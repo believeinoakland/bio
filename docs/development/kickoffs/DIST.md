@@ -98,7 +98,8 @@ reader behind, is `main`'s own `release/`, held equal to the last release deploy
    as the plane, never the plane first** (IC-130); then pdf-worker, ocr-worker, and any order an IC since the last
    release adds. Verify the bytes read back,
    `/version` serving, the headline closings live in scratch (swept after), and `op=audit`.
-3. **Only then advance the pointer:** merge `dist/cut-X.Y.Z` into `main` and push. The tag becomes an ancestor of `main`,
+3. **Only then advance the pointer:** push the cut as `land/dist/cut-X.Y.Z`; CONDUCT's train lands it (M0-111: a
+   direct push of `main` is refused; ask for an immediate train). The tag becomes an ancestor of `main`,
    so tags stay on the mainline. Then deploy the installer embedding the same release.
 4. **If the live check fails:** roll back to the previous deployment (`wrangler rollback <previous version id>`,
    measured working 2026-09-19), and never merge the branch. Nothing was offered to anyone.
@@ -170,9 +171,8 @@ In order, and all of it on the merged `main`:
    back from the account and confirm the embedded version AND that
    `bindings: []` is still empty. That empty binding set is a structural
    security guarantee, not a detail.
-10. **Advance the pointer:** merge `dist/cut-X.Y.Z` into `main` and push. The TAG was already made on the branch, BEFORE
-    the deploy (the mechanism below); the merge puts it on the mainline. Never before the live check. If `main`
-    moved, re-merge and re-check with `gates.mjs --since <the cut commit>`, never a fresh battery (0.71.0's took 2.4 h).
+10. **Advance the pointer:** the train lands `land/dist/cut-X.Y.Z` (step 3). The TAG was already made on the branch,
+    BEFORE the deploy (the mechanism below); the merge puts it on the mainline. Never before the live check.
 11. **Add the release to the upgrade arm:** a row `["X.Y.Z", "<the commit whose release/ holds it>"]` in
     `bio-plane/test/migrate-released.test.mjs`'s `RELEASES`, in the NEXT cut. A release absent from that table is never
     tested as an upgrade source (REC-143's worker, 2026-09-19).
@@ -203,7 +203,7 @@ and both want to ship.
 ## LESSONS FROM THE 0.59.0–0.65.0 CUTS (2026-09-18/19), recorded at the stand-down — each one cost time or nearly shipped a defect
 
 1. **A signed release on `main` IS distribution.** Every installer's `/update` reads `main/release/RELEASE.json`. That is
-   why the pointer mechanism above exists. Never push `release/` to `main` except by merging a live-verified cut branch.
+   why the pointer mechanism above exists. `release/` reaches `main` only through the train, from a live-verified cut branch.
 2. **The battery builds FRESH stores; production stores are OLD.** 0.59.0–0.63.0 passed every suite and bricked every
    existing store. `migrate-released.test.mjs` is the upgrade arm. **Each cut adds the PREVIOUS release to its `RELEASES`**
    (version, and the commit whose `release/` holds it: the cut commit on the branch). **Only a withdrawn, bricking release

@@ -64,6 +64,15 @@ if [ -n "$common" ] && [ ! -d "$common/bio-idalloc" ]; then
   mkdir -p "$common/bio-idalloc" || say "FAILED to create the id ledger directory"
 fi
 
+# 2c · the push guard (M0-111) ----------------------------------------------------------------
+# The refusal of a lane's direct push to `main` lives in the pre-push hook, which `plancheck` installs on its first
+# run, so a fresh clone that pushes before it ever gates is unguarded (VERIFICATION.md, the pre-push limit). Installed
+# here so every cloud session starts guarded. Writes only `<git-common-dir>/hooks/pre-push` and its clone-wide copy.
+if [ -f "$REPO/tools/pushguard.mjs" ]; then
+  node "$REPO/tools/pushguard.mjs" --install >/dev/null 2>&1 \
+    || say "FAILED to install the push guard — a push of main is NOT refused in this clone"
+fi
+
 # 3 · dependencies ----------------------------------------------------------------------------
 for pkg in bio-plane pdf-worker ocr-worker newgroup; do
   dir="$REPO/$pkg"

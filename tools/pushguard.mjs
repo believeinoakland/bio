@@ -6,7 +6,8 @@
  * design corpus fails `corpuscheck`, and one whose construct status disagrees
  * with the code. M0-110: a push of the branch `coord` ALONE (the lanes' message
  * board, TREE-SHARING.md §1) is judged by its own commit — no merge marker — and
- * by none of those four, which are verdicts about `main`'s tree (`coordOnly`).
+ * by none of those four, which are verdicts about `main`'s tree (`coordOnly`). M0-111: a push to `main` is
+ * refused by name unless its tip carries the train's mark (`mainArmCheck`; `tools/train.mjs` lands `main`).
  *
  * ------------------------------------------------------------------ M0-99, 2026-09-22: THE ARM IT WAS BUILT FOR RETIRED
  *
@@ -800,6 +801,95 @@ export function commitMarkerCheck({ repo = REPO, sha }) {
   return { ok: false, marked, message: `UNRESOLVED MERGE MARKERS in ${marked.length} place(s) of the pushed coord commit.` };
 }
 
+/* ------------------------------------------------------------------ THE `main` REF ARM (M0-111)
+ *
+ * TREE-SHARING.md §2, ruled by Bob 2026-09-22: lanes and workers push `land/<lane>/<topic>` only, and CONDUCT lands
+ * them on `main` in ONE integration branch with ONE gate (`tools/train.mjs`). Nobody else pushes `main`, and this arm
+ * is what makes that a mechanism instead of a memory: a push whose remote ref is `refs/heads/main` is REFUSED, by
+ * name, unless it carries the TRAIN'S MARK.
+ *
+ * HOW IT TELLS CONDUCT FROM A LANE, HONESTLY: IT DOES NOT, AND NOTHING AT A HOOK CAN. Every session on this estate
+ * pushes through one git credential (the cloud proxy's, or one Mac's), so git carries no identity a hook could read,
+ * and an environment variable or a config key is a word anyone can say. What the arm reads instead is the ACT: the
+ * tip must be a commit `tools/train.mjs` made — a trailer `Bio-Train: <id>` in its message — with the train's record
+ * `<git common dir>/bio-train/<id>.json` naming that exact commit and its tree, AND a GREEN gate record (D-293) for
+ * that tree. So a direct push is refused whoever makes it, and the train's push passes whoever runs it: the mark
+ * proves the PROCEDURE (merged from `origin/main`, gated once, GREEN), never the actor.
+ *
+ * HOW A LIAR PASSES IT, stated before anyone relies on it: (1) run `tools/train.mjs` as a lane — the procedure is the
+ * mark, so a lane that runs the integrator's tool IS integrating, and only the kickoff forbids it; (2) forge the three
+ * artifacts by hand — a trailer, a JSON file and a gate record, all local and unsigned (`train.test.mjs` DRIVES this
+ * and asserts it passes, so the limit is pinned rather than implied closed); (3) `git push --no-verify`; (4) push
+ * from a clone where no gate has run yet, so no hook is installed (`VERIFICATION.md`, the pre-push limit); (5) push
+ * from a checkout whose tracked `tools/pushguard.mjs` predates this arm — the shim is worktree-first (D-406). The
+ * one refusal a local liar cannot reach is the HOST's (branch protection on `main`), and it cannot tell sessions
+ * apart either while they share a credential — that is Bob's to rule, raised by M0-111's report.
+ *
+ * A DELETION of `main` is refused outright: no train deletes `main`. */
+export const MAIN_REF = "refs/heads/main";
+export const TRAIN_TRAILER = "Bio-Train";
+export const TRAIN_DIR = "bio-train";
+const TRAIN_ID = /^train-[0-9A-Za-z._-]{1,80}$/;
+
+/* Every line of the hook's stdin whose REMOTE ref is `main` — deletions INCLUDED, unlike `pushedRefs`. */
+export function mainPushes(stdin) {
+  const out = [];
+  for (const line of String(stdin || "").split("\n")) {
+    const [localRef, localSha, remoteRef] = line.trim().split(/\s+/);
+    if (!localRef || !localSha || remoteRef !== MAIN_REF) continue;
+    out.push({ localRef, localSha, remoteRef, deletion: /^0+$/.test(localSha) });
+  }
+  return out;
+}
+
+export function trainDir({ repo = REPO } = {}) {
+  const c = commonDir({ repo });
+  return c ? join(c, TRAIN_DIR) : null;
+}
+
+/* The train's mark on ONE commit: its trailer, its record, and a GREEN gate verdict for its tree. Every failure
+   says which of the three was missing, because a refusal a reader cannot trace is one they learn to route around. */
+export function trainMark({ repo = REPO, sha } = {}) {
+  const msg = git(["log", "-1", "--format=%B", sha], repo);
+  if (msg === null) return { ok: false, reason: `commit ${String(sha).slice(0, 8)} could not be read` };
+  const m = new RegExp(`^${TRAIN_TRAILER}: (\\S+)\\s*$`, "m").exec(msg);
+  if (!m) return { ok: false, reason: `the commit carries no \`${TRAIN_TRAILER}:\` trailer — it was not made by tools/train.mjs` };
+  const id = m[1];
+  if (!TRAIN_ID.test(id)) return { ok: false, id, reason: `\`${TRAIN_TRAILER}: ${id}\` is not a train id` };
+  const d = trainDir({ repo });
+  const file = d ? join(d, `${id}.json`) : null;
+  let rec = null;
+  try { rec = file && existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null; } catch { rec = null; }
+  if (!rec) return { ok: false, id, reason: `no train record ${file || `${TRAIN_DIR}/${id}.json`} — the trailer names a train this clone never ran` };
+  const tree = treeOf(sha, { repo });
+  if (rec.id !== id || rec.head !== sha || rec.tree !== tree)
+    return { ok: false, id, reason: `train record ${id} names commit ${String(rec.head).slice(0, 8)}, tree ${String(rec.tree).slice(0, 8)} — not this commit ${String(sha).slice(0, 8)}, tree ${String(tree).slice(0, 8)}` };
+  const eff = effectiveVerdict(readRuns({ repo, tree }).runs);
+  if (eff.verdict !== "GREEN")
+    return { ok: false, id, reason: `the gate verdict for tree ${String(tree).slice(0, 8)} is ${eff.verdict || "UNRECORDED"}, not GREEN — a train lands only a GREEN tree` };
+  return { ok: true, id, tree, branches: (rec.landed || []).map((l) => l.branch) };
+}
+
+export function mainArmCheck({ repo = REPO, stdin = "" } = {}) {
+  const refused = [], trains = [];
+  for (const p of mainPushes(stdin)) {
+    if (p.deletion) { refused.push({ ...p, reason: "a DELETION of main — no train deletes main" }); continue; }
+    const mk = trainMark({ repo, sha: p.localSha });
+    if (mk.ok) trains.push({ ...p, ...mk }); else refused.push({ ...p, reason: mk.reason });
+  }
+  return { ok: refused.length === 0, refused, trains };
+}
+
+export function mainRefusal(mc) {
+  const L = ["", `  PUSH REFUSED — ${HOOK_MARKER}`, "",
+    "  A DIRECT PUSH TO refs/heads/main (M0-111). Only the train lands on main: lanes and workers push",
+    "  `land/<lane>/<topic>`, and CONDUCT lands every waiting branch with `node tools/train.mjs run` —",
+    "  one integration branch from origin/main, one gate, one push (TREE-SHARING.md §2).", ""];
+  for (const r of mc.refused) L.push(`      ${r.localRef} -> ${r.remoteRef}${r.deletion ? "" : ` @ ${String(r.localSha).slice(0, 8)}`}: ${r.reason}`);
+  L.push("", "  Push your branch instead:  git push origin HEAD:refs/heads/land/<lane>/<topic>", "");
+  return L.join("\n");
+}
+
 /* ------------------------------------------------------------------ the D-293 refusal's text
  *
  * It NAMES the record — ref, commit, tree, class, when, what still fails, the file — because a
@@ -844,6 +934,12 @@ function run(stdin) {
     process.stderr.write(`${HOOK_MARKER}: a coord-only push (M0-110) — no merge markers in the pushed commit; `
       + `main's checks (gate record, design corpus, construct status) do not judge a note\n`);
     return 0;
+  }
+  /* M0-111: a push to `main` must carry the train's mark, or it is refused by name before anything else is judged. */
+  const mc = mainArmCheck({ repo, stdin });
+  if (!mc.ok) {
+    process.stderr.write(mainRefusal(mc) + "\n");
+    return 1;
   }
   /* D-293 FIRST: it reads only the pushed commits' trees and the record, never the working tree,
      so nothing a session has left uncommitted can confound it.  A failure to READ the record is
@@ -913,6 +1009,8 @@ function run(stdin) {
   if (gv.unreadable.length)
     notes.push(`${gv.unreadable.length} gate record file(s) UNREADABLE, so the gate verdict is UNDETERMINED for this push: `
              + gv.unreadable.slice(0, 3).join(", "));
+  for (const tr of mc.trains)
+    notes.push(`main carries the train's mark (M0-111): ${tr.id}, GREEN tree ${String(tr.tree).slice(0, 8)}, landing ${tr.branches.join(", ") || "no branch named"}`);
   const tail = notes.length ? ` (${notes.join("; ")})` : "";
   /* M0-99: the line no longer opens `docs/DECIDED.md current` — nothing here reads the index. */
   process.stderr.write(`${HOOK_MARKER}: no merge markers; design corpus current; construct status agrees with the code${tail}\n`);
@@ -1021,6 +1119,15 @@ function control() {
       && !unitCovers("plane:x.test.mjs", "plane:*"), "wildcards cover their members and never the reverse");
   arm(pushedRefs(`refs/heads/x ${"0".repeat(40)} refs/heads/x ${"b".repeat(40)}\nrefs/heads/y ${"c".repeat(40)} refs/heads/y ${"0".repeat(40)}`).length === 1,
       "a deletion offers no tree to refuse; a push does");
+  /* M0-111: the `main` arm's parse. The refusal and the train's pass are driven through real pushes in `train.test.mjs`. */
+  const mp = mainPushes(`refs/heads/x ${"c".repeat(40)} refs/heads/main ${"b".repeat(40)}\n(delete) ${"0".repeat(40)} refs/heads/main ${"b".repeat(40)}\n`
+    + `refs/heads/x ${"c".repeat(40)} refs/heads/land/a/b ${"0".repeat(40)}`);
+  arm(mp.length === 2 && !mp[0].deletion && mp[1].deletion,
+      "M0-111: every push naming refs/heads/main is read, a DELETION of main included; a land/* push is not");
+  arm(mainArmCheck({ stdin: `(delete) ${"0".repeat(40)} refs/heads/main ${"b".repeat(40)}` }).ok === false,
+      "M0-111: a deletion of main is refused");
+  arm(mainArmCheck({ stdin: `refs/heads/x ${"c".repeat(40)} refs/heads/land/a/b ${"0".repeat(40)}` }).ok === true,
+      "M0-111: a push naming no main is not judged by the main arm");
 
   console.log(bad ? `\n${bad} FAILED` : "\nall control arms pass");
   return bad ? 1 : 0;

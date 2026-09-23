@@ -98,8 +98,14 @@ import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import {
   sweep, readDispatch, corpus, mentionsIn, routeOf, opReaching,
-  generatedReason, LEDGER, PLANNED_OPS, REPO,
+  generatedReason, LEDGER_STATE, PLANNED_OPS, REPO,
 } from "../scripts/op-claims.mjs";
+/* M0-116: the MAIN half of the ledger is a module of its own, and THIS SUITE IS ITS ONLY IMPORTER — the one unit that
+   sweeps the whole tree against it. Every other importer of `op-claims.mjs` inherited its 18 named files as inputs to
+   `tools/gates.mjs` while reading none of them (why, and the figures: `../scripts/op-claims-ledger.mjs`'s head). */
+import { LEDGER, LEDGER_MAIN } from "../scripts/op-claims-ledger.mjs";
+import { isMovedPath } from "../../tools/coord.mjs";
+import { stripComments } from "../scripts/walkfloor.mjs";
 import { fresh } from "../../tools/decided.mjs";   /* M0-99: the ruling index's ONE freshness call */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
@@ -173,11 +179,19 @@ console.log("\n--- 2. the corpus, PRINTED, and asserted non-trivial ---");
    about this walk recognising the index BY ITS BANNER, so the index is produced first through the ONE
    freshness call every reader of it makes, rather than the assertion depending on whether this
    checkout happened to run the tool. */
+/* NEGATIVE CONTROL (M0-116, RAN 2026-09-22 by the M0-116 worker): one MAIN ledger entry (MEASUREMENTS.md · inboxlist)
+   put back into `op-claims.mjs`'s `LEDGER_STATE` -> 35 pass / 2 fail, exactly the two M0-116 arms: "the ledger is ONE
+   ledger in two halves" (53 main + 12 state, a main file among the state entries) and "op-claims.mjs, read as code, names
+   none of the 18 file(s)"; restored by cp, sha256 and `cmp` identical, 42,034 bytes. The OVER-STRICTNESS arm is live in
+   the tree and needs no plant: `op-claims.mjs` still names MEASUREMENTS.md in a COMMENT (its language-reading note),
+   and the code-read arm stays GREEN over it. */
 /* NEGATIVE CONTROL (M0-99, run 2026-09-22 by the M0-99 worker): the index moved aside, as a fresh checkout
    has it, and the `fresh();` line below deleted -> "EVERY generated artifact is excluded" FAILS, 34 pass / 1 fail,
    exit 1; with the line, over the same absent index, 35 / 0. Restored by cp-back, sha256 and `cmp` identical. */
 fresh();
-const result = sweep();
+/* M0-116: the ledger is PASSED. Until 2026-09-22 `sweep()` defaulted to the main half, which meant `op-claims.mjs`
+   imported it; it now defaults to NOTHING excused, so this call names the ledger it is held to. */
+const result = sweep({ ledger: LEDGER_MAIN });
 console.log(`  M0-12 CORPUS: ${result.files} files, ${result.chars} chars scanned; `
   + `${result.mentions} op= mentions over ${result.names.count} distinct names; `
   + `${result.dynamic} dynamic (template-built) skipped; `
@@ -325,6 +339,23 @@ t("no PLANNED op has been BUILT — a registration that outlived its deferral is
 t("the ledger is non-empty and every entry carries a reason",
   [LEDGER.length >= 20, LEDGER.every((e) => typeof e.why === "string" && e.why.length >= 8)],
   [true, true]);
+/* M0-116 · THE TWO HALVES ARE ONE LEDGER, PARTITIONED BY BRANCH, AND THE MODULE 38 UNITS IMPORT NAMES NONE OF MAIN'S
+   FILES. The partition was a filter over one list until 2026-09-22; it is now two files, so which file an entry sits in
+   is asserted against `isMovedPath` rather than trusted. And the reason the main half moved is asserted where it
+   bites: `op-claims.mjs`, read as CODE (comments blanked by the estate's one lexer, strings kept — exactly how
+   `tools/gates.mjs` reads a file a unit imports), names no file the main half registers. A main entry moved back into
+   it turns this RED by name; the gate would otherwise just quietly re-run a third of the battery again. */
+const opClaimsCode = stripComments(readFileSync(join(REPO, "bio-plane/scripts/op-claims.mjs"), "utf8"));
+const mainFiles = [...new Set(LEDGER_MAIN.map((e) => e.file))];
+t(`the ledger is ONE ledger in two halves: ${LEDGER_MAIN.length} main + ${LEDGER_STATE.length} state = ${LEDGER.length}, `
++ "every state entry is a state file and no main entry is",
+  [LEDGER.length === LEDGER_MAIN.length + LEDGER_STATE.length, LEDGER_STATE.length > 0, LEDGER_MAIN.length > 0,
+   LEDGER_STATE.filter((e) => !isMovedPath(e.file)).map((e) => e.file),
+   LEDGER_MAIN.filter((e) => isMovedPath(e.file)).map((e) => e.file)],
+  [true, true, true, [], []]);
+t(`op-claims.mjs, read as code, names none of the ${mainFiles.length} file(s) the main half registers `
++ "(M0-116: its importers are not readers of them)",
+  mainFiles.length > 0 ? mainFiles.filter((f) => opClaimsCode.includes(f)) : ["(the main half names no file)"], []);
 
 /* ------------------------------------------------------- 5. REACH, AS A DELTA */
 /* Every arm below is a DELTA between text that must fire and text that must not,
