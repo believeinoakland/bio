@@ -382,6 +382,9 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-33.19", "SEVERED_EDGE"],
     ["C-33.20", "NO_SUCH_SELECTION"],
     ["C-33.21", "CAS_STALE"],
+    /* REC-176 (State Rules §2.4, 2026-09-23): op=promote refuses a snap key the bundle already holds, where the write
+       REPLACED the recorded promotion. C-67 minted by mintid. D-PIN-B failed on it when it landed — the arm doing its job. */
+    ["C-67.1", "SNAP_KEY_TAKEN"],
     ["C-33.22", "SELF_BASIS"],
     ["C-33.23", "BASIS_CYCLE"],
     ["C-33.24", "FILES_DROPPED"],
@@ -515,9 +518,13 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
   /* MOVED 54 -> 55 on 2026-09-23 (REC-175), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 55 rows across 2 families" on the item's tree
      over origin/main 14faa089) and not by adding to the number in the file: C-33.38 FILE_DIGEST_MISMATCH. */
   t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two, REC-125's two, "
-    + "REC-126's one, REC-124's three, REC-136's one, D-136's one and REC-175's one — a walk that lost a family "
+    + "REC-126's one, REC-124's three, REC-136's one, D-136's one, REC-175's one and REC-176's one — a walk that lost a family "
     + "would run fewer arms and every one of them would still pass",
-    rowsSeen, 55);
+    /* MOVED 54 -> 55 on 2026-09-23 (REC-176), FROM THE FIGURE THIS INSTRUMENT PRINTED on the item's tree over
+       origin/main 0e7cc03e and not by adding to the number in the file: C-67.1 SNAP_KEY_TAKEN. */
+    /* MOVED 55 -> 56 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 54 -> 55 from the same base): the figure this
+       instrument PRINTED on the merged tree — C-33.38 FILE_DIGEST_MISMATCH and C-67.1 SNAP_KEY_TAKEN together. */
+    rowsSeen, 56);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

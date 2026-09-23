@@ -1260,6 +1260,11 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "registeraudit's fence, and for its reason: it is an audit of the working corpus that lists bundle ids "
       + "and paths whose stored digest disagrees with their bytes; probe is confined by scopeFor to the scratch "
       + "namespace, a different Durable Object. It writes nothing.",
+    /* REC-176, 2026-09-23. Classified by the item that adds it. */
+    snapkeycensus: "CLASS-FENCED to admin and probe (no member class), so no member session reaches it — "
+      + "registeraudit's fence, and for its reason: it is an audit of the working corpus that lists bundle ids whose "
+      + "manifest lost a row to a repeated snap key; probe is confined by scopeFor to the scratch namespace, a "
+      + "different Durable Object. It writes nothing.",
     /* PL-4 / IS-4, 2026-08-08. Classified by the item that adds it. */
     capturerequestdraining: "CLASS-FENCED to admin, probe and daemon (NO MEMBER CLASS), so no member "
       + "session reaches it, and probe is confined by scopeFor to the scratch namespace. It exists for "
