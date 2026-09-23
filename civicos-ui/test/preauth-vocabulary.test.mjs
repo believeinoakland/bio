@@ -1810,7 +1810,7 @@ if(S("case-address-at-load") && !HID("case-verify")){
         case's frozen pair (`inquiryCasePairs`, Publication §3 rule 12: a member published under it carries none in
         its own bytes) through this credential-free seam, and it keeps its OWN error path as this sweep requires — a
         SHAPE test: only an answer carrying `findings[]` is a case, only `reason: NOT_PUBLISHED` is "in no case",
-        only `FINDING_IN_SEVERAL_CASES` with its `cases[]` is asked again per case, and everything else — an
+        only a refusal carrying the candidate case ids in `cases[]` (IC-74's resolution aid) is asked again per case, and everything else — an
         `ok:false` this non-throwing seam returns included — reads as the published record NOT ANSWERING, never as
         "not published" (`case-frozen-pair.test.mjs`'s SILENCE arm drives it). The op set is unchanged. */
      && APIQ_CALLERS.length === 5
