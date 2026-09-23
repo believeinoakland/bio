@@ -3230,3 +3230,45 @@ depends-on: D-85 (it widens D-85's stamp; done).
 scope: a creation stamped `agent` names a running run whose principal is the caller (`token:<class>` for a deploy token, `runPrincipalGate` unchanged), under the `surfaces` bound, sight check, C-66.1–.4 and the `inquiry_run_surfacings` row; every non-test caller creating under a deploy token (livefire, setup scripts, `agent-worker`) moves inside a run, or is brought to BOB, never exempted.
 accepts-when: an admin-, member- and probe-token creation naming no run is refused `SURFACE_NO_RUN`; one inside the token's own running run lands with its row; a member's session creation is unchanged. NEGATIVE CONTROL: restore the `cls === "ai"` condition, and the deploy-token arms fail by name.
 added: 2026-09-23 · SCHEDULER #15 (BOB #30's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+
+### M0-126 · done — landed in land/conduct/c16-batch1 @ 7e02a6af (train train-20260923T125802Z-505, origin/main e62e08e1); verified: tools/gates.mjs carries the result record and mergecarry.test is GATE: never-cache (history)
+order: FIRST of the backlog (BOB #29): every landing and every lane's gate pays for it, so it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); its design landed in §3a at `619dfa65` and CONDUCT #15 spawned it on BOB's order (moved into the cache by SCHEDULER #14) (SCHEDULER #14, 2026-09-23; BOB #29's item)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3a (the shared per-suite result record, landed by BOB #29 at `619dfa65`), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: none — its design (§3a) and `land/bob/gate-rerun-failed` are on `main`.
+scope: a record keyed (unit, hash of its inputs: source, sibling control, transitive imports, files read, as `gates.mjs` derives per unit; a plane or fleet unit always includes the FULL runtime set), value PASS with run id and tree, on an append-only branch, one file per key; `gates.mjs` skips a unit whose key holds a PASS and prints REUSED. SAFETY, all three: a suite reading an undeclared input (clock, network, env, live coord) is NEVER-CACHED; a check FAILS when a unit reads a file its key does not cover; a FULL run at every release cut, controls kept.
+accepts-when: a second clone runs 0 suites over a tree whose units a first clone passed, and one input change re-runs exactly the units whose key moved. NEGATIVE CONTROL: drop one input from a unit's hash, and the coverage check fails by name.
+added: 2026-09-23 · SCHEDULER #14 (BOB #29's designed item; `node tools/mintid.mjs M0`).
+owed-at-integration (BOB #30; recorded by CONDUCT #15): BOB READ land/worker/M0-126 @ d47af600 and said LAND (11:34Z) — the hold is LIFTED. At the merge: (a) correct TREE-SHARING §3a "As built" item 10 to say the train's tree-keyed reuse is "correct only where no never-cached unit is in scope; M0-131"; (b) it overlaps M0-127 (landed d89e04d1) in tools/gates.mjs, the battery verdict file and gates.yml's gate step — read BOTH sides; re-read the statepaths ceiling. BOB corrects DIST.md's --since after it lands.
+
+### UI-81 · done — landed in land/conduct/c16-batch1 @ 7e02a6af (train train-20260923T125802Z-505, origin/main e62e08e1); verified: app.html names FINDING_IN_SEVERAL_CASES
+order: directly after REC-170, the same public page: machine vocabulary shown to a stranger where the record holds the answer; before UI-82 because it needs no plane change (SCHEDULER #15, 2026-09-23)
+milestone: M10
+interface: I3 consumer (IC-74's `cases` on `FINDING_IN_SEVERAL_CASES`).
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12, with DEC-49 as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it (every code a surface can receive has a translation).
+depends-on: none.
+scope: `pubOpen` offers the named cases as choices and opens the chosen one; and the code gets a translation row in its checks family, so the guard sees it.
+accepts-when: against the real plane, opening a finding two cases pin offers both and opens each; no raw code renders. NEGATIVE CONTROL: drop the translation row, and the DEC-49 guard fails naming the code.
+added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs UI`).
+
+### D-389 · done — landed in land/conduct/c16-batch1 @ 7e02a6af (train train-20260923T125802Z-505, origin/main e62e08e1)
+order: after CAP-13, above the ledger tooling: CLAUDE.md §2's class, in the read that must say WHICH absence is true. The row's open question — is `true` more often acceptable? — §2 answers: a coverage claim the method did not establish is not made, and fail-safe is the direction (SCHEDULER #6, 2026-09-21, LED-7 batch 13)
+milestone: M3
+interface: I3 — `truncated` reads `true` on a full raw fetch at all three arms; the integrator mints and classifies the IC.
+design: `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the readers), which compute `truncated` from what the viewer may read.
+depends-on: none.
+scope: ONE disjunct, `raw.length === R` (the supply was not exhausted), in the ONE over-fetch the three arms share — never per arm, the mirror-and-drift class this row was raised to avoid. The row's analysis stands: it leaks nothing, since an entitled viewer on a full fetch already reads `true`. Arm G5 moves in the same commit with a dated reason.
+accepts-when: a fixture whose raw supply exceeds the over-fetch reads `truncated: true` at every arm for every viewer; an exhausted supply reads as before. How a liar passes it: fixing one arm, so the fixture drives all three. NEGATIVE CONTROL: drop the disjunct, and the full-fetch arm fails by name at each level.
+added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 13; keeps its `D-` id).
+uncut: restored whole from the cut archive on entering the cache (SCHEDULER #15, 2026-09-23), so the worker reads its design here.
+
+### UI-82 · done — landed in land/conduct/c16-batch1 @ 7e02a6af (train train-20260923T125802Z-505, origin/main e62e08e1); verified: app.html reads strengthByCase
+order: directly after UI-81, on REC-170's field (SCHEDULER #15, 2026-09-23)
+milestone: M10
+interface: I3 consumer (REC-170's IC).
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12 (b)–(d), with DEC-8 (a surface invents nothing).
+depends-on: REC-170.
+scope: `pubList` renders the pair per case, naming each case, or the undetermined state with its reason; one pair renders as today.
+accepts-when: against the real plane, a finding two cases pin with different pairs lists both, each with its case; none reads "no frozen pair". NEGATIVE CONTROL: read the single field again, and the per-case arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs UI`).
