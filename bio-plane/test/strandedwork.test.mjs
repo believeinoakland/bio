@@ -84,6 +84,11 @@
  *        fail, which is the consequence BOB #12's ruling forbids.
  *   (A9) the carrier walk reverted to a lookup by BRANCH NAME -> S11 fails and its
  *        over-strictness twin does NOT. The spelling defect as the estate actually had it.
+ *   (A10) BOB #29, 2026-09-23, RUN BY HAND: plancheck's `stateFail` made `fail` unconditionally
+ *        (coord state deciding the tree's verdict again) -> S9's planted-coord arms fail by name,
+ *        "a coord finding is REPORTED under --local…" and "…plancheck --local exits 0 over a tree
+ *        whose only defect is coord's state": 89 pass / 2 fail; restored by `cp`, sha256
+ *        95c986df… before and after, `cmp` identical; the plant took in both runs.
  *
  * M0-49 ADDS TWO ARMS TO SECTION 10, AND THEY ARE DRIVEN BY HAND RATHER THAN BY THE DRIVER
  * ABOVE, because their subject is a COMMITTED document and `g(REPO, "show", "HEAD:…")` cannot
@@ -387,6 +392,46 @@ section("9 — THE GATE. `plancheck` must actually RUN this and must NOT fail on
   t("the finding is a WARN, never a FAIL — BOB #12's ruling, and the arm that pins it",
     /FAIL {2}STRANDED WORK/.test(out), false);
   t("...and plancheck --local exits 0", r.status, 0);
+
+  /* THE EXIT-0 ARM ABOVE MUST NOT MOVE WITH LIVE `coord` STATE (Bob, 2026-09-23; TREE-SHARING §3 (c)). It went RED
+     twice on GitHub (land/conduct/batch6, runs 6 and 7) while the tree was unchanged and passed here 88/0: plancheck
+     read coord's BACKLOG.md 381 B over a budget and FAILed P5, and a gate record is keyed by the TREE (D-293). The
+     arm itself was right — this suite's finding must never FAIL plancheck — and what was wrong was plancheck letting a
+     coord finding decide a tree's verdict; that is fixed in plancheck's `stateFail`, and these arms pin it by PLANTING
+     an over-budget coord (BIO_COORD_REF) and driving plancheck --local against it. */
+  const coordTip = (() => { try { return g(REPO, "rev-parse", "--verify", "--quiet", "origin/coord^{commit}"); } catch { return ""; } })();
+  if (!coordTip) {
+    console.log("  NOTE  origin/coord does not resolve on this clone, so the planted-coord arms have nothing to plant from (fetch coord)");
+    t("origin/coord resolves, so the planted-coord arms can run", false, true);
+  } else {
+    const planted = `refs/bio-test/coord-overbudget-${process.pid}`;
+    const idx = join(SANDBOX, "planted.index");
+    const env = { ...process.env, GIT_INDEX_FILE: idx };
+    const gi = (...args) => execFileSync("git", args, { cwd: REPO, encoding: "utf8", env }).trim();
+    const backlog = "docs/development/BACKLOG.md";
+    try {
+      gi("read-tree", `${coordTip}^{tree}`);
+      const body = execFileSync("git", ["show", `${coordTip}:${backlog}`], { cwd: REPO, encoding: "utf8", maxBuffer: 1 << 26 });
+      const pad = `${body}\n<!-- planted by strandedwork.test.mjs: ${"x".repeat(240 * 1024)} -->\n`;
+      const blob = execFileSync("git", ["hash-object", "-w", "--stdin"], { cwd: REPO, input: pad, encoding: "utf8" }).trim();
+      gi("update-index", "--cacheinfo", `100644,${blob},${backlog}`);
+      const tree = gi("write-tree");
+      const commit = execFileSync("git", ["commit-tree", tree, "-p", coordTip, "-m", "planted: BACKLOG.md over every budget"],
+        { cwd: REPO, encoding: "utf8", env: { ...env, GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@invalid", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@invalid" } }).trim();
+      g(REPO, "update-ref", planted, commit);
+      const p = spawnSync(process.execPath, ["tools/plancheck.mjs", "--local"],
+        { cwd: REPO, encoding: "utf8", env: { ...process.env, BIO_COORD_REF: planted } });
+      const po = `${p.stdout || ""}${p.stderr || ""}`;
+      t("the plant took: plancheck read the planted coord and found P5 violated",
+        /PIPELINE INVARIANT P5/.test(po), true);
+      t("a coord finding is REPORTED under --local, as a WARN naming why, never as a FAIL",
+        [/WARN {2}\[coord state — reported, never this tree's verdict under --local[^\n]*PIPELINE INVARIANT P5/.test(po),
+         /FAIL {2}PIPELINE INVARIANT/.test(po)], [true, false]);
+      t("...so plancheck --local exits 0 over a tree whose only defect is coord's state", p.status, 0);
+    } finally {
+      try { g(REPO, "update-ref", "-d", planted); } catch { /* absent already */ }
+    }
+  }
 
   /* THE VANTAGE ARMS. Two sessions went to the artifact on 2026-09-17 and reached opposite
      answers about one worktree, because this file's arm is ESTATE-WIDE and plancheck's
