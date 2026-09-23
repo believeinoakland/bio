@@ -19938,3 +19938,9 @@ paths: bio-plane/src/airun.mjs (`checkConsume`'s allowance arm only), bio-plane/
 why: op=airunopen accepts a declared bound with no positive allowed (REC-177, QUEUE.md on coord; INVESTIGATIVE-SESSION.md §14b item 6, BOB #30).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+### REC-179 · RECORD worker of CONDUCT #16 (worktree agent-a368de25bd347b32f) · 2026-09-23
+paths: bio-plane/src/store.mjs (`promote`: one new region after the compare-and-swap, `is-promote-surfaced-by`; nothing in REC-175's `is-promote-digest`), bio-plane/checks/bio-checks.mjs (SURFACE_CHECKS: one new row, C-66.5), civicos-ui/check-refusal-codes.mjs (floors moved from its own print), bio-plane/test/rec179-surfaced-by.test.mjs and .control.mjs (new), suites that flip a revision's surfaced_by (corrected, never exempted), bio-plane/dist/ (rebuilt), docs/development/interface-changes/ (one new IC), docs/architecture/construct-status.json and INVESTIGATIVE-SESSION.md front matter.
+why: a revision of an inquiry can rewrite its surfaced_by (REC-179, QUEUE.md on coord; INVESTIGATIVE-SESSION.md §11 item 5, rule 2's reach).
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
