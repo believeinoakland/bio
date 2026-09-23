@@ -10092,6 +10092,14 @@ export default {
         b.actorViewer = viaSession ? sessViewer
           : cls === "ai" ? aiCred.principal
           : `${MACHINE_CLASS_PREFIX}${cls}`;
+        /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25): AN ASSISTANT OPENS A QUESTION ONLY INSIDE A
+           RUN IT HOLDS. The store asks that of a creation carrying THIS stamp, and only an `ai` credential carries
+           it: a member's creation is untouched. It is the run's principal stamp in the ONE form `RUN_PRODUCTION_ACTIONS`
+           uses (`<principal>/<tokenId>`), so `runPrincipalGate` recognises a member and the credential she minted as
+           one principal by the same expression the run verbs are compared with. Deleted FIRST for every caller, so a
+           session that sends one is not taken for an assistant and an assistant cannot name someone else. */
+        delete b.assistantPrincipal;
+        if (!viaSession && cls === "ai") b.assistantPrincipal = `${aiCred.principal}/${aiCred.tokenId}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           /* **THE SECOND SITE OF `NOT_CAPABLE`, AND REC-79 IS SAYING SO RATHER
              THAN HIDING IT.** C-38.5's `where` names the admission region above;
