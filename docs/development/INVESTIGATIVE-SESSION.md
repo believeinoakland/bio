@@ -902,9 +902,12 @@ ATTESTATION would invent an author: the question was surfaced in the Drive era b
 carrying that record forward, not witnessing a new act. And D-78's `agent` restamp was already FALSE on this path, because it
 told every later reader that a machine surfaced a member's question. So a migration is a THIRD case, admitted by what the
 server can check rather than by what the caller says. A creation is a MIGRATION REPLAY when (1) it arrives under the
-ADMIN class (the root of trust; `migrate.mjs`'s `admin-or-member` narrows to admin), and (2) it names a registered
-drive-provenance capture already in the record whose preserved promotion records name this bundle id and list this
-revision's `bundle.md` SHA-256. That check proves the bytes are the Drive era's, not the caller's. A replay (a) is exempt
+ADMIN class (the root of trust; `migrate.mjs`'s `admin-or-member` narrows to admin), and (2) it names a drive-provenance
+capture whose BYTES the record already holds (uploaded through the capture op, content-addressed) and whose preserved
+promotion records name this bundle id and list this revision's `bundle.md` SHA-256; the creation itself registers that
+capture, the plane re-reading and hashing its bytes (CORRECTED 2026-09-23 by BOB #30 on REC-173's builder's finding:
+`op=promote` is the register's only writer and a register row names its bundle, so "already registered" could not be
+built; the check stands on the bytes, which is what it needs). That check proves the bytes are the Drive era's, not the caller's. A replay (a) is exempt
 from rule 2, since no surfacing happens on this plane; (b) keeps the `surfaced_by` its Drive-era bytes carry and is NOT
 restamped by D-78, because a server-verified replay of recorded bytes is not a caller's assertion; and (c) reads
 `surfaced_in: not recorded (migrated from the Drive era)`, never a guess, rule 2's own wording for a question surfaced
