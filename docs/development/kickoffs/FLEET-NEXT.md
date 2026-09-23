@@ -131,8 +131,8 @@ source (reproduced). Fix: `preserveSymlinks: true` in `optionsFor`, the one reci
 a recipe assertion per member and one for the plane, and control arm 9 in `fleetbundles.control.mjs` (84/7 on both layouts; a real
 install with the flag dropped reads 87/4). Committed bytes did not move. Local gate GREEN: 81/81 suites, 5,934
 assertions, class TARGETED, recorded for tree `e30256ab`. Pushed `land/fleet/preserve-symlinks` @ `b781b5b6` for the train.
-GitHub run `35819000017` read **success** (completed 04:42Z). Not yet on `main` at 04:58Z (the train's last landing
-was `95c40ed9`); confirm with `git merge-base --is-ancestor b781b5b6 origin/main`.
+GitHub run `35819000017` read **success** (completed 04:42Z). **LANDED** on `main` by train `train-20260923T052524Z-23028` (merge `e7a0ccad`,
+`main` @ `41c7e0c3`, gate GREEN FULL; CONDUCT #15), verified from the remote at 05:29Z. Nothing owed back.
 
 **A trap met while doing it:** a symlinked `node_modules` shows as UNTRACKED (`.gitignore` matches a directory, not a
 link), so `gates.mjs` calls the tree unclean and records nothing. Gate a landing tree with REAL installs (`cp -a` from a
