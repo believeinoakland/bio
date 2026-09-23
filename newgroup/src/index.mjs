@@ -498,6 +498,9 @@ async function installFleet(emit, token, acct, slug, release) {
       + left.map((l) => l.member + " (" + l.why + ")").join("; ")
       + ". Your copy works without them; the next update retries exactly this step.");
   }
+  /* D-116: WHICH members this act uploaded, so the verify step can require each of them to answer THROUGH the plane's
+     binding. Every early return above uploads nothing and returns undefined, which the caller reads as none. */
+  return { done, left };
 }
 
 async function ensureSubdomain(token, acct, slug) {
@@ -537,17 +540,72 @@ async function verifyInstall(base, probe) {
   return null;
 }
 
-async function verifyUpdate(base, wantVersion) {
-  for (let i = 0; i < 5; i++) {
-    try {
-      const r = await fetch(`${base}/api/?op=bootstrap`);
-      const j = await r.json();
-      if (j.version === wantVersion) return j;
-    } catch {}
-    await new Promise((res) => setTimeout(res, 2500));
-  }
-  return null;
+/* D-116 — WHAT EACH PART OF THE COPY ACTUALLY SERVES, NOT WHAT WAS UPLOADED (`BIO_Distribution_v0_1.md` §6, §8;
+ * `CLAUDE.md` §5: a deploy verified is not a build serving).
+ *
+ * `op=bootstrap`'s `version` is the ROUTING isolate's build. Until D-116 that was the only thing this checked, so an
+ * update whose Durable Object — the part holding the record — still ran the previous build, or whose capability
+ * worker never took the new one, reported "Updated" all the same. A plane carrying D-116 answers three readings,
+ * each from where it runs: `version` (the isolate), `storeVersion` (the DO's own env, never the isolate's), and on
+ * `members=1`, `memberVersions` (each member's own `/version`, asked THROUGH the plane's binding). Every one must
+ * equal the release, and the one that does not is NAMED; the update and the install do not report success until
+ * none lags.
+ *
+ * WHETHER THE RELEASE CAN ANSWER is read from the plane bytes this act uploaded (`reportsBuilds`), never from a
+ * version number: a release cut before D-116 landed has neither field in its source, so its store's build and its
+ * members' are UNDETERMINED and the page says so in the same breath as the isolate's confirmation (UNDETERMINED_BUILDS)
+ * — never a silent "confirmed", and never a refusal for lacking a field that release could not have. A plane that SHOULD answer and does not is a lag, not an absence:
+ * after uploading a release that carries the fields, a reply without `storeVersion` is a DO still on older code. */
+const BUILD_FIELDS = ["storeVersion", "memberVersions"];
+export function reportsBuilds(source) {
+  return typeof source === "string" && BUILD_FIELDS.every((f) => new RegExp("\\b" + f + "\\b").test(source));
 }
+
+function servingVerdict(j, want, installed, capable) {
+  const lags = [];
+  if (!j || typeof j !== "object") {
+    lags.push("your copy's address did not answer");
+    return { confirmed: false, lags, capable };
+  }
+  if (j.version !== want) lags.push(`your copy's address answers ${j.version ? j.version : "with no version"}`);
+  if (!capable) return { confirmed: lags.length === 0, lags, capable };
+  if (!("storeVersion" in j)) lags.push("your copy's record store has not reported its version, so it is still running a release from before this one");
+  else if (j.storeVersion === null) lags.push("your copy's record store cannot say which version it runs");
+  else if (j.storeVersion !== want) lags.push(`your copy's record store still runs ${j.storeVersion}`);
+  const mv = j.memberVersions;
+  if (!mv || typeof mv !== "object") {
+    lags.push("your copy did not report its capability workers");
+  } else {
+    for (const [name, st] of Object.entries(mv)) {
+      const s = st && st.state;
+      if (s === "SERVING" && st.version !== want) lags.push(`the capability worker ${name} still runs ${st.version}`);
+      else if (s === "MISNAMED") lags.push(`your copy's connection to ${name} reaches a different worker (${st.name || "unnamed"})`);
+      else if (s === "SILENT") lags.push(`your copy cannot get an answer from the capability worker ${name}`
+        + (installed.includes(name) ? ", which this step installed" : ""));
+      else if (s === "UNBOUND" && installed.includes(name))
+        lags.push(`the capability worker ${name} was installed, but your copy holds no connection to it, so it cannot use it`);
+    }
+    for (const name of installed)
+      if (!(name in mv)) lags.push(`the capability worker ${name} was installed, but your copy does not know it`);
+  }
+  return { confirmed: lags.length === 0, lags, capable };
+}
+
+async function verifyServing(base, want, installed, capable, tries = 5) {
+  let last = null;
+  for (let i = 0; i < tries; i++) {
+    let j = null;
+    try { j = await (await fetch(`${base}/api/?op=bootstrap&members=1`)).json(); } catch {}
+    last = servingVerdict(j, want, installed, capable);
+    if (last.confirmed) return last;
+    if (i < tries - 1) await new Promise((res) => setTimeout(res, 2500));
+  }
+  return last;
+}
+
+const lagList = (v) => `<ul>${v.lags.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
+const UNDETERMINED_BUILDS = "This release cannot report which version your copy's record store or its capability "
+  + "workers are running, so only your copy's address was checked; those parts are not confirmed either way.";
 
 /* -------------------------------------------------------- the progress page
    The callback streams HTML: the shell renders immediately, then each
@@ -569,7 +627,7 @@ const $=s=>document.querySelector(s);const rows={};
 function step(id,label){const d=document.createElement("div");d.className="row go";d.id="r-"+id;
  d.innerHTML='<span class="dot"></span><span></span>';d.lastChild.textContent=label;$("#log").appendChild(d);rows[id]=d;}
 function ok(id,label){const d=rows[id];if(!d)return;d.className="row ok";if(label)d.lastChild.textContent=label;}
-function no(id){const d=rows[id];if(!d)return;d.className="row no";}
+function no(id,label){const d=rows[id];if(!d)return;d.className="row no";if(label)d.lastChild.textContent=label;}
 function fail(h,p,d){$("#fail").hidden=false;$("#fail-h").textContent=h;$("#fail-p").textContent=p;$("#fail-d").textContent=d||"";}
 function done(html){$("#done").innerHTML=html;$("#done").hidden=false;
  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",async()=>{
@@ -588,7 +646,7 @@ function streamPage(headers, shell, run) {
   const emit = {
     step: (id, label) => write(`<script>step(${jsStr(id)},${jsStr(label)})</script>\n`),
     ok:   (id, label) => write(`<script>ok(${jsStr(id)}${label ? "," + jsStr(label) : ""})</script>\n`),
-    no:   (id)        => write(`<script>no(${jsStr(id)})</script>\n`),
+    no:   (id, label) => write(`<script>no(${jsStr(id)}${label ? "," + jsStr(label) : ""})</script>\n`),
     fail: (h, p, d)   => write(`<script>no();fail(${jsStr(h)},${jsStr(p)},${jsStr(d)})</script>\n`),
     done: (inner)     => write(`<script>done(${JSON.stringify(inner)})</script>\n`),
   };
@@ -742,7 +800,7 @@ async function runInstall(emit, code, saved) {
 
   /* IC-82/D-297: the fleet rides the same act. Per-member degradation lives
      inside installFleet — it never fails the install. */
-  await installFleet(emit, token, acct.id, slug, release);
+  const fleet = await installFleet(emit, token, acct.id, slug, release);
 
   emit.step("addr", "Turning on your web address");
   let base;
@@ -762,21 +820,37 @@ async function runInstall(emit, code, saved) {
 
   emit.step("verify", "Checking that it answers");
   const st = await verifyInstall(base, secrets.probe);
-  if (st) emit.ok("verify");
+  /* D-116: answering is not serving. Once the address answers, each part's OWN build is read back — the record
+     store's, and each capability worker's through the plane's binding — and a part that is not on this release is
+     named. A release that cannot report those builds says so (UNDETERMINED_BUILDS) rather than claiming them. */
+  const capable = reportsBuilds(release.source);
+  /* An install has always taken the selftest as its "answers"; a release that cannot report builds adds nothing to
+     read, so the verdict is the selftest's plus the stated undetermined remainder — no new refusal is invented. */
+  const verdict = !st ? null
+    : capable ? await verifyServing(base, release.version, fleet?.done || [], capable)
+    : { confirmed: true, lags: [], capable: false };
+  if (st && verdict.confirmed) emit.ok("verify", capable ? undefined : "Your copy answers. " + UNDETERMINED_BUILDS);
+  else if (st) emit.no("verify", "Your copy answers, but not every part is running " + release.version + " yet");
   else emit.no("verify");
 
-  emit.done(successPanel(base, secrets, !!st));
+  emit.done(successPanel(base, secrets, !!st, verdict));
 }
 
-function successPanel(base, secrets, verified) {
-  const head = verified
+function successPanel(base, secrets, verified, verdict = null) {
+  const lagging = verified && verdict && !verdict.confirmed;
+  const head = verified && !lagging
     ? `<b>Your copy is running.</b> It lives in your
 Cloudflare account, under your control. Believe in Oakland holds no key to it.`
+      + (verdict && !verdict.capable ? ` ${esc(UNDETERMINED_BUILDS)}` : "")
+    : lagging
+    ? `<b>Your copy is installed and answering, but not every part of it is confirmed running this release.</b>
+When it was last asked:${lagList(verdict)}Save the credentials below now either way. It lives in your Cloudflare
+account, under your control. Believe in Oakland holds no key to it.`
     : `<b>Your copy is installed. Its new address has not woken up yet.</b> Brand-new
 addresses can take a few minutes to start answering; everything else finished. Save the
 credentials below now, then open your address. It lives in your Cloudflare account, under
 your control. Believe in Oakland holds no key to it.`;
-  return `<div class="okbox"><p style="margin:0">${head}</p></div>
+  return `<div class="${lagging ? "notice" : "okbox"}"><p style="margin:0">${head}</p></div>
 <div class="card">
  <div class="kv"><span class="k">Your address</span><span class="v" id="out-url">${esc(base)}</span><button class="copy" data-copy="out-url">Copy</button></div>
  <div class="kv"><span class="k">One-time password</span><span class="v" id="out-boot">${secrets.boot}</span><button class="copy" data-copy="out-boot">Copy</button></div>
@@ -923,7 +997,7 @@ async function runUpdate(emit, code, saved) {
   /* The update path installs OR refreshes the members — the PUT is the same
      act, and this is what heals a copy installed before the fleet existed
      (the SELF-binding precedent, now for whole workers). */
-  await installFleet(emit, token, acct.id, slug, release);
+  const fleet = await installFleet(emit, token, acct.id, slug, release);
 
   emit.step("addr", "Finding your copy's address");
   let base = null;
@@ -933,14 +1007,21 @@ async function runUpdate(emit, code, saved) {
     emit.ok("addr");
   } catch { emit.ok("addr"); }
 
-  let confirmed = false;
+  /* D-116: confirmed means EVERY part answers the release — the address, the record store, and each capability
+     worker through the plane's binding (verifyServing). The patient tone stays, because a rollout genuinely takes
+     minutes; what goes is reporting an update as done while a named part still runs the old build. */
+  const capable = reportsBuilds(release.source);
+  let verdict = null;
   if (base) {
     emit.step("verify", "Checking the new version answers");
-    confirmed = !!(await verifyUpdate(base, release.version));
-    emit.ok("verify", confirmed ? undefined
-      : "The address has not started answering with the new version yet. That is normal for a few "
-      + "minutes after an update and nothing needs fixing.");
+    verdict = await verifyServing(base, release.version, fleet?.done || [], capable);
+    if (verdict.confirmed) emit.ok("verify", capable ? undefined : "Your copy's address answers " + release.version
+      + ". " + UNDETERMINED_BUILDS);
+    else emit.no("verify", "Not every part of your copy is running " + release.version + " yet. That is normal for a "
+      + "few minutes after an update; the list below names each part.");
   }
+  const confirmed = !!(verdict && verdict.confirmed);
+  const lagging = !!(verdict && !verdict.confirmed);
 
   /* D-436: told, never done — see FIRST_GROUP_RELEASE above. */
   const told = groupNotice(groupUnrecorded(before, release.version, noop), slug, before, base);
@@ -951,11 +1032,22 @@ The upload succeeded, but it replaced that version with the same version, so thi
 If you expected something newer, the installer had nothing newer to give: it uses the newest release it can
 verify, and that is ${esc(release.version)}. Check that a newer release has actually been published before
 running this again.</p></div>`
+      + (lagging ? `<div class="notice"><p style="margin:0">Not every part of your copy is running ${esc(release.version)}.
+When it was last asked:</p>${lagList(verdict)}</div>` : "")
+    : (lagging
+    /* D-116: the upload happened, and is said; an UPDATE is not claimed while a named part runs another build. */
+    ? `<div class="notice"><p style="margin:0"><b>Uploaded ${esc(release.version)}${before ? " over " + esc(before) : ""}; not yet confirmed running everywhere.</b>
+The upload finished, but when your copy was last asked, not every part of it was running the new version:</p>
+${lagList(verdict)}<p>A part of a copy can take a few minutes to start running a new version after an update, so
+open your copy a little later and check again; if the same part is still named, run this update again. Your
+passwords, your credentials, and everything in the record are exactly as they were. Updates never touch them.</p></div>`
     : `<div class="okbox"><p style="margin:0"><b>Updated ${before ? "from " + esc(before) + " " : ""}to ${esc(release.version)}.</b>
-${confirmed ? "The new version is answering."
+${confirmed
+  ? (capable ? "Every part of your copy answers " + esc(release.version) + ": its address, its record store, and each capability worker it is connected to."
+             : "The new version is answering. " + esc(UNDETERMINED_BUILDS))
   : "The upload finished successfully. The address can take a few minutes to start serving the new version, so open your copy a little later and its page will show " + esc(release.version) + "."}
 Your passwords, your credentials, and everything in the record are exactly as they were.
-Updates never touch them.</p></div>`
+Updates never touch them.</p></div>`)
     + told
     + (base ? `<div class="actions"><a class="btnlink" href="${esc(base)}/">Open your copy</a></div>` : ""));
 }

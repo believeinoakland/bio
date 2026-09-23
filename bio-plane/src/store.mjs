@@ -40544,19 +40544,40 @@ export class Store extends DurableObject {
    * ------------------------------------------------------------------ */
 
   /** Look up assets this host has served before, by normalised address.
-   *  `documents` is counted from the ref rows rather than kept as a counter, so
-   *  re-capturing the same document twice does not inflate it into looking like
-   *  a shared asset when it is one page's own. */
+   *
+   *  `documents` counts distinct PAGES, and a page is the primary's DOCUMENT
+   *  ADDRESS: `captured_locators.address_norm` for `capture_sha = primary_sha`
+   *  (CAP-13, `CAPTURE-SCALING.md` §Job one, reuse condition 3). Until CAP-13 it
+   *  counted distinct primary SHAS, and a primary sha is the content hash of the
+   *  page's bytes, so one page whose bytes changed between two captures read as
+   *  two documents and met the two-document reuse floor on its own. The document
+   *  address is the identity the record already keys a document on (D-96: an
+   *  archive capture and a direct one land on the same locator row), and D-58
+   *  writes it for every capture.
+   *
+   *  A primary with NO locator row (a capture from before D-58, or one whose
+   *  locator write failed inside its swallowing try) cannot say which page it
+   *  was. It is counted apart, as `documents_undetermined` (distinct primary
+   *  shas), and never guessed into `documents`: it may be a page already counted
+   *  or a new one, and the record cannot say which (CLAUDE.md §2). */
   siteAssets({ host, addresses = [] }) {
     if (!host) return { host: null, assets: {} };
     const out = {};
     const want = addresses.length ? new Set(addresses) : null;
+    const counts = new Map();
+    for (const c of this.sql.exec(
+      `SELECT r.address_norm AS address_norm,
+              COUNT(DISTINCT cl.address_norm) AS pages,
+              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+         FROM site_asset_refs r
+         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+        WHERE r.host = ? GROUP BY r.address_norm`, host))
+      counts.set(c.address_norm, c);
     for (const r of this.sql.exec(`SELECT * FROM site_assets WHERE host = ?`, host)) {
       if (want && !want.has(r.address_norm)) continue;
-      const n = [...this.sql.exec(
-        `SELECT COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ? AND address_norm = ?`,
-        host, r.address_norm)][0];
-      out[r.address_norm] = { ...r, documents: (n && n.n) || 0 };
+      const c = counts.get(r.address_norm);
+      out[r.address_norm] = { ...r, documents: (c && c.pages) || 0,
+                              documents_undetermined: (c && c.unlocated) || 0 };
     }
     return { host, assets: out, count: Object.keys(out).length };
   }
@@ -40735,23 +40756,45 @@ export class Store extends DurableObject {
 
   /** Chrome by RECURRENCE, which works on sites that never write a <nav>.
    *  A ratio, not a boolean: the threshold is a tuning decision and belongs to
-   *  the caller, so both numbers are returned and nothing is decided here. */
+   *  the caller, so both numbers are returned and nothing is decided here.
+   *
+   *  CAP-13: a document is a PAGE (the primary's `captured_locators.address_norm`),
+   *  exactly as in `siteAssets`, so a page captured often no longer makes its own
+   *  assets read as the site's chrome. Primaries with no page on record are
+   *  reported apart as `documents_undetermined` and enter neither the numerator
+   *  nor the denominator: the share and the verdict rest on determined pages. */
   siteChrome({ host, threshold = 0.6 }) {
-    if (!host) return { host: null, documents: 0, assets: [] };
-    const d = [...this.sql.exec(`SELECT COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ?`, host)][0];
-    const documents = (d && d.n) || 0;
+    if (!host) return { host: null, documents: 0, documents_undetermined: 0, assets: [] };
+    const d = [...this.sql.exec(
+      `SELECT COUNT(DISTINCT cl.address_norm) AS pages,
+              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+         FROM site_asset_refs r
+         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+        WHERE r.host = ?`, host)][0];
+    const documents = (d && d.pages) || 0;
+    const undetermined = (d && d.unlocated) || 0;
     const assets = [];
     for (const r of this.sql.exec(
-      `SELECT address_norm, COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ? GROUP BY address_norm`, host)) {
-      const share = documents ? r.n / documents : 0;
-      assets.push({ address_norm: r.address_norm, documents: r.n, share,
+      `SELECT r.address_norm AS address_norm,
+              COUNT(DISTINCT cl.address_norm) AS pages,
+              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+         FROM site_asset_refs r
+         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+        WHERE r.host = ? GROUP BY r.address_norm`, host)) {
+      const share = documents ? r.pages / documents : 0;
+      assets.push({ address_norm: r.address_norm, documents: r.pages,
+                    documents_undetermined: r.unlocated || 0, share,
                     chrome: documents >= 3 && share >= threshold });
     }
     assets.sort((a, b) => b.share - a.share);
-    return { host, documents, threshold, assets,
-             note: documents < 3
+    return { host, documents, documents_undetermined: undetermined, threshold, assets,
+             note: (documents < 3
                ? "fewer than three documents captured from this host: recurrence says nothing yet"
-               : "chrome here means the address recurs across at least this share of the host's captured documents" };
+               : "chrome here means the address recurs across at least this share of the host's captured documents")
+               + (undetermined
+                 ? `; ${undetermined} further capture${undetermined === 1 ? "" : "s"} of this host name no page on record, `
+                   + "so which document each was is undetermined and none is counted"
+                 : "") };
   }
 
   /* ------------------------------------------------------------------ *
@@ -43268,7 +43311,14 @@ export class Store extends DurableObject {
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
         stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
-        bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
+        /* D-116: THE DO'S OWN BUILD, under a field that is NEVER `version`. `op=bootstrap`'s `version` is the ROUTING
+           isolate's env.VERSION, and this answer is spread AFTER it, so a `version` here would REPLACE that reading
+           rather than stand beside it. `this.env` is the env of the worker version THIS OBJECT is running, which rolls
+           out on its own (D-108); nothing in the request is read for it, so a caller cannot hand it a value to echo.
+           null, never a default: a DO with no VERSION bound cannot say which build it is, and says exactly that. */
+        bootstrap: () => ({ ...this.bootstrapState(url.searchParams.get("fp")),
+                            storeVersion: typeof this.env?.VERSION === "string" && this.env.VERSION
+                              ? this.env.VERSION : null }),
         claim: () => this.claim({ ...(body || {}), tokenFp: url.searchParams.get("fp") }),
         /* D-436 / IC-172: the producing group. The seed's `author` is the control plane's stamp, read from the
            query AFTER the body is spread, so a body naming its own recorder is overwritten rather than honoured. */

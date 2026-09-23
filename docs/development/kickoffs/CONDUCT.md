@@ -215,7 +215,7 @@ at once (D-405). A stood-down session that receives a late report MESSAGES its s
   ITS landing — **then run the suites where they MEET**: two green branches were red together.
 - **Mechanical conflicts are scriptable, the rest are not:** `docs/DECIDED.md` from a pre-M0-99 branch = the deletion; `bio-plane/dist/`
   = ours + `build-plane.mjs`; REGISTER_FLOOR = main's key + both sides' comments, re-read from `--strict` on the
-  COMMITTED merge; MEASUREMENTS/INTERFACE-CHANGES = keep both; a state file = main's POINTER, the branch's block carried by `coord.mjs write`. Everything else: read BOTH sides.
+  COMMITTED merge; MEASUREMENTS/INTERFACE-CHANGES are frozen (M0-100): an entry appended to either is moved out by `node tools/entries.mjs carry`; a state file = main's POINTER, the branch's block carried by `coord.mjs write`. Everything else: read BOTH sides.
 - **`Dropped-from-branch:` trailers sit in the LAST paragraph with `Co-Authored-By`.** A placement or archiving BEATS a
   branch that merely CARRIED the old row (verify byte-identical to the merge base first); one that MODIFIED it goes back
   to SCHEDULER — the modification is evidence the close was wrong.
