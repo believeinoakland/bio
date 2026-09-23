@@ -177,6 +177,15 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   merge carries, push, verify from the remote. And a union whose TREE this clone's D-293 record already holds GREEN —
   a lone `land/*` branch fast-forwarding `origin/main` merges to exactly its own tip's tree — lands with no gate run,
   read through pushguard's `readRuns` and `effectiveVerdict`; a tree recorded RED or NOT MEASURED is gated as before.
+  **M0-131 (2026-09-23) made that reuse run the never-cached units (§3a condition 1, BOB #30):** a tree record says nothing
+  about the union's NEW HISTORY, so a reused tree runs `gates.mjs --never-cached` — every unit `neverCacheOf` marks (the
+  `GATE: never-cache` markers and the plancheck closures, derived in the gate, never listed in the train) and plancheck —
+  recorded as class NEVERCACHE (which covers no class), and its RED refuses the union naming the unit. Every other non-FULL
+  train gate (the derived class, the retry's `--since`) carries `--with-never-cached`: its plan plus every never-cached
+  unit it left out, since a narrowed selection is a reuse too. Driven in `train.test.mjs`'s M0-131 section: a lane's tree
+  gated GREEN, then `merge -s ours` of a main carrying a `Carry:` edit, keeps that tree and drops the edit; the train
+  refuses it at the history check by name. A RED never-cached run is recorded against the TREE, so the guard's `main`
+  arm then refuses that tree too — a second refusal, found by the control's verdict-ignored arm.
   **Not built:** reuse of a record held in ANOTHER clone's git dir (a cloud session's gate is not visible to CONDUCT's
   clone), so such a branch is still gated in the train.
 
@@ -349,7 +358,7 @@ file from a unit's input set, and condition 2 fails that unit by name.
      `retirable`, `status`, `coverage`); each is marked, with `mergecarry` (named by the ruling). And a REUSED record
      never answers for a never-cached unit: with the per-unit record on, §2d's tree-keyed GREEN shortcut is not taken,
      and a RERUN of what failed also runs every never-cached unit. The train's own tree-keyed reuse (M0-122's
-     `recordedGreen`) is NOT changed here: M0-131 carries it.
+     `recordedGreen`) was not changed here; M0-131 made it run every never-cached unit (§2).
      **Never cached** also covers a unit whose closure names `tools/plancheck.mjs`: it reads what plancheck reads (the
      whole tree and `origin/coord`); `ledger`, `mergecarry` and `pipeline-readers` traced 1,027–1,028 of 1,028 files
      that way. 12 units today, and the rule is coarse on purpose: `gates`, `train` and `gateresults` name the path only
@@ -382,8 +391,8 @@ file from a unit's input set, and condition 2 fails that unit by name.
   9. **Append-only is enforced at the push**: the guard's `gate-results` arm (a push of that ref alone) passes only a
      commit that descends from the remote tip and ADDS `results/…` or `revoked/…` files; a modify, a stray path, a
      rewritten history or a deletion is refused by name. `main`'s checks do not judge it, as for `coord`.
-  10. **The tree-keyed reuse stays as a local fast path** (§2d, M0-122's `recordedGreen`): correct only where no
-      never-cached unit is in scope (M0-131), and cheaper than keying; the per-unit record supersedes it as the shared
+  10. **The tree-keyed reuse stays as a local fast path** (§2d, M0-122's `recordedGreen`): it answers only for the
+      CACHEABLE units — the train's reuse runs every never-cached unit on the union (M0-131, §2) — and is cheaper than keying; the per-unit record supersedes it as the shared
       mechanism. (Corrected at integration by CONDUCT #16 on BOB #30's order, 2026-09-23: "still correct" was not — a
       tree-identical reuse skips a unit that reads history, the 4355bfda class.)
   **Not built:** a concurrent-writer race driven in the suite (the writer re-fetches and re-applies on a rejected push,
