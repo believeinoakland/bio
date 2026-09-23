@@ -19660,6 +19660,7 @@ paths, BY SITE:
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 paths ADDED 2026-09-23 (the class sweep: fixtures that created questions under a deploy token outside any run, CORRECTED): NEW `bio-plane/test/surfacing-run.mjs` (the shared fixture); the fixture line of 62 plane suites (`withSurfacingRun(new Miniflare(…))`), `bio-plane/test/mint-ledger.test.mjs` (its question through a session), the count assertions of `gate-reads` and `meaning-bounds`; `agent-worker/test/harness.test.mjs` (FLEET's — its REC-100 fixture opens a surfacing run); 8 `civicos-ui/test/*.test.mjs` fixture lines (UI's); `tools/fw21-onpoint-probe.mjs`'s Miniflare line; `bio-plane/test/d85-surface-run.control.mjs` (the stamp anchor); `docs/architecture/construct-status.json` 11.run-production and the rendered `BIO_System_Design.md` §3; `bio-plane/scripts/coverage.mjs` REGISTER_FLOOR from printed figures only.
+released: 2026-09-23 — pushed `land/worker/REC-171` @ 82bad4b3 (verified with `git ls-remote`), merged with origin/main 19101d04, gate GREEN class FULL (288/288 suites green · 17294 assertions passing; civicos-ui all green; coverage --strict exit 0; plancheck --local 0 fail). The paths stay reserved until CONDUCT integrates the branch; IC-186 PROPOSED.
 
 ## CLAIM 2026-09-23 UI (UI-81 — the published case page, handed a finding id several cases pin, offers those cases as choices and never picks; `FINDING_IN_SEVERAL_CASES` gets its canned translation, C-44.2)
 
