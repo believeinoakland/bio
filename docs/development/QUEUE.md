@@ -398,7 +398,7 @@ accepts-when: a selection of three where one item drifted leaves exactly that on
 added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; keeps its `D-` id).
 uncut: restored whole from «D-126» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-74 · running — SPAWNED 2026-09-23 ~22:40Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-74 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-74 and that session; never conclude queued from the absence alone.
+### D-74 · integrated — finished; integrated on land/conduct/c17-batch7 @ 6ff3cf56 (measurement renumbered M-119, tool tools/m119-idspace.py; 6.identifier-spaces stays ABSENT), waiting for its train — flipped by SCHEDULER #17
 order: first of the M4 product rows, after D-126: a MEASUREMENT comes before anything built on it, and §8.3 calls it *"one of the highest-value pieces of measurement this project can do"*; a gap, not an over-claim (SCHEDULER #10, 2026-09-21, LED-7)
 milestone: M4
 interface: none — a measurement; a shared identifier it finds is built under its own row.
@@ -534,6 +534,16 @@ scope: a catalog check over a handed corpus naming every pair of projects whose 
 accepts-when: a fixture corpus with two projects differing only in case and spacing is reported by name; distinct names pass; a deactivated collider is still reported. How a liar passes it: a second normaliser that agrees on the fixture, so the check imports `projectNameKey`. NEGATIVE CONTROL: compare raw titles instead of the key, and the case-and-spacing arm fails by name.
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-50's DEBT row of 2026-07-26; keeps its `D-` id).
 uncut: restored whole from «D-50» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
+
+### D-452 · queued — **ONE DROPPED CANDIDATE SWALLOWS THE REST OF ITS PASS: in `agent-worker`'s harness a candidate dropped at `adjust` routes to `next-pass`, so the level-empty candidates queued behind it are never written.** Pre-existing; found by FL-11/12's worker. — owner FLEET.
+order: after D-451, the same run's output (SCHEDULER #17, 2026-09-23; FL-11/12's worker via CONDUCT #18 22:51Z)
+milestone: M9
+interface: none
+design: `docs/development/INVESTIGATIVE-SESSION.md` §14b (the run's architecture).
+depends-on: none.
+scope: in `harness.mjs` `nextStep`, `adjust` with nothing adjusted and a non-empty queue goes to `submit` (the edge is already declared); re-run H3. Extend `agent-worker/test/harness.test.mjs`.
+accepts-when: a pass whose first candidate is dropped still writes the candidates behind it. NEGATIVE CONTROL: route the edge back to `next-pass`, and the "the rest of the pass is written" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

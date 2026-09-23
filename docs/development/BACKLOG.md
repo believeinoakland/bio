@@ -173,16 +173,6 @@ scope: for a project run, `aiRunRead` publishes the questions the project confir
 accepts-when: a project run citing one question seeds it as the target, and its level-empty candidates are filed. NEGATIVE CONTROL: drop the questions from the read, and the project-run arm reads SUGGEST_NO_TARGET by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-452 · queued — **ONE DROPPED CANDIDATE SWALLOWS THE REST OF ITS PASS: in `agent-worker`'s harness a candidate dropped at `adjust` routes to `next-pass`, so the level-empty candidates queued behind it are never written.** Pre-existing; found by FL-11/12's worker. — owner FLEET.
-order: after D-451, the same run's output (SCHEDULER #17, 2026-09-23; FL-11/12's worker via CONDUCT #18 22:51Z)
-milestone: M9
-interface: none
-design: `docs/development/INVESTIGATIVE-SESSION.md` §14b (the run's architecture).
-depends-on: none.
-scope: in `harness.mjs` `nextStep`, `adjust` with nothing adjusted and a non-empty queue goes to `submit` (the edge is already declared); re-run H3. Extend `agent-worker/test/harness.test.mjs`.
-accepts-when: a pass whose first candidate is dropped still writes the candidates behind it. NEGATIVE CONTROL: route the edge back to `next-pass`, and the "the rest of the pass is written" arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
 ### REC-192 · queued — **A STORED VERSION'S INDEPENDENCE CAN ONLY BE READ BESIDE ITS STRENGTH PAIR: `op=versionstrength` is the one read of it, so DEC-32 clause 5 (*the structure is authored before the strength is shown*) holds only because UI-74's page drops the pair it fetched.** BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *a read returns `independence` on its own, so clause 5's separation is structural at the wire.* — owner RECORD.
 order: after D-256: a correction to just-landed work (UI-74, REC-161) that moves a doctrine from a page's choice into the wire (SCHEDULER #17, 2026-09-23)
 milestone: M9
@@ -1145,3 +1135,12 @@ design: `docs/development/ASSISTANT-PILOT.md` §1 (the five-layer training pack 
 depends-on: a published surface registry (unbuilt). **NOT schedulable until that exists** — recorded so the … (whole text: the cut archive)
 accepts-when: (on unblocking) a recipe whose step names a surface or an op that does not exist **FAILS THE BUILD**; the pack's `absent_because` body is replaced by the layer rather than edited around.
 cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «SK-5» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### UI-60 · blocked — RESTORED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18):
+order: blocked: waits on Bob's re-prioritisation of UI (SCHEDULER, first order audit, 2026-09-18)
+milestone: M8
+interface: none
+depends-on: Bob's re-prioritisation of UI (DEC-33's deferral and the 2026-09-15 content direction stand)
+accepts-when: the decomposition exists as rows and this pointer is marked superseded naming them.
+cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «UI-60». A worker READS IT before building.
+narrowed: 2026-09-23 by SCHEDULER #17 (CONDUCT #17's 22:00Z finding (2), verified at c17-batch5 @ 7c4f6b5f): UI-43's version acts are DRAINED — versionaccept/reject/consider/revert by UI-74's accept ceremony, versionhide by UI-42, versioncurrent by UI-45. Residue still owed: `attesttext` (in `ACTS_AWAITING_SURFACE`, 0 hits in `app.html`), the doorbell ops `inboxget`/`inboxresolve` (0 hits), and U13, U14, expertise/licences and verified export (unchecked: no op to grep).
