@@ -1464,9 +1464,17 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
      and it is CUT GRADED at the published cap by the arm below, with ZERO
      violations. Declared here BEFORE it could pass, which is the whole point of
      pinning the roster rather than counting it. */
-  ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:page",
-   "#frontierMeaning:gated", "biasInhale:bars", "documentsNamingEntity:merged",
-   "frontier:page", "queueFeed:dispAll", "queueFeed:items"]);
+  /* MOVED 2026-09-23 by D-389, READ FROM THE ROSTER THIS RUN PRINTED (9 -> 10), never by editing names in.
+     The three frontier arms' `looked`-page claims (`#frontierContent:page`, `#frontierMeaning:gated`,
+     `frontier:page`) LEFT together: the over-fetch, gate, cut and claim moved into the ONE helper the three
+     share, `#frontierPage`, which now carries the full-fetch disjunct once — it arrives as
+     `#frontierPage:gated`. Each arm's own remaining claim is now written FIRST (`never.length > cap || …`),
+     so the grader reads the list each arm still cuts itself — `#frontierContent:never`,
+     `#frontierMeaning:never`, `frontier:never` — which it could NOT read before, because it matched only
+     the first disjunct. One departure of three names, four arrivals: a gain in reach, not slack. */
+  ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
+   "#frontierMeaning:never", "#frontierPage:gated", "biasInhale:bars",
+   "documentsNamingEntity:merged", "frontier:never", "queueFeed:dispAll", "queueFeed:items"]);
 const noRowSources = CODE.replace(/#rows\(/g, "#norows(");
 t("REACH IS A DELTA (the truncation grader): over a copy of store.mjs with no `#rows(` in it, "
 + "every graded source becomes UNGRADEABLE and none is silently scored as compliant — the "
@@ -1638,8 +1646,10 @@ t("IN-MEMORY TRUNCATION: and the SOURCE BOUND is reported as TWO rosters, never 
 + "An instrument that cannot reach something must SAY SO by name rather than pass silently over "
 + "it, which is this block's entire content",
   [INMEM.source.graded.length + INMEM.source.outOfReach.length, INMEM.source.graded.length > 0],
-  [9, true]);   /* REC-92: 8 -> 9, `#contentAxisTally:raw`. Moved from the figure the
-                   instrument PRINTED, never by incrementing the number in this file. */
+  [10, true]);  /* REC-92: 8 -> 9, `#contentAxisTally:raw`. Moved from the figure the
+                   instrument PRINTED, never by incrementing the number in this file.
+                   D-389, 2026-09-23: 9 -> 10, from the printed `10 cut-graded` / `1 graded, 9 OUT OF
+                   REACH` — the roster above, one for one. */
 
 /* THE OUT-OF-REACH ROSTER, PINNED BY NAME. Same discipline as REC-99's ungraded pin: an EIGHTH
    in-memory figure, or one MIGRATING between the two rosters, must be declared here before it can
@@ -1657,9 +1667,19 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
      over-fetch, in JS, so this one-method walk cannot attribute the figure to a
      row source even though a row source with a SQL bound is right there. Named
      with its reason rather than scored zero. */
-  ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierMeaning:gated",
-   "biasInhale:bars", "documentsNamingEntity:merged", "queueFeed:dispAll",
-   "queueFeed:items"]);
+  /* MOVED 2026-09-23 by D-389, from the printed roster. THE MIGRATION THIS PIN EXISTS TO SURFACE, and it is
+     declared rather than absorbed: the `looked` page's cut moved from the three arms into `#frontierPage`,
+     and a cut in a helper is exactly what this one-method walk cannot bound — `#frontierContent:page` and
+     `frontier:page` were SOURCE GRADED (a cap-carrying call to `#frontierLatest`) and their successor
+     `#frontierPage:gated` is DERIVED from `raw`, whose `limit` the helper receives as an argument.
+     `#frontierMeaning:gated` leaves (same helper). The arms' `never` claims are now read: `frontier:never`
+     is SOURCE GRADED (`#frontierNeverLooked((cap + 1) * 2)`); `#frontierContent:never` and
+     `#frontierMeaning:never` are DERIVED from `missing`. Source-graded 2 -> 1 is a real loss of reach at
+     the source, taken rather than contorted around: re-inlining the fetch per arm to score better would be
+     three copies of the one rule D-389 exists to hold once. */
+  ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
+   "#frontierMeaning:never", "#frontierPage:gated", "biasInhale:bars",
+   "documentsNamingEntity:merged", "queueFeed:dispAll", "queueFeed:items"]);
 
 /* ---- SET 2. THE METHODS THE CENSUS COUNT CANNOT GRADE BY CONSTRUCTION.
    DERIVED BY INVERSION, NEVER LISTED — AND THE INVERSION FOUND ONE MORE THAN THE LEDGER'S HAND

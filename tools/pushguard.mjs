@@ -607,6 +607,17 @@ export function effectiveVerdict(runs) {
            redRuns: [...new Set(open.values())], last: runs[runs.length - 1] };
 }
 
+/* M0-126, on BOB #30's correction to TREE-SHARING §3a condition 3: the ONE reader of "may a release cut rely on this
+   record". Only a GREEN run of class FULL that says `backstop: true` — written by `gates.mjs` for a FULL run that reused
+   no unit from `gate-results` and used no `--since`. A FULLREUSE run, a --since run, and any record from before the field
+   existed (no `backstop` key) are NOT backstops: the absence of the word never reads as the word. The run's own steps
+   are read too, so a record whose class and flag were edited by hand but which still carries a REUSED step, or a
+   `--since` pairing, reads as what it is. */
+export function isBackstop(run) {
+  return !!run && run.verdict === "GREEN" && run.class === "FULL" && run.backstop === true && !run.since
+    && Array.isArray(run.steps) && !run.steps.some((s) => s && s.reused);
+}
+
 /* The refs a push offers on the hook's stdin, deletions dropped (a deletion publishes no tree). */
 export function pushedRefs(stdin) {
   const out = [];
@@ -702,7 +713,8 @@ export const tokenSafe = (x) => String(x).replace(/\s/g, "%20");
  * battery's verdict file names it); `residue:<path>:by=<suite|UNDETERMINED>:pid=<n>` D-186's residue check, which is
  * NOT a suite; `sharedlog:battery` D-425; `notmeasured:<unit>` M0-107; `step:<name>:exit=<n>` a step that failed with
  * nothing finer to name (coverage --strict, the UI harness, plancheck, a battery that died before writing its
- * verdict file). A step that is not ok ALWAYS yields at least one token, so a RED can never name nothing. `r` is the
+ * verdict file); `underinclusion:<unit>` / `history:<unit>` M0-126's conditions, which fail a unit that exited 0
+ * (added by `tools/gates.mjs` beside these, CONDUCT #16 at the M0-126/M0-127 merge). A step that is not ok ALWAYS yields at least one token, so a RED can never name nothing. `r` is the
  * step's spawnSync result, `v` the verdict file the battery wrote for it (null for any other step). */
 export const stepName = (s) => /^battery/.test(s.label) ? "battery" : /^coverage/.test(s.label) ? "coverage--strict"
   : /^civicos-ui/.test(s.label) ? "civicos-ui" : /^plancheck/.test(s.label) ? "plancheck" : tokenSafe(s.label.replace(/\s+/g, "-"));
@@ -983,6 +995,45 @@ export function coordOnly(stdin) {
   const refs = pushedRefs(stdin);
   return refs.length > 0 && refs.every((r) => r.remoteRef === COORD_REF);
 }
+/* ------------------------------------------------------------------ a push of `gate-results` ALONE (M0-126)
+ *
+ * `gate-results` holds the per-unit PASS records (TREE-SHARING.md §3a), written by `tools/gates.mjs` through
+ * `tools/gateresults.mjs` at the end of a gate, from ANY checkout. Like a `coord` note it is state about the WORK and
+ * says nothing about `main`'s tree, so `main`'s checks (the gate record, the corpus, the construct status, the GitHub
+ * check) do not judge it. What IS judged is the branch's one law, APPEND-ONLY: the pushed commit must descend from
+ * the remote's tip and, against it, only ADD files named `results/<unit>/<64 hex>.json` or `revoked/<unit>/<64
+ * hex>.json`; a first push (the branch's creation) may hold nothing else. A deletion of the branch is refused: nothing
+ * in the design needs one, and the cloud proxy refuses it anyway (M0-111's measurement). A push naming `gate-results`
+ * beside any other ref is judged the ordinary way. */
+export const GATE_RESULTS_REF = "refs/heads/gate-results";
+const GATE_RECORD_PATH = /^(?:results|revoked)\/[\w.@+/-]+\/[0-9a-f]{64}\.json$/;
+export function gateResultsOnly(stdin) {
+  const lines = String(stdin || "").split("\n").map((l) => l.trim().split(/\s+/)).filter((f) => f.length >= 3 && f[0]);
+  return lines.length > 0 && lines.every((f) => f[2] === GATE_RESULTS_REF);
+}
+export function gateResultsCheck({ repo = REPO, stdin = "" } = {}) {
+  const bad = [];
+  for (const line of String(stdin || "").split("\n")) {
+    const [, localSha, remoteRef, remoteSha] = line.trim().split(/\s+/);
+    if (remoteRef !== GATE_RESULTS_REF) continue;
+    if (/^0+$/.test(localSha)) { bad.push("a DELETION of gate-results — the branch is append-only and is never deleted"); continue; }
+    const created = !remoteSha || /^0+$/.test(remoteSha);
+    if (!created) {
+      const anc = spawnSync("git", ["merge-base", "--is-ancestor", remoteSha, localSha], { cwd: repo });
+      if (anc.status !== 0) { bad.push(`${localSha.slice(0, 8)} does not descend from the remote tip ${remoteSha.slice(0, 8)} (history rewritten)`); continue; }
+    }
+    const d = created
+      ? spawnSync("git", ["ls-tree", "-r", "--name-only", localSha], { cwd: repo, encoding: "utf8", maxBuffer: 1 << 28 })
+      : spawnSync("git", ["diff", "--name-status", "--no-renames", remoteSha, localSha], { cwd: repo, encoding: "utf8", maxBuffer: 1 << 28 });
+    if (d.status !== 0) { bad.push(`the pushed commit ${localSha.slice(0, 8)} could not be read (exit ${d.status}) — UNDETERMINED, refused`); continue; }
+    for (const l of d.stdout.split("\n").filter(Boolean)) {
+      const [st, p] = created ? ["A", l] : l.split("\t");
+      if (st !== "A") bad.push(`${st} ${p} — a record is only ever ADDED`);
+      else if (!GATE_RECORD_PATH.test(p)) bad.push(`A ${p} — not a record path (results/<unit>/<hash>.json or revoked/…)`);
+    }
+  }
+  return { ok: bad.length === 0, bad };
+}
 export function commitMarkerCheck({ repo = REPO, sha }) {
   const open = "<".repeat(7), mid = "=".repeat(7), close = ">".repeat(7);
   const r = spawnSync("git", ["grep", "-n", "-I", "-E", `^(${open} |${mid}$|${close} )`, sha], { cwd: repo, encoding: "utf8", maxBuffer: 1 << 28 });
@@ -1125,6 +1176,17 @@ function run(stdin) {
     }
     process.stderr.write(`${HOOK_MARKER}: a coord-only push (M0-110) — no merge markers in the pushed commit; `
       + `main's checks (gate record, design corpus, construct status) do not judge a note\n`);
+    return 0;
+  }
+  if (gateResultsOnly(stdin)) {
+    const gr = gateResultsCheck({ repo, stdin });
+    if (!gr.ok) {
+      const L = ["", `  PUSH REFUSED — ${HOOK_MARKER}`, "", "  gate-results IS APPEND-ONLY (M0-126, TREE-SHARING.md §3a):", "",
+        ...gr.bad.slice(0, 20).map((b) => `      ${b}`), ""];
+      process.stderr.write(L.join("\n") + "\n");
+      return 1;
+    }
+    process.stderr.write(`${HOOK_MARKER}: a gate-results-only push (M0-126) — records only ADDED; main's checks do not judge it\n`);
     return 0;
   }
   /* M0-111: a push to `main` must carry the train's mark, or it is refused by name before anything else is judged. */

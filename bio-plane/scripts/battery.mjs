@@ -950,6 +950,9 @@ if (VERDICT_FILE) {
     writeFileSync(VERDICT_FILE, `${JSON.stringify({ v: 1, run: RUN_ID, verdict, exit: exitCode, suites: results.length,
       green, failed: failed.map((r) => r.unit), leaking, sharedLog,
       residue: residueList.map(({ path, sandboxes, suite, pid, basis }) => ({ path, sandboxes, suite, pid, basis })),
+      /* M0-126: the suites that RAN GREEN, by unit — not failed, not skipped, not NOT MEASURED. `tools/gates.mjs` writes
+         a per-unit PASS record only for a unit named here (TREE-SHARING.md §3a). */
+      passed: results.filter((r) => !failed.includes(r) && !r.skip && !r.notMeasured).map((r) => r.unit),
       notMeasured: unmeasured.map((r) => ({ unit: r.unit, suite: r.file, timeouts: r.timeouts })) }, null, 1)}\n`);
   } catch (e) { console.log(`battery: could not write the verdict file ${VERDICT_FILE} (${e.message}) — the exit status stands alone`); }
 }

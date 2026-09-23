@@ -887,35 +887,45 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
     JSON.stringify(nAll.looked),
     JSON.stringify(mAll.looked.filter((r) => r.subject !== SHA_PROJ)));
 
-  /* ---- THE RESIDUAL, PINNED RATHER THAN LEFT TO BE REDISCOVERED ------------
-     D-389. `truncated: false` rests on the raw over-fetch being wide enough to
-     absorb the fence: when the raw fetch comes back FULL, rows beyond it were
-     never fetched and their visibility is unknown, so `false` is a claim about
-     coverage this method did not establish. It is true of all THREE arms of this
-     reader — document, content and meaning — and is a property of the over-fetch
-     mechanism, so fixing it in one arm of three would be the mirror-and-drift
-     class. THIS ARM EXISTS SO THE NEXT READER MEETS THE DECISION RATHER THAN THE
-     DEFECT, which is the pattern REC-110's row names for the ungated tally. */
+  /* ---- THE RESIDUAL, NOW CLOSED — MOVED 2026-09-23 BY D-389 ------------------
+     This block read: *`truncated: false` rests on the raw over-fetch being wide
+     enough to absorb the fence … THIS ARM EXISTS SO THE NEXT READER MEETS THE
+     DECISION RATHER THAN THE DEFECT.* That was right when written and is now
+     superseded, not exempted: D-389 put the full-fetch disjunct (`raw.length ===
+     limit`) in `#frontierPage`, the ONE over-fetch the document, content and meaning
+     arms share, so a FULL raw fetch reads `truncated: true` for every viewer and
+     `false` no longer rests on the room being enough. The OLD PIN named the fetch
+     as `this.#frontierLatest("content", …)` in this arm; the fetch now happens in
+     the shared helper, so the pin names the arm's call into it WITH THE SAME
+     FACTOR — the over-fetch is still twice the bound and still protects the answer
+     (REC-109's `overfetch` arm), and the residual is driven behaviourally at all
+     three levels by `d389-fullfetch.test.mjs`. */
   t("G5: THE OVER-FETCH IS PINNED AT TWICE THE BOUND, ON PURPOSE AND WITH ITS LIMIT NAMED — the "
   + "raw page is fetched at `(cap + 1) * 2`, the DOCUMENT arm's factor, so the fence has room to "
   + "drop rows before the cut. IT PROTECTS THE ANSWER AND NOT ONLY THE FLAG, which this item's "
   + "control MEASURED rather than assumed: narrowed back to `cap + 1`, an uninvited member at a "
   + "bound of 2 receives TWO rows while entitled to THREE and is told the list is complete, and "
   + "G2 and G3b go red for that reason alone. This pin is the belt beside those braces. The "
-  + "residual is D-389 and is STATED: on a FULL raw fetch `false` rests on that room being enough",
-    [/#frontierLatest\("content", \{ limit: \(cap \+ 1\) \* 2, subjectKind: "capture" \}\)/
+  + "residual (D-389) is CLOSED at the shared over-fetch, `#frontierPage`: a FULL raw fetch now "
+  + "reads truncated for every viewer",
+    [/#frontierPage\("content", cap, \{ limit: \(cap \+ 1\) \* 2, subjectKind: "capture" \}/
        .test(SRC.store),
      /LIMIT \?`, \(cap \+ 1\) \* 2\)\.filter\(\(r\) => visible\(r\.bundle_id\) !== null\)/
-       .test(SRC.store)],
-    [true, true]);
+       .test(SRC.store),
+     /truncated: gated\.length > cap \|\| raw\.length === limit/.test(SRC.store)],
+    [true, true, true]);
 
+  /* MOVED 2026-09-23 BY D-389: the page's disjunct is no longer spelled `page.length > cap` here — it is
+     `latest.truncated`, computed once in `#frontierPage` — and this arm's own claims are written FIRST so
+     `derivation-bounds.test.mjs` can grade them. What G5b pins is unchanged: `never` and `unexplained`,
+     never `missing`. */
   t("G5b: AND THE CLAIM NAMES ONLY COLLECTIONS THIS METHOD PAGES — `never` and `unexplained` are "
   + "what get cut at the bound, never `missing`, which is split by §5.1's cause before anything "
   + "is published. That was the SECOND error in the one statement D-385 named, and it is the one "
   + "CONDUCT #11 already corrected in `#frontierMeaning` on 2026-09-15",
-    [/truncated: page\.length > cap \|\| never\.length > cap\s*\n\s*\|\| unexplained\.length > cap/
+    [/truncated: never\.length > cap \|\| unexplained\.length > cap\s*\n\s*\|\| latest\.truncated/
        .test(SRC.store),
-     /truncated: page\.length > cap \|\| missing\.length > cap/.test(SRC.store)],
+     /truncated: [^\n]*missing\.length > cap/.test(SRC.store)],
     [true, false]);
 }
 

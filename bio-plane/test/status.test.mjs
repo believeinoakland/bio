@@ -1,3 +1,5 @@
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git log -1 (the last commit's date), which no
+   result key can name; traced 2026-09-23. */
 /* status — the single source of truth for what is BUILT (`tools/status.mjs`,
  * `docs/architecture/construct-status.json`).
  *
@@ -34,6 +36,8 @@
  * AND THE SUITE FOUND A DEFECT IN ITS SUBJECT ON ITS FIRST RUN: under a symlinked tmpdir the CLI's
  *   entry test failed, so `status.mjs --check` DID NOTHING AND EXITED 0 — a pass without a run.
  *   Fixed with realpath, and the guard now requires the tool's completion line, not exit 0.
+ * GATE: reads * (M0-126: it drives pushguard's marker, corpus and status checks over THIS tree; traced 2026-09-23 reading
+ *   1,022 files that no name in this suite reaches, so its result key covers the whole tree — TREE-SHARING §3a)
  */
 
 import "./stdio.mjs";

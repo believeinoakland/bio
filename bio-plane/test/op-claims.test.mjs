@@ -1,3 +1,5 @@
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git ls-tree/show of pinned historical commits, which no
+   result key can name; traced 2026-09-23. */
 /* NEGATIVE CONTROL (D-302, run 2026-09-10, worktree agent-abe820d46ab667b7d): THE FIFTH
    FLOOR'S ARM, and it is the one this suite's own residual existed for. `node
    test/walkfloor.control.mjs phantom` plants an UNCOMMITTED file carrying a TRUE routing
