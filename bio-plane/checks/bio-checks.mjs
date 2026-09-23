@@ -12202,6 +12202,23 @@ export const SURFACE_CHECKS = {
       + 'allowed. Nothing was created. The investigation ends at its next step and says which limit '
       + 'stopped it.',
   },
+  /* REC-179 (INVESTIGATIVE-SESSION.md §11 item 5, "Rule 2's reach", BOB #30; D-78's stated intent that a revision
+     carries the value forward): `surfaced_by` records the SURFACING ACT, and that act happens once, at the
+     creation — decided there by the server (D-78's restamp, or REC-173's verified replay). Measured before this
+     existed (`0e7cc03e`): the restamp runs only on a creation and nothing compared a revision's value with the
+     current version's, so a revision relabelled an assistant's question `human` (or a member's `agent`) and
+     landed, and the rule-2 surfacing row REC-171 writes then contradicted the bytes it describes. Asked inside
+     `promote`'s transaction AFTER the compare-and-swap (the current version is then the one the revision is
+     based on) and BEFORE any write. The comparison is of the value the catalog's own parser reads out of each
+     version's `bundle.md` — a respelling of the same value lands — and an unreadable or absent value is a value:
+     a revision may not supply an origin its creation did not record, nor drop one it did. */
+  SURFACED_BY_REWRITTEN: {
+    check: 'C-66.5',
+    where: 'src/store.mjs promote > is-promote-surfaced-by',
+    translation: 'This revision changes who surfaced the question, a member or an assistant. That is recorded '
+      + 'once, when the question is opened, and a later edit cannot rewrite it. Nothing was saved. Keep the '
+      + 'value the current version carries and save the revision again.',
+  },
 };
 
 /* REC-140 / C-58 — WHAT `op=ratify` MAY PUBLISH AT ALL (BIO_Publication_v0_1.md §3 rule 2,

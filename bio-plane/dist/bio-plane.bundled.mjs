@@ -12073,6 +12073,21 @@ var SURFACE_CHECKS = {
     check: "C-66.4",
     where: "src/store.mjs #surfacingGate > is-surface-run",
     translation: "This investigation has already opened as many questions as the member who started it allowed. Nothing was created. The investigation ends at its next step and says which limit stopped it."
+  },
+  /* REC-179 (INVESTIGATIVE-SESSION.md §11 item 5, "Rule 2's reach", BOB #30; D-78's stated intent that a revision
+     carries the value forward): `surfaced_by` records the SURFACING ACT, and that act happens once, at the
+     creation — decided there by the server (D-78's restamp, or REC-173's verified replay). Measured before this
+     existed (`0e7cc03e`): the restamp runs only on a creation and nothing compared a revision's value with the
+     current version's, so a revision relabelled an assistant's question `human` (or a member's `agent`) and
+     landed, and the rule-2 surfacing row REC-171 writes then contradicted the bytes it describes. Asked inside
+     `promote`'s transaction AFTER the compare-and-swap (the current version is then the one the revision is
+     based on) and BEFORE any write. The comparison is of the value the catalog's own parser reads out of each
+     version's `bundle.md` — a respelling of the same value lands — and an unreadable or absent value is a value:
+     a revision may not supply an origin its creation did not record, nor drop one it did. */
+  SURFACED_BY_REWRITTEN: {
+    check: "C-66.5",
+    where: "src/store.mjs promote > is-promote-surfaced-by",
+    translation: "This revision changes who surfaced the question, a member or an assistant. That is recorded once, when the question is opened, and a later edit cannot rewrite it. Nothing was saved. Keep the value the current version carries and save the revision again."
   }
 };
 var RATIFY_SCOPE_CHECKS = {
@@ -40558,6 +40573,28 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
+      if (cur && base !== null && normalizeType(cur.object_type) === "inquiry") {
+        const surfacedOf = (text) => {
+          if (typeof text !== "string") return "unreadable";
+          const fm = parseFrontmatter(text).data;
+          if (!fm || typeof fm !== "object") return "unreadable";
+          return Object.prototype.hasOwnProperty.call(fm, "surfaced_by") ? JSON.stringify(fm.surfaced_by) : "absent";
+        };
+        const heldMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
+        const nextMd = files.find((f2) => f2 && f2.path === "bundle.md");
+        const was = surfacedOf(heldMd ? heldMd.content : null);
+        const now = surfacedOf(nextMd ? nextMd.text : null);
+        const refusal8 = (code, detail, extra) => {
+          const row = SURFACE_CHECKS[code];
+          return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra || {} };
+        };
+        if (was !== now)
+          return refusal8(
+            "SURFACED_BY_REWRITTEN",
+            `the current version of ${bundleId} records surfaced_by ${was}, and this revision records ${now}. Who surfaced a question is recorded once, at its creation; a revision carries it forward unchanged. Nothing was written.`,
+            { bundleId, current: was, revision: now }
+          );
+      }
       const testimony = pkg[TESTIMONY_PATH] || null;
       const fenced = this.#testimonyFence(bundleId, files, register2, testimony);
       if (fenced) return fenced;
