@@ -27,6 +27,7 @@
  * 3 -> 2); restored -> 36 pass, 0 fail.
  */
 /* NEGATIVE CONTROL: drop the verdicts.push in src/index.mjs op=ratify's `unavailable` (dark-source) branch so a re-fetched-but-dark reused part records no outcome -> "the response records an outcome for every reused part, by name" and "the set of parts with a recorded outcome equals the set of reused parts" both FAIL, got omitting https://assets.oaklandca.gov/gone.css (tally 1/1/1 -> 1/1/0, persisted 3 -> 2). RUN 2026-07-31 capture-agent-5; restored -> 36 pass, 0 fail. */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -68,7 +69,7 @@ const BODIES = new Map([
 ]);
 const NEW_CHANGED_SHA = sha(BODIES.get("/changed.css"));
 
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -86,7 +87,7 @@ const mf = new Miniflare({
     if (!b) return new Response("gone", { status: 404 });         // -> unavailable
     return new Response(b, { headers: { "content-type": "text/css" } });
   },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

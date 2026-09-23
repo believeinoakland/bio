@@ -62,6 +62,7 @@
  */
 /* NEGATIVE CONTROL, COFF-11 (IC-100 / D-359) — SEVEN arms and a baseline, each armed ALONE with every other defence held open, re-runnable in one step with `node test/nc-coff11.mjs [arm]` from `bio-plane/`. RUN 2026-09-15, ALL SEVEN AS DECLARED, every restore verified byte-identically by sha256 AND by content with a byte count printed: `src/formats-xlsx.mjs` 33,691 B sha256 c5855053f670…, `src/pptx.mjs` 37,442 B sha256 1708977ce689…, `src/odf.mjs` 64,000 B sha256 08f4709dde58…. baseline xlsx 88/0 · pptx 116/0 · odf 140/0 · e2e 31/0 GREEN; dropxlsxbound 4/4 declared (5 failing across two suites); dropslideshapes 5/5 (6); dropodpshapes 2/2 (3); dropxlsxboundunread 1/1 (1); usedrangeasbound 4/4 (4); odsborrowsgrid 3/3 (3). TWO CAME BACK WRONG ON THE FIRST RUN AND ARE RECORDED AT THEIR SITES RATHER THAN SMOOTHED, and both were findings about the INSTRUMENT: (1) `dropxlsxbound` declared the DISAGREE assertion and it did NOT fire, because its first spelling (`rows === usedRows` expected false) is satisfied by a NULL bound too — the ASSERTION was too weak and was strengthened to require both figures be integers, which is the arm doing better than going red; (2) both xlsx arms declared the UNREAD-SHEET bound, which neither patch reaches — `xlsxText` emits the sheet object at TWO independent sites, and the seventh arm `dropxlsxboundunread` now covers the second rather than leaving it covered by nobody. AND ONE SURPRISING GREEN, kept because it is the more useful result: under `usedrangeasbound` the END-TO-END suite stayed green at 31/0 — not the arm failing but the measurement that the e2e suite cannot see this bound AT ALL today, because the acquire wire drops the producer's figure before the store reads it (D-359's residue, DELEGATED 2026-09-15). */
 /* NEGATIVE CONTROL, COFF-12 (D-359's consumer half) - SIX arms and a baseline in `test/nc-coff12.mjs`, re-runnable in one step with `node test/nc-coff12.mjs [arm]` from `bio-plane/`. Each arm edits `src/index.mjs` ALONE with every other defence held OPEN, declares BEFORE it runs what MUST fail AND WHAT MUST NOT, and every restore is verified by sha256 AND by content against a UNIQUELY-NAMED per-arm pristine copy with a byte count printed and a 400 KB minimum guarded (never `git checkout --`). RUN 2026-09-15, ALL SIX AS DECLARED, `src/index.mjs` restored byte-identically every time at 562,707 B sha256 4f4c24a76c55...: baseline 47/0 GREEN; dropcellbound 4/4 declared (5 failing); dropslideshapes 5/5 (5); slidesbyposition 5/5 (5); borrowgrid 2/2 (2); usedasbound 4/4 (7) - and in EVERY arm **0 of the declared held-open assertions also broke**. THIS HARNESS CHECKS `mustNotFail` RATHER THAN DESCRIBING IT, which `nc-coff11.mjs` and `nc-cap12.mjs` do not: REC-83's own run had an arm break its declared held-open half with nothing but a human read to catch it, and an arm that takes the whole suite down proves nothing about its own subject. `slidesbyposition` is the arm worth reading - it restores the POSITIONAL slide map this wire carried from CAP-12 until today while LEAVING the passthrough intact, so it isolates the keying; nothing in this repository could see the defect it plants before this item's gapped-deck fixture existed. `borrowgrid` and `usedasbound` arm the DECISION rather than the patch (invent a grid OpenDocument never fixes; make the bound the used range), because a decision nothing can break is a decision nothing is enforcing. AND THE ITEM'S OWN FIRST SPELLING OF THE `.ods` ASSERTION WAS WRONG, kept at its site rather than smoothed: it read `?? "MISSING"`, and `null ?? "MISSING"` is `"MISSING"` - so a correctly carried NULL bound and a dropped key were the SAME observation, in the exact direction this item is about. CAP-12's OWN HARNESS WAS RE-RUN ON THIS TREE AND TWO OF ITS NINE ARMS HAD GONE DEAD: `dropsheets` and `dropslides` both read `ARMED NO, patch matched 0x` because their anchors quoted the literal-null lines this item replaced, and `overstrict`/`overstrict2` named assertion labels that moved with the flip. All four are CORRECTED IN PLACE with the reason at the site, never exempted, and `node test/nc-cap12.mjs` now reads **every arm AS DECLARED, all nine ARMED**. A control whose anchor has drifted fails silently in the direction that looks like success. */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -321,7 +322,7 @@ const PDF = pdfBytes();
 const HTML = `<!doctype html><html><head><title>Council Calendar</title></head>`
   + `<body><h1>Meetings</h1><p>A web page has no sheets, no paragraph count and no slides.</p></body></html>`;
 
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -341,7 +342,7 @@ const mf = new Miniflare({
     if (u.pathname === "/calendar.html") return bin(HTML, "text/html; charset=utf-8");
     return new Response("unscripted", { status: 500 });
   },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -967,7 +968,7 @@ await mf.dispose();
 
 /* A second instance, because the outbound service is fixed at construction and
    this fixture is deliberately built after the assertions above have run. */
-const mf2 = new Miniflare({
+const mf2 = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -981,7 +982,7 @@ const mf2 = new Miniflare({
       return new Response(EMPTY_BOOK, { headers: { "content-type": XLSX_CT } });
     return new Response("unscripted", { status: 500 });
   },
-});
+}));
 const emptyDoc = (await (await mf2.dispatchFetch(
   "http://x/api/?op=acquire&token=mem-cap12b",
   { method: "POST", body: JSON.stringify({ locator: "https://www.oaklandca.gov/empty.xlsx",

@@ -56,6 +56,7 @@
  *       project's full row; "op=list does not name the project" want false
  *       got true) -> restored, 36 pass, stable across 10 consecutive runs.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -64,13 +65,13 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "t-admin-rec25", MEMBER_TOKEN: "mem-rec25", PROBE_TOKEN: "prb-rec25", VERSION: "test" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -557,7 +558,11 @@ console.log("\n--- the two paging integrity sweeps: their findings NAME bundles 
     [s.body.result.checked, s.body.result.counts.bundles], [2, 2]);
   t("and names no hidden bundle", JSON.stringify(s.body).includes(PROJ), false);
   t("a machine credential still checks the whole corpus — the operator view the token exists for",
-    (await GET(`op=searchindexcheck&token=mem-rec25`)).body.result.counts.bundles, 3);
+    (await GET(`op=searchindexcheck&token=mem-rec25`)).body.result.counts.bundles, 4);
+  /* CORRECTED 2026-09-23 by REC-171 (§11 item 5, "Rule 2's reach", BOB #30): this read 3. The member TOKEN's problem
+     is now surfaced inside a run it holds (`surfacing-run.mjs`), and that run is over a project the token created —
+     a FOURTH bundle, real, and visible to neither dave nor carol (their counts above did not move). The operator
+     view the token exists for counts it, which is the point of this assertion. */
 }
 
 console.log("\n--- op=projectownerarith: an owner count IS existence ---");

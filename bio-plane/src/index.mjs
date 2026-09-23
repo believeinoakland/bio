@@ -10150,9 +10150,17 @@ export default {
            it: a member's creation is untouched. It is the run's principal stamp in the ONE form `RUN_PRODUCTION_ACTIONS`
            uses (`<principal>/<tokenId>`), so `runPrincipalGate` recognises a member and the credential she minted as
            one principal by the same expression the run verbs are compared with. Deleted FIRST for every caller, so a
-           session that sends one is not taken for an assistant and an assistant cannot name someone else. */
+           session that sends one is not taken for an assistant and an assistant cannot name someone else.
+           REC-171 (§11 item 5, "Rule 2's reach", BOB #30): THE RULE BINDS THE SURFACING ACT, NOT THE `ai` CLASS. Every
+           creation that did not arrive through a member's session is the one D-78 stamps `surfaced_by: agent` below —
+           an admin, member or probe DEPLOY TOKEN's included, which has no member behind it — so every such caller
+           carries the stamp, composed by the run verbs' OWN expression (`class:<cls>` for a deploy token, the same
+           string `op=airunopen` stamped as the run's principal), and `runPrincipalGate` compares it unchanged. The
+           condition is `!viaSession` and never a list of classes: a class added later is asked, not exempted. The
+           alternative — restamping a deploy token's creation `human` — would invent a person, and is not done. */
         delete b.assistantPrincipal;
-        if (!viaSession && cls === "ai") b.assistantPrincipal = `${aiCred.principal}/${aiCred.tokenId}`;
+        if (!viaSession)
+          b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           /* **THE SECOND SITE OF `NOT_CAPABLE`, AND REC-79 IS SAYING SO RATHER
              THAN HIDING IT.** C-38.5's `where` names the admission region above;

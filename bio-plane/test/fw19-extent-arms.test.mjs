@@ -22,6 +22,7 @@
  *   5. OVER-STRICTNESS: REC-85's three arms are BYTE-IDENTICAL to the pristine
  *      tree, by digest (REC-82's two are pinned by `content-extent-arms`).
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282 */
 import "./sandbox.mjs";               /* D-186 */
 import { Miniflare } from "miniflare";
@@ -224,7 +225,7 @@ t("one address, one string: `$b$3:a1`, `A1:B3` and a reversed range canonicalise
   [true, true]);
 
 /* ===================== THE PLANE ======================================== */
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -239,7 +240,7 @@ const mf = new Miniflare({
     if (u.pathname === "/budget.xlsx") return bin(XLSX, XLSX_CT);
     return new Response("unscripted", { status: 500 });
   },
-});
+}));
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const post = async (op, body, tok = "mem-fw19") => rP(await (await mf.dispatchFetch(
   `http://x/api/?op=${op}&token=${tok}`, { method: "POST", body: JSON.stringify(body) })).json());

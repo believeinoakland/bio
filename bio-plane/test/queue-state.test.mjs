@@ -59,6 +59,7 @@
  * in queue-conditions.test.mjs, which is the "KNOWN TENSION" line of REC-21's
  * landing being discharged. Read the two together.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -69,14 +70,14 @@ import { QUEUE_CONDITION_KINDS, classOfKind, suppressedBy,
          serializeMutedKinds, parseMutedKinds } from "../src/queuestate.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-rec21", MEMBER_TOKEN: "mem-rec21", PROBE_TOKEN: "prb-rec21",
               VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

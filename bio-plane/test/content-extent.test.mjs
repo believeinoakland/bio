@@ -44,6 +44,7 @@
  * 2026-09-14 when REC-85 landed them, together with the (4b) pair below, whose
  * correction carries its own reasoning at the site.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -56,14 +57,14 @@ import { sha256HexSync, contentIdFor, checkContentExtent, legExtent,
          CONTENT_EXTENT_KINDS, MACHINE_AUTHOR_PREFIX } from "../checks/bio-checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-r82", MEMBER_TOKEN: "mem-r82", PROBE_TOKEN: "prb-r82",
               AI_TOKEN: "ai-r82", VERSION: "test" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
