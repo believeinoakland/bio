@@ -164,7 +164,10 @@ console.log("\n--- 2. over-strictness: honest runs read exactly as before ---");
  * to be NAMED on a line that says EXCLUDED, and the tallied suites are held to be
  * absent from that line — both directions, in one estate. */
 console.log("\n--- 2b. every accepted tally form is COUNTED; a suite with none is NAMED AS EXCLUDED (D-413) ---");
-const countOf = (out, file) => { const m = out.match(new RegExp(`^  (?:ok  |FAIL|skip)  ${file.replace(/\./g, "\\.")}\\s+\\d+ms  (.*)$`, "m")); return m ? m[1] : null; };
+/* CORRECTED 2026-09-23 by M0-127, never exempted: the result line now ENDS ` · pid <n>` (the suite's own pid, so a
+   D-186 residue names the suite that left it). This reader took everything after the duration as the COUNT, so it read
+   `4 pass · pid 3042` where the count is `4 pass`; the pid is its own field and is stripped here. */
+const countOf = (out, file) => { const m = out.match(new RegExp(`^  (?:ok  |FAIL|skip)  ${file.replace(/\./g, "\\.")}\\s+\\d+ms  (.*?)(?: · pid (?:\\d+|unknown))?$`, "m")); return m ? m[1] : null; };
 const assertionsOf = (out) => { const m = out.match(/^\d+\/\d+ suites green · (?:\d+ skipped · )?(\d+) assertions passing · /m); return m ? +m[1] : null; };
 const excludedLine = (out) => (out.match(/^  EXCLUDED FROM THE ASSERTION TOTAL[^\n]*/m) || [])[0] || null;
 {

@@ -36,6 +36,12 @@
  *   (`m0114-negctl` @ c36c38c2, run 35799828324) FOUND A DEFECT IN THE WRITER: Actions runs a step as `bash -e`, so the RED
  *   gate killed the step before the annotation, and the guard read UNDETERMINED (the safe direction: not refused, not
  *   GREEN). The workflow now sets `set +e`; the re-run's result is in MEASUREMENTS.md M-104.
+ *   M0-127, RUN 2026-09-23 (the writer moved to `tools/gateverdict.mjs`; the first section's arms were CORRECTED to drive
+ *   it, dated at the site): baseline 49 pass / 0 fail; each arm ALONE, restored by sha256 AND `cmp` —
+ *   (6) `parseVerdictAnnotation` gives every cause the kind `suite` -> 48 / 1, exactly "M0-127: each cause parses to its
+ *   kind"; restore MATCH 1adee7b7…, 89,717 B. (7) the workflow's `node tools/gateverdict.mjs …` line replaced by `true`
+ *   -> 48 / 1, exactly "the workflow RUNS the writer and writes no annotation of its own"; restore MATCH 26a46f6a…,
+ *   4,680 B. Closing 49 / 0. The liar (RED with FAILED=none) is driven in `gateverdict.test.mjs`'s control.
  */
 import "./stdio.mjs";                 /* D-282 */
 import "./sandbox.mjs";
@@ -67,20 +73,48 @@ const T1 = "1".repeat(40), T2 = "2".repeat(40), SHA = "a".repeat(40);
 /* ========================================================================== */
 section("THE WRITER AND THE READER SPEAK ONE GRAMMAR — the annotation is built from the workflow's own text");
 const wf = readFileSync(WORKFLOW, "utf8");
-const tmpl = /echo "::notice title=([^:]+)::([^"]+)"/.exec(wf) || ["", "", ""];
-t("the workflow writes exactly one verdict annotation", (wf.match(/::notice title=/g) || []).length, 1);
-t("...titled as the guard reads it", tmpl && tmpl[1], guard.CHECK_ANNOTATION_TITLE);
-const fill = (vars) => tmpl[2].replace(/\$\(\(t1 - t0\)\)/g, "977").replace(/\$\{(\w+)(?::-([^}]*))?\}/g,
-  (_, k, dflt) => (vars[k] !== undefined && vars[k] !== "" ? vars[k] : (dflt ?? "")));
-const red = guard.parseVerdictAnnotation(fill({ verdict: "RED", tree: T1, cls: "FULL", rc: "1", failed: "caseobject.test.mjs gates.test.mjs" }));
-t("a RED line the workflow writes parses, with its tree, class, exit and failed suites",
-  red && [red.verdict, red.tree, red.cls, red.exit, red.wall, red.failed], ["RED", T1, "FULL", 1, 977, ["caseobject.test.mjs", "gates.test.mjs"]]);
-const green = guard.parseVerdictAnnotation(fill({ verdict: "GREEN", tree: T1, cls: "TARGETED", rc: "0", failed: "" }));
-t("a GREEN line with no failed suite parses to an empty list (the workflow's `none`)", green && [green.verdict, green.failed], ["GREEN", []]);
-const nm = guard.parseVerdictAnnotation(fill({ verdict: "NOT MEASURED", tree: T1, cls: "FULL", rc: "124" }));
+/* CORRECTED 2026-09-23 by M0-127, never exempted. These arms read the annotation TEMPLATE out of the workflow's shell
+   (`echo "::notice title=…::VERDICT=${verdict} … FAILED=${failed:-none}"`) and filled it. That writer took FAILED= from
+   the battery's `  FAILED:` line alone, so the GitHub run on tree 6ef503c4 — RED on D-186's residue check with 282/282
+   suites green — read `FAILED=none`, and these arms passed over it: a template filled with a suite list cannot show what
+   the writer does when the cause is not a suite. The writer is now `tools/gateverdict.mjs`, which the workflow RUNS, so
+   the arms drive THAT writer on gate logs and parse what it prints; the one-grammar property is kept, from the writer's
+   own output rather than a template. */
+const WRITER = join(REPO, "tools/gateverdict.mjs");
+const { composeVerdict } = await import(pathToFileURL(WRITER).href);
+t("the workflow RUNS the writer and writes no annotation of its own",
+  [/node tools\/gateverdict\.mjs --log "\$log" --tree "\$tree" --exit "\$rc"/.test(wf), (wf.match(/::notice title=/g) || []).length], [true, 0]);
+const gateLog = (verdict, causes = "") => `=== gates · battery (all): npm run test:battery\n\ngates: ${verdict} · class FULL\n`
+  + (causes ? `gates: CAUSES ${causes}\n` : "") + `gates: RECORDED ${verdict} for tree ${T1.slice(0, 8)} (class FULL) — x; the push guard reads it (D-293)\n`;
+const cli = spawnSync(process.execPath, [WRITER, "--log", "/dev/null/none", "--tree", T1, "--exit", "1", "--t0", "100", "--t1", "1077"], { encoding: "utf8" });
+const noticeLine = (/^::notice title=([^:]+)::(.*)$/m.exec(cli.stdout || "") || ["", "", ""]);
+t("the writer prints ONE annotation titled as the guard reads it", [(String(cli.stdout).match(/::notice title=/g) || []).length, noticeLine[1]], [1, guard.CHECK_ANNOTATION_TITLE]);
+const cliParsed = guard.parseVerdictAnnotation(noticeLine[2]);
+t("...and a gate that left no log reads UNDETERMINED, NAMED (never `none`), exit and WALL carried",
+  cliParsed && [cliParsed.verdict, cliParsed.exit, cliParsed.wall, cliParsed.failed], ["UNDETERMINED", 1, 977, ["gate:no-record:before-any-step:exit=1"]]);
+t("...and the writer's own exit is non-zero off GREEN (the job fails)", cli.status, 1);
+const red = guard.parseVerdictAnnotation(composeVerdict({ log: gateLog("RED", "plane:caseobject.test.mjs plane:gates.test.mjs"), tree: T1, exit: 1, wall: 977 }).annotation);
+t("a RED line the writer writes parses, with its tree, class, exit and failed suites",
+  red && [red.verdict, red.tree, red.cls, red.exit, red.wall, red.failed], ["RED", T1, "FULL", 1, 977, ["plane:caseobject.test.mjs", "plane:gates.test.mjs"]]);
+const green = guard.parseVerdictAnnotation(composeVerdict({ log: gateLog("GREEN"), tree: T1, exit: 0, wall: 977 }).annotation);
+t("a GREEN line with no failed suite parses to an empty list (the writer's `none`)", green && [green.verdict, green.failed], ["GREEN", []]);
+const nm = guard.parseVerdictAnnotation(composeVerdict({ log: gateLog("NOT MEASURED", "notmeasured:plane:x.test.mjs"), tree: T1, exit: 124 }).annotation);
 t("NOT MEASURED — a verdict with a SPACE in it — parses", nm && nm.verdict, "NOT MEASURED");
-const und = guard.parseVerdictAnnotation(fill({ verdict: "UNDETERMINED", tree: T1, cls: "", rc: "1" }));
+const und = guard.parseVerdictAnnotation(composeVerdict({ log: "npm ERR! crashed\n", tree: T1, exit: 1 }).annotation);
 t("UNDETERMINED with no class (the gate never recorded) parses, class `?`", und && [und.verdict, und.cls], ["UNDETERMINED", "?"]);
+/* M0-127: THE EXTENDED GRAMMAR — `kind:detail` causes beside the legacy bare suite file, and the liar SAID. */
+const rres = guard.parseVerdictAnnotation(`VERDICT=RED TREE=${T1} CLASS=FULL EXIT=1 WALL=9s FAILED=residue:/tmp/bio-battery-1-a/bio-battery-3964-x:by=publish.test.mjs:pid=3964 step:coverage--strict:exit=1 plane:a.test.mjs b.test.mjs`);
+t("M0-127: each cause parses to its kind (residue, step, suite; a bare file is a suite, as before)",
+  rres && rres.causes.map((c) => c.kind), ["residue", "step", "suite", "suite"]);
+t("M0-127: ...with its detail, the residue's path and suite intact",
+  rres && rres.causes[0].detail, "/tmp/bio-battery-1-a/bio-battery-3964-x:by=publish.test.mjs:pid=3964");
+t("M0-127: ...and the flat `failed` list every older reader reads is unchanged in shape", rres && rres.failed.length, 4);
+t("M0-127: a legacy comma-separated FAILED still splits (compatibility)",
+  guard.parseVerdictAnnotation(`VERDICT=RED TREE=${T1} CLASS=FULL EXIT=1 FAILED=a.test.mjs, b.test.mjs`).failed, ["a.test.mjs", "b.test.mjs"]);
+t("M0-127: the OLD writer's liar — RED with FAILED=none — parses, and is flagged `unnamed`",
+  guard.parseVerdictAnnotation(`VERDICT=RED TREE=${T1} CLASS=FULL EXIT=1 WALL=9s FAILED=none`).unnamed, true);
+t("M0-127: over-strictness — a GREEN with FAILED=none is not `unnamed`",
+  guard.parseVerdictAnnotation(`VERDICT=GREEN TREE=${T1} CLASS=FULL EXIT=0 FAILED=none`).unnamed, false);
 t("over-strictness: the minimal grammar, without WALL or FAILED, parses",
   !!guard.parseVerdictAnnotation(`VERDICT=GREEN TREE=${T1} CLASS=FULL EXIT=0`), true);
 t("a free-text annotation is NOT a verdict", guard.parseVerdictAnnotation("the gate was red, trust me"), null);
@@ -95,7 +129,12 @@ const pushBranches = (/push:\s*\n(?:\s*#.*\n)*\s*branches:\s*\[([^\]]*)\]/.exec(
 t("the trigger is `main` alone — one run per landed batch — and never `land/**` or `integrate/**` (Bob, 2026-09-23)",
   [/"main"/.test(pushBranches), /"land\/\*\*"/.test(pushBranches), /"integrate\/\*\*"/.test(pushBranches)], [true, false, false]);
 t("no secret is handed to the gate (a suite needing one is a live probe, not a gate unit)", /secrets\./.test(wf), false);
-t("the verdict comes from the gate's RECORDED line, never the exit alone", wf.includes("gates: RECORDED"), true);
+/* CORRECTED 2026-09-23 by M0-127: this read the WORKFLOW's text for `gates: RECORDED`; the writer moved to
+   `tools/gateverdict.mjs`, so the property is DRIVEN there — a gate that exited 1 and printed a RED line but no
+   RECORDED line must not read RED, and one that exited 0 without recording must not read GREEN. */
+t("the verdict comes from the gate's RECORDED line, never the exit alone",
+  [composeVerdict({ log: "gates: RED · class FULL\ngates: CAUSES plane:a.test.mjs\n", tree: T1, exit: 1 }).verdict,
+   composeVerdict({ log: "gates: GREEN · class FULL\n", tree: T1, exit: 0 }).verdict], ["UNDETERMINED", "UNDETERMINED"]);
 /* Actions runs a step as `bash -e`: without `set +e` before the gate, a RED gate kills the step before the annotation
    is written, and every RED reads UNDETERMINED — found by the LIVE negative control on 2026-09-23 (run 35799828324). */
 /* Comment lines stripped: the step's own comment NAMES `set +e`, and control arm (5)'s first run passed over its removal

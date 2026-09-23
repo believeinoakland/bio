@@ -227,6 +227,14 @@ FLEET); and a battery suite leaking miniflare sandboxes on the runner only (D-18
   **Not built / limits:** it reads the checks of the COMMIT, so a different commit with the same tree finds none; it
   reads the `origin` remote's repository; the integration branch's prefix `integrate/**` is this landing's guess at
   M0-111's name, and that landing names the real one here.
+- **A RED NAMES WHAT IS RED (M0-127, 2026-09-23; measured in `MEASUREMENTS.md` M-112).** The run on tree `6ef503c4` read
+  RED with 282/282 suites green and `FAILED=none`: the red was D-186's residue check, which is not a suite. The annotation
+  is now composed by `tools/gateverdict.mjs` from the gate's log, and its FAILED= names every cause as a token —
+  `plane:`/`fleet:` a suite, `residue:<path>:by=<suite>:pid=<n>`, `step:<coverage--strict|civicos-ui|plancheck|…>:exit=<n>`,
+  `notmeasured:`, `sharedlog:`, `gate:no-record:…` for a gate that died — read from the gate's own `gates: CAUSES` line
+  (`tools/pushguard.mjs` `stepCauses`), and reads `none` ONLY on GREEN. The battery's result line carries each suite's
+  pid, so a residue names the suite that left it. **Not exercised:** the Actions runner itself; the writer is driven
+  locally on real gate logs (`bio-plane/test/gateverdict.test.mjs`).
 
 ### 3a · The shared, per-suite result record (M0-126) — DESIGNED 2026-09-23 by BOB #29, adopting CONDUCT #14's proposal
 
@@ -259,6 +267,13 @@ nowhere again. The train reads the same records. It supersedes the tree-keyed re
 1. **NEVER-CACHED units.** A unit that reads anything outside its declared inputs — the clock, the network, the environment's
    secrets, live `coord` state (tonight's red) — carries a `GATE: never-cache (<reason>)` line in its source and always runs.
    `plancheck` is never cached.
+   **A unit that reads GIT HISTORY or a LIVE REF is never-cache — RULED 2026-09-23 by BOB #30, on the M0-126 worker's finding
+   after GitHub run #20.** `origin/main`, `origin/coord`, merge ancestry, `ls-remote`: none is in the tree a key names, so a
+   PASS keyed by the tree says nothing about the history it judged. `mergecarry.test` passed on a reused GREEN tree record
+   (M0-122) and failed on GitHub at `4355bfda`, a merge whose TREE was already GREEN. So such a unit carries
+   `GATE: never-cache (history)` and runs on every gate, and ANY reuse — this record or M0-122's tree record — still runs the
+   never-cache units. Keying them on the range they read was considered and refused: a second key scheme for a handful of
+   suites, when never-cache costs only their run time.
 2. **UNDER-INCLUSION FAILS.** Over-inclusion only costs a re-run; under-inclusion reuses a stale PASS and is the defect. So each
    unit, when it RUNS, is traced (a node `--import` hook recording every repository file it opens or imports); a file read that
    is not in the unit's input set FAILS the unit by name, and no PASS is written for it.
