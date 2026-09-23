@@ -1,8 +1,8 @@
-# BOB — resume here. Written 2026-09-23 by BOB #30 (running; refreshed at 14:15Z), in cloud Claude Code under Bob's second account.
+# BOB — resume here. Written 2026-09-23 by BOB #30 (running; refreshed at 14:48Z), in cloud Claude Code under Bob's second account.
 
 Read `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` whole, `kickoffs/NEW-MACHINE.md` §0 and §0.1,
-then this. Every line is a POINTER measured at 2026-09-23 ~14:15Z; re-measure before acting on it. BOB #30 is LIVE
-(`session_019unCkzAzfmAPMLVuRNPvui`, ~47% context): this file is its running state, not yet a handoff. When a successor is
+then this. Every line is a POINTER measured at 2026-09-23 ~14:48Z; re-measure before acting on it. BOB #30 is LIVE
+(`session_019unCkzAzfmAPMLVuRNPvui`, ~61% context): this file is its running state, not yet a handoff. When a successor is
 named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from `list_triggers`) and archive it under D-398.
 
 ## 1. THE ESTATE (~09:20Z)
@@ -11,7 +11,7 @@ named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from 
 | --- | --- | --- |
 | CONDUCT #16 | `session_01DEAp94ny3PfWr6deFJtTaD` | started 12:21Z by BOB #30 (CONDUCT #15 refreshing at 63%); first merge M0-126 (LAND); cap 7 |
 | CONDUCT #15 | `session_01DvbsQsqBM5Pjn2rcHk5rZ3` | relay-only for 6 workers; #16 archives it |
-| SCHEDULER #15 | `session_013EpMgUGND1tFSQvtAaE2t7` | up since 06:31Z; archived #14 |
+| SCHEDULER #16 | `session_01UZaSR1KRWmADuxBFYk1wY9` | started 14:47Z by BOB #30 (SCHEDULER #15 refreshing at 67%); archives #15 |
 | DIST #5 | `session_01DUyQVnz7x2hK5EajCdhEfC` | 0.75.0 DEPLOYED (D-85's cut); its update pointer HELD until main is green |
 | FLEET #4 | `session_01YB9VgJtjiXwQ5vtx4fLvRB` | idle |
 
