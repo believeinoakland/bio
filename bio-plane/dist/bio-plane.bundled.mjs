@@ -8921,6 +8921,16 @@ var AI_RUN_CHECKS = {
     check: "C-22.15",
     where: "src/airun.mjs checkConsume (the tick's map, the open's list, and every key in either), called from store.mjs aiRunTick and aiRunOpen",
     translation: "The investigation named a part of its budget that does not exist, or did not say which part it meant. Nothing was recorded, so no budget was spent or set that nobody could account for."
+  },
+  /* REC-177, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b item 6, BOB #30). A bound declared at `op=airunopen` with an
+     ABSENT or ZERO `allowed` was opened at 0, and `finishedBound` reads 0 as NO CEILING — so the run recorded a bound
+     it did not have. Refused at the open, nothing written. Its own code and not C-22.13's: C-22.13 is a figure of the
+     wrong FORM (a string, a fraction, a negative), and 0 is a perfectly good whole number; what is wrong here is that
+     the declaration states no allowance, and the remedy differs (state one, or do not declare the bound). */
+  AI_RUN_BOUND_NO_ALLOWANCE: {
+    check: "C-22.16",
+    where: "src/airun.mjs checkConsume (the open's list, its allowance arm), called from store.mjs aiRunOpen",
+    translation: "The investigation was given a limit on part of its budget without saying how much it may use. A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, or leave that part out."
   }
 };
 var AI_RUNS_CONTEXT_CHECKS = {
@@ -26571,6 +26581,12 @@ function checkConsume(entries, { seed = false, allowance = false, map = false, l
       return refusal3(
         "AI_RUN_BOUND_PLANE_COUNTED",
         `'${b}' is decided by the plane \u2014 a run's lease lapses on the clock, read by the reaper, and nothing spends it (\xA714b.6) \u2014 so no figure for it, not even a zero, is the caller's to send or a member's to declare. Nothing was written`,
+        { bound: b }
+      );
+    if (allowance && (v == null || v === 0))
+      return refusal3(
+        "AI_RUN_BOUND_NO_ALLOWANCE",
+        `'${b}' was declared with ${v == null ? "no `allowed`" : "`allowed: 0`"}: a declared bound states how much the run may spend, a whole number of one or more, and a bound the run is not held to is left out of \`bounds\` (\xA714b item 6). A zero allowance would be read as no ceiling at all. Nothing was written`,
         { bound: b }
       );
     if (seed && v == null) continue;
@@ -62817,8 +62833,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            ON CONFLICT(run, bound) DO NOTHING`,
           run,
           String(b.bound),
-          b.allowed == null ? 0 : b.allowed,
-          /* REC-172: judged above; absent is 0, as ever */
+          b.allowed,
+          /* REC-177: judged above, a whole number of one or more (C-22.16); the old `absent is 0` default was the no-ceiling path */
           b.consumed == null ? 0 : b.consumed,
           /* REC-169: judged above */
           b.unit == null ? null : String(b.unit)

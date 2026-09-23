@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/rec172-bounds.control.mjs` — deliberately NOT a `.test.mjs`, because it patches COPIES of `src/` (and of `test/vf4-live-scratch.mjs`) while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/rec172-bounds.control.mjs [arm]`. RESULTS, RUN 2026-09-23 by the REC-172 worker (CONDUCT #15's, cloud) on 91913d6b + this item (real src/store.mjs 2,842,811 B sha256 34f33c573468, src/airun.mjs 148,602 B e73cb1d08777, src/index.mjs 715,196 B 631fdbf09c26, checks/bio-checks.mjs 829,476 B 89f470e81317, test/vf4-live-scratch.mjs 57,439 B 16072bc2aee2, untouched: YES), ALL EIGHT ARMS AS DECLARED at the first run of the final sources: baseline -> 36/0 · **restore-continue — THE ROW'S CONTROL, the `continue` on an unknown key restored -> 29/7: ARM K1 (C-22.15, BY NAME), K1b, K2 (the good key SPENT beside the unknown one), K3, K4, U1, U4**; ARM A stays green, declared — the array is the map check's door · liar-ignore-array (THE LIAR: a non-map `consume` silently IGNORED, the tick answering `ticked: true`) -> 29/7: A1-A7 by name · lease-spendable -> 31/5: L1-L5 · allowance-coerced (the check dropped AND `Number(b.allowed) || 0` restored) -> 29/7: W1-W7 · bounds-map-ignored -> 35/1: U2 · vf4-array (vf4's array restored in a copy) -> 35/1: V1, V0's reach green · overstrict (membership respelt `Object.keys(...).includes`) -> 36/0. REC-169's own control re-run on the same sources: all nine arms as declared (38/0 baseline). BEFORE THIS ITEM (this suite against 91913d6b's src/ and vf4): 7 pass, 29 fail — ARM A1 `ticked: true` over vf4's own array, K1 `ticked: true` over `{ fetchs: 1 }`, L1 `lease` written, W1 a `-1` allowance opened a run, U1 a misspelt bound opened a run with no fetch ceiling, V1 vf4's tick left `fetches` at 0.
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/rec172-bounds.control.mjs` — deliberately NOT a `.test.mjs`, because it patches COPIES of `src/` (and of `test/vf4-live-scratch.mjs`) while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/rec172-bounds.control.mjs [arm]`. RESULTS, RUN 2026-09-23 by the REC-172 worker (CONDUCT #15's, cloud) on 91913d6b + this item (real src/store.mjs 2,842,811 B sha256 34f33c573468, src/airun.mjs 148,602 B e73cb1d08777, src/index.mjs 715,196 B 631fdbf09c26, checks/bio-checks.mjs 829,476 B 89f470e81317, test/vf4-live-scratch.mjs 57,439 B 16072bc2aee2, untouched: YES), ALL EIGHT ARMS AS DECLARED at the first run of the final sources: baseline -> 36/0 · **restore-continue — THE ROW'S CONTROL, the `continue` on an unknown key restored -> 29/7: ARM K1 (C-22.15, BY NAME), K1b, K2 (the good key SPENT beside the unknown one), K3, K4, U1, U4**; ARM A stays green, declared — the array is the map check's door · liar-ignore-array (THE LIAR: a non-map `consume` silently IGNORED, the tick answering `ticked: true`) -> 29/7: A1-A7 by name · lease-spendable -> 31/5: L1-L5 · allowance-coerced (the check dropped AND `Number(b.allowed) || 0` restored) -> 29/7: W1-W7 · bounds-map-ignored -> 35/1: U2 · vf4-array (vf4's array restored in a copy) -> 35/1: V1, V0's reach green · overstrict (membership respelt `Object.keys(...).includes`) -> 36/0. REC-169's own control re-run on the same sources: all nine arms as declared (38/0 baseline). BEFORE THIS ITEM (this suite against 91913d6b's src/ and vf4): 7 pass, 29 fail — ARM A1 `ticked: true` over vf4's own array, K1 `ticked: true` over `{ fetchs: 1 }`, L1 `lease` written, W1 a `-1` allowance opened a run, U1 a misspelt bound opened a run with no fetch ceiling, V1 vf4's tick left `fetches` at 0. RE-RUN 2026-09-23 by the REC-177 worker after it CORRECTED ARM G2 (a zero and an absent allowance no longer open, C-22.16) and moved the allowance-coerced arm's store anchor to the site's new spelling: all eight AS DECLARED, the same tallies (baseline 36/0, allowance-coerced 29/7).
  * =========================================================================
  * REC-172 — A RUN'S BUDGET IS SPENT ONLY ON A BOUND IT NAMES, BY A MAP; A MEMBER'S ALLOWANCE IS A WHOLE NUMBER; AND
  * `lease` IS NOT A CONSUMABLE AT ALL.
@@ -28,6 +28,8 @@
  * reaper's lease decision is not driven here (`airun.test.mjs` owns it); (iv) ARM V reads vf4's tick body OFF ITS
  * SOURCE and sends it through the op here — it does not run vf4, which is a live instrument against a deployed plane;
  * (v) an absent `allowed` still opens a bound at 0, which `finishedBound` reads as no ceiling — stated, not decided.
+ *     [CLOSED 2026-09-23 by REC-177: BOB #30 ruled it (§14b item 6) and an absent or zero `allowed` is refused at the
+ *     open, C-22.16 AI_RUN_BOUND_NO_ALLOWANCE; `rec177-allowance.test.mjs` owns it, and ARM G2 below was corrected.]
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -266,11 +268,16 @@ console.log("\n--- ARM G · OVER-STRICTNESS: well-formed ticks and opens are unc
   t("ARM G1: every caller-counted bound lands; an empty map and a null consume are ticks that spend nothing",
     [g1?.ticked, g2?.ticked, g3?.ticked, await boundOf(GRUN.run, "fetches"), await boundOf(GRUN.run, "wallclock")],
     [true, true, true, [5, 2], [0, 1000]]);
-  const g4 = await openAs(ALICE, [{ bound: "fetches", allowed: 0 }, { bound: "surfaces", allowed: 2 },
-                                  { bound: "mints", allowed: 9, consumed: 0 }, { bound: "subsessions" }]);
-  t("ARM G2: a zero allowance, a plane-counted allowance, a zero seed and an absent allowance all open",
+  /* CORRECTED 2026-09-23 BY REC-177 (§14b item 6, BOB #30): this arm asserted that a ZERO allowance and an ABSENT one
+     OPEN, at 0 — and 0 is what `finishedBound` reads as NO CEILING, so the run recorded a bound it did not have. The old
+     assertion was this suite's caveat (v) written as a pass; BOB #30 ruled both are refused (C-22.16), and
+     `rec177-allowance.test.mjs` drives them. What stays over-strictness here is a positive allowance, a plane-counted
+     allowance and a zero SEED — `consumed: 0` is none spent yet, a different field from the ceiling. */
+  const g4 = await openAs(ALICE, [{ bound: "fetches", allowed: 1 }, { bound: "surfaces", allowed: 2 },
+                                  { bound: "mints", allowed: 9, consumed: 0 }]);
+  t("ARM G2: a one allowance, a plane-counted allowance and a zero seed all open",
     [g4.r?.started, await boundOf(g4.run, "fetches"), await boundOf(g4.run, "surfaces"),
-     await boundOf(g4.run, "mints"), await boundOf(g4.run, "subsessions")], [true, [0, 0], [2, 0], [9, 0], [0, 0]]);
+     await boundOf(g4.run, "mints")], [true, [1, 0], [2, 0], [9, 0]]);
   const g5 = await openAs(ALICE, []), g6 = await openAs(ALICE, null);
   t("ARM G3: an empty list and a null declaration open a run with no bounds, as they always have",
     [g5.r?.started, g6.r?.started], [true, true]);

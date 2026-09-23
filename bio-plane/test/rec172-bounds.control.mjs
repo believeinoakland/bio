@@ -37,8 +37,11 @@ const OFF = "    if (false)\n";
 const ALLOWANCE = '    return checkConsume(entries.map((e) => [e.bound == null ? "" : String(e.bound), e.allowed]),\n'
                 + "                        { seed: true, allowance: true })\n        || ";
 const ALLOWANCE_OFF = "    return null || ";
-const ALLOWED_WRITE = "b.allowed == null ? 0 : b.allowed,";
-const ALLOWED_COERCED = "Number(b.allowed) || 0,";
+/* CORRECTED 2026-09-23 BY REC-177: the store's write was `b.allowed == null ? 0 : b.allowed,` — an absent allowance
+   defaulted to 0, i.e. NO CEILING. REC-177 (§14b item 6, C-22.16) refuses an absent or zero allowance at the open, so
+   the default is gone and the write is the judged figure; the anchor follows the site, the arm's break is unchanged. */
+const ALLOWED_WRITE = "b.allowed,    /* REC-177:";
+const ALLOWED_COERCED = "Number(b.allowed) || 0,    /* REC-177:";
 const NOT_A_LIST = "    if (!Array.isArray(entries))\n      return refusal(";
 const NOT_A_LIST_IGNORED = "    if (!Array.isArray(entries))\n      return null; void refusal(";
 const OWN = "    if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b))\n      return refusal(\"AI_RUN_BOUND_UNKNOWN\"";

@@ -6405,7 +6405,8 @@ export async function checkBundle(input, opts = {}) {
  * ===========================================================================
  *
  * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
- * and §14b.6). FIFTEEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (FOURTEEN until 2026-09-23, when REC-172 added
+ * and §14b.6). SIXTEEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (FIFTEEN until 2026-09-23, when REC-177 added
+ * C-22.16 — a bound declared at the open states a positive allowance; FOURTEEN until 2026-09-23, when REC-172 added
  * C-22.15 — a figure is spent or declared only on a bound the run HAS, named in a map or a list; TWELVE until
  * 2026-09-23, when REC-169 added
  * C-22.13 — a figure written into a run's bound is a non-negative integer — and C-22.14 — never for a bound the
@@ -6784,6 +6785,18 @@ export const AI_RUN_CHECKS = {
     where: 'src/airun.mjs checkConsume (the tick\'s map, the open\'s list, and every key in either), called from store.mjs aiRunTick and aiRunOpen',
     translation: 'The investigation named a part of its budget that does not exist, or did not say which part '
       + 'it meant. Nothing was recorded, so no budget was spent or set that nobody could account for.',
+  },
+  /* REC-177, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b item 6, BOB #30). A bound declared at `op=airunopen` with an
+     ABSENT or ZERO `allowed` was opened at 0, and `finishedBound` reads 0 as NO CEILING — so the run recorded a bound
+     it did not have. Refused at the open, nothing written. Its own code and not C-22.13's: C-22.13 is a figure of the
+     wrong FORM (a string, a fraction, a negative), and 0 is a perfectly good whole number; what is wrong here is that
+     the declaration states no allowance, and the remedy differs (state one, or do not declare the bound). */
+  AI_RUN_BOUND_NO_ALLOWANCE: {
+    check: 'C-22.16',
+    where: 'src/airun.mjs checkConsume (the open\'s list, its allowance arm), called from store.mjs aiRunOpen',
+    translation: 'The investigation was given a limit on part of its budget without saying how much it may use. '
+      + 'A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, '
+      + 'or leave that part out.',
   },
 };
 
