@@ -7888,11 +7888,12 @@ export default {
                  * not deleted, because what it recorded was real and its closing
                  * is what a later reader needs to see.
                  *
-                 * WHAT IS STILL NOT HERE, so this block does not become the same
-                 * stale reassurance one item later: a DECK LENGTH. The entry
-                 * emits its readable slides and nothing that says how long the
-                 * deck is, so a deck whose trailing slides are unreadable is
-                 * recorded SHORTER than it is — see the keying note at the site.
+                 * THE DECK LENGTH IS HERE FROM 2026-09-23 (COFF-13). These lines
+                 * said it was not — the entry emitted its readable slides and
+                 * nothing that said how long the deck is, so a deck whose
+                 * trailing slides are unreadable was recorded SHORTER than it is.
+                 * Both deck entries now emit `deckLength` and the slide map below
+                 * is as long as the DECK — see the keying note at the site.
                  * And `.ods`/`.odp` carry an honestly NULL grid bound because
                  * OpenDocument fixes no maximum table size; that null is a
                  * STATEMENT and is not a gap in this wire.
@@ -7917,6 +7918,11 @@ export default {
                 const held = (k) => (has(k) && i2text[k].length ? i2text[k] : null);
                 if (has("sheets") || has("paragraphs") || has("slides")) {
                   const sh = held("sheets"), pa = held("paragraphs"), sl = held("slides");
+                  /* COFF-13 — THE DECK'S OWN LENGTH, as the entry states it.
+                     A positive integer or nothing: a zero-slide deck has no slot
+                     to bound and stays NULL under the never-a-zero rule below. */
+                  const deckLen = Number.isInteger(i2text.deckLength) && i2text.deckLength > 0
+                    ? i2text.deckLength : null;
                   /* COFF-12 / IC-100 / D-359 — THE INNER FIGURES ARE READ FROM THE
                      PRODUCER AND NO LONGER WRITTEN AS LITERALS. Until 2026-09-15 the
                      three lines below read `rows: null, cols: null` and `shapes: null`
@@ -7967,15 +7973,19 @@ export default {
                      AN UNFILLED SLOT IS `shapes: null` — UNDETERMINED AND STATED, never
                      a zero. The deck HAS that slide; this record could not read it, and
                      `coversSlideShape` skips a null rather than refusing every shape on
-                     it. WHAT THIS STILL CANNOT SEE, stated rather than left to be found:
-                     a deck whose LAST slides are unreadable reports a deck SHORTER than
-                     it is, because the entry emits no deck length and the highest slide
-                     number this wire can see is the highest READABLE one. That
-                     under-reports in the refusing direction and is D-359's residue after
-                     this item; closing it is a producer change (a deck length on the I2
-                     text shape) and therefore another IC, not a line here. */
+                     it. AND THE ARRAY IS AS LONG AS THE DECK, NOT AS ITS LAST READABLE
+                     SLIDE (COFF-13, IC-207). Until 2026-09-23 this paragraph said a deck
+                     whose LAST slides are unreadable reports a deck SHORTER than it is,
+                     because the entry emitted no deck length and the highest slide number
+                     this wire could see was the highest READABLE one — under-reporting in
+                     the refusing direction, D-359's named residue. Both deck entries now
+                     emit `deckLength` (the slots the deck DECLARES, readable or not), and
+                     it joins the floor: the trailing unreadable slides get their own
+                     `shapes: null` slots, so a citation of the last slide MINTS and one
+                     past the real deck is refused with the real figure. A NULL length
+                     (the deck order was unreadable) adds nothing and the old floor holds. */
                   const slideExtents = (units) => {
-                    let n = units.length;
+                    let n = Math.max(units.length, deckLen ?? 0);
                     for (const u of units)
                       if (u && Number.isInteger(u.slide) && u.slide > n) n = u.slide;
                     const out = Array.from({ length: n }, () => ({ shapes: null }));
@@ -8020,7 +8030,15 @@ export default {
                       rows: int(s && s.rows), cols: int(s && s.cols),
                       usedRows: int(s && s.usedRows), usedCols: int(s && s.usedCols) })) : null,
                     paragraphs: pa ? pa.length : null,
-                    slides: sl ? slideExtents(sl) : null,
+                    /* An over-the-bound deck returns `slides: []` beside the guard,
+                       and still states its length (presentation.xml is structural and
+                       read regardless) — so the OUTER bound is fed with every slot's
+                       shape count NULL, which the store reports by name. */
+                    slides: sl || deckLen ? slideExtents(sl || []) : null,
+                    /* Carried BESIDE the list under its own name: present-and-null when
+                       the entry answered that it cannot say, ABSENT when no entry ever
+                       answered (a capture acquired before COFF-13). */
+                    ...(has("slides") && own("deckLength") ? { deckLength: deckLen } : {}),
                     ...(own("tables") ? { tables: tablesOf(i2text.tables) } : {}),
                     ...(own("images") ? { images: imagesOf(i2text.images) } : {}),
                   };

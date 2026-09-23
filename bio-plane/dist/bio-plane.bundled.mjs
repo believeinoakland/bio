@@ -20386,6 +20386,9 @@ async function pptxStructure(parts) {
     notes
   };
 }
+function deckLengthOf(parts) {
+  return Array.isArray(parts.order) ? parts.order.length : null;
+}
 async function pptxText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "pptx", reason: parts?.why ?? "PARTS_ABSENT" };
@@ -20397,6 +20400,7 @@ async function pptxText(parts) {
       document: null,
       slides: [],
       speakerNotes: [],
+      deckLength: deckLengthOf(parts),
       undetermined: [parts.guard],
       counts: { chars: 0, notesChars: 0, undetermined: 1 }
     };
@@ -20445,6 +20449,7 @@ async function pptxText(parts) {
     document,
     slides,
     speakerNotes,
+    deckLength: deckLengthOf(parts),
     undetermined,
     counts: { chars: document.length, notesChars, undetermined: undetermined.length }
   };
@@ -21388,6 +21393,7 @@ function odpText(parts) {
       document: null,
       slides: [],
       speakerNotes: [],
+      deckLength: null,
       undetermined: [parts.guard],
       counts: { chars: 0, notesChars: 0, undetermined: 1 }
     };
@@ -21401,6 +21407,7 @@ function odpText(parts) {
       document: null,
       slides: [],
       speakerNotes: [],
+      deckLength: null,
       undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_presentation_body" }],
       counts: { chars: 0, notesChars: 0, undetermined: 1 }
     };
@@ -21408,7 +21415,8 @@ function odpText(parts) {
   const styles = automaticStyles(parts.contentXml);
   const slides = [];
   const speakerNotes = [];
-  for (const page of deckOf2(body, styles)) {
+  const deck = deckOf2(body, styles);
+  for (const page of deck) {
     const walked = walkPage(page.xml);
     const text = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
     slides.push({
@@ -21438,6 +21446,12 @@ function odpText(parts) {
     document,
     slides,
     speakerNotes,
+    /* COFF-13 — THE DECK'S OWN LENGTH, on pptx.mjs's key. Every `<draw:page>`
+       lives in the one content.xml, so once the body is read no slide can be
+       unreadable on its own and the length EQUALS the slide list — emitted
+       anyway, so the wire reads one key from every deck entry rather than
+       inferring it from which entry answered. */
+    deckLength: deck.length,
     undetermined: [],
     counts: { chars: document.length, notesChars, undetermined: 0 }
   };
@@ -42594,7 +42608,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     if (sheets && !sheets.some((s) => Number.isInteger(s && s.rows) || Number.isInteger(s && s.cols)))
       missing.push("every sheet's row and column extent (this capture was acquired before the wire read that figure, or its format fixes no grid \u2014 OpenDocument sets no maximum table size, so a .ods workbook states a NULL bound rather than borrowing one \u2014 D-359), so an unknown SHEET is bounded and a cell within a known sheet is not");
     if (slides && !slides.some((s) => Number.isInteger(s && s.shapes)))
-      missing.push("every slide's shape count (this capture was acquired before the wire read that figure, or no slide's part in it could be read \u2014 D-359), so a slide past the deck is bounded and a shape within a known slide is not");
+      missing.push("every slide's shape count (this capture was acquired before the wire read that figure, no slide's part in it could be read, or the deck was over the text size bound and only its length was read \u2014 D-359, COFF-13), so a slide past the deck is bounded and a shape within a known slide is not");
     if (!held) missing.push("the container's own extent \u2014 no sheet list, paragraph count or slide list was persisted for this capture, and, if it is a PDF, no list of the images its pages paint (a PDF acquired before D-420 carries none)");
     const containerName = held && typeof held.container === "string" ? held.container : null;
     const pdfImages = containerName === "pdf" && images ? images : null;
@@ -73076,9 +73090,10 @@ var index_default = {
                 const held2 = (k) => has(k) && i2text[k].length ? i2text[k] : null;
                 if (has("sheets") || has("paragraphs") || has("slides")) {
                   const sh = held2("sheets"), pa = held2("paragraphs"), sl = held2("slides");
+                  const deckLen = Number.isInteger(i2text.deckLength) && i2text.deckLength > 0 ? i2text.deckLength : null;
                   const int = (v) => Number.isInteger(v) ? v : null;
                   const slideExtents = (units) => {
-                    let n = units.length;
+                    let n = Math.max(units.length, deckLen ?? 0);
                     for (const u of units)
                       if (u && Number.isInteger(u.slide) && u.slide > n) n = u.slide;
                     const out = Array.from({ length: n }, () => ({ shapes: null }));
@@ -73105,7 +73120,15 @@ var index_default = {
                       usedCols: int(s && s.usedCols)
                     })) : null,
                     paragraphs: pa ? pa.length : null,
-                    slides: sl ? slideExtents(sl) : null,
+                    /* An over-the-bound deck returns `slides: []` beside the guard,
+                       and still states its length (presentation.xml is structural and
+                       read regardless) — so the OUTER bound is fed with every slot's
+                       shape count NULL, which the store reports by name. */
+                    slides: sl || deckLen ? slideExtents(sl || []) : null,
+                    /* Carried BESIDE the list under its own name: present-and-null when
+                       the entry answered that it cannot say, ABSENT when no entry ever
+                       answered (a capture acquired before COFF-13). */
+                    ...has("slides") && own("deckLength") ? { deckLength: deckLen } : {},
                     ...own("tables") ? { tables: tablesOf(i2text.tables) } : {},
                     ...own("images") ? { images: imagesOf(i2text.images) } : {}
                   };
