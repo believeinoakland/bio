@@ -27730,6 +27730,48 @@ function derivationObservation({
     why: null
   };
 }
+var DERIVATION_DOCUMENTS = /^the derivation (?:over|read|ran over) (\d+) document\(s\)/;
+function derivationDocumentsFrom(detail) {
+  const m = typeof detail === "string" ? DERIVATION_DOCUMENTS.exec(detail) : null;
+  return m ? Number(m[1]) : null;
+}
+function derivationStatement(row = null, missingCause = null) {
+  if (row && typeof row.state === "string") {
+    const documents = derivationDocumentsFrom(row.detail);
+    const at = row.at == null ? null : String(row.at);
+    const over = documents == null ? "an unrecorded number of documents" : `${documents} document(s)`;
+    const cut = row.state === "partial";
+    const says = cut ? `the latest derivation (${at}) was CUT by its bound after ${over}: the connections here are true but are part of the set through this subject, not all of it` : row.state === "PRESENT" ? `the latest derivation (${at}) read ${over} and was not cut` : row.state === "LOOKED_ABSENT" ? `the latest derivation (${at}) ran over ${over}, was not cut, and formed no connection` : `the latest derivation (${at}) recorded state ${row.state}`;
+    return { state: row.state, cut, at, documents, derived: "derived", says };
+  }
+  const cause = typeof missingCause === "string" ? missingCause : "purged";
+  if (cause === "never_looked")
+    return {
+      state: null,
+      cut: null,
+      at: null,
+      documents: null,
+      derived: "never_derived",
+      says: "never derived: no derivation over this subject is recorded, and the log carried derivations over its whole lifetime, so an empty answer here is nobody having derived rather than no connection existing"
+    };
+  if (cause === "pre_log")
+    return {
+      state: null,
+      cut: null,
+      at: null,
+      documents: null,
+      derived: "pre_log",
+      says: "derived before the observation log recorded derivations: the connection rows exist, and whether that derivation was cut is NOT recorded"
+    };
+  return {
+    state: null,
+    cut: null,
+    at: null,
+    documents: null,
+    derived: "undetermined",
+    says: "undetermined: no derivation over this subject is recorded, and the log cannot rule out one made before it carried this level (or cleared by a purge)"
+  };
+}
 var SEARCHED_LEVEL_OUTCOMES = {
   searched: "every subject this case names at this level has an observation: the record can say what was looked for and what came of it",
   partial: "some of this case's subjects at this level have an observation and some do not, or some could not be identified at all -- the coverage is stated and is not complete",
@@ -49836,6 +49878,17 @@ ${words}`;
       const ch = this.#currentPairChoices(r.a_capture_sha, r.b_capture_sha, r.entity_id);
       return ch.a || ch.b ? { on_point: ch } : {};
     };
+    const derivation = entityId ? (() => {
+      const obs = this.#one(
+        `SELECT at, state, detail FROM observation_log
+              WHERE level = 'meaning' AND subject_kind = 'entity' AND subject = ?
+              ORDER BY seq DESC LIMIT 1`,
+        entityId
+      );
+      if (obs) return derivationStatement(obs);
+      const ent = this.#one(`SELECT at FROM entities WHERE entity_id = ?`, entityId);
+      return derivationStatement(null, this.#missingMeaningCause("entity", entityId, ent ? ent.at : null));
+    })() : void 0;
     return {
       ok: true,
       entity_id: entityId,
@@ -49848,7 +49901,8 @@ ${words}`;
         ...withChoice(r)
       })),
       limit: cap,
-      truncated
+      truncated,
+      ...derivation ? { derivation } : {}
     };
   }
   /* ============ FW-17 · A PORTION'S CONNECTION GRADE ============
