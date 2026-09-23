@@ -57844,6 +57844,123 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       predecessor
     };
   }
+  /** D-256 — THE "CHANGED FROM" SENTENCES ALREADY WRITTEN, EACH CHECKED AGAINST
+   *  THE VERSION CHAIN, AND NOT ONE BYTE OF ANY BODY REWRITTEN.
+   *
+   *  D-221 fixed the writer: before 2026-08-08 `addGo` chose the named id by a
+   *  bm25 tiebreak among captures with identical url text, which PL-10 measured
+   *  naming the OLDEST version at the address. The sentences it wrote stay in
+   *  the record, and BOB #31 ruled (2026-09-23 22:22Z) that the bodies stay as
+   *  written and the correction is the READ (DEC-19: correction moves forward;
+   *  D-219: a stored string is a fact about when it was written). This is that
+   *  read. It WRITES NOTHING — `versionchain.test.mjs` asserts every body
+   *  byte-unchanged by digest, and that this method holds no write statement.
+   *
+   *  THE BUNDLE'S OWN VERSION IS FOUND FROM THE RECORD, never from its prose:
+   *  its `register` rows joined to `captured_locators` give the (address,
+   *  capture) pairs the bundle holds; then `versionChain` — the one chain
+   *  reader, consumed and never restated — answers the true predecessor. The
+   *  frontmatter's `content_hash` only breaks a tie when the bundle holds
+   *  versions at more than one address pair.
+   *
+   *  THREE VERDICTS, COUNTED APART, because folding any two is D-256's own
+   *  mistake repeated:
+   *    wrong         the chain names a different predecessor than the sentence
+   *    right         the chain's predecessor IS the bundle the sentence names
+   *                  (`sole_prior` says whether the address held exactly one
+   *                  prior version, where the two routes could not disagree)
+   *    undetermined  the chain cannot check it, with the reason: the bundle
+   *                  holds no version in the chain (`no_version_held`), holds
+   *                  several and none is the frontmatter's (`several_versions_held`),
+   *                  its version is the oldest held (`no_prior_version` —
+   *                  the earlier capture may simply never have been
+   *                  registered; sparse is normal), or the sentence names
+   *                  more than one id (`several_named`) or none this reader
+   *                  can take as one (`no_named_id`).
+   *
+   *  WHAT IT CANNOT SEE, said here rather than implied: it reads the LIVE
+   *  `bundle.md` of every bundle, so a sentence present only in a superseded
+   *  history snapshot is not counted; and it matches the literal the writer
+   *  emitted, so a sentence a member retyped in other words is not counted. */
+  changedFromAudit({ limit = null, offset = 0 } = {}) {
+    const cap = Math.max(1, Math.min(
+      _Store.CHANGED_FROM_AUDIT_LIMIT_MAX,
+      Math.floor(Number(limit) || _Store.CHANGED_FROM_AUDIT_LIMIT_DEFAULT)
+    ));
+    const from = Math.max(0, Math.floor(Number(offset) || 0));
+    const lit = _Store.CHANGED_FROM_SENTENCE;
+    const viewer = `${MACHINE_CLASS_PREFIX}admin`;
+    const named = new RegExp(lit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^()\\s]+)\\)", "g");
+    const rows = this.#rows(
+      `SELECT bundle_id, content FROM files WHERE path = 'bundle.md' AND instr(content, ?) > 0
+        ORDER BY bundle_id`,
+      lit
+    );
+    const out = { wrong: 0, right: 0, undetermined: 0 };
+    const all = rows.map((r) => {
+      const ids = [...new Set([...String(r.content).matchAll(named)].map((m) => m[1]))];
+      const base = { bundle_id: r.bundle_id, named: ids.length === 1 ? ids[0] : null };
+      const undetermined = (why, extra = {}) => ({ ...base, verdict: "undetermined", why, predecessor: null, ...extra });
+      if (ids.length !== 1) return undetermined(ids.length ? "several_named" : "no_named_id", { named_all: ids });
+      const pairs = this.#rows(
+        `SELECT DISTINCT cl.address_norm AS address_norm, cl.capture_sha AS capture_sha
+           FROM register r JOIN captured_locators cl ON cl.capture_sha = r.capture_sha
+          WHERE r.bundle_id = ? ORDER BY cl.address_norm, cl.capture_sha`,
+        r.bundle_id
+      );
+      let pair = pairs.length === 1 ? pairs[0] : null;
+      if (pairs.length > 1) {
+        const h = /^\s*content_hash:\s*"?([0-9a-fA-F]{64})"?\s*$/m.exec(String(r.content));
+        const hits = h ? pairs.filter((p) => p.capture_sha === h[1].toLowerCase()) : [];
+        pair = hits.length === 1 ? hits[0] : null;
+        if (!pair) return undetermined("several_versions_held", { versions_held: pairs.length });
+      }
+      if (!pair) return undetermined("no_version_held");
+      const c = this.versionChain({ addressNorm: pair.address_norm, at: pair.capture_sha, limit: 1, viewer });
+      if (!c.ok) return undetermined("no_version_held");
+      const at = { address_norm: pair.address_norm, capture_sha: pair.capture_sha, at_index: c.at_index };
+      if (!c.predecessor) return undetermined("no_prior_version", at);
+      const predecessor = {
+        bundle_id: c.predecessor.bundle_id,
+        capture_sha: c.predecessor.capture_sha,
+        first_retrieved: c.predecessor.first_retrieved
+      };
+      return {
+        ...base,
+        verdict: c.predecessor.bundle_id === ids[0] ? "right" : "wrong",
+        ...at,
+        sole_prior: c.at_index === 1,
+        predecessor
+      };
+    });
+    for (const a of all) out[a.verdict]++;
+    const listed = all.slice(from, from + cap);
+    return {
+      ok: true,
+      affected: all.length,
+      wrong: out.wrong,
+      right: out.right,
+      undetermined: out.undetermined,
+      bundles: listed,
+      count: listed.length,
+      total: all.length,
+      limit: cap,
+      offset: from,
+      truncated: from + listed.length < all.length,
+      wrote: false,
+      note: "read-only: every body stays as written (BOB #31, 2026-09-23 22:22Z); this answer is the correction. 'undetermined' is the chain unable to check a sentence, never evidence it was right."
+    };
+  }
+  /* D-256's bound, `op=versionchain`'s 200/1000 pair reused rather than a new
+     spelling invented. Declared BELOW its method, on REC-116's finding: `bounds.test.mjs`'s
+     segmenter splits on method signatures, so a constant above a method is credited to the one before it. It bounds the LISTING only: the three totals are always
+     counted over every affected bundle, because a verdict total cut at N would
+     be the partial count this op exists to replace. */
+  static CHANGED_FROM_AUDIT_LIMIT_DEFAULT = 200;
+  static CHANGED_FROM_AUDIT_LIMIT_MAX = 1e3;
+  /* The one literal the pre-2026-08-08 `addGo` wrote (civicos-ui/app.html,
+     the CHANGED_FROM branch), up to the parenthesis that opens the named id. */
+  static CHANGED_FROM_SENTENCE = "The record already holds an earlier capture of this same address (";
   /* PL-1's own bound. 200/1000 is `op=versionchain`'s pair reused rather than a
      thirteenth spelling invented, and the KIND is the same: a KEYED lookup (one
      inquiry, not a query) whose answer is a list. 200 is generous against the
@@ -66423,6 +66540,12 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         lease: () => this.acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 3e5),
         /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
         snapkeycensus: () => this.snapKeyCensus({ limit: url.searchParams.get("limit") }),
+        /* D-256: every "changed from" sentence already written, checked against the version chain; read-only
+           (see `changedFromAudit`). */
+        changedfromaudit: () => this.changedFromAudit({
+          limit: url.searchParams.get("limit"),
+          offset: url.searchParams.get("offset")
+        }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,
@@ -68363,6 +68486,11 @@ var OPS = {
      NEVER rewritten. The method a deployed instance runs to learn whether its own history lost a row. Admin and
      probe, `registeraudit`'s fence: it is an audit of the working corpus, and it lists bundle ids. */
   snapkeycensus: { classes: ["admin", "probe"], mutating: false },
+  /* D-256: every "changed from" sentence the pre-2026-08-08 `addGo` wrote, each resolved through the version chain
+     (`op=versionchain`, PL-10) and classed wrong / right / undetermined with the three totals apart. WRITES NOTHING:
+     BOB #31 ruled (2026-09-23 22:22Z) that the bodies stay as written and the correction is the read. Admin and
+     probe, `registeraudit`'s fence: it is an audit of the working corpus, and it lists bundle ids. */
+  changedfromaudit: { classes: ["admin", "probe"], mutating: false },
   /* REC-130's sweep said here that `allocid` with `prefix=CASE` disclosing how
      many case identities this year had minted was acceptable — instance-level
      knowledge a member already holds. SUPERSEDED 2026-09-19 by BOB #16 (Membership
