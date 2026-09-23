@@ -43,6 +43,16 @@ scope: promote computes each inline file's `bytes` from its UTF-8 encoding (a di
 accepts-when: through the op, a non-ASCII file over `INLINE_MAX` in UTF-8 but under it in `text.length` is refused `OVERSIZE_INLINE`, bundle byte-identical after; stored `bytes` equals the UTF-8 length. NEGATIVE CONTROL: judge `text.length` again, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (REC-175's worker via CONDUCT #16, verified at the code; `node tools/mintid.mjs REC`).
 
+### REC-179 · queued — **A REVISION OF AN INQUIRY CAN REWRITE ITS `surfaced_by`: D-78's server stamp runs only when `base === null`, and no check compares a revision's value with the current version's, so an agent-surfaced question can be relabelled `human` (or the reverse) by whoever edits it.** Re-read on `14faa089`: `index.mjs` `op=promote`'s D-78 restamp is gated on `b.base === null`; `store.mjs` and `bio-checks.mjs` C-2.8 check only that the value is `agent` or `human`. — owner RECORD.
+order: directly after REC-178: an attribution the record states falsely is authority-class (SCHEDULER.md step 3), and the rule-2 surfacing row REC-171 writes would then contradict the bundle it describes (SCHEDULER #16, 2026-09-23; DEBT D-121's defect row, placed by LED-7 batch S16-2)
+milestone: M7
+interface: I3 — a new refusal on `op=promote`; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rule 2's reach (the SURFACING ACT is what `surfaced_by` records, decided at the trust boundary), with the D-78 restamp's own stated intent that a revision carries the value forward.
+depends-on: none. A replay under §11 item 5's migration paragraph (REC-173) is stated by the builder; anything it does not cover goes to BOB before building.
+scope: promote refuses a revision whose `surfaced_by` differs from the current version's by a new refusal code with its canned translation, before any write.
+accepts-when: through the op, a revision flipping `agent` to `human`, and one flipping `human` to `agent`, are each refused by name with the bundle byte-identical after; a revision keeping the value lands. NEGATIVE CONTROL: drop the comparison, and the flip arm lands and fails by name.
+added: 2026-09-23 · SCHEDULER #16 (DEBT D-121, the defect row of the two sharing that id, verified at the code; `node tools/mintid.mjs REC`).
+
 ### REC-177 · blocked — **`op=airunopen` ACCEPTS A DECLARED BOUND WITH NO POSITIVE `allowed`, SO A RUN CAN OPEN UNDER A BOUND THAT STATES NO ALLOWANCE.** BOB #30 ruled a declared bound STATES its allowance: `op=airunopen` refuses one with no positive `allowed`. `blocked` until its design lands. — owner RECORD.
 order: directly after REC-172 (in the cache) as BOB #30 placed it, the same bound fence; below the record-integrity rows REC-175 and REC-176 (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
 milestone: M9
@@ -1150,23 +1160,3 @@ depends-on: none.
 accepts-when: `node bio-plane/test/curated-producer.probe.mjs` from `bio-plane/` reads 10 pass, 0 fail; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: widening the read … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (CONDUCT #6's report; fix named; id minted with `node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-74» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-133 · queued — **`tools/fw21-onpoint-probe.mjs` EXITS 2 (`GROUND BROKEN`) ON `main`: ITS OWN CHECK STILL EXPECTS PAGE 2 TO READ GRADE A AND REACHING, WHICH REC-120's RULE NO LONGER GIVES.** Reproduced by SCHEDULER #15 on `91913d6b` (local, no network): page 2 reads `{"grade":null,"reaching":0,"undetermined":1}` — UNDETERMINED until a member chooses the on-point mention (REC-120; REC-122 is that choice) — so the probe's ground check fails before anything it measures counts. Already so on `4355bfda`. Found by REC-171's worker (CONDUCT #15). — owner M0 with CONTENT.
-order: with the probe corrections, directly after M0-74 (a probe failing on `main` for a moved rule, its class): a probe, never a gate unit, so it cuts no gate time and sits behind the product rows (SCHEDULER #15, 2026-09-23)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair; REC-120's undetermined answer until a member chooses).
-depends-on: none — REC-120 is on `main`.
-scope: re-base the probe's ground check on REC-120's rule: page 2 reads UNDETERMINED with no choice made, and reaches only after the probe makes the member's on-point choice (when REC-122 exists) or states that it cannot; page 7 stays `outside`; a dated note at the site.
-accepts-when: `node tools/fw21-onpoint-probe.mjs` exits 0 on `main` with page 2 read as UNDETERMINED and page 7 `outside`, and exits 2 if page 7 is ever reached. NEGATIVE CONTROL: restore the grade-A ground check, and the probe exits 2 by name.
-added: 2026-09-23 · SCHEDULER #15 (REC-171's worker's finding via CONDUCT #15, reproduced; `node tools/mintid.mjs M0`).
-
-### M0-90 · queued — **MK-1's PUBLISH PROBE CANNOT DRIVE ITS PATH 3, the `op=caseratify` route C-53.12 fences.** Its fixture concludes without naming … (whole text: the cut archive)
-order: with M0-74, the probe corrections: a probe path that cannot run, now stated rather than hidden; the measurement a lifted fence will need (SCHEDULER #4, 2026-09-21; MK-3's report, CONDUCT-NEXT §4)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `node bio-plane/test/mk1-publish-probe.mjs` prints PATH 3 driven, with C-53.12's refusal code, and no DEAD ARM line for it. How a liar passes it: a path reported driven that … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-90» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.

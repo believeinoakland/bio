@@ -9,6 +9,26 @@ ever cut to fit. No whole-file budget; a row is held to 2 KiB, as in the backlog
 
 ## Rows
 
+### M0-133 · queued — **`tools/fw21-onpoint-probe.mjs` EXITS 2 (`GROUND BROKEN`) ON `main`: ITS OWN CHECK STILL EXPECTS PAGE 2 TO READ GRADE A AND REACHING, WHICH REC-120's RULE NO LONGER GIVES.** Reproduced by SCHEDULER #15 on `91913d6b` (local, no network): page 2 reads `{"grade":null,"reaching":0,"undetermined":1}` — UNDETERMINED until a member chooses the on-point mention (REC-120; REC-122 is that choice) — so the probe's ground check fails before anything it measures counts. Already so on `4355bfda`. Found by REC-171's worker (CONDUCT #15). — owner M0 with CONTENT.
+order: with the probe corrections, directly after M0-74 (a probe failing on `main` for a moved rule, its class): a probe, never a gate unit, so it cuts no gate time and sits behind the product rows (SCHEDULER #15, 2026-09-23)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair; REC-120's undetermined answer until a member chooses).
+depends-on: none — REC-120 is on `main`.
+scope: re-base the probe's ground check on REC-120's rule: page 2 reads UNDETERMINED with no choice made, and reaches only after the probe makes the member's on-point choice (when REC-122 exists) or states that it cannot; page 7 stays `outside`; a dated note at the site.
+accepts-when: `node tools/fw21-onpoint-probe.mjs` exits 0 on `main` with page 2 read as UNDETERMINED and page 7 `outside`, and exits 2 if page 7 is ever reached. NEGATIVE CONTROL: restore the grade-A ground check, and the probe exits 2 by name.
+added: 2026-09-23 · SCHEDULER #15 (REC-171's worker's finding via CONDUCT #15, reproduced; `node tools/mintid.mjs M0`).
+
+### M0-90 · queued — **MK-1's PUBLISH PROBE CANNOT DRIVE ITS PATH 3, the `op=caseratify` route C-53.12 fences.** Its fixture concludes without naming … (whole text: the cut archive)
+order: with M0-74, the probe corrections: a probe path that cannot run, now stated rather than hidden; the measurement a lifted fence will need (SCHEDULER #4, 2026-09-21; MK-3's report, CONDUCT-NEXT §4)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `node bio-plane/test/mk1-publish-probe.mjs` prints PATH 3 driven, with C-53.12's refusal code, and no DEAD ARM line for it. How a liar passes it: a path reported driven that … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-90» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
 ### M0-91 · queued — **NO SUITE FEEDS C-2.8 A NON-STRING `content_id`, SO THE ARM THAT CLOSED D-362 HAS NEVER BEEN DRIVEN.** `checkLegExtentGrammar` … (whole text: the cut archive)
 order: with the M0 instrument corrections (M0-74, M0-90): a fix with no arm is one refactor from being undone, and what it guards is a SILENT drop (SCHEDULER #5, 2026-09-21)
 milestone: M0
