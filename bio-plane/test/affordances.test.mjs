@@ -984,8 +984,17 @@ const affB2 = await affordances(B);
    State Rules §4.1 ("A RETIRED ITEM IS NOT CITABLE", BOB #30) made the store refuse it
    (RETIRED_NOT_CITABLE, C-33.39), so publishing `cite` here would be the pre-flight disagreeing with the
    refusal it fronts (DEC-8). The old expectation was right about the old store and is wrong about this one. */
-t("retired is terminal: only reinstate remains (a retired item is not citable — D-168, the store refuses it)",
-  actIds(affB2), ["reinstate"]);
+/* CORRECTED AGAIN 2026-09-23 by REC-183, never exempted: this then expected `reinstate` to remain, because
+   `op=reinstate` moved a severed edge back to `confirmed` without asking what its target had become — the
+   third door onto a retired item. The store now refuses it RETIRED_NOT_CITABLE (C-33.39, State Rules §4.1),
+   so publishing `reinstate` here would be the pre-flight disagreeing with the refusal (DEC-8). The op is
+   driven below so the empty list is checked against the refusal it fronts, not against itself. */
+t("retired is terminal: nothing remains (a retired item is not citable, and so not reinstatable — D-168, REC-183)",
+  actIds(affB2), []);
+const hB5 = await selectIds([B]);
+const reB = rP(await GET(`op=reinstate&token=mem-rec19&project=${P}&handle=${hB5}&reason=wanted+back`));
+t("... and op=reinstate onto the retired item is refused RETIRED_NOT_CITABLE, as the empty list says",
+  [reB.ok, reB.code], [false, "RETIRED_NOT_CITABLE"]);
 
 /* --------------------------------------------------------------- focus */
 console.log("\n--- a focus: dispose while an edge exists, EMPTY when elevated — and the empty list is honest ---");

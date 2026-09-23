@@ -16394,12 +16394,17 @@ var ACTS = [
     types: ["information", "inquiry", "project"],
     applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && f2.cites_out.confirmed > 0 && f2.project_participant !== false
   },
+  /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
+     refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
+     is not. The PROJECT arm is not narrowed: `cites_out.severed` is a count and does not say whether
+     every severed target is retired, so a project whose only severed edges point at retired items is
+     still offered an act the store refuses — a stated residue, not a rule. */
   {
     id: "reinstate",
     label: "Reinstate a severed citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 || ty === "project" && f2.cites_out.severed > 0 && f2.project_participant !== false
+    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f2.current_state === "retired") || ty === "project" && f2.cites_out.severed > 0 && f2.project_participant !== false
   },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
@@ -30762,6 +30767,26 @@ var Store = class _Store extends DurableObject {
         citable: ["information", "inquiry"],
         detail: "a case's citation edges point at material or at a question, and these members of the selection are neither, so they carry no citation edge to move. The whole call is refused rather than narrowed."
       };
+    if (to === "confirmed") {
+      const retiredMembers = [];
+      for (const id of sel.members) {
+        const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+        if (b && normalizeType(b.object_type) === "information" && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
+      }
+      if (retiredMembers.length)
+        return {
+          ok: false,
+          reason: "RETIRED_NOT_CITABLE",
+          code: "RETIRED_NOT_CITABLE",
+          check: ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE.check,
+          translation: ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE.translation,
+          project,
+          handle,
+          offenders: retiredMembers.sort(),
+          drift: sel.drift,
+          detail: "the group has RETIRED these since the edge was severed, recording that they are superseded or no longer stand, and reinstating the edge would read to every later member as live support. Cite what superseded them, or re-collect the source as a new bundle and cite that. The whole call is refused rather than narrowed to the members that are not retired."
+        };
+    }
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
     if (!liveMd || typeof liveMd.content !== "string") return { ok: false, reason: "NO_BUNDLE_MD", project };
     const parsed = parseFrontmatter(liveMd.content);

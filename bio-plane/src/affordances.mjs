@@ -1658,9 +1658,15 @@ export const ACTS = [
     types: ["information", "inquiry", "project"],
     applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.confirmed ?? 0) > 0)
                      || (ty === "project" && f.cites_out.confirmed > 0 && f.project_participant !== false) },
+  /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
+     refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
+     is not. The PROJECT arm is not narrowed: `cites_out.severed` is a count and does not say whether
+     every severed target is retired, so a project whose only severed edges point at retired items is
+     still offered an act the store refuses — a stated residue, not a rule. */
   { id: "reinstate", label: "Reinstate a severed citation", weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.severed ?? 0) > 0)
+    applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.severed ?? 0) > 0
+                         && !(ty === "information" && f.current_state === "retired"))
                      || (ty === "project" && f.cites_out.severed > 0 && f.project_participant !== false) },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact

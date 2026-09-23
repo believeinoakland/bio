@@ -4061,6 +4061,41 @@ export class Store extends DurableObject {
                      + "selection are neither, so they carry no citation edge to move. The whole call is "
                      + "refused rather than narrowed." };
 
+    /* REC-183 / C-33.39 (RETIRED_NOT_CITABLE). A RETIRED ITEM IS
+       NOT CITABLE (State Rules §4.1, BOB #30), and `reinstate` is the THIRD
+       door onto that harm: `cite` refuses a new edge onto a retired item
+       (is-cite-retired), `retire` and `promote` refuse to retire an item a
+       live edge still cites (CITED, REC-181), and so the one way to rest a
+       case on a retired item was to SEVER the edge, RETIRE the item — the
+       remedy §4.1 itself names — and then put the edge back. Moving an edge
+       INTO `confirmed` is a citation made now, so it asks cite's question of
+       the same column, with the same code and the same whole-call refusal.
+       `severed` is not asked: withdrawing reliance on a retired item is the
+       direction the rule wants. `source_status` is not read, as at cite.
+       NOT A DEC-49 REGION, deliberately: the catalog row holds ONE `where`
+       (cite > is-cite-retired) and the guard refuses a marker no row claims, so
+       this second site of the same code is outside the region walk (the
+       guard's F4 MULTI-SITE shape). rec-183-reinstate-retired.test.mjs asserts
+       the code, check and translation arrive through the op. */
+    if (to === "confirmed") {
+      const retiredMembers = [];
+      for (const id of sel.members) {
+        const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+        if (b && normalizeType(b.object_type) === "information"
+            && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
+      }
+      if (retiredMembers.length)
+        return { ok: false, reason: "RETIRED_NOT_CITABLE", code: "RETIRED_NOT_CITABLE",
+                 check: ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE.check,
+                 translation: ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE.translation,
+                 project, handle, offenders: retiredMembers.sort(), drift: sel.drift,
+                 detail: "the group has RETIRED these since the edge was severed, recording that they are "
+                       + "superseded or no longer stand, and reinstating the edge would read to every later "
+                       + "member as live support. Cite what superseded them, or re-collect the source as a new "
+                       + "bundle and cite that. The whole call is refused rather than narrowed to the members "
+                       + "that are not retired." };
+    }
+
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
     if (!liveMd || typeof liveMd.content !== "string") return { ok: false, reason: "NO_BUNDLE_MD", project };
     const parsed = parseFrontmatter(liveMd.content);
