@@ -33,16 +33,6 @@ scope: re-pin at promotion to `adopted`; the case document stamps the adopted bu
 accepts-when: the stamped statements hash equals a hash recomputed from exactly the stamped sha's bytes, across a propose → adopt → later-propose sequence. How a liar passes it: hashing the latest projection, so the arm proposes a newer revision after adoption and recomputes from the stamped sha alone. NEGATIVE CONTROL: pin the proposed sha, and the equality arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (BOB #31's ruling, 21:43Z/21:48Z; `node tools/mintid.mjs REC`).
 
-### D-447 · queued — **A SEARCH HIT'S SCORE LEAKS A PROJECT THE READER CANNOT SEE: the ranked search reads corpus-wide FTS statistics (`bm25(bundles_fts)` in `query.mjs`), so a visible hit's relevance moves when a hidden project is revised — a side channel on what §7.9 says must answer exactly as absence.** Found by REC-149's worker; reported, not re-measured by SCHEDULER. — owner RECORD.
-order: directly after REC-187, ahead of every correction and feature: a disclosure defect outranks both (CLAUDE.md §2; the lane's law) (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
-milestone: M8
-interface: I3 — the search answer stops publishing raw scores; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.9: a project the caller cannot see answers exactly as one that does not exist).
-depends-on: none.
-scope: serve the viewer a filtered rank ORDER only, never a raw score; any score that survives is computed over what the viewer can see. Extend `bio-plane/test/project-sight.test.mjs`.
-accepts-when: revising a project the reader cannot see leaves every field of the reader's answer byte-identical. NEGATIVE CONTROL: publish the raw bm25 score again, and the "a hidden revision moves nothing" arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
 ### REC-188 · queued — **C-41 DOES NOT REQUIRE THE BIAS MANIFEST D-84 STAMPS: `checkCaseDocument` and the C-41 family never read `bias_manifest`, so a case document published without its lens still ratifies.** BOB #32 (22:26Z, G1) folds D-150's `completeness.acknowledged` and its list (possibly empty) into the SAME bump. — owner RECORD.
 order: directly after REC-187: a correction to just-landed work (D-84, D-150); DEC-20's *disclosed* holds only if the gate refuses the absence (SCHEDULER #17, 2026-09-23)
 milestone: M10
@@ -442,16 +432,6 @@ depends-on: D-162.
 accepts-when: the harness declares, tests and places against the real plane, the cover shown on every theme it renders; a proposal renders as a hunch, never as membership. How a liar passes … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #9 (BOB #23's inbox entry, item 2, drained this commit; `node tools/mintid.mjs UI`).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-76» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### D-50 · queued — **PROJECT NAME UNIQUENESS IS ENFORCED AT THE WRITE PATH AND NOT IN THE CHECK CATALOG, SO A CORPUS HANDED IN FROM ELSEWHERE CANNOT** … (whole text: the cut archive)
-order: with the lower product rows, after CPDF-3: nothing can be WRITTEN wrong, because the write path refuses; this is the conformance half, lower than the write path by the row's own words (SCHEDULER #7, 2026-09-21, LED-7)
-milestone: M7
-interface: I3 — a catalog check; the integrator classifies any IC.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §11 item 8, *"Project name uniqueness enforced in the check catalog and at the write path" … (whole text: the cut archive)
-depends-on: none.
-accepts-when: a fixture corpus with two projects differing only in case and spacing is reported by name; distinct names pass; a deactivated collider is still reported. How a liar passes it … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #7 (LED-7; D-50's DEBT row of 2026-07-26; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-50» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
 ### D-241 · queued — **`op=connections` CANNOT SAY THE DERIVATION BEHIND ITS ROWS WAS CUT: REC-95 records each derivation's extent (`#observeConnectionDerivation` writes a `level=meaning` observation, state `partial` when the bound cut it), and `connectionsFor` still answers only its own read's `truncated`.** — owner RECORD.
 order: after D-50, the last of the product rows before the M0 group: a read that says less than the record knows (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
@@ -1153,3 +1133,22 @@ depends-on: REC-14
 accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and … (whole text: the cut archive)
 added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
 cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «REC-15». A worker READS IT before building.
+
+### UI-17 · blocked
+order: blocked: rests on REC-15 (SCHEDULER, first order audit, 2026-09-18)
+milestone: M10
+behind-interface: I3
+depends-on: REC-15, UI-11
+accepts-when: (on waking) as `RECONCILED.md` §3.1 (UI-17), including the Q5 negative control — any prior deferral/dismissal/severance … (whole text: the cut archive)
+added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
+cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «UI-17». A worker READS IT before building.
+
+### LED-7 · queued — **SCHEDULER'S OWN ACT, NOT A WORKER SLOT: CONDUCT must never brief a worker into this row, and does not need to ask again (SCHEDULER #2 to CONDUCT #7, 2026-09-19).** **THE FOLD: every open DEBT row TRIAGED AT THE CODE and archived by one of three doors (closed in fact with its evidence · a BACKLOG item in build order keeping its `D-` id · a stated permanent limitation in its home design); then DEBT.md archived whole and new defects written straight into the backlog.** — waits on LED-6 (it writes into the backlog LED-6 creates). **EXEMPT FROM THE M0 HOLD BY NAME.**
+order: MOVED OUT OF THE CACHE to the foot of the plan by SCHEDULER #15, 2026-09-23: it is SCHEDULER's own continuous act and never a worker slot, but P3 counts every cache row, so holding it cached cost CONDUCT one worker (CONDUCT #15's report). It has no build position; the fold runs from here, batch by batch. (Placed first by SCHEDULER, first order audit, 2026-09-18.)
+milestone: M0 (process, Bob's direction 2026-09-18: *"those debts should be appropriately folded into the build plan so that those debts are retired - in the right build order."*)
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with `docs/development/WORK-PIPELINE.md` §3, which carries LED-7's design and accepts-when.
+depends-on: LED-6
+scope: as §3 states, EXCEPT the actor — batches of ~20 driven by SCHEDULER ITSELF (Bob, 2026-09-19), never a development slot; a row needing a build goes to CONDUCT under its OWN id. The batch that moves D-388 waits on M0-115 (M0-109's DELEGATION).
+accepts-when: as §3 states it.
+added: 2026-09-18 · CONDUCT #5 (BOB #15's inbox entry of that date).

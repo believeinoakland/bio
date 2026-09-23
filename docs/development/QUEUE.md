@@ -346,7 +346,7 @@ accepts-when: through the ops, a hidden project is byte-identical to a nonexiste
 added: 2026-09-19 · SCHEDULER (same entry, item 1).
 uncut: restored whole from «REC-149» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### FL-11 · running — SPAWNED 2026-09-23 ~22:22Z by CONDUCT #18 as ONE SEPARATE CLOUD SESSION titled WORKER FL-11+FL-12 (CONDUCT #18), both rows together (one agent-worker rebuild); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/FL-11 and that session; never conclude queued from the absence alone.
+### FL-11 · integrated — finished; integrated on land/conduct/c17-batch7 @ 162e6c37 (no IC; I8 PROVISIONAL), waiting for its train — flipped by SCHEDULER #17
 order: directly before D-260: inert until D-260 dispatches runs, and D-260 would dispatch runs whose every suggestion is refused (FLEET #4: *"place it with D-260 or ahead of it"*) (SCHEDULER #14, 2026-09-23)
 milestone: M9
 interface: none on the plane — the fleet member's behaviour and its mock; the committed `agent-worker` bundle rebuilds and member bytes move at the next release (DIST's).
@@ -356,7 +356,7 @@ scope: FLEET #4's four: seed `state.target` at run open from the run's context i
 accepts-when: against the mock, a run's suggestions land inside its context and one aimed outside is refused by name; the dedup and empty-level readers receive the run's target. NEGATIVE CONTROL: drop the seeding, and the harness suite fails by name.
 added: 2026-09-23 · SCHEDULER #14 (FLEET #4's trigger; `node tools/mintid.mjs FL`).
 
-### FL-12 · running — SPAWNED 2026-09-23 ~22:22Z by CONDUCT #18 as ONE SEPARATE CLOUD SESSION titled WORKER FL-11+FL-12 (CONDUCT #18), both rows together (one agent-worker rebuild); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/FL-11 and that session; never conclude queued from the absence alone.
+### FL-12 · integrated — finished; integrated on land/conduct/c17-batch7 @ 162e6c37 (no IC), waiting for its train — flipped by SCHEDULER #17
 order: directly after FL-11, before D-260: inert until D-260 dispatches runs, and every internet-level look a dispatched run asks for would be refused ; ONE WORKER TAKES FL-11 AND FL-12 TOGETHER, one `agent-worker` bundle rebuild, so member bytes move once (FLEET #4, 2026-09-23) (SCHEDULER #14, 2026-09-23; REC-168's finding via CONDUCT #14)
 milestone: M9
 interface: none on the plane — the fleet member's call and its mock; the `agent-worker` bundle rebuilds at the next release (DIST's).
@@ -513,6 +513,27 @@ depends-on: CAP-1 (done), a DIST deploy
 added: 2026-07-31 · CONDUCT
 landed:
 uncut: restored whole from «CPDF-3» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
+
+### D-447 · queued — **A SEARCH HIT'S SCORE LEAKS A PROJECT THE READER CANNOT SEE: the ranked search reads corpus-wide FTS statistics (`bm25(bundles_fts)` in `query.mjs`), so a visible hit's relevance moves when a hidden project is revised — a side channel on what §7.9 says must answer exactly as absence.** Found by REC-149's worker; reported, not re-measured by SCHEDULER. — owner RECORD.
+order: directly after REC-187, ahead of every correction and feature: a disclosure defect outranks both (CLAUDE.md §2; the lane's law) (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
+milestone: M8
+interface: I3 — the search answer stops publishing raw scores; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.9: a project the caller cannot see answers exactly as one that does not exist).
+depends-on: none.
+scope: serve the viewer a filtered rank ORDER only, never a raw score; any score that survives is computed over what the viewer can see. Extend `bio-plane/test/project-sight.test.mjs`.
+accepts-when: revising a project the reader cannot see leaves every field of the reader's answer byte-identical. NEGATIVE CONTROL: publish the raw bm25 score again, and the "a hidden revision moves nothing" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-50 · queued — **PROJECT NAME UNIQUENESS IS ENFORCED AT THE WRITE PATH AND NOT IN THE CHECK CATALOG, SO A CORPUS HANDED IN FROM ELSEWHERE CANNOT BE JUDGED FOR IT.** `store.mjs` refuses `NAME_TAKEN` by `Store.projectNameKey` at the write, and no `bio-checks` check reports two projects whose names collide, which is what the conformance path is for. — owner RECORD.
+order: with the lower product rows, after CPDF-3: nothing can be WRITTEN wrong, because the write path refuses; this is the conformance half, lower than the write path by the row's own words (SCHEDULER #7, 2026-09-21, LED-7)
+milestone: M7
+interface: I3 — a catalog check; the integrator classifies any IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §11 item 8, *"Project name uniqueness enforced in the check catalog and at the write path"*, with §7.1's rule: case-insensitive, whitespace-collapsed, across deactivated projects.
+depends-on: none.
+scope: a catalog check over a handed corpus naming every pair of projects whose `Store.projectNameKey` collide, deactivated ones included, IMPORTING that key function rather than copying it.
+accepts-when: a fixture corpus with two projects differing only in case and spacing is reported by name; distinct names pass; a deactivated collider is still reported. How a liar passes it: a second normaliser that agrees on the fixture, so the check imports `projectNameKey`. NEGATIVE CONTROL: compare raw titles instead of the key, and the case-and-spacing arm fails by name.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; D-50's DEBT row of 2026-07-26; keeps its `D-` id).
+uncut: restored whole from «D-50» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
