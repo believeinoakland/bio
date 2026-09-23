@@ -19545,6 +19545,7 @@ paths:
 `QUEUE.md`, `BACKLOG.md`, any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+amended 2026-09-23: ALSO `tools/pushguard.mjs` (a NEW `gate-results`-only arm: gateResultsOnly/gateResultsCheck and its call in run(), nothing else) and `.gitignore` (the `.m0126-harness/` pen line); `docs/development/VERIFICATION.md` one short section.
 
 ## DELEGATION 2026-09-23 SCHEDULER (#15) -> BOB — **THREE QUESTIONS, ONE EACH: M0-106 against §3a's full backstop, D-219's grade-D label, D-168's retired leg**
 
