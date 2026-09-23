@@ -70,6 +70,9 @@ export const MOVED_FILES = [
   "docs/development/CLAIMS.md",
   "docs/development/QUEUE.md",
   "docs/development/BACKLOG.md",
+  /* M0-119 (WORK-PIPELINE §2, BOB #28): the backlog's TAIL, the same order continued. Created on `coord` by its first
+     demotion (or the `rebalance` intent), so it has no pointer on `main`; `readState` finds it on the ref. */
+  "docs/development/BACKLOG-LATER.md",
   "docs/development/DEBT.md",
   "docs/development/PLACEMENT.md",
 ];
@@ -355,7 +358,7 @@ async function applyIntent(dir, it) {
     case "row": wr(need(it.file), replaceRow(rd(it.file), it.id, it.text ?? "")); return;
     case "insert": wr(need(it.file), insertRow(rd(it.file), it.where, it.id, it.text)); return;
     case "status": {
-      const files = it.file ? [need(it.file)] : ["docs/development/QUEUE.md", "docs/development/BACKLOG.md"];
+      const files = it.file ? [need(it.file)] : ["docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md"];
       const holders = files.filter((f) => { const t = rd(f); return t !== null && new RegExp(`^###\\s+${it.id.replace(/[-]/g, "\\-")}\\s+·`, "m").test(t); });
       if (!holders.length) throw refusal("ROW_NOT_FOUND", `no row ${it.id} in ${files.join(" or ")}.`);
       if (holders.length > 1) throw refusal("ROW_AMBIGUOUS", `${it.id} is a row of ${holders.join(" and ")} — name the file.`);
@@ -372,6 +375,26 @@ async function applyIntent(dir, it) {
       const L = await import("./ledger.mjs");
       try { L.refill({ repo: dir }); }
       catch (e) { if (e instanceof L.Refusal) throw refusal(`REFILL_${e.code}`, e.message); throw e; }
+      return;
+    }
+    /* M0-119: hold the backlog's split at its budget — whole rows from its foot to the tail's head, or back as room
+       frees (`ledger.mjs` `rebalance`). The named intent also CREATES an absent tail's header; the rebalance `write` runs
+       after every write's intents (`auto`) never does, and is skipped on a tree that holds no backlog. */
+    case "rebalance": {
+      const L = await import("./ledger.mjs");
+      if (it.auto && rd(L.LEDGERS.BACKLOG.live) === null) return;
+      try { L.rebalance({ repo: dir, ensure: !it.auto }); }
+      catch (e) { if (e instanceof L.Refusal) throw refusal(`REBALANCE_${e.code}`, e.message); throw e; }
+      return;
+    }
+    /* M0-119: an exact text, found ONCE in the file it is applied to, replaced — for a preamble line no row intent
+       reaches. Anchored to its text, never a line number, so a concurrent write elsewhere in the file is kept. */
+    case "swap": {
+      const t = rd(need(it.file));
+      if (t === null) throw refusal("FILE_ABSENT", `${it.file} does not exist.`);
+      const n = it.old ? t.split(it.old).length - 1 : 0;
+      if (n !== 1) throw refusal(n ? "SWAP_AMBIGUOUS" : "SWAP_NOT_FOUND", `the text to replace occurs ${n} time(s) in ${it.file}, not once: "${String(it.old).slice(0, 80)}"`);
+      wr(it.file, t.replace(it.old, () => it.text));
       return;
     }
     default: throw refusal("UNKNOWN_INTENT", `unknown intent ${JSON.stringify(it).slice(0, 120)}`);
@@ -482,7 +505,7 @@ export async function ledgerChecks({ repo = ROOT, today = undefined, git: gitArm
     for (const r of a.budget.rowsOver) warns.push(`${r.ledger} row ${r.id} is ${r.bytes} B against ${r.budget}`);
     if (a.pipeline) for (const [k, p] of Object.entries(a.pipeline.arms))
       for (const v of p.violations) (p.armed ? fails : warns).push(`${k} ${L.describeViolation(k, v)}`);
-    return { fails, warns, note: a.pipeline ? `cache ${a.pipeline.cacheRows} row(s), backlog ${a.pipeline.backlogRows} row(s)` : "pipeline UNREAD" };
+    return { fails, warns, note: a.pipeline ? `cache ${a.pipeline.cacheRows} row(s), backlog ${a.pipeline.backlogRows} row(s), tail ${a.pipeline.tailRows} row(s)` : "pipeline UNREAD" };
   });
 
   await arm("LC-debt-agreement", "ledger §3 (live)", "no live DEBT row owed lists for any lane reads closed, and no residue reads closed", async () => {
@@ -631,7 +654,8 @@ function commitFrom(repo, tip, dir, message, { env = null } = {}) {
 
 /** THE WRITE. Intents are re-applied to the fresh tip on every attempt; nothing is ever merged. */
 export async function write({ repo = ROOT, intents, message, remote = REMOTE, branch = BRANCH, base = "HEAD",
-                              dryRun = false, maxAttempts = 6, checks = true, beforePush = null, today = undefined } = {}) {
+                              dryRun = false, maxAttempts = 6, checks = true, beforePush = null, today = undefined,
+                              rebalance = true } = {}) {
   if (!Array.isArray(intents) || !intents.length) throw refusal("NO_INTENT", "nothing to write — name at least one intent.");
   if (!message || !String(message).trim()) throw refusal("NO_MESSAGE", "a coord commit carries a message saying what the note is (-m).");
   const tracking = `refs/remotes/${remote}/${branch}`;
@@ -646,6 +670,9 @@ export async function write({ repo = ROOT, intents, message, remote = REMOTE, br
     const dir = materialise(repo, tip, base);
     try {
       for (const it of intents) await applyIntent(dir, it);
+      /* M0-119: A PLACEMENT OVER BUDGET MOVES THE TAIL, NEVER CUTS A ROW (WORK-PIPELINE §2) — so every write, whatever its
+         intents, ends by holding the backlog's split at its budget, BEFORE the ledger checks judge the result. */
+      if (rebalance && !intents.some((it) => it.op === "rebalance")) await applyIntent(dir, { op: "rebalance", auto: true });
       let checked = null;
       if (checks) {
         checked = await ledgerChecks({ repo: dir, today });
@@ -800,6 +827,9 @@ function usage(code = 2) {
     "           --insert <path> before|after <ID> <textfile|->   a new row placed by the row it follows or precedes",
     "           --archive <ID>                          node tools/ledger.mjs archive, inside the write",
     "           --refill                                node tools/ledger.mjs refill, inside the write",
+    "           --rebalance                             node tools/ledger.mjs rebalance, inside the write (creates an absent tail);",
+    "                                                   every write ends with one anyway (M0-119), which never creates the tail",
+    "           --swap <path> <oldfile|-> <newfile|->   an exact text, found once, replaced (a preamble line)",
     "           --intents <json-file>                   an array of {op, file, text, under, id, state, note}",
     "       node tools/coord.mjs checks [--git]",
     "       node tools/coord.mjs churn [--since <iso>] [--until <iso>] [--ref <ref>]",
@@ -835,6 +865,8 @@ async function cli(argv) {
       }
       else if (a === "--archive") { intents.push({ op: "archive", id: rest[i + 1] }); i += 1; }
       else if (a === "--refill") intents.push({ op: "refill" });
+      else if (a === "--rebalance") intents.push({ op: "rebalance" });
+      else if (a === "--swap") { intents.push({ op: "swap", file: rest[i + 1], old: textOf(rest[i + 2]), text: textOf(rest[i + 3]) }); i += 3; }
       else if (a === "--intents") { intents.push(...JSON.parse(readFileSync(rest[i + 1], "utf8"))); i += 1; }
       else if (a === "-m") { i += 1; }
       else if (a === "--dry-run") { /* below */ }
