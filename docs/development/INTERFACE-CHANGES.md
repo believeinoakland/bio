@@ -13339,7 +13339,7 @@ bytes is UNDETERMINED until counted live.
   the HANDED manifest against the lens now, and is now the lens IN FORCE AT THE OPEN against the lens now (for a run with a
   recorded open), so a stale-handed run reads `moved: false` where it read `true`; and a run handed NO manifest while a lens was in
   force no longer states `"no manifest was in force"` (it states `"no manifest was handed to this run, and one was in force when
-  it opened"`, `hand: "stale"`). Measured on the unedited tree: the new suite reads 8 pass / 40 fail against `f05c1efd`'s sources.
+  it opened"`, `hand: "stale"`). Measured on the unedited tree: the new suite reads 8 pass / 39 fail against `f05c1efd`'s sources.
   **Why I5 ADDITIVE:** one new table and one new nullable column, no column moved: `inquiry_run_surfacings (bundle_id PK, run,
   principal, at)`, in `op=purge`'s TABLES list (both arms) and counted by `op=stats` (`inquiryRunSurfacings`); `ai_runs.lens_at_open`
   (JSON, NULL on every run opened before it, read back as `not recorded`, never back-filled).
@@ -13377,11 +13377,11 @@ recorded" }`), `hand` (`in_force` | `stale` | null) and `moved_basis` (`at_open`
 beside an empty hand once the open is recorded. `RUN_BOUNDS.surfaces` (the skill pack's `bounds` vocabulary carries it).
 
 **NEGATIVE CONTROL** (`node test/d85-surface-run.control.mjs` from `bio-plane/`, every arm on a COPY of `src/`, real sources
-hashed before and after, untouched): ALL SIXTEEN AS DECLARED — baseline 48/0 · **drop-run-check (THE ROW'S CONTROL) 28/20, the
-outside-a-run arm O1 by name** · no-sight 47/1 · no-principal 36/12 · gate-credential-runs-only (THE LIAR) 37/11 · exact-match
-(too tight) 34/14 · no-status 47/1 · no-bound-required 47/1 · no-bound-cap 46/2 · no-stamp 18/30 · stamp-not-deleted 47/1 ·
-no-link-row 42/6 · hand-by-now (THE RULE-3 LIAR) 46/2 · moved-by-hand 46/2 · no-lens-at-open 41/7 · sight-by-row
-(over-strictness) 48/0.
+hashed before and after, untouched): ALL SIXTEEN AS DECLARED — baseline 47/0 · **drop-run-check (THE ROW'S CONTROL) 27/20, the
+outside-a-run arm O1 by name** · no-sight 46/1 · no-principal 35/12 · gate-credential-runs-only (THE LIAR) 36/11 · exact-match
+(too tight) 33/14 · no-status 46/1 · no-bound-required 46/1 · no-bound-cap 45/2 · no-stamp 17/30 · stamp-not-deleted 46/1 ·
+no-link-row 41/6 · hand-by-now (THE RULE-3 LIAR) 45/2 · moved-by-hand 45/2 · no-lens-at-open 40/7 · sight-by-row
+(over-strictness) 47/0.
 
 **FOR CONDUCT at integration:** resolve this IC against the bases read then (I3 54.0.0 and I5 1.25.0 or later), move I3 and I5 in
 `INTERFACES.md`, and re-run the control. Two findings are routed with their fixes in the item's report (a negative `consume` on

@@ -1,8 +1,8 @@
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/d85-surface-run.control.mjs` — deliberately NOT a `.test.mjs`, because it patches COPIES of `src/` while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/d85-surface-run.control.mjs [arm]`. RESULTS, RUN 2026-09-23 by the D-85 worker (CONDUCT #14's, cloud) on f05c1efd + this item (real src/index.mjs 711,476 B sha256 3e29b9eabc5e…, src/store.mjs 2,831,568 B 6a14a6c063e9…, src/airun.mjs 139,535 B fdef7964b6f0…, checks/bio-checks.mjs 825,591 B 4e4487b043e0…, untouched: YES), ALL SIXTEEN ARMS AS DECLARED (five declarations corrected at the first run, the ARMS right: a refusal that becomes a landing also SPENDS alice's bound, so L1/L7 and M3 move with it; `stamp-not-deleted` leaves M2 green because the forged session is refused): baseline 48/0 · **drop-run-check — THE ROW'S CONTROL, `promote`'s call of the gate disarmed -> 28/20: ARM O1 (THE OUTSIDE-A-RUN ARM, BY NAME), O2, O3, R1-R5, F1, F2, U0-U2, S1, S2, B1, B3, M3, L1, L7** · no-sight -> 47/1: U1 · no-principal -> 36/12 · gate-credential-runs-only (THE LIAR, position asked only of a credential's run) -> 37/11: R1 R3 (a SESSION's run) by name, R2 green · exact-match (a fence tighter than the rule) -> 34/14: L1 first · no-status -> 47/1: S1 · no-bound-required -> 47/1: B1 · no-bound-cap -> 46/2: B3 M3 · no-stamp -> 18/30 · stamp-not-deleted -> 47/1: M1 · no-link-row -> 42/6: L4 L5 N3 P1 T6 W1 · hand-by-now (THE RULE-3 LIAR, stale judged against the lens NOW) -> 46/2: T4 T5 · moved-by-hand (the pre-item `moved`) -> 46/2: T2 T6 · no-lens-at-open -> 41/7 · sight-by-row (over-strictness) -> 48/0. BEFORE THIS ITEM (the suite run against f05c1efd's src/ with this item's checks/): 8 pass, 40 fail — alice's credential created questions naming no run, under cora's run and under an ended one, all landing with no link and no bound; a run handed a stale lens could not be told from one whose lens moved.
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/d85-surface-run.control.mjs` — deliberately NOT a `.test.mjs`, because it patches COPIES of `src/` while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/d85-surface-run.control.mjs [arm]`. RESULTS, RUN 2026-09-23 by the D-85 worker (CONDUCT #14's, cloud) on f05c1efd + this item (real src/index.mjs 711,476 B sha256 3e29b9eabc5e…, src/store.mjs 2,831,568 B 6a14a6c063e9…, src/airun.mjs 139,535 B fdef7964b6f0…, checks/bio-checks.mjs 825,591 B 4e4487b043e0…, untouched: YES), ALL SIXTEEN ARMS AS DECLARED (five declarations corrected at the first run, the ARMS right: a refusal that becomes a landing also SPENDS alice's bound, so L1/L7 and M3 move with it; `stamp-not-deleted` leaves M2 green because the forged session is refused): baseline 47/0 · **drop-run-check — THE ROW'S CONTROL, `promote`'s call of the gate disarmed -> 27/20: ARM O1 (THE OUTSIDE-A-RUN ARM, BY NAME), O2, O3, R1-R5, F1, F2, U0-U2, S1, S2, B1, B3, M3, L1, L7** · no-sight -> 46/1: U1 · no-principal -> 35/12 · gate-credential-runs-only (THE LIAR, position asked only of a credential's run) -> 36/11: R1 R3 (a SESSION's run) by name, R2 green · exact-match (a fence tighter than the rule) -> 33/14: L1 first · no-status -> 46/1: S1 · no-bound-required -> 46/1: B1 · no-bound-cap -> 45/2: B3 M3 · no-stamp -> 17/30 · stamp-not-deleted -> 46/1: M1 · no-link-row -> 41/6: L4 L5 N3 P1 T6 W1 · hand-by-now (THE RULE-3 LIAR, stale judged against the lens NOW) -> 45/2: T4 T5 · moved-by-hand (the pre-item `moved`) -> 45/2: T2 T6 · no-lens-at-open -> 40/7 · sight-by-row (over-strictness) -> 47/0. BEFORE THIS ITEM (the suite run against f05c1efd's src/ with this item's checks/): 8 pass, 39 fail — alice's credential created questions naming no run, under cora's run and under an ended one, all landing with no link and no bound; a run handed a stale lens could not be told from one whose lens moved.
  * =========================================================================
  * D-85 — AN ASSISTANT OPENS A QUESTION ONLY INSIDE A RUN IT HOLDS, AND A RUN KEEPS THE LENS IN FORCE AT ITS OPEN.
  *
- * `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rules 2 and 3 (BOB #25, 2026-09-21), with §3 (the run
+ * `INVESTIGATIVE-SESSION.md` §11 item 5, rules 2 and 3 (BOB #25, 2026-09-21), with §3 (the run
  * carries the lens). RULE 2: an `ai` credential's creation of an inquiry names a RUNNING run whose PRINCIPAL it is;
  * the plane records the link in an instance row keyed by the new inquiry — never a line in its signed bytes — and
  * counts it against a declared `surfaces` bound, refused when none is declared (the `mints` bound's rule); the
@@ -23,7 +23,7 @@
  *
  * WHAT THIS SUITE CANNOT SEE: (i) one isolate, one store; (ii) no surface — it asserts what the plane SENDS;
  * (iii) a run opened BEFORE this item (its `lens_at_open` is NULL): no op can write one, so the `not recorded` branch
- * of the RUN's lens is read only structurally (ARM T7) — the QUESTION's `not recorded` is driven (ARM N); (iv) an
+ * of the RUN's lens (and its `unreadable` twin) is NOT asserted here — the QUESTION's `not recorded` is driven (ARM N); (iv) an
  * organisation-kind `ai` key (REC-152's suite covers that branch of `runPrincipalOf`); (v) token classes other than
  * `ai` (admin, member, probe tokens) — they are not the assistant the rule names and are untouched here.
  * ========================================================================= */
@@ -39,7 +39,6 @@ import { join } from "node:path";
 const SRC_DIR = process.env.D85_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
 const { AI_RUN_CHECKS, SURFACE_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
-const STORE_SRC = readFileSync(join(SRC_DIR, "store.mjs"), "latin1");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -450,13 +449,11 @@ console.log("\n--- ARM T · RULE 3: the run records the lens in force at its ope
   t("ARM T6 (THE QUESTION STATES ITS RUN's LENS): a question opened under a stale-handed run reads that run's lens "
     + "block, hand `stale`, moved false", [landed?.ok, pq?.surfaced_in?.lens?.hand, pq?.surfaced_in?.lens?.moved,
      pq?.surfaced_in?.lens?.at_open?.statements_sha === L2.statements_sha], [true, "stale", false, true]);
-  t("ARM T7 (NOT RECORDED, STRUCTURALLY — this suite cannot mint a pre-rule run): a run with no `lens_at_open` "
-    + "states `not recorded` and keeps the old hand-against-now comparison, basis `handed`; one whose record cannot "
-    + "be read back says so, never `not recorded`",
-    [/recorded: false, stated: "not recorded"/.test(STORE_SRC),
-     /const basis = atOpen \? "at_open" : atOpenUnreadable \? null : "handed";/.test(STORE_SRC),
-     /recorded: true, unreadable: true,/.test(STORE_SRC)],
-    [true, true, true]);
+  /* A STRUCTURAL ARM T7 (a regex over store.mjs's text for the pre-rule branch) stood here at the first run and was
+     REMOVED 2026-09-23 before landing: a source match proves a spelling, not a behaviour, and the branch is named in
+     "WHAT THIS SUITE CANNOT SEE" (iii) instead. (The same pre-landing pass took the design corpus's directory prefix
+     out of this header: a suite whose source spells it is doc-facing to the gate's selector (and so is one naming a tool that reaches the corpus), which raised `statepaths.test.mjs`'s
+     MEASUREMENTS-only selection 60 -> 61, over M0-121's ceiling — measured, 20/0 after.) */
 }
 
 console.log("\n--- ARM W · WHOLE-STORE PURGE takes every link ---");
