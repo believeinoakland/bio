@@ -1,5 +1,7 @@
 # Measurements
 
+**FROZEN HISTORY since 2026-09-23 (M0-100): add nothing here.** A new measurement entry is its own file, `docs/development/measurements/<id>.md` (the id from `node tools/mintid.mjs M`); a later state of an entry is appended to that entry's file. `node tools/entries.mjs` reads both in id order.
+
 Every number this project's limits and defaults rest on, with the date and the
 instrument. Kept in one place because the alternative is what happened before it
 existed: a cap of 40 written from a guess, a comment claiming "50 on this

@@ -36,8 +36,8 @@ FL-3's table or in a C-number.** Write the judgement; cite the fence.
 - the skill / doctrine pack that SK-1 landed, and its versioned successors
 - its own tests and fixtures
 - `docs/development/kickoffs/SKILL.md` (this file)
-- `docs/development/CLAIMS.md` (your claim entry), `docs/development/MEASUREMENTS.md`
-  (appended)
+- `docs/development/CLAIMS.md` (your claim entry), `docs/development/measurements/<id>.md`
+  (one file per figure, M0-100)
 
 **NOT** `bio-plane/src/**`, **NOT** `bio-plane/checks/**` (a prohibition's CODE half is a
 C-number and belongs to the plane — SK-3 cites `PL-3`'s landed boilerplate check rather

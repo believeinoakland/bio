@@ -288,6 +288,8 @@ cannot be both governed and excluded.
 | `docs/development/CLAIMS.md` | ledger | append-only state; `register-grammar` and the DELEGATION arm check it |
 | `docs/development/INTERFACES.md` | ledger | append-only state; the interface arms check it |
 | `docs/development/INTERFACE-CHANGES.md` | ledger | append-only state; `mergecarry` and the resolution arms check it |
+| `docs/development/measurements/*.md` | ledger | one file per measurement entry since M0-100 (`MEASUREMENTS.md` is its frozen history); `tools/entries.mjs` reads both and `plancheck` §2e checks each file |
+| `docs/development/interface-changes/*.md` | ledger | one file per interface-change entry since M0-100 (`INTERFACE-CHANGES.md` is its frozen history); `tools/entries.mjs` reads both and `plancheck` §2e checks each file |
 | `docs/development/ORCHESTRATION.md` | process document | describes how the project works, not what the system is |
 | `docs/development/PARALLELISM.md` | process document | describes how the project works, not what the system is |
 | `docs/development/VERIFICATION.md` | process document | describes how the project works, not what the system is |
