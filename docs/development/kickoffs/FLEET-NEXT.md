@@ -112,6 +112,18 @@ D-260. Its order line says ONE worker takes FL-11 and FL-12 together with one bu
 section's own "Lands by pushing `HEAD:main`" line above is superseded. Run `coord.mjs` from a checkout of `origin/main`:
 a session branch cut before the cutover does not have the tool.
 
+**0.72.0 (DIST #5), read by FLEET #4 at 2026-09-23T02:55Z: labels only, again.** Live: the three members and `biosmoke7`
+answer `0.72.0`. There is NO `v0.72.0` tag on the remote (the git proxy refused it; DIST's commit `b9d839da` on coord),
+so the released tree is the branch `land/dist/release-0.72.0` (`2049195c`). Its `RELEASE.json` names `a7e5f590…`,
+`b26dee19…`, `0d99f5d0…`, the same bytes as v0.59.0 … v0.71.0. `dist/` and the `release/` copies agree. The staleness check
+on that tree: 21 checked, 0 drift, 2 unreadable (the vendored `unpdf`, since a fresh worktree has no install). Until the tag
+exists, compare against that branch, never against `main` (whose `RELEASE.json` still reads 0.71.0).
+
+**Bob's rule on pushes, relayed by BOB #29 on 2026-09-23 (its home is TREE-SHARING §3; not yet in that section on `main`
+at 02:55Z):** every failed GitHub run emails Bob. Push `land/fleet/*` only after its own local gate is GREEN on that
+exact tree. A negative control never goes to a `land/*` or `integrate/*` branch; controls run locally. A branch FLEET
+pushed that reads red is diagnosed at once. FLEET's session branch carries no `.github/workflows/`, so it has fired no run.
+
 ## Carried from the old account's memory, which will not travel
 
 - A background task's exit code is its WRAPPER's. Read the tool's own completion line (`N/N suites green · …`).
