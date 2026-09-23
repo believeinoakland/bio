@@ -86,7 +86,11 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    `mintid.test` already has; the one new reader, 31 -> 32), and two doc-facing suites selected as "doc-facing, and
    docs/development/MEASUREMENTS.md changed": D-125's `plane:d125-findingmute.test.mjs` and D-278's
    `plane:d278-codeless-refusals.test.mjs`. */
-const UNITS_CEILING = 67;
+/* MOVED AGAIN 2026-09-23 by D-242 (67 -> 68), from the figure this suite PRINTED on D-242's tree over origin/main
+   a8f6094a (`68 unit(s) of 391 selected · 33 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`): the one new unit
+   and the one new reader (32 -> 33) is D-242's new suite `mintid-take.test.mjs`, which imports `tools/mintid.mjs` to
+   drive `take` — the edge `mintid.test` and `exportnotice.test` already have; nothing new reaches through `coord.mjs`. */
+const UNITS_CEILING = 68;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 
