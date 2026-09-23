@@ -13606,6 +13606,72 @@ function coversImagePlacement(e, container) {
     + `[${want.join(', ')}], the rectangle the extent names`;
 }
 
+/* D-126 / C-76 — THE TASK-ACTOR FENCE'S REFUSAL, TRANSLATED BECAUSE A MEMBER CAN NOW MEET IT.
+ *
+ * `NOT_YOURS` is REC-4's fence (`store.mjs #refuseNotYours`): a member who is neither a task's assignee nor an
+ * administrator may not resolve or forward it. Until D-126 no surface could receive it — `op=queue` lists a member
+ * only their own and unassigned obligations, so the queue had nothing it could be refused (UI-14 §7). A SELECTION
+ * changes that: an obligation that moves to somebody else between the paint and the act is RETAINED under this
+ * code, and the queue renders the reason. So the code enters reach and carries a canned sentence (DEC-49). The
+ * `detail` still names who holds it; the translation does not, because it is canned. */
+export const TASK_ACTOR_CHECKS = {
+  NOT_YOURS: {
+    check: 'C-76.1',
+    where: 'src/store.mjs #refuseNotYours > is-task-actor-fence',
+    translation: 'This task is not yours to act on: it is with another member now, so nothing was done to it. '
+      + 'The record says below who holds it. Ask them, or an administrator, if it still needs you.',
+  },
+};
+
+/* D-126 / C-75 — THE PER-ITEM WEIGHT (NOTIFICATIONS.md §Applying a handler to a selection).
+ *
+ * Bob's requirement: *"select some (or all) to apply the action to. When the handler is applied to a
+ * notice, it would then indicate whether that notice can be deleted from the list. If that action
+ * didn't work for one or more, they'd stay in the list so that the user can take a different action."*
+ * The design's rule: **each item independently succeeds or is RETAINED WITH A REASON**, and the reason is
+ * the act's OWN refusal for that item, in the plane's own words — never a sentence this family composes
+ * about it. So this family words only what belongs to the SET: a set that is not a set, a set too large
+ * to act on, an item that is not an item, an item whose act threw, and the summary that some items were
+ * kept. Every retained item still carries its own act's `reason` beside this family's summary.
+ *
+ *   C-75.1 — no items: `items` is absent from the set form, not an array, or empty.
+ *   C-75.2 — too many items: over `Store.PER_ITEM_MAX`, refused WHOLE before any item is tried.
+ *   C-75.3 — one item is not an object; THAT item is retained and the others are still tried.
+ *   C-75.4 — one item's act failed without a refusal (it threw); THAT item is retained and says so.
+ *   C-75.5 — the summary: at least one item was retained. Carried beside `items[]`, never instead of it. */
+export const PER_ITEM_CHECKS = {
+  SET_NO_ITEMS: {
+    check: 'C-75.1',
+    where: 'src/store.mjs #perItem > is-per-item-set-shape',
+    translation: 'Nothing was selected, so nothing was done. Choose at least one item and try again.',
+  },
+  SET_TOO_LARGE: {
+    check: 'C-75.2',
+    where: 'src/store.mjs #perItem > is-per-item-set-shape',
+    translation: 'That selection is larger than the record acts on at once, so nothing was done to any of '
+      + 'it. Select fewer items and apply the action again.',
+  },
+  SET_ITEM_MALFORMED: {
+    check: 'C-75.3',
+    where: 'src/store.mjs #perItem > is-per-item-malformed',
+    translation: 'This item could not be read as an item, so it was left as it was. The rest of the '
+      + 'selection was still acted on, one by one.',
+  },
+  SET_ITEM_FAILED: {
+    check: 'C-75.4',
+    where: 'src/store.mjs #perItem > is-per-item-failed',
+    translation: 'The record could not complete the action on this item and did not change it. It stays '
+      + 'in your list. The rest of the selection was still acted on, one by one.',
+  },
+  SET_ITEMS_RETAINED: {
+    check: 'C-75.5',
+    where: 'src/store.mjs #perItem > is-per-item-retained',
+    translation: 'Not every selected item was handled. The ones that were have left your list; the ones that '
+      + 'were not are still there, each with the reason the record gave for it, so you can take a '
+      + 'different action on them.',
+  },
+};
+
 /* =========================================================================
  * FW-17 · THE DETERMINING REFERENCE PAIR, AND WHAT A PORTION MAY EARN FROM IT
  * (D-161; Bob's rulings of 2026-09-14, CONTENT-EXTENT-DESIGN-SPACE.md 5.1
