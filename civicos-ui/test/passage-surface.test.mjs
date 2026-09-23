@@ -134,7 +134,14 @@ const mf = new Miniflare({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-ui62", MEMBER_TOKEN: "mem-ui62", PROBE_TOKEN: "prb-ui62", VERSION: "test" },
+  bindings: { ADMIN_TOKEN: "adm-ui62", MEMBER_TOKEN: "mem-ui62", PROBE_TOKEN: "prb-ui62", VERSION: "test",
+                /* CORRECTED 2026-09-23 BY UI-79 (D-436, IC-172; State Rules §3.1), never exempted. This plane recorded NO
+                   producing group, and its seeds stated one group's slug as a LITERAL in their bytes and their meta — the pin
+                   the member UI carried, true of one instance and false of every instance `newgroup` installs. A store's
+                   producing group is ONE recorded value, written at its FIRST BOOT from the slug the installer binds, and the
+                   plane stamps it into every creation whatever a caller says; so the store records one here, the way every
+                   installed store does, and the seeds name none. The slug is deliberately no real group's. */
+                INSTANCE_NAME: "fixture-group" },
 });
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -163,7 +170,7 @@ const infoMd = (id, authority) => ["---",
   `title: "Info ${id}"`, "current_state: collected", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
-  "group: believe-in-oakland", "references: []", "state_history: []",
+  "references: []", "state_history: []",
   "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "criticality: supporting", "source_status: unchanged",
@@ -177,7 +184,7 @@ const inquiryMd = (id) => ["---",
   `title: "What does the packet say?"`, "current_state: open", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
-  "group: believe-in-oakland", "references: []", "state_history: []",
+  "references: []", "state_history: []",
   "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
@@ -200,7 +207,7 @@ const promote = async (id, text, type, { document = null, registerOnly = null } 
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,
     snapKey: `20260917T${String(300000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, title: `Bundle ${id}`,
             current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER },
     files,
     /* `registerOnly` REGISTERS A CAPTURE AND PROMOTES NO READING FOR IT. It is

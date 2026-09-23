@@ -86,8 +86,11 @@ const ARMS = {
   /* The drift guard's own direction. */
   vocabdrift: {
     file: APP,
-    from: `const CONTENT_EXTENT_KINDS = ["document", "pdf-page", "sheet-cell", "slide-shape", "doc-para"];`,
-    to:   `const CONTENT_EXTENT_KINDS = ["document", "pdf-page", "sheet-cell", "slide-shape"];`,
+    /* CORRECTED 2026-09-23 BY UI-79: this anchor had not matched since FW-19 (c8d9c6cb) wrapped the table onto two
+       lines and added three kinds — the arm REFUSED TO ARM on every run since, measured on f05c1efd. It now drops the
+       last kind, `image`, from the table as it stands. */
+    from: `"sheet-range", "doc-table", "image"];`,
+    to:   `"sheet-range", "doc-table"];`,
     why: "an arm dropped from the surface's copy of the grammar — the drift that made the UI's "
        + "tables the part that rotted through the second rename (D-138)",
     expect: "FAIL in check-semantics.mjs naming CONTENT_EXTENT_KINDS as drifted, and FAIL in the "

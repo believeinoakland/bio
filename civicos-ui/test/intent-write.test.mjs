@@ -264,7 +264,14 @@ const mf = new Miniflare({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-ui13", MEMBER_TOKEN: "mem-ui13", PROBE_TOKEN: "prb-ui13", VERSION: "test" },
+  bindings: { ADMIN_TOKEN: "adm-ui13", MEMBER_TOKEN: "mem-ui13", PROBE_TOKEN: "prb-ui13", VERSION: "test",
+                /* CORRECTED 2026-09-23 BY UI-79 (D-436, IC-172; State Rules §3.1), never exempted. This plane recorded NO
+                   producing group, and its seeds stated one group's slug as a LITERAL in their bytes and their meta — the pin
+                   the member UI carried, true of one instance and false of every instance `newgroup` installs. A store's
+                   producing group is ONE recorded value, written at its FIRST BOOT from the slug the installer binds, and the
+                   plane stamps it into every creation whatever a caller says; so the store records one here, the way every
+                   installed store does, and the seeds name none. The slug is deliberately no real group's. */
+                INSTANCE_NAME: "fixture-group" },
 });
 
 /* Direct plane calls, for SEEDING and for INDEPENDENT verification only. The
@@ -292,7 +299,7 @@ const bundleMd = (id, type = "information", label = id) => [
   `title: "Doc ${label}"`, `current_state: ${type === "project" ? "forming" : "collected"}`, "prior_state: null",
   `created: ${NOW}`, `last_updated: ${NOW}`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
-  "group: believe-in-oakland", "references: []", "state_history: []",
+  "references: []", "state_history: []",
   "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
   "  source: null", "visuals: []", "criticality: supporting", "source_status: unchanged",
   "source:", "  locator: in hand", "  authority: synthetic", `  retrieved: ${NOW}`,
@@ -308,7 +315,7 @@ async function seedDoc(captureSha, entities, { type = "information", tok = "mem-
   const prov = JSON.stringify({ documents:[doc] });
   const r = await post("promote", {
     ...(type === "project" ? {} : { bundleId:id }), base:null, snapKey:"20260724T010000Z_aaaa1111", author:"ui13",
-    meta:{ object_type:type, group:"believe-in-oakland", title:`Doc ${id}`,
+    meta:{ object_type:type, title:`Doc ${id}`,
            current_state: type === "project" ? "forming" : "collected", created:NOW, last_updated:NOW },
     files:[ { path:"bundle.md", text:md, bytes:md.length, sha256:sha(md) },
             { path:"data/provenance.json", text:prov, bytes:prov.length, sha256:sha(prov) } ],
