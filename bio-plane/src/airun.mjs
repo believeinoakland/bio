@@ -1368,7 +1368,15 @@ export const RUN_BOUNDS = {
      first would have renamed every such run's ending without changing anything
      about it. */
   mints:       "passages a machine credential marked citable (§7.3 (5)) — the EXTRACT role's budget",
-  lease:       "the run stopped heartbeating and its lease lapsed: it died rather than finished",
+  /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25): AN ASSISTANT OPENS A QUESTION ONLY INSIDE A
+     RUN, AND THE RUN BOUNDS HOW MANY. Ruled on `mints`' rule, so it is `mints`' shape: a ROW in this table, no
+     schema and no second vocabulary; declared at `op=airunopen` by the member who opens the run; a creation
+     under a run that declares none is REFUSED rather than given an allowance invented in code (a number
+     chosen here would be a measurement with no measurement behind it); and a run whose surfaces reach the
+     allowance ends at its next tick through `finishedBound`, as one that ran out of mints does. AFTER `mints`
+     in declaration order for the tie-break reason `mints` gives: appending it renames no existing ending. */
+  surfaces:    "questions an assistant opened inside this run (§11 item 5, rule 2) — the run's bound on what it may surface",
+  lease:      "the run stopped heartbeating and its lease lapsed: it died rather than finished",
 };
 
 /* The conditions a run may end on that are NOT a bound being reached. Kept

@@ -169,9 +169,16 @@ console.log("\n--- ARM V · D-129's vocabulary, D-104's split, §14b.6's bounds 
      entry is at `airun.mjs`'s declaration with its own reason and its own
      tie-break note, which is what this arm exists to force. Corrected, never
      exempted. */
-  t("ARM V5: the bound vocabulary is §14b.6's three, plus lease and runtime, plus §7.3 (5)'s mints",
+  /* CORRECTED 2026-09-23 BY D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25), and the old set
+     (without `surfaces`) was right when written: it was the whole vocabulary, and asserting it EXHAUSTIVELY is
+     what forced this bound to arrive with its reason rather than slip in. The reason: an assistant opens a
+     question only inside a run, *counted against a declared `surfaces` bound, refused when none is declared (the
+     `mints` bound's rule)* — so it is a ROW here on `mints`' precedent, with its own note at `airun.mjs`.
+     Corrected, never exempted; still a SET, so a next one cannot slip in either. */
+  t("ARM V5: the bound vocabulary is §14b.6's three, plus lease and runtime, plus §7.3 (5)'s mints, plus §11 "
+    + "item 5's surfaces",
     Object.keys(RUN_BOUNDS).sort(),
-    ["fetches", "lease", "mints", "runtime", "subsessions", "wallclock"]);
+    ["fetches", "lease", "mints", "runtime", "subsessions", "surfaces", "wallclock"]);
   /* ARM V6 CORRECTED 2026-08-10 BY FL-7 (IC-62), AND THE OLD SET WAS
      ["cancelled", "completed"]. IT WAS RIGHT WHEN WRITTEN: two endings were all
      the record had, and asserting them EXHAUSTIVELY is exactly what makes a

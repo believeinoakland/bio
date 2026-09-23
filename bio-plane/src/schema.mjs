@@ -2039,7 +2039,8 @@ CREATE TABLE IF NOT EXISTS ai_runs (
   state                 TEXT NOT NULL,
   stopped_bound         TEXT,
   stopped_condition     TEXT,
-  stopped_at            TEXT
+  stopped_at            TEXT,
+  lens_at_open          TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
 CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);
@@ -2061,6 +2062,21 @@ CREATE TABLE IF NOT EXISTS ai_run_bounds (
   consumed  INTEGER NOT NULL DEFAULT 0,
   unit      TEXT,
   PRIMARY KEY (run, bound)
+);
+
+-- D-85 (INVESTIGATIVE-SESSION.md section 11 item 5, rule 2, BOB #25, 2026-09-21): AN ASSISTANT OPENS A
+-- QUESTION ONLY INSIDE A RUN. When an 'ai' credential creates an inquiry it names a RUNNING run whose
+-- principal it is, and the plane records the link HERE, keyed by the new inquiry. It is an INSTANCE row and
+-- never a line in the inquiry's signed bytes: the run is scratch and is never published, and a pointer in
+-- published bytes that no reader can resolve is not provenance. One row per inquiry (an inquiry is created
+-- once). Its principal is the control plane's stamp for the credential that created it, never a field it sent.
+-- The column is named bundle_id so the row rides purge's TABLES list and clears in BOTH arms (D-113).
+-- NO index beyond the key: every reader asks by the inquiry.
+CREATE TABLE IF NOT EXISTS inquiry_run_surfacings (
+  bundle_id  TEXT PRIMARY KEY,
+  run        TEXT NOT NULL,
+  principal  TEXT NOT NULL,
+  at         TEXT NOT NULL
 );
 
 -- THE OBSERVATION LOG (§11). Where the run searched across the four levels,

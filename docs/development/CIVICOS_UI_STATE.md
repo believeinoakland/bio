@@ -50,6 +50,80 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v99, 2026-09-23 session, thread UI, UI-80 (a WORKER of CONDUCT #15). Landed on `land/worker/UI-80` (base `origin/main` @
+`95c40ed9`), in the commit that carries this entry. (Written as `v98`; renumbered `v99` by CONDUCT #15 at
+integration, 2026-09-23, because UI-79's entry, integrated first in the same train, holds `v98`.) SURFACE: the working inquiry page's Strength section, and the published case
+page's supersession banner, its edition twin and its roster sentence.
+
+**What was wrong.** Since D-442 (Publication §3 rule 12, IC-179) `op=publish` writes nothing on a member finding: the
+frozen pair is stated once, in the case's signed document, one pair per case. `inquiryPair` read the finding's own
+`published_strength`, found none, and the page told a member that a published question was *"not published to this page
+yet"*, promising a pair that would never appear there. The published case page said every pair was *"signed with that
+finding's own bytes"*. For a `/2` case the case document's signature covers it.
+
+**What it does now.** The working page reads `op=publishedcase` (through `apiQ`, the credential-free seam) and, for a
+finding several cases pin, asks once per case: one block per case, headed with that case and edition, never one picked
+and never combined, each naming the signature from `frozen_from`. A case's pair is shown as the page's own only when the
+sha the case pinned is the sha the page shows (the published record is pinned to the record namespace; a probe's scratch
+record can hold the same id). A published read that does not answer is said as that, never as "not published". A legacy
+member, whose every case froze the pair into its own bytes, renders exactly as before. The case page's three sentences
+branch on `frozen_from` through one helper, `pubPairSigner`, and keep the legacy wording word for word where it is true.
+
+**Driven against the real plane**, `civicos-ui/test/case-frozen-pair.test.mjs` (24 assertions): D-442's fixture through
+the ops (two projects, two cases over one finding, real SSHSIG); the legacy half, a question in both kinds of case, the
+silence and the identity arms over a wire-shaped mock (a legacy member cannot be minted through the ops any more). On
+`origin/main`'s app.html: 9/15. NEGATIVE CONTROL, 4/4 AS DECLARED: reading `published_strength` again RED 15/9; a
+hard-coded case-document signer RED 23/1 (the both-kinds arm alone); the single banner sentence RED 23/1; re-worded
+signer GREEN 24/0.
+
+**Suites corrected, never exempted:** `inquiry-page` (its mock answers `op=publishedcase` with the store's own
+`NOT_PUBLISHED`), `preauth-vocabulary` (`apiQ`'s callers five, not four; the op set is unchanged).
+
+**Not done, and where it lives.** The published INDEX (`pubList`) still reads `op=publishedmanifest`'s
+`published[].strength`, which the ratify committer leaves null where the case documents pinning one sha disagree, with
+no `strengthUndetermined` on that op. The index then says the member has *no frozen pair on the record at all*, which is
+false. The fix needs the plane first (per-case pairs, or the undetermined flag, on `publishedmanifest`), so it is in
+UI-80's report for routing and not in this landing.
+
+v98, 2026-09-23 session, thread UI, UI-79 (a WORKER of CONDUCT #14, wave 7). Landed on
+`worktree-agent-af35e02341617dc41` (base `origin/main` @ `f05c1efd`), in the commit that carries this entry. SURFACE: the
+write path — every document the member UI authors (`mdFor`; the `meta` of `addGo`, `doProposalAdopt` and
+`reviseWithCapture`) — plus two member-visible strings: the FY glossary entry and the Add form's issuer placeholder.
+
+**What was wrong.** `mdFor` wrote `group: believe-in-oakland` into every document's bytes and the three promote calls sent
+it as `meta.group`, on every instance `newgroup` installs. Since D-436 the plane stamps a store's recorded group over it,
+but on a store recording none the literal was kept as the caller's statement — a sovereign group's first bundles naming
+this project as their producer. The glossary explained FY as one city's; the placeholder suggested one city's name.
+
+**What it does now.** The UI composes no producing group; the plane writes the instance's one recorded value (IC-172). On a
+store recording none the creation is refused C-64.1 and the member reads the plane's translation (the adoption dialog
+printed a bare code for every non-gate refusal; it now renders the plane's words, as the Add surface already did). The
+glossary and the placeholder name no place.
+
+**Driven against the real plane**, `civicos-ui/test/authored-group.test.mjs` (40 assertions): a plane recording a slug
+PLANTED AT RANDOM per run — the Add surface (a note, a project) and the proposal adoption each author a bundle held with
+that slug in its bytes and its projection, and every group the surface SENT is the planted one or none (the liar, a
+different hard-coded slug, can only pass by sending none); a plane recording none refuses in its own words and writes
+nothing; the source census reads no literal anywhere and Oakland in CODE only at four declared recognisers. NEGATIVE
+CONTROL `authored-group.control.mjs`, 4/4 AS DECLARED: one `meta.group` restored RED 31/40 naming the SENT arm while the
+HELD arm stays green; the liar RED 32/40 with the literal census green; over-strictness GREEN.
+
+**Suites corrected, never exempted, each with a dated comment:** the ten miniflare suites that seeded the literal
+(`ai-session-context`, `ai-session-wire`, `conclude-nofalsifier`, `conclude-reading`, `content-extent`, `intent-write`,
+`passage-surface`, `question-npc`, `recipe-drive`, `refusal-translation-surface`) now boot a store recording a fixture slug
+and seed none; the two projection mocks (`document-page`, `document-structure`) carry a fixture slug; `add-surface` judges
+`mdFor`'s bytes AS THE PLANE HOLDS THEM (`withProducingGroup`, conformance's correction) and pins that they name no group;
+`project-id-surface` binds a group and pins the held bytes as the sent ones plus the id AND the stamp; `group-surface`'s
+literal pattern could not see the hyphenated slug (it read GREEN over four hits) and now does. Every changed suite's
+control was RE-RUN (ten controls, all AS DECLARED, app.html restored identical); that re-run found
+`content-extent.control.mjs`'s `vocabdrift` arm REFUSING TO ARM since FW-19 wrapped `CONTENT_EXTENT_KINDS` onto two
+lines — its anchor is corrected and the arm now fails `check-semantics` by name.
+
+**Left, and why.** Oakland stays in 4 code lines — recogniser heuristics measured on that city's documents (`/^City of
+Oakland$/i` twice in page-furniture lists, `CODE_REF` and `REG_CODE_REF`'s municipal-code form) — and in 37 comment lines
+recording where a measurement came from. None is the surface naming a group. `worker.template.mjs` proxies to the dev
+plane's workers.dev address, whose account subdomain contains the name: an address, not a claim, and not this row's.
+
 v97, 2026-09-22 session, thread UI, UI-77 (a WORKER of CONDUCT #14, wave 2). Landed on
 `worktree-agent-a40f17095e235d716` (base `origin/main` @ `14ffdbcf`), in the commit that carries this entry. SURFACE: the
 member fence (`#m-grp`, `#m-idstr`) and the public header (`#p-gname`, `#p-gid`, `#p-mono`) — every instance's, since

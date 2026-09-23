@@ -65,10 +65,13 @@ const IMG = {
   "INFO-MEETING": { "bundle.md": bundleMd("City Council meeting 2026-07-15", SHA_MEETING) },
   "INFO-RFP":     { "bundle.md": bundleMd("RFP 2210 award", SHA_RFP) },
 };
+/* CORRECTED 2026-09-23 BY UI-79 (D-436, IC-172), never exempted: `group_id` is the instance's ONE recorded producing
+   group, which the plane writes; these fixtures pinned one real group's slug as though every record were that group's
+   — the literal the member UI itself carried. The slug below is deliberately no real group's. */
 const PROJ = {
-  "INFO-MEETING": { bundle_id:"INFO-MEETING", object_type:"information", group_id:"believe-in-oakland",
+  "INFO-MEETING": { bundle_id:"INFO-MEETING", object_type:"information", group_id:"fixture-group",
     title:"City Council meeting 2026-07-15", current_state:"verified", bundle_sha:"d".repeat(64), fm_json:null },
-  "INFO-RFP": { bundle_id:"INFO-RFP", object_type:"information", group_id:"believe-in-oakland",
+  "INFO-RFP": { bundle_id:"INFO-RFP", object_type:"information", group_id:"fixture-group",
     title:"RFP 2210 award", current_state:"verified", bundle_sha:"f".repeat(64), fm_json:null },
 };
 const LIST = [

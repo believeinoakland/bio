@@ -1806,8 +1806,15 @@ if(S("case-address-at-load") && !HID("case-verify")){
         is a group and only `{ok:true, group:null}` is "none recorded", so an `ok:false` returned through this
         non-throwing seam reads as a SILENCE, never as "none" (group-surface.test.mjs's SILENCE arms drive it).
         The old pin was right about `apiQ` and about the discipline; its set predates the fourth public read. */
-     && APIQ_CALLERS.length === 4
-     && APIQ_CALLERS.join(",") === "instancegroup,publishedcase,publishedmanifest,verify");
+     /* CORRECTED 2026-09-23 (UI-80), never exempted: FIVE callers. The working inquiry page reads each published
+        case's frozen pair (`inquiryCasePairs`, Publication §3 rule 12: a member published under it carries none in
+        its own bytes) through this credential-free seam, and it keeps its OWN error path as this sweep requires — a
+        SHAPE test: only an answer carrying `findings[]` is a case, only `reason: NOT_PUBLISHED` is "in no case",
+        only a refusal carrying the candidate case ids in `cases[]` (IC-74's resolution aid) is asked again per case, and everything else — an
+        `ok:false` this non-throwing seam returns included — reads as the published record NOT ANSWERING, never as
+        "not published" (`case-frozen-pair.test.mjs`'s SILENCE arm drives it). The op set is unchanged. */
+     && APIQ_CALLERS.length === 5
+     && APIQ_CALLERS.join(",") === "instancegroup,publishedcase,publishedcase,publishedmanifest,verify");
 }
 
 /* AND THE NEW SCENARIO RENDERED ITS OWN SUBJECT (UI-34). The verify pane is the
