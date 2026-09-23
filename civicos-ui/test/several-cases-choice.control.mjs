@@ -187,9 +187,13 @@ try {
 } finally {
   let clean = true;
   for (const [k, p] of Object.entries(FILES)) {
+    /* The pristine copies are NAMED from the arm table, never found by listing the pen — a directory
+       walk is a class `hygiene.test.mjs` guards, and this needs none. */
     if (sha(p) !== orig[k].sha) {
-      const cands = fs.readdirSync(SCRATCH).filter((n) => n.startsWith(`${k}.pristine.`));
-      for (const n of cands) if (sha(path.join(SCRATCH, n)) === orig[k].sha) { fs.copyFileSync(path.join(SCRATCH, n), p); break; }
+      for (const i of ARMS.keys()) {
+        const c = path.join(SCRATCH, `${k}.pristine.arm${i}`);
+        if (fs.existsSync(c) && sha(c) === orig[k].sha) { fs.copyFileSync(c, p); break; }
+      }
     }
     const s = sha(p);
     console.log(`${k} final sha256 ${s} — ${s === orig[k].sha ? "IDENTICAL to pristine" : "DIFFERS FROM PRISTINE"}`);
