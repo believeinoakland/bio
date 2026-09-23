@@ -612,6 +612,10 @@ section("BOB #29 · A TREE'S OWN RECORD IS READ FIRST — re-run only what FAILE
   const idle = gates(F.root);
   t("a run on a tree already recorded GREEN runs NOTHING and says so",
     [idle.status, idle.ran.length, /already recorded GREEN/.test(idle.out)], [0, 0, true]);
+  const last = runsFor(F.root, tree).slice(-1)[0];
+  t("...and still RECORDS its answer (a caller reads the run it caused), as a step-less REUSED GREEN the verdict rule ignores",
+    [last?.class, last?.verdict, (last?.steps || []).length, !!last?.reusedFrom, effectiveVerdict(runsFor(F.root, tree)).verdict],
+    ["REUSED", "GREEN", 0, true, "GREEN"]);
   const forced = gates(F.root, ["--full"]);
   t("...and --full still forces the whole run", [forced.status, forced.cls, forced.ran.some((l) => l.startsWith("battery"))], [0, "FULL", true]);
 

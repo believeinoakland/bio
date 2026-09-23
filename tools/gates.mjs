@@ -603,8 +603,20 @@ if (CLEAN_AT_START && !FORCE_FULL && SINCE === null) {
   const covering = own.runs.some((r) => CLASS_RANK(r.class) >= CLASS_RANK(cls));
   const known = new Map(UNITS.map((u) => [u.id, u]));
   if (covering && eff.verdict === "GREEN") {
-    console.log(`gates: the tree ${short(START.tree)} is already recorded GREEN (by a ${own.runs.filter((r) => CLASS_RANK(r.class) >= CLASS_RANK(cls)).map((r) => r.class).pop()} run)`
+    const by = own.runs.filter((r) => CLASS_RANK(r.class) >= CLASS_RANK(cls)).pop();
+    console.log(`gates: the tree ${short(START.tree)} is already recorded GREEN (by a ${by.class} run)`
       + ` — nothing changed since, so nothing is re-run. \`--full\` forces a run.`);
+    if (EXPLAIN) process.exit(0);
+    /* THE ANSWER IS STILL RECORDED. A caller reads its verdict from the run it just caused (train.mjs `gate()`
+       takes the runs added since it called), so an exit 0 that wrote nothing read to it as UNDETERMINED — found by
+       train.test's --isolate arm on this change's first gate. A REUSED run names the record it relied on and has NO
+       steps, so `effectiveVerdict` is unmoved by it: it opens nothing and, not being FULL, clears nothing. */
+    let w;
+    try {
+      w = appendRun({ repo: REPO, run: { tree: START.tree, verdict: "GREEN", class: "REUSED", why: `already GREEN by ${by.file}`,
+        head: START.head, base: base || null, at: new Date().toISOString(), worktree: REPO, reusedFrom: by.file, steps: [] } });
+    } catch (e) { w = { ok: false, reason: e.message }; }
+    console.log(w.ok ? `gates: RECORDED GREEN (REUSED) for tree ${short(START.tree)} — ${w.path}` : `gates: NOT RECORDED — ${w.reason}`);
     process.exit(0);
   }
   if (covering && eff.verdict === "RED" && eff.open.length
