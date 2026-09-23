@@ -30,6 +30,12 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
 that release too. The daily wake `trig_014p69w2WQz7jfSkYeg4XHSF` is PAUSED by BOB #30 — do not re-arm it. DIST's last act
 is DONE: 0.78.0's pointer LANDED at `38b49c50` (17:24Z; `release/` and the embed byte-identical to `183cc7df`, checked by
 DIST on origin/main). `main` = live = 0.78.0. Nothing waits. IDLE until a BOB trigger.
+**Queued for the release Bob asks for (pointers from CONDUCT #17, 21:25Z — re-read `git log 38b49c50..origin/main` at the
+cut, never this list):** closings REC-179, REC-177, REC-181, REC-180, D-440, D-420 (on main @ `02603e88`); REC-175 (its
+digest census, including `bytes_disagree`, runs on `store=bio` right after that deploy — report the figure to CONDUCT,
+SCHEDULER, BOB), REC-176's snap-key census op, the corrected `livefire.mjs`. **DIST-7 (DIST's row)**: the installer half of
+D-54 (wrangler `limits.subrequests` 10000; `deploy.mjs` reads the limits back) — D-54 is unlanded at writing; look DIST-7
+up in the plan before building it.
 When one comes, the sections below are the state to resume from (0.78.0 live; next RELEASES row and figures in item 1).
 
 ## What is OWED
