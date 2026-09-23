@@ -79,7 +79,7 @@ accepts-when: a rect where the page paints no image is refused by name at the mi
 added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry; LED-7 batch S9-1; D-420's DEBT row of 2026-09-18; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-420» on entering the cache; its `order:` line is the current one.
 
-### M0-138 · queued — **`tools/status.mjs` `renderCell` JOINS EVERY CLAIM'S WHOLE TEXT INTO `BIO_System_Design.md` §3, SO EVERY LANDING THAT ADDS A CLAUSE PUSHES THE MAP OVER ITS 48 KiB CUT AND INTEGRATORS TRIM THE SOURCE OF TRUTH TO FIT ITS RENDERING** (CONDUCT #17 trimmed 5 claim texts in `construct-status.json` to land one batch). — owner BOB (`tools/status.mjs`, a BOB instrument), built by a worker.
+### M0-138 · running — SPAWNED 2026-09-23 ~20:17Z by CONDUCT #17 as a SEPARATE CLOUD SESSION (gate = its own suites, its negative control and plancheck). NOT LANDED on 91bcea6b. Falsify rather than believe: read the branch land/worker/M0-138 and the cloud session titled WORKER M0-138 (CONDUCT #17); never conclude queued from the absence alone.
 order: FIRST of the backlog, as BOB #31 placed it: every train pays this merge tax; a process row admitted because it cuts gate and merge time (Bob, 2026-09-22) (SCHEDULER #16, 2026-09-23; BOB #31's inbox entry, drained this commit)
 milestone: M0
 interface: none
@@ -89,7 +89,7 @@ scope: `renderCell` renders each claim's FIRST SENTENCE (to the first `. ` outsi
 accepts-when: `status.test.mjs`, `statussweep.test.mjs`, `corpuscheck.test.mjs` and `readbudget.test.mjs` green; `node tools/status.mjs --check` shows 0 drift after `--write`; the map is under budget. NEGATIVE CONTROL (`status.control.mjs`, a new arm): render whole texts again, and the budget check FAILs naming the map.
 added: 2026-09-23 · SCHEDULER #16 (BOB #31's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
 
-### REC-180 · queued — **A REFUSAL RETURNED INSIDE `promote`'s `transactionSync` AFTER A WRITE COMMITS THAT WRITE: REC-141's project-id mint runs first, so a later `NO_TITLE`, `NAME_TAKEN` or `CAS_STALE` burns a minted id with no project.** Re-read on `0e5f7054`: `store.mjs` `promote` mints via `#mintProjectId` at the head of the callback and returns `{ ok: false }` further down without throwing. And `bio-plane/test/bias.test.mjs` ARM M checks `op=list`, which could not see the landed bundle REC-176 fixed. — owner RECORD.
+### REC-180 · running — SPAWNED 2026-09-23 ~20:17Z by CONDUCT #17 as a SEPARATE CLOUD SESSION (gate = its own suites, its negative control and plancheck). NOT LANDED on 91bcea6b. Falsify rather than believe: read the branch land/worker/REC-180 and the cloud session titled WORKER REC-180 (CONDUCT #17); never conclude queued from the absence alone.
 order: first of the backlog: a write the record keeps after refusing the act is CLAUDE.md §2's worst class, and it corrects the site REC-176 just fixed (SCHEDULER #16, 2026-09-23; REC-176's worker via CONDUCT #16)
 milestone: M6
 interface: none expected (a refused act writes nothing); the integrator classifies.
@@ -99,7 +99,7 @@ scope: (1) an `ok: false` returned from `promote`'s callback throws `Store.#ROLL
 accepts-when: in a NEW suite `bio-plane/test/rec180-promote-rollback.test.mjs`, through the op: a project creation refused `NAME_TAKEN` after the mint leaves the sequence and `minted_ids` byte-identical; `bias.test.mjs` ARM M green reading `op=image`. NEGATIVE CONTROL (`rec180-promote-rollback.control.mjs`): return the refusal instead of throwing, and the mint arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (REC-176's worker's two findings via CONDUCT #16, verified at the code; `node tools/mintid.mjs REC`).
 
-### REC-181 · queued — **`op=promote` CAN MOVE A VERIFIED INFORMATION ITEM TO `retired` WHILE LIVE LEGS AND EDGES STILL CITE IT, BYPASSING `op=retire`'s `CITED` REFUSAL THAT State Rules §4.1 RESTS ON.** Re-read on `0e5f7054`: `store.mjs` `promote`'s only state-transition guard is the project's (`NOT_THE_OWNER`); `retire` runs `#restsOnLive` / `#citesInto` and refuses `CITED`. D-168's worker's fixture retired a cited item through promote and it answered ok. — owner RECORD.
+### REC-181 · running — SPAWNED 2026-09-23 ~20:17Z by CONDUCT #17 as a SEPARATE CLOUD SESSION (gate = its own suites, its negative control and plancheck). NOT LANDED on 91bcea6b. Falsify rather than believe: read the branch land/worker/REC-181 and the cloud session titled WORKER REC-181 (CONDUCT #17); never conclude queued from the absence alone.
 order: directly after REC-180, the same `promote` callback: a retired item still resting under live legs is the record claiming what §4.1 forbids (CLAUDE.md §2), and D-168 just made a retired item uncitable, so the bypass is a correction to just-landed work (SCHEDULER #16, 2026-09-23; D-168's worker via CONDUCT #16)
 milestone: M9
 interface: I3 — a new refusal on `op=promote` (`CITED`, as `op=retire` answers it); the integrator mints and classifies the IC.
@@ -109,7 +109,7 @@ scope: when `promote` moves an Information item INTO `retired`, it runs `retire`
 accepts-when: in a NEW suite `bio-plane/test/rec-181-promote-retire.test.mjs`, through the op: a promote retiring a cited verified item is refused `CITED` with the bundle byte-identical after; an uncited one retires. NEGATIVE CONTROL (`rec-181-promote-retire.control.mjs`): skip the check, and the cited arm lands and fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-168's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs REC`).
 
-### D-390 · queued — **`#frontierContent`'S INDEX-STATE READ BINDS ONE VARIABLE PER SUBJECT ON THE PAGE, UP TO `cap` — 200 BY DEFAULT, 2,000 AT THE CEILING — AGAINST D-36's MEASURED workerd CEILING OF ABOUT 100.** The `subject IN (${marks})` inside `__REC91_AXIS_LIST__` (`store.mjs`) is built from `pageCut`; REC-109 held it at `cap` rather than doubling it. It has never fired because no fixture or instance has held ~100 captures with a content-level row, and every other guarded site chunks at 64. — owner RECORD.
+### D-390 · running — SPAWNED 2026-09-23 ~20:17Z by CONDUCT #17 as a SEPARATE CLOUD SESSION (gate = its own suites, its negative control and plancheck). NOT LANDED on 91bcea6b. Falsify rather than believe: read the branch land/worker/D-390 and the cloud session titled WORKER D-390 (CONDUCT #17); never conclude queued from the absence alone.
 order: after D-57: a read that must say WHICH absence is true fails outright on the first instance past ~100 content captures; below D-389, REC-160 and D-57 because it fails LOUDLY rather than claiming what the record cannot support (SCHEDULER #8, 2026-09-21, LED-7 S8-1 and S8-2)
 milestone: M3
 interface: none — the answer's shape does not move; the integrator classifies.
@@ -120,7 +120,7 @@ accepts-when: a 200-subject page answers every row's index state, equal to the s
 added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-1; D-390's DEBT row of 2026-09-16, verified at the code; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-390» on entering the cache; its `order:` line is the current one.
 
-### D-60 · queued — **`op=monitor` COMPARES RAW BYTES, SO A LEGISTAR PAGE READS `modified` ON EVERY TICK AND MONITORING REPORTS NOTHING.** It compares the fetched bytes' hash with the capture's `sha256`, then writes `source_status: modified` and raises the re-evaluation flag; `op=acquire` already records the evidentiary digest (FW-4) and C-18.3 folds by it. ASP.NET reissues `__VIEWSTATE` per response: 31% of the bytes, nothing changed (2026-07-30). — owner RECORD.
+### D-60 · running — SPAWNED 2026-09-23 ~20:17Z by CONDUCT #17 as a SEPARATE CLOUD SESSION (gate = its own suites, its negative control and plancheck). NOT LANDED on 91bcea6b. Falsify rather than believe: read the branch land/worker/D-60 and the cloud session titled WORKER D-60 (CONDUCT #17); never conclude queued from the absence alone.
 order: after D-390, above CAP-14: M1's monitoring is noise on the class of page Oakland publishes on; below the claims the record cannot support because the design grades a change reported that did not happen as the cheaper error (DOCUMENT-PROFILES.md, "Three digests") (SCHEDULER #8, 2026-09-21, LED-7 S8-3)
 milestone: M1
 interface: I3 — `op=monitor` names the comparison it made; the integrator mints and classifies the IC.
@@ -131,7 +131,7 @@ accepts-when: two fetches differing only in `__VIEWSTATE` read `unchanged`, comp
 added: 2026-09-21 · SCHEDULER #8 (LED-7 S8-3; D-60's DEBT row, traced at the code; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-60» on entering the cache; its `order:` line is the current one.
 
-### D-169 · queued — **A DISPOSED INTAKE INQUIRY IS WRITTEN WITHOUT THE `disposition_reason` C-2.8 REQUIRES.** `dispose` sets it with `Store.#setScalar`, which replaces a key and silently adds none, and `setup.mjs`'s `mdFor` writes no such line for an inquiry; `dispose` calls `promote` directly, so the bundle lands failing its own catalogue and only an audit finds it (re-read on `7c967f09`). — owner RECORD.
+### D-169 · running — SPAWNED 2026-09-23 ~20:17Z by CONDUCT #17 as a SEPARATE CLOUD SESSION (gate = its own suites, its negative control and plancheck). NOT LANDED on 91bcea6b. Falsify rather than believe: read the branch land/worker/D-169 and the cloud session titled WORKER D-169 (CONDUCT #17); never conclude queued from the absence alone.
 order: after D-65, first of the silent record defects on built paths: the record holds a bundle its own catalogue rejects, CLAUDE.md §2's class; D-171 and D-179 follow, the honesty batch BOB #26 placed together (SCHEDULER #12, 2026-09-22, LED-7)
 milestone: M7
 interface: none expected — the bytes gain the line C-2.8 already requires; the integrator classifies.
@@ -142,7 +142,7 @@ accepts-when: an intake-created inquiry, deferred and dismissed, passes C-2.8 wi
 added: 2026-09-22 · SCHEDULER #12 (LED-7; D-169's DEBT row of 2026-08-03, verified at the code; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-169» on entering the cache; its `order:` line is the current one.
 
-### D-171 · queued — **`#revisionKind` NAMES A REVISION'S WRITER BY A CALLER'S KEY: C-20.1's writer lookup breaks a tie on `created` with `snap_key DESC`, a lexical sort over an opaque caller-chosen key, not the store's write order.** REC-32's derivation of the same latest entry breaks it with `rowid DESC` and says why at its site (`store.mjs`, re-read on `7c967f09`). — owner RECORD.
+### D-171 · running — SPAWNED 2026-09-23 ~20:17Z by CONDUCT #17 as a SEPARATE CLOUD SESSION (gate = its own suites, its negative control and plancheck). NOT LANDED on 91bcea6b. Falsify rather than believe: read the branch land/worker/D-171 and the cloud session titled WORKER D-171 (CONDUCT #17); never conclude queued from the absence alone.
 order: directly after D-169, the same honesty batch (its DEBT row: beside D-169); a wrong writer needs two manifest entries sharing one `created`, so it follows the defect every intake disposal meets (SCHEDULER #12, 2026-09-22, LED-7)
 milestone: M7
 interface: none — the answer's shape does not move; the integrator classifies.
