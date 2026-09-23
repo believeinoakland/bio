@@ -579,10 +579,13 @@ const cat = await affordances(null);
    item 7 rules APPENDS to the relationship's history. Corrected, not loosened,
    for every note above's reason; it moved by exactly the one object-directed
    op REC-136 added. */
-t("no target -> the whole catalogue: twenty acts, each with id/label/weight/needs/mode/rung/prompt",
+/* CORRECTED 2026-09-23 (D-149): TWENTY-ONE, with `actionlaws` — a member stating the laws that govern an
+   action's request (BIO_Case_Making_v0_1.md §2). Corrected, not loosened, for every note above's reason; it
+   moved by exactly the one object-directed op D-149 added. */
+t("no target -> the whole catalogue: twenty-one acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 20, true]);
+  [true, 21, true]);
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
    null for every act no ruling attaches one to, and where a ruling does attach
    one it is the PUBLISHED constant — so a surface that has the control
@@ -1000,8 +1003,10 @@ console.log("\n--- an action bundle: the two acts REC-24 built, and the refusals
 const ACTN = "ACTN-2026-0001-rec19";
 await promote(ACTN, actnMd(ACTN), "action", "planned");
 const affActn = await affordances(ACTN);
-t("an action publishes the two acts that operate it (REC-24)",
-  [affActn.ok, actIds(affActn)], [true, ["actioncorrespond", "actionmove"]]);
+/* CORRECTED 2026-09-23 (D-149): THREE, with `actionlaws`. The old assertion was right for REC-24's two and
+   is corrected rather than loosened, so a published act on an action still cannot appear unannounced. */
+t("an action publishes the three acts that operate it (REC-24's two, D-149's governing laws)",
+  [affActn.ok, actIds(affActn)], [true, ["actioncorrespond", "actionlaws", "actionmove"]]);
 /* DEC-8 both ways, in the same run and on the same object: what is published is
    what the store accepts, and what the store refuses is refused for a reason a
    surface renders rather than computes. A machine credential REACHES both and

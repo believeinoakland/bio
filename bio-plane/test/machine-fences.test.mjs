@@ -252,6 +252,8 @@ const MACHINE_OPS = ["release", "conclude", "reopen", "publish", "actionmove", "
                      "taskforward", "taskresolve",
                      /* REC-126 / C-32.16: the review copy's draft act. */
                      "casedraft",
+                     /* D-149 / C-32.18: stating an action's governing laws. */
+                     "actionlaws",
                      /* `select` is not one of the twelve. It is here because a
                         selection is readable ONLY by the credential that made
                         it (`owner` is server-stamped, `class:ai` for this one),
@@ -683,15 +685,35 @@ const fence = (code, payload, machineAnswer) => {
     [r.ok, typeof r.draftId, r.project], [true, "string", REV_PRJ]);
 }
 
+/* -------------------------------------------------------- (xiv) SET_LAWS */
+{
+  /* D-149 / C-32.18. Stating which laws govern an action's request is a member's authored act; the payload is
+     one a signed-in member succeeds with on the next line — a real action, two well-formed citations at two
+     legal levels — so only the credential can be what refuses it. */
+  const ACT = "ACTN-2026-7300-laws";
+  await mustPromote(ACT, actionMd(ACT), "action", RUTH, { current_state: "planned" });
+  const BODY = { laws: [{ level: "state", citation: "Cal. Gov. Code § 7920.000 et seq." },
+                        { level: "local", citation: "Oakland Municipal Code ch. 2.20" }] };
+  const m = await POST(`op=actionlaws&token=${AI}&target=${ACT}`, BODY);
+  fence("MACHINE_CANNOT_SET_LAWS",
+    "a real action and two well-formed citations at two legal levels — the payload the member sets the list "
+    + "with on the next line",
+    codeOf(m));
+  const r = await POST(`op=actionlaws&token=${RUTH}&target=${ACT}`, BODY);
+  t("  and the SAME payload sets the list for a signed-in member, stamped with her name",
+    [r.ok, r.by, r.laws?.length], [true, "ruth", 2]);
+}
+
 /* ====================================================================== 3
  * THE SWEEP AND THE COMPLETENESS ARM.
  * ==================================================================== */
 console.log("\n--- 3. the driven set IS the harvested set: a thirteenth fence cannot arrive unmeasured ---");
 {
   const drivenCodes = DRIVEN.map((d) => d.code).sort();
-  /* MOVED 12 -> 13 on 2026-09-18 by REC-126 (C-32.16 MACHINE_CANNOT_REVIEW, block xiii). */
-  t("(thirteen acts were actually driven — the guard before the equality, because two empty sets are "
-  + "equal and prove nothing)", drivenCodes.length, 13);
+  /* MOVED 12 -> 13 on 2026-09-18 by REC-126 (C-32.16 MACHINE_CANNOT_REVIEW, block xiii).
+     MOVED 13 -> 14 on 2026-09-23 by D-149 (C-32.18 MACHINE_CANNOT_SET_LAWS, block xiv). */
+  t("(fourteen acts were actually driven — the guard before the equality, because two empty sets are "
+  + "equal and prove nothing)", drivenCodes.length, 14);
   t("EVERY MACHINE_CANNOT_* the plane can mint was driven under a COMPLETE payload",
     HARVEST.filter((c) => !drivenCodes.includes(c)), []);
   t("and nothing was driven that the plane does not mint", drivenCodes.filter((c) => !HARVEST.includes(c)), []);
