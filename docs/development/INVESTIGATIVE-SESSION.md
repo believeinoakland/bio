@@ -18,6 +18,7 @@
 - §14b — the pre-write checks landed plane-side (PL-3) and F10's denied-means-adjust row landed (FL-3); §14b.2 still frames D-222 as a precondition.
 - §Published cases — IS-8/PL-16 RESHAPED by DEC-72 (a case is a production, CASE-1..6); the "no case-level bar" assumption is overtaken; DEC-33's ceremony still deferred.
 - §What is NOT settled — items 3, 3a, 7, 8 and 9 all since answered or landed; the list is history.
+- §11 — item 5, rule 2's REACH, RULED 2026-09-23 by BOB #30 (D-85's builder's question): rule 2 binds every creation D-78 stamps `surfaced_by: agent`, not the `ai` class alone. D-85 built it for `ai`; the admin, member and probe deploy tokens are NOT BUILT (a row, placed after D-85).
 - §Decomposition — every IS-n superseded by a named PL/FL row and all 43 landed; the C-number allocation promise is discharged in `bio-checks.mjs`, not recorded here.
 - §The final Claude Code comparison — F10 built (FL-3), F9 never rewritten, F11 open.
 - §What a SUGGESTION is — the five kinds are built (PL-3); D-324 (VF-4) found `new-version` is not one of the five, unrecorded here.
@@ -862,6 +863,24 @@ act she authors; `op=capturerequest` is a RUN's queue for the daemon, never a me
 principal is the caller's stamp and its Claude principal is still the run's. A request naming no run is refused as it always
 was (the door requires a run, DEC-47), and is byte-unchanged. The builder measures `agent-worker`'s one `suggest` site (`index.mjs`,
 `submit`) against the rule: a candidate aimed outside its run's context is a finding, never an exemption.
+
+**Rule 2's reach — RULED 2026-09-23 by BOB #30, on D-85's builder's question: every creation the record calls an
+assistant's, not the `ai` class alone.** D-85 built rule 2 for an `ai` credential; the admin, member and probe classes are
+instance deploy tokens with no member behind them, and they still create inquiries outside any run. The rule's premise is
+the SURFACING ACT, not the credential: Framework §13 requires a question an assistant surfaced to carry the lens in force
+when it did, and D-78 already decides at the trust boundary which creations the record calls an assistant's — every one
+that did not arrive through a member's session is stamped `surfaced_by: agent` (`index.mjs`, the D-78 restamp). An `agent`
+question with no run is a record claiming a machine surfaced it under conditions it never recorded, which is what rule 2
+exists to stop; exempting three classes would keep minting `not recorded` by design. So **a creation stamped `agent` names
+a running run whose principal is the caller**, by the stamp the run verbs already use (`${MACHINE_CLASS_PREFIX}${cls}` for a
+deploy token, compared by `runPrincipalGate` unchanged), under the same `surfaces` bound, sight check, codes (C-66.1–.4) and
+`inquiry_run_surfacings` row. A deploy token CAN hold a run (the run verbs admit admin, member and probe; `scopeFor` confines
+probe to scratch), so nothing is unreachable. The alternative — restamping a deploy token's creation `human` — would invent
+a person where none exists, and is refused. **Accepts when** an admin-, member- and probe-token creation of an inquiry naming
+no run is refused `SURFACE_NO_RUN`, one inside the token's own running run lands with its surfacing row, and a member's
+session creation is unchanged. NEGATIVE CONTROL: restore the `cls === "ai"` condition on the stamp, and the deploy-token
+arms fail by name. The builder lists every non-test caller that creates an inquiry under a deploy token (the livefire, the
+setup scripts, `agent-worker`) and moves each inside a run; one that cannot be is a finding brought here, never an exemption.
 
 No production carries its own copy of the manifest: that would be a second place to state one fact (D-21), able to
 disagree with the run it came from.

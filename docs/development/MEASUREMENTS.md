@@ -1,5 +1,7 @@
 # Measurements
 
+**FROZEN HISTORY since 2026-09-23 (M0-100): add nothing here.** A new measurement entry is its own file, `docs/development/measurements/<id>.md` (the id from `node tools/mintid.mjs M`); a later state of an entry is appended to that entry's file. `node tools/entries.mjs` reads both in id order.
+
 Every number this project's limits and defaults rest on, with the date and the
 instrument. Kept in one place because the alternative is what happened before it
 existed: a cap of 40 written from a guess, a comment claiming "50 on this
@@ -18698,55 +18700,3 @@ finding another case pins, so no case is flagged by another project's act. **Not
 Cloudflare: UNDETERMINED); the count of LEGACY members (published before rule 12, blocks in their own bytes) in the record
 namespace (UNDETERMINED until counted); the member UI's working inquiry page, which still reads a member's own frozen block
 (delegated to UI).
-
-## M-110 · 2026-09-23 · M0-121 — how many units a MEASUREMENTS-only change selects once the state-path predicate leaves `tools/coord.mjs`
-
-Instrument: `node` in the cloud container (4 cores, shared); `node tools/gates.mjs --explain`, M-106's method reproduced
-exactly: a scratch `git clone` of the tree whose `origin/main` was set to its own HEAD, so the diff is ONLY the plant —
-one line appended to `docs/development/MEASUREMENTS.md` plus an empty root file nobody names (`m0121-plant.txt`), so the
-class reads TARGETED. "Readers" are the selection lines whose first reason is `docs/development/MEASUREMENTS.md`. Every
-plant restored by sha256 (1,423,156 bytes, `012b5cc9…`), the clone clean after each. The same method is now a battery
-arm: `bio-plane/test/statepaths.test.mjs` §3 runs it over a clone of the working tree and PRINTS the figures.
-
-| tree | units selected | MEASUREMENTS readers | through `tools/coord.mjs` |
-| --- | --- | --- | --- |
-| `f05c1efd` (before; M-106 read 85/60 on `e5c54c6a`, the corpus has grown since) | **88 of 345** | **62** | 41 |
-| the predicate in `tools/statepaths.mjs`, `op-claims.mjs` importing it (scratch clone, before the new suite existed) | **59 of 345** | **27** | 4 |
-| the branch as landed (the new suite included: it plants the ledger, so it reads it, and it imports `coord.mjs`) | 60 of 346 | 28 | 5 |
-| control arm (a): `op-claims.mjs` importing from `coord.mjs` again, on the landed branch | 89 of 346 | 63 | 42 |
-| control arm (b), the liar: `statepaths.mjs` re-exporting from `coord.mjs` | 89 of 346 | 63 | 42 |
-
-**WHAT IT SAYS.** Moving `MOVED_FILES`, `MOVED_DIRS`, `NEXT_RE` and `isMovedPath` into a module that imports nothing
-and enumerates no directory takes a MEASUREMENTS-only landing from 88 units to 59 (29 fewer; the new suite adds itself
-back as one honest reader), and the readers through `coord.mjs` from 41 to 4: `ledger`, `owed`, `planning-hygiene` and
-`readbudget`, which call its state readers and so inherit its walk honestly. M-106's experiment predicted 85 → 55 and
-60 → 24 on its older tree; the fall measured here is 29 units and 35 readers against its 30 and 36. The other 23
-readers are `plancheck.mjs` (5, a real string), `pushguard.mjs` (4, walks `docs/`), `gates.mjs` (3), `corpuscheck.mjs`,
-`decided.mjs`, `mintid.mjs` (2 each), 4 suites naming the file in code, and `op-claims-ledger.mjs` (1).
-**Not measured:** the gate TIME saved (selection counts only); a real `--since` over a real rebase.
-
-## M-111 · 2026-09-23 · the runner's D-186 leak — a race in `bio-plane/test/sandbox.mjs`'s exit sweep, measured before and after the fix
-
-Instrument: `node` 26 in the cloud container (4 cores, shared), measured by CONDUCT #14's diagnosis worker; recorded here
-at integration by CONDUCT #15 from the worker's report (`origin/conduct14/reports:LEAK.md`, branch
-`worktree-agent-aba557251eb76f805` @ `4e715931`). Method: the real `sandbox.mjs` exit sweep driven through repeated
-process endings, each ending after a Miniflare `dispose()` (miniflare 4.20260722.0, whose `dispose()` fires
-`fs.promises.rm(tmpPath)` WITHOUT awaiting it); a leak is a `bio-battery-<pid>-*` directory still holding
-`miniflare-*` sandboxes after the process has exited.
-
-| arm | endings | directories left | sandboxes left |
-| --- | --- | --- | --- |
-| old sweep (sync `rmSync(SANDBOX)` in the exit listener) | 300 | **21** | **35** |
-| fix (`sweepSandbox`: `renameSync` first, then `rmSync` of the moved tree, retried ≤ 5 times until `existsSync` says gone) | 300 | **0** | **0** |
-| fix, bare (no Miniflare) | 1000 | 0 | 0 |
-| NEGATIVE CONTROL (old file restored locally; restored back by sha256 `89aef6e1…`) | 300 | 25 | 42 |
-
-CAUSE: `rmSync` walking the tree while the queued async unlinks still run on libuv's pool RETURNS NORMALLY with the tree
-left whenever one of them removes an entry under its walk. This is the exact runner shape GitHub reported on tree
-`6ef503c4` (`bio-battery-<pid>-*: [miniflare-…0, miniflare-…1]`, 282/282 green, run RED). NOT introduced by D-442, which
-touched no dispose/exit/sandbox line; at most it changed timing. Intermittent, which fits run #13 on `main` @ `41c7e0c3`
-passing. WHICH SUITE leaked on the runner is UNDETERMINED: the battery prints no per-suite pid (best fit
-`publish.test.mjs`, which disposes two Miniflares back to back before exiting). Gate of the fix's branch: GREEN TARGETED
-`272/272 suites green · 16134 assertions passing` on tree `0b31fa41`, "this run left 0 directories holding 0 miniflare
-sandboxes". Owed and routed to M0-127: the per-suite pid on the battery's result line, and hygiene.test's D-186 control
-text, which predates this race.

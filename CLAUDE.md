@@ -97,7 +97,7 @@ design, doctrine, anything for Bob → BOB) and continue.
 - **A change is made when it is committed AND pushed**, and verified from the REMOTE. Run
   `node tools/plancheck.mjs` before any handoff.
 - **Claim your area in `CLAIMS.md` before an edit that spans landings**, and write none for one landing (BOB #27;
-  M-97); do not edit another area's paths (append a DELEGATION); interfaces change only through `INTERFACE-CHANGES.md`.
+  M-97); do not edit another area's paths (append a DELEGATION); interfaces change only through an IC entry.
   Work in your own worktree.
 - **Only DIST cuts plane releases**, from a green `main`. **The standing lanes — CONDUCT, BOB, DIST,
   FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18). **A session is REFRESHED when its context is
@@ -114,7 +114,7 @@ design, doctrine, anything for Bob → BOB) and continue.
 
 ## 5. How to know a thing is true
 
-- **Measure; do not recall.** Numbers go into `MEASUREMENTS.md` with date and instrument. A vendor's
+- **Measure; do not recall.** Numbers go into `measurements/<id>.md` with date and instrument. A vendor's
   documentation is a claim, labelled as theirs.
 - **Name the artifact BEFORE you act** — the output that would read differently if the change did not
   work. If you cannot name one, report the act as made-and-unconfirmed.

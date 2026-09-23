@@ -672,9 +672,23 @@ console.log("\n--- what a host has served: reuse, honestly recorded ---");
   t("but a trailing slash is NOT assumed away, since /a and /a/ can differ",
     normalizeAddress("https://x.gov/a") === normalizeAddress("https://x.gov/a/"), false);
 
+  /* CORRECTED 2026-09-23 (CAP-13). This block used to hand `recordsiteassets`
+     three bare primary shas (d1, d2, d3) and assert they counted as three
+     documents. That assertion was wrong: a primary sha is a CAPTURE, and one page
+     whose bytes changed between two captures is two shas, so counting shas let
+     one page meet the two-document reuse floor alone. A document is now the
+     primary's document ADDRESS (`captured_locators`), and a sha with no locator
+     row is counted as undetermined, never as a page. So each fixture capture is
+     filed at its own page address first, exactly as op=acquire's D-58 write
+     does; `cap13-reuse-pages.test.mjs` drives the page count through the op. */
+  for (const [d, p] of [["d1", "/one.html"], ["d2", "/two.html"], ["d3", "/three.html"]]) {
+    const addr = "https://assets.oaklandca.gov" + p;
+    await call("/recordcapturedlocator", { address: addr, addressNorm: normalizeAddress(addr),
+      captureSha: d.padEnd(64, "0"), retrieved: long_ago });
+  }
   await call("/recordsiteassets", { host: H, primarySha: "d1".padEnd(64, "0"), at: long_ago,
     observations: [{ address: A, address_norm: N, sha256: OLD, content_type: "text/css", bytes: 10, kind: "stylesheet" }] });
-  let k = (await call("/siteassets", { host: H })).result.assets[N];
+  let k =(await call("/siteassets", { host: H })).result.assets[N];
   t("one document is not yet a shared asset", k.documents, 1);
   t("a fresh record is stable from when it was first seen", k.stable_since, long_ago);
 

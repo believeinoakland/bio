@@ -61,10 +61,20 @@
  * answers "certain" whatever ran before -> 145 passed, 1 failed: PAST THE LINE, told where nothing is owed;
  * (N3) the update calls op=instancegroupseed -> 143 passed, 3 failed: each arm's "never seeds". ALL AS DECLARED,
  * `newgroup/src/index.mjs` restored byte-identically after each (sha256 12e67385…, verified by hash).
+ *
+ * NEGATIVE CONTROL (D-116, 2026-09-23), DECLARED BEFORE ARMING, whole suite 164/164 before and after: (W1) today's-main
+ * reading — `servingVerdict` reads only `version` (`if (!capable) return` made `if (true) return`) -> 157 passed,
+ * 7 failed: every D-116 lag arm (stale store, pre-D-116 store, stale member, installed-but-unbound member, members
+ * unreported, the install lag) — each reporting the update DONE over the lag it should name; (W2) `reportsBuilds`
+ * answers false -> 155 passed, 9 failed: the PIN on the plane this tree builds, the "every part" sentence, and the
+ * same seven lag arms. ALL AS DECLARED, `newgroup/src/index.mjs` restored byte-identically after each (sha256
+ * e8773248…, verified by sha256 AND byte compare). The plane half's controls are in
+ * `bio-plane/test/d116-serving-builds.test.mjs`.
  */
-import worker, { CFG, ARMED_SIGNERS } from "../src/index.mjs";
+import worker, { CFG, ARMED_SIGNERS, reportsBuilds } from "../src/index.mjs";
+import { readFileSync } from "node:fs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
-import { RELEASE_VERSION } from "../src/release.mjs";
+import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
 
 let pass = 0, fail = 0;
 const t = (l, g, w) => { const ok = JSON.stringify(g) === JSON.stringify(w);
@@ -618,8 +628,16 @@ console.log("\n--- update: storage unavailable never blocks an update ---");
   globalThis.fetch = realFetch;
 }
 
-/* ---- update whose new version cannot be confirmed yet: calm, not red ---- */
-console.log("\n--- update: unconfirmed version reads as done, with a patient note ---");
+/* ---- update whose new version cannot be confirmed yet: calm, but NOT reported as done ----
+   CORRECTED AT D-116 (2026-09-23), not exempted. This block asserted "the outcome is presented as done" — the page
+   said "Updated from 0.0.1 to X" while the address was still answering 0.0.1 — together with "no failure framing" and
+   "the step is not marked red". The first was the defect D-116 exists to remove: reporting an update as done while a
+   named part still serves the old build is the record claiming more than it can support (`CLAUDE.md` §2, §5). What
+   was right in it survives: the note stays patient (a rollout takes minutes, nothing is framed as failed or broken).
+   What changes: the page says the upload happened, NAMES the part that lags, and does not say "Updated". The old
+   "not marked red" assertion searched for the literal `class="no"`, which the streamed page never contains (the
+   class is set by script), so it could not fail; it is replaced by one that reads the emitted step call. */
+console.log("\n--- update: unconfirmed version is named, patiently, and not reported as done (D-116) ---");
 {
   const realTimeout = globalThis.setTimeout;
   globalThis.setTimeout = (fn) => realTimeout(fn, 0);
@@ -636,10 +654,12 @@ console.log("\n--- update: unconfirmed version reads as done, with a patient not
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   globalThis.setTimeout = realTimeout;
-  t("the outcome is presented as done", body.includes("Updated from 0.0.1 to"), true);
+  t("the outcome is NOT presented as an update done (D-116)", /<b>Updated (from|to)/.test(body), false);
+  t("it says the upload happened, over what", body.includes(`Uploaded ${RELEASE_VERSION} over 0.0.1`), true);
+  t("and NAMES the part that lags, with what it answers", body.includes("your copy&#39;s address answers 0.0.1"), true);
   t("the note is patient, not alarming", body.includes("can take a few minutes"), true);
-  t("no failure framing anywhere", /not confirmed|failed|broken/i.test(body), false);
-  t("the step is not marked red", body.includes('class="no"'), false);
+  t("no failure framing anywhere", /failed|broken/i.test(body), false);
+  t("the verify step is not marked done", body.includes('ok("verify"'), false);
   globalThis.fetch = realFetch;
 }
 
@@ -1034,6 +1054,159 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     [body.includes("could not read which version your copy ran"), body.includes("op=instancegroupseed")], [true, true]);
   t("and never seeds, nor asks op=instancegroup", groupCalls(calls), []);
   globalThis.fetch = realFetch;
+}
+
+/* ---- D-116: EACH PART'S OWN BUILD, READ BACK, AND THE ONE THAT LAGS NAMED ----------------------------------------
+   Added 2026-09-23 (D-116 worker). A release whose plane carries D-116 answers `op=bootstrap&members=1` with three
+   readings, each from where it runs: `version` (the routing isolate), `storeVersion` (the Durable Object's own env) and
+   `memberVersions` (each member's own /version THROUGH the plane's binding; bio-plane/test/d116-serving-builds.test.mjs
+   drives the plane half with a real DO on another build). This half drives the INSTALLER's reading of that answer.
+   HOW A LIAR WOULD PASS HERE: an installer that read only `version` (today's main) — every arm below that names a
+   lagging store or member serves a CORRECT `version`, so only a reader of the other two fields can name the lag.
+   NEGATIVE CONTROL: see the D-116 entry at the head of this file's controls. */
+console.log("\n--- D-116: the installer reads the store's and each member's OWN build, and names the one that lags ---");
+{
+  const planeBundle = readFileSync(new URL("../../bio-plane/dist/bio-plane.bundled.mjs", import.meta.url), "utf8");
+  t("PIN: the plane this tree builds CAN report its builds — renaming either field fails HERE, not silently in the field",
+    reportsBuilds(planeBundle), true);
+  t("PIN: a plane without the fields is read as unable to report them (the pre-D-116 releases)",
+    reportsBuilds(repoSrc2), false);
+}
+const repoSrc3 = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {};";
+const repoSha3 = await shaHex(repoSrc3);
+const sig3 = await signAsset(new TextEncoder().encode(repoSrc3));
+const agentEntry = { ...memberEntry, member: "agent-worker", asset: "agent-worker.bundled.mjs", parts: [] };
+const signFleet3 = async (members) => signAsset(
+  new TextEncoder().encode(fleetStatement({ version: FLEET_VER,
+    plane: { sha256: repoSha3, bytes: repoSrc3.length, asset: "bio-plane.bundled.mjs" }, members })), NS_FLEET);
+const fleetSig3 = await signFleet3([agentEntry]);
+const manifest3 = { version: FLEET_VER, sha256: repoSha3, bytes: repoSrc3.length, asset: "bio-plane.bundled.mjs",
+                    sig: sig3, fleet: [agentEntry], fleetSig: fleetSig3 };
+const SERVING = (v) => ({ binding: "AGENT_WORKER", state: "SERVING", version: v });
+const OTHERS = { "pdf-worker": { binding: "PDF_WORKER", state: "UNBOUND" }, "ocr-worker": { binding: "OCR_WORKER", state: "UNBOUND" } };
+/* After the upload the copy answers `after`; before it, 0.1.0 (so this is an update, not a no-op). */
+async function d116Update(slug, after) {
+  armWith(relPubLine);
+  const realTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = (fn) => realTimeout(fn, 0);
+  const { cookie, state } = await begin(slug, "update");
+  let n = 0;
+  const calls = script([
+    ...REL({ manifest: () => jres(manifest3), asset: () => new Response(repoSrc3) }),
+    { m: (u) => u.endsWith("/release/agent-worker.bundled.mjs"), f: () => new Response(memberSrc) },
+    { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+    { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "D1", name: "D116" }]) },
+    { m: (u) => u.includes(`/scripts/${slug}/settings`), f: () => cfok({ existing: true }) },
+    { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith(`/scripts/${slug}`) && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/scripts/agent-worker") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "d1" }) },
+    { m: (u) => u.includes(`${slug}.d1.workers.dev/api/?op=bootstrap`),
+      f: () => n++ === 0 ? jres({ ok: true, version: "0.1.0" }) : jres({ ok: true, version: FLEET_VER, ...after }) },
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  globalThis.setTimeout = realTimeout;
+  globalThis.fetch = realFetch;
+  disarm();
+  return { body, calls, memberPut: calls.some((c) => c.method === "PUT" && c.u.endsWith("/scripts/agent-worker")),
+           askedMembers: calls.some((c) => c.u.includes(`${slug}.d1.workers.dev/api/?op=bootstrap&members=1`)) };
+}
+{
+  const r = await d116Update("all-town", { storeVersion: FLEET_VER,
+    memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
+  t("ARMED: the capable release was the one installed, with its member", [r.memberPut, r.askedMembers], [true, true]);
+  t("ALL ON THE RELEASE: the update is reported done", r.body.includes(`Updated from 0.1.0 to ${FLEET_VER}`), true);
+  t("and says what was confirmed — every part, not only the address",
+    r.body.includes(`Every part of your copy answers ${FLEET_VER}`), true);
+  t("and names no lag", r.body.includes("not yet confirmed"), false);
+}
+{
+  const r = await d116Update("stale-store", { storeVersion: "0.1.0",
+    memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
+  t("A STALE DURABLE OBJECT under a current address is NAMED, with the build it runs",
+    r.body.includes("your copy&#39;s record store still runs 0.1.0"), true);
+  t("and the update is NOT reported done", [/<b>Updated (from|to)/.test(r.body), r.body.includes("not yet confirmed")], [false, true]);
+}
+{
+  const r = await d116Update("old-store", { memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
+  t("A DO STILL ON PRE-D-116 CODE (no storeVersion at all, after a release that has it) is named, not taken as absent",
+    [r.body.includes("record store has not reported its version"), /<b>Updated (from|to)/.test(r.body)], [true, false]);
+}
+{
+  const r = await d116Update("stale-member", { storeVersion: FLEET_VER,
+    memberVersions: { "agent-worker": SERVING("0.1.0"), ...OTHERS } });
+  t("A STALE MEMBER, read back through the plane's binding, is NAMED with the build it runs",
+    [r.body.includes("the capability worker agent-worker still runs 0.1.0"), /<b>Updated (from|to)/.test(r.body)], [true, false]);
+}
+{
+  const r = await d116Update("loose-member", { storeVersion: FLEET_VER,
+    memberVersions: { "agent-worker": { binding: "AGENT_WORKER", state: "UNBOUND" }, ...OTHERS } });
+  t("A MEMBER THIS STEP INSTALLED but the plane cannot reach is NAMED — uploaded is not usable",
+    [r.body.includes("agent-worker was installed, but your copy holds no connection to it"), /<b>Updated (from|to)/.test(r.body)],
+    [true, false]);
+}
+{
+  const r = await d116Update("members-mute", { storeVersion: FLEET_VER });
+  t("a capable plane that does not report its members is named, never read as none",
+    r.body.includes("did not report its capability workers"), true);
+}
+{
+  /* The built-in release predates D-116 in this tree: its store's and members' builds are UNDETERMINED, and said. */
+  disarm();
+  const { cookie, state } = await begin("pre-town", "update");
+  script([
+    { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+    { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "D2", name: "Pre" }]) },
+    { m: (u) => u.includes("/scripts/pre-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/scripts/pre-town") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "pr" }) },
+    { m: (u) => u.includes("pre-town.pr.workers.dev/api/?op=bootstrap"), f: midUpdate("0.1.0", RELEASE_VERSION) },
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  globalThis.fetch = realFetch;
+  if (!reportsBuilds(RELEASE_SOURCE)) {
+    t("A RELEASE THAT CANNOT REPORT BUILDS: the address is confirmed and the rest is STATED undetermined, not claimed",
+      [body.includes(`Updated from 0.1.0 to ${RELEASE_VERSION}`), body.includes("cannot report which version your copy&#39;s record store")],
+      [true, true]);
+  } else {
+    /* Once DIST cuts a release carrying D-116 and embeds it, the built-in release CAN report, and this fixture (which
+       serves no storeVersion) is a stale DO — which is named. Both branches are asserted so the arm survives the cut. */
+    t("THE BUILT-IN RELEASE CAN REPORT BUILDS: a copy answering no storeVersion after it is a stale DO, named",
+      body.includes("record store has not reported its version"), true);
+  }
+}
+console.log("\n--- D-116: an INSTALL names a part not on the release, and still hands over the credentials ---");
+async function d116Install(slug, reply) {
+  armWith(relPubLine);
+  const realTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = (fn) => realTimeout(fn, 0);
+  const { cookie, state } = await begin(slug);
+  script([
+    ...REL({ manifest: () => jres(manifest3), asset: () => new Response(repoSrc3) }),
+    { m: (u) => u.endsWith("/release/agent-worker.bundled.mjs"), f: () => new Response(memberSrc) },
+    ...fleetRoutes(slug, "di").filter((x) => !x.m(`https://${slug}.di.workers.dev/`)),
+    { m: (u, mth) => u.endsWith("/scripts/agent-worker") && mth === "PUT", f: () => cfok({}) },
+    { m: (u) => u.includes(`${slug}.di.workers.dev/api/?op=bootstrap`), f: () => jres({ ok: true, ...reply }) },
+    { m: (u) => u.startsWith(`https://${slug}.di.workers.dev/`), f: () => jres({ ok: true, bindings: { STORE: true } }) },
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  globalThis.setTimeout = realTimeout;
+  globalThis.fetch = realFetch;
+  disarm();
+  return body;
+}
+{
+  const ok = await d116Install("fresh-all", { version: FLEET_VER, storeVersion: FLEET_VER,
+    memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
+  t("INSTALL, every part on the release: \"Your copy is running\"", ok.includes("Your copy is running."), true);
+  const lag = await d116Install("fresh-loose", { version: FLEET_VER, storeVersion: FLEET_VER,
+    memberVersions: { "agent-worker": { binding: "AGENT_WORKER", state: "UNBOUND" }, ...OTHERS } });
+  t("INSTALL with an installed member the plane cannot reach: NOT \"running\", and the member NAMED",
+    [lag.includes("Your copy is running."), lag.includes("agent-worker was installed, but your copy holds no connection to it")],
+    [false, true]);
+  t("and the credentials are still handed over — a lag never costs a group its only sight of them",
+    [lag.includes('id=\\"out-member\\"'), lag.includes('id=\\"out-probe\\"')], [true, true]);
 }
 
 console.log(`\nwizard: ${pass} passed, ${fail} failed`);

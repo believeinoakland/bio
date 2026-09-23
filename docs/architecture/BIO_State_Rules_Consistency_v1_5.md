@@ -1,6 +1,6 @@
 # Believe in Oakland
 
-**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. Amended 2026-09-18: `concluded` is read for a project's relationship with an inquiry (INVESTIGATIVE-SESSION.md §7.1). The information ladder is ONE-WAY and gains no `verified -> collected` edge (BOB #17, 2026-09-19, D-203/D-200): a verification resting on a weaker check is STATED beside the state, never reverted. DEC-70's severance rule is folded into §5.4, and D-145's cross-instance addressing is stated as M6's (BOB #23, 2026-09-21). Amended 2026-09-21 (D-436, IC-172; decision (b)'s premise RULED BY BOB, (a) and (c) the BOB lane's mechanism): §3.1's `group` is ONE recorded value per instance, written once — at the store's first boot from the slug the installer bound, or by the root of trust's one seed on a store that predates it — stamped into every document the plane creates, and never a literal or a deploy-time var; see the amendment at the foot. as of 2026-09-21.
+**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. Amended 2026-09-18: `concluded` is read for a project's relationship with an inquiry (INVESTIGATIVE-SESSION.md §7.1). The information ladder is ONE-WAY and gains no `verified -> collected` edge (BOB #17, 2026-09-19, D-203/D-200): a verification resting on a weaker check is STATED beside the state, never reverted. DEC-70's severance rule is folded into §5.4, and D-145's cross-instance addressing is stated as M6's (BOB #23, 2026-09-21). Amended 2026-09-21 (D-436, IC-172; decision (b)'s premise RULED BY BOB, (a) and (c) the BOB lane's mechanism): §3.1's `group` is ONE recorded value per instance, written once — at the store's first boot from the slug the installer bound, or by the root of trust's one seed on a store that predates it — stamped into every document the plane creates, and never a literal or a deploy-time var; see the amendment at the foot. as of 2026-09-23.
 
 **Place in the system** · Owns construct 3 of `BIO_System_Design.md` §3 (the record): bundle shape and the rules the plane checks. `BIO_Intake_Doctrine_v1_1.md` defers to it for shape; `BIO_Membership_Architecture_v2.md` builds on its §4.3 and §5.1–5.3; the intake provenance register and I-18 realise the intake doctrine inside it. README calls it "the most operationally load-bearing document in the corpus."
 
@@ -19,6 +19,7 @@
 - §8 — C-18.2 "recorded and deliberately not entered"; the "three call sites" are the retired runtime.
 - §9 and §10 — obligations "binding on the bundle skill", a superseded implementation.
 - §footer — reads "Spec version 1.3, July 11, 2026"; stale.
+- §4.1 — a retired item is not citable: RULED 2026-09-23 by BOB #30 (D-168); `op=cite` does not yet refuse one for a member (NOT BUILT, a row).
 
 **Contents**
 - [State Rules & Consistency Specification](#state-rules-consistency-specification)
@@ -711,6 +712,19 @@ says out loud. The repairs available are the two the catalogue already advises: 
 STANDS (an edit needs no state move), or `verified -> retired` with the reason recorded. A member who
 believes a document should never have been verified retires it and re-collects the source as a new
 bundle, which keeps both facts.
+
+**A RETIRED ITEM IS NOT CITABLE — RULED 2026-09-23 by BOB #30 (D-168, SCHEDULER #15's question), from this section's own
+design.** `retired` is the GROUP's authored judgment that an item is superseded or no longer stands, and the terminal
+transition already refuses while a live leg cites the item (`CITED`), because a claim resting on it would read to every
+later member as live support nobody will re-examine. A citation made AFTER the retirement is the same harm entered by the
+other door, so it is refused in the STORE for every caller (DEC-8: never on a surface) — the machine's suggest path already
+refuses it (`SUGGEST_LEG_UNREACHABLE`), and a member's `op=cite` gains the same check with a stated code naming the door:
+cite what superseded it, or re-collect the source as a new bundle (the remedy above). This does not bar citing a
+retraction: a publisher that withdraws or changes a document is the `source_status` axis below (`removed`, `modified`,
+both versions preserved, flagged as potential concealment evidence), never `retired`, and stays citable. **Accepts when**
+`op=cite` onto a retired Information bundle is refused by name for a member and a machine credential alike, one onto a
+`source_status: removed` bundle lands, and a confirmed leg that predates the retirement is untouched. NEGATIVE CONTROL:
+drop the retired check from `op=cite`, and the member arm fails by name.
 
 source_status is an independent axis maintained by change detection: a
 verified item whose source changes becomes source_status: modified with

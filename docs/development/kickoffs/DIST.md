@@ -263,7 +263,9 @@ and both want to ship.
    restating it. **`op=bootstrap` is NOT a reading of the DO's build** (FLEET #3, 2026-09-21): its `version` is the routing
    isolate's `env.VERSION`; the DO adds only claimed/rearmed/consumedAt. A DO-side change is evidenced only by a DO-side
    wire code; when none is reachable without a session or a write, the DO's build is UNDETERMINED and the landing report
-   says so (0.69.0, whose D-136 DO paths are session-only).
+   says so (0.69.0, whose D-136 DO paths are session-only). **Since D-116 (IC-182, 2026-09-23) a plane carrying it answers
+   the DO's own build as `storeVersion`, and `op=bootstrap&members=1` each member's through its binding — read those; on a
+   release without them the DO's build is still UNDETERMINED.**
 19. **A CONTROL CAN BE MEANINGFUL ONLY AS A TREND, AND `migrate-released`'s IS ONE.** Its `alterafter` arm has measured
    **135 pass / 66 fail (declared baseline, REC-143) → 169/66 (0.66.0's cut) → 186/66 (0.67.0's cut)**. The FAILURE
    count is identical every time because it is bounded by `WITHDRAWN`, which a cut never touches; the PASS count rises

@@ -145,8 +145,9 @@ These are written by more than one thread and are the collision risk:
 - `docs/development/CIVICOS_UI_STATE.md` — **prepend a new entry.** Never edit an
   existing one. Version numbers may collide; the date and thread name
   disambiguate, so put both in the entry's first line.
-- `docs/development/MEASUREMENTS.md` — **append a section.** Never restate a
-  figure inline elsewhere; point at this file so a stale number has one home.
+- `docs/development/measurements/<id>.md` — **one file per measurement** (M0-100; the id from
+  `node tools/mintid.mjs M`; `MEASUREMENTS.md` is frozen history). Never restate a figure inline
+  elsewhere; point at the entry so a stale number has one home.
 - `bio-plane/**` outside a thread's owned paths — coordinate first. Two threads
   editing the plane concurrently is the case that would actually hurt.
 

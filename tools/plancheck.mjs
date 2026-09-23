@@ -322,6 +322,22 @@ if (register) {
   else notes.push(`id namespaces: ${u.prefixes.length} allocating prefix(es), all registered (${u.prefixes.join(" ")})`);
 }
 
+/* ------------------- 2e. THE MEASUREMENT AND INTERFACE-CHANGE LEDGERS ARE FROZEN FILES PLUS ONE FILE PER ENTRY (M0-100)
+
+   Two `land/*` branches appending to the same tail collide in the train's merge (ORCHESTRATION.md rule 3). The layout
+   and its check live in `tools/entries.mjs`, the one reader of both ledgers; this runs its `audit()` so a builder
+   who appends to a frozen file, or files an entry that is not whole in its own file, is refused here before a push
+   rather than at the integrator's merge. */
+{
+  const E = await import("./entries.mjs").catch((e) => ({ loadError: e }));
+  if (E.loadError) fail(`entries.mjs could not be loaded — the measurement and interface-change ledgers are UNCHECKED: ${E.loadError.message}`);
+  else {
+    const a = E.audit({ repo: ROOT });
+    for (const f of a.fails) fail(`LEDGER ENTRY — ${f}`);
+    notes.push(`entries (M0-100): ${a.notes.join("; ")}`);
+  }
+}
+
 /* ------------------- 2c. A MERGE THAT SILENTLY DROPPED A FILE (M0-20)
 
    WHY IT IS HERE AND NOT IN THE BATTERY OR IN A DOCUMENT, AND THE ARGUMENT MATTERS
@@ -1149,10 +1165,12 @@ function ARMING_NOTE(a, arm) { return `${a.arming[arm].row} is done, so this arm
     const ORIGIN_MAIN = "origin" + "/main:";
     const stateRef = new RegExp(ORIGIN_MAIN.replace("/", "\\/") + String.raw`[^\s\x60'")]*(?:CLAIMS\.md|QUEUE\.md|BACKLOG\.md|BACKLOG-LATER\.md|DEBT\.md|PLACEMENT\.md|-NEXT\.md|archive\/ledgers\/)`);
     const left = [];
+    const EK = (await import("./entries.mjs")).kindOf;
     for (const f of tracked) {
       /* `MEASUREMENTS.md` is exempt as the archive is: a figure's record quotes the instrument AS IT WAS RUN, and
          rewriting a dated instrument line would falsify the record (a figure lands with what it measured). */
-      if (f.startsWith("docs/archive/") || f === "docs/development/MEASUREMENTS.md" || C.isMovedPath(f)
+      /* M0-100: and so is a measurement ENTRY in its own file, which is the same record (`entries.mjs` kindOf). */
+      if (f.startsWith("docs/archive/") || EK(f)?.kind === "M" || C.isMovedPath(f)
           || !/\.(md|mjs|js|sh|json|html)$/.test(f)) continue;
       const body = (() => { try { return readFileSync(join(ROOT, f), "utf8"); } catch { return null; } })();
       if (body === null || !body.includes(ORIGIN_MAIN)) continue;
