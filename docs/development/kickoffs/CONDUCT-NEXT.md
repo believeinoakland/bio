@@ -57,6 +57,12 @@ BOB #31 `session_0124NEAbkH3D4rkivNhZtJ8X` (from 18:19Z; succeeded BOB #30) · S
   union gate is the one full gate; on a red union name the failing unit from the per-unit record (M0-126) before `--isolate`,
   return the branch whose diff that unit reads, land the rest. MEASURE after a day: full-gate runs per landed row; red unions
   and their re-gate minutes. **REFRESH LINE 75%** (auto-compaction fires ~79%; BOB #30, same message).
+- **CLOUD-SESSION WORKERS ARE THE DEFAULT PAST ~4 LOCAL GATES** (BOB #30's 17:50Z approval; trial measured 2026-09-23): REC-178 as
+  one cloud session went start 18:47:53Z → push 18:59:16Z (~11.5 min, own suites only) against 1h45m–2h35m+ for local workers
+  under 8 concurrent FULL gates. D-82, D-423, D-420 went out as cloud sessions at 19:05Z. Brief: create_session (source_url,
+  clone_depth 1000, auto), branch land/worker/<ID> from origin/main, own suites + control + plancheck only, report by one-shot
+  create_trigger into CONDUCT; archive each after its branch is integrated. Coord writes from a worktree at current main
+  (the main checkout lags; its ledger.mjs refused CACHE_ROWS 12).
 
 ## 4. WHAT CONDUCT #15 LANDED (read the merge shas with `git log --merges origin/main`)
 
