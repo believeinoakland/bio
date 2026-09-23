@@ -584,6 +584,51 @@ if (SINCE && !FORCE_FULL) {
 }
 if (cls === "TARGETED") selection = targetedSelection([...changed]);
 
+/* ---- 2d · READ THIS TREE'S OWN RECORD FIRST (BOB #29, 2026-09-23) --------
+   Bob: "every lane that experienced the bug then went and ran ALL suites even though they'd just passed
+   those suites without making any further changes." MEASURED: this file read a record only under
+   `--since`, and `--since` refuses a RED base, so the one road back from a RED on an UNCHANGED tree was the
+   whole battery again. But the record (D-293, keyed by the TREE) already says what that tree needs:
+     - effectively GREEN, by a run of this class or wider  -> nothing to run; say so and stop;
+     - effectively RED, every open unit a named unit        -> RERUN: exactly those units, and plancheck.
+   `pushguard.mjs` `effectiveVerdict` is the one reader: a failing step opens its units (since this change,
+   only the suites the battery NAMES as failed), a passing step closes what it covers — so a RERUN that
+   passes turns the tree GREEN with no suite that already passed on it run twice. A wildcard left open
+   (a leak, a shared log, a step that named nothing) or no record of this class is not narrowed. `--full`
+   and `--since` are never overridden. */
+const CLASS_RANK = (c) => (c === "FULL" ? 2 : 1);
+if (CLEAN_AT_START && !FORCE_FULL && SINCE === null) {
+  const own = readRuns({ repo: REPO, tree: START.tree });
+  const eff = effectiveVerdict(own.runs);
+  const covering = own.runs.some((r) => CLASS_RANK(r.class) >= CLASS_RANK(cls));
+  const known = new Map(UNITS.map((u) => [u.id, u]));
+  if (covering && eff.verdict === "GREEN") {
+    const by = own.runs.filter((r) => CLASS_RANK(r.class) >= CLASS_RANK(cls)).pop();
+    console.log(`gates: the tree ${short(START.tree)} is already recorded GREEN (by a ${by.class} run)`
+      + ` — nothing changed since, so nothing is re-run. \`--full\` forces a run.`);
+    if (EXPLAIN) process.exit(0);
+    /* THE ANSWER IS STILL RECORDED. A caller reads its verdict from the run it just caused (train.mjs `gate()`
+       takes the runs added since it called), so an exit 0 that wrote nothing read to it as UNDETERMINED — found by
+       train.test's --isolate arm on this change's first gate. A REUSED run names the record it relied on and has NO
+       steps, so `effectiveVerdict` is unmoved by it: it opens nothing and, not being FULL, clears nothing. */
+    let w;
+    try {
+      w = appendRun({ repo: REPO, run: { tree: START.tree, verdict: "GREEN", class: "REUSED", why: `already GREEN by ${by.file}`,
+        head: START.head, base: base || null, at: new Date().toISOString(), worktree: REPO, reusedFrom: by.file, steps: [] } });
+    } catch (e) { w = { ok: false, reason: e.message }; }
+    console.log(w.ok ? `gates: RECORDED GREEN (REUSED) for tree ${short(START.tree)} — ${w.path}` : `gates: NOT RECORDED — ${w.reason}`);
+    process.exit(0);
+  }
+  if (covering && eff.verdict === "RED" && eff.open.length
+      && eff.open.every((u) => u === "plancheck" || known.has(u))) {
+    const openUnits = eff.open.filter((u) => u !== "plancheck").map((u) => known.get(u));
+    cls = "RERUN";
+    why = `the tree ${short(START.tree)} is recorded RED at ${eff.open.length} unit(s) (${eff.open.join(", ")}); every other unit`
+      + " passed on this same tree, so only those are re-run";
+    selection = new Map(openUnits.map((u) => [u.id, { unit: u, why: "recorded RED on this tree" }]));
+  }
+}
+
 /* ---- 3 · the plan ------------------------------------------------------- */
 /* The battery's own filter rule, mirrored so the RECORD names what the battery actually ran:
    `scripts/battery.mjs` keeps a plane suite whose FILE NAME includes a filter and a fleet suite
@@ -607,7 +652,7 @@ if (cls === "FULL") {
   const picked = [...selection.values()].map((v) => v.unit);
   const suites = picked.filter((u) => u.kind === "plane" || u.kind === "fleet").map((u) => u.filter);
   if (suites.length)
-    STEPS.push({ label: `battery (${cls === "SINCE" ? "both sides" : "selected"})`, units: batteryRuns(suites), cmd: "node", args: ["scripts/battery.mjs", ...suites], cwd: join(REPO, "bio-plane"), names: suites });
+    STEPS.push({ label: `battery (${cls === "SINCE" ? "both sides" : cls === "RERUN" ? "re-run: recorded RED" : "selected"})`, units: batteryRuns(suites), cmd: "node", args: ["scripts/battery.mjs", ...suites], cwd: join(REPO, "bio-plane"), names: suites });
   if (picked.some((u) => u.kind === "coverage"))
     STEPS.push({ label: "coverage --strict", units: ["coverage"], cmd: "node", args: ["scripts/coverage.mjs", "--strict"], cwd: join(REPO, "bio-plane") });
   for (const u of picked.filter((x) => x.kind === "ui"))
@@ -624,7 +669,7 @@ if (sinceNote) console.log(`gates: ${sinceNote}`);
 console.log(`gates: change class ${cls} — ${why}`);
 if (cls === "DOCS")
   console.log(`gates: doc-facing suites derived fresh — plane [${planeDoc.join(", ")}] · ui [${uiDoc.join(", ")}]`);
-if (cls === "TARGETED" || cls === "SINCE") {
+if (cls === "TARGETED" || cls === "SINCE" || cls === "RERUN") {
   console.log(`gates: FULL is derived too — plane imports from outside bio-plane/: [${planeForeign.roots.join(", ")}]`
     + `${planeForeign.files.length ? ` + [${planeForeign.files.join(", ")}]` : ""} · fleet: [${FLEET.map((m) => m.dir).join(", ")}]`);
   console.log(`gates: ${cls} selection derived fresh — ${selection.size} unit(s) of ${UNITS.length} ${cls === "SINCE" ? "read a path changed on BOTH sides" : "import, spawn or mention a changed path"}:`);
@@ -655,7 +700,12 @@ STEPS.forEach((s, i) => {
   const unmeasured = v && v.verdict === "NOT MEASURED" && Array.isArray(v.notMeasured)
     ? v.notMeasured.map((x) => x && x.unit).filter(Boolean) : [];
   const timedOut = r.status === 124 && unmeasured.length > 0;
-  results.push({ label: s.label, units: s.units, ok: r.status === 0, ...(timedOut ? { timedOut: true, unmeasured } : {}) });
+  /* BOB #29: a battery that went RED NAMES its failed suites; record them, so a re-run of those alone clears the
+     tree (2d). Not when the finding is the run's, not a suite's — a leak or a shared log keeps the whole step open. */
+  const failedUnits = r.status !== 0 && !timedOut && v && v.verdict === "RED" && Array.isArray(v.failed)
+    && v.failed.length && !v.leaking && !v.sharedLog ? v.failed.filter((u) => typeof u === "string" && u) : [];
+  results.push({ label: s.label, units: s.units, ok: r.status === 0, ...(timedOut ? { timedOut: true, unmeasured } : {}),
+    ...(failedUnits.length ? { failedUnits } : {}) });
 });
 try { rmSync(VERDICT_DIR, { recursive: true, force: true }); } catch { /* the OS temp sweep */ }
 const red = results.some((r) => !r.ok && !r.timedOut);
@@ -687,8 +737,8 @@ if (notMeasured) {
       w = appendRun({ repo: REPO, run: {
         tree: START.tree, verdict: VERDICT, class: cls, why, head: START.head, base: base || null,
         at: new Date().toISOString(), worktree: REPO, since: sinceInfo,
-        steps: results.map(({ label, units, ok, timedOut, unmeasured }) =>
-          ({ label, units, ok, ...(timedOut ? { timedOut, unmeasured } : {}) })),
+        steps: results.map(({ label, units, ok, timedOut, unmeasured, failedUnits }) =>
+          ({ label, units, ok, ...(timedOut ? { timedOut, unmeasured } : {}), ...(failedUnits ? { failedUnits } : {}) })),
       } });
     } catch (e) { w = { ok: false, reason: `the record could not be written (${e.message})` }; }
     console.log(w.ok
