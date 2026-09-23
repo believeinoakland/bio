@@ -18518,3 +18518,70 @@ touched state still move `main` for their product half, but no longer carry the 
 that cost BOB #26's landing six gate runs (TREE-SHARING §"Why"). It is a figure about ONE day's shape, not a forecast:
 a day heavier in product landings moves `main` more. **Not measured:** the gate runs this would have saved — a count
 of avoided rebases needs the runs M-97 could not see either.
+
+## M-104 · 2026-09-23 · M0-114 — the FULL gate on a GitHub runner, beside the Mac's and the cloud's; what Actions answered; and the check's live negative control
+
+**INSTRUMENTS:** worker spawned by CONDUCT #14 (cloud Claude Code), branch `worktree-agent-a7a5246aa91f3c230` from
+`origin/main` @ `df9eb9f9`. `.github/workflows/gates.yml` pushed on THIS branch only (and on two throwaway control branches),
+its job `gate` on `ubuntu-latest` running `node tools/gates.mjs` in its derived class (FULL: the diff carries `.github/`).
+Read through the GitHub API and MCP tools (`actions/workflows`, `actions/runs`, `commits/<sha>/check-runs`,
+`check-runs/<id>/annotations`, `get_job_logs`, `get_workflow_run_usage`), with `curl` through the session's proxy; the
+per-job log downloads (`actions/jobs/<id>/logs`) were REFUSED by the proxy (CONNECT 403 to `*.blob.core.windows.net`), so
+log text was read through the MCP tool. The live refusal by `git push` from this worktree through the installed hook.
+
+**WHAT ACTIONS ANSWERED, VERBATIM.** Before any push, 2026-09-22 23:45Z: `actions/workflows` HTTP 200 `"total_count": 0`;
+`actions/runs` HTTP 200 `"total_count": 0`; `actions/permissions` and `actions/permissions/workflow` HTTP 403 *"Access to
+this GitHub Actions path is not permitted through this proxy."* (so enablement could not be READ). Then the act: the push of
+`af7a5da8` carrying the workflow was accepted, and within 12 s `actions/runs` read `"total_count": 1`, run `35799183380`,
+`"status": "in_progress"`, and `commits/af7a5da8/check-runs` a check run named `gate`. **Actions is ENABLED on
+`believeinoakland/bio`; no act of Bob's was needed.** `get_workflow_run_usage` for that run: `"billable":{"UBUNTU":
+{"total_ms":0,...}}`, `"run_duration_ms":908000` — the repository is public (`"visibility": "public"`), and the run billed 0.
+
+| | the Mac | the cloud session | the GitHub runner |
+| --- | --- | --- | --- |
+| source | M-99's citation of DIST's 0.71.0 cut (M0-106's row); **not re-measured** — no Mac is reachable from here | M-99 (BOB #28), `--full`, 2026-09-22 | THIS entry, run `35799183380` on `af7a5da8` (tree `5b0643cc`), 2026-09-22 23:48:41Z–2026-09-23 00:03:46Z |
+| machine | 8 GiB (TREE-SHARING §"Why") | 4 cores, 15 GiB, shared with sibling workers | `ubuntu-24.04` image `20260907.300.1`, 4 cores (`nproc`), 15 GiB (`free -g`), 145 GB disk, alone |
+| full gate wall | not recorded | 1,082 s RED; 1,135 s GREEN on `9cc1ed7f` | **875 s** (`WALL=875s` in the check's annotation), job 905 s, run 908 s; container prep 29 s (checkout 11, node 5, `npm ci` ×4 + `ssh-keygen` present 9) |
+| battery | ~16 min when run alone | 974.3 s; 1,020.1 s | **787.1 s** |
+| suites · assertions | 269/269 · 16,413 | 272/273 · 16,575; 273/273 · 16,576 | **278/278 suites green · 16747 assertions passing · EXCLUDES 2 untallied suite(s)** (`bundle`, `livefire`), **0 skipped** |
+| verdict | GREEN | RED (id ledger), then GREEN FULL | **GREEN FULL**, recorded; coverage `--strict`, `civicos-ui` all harnesses, `plancheck --local` 0 fail |
+
+The three trees differ (each column's own tree; the suite count grew between them), so the columns compare a gate's cost,
+not one tree's result. A second FULL run on the runner, the negative control's (`1bdfa919`, below), took 857 s with the
+battery at 770.3 s: the runner's figure reproduces within 2%.
+
+**EVERY SUITE NEEDING A SECRET OR THE NETWORK: NONE FOUND.** The runner is handed NO secret (the workflow names no
+`secrets.`; `GITHUB_TOKEN` permissions `Contents: read`) and passed 278/278 with 0 skipped; the cloud passed with every
+Cloudflare host and the live instance REFUSED (M-99). A grep of every `*.mjs` in `bio-plane/test/` and every top-level `<dir>/test/` for eight of the ten keys
+M-99 lists (`BIO_ADMIN_TOKEN`, `BIO_MEMBER_TOKEN`, `CF_TOKEN`, `CLOUDFLARE_API_TOKEN`, `BIO_INSTANCE`, `GITHUB_TOKEN`,
+`BIO_RELEASE_SEED`, `BIO_RATIFY_SEED`; the two account ids are not secrets) found none. `livefire.test.mjs` is *"Credential-free"* and drives a local
+Miniflare. **What this cannot see:** a suite that reaches the network and passes on its own failure; a live probe outside
+the battery (DIST's), which is not a gate unit by design (TREE-SHARING §3).
+
+**MONTHLY MINUTES AT M0-111's CADENCE.** A train about every 30 minutes (TREE-SHARING §2) is at most 48 `integrate/*`
+runs a day; M-97 measured 52 landings in ~15.75 h, ~79 a day, each one `land/*` push. At one FULL run each (~15 min of
+job, the upper bound: DOCS and TARGETED classes are shorter), ~127 runs × 15 min ≈ **1,900 runner-minutes a day, ~57,000
+a month — billed 0**: measured 0 billable ms on this public repository. GitHub's documentation (a vendor CLAIM, not
+measured) says standard runners are free for public repositories, with a concurrency limit (20 jobs on a free plan).
+
+**THE CHECK ON THE COMMIT, LIVE.** (1) GREEN: `githubCheckVerdict` on `af7a5da8` read `GREEN — the check's gate recorded
+GREEN (class FULL)`, from the annotation `VERDICT=GREEN TREE=5b0643cc… CLASS=FULL EXIT=0 WALL=875s FAILED=none`.
+(2) THE LIVE NEGATIVE CONTROL'S FIRST RUN FOUND A DEFECT IN THE WRITER: `m0114-negctl` @ `c36c38c2` (one assertion of
+`pushguard-check.test.mjs` broken) concluded `failure` with NO verdict annotation — Actions runs a step as `bash -e`, so
+the RED gate killed the step before it wrote one — and the guard read UNDETERMINED (the safe direction: not refused, not
+GREEN). The same defect hid `812df0d7`'s RED (its log was never printed; its cause is UNDETERMINED from here, and the
+likeliest is the fixed-port literal below). Fixed by `set +e` (pinned in the suite). (3) The re-run, `m0114-negctl-2` @
+`1bdfa919`, run `35801158591`: **`277/279 suites green · 16788 assertions passing`**, `FAILED: hygiene.test.mjs,
+pushguard-check.test.mjs`, annotation `VERDICT=RED TREE=3882b560… CLASS=FULL EXIT=1 WALL=857s FAILED=hygiene.test.mjs,
+pushguard-check.test.mjs` — **red at the broken suite, at its named assertion `no GitHub remote is NONE`**, and ALSO red at a
+genuine defect the local runs had not exercised: `hygiene.test.mjs` *"no suite pins a fixed port (1 found:
+["pushguard-check.test.mjs: 1234"])"*, a URL literal in the new suite, since corrected. (4) THE REFUSAL:
+`git push origin 1bdfa919…:refs/heads/m0114-negctl-3` exit 1, *"PUSH REFUSED — bio-pushguard … THE GATE ON GITHUB'S
+MACHINES RECORDED THIS TREE RED (M0-114) … RED · class FULL · exit 1 · failed: hygiene.test.mjs, pushguard-check.test.mjs"*,
+and `git ls-remote` shows no `m0114-negctl-3`. (5) A commit GitHub has not seen answers `check-runs` HTTP 422, read as
+NONE (the first push of `812df0d7`, since corrected from UNDETERMINED).
+
+**WHAT IT SAYS.** A runner gates the FULL battery in ~14.5 min, faster than a lone cloud session (~18 min) and alone on its
+machine, for no billed minutes on a public repository — so the figures favour the runner, and there is no act of Bob's
+to ask for: Actions was already on. What changes is where a verdict lives: on the commit, readable by every clone.
+**Not measured:** the Mac today; the queue delay under a busy train (3 s here, alone); a private repository's billing.

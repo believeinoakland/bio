@@ -20,7 +20,7 @@ on:
     # `land/*` is change 2's ready-to-land prefix; `integrate/*` the integrator's union branch.
     # `main` is deliberately absent: the verdict must exist BEFORE main moves, which is when the
     # push guard reads it.
-    branches: ["land/**", "integrate/**", "worktree-agent-a7a5246aa91f3c230"] # MEASUREMENT ONLY: this worker's branch, removed before landing
+    branches: ["land/**", "integrate/**"]
   workflow_dispatch:
 
 permissions:

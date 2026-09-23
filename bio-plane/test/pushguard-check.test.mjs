@@ -149,7 +149,7 @@ section("THE REMOTE'S NAME — owner/repo from each URL form git carries");
 t("https", guard.githubSlug("https://github.com/believeinoakland/bio"), "believeinoakland/bio");
 t("https with .git", guard.githubSlug("https://github.com/believeinoakland/bio.git"), "believeinoakland/bio");
 t("ssh", guard.githubSlug("git@github.com:believeinoakland/bio.git"), "believeinoakland/bio");
-t("a proxy URL that is not github.com is not guessed at", guard.githubSlug("http://127.0.0.1:1234/git/believeinoakland/bio"), null);
+t("a URL that is not github.com (a proxy, another host) is not guessed at", guard.githubSlug("https://gitlab.example/git/believeinoakland/bio"), null);
 
 /* ========================================================================== */
 section("THE END-TO-END PUSH — git calls the hook, the hook reads the check through curl, and a RED check refuses");
