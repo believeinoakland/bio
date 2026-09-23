@@ -623,6 +623,16 @@ scope: correct each live site; re-check the agent-worker segment bound against t
 accepts-when: no live site divides by 128 or says "of 128"; the bound's re-check is recorded. NEGATIVE CONTROL: a grep arm over the live sites fails by name on a planted "of 128 MB".
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
+### D-460 · queued — **DIAGNOSIS: SOME TIER-3 AGENDAS AND MINUTES READ AS GENERIC, AND NOBODY KNOWS WHY.** FW-20 observed it on its walk (M-121, on c18-batch8) without diagnosing it; one suspected cause is that the OCR member transcribes one page per invocation and the plane reads only the first. Its finder's session is archived and no CONTENT-PDF lane is live, so the diagnosis is rowed. — owner CONTENT-PDF.
+order: after D-312, with the M2 extraction measurements: a possible silent under-read of scanned civic records, the class CLAUDE.md §2 ranks worst if confirmed (SCHEDULER #17, 2026-09-23; CONDUCT #18 23:51Z)
+milestone: M0 (a diagnosis — a measurement)
+interface: none until the fix is named.
+design: `docs/development/VERIFICATION.md` (measure; do not recall), for FW-20's M-121 walk.
+depends-on: FW-20 (`integrated` on c18-batch8; M-121 lists the walk).
+scope: take the tier-3 walk documents M-121 names as agendas or minutes that read generic; establish whether the member transcribes one page per invocation and the plane keeps only the first; name the fix, or show the documents are generic.
+accepts-when: the named fix (then placed as its own row) or the refutation, recorded with date and instrument. NEGATIVE CONTROL: a two-page scanned fixture whose second page alone carries the agenda heading reads generic before the fix, or the refutation shows it read whole.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
 ### D-321 · queued — **NO REAL IMAGE-ONLY PAGE IN THE CORPUS CARRIES AGENDA-SHAPED TEXT, SO THE `reading_refs` JOIN OVER REAL OCR IS PROVED ONLY ON SYNTHETIC INK (`ocr-member-e2e.test.mjs`).** — owner CONTENT-PDF.
 order: after D-320; the page must come from bytes already held (the cloud proxy refuses Legistar) (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M2
@@ -1202,13 +1212,3 @@ depends-on: none.
 accepts-when: with only `bio-plane/` installed, the battery runs every fleet suite and names no member dark; a member that truly cannot resolve is told a remedy that works for it. How a liar … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-380's DEBT row of 2026-09-16, verified at the code; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-380» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-427 · queued — **THE UI HARNESS RUNNER JUDGES A SUITE BY ITS EXIT STATUS ALONE, SO A UI SUITE THAT PRINTS A FAILURE AND EXITS 0 READS `PASS`.** `civicos-ui/test/run.mjs` (re-read on `619dfa65`) prints `PASS` whenever `execFileSync` returns; M0-67's cross-check in `bio-plane/scripts/battery.mjs` (a printed failure with exit 0 is RED, `EXIT/TALLY DISAGREE`) never reached the UI estate. Latent (no UI suite is known to do it), but M0-126 will cache a unit's PASS, so a false one would stop re-running. — owner M0 with UI.
-order: with the instrument cluster, directly after D-380: a gate reading green over a suite that failed, M0-79's doctrine on the UI side; below D-380 because no UI suite is known to print a failure and exit 0 (SCHEDULER #15, 2026-09-23, LED-7 batch S15-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): verify by the positive artifact, never the absence of an error.
-depends-on: none — M0-67's cross-check is on `main`.
-scope: `run.mjs` reads each suite's printed tally and fails a suite whose tally reports a failure while it exits 0, naming it `EXIT/TALLY DISAGREE` as `battery.mjs` does, through ONE shared reader rather than a copy.
-accepts-when: a planted UI suite printing one failure and exiting 0 turns the harness red naming it; every real suite still reads as today. NEGATIVE CONTROL: drop the tally read, and the planted arm reads PASS and fails by name.
-added: 2026-09-23 · SCHEDULER #15 (LED-7 batch S15-1; D-427's DEBT row of 2026-09-18, verified at the code; keeps its `D-` id).
