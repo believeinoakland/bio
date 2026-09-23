@@ -55,7 +55,7 @@
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
 
-  "vars": { "VERSION": "0.76.0" },
+  "vars": { "VERSION": "0.77.0" },
 
   // THE NARROWEST BINDING THAT DOES THE JOB (fleet rule 3, I6/I8), and here that
   // is EXACTLY ONE. The member reads and writes nothing itself: everything it

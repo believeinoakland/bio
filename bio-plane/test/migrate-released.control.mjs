@@ -217,4 +217,7 @@ console.log(`\npen removed: ${PEN}`);
    arithmetic slip, and the measured figure is the structure's. alterafter SEQUENCE: … 339/78 → 360/78 → 381/78.
    MEASURED 2026-09-23 by DIST #5 at the 0.76.0 cut (18 rows, 0.75.0 added), each at the figure predicted before arming,
    every restore sha256 MATCH: baseline 480/0 · alterafter 402/78 · nosecondpass 430/50 · percolumn 480/0 ·
-   firstbootalways 444/36 · firstbootnever 479/1 · groupwipe 470/10. alterafter SEQUENCE: … 360/78 → 381/78 → 402/78. */
+   firstbootalways 444/36 · firstbootnever 479/1 · groupwipe 470/10. alterafter SEQUENCE: … 360/78 → 381/78 → 402/78.
+   MEASURED 2026-09-23 by DIST #5 at the 0.77.0 cut (19 rows, 0.76.0 added), each as predicted, every restore sha256
+   MATCH: baseline 501/0 · alterafter 423/78 · nosecondpass 449/52 · percolumn 501/0 · firstbootalways 465/36 ·
+   firstbootnever 500/1 · groupwipe 489/12. alterafter SEQUENCE: … 381/78 → 402/78 → 423/78. */

@@ -122,6 +122,9 @@ const RELEASES = [
   /* 0.75.0: deployed and live-verified 2026-09-23 (D-85 / IC-181, a CUT NOW: an `ai` credential opens a question
      only inside a RUNNING run it holds); the commit is dist/cut-0.75.0's cut, whose release/ holds it. RELEASES. */
   ["0.75.0", "90bd64518626f0f146660a128738c24685a4a501"],
+  /* 0.76.0: deployed and live-verified 2026-09-23 (REC-169 / IC-184, a CUT NOW: a run's principal cannot refund a
+     spent bound; with D-116, REC-170, DIST-6); the commit is dist/cut-0.76.0's cut, whose release/ holds it. */
+  ["0.76.0", "4494f725e017b557336902012b263c49b29afe5e"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
