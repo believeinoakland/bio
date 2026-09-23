@@ -14794,6 +14794,37 @@ export class Store extends DurableObject {
          taken, which is D-428's, stated there rather than here. */
       if (cur && base !== null && pkg.actorIdentity != null && !this.#inSight(bundleId, pkg.actorViewer ?? null))
         return Store.#promoteAbsent();
+      /* ===== REC-176 — A RE-SEND OF A PROMOTION THE RECORD ALREADY HOLDS IS A NO-OP (the history law,
+         `BIO_State_Rules_Consistency_v1_5.md` §2.4: racing promoters "write identical names with identical bytes and
+         the second detects the existing file and skips"). If this bundle's manifest already has a row under THIS
+         snap key, and the row records THIS promotion — the same base, every file by name and digest (not bundle.md
+         alone), the same kind, writer, operation and author — the answer is ok and NOTHING is written: no manifest
+         row, no history, no live file, no row_version. It is asked here, BEFORE EXISTS and CAS_STALE, because an
+         identical re-send of a creation meets EXISTS and of a revision meets CAS_STALE (its base is no longer the
+         head) — both of which would refuse the one re-send the record can honestly accept. After the sight check,
+         so a caller who cannot see the bundle learns nothing from it. The digests compared are the ones `files`
+         carries HERE — after REC-175's `is-promote-digest` computed them from the bytes (once both land) and after
+         D-436's group stamp, which is deterministic — so a creation re-sent is stamped exactly as it was. A row
+         that DIFFERS in any of these is not answered here: it falls through, and `is-promote-snapkey` below refuses
+         it before any write. A file whose digest either side does not state makes the two UNDETERMINED, never
+         equal (two absent digests agree on nothing), and falls through to the refusal. ===== */
+      const heldAtKey = (typeof snapKey === "string" || typeof snapKey === "number")
+        ? this.#one(`SELECT kind, base, author, created, files_json, writer, operation FROM manifest
+                     WHERE bundle_id=? AND snap_key=?`, bundleId, snapKey)
+        : null;
+      if (heldAtKey && Store.#samePromotion(heldAtKey, {
+            base: base === null ? EMPTY_STRING_SHA : base, files, author: author ?? null,
+            kind: pkg.replay ? "promotion-replay" : "promotion", writer, operation })) {
+        const recordedMd = Store.#manifestFiles(heldAtKey.files_json).find((f) => f.name === "bundle.md");
+        return { ok: true, bundleId, idempotent: true, wrote: false, snapKey: String(snapKey),
+                 bundleSha: recordedMd ? recordedMd.sha256 : null,
+                 recorded: { kind: heldAtKey.kind, base: heldAtKey.base, author: heldAtKey.author,
+                             created: heldAtKey.created },
+                 current: cur ? { bundleSha: cur.bundle_sha, rowVersion: cur.row_version } : null,
+                 detail: "the record already holds this promotion under this snap key, byte for byte; "
+                       + "nothing was written" };
+      }
+      /* ===== END REC-176 is-promote-resend ===== */
       if (cur && base === null)
         return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
       if (!cur && base !== null)
@@ -15398,6 +15429,101 @@ export class Store extends DurableObject {
         /* END DEC-49 REGION is-basis-acyclic */
       }
 
+      /* REC-176 — THE HISTORY LAW AT THE WRITE (§2.4: "History is append-only; nothing in _history/ is ever modified
+         or deleted"). The two manifest writes below, and the history snapshot, are keyed (bundle_id, snap_key) and
+         were INSERT OR REPLACE: a second promotion naming a key this bundle already held REPLACED the first
+         promotion's manifest row — its base, author, time and file list — and overwrote its snapshot, and answered
+         ok. A byte-identical re-send was answered above (`is-promote-resend`) without writing; anything else at a
+         held key is refused HERE, the last line before the first write of this transaction, so a refusal leaves
+         the bundle byte-identical (a refusal returned inside `transactionSync` does not roll back what was already
+         written, and nothing has been). The statements below are now plain INSERT, so a key reaching them held is
+         a constraint failure that rolls the whole promotion back rather than a silent replace. */
+      /* PL-12 / D-84: A MALFORMED BIAS SET NEVER LANDS, and it is refused by the
+         CATALOGUE'S OWN function rather than by a second implementation here —
+         the checkGatheringGrammar and checkInquiryBasis precedent exactly, and
+         for the same reason: two implementations of one rule is the drift this
+         repository has measured five times, and the malformedness rule is the
+         last rule in this system that should have two readings.
+         REFUSED AT THE WRITE, not only at the gate. A bias set that landed and
+         was refused later would sit in append-only history forever as a
+         statement the record holds and will not honour — and, worse, could be
+         adopted in the window before anybody ran a gate. Every finding comes
+         back with its C-number AND its canned translation (DEC-49), taken from
+         the one place they live.
+         The replay exemption is the gathering check's, for the gathering check's
+         reason: the record's own history must be holdable verbatim. */
+      /* DEC-49 REGION bias-set-refusal
+       *
+       * THE SPAN `BIAS_CHECKS.BIAS_REFUSED`'s `where` NAMES (REC-71), on the same
+       * terms as `basis-version-freeze` and `basis-version-resolve` above.
+       * Everything between this marker and its `END` is a DEC-49 GOVERNED SITE.
+       *
+       * WHY AN ENVELOPE REFUSAL STILL GETS A REGION, because this is the one row
+       * where the question was live and the answer should not have to be re-derived.
+       * PL-12 named `promote` deliberately and its reasoning was RIGHT — the code
+       * fires HERE rather than in `checkBiasExtension` with its ten siblings, and
+       * naming the site is what puts it inside the guard's governed set. **What was
+       * wrong was only the GRAIN.** Being an ENVELOPE is a fact about the refusal's
+       * SHAPE — it wraps per-finding codes — and says nothing whatever about its
+       * SPAN. `BIAS_REFUSED` fires at exactly one statement inside one `if`; it is
+       * not enforced across the other ~960 lines of `promote`, and claiming it was
+       * conscripted 34 unrelated refusals and turned `main`'s harness red a second
+       * time within hours of the first. **So "it is an envelope" is NOT a reason to
+       * name a whole function, and no future allocator should read it as one.**
+       *
+       * WHAT WOULD JUSTIFY THE WIDER SPELLING, stated so the exception is a real
+       * test rather than a closed door: a `where` may name a whole function when
+       * EVERY refusal that function makes is the family's business. That is true of
+       * `checkObservation`, `checkCondition` and `checkBound` in `airun.mjs`. It is
+       * not true of `promote`, and it is unlikely ever to be true of any function
+       * that both validates and writes. */
+      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
+        const bf = [];
+        checkBiasExtension({ fm: docFmW, files: new Map([["bundle.md", basisMd?.text ?? ""]]) }, bf);
+        const errs = bf.filter((x) => x.severity === "error");
+        if (errs.length) {
+          const byNumber = new Map(Object.entries(BIAS_CHECKS).map(([code, row]) => [row.check, { code, row }]));
+          return { ok: false, reason: "BIAS_REFUSED",
+                   /* DEC-49, and VF-2's guard is why this line exists: the code
+                      on the ENVELOPE carries its own canned translation, not
+                      only the per-finding ones below. A surface keys on what the
+                      plane sent FIRST, and before this it was sent a bare word. */
+                   check: BIAS_CHECKS.BIAS_REFUSED.check,
+                   translation: BIAS_CHECKS.BIAS_REFUSED.translation,
+                   findings: errs.map((x) => {
+                     const hit = byNumber.get(x.check);
+                     return { check: x.check, detail: x.message,
+                              code: hit ? hit.code : null,
+                              translation: hit ? hit.row.translation : null };
+                   }) };
+        }
+      }
+      /* END DEC-49 REGION bias-set-refusal */
+      /* DEC-49 REGION is-promote-files — REC-64/C-33.24. MOVED HERE BY REC-176 from after the manifest and history
+         writes, where a refusal left the refused promotion's row in the history (see the note at its old site). */
+      if (cur && !pkg.replay) {
+        const had = new Set(this.#rows(`SELECT path FROM files WHERE bundle_id=?`, bundleId).map((r) => r.path));
+        const now2 = new Set(files.map((f) => f.path));
+        const declared = new Set(Array.isArray(pkg.drop) ? pkg.drop : []);
+        const dropped = [...had].filter((p) => !now2.has(p) && !declared.has(p));
+        if (dropped.length)
+          return { ok: false, reason: "FILES_DROPPED", paths: dropped.sort(),
+                   detail: "this promotion would remove files the previous revision had. "
+                         + "Carry them forward, or name them in drop[] to delete them on purpose." };
+      }
+      /* END DEC-49 REGION is-promote-files */
+      if (!files.find(f => f.path === "bundle.md")?.sha256) return { ok: false, reason: "NO_BUNDLE_MD" };
+      /* DEC-49 REGION is-promote-snapkey */
+      if (heldAtKey)
+        return { ok: false, reason: "SNAP_KEY_TAKEN", code: "SNAP_KEY_TAKEN",
+                 check: ACT_SHAPE_CHECKS.SNAP_KEY_TAKEN.check,
+                 translation: ACT_SHAPE_CHECKS.SNAP_KEY_TAKEN.translation,
+                 snapKey: String(snapKey),
+                 detail: `${bundleId} already holds a promotion under snap key ${String(snapKey)}, and this one is `
+                       + "not it (a different base, file, writer or author). The record does not rewrite a history "
+                       + "entry; send this promotion under a new snap key. Nothing was written." };
+      /* END DEC-49 REGION is-promote-snapkey */
+
       // history is append-only: snapshot the outgoing live state first
       /* A creation records a manifest entry with the empty-string SHA as its
          base and no snapshot, because there is no prior state to snapshot.
@@ -15407,7 +15533,7 @@ export class Store extends DurableObject {
          is what this method did before, leaves the chain with no first link. */
       if (!cur) {
         this.sql.exec(
-          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
+          `INSERT INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
           bundleId, snapKey, pkg.replay ? "promotion-replay" : "promotion", EMPTY_STRING_SHA, author,
           meta.last_updated || new Date().toISOString(),
           JSON.stringify(files.map((f) => ({ name: f.path, sha256: f.sha256 }))), writer, operation);
@@ -15415,10 +15541,10 @@ export class Store extends DurableObject {
       if (cur) {
         for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
           this.sql.exec(
-            `INSERT OR REPLACE INTO history (bundle_id,snap_key,path,content,blob_sha,sha256,created) VALUES (?,?,?,?,?,?,?)`,
+            `INSERT INTO history (bundle_id,snap_key,path,content,blob_sha,sha256,created) VALUES (?,?,?,?,?,?,?)`,
             bundleId, snapKey, r.path, r.content, r.blob_sha, r.sha256, new Date().toISOString());
         this.sql.exec(
-          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
+          `INSERT INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
           /* The catalog switches on kind === 'promotion' (C-12.2, C-20.1), so
              that is the vocabulary. A creation is still distinguishable, by a
              base equal to the empty-string SHA, which is how the accelerator
@@ -15448,18 +15574,11 @@ export class Store extends DurableObject {
        * the history it reconstructs may legitimately contain deletions, and a
        * replayed revision is already marked as such in the manifest.
        */
-      /* DEC-49 REGION is-promote-files — REC-64/C-33.24. */
-      if (cur && !pkg.replay) {
-        const had = new Set(this.#rows(`SELECT path FROM files WHERE bundle_id=?`, bundleId).map((r) => r.path));
-        const now2 = new Set(files.map((f) => f.path));
-        const declared = new Set(Array.isArray(pkg.drop) ? pkg.drop : []);
-        const dropped = [...had].filter((p) => !now2.has(p) && !declared.has(p));
-        if (dropped.length)
-          return { ok: false, reason: "FILES_DROPPED", paths: dropped.sort(),
-                   detail: "this promotion would remove files the previous revision had. "
-                         + "Carry them forward, or name them in drop[] to delete them on purpose." };
-      }
-      /* END DEC-49 REGION is-promote-files */
+      /* REC-176: `is-promote-files` (FILES_DROPPED) and NO_BUNDLE_MD MOVED from here to BEFORE `is-promote-snapkey`,
+         i.e. before the first write — they sat AFTER the manifest and history writes (and NO_BUNDLE_MD after the live
+         files were replaced), and a refusal returned inside `transactionSync` rolls nothing back, so a refused
+         promotion left its manifest row and snapshot in the history. Both judge only the request and the live file
+         list, which nothing between there and here changes. */
       this.sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
       for (const f of files)
         this.sql.exec(
@@ -15467,7 +15586,6 @@ export class Store extends DurableObject {
           bundleId, f.path, f.text ?? null, f.blobSha ?? null, f.bytes, f.sha256);
 
       const newSha = files.find(f => f.path === "bundle.md")?.sha256;
-      if (!newSha) return { ok: false, reason: "NO_BUNDLE_MD" };
 
       /* Normalisation site 3 of 4 (REC-10): the projected type goes through
          the CATALOG'S OWN normalizeType rather than an inline restatement of
@@ -15813,67 +15931,10 @@ export class Store extends DurableObject {
           }
         }
       }
-      /* PL-12 / D-84: A MALFORMED BIAS SET NEVER LANDS, and it is refused by the
-         CATALOGUE'S OWN function rather than by a second implementation here —
-         the checkGatheringGrammar and checkInquiryBasis precedent exactly, and
-         for the same reason: two implementations of one rule is the drift this
-         repository has measured five times, and the malformedness rule is the
-         last rule in this system that should have two readings.
-         REFUSED AT THE WRITE, not only at the gate. A bias set that landed and
-         was refused later would sit in append-only history forever as a
-         statement the record holds and will not honour — and, worse, could be
-         adopted in the window before anybody ran a gate. Every finding comes
-         back with its C-number AND its canned translation (DEC-49), taken from
-         the one place they live.
-         The replay exemption is the gathering check's, for the gathering check's
-         reason: the record's own history must be holdable verbatim. */
-      /* DEC-49 REGION bias-set-refusal
-       *
-       * THE SPAN `BIAS_CHECKS.BIAS_REFUSED`'s `where` NAMES (REC-71), on the same
-       * terms as `basis-version-freeze` and `basis-version-resolve` above.
-       * Everything between this marker and its `END` is a DEC-49 GOVERNED SITE.
-       *
-       * WHY AN ENVELOPE REFUSAL STILL GETS A REGION, because this is the one row
-       * where the question was live and the answer should not have to be re-derived.
-       * PL-12 named `promote` deliberately and its reasoning was RIGHT — the code
-       * fires HERE rather than in `checkBiasExtension` with its ten siblings, and
-       * naming the site is what puts it inside the guard's governed set. **What was
-       * wrong was only the GRAIN.** Being an ENVELOPE is a fact about the refusal's
-       * SHAPE — it wraps per-finding codes — and says nothing whatever about its
-       * SPAN. `BIAS_REFUSED` fires at exactly one statement inside one `if`; it is
-       * not enforced across the other ~960 lines of `promote`, and claiming it was
-       * conscripted 34 unrelated refusals and turned `main`'s harness red a second
-       * time within hours of the first. **So "it is an envelope" is NOT a reason to
-       * name a whole function, and no future allocator should read it as one.**
-       *
-       * WHAT WOULD JUSTIFY THE WIDER SPELLING, stated so the exception is a real
-       * test rather than a closed door: a `where` may name a whole function when
-       * EVERY refusal that function makes is the family's business. That is true of
-       * `checkObservation`, `checkCondition` and `checkBound` in `airun.mjs`. It is
-       * not true of `promote`, and it is unlikely ever to be true of any function
-       * that both validates and writes. */
-      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
-        const bf = [];
-        checkBiasExtension({ fm: docFmW, files: new Map([["bundle.md", basisMd?.text ?? ""]]) }, bf);
-        const errs = bf.filter((x) => x.severity === "error");
-        if (errs.length) {
-          const byNumber = new Map(Object.entries(BIAS_CHECKS).map(([code, row]) => [row.check, { code, row }]));
-          return { ok: false, reason: "BIAS_REFUSED",
-                   /* DEC-49, and VF-2's guard is why this line exists: the code
-                      on the ENVELOPE carries its own canned translation, not
-                      only the per-finding ones below. A surface keys on what the
-                      plane sent FIRST, and before this it was sent a bare word. */
-                   check: BIAS_CHECKS.BIAS_REFUSED.check,
-                   translation: BIAS_CHECKS.BIAS_REFUSED.translation,
-                   findings: errs.map((x) => {
-                     const hit = byNumber.get(x.check);
-                     return { check: x.check, detail: x.message,
-                              code: hit ? hit.code : null,
-                              translation: hit ? hit.row.translation : null };
-                   }) };
-        }
-      }
-      /* END DEC-49 REGION bias-set-refusal */
+      /* REC-176: the bias-set refusal (PL-12 / D-84, `bias-set-refusal`) MOVED from here to BEFORE the first write
+         of this transaction, beside `is-promote-files`. Here it ran AFTER the manifest, history, files and bundles
+         writes, and a refusal returned inside `transactionSync` rolls nothing back, so a refused bias set LANDED
+         while the caller was told it was refused. It judges only `docFmW` and `basisMd`, computed before any write. */
       /* PL-12 / D-84: bias_statements, projected WHOLE from the bias bundle's
          own statements[] in this SAME transaction and by the same
          delete-then-insert discipline as inquiry_basis above — a projection of
@@ -29275,6 +29336,94 @@ export class Store extends DurableObject {
   /* `promote`'s not-found is the BUNDLE-level one (it revises any bundle, not only projects), so a
      hidden project's revision answers with it rather than with `#noSuchProject` — the rule is
      "the same answer the absent id gets", and for this act that answer is ABSENT. */
+  /* REC-176: THE FILE LIST A MANIFEST ROW RECORDS, parsed once for both readers (the re-send test and the census).
+     An unparsable or non-array value is an EMPTY list, which `#samePromotion` treats as undetermined, never equal. */
+  static #manifestFiles(filesJson) {
+    let arr;
+    try { arr = JSON.parse(filesJson); } catch { return []; }
+    return Array.isArray(arr) ? arr.filter((f) => f && typeof f === "object") : [];
+  }
+  /* REC-176: IS THIS THE PROMOTION THE ROW RECORDS? Every file by name AND digest (a set: the order a caller lists
+     files in is not part of what was promoted), the base, and who wrote it and as what. A digest either side does not
+     state as a non-empty string makes the answer NO — two absent digests agree on nothing (CLAUDE.md section 5), so an
+     undetermined identity falls through to the refusal rather than being answered as a no-op. */
+  static #samePromotion(row, want) {
+    const norm = (v) => (v === undefined || v === null ? null : String(v));
+    if (norm(row.base) !== norm(want.base) || norm(row.kind) !== norm(want.kind)
+        || norm(row.author) !== norm(want.author) || norm(row.writer) !== norm(want.writer)
+        || norm(row.operation) !== norm(want.operation)) return false;
+    const held = Store.#manifestFiles(row.files_json);
+    if (!held.length || held.length !== want.files.length) return false;
+    const digestOf = (v) => (typeof v === "string" && v !== "" ? v.toLowerCase() : null);
+    const byName = new Map();
+    for (const f of held) {
+      const d = digestOf(f.sha256);
+      if (typeof f.name !== "string" || d === null || byName.has(f.name)) return false;
+      byName.set(f.name, d);
+    }
+    for (const f of want.files) {
+      const d = f ? digestOf(f.sha256) : null;
+      if (!f || typeof f.path !== "string" || d === null || byName.get(f.path) !== d) return false;
+      byName.delete(f.path);
+    }
+    return byName.size === 0;
+  }
+  /* REC-176: THE CENSUS OF OVERWRITTEN MANIFEST ROWS — read-only, and a disagreeing bundle is REPORTED, never
+     repaired: the row an INSERT OR REPLACE destroyed is not recoverable from the store, and inventing it back would be
+     the record claiming more than it holds. WHAT MAKES IT MEASURABLE: `manifest` has ONE writer (`promote`, one row
+     per successful promotion) and `bundles.row_version` is advanced by that same write and by nothing else, so for a
+     bundle `row_version - COUNT(manifest)` is the number of promotions whose row is no longer there. WHAT IT CANNOT
+     DECIDE, stated per bundle rather than rounded: a bundle with NO creation row (base = the empty-string sha) may
+     have lost it to an overwrite, OR predate the fix that began writing a creation's manifest row at all (this
+     method's own comment at the manifest write) — so one promotion of such a bundle's deficit is `undetermined`, and
+     only the rest is counted `overwritten`. Which KEY collided is not recorded anywhere and is not guessed; a row whose
+     base is no other row's bundle.md digest (`unanchored`) is listed as the trace an overwrite leaves in the chain.
+     Manifest rows for a bundle id with no `bundles` row have no row_version to compare with and are counted apart.
+     Bounded by `limit` bundles listed (the counts are always whole). */
+  snapKeyCensus({ limit } = {}) {
+    const asked = limit === undefined || limit === null || limit === "" ? NaN : Number(limit);
+    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
+    const rowsBy = new Map();
+    for (const r of this.sql.exec(`SELECT bundle_id, snap_key, base, files_json FROM manifest`)) {
+      if (!rowsBy.has(r.bundle_id)) rowsBy.set(r.bundle_id, []);
+      rowsBy.get(r.bundle_id).push(r);
+    }
+    const out = { ok: true, bundles: 0, manifest_rows: 0, promotions: 0, overwritten: 0, undetermined: 0,
+                  bundles_with_deficit: 0, excess: 0, orphan_manifest_bundles: 0, listed: [], rewritten: 0 };
+    const seen = new Set();
+    for (const b of this.sql.exec(`SELECT bundle_id, row_version FROM bundles`)) {
+      out.bundles++;
+      seen.add(b.bundle_id);
+      const rows = rowsBy.get(b.bundle_id) || [];
+      const promotions = Number(b.row_version) || 0;
+      out.manifest_rows += rows.length;
+      out.promotions += promotions;
+      const deficit = promotions - rows.length;
+      if (deficit < 0) out.excess += -deficit;
+      const hasCreation = rows.some((r) => r.base === EMPTY_STRING_SHA);
+      const outputs = new Set(rows.map((r) => {
+        const md = Store.#manifestFiles(r.files_json).find((f) => f.name === "bundle.md");
+        return md && typeof md.sha256 === "string" ? md.sha256.toLowerCase() : null;
+      }).filter(Boolean));
+      const unanchored = rows.filter((r) => r.base !== EMPTY_STRING_SHA
+        && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
+      if (deficit <= 0 && !unanchored.length) continue;
+      const undetermined = deficit > 0 && !hasCreation ? 1 : 0;
+      const overwritten = deficit > 0 ? deficit - undetermined : 0;
+      out.overwritten += overwritten;
+      out.undetermined += undetermined;
+      if (deficit > 0) out.bundles_with_deficit++;
+      if (out.listed.length < cap)
+        out.listed.push({ bundle_id: b.bundle_id, promotions, manifest_rows: rows.length, overwritten, undetermined,
+                          creation_row: hasCreation, unanchored });
+    }
+    for (const [id, rows] of rowsBy) if (!seen.has(id)) { out.orphan_manifest_bundles++; out.manifest_rows += rows.length; }
+    out.note = "read-only: a bundle whose manifest holds fewer rows than it has promotions lost a row to a repeated "
+      + "snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a bundle with no creation "
+      + "row, which an overwrite and a store predating the creation row both produce. Which key collided is not "
+      + "recorded and is not guessed.";
+    return out;
+  }
   static #promoteAbsent() {
     return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
   }
@@ -42707,6 +42856,8 @@ export class Store extends DurableObject {
         },
         allocid: () => this.allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => this.acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
+        /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
+        snapkeycensus: () => this.snapKeyCensus({ limit: url.searchParams.get("limit") }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,

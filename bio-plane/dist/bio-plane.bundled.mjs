@@ -3677,8 +3677,11 @@ rev ${rev}
   const pkgFor = async (state, rev, extra = []) => {
     const body = md(state, rev);
     return {
+      /* REC-176: ONE SNAP KEY PER PROMOTION. This was the one literal "20260723T190000Z_livefire" for every call, so
+         the canary's revision REPLACED its own creation's manifest row on every run and answered ok — the overwrite
+         op=promote now refuses (SNAP_KEY_TAKEN, C-67.1). `rev` is distinct at every call below. */
       bundleId: id,
-      snapKey: "20260723T190000Z_livefire",
+      snapKey: `20260723T190000Z_livefire_r${rev}`,
       author: "livefire",
       /* D-436: no `group`, which was a literal. The canary is a CREATION, so the store it lands in stamps its own
          recorded producing group into the bytes — and a store recording none refuses it by name (C-64.1), which
@@ -3705,10 +3708,10 @@ rev ${rev}
   assert("garbage base refused", (await post("promote", { ...await pkgFor("ratified", 5), base: "deadbeef" })).reason, "CAS_STALE");
   const live = await get(`image?id=${id}&viewer=class:probe`) || {};
   assert("live state is the winning revision", /rev 3/.test(live["bundle.md"]), true);
-  assert("history holds the superseded revision", /rev 1/.test(live["_history/bundle_20260723T190000Z_livefire.md"] || ""), true);
+  assert("history holds the superseded revision", /rev 1/.test(live["_history/bundle_20260723T190000Z_livefire_r3.md"] || ""), true);
   assert(
     "the verbatim promotion record is projected",
-    "_history/promotion_20260723T190000Z_livefire.json" in live,
+    ["_history/promotion_20260723T190000Z_livefire_r1.json", "_history/promotion_20260723T190000Z_livefire_r3.json"].every((k) => k in live),
     true,
     "classifyDivergence and C-20.1 both read these records; without them the checks are unreachable, not passing"
   );
@@ -10559,6 +10562,18 @@ var ACT_SHAPE_CHECKS = {
     check: "C-33.21",
     where: "src/store.mjs promote > is-promote-cas",
     translation: "Somebody else changed this document since you last read it, so writing now would quietly discard their work. Read it again, fold your change into what is there, and write once more."
+  },
+  /* REC-176 (the history law, BIO_State_Rules_Consistency_v1_5.md §2.4: "History is append-only; nothing in
+     _history/ is ever modified or deleted"). `op=promote` wrote its manifest and history rows with INSERT OR
+     REPLACE keyed (bundle_id, snap_key), so a second promotion naming a key the bundle already holds silently
+     REPLACED the first promotion's rows. It now refuses that key before anything is written; a byte-identical
+     re-send of the promotion that key already names answers ok and writes nothing (§2.4's own convergent rule:
+     "the second detects the existing file and skips"). C-67 is minted (`node tools/mintid.mjs C`) rather than
+     C-33.n, because two parallel promote items took C-33 numbers the same day. */
+  SNAP_KEY_TAKEN: {
+    check: "C-67.1",
+    where: "src/store.mjs promote > is-promote-snapkey",
+    translation: "This write names a history entry this document already has, and it is a different write from the one recorded there. The record never rewrites its history, so nothing was written. Send it again under a new history key."
   },
   SELF_BASIS: {
     check: "C-33.22",
@@ -40406,6 +40421,34 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id FROM bundles WHERE bundle_id=?`, bundleId);
       if (cur && base !== null && pkg.actorIdentity != null && !this.#inSight(bundleId, pkg.actorViewer ?? null))
         return _Store.#promoteAbsent();
+      const heldAtKey = typeof snapKey === "string" || typeof snapKey === "number" ? this.#one(`SELECT kind, base, author, created, files_json, writer, operation FROM manifest
+                     WHERE bundle_id=? AND snap_key=?`, bundleId, snapKey) : null;
+      if (heldAtKey && _Store.#samePromotion(heldAtKey, {
+        base: base === null ? EMPTY_STRING_SHA2 : base,
+        files,
+        author: author ?? null,
+        kind: pkg.replay ? "promotion-replay" : "promotion",
+        writer,
+        operation
+      })) {
+        const recordedMd = _Store.#manifestFiles(heldAtKey.files_json).find((f2) => f2.name === "bundle.md");
+        return {
+          ok: true,
+          bundleId,
+          idempotent: true,
+          wrote: false,
+          snapKey: String(snapKey),
+          bundleSha: recordedMd ? recordedMd.sha256 : null,
+          recorded: {
+            kind: heldAtKey.kind,
+            base: heldAtKey.base,
+            author: heldAtKey.author,
+            created: heldAtKey.created
+          },
+          current: cur ? { bundleSha: cur.bundle_sha, rowVersion: cur.row_version } : null,
+          detail: "the record already holds this promotion under this snap key, byte for byte; nothing was written"
+        };
+      }
       if (cur && base === null)
         return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
       if (!cur && base !== null)
@@ -40794,9 +40837,60 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             detail: `this write would close a cycle: ${cycle.join(" -> ")}. An inquiry's basis is a DAG; the chain above already rests on ${bundleId}.`
           };
       }
+      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
+        const bf = [];
+        checkBiasExtension({ fm: docFmW, files: /* @__PURE__ */ new Map([["bundle.md", basisMd?.text ?? ""]]) }, bf);
+        const errs = bf.filter((x) => x.severity === "error");
+        if (errs.length) {
+          const byNumber = new Map(Object.entries(BIAS_CHECKS).map(([code, row]) => [row.check, { code, row }]));
+          return {
+            ok: false,
+            reason: "BIAS_REFUSED",
+            /* DEC-49, and VF-2's guard is why this line exists: the code
+               on the ENVELOPE carries its own canned translation, not
+               only the per-finding ones below. A surface keys on what the
+               plane sent FIRST, and before this it was sent a bare word. */
+            check: BIAS_CHECKS.BIAS_REFUSED.check,
+            translation: BIAS_CHECKS.BIAS_REFUSED.translation,
+            findings: errs.map((x) => {
+              const hit = byNumber.get(x.check);
+              return {
+                check: x.check,
+                detail: x.message,
+                code: hit ? hit.code : null,
+                translation: hit ? hit.row.translation : null
+              };
+            })
+          };
+        }
+      }
+      if (cur && !pkg.replay) {
+        const had = new Set(this.#rows(`SELECT path FROM files WHERE bundle_id=?`, bundleId).map((r) => r.path));
+        const now2 = new Set(files.map((f2) => f2.path));
+        const declared = new Set(Array.isArray(pkg.drop) ? pkg.drop : []);
+        const dropped = [...had].filter((p) => !now2.has(p) && !declared.has(p));
+        if (dropped.length)
+          return {
+            ok: false,
+            reason: "FILES_DROPPED",
+            paths: dropped.sort(),
+            detail: "this promotion would remove files the previous revision had. Carry them forward, or name them in drop[] to delete them on purpose."
+          };
+      }
+      if (!files.find((f2) => f2.path === "bundle.md")?.sha256) return { ok: false, reason: "NO_BUNDLE_MD" };
+      if (heldAtKey)
+        return {
+          ok: false,
+          reason: "SNAP_KEY_TAKEN",
+          code: "SNAP_KEY_TAKEN",
+          check: ACT_SHAPE_CHECKS.SNAP_KEY_TAKEN.check,
+          translation: ACT_SHAPE_CHECKS.SNAP_KEY_TAKEN.translation,
+          snapKey: String(snapKey),
+          detail: `${bundleId} already holds a promotion under snap key ${String(snapKey)}, and this one is not it (a different base, file, writer or author). The record does not rewrite a history entry; send this promotion under a new snap key. Nothing was written.`
+        };
       if (!cur) {
         this.sql.exec(
-          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
+          `INSERT INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
           bundleId,
           snapKey,
           pkg.replay ? "promotion-replay" : "promotion",
@@ -40811,7 +40905,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       if (cur) {
         for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
           this.sql.exec(
-            `INSERT OR REPLACE INTO history (bundle_id,snap_key,path,content,blob_sha,sha256,created) VALUES (?,?,?,?,?,?,?)`,
+            `INSERT INTO history (bundle_id,snap_key,path,content,blob_sha,sha256,created) VALUES (?,?,?,?,?,?,?)`,
             bundleId,
             snapKey,
             r.path,
@@ -40821,7 +40915,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             (/* @__PURE__ */ new Date()).toISOString()
           );
         this.sql.exec(
-          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
+          `INSERT INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
           /* The catalog switches on kind === 'promotion' (C-12.2, C-20.1), so
              that is the vocabulary. A creation is still distinguishable, by a
              base equal to the empty-string SHA, which is how the accelerator
@@ -40842,19 +40936,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           operation
         );
       }
-      if (cur && !pkg.replay) {
-        const had = new Set(this.#rows(`SELECT path FROM files WHERE bundle_id=?`, bundleId).map((r) => r.path));
-        const now2 = new Set(files.map((f2) => f2.path));
-        const declared = new Set(Array.isArray(pkg.drop) ? pkg.drop : []);
-        const dropped = [...had].filter((p) => !now2.has(p) && !declared.has(p));
-        if (dropped.length)
-          return {
-            ok: false,
-            reason: "FILES_DROPPED",
-            paths: dropped.sort(),
-            detail: "this promotion would remove files the previous revision had. Carry them forward, or name them in drop[] to delete them on purpose."
-          };
-      }
       this.sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
       for (const f2 of files)
         this.sql.exec(
@@ -40867,7 +40948,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           f2.sha256
         );
       const newSha = files.find((f2) => f2.path === "bundle.md")?.sha256;
-      if (!newSha) return { ok: false, reason: "NO_BUNDLE_MD" };
       const projectedType = normalizeType(meta.object_type);
       const mdForTitle = files.find((x) => x.path === "bundle.md");
       const projectedTitle = projectedType === "inquiry" ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? meta.title : meta.title;
@@ -41102,33 +41182,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
               vContentId
             );
           }
-        }
-      }
-      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
-        const bf = [];
-        checkBiasExtension({ fm: docFmW, files: /* @__PURE__ */ new Map([["bundle.md", basisMd?.text ?? ""]]) }, bf);
-        const errs = bf.filter((x) => x.severity === "error");
-        if (errs.length) {
-          const byNumber = new Map(Object.entries(BIAS_CHECKS).map(([code, row]) => [row.check, { code, row }]));
-          return {
-            ok: false,
-            reason: "BIAS_REFUSED",
-            /* DEC-49, and VF-2's guard is why this line exists: the code
-               on the ENVELOPE carries its own canned translation, not
-               only the per-finding ones below. A surface keys on what the
-               plane sent FIRST, and before this it was sent a bare word. */
-            check: BIAS_CHECKS.BIAS_REFUSED.check,
-            translation: BIAS_CHECKS.BIAS_REFUSED.translation,
-            findings: errs.map((x) => {
-              const hit = byNumber.get(x.check);
-              return {
-                check: x.check,
-                detail: x.message,
-                code: hit ? hit.code : null,
-                translation: hit ? hit.row.translation : null
-              };
-            })
-          };
         }
       }
       this.sql.exec(`DELETE FROM bias_statements WHERE bundle_id=?`, bundleId);
@@ -53599,6 +53652,113 @@ ${words}`;
   /* `promote`'s not-found is the BUNDLE-level one (it revises any bundle, not only projects), so a
      hidden project's revision answers with it rather than with `#noSuchProject` — the rule is
      "the same answer the absent id gets", and for this act that answer is ABSENT. */
+  /* REC-176: THE FILE LIST A MANIFEST ROW RECORDS, parsed once for both readers (the re-send test and the census).
+     An unparsable or non-array value is an EMPTY list, which `#samePromotion` treats as undetermined, never equal. */
+  static #manifestFiles(filesJson) {
+    let arr;
+    try {
+      arr = JSON.parse(filesJson);
+    } catch {
+      return [];
+    }
+    return Array.isArray(arr) ? arr.filter((f2) => f2 && typeof f2 === "object") : [];
+  }
+  /* REC-176: IS THIS THE PROMOTION THE ROW RECORDS? Every file by name AND digest (a set: the order a caller lists
+     files in is not part of what was promoted), the base, and who wrote it and as what. A digest either side does not
+     state as a non-empty string makes the answer NO — two absent digests agree on nothing (CLAUDE.md section 5), so an
+     undetermined identity falls through to the refusal rather than being answered as a no-op. */
+  static #samePromotion(row, want) {
+    const norm = (v) => v === void 0 || v === null ? null : String(v);
+    if (norm(row.base) !== norm(want.base) || norm(row.kind) !== norm(want.kind) || norm(row.author) !== norm(want.author) || norm(row.writer) !== norm(want.writer) || norm(row.operation) !== norm(want.operation)) return false;
+    const held = _Store.#manifestFiles(row.files_json);
+    if (!held.length || held.length !== want.files.length) return false;
+    const digestOf = (v) => typeof v === "string" && v !== "" ? v.toLowerCase() : null;
+    const byName = /* @__PURE__ */ new Map();
+    for (const f2 of held) {
+      const d = digestOf(f2.sha256);
+      if (typeof f2.name !== "string" || d === null || byName.has(f2.name)) return false;
+      byName.set(f2.name, d);
+    }
+    for (const f2 of want.files) {
+      const d = f2 ? digestOf(f2.sha256) : null;
+      if (!f2 || typeof f2.path !== "string" || d === null || byName.get(f2.path) !== d) return false;
+      byName.delete(f2.path);
+    }
+    return byName.size === 0;
+  }
+  /* REC-176: THE CENSUS OF OVERWRITTEN MANIFEST ROWS — read-only, and a disagreeing bundle is REPORTED, never
+     repaired: the row an INSERT OR REPLACE destroyed is not recoverable from the store, and inventing it back would be
+     the record claiming more than it holds. WHAT MAKES IT MEASURABLE: `manifest` has ONE writer (`promote`, one row
+     per successful promotion) and `bundles.row_version` is advanced by that same write and by nothing else, so for a
+     bundle `row_version - COUNT(manifest)` is the number of promotions whose row is no longer there. WHAT IT CANNOT
+     DECIDE, stated per bundle rather than rounded: a bundle with NO creation row (base = the empty-string sha) may
+     have lost it to an overwrite, OR predate the fix that began writing a creation's manifest row at all (this
+     method's own comment at the manifest write) — so one promotion of such a bundle's deficit is `undetermined`, and
+     only the rest is counted `overwritten`. Which KEY collided is not recorded anywhere and is not guessed; a row whose
+     base is no other row's bundle.md digest (`unanchored`) is listed as the trace an overwrite leaves in the chain.
+     Manifest rows for a bundle id with no `bundles` row have no row_version to compare with and are counted apart.
+     Bounded by `limit` bundles listed (the counts are always whole). */
+  snapKeyCensus({ limit } = {}) {
+    const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
+    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
+    const rowsBy = /* @__PURE__ */ new Map();
+    for (const r of this.sql.exec(`SELECT bundle_id, snap_key, base, files_json FROM manifest`)) {
+      if (!rowsBy.has(r.bundle_id)) rowsBy.set(r.bundle_id, []);
+      rowsBy.get(r.bundle_id).push(r);
+    }
+    const out = {
+      ok: true,
+      bundles: 0,
+      manifest_rows: 0,
+      promotions: 0,
+      overwritten: 0,
+      undetermined: 0,
+      bundles_with_deficit: 0,
+      excess: 0,
+      orphan_manifest_bundles: 0,
+      listed: [],
+      rewritten: 0
+    };
+    const seen = /* @__PURE__ */ new Set();
+    for (const b of this.sql.exec(`SELECT bundle_id, row_version FROM bundles`)) {
+      out.bundles++;
+      seen.add(b.bundle_id);
+      const rows = rowsBy.get(b.bundle_id) || [];
+      const promotions = Number(b.row_version) || 0;
+      out.manifest_rows += rows.length;
+      out.promotions += promotions;
+      const deficit = promotions - rows.length;
+      if (deficit < 0) out.excess += -deficit;
+      const hasCreation = rows.some((r) => r.base === EMPTY_STRING_SHA2);
+      const outputs = new Set(rows.map((r) => {
+        const md = _Store.#manifestFiles(r.files_json).find((f2) => f2.name === "bundle.md");
+        return md && typeof md.sha256 === "string" ? md.sha256.toLowerCase() : null;
+      }).filter(Boolean));
+      const unanchored = rows.filter((r) => r.base !== EMPTY_STRING_SHA2 && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
+      if (deficit <= 0 && !unanchored.length) continue;
+      const undetermined = deficit > 0 && !hasCreation ? 1 : 0;
+      const overwritten = deficit > 0 ? deficit - undetermined : 0;
+      out.overwritten += overwritten;
+      out.undetermined += undetermined;
+      if (deficit > 0) out.bundles_with_deficit++;
+      if (out.listed.length < cap)
+        out.listed.push({
+          bundle_id: b.bundle_id,
+          promotions,
+          manifest_rows: rows.length,
+          overwritten,
+          undetermined,
+          creation_row: hasCreation,
+          unanchored
+        });
+    }
+    for (const [id, rows] of rowsBy) if (!seen.has(id)) {
+      out.orphan_manifest_bundles++;
+      out.manifest_rows += rows.length;
+    }
+    out.note = "read-only: a bundle whose manifest holds fewer rows than it has promotions lost a row to a repeated snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a bundle with no creation row, which an overwrite and a store predating the creation row both produce. Which key collided is not recorded and is not guessed.";
+    return out;
+  }
   static #promoteAbsent() {
     return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
   }
@@ -65807,6 +65967,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         },
         allocid: () => this.allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => this.acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 3e5),
+        /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
+        snapkeycensus: () => this.snapKeyCensus({ limit: url.searchParams.get("limit") }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,
@@ -67740,6 +67902,11 @@ var OPS = {
   dangling: { classes: ["admin", "member", "probe"], mutating: false },
   stats: { classes: ["admin", "member", "probe"], mutating: false },
   promote: { classes: ["admin", "member", "probe"], mutating: true },
+  /* REC-176: the census of manifest rows a repeated snap key overwrote before `op=promote` refused one
+     (`SNAP_KEY_TAKEN`, C-67.1) — per bundle, promotions (row_version) against manifest rows, counted and listed,
+     NEVER rewritten. The method a deployed instance runs to learn whether its own history lost a row. Admin and
+     probe, `registeraudit`'s fence: it is an audit of the working corpus, and it lists bundle ids. */
+  snapkeycensus: { classes: ["admin", "probe"], mutating: false },
   /* REC-130's sweep said here that `allocid` with `prefix=CASE` disclosing how
      many case identities this year had minted was acceptable — instance-level
      knowledge a member already holds. SUPERSEDED 2026-09-19 by BOB #16 (Membership
