@@ -12072,6 +12072,19 @@ var TESTIMONY_CHECKS = {
     check: "C-53.12",
     where: "src/index.mjs fetch > is-testimony-publish-case",
     translation: "A finding in this case rests, directly or through another finding, on a member's own firsthand observation, so the case cannot be published yet. How a published case attributes an observation is the observing member's choice, and the record cannot yet honour that choice."
+  },
+  /* D-179 — ONE CAPTURE, ONE HOME, THE ORIGINAL's (BOB #26, 2026-09-22;
+     `BIO_Intake_Doctrine_v1_1.md` §8). C-53.8 generalised from an authored
+     observation to EVERY capture: `register` is keyed by `capture_sha`, so a
+     promote registering bytes another bundle already holds would MOVE that
+     bundle's row to the newcomer, silently. Kept in this family because it is
+     the same fence at the same line, asked of every row rather than the authored
+     one; C-53.8 still answers first for an authored capture, in its own words.
+     The holding bundle is named only to a caller who may see it (D-15). */
+  CAPTURE_HELD_BY_ANOTHER_BUNDLE: {
+    check: "C-53.13",
+    where: "src/store.mjs #testimonyFence > is-register-home",
+    translation: "The record already holds this document, under another bundle. A document has one home in the record \u2014 the first bundle that registered it \u2014 and registering it again here would move it away from there. Nothing was written. Cite the bundle that holds it, or, if you found it at a new address, that sighting is already recorded as a corroboration of the one it holds."
   }
 };
 var LEAD_ID_RE = /^LEAD-\d{4}-\d{4}-[a-z0-9]+$/;
@@ -41055,7 +41068,13 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           );
       }
       const testimony = pkg[TESTIMONY_PATH] || null;
-      const fenced = this.#testimonyFence(bundleId, files, register2, testimony);
+      const fenced = this.#testimonyFence(
+        bundleId,
+        files,
+        register2,
+        testimony,
+        { identity: pkg.actorIdentity ?? null, viewer: pkg.actorViewer ?? null }
+      );
       if (fenced) return fenced;
       for (const f2 of files) {
         const inlineBytes = _Store.#inlineBytesOf(f2);
@@ -43514,6 +43533,8 @@ ${words}`;
    *       (C-53.7) — reachable only by a REVISION, since `testify` writes both;
    *   (3) an authored document that stops saying `authored: true`, or whose
    *       provenance document is gone from the revision (C-53.9).
+   *  AND ONE MORE, ASKED OF EVERY CAPTURE (D-179, C-53.13): a register entry
+   *  whose bytes another EXISTING bundle already holds — one capture, one home.
    *
    *  IMPORT AND REPLAY GO THROUGH THE TESTIMONY PATH (BOB #14, 2026-09-18, §7):
    *  there is no replay exemption here, so a migration carrying an authored
@@ -43524,7 +43545,7 @@ ${words}`;
    *  here a caller cannot have produced; the document's `authored` field is the
    *  CLAIM being judged against it. ONE read, whatever the package holds: the
    *  shas travel as one bound JSON array (D-36's ~100-variable ceiling). */
-  #testimonyFence(bundleId, files, register2, testimony) {
+  #testimonyFence(bundleId, files, register2, testimony, viewing = {}) {
     const refusal7 = (code, detail, extra) => {
       const row = TESTIMONY_CHECKS[code];
       return {
@@ -43601,6 +43622,24 @@ ${words}`;
           unreadable ? `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json cannot be read, so it cannot be shown to still say so` : `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json no longer carries it as authored`,
           { bundleId, capture_sha: s }
         );
+    const shas = [...new Set(regs.map((c) => c.sha256))];
+    const homes = shas.length ? this.#rows(
+      `SELECT r.capture_sha, r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE r.bundle_id <> ? AND r.capture_sha IN (SELECT value FROM json_each(?)) LIMIT ?`,
+      bundleId,
+      JSON.stringify(shas),
+      shas.length
+    ) : [];
+    if (homes.length) {
+      const h = homes[0];
+      const caller = viewing.identity != null || viewing.viewer != null;
+      const named = !caller || this.#inSight(h.bundle_id, viewing.viewer ?? null);
+      return refusal7(
+        "CAPTURE_HELD_BY_ANOTHER_BUNDLE",
+        `this promotion registers capture ${h.capture_sha.slice(0, 16)}\u2026 under ${bundleId}, and those bytes are already registered under ${named ? h.bundle_id : "another bundle"}. One capture has one home, the original's; registering it here would move that bundle's register row`,
+        { bundleId, capture_sha: h.capture_sha, holder: named ? h.bundle_id : null }
+      );
+    }
     return null;
   }
   /** op=testify — A MEMBER RECORDS A FIRSTHAND OBSERVATION. */

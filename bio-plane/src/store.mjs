@@ -15266,7 +15266,8 @@ export class Store extends DurableObject {
          writes, because a refusal returned from inside `transactionSync` does
          not roll back what was already written. */
       const testimony = pkg[TESTIMONY_PATH] || null;
-      const fenced = this.#testimonyFence(bundleId, files, register, testimony);
+      const fenced = this.#testimonyFence(bundleId, files, register, testimony,
+        { identity: pkg.actorIdentity ?? null, viewer: pkg.actorViewer ?? null });
       if (fenced) return fenced;
 
       for (const f of files) {
@@ -16396,8 +16397,10 @@ export class Store extends DurableObject {
          an authored capture under the SAME bundle keeps what it is (REPLACE would
          have reset it to the default, the flag being cleared by any writer). The
          other five columns move exactly as REPLACE moved them. A re-registration
-         under a DIFFERENT bundle cannot reach here for an authored row: the fence
-         above refuses it (C-53.8). */
+         under a DIFFERENT bundle that still exists cannot reach here for ANY row:
+         the fence above refuses it (C-53.8 for an authored row, C-53.13 for every
+         other, D-179), so the UPDATE arm moves a row only within its own bundle or
+         off a home that no longer exists. */
       for (const c of register) {
         const own = testimony && testimony.captureSha === c.sha256;
         this.sql.exec(
@@ -18344,6 +18347,8 @@ export class Store extends DurableObject {
    *       (C-53.7) — reachable only by a REVISION, since `testify` writes both;
    *   (3) an authored document that stops saying `authored: true`, or whose
    *       provenance document is gone from the revision (C-53.9).
+   *  AND ONE MORE, ASKED OF EVERY CAPTURE (D-179, C-53.13): a register entry
+   *  whose bytes another EXISTING bundle already holds — one capture, one home.
    *
    *  IMPORT AND REPLAY GO THROUGH THE TESTIMONY PATH (BOB #14, 2026-09-18, §7):
    *  there is no replay exemption here, so a migration carrying an authored
@@ -18354,7 +18359,7 @@ export class Store extends DurableObject {
    *  here a caller cannot have produced; the document's `authored` field is the
    *  CLAIM being judged against it. ONE read, whatever the package holds: the
    *  shas travel as one bound JSON array (D-36's ~100-variable ceiling). */
-  #testimonyFence(bundleId, files, register, testimony) {
+  #testimonyFence(bundleId, files, register, testimony, viewing = {}) {
     const refusal = (code, detail, extra) => {
       const row = TESTIMONY_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation,
@@ -18432,6 +18437,36 @@ export class Store extends DurableObject {
             : `${bundleId} holds the member's authored observation ${s.slice(0, 16)}…, and this revision's `
               + `data/provenance.json no longer carries it as authored`, { bundleId, capture_sha: s });
     /* END DEC-49 REGION is-testimony-fence */
+    /* D-179 — ONE CAPTURE, ONE HOME, THE ORIGINAL's (BOB #26, 2026-09-22; Intake Doctrine §8). The
+       register write below UPSERTs `bundle_id` on the `capture_sha` key, so without this a capture
+       already registered under ANOTHER bundle would be moved to this one and the first bundle's row
+       would read as never having held it. C-53.8 above refused that only for an authored capture;
+       this asks it of every register entry, after C-53.8 so an authored capture keeps its own words.
+       The holder must STILL EXIST (`bundles` joined): a purged home's register rows are deleted with
+       it, and a row orphaned any other way is not a home. The SAME bundle is never asked, so a
+       revision re-registering its own bytes is unchanged. ONE bounded read, the shas as one bound
+       JSON array (D-36); `capture_sha` is the key, so `shas.length` rows is the whole population.
+       THE HOLDER IS NAMED ONLY TO A CALLER WHO MAY SEE IT (D-15), asked of the VISIBILITY stamp the
+       control plane sets beside `actorIdentity` (`#inSight`, fail-closed on a stamped identity with
+       no viewer). An unstamped write is not a caller (the store's own writes, fixtures driven at the
+       store) and is told the holder, on `#rosterInSight`'s precedent. */
+    const shas = [...new Set(regs.map((c) => c.sha256))];
+    const homes = shas.length ? this.#rows(
+      `SELECT r.capture_sha, r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE r.bundle_id <> ? AND r.capture_sha IN (SELECT value FROM json_each(?)) LIMIT ?`,
+      bundleId, JSON.stringify(shas), shas.length) : [];
+    /* DEC-49 REGION is-register-home */
+    if (homes.length) {
+      const h = homes[0];
+      const caller = viewing.identity != null || viewing.viewer != null;
+      const named = !caller || this.#inSight(h.bundle_id, viewing.viewer ?? null);
+      return refusal("CAPTURE_HELD_BY_ANOTHER_BUNDLE",
+        `this promotion registers capture ${h.capture_sha.slice(0, 16)}… under ${bundleId}, and those bytes are `
+        + `already registered under ${named ? h.bundle_id : "another bundle"}. One capture has one home, the `
+        + `original's; registering it here would move that bundle's register row`,
+        { bundleId, capture_sha: h.capture_sha, holder: named ? h.bundle_id : null });
+    }
+    /* END DEC-49 REGION is-register-home */
     return null;
   }
 
