@@ -216,7 +216,7 @@ import { DISPOSITIONS, REOPENABLE_FROM, deriveActs,
    fence refuses against, and the ONE admission decision the feed applies — pure,
    so the suite holds the rule directly rather than only through a Durable
    Object, the same reason deriveActs lives outside this file. */
-import { QUEUE_CONDITION_KINDS, QUEUE_KIND_IDS, classOfKind, MUTE_REFUSAL_DETAIL,
+import { QUEUE_CONDITION_KINDS, catalogueIdOf, classOfKind, MUTE_REFUSAL_DETAIL,
          serializeMutedKinds, parseMutedKinds, suppressedBy } from "./queuestate.mjs";
 /* The retrieval surface is compiled, never assembled here. This file executes
    statements and maintains the index; it builds no query. That is what makes the
@@ -25093,7 +25093,7 @@ export class Store extends DurableObject {
         id: `FINDING::export-performed::${r.seq}`,
         class: "FINDING",
         kind: "export-performed",
-        catalogue_id: QUEUE_KIND_IDS["export-performed"],
+        catalogue_id: catalogueIdOf("export-performed"),
         case: homes,
         subject: { kind: "export", id: `export_log:${r.seq}`, seq: r.seq },
         summary: `A full ${r.scope} export was taken on ${r.at}: ${r.bundles} bundles, ${r.files} files`,

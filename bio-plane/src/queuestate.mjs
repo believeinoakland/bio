@@ -200,10 +200,28 @@ export const QUEUE_FINDING_KINDS = {
  * fence, `op=affordances`' vocabularies, the surface's rendered sentence — is keyed on the slug, so
  * moving the id into `kind` is an interface change to every consumer and not a numbering. The id is
  * published BESIDE the kind, as `catalogue_id`, by the producer that took it. A generator built later
- * takes the next number here; a kind with no generator takes none. */
-export const QUEUE_KIND_IDS = {
+ * takes the next number here; a kind with no generator takes none.
+ *
+ * NOT EXPORTED, AND THAT IS ITS SHAPE RATHER THAN AN ESCAPE (D-52 fix pass, 2026-09-23). The DEC-49
+ * guard's arm E (`civicos-ui/check-refusal-codes.mjs`) harvests every EXPORTED plain object of this
+ * module whose values are all strings as a MEMBER-FACING vocabulary — the texts a surface renders in
+ * place of a machine word. This table is not one: its value is a machine id published as
+ * `catalogue_id`, the item contract's "stable catalogue id" (NOTIFICATIONS.md §The item contract),
+ * which no surface renders (`civicos-ui/` reads no `catalogue_id`; a member reads `summary` and
+ * `detail`). Exported, it read as a 23rd vocabulary whose one term was the token "N-1" and failed the
+ * guard for a reason that was not true of it. So the TABLE stays here, where `tools/mintid.mjs N` reads
+ * its rows as text, and what leaves the module is the LOOKUP below — a function, which arm E does not
+ * harvest, exactly as it does not harvest `classOfKind`. */
+const QUEUE_KIND_IDS = {
   "export-performed": "N-1",
 };
+
+/* The catalogue id a kind was allocated, or null for a kind that has none — which is most of them
+ * (a kind takes an id when its generator is built). Null is not an error: it says no generator has
+ * taken a number, and a producer publishes it as such rather than inventing one. */
+export function catalogueIdOf(kind) {
+  return Object.prototype.hasOwnProperty.call(QUEUE_KIND_IDS, kind) ? QUEUE_KIND_IDS[kind] : null;
+}
 
 /* The ONE class lookup. Returns "CONDITION" | "OBLIGATION" | "FINDING", or null
  * for a kind the catalogue does not name — three-valued in the same sense the

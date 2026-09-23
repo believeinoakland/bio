@@ -24369,6 +24369,9 @@ var QUEUE_FINDING_KINDS = {
 var QUEUE_KIND_IDS = {
   "export-performed": "N-1"
 };
+function catalogueIdOf(kind) {
+  return Object.prototype.hasOwnProperty.call(QUEUE_KIND_IDS, kind) ? QUEUE_KIND_IDS[kind] : null;
+}
 function classOfKind(kind) {
   if (typeof kind !== "string" || !kind) return null;
   if (Object.prototype.hasOwnProperty.call(QUEUE_CONDITION_KINDS, kind)) return "CONDITION";
@@ -50070,7 +50073,7 @@ ${words}`;
         id: `FINDING::export-performed::${r.seq}`,
         class: "FINDING",
         kind: "export-performed",
-        catalogue_id: QUEUE_KIND_IDS["export-performed"],
+        catalogue_id: catalogueIdOf("export-performed"),
         case: homes,
         subject: { kind: "export", id: `export_log:${r.seq}`, seq: r.seq },
         summary: `A full ${r.scope} export was taken on ${r.at}: ${r.bundles} bundles, ${r.files} files`,

@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-09-23, D-52) three arms on `store.mjs`, each armed ALONE by a one-match replace, each declared before it ran, every restore verified by sha256 (deb9ce72…) AND `cmp` against a pristine copy (2,888,504 bytes). Baseline 22 pass 0 fail. (a) DROP THE GENERATOR — remove `items.push(...this.#findingsExportPerformed(me, viewer, now))` from queueFeed -> 10 pass 12 fail, first by name "EVERY administrator's feed carries exactly one export notice …"; the before-export and non-administrator arms stay green, as declared. (b) THE LIAR — raise to the exporter alone (`admin = viewer === class:admin`, so only the ADMIN_TOKEN that exported is told) -> 10 pass 12 fail, the same EVERY-administrator arm by name (ruth, gus and the founder read 0, ADMIN_TOKEN 1). (c) OVER-LOOSE, the other direction — raise to every reader (`admin = true`) -> 20 pass 2 fail, exactly the two "a non-administrator gets NONE" arms, while every administrator arm stays green. ALL THREE AS DECLARED. */
+/* NEGATIVE CONTROL: (run 2026-09-23, D-52) three arms on `store.mjs`, each armed ALONE by a one-match replace, each declared before it ran, every restore verified by sha256 (deb9ce72…) AND `cmp` against a pristine copy (2,888,504 bytes). Baseline 22 pass 0 fail. (a) DROP THE GENERATOR — remove `items.push(...this.#findingsExportPerformed(me, viewer, now))` from queueFeed -> 10 pass 12 fail, first by name "EVERY administrator's feed carries exactly one export notice …"; the before-export and non-administrator arms stay green, as declared. (b) THE LIAR — raise to the exporter alone (`admin = viewer === class:admin`, so only the ADMIN_TOKEN that exported is told) -> 10 pass 12 fail, the same EVERY-administrator arm by name (ruth, gus and the founder read 0, ADMIN_TOKEN 1). (c) OVER-LOOSE, the other direction — raise to every reader (`admin = true`) -> 20 pass 2 fail, exactly the two "a non-administrator gets NONE" arms, while every administrator arm stays green. ALL THREE AS DECLARED. RE-RUN 2026-09-23 in the D-52 fix pass (the id table made private, `catalogueIdOf` exported): baseline 23 pass 0 fail (one assertion added: an unallocated kind reads null); arm (a) re-armed alone -> 11 pass 12 fail, first by name the EVERY-administrator arm, as declared; restore verified by sha256 (71033eed…) AND `cmp` (2,888,502 bytes). A guard arm beside it: re-`export` the table -> `check-refusal-codes.mjs --strict` exit 1, FAIL naming `QUEUE_KIND_IDS.export-performed` reads "N-1" plus vocabularies/vocabularyTerms slack 23/112, as declared; restored by sha256 (8cf4a3b6…) and `cmp`. */
 /* D-52 — Membership v2 §8.1: "The export is recorded in the append-only history, so it can never
  * happen silently, and every administrator is notified." The record half (`export_log`,
  * `op=exportlog`) was built; this suite holds the NOTIFICATION half, the `export-performed` FINDING
@@ -22,7 +22,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { NAMESPACES, allocations, corpusFloor, mint } from "../../tools/mintid.mjs";
-import { QUEUE_KIND_IDS, classOfKind } from "../src/queuestate.mjs";
+import { catalogueIdOf, classOfKind } from "../src/queuestate.mjs";
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
 const mf = new Miniflare({
@@ -105,8 +105,14 @@ t("and the export is row 1 of the append-only log", [log1.result?.exports?.lengt
     Object.values(got).map(() => ["export_log", row1?.seq, `export_log:${row1?.seq}`]));
   const it = got.ruth[0] ?? {};
   t("it is a FINDING under the catalogue's slug, with its N-id beside it",
-    [it.class, classOfKind(it.kind), it.catalogue_id], ["FINDING", "FINDING", QUEUE_KIND_IDS["export-performed"]]);
-  t("the catalogue id is N-1, the first the namespace has allocated", QUEUE_KIND_IDS["export-performed"], "N-1");
+    [it.class, classOfKind(it.kind), it.catalogue_id], ["FINDING", "FINDING", "N-1"]);
+  /* CORRECTED in the D-52 fix pass: these read the exported `QUEUE_KIND_IDS` table, which the DEC-49 guard
+     then harvested as a member-facing vocabulary (it is a machine id, not a text). The table is private now
+     and the lookup is what leaves the module; the item above is pinned to the literal, so it no longer
+     agrees with the producer's own table for free. */
+  t("the catalogue id is N-1, the first the namespace has allocated", catalogueIdOf("export-performed"), "N-1");
+  t("a kind with no generator has no catalogue id — null, not an invented one",
+    [catalogueIdOf("audit-finding"), catalogueIdOf("no-such-kind"), catalogueIdOf("toString")], [null, null, null]);
   t("the basis carries the row as the log holds it — scope, counts and note",
     [it.basis?.scope, it.basis?.bundles, it.basis?.files, it.basis?.note, it.basis?.at],
     [row1?.scope, row1?.bundles, row1?.files, row1?.note, row1?.at]);
