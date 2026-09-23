@@ -43,6 +43,16 @@ scope: §2d's shortcut on a recorded-GREEN tree behaves as `--with-never-cached`
 accepts-when: `gates.mjs` on a recorded-GREEN tree with a planted history defect reads RED naming the never-cached unit. NEGATIVE CONTROL: restore the bare shortcut, and the planted arm reads GREEN and fails by name.
 added: 2026-09-23 · SCHEDULER #15 (M0-131's worker's finding via CONDUCT #16; `node tools/mintid.mjs M0`).
 
+### M0-136 · queued — **NEVER-CACHE MAKES A HISTORY UNIT ALWAYS RUN, NOT DEPEND ONLY ON THE TREE: WHETHER THE OTHER 11 NEVER-CACHED HISTORY READERS HAVE VERDICTS THAT MOVE WITH A LIVE REF IS UNDETERMINED.** `TREE-SHARING.md` §3a item 4 names them: decided, migrate-released, mintid, op-claims, owed-controls, owed, readbudget, register-grammar, retirable, status, coverage. M0-130 pinned `mergecarry` to `REGISTER_PIN`; its worker grepped the others only for `origin/main` (CONDUCT #16). — owner M0.
+order: directly after M0-135, the same class: a gate test depends only on the code (Bob, 2026-09-23); below M0-135 because no red has been traced to any of the eleven (SCHEDULER #15, 2026-09-23)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON THE CODE"*) and §3a condition 1, with `docs/development/VERIFICATION.md` (admitted for M0 by name); M0-130's pin is the precedent.
+depends-on: M0-130 (its planted-ref arm and pin are the pattern).
+scope: examine each of the eleven for any read of a live ref (`origin/*`, `coord`, `ls-remote`, `FETCH_HEAD`, the current date); each that has one reads a pinned range or HEAD's own history, with a planted-ref arm; each that has none is stated as tree-and-history-only at its site; the table of eleven is in the landing. M0-130's known cost (a drop past the pin is graded by no gate unit) is stated where each pin sits.
+accepts-when: every one of the eleven either carries a planted-ref arm proving its verdict identical whatever the live ref holds, or a dated line saying it reads none. NEGATIVE CONTROL: point one pinned unit back at the live ref, and its planted-ref arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (M0-130's worker's class sweep via CONDUCT #16; `node tools/mintid.mjs M0`).
+
 ### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
 milestone: M0
@@ -1161,22 +1171,3 @@ depends-on: none.
 accepts-when: `cite-scale.mjs` builds only conformant Information (C-2.7 passes over its bundles), and each of the three data sites carries its comment. How a liar passes it: changing the … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-40's DEBT row of 2026-07-25, re-measured; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-40» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-75 · queued — **`bundle.test.mjs` AND `livefire.test.mjs` PRINT NO TALLY LINE, so every battery headline carries M0-65's "EXCLUDES 2 untallied suite(s)"** … (whole text: the cut archive)
-order: M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment (SCHEDULER, 2026-09-19)
-milestone: M0 (background lane, holds no slot)
-interface: none — two suites' report lines
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-413 (closed by M0-65) and … (whole text: the cut archive)
-depends-on: M0-65 (its EXCLUDES segment and widened tally reader; in CONDUCT #6's gate).
-accepts-when: a full battery's headline carries no EXCLUDES segment, and its assertion total rises by exactly the two suites' printed tallies, stated in the landing; `cd bio-plane && npm` … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER (M0-65's worker's suggestion, routed by CONDUCT #6; id minted with `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-75» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-76 · queued — `d280-strengthbar.control.mjs` READS NOT AS DECLARED ON EVERY RUN (arm C2 and the severedhomes arms), and D-280's site (a) — the … (whole text: the cut archive)
-order: M0, with the instrument corrections; ruled by BOB #16 (SCHEDULER, 2026-09-19)
-milestone: M0 (background lane, holds no slot)
-interface: none — a control driver and one suite's arm
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name; its one-copy rule), with D-267 and D-280 … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `node bio-plane/test/d280-strengthbar.control.mjs` reads EVERY arm AS DECLARED and the site-(a) arm fails by name; the control leaves the tree byte-identical; the C-6.1 … (whole text: the cut archive)
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-76» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
