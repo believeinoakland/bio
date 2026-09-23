@@ -88,7 +88,7 @@ accepts-when: a fixture whose raw supply exceeds the over-fetch reads `truncated
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 13; keeps its `D-` id).
 uncut: restored whole from the cut archive on entering the cache (SCHEDULER #15, 2026-09-23), so the worker reads its design here.
 
-### M0-132 · queued — **TWO MORE GATE SUITES DRAW FIXTURE VALUES FROM AN UNSEEDED `Math.random()` AND CAN FAIL WITH NO CODE CHANGE.** (1) `civicos-ui/test/ai-session-wire.test.mjs` (re-read on `91913d6b`): `FETCH_ALLOWED − FETCH_CONSUMED` ranges 1502–5992 and overlaps `SUBS_CONSUMED` 2003–2999, so its ARM D0b collides (1 in 2,155, measured by D-286's worker). (2) snap-key suffixes from 4–6 base36 characters of `Math.random()` (`bio-plane/test/action-loop.test.mjs` and `inquiryground.test.mjs` at 4; about 20 suites at 6) are part of the PRIMARY KEY `(bundle_id, snap_key)`, so a repeat clashes; the odds are not measured. D-286's worker's findings (CONDUCT #15). — owner M0 with UI.
+### M0-132 · running — SPAWNED 2026-09-23 by CONDUCT #15 (D-286 landed d89e04d1). NOT LANDED, CHECKED BY CONTENT on d89e04d1: ai-session-wire.test.mjs still draws with unseeded Math.random. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly after UI-82, with D-286's class near the head: a result that moves with the draw is a DEFECT by Bob's ruling of 2026-09-23, and on `main` its red is an alarm to Bob (SCHEDULER #15, 2026-09-23)
 milestone: M0
 interface: none
@@ -98,7 +98,7 @@ scope: (1) D-286's interval proof plus a D0c: disjoint ranges (e.g. FETCH_ALLOWE
 accepts-when: the wire suite passes 500 consecutive draws and fails by name on a forced collision; no suite builds a snap key from `Math.random`. NEGATIVE CONTROL: restore one overlapping range, and D0c fails by name.
 added: 2026-09-23 · SCHEDULER #15 (D-286's worker's findings via CONDUCT #15, verified at the code; `node tools/mintid.mjs M0`).
 
-### REC-160 · queued — **`op=reevaluations` SAYS A SEVERED LEG *RESTS ON* ITS TARGET AND PUBLISHES NO STATUS.** `Store#reevaluations` reads legs from `inquiry_basis`, which drops `status`, and its edition cause says *"this leg rests on edition N"* for every leg, so a withdrawn leg is described as support. `#refEdgeSevered` is the one predicate, and `restingOn` already publishes a status from it. — owner RECORD.
+### REC-160 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT on d89e04d1: store.mjs still says a leg rests on edition N for every leg. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: after D-389, above CAP-14: a support claim the record cannot make, CLAUDE.md §2's class, in the read that tells a member what to re-examine (SCHEDULER #7, 2026-09-21; BOB #22's inbox entry)
 milestone: M9
 interface: I3 additive — the integrator mints the IC.
