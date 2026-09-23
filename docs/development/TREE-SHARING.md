@@ -215,6 +215,8 @@ and a larger batch that reads red takes longer to pin. The per-suite `failedUnit
 the second cost. **Re-measure after a day** (trains a day, branches a train, the train's gate minutes, the red-batch
 count) and widen or narrow from the figures, not from this paragraph.
 
+**ONE FULL GATE PER TRAIN, NOT ONE PER WORKER — RULED 2026-09-23 by Bob** (*"We need to cut back on gates so that this doesn't happen again"*, after 8 concurrent FULL worker gates on CONDUCT's 4 cores stalled every worker ~80 minutes; *"sustained productivity and a process that works"*). A plane change classifies FULL, so every worker was running the whole battery before its `land/*` push and the train ran it again on the union. Now a worker runs only the suites its row names — its new or changed suite, the row's NEGATIVE CONTROL, and `plancheck` — and pushes `land/*` without a FULL gate; the train's union gate is the one FULL gate, and `main` still moves only on a GREEN union, so a red GitHub run still means a real problem. On a red union the integrator names the failing unit from the per-unit record (§3a) and returns the branch whose diff it reads before any `--isolate`. **Re-measure after a day** (FULL runs per landed row; red unions and their re-gate minutes) and narrow from the figures, never on impression.
+
 **ONE GITHUB RUN PER LANDED BATCH — RULED 2026-09-23 by Bob** (*"Ok, 1 github run per batch"*, on BOB #29's
 recommendation). The workflow runs on a push to `main` alone, and `main` moves only through the train, so each run audits
 exactly one landed batch; it no longer runs on `land/*` or `integrate/*`. **Nobody waits on it:** a lane reuses its own GREEN
