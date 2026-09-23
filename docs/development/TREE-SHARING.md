@@ -264,6 +264,12 @@ nowhere again. The train reads the same records. It supersedes the tree-keyed re
    is not in the unit's input set FAILS the unit by name, and no PASS is written for it.
 3. **A FULL BACKSTOP.** Every release cut runs the whole battery with no reuse, and the one GitHub run per landed batch on
    `main` runs everything on a second machine. The negative controls stay.
+   **What the cut's run is — RULED 2026-09-23 by BOB #30 (SCHEDULER #15's question: M0-106 and this condition read
+   opposite).** The backstop's property is ONE RUN OF EVERY UNIT, WITH NO REUSE, ON THE RELEASED TREE — not that DIST's
+   own clone ran it. So a cut may rely on a GREEN FULL record for its EXACT tree (M0-106 stands, narrowed) only when that
+   record was written by a run that REUSED NOTHING: M0-126 marks such a whole-tree record as a backstop, and a record whose
+   run printed any unit REUSED, or a `gates.mjs --since` from another tree, never satisfies a cut (M0-106's `--since` arm
+   is withdrawn). Absent a backstop record for the exact tree, the cut runs the whole battery, as 0.74.0's did.
 
 **What a liar's record would look like, and why it is tolerable.** A PASS file for a key whose unit never ran, or ran red. It
 is indistinguishable from an honest one where it sits: the record proves a PROCEDURE, never an actor (§2, "The mark, and its

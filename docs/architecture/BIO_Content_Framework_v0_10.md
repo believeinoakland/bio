@@ -21,6 +21,7 @@
 - §13 — **"An assistant-surfaced focus must carry the bias manifest in force" (D-85) is carried by the RUN and reached through it** (BOB #25, 2026-09-21, SCHEDULER #10's Q2). `INVESTIGATIVE-SESSION.md` §3 ruled that the run carries the manifest and §11 records it (`ai_runs.bias_manifest`, read back with whether the lens has since moved, PL-12); no production carries its own copy (D-21). What was owed is the LINK and its soundness, ruled in §11 item 5: a production names a running run its caller holds; an assistant's new question names one and the plane records it; the run records the lens in force at its open beside the one it was handed.
 - §13.1 — **evidence accruing to a bias statement (D-87) and a statement's MEASURABLE FORM (D-88) are a STATED DEFERRAL with §12's evaluator** (BOB #25, 2026-09-21). D-88 is the same construct as a satisfaction condition and is built once, with it, under the intent layer's trigger above; D-87's mechanical half is that measure taken over time. The `measure-decay` finding is catalogued (`queuestate.mjs`) with no producer until then. What needs no build is §13.1's own path from decay to a block: a member reads a statement's grounds and amends it, an authored act that generates ordinary bias debt.
 - §12.1 — CONTACT between aspirations is NAMED (the same entities, the same progressions, the same queue ordered differently) and NOT SPECIFIED, DEFERRED rather than forgotten (D-80; re-disposed by BOB #19, stated here by BOB #22, 2026-09-21). An aspiration is not an object in the plane (`node tools/status.mjs 8.goals` reads ABSENT), so specifying how two of them come into contact would design a dependent ahead of its substrate; the specification is a required clause of the design act that makes an aspiration an object. Bob's ruling stands and is not reopened: no arbiter, and a contradiction is found, never prevented.
+- §8.1 — grade D's label CORRECTED 2026-09-23 by BOB #30 (D-219); the stored method string and `schema.mjs`'s two comments still read the old wording (NOT BUILT, a row).
 
 **Contents**
   - [1. Why this document exists, and what it is FOR](#1-why-this-document-exists-and-what-it-is-for)
@@ -654,7 +655,13 @@ Grade states **how the connection was established**, and nothing else:
 | **A** | the SOURCE's own identifier, with both ends captured and hashed | `MeetingDetail.aspx?ID=1428382` links to `View.ashx?M=M&ID=801`: the publisher says these belong together and the record holds both |
 | **B** | an identifier the source uses, matched exactly in captured content at both ends | an agenda item naming "Ordinance 13579" and a captured ordinance whose own number is 13579 |
 | **C** | correspondence rather than identity: a name, a title, a date proximity | "Sheng Thao" in two documents. Plausible, never presented as established, and flagged for a member to confirm |
-| **D** | asserted with no captured basis | a member's own knowledge, or a source that no longer serves the page. Recorded as testimony, with an author and a date |
+| **D** | asserted on the member's stated basis, with no captured document | a member's own knowledge, or a source that no longer serves the page. Recorded as testimony, with an author, a date and the basis she stated |
+
+**Grade D's label — CORRECTED 2026-09-23 by BOB #30 (D-219, SCHEDULER #15's question).** The cell read *"asserted with no
+captured basis"*, and a member reads that as *no basis*, while `testifyResolution` refuses a testimony without one
+(`NO_BASIS`: the member's stated basis, with an author and a date). What grade D lacks is a captured DOCUMENT, not a
+basis, so the label says that. The stored method string and `schema.mjs`'s two comments follow this wording; rows already
+written keep theirs (D-256's shape: a stored string is a fact about when it was written).
 
 Two things this is NOT. Grade is not credibility: a Grade D connection from a member
 who was in the room may be the most valuable thing in a case, and it is labelled by
