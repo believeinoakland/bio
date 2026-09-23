@@ -68,12 +68,54 @@ if (DIR && REPO && unit) {
       load(url, context, nextLoad) { try { if (url.startsWith("file:")) note(url); } catch { /* ignore */ } return nextLoad(url, context); },
     });
   }
+  /* BOB #30 (§3a condition 1): a unit whose verdict reads GIT HISTORY or a LIVE REF of THIS repository reads outside the
+     tree its key names. A `git` child run in this checkout (its cwd, or `-C <dir>`, inside it) whose subcommand walks
+     history or a remote, or whose arguments name a remote-tracking ref or a commit id, is recorded as `history`. A git
+     run in a fixture repository elsewhere (the suite built its history itself) is not. */
+  const history = new Set();
+  const HISTORY_SUB = new Set(["log", "rev-list", "merge-base", "ls-remote", "fetch", "reflog", "describe", "blame",
+    "shortlog", "whatchanged", "pull", "for-each-ref", "name-rev", "cherry"]);
+  const REVISH = /^(?:origin\/|refs\/remotes\/|refs\/heads\/|@\{|FETCH_HEAD|ORIG_HEAD|[0-9a-f]{7,40}(?:[\^~:.]|$))/;
+  const noteGit = (file, args, opts) => {
+    try {
+      if (typeof file !== "string" || !/(?:^|\/)git$/.test(file) || !Array.isArray(args)) return;
+      let dir = resolve((opts && opts.cwd) ? String(opts.cwd instanceof URL ? fileURLToPath(opts.cwd) : opts.cwd) : process.cwd());
+      const a = args.map(String);
+      let i = 0;
+      while (i < a.length && a[i].startsWith("-")) { if (a[i] === "-C" && a[i + 1]) { dir = resolve(dir, a[i + 1]); i += 2; } else if (a[i] === "-c") i += 2; else i++; }
+      if (!(dir + sep).startsWith(root) && dir !== REPO) return;
+      const sub = a[i] || "";
+      if (HISTORY_SUB.has(sub) || a.slice(i + 1).some((x) => REVISH.test(x) || x.includes("origin/")))
+        history.add(`git ${a.slice(i, i + 4).join(" ")}`.slice(0, 160));
+    } catch { /* never disturb the caller */ }
+  };
+  const noteShell = (cmd, opts) => {
+    try { const m = /^\s*git\s+(.*)$/.exec(String(cmd)); if (m) noteGit("git", m[1].split(/\s+/), opts); } catch { /* ignore */ }
+  };
+  try {
+    const cp = await import("node:child_process");
+    const C = cp.default || cp;
+    for (const n of ["spawn", "spawnSync", "execFile", "execFileSync"]) {
+      const orig = C[n];
+      if (typeof orig !== "function") continue;
+      C[n] = function (file, args, opts) {
+        noteGit(file, Array.isArray(args) ? args : [], Array.isArray(args) ? opts : args);
+        return orig.apply(this, arguments);
+      };
+    }
+    for (const n of ["exec", "execSync"]) {
+      const orig = C[n];
+      if (typeof orig !== "function") continue;
+      C[n] = function (cmd, opts) { noteShell(cmd, opts); return orig.apply(this, arguments); };
+    }
+    mod.syncBuiltinESMExports();
+  } catch { /* child_process not patchable: history reads go unseen, and that is the stated reach */ }
   const origWrite = fs.writeFileSync;
   process.on("exit", () => {
     try {
       const f = join(DIR, `${unit.replace(/[^\w.-]+/g, "_")}.${process.pid}.${Date.now()}.json`);
       origWrite(f, JSON.stringify({ unit, pid: process.pid, argv1: process.argv[1] || null,
-        reads: [...reads].sort(), dirs: [...dirs].sort() }));
+        reads: [...reads].sort(), dirs: [...dirs].sort(), history: [...history].sort() }));
     } catch { /* the trace dir is gone: the gate reads a missing record as UNTRACED, never as clean */ }
   });
 }

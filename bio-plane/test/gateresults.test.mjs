@@ -275,6 +275,30 @@ commitAll(S, "the vault moves");
 t("...and a change to the declared file now moves ITS key: the suite runs again",
   gates(S, ["--full"]).ran.includes("plane:sneaky.test.mjs"), true);
 
+/* BOB #30 (condition 1): a suite whose verdict reads this checkout's GIT HISTORY reads what no key names. */
+const HISTORIAN = [`import { ran } from "./log.mjs";`, `import { spawnSync } from "node:child_process";`,
+  `import { join, dirname } from "node:path";`, `import { fileURLToPath } from "node:url";`, `ran("plane:historian.test.mjs");`,
+  `const top = join(dirname(fileURLToPath(import.meta.url)), "../..");`,
+  `const r = spawnSync("git", ["log", "--oneline", "-1"], { cwd: top, encoding: "utf8" });`,
+  `process.exit(r.status === 0 && r.stdout.length ? 0 : 1);`, ""].join("\n");
+const O6 = origin("o6", { "bio-plane/test/historian.test.mjs": HISTORIAN });
+const H = clone(O6, "machine-h");
+const h1 = gates(H, ["--full"]);
+t("a suite that runs `git log` over this checkout FAILS by name (BOB #30: history is outside every key)",
+  [h1.verdict, /HISTORY READ \(M0-126 condition 1, BOB #30\) — plane:historian\.test\.mjs ran 1 git command\(s\)/.test(h1.out),
+    [...remoteResults(O6)].some((p) => p.startsWith("results/plane/historian.test.mjs/"))], ["RED", true, false]);
+put(H, "bio-plane/test/historian.test.mjs", `/* GATE: never-cache (history) */\n${HISTORIAN}`);
+commitAll(H, "mark the historian");
+const h2 = gates(H, ["--full"]);
+t("...and marked `GATE: never-cache (history)` it is never-cached: GREEN, and it RAN though everything else is REUSED",
+  [h2.verdict, h2.ran.includes("plane:historian.test.mjs"), h2.reused.includes("plane:alpha.test.mjs")], ["GREEN", true, true]);
+const h3 = gates(H);
+/* The plain gate's class is TARGETED (the marked suite is this branch's change), whose selection holds the historian;
+   the tree is already recorded GREEN by the wider run, so before BOB #30 the tree-keyed shortcut ran NOTHING here. */
+t("...and a PLAIN gate on that same GREEN tree still RUNS the never-cached unit it selects (a record never answers for it)",
+  [h3.verdict, h3.ran.includes("plane:historian.test.mjs"),
+    /already recorded GREEN, but a record never answers for a never-cached unit/.test(h3.out)], ["GREEN", true, true]);
+
 /* ================================================================== */
 section("the liar's record: reused by the ordinary gate, caught by the backstop, revoked, its writer named");
 const L = clone(O, "machine-liar");

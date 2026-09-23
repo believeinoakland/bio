@@ -870,12 +870,19 @@ if (cls === "TARGETED") selection = targetedSelection([...changed]);
    what FULL covers for this shortcut, and never licenses what only a run of everything does (effectiveVerdict's
    clear-all, the train's `--full` reuse, a release's GREEN FULL). `--no-reuse` is never answered from a record. */
 const CLASS_RANK = (c) => (c === "FULL" || c === "FULLREUSE" ? 2 : 1);
+const PER_UNIT_ON = !RESULTS_OFF && isFile(join(REPO, "tools/gateresults.mjs"));
 if (CLEAN_AT_START && !FORCE_FULL && !NO_REUSE && SINCE === null) {
   const own = readRuns({ repo: REPO, tree: START.tree });
   const eff = effectiveVerdict(own.runs);
   const covering = own.runs.some((r) => CLASS_RANK(r.class) >= CLASS_RANK(cls));
   const known = new Map(UNITS.map((u) => [u.id, u]));
-  if (covering && eff.verdict === "GREEN") {
+  /* BOB #30 (§3a condition 1): a REUSED record must still run the never-cached units, so with the per-unit record on,
+     this tree-keyed shortcut is not taken: the per-unit reuse (§3b) answers every cacheable unit from `gate-results`
+     and the never-cached ones run. Without it (BIO_GATE_RESULTS=off, or no `tools/gateresults.mjs`) it stands as before. */
+  if (covering && eff.verdict === "GREEN" && PER_UNIT_ON)
+    console.log(`gates: the tree ${short(START.tree)} is already recorded GREEN, but a record never answers for a never-cached`
+      + " unit (BOB #30): the per-unit record answers the rest, and those run.");
+  if (covering && eff.verdict === "GREEN" && !PER_UNIT_ON) {
     const by = own.runs.filter((r) => CLASS_RANK(r.class) >= CLASS_RANK(cls)).pop();
     console.log(`gates: the tree ${short(START.tree)} is already recorded GREEN (by a ${by.class} run)`
       + ` — nothing changed since, so nothing is re-run. \`--full\` forces a run.`);
@@ -899,6 +906,11 @@ if (CLEAN_AT_START && !FORCE_FULL && !NO_REUSE && SINCE === null) {
     why = `the tree ${short(START.tree)} is recorded RED at ${eff.open.length} unit(s) (${eff.open.join(", ")}); every other unit`
       + " passed on this same tree, so only those are re-run";
     selection = new Map(openUnits.map((u) => [u.id, { unit: u, why: "recorded RED on this tree" }]));
+    /* BOB #30: a re-run of what failed REUSES everything else on this tree's record, so the never-cached units — whose
+       verdicts read what no record could see (history, live refs, the clock) — run too. */
+    if (PER_UNIT_ON)
+      for (const u of UNITS) if (!selection.has(u.id) && neverCacheOf(u))
+        selection.set(u.id, { unit: u, why: `never cached (${neverCacheOf(u)}): a record never answers for it` });
   }
 }
 
@@ -1078,11 +1090,14 @@ function readTraces(dir) {
     let j = null;
     try { j = JSON.parse(readFileSync(join(dir, n), "utf8")); } catch { continue; }
     if (!j || !j.unit || !Array.isArray(j.reads)) continue;
-    if (!out.has(j.unit)) out.set(j.unit, new Set());
+    if (!out.has(j.unit)) { out.set(j.unit, new Set()); HISTORY.set(j.unit, HISTORY.get(j.unit) || new Set()); }
     for (const p of j.reads) out.get(j.unit).add(p);
+    for (const h of j.history || []) HISTORY.get(j.unit).add(h);
   }
   return out;
 }
+const HISTORY = new Map();          /* unit id -> git history / live-ref reads in THIS checkout (the tracer's `history`) */
+const historyRead = new Map();      /* keyed unit id -> those reads: it FAILS (BOB #30, §3a condition 1) */
 STEPS.forEach((s, i) => {
   console.log(`\n=== gates · ${s.label}: ${s.cmd} ${s.args.join(" ")}`);
   const vf = join(VERDICT_DIR, `step-${i}.json`);
@@ -1128,11 +1143,21 @@ STEPS.forEach((s, i) => {
       if (!t) { untraced.add(id); continue; }
       const miss = [...t].filter((p) => U.set.has(p) && !KEYS.get(id).inputs.has(p)).sort();
       if (miss.length) underIncluded.set(id, miss);
+      /* BOB #30: git HISTORY or a LIVE REF read in this checkout is outside every key — the unit must be never-cached. */
+      const h = [...(HISTORY.get(id) || [])];
+      if (h.length) { historyRead.set(id, h); if (!underIncluded.has(id)) underIncluded.set(id, []); }
     }
+  }
+  for (const id of ran.filter((x) => historyRead.has(x))) {
+    const h = historyRead.get(id);
+    console.log(`gates: HISTORY READ (M0-126 condition 1, BOB #30) — ${id} ran ${h.length} git command(s) over this checkout's `
+      + `history or a live ref (${h.slice(0, 4).join("; ")}${h.length > 4 ? " …" : ""}), which no key can cover. It FAILS and no PASS `
+      + "is written; mark it `GATE: never-cache (history)` in its source.");
   }
   const under = ran.filter((id) => underIncluded.has(id));
   for (const id of under) {
     const miss = underIncluded.get(id);
+    if (!miss.length) continue;                     /* a history read alone, said above */
     console.log(`gates: UNDER-INCLUSION (M0-126 condition 2) — ${id} read ${miss.length} file(s) its key does not cover: `
       + `${miss.slice(0, 12).join(", ")}${miss.length > 12 ? ` (+${miss.length - 12} more)` : ""}. It FAILS and no PASS is written; `
       + "declare them (`GATE: reads <path> <dir/>` in its source) or widen the derivation in tools/gates.mjs §2e.");
@@ -1143,7 +1168,8 @@ STEPS.forEach((s, i) => {
     else if (failedUnits.length) fu = [...new Set([...failedUnits, ...under])];
     ok = false;
   }
-  for (const id of passedHere) if (!under.includes(id) && !timedOut) passedUnits.add(id);  results.push({ label: s.label, units: s.units, ok, ...(timedOut ? { timedOut: true, unmeasured } : {}),
+  for (const id of passedHere) if (!under.includes(id) && !timedOut) passedUnits.add(id);
+  results.push({ label: s.label, units: s.units, ok, ...(timedOut ? { timedOut: true, unmeasured } : {}),
     ...(fu.length ? { failedUnits: fu } : {}) });
 });
 if (REUSED.size)
