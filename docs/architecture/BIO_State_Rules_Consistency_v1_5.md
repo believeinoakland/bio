@@ -19,7 +19,6 @@
 - §8 — C-18.2 "recorded and deliberately not entered"; the "three call sites" are the retired runtime.
 - §9 and §10 — obligations "binding on the bundle skill", a superseded implementation.
 - §footer — reads "Spec version 1.3, July 11, 2026"; stale.
-- §4.1 — a retired item is not citable: RULED 2026-09-23 by BOB #30 (D-168); `op=cite` does not yet refuse one for a member (NOT BUILT, a row).
 
 **Contents**
 - [State Rules & Consistency Specification](#state-rules-consistency-specification)

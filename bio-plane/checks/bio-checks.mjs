@@ -9570,6 +9570,19 @@ export const ACT_SHAPE_CHECKS = {
       + 'from there never having been one. Citing it again would neither reverse that decision nor '
       + 'step around it, so putting the link back is a separate act that records its own reason.',
   },
+  /* D-168 / BOB #30, 2026-09-23 — State Rules §4.1, "A RETIRED ITEM IS NOT
+     CITABLE". A sub-number of this family, as C-33.15..19 (cite's other
+     regions) are; C-33.38 is REC-175's. The translation NAMES THE DOOR, the
+     REC-117 rule: cite what superseded it, or re-collect the source. */
+  RETIRED_NOT_CITABLE: {
+    check: 'C-33.39',
+    where: 'src/store.mjs cite > is-cite-retired',
+    translation: 'The group has retired this material, recording that it is superseded or no longer '
+      + 'stands, so a citation made now would read to everyone after you as live support nobody will '
+      + 'look at again. Cite whatever superseded it, or collect the source again as a new item and '
+      + 'cite that. A document its publisher withdrew or changed is a different thing and can still '
+      + 'be cited.',
+  },
   NO_SUCH_SELECTION: {
     check: 'C-33.20',
     where: 'src/store.mjs selectionResolve > is-selection-known',
