@@ -4282,7 +4282,13 @@ export class Store extends DurableObject {
       text = withHistory;
       text = Store.#setScalar(text, "prior_state", cur.current_state);
       text = Store.#setScalar(text, "current_state", to);
-      text = Store.#setScalar(text, "disposition_reason", `"${why}"`);
+      /* D-169: setOrAdd, not set. C-2.8 requires a non-empty disposition_reason
+         for deferred and dismissed, and the setup page's intake (mdFor) writes an
+         inquiry with NO disposition_reason line; #setScalar returns the text
+         UNCHANGED for an absent key, so the state moved and the requirement went
+         unmet — the record held a bundle its own catalogue rejects. A document
+         already carrying the line is rewritten in place, byte-identical to before. */
+      text = Store.#setOrAddScalar(text, "disposition_reason", `"${why}"`);
       text = Store.#setScalar(text, "last_updated", `"${when}"`);
       /* C-13.2: last_updated moving requires a Session Log entry. What the
          record is FOR is saying who did what and why, and a state change
