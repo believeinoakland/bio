@@ -22,6 +22,12 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
+**2026-09-23 · BOB #30 · A DECLARED BOUND STATES ITS ALLOWANCE — one placement.**
+
+1. **RECORD (M9): `op=airunopen` refuses a declared bound with no positive `allowed`.** `INVESTIGATIVE-SESSION.md` §14b item 6,
+   paragraph "A declared bound STATES its allowance" (on `land/bob/batch-cadence` until the train lands it). Accepts-when and
+   NEGATIVE CONTROL in the paragraph. Directly after REC-172, depends-on REC-172. I3 changes; the integrator mints the IC.
+
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
