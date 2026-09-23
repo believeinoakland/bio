@@ -78,7 +78,7 @@ scope: each manifest entry whose pinning case documents carry differing pairs se
 accepts-when: a fixture finding pinned by two cases with different pairs reads both, each naming its case; a single-case finding is byte-identical. NEGATIVE CONTROL: serve the null again, and the per-case arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs REC`).
 
-### REC-171 · queued — **RULE 2 BINDS ONLY THE `ai` CREDENTIAL: AN ADMIN, MEMBER OR PROBE DEPLOY TOKEN STILL CREATES AN INQUIRY STAMPED `surfaced_by: agent` OUTSIDE ANY RUN, SO THE RECORD CLAIMS A MACHINE SURFACED IT UNDER CONDITIONS IT NEVER RECORDED.** D-85 built rule 2 for `ai` (the `cls === "ai"` condition on the stamp); BOB #30 ruled that the rule's premise is the surfacing act D-78 stamps, not the credential. Its design landed at `4355bfda` (SCHEDULER #15 unblocked it). — owner RECORD.
+### REC-171 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT on 4355bfda: store.mjs (≈L14572) sets the assistantPrincipal run stamp for an ai credential ONLY. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly after REC-169, the same D-85 fence widened (BOB #30: *"Place it directly after D-85"*; D-85 sits in the cache, so this is the first backlog place after it and the authority row that precedes it) (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
 milestone: M9
 interface: I3 — deploy-token creations are refused outside a run; the integrator mints and classifies the IC.
@@ -88,7 +88,7 @@ scope: a creation stamped `agent` names a running run whose principal is the cal
 accepts-when: an admin-, member- and probe-token creation naming no run is refused `SURFACE_NO_RUN`; one inside the token's own running run lands with its row; a member's session creation is unchanged. NEGATIVE CONTROL: restore the `cls === "ai"` condition, and the deploy-token arms fail by name.
 added: 2026-09-23 · SCHEDULER #15 (BOB #30's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 
-### UI-81 · queued — **`pubOpen`, GIVEN A FINDING ID THAT SERVES SEVERAL CASES, SHOWS THE PLANE'S `FINDING_IN_SEVERAL_CASES` RAW UNDER "Not answered".** The code appears nowhere in `civicos-ui/` or in a `*_CHECKS` family (re-read on `cdfaea39`), so the DEC-49 guard, which knows only named codes, cannot see it; the refusal already carries the candidate `cases` (IC-74). Found by UI-80's worker (CONDUCT #15). — owner UI.
+### UI-81 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT on 4355bfda: FINDING_IN_SEVERAL_CASES appears 0 times in civicos-ui/app.html. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly after REC-170, the same public page: machine vocabulary shown to a stranger where the record holds the answer; before UI-82 because it needs no plane change (SCHEDULER #15, 2026-09-23)
 milestone: M10
 interface: I3 consumer (IC-74's `cases` on `FINDING_IN_SEVERAL_CASES`).
@@ -98,7 +98,7 @@ scope: `pubOpen` offers the named cases as choices and opens the chosen one; and
 accepts-when: against the real plane, opening a finding two cases pin offers both and opens each; no raw code renders. NEGATIVE CONTROL: drop the translation row, and the DEC-49 guard fails naming the code.
 added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs UI`).
 
-### DIST-6 · queued — **THE INSTALLER NEVER BINDS `PDF_WORKER`, `OCR_WORKER` OR `AGENT_WORKER` TO THE PLANE IT INSTALLS, SO ON A GROUP'S OWN INSTANCE THE FLEET IS UPLOADED AND UNREACHABLE.** `uploadInstall` binds the plane only its buckets and `SELF`, and `uploadUpdate` keeps whatever bindings exist (`newgroup/src/index.mjs`, re-read on `b5ce975a`); the members bind back to the plane, never the reverse. Found by D-116's worker (CONDUCT #15). — owner DIST.
+### DIST-6 · running — SPAWNED 2026-09-23 by CONDUCT #15 as a WORKER (DIST keeps deploy; no release cut or deploy in this row). NOT LANDED, CHECKED BY CONTENT on 4355bfda: newgroup/src/index.mjs uploadInstall bindings (L280) carry no PDF_WORKER/OCR_WORKER/AGENT_WORKER. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: first of the product rows after the public-page corrections (UI-82), above D-389: a sovereign group's install silently lacks tiers 2 and 3 and the assistant member, `BIO_System_Design.md` §2's distribution model broken on the path every group takes (SCHEDULER #15, 2026-09-23)
 milestone: M7
 interface: I4 — the installed plane's bindings; the integrator classifies it.
