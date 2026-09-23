@@ -19598,6 +19598,7 @@ paths, BY SITE:
 **NOT CLAIMED:** `#surfacingGate`, `promote`, `extractPropose`, `#mintsBound`, `#aiRunTerminate`, `finishedBound`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+**built, NOT PUSHED: 2026-09-23** — committed on the worktree's branch `worktree-agent-a30f15e61a2d24169` @ `b1b5c0b3` (merged with `origin/main` @ `4355bfda`). FULL gate: 287/288 suites green · 17298 assertions; coverage, UI harness, DEC-49 guard and plancheck (0 fail) green. The ONE red is `mergecarry.test.mjs` "no UNREGISTERED drop sits in main's history" naming `4355bfd:docs/development/TREE-SHARING.md` and `4355bfd:docs/development/kickoffs/BOB.md` — origin/main's OWN train merge of `land/bob/batch-0923a`, not this item; the push guard refuses `land/worker/REC-169` on that recorded RED. Owed by CONDUCT: register or repair that drop, then this branch is re-gated and pushed. IC-184 PROPOSED (`docs/development/interface-changes/IC-184.md`).
 
 ## CLAIM 2026-09-23 M0 (M0-127 — a RED verdict names every cause, suite or not; a per-suite pid; D-186's control text corrected for M-111's race)
 
