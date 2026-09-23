@@ -1,0 +1,16 @@
+{
+ "unit": "plane:pipeline-e2e.test.mjs",
+ "inputHash": "cb8f27384afa3c0bba74ec65e5bf1bdf0d821b0e0bad70544c86d29531af3ca6",
+ "verdict": "PASS",
+ "run": "f1dee81d53fd1294f4ea5ad1901ab971082e127f.1790192081532.32520.json",
+ "tree": "f1dee81d53fd1294f4ea5ad1901ab971082e127f",
+ "head": "259a88cbb562e28b01a1da368d2ef9c1e1ac7e50",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 132,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "c24508e4-34b6-5866-a122-a5e731b6ee3c",
+ "at": "2026-09-23T19:34:41.547Z"
+}
