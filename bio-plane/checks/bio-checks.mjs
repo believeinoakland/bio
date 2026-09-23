@@ -11158,6 +11158,26 @@ export const CONTENT_EXTENT_CHECKS = {
       + 'mark, a backslash, a line break or a comment mark, and those characters would silently '
       + 'reshape the document rather than appear in it. It is declined instead of mangled.',
   },
+  /* D-420 — AN IMAGE CITED BY PAGE AND RECTANGLE WHERE THE PAGE PAINTS NO
+     IMAGE. Not C-45.1: that code is "the address is outside the container" and
+     this address is INSIDE it — the page exists and the rectangle is on it. What
+     is wrong is the KIND the row would claim: an `image` row over a region the
+     record holds as painting no image is a text-or-nothing region wearing an
+     image's name. The figure comes from the record (the placements the
+     structure op reported at acquire, EXTRACTION-BREADTH §3.3 item 2), and with
+     no figure held the citation is admitted and the absence stated. C-45.12
+     because D-440 holds C-45.11 in the same family (a sub-number of an
+     allocated family, C-45.5's precedent — no `mintid C`). */
+  CONTENT_EXTENT_NO_IMAGE_PAINTED: {
+    check: 'C-45.12',
+    where: 'checks/bio-checks.mjs checkContentExtent > is-content-extent',
+    translation: 'This citation calls a region of the page an image, and the page paints no image '
+      + 'there. When this document was captured the record listed every image each page draws and '
+      + 'where, and none sits at this address — so a row saying "an image is here" would claim '
+      + 'something the file does not show. If you meant the words in that region, cite it as a '
+      + 'region of the page; if you meant a picture, pick it from the images the record lists for '
+      + 'this page, which are named beside this refusal.',
+  },
 };
 
 /** DEC-49's refusal helper for this family, and BOTH halves of its spelling are
@@ -12615,6 +12635,12 @@ export function checkContentExtent(extent, ctx = {}) {
         return refusal("CONTENT_EXTENT_OUT_OF_RANGE",
           `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the `
           + `image extent names page ${e.page}`);
+      /* D-420: the page set says the page EXISTS; the record's placement list
+         says whether an image is PAINTED there. No list held (a PDF acquired
+         before D-420, a walk that did not finish, a capture that is not a PDF)
+         answers null and the row is admitted with the absence stated. */
+      const unpainted = ctx.known !== false ? coversImagePlacement(e, ctx.container) : null;
+      if (unpainted) return refusal("CONTENT_EXTENT_NO_IMAGE_PAINTED", unpainted);
     }
     const outside = hasPart ? coversImage(e, ctx.container) : null;
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
@@ -12817,6 +12843,42 @@ function coversImage(e, container) {
   if (images.some((x) => x && typeof x.part === 'string' && x.part.toLowerCase() === want)) return null;
   return `this capture's container holds ${images.length} image(s) and none of them has the content `
     + `hash ${want.slice(0, 16)}… that the extent names`;
+}
+
+/* D-420 — THE PAGE FORM'S BOUND: the images a PDF's pages PAINT, as the record
+ * holds them (`container.images` of a `container_name: 'pdf'` extent, each
+ * `{page, rect}`, written at acquire from the structure op). Returns a sentence
+ * or null, on the three predicates' rules above: the figure comes from the
+ * RECORD, and an absent figure is SKIPPED rather than refused. An EMPTY list is
+ * a MEASURED ZERO (IC-124's rule) and bounds.
+ *
+ * "EQUALS" IS THE CROP'S EQUALITY AND NOTHING LOOSER. `pdfPageImages` writes a
+ * rectangle at 1/1000 pt, and `pdf-worker/src/imagecrop.mjs` matches within
+ * exactly that step (RECT_TOL); a wider tolerance here would admit a rectangle
+ * the crop then refuses — the defect this predicate closes, back again. The
+ * corners are normalised first (`canonicalExtent`'s own order), because a
+ * rectangle written upper-right first is the same rectangle.
+ *
+ * A PAGE WITH NO RECT (`{page}` alone) names "an image on page N" and is
+ * refused only when the page paints NONE; which one of several it means is the
+ * crop's question (RECT_REQUIRED), not the address's. */
+function coversImagePlacement(e, container) {
+  if (!container || container.container_name !== 'pdf' || !Array.isArray(container.images)) return null;
+  const all = container.images;
+  const onPage = all.filter((x) => x && x.page === e.page && Array.isArray(x.rect) && x.rect.length === 4);
+  if (!(Array.isArray(e.rect) && e.rect.length === 4)) {
+    if (onPage.length) return null;
+    return `page ${e.page} of this capture paints no image — the record holds ${all.length} image `
+      + `placement(s) over the whole document, and none is on this page`;
+  }
+  const norm = (r) => [Math.min(r[0], r[2]), Math.min(r[1], r[3]), Math.max(r[0], r[2]), Math.max(r[1], r[3])];
+  const want = norm(e.rect);
+  const same = (r) => norm(r).every((v, i) => Math.abs(v - want[i]) <= 0.001 + 1e-9);
+  if (onPage.some((x) => same(x.rect))) return null;
+  const listed = onPage.slice(0, 6).map((x) => `[${norm(x.rect).join(', ')}]`).join(' ');
+  return `page ${e.page} of this capture paints ${onPage.length} image(s)`
+    + `${onPage.length ? ` (${listed}${onPage.length > 6 ? ' …' : ''})` : ''} and none at `
+    + `[${want.join(', ')}], the rectangle the extent names`;
 }
 
 /* =========================================================================
