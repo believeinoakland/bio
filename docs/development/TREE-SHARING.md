@@ -308,9 +308,10 @@ file from a unit's input set, and condition 2 fails that unit by name.
      median of 54 files read); every UI suite's inputs for a UI check over those suites (`check-mock-envelope`); and
      any `GATE: reads <path> <dir/> *` line in the unit's source or control — how an under-inclusion is FIXED when the
      derivation cannot see it (`status.test.mjs` carries `GATE: reads *`: it runs pushguard's checks over the tree).
-     **Measured 2026-09-23** (this worktree, every unit of the estate run under the tracer, 33 min): 346 of 347 units
-     traced; the first derivation under-included 20 of them; the final one, **0**; input sets from 3 to 1,032 files,
-     median 136.
+     **Measured 2026-09-23 (`measurements/M-113.md`):** every unit of the estate run under the tracer: 346 of 347
+     traced; the first derivation under-included 20 of them, the final one **0**; input sets 3 to 1,032 files, median
+     136. The same FULL gate run twice on one tree: 2,056 s running everything, then **488 s with 338 units REUSED** and
+     only the 12 never-cached units and plancheck run.
   4. **Never cached** also covers a unit whose closure names `tools/plancheck.mjs`: it reads what plancheck reads (the
      whole tree and `origin/coord`); `ledger`, `mergecarry` and `pipeline-readers` traced 1,027–1,028 of 1,028 files
      that way. 12 units today, and the rule is coarse on purpose: `gates`, `train` and `gateresults` name the path only
