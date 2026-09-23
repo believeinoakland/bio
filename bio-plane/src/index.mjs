@@ -1750,9 +1750,12 @@ const RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
    a run, and the run is what the production is READ AGAINST (its lens, bar, skill version and principal), so the
    store asks that the run is one the CALLER holds — REC-152's `runPrincipalGate`, fed by REC-152's ONE `principal`
    stamp expression, which this list EXTENDS and nothing else of the run verbs' does: not the `actor` stamp (PL-18
-   measured its blast radius) and not DEC-63's project gate. `capturerequest` is NOT here: rule 1 names these two
-   ops, and that door's same-class finding was routed rather than built (REC-165's report). */
-const RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose"];
+   measured its blast radius) and not DEC-63's project gate.
+   REC-168 (BOB #28, 2026-09-22, the `op=capturerequest` paragraph of §11 item 5): `capturerequest` JOINS — a request
+   that names a run is a production of that run, so it takes the same stamp and the store asks sight, then
+   `runPrincipalGate`, then status, and records the CALLER's principal on the row. It is the ONE list extended, not a
+   second stamp condition beside it. Rule 1's TARGET does not reach it (a request names an address, not a question). */
+const RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest"];
 /* REC-134 / C-56: the acts that change a project and read the POSITIONAL `identity` stamp for
    the store's `#projectAuthority` check (SIGHT IS NOT AUTHORITY, Membership v2 §7). `op=promote`
    carries the same stamp in its body as `actorIdentity`. The stamp site says why. */

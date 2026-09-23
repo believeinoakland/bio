@@ -13177,3 +13177,52 @@ is told. `op=ratify` needs no site of its own: since D-431 it signs only at a sh
 refuses the finding (`RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE`), driven by the suite. **Carried, stated by the worker:** an
 UNRATIFIED case document written before REC-135 records no conclusion, and one for a project-relationship conclusion is now
 refused. How many exist in any real record is UNMEASURED (the network refuses Cloudflare).
+
+## IC-178 · I3: `op=capturerequest` REFUSES A RUN ITS CALLER DOES NOT HOLD, AND THE ROW RECORDS THE CALLER — it takes REC-152's server-stamped `principal` (`RUN_PRODUCTION_ACTIONS` gains `capturerequest`) and asks, in order, SIGHT (a run whose context the caller cannot see answers as a never-minted id: `CAPTURE_REQUEST_NO_RUN`, byte-identical but for the id), POSITION (`AI_RUN_NOT_PRINCIPAL`, C-22.12, relayed from `runPrincipalGate`) and STATUS (`CAPTURE_REQUEST_NO_RUN`, unchanged); the row's and the answer's `principals.plane` is the CALLER's stamp, no longer the run's copy · PROPOSED 2026-09-23 (REC-168, minted with `node tools/mintid.mjs IC` BEFORE the entry was written) — the version bump, the classification and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI and fleet, the op contracts). **Base read off THIS TREE (branch
+  `worktree-agent-a960b19c9e4696303`, base `origin/main` @ `7b4d3942`): 52.0.0, IC-177's resolution. Proposed MAJOR,
+  BREAKING — 52.0.0 → 53.0.0. Read the base AT RESOLUTION**, by this file's own rule.
+  **Why MAJOR, by IC-25's test — the op REFUSES what it accepted:** a caller naming another principal's running run, or a run
+  over a context it cannot see, was answered `ok: true` and a row was written crediting the run's principal; each is now refused
+  and nothing is written. And a field MOVES for callers who still succeed: `principals.plane` (the answer, the row, and every
+  `op=capturerequests` attribution composed from it) names the account that asked — `member:alice/alice-agent` where it used to
+  read the session's `member:alice`, or the reverse. Measured on the unedited tree: the new suite reads 14 pass / 16 fail
+  against `7b4d3942`'s sources.
+- **Proposer:** RECORD, REC-168 worker (CONDUCT #14, cloud, wave 5), 2026-09-23.
+- **Owner to land it:** `RECORD`
+- **Design:** `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, the paragraph *`op=capturerequest` — RULED 2026-09-22 by
+  BOB #28* (rule 1 applies; rule 1's target does not).
+- **Consumers to answer, MEASURED** (the tracked sources of `civicos-ui/`, `agent-worker/src`, `pdf-worker/`, `ocr-worker/`,
+  `tools/` and `docprofile/`, `git grep capturerequest`): **`civicos-ui` 0 · `pdf-worker` 0 · `ocr-worker` 0 · `tools/` 0 ·
+  `docprofile` 0 · `newgroup/src/release.mjs` 1 (the embedded cut plane, not a consumer) · `agent-worker/src` — ONE call site**
+  (`index.mjs`, the internet level, `call("capturerequest", null, { run: runId, target, url })`) plus a comment and the harness
+  table row. **`agent-worker` — NOT BROKEN BY THE PRINCIPAL HALF:** it requests under the SAME handed credential it ticks the run
+  with, which REC-152 (IC-165) already requires to be the run's principal. **A PRE-EXISTING DEFECT MEASURED BY READING, NOT
+  CHANGED HERE:** that call sends the locator as `url`, and `captureRequest` reads only `address` — so every live internet-level
+  request from the fleet member is refused `CAPTURE_REQUEST_NOT_PUBLIC` whatever this IC does (routed to SCHEDULER in REC-168's
+  report with its fix). **`aicredential.test.mjs`'s** one assertion that pinned the run's copy (*"the credential identity does
+  not reach it (finding, delegated)"*) was CORRECTED with a dated comment: the D-199 (4) finding it pinned is closed by this IC.
+
+**THE SHAPE.** `index.mjs`: `RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest"]` — REC-152's ONE stamp
+condition is not rewritten; the `actor` stamp and DEC-63's gate are NOT extended. `store.mjs`: the `capturerequest` route passes
+`caller` from that stamp AFTER the body's spread. `captureRequest`, inside `is-capture-request`: sight (`#aiRunInSight`, the
+tick's, the close's and `op=suggest`'s predicate) → `runPrincipalGate` (act *"requesting a capture under a run"*) → running. The
+row's `principal_plane` is the stamp; `principal_claude` is still the run's (the account the run's budget is paid from).
+
+**THE WIRE.** A new refusal: `{ ok: false, reason: "AI_RUN_NOT_PRINCIPAL", code, check: "C-22.12", translation, detail, run,
+note }`. A request under a run the caller cannot see is the never-minted `CAPTURE_REQUEST_NO_RUN` answer. A request naming NO run
+is byte-unchanged (the door has always refused it, DEC-47). A request under the caller's own running run is unchanged but for
+`principals.plane`, as above. No new code; no class list moves.
+
+**No I5 IC:** no table, no column.
+
+**NEGATIVE CONTROL** (`node test/rec168-capturerequest-principal.control.mjs` from `bio-plane/`, every arm on a COPY of `src/`,
+real sources hashed before and after, untouched): ALL ELEVEN ROWS AS DECLARED — baseline 30/0 · drop-gate (THE ROW'S CONTROL)
+18/12, the other-principal arms R1-R6 by name, session AND credential · gate-sessions-only 24/6 · gate-credentials-only 20/10
+(THE LIAR, each way) · no-stamp 19/11 · no-sight 29/1 · record-run-principal 27/3 · sent-field-query 27/3 · sent-field-body 26/4
+· exact-match (too tight) 26/4 · sight-by-row (over-strictness) 30/0. REC-165's control re-run on this tree: all nine arms as
+declared at its tallies.
+
+**FOR CONDUCT at integration:** resolve this IC against the base read then (I3 52.0.0 or later), and move I3 in `INTERFACES.md`;
+re-run the control.
