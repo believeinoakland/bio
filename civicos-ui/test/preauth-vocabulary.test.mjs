@@ -514,8 +514,10 @@ const ROUTE_FNS = [...new Set([...SCRIPT.matchAll(/\b([A-Za-z]*[Rr]outeFromHash)
 
 ok("WALK 2 REACH: publishedRouteFromHash's body was read and is the real function",
    PUBROUTE.length > 200 && PUBROUTE.includes("enterPublished"));
-ok("WALK 2 REACH: it matches exactly two published ADDRESS SHAPES — found ["
-   + ADDRESS_SHAPES.join(" , ") + "]", ADDRESS_SHAPES.length === 2);
+/* UI-68: THREE. `#reviewcopy/<secret>` is a review copy's recipient, who holds no session by design
+   (BIO_Publication §6A.2), so the address is asked by this router and is driven below by its own scenario. */
+ok("WALK 2 REACH: it matches exactly three published ADDRESS SHAPES — found ["
+   + ADDRESS_SHAPES.join(" , ") + "]", ADDRESS_SHAPES.length === 3);
 /* A NEW ROUTER IS A NEW ADDRESS, and an address that resolves before sign-in is
    a pre-authentication surface. This does not judge the new one; it stops it
    from arriving unclassified. */
@@ -569,12 +571,12 @@ ok("WALK 2 REACH: it matches exactly two published ADDRESS SHAPES — found ["
 
    Asserted rather than asserted-by-comment: the two pins below check both halves
    of that classification for THIS router as well. */
-ok("WALK 2 REACH: the script declares exactly the seven routers this walk has classified — found ["
-   + ROUTE_FNS.join(", ") + "] (an eighth must be classified as pre-auth or not before this passes)",
-   ROUTE_FNS.length === 7
+ok("WALK 2 REACH: the script declares exactly the eight routers this walk has classified — found ["
+   + ROUTE_FNS.join(", ") + "] (a ninth must be classified as pre-auth or not before this passes)",
+   ROUTE_FNS.length === 8
    && ["actionRouteFromHash","aiSessionRouteFromHash","projectRouteFromHash",
        "publishedRouteFromHash","routeFromHash","stanceRouteFromHash",
-       "versionReviewRouteFromHash"].every(f => ROUTE_FNS.includes(f)));
+       "versionReviewRouteFromHash", "draftRouteFromHash"].every(f => ROUTE_FNS.includes(f)));
 {
   /* The running-session router is asked in boot()'s chain ... */
   const BOOTCHAIN = /if\(!publishedRouteFromHash\(\)[\s\S]{0,400}?\)\s*go\("queue"/.exec(SCRIPT);
@@ -611,6 +613,15 @@ ok("WALK 2 REACH: the script declares exactly the seven routers this walk has cl
      SCRIPT.indexOf("/*__NOTIFICATIONS_END__*/") > 0 && NTAIL.length > 100);
   ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #stands/<PROJ-…>/<INQ-…> resolves for nobody holding nothing",
      !NTAIL.includes("stanceRouteFromHash()"));
+  /* UI-68's router, the same two halves: `#draft/<id>` is the review copy's MEMBER door. The recipient's door is
+     `#reviewcopy/<secret>` and belongs to the published router above; this one resolves for nobody holding nothing. */
+  ok("WALK 2 CLASSIFICATION: draftRouteFromHash is asked INSIDE boot(), which is what makes it post-authentication",
+     !!BOOTCHAIN && BOOTCHAIN[0].includes("draftRouteFromHash()"));
+  const RTAIL = SCRIPT.slice(SCRIPT.indexOf("/*__REVIEW_COPY_END__*/"));
+  ok("WALK 2 REACH: the review-copy block's END marker was found — a slice that missed it would make the pin below pass over nothing",
+     SCRIPT.indexOf("/*__REVIEW_COPY_END__*/") > 0 && RTAIL.length > 100);
+  ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #draft/<id> resolves for nobody holding nothing",
+     !RTAIL.includes("draftRouteFromHash()"));
 }
 ok("WALK 2 REACH: and app.html asks the published router at the TOP LEVEL, outside boot()",
    /\n\s*if\(\/\^#\(published[\s\S]{0,80}publishedRouteFromHash\(\);?\n?\}catch/.test(SCRIPT)
@@ -782,6 +793,34 @@ ok("the store's own NOT_PUBLISHED answer for op=publishedcase is readable from h
    is what `check-mock-envelope.mjs`'s wire map says and what its arm B judges
    these answers against. */
 const CASE_ID = "CASE-2026-0001", FIND_ID = "FIND-2026-0001";
+/* UI-68 — A REVIEW COPY, AS THE PLANE ANSWERS ITS RECIPIENT (`op=reviewcopy&secret=…`, FLAT: index.mjs
+   `json({ ok: true, ...r }, 200)`). The plane's OWN sentences — the marking, the signature line and the gates'
+   `evaluated` — are READ OUT OF store.mjs, never typed here, for UI-30's reason; each is a string concatenation
+   in the source and is evaluated as one. The draft's authored words, ids and the one missing item are this
+   fixture's own and are labelled as such: the plane-sourced column is a LOWER BOUND for this surface, as for
+   the published ones. */
+const planeSentence = (re) => { const m = re.exec(STORE_SRC); try{ return m ? Function("return " + m[1])() : ""; }catch(_){ return ""; } };
+const REVIEW_MARKING = planeSentence(/static REVIEW_MARKING = ("[\s\S]*?");\n/);
+const REVIEW_SIGNATURE = planeSentence(/signature: \{ signed: false, detail: ("[\s\S]*?") \},/);
+const REVIEW_EVALUATED = planeSentence(/return \{ gates: "refused", missing: \[refused\],\s*evaluated: ("[\s\S]*?") \};/);
+const REVIEW_SECRET = "rv1_" + "Q".repeat(43);
+const REVIEW_COPY_ANSWER = {
+  ok:true, kind:"review-copy", marking:REVIEW_MARKING, published:false,
+  signature:{ signed:false, detail:REVIEW_SIGNATURE },
+  draft:"DRAFT-2026-0001", project:"PROJ-2026-0001", reader:"recipient",
+  case:{ case_id:null, edition:1, identity:"a new case, whose identity is not yet allocated — a case id is minted only by publication" },
+  authored:{ scope:"Whether the harbour dredging contract followed the adopted process.",
+             statement:"This case does not cover the 2025 contracts.",
+             excluded:[{ target:null, description:"The 2025 contracts", reason:"Out of scope." }],
+             subjectPosition:null, subjectJustification:null, biasAcknowledgement:null },
+  findings:[{ target:"INQ-2026-0001", present:true, object_type:"inquiry", state:"open", role:"load_bearing",
+              text:"---\ntitle: \"Did the contract follow the process?\"\n---\n\nThe tender was not advertised.\n" }],
+  gates:"refused",
+  missing:[{ reason:"NOT_CONCLUDED", detail:"the finding this case rests on is not yet concluded." }],
+  evaluated:REVIEW_EVALUATED, comments:[], comments_truncated:false, list_limit:500,
+  updated_by:"m_alice", updated_at:"2026-07-02T00:00:00Z",
+  grant:{ grant_id:"RVG-2026-0001", recipient:"Dana Ortiz, the city auditor", issued_by:"m_alice", issued_at:"2026-07-02T00:00:00Z" },
+};
 const SHA = "a".repeat(64), MAN = "b".repeat(64), CAP = "c".repeat(64);
 /* M0-23 (UI-56's delegation), 2026-09-10 — THE DIVERGED MEMBER, and it is here so
    that this fixture CAN represent the state the wire can carry rather than only
@@ -994,6 +1033,10 @@ function makePlane(mode){
        project's, through `say` so the slug is attributed to the PLANE, not to the surface. Before UI-77 the
        header painted a literal and this op was never asked. */
     if(op === "instancegroup") return W(say({ ok:true, group:"harbour-watch-coalition" }));
+    /* UI-68: the recipient's door — FLAT, as index.mjs answers it; only the fixture's own secret reads a copy. */
+    if(op === "reviewcopy")
+      return url.searchParams.get("secret") === REVIEW_SECRET ? R(say(REVIEW_COPY_ANSWER))
+        : { ok:false, status:404, json:async()=>say({ ok:false, reason:"NO_REVIEW_COPY", detail:"no review copy answers to this request." }) };
     if(op === "publishedmanifest"){
       if(opts.manifestArm === "unknownop")
         return { ok:false, status:400, json:async()=>say({ ok:false, error:UNKNOWN_OP_REFUSAL, op }) };
@@ -1328,6 +1371,14 @@ await scenario("case-address-at-load", "a published case address, opened by a st
    IT ENTERS WITH `fromNav`, which is faithful and also isolates the delta: the
    rail is reachable however the member arrived, and skipping the index re-render
    means every occurrence this scenario adds is the verify pane's own. */
+/* UI-68 — THE THIRD ADDRESS: a review copy's recipient, holding nothing, at the link its owner handed over. */
+await scenario("review-copy-address-at-load", "a review copy's address, opened by the recipient holding nothing", {
+  controls:[], address:"#reviewcopy/", hash:"#reviewcopy/" + REVIEW_SECRET,
+  drive:async(ctx)=>{
+    for(let i = 0; i < 20 && !(ctx.__doc.querySelector("#pub-body")._html || "").includes("data-rvc-copy"); i++)
+      await settle();
+  },
+});
 await scenario("published-verify-panel", "the Verify pane, opened from the published rail by a stranger", {
   controls:[], pubControls:["pubVerifyPanel"],
   drive:async(ctx)=>{ ctx.__enterPublished(true); ctx.__pubVerifyPanel(); await settle(); },
@@ -1472,8 +1523,8 @@ ok("WALK 1c REACH: pubVerify is rendered " + CASE_SITE_COUNT("pubVerify")
   const undriven = ADDRESS_SHAPES.filter(sh =>
     !driven.some(a => sh.includes(a.replace(/^#/, "").replace(/\/$/, ""))));
   ok("REACH: every published ADDRESS SHAPE the load-time router matches is opened by a scenario — "
-     + "UNDRIVEN: " + (undriven.length ? undriven.join(" , ") : "none, both driven as [" + driven.join(", ") + "]"),
-     undriven.length === 0 && driven.length === 2);
+     + "UNDRIVEN: " + (undriven.length ? undriven.join(" , ") : "none, all driven as [" + driven.join(", ") + "]"),
+     undriven.length === 0 && driven.length === 3);
 }
 /* THE SURFACES ACTUALLY WALKED, by name and by count. */
 const ALL_SURFACES = [...new Set(SCENARIOS.flatMap(s => [...s.surfaces.keys()]))].sort();
@@ -1817,7 +1868,10 @@ if(S("case-address-at-load") && !HID("case-verify")){
      + "the value, exactly as before — and its callers are the " + APIQ_CALLERS.length + " this item swept ["
      + APIQ_CALLERS.join(", ") + "], each keeping its own error path rather than being routed into one "
      + "generic catch",
-     /async function apiQ\(op, params\)\{\n  const j = await api\(op, null, params\|\|\{\}\);\n  return \(j && j\.result !== undefined\) \? j\.result : j;\n\}/.test(APP_SRC)
+     /* CORRECTED 2026-09-23 (UI-68), never exempted: `apiQ` took an optional POST body (the review copy's
+        recipient commenting holding nothing), passed where `null` stood. It still opens the envelope and still
+        does not throw on ok:false — the property this pin exists for is unchanged; its text moved. */
+     /async function apiQ\(op, params, body\)\{\n  const j = await api\(op, body \|\| null, params\|\|\{\}\);\n  return \(j && j\.result !== undefined\) \? j\.result : j;\n\}/.test(APP_SRC)
      /* CORRECTED 2026-09-22 (UI-77), never exempted: this pinned THREE callers. The public header's group read
         (`readGroup`, `op=instancegroup`, public since REC-163/IC-174) is a fourth, and it keeps its OWN error
         path exactly as this sweep requires: `groupFromAnswer` is a SHAPE test — only `{ok:true, group:<slug>}`
@@ -1831,8 +1885,14 @@ if(S("case-address-at-load") && !HID("case-verify")){
         only a refusal carrying the candidate case ids in `cases[]` (IC-74's resolution aid) is asked again per case, and everything else — an
         `ok:false` this non-throwing seam returns included — reads as the published record NOT ANSWERING, never as
         "not published" (`case-frozen-pair.test.mjs`'s SILENCE arm drives it). The op set is unchanged. */
-     && APIQ_CALLERS.length === 5
-     && APIQ_CALLERS.join(",") === "instancegroup,publishedcase,publishedcase,publishedmanifest,verify");
+     /* CORRECTED 2026-09-23 (UI-68), never exempted: SEVEN callers. A review copy's recipient reads the copy
+        (`rvsLoad`, `op=reviewcopy`) and comments (`rvsComment`, `op=reviewcomment`) through this seam, and each
+        keeps its OWN error path — a SHAPE test: only `{ok:true, kind:"review-copy"}` is a copy and everything
+        else, an `ok:false` returned through this non-throwing seam included, renders the plane's one dead
+        sentence; only `ok:true` is a comment recorded, and anything else renders as that comment's refusal. A
+        thrown transport error reads as the record NOT REACHED, never as a dead copy. */
+     && APIQ_CALLERS.length === 7
+     && APIQ_CALLERS.join(",") === "instancegroup,publishedcase,publishedcase,publishedmanifest,reviewcomment,reviewcopy,verify");
 }
 
 /* AND THE NEW SCENARIO RENDERED ITS OWN SUBJECT (UI-34). The verify pane is the
@@ -1841,6 +1901,16 @@ if(S("case-address-at-load") && !HID("case-verify")){
    it can be reworded at all and why UI-33 could. The marker is the pane's own
    headline rather than a term from the sweep, so this arm cannot be satisfied by
    the very words it exists to make measurable. */
+/* UI-68 — THE RECIPIENT'S ADDRESS RENDERED ITS SUBJECT, over plane sentences that were really READ: a regex
+   that stopped matching store.mjs would hand the fixture empty strings and the walk would pass over nothing. */
+if(S("review-copy-address-at-load"))
+  ok("REACH: the review copy's address resolved AT LOAD holding nothing and drew the copy, its marking the plane's "
+     + "own sentence read out of store.mjs (the three plane sentences extracted: "
+     + [REVIEW_MARKING, REVIEW_SIGNATURE, REVIEW_EVALUATED].map(x => x.length).join("/") + " chars)",
+     [REVIEW_MARKING, REVIEW_SIGNATURE, REVIEW_EVALUATED].every(x => typeof x === "string" && x.length > 40)
+     && /data-rvc-copy/.test(S("review-copy-address-at-load").surfaces.get("#pub-body") || "")
+     && (S("review-copy-address-at-load").surfaces.get("#pub-body") || "").includes(REVIEW_MARKING.slice(0, 60))
+     && S("review-copy-address-at-load").calls.every(c => c.token === null));
 if(S("published-verify-panel"))
   ok("REACH: the Verify pane opened from the published rail with NO credential, rendered its own subject, "
      + "and asked the plane nothing",
@@ -2292,13 +2362,17 @@ const DEC49_SUBJECT = {
                           /* NEW SOURCE 2026-08-04, UI-37 — op=verify's own refusal,
                              rendered instead of swallowed (D-195) */
                           "case-address-at-load #v-refused"],
-  "op=":                 ["case-address-at-load #pub-body"],
+  /* UI-68 (2026-09-23): +1 SOURCE on each of these two existing terms, NO new term. The review copy's recipient
+     reads the plane's own `signature.detail` ("… at publication (op=caseratify)") and its `marking` ("… shown
+     inside this instance …"), both read out of store.mjs by this file and rendered verbatim, as DEC-8 requires.
+     DEC-49's subject did not grow a term; two plane sentences reach one more unauthenticated reader. */
+  "op=":                 ["case-address-at-load #pub-body", "review-copy-address-at-load #pub-body"],
   "bundle.md":           ["case-address-at-load #pub-body",
                           /* NEW 2026-08-04, UI-36 — op=verify echoing the part's path */
                           "case-address-at-load #v-part-" + SHA.slice(0, 12),
                           "case-address-at-load #v-f-" + FIND_ID,
                           "case-address-at-load #v-c-" + FIND_ID],
-  "this instance":       ["case-address-at-load #pub-body", "refused-signin #g-err"],
+  "this instance":       ["case-address-at-load #pub-body", "refused-signin #g-err", "review-copy-address-at-load #pub-body"],
   "a salted derivation": ["refused-signin #g-err"],
   "its stored hash":     ["refused-signin #g-err"],
   "no active credential":["refused-signin #g-err"],

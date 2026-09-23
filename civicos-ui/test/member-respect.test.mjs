@@ -667,6 +667,7 @@ const CHOOSERS = {
   "pubFindingPages":       "per-hash Verify on a finding's pages — the same read",
   "pubLegHtml":            "per-leg open and Verify on a published case — reads, on a surface with no member and no selection",
   "stanceActHtml":         "one control per accepted reading; a project stands on exactly ONE, so a set is incoherent",
+  "rvcFormHtml":           "UI-68: draft-list editing of a review copy's exclusion rows before ONE op=casedraft; nothing is decided until the one save",
 };
 /* SETS OF DECISIONS — a list where each item is decided independently, so both
    modes are owed. Every row states which modes exist TODAY and, where a mode is
@@ -686,6 +687,8 @@ const SETS = {
     why: "CLEAN, and it is the amendment's shape reached the other way round. Selection is PER CARD and `aiConnectionsReviewMotion` composes ONE motion over whatever is picked — one connection or forty — so neither mode is forced. UI-44's anti-gate arm already holds the harder half: reviewing changes a connection's standing not at all, so this is visibility and bulk review rather than an approval gate (DEC-52 final)." },
   "passageRowHtml": { single: true, bulk: false, op: "cite",
     why: "UI-62 (carried): `op=cite` REFUSES an extent over more than one leg BY NAME — `EXTENT_ON_MANY`, whose own words are that writing the same passage onto several documents *would put claims in the record that nobody made*. So a bulk passage cite is not a control this surface is declining to build; it is a shape the plane refuses, and correctly. Looping N calls over N passages is the forty-dialogs shape wearing a bulk control's clothes (DEC-52, `loadResolveCandidates`' own note). NOR DO PASSAGES CARRY A TICK into the finder's selection lease, and that is deliberate rather than an omission: the lease is over BUNDLES and a passage is a part of one, so ticking passages into it would hand a member a set they would then cite as documents — the grain confusion this whole surface reports three counts to avoid. The single-item path is the whole of what is coherent here." },
+  "rvcGrantsHtml": { single: true, bulk: false, op: "reviewrevoke",
+    why: "UI-68 (carried): one Withdraw per live grant on a review copy. `op=reviewrevoke` takes ONE `grant`, and each withdrawal is its own attributed act on the record (BIO_Publication §6A.2: the grant names who issued it, to whom and when; the withdrawal names who withdrew it). A bulk path is the PLANE accepting a set, not this surface looping — N calls over N grants is the forty-dialogs shape wearing a bulk control's clothes (DEC-52, `loadResolveCandidates`' own note)." },
   "queueMuteHtml": { single: true, bulk: true, op: "queuemute",
     why: "CORRECTED IN PLACE by UI-55. This was the amendment's BULK-ONLY half: one control muted every condition kind on the case and the member could not say 'just this one'. `op=queuemute` already took an arbitrary subset, so the single-kind path was one parameter away and no plane change was owed." },
 };
@@ -725,6 +728,8 @@ for(const [host, s] of Object.entries(SETS)){
   const stillScalar = [
     { op: "resolve",        sig: /async resolveReferences\(\{\s*captureSha/ },
     { op: "proposedispose", sig: /proposeDispose\(\{\s*progressionKey/ },
+    /* UI-68: `op=reviewrevoke` withdraws ONE grant, named by id. */
+    { op: "reviewrevoke",   sig: /#reviewRevoke\(who, \{\s*grant = null\s*\}/ },
   ];
   for(const c of stillScalar)
     ok(c.sig.test(store),
@@ -754,6 +759,6 @@ console.log(
   no vocabulary to derive a closure from — a novel phrasing is not caught and that is
   said rather than implied. ARM 4 partitions by REGISTER because whether a repeated
   control is a set of decisions or a chooser is not a fact a static walk can read;
-  what the walk DOES enforce is that nothing arrives unclassified. Two sets of
+  what the walk DOES enforce is that nothing arrives unclassified. Four sets of
   decisions are CARRIED, not clean: see ARM 4c.`);
 process.exit(fails.length ? 1 : 0);

@@ -796,6 +796,8 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
               padding-top:8px;margin-top:26px;word-break:break-all}
 .pub-page details{margin:8px 0}
 .pub-page details>summary{cursor:pointer;font-size:13.5px;color:var(--verdigris-dk)}
+/* UI-68: a review copy's marking leads, and it cannot be mistaken for a heading. */
+.rvc-marking{border:2px solid currentColor;padding:12px 14px;margin:10px 0 14px;font-weight:700;line-height:1.45}
 
 /* ---------- PRINT, AND IT IS FIRST-CLASS ----------
    THERE IS NO `display:none` IN THIS BLOCK AND THERE MUST NEVER BE ONE. A
@@ -1085,9 +1087,13 @@ async function apiR(op, body){
    reach `api` at all. Shape-agnostic exactly as `recR` is — `op=publishedcase`
    and `op=verify` are FLATTENED by their own handlers in index.mjs while
    `op=publishedmanifest` is re-wrapped by its, and no call site should have to
-   know which is which. */
-async function apiQ(op, params){
-  const j = await api(op, null, params||{});
+   know which is which.
+   UI-68 gave it an optional THIRD argument, a POST body, for the one credential-free
+   WRITE there is: a review copy's recipient commenting through `op=reviewcomment`,
+   which takes its `secret` as a parameter and its text as the body. It still never
+   carries a token. */
+async function apiQ(op, params, body){
+  const j = await api(op, body || null, params||{});
   return (j && j.result !== undefined) ? j.result : j;
 }
 async function rec(op, params={}){
@@ -1501,7 +1507,8 @@ async function boot(){
      when it is not. */
   if(!publishedRouteFromHash() && !routeFromHash() && !projectRouteFromHash()
      && !actionRouteFromHash() && !aiSessionRouteFromHash()
-     && !versionReviewRouteFromHash() && !stanceRouteFromHash()) go("queue", true);
+     && !versionReviewRouteFromHash() && !stanceRouteFromHash()
+     && !draftRouteFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -2250,6 +2257,20 @@ const SURFACES = {
     levels: ["meaning"],
     acts: [],
     reads: ["publishedcase"],
+  },
+  /* UI-68 · the review copy (BIO_Publication §6A). TWO DOORS, one surface: a
+     member with standing reads `#draft/<id>` with a session, and a recipient
+     reads `#reviewcopy/<secret>` holding nothing. `acts` is EMPTY because none
+     of these five ops is in the plane's act catalogue — `affordances.mjs`
+     NON_ACTS names `casedraft` and `reviewgrant` as acts on a DRAFT keyed
+     `draft_id`, never a move of a bundle — so they are the surface's READS and
+     writes here, each reached from the page. */
+  "review-copy": {
+    routes: ["hash:draft", "hash:reviewcopy"],
+    purpose: "A draft of a case shown, before and without publication, to the people it is addressed to, inside this record: marked as what it is, as complete as it can be, and listing in the publish gates' own words what a publication would still need. Its editors draft it; its project's owner gives and withdraws access; members and recipients comment. Nothing on it leaves the instance.",
+    levels: ["meaning", "documents"],
+    acts: [],
+    reads: ["casedraft", "reviewcopy", "reviewgrant", "reviewrevoke", "reviewcomment"],
   },
   "published-case": {
     routes: ["hash:case"],
@@ -8252,7 +8273,7 @@ async function openInquiry(id, fromNav){
       ${npcPane}
       ${pubEntry}
       ${actBarHtml(id, fm.title||(proj&&proj.title)||id, actsR, (barOpts.elsewhere || barOpts.routed) ? barOpts : undefined)}
-      <h2 class="sec">What would falsify it</h2>
+      ${reviewCopyEntryHtml() /* UI-68: flush against the next heading, so the publication section's extent is the same for every credential */}<h2 class="sec">What would falsify it</h2>
       ${falsifyText
         ? `<div class="card"><div class="prose">${mdLite(falsifyText)}</div></div>`
         /* CORRECTED 2026-09-17 (REC-117), never exempted. This read "Saying so is a
@@ -20017,6 +20038,11 @@ function publishedRouteFromHash(){
   let h = "";
   try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
   if(/^#published\/?$/.test(h)){ enterPublished(); return true; }
+  /* UI-68: a review copy's RECIPIENT holds no session, so their address is asked
+     here, where an address resolves for somebody holding nothing. It opens the
+     copy the secret reads and nothing else — no index, no case list. */
+  const rv = /^#reviewcopy\/([A-Za-z0-9_-]+)$/.exec(h);
+  if(rv){ enterPublished(true); rvsOpen(rv[1]); return true; }
   const m = /^#case\/([A-Za-z0-9._-]+)(?:\/e(\d+))?$/.exec(h);
   if(!m) return false;
   enterPublished(true);
@@ -22198,6 +22224,481 @@ function stanceRouteFromHash(){
 try{ window.addEventListener("hashchange", ()=>{ if(!STANCE_HASH_LOCK) stanceRouteFromHash(); }); }catch(_){}
 /*__NOTIFICATIONS_END__*/
 
+/*__REVIEW_COPY_START__*/
+/* ============================================================
+   UI-68 · THE REVIEW COPY — an addressed act that never leaves the instance.
+
+   DESIGN: `docs/architecture/BIO_Publication_v0_1.md` §6A (Bob, 2026-09-17; §6A.2
+   by BOB #14/#15; §6A.3–6A.4), and the REC-126 → UI DELEGATION in `CLAIMS.md`
+   with its REC-133 addendum, which name the FOUR SURFACES built here. The plane
+   half is REC-126's (IC-145/IC-146) and REC-133's (IC-151); nothing below asks
+   the plane for anything it did not already publish.
+
+     1 DRAFT (an editor of the project) — `op=casedraft`, the same arguments the
+       publish act takes, `draft=` in the body to EDIT in place. Nothing is
+       prefilled and nothing is required but the project (DEC-69): a draft with
+       gaps is the normal case, so this form never refuses locally for a field
+       the plane would accept into a draft. Editing hydrates the form from the
+       draft's OWN answer, which is the draft's content, not a default.
+     2 READ (members with standing, and recipients) — `op=reviewcopy`, by
+       `draft=` with the session, or by `secret=` with NOTHING. The plane's
+       `marking` leads, unmissably; the exclusion statement leads the content
+       (§6A.4, §3 rule 11); `missing` is the publish gates' OWN refusal, and
+       `evaluated` beneath it says it is the FIRST refusal only.
+     3 GRANT AND REVOKE (the owner) — `op=reviewgrant` shows the read secret
+       ONCE, with the plane's own `secretIsShownOnce`; `op=reviewrevoke`
+       withdraws one. §6A.3 point 2 is said AT THE ACT.
+     4 COMMENT (both doors) — `op=reviewcomment`; a recipient's comment is
+       labelled a recipient's, by the name the issuer gave, never a member's.
+
+   WHAT THIS SURFACE MUST NEVER DO, and the harness (`review-copy.test.mjs`)
+   asserts each by name:
+     - OFFER ANY WAY OUT OF THE INSTANCE. No download, no print, no file, no
+       blob or data link, no `beforeprint` hook, no print rule for this copy.
+       §6A.3 point 1 (DEC-31's bound rule, measured by BOB #16): a rendering
+       that leaves carries its hash, date, author and both threshold floors
+       in-band, and `op=reviewcopy` does not yet carry all four — so NO surface
+       offers to export a review copy. Reading it here needs none of that.
+     - TELL A RECIPIENT WHY A COPY IS DEAD. The plane's dead answer is ONE answer
+       for revoked, never issued, malformed and moved-on alike, and the page
+       renders its one sentence and nothing that varies with the cause. The page
+       keys on no refusal code at all: it reads `ok` and `kind`, and renders words.
+     - CALL IT "pre-publish" — Bob: it may never be published.
+     - RENDER A CODE. Refusals render `refusalWords` (the canned translation,
+       else the plane's `detail`), never a sentence built from the code's name.
+
+   ADDRESSES. `#draft/new` and `#draft/<id>` are the member door, asked inside
+   `boot()`'s router chain (POST-authentication). `#reviewcopy/<secret>` is the
+   recipient door and is asked by `publishedRouteFromHash` — the one router
+   that runs at load holding nothing — because a recipient has no session. The
+   secret rides in the FRAGMENT, which a browser never sends to a server; it
+   crosses to the plane only as `op=reviewcopy`'s own `secret=` parameter.
+   ============================================================ */
+let RVC = null;              /* the member door's state */
+let RVC_HASH_LOCK = false;
+let RVS = null;              /* the recipient door's state */
+
+function rvcEmptyForm(){
+  return { project:"", loadBearing:"", supporting:"", undesignated:"", caseMode:"", caseId:"",
+           scope:"", statement:"", excluded:[], nothingLeftOut:false,
+           subjectPosition:"", subjectJustification:"", biasAcknowledgement:"" };
+}
+function rvcIds(s){ return String(s == null ? "" : s).split(/[\s,]+/).map(x => x.trim()).filter(Boolean); }
+function rvcStr(v){ return typeof v === "string" ? v : ""; }
+
+/* The body `op=casedraft` takes. A field left EMPTY is left OUT, so the draft
+   says nothing where the member said nothing and the gates name the gap; an
+   empty exclusion list is SENT only when the member says the case leaves
+   nothing out, because an empty list is a claim (`op=publish`'s own rule). */
+function rvcDraftBody(f, draftId){
+  const body = { project: String(f.project || "").trim() };
+  if(draftId) body.draft = draftId;
+  const lb = rvcIds(f.loadBearing), sp = rvcIds(f.supporting), un = rvcIds(f.undesignated);
+  if(lb.length || sp.length || un.length){
+    body.targets = [...lb, ...sp, ...un];
+    if(lb.length || sp.length){
+      body.roles = {};
+      for(const i of lb) body.roles[i] = "load_bearing";
+      for(const i of sp) body.roles[i] = "supporting";
+    }
+  }
+  if(f.caseMode === "new") body.newCase = true;
+  else if(f.caseMode === "next" && String(f.caseId || "").trim()) body.caseId = String(f.caseId).trim();
+  for(const k of ["scope", "statement", "subjectPosition", "subjectJustification", "biasAcknowledgement"])
+    if(String(f[k] || "").trim()) body[k] = String(f[k]).trim();
+  const rows = (f.excluded || [])
+    .map(r => ({ target: String(r.target || "").trim() || null, description: String(r.description || "").trim(),
+                 reason: String(r.reason || "").trim() }))
+    .filter(r => r.target || r.description || r.reason);
+  if(rows.length) body.excluded = rows;
+  else if(f.nothingLeftOut) body.excluded = [];
+  return body;
+}
+/* Editing starts from what the draft HOLDS, read back from `op=reviewcopy`. The
+   one thing the answer does not say back is whether a draft naming no case was
+   marked as a new one, so that choice starts unmade rather than guessed. */
+function rvcFormFromCopy(c){
+  const f = rvcEmptyForm();
+  f.project = rvcStr(c && c.project);
+  const fs = (c && Array.isArray(c.findings)) ? c.findings : [];
+  f.loadBearing = fs.filter(x => x && x.role === "load_bearing").map(x => x.target).join("\n");
+  f.supporting = fs.filter(x => x && x.role === "supporting").map(x => x.target).join("\n");
+  f.undesignated = fs.filter(x => x && x.role !== "load_bearing" && x.role !== "supporting").map(x => x.target).join("\n");
+  const cid = c && c.case && c.case.case_id;
+  if(cid){ f.caseMode = "next"; f.caseId = String(cid); }
+  const a = (c && c.authored) || {};
+  for(const k of ["scope", "statement", "subjectPosition", "subjectJustification", "biasAcknowledgement"]) f[k] = rvcStr(a[k]);
+  if(Array.isArray(a.excluded)){
+    f.excluded = a.excluded.filter(r => r && typeof r === "object")
+      .map(r => ({ target: rvcStr(r.target), description: rvcStr(r.description), reason: rvcStr(r.reason) }));
+    f.nothingLeftOut = a.excluded.length === 0;
+  }
+  return f;
+}
+
+/* A plane answer is a refusal when it is an object saying why; anything else
+   thrown (a failed fetch) is the record not being reached, said as THAT. */
+function rvcIsAnswer(e){ return !!(e && typeof e === "object" && ("reason" in e || "detail" in e || "error" in e || "translation" in e)); }
+function rvcRefusalHtml(r){
+  return '<div class="intent-ref" data-rvc-refusal><div class="intent-ref-why">'
+    + esc(refusalWords(r) || "The record refused this and said nothing further.") + '</div></div>';
+}
+const RVC_UNREACHED = "This page could not reach the record just now, so nothing is shown. Nothing about the draft is implied by that.";
+function rvcText(v){ return (typeof v === "string" && v.trim()) ? esc(v) : ""; }
+function rvcSaid(v){
+  const t = rvcText(v);
+  return t ? '<div class="card"><div class="prose"><p>' + t.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>") + '</p></div></div>'
+           : '<div class="q-gap">This draft does not say.</div>';
+}
+/* A finding's own write-up, as the draft's editor sees it: its title from its
+   frontmatter and its body as paragraphs. Nothing here collapses or hides. */
+function rvcFindingHtml(f){
+  if(!f || f.present !== true)
+    return '<div class="card" data-rvc-finding="' + esc(f && f.target) + '"><div class="kv"><span class="mono">'
+      + esc(f && f.target) + '</span></div><div class="q-gap">' + esc((f && f.detail) || "") + '</div></div>';
+  const parts = splitFm(typeof f.text === "string" ? f.text : "");
+  const title = parts.fm && parts.fm.title ? parts.fm.title : "";
+  const role = f.role === "load_bearing" ? "The case rests on this finding."
+             : f.role === "supporting" ? "Supporting: part of the work, not presented as carrying it."
+             : "This draft does not yet say whether the case rests on this finding.";
+  const body = String(parts.body || "").trim();
+  return '<div class="card" data-rvc-finding="' + esc(f.target) + '">'
+    + '<div class="kv"><span class="mono">' + esc(f.target) + '</span>' + (title ? ' &middot; ' + esc(title) : '') + '</div>'
+    + '<p class="subj-note">' + role + '</p>'
+    + (body ? '<div class="prose"><p>' + esc(body).replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>") + '</p></div>'
+            : '<div class="q-gap">The record holds no write-up for this finding.</div>')
+    + '</div>';
+}
+function rvcMissingHtml(c){
+  const miss = Array.isArray(c.missing) ? c.missing : [];
+  const items = miss.map(m => {
+    const allowed = (m && Array.isArray(m.allowed) && m.allowed.length)
+      ? '<div class="subj-note">The record accepts: ' + m.allowed.map(a => '<span class="mono">' + esc(a) + '</span>').join(", ") + '</div>' : '';
+    return '<li data-rvc-missing>' + esc(refusalWords(m) || "The record named a gap and said nothing further about it.") + allowed + '</li>';
+  }).join("");
+  return (items ? '<ul class="rvc-missing">' + items + '</ul>' : '')
+    + '<p class="subj-note" data-rvc-evaluated>' + esc(c.evaluated || "") + '</p>';
+}
+function rvcExcludedHtml(a){
+  const ex = a && a.excluded;
+  if(!Array.isArray(ex)) return '<div class="q-gap">This draft does not yet list what the case leaves out.</div>';
+  if(!ex.length) return '<p class="subj-note">This draft says the case leaves nothing material out.</p>';
+  return '<ul>' + ex.map(r => '<li>' + (r && r.target ? '<span class="mono">' + esc(r.target) + '</span> ' : '')
+    + esc((r && r.description) || "") + (r && r.reason ? ' &mdash; ' + esc(r.reason) : '') + '</li>').join("") + '</ul>';
+}
+
+/* THE COPY ITSELF, the same for both doors: what a reader is shown is what the
+   draft holds, in the order §6A puts it. */
+function rvcCopyHtml(c){
+  const a = c.authored || {};
+  return '<div class="rvc-copy" data-rvc-copy>'
+    + '<div class="rvc-marking" data-rvc-marking>' + esc(c.marking || "") + '</div>'
+    + '<p class="subj-note" data-rvc-signature>' + esc((c.signature && c.signature.detail) || "") + '</p>'
+    + '<p class="lede" data-rvc-identity>This draft stands as ' + esc((c.case && c.case.identity) || "") + '.</p>'
+    + '<h2 class="sec">What this case leaves out</h2>'
+    + '<p class="subj-note">Shown first, so it can be tested first.</p>'
+    + rvcSaid(a.statement) + rvcExcludedHtml(a)
+    + '<h2 class="sec">What a publication would still need</h2>'
+    + rvcMissingHtml(c)
+    + '<h2 class="sec">What the case covers</h2>' + rvcSaid(a.scope)
+    + '<h2 class="sec">Putting it to its subject</h2>'
+    + (rvcText(a.subjectPosition) ? '<p><span class="mono">' + esc(a.subjectPosition) + '</span></p>' : '')
+    + rvcSaid(a.subjectJustification)
+    + '<h2 class="sec">The acknowledgement of bias</h2>' + rvcSaid(a.biasAcknowledgement)
+    + '<h2 class="sec">The findings it rests on</h2>'
+    + ((Array.isArray(c.findings) && c.findings.length) ? c.findings.map(rvcFindingHtml).join("")
+       : '<div class="q-gap">This draft names no findings yet.</div>')
+    + '<p class="subj-note" data-rvc-updated>Last changed by <span class="mono">' + esc(c.updated_by || "") + '</span> at <span class="mono">'
+    + esc(c.updated_at || "") + '</span>.</p>'
+    + '</div>';
+}
+function rvcCommentsHtml(c, door){
+  const list = Array.isArray(c.comments) ? c.comments : [];
+  const rows = list.map(k => {
+    const who = k && k.author_kind === "recipient"
+      ? 'From <b>' + esc(k.recipient || "") + '</b>, who this copy was addressed to &mdash; not a member of this group'
+      : 'From <span class="mono">' + esc(k && k.author) + '</span>, a member of this group';
+    return '<div class="card" data-rvc-comment data-author-kind="' + esc(k && k.author_kind) + '"><div class="subj-note">'
+      + who + ' &middot; <span class="mono">' + esc(k && k.at) + '</span></div><div class="prose"><p>'
+      + esc(k && k.text).replace(/\n/g, "<br>") + '</p></div></div>';
+  }).join("");
+  const st = door === "recipient" ? RVS : RVC;
+  return '<h2 class="sec">Comments</h2>'
+    + (rows || '<div class="empty">No comments yet.</div>')
+    + (c.comments_truncated ? '<p class="subj-note">Only the first ' + esc(c.list_limit) + ' comments are shown; the record holds more.</p>' : '')
+    + '<div class="intent-box" data-rvc-comment-box><div class="kv"><span class="k">Add a comment</span></div>'
+    + '<textarea class="txt" id="rv-comment" rows="3" onchange="' + (door === "recipient" ? 'rvsField' : 'rvcField') + '(\'comment\', this.value)">'
+    + esc((st && st.comment) || "") + '</textarea>'
+    + ((st && st.commentRefusal) ? rvcRefusalHtml(st.commentRefusal) : '')
+    + '<button class="btn" onclick="' + (door === "recipient" ? 'rvsComment()' : 'rvcComment()') + '">Add the comment</button></div>';
+}
+
+/* ---------------- THE MEMBER DOOR ---------------- */
+function rvcField(k, v){ if(RVC) RVC[k] = String(v == null ? "" : v); }
+function rvcFormField(k, v){ if(RVC && RVC.form) RVC.form[k] = (k === "nothingLeftOut") ? !!v : String(v == null ? "" : v); }
+function rvcExField(i, k, v){ if(RVC && RVC.form && RVC.form.excluded[i]) RVC.form.excluded[i][k] = String(v == null ? "" : v); }
+function rvcExAdd(){ if(!RVC || !RVC.form) return; RVC.form.excluded.push({ target:"", description:"", reason:"" }); rvcPaint(); }
+
+function rvcSetHash(h){
+  RVC_HASH_LOCK = true;
+  try{ location.hash = h; }catch(_){}
+  RVC_HASH_LOCK = false;
+}
+function rvcDraftNew(){
+  RVC = { mode:"form", draft:null, form:rvcEmptyForm(), formRefusal:null, busy:false };
+  rvcSetHash("#draft/new");
+  rvcPaint();
+}
+function rvcEdit(){
+  if(!RVC || !RVC.copy) return;
+  RVC = { mode:"form", draft:RVC.draft, form:rvcFormFromCopy(RVC.copy), formRefusal:null, busy:false };
+  rvcPaint();
+}
+async function rvcOpen(draftId){
+  const id = String(draftId == null ? "" : draftId).trim();
+  if(!id) return;
+  RVC = { mode:"read", draft:id, copy:null, refusal:null, err:null, busy:true, saved:null, issued:null,
+          recipient:"", grantRefusal:null, revokeRefusal:null, comment:"", commentRefusal:null };
+  rvcSetHash("#draft/" + id);
+  await rvcLoad();
+}
+async function rvcLoad(){
+  if(!RVC || !RVC.draft) return;
+  RVC.busy = true; rvcPaint();
+  try{ RVC.copy = await recR("reviewcopy", { draft: RVC.draft }); RVC.refusal = null; RVC.err = null; }
+  catch(e){ RVC.copy = null; if(rvcIsAnswer(e)) RVC.refusal = e; else RVC.err = RVC_UNREACHED; }
+  RVC.busy = false;
+  rvcPaint();
+}
+async function rvcSave(){
+  if(!RVC || RVC.mode !== "form" || RVC.busy) return;
+  RVC.busy = true; RVC.formRefusal = null; rvcPaint();
+  let r;
+  try{ r = await recPostR("casedraft", rvcDraftBody(RVC.form, RVC.draft)); }
+  catch(e){ r = rvcIsAnswer(e) ? e : { detail: RVC_UNREACHED }; }
+  if(r && r.ok === true && r.draftId){
+    await rvcOpen(r.draftId);
+    RVC.saved = r; rvcPaint();
+    return;
+  }
+  RVC.busy = false; RVC.formRefusal = r || {}; rvcPaint();
+}
+async function rvcGrant(){
+  if(!RVC || !RVC.copy) return;
+  RVC.grantRefusal = null; RVC.issued = null;
+  let r;
+  try{ r = await recPostR("reviewgrant", { draft: RVC.draft, recipient: RVC.recipient || "" }); }
+  catch(e){ r = rvcIsAnswer(e) ? e : { detail: RVC_UNREACHED }; }
+  if(r && r.ok === true && r.secret){ RVC.issued = r; RVC.recipient = ""; }
+  else RVC.grantRefusal = r || {};
+  await rvcLoad();
+}
+async function rvcRevoke(grantId){
+  if(!RVC || !RVC.copy) return;
+  RVC.revokeRefusal = null;
+  let r;
+  try{ r = await recPostR("reviewrevoke", { grant: String(grantId) }); }
+  catch(e){ r = rvcIsAnswer(e) ? e : { detail: RVC_UNREACHED }; }
+  if(!(r && r.ok === true)) RVC.revokeRefusal = r || {};
+  await rvcLoad();
+}
+async function rvcComment(){
+  if(!RVC || !RVC.copy) return;
+  RVC.commentRefusal = null;
+  let r;
+  try{ r = await recPostR("reviewcomment", { text: RVC.comment || "" }, { draft: RVC.draft }); }
+  catch(e){ r = rvcIsAnswer(e) ? e : { detail: RVC_UNREACHED }; }
+  if(r && r.ok === true) RVC.comment = "";
+  else RVC.commentRefusal = r || {};
+  await rvcLoad();
+}
+
+/* The address a recipient opens. The fragment never reaches a server. */
+function rvcRecipientLink(secret){
+  let base = "";
+  try{ base = String((typeof location !== "undefined" && location.href) || "").split("#")[0]; }catch(_){ base = ""; }
+  return base + "#reviewcopy/" + secret;
+}
+/* §6A.3 point 2, AT THE ACT: what the grant controls and what it does not. */
+const RVC_AT_THE_ACT = "This gives one named person a link to read this draft and comment on it, here, inside "
+  + "this group's record. Nothing is sent anywhere and no file of it is made. Withdrawing the grant ends their "
+  + "access at once. What a withdrawal cannot reach is anything copied out of this page by hand: text pasted "
+  + "into an email, a screenshot, a page printed from the browser. That has left, and it cannot be revoked. "
+  + "If what you need is confidentiality, the grant protects what stays here and nothing that leaves.";
+function rvcGrantsHtml(c){
+  const gs = Array.isArray(c.grants) ? c.grants : [];
+  const rows = gs.map(g => {
+    const bound = g.case_id ? "edition " + esc(g.edition) + " of <span class=\"mono\">" + esc(g.case_id) + "</span>" : "a new case";
+    const state = g.live
+      ? 'Can read this draft now. <button class="btn ghost" onclick="rvcRevoke(\'' + esc(g.grant_id) + '\')">Withdraw this grant</button>'
+      : g.revoked_at
+        ? 'Withdrawn by <span class="mono">' + esc(g.revoked_by) + '</span> at <span class="mono">' + esc(g.revoked_at) + '</span>. It reads nothing.'
+        : 'Reads nothing now: it was given for ' + bound + ', and this draft no longer stands there.';
+    return '<div class="card" data-rvc-grant="' + esc(g.grant_id) + '" data-live="' + (g.live ? "1" : "0") + '">'
+      + '<div class="kv"><b>' + esc(g.recipient) + '</b></div>'
+      + '<div class="subj-note">Given by <span class="mono">' + esc(g.issued_by) + '</span> at <span class="mono">' + esc(g.issued_at)
+      + '</span>, for ' + bound + '.</div><div>' + state + '</div></div>';
+  }).join("");
+  const issued = RVC.issued
+    ? '<div class="intent-box" data-rvc-issued><div class="intent-lede">A grant was given to ' + esc(RVC.issued.recipient) + '</div>'
+      + '<p class="subj-note" data-rvc-shown-once>' + esc(RVC.issued.secretIsShownOnce || "") + '</p>'
+      + '<div class="kv"><span class="k">The link to give them</span></div>'
+      + '<div class="mono" data-rvc-link>' + esc(rvcRecipientLink(RVC.issued.secret)) + '</div>'
+      + '<p class="subj-note">' + esc(RVC.issued.boundTo || "") + '</p></div>'
+    : '';
+  return '<h2 class="sec">Who it is addressed to</h2>'
+    + (rows || '<div class="empty">Nobody has been given this draft yet.</div>')
+    + (c.grants_truncated ? '<p class="subj-note">Only the first ' + esc(c.list_limit) + ' grants are shown; the record holds more.</p>' : '')
+    + (RVC.revokeRefusal ? rvcRefusalHtml(RVC.revokeRefusal) : '')
+    + issued
+    + '<div class="intent-box" data-rvc-grant-box><div class="kv"><span class="k">Give one person access to read and comment</span></div>'
+    + '<p class="subj-note" data-rvc-at-the-act>' + RVC_AT_THE_ACT + '</p>'
+    + '<input class="txt" id="rv-recipient" value="' + esc(RVC.recipient || "") + '" onchange="rvcField(\'recipient\', this.value)" placeholder="their name, or the group they speak for">'
+    + (RVC.grantRefusal ? rvcRefusalHtml(RVC.grantRefusal) : '')
+    + '<button class="btn" onclick="rvcGrant()">Give access</button></div>';
+}
+function rvcFormHtml(){
+  const f = RVC.form;
+  const ta = (k, rows) => '<textarea class="txt" id="rv-' + k + '" rows="' + rows + '" onchange="rvcFormField(\'' + k + '\', this.value)">' + esc(f[k]) + '</textarea>';
+  const ex = f.excluded.map((r, i) => '<div class="card" data-rvc-exrow="' + i + '">'
+    + '<div class="kv"><span class="k">What is left out</span></div>'
+    + '<input class="txt" id="rv-ex-d-' + i + '" value="' + esc(r.description) + '" onchange="rvcExField(' + i + ', \'description\', this.value)">'
+    + '<div class="kv"><span class="k">Why</span></div>'
+    + '<input class="txt" id="rv-ex-r-' + i + '" value="' + esc(r.reason) + '" onchange="rvcExField(' + i + ', \'reason\', this.value)">'
+    + '<div class="kv"><span class="k">A document in the record it concerns, by its id (optional)</span></div>'
+    + '<input class="txt" id="rv-ex-t-' + i + '" value="' + esc(r.target) + '" onchange="rvcExField(' + i + ', \'target\', this.value)">'
+    + '</div>').join("");
+  return '<div class="trow"><h1 class="rec">' + (RVC.draft ? 'Editing a review copy' : 'A new review copy') + '</h1></div>'
+    + (RVC.draft ? '<p class="lede mono">' + esc(RVC.draft) + '</p>' : '')
+    + '<p class="subj-note">A review copy is a draft of a case, shown to the people you address it to, inside this group&rsquo;s record. It is not a publication and may never become one. Only the project is needed to save it: a draft with gaps is normal, and the copy lists, in the record&rsquo;s own words, what a publication would still need.</p>'
+    + '<div class="kv"><span class="k">The project whose case this is</span></div>'
+    + (RVC.draft ? '<p class="mono">' + esc(f.project) + '</p>'
+                 : '<input class="txt" id="rv-project" value="' + esc(f.project) + '" onchange="rvcFormField(\'project\', this.value)">')
+    + '<h2 class="sec">The findings it rests on</h2>'
+    + '<p class="subj-note">One finding id per line.</p>'
+    + '<div class="kv"><span class="k">Findings the case rests on</span></div>' + ta("loadBearing", 3)
+    + '<div class="kv"><span class="k">Supporting findings</span></div>' + ta("supporting", 3)
+    + '<div class="kv"><span class="k">Findings not yet designated either way</span></div>' + ta("undesignated", 2)
+    + '<h2 class="sec">Which case</h2>'
+    + '<label><input type="radio" name="rv-case" ' + (f.caseMode === "new" ? 'checked ' : '') + 'onchange="rvcFormField(\'caseMode\', \'new\')"> A new case</label><br>'
+    + '<label><input type="radio" name="rv-case" ' + (f.caseMode === "next" ? 'checked ' : '') + 'onchange="rvcFormField(\'caseMode\', \'next\')"> The next edition of an existing case of this project:</label> '
+    + '<input class="txt" id="rv-caseId" value="' + esc(f.caseId) + '" onchange="rvcFormField(\'caseId\', this.value)">'
+    + '<h2 class="sec">What the case covers</h2>' + ta("scope", 3)
+    + '<h2 class="sec">What it leaves out</h2>'
+    + '<div class="kv"><span class="k">The statement of what this case does not cover</span></div>' + ta("statement", 3)
+    + ex
+    + '<button class="btn ghost" onclick="rvcExAdd()">Add something it leaves out</button><br>'
+    + '<label><input type="checkbox" ' + (f.nothingLeftOut ? 'checked ' : '') + 'onchange="rvcFormField(\'nothingLeftOut\', this.checked)"> This case leaves nothing material out</label>'
+    + '<h2 class="sec">Putting it to its subject</h2>'
+    + '<div class="kv"><span class="k">The position taken</span></div>'
+    + '<input class="txt" id="rv-subjectPosition" value="' + esc(f.subjectPosition) + '" onchange="rvcFormField(\'subjectPosition\', this.value)">'
+    + '<div class="kv"><span class="k">Why</span></div>' + ta("subjectJustification", 3)
+    + '<h2 class="sec">The acknowledgement of bias</h2>' + ta("biasAcknowledgement", 3)
+    + (RVC.formRefusal ? rvcRefusalHtml(RVC.formRefusal) : '')
+    + '<button class="btn" id="rv-save" onclick="rvcSave()">Save the draft</button>'
+    + (RVC.draft ? ' <button class="btn ghost" onclick="rvcOpen(\'' + esc(RVC.draft) + '\')">Back to the copy</button>' : '');
+}
+function rvcHtml(){
+  if(!RVC) return "";
+  if(RVC.mode === "form") return rvcFormHtml();
+  const head = '<div class="trow"><h1 class="rec">Review copy</h1></div><p class="lede mono">' + esc(RVC.draft) + '</p>';
+  if(RVC.busy && !RVC.copy) return head + '<div class="empty">Reading the draft.</div>';
+  if(RVC.err) return head + '<div class="q-gap" data-rvc-unreached>' + esc(RVC.err) + '</div>';
+  if(RVC.refusal) return head + rvcRefusalHtml(RVC.refusal);
+  const c = RVC.copy || {};
+  const saved = RVC.saved
+    ? '<div class="intent-box" data-rvc-saved><div class="intent-lede">' + (RVC.saved.edited ? 'The draft was changed' : 'The draft was saved')
+      + '</div><p class="subj-note">It stands as ' + esc(RVC.saved.caseIdentity || "") + '.</p></div>' : '';
+  return head + saved
+    + '<button class="btn ghost" onclick="rvcEdit()">Edit this draft</button>'
+    + rvcCopyHtml(c)
+    + rvcGrantsHtml(c)
+    + rvcCommentsHtml(c, "member");
+}
+function rvcPaint(){
+  const el = (typeof $ === "function") ? $("#content") : null;
+  if(!el) return;
+  el.innerHTML = rvcHtml();
+}
+/* `#draft/new` and `#draft/<id>` are real addresses, asked inside `boot()`'s
+   router chain and nowhere at the top level — POST-authentication, classified
+   by `preauth-vocabulary.test.mjs` WALK 2. */
+function draftRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  if(/^#draft\/new$/.test(h)){
+    if(!(RVC && RVC.mode === "form" && !RVC.draft)) rvcDraftNew();
+    return true;
+  }
+  const m = /^#draft\/([A-Za-z0-9._-]+)$/.exec(h);
+  if(!m) return false;
+  if(RVC && RVC.draft === m[1]) return true;
+  rvcOpen(m[1]);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!RVC_HASH_LOCK) draftRouteFromHash(); }); }catch(_){}
+
+/* The entry beside the publication statement on a question's page. It renders
+   only for a signed-in member holding `contribute` — the capability half of the
+   draft's authority; the positional half (an owner or a joined participant of
+   the project) is the plane's, and its refusal is rendered in its words. */
+function reviewCopyEntryHtml(){
+  if(!canRelease()) return "";
+  return '<h2 class="sec">A review copy</h2>'
+    + '<p class="subj-note">Before anything is published, a draft of a case can be shown to one named person or group to read and comment on. It stays inside this group&rsquo;s record, the access can be withdrawn, and the copy lists what a publication would still need.</p>'
+    + '<button class="btn ghost" onclick="rvcDraftNew()">Draft a review copy</button>';
+}
+
+/* ---------------- THE RECIPIENT DOOR ---------------- */
+function rvsField(k, v){ if(RVS) RVS[k] = String(v == null ? "" : v); }
+async function rvsOpen(secret){
+  RVS = { secret:String(secret || ""), copy:null, dead:null, err:null, busy:true, comment:"", commentRefusal:null };
+  if(typeof PUB !== "undefined" && PUB){ PUB.id = null; PUB.edition = null; }
+  await rvsLoad();
+}
+async function rvsLoad(){
+  if(!RVS) return;
+  RVS.busy = true; rvsPaint();
+  try{
+    const j = await apiQ("reviewcopy", { secret: RVS.secret });
+    if(j && j.ok === true && j.kind === "review-copy"){ RVS.copy = j; RVS.dead = null; }
+    else { RVS.copy = null; RVS.dead = j || {}; }
+    RVS.err = null;
+  }catch(_){ RVS.copy = null; RVS.err = RVC_UNREACHED; }
+  RVS.busy = false;
+  rvsPaint();
+}
+async function rvsComment(){
+  if(!RVS || !RVS.copy) return;
+  RVS.commentRefusal = null;
+  let r;
+  try{ r = await apiQ("reviewcomment", { secret: RVS.secret }, { text: RVS.comment || "" }); }
+  catch(_){ r = { detail: RVC_UNREACHED }; }
+  if(r && r.ok === true) RVS.comment = "";
+  else RVS.commentRefusal = r || {};
+  await rvsLoad();
+}
+function rvsHtml(){
+  if(!RVS) return "";
+  if(RVS.busy && !RVS.copy) return '<div class="empty">Reading the copy.</div>';
+  if(RVS.err) return '<div class="q-gap" data-rvc-unreached>' + esc(RVS.err) + '</div>';
+  /* ONE ANSWER FOR EVERY DEAD CAUSE: the plane's one sentence, under one neutral
+     heading, and nothing that varies with why. */
+  if(!RVS.copy) return '<h1 class="rec">Nothing to read here</h1>' + rvcRefusalHtml(RVS.dead);
+  const c = RVS.copy, g = c.grant || {};
+  return '<h1 class="rec">Review copy</h1>'
+    + '<p class="subj-note" data-rvc-addressed>Addressed to <b>' + esc(g.recipient || "") + '</b> by <span class="mono">'
+    + esc(g.issued_by || "") + '</span> at <span class="mono">' + esc(g.issued_at || "") + '</span>. You can read it and comment on it here; it is not a publication.</p>'
+    + rvcCopyHtml(c)
+    + rvcCommentsHtml(c, "recipient");
+}
+function rvsPaint(){
+  const el = (typeof $ === "function") ? $("#pub-body") : null;
+  if(!el) return;
+  el.innerHTML = rvsHtml();
+}
+/*__REVIEW_COPY_END__*/
+
 /* prefill the plane address for convenience when opened locally */
 try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}
 /* UI-18: A PUBLISHED ADDRESS RESOLVES FOR SOMEBODY HOLDING NOTHING. `boot()`
@@ -22207,7 +22708,7 @@ try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}
    reaches are the four the plane declares `classes: null`. */
 try{
   const h0 = String((typeof location !== "undefined" && location.hash) || "");
-  if(/^#(published\/?$|case\/)/.test(h0)) publishedRouteFromHash();
+  if(/^#(published\/?$|case\/|reviewcopy\/)/.test(h0)) publishedRouteFromHash();
 }catch{}
 </script>
 </body>
