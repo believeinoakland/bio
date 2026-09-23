@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (REC-17's two, each broken ALONE and restored; 63 pass when whole) (a) THE REVERSE LOOKUP IS DROPPED -- in src/store.mjs #restsOnLive change `WHERE ib.target_id=? ORDER BY ib.bundle_id, ib.ord` to `WHERE ib.target_id=? AND 1=0 ORDER BY ib.bundle_id, ib.ord`, AND in reevaluations() change the leg query's `FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord` to `... WHERE target_id=? AND 1=0 ORDER BY bundle_id, ord` -> 29 pass, 33 FAIL. MEASURED: an inquiry resting on a superseded case, on a deferred one, on a reopened one and on a case republished at a new edition all report NOTHING; the dismiss of a cited inquiry SUCCEEDS and the question is silently abandoned under a signed edition; op=inquirydivide divides a question a live leg still rests on; op=affordances publishes `inquirydivide` on a question the store would have refused (DEC-8's disagreement, arriving because the derivation and the refusal share the broken predicate); and every act's `reevaluation.raised` block is empty, so nothing anywhere says a second look is owed. BOTH HALVES MUST GO TOGETHER: the guard and the read run the same lookup by different doors, and breaking one alone leaves the other answering. (b) A DISMISS IS PERMITTED ON A CITED INQUIRY -- in src/store.mjs dispose() guard the CITED block with `if (false && to === "dismissed") {` -> 57 pass, 6 FAIL. MEASURED, and the headline is the accepts-when's own sentence: dismissing INQ-2026-1700-moved is ACCEPTED, and the published case that rests on it then names, in its own basis panel, a leg that is now an ABANDONED question -- while its frozen published_strength still reads [[capture,graded,B],[connection,graded,C]], exactly as signed. The harm is not that the strength changed; it is that it did NOT, and nothing anywhere says so. The divide arm is untouched by this control and still refuses, which is what shows the two acts' guards are separate rules rather than one. Restore after each. BOTH RUN 2026-08-04 (rec17-agent), measured exactly as recorded here. */
+/* NEGATIVE CONTROL: (REC-17's two, each broken ALONE and restored; 63 pass when whole) (a) THE REVERSE LOOKUP IS DROPPED -- in src/store.mjs #restsOnLive change `WHERE ib.target_id=? ORDER BY ib.bundle_id, ib.ord` to `WHERE ib.target_id=? AND 1=0 ORDER BY ib.bundle_id, ib.ord`, AND in reevaluations() change the leg query's `FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord` to `... WHERE target_id=? AND 1=0 ORDER BY bundle_id, ord` -> 29 pass, 33 FAIL. MEASURED: an inquiry resting on a superseded case, on a deferred one, on a reopened one and on a case republished at a new edition all report NOTHING; the dismiss of a cited inquiry SUCCEEDS and the question is silently abandoned under a signed edition; op=inquirydivide divides a question a live leg still rests on; op=affordances publishes `inquirydivide` on a question the store would have refused (DEC-8's disagreement, arriving because the derivation and the refusal share the broken predicate); and every act's `reevaluation.raised` block is empty, so nothing anywhere says a second look is owed. BOTH HALVES MUST GO TOGETHER: the guard and the read run the same lookup by different doors, and breaking one alone leaves the other answering. (b) A DISMISS IS PERMITTED ON A CITED INQUIRY -- in src/store.mjs dispose() guard the CITED block with `if (false && to === "dismissed") {` -> 57 pass, 6 FAIL. MEASURED, and the headline is the accepts-when's own sentence: dismissing INQ-2026-1700-moved is ACCEPTED, and the published case that rests on it then names, in its own basis panel, a leg that is now an ABANDONED question -- while its frozen published_strength still reads [[capture,graded,B],[connection,graded,C]], exactly as signed. The harm is not that the strength changed; it is that it did NOT, and nothing anywhere says so. The divide arm is untouched by this control and still refuses, which is what shows the two acts' guards are separate rules rather than one. Restore after each. BOTH RUN 2026-08-04 (rec17-agent), measured exactly as recorded here. REC-160's THREE (block 9; each ALONE in src/store.mjs reevaluations(), restored by sha256 + cmp to da805033…, 2,844,069 bytes; 73 pass when whole; FAILING-BEFORE on d89e04d1's store: 67/6 here and d280-strengthbar 34/1) (c1) DROP THE STATUS -- delete `status: legStatus` from the raw leg map -> 71/2, FAIL by name `REC-160 SEVERED ARM` and `every leg the op publishes carries a status out of exactly two values`; the DEC-70, CONFIRMED and OVER-STRICTNESS arms stay GREEN; d280-strengthbar 35/0. (c2) THE LIAR: FILTER THE SEVERED LEG -- add `if (legStatus === "severed") continue;` after legStatus -> 68/5, FAIL by name `REC-160 DEC-70: the SEVERED dependent STILL RECEIVES the obligation`, SEVERED ARM, SEVERED WORDING, the edition-FACTS arm and the two-values arm; CONFIRMED and OVER-STRICTNESS stay GREEN; AND d280-strengthbar 34/1 at SITE (c) — every wording arm alone would pass a filter vacuously, which is why the DEC-70 arm exists. (c3) WORDING REVERTED -- `detail: false && legStatus === "severed"` -> 72/1, FAIL by name `REC-160 SEVERED WORDING` only. RUN 2026-09-23 (REC-160 worker), as recorded. */
 /* REC-17 / P-64: THE RE-EVALUATION OBLIGATION, AS A QUERY AND NOT A FLAG,
  * WIDENED BY D-5 TO THE WALK-BACK EDGES.
  *
@@ -450,9 +450,14 @@ console.log("\n--- 2. D-5, the terminal arm and the reversible arm on the SAME q
        `grade_why` is null — which is exactly the byte-identity this assertion
        is well placed to hold: if a future edit ever caps by axis NAME rather
        than by what the registry holds, this row moves and this test fails. */
+    /* `status` ADDED 2026-09-23 (REC-160 / DEC-70, IC proposed): the old pin had
+       no `status` because the op could not tell a leg the case still rests on
+       from one it WITHDREW — `inquiry_basis` drops the status. This leg's
+       reference records `status: confirmed`, so it reads `confirmed`; block 9
+       drives the severed half. Corrected, never exempted. */
     r.obligations[0]?.legs ?? [], [{ ord: 2, role: "supports", grade: "B",
                               grade_axis: "connection", grade_source: "hunch",
-                              target_edition: null,
+                              target_edition: null, status: "confirmed",
                               grade_authored: "B", grade_why: null }]);
   t("the REUSED triple: flag, since and source, in the reeval_pending vocabulary already in the schema",
     [r.obligations[0]?.reeval?.flag ?? null, r.obligations[0]?.reeval?.source ?? null,
@@ -673,6 +678,85 @@ console.log("\n--- 8. STRUCTURAL: a query and not a flag, and no verdict compute
   const aff = readFileSync(fileURLToPath(new URL("../src/affordances.mjs", import.meta.url)), "utf8");
   t("the act catalogue reads that predicate's COUNTS and never its ids: an affordance names no dependent",
     [/rested_on\?\.working/.test(aff), /rested_on\.[a-z]*\.map/.test(aff)], [true, false]);
+}
+
+/* ============================== 9. REC-160 / DEC-70: a SEVERED leg */
+console.log("\n--- 9. REC-160: a SEVERED leg still receives the obligation, is MARKED, and is never said to rest on its target ---");
+{
+  /* DEC-70 (State Rules §5.4): SEVERANCE DISCHARGES SUPPORT, NEVER CONNECTION.
+     Three new dependents of INQ_CASE (now at edition 2), each naming edition 1:
+       INQ_SEVERED  — its reference to the case records `status: severed`
+       INQ_ODDCASE  — records `status: Severed`, a spelling the catalog never
+                      writes: the OVER-STRICTNESS arm, it must read `confirmed`
+     and INQ_DEPENDS (block 6), whose reference is `confirmed`, is the leg that
+     must come back UNCHANGED. */
+  const INQ_SEVERED = "INQ-2026-1700-severed";
+  const INQ_ODDCASE = "INQ-2026-1700-oddcase";
+  const withStatus = (md, status) => {
+    const out = md.replace(`  - target: ${INQ_CASE}\n    rel: cites\n    status: confirmed`,
+                           `  - target: ${INQ_CASE}\n    rel: cites\n    status: ${status}`);
+    if (out === md) throw new Error(`fixture: the reference status was not rewritten to ${status}`);
+    return out;
+  };
+  const depLegs = [{ target: INQ_CASE, grade: "C", axis: "connection", source: "inherited", edition: 1 }];
+  await mustPromote(INQ_SEVERED, withStatus(inquiryMd(INQ_SEVERED, {
+    question: "Did the transfer breach the charter?", refs: [INQ_CASE], legs: depLegs }), "severed"),
+    "inquiry", "open");
+  await mustPromote(INQ_ODDCASE, withStatus(inquiryMd(INQ_ODDCASE, {
+    question: "Was the memo circulated?", refs: [INQ_CASE], legs: depLegs }), "Severed"),
+    "inquiry", "open");
+  t("(fixture) the severed dependent's document records the withdrawal, and its basis leg still names edition 1",
+    [((parseFrontmatter(await imageOf(INQ_SEVERED)).data || {}).references || []).map((x) => [x.target, x.status]),
+     (await legsOf(INQ_SEVERED)).map((l) => [l.target, l.target_edition])],
+    [[[INQ_CASE, "severed"]], [[INQ_CASE, 1]]]);
+  t("(fixture) and op=backlinks — which reads the same predicate — already reports the two edges' statuses",
+    (rP(await GET(`op=backlinks&token=mem-rec17&target=${INQ_CASE}`))?.backlinks ?? [])
+      .filter((b) => [INQ_SEVERED, INQ_DEPENDS].includes(b.from) && b.rel === "cites")
+      .map((b) => [b.from, b.status]).sort(),
+    [[INQ_DEPENDS, "confirmed"], [INQ_SEVERED, "severed"]].sort());
+
+  const r = await reevals(INQ_CASE);
+  const sev = owed(r, INQ_SEVERED)[0];
+  const dep = owed(r, INQ_DEPENDS)[0];
+  const odd = owed(r, INQ_ODDCASE)[0];
+  /* THE LIAR'S ARM. Filtering the severed leg out passes every wording arm
+     below vacuously; this one fails by name, and it is DEC-70's own sentence. */
+  t("REC-160 DEC-70: the SEVERED dependent STILL RECEIVES the obligation — severance discharges support, "
+    + "never connection, so the leg is not filtered out",
+    [!!sev, sev?.causes?.[0]?.source ?? null, (sev?.legs ?? []).map((l) => l.ord)], [true, "edition", [0]]);
+  t("REC-160 SEVERED ARM: the severed leg carries `status: \"severed\"`",
+    (sev?.legs ?? []).map((l) => [l.ord, l.status]), [[0, "severed"]]);
+  const sevDetail = sev?.causes?.find((c) => c.source === "edition")?.detail ?? "";
+  t("REC-160 SEVERED WORDING: the edition detail says the withdrawn leg NAMED edition 1 and claims no support — "
+    + "no `rests on`, no `resting on`",
+    [/WITHDRAWN \(severed\) and named edition 1 of /.test(sevDetail), /\brest(s|ing)? on\b/i.test(sevDetail),
+     /supports nothing/.test(sevDetail), /DEC-70/.test(sevDetail)],
+    [true, false, true, true]);
+  t("the severed leg's edition FACTS are unchanged — the same cited and latest editions a confirmed leg reports",
+    ["cited_edition", "latest_edition", "latest_ratified_edition"]
+      .map((k) => sev?.causes?.find((c) => c.source === "edition")?.[k] ?? null), [1, 2, 2]);
+  /* THE CONFIRMED LEG, UNCHANGED. */
+  t("REC-160 CONFIRMED ARM: the confirmed leg on the same target reads `status: \"confirmed\"` and keeps its "
+    + "wording byte-for-byte — it rests on edition 1",
+    [(dep?.legs ?? []).map((l) => [l.ord, l.status]),
+     dep?.causes?.find((c) => c.source === "edition")?.detail ?? null],
+    [[[0, "confirmed"]],
+     `this leg rests on edition 1 of ${INQ_CASE}, which now stands at edition 2. Edition 1 keeps answering `
+     + "with its own signature and its own frozen strength; nothing here follows the case forward on your "
+     + "behalf (DEC-12)."]);
+  /* OVER-STRICTNESS: severance narrows only on a POSITIVE recorded withdrawal. */
+  t("REC-160 OVER-STRICTNESS: a status spelled `Severed` — one the catalog never writes — reads `confirmed`, "
+    + "and its detail is the confirmed wording",
+    [(odd?.legs ?? []).map((l) => l.status),
+     /^this leg rests on edition 1 of /.test(odd?.causes?.find((c) => c.source === "edition")?.detail ?? "")],
+    [["confirmed"], true]);
+  t("every leg the op publishes carries a status out of exactly two values",
+    [...new Set((await reevals()).obligations.flatMap((o) => o.legs.map((l) => l.status)))].sort(),
+    ["confirmed", "severed"]);
+  /* DERIVES NOTHING FROM STRENGTH: the severed dependent's strength block is the
+     same derivation as ever, and the case's frozen pair is untouched. */
+  t("and nothing was derived from strength: the case's frozen pair still reads as signed",
+    await frozenPairOf(INQ_CASE), FROZEN_1);
 }
 
 await mf.dispose();
