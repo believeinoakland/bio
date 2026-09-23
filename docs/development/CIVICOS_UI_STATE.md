@@ -50,6 +50,32 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v102, 2026-09-23 session, thread UI, UI-73 (a WORKER of CONDUCT #16). Landed on `land/worker/UI-73` (base `origin/main` @
+`0e5f7054`), in the commit that carries this entry. SURFACE: `app.html` — every member-facing refusal reader OUTSIDE
+`actRefusalHtml` / `intentRefusalHtml`. **A REFUSAL CARRYING DEC-49'S CANNED `translation` NOW REACHES THE MEMBER IN THAT
+SENTENCE ON THE GATE, THE QUEUE, THE PUBLISHED PAGES, THE FINDER, THE RELEASE / ATTEST / ADD RECEIPTS, THE PROPOSAL AND
+LEG PRE-FLIGHTS, THE FORWARD PICKER AND EVERY OBJECT PAGE'S FAILURE PANE**, where each used to read `detail` itself.
+
+**The eleven UI-72 named, and a twelfth.** `teach()` (with `signIn()` now handing it the translation beside the detail),
+`queueReason`, `planeSaid`, the finder's per-subject error list, `releaseRefusal`, `attestRefusalHtml`, the add surface's
+`findings[]` receipt, the proposal pre-flight, `taskErr` (the forward picker), the leg pre-flight's `subj-how`, and
+`INTENT_VOCAB.words` — each reads `refusalWords(r)`. **`errPane` was found by the class sweep**: `teach()`'s own line on
+the pane every object page shows when it fails. `intentOptionsFrom(a.refusal.detail)` is a DELIBERATE CLOSURE and was
+left on `detail`: it PARSES the legal set out of the sentence the store composes, which no translation carries.
+Two behaviour notes, stated: `taskErr` rendered an `error`-only refusal BLANK (its guard admitted `error`, its join
+dropped it) and now prints it; and where a refusal carries BOTH `error` and `detail`, `teach`/`errPane` now print one
+sentence (the helper's choice) where they printed both — the same choice `actRefusalHtml` has made since UI-72.
+
+**Evidence.** `refusal-translation-surface.test.mjs` ARM 6: all twelve sites asserted by name, structurally, and the
+seven callable ones behaviourally with the plane's own refusal read off the wire — 29 -> 89 assertions. Its control,
+8/8 AS DECLARED: one site at a time restored to its `detail` read fails at that site's lines ONLY (`queueReason` 4,
+the leg pre-flight 2, `teach` 4). **`preauth-vocabulary.test.mjs`' DEC-49 SUBJECT arm DID NOT MOVE** — report
+character-identical at 47,815 characters, 75 occurrences (65 visible), 12 plane-sourced rows, 70 -> 71 assertions (one
+new: no `*_CHECKS` row carries `SIGN_IN_REFUSED`, so the mock's translation-less login refusal matches the wire). WHY is
+at the pin, with UI-73's own control proving the arm WOULD move: give the login refusal a translation and it fails
+naming four terms VANISHED from `#g-err`; revert `teach` too and it is green. `auth-surface.test.mjs` NEG-CONTROL (b)
+had anchored on `signIn`'s old line and stopped arming; its anchor is CORRECTED, not exempted.
+
 v100, 2026-09-23 session, thread UI, UI-81 (a WORKER of CONDUCT #15). Landed on `land/worker/UI-81` (base `origin/main` @
 `4355bfda`), in the commit that carries this entry. SURFACE: the published case page (`pubOpen`), opened by a finding id
 that several cases pin.

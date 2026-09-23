@@ -1252,10 +1252,16 @@ if(!CHILD){
      that shipped, and every code-shaped assertion in this file is green against
      it. Only subtracting what the plane said and reading the remainder can see
      it. That is the whole point of keeping this arm through the change: if
-     `app.html` ever starts composing wording of its own, this fires. */
+     `app.html` ever starts composing wording of its own, this fires.
+     ANCHOR CORRECTED 2026-09-23 BY UI-73, never exempted: `signIn()`'s refusal
+     line now hands `teach` the plane's canned `translation` beside its `detail`
+     (DEC-49, chosen by `refusalWords`), so the old anchor — the `detail`-only
+     line — matched nothing and this arm stopped arming; its own first assertion
+     ("the mutation actually changed the source") is what said so. The mutation
+     is unchanged: it still replaces the whole refusal line with composed words. */
   {
     const src = SRC.replace(
-      'if(!l || l.ok===false || !l.token){ teach($("#g-err"), l && l.detail ? { detail:l.detail } : (l||{})); return; }',
+      'if(!l || l.ok===false || !l.token){ teach($("#g-err"), l && (l.translation || l.detail) ? { translation:l.translation, detail:l.detail } : (l||{})); return; }',
       'if(!l || l.ok===false || !l.token){ const e=$("#g-err"); e.innerHTML=esc(String((l&&l.reason)||"")) + " — that password is not correct. Try again, or ask an administrator to reset it."; e.classList.remove("hidden"); return; }');
     ok("NEG-CONTROL (b): the mutation actually changed the source", src !== SRC);
     const p = makePlane();
