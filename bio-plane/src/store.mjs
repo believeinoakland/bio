@@ -13237,11 +13237,21 @@ export class Store extends DurableObject {
            than once for the page: the subject entity is per inquiry, so there is
            no shared registry to build. Two indexed reads, and only for a bundle
            that has basis rows at all. */
-        earnedRegistry: (() => {
+        ...(() => {
           const targets = this.#rows(
             `SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, row.bundle_id).map((r) => r.target_id);
-          return targets.length
-            ? this.earnedBasisRegistry(this.#subjectEntityOf(row.bundle_id), targets) : null;
+          return {
+            earnedRegistry: targets.length
+              ? this.earnedBasisRegistry(this.#subjectEntityOf(row.bundle_id), targets) : null,
+            /* D-178 (BIO_Publication_v0_1.md §3 rule 5, C-21.2): the PUBLISHED projection, built exactly as
+               gateFacts builds it — this bundle and every target its basis names. Without it the sweep was
+               BLIND on inheritance in both directions: a correctly inherited leg read as an offender at C-2.8
+               ("cannot be checked against the published record here"), and an own grade on a published case
+               — C-21.2's whole subject — was never looked at, because checkInheritedLeg returns early on an
+               unknown target. Always an object, never null: an empty registry here is a MEASURED answer (no
+               target is published), where null would restate the blindness. */
+            publishedRegistry: this.publishedRegistryFor(row.bundle_id, targets),
+          };
         })(),
       });
       const errs = findings.filter((f) => f.severity === "error");

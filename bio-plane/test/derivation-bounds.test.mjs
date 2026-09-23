@@ -581,8 +581,10 @@ const D384_LEAVES = [
       + "statements), and the per-subject cause reads run over capList, capped at the published "
       + "SEARCHED_SUBJECT_MAX. The classifier scored REC-96's batching HIGHER than the per-subject draft; "
       + "that was the header credit, and it is gone" },
-  { name: "auditPass", why: "its per-row work (readImage, checkBundle, an inquiry_basis read and "
-      + "earnedBasisRegistry per bundle) iterates a LIMIT-bounded page (cap <= 1000, published); the "
+  /* CORRECTED 2026-09-23 by D-178: the per-row list gained publishedRegistryFor (C-21.2's registry,
+     one json_each-bound read). The verdict is unchanged; the list is what a reader checks it against. */
+  { name: "auditPass", why: "its per-row work (readImage, checkBundle, an inquiry_basis read, "
+      + "earnedBasisRegistry and publishedRegistryFor per bundle) iterates a LIMIT-bounded page (cap <= 1000, published); the "
       + "unbounded `known` set is built once and used as a lookup, and the route-mark scan is read once" },
   /* CORRECTED 2026-09-19 by D-414, never exempted, and the OLD TEXT WAS RIGHT WHEN IT WAS WRITTEN:
      it read "`*eachImage` is a generator the segmenter's signature regex cannot see, so its header
