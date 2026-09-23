@@ -14867,7 +14867,20 @@ export class Store extends DurableObject {
       ? { capture: pkg.migrationReplay.capture,
           promotion: typeof pkg.migrationReplay.promotion === "string" ? pkg.migrationReplay.promotion : null }
       : null;
-    return this.ctx.storage.transactionSync(() => {
+    /* ===== REC-180 — A REFUSED PROMOTION LEAVES NOTHING BEHIND (the Mechanical Verification Law,
+       `BIO_State_Rules_Consistency_v1_5.md` §8: the record holds only what an act that LANDED wrote; CLAUDE.md §2,
+       a record claiming more than it can support). A refusal RETURNED from inside `transactionSync` commits whatever
+       the callback wrote before it, and one write precedes every refusal below on a project creation: REC-141's mint,
+       which records the drawn id in `minted_ids` — so a creation refused NAME_TAKEN spent an id for a project that
+       never existed. The callback is therefore `act`, and ANY `ok: false` it returns throws `Store.#ROLLBACK`
+       (REC-126's sentinel, `#reviewGates`) with the refusal held beside it; the catch returns that refusal, so the
+       transaction is undone and the caller's answer is unchanged. This covers every late refusal at once rather
+       than one site at a time: the sweep (REC-180's row) found the mint the only write before a refusal TODAY, and
+       each later refusal-before-first-write comment below ("a refusal returned inside `transactionSync` rolls
+       nothing back") no longer states the only thing keeping the record clean. Nested inside a caller's own
+       transaction (`cite`, `publishCase`, `#reviewGates`) the throw undoes this promotion's savepoint only. A
+       sentinel caught with no refusal held is not this function's and is re-thrown. ===== */
+    const act = () => {
       /* REC-141: MINT, WRITE, THEN HASH. The id goes in as the first line after the opening fence; the
          bytes and their sha256 are recomputed from the written text, and THAT sha is what the files row,
          the bundle's head and the answer carry — the caller's own sha of an id-less document is never
@@ -16360,7 +16373,19 @@ export class Store extends DurableObject {
             WHERE bundle_id=? ORDER BY name, ord`, bundleId)
           .map((r) => ({ version: r.name, ord: r.ord, target: r.target_id,
                          content_id: r.content_id ?? null })) } : {}) };
-    });
+    };
+    let refused = null;
+    try {
+      return this.ctx.storage.transactionSync(() => {
+        const out = act();
+        if (out && out.ok === false) { refused = out; throw Store.#ROLLBACK; }
+        return out;
+      });
+    } catch (e) {
+      if (e !== Store.#ROLLBACK || !refused) throw e;
+      return refused;
+    }
+    /* ===== END REC-180 ===== */
   }
 
   /* CONSTRUCTS Step 3 (FW-5): persist a captured document's READING and index it

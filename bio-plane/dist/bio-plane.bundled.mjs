@@ -40487,7 +40487,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       capture: pkg.migrationReplay.capture,
       promotion: typeof pkg.migrationReplay.promotion === "string" ? pkg.migrationReplay.promotion : null
     } : null;
-    return this.ctx.storage.transactionSync(() => {
+    const act = () => {
       if (creatingProject) {
         bundleId = this.#mintProjectId(meta.title);
         if (!bundleId) return {
@@ -41508,7 +41508,21 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           content_id: r.content_id ?? null
         })) } : {}
       };
-    });
+    };
+    let refused = null;
+    try {
+      return this.ctx.storage.transactionSync(() => {
+        const out = act();
+        if (out && out.ok === false) {
+          refused = out;
+          throw _Store.#ROLLBACK;
+        }
+        return out;
+      });
+    } catch (e) {
+      if (e !== _Store.#ROLLBACK || !refused) throw e;
+      return refused;
+    }
   }
   /* CONSTRUCTS Step 3 (FW-5): persist a captured document's READING and index it
      by entity reference. Called inside the promote transaction, from the acquire
