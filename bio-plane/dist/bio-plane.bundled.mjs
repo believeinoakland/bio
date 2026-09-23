@@ -43680,21 +43680,19 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const ids = [...new Set((Array.isArray(contentIds) ? contentIds : []).filter((c) => typeof c === "string" && c))];
     const by = /* @__PURE__ */ new Map();
     if (!ids.length) return { by, truncated: false };
-    const marks = ids.map(() => "?").join(",");
     const rows = this.#rows(
       `SELECT content_id, transcriber, at, text_sha256 FROM transcriptions
-        WHERE content_id IN (${marks}) LIMIT ?`,
-      ...ids,
+        WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
+      JSON.stringify(ids),
       ids.length
     );
     if (!rows.length) return { by, truncated: false };
     for (const r of rows) by.set(r.content_id, { ...r, attestations: [] });
     const cap = Math.min(_Store.TEXT_SOURCE_LIMIT_DEFAULT * rows.length, _Store.TEXT_SOURCE_LIMIT_MAX);
-    const txMarks = rows.map(() => "?").join(",");
     const page = this.#rows(
       `SELECT content_id, attestor, at, note FROM transcription_attestations
-        WHERE content_id IN (${txMarks}) ORDER BY content_id, at, attestor LIMIT ?`,
-      ...rows.map((r) => r.content_id),
+        WHERE content_id IN (SELECT value FROM json_each(?)) ORDER BY content_id, at, attestor LIMIT ?`,
+      JSON.stringify(rows.map((r) => r.content_id)),
       cap + 1
     );
     for (const a of page.slice(0, cap)) by.get(a.content_id).attestations.push(a);
@@ -45440,12 +45438,11 @@ ${words}`;
    *  The ids are already in hand, so there is nothing to scan for. */
   #contentStandings(rows) {
     const ids = [...new Set(rows.map((r) => r.content_id))];
-    const marks = ids.map(() => "?").join(",");
     const by = /* @__PURE__ */ new Map();
     const found = this.#rows(
       `SELECT content_id, extent_kind, extent, minted_by, stale FROM content
-        WHERE content_id IN (${marks})`,
-      ...ids
+        WHERE content_id IN (SELECT value FROM json_each(?))`,
+      JSON.stringify(ids)
     );
     for (const r of found) by.set(r.content_id, r);
     for (const r of rows) {
@@ -45639,13 +45636,12 @@ ${words}`;
     const ids = [...new Set((Array.isArray(captures) ? captures : []).filter((c) => typeof c === "string" && c))];
     const by = /* @__PURE__ */ new Map();
     if (!ids.length) return { by, truncated: false };
-    const marks = ids.map(() => "?").join(",");
     const cap = Math.min(_Store.TEXT_SOURCE_LIMIT_DEFAULT * ids.length, _Store.TEXT_SOURCE_LIMIT_MAX);
     const page = this.#rows(
       `SELECT capture_sha, attestor, at, extent_kind, extent_page, extent_rect, chain
-         FROM text_attestations WHERE capture_sha IN (${marks})
+         FROM text_attestations WHERE capture_sha IN (SELECT value FROM json_each(?))
         ORDER BY capture_sha, at, attestor LIMIT ?`,
-      ...ids,
+      JSON.stringify(ids),
       cap + 1
     );
     for (const a of page.slice(0, cap)) {
@@ -45782,12 +45778,11 @@ ${words}`;
     const ids = [...new Set((Array.isArray(contentIds) ? contentIds : []).filter((c) => typeof c === "string" && c))].slice(0, _Store.CONTENT_EARNED_MAX);
     const out = {};
     if (!ids.length) return out;
-    const marks = ids.map(() => "?").join(",");
     const rows = this.#rows(
       `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
               derivation_cap, page_count, minted_by, at, stale, cited_as
-         FROM content WHERE content_id IN (${marks}) LIMIT ?`,
-      ...ids,
+         FROM content WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
+      JSON.stringify(ids),
       ids.length
     );
     if (!rows.length) return out;
@@ -48774,17 +48769,17 @@ ${words}`;
       for (const [id, e] of Object.entries(out.earned.connection))
         e.mode = "value", e.why = `${id} resolves to ${subjectEntity}${ent ? ` (${ent.label})` : ""} at grade ${e.grade} \u2014 the strongest of the ${e.captures} capture(s) of that document the recogniser matched to this subject. Grade states HOW it was matched (framework 8.1) and nothing about how credible the document is.`;
     }
-    const marks = ids.map(() => "?").join(",");
     const perBundle = /* @__PURE__ */ new Map();
     for (const r of this.#rows(
       `SELECT u.bundle_id AS bundle_id, u.capture_sha AS capture_sha, ts.chain AS chain,
               (SELECT ra.authored FROM register ra WHERE ra.capture_sha = u.capture_sha) AS authored FROM (
-         SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${marks})
+         SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))
          UNION
-         SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${marks})
+         SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (SELECT value FROM json_each(?))
        ) u LEFT JOIN reading_text_source ts ON ts.capture_sha = u.capture_sha`,
-      ...ids,
-      ...ids
+      /* D-443: the list is bound TWICE, so one variable per id failed from ~50 targets (D-36). */
+      JSON.stringify(ids),
+      JSON.stringify(ids)
     )) {
       if (!r.bundle_id) continue;
       if (!perBundle.has(r.bundle_id))
@@ -53100,8 +53095,8 @@ ${words}`;
     if (sup.length) {
       supersededBy = sup.map((id) => visible(id));
       const when = this.#one(
-        `SELECT MAX(last_updated) AS m FROM bundles WHERE bundle_id IN (${sup.map(() => "?").join(",")})`,
-        ...sup
+        `SELECT MAX(last_updated) AS m FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))`,
+        JSON.stringify(sup)
       );
       causes.push({
         source: "supersession",
@@ -58321,12 +58316,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
   publishedCaseRegistryFor(caseIds = []) {
     const ids = [...new Set((Array.isArray(caseIds) ? caseIds : [caseIds]).filter(Boolean))];
     if (!ids.length) return {};
-    const marks = ids.map(() => "?").join(",");
     const reg = {};
     for (const r of this.#rows(
       `SELECT case_id, edition, scope, completeness, bias_acknowledgement, ratified_at FROM published_cases
-       WHERE case_id IN (${marks}) AND ratified_at IS NOT NULL ORDER BY case_id, edition`,
-      ...ids
+       WHERE case_id IN (SELECT value FROM json_each(?)) AND ratified_at IS NOT NULL ORDER BY case_id, edition`,
+      JSON.stringify(ids)
     )) {
       const e = reg[r.case_id] || (reg[r.case_id] = { latest: 0, editions: {} });
       e.editions[String(r.edition)] = {
