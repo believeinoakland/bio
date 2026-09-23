@@ -131,7 +131,10 @@ export const QUEUE_FINDING_KINDS = {
   "grade-improvable":           "a connection's grade is improvable (D-72)",
   "objective-gap":              "a gap derived from an objective's satisfaction condition (D-76)",
   "measure-decay":              "a bias statement's measure has decayed (D-87, D-90 — reports, never blocks)",
-  "export-performed":           "an export was performed; every administrator is notified (D-52 8.1)",
+  /* D-52, LIVE 2026-09-23: store.mjs #findingsExportPerformed, derived on read from `export_log`
+     and raised to every administrator and to nobody else (Membership v2 §8.1). */
+  "export-performed":           "an export was performed; every administrator is notified (D-52 8.1) "
+                              + "— LIVE: store.mjs #findingsExportPerformed",
   "audit-finding":              "op=audit found something about the record",
   "register-unbacked":          "a register entry's bytes are unbacked (D-9, D-45)",
   /* PL-15 / D-213, ANSWERED 2026-08-06 by Bob and LIVE from this item:
@@ -198,6 +201,38 @@ export const QUEUE_FINDING_KINDS = {
                               + "or concluded has moved (§7.1 — a conclusion is per-project) "
                               + "— LIVE: store.mjs #findingsConcludedElsewhere",
 };
+
+/* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before
+ * (NOTIFICATIONS.md §The catalogue; `N-<n>` beside `C-<n>`). A row here IS the allocation: it is the
+ * site `tools/mintid.mjs` registers for `N`, and a number is taken only with `node tools/mintid.mjs N`.
+ *
+ * THE SLUG STAYS THE ITEM'S `kind`, AND THAT IS DELIBERATE RATHER THAN UNFINISHED. The item contract's
+ * sketch puts the id in `kind`, but every reader of `kind` today — the mint's `classOfKind`, the mute
+ * fence, `op=affordances`' vocabularies, the surface's rendered sentence — is keyed on the slug, so
+ * moving the id into `kind` is an interface change to every consumer and not a numbering. The id is
+ * published BESIDE the kind, as `catalogue_id`, by the producer that took it. A generator built later
+ * takes the next number here; a kind with no generator takes none.
+ *
+ * NOT EXPORTED, AND THAT IS ITS SHAPE RATHER THAN AN ESCAPE (D-52 fix pass, 2026-09-23). The DEC-49
+ * guard's arm E (`civicos-ui/check-refusal-codes.mjs`) harvests every EXPORTED plain object of this
+ * module whose values are all strings as a MEMBER-FACING vocabulary — the texts a surface renders in
+ * place of a machine word. This table is not one: its value is a machine id published as
+ * `catalogue_id`, the item contract's "stable catalogue id" (NOTIFICATIONS.md §The item contract),
+ * which no surface renders (`civicos-ui/` reads no `catalogue_id`; a member reads `summary` and
+ * `detail`). Exported, it read as a 23rd vocabulary whose one term was the token "N-1" and failed the
+ * guard for a reason that was not true of it. So the TABLE stays here, where `tools/mintid.mjs N` reads
+ * its rows as text, and what leaves the module is the LOOKUP below — a function, which arm E does not
+ * harvest, exactly as it does not harvest `classOfKind`. */
+const QUEUE_KIND_IDS = {
+  "export-performed": "N-1",
+};
+
+/* The catalogue id a kind was allocated, or null for a kind that has none — which is most of them
+ * (a kind takes an id when its generator is built). Null is not an error: it says no generator has
+ * taken a number, and a producer publishes it as such rather than inventing one. */
+export function catalogueIdOf(kind) {
+  return Object.prototype.hasOwnProperty.call(QUEUE_KIND_IDS, kind) ? QUEUE_KIND_IDS[kind] : null;
+}
 
 /* The ONE class lookup. Returns "CONDITION" | "OBLIGATION" | "FINDING", or null
  * for a kind the catalogue does not name — three-valued in the same sense the
