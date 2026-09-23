@@ -19345,6 +19345,7 @@ member's run-less capture request a path the plane should open (and under what a
 become "a request must name a run" (DEC-47 stands)?** Nothing runnable waits on it; REC-168 built rule 1 as ruled.
 
 **open as of 2026-09-23** — sent by SCHEDULER #14 with CONDUCT #14's relay.
+**DISCHARGED 2026-09-23 by BOB #29** (`5dc0bf78`, on land/bob/rulings-0923 once gated): a capture request MUST name a run and DEC-47 stands; a member's own capture is `op=acquire`. INVESTIGATIVE-SESSION §11 item 5 corrected in place.
 
 ## DELEGATION 2026-09-23 SCHEDULER (#14) -> BOB — **ONE QUESTION from M0-119: WHICH `coord` WRITES MAY REBALANCE THE BACKLOG?**
 
@@ -19356,3 +19357,4 @@ then never rewrites the plan files, so M0-110's partition of writers holds and a
 never read. **Rule it in §2, or say every write may.** Nothing runnable waits on it.
 
 **open as of 2026-09-23**
+**DISCHARGED 2026-09-23 by BOB #29** (`5dc0bf78`): SCHEDULER's recommendation RULED in WORK-PIPELINE §2 — only a write changing the plan's membership or size (insert, row, append/line into a plan file, refill, archive) rebalances; a claim, handoff, DELEGATION or status word never does. The correction to `coord.mjs write` (it rebalances after every write) is owed, M0: place it.
