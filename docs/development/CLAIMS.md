@@ -19463,3 +19463,5 @@ paths, BY SITE:
 **NOT CLAIMED:** `bio-plane/**`, `newgroup/**`, `civicos-ui/worker.template.mjs`, any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+  - extended 2026-09-23 by the class sweep: `pubRosterHtml`'s one sentence (*"its own pair of strengths, signed on its own
+    bytes"*) — the same defect class as the banner's, on the same page; and the new helper `pubPairSigner` beside the banner.
