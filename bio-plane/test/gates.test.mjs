@@ -1,6 +1,12 @@
 /* D-293 WITH M0-98 — THE GATE'S VERDICT, RECORDED BY TREE AND REFUSED AT THE PUSH; AND THE TARGETED
  * CLASS WITH `--since`. One file set (`tools/gates.mjs`, `tools/pushguard.mjs`), one suite, one gate.
  *
+ * NEGATIVE CONTROL (BOB #29, 2026-09-23, run by hand, each arm ALONE, restored by `cp` and sha256- and cmp-identical):
+ *   (R1) `pushguard.mjs` effectiveVerdict's failedUnits branch disabled (a named failure opens the whole step again)
+ *        -> 85/2: "...so the tree is open at that one unit and no other" and "the NEXT plain run … is a RERUN of
+ *        the failed suite alone"; sha256 298c768b… before and after.
+ *   (R2) `gates.mjs` §2d disabled (the gate reads no record of its own tree) -> 85/2: the RERUN arm and "a run on a
+ *        tree already recorded GREEN runs NOTHING"; sha256 b0649dd8… before and after.
  * NEGATIVE CONTROL: RAN 2026-09-21 by the D-293/M0-98 worker, driver `test/gates.control.mjs` (thirteen arms plus
  * a baseline), each arm ALONE against pristine copies restored by sha256 AND `cmp` AND a byte floor; baseline
  * 62 pass / 0 fail, closing 62 / 0, the driver 96 pass / 0 fail (its D-331 preflight refused to arm ANYTHING on
@@ -94,7 +100,7 @@ const t = (label, got, want) => {
 };
 /* The FOOT sentinel (`mintid.test.mjs`'s): a TypeError inside an assertion ends the module while the
    tally still reads clean, so every section bumps this and the last assertion requires all of them. */
-const SECTIONS = 8;   /* M0-107: +1; M0-116: +1 */
+const SECTIONS = 9;   /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1 */
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -120,6 +126,10 @@ const stub = (name) => [
      124 and writes NOTHING — a 124 the gate must not take on trust. The unit arrives by environment, as above. */
   `if (name === "battery" && process.env.GATES_FIXTURE_TIMEOUT && process.env.BIO_BATTERY_VERDICT) { writeFileSync(process.env.BIO_BATTERY_VERDICT, JSON.stringify({ v: 1, verdict: "NOT MEASURED", exit: 124, failed: [], notMeasured: [{ unit: process.env.GATES_FIXTURE_TIMEOUT, timeouts: ["a planted expiry"] }] })); process.exit(124); }`,
   `if (name === "battery" && process.env.GATES_FIXTURE_BARE124) process.exit(124);`,
+  /* BOB #29: GATES_FIXTURE_REDSUITE=<unit> behaves as a real battery that ran every suite and names ONE failure: it
+     writes the verdict file with `failed: [<unit>]` and exits 1. GATES_FIXTURE_LEAK adds `leaking: true` — a finding
+     that is the run's, not a suite's. */
+  `if (name === "battery" && process.env.GATES_FIXTURE_REDSUITE && process.env.BIO_BATTERY_VERDICT) { writeFileSync(process.env.BIO_BATTERY_VERDICT, JSON.stringify({ v: 1, verdict: "RED", exit: 1, failed: [process.env.GATES_FIXTURE_REDSUITE], leaking: !!process.env.GATES_FIXTURE_LEAK, sharedLog: false, notMeasured: [] })); process.exit(1); }`,
   `process.exit(String(process.env.GATES_FIXTURE_FAIL || "").split(",").includes(name) ? 1 : 0);`,
   "",
 ].join("\n");
@@ -574,6 +584,46 @@ section("M0-107 · AN EXPIRED BUDGET — recorded NOT MEASURED, never RED, never
   const both = gates(F.root, ["--full"], { GATES_FIXTURE_TIMEOUT: "plane:widget.test.mjs", GATES_FIXTURE_FAIL: "coverage" });
   t("an expired budget BESIDE a failing gate is RED, exit 1, and the push is refused",
     [both.status, /^gates: RED · class FULL$/m.test(both.out), refusedByGate(push(F.root, "nmred"))], [1, true, true]);
+}
+
+/* ========================================================================== */
+section("BOB #29 · A TREE'S OWN RECORD IS READ FIRST — re-run only what FAILED on it; a GREEN tree runs nothing");
+/* Bob, 2026-09-23: "every lane that experienced the bug then went and ran ALL suites even though they'd just passed
+   those suites without making any further changes." The gate read no record but under --since, and --since refuses
+   a RED base, so a RED on an UNCHANGED tree cost the whole battery again. */
+{
+  branch(F.root, "rerun");
+  appendFileSync(join(F.root, "bio-plane/src/store.mjs"), "// a plane change: FULL\n");
+  commitAll(F.root, "rerun: a plane change");
+  const tree = treeAt(F.root);
+  const red = gates(F.root, [], { GATES_FIXTURE_REDSUITE: "plane:widget.test.mjs" });
+  t("a FULL run whose battery names ONE failed suite is RED", [red.status, red.cls], [1, "FULL"]);
+  const step = (runsFor(F.root, tree)[0]?.steps || []).find((s) => s.label === "battery (all)");
+  t("...and the record names that suite, not the whole battery", step?.failedUnits, ["plane:widget.test.mjs"]);
+  t("...so the tree is open at that one unit and no other",
+    effectiveVerdict(runsFor(F.root, tree)).open, ["plane:widget.test.mjs"]);
+
+  const again = gates(F.root);
+  t("the NEXT plain run on the same tree is a RERUN of the failed suite alone",
+    [again.status, again.cls, batteryOf(again), again.ran.filter((l) => /^(coverage|ui-harness)\b/.test(l)).length],
+    [0, "RERUN", ["widget.test.mjs"], 0]);
+  t("...which turns the tree GREEN through the guard's own verdict rule", effectiveVerdict(runsFor(F.root, tree)).verdict, "GREEN");
+
+  const idle = gates(F.root);
+  t("a run on a tree already recorded GREEN runs NOTHING and says so",
+    [idle.status, idle.ran.length, /already recorded GREEN/.test(idle.out)], [0, 0, true]);
+  const forced = gates(F.root, ["--full"]);
+  t("...and --full still forces the whole run", [forced.status, forced.cls, forced.ran.some((l) => l.startsWith("battery"))], [0, "FULL", true]);
+
+  /* OVER-STRICTNESS, both ways: a finding that is the RUN's (a leak) names no suite to re-run, so it is not narrowed */
+  branch(F.root, "rerun-leak");
+  appendFileSync(join(F.root, "bio-plane/src/store.mjs"), "// another plane change\n");
+  commitAll(F.root, "rerun-leak");
+  const leak = gates(F.root, [], { GATES_FIXTURE_REDSUITE: "plane:widget.test.mjs", GATES_FIXTURE_LEAK: "1" });
+  t("a battery RED that is a LEAK records the whole step open", [leak.status,
+    (runsFor(F.root, treeAt(F.root))[0]?.steps || []).find((s) => s.label === "battery (all)")?.failedUnits ?? null], [1, null]);
+  const leakAgain = gates(F.root);
+  t("...so the next run is FULL again, never a narrowed RERUN", [leakAgain.status, leakAgain.cls], [0, "FULL"]);
 }
 
 /* ========================================================================== */

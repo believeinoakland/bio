@@ -581,6 +581,20 @@ export function effectiveVerdict(runs) {
         for (const u of [...open.keys()]) if (units.some((h) => unitCovers(h, u))) open.delete(u);
         for (const u of [...unmeasured.keys()]) if (units.some((h) => unitCovers(h, u))) unmeasured.delete(u);
       }
+      else if (Array.isArray(s.failedUnits) && s.failedUnits.length) {
+        /* BOB #29, 2026-09-23 (Bob: "every lane that experienced the bug then went and ran ALL suites"): A STEP
+           THAT NAMES WHICH OF ITS UNITS FAILED opens ONLY those. The battery ran every one of the step's units on
+           this tree and says which went red (its verdict file's `failed`), so the rest PASSED here — they close
+           what they cover, exactly as a passing step would, and re-running the named suites GREEN clears the tree.
+           Recorded whole (a wildcard left open) only a leak or a shared log, which no one suite can answer. */
+        failed++;
+        const bad = s.failedUnits;
+        for (const u of [...open.keys()])
+          if (units.some((h) => unitCovers(h, u)) && !bad.some((b) => unitCovers(u, b) || unitCovers(b, u))) open.delete(u);
+        for (const u of [...unmeasured.keys()])
+          if (units.some((h) => unitCovers(h, u)) && !bad.some((b) => unitCovers(u, b) || unitCovers(b, u))) unmeasured.delete(u);
+        for (const u of bad) open.set(u, r);
+      }
       else { failed++; for (const u of units) open.set(u, r); }
     }
     /* A RED naming no failing step is a verdict with no cause attached; only a GREEN FULL run
