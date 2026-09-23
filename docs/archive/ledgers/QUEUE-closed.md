@@ -3364,3 +3364,77 @@ depends-on: none.
 scope: promote computes the SHA-256 of every inline text file's bytes and refuses a supplied value that differs, by a new refusal code with its canned translation, before any write; a file with no supplied sha stores the computed one; blob-backed files state what is checked; a census of rows already stored whose digest disagrees with their content is measured and stated, never silently rewritten.
 accepts-when: through the op, a mismatched `sha256` is refused by name with the bundle byte-identical after; a matching one lands; the census is in the landing. NEGATIVE CONTROL: drop the comparison, and the `fff…` arm lands and fails by name.
 added: 2026-09-23 · SCHEDULER #15 (REC-173's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
+
+### M0-136 · done — landed on origin/main at 91bcea6b (train train-20260923T193223Z-25012, c16-batch7 @ fa5d0a10), verified by content by SCHEDULER #16
+order: directly after M0-135, the same class: a gate test depends only on the code (Bob, 2026-09-23); below M0-135 because no red has been traced to any of the eleven (SCHEDULER #15, 2026-09-23)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON THE CODE"*) and §3a condition 1, with `docs/development/VERIFICATION.md` (admitted for M0 by name); M0-130's pin is the precedent.
+depends-on: M0-130 (its planted-ref arm and pin are the pattern).
+scope: examine each of the eleven for any read of a live ref (`origin/*`, `coord`, `ls-remote`, `FETCH_HEAD`, the current date); each that has one reads a pinned range or HEAD's own history, with a planted-ref arm; each that has none is stated as tree-and-history-only at its site; the table of eleven is in the landing. M0-130's known cost (a drop past the pin is graded by no gate unit) is stated where each pin sits.
+accepts-when: every one of the eleven either carries a planted-ref arm proving its verdict identical whatever the live ref holds, or a dated line saying it reads none. NEGATIVE CONTROL: point one pinned unit back at the live ref, and its planted-ref arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (M0-130's worker's class sweep via CONDUCT #16; `node tools/mintid.mjs M0`).
+
+### D-57 · done — landed on origin/main at 91bcea6b (train train-20260923T193223Z-25012, c16-batch7 @ fa5d0a10), verified by content by SCHEDULER #16
+order: after REC-160, with the read-time claims the record cannot support (CLAUDE.md §2's class): a fabricated sentence about a source, on every self-linking municipal page; below REC-160 because the verdict it carries is right (SCHEDULER #8, 2026-09-21, LED-7 batch S8-2)
+milestone: M3
+interface: I3 — a fourth BASIS on `op=links&capture=`, never a fourth verdict; the integrator mints and classifies the IC.
+design: `docs/development/LINK-FIDELITY.md`, which defines the verdicts and what each basis may claim, with `BIO_Intake_Doctrine_v1_1.md` (link fidelity is construct 2's).
+depends-on: none.
+scope: the row's fix — `resolveLinks` recognises a pick whose `capture_sha` is `sourceCapture` and states a SELF-REFERENCE basis; and, the same defect one step wider, a `before` and `after` that are ONE capture never read as *changed*. The UI keeps rendering the plane's words.
+accepts-when: a self-linking page's self-link reads the self-reference basis, with no *changed* sentence and no doubled hash; a genuine two-capture bracket still reads *changed*. How a liar passes it: dropping the self-link from the answer, so the arm asserts it is still listed and counted. NEGATIVE CONTROL: remove the self-reference test, and the self-link arm fails by name at the *changed* sentence.
+added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-2; D-57's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
+
+uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-57» on entering the cache; re-read on `0e7cc03e`: still open.
+
+### REC-176 · done — landed on origin/main at 91bcea6b (train train-20260923T193223Z-25012, c16-batch7 @ fa5d0a10), verified by content by SCHEDULER #16
+order: directly after REC-175 (in the cache), the same op writing what the record cannot support: history the law calls append-only is rewritten in place, CLAUDE.md §2's worst class (SCHEDULER #15, 2026-09-23; M0-132's worker via CONDUCT #15)
+milestone: M6
+interface: I3 — a new refusal on `op=promote`; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md`, the history law (*"History is append-only; nothing in `_history/` is ever modified"*), with REC-173's migration replay (INVESTIGATIVE-SESSION §11 item 5) as the one ruled replay.
+depends-on: none. **If the builder finds a replay other than REC-173's that must re-write a key, that is BOB's to rule before building it.**
+scope: promote refuses a `snap_key` already present for the bundle by a new refusal code with its canned translation, before any write; a byte-identical re-send (same files and base) answers idempotently rather than writing; a census of any manifest row already overwritten is stated where measurable, never guessed.
+accepts-when: through the op, a second promote reusing a snap key with different content is refused by name and the first version's row is byte-identical after; an identical re-send is a no-op. NEGATIVE CONTROL: restore `INSERT OR REPLACE`, and the collision arm lands and fails by name.
+added: 2026-09-23 · SCHEDULER #15 (M0-132's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
+
+### REC-178 · done — landed on origin/main at 91bcea6b (train train-20260923T193223Z-25012, c16-batch7 @ fa5d0a10), verified by content by SCHEDULER #16
+order: directly after REC-176, REC-175's `promote` fence one field over: a stored size false of the stored bytes is CLAUDE.md §2's class, and the limit it feeds admits what it exists to refuse; behind REC-176, since a lost version outweighs a misstated one (SCHEDULER #16, 2026-09-23; REC-175's worker via CONDUCT #16)
+milestone: M6
+interface: I3 — the plane computes `bytes`; `OVERSIZE_INLINE` judges UTF-8 bytes; the integrator mints the IC.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (bundle anatomy; the Mechanical Verification Law), with `CLAUDE.md` §5; REC-175's digest check is the precedent.
+depends-on: REC-175 (same site; on `land/conduct/c16-batch5`).
+scope: promote computes each inline file's `bytes` from its UTF-8 encoding (a differing supplied value refused or overridden, stated) and judges `OVERSIZE_INLINE` on it; the writers send UTF-8 length or none; a census of stored rows whose `bytes` disagrees is stated in the landing, never rewritten.
+accepts-when: in a NEW suite `bio-plane/test/rec178-bytes.test.mjs`, through the op: a non-ASCII file over `INLINE_MAX` in UTF-8 but under it in `text.length` is refused `OVERSIZE_INLINE`, bundle byte-identical after; stored `bytes` equals the UTF-8 length; plus `rec175-digest.test.mjs` (same `promote` site) green. NEGATIVE CONTROL (`rec178-bytes.control.mjs`): judge `text.length` again, and the non-ASCII arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (REC-175's worker via CONDUCT #16, verified at the code; `node tools/mintid.mjs REC`).
+
+### D-168 · done — landed on origin/main at 91bcea6b (train train-20260923T193223Z-25012, c16-batch7 @ fa5d0a10), verified by content by SCHEDULER #16
+order: with the claims the record cannot support, directly after D-57 and above D-440: support the record's own judgment withdrew, CLAUDE.md §2's class, a correction to the built cite path (SCHEDULER #15, 2026-09-23, LED-7; BOB #30's ruling)
+milestone: M9
+interface: I3 — a new refusal on `op=cite`; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.1, *"A RETIRED ITEM IS NOT CITABLE"* (BOB #30, 2026-09-23, landed at `4355bfda`).
+depends-on: none — its design is on `main` (`4355bfda`).
+scope: `op=cite` onto a `retired` bundle is refused with a stated code naming the door (cite what superseded it, or re-collect the source); a `source_status: removed` bundle stays citable; a confirmed leg predating the retirement is untouched.
+accepts-when: a cite onto a retired Information bundle is refused by name for a member and a machine credential alike; one onto a `source_status: removed` bundle lands; an older leg is byte-identical. NEGATIVE CONTROL: drop the retired check from `op=cite`, and the member arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (LED-7; D-168's DEBT row of 2026-08-03; keeps its `D-` id).
+
+### D-423 · done — landed on origin/main at 91bcea6b (train train-20260923T193223Z-25012, c16-batch7 @ fa5d0a10), verified by content by SCHEDULER #16
+order: MOVED UP 2026-09-23 by SCHEDULER #16 to directly after D-82: `schema.mjs` comments only, disjoint from the three store files CONDUCT caps at 5 concurrent, so it fills a non-store slot under continuous spawning (BOB #30). Its own reason stands: with the RECORD corrections after D-278 and before COFF-13: the record's own schema describing a column wrongly, a correction to landed work (MK-2), cheap; below D-278 because nothing a member reads moves (SCHEDULER #15, 2026-09-23, LED-7 batch S15-1)
+milestone: M2
+interface: none — comments only; the schema literal's hygiene check still reads it.
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §3 (the grade: a third axis, testimony).
+depends-on: none — MK-2 is on `main`.
+scope: each `grade_axis` comment names all three axes, with no semicolon and no backtick inside a `--` comment (CLAUDE.md §7); a sweep for other two-axis enumerations in `schema.mjs` comments, each corrected or listed.
+accepts-when: no `grade_axis` comment in `schema.mjs` enumerates fewer axes than `GRADE_AXES`; the battery green by its completion line. NEGATIVE CONTROL: restore one two-valued comment, and a comment-versus-`GRADE_AXES` arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (LED-7 batch S15-1; D-423's DEBT row of 2026-09-18, verified at the code; keeps its `D-` id).
+
+### UI-73 · done — landed on origin/main at 91bcea6b (train train-20260923T193223Z-25012, c16-batch7 @ fa5d0a10), verified by content by SCHEDULER #16
+order: MOVED UP 2026-09-23 by SCHEDULER #16 to directly after REC-178: the product rows it passed (D-420 through D-311) all write `store.mjs`, `index.mjs` or `bio-checks.mjs`, which `kickoffs/CONDUCT.md` caps at 5 concurrent, and CONDUCT asked for rows with disjoint paths so its other slots fill under continuous spawning (BOB #30, 2026-09-23); this is the first (`civicos-ui` only). Its own reason stands: a CORRECTION TO JUST-LANDED WORK, which outranks new work: UI-72 shipped the helper and eleven sites still bypass it, so a member meets machine vocabulary at the moment they are told no — the failure DEC-49 exists to close (SCHEDULER #3, 2026-09-19)
+milestone: M8
+interface: none — the helper exists; no code, wire shape or catalogue row moves.
+design: DEC-49 (`node tools/decided.mjs "DEC-49"`) as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it — every condition has a named code and a canned translation. UI-72's own citation, unchanged.
+depends-on: none. UI-72 landed at `02e7c537`.
+scope: each site reads `refusalWords(r)` instead of `r.detail`. **IT IS NOT ONE EDIT AND THE ROW REFUSES TO BE TREATED AS ONE:** `teach()` is pinned by `civicos-ui/test/preauth-vocabulary.test.mjs`' DEC-49 SUBJECT arm, whose FIGURES MOVE when the gate's rendered sentence changes — so this row carries that arm's re-read and re-pin as its own work rather than leaving the battery to discover it.
+accepts-when: all eleven take their words from the ONE helper, asserted as `refusal-translation-surface.test.mjs` already asserts the two renderers; the SUBJECT arm re-pinned to figures a green run printed, with the movement STATED. How a liar passes it: re-pinning the arm to whatever it now reads — so the re-pin names the old and new figures and why they moved.
+NEGATIVE CONTROL: restore `r.detail` at one site, and that site's arm fails by name.
+added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 3, verified in UI-72's own CLAIMS.md block).
+uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «UI-73» on entering the cache; its `order:` line is the current one.
