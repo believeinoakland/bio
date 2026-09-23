@@ -346,7 +346,7 @@ accepts-when: through the ops, a hidden project is byte-identical to a nonexiste
 added: 2026-09-19 · SCHEDULER (same entry, item 1).
 uncut: restored whole from «REC-149» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### FL-11 · queued — **`agent-worker` NEVER SETS `state.target`, SO ONCE REC-165 LANDED EVERY SUGGESTION IT SUBMITS IS REFUSED `SUGGEST_OUTSIDE_RUN_CONTEXT`.** `submit` sends whatever target the model wrote; `emptyLevelCandidates` gets a null target and the dedup reads `basisversions` with id `""` (`agent-worker/src/index.mjs`, re-read on `df9eb9f9`); the mock `test/plane-suggest.mjs` models neither the context rule nor the principal gate. REC-165's worker's finding, fix named by FLEET #4 (`FLEET-NEXT.md` on `coord`, "The one open FLEET defect"). — owner FLEET.
+### FL-11 · running — SPAWNED 2026-09-23 ~22:22Z by CONDUCT #18 as ONE SEPARATE CLOUD SESSION titled WORKER FL-11+FL-12 (CONDUCT #18), both rows together (one agent-worker rebuild); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/FL-11 and that session; never conclude queued from the absence alone.
 order: directly before D-260: inert until D-260 dispatches runs, and D-260 would dispatch runs whose every suggestion is refused (FLEET #4: *"place it with D-260 or ahead of it"*) (SCHEDULER #14, 2026-09-23)
 milestone: M9
 interface: none on the plane — the fleet member's behaviour and its mock; the committed `agent-worker` bundle rebuilds and member bytes move at the next release (DIST's).
@@ -356,7 +356,7 @@ scope: FLEET #4's four: seed `state.target` at run open from the run's context i
 accepts-when: against the mock, a run's suggestions land inside its context and one aimed outside is refused by name; the dedup and empty-level readers receive the run's target. NEGATIVE CONTROL: drop the seeding, and the harness suite fails by name.
 added: 2026-09-23 · SCHEDULER #14 (FLEET #4's trigger; `node tools/mintid.mjs FL`).
 
-### FL-12 · queued — **`agent-worker` SENDS `op=capturerequest`'s LOCATOR AS `url`, BUT THE PLANE READS ONLY `address`, SO EVERY FLEET INTERNET-LEVEL CAPTURE REQUEST IS REFUSED `CAPTURE_REQUEST_NOT_PUBLIC`.** `agent-worker/src/index.mjs` calls it with `{ run, target, url: t.url }` (re-read on `c5c83dc4`); the fleet mock does not model `address`. REC-168's worker's finding, fix named. — owner FLEET.
+### FL-12 · running — SPAWNED 2026-09-23 ~22:22Z by CONDUCT #18 as ONE SEPARATE CLOUD SESSION titled WORKER FL-11+FL-12 (CONDUCT #18), both rows together (one agent-worker rebuild); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/FL-11 and that session; never conclude queued from the absence alone.
 order: directly after FL-11, before D-260: inert until D-260 dispatches runs, and every internet-level look a dispatched run asks for would be refused ; ONE WORKER TAKES FL-11 AND FL-12 TOGETHER, one `agent-worker` bundle rebuild, so member bytes move once (FLEET #4, 2026-09-23) (SCHEDULER #14, 2026-09-23; REC-168's finding via CONDUCT #14)
 milestone: M9
 interface: none on the plane — the fleet member's call and its mock; the `agent-worker` bundle rebuilds at the next release (DIST's).
