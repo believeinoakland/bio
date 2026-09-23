@@ -104,6 +104,11 @@ const RELEASES = [
      release/ holds it. RELEASES, NOT WITHDRAWN. It is the LAST release before D-436 (IC-172),
      so its store is the one the D-436 boot arm below most needs: a group standing on it now. */
   ["0.70.0", "072bb9f3a414af8c4ff05ae9ddc443aa0f88454a"],
+  /* 0.71.0: deployed and live-verified 2026-09-22 (a BATCH: D-436 / IC-172, the producing group
+     recorded once per store, and D-434); the commit is dist/cut-0.71.0's cut, tag v0.71.0, whose
+     release/ holds it. RELEASES, NOT WITHDRAWN. The FIRST release that records a producing group,
+     so its store is the first the boot arm meets already holding one. */
+  ["0.71.0", "9439431e0462522a52c46932985c3ad2eebcf1c7"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
@@ -149,6 +154,8 @@ export default {
    `verifyCurrent` asserts the store records nothing; section 0 asserts the positive half on a fresh
    store, so the absence is not an artifact of the binding going unread. A worker name, not a group's. */
 const INSTANCE = "released-store-worker";
+/* The first release that records a producing group at a store's first boot (D-436, IC-172). */
+const recordsGroup = (v) => { const [a, b, c] = v.split(".").map(Number); return a > 0 || b > 71 || (b === 71 && c >= 0); };
 const boot = (scriptPath, script, persist, version) => new Miniflare({
   modules: true, modulesRoot: "/", scriptPath, script,
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -301,6 +308,25 @@ const seed = async (label, version, persist) => {
                 null, null, null, "rec143 legacy version leg", NOW, "g1"),
   ];
   t(`${label}: ARMED — ${version}'s store took a basis leg and a version leg`, legs.map((r) => r.ok ? true : r.error), [true, true]);
+  /* WHAT THE OLD PLANE STORED, read through its own op — the reference the upgrade must preserve.
+     Corrected by DIST #5 at the 0.72.0 cut (the 0.71.0 row): this suite compared op=file after the
+     upgrade against the text it SUBMITTED, which holds only while no release rewrites a document at
+     promote. 0.71.0 does: it stamps the store's recorded producing group into the bytes (measured
+     2026-09-23: its op=file answers `group: released-store-worker` where the submission said
+     `group: believe-in-oakland`, and every release 0.58.0-0.70.0 answers the submission unchanged).
+     The claim is that the upgrade preserves the OLD PLANE's bytes, so that is what is compared. */
+  const f0 = await c.get("file", `id=${DOC}&path=bundle.md`);
+  const served = (f0.result ?? f0).text ?? null;
+  t(`${label}: ARMED — ${version} serves the document it stored through its own op=file`, typeof served, "string");
+  /* D-436 on a store born on a release that ALREADY records a producing group (0.71.0 and later):
+     that release recorded its bound name at the store's own first boot (decision (a)), so the
+     current plane must KEEP that value — not clear it, not re-decide it. Before 0.71.0 no plane
+     records one, and the current plane must record none (decision (b)). */
+  const groupBefore = recordsGroup(version) ? await groupOf(c) : [true, null, null];
+  if (recordsGroup(version)) {
+    t(`${label}: ARMED — ${version} recorded its bound name at the store's own first boot (decision (a))`,
+      groupBefore, [true, INSTANCE, "bootstrap"]);
+  }
   const before = await shapeOf(c);
   const rows = [];
   for (const q of ROWS_Q) rows.push((await c.raw(q)).rows ?? null);
@@ -315,12 +341,12 @@ const seed = async (label, version, persist) => {
     for (const col of cols) if (!before.tables[tb].includes(col)) missing.push(`${tb}.${col}`);
   }
   console.log(`    ${version}'s store lacks, against a fresh current store: ${missing.join(", ") || "(nothing)"}`);
-  return { DOC, text, rows };
+  return { DOC, text, served, groupBefore, rows };
 };
 
 /* THE CURRENT PLANE on a store somebody else wrote: it answers, it has a fresh
    store's exact shape, the rows survive, and a second boot is clean. */
-const verifyCurrent = async (label, persist, { DOC, text, rows }) => {
+const verifyCurrent = async (label, persist, { DOC, served, groupBefore, rows }) => {
   let mf = bootCurrent(persist);
   let c = client(mf);
   const bs = await c.get("bootstrap", "", "");
@@ -335,9 +361,12 @@ const verifyCurrent = async (label, persist, { DOC, text, rows }) => {
   t(`${label}: op=audit answers from the store`, au.ok !== false ? true : errOf(au), true);
   const sf = await c.get("selftest", "", TOK.PROBE_TOKEN);
   t(`${label}: op=selftest answers`, [sf.ok, sf.service], [true, "bio-plane"]);
-  t(`${label}: D-436 DECISION (b) — the store a released plane wrote records NO producing group at the current `
-    + `plane's first boot, though INSTANCE_NAME ('${INSTANCE}') is bound: only the root of trust's seed may decide it`,
-    await groupOf(c), [true, null, null]);
+  t(groupBefore[1] === null
+      ? `${label}: D-436 DECISION (b) — the store a released plane wrote records NO producing group at the current `
+        + `plane's first boot, though INSTANCE_NAME ('${INSTANCE}') is bound: only the root of trust's seed may decide it`
+      : `${label}: D-436 — the group the old plane recorded at the store's own first boot is KEPT at the current `
+        + `plane's first boot, unchanged: no later boot re-decides it`,
+    await groupOf(c), groupBefore);
 
   const after = await shapeOf(c);
   const lacking = [], extra = [];
@@ -361,7 +390,7 @@ const verifyCurrent = async (label, persist, { DOC, text, rows }) => {
     (await c.raw("SELECT content_id FROM inquiry_basis WHERE bundle_id='INQ-2026-9143'")).rows, [{ content_id: null }]);
   const got = await c.get("file", `id=${DOC}&path=bundle.md`);
   t(`${label}: THROUGH THE OP — op=file reads the old document's bytes exactly as the old plane stored them`,
-    sha((got.result ?? got).text ?? String(errOf(got))), sha(text));
+    sha((got.result ?? got).text ?? String(errOf(got))), sha(served));
   await mf.dispose();
 
   mf = bootCurrent(persist);
@@ -369,8 +398,8 @@ const verifyCurrent = async (label, persist, { DOC, text, rows }) => {
   const again = await c.raw("SELECT count(*) AS n FROM inquiry_basis");
   t(`${label}: a SECOND boot is clean — the store answers and holds the same rows`,
     again.ok ? again.rows[0].n : again.error, 1);
-  t(`${label}: D-436 — and a SECOND boot records no producing group either (no later boot reads the binding)`,
-    await groupOf(c), [true, null, null]);
+  t(`${label}: D-436 — and a SECOND boot leaves the producing group as it found it (no later boot reads the binding)`,
+    await groupOf(c), groupBefore);
   await mf.dispose();
 };
 
