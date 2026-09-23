@@ -33,15 +33,45 @@ scope: re-pin at promotion to `adopted`; the case document stamps the adopted bu
 accepts-when: the stamped statements hash equals a hash recomputed from exactly the stamped sha's bytes, across a propose → adopt → later-propose sequence. How a liar passes it: hashing the latest projection, so the arm proposes a newer revision after adoption and recomputes from the stamped sha alone. NEGATIVE CONTROL: pin the proposed sha, and the equality arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (BOB #31's ruling, 21:43Z/21:48Z; `node tools/mintid.mjs REC`).
 
-### REC-188 · queued — **C-41 DOES NOT REQUIRE THE BIAS MANIFEST D-84 STAMPS: `checkCaseDocument` and the C-41 family never read `bias_manifest`, so a case document published without its lens still ratifies.** D-84 keeps `bio-case-document/2`; `construct-status.json` `7.manifest-stamped` says the gate *"does not REQUIRE the block"* because unsigned /2 documents without it exist. — owner RECORD.
-order: directly after REC-187, the same stamp: a correction to just-landed work (D-84), and DEC-20's *disclosed* is only true if the gate refuses its absence (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (2), verified at c17-batch4 @ 65205437)
+### REC-188 · queued — **C-41 DOES NOT REQUIRE THE BIAS MANIFEST D-84 STAMPS: `checkCaseDocument` and the C-41 family never read `bias_manifest`, so a case document published without its lens still ratifies.** BOB #32 (22:26Z, G1) folds D-150's `completeness.acknowledged` and its list (possibly empty) into the SAME bump. — owner RECORD.
+order: directly after REC-187: a correction to just-landed work (D-84, D-150); DEC-20's *disclosed* holds only if the gate refuses the absence (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I3 — the case document format becomes `bio-case-document/3` (additive, a newly REQUIRED key); /2 and /1 stay accepted; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"The bias acknowledgement, authored at export" (the manifest row *computed and stamped by the plane*), with `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12 (a format bump). The bump is CONFIRMED by BOB #31's ruling of 2026-09-23 22:03Z (cite it until folded): *a newly REQUIRED field changes what the document promises.*
-depends-on: D-84 (the stamp; `integrated` on c17-batch4).
-scope: `op=publish` writes `bio-case-document/3`; a new C-41 check (mint its C-number) refuses a /3 document without the `bias_manifest` map (`in_force`, `stated`); /2 and /1 keep ratifying. Extend `bio-plane/test/d84-case-manifest.test.mjs`.
-accepts-when: a /3 document lacking `bias_manifest` is refused by the new C-41 check by name; a /2 document without it still ratifies; a published case reads /3. How a liar passes it: bumping the format string without the check, so the arm hands a /3 document with the block deleted. NEGATIVE CONTROL: drop the new check's push, and the "/3 without a manifest is refused" arm fails by name.
+design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"The bias acknowledgement, authored at export", with `docs/architecture/BIO_Publication_v0_1.md` §3 rules 11 and 12; the bump CONFIRMED by BOB #31 (22:03Z) and widened by BOB #32 (22:26Z): *ONE format bump carries both requirements.*
+depends-on: D-84 (c17-batch4), D-150 (c17-batch7), both `integrated`.
+scope: `op=publish` writes `bio-case-document/3`; a new C-41 check (mint its C-number) refuses a /3 document without the `bias_manifest` map or without `completeness.acknowledged` and its list; /2 and /1 keep ratifying as written. Extend `bio-plane/test/d84-case-manifest.test.mjs`.
+accepts-when: a /3 document lacking `bias_manifest`, and one lacking the acknowledgement list, is each refused by the new C-41 check by name; a /2 document without it still ratifies; a published case reads /3. NEGATIVE CONTROL: drop the new check's push, and the "/3 without a manifest is refused" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
+
+### REC-193 · queued — **C-41.10's AUTHOR EXCLUSION READS THE DRAFT'S LAST EDITOR, NOT THE STATEMENT'S AUTHOR: D-150's worker used the last editor PROVISIONALLY, so a participant who edited another section could be refused acknowledging a statement they did not write, and its writer admitted.** BOB #32's ruling of 2026-09-23 22:26Z (cite it until folded into Publication §3): *the statement's author is the member who wrote the statement's CURRENT BYTES.* — owner RECORD.
+order: after REC-188, the same completeness block: a correction to just-landed work (D-150) on who may attest (SCHEDULER #17, 2026-09-23)
+milestone: M10
+interface: I5 additive — a `statement_by` value recorded at the draft write; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 11, with BOB #32's ruling of 2026-09-23 22:26Z (cite it until folded into Publication §3).
+depends-on: D-150 (`integrated` on c17-batch7).
+scope: record `statement_by` (server-stamped) at every draft write that changes the statement text; C-41.10's author exclusion reads it. Extend D-150's suite (`bio-plane/test/d150*.test.mjs`).
+accepts-when: B edits another section after A wrote the statement, and B may acknowledge while A is refused by name. NEGATIVE CONTROL: read the last editor again, and the "the statement's writer is refused" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (BOB #32's G2; `node tools/mintid.mjs REC`).
+
+### REC-194 · queued — **AN ACKNOWLEDGEMENT MAY MATCH ANOTHER CASE WHOSE STATEMENT IS BYTE-IDENTICAL: D-150 binds it to the statement's bytes, not to ONE case identity.** BOB #32's ruling of 2026-09-23 22:26Z (cite it until folded into Publication §3): *an acknowledgement binds to ONE case identity; reading A's statement is not reading B's.* — owner RECORD.
+order: directly after REC-193, the same block (SCHEDULER #17, 2026-09-23)
+milestone: M10
+interface: I3 — the `statementack` op's binding narrows to one case; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 11, with BOB #32's ruling of 2026-09-23 22:26Z (cite it until folded into Publication §3).
+depends-on: D-150 (`integrated` on c17-batch7).
+scope: an acknowledgement records and is matched by the case identity it was given for; a second case in the project with byte-identical statement text lists none of the first's. Extend D-150's suite.
+accepts-when: two cases with identical statements, one acknowledged: the other's completeness block lists nobody. NEGATIVE CONTROL: match by statement hash alone, and the "the twin case lists nobody" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (BOB #32's G3; `node tools/mintid.mjs REC`).
+
+### UI-89 · queued — **THE STATEMENT'S ACKNOWLEDGEMENTS HAVE A PLANE AND NO SURFACE: the `statementack` op and the signed `completeness.acknowledgements` (D-150, IC-227) are unreachable from any page.** The DELEGATION RECORD (D-150) -> UI of 2026-09-23 on coord `CLAIMS.md` names three surfaces. — owner UI.
+order: after REC-194, the member half of the same block (SCHEDULER #17, 2026-09-23)
+milestone: M10
+interface: I3 consumer (IC-227).
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 11 and §6A.4 (the review copy leads with the statement).
+depends-on: D-150 (`integrated` on c17-batch7; verify `statementack` in `index.mjs` on `main` first).
+scope: (1) the review copy leads with the exclusion statement and its acknowledgements; (2) an acknowledge act for recipients (by the grant's secret) and joined participants (by session), with DEC-49 translations for the five `STATEMENT_ACK_*` codes; (3) the published case page renders `[]` as "nobody but the author acknowledged the statement" and `null` as "the document says nothing about acknowledgements", never "nobody".
+accepts-when: the three surfaces render against a live answer, and the empty and null cases read different sentences. NEGATIVE CONTROL: render `null` as `[]`, and the "null is not nobody" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (the D-150 delegation; `node tools/mintid.mjs UI`).
 
 ### REC-189 · queued — **A MACHINE CREDENTIAL CAN SET `risk_tier` 1, 2 OR 3 — THE ONE FIELD THAT CARRIES LEGAL EXPOSURE — BECAUSE NOTHING AT PROMOTE ENFORCES *"only a member's authored act sets 1, 2 or 3"*.** `Store.promote`'s action block never reads `risk_tier` nor calls `isMachineIdentity`, and `op=promote` admits probe; the only machine fence on actions is `actionMove`'s. — owner RECORD.
 order: after REC-188, ahead of the features: a correction to just-landed work (D-182) on the field BOB #21 ruled carries legal exposure; UI-85's chooser follows it so the fence and the member path arrive together (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:48Z finding (1), verified at c17-batch5 @ 74fc2e25)
@@ -82,6 +112,36 @@ depends-on: REC-183 (finished, awaiting integration).
 scope: `affordanceFacts` gains a fact counting severed out-edges whose target is NOT retired (e.g. `cites_out.severed_reinstatable`), read by the same predicate `#edgeTransition` runs; the PROJECT arm keys on it. Extend `bio-plane/test/affordances.test.mjs`.
 accepts-when: a project whose only severed edge targets a retired item is not offered reinstate; one with a severed edge to a live item is, and the store accepts it. How a liar passes it: dropping reinstate from projects entirely, so the live-target arm must be offered. NEGATIVE CONTROL: key the arm back on `cites_out.severed`, and the retired-only arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`; placed directly as a plan row, never a DEBT row — BOB #31, 2026-09-23 22:09Z).
+
+### D-256 · queued — **THE WRONG "CHANGED FROM" SENTENCES ALREADY WRITTEN ARE UNCOUNTED: D-221 fixed the writer (`app.html` `addGo`'s CHANGED_FROM branch), but no read sorts the bundles whose bodies carry the old sentence into provably wrong, right and undetermined.** The bodies STAY AS WRITTEN — BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *the correction is the READ; `op=versionchain` answers from the chain, not the stored sentence* — so this row enumerates and never rewrites. — owner RECORD.
+order: after D-444, before the census rows: it measures an over-claim already in the record, the class CLAUDE.md §2 ranks worst (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
+milestone: M3
+interface: I3 additive — one admin/probe read op, `mutating:false`, `registeraudit`'s shape (proposed name changedfromaudit); the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 (the version chain), with BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded) (D-219's precedent: *a stored string is a fact about when it was written*).
+depends-on: none — `op=versionchain` (PL-10) and the history append are built.
+scope: scan bundle bodies for the sentence, resolve each named bundle through the version-chain logic, return per bundle the named id, the true predecessor and a verdict: wrong (a different predecessor), right (exactly one prior version) or undetermined (no such version); the three totals apart. Writes nothing. Extend `bio-plane/test/versionchain.test.mjs`.
+accepts-when: every affected bundle lands in exactly one class with separate totals, and every body is byte-unchanged. NEGATIVE CONTROL: resolve through the ranked search instead of the chain, and the "provably wrong" arm (a sixty-version fixture naming the oldest) fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-256's DEBT row of 2026-08-08, keeps its `D-` id).
+
+### REC-192 · queued — **A STORED VERSION'S INDEPENDENCE CAN ONLY BE READ BESIDE ITS STRENGTH PAIR: `op=versionstrength` is the one read of it, so DEC-32 clause 5 (*the structure is authored before the strength is shown*) holds only because UI-74's page drops the pair it fetched.** BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *a read returns `independence` on its own, so clause 5's separation is structural at the wire.* — owner RECORD.
+order: after D-256: a correction to just-landed work (UI-74, REC-161) that moves a doctrine from a page's choice into the wire (SCHEDULER #17, 2026-09-23)
+milestone: M9
+interface: I3 additive — `partitionindependence` (REC-161) takes `version=<id>` and reads that stored version's legs through the same `#independenceOf`, returning no strength field; versionstrength's gate and viewer stamp kept. The integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §12 (Strength, clauses (a)–(c)) with DEC-32 clause 5, and BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded).
+depends-on: REC-161 (`integrated` on c17-batch5).
+scope: the version arm on the independence read. Extend `bio-plane/test/partitionindependence.test.mjs`.
+accepts-when: the version arm's answer carries no strength key and equals versionstrength's `independence` for the same version. NEGATIVE CONTROL: add a strength field to the version-arm answer, and the "no strength key" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (UI-74's worker finding via CONDUCT #17; `node tools/mintid.mjs REC`).
+
+### UI-88 · queued — **THE ACCEPT CEREMONY FETCHES THE STRENGTH PAIR BEFORE THE MEMBER AFFIRMS, AND HIDES IT: `app.html` `acerOriginsRead` reads `op=versionstrength` and drops the pair client-side.** Once REC-192 lands it switches to the independence-only read. — owner UI.
+order: directly after REC-192, which it consumes (SCHEDULER #17, 2026-09-23; BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded))
+milestone: M9
+interface: I3 consumer (REC-192's IC).
+design: `docs/development/INVESTIGATIVE-SESSION.md` §12 (Strength) with DEC-32 clause 5.
+depends-on: REC-192, UI-74 (`integrated` on c17-batch5).
+scope: `acerOriginsRead` reads the version arm of the independence read; no code path fetches a strength-bearing answer before the affirmation. Extend `civicos-ui/test/accept-ceremony.test.mjs`.
+accepts-when: before the affirmation the ceremony's network log holds no strength-bearing answer. NEGATIVE CONTROL: point `acerOriginsRead` back at `op=versionstrength`, and the pre-affirmation fetch arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
 ### REC-190 · queued — **NOTHING CAN FIND A CAPTURE MOVED BETWEEN BUNDLES BEFORE D-179's FENCE: the old UPSERT moved the register row (`capture_sha` is its primary key) to the newcomer, leaving the original bundle's `files`/`history` rows naming a sha the register gives to another bundle, and `registerAudit` reads the moved row as live.** — owner RECORD; DIST runs it live.
 order: after UI-86: the census that tells whether D-179's residue exists on a live record, before anything repairs it (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (6), verified at c17-batch4 @ 65205437)
