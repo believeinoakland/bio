@@ -121,12 +121,14 @@ export function openRows(text) {
 
 /* THE PLAN'S ROWS — cache ∪ backlog, from `pipelineRows` and nothing else. `queue`/`backlog`
    inject fixture TEXTS (either given: fixture mode, and the other reads as EMPTY — a fixture
-   never mixes with the live file); neither given: the live files under `repo`. */
-export function planRows({ repo = ROOT, queue = null, backlog = null } = {}) {
-  const texts = queue === null && backlog === null ? null : { QUEUE: queue ?? "", BACKLOG: backlog ?? "" };
+   never mixes with the live file); neither given: the live files under `repo`. M0-119: `later` injects the backlog's
+   TAIL the same way — the lister reads all three, so the tail's rows are judged exactly as the backlog's. */
+export function planRows({ repo = ROOT, queue = null, backlog = null, later = null } = {}) {
+  const texts = queue === null && backlog === null && later === null ? null
+    : { QUEUE: queue ?? "", BACKLOG: backlog ?? "", LATER: later ?? "" };
   const p = pipelineRows({ repo, texts });
   const rows = p.rows.map(asRow);
-  return { rows, strays: p.strays, unreadable: p.unreadable, cacheRows: p.cacheRows, backlogRows: p.backlogRows };
+  return { rows, strays: p.strays, unreadable: p.unreadable, cacheRows: p.cacheRows, backlogRows: p.backlogRows, tailRows: p.tailRows };
 }
 
 /* PLANCHECK §2's MILESTONE AND INTERFACE CHECKS, over the plan's rows (D-430). Until 2026-09-18
@@ -210,9 +212,9 @@ export function citations(text, index = governedIndex(), { milestone = "" } = {}
 /* The audit. `queue`, `backlog` and `governedSet` are injectable so the suite can drive the
    judgement over fixtures — including a planted governed path, and a planted BACKLOG row —
    without writing to the tree. */
-export function rowDesignAudit({ repo = ROOT, queue = null, backlog = null, governedSet = null } = {}) {
+export function rowDesignAudit({ repo = ROOT, queue = null, backlog = null, later = null, governedSet = null } = {}) {
   const index = governedIndex(governedSet ?? governed());
-  const plan = planRows({ repo, queue, backlog });
+  const plan = planRows({ repo, queue, backlog, later });
   const rows = plan.rows;
   const open = [], skipped = [], unknownState = [], findings = [];
   for (const row of rows) {
@@ -229,7 +231,8 @@ export function rowDesignAudit({ repo = ROOT, queue = null, backlog = null, gove
     if (!ok) findings.push(r);
   }
   return { rows, open, skipped, unknownState, findings, governedCount: index.paths.size,
-           strays: plan.strays, unreadable: plan.unreadable, cacheRows: plan.cacheRows, backlogRows: plan.backlogRows };
+           strays: plan.strays, unreadable: plan.unreadable, cacheRows: plan.cacheRows, backlogRows: plan.backlogRows,
+           tailRows: plan.tailRows };
 }
 
 /* `QUEUE.md:12` / `BACKLOG.md:3` — the file a row is in, by basename, as the gate prints it. */

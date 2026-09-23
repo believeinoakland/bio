@@ -201,7 +201,7 @@ if (queue && register) {
       if (idle.length)
         notes.push(`milestones with no queued item (normal for later rungs): ${idle.join(", ")}`);
     }
-    notes.push(`plan fields: ${fa.rowsRead} row(s) read (cache ${plan.cacheRows}, backlog ${plan.backlogRows}) — `
+    notes.push(`plan fields: ${fa.rowsRead} row(s) read (cache ${plan.cacheRows}, backlog ${plan.backlogRows}, tail ${plan.tailRows}) — `
       + `every milestone and behind-interface line judged`);
   }
 }
@@ -715,7 +715,7 @@ if (conduct && inbox && !/INBOX/.test(conduct))
     const a = rowDesignAudit({ repo: ROOT });
     const routed = a.open.filter((r) => r.routed).length;
     notes.push(`queue design pointers: ${a.open.length} open row(s) judged of ${a.rows.length} `
-      + `(cache ${a.cacheRows}, backlog ${a.backlogRows}), `
+      + `(cache ${a.cacheRows}, backlog ${a.backlogRows}, tail ${a.tailRows}), `
       + `${a.skipped.length} closed row(s) not judged, ${a.findings.length} naming no design`
       + (routed ? `, ${routed} explicitly ROUTED as a missing design` : "")
       + ` (governed set: ${a.governedCount} document(s), read from CORPUS-STANDARD.md §5)`);
@@ -802,8 +802,9 @@ if (conduct && inbox && !/INBOX/.test(conduct))
    file's own arms.
 
    THE WORK PIPELINE'S FIVE INVARIANTS (LED-6, `WORK-PIPELINE.md` §2), each its own arm, computed
-   by `ledger.mjs`'s `pipelineInvariants` over the cache (`QUEUE.md`) and the backlog (`BACKLOG.md`):
-     P1 every open id in EXACTLY ONE of the two — FAILs now (it holds on the real ledgers);
+   by `ledger.mjs`'s `pipelineInvariants` over the cache (`QUEUE.md`) and the backlog (`BACKLOG.md`) with its tail
+   (`BACKLOG-LATER.md`, M0-119 — the same order continued; absent is an empty tail):
+     P1 every open id in EXACTLY ONE of the three — FAILs now (it holds on the real ledgers);
      P2 no closed row in either — armed with (a)'s LED-3, as the QUEUE half of (a) always was;
      P3 the cache ≤ 8 rows, none `blocked`; P4 every open cache row's depends-on MET; P5 both files
      within budget (cache 40 KiB / row 3 KiB, backlog 150 KiB / row 2 KiB) — WARN until LED-6 is
@@ -852,7 +853,8 @@ if (conduct && inbox && !/INBOX/.test(conduct))
         + `        or a \`tools/status.mjs\` claim reading BUILT.`);
     if (a.pipeline) {
       const P = a.pipeline;
-      notes.push(`pipeline: cache ${P.cacheRows} row(s), backlog ${P.backlogRows} row(s); `
+      notes.push(`pipeline: cache ${P.cacheRows} row(s), backlog ${P.backlogRows} row(s), tail ${P.tailRows} row(s)`
+        + `${a.absent.includes(L.LEDGERS.LATER.live) ? " (tail file absent: an empty tail)" : ""}; `
         + Object.entries(P.arms).map(([k, x]) => `${k} ${x.violations.length ? (x.armed ? "FAIL" : "WARN") : "pass"}`).join(", "));
       for (const [k, x] of Object.entries(P.arms)) {
         if (!x.violations.length) continue;
@@ -1133,7 +1135,7 @@ function ARMING_NOTE(a, arm) { return `${a.arming[arm].row} is done, so this arm
     }
     /* (b) — the pattern is BUILT so this file does not match itself. */
     const ORIGIN_MAIN = "origin" + "/main:";
-    const stateRef = new RegExp(ORIGIN_MAIN.replace("/", "\\/") + String.raw`[^\s\x60'")]*(?:CLAIMS\.md|QUEUE\.md|BACKLOG\.md|DEBT\.md|PLACEMENT\.md|-NEXT\.md|archive\/ledgers\/)`);
+    const stateRef = new RegExp(ORIGIN_MAIN.replace("/", "\\/") + String.raw`[^\s\x60'")]*(?:CLAIMS\.md|QUEUE\.md|BACKLOG\.md|BACKLOG-LATER\.md|DEBT\.md|PLACEMENT\.md|-NEXT\.md|archive\/ledgers\/)`);
     const left = [];
     for (const f of tracked) {
       /* `MEASUREMENTS.md` is exempt as the archive is: a figure's record quotes the instrument AS IT WAS RUN, and

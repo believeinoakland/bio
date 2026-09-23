@@ -314,7 +314,8 @@ try {
   for (const [nc, ns, file] of [["NC6a", "DEC", "DECISIONS.md"], ["NC6b", "IC", "INTERFACE-CHANGES.md"], ["NC6c", "M", "MEASUREMENTS.md"]]) {
     console.log(`\n--- ${nc} · mintid's ${ns} corpus without BACKLOG.md (plant in place; armed ALONE) ---`);
     const q = `"docs/development/${file}", "docs/development/QUEUE.md"`;
-    arm(MINTID, `${q}, "docs/development/BACKLOG.md"]`, `${q}]`);
+    /* REPOINTED 2026-09-22 (M0-119): the corpus now ends with the backlog's tail; the arm still drops BACKLOG.md alone. */
+    arm(MINTID, `${q}, "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md"]`, `${q}, "docs/development/BACKLOG-LATER.md"]`);
     const f = floors();
     t(`${nc} · on disk the ${ns} floor FALLS back to the live one — the backlog-only id sets no floor`,
       f[ns], liveFloors[ns]);

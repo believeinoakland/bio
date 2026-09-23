@@ -1,0 +1,17 @@
+[
+  {
+    "op": "swap",
+    "file": "docs/development/BACKLOG.md",
+    "old": "- **Budget:** 200 KiB for the file (BOB #28's interim figure until M0-119's tail file lands; WORK-PIPELINE §2), 2 KiB for a row. `node tools/ledger.mjs invariants` prints the five pipeline\n  invariants; `node tools/plancheck.mjs` enforces them.\n",
+    "text": "- **Budget:** 150 KiB for the file, 2 KiB for a row (WORK-PIPELINE §2). A placement that puts this file over budget\n  moves WHOLE rows from its foot to the head of `BACKLOG-LATER.md` — the same order's tail, looked up and never read\n  whole — and a refill or any later write brings them back as room frees; no row is cut to fit (every `coord.mjs write`\n  rebalances). `node tools/ledger.mjs invariants` prints the five pipeline invariants; `node tools/plancheck.mjs`\n  enforces them.\n"
+  },
+  {
+    "op": "swap",
+    "file": "docs/development/BACKLOG.md",
+    "old": "- **Find any id** — here, in the cache or in the archive — with `node tools/ledger.mjs find <ID>`.\n",
+    "text": "- **Find any id** — here, in the tail, in the cache or in the archive — with `node tools/ledger.mjs find <ID>`.\n"
+  },
+  {
+    "op": "rebalance"
+  }
+]

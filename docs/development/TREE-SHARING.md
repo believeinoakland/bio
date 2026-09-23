@@ -120,7 +120,9 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   `coord.mjs migrate`: `coord` as a ROOT commit of the state files from the integration HEAD (fixed dates: re-runs agree)
   and `main`'s pointer commit on it, pushed coord-first by CONDUCT. **Not built:** a `carry <branch>` command (a branch
   cut before the cutover carries its state additions by hand, as `coord.mjs write` intents); the heartbeat's cloud
-  replacement (ruling 4).
+  replacement (ruling 4). **Widened by M0-119 (2026-09-22):** `docs/development/BACKLOG-LATER.md`, the backlog's tail
+  (WORK-PIPELINE §2), is a state file created on `coord` with no pointer on `main`; every write ends with a rebalance of
+  the backlog's split, and the intents gain `rebalance` and `swap`.
 
 ### 2 · One lane lands on `main`, in batches
 
