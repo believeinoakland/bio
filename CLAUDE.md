@@ -101,7 +101,7 @@ design, doctrine, anything for Bob → BOB) and continue.
   Work in your own worktree.
 - **Only DIST cuts plane releases**, from a green `main`. **The standing lanes — CONDUCT, BOB, DIST,
   FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18). **A session is REFRESHED when its context is
-  more than 80% full** (Bob, 2026-09-23, raised from 70%: *"I don't see any advantage to refreshing lanes earlier than necessary"*):
+  more than 80% full** (Bob, 2026-09-23; was 70%):
   check it with `get_usage` (cloud: `get_session`) at every self-wake and handoff; over 80%, stop taking new work, write
   your `<LANE>-NEXT.md` from the measured state, push it, verify it on the remote, and ask BOB for your successor. The
   successor archives you under D-398's three conditions. **Its self-wake expires:** a session-only `CronCreate` lasts
