@@ -35,6 +35,12 @@
  *       ancestry" FAILS; the first landing holds;
  *   (4) the train's trailer dropped from its merges -> "THE TRAIN LANDS BOTH LANES" FAILS — the guard binds the
  *       train too, so the mark is load-bearing; the direct-push refusal holds.
+ *   RUN 2026-09-23 by the M0-111 worker, all four AS DECLARED: baseline 34 pass / 0 fail, each arm alone, every declared
+ *   must-stay-green assertion green and the collateral assertion never red; failing counts per arm 7, 1, 1, 12; driver
+ *   34 pass / 0 fail, every restore byte-identical by sha256 and `cmp`, closing 34 / 0, pen removed. ARM (4)'s FIRST RUN
+ *   FOUND ITS OWN DECLARATION WRONG: it declared "THE LONE RED BRANCH IS RETURNED BY NAME" must stay green, and it went
+ *   red because every refused train leaves the earlier sections' branches WAITING, so the "lone" branch shares its
+ *   train — a cascade of the arm, not collateral; the declaration now names only arms that run no train.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
