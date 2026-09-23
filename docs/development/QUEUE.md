@@ -514,7 +514,7 @@ added: 2026-07-31 · CONDUCT
 landed:
 uncut: restored whole from «CPDF-3» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-447 · queued — **A SEARCH HIT'S SCORE LEAKS A PROJECT THE READER CANNOT SEE: the ranked search reads corpus-wide FTS statistics (`bm25(bundles_fts)` in `query.mjs`), so a visible hit's relevance moves when a hidden project is revised — a side channel on what §7.9 says must answer exactly as absence.** Found by REC-149's worker; reported, not re-measured by SCHEDULER. — owner RECORD.
+### D-447 · running — SPAWNED 2026-09-23 ~23:05Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-447 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-447 and that session; never conclude queued from the absence alone.
 order: directly after REC-187, ahead of every correction and feature: a disclosure defect outranks both (CLAUDE.md §2; the lane's law) (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
 milestone: M8
 interface: I3 — the search answer stops publishing raw scores; the integrator mints and classifies the IC.
