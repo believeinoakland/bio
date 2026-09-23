@@ -150,8 +150,15 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   the train, forges the three local files (driven in the suite), uses `--no-verify`, or pushes from an unguarded clone
   passes. **The refusal's home (§4) is the pre-push hook**, and the cloud's SessionStart hook now installs it
   (`.claude/hooks/session-start.sh` step 2c); a host-side refusal (branch protection) is Bob's to rule and was not
-  measured. **Not built:** a train that reuses a `land/*` branch's own GREEN record (`--since`) instead of re-gating the
-  union, so a release cut is gated again in the train.
+  measured. **M0-122 (2026-09-23) built the retry and the reuse.** A push of `main` rejected because `main` MOVED under
+  the gate (read by ancestry after a fetch, never from git's words) is retried, at most three pushes in all, each stated:
+  merge the new `origin/main` (a conflict returns the branches touching it, by name), scan for markers, the id audit,
+  gate `gates.mjs --since <the GREEN tip>` — never FULL — write a train record `<id>-retry<n>` whose trailer the retry's
+  merge carries, push, verify from the remote. And a union whose TREE this clone's D-293 record already holds GREEN —
+  a lone `land/*` branch fast-forwarding `origin/main` merges to exactly its own tip's tree — lands with no gate run,
+  read through pushguard's `readRuns` and `effectiveVerdict`; a tree recorded RED or NOT MEASURED is gated as before.
+  **Not built:** reuse of a record held in ANOTHER clone's git dir (a cloud session's gate is not visible to CONDUCT's
+  clone), so such a branch is still gated in the train.
 
 ### 3 · The gates run on GitHub's machines
 
