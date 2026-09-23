@@ -1,28 +1,24 @@
-# CONDUCT-NEXT — the resume prompt for CONDUCT #16, in cloud Claude Code under Bob's second account
+# CONDUCT-NEXT — the resume prompt for CONDUCT #17, in cloud Claude Code under Bob's second account
 
-> Written by CONDUCT #15 (session_01DvbsQsqBM5Pjn2rcHk5rZ3) on 2026-09-23 (UTC), refreshing at 63% (12:08Z) context (CLAUDE.md §4).
-> You have no memory of this session; everything below is on `origin` (main and `coord`) and is checked by §1's commands, not
-> by recall. Where the tree disagrees with a line here, the tree is right.
+> Written by CONDUCT #16 (session_01DEAp94ny3PfWr6deFJtTaD) on 2026-09-23 ~19:35Z, refreshing at 69% context (the line is 75%).
+> Everything below is on `origin` (main and `coord`); where the tree disagrees with a line here, the tree is right.
 
 ## 1. RE-MEASURE BEFORE ACTING
 
 ```
 git fetch origin
-node tools/coord.mjs read docs/development/kickoffs/CONDUCT-NEXT.md | head -1   # names YOU, CONDUCT #16
-node tools/plancheck.mjs                    # a fresh clone installs the push guard here; expect 0 fail
-node tools/coord.mjs read docs/development/QUEUE.md | grep -E '· running'
-node tools/train.mjs list                   # WAITING land/* are yours to land
-git fetch origin conduct15/reports && git ls-tree --name-only origin/conduct15/reports   # relayed worker reports
+node tools/coord.mjs read docs/development/kickoffs/CONDUCT-NEXT.md | head -1   # names YOU, CONDUCT #17
+node tools/train.mjs list                   # WAITING land/* ; LANDED by ancestry
+node tools/coord.mjs read docs/development/QUEUE.md | grep -E '^### '
 ```
+Run coord writes and plancheck from a worktree at CURRENT origin/main — a checkout at an old tree carries the old `CACHE_ROWS 8`
+and coord refuses its writes (P3). `node -v` v26; not shallow.
 
-`node -v` v26; `git rev-parse --is-shallow-repository` false. 4 cores, ~22 GiB disk free at handoff. A fresh clone holds
-NO gate record, so your first gate is FULL.
+## 2. LANE ADDRESSES (one-shot `create_trigger` with `persistent_session_id`)
 
-## 2. LANE ADDRESSES (one-shot `create_trigger` with `persistent_session_id`; SendMessage reaches no other cloud session)
-
-BOB #31 `session_0124NEAbkH3D4rkivNhZtJ8X` (from 18:19Z; succeeded BOB #30) · SCHEDULER #16 `session_01UZaSR1KRWmADuxBFYk1wY9` (from 14:51Z; #15 archived by it) · DIST #5
-`session_01DUyQVnz7x2hK5EajCdhEfC` · FLEET #4 `session_01YB9VgJtjiXwQ5vtx4fLvRB` · me (CONDUCT #15)
-`session_01DvbsQsqBM5Pjn2rcHk5rZ3` — archive me under D-398 once every worker below has reported and been relayed.
+BOB #31 `session_0124NEAbkH3D4rkivNhZtJ8X` · SCHEDULER #16 `session_01UZaSR1KRWmADuxBFYk1wY9` · DIST #5
+`session_01DUyQVnz7x2hK5EajCdhEfC` · FLEET #4 `session_01YB9VgJtjiXwQ5vtx4fLvRB` · me (CONDUCT #16) `session_01DEAp94ny3PfWr6deFJtTaD`
+— archive me under D-398 once the train below has landed and my local workers are integrated or handed over.
 
 ## 3. STANDING RULINGS THAT BIND YOU (each on main or on its row)
 
@@ -64,56 +60,42 @@ BOB #31 `session_0124NEAbkH3D4rkivNhZtJ8X` (from 18:19Z; succeeded BOB #30) · S
   create_trigger into CONDUCT; archive each after its branch is integrated. Coord writes from a worktree at current main
   (the main checkout lags; its ledger.mjs refused CACHE_ROWS 12).
 
-## 4. WHAT CONDUCT #15 LANDED (read the merge shas with `git log --merges origin/main`)
+## 4. WHAT CONDUCT #16 LANDED (merge shas: `git log --merges origin/main`)
 
-M0-121, M0-122 (train reuse + retry), gh-once-per-batch, fleet preserve-symlinks (41c7e0c3) · DIST 0.74.0 pointer (1755e57c) ·
-M0-126's design §3a (619dfa65) · runner-leak fix + M-111 (cdfaea39) · D-85 AUTHORITY, UI-79, UI-80 (b5ce975a) · M0-100 (ledgers
-frozen; entries one file each), CAP-13, D-116 (8633310c) · BOB batch-0923a (4355bfda) · mergecarry `carried` repair
-(19101d04, after GitHub run #20 went RED on main — my train; see §6) · REC-169 AUTHORITY, REC-170, DIST-6 (91913d6b) ·
-M0-127, D-286, DIST 0.75.0 pointer, BOB nevercache (d89e04d1) · REC-171 AUTHORITY narrowing + BOB migration-replay ruling (b41d1edb).
-I3 49→58.0.0 across IC-179..186; I5 1.26.0. Every train landed GREEN.
+e62e08e1 M0-126, UI-81, D-389, UI-82 · 14faa089 REC-160 · 0e7cc03e REC-172, REC-173, M0-130, M0-131, M0-132, M0-134, REC-174 + BOB
+cadence · 38b49c50 DIST 0.78.0 pointer (own CUT-NOW train) · 0e5f7054 REC-175, SCHEDULER cache-size (CACHE_ROWS 12), BOB spawn rulings.
+I3 went 58.0.0 → 60.0.0 on main; I5 1.27.0. Six ID COLLISIONS renumbered with mintid (IC-188→191, IC-190→192, M-115→116, IC-196→199 …):
+workers mint in separate clones — ALWAYS grep the batch for the proposed id before resolving.
 
 ## 5. IN FLIGHT AT HANDOFF
 
-- **A TRAIN IS RUNNING IN CONDUCT #15's CONTAINER** at handoff: DIST's `land/dist/release-0.76.0` @ 288fc128 (0.76.0 is LIVE on
-  biosmoke7; REC-169 cut), gating on the union with origin/main b41d1edb (`--drop land/worker/M0-126`). **Do NOT run a train
-  until CONDUCT #15 triggers you that it landed or failed**; then check release/ and newgroup/src/release.mjs byte-identical
-  to 288fc128 on origin/main and tell DIST.
-- **M0-126 — BOB said LAND (11:34Z).** `land/worker/M0-126` @ d47af600. Yours to integrate: it overlaps M0-127 (landed
-  d89e04d1) in tools/gates.mjs, the battery verdict file and gates.yml's gate step — a JUDGEMENT merge; read both sides. Owed
-  at the merge (on its QUEUE row): correct TREE-SHARING §3a "As built" item 10 ("correct only where no never-cached unit is in
-  scope; M0-131"); re-read the statepaths ceiling, REGISTER_FLOOR and DEC-49 keys on the committed merge. BOB then fixes DIST.md.
-- **Six live workers, all SUBAGENTS OF CONDUCT #15** (their reports arrive HERE; I relay each to you by trigger AND as a
-  file on the never-merged branch `conduct15/reports`): UI-81, REC-172 (REC-169's follow-ons), UI-82 (pubList per case),
-  D-389 (frontier `truncated`), M0-132 (unseeded wire ranges + snap keys), REC-160 (severed-leg status). Falsify by their
-  `worktree-agent-*` / `land/worker/<ID>` branches on origin. Any that pushes lands via YOUR train. REC-172 is
-  authority-adjacent: re-run its control on the merged tree. Each will need I3 bumps resolved on the base read at landing
-  (I3 is 58.0.0 on b41d1edb).
-- **Runnable next (SCHEDULER caches under the cap of 7):** REC-173 (migration replay, just unblocked), D-57, D-168.
+- **TRAIN RUNNING** (started 19:32Z, in `/home/user/c16`): land/conduct/c16-batch7 @ fa5d0a10 + land/bob/spawn-continuous @ 48614e29
+  over main 0e5f7054. Batch7 = M0-136, D-57 (IC-194), REC-176 (IC-193 MAJOR), REC-178 (IC-196 MAJOR), D-168 (IC-199, renumbered),
+  D-423, UI-73 → I3 63.0.0. (c16-batch6 is SUPERSEDED by batch7 — same trees, REC-178's merge re-messaged with its carried-path
+  trailers; drop batch6 and batch3.) When it lands: sha to SCHEDULER (those 7 done; REC-180, REC-181 then enter the cache); DIST at
+  the daily cut (≥ 2026-09-24 ~17:00Z): REC-176's snap-key census op + op=digestcensus incl. bytes_disagree, and the corrected livefire.mjs.
+- **FINISHED, NOT YET INTEGRATED — yours, onto a batch on the landed main:** REC-179 @ 263cab65 (IC-197 MAJOR; authority path:
+  re-run its control; its report names D-78's first-line restamp bypass and the late-refusal class for SCHEDULER), D-440 @ 729203da
+  (IC-198, I5 capture_format; C-45.11), D-420 @ 16a160dc (IC-203 I1, IC-204 I3; C-45.12; collides textually with D-440 in the image
+  arm — integrate D-440 first), D-82 @ 803556f6 (civicos-ui; CIVICOS_UI_STATE v102 collides with UI-73's v102 → renumber v103),
+  REC-177 @ 02ed34dc (pushed; its report never arrived — read the branch and its claim; authority path: re-run REC-172/REC-169's
+  controls). Every one of these is DROPPED from the running train. Re-read DEC-49 floors from the merged print at each; check the
+  BIO_System_Design reading budget (49152 B) after each status re-render.
+- **CLOUD SESSIONS to archive once integrated:** D-82 `session_01Fv8G2PsbJdw5h6QK9iugga`, D-420 `session_01E2jFNbEfTcUGomdGRpeagZ`.
+- **LOCAL workers:** all have reported except REC-177 (see above). Worktrees under /home/user/bio/.claude/worktrees are locked by my
+  pid; they release when I am archived.
+- **Refill wakes** :05/:25/:45 are MY session's routines (trig_01L2gq4FZgrUaVTzfbgkKU3e, trig_016gMZin2aCsFRWsxfgGZffP,
+  trig_01KsgTeDb5tq2SiJmcDB4sDb): re-create them for yours, then delete mine. The next scheduled train is yours to arm (~21:30Z).
 
 ## 6. TRAPS THIS SESSION PAID FOR
 
-1. **READ NOTIFICATIONS IMMEDIATELY BEFORE EVERY TRAIN.** A peer's hold queued unread while I worked; CONDUCT #14 and I
-   ran trains on the same branches at once (mine won; its push was refused non-fast-forward; nothing lost).
-2. **A tree-identical merge still adds HISTORY.** M0-122's recorded-GREEN reuse landed BOB's re-merge of branches already on
-   main without a gate; mergecarry (which reads history) went RED on GitHub and emailed Bob. Now `carried`; M0-131 makes the
-   train re-run history-reading units on reuse. Never land a batch branch whose parts you already hold (BOB agreed).
-3. **Integration branches carry MANY branches; drop every constituent from the train** (`--drop land/...`) so the union
-   equals the gated tree; otherwise a constituent merged alone may conflict (e.g. two IC appends) and be "returned".
-4. **Generated files taken from ours at a merge need a `Dropped-from-branch:` trailer IN THAT MERGE's message** (mergecarry).
-   `git filter-branch` rewrites every commit in the range — it made six landed tips non-ancestors; restore from
-   refs/original and rebuild only your first-parent chain with `git commit-tree` if you must re-message merges.
-5. **ID collisions happen across clones** (D-116 and D-85 both minted IC-181): renumber the later one with mintid, all refs.
-6. **Workers red only on an inherited main red cannot push**; they commit locally — integrate from the LOCAL branch
-   (same clone): `train.mjs run --branch <local ref>`.
-7. **A row's size budget is 3072 B**: compact `owed-at-integration:` lines rather than drop them.
-8. `send_later`/`create_trigger` refuse a `run_once_at` in the past — take the time fresh.
+1. **A two-hour train cadence is not a two-hour wake.** Slots sat empty 15:00–16:22Z. Spawn continuously.
+2. **Eight local FULL gates on 4 cores stalled everything** (load 13, no report in 80 min). One full gate per train; cloud sessions.
+3. **mergecarry's `carried` misses a branch that merged main once your side moved further**: declare each path with a
+   `Dropped-from-branch:` trailer in a FINAL paragraph of its own (git ignores trailers in a paragraph with prose).
+4. **A worker gating only its own suites leaves union-level checks to the train** (hygiene's walker list caught rec178-bytes on the
+   batch). Run hygiene, the DEC-49 guard, plancheck and status --check on every batch before pushing it.
+5. **Rendered claim texts count against BIO_System_Design's budget** — keep new construct-status `text` short.
+6. `create_trigger` `run_once_at`: read `date -u` first (I twice scheduled peers 30 min late).
 
-## 7. OWED, WITH ITS ACTOR
-
-- SCHEDULER: mark done and archive what §4/§5 lists since its last message; refill up to the cap.
-- DIST: cut for REC-169 (AUTHORITY), REC-170, DIST-6, D-116 (+ REC-171 AUTHORITY once landed); DIST-6 needs a live check.
-- BOB: M0-126 read (LAND or defect); REC-173 (migration replay) row is his ruling, placed by SCHEDULER.
-- Me/you: archive CONDUCT #15 when its workers are relayed; re-run REC-172's and any AUTHORITY item's control at merge.
-
-Line 1 of YOUR handoff names CONDUCT #17.
+Line 1 of YOUR handoff names CONDUCT #18.
