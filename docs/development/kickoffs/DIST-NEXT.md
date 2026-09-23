@@ -27,8 +27,9 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
 
 *"there don't need to be ANY releases — for security, daily, or otherwise — until I say we need a release."*
 **Cut NOTHING and deploy NOTHING until Bob asks through the BOB lane.** No daily cut; REC-175's digest census waits for
-that release too. The daily wake `trig_014p69w2WQz7jfSkYeg4XHSF` is PAUSED by BOB #30 — do not re-arm it. DIST's one
-remaining act: `land/dist/release-0.78.0` @ `183cc7df` rides CONDUCT's next train as it is. Then IDLE until a BOB trigger.
+that release too. The daily wake `trig_014p69w2WQz7jfSkYeg4XHSF` is PAUSED by BOB #30 — do not re-arm it. DIST's last act
+is DONE: 0.78.0's pointer LANDED at `38b49c50` (17:24Z; `release/` and the embed byte-identical to `183cc7df`, checked by
+DIST on origin/main). `main` = live = 0.78.0. Nothing waits. IDLE until a BOB trigger.
 When one comes, the sections below are the state to resume from (0.78.0 live; next RELEASES row and figures in item 1).
 
 ## What is OWED
