@@ -19552,6 +19552,7 @@ paths:
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 amended 2026-09-23: ALSO `tools/pushguard.mjs` (a NEW `gate-results`-only arm: gateResultsOnly/gateResultsCheck and its call in run(), nothing else) and `.gitignore` (the `.m0126-harness/` pen line); `docs/development/VERIFICATION.md` one short section.
 amended 2026-09-23: ALSO `bio-plane/test/status.test.mjs` — ONE header line, `GATE: reads *` (its traced reads cover the tree through pushguard's checks); no assertion touched.
+amended 2026-09-23 (BOB #30 ruling via CONDUCT #15): ALSO one head-of-file `GATE: never-cache (history)` comment in bio-plane/test/{decided,migrate-released,mintid,op-claims,owed-controls,owed,readbudget,register-grammar,retirable,status,mergecarry}.test.mjs and bio-plane/scripts/coverage.mjs; bio-plane/test/statepaths.test.mjs (ceiling 61 -> 62, printed); docs/development/measurements/M-113.md (new).
 
 ## DELEGATION 2026-09-23 SCHEDULER (#15) -> BOB — **THREE QUESTIONS, ONE EACH: M0-106 against §3a's full backstop, D-219's grade-D label, D-168's retired leg**
 
