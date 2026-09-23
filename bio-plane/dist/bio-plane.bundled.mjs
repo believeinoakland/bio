@@ -14914,6 +14914,48 @@ async function containerEntries(manifest, manifestBytes, read) {
   return { ok: true, entries, layout };
 }
 
+// src/inband.mjs
+var INBAND_FORMAT = "bio-inband/1";
+function canonicalBytes(value) {
+  return new TextEncoder().encode(JSON.stringify(value, null, 1));
+}
+async function sha256HexOf(bytes) {
+  const d = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+function floorsOf(bar) {
+  const grade = (g) => typeof g === "string" && g.trim() && g.trim() !== "null" ? g.trim() : null;
+  const capture = bar && typeof bar === "object" ? grade(bar.capture) : null;
+  const connection = bar && typeof bar === "object" ? grade(bar.connection) : null;
+  const declared = !!(bar && typeof bar === "object" && (bar.declared === true || bar.declared === "true") && (capture || connection));
+  return {
+    capture,
+    connection,
+    declared,
+    detail: declared ? "the floors on the two strength axes this case is held to: its publishing project's required strength (DEC-72). They are independent, and neither is a default for the other." : "NO FLOOR IS DECLARED, and that is not a floor of zero: the publishing project states no required strength, so nothing here claims to have cleared a standard."
+  };
+}
+async function inbandQuartet({ subject, over, date = null, author = null, bar = null }) {
+  const bytes = canonicalBytes(subject);
+  const sha2562 = await sha256HexOf(bytes);
+  return {
+    bytes,
+    quartet: {
+      format: INBAND_FORMAT,
+      hash: {
+        algorithm: "sha256",
+        sha256: sha2562,
+        over,
+        bytes: bytes.length,
+        canonical: "JSON.stringify(value, null, 1), UTF-8"
+      },
+      date: date ?? null,
+      author: author ?? null,
+      floors: floorsOf(bar)
+    }
+  };
+}
+
 // src/drive.mjs
 var DRIVE_HOSTS = [
   "docs.google.com",
@@ -35270,7 +35312,10 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       list_limit: cap,
       updated_by: d.updated_by,
       updated_at: d.updated_at,
-      ...grantPart
+      ...grantPart,
+      /* REC-148: the project's bar AS `op=publish` WOULD FREEZE IT (the same `#projectBar` call), for the
+         control plane's in-band floors (DEC-31, §6A.3 point 1). Read now, because a draft is not frozen. */
+      required_strength: this.#projectBar(d.project_id)
     };
   }
   reviewComment({ draft = null, secretSha = null, viewer = null, bySecret = false, text = "" } = {}) {
@@ -70858,9 +70903,14 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
     },
     verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without this instance's cooperation. Each finding is signed on its own bytes; there is no case-level strength, because composing several findings' strengths into one letter is a claim the evidence does not support. EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's edition: since the artifact flip the two are separate numbers, so a member of edition 2 of this case may be at its own edition 1. `version_sha` is the version THIS CASE COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this container was assembled over a member the case did not pin and you should not rely on it. `role` is the publisher's authored designation: only `load_bearing` members were held to the `bar` above, and a `supporting` member is part of the published work without being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is not a standard of zero \u2014 the case claims no cleared bar and says so. `attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED that signature to this instance \u2014 the authenticated session that performed the act, a member or the instance's founder \u2014 and it is this instance's record, not covered by any signature. `undetermined` there means the delivery was not recorded; it never means the signer delivered it." + (caseDocumentStatesMemberBlocks(parseFrontmatter(String(cs.document && cs.document.text || "")).data || {}) ? " Each finding's `strength` and its own `edition` are stated in the CASE DOCUMENT carried above (`case_strength`, `case_roles`), under the case document's signature: publishing wrote nothing on any finding, so its own signature covers the finding as its project concluded it, and the pair is this case's reading of those bytes." : "")
   };
-  const mText = JSON.stringify(manifest, null, 1);
-  const mBytes = new TextEncoder().encode(mText);
-  const mSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", mBytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
+  const { bytes: mBytes, quartet: inband } = await inbandQuartet({
+    subject: manifest,
+    over: "this case edition's container manifest (MANIFEST.json), exactly as served at op=publishedbytes&sha256=<this hash>",
+    date: cs.ratified_at ?? null,
+    author: (cs.document && cs.document.attestor && cs.document.attestor.member) ?? null,
+    bar: cs.bar ?? null
+  });
+  const mSha = inband.hash.sha256;
   const recOut = await doAnswer(stub.fetch(new Request("http://do/recordcasemanifest", {
     method: "POST",
     body: JSON.stringify({
@@ -70885,7 +70935,8 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
     manifest_sha: mSha,
     parts: manifest.parts.length,
     findings: manifest.findings.length,
-    zip: `op=publishedbytes&sha256=${mSha}&format=zip`
+    zip: `op=publishedbytes&sha256=${mSha}&format=zip`,
+    inband
   } : { ok: false, ...rec || { reason: "MANIFEST_NOT_RECORDED" } };
 }
 var index_default = {
@@ -71059,6 +71110,18 @@ var index_default = {
         if (!out2.answered) return storeSilent(op);
         const r = out2.result;
         if (!r?.ok) return json({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
+        if (op === "reviewcopy") {
+          const { required_strength: bar, ...copy } = r;
+          const served = { ok: true, ...copy };
+          const { quartet } = await inbandQuartet({
+            subject: served,
+            over: "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
+            date: r.updated_at ?? null,
+            author: r.updated_by ?? null,
+            bar: bar ?? null
+          });
+          return json({ ...served, inband: quartet }, 200);
+        }
         return json({ ok: true, ...r }, 200);
       }
       if (op === "publishedcase" || op === "publishedbytes") {

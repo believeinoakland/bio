@@ -75,6 +75,7 @@ import * as CHECK_CATALOGUE from "../checks/bio-checks.mjs";
    a `layout` block that says how the parts assemble; this module reads it and
    writes the zip, so nothing about the container's shape is decided twice. */
 import { serialiseContainer, containerEntries } from "./container.mjs";
+import { inbandQuartet } from "./inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 /* CAP-8: the Google Drive HOST STACK, enacting Bob's ruling of 2026-09-14 — a
    link to a Drive file KEEPS THE LINK and the harvest is the OpenDocument export.
    `drive.mjs` is PURE (no fetch, no store, no registry): it reads an address's
@@ -4805,10 +4806,18 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
                     + "concluded it, and the pair is this case's reading of those bytes."
                   : ""),
         };
-        const mText = JSON.stringify(manifest, null, 1);
-        const mBytes = new TextEncoder().encode(mText);
-        const mSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", mBytes))]
-          .map((x) => x.toString(16).padStart(2, "0")).join("");
+        /* REC-148: THE MANIFEST'S HASH IS TAKEN BY `inbandQuartet` — the one function the review copy's
+           in-band quartet uses too (DEC-31's bound rule, `BIO_Publication_v0_1.md` §6A.3 point 1), so the
+           two can never be two canonicalisations under one name. The bytes are unchanged: the manifest was
+           always hashed over `JSON.stringify(manifest, null, 1)`, which is the function's canonical form. */
+        const { bytes: mBytes, quartet: inband } = await inbandQuartet({
+          subject: manifest,
+          over: "this case edition's container manifest (MANIFEST.json), exactly as served at "
+              + "op=publishedbytes&sha256=<this hash>",
+          date: cs.ratified_at ?? null,
+          author: (cs.document && cs.document.attestor && cs.document.attestor.member) ?? null,
+          bar: cs.bar ?? null });
+        const mSha = inband.hash.sha256;
         /* REC-53, THE FIRST POST-COMMIT SITE. A silence here made `rec`
            undefined and the fallback minted `reason:"MANIFEST_NOT_RECORDED"` —
            a statement that the published record does NOT hold this case's
@@ -4833,7 +4842,7 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
               detail: STORE_SILENT_DETAIL }
           : rec && rec.ok
             ? { manifest_sha: mSha, parts: manifest.parts.length, findings: manifest.findings.length,
-                zip: `op=publishedbytes&sha256=${mSha}&format=zip` }
+                zip: `op=publishedbytes&sha256=${mSha}&format=zip`, inband }
             : { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
 }
 
@@ -5129,6 +5138,22 @@ export default {
         if (!out.answered) return storeSilent(op);
         const r = out.result;
         if (!r?.ok) return json({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
+        if (op === "reviewcopy") {
+          /* REC-148 / DEC-31's BOUND RULE (`BIO_Publication_v0_1.md` §6A.3 point 1): the answer carries its
+             hash, date, author and both floors IN-BAND, by the SAME function the container manifest is
+             hashed with. The hash is over every byte of this answer but `inband` itself, in the form it is
+             served; the floors are the project's required strength, the quantity `op=publish` freezes into
+             the case document and the container carries as `bar`. The store's `required_strength` is read
+             into the floors and not served twice. */
+          const { required_strength: bar, ...copy } = r;
+          const served = { ok: true, ...copy };
+          const { quartet } = await inbandQuartet({
+            subject: served,
+            over: "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and "
+                + "hash JSON.stringify(rest, null, 1) as UTF-8",
+            date: r.updated_at ?? null, author: r.updated_by ?? null, bar: bar ?? null });
+          return json({ ...served, inband: quartet }, 200);
+        }
         return json({ ok: true, ...r }, 200);
       }
 
