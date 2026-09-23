@@ -131,6 +131,12 @@ const RELEASES = [
   /* 0.75.0: deployed and live-verified 2026-09-23 (D-85 / IC-181, a CUT NOW: an `ai` credential opens a question
      only inside a RUNNING run it holds); the commit is dist/cut-0.75.0's cut, whose release/ holds it. RELEASES. */
   ["0.75.0", "90bd64518626f0f146660a128738c24685a4a501"],
+  /* 0.76.0: deployed and live-verified 2026-09-23 (REC-169 / IC-184, a CUT NOW; with D-116, REC-170, DIST-6); the
+     commit is dist/cut-0.76.0's cut, whose release/ holds it. RELEASES, NOT WITHDRAWN. */
+  ["0.76.0", "4494f725e017b557336902012b263c49b29afe5e"],
+  /* 0.77.0: deployed and live-verified on biosmoke7 2026-09-23 (REC-171 / IC-186, a CUT NOW); its pointer was HELD
+     (never offered to groups) until REC-173, but biosmoke7's stores booted on it. The commit is dist/cut-0.77.0's cut. */
+  ["0.77.0", "6b0beb8e7d321fe96d64de5e5b3aefa291b41599"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
