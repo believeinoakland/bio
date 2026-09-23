@@ -19193,6 +19193,13 @@ paths, BY SITE:
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 
+**released: 2026-09-23 by the M0-116 worker** — built and pushed on `worktree-agent-a13a769db4127c711` at `fd97be0c`; full gate
+GREEN (class FULL, tree `908840ce`): `278/278 suites green · 16752 assertions passing · EXCLUDES 2 untallied suite(s)` (bundle, livefire), 0 SKIP lines; coverage --strict exit 0; UI all harnesses green. NARROWED, not closed: a MEASUREMENTS-only TARGETED plant selects 85 units, down from 109 (readers 85 -> 60,
+`MEASUREMENTS.md` M-106); the whole fall is the gate half. The op-claims half is built and measured at ZERO until
+`op-claims.mjs` stops importing `tools/coord.mjs` (whose `queuedRefs` walks `docs/development/`): measured by experiment,
+55 units / 24 readers. That split is in `tools/coord.mjs`, M0-119's claimed site, so it is handed to SCHEDULER, not done
+here. The paths stay reserved until CONDUCT integrates.
+
 ## CLAIM 2026-09-22 M0 (M0-119 — the backlog's budget moves the TAIL, never cuts a row: `BACKLOG-LATER.md` is the same order's tail, and every reader reads the two files as one order)
 
 session: WORKER spawned 2026-09-22 by CONDUCT #14 for M0-119 (wave 4), worktree `.claude/worktrees/agent-a632fff2ea62a3014`,
