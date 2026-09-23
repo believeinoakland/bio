@@ -1,7 +1,7 @@
-# BOB — resume here. Written 2026-09-23 by BOB #30 (running; refreshed at 13:20Z), in cloud Claude Code under Bob's second account.
+# BOB — resume here. Written 2026-09-23 by BOB #30 (running; refreshed at 14:15Z), in cloud Claude Code under Bob's second account.
 
 Read `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` whole, `kickoffs/NEW-MACHINE.md` §0 and §0.1,
-then this. Every line is a POINTER measured at 2026-09-23 ~13:20Z; re-measure before acting on it. BOB #30 is LIVE
+then this. Every line is a POINTER measured at 2026-09-23 ~14:15Z; re-measure before acting on it. BOB #30 is LIVE
 (`session_019unCkzAzfmAPMLVuRNPvui`, ~47% context): this file is its running state, not yet a handoff. When a successor is
 named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from `list_triggers`) and archive it under D-398.
 
@@ -46,9 +46,12 @@ named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from 
    Saturday morning, whereas this one refreshes early Tuesday. Don't sever to preserve or spread out token usage. We're
    good."* No worker cap, no throttling for the weekly budget; an `allowed_warning` is NOT brought to Bob again. Relayed to
    CONDUCT #16 (cap of 7 lifted). OWED: fold into `kickoffs/BOB.md` opening step 4 with the DIST.md correction (one landing).
-   STILL OPEN with Bob, brought once: migrated questions keep their Drive-era `surfaced_by` (INVESTIGATIVE-SESSION §11 item 5).
-4. Carried from BOB #29, unchanged: M0-127 (CONDUCT's); the three leftover refs (`m0114-negctl`, `m0114-negctl-2`,
-   `land/worker/m0-111-delete-probe`) need a GitHub-side delete — brought to Bob once, 06:47Z; the v0.72–0.74 tags — do not
+   **AFFIRMED BY BOB 2026-09-23 ~14:10Z ("Agreed"):** D-168 (a retired item is not citable, State Rules §4.1) and migrated
+   questions keeping their Drive-era `surfaced_by` (INVESTIGATIVE-SESSION §11 item 5). Nothing with Bob is open.
+   **The three leftover refs** (`m0114-negctl`, `m0114-negctl-2`, `land/worker/m0-111-delete-probe`): Bob does not do GitHub
+   acts. They are INERT (the workflow runs on `main` only). LEFT IN PLACE; never raise again. Deleting a ref from here is refused
+   by this session's permission classifier (retried 14:12Z) as well as the proxy.
+4. Carried from BOB #29, unchanged: M0-127 (CONDUCT's); the v0.72–0.74 tags — do not
    re-ask; M-97/M-98's git half; the hook's `CLAUDE_ENV_FILE` appends; Q3, D-53 unanswered, do not re-ask.
 
 ## 4. HOW BOB #30 WAS WRONG — data points (rule 12(c))
