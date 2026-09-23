@@ -546,7 +546,9 @@ consumers.
   (1) `unauthenticated` is ALREADY CODED (`NOT_AUTHENTICATED`, C-38.1, REC-79, 2026-08-09) and closes in fact. (3)
   the METHOD complaints (405) stay codeless BY DESIGN: a surface never sends the wrong verb, and the program that
   does needs only the sentence, which names the right one. Every coded refusal keeps its `error` beside the new
-  `reason` (D-270's pattern). Not built; the build is the BOB INBOX's entry of 2026-09-22 (the integrator mints the IC).
+  `reason` (D-270's pattern). BUILT 2026-09-23 by D-278: (4) is `EVIDENCE_STORAGE_NOT_CONFIGURED` (C-68.1), `claim`'s three
+  are C-68.2–.4, (5) is `UNKNOWN_OP` (C-69.1), and the four pre-authentication argument complaints answer C-61.1; graded
+  by `bio-plane/test/d278-codeless-refusals.test.mjs`. The IC is the integrator's to mint and classify.
 - **Capability gating** applies to a SESSION and never to a machine credential: a
   token class has no member behind it and therefore holds no capabilities.
 - **Namespace.** `store=` selects the namespace; the probe class is confined to

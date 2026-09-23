@@ -109,8 +109,12 @@
  *     table, under a member session and under a real administrator's session.
  *   - IT CANNOT SEE a refusal only a richer payload provokes; a refusal returned
  *     as raw bytes or HTML rather than through `json()`; or the PRE-
- *     AUTHENTICATION surfaces, which no credential reaches and which are D-278's
- *     subject. Those are NAMED on every run rather than assumed absent.
+ *     AUTHENTICATION surfaces, which no credential reaches. Those are NAMED on
+ *     every run rather than assumed absent. CORRECTED 2026-09-23 BY D-278: this
+ *     read *"which are D-278's subject"* — true until D-278 landed and false
+ *     after, since they are no longer codeless. They are GRADED by
+ *     `d278-codeless-refusals.test.mjs`, and section 9 now DRIVES one of them
+ *     rather than naming the group as open.
  *   - IT IS NOT A LIVE PROBE. A green harness is not a serving build (D-108).
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
@@ -275,7 +279,10 @@ t("every SESSION_OPS spread resolved — an unresolved one silently UNDERCOUNTS 
        "true and misleading" for it — the same defect this item generalises, and
        already fixed for that one op.
    (3) The PRE-AUTHENTICATION ops are reached with no session at all, so no
-       session token can carry a caller to this gate. They are D-278's subject.
+       session token can carry a caller to this gate. Their own refusals are
+       coded by D-278 and graded in `d278-codeless-refusals.test.mjs` (CORRECTED
+       2026-09-23: this read "They are D-278's subject", an open item it no
+       longer is).
    Every excluded op is DRIVEN below and asserted to answer something OTHER than
    a gate code, so the exclusion is a claim this suite checks rather than a hole
    it leaves. */
@@ -582,7 +589,21 @@ t("and the pre-D-270 `error` sentence is BYTE-IDENTICAL at all three, so the cod
  * ==================================================================== */
 console.log("\n--- 9. the residue this walk cannot see, named rather than assumed absent ---");
 console.log(`    PRE-AUTHENTICATION surfaces are reached with NO credential and are outside this walk:`);
-console.log(`      verify, publishedbytes, publishedcase, knock, bootstrap — D-278's subject.`);
+console.log(`      verify, publishedbytes, publishedcase, knock, claim — coded by D-278 and graded in`);
+console.log(`      d278-codeless-refusals.test.mjs; bootstrap is a status read and refuses nothing D-278 coded.`);
+/* CORRECTED 2026-09-23 BY D-278, NEVER EXEMPTED. The line above named this group as
+   D-278's OPEN subject. A naming that goes stale the day its item lands is the
+   thing this file exists to stop, so the naming is now CHECKED at one site: the
+   pre-authentication sha256 complaint `refusal-wire.test.mjs` and this file both
+   pointed at answers the C-61.1 row, with its pre-D-278 sentence kept. */
+{
+  const v = await (await mf.dispatchFetch("http://x/api/?op=verify")).json();
+  t("the pre-authentication group is CODED now, not open — op=verify's argument complaint answers C-61.1 "
+  + "beside its byte-identical sentence (D-278; its full grading is d278-codeless-refusals.test.mjs)",
+    [v.reason, v.check, v.error],
+    ["REQUIRED_ARGUMENT_MISSING", REQUIRED_ARGUMENT_CHECKS.REQUIRED_ARGUMENT_MISSING.check,
+     "verify requires sha256=<64 lowercase hex>"]);
+}
 console.log(`    An EMPTY payload only provokes refusals sitting ABOVE the payload complaints.`);
 console.log(`    Refusals returned as raw bytes or HTML rather than through json() are outside it.`);
 console.log(`    It is NOT a live probe: a green harness is not a serving build (D-108).`);

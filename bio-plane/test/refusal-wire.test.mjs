@@ -582,7 +582,10 @@ t("the ops answering a caller with NO code at all are NAMED — D-270, raised by
      WHAT THIS DRIVE STILL CANNOT SEE, so an empty set is not read as a clean plane:
      it filters to member-CLASS ops, so `forbidden for token class` on a read outside
      that class is invisible to it, and the PRE-AUTHENTICATION sha256 complaints
-     (`op=verify`, `op=publishedbytes`) are outside it too. Both are D-278's. */
+     (`op=verify`, `op=publishedbytes`) are outside it too. CORRECTED 2026-09-23 BY
+     D-278: this read *"Both are D-278's"*. The pre-authentication complaints are
+     coded now (C-61.1) and graded in `d278-codeless-refusals.test.mjs`; the
+     class-filter blindness is still true of this drive and is kept. */
   []);
 console.log(`    BODIES THIS WALK COULD NOT CLASSIFY: ${NOT_CLASSIFIED.length}`);
 for (const n of NOT_CLASSIFIED.slice(0, 20)) console.log(`      unclassified  op=${n.op} (${n.who}) — ${n.why}`);

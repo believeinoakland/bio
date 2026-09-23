@@ -10306,10 +10306,14 @@ export const ADMISSION_CHECKS = {
    arm-C note calls that the MULTI-SITE class. Minting it in `requiredArgument`
    is what makes this row's `where` true.
 
-   WHAT IS DELIBERATELY NOT IN SCOPE, named rather than left to be noticed:
-   `op=verify` and `op=publishedbytes` make the same sha256 complaint and keep
-   their bare strings. They are PRE-AUTHENTICATION surfaces reached with no
-   credential at all, which is D-278's subject and a different determination.
+   CORRECTED 2026-09-23 BY D-278. This paragraph read *`op=verify` and
+   `op=publishedbytes` make the same sha256 complaint and keep their bare
+   strings … D-278's subject and a different determination.* BOB #26 made that
+   determination (INTERFACES.md I3, **Answers**, 2026-09-22): the PRE-
+   AUTHENTICATION argument complaints of `verify`, `publishedbytes`,
+   `publishedcase` and `knock` take THIS row, because the fact is the same fact
+   and the sentence below carries no member vocabulary. They are minted through
+   the same helper, so the row's one `where` stays true.
    =========================================================================== */
 export const REQUIRED_ARGUMENT_CHECKS = {
   /* NOTHING WAS CHANGED, and the sentence says so first. A caller who cannot
@@ -10321,6 +10325,78 @@ export const REQUIRED_ARGUMENT_CHECKS = {
     translation: 'This request left out an argument the operation cannot run without, or sent one '
       + 'in a shape it does not accept. Nothing was changed. The argument and the shape it must '
       + 'take are named beside this message.',
+  },
+};
+
+/* ===========================================================================
+   D-278 (C-68) — A FACT ABOUT THE INSTALLATION, NOT ABOUT THE REQUEST.
+
+   BOB #26's per-group ruling, PROVISIONAL, 2026-09-22 (`INTERFACES.md` I3,
+   **Answers**): the refusals that still answered only `error` are coded one
+   group at a time. Two of those groups are THIS family, because the condition
+   is the same kind of fact — something about how the copy was SET UP, which no
+   change to the request can cure:
+
+   (4) THE CAPABILITY COMPLAINTS (503). `capture`, `pdfstructure`, `acquire` and
+       `attest` on a copy with no evidence storage bound. ONE row: the condition
+       is one condition whichever op meets it, and the op is named beside it.
+       Minted in ONE governed helper, `storageAbsent`, so the row's `where` names
+       one span rather than four sites inside `fetch`.
+   (2) `claim`'s THREE BOOTSTRAP-CREDENTIAL COMPLAINTS. Pre-authentication, met
+       before anyone holds anything, and each SAYS NO MORE THAN ITS `error` DID —
+       the mismatch row in particular does not tell the caller anything about
+       the token it failed to match.
+
+   The translations are addressed to WHOEVER INSTALLED THE COPY, because that is
+   the only person who can act on them. `error` is kept beside every code
+   byte-identical (D-270's pattern), so no consumer reading it moves.
+   =========================================================================== */
+export const INSTALLATION_CHECKS = {
+  EVIDENCE_STORAGE_NOT_CONFIGURED: {
+    check: 'C-68.1',
+    where: 'src/index.mjs storageAbsent > is-storage-absent',
+    translation: 'This copy was installed without the storage it keeps captured documents in, so it cannot '
+      + 'keep or read the bytes of a captured document. That is a fact about how the copy was set up, not '
+      + 'about this request: whoever installed it can connect that storage in the hosting account. Nothing '
+      + 'was changed.',
+  },
+  BOOTSTRAP_CREDENTIAL_UNSET: {
+    check: 'C-68.2',
+    where: 'src/index.mjs fetch > is-bootstrap-claim',
+    translation: 'This copy has no administrator token set, so it cannot be claimed yet. Whoever installed it '
+      + 'sets one in the hosting account. Nothing was changed.',
+  },
+  BOOTSTRAP_CREDENTIAL_PUBLISHED: {
+    check: 'C-68.3',
+    where: 'src/index.mjs fetch > is-bootstrap-claim',
+    translation: 'This copy\'s administrator token is a value published in the project\'s public repository, '
+      + 'so it can never be used to claim the copy: anyone can read it. Whoever installed the copy sets a '
+      + 'fresh one in the hosting account. Nothing was changed.',
+  },
+  BOOTSTRAP_CREDENTIAL_MISMATCH: {
+    check: 'C-68.4',
+    where: 'src/index.mjs fetch > is-bootstrap-claim',
+    translation: 'The administrator token given does not match the one this copy holds, so the copy was not '
+      + 'claimed. Nothing was changed.',
+  },
+};
+
+/* ===========================================================================
+   D-278 (C-69) — NO OPERATION BY THAT NAME.
+
+   Group (5) of BOB #26's ruling. `error: "unknown op"` is kept BYTE-IDENTICAL
+   beside the code, and that is load-bearing rather than courtesy: `civicos-ui`
+   reads it (`queueAbsent` and its two siblings) to tell a copy running an OLDER
+   plane — one that has not got the op yet — from a refusal. The translation
+   says only what the copy knows: it has no op by that name. It does not guess
+   which of "older", "newer" or "misspelt" is true.
+   =========================================================================== */
+export const DISPATCH_CHECKS = {
+  UNKNOWN_OP: {
+    check: 'C-69.1',
+    where: 'src/index.mjs fetch > is-unknown-op',
+    translation: 'This copy has no operation by that name. A copy running an older or newer version can have '
+      + 'a different set of operations, and a misspelt name reads the same way. Nothing was changed.',
   },
 };
 
