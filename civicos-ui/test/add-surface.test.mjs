@@ -42,7 +42,7 @@
  *      the act is unavailable here, and the one sentence that stops a member
  *      reaching for co-attestation to solve a problem it does not address.
  *
- * NEGATIVE CONTROL: sixteen. Eleven RUN BY HAND — six 2026-08-04 (UI-15) and five 2026-08-04 (UI-32), each arm mutating ONE file, restored byte-identical afterwards with sha256 compared, and re-run against the FINAL files (144 assertions at the time; 167 now). FIVE MORE, UI-54's, are DRIVEN and re-runnable in one step: `node civicos-ui/test/add-surface.control.mjs` — arms (1)(2)(3) declared RED and (3b)(4) declared GREEN, all five AS DECLARED on 2026-08-10, both watched files restored byte-identical by sha256 AND `cmp` against two independent pristine copies. The arms and their measured outcomes are written out in that file's header; they are NOT duplicated here, because two accounts of one run is the drift this suite's own subject is about.
+ * NEGATIVE CONTROL: sixteen. Eleven RUN BY HAND — six 2026-08-04 (UI-15) and five 2026-08-04 (UI-32), each arm mutating ONE file, restored byte-identical afterwards with sha256 compared, and re-run against the FINAL files (144 assertions at the time; 167 now). FIVE MORE, UI-54's, are DRIVEN and re-runnable in one step: `node civicos-ui/test/add-surface.control.mjs` — arms (1)(2)(3) declared RED and (3b)(4) declared GREEN, all five AS DECLARED on 2026-08-10, both watched files restored byte-identical by sha256 AND `cmp` against two independent pristine copies. The arms and their measured outcomes are written out in that file's header; they are NOT duplicated here, because two accounts of one run is the drift this suite's own subject is about. RE-RUN 2026-09-23 by UI-79 after its correction (the catalogue arms judge bytes as the plane holds them; 168 assertions): 5 arms run, 5 AS DECLARED, every watched file restored byte-identical (sha256 + cmp).
  *
  *  (a) THE ITEM'S OWN CONTROL. Delete the `const ADD_TICKS = 8;` declaration in
  *      civicos-ui/app.html (beside `ADD_BUSY`, ~:9411) -> `ReferenceError:
@@ -138,7 +138,18 @@ import vm from "vm";
 import { createHash, webcrypto } from "crypto";
 import { SETUP_HTML } from "../../bio-plane/src/setup.mjs";
 import { STATES, HEADINGS, OBJECT_TYPES, normalizeType } from "../../bio-plane/checks/bio-checks.mjs";
-import { checkBundle } from "../../bio-plane/checks/bio-checks.mjs";
+import { checkBundle, withProducingGroup } from "../../bio-plane/checks/bio-checks.mjs";
+/* CORRECTED 2026-09-23 BY UI-79 (D-436, IC-172), never exempted. The catalogue arms below judged `mdFor`'s bytes AS THE
+   SURFACE SENDS THEM, and those bytes cleared C-2.2 only because they carried a LITERAL producing group — one group's
+   slug, true of one instance and false of every instance `newgroup` installs. The surface now sends NO `group:` line:
+   the plane writes the store's one recorded value into every creation (`Store#stampGroup`, through the catalogue's
+   `withProducingGroup`). So what is judged is the document AS THE PLANE HOLDS IT — the surface's own bytes through that
+   same catalogue function, never a copy of it — exactly the correction `bio-plane/test/conformance.test.mjs` took for
+   the setup page; and the surface's side of the division is pinned by `OWN_NAMES_GROUP` below: it names no group. This
+   slug stands in for "the store's recorded value" and is deliberately no real group's. */
+const HELD_GROUP = "intake-fixture";
+const OWN_NAMES_GROUP = [];
+const asHeld = (own) => { OWN_NAMES_GROUP.push(/^group:/m.test(String(own))); return withProducingGroup(own, HELD_GROUP); };
 /* THE CAPTURE DOCTRINE, IMPORTED FROM WHERE IT IS ENFORCED AND WHERE IT IS
    PUBLISHED (UI-32, 2026-08-04). Neither module reaches `cloudflare:workers`,
    which is UI-28's finding and is why this suite can hold the rule itself
@@ -292,6 +303,7 @@ async function gate(id, type, hasDoc, extra) {
   const files = await G.docFiles(body, hasDoc ? document_ : null, await sha256(body), extra || null);
   const map = new Map();
   for (const f of files) map.set(f.path, f.text !== undefined ? f.text : DOC);
+  map.set("bundle.md", asHeld(map.get("bundle.md")));   /* UI-79: judged as the plane holds it (see HELD_GROUP) */
   const { findings } = await checkBundle({ folderName: id, files: map, sha256, sha512,
     resolveTarget: () => true });
   return { files, errs: findings.filter(x => x.severity === "error") };
@@ -675,8 +687,8 @@ const UNDET = { kind: "cpra_request",
                 basis: [], clock: [] };
 const actionErrs = async (act) => {
   const id = "ACTN-2026-0800-records-request";
-  const text = G.mdFor(id, "action", G.FIRST_STATE.action, "Records request",
-                       "Ask for the transfer ledger.", NOW, false, null, act);
+  const text = asHeld(G.mdFor(id, "action", G.FIRST_STATE.action, "Records request",
+                       "Ask for the transfer ledger.", NOW, false, null, act));   /* UI-79: as the plane holds it */
   const { findings } = await checkBundle({ folderName: id, files: new Map([["bundle.md", text]]),
     sha256, sha512, resolveTarget: () => true });
   return { text, errs: findings.filter((x) => x.severity === "error") };
@@ -709,13 +721,18 @@ ok("and the writer still keeps its action arm, because actions already in the re
    result clears the real catalog. */
 {
   const id = "INQ-2026-0810-why-no-reply";
-  const text = G.mdFor(id, "inquiry", G.FIRST_STATE.inquiry, "Why no reply", "What the silence means.",
-                       NOW, false, null, { refs: [{ target: "ACTN-2026-0800-records-request", rel: "cites" }] });
+  const text = asHeld(G.mdFor(id, "inquiry", G.FIRST_STATE.inquiry, "Why no reply", "What the silence means.",
+                       NOW, false, null, { refs: [{ target: "ACTN-2026-0800-records-request", rel: "cites" }] }));
   const { findings } = await checkBundle({ folderName: id, files: new Map([["bundle.md", text]]),
     sha256, sha512, resolveTarget: () => true });
   const errs = findings.filter((x) => x.severity === "error");
   for (const e of errs) console.log(`         carry: ${e.check}: ${String(e.message).slice(0, 140)}`);
   ok("a question carrying an action as a REFERENCE clears the catalog", errs.length === 0);
+  /* UI-79, 2026-09-23: the surface's side of the division, pinned over every document judged above. A surface that went
+     back to writing a group of its own would be a second author of the producer — the one that was wrong on every
+     instance but one. Floored, so an arm that judged nothing cannot pass it. */
+  ok(`UI-79: the surface's OWN bytes name no producing group, in every document judged here (${OWN_NAMES_GROUP.length} judged)`,
+     OWN_NAMES_GROUP.length >= 7 && OWN_NAMES_GROUP.every(x => x === false));
   ok("the action is in references[] and the question rests on nothing",
      /target: ACTN-2026-0800-records-request/.test(text) && !/^basis:/m.test(text));
 }

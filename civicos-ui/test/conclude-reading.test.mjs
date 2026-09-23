@@ -87,7 +87,14 @@ const mf = new Miniflare({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-ui65", MEMBER_TOKEN: "mem-ui65", PROBE_TOKEN: "prb-ui65", VERSION: "test" },
+  bindings: { ADMIN_TOKEN: "adm-ui65", MEMBER_TOKEN: "mem-ui65", PROBE_TOKEN: "prb-ui65", VERSION: "test",
+                /* CORRECTED 2026-09-23 BY UI-79 (D-436, IC-172; State Rules §3.1), never exempted. This plane recorded NO
+                   producing group, and its seeds stated one group's slug as a LITERAL in their bytes and their meta — the pin
+                   the member UI carried, true of one instance and false of every instance `newgroup` installs. A store's
+                   producing group is ONE recorded value, written at its FIRST BOOT from the slug the installer binds, and the
+                   plane stamps it into every creation whatever a caller says; so the store records one here, the way every
+                   installed store does, and the seeds name none. The slug is deliberately no real group's. */
+                INSTANCE_NAME: "fixture-group" },
 });
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const GET = async (q) => (await mf.dispatchFetch(`http://x/api/?${q}`)).json();
@@ -159,7 +166,6 @@ const inquiryMd = (id, question, { versions = [], legacy = null } = {}) => ["---
     : ["current_state: open", "prior_state: null"]),
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
-  "group: believe-in-oakland",
   "references:", `  - target: ${DOC}`, "    rel: cites", "    status: confirmed",
   `  - target: ${DOC2}`, "    rel: cites", "    status: confirmed",
   "state_history: []", "annotations_open: 0",
@@ -178,7 +184,7 @@ const infoMd = (id) => ["---",
   `title: "Record ${id}"`, "current_state: collected", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
-  "group: believe-in-oakland", "references: []", "state_history: []",
+  "references: []", "state_history: []",
   "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "---", "", "## Summary", "", "A captured record.", "",
@@ -196,7 +202,7 @@ let seq = 0;
 const promote = async (id, md, type, state, token = "mem-ui65") => {
   const r = rP(await POST(`op=promote&token=${token}`, {
     ...(id === null ? {} : { bundleId: id }), base: null, snapKey: `${id ?? type}-${++seq}`, author: "seed",
-    meta: { object_type: type, group: "believe-in-oakland", title: `t ${id ?? "oversight"}`,
+    meta: { object_type: type, title: `t ${id ?? "oversight"}`,
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [],

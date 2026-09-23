@@ -50,6 +50,45 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v98, 2026-09-23 session, thread UI, UI-79 (a WORKER of CONDUCT #14, wave 7). Landed on
+`worktree-agent-af35e02341617dc41` (base `origin/main` @ `f05c1efd`), in the commit that carries this entry. SURFACE: the
+write path — every document the member UI authors (`mdFor`; the `meta` of `addGo`, `doProposalAdopt` and
+`reviseWithCapture`) — plus two member-visible strings: the FY glossary entry and the Add form's issuer placeholder.
+
+**What was wrong.** `mdFor` wrote `group: believe-in-oakland` into every document's bytes and the three promote calls sent
+it as `meta.group`, on every instance `newgroup` installs. Since D-436 the plane stamps a store's recorded group over it,
+but on a store recording none the literal was kept as the caller's statement — a sovereign group's first bundles naming
+this project as their producer. The glossary explained FY as one city's; the placeholder suggested one city's name.
+
+**What it does now.** The UI composes no producing group; the plane writes the instance's one recorded value (IC-172). On a
+store recording none the creation is refused C-64.1 and the member reads the plane's translation (the adoption dialog
+printed a bare code for every non-gate refusal; it now renders the plane's words, as the Add surface already did). The
+glossary and the placeholder name no place.
+
+**Driven against the real plane**, `civicos-ui/test/authored-group.test.mjs` (40 assertions): a plane recording a slug
+PLANTED AT RANDOM per run — the Add surface (a note, a project) and the proposal adoption each author a bundle held with
+that slug in its bytes and its projection, and every group the surface SENT is the planted one or none (the liar, a
+different hard-coded slug, can only pass by sending none); a plane recording none refuses in its own words and writes
+nothing; the source census reads no literal anywhere and Oakland in CODE only at four declared recognisers. NEGATIVE
+CONTROL `authored-group.control.mjs`, 4/4 AS DECLARED: one `meta.group` restored RED 31/40 naming the SENT arm while the
+HELD arm stays green; the liar RED 32/40 with the literal census green; over-strictness GREEN.
+
+**Suites corrected, never exempted, each with a dated comment:** the ten miniflare suites that seeded the literal
+(`ai-session-context`, `ai-session-wire`, `conclude-nofalsifier`, `conclude-reading`, `content-extent`, `intent-write`,
+`passage-surface`, `question-npc`, `recipe-drive`, `refusal-translation-surface`) now boot a store recording a fixture slug
+and seed none; the two projection mocks (`document-page`, `document-structure`) carry a fixture slug; `add-surface` judges
+`mdFor`'s bytes AS THE PLANE HOLDS THEM (`withProducingGroup`, conformance's correction) and pins that they name no group;
+`project-id-surface` binds a group and pins the held bytes as the sent ones plus the id AND the stamp; `group-surface`'s
+literal pattern could not see the hyphenated slug (it read GREEN over four hits) and now does. Every changed suite's
+control was RE-RUN (ten controls, all AS DECLARED, app.html restored identical); that re-run found
+`content-extent.control.mjs`'s `vocabdrift` arm REFUSING TO ARM since FW-19 wrapped `CONTENT_EXTENT_KINDS` onto two
+lines — its anchor is corrected and the arm now fails `check-semantics` by name.
+
+**Left, and why.** Oakland stays in 4 code lines — recogniser heuristics measured on that city's documents (`/^City of
+Oakland$/i` twice in page-furniture lists, `CODE_REF` and `REG_CODE_REF`'s municipal-code form) — and in 37 comment lines
+recording where a measurement came from. None is the surface naming a group. `worker.template.mjs` proxies to the dev
+plane's workers.dev address, whose account subdomain contains the name: an address, not a claim, and not this row's.
+
 v97, 2026-09-22 session, thread UI, UI-77 (a WORKER of CONDUCT #14, wave 2). Landed on
 `worktree-agent-a40f17095e235d716` (base `origin/main` @ `14ffdbcf`), in the commit that carries this entry. SURFACE: the
 member fence (`#m-grp`, `#m-idstr`) and the public header (`#p-gname`, `#p-gid`, `#p-mono`) — every instance's, since

@@ -112,7 +112,14 @@ const mf = new Miniflare({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-ui49", MEMBER_TOKEN: "mem-ui49", PROBE_TOKEN: "prb-ui49", VERSION: "test" },
+  bindings: { ADMIN_TOKEN: "adm-ui49", MEMBER_TOKEN: "mem-ui49", PROBE_TOKEN: "prb-ui49", VERSION: "test",
+                /* CORRECTED 2026-09-23 BY UI-79 (D-436, IC-172; State Rules §3.1), never exempted. This plane recorded NO
+                   producing group, and its seeds stated one group's slug as a LITERAL in their bytes and their meta — the pin
+                   the member UI carried, true of one instance and false of every instance `newgroup` installs. A store's
+                   producing group is ONE recorded value, written at its FIRST BOOT from the slug the installer binds, and the
+                   plane stamps it into every creation whatever a caller says; so the store records one here, the way every
+                   installed store does, and the seeds name none. The slug is deliberately no real group's. */
+                INSTANCE_NAME: "fixture-group" },
 });
 
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
@@ -178,7 +185,7 @@ const promote = (id, objectType, tok = "mem-ui49") => {
   const md = objectType === "project" ? `---\n---\n\n## Question\n\nfixture\n` : `---\nid: ${id}\n---\n\n## Question\n\nfixture\n`;
   return post("promote", {
     ...(objectType === "project" ? {} : { bundleId: id }), base: null, snapKey: "20260807T090000Z_inbox", author: "ruth",
-    meta: { object_type: objectType, group: "believe-in-oakland",
+    meta: { object_type: objectType, 
             title: `fixture ${id}`,
             current_state: objectType === "project" ? "forming" : "open",
             created: T0, last_updated: T0 },

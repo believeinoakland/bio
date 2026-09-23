@@ -104,7 +104,14 @@ const mf = new Miniflare({
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-d434", MEMBER_TOKEN: "mem-d434", PROBE_TOKEN: "prb-d434", VERSION: "test",
               /* D-95's precedent (acquire.test.mjs): this suite is about a recipe, not pacing. */
-              GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0" },
+              GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0",
+              /* CORRECTED 2026-09-23 BY UI-79 (D-436, IC-172; State Rules §3.1), never exempted. This plane recorded NO
+                 producing group, and its seeds stated one group's slug as a LITERAL in their bytes and their meta — the pin
+                 the member UI carried, true of one instance and false of every instance `newgroup` installs. A store's
+                 producing group is ONE recorded value, written at its FIRST BOOT from the slug the installer binds, and the
+                 plane stamps it into every creation whatever a caller says; so the store records one here, the way every
+                 installed store does, and the seeds name none. The slug is deliberately no real group's. */
+              INSTANCE_NAME: "fixture-group" },
   outboundService(request){
     const u = new URL(request.url);
     if(u.hostname === HOST && u.pathname.startsWith("/d434/"))
@@ -214,7 +221,6 @@ const inquiryMd = (id, legs) => ["---",
   `title: "What does ${id} rest on?"`, "current_state: open", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
-  "group: believe-in-oakland",
   ...(legs.length
     ? ["references:", ...legs.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"])]
     : ["references: []"]),
@@ -235,7 +241,7 @@ const seedQuestion = async (id, legs) => {
   const r = await post("promote", {
     bundleId: id, base: null,
     snapKey: `20260921T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: `What does ${id} rest on?`,
+    meta: { object_type: "inquiry", title: `What does ${id} rest on?`,
             current_state: "open", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: t, bytes: t.length, sha256: sha(t) }], register: [] }, "mem-d434");
   if(!r || r.ok === false) throw new Error(`seed ${id}: ${JSON.stringify(r).slice(0, 600)}`);
