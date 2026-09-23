@@ -124,6 +124,19 @@ at 02:55Z):** every failed GitHub run emails Bob. Push `land/fleet/*` only after
 exact tree. A negative control never goes to a `land/*` or `integrate/*` branch; controls run locally. A branch FLEET
 pushed that reads red is diagnosed at once. FLEET's session branch carries no `.github/workflows/`, so it has fired no run.
 
+**Fleet bundles were not reproducible across install layouts. BUILT by FLEET #4 on 2026-09-23, on BOB #29's diagnosis.**
+esbuild names a module by its RESOLVED path, so a symlinked `node_modules` (a worktree sharing another checkout's
+install) put `../../../../home/...` into pdf-worker's boundary comment, and `fleetbundles.test.mjs` read 84/3 on identical
+source (reproduced). Fix: `preserveSymlinks: true` in `optionsFor`, the one recipe for all members and the plane. Also
+a recipe assertion per member and one for the plane, and control arm 9 in `fleetbundles.control.mjs` (84/7 on both layouts; a real
+install with the flag dropped reads 87/4). Committed bytes did not move. Local gate GREEN: 81/81 suites, 5,934
+assertions, class TARGETED, recorded for tree `e30256ab`. Pushed `land/fleet/preserve-symlinks` @ `b781b5b6` for the train.
+GitHub run `35819000017` was in progress at 04:37Z; its verdict is this lane's to read.
+
+**A trap met while doing it:** a symlinked `node_modules` shows as UNTRACKED (`.gitignore` matches a directory, not a
+link), so `gates.mjs` calls the tree unclean and records nothing. Gate a landing tree with REAL installs (`cp -a` from a
+checkout whose locks match, or `npm ci`).
+
 ## Carried from the old account's memory, which will not travel
 
 - A background task's exit code is its WRAPPER's. Read the tool's own completion line (`N/N suites green · …`).
