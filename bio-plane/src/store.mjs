@@ -2825,6 +2825,15 @@ export class Store extends DurableObject {
                 offered and then refused. THREE-VALUED, `project_owner`'s shape exactly: null on
                 any target that is not a project and for a caller with no roster position (a
                 `class:*` credential), whose act set is therefore byte-unchanged. */
+             /* REC-149 / Membership v2 §7.14: WHETHER THE CALLER OWNS THIS PROJECT — the PAIR fact D-311 names,
+                asked of `identity` through `#isProjectOwner`, the predicate `projectVisibilitySet` refuses on, so
+                the published act and its refusal cannot disagree (DEC-8). THREE-VALUED, `project_participant`'s
+                shape: null on a target that is not a project and for a caller with no roster position. Its one
+                consumer is `projectvisibilityset`, which is offered on `=== true` only. */
+             project_target_owner: (() => {
+               if (normalizeType(b.object_type) !== "project") return null;
+               const who = this.#positionalMember(viewer, identity);
+               return who === null ? null : this.#isProjectOwner(b.bundle_id, who); })(),
              project_participant: (() => {
                if (normalizeType(b.object_type) !== "project") return null;
                const who = this.#positionalMember(viewer, identity);

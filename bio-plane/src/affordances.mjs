@@ -847,6 +847,7 @@ export const RUNG_ABSENT = {
   taskresolve:          { ground: "undetermined", is: "records how a task ended" },
   actioncorrespond:     { ground: "undetermined", is: "records what came back from outside the system — REC-23's counterparty, named or honestly undetermined" },
   projectfork:          { ground: "undetermined", is: "creates a NEW project; the source object is unchanged, and nothing folds a fork back" },
+  projectvisibilityset: { ground: "undetermined", is: "an owner's recorded, append-only choice of whether a project is DISCOVERABLE or HIDDEN (Membership v2 §7.14, REC-149); it sets no state on the project's document" },
   biasadopt:            { ground: "undetermined", is: "the authored, attributed adoption putting a declared-bias set in force for a scope (DEC-54 c/d)" },
   strengthbar:          { ground: "undetermined", is: "the GROUP's declared default required strength (DEC-17)" },
   entitycreate:         { ground: "undetermined", is: "a registry write introducing a SUBJECT (safeguard 4)" },
@@ -1650,6 +1651,16 @@ export const ACTS = [
     types: ["information", "inquiry", "project"],
     applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.severed ?? 0) > 0)
                      || (ty === "project" && f.cites_out.severed > 0 && f.project_participant !== false) },
+  /* REC-149 (Membership v2 §7.14): WHETHER THIS PROJECT CAN BE FOUND — an OWNER's recorded act on the project
+     that is the TARGET. It asks the PAIR fact `project_target_owner` (`#isProjectOwner(target, caller)`, the one
+     owner predicate `projectVisibilitySet` refuses on), never D-310's `project_owner` (owner of SOME project),
+     which would offer it on every project to anyone owning any — D-311's argument (2) for the roster acts. It is
+     offered on `=== true` ONLY: the store refuses every other caller, a machine credential included (C-70.2),
+     so a null (no roster position) must not publish it — this is a NEW act, so no existing act set moves.
+     Weight `single`: one project, one setting. */
+  { id: "projectvisibilityset", label: "Choose whether this project can be found", weight: "single",
+    types: ["project"],
+    applies: (f, ty) => ty === "project" && f.project_target_owner === true },
 ];
 
 /* Every op in NEEDS that is NOT an object-directed act, with the reason — so

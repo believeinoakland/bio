@@ -773,6 +773,12 @@ const ACTS_AWAITING_SURFACE = [
      the project's whole conclusion history (`conclusion_history`) and with the
      plane's own label saying the conclusion stays in the record;
      `conclude-reading.test.mjs` §5 drives it against the real plane. */
+  /* REC-149. Registered as a DEBT, never exempted, which is what ARM A4b asked for by name on the item's first
+     run. The act is `op=projectvisibilityset`: a project's OWNER chooses whether it is DISCOVERABLE or HIDDEN
+     (Membership Architecture v2 §7.14). THE SURFACE OWES ONE THING THE BUTTON DOES NOT: neither option is
+     preselected (§7.14: "each project chooses" is taken literally), and a project with no record reads HIDDEN in
+     the plane's own words (`op=projectvisibility`'s `recorded: false`), never as a default the surface picked. */
+  { id: "projectvisibilityset", published_by: "REC-149 (Membership v2 §7.14 step 1: the owner's setting)", owed_by: "UI — §7.14 step 3: the owner's setting control, with neither option preselected, and the create/fork forced choice", since: "2026-09-23" },
 ];
 
 /* THE ONE PLACE the act/surface partition is computed. The negative controls

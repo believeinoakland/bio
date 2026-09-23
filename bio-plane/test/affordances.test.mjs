@@ -579,10 +579,13 @@ const cat = await affordances(null);
    item 7 rules APPENDS to the relationship's history. Corrected, not loosened,
    for every note above's reason; it moved by exactly the one object-directed
    op REC-136 added. */
-t("no target -> the whole catalogue: twenty acts, each with id/label/weight/needs/mode/rung/prompt",
+/* CORRECTED 2026-09-23 (REC-149): TWENTY-ONE, with `projectvisibilityset` — a project's OWNER choosing whether
+   it can be found (Membership Architecture v2 §7.14). Corrected, not loosened, for every note above's reason; it
+   moved by exactly the one object-directed op REC-149 added. */
+t("no target -> the whole catalogue: twenty-one acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 20, true]);
+  [true, 21, true]);
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
    null for every act no ruling attaches one to, and where a ruling does attach
    one it is the PUBLISHED constant — so a surface that has the control
@@ -821,9 +824,14 @@ t("the four resolutions reach a caller OVER THE WIRE, exactly as the catalogue h
    author the case either. Still composed rather than hand-listed: `mode` comes
    from SESSION_OPS for every act, and exactly one act names the other
    capability. */
-t("every act is session-reachable, and each carries the capability its own NEEDS entry names — publish rides the publication surface, not the contribute one",
+/* CORRECTED 2026-09-23 (REC-149), never exempted: `projectvisibilityset` needs NO working capability — its
+   NEEDS entry is null for the roster acts' reason (Membership v2 §7 governs it, an OWNER's position, not §5's four
+   working rights), and the store refuses every non-owner by C-70.2. The old composition said every act but
+   publish needs `contribute`, which was true while every published act shaped the corpus; this one sets a
+   project's visibility and shapes nothing. Still composed, and still exactly one exception per rule. */
+t("every act is session-reachable, and each carries the capability its own NEEDS entry names — publish rides the publication surface, the visibility setting rides none",
   cat.result.catalog.map((a) => [a.needs, a.mode]),
-  cat.result.catalog.map((a) => [a.id === "publish" ? "publish" : "contribute", "session"]));
+  cat.result.catalog.map((a) => [a.id === "publish" ? "publish" : a.id === "projectvisibilityset" ? null : "contribute", "session"]));
 /* CORRECTED BY FW-14, never exempted, and this is the pin the item MOVED rather
    than merely reworded. It read "rung is DECLARED: cite is null (no document
    assigns one — FW-14's, not ours), retire is terminal" and pinned cite's rung
