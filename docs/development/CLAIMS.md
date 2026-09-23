@@ -19619,3 +19619,19 @@ paths (hunks kept local; M0-126 holds the rest of `gates.mjs`/`gates.yml`/batter
   - `docs/development/TREE-SHARING.md` §3 (as-built sentence), `docs/development/VERIFICATION.md` (the D-186 paragraph),
     one measurement entry.
 **open as of 2026-09-23** — OPEN while this item builds.
+
+## CLAIM 2026-09-23 RECORD (REC-170 — `op=publishedmanifest` serves the frozen pair PER CASE where the pinning case documents disagree, never a bare null and never one case's pair as THE pair)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for REC-170, worktree `.claude/worktrees/agent-ace3a991381a5e0d1`,
+branch `land/worker/REC-170`, from `origin/main` @ `b5ce975a`.
+authority: `QUEUE.md` `### REC-170 · running`; design `BIO_Publication_v0_1.md` §3 rule 12 (b)–(d), with IC-74.
+paths, BY SITE:
+  - `bio-plane/src/store.mjs`: `publishedManifest` (the `published[]` row map ONLY) and ONE new private reader beside
+    `#frozenFromPinningDocuments` (reads `#caseDocMemberFrozen`, unchanged).
+  - `bio-plane/test/d442-publish-writes-nothing.test.mjs`: its section-4 `op=publishedmanifest` arm, only if its pin moves.
+  - NEW `bio-plane/test/rec170-manifest-pair.test.mjs` and `bio-plane/test/rec170-manifest-pair.control.mjs`; `bio-plane/dist/`.
+  - `docs/development/INTERFACE-CHANGES.md` (one PROPOSED IC), `docs/architecture/BIO_Publication_v0_1.md` (front matter
+    and §3 rule 12's "As built"), `docs/architecture/construct-status.json` if a construct's text moves.
+**NOT CLAIMED:** the ratify committer (`publish`), `#caseEditionState`, `civicos-ui/**` (UI-82's).
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
