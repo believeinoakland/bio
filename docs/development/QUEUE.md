@@ -446,7 +446,7 @@ scope: in promote's action block (not on replay), refuse MACHINE_CANNOT_SET_RISK
 accepts-when: a machine credential's promote changing a tier to 2 is refused by name; a member's promote setting 2 and a machine's unchanged carry-forward are accepted. How a liar passes it: refusing every machine promote of an action, so the carry-forward arm must pass. NEGATIVE CONTROL: drop the machine-identity clause, and the "a machine credential cannot set risk_tier" arm fails by name while the member arm stays green.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
 
-### REC-159 · queued — STARTED by BOB #32 at Bob's ruling (~23:20Z: starting plan entries is BOB's act): WORKER REC-159, session_01Kmhpfj3yoHZCRgNHbBXaTf, reporting to CONDUCT #18, which writes `running`. Formerly blocked: CONDUCT #17's spawn was refused [Permission Grant] 21:11Z. REC-162 and REC-155 depend on it.
+### REC-159 · running — SPAWNED 2026-09-23 ~23:20Z by BOB #32 on Bob's ruling (session_01Kmhpfj3yoHZCRgNHbBXaTf, WORKER REC-159, reports to CONDUCT #18); written running by CONDUCT #18. Falsify rather than believe: read the branch land/worker/REC-159 and that session; never conclude queued from the absence alone.
 order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
 milestone: M8
 interface: I3 — four ops gain session reach and three a stamped `by`; the integrator mints and classifies the IC.
