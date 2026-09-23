@@ -24313,7 +24313,9 @@ var QUEUE_FINDING_KINDS = {
   "grade-improvable": "a connection's grade is improvable (D-72)",
   "objective-gap": "a gap derived from an objective's satisfaction condition (D-76)",
   "measure-decay": "a bias statement's measure has decayed (D-87, D-90 \u2014 reports, never blocks)",
-  "export-performed": "an export was performed; every administrator is notified (D-52 8.1)",
+  /* D-52, LIVE 2026-09-23: store.mjs #findingsExportPerformed, derived on read from `export_log`
+     and raised to every administrator and to nobody else (Membership v2 §8.1). */
+  "export-performed": "an export was performed; every administrator is notified (D-52 8.1) \u2014 LIVE: store.mjs #findingsExportPerformed",
   "audit-finding": "op=audit found something about the record",
   "register-unbacked": "a register entry's bytes are unbacked (D-9, D-45)",
   /* PL-15 / D-213, ANSWERED 2026-08-06 by Bob and LIVE from this item:
@@ -24363,6 +24365,9 @@ var QUEUE_FINDING_KINDS = {
      another team concluding the question you share is a fact about the work,
      and no member may silence it for the team. */
   "shared-inquiry-concluded-by-another-project": "another project drawing on a SHARED question concluded it, adopting the claim of the reading it stands on; nothing this project stands on or concluded has moved (\xA77.1 \u2014 a conclusion is per-project) \u2014 LIVE: store.mjs #findingsConcludedElsewhere"
+};
+var QUEUE_KIND_IDS = {
+  "export-performed": "N-1"
 };
 function classOfKind(kind) {
   if (typeof kind !== "string" || !kind) return null;
@@ -50024,6 +50029,82 @@ ${words}`;
     }
     return out;
   }
+  /** `export-performed` (D-52, catalogue id N-1) — Membership v2 §8.1: *"The export is recorded in
+   *  the append-only history, so it can never happen silently, and every administrator is notified."*
+   *  The RECORD half was `export_log` and `op=exportlog`, which reach an administrator who LOOKS; this
+   *  is the notification half, which reaches one who does not.
+   *
+   *  ONE ITEM PER `export_log` ROW, IN EVERY ADMINISTRATOR'S FEED AND IN NO OTHER. The reader is an
+   *  administrator when `#isAdminMember` says so of the stamped member (the founder's own session is
+   *  ROOT_ADMIN and counts), or, for a machine credential, when the credential IS the ADMIN_TOKEN class
+   *  — the root of trust that took the export. Every other reader gets nothing, and not a count: an
+   *  ordinary member is not told an export exists, since §8.1's audience is the administrators. The
+   *  rule is asked of the READER, never of the exporter, so the item cannot collapse to "the person
+   *  who exported was told" — the failure this item's control arm is aimed at.
+   *
+   *  DERIVED ON READ from the log itself, the lead's and the conclusions' precedent: no table, no purge
+   *  arm (D-113), and it cannot disagree with `op=exportlog` about what was exported. An administrator
+   *  appointed after an export is told of it too, which is the reading of "every administrator" that
+   *  leaves no administrator uninformed.
+   *
+   *  WHAT IT CANNOT YET DO, STATED ON THE ITEM: leave anyone's list. It is a FINDING, and a finding
+   *  leaves by an authored disposition or a member's personal mute; the disposition is scoped to a
+   *  project and an export has none, and the personal mute of a finding (D-125) is ruled and not built.
+   *  So the notice is bounded to the log's newest `EXPORT_LOG_LIMIT_DEFAULT` rows instead, and the bound
+   *  is published. */
+  #findingsExportPerformed(me, viewer, now) {
+    const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
+    if (!admin) return [];
+    const cap = _Store.EXPORT_LOG_LIMIT_DEFAULT;
+    const page = this.#rows(
+      `SELECT seq, at, scope, bundles, files, note FROM export_log ORDER BY seq DESC LIMIT ?`,
+      cap + 1
+    );
+    if (page.length === 0) return [];
+    const truncated = page.length > cap;
+    const raisedTo = this.#activeAdmins();
+    const homes = this.#queueAncestors([], viewer);
+    return page.slice(0, cap).map((r) => {
+      const atMs = Date.parse(r.at ?? "");
+      return {
+        id: `FINDING::export-performed::${r.seq}`,
+        class: "FINDING",
+        kind: "export-performed",
+        catalogue_id: QUEUE_KIND_IDS["export-performed"],
+        case: homes,
+        subject: { kind: "export", id: `export_log:${r.seq}`, seq: r.seq },
+        summary: `A full ${r.scope} export was taken on ${r.at}: ${r.bundles} bundles, ${r.files} files`,
+        detail: `An export of the ${r.scope} left this instance with the root-of-trust credential (Membership v2 \xA78.1). It is row ${r.seq} of the append-only export log` + (r.note ? `, noted "${r.note}"` : ", with no note") + `. Every administrator is told; nobody else is. The log is the record of it and nothing here changes the log.`,
+        basis: {
+          source: "export_log",
+          seq: r.seq,
+          at: r.at,
+          scope: r.scope,
+          bundles: r.bundles,
+          files: r.files,
+          note: r.note ?? null,
+          raised_to: raisedTo,
+          bounds: {
+            limit: cap,
+            truncated,
+            detail: "the newest exports are read up to this bound. An export past it is still in the log (op=exportlog, with a larger limit) and is not told here."
+          },
+          detail: "an export of the working corpus is recorded in the append-only export log and every administrator is notified (Membership v2 \xA78.1). This notice is derived from that log row and reaches every administrator named in raised_to and no one else. No act clears it yet: a disposition is scoped to a project and an export has none, and a member's own mute of a finding (D-125) is ruled but not built."
+        },
+        age: Number.isFinite(atMs) ? { state: "determined", since: r.at, ms: Math.max(0, now - atMs) } : {
+          state: "undetermined",
+          reason: "unparseable_export_instant",
+          detail: "the export log row carries an instant this producer cannot read"
+        },
+        assignee: null,
+        assignee_role: null,
+        /* The producer's own option (NOTIFICATIONS.md item contract, rule 1): the act that shows the
+           administrator the record behind the notice. Not REC-19's object derivation, because an
+           export is not a bundle and has no affordances to derive. */
+        options: [{ id: "exportlog", label: "Read the export log", weight: "single" }]
+      };
+    });
+  }
   /* ======================================================================
    * PL-13 — **WHAT IDENTITY A QUEUE ITEM CAN BE DISPOSITIONED ON, ANSWERED BY
    * THE PLANE AND PUBLISHED, INSTEAD OF BEING GUESSED AT A SURFACE.**
@@ -50307,6 +50388,7 @@ ${words}`;
     const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now, identity);
     items.push(...fromAnotherTeam);
     items.push(...this.#findingsConcludedElsewhere(viewer, now));
+    items.push(...this.#findingsExportPerformed(me, viewer, now));
     items.push(...this.#queueConditions(viewer, now, identity));
     const refusal7 = (code, detail, extra) => {
       const row = QUEUE_MINT_CHECKS[code];
