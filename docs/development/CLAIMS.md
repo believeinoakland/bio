@@ -19950,3 +19950,9 @@ paths: bio-plane/src/store.mjs (`promote`: two new regions — `is-promote-resen
 why: op=promote's INSERT OR REPLACE overwrites a repeated (bundle_id, snap_key) manifest row (REC-176, QUEUE.md on coord; the history law, BIO_State_Rules_Consistency_v1_5.md §2.4).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+### D-168 · RECORD worker of CONDUCT #16 (worktree agent-ab0b1ebe531cb428b) · 2026-09-23
+paths: bio-plane/src/store.mjs (`cite`: one new DEC-49 region, is-cite-retired, after the type offenders; comments that said citing retired material is permitted), bio-plane/src/affordances.mjs (the `cite` entry's information arm: not on a retired bundle), bio-plane/checks/bio-checks.mjs (ACT_SHAPE_CHECKS: one new row, C-33.39 — C-33.38 is REC-175's, on c16-batch5), civicos-ui/check-refusal-codes.mjs (floors moved from its own print), bio-plane/test/d168-retired-cite.test.mjs and .control.mjs (new), bio-plane/test/citeinquiry.test.mjs (header comment only), bio-plane/dist/ (rebuilt), docs/development/interface-changes/ (one new IC), docs/architecture/construct-status.json and BIO_State_Rules_Consistency_v1_5.md front matter.
+why: op=cite admits a RETIRED Information bundle (D-168, QUEUE.md on coord; State Rules §4.1 "A RETIRED ITEM IS NOT CITABLE", BOB #30).
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
