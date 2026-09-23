@@ -23,44 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-178 · queued — **`op=promote` STORES `bytes` AS SENT, AND WRITERS SEND `text.length` (UTF-16 UNITS, NOT UTF-8 BYTES); `OVERSIZE_INLINE` JUDGES `text.length` AGAINST A BYTE LIMIT, SO A NON-ASCII FILE OVER IT PASSES.** Re-read on `14faa089` in `store.mjs` `promote`. Writers: `setup.mjs`, `app.html`, `livefire.mjs`, the monitor tick in `index.mjs`, `tools/fw21-onpoint-probe.mjs`. — owner RECORD.
-order: directly after REC-176, REC-175's `promote` fence one field over: a stored size false of the stored bytes is CLAUDE.md §2's class, and the limit it feeds admits what it exists to refuse; behind REC-176, since a lost version outweighs a misstated one (SCHEDULER #16, 2026-09-23; REC-175's worker via CONDUCT #16)
-milestone: M6
-interface: I3 — the plane computes `bytes`; `OVERSIZE_INLINE` judges UTF-8 bytes; the integrator mints the IC.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (bundle anatomy; the Mechanical Verification Law), with `CLAUDE.md` §5; REC-175's digest check is the precedent.
-depends-on: REC-175 (same site; on `land/conduct/c16-batch5`).
-scope: promote computes each inline file's `bytes` from its UTF-8 encoding (a differing supplied value refused or overridden, stated) and judges `OVERSIZE_INLINE` on it; the writers send UTF-8 length or none; a census of stored rows whose `bytes` disagrees is stated in the landing, never rewritten.
-accepts-when: in a NEW suite `bio-plane/test/rec178-bytes.test.mjs`, through the op: a non-ASCII file over `INLINE_MAX` in UTF-8 but under it in `text.length` is refused `OVERSIZE_INLINE`, bundle byte-identical after; stored `bytes` equals the UTF-8 length; plus `rec175-digest.test.mjs` (same `promote` site) green. NEGATIVE CONTROL (`rec178-bytes.control.mjs`): judge `text.length` again, and the non-ASCII arm fails by name.
-added: 2026-09-23 · SCHEDULER #16 (REC-175's worker via CONDUCT #16, verified at the code; `node tools/mintid.mjs REC`).
-
-### UI-73 · queued — **ELEVEN MEMBER-FACING SITES STILL READ A REFUSAL'S RAW `detail` INSTEAD OF ITS CANNED TRANSLATION** — `teach()`, `queueReason` … (whole text: the cut archive)
-order: MOVED UP 2026-09-23 by SCHEDULER #16 to directly after REC-178: the product rows it passed (D-420 through D-311) all write `store.mjs`, `index.mjs` or `bio-checks.mjs`, which `kickoffs/CONDUCT.md` caps at 5 concurrent, and CONDUCT asked for rows with disjoint paths so its other slots fill under continuous spawning (BOB #30, 2026-09-23); this is the first (`civicos-ui` only). Its own reason stands: a CORRECTION TO JUST-LANDED WORK, which outranks new work: UI-72 shipped the helper and eleven sites still bypass it, so a member meets machine vocabulary at the moment they are told no — the failure DEC-49 exists to close (SCHEDULER #3, 2026-09-19)
-milestone: M8
-interface: none — the helper exists; no code, wire shape or catalogue row moves.
-design: DEC-49 (`node tools/decided.mjs "DEC-49"`) as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` … (whole text: the cut archive)
-depends-on: none. UI-72 landed at `02e7c537`.
-accepts-when: all eleven take their words from the ONE helper, asserted as `refusal-translation-surface.test.mjs` already asserts the two renderers; the SUBJECT arm re-pinned to figures a … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 3, verified in UI-72's own CLAIMS.md block).
-
-### D-82 · queued — **A FOCUS AN ASSISTANT SURFACED IS SHOWN EXACTLY LIKE ONE A MEMBER OPENED.** The plane stamps `surfaced_by: agent` server-side on … (whole text: the cut archive)
-order: MOVED UP 2026-09-23 by SCHEDULER #16 to directly after UI-73, with it: paths disjoint from `store.mjs`, `index.mjs` and `bio-checks.mjs` (`civicos-ui` only), which CONDUCT caps at 5 concurrent, so it fills a non-store slot under continuous spawning (BOB #30). Its own reason stands: after UI-73, the same member-surface class: a member reads a machine's question as a colleague's judgement, which §P's accountability rule exists to prevent; a gap over built stamping, so below the refusal words already shipping wrong (SCHEDULER #10, 2026-09-21, LED-7)
-milestone: M8
-interface: I3 consumer (`surfaced_by`, stamped since D-78).
-design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"P · PROPOSAL", its accountability rule … (whole text: the cut archive)
-depends-on: none — D-78's stamp is built.
-accepts-when: against the real plane, an inquiry a machine credential created shows the marker on every surface listing it, and one a member created shows none. How a liar passes it: marking … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #10 (LED-7; D-82's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
-
-### D-423 · queued — **`schema.mjs` DOCUMENTS `grade_axis` AS TWO-VALUED (`capture` or `connection`) WHERE MK-2 MADE IT THREE.** Three column comments (`bio-plane/src/schema.mjs`, re-read on `619dfa65`: the grades table and the frozen-strength table) omit `testimony`, which `GRADE_AXES` and `STRENGTH_AXES` carry since IC-142. No behaviour reads a comment; this is the file a reader opens to learn what a column holds. — owner RECORD.
-order: MOVED UP 2026-09-23 by SCHEDULER #16 to directly after D-82: `schema.mjs` comments only, disjoint from the three store files CONDUCT caps at 5 concurrent, so it fills a non-store slot under continuous spawning (BOB #30). Its own reason stands: with the RECORD corrections after D-278 and before COFF-13: the record's own schema describing a column wrongly, a correction to landed work (MK-2), cheap; below D-278 because nothing a member reads moves (SCHEDULER #15, 2026-09-23, LED-7 batch S15-1)
-milestone: M2
-interface: none — comments only; the schema literal's hygiene check still reads it.
-design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §3 (the grade: a third axis, testimony).
-depends-on: none — MK-2 is on `main`.
-scope: each `grade_axis` comment names all three axes, with no semicolon and no backtick inside a `--` comment (CLAUDE.md §7); a sweep for other two-axis enumerations in `schema.mjs` comments, each corrected or listed.
-accepts-when: no `grade_axis` comment in `schema.mjs` enumerates fewer axes than `GRADE_AXES`; the battery green by its completion line. NEGATIVE CONTROL: restore one two-valued comment, and a comment-versus-`GRADE_AXES` arm fails by name.
-added: 2026-09-23 · SCHEDULER #15 (LED-7 batch S15-1; D-423's DEBT row of 2026-09-18, verified at the code; keeps its `D-` id).
-
 ### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
 milestone: M0
@@ -70,16 +32,6 @@ depends-on: M0-126 (the backstop mark); then DIST's first cut from a tree carryi
 scope: DIST.md step 1 reads: `gates.mjs --full --no-reuse` on the exact tree, or a record for which pushguard's `isBackstop()` (M0-126) is true, NAMED in the cut commit, else the whole battery; `--since` removed (M0-126's worker found step 1 still naming it, via CONDUCT #15); the bumped tree's own gate stays.
 accepts-when: a cut from a tree with a backstop record runs no battery and names it; a record whose run printed any REUSED unit, or a `--since`, never satisfies a cut and the battery runs.
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1; `node tools/mintid.mjs M0`); re-narrowed 2026-09-23 by SCHEDULER #15 (BOB #30's ruling).
-
-### D-420 · queued — **AN `image {page, rect}` ROW IS BOUNDED BY THE PAGE SET AND NOT BY WHAT THE PAGE PAINTS.** A rectangle where a PDF page paints … (whole text: the cut archive)
-order: directly after D-440, the same function and one worker for both (BOB #24): a KIND overclaim the crop already catches, so below D-440's silent mint (SCHEDULER #9, 2026-09-21, LED-7 batch S9-1)
-milestone: M4
-interface: I1 (a PDF reading's container extent gains its images) and I3 (a new refusal); the integrator mints and classifies the ICs.
-design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.2 (the `image` reference's `{page, rect}` form … (whole text: the cut archive)
-depends-on: none — CPDF-18's `structure().images` is built.
-accepts-when: a rect where the page paints no image is refused by name at the mint; a rect equal to a persisted placement mints; a PDF acquired before the change is admitted with its absence … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry; LED-7 batch S9-1; D-420's DEBT row of 2026-09-18; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-420» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### D-390 · queued — **`#frontierContent`'S INDEX-STATE READ BINDS ONE VARIABLE PER SUBJECT ON THE PAGE, UP TO `cap` — 200 BY DEFAULT, 2,000 AT THE** … (whole text: the cut archive)
 order: after D-57: a read that must say WHICH absence is true fails outright on the first instance past ~100 content captures; below D-389, REC-160 and D-57 because it fails LOUDLY rather than claiming what the record cannot support (SCHEDULER #8, 2026-09-21, LED-7 S8-1 and S8-2)
@@ -1167,3 +1119,69 @@ design: `docs/architecture/BIO_Distribution_v0_1.md` §6 rung 6, "What 'swept af
 depends-on: none in code.
 accepts-when: a scratch purge leaves every enumerated identity table empty; a record-store purge driven through the op leaves `members` byte-identical; a new member-keyed table added to the … (whole text: the cut archive)
 cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-69» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-70 · queued — **VF-4's LIVE-SCRATCH INSTRUMENT STATES ON ITS OWN OUTPUT THAT ARM 2a LEAVES A `proposed` MEMBER BY DESIGN (Membership v2 §4.7)** … (whole text: the cut archive)
+order: M0, after M0-68 and M0-69: the same instrument file as M0-68, and its purge-after rests on M0-69 (SCHEDULER, 2026-09-19)
+milestone: M0 (background lane, holds no slot)
+interface: none — the instrument `bio-plane/test/vf4-live-scratch.mjs`
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.7 (administrator consensus) and … (whole text: the cut archive)
+depends-on: M0-69 (the purge must take scratch identity) and M0-68 (SAME FILE — one worker at a time in `vf4-live-scratch.mjs`).
+accepts-when: a run's output carries the statement at arm 2a; after the run, scratch `members` reads empty; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: a purge call … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER (BOB #16's inbox entry, item 3; id minted with `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-70» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### VF-7 · queued — CANNOT RUN until the next DIST deploy; queued now so the future act is an ITEM the deploy's integration meets, not a telling a … (whole text: the cut archive)
+order: M0 VERIFY lane, after the battery tally: it watches a credential class (DEC-43's zero), now a read-back since the 0.58.0 deploy armed it (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+milestone: M0 (VERIFY lane, holds no slot)
+interface: none — it watches, it does not publish a shape
+design: `docs/development/SCHEDULER.md` §"The mechanism, and how the next consumer joins" (the … (whole text: the cut archive)
+depends-on: **the next plane deploy through `deploy.mjs`** (DIST's next cut — D-297's release is the likely carrier)
+accepts-when: (on the deploy landing) both first activations measured and recorded with the serving build named; the first armed tick attributed to the scoped class; `op=audit` clean after … (whole text: the cut archive)
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «VF-7» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### D-92 · queued — **`op=file` WITH A MEMBER TOKEN RETURNED AN INTERMITTENT 403 UNDER SEQUENTIAL LOAD** (the live instance, July): a different … (whole text: the cut archive)
+order: last of the live verifications, after D-207: a July observation on a plane rebuilt many times since, with no report of recurrence; a bounded measurement that names a cause or retires the claim (SCHEDULER #6, 2026-09-21, LED-7 batch 11)
+milestone: M0
+interface: none — a probe; a fix it finds is its own row
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §5: *a blocker is a … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `MEASUREMENTS.md` carries the probe with its load, its count and the build; the row closes either way. How a liar passes it: a probe lighter than July's, so the load is stated beside the row's.
+added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
+cut: cut to its fields (SCHEDULER #8, 2026-09-21) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-92» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### D-59 · queued — **`contemporaneous`, THE STRONGEST LINK-FIDELITY VERDICT, HAS NEVER BEEN OBSERVED ON REAL DATA, AND MAY BE UNREACHABLE FOR MOST** … (whole text: the cut archive)
+order: with the live verifications, after D-92: a measurement deciding whether a verdict arm earns its complexity, not a defect shipping, since `undetermined` is honest meanwhile (SCHEDULER #7, 2026-09-21, LED-7)
+milestone: M3
+interface: none — a probe
+design: `docs/development/LINK-FIDELITY.md`, which defines the verdict and names the establishing routes that … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `MEASUREMENTS.md` carries the per-host table with N, the interval and the build; the row closes either way. How a liar passes it: hosts chosen for static bytes, so the list … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #7 (LED-7; D-59's DEBT row of 2026-07-30; keeps its `D-` id).
+cut: cut to its fields (SCHEDULER #8, 2026-09-21) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-59» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-66 · queued — `m025-arm-anchor-witness.test.mjs` CLOSES THE COMMENTARY CLASS ON ITS LABEL HALF AND NOT ON ITS ANCHOR HALF — prose in a … (whole text: the cut archive)
+order: M0; an instrument producing false findings (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+milestone: M0 (background lane, holds no slot) — an instrument that penalises a driver for documenting how it … (whole text: the cut archive)
+interface: none — `bio-plane/test/m025-arm-anchor-witness.test.mjs`
+design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY … (whole text: the cut archive)
+depends-on: none
+accepts-when: prose in a block comment naming an anchor-bearing shape is NOT read as an anchor; a live anchor in code still is; the reach figures before and after are stated with any … (whole text: the cut archive)
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-66» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-64 · queued — M0-41's CONTROL ARM 3 NO LONGER HAS A SUBJECT:
+order: M0; a control arm proving less than it declares (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+milestone: M0 (background lane, holds no slot) — an arm that measures something other than what it declares … (whole text: the cut archive)
+interface: none — `bio-plane/test/m041-instrument-census.control.mjs` (a `.control.mjs`, not discovered by the battery)
+design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY … (whole text: the cut archive)
+depends-on: none
+accepts-when: the control's run reports every arm AS DECLARED, or arm 3 is RETIRED with the falsifier's measurement at the site; the planted id uses the target's real heading shape; arms 1 … (whole text: the cut archive)
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-64» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-44 · queued — FLIPPED TO `running` AND REVERTED WITHIN THE HOUR, 2026-09-17, by CONDUCT #1, and the reversal is recorded rather than silently undone.
+order: M0; seven truncated claims invisible to the bounds instrument (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+milestone: M0 (background lane, holds no slot)
+interface: none — a reader's pattern and the rosters derived from it; no plane source moves
+design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY … (whole text: the cut archive)
+depends-on: none (M0-38 landed the grading and pinned the blind spot rather than fixing it)
+accepts-when: each of the seven previously-invisible claims appears in a roster the instrument prints, or is named as out of reach with its reason; **every roster the widened pattern feeds** … (whole text: the cut archive)
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-44» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.

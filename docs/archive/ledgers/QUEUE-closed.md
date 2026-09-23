@@ -3354,3 +3354,13 @@ depends-on: D-389 (its disjunct in `Store#frontierPage` is reused).
 scope: route every never-looked and missing fetch through D-389's exhaustion disjunct, OR-ed into each arm's `truncated`; the meaning arm's three lists gain the same over-fetch.
 accepts-when: a fixture whose never-looked or missing supply exceeds the fetch reads `truncated: true` at every arm for every viewer; an exhausted supply reads as before. NEGATIVE CONTROL: drop the disjunct from one arm, and that arm's fixture fails by name.
 added: 2026-09-23 · SCHEDULER #15 (D-389's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
+
+### REC-175 · done — landed on origin/main at 0e5f7054 (train train-20260923T173026Z-29329, c16-batch5), verified by content by SCHEDULER #16: FILE_DIGEST_MISMATCH and digestCensus in store.mjs, rec175-digest.test.mjs
+order: FIRST of the backlog: a record stating a false digest of its own bytes is CLAUDE.md §2's worst class (the whole product is the trustworthiness of the record), above M0-134's gate honesty (SCHEDULER #15, 2026-09-23; REC-173's worker via CONDUCT #15)
+milestone: M6
+interface: I3 — a new refusal on `op=promote`; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (the bundle's anatomy and the Mechanical Verification Law: a stored digest is of the stored bytes), with `CLAUDE.md` §5 (*an equality that costs nothing to produce is not evidence*).
+depends-on: none.
+scope: promote computes the SHA-256 of every inline text file's bytes and refuses a supplied value that differs, by a new refusal code with its canned translation, before any write; a file with no supplied sha stores the computed one; blob-backed files state what is checked; a census of rows already stored whose digest disagrees with their content is measured and stated, never silently rewritten.
+accepts-when: through the op, a mismatched `sha256` is refused by name with the bundle byte-identical after; a matching one lands; the census is in the landing. NEGATIVE CONTROL: drop the comparison, and the `fff…` arm lands and fails by name.
+added: 2026-09-23 · SCHEDULER #15 (REC-173's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
