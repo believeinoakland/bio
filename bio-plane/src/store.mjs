@@ -9683,6 +9683,9 @@ export class Store extends DurableObject {
       })(),
       updated_by: d.updated_by, updated_at: d.updated_at,
       ...grantPart,
+      /* REC-148: the project's bar AS `op=publish` WOULD FREEZE IT (the same `#projectBar` call), for the
+         control plane's in-band floors (DEC-31, §6A.3 point 1). Read now, because a draft is not frozen. */
+      required_strength: this.#projectBar(d.project_id),
     };
   }
 
