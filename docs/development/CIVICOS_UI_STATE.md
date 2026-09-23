@@ -50,6 +50,39 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v105, 2026-09-23 session, thread UI, UI-68 (a WORKER of CONDUCT #17, cloud session). Landed on `land/worker/UI-68`
+(base `origin/main` @ `02603e88`), in the commit that carries this entry. `v104` is taken on the `land/conduct/c17-*`
+branches, so this is `v105`. SURFACES: a question's page (a new entry beside the publication statement), and a new
+surface, the review copy, with two doors — `#draft/new` and `#draft/<id>` for members, `#reviewcopy/<secret>` for a
+recipient holding nothing.
+
+**What was missing.** REC-126 built the review copy's plane half on 2026-09-18 (BIO_Publication §6A; IC-145/IC-146,
+REC-133's IC-151) and delegated the four surfaces to UI. Nothing in `civicos-ui/` called any of the five ops, so no member
+could draft, give access, read or comment, and a recipient had no way in.
+
+**What it does now.** DRAFT: a member session holding `contribute` is offered "Draft a review copy"; the form prefills
+nothing and requires only the project, and editing starts from the draft's own answer. READ: the plane's marking leads,
+the exclusion statement comes first, and the missing-list is the publish gates' own words with the plane's note that it is
+the first refusal only. GRANT AND REVOKE: the secret is shown once, as a link whose secret sits in the address fragment,
+beside the plane's own shown-once sentence; each grant is listed live, withdrawn, or bound to an edition the draft has
+left. The grant box says, at the act, that withdrawing ends access and cannot recall anything copied out by hand
+(§6A.3 point 2). RECIPIENT: the link opens at load with no session; a withdrawn, never-issued or malformed link draws one
+byte-identical page carrying the plane's one sentence. COMMENT: both doors, and a recipient's comment is labelled as the
+recipient's. NO EXPORT: no download, file, blob or data link, print hook or print rule, because `op=reviewcopy` does not
+yet carry DEC-31's in-band quartet (§6A.3 point 1). `apiQ` gained an optional POST body for the recipient's comment.
+
+**Driven against the real plane**, `civicos-ui/test/review-copy.test.mjs` (40 assertions): the form's own controls draft,
+edit, grant, revoke and comment; the recipient's page is loaded from the address alone and its wire carries no token; the
+dead pages are compared byte for byte; the no-export arm reads the block's code and every page walked. NEGATIVE CONTROL
+`review-copy.control.mjs`, 8/8 AS DECLARED: a download link RED at NO EXPORT; a print hook RED at NO EXPORT; a dead page
+that says "revoked" RED at NEUTRAL (ONE ANSWER stays green, since every cause still draws the same bytes); the marking
+dropped RED; the form prefilled RED; a recipient labelled a member RED; over-strictness GREEN. Suites corrected, each with
+its reason at the site: `auth-surface` (its control's `apiQ` anchor), `preauth-vocabulary` (a third published address, an
+eighth router, `apiQ`'s callers and signature, +1 source on two plane-sourced rows), `member-respect` (two repeated
+controls classified, the grant row CARRIED). NOT BUILT: export; any way back to a draft but its address (no op lists a
+project's drafts); canned translations for the review refusal codes (none has a DEC-49 row, so the surface renders the
+plane's detail).
+
 v104, 2026-09-23 session, thread UI, UI-74 (a WORKER of CONDUCT #17, cloud session). Landed on `land/worker/UI-74` (base
 `origin/main` @ `02603e88`), in the commit that carries this entry. (If a concurrent batch has taken `v104`, renumber this
 entry at integration.) SURFACES: a new place, the ACCEPT CEREMONY at `#accept/<INQ-…>/<name>`, reached by "Act on this
