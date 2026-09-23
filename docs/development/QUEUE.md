@@ -280,7 +280,7 @@ accepts-when: `MEASUREMENTS.md` carries the figures with date, instrument and co
 added: 2026-09-19 · SCHEDULER (same entry, item 2).
 uncut: restored whole from «M0-71» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### UI-68 · running — SPAWNED 2026-09-23 ~21:57Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER UI-68 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/UI-68 and that session; never conclude queued from the absence alone.
+### UI-68 · integrated — finished; integrated on land/conduct/c17-batch7 @ eb96b1fa (met UI-74's routers and REC-148's 13.review-copy), waiting for its train — flipped by SCHEDULER #17
 order: BOB #14's item 8 (13.review-copy), its in-instance surfaces; the plane half is built (SCHEDULER, 2026-09-19)
 milestone: M10
 interface: I3 consumer (REC-126's IC-145/IC-146)
@@ -366,7 +366,7 @@ scope: send `address: t.url` in `agent-worker/src/index.mjs`; the mocks (`harnes
 accepts-when: against the mock, a run's internet-level target files a request naming its address; one sent with only `url` is refused by name. NEGATIVE CONTROL: send `url` again, and the address arm fails by name.
 added: 2026-09-23 · SCHEDULER #14 (REC-168's finding via CONDUCT #14; `node tools/mintid.mjs FL`).
 
-### D-192 · running — SPAWNED 2026-09-23 ~22:40Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-192 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-192 and that session; never conclude queued from the absence alone.
+### D-192 · integrated — finished; integrated on land/conduct/c17-batch7 @ eb96b1fa, waiting for its train — flipped by SCHEDULER #17
 order: after REC-191: a security pin on a built guarantee, small, ahead of the process rows (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1; narrowed at the code on `02603e88`)
 milestone: M2
 interface: none — an assertion and one sentence of design.
@@ -491,6 +491,28 @@ depends-on: none — `op=versionchain` (PL-10) and the history append are built.
 scope: scan bundle bodies for the sentence, resolve each named bundle through the version-chain logic, return per bundle the named id, the true predecessor and a verdict: wrong (a different predecessor), right (exactly one prior version) or undetermined (no such version); the three totals apart. Writes nothing. Extend `bio-plane/test/versionchain.test.mjs`.
 accepts-when: every affected bundle lands in exactly one class with separate totals, and every body is byte-unchanged. NEGATIVE CONTROL: resolve through the ranked search instead of the chain, and the "provably wrong" arm (a sixty-version fixture naming the oldest) fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-256's DEBT row of 2026-08-08, keeps its `D-` id).
+
+### D-66 · queued — **A BUDGET OR DATASET HAS NO CONTENT TYPE, AND THE CLASS HAS NEVER BEEN COUNTED.** Bob named it beside four types now built or placed (FW-20, the directory); `EXTRACTION-BREADTH-DESIGN.md` §2 lists it fifth, *"UNMEASURED: not in the census's class list"*, and neither `tools/m032-class-census.py` nor `docprofile/doctypes/registry.mjs` knows it (re-read 2026-09-21). NARROWED by BOB #24 to this class. — owner FRAMEWORK.
+order: directly after FW-20, §2's order: row 5 after row 4, a count before any reader (SCHEDULER #10, 2026-09-21, LED-7)
+milestone: M2
+interface: none — a census class and a read sample; a reader they justify is its own row.
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §2, row 5 (BOB #24, 2026-09-21): *"Its count and a read sample come first, with the census instrument gaining the class, and no reader is written from what a budget probably looks like."*
+depends-on: none. Sequence after FW-20 (§2's order).
+scope: the census instrument gains a budget-or-dataset class judged from BODIES, re-run over COFF-6's corpus with its stratum and seed stated; a fixed-seed read sample records what each document holds and whether a spreadsheet is already read by the office entries. No content type is written here. **FULL GATE PROFILE** (`tools/`).
+accepts-when: `MEASUREMENTS.md` carries the class's count with its interval beside the four measured classes, and the read sample with N and what each held, dated with the instrument. How a liar passes it: counting by filename, which §2 measured recovering 13% of staff reports, so the class is judged from bodies.
+added: 2026-09-21 · SCHEDULER #10 (LED-7; D-66's DEBT row, narrowed by BOB #24 on SCHEDULER #9's Q3; keeps its `D-` id).
+uncut: restored whole from «D-66» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
+
+### CPDF-3 · queued — **UNBLOCKED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18): its stated blocker, *a DIST deploy*, is false at the artifact — `op=pdfstructure` is in `bio-plane/src/index.mjs`, and 0.58.0 was deployed through `deploy.mjs` and verified serving on 2026-09-14 (`MEASUREMENTS.md`, "D-297/IC-82 — release 0.58.0 deployed"); releases through 0.63.0 have been cut since.** The live verification itself is still owed.
+order: unblocked at this audit (its deploy blocker is false); an M2 live verification, after the product rows above (SCHEDULER, first order audit, 2026-09-18)
+milestone: M2
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 "How content is extracted today" (the I2 structure shape `op=pdfstructure` answers), with `docs/development/INTERFACES.md` I1/I2.
+scope: Live-verify pdfstructure against real captured Oakland PDFs (the agenda→item graph) via `op=pdfstructure`, in a `biosmoke-pdf` scratch namespace; sweep after.
+behind-interface: I1
+depends-on: CAP-1 (done), a DIST deploy
+added: 2026-07-31 · CONDUCT
+landed:
+uncut: restored whole from «CPDF-3» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
