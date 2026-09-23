@@ -218,6 +218,16 @@ function mockFetch(u){
           mode:"session", rung:"reasoned", prompt:null }],
       vocabularies:{ dispositions:["deferred","dismissed"] } } });
   }
+  /* ADDED 2026-09-23 by UI-80, which reads each published case's frozen pair on this page
+     (Publication §3 rule 12: a member published under it carries none in its own bytes). The
+     page now asks op=publishedcase, so this mock must answer it — a plane with no such op is a
+     state that cannot occur, and the old catch-all refusal read as "the published record did not
+     answer", which the page (rightly) says in place of "not published". The answer is the store's
+     own true negative, in its own shape (store.mjs `publishedCase`), because none of these
+     fixtures is in a case: the legacy pairs above are in the questions' own bytes, which is
+     exactly what this suite's frozen-pair arms read. `case-frozen-pair.test.mjs` owns the rest. */
+  if(op==="publishedcase")
+    return R({ ok:false, reason:"NOT_PUBLISHED", detail:"no published edition answers to that." });
   if(op==="image"||op==="list") return R({ ok:true, result:[] });
   return R({ ok:false, error:"unexpected op "+op });
 }

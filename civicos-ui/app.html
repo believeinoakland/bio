@@ -7844,6 +7844,107 @@ function inquiryPair(fmj){
   return (out.capture && out.connection) ? out : null;
 }
 
+/* ---- UI-80 / BIO_Publication_v0_1.md §3 rule 12 (D-442, IC-179): THE PAIR EACH CASE FROZE ----
+   `inquiryPair` above reads the pair out of the question's OWN bytes, and that is still exactly
+   right for a LEGACY member (rule 12 (e): what crossed stays crossed, blocks and all). But since
+   D-442 `op=publish` writes NOTHING on a member finding: the frozen pair, its grounds and the
+   member's edition are stated ONCE, in the case's signed document (`bio-case-document/2`), and a
+   finding pinned by two cases has two frozen pairs, one per case, each that case's reading of the
+   same bytes. So the question's own bytes carry none, `inquiryPair` finds none, and this page used
+   to say "not published to this page yet" about a question that IS published.
+
+   THE READ is `op=publishedcase` — the public accessor that serves each member's pair from its
+   case's document (`findings[].strength`) and says WHICH signature covers it
+   (`findings[].frozen_from`: `case_document` | `member_bytes`). It is read through `apiQ`, the
+   credential-free seam, because what it answers is the published record, which is the same for a
+   member and a stranger. A finding in several cases is REFUSED with every candidate named in
+   `cases[]` (D-309 / IC-74's resolution aid), and this reader then asks ONCE PER CASE, naming it.
+   IT NEVER PICKS ONE: every case's pair comes back beside that case's name, in the order the plane
+   named them. It keys on that SHAPE — a refusal carrying the case ids to ask about — and never
+   renders the refusal's code or sentence to anybody, because the refusal is a question to this
+   reader and not a statement for a member.
+
+   THE IDENTITY IS PROVED BY HASH, never assumed from the id. The published record is pinned to
+   the record namespace (index.mjs `PUBLISHED_STORE`), and the working page may be reading another
+   (a probe's scratch record), where the same id can name a different question. A case's pair is
+   offered as THIS question's only when the sha the case pinned is the sha this page is showing;
+   otherwise the case is named, with the sha it pinned, and its pair is not printed here as this
+   version's (`matches: false`) — the case page shows it with the bytes it belongs to.
+
+   Returns `{ state, cases }`: `state` is `answered` (the published record answered: `cases` may
+   be empty, which is NOT_PUBLISHED, the true negative) or `silent` (the read did not answer, so
+   this page cannot say either way — REC-52: a failure to answer is never rendered as an absence). */
+async function inquiryCasePairs(id, workingSha){
+  if(PLANE.preview) return { state:"silent", cases:[] };
+  const ask = async (params) => { try{ return await apiQ("publishedcase", params); }catch(_){ return null; } };
+  const first = await ask({ id });
+  let answers;
+  if(first && first.ok !== false && Array.isArray(first.findings)) answers = [first];
+  else if(first && first.reason === "NOT_PUBLISHED") return { state:"answered", cases:[] };
+  else if(first && first.ok === false && Array.isArray(first.cases) && first.cases.length){
+    answers = [];
+    for(const caseId of first.cases) answers.push(await ask({ id, caseId: String(caseId) }));
+  }
+  else return { state:"silent", cases:[] };
+  const cases = [];
+  let silent = false;
+  for(const c of answers){
+    const f = (c && c.ok !== false && Array.isArray(c.findings))
+      ? c.findings.find((x) => x && String(x.bundle_id) === String(id)) : null;
+    if(!f){ silent = true; continue; }
+    const pinned = String(f.version_sha || f.bundle_sha || "");
+    cases.push({
+      caseId: c.caseId ? String(c.caseId) : null,
+      edition: c.edition ?? null,
+      memberEdition: f.edition ?? null,
+      pinned,
+      /* An answer from a plane older than D-442 carries no `frozen_from`, and on such a plane the
+         only place a pair was ever frozen is the member's own bytes — so the absence reads as
+         that, which is the fact those planes were written under, not a guess about this one. */
+      frozenFrom: f.frozen_from === "case_document" ? "case_document" : "member_bytes",
+      pair: pubPair(f),
+      matches: !!(workingSha && pinned && pinned === String(workingSha)),
+    });
+  }
+  return { state: silent && !cases.length ? "silent" : "answered", cases, partial: silent && cases.length > 0 };
+}
+
+/* WHOSE SIGNATURE COVERS ONE CASE'S PAIR, in words, from `frozen_from` and nothing else. The
+   two are different facts and the sentence must not be one hard-coded line: under rule 12 the
+   CASE DOCUMENT's signature covers the pair and the finding's own signature covers the finding
+   as its project concluded it; before rule 12 the pair was frozen into the finding's own bytes
+   and signed with them. */
+function casePairSignerHtml(x){
+  const at = x.caseId ? `case ${esc(x.caseId)}${x.edition != null ? `, edition ${esc(String(x.edition))}` : ""}` : "no case";
+  return x.frozenFrom === "case_document"
+    ? `<div class="subj-how" data-signer="case_document">Stated in the signed case document of ${at}, and covered by that document's signature. This question's own signature covers the question as its project concluded it, and carries no pair: the pair is this case's reading of this question at the version it pinned.</div>`
+    : `<div class="subj-how" data-signer="member_bytes">Frozen into this question's own published bytes${x.memberEdition != null ? ` (its edition ${esc(String(x.memberEdition))})` : ""} when ${at} published it, and signed with those bytes.</div>`;
+}
+
+/* EVERY CASE'S PAIR, EACH UNDER ITS CASE, NEVER ONE CHOSEN AND NEVER COMBINED. Each block carries
+   `data-casepair` (the case) and `data-frozen-from` (whose signature covers it) so a sweep can
+   read the shape without parsing prose. The axis panels inside are `axisPanel`'s own — the same
+   renderer the legacy pair uses, so a case's pair reads exactly as a pair always has. */
+function casePairsHtml(perCase, legs, partial){
+  const n = perCase.length;
+  const intro = `<p class="subj-note" data-casepairs="${esc(String(n))}">${n === 1
+    ? "This question is a member of one published case, and the pair below is the one that case froze."
+    : `This question is a member of ${esc(String(n))} published cases. Each case froze its own reading of it, and each pair below is that case's own: they are not combined, and this page does not choose between them.`}${partial
+    ? " This page could not read every case that includes this question just now; the ones it could read are below."
+    : ""}</p>`;
+  return intro + perCase.map((x) => {
+    const head = `<h3 style="font-family:var(--font-ui);font-size:14px;margin:18px 0 4px">As ${x.caseId ? `case ${esc(x.caseId)}${x.edition != null ? `, edition ${esc(String(x.edition))},` : ""}` : "its published edition"} froze it</h3>`;
+    let body;
+    if(!x.matches)
+      body = `<div class="empty" data-pinned="${esc(x.pinned)}">This case pinned this question at the version whose hash begins ${esc(x.pinned.slice(0, 16))}, and that is not the version this page is showing. Its pair belongs to that version, so it is not printed here as this one's; the published case shows it beside the bytes it belongs to.</div>`;
+    else if(!x.pair)
+      body = `<div class="empty">The published record states no complete pair for this question in this case, and this page composes none.</div>`;
+    else
+      body = PAIR_AXES.map(ax=>axisPanel(ax, x.pair[ax], legs)).join("");
+    return `<div class="casepair" data-casepair="${esc(x.caseId || "")}" data-frozen-from="${esc(x.frozenFrom)}">${head}${casePairSignerHtml(x)}${body}</div>`;
+  }).join("");
+}
+
 /* One axis, rendered from ONE axis object the plane published. Never combined
    with the other, never averaged, never scored, never drawn as a bar, and the
    grade rendered is the plane's own value — this function performs no
@@ -7909,20 +8010,37 @@ function axisPanel(axis, a, legs, opts){
 /* The STRENGTH panel. TWO strengths, never one — the two panels are rendered
    from two independent axis objects and there is no code path here that
    produces a third, composed value. */
-function strengthPanels(pair, legs){
+function strengthPanels(pair, legs, frozen){
   const lede = `<p class="lede">A case does not have <i>a</i> strength. It has two, and they are never combined, averaged or scored against each other: how directly the record holds the DOCUMENTS it reaches, and how strongly the LINKS between them were established. A conclusion is no stronger than the weakest leg on each, separately.</p>`;
   const hunches = legs.filter(l=>l && l.grade_source === "hunch");
   const hunchNote = hunches.length
     ? `<div class="teach" style="margin:14px 0 0"><b>A hunch stands on this question.</b> ${hunches.map(h=>esc(String(h.target))).join(", ")} ${hunches.length===1?"is":"are"} recorded as a member's hunch — declared bias, not an established grade. While one stands, this case cannot be published; clearing it means establishing the grade, not waiting for it to age into a fact.</div>`
     : "";
+  /* UI-80 / Publication §3 rule 12: A MEMBER PUBLISHED UNDER THE RULE carries no pair in its own
+     bytes, so its pairs are read per case (`inquiryCasePairs`) and drawn ONE PER CASE, each under
+     that case's name and the signature that covers it. A LEGACY member — every case it is in froze
+     the pair into its own bytes — is drawn from those bytes exactly as before this item. */
+  const perCase = (frozen && Array.isArray(frozen.cases)) ? frozen.cases : [];
+  if(perCase.some(x=>x.frozenFrom === "case_document"))
+    return `<h2 class="sec">Strength</h2>${lede}${casePairsHtml(perCase, legs, !!(frozen && frozen.partial))}${hunchNote}`;
   if(!pair){
     /* THE NAMED GAP, and it is named rather than filled. Both axes are still
        drawn, because the shape of the answer is a PAIR whether or not this
        surface can read its values yet, and a member who learns the shape here
-       learns the right one. */
+       learns the right one.
+       CORRECTED 2026-09-23 (UI-80), never exempted: the last sentences said the pair "is shown
+       here once a case is set down and published, where it is frozen with the edition it belongs
+       to". Under rule 12 the pair is frozen in the CASE DOCUMENT, one per case, and was never
+       shown here for such a member at all — so the promise was false for every case published
+       since D-442. It now says what this page does (each case's pair, under its name), and a read
+       of the published record that did not ANSWER is said as that, never as "not published". */
+    const silent = !!(frozen && frozen.state === "silent");
+    const gap = silent
+      ? `Derived by the record from the legs above. This page could not read the published record just now, so it cannot say whether any published case has frozen a pair for this question. The strength of a question that is still being worked on is computed fresh every time it is asked for, not read from a stored number. This page shows no number and does not compute one.`
+      : `Derived by the record from the legs above, and not published to this page yet. The strength of a question that is still being worked on is computed fresh every time it is asked for — it is not read from a stored number, because a stored one goes stale the moment a leg beneath it is re-graded. It is shown here once a case that includes this question is published: each such case freezes its own pair, with the edition it belongs to, and this page shows every case's pair under that case's name. This page shows no number in the meantime and does not compute one.`;
     return `<h2 class="sec">Strength</h2>${lede}
       ${PAIR_AXES.map(ax=>`<h3 style="font-family:var(--font-ui);font-size:14px;margin:18px 0 4px">${esc(AXIS_SHORT[ax])} &middot; ${esc(AXIS_WORD[ax].toLowerCase())}</h3>
-        <div class="empty">Derived by the record from the legs above, and not published to this page yet. The strength of a question that is still being worked on is computed fresh every time it is asked for — it is not read from a stored number, because a stored one goes stale the moment a leg beneath it is re-graded. It is shown here once a case is set down and published, where it is frozen with the edition it belongs to. This page shows no number in the meantime and does not compute one.</div>`).join("")}
+        <div class="empty"${silent ? ` data-published-read="silent"` : ""}>${gap}</div>`).join("")}
       ${hunchNote}`;
   }
   return `<h2 class="sec">Strength</h2>${lede}
@@ -7972,6 +8090,9 @@ async function openInquiry(id, fromNav){
     const phase = phaseOf(state);
     const legs = (fmj && Array.isArray(fmj.basis)) ? fmj.basis.filter(l=>l && typeof l==="object") : [];
     const pair = inquiryPair(fmj);
+    /* UI-80: and the pair EACH PUBLISHED CASE froze, read from the published record — the only
+       place a member published under Publication §3 rule 12 has one. Its own failure is its own. */
+    const frozen = await inquiryCasePairs(id, proj && proj.bundle_sha).catch(()=>({ state:"silent", cases:[] }));
 
     const questionText = mdSectionOf(body, (vocabFor(HEADINGS, otype)||[])[0]);
     const falsifyHeading = headingLike(otype, /falsif/i);
@@ -8104,7 +8225,7 @@ async function openInquiry(id, fromNav){
       <h2 class="sec">What it rests on</h2>
       <p class="subj-note">Every leg the question rests on, in the order it was recorded, with what it does to the conclusion and how its grade was established. A leg that cuts against the conclusion is a leg like any other and is counted on its own axis exactly as a supporting one is — the record keeps what it found, not only what it hoped for.</p>
       ${legsPane}
-      ${strengthPanels(pair, legs)}
+      ${strengthPanels(pair, legs, frozen)}
       ${npcPane}
       ${pubEntry}
       ${actBarHtml(id, fm.title||(proj&&proj.title)||id, actsR, (barOpts.elsewhere || barOpts.routed) ? barOpts : undefined)}
@@ -18568,8 +18689,19 @@ function pubRosterHtml(c){
   /* COUNTED APART, NOT FOLDED IN, for the reason `pubRoster` states: a member
      whose designation this accessor did not send is not a member without one. */
   const unsent = roster.filter((m) => m.role === undefined).length;
+  /* CORRECTED 2026-09-23 (UI-80), never exempted — the same sentence class as the supersession
+     banner's: "its own pair of strengths, signed on its own bytes" is false for a finding published
+     under Publication §3 rule 12, whose pair this case's document states and signs. Read from
+     `frozen_from` through the banner's one helper; the legacy wording stands where it is true. */
+  const sig = pubPairSigner(c);
+  const ownWords = sig.kind === "member_bytes"
+    ? "Each is a separate document with its own conclusion, its own falsifier, its own basis and its own pair of strengths, signed on its own bytes by its own attestor."
+    : "Each is a separate document with its own conclusion, its own falsifier and its own basis, signed on its own bytes by its own attestor, and each has its own pair of strengths"
+      + (sig.kind === "case_document"
+        ? " — which this case's signed document states for it, as this case read it, and not the finding's own bytes."
+        : ` — stated in this case's signed document for ${sig.doc.join(", ")}, and in the finding's own signed bytes for every other.`);
   return `<h2>The findings in this case</h2>
-    <p class="subj-note">In the order the group published them. Each is a separate document with its own conclusion, its own falsifier, its own basis and its own pair of strengths, signed on its own bytes by its own attestor.</p>
+    <p class="subj-note" data-signer="${esc(sig.kind)}">In the order the group published them. ${esc(ownWords)}</p>
     <p class="subj-note" data-partition="1">The publisher AUTHORED which of these the case rests on; this page reads that designation and never derives one. Of ${esc(String(roster.length))} declared finding${roster.length === 1 ? "" : "s"}: <b>${esc(String(lb))} load-bearing</b>, ${esc(String(sup))} supporting${und ? `, ${esc(String(und))} carrying no designation in the published bytes` : ""}${unsent ? `, and ${esc(String(unsent))} whose designation is not served here at all because ${unsent === 1 ? "it has" : "they have"} not been ratified yet` : ""}. Only the load-bearing findings were held to the case's required strength; the supporting ones are part of the published work and are not presented as carrying it.</p>
     ${roster.map((m, i) => m.ratified
       ? `<div class="pub-file" data-member="ratified" data-leg="${esc(m.id)}">Finding ${esc(String(i + 1))} of ${esc(String(roster.length))} &middot; <span class="mono">${esc(m.id)}</span> &middot; ${esc(m.finding.title || "untitled")}
@@ -18596,16 +18728,46 @@ function pubRosterHtml(c){
    `op=reevaluations`: that op is member-class, and a public banner that needed a
    credential would either not render for the reader it is for, or would be a
    credentialled read wearing a public page's clothes. */
+/* UI-80 / BIO_Publication_v0_1.md §3 rule 12 (D-442, IC-179): WHICH SIGNATURE COVERS THE PAIRS ON
+   THIS EDITION, read per finding from the plane's own `findings[].frozen_from` and never written as
+   one fixed line. Before rule 12 every pair was frozen into its finding's own bytes and signed with
+   them (`member_bytes`); under it the pair is stated once, in the CASE DOCUMENT, and that document's
+   signature covers it (`case_document`), while the finding's own signature covers the finding as
+   its project concluded it. An answer from a plane older than D-442 carries no `frozen_from`, and
+   on such a plane `member_bytes` is the only shape a pair ever had, so the absence reads as that.
+   Returns `member_bytes`, `case_document`, or `mixed` (each finding then names its own), and the
+   ids under the case document for the mixed wording. */
+function pubPairSigner(c){
+  const ms = (c && Array.isArray(c.findings)) ? c.findings : [];
+  const doc = ms.filter((f) => f && f.frozen_from === "case_document").map((f) => String(f.bundle_id));
+  if(!doc.length) return { kind: "member_bytes", doc };
+  return { kind: doc.length === ms.length ? "case_document" : "mixed", doc };
+}
 function pubSupersessionHtml(c){
   const eds = Array.isArray(c.editions) ? c.editions : [];
   const newer = eds.filter((e) => Number(e) > Number(c.edition));
   const id = pubCaseId(c) || String((c.findings && c.findings[0] && c.findings[0].bundle_id) || "");
+  /* CORRECTED 2026-09-23 (UI-80), never exempted: both sentences below said the pairs were "signed
+     with that finding's own bytes", which was the only shape a pair had until D-442 and is FALSE for
+     every `bio-case-document/2` case: there the case document's signature covers the pair and the
+     finding's bytes carry none. The legacy wording is kept, word for word, where it is still true. */
+  const sig = pubPairSigner(c);
+  const signedLatest = sig.kind === "member_bytes"
+    ? "signed with that finding's own bytes"
+    : sig.kind === "case_document"
+      ? "stated in this edition's signed case document and covered by that document's signature — each finding's own signature covers the finding as its project concluded it, not this pair"
+      : `stated in this edition's signed case document for ${esc(sig.doc.join(", "))}, and signed with the finding's own bytes for every other finding`;
+  const signedOlder = sig.kind === "member_bytes"
+    ? "the numbers signed with that finding's bytes"
+    : sig.kind === "case_document"
+      ? "the numbers this edition's case document states and its signature covers"
+      : `the numbers this edition's case document states for ${esc(sig.doc.join(", "))}, and the numbers signed with each other finding's own bytes`;
   if(!newer.length)
-    return `<div class="pub-super" data-super="latest">You are reading edition ${esc(String(c.edition))}, which is the newest edition of this case. Every strength shown on this page is the frozen pair of the FINDING it is printed beside, as edition ${esc(String(c.edition))} froze it, signed with that finding's own bytes.</div>`;
-  return `<div class="pub-super" data-super="superseded"><b>A newer edition of this case exists.</b>
+    return `<div class="pub-super" data-super="latest" data-signer="${esc(sig.kind)}">You are reading edition ${esc(String(c.edition))}, which is the newest edition of this case. Every strength shown on this page is the frozen pair of the FINDING it is printed beside, as edition ${esc(String(c.edition))} froze it, ${signedLatest}.</div>`;
+  return `<div class="pub-super" data-super="superseded" data-signer="${esc(sig.kind)}"><b>A newer edition of this case exists.</b>
     You are reading edition ${esc(String(c.edition))}; edition${newer.length === 1 ? "" : "s"} ${esc(newer.join(", "))} ${newer.length === 1 ? "was" : "were"} published later.
     Edition ${esc(String(c.edition))} has not been withdrawn and still answers: an edition is a separate document and every published one stands.
-    <b>Every strength on this page is edition ${esc(String(c.edition))}'s OWN FROZEN PAIR for the finding it sits beside</b> — the numbers signed with that finding's bytes. They are not edition ${esc(String(c.latest_edition))}'s, and nothing here has been recomputed on your behalf.
+    <b>Every strength on this page is edition ${esc(String(c.edition))}'s OWN FROZEN PAIR for the finding it sits beside</b> — ${signedOlder}. They are not edition ${esc(String(c.latest_edition))}'s, and nothing here has been recomputed on your behalf.
     ${newer.map((e) => `<a class="pub-back" onclick="pubOpen('${esc(id)}', ${esc(String(e))})">Read edition ${esc(String(e))}</a>`).join(" ")}</div>`;
 }
 
