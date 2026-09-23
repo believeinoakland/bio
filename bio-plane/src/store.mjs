@@ -30829,9 +30829,11 @@ export class Store extends DurableObject {
            re-derive the chain rather than believe it. `history` holds the
            snapshotted FILES; `manifest` holds the promotion records that link
            them, which is what a chain check actually walks. */
+        /* REC-182: `created` is the document's own time and two promotions can tie on it; a tie is
+           broken by `rowid`, the store's write order (D-171's precedent), never by the scan. */
         promotions: this.#rows(
           `SELECT snap_key, kind, base, author, created, writer, operation
-           FROM manifest WHERE bundle_id=? ORDER BY created`, b.bundle_id),
+           FROM manifest WHERE bundle_id=? ORDER BY created, rowid`, b.bundle_id),
         snapshots: this.#rows(
           `SELECT snap_key, path, sha256, created FROM history WHERE bundle_id=? ORDER BY snap_key, path`,
           b.bundle_id),
@@ -31810,7 +31812,8 @@ export class Store extends DurableObject {
       return { ok: false, reason: "ABSENT", bundleId };
     return {
       ok: true, row,
-      manifest: this.#rows(`SELECT snap_key, kind, base, created FROM manifest WHERE bundle_id=? ORDER BY created`, bundleId),
+      /* REC-182: on a `created` tie the prior promotion is the one WRITTEN first (`rowid`, D-171). */
+      manifest: this.#rows(`SELECT snap_key, kind, base, created FROM manifest WHERE bundle_id=? ORDER BY created, rowid`, bundleId),
       history: this.#rows(`SELECT snap_key, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`, bundleId),
       registers: this.#rows(`SELECT capture_sha, path, bytes FROM register WHERE bundle_id=?`, bundleId),
       /* MK-1 (A): whether this bundle IS, or RESTS ON, a member's authored
