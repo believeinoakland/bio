@@ -149,8 +149,19 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   never the actor: every session shares one credential, so no hook can tell CONDUCT from a lane, and a lane that runs
   the train, forges the three local files (driven in the suite), uses `--no-verify`, or pushes from an unguarded clone
   passes. **The refusal's home (§4) is the pre-push hook**, and the cloud's SessionStart hook now installs it
-  (`.claude/hooks/session-start.sh` step 2c); a host-side refusal (branch protection) is Bob's to rule and was not
-  measured. **Not built:** a train that reuses a `land/*` branch's own GREEN record (`--since`) instead of re-gating the
+  (`.claude/hooks/session-start.sh` step 2c); a host-side refusal (branch protection) was not
+  measured. **RULED 2026-09-23 by BOB #29, on the M0-111 builder's two questions (via CONDUCT #14):**
+  **(1) No branch protection on `main` now.** The guard exists against HONEST procedural error by sessions acting under one
+  principal, never against an adversary: every bypass named above is a deliberate act a session must choose, and the
+  kickoffs already forbid each. Branch protection would not add what the guard lacks — it cannot tell one session from
+  another either — and would cost Bob a settings act. Its one real gain is binding the PROCEDURE host-side, independent of
+  a local hook, and that needs a check for it to require: **trigger, change 3 built** (the Actions check on each commit;
+  M0-114 measured Actions already enabled, FULL 278/278 in 875 s on a runner). Then requiring that check on `main` is
+  brought to Bob as one setting, with change 3's figures. Earlier trigger: any commit found on `main` after `c5c83dc4`
+  without a `Bio-Train` trailer. **(2) The kickoff is enough to keep a lane from running `train.mjs` itself.** A train
+  run by the wrong lane still merges, gates, records and verifies exactly as CONDUCT's would; the rule is COORDINATION
+  (one lander, so two trains do not race), and a race fails loudly (non-fast-forward), never into a false record. A
+  wrong-lane train is a data point on its receipt, not grounds for a mechanism. **Not built:** a train that reuses a `land/*` branch's own GREEN record (`--since`) instead of re-gating the
   union, so a release cut is gated again in the train.
 
 ### 3 · The gates run on GitHub's machines
