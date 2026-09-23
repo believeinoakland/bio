@@ -185,7 +185,7 @@ accepts-when: an OR accept requires the per-branch affirmation; a fixture whose 
 added: 2026-09-21 · SCHEDULER #5 (D-397's third branch and D-195, verified at the code; `node tools/mintid.mjs UI`).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «UI-74» on entering the cache; its `order:` line is the current one.
 
-### REC-161 · queued — **NOTHING COMPUTES INDEPENDENCE OVER A PARTITION A MEMBER IS STILL PROPOSING, SO D-195's SHARED ORIGIN CANNOT BE SHOWN AT THEIR OWN ELICITATION.** `Store#independenceOf` has two consumers, `op=suggest`'s check and `op=versionstrength`'s read of a STORED version; UI-27's read-back (`elicFalsifier`) prints *"Your answer fails only if ALL of these fail"* and reads no independence. — owner RECORD.
+### REC-161 · running — SPAWNED 2026-09-23 ~21:26Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER REC-161 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-161 and that session; never conclude queued from the absence alone.
 order: 1 of 2, directly after UI-74, which shows the same fact at the accept ceremony (BOB #22, 2026-09-21: SCHEDULER #5's Q1, RULED)
 milestone: M9
 interface: I3 additive — an IC.
