@@ -116,5 +116,5 @@ decides content. Do not re-ask what is already ruled.
 **Close the turn with the decisions that are BOB'S, and nothing else**, in the
 shape `kickoffs/README.md` defines; read its three tests first, and an empty list
 is a real answer. At the close, rewrite ONLY this file — with FRAMEWORK's own
-account of its work this time — append to `DEBT.md` and `MEASUREMENTS.md`, and
+account of its work this time — append to `DEBT.md`, file each figure as `measurements/<id>.md`, and
 prepend a state-doc entry naming this area.

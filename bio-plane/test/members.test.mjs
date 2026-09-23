@@ -461,9 +461,12 @@ t("REC-41: and NO password date — the only instant it may carry is the instanc
    dodge both patterns. */
 t("REC-41: the answer carries no nested object or array at all",
   leaves.filter(([, v]) => v === "«key»").map(([p]) => p).filter((p) => p.slice(1).split(".").length > 2), []);
+/* MOVED BY ONE KEY at D-116 (2026-09-23), through its IC in INTERFACE-CHANGES.md: `storeVersion` is the build the
+   Durable Object itself runs — a release label like `version` beside it, naming nobody and no date, and the one fact
+   that tells an installer whether the record's store took an update. The pin still fails by name on any OTHER key. */
 t("REC-41: and its key set is exactly what the pre-auth question needs, nothing more",
   Object.keys(anon).sort(),
-  ["bootstrapConfigured", "claimed", "consumedAt", "ok", "rearmed", "service", "version"]);
+  ["bootstrapConfigured", "claimed", "consumedAt", "ok", "rearmed", "service", "storeVersion", "version"]);
 /* (4) AND THE SWEEP IS NOT PASSING BECAUSE THE FIXTURE IS EMPTY. If this
    instance held no credentials the four assertions above would pass on a store
    with nothing to leak, which is the equality-that-costs-nothing trap. The

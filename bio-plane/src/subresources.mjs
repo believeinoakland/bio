@@ -592,11 +592,20 @@ export const REUSABLE_KINDS = new Set(["stylesheet", "css-asset", "font", "icon"
  *  Three requirements, each doing work. The kind must be furniture rather than
  *  evidence. The bytes must have been seen served within the freshness window.
  *  And it must appear across more than one document, because an asset referenced
- *  by exactly one page is that page's own whatever directory it sits in. */
+ *  by exactly one page is that page's own whatever directory it sits in — a
+ *  document being a PAGE (its address), not a capture of it (CAP-13). */
 export function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 1000, minDocuments = 2 } = {}) {
   if (!known || !known.sha256) return { reuse: false, why: "not_seen_before" };
   if (!REUSABLE_KINDS.has(ref.kind)) return { reuse: false, why: "evidence_is_always_fetched" };
-  if ((known.documents || 0) < minDocuments) return { reuse: false, why: "not_yet_shared_across_documents" };
+  /* CAP-13: `documents` counts distinct PAGES (document addresses), not primary
+     captures, so one page re-captured with changed bytes stays one. A capture
+     whose page the record does not name (`documents_undetermined`) is never
+     counted toward the floor, and when only those could lift an asset over it
+     the refusal says so by name instead of calling the asset unshared. */
+  const pages = known.documents || 0;
+  if (pages < minDocuments)
+    return { reuse: false, why: pages + (known.documents_undetermined || 0) >= minDocuments
+      ? "shared_across_documents_undetermined" : "not_yet_shared_across_documents" };
   const seen = Date.parse(known.last_fetched || "");
   if (!Number.isFinite(seen)) return { reuse: false, why: "no_fetch_record" };
   const age = now - seen;
@@ -904,8 +913,12 @@ export async function captureSubresources({
           reused_stable_since: known.stable_since,
           reused_seen_in_documents: known.documents,
           detail: `not fetched during this capture: the source was seen serving these exact bytes at `
-                + `${known.last_fetched}, across ${known.documents} documents on this host, and they are `
-                + `reused from the record rather than requested again` };
+                + `${known.last_fetched}, across ${known.documents} documents on this host`
+                + (known.documents_undetermined
+                    ? ` (and ${known.documents_undetermined} earlier capture${known.documents_undetermined === 1 ? "" : "s"} `
+                      + `whose page the record does not name, counted as undetermined)`
+                    : "")
+                + `, and they are reused from the record rather than requested again` };
         byUrl.set(cls.url, rec);
         if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec);
         siteObservations.push({ address: cls.url, address_norm: normalizeAddress(cls.url),

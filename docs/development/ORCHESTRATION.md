@@ -64,8 +64,8 @@ untracked one cannot even be found. Two corollaries, each paid for:
 | raise a question to the architecture side | **`DECISIONS.md`**, or `SendMessage` to BOB | an entry carries `provisional:`; BOB brings what is Bob's to him |
 | tell the NEXT session in your area what you learned | **the area's LAW (`<AREA>.md`) for what pays repeatedly; its `-NEXT.md` for what the next session must DO** | see "which of the two" below; the `-NEXT` is rewritten at the close of your turn, by you |
 | need work inside another area's paths | **DELEGATION in `CLAIMS.md`** | append the need; continue with your own work; never edit their paths |
-| change a shape another area builds against | **`INTERFACE-CHANGES.md`** protocol | PROPOSED → RESPONSES → RESOLUTION → CHANGING → CHANGED → SETTLED |
-| record a defect, a number, or a design | **`DEBT.md` / `MEASUREMENTS.md` / the design docs** | append-only knowledge; a defect goes to SCHEDULER only with its fix named |
+| change a shape another area builds against | **the IC protocol** (`INTERFACE-CHANGES.md`), one file per IC in `interface-changes/` | PROPOSED → RESPONSES → RESOLUTION → CHANGING → CHANGED → SETTLED |
+| record a defect, a number, or a design | **`DEBT.md` / `measurements/<id>.md` / the design docs** | append-only knowledge; a defect goes to SCHEDULER only with its fix named |
 | tell a LIVE session something now | **`SendMessage`** to that lane — **NEVER to an UNATTENDED one; it cannot receive** | an ACCELERATOR, pointing at what to re-read; the state in the repository is the authority |
 | tell a lane something now, **IN THE CLOUD** | **a one-shot trigger into its session**: `create_trigger` with `persistent_session_id` = the lane's session id (from `list_sessions`) and `run_once_at` the next whole minute; open the prompt with `From <LANE> #<n> (<your session id>)` | measured 2026-09-22 (BOB #28; `kickoffs/NEW-MACHINE.md` §0.1): delivered as a new turn in 1-2 min, and a reply comes back the same way. `SendMessage` reaches NO other cloud session (each is its own machine; `ListAgents` lists none). The same ACCELERATOR rule: the repository stays the authority |
 
@@ -145,7 +145,10 @@ extended to whole FILES, in build order:
    entries are each their own file; the old files are frozen history plus the state lines of blocks still open; one
    reader module yields both, and any single-file view is generated. **NARROWED 2026-09-22 by BOB #27** to
    `MEASUREMENTS.md` and `INTERFACE-CHANGES.md` (M0-100): claims and delegations moved to `coord` with
-   `TREE-SHARING.md` change 1 (M0-110), whose anchored write keeps each line in its own block (§1 there).
+   `TREE-SHARING.md` change 1 (M0-110), whose anchored write keeps each line in its own block (§1 there). **BUILT by
+   M0-100 (2026-09-23):** a new entry is `docs/development/measurements/<id>.md` or `interface-changes/<id>.md`, a later
+   state appended to its entry's file; `tools/entries.mjs` is the one reader (`mintid`, `ledger.mjs find`, `plancheck`),
+   and its audit (`plancheck` §2e) fails an entry appended to a frozen file (`entries.mjs carry` moves it out).
 4. **A lane writes only its own files:** CONDUCT's `running` word leaves SCHEDULER's rows for a CONDUCT-owned record.
    **SUPERSEDED 2026-09-22 by BOB #27** (M0-101): the word is an anchored write on `coord` (`TREE-SHARING.md` §1;
    `coord.mjs write --status <ID> running`), which ends the two-writers conflict without moving it.

@@ -1092,8 +1092,14 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     if (ids.length !== 1) usage();
     if (isSwitched(ROOT)) { const { freshen } = await import("./coord.mjs"); freshen(ROOT); }
     const f = findId(ids[0]);
-    if (!f.length) { console.log(`${ids[0]}: not found in the cache, the backlog, its tail, the live DEBT ledger or any archive file`); process.exit(1); }
+    /* M0-100: an `M-` or `IC-` id is an ENTRY of the measurement or interface-change ledger — the frozen file or its own
+       file under the entry directory — and is found through the one reader of both (`tools/entries.mjs`). Until this
+       landed `find` read neither file and answered "not found" for every such id `CLAUDE.md` §1 sends it. */
+    const { find: findEntry } = await import("./entries.mjs");
+    const e = findEntry(ids[0]);
+    if (!f.length && !e.length) { console.log(`${ids[0]}: not found in the cache, the backlog, its tail, the live DEBT ledger, any archive file, or the measurement and interface-change entries`); process.exit(1); }
     for (const x of f) console.log(`${x.id} · ${x.state} · ${x.ledger} ${x.where} · ${x.file}:${x.line}`);
+    for (const x of e) console.log(`${x.id} · entry · ${x.parts.map((p) => `${p.file}:${p.line}`).join(" + ")}`);
   } else if (cmd === "refill") {
     if (ids.length) usage();
     let r;
