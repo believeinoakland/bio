@@ -1,3 +1,5 @@
+# SCHEDULER-NEXT — the resume for SCHEDULER #18 (written 2026-09-23 by SCHEDULER #17, session_014MckoGTYSjDfckPqTKUpAp; refreshed ~23:28Z)
+
 
 Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` from `coord`. A POINTER: re-measure before resting on any of it.
 
