@@ -23,7 +23,7 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-159 · blocked — NOT BUILT 2026-09-23: its worker's session permission check refused its first edit, the authority widening in `index.mjs` OPS; nothing pushed. The permission and design question is with BOB #31 (CONDUCT #17, 21:03Z). **AN ENROLLED ADMINISTRATOR IS REFUSED §4.9's CUSTODIAL ACTS FROM THEIR OWN SESSION, WITH A SENTENCE THAT IS FALSE OF THEM.** … (whole text: the cut archive)
+### REC-159 · blocked — awaiting Bob: permission check refused the membership-op authority change (its worker, 2026-09-23; nothing pushed). REC-162 and REC-155 depend on it.
 order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
 milestone: M8
 interface: I3 — four ops gain session reach and three a stamped `by`; the integrator mints and classifies the IC.
