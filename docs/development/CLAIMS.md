@@ -19796,6 +19796,7 @@ paths, BY SITE:
     `construct-status.json` if a text moves.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — pushed `land/worker/REC-160` @ `30706853` (verified by git ls-remote), gate GREEN FULL on the merged tree 639a1444 (291/291 suites · 17434 assertions); awaiting CONDUCT's integration and IC-189's resolution.
 
 ## CLAIM 2026-09-23 UI (M0-132 — the ai-session-wire fixture draws from ranges PROVEN disjoint; no suite builds a snap key from `Math.random`)
 
