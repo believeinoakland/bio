@@ -104,6 +104,7 @@ import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { parseFrontmatter } from "../checks/bio-checks.mjs"; /* D-442: the case document's roster row */
+import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs"; /* UI-81: C-44.2's row, read, never typed */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync, existsSync } from "node:fs";
@@ -1016,6 +1017,17 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
     + "reader's behalf what they meant, which is this method's own stated doctrine",
     [strangerAmbig.ok, strangerAmbig.reason, (strangerAmbig.cases || []).slice().sort()],
     [false, "FINDING_IN_SEVERAL_CASES", [CASE, other.caseId].sort()]);
+  /* UI-81 (C-44.2): the refusal a stranger meets on the published page carries its DEC-49 row — the
+     code, the C-number and the canned translation, compared against the catalogue row itself rather
+     than a typed copy — so a surface can say it in words and the guard can see it. NEGATIVE CONTROL:
+     `civicos-ui/test/several-cases-choice.control.mjs` arm F3, the row's translation dropped -> this
+     suite 58 passed / 1 failed, THIS assertion alone (RUN 2026-09-23, restored by sha256 and cmp). */
+  t("and that refusal carries its CODE, C-44.2 and the catalogue row's canned translation (DEC-49), "
+    + "so the stranger reads a sentence instead of the code",
+    [strangerAmbig.code, strangerAmbig.check,
+     strangerAmbig.translation === CASE_DERIVATION_CHECKS.FINDING_IN_SEVERAL_CASES?.translation
+       && typeof strangerAmbig.translation === "string" && strangerAmbig.translation.length > 40],
+    ["FINDING_IN_SEVERAL_CASES", "C-44.2", true]);
   /* THE OVER-STRICTNESS COMPLEMENT, IN THE SUITE RATHER THAN ONLY IN THE CONTROL:
      a reader who DID say which case is served, not refused. A fence tighter than
      its rule is an undeclared interface change wearing the costume of caution. */

@@ -50,6 +50,34 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v100, 2026-09-23 session, thread UI, UI-81 (a WORKER of CONDUCT #15). Landed on `land/worker/UI-81` (base `origin/main` @
+`4355bfda`), in the commit that carries this entry. SURFACE: the published case page (`pubOpen`), opened by a finding id
+that several cases pin.
+
+**What was wrong.** Since D-309 (IC-74) `op=publishedcase` handed a finding id alone that several cases pin refuses and
+names every case, because each case is its own artifact and serving one would choose for the reader; Publication §3 rule
+12 makes that shape normal. `pubOpen` printed the refusal under *"Not answered"*, with the plane's internal detail, as if the
+question had failed, and offered nothing to open. And no `*_CHECKS` row named the code, so the DEC-49 guard could not see the
+one refusal a stranger meets on that page (UI-80's worker found naming it in `app.html` broke the guard for that reason).
+
+**What it does now.** `pubOpen` keys on the refusal's `cases[]` (UI-80's keying, no code literal on the surface) and draws
+one choice per named case, in the plane's order, each opening that case's own published page at the newest edition the
+refusal's `memberships` say pins the finding; it never opens one itself. The words above the choices are the refusal's
+canned translation, read through `refusalWords` (the plane's detail on a plane older than this). The plane half: a row
+`FINDING_IN_SEVERAL_CASES` (C-44.2) in `CASE_DERIVATION_CHECKS`, D-309's own family, and `#resolveOneCase` builds the
+refusal through the file's `refusal` helper inside a DEC-49 region (IC-185 proposed, additive). The guard's floors moved from
+its own print (rows, reach, governedSites, regions, regionLines, codesChecked, refusalsJudged up by the item; untranslated
+FELL 297 -> 296, the reason at the site).
+
+**Driven against the real plane**, `civicos-ui/test/several-cases-choice.test.mjs` (15 assertions): UI-80's fixture (two
+projects, two cases over one finding, real SSHSIG); the plane's refusal and its row; the page opened by the finding id; each
+choice CLICKED and read back from the plane's own answer for that case; a plane older than this over a wire-shaped mock.
+NEGATIVE CONTROL `several-cases-choice.control.mjs`, 13/13 AS DECLARED, the earlier runs' wrong declarations corrected by
+name in the suite's header (and `caseflip.test.mjs` now names C-44.2 through the op, its arm F3): the liar (open the first case silently) RED 5/10 at NEVER PICKS and CHOICES; origin/main's three files
+RED 4/11; the row dropped RED in the guard naming the orphaned region (never the code — the code leaves the reach with its
+row); its translation dropped RED naming the code; the store's helper alone removed GREEN (D-262's `dec49Attach` carries the
+row to the wire).
+
 v99, 2026-09-23 session, thread UI, UI-80 (a WORKER of CONDUCT #15). Landed on `land/worker/UI-80` (base `origin/main` @
 `95c40ed9`), in the commit that carries this entry. (Written as `v98`; renumbered `v99` by CONDUCT #15 at
 integration, 2026-09-23, because UI-79's entry, integrated first in the same train, holds `v98`.) SURFACE: the working inquiry page's Strength section, and the published case
