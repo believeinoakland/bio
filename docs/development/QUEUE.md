@@ -259,7 +259,7 @@ accepts-when: a leg citing a passage whose address gained a newer capture reads 
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 12; keeps its `D-` id).
 uncut: restored whole from «D-394» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-86 · running — SPAWNED 2026-09-23 ~22:45Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-86 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-86 and that session; never conclude queued from the absence alone.
+### D-86 · integrated — finished; integrated on land/conduct/c17-batch7 @ ec330436 (IC-231 renumbered IC-234, I3 76.2.0, I5 3.3.0), waiting for its train — flipped by SCHEDULER #17
 order: with the M4 product rows, after D-394 and before D-162: it completes a built construct's half, and a new construct follows the rows completing built ones, as D-162's order line says (SCHEDULER #10, 2026-09-21, LED-7)
 milestone: M4
 interface: I3 additive — a queue item kind gains its producer; the integrator mints and classifies the IC.
@@ -415,6 +415,16 @@ scope: move the take to one writer: a compare-and-swap push to `origin/coord` (a
 accepts-when: two clones minting one namespace at once receive distinct ids. NEGATIVE CONTROL: bypass the single writer, and the "distinct ids" arm fails by name. Whether a collision has happened since the move is UNDETERMINED (not measured).
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
 note: 2026-09-23 by SCHEDULER #17 (D-148's and D-149's workers via CONDUCT #18): measured harm — the C floor reads `origin/main` only, so mintid handed out C-68..C-72 while live on `land/*` branches and both workers burned several. The single writer closes it; until then the C floor also reads every `land/*` tip.
+
+### REC-187 · queued — **THE BIAS ACKNOWLEDGEMENT'S PIN AND ITS HASH MUST NAME ONE REVISION, THE ADOPTED ONE: promotion to `adopted` re-pins the adoption to the adopted bundle_sha, the case stamps that sha, and `op=biasmanifest` hashes THAT revision's statements.** Today a proposed sha can stand beside a later projection's hash — one quantity under two names (BOB.md rule 7). — owner RECORD.
+order: FIRST in the backlog, by BOB #31's ruling of 2026-09-23 (*"Place ONE row FIRST in the backlog"*): a correction to just-landed work (D-84's stamp) outranks new work; it waits only on D-84's train (SCHEDULER #17, 2026-09-23)
+milestone: M10
+interface: I3 — the stamped sha and `op=biasmanifest`'s statements hash change meaning together; ONE IC, minted and classified by the integrator.
+design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"The bias acknowledgement, authored at export" — BOB #31's ruling *"WHICH REVISION THE ACKNOWLEDGEMENT NAMES (D-84 / PL-12). The ADOPTED one."* (on `land/bob/message-driven` @ 58f6d4ed, riding the current train; a worker reads it there until it is on `main`).
+depends-on: D-84 (its case stamp; `integrated` on c17-batch4, done when that train lands).
+scope: re-pin at promotion to `adopted`; the case document stamps the adopted bundle_sha; `op=biasmanifest` computes `statements_sha` from exactly that revision's statements. Extend `bio-plane/test/d84-case-manifest.test.mjs` (or `bias.test.mjs`).
+accepts-when: the stamped statements hash equals a hash recomputed from exactly the stamped sha's bytes, across a propose → adopt → later-propose sequence. How a liar passes it: hashing the latest projection, so the arm proposes a newer revision after adoption and recomputes from the stamped sha alone. NEGATIVE CONTROL: pin the proposed sha, and the equality arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (BOB #31's ruling, 21:43Z/21:48Z; `node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

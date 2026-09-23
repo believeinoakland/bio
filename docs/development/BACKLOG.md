@@ -23,16 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-187 · queued — **THE BIAS ACKNOWLEDGEMENT'S PIN AND ITS HASH MUST NAME ONE REVISION, THE ADOPTED ONE: promotion to `adopted` re-pins the adoption to the adopted bundle_sha, the case stamps that sha, and `op=biasmanifest` hashes THAT revision's statements.** Today a proposed sha can stand beside a later projection's hash — one quantity under two names (BOB.md rule 7). — owner RECORD.
-order: FIRST in the backlog, by BOB #31's ruling of 2026-09-23 (*"Place ONE row FIRST in the backlog"*): a correction to just-landed work (D-84's stamp) outranks new work; it waits only on D-84's train (SCHEDULER #17, 2026-09-23)
-milestone: M10
-interface: I3 — the stamped sha and `op=biasmanifest`'s statements hash change meaning together; ONE IC, minted and classified by the integrator.
-design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"The bias acknowledgement, authored at export" — BOB #31's ruling *"WHICH REVISION THE ACKNOWLEDGEMENT NAMES (D-84 / PL-12). The ADOPTED one."* (on `land/bob/message-driven` @ 58f6d4ed, riding the current train; a worker reads it there until it is on `main`).
-depends-on: D-84 (its case stamp; `integrated` on c17-batch4, done when that train lands).
-scope: re-pin at promotion to `adopted`; the case document stamps the adopted bundle_sha; `op=biasmanifest` computes `statements_sha` from exactly that revision's statements. Extend `bio-plane/test/d84-case-manifest.test.mjs` (or `bias.test.mjs`).
-accepts-when: the stamped statements hash equals a hash recomputed from exactly the stamped sha's bytes, across a propose → adopt → later-propose sequence. How a liar passes it: hashing the latest projection, so the arm proposes a newer revision after adoption and recomputes from the stamped sha alone. NEGATIVE CONTROL: pin the proposed sha, and the equality arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (BOB #31's ruling, 21:43Z/21:48Z; `node tools/mintid.mjs REC`).
-
 ### REC-188 · queued — **C-41 DOES NOT REQUIRE THE BIAS MANIFEST D-84 STAMPS: `checkCaseDocument` and the C-41 family never read `bias_manifest`, so a case document published without its lens still ratifies.** BOB #32 (22:26Z, G1) folds D-150's `completeness.acknowledged` and its list (possibly empty) into the SAME bump. — owner RECORD.
 order: directly after REC-187: a correction to just-landed work (D-84, D-150); DEC-20's *disclosed* holds only if the gate refuses the absence (SCHEDULER #17, 2026-09-23)
 milestone: M10
@@ -1182,3 +1172,13 @@ depends-on: none. **Same file as M0-44** — one worker at a time.
 accepts-when: `eachImage` carries a verdict in `D384_STAYS` or `D384_LEAVES` with its reason; the class figure is taken from a printed run, its delta attributed. How a liar passes it: a verdict with no … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-89» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### D-439 · queued — **TWO MORE SHARED MECHANISMS ARE HAND-KEPT COPIES, NEITHER PINNED.** (1) A READER: `stripComments`, `quotedIn`, `literalsOf`, … (whole text: the cut archive)
+order: after M0-89, the instrument cluster's end: copies that agree today, the drift a pin would catch, so debt and not a live defect (SCHEDULER #7, 2026-09-21; the D-254 worker via CONDUCT #10)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-254's single-homed verdict reader … (whole text: the cut archive)
+depends-on: none.
+accepts-when: four suites import one reader, three derive their list, every suite's tally unchanged. How a liar passes it: a renamed second copy, so the pin extracts by behaviour. NEGATIVE CONTROL: add a … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #7 (LED-7; the D-254 worker's DEBT row; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-439» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
