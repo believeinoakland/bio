@@ -2097,6 +2097,22 @@ CREATE TABLE IF NOT EXISTS inquiry_run_surfacings (
   at         TEXT NOT NULL
 );
 
+-- REC-173 (INVESTIGATIVE-SESSION.md section 11 item 5, A MIGRATION IS A REPLAY, NOT A SURFACING, BOB #30,
+-- 2026-09-23): the inquiries whose CREATION was a server-verified MIGRATION REPLAY. The control plane admits one
+-- only for the ADMIN class and only when the drive-provenance capture it names is registered, held, and lists this
+-- bundle id and this bundle.md SHA-256. Such a question was surfaced in the Drive era, not on this plane, so no run
+-- is recorded for it and its read says so in words (not recorded, migrated from the Drive era) rather than guessing.
+-- An INSTANCE row, never a line in the question's bytes, which are the Drive era's verbatim. capture_sha is the
+-- provenance capture, promotion_key the preserved Drive promotion whose record listed the bytes. One row per
+-- inquiry, written in the creation's own transaction. Named bundle_id so it rides purge's TABLES list and clears in
+-- BOTH arms (D-113). NO index beyond the key: the one reader asks by the inquiry.
+CREATE TABLE IF NOT EXISTS inquiry_migration_replays (
+  bundle_id      TEXT PRIMARY KEY,
+  capture_sha    TEXT NOT NULL,
+  promotion_key  TEXT,
+  at             TEXT NOT NULL
+);
+
 -- THE OBSERVATION LOG (\xA711). Where the run searched across the four levels,
 -- what it established, where it STOPPED and why. APPEND-ONLY: 'seq' is
 -- monotonic per run and no row is ever updated, because a resumed run reads its
@@ -28256,8 +28272,21 @@ var Store = class _Store extends DurableObject {
    *  serves, so the question's read and the run's read cannot disagree. */
   async #surfacedIn(bundleId, viewer) {
     const link = this.#one(`SELECT run, principal, at FROM inquiry_run_surfacings WHERE bundle_id=?`, bundleId);
-    if (!link)
+    if (!link) {
+      const mig = this.#one(
+        `SELECT capture_sha, promotion_key, at FROM inquiry_migration_replays WHERE bundle_id=?`,
+        bundleId
+      );
+      if (mig)
+        return {
+          recorded: false,
+          stated: "not recorded (migrated from the Drive era)",
+          run: null,
+          lens: null,
+          migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at }
+        };
       return { recorded: false, stated: "not recorded", run: null, lens: null };
+    }
     const read = await this.aiRunRead({ run: link.run, viewer });
     if (!read || read.found !== true || !read.session)
       return {
@@ -40354,6 +40383,10 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       if (refusedSurface) return refusedSurface;
       surfacing = { run: String(pkg.run).trim(), principal: pkg.assistantPrincipal.trim() };
     }
+    const migration = base === null && !surfacing && meta && typeof meta === "object" && normalizeType(meta.object_type) === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object" && typeof pkg.migrationReplay.capture === "string" && pkg.migrationReplay.capture ? {
+      capture: pkg.migrationReplay.capture,
+      promotion: typeof pkg.migrationReplay.promotion === "string" ? pkg.migrationReplay.promotion : null
+    } : null;
     return this.ctx.storage.transactionSync(() => {
       if (creatingProject) {
         bundleId = this.#mintProjectId(meta.title);
@@ -41263,6 +41296,18 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           bound: { bound: "surfaces", allowed: Number(left.allowed), consumed: Number(left.consumed) }
         };
       }
+      let migrated = null;
+      if (!cur && migration) {
+        const ts = (/* @__PURE__ */ new Date()).toISOString();
+        this.sql.exec(
+          `INSERT INTO inquiry_migration_replays (bundle_id, capture_sha, promotion_key, at) VALUES (?,?,?,?)`,
+          bundleId,
+          migration.capture,
+          migration.promotion,
+          ts
+        );
+        migrated = { capture: migration.capture, promotion: migration.promotion, at: ts };
+      }
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       this.#flagCasesOnRevision(
         bundleId,
@@ -41281,6 +41326,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         /* D-85: present ONLY on an assistant's creation of a question, naming the run it landed inside and
            that run's `surfaces` bound after this creation — so no member's answer gains a key. */
         ...surfacedIn ? { surfaced_in: surfacedIn } : {},
+        /* REC-173: present ONLY on a creation admitted as a migration replay, naming the provenance capture and the
+           Drive promotion that listed its bytes — so no other caller's answer gains a key. */
+        ...migrated ? { migration_replay: migrated } : {},
         /* REC-82 / IC-83: WHAT THE WRITER DID WITH EACH LEG'S REFERENT, on the
            write path's own surface. A mechanism believed on the strength of its
            EXISTENCE rather than its behaviour is the defect this project meets
@@ -51232,6 +51280,8 @@ ${words}`;
          purge can PROVE it took them (D-113). A COUNT AND NOTHING ELSE: which run opened which question is read
          per question, under that question's gate (`op=projection`'s `surfaced_in`). */
       inquiryRunSurfacings: n("inquiry_run_surfacings"),
+      /* REC-173: the questions whose creation was a verified migration replay, counted for D-85's reason one line up. */
+      inquiryMigrationReplays: n("inquiry_migration_replays"),
       /* REC-93 / IC-92: `aiRunLog` was a count of `ai_run_log`, which no longer
          exists — `OBSERVATION-LOG-DESIGN.md` §4.4 folded it into `observations`
          and `#migrate` drops it. The key is KEPT AND RE-AIMED at the folded rows
@@ -52558,6 +52608,10 @@ ${words}`;
          its run is the silent-leftover exactly. hygiene.test.mjs holds this list
          against schema.mjs. */
       "inquiry_run_surfacings",
+      /* REC-173 / D-113: the migration-replay row of an inquiry whose creation was a verified Drive-era
+         replay, keyed on the INQUIRY's `bundle_id`, for the reason the D-85 entry above gives: a row
+         outliving its inquiry would tell the next bundle allocated that id it was migrated. BOTH arms. */
+      "inquiry_migration_replays",
       /*__REC91_PURGE_START__*/
       /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX. It is a
          PROJECTION of a capture's extracted text -- re-derivable
@@ -69467,6 +69521,36 @@ var StoreSilent = class extends Error {
   }
 };
 var captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
+var DRIVE_PROVENANCE_PATH = "migration/drive-provenance.json";
+async function migrationReplayOf(env, storeName, b) {
+  const cap = typeof b.provenanceCapture === "string" ? b.provenanceCapture.trim() : "";
+  if (!/^[0-9a-f]{64}$/.test(cap)) return null;
+  const registered = Array.isArray(b.register) && b.register.some((r) => r && r.sha256 === cap && r.path === DRIVE_PROVENANCE_PATH);
+  if (!registered) return null;
+  const bm = Array.isArray(b.files) ? b.files.find((f2) => f2 && f2.path === "bundle.md" && typeof f2.text === "string") : null;
+  if (!bm) return null;
+  const mdSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();
+  if (bm.sha256 !== mdSha) return null;
+  let held;
+  try {
+    held = await env.CAPTURES.get(captureKey(storeName, cap));
+  } catch {
+    return null;
+  }
+  if (!held) return null;
+  const bytes = new Uint8Array(await held.arrayBuffer());
+  if (createSha256().update(bytes).hex() !== cap) return null;
+  let prov;
+  try {
+    prov = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  } catch {
+    return null;
+  }
+  const records = Array.isArray(prov?.promotions) ? prov.promotions : [];
+  const match = records.find((p) => p && p.record && typeof p.record === "object" && p.record.target === b.bundleId && Array.isArray(p.record.files) && p.record.files.some((f2) => f2 && f2.name === "bundle.md" && f2.sha256 === mdSha));
+  if (!match) return null;
+  return { capture: cap, promotion: typeof match.key === "string" ? match.key : null, bundleMdSha: mdSha };
+}
 function needsTier2(text) {
   const c = text && text.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
@@ -73309,9 +73393,16 @@ var index_default = {
         b.actorIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
         delete b.actorViewer;
         b.actorViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+        delete b.migrationReplay;
+        const replayed = !viaSession && cls === "admin" && b.base === null && b.meta && normalizeType(b.meta.object_type) === "inquiry" ? await migrationReplayOf(env, storeName, b) : null;
+        if (replayed) {
+          b.migrationReplay = replayed;
+          b.replay = true;
+        }
         delete b.assistantPrincipal;
         if (!viaSession)
           b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+        if (replayed) delete b.assistantPrincipal;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({
@@ -73325,7 +73416,7 @@ var index_default = {
             }, 403);
           b.ownerMemberId = sessMember;
         }
-        if (b.base === null && b.meta && normalizeType(b.meta.object_type) === "inquiry" && Array.isArray(b.files)) {
+        if (b.base === null && b.meta && !replayed && normalizeType(b.meta.object_type) === "inquiry" && Array.isArray(b.files)) {
           const bm = b.files.find((f2) => f2 && f2.path === "bundle.md" && typeof f2.text === "string");
           if (bm) {
             const want = viaSession ? "human" : "agent";
