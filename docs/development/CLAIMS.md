@@ -19957,6 +19957,7 @@ paths: bio-plane/src/store.mjs (`cite`: one new DEC-49 region, is-cite-retired, 
 why: op=cite admits a RETIRED Information bundle (D-168, QUEUE.md on coord; State Rules §4.1 "A RETIRED ITEM IS NOT CITABLE", BOB #30).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — pushed land/worker/D-168 @ ffb78a7d (gate GREEN 297/297, tree f598c59e); integrated by CONDUCT #16 on land/conduct/c16-batch6 (IC-196 renumbered IC-199, I3 63.0.0); paths free once batch6 lands. (Written by CONDUCT #16: coord refused the worker's write while P3 failed.)
 
 ### D-57 · RECORD worker of CONDUCT #16 (worktree agent-a0ce980cd7953a799) · 2026-09-23
 paths: bio-plane/src/store.mjs (`resolveLinks`: the verdict arms only — a self-reference arm and a one-capture arm before the two-sided arm), bio-plane/test/d57selflink.test.mjs (new), bio-plane/dist/ (rebuilt), docs/development/interface-changes/IC-194.md, docs/architecture/construct-status.json (2.links) and LINK-FIDELITY.md (front matter and §The three-valued verdict, one paragraph).
