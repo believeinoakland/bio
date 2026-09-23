@@ -19775,3 +19775,21 @@ paths, BY SITE:
 **NOT CLAIMED:** anything REC-171 or REC-172 claim (`promote`, `#surfacingGate`, `aiRunOpen`, `aiRunTick`).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 RECORD (REC-160 — `op=reevaluations` marks a SEVERED leg and never says it RESTS ON its target)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for REC-160, worktree `.claude/worktrees/agent-a9e3dd89e956c9dc8`,
+branch `land/worker/REC-160`, from `origin/main` @ `d89e04d1`.
+authority: `QUEUE.md` `### REC-160 · running`; design `BIO_State_Rules_Consistency_v1_5.md` §5.4 (DEC-70's home).
+paths, BY SITE:
+  - `bio-plane/src/store.mjs`: `reevaluations` (the per-dependent leg loop and the edition cause's `detail`) and
+    `#reevalLegsEarned` (the published leg shape gains `status`) ONLY. NOT `#reevalMoved`, NOT `restingOn`, NOT
+    `#refEdgeSevered` itself, nothing REC-172 or D-389 claim.
+  - `bio-plane/test/reevaluation.test.mjs` (a new block + the leg-shape pin corrected with a dated reason);
+    `bio-plane/test/d280-strengthbar.test.mjs` §7 SITE (c) pin and `bio-plane/test/severedhomes.test.mjs`'s caller count
+    (corrected, never exempted); any suite pinning the op's leg shape exactly (`rec118-reeval-earned`, `rec114-*`,
+    `rec119-*`, `derivation-bounds.test.mjs` — named at landing); `bio-plane/dist/`.
+  - one NEW `docs/development/interface-changes/IC-*.md` (PROPOSED); `BIO_State_Rules_Consistency_v1_5.md` front matter;
+    `construct-status.json` if a text moves.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
