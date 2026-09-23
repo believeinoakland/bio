@@ -19258,6 +19258,7 @@ paths, BY SITE:
 `docs/development/QUEUE.md` (CONDUCT's).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+**released: 2026-09-23** — REC-168 BUILT on branch `worktree-agent-a960b19c9e4696303` @ `8f375b48` (pushed, read back by `git ls-remote`); NOT merged, CONDUCT integrates. Full gate GREEN on the clean committed tree 133c6566 (`279/279 suites green · 16779 assertions passing`, 2 untallied, 0 skipped suites; civicos-ui all harnesses green; plancheck clean but UNPUSHED-to-main). IC-178 PROPOSED (I3, MAJOR, base 52.0.0); M-107. ALSO TOUCHED beyond the paths above: `civicos-ui/check-refusal-codes.mjs` (four DEC-49 floors, from its print). The paths stay reserved until CONDUCT integrates the branch.
 
 ## CLAIM 2026-09-23 RECORD (D-442 — `op=publish` promotes no member finding; the moved blocks are stated once in the case document)
 
