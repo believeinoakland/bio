@@ -26,7 +26,7 @@ BOB appends a designed item, a correction or an order change here, with its inte
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 12 in all (`CACHE_ROWS`, sized to CONDUCT's capacity plus spare: Bob, 2026-09-23, `WORK-PIPELINE.md`). The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
 
-### D-179 · running — SPAWNED 2026-09-23 20:53Z by CONDUCT #17 from the BACKLOG as a cloud worker (session 'WORKER <ID> (CONDUCT #17)'), under BOB #31's 20:51Z ruling; recorded here by SCHEDULER #16 so no refill places it twice. A worker finds this row with ledger.mjs find.
+### D-179 · integrated — finished; integrated on land/conduct/c17-batch4 @ 65205437, waiting for its train — flipped by SCHEDULER #16 (IC-216)
 order: directly after D-171, beside D-169 and D-171 as BOB #26 placed it: a silent move of the record's provenance row, CLAUDE.md §2's class (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 1)
 milestone: M7
 interface: I3 — `op=promote` refuses what it accepted; the integrator mints and classifies the IC.
@@ -66,7 +66,7 @@ accepts-when: each roster act is offered exactly where its store act succeeds, p
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 14; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-311» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-125 · running — SPAWNED 2026-09-23 20:53Z by CONDUCT #17 from the BACKLOG as a cloud worker (session 'WORKER <ID> (CONDUCT #17)'), under BOB #31's 20:51Z ruling; recorded here by SCHEDULER #16 so no refill places it twice. A worker finds this row with ledger.mjs find.
+### D-125 · integrated — finished; integrated on land/conduct/c17-batch4 @ 65205437, waiting for its train — flipped by SCHEDULER #16 (IC-215)
 order: last of the M8 corrections, after D-82: DEC-10's ruled act is missing rather than anything claimed falsely, so below the rows that correct what a member is told (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 2)
 milestone: M8
 interface: I5 and I3 — a derived table and `op=queuemute`'s item form; the integrator mints and classifies the ICs.
@@ -130,7 +130,7 @@ accepts-when: one export writes one item per administrator, each naming the `exp
 added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-52» on entering the cache; its `order:` line is the current one.
 
-### D-84 · running — SPAWNED 2026-09-23 ~21:08Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-84 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-84 and that session; never conclude queued from the absence alone.
+### D-84 · integrated — finished; integrated on land/conduct/c17-batch4 @ 65205437, waiting for its train — flipped by SCHEDULER #16 (IC-214)
 order: directly after D-52, above the features: DEC-20's *disclosed* — the manifest SHOWN in the artifact — is missing from every published case, and one published without it is corrected only by a new edition (DEC-19) (SCHEDULER #6, 2026-09-21, LED-7 batch 11)
 milestone: M10
 interface: I3 — the case document gains the manifest; the integrator mints and classifies the IC.
@@ -141,7 +141,7 @@ accepts-when: a case published under an adopted set names each pair and the hash
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-84» on entering the cache; its `order:` line is the current one.
 
-### D-220 · running — SPAWNED 2026-09-23 ~21:08Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-220 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-220 and that session; never conclude queued from the absence alone.
+### D-220 · integrated — finished; integrated on land/conduct/c17-batch4 @ 65205437, waiting for its train — flipped by SCHEDULER #16 (IC-213)
 order: after D-84, above the features: a deployed machine role over-counts what the record holds — the false-coverage hazard `STORE-AS-CACHE.md` names — in work a member reads and may accept; a correction to built work (SCHEDULER #6, 2026-09-21, LED-7 batch 12)
 milestone: M9
 interface: I8 consumer of `op=versionchain` (I3, built); no shape moves unless the builder finds one.
