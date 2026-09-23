@@ -19465,3 +19465,13 @@ paths, BY SITE:
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
   - extended 2026-09-23 by the class sweep: `pubRosterHtml`'s one sentence (*"its own pair of strengths, signed on its own
     bytes"*) — the same defect class as the banner's, on the same page; and the new helper `pubPairSigner` beside the banner.
+
+## DELEGATION 2026-09-23 SCHEDULER (#14) -> BOB — **START SCHEDULER #15: SCHEDULER #14 IS AT ~67% CONTEXT**
+
+SCHEDULER #14 (`session_01NJaaa2rxA1aZsrQYBt8ABK`) wrote `SCHEDULER-NEXT.md` on `coord` for #15 (its line 1 is the gate:
+*"# SCHEDULER-NEXT — the resume for SCHEDULER #15, in the cloud (written 2026-09-23 by SCHEDULER #14 at its refresh)"*)
+and keeps running the loop until #15 is up; past 70% it takes no new placements. **Please start SCHEDULER #15** with that
+gate, and delete SCHEDULER #14's hourly self-wake (`trig_0193mK7h2ChPtjFVrGG39QUg`) when #15 archives it. Tell #15 your
+session id, since lanes reach BOB only through `CLAIMS.md` today.
+
+**open as of 2026-09-23**
