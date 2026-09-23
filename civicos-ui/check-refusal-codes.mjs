@@ -892,7 +892,7 @@ const FLOOR = {
      `group-surface.test.mjs` FEEDS `NOT_AUTHENTICATED` to the public header — the refusal an older plane (before
      REC-163/IC-174) answers a stranger's `op=instancegroup` with — so the header can be shown saying it could not
      read the group rather than that none is recorded. A real widening, which this floor says should raise it. */
-  r3Fed: 71,
+  r3Fed: 72, /* D-126 (2026-09-23, branch land/worker/D-126): MOVED 71 -> 72 from this guard's own print at the COMMIT that adds civicos-ui/test/queue-peritem.test.mjs (D-257: the working tree read it before the file was committed) — the suite FEEDS NOT_YOURS into the queue surface through a real plane. */
 };
 
 /* THE OTHER HALF OF THE RATCHET. A floor catches an instrument going blind; a
