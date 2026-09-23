@@ -2,7 +2,7 @@
   "name": "agent-worker",
   "private": true,
   "type": "module",
-  "version": "0.76.0",
+  "version": "0.78.0",
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node test/agent-worker.test.mjs",
