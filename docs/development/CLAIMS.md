@@ -19381,6 +19381,7 @@ paths, BY SITE:
 wrong for the new paths), any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+**released: 2026-09-23** — M0-100 BUILT on branch `worktree-agent-a08c137666a63d52b` @ `69925f59` (pushed, read back by `git ls-remote`); NOT merged, CONDUCT integrates. Merged with `origin/main` @ `cdfaea39` (merge, never rebase, per CONDUCT #15): M0-121's M-110 and CONDUCT #15's M-111, appended to the frozen `MEASUREMENTS.md`, carried verbatim to `measurements/M-110.md` and `M-111.md` by `entries.mjs carry` (declared `Dropped-from-branch:`). Gates: FULL GREEN `284/284 suites green · 17143 assertions passing` (2 untallied, 0 skipped) on `24927dde`; SINCE GREEN `118/118 suites green · 8270 assertions passing` on the merged `69925f59` (tree `3bb869b4`). The paths are released.
 
 ## CLAIM 2026-09-23 UI (UI-79 — the member UI composes no producing group: the plane stamps the instance's recorded one on every bundle the UI authors)
 
