@@ -20004,6 +20004,9 @@ Suites: `civicos-ui/test/refusal-translation-surface.test.mjs` (+ `.control.mjs`
 `civicos-ui/test/preauth-vocabulary.test.mjs` (the DEC-49 SUBJECT arm's comment and re-read only), and any suite
 whose pin on these sites moves (named at release). `docs/development/CIVICOS_UI_STATE.md` (PREPENDED).
 **open as of 2026-09-23** — claimed at the start of the item.
+released: 2026-09-23 — pushed `land/worker/UI-73` @ `59ef75c0` (verified by `git ls-remote`). Touched exactly the claimed
+sites, plus `civicos-ui/test/auth-surface.test.mjs` NEG-CONTROL (b)'s anchor ONLY (its pin moved: it anchored on `signIn`'s
+old line and stopped arming — corrected, not exempted). The paths stay reserved until CONDUCT's train integrates the branch.
 
 ### D-420 · CAPTURE/RECORD worker of CONDUCT #16 (cloud session WORKER D-420 (CONDUCT #16), branch land/worker/D-420) · 2026-09-23
 paths: bio-plane/src/index.mjs (op=acquire's format wire: the PDF branch keeps `structure().images` and the CAP-12 container-extent site persists it as `container_extent.images` for a PDF), bio-plane/checks/bio-checks.mjs (CONTENT_EXTENT_CHECKS: one new row, C-45.12 — D-440 holds C-45.11; `checkContentExtent`'s image arm, the `{page}` half only, inside is-content-extent; one pure predicate beside `coversImage`, which is NOT edited), bio-plane/src/store.mjs (`#containerExtentForCapture`: the capture's container name and the PDF image level's stated absence; `mintContent`'s answer, promote's `content[]` entry and `contentMint`'s answer carry `image_bound` when a page-form image is admitted unbounded), civicos-ui/check-refusal-codes.mjs (floors moved from its own print), bio-plane/test/d420-image-page.test.mjs (new), bio-plane/test/capture-container-extent.test.mjs (the superseded PDF-null assertion, corrected), bio-plane/dist/ (rebuilt), docs/development/interface-changes/ (IC files), docs/architecture/construct-status.json and EXTRACTION-BREADTH-DESIGN.md front matter.
