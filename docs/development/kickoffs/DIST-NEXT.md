@@ -29,12 +29,18 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    = the cut tree, GREEN `--full --no-reuse` 296/296 · 17690). Confirm: `git merge-base --is-ancestor 183cc7df origin/main`.
    **The 0.77.0 hold is OVER:** 0.78.0 carries REC-173, and its pointer and the installer both advance. 0.77.0 was never
    offered to groups.
-1. **REC-175 (IC-192 MAJOR, I3 60.0.0) lands ~17:30Z — CONDUCT will trigger.** `op=promote` then refuses a sha256 that
-   does not match the bytes, and a new read op REC-175 adds, `digestcensus` (admin, probe; NOT on main at writing) counts stored rows whose digest disagrees;
-   a live bundle already holding a false digest will refuse re-promotion and there is NO repair act. **So: cut it, deploy
-   it, and run its digest census on `store=bio` (admin) on the deployed build IMMEDIATELY, before any re-promotion — and report
-   the figure to CONDUCT #16, SCHEDULER #16 (`session_01UZaSR1KRWmADuxBFYk1wY9`) and BOB #30.** Judge at the code whether
-   REC-175 is a CUT NOW (a digest that lies about bytes is a record-integrity/provenance closing — DIST's reading: yes).
+**BOB'S RULING (Bob, 2026-09-23 16:20Z, relayed by BOB #30): CUT NOW IS SUSPENDED.** *"Nobody can access the site except
+me. Security updates don't matter at all at this point. Again, the primary focus is BIO development productivity.
+Everything else is overhead."* A security, disclosure or authority closing no longer triggers a release. **Cut AT MOST
+ONCE A DAY, only when main differs from the live release in a shipped path, or when Bob asks.** Verification is LEAN: the
+backstop gate (`isBackstop()` record, else `--full --no-reuse`), the live `/version` + D-116 read, and the probe. Nothing
+else in the estate waits on a deploy. (0.78.0 was already in flight at 16:20Z and was finished.) The wake is DAILY at
+17:08Z (`trig_014p69w2WQz7jfSkYeg4XHSF`); the next cut is no earlier than 2026-09-24 ~17:00Z unless Bob asks.
+1. **REC-175 (IC-192, I3 60.0.0) rides the next DAILY cut.** It makes `op=promote` refuse a sha256 that does not match the
+   bytes and adds a read op, `digestcensus` (admin, probe; NOT on main at writing), counting stored rows whose digest
+   disagrees; a live bundle already holding a false digest will refuse re-promotion and there is NO repair act. **So the
+   deploy that first carries it runs the digest census on `store=bio` (admin) right after the deploy, and reports the
+   figure to CONDUCT #16, SCHEDULER #16 (`session_01UZaSR1KRWmADuxBFYk1wY9`) and BOB #30.**
    Next RELEASES row: `["0.78.0", "dfe9858c89810a49422ee071c4f0bf92c0c2f297"]`. Expected: baseline 522 + 21 → **543/0**, `alterafter` → **465/78**,
    `groupwipe` → **527/16** (eight group-recording stores). Measure. Gate: an `isBackstop()` record for the exact tree,
    else `gates.mjs --full --no-reuse`; never `--since` (BOB #30). Refresh past 80%.
