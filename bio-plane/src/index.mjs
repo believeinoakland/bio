@@ -1091,6 +1091,11 @@ const OPS = {
      live instance stop being a plausible story and become a measured one.
      Admin, because the register is intake provenance for the working corpus. */
   registeraudit:{ classes: ["admin", "probe"],                     mutating: false },
+  /* REC-175: the digest census — every row already held (the live image and the history) whose stored sha256
+     disagrees with its own stored bytes, counted and listed, NEVER rewritten. The method a deployed instance runs
+     to learn whether `op=promote`'s old unchecked digest left a false one behind. Admin and probe, as
+     `registeraudit` beside it: it is an audit of the working corpus, and it lists paths. */
+  digestcensus: { classes: ["admin", "probe"],                     mutating: false },
   /* CONSTRUCTS Step 3 (FW-5): the reading persisted at promote. `reading` reads
      one captured document's reading (entities + document facts) by its capture
      sha; `readingref` is the reverse index — which documents' readings carry a
@@ -10216,7 +10221,16 @@ export default {
             for (let i = 1; i < (end === -1 ? lines.length : end); i++) {
               if (lines[i].startsWith("surfaced_by:")) { lines[i] = "surfaced_by: " + want; changed = true; break; }
             }
-            if (changed) {
+            /* REC-175: A SUPPLIED DIGEST THAT IS NOT OF THE BYTES SENT IS NOT PAPERED OVER HERE. This restamp
+               recomputes the sha of what it writes, which would silently REPLACE a caller's false `sha256` with a
+               true one and answer `ok: true` over it. So the restamp runs only when the caller sent no digest or
+               the digest OF THE TEXT IT SENT; otherwise the bytes and the digest go to the store as sent, and
+               `promote` refuses them FILE_DIGEST_MISMATCH by name. Compared by the store's own rule (UTF-8, hex
+               case-insensitive). */
+            const sentSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();
+            const sentOk = bm.sha256 === undefined || bm.sha256 === null
+              || (typeof bm.sha256 === "string" && bm.sha256.toLowerCase() === sentSha);
+            if (changed && sentOk) {
               bm.text = lines.join("\n");
               const bytes = new TextEncoder().encode(bm.text);
               bm.bytes = bytes.length;

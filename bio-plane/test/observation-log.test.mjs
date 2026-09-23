@@ -563,7 +563,7 @@ await POST(`op=promote&token=${TOK}`, {
   meta: { object_type: "inquiry", group: "believe-in-oakland",
           title: "What did we look for?", current_state: "open", created: T0, last_updated: T0 },
   files: [{ path: "bundle.md", text: `---\nid: ${BUNDLE}\n---\n\n## Question\n\nWhat did we look for?\n`,
-            bytes: 90, sha256: SHA_A }],
+            bytes: 90 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: SHA_A ("a" x 64), which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
   register: [],
 });
 
@@ -1151,7 +1151,7 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
             title: "what is the carve-out waiting on?", current_state: "open",
             created: T0, last_updated: T0 },
     files: [{ path: "bundle.md", text: `---\nid: ${B2}\n---\n\n## Question\n\nWaiting on what?\n`,
-              bytes: 90, sha256: SHA_A }],
+              bytes: 90 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: SHA_A ("a" x 64), which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
     register: [],
   });
   await POST(`op=airunopen&token=${TOK}`, {
@@ -1479,7 +1479,7 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
             title: "what does the rollup rest on?", current_state: "open",
             created: T0, last_updated: T0 },
     files: [{ path: "bundle.md", text: `---\nid: ${KB}\n---\n\n## Question\n\nRests on what?\n`,
-              bytes: 90, sha256: SHA_A }],
+              bytes: 90 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: SHA_A ("a" x 64), which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
     register: [],
   });
   const openRun = (run, plus, leaseMs = 600000) => POST(`op=airunopen&token=${TOK}`, {
@@ -1670,7 +1670,7 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
                   title: "what does the rollup rest on?", current_state: "open",
                   created: T0, last_updated: T0 },
           files: [{ path: "bundle.md", text: `---\nid: ${KB}\n---\n\n## Question\n\nRests on what?\n`,
-                    bytes: 90, sha256: SHA_A }],
+                    bytes: 90 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: SHA_A ("a" x 64), which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
           register: [] });
         await o.POST(`op=airunopen&token=${TOK}`, {
           run: KL, contextType: "inquiry", contextId: KB, label: "a run written under the old rule",
