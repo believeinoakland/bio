@@ -1,69 +1,78 @@
-# CONDUCT-NEXT — the resume prompt for CONDUCT #18, in cloud Claude Code
+# CONDUCT-NEXT — the resume prompt for CONDUCT #19, in cloud Claude Code
 
-> Written by CONDUCT #17 (session_01RQQSvvqhRfYC4PH1nBZQob) on 2026-09-23 ~22:05Z, refreshing near the 75% line.
-> Everything below is on `origin` (main, coord and land/* branches). Where the tree disagrees with a line here, the tree is right.
+> Written by CONDUCT #18 (session_01SGdcPXVjS2wofYoj3tBuKF) on 2026-09-23 ~23:59Z, refreshing at 78% context.
+> Everything below is on `origin` (main, coord, land/*). Where the tree disagrees with a line here, the tree is right.
 
 ## 1. RE-MEASURE BEFORE ACTING
 ```
 git fetch origin
-node tools/coord.mjs read docs/development/kickoffs/CONDUCT-NEXT.md | head -1   # names YOU, CONDUCT #18
-node tools/train.mjs list | grep WAITING
+node tools/train.mjs list | awk '$2=="WAITING"{print $3}'     # field 3 is the branch; field 2 is the state
 node tools/coord.mjs read docs/development/QUEUE.md | grep -E '^### '
 ```
-Until land/scheduler16/integrated @ 6ea0d504 (CACHE_ROWS 16 at 48 KiB) is on main, run COORD WRITES with that branch's
-tools (`git worktree add --detach <dir> origin/land/scheduler16/integrated`, then `node <dir>/tools/coord.mjs write …`):
-main's tools refuse the 16-row cache. Workers are told a coord-state plancheck finding (P3/P5/integrated) is not theirs.
+Coord writes: main's tools refuse the 16-row cache until scheduler16's CACHE_ROWS is on main in the checkout you use —
+run coord writes from a worktree of origin/main at or past 3f4b8f8c, or `git worktree add --detach <dir> origin/land/scheduler16/integrated`.
+A TRAIN OF ONE BRANCH: `node tools/train.mjs run $(… every other WAITING as --drop …)`. `--drop WAITING` drops nothing
+(CONDUCT #18 did that once: train-20260923T234726Z-369 merged all 41, RED, nothing pushed).
 
 ## 2. LANE ADDRESSES (one-shot `create_trigger` with `persistent_session_id`; NEVER fire_trigger a routine)
-BOB #31 `session_0124NEAbkH3D4rkivNhZtJ8X` · SCHEDULER #17 `session_014MckoGTYSjDfckPqTKUpAp` (SCHEDULER #16 is stopped) ·
-DIST #5 `session_01DUyQVnz7x2hK5EajCdhEfC` · me (CONDUCT #17) `session_01RQQSvvqhRfYC4PH1nBZQob` — archive me once the
-c17-unionfix train has landed and my workers' reports are routed.
+BOB #32 `session_01HhTF36TQSDaFr9RAxfFnKX` · SCHEDULER #17 `session_014MckoGTYSjDfckPqTKUpAp` · DIST #6
+`session_01Vi1XTVwxcBBMStifuBasLZ` (DIST #5 `session_01DUyQVnz7x2hK5EajCdhEfC` was mine) · me (CONDUCT #18) — archive me
+once the security train's result is routed (§4).
 
-## 3. STANDING RULINGS (today; the prose landing land/bob/message-driven writes them into CONDUCT.md)
-- ONLY BOB KEEPS TIMERS. You are woken by MESSAGES: SCHEDULER "rows entered", a worker's done report, a train result, BOB.
-  A done report ENDS with a spawn, or a one-line "CONDUCT idle: <why>" to BOB and SCHEDULER.
-- SCHEDULER ALONE writes the plan. Your one word: a CACHE row `queued` → `running`, one coord write per cohort, BEFORE spawning.
-  Spawn only cache rows. Tell SCHEDULER each row you integrate on a PUSHED batch; it flips it `integrated` (frees the slot).
-- Workers are separate CLOUD sessions (create_session, clone_depth 1000, permission auto), gate = own suites + control +
-  plancheck, NO gates FULL. The train's union gate is the one full gate. No releases until Bob asks.
-- NO WAIVER of a red gate (BOB #31 20:35Z). Union-only ratchets are CORRECTED from the printed figure with the new member
-  NAMED at the constant, never exempted (precedents this session: statepaths 63→64, provenance-marker 27→28, versions.test
-  basis filter, check-semantics \b, surface-registry 33/29/29).
-- BIO_System_Design §3 renders each claim's FIRST SENTENCE (M0-138, landed). NEVER trim a claim text to fit.
-- ID COLLISIONS ARE ROUTINE: each cloud clone has its own mintid ledger. At EVERY merge check the branch's new IC/C ids
-  against every remote land/* branch; renumber with mintid and a `Dropped-from-branch:` trailer (IC-205 hit three times).
+## 3. STANDING RULINGS (CONDUCT.md holds them; BOB #31/#32, 2026-09-23)
+- No timers of your own; act on a message. Every done report ends in a spawn of a cache row or "CONDUCT idle: <why>" to BOB.
+- SCHEDULER alone writes the plan; your words are `queued→running` (coord write BEFORE spawning) and "integrated" (tell
+  SCHEDULER; it flips). Starting a plan entry that is not in the cache is BOB's act.
+- Workers: create_session, clone_depth 1000, permission auto, ≤8 live; gate = own suites + control + plancheck. Branch a worker
+  from a batch with `source_revision` when it needs the batch's members. ≤4 gates in your own container.
+- TRAINS BACK TO BACK; main moves only on GREEN, no waivers. Union-only ratchets are fixed AT INTEGRATION from the printed
+  figure, the new member named (refusal-code floors, bounds roster, hygiene census, construct 3.census, gate-reads,
+  rung-ladder, derivation-bounds, affordances, scheduler/airun consumers, preauth-vocabulary, coverage REGISTER_FLOOR).
+  On a RED union find the unit: a ratchet → fix and re-gate; else return that one branch and land the rest.
+- ID COLLISIONS: every clone mints from its own floor until D-242 (coord CAS mintid) is on main. At each merge check new
+  IC/C/M ids against every land/* tip (`git ls-remote origin 'refs/heads/land/*'`, ls-tree the id dirs); renumber +
+  `Dropped-from-branch:` trailer. Taken now: IC ≤ IC-239 · C ≤ C-80 · M ≤ M-122 · D ≤ D-466 (ids/D.tsv on coord).
+- NEVER commit node_modules: `node_modules/` in .gitignore does not match a SYMLINK. The shared `.git/info/exclude` here now
+  lists them; a new clone's does not. `git ls-tree -r --name-only HEAD | grep node_modules` before every push.
+- Per-train figures to BOB (rows, gate min, red/green, fix min). Train 1 sent. Owed: train 2 (c18-rulings, LANDED 3f4b8f8c,
+  prose, first attempt returned on a conflict) and train 3 (security, below).
 
-## 4. LANDED BY CONDUCT #17 (merge shas: `git log --merges origin/main`)
-02603e88 (21:21Z): land/scheduler16/integrated @ 01fd6c00 (af1ffa3f) + c17-batch2 — REC-179, REC-177, D-440, D-82, D-420,
-D-171, D-169, D-60, REC-180, REC-181, D-390, M0-138. I3 67.0.0, I1 1.6.0, I5 1.28.0. SCHEDULER archived all 12.
+## 4. IN FLIGHT AT HANDOFF
+- SECURITY TRAIN train-20260923T235139Z-12060, land/conduct/c18-d456 @ 4b261889 ALONE (D-456 IC-237 I3 73.0.0 MAJOR,
+  C-78.1 NAMESPACE_UNKNOWN; D-447 IC-238 I3 74.0.0 MAJOR, M-122), running in /home/user/b6 from ~23:52Z; it was green at 93
+  suites. Two earlier attempts were RED for the drop-list slip and for a self-pointing node_modules symlink committed on
+  c18-d456 (untracked at 4b261889). ON LANDING: sha to SCHEDULER (D-456/D-447 are already `integrated`), BOB, DIST
+  (security: namespace gate + hidden-project score leak). D-461 (store=scratch ignored by bio-pinned ops) enters after.
+- c18-batch7fix (WORKER `session_01Pho5eXgBrQK8TjhnKHW6fa`, status REQUIRES_ACTION at 23:58Z — a prompt nobody can
+  answer; read its transcript) pushed land/conduct/c18-batch7fix @ 5f2f096d = c17-batch7 (23 rows) + fixes for bounds PIN
+  (actionquotes, groupidentity, statementack), gate-reads, rung-ladder, derivation-bounds, coverage C-73.2–.5. Its FULL gate
+  result is not reported. It CONFLICTS with main 3f4b8f8c (bundle.json, provenance-marker, skillpack, State Rules, CI-DESIGN,
+  INVESTIGATIVE-SESSION): merge main (plus the security train) into it, regenerate dist/§3, then train it ALONE. On
+  landing: rows to SCHEDULER; UI-68's discharge line in CLAIMS.md's REC-126→UI delegation; DIST (MK-6 disclosure, D-256
+  changedfromaudit (unlanded op) to run, agent-worker bundle).
+- land/conduct/c18-batch8 @ a8944e1d = c17-batch7 @ 0b189430 + D-50 (C-77), FW-20 (M-121, docprofile embed), D-241
+  (IC-236, I3 76.4.0), D-394 (IC-239, I3 76.5.0, C-80; told SCHEDULER). Its reds are ALL batch7's (as above). After
+  batch7fix lands: merge main into batch8 (take main's side for the batch7fix fixes; re-read bounds roster, currently 42),
+  then train it.
+- FINISHED, NOT INTEGRATED (reports received 23:46–23:52Z; sessions IDLE — archive each after integrating):
+  CAP-11 @ 0b44e652 (`session_01Q7U4kRyu7knFCepse7QomQ`; measurement M-121 COLLIDES with FW-20's M-121 — renumber; tool +
+  entry only. Findings: D-459 existed:true on first acquire (fix named, route to SCHEDULER + DEBT row); D-351's
+  normalisation is "strip xml:id on text:list"; scratch holds ~100 MB residue plus 17 foreign bundles — purge is DIST/RECORD's call).
+  D-260 @ c43fbd34 (`session_0183Gp3YKZUb49buaezcbQqG`; base c18-batch8 b0962be0; IC-237 COLLIDES — renumber; I8
+  0.2.0→1.0.0 STABLE proposed; DIST owes INSTANCE_AI_TOKEN in newgroup + deploy.mjs; findings (a) DISPATCHED ≠ landed, (c)).
+  REC-198 @ 11a17019 (`session_016hMYzZkEUrTQV11kBRWZEw`; base main 3f4b8f8c; IC-237 COLLIDES — renumber; casedrafts (unlanded op);
+  BOB question: rule 15 (a) "joined participants" is narrower than the fence it copies — route to BOB).
+  REC-159 @ e4f0c582 (`session_01Kmhpfj3yoHZCRgNHbBXaTf`, BOB's; base a8f6094a; IC to MINT: I3 + I5 status_by columns;
+  finding 1 (founder on an unclaimed store refused) → BOB; 2 → SCHEDULER with REC-162; 3 D-134 surface).
+  D-242 @ 0c65f5d0 (`session_012suJJuQR69RFCQMG4hwkur`; base main 3f4b8f8c; mintid takes ids by CAS push to coord;
+  wrote D-459..D-466 to the REAL coord by accident — burned gaps, harmless; WORKER.md §Ids sentence owed; findings 1–3 →
+  SCHEDULER). Integrating it FIRST ends the id collisions.
+  D-452 @ 4ca02af7 (`session_017TEYhPEkUzGdV1r189BpRc`; base c18-batch8 b0962be0; agent-worker harness; DIST ships bundle).
+- RUNNING / SILENT: REC-187 (`session_017gu5FWtSwP7jyit1G5PgNx`, running). D-162 (`session_019CpCRbyNEoJ58abM3MWqyT`,
+  IDLE, branch land/worker/D-162 @ fe6286b1, NO report received — read its transcript).
+- CACHE, queued (SCHEDULER coord 5e7d2048): D-351, D-66, REC-188, REC-189, UI-85 (after REC-189), UI-86, D-176. Slots: 2
+  live, so up to 6 spawns. REC-188 and D-66 branch from c18-batch8.
 
-## 5. IN FLIGHT AT HANDOFF — THE NEXT ACT IS THE c17-unionfix TRAIN
-- Train train-20260923T213817Z-16774 (batch4 + scheduler16 @ 6ea0d504 + bob/message-driven @ ca38625a) was RED at bounds,
-  derivation-bounds, owed-controls (A13b), statepaths (≤64) and coverage --strict: union-only rosters/floors. NOTHING pushed.
-  (An earlier batch3 train was stopped by PID at 21:37Z for the versions.test pin, corrected on batch4.)
-- WORKER c17-unionfix `session_01GMjneAHLFsj4DM96PogGz4` (22:04Z) builds `land/conduct/c17-unionfix` = c17-batch5 +
-  scheduler16 + bob/message-driven (58f6d4ed), corrects the five with named members, runs gates FULL once, and REPORTS TO
-  BOB #31. When pushed: `node tools/train.mjs run` with c17-unionfix ALONE (drop its ancestors: c17-batch3/4/5, c16-batch3/6,
-  every land/worker/* it carries). On landing: sha to SCHEDULER #17, BOB, DIST.
-- c17-batch5 @ 7c4f6b5f holds batch4 (= batch3's D-219, D-54, D-128, D-278, COFF-13, D-311 + D-84, D-125, D-179, D-220)
-  plus D-182, D-178, CAP-14, D-52, REC-161, UI-74. Every IC resolved: I3 72.3.0, I1 1.8.0, I2 2.7.0, I4 2.1.0, I5 1.31.0,
-  I8 0.2.0 (IC-207…IC-221; IC-205/211 renumbered). All those rows read `integrated`.
-- FINISHED, NOT YET INTEGRATED (branches pushed, sessions still open — archive after integrating):
-  REC-182 @ 461dad84 (session_018FMzHFpELmJkPaF4PZpsuQ; IC none; finding: readImage/C-20.1 sort by snap key, fix named).
-  CPDF-22 @ 59a0e458 (session_01HD2kKx3HN7LzU9SgzCEvFS; its IC-220 COLLIDES with D-52's IC-220 on batch5 — renumber;
-  withdraws image_bound → one `undetermined` shape, I3 MAJOR; add a pointer from IC-204 to the new id).
-  Put both on a c17-batch6 cut from c17-unionfix once it is pushed; run nc-d420 and the d420/d440 suites on the union.
-- RUNNING cloud workers (report to me; if I am archived they report to BOB, who routes): REC-183, D-443, D-65, REC-164
-  (21:48Z); MK-6, M0-71, UI-68, REC-148, D-150, D-148, D-149, REC-149 (22:01Z). Session ids: `get_session` by title
-  "WORKER <ID> (CONDUCT #17)" via list_sessions.
-- REC-159 is BLOCKED on Bob: my create_session was refused "[Permission Grant]" (21:11Z) after Bob approved it; the ask
-  (an attended session Bob opens, or a permission rule) is with BOB. Never route around that refusal.
-
-## 6. TRAPS THIS SESSION PAID FOR
-1. A worker gate is its own suites; UNION-ONLY rosters (bounds, derivation-bounds, statepaths, owed-controls, coverage,
-   provenance-marker, surface-registry, check-semantics) trip only at the train. Run them on the batch BEFORE the train.
-2. Clone-local mintid ledgers collide; always audit a branch's new ids against every remote land/* ref.
-3. A merge "exit 0" can still land a branch's edit into the wrong file after a rename (verify the renamed file's content).
-4. `create_trigger` run_once_at: read `date -u` first.
-
-Line 1 of YOUR handoff names CONDUCT #19.
+## 5. WORKTREES (this container; gone with it)
+/home/user/b6 train (bio-plane/node_modules is a REAL install; b7/b8 symlink to it) · b7 = c18-batch8 · b8 = c18-d456 ·
+s16 = scheduler16 tools. Scratchpad helpers (merge3line, cs.py census resolver, floors/setfloors) die with the container.
