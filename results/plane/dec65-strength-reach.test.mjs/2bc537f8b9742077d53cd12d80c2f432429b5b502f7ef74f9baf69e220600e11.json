@@ -1,0 +1,16 @@
+{
+ "unit": "plane:dec65-strength-reach.test.mjs",
+ "inputHash": "2bc537f8b9742077d53cd12d80c2f432429b5b502f7ef74f9baf69e220600e11",
+ "verdict": "PASS",
+ "run": "99633bc6f9701e96091fce119598c7ffb284ccf9.1790174012083.16313.json",
+ "tree": "99633bc6f9701e96091fce119598c7ffb284ccf9",
+ "head": "ab344aca3831aac9f2e81a03573ef43fdfcb73c9",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 793,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "c24508e4-34b6-5866-a122-a5e731b6ee3c",
+ "at": "2026-09-23T14:33:32.096Z"
+}
