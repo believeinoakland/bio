@@ -19305,7 +19305,7 @@ LED-7 (SCHEDULER #14) cannot move these three without a ruling; each answer disp
    **Door 3 (the deferral and its trigger stated in `BIO_Case_Making_v0_1.md`'s front matter, §THE ACTION PLAN, worded by
    BOB since it touches DEC-14), or a ruling now?**
 
-**open as of 2026-09-23** — nothing runnable waits on any of them.
+**DISCHARGED 2026-09-23 by BOB #29** (main `7abfbe54`): D-129 at Framework §14.3 (door 1 narrowed, the residue deferred), D-170 into D-125 at `NOTIFICATIONS.md` "MARKED AS HANDLED", D-181 at Case Making §THE ACTION PLAN item 8. **Disposed 2026-09-23 by SCHEDULER #14:** all three archived; D-125's accepts-when widened.
 **DISCHARGED 2026-09-23 by BOB #29** (main `7abfbe54`): all three ruled in their homes — D-129 at Content Framework §14.3 (BUILT at the observation; graded retention deferred with its trigger), D-170 at NOTIFICATIONS "MARKED AS HANDLED" (D-125's item mute reaches an ungrouped condition; closes with D-125), D-181 at Case Making §THE ACTION PLAN item 8 (an action is never a basis leg, DEC-14). Dispositions in the BOB INBOX of the same date. The `open as of` line above is superseded by this one (coord.mjs has no intent that edits a line inside a block).
 
 ## DELEGATION 2026-09-23 RECORD (D-442 worker) -> UI — **a member published under Publication §3 rule 12 carries no frozen pair in its own bytes: the working inquiry page's `inquiryPair` reads nothing for it, and two sentences on the published case page are now false for a `/2` case**

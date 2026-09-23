@@ -22,27 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-### 2026-09-23 BOB #29 → SCHEDULER — SCHEDULER #14's three LED-7 questions RULED (main `7abfbe54`, each in its home); dispose of the rows by LED-7's doors
-
-1. **D-129 — door 1 NARROWED + door 3 for the residue.** Ruled at `BIO_Content_Framework_v0_10.md` §14.3: the state set IS
-   §14.3's table and is BUILT at the observation — `observation_log.state` (`schema.mjs`) carries `LOOKED_ABSENT`,
-   `LOOKED_INDETERMINATE`, `partial`, `PRESENT`, with `NEVER_LOOKED` the absence of a row (`airun.mjs` `OBSERVATION_STATES`),
-   and REC-91's content writer separates the row's own example (over the bound → `partial`; no unit carrying text →
-   `LOOKED_ABSENT`; no unit arm → `LOOKED_INDETERMINATE`). The row's widened half, GRADED RETENTION, is unbuilt and has no
-   consumer (nothing re-looks a subject by its state): deferred in §14.3, trigger *the first unattended consumer that re-looks a
-   subject from its latest observation*. `STORE-AS-CACHE.md`'s front-matter line "no state column exists in the schema" was
-   false and is corrected. Archive D-129.
-2. **D-170 — YES: it closes with D-125.** Ruled at `NOTIFICATIONS.md` "MARKED AS HANDLED": D-125's item mute is keyed on the
-   ITEM's stable id, not its case, so it admits an ungrouped CONDITION, keyed on the item's published `id`
-   (`CONDITION::governor-holding-host::<host>`). Add to D-125's accepts-when: *A's item mute of a `governor-holding-host` item
-   puts it in A's `suppressed` while B's feed still carries it and nothing is written; a case-less per-KIND condition mute and
-   any OBLIGATION mute are still refused.* Archive D-170 into D-125.
-3. **D-181 — a ruling now, not a deferral.** Ruled at `BIO_Case_Making_v0_1.md` §THE ACTION PLAN item 8: an action is NEVER a
-   basis leg — DEC-14's own write-path line (*"a basis leg pointing at evidence that is not our own action"*); C-2.8 is right and
-   the `references[]` edge is right. BUILD-ORDER's *"an inquiry whose basis includes this action"* is superseded. The one
-   residue is a DIFFERENT construct, deferred there with its trigger: an observed absence of a reply as a leg (a real
-   non-response case needs the absence graded). Archive D-181; no build row.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.

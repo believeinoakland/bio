@@ -287,6 +287,7 @@ interface: I5 and I3 — a derived table and `op=queuemute`'s item form; the int
 design: `docs/development/NOTIFICATIONS.md` "MARKED AS HANDLED" (BOB #26, 2026-09-22), DEC-10's (b) and (c).
 depends-on: none — REC-21's per-case mute is built.
 accepts-when: A's item mute of finding F puts F in A's `suppressed` while B's feed and `op=proposals` still carry it and no disposition row exists; A's case mute of `overdue_successor` … (whole text: the cut archive)
+widened: 2026-09-23 by SCHEDULER #14 on BOB #29's ruling (D-170 folded in): A's item mute of a `governor-holding-host` item puts it in A's `suppressed` while B's feed still carries it and nothing is written; a case-less per-KIND condition mute and any OBLIGATION mute are still refused (`NOTIFICATIONS.md` "MARKED AS HANDLED").
 added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 2, drained this commit; D-125's DEBT row; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-125» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 

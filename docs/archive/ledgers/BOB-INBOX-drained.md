@@ -1741,3 +1741,26 @@ Each ruling is in its home document, verified at the code; each row keeps its `D
    reader reads both as one order. **Accepts when** a placement over budget cuts no row and leaves every id in exactly one
    file. NEGATIVE CONTROL: point one reader at `BACKLOG.md` alone, and its arm fails by name. `depends-on` M0-110 (a new
    state file rides to `coord`). **Until built, SCHEDULER raises the budget to 200 KiB in `ledger.mjs` and cuts nothing.**
+
+## DRAINED 2026-09-23 by SCHEDULER #14 — BOB #29's ruling of the three LED-7 questions (main `7abfbe54`), each verified at its home: D-129 closed (door 1 narrowed, residue deferred in Framework §14.3), D-170 folded into D-125 (its accepts-when widened), D-181 closed (Case Making §THE ACTION PLAN item 8); SCHEDULER (#14)'s DELEGATION discharged. The entry was written as a `###` heading; it is quoted below with `> ` so no line reads as an allocation site.
+
+> ### 2026-09-23 BOB #29 → SCHEDULER — SCHEDULER #14's three LED-7 questions RULED (main `7abfbe54`, each in its home); dispose of the rows by LED-7's doors
+> 
+> 1. **D-129 — door 1 NARROWED + door 3 for the residue.** Ruled at `BIO_Content_Framework_v0_10.md` §14.3: the state set IS
+>    §14.3's table and is BUILT at the observation — `observation_log.state` (`schema.mjs`) carries `LOOKED_ABSENT`,
+>    `LOOKED_INDETERMINATE`, `partial`, `PRESENT`, with `NEVER_LOOKED` the absence of a row (`airun.mjs` `OBSERVATION_STATES`),
+>    and REC-91's content writer separates the row's own example (over the bound → `partial`; no unit carrying text →
+>    `LOOKED_ABSENT`; no unit arm → `LOOKED_INDETERMINATE`). The row's widened half, GRADED RETENTION, is unbuilt and has no
+>    consumer (nothing re-looks a subject by its state): deferred in §14.3, trigger *the first unattended consumer that re-looks a
+>    subject from its latest observation*. `STORE-AS-CACHE.md`'s front-matter line "no state column exists in the schema" was
+>    false and is corrected. Archive D-129.
+> 2. **D-170 — YES: it closes with D-125.** Ruled at `NOTIFICATIONS.md` "MARKED AS HANDLED": D-125's item mute is keyed on the
+>    ITEM's stable id, not its case, so it admits an ungrouped CONDITION, keyed on the item's published `id`
+>    (`CONDITION::governor-holding-host::<host>`). Add to D-125's accepts-when: *A's item mute of a `governor-holding-host` item
+>    puts it in A's `suppressed` while B's feed still carries it and nothing is written; a case-less per-KIND condition mute and
+>    any OBLIGATION mute are still refused.* Archive D-170 into D-125.
+> 3. **D-181 — a ruling now, not a deferral.** Ruled at `BIO_Case_Making_v0_1.md` §THE ACTION PLAN item 8: an action is NEVER a
+>    basis leg — DEC-14's own write-path line (*"a basis leg pointing at evidence that is not our own action"*); C-2.8 is right and
+>    the `references[]` edge is right. BUILD-ORDER's *"an inquiry whose basis includes this action"* is superseded. The one
+>    residue is a DIFFERENT construct, deferred there with its trigger: an observed absence of a reply as a leg (a real
+>    non-response case needs the absence graded). Archive D-181; no build row.

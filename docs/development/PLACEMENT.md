@@ -84,7 +84,7 @@ and handed to CONDUCT through the BOB INBOX.
 | D-126 ~30 notification generators, no catalogue, no classes | RECORD · UI | M8 · REC-20 |
 | **D-127 case-making is undesigned, and it is what the system is for** | RECORD · UI | **M9 · M10** — the rungs this pass adds |
 | D-128 declared-versus-observed flow is the analytic product | FRAMEWORK · RECORD | M4 · consequence half M10 (REC-24) · PLACED 2026-09-22 in `BACKLOG.md` on BOB #27's ruling (the declared flow append-only) |
-| D-129 `undetermined` conflates *cannot determine* and *positively none* | RECORD | M8 · a field beside the reason |
+| D-129 `undetermined` conflates *cannot determine* and *positively none* | RECORD | M8 · a field beside the reason · CLOSED 2026-09-23 on BOB #29's ruling (door 1 narrowed, residue deferred in Framework §14.3) |
 | D-130 `counterparty: to be named` passes C-2.10 | RECORD · UI | M7 · REC-23 CLOSED (rendering half UI-19; ADD_TYPES absence UI-15 — corrected 2026-08-04, the row had said UI-15 for the rendering while QUEUE/BUILD-ORDER say UI-19) |
 | D-131 a raw NUL byte makes `store.mjs` invisible to `grep` | RECORD | M0 · REC-27 |
 | D-134 the administrator WRITE surface: §4.9's four custodial acts have no UI call site | UI | M8 · PLACED 2026-09-22 in `BACKLOG.md` (LED-7), after D-126, resting on REC-159 |
@@ -124,7 +124,7 @@ together with `DEBT.md`).
 | D-167 Tier-1 text trips the `client_rendered` stack test | FRAMEWORK | M3 · next stack-axis item · ARCHIVED 2026-09-22 by door 3, stated in DOCUMENT-PROFILES.md |
 | D-168 `op=cite` is type-only, so RETIRED is citable | RECORD | M9 · bounds REC-11/UI-20 |
 | D-169 `#setScalar` cannot ADD a frontmatter key | RECORD | M7 · batch with the honesty defects · PLACED 2026-09-22 in `BACKLOG.md` |
-| D-170 an ungrouped condition cannot be muted | RECORD | M8 · WATCH |
+| D-170 an ungrouped condition cannot be muted | RECORD | M8 · WATCH · CLOSED 2026-09-23 into D-125 (BOB #29) |
 | D-171 `#revisionKind` tiebreaks on a backdatable time | RECORD | M7 · beside D-169 · PLACED 2026-09-22 in `BACKLOG.md` |
 | D-172 the DO alarm can re-enter a tick still in flight | RECORD | M1 · decide at the next scheduler consumer · CLOSED IN FACT 2026-09-22 (the serial flag, `#tickRunning`) |
 | D-174 plane vocabulary on the sign-in gate | RECORD · UI | M8 · open until DEC-49 is answered |
@@ -133,7 +133,7 @@ together with `DEBT.md`).
 | D-177 the capture axis below the ceiling is still authored | CAPTURE | M9 · CAPTURE's next activation |
 | D-178 `op=audit` never injects publishedRegistry | RECORD | M10 · small, pair with the next M10 item · PLACED 2026-09-22 in `BACKLOG.md` |
 | D-179 `register.capture_sha` is global — a re-register MOVES the row | RECORD | M7 · beside D-169/D-171 · PLACED 2026-09-22 in `BACKLOG.md` on BOB #26's ruling |
-| D-181 C-2.8 refuses an ACTION as a basis leg | RECORD | M10 · raise to Bob only if a real case needs it |
+| D-181 C-2.8 refuses an ACTION as a basis leg | RECORD | M10 · raise to Bob only if a real case needs it · CLOSED 2026-09-23 on BOB #29's ruling (Case Making §THE ACTION PLAN item 8) |
 | D-182 `risk_tier` is D-130's unreached residue | RECORD · UI | M10 · pair with the next action-surface item |
 | D-183 nothing binds a transcription to the measurement that graded it | CONTENT-PDF | M2 · CPDF-12, behind CPDF-11 |
 | D-184 a firsthand observation has no home as a leg | RECORD | M9 · pair with DEC-39's wording + REC-11 |
