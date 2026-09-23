@@ -409,7 +409,7 @@ accepts-when: `MEASUREMENTS.md` carries a per-class table — the systems read, 
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-74's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
 uncut: restored whole from «D-74» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### REC-122 · running — SPAWNED 2026-09-23 ~22:40Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER REC-122 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-122 and that session; never conclude queued from the absence alone.
+### REC-122 · integrated — finished; integrated on land/conduct/c17-batch7 @ e7bcdc23 (IC-228 renumbered IC-232, I3 75.5.0, I5 3.1.0), waiting for its train — flipped by SCHEDULER #17
 order: runnable product work (M4, D-161's last act); REC-120 is done; not on BOB #14's list, which governs only rows added after it (SCHEDULER, first order audit, 2026-09-18)
 milestone: M4 — D-164, the content-extent primitive (RECORD)
 interface: I5 and I3 — its OWN IC, minted with `node tools/mintid.mjs IC` BEFORE building, against the bases as read at resolution (I5 1.18.0, I3 23.5.0 on `main` when rowed)
@@ -544,6 +544,16 @@ depends-on: none.
 scope: in `harness.mjs` `nextStep`, `adjust` with nothing adjusted and a non-empty queue goes to `submit` (the edge is already declared); re-run H3. Extend `agent-worker/test/harness.test.mjs`.
 accepts-when: a pass whose first candidate is dropped still writes the candidates behind it. NEGATIVE CONTROL: route the edge back to `next-pass`, and the "the rest of the pass is written" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-241 · queued — **`op=connections` CANNOT SAY THE DERIVATION BEHIND ITS ROWS WAS CUT: REC-95 records each derivation's extent (`#observeConnectionDerivation` writes a `level=meaning` observation, state `partial` when the bound cut it), and `connectionsFor` still answers only its own read's `truncated`.** — owner RECORD.
+order: after D-50, the last of the product rows before the M0 group: a read that says less than the record knows (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
+milestone: M3
+interface: I3 additive — a `derivation` field on the entity arm; the integrator mints and classifies the IC.
+design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.3 (the cap, and truncation stated).
+depends-on: none — REC-95's observation is built.
+scope: the entity arm reads the latest derivation observation for that entity and publishes `derivation {state, at, documents}`, `null` stated as never derived; no schema column (supersedes the row's first proposal).
+accepts-when: op=connect over more than 32 documents, then op=connections, says the derivation was cut. NEGATIVE CONTROL: remove the observation read, and that arm fails by name. New suite `bio-plane/test/d241-derivation-stated.test.mjs`.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-241's DEBT row of 2026-08-08, verified at the code on `02603e88`; keeps its `D-` id).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

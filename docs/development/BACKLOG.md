@@ -173,6 +173,37 @@ scope: for a project run, `aiRunRead` publishes the questions the project confir
 accepts-when: a project run citing one question seeds it as the target, and its level-empty candidates are filed. NEGATIVE CONTROL: drop the questions from the read, and the project-run arm reads SUGGEST_NO_TARGET by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
+### D-454 · queued — **ONE STRING READ ON SEVERAL PAGES IS ONE MENTION: `reading_refs` holds a single position per (capture_sha, ref), so a member choosing a connection's on-point mention (REC-122) cannot choose between that string's occurrences.** — owner CAPTURE / FRAMEWORK (the reading tables).
+order: after D-452: a correction that REC-122's act exposes; the choice it built is only as fine as the positions it can name (SCHEDULER #17, 2026-09-23; REC-122's worker via CONDUCT #18 23:08Z)
+milestone: M4
+interface: I5 — `reading_refs` keyed by (capture_sha, ref, position); I3 — a resolution carries its occurrence. The integrator mints and classifies the ICs.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair) and §8 (the reading positions a connection rests on).
+depends-on: REC-122 (`integrated` on c17-batch7).
+scope: re-key `reading_refs` by position with a migration that keeps every existing row; each resolution names its occurrence; the connection's mentions list every occurrence.
+accepts-when: a ref read on three pages yields three mentions, each choosable. NEGATIVE CONTROL: restore the two-column key, and the three-occurrences arm reads one by name. Extend the reading suite (`bio-plane/test/reading-position*.test.mjs`).
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### UI-91 · queued — **A MEMBER CAN CHOOSE A CONNECTION'S ON-POINT MENTION ON THE PLANE, AND NO SURFACE OFFERS IT: REC-122's `connectionchoose` (IC-232, C-74) has no page; construct 6.on-point-ui is ABSENT.** The DELEGATION RECORD (REC-122) -> UI of 2026-09-23 is on coord `CLAIMS.md`. — owner UI.
+order: after D-454, the member half of REC-122 (SCHEDULER #17, 2026-09-23; REC-122's worker via CONDUCT #18 23:08Z)
+milestone: M4
+interface: I3 consumer (IC-232).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair and what it is NOT), with D-161's act 3.
+depends-on: REC-122 (`integrated` on c17-batch7; verify the op on `main` first).
+scope: on the connection display, offer a signed-in member the choice among the mentions the C-49.4 entries name as bearing; show the chosen mention BESIDE the machine's pair, never replacing it; render a lapsed choice as the plane states it; replace 6.on-point-ui's `uinone` probe with `hit` probes.
+accepts-when: a member's choice renders beside the machine's pair, and a lapsed one reads as the plane states it. NEGATIVE CONTROL: render the choice in place of the pair, and the "never replacing" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
+
+### D-242 · queued — **`mintid`'s EXCLUSIVE CREATE IS EXCLUSIVE AGAINST NOTHING NOW THAT EVERY WORKER IS ITS OWN CLOUD CLONE: the row's WATCH trigger (a worker running outside one Mac's worktrees) has fired, and only the floor read from `origin/coord` stands between two concurrent mints.** `ORCHESTRATION.md` §"TAKING AN ID" still describes the one-clone scope. — owner M0 (tools).
+order: MOVED UP 2026-09-23 by SCHEDULER #17 to follow the corrections at the head: it now costs product cycles (3 IC-222s, IC-228, IC-224, C-68, 2 M-117s burned in one day across cloud workers), so it cuts integration time; M0-120, its audit half, follows later (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (an instrument states its scope), with `docs/development/ORCHESTRATION.md` §"TAKING AN ID" corrected in the same landing.
+depends-on: none.
+scope: move the take to one writer: a compare-and-swap push to `origin/coord` (a remote ref refuses a non-fast-forward) or the plane's `Store.allocId`.
+accepts-when: two clones minting one namespace at once receive distinct ids. NEGATIVE CONTROL: bypass the single writer, and the "distinct ids" arm fails by name. Whether a collision has happened since the move is UNDETERMINED (not measured).
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
+note: 2026-09-23 by SCHEDULER #17 (D-148's and D-149's workers via CONDUCT #18): measured harm — the C floor reads `origin/main` only, so mintid handed out C-68..C-72 while live on `land/*` branches and both workers burned several. The single writer closes it; until then the C floor also reads every `land/*` tip.
+
 ### REC-192 · queued — **A STORED VERSION'S INDEPENDENCE CAN ONLY BE READ BESIDE ITS STRENGTH PAIR: `op=versionstrength` is the one read of it, so DEC-32 clause 5 (*the structure is authored before the strength is shown*) holds only because UI-74's page drops the pair it fetched.** BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *a read returns `independence` on its own, so clause 5's separation is structural at the wire.* — owner RECORD.
 order: after D-256: a correction to just-landed work (UI-74, REC-161) that moves a doctrine from a page's choice into the wire (SCHEDULER #17, 2026-09-23)
 milestone: M9
@@ -463,16 +494,6 @@ accepts-when: the harness declares, tests and places against the real plane, the
 added: 2026-09-21 · SCHEDULER #9 (BOB #23's inbox entry, item 2, drained this commit; `node tools/mintid.mjs UI`).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-76» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### D-241 · queued — **`op=connections` CANNOT SAY THE DERIVATION BEHIND ITS ROWS WAS CUT: REC-95 records each derivation's extent (`#observeConnectionDerivation` writes a `level=meaning` observation, state `partial` when the bound cut it), and `connectionsFor` still answers only its own read's `truncated`.** — owner RECORD.
-order: after D-50, the last of the product rows before the M0 group: a read that says less than the record knows (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
-milestone: M3
-interface: I3 additive — a `derivation` field on the entity arm; the integrator mints and classifies the IC.
-design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.3 (the cap, and truncation stated).
-depends-on: none — REC-95's observation is built.
-scope: the entity arm reads the latest derivation observation for that entity and publishes `derivation {state, at, documents}`, `null` stated as never derived; no schema column (supersedes the row's first proposal).
-accepts-when: op=connect over more than 32 documents, then op=connections, says the derivation was cut. NEGATIVE CONTROL: remove the observation read, and that arm fails by name. New suite `bio-plane/test/d241-derivation-stated.test.mjs`.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-241's DEBT row of 2026-08-08, verified at the code on `02603e88`; keeps its `D-` id).
-
 ### D-235 · queued — **`op=basisversions` DOES NOT PUBLISH A VERSION'S `kind`: `basisVersions` selects every column of `inquiry_basis_versions`, `kind` among them, and the answer carries no `kind` key, so the same version reads a kind from `op=suggest` and none from here.** — owner RECORD.
 order: after D-241 (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
 milestone: M3
@@ -682,17 +703,6 @@ depends-on: none — M0-110 is done.
 scope: the audit also diffs the `origin/coord` range (the ids a branch's coord writes added since its base), reading through `tools/coord.mjs`, and says which side each allocation came from.
 accepts-when: an id allocated twice, once on `main` and once on `coord`, is reported as a collision by name. NEGATIVE CONTROL: drop the coord range, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #14 (M0-110's finding, via CONDUCT #14; `node tools/mintid.mjs M0`).
-
-### D-242 · queued — **`mintid`'s EXCLUSIVE CREATE IS EXCLUSIVE AGAINST NOTHING NOW THAT EVERY WORKER IS ITS OWN CLOUD CLONE: the row's WATCH trigger (a worker running outside one Mac's worktrees) has fired, and only the floor read from `origin/coord` stands between two concurrent mints.** `ORCHESTRATION.md` §"TAKING AN ID" still describes the one-clone scope. — owner M0 (tools).
-order: directly after M0-120, the audit half of the same ledger (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (an instrument states its scope), with `docs/development/ORCHESTRATION.md` §"TAKING AN ID" corrected in the same landing.
-depends-on: none.
-scope: move the take to one writer: a compare-and-swap push to `origin/coord` (a remote ref refuses a non-fast-forward) or the plane's `Store.allocId`.
-accepts-when: two clones minting one namespace at once receive distinct ids. NEGATIVE CONTROL: bypass the single writer, and the "distinct ids" arm fails by name. Whether a collision has happened since the move is UNDETERMINED (not measured).
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
-note: 2026-09-23 by SCHEDULER #17 (D-148's and D-149's workers via CONDUCT #18): measured harm — the C floor reads `origin/main` only, so mintid handed out C-68..C-72 while live on `land/*` branches and both workers burned several. The single writer closes it; until then the C floor also reads every `land/*` tip.
 
 ### M0-128 · queued — **`coord.mjs write` REBALANCES THE BACKLOG AFTER EVERY WRITE, A CLAIM OR A STATUS WORD INCLUDED, WHERE BOB #29 RULED THAT ONLY A WRITE CHANGING THE PLAN'S MEMBERSHIP OR SIZE MAY.** `write()` (`tools/coord.mjs`, re-read on `619dfa65`) runs `applyIntent(dir, { op: "rebalance", auto: true })` whenever its `rebalance` option is true, which is the default, whatever the intents; `WORK-PIPELINE.md` §2 names this *"the correction owed (M0)"*. Harmless today (a rebalance conserves every row verbatim), so it breaks M0-110's partition of writers only in principle: a lane's claim can move a plan row it never read. — owner M0.
 order: with the ledger tooling, directly after M0-120 and before LED-8: a ruled correction to a landed tool, but WORK-PIPELINE §2 itself says a stray rebalance is harmless, so it neither cuts gate time nor unblocks product and sits behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #15, 2026-09-23; BOB #29's ruling of the same day)
@@ -1127,21 +1137,3 @@ design: `docs/development/VERIFICATION.md` — the test estate's own authority, 
 depends-on: none (M0-38 landed the grading and pinned the blind spot rather than fixing it)
 accepts-when: each of the seven previously-invisible claims appears in a roster the instrument prints, or is named as out of reach with its reason; **every roster the widened pattern feeds** … (whole text: the cut archive)
 cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-44» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-33 · queued — D-353 RULED at M0-29's integration (CONDUCT #11, mechanism):
-order: M0; a third census shape (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
-milestone: M0 (background lane, holds no slot) — the test estate's own instrument
-interface: none — control drivers and the census only
-design: `docs/development/VERIFICATION.md` §"A THROWING CONTROL DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING (D-331, 2026-09-14)" … (whole text: the cut archive)
-depends-on: none (M0-29 landed the sweep and its adjudication table)
-accepts-when: the census reports the sweep's tally section (0 open candidates on the estate as landed, the three retired instances listed as adjudicated); one unadjudicated candidate … (whole text: the cut archive)
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-33» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### SK-5 · blocked — RE-STATED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18):
-order: blocked: no plane op publishes the surface registry (SCHEDULER, first order audit, 2026-09-18)
-milestone: M9
-interface: I3 — **it needs the plane to PUBLISH the surface registry, which nothing does today; that is the** … (whole text: the cut archive)
-design: `docs/development/ASSISTANT-PILOT.md` §1 (the five-layer training pack — the **Recipes** row is this … (whole text: the cut archive)
-depends-on: a published surface registry (unbuilt). **NOT schedulable until that exists** — recorded so the … (whole text: the cut archive)
-accepts-when: (on unblocking) a recipe whose step names a surface or an op that does not exist **FAILS THE BUILD**; the pack's `absent_because` body is replaced by the layer rather than edited around.
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «SK-5» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
