@@ -108,7 +108,7 @@ accepts-when: a reused part names the capture whose fetch served it, and a later
 added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CAP`).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «CAP-14» on entering the cache; its `order:` line is the current one.
 
-### COFF-13 · running — SPAWNED 2026-09-23 ~21:08Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER COFF-13 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/COFF-13 and that session; never conclude queued from the absence alone.
+### COFF-13 · integrated — finished; land/worker/COFF-13 @ 62b93406 integrated on land/conduct/c17-batch3 @ a6f0479a (IC-205 renumbered IC-207), waiting for its train — flipped by SCHEDULER #16
 order: below the M8 corrections, above the features (it sat below LED-8, which Bob's ruling of 2026-09-22 moved behind the product rows — SCHEDULER #12): it refuses something TRUE — a record defect, not a gap — but errs in the CONSERVATIVE direction and reaches only decks with unreadable trailing slides, so it ranks under the defects above it (SCHEDULER #2, 2026-09-19)
 milestone: M9
 interface: I2 — a producer change on the text shape, so an IC is minted and the integrator classifies it.
@@ -195,6 +195,16 @@ scope: a read returning `#independenceOf` for a PROPOSED partition over an inqui
 accepts-when: two parts sharing a capture read as sharing an origin, independent parts read clean, a one-part partition reads `checked: false`, and the answer equals `op=versionstrength`'s once the partition is written. How a liar passes it: a second derivation that agrees today, so a control swaps in a copy differing in one branch and fails by name.
 added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «REC-161» on entering the cache; its `order:` line is the current one.
+
+### CPDF-22 · queued — **ONE SHAPE FOR "ADMITTED, BOUND NOT HELD": D-440 (IC-198) answers `undetermined: {level, why}` for an image `{part}`, while D-420 (IC-203/IC-204) answers `image_bound: {determined:false, empty_level, why}` for an image `{page, rect}` — two shapes for one statement on I5 mint answers.** `image_bound` is withdrawn before any client reads it. — owner CONTENT-PDF (D-420's paths).
+order: directly after M0-138, first of the product rows, as BOB #31 placed it: no client may read `image_bound` before it goes; after M0-138 because every train pays that tax (SCHEDULER #16, 2026-09-23; BOB #31's inbox entry, drained this commit)
+milestone: M4
+interface: I5 — `image_bound` withdrawn for `undetermined: {level, why}`, through ONE IC; the integrator mints and classifies it.
+design: `docs/architecture/BIO_System_Design.md` §3, construct 12 (UNDETERMINED as a display primitive; D-440's `undetermined` is the record's shape), with BOB #31's ruling of 2026-09-23 (the drained inbox entry).
+depends-on: D-420, D-440 (both on `land/conduct/c17-batch1`; the train that lands it).
+scope: every "admitted, bound not held" mint answer carries `undetermined: {level, why}`; `image_bound` is removed at every producer and reader.
+accepts-when: `bio-plane/test/d420-image-page.test.mjs` reads `undetermined.level` and `undetermined.why` for a `{page, rect}` on a pre-change PDF, `d440-image-part.test.mjs` green, and `git grep -n image_bound -- bio-plane civicos-ui` returns nothing. NEGATIVE CONTROL (`nc-d420.mjs`, a new arm): restore the `image_bound` key, and D-420's suite fails by name.
+added: 2026-09-23 · SCHEDULER #16 (BOB #31's inbox entry, drained this commit; `node tools/mintid.mjs CPDF`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
