@@ -256,7 +256,7 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
   const registry = at >= 0 && end > at ? bare.slice(at, end) : "";
   const names = [...registry.matchAll(/name:\s*"([a-z-]+)"/g)].map((m) => m[1]);
 
-  console.log("\n--- FL-4 + CPDF-13: eleven consumers, ONE alarm, and the order is the mechanism ---");
+  console.log("\n--- FL-4 + CPDF-13 + D-86: twelve consumers, ONE alarm, and the order is the mechanism ---");
   /* THE CORPUS IS PRINTED AND FLOORED. A totality assertion over an empty slice
      passes for free, which this repository has measured three times. */
   console.log(`    registry span: ${registry.length} chars · consumers: ${names.join(", ")}`);
@@ -269,18 +269,26 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
      consumer "a SIXTH", which it was on 2026-08-04 when the item was written;
      five landed while it sat queued. A count carried by hand in prose goes stale
      silently, and the list below is the thing that does not. */
-  t("the registry is exactly the eleven real consumers, in order", names, [
+  /* CORRECTED 2026-09-23 by D-86, never exempted: the TWELFTH consumer, `bias-debt`, is appended — overdue-scan's
+     other half (framework §13), registered on the same alarm and APPENDED rather than inserted beside it, because
+     an insertion renumbers every consumer a later census names. The old list was right for a registry of eleven. */
+  t("the registry is exactly the twelve real consumers, in order", names, [
     "selection-sweep", "task-drain", "archive-monitor", "connection-derive",
     "overdue-scan", "queue-renotify", "monitor-cadence", "ai-run-reap",
-    "capture-request-drain", "ai-run-wake", "calibration-reprobe"]);
+    "capture-request-drain", "ai-run-wake", "calibration-reprobe", "bias-debt"]);
   /* CPDF-13: the re-probe is appended LAST and that is deliberate rather than
      incidental. It is a pure clock over engines and shares no subject with any
      consumer before it, so nothing it does can change what they see and nothing
      they do can change what it sees — which means its position is free, and a
      free position goes at the end where an append does not disturb an ordering
      another consumer's correctness rests on (the drain-then-wake pair above). */
+  /* CORRECTED 2026-09-23 by D-86, never exempted: this read `names.length - 1`, which was true while the re-probe
+     was the last append and said nothing about the property named in the label. `bias-debt` is appended after it;
+     the re-probe still sits after every consumer it was appended after, which is what the label claims. */
   t("the calibration re-probe is appended after every consumer it shares no subject with",
-    names.indexOf("calibration-reprobe"), names.length - 1);
+    names.indexOf("calibration-reprobe"), names.indexOf("ai-run-wake") + 1);
+  t("and D-86's bias-debt sweep is the last append, after the re-probe",
+    names.indexOf("bias-debt"), names.length - 1);
   /* THE ORDER ARM, asserted as a RELATION rather than as an index, so it still
      means what it says after the eleventh consumer is appended. */
   t("the wake is registered AFTER the drain, so a completion is delivered on the alarm that made it",
