@@ -31,7 +31,9 @@
  *       puts the row's translation on every `ok:false` answer whose reason has a row — the row is the wire's)
  *   (F2) the row's translation dropped, through the suite                                    -> RED, naming
  *       "DEC-49: the refusal carries" and "THE PLANE'S WORDS"; MUST NOT fail "CHOICES", "NEVER PICKS", "OPENS"
- *   (BEFORE) the three files as origin/main @ 4355bfda holds them (suite)                     -> RED, naming
+ *   (F3) the row's translation dropped, through the PLANE's `caseflip.test.mjs`               -> RED, naming
+ *       "C-44.2 and the catalogue row's canned translation"; MUST NOT fail its stranger's two-cases arm
+ *   (BEFORE) the three files as origin/main @ 4355bfda holds them (suite)                   -> RED, naming
  *       "DEC-49: the refusal carries", "CHOICES", "THE PLANE'S WORDS"; MUST NOT fail "SUBSTRATE"
  *   (G) OVER-STRICTNESS — the page's own heading and note re-worded (suite)                  -> GREEN
  */
@@ -78,7 +80,10 @@ const ARMS = [
      guard still sees is the orphaned REGION marker and eight floors. So the guard names the code only
      while the row stands; (A2) is the arm that drops the translation and is named by the code. */
   { name: "(A) the C-44.2 row dropped", run: "guard", declared: "RED",
-    names: ["NO row's `where` claims: src/store.mjs::is-finding-in-several-cases", "DEC-49 rows across 38 families, floor is 299"],
+    /* Each name is an INVARIANT fragment of the guard's sentence or a whole value, never a fragment
+       spanning a rendered count (`m025-arm-anchor-witness.test.mjs` L3 caught the first spelling,
+       "… 38 families, floor is 299", which would go stale the moment either figure moved). */
+    names: ["marker(s) in the plane that NO row's `where` claims", "is-finding-in-several-cases", "The reach SHRANK"],
     edits: [["checks", ROW, ""]] },
   { name: "(A2) the row's translation dropped", run: "guard", declared: "RED",
     names: ["FINDING_IN_SEVERAL_CASES has NO CANNED TRANSLATION"], edits: [["checks", TRANSLATION, ""]] },
@@ -108,6 +113,10 @@ const ARMS = [
   { name: "(F2) the row's translation dropped, run through the suite", run: "suite", declared: "RED",
     names: ["DEC-49: the refusal carries", "THE PLANE'S WORDS"], mustNotFail: ["CHOICES", "NEVER PICKS", "OPENS: the choice for case"],
     edits: [["checks", TRANSLATION, ""]] },
+  { name: "(F3) the row's translation dropped, through the plane's caseflip.test.mjs", run: "caseflip", declared: "RED",
+    names: ["C-44.2 and the catalogue row's canned translation"],
+    mustNotFail: ["and a STRANGER holding only that finding's id is told it serves TWO cases"],
+    edits: [["checks", TRANSLATION, ""]] },
   /* THE BEFORE-STATE: the three subject files exactly as origin/main @ 4355bfda carried them. */
   { name: "(BEFORE) origin/main 4355bfda's app.html, bio-checks.mjs and store.mjs", run: "suite", declared: "RED",
     names: ["DEC-49: the refusal carries", "CHOICES", "THE PLANE'S WORDS"], mustNotFail: ["SUBSTRATE"],
@@ -128,6 +137,8 @@ for (const [k, p] of Object.entries(FILES)) {
 }
 const runOne = (which) => which === "suite"
   ? spawnSync("node", [SUITE], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, cwd: REPO })
+  : which === "caseflip"
+  ? spawnSync("node", ["test/caseflip.test.mjs"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, cwd: path.join(REPO, "bio-plane") })
   : spawnSync("node", ["check-refusal-codes.mjs"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, cwd: path.join(REPO, "civicos-ui") });
 const rows = [];
 let allAsDeclared = true;
@@ -156,11 +167,13 @@ try {
     if (armed) for (const f of touched) fs.writeFileSync(FILES[f], src[f]);
     const r = runOne(arm.run);
     const out = String(r.stdout || "") + String(r.stderr || "");
-    const failLines = arm.run === "suite"
-      ? out.split("\n").filter((l) => /^\s*FAIL /.test(l))
-      : out.split("\n").filter((l) => /^FAIL/.test(l));
+    const failLines = arm.run === "guard"
+      ? out.split("\n").filter((l) => /^FAIL/.test(l))
+      : out.split("\n").filter((l) => /^\s*FAIL /.test(l));
     const tally = arm.run === "suite"
       ? ((/several-cases-choice\.test\.mjs: (\d+ pass, \d+ fail)/.exec(out) || [])[1] || "-1")
+      : arm.run === "caseflip"
+      ? ((/caseflip: (\d+ passed, \d+ failed)/.exec(out) || [])[1] || "-1")
       : ((/check-refusal-codes: (\d+ failures?|every code a surface can receive)/.exec(out) || [])[1] || "-1");
     const got = r.status === 0 ? "GREEN" : "RED";
     const named = arm.names ? arm.names.every((nm) => failLines.some((l) => l.includes(nm))) : null;
