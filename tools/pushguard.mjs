@@ -623,6 +623,139 @@ export function gateVerdictCheck({ repo = REPO, stdin = "" } = {}) {
   return { ok: red.length === 0, red, green, notMeasured, unreadable, dir };
 }
 
+/* ------------------------------------------------------------------ M0-114: THE CHECK ON THE COMMIT
+ *
+ * A local record (above) lives in ONE clone's git directory, so no other session can read it and a
+ * cloud session starts with none (TREE-SHARING.md §3 as revised by §4, BOB #28). The gate therefore
+ * also runs on GitHub's machines (`.github/workflows/gates.yml`) and leaves its verdict ON THE COMMIT:
+ * the job's check run, named `gate`, carrying ONE annotation titled `gate verdict` in the grammar
+ *
+ *     VERDICT=<GREEN|RED|NOT MEASURED|UNDETERMINED> TREE=<40 hex> CLASS=<c> EXIT=<n> WALL=<s>s FAILED=<suites|none>
+ *
+ * which the workflow writes from the gate's OWN `RECORDED` line — never from the job's exit alone.
+ *
+ * WHAT REFUSES, AND WHY NOTHING ELSE DOES. A push is refused on the check only when ALL hold: the
+ * latest completed `gate` check run on the pushed commit concluded `failure`, its annotation says RED,
+ * and the annotation's TREE is the pushed commit's tree (D-293 keys by the tree). A failed job with no
+ * verdict annotation is a job that died before the gate recorded (npm, a crash, a cancel, a timeout):
+ * it measured nothing, and says UNDETERMINED. NOT MEASURED (M0-107) is said and never refused. A
+ * check still running, no check, no GitHub remote, or an API that cannot be read are each SAID, in
+ * those words, and never refuse: a guard that blocked every push over its own I/O would be switched
+ * off within a day (the rule `run` already states for the local record).
+ *
+ * THE LIMITS, STATED. It reads the commit's checks, so a DIFFERENT commit with the same tree (a
+ * rebase that changed nothing) finds none and says so; it reads the `origin` remote's repository (the
+ * hook's shim passes no remote argument, and it is left byte-identical); a job's annotation is
+ * written by the workflow, so a workflow edited to lie is a liar this arm cannot see (the check is a
+ * record of what the runner printed, like the local record). Transport is `curl`, synchronous and
+ * bounded (`CHECK_TIMEOUT_S`); `BIO_GITHUB_API` names another API base, and a `file://` base reads a
+ * fixture tree laid out as the API's paths — the seam `bio-plane/test/pushguard-check.test.mjs`
+ * drives the hook through. `BIO_PUSHGUARD_CHECKS=off` skips the arm and says so. */
+export const CHECK_NAME = "gate";
+export const CHECK_ANNOTATION_TITLE = "gate verdict";
+export const CHECK_TIMEOUT_S = 8;
+const CHECK_VERDICTS = ["GREEN", "RED", "NOT MEASURED", "UNDETERMINED"];
+
+/* One annotation message -> { verdict, tree, cls, exit, failed }, or null when it is not the grammar. */
+export function parseVerdictAnnotation(message) {
+  const m = /^VERDICT=(GREEN|RED|NOT MEASURED|UNDETERMINED) TREE=([0-9a-f]{40}|[0-9a-f]{64}) CLASS=(\S+) EXIT=(-?\d+)(?: WALL=(\d+)s)?(?: FAILED=(.*))?$/
+    .exec(String(message || "").trim());
+  if (!m || !CHECK_VERDICTS.includes(m[1])) return null;
+  const failed = (m[6] || "none").trim();
+  return { verdict: m[1], tree: m[2], cls: m[3], exit: Number(m[4]), wall: m[5] ? Number(m[5]) : null,
+           failed: failed === "none" ? [] : failed.split(/[\s,]+/).filter(Boolean) };
+}
+
+/* `owner/repo` of a GitHub remote URL, or null. */
+export function githubSlug(url) {
+  const m = /github\.com[:/]+([^/\s]+)\/([^/\s]+?)(?:\.git)?\/?$/.exec(String(url || "").trim());
+  return m ? `${m[1]}/${m[2]}` : null;
+}
+
+/* GET one API path through curl. { ok, json } or { ok: false, reason }. The token, when the
+   environment carries one, goes in on stdin as curl config, never on the command line. */
+export function githubGet(path, { base = process.env.BIO_GITHUB_API || "https://api.github.com",
+                                  token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "" } = {}) {
+  const url = `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
+  const cfg = token && !url.startsWith("file:") ? `header = "Authorization: Bearer ${token}"\n` : "";
+  const r = spawnSync("curl", ["-sS", "--max-time", String(CHECK_TIMEOUT_S), "-H", "Accept: application/vnd.github+json",
+    "-w", "\n%{http_code}", "--config", "-", url], { input: cfg, encoding: "utf8" });
+  if (r.error) return { ok: false, reason: `curl could not run (${r.error.code || r.error.message})` };
+  const out = String(r.stdout || "");
+  const nl = out.lastIndexOf("\n");
+  const code = out.slice(nl + 1).trim();
+  const body = out.slice(0, nl);
+  if (r.status !== 0) return { ok: false, reason: `curl exit ${r.status}${r.stderr ? `: ${String(r.stderr).trim().slice(0, 160)}` : ""}` };
+  if (!url.startsWith("file:") && code !== "200") return { ok: false, code, reason: `HTTP ${code} for ${path}` };
+  try { return { ok: true, json: JSON.parse(body) }; }
+  catch { return { ok: false, reason: `unparseable JSON for ${path}` }; }
+}
+
+/* The verdict the GitHub check carries for ONE commit whose tree is `tree`.
+   state: GREEN | RED | NOT MEASURED | UNDETERMINED | PENDING | NONE; `refuse` is true only for RED. */
+export function githubCheckVerdict({ slug, sha, tree, get = githubGet } = {}) {
+  const say = (state, why, extra = {}) => ({ state, why, refuse: false, sha, tree, ...extra });
+  if (!slug) return say("NONE", "no GitHub remote named origin");
+  const cr = get(`repos/${slug}/commits/${sha}/check-runs`);
+  /* 422 is GitHub's "No commit found for SHA": a commit this push is about to publish for the first
+     time, which no check can have run on yet — measured live on the first push of `812df0d7`. */
+  if (!cr.ok && cr.code === "422") return say("NONE", `commit ${sha.slice(0, 8)} is not on GitHub yet, so no check has run on it`);
+  if (!cr.ok) return say("UNDETERMINED", `the check runs could not be read (${cr.reason})`);
+  const runs = (cr.json && Array.isArray(cr.json.check_runs) ? cr.json.check_runs : [])
+    .filter((c) => c && c.name === CHECK_NAME && c.head_sha === sha);
+  if (!runs.length) return say("NONE", `no \`${CHECK_NAME}\` check on commit ${sha.slice(0, 8)}`);
+  const done = runs.filter((c) => c.status === "completed")
+    .sort((a, b) => String(a.completed_at || "").localeCompare(String(b.completed_at || "")) || (a.id - b.id));
+  if (!done.length) return say("PENDING", `the \`${CHECK_NAME}\` check on ${sha.slice(0, 8)} has not completed`, { url: runs[0].html_url });
+  const run = done[done.length - 1];
+  const extra = { url: run.html_url, conclusion: run.conclusion, checkRunId: run.id };
+  const an = get(`repos/${slug}/check-runs/${run.id}/annotations`);
+  if (!an.ok) return say("UNDETERMINED", `the check's annotations could not be read (${an.reason})`, extra);
+  const notes = (Array.isArray(an.json) ? an.json : []).filter((a) => a && a.title === CHECK_ANNOTATION_TITLE);
+  const parsed = notes.map((a) => parseVerdictAnnotation(a.message)).filter(Boolean);
+  if (!parsed.length)
+    return say("UNDETERMINED", `the check concluded ${run.conclusion} with no \`${CHECK_ANNOTATION_TITLE}\` annotation — it measured nothing this guard can read`, extra);
+  if (parsed.length > 1) return say("UNDETERMINED", `${parsed.length} verdict annotations on one check run`, extra);
+  const v = parsed[0];
+  if (v.tree !== tree) return say("UNDETERMINED", `the check's verdict is for tree ${v.tree.slice(0, 8)}, not the pushed tree ${String(tree).slice(0, 8)}`, extra);
+  const agrees = (v.verdict === "GREEN") === (run.conclusion === "success");
+  if (!agrees) return say("UNDETERMINED", `the annotation says ${v.verdict} but the check concluded ${run.conclusion}`, extra);
+  if (v.verdict === "RED") return { ...say("RED", `the check concluded failure and its gate recorded RED`, { ...extra, verdict: v }), refuse: true };
+  return say(v.verdict, `the check's gate recorded ${v.verdict} (class ${v.cls})`, { ...extra, verdict: v });
+}
+
+/* Every pushed ref's commit, against its GitHub check. { ok, red, said }: `said` is one line per ref. */
+export function checkVerdicts({ repo = REPO, stdin = "", env = process.env, get = githubGet } = {}) {
+  if (String(env.BIO_PUSHGUARD_CHECKS || "").toLowerCase() === "off")
+    return { ok: true, red: [], said: ["GitHub check NOT READ (BIO_PUSHGUARD_CHECKS=off)"] };
+  const slug = githubSlug(git(["remote", "get-url", "origin"], repo));
+  const red = [], said = [];
+  for (const r of pushedRefs(stdin)) {
+    const tree = treeOf(r.localSha, { repo });
+    if (!tree) continue;
+    const v = githubCheckVerdict({ slug, sha: r.localSha, tree, get });
+    if (v.refuse) red.push({ ...r, check: v });
+    else said.push(`GitHub check for ${r.localRef} (${r.localSha.slice(0, 8)}): ${v.state} — ${v.why}`);
+  }
+  return { ok: red.length === 0, red, said };
+}
+
+export function checkRefusal(cv) {
+  const L = ["", `  PUSH REFUSED — ${HOOK_MARKER}`, "",
+    "  THE GATE ON GITHUB'S MACHINES RECORDED THIS TREE RED (M0-114). The `gate` check on the pushed",
+    "  commit concluded failure, and its verdict annotation names this tree:", ""];
+  for (const r of cv.red) {
+    const v = r.check.verdict;
+    L.push(`      ${r.localRef} -> commit ${r.localSha.slice(0, 8)}, tree ${r.check.tree.slice(0, 8)}`);
+    L.push(`      RED · class ${v.cls} · exit ${v.exit} · failed: ${v.failed.length ? v.failed.join(", ") : "no suite named"}`);
+    if (r.check.url) L.push(`      check: ${r.check.url}`);
+    L.push("");
+  }
+  L.push("  Fix what failed and commit (a new commit gets its own check), or re-run the check if it was",
+         "  a flake: the LATEST completed `gate` run on the commit is the one read.", "");
+  return L.join("\n");
+}
+
 /* ------------------------------------------------------------------ installCopy — D-406
  *
  * THE CLONE-WIDE COPY.  `install()` puts ONE hook where git reads hooks for every worktree;
@@ -952,6 +1085,14 @@ function run(stdin) {
     process.stderr.write(gateRefusal(gv) + "\n");
     return 1;
   }
+  /* M0-114: the same question asked of the check on the commit, which any clone can read. */
+  let cv;
+  try { cv = checkVerdicts({ repo, stdin }); }
+  catch (e) { cv = { ok: true, red: [], said: [`GitHub check UNDETERMINED (${e.message})`] }; }
+  if (!cv.ok) {
+    process.stderr.write(checkRefusal(cv) + "\n");
+    return 1;
+  }
   /* M0-99, 2026-09-22: THE INDEX ARM THAT STOOD HERE IS RETIRED.  It ran `decided.mjs --check`
      and refused a push whose committed `docs/DECIDED.md` was stale; the index is no longer
      committed, so no push carries one (the retired `check()` note above). */
@@ -1006,6 +1147,7 @@ function run(stdin) {
     notes.push(`gate verdict NOT MEASURED recorded for ${g.localRef}'s tree ${g.tree.slice(0, 8)} — a budget EXPIRED`
              + ` (M0-107), so ${g.eff.unmeasured.slice(0, 4).join(", ")}${g.eff.unmeasured.length > 4 ? ` (+${g.eff.unmeasured.length - 4} more)` : ""}`
              + " measured nothing; not refused, and NOT GREEN: it licenses no --since");
+  notes.push(...cv.said); /* M0-114: every non-refusing check state is SAID, in its own words */
   if (gv.unreadable.length)
     notes.push(`${gv.unreadable.length} gate record file(s) UNREADABLE, so the gate verdict is UNDETERMINED for this push: `
              + gv.unreadable.slice(0, 3).join(", "));
@@ -1128,6 +1270,19 @@ function control() {
       "M0-111: a deletion of main is refused");
   arm(mainArmCheck({ stdin: `refs/heads/x ${"c".repeat(40)} refs/heads/land/a/b ${"0".repeat(40)}` }).ok === true,
       "M0-111: a push naming no main is not judged by the main arm");
+
+  /* M0-114: the check on the commit. The END-TO-END refusal through curl and a real push is
+     `bio-plane/test/pushguard-check.test.mjs`'s; these pin the decision over a stubbed API. */
+  const T = "1".repeat(40), S = "a".repeat(40);
+  const api = (conclusion, msg) => (p) => p.endsWith("/check-runs")
+    ? { ok: true, json: { check_runs: [{ id: 1, name: CHECK_NAME, head_sha: S, status: "completed", conclusion, completed_at: "x" }] } }
+    : { ok: true, json: msg ? [{ title: CHECK_ANNOTATION_TITLE, message: msg }] : [] };
+  arm(githubCheckVerdict({ slug: "o/r", sha: S, tree: T, get: api("failure", `VERDICT=RED TREE=${T} CLASS=FULL EXIT=1`) }).refuse === true,
+      "M0-114: a RED verdict for the pushed tree on a failed check refuses");
+  arm(githubCheckVerdict({ slug: "o/r", sha: S, tree: T, get: api("failure", null) }).refuse === false,
+      "M0-114: a failed check that recorded no verdict measured nothing and does not refuse");
+  arm(githubCheckVerdict({ slug: "o/r", sha: S, tree: T, get: api("failure", `VERDICT=RED TREE=${"2".repeat(40)} CLASS=FULL EXIT=1`) }).refuse === false,
+      "M0-114: a RED verdict for ANOTHER tree does not refuse (D-293 keys by the tree)");
 
   console.log(bad ? `\n${bad} FAILED` : "\nall control arms pass");
   return bad ? 1 : 0;

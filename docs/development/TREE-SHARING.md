@@ -3,7 +3,7 @@
 A process document (`CORPUS-STANDARD.md` §6). **RULED BY BOB 2026-09-22: *"Yes to all 3 recommendations"*** — the three
 changes below, as BOB #26 put them to him that day. Designed here by BOB #26. **Change 1 is BUILT by M0-110** (§1 "As
 built"; live from CONDUCT's cutover); **change 2 is BUILT by M0-111** (§2 "As built"; live from the train that lands
-it); **change 3 is NOT BUILT**. Until each change lands, the
+it); **change 3 is BUILT by M0-114** (§3 "As built"). Until each change lands, the
 rules in `CLAUDE.md` stand as written, and the landing that builds a change corrects every rule and kickoff it supersedes.
 **Revised 2026-09-22 by BOB #27** for Bob's move to cloud Claude Code under his second account (§4), with three builders'
 questions answered in §1 (M0-99, M0-100, M0-101), and M0-110's builder's four answered there by BOB #28 the same day;
@@ -164,6 +164,19 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
 - **Bob's acts, named once with those figures:** enabling Actions on `believeinoakland/bio`, and any spending limit.
 - **Accepts when** a `land/*` push gets a GitHub check whose verdict the push guard reads, and a red check refuses the
   push. NEGATIVE CONTROL: break one suite on a branch, and the check reads red at that suite.
+- **As built (M0-114, 2026-09-22) — `.github/workflows/gates.yml`, the arm in `tools/pushguard.mjs`, its suite
+  `bio-plane/test/pushguard-check.test.mjs`; the measurement is `MEASUREMENTS.md` M-104.** Actions was ENABLED on the
+  repository already: a workflow pushed on a worker's branch ran at once, so no act of Bob's was needed. The workflow runs
+  `node tools/gates.mjs` in its derived class on every push of `land/**` and `integrate/**` (never `main`), with the
+  cloud hook's five repairs and no secret, and leaves the verdict on the commit as the `gate` check run's ONE `gate
+  verdict` annotation (`VERDICT=… TREE=… CLASS=… EXIT=… WALL=…s FAILED=…`), read from the gate's own `RECORDED` line, so
+  a job that died before the gate recorded says UNDETERMINED. **The guard refuses** a push only when the latest
+  completed `gate` check on the pushed COMMIT concluded failure and its annotation says RED for the pushed TREE; GREEN,
+  NOT MEASURED, UNDETERMINED, PENDING and NONE (no check, or a commit GitHub has not seen: HTTP 422) are each said, never
+  refused, and `BIO_PUSHGUARD_CHECKS=off` skips the arm aloud. The local record stays the first arm and the fallback.
+  **Not built / limits:** it reads the checks of the COMMIT, so a different commit with the same tree finds none; it
+  reads the `origin` remote's repository; the integration branch's prefix `integrate/**` is this landing's guess at
+  M0-111's name, and that landing names the real one here.
 
 ## 4 · The move to cloud Claude Code, under Bob's second account
 
@@ -201,6 +214,6 @@ Their state is the ledger's, never this file's: `node tools/ledger.mjs find <ID>
   recorded it: *"the line is 70%, not 60% — refresh less, work more"*).
 - **The rows:** M0-99 (`DECIDED.md` untracked, generated on demand; §1), M0-106 (DIST's release gate reuses a tree's
   GREEN record), M0-107 (a timeout reads NOT MEASURED, never a finding), M0-109 (the ledger suite's floor that the debt
-  fold tripped), M0-100 (narrowed, §1), M0-101 (superseded, §1), M0-114 (change 3, BLOCKED on the
-  first cloud session's full-gate figures, §4) and M0-116 (the gate's selection: one measurement appended re-ran 105 of 335
+  fold tripped), M0-100 (narrowed, §1), M0-101 (superseded, §1), M0-114 (change 3, BUILT: §3 "As built"; it was
+  unblocked by the first cloud session's full-gate figures, §4) and M0-116 (the gate's selection: one measurement appended re-ran 105 of 335
   units, 36 of them only because they import a scanner that names the file).
