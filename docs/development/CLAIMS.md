@@ -19522,3 +19522,24 @@ paths, BY SITE:
 member's source, any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 M0 (M0-126 — the shared, per-suite, content-addressed result record on `gate-results`)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for M0-126, worktree `.claude/worktrees/agent-af8815030f1fe92e5`,
+branch `land/worker/M0-126`, from `origin/main` @ `619dfa65` (cloud).
+authority: `BACKLOG.md` `### M0-126 · running` (read on `origin/coord`); design `TREE-SHARING.md` §3a.
+paths:
+  - `tools/gates.mjs` (the unit key, the reuse rule, the trace check, the per-unit steps of a FULL run, the record write).
+  - NEW `tools/gateresults.mjs` (the key, the `gate-results` branch's reader/writer, revocation) and NEW
+    `tools/gatetrace.mjs` (the `--import` read tracer).
+  - `bio-plane/scripts/battery.mjs`: the verdict file ONLY (it gains `passed`, the suites that ran green).
+  - `tools/train.mjs`: the reuse note beside `recordedGreen` only, if the record changes what it reads.
+  - `.github/workflows/gates.yml`: the gate STEP's arguments only (`on:` untouched, Bob's ruling).
+  - NEW `bio-plane/test/gateresults.test.mjs` and its control; `bio-plane/test/gates.test.mjs` only if a superseded
+    assertion must be corrected.
+  - `docs/development/TREE-SHARING.md` §3a ("As built"), `docs/development/VERIFICATION.md` (the reuse line),
+    `construct-status.json` if the construct's state moves.
+**NOT CLAIMED:** `tools/pushguard.mjs`, `tools/coord.mjs`, `tools/plancheck.mjs`, `MEASUREMENTS.md` layout (M0-100's),
+`QUEUE.md`, `BACKLOG.md`, any state path on `main`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
