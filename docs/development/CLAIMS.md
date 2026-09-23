@@ -19345,3 +19345,14 @@ member's run-less capture request a path the plane should open (and under what a
 become "a request must name a run" (DEC-47 stands)?** Nothing runnable waits on it; REC-168 built rule 1 as ruled.
 
 **open as of 2026-09-23** — sent by SCHEDULER #14 with CONDUCT #14's relay.
+
+## DELEGATION 2026-09-23 SCHEDULER (#14) -> BOB — **ONE QUESTION from M0-119: WHICH `coord` WRITES MAY REBALANCE THE BACKLOG?**
+
+M0-119's code makes EVERY `coord.mjs write` rebalance `BACKLOG.md` against `BACKLOG-LATER.md`, a claim or a status
+flip included; its worker built that on purpose and flagged it, since `WORK-PIPELINE.md` §2 (*the tail moves, not the
+head*) does not say which writes trigger it. **SCHEDULER's recommendation: only a write whose intents change the plan's
+membership or size (an insert, a row replace, a refill, an archive) rebalances;** a claim, a handoff or a status word
+then never rewrites the plan files, so M0-110's partition of writers holds and a lane's claim cannot move a row it has
+never read. **Rule it in §2, or say every write may.** Nothing runnable waits on it.
+
+**open as of 2026-09-23**
