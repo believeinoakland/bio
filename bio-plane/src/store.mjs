@@ -14932,8 +14932,10 @@ export class Store extends DurableObject {
       if (cur && base !== null && normalizeType(cur.object_type) === "inquiry") {
         const surfacedOf = (text) => {
           if (typeof text !== "string") return "unreadable";
-          let fm;
-          try { fm = parseFrontmatter(text).data; } catch { return "unreadable"; }
+          /* No catch: the catalog's parser does not throw on a string — a document it cannot read comes back
+             `data: null` with its C-2.1 finding, and that is stated here as `unreadable` (provenance-marker's
+             swallowed-read ratchet counts a catch, and this one would catch nothing). */
+          const fm = parseFrontmatter(text).data;
           if (!fm || typeof fm !== "object") return "unreadable";
           return Object.prototype.hasOwnProperty.call(fm, "surfaced_by") ? JSON.stringify(fm.surfaced_by) : "absent";
         };

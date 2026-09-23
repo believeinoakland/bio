@@ -40470,12 +40470,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       if (cur && base !== null && normalizeType(cur.object_type) === "inquiry") {
         const surfacedOf = (text) => {
           if (typeof text !== "string") return "unreadable";
-          let fm;
-          try {
-            fm = parseFrontmatter(text).data;
-          } catch {
-            return "unreadable";
-          }
+          const fm = parseFrontmatter(text).data;
           if (!fm || typeof fm !== "object") return "unreadable";
           return Object.prototype.hasOwnProperty.call(fm, "surfaced_by") ? JSON.stringify(fm.surfaced_by) : "absent";
         };
