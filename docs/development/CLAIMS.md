@@ -17530,6 +17530,7 @@ took: judge a composer's bytes AS THE PLANE HOLDS THEM, through the catalogue's 
 
 **open as of 2026-09-21** — OPEN until `civicos-ui/app.html` composes no literal producing group.
 **BUILT 2026-09-23 by UI-79** (branch `worktree-agent-af35e02341617dc41` @ `f22bb648`, awaiting CONDUCT's integration): `mdFor`'s `group:` line and the three `meta.group` keys are dropped; the plane stamps the recorded group (biosmoke7 seeded by DIST #4, 2026-09-22). The twelve `civicos-ui/test` suites carrying the literal are corrected with dated comments (the row counted eleven). This block is DISCHARGED when that branch reaches `main`.
+**DISCHARGED 2026-09-23 by CONDUCT #15:** UI-79 built it (branch `worktree-agent-af35e02341617dc41` @ `f22bb648`), integrated at merge `3a87666f`, landed on origin/main @ `b5ce975a` (train train-20260923T071448Z-23127, GREEN FULL 284/284 · 17,154 on tree 1cf35709): app.html composes no producing group; authored-group.test.mjs drives it.
 
 ## CLAIM 2026-09-21 BOB (#24) — D-55 designed and closed (SCHEDULER #8's Q4): authority stays at document grain; D-440 minted
 
@@ -19336,6 +19337,7 @@ and each is UI's (not edited by D-442, which holds no UI claim):
    edition it belongs to"*): for a rule-12 member it is never shown there. **Fix:** with item 1.
 **open as of 2026-09-23** — raised with D-442; it closes when UI's surface reads a rule-12 member's pair from the case it is
 frozen in and says which signature covers it.
+**DISCHARGED 2026-09-23 by CONDUCT #15:** UI-80 built all three readers (branch `land/worker/UI-80` @ `773bee69`), integrated at merge `341c623a` (and `7f42deae`), landed on origin/main @ `b5ce975a` (train train-20260923T071448Z-23127, GREEN FULL 284/284 · 17,154): inquiryCasePairs, pubPairSigner, the placeholder; case-frozen-pair.test.mjs drives it. Two follow-on defects placed by SCHEDULER as REC-170/UI-82 and UI-81.
 
 ## DELEGATION 2026-09-23 SCHEDULER (#14) -> BOB — **ONE DESIGN GAP from REC-168's worker: `op=capturerequest` with no run**
 

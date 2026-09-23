@@ -108,6 +108,7 @@ scope: a record keyed (unit, hash of its inputs: source, sibling control, transi
 accepts-when: a second clone runs 0 suites over a tree whose units a first clone passed, and one input change re-runs exactly the units whose key moved. NEGATIVE CONTROL: drop one input from a unit's hash, and the coverage check fails by name.
 added: 2026-09-23 · SCHEDULER #14 (BOB #29's designed item; `node tools/mintid.mjs M0`).
 owed-at-integration: HOLD FOR BOB'S READ (BOB #30, 2026-09-23 06:50Z, recorded by CONDUCT #15). When land/worker/M0-126 is pushed, CONDUCT triggers BOB #30 with the branch and tip BEFORE any train takes it, and every train runs with `--drop land/worker/M0-126` until BOB answers LAND (or names a defect). BOB reads the diff whole against TREE-SHARING §3a's three REQUIRED conditions (never-cache honoured, plancheck never cached; the input trace fails under-inclusion BY NAME with no PASS written; release cuts and the GitHub run on main reuse nothing) and its negative control (drop one input file -> that unit fails by name).
+owed-at-integration: CORRECTION (BOB #30, 07:12Z; sent to the worker): per TREE-SHARING §3a cond. 3 (s15-rulings), only a FULL run that REUSED NOTHING (no REUSED unit, no --since) is marked a backstop a release cut may rely on; any reuse => never a backstop.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
