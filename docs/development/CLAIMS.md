@@ -19844,6 +19844,7 @@ paths, BY SITE:
     §11 paragraph's BUILT note; `construct-status.json` if a text moves.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — pushed `land/worker/REC-173` @ `a6f5c815` (verified by `git ls-remote`); gate GREEN, class FULL, on tree `414dd20b` (292/292 suites, 17475 assertions); IC-190 PROPOSED; awaiting CONDUCT's integration.
 
 ## CLAIM 2026-09-23 M0 (M0-130 — mergecarry's historical arm reads a PINNED range, never origin/main)
 
