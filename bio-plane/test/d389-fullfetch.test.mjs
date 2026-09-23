@@ -16,8 +16,11 @@
    (2,845,011 bytes, sha256 e1b952c145d5410b…). FAILING BEFORE D-389 (the unchanged tree): B1 B2 B3 B4 S1 red,
    the uninvited and unstamped viewers reading `truncated: false` over zero rows at every level.
    WHAT THIS SUITE CANNOT SEE: the never-looked / missing lists each arm fetches BESIDE the `looked` page carry the
-   same full-fetch shape and are NOT covered by this row's one disjunct (reported with its named fix); and the
-   internet arm is out of the class, because it gates INSIDE the statement and so its `cap + 1` fetch is exact. */
+   same full-fetch shape and are NOT covered by this row's one disjunct (reported with its named fix) — CLOSED
+   2026-09-23 BY REC-174, whose suite `rec174-supplyfetch.test.mjs` drives every such list at every arm; and the
+   internet arm is out of the class, because it gates INSIDE the statement and so its `cap + 1` fetch is exact.
+   ANCHORS MOVED 2026-09-23 BY REC-174: the page's claim now reads `gated.length > cap || full` (the test itself moved
+   into `#frontierFetch`), so the control's HELPER and CONTENT_CLAIM anchors were re-pointed at the same acts. */
 
 /* D-389 — `op=frontier`'s `truncated` ON A FULL RAW FETCH, AT ALL THREE BUNDLE ARMS.
  * =====================================================================
@@ -202,11 +205,18 @@ console.log("\n--- S · one disjunct, in the one over-fetch the three arms share
 {
   /* The DISJUNCT as code (`|| raw.length === …`), anywhere in the store: a second arm writing its own full-fetch
      test in any spelling of the bound is a second copy, and this counts it. */
-  const disjunct = (STORE_SRC.match(/\|\|\s*raw\.length\s*===/g) || []).length;
+  /* CORRECTED 2026-09-23 BY REC-174, NEVER EXEMPTED. This counted the spelling `|| raw.length ===`, which was the
+     disjunct's whole text while `#frontierPage` held the test inline. REC-174 routed the never-looked / missing
+     supplies through the SAME test, so the test moved into `#frontierFetch` (`full: raw.length === limit`, written
+     once) and the page's disjunct now reads `gated.length > cap || full`. The old count read 0 over a disjunct that
+     is present, i.e. it pinned a spelling rather than the rule; the rule — ONE full-fetch test, the page's claim
+     OR-ing it, three arms taking their page from the helper — is what is counted now. */
+  const fullTest = (STORE_SRC.match(/full:\s*raw\.length\s*===/g) || []).length;
+  const disjunct = (STORE_SRC.match(/truncated:\s*gated\.length\s*>\s*cap\s*\|\|\s*full\b/g) || []).length;
   const callers = (STORE_SRC.match(/this\.#frontierPage\("(document|content|meaning)"/g) || []).map((s) => s.match(/"(\w+)"/)[1]).sort();
   t("S1: THE DISJUNCT IS WRITTEN ONCE, in `#frontierPage`, and the three bundle arms each take their `looked` page "
   + "from it — a per-arm copy is the mirror-and-drift class this row was raised to avoid",
-    [disjunct, callers], [1, ["content", "document", "meaning"]]);
+    [fullTest, disjunct, callers], [1, 1, ["content", "document", "meaning"]]);
 }
 
 reachedFoot = true;

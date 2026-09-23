@@ -1574,6 +1574,20 @@ const sourceOrigin = (body, src) => {
     return { kind: "CALL", why: "assigned from a call; the callee's body is not read by this walk", rhs };
   if (/^\s*\[/.test(rhs) || grown)
     return { kind: "ASSEMBLED", why: "assembled in memory — grown or spread from several reads, so there is no single source to bound", rhs };
+  /* A MEMBER OF A LOCAL — ADDED 2026-09-23 BY REC-174. `const never = neverFetch.rows;` reads a field of a local
+     whose own declaration is the read. REC-174 routed the frontier's never-looked / missing supplies through ONE
+     exhaustion helper that returns `{ rows, full }`, so the document arm's `never` stopped being declared as the
+     cap-carrying call itself and became a member of its result — and this reader, which classified the call,
+     answered UNCLASSIFIED for the same bound one hop away, taking source-graded to ZERO (the floor below). ONE hop,
+     and only a bare member (no call, no index): the local's declaration is classified by THIS function, so a member
+     of a CALL is a CALL with that call's rhs, graded by the same cap-mention test; anything else is reported as the
+     member of what it is. It does not recurse: a member of a member of a call stays UNCLASSIFIED. */
+  const member = /^\s*([A-Za-z_$][\w$]*)\s*\.\s*[A-Za-z_$][\w$]*\s*$/.exec(rhs);
+  if (member && member[1] !== src) {
+    const inner = new RegExp(`\\b(?:const|let|var)\\s+${member[1].replace(/\$/g, "\\$")}\\s*=\\s*([^;]*)`).exec(body);
+    if (inner && /this\s*\.\s*#?[A-Za-z_$][\w$]*\s*\(/.test(inner[1]))
+      return { kind: "CALL", why: `a member of \`${member[1]}\`, which is assigned from a call; the callee's body is not read by this walk`, rhs: inner[1] };
+  }
   const recv = /^\s*([A-Za-z_$][\w$]*)\s*\.\s*(?:filter|map|slice|concat|sort|flatMap|reduce)\s*\(/.exec(rhs);
   if (recv) {
     const local = new RegExp(`\\b(?:const|let|var)\\s+${recv[1].replace(/\$/g, "\\$")}\\b`).test(body);
@@ -1677,6 +1691,12 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
      `#frontierMeaning:never` are DERIVED from `missing`. Source-graded 2 -> 1 is a real loss of reach at
      the source, taken rather than contorted around: re-inlining the fetch per arm to score better would be
      three copies of the one rule D-389 exists to hold once. */
+  /* UNCHANGED BY REC-174 (2026-09-23), AND WHY THAT TOOK AN ACT: `frontier:never` is now `neverFetch.rows`, a
+     member of `this.#frontierFetch((cap + 1) * 2, …)`, and this reader first printed it UNCLASSIFIED — source
+     graded 1 -> 0, the floor one assertion up red. `sourceOrigin` gained ONE hop through a bare member of a local
+     (see its note), and the verdict is back to SOURCE GRADED by the same cap-mention test. CONTROLLED: with the
+     document arm's fetch bound to a literal `4000` instead of `(cap + 1) * 2`, both pins went red (graded 0, and
+     `frontier:never` arriving in this roster); restored, byte-identical by sha256 and `cmp`. */
   ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
    "#frontierMeaning:never", "#frontierPage:gated", "biasInhale:bars",
    "documentsNamingEntity:merged", "queueFeed:dispAll", "queueFeed:items"]);

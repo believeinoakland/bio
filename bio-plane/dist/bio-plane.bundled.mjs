@@ -61039,16 +61039,44 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  ONE DISJUNCT HERE AND NEVER PER ARM — three copies is the mirror-and-drift
    *  class the row was raised to avoid, and `d389-fullfetch.test.mjs` S1 counts
    *  it. `#frontierInternet` is NOT a caller and is not in the class: it gates
-   *  INSIDE its statement, so its `cap + 1` fetch is already exact. The
-   *  never-looked / missing lists each arm fetches beside this page are NOT
-   *  routed here (D-389's scope is this one over-fetch). */
+   *  INSIDE its statement, so its `cap + 1` fetch is already exact.
+   *
+   *  REC-174 (2026-09-23) — THE NEVER-LOOKED AND MISSING LISTS NOW TAKE THE
+   *  SAME TEST. D-389 closed this hole for `looked` and named the same shape
+   *  beside it: the document arm's `#frontierNeverLooked` fetch, the content
+   *  arm's `missing` fetch and the meaning arm's three `missing` fetches are each
+   *  gated (and split by §5.1's cause) AFTER a bounded fetch, so a viewer the
+   *  fence narrowed read `truncated: false` over a fetch that came back full.
+   *  The exhaustion test is therefore `#frontierFetch` below, written ONCE, and
+   *  this page is its first caller rather than a second copy. */
   #frontierPage(level, cap, { limit, subjectKind = null }, gate) {
-    const raw = this.#frontierLatest(level, { limit, subjectKind });
-    const gated = raw.filter(gate);
+    const { rows: gated, full } = this.#frontierFetch(
+      limit,
+      (n) => this.#frontierLatest(level, { limit: n, subjectKind }),
+      gate
+    );
     return {
       page: gated.slice(0, cap),
-      truncated: gated.length > cap || raw.length === limit
+      truncated: gated.length > cap || full
     };
+  }
+  /** REC-174 — THE ONE EXHAUSTION TEST, for every bounded fetch a frontier arm
+   *  gates or splits before it cuts: D-389's `looked` page and REC-174's
+   *  never-looked / missing supplies. `read(limit)` runs the bounded statement
+   *  AT the limit given here, so the limit fetched and the limit tested are one
+   *  value and cannot drift apart. `full` is the claim D-389 wrote: a fetch that
+   *  came back FULL did not exhaust its supply, so rows beyond it were never
+   *  fetched and their visibility is unknown. Each arm ORs `full` into its
+   *  `truncated` for every fetch it makes, and the list lengths it compares
+   *  against `cap` stay its own (they are the collections it cuts).
+   *
+   *  IT LEAKS NOTHING, FOR D-389's REASON: on a full fetch an entitled viewer's
+   *  gated rows are the whole fetch, and split two ways by cause (or three by
+   *  kind), one list exceeds `cap` — so it already read `true`; every viewer
+   *  now reads the same bit. No count of what the gate withheld is returned. */
+  #frontierFetch(limit, read, gate = null) {
+    const raw = read(limit);
+    return { rows: gate ? raw.filter(gate) : raw, full: raw.length === limit };
   }
   /** §5: *`last_verified` is the latest `PRESENT` row's `at`; source unreachable
    *  since is the earliest `LOOKED_INDETERMINATE` after it.* `STORE-AS-CACHE.md`
@@ -61365,7 +61393,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         ...this.#frontierVerification("content", r.subject_kind, r.subject)
       };
     });
-    const missing = this.#rows(
+    const missingFetch = this.#frontierFetch((cap + 1) * 2, (n) => this.#rows(
       `SELECT DISTINCT g.capture_sha AS subject, g.bundle_id AS bundle_id, g.registered AS registered
          FROM register g
         WHERE NOT EXISTS (SELECT 1 FROM observation_log o
@@ -61373,8 +61401,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
                              AND o.subject = g.capture_sha)
         ORDER BY g.capture_sha
         LIMIT ?`,
-      (cap + 1) * 2
-    ).filter((r) => visible(r.bundle_id) !== null).map((r) => ({ ...r, missing_cause: this.#missingContentCause(r.subject, r.registered) }));
+      n
+    ), (r) => visible(r.bundle_id) !== null);
+    const missing = missingFetch.rows.map((r) => ({ ...r, missing_cause: this.#missingContentCause(r.subject, r.registered) }));
     const never = missing.filter((r) => r.missing_cause === "never_looked");
     const unexplained = missing.filter((r) => r.missing_cause !== "never_looked");
     const tally = {};
@@ -61422,7 +61451,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          room being enough. */
       /* D-389: the page's claim is `latest.truncated`, written LAST so the claims this method
          still makes itself stay in the spelling `derivation-bounds.test.mjs` can grade. */
-      truncated: never.length > cap || unexplained.length > cap || latest.truncated,
+      /* REC-174: `missingFetch.full` is the same claim for the never-looked / missing supply —
+         a full fetch there reads true for every viewer, as the page's does. */
+      truncated: never.length > cap || unexplained.length > cap || missingFetch.full || latest.truncated,
       looked,
       /* REC-107 SWEPT THE CLASS RATHER THAN THE REPORTED SITE. The defect was rowed
          against the MEANING level, and this arm had it too: `missing_unexplained`
@@ -61797,8 +61828,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       ...this.#frontierVerification("meaning", r.subject_kind, r.subject)
     });
     const looked = latest.page.map(view);
-    const missing = [];
-    for (const r of this.#rows(
+    const captureFetch = this.#frontierFetch((cap + 1) * 2, (n) => this.#rows(
       `SELECT g.capture_sha AS subject, g.bundle_id AS bundle_id, g.registered AS entered
          FROM register g
         WHERE NOT EXISTS (SELECT 1 FROM observation_log o
@@ -61806,15 +61836,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
                              AND o.subject = g.capture_sha)
         ORDER BY g.capture_sha
         LIMIT ?`,
-      cap + 1
-    ))
-      if (visible(r.bundle_id) !== null)
-        missing.push({
-          subject: r.subject,
-          subject_kind: "capture",
-          missing_cause: this.#missingMeaningCause("capture", r.subject, r.entered)
-        });
-    for (const r of this.#rows(
+      n
+    ), (r) => visible(r.bundle_id) !== null);
+    const referenceFetch = this.#frontierFetch((cap + 1) * 2, (n) => this.#rows(
       `SELECT rr.ref AS subject, MIN(g.registered) AS entered, MIN(rr.bundle_id) AS bundle_id
          FROM reading_refs rr LEFT JOIN register g ON g.capture_sha = rr.capture_sha
         WHERE NOT EXISTS (SELECT 1 FROM observation_log o
@@ -61823,15 +61847,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         GROUP BY rr.ref
         ORDER BY rr.ref
         LIMIT ?`,
-      cap + 1
-    ))
-      if (visible(r.bundle_id) !== null)
-        missing.push({
-          subject: r.subject,
-          subject_kind: "reference",
-          missing_cause: this.#missingMeaningCause("reference", r.subject, r.entered)
-        });
-    for (const r of this.#rows(
+      n
+    ), (r) => visible(r.bundle_id) !== null);
+    const entityFetch = this.#frontierFetch((cap + 1) * 2, (n) => this.#rows(
       `SELECT e.entity_id AS subject, e.at AS entered
          FROM entities e
         WHERE NOT EXISTS (SELECT 1 FROM observation_log o
@@ -61839,8 +61857,22 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
                              AND o.subject = e.entity_id)
         ORDER BY e.entity_id
         LIMIT ?`,
-      cap + 1
-    ))
+      n
+    ));
+    const missing = [];
+    for (const r of captureFetch.rows)
+      missing.push({
+        subject: r.subject,
+        subject_kind: "capture",
+        missing_cause: this.#missingMeaningCause("capture", r.subject, r.entered)
+      });
+    for (const r of referenceFetch.rows)
+      missing.push({
+        subject: r.subject,
+        subject_kind: "reference",
+        missing_cause: this.#missingMeaningCause("reference", r.subject, r.entered)
+      });
+    for (const r of entityFetch.rows)
       missing.push({
         subject: r.subject,
         subject_kind: "entity",
@@ -61877,7 +61909,12 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          the collections it cuts, and is the model. NEITHER BRANCH COULD HAVE SEEN THIS:
          REC-95 wrote the method and M0-38 wrote the grader, in parallel, each green
          alone — the merge is the only place the two met. */
-      truncated: never.length > cap || latest.truncated,
+      /* REC-174 (2026-09-23): two corrections, both the cut-and-claim rule above. `unexplained` IS
+         cut at `cap` below (`missing_unexplained`) and was absent from this claim, so an entitled
+         viewer holding more unexplained rows than `cap` read `false` over a list it was not given
+         whole — the content arm has carried that disjunct since REC-109. And each of the three
+         supply fetches ORs in its FULL bit, D-389's claim at the lists it did not reach. */
+      truncated: never.length > cap || unexplained.length > cap || captureFetch.full || referenceFetch.full || entityFetch.full || latest.truncated,
       /* D-389: the page's claim is `#frontierPage`'s */
       looked,
       /* REC-107: `not_ruled_out` IS TOTAL ACROSS BOTH LISTS, and that is the point
@@ -62159,12 +62196,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       at: r.at,
       ...this.#frontierVerification("document", r.subject_kind, r.subject)
     }));
-    const never = this.#frontierNeverLooked((cap + 1) * 2).filter((r) => seenRow({
-      result_kind: "capture",
-      result_ref: r.from_document,
-      authority: null,
-      authority_kind: null
-    }));
+    const neverFetch = this.#frontierFetch(
+      (cap + 1) * 2,
+      (n) => this.#frontierNeverLooked(n),
+      (r) => seenRow({
+        result_kind: "capture",
+        result_ref: r.from_document,
+        authority: null,
+        authority_kind: null
+      })
+    );
+    const never = neverFetch.rows;
     const tally = {};
     for (const row of this.#rows(
       `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document' GROUP BY state`
@@ -62182,7 +62224,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          `truncated` computed from the raw supply would be true exactly when
          the gate dropped enough rows, which is a one-bit count of what was
          withheld, and the count is the leak. */
-      truncated: never.length > cap || latest.truncated,
+      truncated: never.length > cap || neverFetch.full || latest.truncated,
       /* D-389: the page's claim is `#frontierPage`'s */
       looked,
       never_looked: never.slice(0, cap),
