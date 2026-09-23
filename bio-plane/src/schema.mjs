@@ -1538,6 +1538,24 @@ CREATE TABLE IF NOT EXISTS queue_state (
 );
 CREATE INDEX IF NOT EXISTS queue_state_member ON queue_state(member_id);
 CREATE INDEX IF NOT EXISTS queue_state_case ON queue_state(case_id);
+-- D-125 (DEC-10 (b), RULED 2026-09-22 by BOB #26) and D-170 (BOB #29, 2026-09-23):
+-- the PER-ITEM personal mute. One row is one member choosing not to be told
+-- about ONE queue item, keyed on the item's own stable id (the id op=queue
+-- publishes: FINDING::<progression>::<stage> is the key proposal_dispositions
+-- already uses, and CONDITION::governor-holding-host::<host> names the host).
+-- It is keyed on the MEMBER, so it moves no other member's list, and it writes
+-- no disposition: a finding leaves the team's list only by the authored act.
+-- item_class is FINDING or CONDITION and never OBLIGATION -- the fence is at
+-- the ONE write (store.mjs queueMute) for queue_state's reason. It is personal
+-- state, not corpus-derived, and it is keyed on no bundle id, so it clears in
+-- the whole-store purge arm only (D-113).
+CREATE TABLE IF NOT EXISTS queue_item_mutes (
+  member_id   TEXT NOT NULL,
+  item_id     TEXT NOT NULL,
+  item_class  TEXT NOT NULL,
+  muted_at    TEXT NOT NULL,
+  PRIMARY KEY (member_id, item_id)
+);
 -- REC-14 / C-9: what a published case says it does NOT cover. A projection of
 -- the completeness_excluded[] block in bundle.md, exactly as inquiry_basis is
 -- of basis[] -- the BYTES make the assertion storable and signable, and only

@@ -12,7 +12,16 @@
  * member still sees it (NOTIFICATIONS.md, "MARKED AS HANDLED", which calls this
  * "the rule most likely to be lost when someone implements a delete button").
  *
- * SO `muted_kinds` MAY CONTAIN CONDITION KINDS ONLY, and the fence is at the
+ * CORRECTED 2026-09-22 by BOB #26's ruling (D-125, NOTIFICATIONS.md "MARKED AS
+ * HANDLED"), built by D-125's landing: a member may PERSONALLY stop being
+ * notified of a FINDING too — DEC-10's (b) per item and (c) per case over the
+ * kinds named. That does not touch the rule above: a mute is keyed on the
+ * MEMBER, so it removes nothing from any other member's list, and a finding
+ * still leaves the TEAM's list only by the authored disposition, which a mute
+ * never writes. The sentence below said "CONDITION KINDS ONLY" and guarded the
+ * right hazard with the wrong key; it now reads OBLIGATION-free.
+ *
+ * SO `muted_kinds` MAY CONTAIN NO OBLIGATION KIND, and the fence is at the
  * WRITE, in queueMute, which is the ONE place the column is ever authored. The
  * concrete failure it prevents is stated by CRITIQUE.md and is worth carrying
  * here where the fence lives: an OBLIGATION is something a NAMED PERSON must do
@@ -163,11 +172,13 @@ export const QUEUE_FINDING_KINDS = {
      fact about OUR OWN MACHINERY and is personally MUTABLE (D-125, DEC-16). A
      divergence of stance is a fact about the WORLD OF THE WORK: another team
      reads the shared question differently. One member's inbox hygiene must not
-     be able to make that disappear for everybody with nothing recorded, which
-     is precisely what `op=queuemute` would allow if either were a CONDITION.
+     be able to make that disappear for everybody with nothing recorded.
      Both leave a list the way every finding does — by an authored, attributed
-     act — and `test/current.test.mjs` DRIVES the mute refusal rather than
-     asserting the classification. */
+     act. CORRECTED 2026-09-23 (D-125, BOB #26's ruling): a member MAY now mute
+     either one for THEMSELVES, because a mute is keyed on the member and moves no
+     other member's list; `test/current.test.mjs` drives exactly that — the mute
+     accepted, personal, writing no disposition, the finding still on a second
+     member's feed — where it used to drive a refusal. */
   "stance-changed-here-not-elsewhere":
                                 "a project moved what it stands on for a SHARED question and the other "
                               + "projects drawing on it did not: one question, two live readings, "
@@ -205,16 +216,47 @@ export function classOfKind(kind) {
  * an obligation is resolved and a finding is dismissed, and each of those is a
  * real act on a real surface the member can reach. A refusal that only says no
  * is the gate that pressures somebody into inventing a way past it. */
+/* D-125 (BOB #26, 2026-09-22): the FINDING sentence is GONE, because a FINDING is
+ * no longer refused — a member may mute one for themselves (DEC-10's (b) and (c)).
+ * What it guarded, one member erasing the group's question, a MEMBER-keyed mute
+ * cannot do: the finding stays on every other feed and in op=proposals, and it
+ * leaves the team's list only by op=proposedispose. OBLIGATION alone is refused. */
 export const MUTE_REFUSAL_DETAIL = {
   OBLIGATION: "an OBLIGATION is something a named person must do for the record to proceed, and it leaves "
             + "every list only when it is RESOLVED (op=taskresolve) — record state, not a preference. "
             + "Muting it would remove it from the only surface that routes it while `tasks` carries no "
             + "per-member mute, so the record would go on believing the question reached a person.",
-  FINDING:   "a FINDING is something that may become evidence, and it leaves the list when it is adopted, "
-           + "deferred or dismissed (op=proposedispose) — an AUTHORED RECORD ACT carrying its author and "
-           + "reason, which stays in the record. Muting it would let one member's inbox hygiene erase the "
-           + "group's question with nothing recorded about who did it or why.",
 };
+
+/* The classes a PERSONAL mute may reach, in either form (D-125). A CONDITION and
+ * a FINDING; never an OBLIGATION. One list, read by the one write. */
+export const PERSONALLY_MUTABLE_CLASSES = ["CONDITION", "FINDING"];
+
+/* D-125's ITEM form (DEC-10 (b)) and D-170's widening: the class of a queue item
+ * named by its published id, or null. The id is the item's STABLE IDENTITY as
+ * op=queue mints it — `FINDING::<progression>::<stage>` (the key
+ * proposal_dispositions already uses), `FINDING::<kind>::…`,
+ * `CONDITION::<kind>::…` — so the class is its first segment and nothing is
+ * inferred. An OBLIGATION's id is an opaque task id with no class segment, so it
+ * answers null here and the store asks `tasks` to name it (the refusal must say
+ * OBLIGATION, not merely "unknown"). A segment with nothing after it is not an
+ * item id. */
+export function itemClassOf(id) {
+  if (typeof id !== "string") return null;
+  const m = /^(FINDING|CONDITION)::(.+)$/.exec(id.trim());
+  return m && m[2].trim() ? m[1] : null;
+}
+
+/* The ITEM half of the admission decision: is THIS item muted by id for this
+ * member? `itemMutes` is a Set of item ids. An OBLIGATION is never matched even
+ * if its id were somehow in the set — the write refuses one, and this read does
+ * not trust the column to have been written by that write alone (D-125: an
+ * OBLIGATION stays unmutable). Returns true or false. */
+export function mutedAsItem(item, itemMutes) {
+  if (!item || !itemMutes || itemMutes.size === 0) return false;
+  if (!PERSONALLY_MUTABLE_CLASSES.includes(item.class)) return false;
+  return typeof item.id === "string" && itemMutes.has(item.id);
+}
 
 /* muted_kinds is ONE TEXT column holding a set. Stored as a sorted,
  * comma-separated list: sorted so the same set has one representation and a
@@ -246,10 +288,11 @@ export function parseMutedKinds(text) {
  * CASE rather than its kinds is precisely the delete button the doctrine
  * forbids, and the shape of this column is what makes it unavailable.
  *
- * AN UNGROUPED ITEM CANNOT BE MUTED, and that is not an oversight. queue_state
- * is keyed (member_id, case_id); an item with no home has no case to mute
- * against, and inventing a pseudo-case for it would be the same invented home
- * REC-20 refuses to give it. */
+ * AN UNGROUPED ITEM CANNOT BE MUTED BY CASE, and that is not an oversight.
+ * queue_state is keyed (member_id, case_id); an item with no home has no case to
+ * mute against, and inventing a pseudo-case for it would be the same invented
+ * home REC-20 refuses to give it. Its way out is the ITEM form (`mutedAsItem`
+ * above, D-125/D-170), keyed on the item's own id and on no case. */
 export function suppressedBy(item, mutes) {
   if (!item || !mutes || mutes.size === 0) return null;
   const kind = item.kind;

@@ -374,8 +374,16 @@ console.log("\n--- 1. two projects, one shared question, each concludes with ITS
     /* CORRECTED 2026-09-19 (REC-141, BOB #16): minted ids are OPAQUE, so B and D no longer sort in creation order —
        both sides are sorted; the claim is WHICH projects stand where, not their order. */
     [[B, "concluded", VB.name], [D, "not_concluded", null]].sort());
+  /* CORRECTED 2026-09-23 by D-125, never exempted. This pinned "a member CANNOT
+     mute it", and BOB #26 ruled on 2026-09-22 (NOTIFICATIONS.md "MARKED AS
+     HANDLED", DEC-10) that a member MAY mute a FINDING for themselves: the mute
+     is keyed on the member and writes no disposition, so the team is still told.
+     Driven now: accepted, nothing of the record written, then undone so RUTH's
+     feed stays what the rest of this suite reads. */
   const mute = await POST(`op=queuemute&token=${RUTH}`, { case: B, kinds: ["shared-inquiry-concluded-by-another-project"] });
-  t("a member CANNOT mute it: op=queuemute refuses a FINDING kind", mute?.ok, false);
+  t("a member MAY mute it for themselves, and the mute writes nothing of the record (D-125)",
+    [mute?.ok, mute?.wrote], [true, { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 }]);
+  await POST(`op=queuemute&token=${RUTH}`, { case: B, kinds: ["shared-inquiry-concluded-by-another-project"], unmute: true });
   t("and being told moved nothing: B's stance and conclusion are exactly as B left them",
     [(await versionsOf(INQ, B))?.current?.version, (await conclusionOf(B))?.claim], [VB.name, CLAIM_B]);
 

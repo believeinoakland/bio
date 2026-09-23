@@ -2006,7 +2006,7 @@ export const NON_ACTS = {
      bundle". It offers candidates a member picks a resolve out of; the ACT is
      op=resolve, which is already a named non-act keyed by capture sha. */
   readingname: "read: which captured documents' readings name a registered subject (framework §8.1's grade-C tier), keyed by entity — the candidate list op=resolve is chosen from, never an act on an object",
-  queuemute: "personal state, keyed (member, case): a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)",
+  queuemute: "personal state, keyed (member, case) over the kinds named or (member, item) by the item's own id: a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)",
   queuesnooze: "personal state, keyed (member, case): defers re-notification for one member, changes nothing about the object or the record (D-125, P-87)",
   /* IS-6. The three run verbs are NOT acts on a bundle and must not appear on
      one, which is why they are named here rather than added to ACTS. A run is

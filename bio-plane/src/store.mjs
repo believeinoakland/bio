@@ -219,7 +219,8 @@ import { DISPOSITIONS, REOPENABLE_FROM, deriveActs,
    fence refuses against, and the ONE admission decision the feed applies — pure,
    so the suite holds the rule directly rather than only through a Durable
    Object, the same reason deriveActs lives outside this file. */
-import { QUEUE_CONDITION_KINDS, classOfKind, MUTE_REFUSAL_DETAIL,
+import { QUEUE_CONDITION_KINDS, QUEUE_FINDING_KINDS, classOfKind, MUTE_REFUSAL_DETAIL,
+         PERSONALLY_MUTABLE_CLASSES, itemClassOf, mutedAsItem,
          serializeMutedKinds, parseMutedKinds, suppressedBy } from "./queuestate.mjs";
 /* The retrieval surface is compiled, never assembled here. This file executes
    statements and maintains the index; it builds no query. That is what makes the
@@ -26118,12 +26119,21 @@ export class Store extends DurableObject {
        mutes and sees the whole live set: #queueMutes returns an empty map and
        this loop suppresses nothing. */
     const mutes = this.#queueMutes(me);
+    /* D-125 (DEC-10 (b)) and D-170: the ITEM form, keyed on the item's own id and
+       on no case, asked FIRST because it is the narrower preference. `scope`
+       says which form suppressed each item, so the member's feed states what
+       it hides and by which of their own choices. */
+    const itemMutes = this.#queueItemMutes(me);
     const suppressed = [];
     const admitted = [];
     for (const it of items) {
+      if (mutedAsItem(it, itemMutes)) {
+        suppressed.push({ id: it.id, class: it.class, kind: it.kind, case: null, scope: "item" });
+        continue;
+      }
       const by = suppressedBy(it, mutes);
       if (by === null) { admitted.push(it); continue; }
-      suppressed.push({ id: it.id, class: it.class, kind: it.kind, case: by });
+      suppressed.push({ id: it.id, class: it.class, kind: it.kind, case: by, scope: "case" });
     }
     items.length = 0;
     items.push(...admitted);
@@ -26230,12 +26240,17 @@ export class Store extends DurableObject {
       mute: {
         personal: true,
         cases: [...mutes.keys()].sort(),
+        /* D-125: every item id this member muted, whether or not it is live
+           now — a muted host that is not held today is still muted for them. */
+        items: [...itemMutes].sort(),
         suppressed,
         suppressed_count: suppressed.length,
         detail: "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed "
-              + "from the record, nothing here left another member's queue, and only CONDITION kinds "
-              + "can be here: an OBLIGATION leaves every list when it is RESOLVED and a FINDING when "
-              + "it is dismissed, both of which are acts the record keeps.",
+              + "from the record and nothing here left another member's queue. A CONDITION or a FINDING "
+              + "can be here, muted by case over the kinds you named or by its own id (`scope`); an "
+              + "OBLIGATION never can, because it leaves every list only when it is RESOLVED. A muted "
+              + "FINDING is still open for the team and in op=proposals: it leaves the team's list only "
+              + "when it is adopted, deferred or dismissed, an act the record keeps.",
       },
       /* D-266. The other half of the sentence `mute` has just finished — a
          FINDING leaves this list when it is dismissed, and here is every one
@@ -26347,6 +26362,16 @@ export class Store extends DurableObject {
     return out;
   }
 
+  /** D-125: this member's ITEM mutes, as a Set of item ids. A caller with no
+   *  member has none, for `#queueMutes`' reason. */
+  #queueItemMutes(member) {
+    const out = new Set();
+    if (typeof member !== "string" || !member.trim()) return out;
+    for (const r of this.#rows(
+      `SELECT item_id FROM queue_item_mutes WHERE member_id=?`, member.trim())) out.add(r.item_id);
+    return out;
+  }
+
   /** The case a personal preference may be attached to, resolved through the
    *  catalog's OWN machinery and gated by the viewer.
    *
@@ -26386,55 +26411,117 @@ export class Store extends DurableObject {
                && Object.prototype.hasOwnProperty.call(spec.edges, row.current_state)) };
   }
 
-  /** op=queuemute — mute CONDITION kinds on one case, for one member.
+  /** op=queuemute — a member's PERSONAL mute, in one of two forms (D-125, DEC-10).
+   *
+   *  THE CASE FORM, `{ case, kinds }` — DEC-10's (c): stop notifying ME about these
+   *  kinds on this case. Scoped to the kinds NAMED when it is made, so a new kind
+   *  on the case still reaches the member (queuestate.mjs `suppressedBy`).
+   *
+   *  THE ITEM FORM, `{ item }` — DEC-10's (b): stop notifying ME about this one
+   *  item, keyed on the item's own stable id as op=queue publishes it (a
+   *  FINDING's `FINDING::<progression>::<stage>` is the key its disposition
+   *  already uses). It names no case, so it also reaches an UNGROUPED CONDITION
+   *  (D-170, BOB #29), which the case form cannot. It writes ONE row of
+   *  `queue_item_mutes` and nothing else.
    *
    *  `member` is stamped server-side at index.mjs and is never taken from the
    *  caller: a caller who could name the member could mute somebody else's
    *  attention, which is the one thing a personal preference must not permit.
    *
-   *  THE FENCE. Every named kind must be a CONDITION kind. A kind that is an
-   *  OBLIGATION or a FINDING is refused with the kind, its ACTUAL class, and the
-   *  act that DOES clear it, because a refusal that only says no is the kind of
-   *  gate that pressures a member into finding a way around it. A kind the
-   *  catalogue does not name at all is refused separately: unknown is not the
-   *  same as wrong.
+   *  THE FENCE. Either form reaches a CONDITION or a FINDING and NEVER an
+   *  OBLIGATION (NOTIFICATIONS.md "MARKED AS HANDLED", RULED 2026-09-22 by BOB
+   *  #26): a mute is keyed on the MEMBER, so it moves no other member's list, and
+   *  a finding still leaves the TEAM's list only by the authored disposition,
+   *  which a mute never writes. An obligation is refused with its class and the
+   *  act that DOES clear it. A kind or an item the catalogue cannot classify is
+   *  refused separately: unknown is not the same as wrong. A case-less per-KIND
+   *  mute stays unavailable (REC-32's hazard): the case form requires a case.
    *
    *  It refuses an EMPTY set too. "Mute this case" with no kinds is the delete
    *  button the doctrine forbids, and accepting it as a no-op would leave a
    *  member believing they had silenced something they had not. */
-  queueMute({ member = null, case: caseId = null, kinds = null, unmute = false,
+  queueMute({ member = null, case: caseId = null, kinds = null, item = null, unmute = false,
               viewer = null, at = null } = {}) {
     const me = typeof member === "string" ? member.trim() : "";
     if (!me) return { ok: false, reason: "NO_MEMBER",
       detail: "a mute is PERSONAL: it is keyed to the member whose attention it is about, and a machine "
             + "credential has no member behind it. There is no instance-wide mute and there must not be." };
-    const c = this.#queueCaseFor(caseId, viewer);
-    if (c.ok !== true) return c;
+    const mutableKinds = [...Object.keys(QUEUE_CONDITION_KINDS), ...Object.keys(QUEUE_FINDING_KINDS)];
+    const itemId = typeof item === "string" ? item.trim() : "";
     const named = Array.isArray(kinds) ? kinds.map((k) => (typeof k === "string" ? k.trim() : "")).filter(Boolean) : [];
-    if (named.length === 0)
-      return { ok: false, reason: "NO_KINDS", case: c.id,
-        detail: "name the CONDITION kinds to mute. A mute is scoped to the kinds present when it was "
-              + "made — that is what lets a NEW kind on this case still reach you — so there is no "
-              + "whole-case mute to ask for.",
-        available: Object.keys(QUEUE_CONDITION_KINDS) };
-    for (const k of named) {
-      if (k.includes(","))
-        return { ok: false, reason: "BAD_KIND", kind: k, case: c.id,
+    let c = null;
+    const subjects = [];
+    if (itemId) {
+      /* One form per call. An item named beside kinds or a case is ambiguous
+         about which preference the member meant, and guessing is how a member
+         ends up believing the wrong thing is silenced. */
+      if (named.length > 0 || (typeof caseId === "string" && caseId.trim()))
+        return { ok: false, reason: "BAD_KIND", item: itemId,
+          detail: "name EITHER one item (`item`) OR kinds on a case (`case` + `kinds`), not both: they are "
+                + "two different preferences and this plane will not guess which one you meant" };
+      /* The class is the id's own first segment; an OBLIGATION's id is an
+         opaque task id with none, so `tasks` is asked to NAME it — the refusal
+         must say OBLIGATION rather than merely "unknown". */
+      let cls = itemClassOf(itemId);
+      if (cls === null && this.#one(`SELECT id FROM tasks WHERE id=?`, itemId)) cls = "OBLIGATION";
+      subjects.push({ item: itemId, cls });
+    } else {
+      c = this.#queueCaseFor(caseId, viewer);
+      if (c.ok !== true) return c;
+      if (named.length === 0)
+        return { ok: false, reason: "NO_KINDS", case: c.id,
+          detail: "name the kinds to mute, or name one `item`. A mute is scoped to the kinds present when it "
+                + "was made — that is what lets a NEW kind on this case still reach you — so there is no "
+                + "whole-case mute to ask for.",
+          available: mutableKinds };
+      for (const k of named) subjects.push({ kind: k, cls: classOfKind(k) });
+    }
+    for (const sb of subjects) {
+      if (sb.kind !== undefined && sb.kind.includes(","))
+        return { ok: false, reason: "BAD_KIND", kind: sb.kind, case: c.id,
           detail: "a kind is a slug and may not contain a comma; the stored set is comma-separated" };
-      const cls = classOfKind(k);
-      if (cls === null)
-        return { ok: false, reason: "UNKNOWN_KIND", kind: k, case: c.id,
-          detail: "the notification catalogue does not name that kind. Unknown is not the same as "
-                + "forbidden, and this refusal is the first rather than the second.",
-          available: Object.keys(QUEUE_CONDITION_KINDS) };
+      if (sb.cls === null)
+        return { ok: false, reason: "UNKNOWN_KIND", ...(sb.item ? { item: sb.item } : { kind: sb.kind }),
+          case: c ? c.id : null,
+          detail: sb.item
+            ? "no queue item by that id is one this plane can classify: a FINDING's or CONDITION's id "
+              + "begins with its class (as op=queue publishes it), and it names no obligation. Unknown is "
+              + "not the same as forbidden, and this refusal is the first rather than the second."
+            : "the notification catalogue does not name that kind. Unknown is not the same as "
+              + "forbidden, and this refusal is the first rather than the second.",
+          available: mutableKinds };
       /* DEC-49 REGION is-mute-class — REC-64/C-33.27. */
-      if (cls !== "CONDITION")
-        return { ok: false, reason: "KIND_NOT_PERSONAL", kind: k, kind_class: cls, case: c.id,
-          detail: MUTE_REFUSAL_DETAIL[cls],
-          available: Object.keys(QUEUE_CONDITION_KINDS) };
+      if (!PERSONALLY_MUTABLE_CLASSES.includes(sb.cls))
+        return { ok: false, reason: "KIND_NOT_PERSONAL",
+          ...(sb.item ? { item: sb.item } : { kind: sb.kind }), kind_class: sb.cls,
+          case: c ? c.id : null,
+          detail: MUTE_REFUSAL_DETAIL[sb.cls],
+          available: mutableKinds };
       /* END DEC-49 REGION is-mute-class */
     }
     const stamp = typeof at === "string" && at ? at : new Date(this.#nowMs(null)).toISOString();
+    if (itemId) {
+      const cls = subjects[0].cls;
+      const had = !!this.#one(
+        `SELECT item_id FROM queue_item_mutes WHERE member_id=? AND item_id=?`, me, itemId);
+      if (unmute) this.sql.exec(
+        `DELETE FROM queue_item_mutes WHERE member_id=? AND item_id=?`, me, itemId);
+      else this.sql.exec(
+        `INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES (?, ?, ?, ?)
+         ON CONFLICT(member_id, item_id) DO UPDATE SET muted_at=excluded.muted_at`,
+        me, itemId, cls, stamp);
+      return {
+        ok: true, member: me, form: "item", item: itemId, item_class: cls,
+        muted_items: [...this.#queueItemMutes(me)].sort(),
+        added: !unmute && !had ? [itemId] : [], removed: unmute && had ? [itemId] : [], at: stamp,
+        wrote: { queue_item_mutes: 1, queue_state: 0, tasks: 0, proposal_dispositions: 0, bundles: 0 },
+        detail: "a mute is PERSONAL: this one item leaves YOUR feed, which says so in its `mute` block. "
+              + "Nothing left the record, no other member's feed moved, no disposition was written, and "
+              + "op=proposals still carries the finding. A finding leaves the team's list only when it is "
+              + "adopted, deferred or dismissed (op=proposedispose). The key is the item's own id, so the "
+              + "same item arising again stays muted for you until you unmute it.",
+      };
+    }
     const row = this.#one(
       `SELECT muted_kinds, snoozed_until FROM queue_state WHERE member_id=? AND case_id=?`, me, c.id);
     const had = parseMutedKinds(row ? row.muted_kinds : "");
@@ -26459,9 +26546,10 @@ export class Store extends DurableObject {
          so the suite can assert the boundary from the op's own answer as well as
          from the tables. */
       wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
-      detail: "a mute is PERSONAL and reaches CONDITION kinds only. Nothing left the record, nothing "
-            + "left another member's queue, and an OBLIGATION on this case still reaches you: an "
-            + "obligation leaves every list only when it is RESOLVED, which is record state.",
+      detail: "a mute is PERSONAL and reaches CONDITION and FINDING kinds, never an OBLIGATION. Nothing "
+            + "left the record, nothing left another member's queue, no disposition was written, and an "
+            + "OBLIGATION on this case still reaches you: an obligation leaves every list only when it is "
+            + "RESOLVED, which is record state.",
     };
   }
 
@@ -27052,6 +27140,8 @@ export class Store extends DurableObject {
          NOTHING ELSE — stats is an operator surface and whose attention is muted
          on what is not an operator's business. */
       queueState: n("queue_state"),
+      /* D-125: the item mutes, a COUNT for queueState's reason. */
+      queueItemMutes: n("queue_item_mutes"),
       /* REC-82 / IC-83: the content rows — the parts of documents this record's
          edges point at — reported so a purge can PROVE it took them (D-113)
          rather than assert it, and so an operator can see the content axis's
@@ -29013,6 +29103,10 @@ export class Store extends DurableObject {
            the caller believes the store is empty. hygiene.test.mjs asserts this
            list against schema.mjs. */
         this.sql.exec(`DELETE FROM queue_state`);
+        /* D-125. Members' ITEM mutes, cleared for queue_state's reason. Keyed on
+           an item id and on no bundle id, so the per-bundle arm has no key to
+           clear them by, and a mute naming a vanished item suppresses nothing. */
+        this.sql.exec(`DELETE FROM queue_item_mutes`);
         /* IS-6 / D-113. The investigative run, its budget and its observation
            log. Every one is keyed to a run whose CONTEXT is an inquiry or a
            project this purge just removed, so a whole-store purge that reported
