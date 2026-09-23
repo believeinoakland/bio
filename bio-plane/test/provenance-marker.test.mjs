@@ -4,6 +4,7 @@
    (c) THE OVER-STRICTNESS ARM — a verification whose route CAN be shown must carry NO marker and must NOT be refused. Make `provenanceRouteAssess` mark unconditionally (finding always LOOKED_INDETERMINATE). DECLARED MUST-FAIL: the good-chain arms. DECLARED MUST-NOT-FAIL: everything in section A, which is why this arm is run alone — an item that only ever fails in one direction has not shown its subject is the thing being measured.
    (d) THE PUBLICATION ARM (REC-74's defect, one field over) — keep the marker in the table and stop publishing it: drop `route` from `listBundles`'s rows. DECLARED MUST-FAIL: every op=list arm. The point of the arm is that the store still HOLDS the marker and the record has still gone silent for anybody who was not there.
    (e) THE CLASS SWEEP'S OWN REACH, AS A DELTA — neuter `silentCatches()` so it returns an empty roster. DECLARED MUST-FAIL: the sweep's delta arms, because a walk that finds nothing reports a beautiful roster of zero over an empty corpus. The sweep is ALSO run against a source carrying a PLANTED extra silent catch and required to find it, so its reach is proved against a real defect at a real site rather than against an absolute.
+   CEILING ARM (c18-batch7fix, 2026-09-23, land/conduct/c18-batch7fix, union of c17-batch7): `const CEILING = 35;` -> `34`, anchor asserted once, restored by cp and verified by sha256 AND cmp. DECLARED: §I's ratchet arm fails and nothing else. RESULT 112/1, AS DECLARED: "swallowed reads in store.mjs are at or below the ratchet (35 of 34)".
 */
 
 /* REC-63 / DEC-56 / D-204 — THE STANDING MARKER AT `verified`.
@@ -551,7 +552,32 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
      (REC-141's mint in `minted_ids`) are undone. WHY IT IS A CATCH AT ALL: the Durable Object's SQL API rolls back
      only on a throw. The worker, gating its own suites only (Bob, 2026-09-23), could not see this walk; the union
      gate is where it fires, which is why it is resolved here. */
-  const CEILING = 28;
+  /* MOVED 28 -> 35 AT INTEGRATION by c18-batch7fix for CONDUCT #18 (2026-09-23, land/conduct/c17-batch7), FROM THE
+     FIGURE THIS WALK PRINTED on the union tree. Measured with this walk's own regex, per tree: main 02603e88 prints 28;
+     c17-batch5 prints 29; REC-164's branch alone prints 33; D-149's branch alone prints 29; the union prints 35. No
+     side's figure is the sum of the others' — each branch was measured over its own base and gated only its own
+     suites (Bob, 2026-09-23), so none of them saw this walk move. Every new site was LOOKED AT, one by one:
+     - REC-161 (c17-batch5; c17-unionfix adjudicates it): `partitionIndependence` parses `partition` from a query
+       string, and an unparseable string becomes `undefined`, which is REFUSED `PARTITION_INDEPENDENCE_UNREADABLE`
+       on the next line. The class's remedy: the failure is a refusal, never a normal-looking answer.
+     - D-149: `actionLaws` parses `laws` the same way; an unparseable string is refused `NO_LAWS` and nothing is
+       written. The class's remedy, on REC-161's grounds.
+     - REC-164, `#instanceAddress`: an origin `URL` cannot parse returns null, and `#checkGroupDomain` then PUBLISHES
+       verdict `undetermined` with "the claim carries no instance address for the file to name". Stated, not smoothed.
+     - REC-164, the well-known fetch: a fetch that throws becomes `res = null`, published as verdict `undetermined`
+       with "the fetch did not complete, and this plane did not record why" — the absence says it is one.
+     - REC-164, the well-known file's JSON: an unparseable body becomes `f = null`, published as verdict
+       `mismatched` with "the file is not the JSON object this plane reads". Stated.
+     - REC-164, `governorReport` after that fetch: the capture path's own shape copied (`index.mjs`'s two
+       `governorreport` calls carry the same catch and the same sentence). What is lost on a throw is the governor's
+       capacity bookkeeping for the host, not anything the verdict rests on: the verdict reads the real HTTP status.
+     - REC-164, `#armScheduler()` after `groupDomainSet`: THE ONE THAT IS NOT THE REMEDY SHAPE, and it is named so.
+       Every other `#armScheduler()` caller in this file lets a failure propagate. This one swallows it because the
+       claim and its first check are already written and a throw would report a recorded claim as failed; the answer
+       claims nothing about a re-check (no field says one is armed), and the next arm by any consumer reconciles the
+       domain wake, since `#reconcileAlarm` weighs the whole registry. So it overclaims nothing — but a failed arm is
+       silent until that next arm, which is the residue this entry states rather than hides. */
+  const CEILING = 35;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 

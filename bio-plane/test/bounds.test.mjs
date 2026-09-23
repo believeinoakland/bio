@@ -14,6 +14,7 @@
 /* NEGATIVE CONTROL: (run 2026-08-07, rec59-agent, IC-24/REC-59) FOUR arms, each RUN, every file restored BYTE-IDENTICALLY (sha256 compared). (1) REVERT op=projection TO THE BARE ARRAY — in src/store.mjs projection(), insert `return bundles;` above the envelope's `return {` -> 25 assertions fail across FOUR suites: bounds 6 (both PIN arms, the PIN GUARD, and three of op=projection's LIVE arms including the DELTA), gate-reads 4 (the enumeration, and all three of the viewer-gated `total` / viewer-independent `limit` arms), projection 3 (the json_extract read and both filter-total arms), projects 12. (1b) AND THE CONTROL FOUND A DEFECT IN THE INSTRUMENT RATHER THAN CONFIRMING IT: on the first run gate-reads, projection and projects all THREW on `.bundles.length` / `.find(...)` of undefined and DIED, hiding every arm behind the throw — D-93's class inside a control. Every migrated read is null-tolerant now, so the control NAMES what it broke; the failure counts above are the post-fix ones. (2) A SECOND BARE-ARRAY CAPPED OP, run in two stages because the stages fail differently and only the second is the pin: (2a) add a capped method returning a bare array plus its dispatch entry -> the walk FINDS it (`op=ncsecond -> ncSecondBareArray` prints on the roster) and 3 fail, headed by "every capped op the walk found is DRIVEN here"; (2b) additionally drive it into `answersByOp` -> **"PIN: ZERO capped ops answer with a bare array" FAILS with `got ["ncsecond"]`**, naming the offender, which is the proof it is a pin and not an exemption. (3) NEUTER THE WALKS, both of them: (3a) `cappedMethods` -> `return new Map()` -> 9 fail including all three REACH-AS-A-DELTA arms, with the corpus PRINTED as `0 carrying a cap, reaching 0 ops`; (3b) empty the consumer walk's corpus (`allFiles.length = 0`) -> 8 fail, corpus PRINTED as `0 files, 0 chars`, every REC-59 REACH arm among them — while "REC-59 REACH (THE FAILURE MODE NAMED)" deliberately STAYS GREEN, because its whole subject is that IC-24's claim still reads true over nothing. (4) OVER-STRICTNESS — inherited from REC-57 and still passing, plus this item's own PIN GUARD arm proving the array reader can still SEE an array when one is present. */
 /* NEGATIVE CONTROL: (run 2026-08-07, rec60-agent, REC-60/D-225) THIS SUITE'S SHARE of REC-60's controls, run against the three ops that JOINED its roster when they gained a bound, each restored byte-identically. (1) RESTORE EACH UNBOUNDED READ in src/store.mjs — drop `LIMIT ?`/`cap + 1` and the `limit:`/`truncated` keys — and this file fails FOUR arms per op, every one naming it: the bound-applied arm, both direction arms, and the DELTA. Run per op: resolutionsForCapture 4, documentsConcerning 4, connectionsFor 4. (2) COUNT WHAT IT SENT (`const truncated = false;` beside a real slice) -> 2 fail per op here, the cut-answer arm and the DELTA. Note that the WALK stays green under (2) — the scan is still capped, so `OPS.size` is still 14 and only the LIVE arms catch a dishonest answer. (3)/(4) are `test/meaning-bounds.test.mjs`'s, which is where REC-60's own walk and its reach deltas live. */
 /* NEGATIVE CONTROL: (run 2026-08-08, rec67-agent, REC-67) FIVE arms, each armed ALONE with every other held open, every file restored from a PRISTINE pre-arm copy and verified by sha256 AND by `cmp`. Baseline 147/0. (1) PLANT A REAL CORPUS-ARM CALL SITE — a new file `civicos-ui/nc-rec67-arm1.mjs` calling `ask("projection", "jsonPath=…")` through an ordinary local helper -> 146/1, the ONE failure being `civicos-ui reaches op=projection ONLY through the &id= arm`, and the helper roster PRINTS the planted file and its callee. **This is the arm proving the narrowing did not blind the walk.** (2) PLANT UI-46's EXACT REGRESSION — `CLASS.methods.get("projection")` in `civicos-ui/nc-rec67-arm2.mjs` -> 147/0, GREEN, the planted file absent from the roster and the site count unmoved at 40. **A green arm proves nothing on its own, so the same planted file was read by the PRE-FIX matcher in the same turn: it classified it `helper corpus-bare civicos-ui/nc-rec67-arm2.mjs:3` and took the count to 41** — which is the 106/106 -> 105/106 failure reproduced and then shown fixed. (3) NEUTER THE RESOLUTION (`if (false && TRANSPORT.test(b))`) -> 142/5, the helper roster PRINTED as `0 site(s) … NONE`, the total dropping 40 -> 38, and the two REC-67 HELPER REACH arms among the failures with both synthetic guards. (4) OVER-STRICTNESS — a real call through `zzq` -> `hop` -> `fetch`, a spelling no list ever carried, two hops deep -> 146/1, FOUND and named `via zzq()`. The old list-based matcher could not have passed this arm. (5) is `meaning-bounds.test.mjs`'s and (6) `plane-envelope.test.mjs`'s — the two sibling walks in the same class, recorded in their own headers. THE HARNESS'S OWN FAULT, RECORDED RATHER THAN SMOOTHED: its first run reported `exit 1 · null pass, null fail` for EVERY arm INCLUDING THE BASELINE, because it joined the suite path onto the repo root while running with `cwd=bio-plane`. Only the baseline row made it visible; without one, six arms failing for a reason unrelated to their subject read exactly like six arms working. */
+/* NEGATIVE CONTROL: (run 2026-09-23, c18-batch7fix, D-148's arms joined at the c17-batch7 union) ONE arm, RUN. (1) COUNT WHAT IT SENT — in src/store.mjs actionQuotes, `const truncated = rows.length > max;` -> `const truncated = false;`, anchor asserted to occur exactly once, restored by cp from a pristine copy and verified by sha256 AND cmp (419e0f54…, 3,023,229 B). DECLARED: the bite arm and the DELTA fail; the whole arm and every other arm hold. RESULT 173/5 against a 175/3 baseline, AS DECLARED: exactly "op=actionquotes: publishes the bound it APPLIED (`max`), and a cut answer SAYS SO …" and "op=actionquotes: DELTA …" were added; the three standing reds (PIN GUARD and both PIN arms, naming groupidentity/statementack and biasmanifest) were red before arming. */
 /* REC-57 · EVERY CAPPED OP PUBLISHES THE BOUND IT APPLIED, AND WHETHER IT BIT.
  * ===================================================================== *
  * UI-39 measured this one layer up: a plane that caps and does not say so forces
@@ -572,7 +573,15 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      not the caller's, and it REFUSES rather than cuts: `BASIS_VERSION_LEGS_MAX` over the question's
      reasons, because a partition checked over a truncated basis could pass as covering reasons it never
      saw. DRIVEN below with the refusal arm, and carried in DRIVEN_ELSEWHERE for versionstrength's reason. */
-  OPS.size, 37);
+  /* MOVED 37 -> 39 AT INTEGRATION by c18-batch7fix for CONDUCT #18 (2026-09-23, land/conduct/c17-batch7), from
+     THIS ARM'S OWN FAILURE OUTPUT on the union tree (`want 37 / got 39`), never by adding. Three rows met here,
+     each gating only its own suites: D-148's `op=actionquotes` (`LIMIT ?` against the named `QUOTES_MAX`),
+     REC-164's `op=groupidentity` (`domain_checks ... LIMIT 20`, a SQL literal) and D-150's `op=statementack`
+     (the unsigned case documents it re-authors, `LIMIT 8`, a SQL literal) — three arrivals. One member LEFT on the
+     same union: `op=biasmanifest` still dispatches to `biasManifest`, which now only delegates to the private
+     `#biasManifestNow` where the cap lives, so the dispatched segment carries no cap and c17-batch5 alone prints
+     36 (that departure, and the "driven but not found" arm it causes, are c17-unionfix's). Neither side's figure is the other's plus three: 39 is what this walk printed. */
+  OPS.size, 39);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1353,7 +1362,13 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                   /* REC-161: op=partitionindependence takes NO `limit` from the caller —
                                      versionstrength's reason: a caller has no business asking for HALF a
                                      partition. Its bound REFUSES (C-71.7) and is driven below. */
-                                  "partitionindependence"]);
+                                  "partitionindependence",
+                                  /* D-148, joined at integration by c18-batch7fix (2026-09-23): op=actionquotes
+                                     takes NO `limit` from the caller — its bound is `QUOTES_MAX`, published as
+                                     `max` beside `truncated`, so the loop's descriptor (ask for a bite of one,
+                                     read the bound back) has nothing to ask for. It is DRIVEN below, in this file,
+                                     with a real bite: one action carrying QUOTES_MAX + 1 quotes. */
+                                  "actionquotes"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1460,6 +1475,55 @@ t("op=partitionindependence: a partition OVER the bound is REFUSED and the refus
 + "shared with op=versionstrength's legs constant rather than a second figure that could drift",
   [PI_OVER.ok, PI_OVER.code, PI_OVER.limit, /BASIS_VERSION_LEGS_MAX = 500\b/.test(SRC_STORE)],
   [false, "PARTITION_INDEPENDENCE_TOO_MANY_LEGS", 500, true]);
+/* ----------------------------------------------- D-148's ARMS (c18-batch7fix, 2026-09-23).
+   op=actionquotes joined this roster at the c17-batch7 union: its read carries `LIMIT ?` against the named
+   `QUOTES_MAX`, so the walk finds it, and D-148's worker — gating its own suites — never met this pin. Its
+   bound is not the caller's (no `limit` is taken), so it is driven here rather than in the loop, with a REAL
+   bite: ONE promote of an action whose ledger holds one sent request and QUOTES_MAX + 1 received quotes
+   answering it. One promote rather than 501 `op=actioncorrespond` acts because promote is the writer that
+   PROJECTS `action_quotes` from the bytes (D-21) — the act is a door onto the same projection, so this is a
+   shape production reaches, built in one write instead of 501 re-promotions of a growing document.
+   WHAT A SILENT CUT WOULD LOSE: the 501st quote a body sent back. Quotes are set side by side so a member can
+   see a fee revised or a request priced twice; a list silently cut at 500 reads as every quote the record
+   holds, and the one left out is exactly the one nobody would know to ask for. */
+const QT_MAX = Number((/static QUOTES_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
+const quoteAction = (id, n) => ["---", `id: ${id}`, "object_type: action", "schema: action@1",
+  `title: "Records request ${id}"`, "current_state: active", "prior_state: null",
+  `created: "${NOW}"`, `last_updated: "${NOW}"`, "produced_by:", "  mode: assisted", "  capability_tier: session",
+  "group: believe-in-oakland", "references: []", "state_history: []", "annotations_open: 0",
+  "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
+  "action_kind: cpra_request", "risk_tier: 1",
+  "counterparty:", "  state: named", "  name: Bounds Clerk r57",
+  "correspondence:",
+  "  - direction: sent", "    at: 2026-07-03", '    account: "The request."', "    author: r57",
+  ...Array.from({ length: n }, (_, i) => ["  - direction: received", "    at: 2026-07-05",
+    `    account: "Quote ${i + 1}."`, "    author: r57",
+    `    quote_amount: "${i + 1}"`, '    quote_currency: "USD"', "    quote_answers: 0"]).flat(),
+  "---", "", "## Plan", "", "Ask for the ledger.", "", "## Status", "", "## Correspondence", "",
+  "## Session Log", "", "## Review Notes", ""].join("\n");
+const QT_BIG = "ACTN-2026-0923-bounds-quotes-many", QT_ONE = "ACTN-2026-0923-bounds-quotes-one";
+for (const [id, n] of [[QT_BIG, QT_MAX + 1], [QT_ONE, 1]]) {
+  const md = quoteAction(id, n);
+  const r = await POST("op=promote&token=mem-r57", {
+    bundleId: id, base: null, snapKey: `${id}-new`, author: "r57",
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
+    meta: { object_type: "action", group: "believe-in-oakland", title: id, current_state: "active",
+            created: NOW, last_updated: NOW } });
+  if (r?.ok !== true) throw new Error(`D-148 fixture promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
+}
+const QT_BITE = await GET(`op=actionquotes&token=mem-r57&request=${QT_BIG}`);
+const QT_WHOLE = await GET(`op=actionquotes&token=mem-r57&request=${QT_ONE}`);
+t("FIXTURE ARMS THE TRAP: the walk's own reading of QUOTES_MAX is a number, so the fixture is ONE past it",
+  Number.isInteger(QT_MAX) && QT_MAX > 0, true);
+t("op=actionquotes: publishes the bound it APPLIED (`max`), and a cut answer SAYS SO — the first QUOTES_MAX of "
++ "QUOTES_MAX + 1 quotes, `truncated` true",
+  [QT_BITE.ok, QT_BITE.max, QT_BITE.count, QT_BITE.quotes?.length, QT_BITE.truncated],
+  [true, QT_MAX, QT_MAX, QT_MAX, true]);
+t("op=actionquotes: a complete answer says the opposite — whether this is every quote the body sent back is "
++ "READABLE, not inferred",
+  [QT_WHOLE.ok, QT_WHOLE.max, QT_WHOLE.count, QT_WHOLE.truncated], [true, QT_MAX, 1, false]);
+t("op=actionquotes: DELTA — 'this is all of them' and 'this is the first QUOTES_MAX' do NOT read alike",
+  QT_BITE.truncated !== QT_WHOLE.truncated, true);
 /* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
  *
  * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the
@@ -1501,6 +1565,8 @@ const answersByOp = new Map([
   /* REC-161: driven above (its refusing bound) and REUSED here — the envelope is an object on the
      refusal as on the answer. */
   ["partitionindependence", PI_OVER],
+  /* D-148: driven above with its real bite and REUSED here — the envelope is an object either way. */
+  ["actionquotes", QT_WHOLE],
   /* CPDF-10: driven HERE, plainly, for exactly the one thing this map is for —
      the ENVELOPE SHAPE. The bite/`truncated` arms need a corpus of transcribed
      documents and attestations, which lives in `test/textchain.test.mjs`; the

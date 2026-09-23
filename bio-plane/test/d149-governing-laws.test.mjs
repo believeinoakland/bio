@@ -2,7 +2,8 @@
    (A) THE ROW'S NAMED CONTROL — default an empty list to a federal citation: in checks/bio-checks.mjs governingLawsOf, return `{ state: 'stated', laws: [{ level: 'federal', citation: '5 U.S.C. 552' }] }` before the undetermined branch. DECLARED: §1's undetermined arms, the cpra_request arms and §7's reader arm fail; §3-§5 hold. RESULT 39/9 — the undetermined arm fails BY NAME first ("the action's read says UNDETERMINED, with an empty list and nobody named"), then its sentence, "no level is asserted", both cpra_request arms, §2's explicit-[] arm and §7's reader. NOT AS DECLARED in two §3 arms ("lands … replaced null" and the Session Log's "replaced an undetermined list"), and the declaration was wrong rather than the arm: the act reads the SAME reader to say what it replaced, so a reader that defaults to federal makes the act report replacing a federal list nobody stated. §3's read-back, §4 and §5 held.
    (B) THE LIAR'S PASS — in src/store.mjs promote, `if (was !== now)` -> `if (false && was !== now)` in is-promote-governing-laws. DECLARED: §2's three creation refusals and §6's two revision refusals fail; §1, §3, §4, §5 hold. RESULT 39/9, AS DECLARED for all five, plus four §6 arms downstream of the edit that then landed (the list really changed, so the carried-forward and restated expectations moved). §1, §3, §4, §5 held.
    (C) THE MACHINE FENCE — in src/store.mjs actionLaws, `if (!who || isMachineIdentity(who))` -> `if (!who)`. DECLARED: §4's three arms fail; §1-§3 hold. RESULT 40/8, AS DECLARED, plus five §6 arms downstream of the machine's list having landed. §1-§3 held.
-   (D) OVER-STRICTNESS — the promote fence applied to the act itself: `if (!pkg[LAWS_ACT] && ((cur …` -> `if (((cur …`. DECLARED: §3's member act fails (refused GOVERNING_LAWS_REWRITTEN); §1, §2 and §4's refusal hold. RESULT 35/13, AS DECLARED: "op=actionlaws by a member lands" fails first and every arm resting on a list having been set follows; §1, §2 and §4's machine refusal held. */
+   (D) OVER-STRICTNESS — the promote fence applied to the act itself: `if (!pkg[LAWS_ACT] && ((cur …` -> `if (((cur …`. DECLARED: §3's member act fails (refused GOVERNING_LAWS_REWRITTEN); §1, §2 and §4's refusal hold. RESULT 35/13, AS DECLARED: "op=actionlaws by a member lands" fails first and every arm resting on a list having been set follows; §1, §2 and §4's machine refusal held.
+   (E) THE LITERAL ROW IDS (c18-batch7fix, 2026-09-23, on land/conduct/c18-batch7fix) — in §5's case table, BAD_LAW_LEVEL's literal `"C-73.3"` -> `"C-73.4"`, anchor asserted once, restored by cp and verified by sha256 AND cmp. DECLARED: that one §5 arm fails; every other arm holds. RESULT 47/1, AS DECLARED: "a level outside the three is refused BAD_LAW_LEVEL, with its C-73 row (C-73.4)". */
 /* D-149: A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT (Bob, 2026-09-22;
  * `docs/architecture/BIO_Case_Making_v0_1.md` §2).
  *
@@ -231,18 +232,22 @@ console.log("\n--- 5. the shape, refused at the act and judged by the catalog --
 {
   const before = await headOf(ACT);
   const cases = [
-    ["no list", undefined, "NO_LAWS"],
-    ["an empty list", [], "NO_LAWS"],
-    ["a level outside the three", [{ level: "county", citation: "Alameda County Ordinance" }], "BAD_LAW_LEVEL"],
-    ["an empty citation", [{ level: "state", citation: "  " }], "BAD_CITATION"],
-    ["a citation holding a quotation mark", [{ level: "state", citation: 'the "CPRA"' }], "BAD_CITATION"],
-    ["a repeated entry", [OAKLAND[0], { ...OAKLAND[0], citation: OAKLAND[0].citation.toUpperCase() }], "BAD_CITATION"],
-    ["thirteen entries", Array.from({ length: 13 }, (_, i) => ({ level: "local", citation: `Ord. ${i}` })), "TOO_MANY_LAWS"],
+    ["no list", undefined, "NO_LAWS", "C-73.2"],
+    ["an empty list", [], "NO_LAWS", "C-73.2"],
+    ["a level outside the three", [{ level: "county", citation: "Alameda County Ordinance" }], "BAD_LAW_LEVEL", "C-73.3"],
+    ["an empty citation", [{ level: "state", citation: "  " }], "BAD_CITATION", "C-73.4"],
+    ["a citation holding a quotation mark", [{ level: "state", citation: 'the "CPRA"' }], "BAD_CITATION", "C-73.4"],
+    ["a repeated entry", [OAKLAND[0], { ...OAKLAND[0], citation: OAKLAND[0].citation.toUpperCase() }], "BAD_CITATION", "C-73.4"],
+    ["thirteen entries", Array.from({ length: 13 }, (_, i) => ({ level: "local", citation: `Ord. ${i}` })), "TOO_MANY_LAWS", "C-73.5"],
   ];
-  for (const [what, laws, code] of cases) {
+  /* Each case names its check id as a LITERAL (c18-batch7fix, 2026-09-23): the row's number was read from the
+     catalog at run time, so the assertion held whatever number the catalog said and `coverage.mjs`, which reads
+     literal ids, counted C-73.2..5 as never named. The literal is asserted against BOTH the wire and the catalog,
+     so a renumbered row now fails here instead of passing silently. */
+  for (const [what, laws, code, check] of cases) {
     const r = await actionlaws(NADIA, ACT, laws);
-    t(`${what} is refused ${code}, with its C-73 row`,
-      [r?.ok, r?.reason, r?.check], [false, code, GOVERNING_LAW_CHECKS[code].check]);
+    t(`${what} is refused ${code}, with its C-73 row (${check})`,
+      [r?.ok, r?.reason, r?.check, GOVERNING_LAW_CHECKS[code].check], [false, code, check, check]);
   }
   t("...and none of them wrote anything", await headOf(ACT), before);
   const na = await actionlaws(NADIA, "INFO-2026-1495-nope", OAKLAND);
