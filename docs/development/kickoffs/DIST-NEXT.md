@@ -34,7 +34,8 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    If BOB overrules first: merge `origin/main` into `dist/cut-0.77.0` (`6b0beb8e`, on the remote), gate, push
    `land/dist/release-0.77.0`, deploy `newgroup` from the tag's tree, read it back.
    0.76.0's pointer LANDED (`288fc128` is an ancestor of origin/main, checked 13:07Z): `/update` offers 0.76.0.
-   CONDUCT #15 hands off to CONDUCT #16 — send notices to whichever CONDUCT the `coord` handoff names.
+   **The integrator is CONDUCT #16 (`session_01DEAp94ny3PfWr6deFJtTaD`)** — send `land/*` notices there. Its next train
+   (M0-126, UI-81/IC-185, D-389/IC-187, UI-82) carries no closing: a batch for the cut after REC-173.
 1. **The next cut, by WHEN DIST CUTS.** Read `git log 6b0beb8e..origin/main` over the shipped paths. RELEASES row:
    `["0.77.0", "6b0beb8e7d321fe96d64de5e5b3aefa291b41599"]`. Expected: baseline 501 + 21 → **522/0**, `alterafter` → **444/78**, `groupwipe` → **508/14**
    (seven group-recording stores, 0.71.0-0.77.0). Measure.
