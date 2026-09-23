@@ -36,7 +36,7 @@ scope: promote computes the SHA-256 of every inline text file's bytes and refuse
 accepts-when: through the op, a mismatched `sha256` is refused by name with the bundle byte-identical after; a matching one lands; the census is in the landing. NEGATIVE CONTROL: drop the comparison, and the `fff…` arm lands and fails by name.
 added: 2026-09-23 · SCHEDULER #15 (REC-173's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
 
-### REC-176 · queued — **`op=promote` WRITES MANIFEST ROWS WITH `INSERT OR REPLACE`, SO A REPEATED `(bundle_id, snap_key)` SILENTLY OVERWRITES AN EXISTING VERSION'S ROW — NO TRACE, NO REFUSAL.** `bio-plane/src/store.mjs` (two sites, re-read on `14faa089`). M0-132's worker measured it: with key counters frozen so keys repeat, all 18 suites whose unseeded snap keys could collide stayed GREEN, so every past collision was silent. — owner RECORD.
+### REC-176 · running — promote's INSERT OR REPLACE overwrites a repeated snap key. SPAWNED 2026-09-23 ~16:25Z by CONDUCT #16. NOT LANDED, CHECKED BY CONTENT on 0e7cc03e: store.mjs carries INSERT OR REPLACE INTO manifest twice. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly after REC-175 (in the cache), the same op writing what the record cannot support: history the law calls append-only is rewritten in place, CLAUDE.md §2's worst class (SCHEDULER #15, 2026-09-23; M0-132's worker via CONDUCT #15)
 milestone: M6
 interface: I3 — a new refusal on `op=promote`; the integrator mints and classifies the IC.
@@ -46,7 +46,7 @@ scope: promote refuses a `snap_key` already present for the bundle by a new refu
 accepts-when: through the op, a second promote reusing a snap key with different content is refused by name and the first version's row is byte-identical after; an identical re-send is a no-op. NEGATIVE CONTROL: restore `INSERT OR REPLACE`, and the collision arm lands and fails by name.
 added: 2026-09-23 · SCHEDULER #15 (M0-132's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
 
-### REC-179 · queued — **A REVISION OF AN INQUIRY CAN REWRITE ITS `surfaced_by`: D-78's server stamp runs only when `base === null`, and no check compares a revision's value with the current version's, so an agent-surfaced question can be relabelled `human` (or the reverse) by whoever edits it.** Re-read on `14faa089`: `index.mjs` `op=promote`'s D-78 restamp is gated on `b.base === null`; `store.mjs` and `bio-checks.mjs` C-2.8 check only that the value is `agent` or `human`. — owner RECORD.
+### REC-179 · running — a revision can rewrite an inquiry's surfaced_by. SPAWNED 2026-09-23 ~16:25Z by CONDUCT #16. NOT LANDED, CHECKED BY CONTENT on 0e7cc03e: no refusal comparing a revision's surfaced_by exists in store.mjs; D-78's restamp is gated on base === null. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly after REC-178: an attribution the record states falsely is authority-class (SCHEDULER.md step 3), and the rule-2 surfacing row REC-171 writes would then contradict the bundle it describes (SCHEDULER #16, 2026-09-23; DEBT D-121's defect row, placed by LED-7 batch S16-2)
 milestone: M7
 interface: I3 — a new refusal on `op=promote`; the integrator mints and classifies the IC.
@@ -56,7 +56,7 @@ scope: promote refuses a revision whose `surfaced_by` differs from the current v
 accepts-when: through the op, a revision flipping `agent` to `human`, and one flipping `human` to `agent`, are each refused by name with the bundle byte-identical after; a revision keeping the value lands. NEGATIVE CONTROL: drop the comparison, and the flip arm lands and fails by name.
 added: 2026-09-23 · SCHEDULER #16 (DEBT D-121, the defect row of the two sharing that id, verified at the code; `node tools/mintid.mjs REC`).
 
-### REC-177 · queued — **`op=airunopen` ACCEPTS A DECLARED BOUND WITH NO POSITIVE `allowed`, SO A RUN CAN OPEN UNDER A BOUND THAT STATES NO ALLOWANCE.** BOB #30 ruled a declared bound STATES its allowance: `op=airunopen` refuses one with no positive `allowed`. UNBLOCKED 2026-09-23 by SCHEDULER #16: the ruling landed on `main` at `aaf19287` (train `0e7cc03e`), and REC-172 is done. — owner RECORD.
+### REC-177 · running — airunopen accepts a declared bound with no positive allowed. SPAWNED 2026-09-23 ~16:25Z by CONDUCT #16. NOT LANDED, CHECKED BY CONTENT on 0e7cc03e: no allowance-required refusal in bio-checks.mjs. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly after REC-172 (in the cache) as BOB #30 placed it, the same bound fence; below the record-integrity rows REC-175 and REC-176 (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
 milestone: M9
 interface: I3 — a new refusal on `op=airunopen`; the integrator mints and classifies the IC.
@@ -65,7 +65,7 @@ depends-on: REC-172 (done, `0e7cc03e`).
 accepts-when: as the paragraph states it, with its NEGATIVE CONTROL.
 added: 2026-09-23 · SCHEDULER #15 (BOB #30's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 
-### M0-136 · queued — **NEVER-CACHE MAKES A HISTORY UNIT ALWAYS RUN, NOT DEPEND ONLY ON THE TREE: WHETHER THE OTHER 11 NEVER-CACHED HISTORY READERS HAVE VERDICTS THAT MOVE WITH A LIVE REF IS UNDETERMINED.** `TREE-SHARING.md` §3a item 4 names them: decided, migrate-released, mintid, op-claims, owed-controls, owed, readbudget, register-grammar, retirable, status, coverage. M0-130 pinned `mergecarry` to `REGISTER_PIN`; its worker grepped the others only for `origin/main` (CONDUCT #16). — owner M0.
+### M0-136 · running — the eleven never-cache history readers' verdicts vs a live ref. SPAWNED 2026-09-23 ~16:25Z by CONDUCT #16. NOT LANDED, CHECKED BY CONTENT on 0e7cc03e: only mergecarry carries a REGISTER_PIN (M0-130). Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly after M0-135, the same class: a gate test depends only on the code (Bob, 2026-09-23); below M0-135 because no red has been traced to any of the eleven (SCHEDULER #15, 2026-09-23)
 milestone: M0
 interface: none
@@ -75,7 +75,7 @@ scope: examine each of the eleven for any read of a live ref (`origin/*`, `coord
 accepts-when: every one of the eleven either carries a planted-ref arm proving its verdict identical whatever the live ref holds, or a dated line saying it reads none. NEGATIVE CONTROL: point one pinned unit back at the live ref, and its planted-ref arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (M0-130's worker's class sweep via CONDUCT #16; `node tools/mintid.mjs M0`).
 
-### D-57 · queued — **`resolveLinks` TELLS A MEMBER THAT A SELF-LINKED PAGE'S TARGET *CHANGED*, NAMING ONE CAPTURE TWICE AS THE BRACKET.** A page linking to itself (every Legistar calendar does) finds its own capture as both `before` and `after` — its `first_retrieved` and `last_retrieved` equal the source's retrieval instant — so the `before && after` arm returns `undetermined` with the basis *"the target changed somewhere between the captures bracketing this document's retrieval"*. The verdict is defensible; the BASIS is false, and the UI renders the plane's words verbatim. — owner RECORD.
+### D-57 · running — resolveLinks tells a self-linked page's target CHANGED. SPAWNED 2026-09-23 ~16:25Z by CONDUCT #16. NOT LANDED, CHECKED BY CONTENT on 0e7cc03e: store.mjs still states 'the target changed somewhere between the captures bracketing' with no self-reference basis. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: after REC-160, with the read-time claims the record cannot support (CLAUDE.md §2's class): a fabricated sentence about a source, on every self-linking municipal page; below REC-160 because the verdict it carries is right (SCHEDULER #8, 2026-09-21, LED-7 batch S8-2)
 milestone: M3
 interface: I3 — a fourth BASIS on `op=links&capture=`, never a fourth verdict; the integrator mints and classifies the IC.
@@ -87,7 +87,7 @@ added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-2; D-57's DEBT row of 2026-07-
 
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-57» on entering the cache; re-read on `0e7cc03e`: still open.
 
-### D-168 · queued — **A MEMBER'S `op=cite` ADMITS A RETIRED INFORMATION BUNDLE, SO A CLAIM CAN REST ON WHAT THE GROUP ITSELF RETIRED, READING TO EVERY LATER MEMBER AS LIVE SUPPORT.** `op=cite` is type-only; the machine's suggest path already refuses it (`SUGGEST_LEG_UNREACHABLE`, `store.mjs`, re-read on `cdfaea39`). BOB #30 ruled it refused in the store for every caller. Its design landed at `4355bfda`. — owner RECORD.
+### D-168 · running — op=cite admits a retired Information bundle. SPAWNED 2026-09-23 ~16:25Z by CONDUCT #16. NOT LANDED, CHECKED BY CONTENT on 0e7cc03e: no retired-citation refusal in bio-checks.mjs. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: with the claims the record cannot support, directly after D-57 and above D-440: support the record's own judgment withdrew, CLAUDE.md §2's class, a correction to the built cite path (SCHEDULER #15, 2026-09-23, LED-7; BOB #30's ruling)
 milestone: M9
 interface: I3 — a new refusal on `op=cite`; the integrator mints and classifies the IC.
