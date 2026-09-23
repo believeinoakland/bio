@@ -100,3 +100,58 @@ export function serviceTargets(bindings, slug) {
   return bindings.filter((b) => b.type === "service" && b.service !== slug)
                  .map((b) => b.service);
 }
+
+/* ---- D-54: the subrequest ceiling is DECLARED, carried and read back ----
+ *
+ * `limits.subrequests` lives in wrangler.jsonc beside the reason for its value.
+ * The release path does not run wrangler (deploy.mjs PUTs the script through the
+ * REST API with metadata it builds itself), so a limit written only in the
+ * config would reach `wrangler dev` and never a deployed plane — the same
+ * second-copy gap D-202 closed for bindings. deriveLimits is the one copy.
+ *
+ * THE REFUSAL: a config with no explicit subrequest ceiling is REFUSED BY NAME.
+ * Sending no `limits` is not "no limit", it is Cloudflare's default that month,
+ * which is the whole defect (D-54). A limit key this derivation does not know is
+ * refused too, never dropped: that is D-201's silent deletion again.
+ */
+const KNOWN_LIMIT_KEYS = new Set(["subrequests", "cpu_ms"]);
+
+/** The `limits` object deploy.mjs sends in the upload metadata (wrangler's own
+ *  upload uses the same field, `limits: { cpu_ms, subrequests }`). */
+export function deriveLimits(cfg) {
+  const lim = cfg && cfg.limits;
+  const n = lim && lim.subrequests;
+  if (!Number.isInteger(n) || n <= 0) {
+    throw new Error(
+      "REFUSED [NO_SUBREQUEST_LIMIT]: wrangler.jsonc sets no explicit positive integer "
+      + "`limits.subrequests`, so the deployed plane's ceiling would be whatever Cloudflare's "
+      + "default is that month (D-54). State the figure the plane is sized for, with its reason, at the site.");
+  }
+  const unknown = Object.keys(lim).filter((k) => !KNOWN_LIMIT_KEYS.has(k));
+  if (unknown.length) {
+    throw new Error(
+      `REFUSED [UNKNOWN_LIMIT_KEY]: wrangler.jsonc's limits declares ${unknown.join(", ")}, `
+      + "which this derivation does not carry. Teach deriveLimits the key in the same change.");
+  }
+  const out = { subrequests: n };
+  if (lim.cpu_ms !== undefined) out.cpu_ms = lim.cpu_ms;
+  return out;
+}
+
+/** Read the deployed script's settings back against what was sent. Three honest
+ *  answers and no fourth: MATCH, MISMATCH (a value that is not ours — the deploy
+ *  must not report success), or UNDETERMINED (the settings did not state the
+ *  field, or could not be read — never read as a match). */
+export function limitsReadBack(settings, want) {
+  if (!settings || typeof settings !== "object") {
+    return { verdict: "UNDETERMINED", why: "the script settings could not be read" };
+  }
+  const got = settings.limits && settings.limits.subrequests;
+  if (got === undefined || got === null) {
+    return { verdict: "UNDETERMINED", why: "the script settings state no limits.subrequests" };
+  }
+  if (got !== want.subrequests) {
+    return { verdict: "MISMATCH", why: `settings say limits.subrequests ${got}, the config sent ${want.subrequests}` };
+  }
+  return { verdict: "MATCH", why: `limits.subrequests ${got} read back` };
+}
