@@ -19944,6 +19944,7 @@ paths: bio-plane/src/store.mjs (`promote`: one new region after the compare-and-
 why: a revision of an inquiry can rewrite its surfaced_by (REC-179, QUEUE.md on coord; INVESTIGATIVE-SESSION.md §11 item 5, rule 2's reach).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — pushed land/worker/REC-179 @ 263cab65 (verified by ls-remote; gate GREEN, tree f9e00b7e); IC-197 proposed; paths stay reserved until CONDUCT integrates the branch.
 
 ### REC-176 · RECORD worker of CONDUCT #16 (worktree agent-af684c758de00aae7) · 2026-09-23
 paths: bio-plane/src/store.mjs (`promote`: two new regions — `is-promote-resend` after the sight check, before EXISTS; `is-promote-snapkey` immediately before the manifest/history writes; nothing in REC-175's `is-promote-digest` nor REC-179's `is-promote-surfaced-by`; a read-only `snapKeyCensus`), bio-plane/src/livefire.mjs (its fixed snap key, which collides on every run), bio-plane/checks/bio-checks.mjs (ACT_SHAPE_CHECKS: one new row, C-67.1), civicos-ui/check-refusal-codes.mjs (floors moved from its own print), bio-plane/test/rec176-snapkey.test.mjs (new), suites that reuse a snap key (corrected, never exempted), bio-plane/dist/ (rebuilt), docs/development/interface-changes/IC-193.md, docs/architecture/construct-status.json and BIO_State_Rules_Consistency_v1_5.md front matter.
