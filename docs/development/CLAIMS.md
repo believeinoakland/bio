@@ -19676,3 +19676,19 @@ paths, BY SITE:
     `docs/architecture/BIO_Publication_v0_1.md` (front matter / rule 12's As built), `construct-status.json` if a text moves.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 DIST (DIST-6 — the installed plane is BOUND to the fleet members installed beside it: PDF_WORKER / OCR_WORKER / AGENT_WORKER on install AND update)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for DIST-6, worktree `.claude/worktrees/agent-a91d96971f1e9a19a`,
+branch `land/worker/DIST-6`, from `origin/main` @ `4355bfda` (carries D-116).
+authority: `QUEUE.md` `### DIST-6 · running`; design `BIO_Distribution_v0_1.md` §4 and §6 (and its Incomplete
+section's member-bindings entry).
+paths, BY SITE:
+  - `newgroup/src/index.mjs`: `uploadInstall`, `uploadUpdate`, a new member-binding helper beside `selfBinding`,
+    `runInstall`/`runUpdate`'s upload -> fleet -> verify sequence, `servingVerdict` (a member whose upload FAILED is named).
+  - `newgroup/test/wizard.test.mjs` (a new DIST-6 section and its NEGATIVE CONTROL line; superseded fixtures corrected).
+  - `docs/architecture/construct-status.json` (`15.member-bindings`), `docs/architecture/BIO_Distribution_v0_1.md`
+    (front matter, Incomplete sections, §5/§8 where they state the absence).
+**NOT CLAIMED, NOT TOUCHED:** `release/**`, `newgroup/src/release.mjs` (signed; DIST cuts), `newgroup/scripts/`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
