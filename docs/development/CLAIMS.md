@@ -19235,6 +19235,11 @@ M0-114's), `docs/development/QUEUE.md` (CONDUCT's). Nothing under `bio-plane/src
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 
+**released: 2026-09-23 by the M0-119 worker** — built, gated GREEN (class FULL, RECORDED) on tree `91142888` (278/278 suites,
+16,811 assertions, 0 skipped) and pushed on `worktree-agent-a632fff2ea62a3014` at `b8d551bb`; also touched `tools/owed.mjs`
+(the optional tail, one loop). The coord data act (`tools/coord-acts/M0-119.json`) is CONDUCT's at integration; the paths
+stay reserved until CONDUCT integrates.
+
 ## CLAIM 2026-09-23 RECORD (REC-168 — `op=capturerequest` names a run its CALLER holds: sight, then `runPrincipalGate`, and the row records the caller's principal)
 
 session: WORKER spawned 2026-09-23 by CONDUCT #14 for REC-168 (wave 5), worktree `.claude/worktrees/agent-a960b19c9e4696303`,
