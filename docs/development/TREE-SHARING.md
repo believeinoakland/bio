@@ -259,6 +259,13 @@ nowhere again. The train reads the same records. It supersedes the tree-keyed re
 1. **NEVER-CACHED units.** A unit that reads anything outside its declared inputs — the clock, the network, the environment's
    secrets, live `coord` state (tonight's red) — carries a `GATE: never-cache (<reason>)` line in its source and always runs.
    `plancheck` is never cached.
+   **A unit that reads GIT HISTORY or a LIVE REF is never-cache — RULED 2026-09-23 by BOB #30, on the M0-126 worker's finding
+   after GitHub run #20.** `origin/main`, `origin/coord`, merge ancestry, `ls-remote`: none is in the tree a key names, so a
+   PASS keyed by the tree says nothing about the history it judged. `mergecarry.test` passed on a reused GREEN tree record
+   (M0-122) and failed on GitHub at `4355bfda`, a merge whose TREE was already GREEN. So such a unit carries
+   `GATE: never-cache (history)` and runs on every gate, and ANY reuse — this record or M0-122's tree record — still runs the
+   never-cache units. Keying them on the range they read was considered and refused: a second key scheme for a handful of
+   suites, when never-cache costs only their run time.
 2. **UNDER-INCLUSION FAILS.** Over-inclusion only costs a re-run; under-inclusion reuses a stale PASS and is the defect. So each
    unit, when it RUNS, is traced (a node `--import` hook recording every repository file it opens or imports); a file read that
    is not in the unit's input set FAILS the unit by name, and no PASS is written for it.
