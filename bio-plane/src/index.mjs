@@ -7038,9 +7038,11 @@ export default {
 
             /* What this host has served before. Bytes were always shared by
                content-addressing; FETCHES were not, and fetches are the scarce
-               thing. A stylesheet stable across the window and seen in more
-               than one document is reused at zero subrequest cost, and every
-               reuse is recorded as one. */
+               thing. A furniture asset the source was seen SERVING within the
+               freshness window, referenced by at least two distinct PAGES on the
+               host, is reused at zero subrequest cost (reuseDecision: recency of
+               fetch, not stability; a page is its document address, CAP-13), and
+               every reuse is recorded as one. */
             let baseHost = null;
             try { baseHost = new URL(res.url || locator).hostname.toLowerCase(); } catch { baseHost = null; }
             let siteKnown = {};
