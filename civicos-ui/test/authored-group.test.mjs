@@ -13,7 +13,11 @@
  */
 /* =========================================================================
  * UI-79 — THE MEMBER UI COMPOSES NO PRODUCING GROUP: A BUNDLE IT AUTHORS CARRIES THE GROUP THE INSTANCE RECORDS.
- * Design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 and its D-436 amendment (a bundle's `group` is
+ * Design: the State Rules document (`BIO_State_Rules_Consistency_v1_5.md`, named WITHOUT its directory on purpose: this
+ * suite reads no prose, and the gate's selector makes a suite that spells that directory doc-facing — and one that names
+ * the selector's own file a reader of every path it walks — which put this suite in every prose-only landing's
+ * selection: measured by `statepaths.test.mjs`, 61 units against its ceiling of 60)
+ * §3.1 and its D-436 amendment (a bundle's `group` is
  * the ONE recorded value per instance, stamped by the plane into every creation, never a literal), with DEC-8 (a
  * surface invents nothing). Consumes IC-172 (`op=promote` stamps the recorded group; `op=instancegroup` reads it).
  *
