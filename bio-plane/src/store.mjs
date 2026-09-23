@@ -323,6 +323,9 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
 /* REC-152: tick and close are the run's PRINCIPAL's acts — the positional half, decided once in `airun.mjs`.
    Its own import line, so REC-153's edit of the list above and this one cannot collide at integration. */
 import { runPrincipalGate } from "./airun.mjs";
+/* REC-169: a figure written into a run's bound is a non-negative integer and never a plane-counted bound's — decided
+   once in `airun.mjs`, asked by the tick and by the open's seed. Its own line, for the reason REC-152's gives. */
+import { checkConsume } from "./airun.mjs";
 /* CPDF-10: the transcription provenance chain, IMPORTED and never restated.
    This file projects a chain into columns and records attestations against it;
    it holds no copy of what a chain may claim, which engine weakens what, or who
@@ -39329,6 +39332,14 @@ export class Store extends DurableObject {
     if (badSkill)
       return { run, started: false, code: badSkill.code, check: badSkill.check,
                translation: badSkill.translation, note: badSkill.detail };
+    /* REC-169 — THE SEED IS THE TICK'S RULE. A declared `consumed` is the other caller-written figure in
+       `ai_run_bounds`, and `Number(b.consumed) || 0` let a run OPEN already refunded (`consumed: -10`) or seed a
+       bound the plane counts. The same check the tick asks (`checkConsume`), with an absent seed meaning none spent. */
+    const badSeed = checkConsume((Array.isArray(bounds) ? bounds : []).filter((b) => b && typeof b === "object")
+      .map((b) => [String(b.bound), b.consumed]), { seed: true });
+    if (badSeed)
+      return { run, started: false, code: badSeed.code, check: badSeed.check,
+               translation: badSeed.translation, note: badSeed.detail };
     /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 3, BOB #25): THE LENS IN FORCE AT THIS INSTANT, computed by
        the PLANE, beside the manifest the run was HANDED. The handed one is stored verbatim below and nothing is
        derived from it; this is the call `#biasForRun` makes for the run's context (a project's scope for a run
@@ -39380,7 +39391,7 @@ export class Store extends DurableObject {
         this.sql.exec(
           `INSERT INTO ai_run_bounds (run, bound, allowed, consumed, unit) VALUES (?, ?, ?, ?, ?)
            ON CONFLICT(run, bound) DO NOTHING`,
-          run, String(b.bound), Number(b.allowed) || 0, Number(b.consumed) || 0,
+          run, String(b.bound), Number(b.allowed) || 0, b.consumed == null ? 0 : b.consumed,   /* REC-169: judged above */
           b.unit == null ? null : String(b.unit));
       }
     });
@@ -39473,6 +39484,19 @@ export class Store extends DurableObject {
       return { run, found: true, ticked: false, status: row.status,
                bound: row.stopped_bound,
                note: "this run has ended; its log is closed and a later tick does not reopen it" };
+    /* REC-169 (§14b.6; §11 item 5 rule 2) — THE FIGURES ARE JUDGED WHOLE, BEFORE ANYTHING IS WRITTEN. The loop below
+       used to write `Number(v) || 0` for every bound named, so the run's own principal could send `surfaces: -1`
+       after its last question and open another — a REFUND of a bound its member set. One bad figure refuses the
+       whole tick: nothing appended, nothing spent, the lease not extended. A clamp would answer `ticked: true` over
+       a spend that did not happen. Asked AFTER sight, position, the project gate and status, so a caller who may
+       not drive the run learns nothing about the figures' rule, and an ended run's tick stays its stated no-op. */
+    const badConsume = checkConsume(Object.entries(consume && typeof consume === "object" ? consume : {}));
+    if (badConsume)
+      return { run, ticked: false, found: true, status: row.status,
+               code: badConsume.code, check: badConsume.check,
+               translation: badConsume.translation, detail: badConsume.detail, bound: badConsume.bound,
+               note: "a run's budget moves only up, by whole numbers, and only on the bounds the caller counts. "
+                   + "Nothing was appended and no budget was spent" };
 
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : Store.AI_RUN_LEASE_MS;
     const refused = [];
@@ -39490,7 +39514,7 @@ export class Store extends DurableObject {
         this.sql.exec(
           `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
            ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
-          run, k, Number(v) || 0, Number(v) || 0);
+          run, k, v, v);   /* REC-169: judged above — a non-negative safe integer, on a bound the caller counts */
       }
       this.sql.exec(
         `UPDATE ai_runs SET updated = ?, expires = ?, ticks = ticks + 1${state == null ? "" : ", state = ?"}
