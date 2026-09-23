@@ -440,3 +440,7 @@ bio-plane/.nc-caseratify-conclusion/
 # D-442 (2026-09-23): `bio-plane/test/d442-publish-writes-nothing.control.mjs`'s pen — it edits src/ and checks/ and
 # keeps per-arm pristine copies here; an interrupted driver must not leave them as somebody else's corpus.
 bio-plane/.nc-d442/
+# COFF-13's pen, named for its item on the rule at `.rec84-control-pristine/`: a glob over
+# `.*-control-pristine/` would silently cover a pen nobody declared. `bio-plane/test/nc-coff13.mjs`
+# keeps per-arm pristine copies of `src/pptx.mjs` and `src/index.mjs` here while it arms them.
+.coff13-control-pristine/

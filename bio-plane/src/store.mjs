@@ -17379,7 +17379,8 @@ export class Store extends DurableObject {
                  + "known sheet is not");
     if (slides && !slides.some((s) => Number.isInteger(s && s.shapes)))
       missing.push("every slide's shape count (this capture was acquired before the wire read "
-                 + "that figure, or no slide's part in it could be read — D-359), so a slide "
+                 + "that figure, no slide's part in it could be read, or the deck was over the text "
+                 + "size bound and only its length was read — D-359, COFF-13), so a slide "
                  + "past the deck is bounded and a shape within a known slide is not");
     if (!held) missing.push("the container's own extent — no sheet list, paragraph count or "
                           + "slide list was persisted for this capture");
