@@ -1055,6 +1055,12 @@ const OPS = {
   reviewrevoke:   { classes: ["admin", "member", "probe"],           mutating: true  },
   reviewcopy:     { classes: null,                                   mutating: false },
   reviewcomment:  { classes: null,                                   mutating: true  },
+  /* REC-198 / BOB #32 (2026-09-23 23:08Z, cite until folded): the LIST of a project's drafts, fenced exactly
+     like reading one draft. GATED, unlike `reviewcopy`: the list has no recipient door — a grant reads ONE
+     draft and names it — so only the member door exists here, and a caller holding no credential of this
+     instance has no business at it. The fence is the store's `#seesProjectDrafts`, the very predicate the
+     single read's member door calls, fed the same server-stamped `viewer`. */
+  casedrafts:     { classes: ["admin", "member", "probe"],           mutating: false },
   excludedby:   { classes: ["admin", "member", "probe"],           mutating: false },
   publishedlist:{ classes: ["admin", "member", "probe"],           mutating: false },
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
@@ -2259,6 +2265,9 @@ const NEEDS = {
   casedraft:        "contribute",
   reviewgrant:      "publish",
   reviewrevoke:     "publish",
+  /* REC-198: NO CAPABILITY, on `reviewcopy`'s terms — the single read takes none, and the list is fenced exactly
+     like it (BOB #32). Listing which drafts one's own project holds is reading; it writes nothing. */
+  casedrafts:       null,
   /* DEC-17: the group's declared bar is about what publishing REQUIRES, so it
      rides the publication surface too. Lowering your own bar is legitimate and
      is an authored, dated, on-the-record act; what it may not be is quiet. */
@@ -2928,6 +2937,17 @@ function resolveSession(sess) {
    machine class, `ai`, or a session's kind spelled exactly as the gate spells it (`sess.role === "admin"`). The
    public op=instancegroup names it on a credentialed answer, as that answer did when it came through the gate. The
    three callers before it read only `viewer` and `silent`. */
+/* REC-126 / REC-198 — THE REVIEW COPY'S ANSWER SHAPE, ONE FUNCTION FOR EVERY READ OF A DRAFT. The store's
+   `#noReviewCopy` is carried at 404 with nothing added, so a caller outside the fence reads the same status and the
+   same bytes from the single read (`reviewcopy`) and from the list (`casedrafts`); a store that did not answer is a
+   silence, stated as one. */
+function reviewAnswer(out, op) {
+  if (!out.answered) return storeSilent(op);
+  const r = out.result;
+  if (!r?.ok) return json({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
+  return json({ ok: true, ...r }, 200);
+}
+
 async function caseReader(url, env, storeName) {
   const t = url.searchParams.get("token");
   if (!t) return { viewer: "" };
@@ -5182,10 +5202,7 @@ export default {
         }
         const out = await doAnswer(stub.fetch(`http://do/${op}?${q}`,
           commentBody === null ? undefined : { method: "POST", body: commentBody }));
-        if (!out.answered) return storeSilent(op);
-        const r = out.result;
-        if (!r?.ok) return json({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
-        return json({ ok: true, ...r }, 200);
+        return reviewAnswer(out, op);
       }
 
       if (op === "publishedcase" || op === "publishedbytes") {
@@ -9825,6 +9842,11 @@ export default {
            absent stamp therefore fails CLOSED to `scope: DENY`, and the answer SAYS
            it compared nothing rather than reading as a record with no conflicts. */
         || op === "contradictionpairs"
+        /* REC-198: the LIST of a project's drafts NAMES A PROJECT and enumerates its working material, so a
+           project the caller cannot see must answer exactly as one that does not exist — and the single read of
+           a draft answers such a caller `#noReviewCopy`, so the list does too (BOB #32: fenced exactly like it).
+           Fails closed on an absent stamp. */
+        || op === "casedrafts"
         /* REC-87: all three TRANSCRIBE ops name a DOCUMENT (the act) or a content
            row filed in one (the attestation and the read), so a document the
            caller was never invited to must answer exactly as one that does not
@@ -10885,6 +10907,12 @@ export default {
         read: "op=reviewcopy&secret=<the value above>",
       }, store: storeName, tokenClass: cls }, 200);
     }
+
+    /* REC-198: the list of a project's drafts answers in the review copy's OWN shape — through `reviewAnswer`,
+       the function `reviewcopy` answers through — so the dead answer a caller outside the fence receives is the
+       single read's, status and bytes, and not this handler's generic envelope. */
+    if (op === "casedrafts")
+      return reviewAnswer(await doAnswer(stub.fetch(new Request(inner, { method: "GET" }))), op);
 
     const res = await stub.fetch(new Request(inner, { method: req.method, body: passBody }));
     const body = await res.json();

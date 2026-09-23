@@ -116,6 +116,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, extname, relative } from "node:path";
 import { createHash } from "node:crypto";
+import { makePublishingProject } from "./publishingproject.mjs";
 /* M0-18 — ONE mechanism, imported, never a copy of the rule. Why the module
    exists and what it cannot see is in its own header; why THIS suite needed it
    is at the REC-59 corpus walk below. */
@@ -572,7 +573,11 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      not the caller's, and it REFUSES rather than cuts: `BASIS_VERSION_LEGS_MAX` over the question's
      reasons, because a partition checked over a truncated basis could pass as covering reasons it never
      saw. DRIVEN below with the refusal arm, and carried in DRIVEN_ELSEWHERE for versionstrength's reason. */
-  OPS.size, 37);
+  /* MOVED 37 -> 38 on 2026-09-23 by REC-198, from THIS ARM'S OWN FAILURE OUTPUT (`want 37 / got 38`), never by
+     adding one: op=casedrafts, the list of a project's drafts (BOB #32: fenced exactly like reading one). Its bound
+     is REVIEW_LIST_MAX beside `LIMIT ?`, with `total` and `truncated` published; DRIVEN in the loop above against
+     a project holding two drafts. */
+  OPS.size, 38);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -968,6 +973,22 @@ t("FIXTURE ARMS THE TRAP: one inquiry carries THREE alternative accounts of its 
 + "op=basisversions' cap of 1 has something to cut",
   (await GET(`op=basisversions&token=mem-r57&id=${PL1_INQ}&limit=5000`)).total, 3);
 
+/* REC-198 / BOB #32: op=casedrafts, the list of a project's drafts. Its BITE needs a project holding TWO drafts,
+   and a draft is authored only by a person with the project's edit permission (C-32.16 refuses a machine by name),
+   while this suite drives machine tokens. So the fixture is the shared publishing project (`publishingproject.mjs`,
+   ownership through the Durable Object's `projectclaimowner`), and the two drafts are written through the store's
+   own `casedraft` route with the owner as author, the control plane's author stamp stood in for by the one value it
+   would stamp. The READ under test is then driven through the real route with the machine credential, which the
+   single read's fence admits unfiltered — so this loop measures the bound, and `test/reviewcopy.test.mjs` block 9
+   measures the fence. */
+const DRAFTS_PROJ = await makePublishingProject({
+  post: POST, mf, sha, machineToken: "adm-r57", owner: "r198owner",
+  name: "bounds-r198-drafts", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+for (const n of [1, 2]) {
+  const r = await DO("casedraft?author=r198owner", { project: DRAFTS_PROJ, scope: `bounds fixture draft ${n}` });
+  if (r?.ok !== true) throw new Error(`bounds fixture casedraft ${n}: ${JSON.stringify(r).slice(0, 400)}`);
+}
+
 const DRIVEN = [
   { op: "readingname", bite: 1, whole: 500,
     drive: (n) => GET(`op=readingname&token=mem-r57&entity=${ENT}&limit=${n}`),
@@ -1179,6 +1200,16 @@ const DRIVEN = [
     lost: "whether the record worked out the connections among ALL the documents concerning this subject "
         + "or among the first N of them — and a derivation silently cut is a graph a member reads as "
         + "whole, on the one act whose cost grows as k(k-1)/2" },
+  /* REC-198: the list of a project's drafts. It answers in `op=search`'s completeness vocabulary — `total` beside
+     `limit` — with `truncated` said beside them, because a member reading "these are the project's drafts" off a
+     page silently cut would take a draft past the cut for one that does not exist: the lost-draft defect the op
+     exists to remove, reappearing inside it. Its bound is REVIEW_LIST_MAX, the review copy's own list ceiling. */
+  { op: "casedrafts", bite: 1, whole: 500,
+    drive: (n) => GET(`op=casedrafts&token=mem-r57&project=${encodeURIComponent(DRAFTS_PROJ)}&limit=${n}`),
+    more: (a) => a.truncated === true && a.count < a.total,
+    says: "`truncated`, and `total` beside `limit`",
+    lost: "whether these are ALL the project's drafts or the first N — a draft past the cut reads as a draft "
+        + "that does not exist, which is the lost draft this op was built to end" },
 ];
 
 console.log("\n--- LIVE: every roster op, driven twice — the bound biting, and not ---");

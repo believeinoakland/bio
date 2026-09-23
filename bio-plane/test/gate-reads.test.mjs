@@ -952,6 +952,15 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "the read compared NOTHING and that this is an outage and not a statement about the record. "
       + "NO COUNT OF THE WITHHELD IS REPORTED (op=backlinks' rule): a count of pairs a caller may not see "
       + "would say that somebody's project holds material about a subject they were never invited to.",
+    casedrafts: "REC-198: the LIST of a project's review-copy DRAFTS — each draft's id, its case identity, who "
+      + "made and last edited it, and the read that opens it. GATED, and fenced EXACTLY like reading one draft "
+      + "(BOB #32, 2026-09-23 23:08Z): the store's Store#caseDraftList CALLS #seesProjectDrafts, the very "
+      + "predicate op=reviewcopy's member door calls, fed the fail-closed viewer stamp beside "
+      + "op=contradictionpairs in index.mjs — D-15's predicate over the producing project, so a draft is its "
+      + "project's working material and a member without standing there reads nothing of it. Every caller the "
+      + "fence refuses, and every project that does not exist, reads the single read's own dead answer "
+      + "(NO_REVIEW_COPY), byte for byte, so the list is no oracle for which projects exist or hold drafts. It "
+      + "has no RECIPIENT door: a grant reads the one draft it names and cannot list.",
     narrowcandidates: "REC-86: the machine's proposals for making ONE leg of ONE reading more specific. "
       + "GATED: it names a QUESTION and answers about the document its leg rests on, so it takes the "
       + "fail-closed viewer stamp beside op=narrow in index.mjs and answers a question the caller may not "

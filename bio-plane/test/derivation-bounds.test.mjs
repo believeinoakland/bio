@@ -1854,6 +1854,14 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
    "#contradictionK3: same.truncated || doc.truncated",
    "basisVersions: from + versions.length < total",
    "biasManifest: from + page.length < all.length",
+   /* REC-198, 2026-09-23 — DECLARED HERE BECAUSE THIS SUITE SAYS A NEW ONE MUST BE, on REC-146's reasoning above
+      and not reworded to vanish from every roster. `caseDraftList` (op=casedrafts, the list of a project's drafts)
+      publishes `total` — a `COUNT(*)` over `case_drafts WHERE project_id=?`, the same predicate as its page — and
+      says `truncated` as that total exceeding the rows it sent. So the claim is a comparison of two MEASURED
+      figures, the count and the page, and not an unmeasured assertion; it reads `total > drafts.length` where the
+      grader reads only `X.length > Y`. Its page is bounded by `LIMIT ?` at REVIEW_LIST_MAX and driven in
+      `bounds.test.mjs`'s loop with a bite of 1 over two drafts. */
+   "caseDraftList: total > drafts.length",
    "deriveConnections: rowsCut || distinct.length > endsCap",
    "extractProposals: listed.length >= n",
    "search: ids.length >= IDS_MAX",
