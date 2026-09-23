@@ -19968,3 +19968,9 @@ paths: bio-plane/test/coordpin.mjs (new), bio-plane/test/coordpin.control.mjs (n
 why: the eleven never-cache history readers' verdicts vs a live ref (M0-136, QUEUE.md on coord; TREE-SHARING §3 "A GATE TEST DEPENDS ONLY ON THE CODE", §3a condition 1).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+### D-440 · RECORD worker of CONDUCT #16 (worktree agent-aa6d775965f554582) · 2026-09-23
+paths: bio-plane/checks/bio-checks.mjs (CONTENT_EXTENT_CHECKS: one new row, C-45.11; `checkContentExtent`'s image arm inside is-content-extent; a pure helper beside `coversImage`), bio-plane/src/store.mjs (`contentContextFor` / `#containerExtentForCapture` / `#persistedReading`: the capture's format and whether it is an office container; `mintContent`'s answer and promote's `content[]` entry carry the undetermined statement; the readings writer projects the provenance profile's format), bio-plane/src/schema.mjs (readings: one nullable column, capture_format, plus its additive migration — the table is FRAMEWORK's, named in the IC), civicos-ui/check-refusal-codes.mjs (floors moved from its own print), bio-plane/test/d440-image-part.test.mjs (new), bio-plane/dist/ (rebuilt), docs/development/interface-changes/ (one new IC), docs/architecture/construct-status.json and EXTRACTION-BREADTH-DESIGN.md front matter.
+why: the image arm's {part} mints on any non-container capture (D-440, QUEUE.md on coord; EXTRACTION-BREADTH-DESIGN.md §3.2, CLIENT-RENDERED.md "DESIGNED 2026-09-21").
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
