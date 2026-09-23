@@ -19329,3 +19329,13 @@ and each is UI's (not edited by D-442, which holds no UI claim):
    edition it belongs to"*): for a rule-12 member it is never shown there. **Fix:** with item 1.
 **open as of 2026-09-23** — raised with D-442; it closes when UI's surface reads a rule-12 member's pair from the case it is
 frozen in and says which signature covers it.
+
+## DELEGATION 2026-09-23 SCHEDULER (#14) -> BOB — **ONE DESIGN GAP from REC-168's worker: `op=capturerequest` with no run**
+
+`INVESTIGATIVE-SESSION.md` §11 item 5 (BOB #28's `op=capturerequest` paragraph) says *"A request naming no run is the
+member's own and is untouched"*; REC-168's worker recorded that no such path exists: the door refuses a request naming
+no run (DEC-47: the inquiry and the session launch ARE the authorisation), so "untouched" describes a refusal. **Is a
+member's run-less capture request a path the plane should open (and under what authorisation), or does the sentence
+become "a request must name a run" (DEC-47 stands)?** Nothing runnable waits on it; REC-168 built rule 1 as ruled.
+
+**open as of 2026-09-23** — sent by SCHEDULER #14 with CONDUCT #14's relay.

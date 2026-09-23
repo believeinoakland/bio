@@ -3028,3 +3028,23 @@ depends-on: none.
 scope: `scopeOf` creates the live root as the mint does before probing it, a failure to create answering `LEDGER_UNWRITABLE` as the mint's does. **NOT the probe itself** (corrected at the code by SCHEDULER #14: BOB #28's entry says *"the probe creates its root"*, but `mintid.test.mjs`'s next arm asserts that `exclusivityProbe` on a missing directory is a `PROBE_UNWRITABLE` refusal, and that arm stays).
 accepts-when: a clone with no ledger directory passes the live-ledger arm, and the missing-directory arm stays green. NEGATIVE CONTROL: the suite's control (11), the second create's flag `w`, still fails it by name; dropping `scopeOf`'s create fails the live-ledger arm in a clone with no ledger.
 added: 2026-09-22 · SCHEDULER #14 (BOB #28's inbox entry, item 6, drained this commit; `node tools/mintid.mjs M0`).
+
+### M0-111 · done — **DONE 2026-09-23: INTEGRATED by CONDUCT #14 through the train at `c5c83dc4` (merged at `6b740b8a`); verified by content by SCHEDULER #14: `tools/train.mjs` on `main`, the push guard carries its `land/` arms. Its finding (no retry on a non-fast-forward; a recorded tree re-gated) is M0-122.**
+order: directly after M0-110, which it depends on: the notes lanes trade need `coord` before `main` stops carrying them (TREE-SHARING, the order of the three changes); it cuts gate time, Bob's own test (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 3)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §2 (one lane lands on `main`, in batches), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: M0-110.
+scope: as §2: CONDUCT merges every waiting `land/*` branch onto `main` in one integration branch, gates ONCE on the union class, pushes `main` and deletes the landed refs, returning a conflicting or red branch to its lane by name; nobody else pushes `main`, enforced by the push guard; a release lands through the same train. **FULL GATE PROFILE**.
+accepts-when: two lanes' `land/*` branches land in one train with one gate record, and a lane's direct push to `main` is refused by name. NEGATIVE CONTROL: drop the guard's `main` arm, and the refusal arm fails by name.
+added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 3; `node tools/mintid.mjs M0`).
+
+### M0-116 · done — **DONE 2026-09-23, NARROWED: INTEGRATED by CONDUCT #14 at `e5c54c6a`: `gates.mjs` reads a unit's own files as code with comments blanked (units 109 → 85). ITS ACCEPTS-WHEN IS NOT MET — 85 units, not the readers — and the unbuilt half (the op-claims split, which moves nothing while the state-path predicate lives in `coord.mjs`) is M0-121, which closes it (SCHEDULER #14).**
+order: directly after M0-111, where BOB #27 placed it (*"after M0-110 and M0-111, which take the ledgers off both sides first"*), ahead of M0-100 because it pays on every measurement landing: it CUTS GATE TIME, Bob's own test (`CLAUDE.md` §2) (SCHEDULER #13, 2026-09-22; BOB #27's defect, its fix named)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a comment reads nothing, so it selects … (whole text: the cut archive)
+depends-on: none.
+accepts-when: a `MEASUREMENTS.md`-only change selects the units that read it (`op-claims.test`, `mintid`'s readers, the ledger suites) and not the 105, both figures in the landing. NEGATIVE … (whole text: the cut archive)
+added: 2026-09-22 · SCHEDULER #13 (BOB #27's defect, verified at the code on `81510280`; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-116» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

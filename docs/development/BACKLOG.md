@@ -20,15 +20,15 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-100 · queued — **NARROWED 2026-09-22 by BOB #27 to `MEASUREMENTS.md` AND `INTERFACE-CHANGES.md`, WHICH STAY ON `main`: under M0-111's train two** … (whole text: the cut archive)
-order: after M0-110 and M0-111, where BOB #27 placed it on narrowing: the collision it removes exists only inside M0-111's train (SCHEDULER #12, 2026-09-22)
+### M0-121 · queued — **M0-116, NARROWED: A `MEASUREMENTS.md`-ONLY LANDING STILL SELECTS 85 UNITS, BECAUSE `op-claims.mjs` AND ~60 READERS IMPORT `tools/coord.mjs` FOR ITS STATE-PATH PREDICATE AND INHERIT WHAT IT WALKS.** M0-116's gates half landed (109 → 85, `e5c54c6a`); its op-claims split moves nothing until the predicate leaves the walking module. — owner M0.
+order: directly after M0-119, which it follows (CONDUCT #14: *"after M0-119"*), M0-116's residue, which CUTS GATE TIME on every measurement landing (SCHEDULER #14, 2026-09-23; M0-116's finding)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` … (whole text: the cut archive)
-depends-on: M0-111.
-accepts-when: two `land/*` branches each adding a measurement land in one train with no conflict; every reader's counts over the frozen history are unchanged. How a liar passes it … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry; `node tools/mintid.mjs M0`); narrowed 2026-09-22 by BOB #27 (SCHEDULER #12).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-100» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a comment reads nothing, so it selects nothing, and an import that walks nothing selects nothing; with `ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 1.
+depends-on: M0-119.
+scope: move `MOVED_FILES`, `MOVED_DIRS`, `NEXT_RE` and `isMovedPath` (all I/O-free) out of `tools/coord.mjs` into a module that walks nothing, re-exported by `coord.mjs` and imported by `op-claims.mjs` (measured as an experiment by CONDUCT #14: 60 → 24 readers, 85 → 55 units).
+accepts-when: a `MEASUREMENTS.md`-only change selects the units that read it and not the 85, both figures in the landing, closing M0-116's accepts-when. NEGATIVE CONTROL: import the predicate from `coord.mjs` again, and the unit-count arm fails by name.
+added: 2026-09-23 · SCHEDULER #14 (M0-116's residue via CONDUCT #14; `node tools/mintid.mjs M0`).
 
 ### UI-79 · queued — **THE MEMBER UI WRITES `believe-in-oakland` AS THE GROUP OF EVERY BUNDLE IT AUTHORS, ON EVERY INSTANCE.** `civicos-ui/app.html` sends `group: believe-in-oakland` in `mdFor`'s front matter and three `meta.group` keys (re-read on `a73cba2b`), where the plane stamps the instance's recorded group (D-436, IC-172); the FY glossary entry and the Add form's placeholder name Oakland too. Found by UI-77's worker (CONDUCT #14); the open D-436 → UI DELEGATION. — owner UI.
 order: directly after REC-168, with the product corrections: a sovereign group's bundles would claim this project's group, CLAUDE.md §2's class, UI-77's sibling on the write path; below D-442 and REC-168, whose defects move published pins and attribution (SCHEDULER #14, 2026-09-23; UI-77's findings, relayed by CONDUCT #14)
@@ -580,6 +580,16 @@ depends-on: none — REC-165's refusal is on `main`; `op=airun`'s read returns t
 scope: FLEET #4's four: seed `state.target` at run open from the run's context id (for a PROJECT run, a question the project confirmed-cites, never the project id); `submit` defaults a candidate's target to it; the mock gains the context rule, `SUGGEST_OUTSIDE_RUN_CONTEXT` and the principal gate; a negative control.
 accepts-when: against the mock, a run's suggestions land inside its context and one aimed outside is refused by name; the dedup and empty-level readers receive the run's target. NEGATIVE CONTROL: drop the seeding, and the harness suite fails by name.
 added: 2026-09-23 · SCHEDULER #14 (FLEET #4's trigger; `node tools/mintid.mjs FL`).
+
+### FL-12 · queued — **`agent-worker` SENDS `op=capturerequest`'s LOCATOR AS `url`, BUT THE PLANE READS ONLY `address`, SO EVERY FLEET INTERNET-LEVEL CAPTURE REQUEST IS REFUSED `CAPTURE_REQUEST_NOT_PUBLIC`.** `agent-worker/src/index.mjs` calls it with `{ run, target, url: t.url }` (re-read on `c5c83dc4`); the fleet mock does not model `address`. REC-168's worker's finding, fix named. — owner FLEET.
+order: directly after FL-11, before D-260: inert until D-260 dispatches runs, and every internet-level look a dispatched run asks for would be refused (SCHEDULER #14, 2026-09-23; REC-168's finding via CONDUCT #14)
+milestone: M9
+interface: none on the plane — the fleet member's call and its mock; the `agent-worker` bundle rebuilds at the next release (DIST's).
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5 (`op=capturerequest` takes rule 1; a request names an address), with `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6.
+depends-on: none — REC-168's gate is on `main` or lands before this reaches the cache.
+scope: send `address: t.url` in `agent-worker/src/index.mjs`; the fleet mock reads `address` and refuses a request without one as the plane does.
+accepts-when: against the mock, a run's internet-level target files a request naming its address; one sent with only `url` is refused by name. NEGATIVE CONTROL: send `url` again, and the address arm fails by name.
+added: 2026-09-23 · SCHEDULER #14 (REC-168's finding via CONDUCT #14; `node tools/mintid.mjs FL`).
 
 ### D-260 · queued — **A WOKEN RUN IS NOT RE-ENTERED: FL-4's wake has nothing to consume it.** When the daemon completes a capture a run waited on … (whole text: the cut archive)
 order: a feature after the rows Bob's priorities ordered (UI-71), above D-126: FL-4's wake and DS-3's and FL-6's halves are BUILT and inert until this caller exists, and I8 leaves PROVISIONAL when it lands (SCHEDULER #7, 2026-09-21)

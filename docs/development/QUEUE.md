@@ -56,26 +56,6 @@ scope: FIRST the measurement, the FULL battery's wall time and pass count on a G
 accepts-when: the three-column measurement is in `MEASUREMENTS.md` before any workflow lands; a `land/*` push gets a check whose verdict the push guard reads, and a red check refuses the push. NEGATIVE CONTROL: break one suite on a branch, and the check reads red at that suite.
 added: 2026-09-22 · SCHEDULER #13 (BOB #26's entry, item 2; `mintid`); unblocked by SCHEDULER #14 (BOB #28's entry, item 1).
 
-### M0-116 · running — **SPAWNED 2026-09-22 by CONDUCT #14, wave 4, the first flips on `coord`. NOT LANDED, CHECKED BY CONTENT: `bio-plane/scripts/op-claims.mjs` still carries its scanned-corpus list naming `MEASUREMENTS.md` (L529) on `a73cba2b`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **A LANDING THAT TOUCHES ONLY `MEASUREMENTS.md` RE-RUNS A THIRD OF THE BATTERY.** `gates.mjs --since 81510280` over three docs … (whole text: the cut archive)
-order: directly after M0-111, where BOB #27 placed it (*"after M0-110 and M0-111, which take the ledgers off both sides first"*), ahead of M0-100 because it pays on every measurement landing: it CUTS GATE TIME, Bob's own test (`CLAUDE.md` §2) (SCHEDULER #13, 2026-09-22; BOB #27's defect, its fix named)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a comment reads nothing, so it selects … (whole text: the cut archive)
-depends-on: none.
-accepts-when: a `MEASUREMENTS.md`-only change selects the units that read it (`op-claims.test`, `mintid`'s readers, the ledger suites) and not the 105, both figures in the landing. NEGATIVE … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #13 (BOB #27's defect, verified at the code on `81510280`; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-116» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-111 · running — **SPAWNED 2026-09-22 by CONDUCT #14, wave 4. NOT LANDED, CHECKED BY CONTENT: `tools/pushguard.mjs` names no `land/` ref on `df9eb9f9`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **EVERY LANE LANDS ON `main` ITSELF, SO `main` MOVES UNDER EVERY GATE AND EACH LANDING REBASES AND RE-GATES.** RULED by Bob, 2026-09-22 (*"Yes to all 3 recommendations"*): lanes and workers push `land/<lane>/<topic>` branches only, and CONDUCT lands them on a cadence in one integration branch with one gate. — owner CONDUCT, with M0.
-order: directly after M0-110, which it depends on: the notes lanes trade need `coord` before `main` stops carrying them (TREE-SHARING, the order of the three changes); it cuts gate time, Bob's own test (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 3)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §2 (one lane lands on `main`, in batches), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: M0-110.
-scope: as §2: CONDUCT merges every waiting `land/*` branch onto `main` in one integration branch, gates ONCE on the union class, pushes `main` and deletes the landed refs, returning a conflicting or red branch to its lane by name; nobody else pushes `main`, enforced by the push guard; a release lands through the same train. **FULL GATE PROFILE**.
-accepts-when: two lanes' `land/*` branches land in one train with one gate record, and a lane's direct push to `main` is refused by name. NEGATIVE CONTROL: drop the guard's `main` arm, and the refusal arm fails by name.
-added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 3; `node tools/mintid.mjs M0`).
-
 ### M0-119 · running — **SPAWNED 2026-09-22 by CONDUCT #14, wave 4. NOT LANDED, CHECKED BY CONTENT: no `BACKLOG-LATER.md` on `coord` and `ledger.mjs` names none on `df9eb9f9`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE BACKLOG'S BUDGET CUTS ROWS: A PLACEMENT OVER 150 KiB TRUNCATES THE ROWS NEXT TO RUN, AND ONCE EVERY ROW IS CUT NO PLACEMENT CAN LAND.** SCHEDULER #14's landing of 2026-09-22 cut 17 rows to their fields, leaving four whole; BOB #28 RULED the fix: the TAIL moves to a second file, the head is never cut. — owner M0.
 order: directly after M0-111, the other row resting on M0-110: it UNBLOCKS PRODUCT, since every placement of a product row passes through the backlog's budget (Bob, 2026-09-22, `CLAUDE.md` §2); the interim 200 KiB budget holds until it lands (SCHEDULER #14; BOB #28's inbox entry, item 3)
 milestone: M0
@@ -105,6 +85,26 @@ depends-on: none — REC-165's gate, stamp and sight check are on `main`.
 scope: when a request names a run: REC-152's stamp of the caller's principal, the sight check first, then `runPrincipalGate`, as REC-165 applies them; the row records the CALLER's principal. A request naming no run is the member's own and is untouched; no context check (a request names an address, not a question).
 accepts-when: another principal's running run is refused `AI_RUN_NOT_PRINCIPAL` and writes no row; the caller's own running run lands, naming the caller; a request naming no run is unchanged. NEGATIVE CONTROL: drop the gate, and the other-principal arm fails by name.
 added: 2026-09-22 · SCHEDULER #14 (REC-165's stand-down finding, driven, via CONDUCT #14; ruled by BOB #28's inbox entry, item 2, drained this commit; `node tools/mintid.mjs REC`).
+
+### M0-122 · queued — **THE TRAIN HAS NO RETRY ON A NON-FAST-FORWARD, AND RE-GATES A `land/*` BRANCH'S TREE THAT ALREADY CARRIES ITS OWN GREEN RECORD.** `tools/train.mjs` fails when `main` moves under its gate (the first train lost to BOB #29's docs commit, 2026-09-23; CONDUCT #14 retried by hand, `c5c83dc4`), and gates the union even when the branch's tip tree is recorded GREEN. M0-111's finding, fix named by CONDUCT #14. — owner M0.
+order: FIRST of the backlog: every landing now goes through the train, so both halves CUT GATE TIME on every landing (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23; M0-111's finding)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §2 (one lane lands on `main`, in batches), with `docs/development/VERIFICATION.md` (admitted for M0 by name; D-293's record keyed by tree, M0-98's `--since`).
+depends-on: none — M0-111 is on `main`.
+scope: on a rejected push, merge `origin/main`, re-gate with `gates.mjs --since <the GREEN tip>`, re-record and push, bounded; and a `land/*` tip whose tree carries a GREEN record lands without a second gate of that tree.
+accepts-when: a train whose push is rejected once lands on the retry with one `--since` gate, not a FULL one; a recorded-GREEN branch lands with no battery run of its own tree. NEGATIVE CONTROL: drop the retry, and the moved-main arm fails by name.
+added: 2026-09-23 · SCHEDULER #14 (M0-111's finding via CONDUCT #14; `node tools/mintid.mjs M0`).
+
+### M0-100 · queued — **NARROWED 2026-09-22 by BOB #27 to `MEASUREMENTS.md` AND `INTERFACE-CHANGES.md`, WHICH STAY ON `main`: under M0-111's train two** … (whole text: the cut archive)
+order: after M0-110 and M0-111, where BOB #27 placed it on narrowing: the collision it removes exists only inside M0-111's train (SCHEDULER #12, 2026-09-22)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` … (whole text: the cut archive)
+depends-on: M0-111.
+accepts-when: two `land/*` branches each adding a measurement land in one train with no conflict; every reader's counts over the frozen history are unchanged. How a liar passes it … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry; `node tools/mintid.mjs M0`); narrowed 2026-09-22 by BOB #27 (SCHEDULER #12).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-100» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
