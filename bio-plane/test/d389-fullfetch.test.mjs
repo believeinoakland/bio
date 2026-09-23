@@ -22,7 +22,7 @@
 /* D-389 — `op=frontier`'s `truncated` ON A FULL RAW FETCH, AT ALL THREE BUNDLE ARMS.
  * =====================================================================
  *
- * `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the readers,
+ * `OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the readers,
  * which compute `truncated` from what the viewer may read). Each bundle-level arm — document, content, meaning —
  * OVER-FETCHES `R` raw rows (`(cap + 1) * 2`, `* 3` at meaning) because the §6 fence drops rows before the cut.
  * When that raw fetch comes back FULL the supply was NOT exhausted: rows beyond it were never fetched and their
