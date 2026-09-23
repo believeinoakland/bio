@@ -3216,14 +3216,14 @@ function mdFor(id, type, state, title, body, now, hasDoc, src, act){
      draws exactly C-2.10, which is the honest one error; an authored one draws
      none. Both directions are asserted (conformance.test.mjs, add-surface).
 
-     risk_tier STAYS 1 AND IS NOT A MEMBER CONTROL, and the reason is named
-     rather than left to be rediscovered: C-2.10 admits 1, 2 or 3 and NOTHING
-     PUBLISHES member-facing words for them (they are not in op=affordances'
-     vocabularies, and BIO_Case_Making calls the ladder "that repertoire's
-     first draft"). A chooser here would be this surface deciding what tiers 2
-     and 3 MEAN, which is the option map DEC-8 forbids; 1 is the floor and the
-     record has no undetermined value on this axis to state instead. Reported
-     to CONDUCT as the residue of D-130's class that REC-23 did not reach.
+     risk_tier IS WRITTEN `undetermined` AND IS NOT YET A MEMBER CONTROL
+     (D-182, BOB #21, 2026-09-21). This arm wrote 1, which told a member an
+     action was safe to FILE FREELY when nobody had assessed it — an overclaim
+     on the one field that carries legal exposure. The record now has the
+     undetermined value to state instead, and the plane publishes the tiers'
+     words (op=affordances' vocabularies.risk_tiers); a chooser reading those
+     words is this page's to add, and until it does no member has stated a
+     tier here, so none is written. Only a member's authored act sets 1, 2 or 3.
      (The old placeholder literal is deliberately not repeated in this comment:
      counterparty.test.mjs asserts, over this file's SOURCE, that it appears
      nowhere — so a future edit that pastes it back fails there rather than at
@@ -3231,7 +3231,7 @@ function mdFor(id, type, state, title, body, now, hasDoc, src, act){
   if(type === "action"){
     const a = act || {};
     const cp = a.counterparty || null;
-    fm.push("action_kind: " + (a.kind || "other"), "risk_tier: 1");
+    fm.push("action_kind: " + (a.kind || "other"), "risk_tier: undetermined");
     /* THE STATE THE MEMBER CHOSE IS WRITTEN EVEN WHEN THE FIELD BESIDE IT IS
        EMPTY, and that is deliberate rather than sloppy: a member who answered
        "not determined yet" and wrote no basis has made a choice and left a

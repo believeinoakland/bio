@@ -296,7 +296,7 @@ the D-436 worker to UI in `CLAIMS.md`.
 
 ## 8. Risk tiers, and what is dishonest today
 
-Evidence packages are classified in three tiers — file freely; file with caution; do not file without counsel, publishing the evidence and withholding the filing templates — because *"a poorly filed Tier 3 case could create adverse precedent that forecloses future, properly constructed challenges"* (`BIO_Communications_Platforms.md`; Roadmap §8). The field is `risk_tier` on the action schema (State Rules v1.5). What is built is half of it and the half is dishonest: the UI writes `risk_tier: 1`, `action_kind: other`, `counterparty: to be named` as placeholders that satisfy the check (D-182; the process inventory's P-48) — a required field filled to clear a gate, the defect this document's construct exists to refuse. Stated here so it is not derivable only from a debt row.
+Evidence packages are classified in three tiers — file freely; file with caution; do not file without counsel, publishing the evidence and withholding the filing templates — because *"a poorly filed Tier 3 case could create adverse precedent that forecloses future, properly constructed challenges"* (`BIO_Communications_Platforms.md`; Roadmap §8). The field is `risk_tier` on the action schema (State Rules v1.5). The placeholders that satisfied the check are gone: the counterparty's with D-130, and `risk_tier: 1` with D-182 (2026-09-23), which writes UNDETERMINED wherever no member stated a tier and publishes the three words (`node tools/status.mjs 8.risk-tier`). NOT BUILT: a member-facing tier chooser, and actions written at the old default still read 1 because their bytes say so.
 
 ## 9. Where it stands, and the frontier
 

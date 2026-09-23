@@ -866,7 +866,7 @@ action_kind: cpra_request \# extensible suite: cpra_request \|
 grand_jury \| controller_referral \| public_comment \| media \|
 litigation_support \| other
 
-risk_tier: 1 \# 1 \| 2 \| 3, from the evidence-package classification
+risk_tier: undetermined \# 1 \| 2 \| 3 \| undetermined, from the evidence-package classification; undetermined wherever no member stated one (D-182)
 
 clock:
 

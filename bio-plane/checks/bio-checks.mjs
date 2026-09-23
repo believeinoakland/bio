@@ -512,6 +512,33 @@ STATES.problem = STATES.focus;
  * four claims to them" must be different rows in this record. */
 export const ACTION_KINDS = ['cpra_request', 'grand_jury', 'controller_referral', 'public_comment', 'media', 'litigation_support', 'request_for_comment', 'other'];
 
+/* D-182, RULED 2026-09-21 by BOB #21 (BIO_Case_Making_v0_1.md §2, "risk_tier"): the tier of an action is
+ * the ONE field that carries legal exposure, and its words are Bob's own, from the mission of record
+ * (BIO_Complete_Roadmap_v5.md §8). A code->text map, not a list, for SUFFICIENCY_CLAIM_STATES' reason: the
+ * sentence IS the tier's meaning, and a surface that renders a bare `2` has had to decide what 2 means.
+ * Published by op=affordances (vocabularies.risk_tiers) so a surface invents none (REC-38's pattern).
+ *
+ * `undetermined` is the fourth value, as it is for authority and the counterparty (D-130): WRITTEN wherever
+ * no member has stated a tier, and never a default of 1. Before this row every writer defaulted to 1, which
+ * told a member an action was safe to file freely when nobody had assessed it. Only a member's authored act
+ * sets 1, 2 or 3. An action whose bytes carry NO `risk_tier` key reads undetermined too, because that is
+ * exactly what the absence says: nobody stated one. The gate does not refuse the absence, since a gate
+ * that did would press a writer to invent the one value nobody assessed (CLAUDE.md §4). */
+export const RISK_TIERS = {
+  1: 'file freely',
+  2: 'file with caution',
+  3: 'do not file without counsel',
+  undetermined: 'not assessed: no member has stated a risk tier for this action',
+};
+/* The stored value -> one of RISK_TIERS' keys, or null for a value the vocabulary does not hold (which
+ * C-2.10 refuses by name). Absent and the literal `undetermined` read as undetermined; the NUMBERS 1, 2 and
+ * 3 read as themselves (a quoted "2" stays refused, exactly as before this row). Every reader takes this,
+ * never the literal. */
+export function riskTierState(v) {
+  if (v === undefined || v === null || v === 'undetermined') return 'undetermined';
+  return v === 1 || v === 2 || v === 3 ? v : null;
+}
+
 /* REC-24 (a): the two kinds a leg of an action's basis may carry. Exported for
  * the same reason ACTION_KINDS is — op=affordances publishes it and the store
  * projects against it, so the gate and the publication read ONE array. */
@@ -4493,7 +4520,8 @@ function checkActionExtension(ctx, findings) {
   /* The suite lives at module level as ACTION_KINDS (exported for REC-19's
      op=affordances) so the gate and the publication read one array. */
   if (!ACTION_KINDS.includes(fm.action_kind)) findings.push(f('C-2.10', 'error', `action_kind '${fm.action_kind}' is not in the suite`));
-  if (![1, 2, 3].includes(fm.risk_tier)) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not 1, 2, or 3`));
+  /* D-182: 1, 2, 3 or undetermined (absent reads undetermined); the words are RISK_TIERS'. */
+  if (riskTierState(fm.risk_tier) === null) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(', ')}`));
   checkCounterparty(fm, findings);
   /* REC-39: the four words are RESOLUTIONS at module level (exported for
      op=affordances) so this finding, op=actionmove's own refusal and the
