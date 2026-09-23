@@ -372,6 +372,7 @@ interface: I3 consumer (`op=versionaccept`; `op=versionstrength`'s `independence
 design: `docs/development/INVESTIGATIVE-SESSION.md` §12 (a)–(b), with `docs/archive/IS-BUILD-PLAN.md`'s UI-43 row as … (whole text: the cut archive)
 depends-on: none; both ops are built — CHECK AT THE CODE at spawn.
 accepts-when: an OR accept requires the per-branch affirmation; a fixture whose two parts share a capture shows that origin before it, and one with independent parts shows NONE; driven against the real … (whole text: the cut archive)
+reference: UI-43's original build survives only on `origin/worktree-agent-a9e7e017d06799858` (tip `9706d19e`, 2026-08-09: 2 commits, 9 files, +2,338 lines; `acerRead`, `acerList`, `acerVersion`, `acerSets`, `aiSessionConditions`), six weeks stale and not mergeable; read it as a reference and rebuild on today's `app.html` (CONDUCT #16's measurement on `a13667ee`, 2026-09-23: `versionaccept` 0 times in `app.html`; D-271's plane half requires the affirmation).
 added: 2026-09-21 · SCHEDULER #5 (D-397's third branch and D-195, verified at the code; `node tools/mintid.mjs UI`).
 cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-74» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
