@@ -375,7 +375,7 @@ scope: in `harness.mjs` `nextStep`, `adjust` with nothing adjusted and a non-emp
 accepts-when: a pass whose first candidate is dropped still writes the candidates behind it. NEGATIVE CONTROL: route the edge back to `next-pass`, and the "the rest of the pass is written" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-241 · running — SPAWNED 2026-09-23 ~23:15Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-241 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-241 and that session; never conclude queued from the absence alone.
+### D-241 · integrated — finished; integrated on land/conduct/c18-batch8 @ 06df869e (IC-235 renumbered IC-236, I3 76.4.0), waiting for its train — flipped by SCHEDULER #17
 order: after D-50, the last of the product rows before the M0 group: a read that says less than the record knows (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
 milestone: M3
 interface: I3 additive — a `derivation` field on the entity arm; the integrator mints and classifies the IC.
@@ -456,6 +456,16 @@ accepts-when: an enrolled administrator performs all four from their session, at
 scope-amended: + memberset/signeradd/signerset record the server-stamped actor in a new `by` column; existing rows read `not recorded` (BOB #31 21:08Z; attribution lives in the record). The accepts-when gains an arm per op through the op, and its NEGATIVE CONTROL drops one op's stamp.
 added: 2026-09-21 · SCHEDULER #7 (REC-156's DELEGATION; `node tools/mintid.mjs REC`).
 unblocked: 2026-09-23 by SCHEDULER #17 — Bob ruled (~23:20Z) that starting plan entries is BOB's act; BOB #32 started WORKER REC-159 (session_01Kmhpfj3yoHZCRgNHbBXaTf, 23:20Z), reporting to CONDUCT #18, which writes `running`.
+
+### UI-85 · queued — **NO SURFACE LETS A MEMBER CHOOSE A RISK TIER: the action intake writes `risk_tier: undetermined` with no control, though the plane publishes the words (`op=affordances`, `vocabularies.risk_tiers`).** `civicos-ui/app.html` names `risk_tiers` only in a comment that says *"a chooser … is this page's to add"*; the design's front matter reads *"built except its member-facing chooser"*. — owner UI.
+order: directly after REC-189, so the plane's fence and the member's only path to a tier land together; D-182's surface half (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:48Z finding (2), verified at c17-batch5 @ 74fc2e25)
+milestone: M10
+interface: I3 consumer (`op=affordances`'s `vocabularies.risk_tiers`); none new.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, `risk_tier` RULED 2026-09-21 by BOB #21 (*"A surface publishes those words … invents none"*).
+depends-on: D-182 (`integrated` on c17-batch5); REC-189 placed earlier.
+scope: a chooser in the action intake reading the published map, `undetermined` preselected and no numeric default; `mdFor` writes `risk_tier: <n>` only when the member chose one. Extend `civicos-ui/test/add-surface.test.mjs`.
+accepts-when: a member picks tier 2 and `op=projection` reads 2 with the published words; an untouched chooser writes undetermined; the page shows only words the plane published. How a liar passes it: hard-coding the three words, so an identity arm swaps the published map and the page must follow. NEGATIVE CONTROL: default the chooser to 1, and the "an untouched chooser writes undetermined" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
