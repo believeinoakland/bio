@@ -33,6 +33,15 @@ scope: promote refuses a `snap_key` already present for the bundle by a new refu
 accepts-when: through the op, a second promote reusing a snap key with different content is refused by name and the first version's row is byte-identical after; an identical re-send is a no-op. NEGATIVE CONTROL: restore `INSERT OR REPLACE`, and the collision arm lands and fails by name.
 added: 2026-09-23 · SCHEDULER #15 (M0-132's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
 
+### REC-177 · blocked — **`op=airunopen` ACCEPTS A DECLARED BOUND WITH NO POSITIVE `allowed`, SO A RUN CAN OPEN UNDER A BOUND THAT STATES NO ALLOWANCE.** BOB #30 ruled a declared bound STATES its allowance: `op=airunopen` refuses one with no positive `allowed`. `blocked` until its design lands. — owner RECORD.
+order: directly after REC-172 (in the cache) as BOB #30 placed it, the same bound fence; below the record-integrity rows REC-175 and REC-176 (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
+milestone: M9
+interface: I3 — a new refusal on `op=airunopen`; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §14b item 6, *"A declared bound STATES its allowance"* (BOB #30, 2026-09-23; on `land/bob/batch-cadence` until the train lands it).
+depends-on: REC-172; `land/bob/batch-cadence` on `main`.
+accepts-when: as the paragraph states it, with its NEGATIVE CONTROL.
+added: 2026-09-23 · SCHEDULER #15 (BOB #30's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+
 ### M0-135 · queued — **A LANE'S OWN `gates.mjs` ON A TREE ALREADY RECORDED GREEN TAKES §2d's TREE-KEYED SHORTCUT AND RUNS NO NEVER-CACHED UNIT (with `BIO_GATE_RESULTS=off`), SO A HISTORY- OR REF-READING CHECK IS SKIPPED ON A LANE'S PUSH.** M0-131 closed this for the TRAIN (`gates.mjs --never-cached` on a reused tree, so `main` is covered); a lane's gate is not. M0-131's worker's finding, verified in its report (CONDUCT #16); to be re-read at the code once M0-131 lands. — owner M0.
 order: directly after REC-176, with the gate-honesty rows: a green that skipped what can fail is a costs-nothing green, but `main` is already covered by M0-131, so it sits below the record-integrity rows (SCHEDULER #15, 2026-09-23)
 milestone: M0
@@ -52,15 +61,6 @@ depends-on: M0-130 (its planted-ref arm and pin are the pattern).
 scope: examine each of the eleven for any read of a live ref (`origin/*`, `coord`, `ls-remote`, `FETCH_HEAD`, the current date); each that has one reads a pinned range or HEAD's own history, with a planted-ref arm; each that has none is stated as tree-and-history-only at its site; the table of eleven is in the landing. M0-130's known cost (a drop past the pin is graded by no gate unit) is stated where each pin sits.
 accepts-when: every one of the eleven either carries a planted-ref arm proving its verdict identical whatever the live ref holds, or a dated line saying it reads none. NEGATIVE CONTROL: point one pinned unit back at the live ref, and its planted-ref arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (M0-130's worker's class sweep via CONDUCT #16; `node tools/mintid.mjs M0`).
-
-### REC-177 · blocked — **`op=airunopen` ACCEPTS A DECLARED BOUND WITH NO POSITIVE `allowed`, SO A RUN CAN OPEN UNDER A BOUND THAT STATES NO ALLOWANCE.** BOB #30 ruled a declared bound STATES its allowance: `op=airunopen` refuses one with no positive `allowed`. `blocked` until its design lands. — owner RECORD.
-order: directly after REC-172 (in the cache) as BOB #30 placed it, the same bound fence; below the record-integrity rows REC-175 and REC-176 (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
-milestone: M9
-interface: I3 — a new refusal on `op=airunopen`; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §14b item 6, *"A declared bound STATES its allowance"* (BOB #30, 2026-09-23; on `land/bob/batch-cadence` until the train lands it).
-depends-on: REC-172; `land/bob/batch-cadence` on `main`.
-accepts-when: as the paragraph states it, with its NEGATIVE CONTROL.
-added: 2026-09-23 · SCHEDULER #15 (BOB #30's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 
 ### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
