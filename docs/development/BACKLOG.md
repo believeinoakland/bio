@@ -23,6 +23,33 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### REC-159 · blocked — NOT BUILT 2026-09-23: its worker's session permission check refused its first edit, the authority widening in `index.mjs` OPS; nothing pushed. The permission and design question is with BOB #31 (CONDUCT #17, 21:03Z). **AN ENROLLED ADMINISTRATOR IS REFUSED §4.9's CUSTODIAL ACTS FROM THEIR OWN SESSION, WITH A SENTENCE THAT IS FALSE OF THEM.** … (whole text: the cut archive)
+order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
+milestone: M8
+interface: I3 — four ops gain session reach and three a stamped `by`; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 (each act is EVERY administrator's) and … (whole text: the cut archive)
+depends-on: none. D-136 and REC-156 are on `main`.
+accepts-when: an enrolled administrator performs all four from their session, attributed to them; a member is refused by name. How a liar passes it: widening the class without the roster … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #7 (REC-156's DELEGATION; `node tools/mintid.mjs REC`).
+
+### REC-162 · queued — **A FOUNDER-ONLY OP'S REFUSAL CALLS AN ENROLLED ADMINISTRATOR A NON-ADMINISTRATOR.** Five ops sit in `SESSION_OPS.admin` and … (whole text: the cut archive)
+order: back to back after REC-159, the same two suites (`d270-refusal-truth`'s ROLE literal, `adminvote` §8f), the second re-reading the first's pins; a false refusal sentence, CLAUDE.md §2's class (BOB #23's entry, 2026-09-21; SCHEDULER #7)
+milestone: M8
+interface: I3 — the refusal's sentence; the integrator classifies it in IC-55's family.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9, *AND ADMINISTRATORS DO NOT RUN THE INSTANCE* (BOB #23, 2026-09-21).
+depends-on: REC-159 (sequence: the same `SESSION_OPS` sets and ROLE literal; made a dependency 2026-09-23 by SCHEDULER #16 so no refill takes this row ahead of it).
+accepts-when: an enrolled administrator and a member, each refused `governorconfig`, read the founder's-session sentence; the founder's session and the ADMIN_TOKEN bearer still set an … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #7 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+
+### REC-155 · queued — **SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS WERE REACHABLE BY NO SESSION, AND NOBODY HAD RULED WHY — NOW RULED** … (whole text: the cut archive)
+order: where it stood, now with its design (BOB #20's entry): the plane is honest here — a determination was owed, not a defect shipping — and this landing refuses nobody (SCHEDULER #5, 2026-09-21; placed by SCHEDULER #3, 2026-09-19)
+milestone: M8
+interface: I3 — MINOR: sessions gain reach and no class list moves; the integrator mints the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.10 (ruled by BOB #19, landed by BOB #20 at `d9cf3283`).
+depends-on: REC-159 (sequence: the same `SESSION_OPS` sets and ROLE literal; made a dependency 2026-09-23 by SCHEDULER #16 so no refill takes this row ahead of it).
+accepts-when: each of the five answers a member session and an administrator session with the op's own result; the two unattended ops answer every session `MACHINE_CREDENTIAL_REQUIRED` with … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 1); designed 2026-09-21 by §4.10, BOB #20's entry drained by SCHEDULER #5.
+
 ### CPDF-22 · queued — **ONE SHAPE FOR "ADMITTED, BOUND NOT HELD": D-440 (IC-198) answers `undetermined: {level, why}` for an image `{part}`, while D-420 (IC-203/IC-204) answers `image_bound: {determined:false, empty_level, why}` for an image `{page, rect}` — two shapes for one statement on I5 mint answers.** `image_bound` is withdrawn before any client reads it. — owner CONTENT-PDF (D-420's paths).
 order: directly after M0-138, first of the product rows, as BOB #31 placed it: no client may read `image_bound` before it goes; after M0-138 because every train pays that tax (SCHEDULER #16, 2026-09-23; BOB #31's inbox entry, drained this commit)
 milestone: M4
@@ -92,36 +119,6 @@ depends-on: REC-155 — DRIVEN, not merely landed.
 accepts-when: a bearer `apply=1` and a bearer `provenanceroute` are refused by name; a session's succeed and the author written is the session's member, never `token:<class>`; a bearer … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #5 (BOB #20's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-158» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-52 · queued — **A ROOT-OF-TRUST EXPORT NOTIFIES NO ADMINISTRATOR.** `export_log` records it and `op=exportlog` reads it, so an administrator who … (whole text: the cut archive)
-order: security-class, first above the features: Membership v2 §8.1's promise that an export is never silent rests on this notification and only the looking half is built; below the silent defects because the export IS logged and §8.1 says so (SCHEDULER #5, 2026-09-21)
-milestone: M7
-interface: I3 — a queue item kind gains a producer; the integrator mints and classifies the IC.
-design: `docs/development/NOTIFICATIONS.md` §The catalogue (the export entry, FINDING) and §The item contract, with … (whole text: the cut archive)
-depends-on: none in code.
-accepts-when: one export writes one item per administrator, each naming the `export_log` row, and a non-administrator gets none; `mintid N` mints. How a liar passes it: raising to the exporter alone, so … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-52» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-84 · queued — **A PUBLISHED CASE DOES NOT NAME THE BIAS LENS IT WAS HELD TO.** DEC-54 (d) and the bias design require every work product to cite … (whole text: the cut archive)
-order: directly after D-52, above the features: DEC-20's *disclosed* — the manifest SHOWN in the artifact — is missing from every published case, and one published without it is corrected only by a new edition (DEC-19) (SCHEDULER #6, 2026-09-21, LED-7 batch 11)
-milestone: M10
-interface: I3 — the case document gains the manifest; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption" … (whole text: the cut archive)
-depends-on: none — PL-12's manifest and pins are built.
-accepts-when: a case published under an adopted set names each pair and the hash; adopting a new revision afterwards leaves the published bytes identical; with nothing adopted the document says no … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-84» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-220 · queued — **THE INVESTIGATIVE SESSION READS SIXTY CAPTURES OF ONE DOCUMENT AS SIXTY DOCUMENTS.** Bob's ruling of 2026-08-06 — link a … (whole text: the cut archive)
-order: after D-84, above the features: a deployed machine role over-counts what the record holds — the false-coverage hazard `STORE-AS-CACHE.md` names — in work a member reads and may accept; a correction to built work (SCHEDULER #6, 2026-09-21, LED-7 batch 12)
-milestone: M9
-interface: I8 consumer of `op=versionchain` (I3, built); no shape moves unless the builder finds one.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §"What the session sees" … (whole text: the cut archive)
-depends-on: none — `op=versionchain` is built.
-accepts-when: a fixture holding several captures of one address reads as ONE document with its versions, and a run's coverage counts it once. How a liar passes it: deduplicating by title or text, which … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 12; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-220» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### D-182 · queued — **AN ACTION NOBODY ASSESSED IS RECORDED AT `risk_tier` 1 — *FILE FREELY* — ON THE ONE FIELD THAT CARRIES LEGAL EXPOSURE.** C-2.10 … (whole text: the cut archive)
 order: after D-220, above the features: an overclaim on the field that carries legal exposure — CLAUDE.md §2's class, in the action plan a member files from (SCHEDULER #6, 2026-09-21; ruled on SCHEDULER #6's Q4)
