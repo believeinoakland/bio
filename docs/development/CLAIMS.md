@@ -19989,6 +19989,7 @@ paths: bio-plane/src/schema.mjs (comments only: the grade_axis comments on inqui
 why: schema.mjs documents grade_axis as two-valued while GRADE_AXES carries testimony since MK-2 / IC-142 (D-423, QUEUE.md on coord; MEMBER-KNOWLEDGE-DESIGN.md §3).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — pushed land/worker/D-423 @ ae010c98 (verified by ls-remote); comments + hygiene arm, no IC; paths stay reserved until CONDUCT integrates the branch.
 
 ### UI-73 · UI worker of CONDUCT #16 · 2026-09-23 — the eleven member-facing refusal `detail` readers read `refusalWords(r)`
 
