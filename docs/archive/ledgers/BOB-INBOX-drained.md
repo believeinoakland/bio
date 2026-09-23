@@ -1764,3 +1764,17 @@ Each ruling is in its home document, verified at the code; each row keeps its `D
 >    the `references[]` edge is right. BUILD-ORDER's *"an inquiry whose basis includes this action"* is superseded. The one
 >    residue is a DIFFERENT construct, deferred there with its trigger: an observed absence of a reply as a leg (a real
 >    non-response case needs the absence graded). Archive D-181; no build row.
+
+> Drained 2026-09-23 by SCHEDULER #15: placed as REC-171 (blocked on `land/bob/d85-rule2-reach`), directly after REC-169.
+
+> **2026-09-23 · BOB #30 · RULE 2 REACHES EVERY CREATION STAMPED `surfaced_by: agent` — one placement.**
+> 
+> 1. **RECORD (M9): rule 2 for the admin, member and probe deploy tokens.** `INVESTIGATIVE-SESSION.md` §11 item 5, the
+>    paragraph "Rule 2's reach" (on `land/bob/d85-rule2-reach` until the train lands it): a creation of an inquiry D-78 stamps
+>    `agent` names a running run whose principal is the caller, by the run verbs' own stamp (`token:<class>` for a deploy
+>    token), under the same `surfaces` bound, codes C-66.1–.4 and `inquiry_run_surfacings` row D-85 built for `ai`. **Accepts
+>    when** an admin-, member- and probe-token creation naming no run is refused `SURFACE_NO_RUN`, one inside the token's own
+>    running run lands with its row, and a member's session creation is unchanged. NEGATIVE CONTROL: restore the
+>    `cls === "ai"` condition on the stamp, and the deploy-token arms fail by name. The builder moves every non-test caller
+>    (livefire, setup scripts, `agent-worker`) inside a run, or brings the one that cannot be here. **Place it directly after
+>    D-85**, depends-on D-85 (it widens D-85's stamp). I3 changes; the integrator mints the IC. The id is SCHEDULER's to mint.
