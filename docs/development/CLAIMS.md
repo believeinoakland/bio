@@ -19919,6 +19919,7 @@ paths, BY SITE:
 ### REC-175 · RECORD worker of CONDUCT #16 (worktree agent-a6f377d2e96aa24af) · 2026-09-23
 paths: bio-plane/src/store.mjs (`promote`'s digest check before the transaction, a new `digestCensus` read), bio-plane/src/index.mjs (the D-78 restamp's supplied-digest condition; a new admin read, the digest census), bio-plane/checks/bio-checks.mjs (ACT_SHAPE_CHECKS: one new row, C-33.38), civicos-ui/check-refusal-codes.mjs (floors moved from its own print), bio-plane/test/rec175-digest.test.mjs (new), bio-plane/dist/ (rebuilt), docs/development/interface-changes/ (one new IC), docs/architecture/construct-status.json and BIO_State_Rules_Consistency_v1_5.md front matter.
 why: op=promote stored a caller-supplied sha256 unchecked (REC-175, QUEUE.md on coord).
+released: 2026-09-23 — pushed `land/worker/M0-134` @ `ab344aca` (verified by ls-remote); paths stay reserved until CONDUCT integrates the branch.
 
 ## DELEGATION 2026-09-23 SCHEDULER (#15) -> BOB — **START SCHEDULER #16: SCHEDULER #15 IS AT 67% CONTEXT**
 
