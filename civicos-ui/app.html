@@ -2543,7 +2543,7 @@ function recordRows(list, showType){
   return list.map(b=>{
     const crux = b.criticality==="crucial" ? " "+sealFor("crit","crucial") : "";
     return `<tr class="row" data-id="${esc(b.bundle_id)}" data-type="${esc(b.object_type||"")}">
-      <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${crux}</td>
+      <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${crux}${surfacedByAgentHtml(surfacedByOf(b.bundle_id))}</td>
       ${showType?`<td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(typeLabel(b.object_type, b.current_state))}</td>`:""}
       <td class="st">${sealFor("state", b.current_state, b.object_type)}</td>
       <td class="upd">${fmtWhen(b.last_updated)}</td>
@@ -2615,7 +2615,7 @@ async function renderRecord(){
     const collected = list.filter(b=>b.current_state==="collected").length;
     if(!$("#rc")) return;
     $("#rc").textContent = `${list.length} items · ${collected} awaiting review`;
-    $("#rectable").innerHTML = listTable(list);
+    $("#rectable").innerHTML = listTable(list) + surfacedByNoteHtml(list.length > 0);
     wireRows();
     /* Counted by NORMALIZED type, so one question is one question however its
        row spells itself — the split count the second rename left is gone. */
@@ -2627,12 +2627,13 @@ async function renderRecord(){
   LIST_REPAINT = ()=>paint(last);
   try{
     let list = await loadRecord();
+    await loadAgentSurfaced();   /* D-82: which listed questions a machine raised, asked once per paint of this list */
     let sig = listSig(list);
     paint(list);
     liveStart(async ()=>{
       const fresh = await loadRecord(true);
       const s = listSig(fresh);
-      if(s!==sig && $("#recrows")){ sig = s; paint(fresh); }
+      if(s!==sig && $("#recrows")){ sig = s; await loadAgentSurfaced(); paint(fresh); }
     });
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }
@@ -6992,6 +6993,7 @@ async function openBundle(id, fromNav){
        successor. Built async (its own reads) and degrades honestly section by
        section, so it never blanks the page. */
     const docKnows = await docKnowsPanel(capSha);
+    if(((fmj && fmj.references) || []).length || rev.length) await loadAgentSurfaced();   /* D-82: only when this page lists another question */
     const vFact = releaseFact(bundleMd);
     /* op=backlinks' own field names, read straight: `from_title`, `from_type`,
        `from_state`. An outage says so instead of claiming nothing cites it. */
@@ -7021,14 +7023,14 @@ async function openBundle(id, fromNav){
       const pa = VIEW_REG[PRIMARY_K], ext = fileExt(pa.base);
       if(ext) ftag = `<span class="ftag" onclick="chipPop(event,this)" data-pop-gloss="__ft" data-pop-extra="${esc(`${pa.base.split("/").pop()}, ${fmtBytes(pa.total)}${pa.parts.length>1?` in ${pa.parts.length} parts`:""}.`)}" data-ft="${esc(ext)}" title="${esc(ext)}: ${esc(FILETYPES[ext]||"the primary artifact's file type")}">${esc(ext)}</span>`;
     }
-    const seals = `<span class="sp"></span><span class="seals">${ftag}${sealFor("state", fm.current_state||(proj&&proj.current_state)||"", otype, (fm.current_state==="verified")?vFact:null)}${(fm.criticality||(proj&&proj.criticality))==="crucial"?sealFor("crit","crucial",null,cFact):""}${(proj&&proj.monitor_enabled)?sealFor("flag","monitored",null,mFact):""}${(proj&&proj.reeval_flag)?sealFor("flag","reeval"):""}${(proj&&proj.annotations_open)?sealFor("flag","annotations"):""}</span>`;
+    const seals = `<span class="sp"></span><span class="seals">${normalizeType(otype)==="inquiry" ? surfacedByAgentHtml(fm.surfaced_by || (fmj && fmj.surfaced_by)) : ""}${ftag}${sealFor("state", fm.current_state||(proj&&proj.current_state)||"", otype, (fm.current_state==="verified")?vFact:null)}${(fm.criticality||(proj&&proj.criticality))==="crucial"?sealFor("crit","crucial",null,cFact):""}${(proj&&proj.monitor_enabled)?sealFor("flag","monitored",null,mFact):""}${(proj&&proj.reeval_flag)?sealFor("flag","reeval"):""}${(proj&&proj.annotations_open)?sealFor("flag","annotations"):""}</span>`;
 
 
     /* --- stratum 2: in the case --- */
     const fwd = (fmj && fmj.references) || [];
     const objective = fmj && fmj.objective ? `<div class="card"><div class="kv"><span class="k">Objective</span><span class="v plain">${esc(fmj.objective)}</span></div>${fmj.workproduct_state?`<div class="kv"><span class="k">Work product</span><span class="v plain">${chip(fmj.workproduct_state, "workproduct")||esc(fmj.workproduct_state)}</span></div>`:""}</div>` : "";
-    const fwdRows = fwd.length ? fwd.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.target)}')"><span class="lt">${esc(r.target)}</span><span class="ln">${esc(r.rel||"cites")}${r.status?` · ${esc(r.status)}`:""}${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
-    const revRows = rev.length ? rev.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.from)}')"><span class="lt">${esc(r.from_title||r.from)}</span><span class="ln">${esc(typeLabel(r.from_type, r.from_state))} · ${esc(r.rel||"cites")} this${r.status?` · ${esc(r.status)}`:""}${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
+    const fwdRows = fwd.length ? fwd.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.target)}')"><span class="lt">${esc(r.target)}${surfacedByAgentHtml(surfacedByOf(r.target))}</span><span class="ln">${esc(r.rel||"cites")}${r.status?` · ${esc(r.status)}`:""}${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
+    const revRows = rev.length ? rev.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.from)}')"><span class="lt">${esc(r.from_title||r.from)}${surfacedByAgentHtml(surfacedByOf(r.from))}</span><span class="ln">${esc(typeLabel(r.from_type, r.from_state))} · ${esc(r.rel||"cites")} this${r.status?` · ${esc(r.status)}`:""}${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
     /* THE RECORD'S REFUSAL, IN ITS OWN WORDS, where the reverse index could not
        be read. It stands INSTEAD OF the "nothing cites this" empty state, never
        beside it: an unanswered question rendered as a settled answer is the
@@ -8145,6 +8147,7 @@ async function openInquiry(id, fromNav){
     }catch(e){ backErr = backErr || e; }
     ACTS_HERE = (actsR && actsR.ok) ? actsR.acts : [];
     const rels = (back && Array.isArray(back.backlinks)) ? back.backlinks : [];
+    if(rels.length) await loadAgentSurfaced();   /* D-82: only when this page lists another question */
 
     /* UI-17a, CORRECTED BY UI-57 2026-09-10. The publication entry point renders
        where the OBJECT is one the record's publication rule applies to — a
@@ -8193,7 +8196,7 @@ async function openInquiry(id, fromNav){
     const relPane = backErr
       ? errPane(backErr)
       : (rels.length
-        ? rels.map(r=>`<div class="linkrow" onclick="openBundle(${esc(JSON.stringify(String(r.from)))})"><span class="lt">${esc(r.from_title||r.from)}</span><span class="ln">${esc(typeLabel(r.from_type, r.from_state))} &middot; ${esc(r.rel||"cites")} this${r.note?` &middot; ${esc(r.note)}`:""}</span></div>`).join("")
+        ? rels.map(r=>`<div class="linkrow" onclick="openBundle(${esc(JSON.stringify(String(r.from)))})"><span class="lt">${esc(r.from_title||r.from)}${surfacedByAgentHtml(surfacedByOf(r.from))}</span><span class="ln">${esc(typeLabel(r.from_type, r.from_state))} &middot; ${esc(r.rel||"cites")} this${r.note?` &middot; ${esc(r.note)}`:""}</span></div>`).join("")
         : `<div class="empty">Nothing in the record rests on this question yet.</div>`);
 
     /* The no-project conclusion renders through `noProjectConclusionHtml` — the
@@ -8226,7 +8229,7 @@ async function openInquiry(id, fromNav){
 
     $("#content").innerHTML = `${crumb}
       <div class="trow"><h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1></div>
-      <p class="lede">${esc(PHASE_LABEL[phase])} &middot; <span class="mono">${esc(state)}</span></p>
+      <p class="lede">${esc(PHASE_LABEL[phase])} &middot; <span class="mono">${esc(state)}</span>${surfacedByAgentHtml(fm.surfaced_by || (fmj && fmj.surfaced_by))}</p>
       ${runs}
       ${credentialSentence(PLANE.me)}
       <h2 class="sec">The question, as authored</h2>${questionPane}
@@ -8485,14 +8488,14 @@ function projectContentsHtml(refs, back){
   const rows = [];
   for(const r of (Array.isArray(refs)?refs:[])){
     if(!r || !r.target) continue;
-    rows.push(`<div class="linkrow" onclick="openByType(${esc(JSON.stringify(String(r.target)))})"><span class="lt">${esc(String(r.target))}</span><span class="ln">this project ${esc(String(r.rel||"cites"))} it${r.status?` &middot; ${esc(String(r.status))}`:""}${r.note?` &middot; ${esc(String(r.note))}`:""}</span></div>`);
+    rows.push(`<div class="linkrow" onclick="openByType(${esc(JSON.stringify(String(r.target)))})"><span class="lt">${esc(String(r.target))}${surfacedByAgentHtml(surfacedByOf(r.target))}</span><span class="ln">this project ${esc(String(r.rel||"cites"))} it${r.status?` &middot; ${esc(String(r.status))}`:""}${r.note?` &middot; ${esc(String(r.note))}`:""}</span></div>`);
   }
   for(const b of (Array.isArray(back)?back:[])){
     if(!b || !b.from) continue;
-    rows.push(`<div class="linkrow" onclick="openByType(${esc(JSON.stringify(String(b.from)))},${esc(JSON.stringify(String(b.from_type||"")))})"><span class="lt">${esc(String(b.from_title||b.from))}</span><span class="ln">${esc(typeLabel(b.from_type, b.from_state))} &middot; ${esc(String(b.rel||"cites"))} this project${b.note?` &middot; ${esc(String(b.note))}`:""}</span></div>`);
+    rows.push(`<div class="linkrow" onclick="openByType(${esc(JSON.stringify(String(b.from)))},${esc(JSON.stringify(String(b.from_type||"")))})"><span class="lt">${esc(String(b.from_title||b.from))}${surfacedByAgentHtml(surfacedByOf(b.from))}</span><span class="ln">${esc(typeLabel(b.from_type, b.from_state))} &middot; ${esc(String(b.rel||"cites"))} this project${b.note?` &middot; ${esc(String(b.note))}`:""}</span></div>`);
   }
   return rows.length
-    ? `<div class="card" style="padding:4px 18px">${rows.join("")}</div>`
+    ? `<div class="card" style="padding:4px 18px">${rows.join("")}</div>${surfacedByNoteHtml(true)}`
     : `<div class="empty">Nothing is in this project yet: it cites nothing and nothing in the record points at it.</div>`;
 }
 /* One click, the right surface: a question opens the QUESTION page, a project
@@ -8656,6 +8659,7 @@ async function openProjectWorkspace(id, fromNav){
     /* WHAT IS IN IT, both directions, one gated read each and no walk. */
     let back = null, backErr = null;
     try{ back = await recR("backlinks", { target:id }); }catch(e){ backErr = e; }
+    await loadAgentSurfaced();   /* D-82: which of the questions in it a machine raised */
     const refs = (fmj && Array.isArray(fmj.references)) ? fmj.references : [];
     const contents = backErr ? errPane(backErr)
                              : projectContentsHtml(refs, (back && back.backlinks) || []);
@@ -11890,7 +11894,7 @@ async function runSearch(){
   FIND.running = true;
   res.innerHTML = `<p class="count-line">Asking the record&hellip;</p>`;
   const [text, subjects, passages] = await Promise.all(
-    [finderTextRoute(plan), finderSubjectsRoute(plan), finderPassageRoute(plan)]);
+    [finderTextRoute(plan), finderSubjectsRoute(plan), finderPassageRoute(plan), loadAgentSurfaced()]);
   FIND.running = false;
   FIND.text = text; FIND.subjects = subjects; FIND.passages = passages;
   /* THE OVERLAP, MERGED BY `bundle_id`, and it is the ONLY figure this page
@@ -11955,7 +11959,7 @@ function finderRowsHtml(rows, overlapIds){
     const both = id && overlapIds.has(id);
     return `<tr class="row" data-id="${esc(id||"")}">
       <td class="pick">${id?`<input class="ck" type="checkbox" data-id="${esc(id)}" onclick="event.stopPropagation();finderPickCount()">`:""}</td>
-      <td class="item"><span class="ttl">${esc(b.title||id||"")}</span>${crux}${both?` <span class="chip collected" title="this document was found by both routes">both routes</span>`:""}</td>
+      <td class="item"><span class="ttl">${esc(b.title||id||"")}</span>${crux}${surfacedByAgentHtml(surfacedByOf(id))}${both?` <span class="chip collected" title="this document was found by both routes">both routes</span>`:""}</td>
       <td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(typeLabel(b.object_type, b.current_state))}</td>
       <td class="st">${sealFor("state", b.current_state, b.object_type)}</td>
       <td class="upd">${fmtWhen(b.last_updated)}</td></tr>`;
@@ -11992,7 +11996,7 @@ function finderTextPanelHtml(t, overlapIds){
     + ((t.warnings||[]).length ? `<div class="card" style="margin:8px 0">${t.warnings.map(w=>`<div class="kv"><span class="k">The record&rsquo;s note on this query</span><span class="v plain">${esc(String(w))}</span></div>`).join("")}</div>` : "")
     + (t.widen ? `<div class="card" style="margin:8px 0"><div class="kv"><span class="k">The record&rsquo;s own offer</span><span class="v plain">${esc(String(t.widen.detail||""))} &mdash; ${esc(String(t.widen.total))} match any of them.</span></div></div>` : "")
     + (shown
-        ? `<table class="rec"><thead><tr><th class="pick"></th><th>Item</th><th>Type</th><th>State</th><th>Updated</th></tr></thead><tbody>${finderRowsHtml(t.hits, overlapIds)}</tbody></table>`
+        ? `<table class="rec"><thead><tr><th class="pick"></th><th>Item</th><th>Type</th><th>State</th><th>Updated</th></tr></thead><tbody>${finderRowsHtml(t.hits, overlapIds)}</tbody></table>${surfacedByNoteHtml(true)}`
         : `<div class="empty">This route found nothing.</div>`);
 }
 /* ---- UI-39: ONE SENTENCE ABOUT WHAT A NAME LOOKUP CANNOT TELL YOU ----
@@ -16080,6 +16084,60 @@ function proposalDerivedBadgeHtml(p){
     <span class="prop-dwhy">The record noticed this pattern on its own. <b>Nobody has yet decided it is worth pursuing.</b> It is a question the record raised, not an established finding — it decides nothing and changes nothing until a person acts on it.</span>
   </div>`;
 }
+
+/* ==== D-82 SURFACED-BY — THE AGENT-SURFACED QUESTION, MARKED WHEREVER A QUESTION IS LISTED OR SHOWN ====
+   `proposalDerivedBadgeHtml` above is D-82's display half for a DERIVED finding. This is its other half, for an
+   AUTHORED question a machine opened. D-78 has the plane stamp `surfaced_by: agent` on every inquiry whose creation
+   did not arrive through a member's session (an assistant's credential or a deploy token) and `human` on a member's;
+   until D-82 no surface read that stamp on a question, so a machine's question read exactly like a colleague's
+   judgement. Interaction Constructs §P, the accountability rule: the marker is NOT a discount — a good question stands
+   on its merits whoever asked it — it says that NOBODY HAS YET JUDGED IT WORTH ASKING. Assistant and AI Roles §3 rule 8:
+   an assistant-surfaced focus must be written and shown as one.
+
+   ONE HELPER DRAWS THE MARKER, and every site calls it with the RECORD'S value, never with a title, an author or an
+   id's shape (a liar marking by those passes a fixture whose two questions differ only in who opened them; the suite's
+   two questions share both). It discounts nothing and hides nothing: it is added beside a row, and a member's question
+   renders exactly as before. Two ways the value arrives, both the record's:
+     - on a question's OWN page, from its front matter (`op=projection`'s `fm_json`, the read the page already takes);
+     - on a LIST, from ONE `op=search` read per surface — `type:inquiry fm:surfaced_by=agent`, ids only — because no
+       list read (`op=list`, a search page, `op=backlinks`, `op=queue`) carries the field. `fm:` is the plane's own
+       published grammar line (`op=searchfields` `syntax`); where the record does not publish it, nothing is asked.
+   UNDETERMINED IS STATED: when that read failed, was not asked, or came back short of its own total, rows it did not
+   name stay unmarked and `surfacedByNoteHtml` says once that an unmarked question is NOT thereby a member's. */
+let AGENT_SURFACED = { asked:false, ids:null, complete:false, err:null };
+async function loadAgentSurfaced(){
+  await loadSearchFields();
+  const type = fieldSelector("type", "inquiry");
+  const fmPublished = (SEARCH_FIELDS.syntax || []).some(l => /(^|\s)fm:/.test(String(l)));
+  if(!type || !fmPublished){ AGENT_SURFACED = { asked:false, ids:null, complete:false, err:null }; return AGENT_SURFACED; }
+  try{
+    const r = await recR("search", { q:`${type} fm:surfaced_by=agent`, mode:"ids", limit:"500", facets:"none" });
+    const ids = (r && Array.isArray(r.ids)) ? r.ids : null;
+    /* COMPLETE only when the record said so on both counts: not truncated, and its own total equals what it sent.
+       `r.limit` is the page size of the PAGE mode and bounds nothing here (ids mode answers to the plane's ids cap,
+       which `truncated` reports), so it is carried for the reader and never used as a completeness test. */
+    const complete = !!ids && r.truncated === false && typeof r.total === "number" && r.total === ids.length;
+    AGENT_SURFACED = { asked:true, ids: ids ? new Set(ids) : null, complete, err:null,
+                       total: (r && typeof r.total === "number") ? r.total : null, limit: r ? r.limit : null };
+  }catch(e){ AGENT_SURFACED = { asked:true, ids:null, complete:false, err:e }; }
+  return AGENT_SURFACED;
+}
+/* The record's value for a LISTED question, by its id: "agent" when the read above named it, else null — which means
+   "not named", never "a member's". */
+function surfacedByOf(id){
+  return (AGENT_SURFACED.ids && id && AGENT_SURFACED.ids.has(String(id))) ? "agent" : null;
+}
+/* THE MARKER. The one helper; D-82's negative control neuters it. */
+function surfacedByAgentHtml(surfacedBy){
+  if(surfacedBy !== "agent") return "";
+  return ` <span class="chip surf-agent" data-surfaced-by="agent" title="A machine opened this question, not a member. A good question stands on its merits whoever raised it; this says only that no member has yet decided it is worth asking.">Raised by a machine &middot; nobody has yet judged it worth asking</span>`;
+}
+/* Said ONCE on a list with rows, and only when the list read could not name every machine-raised question. */
+function surfacedByNoteHtml(hasRows){
+  if(!hasRows || AGENT_SURFACED.complete) return "";
+  return `<p class="subj-note" data-surfaced-undetermined="1">The record did not say which of the questions here a machine raised, so none is marked as one &mdash; an unmarked question here is not thereby a member&rsquo;s.</p>`;
+}
+/* ==== END D-82 SURFACED-BY ==== */
 
 /* The strength grade, shown HONESTLY: how strongly the record connected the
    evidence (§8.1), never how much to trust it, and never a claim that the question
