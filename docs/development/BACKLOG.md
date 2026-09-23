@@ -201,36 +201,6 @@ accepts-when: an exported copy carries the quartet on every page byte-equal to t
 added: 2026-09-19 · SCHEDULER (same entry, item 8).
 cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-69» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### D-150 · queued — **THE EXCLUSION STATEMENT IS CHECKED BY NOBODY BUT ITS AUTHOR, AND THE SIGNED CASE DOCUMENT DOES NOT SAY SO.** REC-14 built the … (whole text: the cut archive)
-order: with the M10 publication path, directly after UI-69 and before D-148: what a published case says about its own completeness, disclosed; designed and NOT BUILT, so a feature below the corrections (SCHEDULER #14, 2026-09-22; BOB #27's inbox entry, item 1)
-milestone: M10
-interface: I3 — the acknowledgement act and the completeness block's list; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 11 and §6A.4 (BOB #27, 2026-09-22).
-depends-on: none — REC-14's statement and REC-126's review-copy grant are built.
-accepts-when: a second participant's acknowledgement lands and is listed in the signed completeness block; a case with none publishes and says so; the author's own acknowledgement is refused … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #14 (BOB #27's inbox entry, item 1, drained this commit; D-150's DEBT row of 2026-08-01; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-150» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-148 · queued — **A FEE QUOTE IS EVIDENCE, AND THE RECORD HOLDS ONE ONLY AS PROSE: a `received` correspondence entry cannot carry the amount, the** … (whole text: the cut archive)
-order: with the M10 case path, after UI-69: the action a case justifies, CivicOS's fourth verb, a feature over built substrate; D-149 directly after it, both beside D-147 as BOB #26 placed them (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 1)
-milestone: M10
-interface: I3 and I5 — a quote grammar on correspondence and an indexed table; the integrator mints and classifies the ICs.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A FEE QUOTE IS EVIDENCE*, Bob's ruling of 2026-09-22).
-depends-on: none — `action` and its correspondence are built.
-accepts-when: a quote projects and reads back by counterparty and by request; a revision to zero keeps both entries; a quote answering no `sent` entry, or whose amount is not a number, is … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #12 drafted it; SCHEDULER #13 placed it, re-verified on `8e2c146c` (BOB #26's inbox entry, item 1; D-148's DEBT row; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-148» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-149 · queued — **A RECORDS REQUEST CANNOT SAY WHICH LAWS GOVERN IT: the action carries no citation of the federal, state or local records laws** … (whole text: the cut archive)
-order: directly after D-148, its sibling at M10 beside D-147 (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 2)
-milestone: M10
-interface: I3 and I5 — the action's citation list; the integrator mints and classifies the ICs.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*, Bob's ruling of 2026-09-22).
-depends-on: none — `action` is built.
-accepts-when: a member's list lands and reads back; an action with none reads undetermined, never federal; a machine credential's list is refused by name. How a liar passes it: a citation … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #12 drafted it; SCHEDULER #13 placed it, re-verified on `8e2c146c` (BOB #26's inbox entry, item 2; D-149's DEBT row; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-149» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
 ### D-147 · queued — **A RECORDS REQUEST IS ONE ROUND TRIP: `awaiting_response` HIDES THE FEE ESTIMATE, THE WAIVER DECISION, A PARTIAL PRODUCTION AND** … (whole text: the cut archive)
 order: directly after D-149, on D-148's entry grammar, which it extends (BOB #27: *"depends-on D-148"*), the M10 action path (SCHEDULER #14, 2026-09-22; BOB #27's inbox entry, item 2)
 milestone: M10
@@ -240,16 +210,6 @@ depends-on: D-148 (the entry grammar it extends); D-149 (a stated due date names
 accepts-when: a request, a fee estimate, a waiver decision, a partial production and an appeal read back as one dated chain; an entry with no stated due date reads UNDETERMINED; a stated … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #14 (BOB #27's inbox entry, item 2, drained this commit; D-147's DEBT row of 2026-08-01; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-147» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### REC-149 · queued — **DISCOVERABLE OR HIDDEN (Membership v2 §7 item 7.14), 1 of 4: the OWNER's recorded setting (append-only, latest wins, no** … (whole text: the cut archive)
-order: Bob's 2026-09-18 ruling (DISCOVERABLE/HIDDEN), after BOB #14's listed items; the plane half first (SCHEDULER, 2026-09-19)
-milestone: M8
-interface: I3 (an IC minted with `node tools/mintid.mjs IC`), I5 for the setting's table
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 item 7.14 (Bob's ruling of 2026-09-18; decided by BOB #16, 2026-09-19).
-depends-on: REC-138 (done; `Store#inSight`) — CHECK AT THE CODE at spawn.
-accepts-when: through the ops, a hidden project is byte-identical to a nonexistent one at the directory, the request and every act (REC-138's suites green UNEDITED); an uninvited member's … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER (same entry, item 1).
-cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-149» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
 ### REC-150 · queued — **DISCOVERABLE OR HIDDEN, 2 of 4: THE REQUEST TO JOIN — ask (one open per member per project, optional comment), withdraw** … (whole text: the cut archive)
 order: after REC-149, whose EXISTENCE level it needs (SCHEDULER, 2026-09-19)

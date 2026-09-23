@@ -97,7 +97,7 @@ scope: the method string and the two `schema.mjs` comments follow §8.1's wordin
 accepts-when: a new grade-D resolution's stored method reads the new wording through the op; an older row is byte-identical. NEGATIVE CONTROL: restore the old string, and the wording arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (LED-7; D-219's DEBT row of 2026-08-06; keeps its `D-` id).
 
-### CAP-14 · running — SPAWNED 2026-09-23 ~21:08Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER CAP-14 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/CAP-14 and that session; never conclude queued from the absence alone.
+### CAP-14 · integrated — finished; integrated on land/conduct/c17-batch5 @ beee0b17, waiting for its train — flipped by SCHEDULER #17 (IC-219)
 order: after D-389 and behind CAP-13, the same reuse machinery and files, one worker at a time; below CAP-13 because it adds provenance the record omits rather than correcting a figure it overstates (SCHEDULER #6, 2026-09-21; the D-339 worker's item 3, ruled)
 milestone: M2
 interface: I5 and I1 — a derived column and an additive manifest field; the integrator mints and classifies the ICs.
@@ -119,7 +119,7 @@ accepts-when: a deck whose LAST slide part is unreadable still admits a citation
 added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 7, at D-359's close; `node tools/mintid.mjs COFF`).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «COFF-13» on entering the cache; its `order:` line is the current one.
 
-### D-52 · running — SPAWNED 2026-09-23 ~21:08Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-52 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-52 and that session; never conclude queued from the absence alone.
+### D-52 · integrated — finished; integrated on land/conduct/c17-batch5 @ 74fc2e25 (its DEC-49 fix, f4058e38), waiting for its train — flipped by SCHEDULER #17 (IC-220)
 order: security-class, first above the features: Membership v2 §8.1's promise that an export is never silent rests on this notification and only the looking half is built; below the silent defects because the export IS logged and §8.1 says so (SCHEDULER #5, 2026-09-21)
 milestone: M7
 interface: I3 — a queue item kind gains a producer; the integrator mints and classifies the IC.
@@ -152,7 +152,7 @@ accepts-when: a fixture holding several captures of one address reads as ONE doc
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 12; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-220» on entering the cache; its `order:` line is the current one.
 
-### D-182 · running — SPAWNED 2026-09-23 ~21:16Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-182 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-182 and that session; never conclude queued from the absence alone.
+### D-182 · integrated — finished; integrated on land/conduct/c17-batch5 @ beee0b17, waiting for its train — flipped by SCHEDULER #17 (IC-217)
 order: after D-220, above the features: an overclaim on the field that carries legal exposure — CLAUDE.md §2's class, in the action plan a member files from (SCHEDULER #6, 2026-09-21; ruled on SCHEDULER #6's Q4)
 milestone: M10
 interface: I3 and I5 — a new value and published words; the integrator mints and classifies the IC.
@@ -163,7 +163,7 @@ accepts-when: an action created with no tier reads UNDETERMINED through the ops;
 added: 2026-09-21 · SCHEDULER #6 (LED-7; ruled on its row's two options; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-182» on entering the cache; its `order:` line is the current one.
 
-### D-178 · running — SPAWNED 2026-09-23 ~21:21Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-178 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-178 and that session; never conclude queued from the absence alone.
+### D-178 · integrated — finished; integrated on land/conduct/c17-batch5 @ beee0b17, waiting for its train — flipped by SCHEDULER #17 (IC-218)
 order: with the M10 corrections, after D-182 and above the features: the audit DIST's ladder needs clean before a version serves reports correct legs as offenders and skips the checks it exists to run, CLAUDE.md §2's class; last of them because no member reads it (SCHEDULER #12, 2026-09-22, LED-7)
 milestone: M10
 interface: I3 — `op=audit`'s tallies move; the integrator mints and classifies the IC.
@@ -301,6 +301,50 @@ scope: add the hash and both floors beside the date and author, computed by the 
 accepts-when: for one case edition, the review copy's quartet and the published container's header agree field for field, proved by the SAME function; the hash changes when one byte of the answer does. How a liar passes it: a second hasher over a differently-canonicalised body agrees on the fixture and drifts, so the suite asserts ONE function. NEGATIVE CONTROL: canonicalise differently in one place, and the agreement arm fails. Battery green own-baseline by its COMPLETION LINE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `node tools/plancheck.mjs --local` then BARE.
 added: 2026-09-19 · SCHEDULER (same entry, item 7).
 uncut: restored whole from «REC-148» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
+
+### D-150 · queued — **THE EXCLUSION STATEMENT IS CHECKED BY NOBODY BUT ITS AUTHOR, AND THE SIGNED CASE DOCUMENT DOES NOT SAY SO.** REC-14 built the authored statement with its computed `searched` section; no act acknowledges it, though the row's external evidence is that the catch was a second person with standing. — owner RECORD.
+order: with the M10 publication path, directly after UI-69 and before D-148: what a published case says about its own completeness, disclosed; designed and NOT BUILT, so a feature below the corrections (SCHEDULER #14, 2026-09-22; BOB #27's inbox entry, item 1)
+milestone: M10
+interface: I3 — the acknowledgement act and the completeness block's list; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 11 and §6A.4 (BOB #27, 2026-09-22).
+depends-on: none — REC-14's statement and REC-126's review-copy grant are built.
+scope: an acknowledgement is an authored, attributed, dated act by a joined participant of the publishing project other than the statement's author, or by a review-copy recipient through their grant; the signed completeness block lists them, or states that nobody but its author acknowledged it; publication is never refused for want of one. The UI half (the review copy leads with the statement, §6A.4) is UI-68's surface: a DELEGATION to UI at integration.
+accepts-when: a second participant's acknowledgement lands and is listed in the signed completeness block; a case with none publishes and says so; the author's own acknowledgement is refused by name. NEGATIVE CONTROL: refuse publication for want of one, and the one-member arm fails by name.
+added: 2026-09-22 · SCHEDULER #14 (BOB #27's inbox entry, item 1, drained this commit; D-150's DEBT row of 2026-08-01; keeps its `D-` id).
+uncut: restored whole from «D-150» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
+
+### D-148 · queued — **A FEE QUOTE IS EVIDENCE, AND THE RECORD HOLDS ONE ONLY AS PROSE: a `received` correspondence entry cannot carry the amount, the currency, the stated basis or the request it answers, so quotes cannot be compared across bodies or over time.** RULED by Bob, 2026-09-22; the action and its correspondence are BUILT (`node tools/status.mjs 8`). — owner RECORD.
+order: with the M10 case path, after UI-69: the action a case justifies, CivicOS's fourth verb, a feature over built substrate; D-149 directly after it, both beside D-147 as BOB #26 placed them (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 1)
+milestone: M10
+interface: I3 and I5 — a quote grammar on correspondence and an indexed table; the integrator mints and classifies the ICs.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A FEE QUOTE IS EVIDENCE*, Bob's ruling of 2026-09-22).
+depends-on: none — `action` and its correspondence are built.
+scope: a `received` entry may carry a QUOTE — amount and currency as quoted, the stated basis verbatim, and the `sent` entry it answers; a later entry may name the quote it revises (a waiver is a revision to zero, both entries standing). Its grammar sits at C-2.10 beside the correspondence arms; `promote` projects it into an indexed table `purge` clears in both arms; a read returns quotes by counterparty and by request. The record states no finding about a quote.
+accepts-when: a quote projects and reads back by counterparty and by request; a revision to zero keeps both entries; a quote answering no `sent` entry, or whose amount is not a number, is refused by name; an action with no quote reads byte-identical. NEGATIVE CONTROL: drop the projection from the per-bundle purge, and the purge arm fails by name.
+added: 2026-09-22 · SCHEDULER #12 drafted it; SCHEDULER #13 placed it, re-verified on `8e2c146c` (BOB #26's inbox entry, item 1; D-148's DEBT row; keeps its `D-` id).
+uncut: restored whole from «D-148» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
+
+### D-149 · queued — **A RECORDS REQUEST CANNOT SAY WHICH LAWS GOVERN IT: the action carries no citation of the federal, state or local records laws that apply to the agency asked, so the design reads jurisdiction-blind.** RULED by Bob, 2026-09-22: every records law governing the agency asked applies, layered by the agency's level. — owner RECORD.
+order: directly after D-148, its sibling at M10 beside D-147 (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 2)
+milestone: M10
+interface: I3 and I5 — the action's citation list; the integrator mints and classifies the ICs.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*, Bob's ruling of 2026-09-22).
+depends-on: none — `action` is built.
+scope: a records-request action carries a list of citations, each with its level (federal, state or local), set by a member's authored act; a machine credential is refused by name, and a machine PROPOSAL, if built, is labelled machine work. An empty list reads UNDETERMINED with its sentence, never a default; the plane encodes no law's rules; `cpra_request` actions read unchanged.
+accepts-when: a member's list lands and reads back; an action with none reads undetermined, never federal; a machine credential's list is refused by name. How a liar passes it: a citation filled in at creation, so the empty-list arm reads the bytes. NEGATIVE CONTROL: default an empty list to a federal citation, and the undetermined arm fails by name.
+added: 2026-09-22 · SCHEDULER #12 drafted it; SCHEDULER #13 placed it, re-verified on `8e2c146c` (BOB #26's inbox entry, item 2; D-149's DEBT row; keeps its `D-` id).
+uncut: restored whole from «D-149» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
+
+### REC-149 · queued — **DISCOVERABLE OR HIDDEN (Membership v2 §7 item 7.14), 1 of 4: the OWNER's recorded setting (append-only, latest wins, no record = HIDDEN); `#inSight` answers three levels at the ONE predicate; EXISTENCE only for a discoverable project to a member outside it; the DIRECTORY read; `viewerPredicate` NOT changed.** — owner RECORD.
+order: Bob's 2026-09-18 ruling (DISCOVERABLE/HIDDEN), after BOB #14's listed items; the plane half first (SCHEDULER, 2026-09-19)
+milestone: M8
+interface: I3 (an IC minted with `node tools/mintid.mjs IC`), I5 for the setting's table
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 item 7.14 (Bob's ruling of 2026-09-18; decided by BOB #16, 2026-09-19).
+depends-on: REC-138 (done; `Store#inSight`) — CHECK AT THE CODE at spawn.
+scope: as item 7.14: at EXISTENCE every act but the request is refused POSITIONALLY with a new code carrying id and name only; every existing project boots HIDDEN.
+accepts-when: through the ops, a hidden project is byte-identical to a nonexistent one at the directory, the request and every act (REC-138's suites green UNEDITED); an uninvited member's record reads, search, backlinks and run reports never show a discoverable project's contents; a predecessor's store boots with every project HIDDEN. How a liar passes it: widening `viewerPredicate` passes the directory arm and leaks contents. NEGATIVE CONTROL: widen it, and a contents arm fails by name. Battery green own-baseline by its COMPLETION LINE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `node tools/plancheck.mjs --local` then BARE.
+added: 2026-09-19 · SCHEDULER (same entry, item 1).
+uncut: restored whole from «REC-149» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
