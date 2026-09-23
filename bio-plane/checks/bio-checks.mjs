@@ -11807,6 +11807,9 @@ export const TRANSCRIBE_CHECKS = {
  *                        testimony path did not write (C-53.8, THE LIAR: a flag any
  *                        writer could set); an authored document that stops saying
  *                        so (C-53.9).
+ *   is-register-home     D-179, THE SAME FENCE ASKED OF EVERY CAPTURE (C-53.13): a
+ *                        register entry whose bytes another existing bundle
+ *                        already holds — one capture, one home, the original's.
  *
  * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's
  * and lives in C-2.8 (`checkTestimonyLeg`, IC-142), not in this family; the
@@ -11915,6 +11918,22 @@ export const TESTIMONY_CHECKS = {
     translation: 'A finding in this case rests, directly or through another finding, on a member\'s own '
       + 'firsthand observation, so the case cannot be published yet. How a published case attributes an '
       + 'observation is the observing member\'s choice, and the record cannot yet honour that choice.',
+  },
+  /* D-179 — ONE CAPTURE, ONE HOME, THE ORIGINAL's (BOB #26, 2026-09-22;
+     `BIO_Intake_Doctrine_v1_1.md` §8). C-53.8 generalised from an authored
+     observation to EVERY capture: `register` is keyed by `capture_sha`, so a
+     promote registering bytes another bundle already holds would MOVE that
+     bundle's row to the newcomer, silently. Kept in this family because it is
+     the same fence at the same line, asked of every row rather than the authored
+     one; C-53.8 still answers first for an authored capture, in its own words.
+     The holding bundle is named only to a caller who may see it (D-15). */
+  CAPTURE_HELD_BY_ANOTHER_BUNDLE: {
+    check: 'C-53.13',
+    where: 'src/store.mjs #testimonyFence > is-register-home',
+    translation: 'The record already holds this document, under another bundle. A document has one home '
+      + 'in the record — the first bundle that registered it — and registering it again here would move '
+      + 'it away from there. Nothing was written. Cite the bundle that holds it, or, if you found it at a '
+      + 'new address, that sighting is already recorded as a corroboration of the one it holds.',
   },
 };
 
