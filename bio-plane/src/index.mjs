@@ -870,6 +870,13 @@ const OPS = {
      a question and every document its legs rest on, so a member must not learn
      from a strength what op=list would not tell them. */
   versionstrength: { classes: ["admin", "member", "probe"],      mutating: false },
+  /* REC-161 / §12 clause (c): D-195's independence derivation over a PROPOSED
+     partition of a question's reasons — the read the elicitation's read-back
+     makes BEFORE the member's answers are written. A pure read through the one
+     `#independenceOf`; it shows no strength and writes nothing. Same classes and
+     the same fail-closed `viewer` stamp as versionstrength, below, because it
+     names a question and every document its reasons rest on. */
+  partitionindependence: { classes: ["admin", "member", "probe"], mutating: false },
 
   /* PL-12 / D-84: the bias object's three ops.
      `biasmanifest` is a READ and is gated on the viewer below, like every read
@@ -9667,6 +9674,11 @@ export default {
            `#bundleGate` to the inquiry ONCE, before any leg is read, and fails
            closed on an absent stamp, like every op in this list. */
         || op === "versionstrength"
+        /* REC-161: the proposed-partition independence read names the same
+           QUESTION and the documents its reasons rest on, so it takes the same
+           stamp; the store gates the inquiry ONCE, before any leg is read, and
+           fails closed on an absent stamp. */
+        || op === "partitionindependence"
 
         /* PL-12 / D-84: a project-scoped manifest names a PROJECT bundle, and
            the adopted bias bundles are bundles too, so a caller who may not see

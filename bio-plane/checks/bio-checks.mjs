@@ -8974,6 +8974,66 @@ export const VERSION_STRENGTH_DEFAULT_STATES =
 export const VERSION_STRENGTH_INERT_SOURCES = ['hunch'];
 
 /* ===========================================================================
+ * C-71 — THE INDEPENDENCE OF A PROPOSED PARTITION (REC-161,
+ * INVESTIGATIVE-SESSION.md §12 clause (c), BOB #22 2026-09-21).
+ *
+ * `op=partitionindependence` answers D-195's question — do these parts share an
+ * upstream origin — for a partition of a question's reasons that NOBODY HAS
+ * WRITTEN YET, so the elicitation's read-back can name every shared origin
+ * BEFORE the member's answers are written. It is gated as `op=versionstrength`
+ * is and writes nothing. C-71 is minted (`node tools/mintid.mjs C`) rather than
+ * taken as C-30.n: the op is a second door onto `#independenceOf`, not a second
+ * strength read, and none of these refusals is a statement about a strength.
+ * =========================================================================== */
+export const PARTITION_INDEPENDENCE_CHECKS = {
+  PARTITION_INDEPENDENCE_NO_INQUIRY: {
+    check: 'C-71.1',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'This asks whether the groups of reasons behind one question share a source, and no '
+      + 'question was named. There is no default question here and there must not be one.',
+  },
+  PARTITION_INDEPENDENCE_NOT_AN_INQUIRY: {
+    check: 'C-71.2',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'That is not a question you can read here, so it has no reasons to group. Only a '
+      + 'question rests on reasons, and a question you may not see answers exactly as one that does '
+      + 'not exist.',
+  },
+  PARTITION_INDEPENDENCE_UNREADABLE: {
+    check: 'C-71.3',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'The grouping of reasons could not be read. Send it as a list of groups, each group a '
+      + 'list of the positions of the reasons in it, or as groups each carrying a name and its '
+      + 'positions. Every group needs at least one reason and a name no other group has.',
+  },
+  PARTITION_INDEPENDENCE_UNKNOWN_LEG: {
+    check: 'C-71.4',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'The grouping names a reason this question does not have. It was not dropped quietly, '
+      + 'because an answer about groups the question does not hold would be an answer about something else.',
+  },
+  PARTITION_INDEPENDENCE_LEG_TWICE: {
+    check: 'C-71.5',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'One reason was put in two groups. Each reason belongs to exactly one group, because a '
+      + 'reason shared by two groups would make them share a source by construction.',
+  },
+  PARTITION_INDEPENDENCE_NOT_TOTAL: {
+    check: 'C-71.6',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'Some of this question\'s reasons are in no group. A grouping covers every reason, as a '
+      + 'written reading does, so that what is checked here is what would be written.',
+  },
+  PARTITION_INDEPENDENCE_TOO_MANY_LEGS: {
+    check: 'C-71.7',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'This question rests on more reasons than a written reading may hold, so a grouping of '
+      + 'all of them could not be written and is not checked. The bound is said here rather than '
+      + 'applied quietly.',
+  },
+};
+
+/* ===========================================================================
  * C-31 — THE QUEUE MINT: EVERY ITEM CARRIES A CLASS, AND A KIND THE CATALOGUE
  * NAMES UNDER THAT CLASS (PL-15 / D-213, NOTIFICATIONS.md).
  *

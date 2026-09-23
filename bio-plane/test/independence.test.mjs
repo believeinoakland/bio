@@ -279,10 +279,16 @@ console.log("\n--- C. the gate and the ceremony cannot come to disagree ---");
   const calls = (CODE.match(/this\.#independenceOf\s*\(/g) || []).length;
   const walks = (CODE.match(/FROM captured_locators WHERE capture_sha=\?/g) || []).length;
   console.log(`  reach: 1 definition expected, ${calls} call site(s) found, ${walks} locator walk(s) in the file`);
-  t("ARM C1 — ONE DEFINITION, TWO CALL SITES, AND EXACTLY ONE ORIGIN WALK IN THE FILE. The write "
-  + "gate and the ceremony's read are the two consumers, and a second inlined walk is what this pin "
-  + "exists to catch — behaviour would be identical the day it was written",
-    [defs - calls, calls, walks], [1, 2, 1]);
+  /* CORRECTED 2026-09-23 by REC-161, never exempted: this pinned TWO call sites, which was the consumer
+     count on the day D-271 wrote it and never the rule. The rule is ONE DEFINITION and ONE ORIGIN WALK;
+     REC-161 (INVESTIGATIVE-SESSION.md §12 clause (c)) adds the THIRD consumer, `op=partitionindependence`,
+     which calls the same `#independenceOf` over a PROPOSED partition. The pin stays EXACT rather than
+     becoming a floor, so a fourth consumer still has to come here and say where it is. */
+  t("ARM C1 — ONE DEFINITION, THREE CALL SITES, AND EXACTLY ONE ORIGIN WALK IN THE FILE. The write "
+  + "gate, the ceremony's read and the elicitation's proposed-partition read (REC-161) are the three "
+  + "consumers, and a second inlined walk is what this pin exists to catch — behaviour would be "
+  + "identical the day it was written",
+    [defs - calls, calls, walks], [1, 3, 1]);
 
   t("ARM C2 — and what the walk can and cannot see, stated rather than implied: it derives from "
   + "`register` (capture shas) and `captured_locators` (addresses), so it sees a shared BUNDLE, a "
