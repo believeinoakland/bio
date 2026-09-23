@@ -37570,6 +37570,40 @@ export class Store extends DurableObject {
          LIMIT ?`, ...args, limit);
   }
 
+  /** D-389 — THE ONE OVER-FETCH THE THREE BUNDLE ARMS SHARE, and the one place
+   *  their `looked` page is gated, cut and CLAIMED. The document, content and
+   *  meaning arms each fetch `limit` raw rows — `(cap + 1) * 2`, or `* 3` at
+   *  meaning — because §6's row-whole fence drops rows BEFORE the cut (REC-109),
+   *  then cut the gated list at `cap`. Each arm used to do that itself, and each
+   *  computed its own `truncated` from the gated list alone.
+   *
+   *  THE DISJUNCT, AND WHY IT IS A CLAIM ABOUT COVERAGE: when the raw fetch
+   *  comes back FULL (`raw.length === limit`) the supply was NOT exhausted —
+   *  rows beyond it were never fetched and their visibility is unknown. A viewer
+   *  the fence narrowed to `cap` or fewer then read `truncated: false`, which says
+   *  the list is complete when the reader never looked past the fetch. CLAUDE.md
+   *  §2: sparse is normal, so a coverage flag must never read false where the
+   *  reader cannot know. Fail-safe is the direction (SCHEDULER #6, D-389's order).
+   *  A supply of EXACTLY `limit` rows also reads true — the one over-report this
+   *  accepts rather than a second fetch to rule it out.
+   *
+   *  IT LEAKS NOTHING: an entitled viewer on a full fetch already reads `true`
+   *  (every raw row passes, so the gated list exceeds `cap`), so on a full fetch
+   *  every viewer reads the same bit. The withheld count is still not published.
+   *
+   *  ONE DISJUNCT HERE AND NEVER PER ARM — three copies is the mirror-and-drift
+   *  class the row was raised to avoid, and `d389-fullfetch.test.mjs` S1 counts
+   *  it. `#frontierInternet` is NOT a caller and is not in the class: it gates
+   *  INSIDE its statement, so its `cap + 1` fetch is already exact. The
+   *  never-looked / missing lists each arm fetches beside this page are NOT
+   *  routed here (D-389's scope is this one over-fetch). */
+  #frontierPage(level, cap, { limit, subjectKind = null }, gate) {
+    const raw = this.#frontierLatest(level, { limit, subjectKind });
+    const gated = raw.filter(gate);
+    return { page: gated.slice(0, cap),
+             truncated: gated.length > cap || raw.length === limit };
+  }
+
   /** §5: *`last_verified` is the latest `PRESENT` row's `at`; source unreachable
    *  since is the earliest `LOOKED_INDETERMINATE` after it.* `STORE-AS-CACHE.md`
    *  says HTTP obsoleted `last_verified` and that we must own it — this is where
@@ -37852,8 +37886,10 @@ export class Store extends DurableObject {
        subject kind, one gate, one bound, so a second number here would be a second
        vocabulary for one fact. `#frontierMeaning` over-fetches at `* 3` because it
        pages three subject kinds, which is the same rule and not a different one. */
-    const page = this.#frontierLatest("content", { limit: (cap + 1) * 2, subjectKind: "capture" })
-      .filter((r) => seen(r.subject));
+    /* D-389: the over-fetch, the gate, the cut and the claim are `#frontierPage`'s, shared with the
+       document and meaning arms — this arm names its factor and its gate and nothing else. */
+    const latest = this.#frontierPage("content", cap, { limit: (cap + 1) * 2, subjectKind: "capture" },
+                                      (r) => seen(r.subject));
     /* ONE CALL, NOT ONE PER ROW. The drift join is bounded at birth and its
        result is a SET; asking it per row would put an amplifying scan inside a
        bounded read, which is exactly what `test/derivation-bounds.test.mjs`
@@ -37878,7 +37914,7 @@ export class Store extends DurableObject {
        what is NOT acceptable is an item that doubles the exposure and says
        nothing); and it stops computing an index state for rows this answer then
        throws away. */
-    const pageCut = page.slice(0, cap);
+    const pageCut = latest.page;
     const indexState = new Map();
     {
       const subjects = [...new Set(pageCut.map((r) => r.subject).filter((v) => typeof v === "string" && v))];
@@ -38027,9 +38063,14 @@ export class Store extends DurableObject {
          over-fetch being wide enough to absorb the fence. That is true of all
          three arms of this reader and is raised as its own row — it is a property
          of the over-fetch mechanism and fixing it in one arm of three would be
-         the mirror-and-drift class. */
-      truncated: page.length > cap || never.length > cap
-              || unexplained.length > cap,
+         the mirror-and-drift class. **CLOSED 2026-09-23 BY D-389, AT THE SHARED
+         OVER-FETCH:** `latest.truncated` is `#frontierPage`'s, which reads a FULL
+         raw fetch as truncated for every viewer, so `false` no longer rests on the
+         room being enough. */
+      /* D-389: the page's claim is `latest.truncated`, written LAST so the claims this method
+         still makes itself stay in the spelling `derivation-bounds.test.mjs` can grade. */
+      truncated: never.length > cap || unexplained.length > cap
+              || latest.truncated,
       looked,
       /* REC-107 SWEPT THE CLASS RATHER THAN THE REPORTED SITE. The defect was rowed
          against the MEANING level, and this arm had it too: `missing_unexplained`
@@ -38421,8 +38462,8 @@ export class Store extends DurableObject {
     /* A REFERENCE IS GATED THROUGH THE CAPTURE THAT CARRIED IT, which is the row's
        own AUTHORITY — so the gate asks about the document the look was made for
        and not about some other document that happens to carry the same name. */
-    const rows = this.#frontierLatest("meaning", { limit: (cap + 1) * 3 });
-    const gated = rows.filter((r) => {
+    /* D-389: the over-fetch, gate, cut and claim are `#frontierPage`'s, shared with the other two arms. */
+    const latest = this.#frontierPage("meaning", cap, { limit: (cap + 1) * 3 }, (r) => {
       if (r.subject_kind === "capture") return captureSeen(r.subject);
       if (r.subject_kind === "reference")
         return r.authority ? captureSeen(r.authority) : false;
@@ -38442,7 +38483,7 @@ export class Store extends DurableObject {
       ran_and_found_nothing: r.state === "LOOKED_ABSENT",
       ...this.#frontierVerification("meaning", r.subject_kind, r.subject),
     });
-    const looked = gated.slice(0, cap).map(view);
+    const looked = latest.page.map(view);
 
     /* THE SUBJECTS THAT EXIST AND HAVE NO ROW, one query per subject kind,
        each bounded and each carrying the timestamp section 5.1's cause (2) is
@@ -38534,7 +38575,7 @@ export class Store extends DurableObject {
          the collections it cuts, and is the model. NEITHER BRANCH COULD HAVE SEEN THIS:
          REC-95 wrote the method and M0-38 wrote the grader, in parallel, each green
          alone — the merge is the only place the two met. */
-      truncated: gated.length > cap || never.length > cap,
+      truncated: never.length > cap || latest.truncated,   /* D-389: the page's claim is `#frontierPage`'s */
       looked,
       /* REC-107: `not_ruled_out` IS TOTAL ACROSS BOTH LISTS, and that is the point
          rather than symmetry. A field present on the rows a reader distrusts and
@@ -38781,9 +38822,10 @@ export class Store extends DurableObject {
        false-coverage direction this table exists to refuse. `#frontierMeaning`
        over-fetches for the same reason at the same place. */
     const seenRow = this.#frontierDocumentVisible(viewer);
-    const page = this.#frontierLatest("document", { limit: (cap + 1) * 2, subjectKind: "address" })
-      .filter(seenRow);
-    const looked = page.slice(0, cap).map((r) => ({
+    /* D-389: the over-fetch, gate, cut and claim are `#frontierPage`'s, shared with the other two arms. */
+    const latest = this.#frontierPage("document", cap, { limit: (cap + 1) * 2, subjectKind: "address" },
+                                      seenRow);
+    const looked = latest.page.map((r) => ({
       subject: r.subject, subject_kind: r.subject_kind, state: r.state,
       governed: r.governed === 1, condition: r.condition,
       authority_kind: r.authority_kind, authority: r.authority,
@@ -38909,7 +38951,7 @@ export class Store extends DurableObject {
                 `truncated` computed from the raw supply would be true exactly when
                 the gate dropped enough rows, which is a one-bit count of what was
                 withheld, and the count is the leak. */
-             truncated: page.length > cap || never.length > cap,
+             truncated: never.length > cap || latest.truncated,   /* D-389: the page's claim is `#frontierPage`'s */
              looked, never_looked: never.slice(0, cap),
              tally, never_looked_count: never.slice(0, cap).length,
              note: "NEVER_LOOKED is the absence of a row and is reported apart from the tally: "
