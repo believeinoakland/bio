@@ -23,7 +23,7 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-126 · blocked — **EVERY CLONE AND EVERY LANE RE-RUNS SUITES ANOTHER HAS ALREADY PASSED ON IDENTICAL INPUTS: THERE IS NO SHARED, PER-SUITE RESULT RECORD.** A GREEN record is keyed by a whole tree and lives in one clone (D-293); Bob's asks, 2026-09-23: *"track which suites passed so they don't run again, or those that failed so only those run"*, results shared rather than re-run. CONDUCT #14's design, adopted by BOB #29. — owner M0.
+### M0-126 · running — SPAWNED 2026-09-23 by CONDUCT #15 against TREE-SHARING.md §3a (landed 619dfa65). NOT LANDED, CHECKED BY CONTENT: no gate-results branch reader/writer in tools/ on 619dfa65. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: FIRST of the backlog (BOB #29): every landing and every lane's gate pays for it, so it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); `land/bob/gate-rerun-failed` is on `main`; RETURNED from the cache 2026-09-23, its design unlanded (SCHEDULER #14, 2026-09-23; BOB #29's item)
 milestone: M0
 interface: none
