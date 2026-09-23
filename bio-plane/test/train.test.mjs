@@ -24,6 +24,9 @@
  *     reads the ref LANDED by ancestry;
  *   - "one gate record" read from the train's own summary is its own word; so the record is read back from the gate's
  *     record directory for the tree the REMOTE's `main` now holds.
+ *   - M0-131: a train that skips the never-cached units on a reused tree, derives an EMPTY set, or runs them and ignores
+ *     their verdict lands a merge that drops a carried edit; so its section drives exactly that union and asserts the
+ *     refusal names `plane:carry.test.mjs`, and that the derived set is non-empty and holds it.
  * AND THE GUARD'S OWN LIMIT IS DRIVEN, NOT IMPLIED CLOSED: forging the trailer, the train record and a GREEN gate
  * record by hand PASSES the `main` arm (section 8) — the mark proves a procedure, never an actor.
  *
@@ -41,6 +44,18 @@
  *       ONCE LANDS ON THE RETRY" FAILS, and "THE RETRY IS BOUNDED" with it; the train and the reuse arm hold;
  *   (6) M0-122 — THE REUSE DROPPED (every union gated) -> "A RECORDED-GREEN TREE LANDS WITH NO BATTERY RUN OF ITS OWN"
  *       FAILS; the train, the retry and "OVER-REUSE CLOSED" hold.
+ *   (7) M0-131 — THE HISTORY CHECKS SKIPPED ON REUSE (`if (reuse) return reuse`, M0-122's shape) -> "A UNION WHOSE TREE IS
+ *       RECORDED GREEN BUT WHOSE MERGE DROPS A CARRIED EDIT IS REFUSED BY THE TRAIN NAMING THE CHECK" FAILS (the bad merge
+ *       LANDS), with "THE DERIVED SET IS NOT EMPTY"; the train, the retry and "OVER-REUSE CLOSED" hold.
+ *   (8) M0-131 — THE DERIVED SET EMPTIED (gates.mjs `NEVER_SET = []`) -> the same refusal FAILS, with "THE DERIVED SET IS
+ *       NOT EMPTY"; the train and the reuse arm hold.
+ *   (9) M0-131 — THE VERDICT IGNORED (the never-cached run happens; the reused tree reads GREEN) -> the refusal FAILS
+ *       (no "RED at plane:carry.test.mjs", nothing returned by name) while "THE DERIVED SET IS NOT EMPTY" holds.
+ *   RUN 2026-09-23 by the M0-131 worker, all nine AS DECLARED: baseline 53 pass / 0 fail; failing counts per arm 9, 1, 1,
+ *   22, 7, 5, 5, 4, 1; every restore byte-identical by sha256 and `cmp`, closing 53 / 0, driver 78 pass / 0 fail. Arm 7
+ *   is the row's control: the bad merge landed. FOUND BY ARM 9, re-run alone: main still did NOT move — the never-cached
+ *   run's RED is recorded against the TREE, so the guard's `main` arm refused the push of that tree; the refusal
+ *   failed only its "RED at <check>" and returned-by-name halves. A second line of defence, not the train's own.
  *   RUN 2026-09-23 by the M0-122 worker, all six AS DECLARED: baseline 47 pass / 0 fail; failing counts per arm 9, 1, 1,
  *   16, 7, 2; every restore byte-identical by sha256 and `cmp`, closing 47 / 0, driver 50 pass / 0 fail, pen
  *   removed. Arm 5 failed exactly the seven assertions of the moved-main section and nothing else; arm 6 exactly the
@@ -71,7 +86,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 11;
+const SECTIONS = 12;
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -115,12 +130,12 @@ const FILES = {
   ".gitignore": "node_modules/\n",
 };
 
-function fixture(name) {
+function fixture(name, extra = {}) {
   const seed = join(SANDBOX, `${name}-seed`);
   for (const f of ["gates.mjs", "pushguard.mjs", "train.mjs"]) put(seed, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
   for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"])
     put(seed, `bio-plane/scripts/${f}`, readFileSync(join(REPO, "bio-plane/scripts", f)));
-  for (const [rel, body] of Object.entries(FILES)) put(seed, rel, body);
+  for (const [rel, body] of Object.entries({ ...FILES, ...extra })) put(seed, rel, body);
   git(["init", "-q", "-b", "main"], seed); ident(seed);
   commitAll(seed, "base");
   const remote = join(SANDBOX, `${name}-remote.git`);
@@ -336,7 +351,11 @@ section("M0-122 · MAIN MOVES UNDER THE GATE — the rejected push is retried wi
   const runs = readRuns({ repo: M.C, tree }).runs;
   const firstSha = firstHead && out1(["rev-parse", `${firstHead}^{commit}`], M.C);
   t("...with TWO gate runs in all, the retry's ONE a `--since <the GREEN tip>` gate",
-    [r.gates, /^node tools\/gates\.mjs \(tree/.test(r.gateLines[0] || ""), (r.gateLines[1] || "").startsWith(`node tools/gates.mjs --since ${firstSha} `)], [2, true, true]);
+    [r.gates, /^node tools\/gates\.mjs --with-never-cached \(tree/.test(r.gateLines[0] || ""), (r.gateLines[1] || "").startsWith(`node tools/gates.mjs --since ${firstSha} --with-never-cached `)], [2, true, true]);
+  /* CORRECTED 2026-09-23 by M0-131: the first gate was asserted to be the bare `gates.mjs`, and the retry's `--since
+     <tip>` alone. Both are narrowed selections, and a narrowed selection is a REUSE of what it leaves out, so under BOB
+     #30's ruling each now also runs every never-cached unit (`--with-never-cached`); the old assertion pinned a gate
+     that skipped the history readers on a new merge commit. */
   t("...and the landed tree's ONE gate record is class SINCE against that tip — NOT a FULL re-run",
     [runs.length, runs[0] && runs[0].verdict, runs[0] && runs[0].class, runs[0] && runs[0].since && runs[0].since.commit], [1, "GREEN", "SINCE", firstSha]);
   const { id, rec } = readRec(main);
@@ -375,9 +394,14 @@ section("M0-122 · A TREE ALREADY RECORDED GREEN LANDS WITHOUT A SECOND GATE —
   if (r.status !== 0) console.log(r.text.split("\n").slice(-25).join("\n"));
   const main = onRemote(R.remote, "main");
   const runs = readRuns({ repo: R.C, tree: tipTree }).runs;
-  t("A RECORDED-GREEN TREE LANDS WITH NO BATTERY RUN OF ITS OWN — exit 0, landed, no gate run, and still ONE record for the tree",
-    [r.status, isAncestor(R.remote, tip), r.gates, /^=== train · NO GATE RUN: tree \S+ is already recorded GREEN/m.test(r.text), runs.length],
-    [0, true, 0, true, 1]);
+  /* CORRECTED 2026-09-23 by M0-131: this asserted NO gate run at all and ONE record for the tree. That was the defect:
+     a tree record says nothing about the union's HISTORY (GitHub run #20, 4355bfda), so a reused tree now runs ONLY
+     its never-cached units — one `gates.mjs --never-cached` run, a second record of class NEVERCACHE, and the full
+     derived gate still NOT run. */
+  t("A RECORDED-GREEN TREE LANDS WITH ONLY ITS NEVER-CACHED UNITS RUN — exit 0, landed, one `--never-cached` gate, and its record class NEVERCACHE",
+    [r.status, isAncestor(R.remote, tip), r.gates, /^=== train · NO FULL GATE: tree \S+ is already recorded GREEN/m.test(r.text),
+     /^node tools\/gates\.mjs --never-cached \(tree/.test(r.gateLines[0] || ""), runs.length, runs[1] && runs[1].class, runs[1] && runs[1].verdict],
+    [0, true, 1, true, true, 2, "NEVERCACHE", "GREEN"]);
   const id = (out1(["log", "-1", "--format=%B", main], R.remote).match(/^Bio-Train: (\S+)$/m) || [])[1];
   const rf = id ? join(trainDir({ repo: R.C }), `${id}.json`) : "";
   const rec = rf && existsSync(rf) ? JSON.parse(readFileSync(rf, "utf8")) : {};
@@ -394,8 +418,106 @@ section("M0-122 · A TREE ALREADY RECORDED GREEN LANDS WITHOUT A SECOND GATE —
   appendRun({ repo: R.C, run: { tree: t2Tree, verdict: "RED", class: "DOCS", steps: [{ label: "plancheck --local", units: ["plancheck"], ok: false }] } });
   const r2 = train(R.C, ["run"]);
   t("OVER-REUSE CLOSED — a tree recorded RED is GATED by the train (one gate run), and lands once that gate is GREEN",
-    [r2.status, r2.gates, /NO GATE RUN/.test(r2.text), isAncestor(R.remote, t2)], [0, 1, false, true]);
+    [r2.status, r2.gates, /NO FULL GATE/.test(r2.text), isAncestor(R.remote, t2)], [0, 1, false, true]);
   git(["worktree", "remove", "--force", wt], R.C);
+}
+
+/* ========================================================================== */
+section("M0-131 · A REUSED GREEN TREE STILL RUNS THE NEVER-CACHED UNITS — a merge that drops a carried edit is REFUSED by name");
+/* The 4355bfda shape, built in a fixture of its own. The fixture carries a HISTORY-READING suite, `carry.test.mjs`,
+   marked `GATE: never-cache (history)` (the marker is written line by line below, so THIS file declares nothing): for
+   every commit reachable from HEAD whose message carries `Carry: <path> :: <line>`, the tree must still hold that line.
+   And a battery that really runs the suites it is named (the shared stub exits 0 whatever it is asked).
+   THE SHAPE: a lane gates its work GREEN (tree T0); main then lands a CARRIED edit E; the lane takes main in with
+   `merge -s ours`, which keeps T0 EXACTLY and drops E. So the lane's tip, and the train's `--no-ff` union, have T0 —
+   recorded GREEN — while their history now holds E's carry, which T0 does not. Only a unit reading HISTORY sees it.
+   HOW A LIAR PASSES, AND WHICH ASSERTION CATCHES IT: skipping the never-cached run on reuse (M0-122's shape) or deriving
+   an EMPTY set lands the bad merge — "...IS REFUSED BY THE TRAIN NAMING THE CHECK" fails, and "THE DERIVED SET" fails;
+   running the set but ignoring its verdict also lands it — the refusal fails while the derived-set assertion holds. */
+{
+  const CARRY = ["import { execFileSync } from \"node:child_process\";",
+    "import { readFileSync, existsSync } from \"node:fs\";",
+    "import { join, dirname } from \"node:path\";",
+    "import { fileURLToPath } from \"node:url\";",
+    "// GATE: never-cache (history)",
+    "const ROOT = join(dirname(fileURLToPath(import.meta.url)), \"../..\");",
+    "const log = execFileSync(\"git\", [\"log\", \"--format=%B%x01\", \"HEAD\"], { cwd: ROOT, encoding: \"utf8\" });",
+    "let seen = 0, bad = 0;",
+    "for (const m of log.matchAll(/^Carry: (\\S+) :: (.+)$/gm)) {",
+    "  seen++;",
+    "  const f = join(ROOT, m[1]);",
+    "  if (!(existsSync(f) && readFileSync(f, \"utf8\").includes(m[2]))) { bad++; console.log(`  FAIL  carried edit dropped: ${m[1]} no longer holds \"${m[2]}\"`); }",
+    "}",
+    "console.log(`carry: ${seen} carried edit(s) in HEAD's history, ${bad} dropped from its tree`);",
+    "process.exit(bad ? 1 : 0);", ""].join("\n");
+  const BATTERY = ["import { readdirSync, writeFileSync } from \"node:fs\";",
+    "import { spawnSync } from \"node:child_process\";",
+    "import { join, dirname } from \"node:path\";",
+    "import { fileURLToPath } from \"node:url\";",
+    "const TEST = join(dirname(fileURLToPath(import.meta.url)), \"../test\");",
+    "const want = process.argv.slice(2);",
+    "const files = readdirSync(TEST).filter((f) => f.endsWith(\".test.mjs\") && (!want.length || want.some((w) => f.includes(w)))).sort();",
+    "const failed = [], passed = [];",
+    "for (const f of files) (spawnSync(process.execPath, [join(TEST, f)], { stdio: \"inherit\" }).status === 0 ? passed : failed).push(`plane:${f}`);",
+    "if (process.env.BIO_BATTERY_VERDICT) writeFileSync(process.env.BIO_BATTERY_VERDICT, JSON.stringify({ v: 1, verdict: failed.length ? \"RED\" : \"GREEN\", failed, passed }));",
+    "console.log(`battery (fixture): ${files.length} suite(s) · failed: ${failed.join(\", \") || \"none\"}`);",
+    "process.exit(failed.length ? 1 : 0);", ""].join("\n");
+  const K = fixture("carry", { "bio-plane/test/carry.test.mjs": CARRY, "bio-plane/scripts/battery.mjs": BATTERY });
+  const wt = join(SANDBOX, "carry-worktree");
+  git(["worktree", "add", "-q", "-b", "drop", wt, "origin/main"], K.C);
+  put(wt, "docs/notes/lane.md", "# the lane's work, gated before main moved\n"); commitAll(wt, "a lane's work");
+  const t0 = out1(["rev-parse", "HEAD^{tree}"], wt);
+  const g0 = spawnSync(process.execPath, [join(wt, "tools/gates.mjs")], { cwd: wt, encoding: "utf8" });
+  const own = readRuns({ repo: K.C, tree: t0 }).runs;
+
+  /* main lands a CARRIED edit through the train, so its gate is the ordinary one — which now carries the never-cached
+     units too, and must pass them here (the carry is in the tree). */
+  const e = lane(K.B, "land/beta/carry", "docs/notes/carried.md", "# carried\n\nthe carried line\n",
+    "beta carries an edit\n\nCarry: docs/notes/carried.md :: the carried line");
+  const re = train(K.C, ["run"]);
+  if (re.status !== 0) console.log(re.text.split("\n").slice(-25).join("\n"));
+  t("(the fixture: the lane's tree T0 is recorded GREEN; main then landed the carried edit, through an ordinary gate that ran the never-cached carry check)",
+    [g0.status, own.length, own[0] && own[0].verdict, re.status, isAncestor(K.remote, e.sha),
+     /^node tools\/gates\.mjs --with-never-cached \(tree/.test(re.gateLines[0] || ""), /NEVER-CACHED plane:carry\.test\.mjs/.test(re.text)],
+    [0, 1, "GREEN", 0, true, true, true]);
+
+  git(["fetch", "-q", "origin"], wt);
+  git(["merge", "-q", "-s", "ours", "--no-edit", "origin/main"], wt);
+  const tip = out1(["rev-parse", "HEAD"], wt);
+  const p = push(wt, "HEAD:refs/heads/land/alpha/drop");
+  t("(the lane's `merge -s ours` kept T0 exactly and dropped the carried file; its tip descends from the carry; its land/* push landed)",
+    [out1(["rev-parse", "HEAD^{tree}"], wt), existsSync(join(wt, "docs/notes/carried.md")), isAncestor(K.remote, e.sha, "main") && git(["merge-base", "--is-ancestor", e.sha, tip], wt).status === 0, p.status, onRemote(K.remote, "land/alpha/drop")],
+    [t0, false, true, 0, tip]);
+
+  const before = onRemote(K.remote, "main");
+  const r = train(K.C, ["run"]);
+  const ncLine = (r.text.match(/^train: the reused tree's never-cached run — (\S+(?: \S+)?), (\d+) unit\(s\) run: ([^\n]*)$/m) || []);
+  const derived = (ncLine[3] || "").split(", ").filter((x) => x && x !== "NONE");
+  t("(the train REUSED the tree record: the union's tree is T0, recorded GREEN, and its one gate was `--never-cached`)",
+    [/^=== train · NO FULL GATE: tree \S+ is already recorded GREEN/m.test(r.text), r.gates, /^node tools\/gates\.mjs --never-cached \(tree/.test(r.gateLines[0] || "")],
+    [true, 1, true]);
+  t("THE DERIVED SET IS NOT EMPTY — the reused tree's never-cached run ran the history check (plane:carry.test.mjs), derived from its marker, and plancheck",
+    [derived.length > 0, derived.includes("plane:carry.test.mjs"), derived.includes("plancheck")], [true, true, true]);
+  t("A UNION WHOSE TREE IS RECORDED GREEN BUT WHOSE MERGE DROPS A CARRIED EDIT IS REFUSED BY THE TRAIN NAMING THE CHECK — exit non-zero, main unmoved, returned naming plane:carry.test.mjs",
+    [r.status !== 0, onRemote(K.remote, "main"), /^train: RED at plane:carry\.test\.mjs/m.test(r.summary),
+     r.returned.some((l) => l.includes("land/alpha/drop") && l.includes("to lane alpha") && l.includes("plane:carry.test.mjs"))],
+    [true, before, true, true]);
+  if (r.status === 0) console.log(r.text.split("\n").slice(-25).join("\n"));
+
+  /* OVER-STRICTNESS: the same reuse, over a history that carries its edit, lands with only the never-cached run. */
+  push(wt, ":refs/heads/land/alpha/drop");   /* the lane takes its branch back */
+  git(["fetch", "-q", "origin"], wt);
+  git(["checkout", "-q", "-B", "good", "origin/main"], wt);
+  put(wt, "docs/notes/good.md", "# the lane's work, on a main that carries its edit\n"); commitAll(wt, "a lane's good work");
+  const good = out1(["rev-parse", "HEAD"], wt);
+  const g1 = spawnSync(process.execPath, [join(wt, "tools/gates.mjs")], { cwd: wt, encoding: "utf8" });
+  push(wt, "HEAD:refs/heads/land/alpha/good");
+  const ok = train(K.C, ["run"]);
+  if (ok.status !== 0) console.log(ok.text.split("\n").slice(-25).join("\n"));
+  t("OVER-STRICTNESS — a reused GREEN tree whose history KEEPS its carried edit lands, with only the never-cached units run",
+    [g1.status, ok.status, isAncestor(K.remote, good), /NO FULL GATE/.test(ok.text), /^train: the reused tree's never-cached run — GREEN, \d+ unit\(s\) run: [^\n]*plane:carry\.test\.mjs/m.test(ok.text)],
+    [0, 0, true, true, true]);
+  git(["worktree", "remove", "--force", wt], K.C);
 }
 
 /* ========================================================================== */

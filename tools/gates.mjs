@@ -105,6 +105,13 @@
  *   node tools/gates.mjs --no-reuse       run every selected unit whatever `gate-results` holds (the backstop:
  *                                         every release cut runs `--full --no-reuse`); passes are still recorded
  *   node tools/gates.mjs --inputs <unit>  print a unit's input set (`all`: every unit's, as JSON); run nothing
+ *   node tools/gates.mjs --never-cached   M0-131: run every NEVER-CACHED unit (derived: §3a condition 1) and plancheck,
+ *                                         and nothing else — the train's run on a union whose TREE is already recorded
+ *                                         GREEN, since that record says nothing about the union's new HISTORY (BOB #30).
+ *                                         Recorded as class NEVERCACHE, which covers no class.
+ *   node tools/gates.mjs --with-never-cached  M0-131: the ordinary plan (a derived class, or `--since`) PLUS every
+ *                                         never-cached unit it left out — a narrowed selection is a reuse of what it
+ *                                         leaves out. On a tree already recorded GREEN it runs as `--never-cached`.
  *   BIO_GATE_RESULTS=off                  no key, no trace, no reuse, no record — the gate as before M0-126
  *   BIO_GATE_RESULTS_REMOTE=<remote>      where `gate-results` is read and written (default `origin`)
  *
@@ -144,6 +151,9 @@ const EXPLAIN = ARGV.includes("--explain");
    backstop: every release cut runs `--full --no-reuse`); its passes are still recorded. `BIO_GATE_RESULTS=off` turns
    the whole mechanism off — no key, no trace, no reuse, no record: the gate as it stood before M0-126. */
 const NO_REUSE = ARGV.includes("--no-reuse");
+/* M0-131 (TREE-SHARING.md §3a condition 1, BOB #30: ANY reuse still runs the never-cached units). */
+const NEVER_ONLY = ARGV.includes("--never-cached");
+const NEVER_CACHED = NEVER_ONLY || ARGV.includes("--with-never-cached");
 const RESULTS_OFF = process.env.BIO_GATE_RESULTS === "off";
 const SINCE_AT = ARGV.indexOf("--since");
 const SINCE = SINCE_AT < 0 ? null
@@ -274,6 +284,13 @@ let why = "forced";
 if (!FORCE_FULL) {
   if (!changed) why = `${unreadable} — refusing to narrow`;
   else ({ cls, why } = classify([...changed]));
+}
+/* M0-131: `--never-cached` ALONE is not a classification of the diff: it asks for the never-cached units and nothing
+   else, because the caller (the train) already holds a GREEN record for this very TREE and needs only what that record
+   cannot answer — the units that read history, a live ref, or plancheck's world. Section 3 adds them. */
+if (NEVER_ONLY && !FORCE_FULL && SINCE === null) {
+  cls = "NEVERCACHE";
+  why = "--never-cached: this tree's record answers for every cacheable unit; the never-cached units read what no tree record holds (BOB #30)";
 }
 
 /* ---- 2 · the doc-facing suite set, derived ------------------------------ */
@@ -854,6 +871,7 @@ if (SINCE && !FORCE_FULL) {
   }
 }
 if (cls === "TARGETED") selection = targetedSelection([...changed]);
+if (cls === "NEVERCACHE") selection = new Map();   /* M0-131: section 3a adds every never-cached unit */
 
 /* ---- 2d · READ THIS TREE'S OWN RECORD FIRST (BOB #29, 2026-09-23) --------
    Bob: "every lane that experienced the bug then went and ran ALL suites even though they'd just passed
@@ -870,9 +888,11 @@ if (cls === "TARGETED") selection = targetedSelection([...changed]);
 /* M0-126: FULLREUSE is a FULL selection some of whose units were REUSED from `gate-results` rather than run. It covers
    what FULL covers for this shortcut, and never licenses what only a run of everything does (effectiveVerdict's
    clear-all, the train's `--full` reuse, a release's GREEN FULL). `--no-reuse` is never answered from a record. */
-const CLASS_RANK = (c) => (c === "FULL" || c === "FULLREUSE" ? 2 : 1);
+const CLASS_RANK = (c) => (c === "FULL" || c === "FULLREUSE" ? 2 : c === "NEVERCACHE" ? 0 : 1);
+/* M0-131: a NEVERCACHE run ran only the never-cached units, so it COVERS no class (rank 0): it can never be the record
+   this shortcut stands on. */
 const PER_UNIT_ON = !RESULTS_OFF && isFile(join(REPO, "tools/gateresults.mjs"));
-if (CLEAN_AT_START && !FORCE_FULL && !NO_REUSE && SINCE === null) {
+if (CLEAN_AT_START && !FORCE_FULL && !NO_REUSE && SINCE === null && !NEVER_ONLY) {
   const own = readRuns({ repo: REPO, tree: START.tree });
   const eff = effectiveVerdict(own.runs);
   const covering = own.runs.some((r) => CLASS_RANK(r.class) >= CLASS_RANK(cls));
@@ -883,7 +903,12 @@ if (CLEAN_AT_START && !FORCE_FULL && !NO_REUSE && SINCE === null) {
   if (covering && eff.verdict === "GREEN" && PER_UNIT_ON)
     console.log(`gates: the tree ${short(START.tree)} is already recorded GREEN, but a record never answers for a never-cached`
       + " unit (BOB #30): the per-unit record answers the rest, and those run.");
-  if (covering && eff.verdict === "GREEN" && !PER_UNIT_ON) {
+  /* M0-131: `--with-never-cached` on a tree already GREEN runs the never-cached units, never nothing (BOB #30). */
+  if (covering && eff.verdict === "GREEN" && !PER_UNIT_ON && NEVER_CACHED) {
+    cls = "NEVERCACHE";
+    why = `the tree ${short(START.tree)} is already recorded GREEN, and a record never answers for a never-cached unit (BOB #30): only those run`;
+    selection = new Map();
+  } else if (covering && eff.verdict === "GREEN" && !PER_UNIT_ON) {
     const by = own.runs.filter((r) => CLASS_RANK(r.class) >= CLASS_RANK(cls)).pop();
     console.log(`gates: the tree ${short(START.tree)} is already recorded GREEN (by a ${by.class} run)`
       + ` — nothing changed since, so nothing is re-run. \`--full\` forces a run.`);
@@ -938,7 +963,7 @@ if (cls === "FULL") {
   const picked = [...selection.values()].map((v) => v.unit);
   const suites = picked.filter((u) => u.kind === "plane" || u.kind === "fleet").map((u) => u.filter);
   if (suites.length)
-    STEPS.push({ label: `battery (${cls === "SINCE" ? "both sides" : cls === "RERUN" ? "re-run: recorded RED" : "selected"})`, units: batteryRuns(suites), cmd: "node", args: ["scripts/battery.mjs", ...suites], cwd: join(REPO, "bio-plane"), names: suites });
+    STEPS.push({ label: `battery (${cls === "SINCE" ? "both sides" : cls === "RERUN" ? "re-run: recorded RED" : cls === "NEVERCACHE" ? "never-cached" : "selected"})`, units: batteryRuns(suites), cmd: "node", args: ["scripts/battery.mjs", ...suites], cwd: join(REPO, "bio-plane"), names: suites });
   if (picked.some((u) => u.kind === "coverage"))
     STEPS.push({ label: "coverage --strict", units: ["coverage"], cmd: "node", args: ["scripts/coverage.mjs", "--strict"], cwd: join(REPO, "bio-plane") });
   for (const u of picked.filter((x) => x.kind === "ui"))
@@ -964,6 +989,24 @@ const neverCache = neverCacheOf;
 const uiStep = (u) => (u.kind === "ui"
   ? { label: `ui ${u.name}`, units: [u.id], cmd: "node", args: [join("civicos-ui/test", u.name)] }
   : { label: `ui check ${u.name}`, units: [u.id], cmd: "node", args: [join("civicos-ui", u.name)] });
+/* ---- 3a · M0-131: `--never-cached` — EVERY NEVER-CACHED UNIT RUNS, DERIVED, NEVER LISTED --------------------------
+   The set is `neverCacheOf` over every unit — the `GATE: never-cache (<reason>)` markers and the plancheck closures —
+   read fresh, the same reader §3b uses to refuse a key, so the train's set and the gate's can never drift. A unit the
+   plan already runs is left where it is; each one the plan left out is added (plane and fleet suites in one battery
+   step, by name). plancheck is appended to every plan below. The set is PRINTED, and an empty one is said. */
+const NEVER_SET = NEVER_CACHED ? UNITS.filter((u) => neverCacheOf(u)) : [];
+const NEVER_ADDED = [];
+if (NEVER_CACHED) {
+  const covered = new Set(expandUnits(STEPS.flatMap((s) => s.units)));
+  const add = NEVER_SET.filter((u) => !covered.has(u.id));
+  NEVER_ADDED.push(...add.map((u) => u.id));
+  const suites = add.filter((u) => u.kind === "plane" || u.kind === "fleet").map((u) => u.filter);
+  if (suites.length)
+    STEPS.push({ label: "battery (never-cached)", units: batteryRuns(suites), cmd: "node", args: ["scripts/battery.mjs", ...suites], cwd: join(REPO, "bio-plane"), names: suites });
+  if (add.some((u) => u.kind === "coverage"))
+    STEPS.push({ label: "coverage --strict", units: ["coverage"], cmd: "node", args: ["scripts/coverage.mjs", "--strict"], cwd: join(REPO, "bio-plane") });
+  for (const u of add.filter((x) => x.kind === "ui" || x.kind === "uicheck")) STEPS.push(uiStep(u));
+}
 let GR = null;
 let grWhy = RESULTS_OFF ? "BIO_GATE_RESULTS=off" : "";
 if (!RESULTS_OFF) {
@@ -1033,6 +1076,11 @@ STEPS.push(plancheckStep);
 
 if (sinceNote) console.log(`gates: ${sinceNote}`);
 console.log(`gates: change class ${cls} — ${why}`);
+if (NEVER_CACHED) {
+  console.log(`gates: --never-cached (M0-131) — ${NEVER_SET.length} never-cached unit(s) derived fresh of ${UNITS.length}`
+    + `${NEVER_SET.length ? `; ${NEVER_SET.length - NEVER_ADDED.length} already in the plan, ${NEVER_ADDED.length} added` : " — NONE DERIVED: no unit carries `GATE: never-cache` or runs plancheck"}; plancheck always runs`);
+  for (const u of NEVER_SET) console.log(`gates:   NEVER-CACHED ${u.id}  <- ${neverCacheOf(u)}${NEVER_ADDED.includes(u.id) ? "" : " (already planned)"}`);
+}
 if (cls === "DOCS")
   console.log(`gates: doc-facing suites derived fresh — plane [${planeDoc.join(", ")}] · ui [${uiDoc.join(", ")}]`);
 if (cls === "TARGETED" || cls === "SINCE" || cls === "RERUN") {
