@@ -215,6 +215,8 @@ and a larger batch that reads red takes longer to pin. The per-suite `failedUnit
 the second cost. **Re-measure after a day** (trains a day, branches a train, the train's gate minutes, the red-batch
 count) and widen or narrow from the figures, not from this paragraph.
 
+**ONE FULL GATE PER TRAIN, NOT ONE PER WORKER — RULED 2026-09-23 by Bob** (*"We need to cut back on gates so that this doesn't happen again"*, after 8 concurrent FULL worker gates on CONDUCT's 4 cores stalled every worker ~80 minutes; *"sustained productivity and a process that works"*). A plane change classifies FULL, so every worker was running the whole battery before its `land/*` push and the train ran it again on the union. Now a worker runs only the suites its row names — its new or changed suite, the row's NEGATIVE CONTROL, and `plancheck` — and pushes `land/*` without a FULL gate; the train's union gate is the one FULL gate, and `main` still moves only on a GREEN union, so a red GitHub run still means a real problem. On a red union the integrator names the failing unit from the per-unit record (§3a) and returns the branch whose diff it reads before any `--isolate`. **Re-measure after a day** (FULL runs per landed row; red unions and their re-gate minutes) and narrow from the figures, never on impression.
+
 **ONE GITHUB RUN PER LANDED BATCH — RULED 2026-09-23 by Bob** (*"Ok, 1 github run per batch"*, on BOB #29's
 recommendation). The workflow runs on a push to `main` alone, and `main` moves only through the train, so each run audits
 exactly one landed batch; it no longer runs on `land/*` or `integrate/*`. **Nobody waits on it:** a lane reuses its own GREEN
@@ -440,7 +442,7 @@ Their state is the ledger's, never this file's: `node tools/ledger.mjs find <ID>
   `SCHEDULER.md` step 3 orders the plan by it); *"Never queue a gate behind another lane's"* (`CLAUDE.md` §6); a session
   refreshes past 70% of its context, not 60% (`CLAUDE.md` §4; ruled 2026-09-21, and restated 2026-09-22 as BOB #26
   recorded it: *"the line is 70%, not 60% — refresh less, work more"*). **RAISED TO 80% by Bob 2026-09-23** (*"I can't see a
-  downside to increasing the context limit to 75% or 80% so as to extend session lifetimes"*; `CLAUDE.md` §4).
+  downside to increasing the context limit to 75% or 80% so as to extend session lifetimes"*; `CLAUDE.md` §4). **SET TO 75% by BOB #30 the same day, on a measurement:** the cloud environment sets `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80`, which auto-compacts at ~79% of the context `get_session` reports (BOB #30 compacted at 788,078 of 1,000,000 tokens, 18:01Z, before its 80% line), so an 80% refresh line could never be reached. The refresh line must sit BELOW the compaction point; 75% is the highest that leaves one working turn's margin. Raising the override in the environment's settings would let the line rise with it.
 - **The rows:** M0-99 (`DECIDED.md` untracked, generated on demand; §1), M0-106 (DIST's release gate reuses a tree's
   GREEN record), M0-107 (a timeout reads NOT MEASURED, never a finding), M0-109 (the ledger suite's floor that the debt
   fold tripped), M0-100 (narrowed, §1; BUILT: `ORCHESTRATION.md` rule 3), M0-101 (superseded, §1), M0-114 (change 3, BUILT: §3 "As built"; it was

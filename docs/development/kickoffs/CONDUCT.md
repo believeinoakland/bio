@@ -41,7 +41,7 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
    fresh one and arms the next reminder (`CLAUDE.md` §4). The `conduct-heartbeat` scheduled task no longer messages you
    (its mode differs from yours, so its messages were held unread); it only watches for what no session can report about
    itself — no integrator, or one idle with runnable work three runs in a row, which means your self-wake is not armed.
-4. **Measure your context** (`get_usage`) at every self-wake and every handoff boundary; over 80%, refresh (`CLAUDE.md` §4).
+4. **Measure your context** (`get_usage`) at every self-wake and every handoff boundary; over 75%, refresh (`CLAUDE.md` §4).
 5. **Tell BOB and SCHEDULER you are up**, by `SendMessage`.
 
 ## The loop
