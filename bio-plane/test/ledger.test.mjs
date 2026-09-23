@@ -36,6 +36,18 @@
  * wrong thing: section 11 judged texts against a repository holding neither, so the "open" dependency
  * was unmet because it was NOWHERE and the P4 assertion stayed green — fixed in section 11, and the
  * arm now also requires "...and R-5 is unmet because B-1 is OPEN".
+ * NEGATIVE CONTROL: (M0-119, section 13 — the backlog's TAIL) the same driver's NINE T-arms, each armed ALONE and
+ * restored by sha256 + cmp; RUN 2026-09-22 by the M0-119 worker: (T1) the rebalance drops the row it demotes ->
+ * "THE ACCEPTANCE — every id is in EXACTLY ONE file" FAILS, 173/14; (T2) a demoted row to the tail's FOOT -> "...IN
+ * ORDER" FAILS, 176/11; (T3) P1 blind to the tail -> "P1 CATCHES an open id in BOTH the backlog and its tail" FAILS,
+ * 186/1; (T4) the refill walks BACKLOG.md alone -> "refill … FROM THE TAIL" FAILS, 185/2; (T5) the coord write's
+ * rebalance skipped -> coord.test "§10 a placement over budget is PUSHED" FAILS, 87/7; (T6) THE ITEM'S CONTROL, the
+ * lister pointed at BACKLOG.md alone -> pipeline-readers.test "the lister reads the TAIL" and "a TAIL row naming no
+ * design FAILS by name" FAIL, 49/9; (T7) mintid's DEC corpus without the tail -> "DEC: an id mentioned ONLY in
+ * BACKLOG-LATER.md raises the floor" FAILS, 56/2; (T8) find blind to the tail -> "find answers a demoted id in the
+ * TAIL" FAILS, 185/2; (T9, over-strictness) an absent tail read as unreadable -> ON ITS FIRST RUN the suite CRASHED
+ * (section 11's `.pipeline.arms` threw on an unscored pipeline, tally -1): a finding about the suite, fixed there and in
+ * section 12, after which "an ABSENT tail is NAMED absent by the audit" FAILS by name, 159/28.
  */
 /* NEGATIVE CONTROL: (M0-109, §3's non-vacuity floor) `node bio-plane/test/debt-floor.control.mjs` from the repo root,
    eight arms plus a baseline across this suite and `planning-hygiene.test.mjs`, each armed ALONE and restored by sha256
@@ -72,7 +84,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 12;
+const SECTIONS = 13;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 const code = (f) => { try { f(); return "NO REFUSAL"; } catch (e) { return e.code || `THREW ${e.message}`; } };
@@ -430,7 +442,9 @@ section("8 — THROUGH THE GATE ITSELF: `plancheck --local` runs the three arms 
      the cutover. They are `coord.mjs`' ledger check LC-ledger (every coord write runs it before the push; plancheck
      runs the same arms, §2h). This section keeps what it is FOR: the gate RUNS the arms and prints their notes. */
   /* LED-6 */
-  t("it printed the pipeline note, all five invariants named", /note\s+pipeline: cache \d+ row\(s\), backlog \d+ row\(s\); P1 \w+, P2 \w+, P3 \w+, P4 \w+, P5 \w+/.test(out), true);
+  /* CORRECTED 2026-09-22 by M0-119: the note now counts the backlog's TAIL too (and says when its file is absent). */
+  t("it printed the pipeline note, all five invariants named",
+    /note\s+pipeline: cache \d+ row\(s\), backlog \d+ row\(s\), tail \d+ row\(s\)[^;\n]*; P1 \w+, P2 \w+, P3 \w+, P4 \w+, P5 \w+/.test(out), true);
 
 }
 
@@ -575,10 +589,12 @@ section("11 — LED-6: THE FIVE INVARIANTS (WORK-PIPELINE §2), each with a PLAN
     { P1: 0, P2: 0, P3: 0, P4: 0, P5: 0 });
   t("...and the clean fixture is not empty (a headline over nothing has passed three times)", [clean.cacheRows, clean.backlogRows], [3, 2]);
 
+  /* CORRECTED 2026-09-22 by M0-119: P1 counts an open id across THREE files — the cache, the backlog and its tail — so
+     each violation carries the tail's count; the two-key shape could not say an id sat in the tail too. */
   t("P1 CATCHES an open id twice in the backlog", v(inv(cleanCache, cleanBacklog + dep("B-1", "queued", "none")), "P1"),
-    [{ id: "B-1", cache: 0, backlog: 2 }]);
+    [{ id: "B-1", cache: 0, backlog: 2, tail: 0 }]);
   t("P1 CATCHES an open id in BOTH files", v(inv(cleanCache, cleanBacklog + dep("R-3", "queued", "none")), "P1"),
-    [{ id: "R-3", cache: 1, backlog: 1 }]);
+    [{ id: "R-3", cache: 1, backlog: 1, tail: 0 }]);
   t("P2 CATCHES a closed row in the backlog AND one in the cache",
     v(inv(cleanCache + dep("R-9", "superseded", "none"), cleanBacklog + dep("B-9", "done", "none")), "P2").map((x) => `${x.where} ${x.id}`),
     ["cache R-9", "backlog B-9"]);
@@ -602,9 +618,12 @@ section("11 — LED-6: THE FIVE INVARIANTS (WORK-PIPELINE §2), each with a PLAN
   const odd = inv(cleanCache + dep("R-10", "parked", "none"), cleanBacklog);
   t("a row whose state is neither open nor closed is listed UNJUDGED, never silently scored", odd.unjudged.map((u) => u.id), ["R-10"]);
 
-  /* Arming, read from the ledger: P1 always; P2 with LED-3; P3–P5 with LED-6. */
-  const arm = (led3, led6) => L.ledgerAudit({ repo: fixture({ queue: nine, debt: DEBT([]),
-    archives: { "QUEUE-closed.md": L.ARCHIVE_HEADER.QUEUE + Q("LED-3", led3) + Q("LED-6", led6) + Q("LED-7", "queued") } }) }).pipeline.arms;
+  /* Arming, read from the ledger: P1 always; P2 with LED-3; P3–P5 with LED-6.
+     CORRECTED 2026-09-22 by M0-119: `.pipeline.arms` THREW when the audit scored no pipeline, ending the module before
+     its tally — found by arm T9 (an absent tail read as unreadable), whose suite crashed instead of going red. An
+     unscored pipeline now reddens these assertions by name. */
+  const arm = (led3, led6) => (L.ledgerAudit({ repo: fixture({ queue: nine, debt: DEBT([]),
+    archives: { "QUEUE-closed.md": L.ARCHIVE_HEADER.QUEUE + Q("LED-3", led3) + Q("LED-6", led6) + Q("LED-7", "queued") } }) }).pipeline || { arms: {} }).arms;
   t("before LED-6 is done, P3–P5 WARN (armed false) and P1 is armed", Object.fromEntries(Object.entries(arm("done", "running")).map(([k, x]) => [k, x.armed])),
     { P1: true, P2: true, P3: false, P4: false, P5: false });
   t("once LED-6 is done, every arm is armed", Object.values(arm("done", "done")).every((x) => x.armed), true);
@@ -648,7 +667,10 @@ section("12 — LED-6 OVER THE REAL LEDGERS: P1 and P2 hold on the cache and bac
   writeFileSync(join(root, L.LEDGERS.QUEUE.live), kept.join("\n"));
   writeFileSync(join(root, L.LEDGERS.BACKLOG.live), backlog0 + "\n" + blocks.map((b) => b.endsWith("\n") ? b : b + "\n").join(""));
   const archTexts = L.archiveFiles(L.LEDGERS.QUEUE, { repo: root }).map((f) => read(root, f));
-  const idsNow = () => L.idCounts(L.LEDGERS.QUEUE, [read(root, L.LEDGERS.QUEUE.live), read(root, L.LEDGERS.BACKLOG.live), ...archTexts]);
+  /* CORRECTED 2026-09-22 by M0-119: the refill now rebalances the backlog's split, so a row it demotes lives in the TAIL —
+     a count of the cache and the backlog alone would read it as dropped. `read` gives "" for an absent tail. */
+  const idsNow = () => L.idCounts(L.LEDGERS.QUEUE, [read(root, L.LEDGERS.QUEUE.live), read(root, L.LEDGERS.BACKLOG.live),
+                                                    read(root, L.LEDGERS.LATER.live), ...archTexts]);
   const beforeSplit = L.idCounts(L.LEDGERS.QUEUE, [cache0, backlog0, ...archTexts]);
   t("the hand split itself conserved every id (a check on the simulation, not on the tool)", L.conservation(beforeSplit, idsNow()).ok, true);
   let r;
@@ -658,12 +680,121 @@ section("12 — LED-6 OVER THE REAL LEDGERS: P1 and P2 hold on the cache and bac
   t("...and moved at least one row (else the conservation below is two unchanged files agreeing)", r.moved.length > 0, true);
   t("the id multiset of cache ∪ backlog ∪ archive over the real rows is IDENTICAL after the refill, read back from disk",
     L.conservation(beforeSplit, idsNow()), { ok: true, dropped: [], gained: [] });
-  const after = L.ledgerAudit({ repo: root }).pipeline;
+  /* CORRECTED 2026-09-22 by M0-119: an unscored pipeline reddens the assertions below instead of throwing (arm T9). */
+  const after = L.ledgerAudit({ repo: root }).pipeline
+    || { arms: Object.fromEntries(["P1", "P2", "P3", "P4", "P5"].map((k) => [k, { violations: [{ id: "UNSCORED" }] }])) };
   console.log(`  after the simulated split + refill: ` + Object.entries(after.arms).map(([k, x]) => `${k} ${x.violations.length}`).join(", ")
     + ` — P4 and P5 are MEASURED, not asserted: the running rows' depends-on and the uncut rows / non-row blocks are the migration's (§5 steps 2–3)`);
   t("after the split and refill, P1, P2 and P3 hold over the real rows", ["P1", "P2", "P3"].map((k) => after.arms[k].violations.length), [0, 0, 0]);
   t("...and every row the refill moved has its depends-on MET (P4 over the moved rows)",
     after.arms.P4.violations.filter((x) => r.moved.some((m) => m.id === x.id)), []);
+}
+
+
+/* ========================================================================================== */
+section("13 — M0-119: THE BACKLOG'S TAIL (WORK-PIPELINE §2, BOB #28) — a placement over budget moves WHOLE rows from "
+      + "BACKLOG.md's foot to the head of BACKLOG-LATER.md, cuts none, and leaves every id in exactly one file, in order");
+{
+  /* Rows of a known size, each with a body that would be LOST by a cut (the fields-only cut kept the heading). */
+  const R = (id, n = 300, state = "queued", dep = "none") =>
+    `### ${id} · ${state} — a row of the order\ndepends-on: ${dep}\nscope: ${"s".repeat(n)}\naccepts-when: the whole text of ${id}\n\n`;
+  const HEAD = "# Backlog\n\n## Rows\n\n";
+  const bodyOf = (text, id) => { const r = L.queueRows(text).find((x) => x.id === id); return r ? r.body.replace(/\n+$/, "") : null; };
+  const ids = (text) => L.queueRows(text).map((r) => r.id);
+  const order = ["O-1", "O-2", "O-3", "O-4", "O-5", "O-6", "O-7", "O-8"];
+  const backlog = HEAD + order.map((id) => R(id)).join("");
+  const budget = 2000;   /* the fixture's budget: ~5 rows fit (the real one is BUDGET.BACKLOG.ledger, 150 KiB) */
+  t("the fixture backlog is OVER the fixture budget (else nothing is exercised)", Buffer.byteLength(backlog) > budget, true);
+  t("the real budget is back at 150 KiB (the interim 200 KiB retired by this item)", L.BUDGET.BACKLOG.ledger, 150 * 1024);
+  t("...and the tail has no whole-file budget and a backlog row's 2 KiB row budget", [L.BUDGET.LATER.ledger, L.BUDGET.LATER.row], [null, 2048]);
+
+  const p = L.planRebalance(backlog, "", { budget });
+  t("THE ACCEPTANCE — every id is in EXACTLY ONE file", (() => {
+    const all = [...ids(p.newBacklog), ...ids(p.newLater)];
+    return [all.length, new Set(all).size, order.every((id) => all.includes(id))];
+  })(), [8, 8, true]);
+  t("...IN ORDER: the backlog then the tail read as the ORIGINAL order", [...ids(p.newBacklog), ...ids(p.newLater)], order);
+  t("...the TAIL moved (the backlog's foot), never the head", [ids(p.newBacklog)[0], p.demoted[p.demoted.length - 1]], ["O-1", "O-8"]);
+  t("...NO ROW IS CUT: every row's whole text is in one of the two files, verbatim",
+    order.filter((id) => (bodyOf(p.newBacklog, id) ?? bodyOf(p.newLater, id)) !== bodyOf(backlog, id)), []);
+  t("...BACKLOG.md is within the budget after the placement", Buffer.byteLength(p.newBacklog) <= budget, true);
+  t("...and holds the LONGEST head that fits: the tail's first row would not fit beside it",
+    [L.rebalanceConserved({ backlog, later: "", newBacklog: p.newBacklog, newLater: p.newLater, budget }).split,
+     Buffer.byteLength(p.newBacklog) + Buffer.byteLength(R(p.demoted[0])) > budget], [true, true]);
+  t("...an absent tail gains its header, and the demoted rows follow it", [p.newLater.startsWith(L.LATER_HEADER), ids(p.newLater)], [true, p.demoted]);
+  t("...the plan conserves by the judge's own five properties",
+    L.rebalanceConserved({ backlog, later: "", newBacklog: p.newBacklog, newLater: p.newLater, budget }).ok, true);
+
+  /* A SECOND placement: the rows demoted now go to the HEAD of the existing tail, AHEAD of what it already holds. */
+  const placed = p.newBacklog.replace("### O-1 ·", R("P-1").replace(/\n\n$/, "\n\n") + "### O-1 ·");
+  const p2 = L.planRebalance(placed, p.newLater, { budget });
+  t("a second placement (P-1 at the TOP) pushes the backlog's new foot to the HEAD of the tail, the order intact",
+    [...ids(p2.newBacklog), ...ids(p2.newLater)], ["P-1", ...order]);
+  t("...the newly demoted row precedes every row the tail already held", ids(p2.newLater)[0], ids(p.newBacklog).slice(-1)[0]);
+
+  /* PROMOTION: room frees (a refill or an archive took rows out), and the tail's head comes back, in order. */
+  const freed = p.newBacklog.replace(R("O-1"), "").replace(R("O-2"), "");
+  const p3 = L.planRebalance(freed, p.newLater, { budget });
+  t("as room frees, rows are PROMOTED from the tail's head to the backlog's foot, in order",
+    [p3.promoted.length > 0, [...ids(p3.newBacklog), ...ids(p3.newLater)]], [true, order.slice(2)]);
+  t("...and the split sits at the budget again", L.rebalanceConserved({ backlog: freed, later: p.newLater, newBacklog: p3.newBacklog, newLater: p3.newLater, budget }).ok, true);
+  const idle = L.planRebalance(p.newBacklog, p.newLater, { budget });
+  t("a balanced pair is left EXACTLY as it is (a rebalance is idempotent)", [idle.newBacklog === p.newBacklog, idle.newLater === p.newLater, idle.demoted, idle.promoted], [true, true, [], []]);
+
+  /* THE LIARS, handed to the judge directly: each must be refused. */
+  const J = (nb, nl) => L.rebalanceConserved({ backlog, later: "", newBacklog: nb, newLater: nl, budget });
+  const lost = p.demoted[0];
+  t("a rebalance that DROPS a demoted row is refused, naming it", J(p.newBacklog, p.newLater.replace(R(lost), "")).ids.dropped, [`${lost} (1 -> 0)`]);
+  const [a, b] = [p.demoted[0], p.demoted[1]];
+  const swapped = p.newLater.replace(R(a), "@@A").replace(R(b), R(a)).replace("@@A", R(b));
+  t("a rebalance that REORDERS the tail is refused though every id and line conserves",
+    [J(p.newBacklog, swapped).ok, J(p.newBacklog, swapped).ids.ok, J(p.newBacklog, swapped).orderOk], [false, true, false]);
+  const cut = p.newLater.replace(`accepts-when: the whole text of ${a}\n`, "");
+  t("a rebalance that CUTS a row to fit is refused", [J(p.newBacklog, cut).ok, J(p.newBacklog, cut).rowsOff.length > 0], [false, true]);
+  t("a rebalance that leaves BACKLOG.md over budget is refused", J(backlog, "").ok, false);
+  const early = L.planRebalance(backlog, "", { budget: budget - 400 });
+  t("a rebalance that stops EARLY (a row that fits is left in the tail) is refused",
+    L.rebalanceConserved({ backlog, later: "", newBacklog: early.newBacklog, newLater: early.newLater, budget }).split, false);
+
+  /* ON DISK, through the tool: `rebalance` writes both files, judges what it READS BACK, and the readers see one order. */
+  const root = fixture({ queue: "# The work queue\n\n## ROWS\n\n" + ARMS, backlog, debt: DEBT([]) });
+  let r; try { r = L.rebalance({ repo: root, budget }); } catch (e) { r = { refusal: `${e.code}: ${e.message}` }; }
+  t("rebalance on disk was not refused", r.refusal, undefined);
+  t("...it demoted the foot and wrote the tail file", [r.demoted, existsSync(join(root, L.LEDGERS.LATER.live))], [p.demoted, true]);
+  const onDisk = [...ids(read(root, L.LEDGERS.BACKLOG.live)), ...ids(read(root, L.LEDGERS.LATER.live))];
+  t("...what it READ BACK is the one order", onDisk, order);
+  t("find answers a demoted id in the TAIL", L.findId(p.demoted[0], { repo: root }).map((f) => `${f.where} ${f.file}`), [`tail ${L.LEDGERS.LATER.live}`]);
+  const pr = L.pipelineRows({ repo: root });
+  t("the lister reads the tail after the backlog, one order", pr.rows.filter((x) => x.id.startsWith("O-")).map((x) => x.id), order);
+  const inv = L.pipelineInvariants(read(root, L.LEDGERS.QUEUE.live), read(root, L.LEDGERS.BACKLOG.live), { repo: root, later: read(root, L.LEDGERS.LATER.live) });
+  t("P1 holds over the three files", inv.arms.P1.violations, []);
+  t("P1 CATCHES an open id in BOTH the backlog and its tail",
+    L.pipelineInvariants("", R("D-1") + R("D-2"), { repo: root, later: R("D-2") }).arms.P1.violations, [{ id: "D-2", cache: 0, backlog: 1, tail: 1 }]);
+  t("P2 CATCHES a closed row in the tail", L.pipelineInvariants("", "", { repo: root, later: R("D-3", 10, "done") }).arms.P2.violations.map((x) => `${x.where} ${x.id}`), ["tail D-3"]);
+  t("P5 CATCHES a tail row over 2 KiB", L.pipelineInvariants("", "", { repo: root, later: R("D-4", 2600) }).arms.P5.violations.map((x) => x.id), ["D-4"]);
+  t("P5 (over-strictness) passes a tail over 150 KiB — the tail has no whole-file budget",
+    L.pipelineInvariants("", "", { repo: root, later: Array.from({ length: 120 }, (_, i) => R(`T-${i}`, 1500)).join("") }).arms.P5.violations, []);
+  t("an ABSENT tail is NAMED absent by the audit, never unreadable, and scored as empty",
+    (() => { const a = L.ledgerAudit({ repo: fixture({ queue: ARMS, backlog: HEAD, debt: DEBT([]) }) }); return [a.absent, a.unreadable, (a.pipeline || {}).tailRows]; })(),
+    [[L.LEDGERS.LATER.live], [], 0]);
+
+  /* REFILL walks the ONE order: with nothing runnable in BACKLOG.md it takes from the tail, and promotes as room frees. */
+  const rr = fixture({ queue: "# The work queue\n\n## ROWS\n\n", backlog: HEAD + R("W-1", 300, "blocked") + R("W-2", 300, "blocked"), debt: DEBT([]) });
+  writeFileSync(join(rr, L.LEDGERS.LATER.live), L.LATER_HEADER + "\n" + R("W-3") + R("W-4"));
+  let rf; try { rf = L.refill({ repo: rr, cacheRows: 1 }); } catch (e) { rf = { moved: [], refusal: `${e.code}: ${e.message}` }; }
+  t("refill with no runnable row in BACKLOG.md takes the order's next runnable row FROM THE TAIL", [rf.refusal, rf.moved.map((m) => `${m.id}@${m.from}`)], [undefined, ["W-3@tail"]]);
+  t("...and promoted the tail's rest into the room (the fixture's backlog is far under 150 KiB)",
+    [ids(read(rr, L.LEDGERS.BACKLOG.live)), ids(read(rr, L.LEDGERS.LATER.live))], [["W-1", "W-2", "W-4"], []]);
+  t("...the whole pipeline conserved: cache ∪ backlog ∪ tail hold W-1..W-4 once each",
+    ["W-1", "W-2", "W-3", "W-4"].map((id) => L.findId(id, { repo: rr }).length), [1, 1, 1, 1]);
+  const bare = fixture({ queue: ARMS, backlog: HEAD + R("E-1"), debt: DEBT([]) });
+  const quiet = L.rebalance({ repo: bare });
+  t("a rebalance with nothing to move writes NOTHING — an absent tail stays absent", [quiet.written, existsSync(join(bare, L.LEDGERS.LATER.live))], [false, false]);
+  const made = L.rebalance({ repo: bare, ensure: true });
+  t("...and with `ensure` (the `rebalance` intent) it writes the tail's HEADER alone", [made.created, read(bare, L.LEDGERS.LATER.live) === L.LATER_HEADER, ids(read(bare, L.LEDGERS.BACKLOG.live))], [true, true, ["E-1"]]);
+  const archived = fixture({ queue: ARMS, backlog: HEAD, debt: DEBT([]) });
+  writeFileSync(join(archived, L.LEDGERS.LATER.live), L.LATER_HEADER + "\n" + R("Z-1", 10, "superseded"));
+  t("a closed row in the TAIL archives to the shared archive like any backlog row", mv("Z-1", { repo: archived }).moved.map((m) => m.ledger), ["LATER"]);
 }
 
 console.log(`\nsections reached ${reached}/${SECTIONS}`);

@@ -50,7 +50,21 @@
  *   F2  find reads the shared archive twice                     -> "find F-0 answers the ARCHIVE — ONCE…"
  *   M1  mintid stops reading the backlog                        -> "mintid's duplicate check READS THE BACKLOG…"
  *   O1  owed stops reading the backlog (judged by owed.test)    -> "a blocked row in the BACKLOG routed to the lane is owed…"
- * What MUST NOT fail: the baseline (ledger.test AND owed.test), and every restore.
+ * M0-119 (the backlog's TAIL, `BACKLOG-LATER.md` — WORK-PIPELINE §2) adds NINE arms, each declared by the assertion it must redden:
+ *   T1  the rebalance DROPS the row it demotes (never placed in the tail) -> "THE ACCEPTANCE — every id is in EXACTLY ONE file"
+ *   T2  the demoted row goes to the tail's FOOT, not its head (the order breaks)
+ *                                                               -> "...IN ORDER: the backlog then the tail read as the ORIGINAL order"
+ *   T3  P1 blind to the tail                                    -> "P1 CATCHES an open id in BOTH the backlog and its tail"
+ *   T4  the refill blind to the tail (walks BACKLOG.md alone)   -> "refill with no runnable row in BACKLOG.md takes … FROM THE TAIL"
+ *   T5  the coord write's rebalance skipped (judged by coord.test) -> "§10 a placement over budget is PUSHED …"
+ *   T6  THE ITEM'S CONTROL: the lister's PIPELINE points at BACKLOG.md alone (judged by pipeline-readers.test)
+ *                                                               -> "the lister reads the TAIL …" and "a TAIL row naming no design …"
+ *   T7  mintid's DEC corpus reads BACKLOG.md alone (judged by pipeline-readers.test)
+ *                                                               -> "DEC: an id mentioned ONLY in BACKLOG-LATER.md raises the floor"
+ *   T8  find blind to the tail (ledgersFor without it)          -> "find answers a demoted id in the TAIL"
+ *   T9  (OVER-STRICTNESS) an ABSENT tail read as UNREADABLE     -> "an ABSENT tail is NAMED absent by the audit …" — a plan with
+ *                                                                  no tail file yet is correct work and must pass
+ * What MUST NOT fail: the baseline (ledger.test, owed.test, coord.test AND pipeline-readers.test), and every restore.
  */
 import { readFileSync, writeFileSync, mkdirSync, rmSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -63,8 +77,9 @@ const PEN = join(REPO, ".led2-harness");
 const LEDGER = join(REPO, "tools/ledger.mjs");
 const OWED = join(REPO, "tools/owed.mjs");
 const MINTID = join(REPO, "tools/mintid.mjs");
+const COORD = join(REPO, "tools/coord.mjs");
 const SUITE = join(REPO, "bio-plane/test/ledger.test.mjs");
-const MIN_BYTES = { [LEDGER]: 15000, [OWED]: 8000, [MINTID]: 40000 };
+const MIN_BYTES = { [LEDGER]: 15000, [OWED]: 8000, [MINTID]: 40000, [COORD]: 30000 };
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -76,7 +91,7 @@ const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 mkdirSync(PEN, { recursive: true });
 const pristine = new Map();
-for (const [name, p] of [["ledger", LEDGER], ["owed", OWED], ["mintid", MINTID]]) {
+for (const [name, p] of [["ledger", LEDGER], ["owed", OWED], ["mintid", MINTID], ["coord", COORD]]) {
   const copy = join(PEN, `pristine.${name}.mjs`);
   writeFileSync(copy, readFileSync(p));
   pristine.set(p, { copy, sha: sha(p), bytes: statSync(p).size });
@@ -94,10 +109,14 @@ function restore(p) {
 /* LED-6: an arm may name the suite it reddens (owed's backlog read is judged by `owed.test`); the
    default is `ledger.test`. The tally is read by the suite's own name, so a foreign tally cannot pass. */
 const OWED_SUITE = join(REPO, "bio-plane/test/owed.test.mjs");
+/* M0-119: the tail's arms are judged by coord.test (the placement through a real write) and pipeline-readers.test (the
+   readers); the tally is read by the suite's own name, taken from its file name. */
+const COORD_SUITE = join(REPO, "bio-plane/test/coord.test.mjs");
+const READERS_SUITE = join(REPO, "bio-plane/test/pipeline-readers.test.mjs");
 const suite = (path = SUITE) => {
-  const r = spawnSync(process.execPath, [path], { cwd: REPO, encoding: "utf8" });
+  const r = spawnSync(process.execPath, [path], { cwd: REPO, encoding: "utf8", maxBuffer: 1 << 28 });
   const out = r.stdout || "";
-  const name = path.endsWith("owed.test.mjs") ? "owed" : "ledger";
+  const name = path.split("/").pop().replace(/\.test\.mjs$/, "");
   const m = out.match(new RegExp(`${name}: (\\d+) pass, (\\d+) fail`));
   return { out, pass: m ? +m[1] : -1, fail: m ? +m[2] : -1, status: r.status };
 };
@@ -109,7 +128,10 @@ console.log("\n--- BASELINE · nothing armed ---");
   t("baseline · the suite reached its tally and is GREEN", [s.pass > 50, s.fail, s.status], [true, 0, 0]);
   const so = suite(OWED_SUITE);
   t("baseline · owed.test (arm O1's suite) reached its tally and is GREEN", [so.pass > 30, so.fail, so.status], [true, 0, 0]);
-  console.log(`  baseline suite: ${s.pass} pass, ${s.fail} fail`);
+  const sc = suite(COORD_SUITE), sr = suite(READERS_SUITE);
+  t("baseline · coord.test (arm T5's suite) reached its tally and is GREEN", [sc.pass > 50, sc.fail, sc.status], [true, 0, 0]);
+  t("baseline · pipeline-readers.test (arms T6, T7's suite) reached its tally and is GREEN", [sr.pass > 40, sr.fail, sr.status], [true, 0, 0]);
+  console.log(`  baseline suite: ${s.pass} pass, ${s.fail} fail; coord ${sc.pass}/${sc.fail}; pipeline-readers ${sr.pass}/${sr.fail}`);
 }
 
 const ARMS = [
@@ -159,7 +181,8 @@ const ARMS = [
 
   /* ------------------------------------------------ LED-6: the five invariants, each with its liar */
   { id: "P1", title: "P1's LIAR — an id counted by PRESENCE in both files, so one open twice in the backlog passes",
-    patches: [[LEDGER, "const P1 = [...counts.values()].filter((e) => e.cache + e.backlog !== 1);",
+    /* REPOINTED 2026-09-22 (M0-119): P1 now counts three files; the liar is the same — presence in two. */
+    patches: [[LEDGER, "const P1 = [...counts.values()].filter((e) => e.cache + e.backlog + e.tail !== 1);",
       "const P1 = [...counts.values()].filter((e) => e.cache > 0 && e.backlog > 0);"]],
     mustFail: ["P1 CATCHES an open id twice in the backlog"] },
   { id: "P2", title: "P2 BLIND TO THE BACKLOG — only the cache's closed rows are seen",
@@ -186,8 +209,9 @@ const ARMS = [
     mustFail: ["P4 (over-strictness) passes a dependency on an ARCHIVED done row and a BUILT claim",
                "it moved the runnable rows from the TOP, in backlog order, until the cache held 6"] },
   { id: "P5", title: "P5 BLIND TO THE BACKLOG — only the cache is measured",
-    patches: [[LEDGER, "for (const [ledger, text, rows] of [[LEDGERS.QUEUE, cache, c], [LEDGERS.BACKLOG, backlog, b]]) {",
-      "for (const [ledger, text, rows] of [[LEDGERS.QUEUE, cache, c]]) {"]],
+    /* REPOINTED 2026-09-22 (M0-119): the loop names the tail too; the arm drops the BACKLOG from it, as before. */
+    patches: [[LEDGER, "for (const [ledger, text, rows] of [[LEDGERS.QUEUE, cache, c], [LEDGERS.BACKLOG, backlog, b], [LEDGERS.LATER, later ?? \"\", lt]]) {",
+      "for (const [ledger, text, rows] of [[LEDGERS.QUEUE, cache, c], [LEDGERS.LATER, later ?? \"\", lt]]) {"]],
     mustFail: ["P5 CATCHES a backlog row over 2 KiB"] },
   { id: "P5o", title: "OVER-STRICTNESS — the backlog's 2 KiB row budget applied to the cache",
     patches: [[LEDGER, "const B = BUDGET[ledger.name];", "const B = BUDGET.BACKLOG;"]],
@@ -224,7 +248,8 @@ const ARMS = [
     patches: [[LEDGER, "if (seen.has(rel)) continue;", "if (false) continue;"]],
     mustFail: ["find F-0 answers the ARCHIVE — ONCE, though two ledgers share that archive file"] },
   { id: "M1", title: "mintid STOPS READING THE BACKLOG — an id there can be allocated twice unseen",
-    patches: [[MINTID, "  \"docs/development/BACKLOG.md\",\n  \"docs/development/MILESTONES.md\",", "  \"docs/development/MILESTONES.md\","]],
+    /* REPOINTED 2026-09-22 (M0-119): the tail's entry now follows BACKLOG.md's in the list; the arm drops BACKLOG.md alone. */
+    patches: [[MINTID, "  \"docs/development/BACKLOG.md\",\n  /* M0-119:", "  /* M0-119:"]],
     mustFail: ["mintid's duplicate check READS THE BACKLOG — REC-7 in the cache and the backlog is seen twice"] },
   { id: "O1", title: "owed STOPS READING THE BACKLOG — after the migration every blocked row is there, and the list empties",
     suite: OWED_SUITE,
@@ -233,6 +258,40 @@ const ARMS = [
        same property, at its one site. The old anchor went to ZERO (m025-arm-anchor-witness A4 caught it). */
     patches: [[OWED, "  for (const l of PIPELINE) {", "  for (const l of PIPELINE.slice(0, 1)) {"]],
     mustFail: ["an unreadable BACKLOG is NAMED too (LED-6)", "a blocked row in the BACKLOG routed to the lane is owed, sourced BACKLOG (LED-6)"] },
+
+  /* ------------------------------------------------------------- M0-119: the backlog's tail */
+  { id: "T1", title: "THE REBALANCE DROPS THE ROW IT DEMOTES — it leaves BACKLOG.md and reaches no file",
+    patches: [[LEDGER, "    T = atHead(T, rowLines(linesOf(B).lines, r));\n", "    T = T;\n"]],
+    mustFail: ["THE ACCEPTANCE — every id is in EXACTLY ONE file", "rebalance on disk was not refused"] },
+  { id: "T2", title: "THE ORDER BREAKS — a demoted row goes to the tail's FOOT instead of its head",
+    patches: [[LEDGER, "    T = atHead(T, rowLines(linesOf(B).lines, r));\n", "    T = atFoot(T, rowLines(linesOf(B).lines, r));\n"]],
+    mustFail: ["...IN ORDER: the backlog then the tail read as the ORIGINAL order"] },
+  { id: "T3", title: "P1 BLIND TO THE TAIL — an id open in the backlog AND its tail passes",
+    patches: [[LEDGER, "for (const [rows, where] of [[c, \"cache\"], [b, \"backlog\"], [lt, \"tail\"]])", "for (const [rows, where] of [[c, \"cache\"], [b, \"backlog\"]])"]],
+    mustFail: ["P1 CATCHES an open id in BOTH the backlog and its tail"] },
+  { id: "T4", title: "THE REFILL BLIND TO THE TAIL — it walks BACKLOG.md alone",
+    patches: [[LEDGER, "...queueRows(later ?? \"\").map((r) => ({ ...r, from: \"tail\" }))];", "];"]],
+    mustFail: ["refill with no runnable row in BACKLOG.md takes the order's next runnable row FROM THE TAIL"] },
+  { id: "T5", title: "THE PLACEMENT'S REBALANCE SKIPPED — a coord write over budget meets the ledger checks unbalanced",
+    suite: COORD_SUITE,
+    patches: [[COORD, "if (rebalance && !intents.some((it) => it.op === \"rebalance\"))", "if (false)"]],
+    mustFail: ["§10 a placement over budget is PUSHED — the ledger checks pass, the tail moved rather than the budget failing"] },
+  { id: "T6", title: "THE ITEM'S CONTROL — the lister points at BACKLOG.md alone: PIPELINE without the tail",
+    suite: READERS_SUITE,
+    patches: [[LEDGER, "export const PIPELINE = [LEDGERS.QUEUE, LEDGERS.BACKLOG, LEDGERS.LATER];", "export const PIPELINE = [LEDGERS.QUEUE, LEDGERS.BACKLOG];"]],
+    mustFail: ["the lister reads the TAIL: a tail row is read, tagged `tail`, AFTER every backlog row (one order)",
+               "a TAIL row naming no design FAILS by name, and names BACKLOG-LATER.md"] },
+  { id: "T7", title: "mintid's DEC CORPUS READS BACKLOG.md ALONE — an id placed only in the tail sets no floor",
+    suite: READERS_SUITE,
+    patches: [[MINTID, "\"docs/development/DECISIONS.md\", \"docs/development/QUEUE.md\", \"docs/development/BACKLOG.md\", \"docs/development/BACKLOG-LATER.md\"]",
+                       "\"docs/development/DECISIONS.md\", \"docs/development/QUEUE.md\", \"docs/development/BACKLOG.md\"]"]],
+    mustFail: ["DEC: an id mentioned ONLY in BACKLOG-LATER.md raises the floor", "THE TAIL CLASS: no mintid corpus names the backlog without its tail"] },
+  { id: "T8", title: "FIND BLIND TO THE TAIL — a demoted id is reported nowhere",
+    patches: [[LEDGER, "? [...PIPELINE, LEDGERS.DEBT] : [...PIPELINE]);", "? [...PIPELINE, LEDGERS.DEBT] : [LEDGERS.QUEUE, LEDGERS.BACKLOG]);"]],
+    mustFail: ["find answers a demoted id in the TAIL"] },
+  { id: "T9", title: "OVER-STRICTNESS — an ABSENT tail read as UNREADABLE (a plan with no tail yet is correct work)",
+    patches: [[LEDGER, "return t === null && l.optional ? { text: \"\", absent: true }", "return false ? { text: \"\", absent: true }"]],
+    mustFail: ["an ABSENT tail is NAMED absent by the audit, never unreadable, and scored as empty"] },
 ];
 
 for (const a of ARMS) {
@@ -261,6 +320,8 @@ console.log("\n--- AFTER · every file restored, the suite green again ---");
   t("after · the suite is GREEN on the restored tree", [s.fail, s.status], [0, 0]);
   const so = suite(OWED_SUITE);
   t("after · owed.test (arm O1's suite) is GREEN on the restored tree", [so.pass > 30, so.fail, so.status], [true, 0, 0]);
+  const sc = suite(COORD_SUITE), sr = suite(READERS_SUITE);
+  t("after · coord.test and pipeline-readers.test are GREEN on the restored tree", [sc.fail, sc.status, sr.fail, sr.status], [0, 0, 0, 0]);
 }
 /* The pen is removed on a clean run and KEPT on a red one, where the pristine copies are the evidence. */
 if (!fail) rmSync(PEN, { recursive: true, force: true });

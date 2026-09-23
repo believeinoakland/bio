@@ -27,6 +27,7 @@
  * class); (iv) it does not drive a SEVERED citation for the project-context arm — `#citesInto` is the one
  * live-cites predicate and its severance reading is `severedhomes.test.mjs`'s; (v) `op=capturerequest`, the same
  * class, is NOT gated by this landing (rule 1 names two ops) and is measured, not asserted, in REC-165's report.
+ * [2026-09-23, REC-168: that door is now gated by BOB #28's ruling — `test/rec168-capturerequest-principal.test.mjs`.]
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
