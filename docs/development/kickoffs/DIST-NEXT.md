@@ -46,7 +46,10 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    **A DEFECT IN DIST'S AREA, being placed by SCHEDULER (reported by D-116's worker via CONDUCT #15):** newgroup's
    `uploadInstall`/`uploadUpdate` never bind PDF_WORKER, OCR_WORKER or AGENT_WORKER to the installed plane, so on a group's
    own instance the members are unreachable. Fix named: add the three service bindings, installing the members first or
-   re-PUTting the plane after `installFleet`. Look it up in the plan before building it.
+   re-PUTting the plane after `installFleet`. **Placed as DIST-6 and SPAWNED as a CONDUCT worker (08:08Z)**, barred from
+   `release/`, the embed, deploying and the live API; it lands by the train. DIST let it run (no need to own it).
+   **The next batch is D-116 (IC-182, on main @ 8633310c) + DIST-6 once landed** — both reach a group ONLY through a cut;
+   neither is a closing, so it is a BATCH (at most once a day), cut when main is green and DIST-6 has landed.
 2. **The tags `v0.72.0`-`v0.75.0` are not on the remote** (above) — NOT CARRIED: BOB #29 (02:52Z) judged it non-blocking (nothing
    reads it; `b942d973` is on the remote) and named it to Bob as an optional web-UI act. A future cut's tag meets the
    same 403: push the branch, and let the tag follow when Bob's act or the environment allows.
