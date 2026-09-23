@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) force every selection with no explicit kind to resolve as "query" (store.mjs: guard the `ids.length ? "enumerated"` arm with `false`, so a picked-ids selection stops enumerating) -> 7 assertions fail (kind enumerated, the stored-item count, resolving to exactly what was picked) then the suite throws; restored, 65 pass. */
+/* NEGATIVE CONTROL: (run 2026-07-31) force every selection with no explicit kind to resolve as "query" (store.mjs: guard the `ids.length ? "enumerated"` arm with `false`, so a picked-ids selection stops enumerating) -> 7 assertions fail (kind enumerated, the stored-item count, resolving to exactly what was picked) then the suite throws; restored, 65 pass. (run 2026-09-23, D-171) restore `snap_key DESC` as #revisionKind's tiebreak (store.mjs) -> exactly 1 assertion fails, "D-171: a tie on created is broken by WRITE order, so the member who wrote last is the writer" (got mechanical, want authored); restored by sha256 and cmp, 71 pass. */
 /* Server-side selections, S-10 step 5.
  *
  * Negative-control detail: force every selection with no explicit kind to resolve as "query" (store.mjs: guard the `ids.length ? "enumerated"` arm with `false`, so a picked-ids selection stops enumerating) -> 7 assertions fail (kind enumerated, the stored-item count, resolving to exactly what was picked) then the suite throws; restored, 65 pass.
@@ -291,6 +291,47 @@ console.log("\n--- selections are the one collectable thing in an append-only st
      anything else in this store a violation. */
   const st = await call("/stats");
   t("the corpus is untouched by any of it", st.bundles, CORPUS.length + 1 - 1);
+}
+
+console.log("\n--- D-171: the LATEST writer is the one written last, not the one with the larger key ---");
+{
+  /* `created` is the DOCUMENT's time (promote stores meta.last_updated), so two
+     revisions carrying one last_updated tie on it, and the tiebreak decides whose
+     writer drift reports. `snap_key` is an opaque caller-chosen string and its
+     lexical order is not a clock, so the tiebreak is `rowid DESC`, the store's own
+     write order, as REC-32's #conditionsCaptureUnattended already reads it. THE
+     FIXTURE'S KEYS RUN AGAINST WRITE ORDER on purpose: a later write that also
+     carried the larger key would pass under either order and tell them apart never. */
+  const b = { id: "INFO-2026-7171-tie", title: "Selection record tie", state: "collected",
+              updated: "2026-07-20T00:00:00Z", body: "sewer fund tie bravo" };
+  const put = async (bb, base, snapKey, writer = null, operation = null) => {
+    const text = md(bb);
+    return call("/promote", {
+      bundleId: bb.id, base, snapKey, author: "suite", writer, operation,
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+      meta: { object_type: "information", group: "believe-in-oakland", title: bb.title,
+              current_state: bb.state, created: "2026-07-01T00:00:00Z", last_updated: bb.updated,
+              criticality: "notable" },
+    });
+  };
+  const created = await put(b, null, "m-new");
+  t("the tie fixture's bundle is created", created.ok, true);
+  const sel = await call(`/select?${VIEW}&q=`, { ids: [b.id] });
+  const TIE = "2026-07-25T00:00:00Z";
+  const KEY_FIRST = "z-mech", KEY_SECOND = "a-authored";
+  t("the fixture's keys run AGAINST write order (the later write has the smaller key)", KEY_SECOND < KEY_FIRST, true);
+  const cur = (await call(`/projection?id=${b.id}&viewer=class:member`)).bundle_sha;
+  const w1 = await put({ ...b, updated: TIE }, cur, KEY_FIRST, "mechanical", "monitor-tick");
+  t("first, a mechanical tick is written", w1.ok, true);
+  const cur2 = (await call(`/projection?id=${b.id}&viewer=class:member`)).bundle_sha;
+  const w2 = await put({ ...b, updated: TIE, body: "sewer fund tie bravo, rewritten by a member" }, cur2, KEY_SECOND);
+  t("then a member's rewrite, at the SAME last_updated", w2.ok, true);
+  const r = await call(`/selection?handle=${sel.handle}&${VIEW}`);
+  const rev = (r.drift?.revised || []).find((x) => x.bundleId === b.id);
+  t("the tied revision is seen", !!rev, true);
+  t("D-171: a tie on created is broken by WRITE order, so the member who wrote last is the writer",
+    rev?.class, "authored");
+  await call(`/selectionrelease?handle=${sel.handle}&owner=${OWNER}`);
 }
 
 await mf.dispose();
