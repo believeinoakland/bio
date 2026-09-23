@@ -33,6 +33,66 @@ scope: re-pin at promotion to `adopted`; the case document stamps the adopted bu
 accepts-when: the stamped statements hash equals a hash recomputed from exactly the stamped sha's bytes, across a propose → adopt → later-propose sequence. How a liar passes it: hashing the latest projection, so the arm proposes a newer revision after adoption and recomputes from the stamped sha alone. NEGATIVE CONTROL: pin the proposed sha, and the equality arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (BOB #31's ruling, 21:43Z/21:48Z; `node tools/mintid.mjs REC`).
 
+### REC-188 · queued — **C-41 DOES NOT REQUIRE THE BIAS MANIFEST D-84 STAMPS: `checkCaseDocument` and the C-41 family never read `bias_manifest`, so a case document published without its lens still ratifies.** D-84 keeps `bio-case-document/2`; `construct-status.json` `7.manifest-stamped` says the gate *"does not REQUIRE the block"* because unsigned /2 documents without it exist. — owner RECORD.
+order: directly after REC-187, the same stamp: a correction to just-landed work (D-84), and DEC-20's *disclosed* is only true if the gate refuses its absence (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (2), verified at c17-batch4 @ 65205437)
+milestone: M10
+interface: I3 — the case document format becomes `bio-case-document/3` (additive, a newly REQUIRED key); /2 and /1 stay accepted; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"The bias acknowledgement, authored at export" (the manifest row *computed and stamped by the plane*), with `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12 (a format bump). PROVISIONAL on the bump: rule 12 names removal and changed meaning, not an added required key — asked of BOB #31, 2026-09-23.
+depends-on: D-84 (the stamp; `integrated` on c17-batch4).
+scope: `op=publish` writes `bio-case-document/3`; a new C-41 check (mint its C-number) refuses a /3 document without the `bias_manifest` map (`in_force`, `stated`); /2 and /1 keep ratifying. Extend `bio-plane/test/d84-case-manifest.test.mjs`.
+accepts-when: a /3 document lacking `bias_manifest` is refused by the new C-41 check by name; a /2 document without it still ratifies; a published case reads /3. How a liar passes it: bumping the format string without the check, so the arm hands a /3 document with the block deleted. NEGATIVE CONTROL: drop the new check's push, and the "/3 without a manifest is refused" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
+
+### REC-189 · queued — **A MACHINE CREDENTIAL CAN SET `risk_tier` 1, 2 OR 3 — THE ONE FIELD THAT CARRIES LEGAL EXPOSURE — BECAUSE NOTHING AT PROMOTE ENFORCES *"only a member's authored act sets 1, 2 or 3"*.** `Store.promote`'s action block never reads `risk_tier` nor calls `isMachineIdentity`, and `op=promote` admits probe; the only machine fence on actions is `actionMove`'s. — owner RECORD.
+order: after REC-188, ahead of the features: a correction to just-landed work (D-182) on the field BOB #21 ruled carries legal exposure; UI-85's chooser follows it so the fence and the member path arrive together (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:48Z finding (1), verified at c17-batch5 @ 74fc2e25)
+milestone: M10
+interface: I3 additive — a new refusal code, registered in `affordances.mjs`'s refusal table beside `actionmove`; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, `risk_tier` RULED 2026-09-21 by BOB #21 (*"Only a member's authored act sets 1, 2 or 3"*); the MACHINE_CANNOT_* precedent at `actionMove`.
+depends-on: D-182 (the undetermined tier; `integrated` on c17-batch5).
+scope: in promote's action block (not on replay), refuse MACHINE_CANNOT_SET_RISK_TIER when the author is a machine identity and the new tier is 1, 2 or 3 and differs from the previous version's; an unchanged carry-forward passes. Inside a DEC-49 region; a bio-checks entry beside the actionmove one. Extend `bio-plane/test/machine-fences.test.mjs`.
+accepts-when: a machine credential's promote changing a tier to 2 is refused by name; a member's promote setting 2 and a machine's unchanged carry-forward are accepted. How a liar passes it: refusing every machine promote of an action, so the carry-forward arm must pass. NEGATIVE CONTROL: drop the machine-identity clause, and the "a machine credential cannot set risk_tier" arm fails by name while the member arm stays green.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
+
+### UI-85 · queued — **NO SURFACE LETS A MEMBER CHOOSE A RISK TIER: the action intake writes `risk_tier: undetermined` with no control, though the plane publishes the words (`op=affordances`, `vocabularies.risk_tiers`).** `civicos-ui/app.html` names `risk_tiers` only in a comment that says *"a chooser … is this page's to add"*; the design's front matter reads *"built except its member-facing chooser"*. — owner UI.
+order: directly after REC-189, so the plane's fence and the member's only path to a tier land together; D-182's surface half (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:48Z finding (2), verified at c17-batch5 @ 74fc2e25)
+milestone: M10
+interface: I3 consumer (`op=affordances`'s `vocabularies.risk_tiers`); none new.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, `risk_tier` RULED 2026-09-21 by BOB #21 (*"A surface publishes those words … invents none"*).
+depends-on: D-182 (`integrated` on c17-batch5); REC-189 placed earlier.
+scope: a chooser in the action intake reading the published map, `undetermined` preselected and no numeric default; `mdFor` writes `risk_tier: <n>` only when the member chose one. Extend `civicos-ui/test/add-surface.test.mjs`.
+accepts-when: a member picks tier 2 and `op=projection` reads 2 with the published words; an untouched chooser writes undetermined; the page shows only words the plane published. How a liar passes it: hard-coding the three words, so an identity arm swaps the published map and the page must follow. NEGATIVE CONTROL: default the chooser to 1, and the "an untouched chooser writes undetermined" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs UI`).
+
+### UI-86 · queued — **THE QUEUE OFFERS NO MUTE ON A FINDING, THOUGH THE PLANE NOW ACCEPTS ONE: `op=queuemute` takes FINDING kinds and the item form `{item}` (`PERSONALLY_MUTABLE_CLASSES` = CONDITION, FINDING), while `app.html`'s `queueMutableKinds` filters CONDITION only and sends only `{case, kinds}`.** Its copy (*"reaches condition kinds only"*) and `queueMuteReportHtml` are now false, and `civicos-ui/test/notifications.test.mjs` §2 still pins PL-15's superseded *"NO MUTE IS OFFERED ON A FINDING"*. — owner UI.
+order: after UI-85: a correction to just-landed work (D-125's plane half), a surface that now tells a member something untrue (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (4), verified at c17-batch4 @ 65205437)
+milestone: M8
+interface: I3 consumer (`op=queuemute`'s item form); none new.
+design: `docs/development/NOTIFICATIONS.md` §"MARKED AS HANDLED — and handling has a SCOPE, which differs by class" (BOB #26, 2026-09-22; D-170).
+depends-on: D-125 (`integrated` on c17-batch4).
+scope: FINDING kinds in the per-case control; a per-item mute sending `{item}`; the copy and the report cover item mutes and read `mute.items`; the superseded pin corrected in place with a comment saying why. Suites: `civicos-ui/test/notifications.test.mjs`, `queue.test.mjs`, `member-respect.test.mjs`.
+accepts-when: a feed holding only a lead draws a mute that reaches `op=queuemute` as `{item}` and the suppression reads under `mute.items`. How a liar passes it: offering the control without sending the item form, so the arm reads the request body. NEGATIVE CONTROL: restore the CONDITION-only filter, and the "a FINDING is offered a mute" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs UI`).
+
+### REC-190 · queued — **NOTHING CAN FIND A CAPTURE MOVED BETWEEN BUNDLES BEFORE D-179's FENCE: the old UPSERT moved the register row (`capture_sha` is its primary key) to the newcomer, leaving the original bundle's `files`/`history` rows naming a sha the register gives to another bundle, and `registerAudit` reads the moved row as live.** The fence (C-53.13) refuses only new moves; neither census op (`digestcensus`, `snapkeycensus`) answers this. — owner RECORD; DIST runs it live.
+order: after UI-86: the census that tells whether D-179's residue exists on a live record, before anything repairs it; a read, not a rewrite (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (6), verified at c17-batch4 @ 65205437)
+milestone: M2
+interface: I3 additive — one new admin/probe census op, `mutating:false`, REC-175's shape (proposed name homecensus); the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (*"ONE CAPTURE, ONE HOME — the ORIGINAL's"*). REPAIR of what it finds, and the digest-level duplicate (the same content in different bytes, §8's Incomplete note), are NOT in scope: asked of BOB #31, 2026-09-23.
+depends-on: D-179 (the fence; `integrated` on c17-batch4).
+scope: list every `files`/`history` row whose sha the register assigns to a DIFFERENT, still-existing bundle, with both bundles named; never write. New suite `bio-plane/test/homecensus.test.mjs`, modelled on `d179onehome.test.mjs`, seeding a moved row at the store (the pre-fence state).
+accepts-when: a store seeded with one moved row lists that sha under both bundles; a clean store lists none; the record's counters read before and after the call are unchanged. How a liar passes it: listing every multi-bundle sha including legitimate shares, so the clean-store arm must read none. NEGATIVE CONTROL: remove the different-bundle predicate, and the "displaced row found" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
+
+### REC-191 · blocked — awaiting BOB #31: which version's `monitor_frequency` governs an address whose versions disagree (asked 2026-09-23) — **MONITORING SCHEDULES A BUNDLE, NOT AN ADDRESS: sixty captures of one document are sixty monitor schedules.** `Store#monitorCadencePlan` selects `bundles WHERE monitor_enabled=1`; no monitoring path calls `versionChain`. — owner RECORD.
+order: after REC-190, behind D-65 (running; same op and path); a gap, not an over-claim; PROVISIONAL (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (5), verified at c17-batch4 @ 65205437)
+milestone: M3
+interface: I3 — `op=monitor`'s schedule and report become per address, naming every version grouped; the integrator mints and classifies the IC.
+design: D-220's ruled intent (its DEBT row, Bob 2026-08-06, *"Monitoring an ADDRESS is what a member means"*) with `docs/architecture/BIO_Content_Framework_v0_10.md` §6 (the contract sets the check frequency). The cross-version frequency rule is BOB's to fold.
+depends-on: D-65 (running), D-220 (`integrated` on c17-batch4), BOB's ruling.
+scope: `#monitorCadencePlan` groups monitored bundles by `captured_locators.address_norm` through the version-chain join, checks the address once against its current version, and reports the versions it grouped. Also renumber D-220's archived row body to match its disposition, and `INVESTIGATIVE-SESSION.md`'s Incomplete bullet. Extend `bio-plane/test/monitor-cadence.test.mjs`.
+accepts-when: three captures of one address give one due entry; two addresses sharing a title give two. How a liar passes it: grouping by title, so the shared-title arm must read two. NEGATIVE CONTROL: restore the per-bundle select, and the one-address arm fails by name (it sees three due).
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
+
 ### REC-159 · blocked — awaiting Bob: an attended session or a permission rule — CONDUCT #17's spawn was refused [Permission Grant] 21:11Z (Bob approved the change ~21:08Z; no worker exists). REC-162 and REC-155 depend on it.
 order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
 milestone: M8
@@ -407,6 +467,16 @@ depends-on: none.
 accepts-when: a fixture corpus with two projects differing only in case and spacing is reported by name; distinct names pass; a deactivated collider is still reported. How a liar passes it … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-50's DEBT row of 2026-07-26; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-50» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
+order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
+milestone: M0
+interface: none — a control and one assertion.
+design: `docs/development/VERIFICATION.md` (the negative control and its `NEGATIVE CONTROL:` line; CLAUDE.md §5's *"Run the negative control"*).
+depends-on: none.
+scope: split arm 8 into 8a and 8b, each anchored on its producer's signature line plus the guard; add a `current.test.mjs` assertion driving a finding filed under no project to `available:false, reason:"no_project_scope"` and point arm 7's must-fail at it.
+accepts-when: `node bio-plane/test/current.control.mjs` reports every arm run and 0 NOT as declared; 8a and 8b each fail "PURGE THE SHARED QUESTION AND BOTH ITEMS GO QUIET", arm 7 fails the new no-scope assertion by name. NEGATIVE CONTROL: the control's own arms, each recorded on the suite's `NEGATIVE CONTROL:` line.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs M0`).
 
 ### M0-135 · queued — **A LANE'S OWN `gates.mjs` ON A TREE ALREADY RECORDED GREEN TAKES §2d's TREE-KEYED SHORTCUT AND RUNS NO NEVER-CACHED UNIT (with `BIO_GATE_RESULTS=off`), SO A HISTORY- OR REF-READING CHECK IS SKIPPED ON A LANE'S PUSH.** M0-131 closed this for the TRAIN (`gates.mjs --never-cached` on a reused tree, so `main` is covered); a lane's gate is not. M0-131's worker's finding, verified in its report (CONDUCT #16); RE-READ 2026-09-23 by SCHEDULER #16 on `0e7cc03e` (M0-131 landed): NARROWED — with the per-unit record on (the default) §2d does not take the shortcut and the never-cached units run; the bare shortcut stands only with `BIO_GATE_RESULTS=off` (or no `tools/gateresults.mjs`) and no `--with-never-cached`. — owner M0.
 order: behind the product rows, first of the process block (moved 2026-09-23 by SCHEDULER #16): re-read at the code, the default path already runs the never-cached units, so this closes a non-default mode, neither cutting gate time nor unblocking product — Bob, 2026-09-22: *"The goal is BIO work; process is overhead"* (was: directly after REC-176, SCHEDULER #15)
