@@ -72,6 +72,24 @@
  * run and the arm is what said so** — it declared that the failing line must name the CANNED sentence,
  * when a broken preference is precisely what makes that sentence vanish; it is now two-sided (the caller's
  * sentence present, the canned one absent) and the control's own header records why.
+ *
+ *   ARM 6 (UI-73, 2026-09-23) · THE ELEVEN READERS OUTSIDE THE TWO RENDERERS, and a twelfth. `teach()`,
+ *     `queueReason`, `planeSaid`, the finder's per-subject errors, the release / attest / capture (the add
+ *     surface's `findings[]`) receipts, the proposal pre-flight, the forward picker (`taskErr`), the leg
+ *     pre-flight's `subj-how` and `INTENT_VOCAB.words` each read a refusal's `detail` themselves; each now
+ *     reads `refusalWords`. `errPane` is the class sweep's twelfth — `teach()`'s own line on every object
+ *     page's failure pane. Asserted per site, by name: STRUCTURALLY at all twelve (the helper present, no
+ *     `.detail` read of its own) and BEHAVIOURALLY at the seven that are callable functions, with ARM 0's
+ *     refusal off the wire (canned sentence present, caller's absent) and with an untranslated one (its
+ *     `detail` still reaches the member). And the GATE driven against the real plane: `op=login`'s
+ *     SIGN_IN_REFUSED carries no translation, so the gate still prints its `detail` byte for byte — the
+ *     measured reason `preauth-vocabulary.test.mjs`' DEC-49 SUBJECT arm did not move. **THE LIAR THIS
+ *     BEATS:** fixing the sites a suite happens to drive and leaving the rest reading `detail`.
+ *     NEGATIVE CONTROL for ARM 6: arms (E), (F), (G) in the control below, one site each restored to its
+ *     `detail` read — RUN 2026-09-23, 8/8 AS DECLARED against app.html `dca28886…` (1,434,733 bytes):
+ *     BASELINE 89/0; (E) `queueReason` RED 4, every failing line `SITE queueReason`; (F) the leg pre-flight
+ *     RED 2, every line its own; (G) `teach` RED 4, every line `SITE teach`; and (A) now RED 18 because
+ *     the helper's deletion reaches all seven callable sites. Restored by sha256 and `cmp` after every arm.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not discard the
    writer's own output. SHARED from the plane's test estate; census: `stdio-census.test.mjs`. */
@@ -185,6 +203,8 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
 ctx.globalThis = ctx; vm.createContext(ctx);
 vm.runInContext(appScript() + ";globalThis.__U = {" + [
   "PLANE","esc","refusalWords","actRefusalHtml","intentRefusalHtml","versionReviewOpen","versionReviewHtml",
+  /* UI-73's sites */
+  "teach","queueReason","planeSaid","releaseRefusal","attestRefusalHtml","taskErr","errPane","signIn",
 ].join(",") + "};", ctx);
 const U = ctx.__U;
 U.PLANE.token = NELL;
@@ -306,9 +326,100 @@ console.log("\n--- 5. the over-strictness arm: 297 of the plane's codes have no 
      strip(U.actRefusalHtml({ ok:false, reason:"X" })).includes("The record refused this and said nothing further"));
 }
 
+/* ============================================================
+   6. UI-73 — THE ELEVEN READERS OUTSIDE THE TWO RENDERERS, AND THE TWELFTH THE SWEEP FOUND
+   ============================================================
+   UI-72 named them and left them: each drew a refusal's words by reading `detail` itself, so a
+   refusal carrying DEC-49's canned translation reached the member in the sentence written for a
+   caller of the op on every one of them. Each now takes its words from `refusalWords`. Asserted
+   the way ARM 2 asserts the two renderers — STRUCTURALLY, per site, by name — and, for every site
+   that is a function a suite can call, BEHAVIOURALLY with the refusal ARM 0 read OFF THE WIRE:
+   the member's sentence present, the caller's absent. The over-strictness half (an UNTRANSLATED
+   refusal still reaches the member in its `detail`) is asserted at every callable site too. */
+console.log("\n--- 6. UI-73: every other member-facing refusal reader goes through the one helper ---");
+const stripComments = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
+const fnBody = (name) => {
+  const m = new RegExp(`\\nfunction ${name}\\(`).exec("\n" + SCRIPT);
+  if(!m) return "";
+  const at = m.index;
+  return stripComments(SCRIPT.slice(at, SCRIPT.indexOf("\n}", at)));
+};
+/* THE FUNCTION-SHAPED SITES — the release, attest and forward-picker receipts, the queue's feed
+   reason, the published pages' `planeSaid`, the gate's `teach`, and `errPane` (the class sweep's
+   twelfth: `teach`'s own line, one pane over, serving every object page's failure). */
+const FN_SITES = ["teach", "queueReason", "planeSaid", "releaseRefusal", "attestRefusalHtml", "taskErr", "errPane"];
+for(const name of FN_SITES){
+  const b = fnBody(name);
+  ok(`SITE ${name}: found in app.html`, b.length > 30);
+  ok(`SITE ${name}: takes its words from the ONE helper`, /refusalWords\(/.test(b));
+  ok(`SITE ${name}: reads no refusal's \`detail\` of its own`, !/\.detail\b/.test(b), (/.{0,40}\.detail\b.{0,20}/.exec(b) || [""])[0]);
+}
+/* THE LINE-SHAPED SITES — each inside a larger renderer no suite here can call alone, so each is
+   found by an anchor that must match EXACTLY ONCE (an anchor that matched nothing would make the
+   arm pass over nothing), and the one line is read. */
+const LINE_SITES = [
+  ["the finder's per-subject errors", "(s.errors||[]).map(e=>"],
+  ["the leg pre-flight's subj-how",   "(lp.refusal ? "],
+  ["the add surface's capture receipt (findings[])", 'fs.map(f=>`<div class="intent-ref"><div class="intent-ref-why">'],
+  ["the proposal pre-flight",         "This won't run yet — and nothing has been written.</b>"],
+  ["INTENT_VOCAB.words",              "INTENT_VOCAB.words[name] = a.accepted"],
+];
+for(const [label, anchor] of LINE_SITES){
+  const lines = SCRIPT.split("\n").filter(l => l.includes(anchor));
+  ok(`SITE ${label}: its anchor matches exactly one line`, lines.length === 1, lines.length);
+  const l = lines[0] || "";
+  ok(`SITE ${label}: takes its words from the ONE helper`, /refusalWords\(/.test(l));
+  ok(`SITE ${label}: reads no refusal's \`detail\` of its own`, !/\.detail\b/.test(l), (/.{0,40}\.detail\b.{0,20}/.exec(l) || [""])[0]);
+}
+{
+  const lines = SCRIPT.split("\n").filter(l => l.includes("if(!l || l.ok===false || !l.token){ teach("));
+  ok("SITE signIn: hands the gate BOTH sentences the plane may send, so `teach` can choose the canned one",
+     lines.length === 1 && /translation:\s*l\.translation/.test(lines[0]), lines[0]);
+}
+/* BEHAVIOUR, with the refusal the plane actually sent in ARM 0. */
+{
+  const T = ROW.translation, D = WIRE_REF.detail;
+  const D2 = "op=versionchain answers for ONE document address: pass address=<url>.";
+  const PLAIN = { ok:false, reason:"VERSION_CHAIN_NO_ADDRESS", detail:D2 };
+  const has = (out, s) => out.includes(s) || out.includes(U.esc(s));
+  const render = {
+    teach:             (r) => { const e = el(); U.teach(e, r); return e._html; },
+    queueReason:       (r) => U.queueReason(r),
+    planeSaid:         (r) => U.planeSaid(r),
+    releaseRefusal:    (r) => U.releaseRefusal(r),
+    attestRefusalHtml: (r) => U.attestRefusalHtml(r),
+    taskErr:           (r) => { U.taskErr("ui73", r); return $$('#q [data-err="ui73"]').textContent; },
+    errPane:           (r) => U.errPane(r),
+  };
+  for(const name of FN_SITES){
+    const out = String(render[name](WIRE_REF) || "");
+    ok(`SITE ${name}: a member reads the plane's CANNED translation`, has(out, T), strip(out).slice(0, 160));
+    ok(`SITE ${name}: and not the sentence written for a caller of the op`, !has(out, D) && !strip(out).includes(strip(D)));
+    const plain = String(render[name](PLAIN) || "");
+    ok(`SITE ${name} (over-strictness): an UNTRANSLATED refusal still reaches the member in its detail`, has(plain, D2), strip(plain));
+  }
+}
+/* THE GATE, DRIVEN AGAINST THE REAL PLANE: `op=login` refuses SIGN_IN_REFUSED, a code with NO catalogue
+   row and so NO canned translation (measured: no `*_CHECKS` family carries it) — so the gate must still
+   print the plane's `detail`, byte for byte. This is the reason `preauth-vocabulary.test.mjs`' DEC-49
+   SUBJECT arm did not move under UI-73, asserted here rather than inferred there. */
+{
+  $$("#g-handle").value = "member:nell";
+  $$("#g-pw").value = "not nell's passphrase";
+  await U.signIn();
+  const w = [...WIRE].reverse().find(x => x.op === "login");
+  const said = w && rP(w.body);
+  ok("SITE signIn (the real plane): op=login refused, with a detail and no canned translation",
+     !!said && said.ok === false && typeof said.detail === "string" && said.detail.length > 40 && said.translation === undefined,
+     JSON.stringify(said).slice(0, 200));
+  ok("SITE signIn (the real plane): the gate prints the plane's own detail, byte for byte",
+     !!said && $$("#g-err")._html === U.esc(said.detail), strip($$("#g-err")._html).slice(0, 160));
+}
+
 console.log(`\nrefusal-translation-surface: ${n} assertions, ${fails.length} failed — the plane's own refusal `
   + `(BASIS_VERSIONS_NOT_AN_INQUIRY, ${ROW.check}) read off the wire and rendered on a real surface; `
-  + `${sites} actRefusalHtml and ${twins} intentRefusalHtml call sites covered structurally by the one helper`);
+  + `${sites} actRefusalHtml and ${twins} intentRefusalHtml call sites covered structurally by the one helper; `
+  + `UI-73's ${FN_SITES.length} function sites and ${LINE_SITES.length} line sites (+ signIn) each through it`);
 exitCode = fails.length ? 1 : 0;
 if(fails.length) for(const f of fails) console.error("  FAILED:", f);
 } finally { await mf.dispose(); }
