@@ -19289,6 +19289,7 @@ paths, BY SITE:
 DELEGATION, not an edit), `tools/**` (four M0 workers), `docs/development/QUEUE.md` (CONDUCT's).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 by the D-442 worker — BUILT and PUSHED, awaiting CONDUCT's integration: branch `worktree-agent-af1478b0c650efa08` @ `cd105e3e` (verified with `git ls-remote`; `origin/main` @ `c5c83dc4` merged in). FULL gate GREEN on the clean committed tree `185730ee`: `280/280 suites green · 16831 assertions passing` (2 untallied: bundle, livefire; 0 SKIP), coverage `--strict` and civicos-ui green, plancheck clean but for UNPUSHED. IC-179 PROPOSED (I3 MAJOR, I5 additive — `case_exclusions`); M-108 recorded. The claimed paths stay reserved until CONDUCT integrates the branch. The UI reader this item could not touch is the DELEGATION to UI raised on this file the same day.
 
 ## DELEGATION 2026-09-23 SCHEDULER (#14) -> BOB — **THREE LED-7 DESIGN QUESTIONS, ONE EACH: D-129's states of `undetermined`, D-170's ungrouped mute, D-181's action leg**
 
