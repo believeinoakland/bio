@@ -19419,3 +19419,25 @@ paths, BY SITE:
 **NOT CLAIMED:** `tools/gates.mjs` (read, not edited), any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 RECORD (D-85 — an assistant opens a question only inside a run it holds; a run records the lens in force at its open)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #14 for D-85 (wave 7), worktree `.claude/worktrees/agent-a09e49cc337fc2200`,
+branch `worktree-agent-a09e49cc337fc2200`, from `origin/main` @ `f05c1efd` (cloud).
+authority: `QUEUE.md` `### D-85 · running` (read on `origin/coord` @ `2b2868c5`); the row's full text under «D-85» in
+`docs/archive/ledgers/QUEUE-cut-2026-09-22.md`; design `INVESTIGATIVE-SESSION.md` §11 item 5 rules 2 and 3 (BOB #25), with §3.
+paths, BY SITE:
+  - `bio-plane/src/store.mjs`: `promote` (the surfacing gate before the transaction, the link row inside it), `aiRunOpen`
+    (the lens in force at open), `#biasForRun`, `projection` (the single-bundle arm's `surfaced_in`), `purge`'s TABLES
+    list, `ADDITIVE_COLUMNS`.
+  - `bio-plane/src/schema.mjs`: `ai_runs.lens_at_open`; one NEW instance table keyed by the inquiry.
+  - `bio-plane/src/airun.mjs`: `RUN_BOUNDS.surfaces`.
+  - `bio-plane/src/index.mjs`: the `op=promote` stamp block (one server-side stamp for an `ai` credential).
+  - `bio-plane/checks/bio-checks.mjs`: one NEW refusal family (C number minted).
+  - NEW `bio-plane/test/d85-surface-run.test.mjs` + `.control.mjs`; suites whose assertion this supersedes, corrected
+    with a dated comment (`airun.test.mjs` V5, `bias.test.mjs` block 12 if it moves), floors the instruments print.
+  - `bio-plane/dist/`, `docs/architecture/construct-status.json` (`11.run-production`), `INVESTIGATIVE-SESSION.md` front
+    matter and §11 item 5's built note, `INTERFACE-CHANGES.md` (one proposed IC).
+**NOT CLAIMED:** `agent-worker/`, `civicos-ui/` (measured, not edited unless a harness reads a new code), `newgroup/`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
