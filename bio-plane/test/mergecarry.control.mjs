@@ -167,8 +167,14 @@ arm("the rename test is dropped — a legitimate rename reads as lost work",
 
 arm("a row is removed from KNOWN_HISTORICAL_DROPS — the register must notice a drop nobody looked at",
   [{ path: TOOL, append: `\nKNOWN_HISTORICAL_DROPS.pop();\n` }],
-  { mustFail: ["no UNREGISTERED drop sits in main's history", "the register is the three the sweep found"],
+  { mustFail: ["no UNREGISTERED drop sits in main's history", "the register is the"] /* CORRECTED 2026-09-23 (CONDUCT #15): the pin's name moved (three -> FIVE -> FOUR true drops); a stable substring now, so a rename cannot silently un-declare the arm. */,
     mustNotFail: ["no registered drop has quietly stopped being one"] });
+
+arm("the `carried` classification is made unreachable — a merge that already holds the branch's change reads as lost",
+  [{ path: TOOL, from: `klass = "carried";`, to: `klass = "dropped";`, expect: 1 }],
+  { mustFail: ["4355bfd: TREE-SHARING.md is CARRIED", "4355bfd: nothing in it counts as dropped",
+               "no UNREGISTERED drop sits in main's history"],
+    mustNotFail: ["e241672's real drop is NOT carried"] });
 
 arm("a bogus row is added to KNOWN_HISTORICAL_DROPS — the register must not outlive its reason",
   [{ path: TOOL, append: `\nKNOWN_HISTORICAL_DROPS.push({ merge: "abc1234", path: "nope.md", why: "control arm 6" });\n` }],

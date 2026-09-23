@@ -92,7 +92,10 @@
  * one keystroke that leaves no trace. The residual is real and is stated, not closed.
  */
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { tmpdir } from "node:os";
 
 const ABSENT = null; /* a path with no blob at a commit. Distinct from "" and from a sha. */
 
@@ -167,25 +170,6 @@ export const KNOWN_HISTORICAL_DROPS = [
        + "until it is done`, while the battery prints `2 member(s) actually RAN` and no `DARK:` "
        + "at all. The work was done and the ledger still asks for it. Leaves this list when "
        + "D-232's disposition is corrected." },
-  { merge: "95e401b", path: "bio-plane/dist/bio-plane.bundle.json",
-    why: "D-334 x release 0.58.0, 2026-09-14, CONDUCT #9. A GENERATED manifest, and the drop "
-       + "is benign AND correct rather than a repair owed: DIST cut 0.58.0 (db7589b) from a "
-       + "plane source WITHOUT D-334 (its store.mjs input 1,869,260 B, sha 514bb504...), while "
-       + "the integration side had already rebuilt the bundle on the merged source carrying "
-       + "D-334 (store.mjs 1,874,385 B, sha 2416ee7b...; f974291, itself forced by FL-10's "
-       + "guard firing at the D-334 merge). The merge kept the integration side's manifest "
-       + "whole, so DIST's describes a source tree that no longer existed after the merge. "
-       + "MEASURED on the merged tree at 95e401b, `fleetbundles.test.mjs` 87/87 exit 0 "
-       + "unpiped: the surviving manifest is byte-identical to a fresh build of the merged "
-       + "source — the guard that exists for exactly this question answered it. `release/**` "
-       + "is untouched and still carries the SIGNED 0.58.0 artifact (72fce1e9...); dist/ and "
-       + "release/ diverging after a cut is D-298's truthful state, not a defect. WHY IT WAS "
-       + "UNREGISTERED: the corpus arm grades origin/main, which cannot see an unpushed "
-       + "merge, and plancheck's origin/main..HEAD carry check read 0 DROPPED before the "
-       + "push - the two instruments disagree about a same-end drop on a GENERATED file, "
-       + "and that gap is the finding this row leaves behind (the honest fix is a "
-       + "Dropped-from-branch trailer at merge time, which this merge did not carry). "
-       + "Stays here as the receipt; nothing to repair." },
 ];
 
 export function git(args, { repo, allowFail = false } = {}) {
@@ -255,7 +239,7 @@ export function auditMerge({ repo, commit }) {
   const r = {
     merge: sha, short: sha.slice(0, 7), subject, parents,
     isMerge: parents.length > 1, octopus: parents.length > 2,
-    sides: [], counts: { sameEnd: 0, moved: 0, goneOnMain: 0, dropped: 0, declared: 0 },
+    sides: [], counts: { sameEnd: 0, moved: 0, goneOnMain: 0, carried: 0, dropped: 0, declared: 0 },
     findings: [], notes: [],
   };
   if (!r.isMerge) return r;
@@ -316,6 +300,15 @@ export function auditMerge({ repo, commit }) {
         else if (atP1 === ABSENT)
           klass = blobAt(repo, base, path) === ABSENT ? "dropped" : "goneOnMain";
         else klass = "dropped";
+        /* CARRIED (CONDUCT #15, 2026-09-23, on BOB #30's measured design): M's blob differs from
+           the branch's END state, but it may still CONTAIN the branch's CHANGE — the change reached
+           main by another path (the branch's parts landed earlier, then the branch itself merged
+           tree-identical; 4355bfd, GitHub run #20). The test: the branch's own patch
+           (base..Pk, this path) applies IN REVERSE, cleanly, to M's blob. Only a blob that already
+           holds every added line in place and lacks every removed line passes, so a true drop
+           (e241672, the registered real one) still reads `dropped`. Counted, never failed. */
+        if (klass === "dropped" && atP1 !== ABSENT && containsChange(repo, base, pk, path, atP1))
+          klass = "carried";
       }
       if (klass === "dropped" && declared.has(path)) klass = "declared";
 
@@ -329,10 +322,27 @@ export function auditMerge({ repo, commit }) {
   return r;
 }
 
+/* Does blob `mBlob` already hold the branch's change to `path` (base..pk)? The branch's patch
+   must apply IN REVERSE, cleanly, to it (`git apply --check --reverse`), in a scratch directory
+   holding only that one file. Any failure to decide is NOT containment: it reads `dropped`. */
+function containsChange(repo, base, pk, path, mBlob) {
+  const patch = git(["diff", "--no-color", "--no-ext-diff", base, pk, "--", path], { repo, allowFail: true });
+  if (!patch) return false;
+  const dir = mkdtempSync(join(tmpdir(), "mergecarry-carried-"));
+  try {
+    const file = join(dir, path);
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, execFileSync("git", ["cat-file", "blob", mBlob], { cwd: repo, maxBuffer: 64 * 1024 * 1024 }));
+    const r = spawnSync("git", ["apply", "--check", "--reverse", "-"], { cwd: dir, input: patch + "\n" });
+    return r.status === 0;
+  } catch { return false; }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+}
+
 /* ------------------------------------------------------------------ a range */
 
 export function carryAudit({ repo, range = null, commit = null } = {}) {
-  const out = { scope: null, merges: [], findings: [], notes: [], counts: { sameEnd: 0, moved: 0, goneOnMain: 0, dropped: 0, declared: 0 } };
+  const out = { scope: null, merges: [], findings: [], notes: [], counts: { sameEnd: 0, moved: 0, goneOnMain: 0, carried: 0, dropped: 0, declared: 0 } };
 
   let shas;
   if (commit) {
@@ -437,7 +447,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   for (const n of a.notes) console.log(`  note  ${n}`);
   console.log(`\n  sameEnd ${a.counts.sameEnd}  moved ${a.counts.moved}  goneOnMain ${a.counts.goneOnMain}`
-    + `  declared ${a.counts.declared}  DROPPED ${a.counts.dropped}`);
+    + `  carried ${a.counts.carried}  declared ${a.counts.declared}  DROPPED ${a.counts.dropped}`);
+  for (const f of a.findings.filter((f) => f.klass === "carried"))
+    console.log(`  note  carried    ${f.merge}  ${f.path} — the merge kept main's bytes, which already hold the branch's change`);
   for (const f of a.findings.filter((f) => f.klass === "goneOnMain"))
     console.log(`  WARN  gone on main: ${f.merge} ${f.path} — the branch changed it (${f.lines} line(s)) and main removed the path.`);
   for (const f of a.findings.filter((f) => f.klass === "moved"))
