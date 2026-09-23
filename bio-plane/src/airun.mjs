@@ -1852,6 +1852,46 @@ export function checkBound(bound) {
     + `endings: ${Object.keys(RUN_ENDINGS).join(", ")} (§14b.6)`);
 }
 
+/* REC-169 (INVESTIGATIVE-SESSION.md §14b.6 and §11 item 5 rule 2) — THE BOUNDS THE PLANE COUNTS ITSELF. `mints` is
+   counted by `extractPropose` from what it actually minted, and `surfaces` by `promote` when an assistant's question
+   lands (D-85). Each has a writer in `store.mjs` that names it BY LITERAL, and `rec169-consume.test.mjs` ARM C holds
+   this list equal to that census off the source, so a third plane-counted bound fails a suite until it is added here.
+   A caller's figure for one of these can only disagree with the plane's: a positive one makes the bound say passages
+   were minted or questions opened that were not, and a negative one is a refund of what the plane counted. So the
+   caller spends neither, at the tick or as a seed at the open — a zero claims nothing and is let through. */
+export const PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
+
+/** REC-169 — C-22.13 and C-22.14: MAY THE CALLER WRITE THIS FIGURE INTO A RUN'S BOUND? Null when every entry may be
+ *  written, else the refusal for the FIRST that may not (in the order given), so the caller is told which one.
+ *
+ *  `entries` is `[bound, value]` pairs; a pair whose bound is not a RUN_BOUNDS row is not judged (the tick has always
+ *  skipped one — a finding reported by REC-169, not decided here). `seed` is true at the open, where an ABSENT
+ *  figure (undefined or null) means "none spent yet" and is not a figure at all.
+ *
+ *  THE RULE: a figure is a NON-NEGATIVE SAFE INTEGER, and a JSON number — never a string that looks like one. The
+ *  column is declared INTEGER and counts things (fetches, sub-sessions, milliseconds, ceilings, passages,
+ *  questions); a count moves up by a whole number or not at all. A negative is a REFUND — the run's principal un-spending
+ *  what its member allowed it — a fraction and a non-finite are not counts, and a string or `true` was coerced by
+ *  `Number(v) || 0` into a figure nobody sent. Refused, never clamped: a clamp answers `ticked: true` over a spend that
+ *  did not happen. */
+export function checkConsume(entries, { seed = false } = {}) {
+  for (const [k, v] of Array.isArray(entries) ? entries : []) {
+    const b = String(k);
+    if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) continue;
+    if (seed && v == null) continue;
+    if (!(typeof v === "number" && Number.isSafeInteger(v) && v >= 0))
+      return refusal("AI_RUN_CONSUME_INVALID",
+        `'${b}' was given ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)}`
+        + ` — a bound's figure is a whole number of zero or more, and a count never goes down (§14b.6). `
+        + `Nothing was written`, { bound: b });
+    if (v !== 0 && PLANE_COUNTED_BOUNDS.includes(b))
+      return refusal("AI_RUN_BOUND_PLANE_COUNTED",
+        `'${b}' is counted by the plane as the run's work lands, never by the caller (§11 item 5 rule 2, SK-8), `
+        + `so a figure sent for it could only disagree with the count. Nothing was written`, { bound: b });
+  }
+  return null;
+}
+
 /* ------------------------------------------------- DEC-63's gate (PL-18)
 
    THE THREE GROUNDS ON WHICH THE PROJECT GATE CAN PERMIT, as a CLOSED
