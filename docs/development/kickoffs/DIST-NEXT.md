@@ -32,6 +32,9 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    Its RELEASES row: `["0.74.0", "cacebb12b7b42f4825238348c4f1e834e9a2c168"]` (`git rev-parse cacebb12`). Expected, by arithmetic: baseline
    438 + 21 → **459/0**, `alterafter` → **381/78**, `groupwipe` → 453/6. MEASURE them before claiming them.
    A cut base is `origin/main` MERGED with any still-waiting `land/dist/release-*` tip, so one landing carries both.
+   **Before pushing any `land/*` branch (CONDUCT #15, 05:32Z, Bob's one-GitHub-run-per-batch ruling at `41c7e0c3`):**
+   `git merge origin/main` (merge, never rebase or force), gate the MERGED tree GREEN, then push — `gates.yml` now fires
+   only on `main`, and a branch based before `41c7e0c3` still carries the old `land/**` trigger (0.74.0's fired run #14).
 2. **The tags `v0.72.0`, `v0.73.0` and `v0.74.0` are not on the remote** (above) — NOT CARRIED: BOB #29 (02:52Z) judged it non-blocking (nothing
    reads it; `b942d973` is on the remote) and named it to Bob as an optional web-UI act. A future cut's tag meets the
    same 403: push the branch, and let the tag follow when Bob's act or the environment allows.
