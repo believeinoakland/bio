@@ -19821,6 +19821,7 @@ paths, BY SITE:
 in `bio-plane/src/`, `civicos-ui/app.html`, `ai-session-context.test.mjs`'s arms.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — pushed `land/worker/M0-132` @ 082a1e75, read back with `git ls-remote`; merged with origin/main e62e08e1; gate GREEN class FULLREUSE on tree e451a5e7 (130/130 suites run green · 9164 assertions; 211 units REUSED, every changed unit re-run; civicos-ui green incl. ai-session-wire 86/0); the pre-merge FULL gate on tree 8377388a read 291/291 · 17445. M-115 filed. Paths stay reserved until CONDUCT integrates.
 
 ## CLAIM 2026-09-23 RECORD (REC-173 — a MIGRATION REPLAY is admitted by what the server checks: ADMIN class + a registered drive-provenance capture listing this bundle and this bundle.md SHA-256)
 
