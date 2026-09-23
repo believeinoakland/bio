@@ -939,8 +939,13 @@ t("retire — now published — succeeds at the published refuse weight",
   [retB2.ok, retB2.retired, retB2.weight],
   [true, [B], cat.result.catalog.find((a) => a.id === "retire").weight]);
 const affB2 = await affordances(B);
-t("retired is terminal: only cite (the store checks type, not state — published honestly) and reinstate remain",
-  actIds(affB2), ["cite", "reinstate"]);
+/* CORRECTED 2026-09-23 by D-168, never exempted: this assertion expected `cite` to remain on a RETIRED
+   bundle because `op=cite` then checked type and not state, and the affordance published that honestly.
+   State Rules §4.1 ("A RETIRED ITEM IS NOT CITABLE", BOB #30) made the store refuse it
+   (RETIRED_NOT_CITABLE, C-33.39), so publishing `cite` here would be the pre-flight disagreeing with the
+   refusal it fronts (DEC-8). The old expectation was right about the old store and is wrong about this one. */
+t("retired is terminal: only reinstate remains (a retired item is not citable — D-168, the store refuses it)",
+  actIds(affB2), ["reinstate"]);
 
 /* --------------------------------------------------------------- focus */
 console.log("\n--- a focus: dispose while an edge exists, EMPTY when elevated — and the empty list is honest ---");

@@ -647,6 +647,24 @@ const REFUSAL_CODE = REFUSAL ? Object.keys(REFUSAL)[0] : "";
 const REFUSAL_SENTENCE = REFUSAL ? REFUSAL[REFUSAL_CODE] : "";
 ok("the plane's login-refusal sentence is readable from here, whole, and is prose",
    !!REFUSAL_CODE && REFUSAL_SENTENCE.length > 200 && /^[a-z].*\.$/s.test(REFUSAL_SENTENCE));
+/* UI-73, 2026-09-23 — THE MOCK'S LOGIN REFUSAL CARRIES NO `translation`, AND THAT IS NOW A CLAIM THIS FILE
+   CHECKS RATHER THAN ASSUMES. Since UI-73 the gate's `teach()` chooses its sentence through `refusalWords`,
+   which renders DEC-49's canned translation FIRST. The control plane decorates a refusal with one only when a
+   `*_CHECKS` catalogue row carries its code (`index.mjs` `dec49Decorate`), so the mock below is true to the
+   wire exactly while no row carries this code. If one ever does, the gate stops printing the sentence the
+   DEC-49 SUBJECT arm pins — and this assertion fails FIRST, naming the row, so the mock is corrected to carry
+   the translation and the SUBJECT re-pinned with the movement stated, rather than the mock going quietly
+   narrower than the wire (the four fixtures UI-72 measured, M-72, are that failure). */
+{
+  const CAT = await import("../../bio-plane/checks/bio-checks.mjs");
+  const fams = Object.keys(CAT).filter(k => /_CHECKS$/.test(k) && CAT[k] && typeof CAT[k] === "object");
+  const rowsFor = fams.filter(k => CAT[k][REFUSAL_CODE] && typeof CAT[k][REFUSAL_CODE].translation === "string"
+                                   && CAT[k][REFUSAL_CODE].translation);
+  ok(`the login refusal ${REFUSAL_CODE} has NO canned translation in any of the ${fams.length} *_CHECKS families, `
+     + "so the gate prints its detail and the mock's translation-less refusal matches the wire — found in: ["
+     + (rowsFor.join(", ") || "none") + "]",
+     fams.length > 20 && rowsFor.length === 0);
+}
 
 /* AND `op=verify`'S OWN REFUSAL, READ THE SAME WAY AND FOR THE SAME REASON —
    ADDED BY UI-36, 2026-08-04. `op=verify` is answered by the CONTROL PLANE
@@ -2236,6 +2254,39 @@ for(const [term, e] of ordered){
        UI-30's rule — so a SCREAMING_SNAKE wire code does not stand in front of a
        stranger when a sentence was available. Recorded because the instrument
        caught it and because the near-miss is the argument for the instrument. */
+/* ============================================================
+   RE-READ BY UI-73, 2026-09-23 — THE FIGURES DID NOT MOVE, AND WHY IS STATED
+   RATHER THAN LEFT AS "STILL GREEN".
+   ============================================================
+   UI-73 routed `teach()` (the gate's `#g-err`), `signIn()`'s refusal line and
+   `planeSaid` (the case page's `#pub-body` and `#v-refused`) through
+   `refusalWords`, which prefers DEC-49's canned `translation` to `detail`. Its
+   row predicted this arm's figures would move "when the gate's rendered sentence
+   changes". MEASURED: they did not, because the rendered sentence did not change.
+     OLD (0e5f7054, before UI-73): 70/70 green · 15 scenarios · 21 surfaces ·
+       47,815 characters · 15 terms · 75 occurrences (65 visible) · the SUBJECT
+       arm's 12 plane-sourced rows below.
+     NEW (UI-73): the SAME, and the whole report CHARACTER-IDENTICAL line for
+       line (only the provenance line's HEAD differs) · plus one assertion
+       (71/71), the catalogue check beside the mock's login refusal.
+   WHY NOTHING MOVED: every plane-sourced row here arrives through a refusal
+   that carries NO canned translation, so `refusalWords` falls through to the
+   very `detail` / `error` the old code read. `SIGN_IN_REFUSED` is in none of the
+   38 `*_CHECKS` families (asserted above, and on the REAL wire by
+   `refusal-translation-surface.test.mjs` ARM 6's signIn drive); `op=verify`'s
+   refusal is the control plane's bare `error` with no code at all; and the
+   `#pub-body` rows are the published answer's own prose, not a refusal.
+   WHAT WOULD MOVE THEM, and this arm then FAILS rather than absorbing it: a
+   canned translation for `SIGN_IN_REFUSED`. Measured by UI-73 as a control,
+   the mock's login refusal given a translation, each arm alone, both files
+   restored by sha256 and `cmp` — BASELINE 71/71 green; (P1) with UI-73's
+   `teach`: RED, 3 of 71 — the REACH arm (the gate no longer renders the plane's
+   `detail` whole), the ATTRIBUTION arm, and this arm naming 'a salted
+   derivation', 'its stored hash', 'no active credential' and 'register'
+   VANISHED and 'this instance' ARRIVING FROM SOMEWHERE ELSE {case-address-at-load
+   #pub-body}; (P2) the same mock with `teach` and `signIn`'s refusal line
+   reverted to their pre-UI-73 text: GREEN 71/71, which is what makes P1's
+   movement `teach`'s and not the mock's. */
 const DEC49_SUBJECT = {
   "sha256":              ["case-address-at-load #pub-body",
                           /* NEW SOURCE 2026-08-04, UI-37 — op=verify's own refusal,

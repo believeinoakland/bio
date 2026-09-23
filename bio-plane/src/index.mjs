@@ -815,6 +815,11 @@ const OPS = {
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* REC-176: the census of manifest rows a repeated snap key overwrote before `op=promote` refused one
+     (`SNAP_KEY_TAKEN`, C-67.1) — per bundle, promotions (row_version) against manifest rows, counted and listed,
+     NEVER rewritten. The method a deployed instance runs to learn whether its own history lost a row. Admin and
+     probe, `registeraudit`'s fence: it is an audit of the working corpus, and it lists bundle ids. */
+  snapkeycensus: { classes: ["admin", "probe"],                    mutating: false },
   /* REC-130's sweep said here that `allocid` with `prefix=CASE` disclosing how
      many case identities this year had minted was acceptable — instance-level
      knowledge a member already holds. SUPERSEDED 2026-09-19 by BOB #16 (Membership
@@ -8471,7 +8476,7 @@ export default {
         if (path === "bundle.md" || path.startsWith("_history/")) continue;
         if (typeof v === "string") {
           const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
-          carried.push({ path, text: v, bytes: v.length,
+          carried.push({ path, text: v, bytes: new TextEncoder().encode(v).length,
                          sha256: [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("") });
         } else carried.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
       }
@@ -8498,7 +8503,7 @@ export default {
            the worst thing in this system, and the shape of promote made it the
            DEFAULT behaviour of a careless caller. */
         files: [
-          { path: "bundle.md", text, bytes: text.length, sha256: textSha },
+          { path: "bundle.md", text, bytes: new TextEncoder().encode(text).length, sha256: textSha },
           ...carried,
         ],
         register: [],

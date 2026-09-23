@@ -1,5 +1,11 @@
-/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads fetches origin/coord and reads it, which no
-   result key can name; traced 2026-09-23. */
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads `origin/coord` (the corpora the floors read) and this checkout's git layout, which no
+   result key can name; traced 2026-09-23. M0-136 (2026-09-23): it no longer reads the LIVE `origin/coord` — the coord state
+   is read at `COORD_PIN` (`./coordpin.mjs`, named there with its why and its cost), and a planted-ref arm below proves the
+   verdict identical whatever `origin/coord` holds.
+   NEGATIVE CONTROL (M0-136, RUN 2026-09-23 by the M0-136 worker): `node bio-plane/test/coordpin.control.mjs mintid` —
+   this suite pointed back at the live `origin/coord` (arm L1, one line after the pin's import) -> exactly two FAILs,
+   "…reads the PINNED coord commit, never a ref name" and "…is IDENTICAL whatever origin/coord holds", 119 pass / 2 fail, exit 1;
+   the pin spelled out in the suite instead (S0, over-strictness) PASSES; each restored, sha256 and `cmp` identical. */
 /* M0-17 — AN ID THAT CANNOT BE TAKEN TWICE, DRIVEN UNDER CONCURRENCY.
  *
  * The subject is `tools/mintid.mjs`. The reason it exists is a measurement, not
@@ -177,6 +183,7 @@ import { NAMESPACES, corpusFloor, ledgerRoot, mint, held, REPO_ROOT,
          allocations, collisions, KNOWN_COLLISIONS, unregisteredNamespaces,
          exclusivityProbe, scopeOf, scopeLines, watermark,
          KNOWN_FLAGS, unknownFlags } from "../../tools/mintid.mjs";
+import { plantedCoord, assertPlanted, REPO as PIN_REPO } from "./coordpin.mjs";   /* M0-136: coord read at a PINNED commit */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const TOOL = join(REPO_ROOT, "tools/mintid.mjs");
@@ -192,7 +199,7 @@ const t = (label, got, want) => {
    went through no assertion at all, ending the module while the tally read
    clean. Every section bumps this; the last assertion in the file requires all
    of them, so a section that dies silently cannot leave a green count. */
-const SECTIONS = 12;
+const SECTIONS = 13;
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -865,7 +872,10 @@ section("M0-52: an allocation is unambiguous to its caller, in BOTH directions")
     ["--list M0", ["--list", "M0"], 0, 0],
     ["M0 --floor-only", ["M0", "--floor-only"], 0, 0],
     ["--audit", ["--audit"], 0, 0],
-    ["--audit --base <ref>", ["--audit", "--base", "origin/main"], 0, 0],
+    /* CORRECTED 2026-09-23 (M0-136), never exempted: the ref was `origin/main`, a LIVE ref, so this arm diffed whatever
+       had landed (`git diff origin/main...HEAD`). The arm asks whether `--base <ref>` is PARSED — its value skipped, the
+       audit run — and `HEAD` is a ref every checkout has, whose three-dot diff with itself is empty and fixed. */
+    ["--audit --base <ref>", ["--audit", "--base", "HEAD"], 0, 0],
     ["--help", ["--help"], 0, 0],
     ["M0 (bare)", ["M0"], 0, 1],
     ["M0 --json", ["M0", "--json"], 0, 1],
@@ -909,6 +919,16 @@ section("M0-52: an allocation is unambiguous to its caller, in BOTH directions")
     t("...and the whitelist declares nothing the tool does not read, so it cannot rot in the other direction",
       declared.filter((f) => !readByTool.includes(f)), []);
   }
+}
+
+/* ========================================================================== */
+section("M0-136: the floors and the register sweep read the PINNED coord commit, and do not move with origin/coord");
+{
+  /* The floors (`corpusFloor`) and the audit's register sweep (`unregisteredNamespaces`, whose count is `--audit`'s EXIT) read the corpora on `coord`, and until M0-136 that was the LIVE `origin/coord`, which every CLI run here FETCHED first (31 fetches a run, measured 2026-09-23): an unregistered prefix a lane wrote to `coord` turned the `--audit` arms red with `main` unmoved. The probe is both calls; the planted commit empties QUEUE.md and DEBT.md, which moves the floors when read. */
+  const p = plantedCoord({
+    probe: `const { NAMESPACES, corpusFloor, unregisteredNamespaces } = await import(${JSON.stringify(PIN_REPO + "/tools/mintid.mjs")});\nconst floors = {}; for (const ns of Object.keys(NAMESPACES)) { const f = corpusFloor(ns); floors[ns] = [f.floor, f.allocFloor, f.missing.length]; }\nconst u = unregisteredNamespaces();\nconsole.log(JSON.stringify({ floors, unregistered: u.unregistered.map((x) => x.prefix), filesRead: u.filesRead }));`,
+    plant: { "docs/development/QUEUE.md": "planted by M0-136: a QUEUE.md with no rows\n", "docs/development/DEBT.md": "planted by M0-136: a DEBT.md with no rows\n" } });
+  assertPlanted(t, "mintid", p);
 }
 
 /* ========================================================================== */

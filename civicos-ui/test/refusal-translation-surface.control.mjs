@@ -50,6 +50,21 @@
  *       a member would have read, with ARMS 1, 3 and 5 green ·
  *   (D) GREEN 29 / 0.
  * RESULTS ARE PRINTED ON EVERY RUN and this file's own exit is 0 only when every arm came back AS DECLARED.
+ *
+ * UI-73, 2026-09-23 — THREE MORE ARMS, one per SHAPE of site ARM 6 covers, each restoring ONE site to the
+ * `detail` read it had before UI-73 and declared to fail ONLY at that site (`only`: every failing line
+ * names it, so a site's arm is its own and not a second reading of the helper):
+ *   (E) a FUNCTION site — `queueReason` -> RED at `SITE queueReason` alone
+ *   (F) a LINE site, structural only — the leg pre-flight's `subj-how` -> RED at that site alone
+ *   (G) THE GATE — `teach()` -> RED at `SITE teach` alone (the signIn drive stays green: SIGN_IN_REFUSED
+ *       has no canned translation, so the old line and the new print the same sentence there)
+ * RESULTS, RUN 2026-09-23 by UI-73 against app.html `dca2888693b79a74beccd5bf1b98b87958c043fb9994ba4ea103ad419a5b5bc8`
+ * (1,434,733 bytes), every arm restored and verified by sha256 AND `cmp`, IDENTICAL at the end — **8/8 AS
+ * DECLARED**: BASELINE GREEN 89/0 · (A) RED 18 — UI-72's four PLUS both behavioural lines of all seven of
+ * UI-73's callable sites, which is the helper's deletion reaching every one of them and so the evidence
+ * they go THROUGH it at runtime, not only in shape · (B) RED 5 · (C) RED 2 · (D) GREEN 89/0 ·
+ * (E) RED 4, all `SITE queueReason` · (F) RED 2, all `SITE the leg pre-flight's subj-how` · (G) RED 4,
+ * all `SITE teach`.
  */
 import "../../bio-plane/test/stdio.mjs";
 import fs from "fs";
@@ -99,6 +114,20 @@ const ARMS = [
     from: HELPER, to: `  if(r.translation) return r.translation;\n` },
   { name: "(D) over-strictness: the same rule, conditions swapped", declared: "GREEN",
     from: HELPER, to: `  if(r.translation && typeof r.translation === "string") return r.translation;\n` },
+  /* UI-73's arms — ONE SITE each restored to the `detail` read it had before UI-73, and each must fail
+     ONLY at that site's own lines (`only`): every failing line names it, and no other site goes red. */
+  { name: "(E) UI-73, a function site: queueReason reads `detail` again", declared: "RED",
+    names: "SITE queueReason", only: true,
+    from: `  return [e.reason, refusalWords(e)].filter(Boolean).join(" · ");`,
+    to:   `  return [e.reason, e.detail || e.error].filter(Boolean).join(" · ");` },
+  { name: "(F) UI-73, a line site: the leg pre-flight reads `detail` again", declared: "RED",
+    names: "SITE the leg pre-flight's subj-how", only: true,
+    from: '`<div class="subj-how">${esc(refusalWords(lp.refusal))}</div>`',
+    to:   '`<div class="subj-how">${esc(lp.refusal.detail || lp.refusal.error || "")}</div>`' },
+  { name: "(G) UI-73, the gate: teach() reads `detail` again", declared: "RED",
+    names: "SITE teach", only: true,
+    from: `  const words = refusalWords(err);\n  const msg = err && (words || err.reason) ? [err.reason, words].filter(Boolean).join(" · ") :`,
+    to:   `  const msg = err && (err.error || err.reason || err.detail) ? [err.reason,err.error,err.detail].filter(Boolean).join(" · ") :` },
 ];
 
 fs.mkdirSync(SCRATCH, { recursive: true });
@@ -135,8 +164,10 @@ try{
     /* THE ARMS THAT MUST STAY GREEN, checked by section rather than by count: a control that only counts
        failures cannot tell six-arms-broken from one. */
     const stillGreen = (arm.green || []).every(sec => !failLines.some(l => l.includes(sec)));
+    /* UI-73: a one-site arm is specific only if EVERY failing line is that site's. */
+    const onlyItsOwn = arm.only ? failLines.length > 0 && failLines.every(l => l.includes(arm.names)) : null;
     const asDeclared = armed && got === arm.declared && (named === null || named === true)
-      && (absent === null || absent === true) && stillGreen;
+      && (absent === null || absent === true) && stillGreen && (onlyItsOwn === null || onlyItsOwn === true);
     if(!asDeclared) allAsDeclared = false;
     fs.copyFileSync(pristine, APP);
     const restoredSha = sha(APP);
@@ -148,7 +179,8 @@ try{
     console.log(`${asDeclared ? "AS DECLARED" : "NOT AS DECLARED"} · ${arm.name} · declared ${arm.declared} · got ${got} `
       + `(exit ${r.status}, ${tally})${arm.names ? ` · names its declared text: ${named}` : ""}`
       + `${arm.namesNot ? ` · the canned sentence is absent: ${absent}` : ""}`
-      + `${arm.green ? ` · declared-green sections still green: ${stillGreen}` : ""} · restored ${restoredSha.slice(0, 12)} cmp ok`);
+      + `${arm.green ? ` · declared-green sections still green: ${stillGreen}` : ""}`
+      + `${arm.only ? ` · every failing line is its own site's: ${onlyItsOwn}` : ""} · restored ${restoredSha.slice(0, 12)} cmp ok`);
     for(const l of failLines) console.log("      " + l.trim().slice(0, 200));
   }
 }finally{

@@ -1,5 +1,13 @@
 /* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git log -1 (the last commit's date), which no
-   result key can name; traced 2026-09-23. */
+   result key can name; traced 2026-09-23.
+   READS NO LIVE REF — M0-136, 2026-09-23. What it reads: HEAD's OWN history — `git log -1 --format=%cs -- <suite>` for
+   each suite (the real `scripts/coverage.mjs`, which this suite runs, reporting STALENESS and never gating on it), with
+   `ls-tree -r HEAD`, `ls-files` and `rev-parse --short HEAD` (`scripts/provenance.mjs`); the rest is scratch
+   repositories. No `origin/*`, `coord`, `FETCH_HEAD`, `ls-remote` or fetch. HOW CHECKED: this file, the modules it
+   imports (`./stdio.mjs`, `./sandbox.mjs`, `../scripts/control-register.mjs`, `./instrument-deps.mjs`, `./budget.mjs`)
+   and `scripts/coverage.mjs`'s own closure grepped for `execFileSync`/`spawnSync`/`execSync`/`git` and those ref
+   tokens; and the suite run with a logging `git` first on PATH: 526 calls, every one HEAD, the index, or a scratch
+   repository. The CLOCK: `./budget.mjs` reads it only to time a child against its budget. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/owed-controls.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and neither the battery nor the fleet walk must discover it (PL-3/PL-11/FL-3's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`), and every arm declares BEFORE it runs what MUST fail and what MUST NOT.
    (1) THE ARM THIS SUITE EXISTS FOR, AND IT WAS MEASURED BEFORE THE FIX EXISTED. Hide the declaration in `agent-worker/test/harness.test.mjs` -> `node scripts/coverage.mjs --strict` must EXIT 1 and NAME that suite. Run against the tree as it stood on 2026-08-09 it exited 0 with EVERY figure unmoved, printing `2/2 declaring a negative control` — the fleet's controls were counted per MEMBER, so FL-3/IS-9's own suite could go quiet behind its sibling's declaration. The plane register's 134/134 and 621 arms MUST NOT move under this arm: the hole is in the fleet walk and nowhere else.
    (2) THE FLEET ARMS FLOOR. Delete arms from a fleet suite's declaration -> `--strict` EXITS 1 at the fleet arms floor. A count of DECLARING suites cannot see a declaration that got shorter, which is M0-14's lesson one directory over.

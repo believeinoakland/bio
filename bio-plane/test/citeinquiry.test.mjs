@@ -65,10 +65,13 @@
  * route) so coverage credits the surface a caller can actually reach — the D-43
  * class, and `op=invitelook`'s ReferenceError beside 1276 green assertions.
  *
- * D-168 DID NOT BITE: this act asks nothing about a target's STATE on either
- * arm, exactly as it never has. Citing retired material stays permitted and is
- * therefore published; the doctrine is still undecided and nothing here decides
- * it.
+ * D-168 WAS DECIDED 2026-09-23 (BOB #30, State Rules §4.1 "A RETIRED ITEM IS
+ * NOT CITABLE") AND LANDED ON BOTH ARMS: this paragraph used to say the act asks
+ * nothing about a target's state and that the doctrine was undecided, which is
+ * no longer true. The act now refuses a RETIRED Information member
+ * (RETIRED_NOT_CITABLE, C-33.39); nothing in this suite cites retired material,
+ * so no assertion here moved. The refusal is driven, for a member session and a
+ * machine credential, in `d168-retired-cite.test.mjs`.
  */
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */

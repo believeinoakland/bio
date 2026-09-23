@@ -194,7 +194,10 @@ const promoteDoc = async (inst, doc, { id = null, base = null, summary } = {}) =
   const md = bundleMd(bid, summary);
   const prov = JSON.stringify({ documents: [doc] });
   const r = await post(inst, "op=promote&token=mem-cpdf19", {
-    bundleId: bid, base, snapKey: "20260918T010000Z_aaaa1111", author: "cpdf19",
+    /* CORRECTED 2026-09-23 (REC-176, IC-193), never exempted: ONE literal key served the creation AND the revision, so
+       the revision REPLACED the creation's manifest row — silently, until op=promote refused a held snap key
+       (SNAP_KEY_TAKEN, C-67.1). A revision's key now carries its base, which is unique along the chain. */
+    bundleId: bid, base, snapKey: base ? `20260918T020000Z_${String(base).slice(0, 8)}` : "20260918T010000Z_aaaa1111", author: "cpdf19",
     meta: { object_type: "information", group: "believe-in-oakland", title: `Member ${bid}`,
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [

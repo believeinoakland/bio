@@ -1442,8 +1442,10 @@ export const ACTS = [
                      && !f.case_member && f.current_state !== "divided" },
   /* S-10/S-11 step 1: citing. Published for BOTH ends, because the store's own
      guards are type-only on both: any information bundle may be cited (cite
-     checks the member's TYPE and nothing about state — citing retired material
-     is permitted and therefore published), and any citing object may cite.
+     checks the member's TYPE and, since D-168, ONE fact about state: a RETIRED
+     one is refused, so it is not published on one — see the entry below; this
+     sentence said "citing retired material is permitted" until 2026-09-23),
+     and any citing object may cite.
      Deriving a narrower answer here than the op gives would be this file
      inventing a rule the plane does not enforce.
 
@@ -1597,7 +1599,12 @@ export const ACTS = [
      narrowed — citing FROM them is not an act on a project. */
   { id: "cite", label: "Cite material into a case or a question", weight: "report",
     types: ["information", "project", "inquiry"],
-    applies: (f, ty) => ty === "information" || (ty === "project" && f.project_participant !== false)
+    /* D-168 (2026-09-23, State Rules §4.1, BOB #30): a RETIRED Information bundle is not
+       citable and the store refuses RETIRED_NOT_CITABLE for every caller, so the act is not
+       offered on one — offering it would be the pre-flight disagreeing with the refusal it
+       fronts (DEC-8). `source_status` is not read: a removed or modified source stays citable. */
+    applies: (f, ty) => (ty === "information" && f.current_state !== "retired")
+                     || (ty === "project" && f.project_participant !== false)
                      || ty === "inquiry" },
   /* S-11 step 2: withdrawing a citation without deleting it. From the CITED
      side: some CASE holds a live cites edge to it. From the case's own side:
