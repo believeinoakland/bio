@@ -15660,7 +15660,7 @@ export class Store extends DurableObject {
              this loop now has to call. The shadow parsed, ran, and would have
              thrown `not a function` only on the path that reads an authored id;
              renamed rather than aliased so there is one name for one thing. */
-          let legRowId = null, legCarried = false, legMinted = false, legUndetermined = null;
+          let legRowId = null, legCarried = false, legMinted = false, legUndetermined = null, legImageBound = null;
           const cp = contentPlan.get(i);
           if (cp && cp.isInfo) {
             const ext = cp.extent;
@@ -15683,7 +15683,7 @@ export class Store extends DurableObject {
                 const mint = this.mintContent({ bundleId: leg.target, captureSha: cp.captureSha,
                   extent: ext, mintedBy: CONTENT_MINTED_BY_PLANE, at: meta.last_updated || null, ctx: cp.ctx });
                 if (mint.ok) { legRowId = mint.content_id; legMinted = mint.minted;
-                               legUndetermined = mint.undetermined || null; }
+                               legUndetermined = mint.undetermined || null; legImageBound = mint.image_bound || null; }
               }
             }
             /* The ROW is not read here. `contentRow` is a read, and a read inside
@@ -15693,7 +15693,8 @@ export class Store extends DurableObject {
             if (legRowId)
               contentProjected.push({ ord: i, target: leg.target, content_id: legRowId,
                 extent_kind: ext.kind, minted: legMinted, carried: legCarried,
-                ...(legUndetermined ? { undetermined: legUndetermined } : {}) });
+                ...(legUndetermined ? { undetermined: legUndetermined } : {}),
+                ...(legImageBound ? { image_bound: legImageBound } : {}) });
           }
           this.sql.exec(
             `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id)
@@ -17290,9 +17291,38 @@ export class Store extends DurableObject {
                  + "that figure, or no slide's part in it could be read — D-359), so a slide "
                  + "past the deck is bounded and a shape within a known slide is not");
     if (!held) missing.push("the container's own extent — no sheet list, paragraph count or "
-                          + "slide list was persisted for this capture");
+                          + "slide list was persisted for this capture, and, if it is a PDF, no "
+                          + "list of the images its pages paint (a PDF acquired before D-420 "
+                          + "carries none)");
+    /* D-420 — WHICH CONTAINER, AND FOR A PDF WHETHER THE PAINTED-IMAGE LIST IS
+       HELD. `container_name` is the entry's own `container` string as the wire
+       stored it (null when nothing was stored), and the checker's `{page, rect}`
+       bound reads a list ONLY when this names a PDF: an office container's
+       `images` are media parts with no page, and bounding a page-form citation
+       by them would refuse every one. `page_images_why` is the sentence stated
+       beside a page-form image the record ADMITS without that bound — a PDF
+       acquired before D-420 (`container_extent` null), a walk that did not
+       finish (`images_why`), or a capture that is not a PDF at all — so an
+       admission is never silent about what it was not checked against. */
+    const containerName = held && typeof held.container === "string" ? held.container : null;
+    const pdfImages = containerName === "pdf" && images ? images : null;
+    const pageImagesWhy = pdfImages ? null
+      : containerName === "pdf"
+        ? `this record holds no list of the images the pages of capture `
+          + `${String(captureSha).slice(0, 12)}… paint — the structure op's walk did not finish `
+          + `(${held && typeof held.images_why === "string" ? held.images_why.slice(0, 120) : "no reason recorded"}) — `
+          + `so whether an image is painted at this address is UNDETERMINED and stated, not refused`
+        : held
+          ? `capture ${String(captureSha).slice(0, 12)}… is itemised as a ${containerName || "container"} `
+            + `and not as a PDF, so this record holds no list of images painted on its pages and `
+            + `whether an image is painted at this address is UNDETERMINED and stated, not refused`
+          : `this record holds no list of the images the pages of capture ${String(captureSha).slice(0, 12)}… `
+            + `paint — a PDF acquired before D-420 persisted none, and nothing was persisted at all for `
+            + `a capture no format entry itemised — so whether an image is painted at this address is `
+            + `UNDETERMINED and stated, not refused. Re-acquiring the document records the list`;
     return {
       sheets, paragraphs, slides, tables, images,
+      container_name: containerName, page_images_why: pageImagesWhy,
       held: !!(sheets || paragraphs !== null || slides || tables || images),
       empty_level: missing.length ? missing.join("; ") : null,
       why: missing.length
@@ -17619,7 +17649,17 @@ export class Store extends DurableObject {
        whose kind the record does not hold) says so on the answer. Returned bare,
        it read exactly like a part the record had verified is in the document. */
     const undetermined = imagePartUndetermined(extent, ctx);
-    return { ok: true, content_id: id, minted: !before, ...(undetermined ? { undetermined } : {}) };
+    /* D-420: A PAGE-FORM IMAGE ADMITTED WITHOUT THE PAINTED-IMAGE BOUND SAYS SO.
+       The checker admits it because the record holds no placement list to test
+       it against (`#containerExtentForCapture` names which absence), and an
+       admission that said nothing would read as "an image is painted here". */
+    const imageBound = extent && extent.kind === "image" && Number.isInteger(extent.page)
+        && ctx.container && ctx.container.page_images_why
+      ? { determined: false, empty_level: "the images this capture's pages paint",
+          why: ctx.container.page_images_why }
+      : null;
+    return { ok: true, content_id: id, minted: !before, ...(undetermined ? { undetermined } : {}),
+             ...(imageBound ? { image_bound: imageBound } : {}) };
   }
 
   /** SK-7 / framework Part II 14.4 (Bob's 5.7) — MARKING A PASSAGE AS CITABLE,
@@ -17710,7 +17750,8 @@ export class Store extends DurableObject {
                                    mintedBy: mintedBy.trim(), at });
     if (!out.ok) return out;
     return { ok: true, minted: out.minted, capture_sha: sha, ...this.contentRow(out.content_id),
-             ...(out.undetermined ? { undetermined: out.undetermined } : {}) };
+             ...(out.undetermined ? { undetermined: out.undetermined } : {}),
+             ...(out.image_bound ? { image_bound: out.image_bound } : {}) };
   }
 
   /* ====================================================================== *

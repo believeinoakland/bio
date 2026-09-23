@@ -11537,6 +11537,21 @@ var CONTENT_EXTENT_CHECKS = {
     check: "C-45.10",
     where: "src/store.mjs cite > is-cite-extent",
     translation: "One of the values describing which part of the document you mean cannot be written into the record as it stands \u2014 it is empty, too long, or contains a quotation mark, a backslash, a line break or a comment mark, and those characters would silently reshape the document rather than appear in it. It is declined instead of mangled."
+  },
+  /* D-420 — AN IMAGE CITED BY PAGE AND RECTANGLE WHERE THE PAGE PAINTS NO
+     IMAGE. Not C-45.1: that code is "the address is outside the container" and
+     this address is INSIDE it — the page exists and the rectangle is on it. What
+     is wrong is the KIND the row would claim: an `image` row over a region the
+     record holds as painting no image is a text-or-nothing region wearing an
+     image's name. The figure comes from the record (the placements the
+     structure op reported at acquire, EXTRACTION-BREADTH §3.3 item 2), and with
+     no figure held the citation is admitted and the absence stated. C-45.12
+     because D-440 holds C-45.11 in the same family (a sub-number of an
+     allocated family, C-45.5's precedent — no `mintid C`). */
+  CONTENT_EXTENT_NO_IMAGE_PAINTED: {
+    check: "C-45.12",
+    where: "checks/bio-checks.mjs checkContentExtent > is-content-extent",
+    translation: 'This citation calls a region of the page an image, and the page paints no image there. When this document was captured the record listed every image each page draws and where, and none sits at this address \u2014 so a row saying "an image is here" would claim something the file does not show. If you meant the words in that region, cite it as a region of the page; if you meant a picture, pick it from the images the record lists for this page, which are named beside this refusal.'
   }
 };
 function refusal(key, detail, extra = null) {
@@ -12322,6 +12337,8 @@ function checkContentExtent(extent, ctx = {}) {
           "CONTENT_EXTENT_OUT_OF_RANGE",
           `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the image extent names page ${e.page}`
         );
+      const unpainted = ctx.known !== false ? coversImagePlacement(e, ctx.container) : null;
+      if (unpainted) return refusal("CONTENT_EXTENT_NO_IMAGE_PAINTED", unpainted);
     }
     const notContainer = hasPart && ctx.known !== false ? partOutsideAnyContainer(ctx.container) : null;
     if (notContainer) return refusal("CONTENT_EXTENT_NOT_A_CONTAINER", notContainer);
@@ -12432,6 +12449,21 @@ function imagePartUndetermined(extent, ctx = {}) {
       why: `this capture is an office container and this record holds no list of its embedded images (it was acquired before the wire carried one, or no entry itemised it), so whether the part is among them is UNDETERMINED, admitted and stated rather than guessed`
     };
   return null;
+}
+function coversImagePlacement(e, container) {
+  if (!container || container.container_name !== "pdf" || !Array.isArray(container.images)) return null;
+  const all = container.images;
+  const onPage = all.filter((x) => x && x.page === e.page && Array.isArray(x.rect) && x.rect.length === 4);
+  if (!(Array.isArray(e.rect) && e.rect.length === 4)) {
+    if (onPage.length) return null;
+    return `page ${e.page} of this capture paints no image \u2014 the record holds ${all.length} image placement(s) over the whole document, and none is on this page`;
+  }
+  const norm = (r) => [Math.min(r[0], r[2]), Math.min(r[1], r[3]), Math.max(r[0], r[2]), Math.max(r[1], r[3])];
+  const want = norm(e.rect);
+  const same = (r) => norm(r).every((v, i) => Math.abs(v - want[i]) <= 1e-3 + 1e-9);
+  if (onPage.some((x) => same(x.rect))) return null;
+  const listed = onPage.slice(0, 6).map((x) => `[${norm(x.rect).join(", ")}]`).join(" ");
+  return `page ${e.page} of this capture paints ${onPage.length} image(s)${onPage.length ? ` (${listed}${onPage.length > 6 ? " \u2026" : ""})` : ""} and none at [${want.join(", ")}], the rectangle the extent names`;
 }
 var CONNECTION_PAIR_CHECKS = {
   /* THE FORGED PAIR. A pair whose recorded position is NOT inside the extent
@@ -41010,7 +41042,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         for (let i = 0; i < basisLegs.length; i++) {
           const leg = basisLegs[i];
           if (typeof leg.target !== "string") continue;
-          let legRowId = null, legCarried = false, legMinted = false, legUndetermined = null;
+          let legRowId = null, legCarried = false, legMinted = false, legUndetermined = null, legImageBound = null;
           const cp = contentPlan.get(i);
           if (cp && cp.isInfo) {
             const ext = cp.extent;
@@ -41035,6 +41067,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
                   legRowId = mint.content_id;
                   legMinted = mint.minted;
                   legUndetermined = mint.undetermined || null;
+                  legImageBound = mint.image_bound || null;
                 }
               }
             }
@@ -41046,7 +41079,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
                 extent_kind: ext.kind,
                 minted: legMinted,
                 carried: legCarried,
-                ...legUndetermined ? { undetermined: legUndetermined } : {}
+                ...legUndetermined ? { undetermined: legUndetermined } : {},
+                ...legImageBound ? { image_bound: legImageBound } : {}
               });
           }
           this.sql.exec(
@@ -42288,13 +42322,18 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       missing.push("every sheet's row and column extent (this capture was acquired before the wire read that figure, or its format fixes no grid \u2014 OpenDocument sets no maximum table size, so a .ods workbook states a NULL bound rather than borrowing one \u2014 D-359), so an unknown SHEET is bounded and a cell within a known sheet is not");
     if (slides && !slides.some((s) => Number.isInteger(s && s.shapes)))
       missing.push("every slide's shape count (this capture was acquired before the wire read that figure, or no slide's part in it could be read \u2014 D-359), so a slide past the deck is bounded and a shape within a known slide is not");
-    if (!held) missing.push("the container's own extent \u2014 no sheet list, paragraph count or slide list was persisted for this capture");
+    if (!held) missing.push("the container's own extent \u2014 no sheet list, paragraph count or slide list was persisted for this capture, and, if it is a PDF, no list of the images its pages paint (a PDF acquired before D-420 carries none)");
+    const containerName = held && typeof held.container === "string" ? held.container : null;
+    const pdfImages = containerName === "pdf" && images ? images : null;
+    const pageImagesWhy = pdfImages ? null : containerName === "pdf" ? `this record holds no list of the images the pages of capture ${String(captureSha).slice(0, 12)}\u2026 paint \u2014 the structure op's walk did not finish (${held && typeof held.images_why === "string" ? held.images_why.slice(0, 120) : "no reason recorded"}) \u2014 so whether an image is painted at this address is UNDETERMINED and stated, not refused` : held ? `capture ${String(captureSha).slice(0, 12)}\u2026 is itemised as a ${containerName || "container"} and not as a PDF, so this record holds no list of images painted on its pages and whether an image is painted at this address is UNDETERMINED and stated, not refused` : `this record holds no list of the images the pages of capture ${String(captureSha).slice(0, 12)}\u2026 paint \u2014 a PDF acquired before D-420 persisted none, and nothing was persisted at all for a capture no format entry itemised \u2014 so whether an image is painted at this address is UNDETERMINED and stated, not refused. Re-acquiring the document records the list`;
     return {
       sheets,
       paragraphs,
       slides,
       tables,
       images,
+      container_name: containerName,
+      page_images_why: pageImagesWhy,
       held: !!(sheets || paragraphs !== null || slides || tables || images),
       empty_level: missing.length ? missing.join("; ") : null,
       why: missing.length ? `this record does not hold ${missing.join("; ")} for the capture ${String(captureSha).slice(0, 12)}\u2026, so whether an address falls inside it is UNDETERMINED and is stated rather than guessed. It is not a refusal: refusing a citation for a bound nobody measured would push a member toward citing the whole document, which claims more and not less` : `the record holds this capture's container extent as the format entry itemised it at acquire (CAP-12), so an address outside it is refused by name and one inside it mints`
@@ -42598,7 +42637,18 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       );
     }
     const undetermined = imagePartUndetermined(extent, ctx);
-    return { ok: true, content_id: id, minted: !before, ...undetermined ? { undetermined } : {} };
+    const imageBound = extent && extent.kind === "image" && Number.isInteger(extent.page) && ctx.container && ctx.container.page_images_why ? {
+      determined: false,
+      empty_level: "the images this capture's pages paint",
+      why: ctx.container.page_images_why
+    } : null;
+    return {
+      ok: true,
+      content_id: id,
+      minted: !before,
+      ...undetermined ? { undetermined } : {},
+      ...imageBound ? { image_bound: imageBound } : {}
+    };
   }
   /** SK-7 / framework Part II 14.4 (Bob's 5.7) — MARKING A PASSAGE AS CITABLE,
    *  as an ACT a credential performs rather than as a side effect of promotion.
@@ -42691,7 +42741,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       minted: out.minted,
       capture_sha: sha,
       ...this.contentRow(out.content_id),
-      ...out.undetermined ? { undetermined: out.undetermined } : {}
+      ...out.undetermined ? { undetermined: out.undetermined } : {},
+      ...out.image_bound ? { image_bound: out.image_bound } : {}
     };
   }
   /* ====================================================================== *
@@ -72301,6 +72352,7 @@ var index_default = {
         };
       } else {
         let wired = null, wiredTier = null, pageCount = null, containerExtent = null;
+        let pdfPaints = null;
         let chain2 = null, ocrNote = null, tier2note = null, tier2PerPage = null;
         let t3Wanting = false;
         const fmt = profile.format && profile.format.format;
@@ -72324,6 +72376,10 @@ var index_default = {
                   i2text = st.text || null;
                   wiredTier = 1;
                   if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
+                  pdfPaints = {
+                    images: Array.isArray(st.images) ? st.images : null,
+                    why: typeof st.imagesWhy === "string" ? st.imagesWhy : null
+                  };
                   if (env.PDF_WORKER && needsTier2(i2text)) {
                     try {
                       const r = await env.PDF_WORKER.fetch("https://pdf-worker/structure", {
@@ -72403,6 +72459,15 @@ var index_default = {
                     ...own("images") ? { images: imagesOf(i2text.images) } : {}
                   };
                 }
+              }
+              if (!containerExtent && pdfPaints && fmt === "pdf") {
+                const placements = Array.isArray(pdfPaints.images) && pdfPaints.images.every((x) => x && Number.isInteger(x.page) && x.page >= 0 && Array.isArray(x.rect) && x.rect.length === 4 && x.rect.every((n) => typeof n === "number" && Number.isFinite(n))) ? pdfPaints.images.map((x) => ({ page: x.page, rect: x.rect.slice() })) : null;
+                containerExtent = {
+                  container: "pdf",
+                  levels: ["images"],
+                  images: placements,
+                  ...placements ? {} : { images_why: pdfPaints.why || "a placement the structure op reported could not be read as {page, rect}" }
+                };
               }
               {
                 const u = textUnitsFor(i2text);
