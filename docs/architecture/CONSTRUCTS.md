@@ -8,7 +8,7 @@
 - §Inventory — a 2026-07-30 snapshot; verified changed since: `profileRecord` is now stamped at acquire, `TYPE_CONFIDENCE` is gone, and `docprofile/monitoring.mjs` no longer exists. Other rows not re-audited.
 - §What overlaps or conflicts — items 1–8 were Step 0's scope and are BUILT (FW-2); the section carries no resolution marks.
 - §The connection table — "deliberately NOT being coded yet"; the sketch is history, because connections are BUILT (construct 6, `node tools/status.mjs 6`: each keeps its determining reference pair, D-161).
-- §The plan — the steps marked UNSCHEDULED on 2026-07-31 were re-read at the code on 2026-09-21 (BOB #24, D-69). Step 1 is BUILT: `op=acquire` spreads `profileRecord` onto the capture. Step 5's progression and connection tables are BUILT (construct 6). Step 5a (identifier spaces, ABSENT) is D-74 and Step 6 is D-65, both open DEBT rows placed as the backlog allows. Steps 8–8b are Framework §12's intent layer (D-75, D-76, D-79, D-81, D-82, all open). Step 9's content types are ordered in `EXTRACTION-BREADTH-DESIGN.md` §2, where Bob's named types are built or placed (FW-20) and the budget-or-dataset type is OWED, measured first. Step 7's "a Focus, which Bob has not ruled on" predates DEC-10; Step 8b's focus/problem vocabulary predates the inquiry collapse.
+- §The plan — the steps marked UNSCHEDULED on 2026-07-31 were re-read at the code on 2026-09-21 (BOB #24, D-69). Step 1 is BUILT: `op=acquire` spreads `profileRecord` onto the capture. Step 5's progression and connection tables are BUILT (construct 6). Step 5a's MEASUREMENT was taken once on 2026-09-23 (D-74, `measurements/M-117.md`: a first sample from the record, three classes seen in two Oakland systems, contract/PO and APN UNDETERMINED); the identifier-space construct it would feed stays ABSENT, and Step 6 is D-65, an open DEBT row placed as the backlog allows. Steps 8–8b are Framework §12's intent layer (D-75, D-76, D-79, D-81, D-82, all open). Step 9's content types are ordered in `EXTRACTION-BREADTH-DESIGN.md` §2, where Bob's named types are built or placed (FW-20) and the budget-or-dataset type is OWED, measured first. Step 7's "a Focus, which Bob has not ruled on" predates DEC-10; Step 8b's focus/problem vocabulary predates the inquiry collapse.
 
 **Contents**
 - [Purpose of this document](#purpose-of-this-document)
@@ -275,6 +275,11 @@ Legistar, its procurement portal and its finance system? A contract number, a pr
 number, a resolution number, an APN, a fund code. Each one found in two systems
 converts a whole progression from Grade C to Grade B, which makes this the highest
 value-per-hour measurement available. Consumer: Step 4's entity recognisers.
+*Measured once, 2026-09-23 (D-74, `docs/development/measurements/M-117.md`)*: from the record's own
+captures (no Oakland host was reachable), a project number is shared by the budget and Legistar
+(7 values), a fund code by the budget and Legistar (3), a C.M.S. number by the Auditor and
+Legistar (1); contract/PO numbers and APNs are UNDETERMINED because their issuing systems were
+not read. A first sample, not a census; M-117 names the four measurements still owed.
 
 **Step 6 — UNSCHEDULED. Monitoring adopts the contracts,** with frequency by document kind, and
 stores confirmations. Consumer: the daemon. This is where the negative result finally
