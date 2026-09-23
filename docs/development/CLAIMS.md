@@ -19715,3 +19715,4 @@ paths, BY SITE:
 REPORTED, not fixed), `tools/mergecarry.mjs`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — pushed `land/worker/D-286` @ `cdb2e428`, read back from the remote; gate GREEN class FULL on tree `53fe4d6e` (287/287 suites green · 17263 assertions passing; civicos-ui all green). Paths stay reserved until CONDUCT integrates.
