@@ -535,14 +535,16 @@ section("10 — LED-6: `refill` moves the next RUNNABLE rows from the TOP of the
     [...new Set([...before.c.split("\n"), ...before.b.split("\n")])].filter((l) => l.trim()).filter((l) =>
       (before.c + "\n" + before.b).split("\n").filter((x) => x === l).length !== (after.c + "\n" + after.b).split("\n").filter((x) => x === l).length), []);
 
-  const r2 = rf({ repo: root });
+  /* CORRECTED 2026-09-23 by SCHEDULER #16: the default fill point became 12 (`CACHE_ROWS`, Bob's ruling via BOB #30), so
+     "the default 8" these two refills leaned on is now stated: the fixture's full cache is 8, passed as `cacheRows`. */
+  const r2 = rf({ repo: root, cacheRows: 8 });
   const after2 = all(root);
-  t("a second refill (to the default 8) moves the next two runnable rows, the last one at EOF with no newline",
+  t("a second refill (to 8) moves the next two runnable rows, the last one at EOF with no newline",
     r2.moved.map((m) => m.id), ["B-10", "B-11"]);
   t("...B-3 is still not runnable while B-1 is open in the cache", r2.skipped.some((s) => s.id === "B-3"), true);
   t("...the cache now holds 8 rows, in order", ids(after2.c), ["R-1", "R-2", "B-1", "B-4", "B-6", "B-9", "B-10", "B-11"]);
   t("...and the row that had no trailing newline is separated from the TAIL block", after2.c.includes("scope: s\n\n## TAIL"), true);
-  const r3 = rf({ repo: root });
+  const r3 = rf({ repo: root, cacheRows: 8 });
   t("a full cache moves nothing and writes nothing", [r3.moved.length, r3.room, all(root).c === after2.c, all(root).b === after2.b], [0, 0, true, true]);
 
   const dry = mk();
@@ -598,9 +600,11 @@ section("11 — LED-6: THE FIVE INVARIANTS (WORK-PIPELINE §2), each with a PLAN
   t("P2 CATCHES a closed row in the backlog AND one in the cache",
     v(inv(cleanCache + dep("R-9", "superseded", "none"), cleanBacklog + dep("B-9", "done", "none")), "P2").map((x) => `${x.where} ${x.id}`),
     ["cache R-9", "backlog B-9"]);
-  const nine = Array.from({ length: 9 }, (_, i) => dep(`N-${i}`, "queued", "none")).join("");
-  t("P3 CATCHES a cache of 9 rows", v(inv(nine, ""), "P3"), [{ what: "rows", rows: 9, max: 8 }]);
-  t("...and passes a cache of exactly 8", v(inv(Array.from({ length: 8 }, (_, i) => dep(`N-${i}`, "queued", "none")).join(""), ""), "P3"), []);
+  /* CORRECTED 2026-09-23 by SCHEDULER #16: the limit was the literal 8 here while the code read `CACHE_ROWS`; it moved to
+     12 (Bob's ruling via BOB #30), so both arms now read the constant, and their labels name no figure that can drift. */
+  const nine = Array.from({ length: L.CACHE_ROWS + 1 }, (_, i) => dep(`N-${i}`, "queued", "none")).join("");
+  t("P3 CATCHES a cache one row over CACHE_ROWS", v(inv(nine, ""), "P3"), [{ what: "rows", rows: L.CACHE_ROWS + 1, max: L.CACHE_ROWS }]);
+  t("...and passes a cache of exactly CACHE_ROWS", v(inv(Array.from({ length: L.CACHE_ROWS }, (_, i) => dep(`N-${i}`, "queued", "none")).join(""), ""), "P3"), []);
   t("P3 CATCHES a `blocked` row in the cache", v(inv(cleanCache + dep("R-4", "blocked", "none"), ""), "P3").map((x) => x.id), ["R-4"]);
   const p4 = v(inv(cleanCache + dep("R-5", "queued", "B-1") + dep("R-6", "queued", "the next deploy") + dep("R-7", "queued", "X-2")
                   + dep("R-8", "queued", "X-99"), cleanBacklog), "P4");
