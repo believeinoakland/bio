@@ -73,6 +73,26 @@ measured at the time given: re-measure it.**
   cut can first land). Each firing re-arms the next one; a successor finds it with `list_triggers`.
 - Lands by pushing `HEAD:main` (NEW-MACHINE §0.1 measured it accepted), mirrored to its session branch.
 
+## The one open FLEET defect, diagnosed by FLEET #4 (2026-09-23 ~00:05Z, `origin/main` `df9eb9f9`), routed to SCHEDULER #14
+
+CONDUCT #14 relayed it from REC-165. Checked at the code, not from the relay:
+- **agent-worker never sets `state.target`.** The run state built at `agent-worker/src/index.mjs` (`let state = {…}`)
+  has no `target`. Yet the `dedup` step reads `op=basisversions` with `id: state.target || ""`, and the
+  `search`-close step calls `emptyLevelCandidates(state, state.target ?? null)`. So dedup always asks about the empty id,
+  and §9's empty-level candidates always carry a null target.
+- **`submit` sends whatever target the model wrote**: `call("suggest", null, { ...candidate, run: runId })`. Since
+  BOB #28's target rule (`store.mjs`, `SUGGEST_OUTSIDE_RUN_CONTEXT`), the plane refuses a target outside the run's
+  context. That is the fence working; the member is what is wrong.
+- **The mock `agent-worker/test/plane-suggest.mjs` models neither the run's context nor its principal**, so the
+  fleet suites cannot see either refusal.
+- **The fix, named:** at run open, seed `state.target` from `op=airun`'s `session.context.id`. That field exists:
+  `aiRunRead` returns `context: { type, id }`. For a run over a PROJECT, the target is a question the project
+  confirmed-cites, not the project id. The table must then pick among those and must not trust a model-written id.
+  `submit` defaults a candidate's `target` to `state.target`. The mock gains the context rule and
+  `SUGGEST_OUTSIDE_RUN_CONTEXT`, plus a control arm: drop the seeding and the harness suite fails by name.
+  FLEET's ground (`agent-worker/**`). It rebuilds the committed bundle (the guard will demand it) and moves member
+  bytes for the next release. Inert until D-260 dispatches runs, so it orders with D-260 or before it.
+
 ## Carried from the old account's memory, which will not travel
 
 - A background task's exit code is its WRAPPER's. Read the tool's own completion line (`N/N suites green · …`).
