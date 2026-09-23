@@ -19754,3 +19754,21 @@ paths, BY SITE:
     §14b.6 and its front matter; `construct-status.json` if a text moves.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 RECORD (D-389 — `op=frontier`'s `truncated` reads `true` on a FULL raw fetch, at the ONE over-fetch the three bundle arms share)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for D-389, worktree `.claude/worktrees/agent-af15234bde93a3b9f`,
+branch `land/worker/D-389`, from `origin/main` @ `91913d6b`.
+authority: `QUEUE.md` `### D-389 · running`; design `OBSERVATION-LOG-DESIGN.md` §5 and §6.
+paths, BY SITE:
+  - `bio-plane/src/store.mjs`: `#frontierLatest`'s neighbourhood (a NEW `#frontierPage` beside it: the shared over-fetch,
+    gate, cut and claim), and the `looked`-page fetch + `truncated` expression ONLY in `#frontierContent`,
+    `#frontierMeaning` and `frontier` (the document arm). NOT `#frontierInternet`, NOT the never/missing lists.
+  - NEW `bio-plane/test/d389-fullfetch.test.mjs` (+ its control driver); `bio-plane/test/observation-content.test.mjs`
+    section G's G5 (moved with a dated reason); any suite/driver whose source pin anchors on the moved expressions
+    (`nc-rec109.mjs`, `nc-m038.mjs`, `nc-rec110.mjs`, `derivation-bounds.test.mjs` — named at landing); `bio-plane/dist/`.
+  - one NEW `docs/development/interface-changes/IC-*.md` (PROPOSED) if the answer's meaning moves;
+    `docs/development/OBSERVATION-LOG-DESIGN.md` front matter; `construct-status.json` if a text moves.
+**NOT CLAIMED:** anything REC-171 or REC-172 claim (`promote`, `#surfacingGate`, `aiRunOpen`, `aiRunTick`).
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
