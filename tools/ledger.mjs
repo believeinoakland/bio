@@ -43,9 +43,9 @@
  * THE FIVE INVARIANTS (§2, each a `plancheck` arm):
  *   P1 every open id is in EXACTLY ONE of the cache and the backlog (per id, per count) — FAIL now;
  *   P2 no closed row is in either — armed by LED-3, as the closed-live arm (a) always was;
- *   P3 the cache holds ≤ 12 rows and no `blocked` row                     — armed by LED-6 done;
+ *   P3 the cache holds ≤ 16 rows and no `blocked` row                     — armed by LED-6 done;
  *   P4 every open cache row's `depends-on` is MET (above)                 — armed by LED-6 done;
- *   P5 both files within budget: cache ≤ 40 KiB and a row ≤ 3 KiB, backlog ≤ 150 KiB and a row
+ *   P5 both files within budget: cache ≤ 48 KiB and a row ≤ 3 KiB, backlog ≤ 150 KiB and a row
  *      ≤ 2 KiB (§1's table; §4 moves the old 150 KiB QUEUE budget to the backlog) — armed by LED-6.
  * P3–P5 CANNOT hold before the migration (§5 steps 2–4) and so WARN until LED-6 is done, the
  * arming LED-2 built; P1 and P2 hold on the real ledgers today, so they FAIL from the start. A row
@@ -183,7 +183,9 @@ const readPipe = (repo, l) => { const t = readRel(repo, l.live); return t === nu
    plus a few spare"*; CONDUCT spawns continuously, overflow in cloud sessions): 8 running and 4 spare. The bound is the
    cache's own byte budget (BUDGET.QUEUE.ledger, 40 KiB): 8 rows and the header measured 21,079 B on coord 3dca2f40,
    so 12 rows sit near 34 KB. More rows means raising that budget, which every session reads whole. Was 8. */
-export const CACHE_ROWS = 12;
+/* 16 at 48 KiB since 2026-09-23 21:03Z (BOB #31, on Bob's ruling: "12 active plus at least 4 queued", so a worker's done
+   report is a spawn in the same turn; workers finish in about ten minutes). Was 12 at 40 KiB. */
+export const CACHE_ROWS = 16;
 
 export const CLOSED_QUEUE_STATES = new Set(["done", "superseded"]);
 export const OPEN_QUEUE_STATES = new Set(["queued", "running", "blocked", "integrated"]);
@@ -207,7 +209,7 @@ export const DEBT_FLOOR_BYTES = 10000;
 /* RETURNED 2026-09-22 to 150 KiB by M0-119, as the ruling set: a placement over it now moves whole rows to the tail
    (`LATER`, no whole-file budget — it is looked up, never read whole — and a row ≤ 2 KiB, a backlog row's figure). */
 export const BUDGET = {
-  QUEUE:   { ledger: 40 * 1024,  row: 3 * 1024 },
+  QUEUE:   { ledger: 48 * 1024,  row: 3 * 1024 },   /* 48 KiB with CACHE_ROWS 16 (BOB #31, 2026-09-23); was 40 */
   BACKLOG: { ledger: 150 * 1024, row: 2 * 1024 },
   LATER:   { ledger: null,       row: 2 * 1024 },
   DEBT:    { ledger: null,       row: 3 * 1024 },

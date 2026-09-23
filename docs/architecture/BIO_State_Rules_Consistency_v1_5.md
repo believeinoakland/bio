@@ -10,7 +10,7 @@
 - §2 — the state/record split and description-as-truth transferred; §2.4 convergent promotion, §2.5's gated deletion mechanics and §2.6 the pending-package queue are history, and the PENDING/PROMOTING transients no longer exist.
 - §2.4 — a manifest row an `INSERT OR REPLACE` overwrote before REC-176 is NOT recoverable from the store and is not reconstructed; `op=snapkeycensus` counts the promotions a bundle's manifest lost (and states a lost CREATION row as undetermined, since a store predating the creation row shows the same). What a deployed instance's census reads is not known until an administrator runs it there; which key collided is recorded nowhere.
 - §3.1 — the core field list is stated; where the `group` value comes from was unstated until the 2026-09-21 amendment at the foot (D-436), whose three decisions are settled — decision (b)'s premise RULED BY BOB on 2026-09-21, decisions (a) and (c) decided by the BOB lane at integration (§3.1) — and what a group named wrongly in bytes that are already signed can become is not designed.
-- §4.1 — `op=reinstate` onto a retired item is refused `RETIRED_NOT_CITABLE` since REC-183 (2026-09-23), closing the door REC-181 found; the PROJECT side of the `reinstate` affordance still offers the act on a project whose only severed edges point at retired items (a count cannot say so; the store refuses). A confirmed edge onto a retired item that predates REC-181 survives in the record and is not swept.
+- §4.1 — `op=reinstate` onto a retired item is refused `RETIRED_NOT_CITABLE` since REC-183 (2026-09-23), closing the door REC-181 found; the PROJECT side of the `reinstate` affordance still offers the act on a project whose only severed edges point at retired items (a count cannot say so; the store refuses). A confirmed edge onto a retired item that predates REC-181 survives in the record and is not swept. The withdrawal door for a question's leg is a new basis version, not a sever (ruled below, BOB #31).
 - §4.2 — the Focus machine is legacy: nothing produces those states; the live machine is `inquiry`, which §4 does not describe, nor `bias`.
 - §4.3 — lacks the project-name-uniqueness annotation Membership v2 §11 requires.
 - §4 — `published` left the inquiry lifecycle by the 2026-09-10 amendment (DEC-72 / CASE-4); the body text of the state machines is unrevised.
@@ -728,6 +728,12 @@ both versions preserved, flagged as potential concealment evidence), never `reti
 `op=cite` onto a retired Information bundle is refused by name for a member and a machine credential alike, one onto a
 `source_status: removed` bundle lands, and a confirmed leg that predates the retirement is untouched. NEGATIVE CONTROL:
 drop the retired check from `op=cite`, and the member arm fails by name.
+
+**WITHDRAWING A CITATION BEFORE A RETIREMENT — RULED 2026-09-23 by BOB #31 (REC-181's worker's question).** The terminal
+transition refuses while a LIVE edge cites the item, so the citation goes first — by the door its kind has. A project's
+edge is a relationship and is SEVERED (`op=sever`). A question's leg is part of its versioned basis, so it is withdrawn by an
+authored NEW BASIS VERSION without that leg (`op=promote` of the question), append-only, the old version kept. No
+question-leg sever op is owed. Then the item retires.
 
 source_status is an independent axis maintained by change detection: a
 verified item whose source changes becomes source_status: modified with

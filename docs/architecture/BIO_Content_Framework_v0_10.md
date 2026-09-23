@@ -1833,6 +1833,10 @@ Read down the two right-hand columns and the shape of the estate is plain: **eve
 extraction is built or specified, every address is emitted, and no addressable object
 exists for any of it.**
 
+**RULED 2026-09-23 by BOB #31 — ONE SHAPE FOR "ADMITTED, BOUND NOT HELD" (CPDF-22).** Every mint answer that admits a
+reference whose bound the record cannot check carries ONE field, `undetermined: {level, why}` (the record's UNDETERMINED
+primitive; D-440's shape). D-420's `image_bound: {determined:false, …}` is withdrawn through one IC before any client reads it.
+
 ## 16. How content is extracted today
 
 The path from bytes to a stored reading runs at acquire and is persisted at promote.

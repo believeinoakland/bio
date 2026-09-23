@@ -78,7 +78,15 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    The one new unit, found by diffing the selected lists of the two trees: D-82's `ui:agent-surfaced-inquiry.test.mjs`,
    selected as "doc-facing, and docs/development/MEASUREMENTS.md changed" — a legitimately added doc-facing UI suite,
    not a reader of the ledger (the reader list is identical, 31 on both) and not reach through `coord.mjs`. */
-const UNITS_CEILING = 64;
+/* MOVED AGAIN 2026-09-23 by c17-unionfix (64 -> 67), from the figure this suite PRINTED on the train's union
+   (c17-batch5 + scheduler16/integrated + bob/message-driven: `67 unit(s) of 390 selected · 32 MEASUREMENTS reader(s) ·
+   4 through tools/coord.mjs`); origin/main @ 02603e88 prints 64 of 377. Three new units, found by diffing the selected
+   lists of the two trees, each a NEW suite and none reaching through `coord.mjs`: D-52's `plane:exportnotice.test.mjs`
+   ("names MEASUREMENTS.md in tools/entries.mjs" — it imports `tools/mintid.mjs` to mint the N-1 id, the edge
+   `mintid.test` already has; the one new reader, 31 -> 32), and two doc-facing suites selected as "doc-facing, and
+   docs/development/MEASUREMENTS.md changed": D-125's `plane:d125-findingmute.test.mjs` and D-278's
+   `plane:d278-codeless-refusals.test.mjs`. */
+const UNITS_CEILING = 67;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 

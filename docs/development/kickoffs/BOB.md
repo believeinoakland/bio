@@ -48,14 +48,11 @@ Bob can answer sends it here, and this session carries it into his conversation.
    keyed `id`/`session_status` and the tool parses a bare array of `sessionId`/`isRunning`; and no session's container is
    readable from another, so its worktree half has nothing to judge. Not rowed (no gate time, no product). Sweep by hand:
    a non-archived row that is not a standing lane's newest is judged by D-398 at `get_session` and its branches on `origin`.
-   **THE HEARTBEAT'S OWN RUN-SESSIONS SELF-ARCHIVE ONLY INTERMITTENTLY, SO THIS SWEEP IS LOAD-BEARING RATHER THAN A
-   FORMALITY** (measured 2026-09-19 by BOB #17: of 9 `conduct-heartbeat` runs that day, 4 had archived themselves and
-   **5 had not**, in no pattern — two consecutive runs differed). They are finished `succeeded` sessions and are safe
-   to archive by id; the heartbeat's own SKILL names them as *"YOUR OWN PAST RUNS"* and tells it never to touch them,
-   so nothing else will. Read them with `list_task_runs` for the task rather than hunting them in `list_sessions`,
-   where they look like any other session. BOB #16 found 28 waiting at one stand-down. **`archive_session` returned
-   promptly from this lane in `auto` mode** — the wedge D-402/D-407 records was the HEARTBEAT calling it unattended,
-   not this lane, so the act stays here.
+   **BOB IS THE ONLY LANE WITH TIMERS** (Bob, 2026-09-23 ~20:28Z; the Mac-era heartbeat text is in git history). Arm
+   (a) a ONE-SHOT 20-minute idle timer (`send_later`), RESET at the end of any turn a lane's message woke; on firing, run a
+   one-line stall probe (runnable rows unspawned, finished rows past ~2 h without a train, an undrained inbox) and TRIGGER
+   the lane that can act; (b) ONE hourly recurring dead-man check that re-arms (a) if its chain broke. Lanes trigger BOB
+   `CONDUCT idle: <why>` / `SCHEDULER cannot fill: <why>`. Recurring routines count against a daily run cap; one-shots do not.
 4. **Run `node tools/owed.mjs BOB`, `node tools/plancheck.mjs` and `node tools/status.mjs --check`.** And **measure every
    live session's context** (`get_usage` per session): any over 75% is refreshed (BOB #30, 2026-09-23: 80% sat above the cloud's auto-compaction at ~79%; 70% until then, 60% before 2026-09-21) — tell it to write its
    handoff, then file its successor's chip. Include yourself.
