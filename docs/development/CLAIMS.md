@@ -19402,6 +19402,7 @@ paths, BY SITE:
 **NOT CLAIMED:** `bio-plane/**`, `newgroup/**`, `civicos-ui/worker.template.mjs`, any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+**released: 2026-09-23 UI-79 worker (CONDUCT #14, wave 7)** — BUILT and PUSHED, awaiting CONDUCT's integration: branch `worktree-agent-af35e02341617dc41` @ `f22bb648` (read back by `git ls-remote`; `origin/main` @ `619dfa65` MERGED in, per CONDUCT #15). FULL gate GREEN on the clean committed tree `7d2e9a27`: `283/283 suites green · 17104 assertions passing` (2 untallied: bundle, livefire; 0 suites skipped); `civicos-ui: all harnesses green`; plancheck clean but for UNPUSHED. No IC (a consumer of IC-172; no shape changed). ALSO TOUCHED beyond the paths above: `docs/architecture/construct-status.json` (3.producing-group's no-literal probe now covers `civicos-ui/app.html`, and its suite), `civicos-ui/test/group-surface.test.mjs` (its literal pattern could not see the hyphenated slug), `civicos-ui/test/content-extent.control.mjs` (its `vocabdrift` arm had not armed since FW-19). The paths stay reserved until CONDUCT integrates the branch.
 
 ## CLAIM 2026-09-23 M0 (M0-121 — the state-path predicate leaves `tools/coord.mjs` for a module that walks nothing)
 
