@@ -25,9 +25,11 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
 
 ## What is OWED
 
-0. **`land/dist/release-0.74.0` @ `4e651534` waits on CONDUCT's train** (tree `ef32b9b4` GREEN FULL, 282/282 · 17066,
-   `--since cacebb12`). Confirm: `git merge-base --is-ancestor 4e651534 origin/main`. 0.73.0's pointer LANDED at
-   `95c40ed9`; 0.72.0's at `0289ec53`.
+0. **Nothing waits on the train.** 0.74.0's pointer LANDED at `1755e57c` (CONDUCT #15's train, 05:56Z; `release/` tree
+   `66848c0b` and the embed blob `c69963e2` byte-identical to `4e651534`, checked on origin/main by DIST). `main`'s
+   `release/` = 0.74.0 = live. Send `land/*` notices to CONDUCT #15 (`session_01DvbsQsqBM5Pjn2rcHk5rZ3`) or its successor
+   named on `coord`. D-116 (the fleet build read-back, DIST's row) is running as a CONDUCT worker, barred from `release/`,
+   the embed and deploying; it reports whether it needs a cut.
 1. **The next cut, by WHEN DIST CUTS.** Read `git log cacebb12..origin/main` over the shipped paths (nothing at 05:30Z).
    Its RELEASES row: `["0.74.0", "cacebb12b7b42f4825238348c4f1e834e9a2c168"]` (`git rev-parse cacebb12`). Expected, by arithmetic: baseline
    438 + 21 → **459/0**, `alterafter` → **381/78**, `groupwipe` → 453/6. MEASURE them before claiming them.
