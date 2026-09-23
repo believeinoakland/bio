@@ -60,7 +60,9 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
          /* CASE-4 / DEC-72: THE CASE RELATION, asked of signed bytes. Imported
             rather than restated so the ratify committer and the catalog that
             refuses on the same fact cannot answer it differently. */
-         isCaseMemberBytes } from "../checks/bio-checks.mjs";
+         isCaseMemberBytes,
+         /* D-442: which shape a case document is (BIO_Publication_v0_1.md §3 rule 12). */
+         caseDocumentStatesMemberBlocks } from "../checks/bio-checks.mjs";
 /* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
    below resolves a refusal code against every DEC-49 family the catalogue
    exports, and it finds those families BY THE `_CHECKS` SUFFIX — the same rule
@@ -4434,6 +4436,266 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
   return { ok: true, text, chain, kept, floored, note };
 }
 
+/* REC-44 / DEC-34: THE CASE CONTAINER, assembled the moment a case edition COMPLETES — every member
+   finding ratified at the version the case pinned. D-442 moved it out of the op=ratify block VERBATIM
+   so op=caseratify can call it too (see the call sites). `cs` is `#caseEditionState`'s answer. Returns
+   what op=ratify always answered as `container`. */
+async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
+        const manifest = {
+          /* REC-47 bumps 2 -> 3, and the bump is deliberate rather than
+             bookkeeping. The container gains `bias_acknowledgement`, which is a
+             DISCLOSURE a reader is entitled to rely on being present: without a
+             version move, a /2 container carrying no acknowledgement and a /2
+             container that simply predates the field are indistinguishable to a
+             stranger holding the zip, and "the record is silent" would read as
+             "the group declared nothing". The whole premise of the container is
+             that it is readable without our cooperation, so the only place that
+             ambiguity could be resolved is the one place the reader cannot
+             reach. REC-44 bumped 1 -> 2 for the same class of reason. */
+          /* CASE-5 / DEC-72 bumps 3 -> 4, AND THE BUMP IS THE SAME ARGUMENT
+             REC-47 MADE, arriving on the fields the artifact flip adds. `/4`
+             carries the PIN, the AUTHORED ROLE, each member's OWN edition, whose
+             production the case is and the standard it was held to. Without a
+             version move a `/3` container carrying no pin and a `/4` container
+             whose pin was WITHHELD are indistinguishable to a stranger holding
+             the zip, and "the record is silent" would read as "the case froze
+             nothing" — which is the one claim this artifact exists to refute.
+             The whole premise is that it is readable without our cooperation, so
+             the only place that ambiguity could be resolved is the one place the
+             reader cannot reach. */
+          /* CASE-5b / DEC-72 bumps 4 -> 5, AND THIS BUMP IS LOAD-BEARING IN A WAY
+             THE OTHERS WERE NOT. `/4` and every version before it carried the
+             case's scope, roster, partition, bias acknowledgement and bar as
+             MANIFEST FIELDS — and a stranger could check every one of them,
+             because the same facts were inside each member's SIGNED bundle.md.
+             That is the property REC-44 bought and it is why the fields could be
+             taken on trust here: the manifest was a convenience over material
+             the reader could verify.
+
+             CASE-5b removes those facts from member bytes. A `/4`-shaped
+             manifest built after this item would carry the same fields with
+             NOTHING BEHIND THEM — assertions this instance makes about itself,
+             checkable against nothing, which is precisely the ambiguity the
+             format comment above says this artifact exists to refute. So `/5`
+             carries `case_document`: the bytes, their hash, and the armored
+             signature a member made over them, verifiable with ssh-keygen
+             against a key the artifact names.
+
+             WITHOUT THE VERSION MOVE a reader could not tell a `/4` container
+             whose case facts were member-signed from a `/4` container whose case
+             facts were nobody's. That distinction is the entire difference
+             between this record and a press release. */
+          /* REC-128 bumps 5 -> 6, ON THE ARGUMENT EVERY BUMP ABOVE MADE. `/6`
+             carries `delivered_by` beside every `attestor` — on the case document
+             and on each finding — naming whose authenticated session CARRIED the
+             signature in: a member, or the instance's founder. Without the move a
+             `/5` container (which never recorded a deliverer) and a `/6` one whose
+             deliverer was not recorded would read alike, and a stranger could not
+             tell "nobody said" from "the format had no place to say". EXISTING
+             containers are untouched: a manifest is built once, when an edition
+             completes, and is served by its own stored hash, so nothing already
+             published verifies against anything new. `delivered_by` is THIS
+             INSTANCE'S RECORD and not covered by any signature (a member signs
+             before anybody delivers), and `verify` below says so in words. */
+          format: "bio-case-container/6",
+          case: cs.caseId,
+          edition: cs.edition,
+          group: cs.group ?? null,
+          /* THE SIGNED CASE DOCUMENT, WHOLE. The text is carried rather than a
+             digest of it for the same reason every member's bundle.md is carried
+             rather than named: a stranger must be able to RE-HASH what they hold
+             and check the signature over it themselves. A digest alone would let
+             them detect a mismatch and never let them read what was signed.
+
+             THE STATEMENT IS PRINTED IN ASCII, which is CASE-5's own correction
+             arriving on the new field: `caseRatifyStatement()` returns a
+             Uint8Array, and `JSON.stringify` renders one as an object of byte
+             indices — so a `/4` container told a stranger to verify over a
+             statement printed as numbered integers. Decoded here, at the site,
+             rather than by changing what the statement builder returns. */
+          case_document: cs.document ? {
+            doc_sha: cs.document.doc_sha,
+            text: cs.document.text,
+            gate_version: cs.document.gate_version,
+            ratified_at: cs.document.ratified_at,
+            attestor: cs.document.attestor,
+            delivered_by: cs.document.delivered_by,
+            signature: { namespace: NS_RATIFY,
+                         statement: new TextDecoder().decode(
+                           caseRatifyStatement(cs.caseId, cs.edition, cs.document.doc_sha)),
+                         /* `armored`, the SAME field name every member's
+                            signature already uses twelve lines down. A second
+                            spelling for one thing in one artifact is how a
+                            consumer comes to handle only the half it happened to
+                            meet first. */
+                         armored: cs.document.sig_armored },
+          } : null,
+          /* DEC-72 clause 2, INSIDE THE ARTIFACT THAT TRAVELS. Whose production
+             this case is, and the standard of evidence it was held to. The
+             design doc's own list of what the CASE artifact freezes names the
+             bar; before this item it was reachable only by opening a member's
+             bundle.md and reading that member's copy, which is one member's
+             stamp of a case property. A stranger weighing a case has to be able
+             to see what the group required of it and who required it, from the
+             bytes in their hand. `bar: null` is the absent-bar posture and never
+             a bar of zero, which `verify` below says in words. */
+          project: cs.project ?? null,
+          bar: cs.bar ?? null,
+          /* DEC-44 determination 2: what the case is ABOUT, authored by the
+             group. Beside it, what it left OUT. A reader needs both. */
+          scope: cs.scope ?? null,
+          /* REC-47 / DEC-46 (a): INSIDE THE CONTAINER, which is the copy that
+             matters most. DEC-20 makes the bias part of the evidentiary record
+             that TRAVELS with publication, and the container is the artifact
+             that travels — a stranger holding the zip must be able to read the
+             lens this case was made under without coming back to this instance.
+             An acknowledgement served only from a live op would be a disclosure
+             that stops existing the moment the instance does. */
+          bias_acknowledgement: cs.bias_acknowledgement ?? null,
+          completeness: cs.completeness ?? null,
+          /* REC-58, 2026-08-05: `ratified_at` and NOT `opened`, and the pair is
+             a decision rather than an accident of which fields were to hand.
+             `cs` is the whole case-edition state and carries both. The instant
+             the LAST member signed is what this container can stand behind; the
+             instant somebody started work is a fact about the working record,
+             and a stranger holding this zip has no way to check it and no stated
+             use for it. Named rather than spread, for the reason at the sibling
+             pick above: this artifact travels without this instance, so a field
+             that leaks into it cannot be withdrawn from the copies. */
+          ratified_at: cs.ratified_at,
+          /* EVERY MEMBER FINDING, each with its OWN signature, its OWN attestor
+             and its OWN frozen PAIR. The signature is per finding because the
+             FINDING is the unit of truth: what a member signed is one
+             document's bytes, and a case-level signature would be a signature
+             over something nobody reviewed. */
+          findings: cs.findings.map((f) => ({
+            bundle_id: f.bundle_id, title: f.title,
+            /* CASE-5, AND THIS ONE LINE WAS A FALSE STATEMENT IN A SIGNED-ADJACENT
+               ARTIFACT. It read `edition: cs.edition` — the CASE's number,
+               written onto every member as though it were the member's. While
+               the two were slaved it happened to be true; the artifact flip makes
+               it a claim about a finding that the finding's own published row
+               contradicts, and this is the copy that TRAVELS, so a reader has no
+               way to check it against anything. It is the member's own edition,
+               off the member's own published row, resolved by the pin. */
+            edition: f.edition,
+            bundle_sha: f.bundle_sha,
+            /* THE PIN AND THE DESIGNATION, INSIDE THE CONTAINER. The design's
+               sentence: the CASE artifact freezes its members — *"content by
+               hash, version, per-member strength pair, role, the bar, the
+               exclusions."* The pair and the exclusions were already here (the
+               latter inside `completeness.excluded`, which is why it is not
+               copied a second time); the version and the role were not.
+               `version_sha` is what the case COMMITTED TO and `bundle_sha` is
+               what the member SIGNED — equal by construction at assembly, and
+               carried as two fields anyway, because a reader checking the freeze
+               must be able to see the case's commitment as a separate statement
+               from the finding's own hash. `role` is the authored designation
+               (clause 4): a stranger holding a SUPPORTING member must be able to
+               see it was not presented as carrying the case. */
+            version_sha: f.version_sha ?? null,
+            role: f.role ?? null,
+            ratified_at: f.ratified_at, gate_version: f.gate_version,
+            attestor: f.attestor,
+            delivered_by: f.delivered_by,
+            /* CASE-5 CORRECTS `statement`, AND IT IS THE ONE FIELD IN THIS
+               ARTIFACT THAT WAS UNREADABLE BY THE READER IT EXISTS FOR.
+               `ratifyStatement()` returns a Uint8Array — it is the message fed
+               to the signer — and JSON.stringify turns a Uint8Array into an
+               OBJECT KEYED BY BYTE INDEX: {"0":98,"1":105,…}. So the container
+               told a stranger to check a signature over a statement it printed
+               as 47 numbered integers, and the one thing they had to have in
+               ASCII was the one thing they had to decode. Nothing consumed it —
+               measured across `civicos-ui`, the battery and this file — so this
+               is a correction and not a withdrawal, and it rides the /4 bump
+               with the rest of what the flip adds. Decoded here rather than by
+               changing `ratifyStatement`, whose Uint8Array return is exactly
+               right for `verifySshsig`'s caller two thousand lines up. */
+            signature: { namespace: NS_RATIFY,
+                         statement: new TextDecoder().decode(ratifyStatement(f.bundle_id, f.bundle_sha)),
+                         armored: f.sig_armored },
+            strength: f.strength, required_strength: f.required,
+            parts: f.parts.map((p) => `${f.bundle_id}/${p.path}`),
+          })),
+          /* The parts are NAMESPACED BY FINDING, and that is forced rather than
+             chosen: every finding carries a `bundle.md`, so a flat parts[]
+             would have two members claiming one path and the archive would say
+             two things about one name. */
+          parts: cs.findings.flatMap((f) => f.parts.map((p) => ({
+            path: `${f.bundle_id}/${p.path}`, finding: f.bundle_id,
+            sha256: p.sha256, kind: p.kind, bytes: p.bytes ?? null }))),
+          layout: { root: `${cs.caseId}/`, parts_at: "path", manifest_at: "MANIFEST.json",
+                    note: "the zip carries every part at <case>/<finding>/<path> with this manifest at the "
+                        + "root. Check each part's sha256 against this list, then check this manifest's own "
+                        + "sha256 and each finding's signature over its own bundle_sha. Renderings (REC-22) "
+                        + "join parts[] as kind: rendering." },
+          verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here "
+                + "makes one detectable by anyone holding it, without this instance's cooperation. Each "
+                + "finding is signed on its own bytes; there is no case-level strength, because composing "
+                + "several findings' strengths into one letter is a claim the evidence does not support. "
+                /* CASE-5: THE INSTRUCTIONS A STRANGER ACTUALLY NEEDS, in the
+                   artifact rather than in our documentation — which they do not
+                   have, and which is the whole point of the thing they are
+                   holding. Three sentences, one per field the flip adds, each of
+                   them a check the reader can RUN. */
+                + "EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's "
+                + "edition: since the artifact flip the two are separate numbers, so a member of edition 2 "
+                + "of this case may be at its own edition 1. `version_sha` is the version THIS CASE "
+                + "COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this "
+                + "container was assembled over a member the case did not pin and you should not rely on "
+                + "it. `role` is the publisher's authored designation: only `load_bearing` members were "
+                + "held to the `bar` above, and a `supporting` member is part of the published work without "
+                + "being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is "
+                + "not a standard of zero — the case claims no cleared bar and says so. "
+                /* REC-128: the two principals of one ratification, told apart in
+                   the artifact that travels. */
+                + "`attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED "
+                + "that signature to this instance — the authenticated session that performed the act, a "
+                + "member or the instance's founder — and it is this instance's record, not covered by any "
+                + "signature. `undetermined` there means the delivery was not recorded; it never means the "
+                + "signer delivered it."
+                /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (c): WHICH SIGNATURE COVERS A MEMBER'S
+                   FROZEN PAIR now depends on the case document's format, and a stranger must be told
+                   which one to check — in the artifact, for CASE-5's reason above. */
+                + (caseDocumentStatesMemberBlocks(parseFrontmatter(String((cs.document && cs.document.text) || "")).data || {})
+                  ? " Each finding's `strength` and its own `edition` are stated in the CASE DOCUMENT carried "
+                    + "above (`case_strength`, `case_roles`), under the case document's signature: publishing "
+                    + "wrote nothing on any finding, so its own signature covers the finding as its project "
+                    + "concluded it, and the pair is this case's reading of those bytes."
+                  : ""),
+        };
+        const mText = JSON.stringify(manifest, null, 1);
+        const mBytes = new TextEncoder().encode(mText);
+        const mSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", mBytes))]
+          .map((x) => x.toString(16).padStart(2, "0")).join("");
+        /* REC-53, THE FIRST POST-COMMIT SITE. A silence here made `rec`
+           undefined and the fallback minted `reason:"MANIFEST_NOT_RECORDED"` —
+           a statement that the published record does NOT hold this case's
+           container — and carried it inside an `ok:true` ratification answer.
+           Invisible to REC-52's detector B, which reads `json()` arguments, and
+           to detector A, which looks for a `.result` spread: this one travels to
+           the caller in a LOCAL VARIABLE and is spread twelve lines later.
+           The ratification has ALREADY COMMITTED here, so this may not refuse;
+           it states the exchange instead. The `MANIFEST_NOT_RECORDED` fallback
+           survives for the answered path, where it describes a store that said
+           `ok:false` without a reason of its own. */
+        const recOut = await doAnswer(stub.fetch(new Request("http://do/recordcasemanifest", {
+          method: "POST", body: JSON.stringify({ caseId: cs.caseId, edition: cs.edition,
+                                                 manifest, manifestSha: mSha, bytes: mBytes.length }) })));
+        const rec = recOut.result;
+        if (recOut.answered && rec && rec.ok && typeof env.PUBLISHED?.put === "function") {
+          const key = `${storeName}/published/${mSha}`;
+          if (!(await env.PUBLISHED.head(key))) await env.PUBLISHED.put(key, mBytes);
+        }
+        return !recOut.answered
+          ? { ok: false, reason: STORE_SILENT_REASON, op: `${via}/recordcasemanifest`,
+              detail: STORE_SILENT_DETAIL }
+          : rec && rec.ok
+            ? { manifest_sha: mSha, parts: manifest.parts.length, findings: manifest.findings.length,
+                zip: `op=publishedbytes&sha256=${mSha}&format=zip` }
+            : { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -4882,7 +5144,15 @@ export default {
                 question: sectionText(text, "## Question"),
                 conclusion: sectionText(text, "## Conclusion"),
                 falsifies: sectionText(text, "## What Would Falsify This"),
-                excludes: sectionText(text, "## What This Excludes"),
+                /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): a member published under rule 12
+                   carries no `## What This Excludes` in its own bytes — the case states it once, in
+                   its document — so the section is read from THAT signed document for such a member,
+                   and from the member's own bytes for a legacy one (rule 12 (e)). `excludes_from`
+                   says which, so a renderer never has to infer whose words it is printing. */
+                excludes: fnd.frozen_from === "case_document"
+                  ? (typeof fnd.case_excludes === "string" ? fnd.case_excludes : null)
+                  : sectionText(text, "## What This Excludes"),
+                excludes_from: fnd.frozen_from === "case_document" ? "case_document" : "member_bytes",
                 /* BOTH, because the document says it in two places and they are not
                    the same statement. The FRONTMATTER carries what op=conclude
                    authored and what the catalog gates — that is the conclusion of
@@ -8261,8 +8531,14 @@ export default {
          `priorCase` is C-21.1's fact at case altitude and comes down with the
          rest of the facts from the one place that has the rows — passing null
          would not soften C-21.1, it would blind it. */
-      const fm = parseFrontmatter(facts.doc.text).data || {};
+      const parsedDoc = parseFrontmatter(facts.doc.text);
+      const fm = parsedDoc.data || {};
       const gate = runCaseGate({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition),
+                                 /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): the body (C-3.1's
+                                    section) and each member's basis at the pinned bytes (C-2.8's
+                                    testimony and per-ground arms), both from the one facts read. */
+                                 body: typeof parsedDoc.body === "string" ? parsedDoc.body : null,
+                                 memberBasis: facts.memberBasis || null,
                                  fm, priorCase: facts.priorCase
                                    ? { edition: facts.priorCase.edition,
                                        statement: facts.priorCase.completeness
@@ -8297,11 +8573,20 @@ export default {
           deliveredBy,
         }) }));
       if (!out.answered) return storeSilent("caseratify/commit");
-      const r = out.result;
-      if (!r?.ok)
-        return json({ ok: false, ...(r && r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: r }),
+      const answered = out.result;
+      const { completedCase, ...r } = answered || {};
+      if (!answered || !r.ok)
+        return json({ ok: false, ...(r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: answered }),
                       store: storeName, tokenClass: cls }, 409);
+      /* D-442 / BIO_Publication_v0_1.md §3 rule 12: a case whose every member was already ratified at
+         its pin is COMPLETE at this act, and no op=ratify will come to assemble it — so it is
+         assembled here, by the one function op=ratify uses. `completedCase` is the store's internal
+         state and is destructured OFF the answer above, never spread into it (REC-58's pick). */
+      const container = completedCase && completedCase.complete && !completedCase.manifest_sha
+        ? await assembleCaseContainer({ env, stub, storeName, cs: completedCase, via: "caseratify" })
+        : null;
       return json({ ok: true, ...r, gateVersion: gate.gateVersion,
+                    ...(container ? { container } : {}),
                     attestor: { member: attestor?.member_id ?? null, key_b64: sv.keyB64 },
                     /* REC-128: who carried the signature in, beside who made it. On a
                        retry of the same signature (`existed`) the store wrote nothing,
@@ -8318,7 +8603,8 @@ export default {
                         + `(op=ratify): ${r.awaiting.join(", ")}. This edition becomes servable as a `
                         + `container when the last of them lands.`
                       : "the case is committed and every member finding is already ratified at the version "
-                        + "this case pinned.",
+                        + "this case pinned" + (container && container.manifest_sha
+                          ? `, so its container is assembled (${container.zip}).` : "."),
                     store: storeName, tokenClass: cls });
     }
 
@@ -8704,6 +8990,11 @@ export default {
              control plane must not invent one for it. */
           ...(isCase ? { edition } : {}), title: ratifiedFm.title ?? null,
           completeness: frozenCompleteness, strength: frozenStrength,
+          /* D-442 / BIO_Publication_v0_1.md §3 rule 12: a member published under rule 12 carries
+             no frozen block in its own bytes (`isCase` false), and the store reads its edition and
+             frozen pair from the RATIFIED case documents pinning these bytes instead. Legacy bytes
+             carry their own, read above exactly as before (rule 12 (e)). */
+          memberCarriesBlocks: isCase,
           /* CASE-5b: `required` IS NOT SENT ANY MORE. The bar is the CASE's
              (DEC-72 clause 2) and it left these bytes with the rest of the case,
              so there is nothing here to send. `publish()` reads it from
@@ -8773,253 +9064,20 @@ export default {
          finding carries its own frozen pair inside findings[], and one letter
          over the case is R2's forbidden composition at case altitude. */
       let container = null;
-      if (pub.case && pub.case.complete && !pub.case.manifest_sha) {
-        const cs = pub.case;
-        const manifest = {
-          /* REC-47 bumps 2 -> 3, and the bump is deliberate rather than
-             bookkeeping. The container gains `bias_acknowledgement`, which is a
-             DISCLOSURE a reader is entitled to rely on being present: without a
-             version move, a /2 container carrying no acknowledgement and a /2
-             container that simply predates the field are indistinguishable to a
-             stranger holding the zip, and "the record is silent" would read as
-             "the group declared nothing". The whole premise of the container is
-             that it is readable without our cooperation, so the only place that
-             ambiguity could be resolved is the one place the reader cannot
-             reach. REC-44 bumped 1 -> 2 for the same class of reason. */
-          /* CASE-5 / DEC-72 bumps 3 -> 4, AND THE BUMP IS THE SAME ARGUMENT
-             REC-47 MADE, arriving on the fields the artifact flip adds. `/4`
-             carries the PIN, the AUTHORED ROLE, each member's OWN edition, whose
-             production the case is and the standard it was held to. Without a
-             version move a `/3` container carrying no pin and a `/4` container
-             whose pin was WITHHELD are indistinguishable to a stranger holding
-             the zip, and "the record is silent" would read as "the case froze
-             nothing" — which is the one claim this artifact exists to refute.
-             The whole premise is that it is readable without our cooperation, so
-             the only place that ambiguity could be resolved is the one place the
-             reader cannot reach. */
-          /* CASE-5b / DEC-72 bumps 4 -> 5, AND THIS BUMP IS LOAD-BEARING IN A WAY
-             THE OTHERS WERE NOT. `/4` and every version before it carried the
-             case's scope, roster, partition, bias acknowledgement and bar as
-             MANIFEST FIELDS — and a stranger could check every one of them,
-             because the same facts were inside each member's SIGNED bundle.md.
-             That is the property REC-44 bought and it is why the fields could be
-             taken on trust here: the manifest was a convenience over material
-             the reader could verify.
-
-             CASE-5b removes those facts from member bytes. A `/4`-shaped
-             manifest built after this item would carry the same fields with
-             NOTHING BEHIND THEM — assertions this instance makes about itself,
-             checkable against nothing, which is precisely the ambiguity the
-             format comment above says this artifact exists to refute. So `/5`
-             carries `case_document`: the bytes, their hash, and the armored
-             signature a member made over them, verifiable with ssh-keygen
-             against a key the artifact names.
-
-             WITHOUT THE VERSION MOVE a reader could not tell a `/4` container
-             whose case facts were member-signed from a `/4` container whose case
-             facts were nobody's. That distinction is the entire difference
-             between this record and a press release. */
-          /* REC-128 bumps 5 -> 6, ON THE ARGUMENT EVERY BUMP ABOVE MADE. `/6`
-             carries `delivered_by` beside every `attestor` — on the case document
-             and on each finding — naming whose authenticated session CARRIED the
-             signature in: a member, or the instance's founder. Without the move a
-             `/5` container (which never recorded a deliverer) and a `/6` one whose
-             deliverer was not recorded would read alike, and a stranger could not
-             tell "nobody said" from "the format had no place to say". EXISTING
-             containers are untouched: a manifest is built once, when an edition
-             completes, and is served by its own stored hash, so nothing already
-             published verifies against anything new. `delivered_by` is THIS
-             INSTANCE'S RECORD and not covered by any signature (a member signs
-             before anybody delivers), and `verify` below says so in words. */
-          format: "bio-case-container/6",
-          case: cs.caseId,
-          edition: cs.edition,
-          group: cs.group ?? null,
-          /* THE SIGNED CASE DOCUMENT, WHOLE. The text is carried rather than a
-             digest of it for the same reason every member's bundle.md is carried
-             rather than named: a stranger must be able to RE-HASH what they hold
-             and check the signature over it themselves. A digest alone would let
-             them detect a mismatch and never let them read what was signed.
-
-             THE STATEMENT IS PRINTED IN ASCII, which is CASE-5's own correction
-             arriving on the new field: `caseRatifyStatement()` returns a
-             Uint8Array, and `JSON.stringify` renders one as an object of byte
-             indices — so a `/4` container told a stranger to verify over a
-             statement printed as numbered integers. Decoded here, at the site,
-             rather than by changing what the statement builder returns. */
-          case_document: cs.document ? {
-            doc_sha: cs.document.doc_sha,
-            text: cs.document.text,
-            gate_version: cs.document.gate_version,
-            ratified_at: cs.document.ratified_at,
-            attestor: cs.document.attestor,
-            delivered_by: cs.document.delivered_by,
-            signature: { namespace: NS_RATIFY,
-                         statement: new TextDecoder().decode(
-                           caseRatifyStatement(cs.caseId, cs.edition, cs.document.doc_sha)),
-                         /* `armored`, the SAME field name every member's
-                            signature already uses twelve lines down. A second
-                            spelling for one thing in one artifact is how a
-                            consumer comes to handle only the half it happened to
-                            meet first. */
-                         armored: cs.document.sig_armored },
-          } : null,
-          /* DEC-72 clause 2, INSIDE THE ARTIFACT THAT TRAVELS. Whose production
-             this case is, and the standard of evidence it was held to. The
-             design doc's own list of what the CASE artifact freezes names the
-             bar; before this item it was reachable only by opening a member's
-             bundle.md and reading that member's copy, which is one member's
-             stamp of a case property. A stranger weighing a case has to be able
-             to see what the group required of it and who required it, from the
-             bytes in their hand. `bar: null` is the absent-bar posture and never
-             a bar of zero, which `verify` below says in words. */
-          project: cs.project ?? null,
-          bar: cs.bar ?? null,
-          /* DEC-44 determination 2: what the case is ABOUT, authored by the
-             group. Beside it, what it left OUT. A reader needs both. */
-          scope: cs.scope ?? null,
-          /* REC-47 / DEC-46 (a): INSIDE THE CONTAINER, which is the copy that
-             matters most. DEC-20 makes the bias part of the evidentiary record
-             that TRAVELS with publication, and the container is the artifact
-             that travels — a stranger holding the zip must be able to read the
-             lens this case was made under without coming back to this instance.
-             An acknowledgement served only from a live op would be a disclosure
-             that stops existing the moment the instance does. */
-          bias_acknowledgement: cs.bias_acknowledgement ?? null,
-          completeness: cs.completeness ?? null,
-          /* REC-58, 2026-08-05: `ratified_at` and NOT `opened`, and the pair is
-             a decision rather than an accident of which fields were to hand.
-             `cs` is the whole case-edition state and carries both. The instant
-             the LAST member signed is what this container can stand behind; the
-             instant somebody started work is a fact about the working record,
-             and a stranger holding this zip has no way to check it and no stated
-             use for it. Named rather than spread, for the reason at the sibling
-             pick above: this artifact travels without this instance, so a field
-             that leaks into it cannot be withdrawn from the copies. */
-          ratified_at: cs.ratified_at,
-          /* EVERY MEMBER FINDING, each with its OWN signature, its OWN attestor
-             and its OWN frozen PAIR. The signature is per finding because the
-             FINDING is the unit of truth: what a member signed is one
-             document's bytes, and a case-level signature would be a signature
-             over something nobody reviewed. */
-          findings: cs.findings.map((f) => ({
-            bundle_id: f.bundle_id, title: f.title,
-            /* CASE-5, AND THIS ONE LINE WAS A FALSE STATEMENT IN A SIGNED-ADJACENT
-               ARTIFACT. It read `edition: cs.edition` — the CASE's number,
-               written onto every member as though it were the member's. While
-               the two were slaved it happened to be true; the artifact flip makes
-               it a claim about a finding that the finding's own published row
-               contradicts, and this is the copy that TRAVELS, so a reader has no
-               way to check it against anything. It is the member's own edition,
-               off the member's own published row, resolved by the pin. */
-            edition: f.edition,
-            bundle_sha: f.bundle_sha,
-            /* THE PIN AND THE DESIGNATION, INSIDE THE CONTAINER. The design's
-               sentence: the CASE artifact freezes its members — *"content by
-               hash, version, per-member strength pair, role, the bar, the
-               exclusions."* The pair and the exclusions were already here (the
-               latter inside `completeness.excluded`, which is why it is not
-               copied a second time); the version and the role were not.
-               `version_sha` is what the case COMMITTED TO and `bundle_sha` is
-               what the member SIGNED — equal by construction at assembly, and
-               carried as two fields anyway, because a reader checking the freeze
-               must be able to see the case's commitment as a separate statement
-               from the finding's own hash. `role` is the authored designation
-               (clause 4): a stranger holding a SUPPORTING member must be able to
-               see it was not presented as carrying the case. */
-            version_sha: f.version_sha ?? null,
-            role: f.role ?? null,
-            ratified_at: f.ratified_at, gate_version: f.gate_version,
-            attestor: f.attestor,
-            delivered_by: f.delivered_by,
-            /* CASE-5 CORRECTS `statement`, AND IT IS THE ONE FIELD IN THIS
-               ARTIFACT THAT WAS UNREADABLE BY THE READER IT EXISTS FOR.
-               `ratifyStatement()` returns a Uint8Array — it is the message fed
-               to the signer — and JSON.stringify turns a Uint8Array into an
-               OBJECT KEYED BY BYTE INDEX: {"0":98,"1":105,…}. So the container
-               told a stranger to check a signature over a statement it printed
-               as 47 numbered integers, and the one thing they had to have in
-               ASCII was the one thing they had to decode. Nothing consumed it —
-               measured across `civicos-ui`, the battery and this file — so this
-               is a correction and not a withdrawal, and it rides the /4 bump
-               with the rest of what the flip adds. Decoded here rather than by
-               changing `ratifyStatement`, whose Uint8Array return is exactly
-               right for `verifySshsig`'s caller two thousand lines up. */
-            signature: { namespace: NS_RATIFY,
-                         statement: new TextDecoder().decode(ratifyStatement(f.bundle_id, f.bundle_sha)),
-                         armored: f.sig_armored },
-            strength: f.strength, required_strength: f.required,
-            parts: f.parts.map((p) => `${f.bundle_id}/${p.path}`),
-          })),
-          /* The parts are NAMESPACED BY FINDING, and that is forced rather than
-             chosen: every finding carries a `bundle.md`, so a flat parts[]
-             would have two members claiming one path and the archive would say
-             two things about one name. */
-          parts: cs.findings.flatMap((f) => f.parts.map((p) => ({
-            path: `${f.bundle_id}/${p.path}`, finding: f.bundle_id,
-            sha256: p.sha256, kind: p.kind, bytes: p.bytes ?? null }))),
-          layout: { root: `${cs.caseId}/`, parts_at: "path", manifest_at: "MANIFEST.json",
-                    note: "the zip carries every part at <case>/<finding>/<path> with this manifest at the "
-                        + "root. Check each part's sha256 against this list, then check this manifest's own "
-                        + "sha256 and each finding's signature over its own bundle_sha. Renderings (REC-22) "
-                        + "join parts[] as kind: rendering." },
-          verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here "
-                + "makes one detectable by anyone holding it, without this instance's cooperation. Each "
-                + "finding is signed on its own bytes; there is no case-level strength, because composing "
-                + "several findings' strengths into one letter is a claim the evidence does not support. "
-                /* CASE-5: THE INSTRUCTIONS A STRANGER ACTUALLY NEEDS, in the
-                   artifact rather than in our documentation — which they do not
-                   have, and which is the whole point of the thing they are
-                   holding. Three sentences, one per field the flip adds, each of
-                   them a check the reader can RUN. */
-                + "EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's "
-                + "edition: since the artifact flip the two are separate numbers, so a member of edition 2 "
-                + "of this case may be at its own edition 1. `version_sha` is the version THIS CASE "
-                + "COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this "
-                + "container was assembled over a member the case did not pin and you should not rely on "
-                + "it. `role` is the publisher's authored designation: only `load_bearing` members were "
-                + "held to the `bar` above, and a `supporting` member is part of the published work without "
-                + "being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is "
-                + "not a standard of zero — the case claims no cleared bar and says so. "
-                /* REC-128: the two principals of one ratification, told apart in
-                   the artifact that travels. */
-                + "`attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED "
-                + "that signature to this instance — the authenticated session that performed the act, a "
-                + "member or the instance's founder — and it is this instance's record, not covered by any "
-                + "signature. `undetermined` there means the delivery was not recorded; it never means the "
-                + "signer delivered it.",
-        };
-        const mText = JSON.stringify(manifest, null, 1);
-        const mBytes = new TextEncoder().encode(mText);
-        const mSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", mBytes))]
-          .map((x) => x.toString(16).padStart(2, "0")).join("");
-        /* REC-53, THE FIRST POST-COMMIT SITE. A silence here made `rec`
-           undefined and the fallback minted `reason:"MANIFEST_NOT_RECORDED"` —
-           a statement that the published record does NOT hold this case's
-           container — and carried it inside an `ok:true` ratification answer.
-           Invisible to REC-52's detector B, which reads `json()` arguments, and
-           to detector A, which looks for a `.result` spread: this one travels to
-           the caller in a LOCAL VARIABLE and is spread twelve lines later.
-           The ratification has ALREADY COMMITTED here, so this may not refuse;
-           it states the exchange instead. The `MANIFEST_NOT_RECORDED` fallback
-           survives for the answered path, where it describes a store that said
-           `ok:false` without a reason of its own. */
-        const recOut = await doAnswer(stub.fetch(new Request("http://do/recordcasemanifest", {
-          method: "POST", body: JSON.stringify({ caseId: cs.caseId, edition: cs.edition,
-                                                 manifest, manifestSha: mSha, bytes: mBytes.length }) })));
-        const rec = recOut.result;
-        if (recOut.answered && rec && rec.ok && typeof env.PUBLISHED?.put === "function") {
-          const key = `${storeName}/published/${mSha}`;
-          if (!(await env.PUBLISHED.head(key))) await env.PUBLISHED.put(key, mBytes);
-        }
-        container = !recOut.answered
-          ? { ok: false, reason: STORE_SILENT_REASON, op: "ratify/recordcasemanifest",
-              detail: STORE_SILENT_DETAIL }
-          : rec && rec.ok
-            ? { manifest_sha: mSha, parts: manifest.parts.length, findings: manifest.findings.length,
-                zip: `op=publishedbytes&sha256=${mSha}&format=zip` }
-            : { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
-      }
+      /* D-442 / BIO_Publication_v0_1.md §3 rule 12: THE ASSEMBLY IS ONE FUNCTION NOW, CALLED FROM
+         BOTH ACTS THAT CAN COMPLETE A CASE EDITION. It was inline here, which was complete while every
+         publication promoted its members: a case's pins were always fresh bytes, so the LAST member's
+         op=ratify was always the act that completed it. Rule 12 pins a finding at the bytes it has, so
+         a case over a finding ANOTHER case already carried across is complete the moment its own
+         document is ratified (op=caseratify) — and a sha several cases pin ratifies with no SOLE case
+         (`pub.case` absent, IC-74), so every such case edition is named in `containerCases`. Moved
+         verbatim; nothing in the manifest changed but the sentence rule 12 adds to `verify`. */
+      if (pub.case && pub.case.complete && !pub.case.manifest_sha)
+        container = await assembleCaseContainer({ env, stub, storeName, cs: pub.case, via: "ratify" });
+      else if (Array.isArray(pub.containerCases))
+        for (const cs of pub.containerCases)
+          if (cs && cs.complete && !cs.manifest_sha)
+            container = await assembleCaseContainer({ env, stub, storeName, cs, via: "ratify" });
 
       /* CAP-4 / CAPTURE-SCALING item 6: re-fetch the reused parts at
          ratification, which is where a working capture's reuse becomes evidence.
@@ -9182,6 +9240,12 @@ export default {
                             zip: `op=publishedbytes&sha256=${pub.case.manifest_sha}&format=zip` }
                         : null),
                     graph: pub.edges ?? null,
+                    /* D-442 / BIO_Publication_v0_1.md §3 rule 12: where this edition's number and
+                       frozen pair were read from — the finding's own bytes (legacy), the case
+                       documents pinning them, or neither — and whether those documents disagreed
+                       about the pair. Two scalars, forwarded by name like every field here. */
+                    frozenFrom: pub.frozenFrom ?? null,
+                    ...(pub.strengthUndetermined ? { strengthUndetermined: true } : {}),
                     existed: pub.existed, ratifiedAt: pub.ratifiedAt,
                     attestor: attestor?.member_id ?? null, gateVersion: gate.gateVersion,
                     /* REC-128: who DELIVERED this request (a retry that `existed`

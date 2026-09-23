@@ -790,11 +790,24 @@ const ratifyMember = async (id) => {
   + "could not make, and the one CASE-5b exists for",
     ["case_id:", "case_edition:", "case_project:", "case_findings:", "case_roles:", "case_scope:",
      "bias_acknowledgement:", "required_strength:"].filter((k) => bytes.includes(k)), []);
-  t("and what the member's bytes DO still carry is everything that is genuinely the FINDING's — its "
-  + "own edition on its own chain, its completeness block, its exclusions and its frozen pair",
-    [/^edition: 1$/m.test(bytes), /^completeness:$/m.test(bytes),
-     /^completeness_excluded:$/m.test(bytes), /^published_strength:$/m.test(bytes)],
-    [true, true, true, true]);
+  /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted. CASE-5b left four
+     blocks in the member's bytes because they were "genuinely the FINDING's" — its own edition, its
+     completeness block, its exclusions and its frozen pair — and op=publish's PROMOTION was what wrote
+     them. Rule 12 stops that promotion (one project's prepare was moving another project's pin, M-100)
+     and states each block ONCE in the case document: the completeness block and exclusions were already
+     there (C-41.10/.11); the member's edition and frozen pair join them (`case_roles[].edition`,
+     `case_strength`). So the arm is INVERTED, as CASE-5b inverted the one above it, and demands the facts
+     where they now are, off the signed case document — moved, not dropped. */
+  const signedDoc = String(rP(await (await anonRaw(`op=casedocument&case=${CASE}&edition=1`)).json())?.text || "");
+  const leadRow = ((parseFrontmatter(signedDoc).data || {}).case_roles || []).find((r) => r && r.target === LEAD) || {};
+  t("and the member's bytes carry NONE of the four blocks op=publish's promotion used to write — its "
+  + "edition, completeness, exclusions and frozen pair are stated once in the signed CASE DOCUMENT",
+    [/^edition: /m.test(bytes), /^completeness:$/m.test(bytes),
+     /^completeness_excluded:$/m.test(bytes), /^published_strength:$/m.test(bytes),
+     leadRow.edition, /^completeness:$/m.test(signedDoc), /^completeness_excluded:$/m.test(signedDoc),
+     new RegExp(`^case_strength:\\n  - target: ${LEAD}$`, "m").test(signedDoc)
+       || new RegExp(`^  - target: ${LEAD}\\n    axis: capture$`, "m").test(signedDoc)],
+    [false, false, false, false, 1, true, true, true]);
   /* THE DELETION IS A PROPERTY OF THE FORMAT, not of op=publish remembering. */
   const lie = bytes.replace(/^(---\n)/, `$1case_id: ${CASE}\n`);
   await mustPromote(LEAD, lie, "inquiry", "concluded", await shaOf(LEAD));

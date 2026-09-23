@@ -265,8 +265,11 @@ export const DIVIDE_PROMPT =
  * the field means, in the words checkGrounds' own refusal already uses; (2) the
  * MAX composition in `#axisResult`; (3) the server stamp and its carry-forward
  * rule in `groundInquiry`; (4) the branches surviving redaction and being
- * frozen into the ratified bytes (`published_strength_grounds`, required by
- * C-2.8); (5) the AND default. NOTHING here states a doctrine the record does
+ * frozen into signed bytes (`published_strength_grounds` in a member published
+ * before BIO_Publication_v0_1.md §3 rule 12, `case_strength_grounds` in the case
+ * document since — D-442 — required by C-2.8 either way; the prompt's "a
+ * published case carries each group … inside the signed bytes" is true of both);
+ * (5) the AND default. NOTHING here states a doctrine the record does
  * not already enforce — REC-45 was scoped to report such a sentence as a DEC
  * candidate rather than write one, and one was reported rather than written
  * (DEC-32's operational test, *"would refuting this alone change the

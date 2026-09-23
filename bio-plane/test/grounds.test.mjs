@@ -58,7 +58,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { checkBundle } from "../checks/bio-checks.mjs";
+import { checkBundle, checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
@@ -678,12 +678,24 @@ console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, cla
     [["capture", "graded", "B"], ["connection", "graded", "A"]]);
 
   const md = (await GET(`op=image&token=${CAROL}&id=${CASE}`))["bundle.md"];
-  t("the per-branch breakdown is IN THE BYTES THAT GET SIGNED, one row per ground per axis",
-    [/^published_strength_grounds:$/m.test(md),
-     (md.match(/^ {2}- axis: /gm) || []).length], [true, 6]);
+  /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted. REC-42's clause (e)
+     is UNCHANGED — the frozen result is the STRUCTURED one, in bytes a member signs — and what moved is
+     WHICH signed bytes. op=publish's promotion wrote `published_strength_grounds` into the finding; rule 12
+     stops that promotion and states the per-branch rows ONCE, in the CASE DOCUMENT (`case_strength_grounds`,
+     one row per ground per axis, each naming its member), under the case document's signature (rule 12
+     (c)). The same rows, the same arithmetic, the same catalogue arm (C-2.8, run per member over the case
+     document by `checkCaseDocument`) — read where they now are. The finding's own bytes carry none. */
+  const cdoc = await GET(`op=casedocument&token=${CAROL}&case=${encodeURIComponent(pub.caseId)}&edition=${pub.edition}`);
+  const cfm = parseFrontmatter(String(cdoc?.text || "")).data || {};
+  const gRows = (cfm.case_strength_grounds || []).filter((r) => r && r.target === CASE);
+  t("the per-branch breakdown is IN THE BYTES THAT GET SIGNED — the case document's — one row per ground "
+  + "per axis, and none in the finding's own bytes",
+    [Array.isArray(cfm.case_strength_grounds), gRows.length, /^published_strength_grounds:$/m.test(md)],
+    [true, 4, false]);
   t("and each row says which branch reached what, so the sufficiency claim is checkable",
-    [/ {4}ground: "charter"\n {4}state: graded\n {4}grade: B/.test(md),
-     / {4}ground: "code"\n {4}state: graded\n {4}grade: C/.test(md)], [true, true]);
+    [gRows.some((r) => r.axis === "capture" && r.ground === "charter" && r.state === "graded" && r.grade === "B"),
+     gRows.some((r) => r.axis === "capture" && r.ground === "code" && r.state === "graded" && r.grade === "C")],
+    [true, true]);
   t("the published case AUDITS CLEAN against the catalog",
     (await checkBundle({ folderName: CASE, files: new Map([["bundle.md", md]]),
       sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64),
@@ -694,14 +706,16 @@ console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, cla
   /* STRIP THE FROZEN STRUCTURE and the catalog names it: a grade produced by a
      maximum over branches, published with the branches invisible, is a claim no
      reader can test. */
-  const stripped = md.replace(/^published_strength_grounds:\n(?: {2}- axis:.*\n(?: {4}.*\n)*)+/m, "");
-  const errs = (await checkBundle({ folderName: CASE, files: new Map([["bundle.md", stripped]]),
-    sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64),
-    resolveTarget: () => true,
-    earnedRegistry: await GET(`op=earnedbasis&token=${CAROL}&id=${CASE}`) })).findings
-    .filter((x) => x.severity === "error");
+  /* D-442: stripped from the CASE DOCUMENT, where the rows now live, and judged by the case gate with the
+     member's basis at the pinned bytes — the fact the per-ground arm reads. */
+  const mfm = parseFrontmatter(md).data || {};
+  const caseCtx = { caseId: pub.caseId, edition: pub.edition, memberBasis: { [CASE]: mfm.basis || [] } };
+  t("the case document AUDITS CLEAN against the case gate, member rows included",
+    checkCaseDocument(cfm, caseCtx).filter((x) => x.severity === "error").map((x) => `${x.check}: ${x.message}`), []);
+  const stripped = { ...cfm, case_strength_grounds: (cfm.case_strength_grounds || []).filter((r) => r.target !== CASE) };
+  const errs = checkCaseDocument(stripped, caseCtx).filter((x) => x.severity === "error");
   t("strip it and the published case STOPS auditing clean, by name",
-    [stripped !== md, errs.some((x) => /requires published_strength_grounds/.test(x.message))],
+    [gRows.length > 0, errs.some((x) => x.check === "C-2.8" && /requires published_strength_grounds/.test(x.message))],
     [true, true]);
   /* AND THE OTHER DIRECTION, driven rather than asserted about the same bytes:
      a case whose legs were never grouped publishes with no such block at all,
@@ -727,6 +741,15 @@ console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, cla
     /* ADDED 2026-08-05, REC-47. */
     biasAcknowledgement: "The same declared position on public adoption frames the unstructured case too." });
   const md2 = (await GET(`op=image&token=${CAROL}&id=${PLAIN}`))["bundle.md"];
+  /* D-442: and the case document carries no branch ROW for it — the field is always written, and an
+     unstructured member contributes nothing to it. */
+  const cfm2 = parseFrontmatter(String((await GET(`op=casedocument&token=${CAROL}`
+    + `&case=${encodeURIComponent(pub2.caseId)}&edition=${pub2.edition}`))?.text || "")).data || {};
+  t("an UNSTRUCTURED case's document carries no branch row for it, and passes the case gate without one",
+    [(cfm2.case_strength_grounds || []).filter((r) => r && r.target === PLAIN).length,
+     checkCaseDocument(cfm2, { caseId: pub2.caseId, edition: pub2.edition,
+       memberBasis: { [PLAIN]: (parseFrontmatter(md2).data || {}).basis || [] } })
+       .filter((x) => x.severity === "error").length], [0, 0]);
   t("an UNSTRUCTURED published case carries NO frozen branch block, and audits clean without one",
     [pub2.ok, /published_strength_grounds/.test(md2),
      (await checkBundle({ folderName: PLAIN, files: new Map([["bundle.md", md2]]),

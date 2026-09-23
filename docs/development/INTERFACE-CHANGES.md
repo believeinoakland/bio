@@ -13236,3 +13236,94 @@ break it. Its separate defect (it sends `url`, and the plane reads only `address
 carried:** INVESTIGATIVE-SESSION §11 item 5's "a request naming no run is the member's own" names a path the door has
 always refused (`CAPTURE_REQUEST_NO_RUN`, DEC-47). Nothing was built for it, and the gap is recorded in that document's
 Incomplete sections.
+
+## IC-179 · I3 + I5: PUBLISHING WRITES NOTHING ON A MEMBER FINDING — `op=publish` promotes no member (each is pinned at the `bundle_sha` it has as prepared); the CASE DOCUMENT moves to `bio-case-document/2` and states per member its own edition (`case_roles[].edition`), its frozen strength pair (`case_strength`) and grounds (`case_strength_grounds`); every check and reader of a moved block reads it there; `op=excludedby` gains case-document rows through a new derived table `case_exclusions` · PROPOSED 2026-09-23 (D-442, minted with `node tools/mintid.mjs IC` BEFORE the entry was written) — the version bump, the classification and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts) and I5 (the store schema). **Base read off THIS TREE (branch
+  `worktree-agent-af1478b0c650efa08`, base `origin/main` @ `7b4d3942`): I3 52.0.0 (IC-177), I5 1.24.0 (IC-172).** Proposed:
+  I3 MAJOR 52.0.0 → 53.0.0; I5 MINOR, ADDITIVE 1.24.0 → 1.25.0 (one derived table, one index). Read both bases AT RESOLUTION.
+  **Why MAJOR:** `op=publish` no longer returns a NEW sha — `findings[].bundleSha` (and the one-finding `bundleSha`) is the
+  member's sha AS PREPARED; the member's bytes no longer carry `edition`, `completeness`, `completeness_excluded`,
+  `published_strength`, `published_strength_grounds`, `division_parent`/`division_siblings` stamps, `## What This Excludes` or a
+  `| Published |` Session Log entry; `CASE_DOCUMENT_FORMAT` is `/2`; `ALREADY_A_CASE_MEMBER` now fires only for editions of the
+  case being published (a NEW case over a finding another case of the same project pins now SUCCEEDS where it was refused).
+  Each of those is a caller-visible change to an existing contract.
+- **Proposer:** RECORD, D-442 worker, 2026-09-23, spawned by CONDUCT #14.
+- **Owner to land it:** `RECORD`
+- **Design:** `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12, *PUBLISHING WRITES NOTHING ON A MEMBER FINDING* (BOB #28,
+  2026-09-22), (a)–(e), and its "As built" paragraph.
+- **Consumers to answer, MEASURED** (every tracked file under `civicos-ui/`, `agent-worker/`, `newgroup/src/` and `tools/`, 168
+  files, `newgroup/src/release.mjs` excluded as the embedded last CUT): `bio-case-document` 0 · `case_strength` 0 ·
+  `excludedby` 0 · `What This Excludes` 0 · `completeness_excluded` 0 · `frozen_from` 0 · **`published_strength` 3 files**
+  (`civicos-ui/app.html` ×2 — `inquiryPair`, the WORKING inquiry page's frozen-pair seam; `civicos-ui/test/inquiry-page.test.mjs`
+  ×3 and `publication-entry.test.mjs` ×2, both fixture-driven). **`UI` — BROKEN IN ONE READER, NOT IN ITS HARNESS:** a finding
+  published under rule 12 carries no `published_strength`, so the working inquiry page shows its named gap ("not published to
+  this page yet") for a finding that IS published; the published case page (`pubCaseHtml`) reads `op=publishedcase`'s
+  `findings[].strength`, which the plane now serves from the case document, and is NOT BROKEN — but two sentences on it
+  (`app.html` "Every strength shown on this page is the frozen pair … signed with that finding's own bytes", and its edition
+  twin) are now FALSE for a `/2` case: the pair is signed with the CASE DOCUMENT. Both are UI's to fix (DELEGATION on `coord`'s
+  `CLAIMS.md`, raised by this item). `agent-worker` — 0 hits. `tools/` — 0 hits. `DIST` — the embedded last CUT carries the old
+  behaviour until the next cut.
+
+**THE SHAPE, I3.**
+- `op=publish` (`Store.publishCase`): no promotion. Each `findings[]` row gains `promoted: false` and `frozen_in:
+  "case_document"`; `bundleSha` is the prepared sha; `edition` is the member's OWN published edition of that sha (its existing
+  edition when another case already carried it across, else the next on its chain — so a sha is never given two numbers);
+  `reevaluation` is raised only when the act prepares a NEW edition of the finding. The `next:` sentence says nothing was written
+  on any finding. `ALREADY_A_CASE_MEMBER` is asked after the case identity is decided (before a new id is minted), of the
+  RATIFIED editions of THAT case and — unchanged from REC-157 — of any unsigned preparation pinning the bytes.
+- The case document `bio-case-document/2`: `case_roles[]` rows gain `edition`; new top-level arrays `case_strength` (`target`,
+  `axis`, `state`, `grade`, `weakest`, `load_bearing`, `population`, `detail` — the member-bytes block's fields) and
+  `case_strength_grounds` (`target`, `axis`, `ground`, `state`, `grade`, `weakest`, `load_bearing`, `population`); a body section
+  `## What Each Finding Reached, As Read For This Case`; one `Pinned: <member> at <sha>, its edition <n>; nothing was written on
+  it.` line per member in its Session Log. C-41.1 accepts `/2` and, for documents authored before this, `/1`
+  (`CASE_DOCUMENT_FORMATS_ACCEPTED`).
+- The gate (`checkCaseDocument`, via `runCaseGate`, which now takes `body` and `memberBasis`): for a `/2` document, C-2.8 runs
+  `checkPublishedExtension` once per roster member over the document's statement of it and the member's `basis` at the pinned
+  bytes — same codes (`testimony-axis-unfrozen` included), messages prefixed `case document, member <id>: ` — and C-3.1 requires
+  `## What This Excludes` in the document's body. `/1` is not asked (its members' bytes carry the blocks, and the member gate
+  still asks them there).
+- `op=ratify`: for bytes with no frozen block of their own, the member's edition and `published_bundles.strength` are read from
+  the RATIFIED `/2` case documents pinning that sha (unanimous; a disagreement leaves the pair null and says
+  `strengthUndetermined: true`); the answer gains `frozenFrom` (`member_bytes` | `case_document` | `none`).
+  `CASE_ASSERTION_DIVERGED` is asked only of a `/1` document. When the sha has no SOLE case, every case edition it completed is
+  assembled (`containerCases`, an internal hop).
+- `op=caseratify`: when every member is already ratified at its pin, the container is assembled at this act and the answer gains
+  `container` (the shape `op=ratify` answers).
+- `op=publishedcase`: each `findings[]` row gains `frozen_from`, and for a `/2` case `strength` and `grounds` are the case
+  document's, `case_excludes` its `## What This Excludes`; `body.excludes` reads it (with `body.excludes_from`).
+- The container (`bio-case-container/6`, NOT bumped — no field added or removed): `findings[].strength` and `edition` are the
+  case document's for a `/2` case, and `verify` gains one sentence saying which signature covers them.
+- `op=excludedby`: rows from `case_exclusions` join the legacy rows, one per member of the case the viewer can see, carrying
+  `case_id`, `case_edition` and `from: "case_document"`; an unsigned document's rows answer only to standing in its project.
+
+**THE SHAPE, I5.** `case_exclusions (case_id, edition, bundle_id, ord, member_edition, project_id, target_id, description,
+reason, author, at)`, PK `(case_id, edition, bundle_id, ord)` — one row per case edition, per MEMBER, per exclusion row, so
+`op=excludedby` answers in one indexed, gated statement with no read per row (`derivation-bounds`' class measured the first
+per-row draft and refused it) — index `case_exclusions_target(target_id)`; DERIVED from `case_documents.text`, re-projected whole
+at `op=publish`; the whole-store purge clears the rows of every document it clears (the unratified ones). No column moves.
+
+**WHAT IS NOT DONE, and whose it is.** The member UI's working inquiry page still reads the finding's own frozen block (UI,
+delegated). The legacy count in the record namespace (members published before this, still carrying the blocks) is
+UNDETERMINED: the network refuses Cloudflare. The `publish` AFFORDANCE (`#editionWarrantedForJoinedProjectOf`) still asks every
+edition pinning the bytes — it fronts a new EDITION, and is not offered for a same-project NEW case the act now admits; an
+under-offer, never an over-offer, stated rather than widened here.
+
+**MEASURED** (`bio-plane/test/d442-publish-writes-nothing.test.mjs`, 35/0; its control, six arms and a baseline — the promotion
+restored fails the unmoved-sha arms by name, 18/17; three liar readers and the check left behind each fail their arms alone;
+over-strictness green). See `MEASUREMENTS.md` M-108.
+**RESOLUTION · 2026-09-23 · ACCEPTED by CONDUCT #14 — I3 MAJOR, BREAKING, 53.0.0 → 54.0.0; I5 ADDITIVE, 1.24.0 → 1.25.0.** Bases
+RE-READ at resolution off the integration tree (origin/main `30475ca6`, D-442 merged): **I3 53.0.0** (IC-178, REC-168's
+resolution in the train that landed at `30475ca6`), NOT the proposal's 52.0.0; **I5 1.24.0**, as proposed. **WHY I3 MAJOR:** the
+case document's format moves to `bio-case-document/2`, carrying every block the promotion wrote on a member finding, and
+readers that took a member's edition, frozen pair, grounds and exclusions from its own bytes now take them from the case
+document (C-2.8 per member, the ratify committer, `op=publishedcase`, the container, `op=excludedby`). A consumer reading the
+old place finds nothing for a case published from now on. `/1` documents are still accepted. **WHY I5 ADDITIVE:** one new
+derived table (`case_exclusions`), purged with the rest; no column moved. **A RECORD-INTEGRITY closing:** one project's
+prepare no longer moves a finding off another project's ratified pin or flags its case (M-100, M-108). DIST is told; the
+0.72.0 release embeds the old behaviour. **Carried, each with its fix named, to SCHEDULER:** the UI's `inquiryPair` and two
+sentences on the published case page are false for a `/2` case (a DELEGATION to UI is on coord's CLAIMS.md); the `publish`
+affordance under-offers the same-project new case the act now accepts (stated, not widened); three control arms die on the
+base since REC-167 (`case-edition-conclusion.control` (d) and (e), `caselifecycle.control` (c): C-65.1 refuses the fixture's
+ratification, so re-aim each arm at op=publish's use of the reader). The count of legacy members carrying blocks in their own
+bytes is UNDETERMINED until counted live.
