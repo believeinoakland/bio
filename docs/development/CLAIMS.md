@@ -19526,6 +19526,7 @@ paths, BY SITE:
 member's source, any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — pushed `land/worker/D-116` @ `2aedaa5a` (read back by `git ls-remote`), gate GREEN class FULL on tree 9d8401eb (284/284 suites green · 17123 assertions). The paths stay reserved until CONDUCT integrates; IC-181 proposed for CONDUCT to resolve.
 
 ## CLAIM 2026-09-23 M0 (M0-126 — the shared, per-suite, content-addressed result record on `gate-results`)
 
