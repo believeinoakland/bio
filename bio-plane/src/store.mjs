@@ -21598,7 +21598,10 @@ export class Store extends DurableObject {
       detail: "this captured document's reading carries no such reference to testify about" };
     const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, entityId);
     if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
-    const method = `testimony -- asserted by ${resolvedBy || "a member"} with no captured basis (framework 8.1 grade D)`;
+    /* D-219 (BOB #30, framework 8.1): what grade D lacks is a captured DOCUMENT, not a basis
+       -- NO_BASIS above refuses a testimony without one. Rows written before this wording
+       keep theirs (D-256's shape: a stored string is a fact about when it was written). */
+    const method = `testimony -- asserted by ${resolvedBy || "a member"} on the member's stated basis, with no captured document (framework 8.1 grade D)`;
     const m = this.ctx.storage.transactionSync(() => this.#upsertResolution({
       captureSha, bundleId: rr.bundle_id, ref, entityId, grade: "D", method, basis: b, resolvedBy }));
     /* REC-5 / D-122: a grade-D testimony that INSERTED or RAISED a resolution

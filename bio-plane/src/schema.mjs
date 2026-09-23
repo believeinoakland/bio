@@ -943,8 +943,9 @@ CREATE INDEX IF NOT EXISTS entity_aliases_entity ON entity_aliases(entity_id);
 -- own statements mean, not claiming something checkable about the world. So it sits
 -- OUTSIDE the framework's section 8.1 A-to-D connection grade, which states how a
 -- connection's provenance was ESTABLISHED. Grading a constitutive relation Grade D
--- ("asserted with no captured basis") is the category error D-83 names explicitly:
--- it is not weak evidence, it is not evidence at all. The enforcement is structural
+-- ("asserted on the member's stated basis, with no captured document") is the
+-- category error D-83 names explicitly: it is not weak evidence, it is not
+-- evidence at all. The enforcement is structural
 -- -- there is simply no field to carry a grade -- rather than a convention a later
 -- writer could forget; entityregistry.test.mjs asserts a read relation exposes none.
 -- Constitutive, member-declared, first-class; cleared by a whole-store purge (D-113).
@@ -978,8 +979,9 @@ CREATE INDEX IF NOT EXISTS entity_relations_to ON entity_relations(to_entity);
 --   C -- correspondence, not identity: a name/title matched an entity ALIAS. Plausible,
 --        NEVER presented as established, and FLAGGED for a member to confirm (an
 --        equality that costs nothing to produce is not evidence, CLAUDE.md).
---   D -- asserted with no captured basis: member TESTIMONY, recorded with an author and
---        a date. The RECOGNISER never mints a D (op=resolve produces only A/B/C); the
+--   D -- asserted on the member's stated basis, with no captured document: member
+--        TESTIMONY, recorded with an author, a date and the basis stated (D-219).
+--        The RECOGNISER never mints a D (op=resolve produces only A/B/C), the
 --        model holds it so a member can testify (op=resolvetestify), never the machine.
 -- established is derived from grade at write time -- 1 for A/B, 0 for C/D -- so a C can
 -- NEVER be read back as established (the column carries the flag structurally, not by a

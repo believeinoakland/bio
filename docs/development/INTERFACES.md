@@ -746,7 +746,8 @@ is IMPROVABLE, not frozen. `grade` ∈ {A,B,C,D}: **A** the reference's composit
 a registered identifier exactly (the source's own identifier, both ends captured); **B**
 the bare key matched a registered identifier in content; **C** a name/title matched an
 entity ALIAS (correspondence — NEVER established, `needs_confirmation`); **D** member
-TESTIMONY (`op=resolvetestify`, an author + a date, no captured basis). `established` is
+TESTIMONY (`op=resolvetestify`, an author + a date + the member's stated basis, no captured
+document — D-219). `established` is
 DERIVED from grade at write (1 for A/B, 0 for C/D), so a C can never read back as
 established. The recogniser (`op=resolve`) mints only A/B/C, matches a reference to an
 entity's OWN aliases only, and NEVER traverses a declared relation (do not resolve THROUGH

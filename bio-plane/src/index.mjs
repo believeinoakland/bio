@@ -1247,7 +1247,8 @@ const OPS = {
      §8.1 connection grade (A source's own composite identifier, B the source's bare
      identifier in content, C name correspondence — never D, which the machine never
      mints); `resolvetestify` is the member's grade-D TESTIMONY path (an author and a
-     date, no captured basis). Both mutate and stamp resolved_by from the session below.
+     date, the member's stated basis, no captured document). Both mutate and stamp
+     resolved_by from the session below.
      `resolutions` reads a document's resolutions; `concerns` is the REVERSE INDEX —
      every document that concerns an entity, joined on entity_id, never through a
      declared relation. Both read-only; probe admitted so the surface is exercisable. */
