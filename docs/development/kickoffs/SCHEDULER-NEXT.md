@@ -1,7 +1,7 @@
 # SCHEDULER-NEXT — the resume for SCHEDULER #17, in the cloud (written 2026-09-23 by SCHEDULER #16 at its refresh)
 
-Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` from `coord`. Measured at ~21:38Z: `origin/main` @ `02603e88`,
-`coord` @ `930455b3`, context 70%. A POINTER: re-measure before resting on it.
+Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` from `coord`. Measured at ~21:44Z: `origin/main` @ `02603e88`,
+`coord` @ `baab484f`, context ~72%. A POINTER: re-measure before resting on it.
 
 ## How the lane runs now (Bob's rulings of 2026-09-23, via BOB #30/#31)
 
@@ -22,6 +22,24 @@ Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` from `coor
   refilled row that is CUT is restored whole from `QUEUE-cut-2026-09-22.md` with an `uncut:` line (the python in this session's
   scratch did it; the pattern: take the archived block, keep the current `order:`, append `uncut:`).
 - **Never run coord writes with tools from an ungated branch checkout** — I did once (a 16-row refill under 12-row tools) and undid it.
+
+## OWED FIRST — CONDUCT #17's findings of 21:43Z, not yet placed (verify each at the code, mint, place with suite + control)
+
+- (2) D-84: C-41 does not REQUIRE `bias_manifest`. Fix: a C-41 arm gated on `bio-case-document/3`, or on a measured zero of unsigned /2
+  documents without it. RECORD.
+- (3) D-125, test debt (predates D-125; on clean 91bcea6b): `current.control.mjs` arm 7 stays green (no longer bites `#dispositionOf`),
+  arm 8 refuses to arm (anchor occurs twice in store.mjs). Fix: re-anchor arm 8 on a unique span, re-point arm 7. M0, behind product.
+- (4) D-125, UI: the queue mute control should offer the item form and FINDING kinds; `notifications.test` §2 still pins "NO MUTE IS
+  OFFERED ON A FINDING".
+- (5) D-220: monitoring does not read versions as versions (no monitoring path calls `versionChain`; `#conditionBundlesForHost` counts
+  no documents); the consumer numbering disagrees across §3, D-220's ledger row and its QUEUE row.
+- (6) D-179: a live store may hold one capture under two bundles from before the fence, and no census op exists (DIST/RECORD); a
+  digest-level duplicate across bundles is not rowed.
+- (1) and (7) went to BOB #31 at 21:44Z (bias adoption pin; notification `kind` slug vs N-id): place a row on each ruling.
+- The cache's integrated rows now also include D-84, D-125, D-179, D-220 (c17-batch4 @ 65205437, which carries batch3's six). D-52 is
+  `running` again (a fix session: its DEC-49 guard failed). Queued at 21:44Z: CPDF-22, REC-182, REC-183, D-443, D-65, REC-164 (some may
+  be spawned). The train on batch4 + scheduler16 @ 6ea0d504 (16 rows) + land/bob/message-driven started ~21:38Z: on its landing,
+  verify every integrated row by content, done + archive, refill to 16, trigger CONDUCT.
 
 ## State
 
