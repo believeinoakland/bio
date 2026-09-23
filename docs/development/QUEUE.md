@@ -46,16 +46,6 @@ scope: step 1 becomes: a GREEN FULL record for the tree being released, or `gate
 accepts-when: a release from a tree with a GREEN FULL record runs no battery and names the record it relied on; one from an unrecorded tree runs the battery as today.
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
 
-### D-442 · running — **SPAWNED 2026-09-23 by CONDUCT #14, wave 5. NOT LANDED, CHECKED BY CONTENT: `publishCase()` (`store.mjs`) still promotes each member finding on `df9eb9f9`, untouched since M-100 measured it. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **A SECOND PROJECT'S `op=publish` MOVES A FINDING ANOTHER PROJECT'S PUBLISHED CASE PINS.** `publishCase()` promotes every member, writing the case's completeness, exclusions, frozen strength pair and grounds, edition and a receipt into the finding's bytes, so one project's PREPARE moves the finding off another project's ratified pin and flags that case (MEASURED by REC-166's worker, `MEASUREMENTS.md` M-100). — owner RECORD.
-order: FIRST of the product corrections, ahead of REC-168 (BOB #28: *"Place it FIRST of the product corrections: one project's act silently moves another project's published pins, REC-166's class on the publication path"*) (SCHEDULER #14, 2026-09-22; BOB #28's inbox entry, item 1)
-milestone: M10
-interface: I3 — the case document's shape and the publish answer; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12, *PUBLISHING WRITES NOTHING ON A MEMBER FINDING* (BOB #28, 2026-09-22), (a)–(e).
-depends-on: none — REC-166 (the project arm) and CASE-5b (the case's stamps) are on `main`.
-scope: rule 12: `op=publish` promotes no member; every block the promotion wrote is stated ONCE in the case document (completeness, exclusions, per member its role, pinned sha, edition and the frozen pair and grounds, and the receipt); the case-document signature covers them; every check and reader of a moved block follows it, each named from the code; members published before keep their blocks (rule 1).
-accepts-when: project B's prepare over a finding project A's ratified case pins leaves its `bundle_sha` unmoved and flags nothing on A's case, B's ratification then succeeds, and a second case of the SAME project over the finding does the same; the case document carries every moved block. NEGATIVE CONTROL: restore the member promotion, and the unmoved-sha arm fails by name.
-added: 2026-09-22 · SCHEDULER #14 (BOB #28's inbox entry, item 1, drained this commit; D-442's DEBT row, minted by CONDUCT #14; keeps its `D-` id).
-
 ### M0-122 · running — **FLIPPED 2026-09-23 by CONDUCT #14 on BOB #29's order (Bob's direct instruction, 03:15Z): BUILT BY A BOB WORKER on `land/bob/m0-122-train-retry`, NOT a CONDUCT slot; CONDUCT lands it by train when it arrives. Falsify rather than believe: if no `land/bob/m0-122-train-retry` exists on origin, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH.** **Prior state, kept as the record: queued** — **THE TRAIN HAS NO RETRY ON A NON-FAST-FORWARD, AND RE-GATES A `land/*` BRANCH'S TREE THAT ALREADY CARRIES ITS OWN GREEN RECORD.** `tools/train.mjs` fails when `main` moves under its gate (the first train lost to BOB #29's docs commit, 2026-09-23; CONDUCT #14 retried by hand, `c5c83dc4`), and gates the union even when the branch's tip tree is recorded GREEN. M0-111's finding, fix named by CONDUCT #14. — owner M0.
 order: FIRST of the backlog: every landing now goes through the train, so both halves CUT GATE TIME on every landing (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23; M0-111's finding)
 milestone: M0
@@ -105,6 +95,16 @@ depends-on: REC-165 (the same gate).
 accepts-when: a creation outside a run, in another principal's run or past the bound is refused by name; one inside lands with its row and reads the lens and `moved`; a member's is … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #10 (BOB #25's inbox entry, items 2 and 3; D-85's DEBT row of 2026-07-30; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### UI-80 · queued — **FOR A CASE PUBLISHED UNDER RULE 12 (`bio-case-document/2`), THE PUBLISHED CASE PAGE SAYS EACH STRENGTH IS SIGNED WITH ITS FINDING'S OWN BYTES, AND THE WORKING PAGE SAYS A PUBLISHED FINDING IS NOT PUBLISHED.** `civicos-ui/app.html`'s `inquiryPair` reads the finding's own `published_strength`, which a rule-12 member no longer carries; the supersession sentence and its edition twin name the wrong signature; the placeholder promises a pair that never appears there. D-442's worker's DELEGATION to UI (`CLAIMS.md` on `coord`). — owner UI.
+order: FIRST of the product corrections, directly after M0-126: a public page claiming a signature that does not cover what it shows, CLAUDE.md §2's worst class, live since D-442 landed (SCHEDULER #14, 2026-09-23)
+milestone: M10
+interface: I3 consumer (IC-179: `op=publishedcase`'s `findings[].strength`, `grounds`, `frozen_from`).
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12 (b)–(d) (the pair stated once, in the case document, under its signature), with DEC-8 (a surface invents nothing).
+depends-on: none — D-442 is on `main`.
+scope: the DELEGATION's three fixes: `inquiryPair` reads each case's pair from `op=publishedcase`, one per case, never picking one; the two sentences branch on `frozen_from` (`case_document` or `member_bytes`) and name the signature that covers the pair; the placeholder follows item 1. Legacy members keep working.
+accepts-when: against the real plane, a rule-12 member shows its pair per case with the case document named as the signer, and a legacy member reads as today. How a liar passes it: a hard-coded signer sentence, so a fixture holds one member of each kind. NEGATIVE CONTROL: read `published_strength` again, and the rule-12 arm fails by name.
+added: 2026-09-23 · SCHEDULER #14 (D-442's finding (a) via CONDUCT #14; `node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

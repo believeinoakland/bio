@@ -3078,3 +3078,13 @@ depends-on: M0-110 (a new state file rides to `coord`).
 scope: a placement over budget moves whole rows from `BACKLOG.md`'s foot to the head of `BACKLOG-LATER.md` (looked up, never read whole, unbounded); a refill promotes them back; `ledger.mjs`, the invariants, `plancheck` and every reader of the order read both files as ONE order; the budget returns to 150 KiB when it lands.
 accepts-when: a placement over budget cuts no row and leaves every id in exactly one file, in order. NEGATIVE CONTROL: point one reader at `BACKLOG.md` alone, and its arm fails by name.
 added: 2026-09-22 · SCHEDULER #14 (BOB #28's inbox entry, item 3, drained this commit; `node tools/mintid.mjs M0`).
+
+### D-442 · done — **DONE 2026-09-23: LANDED through the train at `f05c1efd` (`b3af4153`); verified by content by SCHEDULER #14: IC-179 written (I3 MAJOR 54.0.0, I5 1.25.0), the case document at `bio-case-document/2`. Its surface finding is UI-80; its three dead control arms are M0-124.**
+order: FIRST of the product corrections, ahead of REC-168 (BOB #28: *"Place it FIRST of the product corrections: one project's act silently moves another project's published pins, REC-166's class on the publication path"*) (SCHEDULER #14, 2026-09-22; BOB #28's inbox entry, item 1)
+milestone: M10
+interface: I3 — the case document's shape and the publish answer; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12, *PUBLISHING WRITES NOTHING ON A MEMBER FINDING* (BOB #28, 2026-09-22), (a)–(e).
+depends-on: none — REC-166 (the project arm) and CASE-5b (the case's stamps) are on `main`.
+scope: rule 12: `op=publish` promotes no member; every block the promotion wrote is stated ONCE in the case document (completeness, exclusions, per member its role, pinned sha, edition and the frozen pair and grounds, and the receipt); the case-document signature covers them; every check and reader of a moved block follows it, each named from the code; members published before keep their blocks (rule 1).
+accepts-when: project B's prepare over a finding project A's ratified case pins leaves its `bundle_sha` unmoved and flags nothing on A's case, B's ratification then succeeds, and a second case of the SAME project over the finding does the same; the case document carries every moved block. NEGATIVE CONTROL: restore the member promotion, and the unmoved-sha arm fails by name.
+added: 2026-09-22 · SCHEDULER #14 (BOB #28's inbox entry, item 1, drained this commit; D-442's DEBT row, minted by CONDUCT #14; keeps its `D-` id).
