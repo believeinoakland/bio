@@ -19894,3 +19894,21 @@ paths, BY SITE:
 **NOT CLAIMED:** `bio-plane/src/index.mjs`, the internet arm, `QUEUE.md`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 M0 (M0-134 — a suite's `finally` that exits follows a `catch` that counts; severedhomes mints its projects)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #16 for M0-134, worktree `.claude/worktrees/agent-a8577601d49f78329`,
+branch `land/worker/M0-134`, from `origin/main` @ `e62e08e1`.
+authority: `QUEUE.md` `### M0-134 · running`; design `docs/development/VERIFICATION.md` (admitted for M0 by name).
+paths, BY SITE:
+  - `bio-plane/test/severedhomes.test.mjs`: the project fixtures (minted, id taken from the answer), the
+    `withSurfacingRun` wrap, a `catch` before the exiting `finally`, and arm (H) of its NEGATIVE CONTROL.
+    NOT its §5 caller-count pin (REC-160's claimed site).
+  - `bio-plane/test/severedhomes.control.mjs`: arm (E)'s `mustFail` label only.
+  - `bio-plane/test/capture-text-index.test.mjs`: one `fail++` in the catch before its exiting `finally`.
+  - `bio-plane/test/hygiene.test.mjs`: one new section after "every suite ends on its own result", one import, and one arm
+    appended to its NEGATIVE CONTROL declaration. (REC-173 names this file "only if"; different site.)
+  - `bio-plane/scripts/finallyexit.mjs`, `bio-plane/test/finallyexit.control.mjs`: new. `.gitignore`: one pen line.
+**NOT CLAIMED:** `bio-plane/test/mergecarry.test.mjs` (M0-130), `bio-plane/src/**`, `QUEUE.md`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
