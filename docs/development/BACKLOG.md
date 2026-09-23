@@ -11,9 +11,12 @@ What is done lives in the archive (`docs/archive/ledgers/QUEUE-closed*.md`).
   act; a closed row leaves by `node tools/ledger.mjs archive <ID>`. Both refuse any move that does not conserve the id
   multiset of cache, backlog and archive, checked on the plan and again on what is read back from disk.
 - **The order is SCHEDULER's** (`kickoffs/SCHEDULER.md`); new work is inserted at its place in the order.
-- **Budget:** 200 KiB for the file (BOB #28's interim figure until M0-119's tail file lands; WORK-PIPELINE §2), 2 KiB for a row. `node tools/ledger.mjs invariants` prints the five pipeline
-  invariants; `node tools/plancheck.mjs` enforces them.
-- **Find any id** — here, in the cache or in the archive — with `node tools/ledger.mjs find <ID>`.
+- **Budget:** 150 KiB for the file, 2 KiB for a row (WORK-PIPELINE §2). A placement that puts this file over budget
+  moves WHOLE rows from its foot to the head of `BACKLOG-LATER.md` — the same order's tail, looked up and never read
+  whole — and a refill or any later write brings them back as room frees; no row is cut to fit (every `coord.mjs write`
+  rebalances). `node tools/ledger.mjs invariants` prints the five pipeline invariants; `node tools/plancheck.mjs`
+  enforces them.
+- **Find any id** — here, in the tail, in the cache or in the archive — with `node tools/ledger.mjs find <ID>`.
 
 Created EMPTY on 2026-09-18 by LED-6's tool half. The rows arrive with the migration (WORK-PIPELINE §5 steps 2–4),
 performed by hand by the lane that owns the plan.
@@ -1207,21 +1210,3 @@ interface: none
 depends-on: Bob's re-prioritisation of UI (DEC-33's deferral and the 2026-09-15 content direction stand)
 accepts-when: the decomposition exists as rows and this pointer is marked superseded naming them.
 cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «UI-60». A worker READS IT before building.
-
-### REC-15 · blocked
-order: blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 (SCHEDULER, first order audit, 2026-09-18)
-milestone: M10
-behind-interface: I3
-depends-on: REC-14
-accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and … (whole text: the cut archive)
-added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
-cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «REC-15». A worker READS IT before building.
-
-### UI-17 · blocked
-order: blocked: rests on REC-15 (SCHEDULER, first order audit, 2026-09-18)
-milestone: M10
-behind-interface: I3
-depends-on: REC-15, UI-11
-accepts-when: (on waking) as `RECONCILED.md` §3.1 (UI-17), including the Q5 negative control — any prior deferral/dismissal/severance … (whole text: the cut archive)
-added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
-cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «UI-17». A worker READS IT before building.
