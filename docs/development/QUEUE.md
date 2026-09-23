@@ -279,7 +279,7 @@ accepts-when: a fixture holding several captures of one address reads as ONE doc
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 12; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-220» on entering the cache; its `order:` line is the current one.
 
-### D-182 · queued — **AN ACTION NOBODY ASSESSED IS RECORDED AT `risk_tier` 1 — *FILE FREELY* — ON THE ONE FIELD THAT CARRIES LEGAL EXPOSURE.** C-2.10 admits 1, 2 and 3; nothing publishes member words for them and no undetermined value exists, so both writers keep the floor. RULED by BOB #21 (2026-09-21): both halves in one row. — owner RECORD, then UI.
+### D-182 · running — SPAWNED 2026-09-23 ~21:16Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-182 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-182 and that session; never conclude queued from the absence alone.
 order: after D-220, above the features: an overclaim on the field that carries legal exposure — CLAUDE.md §2's class, in the action plan a member files from (SCHEDULER #6, 2026-09-21; ruled on SCHEDULER #6's Q4)
 milestone: M10
 interface: I3 and I5 — a new value and published words; the integrator mints and classifies the IC.
