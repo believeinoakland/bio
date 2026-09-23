@@ -101,8 +101,11 @@ const ARMS = {
     mustFail: ["ARM F1 ", "ARM F2 ", "ARM F3 "],
   },
   "sent-field-body": {
-    patches: [["store.mjs", ROUTE, ROUTE.replace("caller: url.searchParams.get(\"principal\"),",
-      "caller: (body || {}).caller ?? url.searchParams.get(\"principal\"),")]],
+    /* Spelled WHOLE rather than as a `.replace` of a sub-literal: the sub-literal occurs at `suggest`'s route too, and
+       m025-arm-anchor-witness (A5) reads every `.replace(` literal as an anchor into the subject. */
+    patches: [["store.mjs", ROUTE,
+      "             overwritten rather than believed. */\n          caller: (body || {}).caller ?? url.searchParams.get(\"principal\"),\n        }),\n"
+      + "        capturerequestdrain:"]],
     mustFail: ["ARM F1 ", "ARM F2 ", "ARM F3 ", "ARM F4 "],
   },
 
@@ -111,8 +114,10 @@ const ARMS = {
      (2026-09-23): S2 as well — her credential under her session's ENDED run is then told the run is not hers
      before its status, which is the same over-tight fence seen from the order arm. */
   "exact-match": {
-    patches: [["store.mjs", CALL, CALL.replace("caller: args.caller ?? null,",
-      "caller: String(args.caller ?? \"\") === String(runRow.principal_plane ?? \"\") ? runRow.principal_plane : \"member:nobody\",")]],
+    /* Spelled WHOLE for the reason `sent-field-body` gives. */
+    patches: [["store.mjs", CALL,
+      "    const notPrincipal = runPrincipalGate({ caller: String(args.caller ?? \"\") === String(runRow.principal_plane ?? \"\") ? runRow.principal_plane : \"member:nobody\", principal: runRow.principal_plane,\n"
+      + "                                            act: \"requesting a capture under a run\" });\n"]],
     mustFail: ["ARM L2 ", "ARM L3 ", "ARM L4 ", "ARM S2 "],
   },
 
