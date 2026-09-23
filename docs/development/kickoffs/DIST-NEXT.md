@@ -1,4 +1,4 @@
-# DIST — resume here. Written 2026-09-23 by DIST #5 (cloud, Bob's second account), after 0.72.0-0.75.0 went live (2026-09-23 ~08:40Z).
+# DIST — resume here. Written 2026-09-23 by DIST #5 (cloud, Bob's second account), after 0.72.0-0.76.0 went live (2026-09-23 ~12:05Z).
 
 This file is only STATE, measured 2026-09-23 ~02:15Z. The process is `kickoffs/DIST.md` (WHEN DIST CUTS, the `latest`
 pointer, the gate, the LESSONS) — read it whole. Re-measure before acting: a deployment is a fact about the ACCOUNT.
@@ -25,32 +25,19 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
 
 ## What is OWED
 
-0. **`land/dist/release-0.75.0` @ `f48b9e91` waits on CONDUCT #15's train** (main repaired at `19101d04`; merged tree
-   `889935e1` GREEN FULL 287/287 · 17284, `--since 90bd6451`). Confirm: `git merge-base --is-ancestor f48b9e91 origin/main`.
-1. **The next cut, by WHEN DIST CUTS.** `git log 90bd6451..origin/main` over the shipped paths already holds D-116 (the DO
-   and members report their build; installer names the lagging part — members' SOURCE changes: re-read the fleet guard
-   and deploy members from source) and CAP-13, and more — a BATCH unless a closing is among them. RELEASES row:
-   `["0.75.0", "90bd64518626f0f146660a128738c24685a4a501"]`. Expected: baseline 459 + 21 → **480/0**, `alterafter` → **402/78**, `groupwipe` →
-   **470/10** (two per group-recording store; five stores at 0.75.0). Measure.
-   A cut base is `origin/main` MERGED with any still-waiting release merge, so one landing carries both.
-   **Before pushing any `land/*` branch:** `git merge origin/main`, gate the MERGED tree GREEN, then push.
-   **`civicos` MOVES whenever `app.html` differs from the one live** — compare `/build` against `sha256(app.html)` at the
-   cut, NEVER a diff remembered from earlier: 0.72.0-0.74.0 each shipped without the UI they should have carried (UI-77,
-   b5a6a9be), because a 20:06Z check was trusted at 22:30Z. Build: worker.template.mjs with `__APP_HTML_BASE64__` and
-   `__BUILD_ID__`=sha256(app.html) from the TAG; `civicos-ui/deploy-ui.mjs`; `/build` must answer it. Deploy after the plane.
-   **A DEFECT IN DIST'S AREA, being placed by SCHEDULER (reported by D-116's worker via CONDUCT #15):** newgroup's
-   `uploadInstall`/`uploadUpdate` never bind PDF_WORKER, OCR_WORKER or AGENT_WORKER to the installed plane, so on a group's
-   own instance the members are unreachable. Fix named: add the three service bindings, installing the members first or
-   re-PUTting the plane after `installFleet`. **Placed as DIST-6 and SPAWNED as a CONDUCT worker (08:08Z)**, barred from
-   `release/`, the embed, deploying and the live API; it lands by the train. DIST let it run (no need to own it).
-   **The next batch is D-116 (IC-182, on main @ 8633310c) + DIST-6 once landed** — both reach a group ONLY through a cut;
-   neither is a closing, so it is a BATCH (at most once a day), cut when main is green and DIST-6 has landed.
-   **UPDATE 09:30Z (CONDUCT #15):** DIST-6 is built and lands in CONDUCT's next batch WITH REC-169 (an AUTHORITY closing:
-   the negative refund on `airuntick`) and REC-170 — so the next cut is a CUT NOW, carrying D-116, DIST-6, REC-169, REC-170.
-   DIST-6 changes `newgroup/src` (not the embed): the wizard suite is the installer half of the gate, and the installer
-   read-back must also show the member bindings DIST-6 adds for a NEW install (fake-API fixture in the suite; live only
-   through an install DIST does not run on biosmoke7 — state that).
-2. **The tags `v0.72.0`-`v0.75.0` are not on the remote** (above) — NOT CARRIED: BOB #29 (02:52Z) judged it non-blocking (nothing
+0. **`land/dist/release-0.76.0` @ `288fc128` waits on CONDUCT #15's train** (tree `b178380e` GREEN FULL 290/290 · 17414,
+   `--since 4494f725`). Confirm: `git merge-base --is-ancestor 288fc128 origin/main`. 0.75.0's pointer LANDED (f48b9e91).
+1. **The next cut, by WHEN DIST CUTS.** Read `git log 4494f725..origin/main` over the shipped paths. RELEASES row:
+   `["0.76.0", "4494f725e017b557336902012b263c49b29afe5e"]`. Expected: baseline 480 + 21 → **501/0**, `alterafter` → **423/78**, `groupwipe` → **489/12**
+   (six group-recording stores, 0.71.0-0.76.0). Measure.
+   A cut base is `origin/main` MERGED with any still-waiting release merge. Before pushing any `land/*` branch: merge
+   `origin/main`, gate the MERGED tree GREEN, then push.
+   **civicos moves whenever `sha256(app.html)` ≠ the live `/build`** — compare at the cut, never from memory
+   (0.72.0-0.74.0 missed UI-77 that way). Build from the TAG's app.html; deploy after the plane.
+   **WHICH BUILD ANSWERS is now readable live (D-116, since 0.76.0):** `op=bootstrap&members=1` (no credential) answers
+   `version`, `storeVersion` (the DO's own) and each member's `SERVING` version — use it in every landing report.
+   **`op=airuntick` answers `ticked`, not `ok`** (the 0.76.0 probe's first run misread it; see the lessons below).
+2. **The tags `v0.72.0`-`v0.76.0` are not on the remote** (above) — NOT CARRIED: BOB #29 (02:52Z) judged it non-blocking (nothing
    reads it; `b942d973` is on the remote) and named it to Bob as an optional web-UI act. A future cut's tag meets the
    same 403: push the branch, and let the tag follow when Bob's act or the environment allows.
    **BOB'S RULING, 2026-09-23 (TREE-SHARING §3):** every failed GitHub run emails Bob as an alarm — push a `land/*`
@@ -59,14 +46,14 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    AFTER the plane's caller lands — `node tools/ledger.mjs find D-260` first.
 4. **Carried, not re-verified:** v0.56.0/v0.57.0 never pushed; `v0.58.0` off the mainline; v0.59.0–v0.63.0 WITHDRAWN.
 
-## What is LIVE (deployments API at 100%, 2026-09-23 ~08:10Z) — each id is the ROLLBACK TARGET for the next cut
+## What is LIVE (deployments API at 100%, 2026-09-23 ~11:30Z) — each id is the ROLLBACK TARGET for the next cut
 
-biosmoke7 `008160e1-4447-4a8a-9070-489e80f8c93c` (0.75.0, bytes = signed `0888941b…`) · agent-worker
-`513f2283-18cd-4b0d-b77c-7273f1399f40` · pdf-worker `2eb300be-7c1a-4b4e-96f0-c046be75feec` · ocr-worker
-`faf10470-f9bb-4dfb-bd06-60913728aad5` · **civicos `f2a2ac27-9735-4c74-9e51-9dd44921135d` (`/build` `c866bb15…` = v0.75.0's
-app.html)** · newgroup `e3ec9bd1-c62b-40c7-b29c-c53bd52ffd9d` (embeds 0.75.0, `RELEASE_SOURCE` → `0888941b…`, bindings `[]`).
-The 0.74.0 ids: biosmoke7 `b9f5369c…` · agent-worker `db09b5ea…` · pdf-worker `8941787f…` · ocr-worker `ab58f010…` ·
-civicos `7fe8fed0…` (v0.71.0's UI) · newgroup `1ffe46f8…`.
+biosmoke7 `e319f8a1-2317-4903-80eb-7c02377f1258` (0.76.0, bytes = signed `5f4391db…`; storeVersion 0.76.0) · agent-worker
+`a6f0647f-ea82-4e06-80cb-6afa2507b110` · pdf-worker `b97fc33d-8e0f-4d62-b163-ed604859528b` · ocr-worker
+`40a19783-bf0f-4139-9129-c90dfcc43f72` · civicos `f2a2ac27-9735-4c74-9e51-9dd44921135d` (`/build` `c866bb15…`) · newgroup
+`60692a45-4cd8-4bf1-823b-344d495e5c65` (embeds 0.76.0, `RELEASE_SOURCE` → `5f4391db…`, bindings `[]`).
+The 0.75.0 ids: biosmoke7 `008160e1…` · agent-worker `513f2283…` · pdf-worker `2eb300be…` · ocr-worker `faf10470…` ·
+newgroup `e3ec9bd1…`.
 
 **biosmoke7's stores record their producing group `believe-in-oakland` (seed, `token:admin`, 2026-09-22T04:26:11Z), both
 `bio` and `store=scratch` — write-once, never seed again (C-64.3).** Since 0.72.0 a caller with NO credential reads the
@@ -74,6 +61,16 @@ slug (IC-174). An admin op with no `store` runs against `bio` (`scopeFor`) — a
 Scratch residue, not swept: DIST #5's `INQ-2026-9172-dist5-{a,b}-mudgvfyx` and runs `RUN-2026-0923-dist5-mudgvfyx-1..2`
 (both closed), DIST #4's `INFO-2026-9436-dist4-muc6a1x0`, member `dist3-rec156-muboxe9j`, livefire canaries, 13 July
 probe members (not DIST's) — so `op=purge` is not used.
+
+## The 0.76.0 figures (a CUT NOW for REC-169 / IC-184; carries D-116, REC-170, DIST-6; I3 57.0.0)
+
+Cut `4494f725` (carries 0.75.0's pointer merge). Gate GREEN FULL on `2f424ed1`: **289/289 · 17362**, 1538 s. Signature 7/7;
+newgroup embed 23/0, **wizard 184/0 after correcting three superseded arms** (the first D-116 embed made a post-update
+plane without `storeVersion` read as stale — installer right, fixtures old; now `midUpdateBuilt`; `midUpdate` kept for
+D-116's own stale-store arm; control storeVersion "x" → exactly those three fail). migrate-released: 480/0 · 402/78 ·
+430/50 · 480/0 · 444/36 · 479/1 · 470/10, each as predicted. Live 11/11 (REC-169's two codes, `ticked:false`; a positive
+tick accepted); D-116 live: storeVersion and all members 0.76.0; audit = baseline. DIST-6's new-install bindings are
+fake-API only (no install runs on biosmoke7).
 
 ## The 0.75.0 figures (a CUT NOW for D-85 / IC-181; I3 55.0.0; civicos moved)
 
