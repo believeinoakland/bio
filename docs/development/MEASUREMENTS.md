@@ -18518,3 +18518,33 @@ touched state still move `main` for their product half, but no longer carry the 
 that cost BOB #26's landing six gate runs (TREE-SHARING §"Why"). It is a figure about ONE day's shape, not a forecast:
 a day heavier in product landings moves `main` more. **Not measured:** the gate runs this would have saved — a count
 of avoided rebases needs the runs M-97 could not see either.
+
+
+## M-108 · 2026-09-23 · D-442 — publishing writes nothing on a member finding (Publication §3 rule 12), measured through the ops
+
+**INSTRUMENTS:** worker spawned by CONDUCT #14 (cloud Claude Code, 4 cores shared with five workers), branch
+`worktree-agent-af1478b0c650efa08` on `origin/main` @ `7b4d3942`. Every act through the control plane of a Miniflare plane
+booted from `bio-plane/src/` (one member owning two projects, real ssh-keygen SSHSIG ratifications): the new suite
+`test/d442-publish-writes-nothing.test.mjs` (REC-166's fixture), its driver `test/d442-publish-writes-nothing.control.mjs`,
+the eleven superseded suites run alone through `node test/<suite>.test.mjs`, and the existing controls of the subjects this
+item touched (`current-shared-question`, `case-edition-conclusion`, `caseratify-conclusion`, `casesign`, `caselifecycle`,
+`casepin`) re-run on the changed tree. The base's own control behaviour was measured on a detached checkout of `7b4d3942`
+beside this worktree (`node_modules` linked, removed after).
+
+| what | measured |
+| --- | --- |
+| THE ROW, M-100's lead re-driven: A publishes and ratifies case X over Q; B (another project citing Q) concludes and publishes a NEW case over Q | Q's `bundle_sha` UNMOVED and its `bundle.md` byte-identical after A's OWN prepare, after B's prepare, after B's whole ceremony and after a second case of A; `op=caseflags` 0 for Q and for X throughout; B's case document ratifies; B's `op=ratify` of Q SUCCEEDS (`existed: true`, edition 1, `frozenFrom: case_document`); A's second case (`newCase`) prepares, ratifies, and Q ratifies again (`existed`) |
+| the case document carries every moved block | `format: bio-case-document/2`; `case_roles[Q]`: role, `version_sha` = X's pin, `edition: 1`; `case_strength` capture + connection equal to `op=publish`'s answer; `case_strength_grounds` field; completeness + 2 exclusions; body `## What This Excludes`, `## What Each Finding Reached, As Read For This Case`; a Session Log line naming Q, the pin and edition 1 |
+| the finding's own bytes after all of it | no `published_strength`, `completeness`, `completeness_excluded`, `## What This Excludes` or `\| Published \|` entry |
+| each moved fact through its public op | `op=publishedcase`: `frozen_from: case_document`, strength and grounds equal to B's document, edition 1, `excludes` from the case document; the container built at B's `op=caseratify` (complete there, every member already ratified) carries the document's pair, edition and the document whole; `op=publishedmanifest`'s Q row carries X's document's pair; `op=excludedby` names B's case from its document, on Q at edition 1, and all three cases once each |
+| the catalogue | the real `/2` document passes `checkCaseDocument`; a member's capture row, its edition, or (with a testimony leg at the pinned bytes) its testimony row removed -> C-2.8 naming the member; the section removed -> C-3.1; `/1` still accepted; an unknown format C-41.1 |
+| the suite and its control | 35/0. Baseline 35/0 · (a) promotion restored **16/19**, failing BY NAME at the three unmoved-sha arms (declaration corrected twice, each time adding an arm the moved pin reached further on) · (b) publishedcase's exclusions off the finding 34/1 · (c) the committer's pair off the finding 34/1 · (d) C-2.8 not run per member 32/3 · (e) over-strictness 35/0 · (f) excludedby off the members 33/2; every arm AS DECLARED; every restore sha256 MATCH / content IDENTICAL / cmp SAME (store.mjs 2,810,358 B) |
+| superseded suites, before -> after correction (never exempted) | case-opened 28/1 -> 31/0 · caseflip 57/1 -> 58/0 · caselifecycle 67/1 -> 68/0 · casesign 73/1 -> 74/0 · grounds 65/3 -> 70/0 · multifinding 82/2 -> 84/0 · plane-envelope 58/2 -> 61/0 · publish 91/8 -> 99/0 · reevaluation 62/1 -> 63/0 · shadowed-refusals (died) -> 45/0 · testimonyaxis 42/3 -> 51/0 |
+| re-run controls | current-shared-question 5/5 AS DECLARED (18/0, 10/8, 16/2, 12/6, 18/0) · caseratify-conclusion 5/5 AS DECLARED · case-edition-conclusion: (a) (c) (f) AS DECLARED after re-aiming (a)/(b) to the moved refusal; (b) 29/7 AS DECLARED once its three discriminator "cascades" moved to must-not-fail (rule 12: a publish no longer moves the finding off its pin) · casesign, caselifecycle, casepin: figures recorded by those drivers, no verdict harness |
+| **three control arms that die on the BASE** (measured on `7b4d3942`, not caused here) | `case-edition-conclusion.control.mjs` (d) and (e) and `caselifecycle.control.mjs` (c) print NO TALLY on origin/main too: REC-167's C-65.1 at `op=caseratify` refuses the fixture's case ratification (the shared `#editionsRecordingConclusion` / `NOT_CONCLUDED` reader each arm breaks is also the reader C-65.1 asks), and the suites' `ratifyCase` fixture throws |
+
+**WHAT IT SAYS.** Rule 12's accepts-when holds through the ops, and M-100's lead is closed: no project's prepare moves a
+finding another case pins, so no case is flagged by another project's act. **Not measured:** live (the network refuses
+Cloudflare: UNDETERMINED); the count of LEGACY members (published before rule 12, blocks in their own bytes) in the record
+namespace (UNDETERMINED until counted); the member UI's working inquiry page, which still reads a member's own frozen block
+(delegated to UI).

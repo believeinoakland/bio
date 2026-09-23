@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: RUN BY `test/d442-publish-writes-nothing.control.mjs` (a `.control.mjs`, not discovered by the battery, because it EDITS src/ while it runs). Each arm armed ALONE from a per-arm pristine copy, restored and verified by sha256, by content AND by cmp; the declarations live on that driver. RECORDED BELOW THE HEADER BY THE D-442 WORKER, 2026-09-23 — see the line starting "CONTROL RESULT". */
+/* NEGATIVE CONTROL: RUN BY `test/d442-publish-writes-nothing.control.mjs` (a `.control.mjs`, not discovered by the battery, because it EDITS src/ and checks/ while it runs). Each arm armed ALONE from a per-arm pristine copy, restored and verified by sha256, by content AND by cmp. RUN 2026-09-23 by the D-442 worker: baseline 35/0 * (a) RESTORE THE MEMBER PROMOTION, the row's own control -> 16/19, failing BY NAME at "A's OWN prepare leaves Q's bundle_sha and bytes unmoved", "THE PIN: B's prepare leaves Q's bundle_sha at case X's pin" and "THE PIN, SAME PROJECT", with the byte-identical, no-flag, same-sha, pin-row, ratification and every downstream per-case read (its declaration was CORRECTED TWICE, each time adding arms the moved pin reached further on — recorded on the driver) * (b) THE LIAR, publishedcase's exclusions read off the finding's bytes -> 34/1, that arm alone * (c) THE LIAR, the ratify committer's pair from the finding's bytes -> 34/1, the publishedmanifest arm alone * (d) THE CHECK LEFT BEHIND, checkPublishedExtension not run per member -> 32/3, the three C-2.8 catalogue arms * (e) OVER-STRICTNESS, the receipt line re-worded -> 35/0 * (f) THE LIAR, excludedby off the members' bytes alone -> 33/2, the two excludedby arms. EVERY ARM AS DECLARED; every restore sha256 MATCH, content IDENTICAL, cmp SAME (store.mjs 2,810,358 B, index.mjs 710,297 B, bio-checks.mjs 822,889 B). */
 /* D-442 — PUBLISHING WRITES NOTHING ON A MEMBER FINDING
  * (BIO_Publication_v0_1.md §3 rule 12, RULED 2026-09-22 by BOB #28; MEASURED by the REC-166
  * worker, MEASUREMENTS.md M-100.)
@@ -219,7 +219,8 @@ const flagsFor = async (q) => (await GET(`op=caseflags&${q}`)) || {};
 const caseDoc = async (caseId, edition) => GET(`op=casedocument&token=${IRIS}&case=${enc(caseId)}&edition=${edition}`);
 
 const LEDGER = "INFO-2026-4442-ledger", MINUTES = "INFO-2026-4442-minutes", AUDIT = "INFO-2026-4442-audit";
-for (const d of [LEDGER, MINUTES, AUDIT]) await must(`promote ${d}`, await promote(d, infoMd(d), "information"));
+const MEMO = "INFO-2026-4442-memo";   /* the document every case here EXCLUDES, by id */
+for (const d of [LEDGER, MINUTES, AUDIT, MEMO]) await must(`promote ${d}`, await promote(d, infoMd(d), "information"));
 const V1 = { name: "paper trail", claim: "The transfer followed the process the council adopted in 2024.",
   description: "The ledger and the minutes together show the transfer was authorised.",
   grounds: ["paper trail"],
@@ -251,7 +252,9 @@ const publish = async (project, extra = {}) => {
     subjectPosition: "sought_no_answer",
     subjectJustification: `The subject was asked and declined to comment (publication ${n}).`,
     biasAcknowledgement: `The publishing project is funded by a party with an interest (publication ${n}).`,
-    excluded: [{ target: null, description: `The 2025 transfers (publication ${n})`, reason: "Out of scope." }],
+    excluded: [{ target: null, description: `The 2025 transfers (publication ${n})`, reason: "Out of scope." },
+               { target: MEMO, description: `the FY2023 comparison memo (publication ${n})`,
+                 reason: "A records request for it is still outstanding." }],
     ...extra });
 };
 const ratifyQ = async (bundleSha) =>
@@ -321,11 +324,14 @@ t("(fixture) B's case document is readable and non-empty", [docB?.ok, (docB?.tex
   t("… the grounds FIELD, the completeness block and the exclusion list",
     [Array.isArray(fmB.case_strength_grounds), typeof fmB.completeness?.statement,
      Array.isArray(fmB.completeness_excluded) && fmB.completeness_excluded.length],
-    [true, "string", 1]);
+    [true, "string", 2]);
   t("… `## What This Excludes` and the frozen pair in PROSE, and the receipt in the document's own "
   + "Session Log naming the pin",
     [/^## What This Excludes$/m.test(bodyB), /^## What Each Finding Reached, As Read For This Case$/m.test(bodyB),
-     bodyB.includes(`Pinned: ${Q} at ${PIN}, its edition 1; nothing was written on it.`),
+     /* matched on FACTS, never on the sentence (the control's over-strictness arm re-words it): one
+        Session Log line names the member, the pinned sha and the member's own edition */
+     bodyB.split("## Session Log")[1]?.split("\n").some((l) => l.includes(Q) && l.includes(PIN) && /edition 1\b/.test(l))
+       ?? false,
      bodyB.includes(`Published by: ${B}`)],
     [true, true, true, true]);
 }
@@ -386,6 +392,16 @@ t("Q's own bytes carry NONE of the blocks (so a reader left on them would read n
     [typeof pc?.manifest_sha, JSON.stringify(mf0.strength) === JSON.stringify(f.strength), mf0.edition,
      typeof man?.case_document?.text === "string" && man.case_document.text.includes("case_strength:")],
     ["string", true, 1, true]);
+}
+{
+  const ex = await GET(`op=excludedby&token=${IRIS}&id=${enc(MEMO)}`);
+  const mine = (ex?.cases || []).filter((r) => r.case_id === pubB.caseId);
+  t("op=excludedby names B's case for the document its CASE DOCUMENT excludes — read from the document, since "
+  + "no member carries the exclusion — on the member, at the member's own edition",
+    [mine.length, mine[0]?.bundle_id, mine[0]?.edition, mine[0]?.from, mine[0]?.case_edition],
+    [1, Q, 1, "case_document", pubB.edition]);
+  t("… and every case published over Q here answers, each once — X, B's and A's second",
+    new Set((ex?.cases || []).map((r) => r.case_id)).size, 3);
 }
 {
   const pm = await GET("op=publishedmanifest");

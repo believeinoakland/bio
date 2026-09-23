@@ -7395,27 +7395,9 @@ export class Store extends DurableObject {
        with the first one abandoned. It cannot override the published record:
        the disagreement refusal below runs against `belongs`, which is the
        ratified fact. */
-    /* D-442 / BIO_Publication_v0_1.md §3 rule 12: THE PREPARATION IS READ FROM THE CASE DOCUMENT
-       THAT PINS THESE BYTES, and no longer only from the member's frontmatter. The frontmatter pair
-       stopped being written by CASE-5b, and while every publish PROMOTED the member a re-publish in
-       the window found nothing here and minted a fresh case — harmless while the promotion moved the
-       sha, since the abandoned preparation then pinned bytes nobody held. Rule 12 stops the promotion,
-       so the abandoned preparation and the new one would pin the SAME bytes under two identities.
-       `#caseClaimInBytes` is `#caseRelationOf`'s own prepared arm — an UNRATIFIED case document naming
-       this member at its CURRENT sha — consulted here for this block's stated purpose: to land a
-       re-publish on the case this act already prepared. The legacy frontmatter claim is still read. */
-    const preparedClaims = prepared.map((p) => {
-      const legacy = typeof p.fm.case_id === "string" && p.fm.case_id !== "null" ? p.fm.case_id : null;
-      if (legacy) return { case_id: legacy, project: typeof p.fm.case_project === "string"
-        && p.fm.case_project !== "null" ? p.fm.case_project : null };
-      const c = this.#caseClaimInBytes(p.id);
-      if (!c) return null;
-      const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, c.case_id, c.edition);
-      const dfm = d && typeof d.text === "string" ? (parseFrontmatter(d.text).data || {}) : {};
-      return { case_id: c.case_id,
-               project: typeof dfm.case_project === "string" && dfm.case_project !== "null" ? dfm.case_project : null };
-    }).filter(Boolean);
-    const claimedInBytes = [...new Set(preparedClaims.map((c) => c.case_id))];
+    const claimedInBytes = [...new Set(prepared
+      .map((p) => (typeof p.fm.case_id === "string" && p.fm.case_id !== "null" ? p.fm.case_id : null))
+      .filter(Boolean))];
     /* DEC-49 REGION case-identity-derivation
        ---------------------------------------------------------------------
        NOTE ON THE MARKER ITSELF, because this cost a red guard: the opening
@@ -7528,9 +7510,14 @@ export class Store extends DurableObject {
        NAMED or the derivation found. A caller asking for a NEW case (`newCase`) has no edition to
        repeat, and a finding in exactly one case, published with nothing named, derives that case
        and is refused exactly as before (the fence `current-shared-question` pins). Asked BEFORE a
-       new id is minted, so a refusal spends no id. */
+       new id is minted, so a refusal spends no id.
+       AN UNSIGNED PREPARATION STILL REFUSES, whichever case it is of — REC-157's prepared-window arm,
+       unchanged: a preparation is not yet a case anyone can cite, and re-publishing the conclusion it
+       already records is the no-op the refusal names; the route out (withdraw and conclude again, or
+       sign the preparation) is the same. */
     for (const p of prepared) {
-      const same = p.warrant && theCase ? p.warrant.same.filter((e) => e.case_id === theCase) : [];
+      const same = p.warrant ? p.warrant.same.filter((e) =>
+        (theCase && e.case_id === theCase) || e.state === "prepared") : [];
       if (same.length)
         return { ok: false, reason: "ALREADY_A_CASE_MEMBER", target: p.id, from: p.b.current_state,
                  project: proj, relationship: p.conclusion.relationship,
@@ -7660,13 +7647,9 @@ export class Store extends DurableObject {
        the case identity above resolves — one is the record, the other is this
        act's own unratified preparation. */
     const ownedBy = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, theCase);
-    /* D-442: the prepared claim's project comes from the case document that made the claim (see
-       `preparedClaims`), so one project's re-publish never lands on — and overwrites — another
-       project's unsigned preparation over the same bytes: it is refused by name, as it is for a
-       ratified case, and `newCase` is the door. */
     const claimedProject = ownedBy ? ownedBy.project_id
-      : [...new Set(preparedClaims.filter((c) => c.case_id === theCase).map((c) => c.project)
-          .filter(Boolean))][0] || null;
+      : [...new Set(prepared.map((p) => (typeof p.fm.case_project === "string"
+          && p.fm.case_project !== "null" ? p.fm.case_project : null)).filter(Boolean))][0] || null;
     if (claimedProject && claimedProject !== proj)
       return { ok: false, reason: "CASE_BELONGS_TO_ANOTHER_PROJECT", caseId: theCase,
                project: proj, owner: claimedProject, ratified: !!ownedBy,

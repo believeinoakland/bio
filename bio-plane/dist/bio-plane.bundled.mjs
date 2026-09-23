@@ -33321,19 +33321,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       if (rows2.length) belongs.set(id, rows2.map((r) => r.case_id));
     }
     const distinct = [...new Set([...belongs.values()].flat())];
-    const preparedClaims = prepared.map((p) => {
-      const legacy = typeof p.fm.case_id === "string" && p.fm.case_id !== "null" ? p.fm.case_id : null;
-      if (legacy) return { case_id: legacy, project: typeof p.fm.case_project === "string" && p.fm.case_project !== "null" ? p.fm.case_project : null };
-      const c = this.#caseClaimInBytes(p.id);
-      if (!c) return null;
-      const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, c.case_id, c.edition);
-      const dfm = d && typeof d.text === "string" ? parseFrontmatter(d.text).data || {} : {};
-      return {
-        case_id: c.case_id,
-        project: typeof dfm.case_project === "string" && dfm.case_project !== "null" ? dfm.case_project : null
-      };
-    }).filter(Boolean);
-    const claimedInBytes = [...new Set(preparedClaims.map((c) => c.case_id))];
+    const claimedInBytes = [...new Set(prepared.map((p) => typeof p.fm.case_id === "string" && p.fm.case_id !== "null" ? p.fm.case_id : null).filter(Boolean))];
     if (newCase && String(caseId ?? "").trim())
       return refusal6("CASE_IDENTITY_AMBIGUOUS", {
         cases: [String(caseId).trim()],
@@ -33355,7 +33343,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         detail: `no published case answers to ${theCase}. A case identity is minted by this act and carried in the signed bytes; it is never taken from a caller, because an identity a caller can hand us is one a caller can invent.`
       };
     for (const p of prepared) {
-      const same = p.warrant && theCase ? p.warrant.same.filter((e) => e.case_id === theCase) : [];
+      const same = p.warrant ? p.warrant.same.filter((e) => theCase && e.case_id === theCase || e.state === "prepared") : [];
       if (same.length)
         return {
           ok: false,
@@ -33382,7 +33370,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       };
     }
     const ownedBy = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, theCase);
-    const claimedProject = ownedBy ? ownedBy.project_id : [...new Set(preparedClaims.filter((c) => c.case_id === theCase).map((c) => c.project).filter(Boolean))][0] || null;
+    const claimedProject = ownedBy ? ownedBy.project_id : [...new Set(prepared.map((p) => typeof p.fm.case_project === "string" && p.fm.case_project !== "null" ? p.fm.case_project : null).filter(Boolean))][0] || null;
     if (claimedProject && claimedProject !== proj)
       return {
         ok: false,

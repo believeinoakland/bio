@@ -431,3 +431,7 @@ bio-plane/.nc-rec166/
 # REC-167 (2026-09-22): `bio-plane/test/caseratify-conclusion.control.mjs`'s pen — it edits src/ and keeps per-arm
 # pristine copies here; an interrupted driver must not leave them as somebody else's corpus.
 bio-plane/.nc-caseratify-conclusion/
+
+# D-442 (2026-09-23): `bio-plane/test/d442-publish-writes-nothing.control.mjs`'s pen — it edits src/ and checks/ and
+# keeps per-arm pristine copies here; an interrupted driver must not leave them as somebody else's corpus.
+bio-plane/.nc-d442/
