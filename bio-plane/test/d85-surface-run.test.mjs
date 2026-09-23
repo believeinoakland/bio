@@ -25,7 +25,9 @@
  * (iii) a run opened BEFORE this item (its `lens_at_open` is NULL): no op can write one, so the `not recorded` branch
  * of the RUN's lens (and its `unreadable` twin) is NOT asserted here — the QUESTION's `not recorded` is driven (ARM N); (iv) an
  * organisation-kind `ai` key (REC-152's suite covers that branch of `runPrincipalOf`); (v) token classes other than
- * `ai` (admin, member, probe tokens) — they are not the assistant the rule names and are untouched here.
+ * `ai` (admin, member, probe tokens) — NOT driven here. CORRECTED 2026-09-23 by REC-171: this line read "they are not
+ * the assistant the rule names and are untouched", which BOB #30 ruled wrong (the rule binds every creation D-78 stamps
+ * `agent`); they are now bound, and `rec171-surface-token.test.mjs` drives each of them.
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */

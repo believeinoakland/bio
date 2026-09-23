@@ -73185,7 +73185,8 @@ var index_default = {
         delete b.actorViewer;
         b.actorViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
         delete b.assistantPrincipal;
-        if (!viaSession && cls === "ai") b.assistantPrincipal = `${aiCred.principal}/${aiCred.tokenId}`;
+        if (!viaSession)
+          b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({

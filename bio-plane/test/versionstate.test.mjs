@@ -82,6 +82,7 @@
  * as a member-facing word (DEC-32's elicitation clause 1, D-226) and block 11
  * asserts that of every canned translation directly.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -113,7 +114,7 @@ const sha = (v) => createHash("sha256").update(v).digest("hex");
    TypeError never reaches it at all. */
 const codeOf = (r) => (r && typeof r.code === "string") ? r.code : null;
 
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC("index.mjs"),
   script: readFileSync(SRC("index.mjs"), "utf8"),
   modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
@@ -121,7 +122,7 @@ const mf = new Miniflare({
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-pl2", MEMBER_TOKEN: "mem-pl2", PROBE_TOKEN: "prb-pl2", VERSION: "test" },
-});
+}));
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
 const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,

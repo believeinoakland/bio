@@ -61,6 +61,7 @@
  * on both GOAL lines, (E) 30/30; app.html restored by sha256 and `cmp` after every arm. The per-arm lines are in the
  * control driver's header.
  */
+import { withSurfacingRun } from "../../bio-plane/test/surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not discard the writer's
    own output. SHARED from the plane's test estate; census: `stdio-census.test.mjs`. */
 import fs from "fs";
@@ -96,7 +97,7 @@ catch(e){
 const HOST = "www.oaklandca.gov";
 const served = (p) => `The Sewer Fund transfer memo (${p}). Served for D-434's recipe drive; the words are the fixture's.\n`;
 const IDX = new URL("../../bio-plane/src/index.mjs", import.meta.url);
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX.pathname,
   script: fs.readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -118,7 +119,7 @@ const mf = new Miniflare({
       return new Response(served(u.pathname), { headers: { "content-type": "text/plain" } });
     return new Response("unscripted", { status: 500 });
   },
-});
+}));
 let exitCode = 1;
 try {
 /* Direct plane calls, for SEEDING the precondition and for INDEPENDENT read-back only. Every step the recipe names

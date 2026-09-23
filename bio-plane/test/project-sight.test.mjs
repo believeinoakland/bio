@@ -33,6 +33,7 @@
  *       promote body; both are deleted and re-stamped by the control plane, so both still match.
  *   (4) narrow SIGHT for machines. §5 pins that the ADMIN and MEMBER tokens still act on the project.
  * ========================================================================= */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -53,7 +54,7 @@ const t = (label, got, want) => {
 };
 
 const ADM = "adm-rec138", MEM = "mem-rec138";
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -63,7 +64,7 @@ const mf = new Miniflare({
      store records none and a fork of a project whose document names no group is refused by name (C-64.1) where it used to be handed a literal
      group. 'believe-in-oakland' is this project's own group, the one these fixtures' documents already name. */
   bindings: { INSTANCE_NAME: "believe-in-oakland", ADMIN_TOKEN: ADM, MEMBER_TOKEN: MEM, VERSION: "test" },
-});
+}));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 /* THE RAW ANSWER: status, content type and the body's exact bytes — nothing parsed away. */

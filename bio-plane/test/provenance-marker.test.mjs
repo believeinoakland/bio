@@ -36,6 +36,7 @@
  *   I. THE CLASS SWEEP — which other acts complete while something could not be
  *      established, and say nothing.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -89,13 +90,13 @@ const NO_ROUTE = {
 const bundleMd = (id, type, state) =>
   `---\nid: ${id}\nobject_type: ${type}\ncurrent_state: ${state}\n---\n\n# ${id}\n`;
 
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   bindings: { ADMIN_TOKEN: "adm-p", MEMBER_TOKEN: "mem-p", PROBE_TOKEN: "prb-p",
               VERSION: "test", INSTANCE_NAME: "testinstance" },
-});
+}));
 const post = async (op, body, qs = "") => (await mf.dispatchFetch(
   `http://x/api/?op=${op}&token=mem-p${qs}`, { method: "POST", body: JSON.stringify(body || {}) })).json();
 const get = async (op, qs = "") => (await mf.dispatchFetch(
@@ -343,12 +344,12 @@ console.log("\n--- F. the four door refusals, each with its C-number and canned 
   /* C-34.1 cannot be reached through the control plane — index.mjs stamps the
      author on every call, which is the point of that stamp. It is asserted at
      the layer where it fires (VERIFICATION.md 3a). */
-  const mfStore = new Miniflare({
+  const mfStore = withSurfacingRun(new Miniflare({
     modules: true, script: readFileSync(STORE_SRC, "utf8"),
     modulesRoot: "/", scriptPath: STORE_SRC,
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
     durableObjects: { STORE: { className: "Store", useSQLite: true } },
-  });
+  }));
   const noAuthor = o((await (await mfStore.dispatchFetch(
     "http://x/provenanceroute?bundleId=X", { method: "POST", body: "{}" })).json()).result);
   t("an act with no principal at all is refused at the store", noAuthor.reason, "ROUTE_MARK_NO_AUTHOR");
