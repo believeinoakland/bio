@@ -36,8 +36,9 @@
  * live (no deploy is this item's, and the network refuses Cloudflare).
  *
  * NEGATIVE CONTROL: RUN 2026-09-23 by the UI-80 worker, each arm ALONE against the final app.html
- * (sha256 7b870ca62daabb48…, 1,423,226 B), each anchor matched EXACTLY ONCE, restored by cp from a
- * per-arm pristine copy and verified after every arm: sha256 MATCH, cmp SAME. Baseline 24/0.
+ * (first 7b870ca62daabb48…, 1,423,226 B; RE-RUN after the several-cases branch moved to its shape, on
+ * 6b164acab02ec0d4…, 1,423,447 B, the SAME result per arm), each anchor matched EXACTLY ONCE, restored
+ * by cp from a per-arm pristine copy and verified after every arm: sha256 MATCH, cmp SAME. Baseline 24/0.
  *   (A) THE ROW'S OWN — the working page reads the question's own `published_strength` again
  *       (`strengthPanels`' per-case branch disabled) -> 15/9, failing BY NAME at "RULE 12: the
  *       working page draws ONE block PER CASE", "each block names the CASE DOCUMENT", both per-case
