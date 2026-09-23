@@ -1204,29 +1204,3 @@ design: `docs/development/VERIFICATION.md` — the test estate's own authority, 
 depends-on: none (M0-38 landed the grading and pinned the blind spot rather than fixing it)
 accepts-when: each of the seven previously-invisible claims appears in a roster the instrument prints, or is named as out of reach with its reason; **every roster the widened pattern feeds** … (whole text: the cut archive)
 cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-44» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-33 · queued — D-353 RULED at M0-29's integration (CONDUCT #11, mechanism):
-order: M0; a third census shape (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
-milestone: M0 (background lane, holds no slot) — the test estate's own instrument
-interface: none — control drivers and the census only
-design: `docs/development/VERIFICATION.md` §"A THROWING CONTROL DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING (D-331, 2026-09-14)" … (whole text: the cut archive)
-depends-on: none (M0-29 landed the sweep and its adjudication table)
-accepts-when: the census reports the sweep's tally section (0 open candidates on the estate as landed, the three retired instances listed as adjudicated); one unadjudicated candidate … (whole text: the cut archive)
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-33» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### SK-5 · blocked — RE-STATED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18):
-order: blocked: no plane op publishes the surface registry (SCHEDULER, first order audit, 2026-09-18)
-milestone: M9
-interface: I3 — **it needs the plane to PUBLISH the surface registry, which nothing does today; that is the** … (whole text: the cut archive)
-design: `docs/development/ASSISTANT-PILOT.md` §1 (the five-layer training pack — the **Recipes** row is this … (whole text: the cut archive)
-depends-on: a published surface registry (unbuilt). **NOT schedulable until that exists** — recorded so the … (whole text: the cut archive)
-accepts-when: (on unblocking) a recipe whose step names a surface or an op that does not exist **FAILS THE BUILD**; the pack's `absent_because` body is replaced by the layer rather than edited around.
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «SK-5» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### UI-60 · blocked — RESTORED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18):
-order: blocked: waits on Bob's re-prioritisation of UI (SCHEDULER, first order audit, 2026-09-18)
-milestone: M8
-interface: none
-depends-on: Bob's re-prioritisation of UI (DEC-33's deferral and the 2026-09-15 content direction stand)
-accepts-when: the decomposition exists as rows and this pointer is marked superseded naming them.
-cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «UI-60». A worker READS IT before building.
