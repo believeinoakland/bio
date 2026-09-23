@@ -411,6 +411,7 @@ CREATE TABLE IF NOT EXISTS site_assets (
   last_fetched TEXT NOT NULL,
   stable_since TEXT NOT NULL,
   changes      INTEGER NOT NULL DEFAULT 0,
+  last_fetched_by TEXT,
   PRIMARY KEY (host, address_norm)
 );
 CREATE INDEX IF NOT EXISTS site_assets_host ON site_assets(host);
@@ -424,6 +425,17 @@ CREATE INDEX IF NOT EXISTS site_assets_sha ON site_assets(sha256);
 -- count joins primary_sha to captured_locators and counts document ADDRESSES
 -- (siteAssets and siteChrome in store.mjs, CAP-13), and a primary with no locator
 -- row is counted apart as undetermined rather than as a page.
+--
+-- CAP-14 (CAPTURE-SCALING.md, Job one, RULED 2026-09-21 by BOB #21): a reused
+-- part names the capture whose FETCH served its bytes. site_assets.last_fetched_by
+-- is the primary capture sha whose fetch set last_fetched, written beside it on
+-- every fetched observation and never moved by a reuse. A reusing capture's row
+-- here keeps it as reused_from, taken from the capture's own observation so the
+-- manifest and the store cannot disagree, and reusedParts reads it from THIS row,
+-- never from site_assets, whose value a later fetch moves. Both are NULLABLE and
+-- NEVER BACK-FILLED: a reuse recorded before the build is UNDETERMINED as to its
+-- source, and matching a ref row at against last_fetched would prove nothing
+-- (both whole seconds, and a ref row is overwritten in place).
 CREATE TABLE IF NOT EXISTS site_asset_refs (
   host         TEXT NOT NULL,
   address_norm TEXT NOT NULL,
@@ -431,6 +443,7 @@ CREATE TABLE IF NOT EXISTS site_asset_refs (
   at           TEXT NOT NULL,
   reused       INTEGER NOT NULL DEFAULT 0,
   sha256       TEXT NOT NULL,
+  reused_from  TEXT,
   PRIMARY KEY (host, address_norm, primary_sha)
 );
 CREATE INDEX IF NOT EXISTS site_asset_refs_doc ON site_asset_refs(primary_sha);
@@ -16976,10 +16989,16 @@ async function captureSubresources({
           /* The honesty fields. A reader must never be led to believe a byte was
              verified against the source during THIS capture when it was not. */
           fetched_this_capture: false,
+          /* CAP-14 (CAPTURE-SCALING.md §Job one, RULED 2026-09-21 by BOB #21): the
+             capture whose FETCH served these bytes, so a reader can follow them to
+             the fetch that saw them served. null when the record names none (a
+             fetch recorded before the build): UNDETERMINED as to source, never
+             inferred from timestamps. */
+          reused_from: known.last_fetched_by || null,
           reused_from_fetched_at: known.last_fetched,
           reused_stable_since: known.stable_since,
           reused_seen_in_documents: known.documents,
-          detail: `not fetched during this capture: the source was seen serving these exact bytes at ${known.last_fetched}, across ${known.documents} documents on this host` + (known.documents_undetermined ? ` (and ${known.documents_undetermined} earlier capture${known.documents_undetermined === 1 ? "" : "s"} whose page the record does not name, counted as undetermined)` : "") + `, and they are reused from the record rather than requested again`
+          detail: `not fetched during this capture: the source was seen serving these exact bytes at ${known.last_fetched}` + (known.last_fetched_by ? ` by capture ${known.last_fetched_by}` : ` by a capture the record does not name (undetermined)`) + `, across ${known.documents} documents on this host` + (known.documents_undetermined ? ` (and ${known.documents_undetermined} earlier capture${known.documents_undetermined === 1 ? "" : "s"} whose page the record does not name, counted as undetermined)` : "") + `, and they are reused from the record rather than requested again`
         };
         byUrl.set(cls.url, rec2);
         if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec2);
@@ -16988,7 +17007,8 @@ async function captureSubresources({
           address_norm: normalizeAddress(cls.url),
           sha256: known.sha256,
           kind: item.kind,
-          reused: true
+          reused: true,
+          reused_from: known.last_fetched_by || null
         });
         if ((item.kind === "stylesheet" || known.content_type === "text/css") && item.depth < CSS_MAX_DEPTH && readBack) {
           const text = await readBack(known.sha256);
@@ -17199,7 +17219,7 @@ async function captureSubresources({
       not_reused: noReuse,
       fresh_window_ms: reuseFreshWindowMs,
       min_documents: reuseMinDocuments,
-      note: "entries with fetched_this_capture:false were NOT fetched during this capture; their bytes come from an earlier fetch of the same address on this host, named in reused_from_fetched_at. A capture ratified as evidence must re-fetch them."
+      note: "entries with fetched_this_capture:false were NOT fetched during this capture; their bytes come from an earlier fetch of the same address on this host, made by the capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. A capture ratified as evidence must re-fetch them."
     },
     outstanding: deferred,
     platform: {
@@ -27848,7 +27868,16 @@ var Store = class _Store extends DurableObject {
          NULLABLE AND NEVER BACK-FILLED: a reading persisted before this column existed recorded no format,
          and `#containerKindOf` then falls back to the reading's own `text_container` and, failing that,
          states the kind UNDETERMINED rather than guessing it. */
-      ["readings", "capture_format", "TEXT"]
+      ["readings", "capture_format", "TEXT"],
+      /* CAP-14 (CAPTURE-SCALING.md §Job one, RULED 2026-09-21 by BOB #21): WHICH capture's fetch served a reused
+         part. ALTER rather than the derived-table DROP above, though both tables are derived: neither column is in
+         the key, so an old row is not wrong, and dropping `site_asset_refs` would erase the reused=1 rows that
+         ratification's re-fetch (CAP-4) and post-hoc detection read. NULLABLE AND NEVER BACK-FILLED: a fetch or
+         reuse recorded before this column existed named no capture, and the only value a backfill could reach for
+         is a match of a ref row's `at` against `last_fetched` -- whole seconds, a row overwritten in place -- which
+         costs nothing and proves nothing. NULL reads back as UNDETERMINED as to source, stated by `reusedParts`. */
+      ["site_assets", "last_fetched_by", "TEXT"],
+      ["site_asset_refs", "reused_from", "TEXT"]
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -64533,6 +64562,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     let added = 0, changedCount = 0;
     const changed = [];
+    const fromObs = (o) => typeof o.reused_from === "string" && /^[0-9a-f]{64}$/.test(o.reused_from) ? o.reused_from : null;
     for (const o of observations) {
       if (!o || !o.address_norm || !o.sha256) continue;
       const cur = [...this.sql.exec(
@@ -64543,8 +64573,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       if (!cur) {
         this.sql.exec(
           `INSERT INTO site_assets (host, address_norm, address, sha256, content_type, bytes, kind,
-             first_seen, last_seen, last_fetched, stable_since, changes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+             first_seen, last_seen, last_fetched, stable_since, changes, last_fetched_by)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
           host,
           o.address_norm,
           o.address || o.address_norm,
@@ -64555,7 +64585,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           now,
           now,
           now,
-          now
+          now,
+          o.reused ? fromObs(o) : primarySha
         );
         added++;
       } else if (!o.reused && cur.sha256 !== o.sha256) {
@@ -64566,12 +64597,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         )];
         this.sql.exec(
           `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
-             stable_since = ?, changes = changes + 1 WHERE host = ? AND address_norm = ?`,
+             last_fetched_by = ?, stable_since = ?, changes = changes + 1 WHERE host = ? AND address_norm = ?`,
           o.sha256,
           o.content_type || cur.content_type,
           o.bytes || 0,
           now,
           now,
+          primarySha,
           now,
           host,
           o.address_norm
@@ -64598,9 +64630,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           );
       } else if (!o.reused) {
         this.sql.exec(
-          `UPDATE site_assets SET last_seen = ?, last_fetched = ? WHERE host = ? AND address_norm = ?`,
+          `UPDATE site_assets SET last_seen = ?, last_fetched = ?, last_fetched_by = ? WHERE host = ? AND address_norm = ?`,
           now,
           now,
+          primarySha,
           host,
           o.address_norm
         );
@@ -64613,16 +64646,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         );
       }
       this.sql.exec(
-        `INSERT INTO site_asset_refs (host, address_norm, primary_sha, at, reused, sha256)
-         VALUES (?, ?, ?, ?, ?, ?)
+        `INSERT INTO site_asset_refs (host, address_norm, primary_sha, at, reused, sha256, reused_from)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(host, address_norm, primary_sha) DO UPDATE SET at = excluded.at,
-           reused = excluded.reused, sha256 = excluded.sha256`,
+           reused = excluded.reused, sha256 = excluded.sha256, reused_from = excluded.reused_from`,
         host,
         o.address_norm,
         primarySha,
         now,
         o.reused ? 1 : 0,
-        o.sha256
+        o.sha256,
+        o.reused ? fromObs(o) : null
       );
     }
     return { host, recorded: observations.length, added, changed: changedCount, changes: changed };
@@ -64641,14 +64675,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (!bundleId) return { bundleId: null, parts: [] };
     const parts = this.#rows(
       `SELECT ar.host AS host, ar.address_norm AS address_norm, ar.primary_sha AS primary_sha,
-              ar.sha256 AS reused_sha, sa.address AS address, sa.content_type AS content_type
+              ar.sha256 AS reused_sha, ar.reused_from AS reused_from,
+              sa.address AS address, sa.content_type AS content_type
        FROM site_asset_refs ar
        JOIN register r ON r.capture_sha = ar.primary_sha
        LEFT JOIN site_assets sa ON sa.host = ar.host AND sa.address_norm = ar.address_norm
        WHERE r.bundle_id = ? AND ar.reused = 1
        ORDER BY ar.host, ar.address_norm`,
       bundleId
-    );
+    ).map((p) => ({ ...p, reused_from_state: p.reused_from ? "recorded" : "undetermined" }));
     return { bundleId, parts, count: parts.length };
   }
   /** CAP-4: append the outcome of a ratification's re-fetch of the reused parts.

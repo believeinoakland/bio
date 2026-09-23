@@ -1084,6 +1084,15 @@ export class Store extends DurableObject {
          and `#containerKindOf` then falls back to the reading's own `text_container` and, failing that,
          states the kind UNDETERMINED rather than guessing it. */
       ["readings", "capture_format", "TEXT"],
+      /* CAP-14 (CAPTURE-SCALING.md §Job one, RULED 2026-09-21 by BOB #21): WHICH capture's fetch served a reused
+         part. ALTER rather than the derived-table DROP above, though both tables are derived: neither column is in
+         the key, so an old row is not wrong, and dropping `site_asset_refs` would erase the reused=1 rows that
+         ratification's re-fetch (CAP-4) and post-hoc detection read. NULLABLE AND NEVER BACK-FILLED: a fetch or
+         reuse recorded before this column existed named no capture, and the only value a backfill could reach for
+         is a match of a ref row's `at` against `last_fetched` -- whole seconds, a row overwritten in place -- which
+         costs nothing and proves nothing. NULL reads back as UNDETERMINED as to source, stated by `reusedParts`. */
+      ["site_assets", "last_fetched_by", "TEXT"],
+      ["site_asset_refs", "reused_from", "TEXT"],
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -41470,6 +41479,13 @@ export class Store extends DurableObject {
     const now = at || new Date().toISOString().split(".")[0] + "Z";
     let added = 0, changedCount = 0;
     const changed = [];
+    /* CAP-14: the capture a REUSED observation names as its source is the one the
+       capture itself read (`site_assets.last_fetched_by` at lookup, carried on the
+       observation as `reused_from`), never re-read here: a fetch between that
+       lookup and this write would move site_assets, and the manifest already says
+       what the capture read. Only a capture-sha shape is kept; anything else, and
+       an absent value, is NULL -- UNDETERMINED, never guessed. */
+    const fromObs = (o) => (typeof o.reused_from === "string" && /^[0-9a-f]{64}$/.test(o.reused_from)) ? o.reused_from : null;
     for (const o of observations) {
       if (!o || !o.address_norm || !o.sha256) continue;
       const cur = [...this.sql.exec(
@@ -41477,10 +41493,10 @@ export class Store extends DurableObject {
       if (!cur) {
         this.sql.exec(
           `INSERT INTO site_assets (host, address_norm, address, sha256, content_type, bytes, kind,
-             first_seen, last_seen, last_fetched, stable_since, changes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+             first_seen, last_seen, last_fetched, stable_since, changes, last_fetched_by)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
           host, o.address_norm, o.address || o.address_norm, o.sha256, o.content_type || null,
-          o.bytes || 0, o.kind || null, now, now, now, now);
+          o.bytes || 0, o.kind || null, now, now, now, now, o.reused ? fromObs(o) : primarySha);
         added++;
       } else if (!o.reused && cur.sha256 !== o.sha256) {
         /* It changed. Everything that reused the OLD bytes is now unverified,
@@ -41490,8 +41506,8 @@ export class Store extends DurableObject {
           host, o.address_norm)];
         this.sql.exec(
           `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
-             stable_since = ?, changes = changes + 1 WHERE host = ? AND address_norm = ?`,
-          o.sha256, o.content_type || cur.content_type, o.bytes || 0, now, now, now, host, o.address_norm);
+             last_fetched_by = ?, stable_since = ?, changes = changes + 1 WHERE host = ? AND address_norm = ?`,
+          o.sha256, o.content_type || cur.content_type, o.bytes || 0, now, now, primarySha, now, host, o.address_norm);
         changedCount++;
         changed.push({ address_norm: o.address_norm, was: cur.sha256, now: o.sha256,
                        reused_by: affected.map((a) => a.primary_sha) });
@@ -41515,20 +41531,22 @@ export class Store extends DurableObject {
             now);
       } else if (!o.reused) {
         this.sql.exec(
-          `UPDATE site_assets SET last_seen = ?, last_fetched = ? WHERE host = ? AND address_norm = ?`,
-          now, now, host, o.address_norm);
+          `UPDATE site_assets SET last_seen = ?, last_fetched = ?, last_fetched_by = ? WHERE host = ? AND address_norm = ?`,
+          now, now, primarySha, host, o.address_norm);
       } else {
         /* A reuse confirms nothing about the source, so last_fetched must not
-           move: it names the last time these bytes were actually seen served. */
+           move: it names the last time these bytes were actually seen served.
+           Nor does last_fetched_by (CAP-14): it names the capture whose fetch
+           that was, and a reuse fetched nothing. */
         this.sql.exec(`UPDATE site_assets SET last_seen = ? WHERE host = ? AND address_norm = ?`,
           now, host, o.address_norm);
       }
       this.sql.exec(
-        `INSERT INTO site_asset_refs (host, address_norm, primary_sha, at, reused, sha256)
-         VALUES (?, ?, ?, ?, ?, ?)
+        `INSERT INTO site_asset_refs (host, address_norm, primary_sha, at, reused, sha256, reused_from)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(host, address_norm, primary_sha) DO UPDATE SET at = excluded.at,
-           reused = excluded.reused, sha256 = excluded.sha256`,
-        host, o.address_norm, primarySha, now, o.reused ? 1 : 0, o.sha256);
+           reused = excluded.reused, sha256 = excluded.sha256, reused_from = excluded.reused_from`,
+        host, o.address_norm, primarySha, now, o.reused ? 1 : 0, o.sha256, o.reused ? fromObs(o) : null);
     }
     return { host, recorded: observations.length, added, changed: changedCount, changes: changed };
   }
@@ -41545,14 +41563,21 @@ export class Store extends DurableObject {
    *  re-fetch needs the real address, not the normalised key. */
   reusedParts(bundleId) {
     if (!bundleId) return { bundleId: null, parts: [] };
+    /* CAP-14: `reused_from` is the capture whose fetch served the reused bytes,
+       read from the REUSING capture's own ref row -- never from `site_assets`,
+       whose `last_fetched_by` a later fetch moves. NULL is a reuse recorded
+       before the column existed (or whose lookup named no fetch), and it is
+       stated as `reused_from_state: "undetermined"`, never inferred. */
     const parts = this.#rows(
       `SELECT ar.host AS host, ar.address_norm AS address_norm, ar.primary_sha AS primary_sha,
-              ar.sha256 AS reused_sha, sa.address AS address, sa.content_type AS content_type
+              ar.sha256 AS reused_sha, ar.reused_from AS reused_from,
+              sa.address AS address, sa.content_type AS content_type
        FROM site_asset_refs ar
        JOIN register r ON r.capture_sha = ar.primary_sha
        LEFT JOIN site_assets sa ON sa.host = ar.host AND sa.address_norm = ar.address_norm
        WHERE r.bundle_id = ? AND ar.reused = 1
-       ORDER BY ar.host, ar.address_norm`, bundleId);
+       ORDER BY ar.host, ar.address_norm`, bundleId)
+      .map((p) => ({ ...p, reused_from_state: p.reused_from ? "recorded" : "undetermined" }));
     return { bundleId, parts, count: parts.length };
   }
 
