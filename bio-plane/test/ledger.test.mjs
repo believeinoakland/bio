@@ -605,6 +605,18 @@ section("11 — LED-6: THE FIVE INVARIANTS (WORK-PIPELINE §2), each with a PLAN
   const nine = Array.from({ length: L.CACHE_ROWS + 1 }, (_, i) => dep(`N-${i}`, "queued", "none")).join("");
   t("P3 CATCHES a cache one row over CACHE_ROWS", v(inv(nine, ""), "P3"), [{ what: "rows", rows: L.CACHE_ROWS + 1, max: L.CACHE_ROWS }]);
   t("...and passes a cache of exactly CACHE_ROWS", v(inv(Array.from({ length: L.CACHE_ROWS }, (_, i) => dep(`N-${i}`, "queued", "none")).join(""), ""), "P3"), []);
+  /* ADDED 2026-09-23 by SCHEDULER #16: an `integrated` row (finished, its branch integrated on a pushed batch, waiting
+     on its train) holds NO slot — at 19:58Z all 12 cache rows were finished and unlanded and CONDUCT had nothing to
+     spawn. It stays OPEN (P1 still counts it; it is done only when its sha is on origin/main). */
+  const full = Array.from({ length: L.CACHE_ROWS }, (_, i) => dep(`N-${i}`, "running", "none")).join("");
+  const held = Array.from({ length: 5 }, (_, i) => dep(`H-${i}`, "integrated", "none", "x".repeat(2000))).join("");
+  t("INTEGRATED: P3 passes CACHE_ROWS working rows beside 5 `integrated` ones", v(inv(full + held, ""), "P3"), []);
+  t("INTEGRATED: ...and P5 does not charge an `integrated` row's bytes to the cache budget",
+    v(inv(full + held + held.replace(/H-/g, "I-") + held.replace(/H-/g, "J-") + held.replace(/H-/g, "K-"), ""), "P5").filter((x) => !x.id), []);
+  t("INTEGRATED: ...while an `integrated` row is still OPEN, so P1 sees it once", v(inv(full + held, dep("H-0", "queued", "none")), "P1").map((x) => x.id), ["H-0"]);
+  const selHeld = L.selectRefill(full.split("### ").slice(1, 4).map((x) => "### " + x).join("") + held,
+    dep("B-1", "queued", "none") + dep("B-2", "queued", "none"), { repo: fixture({ queue: "", backlog: "", debt: DEBT([]), archives, status }), claims, cacheRows: 4 });
+  t("INTEGRATED: the refill's room ignores `integrated` rows (3 working of 4 leaves room for 1)", [selHeld.room, selHeld.take.map((r) => r.id)], [1, ["B-1"]]);
   t("P3 CATCHES a `blocked` row in the cache", v(inv(cleanCache + dep("R-4", "blocked", "none"), ""), "P3").map((x) => x.id), ["R-4"]);
   const p4 = v(inv(cleanCache + dep("R-5", "queued", "B-1") + dep("R-6", "queued", "the next deploy") + dep("R-7", "queued", "X-2")
                   + dep("R-8", "queued", "X-99"), cleanBacklog), "P4");

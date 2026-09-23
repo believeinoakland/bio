@@ -71,7 +71,7 @@ export const RULE_SENTENCE =
   + "its scope's authority (CORPUS-STANDARD.md §4.7).";
 
 /* The states this rule judges, and the states it deliberately does not. */
-export const JUDGED = new Set(["queued", "running"]);
+export const JUDGED = new Set(["queued", "running", "integrated"]);
 export const NOT_JUDGED = new Set(["done", "blocked", "superseded"]);
 
 /* THE ONE PROCESS DOCUMENT ACCEPTED AS AN AUTHORITY, AND THE REASON IS AT THE SITE.

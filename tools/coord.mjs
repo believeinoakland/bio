@@ -278,7 +278,7 @@ export function addLine(text, anchor, add) {
   return [...lines.slice(0, last + 1), ...ins, ...lines.slice(last + 1)].join("\n");
 }
 
-export const ROW_STATES = ["queued", "running", "blocked", "done", "superseded"];
+export const ROW_STATES = ["queued", "running", "blocked", "integrated", "done", "superseded"];   /* `integrated`: ledger.mjs HELD_QUEUE_STATES */
 
 /** A plan row's span: from its `### <ID> · <state>` heading to the next heading of level 1–3 (the ledger's own
     grammar), trailing blank lines left outside it. Exactly one, or refused. */
