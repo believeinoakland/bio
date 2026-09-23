@@ -105,8 +105,9 @@ const promoteFixture = () => POST(`op=promote&token=${TOK}`, {
   meta: { object_type: "inquiry", group: "believe-in-oakland",
           title: "Where did the sewer fund transfers go?",
           current_state: "open", created: T0, last_updated: T0 },
+  /* REC-175 (2026-09-23): CORRECTED, not exempted. This fixture sent a digest that is NOT the SHA-256 of the text beside it ("a" x 64), and the old op=promote stored it as given — a false digest in the fixture's own record. promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so the file sends no digest and the plane computes it from the bytes; nothing this suite asserts reads the old value. */
   files: [{ path: "bundle.md", text: `---\nid: ${BUNDLE}\n---\n\n## Question\n\nWhere did the sewer fund transfers go?\n`,
-            bytes: 90, sha256: SHA_A }],
+            bytes: 90 }],
   register: [],
 });
 

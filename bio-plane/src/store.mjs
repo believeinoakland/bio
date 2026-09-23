@@ -14715,6 +14715,39 @@ export class Store extends DurableObject {
     }
     /* ===== END REC-141 (the mint itself is the first act inside the transaction) ===== */
     if ((!bundleId && !creatingProject) || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
+    /* ===== REC-175 — A STORED DIGEST IS OF THE STORED BYTES (the Mechanical Verification Law,
+       `BIO_State_Rules_Consistency_v1_5.md` §8; CLAUDE.md §5, *an equality that costs nothing to produce is
+       not evidence*). `files.sha256` and the bundle's head (`newSha`, read from bundle.md's row below) were
+       written AS THE CALLER GAVE THEM: REC-173's worker drove a bundle.md sha of `fff…` to `ok: true`. So the
+       digest of every INLINE text file is COMPUTED here over the UTF-8 encoding of the very string the
+       `files` row stores (`content`), and a supplied value that differs is REFUSED — every file, not only
+       bundle.md — BEFORE THE TRANSACTION, so a refusal leaves the bundle byte-identical (a refusal returned
+       from inside `transactionSync` does not roll back what was already written). A file that supplies none
+       stores the computed one. The comparison is of hex digits, case-insensitive; the COMPUTED lowercase form
+       is what is stored, so an honest upper-case spelling lands and no second spelling of one digest enters.
+       This runs before REC-141's mint and D-436's group stamp, which rewrite bundle.md and recompute its
+       digest from what they wrote: the caller's claim is judged against the bytes the caller sent.
+       BLOB-BACKED FILES, EXACTLY: their bytes are in R2, which `promote` does not read (D-45, §8's stated
+       limitation — R2 is outside this transaction). What IS checked is that the supplied `sha256` names the
+       same digest as `blobSha`, the content address the bytes are held under (and `op=capture` refuses a PUT
+       whose body does not hash to its key, `INTEGRITY`); none supplied stores `blobSha`. What is NOT checked:
+       that bytes exist under that key at all (refused at RATIFY, `PLANE_MISSING_BYTES`), or that the stated
+       `bytes` count is theirs. `bytes` on an INLINE file is also not judged here — several writers send
+       `text.length`, UTF-16 units rather than UTF-8 bytes, a separate finding named in REC-175's landing.
+       Replay is NOT exempt: a replay's bytes are the past's, and so is their digest (migrate.mjs hashes the
+       raw buffer it sends as text, and REC-173's replay door already demands the equality for bundle.md). */
+    /* DEC-49 REGION is-promote-digest */
+    const digested = Store.#digestFiles(files);
+    if (digested.disagree.length)
+      return { ok: false, reason: "FILE_DIGEST_MISMATCH", code: "FILE_DIGEST_MISMATCH",
+               check: ACT_SHAPE_CHECKS.FILE_DIGEST_MISMATCH.check,
+               translation: ACT_SHAPE_CHECKS.FILE_DIGEST_MISMATCH.translation,
+               paths: digested.disagree.map((d) => d.path), files: digested.disagree,
+               detail: "the sha256 sent for " + digested.disagree.map((d) => d.path).join(", ")
+                     + " is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content "
+                     + "address). The record stores a digest only of what it holds. Nothing was written." };
+    /* END DEC-49 REGION is-promote-digest */
+    files = digested.files;
     /* ===== D-436 — A CREATION'S PRODUCING GROUP, decided HERE, before the transaction, because a refusal returned
        from inside `transactionSync` does not roll back what was already written (REC-141's mint writes first).
        With a recorded group, a creation is STAMPED with it (`#stampGroup`, after the mint) and the projection is
@@ -28722,6 +28755,71 @@ export class Store extends DurableObject {
     return { ok: false, reason: "GROUP_UNDETERMINED", code: "GROUP_UNDETERMINED", check: row.check,
              translation: row.translation, act, detail };
     /* END DEC-49 REGION is-group-undetermined */
+  }
+
+  /* REC-175: THE ONE COMPUTATION of what a promoted file's digest IS, read by `promote` before any write and by
+     `digestCensus` over what is already held, so the check at the door and the census of the past cannot disagree
+     about what a disagreement is. An inline file is hashed over `new TextEncoder().encode(text)` — the UTF-8 bytes
+     of the string the `files.content` column stores, never a normalised copy (no trimming, no line-ending fold).
+     A blob-backed file's digest is its content address, `blobSha`. Returns the files with every digest the
+     computed lowercase value, and each file whose SUPPLIED value named another digest. */
+  static #fileDigestOf(f) {
+    if (f && typeof f.text === "string") return createSha256().update(new TextEncoder().encode(f.text)).hex();
+    if (f && typeof f.blobSha === "string" && f.blobSha) return f.blobSha.toLowerCase();
+    return null;
+  }
+  static #digestFiles(files) {
+    const disagree = [];
+    const out = files.map((f) => {
+      const computed = Store.#fileDigestOf(f);
+      if (computed === null) return f;
+      const supplied = f.sha256;
+      if (supplied === undefined || supplied === null) return { ...f, sha256: computed };
+      if (typeof supplied !== "string" || supplied.toLowerCase() !== computed) {
+        disagree.push({ path: f.path ?? null, kind: typeof f.text === "string" ? "inline" : "blob",
+                        supplied: typeof supplied === "string" ? supplied : String(supplied), computed });
+        return f;
+      }
+      return supplied === computed ? f : { ...f, sha256: computed };
+    });
+    return { files: out, disagree };
+  }
+
+  /* REC-175: THE CENSUS OF THE PAST — every row already HELD whose stored digest disagrees with its own stored
+     content, over the live image (`files`) and the append-only snapshots (`history`). READ-ONLY, and that is the
+     point: a disagreeing row is REPORTED, never rewritten — the record's history is not corrected by a read, and
+     which of the two (bytes or digest) is wrong is not decidable from here. An inline row is recomputed by the one
+     `#fileDigestOf`; a blob row compares its `sha256` against its `blob_sha`. `bytes` is counted beside it for inline
+     rows (UTF-8 length against the stored figure), as a SEPARATE figure: it is REC-175's named finding, not its
+     refusal. Bounded by `limit` rows listed per table (the counts are always whole). */
+  digestCensus({ limit } = {}) {
+    const asked = limit === undefined || limit === null || limit === "" ? NaN : Number(limit);
+    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
+    const walk = (table) => {
+      const out = { rows: 0, inline: 0, blob: 0, digest_disagrees: 0, bytes_disagree: 0, listed: [] };
+      for (const r of this.sql.exec(table === "files"
+          ? `SELECT bundle_id, path, content, blob_sha, bytes, sha256 FROM files`
+          : `SELECT bundle_id, snap_key, path, content, blob_sha, NULL AS bytes, sha256 FROM history`)) {
+        out.rows++;
+        const f = r.content !== null ? { text: r.content } : { blobSha: r.blob_sha };
+        const computed = Store.#fileDigestOf(f);
+        if (r.content !== null) out.inline++; else out.blob++;
+        const dBad = computed !== null && String(r.sha256 ?? "").toLowerCase() !== computed;
+        const bBad = r.content !== null && table === "files"
+          && Number(r.bytes) !== new TextEncoder().encode(r.content).length;
+        if (dBad) out.digest_disagrees++;
+        if (bBad) out.bytes_disagree++;
+        if ((dBad || bBad) && out.listed.length < cap)
+          out.listed.push({ bundle_id: r.bundle_id, ...(r.snap_key ? { snap_key: r.snap_key } : {}), path: r.path,
+                            stored: r.sha256, computed,
+                            ...(bBad ? { bytes_stored: r.bytes } : {}), digest: dBad ? "disagrees" : "agrees" });
+      }
+      return out;
+    };
+    return { ok: true, files: walk("files"), history: walk("history"),
+             rewritten: 0,
+             note: "read-only: a disagreeing row is reported and never rewritten. history holds no bytes column, "
+                 + "so its bytes are not judged." };
   }
 
   /* A CREATED document names THIS instance's group in its own bytes, whatever the caller wrote — D-78's rule for
@@ -43878,6 +43976,8 @@ export class Store extends DurableObject {
         projectparticipants: () => this.projectParticipants({ projectId: url.searchParams.get("projectId"),
           by: url.searchParams.get("by") }),
         registeraudit: () => this.registerAudit(),
+        /* REC-175: the digest census, read-only (see `digestCensus`). */
+        digestcensus: () => this.digestCensus({ limit: url.searchParams.get("limit") }),
         signeradd: () => this.signerAdd(body || {}),
         signerlist: () => this.signerList(),
         signerset: () => this.signerSet(body || {}),

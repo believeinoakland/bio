@@ -422,6 +422,9 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* REC-136 / §7.1 item 7, 2026-09-18: a project withdraws only a conclusion
        it stands on. D-PIN-B failed on it when it landed — the arm doing its job. */
     ["C-33.37", "NOTHING_TO_WITHDRAW"],
+    /* REC-175 (State Rules §8, 2026-09-23): op=promote refuses a supplied sha256 that is not the digest of the
+       file's own bytes. D-PIN-B failed on it when it landed — the arm doing its job. */
+    ["C-33.38", "FILE_DIGEST_MISMATCH"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -509,10 +512,12 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
   /* MOVED 53 -> 54 on 2026-09-19 (D-136), FROM THE FIGURE THIS INSTRUMENT PRINTED
      ("corpus: 54 rows across 2 families" on the item's tree) and not by adding to
      the number in the file: C-32.17 OPERATOR_TOKEN_CANNOT_GOVERN. */
+  /* MOVED 54 -> 55 on 2026-09-23 (REC-175), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 55 rows across 2 families" on the item's tree
+     over origin/main 14faa089) and not by adding to the number in the file: C-33.38 FILE_DIGEST_MISMATCH. */
   t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two, REC-125's two, "
-    + "REC-126's one, REC-124's three, REC-136's one and D-136's one — a walk that lost a family would run "
-    + "fewer arms and every one of them would still pass",
-    rowsSeen, 54);
+    + "REC-126's one, REC-124's three, REC-136's one, D-136's one and REC-175's one — a walk that lost a family "
+    + "would run fewer arms and every one of them would still pass",
+    rowsSeen, 55);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`
