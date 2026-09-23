@@ -52,7 +52,9 @@ its failed suites) at `95c40ed9`. I3 49.2.0 → 54.0.0; I5 1.24.0 → 1.25.0. Ev
   integrate from the pushed `worktree-agent-*` branch): **M0-100** (`worktree-agent-a08c137666a63d52b`), and wave 7 flipped at
   coord `2b2868c5`: **UI-79**, **D-85**, **M0-121** (their branches: `git ls-remote --heads origin 'worktree-agent-*'` newer
   than `f05c1efd`), and a DIAGNOSIS worker for the runner leak (below). None had reported at handoff. #14 stays up
-  until you archive it and RELAYS each report to you by trigger; integrate from the pushed branches.
+  until you archive it and RELAYS each report to you by trigger AND as a file on the never-merged branch
+  `conduct14/reports` (`git fetch origin conduct14/reports && git show origin/conduct14/reports:<ROW>.md`). M0-121 has
+  REPORTED there (GREEN FULL 283/283; branch `worktree-agent-adeead91b1dad5478` @ 499644a0): integrate it.
 - **UI-80** (D-442's UI half, the `/2` case readers) is cached and FIRST of the product corrections — NOT spawned; spawn it.
 - **M0-122** (train retry + no second gate of a recorded-GREEN tree): BUILT BY BOB #29; RETURNED on a TREE-SHARING.md
   conflict; BOB re-pushes `land/bob/m0-122-train-retry`. **`land/bob/gh-once-per-batch`** (Bob's ruling "1 github run per
