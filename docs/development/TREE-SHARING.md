@@ -159,12 +159,25 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   another either — and would cost Bob a settings act. Its one real gain is binding the PROCEDURE host-side, independent of
   a local hook, and that needs a check for it to require: **trigger, change 3 built** (the Actions check on each commit;
   M0-114 measured Actions already enabled, FULL 278/278 in 875 s on a runner). Then requiring that check on `main` is
-  brought to Bob as one setting, with change 3's figures. Earlier trigger: any commit found on `main` after `c5c83dc4`
+  brought to Bob as one setting, with change 3's figures. **AMENDED 2026-09-23 by BOB #29, the trigger having fired
+  (M0-114 landed at `30475ca6`):** the premise was incomplete. The train's `main` commit is a NEW merge commit that no
+  `land/*` push carried, so a required check would refuse every landing until the train first pushes `integrate/*`
+  and WAITS for the runner (~15 min, measured 875 s) on each landing — gate time added, which Bob ruled against the
+  same day. So it is NOT brought to Bob now. Re-trigger: a train that already lands through `integrate/*` with the
+  check read (built for its own sake), or a commit on `main` after `c5c83dc4` without a `Bio-Train` trailer. Earlier trigger: any commit found on `main` after `c5c83dc4`
   without a `Bio-Train` trailer. **(2) The kickoff is enough to keep a lane from running `train.mjs` itself.** A train
   run by the wrong lane still merges, gates, records and verifies exactly as CONDUCT's would; the rule is COORDINATION
   (one lander, so two trains do not race), and a race fails loudly (non-fast-forward), never into a false record. A
-  wrong-lane train is a data point on its receipt, not grounds for a mechanism. **Not built:** a train that reuses a `land/*` branch's own GREEN record (`--since`) instead of re-gating the
-  union, so a release cut is gated again in the train.
+  wrong-lane train is a data point on its receipt, not grounds for a mechanism.
+  **M0-122 (2026-09-23) built the retry and the reuse.** A push of `main` rejected because `main` MOVED under
+  the gate (read by ancestry after a fetch, never from git's words) is retried, at most three pushes in all, each stated:
+  merge the new `origin/main` (a conflict returns the branches touching it, by name), scan for markers, the id audit,
+  gate `gates.mjs --since <the GREEN tip>` — never FULL — write a train record `<id>-retry<n>` whose trailer the retry's
+  merge carries, push, verify from the remote. And a union whose TREE this clone's D-293 record already holds GREEN —
+  a lone `land/*` branch fast-forwarding `origin/main` merges to exactly its own tip's tree — lands with no gate run,
+  read through pushguard's `readRuns` and `effectiveVerdict`; a tree recorded RED or NOT MEASURED is gated as before.
+  **Not built:** reuse of a record held in ANOTHER clone's git dir (a cloud session's gate is not visible to CONDUCT's
+  clone), so such a branch is still gated in the train.
 
 ### 3 · The gates run on GitHub's machines
 
@@ -176,6 +189,21 @@ workflow triggers on — it runs locally, as every other control does (M0-114's 
 (c) a check that depends on anything but the tree — live `coord` state above all — never decides the gate's verdict (the
 defect that reddened `land/conduct/batch6`'s runs 6 and 7, placed by SCHEDULER); and (d) whoever pushed a branch that
 reads red diagnoses it at once and never leaves it red.
+
+**ONE GITHUB RUN PER LANDED BATCH — RULED 2026-09-23 by Bob** (*"Ok, 1 github run per batch"*, on BOB #29's
+recommendation). The workflow runs on a push to `main` alone, and `main` moves only through the train, so each run audits
+exactly one landed batch; it no longer runs on `land/*` or `integrate/*`. **Nobody waits on it:** a lane reuses its own GREEN
+record, and the push guard's check arm, finding no check on a `land/*` commit, says so and never refuses. What it is FOR is
+the one thing a second machine can see: a test whose result depends on the machine. Its email to Bob is the alarm that
+`main` itself is red. The measured cost it removes: every locally-green branch re-run on a runner (~15 min a push), and
+the runner-only emails of 2026-09-23.
+
+**A GATE TEST DEPENDS ONLY ON THE CODE — RULED 2026-09-23 by Bob** (*"If a test can pass or fail because of the machine it
+ran on rather than the code, that sounds like an error in the design of the test"*). A result that moves with the machine
+is a DEFECT, diagnosed to its fix like any other, never waved through as "the environment". Anything that genuinely needs
+the outside world is a LIVE PROBE, outside the gate (§3 above). The two found that night: esbuild writing each
+dependency's RESOLVED path into the fleet bundles, so a symlinked `node_modules` changed the bytes (fix: `preserveSymlinks`,
+FLEET); and a battery suite leaking miniflare sandboxes on the runner only (D-186's race, CONDUCT).
 
 - A GitHub Actions workflow runs `node tools/gates.mjs`, in the class it derives, for each `land/*` push and each
   integration branch, and records the verdict as a check on the commit. **The push guard accepts a green check for

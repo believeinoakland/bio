@@ -87,8 +87,13 @@ t("a free-text annotation is NOT a verdict", guard.parseVerdictAnnotation("the g
 t("a verdict outside the four is NOT a verdict", guard.parseVerdictAnnotation(`VERDICT=YELLOW TREE=${T1} CLASS=FULL EXIT=0`), null);
 t("the job's check is named as the guard reads it", /\n  gate:\n    name: gate\n/.test(wf) && guard.CHECK_NAME === "gate", true);
 const pushBranches = (/push:\s*\n(?:\s*#.*\n)*\s*branches:\s*\[([^\]]*)\]/.exec(wf) || [])[1] || "";
-t("the trigger reads `land/**` and never `main` (the verdict must exist BEFORE main moves)",
-  [/"land\/\*\*"/.test(pushBranches), /"main"/.test(pushBranches)], [true, false]);
+/* CORRECTED 2026-09-23 by BOB #29 on BOB'S RULING ("Ok, 1 github run per batch"; TREE-SHARING §3), never exempted.
+   The old arm asserted `land/**` and never `main`, so the verdict existed BEFORE main moved. That design re-ran the whole
+   battery on GitHub for every branch a lane had already gated GREEN locally, added ~15 min a push, and emailed Bob on
+   runner-only defects. The run is now the independent audit of each LANDED batch — `main` moves only through the train —
+   and the check arm on `land/*` pushes says "no check" and never refuses, as it always did for a commit without one. */
+t("the trigger is `main` alone — one run per landed batch — and never `land/**` or `integrate/**` (Bob, 2026-09-23)",
+  [/"main"/.test(pushBranches), /"land\/\*\*"/.test(pushBranches), /"integrate\/\*\*"/.test(pushBranches)], [true, false, false]);
 t("no secret is handed to the gate (a suite needing one is a live probe, not a gate unit)", /secrets\./.test(wf), false);
 t("the verdict comes from the gate's RECORDED line, never the exit alone", wf.includes("gates: RECORDED"), true);
 /* Actions runs a step as `bash -e`: without `set +e` before the gate, a RED gate kills the step before the annotation

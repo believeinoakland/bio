@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* train.control.mjs — the NEGATIVE-CONTROL DRIVER of M0-111, 4 ARMS PLUS A BASELINE, for `tools/train.mjs`, the push
+/* train.control.mjs — the NEGATIVE-CONTROL DRIVER of M0-111 and M0-122, 6 ARMS PLUS A BASELINE, for `tools/train.mjs`, the push
  * guard's `main` arm in `tools/pushguard.mjs`, and their suite `bio-plane/test/train.test.mjs`.
  *
  *     node bio-plane/test/train.control.mjs        # from the repo root: the baseline, then every arm
@@ -30,7 +30,7 @@ const TRAIN = path.join(REPO, "tools", "train.mjs");
 const SUITE = path.join(REPO, "bio-plane", "test", "train.test.mjs");
 const PEN = path.join(REPO, ".m0111-harness");
 const ONLY = process.argv[2] || null;
-const DECLARED_ARMS = 4;
+const DECLARED_ARMS = 6;
 const FLOOR = { [GUARD]: 40000, [TRAIN]: 10000 };
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -99,6 +99,17 @@ const ARMS = [
        WAITING, so the "lone" red branch shares its train with them. The cascade is the arm working; the declaration
        was wrong about the fixture's sequencing, so it names only arms that do not run a train. */
     mustNotBreak: ["A LANE'S DIRECT PUSH TO main IS REFUSED BY NAME", "a DELETION of main is refused by name"] },
+  /* M0-122. Arm 5 drops the retry: every rejected push is final, as before M0-122. Arm 6 drops the reuse of a
+     recorded-GREEN tree: every union is gated. Each section runs on a fixture of its own, so neither cascades. */
+  { id: "5", file: TRAIN, title: "THE RETRY DROPPED — a push rejected because main moved is final",
+    patches: [["    if (!moved) return failed(", "    if (true) return failed("]],
+    mustBreak: "A TRAIN WHOSE PUSH IS REJECTED ONCE LANDS ON THE RETRY",
+    alsoBreak: ["THE RETRY IS BOUNDED"],
+    mustNotBreak: ["THE TRAIN LANDS BOTH LANES", "A RECORDED-GREEN TREE LANDS WITH NO BATTERY RUN OF ITS OWN"] },
+  { id: "6", file: TRAIN, title: "THE REUSE DROPPED — a union whose tree is already recorded GREEN is gated again",
+    patches: [["  const reuse = recordedGreen(repo, { full });\n", "  const reuse = null;\n"]],
+    mustBreak: "A RECORDED-GREEN TREE LANDS WITH NO BATTERY RUN OF ITS OWN",
+    mustNotBreak: ["THE TRAIN LANDS BOTH LANES", "A TRAIN WHOSE PUSH IS REJECTED ONCE LANDS ON THE RETRY", "OVER-REUSE CLOSED"] },
 ];
 if (ARMS.length !== DECLARED_ARMS) { console.log(`** ${ARMS.length} arms in the table against ${DECLARED_ARMS} declared — the head is wrong`); process.exit(1); }
 

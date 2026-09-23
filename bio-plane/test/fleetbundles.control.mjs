@@ -43,7 +43,7 @@
  * EACH ARM IS ARMED ALONE, with every other defence held open, and each names
  * what MUST fail AND what MUST NOT.
  */
-import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync, rmSync, lstatSync, symlinkSync, unlinkSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -372,6 +372,65 @@ ARMS["8"] = {
       mustNot: "any assertion — a legitimately rebuilt, byte-identical plane bundle must still pass",
     });
   },
+};
+
+/* ---- ARM 9, APPENDED 2026-09-23 (FLEET #4, on BOB #29's diagnosis). No existing arm is edited. ---- */
+const FLEET_BUNDLE = join(PLANE, "scripts/fleet-bundle.mjs");
+const FLAG_LINE = "    preserveSymlinks: true,";
+
+/* One exact line removed, restored with both proofs. The line must occur EXACTLY ONCE: an arm that
+   removes the wrong occurrence, or none, would be a control that moved nothing. */
+function withLineRemoved(file, line, body) {
+  const before = readFileSync(file);
+  const text = before.toString("utf8");
+  const hits = text.split("\n").filter((l) => l.startsWith(line)).length;
+  if (hits !== 1) throw new Error(`refusing to arm ${file}: the line occurs ${hits} time(s), not once`);
+  try {
+    writeFileSync(file, text.split("\n").filter((l) => !l.startsWith(line)).join("\n"));
+    return body();
+  } finally {
+    writeFileSync(file, before);
+    const after = readFileSync(file);
+    console.log(`    restore ${file.replace(REPO + "/", "")}: content=${after.equals(before)} sha256=${sha(after) === sha(before)} bytes=${after.length}`);
+    if (!after.equals(before)) throw new Error("RESTORE FAILED — stop and fix the tree by hand");
+  }
+}
+
+/* The defect's CONDITION: pdf-worker's `node_modules` reached through a symlink. If it is one already
+   (a worktree sharing another checkout's install), that is the ambient condition. If it is a real
+   directory, it is parked beside itself and a symlink put in its place, so the bytes esbuild reads are
+   the same bytes, only the PATH to them differs, which is the one variable the flag governs. */
+function withSymlinkedInstall(path, body) {
+  if (!existsSync(path)) throw new Error(`refusing to arm: ${path} is absent, and this arm needs an install to build`);
+  if (lstatSync(path).isSymbolicLink()) { console.log(`    (${path.replace(REPO + "/", "")} is a symlink already — the ambient condition)`); return body(); }
+  const parked = path + ".fl13-real";
+  renameSync(path, parked);
+  symlinkSync(parked, path, "dir");
+  try { return body(); }
+  finally {
+    unlinkSync(path);
+    renameSync(parked, path);
+    const ok = existsSync(path) && !lstatSync(path).isSymbolicLink() && !existsSync(parked);
+    console.log(`    restore ${path.replace(REPO + "/", "")}: real-directory=${ok}`);
+    if (!ok) throw new Error("RESTORE FAILED — stop and fix the tree by hand");
+  }
+}
+
+ARMS["9"] = {
+  label: "(9) THE INSTALL LAYOUT — drop `preserveSymlinks` from the recipe and build pdf-worker through a "
+    + "SYMLINKED node_modules. esbuild then names unpdf by its RESOLVED absolute-ish path, and the committed "
+    + "bundle (built from a real install) no longer matches identical source.",
+  run: () => withSymlinkedInstall(PDF_NODE_MODULES, () => withLineRemoved(FLEET_BUNDLE, FLAG_LINE, () => {
+    const r = report("9", runSuite(), {
+      mustFail: "exit non-zero: all four recipe assertions (`… preserves symlinks …`), AND pdf-worker's "
+        + "byte-identity, manifest-sha and comment-only assertions, the member that vendors from node_modules",
+      mustNot: "agent-worker's, ocr-worker's or bio-plane's byte-identity: none vendors from node_modules",
+    });
+    console.log(`     recipe assertion fired: ${named(r, "FAIL  pdf-worker: its build recipe preserves symlinks")}`);
+    console.log(`     pdf-worker byte arm fired: ${named(r, "FAIL  pdf-worker: a fresh build of src/index.mjs is byte-identical")}`);
+    console.log(`     agent-worker byte arm held: ${!r.out.includes("FAIL  agent-worker: a fresh build")}`);
+    return r;
+  })),
 };
 
 const only = process.argv[2];

@@ -66,24 +66,14 @@ export const DEFAULT_REF = `${REMOTE}/${BRANCH}`;
 
 /* ------------------------------------------------------------------------------ what is state */
 
-export const MOVED_FILES = [
-  "docs/development/CLAIMS.md",
-  "docs/development/QUEUE.md",
-  "docs/development/BACKLOG.md",
-  /* M0-119 (WORK-PIPELINE §2, BOB #28): the backlog's TAIL, the same order continued. Created on `coord` by its first
-     demotion (or the `rebalance` intent), so it has no pointer on `main`; `readState` finds it on the ref. */
-  "docs/development/BACKLOG-LATER.md",
-  "docs/development/DEBT.md",
-  "docs/development/PLACEMENT.md",
-];
-export const MOVED_DIRS = ["docs/archive/ledgers"];
-export const NEXT_RE = /^docs\/development\/kickoffs\/[A-Z][A-Z0-9-]*-NEXT\.md$/;
+/* M0-121: WHICH FILES ARE STATE is defined in `tools/statepaths.mjs`, a module that walks nothing, and re-exported
+   here. An importer that needs only the predicate imports that file, so it does not inherit this module's walks of
+   `docs/` (M-106: a MEASUREMENTS-only landing selected every op-claims importer through them). */
+import { MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath } from "./statepaths.mjs";
+export { MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath };
 /* The one file whose pointer says the TREE is switched (for files created on `coord` after the cutover, which
    carry no pointer of their own). The cache is the file every lane reads first. */
 export const SWITCH_FILE = "docs/development/QUEUE.md";
-
-export const isMovedPath = (rel) =>
-  MOVED_FILES.includes(rel) || NEXT_RE.test(rel) || MOVED_DIRS.some((d) => rel.startsWith(d + "/"));
 
 /* ONE LINE, and its first bytes are the switch. The exact text is per path, and `plancheck` requires it EXACTLY
    once the tree is switched, so a stale merge that restores content, or a hand edit to a pointer, fails by name. */

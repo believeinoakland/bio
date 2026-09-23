@@ -109,6 +109,10 @@ const RELEASES = [
      release/ holds it. RELEASES, NOT WITHDRAWN. The FIRST release that records a producing group,
      so its store is the first the boot arm meets already holding one. */
   ["0.71.0", "9439431e0462522a52c46932985c3ad2eebcf1c7"],
+  /* 0.72.0: deployed and live-verified 2026-09-23 (REC-165 / IC-176, a CUT NOW: a production names only a
+     RUNNING run its caller holds); the commit is dist/cut-0.72.0's cut, whose release/ holds it. RELEASES,
+     NOT WITHDRAWN. It records a producing group at a store's first boot, as 0.71.0 does. */
+  ["0.72.0", "b942d97308195a644f5c2ecb3ba79967ce7548ef"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
