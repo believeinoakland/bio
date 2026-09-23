@@ -19843,3 +19843,18 @@ paths, BY SITE:
     §11 paragraph's BUILT note; `construct-status.json` if a text moves.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 M0 (M0-130 — mergecarry's historical arm reads a PINNED range, never origin/main)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #16 for M0-130, worktree `.claude/worktrees/agent-ab163f810aa7cd498`,
+branch `land/worker/M0-130`, from `origin/main` @ `e62e08e1` (carries M0-126).
+authority: `QUEUE.md` `### M0-130 · running`; design `TREE-SHARING.md` §3 ("A GATE TEST DEPENDS ONLY ON THE CODE") and §3a.
+paths, BY SITE:
+  - `bio-plane/test/mergecarry.test.mjs`: the never-cache header and the historical-register section (+ one new section,
+    the planted-ref arm); `SECTIONS`.
+  - `bio-plane/test/mergecarry.control.mjs`: one new arm (the arm reads `origin/main` again).
+  - `tools/mergecarry.mjs`: `historicalRegister` only (its live-ref default). NOT `carryAudit`, NOT `auditMerge`.
+  - `docs/development/TREE-SHARING.md` §3a's as-built note (one sentence) if the text names mergecarry's read.
+**NOT CLAIMED:** `tools/train.mjs` (M0-131), the catch/finally shape of any suite (M0-134), `tools/plancheck.mjs`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
