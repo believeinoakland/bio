@@ -19288,6 +19288,42 @@ async function pubList(fromNav){
 /* ============================================================
    THE CASE, IN FULL — every finding of it.
    ============================================================ */
+/* UI-81 — A FINDING SEVERAL CASES PIN IS ANSWERED WITH THOSE CASES, AS CHOICES, AND NEVER WITH ONE
+   OF THEM PICKED. Handed a finding id alone, `op=publishedcase` refuses and names every case that
+   pins it (D-309, IC-74): each case is its own artifact, with its own scope and completeness
+   statement, so serving one would decide for the reader which publication they meant. Until this,
+   `pubOpen` printed that refusal under "Not answered" as if the question had failed; the record had
+   in fact answered it completely, with the list. So the page now offers each named case, in the
+   order the plane named them (it sorts them by id and ranks nothing, and neither does this), and
+   each opens that case's own published page — at the newest edition the refusal says pins this
+   finding, so the page a reader lands on has the finding in it. KEYED ON THE REFUSAL'S `cases[]`,
+   never on its code, which is UI-80's keying in `inquiryCasePairs` (no code literal enters the
+   surface). The words above the choices are the plane's canned translation (C-44.2, DEC-49), read
+   through `refusalWords`, and the only words this page adds are a count and a list it read from
+   the same answer. */
+function pubSeveralCasesHtml(id, c){
+  const cases = c.cases.map((x) => String(x));
+  const ms = Array.isArray(c.memberships) ? c.memberships : [];
+  const editionOf = (cid) => {
+    let top = null;
+    for(const m of ms) if(m && String(m.case_id) === cid && Number.isInteger(Number(m.edition))
+                          && (top == null || Number(m.edition) > top)) top = Number(m.edition);
+    return top;
+  };
+  const said = refusalWords(c);
+  const rows = cases.map((cid) => {
+    const ed = editionOf(cid);
+    return `<div class="pf" data-casechoice="${esc(cid)}" onclick="pubOpen('${esc(cid)}', ${ed == null ? "null" : esc(String(ed))})">
+        <div class="t">Case file ${esc(cid)}</div>
+        <div class="m">${ed == null ? "its newest edition" : `edition ${esc(String(ed))}`} &middot; includes ${esc(id)}</div>
+      </div>`;
+  }).join("");
+  return `<div class="eyebrow">Case file &middot; published</div><h1>In ${esc(String(cases.length))} case files</h1>
+    ${said ? `<p class="pub-lead">${esc(said)}</p>` : ""}
+    <p class="subj-note" data-several-cases="${esc(String(cases.length))}">${esc(id)} is a finding in each of these published case files. They are listed by their names, not ranked, and this page does not choose between them.</p>
+    <div class="pub-list" data-case-choices="${esc(String(cases.length))}">${rows}</div>
+    <p><a class="pub-back" onclick="pubList()">&larr; All case files</a></p>`;
+}
 async function pubOpen(id, edition, fromNav){
   PUB.id = id; PUB.edition = (edition == null || edition === "") ? null : Number(edition);
   if(!fromNav) pubSetHash("#case/" + id + (PUB.edition ? "/e" + PUB.edition : ""));
@@ -19297,6 +19333,10 @@ async function pubOpen(id, edition, fromNav){
     const params = { id };
     if(PUB.edition) params.edition = String(PUB.edition);
     const c = await apiQ("publishedcase", params);
+    if(c && c.ok === false && Array.isArray(c.cases) && c.cases.length){
+      $("#pub-body").innerHTML = pubSeveralCasesHtml(id, c);
+      return;
+    }
     if(!c || c.ok === false){
       /* **CORRECTED 2026-08-04 — UI-37, D-195's class, the THIRD site the sweep
          found and the mildest of the three.** This branch already knew a refusal

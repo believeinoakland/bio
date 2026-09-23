@@ -10201,6 +10201,21 @@ var CASE_DERIVATION_CHECKS = {
     check: "C-44.1",
     where: "src/store.mjs publishCase > case-identity-derivation",
     translation: "This publication did not say which case it is. The findings you are publishing already serve more than one published case, and a finding is allowed to serve many \u2014 so the record cannot work out from them alone whether you are publishing a further edition of one of those cases or starting a new case that rests on the same work. Nothing has been published and nothing has changed. Say which case this is, or say that it is a new one, and publish again."
+  },
+  /* UI-81 (2026-09-23) — D-309's OTHER HALF, the READ, given its row. `op=publishedcase` handed a
+     finding id that several cases pin refuses and names every case (IC-74), because each case is
+     its own artifact and serving one would choose for the reader. That refusal reached the
+     published case page — the one page a stranger reads — with no code and no translation, and no
+     row here named it, so the DEC-49 guard could not see it (R1 misses it; R2 misses it because
+     the surface keys on the refusal's `cases[]`, not on the code). A ROW IN THIS FAMILY rather than
+     a new one: the condition is clause 6's ambiguity at the read where C-44.1 is the same
+     ambiguity at the act, and `#resolveOneCase` already sits in the file whose `refusal` helper
+     reads this table. The translation says what a reader of either surface can do — choose — and
+     names no screen, because every caller of `#resolveOneCase` answers with it. */
+  FINDING_IN_SEVERAL_CASES: {
+    check: "C-44.2",
+    where: "src/store.mjs #resolveOneCase > is-finding-in-several-cases",
+    translation: "This finding is part of more than one published case file. Each case file is its own publication, with its own scope and its own statement of what it covers, so the record will not pick one of them for you. Nothing is wrong with the finding. Choose the case file you mean, and it opens with this finding in it."
   }
 };
 var MACHINE_FENCE_CHECKS = {
@@ -56087,14 +56102,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const sole = this.#soleCase(rows);
     if (sole) return { ok: true, pick: sole };
     const cases = [...new Set(rows.map((x) => x.case_id))].sort();
-    return {
-      ok: false,
-      reason: "FINDING_IN_SEVERAL_CASES",
+    return refusal6("FINDING_IN_SEVERAL_CASES", {
       target: bundleId,
       cases,
       memberships: rows.map((x) => ({ case_id: x.case_id, edition: x.edition })),
       detail: `${bundleId} is a published finding of ${cases.length} cases (${cases.join(", ")}). A finding can serve many cases (DEC-72 clause 6), and each case is its own artifact with its own scope and completeness assertion \u2014 so this read cannot choose one for you. Ask again naming the case you mean.`
-    };
+    });
   }
   /* CASE-5 / DEC-72: WHICH CASE EDITION A SET OF PUBLISHED BYTES BELONGS TO,
        RESOLVED BY THE HASH RATHER THAN BY A NUMBER.

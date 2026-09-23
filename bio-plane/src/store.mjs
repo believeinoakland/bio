@@ -32125,12 +32125,19 @@ export class Store extends DurableObject {
     const sole = this.#soleCase(rows);
     if (sole) return { ok: true, pick: sole };
     const cases = [...new Set(rows.map((x) => x.case_id))].sort();
-    return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", target: bundleId, cases,
+    /* UI-81 / C-44.2: THE CODE NOW CARRIES ITS CANNED TRANSLATION (DEC-49). It reached the published
+       case page raw — no `*_CHECKS` row named it, so the guard could not see the one refusal a stranger
+       meets on that page. Built through this file's `refusal` helper (C-44's family, D-309's other
+       half), so `reason` and `code` are one literal and the wire only GAINS `code`, `check` and
+       `translation`; every field it carried is unchanged (IC-185). */
+    /* DEC-49 REGION is-finding-in-several-cases */
+    return refusal("FINDING_IN_SEVERAL_CASES", { target: bundleId, cases,
              memberships: rows.map((x) => ({ case_id: x.case_id, edition: x.edition })),
              detail: `${bundleId} is a published finding of ${cases.length} cases (${cases.join(", ")}). `
                    + `A finding can serve many cases (DEC-72 clause 6), and each case is its own artifact `
                    + `with its own scope and completeness assertion — so this read cannot choose one for `
-                   + `you. Ask again naming the case you mean.` };
+                   + `you. Ask again naming the case you mean.` });
+    /* END DEC-49 REGION is-finding-in-several-cases */
   }
 
   /* CASE-5 / DEC-72: WHICH CASE EDITION A SET OF PUBLISHED BYTES BELONGS TO,
