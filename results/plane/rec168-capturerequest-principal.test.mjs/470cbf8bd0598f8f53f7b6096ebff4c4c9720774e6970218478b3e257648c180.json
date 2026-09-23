@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec168-capturerequest-principal.test.mjs",
+ "inputHash": "470cbf8bd0598f8f53f7b6096ebff4c4c9720774e6970218478b3e257648c180",
+ "verdict": "PASS",
+ "run": "1ea225652224ddace911d07ba8ed46bb041c13e5.1790207009156.2130.json",
+ "tree": "1ea225652224ddace911d07ba8ed46bb041c13e5",
+ "head": "0b44e65221f2a975718f95fb82ca727350bee4ce",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 310,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "15c0ba2b-03e7-5282-823b-67b8889907c1",
+ "at": "2026-09-23T23:43:29.165Z"
+}
