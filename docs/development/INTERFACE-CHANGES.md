@@ -13387,3 +13387,11 @@ no-link-row 41/6 · hand-by-now (THE RULE-3 LIAR) 45/2 · moved-by-hand 45/2 · 
 `INTERFACES.md`, and re-run the control. Two findings are routed with their fixes in the item's report (a negative `consume` on
 `op=airuntick` refunds a plane-counted bound; token classes other than `ai` still create `surfaced_by: agent` inquiries outside
 any run).
+
+**RESOLUTION · 2026-09-23 · ACCEPTED by CONDUCT #15 — I3 MAJOR, BREAKING, 54.0.0 → 55.0.0; I5 ADDITIVE, 1.25.0 → 1.26.0.**
+Bases RE-READ at resolution off the integration tree (`int/c15-batch3`, cut at origin/main `cdfaea39` with D-85, UI-79 and
+UI-80 merged): **I3 54.0.0** and **I5 1.25.0** (both IC-179's), exactly the proposal's; UI-79 and UI-80, landing in the same
+train, carry no IC (UI-80 consumes IC-179). **WHY I3 MAJOR:** IC-25's test — `op=promote` under an `ai` credential now
+REFUSES an inquiry creation it accepted (no running run the credential holds, or the run's `surfaces` bound reached). **WHY
+I5 ADDITIVE:** one new derived table (`inquiry_run_surfacings`, in both purge arms) and one nullable column; no column moved.
+**AN AUTHORITY closing** (INVESTIGATIVE-SESSION §11 item 5, rules 2 and 3): said in the merge commit and sent to DIST.
