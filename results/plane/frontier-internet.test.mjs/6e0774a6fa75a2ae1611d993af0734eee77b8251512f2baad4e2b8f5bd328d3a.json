@@ -1,0 +1,16 @@
+{
+ "unit": "plane:frontier-internet.test.mjs",
+ "inputHash": "6e0774a6fa75a2ae1611d993af0734eee77b8251512f2baad4e2b8f5bd328d3a",
+ "verdict": "PASS",
+ "run": "d10cb9486b5e2769a1e8869276b6a17914947db3.1790189997826.30779.json",
+ "tree": "d10cb9486b5e2769a1e8869276b6a17914947db3",
+ "head": "02ed34dc33e93bd26e74003fe50ccf1014e8912c",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 127,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "c24508e4-34b6-5866-a122-a5e731b6ee3c",
+ "at": "2026-09-23T18:59:57.843Z"
+}
