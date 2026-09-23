@@ -207,4 +207,7 @@ console.log(`\npen removed: ${PEN}`);
    MEASURED 2026-09-23 by DIST #5 at the 0.73.0 cut (15 RELEASES rows, 0.72.0 added), every restore sha256 MATCH:
    baseline 417/0 (396 + 21, as predicted) · alterafter 339/78 · nosecondpass 373/44 · percolumn 417/0 ·
    firstbootalways 381/36 · firstbootnever 416/1 · groupwipe 413/4 (the 0.71.0 and 0.72.0 stores' KEPT assertions
-   ALONE). alterafter SEQUENCE: … 279/78 → 318/78 → 339/78. */
+   ALONE). alterafter SEQUENCE: … 279/78 → 318/78 → 339/78.
+   MEASURED 2026-09-23 by DIST #5 at the 0.74.0 cut (16 rows, 0.73.0 added), each at the figure predicted before
+   arming, every restore sha256 MATCH: baseline 438/0 · alterafter 360/78 · nosecondpass 392/46 · percolumn 438/0 ·
+   firstbootalways 402/36 · firstbootnever 437/1 · groupwipe 432/6. alterafter SEQUENCE: … 318/78 → 339/78 → 360/78. */
