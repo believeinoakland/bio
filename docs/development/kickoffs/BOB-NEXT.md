@@ -34,6 +34,15 @@ release, START A FRESH DIST. BOB #30 and CONDUCT #16 archived (D-398). Last land
    Weekly budget: `allowed_warning`, resets 2026-09-29 18:00Z, recorded, never brought to Bob.
 5. The plain-words plan page: https://claude.ai/artifact/M5hUaNBgeM292h4D6odXbX (snapshot 19:40Z; republish on ask).
 
+6. **DEBT.md only shrinks** (BOB #31 22:07Z): new defects go straight into the plan; SCHEDULER runs LED-7 batches (67 open at
+   22:05Z, 89 at the day's start). **Bob, 22:09Z: once it reaches 0, REMOVE DEBT.md FROM THE PROCESS**: CLAUDE.md §1/§4, the
+   tools that read it (owed.mjs, plancheck's DEBT arms, ledger), and every kickoff. SCHEDULER tells BOB at 0.
+7. Rulings still to fold on the next doc landing: SCHEDULER #17's Q1–Q4 (monitor frequency, census stands alone, case
+   document /3, no CAP-14 row), and CLAUDE.md §4's defect-minting sentence (new defects go to the plan, not DEBT.md).
+8. Estate at 22:10Z: CONDUCT #18 `session_01SGdcPXVjS2wofYoj3tBuKF` starting (archive CONDUCT #17 once #18 is up);
+   SCHEDULER #17 `session_014MckoGTYSjDfckPqTKUpAp`; SCHEDULER #16 archived. batch4 was RED on union-only units;
+   WORKER c17-unionfix reports to BOB, then train it ALONE.
+
 ## 3. STALL PROBE
 BOB #31's was a scratch script (lost with its container): fetch coord+main; count cache `queued` untouched ≥10 min (STALL →
 CONDUCT), minutes since the last `^train ` commit on main ≥120 (TRAIN → CONDUCT), undrained BOB INBOX entries (→ SCHEDULER).
