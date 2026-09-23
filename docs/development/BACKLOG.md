@@ -23,15 +23,15 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-127 · queued — **A GITHUB GATE READ RED WITH EVERY SUITE GREEN, AND ITS ANNOTATION SAID `FAILED=none`.** On tree `6ef503c4` (282/282 green) two miniflare sandboxes leaked in the runner's TMPDIR (D-186's residue check), and the verdict line named no failure; a red run emails Bob as an ALARM (`TREE-SHARING.md` §3), so a red must say what is red. CONDUCT #14's finding, runner-only. — owner M0.
-order: HELD by CONDUCT #15 until CONDUCT #14's runner-leak diagnosis reports, so moved back to the backlog head for the running M0-126 (SCHEDULER #14); directly after UI-80, near the head: a red that names nothing is a false-looking alarm on every runner push, and it CUTS GATE TIME to know what failed (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23)
+### M0-127 · queued — **A GITHUB GATE READ RED WITH EVERY SUITE GREEN, AND ITS ANNOTATION SAID `FAILED=none`.** On tree `6ef503c4` (282/282 green) two miniflare sandboxes leaked in the runner's TMPDIR (D-186's residue check), and the verdict line named no failure; a red run emails Bob as an ALARM (`TREE-SHARING.md` §3), so a red must say what is red. **NARROWED 2026-09-23 by SCHEDULER #15 on CONDUCT #15's report: the leak itself is FIXED** (`test/sandbox.mjs`'s exit sweep raced `dispose()`'s rm; landed at `cdfaea39`, recorded as M-111); left: the verdict line and two items the diagnosis owed. — owner M0.
+order: first of the backlog, near the head: a red that names nothing is a false-looking alarm on Bob's email, and knowing what failed CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); CONDUCT #15's hold lifted with the leak fix (SCHEDULER #14, 2026-09-23; narrowed by SCHEDULER #15)
 milestone: M0
 interface: none
-design: `docs/development/TREE-SHARING.md` §3 (a red GitHub run is an alarm that reaches Bob), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none — M0-114's workflow is on `main`.
-scope: (1) the verdict line and the run's annotation name every non-suite failure (a residue check, a leak, a timeout) by what failed; (2) the leaking suite is found by the runner's residue listing and made to clean up, or its leak is stated where D-186's check reads it.
+design: `docs/development/TREE-SHARING.md` §3 (a red GitHub run is an alarm that reaches Bob; *a gate test depends only on the code*), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: none — M0-114's workflow and the leak fix (`cdfaea39`) are on `main`.
+scope: (1) the verdict line (`.github/workflows/gates.yml`'s `FAILED=` and the gate's own RED line) names every non-suite failure (a residue check, a leak, a timeout), never `none` on a RED; (2) the battery's per-suite result line carries the suite's pid (`battery.mjs` already records `r.pid`), so a residue names the suite that left it; (3) `hygiene.test.mjs`'s D-186 control text, which predates the race, is corrected with a dated comment.
 accepts-when: a run whose only failure is a leaked sandbox reads RED naming the residue and the suite that left it, never `FAILED=none`. NEGATIVE CONTROL: plant one sandbox directory in TMPDIR, and the verdict names it by path.
-added: 2026-09-23 · SCHEDULER #14 (CONDUCT #14's runner finding; `node tools/mintid.mjs M0`).
+added: 2026-09-23 · SCHEDULER #14 (CONDUCT #14's runner finding; `node tools/mintid.mjs M0`); narrowed 2026-09-23 by SCHEDULER #15 (CONDUCT #15's report).
 
 ### M0-106 · blocked — **NARROWED 2026-09-22 by SCHEDULER #12: the TEXT landed at `4f7efed0`, verified on `origin/main`. What remains is the WITNESS, at the next cut (0.72.0, owed no earlier than 2026-09-23 04:00Z): its step 1 names the record it relied on and runs no battery. DIST reports the cut commit and that line; then close.** **DIST's RELEASE GATE RE-RUNS THE WHOLE BATTERY ON MERGED `main`, CALLING IT *"a tree nobody has tested"* (`kickoffs/DIST.md`), WHICH IS FALSE WHEREVER THAT EXACT TREE ALREADY CARRIES A GREEN FULL RECORD** (D-293 keys the record by tree). — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob's ruling, 2026-09-22, `CLAUDE.md` §2: *The goal is BIO work; process is overhead*: no process row unless it cuts gate time or unblocks product); DIST's own act, never a worker slot (moved by SCHEDULER #11 on BOB #25's word, 2026-09-22)
@@ -1187,12 +1187,3 @@ depends-on: none.
 accepts-when: `MEASUREMENTS.md` carries the per-host table with N, the interval and the build; the row closes either way. How a liar passes it: hosts chosen for static bytes, so the list … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-59's DEBT row of 2026-07-30; keeps its `D-` id).
 cut: cut to its fields (SCHEDULER #8, 2026-09-21) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-59» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-66 · queued — `m025-arm-anchor-witness.test.mjs` CLOSES THE COMMENTARY CLASS ON ITS LABEL HALF AND NOT ON ITS ANCHOR HALF — prose in a … (whole text: the cut archive)
-order: M0; an instrument producing false findings (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
-milestone: M0 (background lane, holds no slot) — an instrument that penalises a driver for documenting how it … (whole text: the cut archive)
-interface: none — `bio-plane/test/m025-arm-anchor-witness.test.mjs`
-design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY … (whole text: the cut archive)
-depends-on: none
-accepts-when: prose in a block comment naming an anchor-bearing shape is NOT read as an anchor; a live anchor in code still is; the reach figures before and after are stated with any … (whole text: the cut archive)
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-66» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
