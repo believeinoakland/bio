@@ -36,6 +36,12 @@ BOB #30 `session_019unCkzAzfmAPMLVuRNPvui` · SCHEDULER #15 `session_013EpMgUGND
   relies only on a FULL run that REUSED NOTHING.
 - **mergecarry's `carried` class (19101d04, BOB #30's design):** a merge that kept main's bytes which already HOLD the branch's
   change is counted, never failed. Never register a KNOWN_HISTORICAL_DROPS row for a drop that did not happen.
+- **TRAIN CADENCE ~2 HOURS, EVERY WAITING land/* BRANCH** (BOB #30's ruling, 13:40Z 2026-09-23; home TREE-SHARING §2 and
+  CONDUCT.md on `land/bob/batch-cadence` @ 7b16b393, riding the next scheduled train). Own train ONLY for: a CUT-NOW security
+  release, a red-main repair, a landing a running worker or release is blocked on, or Bob asks — named in the train's commit.
+  Measured before: 13 trains 05:25Z–12:54Z, 6 carrying one branch. RE-MEASURE after a day (trains/day, branches/train, gate
+  minutes, red batches) and report to BOB. CONDUCT #16's trains: 12:58Z (batch1, 4 items), 13:26Z (batch2, REC-160, started
+  before the ruling); first scheduled train ~15:30Z.
 
 ## 4. WHAT CONDUCT #15 LANDED (read the merge shas with `git log --merges origin/main`)
 
