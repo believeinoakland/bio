@@ -19165,6 +19165,9 @@ paths, BY SITE:
 **widened 2026-09-23 by the M0-111 worker** — also `.claude/hooks/session-start.sh` (one step, 2c: `pushguard.mjs
 --install`, so a fresh cloud clone starts guarded; TREE-SHARING §4 asked the builder to name the refusal's home) and
 `docs/development/kickoffs/BOB.md` (its push line: a lane pushes `land/bob/<topic>`).
+**widened 2026-09-23 by the M0-111 worker** — also `docs/development/MEASUREMENTS.md` (M-105 APPENDED: the cloud proxy's
+answer to a ref deletion push, measured). The probe ref `land/worker/m0-111-delete-probe` (at `df9eb9f9`, an ancestor of
+`origin/main`) is LEFT ON THE REMOTE because the proxy refused its deletion (HTTP 403); it reads LANDED by ancestry.
 
 ## CLAIM 2026-09-22 M0 (M0-116 — a MEASUREMENTS.md-only landing re-runs a third of the battery: the op-claims ledger leaves the module its importers inherit, and gates reads a unit's own files as code)
 
