@@ -12051,6 +12051,47 @@ export const CASE_CONCLUSION_CHECKS = {
   },
 };
 
+/* D-85 / C-66 — AN ASSISTANT OPENS A QUESTION ONLY INSIDE A RUN IT HOLDS (INVESTIGATIVE-SESSION.md §11
+ * item 5, rule 2, BOB #25, 2026-09-21). Framework §12 lets an assistant open a question unattended and §13
+ * requires it to carry the lens in force when it did; that lens exists only on a run (§3, RULED), and the
+ * objective it pursued only as the run's context (DEC-24 rule 2). So an `ai` credential's creation of an
+ * inquiry names a RUNNING run whose PRINCIPAL it is, and counts against the run's declared `surfaces` bound.
+ * Measured before this existed (`f05c1efd`): an `ai` credential holding `promote` created an inquiry with no
+ * run, no lens and no bound, and nothing linked it to any work. Asked in `#surfacingGate` BEFORE `promote`'s
+ * transaction, in REC-165's order: SIGHT (a run the caller cannot see answers as one never minted, so
+ * SURFACE_NO_RUN covers both), then POSITION (`runPrincipalGate`, C-22.12, relayed), then STATUS, then the
+ * BOUND. A MEMBER's own creation is untouched: the rule is about the assistant. */
+export const SURFACE_CHECKS = {
+  SURFACE_NO_RUN: {
+    check: 'C-66.1',
+    where: 'src/store.mjs #surfacingGate > is-surface-run',
+    translation: 'An assistant opens a question only inside an investigation it is running, and this one '
+      + 'named none that can be read here. The investigation is what records the lens and the purpose the '
+      + 'question was opened under, so without one nothing could say why it exists. Nothing was created.',
+  },
+  SURFACE_RUN_NOT_RUNNING: {
+    check: 'C-66.2',
+    where: 'src/store.mjs #surfacingGate > is-surface-run',
+    translation: 'The investigation this question was to be opened inside has ended. A question is read '
+      + 'against the conditions of the investigation that opened it, and those stopped being current when '
+      + 'it stopped. Nothing was created; a member can start a new investigation.',
+  },
+  SURFACE_NO_BOUND: {
+    check: 'C-66.3',
+    where: 'src/store.mjs #surfacingGate > is-surface-run',
+    translation: 'This investigation was not given a limit on how many questions it may open, so it may '
+      + 'open none: an assistant opening questions without a limit fills the record with questions nobody '
+      + 'asked for. The limit is set by the member who starts the investigation. Nothing was created.',
+  },
+  SURFACE_BOUND_REACHED: {
+    check: 'C-66.4',
+    where: 'src/store.mjs #surfacingGate > is-surface-run',
+    translation: 'This investigation has already opened as many questions as the member who started it '
+      + 'allowed. Nothing was created. The investigation ends at its next step and says which limit '
+      + 'stopped it.',
+  },
+};
+
 /* REC-140 / C-58 — WHAT `op=ratify` MAY PUBLISH AT ALL (BIO_Publication_v0_1.md §3 rule 2,
  * *"Only findings that are part of a project can be published"*, as BOB #15 applied it to
  * D-429 on 2026-09-18). A PROJECT's own document is the group's thinking, not a finding: a
