@@ -2,20 +2,22 @@
  * (`tools/gates.mjs`, `tools/gateresults.mjs`, `tools/gatetrace.mjs`, the `gate-results` arm of `tools/pushguard.mjs`),
  * one suite, one control (`gateresults.control.mjs`).
  *
- * NEGATIVE CONTROL: RAN 2026-09-23 by the M0-126 worker, driver `bio-plane/test/gateresults.control.mjs` (thirteen arms
+ * NEGATIVE CONTROL: RAN 2026-09-23 by the M0-126 worker, driver `bio-plane/test/gateresults.control.mjs` (fifteen arms
  * plus a baseline), each arm ALONE against pristine copies restored by sha256 AND `cmp` AND a byte floor (gates.mjs
- * 6ad38d85…, gateresults.mjs af22c33a…, pushguard.mjs 445bf093…, gates.yml ba431a6c…, each byte-identical after every arm);
- * baseline 47/0, closing 47/0, driver 83 pass / 0 fail. Each broke at its declared assertion: (R1) one `data/` input
- * dropped from every key -> "...and it names NO under-inclusion" and machine A RED (33/14); (R2) PASS ignored -> "...it
- * REUSED every cacheable unit" (34/13); (R3) key ignores inputs -> "a data file ONE suite reads: only that suite" (37/10);
- * (R4) never-cache ignored -> "a never-cached unit runs EVERY time" (38/9); (R5) revocation ignored -> "the next ordinary
- * gate RUNS beta (REVOKED…" (46/1); (R6) `--no-reuse` ignored -> "THE BACKSTOP catches it" (46/1); (R7) the guard lets a
- * record be MODIFIED -> "a record MODIFIED … is REFUSED" (46/1); (R8) the trace comparison off -> "...the failure NAMES
- * the unit and the file" (43/4); (R9) the plane runtime set dropped -> "a plane RUNTIME file: every plane and fleet unit
- * runs" (45/2); (R10) a declared read ignored -> "OVER-STRICTNESS: the read DECLARED" (46/1); (R11) the GitHub run back
- * on the derived class -> "the run on `main` gates EVERY unit" (46/1); (R12) a reusing run written as a backstop ->
- * "machine B's FULL runs … NEVER a backstop" (45/2); (R13) the backstop reader ignoring the steps -> "...the same record
- * with its class and flag EDITED … NOT a backstop" (46/1). The first run found ONE wrong declaration, the ARM's and not
+ * da7f271d…, gateresults.mjs af22c33a…, pushguard.mjs 445bf093…, gates.yml ba431a6c…, each byte-identical after every arm);
+ * baseline 50/0, closing 50/0, driver 95 pass / 0 fail. Each broke at its declared assertion: (R1) one `data/` input
+ * dropped from every key -> "...and it names NO under-inclusion" and machine A RED (34/16); (R2) PASS ignored -> "...it
+ * REUSED every cacheable unit" (36/14); (R3) key ignores inputs -> "a data file ONE suite reads: only that suite" (40/10);
+ * (R4) never-cache ignored -> "a never-cached unit runs EVERY time" (39/11); (R5) revocation ignored -> "the next ordinary
+ * gate RUNS beta (REVOKED…" (49/1); (R6) `--no-reuse` ignored -> "THE BACKSTOP catches it" (49/1); (R7) the guard lets a
+ * record be MODIFIED -> "a record MODIFIED … is REFUSED" (49/1); (R8) the trace comparison off -> "...the failure NAMES
+ * the unit and the file" (46/4); (R9) the plane runtime set dropped -> "a plane RUNTIME file: every plane and fleet unit
+ * runs" (48/2); (R10) a declared read ignored -> "OVER-STRICTNESS: the read DECLARED" (49/1); (R11) the GitHub run back
+ * on the derived class -> "the run on `main` gates EVERY unit" (49/1); (R12) a reusing run written as a backstop ->
+ * "machine B's FULL runs … NEVER a backstop" (48/2); (R13) the backstop reader ignoring the steps -> "...the same record
+ * with its class and flag EDITED … NOT a backstop" (49/1); (R14) a git-history read ignored -> "a suite that runs `git
+ * log` … FAILS by name" (49/1); (R15) the tree-keyed GREEN shortcut taken with the record on -> "...a PLAIN gate on that
+ * same GREEN tree still RUNS the never-cached unit" (49/1). The first run found ONE wrong declaration, the ARM's and not
  * the subject's: R4 said "...the rest are REUSED" must hold, and with the marker ignored the clock suite earns a PASS and
  * is reused too — corrected in the driver, said at its site.
  *

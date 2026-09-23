@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* M0-126's NEGATIVE CONTROL DRIVER — thirteen arms plus a baseline — over `tools/gates.mjs`, `tools/gateresults.mjs`, the
+/* M0-126's NEGATIVE CONTROL DRIVER — fifteen arms plus a baseline — over `tools/gates.mjs`, `tools/gateresults.mjs`, the
  * `gate-results` arm of `tools/pushguard.mjs` and the gate step of `.github/workflows/gates.yml`, each driven through
  * `bio-plane/test/gateresults.test.mjs`.
  *
@@ -38,6 +38,10 @@
  *       backstop (BOB #30's liar)                        machine A's no-reuse run is still one.
  *   R13 the backstop reader trusts the words and      -> "...the same record with its class and flag EDITED … NOT a
  *       never reads the steps                            backstop" FAILS. MUST NOT: the honest one-reused record.
+ *   R14 a git-HISTORY read ignored (BOB #30)         -> "a suite that runs `git log` … FAILS by name" FAILS. MUST NOT:
+ *                                                        no under-inclusion.
+ *   R15 the tree-keyed GREEN shortcut taken again    -> "...a PLAIN gate on that same GREEN tree still RUNS the
+ *                                                        never-cached unit" FAILS. MUST NOT: never-cached runs every time.
  * Every arm asserts its DOWNSTREAM failure, never merely its patch count.
  */
 import { readFileSync, writeFileSync, mkdirSync, statSync, existsSync, unlinkSync } from "node:fs";
@@ -167,6 +171,12 @@ const ARMS = [
     patches: [{ file: GUARD, from: "    && Array.isArray(run.steps) && !run.steps.some((s) => s && s.reused);", to: ";" }],
     mustBreak: "...and the same record with its class and flag EDITED to FULL/true still reads NOT a backstop",
     mustNotBreak: ["...and a FULL run that reused ONE unit is FULLREUSE, backstop:false"] },
+  { id: "R14", title: "a git-HISTORY read ignored (BOB #30, condition 1)",
+    patches: [{ file: GATES, from: "if (h.length) { historyRead.set(id, h);", to: "if (false) { historyRead.set(id, h);" }],
+    mustBreak: "a suite that runs `git log` over this checkout FAILS by name", mustNotBreak: ["...and it names NO under-inclusion"] },
+  { id: "R15", title: "the tree-keyed GREEN shortcut taken again with the per-unit record on (a record answering for a never-cached unit)",
+    patches: [{ file: GATES, from: "if (covering && eff.verdict === \"GREEN\" && !PER_UNIT_ON) {", to: "if (covering && eff.verdict === \"GREEN\") {" }],
+    mustBreak: "...and a PLAIN gate on that same GREEN tree still RUNS the never-cached unit", mustNotBreak: ["a never-cached unit runs EVERY time"] },
 ];
 
 const RUN = ARMS.filter((a) => !ONLY.length || ONLY.includes(a.id));

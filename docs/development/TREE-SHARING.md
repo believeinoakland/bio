@@ -309,10 +309,20 @@ file from a unit's input set, and condition 2 fails that unit by name.
      any `GATE: reads <path> <dir/> *` line in the unit's source or control — how an under-inclusion is FIXED when the
      derivation cannot see it (`status.test.mjs` carries `GATE: reads *`: it runs pushguard's checks over the tree).
      **Measured 2026-09-23 (`measurements/M-113.md`):** every unit of the estate run under the tracer: 346 of 347
-     traced; the first derivation under-included 20 of them, the final one **0**; input sets 3 to 1,032 files, median
+     traced; the first derivation under-included 20 of them, the final one **0** (and 11 history readers, marked); input sets 3 to 1,032 files, median
      136. The same FULL gate run twice on one tree: 2,056 s running everything, then **488 s with 338 units REUSED** and
      only the 12 never-cached units and plancheck run.
-  4. **Never cached** also covers a unit whose closure names `tools/plancheck.mjs`: it reads what plancheck reads (the
+  4. **History (BOB #30's ruling on condition 1, applied here):** a unit whose verdict reads this checkout's GIT HISTORY or
+     a LIVE REF is never cached and carries `GATE: never-cache (history)`. The tracer ENFORCES it: a `git` child run over
+     this checkout whose subcommand walks history or a remote (log, rev-list, merge-base, ls-remote, fetch, …), or whose
+     arguments name a remote-tracking ref or a commit id, FAILS a cacheable unit by name (`HISTORY READ`) and writes no
+     PASS; a git run in a fixture repository elsewhere does not count. The full traced gate of 2026-09-23 named eleven
+     (`decided`, `migrate-released`, `mintid`, `op-claims`, `owed-controls`, `owed`, `readbudget`, `register-grammar`,
+     `retirable`, `status`, `coverage`); each is marked, with `mergecarry` (named by the ruling). And a REUSED record
+     never answers for a never-cached unit: with the per-unit record on, §2d's tree-keyed GREEN shortcut is not taken,
+     and a RERUN of what failed also runs every never-cached unit. The train's own tree-keyed reuse (M0-122's
+     `recordedGreen`) is NOT changed here: M0-131 carries it.
+     **Never cached** also covers a unit whose closure names `tools/plancheck.mjs`: it reads what plancheck reads (the
      whole tree and `origin/coord`); `ledger`, `mergecarry` and `pipeline-readers` traced 1,027–1,028 of 1,028 files
      that way. 12 units today, and the rule is coarse on purpose: `gates`, `train` and `gateresults` name the path only
      to plant a stub in a fixture, and still always run (about 70 s together).

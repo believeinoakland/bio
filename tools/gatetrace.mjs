@@ -12,8 +12,10 @@
  *
  * WHAT IT SEES: module loads (ESM and CommonJS, through `module.registerHooks`), and the fs calls that read a file's
  * CONTENT — readFile/readFileSync/open/openSync/createReadStream/copyFile/cp, callback, sync and promise forms — plus
- * directory listings (readdir/opendir), recorded apart. WHAT IT CANNOT SEE, stated: a read by a non-node child (git,
- * workerd, a shell) — so `git show`, `git ls-files`, `git clone` of this repository read nothing here; a node child
+ * directory listings (readdir/opendir), recorded apart; and (BOB #30) every `git` child run over THIS checkout that walks
+ * history or a live ref (`history`). WHAT IT CANNOT SEE, stated: the FILES a non-node child reads (git, workerd, a
+ * shell) — so `git show HEAD:x`, `git ls-files`, `git clone` of this repository read no file here; a git command run
+ * through a shell script rather than node's child_process; a node child
  * spawned with an environment that drops NODE_OPTIONS; a process killed by a signal before its exit handler (its
  * record is lost, never invented); existence and stat checks. The record is written once, at exit, to
  * `BIO_GATE_TRACE_DIR`. It prints NOTHING: suites compare their children's output byte for byte.
