@@ -258,7 +258,7 @@ accepts-when: a bearer and a caller-supplied `by` are refused; an unverified dom
 added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry, item 2, drained this commit; `node tools/mintid.mjs REC`).
 uncut: restored whole from «REC-164» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### MK-6 · queued — **THE AUTHORED BUNDLE NAMES NO AUTHOR** (MK-3's replacement (i), `MEMBER-KNOWLEDGE-DESIGN.md` §4.1). Today `testify` writes the author's member id into `bundle.md`'s Session Log AND into `data/provenance.json` (`author`, `provenance_chain[].who`), and a ratified bundle's files are what the published bucket receives. Every file and manifest record an authored bundle can publish must name the author as `observer:<testimony id>`, which only the register resolves. — owner RECORD.
+### MK-6 · running — SPAWNED 2026-09-23 ~21:57Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER MK-6 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/MK-6 and that session; never conclude queued from the absence alone.
 order: replaces MK-3 (superseded 2026-09-21), directly above MK-7 and MK-5, which rest on it; BOB #19: *"Build (i) regardless"* — no published byte moves, since MK-1's fence still stands (SCHEDULER #4, 2026-09-21)
 milestone: M3 — the member's own knowledge enters the record as what it is
 interface: I3 and I5 (the authored provenance document's shape); the builder states additive or breaking, and the integrator mints the IC.
@@ -269,7 +269,7 @@ accepts-when: a fixture case publishes an observation at `group` level and NO pu
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit; `node tools/mintid.mjs MK`).
 uncut: restored whole from «MK-6» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### M0-71 · queued — **CONTRADICTION'S IDENTIFY, 2 of 3: THE FIXTURE AND THE FIRST MEASUREMENT, BEFORE ANYTHING A MEMBER SEES — §7's corpus, the false-conflict rate and recall, and the THRESHOLD recorded.** A candidate judgement is measured OFF-RECORD (no table write). — owner M0 / VERIFY.
+### M0-71 · running — SPAWNED 2026-09-23 ~21:57Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER M0-71 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/M0-71 and that session; never conclude queued from the absence alone.
 order: the measurement IDENTIFY's judgement must pass, BEFORE anything a member sees; after REC-146 (SCHEDULER, 2026-09-19); a process row that stays among the product rows because it unblocks REC-147 (Bob, 2026-09-22: no process row unless it cuts gate time or unblocks product — SCHEDULER #12)
 milestone: M0 (VERIFY; the acceptance test of item 3 is this item's over-strictness arm)
 interface: none — a fixture, a harness and a measurement
@@ -280,7 +280,7 @@ accepts-when: `MEASUREMENTS.md` carries the figures with date, instrument and co
 added: 2026-09-19 · SCHEDULER (same entry, item 2).
 uncut: restored whole from «M0-71» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### UI-68 · queued — **THE REVIEW-COPY SURFACES, WITHOUT EXPORT: draft (the project's editors), read (owner/participants, and recipients by secret), grant and revoke (the owner), comment at both doors — the plane rendered verbatim, and NO export, download or print-to-file affordance.** Discharges the in-instance half of REC-126's DELEGATION to UI. — owner UI.
+### UI-68 · running — SPAWNED 2026-09-23 ~21:57Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER UI-68 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/UI-68 and that session; never conclude queued from the absence alone.
 order: BOB #14's item 8 (13.review-copy), its in-instance surfaces; the plane half is built (SCHEDULER, 2026-09-19)
 milestone: M10
 interface: I3 consumer (REC-126's IC-145/IC-146)
@@ -291,7 +291,7 @@ accepts-when: the harness drafts, grants, reads by secret, comments and revokes 
 added: 2026-09-19 · SCHEDULER (BOB #16 inbox "THREE DESIGNS AT THEIR HOMES", item 6).
 uncut: restored whole from «UI-68» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### REC-148 · queued — **`op=reviewcopy` CARRIES DEC-31's IN-BAND QUARTET: a SHA-256 over the canonical bytes it answers, its date, its author, and both threshold floors (the project's `required_strength`, both axes) — the SAME quantity the published container's header renders.** Measured by BOB #16: today it carries a date and an author and no hash and no floors. — owner RECORD.
+### REC-148 · running — SPAWNED 2026-09-23 ~21:57Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER REC-148 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-148 and that session; never conclude queued from the absence alone.
 order: DEC-31's in-band quartet, before any review copy leaves the instance (SCHEDULER, 2026-09-19)
 milestone: M10
 interface: I3 additive (an IC minted with `node tools/mintid.mjs IC`)
@@ -302,7 +302,7 @@ accepts-when: for one case edition, the review copy's quartet and the published 
 added: 2026-09-19 · SCHEDULER (same entry, item 7).
 uncut: restored whole from «REC-148» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-150 · queued — **THE EXCLUSION STATEMENT IS CHECKED BY NOBODY BUT ITS AUTHOR, AND THE SIGNED CASE DOCUMENT DOES NOT SAY SO.** REC-14 built the authored statement with its computed `searched` section; no act acknowledges it, though the row's external evidence is that the catch was a second person with standing. — owner RECORD.
+### D-150 · running — SPAWNED 2026-09-23 ~21:57Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-150 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-150 and that session; never conclude queued from the absence alone.
 order: with the M10 publication path, directly after UI-69 and before D-148: what a published case says about its own completeness, disclosed; designed and NOT BUILT, so a feature below the corrections (SCHEDULER #14, 2026-09-22; BOB #27's inbox entry, item 1)
 milestone: M10
 interface: I3 — the acknowledgement act and the completeness block's list; the integrator mints and classifies the IC.
@@ -313,7 +313,7 @@ accepts-when: a second participant's acknowledgement lands and is listed in the 
 added: 2026-09-22 · SCHEDULER #14 (BOB #27's inbox entry, item 1, drained this commit; D-150's DEBT row of 2026-08-01; keeps its `D-` id).
 uncut: restored whole from «D-150» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-148 · queued — **A FEE QUOTE IS EVIDENCE, AND THE RECORD HOLDS ONE ONLY AS PROSE: a `received` correspondence entry cannot carry the amount, the currency, the stated basis or the request it answers, so quotes cannot be compared across bodies or over time.** RULED by Bob, 2026-09-22; the action and its correspondence are BUILT (`node tools/status.mjs 8`). — owner RECORD.
+### D-148 · running — SPAWNED 2026-09-23 ~21:57Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-148 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-148 and that session; never conclude queued from the absence alone.
 order: with the M10 case path, after UI-69: the action a case justifies, CivicOS's fourth verb, a feature over built substrate; D-149 directly after it, both beside D-147 as BOB #26 placed them (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 1)
 milestone: M10
 interface: I3 and I5 — a quote grammar on correspondence and an indexed table; the integrator mints and classifies the ICs.
@@ -324,7 +324,7 @@ accepts-when: a quote projects and reads back by counterparty and by request; a 
 added: 2026-09-22 · SCHEDULER #12 drafted it; SCHEDULER #13 placed it, re-verified on `8e2c146c` (BOB #26's inbox entry, item 1; D-148's DEBT row; keeps its `D-` id).
 uncut: restored whole from «D-148» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-149 · queued — **A RECORDS REQUEST CANNOT SAY WHICH LAWS GOVERN IT: the action carries no citation of the federal, state or local records laws that apply to the agency asked, so the design reads jurisdiction-blind.** RULED by Bob, 2026-09-22: every records law governing the agency asked applies, layered by the agency's level. — owner RECORD.
+### D-149 · running — SPAWNED 2026-09-23 ~21:57Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-149 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-149 and that session; never conclude queued from the absence alone.
 order: directly after D-148, its sibling at M10 beside D-147 (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 2)
 milestone: M10
 interface: I3 and I5 — the action's citation list; the integrator mints and classifies the ICs.
@@ -335,7 +335,7 @@ accepts-when: a member's list lands and reads back; an action with none reads un
 added: 2026-09-22 · SCHEDULER #12 drafted it; SCHEDULER #13 placed it, re-verified on `8e2c146c` (BOB #26's inbox entry, item 2; D-149's DEBT row; keeps its `D-` id).
 uncut: restored whole from «D-149» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### REC-149 · queued — **DISCOVERABLE OR HIDDEN (Membership v2 §7 item 7.14), 1 of 4: the OWNER's recorded setting (append-only, latest wins, no record = HIDDEN); `#inSight` answers three levels at the ONE predicate; EXISTENCE only for a discoverable project to a member outside it; the DIRECTORY read; `viewerPredicate` NOT changed.** — owner RECORD.
+### REC-149 · running — SPAWNED 2026-09-23 ~21:57Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER REC-149 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-149 and that session; never conclude queued from the absence alone.
 order: Bob's 2026-09-18 ruling (DISCOVERABLE/HIDDEN), after BOB #14's listed items; the plane half first (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 (an IC minted with `node tools/mintid.mjs IC`), I5 for the setting's table
