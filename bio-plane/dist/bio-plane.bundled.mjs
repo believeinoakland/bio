@@ -56984,11 +56984,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
   publishedRegistryFor(bundleId, extraTargets = []) {
     const ids = [...new Set([bundleId, ...extraTargets].filter(Boolean))];
     if (!ids.length) return {};
-    const marks = ids.map(() => "?").join(",");
     const rows = this.#rows(
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, strength
-       FROM published_bundles WHERE bundle_id IN (${marks}) ORDER BY bundle_id, edition`,
-      ...ids
+       FROM published_bundles WHERE bundle_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, edition`,
+      JSON.stringify(ids)
     );
     const reg = {};
     for (const r of rows) {
@@ -61829,15 +61828,16 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const indexState = /* @__PURE__ */ new Map();
     {
       const subjects = [...new Set(pageCut.map((r) => r.subject).filter((v) => typeof v === "string" && v))];
-      if (subjects.length) {
-        const marks = subjects.map(() => "?").join(",");
+      for (let i = 0; i < subjects.length; i += _Store.SELECTION_ID_CHUNK) {
+        const part = subjects.slice(i, i + _Store.SELECTION_ID_CHUNK);
+        const marks = part.map(() => "?").join(",");
         for (const r of this.#rows(
           `SELECT subject, state, bound, detail FROM observation_log
             WHERE seq IN (SELECT MAX(seq) FROM observation_log
                            WHERE level = 'content' AND subject_kind = 'capture'
                              AND authority_kind = 'derive' AND subject IN (${marks})
                            GROUP BY subject)`,
-          ...subjects
+          ...part
         ))
           indexState.set(r.subject, { state: r.state, bound: r.bound, detail: r.detail });
       }
