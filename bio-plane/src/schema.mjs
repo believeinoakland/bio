@@ -3602,6 +3602,41 @@ CREATE TABLE IF NOT EXISTS review_comments (
 CREATE INDEX IF NOT EXISTS review_comments_draft ON review_comments(draft_id);
 -- =========================================================================
 
+-- REC-164: THE PUBLISHING GROUP'S DISPLAY NAME AND ITS DOMAIN (BIO_Publication_v0_1.md
+-- section 7 points 2 and 3). Two durable values, each with a dated history: a value is
+-- the LATEST row for its field, and no statement updates or deletes a row, so every
+-- revision stays readable with its date and the administrator who made it.
+--   field             'display_name' or 'domain'
+--   set_by            the member the control plane stamped from the signed-in session,
+--                     never a caller's statement, never a bearer
+--   instance_address  a domain row only: the origin the administrator's session reached,
+--                     stamped by the control plane, which the well-known file must name
+-- EXEMPT FROM op=purge, in both arms: identity, not derived from the corpus, the family
+-- of instance_group. hygiene.test.mjs lists both tables among the purge exemptions.
+CREATE TABLE IF NOT EXISTS group_identity_history (
+  seq               INTEGER PRIMARY KEY AUTOINCREMENT,
+  field             TEXT NOT NULL CHECK (field IN ('display_name','domain')),
+  value             TEXT NOT NULL,
+  set_at            TEXT NOT NULL,
+  set_by            TEXT NOT NULL,
+  instance_address  TEXT
+);
+-- Every verdict on a claimed domain, dated. The public read shows a domain only while
+-- the latest verdict for the CURRENT claim is 'verified'. 'undetermined' is the fourth
+-- word, and it is not one of the design's three: the governor holding the host, a fetch
+-- that did not complete, or an answer that is neither a file nor its absence says
+-- nothing about the domain, so it is recorded as what it is and never as 'absent'.
+--   trigger  'set' (the administrator's act) or 'alarm' (the reconciling re-check)
+CREATE TABLE IF NOT EXISTS group_domain_checks (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  domain      TEXT NOT NULL,
+  verdict     TEXT NOT NULL CHECK (verdict IN ('verified','absent','mismatched','undetermined')),
+  checked_at  TEXT NOT NULL,
+  trigger     TEXT NOT NULL,
+  status      INTEGER,
+  detail      TEXT
+);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

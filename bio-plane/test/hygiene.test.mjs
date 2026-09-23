@@ -726,6 +726,11 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
        later creation refused or — worse — decided by whatever the next caller claimed. `instance-group.test.mjs`
        drives a whole-store purge and reads the value back unchanged. */
     instance_group:       "the instance's producing-group slug (D-436): identity, recorded once at the store's first boot or by the root of trust's one seed, named in the signed bytes of every document the store writes; not derived from the corpus",
+    /* REC-164, instance_group's reasoning exactly: the group's public identity beside its slug, set by an administrator's
+       act (Publication §7 points 2 and 3). A purge of the corpus is not a retraction of what the group calls itself or
+       of the domain it claimed, and the dated histories ARE the record of who set each one. */
+    group_identity_history: "the group's display name and domain claim with their dated histories (REC-164): identity set by an administrator's act, not derived from the corpus",
+    group_domain_checks:  "every dated verdict on the group's claimed domain (REC-164): what the verifier read, not derived from the corpus",
     members:              "the roster; membership is identity, not derived from captured documents",
     signers:              "registered signing keys; identity, not corpus-derived",
     /* PL-11 / IS-5 / D-199 (2). The `ai` credential's DECLARED TASK SCOPE, and

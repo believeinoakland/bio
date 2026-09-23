@@ -12416,6 +12416,37 @@ export const INSTANCE_GROUP_CHECKS = {
       + 'document the record has signed, so a second name would make those documents name a producer they were '
       + 'not written under. Nothing was changed.',
   },
+  /* REC-164 — BIO_Publication_v0_1.md §7 points 2 and 3: the display name and the domain are set by an
+     administrator's own signed-in session, and the record names who set each one. */
+  GROUP_IDENTITY_NEEDS_SESSION: {
+    check: 'C-64.4',
+    where: 'src/index.mjs fetch > is-group-identity-session',
+    translation: 'The name this group shows the public, and the web address it claims, are set by one of its '
+      + 'administrators, and the record names who set each one. The credential that asked here is one of the '
+      + 'operator\'s access tokens for this copy, not a person, so it cannot be that administrator. Sign in as '
+      + 'the administrator and set it from there. Nothing was changed.',
+  },
+  GROUP_IDENTITY_NOT_ADMIN: {
+    check: 'C-64.5',
+    where: 'src/store.mjs #groupIdentityGate > is-group-identity-admin',
+    translation: 'Only one of the group\'s administrators can set the name it shows the public or the web '
+      + 'address it claims. The person signed in here is not one of its active administrators. Nothing was '
+      + 'changed.',
+  },
+  GROUP_DISPLAY_NAME_MALFORMED: {
+    check: 'C-64.6',
+    where: 'src/store.mjs groupNameSet > is-group-display-name',
+    translation: 'A display name is the group\'s own words for itself: some text, at most 120 characters, on '
+      + 'one line. It is always shown beside the group\'s short name and never instead of it. Nothing was '
+      + 'changed.',
+  },
+  GROUP_DOMAIN_MALFORMED: {
+    check: 'C-64.7',
+    where: 'src/store.mjs groupDomainSet > is-group-domain',
+    translation: 'A web address is claimed by its bare domain name, like example.org: no https://, no path and '
+      + 'no port. The claim is then checked by reading a file the domain itself serves, and the public sees '
+      + 'the domain only while that check passes. Nothing was changed.',
+  },
 };
 
 /** D-436 — THE ONE DEFINITION of how a producing group is written into a document's bytes. `Store#stampGroup` calls it

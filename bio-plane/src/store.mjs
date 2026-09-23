@@ -3386,6 +3386,15 @@ export class Store extends DurableObject {
         due:  (now) => this.#calibrationDue(now) > 0 ? now : null,
         wake: (now) => this.#calibrationWake(now),
         tick: (now) => ({ calibration: this.#calibrationTick(now) }) },
+      /* REC-164 / Publication §7 point 3: the GROUP-DOMAIN RE-CHECK, the TWELFTH consumer, one appended entry as
+         SCHEDULER.md instructs. A domain the public is shown is one whose file named this instance at the LAST
+         check, so the check must recur: verifying once at set time would certify a file the domain can change the
+         next minute. INTERVAL shape — due one interval after the current claim's latest verdict — and an instance
+         claiming no domain holds no wake, so it self-terminates like every consumer here. */
+      { name: "group-domain-recheck",
+        due:  ()    => this.#groupDomainWake(),
+        wake: ()    => this.#groupDomainWake(),
+        tick: ()    => this.#groupDomainTick() },
     ];
     for (const name of Object.keys(probe || {})) {
       const st = probe[name];
@@ -3414,7 +3423,7 @@ export class Store extends DurableObject {
     const grace = Store.SCHED_GRACE_MS;
     let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null,
         queuerenotify = null, monitorcadence = null, airunreap = null, capturerequests = null,
-        airunwake = null, calibration = null;
+        airunwake = null, calibration = null, groupdomain = null;
     const probes = [];
     for (const c of reg) {
       const d = c.due(now);
@@ -3461,6 +3470,9 @@ export class Store extends DurableObject {
          measurement, going unobservable in the alarm's own account of itself.
          That is the mechanism-believed-on-its-existence shape exactly. */
       else if (c.name === "calibration-reprobe") calibration = r && r.calibration;
+      /* REC-164, named for the seventh time and for the same reason: a domain re-check that disappears into
+         `probes` is the one mechanism keeping a public claim true, unobservable in the alarm's own account. */
+      else if (c.name === "group-domain-recheck") groupdomain = r && r.groupdomain;
       else probes.push(c.name);
     }
     /* Reconcile over the FULL registry, not just the consumers that ticked, and
@@ -3484,7 +3496,8 @@ export class Store extends DurableObject {
              ...(airunreap ? { airunreap } : {}),
              ...(capturerequests ? { capturerequests } : {}),
              ...(airunwake ? { airunwake } : {}),
-             ...(calibration ? { calibration } : {}) };
+             ...(calibration ? { calibration } : {}),
+             ...(groupdomain ? { groupdomain } : {}) };
   }
 
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -29128,6 +29141,232 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-group-undetermined */
   }
 
+  /* =====================================================================
+   * REC-164 — THE PUBLISHING GROUP'S DISPLAY NAME AND ITS VERIFIED DOMAIN. `BIO_Publication_v0_1.md` §7 points 2
+   * and 3 (BOB #24, 2026-09-21), resting on point 1's public slug (REC-163).
+   *
+   * TWO DURABLE VALUES, EACH WITH A DATED HISTORY (`group_identity_history`): the value is the latest row for its
+   * field, and nothing updates or deletes a row. Each is set by an ADMINISTRATOR'S SESSION ACT, and `by` is the
+   * control plane's stamp, read here from the query and asked of the live roster — a bearer is refused before this
+   * (C-64.4), and a caller's own `by` is overwritten there, so a member naming an administrator is still themselves.
+   *
+   * THE DISPLAY NAME is presentation only: it is written into no signed bytes (nothing here reaches a document), it
+   * needs no verification because it asserts only what the group calls itself, and the public read shows it WITH the
+   * slug and never without one (§7 point 2: a name that imitates another body cannot stand alone as an identity).
+   *
+   * THE DOMAIN is a CLAIM. It is shown publicly only while the latest verdict on the current claim is `verified`.
+   * The verifier fetches `https://<domain>/.well-known/civicos-group.json` through the per-host governor and reads
+   * whether it names THIS instance's address and slug. It runs at the set act AND on the reconciling alarm
+   * (`group-domain-recheck`), because a check made once at set time certifies a file the domain can change the next
+   * minute — the row's own liar. Its verdicts: `verified`, `absent` (no file at that domain), `mismatched` (a file
+   * that names another instance or another group, or that this plane cannot read as the format) and a FOURTH,
+   * `undetermined`: the governor holding the host, a fetch that did not complete, an answer that is neither the file
+   * nor its absence, or no slug recorded to compare with. None of those says anything about the domain, so none is
+   * recorded as `absent`, and none shows the domain publicly (DESIGN GAP, reported: §7 names three verdicts).
+   * ===================================================================== */
+  static GROUP_DISPLAY_NAME_MAX = 120;
+  /* A bare lowercase host name with at least one dot, labels of 1-63 letters, digits and hyphens: no scheme, path,
+     port or IP literal. The last label must begin with a letter, which is what excludes a dotted-quad. */
+  static GROUP_DOMAIN_RE = /^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+  static GROUP_WELL_KNOWN_PATH = "/.well-known/civicos-group.json";
+  static GROUP_WELL_KNOWN_MAX_BYTES = 16384;
+  static GROUP_DOMAIN_RECHECK_MS = 86_400_000;   // chosen, not measured: once a day
+
+  #groupDomainRecheckMs() {
+    const v = Number(this.env && this.env.GROUP_DOMAIN_RECHECK_MS);
+    return Number.isFinite(v) && v > 0 ? v : Store.GROUP_DOMAIN_RECHECK_MS;
+  }
+
+  #groupIdentityRefusal(code, detail, extra) {
+    const row = INSTANCE_GROUP_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+  }
+
+  /* WHO MAY SET EITHER VALUE: an active administrator, named by the control plane's stamp. Asked before anything is
+     read or validated, so a caller with no standing learns nothing about what is recorded. */
+  #groupIdentityGate(by) {
+    const refusal = (code, detail) => this.#groupIdentityRefusal(code, detail, { by: by ?? null });
+    /* DEC-49 REGION is-group-identity-admin */
+    if (!by || !this.#activeAdmins().includes(by))
+      return refusal("GROUP_IDENTITY_NOT_ADMIN",
+        "setting the group's display name or claiming its domain is an administrator's act (Publication §7), and "
+        + "the plane stamps who is asking from the signed-in session rather than taking it from the caller. This "
+        + "caller is not one of the active administrators.");
+    /* END DEC-49 REGION is-group-identity-admin */
+    return null;
+  }
+
+  #groupIdentityCurrent(field) {
+    return this.#one(`SELECT value, set_at, set_by, instance_address FROM group_identity_history
+                      WHERE field=? ORDER BY seq DESC LIMIT 1`, field) || null;
+  }
+  #groupIdentityHistory(field) {
+    return this.#rows(`SELECT value, set_at, set_by FROM group_identity_history WHERE field=? ORDER BY seq`, field)
+      .map((r) => ({ value: r.value, set_at: r.set_at, set_by: r.set_by }));
+  }
+  #groupDomainLatestCheck(domain) {
+    const r = this.#one(`SELECT domain, verdict, checked_at, trigger, status, detail FROM group_domain_checks
+                         WHERE domain=? ORDER BY seq DESC LIMIT 1`, domain);
+    return r ? { ...r } : null;
+  }
+
+  /** op=groupnameset — §7 point 2. `by` is the control plane's stamp. */
+  groupNameSet({ name = null, by = null } = {}) {
+    const gate = this.#groupIdentityGate(by);
+    if (gate) return gate;
+    const refusal = (code, detail) => this.#groupIdentityRefusal(code, detail);
+    const s = typeof name === "string" ? name.trim() : "";
+    /* DEC-49 REGION is-group-display-name */
+    if (!s || s.length > Store.GROUP_DISPLAY_NAME_MAX || /[\u0000-\u001f\u007f]/.test(s))
+      return refusal("GROUP_DISPLAY_NAME_MALFORMED",
+        `${s ? `a name of ${s.length} characters` : "the request names no display name, and it is set as"} `
+        + `one line of 1 to ${Store.GROUP_DISPLAY_NAME_MAX} characters with no control characters. Nothing was set.`);
+    /* END DEC-49 REGION is-group-display-name */
+    const at = new Date().toISOString();
+    this.sql.exec(`INSERT INTO group_identity_history (field, value, set_at, set_by) VALUES ('display_name', ?, ?, ?)`,
+                  s, at, by);
+    return { ok: true, display_name: s, set_at: at, set_by: by,
+             history: this.#groupIdentityHistory("display_name"),
+             note: "presentation only: no signed bytes carry it, and every public surface shows it beside the slug." };
+  }
+
+  /** op=groupdomainset — §7 point 3. `by` and `origin` are the control plane's stamps: `origin` is the address the
+   *  administrator's session reached, which the domain's well-known file must name. The claim is recorded and then
+   *  checked at once; the alarm re-checks it. */
+  async groupDomainSet({ domain = null, by = null, origin = null } = {}) {
+    const gate = this.#groupIdentityGate(by);
+    if (gate) return gate;
+    const refusal = (code, detail) => this.#groupIdentityRefusal(code, detail);
+    const d = typeof domain === "string" ? domain.trim().toLowerCase().replace(/\.$/, "") : "";
+    /* DEC-49 REGION is-group-domain */
+    if (!Store.GROUP_DOMAIN_RE.test(d))
+      return refusal("GROUP_DOMAIN_MALFORMED",
+        `${d ? `'${d.slice(0, 80)}' is not` : "the request names no domain, and one is claimed as"} a bare host `
+        + `name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.`);
+    /* END DEC-49 REGION is-group-domain */
+    const address = Store.#instanceAddress(origin);
+    const at = new Date().toISOString();
+    this.sql.exec(`INSERT INTO group_identity_history (field, value, set_at, set_by, instance_address)
+                   VALUES ('domain', ?, ?, ?, ?)`, d, at, by, address);
+    const check = await this.#checkGroupDomain("set");
+    try { await this.#armScheduler(); } catch { /* the check above stands; the next arm reconciles */ }
+    return { ok: true, domain: d, set_at: at, set_by: by, instance_address: address, check,
+             shown_publicly: check && check.verdict === "verified",
+             history: this.#groupIdentityHistory("domain") };
+  }
+
+  /* The instance's own address as the control plane stamped it: an origin, lowercased, no trailing slash. */
+  static #instanceAddress(origin) {
+    try {
+      const u = new URL(String(origin ?? ""));
+      return (u.protocol === "https:" || u.protocol === "http:") ? `${u.protocol}//${u.host}`.toLowerCase() : null;
+    } catch { return null; }
+  }
+
+  /** THE VERIFIER: one governed fetch of the current claim's well-known file, and one dated verdict. */
+  async #checkGroupDomain(trigger) {
+    const cur = this.#groupIdentityCurrent("domain");
+    if (!cur) return null;
+    const domain = cur.value;
+    const slug = this.#producingGroup();
+    const address = cur.instance_address || null;
+    let verdict = "undetermined", status = null, detail;
+    if (!slug || !address) {
+      detail = !slug ? "this store records no producing group, so there is no slug for the file to name"
+                     : "the claim carries no instance address for the file to name";
+    } else {
+      const g = this.governorAdmit({ host: domain });
+      if (!g.admitted) {
+        detail = `the per-host governor held ${domain} (${g.reason}); this says nothing about the domain`;
+      } else {
+        if (g.wait_ms) await new Promise((s) => setTimeout(s, g.wait_ms));
+        let res = null;
+        try {
+          res = await fetch(`https://${domain}${Store.GROUP_WELL_KNOWN_PATH}`, { redirect: "manual",
+            headers: { "user-agent": civicosUserAgent(this.env && this.env.VERSION,
+                                                      this.env && this.env.INSTANCE_NAME, "group-domain") } });
+        } catch { res = null; }
+        if (!res) {
+          detail = "the fetch did not complete, and this plane did not record why";
+        } else {
+          status = res.status;
+          try { this.governorReport({ host: domain, status }); } catch { /* an unrecorded outcome is not a verdict */ }
+          if (status === 404 || status === 410 || (status >= 300 && status < 400)) {
+            verdict = "absent";
+            detail = status < 400 ? `the domain redirected (HTTP ${status}); the file is read on the claimed domain itself`
+                                  : `the domain serves no ${Store.GROUP_WELL_KNOWN_PATH} (HTTP ${status})`;
+          } else if (status >= 200 && status < 300) {
+            const text = (await res.text().catch(() => "")).slice(0, Store.GROUP_WELL_KNOWN_MAX_BYTES);
+            let f = null;
+            try { f = JSON.parse(text); } catch { f = null; }
+            const inst = f && typeof f.instance === "string" ? Store.#instanceAddress(f.instance) : null;
+            const grp = f && typeof f.group === "string" ? f.group.trim() : null;
+            if (inst === address && grp === slug) {
+              verdict = "verified";
+              detail = `the file names this instance (${address}) and its slug (${slug})`;
+            } else {
+              verdict = "mismatched";
+              detail = !f || typeof f !== "object"
+                ? "the file is not the JSON object this plane reads ({ instance, group })"
+                : `the file names instance ${JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)} and group `
+                  + `${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug}`;
+            }
+          } else {
+            detail = `the domain answered HTTP ${status}, which is neither the file nor its absence`;
+          }
+        }
+      }
+    }
+    const at = new Date().toISOString();
+    this.sql.exec(`INSERT INTO group_domain_checks (domain, verdict, checked_at, trigger, status, detail)
+                   VALUES (?, ?, ?, ?, ?, ?)`, domain, verdict, at, trigger, status, detail);
+    return { domain, verdict, checked_at: at, trigger, status, detail };
+  }
+
+  /* The alarm consumer's two halves: the next re-check is due one interval after the current claim's last verdict,
+     and an instance claiming no domain holds no wake. */
+  #groupDomainWake() {
+    const cur = this.#groupIdentityCurrent("domain");
+    if (!cur) return null;
+    const last = this.#groupDomainLatestCheck(cur.value);
+    const from = Date.parse((last && last.checked_at) || cur.set_at);
+    return (Number.isFinite(from) ? from : 0) + this.#groupDomainRecheckMs();
+  }
+  async #groupDomainTick() {
+    return { groupdomain: await this.#checkGroupDomain("alarm") };
+  }
+
+  /** op=groupidentity, PUBLIC projection: the slug, the display name only beside a slug, and the domain only while
+   *  the latest verdict on the current claim is `verified`. */
+  groupIdentityPublic() {
+    const slug = this.#producingGroup();
+    const name = this.#groupIdentityCurrent("display_name");
+    const dom = this.#groupIdentityCurrent("domain");
+    const last = dom ? this.#groupDomainLatestCheck(dom.value) : null;
+    /* THE VERDICT GATE: the one line that decides whether a claimed domain reaches a stranger. */
+    const verified = !!(slug && dom && last && last.verdict === "verified");
+    return { ok: true, group: slug,
+             display_name: slug && name ? name.value : null,
+             domain: verified ? dom.value : null,
+             domain_verified_at: verified ? last.checked_at : null,
+             ...(slug ? {} : { detail: Store.NO_GROUP_RECORDED }) };
+  }
+
+  /** op=groupidentity for a credentialed reader: the public projection, and the claim, its state and both histories. */
+  groupIdentity() {
+    const pub = this.groupIdentityPublic();
+    const dom = this.#groupIdentityCurrent("domain");
+    return { ...pub,
+             display_name_recorded: this.#groupIdentityCurrent("display_name")?.value ?? null,
+             display_name_history: this.#groupIdentityHistory("display_name"),
+             domain_claim: dom ? { domain: dom.value, set_at: dom.set_at, set_by: dom.set_by,
+                                   instance_address: dom.instance_address ?? null,
+                                   latest: this.#groupDomainLatestCheck(dom.value) } : null,
+             domain_history: this.#groupIdentityHistory("domain"),
+             domain_checks: this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
+                                        FROM group_domain_checks ORDER BY seq DESC LIMIT 20`).map((r) => ({ ...r })) };
+  }
+
   /* REC-175: THE ONE COMPUTATION of what a promoted file's digest IS, read by `promote` before any write and by
      `digestCensus` over what is already held, so the check at the door and the census of the past cannot disagree
      about what a disagreement is. An inline file is hashed over `new TextEncoder().encode(text)` — the UTF-8 bytes
@@ -44205,6 +44444,13 @@ export class Store extends DurableObject {
            setup page it serves at `/`. */
         instancegrouppublic: () => this.instanceGroupPublic(),
         instancegroupseed: () => this.instanceGroupSeed({ ...(body || {}), author: url.searchParams.get("author") }),
+        /* REC-164 / Publication §7 points 2 and 3. `by` and `origin` are the control plane's stamps, read from the
+           query AFTER the body is spread, so a body naming its own setter or its own address is overwritten. */
+        groupnameset: () => this.groupNameSet({ ...(body || {}), by: url.searchParams.get("by") }),
+        groupdomainset: () => this.groupDomainSet({ ...(body || {}), by: url.searchParams.get("by"),
+                                                    origin: url.searchParams.get("origin") }),
+        groupidentity: () => this.groupIdentity(),
+        groupidentitypublic: () => this.groupIdentityPublic(),
         login: async () => {
           /* A member login is refused unless the member is active, so
              revocation closes the front door as well as the sessions.

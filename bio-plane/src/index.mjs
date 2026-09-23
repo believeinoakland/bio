@@ -512,6 +512,14 @@ const OPS = {
      row, so a session is told which credential the verb is addressed to rather than an invented reason. */
   instancegroup:       { classes: null,                         mutating: false },
   instancegroupseed:   { classes: ["admin"],                    mutating: true  },
+  /* REC-164 / Publication §7 points 2 and 3. `groupidentity` is PUBLIC on point 1's reasoning, and answers a stranger
+     the slug, the display name only beside it, and the domain only while its latest verdict is `verified`; a
+     credential the admission gate admits is answered the claim, its state and both dated histories too. The two SET
+     acts are an administrator's own session act (`IDENTITY_ACTIONS`): admitted to the three bearer classes only so
+     the fence can refuse a bearer BY NAME (C-64.4) rather than by a class list, exactly as the §4 governance acts. */
+  groupidentity:       { classes: null,                         mutating: false },
+  groupnameset:        { classes: ["admin", "member", "probe"], mutating: true  },
+  groupdomainset:      { classes: ["admin", "member", "probe"], mutating: true  },
   /* Section 8.2. classes: null, because published-record reconstruction requires
      NOTHING: the hashes are public and verifiable by any stranger without this
      instance's cooperation or continued existence. It reads the published
@@ -1674,6 +1682,13 @@ const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projec
    fence, and moving either is a reach change and a refusal nobody ruled. The stamp
    site says what was decided about a bearer, and that it is provisional. */
 const GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];
+/* REC-164 / Publication §7 points 2 and 3: the group's display name and its domain claim are set by an
+   administrator's session, with `by` stamped by the server "as for the Membership v2 §4 governance acts". A SET OF
+   ITS OWN rather than three more names in `GOVERNANCE_ACTIONS`, because that array's fence carries C-32.17, whose
+   canned sentence names the §4 votes and the capability edit — it would be FALSE here (D-270's class). Same shape:
+   both session sets (an enrolled administrator holds `member:<id>`, so the admin set alone is the founder alone),
+   a fence that refuses any caller who did not arrive by a session, and a `by` stamp the store asks the roster. */
+const IDENTITY_ACTIONS = ["groupnameset", "groupdomainset"];
 /* Section 1.3. Both are in the MEMBER set: a member declares their own, and a
    member reaching confirm is refused by the store with ADMIN_ONLY, which says
    what is wrong. Putting confirm in the admin set alone would answer "requires a
@@ -1908,6 +1923,7 @@ const SESSION_OPS = {
                       Before this landing the three were in NEITHER set, so every session
                       got SESSION_ROUTE_NOT_RECORDED: an OMISSION honestly stated (D-270
                       (c)), and this is the item that discharges it. */
+                   ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    /* REC-146: THE CONTRADICTION PAIRING READ. It reads across QUESTIONS,
                       their accepted readings and the documents those rest on, so the
@@ -1962,6 +1978,7 @@ const SESSION_OPS = {
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
                    ...BIAS_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS, "memberadd", "memberset",
+                   ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    "signeradd", "signerset", "governorstate", "governorconfig",
                    "aicredentialmint", "aicredentialrevoke",
@@ -2306,6 +2323,10 @@ const NEEDS = {
   membercaps:       null,
   adminendorse:     null,
   adminremove:      null,
+  /* REC-164: NO WORKING CAPABILITY, on D-136's reasoning above: what bounds the two is who a session IS, and the
+     store asks the roster for an ACTIVE ADMINISTRATOR (C-64.5), not one of section 5's four working rights. */
+  groupnameset:     null,
+  groupdomainset:   null,
   signeradd:        null,
   signerset:        null,
   /* PL-11 / IS-5 / D-199: NO WORKING CAPABILITY, and NO FIFTH CAPABILITY TOKEN
@@ -3322,6 +3343,15 @@ const machineFenceRow = (code) => {
   const row = CHECK_CATALOGUE.MACHINE_FENCE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`machineFenceRow: ${code} has no MACHINE_FENCE_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
+/* REC-164: C-64.4's row, the fence's canned sentence taken from the one catalogue family that holds it. */
+const identityFenceRow = (code) => {
+  const row = CHECK_CATALOGUE.INSTANCE_GROUP_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`identityFenceRow: ${code} has no INSTANCE_GROUP_CHECKS row with a canned translation `
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
@@ -4993,6 +5023,26 @@ export default {
         const pubOut = await publicInstanceGroup(env, igStore);
         if (!pubOut.answered) return storeSilent("instancegroup");
         return json({ ok: true, result: pubOut.result, store: igStore }, 200);
+      }
+
+      /* ===== REC-164: op=groupidentity — THE DISPLAY NAME AND THE VERIFIED DOMAIN, BESIDE THE PUBLIC SLUG =========
+         `BIO_Publication_v0_1.md` §7 points 2 and 3. op=instancegroup's rule for WHO and WHICH STORE, unchanged: a
+         caller the admission gate would admit is answered the claim, its latest verdict and both dated histories
+         (§7: "members see the claim and its state"); anybody else the public projection — the slug, the display
+         name only beside a slug, and a domain only while its latest verdict is `verified`. A silence is a silence. */
+      if (op === "groupidentity") {
+        const held = url.searchParams.get("token");
+        const heldCls = held ? await classify(held, env) : null;
+        const heldScope = heldCls ? scopeFor(heldCls, url) : null;
+        const giStore = heldScope && !heldScope.error ? heldScope.name
+          : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
+        const giReader = await caseReader(url, env, giStore);
+        if (giReader.silent) return storeSilent(giReader.silent);
+        const giOut = await doAnswer(env.STORE.get(env.STORE.idFromName(giStore))
+          .fetch(giReader.viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
+        if (!giOut.answered) return storeSilent("groupidentity");
+        return json({ ok: true, result: giOut.result, store: giStore,
+                      ...(giReader.viewer ? { tokenClass: giReader.cls } : {}) }, 200);
       }
 
       /* ============================================================         REC-22: THE PUBLIC READ PATH. Anyone, no token, no session, and — the
@@ -10137,6 +10187,17 @@ export default {
               + `would be attributed to whoever the caller named. Sign in as the administrator and `
               + `do it there (D-136, applying D-421).` }, 403);
     /* END DEC-49 REGION is-operator-governance-act */
+    /* REC-164 — THE SAME FENCE FOR THE GROUP'S PUBLIC IDENTITY (Publication §7 points 2 and 3), with its OWN code
+       and sentence, because C-32.17's names the §4 votes. The predicate is how the caller ARRIVED, never which token
+       it held, so every bearer class is refused and one added tomorrow is too. */
+    /* DEC-49 REGION is-group-identity-session */
+    if (IDENTITY_ACTIONS.includes(op) && !viaSession)
+      return json({ ok: false, reason: "GROUP_IDENTITY_NEEDS_SESSION",
+        ...identityFenceRow("GROUP_IDENTITY_NEEDS_SESSION"), op, tokenClass: cls,
+        detail: `the group's display name and its domain claim are set by a named administrator's own signed-in `
+              + `session, and the record names who set each one (Publication §7). The credential that asked is the `
+              + `operator's \`${cls}\`-class bearer token, which holds no place on the roster. Nothing was changed.` }, 403);
+    /* END DEC-49 REGION is-group-identity-session */
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is
        overwritten rather than honoured: "only an owner may remove" is worth
@@ -10183,6 +10244,14 @@ export default {
         || op === "projectparticipants" || op === "projectownerarith"
         || op === "memberadd")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* REC-164: the setter of the group's display name or domain is the SERVER's stamp — set after the caller's
+       parameters were copied, so a caller's `by` is overwritten rather than honoured, and the store asks the roster
+       for an active administrator (C-64.5). `origin` is stamped the same way: the address the administrator's
+       session reached is the instance address the domain's well-known file must name, never one the caller types. */
+    if (IDENTITY_ACTIONS.includes(op)) {
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+      inner.searchParams.set("origin", url.origin);
+    }
     /* IS-6 / §14a, DEC-27(b), DEC-55.4: THE PLANE-CREDENTIAL PRINCIPAL on a run,
        decided by the SERVER from the credential that authenticated and set after
        the caller's parameters were copied, so a caller-supplied `principal` is
