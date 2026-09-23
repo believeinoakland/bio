@@ -14919,6 +14919,42 @@ export class Store extends DurableObject {
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
       /* END DEC-49 REGION is-promote-cas */
 
+      /* REC-179 / C-66.5 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2's reach): A REVISION CARRIES `surfaced_by`
+         FORWARD. The field records the SURFACING ACT, decided once at the trust boundary on the creation (D-78's
+         restamp; REC-173's verified replay keeps the Drive era's), and the restamp runs only there — so without this
+         a revision relabelled the question and REC-171's surfacing row then contradicted the bytes it describes.
+         Asked of every revision of a bundle whose CURRENT version is an inquiry, after the compare-and-swap (so
+         `cur` is the version this revision is based on) and before any write. Both sides are read by the catalog's
+         own parser, never a line scan a caller can step around, so a respelling of the same value lands and a
+         different value is refused in EITHER direction. An absent field and an unreadable document are values
+         too: a revision may not supply an origin its creation did not record, nor drop one it did. `replay` is not
+         an exemption — it is a caller's assertion (`index.mjs` verifies only a CREATION as a replay, REC-173). */
+      if (cur && base !== null && normalizeType(cur.object_type) === "inquiry") {
+        const surfacedOf = (text) => {
+          if (typeof text !== "string") return "unreadable";
+          let fm;
+          try { fm = parseFrontmatter(text).data; } catch { return "unreadable"; }
+          if (!fm || typeof fm !== "object") return "unreadable";
+          return Object.prototype.hasOwnProperty.call(fm, "surfaced_by") ? JSON.stringify(fm.surfaced_by) : "absent";
+        };
+        const heldMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
+        const nextMd = files.find((f) => f && f.path === "bundle.md");
+        const was = surfacedOf(heldMd ? heldMd.content : null);
+        const now = surfacedOf(nextMd ? nextMd.text : null);
+        /* The C-66 family's own helper shape (`#surfacingGate`'s), shadowing the project-id one in this block only. */
+        const refusal = (code, detail, extra) => {
+          const row = SURFACE_CHECKS[code];
+          return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+        };
+        /* DEC-49 REGION is-promote-surfaced-by */
+        if (was !== now)
+          return refusal("SURFACED_BY_REWRITTEN",
+            `the current version of ${bundleId} records surfaced_by ${was}, and this revision records ${now}. Who `
+            + `surfaced a question is recorded once, at its creation; a revision carries it forward unchanged. `
+            + `Nothing was written.`, { bundleId, current: was, revision: now });
+        /* END DEC-49 REGION is-promote-surfaced-by */
+      }
+
       /* MK-1 / D-184 — THE AUTHORED FLAG'S FENCE, HERE AND BEFORE THE FIRST
          WRITE. `promote` is the ONE write path, so a document can only claim to
          be a member's authored observation — or stop claiming it, or change its
