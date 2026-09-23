@@ -54135,6 +54135,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  endpoint: working material is never consulted, so there is nothing to leak,
    *  exactly as op=verify already works. */
   publishedManifest() {
+    const byCase = this.#frozenPairsByCase();
     return {
       ok: true,
       scope: "published",
@@ -54161,11 +54162,16 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         `SELECT p.bundle_id, p.edition, p.title, p.bundle_sha, p.ratified_at, p.attestor_key,
                 p.gate_version, p.strength, p.required
          FROM published_bundles p ORDER BY p.bundle_id, p.edition`
-      ).map((r) => ({
-        ...r,
-        strength: r.strength ? JSON.parse(r.strength) : null,
-        required: r.required ? JSON.parse(r.required) : null
-      })),
+      ).map((r) => {
+        const row = {
+          ...r,
+          strength: r.strength ? JSON.parse(r.strength) : null,
+          required: r.required ? JSON.parse(r.required) : null
+        };
+        const pinned = byCase.get(`${r.bundle_id}\0${r.bundle_sha}`);
+        if (!pinned || new Set(pinned.map((p) => JSON.stringify(p.strength))).size < 2) return row;
+        return { ...row, strength: null, strengthUndetermined: "CASES_DISAGREE", strengthByCase: pinned };
+      }),
       /* REC-44: the CASES, beside the findings rather than instead of them. The
          findings are what carry a signature and a frozen pair; the case is what
          carries the container's manifest, its own hash and the scope. A
@@ -54214,7 +54220,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       shas: this.#rows(
         `SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`
       ),
-      altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE has a scope, a completeness assertion, a bias acknowledgement, editions and a container; it has no strength, and composing its members' pairs into one letter would be a claim the evidence does not support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET RATIFIED: it has no pair because nothing has been signed for it, which is a state of the record and not a gap in this answer.",
+      altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE has a scope, a completeness assertion, a bias acknowledgement, editions and a container; it has no strength, and composing its members' pairs into one letter would be a claim the evidence does not support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET RATIFIED: it has no pair because nothing has been signed for it, which is a state of the record and not a gap in this answer. Since the frozen pair is stated in each CASE's document (a case's reading of the finding at that hash), a finding several cases pin may carry several pairs: where their documents disagree, `strength` is null, `strengthUndetermined` says CASES_DISAGREE, and `strengthByCase` lists every ratified case edition's own pair, named by its case and edition. None of them is the finding's pair; each is that case's.",
       detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without this instance's cooperation or continued existence. Nothing unpublished appears, by construction: this reads the published projection and never the working corpus."
     };
   }
@@ -55322,6 +55328,43 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       strength: pairs.length === 1 && seen[0].strength.length ? seen[0].strength : null,
       strengthUndetermined: pairs.length > 1
     };
+  }
+  /* REC-170 / BIO_Publication_v0_1.md §3 rule 12 (b): EVERY RATIFIED CASE EDITION'S OWN FROZEN PAIR
+     FOR EVERY PINNED SHA, keyed `bundle_id NUL bundle_sha`, for `publishedManifest`. One set-based read
+     of the pins, then `#caseDocMemberFrozen` (the one parser of the per-case facts) once per case edition
+     that pins a sha SEVERAL editions pin — a sha pinned by one edition has nothing to disagree with, so
+     its document is never opened here. EVERY ratified edition counts, not only a case's latest: each is
+     a separate signed document that stated its own reading of those bytes. A LEGACY (/1) document states
+     no pair of its own (its members carried theirs, rule 12 (e)) and is left out rather than read as an
+     empty pair — which is also where this reader is blind: a /1 reading does not join the comparison. */
+  #frozenPairsByCase() {
+    const pins = this.#rows(
+      `SELECT m.case_id, m.edition, m.bundle_id, m.version_sha FROM published_case_members m
+         JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
+        WHERE m.version_sha IS NOT NULL
+        ORDER BY m.bundle_id, m.version_sha, m.case_id, m.edition`
+    );
+    const groups = /* @__PURE__ */ new Map();
+    for (const p of pins) {
+      const k = `${p.bundle_id}\0${p.version_sha}`;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(p);
+    }
+    const docs = /* @__PURE__ */ new Map();
+    const out = /* @__PURE__ */ new Map();
+    for (const [k, ps] of groups) {
+      if (ps.length < 2) continue;
+      const stated = [];
+      for (const p of ps) {
+        const dk = `${p.case_id}\0${Number(p.edition)}`;
+        if (!docs.has(dk)) docs.set(dk, this.#caseDocMemberFrozen(p.case_id, Number(p.edition)));
+        const row = docs.get(dk) ? docs.get(dk).get(p.bundle_id) : null;
+        if (row && row.version_sha === p.version_sha)
+          stated.push({ case_id: p.case_id, edition: Number(p.edition), strength: row.strength });
+      }
+      out.set(k, stated);
+    }
+    return out;
   }
   /* REC-44: what a case edition is, and whether it is COMPLETE. One place, so
      the ratify path (which must know whether to assemble the container) and the
