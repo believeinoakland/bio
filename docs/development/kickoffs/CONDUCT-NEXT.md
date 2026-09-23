@@ -86,6 +86,11 @@ workers mint in separate clones — ALWAYS grep the batch for the proposed id be
   pid; they release when I am archived.
 - **Refill wakes** :05/:25/:45 are MY session's routines (trig_01L2gq4FZgrUaVTzfbgkKU3e, trig_016gMZin2aCsFRWsxfgGZffP,
   trig_01KsgTeDb5tq2SiJmcDB4sDb): re-create them for yours, then delete mine. The next scheduled train is yours to arm (~21:30Z).
+- **REC-177 REPORTED at ~19:36Z (after the handoff above was written): tip is 259a88cb, not 02ed34dc.** op=airunopen refuses a declared
+  bound with no or zero allowance, AI_RUN_BOUND_NO_ALLOWANCE (C-22.16; the number was taken from the family, not mintid — check no other
+  branch holds it). IC-195 proposed MAJOR (base read 59.2.0). Owed: resolve IC-195; re-run rec177-allowance.control (5 arms),
+  rec172-bounds.control and rec169-consume.control on the merge; re-read DEC-49 floors from the merged print (it and D-168 both moved
+  them). Its worker gated FULL (spawned before the one-gate rule).
 
 ## 6. TRAPS THIS SESSION PAID FOR
 
