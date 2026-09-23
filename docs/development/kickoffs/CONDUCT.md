@@ -211,7 +211,8 @@ at once (D-405). A stood-down session that receives a late report MESSAGES its s
 
 - **A BOB ruling landing on a RUNNING row** goes ON the row as an `owed-at-integration:` FIELD line, is sent to the worker
   by `SendMessage`, and is VERIFIED at the merge.
-- **Batch finished items under ONE train, about every TWO HOURS** (TREE-SHARING §2, BOB #30 2026-09-23: every waiting `land/*`
+- **Spawn continuously; land every ~two hours** (BOB #30, 2026-09-23: wake at least every ~20 min and on each worker's report,
+  refilling every empty slot from the cache). **Batch finished items under ONE train, about every TWO HOURS** (TREE-SHARING §2, BOB #30 2026-09-23: every waiting `land/*`
   rides it; only a CUT-NOW security fix, a red-`main` repair, a landing a running worker or release is blocked on, or Bob, gets
   its own train, named in its commit), each IC resolved on the base as read at
   ITS landing — **then run the suites where they MEET**: two green branches were red together.
