@@ -570,6 +570,16 @@ accepts-when: the harness requests, the owner grants, the requester sees `invite
 added: 2026-09-19 · SCHEDULER (same entry, item 4).
 cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-71» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
+### FL-11 · queued — **`agent-worker` NEVER SETS `state.target`, SO ONCE REC-165 LANDED EVERY SUGGESTION IT SUBMITS IS REFUSED `SUGGEST_OUTSIDE_RUN_CONTEXT`.** `submit` sends whatever target the model wrote; `emptyLevelCandidates` gets a null target and the dedup reads `basisversions` with id `""` (`agent-worker/src/index.mjs`, re-read on `df9eb9f9`); the mock `test/plane-suggest.mjs` models neither the context rule nor the principal gate. REC-165's worker's finding, fix named by FLEET #4 (`FLEET-NEXT.md` on `coord`, "The one open FLEET defect"). — owner FLEET.
+order: directly before D-260: inert until D-260 dispatches runs, and D-260 would dispatch runs whose every suggestion is refused (FLEET #4: *"place it with D-260 or ahead of it"*) (SCHEDULER #14, 2026-09-23)
+milestone: M9
+interface: none on the plane — the fleet member's behaviour and its mock; the committed `agent-worker` bundle rebuilds and member bytes move at the next release (DIST's).
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, *Rule 1's target* (a suggestion lands only inside its run's context), with `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6 (the credential cascade's member).
+depends-on: none — REC-165's refusal is on `main`; `op=airun`'s read returns the run's context.
+scope: FLEET #4's four: seed `state.target` at run open from the run's context id (for a PROJECT run, a question the project confirmed-cites, never the project id); `submit` defaults a candidate's target to it; the mock gains the context rule, `SUGGEST_OUTSIDE_RUN_CONTEXT` and the principal gate; a negative control.
+accepts-when: against the mock, a run's suggestions land inside its context and one aimed outside is refused by name; the dedup and empty-level readers receive the run's target. NEGATIVE CONTROL: drop the seeding, and the harness suite fails by name.
+added: 2026-09-23 · SCHEDULER #14 (FLEET #4's trigger; `node tools/mintid.mjs FL`).
+
 ### D-260 · queued — **A WOKEN RUN IS NOT RE-ENTERED: FL-4's wake has nothing to consume it.** When the daemon completes a capture a run waited on … (whole text: the cut archive)
 order: a feature after the rows Bob's priorities ordered (UI-71), above D-126: FL-4's wake and DS-3's and FL-6's halves are BUILT and inert until this caller exists, and I8 leaves PROVISIONAL when it lands (SCHEDULER #7, 2026-09-21)
 milestone: M9
