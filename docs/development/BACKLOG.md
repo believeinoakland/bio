@@ -30,7 +30,7 @@ interface: I3 — the plane computes `bytes`; `OVERSIZE_INLINE` judges UTF-8 byt
 design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (bundle anatomy; the Mechanical Verification Law), with `CLAUDE.md` §5; REC-175's digest check is the precedent.
 depends-on: REC-175 (same site; on `land/conduct/c16-batch5`).
 scope: promote computes each inline file's `bytes` from its UTF-8 encoding (a differing supplied value refused or overridden, stated) and judges `OVERSIZE_INLINE` on it; the writers send UTF-8 length or none; a census of stored rows whose `bytes` disagrees is stated in the landing, never rewritten.
-accepts-when: through the op, a non-ASCII file over `INLINE_MAX` in UTF-8 but under it in `text.length` is refused `OVERSIZE_INLINE`, bundle byte-identical after; stored `bytes` equals the UTF-8 length. NEGATIVE CONTROL: judge `text.length` again, and that arm fails by name.
+accepts-when: in a NEW suite `bio-plane/test/rec178-bytes.test.mjs`, through the op: a non-ASCII file over `INLINE_MAX` in UTF-8 but under it in `text.length` is refused `OVERSIZE_INLINE`, bundle byte-identical after; stored `bytes` equals the UTF-8 length; plus `rec175-digest.test.mjs` (same `promote` site) green. NEGATIVE CONTROL (`rec178-bytes.control.mjs`): judge `text.length` again, and the non-ASCII arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (REC-175's worker via CONDUCT #16, verified at the code; `node tools/mintid.mjs REC`).
 
 ### UI-73 · queued — **ELEVEN MEMBER-FACING SITES STILL READ A REFUSAL'S RAW `detail` INSTEAD OF ITS CANNED TRANSLATION** — `teach()`, `queueReason` … (whole text: the cut archive)
