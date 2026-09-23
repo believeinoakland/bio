@@ -19988,3 +19988,17 @@ paths: bio-plane/src/schema.mjs (comments only: the grade_axis comments on inqui
 why: schema.mjs documents grade_axis as two-valued while GRADE_AXES carries testimony since MK-2 / IC-142 (D-423, QUEUE.md on coord; MEMBER-KNOWLEDGE-DESIGN.md §3).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+### UI-73 · UI worker of CONDUCT #16 · 2026-09-23 — the eleven member-facing refusal `detail` readers read `refusalWords(r)`
+
+Branch `land/worker/UI-73`, base `origin/main` @ `0e5f7054`. Claimed BY SITE in `civicos-ui/app.html`:
+`teach()`, `signIn()`'s refusal line only, `queueReason`, `planeSaid`, the finder's per-subject error list
+(`s.errors` map), `releaseRefusal`, `attestRefusalHtml`, `addGo`'s `findings[]` map line, `doProposalAdopt`'s
+pre-flight line, `taskErr` (the forward picker), the leg pre-flight's `lp.refusal` line, `loadIntentVocab`'s
+`INTENT_VOCAB.words` line, and `errPane` (found by the class sweep). NOT touched: `refusalWords` itself,
+`actRefusalHtml`, `intentRefusalHtml`, `intentOptionsFrom` (it PARSES the store's composed `detail` and stays on it),
+every marked region's markers and every `SURFACES` key.
+Suites: `civicos-ui/test/refusal-translation-surface.test.mjs` (+ `.control.mjs`),
+`civicos-ui/test/preauth-vocabulary.test.mjs` (the DEC-49 SUBJECT arm's comment and re-read only), and any suite
+whose pin on these sites moves (named at release). `docs/development/CIVICOS_UI_STATE.md` (PREPENDED).
+**open as of 2026-09-23** — claimed at the start of the item.
