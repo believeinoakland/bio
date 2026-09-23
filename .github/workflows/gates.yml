@@ -17,10 +17,13 @@ name: gates
 
 on:
   push:
-    # `land/*` is change 2's ready-to-land prefix; `integrate/*` the integrator's union branch.
-    # `main` is deliberately absent: the verdict must exist BEFORE main moves, which is when the
-    # push guard reads it.
-    branches: ["land/**", "integrate/**"]
+    # RULED BY BOB 2026-09-23 ("Ok, 1 github run per batch"; TREE-SHARING §3): ONE run per LANDED BATCH.
+    # `main` moves only through CONDUCT's train (M0-111), so a push to `main` IS a landed batch. This run
+    # is the independent second machine — nobody waits on it; lanes reuse their own GREEN records — and
+    # its email to Bob is an alarm that `main` itself is red. It no longer runs on `land/*` or
+    # `integrate/*`: that re-ran every locally-green branch's battery a second time (M0-114's design,
+    # superseded), cost ~15 min a push, and emailed Bob on runner-only defects.
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
