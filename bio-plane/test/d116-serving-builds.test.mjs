@@ -24,22 +24,22 @@
  *
  * NEGATIVE CONTROL: DECLARED BEFORE ARMING, RUN 2026-09-23 against the final files (results recorded below, each arm
  *   ALONE, `bio-plane/src/index.mjs` / `store.mjs` restored byte-identically after each, verified by sha256 + cmp):
- *   (N1) THE ROW'S OWN CONTROL — the op=bootstrap handler copies env.VERSION into the DO field (`...out.result,
+ *   (1) THE ROW'S OWN CONTROL — the op=bootstrap handler copies env.VERSION into the DO field (`...out.result,
  *        storeVersion: env.VERSION`): MUST FAIL "the DO names ITS OWN build, not the routing isolate's"; MUST NOT fail
  *        the member arms.
- *   (N2) the DO route drops `storeVersion` (today's main): MUST FAIL the same assertion (got undefined).
- *   (N3) `memberVersions` fills `version` from the PLANE's env.VERSION instead of the member's reply: MUST FAIL the
+ *   (2) the DO route drops `storeVersion` (today's main): MUST FAIL the same assertion (got undefined).
+ *   (3) `memberVersions` fills `version` from the PLANE's env.VERSION instead of the member's reply: MUST FAIL the
  *        agent-worker and pdf-worker SERVING arms.
- *   (OS) OVER-STRICTNESS: all three parts on ONE build must read as that build everywhere — asserted in block 3, green
+ *   OVER-STRICTNESS, not an arm: all three parts on ONE build must read as that build everywhere — asserted in block 3, green
  *        in every arm above.
  *   RESULTS (2026-09-23; whole suite 16/16 before and after every arm):
- *   (N1) 13 passed, 3 FAILED, AS DECLARED: "the DO names ITS OWN build, not the routing isolate's" (want "store-A" got
+ *   arm 1: 13 passed, 3 FAILED, AS DECLARED: "the DO names ITS OWN build, not the routing isolate's" (want "store-A" got
  *        "isolate-B"), "so the two builds DIFFER on the wire", and "a caller cannot supply the DO's build" (the handler's
  *        copy wins over the DO's). Every member arm stayed green.
- *   (N2) 13 passed, 3 FAILED: the same DO assertion (got undefined), the caller arm (got null), AND the over-strictness
+ *   arm 2: 13 passed, 3 FAILED: the same DO assertion (got undefined), the caller arm (got null), AND the over-strictness
  *        block — declared green and it is NOT, correctly: with the field removed there is no DO reading for block 3 to
- *        agree with. Recorded rather than smoothed; the OS arm is green in N1 and N3, where the field exists.
- *   (N3) 13 passed, 3 FAILED, AS DECLARED: agent-worker and pdf-worker SERVING (got "isolate-B"), and "no member reads
+ *        agree with. Recorded rather than smoothed; the over-strictness block is green in arms 1 and 3, where the field exists.
+ *   arm 3: 13 passed, 3 FAILED, AS DECLARED: agent-worker and pdf-worker SERVING (got "isolate-B"), and "no member reads
  *        the plane's own build". Block 3 stayed green (one build everywhere cannot see this lie — which is why block 2
  *        runs the members on builds the plane never holds).
  *   Restores: index.mjs sha256 e9016c15…, store.mjs 123725c6…, each verified by sha256 AND byte compare after its arm.
