@@ -51,16 +51,6 @@ depends-on: REC-159 (sequence: the same `SESSION_OPS` sets and ROLE literal; mad
 accepts-when: each of the five answers a member session and an administrator session with the op's own result; the two unattended ops answer every session `MACHINE_CREDENTIAL_REQUIRED` with … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 1); designed 2026-09-21 by §4.10, BOB #20's entry drained by SCHEDULER #5.
 
-### REC-182 · queued — **TWO MANIFEST READS ORDER BY `created` ALONE, SO TIED ROWS COME BACK IN AN UNDEFINED ORDER: `op=export`'s `promotions` and `gateFacts`' `manifest`.** Re-read on `91bcea6b`: `store.mjs` lines 30093 and 31072 end `ORDER BY created`; D-171 made `#revisionKind` `created DESC, rowid DESC` and REC-32 the same. Harm UNDETERMINED: no consumer found that picks by position. And State Rules §6 I-20's *"immediately prior recorded snapshot"* does not say what prior means on a `created` tie. — owner RECORD.
-order: directly after CPDF-22 (REC-181 is in the cache): the same class D-171 just closed (a correction to just-landed work), the record's own order undefined on a tie; below the promote-integrity rows because no consumer is known to be harmed (SCHEDULER #16, 2026-09-23; D-171's worker via CONDUCT #17)
-milestone: M6
-interface: none (an order made total, as written); the integrator classifies.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6, I-20 (mechanical-writer conformance: the immediately prior recorded snapshot), with D-171's landed `created DESC, rowid DESC` as the precedent.
-depends-on: D-171 (its order is the precedent; on `land/conduct/c17-batch2`).
-scope: (1) both ORDER BYs gain `, rowid` (write order on a tie); a sweep of `store.mjs` manifest reads for any other untied `created` order, each tied or listed; (2) I-20's text states that on a `created` tie, prior means write order.
-accepts-when: in a NEW suite `bio-plane/test/rec-182-created-tie.test.mjs`, through the ops: two manifest rows with an equal `created` come back from `op=export` and the gate in write order on every run; I-20 names the tie rule. NEGATIVE CONTROL (`rec-182-created-tie.control.mjs`): drop `, rowid` from one read, and its arm fails by name.
-added: 2026-09-23 · SCHEDULER #16 (D-171's worker's finding via CONDUCT #17, verified at the code; `node tools/mintid.mjs REC`).
-
 ### REC-183 · queued — **`op=reinstate` CAN CONFIRM AN EDGE ONTO A RETIRED ITEM: `#edgeTransition` never reads the target's state, so cite, sever, retire, reinstate leaves a CONFIRMED edge on what State Rules §4.1 (D-168) makes uncitable.** Re-read on `91bcea6b`: `store.mjs` `#edgeTransition` (the reinstate/sever door) names no `current_state` and no `RETIRED_NOT_CITABLE`. — owner RECORD.
 order: directly after REC-182: the retired-not-citable fence D-168 built and REC-181 closed at promote, one door further, the record claiming what §4.1 forbids (CLAUDE.md §2); a correction to just-landed work (SCHEDULER #16, 2026-09-23; REC-181's worker via CONDUCT #17)
 milestone: M9

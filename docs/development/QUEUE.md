@@ -56,7 +56,7 @@ accepts-when: the deployed script's settings carry the explicit value, read back
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-54's DEBT row of 2026-07-29, NARROWED at the code; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-54» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-311 · running — SPAWNED 2026-09-23 20:53Z by CONDUCT #17 from the BACKLOG as a cloud worker (session 'WORKER <ID> (CONDUCT #17)'), under BOB #31's 20:51Z ruling; recorded here by SCHEDULER #16 so no refill places it twice. A worker finds this row with ledger.mjs find.
+### D-311 · integrated — finished; land/worker/D-311 @ 2fee8c79 integrated on land/conduct/c17-batch3 @ a8066053, waiting for its train. CORRECTION to this row's text and D-310's argument (D-311's worker, verified by CONDUCT #17): projectremove is not an administrator's act; the store refuses any NON-OWNER, and the act is derived from that refusal.
 order: after REC-158, with the plane's who-may-do-what: an act OFFERED that the store refuses is an overclaim in the pre-flight; the roster half costs narration only (no surface renders one off it) (SCHEDULER #6, 2026-09-21, LED-7 batch 14)
 milestone: M8
 interface: I3 — an addition to the published act set and a narrowing for machine credentials; the integrator mints and classifies the IC.
@@ -205,6 +205,16 @@ depends-on: D-420, D-440 (both on `land/conduct/c17-batch1`; the train that land
 scope: every "admitted, bound not held" mint answer carries `undetermined: {level, why}`; `image_bound` is removed at every producer and reader.
 accepts-when: `bio-plane/test/d420-image-page.test.mjs` reads `undetermined.level` and `undetermined.why` for a `{page, rect}` on a pre-change PDF, `d440-image-part.test.mjs` green, and `git grep -n image_bound -- bio-plane civicos-ui` returns nothing. NEGATIVE CONTROL (`nc-d420.mjs`, a new arm): restore the `image_bound` key, and D-420's suite fails by name.
 added: 2026-09-23 · SCHEDULER #16 (BOB #31's inbox entry, drained this commit; `node tools/mintid.mjs CPDF`).
+
+### REC-182 · queued — **TWO MANIFEST READS ORDER BY `created` ALONE, SO TIED ROWS COME BACK IN AN UNDEFINED ORDER: `op=export`'s `promotions` and `gateFacts`' `manifest`.** Re-read on `91bcea6b`: `store.mjs` lines 30093 and 31072 end `ORDER BY created`; D-171 made `#revisionKind` `created DESC, rowid DESC` and REC-32 the same. Harm UNDETERMINED: no consumer found that picks by position. And State Rules §6 I-20's *"immediately prior recorded snapshot"* does not say what prior means on a `created` tie. — owner RECORD.
+order: directly after CPDF-22 (REC-181 is in the cache): the same class D-171 just closed (a correction to just-landed work), the record's own order undefined on a tie; below the promote-integrity rows because no consumer is known to be harmed (SCHEDULER #16, 2026-09-23; D-171's worker via CONDUCT #17)
+milestone: M6
+interface: none (an order made total, as written); the integrator classifies.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6, I-20 (mechanical-writer conformance: the immediately prior recorded snapshot), with D-171's landed `created DESC, rowid DESC` as the precedent.
+depends-on: D-171 (its order is the precedent; on `land/conduct/c17-batch2`).
+scope: (1) both ORDER BYs gain `, rowid` (write order on a tie); a sweep of `store.mjs` manifest reads for any other untied `created` order, each tied or listed; (2) I-20's text states that on a `created` tie, prior means write order.
+accepts-when: in a NEW suite `bio-plane/test/rec-182-created-tie.test.mjs`, through the ops: two manifest rows with an equal `created` come back from `op=export` and the gate in write order on every run; I-20 names the tie rule. NEGATIVE CONTROL (`rec-182-created-tie.control.mjs`): drop `, rowid` from one read, and its arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (D-171's worker's finding via CONDUCT #17, verified at the code; `node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
