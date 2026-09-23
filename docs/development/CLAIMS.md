@@ -19817,3 +19817,26 @@ paths, BY SITE:
 in `bio-plane/src/`, `civicos-ui/app.html`, `ai-session-context.test.mjs`'s arms.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 RECORD (REC-173 — a MIGRATION REPLAY is admitted by what the server checks: ADMIN class + a registered drive-provenance capture listing this bundle and this bundle.md SHA-256)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for REC-173, worktree `.claude/worktrees/agent-ad88181d865129622`,
+branch `land/worker/REC-173`, from `origin/main` @ `b41d1edb` (carries REC-171 and BOB #30's ruling).
+authority: `QUEUE.md` `### REC-173 · running`; design `INVESTIGATIVE-SESSION.md` §11 item 5, "A MIGRATION IS A REPLAY, NOT A
+SURFACING" (BOB #30).
+paths, BY SITE:
+  - `bio-plane/src/index.mjs`: the `op === "promote" && passBody` block ONLY (the `assistantPrincipal` stamp and the D-78
+    restamp gain the replay admission; a new helper beside it for the provenance read).
+  - `bio-plane/src/store.mjs`: `promote` (the replay stamp read before `#surfacingGate`, and one insert in its transaction
+    beside the D-85 link), `#surfacedIn`, the stats counter and the purge list entry for the new table ONLY. NOT
+    `#surfacingGate`'s body, NOT `aiRunOpen`/`aiRunTick` (REC-172), NOT the frontier (D-389), NOT `reevaluations` (REC-160).
+  - `bio-plane/src/schema.mjs`: one NEW table `inquiry_migration_replays` (before `host_governor`).
+  - `bio-plane/migrate/migrate.mjs` (+ `migrate/README.md`): the token narrows to admin; the provenance registration moves
+    to the creation revision; the creation names the capture.
+  - `bio-plane/test/migrate.test.mjs` (admin token, an inquiry bundle in the fixture); NEW
+    `bio-plane/test/rec173-migration-replay.test.mjs` (+ its control driver); `bio-plane/test/hygiene.test.mjs` only if
+    its purge/schema list pins it; `bio-plane/dist/`.
+  - one NEW `docs/development/interface-changes/IC-*.md` (PROPOSED); `INVESTIGATIVE-SESSION.md` front matter and the
+    §11 paragraph's BUILT note; `construct-status.json` if a text moves.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
