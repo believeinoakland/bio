@@ -62,8 +62,13 @@ const te = new TextEncoder();
    of its own would let the two drift apart while each looked internally
    consistent. A member reading `plane-gate/1.0 (bio-checks 1.20.0)` on a case
    ratification and on a finding ratification has read the same fact. */
-export function runCaseGate({ caseId, edition, fm, priorCase }) {
-  const findings = checkCaseDocument(fm, { caseId, edition, priorCase: priorCase || null });
+/* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): two more facts the document cannot carry about
+   itself — its BODY (C-3.1's section followed the block into it) and each member's `basis` at the
+   PINNED bytes (C-2.8's testimony-row and per-ground arms read it). Omitting `memberBasis` BLINDS
+   those two arms rather than softening them; the store supplies it with the rest of the facts. */
+export function runCaseGate({ caseId, edition, fm, priorCase, body = null, memberBasis = null }) {
+  const findings = checkCaseDocument(fm, { caseId, edition, priorCase: priorCase || null,
+                                           body, memberBasis });
   const errors = findings
     .filter((x) => x.severity === "error")
     .map((x) => ({ check: x.check, detail: x.message, ...(x.repairs ? { repairs: x.repairs } : {}) }));

@@ -700,9 +700,29 @@ function rawInRatify(src) {
   const region = ratifyRegion(SRC);
   const raw = rawInRatify(SRC);
   const inBlock = callSpans(SRC, "\\.fetch\\(").filter((f) => f.start >= region.from && f.end <= region.to);
+  /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted: 8 -> 7 IN THE REGION,
+     and the eighth is FOLLOWED, not dropped. The container assembly — and its `recordcasemanifest` fetch —
+     moved VERBATIM out of the ratify handler into the module function `assembleCaseContainer`, because under
+     rule 12 op=caseratify can complete a case too and must assemble it by the same code. So the region carries
+     seven, and the moved fetch is held to detector D's rule at its new home, in the arm right after this one. */
   ok(`the ratify region is found and is the whole handler — ${region.text.split("\n").length} lines `
      + `carrying ${inBlock.length} Durable Object fetches`,
-     region && inBlock.length === 8);
+     region && inBlock.length === 7);
+  {
+    const from = SRC.indexOf("async function assembleCaseContainer(");
+    let i = SRC.indexOf("{", SRC.indexOf(")", from)), depth = 0, to = -1;
+    for (; from >= 0 && i < SRC.length; i++) {
+      if (SRC[i] === "{") depth++;
+      else if (SRC[i] === "}" && --depth === 0) { to = i + 1; break; }
+    }
+    const wrappers = callSpans(SRC, "\\bdoAnswer\\(");
+    const fetches = callSpans(SRC, "\\.fetch\\(").filter((f) => f.start >= from && f.end <= to
+      && /http:\/\/(?:do|x)\//.test(f.args));
+    const rawHere = fetches.filter((f) => !wrappers.some((w) => w.argStart <= f.start && f.end <= w.end));
+    t("D-442: the container assembly's ONE Durable Object fetch, moved out of the ratify handler, still goes "
+    + "through the chokepoint at its new home",
+      [from >= 0 && to > from, fetches.length, rawHere.length], [true, 1, 0]);
+  }
   t(`DETECTOR D — NO raw Durable Object read anywhere in the publish/ratify block; all eight go `
     + `through the chokepoint (violations: ${JSON.stringify((raw || []).map((x) => x.line + ":" + x.path))})`,
     (raw || []).length, 0);

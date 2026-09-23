@@ -117,6 +117,30 @@
  * pre-write check removed the READ-BACK check alone refuses and restores), R2–R5 (the refill ignores
  * state, depends-on, the cache's room, its line checks), F1/F2 (find blind to the backlog; the shared
  * archive read twice), M1 (mintid blind to the backlog), O1 (owed blind to the backlog).
+ *
+ * ------------------------------------------------ THE BACKLOG'S TAIL (M0-119, WORK-PIPELINE §2)
+ *
+ * BOB #28, 2026-09-22: *when `BACKLOG.md` is over its budget, the tail moves, not the head.* Cutting rows to their
+ * fields cut the rows next to run, and runs out. So the ORDER continues past `BACKLOG.md` into
+ * `docs/development/BACKLOG-LATER.md` (`LEDGERS.LATER`, where "tail"): the same grammar, the same archive, LOOKED UP and
+ * never read whole, no whole-file budget, a row ≤ 2 KiB. `PIPELINE` is the cache, the backlog and the tail, so every
+ * reader that walks it (`findId`, `pipelineRows` and through it rowdesign, rowsubstrate, owed and plancheck §2) reads
+ * the two backlog files as ONE sequence; P1 counts an open id across all three files; P2 and P5 judge the tail.
+ *   `planRebalance` (PURE) holds the split AT THE BUDGET: while `BACKLOG.md` is over it, its LAST row moves WHOLE to the
+ * head of the tail; else, while the tail's FIRST row fits, it moves back to the foot of `BACKLOG.md`. So `BACKLOG.md` is
+ * always the longest head of the order within budget, and the order itself never changes. `rebalanceConserved` refuses
+ * any plan that does not keep (i) the id multiset, (ii) the ORDER — the id sequence of backlog then tail — (iii) every
+ * row VERBATIM, (iv) each file's non-row lines, and (v) the split at the budget. `rebalance` writes it (the file that
+ * GAINS first, so an interruption leaves a row in both files, never neither), judges what it READS BACK, and restores by
+ * sha256 on a failure; `refill` walks the backlog then the tail, and rebalances in the same act; `coord.mjs write` runs
+ * a rebalance after every write's intents, so a PLACEMENT over budget moves the tail before the ledger checks run.
+ * THE TAIL FILE IS ABSENT UNTIL A ROW IS FIRST DEMOTED (or the `rebalance` intent creates it): an absent tail is an
+ * EMPTY tail, and a reader NAMES it `absent` rather than `unreadable` — a genuinely unreadable plan is still the cache
+ * or the backlog failing to read, which stays a refusal. Rows already cut to their fields STAY AS THEY ARE (§2, ruling
+ * (1)); this code restores none.
+ * NEGATIVE CONTROL (M0-119, arms in `ledger.control.mjs`): T1 the rebalance drops the demoted row, T2 the order breaks,
+ * T3 P1 blind to the tail, T4 the refill blind to the tail, T5 the placement's rebalance skipped in `coord.mjs`; and the
+ * item's own arm, one reader pointed at `BACKLOG.md` alone (`pipeline-readers.control.mjs` NC7).
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, unlinkSync } from "node:fs";
@@ -139,13 +163,21 @@ export const LEDGERS = {
              archive: "docs/archive/ledgers/QUEUE-closed.md", family: /^QUEUE-.*\.md$/ },
   DEBT:    { name: "DEBT",    grammar: "DEBT",  where: "live",    live: "docs/development/DEBT.md",
              archive: "docs/archive/ledgers/DEBT-closed.md",  family: /^DEBT-.*\.md$/ },
+  /* M0-119: the backlog's TAIL — the same order, continued; the same grammar and archive (see the header). OPTIONAL:
+     absent until a row is first demoted into it, and an absent tail is an empty one, NAMED `absent`. */
+  LATER:   { name: "LATER",   grammar: "QUEUE", where: "tail",    live: "docs/development/BACKLOG-LATER.md",
+             archive: "docs/archive/ledgers/QUEUE-closed.md", family: /^QUEUE-.*\.md$/, optional: true },
 };
 /* The files this archiver writes, EACH ONCE. `mintid.mjs` imports this list for its duplicate
    check, and QUEUE and BACKLOG share an archive — listed twice, every row in it would read as a
    duplicate of itself. Deduplicated here, at the source, for that reason. */
 export const ARCHIVE_TARGETS = [...new Set(Object.values(LEDGERS).map((l) => l.archive))];
-/* The live files of the QUEUE grammar: the cache, then the backlog. */
-export const PIPELINE = [LEDGERS.QUEUE, LEDGERS.BACKLOG];
+/* The live files of the QUEUE grammar: the cache, then the backlog, then the backlog's tail (M0-119) — the backlog and
+   its tail are ONE order, in that sequence. */
+export const PIPELINE = [LEDGERS.QUEUE, LEDGERS.BACKLOG, LEDGERS.LATER];
+/* A pipeline file's text for a reader: an OPTIONAL file that is absent reads as EMPTY and is reported absent; any
+   other null stays null (unreadable). */
+const readPipe = (repo, l) => { const t = readRel(repo, l.live); return t === null && l.optional ? { text: "", absent: true } : { text: t, absent: false }; };
 export const CACHE_ROWS = 8;
 
 export const CLOSED_QUEUE_STATES = new Set(["done", "superseded"]);
@@ -161,9 +193,12 @@ export const DEBT_FLOOR_BYTES = 10000;
    file already used. */
 /* RAISED 2026-09-22 by SCHEDULER #14 to 200 KiB, BOB #28's interim ruling (WORK-PIPELINE §2, *the tail moves, not the
    head*): the 150 KiB figure was cutting the rows next to run; it returns when M0-119's tail file lands. */
+/* RETURNED 2026-09-22 to 150 KiB by M0-119, as the ruling set: a placement over it now moves whole rows to the tail
+   (`LATER`, no whole-file budget — it is looked up, never read whole — and a row ≤ 2 KiB, a backlog row's figure). */
 export const BUDGET = {
   QUEUE:   { ledger: 40 * 1024,  row: 3 * 1024 },
-  BACKLOG: { ledger: 200 * 1024, row: 2 * 1024 },
+  BACKLOG: { ledger: 150 * 1024, row: 2 * 1024 },
+  LATER:   { ledger: null,       row: 2 * 1024 },
   DEBT:    { ledger: null,       row: 3 * 1024 },
 };
 /* An arm WARNs until the row that makes it satisfiable is `done`, then FAILs — read from the
@@ -367,16 +402,18 @@ export function strayHeadings(text) {
     missing key reads as an EMPTY file) so a suite can drive a planted backlog row without writing one
     into the live `BACKLOG.md`. An unreadable file is NAMED in `unreadable`, never read as empty. */
 export function pipelineRows({ repo = ROOT, texts = null } = {}) {
-  const rows = [], strays = [], unreadable = [], read = [];
+  const rows = [], strays = [], unreadable = [], read = [], absent = [];
   for (const l of PIPELINE) {
-    const t = texts ? (texts[l.name] ?? "") : readRel(repo, l.live);
+    const p = texts ? { text: texts[l.name] ?? "", absent: false } : readPipe(repo, l);
+    const t = p.text;
+    if (p.absent) { absent.push(l.live); continue; }
     if (t === null) { unreadable.push(l.live); continue; }
     read.push(l.live);
     for (const r of queueRows(t)) rows.push({ ...r, file: l.live, where: l.where, ledger: l.name });
     for (const s of strayHeadings(t)) strays.push({ ...s, file: l.live, where: l.where });
   }
   const count = (w) => rows.filter((r) => r.where === w).length;
-  return { rows, strays, unreadable, read, cacheRows: count("cache"), backlogRows: count("backlog") };
+  return { rows, strays, unreadable, absent, read, cacheRows: count("cache"), backlogRows: count("backlog"), tailRows: count("tail") };
 }
 
 /* ------------------------------------------------------------------------------ the move */
@@ -445,6 +482,7 @@ export function archiveId(id, { repo = ROOT, dryRun = false } = {}) {
   const live = {};
   for (const ledger of ledgersFor(id)) {
     const t = readRel(repo, ledger.live);
+    if (t === null && ledger.optional) continue;  /* M0-119: an absent tail holds no row to move */
     if (t === null) throw refusal("LEDGER_UNREADABLE", `${ledger.live} could not be read — nothing moved.`);
     if (rowsOf(ledger, t).some((r) => r.id === id)) live[ledger.name] = t;
   }
@@ -561,11 +599,13 @@ function loadClaims(repo) {
 /** Every arm, as data: (a)–(c) and the five pipeline invariants. `plancheck` prints them; the
     suite judges them on fixtures. */
 export function ledgerAudit({ repo = ROOT } = {}) {
-  const unreadable = [];
+  const unreadable = [], absent = [];
   const texts = {};
   for (const l of Object.values(LEDGERS)) {
-    texts[l.name] = readRel(repo, l.live);
-    if (texts[l.name] === null) unreadable.push(l.live);
+    const p = readPipe(repo, l);
+    texts[l.name] = p.text;
+    if (p.absent) absent.push(l.live);
+    else if (texts[l.name] === null) unreadable.push(l.live);
   }
   const armed = {}, arming = {};
   for (const [arm, rowId] of Object.entries(ARMING)) {
@@ -582,7 +622,7 @@ export function ledgerAudit({ repo = ROOT } = {}) {
   const claims = loadClaims(repo);
   for (const l of Object.values(LEDGERS)) {
     const t = texts[l.name];
-    if (t === null) continue;
+    if (t === null || absent.includes(l.live)) continue;
     const rows = rowsOf(l, t);
     closedLive[l.name] = rows.filter((r) => r.closed).map((r) => r.id);
     budget.ledgers.push({ ledger: l.name, file: l.live, bytes: bytes(t), budget: BUDGET[l.name].ledger,
@@ -603,9 +643,9 @@ export function ledgerAudit({ repo = ROOT } = {}) {
   }
   /* THE FIVE PIPELINE INVARIANTS (LED-6). Null when either file cannot be read — `unreadable`
      names it, and an unread file is never scored as a clean one. */
-  const pipeline = texts.QUEUE === null || texts.BACKLOG === null ? null
-    : pipelineInvariants(texts.QUEUE, texts.BACKLOG, { repo, claims, armed });
-  return { unreadable, armed, arming, closedLive, budget, depends, pipeline, claimsReadable: claims !== null };
+  const pipeline = texts.QUEUE === null || texts.BACKLOG === null || texts.LATER === null ? null
+    : pipelineInvariants(texts.QUEUE, texts.BACKLOG, { repo, claims, armed, later: texts.LATER });
+  return { unreadable, absent, armed, arming, closedLive, budget, depends, pipeline, claimsReadable: claims !== null };
 }
 
 /* ------------------------------------------------------ the work pipeline (LED-6, tool half) */
@@ -644,21 +684,25 @@ export function rowDepsMet(rowBody, { repo = ROOT, claims = null } = {}) {
 /** THE FIVE INVARIANTS (WORK-PIPELINE §2), as data, over a cache text and a backlog text. PURE
     but for the dependency lookups, which read `repo`. Each arm returns its violations; an empty
     list is a pass. `armed` says whether `plancheck` FAILs or WARNs on a violation. */
-export function pipelineInvariants(cache, backlog, { repo = ROOT, claims = null, armed = {} } = {}) {
-  const c = queueRows(cache), b = queueRows(backlog);
-  const unjudged = [...c.map((r) => ({ ...r, where: "cache" })), ...b.map((r) => ({ ...r, where: "backlog" }))]
+export function pipelineInvariants(cache, backlog, { repo = ROOT, claims = null, armed = {}, later = "" } = {}) {
+  /* M0-119: `later` is the backlog's TAIL (`BACKLOG-LATER.md`), the same order continued; "" when it is absent. */
+  const c = queueRows(cache), b = queueRows(backlog), lt = queueRows(later ?? "");
+  const unjudged = [...c.map((r) => ({ ...r, where: "cache" })), ...b.map((r) => ({ ...r, where: "backlog" })),
+                    ...lt.map((r) => ({ ...r, where: "tail" }))]
     .filter((r) => !r.open && !r.closed).map((r) => ({ id: r.id, state: r.state, where: r.where, line: r.line }));
-  /* P1 — per id, per count: an open id twice in one file is as wrong as once in each. */
+  /* P1 — per id, per count: an open id twice in one file is as wrong as once in each. Since M0-119 "exactly one place"
+     spans THREE files — the cache, the backlog and its tail (WORK-PIPELINE §2, ruling (3)). */
   const counts = new Map();
-  for (const [rows, where] of [[c, "cache"], [b, "backlog"]])
+  for (const [rows, where] of [[c, "cache"], [b, "backlog"], [lt, "tail"]])
     for (const r of rows) if (r.open) {
-      const e = counts.get(r.id) || { id: r.id, cache: 0, backlog: 0 };
+      const e = counts.get(r.id) || { id: r.id, cache: 0, backlog: 0, tail: 0 };
       e[where]++; counts.set(r.id, e);
     }
-  const P1 = [...counts.values()].filter((e) => e.cache + e.backlog !== 1);
-  /* P2 — no closed row in either file. */
+  const P1 = [...counts.values()].filter((e) => e.cache + e.backlog + e.tail !== 1);
+  /* P2 — no closed row in any of the three files. */
   const P2 = [...c.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "cache", line: r.line })),
-              ...b.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "backlog", line: r.line }))];
+              ...b.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "backlog", line: r.line })),
+              ...lt.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "tail", line: r.line }))];
   /* P3 — ≤ 8 rows in the cache (every row the grammar reads, whatever its state), none blocked. */
   const P3 = [];
   if (c.length > CACHE_ROWS) P3.push({ what: "rows", rows: c.length, max: CACHE_ROWS });
@@ -672,29 +716,31 @@ export function pipelineInvariants(cache, backlog, { repo = ROOT, claims = null,
       why: `depends-on names no id ("${String(m.value).slice(0, 80)}") — UNDETERMINED, so it cannot be shown met` });
     for (const u of m.unmet) P4.push({ id: r.id, line: r.line, dep: u.dep, why: u.why });
   }
-  /* P5 — both files, and every OPEN row in each, within budget. */
+  /* P5 — every file, and every OPEN row in each, within budget. The tail has no whole-file budget (M0-119: it is
+     looked up, never read whole); its rows are backlog rows, ≤ 2 KiB. */
   const P5 = [];
-  for (const [ledger, text, rows] of [[LEDGERS.QUEUE, cache, c], [LEDGERS.BACKLOG, backlog, b]]) {
+  for (const [ledger, text, rows] of [[LEDGERS.QUEUE, cache, c], [LEDGERS.BACKLOG, backlog, b], [LEDGERS.LATER, later ?? "", lt]]) {
     const B = BUDGET[ledger.name];
-    if (bytes(text) > B.ledger) P5.push({ file: ledger.live, bytes: bytes(text), budget: B.ledger });
+    if (B.ledger !== null && bytes(text) > B.ledger) P5.push({ file: ledger.live, bytes: bytes(text), budget: B.ledger });
     for (const r of rows) if (r.open && r.bytes > B.row)
       P5.push({ file: ledger.live, id: r.id, line: r.line, bytes: r.bytes, budget: B.row });
   }
   const arms = {
-    P1: { title: "every open id is in EXACTLY ONE of the cache and the backlog", armed: true, violations: P1 },
-    P2: { title: "no closed row is in the cache or the backlog", armed: armed.closedLive ?? true, violations: P2 },
+    P1: { title: "every open id is in EXACTLY ONE of the cache, the backlog and its tail", armed: true, violations: P1 },
+    P2: { title: "no closed row is in the cache, the backlog or its tail", armed: armed.closedLive ?? true, violations: P2 },
     P3: { title: `the cache holds ≤ ${CACHE_ROWS} rows and no \`blocked\` row`, armed: armed.pipeline ?? true, violations: P3 },
     P4: { title: "every open cache row's depends-on is MET", armed: armed.pipeline ?? true, violations: P4 },
-    P5: { title: `both files within budget (cache ≤ ${BUDGET.QUEUE.ledger} B, row ≤ ${BUDGET.QUEUE.row} B; `
-          + `backlog ≤ ${BUDGET.BACKLOG.ledger} B, row ≤ ${BUDGET.BACKLOG.row} B)`, armed: armed.pipeline ?? true, violations: P5 },
+    P5: { title: `every file within budget (cache ≤ ${BUDGET.QUEUE.ledger} B, row ≤ ${BUDGET.QUEUE.row} B; `
+          + `backlog ≤ ${BUDGET.BACKLOG.ledger} B, row ≤ ${BUDGET.BACKLOG.row} B; tail unbounded, row ≤ ${BUDGET.LATER.row} B)`,
+          armed: armed.pipeline ?? true, violations: P5 },
   };
-  return { arms, unjudged, cacheRows: c.length, backlogRows: b.length };
+  return { arms, unjudged, cacheRows: c.length, backlogRows: b.length, tailRows: lt.length };
 }
 
 /** A violation, one line, for the CLI and for `plancheck`. */
 export function describeViolation(arm, v) {
   switch (arm) {
-    case "P1": return `${v.id} is open ${v.cache}× in the cache and ${v.backlog}× in the backlog`;
+    case "P1": return `${v.id} is open ${v.cache}× in the cache, ${v.backlog}× in the backlog and ${v.tail ?? 0}× in its tail`;
     case "P2": return `${v.id} · ${v.state} in the ${v.where} (line ${v.line}) — archive it: node tools/ledger.mjs archive ${v.id}`;
     case "P3": return v.what === "rows" ? `the cache holds ${v.rows} rows, over ${v.max}` : `${v.id} is \`blocked\` in the cache (line ${v.line})`;
     case "P4": return `${v.id} (cache line ${v.line})${v.dep ? ` depends on ${v.dep}` : ""}: ${v.why}`;
@@ -724,14 +770,16 @@ function sameMultiset(a, b) {
 
 /** PURE: which backlog rows a refill moves, and why each examined row that is not moved is not.
     Walks the backlog from the TOP and stops when the cache is full. */
-export function selectRefill(cache, backlog, { repo = ROOT, claims = null, cacheRows = CACHE_ROWS } = {}) {
-  const c = queueRows(cache), b = queueRows(backlog);
+export function selectRefill(cache, backlog, { repo = ROOT, claims = null, cacheRows = CACHE_ROWS, later = "" } = {}) {
+  /* M0-119: the walk is the ONE order — the backlog, then its tail — and each row says which file it came from. */
+  const c = queueRows(cache);
+  const b = [...queueRows(backlog).map((r) => ({ ...r, from: "backlog" })), ...queueRows(later ?? "").map((r) => ({ ...r, from: "tail" }))];
   const room = Math.max(0, cacheRows - c.length);
   const inCache = new Set(c.filter((r) => r.open).map((r) => r.id));
   const take = [], skipped = [];
   for (const r of b) {
     if (take.length >= room) break;
-    const skip = (why) => skipped.push({ id: r.id, state: r.state, line: r.line, why });
+    const skip = (why) => skipped.push({ id: r.id, state: r.state, line: r.line, from: r.from, why });
     if (r.closed) { skip(`\`${r.state}\` — a closed row is never moved; archive it (node tools/ledger.mjs archive ${r.id})`); continue; }
     if (r.state === "blocked") { skip("`blocked` — skipped, never moved; it stays where the order put it"); continue; }
     if (r.state !== "queued") { skip(`\`${r.state}\` — only a \`queued\` row is moved`); continue; }
@@ -787,39 +835,214 @@ export function refillConserved({ cache, backlog, archives, newCache, newBacklog
   return { ok: ids.ok && !backlogOff.length && !cacheOff.length && !notMoved.length, ids, backlogOff, cacheOff, notMoved };
 }
 
+/* ------------------------------------------------------ the backlog's tail (M0-119) */
+
+/* The tail file's preamble, written when the first row is demoted into an absent tail (or by the `rebalance` intent).
+   It carries no id-shaped token and no ruling marker: it is a corpus `mintid` and `decided` read. */
+export const LATER_HEADER = "# The backlog's tail — the same order, continued\n\n"
+  + "`docs/development/BACKLOG.md` holds the head of the order, within its budget; this file holds the REST of the same\n"
+  + "order, and its first row comes directly after `BACKLOG.md`'s last (`docs/development/WORK-PIPELINE.md` §2). It is\n"
+  + "LOOKED UP, never read whole: find any row with `node tools/ledger.mjs find <ID>`. Rows arrive and leave only by\n"
+  + "tool: a placement that puts `BACKLOG.md` over its budget moves whole rows from its foot to the head of this file,\n"
+  + "and a refill or any later write moves them back as room frees (`tools/ledger.mjs` `planRebalance`). No row is\n"
+  + "ever cut to fit. No whole-file budget; a row is held to 2 KiB, as in the backlog.\n\n## Rows\n";
+
+/* A row's own lines — its trailing blank lines are the separator, not the row. */
+function rowLines(lines, r) {
+  let e = r.end;
+  while (e > r.start + 1 && lines[e - 1].trim() === "") e--;
+  return lines.slice(r.start, e);
+}
+const fileLinesOf = (text) => { const { lines, limit } = linesOf(text); return lines.slice(0, limit); };
+const joinFile = (ls) => ls.join("\n").replace(/\n*$/, "\n");
+const trimEnd = (ls) => { const o = ls.slice(); while (o.length && o[o.length - 1].trim() === "") o.pop(); return o; };
+
+/** A text less one row (its span and the blank lines that separated it). */
+function withoutRow(text, r) {
+  const body = fileLinesOf(text);
+  return joinFile([...body.slice(0, r.start), ...body.slice(r.end)]);
+}
+/** A row block placed BEFORE the first row of a text (the tail's HEAD), or at its end when it holds none. */
+function atHead(text, blk) {
+  const body = fileLinesOf(text);
+  const rows = queueRows(text);
+  if (!rows.length) return joinFile([...trimEnd(body), "", ...blk]);
+  const at = rows[0].start;
+  return joinFile([...body.slice(0, at), ...blk, "", ...body.slice(at)]);
+}
+/** A row block placed AFTER the last row of a text (the backlog's FOOT), before any non-row block that follows it. */
+function atFoot(text, blk) {
+  const body = fileLinesOf(text);
+  const rows = queueRows(text);
+  if (!rows.length) return joinFile([...trimEnd(body), "", ...blk]);
+  const last = rows[rows.length - 1];
+  let e = last.end;
+  while (e > last.start + 1 && body[e - 1].trim() === "") e--;
+  const after = body.slice(e);
+  return joinFile([...body.slice(0, e), "", ...blk, ...(after.length && nonBlank(after[0]) ? [""] : []), ...after]);
+}
+
+/** PURE: hold the split between `BACKLOG.md` and its tail AT THE BUDGET, moving WHOLE rows and never the order. While
+    the backlog is over `budget`, its LAST row moves to the HEAD of the tail; otherwise, while the tail's FIRST row fits,
+    it moves to the FOOT of the backlog. `later` "" (or null) is an absent tail: it gains `LATER_HEADER` only if a row
+    is demoted into it. Returns the new texts and the ids moved each way, in order. */
+export function planRebalance(backlog, later, { budget = BUDGET.BACKLOG.ledger } = {}) {
+  const was = later ?? "";
+  let B = backlog, T = was === "" ? LATER_HEADER : was;
+  const demoted = [], promoted = [];
+  while (bytes(B) > budget) {
+    const rows = queueRows(B);
+    if (!rows.length) break;
+    const r = rows[rows.length - 1];
+    T = atHead(T, rowLines(linesOf(B).lines, r));
+    B = withoutRow(B, r);
+    demoted.unshift(r.id);
+  }
+  if (!demoted.length) {
+    for (;;) {
+      const r = queueRows(T)[0];
+      if (!r) break;
+      const grown = atFoot(B, rowLines(linesOf(T).lines, r));
+      if (bytes(grown) > budget) break;
+      B = grown;
+      T = withoutRow(T, r);
+      promoted.push(r.id);
+    }
+  }
+  const moved = demoted.length + promoted.length > 0;
+  return { newBacklog: moved ? B : backlog, newLater: moved ? T : was, demoted, promoted };
+}
+
+/** THE REBALANCE'S CONSERVATION, over texts: (i) the id multiset of backlog ∪ tail; (ii) the ORDER — the id sequence of
+    the backlog then the tail — unchanged; (iii) every row VERBATIM, exactly as often; (iv) each file's non-row lines
+    unchanged (the tail may gain `LATER_HEADER`, and only when it was absent); (v) the split AT THE BUDGET — the backlog
+    within it (or holding no row), and the tail's first row not fitting beside it. */
+export function rebalanceConserved({ backlog, later, newBacklog, newLater, budget = BUDGET.BACKLOG.ledger }) {
+  const was = later ?? "", now = newLater ?? "";
+  const base = was === "" && now !== "" ? LATER_HEADER : was;
+  const bR = queueRows(backlog), lR = queueRows(base), nbR = queueRows(newBacklog), nlR = queueRows(now);
+  const ids = conservation(idCounts(LEDGERS.QUEUE, [backlog, base]), idCounts(LEDGERS.QUEUE, [newBacklog, now]));
+  const seq = (rs) => rs.map((r) => r.id).join(" ");
+  const orderOk = seq([...bR, ...lR]) === seq([...nbR, ...nlR]);
+  const bodies = (text, rs) => { const ls = linesOf(text).lines; return rs.map((r) => rowLines(ls, r).join("\n")); };
+  const rowsOff = sameMultiset(multiset([...bodies(backlog, bR), ...bodies(base, lR)]), multiset([...bodies(newBacklog, nbR), ...bodies(now, nlR)]));
+  const outside = (text, rs) => {
+    const inRow = new Set();
+    for (const r of rs) for (let i = r.start; i < r.end; i++) inRow.add(i);
+    return fileLinesOf(text).filter((l, i) => !inRow.has(i) && nonBlank(l));
+  };
+  const frameOff = [...sameMultiset(multiset(outside(backlog, bR)), multiset(outside(newBacklog, nbR))).map((x) => `backlog ${x}`),
+                    ...sameMultiset(multiset(outside(base, lR)), multiset(outside(now, nlR))).map((x) => `tail ${x}`)];
+  const within = bytes(newBacklog) <= budget || nbR.length === 0;
+  const split = !within || !nlR.length || bytes(atFoot(newBacklog, rowLines(linesOf(now).lines, nlR[0]))) > budget;
+  return { ok: ids.ok && orderOk && !rowsOff.length && !frameOff.length && within && split,
+           ids, orderOk, rowsOff, frameOff, within, split };
+}
+const sayRebalance = (j) => `ids dropped: ${j.ids.dropped.join(", ") || "none"}; ids gained: ${j.ids.gained.join(", ") || "none"}; `
+  + `order kept: ${j.orderOk}; rows verbatim: ${j.rowsOff.slice(0, 3).join("; ") || "yes"}; non-row lines: ${j.frameOff.slice(0, 3).join("; ") || "kept"}; `
+  + `backlog within budget: ${j.within}; split at the budget: ${j.split}`;
+
+/** Hold the backlog's split at its budget, on disk (WORK-PIPELINE §2, ruling (2)). `ensure` writes an absent tail's
+    header even when no row moves (the `rebalance` intent's first run). Refused, nothing written, when the backlog cannot
+    be read or the plan does not conserve; the file that GAINS is written first, what is READ BACK is judged, and a
+    failure restores both files and verifies the restore by sha256. */
+export function rebalance({ repo = ROOT, dryRun = false, budget = BUDGET.BACKLOG.ledger, ensure = false } = {}) {
+  if (!dryRun) refuseSwitched(repo, "rebalance");
+  const backlogPath = join(repo, LEDGERS.BACKLOG.live), laterPath = join(repo, LEDGERS.LATER.live);
+  const backlog = readRel(repo, LEDGERS.BACKLOG.live);
+  if (backlog === null) throw refusal("LEDGER_UNREADABLE", `${LEDGERS.BACKLOG.live} could not be read — nothing moved. An unreadable ledger is not an empty one.`);
+  const lp = readPipe(repo, LEDGERS.LATER), later = lp.text;
+  const plan = planRebalance(backlog, later, { budget });
+  const judgedPlan = rebalanceConserved({ backlog, later, newBacklog: plan.newBacklog, newLater: plan.newLater, budget });
+  if (!judgedPlan.ok) throw refusal("CONSERVATION_BROKEN", `the planned rebalance does not conserve the order — ${sayRebalance(judgedPlan)}. Nothing written.`);
+  const out = { demoted: plan.demoted, promoted: plan.promoted, dryRun, tailAbsent: lp.absent, backlogBytes: bytes(plan.newBacklog), budget };
+  const changed = plan.newBacklog !== backlog || plan.newLater !== later;
+  const create = ensure && lp.absent && !changed;
+  if (dryRun || (!changed && !create)) return { ...out, written: false };
+  if (create) { writeFileSync(laterPath, LATER_HEADER); return { ...out, written: true, created: true }; }
+  const writes = [[laterPath, plan.newLater], [backlogPath, plan.newBacklog]];
+  if (!plan.demoted.length) writes.reverse();
+  for (const [p, text] of writes) writeFileSync(p, text);
+  const backB = readFileSync(backlogPath, "utf8"), backT = readFileSync(laterPath, "utf8");
+  const judgedDisk = rebalanceConserved({ backlog, later, newBacklog: backB, newLater: backT, budget });
+  if (!judgedDisk.ok) {
+    writeFileSync(backlogPath, backlog);
+    if (lp.absent) unlinkSync(laterPath); else writeFileSync(laterPath, later);
+    const restored = sha(readFileSync(backlogPath, "utf8")) === sha(backlog)
+      && (lp.absent ? !existsSync(laterPath) : sha(readFileSync(laterPath, "utf8")) === sha(later));
+    throw refusal("CONSERVATION_BROKEN", `the rebalance did not conserve what was READ BACK — ${sayRebalance(judgedDisk)}. `
+      + `Both files restored from memory — restored byte-identically: ${restored ? "YES" : "NO"}.`);
+  }
+  return { ...out, written: true };
+}
+
 /** Move the next runnable rows backlog -> cache (WORK-PIPELINE §2 step 2). Refused, nothing
-    written, when either file cannot be read or the move would not conserve. */
+    written, when either file cannot be read or the move would not conserve.
+    M0-119: the rows are taken from the ONE order — the backlog, then its tail — and the backlog's split is rebalanced
+    in the same act (rows promoted from the tail as the moves free room), all judged together. */
 export function refill({ repo = ROOT, dryRun = false, cacheRows = CACHE_ROWS } = {}) {
   if (!dryRun) refuseSwitched(repo, "refill");
-  const cachePath = join(repo, LEDGERS.QUEUE.live), backlogPath = join(repo, LEDGERS.BACKLOG.live);
+  const cachePath = join(repo, LEDGERS.QUEUE.live), backlogPath = join(repo, LEDGERS.BACKLOG.live), laterPath = join(repo, LEDGERS.LATER.live);
   const cache = readRel(repo, LEDGERS.QUEUE.live), backlog = readRel(repo, LEDGERS.BACKLOG.live);
   for (const [t, l] of [[cache, LEDGERS.QUEUE], [backlog, LEDGERS.BACKLOG]])
     if (t === null) throw refusal("LEDGER_UNREADABLE", `${l.live} could not be read — nothing moved. An unreadable ledger is not an empty one.`);
+  const lp = readPipe(repo, LEDGERS.LATER), later = lp.text;
   const claims = loadClaims(repo);
-  const sel = selectRefill(cache, backlog, { repo, claims, cacheRows });
+  const sel = selectRefill(cache, backlog, { repo, claims, cacheRows, later });
   const archives = archiveFiles(LEDGERS.QUEUE, { repo }).map((f) => readRel(repo, f)).filter((t) => t !== null);
-  const base = { ...sel, moved: sel.take.map((r) => ({ id: r.id, line: r.line, bytes: r.bytes })), dryRun };
-  if (!sel.take.length) return { ...base, written: false };
-  const plan = planRefill(cache, backlog, sel.take);
+  const base = { ...sel, moved: sel.take.map((r) => ({ id: r.id, line: r.line, bytes: r.bytes, from: r.from })), dryRun };
+  const takeB = sel.take.filter((r) => r.from !== "tail"), takeT = sel.take.filter((r) => r.from === "tail");
+  const plan = planRefill(cache, backlog, takeB);
+  const tail = takeT.length ? planRefill(plan.newCache, later, takeT) : { newCache: plan.newCache, newBacklog: later };
+  const bal = planRebalance(plan.newBacklog, tail.newBacklog);
+  const next = { cache: tail.newCache, backlog: bal.newBacklog, later: bal.newLater };
+  const moves = { demoted: bal.demoted, promoted: bal.promoted };
+  if (next.cache === cache && next.backlog === backlog && next.later === later) return { ...base, ...moves, written: false };
   const say = (j) => `ids dropped: ${j.ids.dropped.join(", ") || "none"}; ids gained: ${j.ids.gained.join(", ") || "none"}; `
     + `backlog lines: ${j.backlogOff.slice(0, 3).join("; ") || "conserved"}; cache lines: ${j.cacheOff.slice(0, 3).join("; ") || "conserved"}; `
     + `not moved as planned: ${j.notMoved.join(", ") || "none"}`;
-  const judge = (nc, nb) => refillConserved({ cache, backlog, archives, newCache: nc, newBacklog: nb, take: sel.take });
-  const planned = judge(plan.newCache, plan.newBacklog);
+  const everything = (c, b, l) => idCounts(LEDGERS.QUEUE, [c, b, l, ...archives]);
+  const before = everything(cache, backlog, later);
+  /* THE PLAN, judged step by step — the backlog's moves, the tail's moves, the rebalance — and as a whole (the id
+     multiset of cache ∪ backlog ∪ tail ∪ archive). */
+  const judge = () => {
+    const s1 = refillConserved({ cache, backlog, archives: [...archives, later], newCache: plan.newCache, newBacklog: plan.newBacklog, take: takeB });
+    const s2 = takeT.length ? refillConserved({ cache: plan.newCache, backlog: later, archives: [...archives, plan.newBacklog],
+                                                newCache: tail.newCache, newBacklog: tail.newBacklog, take: takeT }) : null;
+    const s3 = rebalanceConserved({ backlog: plan.newBacklog, later: tail.newBacklog, newBacklog: bal.newBacklog, newLater: bal.newLater });
+    const ids = conservation(before, everything(next.cache, next.backlog, next.later));
+    return { ok: ids.ok && s1.ok && (!s2 || s2.ok) && s3.ok, ids,
+             backlogOff: [...s1.backlogOff, ...(s2 ? s2.backlogOff.map((x) => `tail ${x}`) : []), ...(s3.ok ? [] : [`rebalance: ${sayRebalance(s3)}`])],
+             cacheOff: [...s1.cacheOff, ...(s2 ? s2.cacheOff : [])], notMoved: [...s1.notMoved, ...(s2 ? s2.notMoved : [])] };
+  };
+  const planned = judge();
   if (!planned.ok) throw refusal("CONSERVATION_BROKEN", `the planned refill does not conserve the pipeline — ${say(planned)}. Nothing written.`);
-  if (dryRun) return { ...base, written: false, conservation: planned.ids };
-  /* CACHE FIRST: an interruption between the writes leaves a row in both files (P1 names it), never in neither. */
-  writeFileSync(cachePath, plan.newCache);
-  writeFileSync(backlogPath, plan.newBacklog);
-  const disk = judge(readFileSync(cachePath, "utf8"), readFileSync(backlogPath, "utf8"));
+  if (dryRun) return { ...base, ...moves, written: false, conservation: planned.ids };
+  /* What is READ BACK must be exactly the plan, and conserve the whole pipeline on its own terms. */
+  const judgeDisk = (dc, db, dl) => {
+    const ids = conservation(before, everything(dc, db, dl));
+    const same = dc === next.cache && db === next.backlog && dl === next.later;
+    return { ok: ids.ok && same, ids, backlogOff: same ? [] : ["what was read back is not what was planned"], cacheOff: [], notMoved: [] };
+  };
+  /* CACHE FIRST: an interruption between the writes leaves a row in both files (P1 names it), never in neither. Then the
+     file that GAINS in the rebalance before the one that loses, for the same reason. */
+  const tailChanged = next.later !== later;
+  writeFileSync(cachePath, next.cache);
+  const rest = [[backlogPath, next.backlog], ...(tailChanged ? [[laterPath, next.later]] : [])];
+  if (bal.demoted.length) rest.reverse();
+  for (const [p, text] of rest) writeFileSync(p, text);
+  const readTail = () => (tailChanged || !lp.absent ? readFileSync(laterPath, "utf8") : "");
+  const disk = judgeDisk(readFileSync(cachePath, "utf8"), readFileSync(backlogPath, "utf8"), readTail());
   if (!disk.ok) {
     writeFileSync(cachePath, cache);
     writeFileSync(backlogPath, backlog);
-    const restored = sha(readFileSync(cachePath, "utf8")) === sha(cache) && sha(readFileSync(backlogPath, "utf8")) === sha(backlog);
+    if (tailChanged) { if (lp.absent) unlinkSync(laterPath); else writeFileSync(laterPath, later); }
+    const restored = sha(readFileSync(cachePath, "utf8")) === sha(cache) && sha(readFileSync(backlogPath, "utf8")) === sha(backlog)
+      && (lp.absent ? !existsSync(laterPath) : sha(readFileSync(laterPath, "utf8")) === sha(later));
     throw refusal("CONSERVATION_BROKEN", `the refill did not conserve what was READ BACK — ${say(disk)}. `
       + `Both files restored from memory — restored byte-identically: ${restored ? "YES" : "NO"}.`);
   }
-  return { ...base, written: true, conservation: disk.ids };
+  return { ...base, ...moves, written: true, conservation: disk.ids };
 }
 
 /* ---------------------------------------------------------------------------------- CLI */
@@ -828,15 +1051,15 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const [cmd, ...rest] = process.argv.slice(2);
   const dryRun = rest.includes("--dry-run");
   const ids = rest.filter((a) => !a.startsWith("--"));
-  const usage = () => { console.error("usage: ledger.mjs archive <ID> [<ID> ...] [--dry-run] | refill [--dry-run] | find <ID> | invariants | audit"); process.exit(2); };
+  const usage = () => { console.error("usage: ledger.mjs archive <ID> [<ID> ...] [--dry-run] | refill [--dry-run] | rebalance [--dry-run] | find <ID> | invariants | audit"); process.exit(2); };
   /* M0-110: on a switched tree the ledgers live on `coord`, so the two WRITING commands run as ONE coord write —
      re-applied to the fresh tip on a non-fast-forward, with the ledger checks before the push. */
-  if ((cmd === "archive" || cmd === "refill") && isSwitched(ROOT) && !dryRun) {
+  if ((cmd === "archive" || cmd === "refill" || cmd === "rebalance") && isSwitched(ROOT) && !dryRun) {
     if (cmd === "archive" && !ids.length) usage();
     const { write, CoordError } = await import("./coord.mjs");
-    const intents = cmd === "archive" ? ids.map((id) => ({ op: "archive", id })) : [{ op: "refill" }];
+    const intents = cmd === "archive" ? ids.map((id) => ({ op: "archive", id })) : [{ op: cmd }];
     try {
-      const r = await write({ intents, message: cmd === "archive" ? `ledger: archive ${ids.join(" ")}` : "ledger: refill the cache" });
+      const r = await write({ intents, message: cmd === "archive" ? `ledger: archive ${ids.join(" ")}` : cmd === "refill" ? "ledger: refill the cache" : "ledger: rebalance the backlog and its tail" });
       console.log(`${r.status}${r.commit ? ` ${r.commit.slice(0, 8)}` : ""} on coord — ${cmd} ${ids.join(" ")} (${(r.changed || []).join(", ") || "nothing changed"})`);
       process.exit(0);
     } catch (e) {
@@ -869,7 +1092,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     if (ids.length !== 1) usage();
     if (isSwitched(ROOT)) { const { freshen } = await import("./coord.mjs"); freshen(ROOT); }
     const f = findId(ids[0]);
-    if (!f.length) { console.log(`${ids[0]}: not found in the cache, the backlog, the live DEBT ledger or any archive file`); process.exit(1); }
+    if (!f.length) { console.log(`${ids[0]}: not found in the cache, the backlog, its tail, the live DEBT ledger or any archive file`); process.exit(1); }
     for (const x of f) console.log(`${x.id} · ${x.state} · ${x.ledger} ${x.where} · ${x.file}:${x.line}`);
   } else if (cmd === "refill") {
     if (ids.length) usage();
@@ -881,11 +1104,24 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       process.exit(1);
     }
     console.log(`the cache held ${r.cacheRowsBefore} row(s); room for ${r.room} of ${CACHE_ROWS}`);
-    for (const m of r.moved) console.log(`${dryRun ? "would move" : "moved"} ${m.id} (backlog line ${m.line}, ${m.bytes} B) -> ${LEDGERS.QUEUE.live}`);
-    for (const s of r.skipped) console.log(`  skipped ${s.id} · ${s.state} (backlog line ${s.line}): ${s.why}`);
+    for (const m of r.moved) console.log(`${dryRun ? "would move" : "moved"} ${m.id} (${m.from} line ${m.line}, ${m.bytes} B) -> ${LEDGERS.QUEUE.live}`);
+    for (const s of r.skipped) console.log(`  skipped ${s.id} · ${s.state} (${s.from} line ${s.line}): ${s.why}`);
+    if (r.promoted?.length) console.log(`${dryRun ? "would promote" : "promoted"} from the tail to the backlog's foot: ${r.promoted.join(", ")}`);
+    if (r.demoted?.length) console.log(`${dryRun ? "would demote" : "demoted"} from the backlog's foot to the tail's head: ${r.demoted.join(", ")}`);
     if (!r.moved.length) console.log(`nothing moved — ${r.room ? "the backlog has nothing runnable" : "the cache is full"}`);
     else console.log(`${r.moved.length} row(s) ${dryRun ? "would move" : "moved"} · id multiset of cache ∪ backlog ∪ archive conserved`
       + (dryRun ? " (planned)" : " (read back from disk)"));
+  } else if (cmd === "rebalance") {
+    if (ids.length) usage();
+    let r;
+    try { r = rebalance({ dryRun }); }
+    catch (e) {
+      if (!(e instanceof Refusal)) throw e;
+      console.error(`REFUSED rebalance [${e.code}]: ${e.message}`);
+      process.exit(1);
+    }
+    console.log(`backlog ${r.backlogBytes} B of ${r.budget}; ${dryRun ? "would demote" : "demoted"} ${r.demoted.join(", ") || "nothing"}; `
+      + `${dryRun ? "would promote" : "promoted"} ${r.promoted.join(", ") || "nothing"}${r.tailAbsent ? " (the tail file is absent)" : ""}`);
   } else if (cmd === "invariants") {
     const a = ledgerAudit();
     if (!a.pipeline) { console.log(`UNKNOWN — could not read ${a.unreadable.join(", ")}. An unreadable ledger is not an empty one.`); process.exit(1); }
@@ -899,7 +1135,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       if (verdict === "WARN") console.log(`        (WARN until ${ARMING.pipeline} is done — the migration makes this satisfiable)`);
     }
     for (const u of a.pipeline.unjudged) console.log(`UNJUDGED  ${u.id} · ${u.state} in the ${u.where} (line ${u.line}) — neither open nor closed`);
-    console.log(`cache ${a.pipeline.cacheRows} row(s), backlog ${a.pipeline.backlogRows} row(s); ${failN} armed FAIL`);
+    console.log(`cache ${a.pipeline.cacheRows} row(s), backlog ${a.pipeline.backlogRows} row(s), tail ${a.pipeline.tailRows} row(s)`
+      + `${a.absent.includes(LEDGERS.LATER.live) ? " (the tail file is absent: an empty tail)" : ""}; ${failN} armed FAIL`);
     process.exit(failN ? 1 : 0);
   } else if (cmd === "audit") {
     const a = ledgerAudit();

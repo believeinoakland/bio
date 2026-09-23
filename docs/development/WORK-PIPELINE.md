@@ -19,6 +19,7 @@ narrative. `DEBT.md` 504 KB holding 222 open rows averaging 2.3 KB. No session c
 | --- | --- | --- | --- |
 | `docs/development/QUEUE.md` — **the cache** | the BOB INBOX's UNDRAINED entries; then at most **8** rows: those `running`, then the next `queued` rows whose `depends-on` is met, in order | ≤ 40 KB; a row ≤ 3 KB | **WHOLE, by every session** |
 | `docs/development/BACKLOG.md` — **everything still to do** | every open item NOT in the cache, in the order it will be processed (top = next), `blocked` rows included with what unblocks them | ≤ 150 KB; a row ≤ 2 KB | **WHOLE, by SCHEDULER at every replenish and when ordering** (corrected 2026-09-19 by BOB #16: it read CONDUCT, before SCHEDULER existed); by id otherwise |
+| `docs/development/BACKLOG-LATER.md` — **the backlog's tail** (M0-119) | the SAME order, continued: its first row comes directly after `BACKLOG.md`'s last (§2) | unbounded; a row ≤ 2 KiB | **LOOKED UP** (`node tools/ledger.mjs find <ID>`) |
 | `docs/archive/ledgers/QUEUE-closed*.md` — **what has been done** | every `done` / `superseded` row, verbatim, as it stood when it closed | unbounded | **LOOKED UP** (`node tools/ledger.mjs find <ID>`) |
 
 **All three live on the branch `coord`, not `main`, since M0-110** (`TREE-SHARING.md` §1): each is read with
@@ -62,6 +63,15 @@ rows back from that head as room frees. (3) Every reader of the backlog (`ledger
 sequence, and "exactly one place" spans all three. (4) It is a new state file, so it rides with M0-110's family to
 `coord`: its row is placed after M0-110's cutover. **Until it is built**, `BACKLOG.md`'s budget is 200 KiB
 (SCHEDULER sets it in `ledger.mjs`) and no new cut is made.
+**As built (M0-119, 2026-09-22):** `tools/ledger.mjs` — `LEDGERS.LATER` in `PIPELINE`, `planRebalance` /
+`rebalanceConserved` / `rebalance` (the split held at the budget both ways; id multiset, ORDER, every row verbatim, each
+file's non-row lines and the split judged on the plan and on what is read back), `refill` walking the backlog then the
+tail and rebalancing in the same act, P1/P2/P5 over three files; the budget is 150 KiB again. `tools/coord.mjs write`
+ends every write with a rebalance before its ledger checks, so a placement over budget moves the tail; its new intents
+are `rebalance` (creates an absent tail's header) and `swap` (an exact text found once — a preamble line). An ABSENT
+tail is an empty one, named `absent`, never `unreadable`. Readers: `findId`, `pipelineRows` (and through it `rowdesign`,
+`rowsubstrate`, `plancheck` §2), `owed.mjs`, `mintid.mjs`' corpora, `ledgerAudit`. Rows already cut STAY CUT, per (1):
+nothing restores them from the cut archive.
 
 ## 3. DEBT.md FOLDS INTO THE BUILD PLAN, and is retired as a live file
 

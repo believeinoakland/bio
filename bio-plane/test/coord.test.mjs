@@ -18,6 +18,9 @@
  *   §6 BOB #28's ruling 2 negative control: a write that plants a closed row in the cache is REFUSED by name, and
  *      neither branch moves;
  *   §7 refusals, the archive run inside a write, the read command, the churn figure, the push guard's coord-only arm.
+ *   §10 (M0-119) a placement over the backlog's budget, through a real write, moves WHOLE rows from BACKLOG.md's foot to
+ *      the head of BACKLOG-LATER.md: every id in exactly one file, in order, none cut; room freed brings them back; the
+ *      `swap` and `rebalance` intents. Its control is `ledger.control.mjs` arm T5 (the write's rebalance skipped).
  *
  * NEGATIVE CONTROL: `node bio-plane/test/coord.control.mjs` from the repo root, each arm ALONE, restored by sha256
  * AND `cmp`. DECLARED: (R) `ledger.mjs`' `readRel` pointed back at the working tree's old path -> FAILS at "§2 findId
@@ -345,6 +348,50 @@ t("LC-op-claims FIRES on an op= claim naming no op", (await fires("LC-op-claims"
 t("LC-markers FIRES on a merge marker in a state file", (await fires("LC-markers", { "docs/development/QUEUE.md": FILES["docs/development/QUEUE.md"] + `${"<".repeat(7)} HEAD\n` })).length, 1);
 t("LC-handoff-budget FIRES on a handoff over its budget once its cut has landed (a WARN otherwise, as readbudget rules)",
   (await C.ledgerChecks({ repo: plantTree({ "docs/development/kickoffs/LANE-NEXT.md": "x".repeat(13 * 1024) }), only: ["LC-handoff-budget"] })).arms[0].warns.length, 1);
+
+/* ============================================================================================ */
+section("§10 M0-119 — A PLACEMENT OVER BUDGET MOVES THE TAIL, NEVER CUTS A ROW (WORK-PIPELINE §2, BOB #28), through a real write");
+{
+  git(A, "fetch", "-q", "origin"); C.resetCoordCache();
+  const LATER = L.LEDGERS.LATER.live, BL = "docs/development/BACKLOG.md";
+  const big = (id) => ROW(id, "queued", `scope: ${"w".repeat(1400)}\naccepts-when: the WHOLE text of ${id}, which a cut would lose\n`);
+  const ids = (text) => L.queueRows(text || "").map((r) => r.id);
+  /* A backlog just UNDER the real 150 KiB budget: the placement below is what tips it over. */
+  let text = "# BACKLOG — the fixture backlog\n\n- **Budget:** the fixture's preamble line.\n\n" + ROW("ZZ-3", "queued") + "\n";
+  const order = ["ZZ-3"];
+  for (let i = 100; ; i++) { const next = text + big(`ZZ-${i}`) + "\n"; if (Buffer.byteLength(next) > L.BUDGET.BACKLOG.ledger) break; text = next; order.push(`ZZ-${i}`); }
+  const seeded = await tryWrite({ repo: A, message: "seed a backlog just under budget", intents: [{ op: "replace", file: BL, text }] });
+  C.resetCoordCache(); git(A, "fetch", "-q", "origin");
+  t("the seeded backlog landed, under budget, with no tail file (nothing to demote)",
+    [seeded.status, Buffer.byteLength(C.readState(A, BL)) <= L.BUDGET.BACKLOG.ledger, C.readState(A, LATER)], ["pushed", true, null]);
+  t("...over a backlog that is not small (else the placement moves nothing)", order.length > 80, true);
+  const placed = await tryWrite({ repo: A, message: "place ZZ-99 at the top", intents: [{ op: "insert", file: BL, where: "before", id: "ZZ-3", text: big("ZZ-99") }] });
+  C.resetCoordCache(); git(A, "fetch", "-q", "origin");
+  const nb = C.readState(A, BL), nl = C.readState(A, LATER);
+  const want = ["ZZ-99", ...order];
+  t("§10 a placement over budget is PUSHED — the ledger checks pass, the tail moved rather than the budget failing",
+    [placed.status, (placed.changed || []).sort()], ["pushed", [BL, LATER].sort()]);
+  t("§10 every id is in EXACTLY ONE file", (() => { const all = [...ids(nb), ...ids(nl)]; return [all.length, new Set(all).size]; })(), [want.length, want.length]);
+  t("§10 IN ORDER: the backlog then its tail read as the placed order", [...ids(nb), ...ids(nl)], want);
+  t("§10 the FOOT moved — the head, and the placed row, stayed", [ids(nb)[0], ids(nl).slice(-1)[0]], ["ZZ-99", order[order.length - 1]]);
+  t("§10 NO ROW IS CUT: every moved row carries its whole text", ids(nl).filter((id) => !new RegExp(`the WHOLE text of ${id},`).test(nl)), []);
+  t("§10 BACKLOG.md is back within its budget", Buffer.byteLength(nb) <= L.BUDGET.BACKLOG.ledger, true);
+  t("§10 find answers a demoted id in the tail, from coord", L.findId(ids(nl)[0], { repo: A }).map((f) => `${f.where} ${f.file}`), [`tail ${LATER}`]);
+  /* Room frees: the placed row is withdrawn, and the next write brings the tail's head back. */
+  const back = await tryWrite({ repo: A, message: "withdraw ZZ-99", intents: [{ op: "row", file: BL, id: "ZZ-99", text: "" }] });
+  C.resetCoordCache(); git(A, "fetch", "-q", "origin");
+  t("§10 as room frees the tail's head is PROMOTED back by the same write, the order intact",
+    [back.status, [...ids(C.readState(A, BL)), ...ids(C.readState(A, LATER))], ids(C.readState(A, LATER)).length], ["pushed", order, 0]);
+  /* The two intents M0-119 adds: `swap` (a preamble line no row intent reaches) and `rebalance` (creates the tail). */
+  const sw = await tryWrite({ repo: A, message: "the budget line", intents: [{ op: "swap", file: BL, old: "- **Budget:** the fixture's preamble line.\n", text: "- **Budget:** 150 KiB; the tail moves.\n" }] });
+  C.resetCoordCache(); git(A, "fetch", "-q", "origin");
+  t("a `swap` replaces an exact text found once", [sw.status, /150 KiB; the tail moves/.test(C.readState(A, BL))], ["pushed", true]);
+  t("...and refuses a text that is not there", await code(() => C.write({ repo: A, message: "x", intents: [{ op: "swap", file: BL, old: "no such text", text: "y" }] })), "SWAP_NOT_FOUND");
+  t("...or one found twice", await code(() => C.write({ repo: A, message: "x", intents: [{ op: "swap", file: BL, old: "milestone: M0\n", text: "y" }] })), "SWAP_AMBIGUOUS");
+  t("the `rebalance` intent on a balanced pair changes nothing — the emptied tail keeps its header (the file stays)",
+    await (async () => { const r = await tryWrite({ repo: A, message: "rebalance again", intents: [{ op: "rebalance" }] }); C.resetCoordCache(); git(A, "fetch", "-q", "origin");
+      return [r.status, C.readState(A, LATER) === L.LATER_HEADER]; })(), ["unchanged", true]);
+}
 
 console.log(`\ncoord: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

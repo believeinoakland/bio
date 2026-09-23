@@ -27,6 +27,13 @@
  * ONLY in BACKLOG.md raises the floor" and THE CLASS arm, 47/2.
  * (NC6b) the same for IC -> 4243 -> 159; FAILS naming "IC: …" and THE CLASS, 47/2.
  * (NC6c) the same for M -> 424 -> 65; FAILS naming "M: …" and THE CLASS, 47/2. Every restore byte-identical.
+ * M0-119 (the backlog's TAIL, `BACKLOG-LATER.md` — WORK-PIPELINE §2; section 8): THE ITEM'S OWN CONTROL, one reader
+ * pointed at `BACKLOG.md` alone -> its arm fails BY NAME. Driven by `node bio-plane/test/ledger.control.mjs` (arms T6
+ * and T7, whose suite is this one), because that driver arms `tools/` files in place from a pen and restores them by
+ * sha256 AND `cmp`: (T6) the lister's `PIPELINE` without the tail -> "the lister reads the TAIL: a tail row is read,
+ * tagged `tail`" and "a TAIL row naming no design FAILS by name" fail; (T7) mintid's DEC corpus without the tail ->
+ * "DEC: an id mentioned ONLY in BACKLOG-LATER.md raises the floor" and THE TAIL CLASS arm fail. Results are recorded
+ * on `ledger.test.mjs`' M0-119 NEGATIVE CONTROL line.
  *
  * THE DEFECT (DEBT D-430, found by LED-6's tool-half worker): `tools/rowdesign.mjs` and `plancheck` §2's
  * MILESTONE, INTERFACE and UNKNOWN-ROW-STATE checks read `QUEUE.md` only. WORK-PIPELINE §1–§2 make
@@ -78,6 +85,7 @@ const read = (p) => readFileSync(join(REPO, p), "utf8");
 const MILESTONES = read("docs/development/MILESTONES.md");
 const INTERFACES = read("docs/development/INTERFACES.md");
 const BACKLOG_PATH = "docs/development/BACKLOG.md", QUEUE_PATH = "docs/development/QUEUE.md";
+const LATER_PATH = "docs/development/BACKLOG-LATER.md";
 
 /* ----------------------------------------------------------------------------- fixtures */
 const CACHE = [
@@ -136,8 +144,11 @@ const judge = (queue, backlog) => {
 console.log("\n--- 1. the ONE lister reads the cache AND the backlog ---");
 {
   const p = pipelineRows({ texts: { QUEUE: CACHE, BACKLOG } });
-  t("PIPELINE is the cache then the backlog, and nothing else",
-    PIPELINE.map((l) => l.live), [QUEUE_PATH, BACKLOG_PATH]);
+  /* CORRECTED 2026-09-22 by M0-119: the plan's order continues past BACKLOG.md into its TAIL (WORK-PIPELINE §2, BOB
+     #28), so the lister's files are three; "the cache then the backlog, and nothing else" would now pin a reader that
+     cannot see the tail — the very defect the ruling's item (3) names. */
+  t("PIPELINE is the cache, then the backlog, then the backlog's tail, and nothing else",
+    PIPELINE.map((l) => l.live), [QUEUE_PATH, BACKLOG_PATH, LATER_PATH]);
   t("every fixture row is read, each tagged with the file it is in",
     p.rows.map((r) => `${r.id}@${r.where}`),
     ["ZZ-40@cache", "ZZ-41@backlog", "ZZ-42@backlog", "ZZ-43@backlog", "ZZ-44@backlog", "ZZ-45@backlog", "ZZ-46@backlog"]);
@@ -221,12 +232,14 @@ const LF = planFieldAudit(planRows({ repo: REPO }).rows, { milestones: MILESTONE
      text is satisfied by a comment. Its figures must be the lister's figures. */
   const pc = spawnSync(process.execPath, [join(REPO, "tools/plancheck.mjs"), "--local"], { cwd: REPO, encoding: "utf8" });
   const out = pc.stdout || "";
-  const fields = out.match(/plan fields: (\d+) row\(s\) read \(cache (\d+), backlog (\d+)\)/);
-  t("plancheck's milestone and interface checks read every row the lister reads, in both files",
-    fields ? fields.slice(1, 4).map(Number) : null, [LIVE.rows.length, LIVE.cacheRows, LIVE.backlogRows]);
-  const design = out.match(/queue design pointers: (\d+) open row\(s\) judged of (\d+) \(cache (\d+), backlog (\d+)\)/);
-  t("plancheck's row-design check reads every row the lister reads, in both files",
-    design ? design.slice(1, 5).map(Number) : null, [LA.open.length, LIVE.rows.length, LIVE.cacheRows, LIVE.backlogRows]);
+  /* CORRECTED 2026-09-22 by M0-119: plancheck prints the TAIL's count beside the cache's and the backlog's, so the
+     agreement is over all three files (a count of two would hide a tail row the sum still included). */
+  const fields = out.match(/plan fields: (\d+) row\(s\) read \(cache (\d+), backlog (\d+), tail (\d+)\)/);
+  t("plancheck's milestone and interface checks read every row the lister reads, in all three files",
+    fields ? fields.slice(1, 5).map(Number) : null, [LIVE.rows.length, LIVE.cacheRows, LIVE.backlogRows, LIVE.tailRows]);
+  const design = out.match(/queue design pointers: (\d+) open row\(s\) judged of (\d+) \(cache (\d+), backlog (\d+), tail (\d+)\)/);
+  t("plancheck's row-design check reads every row the lister reads, in all three files",
+    design ? design.slice(1, 6).map(Number) : null, [LA.open.length, LIVE.rows.length, LIVE.cacheRows, LIVE.backlogRows, LIVE.tailRows]);
 }
 
 /* ------------------------------ 6. THE LIAR: the one lister is the only reader (structure) */
@@ -310,6 +323,53 @@ console.log("\n--- 7. owed's blocked rows and mintid's DEC, IC and M floors read
       .map(([ns]) => ns), []);
   t("...over a corpus that is not empty: this many namespaces read the cache",
     Object.values(NAMESPACES).filter((s) => s.corpus.includes(QUEUE_PATH)).length >= 20, true);
+}
+
+/* --------------------------- 8. THE BACKLOG'S TAIL (M0-119): every reader reads BACKLOG.md and its tail as ONE order */
+console.log("\n--- 8. the backlog's TAIL (BACKLOG-LATER.md) is read by every reader, exactly as the backlog is (M0-119) ---");
+{
+  const TAIL = [
+    `# BACKLOG-LATER — fixture`, ``,
+    `### ZZ-71 · queued — a TAIL row naming NO design`, `milestone: M8`, `interface: none`, ``,
+    `### ZZ-72 · queued — a TAIL row naming an UNKNOWN milestone`, `milestone: M99`,
+    `design: \`docs/architecture/BIO_System_Design.md\` §3`, ``,
+    `### ZZ-75 · queued — a CORRECT tail row (over-strictness)`, `milestone: M8`, `behind-interface: I3`,
+    `design: \`docs/architecture/BIO_System_Design.md\` §3`, ``,
+    `### ZZ-76 · blocked — a blocked tail row. Routed to BOB.`, `milestone: M8`, ``,
+  ].join("\n");
+  const p = pipelineRows({ texts: { QUEUE: CACHE, BACKLOG, LATER: TAIL } });
+  t("the lister reads the TAIL: a tail row is read, tagged `tail`, AFTER every backlog row (one order)",
+    p.rows.filter((r) => r.id.startsWith("ZZ-7")).map((r) => `${r.id}@${r.where}`), ["ZZ-71@tail", "ZZ-72@tail", "ZZ-75@tail", "ZZ-76@tail"]);
+  t("...and the counts are per file, the tail's its own", [p.cacheRows, p.backlogRows, p.tailRows], [1, 6, 4]);
+  t("...in order: the tail's first row comes after the backlog's last",
+    p.rows.findIndex((r) => r.id === "ZZ-71") === p.rows.findIndex((r) => r.id === "ZZ-46") + 1, true);
+  const a = rowDesignAudit({ queue: CACHE, backlog: BACKLOG, later: TAIL });
+  t("a TAIL row naming no design FAILS by name, and names BACKLOG-LATER.md",
+    a.findings.filter((f) => f.id.startsWith("ZZ-7")).map((f) => `${f.id}@${f.file}`), [`ZZ-71@${LATER_PATH}`]);
+  const f = planFieldAudit(planRows({ queue: CACHE, backlog: BACKLOG, later: TAIL }).rows, { milestones: MILESTONES, interfaces: INTERFACES });
+  t("a TAIL row naming an UNKNOWN milestone is named", f.unknownMilestone.filter((x) => x.id.startsWith("ZZ-7")).map((x) => `${x.id} ${x.milestone}`), ["ZZ-72 M99"]);
+  t("the correct tail row passes (over-strictness)", a.open.filter((r) => r.id === "ZZ-75").map((r) => r.ok), [true]);
+  const files = { [SOURCES.debt]: "| id | type | date | body | disposition |", [SOURCES.decisions]: "",
+                  [SOURCES.queue]: "", [SOURCES.backlog]: "", [LATER_PATH]: TAIL };
+  t("owed reads a blocked TAIL row routed to the lane, sourced LATER",
+    owedFor("BOB", { reader: (x) => (x in files ? files[x] : null) }).attributed.map((i) => `${i.source} ${i.id}`), ["LATER ZZ-76"]);
+  t("an ABSENT tail is an empty one to owed — never named unreadable (the tail exists only once a row is demoted)",
+    owedFor("BOB", { reader: (x) => (x === LATER_PATH ? null : (files[x] ?? null)) }).unreadable, []);
+  const none = mkdtempSync(join(tmpdir(), "m0119-absent-"));
+  mkdirSync(join(none, "docs/development"), { recursive: true });
+  writeFileSync(join(none, QUEUE_PATH), CACHE); writeFileSync(join(none, BACKLOG_PATH), BACKLOG);
+  const ab = pipelineRows({ repo: none });
+  t("an ABSENT tail file is NAMED absent, never unreadable, and reads as no rows", [ab.absent, ab.unreadable, ab.tailRows], [[LATER_PATH], [], 0]);
+  /* mintid: a scratch repo holding ONLY the tail — an id mentioned there alone must raise the floor. */
+  writeFileSync(join(none, LATER_PATH), "# BACKLOG-LATER — fixture\n\n### ZZ-77 · queued — cites DEC-4252, IC-4253 and M-425\n");
+  for (const n of [QUEUE_PATH, BACKLOG_PATH]) writeFileSync(join(none, n), "");
+  for (const [ns, want] of [["DEC", 4252], ["IC", 4253], ["M", 425]]) {
+    const fl = corpusFloor(ns, { repo: none });
+    t(`${ns}: an id mentioned ONLY in BACKLOG-LATER.md raises the floor`, [fl.floor, fl.from], [want, LATER_PATH]);
+  }
+  rmSync(none, { recursive: true, force: true });
+  t("THE TAIL CLASS: no mintid corpus names the backlog without its tail",
+    Object.entries(NAMESPACES).filter(([, s]) => s.corpus.includes(BACKLOG_PATH) && !s.corpus.includes(LATER_PATH)).map(([ns]) => ns), []);
 }
 
 console.log(`\npipeline-readers: ${pass} pass, ${fail} fail`);

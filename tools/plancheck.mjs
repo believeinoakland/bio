@@ -34,7 +34,7 @@ import { dirname, join } from "node:path";
 /* M0-110: the state files live on the branch `coord` after the cutover. Every read below goes through the coord
    layer — a file that is its one-line pointer answers with coord's copy — so each arm judges the same rows it
    judged when they sat on `main` (TREE-SHARING.md §1: "plancheck keeps its cross-checks by reading both branches"). */
-import { readState } from "./coord.mjs";
+import { readState, isSwitched } from "./coord.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DEV = join(ROOT, "docs/development");
@@ -43,6 +43,12 @@ const LOCAL_ONLY = process.argv.includes("--local");
 const fails = [], warns = [], notes = [];
 const fail = (m) => fails.push(m);
 const warn = (m) => warns.push(m);
+/* A finding read from the `coord` ledgers, not from this tree: a FAIL, except under `--local` on a switched tree,
+   where it is a WARN naming why (see the ledger block, TREE-SHARING §3 (c)). */
+const stateOnCoord = () => { try { return isSwitched(ROOT); } catch { return false; } };
+const stateFail = (m) => (LOCAL_ONLY && stateOnCoord()
+  ? warns.push(`[coord state — reported, never this tree's verdict under --local; \`coord.mjs write\` enforces it] ${m}`)
+  : fails.push(m));
 const read = (p) => readState(ROOT, p);
 const sh = (c) => { try { return execSync(c, { cwd: ROOT, encoding: "utf8" }).trim(); } catch { return null; } };
 
@@ -201,7 +207,7 @@ if (queue && register) {
       if (idle.length)
         notes.push(`milestones with no queued item (normal for later rungs): ${idle.join(", ")}`);
     }
-    notes.push(`plan fields: ${fa.rowsRead} row(s) read (cache ${plan.cacheRows}, backlog ${plan.backlogRows}) — `
+    notes.push(`plan fields: ${fa.rowsRead} row(s) read (cache ${plan.cacheRows}, backlog ${plan.backlogRows}, tail ${plan.tailRows}) — `
       + `every milestone and behind-interface line judged`);
   }
 }
@@ -715,7 +721,7 @@ if (conduct && inbox && !/INBOX/.test(conduct))
     const a = rowDesignAudit({ repo: ROOT });
     const routed = a.open.filter((r) => r.routed).length;
     notes.push(`queue design pointers: ${a.open.length} open row(s) judged of ${a.rows.length} `
-      + `(cache ${a.cacheRows}, backlog ${a.backlogRows}), `
+      + `(cache ${a.cacheRows}, backlog ${a.backlogRows}, tail ${a.tailRows}), `
       + `${a.skipped.length} closed row(s) not judged, ${a.findings.length} naming no design`
       + (routed ? `, ${routed} explicitly ROUTED as a missing design` : "")
       + ` (governed set: ${a.governedCount} document(s), read from CORPUS-STANDARD.md §5)`);
@@ -802,8 +808,9 @@ if (conduct && inbox && !/INBOX/.test(conduct))
    file's own arms.
 
    THE WORK PIPELINE'S FIVE INVARIANTS (LED-6, `WORK-PIPELINE.md` §2), each its own arm, computed
-   by `ledger.mjs`'s `pipelineInvariants` over the cache (`QUEUE.md`) and the backlog (`BACKLOG.md`):
-     P1 every open id in EXACTLY ONE of the two — FAILs now (it holds on the real ledgers);
+   by `ledger.mjs`'s `pipelineInvariants` over the cache (`QUEUE.md`) and the backlog (`BACKLOG.md`) with its tail
+   (`BACKLOG-LATER.md`, M0-119 — the same order continued; absent is an empty tail):
+     P1 every open id in EXACTLY ONE of the three — FAILs now (it holds on the real ledgers);
      P2 no closed row in either — armed with (a)'s LED-3, as the QUEUE half of (a) always was;
      P3 the cache ≤ 8 rows, none `blocked`; P4 every open cache row's depends-on MET; P5 both files
      within budget (cache 40 KiB / row 3 KiB, backlog 150 KiB / row 2 KiB) — WARN until LED-6 is
@@ -824,7 +831,13 @@ if (conduct && inbox && !/INBOX/.test(conduct))
         fail(`LEDGER ARM CANNOT ARM — arm "${arm}" is switched by ${s.row}, which is SUPERSEDED and so can never be\n`
           + `        done; the arm would WARN forever. Repoint ARMING in tools/ledger.mjs to the row that replaced it.`);
     }
-    const say = (armed) => (armed ? fail : warn);
+    /* STATE READ FROM `coord` NEVER DECIDES THE GATE'S VERDICT (Bob, 2026-09-23: a red GitHub run emails him as an
+       alarm, TREE-SHARING §3 (c)). Under `--local` — the form `gates.mjs` runs — on a SWITCHED tree these ledgers are
+       `coord`'s, not this tree's, and a gate record is keyed by the tree (D-293): a verdict that moves with live state
+       is not a verdict about the tree. MEASURED: `land/conduct/batch6` read RED twice on GitHub because coord's
+       BACKLOG.md was 381 B over a budget the batch itself tightened (M0-119). `coord.mjs write` runs the same arms
+       (LC-ledger) before every push, so the state is still enforced where it is WRITTEN; here it is reported, loudly. */
+    const say = (armed) => (armed ? stateFail : warn);
     const debtClosed = a.closedLive.DEBT || [];
     if (debtClosed.length)
       say(a.armed.closedLive)(`CLOSED ROWS IN THE LIVE DEBT LEDGER — ${debtClosed.length} (${a.armed.closedLive ? "FAIL: " + ARMING_NOTE(a, "closedLive")
@@ -846,13 +859,14 @@ if (conduct && inbox && !/INBOX/.test(conduct))
       + `${a.depends.unresolved.length} unresolved; ${a.depends.prose.length} row(s) name a dependency in PROSE the gate cannot judge`
       + (a.depends.prose.length ? ` (${a.depends.prose.map((p) => p.id).join(", ")})` : ""));
     if (a.depends.unresolved.length)
-      fail(`DEPENDS-ON DOES NOT RESOLVE — ${a.depends.unresolved.length}:\n`
+      stateFail(`DEPENDS-ON DOES NOT RESOLVE — ${a.depends.unresolved.length}:\n`
         + a.depends.unresolved.map((u) => `          ${u.id} (${u.file}:${u.line}) depends on ${u.dep}: ${u.why}`).join("\n")
         + `\n        A dependency resolves to an open row, a done row (live or archived: \`node tools/ledger.mjs find <ID>\`),\n`
         + `        or a \`tools/status.mjs\` claim reading BUILT.`);
     if (a.pipeline) {
       const P = a.pipeline;
-      notes.push(`pipeline: cache ${P.cacheRows} row(s), backlog ${P.backlogRows} row(s); `
+      notes.push(`pipeline: cache ${P.cacheRows} row(s), backlog ${P.backlogRows} row(s), tail ${P.tailRows} row(s)`
+        + `${a.absent.includes(L.LEDGERS.LATER.live) ? " (tail file absent: an empty tail)" : ""}; `
         + Object.entries(P.arms).map(([k, x]) => `${k} ${x.violations.length ? (x.armed ? "FAIL" : "WARN") : "pass"}`).join(", "));
       for (const [k, x] of Object.entries(P.arms)) {
         if (!x.violations.length) continue;
@@ -1133,7 +1147,7 @@ function ARMING_NOTE(a, arm) { return `${a.arming[arm].row} is done, so this arm
     }
     /* (b) — the pattern is BUILT so this file does not match itself. */
     const ORIGIN_MAIN = "origin" + "/main:";
-    const stateRef = new RegExp(ORIGIN_MAIN.replace("/", "\\/") + String.raw`[^\s\x60'")]*(?:CLAIMS\.md|QUEUE\.md|BACKLOG\.md|DEBT\.md|PLACEMENT\.md|-NEXT\.md|archive\/ledgers\/)`);
+    const stateRef = new RegExp(ORIGIN_MAIN.replace("/", "\\/") + String.raw`[^\s\x60'")]*(?:CLAIMS\.md|QUEUE\.md|BACKLOG\.md|BACKLOG-LATER\.md|DEBT\.md|PLACEMENT\.md|-NEXT\.md|archive\/ledgers\/)`);
     const left = [];
     for (const f of tracked) {
       /* `MEASUREMENTS.md` is exempt as the archive is: a figure's record quotes the instrument AS IT WAS RUN, and
@@ -1151,7 +1165,7 @@ function ARMING_NOTE(a, arm) { return `${a.arming[arm].row} is done, so this arm
          + left.slice(0, 12).map((x) => `          ${x}`).join("\n"));
     /* (c) */
     const r = await C.ledgerChecks({ repo: ROOT, only: ["LC-markers", "LC-queued-refs", "LC-debt-agreement", "LC-undecided-route", "LC-op-claims", "LC-strays", "LC-owed-agreement"] });
-    for (const a of r.arms) for (const f of a.fails) fail(`LEDGER CHECK ${a.id} (${a.title}; moved from ${a.from}) — ${f}`);
+    for (const a of r.arms) for (const f of a.fails) stateFail(`LEDGER CHECK ${a.id} (${a.title}; moved from ${a.from}) — ${f}`);
     notes.push(`coord ledger checks: ${r.arms.map((a) => `${a.id} ${a.fails.length ? "FAIL" : "pass"}${a.note ? ` (${a.note})` : ""}`).join(", ")}`);
   }
 }

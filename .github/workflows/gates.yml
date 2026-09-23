@@ -1,0 +1,96 @@
+# gates.yml — M0-114 (TREE-SHARING.md §3, as revised by §4): the gate runs on GitHub's machines, and
+# its verdict is a CHECK ON THE COMMIT that any clone can read, where a local gate's record lives in
+# one clone's git directory (D-293) and a cloud session starts with none.
+#
+# The check is this job's own check run, named `gate`. Its ONE `gate verdict` annotation carries the
+# verdict keyed by the TREE, in the grammar `tools/pushguard.mjs` (`parseVerdictAnnotation`) reads:
+#   VERDICT=<GREEN|RED|NOT MEASURED|UNDETERMINED> TREE=<40 hex> CLASS=<c> EXIT=<n> ...
+# The job succeeds only on GREEN. A failed job is NOT by itself RED: a job that died before the gate
+# recorded (npm, a crash, a cancel) measured nothing and says UNDETERMINED, and NOT MEASURED (M0-107)
+# is never refused. The push guard refuses only an annotation saying RED on a failed check.
+#
+# The container differs from a developer's in the ways `.claude/hooks/session-start.sh` repairs for
+# the cloud (BOB #28, M-99): node 26, full history, dependencies, `ssh-keygen`, the id-ledger
+# directory. Each is repaired here the same way, and NO SECRET is passed: a suite that needs one is a
+# live probe, not a gate unit (§3).
+name: gates
+
+on:
+  push:
+    # `land/*` is change 2's ready-to-land prefix; `integrate/*` the integrator's union branch.
+    # `main` is deliberately absent: the verdict must exist BEFORE main moves, which is when the
+    # push guard reads it.
+    branches: ["land/**", "integrate/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the date-reading checks misread a shallow clone (M-99: 29 false FAILs)
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "26.10.0" # the project's node; 22 cannot parse owed.mjs's (?i:) (M-99)
+
+      - name: prepare the container
+        run: |
+          set -euo pipefail
+          git config --global user.name "gates (M0-114)"
+          git config --global user.email "gates@invalid"
+          command -v ssh-keygen || { sudo apt-get update -qq && sudo apt-get install -y -qq openssh-client; }
+          mkdir -p "$(git rev-parse --path-format=absolute --git-common-dir)/bio-idalloc"
+          # `coord` holds the message board (M0-110); plancheck reads it as origin/coord.
+          git rev-parse --verify --quiet refs/remotes/origin/coord || git fetch --quiet origin coord:refs/remotes/origin/coord
+          for pkg in bio-plane pdf-worker ocr-worker newgroup; do
+            [ -f "$pkg/package-lock.json" ] || continue
+            (cd "$pkg" && npm ci --no-audit --no-fund --loglevel=error)
+          done
+          node -v; nproc; free -g | head -2; df -h . | tail -1
+
+      - name: gate
+        env:
+          GATE_FULL: ${{ github.event_name == 'workflow_dispatch' && '--full' || '' }}
+        run: |
+          # `set +e` IS LOAD-BEARING: Actions runs a step as `bash -e`, so without it a RED gate (exit 1)
+          # kills the step before the verdict annotation is written, and every RED reads UNDETERMINED.
+          # Measured 2026-09-23 by M0-114's live negative control (run 35799828324).
+          set +e -uo pipefail
+          log="$RUNNER_TEMP/gate.log"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          t0="$(date -u +%s)"
+          node tools/gates.mjs $GATE_FULL > "$log" 2>&1
+          rc=$?
+          t1="$(date -u +%s)"
+          cat "$log"
+          # THE VERDICT IS THE GATE'S OWN RECORD LINE (D-293: a clean run over one tree), never the exit alone.
+          rec="$(grep -E '^gates: RECORDED (GREEN|RED|NOT MEASURED) for tree ' "$log" | tail -1 || true)"
+          verdict=UNDETERMINED
+          case "$rec" in
+            "gates: RECORDED GREEN "*) verdict=GREEN ;;
+            "gates: RECORDED RED "*) verdict=RED ;;
+            "gates: RECORDED NOT MEASURED "*) verdict="NOT MEASURED" ;;
+          esac
+          cls="$(printf '%s\n' "$rec" | sed -n 's/.*(class \([A-Z]*\)).*/\1/p')"
+          done_line="$(grep -E 'suites green|suites? .*(FAILED|failed)' "$log" | tail -1 || true)"
+          failed="$(grep -E '^  FAILED: ' "$log" | sed 's/^  FAILED: //' | paste -sd' ' - || true)"
+          echo "::notice title=gate verdict::VERDICT=${verdict} TREE=${tree} CLASS=${cls:-?} EXIT=${rc} WALL=$((t1 - t0))s FAILED=${failed:-none}"
+          {
+            echo "### gate: ${verdict} · class ${cls:-?} · tree ${tree}"
+            echo ""
+            echo "exit ${rc} · wall $((t1 - t0)) s · $(date -u -d "@$t0" +%FT%TZ) to $(date -u -d "@$t1" +%FT%TZ)"
+            echo ""
+            echo "${done_line:-no battery completion line}"
+            echo ""
+            echo "FAILED: ${failed:-none}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$verdict" = GREEN ]; then exit 0; fi
+          if [ "$rc" = 0 ]; then exit 1; fi
+          exit "$rc"

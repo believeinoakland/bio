@@ -94,7 +94,12 @@ const edit = (file, needle, replacement) => {
   writeFileSync(file, src.replace(needle, replacement));
 };
 
-const REFUSAL = "      if (recorded && recorded.same.length)\n"
+/* RE-AIMED 2026-09-23 by the D-442 worker (BIO_Publication_v0_1.md §3 rule 12), never exempted: the refusal MOVED
+   below the case-identity derivation and is asked only of editions of the case being published (`same`, the
+   warrant filtered to `theCase`), so a second case of the same project can pin a finding rule 12 no longer
+   promotes. The arms keep their meaning at the new site: (a) reverts the test to MEMBERSHIP ALONE — `p.warrant`
+   is `#editionsRecordingConclusion`'s answer, computed exactly when `rel.member` — and (b) drops it. */
+const REFUSAL = "      if (same.length)\n"
               + "        return { ok: false, reason: \"ALREADY_A_CASE_MEMBER\",";
 
 /* The label fragments below are the suite's OWN assertion labels, quoted as the
@@ -136,7 +141,7 @@ const ARMS = {
 
   a: { files: [STORE],
        label: "(A) PIN ON bundle_sha ALONE AGAIN — the refusal reverts to `rel.member`, the row's own named control",
-       apply: () => edit(STORE, REFUSAL, REFUSAL.replace("if (recorded && recorded.same.length)", "if (rel.member)")),
+       apply: () => edit(STORE, REFUSAL, REFUSAL.replace("if (same.length)", "if (p.warrant)")),
        mustFail: [S4_SECOND, S4_WHY, S4_RECORDS, S4_ABSENT, S5_SAME, S5_STOPS,
                   S6_DISC, S6_WARRANTED, S6_RECORDS, S6_SAME, S7_MOVED, S7_RECORDS,
                   S8_PROV, S8_DISCLOSES, S8_SAME, S9_ROUTE],
@@ -144,12 +149,15 @@ const ARMS = {
 
   b: { files: [STORE],
        label: "(B) THE REFUSAL DROPPED — the liar, who passes every second-edition arm",
-       apply: () => edit(STORE, REFUSAL, REFUSAL.replace("if (recorded && recorded.same.length)",
-                                                         "if (false && recorded && recorded.same.length)")),
+       apply: () => edit(STORE, REFUSAL, REFUSAL.replace("if (same.length)", "if (false && same.length)")),
        mustFail: [S2_SAME, S2_NAMES, S5_SAME, S6_SAME, S7_SAME, S8_SAME],
-       cascade: [S4_DISC, S4_WHY, S6_DISC, S7_DISC],
+       /* DECLARATION CORRECTED 2026-09-23 by the D-442 worker (BIO_Publication_v0_1.md §3 rule 12), and the arm is
+          unchanged: the three DISCRIMINATORS were declared to cascade because a publish the dropped refusal let
+          through PROMOTED the finding off its pin. Rule 12 stops op=publish writing on a member, so the bytes stay
+          at the pin whatever the refusal does — measured 29/7 with all three GREEN. They move to mustNotFail. */
+       cascade: [S4_WHY],
        mustNotFail: [S1_ED1, S3_WD, S4_SECOND, S4_RECORDS, S4_ABSENT, S6_WARRANTED, S6_RECORDS,
-                     S7_MOVED, S7_RECORDS, S8_PROV, S8_DISCLOSES, S9_PIN, S9_ROUTE] },
+                     S7_MOVED, S7_RECORDS, S8_PROV, S8_DISCLOSES, S9_PIN, S9_ROUTE, S4_DISC, S6_DISC, S7_DISC] },
 
   c: { files: [STORE],
        label: "(C) OVER-STRICTNESS — the CLAIM compared instead of the ACT, so a re-taken conclusion reads as recorded",

@@ -53,7 +53,9 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { GRADE_AXES, TESTIMONY_GRADE, TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, BASIS_GRADES,
-         checkInquiryBasis, checkBundle, isCaseMemberBytes, parseFrontmatter } from "../checks/bio-checks.mjs";
+         checkInquiryBasis, checkBundle, parseFrontmatter,
+         /* D-442: the frozen rows moved into the case document; its gate is what judges them now. */
+         checkCaseDocument, caseDocumentStatesMemberBlocks } from "../checks/bio-checks.mjs";
 
 const SRC_DIR = fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
@@ -390,18 +392,21 @@ const pubBody = (targets) => ({ project: PROJECT, targets, roles: allLoadBearing
   excluded: [], subjectPosition: "sought_and_answered",
   subjectJustification: "We put the claim to the Clerk on 2026-06-20 and printed what came back.",
   biasAcknowledgement: "This group holds that contracts should be adopted in public session." });
-const frozenRows = async (id) => {
-  const img = await get("image", `id=${encodeURIComponent(id)}`, RUTH);
-  const md = img && typeof img["bundle.md"] === "string" ? img["bundle.md"] : "";
-  const block = md.split("\npublished_strength:\n")[1];
-  if (!block) return null;
-  const rows = [];
-  for (const line of block.split("\n")) {
-    if (/^\S/.test(line)) break;
-    const m = line.match(/^  - axis: (\S+)/); if (m) rows.push({ axis: m[1] });
-    const g = line.match(/^    (state|grade): (\S+)/); if (g && rows.length) rows[rows.length - 1][g[1]] = g[2];
-  }
-  return rows;
+/* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted: the frozen rows were
+   read out of the MEMBER's bytes, where op=publish's promotion stamped `published_strength`. Rule 12 stops
+   the promotion and states the rows ONCE, in the case document the member's case signs (`case_strength`,
+   one row per member per axis). MK-2's rule — testimony frozen only when it carries something — is
+   unchanged, and is read where the rows now are; the shape returned is the one the arms below compare. */
+const caseDocOf = async (pub) => {
+  const d = pub && pub.caseDocument ? await get("casedocument",
+    `case=${encodeURIComponent(pub.caseDocument.case_id)}&edition=${pub.caseDocument.edition}`, RUTH) : null;
+  return d && typeof d.text === "string" ? d.text : "";
+};
+const frozenRows = async (id, pub) => {
+  const fm = parseFrontmatter(await caseDocOf(pub)).data || {};
+  const rows = (fm.case_strength || []).filter((r) => r && r.target === id);
+  return rows.length ? rows.map((r) => ({ axis: r.axis, state: r.state, grade: r.grade === null ? "null" : String(r.grade) }))
+    : null;
 };
 const FT = "INQ-2026-5302-case-testimony", FP = "INQ-2026-5302-case-plain";
 const ft = await promoteConcludable(FT, [{ target: UP, grade: EARNED_CAPTURE_CEILING, axis: "capture", source: "capture" },
@@ -417,12 +422,12 @@ const axesOf = (p) => p && Array.isArray(p.findings) && p.findings[0] && Array.i
   ? p.findings[0].strength.map((a) => [a.axis, a.state, a.grade ?? null]) : null;
 t("THE CASE RESTING ON TESTIMONY: op=publish answers THREE axes, the testimony one graded D — beside capture and connection, never folded in",
   axesOf(pT), [["capture", "graded", EARNED_CAPTURE_CEILING], ["connection", "unrated", null], ["testimony", "graded", TESTIMONY_GRADE]]);
-t("…and the member's frozen bytes carry the same three rows",
-  await frozenRows(FT), [{ axis: "capture", state: "graded", grade: EARNED_CAPTURE_CEILING },
+t("…and the case document's frozen rows for that member are the same three (D-442: stated there, once)",
+  await frozenRows(FT, pT), [{ axis: "capture", state: "graded", grade: EARNED_CAPTURE_CEILING },
                          { axis: "connection", state: "unrated", grade: "null" },
                          { axis: "testimony", state: "graded", grade: TESTIMONY_GRADE }]);
 t("OVER-STRICTNESS: an ORDINARY case freezes exactly the two rows it always did — no testimony row, nothing moved in its signed bytes",
-  [axesOf(pP), await frozenRows(FP)],
+  [axesOf(pP), await frozenRows(FP, pP)],
   [[["capture", "graded", EARNED_CAPTURE_CEILING], ["connection", "unrated", null]],
    [{ axis: "capture", state: "graded", grade: EARNED_CAPTURE_CEILING }, { axis: "connection", state: "unrated", grade: "null" }]]);
 /* MK-1's FENCE IS NOT LIFTED BY THIS ITEM. Driven under a real member's
@@ -479,33 +484,36 @@ t("INHERITED: an edition that froze NO testimony axis gives nothing to inherit o
   judge(fmOf([inh]), pubReg(null), reg).map(([c]) => c), ["C-21.2"]);
 t("…while one that froze testimony D is inherited on the same axis, like any other",
   judge(fmOf([inh]), pubReg({ state: "graded", grade: TESTIMONY_GRADE }), reg), []);
-/* The frozen block, through the WHOLE catalogue over a real case member's bytes
-   (FT's, as op=publish wrote them), with only published_strength varied. */
+/* The frozen block, through the case gate over a REAL case document (FT's, as op=publish wrote it), with only
+   FT's `case_strength` rows varied.
+   CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted: this block ran the WHOLE
+   member-bytes catalogue over FT's bytes with `published_strength` varied, because that is where op=publish
+   froze the rows. Rule 12 moves them into the case document, and C-2.8 FOLLOWS ITS BLOCK: `checkCaseDocument`
+   runs `checkPublishedExtension` once per member over the document's statement of it, with the member's own
+   `basis` at the pinned bytes. So the SAME arms, the SAME codes (`testimony-axis-unfrozen`, the uncoded shape
+   refusals) are asked of the rows where they now live. The member's bytes carry no rows at all. */
 const imgT = await get("image", `id=${encodeURIComponent(FT)}`, RUTH);
-const psRe = /\npublished_strength:\n(?:  .*\n)+/;
-const withRows = (rows) => imgT["bundle.md"].replace(psRe, "\npublished_strength:\n"
-  + rows.map(([a, st, g]) => [`  - axis: ${a}`, `    state: ${st}`, `    grade: ${g}`, "    weakest: null",
-                               "    load_bearing: 0", "    population: 2", `    detail: "x"`].join("\n")).join("\n") + "\n");
-const c28 = async (md, dropTestimonyLeg = false) => {
-  const text = dropTestimonyLeg ? md.replace(/\n  - target: INFO-[^\n]*\n    role: supports\n    grade: D\n    grade_axis: testimony\n    grade_source: testimony/, "") : md;
-  const files = new Map(Object.entries(imgT || {}));
-  files.set("bundle.md", text);
-  const { findings } = await checkBundle({ folderName: FT, files,
-    sha256: async (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex"),
-    sha512: async (b) => new Uint8Array(await (await import("node:crypto")).webcrypto.subtle.digest("SHA-512", b)),
-    resolveTarget: () => true });
-  return findings.filter((x) => x && x.check === "C-2.8" && /published_strength/.test(x.message))
+const docT = await caseDocOf(pT);
+const dfmT = parseFrontmatter(docT).data || {};
+const basisT = (parseFrontmatter(imgT && typeof imgT["bundle.md"] === "string" ? imgT["bundle.md"] : "").data || {}).basis || [];
+const withRows = (rows) => ({ ...dfmT, case_strength: [
+  ...(dfmT.case_strength || []).filter((r) => r && r.target !== FT),
+  ...rows.map(([a, st, g]) => ({ target: FT, axis: a, state: st, grade: g === "null" ? null : g, weakest: null,
+                                  load_bearing: 0, population: 2, detail: "x" }))] });
+const c28 = async (fm, dropTestimonyLeg = false) => {
+  const basis = dropTestimonyLeg ? basisT.filter((l) => !(l && l.grade_axis === "testimony")) : basisT;
+  return checkCaseDocument(fm, { caseId: pT.caseDocument.case_id, edition: pT.caseDocument.edition,
+                                 memberBasis: { [FT]: basis } })
+    .filter((x) => x && x.check === "C-2.8" && /published_strength/.test(x.message))
     .map((x) => x.code ?? "uncoded");
 };
-if (imgT && typeof imgT["bundle.md"] === "string" && psRe.test(imgT["bundle.md"])) {
+if (docT && Array.isArray(dfmT.case_strength) && dfmT.case_strength.some((r) => r && r.target === FT)) {
   const three = [["capture", "graded", "B"], ["connection", "unrated", "null"], ["testimony", "graded", "D"]];
-  /* THE CEREMONY MUST ACTUALLY RUN over a three-row member, or every arm below
-     passes over nothing. Found the hard way: `isCaseMemberBytes` read
-     `length === 2`, so a testimony case member was not a case member at all and
-     the frozen-block arms were silent — this line is what would have said so. */
-  t("the case member op=publish wrote, with THREE frozen rows, IS a case member to the catalogue (the ceremony runs over it)",
-    isCaseMemberBytes(parseFrontmatter(imgT["bundle.md"]).data || {}), true);
-  t("C-2.8 over the case member op=publish wrote: its three frozen rows are clean", await c28(imgT["bundle.md"]), []);
+  /* THE CEREMONY MUST ACTUALLY RUN over a three-row member, or every arm below passes over nothing. Found the
+     hard way (MK-2): `isCaseMemberBytes` read `length === 2`. Under rule 12 the door is the document's format. */
+  t("the case document op=publish wrote, with THREE frozen rows for its member, states its members' blocks (the ceremony runs over it)",
+    [caseDocumentStatesMemberBlocks(dfmT), /^published_strength:$/m.test(String(imgT && imgT["bundle.md"] || ""))], [true, false]);
+  t("C-2.8 over the case document op=publish wrote: its member's three frozen rows are clean", await c28(dfmT), []);
   t("…the SAME member with its testimony row REMOVED is refused by name — the case rests on a member's word and must say at what (testimony-axis-unfrozen)",
     await c28(withRows(three.slice(0, 2))), ["testimony-axis-unfrozen"]);
   t("HISTORIC SHAPE: a member with no testimony leg and the two rows every earlier case carries is clean",
@@ -514,7 +522,7 @@ if (imgT && typeof imgT["bundle.md"] === "string" && psRe.test(imgT["bundle.md"]
   t("a second testimony row is refused", await c28(withRows([...three, ["testimony", "graded", "D"]])), ["uncoded"]);
   t("a member missing its connection row is still refused, as before", await c28(withRows([three[0], three[2]])), ["uncoded"]);
 } else {
-  console.log("  FAIL  the catalogue arm had no case member to judge (op=publish or op=image did not answer)");
+  console.log("  FAIL  the catalogue arm had no case document to judge (op=publish or op=casedocument did not answer)");
   fail++;
 }
 

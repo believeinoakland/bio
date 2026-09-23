@@ -250,6 +250,8 @@ export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
   const texts = {};
   for (const l of PIPELINE) {
     const t = read(l.live);
+    /* M0-119: the backlog's tail is OPTIONAL — absent until a row is first demoted into it; an absent tail is empty. */
+    if (t === null && l.optional) continue;
     if (t === null) unreadable.push(l.live); else texts[l.name] = t;
   }
   for (const r of pipelineRows({ texts }).rows) {

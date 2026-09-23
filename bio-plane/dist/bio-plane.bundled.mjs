@@ -1843,6 +1843,37 @@ CREATE TABLE IF NOT EXISTS case_documents (
   ratified_at     TEXT,
   PRIMARY KEY (case_id, edition)
 );
+-- D-442 / BIO_Publication_v0_1.md section 3 rule 12: WHICH CASES EXCLUDED THIS DOCUMENT, projected
+-- from the CASE DOCUMENT. inquiry_exclusions answered it from a FINDING's own completeness_excluded,
+-- which op=publish's promotion wrote there -- and rule 12 stops that promotion, so a case published
+-- under it states its exclusions once, in its document, and nowhere in any member. Without this
+-- projection op=excludedby would silently stop naming every case published after rule 12, which is
+-- a reader left on the old bytes. DERIVED from case_documents.text, re-projected whole for a
+-- (case_id, edition) whenever op=publish authors or re-authors that document, and never touched
+-- after it is signed (the document can no longer change). Kept for EVERY edition: a case that
+-- excluded a document at edition 1 has still excluded it there, whatever edition 2 says.
+-- description and reason are NOT NULL for inquiry_exclusions' own reason. The whole-store purge
+-- clears the rows of every UNRATIFIED document with the document itself (D-113), and keeps a
+-- ratified document's for case_documents' own reason.
+-- ONE ROW PER (case edition, MEMBER, exclusion row): an excluded document is reported on each member
+-- finding of the case, as inquiry_exclusions always reported it, and the member, its own edition
+-- and the publishing project are columns so op=excludedby answers in ONE indexed, gated statement
+-- with no read per row (derivation-bounds' class).
+CREATE TABLE IF NOT EXISTS case_exclusions (
+  case_id        TEXT NOT NULL,
+  edition        INTEGER NOT NULL,
+  bundle_id      TEXT NOT NULL,
+  ord            INTEGER NOT NULL,
+  member_edition INTEGER,
+  project_id     TEXT,
+  target_id      TEXT,
+  description    TEXT NOT NULL,
+  reason         TEXT NOT NULL,
+  author         TEXT NOT NULL,
+  at             TEXT NOT NULL,
+  PRIMARY KEY (case_id, edition, bundle_id, ord)
+);
+CREATE INDEX IF NOT EXISTS case_exclusions_target ON case_exclusions(target_id);
 -- REC-26 / MACHINE-PROCESSES.md risk 2: the IDEMPOTENCE KEY for the two periodic
 -- consumers that FIRE something (CAP-3's archive-monitor and REC-26's
 -- monitor-cadence). It exists because a retry is not free here: an archive
@@ -3772,6 +3803,8 @@ __export(bio_checks_exports, {
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
+  CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED,
+  CASE_DOCUMENT_FORMAT_LEGACY: () => CASE_DOCUMENT_FORMAT_LEGACY,
   CASE_MEMBER_ROLES: () => CASE_MEMBER_ROLES,
   CHECK_RETIREMENTS: () => CHECK_RETIREMENTS,
   CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
@@ -3858,6 +3891,7 @@ __export(bio_checks_exports, {
   canonicalExtent: () => canonicalExtent,
   canonicalJson: () => canonicalJson,
   canonicalRange: () => canonicalRange,
+  caseDocumentStatesMemberBlocks: () => caseDocumentStatesMemberBlocks,
   caseEditionClaimed: () => caseEditionClaimed,
   checkBiasExtension: () => checkBiasExtension,
   checkBundle: () => checkBundle,
@@ -10990,7 +11024,10 @@ var REEXTRACT_CHECKS = {
     translation: "This record holds no reading of that document for you to re-read. A capture is read when it is filed into the record, so file it first; re-reading replaces a reading that already exists."
   }
 };
-var CASE_DOCUMENT_FORMAT = "bio-case-document/1";
+var CASE_DOCUMENT_FORMAT = "bio-case-document/2";
+var CASE_DOCUMENT_FORMAT_LEGACY = "bio-case-document/1";
+var CASE_DOCUMENT_FORMATS_ACCEPTED = [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_LEGACY];
+var caseDocumentStatesMemberBlocks = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
 var SEARCHED_SUBJECT_SOURCES = {
   case_basis: "the subjects were taken from the CASE -- its members' basis legs and the content rows those legs name -- and the observation log was consulted only to ask what became of each. The log never supplies the subject set; a section computed the other way round is 100% searched by construction and says nothing about the case"
 };
@@ -11013,12 +11050,12 @@ var C41 = Object.fromEntries(
 );
 function checkCaseDocument(fm, ctx = {}) {
   const findings = [];
-  const { caseId = null, edition = null, priorCase = null } = ctx;
-  if (fm?.format !== CASE_DOCUMENT_FORMAT) {
+  const { caseId = null, edition = null, priorCase = null, body = null, memberBasis = null } = ctx;
+  if (!CASE_DOCUMENT_FORMATS_ACCEPTED.includes(fm?.format)) {
     findings.push(f(
       C41.FORMAT,
       "error",
-      `a case document declares format '${CASE_DOCUMENT_FORMAT}' (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
+      `a case document declares format '${CASE_DOCUMENT_FORMAT}' (or, authored before BIO_Publication_v0_1.md \xA73 rule 12, '${CASE_DOCUMENT_FORMAT_LEGACY}') (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
       ["re-publish through op=publish, which authors the case document"]
     ));
   }
@@ -11176,6 +11213,50 @@ function checkCaseDocument(fm, ctx = {}) {
       if (!BASIS_GRADES.includes(rq[axis])) {
         findings.push(f(C41.BAR, "error", `required_strength.${axis} '${rq[axis]}' is not one of: ${BASIS_GRADES.join(", ")} \u2014 the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote`));
       }
+    }
+  }
+  if (caseDocumentStatesMemberBlocks(fm)) {
+    const members = Array.isArray(fm?.case_findings) ? fm.case_findings.map((x) => String(x)) : [];
+    const rolesRows = Array.isArray(fm?.case_roles) ? fm.case_roles.filter((r) => r && typeof r === "object") : [];
+    const rowsFor = (key, m) => (Array.isArray(fm?.[key]) ? fm[key] : []).filter((r) => r && typeof r === "object" && String(r.target ?? "") === m).map(({ target, ...rest }) => rest);
+    if (!Array.isArray(fm?.case_strength)) {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        "a case document requires a case_strength field: since BIO_Publication_v0_1.md \xA73 rule 12 each member's FROZEN STRENGTH PAIR is stated here, once, and not in the member's bytes \u2014 a case document silent about what its findings reached leaves a reader with no strength at all",
+        ["re-publish through op=publish, which states each member's frozen pair in the case document"]
+      ));
+    }
+    if (!Array.isArray(fm?.case_strength_grounds)) {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        "a case document requires a case_strength_grounds field: an EMPTY list is a claim (no member's basis named grounds) and is legal \u2014 an ABSENT field is silence about the branches a structured grade was taken from",
+        ["re-publish through op=publish, which states each member's frozen grounds in the case document"]
+      ));
+    }
+    for (const m of members) {
+      const row = rolesRows.find((r) => String(r.target ?? "") === m) || {};
+      const basis = memberBasis && Object.prototype.hasOwnProperty.call(memberBasis, m) ? memberBasis[m] : void 0;
+      const memberFm = {
+        edition: row.edition,
+        completeness: fm?.completeness,
+        completeness_excluded: fm?.completeness_excluded,
+        published_strength: rowsFor("case_strength", m),
+        ...rowsFor("case_strength_grounds", m).length ? { published_strength_grounds: rowsFor("case_strength_grounds", m) } : {},
+        ...Array.isArray(basis) ? { basis } : {}
+      };
+      const own = [];
+      checkPublishedExtension(memberFm, own);
+      for (const x of own) findings.push({ ...x, message: `case document, member ${m}: ${x.message}` });
+    }
+    if (typeof body === "string" && !/^## What This Excludes\s*$/m.test(body)) {
+      findings.push(f(
+        "C-3.1",
+        "error",
+        "required heading '## What This Excludes' is missing from the case document: since BIO_Publication_v0_1.md \xA73 rule 12 the case states what it excludes once, here, and not in any member's bytes",
+        ["re-publish through op=publish, which writes the section into the case document"]
+      ));
     }
   }
   if (priorCase && c) {
@@ -13701,8 +13782,14 @@ var CATALOG_VERSION = "1.20.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
-function runCaseGate({ caseId, edition, fm, priorCase }) {
-  const findings = checkCaseDocument(fm, { caseId, edition, priorCase: priorCase || null });
+function runCaseGate({ caseId, edition, fm, priorCase, body = null, memberBasis = null }) {
+  const findings = checkCaseDocument(fm, {
+    caseId,
+    edition,
+    priorCase: priorCase || null,
+    body,
+    memberBasis
+  });
   const errors = findings.filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.repairs ? { repairs: x.repairs } : {} }));
   return {
     gateVersion: GATE_VERSION,
@@ -33168,21 +33255,6 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         };
       const rel = this.#caseRelationOf(id);
       const recorded = rel.member ? this.#editionsRecordingConclusion(id, rel, conc) : null;
-      if (recorded && recorded.same.length)
-        return {
-          ok: false,
-          reason: "ALREADY_A_CASE_MEMBER",
-          target: id,
-          from: b.current_state,
-          project: proj,
-          relationship: conc.relationship,
-          recorded_by: recorded.same.map((e) => ({
-            case_id: e.case_id,
-            edition: e.edition,
-            state: e.state
-          })),
-          detail: "this finding is already a member of a published case at the version it stands at now, and that edition already records the conclusion this act would record (the publishing project's relationship, its reading and its claim \u2014 INVESTIGATIVE-SESSION.md \xA77.1 item 9), so there is nothing here a new edition would say differently. An EDITION IS A SEPARATE DOCUMENT (DEC-12): it carries its own conclusion, its own falsifier and its own freshly authored completeness, and minting one that says what an edition already says would make the edition number a count of publish calls rather than a record of what changed. Two routes lead to a new edition, and each leaves a reader able to see what moved: the project withdraws its conclusion and concludes again (op=withdrawconclusion, then op=conclude&project=), or the finding is reopened (op=reopen), worked, concluded again and published \u2014 the route DEC-12 built."
-        };
       prepared.push({ id, b, fm, text: liveMd.content, conclusion: conc, warrant: recorded });
     }
     const roleMap = roles && typeof roles === "object" && !Array.isArray(roles) ? roles : null;
@@ -33277,6 +33349,24 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         caseId: theCase,
         detail: `no published case answers to ${theCase}. A case identity is minted by this act and carried in the signed bytes; it is never taken from a caller, because an identity a caller can hand us is one a caller can invent.`
       };
+    for (const p of prepared) {
+      const same = p.warrant ? p.warrant.same.filter((e) => theCase && e.case_id === theCase || e.state === "prepared") : [];
+      if (same.length)
+        return {
+          ok: false,
+          reason: "ALREADY_A_CASE_MEMBER",
+          target: p.id,
+          from: p.b.current_state,
+          project: proj,
+          relationship: p.conclusion.relationship,
+          recorded_by: same.map((e) => ({
+            case_id: e.case_id,
+            edition: e.edition,
+            state: e.state
+          })),
+          detail: "this finding is already a member of a published case at the version it stands at now, and that edition already records the conclusion this act would record (the publishing project's relationship, its reading and its claim \u2014 INVESTIGATIVE-SESSION.md \xA77.1 item 9), so there is nothing here a new edition would say differently. An EDITION IS A SEPARATE DOCUMENT (DEC-12): it carries its own conclusion, its own falsifier and its own freshly authored completeness, and minting one that says what an edition already says would make the edition number a count of publish calls rather than a record of what changed. Two routes lead to a new edition, and each leaves a reader able to see what moved: the project withdraws its conclusion and concludes again (op=withdrawconclusion, then op=conclude&project=), or the finding is reopened (op=reopen), worked, concluded again and published \u2014 the route DEC-12 built."
+        };
+    }
     const minted = !theCase;
     if (minted) {
       theCase = this.#mintOpaqueId("CASE", (/* @__PURE__ */ new Date()).toISOString().slice(0, 4), "", (id) => !!(this.#one(`SELECT 1 FROM cases WHERE case_id=?`, id) || this.#one(`SELECT 1 FROM published_cases WHERE case_id=? LIMIT 1`, id) || this.#one(`SELECT 1 FROM case_documents WHERE case_id=? LIMIT 1`, id) || this.#one(`SELECT 1 FROM published_case_members WHERE case_id=? LIMIT 1`, id)));
@@ -33343,145 +33433,40 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
           };
     }
     const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
-    const roster = members.join(", ");
     const written = [];
+    const frozen = /* @__PURE__ */ new Map();
     for (const p of prepared) {
       const { id: target2, b, fm } = p;
-      let text = p.text;
       const pair = this.strengthOf(target2);
-      text = _Store.#setOrAddScalar(text, "edition", String(memberEditions.get(target2)));
-      text = _Store.#setOrAddBlock(text, "completeness", [
-        `  statement: "${stmt}"`,
-        `  subject_position: ${pos}`,
-        `  subject_justification: "${just}"`,
-        `  author: ${who}`,
-        `  at: "${when}"`
-      ]);
-      text = _Store.#setOrAddBlock(
-        text,
-        "completeness_excluded",
-        rows.length ? rows.flatMap((r) => [
-          ...r.target ? [`  - target: ${r.target}`, `    description: "${r.description}"`] : [`  - description: "${r.description}"`],
-          `    reason: "${r.reason}"`
-        ]) : []
-      );
       const frozenAxes = _Store.STRENGTH_AXES.filter((axis) => axis !== "testimony" || pair[axis] && pair[axis].state !== "unrated");
-      text = _Store.#setOrAddBlock(
-        text,
-        "published_strength",
-        frozenAxes.flatMap((axis) => {
-          const a = pair[axis];
-          return [
-            `  - axis: ${axis}`,
-            `    state: ${a.state}`,
-            `    grade: ${a.grade ?? "null"}`,
-            `    weakest: ${a.weakest ? a.weakest.target_id : "null"}`,
-            `    load_bearing: ${a.load_bearing}`,
-            `    population: ${a.population}`,
-            `    detail: "${_Store.#fmSafe(a.detail)}"`
-          ];
-        })
-      );
       const frozenGrounds = frozenAxes.flatMap((axis) => (pair[axis].grounds ?? []).map((g) => [axis, g]));
-      if (frozenGrounds.length)
-        text = _Store.#setOrAddBlock(
-          text,
-          "published_strength_grounds",
-          frozenGrounds.flatMap(([axis, g]) => [
-            `  - axis: ${axis}`,
-            `    ground: ${g.ground === null ? "null" : `"${_Store.#fmSafe(String(g.ground))}"`}`,
-            `    state: ${g.state}`,
-            `    grade: ${g.grade ?? "null"}`,
-            `    weakest: ${g.weakest ? g.weakest.target_id : "null"}`,
-            `    load_bearing: ${g.load_bearing}`,
-            `    population: ${g.population}`
-          ])
-        );
-      text = _Store.#setOrAddScalar(
-        text,
-        "division_parent",
-        typeof fm.division_parent === "string" ? fm.division_parent : "null"
+      const already = this.#one(
+        `SELECT edition FROM published_bundles WHERE bundle_id=? AND bundle_sha=?`,
+        target2,
+        b.bundle_sha
       );
-      text = _Store.#setOrAddScalar(
-        text,
-        "division_siblings",
-        Array.isArray(fm.division_siblings) && fm.division_siblings.length ? `[${fm.division_siblings.join(", ")}]` : "[]"
-      );
-      text = _Store.#setScalar(text, "last_updated", `"${when}"`);
-      text = _Store.#setSection(text, "## What This Excludes", [
-        stmt,
-        "",
-        ...rows.length ? rows.flatMap((r) => [`- ${r.target ? r.target + " \u2014 " : ""}${r.description || "(named above)"}: ${r.reason}`]) : ["Nothing material was excluded from this case."],
-        "",
-        `Position on putting this case to its subject: ${pos}. ${just}`
-      ]);
-      const entry = `### Session ${when} | Published | ${who}
-Trigger: op=publish on ${target2}
-Changes: joined case ${theCase} at case edition ${edition} as a member; state unchanged at ${b.current_state} (DEC-72: publication is the case relation).
-Published by: ${proj} (this case is that project's production, DEC-72)
-Case scope: ${scp}
-Findings in this case: ${roster}
-Load-bearing: ${loadBearing.map((m) => m.target).join(", ")}
-Supporting: ${memberRoles.filter((m) => m.role === "supporting").map((m) => m.target).join(", ") || "none"}
-Completeness: ${stmt}
-Excluded: ${rows.length} item(s).
-Subject position: ${pos} \u2014 ${just}
-`;
-      const at = text.indexOf("## Session Log");
-      if (at < 0) text += "\n## Session Log\n\n" + entry;
-      else {
-        const nxt = text.indexOf("\n## ", at + 1);
-        const cutAt = nxt === -1 ? text.length : nxt + 1;
-        text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
-      }
-      const carried = [];
-      for (const r of this.sql.exec(
-        `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
-        target2
-      ))
-        carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-      const bytes = new TextEncoder().encode(text);
-      const promoted = this.promote({
-        bundleId: target2,
-        base: b.bundle_sha,
-        snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
-        author: who,
-        files: [{
-          path: "bundle.md",
-          text,
-          bytes: bytes.length,
-          sha256: createSha256().update(bytes).hex()
-        }, ...carried],
-        /* CASE-4 / DEC-72: the projection carries the state the document actually
-           has, which publication does not move. `prior_state` is likewise the
-           document's own, unchanged — the promotion is a new VERSION of a
-           `concluded` finding, not a transition. */
-        meta: {
-          object_type: fm.object_type ?? b.object_type,
-          title: fm.title,
-          current_state: b.current_state,
-          prior_state: fm.prior_state ?? null,
-          created: fm.created,
-          last_updated: when,
-          criticality: fm.criticality ?? null
-        }
+      const memberEdition = already ? Number(already.edition) : memberEditions.get(target2);
+      frozen.set(target2, {
+        edition: memberEdition,
+        pair,
+        axes: frozenAxes,
+        grounds: frozenGrounds,
+        crossed: !!already
       });
-      if (!promoted.ok) return { ...promoted, target: target2, caseId: theCase, moved: written.map((w) => w.target) };
       written.push({
         target: target2,
         state: b.current_state,
         case_id: theCase,
         case_edition: edition,
-        bundleSha: promoted.bundleSha,
+        /* D-442: THE PIN IS THE SHA THE MEMBER HAS AS PREPARED — nothing
+           was promoted, so this is the bytes its project concluded. */
+        bundleSha: b.bundle_sha,
+        promoted: false,
         title: fm.title ?? null,
-        /* CASE-5: THE MEMBER'S OWN EDITION, beside the case's at
-           the top of this answer. A caller that read the one
-           `edition` this act used to return could not tell which
-           altitude it was at, because there was only one number. */
-        edition: memberEditions.get(target2),
-        /* PER FINDING, and it stays a per-finding array in the
-           answer for the same reason it stays one in the bytes. */
-        /* MK-2: the axes THE BYTES froze, so the answer and the
+        /* CASE-5: THE MEMBER'S OWN EDITION, beside the case's at the top
+           of this answer — stated in the case document now (D-442). */
+        edition: memberEdition,
+        /* MK-2: the axes THE CASE DOCUMENT froze, so the answer and the
            signed document name the same set. */
         strength: frozenAxes.map((axis) => ({
           axis,
@@ -33489,23 +33474,14 @@ Subject position: ${pos} \u2014 ${just}
           grade: pair[axis].grade,
           weakest: pair[axis].weakest ? pair[axis].weakest.target_id : null
         })),
+        frozen_in: "case_document",
         required: bar,
-        /* CASE-2 / DEC-72 clause 4: THE DESIGNATION, BESIDE THE
-           STRENGTH AND THE BAR — which is exactly the shape the
-           design says a reader must be given: *"each claim's own
-           derived strength displayed beside the case's standard"*,
-           with supporting members VISIBLY not load-bearing. A
-           surface holding the pair and the bar but not the role
-           would have to guess which members the bar was actually
-           asked of, and it was asked of none of them but these. */
+        /* CASE-2 / DEC-72 clause 4: THE DESIGNATION, BESIDE THE STRENGTH
+           AND THE BAR. */
         role: (memberRoles.find((m) => m.target === target2) || {}).role ?? null,
         /* REC-157 / §7.1 item 9: WHY AN EDITION WAS MINTED OVER BYTES A CASE
            ALREADY PINS — present ONLY when this finding was a case member at
-           its current version as the act began, which is exactly when the
-           refusal above was asked and answered "the conclusion moved". It names
-           every edition that pinned these bytes and what each RECORDED, so the
-           act's own answer says what moved rather than leaving a caller to
-           infer it from an edition number (DEC-12: a record of what changed). */
+           its current version as the act began. */
         ...p.warrant ? { edition_warranted: {
           because: "the_publishing_projects_conclusion_moved",
           pinned_editions: p.warrant.pinned.map((e) => ({
@@ -33515,33 +33491,17 @@ Subject position: ${pos} \u2014 ${just}
             recorded: e.recorded
           }))
         } } : {},
-        /* REC-17 / DEC-12: a newer EDITION surfaces the re-evaluation
-                                obligation on everything whose basis names this FINDING and
-                                RECOMPUTES NOTHING on the member's behalf — a leg keeps citing
-                                the edition it names, and C-21.2 keeps comparing against that
-                                edition's own frozen pair. Reported from edition 2 onward
-                                because edition 1 moves nothing under anybody: there was no
-                                prior edition for a leg to be resting on. It is raised PER
-                                FINDING because a leg rests on a finding, never on a case —
-                                C-21.2's altitude, which DEC-44 leaves exactly where it was.
-        
-                                CORRECTED BY CASE-5, 2026-09-10, AND THE OLD READING WAS
-                                WRONG IN A WAY ONLY THE FLIP MAKES VISIBLE. This gate and
-                                this field both read the CASE's edition, because before
-                                the flip there was one number and it was the case's. But
-                                the sentence above is right: a leg rests on a FINDING and
-                                C-21.2 compares against THAT FINDING'S OWN frozen pair at
-                                the edition the leg names. So a finding published for the
-                                FIRST TIME as a new member of a case's edition 2 raised a
-                                re-evaluation obligation saying it had moved — on a
-                                document that had never been published, at an edition
-                                number that was not its own. Both now read the member's
-                                own edition, which is what every consumer of this field
-                                was already treating it as. */
-        ...memberEditions.get(target2) > 1 ? { reevaluation: {
+        /* REC-17 / DEC-12: a newer EDITION OF THE FINDING surfaces the
+           re-evaluation obligation on everything whose basis names it, and
+           recomputes nothing on the member's behalf. CASE-5: keyed on the
+           MEMBER's own edition. D-442: raised only where this act prepares a
+           NEW edition of the finding — bytes another case already carried
+           across are the edition a leg already rests on, so nothing moved
+           under anybody. */
+        ...!already && memberEdition > 1 ? { reevaluation: {
           source: "edition",
           since: when,
-          edition: memberEditions.get(target2),
+          edition: memberEdition,
           raised: this.#reevalRaisedBy(target2, viewer)
         } } : {}
       });
@@ -33574,7 +33534,10 @@ Subject position: ${pos} \u2014 ${just}
       author: who,
       at: when,
       searched,
-      conclusions: conclusionRows
+      conclusions: conclusionRows,
+      /* D-442 / rule 12 (b): per member its own edition and the frozen pair and
+         grounds, read at this act — stated here ONCE instead of in the member. */
+      frozen
     });
     const docBytes = new TextEncoder().encode(docText);
     const docSha = createSha256().update(docBytes).hex();
@@ -33596,6 +33559,7 @@ Subject position: ${pos} \u2014 ${just}
       theCase,
       edition
     );
+    this.#projectCaseExclusions(theCase, edition);
     return {
       ok: true,
       caseId: theCase,
@@ -33665,7 +33629,7 @@ Subject position: ${pos} \u2014 ${just}
          That inverts the old shape, in which the roster was written by
          whichever member happened to ratify first, out of a set the other
          members had not yet signed anything about. */
-      next: `review the CASE DOCUMENT (op=casedocument&case=${theCase}&edition=${edition}) and ratify it (op=caseratify): it carries the case's scope, its completeness assertion, its bias acknowledgement, its standard of evidence and the whole roster PINNED AT THE VERSION HASHES this act just produced, and your signature over it is what commits them. ` + (written.length === 1 ? `Then ratify the finding itself (op=ratify): it is signed on its own bytes because the finding is the unit of truth.` : `Then ratify EACH of these ${written.length} findings (op=ratify): every finding is signed on its own bytes because the finding is the unit of truth, and this case edition becomes servable as a container when the last of them lands.`)
+      next: `review the CASE DOCUMENT (op=casedocument&case=${theCase}&edition=${edition}) and ratify it (op=caseratify): it carries the case's scope, its completeness assertion, its bias acknowledgement, its standard of evidence, the whole roster PINNED AT THE VERSION HASHES each finding has now, and each member's own edition and frozen strength as this case reads it \u2014 and your signature over it is what commits them. Nothing was written on any finding (BIO_Publication_v0_1.md \xA73 rule 12). ` + (written.length === 1 ? `Then ratify the finding itself (op=ratify): it is signed on its own bytes because the finding is the unit of truth.` : `Then ratify EACH of these ${written.length} findings (op=ratify): every finding is signed on its own bytes because the finding is the unit of truth, and this case edition becomes servable as a container when the last of them lands.`)
     };
   }
   /* CASE-5b / DEC-72: THE CASE DOCUMENT'S TEXT, AND IT IS A DOCUMENT RATHER THAN
@@ -33723,9 +33687,17 @@ Subject position: ${pos} \u2014 ${just}
        relationship's where the conclusion is in the question's own bytes
        and names nobody, §7.1 item 5). */
     searched,
-    conclusions = []
+    conclusions = [],
+    /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (b): per member
+       `{ edition, pair, axes, grounds }` — its own published edition
+       and the FROZEN STRENGTH PAIR AND GROUNDS as read at the act.
+       Required: a case document authored without it would be the
+       legacy shape, whose members carried these blocks in their
+       own bytes, and nothing authors that shape any more. */
+    frozen
   }) {
     const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
+    const frozenOf = (m) => frozen && frozen.get(m) || null;
     const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
     const fm = [
       "---",
@@ -33740,7 +33712,11 @@ Subject position: ${pos} \u2014 ${just}
       ...roster.flatMap((m) => [
         `  - target: ${m}`,
         `    role: ${roleOf.get(m) ?? "null"}`,
-        `    version_sha: ${pins.get(m) ?? "null"}`
+        `    version_sha: ${pins.get(m) ?? "null"}`,
+        /* D-442: THE MEMBER'S OWN PUBLISHED EDITION of the pinned bytes, beside the
+           pin it numbers — rule 12 (b). It used to be `edition:` in the member's
+           own frontmatter, stamped by the promotion this document replaces. */
+        `    edition: ${frozenOf(m) ? frozenOf(m).edition : "null"}`
       ]),
       /* REC-135 / §7.1 item 4 — THE CONCLUSION EACH MEMBER ENTERED THIS CASE ON,
          AND WHOSE IT WAS. An ARRAY OF FLAT OBJECTS, `case_roles`'s shape, for the
@@ -33805,6 +33781,50 @@ Subject position: ${pos} \u2014 ${just}
         `    evidence_one_sided: ${l.evidence_one_sided}`,
         `    detail: "${_Store.#fmSafe(l.detail)}"`
       ]),
+      /* D-442 / rule 12 (b) — THE FROZEN STRENGTH PAIR, PER MEMBER, STATED ONCE
+         HERE. It was `published_strength` in each member's own bytes; it is this
+         case's reading of that finding at the pinned sha, so it lives in the
+         document the case's signer signs (rule 12 (c)). ONE ROW PER (member,
+         axis), an array of flat objects for the grammar's reason (two levels, no
+         map inside an array). Still PER FINDING and never composed: there is no
+         case-level row, because a case has no strength of its own (DEC-72, R2).
+         The fields are the member-bytes block's, unmoved in name and meaning, so
+         C-2.8 runs over them unchanged (checkCaseDocument). */
+      "case_strength:",
+      ...roster.flatMap((m) => {
+        const z = frozenOf(m);
+        return !z ? [] : z.axes.flatMap((axis) => {
+          const a = z.pair[axis];
+          return [
+            `  - target: ${m}`,
+            `    axis: ${axis}`,
+            `    state: ${a.state}`,
+            `    grade: ${a.grade ?? "null"}`,
+            `    weakest: ${a.weakest ? a.weakest.target_id : "null"}`,
+            `    load_bearing: ${a.load_bearing}`,
+            `    population: ${a.population}`,
+            `    detail: "${_Store.#fmSafe(a.detail)}"`
+          ];
+        });
+      }),
+      /* D-442 / rule 12 (b) — AND THE FROZEN GROUNDS (REC-42 / DEC-32 clause
+         (e)), PER MEMBER. The FIELD is always written; a member whose basis named
+         no grounds contributes no rows, exactly as the member-bytes block was
+         written only when the basis was structured. */
+      "case_strength_grounds:",
+      ...roster.flatMap((m) => {
+        const z = frozenOf(m);
+        return !z ? [] : z.grounds.flatMap(([axis, g]) => [
+          `  - target: ${m}`,
+          `    axis: ${axis}`,
+          `    ground: ${g.ground === null ? "null" : `"${_Store.#fmSafe(String(g.ground))}"`}`,
+          `    state: ${g.state}`,
+          `    grade: ${g.grade ?? "null"}`,
+          `    weakest: ${g.weakest ? g.weakest.target_id : "null"}`,
+          `    load_bearing: ${g.load_bearing}`,
+          `    population: ${g.population}`
+        ]);
+      }),
       "required_strength:",
       `  declared: ${bar.declared}`,
       `  source: ${bar.source}`,
@@ -33876,6 +33896,26 @@ Subject position: ${pos} \u2014 ${just}
       "",
       searched.summary.subjects === 0 ? "**THIS CASE NAMES NO SUBJECT THIS RECORD COULD COMPUTE COVERAGE OVER.** That is not a statement that nothing was searched, and it is emphatically not a statement that everything was: it means the question could not be asked of this record. A reader should treat this case's completeness claim as resting on its author's prose alone." : "A level reported as UNDETERMINED is not a level reported as empty. It means this record cannot exclude that the looking happened before the log carried that level, or that a purge removed what described it \u2014 different facts from nobody having looked, and stated rather than resolved in whichever direction would read better.",
       "",
+      /* D-442 / rule 12 (b) — IN THE BODY AND IN PROSE, for the reason every other
+         section here is: a member reviews and signs THIS, and the frozen pair used to
+         be printed nowhere a person reads. Per finding, per axis, never composed. */
+      "## What Each Finding Reached, As Read For This Case",
+      "",
+      "Each finding's strength is its own, on each axis separately, frozen as this case read it at the version pinned above. This case has no strength of its own: two findings that reached different grades have two answers, and no letter here combines them.",
+      "",
+      ...roster.flatMap((m) => {
+        const z = frozenOf(m);
+        if (!z) return [`- **${m}** \u2014 NO FROZEN STRENGTH WAS RECORDED FOR THIS MEMBER.`];
+        return [
+          `- **${m}** (its edition ${z.edition}):`,
+          ...z.axes.map((axis) => {
+            const a = z.pair[axis];
+            return `  - ${axis}: ${a.state === "graded" ? `grade ${a.grade}` : a.state.toUpperCase()}` + `${a.weakest ? `, no stronger than ${a.weakest.target_id}` : ""}. ${a.detail || ""}`.trimEnd();
+          }),
+          ...z.grounds.map(([axis, g]) => `  - ${axis}, group '${g.ground ?? "(unnamed)"}': ${g.state === "graded" ? `grade ${g.grade}` : String(g.state).toUpperCase()}`)
+        ];
+      }),
+      "",
       "## Bias Acknowledgement",
       "",
       bias,
@@ -33898,6 +33938,10 @@ Subject position: ${pos} \u2014 ${just}
       `Load-bearing: ${roster.filter((m) => roleOf.get(m) === "load_bearing").join(", ")}`,
       `Supporting: ${roster.filter((m) => roleOf.get(m) !== "load_bearing").join(", ") || "none"}`,
       `Excluded: ${(excluded || []).length} item(s).`,
+      /* D-442 / rule 12 (b): THE PUBLISH RECEIPT IS THE CASE DOCUMENT'S HISTORY, never
+         the finding's — which bytes of each member this case took, and at which of
+         that member's own editions. Nothing was written on any member. */
+      ...roster.map((m) => `Pinned: ${m} at ${pins.get(m) ?? "(unpinned)"}${frozenOf(m) ? `, its edition ${frozenOf(m).edition}` : ""}; nothing was written on it.`),
       ""
     ];
     return fm.join("\n") + body.join("\n");
@@ -34138,8 +34182,103 @@ Subject position: ${pos} \u2014 ${just}
       testimony: this.testimonyReach((() => {
         const cf = (parseFrontmatter(doc.text).data || {}).case_findings;
         return (Array.isArray(cf) ? cf : []).map((x) => String(x ?? "").trim());
-      })())
+      })()),
+      /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): each roster member's `basis` AT THE BYTES
+         THIS DOCUMENT PINS, for the C-2.8 arms that followed the frozen pair into the case document
+         (the testimony row, the per-ground rows). Read at the PIN and never at the working version:
+         the frozen pair is this case's reading of those bytes. A member whose pinned bytes this store
+         cannot produce is ABSENT from the map, which leaves those two arms unasked for it rather than
+         asked of a basis nobody pinned — `checkCaseDocument` reads absence as absence. */
+      memberBasis: this.#pinnedMemberBasis(doc.text)
     };
+  }
+  /* D-442: the pinned bytes of one member, from the live row or its history — the lookup
+     `#ratifiedFindingsRestingOn` already makes, named once here for the case-document readers. */
+  #memberTextAtSha(bundleId, sha) {
+    if (!bundleId || !sha) return null;
+    const at = this.#one(
+      `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md' AND sha256=?`,
+      bundleId,
+      sha
+    ) || this.#one(
+      `SELECT content FROM history WHERE bundle_id=? AND path='bundle.md' AND sha256=? LIMIT 1`,
+      bundleId,
+      sha
+    );
+    return at && typeof at.content === "string" ? at.content : null;
+  }
+  #pinnedMemberBasis(docText) {
+    const dfm = parseFrontmatter(String(docText || "")).data || {};
+    const out = {};
+    for (const r of Array.isArray(dfm.case_roles) ? dfm.case_roles : []) {
+      if (!r || typeof r !== "object" || typeof r.target !== "string") continue;
+      const text = this.#memberTextAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
+      if (text === null) continue;
+      const mfm = parseFrontmatter(text).data || {};
+      out[r.target] = Array.isArray(mfm.basis) ? mfm.basis : [];
+    }
+    return out;
+  }
+  /* D-442 — `case_exclusions`, projected WHOLE for one case edition from its stored document, by the
+     delete-then-insert discipline every projection here takes. A signed document cannot change, so a
+     re-projection of one only rewrites the same rows. */
+  #projectCaseExclusions(caseId, edition) {
+    const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, caseId, Number(edition));
+    this.sql.exec(`DELETE FROM case_exclusions WHERE case_id=? AND edition=?`, caseId, Number(edition));
+    if (!d || typeof d.text !== "string") return;
+    const dfm = parseFrontmatter(d.text).data || {};
+    const comp = dfm.completeness && typeof dfm.completeness === "object" ? dfm.completeness : {};
+    const rows = Array.isArray(dfm.completeness_excluded) ? dfm.completeness_excluded : [];
+    const project = typeof dfm.case_project === "string" && dfm.case_project !== "null" ? dfm.case_project : null;
+    const members = (Array.isArray(dfm.case_roles) ? dfm.case_roles : []).filter((r) => r && typeof r === "object" && typeof r.target === "string");
+    for (const m of members)
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || typeof row !== "object") continue;
+        this.sql.exec(
+          `INSERT INTO case_exclusions (case_id,edition,bundle_id,ord,member_edition,project_id,target_id,description,reason,author,at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+          caseId,
+          Number(edition),
+          m.target,
+          i,
+          Number.isInteger(m.edition) ? m.edition : null,
+          project,
+          typeof row.target === "string" ? row.target : null,
+          typeof row.description === "string" ? row.description : "",
+          typeof row.reason === "string" ? row.reason : "",
+          typeof comp.author === "string" ? comp.author : "",
+          typeof comp.at === "string" ? comp.at : ""
+        );
+      }
+  }
+  /* D-442 / BIO_Publication_v0_1.md §3 rule 12 — WHAT A CASE DOCUMENT STATES ABOUT ONE MEMBER, OR
+     NULL FOR A LEGACY (/1) DOCUMENT, whose members carried these blocks in their own bytes (rule 12
+     (e)). THE ONE READER of `case_roles[].edition`, `case_strength` and `case_strength_grounds`:
+     the ratify committer and `#caseEditionState` both ask here, so the per-case frozen facts are
+     parsed one way. `strength` is the member-bytes block's row shape exactly (`axis`, `state`,
+     `grade`, `weakest`, `load_bearing`, `population`, `detail`), so every consumer of the old
+     `published_strength` reads it unchanged. */
+  #caseDocMemberFrozen(caseId, edition) {
+    const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, caseId, Number(edition));
+    if (!d || typeof d.text !== "string") return null;
+    const dfm = parseFrontmatter(d.text).data || {};
+    if (!caseDocumentStatesMemberBlocks(dfm)) return null;
+    const strip = ({ target, ...rest }) => rest;
+    const rowsOf = (key, m) => (Array.isArray(dfm[key]) ? dfm[key] : []).filter((r) => r && typeof r === "object" && String(r.target ?? "") === m).map(strip);
+    const out = /* @__PURE__ */ new Map();
+    const excludes = sectionText(parseFrontmatter(d.text).body || "", "## What This Excludes");
+    for (const r of Array.isArray(dfm.case_roles) ? dfm.case_roles : []) {
+      if (!r || typeof r !== "object" || typeof r.target !== "string") continue;
+      out.set(r.target, {
+        edition: Number.isInteger(r.edition) ? r.edition : null,
+        excludes,
+        version_sha: typeof r.version_sha === "string" ? r.version_sha : null,
+        strength: rowsOf("case_strength", r.target),
+        grounds: rowsOf("case_strength_grounds", r.target)
+      });
+    }
+    return out;
   }
   /* THE ONE "NO SUCH CASE DOCUMENT" ANSWER (REC-130). Both the genuinely-absent
      branch and the no-standing branch return THIS, so "does not exist" and "you
@@ -34965,12 +35104,27 @@ Subject position: ${pos} \u2014 ${just}
         id,
         ed
       );
+      const stillAwaiting = roster.filter((m) => {
+        const r = rows.find((x) => x.target === m) || {};
+        return !this.#one(
+          `SELECT bundle_id FROM published_bundles WHERE bundle_id=? AND bundle_sha=?`,
+          m,
+          r.version_sha ?? ""
+        );
+      });
+      const completedCase = roster.length && !stillAwaiting.length ? (() => {
+        const first = rows.find((x) => x.target === roster[0]) || {};
+        const mt = this.#memberTextAtSha(roster[0], first.version_sha ?? null);
+        const grp = mt ? (parseFrontmatter(mt).data || {}).group ?? null : null;
+        return this.#caseEditionState(id, ed, grp);
+      })() : null;
       return {
         ok: true,
         caseId: id,
         edition: ed,
         project,
         roster,
+        ...completedCase && completedCase.complete && !completedCase.manifest_sha ? { completedCase } : {},
         members: roster.map((m) => {
           const r = rows.find((x) => x.target === m) || {};
           return { bundle_id: m, role: r.role ?? null, version_sha: r.version_sha ?? null };
@@ -52111,6 +52265,8 @@ ${words}`;
         this.sql.exec(`DELETE FROM project_participants`);
         this.sql.exec(`DELETE FROM project_owner_votes`);
         this.sql.exec(`DELETE FROM case_documents WHERE ratified_at IS NULL`);
+        this.sql.exec(`DELETE FROM case_exclusions WHERE NOT EXISTS (SELECT 1 FROM case_documents d
+                         WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)`);
         this.sql.exec(`DELETE FROM review_comments`);
         this.sql.exec(`DELETE FROM review_grants`);
         this.sql.exec(`DELETE FROM case_drafts`);
@@ -54657,7 +54813,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     strength,
     edges,
     group = null,
-    deliveredBy = null
+    deliveredBy = null,
+    /* D-442: whether THESE signed bytes carry their own frozen blocks (a member published
+       before BIO_Publication_v0_1.md §3 rule 12, whose `published_strength` the control plane
+       read and passed as `strength`). False for a member published under rule 12: its
+       edition and frozen pair are then read from the case documents pinning it. */
+    memberCarriesBlocks = false
   } = {}) {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
       return { ok: false, reason: "MALFORMED" };
@@ -54737,7 +54898,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         bundleId,
         bundleSha
       );
-      const ed = Number.isInteger(edition) ? edition : already ? Number(already.edition) : highest + 1;
+      const docFrozen = !memberCarriesBlocks && pinnedBy.length ? this.#frozenFromPinningDocuments(bundleId, bundleSha, pinnedBy) : null;
+      const ed = Number.isInteger(edition) ? edition : already ? Number(already.edition) : docFrozen && Number.isInteger(docFrozen.edition) ? docFrozen.edition : highest + 1;
+      const frozenStrength = memberCarriesBlocks ? strength : docFrozen ? docFrozen.strength : strength;
       const same = this.#one(`SELECT bundle_sha FROM published_bundles WHERE bundle_id=? AND edition=?`, bundleId, ed);
       const existed = !!(same && same.bundle_sha === bundleSha);
       if (same && !existed)
@@ -54771,7 +54934,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           oneEd
         );
         const cComp = completeness ? JSON.stringify(completeness) : null;
-        if (cRow && cComp && (cRow.completeness ?? null) !== cComp)
+        const legacyDoc = !this.#caseDocMemberFrozen(one.case_id, oneEd);
+        if (legacyDoc && cRow && cComp && (cRow.completeness ?? null) !== cComp)
           return {
             ok: false,
             reason: "CASE_ASSERTION_DIVERGED",
@@ -54810,7 +54974,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         deliveredBy ?? null,
         gateVersion,
         sigArmored,
-        strength ? JSON.stringify(strength) : null,
+        frozenStrength ? JSON.stringify(frozenStrength) : null,
         required ? JSON.stringify(required) : null,
         JSON.stringify(shas.map((s) => ({ path: s.path, sha256: s.sha256, kind: s.kind, bytes: s.bytes ?? null })))
       );
@@ -54850,9 +55014,45 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
            handed one case's standard as though it were the answer, and
            `published_cases.bar` answers per case for whoever asks. */
         ...barUndetermined ? { barUndetermined: true } : {},
+        /* D-442: WHERE THIS FINDING'S EDITION AND FROZEN PAIR WERE READ FROM — its own bytes
+           (legacy) or the case document(s) pinning them (rule 12) — and whether those
+           documents disagreed about the pair (a boolean, for `barUndetermined`'s reason). */
+        frozenFrom: memberCarriesBlocks ? "member_bytes" : docFrozen ? "case_document" : "none",
+        /* D-442 / rule 12: EVERY case edition pinning these bytes that this ratification
+           COMPLETED and that has no container yet, where there is no sole case to carry it as
+           `case` (IC-74 keeps `case` for a sole membership only). Before rule 12 a shared sha
+           could not arise — each case pinned the bytes its own promotion minted — so a case
+           over a finding several cases pin would otherwise never be assembled. An INTERNAL
+           hop: the control plane builds each container and forwards none of these states. */
+        ...!caseId && byCase.length ? (() => {
+          const pending = byCase.map((one) => this.#caseEditionState(one.case_id, Number(one.edition), group)).filter((st) => st && st.complete && !st.manifest_sha);
+          return pending.length ? { containerCases: pending } : {};
+        })() : {},
+        ...docFrozen && docFrozen.strengthUndetermined ? { strengthUndetermined: true } : {},
         ...caseId ? { caseId, caseEdition: cEd, case: caseState } : {}
       };
     });
+  }
+  /* D-442 / BIO_Publication_v0_1.md §3 rule 12: a member's edition and frozen pair as the RATIFIED
+     case documents pinning exactly these bytes state them. Null when every pinning document is
+     legacy (/1) — those members carried the blocks in their own bytes. The edition and the pair are
+     each taken only where every /2 document agrees; a disagreement is returned as undetermined and
+     never resolved by picking one (CLAUDE.md §4: undetermined is first-class). */
+  #frozenFromPinningDocuments(bundleId, bundleSha, pins) {
+    const seen = [];
+    for (const pin of pins) {
+      const map = this.#caseDocMemberFrozen(pin.case_id, Number(pin.edition));
+      const row = map ? map.get(bundleId) : null;
+      if (row && row.version_sha === bundleSha) seen.push(row);
+    }
+    if (!seen.length) return null;
+    const eds = [...new Set(seen.map((r) => r.edition))];
+    const pairs = [...new Set(seen.map((r) => JSON.stringify(r.strength)))];
+    return {
+      edition: eds.length === 1 ? eds[0] : null,
+      strength: pairs.length === 1 && seen[0].strength.length ? seen[0].strength : null,
+      strengthUndetermined: pairs.length > 1
+    };
   }
   /* REC-44: what a case edition is, and whether it is COMPLETE. One place, so
      the ratify path (which must know whether to assemble the container) and the
@@ -54874,6 +55074,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const MEMBER_COLS = `bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
                          delivered_by, gate_version, sig_armored, strength, required, parts`;
     const findings = [], awaiting = [];
+    const docFrozen = this.#caseDocMemberFrozen(caseId, ed);
     for (const m of roster) {
       const r = m.version_sha ? this.#one(
         `SELECT ${MEMBER_COLS} FROM published_bundles WHERE bundle_id=? AND bundle_sha=?`,
@@ -54888,6 +55089,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         awaiting.push(m.bundle_id);
         continue;
       }
+      const frozenHere = docFrozen ? docFrozen.get(m.bundle_id) || null : null;
       findings.push({
         ord: m.ord,
         bundle_id: r.bundle_id,
@@ -54912,7 +55114,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         attestor: { member: r.attestor_member, key_b64: r.attestor_key },
         /* REC-128: who SIGNED is `attestor`; who DELIVERED is this. */
         delivered_by: this.#deliveredBy(r),
-        strength: r.strength ? JSON.parse(r.strength) : null,
+        strength: frozenHere ? frozenHere.strength : r.strength ? JSON.parse(r.strength) : null,
+        /* D-442: the frozen BRANCHES, where the case document states them. A legacy
+           member's grounds are in its own signed bytes and were never on this row. */
+        ...frozenHere ? { grounds: frozenHere.grounds } : {},
+        frozen_from: frozenHere ? "case_document" : "member_bytes",
+        ...frozenHere ? { case_excludes: frozenHere.excludes ?? null } : {},
         required: r.required ? JSON.parse(r.required) : null,
         parts: r.parts ? JSON.parse(r.parts) : []
       });
@@ -55938,6 +56145,19 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       targetId,
       ...gate.args
     );
+    const standing = gate.scope === "member" ? "1" : gate.scope === "DENY" ? "0" : `EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = x.project_id AND b.object_type='project' AND (${gate.sql}))`;
+    rows.push(...this.#rows(
+      `SELECT x.bundle_id, x.ord, x.member_edition AS edition, x.description, x.reason, x.author, x.at,
+              b.current_state, b.title, x.case_id, x.edition AS case_edition, 'case_document' AS "from"
+         FROM case_exclusions x
+         JOIN case_documents d ON d.case_id = x.case_id AND d.edition = x.edition
+         JOIN bundles b ON b.bundle_id = x.bundle_id
+        WHERE x.target_id=? AND (${gate.sql}) AND (d.ratified_at IS NOT NULL OR ${standing})
+        ORDER BY x.case_id, x.edition, x.bundle_id, x.ord`,
+      targetId,
+      ...gate.args,
+      ...standing.startsWith("EXISTS") ? gate.args : []
+    ));
     return {
       ok: true,
       targetId,
@@ -58776,11 +58996,34 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     };
     const run = String(args.run ?? "").trim();
     const runRow = run ? this.#one(`SELECT run, status, context_type, context_id, principal_plane, principal_claude FROM ai_runs WHERE run=?`, run) : null;
-    if (!runRow || runRow.status !== "running")
+    const requestRunSeen = !!runRow && this.#aiRunInSight(run, args.viewer ?? null);
+    if (!requestRunSeen)
       return refusal7(
         "CAPTURE_REQUEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.` : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation (DEC-47), and a request naming no session names no authorisation.",
         { run: run || null }
+      );
+    const notPrincipal = runPrincipalGate({
+      caller: args.caller ?? null,
+      principal: runRow.principal_plane,
+      act: "requesting a capture under a run"
+    });
+    if (notPrincipal)
+      return {
+        ok: false,
+        reason: notPrincipal.code,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        run,
+        note: "a capture request names a run its caller holds. Nothing was requested or written"
+      };
+    if (runRow.status !== "running")
+      return refusal7(
+        "CAPTURE_REQUEST_NO_RUN",
+        `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.`,
+        { run }
       );
     const address = String(args.address ?? "").trim();
     if (!isPublicHttpsLocator(address))
@@ -58843,6 +59086,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       );
     const purpose = String(args.purpose ?? "").trim();
     const uaMode = String(args.ua_mode ?? args.uaMode ?? "civicos").trim();
+    const callerPlane = String(args.caller ?? "").trim();
     const nowMs = args.at ? Date.parse(args.at) : Date.now();
     const now = _Store.#aiIso(nowMs);
     const request = String(args.request ?? "").trim() || `CR-${now.replace(/[-:TZ]/g, "")}-${_Store.#rand(6)}`;
@@ -58882,7 +59126,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       host,
       purpose,
       uaMode,
-      runRow.principal_plane,
+      callerPlane,
       runRow.principal_claude,
       now,
       now,
@@ -58902,7 +59146,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       state: "requested",
       requested: true,
       already: false,
-      principals: { plane: runRow.principal_plane, claude: runRow.principal_claude },
+      principals: { plane: callerPlane, claude: runRow.principal_claude },
       detail: "requested. This instance does not fetch on a caller's timing: the daemon drains this queue, and DEC-47's conduct rules are applied there."
     };
   }
@@ -65550,7 +65794,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            capture-request arm asks so it can admit the drain and nobody else. */
         capturerequest: () => this.captureRequest({
           ...body || {},
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          /* REC-168: the caller's PRINCIPAL, stamped by the control plane (REC-152's one expression, via
+             `RUN_PRODUCTION_ACTIONS`) and SET AFTER the body's spread, so a `caller` the body carries is
+             overwritten rather than believed. */
+          caller: url.searchParams.get("principal")
         }),
         capturerequestdrain: () => this.captureRequestDrain(body || {}),
         capturerequestdraining: () => this.captureRequestDraining(
@@ -67562,7 +67810,7 @@ var AI_RUN_ACTIONS = [
   "extractpropose"
 ];
 var RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
-var RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose"];
+var RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest"];
 var POSITIONAL_ACTS = [
   "cite",
   "sever",
@@ -69015,6 +69263,240 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
   const note = anchorless ? `${anchorless} region(s) the OCR member returned carried no checkable image region and were dropped rather than recorded` : null;
   return { ok: true, text, chain: chain2, kept, floored, note };
 }
+async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
+  const manifest = {
+    /* REC-47 bumps 2 -> 3, and the bump is deliberate rather than
+       bookkeeping. The container gains `bias_acknowledgement`, which is a
+       DISCLOSURE a reader is entitled to rely on being present: without a
+       version move, a /2 container carrying no acknowledgement and a /2
+       container that simply predates the field are indistinguishable to a
+       stranger holding the zip, and "the record is silent" would read as
+       "the group declared nothing". The whole premise of the container is
+       that it is readable without our cooperation, so the only place that
+       ambiguity could be resolved is the one place the reader cannot
+       reach. REC-44 bumped 1 -> 2 for the same class of reason. */
+    /* CASE-5 / DEC-72 bumps 3 -> 4, AND THE BUMP IS THE SAME ARGUMENT
+       REC-47 MADE, arriving on the fields the artifact flip adds. `/4`
+       carries the PIN, the AUTHORED ROLE, each member's OWN edition, whose
+       production the case is and the standard it was held to. Without a
+       version move a `/3` container carrying no pin and a `/4` container
+       whose pin was WITHHELD are indistinguishable to a stranger holding
+       the zip, and "the record is silent" would read as "the case froze
+       nothing" — which is the one claim this artifact exists to refute.
+       The whole premise is that it is readable without our cooperation, so
+       the only place that ambiguity could be resolved is the one place the
+       reader cannot reach. */
+    /* CASE-5b / DEC-72 bumps 4 -> 5, AND THIS BUMP IS LOAD-BEARING IN A WAY
+                 THE OTHERS WERE NOT. `/4` and every version before it carried the
+                 case's scope, roster, partition, bias acknowledgement and bar as
+                 MANIFEST FIELDS — and a stranger could check every one of them,
+                 because the same facts were inside each member's SIGNED bundle.md.
+                 That is the property REC-44 bought and it is why the fields could be
+                 taken on trust here: the manifest was a convenience over material
+                 the reader could verify.
+    
+                 CASE-5b removes those facts from member bytes. A `/4`-shaped
+                 manifest built after this item would carry the same fields with
+                 NOTHING BEHIND THEM — assertions this instance makes about itself,
+                 checkable against nothing, which is precisely the ambiguity the
+                 format comment above says this artifact exists to refute. So `/5`
+                 carries `case_document`: the bytes, their hash, and the armored
+                 signature a member made over them, verifiable with ssh-keygen
+                 against a key the artifact names.
+    
+                 WITHOUT THE VERSION MOVE a reader could not tell a `/4` container
+                 whose case facts were member-signed from a `/4` container whose case
+                 facts were nobody's. That distinction is the entire difference
+                 between this record and a press release. */
+    /* REC-128 bumps 5 -> 6, ON THE ARGUMENT EVERY BUMP ABOVE MADE. `/6`
+       carries `delivered_by` beside every `attestor` — on the case document
+       and on each finding — naming whose authenticated session CARRIED the
+       signature in: a member, or the instance's founder. Without the move a
+       `/5` container (which never recorded a deliverer) and a `/6` one whose
+       deliverer was not recorded would read alike, and a stranger could not
+       tell "nobody said" from "the format had no place to say". EXISTING
+       containers are untouched: a manifest is built once, when an edition
+       completes, and is served by its own stored hash, so nothing already
+       published verifies against anything new. `delivered_by` is THIS
+       INSTANCE'S RECORD and not covered by any signature (a member signs
+       before anybody delivers), and `verify` below says so in words. */
+    format: "bio-case-container/6",
+    case: cs.caseId,
+    edition: cs.edition,
+    group: cs.group ?? null,
+    /* THE SIGNED CASE DOCUMENT, WHOLE. The text is carried rather than a
+                 digest of it for the same reason every member's bundle.md is carried
+                 rather than named: a stranger must be able to RE-HASH what they hold
+                 and check the signature over it themselves. A digest alone would let
+                 them detect a mismatch and never let them read what was signed.
+    
+                 THE STATEMENT IS PRINTED IN ASCII, which is CASE-5's own correction
+                 arriving on the new field: `caseRatifyStatement()` returns a
+                 Uint8Array, and `JSON.stringify` renders one as an object of byte
+                 indices — so a `/4` container told a stranger to verify over a
+                 statement printed as numbered integers. Decoded here, at the site,
+                 rather than by changing what the statement builder returns. */
+    case_document: cs.document ? {
+      doc_sha: cs.document.doc_sha,
+      text: cs.document.text,
+      gate_version: cs.document.gate_version,
+      ratified_at: cs.document.ratified_at,
+      attestor: cs.document.attestor,
+      delivered_by: cs.document.delivered_by,
+      signature: {
+        namespace: NS_RATIFY,
+        statement: new TextDecoder().decode(
+          caseRatifyStatement(cs.caseId, cs.edition, cs.document.doc_sha)
+        ),
+        /* `armored`, the SAME field name every member's
+           signature already uses twelve lines down. A second
+           spelling for one thing in one artifact is how a
+           consumer comes to handle only the half it happened to
+           meet first. */
+        armored: cs.document.sig_armored
+      }
+    } : null,
+    /* DEC-72 clause 2, INSIDE THE ARTIFACT THAT TRAVELS. Whose production
+       this case is, and the standard of evidence it was held to. The
+       design doc's own list of what the CASE artifact freezes names the
+       bar; before this item it was reachable only by opening a member's
+       bundle.md and reading that member's copy, which is one member's
+       stamp of a case property. A stranger weighing a case has to be able
+       to see what the group required of it and who required it, from the
+       bytes in their hand. `bar: null` is the absent-bar posture and never
+       a bar of zero, which `verify` below says in words. */
+    project: cs.project ?? null,
+    bar: cs.bar ?? null,
+    /* DEC-44 determination 2: what the case is ABOUT, authored by the
+       group. Beside it, what it left OUT. A reader needs both. */
+    scope: cs.scope ?? null,
+    /* REC-47 / DEC-46 (a): INSIDE THE CONTAINER, which is the copy that
+       matters most. DEC-20 makes the bias part of the evidentiary record
+       that TRAVELS with publication, and the container is the artifact
+       that travels — a stranger holding the zip must be able to read the
+       lens this case was made under without coming back to this instance.
+       An acknowledgement served only from a live op would be a disclosure
+       that stops existing the moment the instance does. */
+    bias_acknowledgement: cs.bias_acknowledgement ?? null,
+    completeness: cs.completeness ?? null,
+    /* REC-58, 2026-08-05: `ratified_at` and NOT `opened`, and the pair is
+       a decision rather than an accident of which fields were to hand.
+       `cs` is the whole case-edition state and carries both. The instant
+       the LAST member signed is what this container can stand behind; the
+       instant somebody started work is a fact about the working record,
+       and a stranger holding this zip has no way to check it and no stated
+       use for it. Named rather than spread, for the reason at the sibling
+       pick above: this artifact travels without this instance, so a field
+       that leaks into it cannot be withdrawn from the copies. */
+    ratified_at: cs.ratified_at,
+    /* EVERY MEMBER FINDING, each with its OWN signature, its OWN attestor
+       and its OWN frozen PAIR. The signature is per finding because the
+       FINDING is the unit of truth: what a member signed is one
+       document's bytes, and a case-level signature would be a signature
+       over something nobody reviewed. */
+    findings: cs.findings.map((f2) => ({
+      bundle_id: f2.bundle_id,
+      title: f2.title,
+      /* CASE-5, AND THIS ONE LINE WAS A FALSE STATEMENT IN A SIGNED-ADJACENT
+         ARTIFACT. It read `edition: cs.edition` — the CASE's number,
+         written onto every member as though it were the member's. While
+         the two were slaved it happened to be true; the artifact flip makes
+         it a claim about a finding that the finding's own published row
+         contradicts, and this is the copy that TRAVELS, so a reader has no
+         way to check it against anything. It is the member's own edition,
+         off the member's own published row, resolved by the pin. */
+      edition: f2.edition,
+      bundle_sha: f2.bundle_sha,
+      /* THE PIN AND THE DESIGNATION, INSIDE THE CONTAINER. The design's
+         sentence: the CASE artifact freezes its members — *"content by
+         hash, version, per-member strength pair, role, the bar, the
+         exclusions."* The pair and the exclusions were already here (the
+         latter inside `completeness.excluded`, which is why it is not
+         copied a second time); the version and the role were not.
+         `version_sha` is what the case COMMITTED TO and `bundle_sha` is
+         what the member SIGNED — equal by construction at assembly, and
+         carried as two fields anyway, because a reader checking the freeze
+         must be able to see the case's commitment as a separate statement
+         from the finding's own hash. `role` is the authored designation
+         (clause 4): a stranger holding a SUPPORTING member must be able to
+         see it was not presented as carrying the case. */
+      version_sha: f2.version_sha ?? null,
+      role: f2.role ?? null,
+      ratified_at: f2.ratified_at,
+      gate_version: f2.gate_version,
+      attestor: f2.attestor,
+      delivered_by: f2.delivered_by,
+      /* CASE-5 CORRECTS `statement`, AND IT IS THE ONE FIELD IN THIS
+         ARTIFACT THAT WAS UNREADABLE BY THE READER IT EXISTS FOR.
+         `ratifyStatement()` returns a Uint8Array — it is the message fed
+         to the signer — and JSON.stringify turns a Uint8Array into an
+         OBJECT KEYED BY BYTE INDEX: {"0":98,"1":105,…}. So the container
+         told a stranger to check a signature over a statement it printed
+         as 47 numbered integers, and the one thing they had to have in
+         ASCII was the one thing they had to decode. Nothing consumed it —
+         measured across `civicos-ui`, the battery and this file — so this
+         is a correction and not a withdrawal, and it rides the /4 bump
+         with the rest of what the flip adds. Decoded here rather than by
+         changing `ratifyStatement`, whose Uint8Array return is exactly
+         right for `verifySshsig`'s caller two thousand lines up. */
+      signature: {
+        namespace: NS_RATIFY,
+        statement: new TextDecoder().decode(ratifyStatement(f2.bundle_id, f2.bundle_sha)),
+        armored: f2.sig_armored
+      },
+      strength: f2.strength,
+      required_strength: f2.required,
+      parts: f2.parts.map((p) => `${f2.bundle_id}/${p.path}`)
+    })),
+    /* The parts are NAMESPACED BY FINDING, and that is forced rather than
+       chosen: every finding carries a `bundle.md`, so a flat parts[]
+       would have two members claiming one path and the archive would say
+       two things about one name. */
+    parts: cs.findings.flatMap((f2) => f2.parts.map((p) => ({
+      path: `${f2.bundle_id}/${p.path}`,
+      finding: f2.bundle_id,
+      sha256: p.sha256,
+      kind: p.kind,
+      bytes: p.bytes ?? null
+    }))),
+    layout: {
+      root: `${cs.caseId}/`,
+      parts_at: "path",
+      manifest_at: "MANIFEST.json",
+      note: "the zip carries every part at <case>/<finding>/<path> with this manifest at the root. Check each part's sha256 against this list, then check this manifest's own sha256 and each finding's signature over its own bundle_sha. Renderings (REC-22) join parts[] as kind: rendering."
+    },
+    verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without this instance's cooperation. Each finding is signed on its own bytes; there is no case-level strength, because composing several findings' strengths into one letter is a claim the evidence does not support. EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's edition: since the artifact flip the two are separate numbers, so a member of edition 2 of this case may be at its own edition 1. `version_sha` is the version THIS CASE COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this container was assembled over a member the case did not pin and you should not rely on it. `role` is the publisher's authored designation: only `load_bearing` members were held to the `bar` above, and a `supporting` member is part of the published work without being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is not a standard of zero \u2014 the case claims no cleared bar and says so. `attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED that signature to this instance \u2014 the authenticated session that performed the act, a member or the instance's founder \u2014 and it is this instance's record, not covered by any signature. `undetermined` there means the delivery was not recorded; it never means the signer delivered it." + (caseDocumentStatesMemberBlocks(parseFrontmatter(String(cs.document && cs.document.text || "")).data || {}) ? " Each finding's `strength` and its own `edition` are stated in the CASE DOCUMENT carried above (`case_strength`, `case_roles`), under the case document's signature: publishing wrote nothing on any finding, so its own signature covers the finding as its project concluded it, and the pair is this case's reading of those bytes." : "")
+  };
+  const mText = JSON.stringify(manifest, null, 1);
+  const mBytes = new TextEncoder().encode(mText);
+  const mSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", mBytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
+  const recOut = await doAnswer(stub.fetch(new Request("http://do/recordcasemanifest", {
+    method: "POST",
+    body: JSON.stringify({
+      caseId: cs.caseId,
+      edition: cs.edition,
+      manifest,
+      manifestSha: mSha,
+      bytes: mBytes.length
+    })
+  })));
+  const rec = recOut.result;
+  if (recOut.answered && rec && rec.ok && typeof env.PUBLISHED?.put === "function") {
+    const key = `${storeName}/published/${mSha}`;
+    if (!await env.PUBLISHED.head(key)) await env.PUBLISHED.put(key, mBytes);
+  }
+  return !recOut.answered ? {
+    ok: false,
+    reason: STORE_SILENT_REASON,
+    op: `${via}/recordcasemanifest`,
+    detail: STORE_SILENT_DETAIL
+  } : rec && rec.ok ? {
+    manifest_sha: mSha,
+    parts: manifest.parts.length,
+    findings: manifest.findings.length,
+    zip: `op=publishedbytes&sha256=${mSha}&format=zip`
+  } : { ok: false, ...rec || { reason: "MANIFEST_NOT_RECORDED" } };
+}
 var index_default = {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -69284,7 +69766,13 @@ var index_default = {
             question: sectionText(text, "## Question"),
             conclusion: sectionText(text, "## Conclusion"),
             falsifies: sectionText(text, "## What Would Falsify This"),
-            excludes: sectionText(text, "## What This Excludes"),
+            /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): a member published under rule 12
+               carries no `## What This Excludes` in its own bytes — the case states it once, in
+               its document — so the section is read from THAT signed document for such a member,
+               and from the member's own bytes for a legacy one (rule 12 (e)). `excludes_from`
+               says which, so a renderer never has to infer whose words it is printing. */
+            excludes: fnd.frozen_from === "case_document" ? typeof fnd.case_excludes === "string" ? fnd.case_excludes : null : sectionText(text, "## What This Excludes"),
+            excludes_from: fnd.frozen_from === "case_document" ? "case_document" : "member_bytes",
             /* BOTH, because the document says it in two places and they are not
                the same statement. The FRONTMATTER carries what op=conclude
                authored and what the catalog gates — that is the conclusion of
@@ -71583,10 +72071,16 @@ var index_default = {
           tokenClass: cls
         }, 403);
       const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
-      const fm = parseFrontmatter(facts.doc.text).data || {};
+      const parsedDoc = parseFrontmatter(facts.doc.text);
+      const fm = parsedDoc.data || {};
       const gate = runCaseGate({
         caseId: facts.doc.case_id,
         edition: Number(facts.doc.edition),
+        /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): the body (C-3.1's
+           section) and each member's basis at the pinned bytes (C-2.8's
+           testimony and per-ground arms), both from the one facts read. */
+        body: typeof parsedDoc.body === "string" ? parsedDoc.body : null,
+        memberBasis: facts.memberBasis || null,
         fm,
         priorCase: facts.priorCase ? {
           edition: facts.priorCase.edition,
@@ -71618,18 +72112,21 @@ var index_default = {
         })
       }));
       if (!out.answered) return storeSilent("caseratify/commit");
-      const r = out.result;
-      if (!r?.ok)
+      const answered = out.result;
+      const { completedCase, ...r } = answered || {};
+      if (!answered || !r.ok)
         return json({
           ok: false,
-          ...r && r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: r },
+          ...r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: answered },
           store: storeName,
           tokenClass: cls
         }, 409);
+      const container = completedCase && completedCase.complete && !completedCase.manifest_sha ? await assembleCaseContainer({ env, stub, storeName, cs: completedCase, via: "caseratify" }) : null;
       return json({
         ok: true,
         ...r,
         gateVersion: gate.gateVersion,
+        ...container ? { container } : {},
         attestor: { member: attestor?.member_id ?? null, key_b64: sv.keyB64 },
         /* REC-128: who carried the signature in, beside who made it. On a
            retry of the same signature (`existed`) the store wrote nothing,
@@ -71641,7 +72138,7 @@ var index_default = {
            members still sign their own bytes, because the finding is
            the unit of truth — the container becomes assemblable when
            the last of them lands. */
-        next: r.awaiting?.length ? `the case is committed. ${r.awaiting.length} member finding(s) still to ratify (op=ratify): ${r.awaiting.join(", ")}. This edition becomes servable as a container when the last of them lands.` : "the case is committed and every member finding is already ratified at the version this case pinned.",
+        next: r.awaiting?.length ? `the case is committed. ${r.awaiting.length} member finding(s) still to ratify (op=ratify): ${r.awaiting.join(", ")}. This edition becomes servable as a container when the last of them lands.` : "the case is committed and every member finding is already ratified at the version this case pinned" + (container && container.manifest_sha ? `, so its container is assembled (${container.zip}).` : "."),
         store: storeName,
         tokenClass: cls
       });
@@ -71834,6 +72331,11 @@ var index_default = {
           title: ratifiedFm.title ?? null,
           completeness: frozenCompleteness,
           strength: frozenStrength,
+          /* D-442 / BIO_Publication_v0_1.md §3 rule 12: a member published under rule 12 carries
+             no frozen block in its own bytes (`isCase` false), and the store reads its edition and
+             frozen pair from the RATIFIED case documents pinning these bytes instead. Legacy bytes
+             carry their own, read above exactly as before (rule 12 (e)). */
+          memberCarriesBlocks: isCase,
           /* CASE-5b: `required` IS NOT SENT ANY MORE. The bar is the CASE's
              (DEC-72 clause 2) and it left these bytes with the rest of the case,
              so there is nothing here to send. `publish()` reads it from
@@ -71879,240 +72381,12 @@ var index_default = {
         }
       }
       let container = null;
-      if (pub.case && pub.case.complete && !pub.case.manifest_sha) {
-        const cs = pub.case;
-        const manifest = {
-          /* REC-47 bumps 2 -> 3, and the bump is deliberate rather than
-             bookkeeping. The container gains `bias_acknowledgement`, which is a
-             DISCLOSURE a reader is entitled to rely on being present: without a
-             version move, a /2 container carrying no acknowledgement and a /2
-             container that simply predates the field are indistinguishable to a
-             stranger holding the zip, and "the record is silent" would read as
-             "the group declared nothing". The whole premise of the container is
-             that it is readable without our cooperation, so the only place that
-             ambiguity could be resolved is the one place the reader cannot
-             reach. REC-44 bumped 1 -> 2 for the same class of reason. */
-          /* CASE-5 / DEC-72 bumps 3 -> 4, AND THE BUMP IS THE SAME ARGUMENT
-             REC-47 MADE, arriving on the fields the artifact flip adds. `/4`
-             carries the PIN, the AUTHORED ROLE, each member's OWN edition, whose
-             production the case is and the standard it was held to. Without a
-             version move a `/3` container carrying no pin and a `/4` container
-             whose pin was WITHHELD are indistinguishable to a stranger holding
-             the zip, and "the record is silent" would read as "the case froze
-             nothing" — which is the one claim this artifact exists to refute.
-             The whole premise is that it is readable without our cooperation, so
-             the only place that ambiguity could be resolved is the one place the
-             reader cannot reach. */
-          /* CASE-5b / DEC-72 bumps 4 -> 5, AND THIS BUMP IS LOAD-BEARING IN A WAY
-                       THE OTHERS WERE NOT. `/4` and every version before it carried the
-                       case's scope, roster, partition, bias acknowledgement and bar as
-                       MANIFEST FIELDS — and a stranger could check every one of them,
-                       because the same facts were inside each member's SIGNED bundle.md.
-                       That is the property REC-44 bought and it is why the fields could be
-                       taken on trust here: the manifest was a convenience over material
-                       the reader could verify.
-          
-                       CASE-5b removes those facts from member bytes. A `/4`-shaped
-                       manifest built after this item would carry the same fields with
-                       NOTHING BEHIND THEM — assertions this instance makes about itself,
-                       checkable against nothing, which is precisely the ambiguity the
-                       format comment above says this artifact exists to refute. So `/5`
-                       carries `case_document`: the bytes, their hash, and the armored
-                       signature a member made over them, verifiable with ssh-keygen
-                       against a key the artifact names.
-          
-                       WITHOUT THE VERSION MOVE a reader could not tell a `/4` container
-                       whose case facts were member-signed from a `/4` container whose case
-                       facts were nobody's. That distinction is the entire difference
-                       between this record and a press release. */
-          /* REC-128 bumps 5 -> 6, ON THE ARGUMENT EVERY BUMP ABOVE MADE. `/6`
-             carries `delivered_by` beside every `attestor` — on the case document
-             and on each finding — naming whose authenticated session CARRIED the
-             signature in: a member, or the instance's founder. Without the move a
-             `/5` container (which never recorded a deliverer) and a `/6` one whose
-             deliverer was not recorded would read alike, and a stranger could not
-             tell "nobody said" from "the format had no place to say". EXISTING
-             containers are untouched: a manifest is built once, when an edition
-             completes, and is served by its own stored hash, so nothing already
-             published verifies against anything new. `delivered_by` is THIS
-             INSTANCE'S RECORD and not covered by any signature (a member signs
-             before anybody delivers), and `verify` below says so in words. */
-          format: "bio-case-container/6",
-          case: cs.caseId,
-          edition: cs.edition,
-          group: cs.group ?? null,
-          /* THE SIGNED CASE DOCUMENT, WHOLE. The text is carried rather than a
-                       digest of it for the same reason every member's bundle.md is carried
-                       rather than named: a stranger must be able to RE-HASH what they hold
-                       and check the signature over it themselves. A digest alone would let
-                       them detect a mismatch and never let them read what was signed.
-          
-                       THE STATEMENT IS PRINTED IN ASCII, which is CASE-5's own correction
-                       arriving on the new field: `caseRatifyStatement()` returns a
-                       Uint8Array, and `JSON.stringify` renders one as an object of byte
-                       indices — so a `/4` container told a stranger to verify over a
-                       statement printed as numbered integers. Decoded here, at the site,
-                       rather than by changing what the statement builder returns. */
-          case_document: cs.document ? {
-            doc_sha: cs.document.doc_sha,
-            text: cs.document.text,
-            gate_version: cs.document.gate_version,
-            ratified_at: cs.document.ratified_at,
-            attestor: cs.document.attestor,
-            delivered_by: cs.document.delivered_by,
-            signature: {
-              namespace: NS_RATIFY,
-              statement: new TextDecoder().decode(
-                caseRatifyStatement(cs.caseId, cs.edition, cs.document.doc_sha)
-              ),
-              /* `armored`, the SAME field name every member's
-                 signature already uses twelve lines down. A second
-                 spelling for one thing in one artifact is how a
-                 consumer comes to handle only the half it happened to
-                 meet first. */
-              armored: cs.document.sig_armored
-            }
-          } : null,
-          /* DEC-72 clause 2, INSIDE THE ARTIFACT THAT TRAVELS. Whose production
-             this case is, and the standard of evidence it was held to. The
-             design doc's own list of what the CASE artifact freezes names the
-             bar; before this item it was reachable only by opening a member's
-             bundle.md and reading that member's copy, which is one member's
-             stamp of a case property. A stranger weighing a case has to be able
-             to see what the group required of it and who required it, from the
-             bytes in their hand. `bar: null` is the absent-bar posture and never
-             a bar of zero, which `verify` below says in words. */
-          project: cs.project ?? null,
-          bar: cs.bar ?? null,
-          /* DEC-44 determination 2: what the case is ABOUT, authored by the
-             group. Beside it, what it left OUT. A reader needs both. */
-          scope: cs.scope ?? null,
-          /* REC-47 / DEC-46 (a): INSIDE THE CONTAINER, which is the copy that
-             matters most. DEC-20 makes the bias part of the evidentiary record
-             that TRAVELS with publication, and the container is the artifact
-             that travels — a stranger holding the zip must be able to read the
-             lens this case was made under without coming back to this instance.
-             An acknowledgement served only from a live op would be a disclosure
-             that stops existing the moment the instance does. */
-          bias_acknowledgement: cs.bias_acknowledgement ?? null,
-          completeness: cs.completeness ?? null,
-          /* REC-58, 2026-08-05: `ratified_at` and NOT `opened`, and the pair is
-             a decision rather than an accident of which fields were to hand.
-             `cs` is the whole case-edition state and carries both. The instant
-             the LAST member signed is what this container can stand behind; the
-             instant somebody started work is a fact about the working record,
-             and a stranger holding this zip has no way to check it and no stated
-             use for it. Named rather than spread, for the reason at the sibling
-             pick above: this artifact travels without this instance, so a field
-             that leaks into it cannot be withdrawn from the copies. */
-          ratified_at: cs.ratified_at,
-          /* EVERY MEMBER FINDING, each with its OWN signature, its OWN attestor
-             and its OWN frozen PAIR. The signature is per finding because the
-             FINDING is the unit of truth: what a member signed is one
-             document's bytes, and a case-level signature would be a signature
-             over something nobody reviewed. */
-          findings: cs.findings.map((f2) => ({
-            bundle_id: f2.bundle_id,
-            title: f2.title,
-            /* CASE-5, AND THIS ONE LINE WAS A FALSE STATEMENT IN A SIGNED-ADJACENT
-               ARTIFACT. It read `edition: cs.edition` — the CASE's number,
-               written onto every member as though it were the member's. While
-               the two were slaved it happened to be true; the artifact flip makes
-               it a claim about a finding that the finding's own published row
-               contradicts, and this is the copy that TRAVELS, so a reader has no
-               way to check it against anything. It is the member's own edition,
-               off the member's own published row, resolved by the pin. */
-            edition: f2.edition,
-            bundle_sha: f2.bundle_sha,
-            /* THE PIN AND THE DESIGNATION, INSIDE THE CONTAINER. The design's
-               sentence: the CASE artifact freezes its members — *"content by
-               hash, version, per-member strength pair, role, the bar, the
-               exclusions."* The pair and the exclusions were already here (the
-               latter inside `completeness.excluded`, which is why it is not
-               copied a second time); the version and the role were not.
-               `version_sha` is what the case COMMITTED TO and `bundle_sha` is
-               what the member SIGNED — equal by construction at assembly, and
-               carried as two fields anyway, because a reader checking the freeze
-               must be able to see the case's commitment as a separate statement
-               from the finding's own hash. `role` is the authored designation
-               (clause 4): a stranger holding a SUPPORTING member must be able to
-               see it was not presented as carrying the case. */
-            version_sha: f2.version_sha ?? null,
-            role: f2.role ?? null,
-            ratified_at: f2.ratified_at,
-            gate_version: f2.gate_version,
-            attestor: f2.attestor,
-            delivered_by: f2.delivered_by,
-            /* CASE-5 CORRECTS `statement`, AND IT IS THE ONE FIELD IN THIS
-               ARTIFACT THAT WAS UNREADABLE BY THE READER IT EXISTS FOR.
-               `ratifyStatement()` returns a Uint8Array — it is the message fed
-               to the signer — and JSON.stringify turns a Uint8Array into an
-               OBJECT KEYED BY BYTE INDEX: {"0":98,"1":105,…}. So the container
-               told a stranger to check a signature over a statement it printed
-               as 47 numbered integers, and the one thing they had to have in
-               ASCII was the one thing they had to decode. Nothing consumed it —
-               measured across `civicos-ui`, the battery and this file — so this
-               is a correction and not a withdrawal, and it rides the /4 bump
-               with the rest of what the flip adds. Decoded here rather than by
-               changing `ratifyStatement`, whose Uint8Array return is exactly
-               right for `verifySshsig`'s caller two thousand lines up. */
-            signature: {
-              namespace: NS_RATIFY,
-              statement: new TextDecoder().decode(ratifyStatement(f2.bundle_id, f2.bundle_sha)),
-              armored: f2.sig_armored
-            },
-            strength: f2.strength,
-            required_strength: f2.required,
-            parts: f2.parts.map((p) => `${f2.bundle_id}/${p.path}`)
-          })),
-          /* The parts are NAMESPACED BY FINDING, and that is forced rather than
-             chosen: every finding carries a `bundle.md`, so a flat parts[]
-             would have two members claiming one path and the archive would say
-             two things about one name. */
-          parts: cs.findings.flatMap((f2) => f2.parts.map((p) => ({
-            path: `${f2.bundle_id}/${p.path}`,
-            finding: f2.bundle_id,
-            sha256: p.sha256,
-            kind: p.kind,
-            bytes: p.bytes ?? null
-          }))),
-          layout: {
-            root: `${cs.caseId}/`,
-            parts_at: "path",
-            manifest_at: "MANIFEST.json",
-            note: "the zip carries every part at <case>/<finding>/<path> with this manifest at the root. Check each part's sha256 against this list, then check this manifest's own sha256 and each finding's signature over its own bundle_sha. Renderings (REC-22) join parts[] as kind: rendering."
-          },
-          verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without this instance's cooperation. Each finding is signed on its own bytes; there is no case-level strength, because composing several findings' strengths into one letter is a claim the evidence does not support. EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's edition: since the artifact flip the two are separate numbers, so a member of edition 2 of this case may be at its own edition 1. `version_sha` is the version THIS CASE COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this container was assembled over a member the case did not pin and you should not rely on it. `role` is the publisher's authored designation: only `load_bearing` members were held to the `bar` above, and a `supporting` member is part of the published work without being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is not a standard of zero \u2014 the case claims no cleared bar and says so. `attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED that signature to this instance \u2014 the authenticated session that performed the act, a member or the instance's founder \u2014 and it is this instance's record, not covered by any signature. `undetermined` there means the delivery was not recorded; it never means the signer delivered it."
-        };
-        const mText = JSON.stringify(manifest, null, 1);
-        const mBytes = new TextEncoder().encode(mText);
-        const mSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", mBytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
-        const recOut = await doAnswer(stub.fetch(new Request("http://do/recordcasemanifest", {
-          method: "POST",
-          body: JSON.stringify({
-            caseId: cs.caseId,
-            edition: cs.edition,
-            manifest,
-            manifestSha: mSha,
-            bytes: mBytes.length
-          })
-        })));
-        const rec = recOut.result;
-        if (recOut.answered && rec && rec.ok && typeof env.PUBLISHED?.put === "function") {
-          const key = `${storeName}/published/${mSha}`;
-          if (!await env.PUBLISHED.head(key)) await env.PUBLISHED.put(key, mBytes);
-        }
-        container = !recOut.answered ? {
-          ok: false,
-          reason: STORE_SILENT_REASON,
-          op: "ratify/recordcasemanifest",
-          detail: STORE_SILENT_DETAIL
-        } : rec && rec.ok ? {
-          manifest_sha: mSha,
-          parts: manifest.parts.length,
-          findings: manifest.findings.length,
-          zip: `op=publishedbytes&sha256=${mSha}&format=zip`
-        } : { ok: false, ...rec || { reason: "MANIFEST_NOT_RECORDED" } };
+      if (pub.case && pub.case.complete && !pub.case.manifest_sha)
+        container = await assembleCaseContainer({ env, stub, storeName, cs: pub.case, via: "ratify" });
+      else if (Array.isArray(pub.containerCases)) {
+        for (const cs of pub.containerCases)
+          if (cs && cs.complete && !cs.manifest_sha)
+            container = await assembleCaseContainer({ env, stub, storeName, cs, via: "ratify" });
       }
       let reuseReport = null;
       const reusedOut = await doAnswer(stub.fetch(`http://do/reusedparts?id=${encodeURIComponent(body2.bundleId)}`));
@@ -72271,6 +72545,12 @@ var index_default = {
           zip: `op=publishedbytes&sha256=${pub.case.manifest_sha}&format=zip`
         } : null),
         graph: pub.edges ?? null,
+        /* D-442 / BIO_Publication_v0_1.md §3 rule 12: where this edition's number and
+           frozen pair were read from — the finding's own bytes (legacy), the case
+           documents pinning them, or neither — and whether those documents disagreed
+           about the pair. Two scalars, forwarded by name like every field here. */
+        frozenFrom: pub.frozenFrom ?? null,
+        ...pub.strengthUndetermined ? { strengthUndetermined: true } : {},
         existed: pub.existed,
         ratifiedAt: pub.ratifiedAt,
         attestor: attestor?.member_id ?? null,

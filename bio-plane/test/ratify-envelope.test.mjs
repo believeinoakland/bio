@@ -529,10 +529,15 @@ console.log("\n--- site 6: do/recordcasemanifest (the one site whose branch need
      version that tested `rec && rec.ok` first and the silence second would put
      the invented reason back on the silence path while looking identical in a
      diff. */
-  const container = /container = !recOut\.answered\s*\n\s*\? \{ ok: false, reason: STORE_SILENT_REASON, op: "ratify\/recordcasemanifest"/.test(SRC);
+  /* RE-AIMED 2026-09-23 by the D-442 worker (BIO_Publication_v0_1.md §3 rule 12), never exempted: the assembly moved
+     VERBATIM into the module function `assembleCaseContainer`, which op=ratify AND op=caseratify call (a case can be
+     complete at its own ratification under rule 12), so the silence branch is now that function's RETURN and its `op`
+     names the calling act (`ratify/recordcasemanifest` or `caseratify/recordcasemanifest`). The ORDER is unchanged
+     and is what is still asserted. */
+  const container = /return !recOut\.answered\s*\n\s*\? \{ ok: false, reason: STORE_SILENT_REASON, op: `\$\{via\}\/recordcasemanifest`/.test(SRC);
   ok("the container's SILENCE branch is evaluated before anything else, so a store that never "
      + "answered cannot reach the `MANIFEST_NOT_RECORDED` fallback", container);
-  const iSilent = SRC.indexOf("op: \"ratify/recordcasemanifest\"");
+  const iSilent = SRC.indexOf("op: `${via}/recordcasemanifest`");
   const iInvent = SRC.indexOf('{ reason: "MANIFEST_NOT_RECORDED" }');
   ok("and the fallback survives BELOW it for the answered path, where it describes a store that "
      + "said ok:false without a reason of its own — corrected, not deleted",

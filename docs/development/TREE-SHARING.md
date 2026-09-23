@@ -3,7 +3,7 @@
 A process document (`CORPUS-STANDARD.md` §6). **RULED BY BOB 2026-09-22: *"Yes to all 3 recommendations"*** — the three
 changes below, as BOB #26 put them to him that day. Designed here by BOB #26. **Change 1 is BUILT by M0-110** (§1 "As
 built"; live from CONDUCT's cutover); **change 2 is BUILT by M0-111** (§2 "As built"; live from the train that lands
-it); **change 3 is NOT BUILT**. Until each change lands, the
+it); **change 3 is BUILT by M0-114** (§3 "As built"). Until each change lands, the
 rules in `CLAUDE.md` stand as written, and the landing that builds a change corrects every rule and kickoff it supersedes.
 **Revised 2026-09-22 by BOB #27** for Bob's move to cloud Claude Code under his second account (§4), with three builders'
 questions answered in §1 (M0-99, M0-100, M0-101), and M0-110's builder's four answered there by BOB #28 the same day;
@@ -121,7 +121,9 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   `coord.mjs migrate`: `coord` as a ROOT commit of the state files from the integration HEAD (fixed dates: re-runs agree)
   and `main`'s pointer commit on it, pushed coord-first by CONDUCT. **Not built:** a `carry <branch>` command (a branch
   cut before the cutover carries its state additions by hand, as `coord.mjs write` intents); the heartbeat's cloud
-  replacement (ruling 4).
+  replacement (ruling 4). **Widened by M0-119 (2026-09-22):** `docs/development/BACKLOG-LATER.md`, the backlog's tail
+  (WORK-PIPELINE §2), is a state file created on `coord` with no pointer on `main`; every write ends with a rebalance of
+  the backlog's split, and the intents gain `rebalance` and `swap`.
 
 ### 2 · One lane lands on `main`, in batches
 
@@ -149,8 +151,20 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   never the actor: every session shares one credential, so no hook can tell CONDUCT from a lane, and a lane that runs
   the train, forges the three local files (driven in the suite), uses `--no-verify`, or pushes from an unguarded clone
   passes. **The refusal's home (§4) is the pre-push hook**, and the cloud's SessionStart hook now installs it
-  (`.claude/hooks/session-start.sh` step 2c); a host-side refusal (branch protection) is Bob's to rule and was not
-  measured. **M0-122 (2026-09-23) built the retry and the reuse.** A push of `main` rejected because `main` MOVED under
+  (`.claude/hooks/session-start.sh` step 2c); a host-side refusal (branch protection) was not
+  measured. **RULED 2026-09-23 by BOB #29, on the M0-111 builder's two questions (via CONDUCT #14):**
+  **(1) No branch protection on `main` now.** The guard exists against HONEST procedural error by sessions acting under one
+  principal, never against an adversary: every bypass named above is a deliberate act a session must choose, and the
+  kickoffs already forbid each. Branch protection would not add what the guard lacks — it cannot tell one session from
+  another either — and would cost Bob a settings act. Its one real gain is binding the PROCEDURE host-side, independent of
+  a local hook, and that needs a check for it to require: **trigger, change 3 built** (the Actions check on each commit;
+  M0-114 measured Actions already enabled, FULL 278/278 in 875 s on a runner). Then requiring that check on `main` is
+  brought to Bob as one setting, with change 3's figures. Earlier trigger: any commit found on `main` after `c5c83dc4`
+  without a `Bio-Train` trailer. **(2) The kickoff is enough to keep a lane from running `train.mjs` itself.** A train
+  run by the wrong lane still merges, gates, records and verifies exactly as CONDUCT's would; the rule is COORDINATION
+  (one lander, so two trains do not race), and a race fails loudly (non-fast-forward), never into a false record. A
+  wrong-lane train is a data point on its receipt, not grounds for a mechanism.
+  **M0-122 (2026-09-23) built the retry and the reuse.** A push of `main` rejected because `main` MOVED under
   the gate (read by ancestry after a fetch, never from git's words) is retried, at most three pushes in all, each stated:
   merge the new `origin/main` (a conflict returns the branches touching it, by name), scan for markers, the id audit,
   gate `gates.mjs --since <the GREEN tip>` — never FULL — write a train record `<id>-retry<n>` whose trailer the retry's
@@ -162,6 +176,15 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
 
 ### 3 · The gates run on GitHub's machines
 
+**A RED GITHUB RUN IS AN ALARM THAT REACHES BOB — RULED 2026-09-23 by Bob** (*"I don't need any more of those github error
+emails, but I'm glad I got them so that we knew there is a problem"*). Every push rides his account, so every failed run emails
+him, and he keeps those emails on on purpose: **a red run must mean a real problem.** So: (a) a `land/*` or `integrate/*` branch
+is pushed only after its own local gate is GREEN on that tree; (b) a negative control is NEVER pushed to a branch the
+workflow triggers on — it runs locally, as every other control does (M0-114's two `m0114-negctl` runs were the last);
+(c) a check that depends on anything but the tree — live `coord` state above all — never decides the gate's verdict (the
+defect that reddened `land/conduct/batch6`'s runs 6 and 7, placed by SCHEDULER); and (d) whoever pushed a branch that
+reads red diagnoses it at once and never leaves it red.
+
 - A GitHub Actions workflow runs `node tools/gates.mjs`, in the class it derives, for each `land/*` push and each
   integration branch, and records the verdict as a check on the commit. **The push guard accepts a green check for
   HEAD's tree** as it accepts a local record today (D-293 keys both by the tree). A local gate stays the fallback.
@@ -171,6 +194,19 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
 - **Bob's acts, named once with those figures:** enabling Actions on `believeinoakland/bio`, and any spending limit.
 - **Accepts when** a `land/*` push gets a GitHub check whose verdict the push guard reads, and a red check refuses the
   push. NEGATIVE CONTROL: break one suite on a branch, and the check reads red at that suite.
+- **As built (M0-114, 2026-09-22) — `.github/workflows/gates.yml`, the arm in `tools/pushguard.mjs`, its suite
+  `bio-plane/test/pushguard-check.test.mjs`; the measurement is `MEASUREMENTS.md` M-104.** Actions was ENABLED on the
+  repository already: a workflow pushed on a worker's branch ran at once, so no act of Bob's was needed. The workflow runs
+  `node tools/gates.mjs` in its derived class on every push of `land/**` and `integrate/**` (never `main`), with the
+  cloud hook's five repairs and no secret, and leaves the verdict on the commit as the `gate` check run's ONE `gate
+  verdict` annotation (`VERDICT=… TREE=… CLASS=… EXIT=… WALL=…s FAILED=…`), read from the gate's own `RECORDED` line, so
+  a job that died before the gate recorded says UNDETERMINED. **The guard refuses** a push only when the latest
+  completed `gate` check on the pushed COMMIT concluded failure and its annotation says RED for the pushed TREE; GREEN,
+  NOT MEASURED, UNDETERMINED, PENDING and NONE (no check, or a commit GitHub has not seen: HTTP 422) are each said, never
+  refused, and `BIO_PUSHGUARD_CHECKS=off` skips the arm aloud. The local record stays the first arm and the fallback.
+  **Not built / limits:** it reads the checks of the COMMIT, so a different commit with the same tree finds none; it
+  reads the `origin` remote's repository; the integration branch's prefix `integrate/**` is this landing's guess at
+  M0-111's name, and that landing names the real one here.
 
 ## 4 · The move to cloud Claude Code, under Bob's second account
 
@@ -208,6 +244,6 @@ Their state is the ledger's, never this file's: `node tools/ledger.mjs find <ID>
   recorded it: *"the line is 70%, not 60% — refresh less, work more"*).
 - **The rows:** M0-99 (`DECIDED.md` untracked, generated on demand; §1), M0-106 (DIST's release gate reuses a tree's
   GREEN record), M0-107 (a timeout reads NOT MEASURED, never a finding), M0-109 (the ledger suite's floor that the debt
-  fold tripped), M0-100 (narrowed, §1), M0-101 (superseded, §1), M0-114 (change 3, BLOCKED on the
-  first cloud session's full-gate figures, §4) and M0-116 (the gate's selection: one measurement appended re-ran 105 of 335
+  fold tripped), M0-100 (narrowed, §1), M0-101 (superseded, §1), M0-114 (change 3, BUILT: §3 "As built"; it was
+  unblocked by the first cloud session's full-gate figures, §4) and M0-116 (the gate's selection: one measurement appended re-ran 105 of 335
   units, 36 of them only because they import a scanner that names the file).

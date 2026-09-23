@@ -132,7 +132,7 @@ import { hostname } from "node:os";
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve, isAbsolute, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ARCHIVE_TARGETS } from "./ledger.mjs";
+import { ARCHIVE_TARGETS, LEDGERS } from "./ledger.mjs";
 /* M0-110: the queue, backlog, debt, claims and archive corpora live on `coord` after the cutover. Every read and walk
    of a corpus goes through the coord layer — the pointer is the switch — or each floor would read the one-line
    pointer and fall to zero, which is the DANGEROUS direction for an allocator (it re-issues ids). */
@@ -140,11 +140,15 @@ import { readState, walkState, isSwitched, freshen } from "./coord.mjs";
 
 /* A corpus file's text as a reader sees it (absolute paths inside the repo are read by their relative path). Throws
    when absent, as `readFileSync` did, so every caller's `missing` bookkeeping is unchanged. */
+const OPTIONAL_CORPUS = new Set(Object.values(LEDGERS).filter((l) => l.optional).map((l) => l.live));
 function readCorpus(repo, p) {
   const abs = isAbsolute(p) ? p : join(repo, p);
   const rel = relative(repo, abs).split(sep).join("/");
   const t = rel.startsWith("..") ? null : readState(repo, rel);
   if (t !== null) return t;
+  /* M0-119: the backlog's TAIL is absent until a row is first demoted into it, and an absent tail is an EMPTY one
+     (`ledger.mjs` LEDGERS.LATER, optional) — never `missing`, which would read as a corpus gone dark. */
+  if (OPTIONAL_CORPUS.has(rel)) return "";
   return readFileSync(abs, "utf8");
 }
 
@@ -213,6 +217,8 @@ const QUEUE_CORPUS = [
      that lives only there must still be seen, or the migration would let a second allocation
      of it pass. */
   "docs/development/BACKLOG.md",
+  /* M0-119: the backlog's TAIL is the same order continued — an id placed there must still be seen. */
+  "docs/development/BACKLOG-LATER.md",
   "docs/development/MILESTONES.md",
   "docs/development/UI-PLAN.md",
   /* MOVED, NOT REMOVED, 2026-09-14 (M0-26): the plan closed at 43/43 and went to
@@ -279,7 +285,7 @@ export const NAMESPACES = {
 
   /* (ii) prose-referenced */
   D: { kind: "prose", what: "debt rows",
-       corpus: ["docs/archive/", "docs/development/DEBT.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/CLAIMS.md"], ceiling: 9999,
+       corpus: ["docs/archive/", "docs/development/DEBT.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md", "docs/development/CLAIMS.md"], ceiling: 9999,
        /* an allocation is a table ROW opening the id; a number in a sentence is not */
        allocPattern: () => /^\|\s*D-(\d+)\s*\|/gm, allocIsUnique: true },
   /* M0-73: DEC, IC and M read `BACKLOG.md` beside `QUEUE.md`, as D and the queue families already did
@@ -287,10 +293,10 @@ export const NAMESPACES = {
      backlog — an id mentioned nowhere else would set no floor and could be handed out a second time.
      `pipeline-readers.test.mjs` §7 asserts the class: no corpus names the cache without the backlog. */
   DEC: { kind: "prose", what: "decisions",
-         corpus: ["docs/archive/", "docs/development/DECISIONS.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md"], ceiling: 9999,
+         corpus: ["docs/archive/", "docs/development/DECISIONS.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md"], ceiling: 9999,
          allocPattern: () => /^###\s+DEC-(\d+)\s+·/gm, allocIsUnique: true },
   IC: { kind: "prose", what: "interface-change entries",
-        corpus: ["docs/archive/", "docs/development/INTERFACE-CHANGES.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md"], ceiling: 9999,
+        corpus: ["docs/archive/", "docs/development/INTERFACE-CHANGES.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md"], ceiling: 9999,
         /* `## IC-n ·` opens the entry; the `### IC-n · RESPONSES / RESOLUTION /
            CONFIRM` blocks beneath it are that entry's own sub-sections and are not
            allocations — measured: IC-2 carries four of them. */
@@ -340,7 +346,7 @@ export const NAMESPACES = {
          queue's three-hash item heading is deliberately outside it. `M-8`..`M-24` have no
          queue rows at all, which is why this costs nothing today and is stated anyway. */
   M: { kind: "prose", what: "measurement entries",
-       corpus: ["docs/archive/", "docs/development/MEASUREMENTS.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md"], ceiling: 999,
+       corpus: ["docs/archive/", "docs/development/MEASUREMENTS.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md"], ceiling: 999,
        allocPattern: () => /^##\s+M-(\d+)\s+·/gm, allocIsUnique: true },
 
   /* (ii) prose-referenced — the queue item families, one corpus between them.

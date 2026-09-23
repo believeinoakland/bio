@@ -154,9 +154,12 @@ const ARMS = {
             + "is the arm that proves the DIVERGENCE IS REAL rather than an artifact of how the suite "
             + "reads: with the two numbers forced equal again the fixture cannot diverge, and block 1's "
             + "first assertion falls naming [2,2,2] where it wants [2,2,1]",
+       /* RE-AIMED 2026-09-23 by the D-442 worker (BIO_Publication_v0_1.md §3 rule 12), never exempted: op=publish no
+          longer stamps `edition:` into a member — the case document states the member's own edition — so the arm
+          re-slaves it at the one place it is now decided, the member's edition op=publish records for the case. */
        apply: () => edit(STORE,
-         'text = Store.#setOrAddScalar(text, "edition", String(memberEditions.get(target)));',
-         'text = Store.#setOrAddScalar(text, "edition", String(edition));') },
+         '      const memberEdition = already ? Number(already.edition) : memberEditions.get(target);',
+         '      const memberEdition = already ? Number(already.edition) : edition;') },
 
   e: { files: [STORE],
        label: "(e) DROP THE LEGACY FALLBACK in #caseOfSha, so a pre-CASE-3 roster row with a NULL pin "

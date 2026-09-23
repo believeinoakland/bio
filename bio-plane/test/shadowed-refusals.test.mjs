@@ -688,7 +688,14 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
        fixture moves both. `EDITION_NOT_INCREMENTED` itself is untouched: it keys
        `published_bundles`, which is the FINDING's own chain, which is what it
        always keyed and now says. */
-    const next = cur
+    /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted: op=publish no longer
+       writes `edition:` (or the completeness block, or the acknowledgement) into the member — the case
+       document states them — so a hand-written revision AUTHORING an edition must ADD the line rather than
+       rewrite one. The shape this block drives is unchanged: bytes whose author claims an edition, refused
+       C-58.2 at op=ratify below because no ratified case pins them. The other rewrites stay for bytes
+       published before rule 12 (rule 12 (e)), and match nothing on these. */
+    const withEdition = /^edition: \d+$/m.test(cur) ? cur : cur.replace(/^---\n/, "---\nedition: 0\n");
+    const next = withEdition
       .replace(/^edition: \d+$/m, `edition: ${n}`)
       .replace(/^case_edition: \d+$/m, `case_edition: ${n}`)
       .replace(/^  statement: ".*"$/m, `  statement: "As of edition ${n} this case still covers the `

@@ -18570,3 +18570,131 @@ remote that exits 0 and keeps the ref). **The probe ref is still on the remote**
 act for a session whose credential the proxy lets delete, or for the host's UI. **Not measured:** whether any cloud
 session can delete a ref (one session, one hour, one refspec), and whether the 403 is the proxy's policy or GitHub's
 (the proxy's own README, `/root/.ccr/README.md`, files a 403 as an organization policy denial: not retried).
+
+## M-107 · 2026-09-23 · REC-168 — whose run a capture request names, and whose principal its row records, before and after
+
+Instruments: `bio-plane/test/rec168-capturerequest-principal.test.mjs` run from `bio-plane/` (every act through the control
+plane, from member sessions and from `ai` credentials those members minted); the same suite pointed (`REC168_SRC`) at a
+`git archive` of `7b4d3942`'s `bio-plane/src` + `checks` for the BEFORE column; `node test/rec168-capturerequest-principal.control.mjs`
+(eleven rows, each on a COPY of `src/`); `civicos-ui/check-refusal-codes.mjs`; `scripts/coverage.mjs --strict`. Branch
+`worktree-agent-a960b19c9e4696303`, base `origin/main` `7b4d3942`.
+
+| measured | `7b4d3942` (before) | this branch |
+| --- | --- | --- |
+| cora (session), cora's credential, gus (admin) file under alice's RUNNING run | each ACCEPTED; a row written naming `member:alice` | each refused `AI_RUN_NOT_PRINCIPAL` (C-22.12, its translation); no row |
+| pia (in no project) files under alice's run over a project she cannot see | ACCEPTED; a row written | byte-identical to a never-minted run id (`CAPTURE_REQUEST_NO_RUN`) |
+| alice's credential files under the run alice's SESSION opened | row names `member:alice` (the run's copy) | row names `member:alice/alice-agent` (the caller) |
+| alice's session files under the run her CREDENTIAL opened | row names `member:alice/alice-agent` | row names `member:alice` |
+| a request naming no run, from a session, a credential, another member | `CAPTURE_REQUEST_NO_RUN`, DEC-47's words | byte-identical store answer, unchanged |
+| cora asks for an address alice already requested under alice's run | the STANDING row echoed to cora, alice's principals on it | refused; the standing row is never echoed |
+| the suite, 30 assertions | 14 / 16 | **30 / 0** |
+| the control, declared before its first run | — | ALL AS DECLARED after two declarations were corrected at the first run (the arms right): baseline 30/0 · drop-gate 18/12 · gate-sessions-only 24/6 · gate-credentials-only 20/10 · no-stamp 19/11 · no-sight 29/1 · record-run-principal 27/3 · sent-field-query 27/3 · sent-field-body 26/4 · exact-match 26/4 · sight-by-row 30/0; real sources untouched (store.mjs 2,803,630 B `7aa1e7b9…`) |
+| REC-165's control on this tree | — | all nine arms AS DECLARED at REC-165's tallies (its anchors still unique) |
+| DEC-49 guard | — | exit 0; four floors moved by exactly this item's own (regionLines +29, codesChecked +1, outcomeReturns +1, refusalsJudged +2), zero pre-existing slack |
+| coverage `--strict` | — | exit 0; register `arms 1680/1680 · classified 270/270 · corpus 271/271`, `floor 232/232` after the floors moved from the print on committed `07fd7ee0` |
+
+**WHAT IT SAYS.** The door credited a request to whoever held the run it named, not to whoever asked: three accounts that were
+not alice wrote rows alice's name stood behind, and a member who could not see a project could file under a run over it. The
+second half is quieter and just as much a record defect: even for the run's own principal, the row named the run's OPENING
+credential rather than the account that asked, so a member's session and her agent were indistinguishable in the queue.
+**The `no-stamp` arm is the finding worth carrying:** the stamp is not only what SUPPLIES the caller, it is what OVERWRITES a
+`principal` the caller forged into its own query — without it, cora's forged `principal=member:alice` reaches the store and is
+believed (F1-F3 fail). **NOT MEASURED:** live (Cloudflare refused from this container); the drain's attribution is asserted on
+the READ, which calls the same one composer.
+
+## M-104 · 2026-09-23 · M0-114 — the FULL gate on a GitHub runner, beside the Mac's and the cloud's; what Actions answered; and the check's live negative control
+
+**INSTRUMENTS:** worker spawned by CONDUCT #14 (cloud Claude Code), branch `worktree-agent-a7a5246aa91f3c230` from
+`origin/main` @ `df9eb9f9`. `.github/workflows/gates.yml` pushed on THIS branch only (and on two throwaway control branches),
+its job `gate` on `ubuntu-latest` running `node tools/gates.mjs` in its derived class (FULL: the diff carries `.github/`).
+Read through the GitHub API and MCP tools (`actions/workflows`, `actions/runs`, `commits/<sha>/check-runs`,
+`check-runs/<id>/annotations`, `get_job_logs`, `get_workflow_run_usage`), with `curl` through the session's proxy; the
+per-job log downloads (`actions/jobs/<id>/logs`) were REFUSED by the proxy (CONNECT 403 to `*.blob.core.windows.net`), so
+log text was read through the MCP tool. The live refusal by `git push` from this worktree through the installed hook.
+
+**WHAT ACTIONS ANSWERED, VERBATIM.** Before any push, 2026-09-22 23:45Z: `actions/workflows` HTTP 200 `"total_count": 0`;
+`actions/runs` HTTP 200 `"total_count": 0`; `actions/permissions` and `actions/permissions/workflow` HTTP 403 *"Access to
+this GitHub Actions path is not permitted through this proxy."* (so enablement could not be READ). Then the act: the push of
+`af7a5da8` carrying the workflow was accepted, and within 12 s `actions/runs` read `"total_count": 1`, run `35799183380`,
+`"status": "in_progress"`, and `commits/af7a5da8/check-runs` a check run named `gate`. **Actions is ENABLED on
+`believeinoakland/bio`; no act of Bob's was needed.** `get_workflow_run_usage` for that run: `"billable":{"UBUNTU":
+{"total_ms":0,...}}`, `"run_duration_ms":908000` — the repository is public (`"visibility": "public"`), and the run billed 0.
+
+| | the Mac | the cloud session | the GitHub runner |
+| --- | --- | --- | --- |
+| source | M-99's citation of DIST's 0.71.0 cut (M0-106's row); **not re-measured** — no Mac is reachable from here | M-99 (BOB #28), `--full`, 2026-09-22 | THIS entry, run `35799183380` on `af7a5da8` (tree `5b0643cc`), 2026-09-22 23:48:41Z–2026-09-23 00:03:46Z |
+| machine | 8 GiB (TREE-SHARING §"Why") | 4 cores, 15 GiB, shared with sibling workers | `ubuntu-24.04` image `20260907.300.1`, 4 cores (`nproc`), 15 GiB (`free -g`), 145 GB disk, alone |
+| full gate wall | not recorded | 1,082 s RED; 1,135 s GREEN on `9cc1ed7f` | **875 s** (`WALL=875s` in the check's annotation), job 905 s, run 908 s; container prep 29 s (checkout 11, node 5, `npm ci` ×4 + `ssh-keygen` present 9) |
+| battery | ~16 min when run alone | 974.3 s; 1,020.1 s | **787.1 s** |
+| suites · assertions | 269/269 · 16,413 | 272/273 · 16,575; 273/273 · 16,576 | **278/278 suites green · 16747 assertions passing · EXCLUDES 2 untallied suite(s)** (`bundle`, `livefire`), **0 skipped** |
+| verdict | GREEN | RED (id ledger), then GREEN FULL | **GREEN FULL**, recorded; coverage `--strict`, `civicos-ui` all harnesses, `plancheck --local` 0 fail |
+
+The three trees differ (each column's own tree; the suite count grew between them), so the columns compare a gate's cost,
+not one tree's result. A second FULL run on the runner, the negative control's (`1bdfa919`, below), took 857 s with the
+battery at 770.3 s: the runner's figure reproduces within 2%.
+
+**EVERY SUITE NEEDING A SECRET OR THE NETWORK: NONE FOUND.** The runner is handed NO secret (the workflow names no
+`secrets.`; `GITHUB_TOKEN` permissions `Contents: read`) and passed 278/278 with 0 skipped; the cloud passed with every
+Cloudflare host and the live instance REFUSED (M-99). A grep of every `*.mjs` in `bio-plane/test/` and every top-level `<dir>/test/` for eight of the ten keys
+M-99 lists (`BIO_ADMIN_TOKEN`, `BIO_MEMBER_TOKEN`, `CF_TOKEN`, `CLOUDFLARE_API_TOKEN`, `BIO_INSTANCE`, `GITHUB_TOKEN`,
+`BIO_RELEASE_SEED`, `BIO_RATIFY_SEED`; the two account ids are not secrets) found none. `livefire.test.mjs` is *"Credential-free"* and drives a local
+Miniflare. **What this cannot see:** a suite that reaches the network and passes on its own failure; a live probe outside
+the battery (DIST's), which is not a gate unit by design (TREE-SHARING §3).
+
+**MONTHLY MINUTES AT M0-111's CADENCE.** A train about every 30 minutes (TREE-SHARING §2) is at most 48 `integrate/*`
+runs a day; M-97 measured 52 landings in ~15.75 h, ~79 a day, each one `land/*` push. At one FULL run each (~15 min of
+job, the upper bound: DOCS and TARGETED classes are shorter), ~127 runs × 15 min ≈ **1,900 runner-minutes a day, ~57,000
+a month — billed 0**: measured 0 billable ms on this public repository. GitHub's documentation (a vendor CLAIM, not
+measured) says standard runners are free for public repositories, with a concurrency limit (20 jobs on a free plan).
+
+**THE CHECK ON THE COMMIT, LIVE.** (1) GREEN: `githubCheckVerdict` on `af7a5da8` read `GREEN — the check's gate recorded
+GREEN (class FULL)`, from the annotation `VERDICT=GREEN TREE=5b0643cc… CLASS=FULL EXIT=0 WALL=875s FAILED=none`.
+(2) THE LIVE NEGATIVE CONTROL'S FIRST RUN FOUND A DEFECT IN THE WRITER: `m0114-negctl` @ `c36c38c2` (one assertion of
+`pushguard-check.test.mjs` broken) concluded `failure` with NO verdict annotation — Actions runs a step as `bash -e`, so
+the RED gate killed the step before it wrote one — and the guard read UNDETERMINED (the safe direction: not refused, not
+GREEN). The same defect hid `812df0d7`'s RED (its log was never printed; its cause is UNDETERMINED from here, and the
+likeliest is the fixed-port literal below). Fixed by `set +e` (pinned in the suite). (3) The re-run, `m0114-negctl-2` @
+`1bdfa919`, run `35801158591`: **`277/279 suites green · 16788 assertions passing`**, `FAILED: hygiene.test.mjs,
+pushguard-check.test.mjs`, annotation `VERDICT=RED TREE=3882b560… CLASS=FULL EXIT=1 WALL=857s FAILED=hygiene.test.mjs,
+pushguard-check.test.mjs` — **red at the broken suite, at its named assertion `no GitHub remote is NONE`**, and ALSO red at a
+genuine defect the local runs had not exercised: `hygiene.test.mjs` *"no suite pins a fixed port (1 found:
+["pushguard-check.test.mjs: 1234"])"*, a URL literal in the new suite, since corrected. (4) THE REFUSAL:
+`git push origin 1bdfa919…:refs/heads/m0114-negctl-3` exit 1, *"PUSH REFUSED — bio-pushguard … THE GATE ON GITHUB'S
+MACHINES RECORDED THIS TREE RED (M0-114) … RED · class FULL · exit 1 · failed: hygiene.test.mjs, pushguard-check.test.mjs"*,
+and `git ls-remote` shows no `m0114-negctl-3`. (5) A commit GitHub has not seen answers `check-runs` HTTP 422, read as
+NONE (the first push of `812df0d7`, since corrected from UNDETERMINED).
+
+**WHAT IT SAYS.** A runner gates the FULL battery in ~14.5 min, faster than a lone cloud session (~18 min) and alone on its
+machine, for no billed minutes on a public repository — so the figures favour the runner, and there is no act of Bob's
+to ask for: Actions was already on. What changes is where a verdict lives: on the commit, readable by every clone.
+**Not measured:** the Mac today; the queue delay under a busy train (3 s here, alone); a private repository's billing.
+
+## M-108 · 2026-09-23 · D-442 — publishing writes nothing on a member finding (Publication §3 rule 12), measured through the ops
+
+**INSTRUMENTS:** worker spawned by CONDUCT #14 (cloud Claude Code, 4 cores shared with five workers), branch
+`worktree-agent-af1478b0c650efa08` on `origin/main` @ `7b4d3942`. Every act through the control plane of a Miniflare plane
+booted from `bio-plane/src/` (one member owning two projects, real ssh-keygen SSHSIG ratifications): the new suite
+`test/d442-publish-writes-nothing.test.mjs` (REC-166's fixture), its driver `test/d442-publish-writes-nothing.control.mjs`,
+the eleven superseded suites run alone through `node test/<suite>.test.mjs`, and the existing controls of the subjects this
+item touched (`current-shared-question`, `case-edition-conclusion`, `caseratify-conclusion`, `casesign`, `caselifecycle`,
+`casepin`) re-run on the changed tree. The base's own control behaviour was measured on a detached checkout of `7b4d3942`
+beside this worktree (`node_modules` linked, removed after).
+
+| what | measured |
+| --- | --- |
+| THE ROW, M-100's lead re-driven: A publishes and ratifies case X over Q; B (another project citing Q) concludes and publishes a NEW case over Q | Q's `bundle_sha` UNMOVED and its `bundle.md` byte-identical after A's OWN prepare, after B's prepare, after B's whole ceremony and after a second case of A; `op=caseflags` 0 for Q and for X throughout; B's case document ratifies; B's `op=ratify` of Q SUCCEEDS (`existed: true`, edition 1, `frozenFrom: case_document`); A's second case (`newCase`) prepares, ratifies, and Q ratifies again (`existed`) |
+| the case document carries every moved block | `format: bio-case-document/2`; `case_roles[Q]`: role, `version_sha` = X's pin, `edition: 1`; `case_strength` capture + connection equal to `op=publish`'s answer; `case_strength_grounds` field; completeness + 2 exclusions; body `## What This Excludes`, `## What Each Finding Reached, As Read For This Case`; a Session Log line naming Q, the pin and edition 1 |
+| the finding's own bytes after all of it | no `published_strength`, `completeness`, `completeness_excluded`, `## What This Excludes` or `\| Published \|` entry |
+| each moved fact through its public op | `op=publishedcase`: `frozen_from: case_document`, strength and grounds equal to B's document, edition 1, `excludes` from the case document; the container built at B's `op=caseratify` (complete there, every member already ratified) carries the document's pair, edition and the document whole; `op=publishedmanifest`'s Q row carries X's document's pair; `op=excludedby` names B's case from its document, on Q at edition 1, and all three cases once each |
+| the catalogue | the real `/2` document passes `checkCaseDocument`; a member's capture row, its edition, or (with a testimony leg at the pinned bytes) its testimony row removed -> C-2.8 naming the member; the section removed -> C-3.1; `/1` still accepted; an unknown format C-41.1 |
+| the suite and its control | 35/0. Baseline 35/0 · (a) promotion restored **16/19**, failing BY NAME at the three unmoved-sha arms (declaration corrected twice, each time adding an arm the moved pin reached further on) · (b) publishedcase's exclusions off the finding 34/1 · (c) the committer's pair off the finding 34/1 · (d) C-2.8 not run per member 32/3 · (e) over-strictness 35/0 · (f) excludedby off the members 33/2; every arm AS DECLARED; every restore sha256 MATCH / content IDENTICAL / cmp SAME (store.mjs 2,810,573 B) |
+| superseded suites, before -> after correction (never exempted) | case-opened 28/1 -> 31/0 · caseflip 57/1 -> 58/0 · caselifecycle 67/1 -> 68/0 · casesign 73/1 -> 74/0 · grounds 65/3 -> 70/0 · multifinding 82/2 -> 84/0 · plane-envelope 58/2 -> 61/0 · publish 91/8 -> 99/0 · reevaluation 62/1 -> 63/0 · shadowed-refusals (died) -> 45/0 · testimonyaxis 42/3 -> 51/0 |
+| re-run controls | current-shared-question 5/5 AS DECLARED (18/0, 10/8, 16/2, 12/6, 18/0) · caseratify-conclusion 5/5 AS DECLARED · case-edition-conclusion: (a) (c) (f) AS DECLARED after re-aiming (a)/(b) to the moved refusal; (b) 29/7 AS DECLARED once its three discriminator "cascades" moved to must-not-fail (rule 12: a publish no longer moves the finding off its pin) · casesign, caselifecycle, casepin: figures recorded by those drivers, no verdict harness |
+| the FULL gate's first run on the committed tree (`c6eed45e`) | RED, 276/279 suites green · 16781 assertions: `derivation-bounds` (op=excludedby arrived in REC-66's class — the first `case_exclusions` read did a bundle read per row; RESHAPED, one row per member, one gated statement: 72/0), `m025-arm-anchor-witness` (`caseflip.control.mjs` arm (d)'s anchor was the removed edition stamp; RE-AIMED at the edition op=publish now records: the same seven assertions fail by name, the divergence arm first, and the suite then dies before its tally — recorded), `ratify-envelope` (the container's silence branch moved verbatim into `assembleCaseContainer`; RE-AIMED: 35/0); coverage `--strict` and `civicos-ui` green |
+| **three control arms that die on the BASE** (measured on `7b4d3942`, not caused here) | `case-edition-conclusion.control.mjs` (d) and (e) and `caselifecycle.control.mjs` (c) print NO TALLY on origin/main too: REC-167's C-65.1 at `op=caseratify` refuses the fixture's case ratification (the shared `#editionsRecordingConclusion` / `NOT_CONCLUDED` reader each arm breaks is also the reader C-65.1 asks), and the suites' `ratifyCase` fixture throws |
+
+**WHAT IT SAYS.** Rule 12's accepts-when holds through the ops, and M-100's lead is closed: no project's prepare moves a
+finding another case pins, so no case is flagged by another project's act. **Not measured:** live (the network refuses
+Cloudflare: UNDETERMINED); the count of LEGACY members (published before rule 12, blocks in their own bytes) in the record
+namespace (UNDETERMINED until counted); the member UI's working inquiry page, which still reads a member's own frozen block
+(delegated to UI).

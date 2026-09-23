@@ -10422,7 +10422,25 @@ export const REEXTRACT_CHECKS = {
    says. A roster row without a pin is refused here, because a case that names
    its members and not the versions of them is a claim about the present.
    =========================================================================== */
-export const CASE_DOCUMENT_FORMAT = 'bio-case-document/1';
+/* D-442 / BIO_Publication_v0_1.md §3 rule 12 (BOB #28, 2026-09-22): THE FORMAT MOVES TO /2, AND
+   IT IS OWED RATHER THAN CHOSEN. IC-166 recorded the condition: *"a format bump becomes owed the
+   moment a key is removed or changes meaning, and C-41 would need an accepted-set arm first."*
+   Rule 12 changes the MEANING of a member row: under /1 a member's own bytes carried its edition,
+   its frozen strength pair and grounds, its completeness block and its `## What This Excludes`
+   section, and the case document pointed at them; under /2 op=publish writes nothing on a member
+   and this document states those facts once (`case_roles[].edition`, `case_strength`,
+   `case_strength_grounds`). A reader that took a /2 document for a /1 would look for the frozen
+   pair in bytes that no longer carry it. So the token is what tells them which shape they hold,
+   and the ACCEPTED SET is what keeps rule 1 true: a /1 document already signed in this record —
+   or authored before this landing and still awaiting its signature — verifies and ratifies exactly
+   as it did, because what already crossed stays crossed (rule 12 (e)). op=publish authors /2 only. */
+export const CASE_DOCUMENT_FORMAT = 'bio-case-document/2';
+export const CASE_DOCUMENT_FORMAT_LEGACY = 'bio-case-document/1';
+export const CASE_DOCUMENT_FORMATS_ACCEPTED = [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_LEGACY];
+/* Does this case document state its members' frozen blocks itself (rule 12, /2), or were they
+   carried in the members' own bytes (/1, legacy)? ONE predicate, read by the gate, the ratify
+   committer and every per-case reader, so the two shapes cannot be told apart two ways. */
+export const caseDocumentStatesMemberBlocks = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
 
 /* REC-96 / D-196 / IC-112 — WHERE A CASE'S `searched` SECTION GOT ITS SUBJECTS,
    AND THE VOCABULARY IS THE FENCE RATHER THAN A LABEL.
@@ -10500,10 +10518,11 @@ const C41 = Object.fromEntries(
 
 export function checkCaseDocument(fm, ctx = {}) {
   const findings = [];
-  const { caseId = null, edition = null, priorCase = null } = ctx;
+  const { caseId = null, edition = null, priorCase = null, body = null, memberBasis = null } = ctx;
 
-  if (fm?.format !== CASE_DOCUMENT_FORMAT) {
-    findings.push(f(C41.FORMAT, 'error', `a case document declares format '${CASE_DOCUMENT_FORMAT}' (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
+  /* D-442: an ACCEPTED SET, never a single value — the IC-166 precondition for the bump. */
+  if (!CASE_DOCUMENT_FORMATS_ACCEPTED.includes(fm?.format)) {
+    findings.push(f(C41.FORMAT, 'error', `a case document declares format '${CASE_DOCUMENT_FORMAT}' (or, authored before BIO_Publication_v0_1.md §3 rule 12, '${CASE_DOCUMENT_FORMAT_LEGACY}') (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
       ['re-publish through op=publish, which authors the case document']));
   }
   /* THE IDENTITY AND THE EDITION, CHECKED AGAINST WHAT THE STORE IS ABOUT TO
@@ -10663,6 +10682,57 @@ export function checkCaseDocument(fm, ctx = {}) {
       if (!BASIS_GRADES.includes(rq[axis])) {
         findings.push(f(C41.BAR, 'error', `required_strength.${axis} '${rq[axis]}' is not one of: ${BASIS_GRADES.join(', ')} — the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote`));
       }
+    }
+  }
+  /* ===== D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): EVERY CHECK FOLLOWS ITS BLOCK. ========
+     Under /2 op=publish writes nothing on a member, so the member-bytes arms that required a block
+     there — C-2.8's entry requirements (the edition, the completeness block, the exclusion FIELD, the
+     frozen pair with its testimony row, the frozen grounds) and C-3.1's `## What This Excludes`
+     section — would stop firing on every new member, silently, with the suite green: the trap
+     CASE-4 and CASE-5b each recorded one field earlier. They are not re-spelled here. THE SAME
+     FUNCTION, `checkPublishedExtension`, runs once per roster member over the member's facts AS THIS
+     DOCUMENT STATES THEM — its edition from `case_roles`, its pair and grounds from `case_strength`
+     and `case_strength_grounds`, the case's completeness and exclusions — beside the member's own
+     `basis` at the pinned bytes (`memberBasis`, from the store; the testimony-row and per-ground arms
+     read it). Same check ids, same refusal text, prefixed with the member it is about. None is
+     dropped. A /1 document is not asked: its members' own bytes carry these blocks and the member
+     gate still asks them there (`isCaseMemberBytes`). */
+  if (caseDocumentStatesMemberBlocks(fm)) {
+    const members = Array.isArray(fm?.case_findings) ? fm.case_findings.map((x) => String(x)) : [];
+    const rolesRows = Array.isArray(fm?.case_roles) ? fm.case_roles.filter((r) => r && typeof r === 'object') : [];
+    const rowsFor = (key, m) => (Array.isArray(fm?.[key]) ? fm[key] : [])
+      .filter((r) => r && typeof r === 'object' && String(r.target ?? '') === m)
+      .map(({ target, ...rest }) => rest);
+    if (!Array.isArray(fm?.case_strength)) {
+      findings.push(f('C-2.8', 'error', 'a case document requires a case_strength field: since BIO_Publication_v0_1.md §3 rule 12 each member\'s FROZEN STRENGTH PAIR is stated here, once, and not in the member\'s bytes — a case document silent about what its findings reached leaves a reader with no strength at all',
+        ['re-publish through op=publish, which states each member\'s frozen pair in the case document']));
+    }
+    if (!Array.isArray(fm?.case_strength_grounds)) {
+      findings.push(f('C-2.8', 'error', 'a case document requires a case_strength_grounds field: an EMPTY list is a claim (no member\'s basis named grounds) and is legal — an ABSENT field is silence about the branches a structured grade was taken from',
+        ['re-publish through op=publish, which states each member\'s frozen grounds in the case document']));
+    }
+    for (const m of members) {
+      const row = rolesRows.find((r) => String(r.target ?? '') === m) || {};
+      const basis = memberBasis && Object.prototype.hasOwnProperty.call(memberBasis, m) ? memberBasis[m] : undefined;
+      const memberFm = {
+        edition: row.edition,
+        completeness: fm?.completeness,
+        completeness_excluded: fm?.completeness_excluded,
+        published_strength: rowsFor('case_strength', m),
+        ...(rowsFor('case_strength_grounds', m).length
+          ? { published_strength_grounds: rowsFor('case_strength_grounds', m) } : {}),
+        ...(Array.isArray(basis) ? { basis } : {}),
+      };
+      const own = [];
+      checkPublishedExtension(memberFm, own);
+      for (const x of own) findings.push({ ...x, message: `case document, member ${m}: ${x.message}` });
+    }
+    /* C-3.1's section, which a person reads: the member carried it under `## What This Excludes`;
+       the case document carries it now, and a document that does not has moved the assertion out of
+       the only place a reader of prose meets it. Asked only when the caller supplies the body. */
+    if (typeof body === 'string' && !/^## What This Excludes\s*$/m.test(body)) {
+      findings.push(f('C-3.1', 'error', "required heading '## What This Excludes' is missing from the case document: since BIO_Publication_v0_1.md §3 rule 12 the case states what it excludes once, here, and not in any member's bytes",
+        ["re-publish through op=publish, which writes the section into the case document"]));
     }
   }
   /* C-21.1 AT CASE ALTITUDE, and it is the arm that moved here WITHOUT its
