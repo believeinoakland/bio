@@ -729,10 +729,14 @@ await section("ARM S · the sourcing", () => {
    fine. UI-42/UI-43/UI-45 should arrive against a MEASURED obligation instead
    of against somebody's memory. */
 const ACTS_AWAITING_SURFACE = [
-  { id: "versionaccept",   published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
-  { id: "versionreject",   published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
-  { id: "versionconsider", published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
-  { id: "versionrevert",   published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
+  /* `versionaccept`, `versionreject`, `versionconsider` and `versionrevert`
+     STOOD HERE AND WERE STRUCK 2026-09-23 BY UI-74 (UI-43's scope re-derived on
+     current main) — the fourth drain, and ARM A4c fired naming all four rows on
+     the item's first run, before they were touched. The four transitions are
+     now hosted by `SURFACES["accept-ceremony"]`, and
+     `accept-ceremony.test.mjs` drives each one it can reach against the REAL
+     plane. The register falls from five rows to one; ARM A4d's, A4e's and A3's
+     floors move in this same commit, from the figures those arms PRINTED. */
   /* `versionhide` STOOD HERE AND WAS STRUCK 2026-08-09 BY UI-42, WHICH IS THE
      ROW THE DRAIN EXISTS FOR — and it fired on the first run of this item,
      naming the row and the item that owed it, before anything else was touched.
@@ -861,8 +865,11 @@ await section("ARM A · acts come from the plane", () => {
      (22, read with the floor raised out of reach on a throwaway copy): the
      stance surface now hosts `conclude` (the project's act — a SECOND placement
      of an act the question's page also hosts) and `withdrawconclusion`. */
-  ok(G.placements >= 22,
-     `ARM A3: ${G.placements} act placements are described, floor 22 (measured 2026-09-18 by UI-65 from the figure this arm PRINTED; was 20 under UI-45, 19 under UI-42, 18 under UI-52, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
+  /* MOVED 2026-09-23 (UI-74) FROM 22 TO 26, from the figure this arm PRINTED
+     (26, read with the floor raised out of reach on a throwaway copy): the
+     accept ceremony hosts the four transitions. */
+  ok(G.placements >= 26,
+     `ARM A3: ${G.placements} act placements are described, floor 26 (measured 2026-09-23 by UI-74 from the figure this arm PRINTED; was 22 under UI-65, 20 under UI-45, 19 under UI-42, 18 under UI-52, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
 
   /* ---- ARM A4a · THE FICTION HALF. UNCONDITIONAL, AND IT HAS NO REGISTER.
      A surface naming an act the plane does not publish is the registry claiming
@@ -921,11 +928,15 @@ await section("ARM A · acts come from the plane", () => {
      throwaway copy): striking `withdrawconclusion` moved it out of the register
      into the catalogue-outside-it, and `inquiry-stance` now hosts it. 17 would
      have carried one act of slack in each. */
-  ok(G.baseline.length >= 18,
-     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 18 (measured 2026-09-18 by UI-65 from the figure this arm PRINTED, up from 17 when the register still named withdrawconclusion). `
+  /* BOTH MOVED 2026-09-23 (UI-74) FROM 18 TO 22, from the figures this arm
+     PRINTED (22 and 22, floors raised out of reach on a throwaway copy): the
+     four version transitions left the register and the accept ceremony hosts
+     them. 18 would have carried four acts of slack in each. */
+  ok(G.baseline.length >= 22,
+     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 22 (measured 2026-09-23 by UI-74 from the figure this arm PRINTED, up from 18 when the register still named the four version transitions). `
      + `A catalogue read as empty makes every arm above pass over nothing — the ceiling especially, which is satisfied by a gap of zero for the wrong reason.`);
-  ok(G.hostedSet.size >= 18,
-     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 18 (measured 2026-09-18 by UI-65 from the figure this arm PRINTED, up from 17 when no surface hosted withdrawconclusion). `
+  ok(G.hostedSet.size >= 22,
+     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 22 (measured 2026-09-23 by UI-74 from the figure this arm PRINTED, up from 18 when no surface hosted the four version transitions). `
      + `A walk that found nothing would make every published act read as unhoused and send the reader to re-house a catalogue that was never the problem.`);
 
   /* ---- ARM A4f · OVER-STRICTNESS. A CORRECT ALTERNATIVE MUST PASS.

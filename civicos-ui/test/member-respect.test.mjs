@@ -667,6 +667,13 @@ const CHOOSERS = {
   "pubFindingPages":       "per-hash Verify on a finding's pages — the same read",
   "pubLegHtml":            "per-leg open and Verify on a published case — reads, on a surface with no member and no selection",
   "stanceActHtml":         "one control per accepted reading; a project stands on exactly ONE, so a set is incoherent",
+  /* UI-74. Classified as ONE decision and NOT as a set, and the absence of a
+     bulk mode is the RULE rather than a gap: DEC-32 clause 4 makes independent
+     sufficiency something affirmed PER SET precisely so it can never happen by
+     default — an 'affirm them all' control is the repackaging-by-omission the
+     keystone exists to stop, and the plane refuses an incomplete affirmation
+     by name (VERSION_AFFIRMATION_INCOMPLETE). */
+  "acerAffirmHtml":        "per-set affirmations composing ONE accept of one reading; each must be said, so a bulk 'say it for all' is the keystone's own forbidden shape",
 };
 /* SETS OF DECISIONS — a list where each item is decided independently, so both
    modes are owed. Every row states which modes exist TODAY and, where a mode is

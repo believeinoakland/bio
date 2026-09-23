@@ -50,6 +50,41 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v104, 2026-09-23 session, thread UI, UI-74 (a WORKER of CONDUCT #17, cloud session). Landed on `land/worker/UI-74` (base
+`origin/main` @ `02603e88`), in the commit that carries this entry. (If a concurrent batch has taken `v104`, renumber this
+entry at integration.) SURFACES: a new place, the ACCEPT CEREMONY at `#accept/<INQ-…>/<name>`, reached by "Act on this
+reading" on each reading of the version review (`#versions/<INQ-…>`).
+
+**What was absent.** DEC-24's member half — the machine proposes, the member concludes — had no door: no surface called
+`op=versionaccept`, `versionreject`, `versionconsider` or `versionrevert` (construct-status `12.accept`, ABSENT since BOB #21).
+UI-43 built a ceremony on a branch that never landed (`worktree-agent-a9e7e017d06799858` @ `9706d19e`, 1,836 commits
+behind); it was read as EVIDENCE and its scope re-derived here, never merged.
+
+**What a member now sees.** The four beats on every transition: choose the act (the plane's own labels, no default), ask
+the record what it would do (`preview=1`), author the reason (never prefilled), the receipt, the reading re-read. On a
+reading filed as more than one set of reasons, BEFORE the member is asked anything, the reading's card says what the
+plane DERIVED about whether those sets rest on the same material — which sets share which document, captured copy or
+address, or that it traced and found none (with the reach of that "none"), or that it could not finish, or that it was not
+told. It never refuses. Then one affirmation per set, none prefilled, the send control absent until every set is said;
+what was said is SENT as `affirmed=` and the record keeps it under the member's name (D-271). DEC-46's lens card sits in
+the flow above the chooser; a reading composed by a run this credential cannot open loses the adopt act only (REC-36).
+What the reading comes to is offered only after the affirmation.
+
+**What differs from UI-43's branch, each measured.** (1) D-195 is now SHOWN, not "untold": `op=versionstrength` publishes
+`independence` (IC-52), which the branch read 0×. (2) The affirmation now reaches the record — the plane grew `affirmed=`
+after the branch was written, and the branch's "there is no field" sentence is gone. (3) The branch offered the arithmetic
+on arrival, before any act was chosen, because its gate keyed on the act; this suite's ordering arm caught it and the gate
+now keys on the reading. (4) `independence` rides on the op that also answers the pair, so the origins read keeps ONE
+field and drops the pair at the fetch — clause 5 is held in the page's state, pinned by control arm E. (5) Refusals use
+`actRefusalHtml` (UI-72's one renderer), not a local copy.
+
+**Suites.** `accept-ceremony.test.mjs` (new, 85, real plane under miniflare, controls clicked out of the rendered markup,
+writes read back from the record) and `.control.mjs` (7 arms + baseline, CLEAN). Moved: `surface-registry` (four rows
+struck from `ACTS_AWAITING_SURFACE`; A3 22→26, A4d/A4e 18→22 from printed figures), `preauth-vocabulary` (WALK 2 router
+census 7→8, the new router classified post-auth), `ai-session-wire` (C4–C4d pin the data door `aiSessionConditions`; C1
+unchanged), `member-respect` (`acerAffirmHtml` classified as one decision — a bulk "affirm all" is the keystone's forbidden
+shape). UI harness 65/65.
+
 v103, 2026-09-23 session, thread UI, D-82 (a WORKER of CONDUCT #16, cloud session). Landed on `land/worker/D-82` (base
 `origin/main` @ `0e5f7054`), in the commit that carries this entry. (UI-73 ran beside this item and took `v102`, so
 CONDUCT #17 renumbered this entry `v103` at c17-batch1.) SURFACES: the record list, the finder's Questions scope, a project's contents, the
