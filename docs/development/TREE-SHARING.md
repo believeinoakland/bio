@@ -129,7 +129,7 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
 ### 2 · One lane lands on `main`, in batches
 
 - **Lanes and workers push branches only.** A branch named `land/<lane>/<topic>` means *ready to land*. **CONDUCT, the
-  integrator, lands on a cadence** (about every 30 minutes, or sooner when work waits): it merges every waiting `land/*`
+  integrator, lands on a cadence** (about every TWO HOURS, RULED 2026-09-23 by BOB #30 below; it was 30 minutes): it merges every waiting `land/*`
   branch onto `main` in one integration branch, gates ONCE on the union class, pushes `main`, and deletes the landed
   refs. A branch that conflicts or reds is returned to its lane by name and the rest land.
 - **Nobody else pushes `main`**, enforced by the push guard, not by memory; the integrator's mark is the builder's to
@@ -190,6 +190,19 @@ workflow triggers on — it runs locally, as every other control does (M0-114's 
 (c) a check that depends on anything but the tree — live `coord` state above all — never decides the gate's verdict (the
 defect that reddened `land/conduct/batch6`'s runs 6 and 7, placed by SCHEDULER); and (d) whoever pushed a branch that
 reads red diagnoses it at once and never leaves it red.
+
+**THE BATCH IS A TIME WINDOW, ABOUT TWO HOURS — RULED 2026-09-23 by BOB #30, on Bob's question** (*"Is there an opportunity
+to significantly increase the batch size?"*). MEASURED from `main`'s first-parent history and the workflow's runs that day:
+13 trains landed between 05:25Z and 12:54Z, about one every 35 minutes, and 6 of them carried ONE branch (two DIST
+pointers, two BOB docs branches, a leak fix, a red-main repair). Each GitHub run read 4-5 minutes only because it ran DOCS
+(M0-126's finding); from M0-126 on it runs the whole battery, which took 14-16 minutes on the runner in M0-114's runs, and
+the train's own local gate runs per train too. So: **a train runs about every two hours and takes EVERY waiting `land/*`
+branch** (lanes' docs branches and DIST's pointers included: they wait for it). Four exceptions only, each named in the
+train's commit: (1) a security fix whose release is a CUT NOW; (2) repairing a RED `main`; (3) a landing a RUNNING worker
+or a release is blocked on; (4) Bob asks. **What it costs, stated:** a finished item waits up to two hours to reach `main`,
+and a larger batch that reads red takes longer to pin. The per-suite `failedUnits` rerun and M0-126's per-unit record bound
+the second cost. **Re-measure after a day** (trains a day, branches a train, the train's gate minutes, the red-batch
+count) and widen or narrow from the figures, not from this paragraph.
 
 **ONE GITHUB RUN PER LANDED BATCH — RULED 2026-09-23 by Bob** (*"Ok, 1 github run per batch"*, on BOB #29's
 recommendation). The workflow runs on a push to `main` alone, and `main` moves only through the train, so each run audits
