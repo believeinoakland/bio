@@ -19976,3 +19976,7 @@ paths: bio-plane/checks/bio-checks.mjs (CONTENT_EXTENT_CHECKS: one new row, C-45
 why: the image arm's {part} mints on any non-container capture (D-440, QUEUE.md on coord; EXTRACTION-BREADTH-DESIGN.md §3.2, CLIENT-RENDERED.md "DESIGNED 2026-09-21").
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+### REC-178 · RECORD worker of CONDUCT #16 (cloud session WORKER REC-178, branch land/worker/REC-178) · 2026-09-23
+paths: bio-plane/src/store.mjs (`promote`: the inline `bytes` computed after REC-175's `is-promote-digest` region, nothing inside it; the OVERSIZE_INLINE measure; one static `#inlineBytesOf`, read by `digestCensus`), bio-plane/src/index.mjs (the monitor tick's files[] bytes only), bio-plane/src/setup.mjs, civicos-ui/app.html (a `utf8Len` helper and the promote writers' bytes), bio-plane/src/livefire.mjs (its two promote files' bytes only — REC-176 edits its snap key), tools/fw21-onpoint-probe.mjs, bio-plane/test/rec178-bytes.test.mjs and .control.mjs (new), bio-plane/dist/ (rebuilt), docs/development/interface-changes/ (one new IC), docs/architecture/construct-status.json and BIO_State_Rules_Consistency_v1_5.md front matter.
+why: op=promote stored `bytes` as sent (UTF-16 units) and judged OVERSIZE_INLINE on text.length (REC-178, QUEUE.md on coord; State Rules §8).
