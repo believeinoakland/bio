@@ -113,6 +113,17 @@ const disarm = () => { ARMED_SIGNERS.length = 0; };
    from the start describes a no-op, not an update. */
 const midUpdate = (from, to) => { let n = 0;
   return () => jres({ ok: true, version: n++ === 0 ? from : to, bindings: { STORE: true } }); };
+/* ADDED 2026-09-23 by DIST #5 at the 0.76.0 cut, the first cut whose EMBED carries D-116. `midUpdate`'s reply after the
+   upload has no `storeVersion`/`memberVersions`, which a D-116 plane always sends; with a D-116 embed the installer
+   (servingVerdict) correctly reads that as a STALE store and does not report the update done — which D-116's own arm
+   ("THE BUILT-IN RELEASE CAN REPORT BUILDS") asserts ON PURPOSE with `midUpdate`. Three older arms that assert only
+   that an update LANDS were written against pre-D-116 embeds and went red on the cut with the installer right; they
+   now use this fixture, which answers as the new plane does (no members installed in them, so `memberVersions` is
+   empty). On a pre-D-116 embed the extra fields are ignored (`capable` false), so the arms hold on either side of it.
+   NEGATIVE CONTROL: storeVersion "x" here -> exactly those three arms fail, by name (measured at the cut). */
+const midUpdateBuilt = (from, to) => { let n = 0;
+  return () => n++ === 0 ? jres({ ok: true, version: from, bindings: { STORE: true } })
+    : jres({ ok: true, version: to, storeVersion: to, memberVersions: {}, bindings: { STORE: true } }); };
 
 const TOK = "TOKEN-THAT-MUST-NEVER-APPEAR-IN-OUTPUT";
 const PUBLISHED = "df362a63adbe5d1d96a2942e39fd60e3fbb412eaadf7317266c19a4efea658ba";
@@ -636,7 +647,7 @@ console.log("\n--- update: storage unavailable never blocks an update ---");
     { m: (u, mth) => u.endsWith("/scripts/old-copy") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "old" }) },
     { m: (u) => u.includes("old-copy.old.workers.dev/api/?op=bootstrap"),
-      f: midUpdate("0.1.0", RELEASE_VERSION) },
+      f: midUpdateBuilt("0.1.0", RELEASE_VERSION) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const meta = await metadataOf(calls.find((c) => c.method === "PUT"));
@@ -1008,7 +1019,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/cross-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "cx" }) },
-    { m: (u) => u.includes("cross-town.cx.workers.dev/api/?op=bootstrap"), f: midUpdate("0.70.0", RELEASE_VERSION) },
+    { m: (u) => u.includes("cross-town.cx.workers.dev/api/?op=bootstrap"), f: midUpdateBuilt("0.70.0", RELEASE_VERSION) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("CROSSING (0.70.0 -> this release): the update lands as an update", body.includes(`Updated from 0.70.0 to ${RELEASE_VERSION}`), true);
@@ -1064,7 +1075,8 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "fg" }) },
     /* The copy does not answer BEFORE the upload (so its version is unknown), and answers the new one after. */
     { m: (u) => u.includes("fog-town.fg.workers.dev/api/?op=bootstrap"),
-      f: () => n++ === 0 ? new Response("unavailable", { status: 503 }) : jres({ ok: true, version: RELEASE_VERSION }) },
+      f: () => n++ === 0 ? new Response("unavailable", { status: 503 })
+        : jres({ ok: true, version: RELEASE_VERSION, storeVersion: RELEASE_VERSION, memberVersions: {} }) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("VERSION BEFORE UNKNOWN: the update lands", body.includes(`Updated to ${RELEASE_VERSION}`), true);
