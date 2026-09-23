@@ -3875,6 +3875,7 @@ __export(bio_checks_exports, {
   CONTRADICTION_PAIR_CHECKS: () => CONTRADICTION_PAIR_CHECKS,
   CORE_FIELDS: () => CORE_FIELDS,
   CORRESPONDENCE_DIRECTIONS: () => CORRESPONDENCE_DIRECTIONS,
+  DISPATCH_CHECKS: () => DISPATCH_CHECKS,
   DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
   EARNED_CAPTURE_CEILING: () => EARNED_CAPTURE_CEILING,
   EARNED_GRADE_SOURCES: () => EARNED_GRADE_SOURCES,
@@ -3887,6 +3888,7 @@ __export(bio_checks_exports, {
   HEADINGS: () => HEADINGS,
   HEADINGS_WHEN: () => HEADINGS_WHEN,
   INQUIRY_TITLE_MAX: () => INQUIRY_TITLE_MAX,
+  INSTALLATION_CHECKS: () => INSTALLATION_CHECKS,
   INSTANCE_GROUP_CHECKS: () => INSTANCE_GROUP_CHECKS,
   ISO_TS_RE: () => ISO_TS_RE,
   LEAD_CHECKS: () => LEAD_CHECKS,
@@ -11043,6 +11045,35 @@ var REQUIRED_ARGUMENT_CHECKS = {
     check: "C-61.1",
     where: "src/index.mjs requiredArgument > is-required-argument",
     translation: "This request left out an argument the operation cannot run without, or sent one in a shape it does not accept. Nothing was changed. The argument and the shape it must take are named beside this message."
+  }
+};
+var INSTALLATION_CHECKS = {
+  EVIDENCE_STORAGE_NOT_CONFIGURED: {
+    check: "C-68.1",
+    where: "src/index.mjs storageAbsent > is-storage-absent",
+    translation: "This copy was installed without the storage it keeps captured documents in, so it cannot keep or read the bytes of a captured document. That is a fact about how the copy was set up, not about this request: whoever installed it can connect that storage in the hosting account. Nothing was changed."
+  },
+  BOOTSTRAP_CREDENTIAL_UNSET: {
+    check: "C-68.2",
+    where: "src/index.mjs fetch > is-bootstrap-claim",
+    translation: "This copy has no administrator token set, so it cannot be claimed yet. Whoever installed it sets one in the hosting account. Nothing was changed."
+  },
+  BOOTSTRAP_CREDENTIAL_PUBLISHED: {
+    check: "C-68.3",
+    where: "src/index.mjs fetch > is-bootstrap-claim",
+    translation: "This copy's administrator token is a value published in the project's public repository, so it can never be used to claim the copy: anyone can read it. Whoever installed the copy sets a fresh one in the hosting account. Nothing was changed."
+  },
+  BOOTSTRAP_CREDENTIAL_MISMATCH: {
+    check: "C-68.4",
+    where: "src/index.mjs fetch > is-bootstrap-claim",
+    translation: "The administrator token given does not match the one this copy holds, so the copy was not claimed. Nothing was changed."
+  }
+};
+var DISPATCH_CHECKS = {
+  UNKNOWN_OP: {
+    check: "C-69.1",
+    where: "src/index.mjs fetch > is-unknown-op",
+    translation: "This copy has no operation by that name. A copy running an older or newer version can have a different set of operations, and a misspelt name reads the same way. Nothing was changed."
   }
 };
 var DRIVE_CAPTURE_CHECKS = {
@@ -69853,6 +69884,18 @@ var requiredArgumentRow = (code) => {
     throw new Error(`requiredArgumentRow: ${code} has no REQUIRED_ARGUMENT_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
+var installationRow = (code) => {
+  const row = INSTALLATION_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`installationRow: ${code} has no INSTALLATION_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+var dispatchRow = (code) => {
+  const row = DISPATCH_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`dispatchRow: ${code} has no DISPATCH_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
 var UNATTENDED_BY_DECISION = {
   purge: "src/index.mjs, the admission gate's own doctrine paragraph: 'Everything outside SESSION_OPS, purge above all, still requires a machine credential.'",
   cpuprobe: "src/index.mjs, op=cpuprobe's OPS row: 'Burns compute deliberately to find where the runtime cuts it off. Probe and admin only: it belongs nowhere near a member's session.'",
@@ -69900,6 +69943,15 @@ function requiredArgument(op, argument, shape, error) {
     shape,
     detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation could use. Nothing was changed.`
   };
+}
+function storageAbsent(op, error) {
+  return json({
+    ok: false,
+    reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+    ...installationRow("EVIDENCE_STORAGE_NOT_CONFIGURED"),
+    error,
+    op
+  }, 503);
 }
 var StoreSilent = class extends Error {
   constructor(op) {
@@ -70599,18 +70651,39 @@ var index_default = {
     const path = url.pathname.replace(/^\/api\/?/, "/");
     const op = url.searchParams.get("op") || path.slice(1) || "selftest";
     const spec = OPS[op];
-    if (!spec) return json({ ok: false, error: "unknown op", op }, 400);
+    if (!spec) return json({
+      ok: false,
+      error: "unknown op",
+      reason: "UNKNOWN_OP",
+      ...dispatchRow("UNKNOWN_OP"),
+      op
+    }, 400);
     if (spec.classes === null) {
       const fp = await fingerprint(env.ADMIN_TOKEN);
       const stub2 = env.STORE.get(env.STORE.idFromName("bio"));
       const invStub = url.searchParams.get("store") === SCRATCH ? env.STORE.get(env.STORE.idFromName(SCRATCH)) : stub2;
       if (op === "claim") {
         const body2 = await req.json().catch(() => ({}));
-        if (!env.ADMIN_TOKEN) return json({ ok: false, error: "instance has no bootstrap credential set" }, 409);
+        if (!env.ADMIN_TOKEN) return json({
+          ok: false,
+          reason: "BOOTSTRAP_CREDENTIAL_UNSET",
+          ...installationRow("BOOTSTRAP_CREDENTIAL_UNSET"),
+          error: "instance has no bootstrap credential set"
+        }, 409);
         if (!await liveToken(env.ADMIN_TOKEN))
-          return json({ ok: false, error: "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard" }, 409);
+          return json({
+            ok: false,
+            reason: "BOOTSTRAP_CREDENTIAL_PUBLISHED",
+            ...installationRow("BOOTSTRAP_CREDENTIAL_PUBLISHED"),
+            error: "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard"
+          }, 409);
         if (body2.bootstrapToken !== env.ADMIN_TOKEN)
-          return json({ ok: false, error: "bootstrap credential does not match" }, 403);
+          return json({
+            ok: false,
+            reason: "BOOTSTRAP_CREDENTIAL_MISMATCH",
+            ...installationRow("BOOTSTRAP_CREDENTIAL_MISMATCH"),
+            error: "bootstrap credential does not match"
+          }, 403);
         const r = await stub2.fetch(new Request(`http://do/claim?fp=${fp}`, {
           method: "POST",
           body: JSON.stringify({ role: "admin", password: body2.password })
@@ -70644,7 +70717,11 @@ var index_default = {
       if (op === "verify") {
         const sha = (url.searchParams.get("sha256") || "").toLowerCase();
         if (!/^[0-9a-f]{64}$/.test(sha))
-          return json({ ok: false, error: "verify requires sha256=<64 lowercase hex>" }, 400);
+          return json({
+            ok: false,
+            ...requiredArgument("verify", "sha256", "<64 lowercase hex>"),
+            error: "verify requires sha256=<64 lowercase hex>"
+          }, 400);
         const out2 = await doAnswer(stub2.fetch(new Request(`http://do/verify?sha256=${sha}`)));
         if (!out2.answered) return storeSilent("verify");
         return json({ ok: true, ...out2.result }, 200);
@@ -70759,7 +70836,12 @@ var index_default = {
         };
         if (op === "publishedbytes") {
           if (!/^[0-9a-f]{64}$/.test(shaParam))
-            return json({ ok: false, error: "publishedbytes requires sha256=<64 lowercase hex>. This surface answers BY HASH and never by path, so there is nothing to walk." }, 400);
+            return json({ ok: false, ...requiredArgument(
+              "publishedbytes",
+              "sha256",
+              "<64 lowercase hex>",
+              "publishedbytes requires sha256=<64 lowercase hex>. This surface answers BY HASH and never by path, so there is nothing to walk."
+            ) }, 400);
           const vOut = await doAnswer(stub2.fetch(`http://do/verify?sha256=${shaParam}`));
           if (!vOut.answered) return storeSilent("publishedbytes");
           const v = vOut.result;
@@ -70824,7 +70906,12 @@ var index_default = {
         }
         const id = url.searchParams.get("id");
         if (!id && !/^[0-9a-f]{64}$/.test(shaParam))
-          return json({ ok: false, error: "publishedcase requires id=<bundle id> (with an optional &edition=N, latest by default) or sha256=<the bundle sha of an edition>" }, 400);
+          return json({ ok: false, ...requiredArgument(
+            "publishedcase",
+            "id or sha256",
+            "id=<bundle id> (optional &edition=N) or sha256=<64 lowercase hex>",
+            "publishedcase requires id=<bundle id> (with an optional &edition=N, latest by default) or sha256=<the bundle sha of an edition>"
+          ) }, 400);
         const q = new URLSearchParams();
         if (id) q.set("id", id);
         if (url.searchParams.get("edition")) q.set("edition", url.searchParams.get("edition"));
@@ -70961,12 +71048,22 @@ var index_default = {
           body2 = null;
         }
         if (!body2 || typeof body2.contentB64 !== "string" && typeof body2.contentText !== "string")
-          return json({ ok: false, error: "knock requires contentB64 or contentText, plus optional note and contact" }, 400);
+          return json({ ok: false, ...requiredArgument(
+            "knock",
+            "contentB64 or contentText",
+            "a JSON body with contentB64=<base64> or contentText=<text>",
+            "knock requires contentB64 or contentText, plus optional note and contact"
+          ) }, 400);
         let bytes;
         try {
           bytes = body2.contentB64 !== void 0 ? Uint8Array.from(atob(body2.contentB64), (c) => c.charCodeAt(0)) : new TextEncoder().encode(body2.contentText);
         } catch {
-          return json({ ok: false, error: "contentB64 is not valid base64" }, 400);
+          return json({ ok: false, ...requiredArgument(
+            "knock",
+            "contentB64",
+            "<base64>",
+            "contentB64 is not valid base64"
+          ) }, 400);
         }
         if (bytes.length === 0) return json({ ok: false, reason: "EMPTY" }, 400);
         const r2 = typeof env.CAPTURES?.put === "function";
@@ -71412,7 +71509,7 @@ var index_default = {
     }
     if (op === "capture") {
       if (typeof env.CAPTURES?.get !== "function")
-        return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
+        return storageAbsent(op, "R2 is not configured on this instance");
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
         return json({ ok: false, ...requiredArgument(
@@ -71458,7 +71555,7 @@ var index_default = {
     }
     if (op === "pdfstructure") {
       if (typeof env.CAPTURES?.get !== "function")
-        return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
+        return storageAbsent(op, "R2 is not configured on this instance");
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
         return json({ ok: false, ...requiredArgument(
@@ -71695,7 +71792,7 @@ var index_default = {
     if (op === "acquire") {
       if (req.method !== "POST") return json({ ok: false, error: "acquire is a POST" }, 405);
       if (typeof env.CAPTURES?.put !== "function")
-        return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
+        return storageAbsent(op, "this instance has no evidence storage configured");
       const body2 = await req.json().catch(() => null);
       if (cls === "daemon" && body2?.via !== "archive.org" && body2?.via !== "capture-request")
         return json({
@@ -72775,7 +72872,7 @@ var index_default = {
     if (op === "attest") {
       if (req.method !== "POST") return json({ ok: false, error: "attest is a POST" }, 405);
       if (typeof env.CAPTURES?.put !== "function")
-        return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
+        return storageAbsent(op, "this instance has no evidence storage configured");
       const body2 = await req.json().catch(() => null);
       const sha = typeof body2?.sha256 === "string" ? body2.sha256.toLowerCase() : "";
       if (!/^[0-9a-f]{64}$/.test(sha))

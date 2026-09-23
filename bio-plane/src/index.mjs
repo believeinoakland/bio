@@ -44,7 +44,7 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
             through the namespace below, because it is used AS A VALUE at the one
             governed site — the code is a STRING LITERAL there so the DEC-49
             guard's arm C can COMPARE it rather than read past a variable. */
-         REQUIRED_ARGUMENT_CHECKS,
+         REQUIRED_ARGUMENT_CHECKS, INSTALLATION_CHECKS, DISPATCH_CHECKS,
          /* CAP-8 / C-48: the Google Drive host stack's DEC-49 rows. Every one is
             a NAMING — a folder, a kind the address does not carry, a shape this
             recogniser does not read, the application shell, an export that could
@@ -3300,6 +3300,23 @@ const requiredArgumentRow = (code) => {
   return { code, check: row.check, translation: row.translation };
 };
 
+/* D-278 / C-68 and C-69: the same reader again, one per family, and the same
+   refusal to invent. */
+const installationRow = (code) => {
+  const row = INSTALLATION_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`installationRow: ${code} has no INSTALLATION_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+const dispatchRow = (code) => {
+  const row = DISPATCH_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`dispatchRow: ${code} has no DISPATCH_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
 /* =========================================================================
  * D-270 — THE SESSION GATE ANSWERED THREE DIFFERENT FACTS WITH ONE SENTENCE,
  * AND THE SENTENCE WAS FALSE FOR TWO OF THEM.
@@ -3497,6 +3514,19 @@ function requiredArgument(op, argument, shape, error) {
            detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried `
                  + `none the operation could use. Nothing was changed.` };
   /* END DEC-49 REGION is-required-argument */
+}
+
+/* THE CAPABILITY COMPLAINT (C-68.1, D-278). A copy installed with no evidence
+ * storage bound cannot serve `capture`, `pdfstructure`, `acquire` or `attest`.
+ * ONE row for the four, the op named beside it, minted here rather than at four
+ * sites inside `fetch` for the same reason `requiredArgument` is: a DEC-49 row
+ * holds one `where`. `error` is passed in BYTE-IDENTICAL from each site — the
+ * sites said two different sentences before this and still do. */
+function storageAbsent(op, error) {
+  /* DEC-49 REGION is-storage-absent */
+  return json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+                ...installationRow("EVIDENCE_STORAGE_NOT_CONFIGURED"), error, op }, 503);
+  /* END DEC-49 REGION is-storage-absent */
 }
 
 /* Some of these reads happen INSIDE a per-item renderer that returns a rendered
@@ -4832,7 +4862,14 @@ export default {
     const path = url.pathname.replace(/^\/api\/?/, "/");
     const op = url.searchParams.get("op") || path.slice(1) || "selftest";
     const spec = OPS[op];
-    if (!spec) return json({ ok: false, error: "unknown op", op }, 400);
+    /* DEC-49 REGION is-unknown-op
+       D-278 (C-69.1). `error` stays "unknown op" BYTE-IDENTICAL and stays the
+       FIRST key after `ok`: civicos-ui's `queueAbsent` reads the sentence to tell
+       an older plane from a refusal (I3), and `preauth-vocabulary.test.mjs` reads
+       it out of this line textually. */
+    if (!spec) return json({ ok: false, error: "unknown op", reason: "UNKNOWN_OP", ...dispatchRow("UNKNOWN_OP"),
+                             op }, 400);
+    /* END DEC-49 REGION is-unknown-op */
 
     /* Unauthenticated by design. Each one gates itself. */
     if (spec.classes === null) {
@@ -4852,11 +4889,18 @@ export default {
         ? env.STORE.get(env.STORE.idFromName(SCRATCH)) : stub;
       if (op === "claim") {
         const body = await req.json().catch(() => ({}));
-        if (!env.ADMIN_TOKEN) return json({ ok: false, error: "instance has no bootstrap credential set" }, 409);
+        /* DEC-49 REGION is-bootstrap-claim
+           D-278 (C-68.2–.4): installation facts, each `error` byte-identical, and
+           no row says more than its sentence did. */
+        if (!env.ADMIN_TOKEN) return json({ ok: false, reason: "BOOTSTRAP_CREDENTIAL_UNSET",
+          ...installationRow("BOOTSTRAP_CREDENTIAL_UNSET"), error: "instance has no bootstrap credential set" }, 409);
         if (!(await liveToken(env.ADMIN_TOKEN)))
-          return json({ ok: false, error: "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard" }, 409);
+          return json({ ok: false, reason: "BOOTSTRAP_CREDENTIAL_PUBLISHED", ...installationRow("BOOTSTRAP_CREDENTIAL_PUBLISHED"),
+            error: "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard" }, 409);
         if (body.bootstrapToken !== env.ADMIN_TOKEN)
-          return json({ ok: false, error: "bootstrap credential does not match" }, 403);
+          return json({ ok: false, reason: "BOOTSTRAP_CREDENTIAL_MISMATCH", ...installationRow("BOOTSTRAP_CREDENTIAL_MISMATCH"),
+            error: "bootstrap credential does not match" }, 403);
+        /* END DEC-49 REGION is-bootstrap-claim */
         const r = await stub.fetch(new Request(`http://do/claim?fp=${fp}`, {
           method: "POST", body: JSON.stringify({ role: "admin", password: body.password }) }));
         return json(await r.json(), 200);
@@ -4884,7 +4928,11 @@ export default {
       if (op === "verify") {
         const sha = (url.searchParams.get("sha256") || "").toLowerCase();
         if (!/^[0-9a-f]{64}$/.test(sha))
-          return json({ ok: false, error: "verify requires sha256=<64 lowercase hex>" }, 400);
+          /* D-278: C-61.1. `error` is written as a KEY here rather than passed into the helper, so the
+             sentence stays readable where `preauth-vocabulary.test.mjs` reads it textually; the key after
+             the spread is the one on the wire, byte-identical to the pre-D-278 answer. */
+          return json({ ok: false, ...requiredArgument("verify", "sha256", "<64 lowercase hex>"),
+            error: "verify requires sha256=<64 lowercase hex>" }, 400);
         /* REC-52, SITE (a). This read used to be
              `const out = await r.json(); return json({ ok: true, ...out.result }, 200);`
            with no look at `out.ok`, so a store failure left the plane as an
@@ -5098,8 +5146,9 @@ export default {
 
         if (op === "publishedbytes") {
           if (!/^[0-9a-f]{64}$/.test(shaParam))
-            return json({ ok: false, error: "publishedbytes requires sha256=<64 lowercase hex>. This surface "
-                        + "answers BY HASH and never by path, so there is nothing to walk." }, 400);
+            return json({ ok: false, ...requiredArgument("publishedbytes", "sha256", "<64 lowercase hex>",
+              "publishedbytes requires sha256=<64 lowercase hex>. This surface "
+                        + "answers BY HASH and never by path, so there is nothing to walk.") }, 400);
           /* THE GUARD, and it is the whole op. A sha is served if and only if a
              published_shas row names it. Everything else 404s with the SAME body
              — a hash that was never ratified and a hash that never existed are
@@ -5178,8 +5227,10 @@ export default {
         /* ---- op=publishedcase ---- */
         const id = url.searchParams.get("id");
         if (!id && !/^[0-9a-f]{64}$/.test(shaParam))
-          return json({ ok: false, error: "publishedcase requires id=<bundle id> (with an optional "
-                      + "&edition=N, latest by default) or sha256=<the bundle sha of an edition>" }, 400);
+          return json({ ok: false, ...requiredArgument("publishedcase", "id or sha256",
+            "id=<bundle id> (optional &edition=N) or sha256=<64 lowercase hex>",
+            "publishedcase requires id=<bundle id> (with an optional "
+                      + "&edition=N, latest by default) or sha256=<the bundle sha of an edition>") }, 400);
         const q = new URLSearchParams();
         if (id) q.set("id", id);
         if (url.searchParams.get("edition")) q.set("edition", url.searchParams.get("edition"));
@@ -5374,13 +5425,16 @@ export default {
           return json({ ok: false, reason: "TOO_LARGE", maxBytes: KNOCK.maxBytes }, 413);
         let body; try { body = JSON.parse(new TextDecoder().decode(raw)); } catch { body = null; }
         if (!body || (typeof body.contentB64 !== "string" && typeof body.contentText !== "string"))
-          return json({ ok: false, error: "knock requires contentB64 or contentText, plus optional note and contact" }, 400);
+          return json({ ok: false, ...requiredArgument("knock", "contentB64 or contentText",
+            "a JSON body with contentB64=<base64> or contentText=<text>",
+            "knock requires contentB64 or contentText, plus optional note and contact") }, 400);
         let bytes;
         try {
           bytes = body.contentB64 !== undefined
             ? Uint8Array.from(atob(body.contentB64), (c) => c.charCodeAt(0))
             : new TextEncoder().encode(body.contentText);
-        } catch { return json({ ok: false, error: "contentB64 is not valid base64" }, 400); }
+        } catch { return json({ ok: false, ...requiredArgument("knock", "contentB64", "<base64>",
+                    "contentB64 is not valid base64") }, 400); }
         if (bytes.length === 0) return json({ ok: false, reason: "EMPTY" }, 400);
         const r2 = typeof env.CAPTURES?.put === "function";
         const cap = r2 ? KNOCK.maxBytes : KNOCK.maxInline;
@@ -6091,7 +6145,7 @@ export default {
 
     if (op === "capture") {
       if (typeof env.CAPTURES?.get !== "function")
-        return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
+        return storageAbsent(op, "R2 is not configured on this instance");
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
         return json({ ok: false, ...requiredArgument("capture", "sha256", "<64 lowercase hex>",
@@ -6131,7 +6185,7 @@ export default {
        its OPS spec is non-mutating and it needs no capture-GET special-case. */
     if (op === "pdfstructure") {
       if (typeof env.CAPTURES?.get !== "function")
-        return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
+        return storageAbsent(op, "R2 is not configured on this instance");
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
         return json({ ok: false, ...requiredArgument("pdfstructure", "sha256", "<64 lowercase hex>",
@@ -6484,7 +6538,7 @@ export default {
     if (op === "acquire") {
       if (req.method !== "POST") return json({ ok: false, error: "acquire is a POST" }, 405);
       if (typeof env.CAPTURES?.put !== "function")
-        return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
+        return storageAbsent(op, "this instance has no evidence storage configured");
       const body = await req.json().catch(() => null);
       /* REC-33: THE DAEMON CLASS'S CONFINEMENT, and it belongs here rather than
          in the OPS table because the table knows only the op while the scope
@@ -8266,7 +8320,7 @@ export default {
     if (op === "attest") {
       if (req.method !== "POST") return json({ ok: false, error: "attest is a POST" }, 405);
       if (typeof env.CAPTURES?.put !== "function")
-        return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
+        return storageAbsent(op, "this instance has no evidence storage configured");
       const body = await req.json().catch(() => null);
       const sha = typeof body?.sha256 === "string" ? body.sha256.toLowerCase() : "";
       if (!/^[0-9a-f]{64}$/.test(sha))
