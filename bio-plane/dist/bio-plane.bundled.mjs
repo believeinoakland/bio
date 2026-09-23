@@ -25096,6 +25096,133 @@ var regulation_default = {
   }
 };
 
+// ../docprofile/doctypes/staff-directory.mjs
+var DIRECTORY_FLOOR = 5;
+var ONE_ORGANISATION = 0.8;
+var SD_EMAIL = /\b[A-Za-z0-9][A-Za-z0-9._%+-]*@((?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,})\b/g;
+var SD_PHONE = /(?:\(\d{3}\)\s?|\b\d{3}[-.\s])?\b\d{3}[-.]\d{4}\b/g;
+var SD_DATE = /\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2}\b|\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/gi;
+var SD_SELF_NAMING = /\b(?:directory|staff|roster|contacts)\b/i;
+function sdAddresses(raw) {
+  const all = /* @__PURE__ */ new Map();
+  for (const m of raw.matchAll(SD_EMAIL)) {
+    const a = m[0].toLowerCase().replace(/\.+$/, "");
+    if (!all.has(a)) all.set(a, { address: a, domain: m[1].toLowerCase().replace(/\.+$/, ""), offset: m.index });
+  }
+  const byDomain = /* @__PURE__ */ new Map();
+  for (const x of all.values()) byDomain.set(x.domain, (byDomain.get(x.domain) || 0) + 1);
+  let domain = null, atDomain = 0;
+  for (const [d, n] of byDomain) if (n > atDomain) {
+    domain = d;
+    atDomain = n;
+  }
+  return { all: [...all.values()], domain, atDomain };
+}
+function sdTitleLine(raw) {
+  const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 5);
+  return lines.find((l) => SD_SELF_NAMING.test(l)) || null;
+}
+var staff_directory_default = {
+  key: "staff_directory",
+  label: "a staff directory",
+  version: 1,
+  /* A directory is a LIST: what matters is which entries are present and whether each
+     still says what it said. Declared on the content type (CONSTRUCTS Step 0 #4). */
+  contract: CONTRACT.MEMBERSHIP,
+  detect(ctx) {
+    const raw = String(ctx.text || "");
+    const { all, domain, atDomain } = sdAddresses(raw);
+    if (atDomain < DIRECTORY_FLOOR || atDomain / all.length < ONE_ORGANISATION)
+      return { match: false, confidence: CONFIDENCE.NONE };
+    const signals = [`${atDomain} distinct contact address(es) at one organisation's domain (${domain}), ${Math.round(atDomain / all.length * 100)}% of the ${all.length} in the document`];
+    const dates = (flatten(raw).match(SD_DATE) || []).length;
+    if (dates >= Math.max(3, atDomain / 2)) return { match: false, confidence: CONFIDENCE.NONE };
+    const phones = new Set((raw.match(SD_PHONE) || []).map((p) => p.replace(/\D/g, ""))).size;
+    if (phones) signals.push(`${phones} distinct phone number(s)`);
+    const title = sdTitleLine(raw);
+    if (title) {
+      signals.push(`it names itself in its title line ("${title.slice(0, 80)}")`);
+      return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    }
+    return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+  },
+  /** What is in it: one entry per distinct address, keyed by the address.
+   *
+   *  THE KEY IS THE ADDRESS, NEVER THE NAME. An address is the identifier the document
+   *  itself assigns to an entry and is stable across revisions of the sheet; a person's
+   *  name is not a source-assigned id (framework §7, and the minutes reader's own rule).
+   *
+   *  FW-17 / IC-86 — each entry carries WHERE it was read, from `ctx.locate` at the
+   *  address's own RAW offset. `rect` is null: tier-1 and tier-2 text carry no geometry. */
+  parse(ctx) {
+    const raw = String(ctx.text || "");
+    const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
+    const { all, domain, atDomain } = sdAddresses(raw);
+    const entities = [];
+    for (const a of all) {
+      const start = raw.lastIndexOf("\n", a.offset) + 1;
+      const endAt = raw.indexOf("\n", a.offset);
+      const line = raw.slice(start, endAt < 0 ? raw.length : endAt).replace(/\s+/g, " ").trim();
+      const phones = [...new Set(line.match(SD_PHONE) || [])];
+      entities.push(entity(
+        `contact:${a.address}`,
+        "contact",
+        line.slice(0, 160) || a.address,
+        { address: a.address, organisation: a.domain === domain, line, phone: phones.join(", ") || null },
+        locate(a.offset)
+      ));
+    }
+    const title = sdTitleLine(raw);
+    return {
+      entities,
+      domain,
+      entries: atDomain,
+      title,
+      title_why: title ? null : "no line among the first five names this document as a directory, staff list, roster or contacts",
+      also_satisfies: alsoSatisfies(ctx, "staff_directory"),
+      at: ctx.at || null
+    };
+  },
+  /** Given two parses of the same directory's address, who came, who went, and whose
+   *  entry now says something else. Graded with the catalogue's list events: an entry
+   *  gone is `item_pulled` (the record can no longer say this person is reached here),
+   *  an entry added is `item_added`, an entry whose line moved is `item_changed`. */
+  assess(a, b) {
+    if (!(a.entities || []).length && !(b.entities || []).length)
+      return {
+        meaningful: null,
+        significance: null,
+        events: [],
+        confirmed: null,
+        why: "no entry could be read from this directory this time, so nothing is claimed about it either way"
+      };
+    const d = diffEntities(a.entities || [], b.entities || []);
+    const events = [];
+    for (const e of d.gone)
+      events.push(event("item_pulled", { key: e.key, label: e.label, why: "this address is no longer listed in the directory" }));
+    for (const e of d.appeared)
+      events.push(event("item_added", { key: e.key, label: e.label, why: "the directory now lists an address it did not" }));
+    for (const x of d.altered)
+      events.push(event("item_changed", {
+        key: x.entity.key,
+        label: x.entity.label,
+        moved: x.moved,
+        why: "this entry's line in the directory now says something else"
+      }));
+    bySeverity(events);
+    return {
+      meaningful: isMeaningful(events),
+      significance: worstSignificance(events),
+      events,
+      confirmed: {
+        entries: (b.entities || []).length,
+        intact: (a.entities || []).filter((e) => (b.entities || []).some((x) => x.key === e.key)).length
+      },
+      why: events.length ? `${events.length} change(s) to the directory's entries` : "the directory lists the same addresses, each saying what it said"
+    };
+  }
+};
+
 // ../docprofile/doctypes/generic.mjs
 var generic_default = {
   key: "generic",
@@ -25144,6 +25271,7 @@ types.register(meeting_minutes_default);
 types.register(meeting_agenda_default);
 types.register(staff_report_default);
 types.register(regulation_default);
+types.register(staff_directory_default);
 types.register(generic_default);
 function doctypeFor(ctx) {
   const r = types.recognise(ctx);

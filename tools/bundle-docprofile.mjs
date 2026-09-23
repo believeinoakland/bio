@@ -36,6 +36,7 @@ export const ORDER = [
   "docprofile/doctypes/meeting-minutes.mjs",
   "docprofile/doctypes/staff-report.mjs",
   "docprofile/doctypes/regulation.mjs",
+  "docprofile/doctypes/staff-directory.mjs",
   "docprofile/doctypes/generic.mjs",
   "docprofile/doctypes/registry.mjs",
   "docprofile/pipeline.mjs",

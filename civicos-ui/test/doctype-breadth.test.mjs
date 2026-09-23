@@ -41,8 +41,9 @@
  *      the file numbers the other lists — read from two documents rather than assumed.
  *
  *   7. WHAT IS NOT REGISTERED IS STATED. A staff DIRECTORY, class 4 of the measured
- *      order, has no type, and the suite asserts the registry says so rather than
- *      letting the absence be silent.
+ *      order, had no type, and the suite asserted the registry said so rather than
+ *      letting the absence be silent. CORRECTED 2026-09-23 (FW-20): the type is now
+ *      written, and its own suite is `staff-directory.test.mjs` — see section 8.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
@@ -259,9 +260,12 @@ for (const k of KEYS) {
 /* ---- 8. the registry, the contracts, and what is NOT registered ---- */
 {
   const keys = doctypes().map((t) => t.key);
-  ok("six content types are registered", keys.length === 6);
-  ok("and they are the measured five plus the generic fallback",
-     ["meeting_calendar", "meeting_minutes", "meeting_agenda", "staff_report", "regulation", "generic"]
+  /* CORRECTED 2026-09-23 (FW-20): was "six content types", which was true until the
+     fourth class of M0-32's order was written. The count is the thing CPDF-17's
+     correction of the registry header obliges every later author to move. */
+  ok("seven content types are registered", keys.length === 7);
+  ok("and they are the measured six plus the generic fallback",
+     ["meeting_calendar", "meeting_minutes", "meeting_agenda", "staff_report", "regulation", "staff_directory", "generic"]
        .every((k) => keys.includes(k)));
   ok("meeting_minutes is registered BEFORE meeting_agenda, which decides a certain/certain tie",
      keys.indexOf("meeting_minutes") < keys.indexOf("meeting_agenda"));
@@ -273,13 +277,20 @@ for (const k of KEYS) {
      && doctypes().find((t) => t.key === "regulation").contract === CONTRACT.SUBSTANCE);
   ok("every registered type carries a version so a judgment can be revised",
      doctypes().every((t) => Number.isInteger(t.version)));
-  /* WHAT IS NOT THERE. Class 4 of the measured order has no type, and the absence is
-     stated in the registry rather than left as silence — the reason being that every
-     directory this item could fetch was Tier-1 undecodable. */
-  ok("NO staff-directory type is registered", !keys.includes("staff_directory") && !keys.includes("directory"));
+  /* CORRECTED 2026-09-23 (FW-20). These two assertions pinned that class 4 of the
+     measured order had NO type and that the registry said why — "every directory this
+     item could fetch was Tier-1 undecodable". The ABSENCE was honest; its REASON was a
+     measurement taken with only tier 1, and FW-20 re-took it through the plane with the
+     fleet bound: the markers were `no_tounicode` (tier 2's case), and 56 of 57
+     name-matched documents read from text once the tier-2 member was bound. So the old
+     assertion now pins a stale reason, not a fact. What stays true, and is asserted in its
+     place: the directory type exists, it is the fourth class's, and the registry still
+     states WHY it was once withheld rather than erasing the history. The type's own
+     behaviour is `staff-directory.test.mjs`'s to pin. */
+  ok("a staff-directory type IS registered (class 4 of the measured order)", keys.includes("staff_directory"));
   const src = fs.readFileSync(new URL("../../docprofile/doctypes/registry.mjs", import.meta.url), "utf8");
-  ok("and the registry SAYS SO, naming the class and why it is unwritten",
-     /NOT REGISTERED/.test(src) && /STAFF\s*\n?\s*\*?\s*DIRECTORY/.test(src) && /UNDECODABLE/i.test(src));
+  ok("and the registry records that it was withheld on a measurement and why that measurement did not hold",
+     /withheld/.test(src) && /UNDECODABLE/i.test(src) && /no_tounicode/.test(src));
   /* The events the new readers emit are in the ONE catalogue, never inline strings. */
   for (const e of ["outcome_changed", "recommendation_changed", "instrument_changed"])
     ok(`the event catalogue holds ${e} with a fixed significance`, EVENTS[e] && EVENTS[e].significance);
