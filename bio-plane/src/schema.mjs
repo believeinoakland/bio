@@ -1146,6 +1146,34 @@ CREATE INDEX IF NOT EXISTS connections_a ON connections(a_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_b ON connections(b_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_a_bundle ON connections(a_bundle_id);
 CREATE INDEX IF NOT EXISTS connections_b_bundle ON connections(b_bundle_id);
+-- REC-122 / D-161 act (3) / IC-232, 2026-09-23: A MEMBER'S CHOICE OF THE ON-POINT
+-- MENTION on one end of a connection (Bob's 5.4 second pass: specificity is worked
+-- for, not merely permitted). The connection's own pair stays the machine's
+-- strongest-graded selection and is NEVER rewritten by a choice -- a re-derivation
+-- would overwrite it, and the machine's selection and a member's judgment are two
+-- facts. So the choice lives beside the row, keyed by the connection's own primary
+-- key plus the END ('a' or 'b') it is about, and names the mention by its reference
+-- exactly as the reading recorded it (resolutions.ref). APPEND-ONLY: a re-choice
+-- stamps superseded_at on the current row and writes a new one, so the old is
+-- retained (REC-86's rule). superseded_at NULL = the current choice. The two bundle
+-- ids are carried so a per-bundle purge clears a choice with the connection it is
+-- about (D-113). No position is stored: WHERE the mention was read is the reading's
+-- fact (reading_refs), read at answer time, so a choice cannot freeze a position the
+-- record later corrects.
+CREATE TABLE IF NOT EXISTS connection_pair_choices (
+  choice_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  a_capture_sha TEXT NOT NULL,
+  b_capture_sha TEXT NOT NULL,
+  entity_id     TEXT NOT NULL,
+  side          TEXT NOT NULL,  -- which end the choice is about, a or b
+  ref           TEXT NOT NULL,  -- the chosen mention, as resolutions.ref holds it
+  a_bundle_id   TEXT,
+  b_bundle_id   TEXT,
+  chosen_by     TEXT NOT NULL,  -- the member, stamped by the control plane
+  at            TEXT NOT NULL,
+  superseded_at TEXT            -- NULL = current, else when a later choice replaced it
+);
+CREATE INDEX IF NOT EXISTS connection_pair_choices_end ON connection_pair_choices(a_capture_sha, b_capture_sha, entity_id, side);
 -- CONSTRUCTS Step 5, SLICE A (FW-8): the PROGRESSION DEFINITION as data (framework
 -- section 8.2, "generalises the connection table rather than sitting beside it"). A
 -- definition is a named ordered set of STAGES with the rules a progression's junction

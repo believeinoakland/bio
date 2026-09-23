@@ -1153,6 +1153,34 @@ CREATE INDEX IF NOT EXISTS connections_a ON connections(a_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_b ON connections(b_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_a_bundle ON connections(a_bundle_id);
 CREATE INDEX IF NOT EXISTS connections_b_bundle ON connections(b_bundle_id);
+-- REC-122 / D-161 act (3) / IC-232, 2026-09-23: A MEMBER'S CHOICE OF THE ON-POINT
+-- MENTION on one end of a connection (Bob's 5.4 second pass: specificity is worked
+-- for, not merely permitted). The connection's own pair stays the machine's
+-- strongest-graded selection and is NEVER rewritten by a choice -- a re-derivation
+-- would overwrite it, and the machine's selection and a member's judgment are two
+-- facts. So the choice lives beside the row, keyed by the connection's own primary
+-- key plus the END ('a' or 'b') it is about, and names the mention by its reference
+-- exactly as the reading recorded it (resolutions.ref). APPEND-ONLY: a re-choice
+-- stamps superseded_at on the current row and writes a new one, so the old is
+-- retained (REC-86's rule). superseded_at NULL = the current choice. The two bundle
+-- ids are carried so a per-bundle purge clears a choice with the connection it is
+-- about (D-113). No position is stored: WHERE the mention was read is the reading's
+-- fact (reading_refs), read at answer time, so a choice cannot freeze a position the
+-- record later corrects.
+CREATE TABLE IF NOT EXISTS connection_pair_choices (
+  choice_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  a_capture_sha TEXT NOT NULL,
+  b_capture_sha TEXT NOT NULL,
+  entity_id     TEXT NOT NULL,
+  side          TEXT NOT NULL,  -- which end the choice is about, a or b
+  ref           TEXT NOT NULL,  -- the chosen mention, as resolutions.ref holds it
+  a_bundle_id   TEXT,
+  b_bundle_id   TEXT,
+  chosen_by     TEXT NOT NULL,  -- the member, stamped by the control plane
+  at            TEXT NOT NULL,
+  superseded_at TEXT            -- NULL = current, else when a later choice replaced it
+);
+CREATE INDEX IF NOT EXISTS connection_pair_choices_end ON connection_pair_choices(a_capture_sha, b_capture_sha, entity_id, side);
 -- CONSTRUCTS Step 5, SLICE A (FW-8): the PROGRESSION DEFINITION as data (framework
 -- section 8.2, "generalises the connection table rather than sitting beside it"). A
 -- definition is a named ordered set of STAGES with the rules a progression's junction
@@ -4031,6 +4059,7 @@ __export(bio_checks_exports, {
   CHECK_RETIREMENTS: () => CHECK_RETIREMENTS,
   CITATION_MAX: () => CITATION_MAX,
   CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
+  CONNECTION_CHOICE_CHECKS: () => CONNECTION_CHOICE_CHECKS,
   CONNECTION_PAIR_CHECKS: () => CONNECTION_PAIR_CHECKS,
   CONTENT_EXTENT_A1_RE: () => CONTENT_EXTENT_A1_RE,
   CONTENT_EXTENT_CHECKS: () => CONTENT_EXTENT_CHECKS,
@@ -13078,7 +13107,24 @@ var CONNECTION_PAIR_CHECKS = {
   CONNECTION_PAIR_MENTION_UNCHOSEN: {
     check: "C-49.4",
     where: "checks/bio-checks.mjs checkConnectionMentionUnchosen > is-mention-unchosen",
-    translation: "This document mentions the same subject in more than one place, and the record linked the two documents through the strongest-graded mention without anyone choosing which mention is the one on point. Because another mention bears on the part you cited, whether this connection reaches your citation is undetermined rather than yes or no. A citation of the document as a whole is answered today; choosing which mention is the on-point one for this connection is not yet something the record lets anyone do."
+    translation: "This document mentions the same subject in more than one place, and the record linked the two documents through the strongest-graded mention without anyone choosing which mention is the one on point. Because another mention bears on the part you cited, whether this connection reaches your citation is undetermined rather than yes or no. A citation of the document as a whole is answered today; a member may also choose which mention is the on-point one for this connection, and the answer then follows that choice."
+  }
+};
+var CONNECTION_CHOICE_CHECKS = {
+  CONNECTION_CHOICE_NOT_A_MEMBER: {
+    check: "C-74.1",
+    where: "src/store.mjs chooseConnectionPair > is-connection-choice",
+    translation: "Choosing which mention of a subject is the one on point for a connection is a member's own act, done in their name. A machine may point out the mentions a document holds, but deciding which one a connection rests on is a judgment a person signs for."
+  },
+  CONNECTION_CHOICE_NO_CONNECTION: {
+    check: "C-74.2",
+    where: "src/store.mjs chooseConnectionPair > is-connection-choice",
+    translation: "That request does not name a connection this record holds and you can see. A connection is named by the two documents it joins and the subject that joins them, and it exists once the record has derived it \u2014 choose after it appears among the document's connections."
+  },
+  CONNECTION_CHOICE_NOT_A_MENTION: {
+    check: "C-74.3",
+    where: "src/store.mjs chooseConnectionPair > is-connection-choice",
+    translation: "The mention named is not one this document carries for that subject. The choice is among the places the record actually read the subject in this document, by the reference as the reading recorded it; a mention the record never read cannot be the one a connection rests on."
   }
 };
 function checkConnectionPairCovers(pair, side, extentKind, extent, covers) {
@@ -16064,6 +16110,12 @@ var RUNG_ABSENT = {
      rather than undoing the first. The act writes a NEW reading, born `suggested`,
      and moves nothing existing — so it is corrected forward and never signed. */
   narrow: { ground: "undetermined", is: "a member writes a NEW reading of a question's evidence with one citation pointing at LESS of its document; the old reading and its citation are untouched, and the new one is born suggested (Bob's 5.3)" },
+  /* REC-122 / IC-232 — CHOOSING A CONNECTION'S ON-POINT MENTION, ground `undetermined` on
+     `narrow`'s measurement one row up: none of its refusals (C-74) is in
+     `JUSTIFICATION_REFUSALS`, and widening that class would be this item re-grading the ladder
+     to suit itself. NOT `reversible`: nothing takes a choice back; a re-choice SUPERSEDES it and
+     the old row is retained, which is corrected forward. Never signed, and never the machine's. */
+  connectionchoose: { ground: "undetermined", is: "a member records WHICH mention of a subject, on one end of one connection, is the one on point; the machine's strongest-graded pair is kept beside it, and a re-choice supersedes and retains the old (Bob's 5.4 second pass)" },
   /* REC-87 / IC-128 — TRANSCRIBE and the attestation of a typing. Ground
      `undetermined` on `attesttext`'s and `narrow`'s measurement: neither act's
      refusals are in `JUSTIFICATION_REFUSALS` (an empty typing, C-52.6, is not a
@@ -49380,6 +49432,10 @@ ${words}`;
     const truncated = scan.length > cap;
     const rows = truncated ? scan.slice(0, cap) : scan;
     const keep = this.#bundleRedactor(viewer);
+    const withChoice = (r) => {
+      const ch = this.#currentPairChoices(r.a_capture_sha, r.b_capture_sha, r.entity_id);
+      return ch.a || ch.b ? { on_point: ch } : {};
+    };
     return {
       ok: true,
       entity_id: entityId,
@@ -49388,7 +49444,8 @@ ${words}`;
       connections: rows.map((r) => ({
         ...this.#connectionView(r),
         a_bundle_id: keep(r.a_bundle_id),
-        b_bundle_id: keep(r.b_bundle_id)
+        b_bundle_id: keep(r.b_bundle_id),
+        ...withChoice(r)
       })),
       limit: cap,
       truncated
@@ -49506,6 +49563,59 @@ ${words}`;
         reaching.push({ ...entry, why: "this citation is of the whole document, so every connection the document has is inside it" });
         continue;
       }
+      const choices = this.#currentPairChoices(c.a_capture_sha, c.b_capture_sha, c.entity_id);
+      const mine = choices[side];
+      let lapsed = null;
+      if (mine) {
+        const m = this.#one(
+          `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref
+             FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
+            WHERE r.capture_sha=? AND r.entity_id=? AND r.ref=?`,
+          row.capture_sha,
+          c.entity_id,
+          mine.ref
+        );
+        if (!m) {
+          lapsed = {
+            ref: mine.ref,
+            chosen_by: mine.chosen_by,
+            at: mine.at,
+            lapsed: true,
+            why: "a member chose this mention as on point, and this document no longer carries it for this subject, so the choice cannot answer and the machine's selection is read as unchosen"
+          };
+        } else {
+          const position = readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref);
+          const theirs = choices[side === "a" ? "b" : "a"];
+          const otherSha = side === "a" ? c.b_capture_sha : c.a_capture_sha;
+          const theirGrade = theirs && this.#one(
+            `SELECT grade FROM resolutions WHERE capture_sha=? AND entity_id=? AND ref=?`,
+            otherSha,
+            c.entity_id,
+            theirs.ref
+          )?.grade || (side === "a" ? c.b_grade : c.a_grade);
+          const grade2 = _Store.#weakerGrade(m.grade, theirGrade);
+          const onPoint = { ref: m.ref, position, grade: m.grade, chosen_by: mine.chosen_by, at: mine.at };
+          const chosenEntry = { ...entry, grade: grade2, on_point: onPoint };
+          const said = `a member (${mine.chosen_by}) chose ${m.ref} as the on-point mention on this end`;
+          const verdict = checkConnectionPairCovers(
+            side === "a" ? { a_ref: m.ref, a_position: position } : { b_ref: m.ref, b_position: position },
+            side,
+            row.extent_kind,
+            extent,
+            readingPositionInExtent
+          );
+          if (!verdict) reaching.push({ ...chosenEntry, why: `${said}; it was read at ${position.ref}, inside ${row.ref}` });
+          else (verdict.code === "CONNECTION_PAIR_OUTSIDE_EXTENT" ? outside : undetermined).push({
+            ...chosenEntry,
+            code: verdict.code,
+            check: verdict.check,
+            translation: verdict.translation,
+            why: `${said}; ${verdict.detail.replace(/^the determining reference/, "that mention")}`
+          });
+          continue;
+        }
+      }
+      if (lapsed) entry.on_point = lapsed;
       if (!view.determining_pair) {
         undetermined.push({
           ...entry,
@@ -49578,6 +49688,150 @@ ${words}`;
       truncated,
       why: grade != null ? `${reaching.length} connection(s) were established by a reference read inside ${row.ref}; the grade is the strongest of them (${grade}), which states how that connection was established and nothing about how credible either document is` : conns.length === 0 ? `this document is an end of no connection, so there is nothing for ${row.ref} to earn from` : unchosenN ? `no connection is established to reach ${row.ref}: ${unchosenN} rest on a pair that is this document's strongest-graded mention of the subject while another mention bears on ${row.ref}, and nobody has chosen which mention is on point` + (undetermined.length > unchosenN ? `; ${undetermined.length - unchosenN} cannot be placed` : ``) + `; ${outside.length} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none` : undetermined.length ? `no connection is established to reach ${row.ref}: ${undetermined.length} cannot be placed (the record does not hold where the determining reference was read) and ${outside.length} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none \u2014 reading this document with positions is what would settle it` : `all ${outside.length} of this document's connections were established by references read outside ${row.ref}, so none of them reaches this citation`
     };
+  }
+  /* ============ REC-122 · D-161 ACT (3) · A MEMBER CHOOSES THE ON-POINT MENTION ============
+   *
+   * Bob, 2026-09-14 (5.4, second pass): the connection pair is the ON-POINT pair, CHOSEN, and
+   * specificity is worked for. FW-17 built the strongest-graded mention instead; REC-120 made
+   * every answer that rested on that machine selection among several mentions honestly
+   * UNDETERMINED (C-49.4). This is the act that lets a member settle it: WHICH mention of the
+   * subject, on ONE end of ONE connection, is the one on point.
+   *
+   * WHAT IT IS NOT. It does not rewrite the connection's pair — that stays the machine's
+   * selection, stated as such (`determining_pair.selection`), and a re-derivation rewrites it
+   * anyway. It does not change the connection's document-grain grade or any whole-document
+   * answer: a whole document holds every mention, so nothing there rested on a choice. It
+   * does not guess: nothing machine-chosen counts, a machine credential is refused BY SHAPE on
+   * the name the control plane stamped (C-74.1, REC-86's C-50.5 twin), and a mention the
+   * document does not carry for that subject is refused BY NAME (C-74.3).
+   *
+   * THE OLD IS RETAINED (REC-86's rule): a re-choice supersedes the current row and appends a
+   * new one; the same choice twice writes nothing and says so.
+   *
+   * HOW A LIAR PASSES THIS, stated before what it checks: a choice the READ then ignores (the
+   * act records, and `connectionGradeForContent` answers REC-120's UNDETERMINED as before), or
+   * a default that picks the strongest-graded mention for everyone (REC-120's overclaim back,
+   * wearing a member's name). The suite drives the act and then the READ, and the negative
+   * control removes the read's use of the choice. */
+  /* BOUNDED BY CONSTRUCTION: the act supersedes the current row in the same transaction that
+     inserts the next, so at most ONE row per end is current and two rows cover both ends. Newest
+     first, and the first seen per end wins, so if that invariant were ever broken the LATEST
+     choice answers — never an older one by scan order. */
+  #currentPairChoices(aSha, bSha, entityId) {
+    const rows = this.#rows(
+      `SELECT side, ref, chosen_by, at FROM connection_pair_choices
+        WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=? AND side IN ('a','b')
+          AND superseded_at IS NULL ORDER BY choice_id DESC LIMIT 2`,
+      aSha,
+      bSha,
+      entityId
+    );
+    const out = { a: null, b: null };
+    for (const r of rows) if (!out[r.side]) out[r.side] = { ref: r.ref, chosen_by: r.chosen_by, at: r.at };
+    return out;
+  }
+  /** op=connectionchoose — THE ACT. `capture` is the end the choice is about, `other` the
+   *  connection's other end, `entity` the subject joining them, `ref` the mention chosen. */
+  chooseConnectionPair(a = {}) {
+    const args = a || {};
+    const refusal7 = (code, detail, extra) => {
+      const row = CONNECTION_CHOICE_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const who = String(args.author ?? "").trim();
+    const capture = String(args.capture ?? "").trim().toLowerCase();
+    const other = String(args.other ?? "").trim().toLowerCase();
+    const entityId = String(args.entity ?? "").trim();
+    const ref = String(args.ref ?? "").trim();
+    const aSha = capture < other ? capture : other, bSha = capture < other ? other : capture;
+    const conn = capture && other && entityId && capture !== other ? this.#one(
+      `SELECT a_capture_sha, b_capture_sha, entity_id, a_bundle_id, b_bundle_id, a_ref, b_ref
+                     FROM connections WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=?`,
+      aSha,
+      bSha,
+      entityId
+    ) : null;
+    const side = capture === aSha ? "a" : "b";
+    const keep = this.#bundleRedactor(args.viewer ?? null);
+    const mention = conn && ref ? this.#one(
+      `SELECT ref, grade FROM resolutions WHERE capture_sha=? AND entity_id=? AND ref=?`,
+      capture,
+      entityId,
+      ref
+    ) : null;
+    if (!who || isMachineIdentity(who))
+      return refusal7(
+        "CONNECTION_CHOICE_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential. It may list a document's mentions (op=connections&content= names them where they bear on a citation); choosing which one a connection rests on is a member's act.` : `this act names no member, and a choice nobody made is not a choice.`
+      );
+    if (!conn || !keep(side === "a" ? conn.a_bundle_id : conn.b_bundle_id))
+      return refusal7(
+        "CONNECTION_CHOICE_NO_CONNECTION",
+        `this record holds no connection between capture=${capture.slice(0, 12) || "(none)"}\u2026 and other=${other.slice(0, 12) || "(none)"}\u2026 through entity=${entityId || "(none)"} that you can see. Name the end the choice is about (capture), the other end (other) and the subject (entity).`,
+        { capture: capture || null, other: other || null, entity_id: entityId || null }
+      );
+    if (!mention)
+      return refusal7(
+        "CONNECTION_CHOICE_NOT_A_MENTION",
+        ref ? `this document does not carry '${ref.slice(0, 80)}' as a mention of ${entityId}. Its mentions are the references the record resolved to that subject in it.` : `pass ref=: the mention, as the reading recorded it, that is on point for this connection.`,
+        { capture, entity_id: entityId, ref: ref || null }
+      );
+    const cur = this.#currentPairChoices(aSha, bSha, entityId)[side];
+    const pos = this.#one(
+      `SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=?`,
+      capture,
+      mention.ref
+    );
+    const position = pos ? readingSourceFromColumns(pos.pos_kind, pos.pos, pos.pos_ref) : null;
+    const answer = (wrote, prior) => ({
+      ok: true,
+      wrote,
+      a_capture_sha: aSha,
+      b_capture_sha: bSha,
+      entity_id: entityId,
+      side,
+      chosen: {
+        ref: mention.ref,
+        grade: mention.grade,
+        position,
+        chosen_by: wrote ? who : cur.chosen_by,
+        at: wrote ? at : cur.at
+      },
+      superseded: prior,
+      machine_pair_ref: side === "a" ? conn.a_ref : conn.b_ref,
+      says: (wrote ? `recorded: ` : `already the choice, so nothing was written: `) + `on end ${side.toUpperCase()} of this connection the on-point mention of ${entityId} is ${mention.ref}` + (position ? ` (read at ${position.ref})` : ` (the reading did not record where)`) + `, as chosen by ${wrote ? who : cur.chosen_by}. A citation of a part of this document now answers from this mention; the machine's strongest-graded pair is kept beside it, unchanged`
+    });
+    const at = (/* @__PURE__ */ new Date()).toISOString();
+    if (cur && cur.ref === mention.ref) return answer(false, null);
+    this.ctx.storage.transactionSync(() => {
+      if (cur)
+        this.sql.exec(`UPDATE connection_pair_choices SET superseded_at=?
+                        WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=? AND side=?
+                          AND superseded_at IS NULL`, at, aSha, bSha, entityId, side);
+      this.sql.exec(
+        `INSERT INTO connection_pair_choices
+                       (a_capture_sha,b_capture_sha,entity_id,side,ref,a_bundle_id,b_bundle_id,chosen_by,at)
+                     VALUES (?,?,?,?,?,?,?,?,?)`,
+        aSha,
+        bSha,
+        entityId,
+        side,
+        mention.ref,
+        conn.a_bundle_id,
+        conn.b_bundle_id,
+        who,
+        at
+      );
+    });
+    return answer(true, cur ? { ref: cur.ref, chosen_by: cur.chosen_by, at: cur.at } : null);
   }
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
      crucial one -- a lawful skip needs an exception document (slice B).
@@ -53871,6 +54125,8 @@ ${words}`;
          reported so a whole-store purge can PROVE it cleared them (D-113). */
       connections: n("connections"),
       progressionDefs: n("progression_defs"),
+      /* REC-122: the member on-point choices, so a purge can PROVE it took them (D-113). */
+      connectionPairChoices: n("connection_pair_choices"),
       progressionStages: n("progression_stages"),
       /* FW-9: the threaded progression instances, reported so a purge can PROVE it cleared
          them (D-113). */
@@ -55311,6 +55567,7 @@ ${words}`;
         if (r && r.fts_id != null) this.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, r.fts_id);
         for (const t of TABLES) this.sql.exec(`DELETE FROM ${t} WHERE bundle_id=?`, bundleId);
         this.sql.exec(`DELETE FROM connections WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
+        this.sql.exec(`DELETE FROM connection_pair_choices WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
         this.sql.exec(`DELETE FROM project_participants WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM bias_adoptions WHERE scope_id=?`, bundleId);
@@ -55354,6 +55611,7 @@ ${words}`;
         this.sql.exec(`DELETE FROM entity_aliases`);
         this.sql.exec(`DELETE FROM entities`);
         this.sql.exec(`DELETE FROM connections`);
+        this.sql.exec(`DELETE FROM connection_pair_choices`);
         this.sql.exec(`DELETE FROM progression_stages`);
         this.sql.exec(`DELETE FROM progression_defs`);
         this.sql.exec(`DELETE FROM progression_stage_versions`);
@@ -55397,6 +55655,8 @@ ${words}`;
            definitions a whole-store purge took (D-113). */
         connections: d("connections"),
         progressionDefs: d("progressionDefs"),
+        /* REC-122: the on-point choices a purge took (D-113). */
+        connectionPairChoices: d("connectionPairChoices"),
         progressionStages: d("progressionStages"),
         /* FW-9: the threaded progression instances a purge took (D-113). */
         progressionInstances: d("progressionInstances"),
@@ -69529,6 +69789,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           limit: url.searchParams.get("limit"),
           viewer: url.searchParams.get("viewer")
         }),
+        /* REC-122 / IC-232: a member's choice of the on-point mention. `author` and `viewer`
+           are the control plane's stamps and never the caller's, so a machine is refused BY
+           SHAPE (C-74.1) and a connection out of sight answers as absent (C-74.2). */
+        connectionchoose: () => this.chooseConnectionPair({
+          capture: body && body.capture || url.searchParams.get("capture"),
+          other: body && body.other || url.searchParams.get("other"),
+          entity: body && body.entity || url.searchParams.get("entity"),
+          ref: body && body.ref || url.searchParams.get("ref"),
+          author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer")
+        }),
         progressiondefine: () => this.defineProgression(body || {}),
         progression: () => this.readProgression({
           progressionKey: url.searchParams.get("key"),
@@ -71203,6 +71474,12 @@ var OPS = {
      machine's proposals are listed to whoever may see the question. */
   narrow: { classes: ["admin", "member", "probe"], mutating: true },
   narrowcandidates: { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-122 / IC-232 — A MEMBER CHOOSES THE ON-POINT MENTION of one end of a connection
+     (D-161 act 3). `narrow`'s class cut and `narrow`'s reasoning: what the act refuses to a
+     machine is decided by the store on the author the control plane stamps below
+     (`CONNECTION_CHOICE_NOT_A_MEMBER`, C-74.1), so a machine arriving honestly named
+     `token:<class>` is refused BY SHAPE and the probe with it. */
+  connectionchoose: { classes: ["admin", "member", "probe"], mutating: true },
   /* REC-146 / IC-167 — CONTRADICTION'S IDENTIFY, THE PAIRING READ. A pure read on
      `narrowcandidates`' class cut exactly: whoever may READ the record may ask which of
      its assertions are worth comparing. It writes nothing, judges nothing and mints
@@ -72051,6 +72328,9 @@ var SESSION_OPS = {
        reading of a question, reached by a signed-in member. */
     "narrow",
     "narrowcandidates",
+    /* REC-122: choosing a connection's on-point mention — a member's
+       act, reached by a signed-in member. */
+    "connectionchoose",
     /* D-136: THE §4.7 VOTE BECOMES CASTABLE BY THE PEOPLE §4.7 ASSIGNS IT
        TO — AND THAT IS WHY THE THREE ARE IN **BOTH** SETS, WHICH IS THE ONE
        DESIGN CALL THIS ITEM HAD TO MAKE. It is `EXPERTISE_ACTIONS`' posture,
@@ -72168,6 +72448,7 @@ var SESSION_OPS = {
     "extractproposals",
     "narrow",
     "narrowcandidates",
+    "connectionchoose",
     "contradictionpairs",
     "actionquotes",
     "transcribe",
@@ -72256,6 +72537,10 @@ var NEEDS = {
      group putting its name on anything — the new reading is born `suggested`. */
   narrow: "contribute",
   narrowcandidates: "contribute",
+  /* REC-122: choosing a connection's on-point mention rides `contribute`, on `narrow`'s
+     reasoning — it is a member's judgment written into the working record, and nothing it
+     writes is the group putting its name on anything. */
+  connectionchoose: "contribute",
   /* REC-146: NO CAPABILITY. The pairing read takes none, on `op=content`'s and
      `op=transcription`'s reasoning: asking which of the record's own assertions are
      worth comparing is READING the record. It writes nothing into the working corpus
@@ -77197,7 +77482,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "contradictionpairs" || op === "actionquotes" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "contradictionpairs" || op === "actionquotes" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -77245,7 +77530,7 @@ var index_default = {
       );
     if (op === "select" || op === "selection" || op === "selectionlist" || op === "selectionrelease" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))
       inner.searchParams.set("owner", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "provenancechain" || op === "provenanceroute" || op === "narrow")
+    if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "connectionchoose" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "provenancechain" || op === "provenanceroute" || op === "narrow")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     if (POSITIONAL_ACTS.includes(op))
       inner.searchParams.set(
