@@ -29,7 +29,11 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    `["0.72.0", "b942d97308195a644f5c2ecb3ba79967ce7548ef"]` in `migrate-released.test.mjs`. Expected, by arithmetic:
    baseline 396 + 21 → **417/0** (19 per row as before, + 1 ARMED op=file, + 1 ARMED group) — MEASURE it, and record the
    `alterafter` sequence: … 279/78 → **318/78** (0.72.0's cut).
-2. **The tag `v0.72.0` is not on the remote** (above). It must reach `origin` from a place whose git may push tags.
+2. **The tag `v0.72.0` is not on the remote** (above) — NOT CARRIED: BOB #29 (02:52Z) judged it non-blocking (nothing
+   reads it; `b942d973` is on the remote) and named it to Bob as an optional web-UI act. A future cut's tag meets the
+   same 403: push the branch, and let the tag follow when Bob's act or the environment allows.
+   **BOB'S RULING, 2026-09-23 (TREE-SHARING §3):** every failed GitHub run emails Bob as an alarm — push a `land/*`
+   branch only after its local gate is GREEN on that tree, and never push a negative control to `land/*` or `integrate/*`.
 3. **D-260 item 2** (not re-measured): one organisation `ai` credential as a deploy secret, the way `DAEMON_TOKEN` is,
    AFTER the plane's caller lands — `node tools/ledger.mjs find D-260` first.
 4. **Carried, not re-verified:** v0.56.0/v0.57.0 never pushed; `v0.58.0` off the mainline; v0.59.0–v0.63.0 WITHDRAWN.
