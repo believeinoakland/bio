@@ -66,6 +66,9 @@ Bob can answer sends it here, and this session carries it into his conversation.
    first day carries an account switch, lanes standing up and release cuts, so a straight-line forecast from it is a
    figure that costs nothing to produce. Report the number and its reset time; let Bob judge the pace, as he did last
    time.
+   **RULED BY BOB 2026-09-23:** *"I have 2 Max 20x accounts. The other one refreshes early Saturday morning, whereas this one
+   refreshes early Tuesday. Don't sever to preserve or spread out token usage."* No cap, no throttling for the weekly figure;
+   an `allowed_warning` is recorded, not brought to him.
 5. **Read `docs/development/DECISIONS.md` and surface every `open` entry to Bob**, as written: question,
    what runs provisionally, the alternative, the recommendation, what reversing costs. When he answers,
    write `response:` and `decided:` and set it `answered`; CONDUCT enacts. An open decision never blocks
