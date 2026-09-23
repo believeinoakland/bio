@@ -2651,7 +2651,7 @@ async function classify(token, env) {
    nothing anyone will ever read. So the daemon class falls through to the
    default and addresses `bio` like an operator does. What bounds it is the op
    table — two verbs — and not the namespace. */
-/* D-456 (IC-236): THERE IS NO FALL-THROUGH TO `bio` ANY MORE. This function answered `bio` for EVERY `store=` value
+/* D-456 (IC-237): THERE IS NO FALL-THROUGH TO `bio` ANY MORE. This function answered `bio` for EVERY `store=` value
    it did not recognise, so `op=stats&store=biosmoke-pdf` answered `store:"bio"` and a brief or a typo naming a
    namespace that does not exist wrote the REAL record while the caller believed it was somewhere else. The named
    refusal is `namespaceGate`'s, at the front door, before any class is resolved, so every caller meets it first; this
@@ -2667,7 +2667,7 @@ function scopeFor(cls, url) {
   return { name: asked === SCRATCH ? SCRATCH : "bio" };
 }
 
-/* D-456 (C-78.1, IC-236) — A NAMESPACE THAT DOES NOT EXIST IS REFUSED BY NAME, FOR EVERY CALLER, AT THE FRONT DOOR.
+/* D-456 (C-78.1, IC-237) — A NAMESPACE THAT DOES NOT EXIST IS REFUSED BY NAME, FOR EVERY CALLER, AT THE FRONT DOOR.
  *
  * WHAT WAS WRONG, MEASURED. `scopeFor` confined only the probe class and answered `bio` for any other `store=` value;
  * the unauthenticated path (the invitation ops, op=instancegroup) did the same with `=== SCRATCH ? SCRATCH : "bio"`.
