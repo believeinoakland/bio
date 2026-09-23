@@ -32977,10 +32977,16 @@ export class Store extends DurableObject {
   publishedRegistryFor(bundleId, extraTargets = []) {
     const ids = [...new Set([bundleId, ...extraTargets].filter(Boolean))];
     if (!ids.length) return {};
-    const marks = ids.map(() => "?").join(",");
+    /* D-390 (2026-09-23): THE LIST IS BOUND AS ONE JSON VALUE, not one variable per id. `publishedTargets`
+       hands this a list cut at 200 and a finding's basis is unbounded, and one statement binding more than
+       ~100 variables is refused by workerd (D-36) — reproduced through `/publishedtargets` by
+       `test/frontier-chunk.test.mjs`. `json_each(?)` is this file's own precedent (the authored-capture read)
+       and binds ONE variable whatever the list's length. Not chunked, because a loop around the read hides
+       its row source from `derivation-bounds.test.mjs`'s reader while the per-row work is unchanged. */
     const rows = this.#rows(
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, strength
-       FROM published_bundles WHERE bundle_id IN (${marks}) ORDER BY bundle_id, edition`, ...ids);
+       FROM published_bundles WHERE bundle_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, edition`,
+      JSON.stringify(ids));
     const reg = {};
     for (const r of rows) {
       const e = reg[r.bundle_id] || (reg[r.bundle_id] = { latest: 0, editions: {} });
@@ -38355,14 +38361,20 @@ export class Store extends DurableObject {
        list is already over it at the default `cap` of 200** (a pre-existing
        hazard in this method, raised as its own row rather than absorbed here —
        what is NOT acceptable is an item that doubles the exposure and says
-       nothing); and it stops computing an index state for rows this answer then
+       nothing — CLOSED by D-390's chunking below); and it stops computing an index state for rows this answer then
        throws away. */
     const pageCut = latest.page;
     const indexState = new Map();
     {
       const subjects = [...new Set(pageCut.map((r) => r.subject).filter((v) => typeof v === "string" && v))];
-      if (subjects.length) {
-        const marks = subjects.map(() => "?").join(",");
+      /* D-390 (2026-09-23): CHUNKED at `Store.SELECTION_ID_CHUNK`, each chunk's rows merged into the one
+         map. The single list above bound one variable per published row, and at the default `cap` of 200
+         workerd refused it (`too many SQL variables`, reproduced by `test/frontier-chunk.test.mjs`): the
+         whole read failed on the first instance past ~100 content captures. A subject appears in exactly
+         one chunk and the query is per-subject, so the merge cannot disagree with a read of one. */
+      for (let i = 0; i < subjects.length; i += Store.SELECTION_ID_CHUNK) {
+        const part = subjects.slice(i, i + Store.SELECTION_ID_CHUNK);
+        const marks = part.map(() => "?").join(",");
         /* The LATEST `derive` row per subject, which is the frontier's own shape
            narrowed by authority — `MAX(seq)` grouped by subject, so the walk
            reads the index and not the table. */
@@ -38371,7 +38383,7 @@ export class Store extends DurableObject {
             WHERE seq IN (SELECT MAX(seq) FROM observation_log
                            WHERE level = 'content' AND subject_kind = 'capture'
                              AND authority_kind = 'derive' AND subject IN (${marks})
-                           GROUP BY subject)`, ...subjects))
+                           GROUP BY subject)`, ...part))
           indexState.set(r.subject, { state: r.state, bound: r.bound, detail: r.detail });
       }
     }
