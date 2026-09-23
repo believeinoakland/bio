@@ -8875,19 +8875,36 @@ var AI_RUN_CHECKS = {
      (`surfaces: -1`, and open another question). A figure is a non-negative whole JSON number; the refusal is the
      whole tick's (or the whole open's, for a seed), and nothing is written. Its own code and not C-22.5's: that one
      is a CLOSE naming no bound, this is a figure no bound can hold. */
+  /* REC-172, 2026-09-23: ALSO the member's `allowed` at the open (it was written `Number(x) || 0`, so `-1`, `1.5` and
+     `"3"` became a declaration nobody made). One code for both halves of a bound's figure — the rule is the same whole
+     number — and the translation widened from SPENDING to GIVING an amount so it reads true of either. */
   AI_RUN_CONSUME_INVALID: {
     check: "C-22.13",
     where: "src/airun.mjs checkConsume, called from store.mjs aiRunTick and aiRunOpen",
-    translation: "The investigation reported spending an amount that is not a whole number of zero or more. A budget is only ever used up, one whole step at a time, so nothing was recorded for this step."
+    translation: "The investigation gave an amount for its budget that is not a whole number of zero or more. A budget is set and used up in whole steps, and never goes down, so nothing was recorded for this step."
   },
   /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
      counted by promote since D-85). WHY ITS OWN CODE: the figure may be perfectly well-formed; what is wrong is WHO
      is counting. The remedy differs too — the caller sends nothing for these, where C-22.13's caller sends a proper
      number. A zero claims nothing and is not refused. */
+  /* REC-172, 2026-09-23: ALSO `lease` (`PLANE_DECIDED_BOUNDS`), at the tick and as a declaration at the open, and
+     for ANY figure including zero. Same rationale — the plane decides it, off the clock — so the same code; the
+     translation now names the lease beside the counts. */
   AI_RUN_BOUND_PLANE_COUNTED: {
     check: "C-22.14",
     where: "src/airun.mjs checkConsume, called from store.mjs aiRunTick and aiRunOpen",
-    translation: "This part of the investigation's budget is counted by the record itself as the work lands \u2014 passages marked citable, questions opened \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
+    translation: "This part of the investigation's budget is kept by the record itself \u2014 passages marked citable and questions opened are counted as the work lands, and whether the investigation is still alive is read off the clock \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
+  },
+  /* REC-172, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6). A tick's `consume` key naming no bound, and a `consume`
+     that is not a map at all (an ARRAY, whose keys are positions), were SKIPPED: the tick answered `ticked: true` and
+     spent nothing, so a caller believed it counted work the record never held (the live instrument vf4 sent an array
+     for its whole life). The open DROPPED an entry naming no bound, so a member who declared `fetchs: 3` got a run
+     with no fetch ceiling. Its own code and not C-22.13's: the figure may be perfectly good; what is wrong is that it
+     names nothing the run has, and the remedy (spell the bound, send a map) differs. */
+  AI_RUN_BOUND_UNKNOWN: {
+    check: "C-22.15",
+    where: "src/airun.mjs checkConsume (the tick's map, the open's list, and every key in either), called from store.mjs aiRunTick and aiRunOpen",
+    translation: "The investigation named a part of its budget that does not exist, or did not say which part it meant. Nothing was recorded, so no budget was spent or set that nobody could account for."
   }
 };
 var AI_RUNS_CONTEXT_CHECKS = {
@@ -26494,17 +26511,60 @@ function checkBound(bound) {
   );
 }
 var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
-function checkConsume(entries, { seed = false } = {}) {
+var PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
+function checkConsume(entries, { seed = false, allowance = false, map = false, list = false } = {}) {
+  if (list) {
+    if (entries == null) return null;
+    if (!Array.isArray(entries))
+      return refusal3(
+        "AI_RUN_BOUND_UNKNOWN",
+        `\`bounds\` was ${typeof entries === "object" ? "a map" : `a ${typeof entries}`}: it is a list of { bound, allowed, unit }, one per bound the run is held to (\xA714b.6). Nothing was written`,
+        { bound: null }
+      );
+    const bad = entries.findIndex((e) => !e || typeof e !== "object" || Array.isArray(e));
+    if (bad >= 0)
+      return refusal3(
+        "AI_RUN_BOUND_UNKNOWN",
+        `\`bounds[${bad}]\` is ${(JSON.stringify(entries[bad]) ?? String(entries[bad])).slice(0, 60)}, not a { bound, allowed, unit } entry, so it names no bound (\xA714b.6). Nothing was written`,
+        { bound: null }
+      );
+    return checkConsume(
+      entries.map((e) => [e.bound == null ? "" : String(e.bound), e.allowed]),
+      { seed: true, allowance: true }
+    ) || checkConsume(entries.map((e) => [String(e.bound), e.consumed]), { seed: true });
+  }
+  if (map) {
+    if (entries == null) return null;
+    if (typeof entries !== "object" || Array.isArray(entries))
+      return refusal3(
+        "AI_RUN_BOUND_UNKNOWN",
+        `\`consume\` was ${Array.isArray(entries) ? "an array" : `a ${typeof entries}`} (${(JSON.stringify(entries) ?? String(entries)).slice(0, 80)}): it is a map from a bound's name to the figure spent on it, e.g. { fetches: 1 }, and an array's keys are positions, which name no bound (\xA714b.6). Nothing was written`,
+        { bound: null }
+      );
+    entries = Object.entries(entries);
+  }
   for (const [k, v] of Array.isArray(entries) ? entries : []) {
     const b = String(k);
-    if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) continue;
+    if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b))
+      return refusal3(
+        "AI_RUN_BOUND_UNKNOWN",
+        `'${b === "" ? "(absent)" : b.slice(0, 60)}' names no bound of a run. The bounds a caller spends are ` + Object.keys(RUN_BOUNDS).filter((x) => !PLANE_COUNTED_BOUNDS.includes(x) && !PLANE_DECIDED_BOUNDS.includes(x)).join(", ") + ` (\xA714b.6); a figure for a bound that does not exist counts nothing. Nothing was written`,
+        { bound: b }
+      );
+    if (PLANE_DECIDED_BOUNDS.includes(b))
+      return refusal3(
+        "AI_RUN_BOUND_PLANE_COUNTED",
+        `'${b}' is decided by the plane \u2014 a run's lease lapses on the clock, read by the reaper, and nothing spends it (\xA714b.6) \u2014 so no figure for it, not even a zero, is the caller's to send or a member's to declare. Nothing was written`,
+        { bound: b }
+      );
     if (seed && v == null) continue;
     if (!(typeof v === "number" && Number.isSafeInteger(v) && v >= 0))
       return refusal3(
         "AI_RUN_CONSUME_INVALID",
-        `'${b}' was given ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)} \u2014 a bound's figure is a whole number of zero or more, and a count never goes down (\xA714b.6). Nothing was written`,
+        `'${b}' was ${allowance ? "declared an allowance of" : "given"} ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)} \u2014 a bound's figure is a whole number of zero or more, ${allowance ? "allowed or spent" : "and a count never goes down"} (\xA714b.6). Nothing was written`,
         { bound: b }
       );
+    if (allowance) continue;
     if (v !== 0 && PLANE_COUNTED_BOUNDS.includes(b))
       return refusal3(
         "AI_RUN_BOUND_PLANE_COUNTED",
@@ -62593,7 +62653,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         translation: badSkill.translation,
         note: badSkill.detail
       };
-    const badSeed = checkConsume((Array.isArray(bounds) ? bounds : []).filter((b) => b && typeof b === "object").map((b) => [String(b.bound), b.consumed]), { seed: true });
+    const badSeed = checkConsume(bounds, { list: true });
     if (badSeed)
       return {
         run,
@@ -62661,7 +62721,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            ON CONFLICT(run, bound) DO NOTHING`,
           run,
           String(b.bound),
-          Number(b.allowed) || 0,
+          b.allowed == null ? 0 : b.allowed,
+          /* REC-172: judged above; absent is 0, as ever */
           b.consumed == null ? 0 : b.consumed,
           /* REC-169: judged above */
           b.unit == null ? null : String(b.unit)
@@ -62759,7 +62820,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         bound: row.stopped_bound,
         note: "this run has ended; its log is closed and a later tick does not reopen it"
       };
-    const badConsume = checkConsume(Object.entries(consume && typeof consume === "object" ? consume : {}));
+    const badConsume = checkConsume(consume, { map: true });
     if (badConsume)
       return {
         run,

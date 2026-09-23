@@ -25,7 +25,9 @@
  * reaper and `extractPropose` write `consumed` from plane-computed figures and are not driven here (`mints`'s plane
  * writer is `extractrun.test.mjs`'s); ARM C pins, off the store's SOURCE, that the plane-counted set this door refuses
  * is exactly the set of bounds the store writes by a literal name — a new plane-counted bound fails it until it is
- * added; (iv) a `consume` KEY that names no bound is still skipped as it always was (a finding, reported, not fixed).
+ * added; (iv) a `consume` KEY that names no bound — CORRECTED 2026-09-23 by REC-172: this read "is still skipped as
+ * it always was (a finding, reported, not fixed)", and it was true on the day; REC-172 refuses it by name
+ * (C-22.15), with an array `consume`, an invalid allowance and `lease`, and `rec172-bounds.test.mjs` asserts it.
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
