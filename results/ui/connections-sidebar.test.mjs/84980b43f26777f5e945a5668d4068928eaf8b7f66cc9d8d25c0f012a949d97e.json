@@ -1,0 +1,16 @@
+{
+ "unit": "ui:connections-sidebar.test.mjs",
+ "inputHash": "84980b43f26777f5e945a5668d4068928eaf8b7f66cc9d8d25c0f012a949d97e",
+ "verdict": "PASS",
+ "run": "24a437d1a6defec774cb8c1a062b070b9de88f20.1790205466452.31513.json",
+ "tree": "24a437d1a6defec774cb8c1a062b070b9de88f20",
+ "head": "fd93bf1d80c2c92a9b170bc2644daff2d65aba38",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 224,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "5684be10-4191-5653-aa3c-40b54f969bb3",
+ "at": "2026-09-23T23:17:46.464Z"
+}
