@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* M0-126's NEGATIVE CONTROL DRIVER — eleven arms plus a baseline — over `tools/gates.mjs`, `tools/gateresults.mjs`, the
+/* M0-126's NEGATIVE CONTROL DRIVER — thirteen arms plus a baseline — over `tools/gates.mjs`, `tools/gateresults.mjs`, the
  * `gate-results` arm of `tools/pushguard.mjs` and the gate step of `.github/workflows/gates.yml`, each driven through
  * `bio-plane/test/gateresults.test.mjs`.
  *
@@ -7,7 +7,7 @@
  *
  * Every arm is armed ALONE against pristine copies kept in `.m0126-harness/` (gitignored), and every restore is verified
  * by sha256 AND `cmp` AND a floored byte count — never `git checkout --`. No arm touches a ref, a remote or this
- * repository's tree beyond the three subject files: the suite builds its own repositories under the battery's temp
+ * repository's tree beyond the four subject files: the suite builds its own repositories under the battery's temp
  * ground. An exit hook restores an armed file on EVERY exit before it removes the pristine copies by name.
  *
  * THE ARMS, each with what MUST fail and what MUST NOT, declared before arming:
@@ -34,6 +34,10 @@
  *                                                        undeclared read still FAILS by name.
  *   R11 the GitHub run back on the DERIVED class      -> "the run on `main` gates EVERY unit" FAILS. MUST NOT: the
  *                                                        record-off line.
+ *   R12 a run that REUSED units written as a          -> "machine B's FULL runs … NEVER a backstop" FAILS. MUST NOT:
+ *       backstop (BOB #30's liar)                        machine A's no-reuse run is still one.
+ *   R13 the backstop reader trusts the words and      -> "...the same record with its class and flag EDITED … NOT a
+ *       never reads the steps                            backstop" FAILS. MUST NOT: the honest one-reused record.
  * Every arm asserts its DOWNSTREAM failure, never merely its patch count.
  */
 import { readFileSync, writeFileSync, mkdirSync, statSync, existsSync, unlinkSync } from "node:fs";
@@ -155,6 +159,14 @@ const ARMS = [
     patches: [{ file: WORKFLOW, from: "          GATE_FULL: --full\n",
       to: "          GATE_FULL: ${{ github.event_name == 'workflow_dispatch' && '--full' || '' }}\n" }],
     mustBreak: "the run on `main` gates EVERY unit", mustNotBreak: ["...and it neither reuses nor writes a per-unit record"] },
+  { id: "R12", title: "a run that REUSED units written as a backstop (BOB #30's liar)",
+    patches: [{ file: GATES, from: "backstop: cls === \"FULL\" && REUSED.size === 0 && SINCE === null,", to: "backstop: cls === \"FULL\" || cls === \"FULLREUSE\"," }],
+    mustBreak: "machine B's FULL runs, which reused units, are FULLREUSE and NEVER a backstop",
+    mustNotBreak: ["machine A's FULL run, which REUSED NOTHING, is recorded FULL with backstop:true"] },
+  { id: "R13", title: "the backstop reader trusts the record's words and never reads its steps",
+    patches: [{ file: GUARD, from: "    && Array.isArray(run.steps) && !run.steps.some((s) => s && s.reused);", to: ";" }],
+    mustBreak: "...and the same record with its class and flag EDITED to FULL/true still reads NOT a backstop",
+    mustNotBreak: ["...and a FULL run that reused ONE unit is FULLREUSE, backstop:false"] },
 ];
 
 const RUN = ARMS.filter((a) => !ONLY.length || ONLY.includes(a.id));

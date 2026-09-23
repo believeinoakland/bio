@@ -728,7 +728,9 @@ function deriveInputs(unit) {
    never cached. Measured 2026-09-23: the traces of `ledger`, `mergecarry` and `pipeline-readers` read 1,027–1,028 of
    the tree's 1,028 files, through plancheck. */
 function neverCacheOf(u) {
-  const NEVER_RE = /GATE: never-cache \(([^)\n]+)\)/;
+  /* At the START of a line (after a comment's `//`, `/*` or ` *`): a marker quoted inside a string — a fixture planting
+     one, as `gateresults.test.mjs` does — declares nothing about the file that quotes it. */
+  const NEVER_RE = /^[ \t]*(?:\/\/|\/?\*)?[ \t]*GATE: never-cache \(([^)\n]+)\)/m;
   for (const t of u.tops) { const m = NEVER_RE.exec(textOf(t) || ""); if (m) return m[1]; }
   if (closure(u).has(join(REPO, "tools/plancheck.mjs"))) return "runs tools/plancheck.mjs, which is never cached";
   return null;
@@ -737,7 +739,7 @@ function neverCacheOf(u) {
    a line `GATE: reads <path> <dir/> …` in its source or control adds each repository path, each directory's every
    file (a trailing `/`), or `*` (the whole repository), to its input set. Over-inclusion costs only a re-run. The
    trace names what to declare; the line is read from the whole text, comments included, because it is a comment. */
-const READS_RE = /GATE: reads (.*)$/gm;
+const READS_RE = /^[ \t]*(?:\/\/|\/?\*)?[ \t]*GATE: reads (.*)$/gm;     /* line-start, as NEVER_RE, for the same reason */
 function declaredReads(unit) {
   const out = [];
   for (const t of unit.tops) for (const m of (textOf(t) || "").matchAll(READS_RE)) {
@@ -1087,12 +1089,18 @@ STEPS.forEach((s, i) => {
   const ran = s.units.includes("plancheck") ? [] : expandUnits(s.units);
   const keyed = ran.filter((id) => KEYS.get(id) && KEYS.get(id).hash);
   const traceDir = TRACING && keyed.length ? mkdtempSync(join(VERDICT_DIR, `trace-${i}-`)) : null;
+  const isBattery = !!s.names || s.units.some((u) => u === "plane:*" || u === "fleet:*") || /battery/.test(s.label);
   const env = { ...process.env, BIO_BATTERY_VERDICT: vf };
   if (traceDir) {
     Object.assign(env, { BIO_GATE_TRACE_DIR: traceDir, BIO_GATE_TRACE_REPO: REPO,
-      NODE_OPTIONS: `${process.env.NODE_OPTIONS ? `${process.env.NODE_OPTIONS} ` : ""}--import=${pathToFileURL(TRACER).href}` });
+      /* A gate run INSIDE a traced unit (a suite driving a fixture's gate) drops the outer tracer: one trace per step. */
+      NODE_OPTIONS: `${String(process.env.NODE_OPTIONS || "").split(/\s+/).filter((o) => o && !/gatetrace\.mjs$/.test(o)).join(" ")} --import=${pathToFileURL(TRACER).href}`.trim() });
     delete env.BIO_GATE_TRACE_UNIT;
-    if (ran.length === 1 && s.units.length === 1 && !s.units[0].endsWith(":*")) env.BIO_GATE_TRACE_UNIT = ran[0];
+    /* A BATTERY step — even one running a single suite — is traced through the tops map, so the runner is nobody's
+       read; only a step that IS its unit (a UI suite, a UI check, coverage) names it outright. Found by the one-reused
+       backstop arm: a one-suite TARGETED battery step named its unit for the whole step, and the suite "read"
+       `scripts/battery.mjs` — an UNDER-INCLUSION that was the runner's, not the suite's. */
+    if (!isBattery && ran.length === 1) env.BIO_GATE_TRACE_UNIT = ran[0];
     else env.BIO_GATE_TRACE_TOPS = topsFile;
   }
   const r = spawnSync(s.cmd, s.args, { cwd: s.cwd ?? REPO, stdio: "inherit", env });
@@ -1108,7 +1116,7 @@ STEPS.forEach((s, i) => {
   let ok = r.status === 0;
   /* M0-126: which units PASSED here. A battery says so in its verdict file (`passed`), never when the run's own finding
      (a leak, a shared log) stands; a single-unit step passed when it exited 0. */
-  const passedHere = ran.length === 1 && !s.names ? (r.status === 0 ? ran : [])
+  const passedHere = !isBattery && ran.length === 1 ? (r.status === 0 ? ran : [])
     : v && Array.isArray(v.passed) && !v.leaking && !v.sharedLog ? v.passed.filter((id) => ran.includes(id)) : [];
   if (traceDir) {
     /* CONDITION 2: a file read outside the unit's key FAILS the unit by name. Only paths of the repository as it stood
@@ -1135,8 +1143,7 @@ STEPS.forEach((s, i) => {
     else if (failedUnits.length) fu = [...new Set([...failedUnits, ...under])];
     ok = false;
   }
-  for (const id of passedHere) if (!under.includes(id) && !timedOut) passedUnits.add(id);
-  results.push({ label: s.label, units: s.units, ok, ...(timedOut ? { timedOut: true, unmeasured } : {}),
+  for (const id of passedHere) if (!under.includes(id) && !timedOut) passedUnits.add(id);  results.push({ label: s.label, units: s.units, ok, ...(timedOut ? { timedOut: true, unmeasured } : {}),
     ...(fu.length ? { failedUnits: fu } : {}) });
 });
 if (REUSED.size)
@@ -1173,6 +1180,10 @@ if (notMeasured) {
       w = appendRun({ repo: REPO, run: {
         tree: START.tree, verdict: VERDICT, class: cls, why, head: START.head, base: base || null,
         at: new Date().toISOString(), worktree: REPO, since: sinceInfo,
+        /* BOB #30 (2026-09-23, TREE-SHARING §3a condition 3): a release cut may rely on a GREEN FULL whole-tree record ONLY
+           when its run REUSED NOTHING and used no `--since`. This run says so itself; pushguard's `isBackstop` reads it. A
+           run that reused even ONE unit is FULLREUSE and never a backstop. */
+        backstop: cls === "FULL" && REUSED.size === 0 && SINCE === null,
         steps: results.map(({ label, units, ok, timedOut, unmeasured, failedUnits, reused, records }) =>
           ({ label, units, ok, ...(timedOut ? { timedOut, unmeasured } : {}), ...(failedUnits ? { failedUnits } : {}),
              ...(reused ? { reused, records } : {}) })),
@@ -1181,6 +1192,9 @@ if (notMeasured) {
     console.log(w.ok
       ? `gates: RECORDED ${VERDICT} for tree ${short(START.tree)} (class ${cls}) — ${w.path}; the push guard reads it (D-293)`
       : `gates: NOT RECORDED — ${w.reason}`);
+    if (w.ok) console.log(cls === "FULL" && REUSED.size === 0 && SINCE === null
+      ? "gates: BACKSTOP — a FULL run that reused nothing and used no --since: a release cut may rely on this record (§3a)"
+      : `gates: NOT A BACKSTOP — ${REUSED.size ? `${REUSED.size} unit(s) REUSED` : SINCE !== null ? "--since" : `class ${cls}`}: no release cut relies on this record (§3a)`);
     /* ---- 4b · M0-126: the PASS records, one per unit that passed, traced clean, with a key ---------------------- */
     if (GR && KEYS.size) {
       const clone = `${hostname()}:${tryGit(["rev-parse", "--path-format=absolute", "--git-common-dir"]) || "?"}`;

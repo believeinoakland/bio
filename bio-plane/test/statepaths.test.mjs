@@ -60,7 +60,11 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8", input, maxBuffer: 1 << 28 });
 
 /* The printed figures (see the head). */
-const UNITS_CEILING = 60;
+/* MOVED 60 -> 61 by M0-126 (2026-09-23), the figure this suite PRINTED on that tree: `61 unit(s) of 347 · 29 MEASUREMENTS
+   reader(s) · 5 through tools/coord.mjs`. The one new reader is `gateresults.test.mjs`, M0-126's own suite, which imports
+   `tools/pushguard.mjs` (it drives the guard's `gate-results` arm) and so walks `docs/` as every pushguard importer does —
+   a legitimate reader, named by the gate's own line: "walks docs/ in tools/pushguard.mjs". */
+const UNITS_CEILING = 61;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 

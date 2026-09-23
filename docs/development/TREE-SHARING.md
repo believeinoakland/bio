@@ -310,7 +310,10 @@ file from a unit's input set, and condition 2 fails that unit by name.
      that way. 12 units today, and the rule is coarse on purpose: `gates`, `train` and `gateresults` name the path only
      to plant a stub in a fixture, and still always run (about 70 s together).
   5. **The trace** (`NODE_OPTIONS=--import`, every node process of a step) records module loads and content reads
-     (read/open/copy/cp, all forms). A read of a path the tree held when the gate began, outside the unit's key, FAILS
+     (read/open/copy/cp, all forms). A battery step, even of one suite, attributes each process by its entry file
+     (the runner is nobody's read); a UI suite, UI check or coverage step is its unit. A gate run inside a traced unit
+     (a suite driving a fixture's gate) drops the outer tracer, and a fixture must drop `BIO_GATE_RESULTS*` too — found
+     when this suite, run inside a real gate, wrote its fixture's records to the outer gate's results remote. A read of a path the tree held when the gate began, outside the unit's key, FAILS
      the unit by name, opens it in the D-293 record, and writes no PASS. A unit that left no trace (killed, or a child
      that dropped `NODE_OPTIONS`) gets no PASS. **Reach, stated:** reads by non-node children (git, workerd, a shell)
      — so `git show`/`git clone` of this repository, and `origin/coord` read through git — are invisible; directory
@@ -319,8 +322,13 @@ file from a unit's input set, and condition 2 fails that unit by name.
      or a shared log, stands), or a single-unit step's exit 0. A RED gate still records the PASSes of the units that
      passed, so a failure re-runs alone in every clone.
   7. **A FULL selection with any unit reused is recorded as class `FULLREUSE`**: it never clears a tree whole in
-     `effectiveVerdict`, never satisfies the train's `--full` reuse or a release's GREEN FULL record. A FULL selection
-     runs the UI harness unit by unit (each suite and check has its own result) while the record is on.
+     `effectiveVerdict`, never satisfies the train's `--full` reuse or a release's GREEN FULL record. **The backstop
+     mark (BOB #30's correction to condition 3):** every D-293 run record now says `backstop: true|false`, true only for
+     a class-FULL run that REUSED NOTHING and used no `--since`, and the gate prints `BACKSTOP` or `NOT A BACKSTOP —
+     <why>`; `pushguard.mjs` `isBackstop(run)` is the one reader — GREEN, class FULL, `backstop: true`, no `since`, and
+     no `reused` step — so a run that reused ONE unit, a hand-edited record that still carries its reused step, and a
+     record from before the field all read NOT a backstop. A FULL selection runs the UI harness unit by unit (each
+     suite and check has its own result) while the record is on.
   8. **The backstop**: `--no-reuse` runs every selected unit and still records its passes — every release cut runs
      `gates.mjs --full --no-reuse`. `BIO_GATE_RESULTS=off` is the gate as it stood before (no key, no trace, no read,
      no write). The GitHub run on `main` now runs `--full` with the record off. **CONTRADICTION FOUND AT THE CODE:**

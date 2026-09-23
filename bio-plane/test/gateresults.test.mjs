@@ -2,20 +2,22 @@
  * (`tools/gates.mjs`, `tools/gateresults.mjs`, `tools/gatetrace.mjs`, the `gate-results` arm of `tools/pushguard.mjs`),
  * one suite, one control (`gateresults.control.mjs`).
  *
- * NEGATIVE CONTROL: RAN 2026-09-23 by the M0-126 worker, driver `bio-plane/test/gateresults.control.mjs` (eleven arms plus
- * a baseline), each arm ALONE against pristine copies restored by sha256 AND `cmp` AND a byte floor (gates.mjs d785a1b7…,
- * gateresults.mjs af22c33a…, pushguard.mjs 330687fe…, gates.yml ba431a6c…, each byte-identical after every arm); baseline
- * 40/0, closing 40/0, driver 71 pass / 0 fail. Each broke at its declared assertion: (R1) one `data/` input dropped from
- * every key -> "...and it names NO under-inclusion" and machine A RED (29/11); (R2) PASS ignored -> "...it REUSED every
- * cacheable unit" (31/9); (R3) key ignores inputs -> "a data file ONE suite reads: only that suite" (30/10); (R4)
- * never-cache ignored -> "a never-cached unit runs EVERY time" (31/9); (R5) revocation ignored -> "the next ordinary gate
- * RUNS beta (REVOKED…" (39/1); (R6) `--no-reuse` ignored -> "THE BACKSTOP catches it" (39/1); (R7) the guard lets a record
- * be MODIFIED -> "a record MODIFIED … is REFUSED" (39/1); (R8) the trace comparison off -> "...the failure NAMES the unit
- * and the file" (36/4); (R9) the plane runtime set dropped -> "a plane RUNTIME file: every plane and fleet unit runs"
- * (38/2); (R10) a declared read ignored -> "OVER-STRICTNESS: the read DECLARED" (39/1); (R11) the GitHub run back on the
- * derived class -> "the run on `main` gates EVERY unit" (39/1). The first run found ONE wrong declaration, the ARM's and
- * not the subject's: R4 said "...the rest are REUSED" must hold, and with the marker ignored the clock suite earns a PASS
- * and is reused too — corrected in the driver, said at its site.
+ * NEGATIVE CONTROL: RAN 2026-09-23 by the M0-126 worker, driver `bio-plane/test/gateresults.control.mjs` (thirteen arms
+ * plus a baseline), each arm ALONE against pristine copies restored by sha256 AND `cmp` AND a byte floor (gates.mjs
+ * 6ad38d85…, gateresults.mjs af22c33a…, pushguard.mjs 445bf093…, gates.yml ba431a6c…, each byte-identical after every arm);
+ * baseline 47/0, closing 47/0, driver 83 pass / 0 fail. Each broke at its declared assertion: (R1) one `data/` input
+ * dropped from every key -> "...and it names NO under-inclusion" and machine A RED (33/14); (R2) PASS ignored -> "...it
+ * REUSED every cacheable unit" (34/13); (R3) key ignores inputs -> "a data file ONE suite reads: only that suite" (37/10);
+ * (R4) never-cache ignored -> "a never-cached unit runs EVERY time" (38/9); (R5) revocation ignored -> "the next ordinary
+ * gate RUNS beta (REVOKED…" (46/1); (R6) `--no-reuse` ignored -> "THE BACKSTOP catches it" (46/1); (R7) the guard lets a
+ * record be MODIFIED -> "a record MODIFIED … is REFUSED" (46/1); (R8) the trace comparison off -> "...the failure NAMES
+ * the unit and the file" (43/4); (R9) the plane runtime set dropped -> "a plane RUNTIME file: every plane and fleet unit
+ * runs" (45/2); (R10) a declared read ignored -> "OVER-STRICTNESS: the read DECLARED" (46/1); (R11) the GitHub run back
+ * on the derived class -> "the run on `main` gates EVERY unit" (46/1); (R12) a reusing run written as a backstop ->
+ * "machine B's FULL runs … NEVER a backstop" (45/2); (R13) the backstop reader ignoring the steps -> "...the same record
+ * with its class and flag EDITED … NOT a backstop" (46/1). The first run found ONE wrong declaration, the ARM's and not
+ * the subject's: R4 said "...the rest are REUSED" must hold, and with the marker ignored the clock suite earns a PASS and
+ * is reused too — corrected in the driver, said at its site.
  *
  * WHY A FIXTURE AND NEVER THIS REPOSITORY. `gate-results` on `origin` is SHARED state that every lane's gate reads: a
  * record this suite wrote there would be REUSED by a real gate. So every arm builds its own repositories under the
@@ -43,7 +45,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { install, gateResultsCheck } from "../../tools/pushguard.mjs";
+import { install, gateResultsCheck, readRuns, isBackstop } from "../../tools/pushguard.mjs";
 import { appendRecords, resultPath, revokedPath, listPaths } from "../../tools/gateresults.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
@@ -55,7 +57,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 9;
+const SECTIONS = 10;
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -157,10 +159,20 @@ function clone(bare, name) {
   install({ repo: root });
   return root;
 }
+/* THE FIXTURE'S GATE NEVER INHERITS THE REAL GATE'S RESULT WIRING. Found by this suite's first run INSIDE a real gate
+   (2026-09-23): the outer gate's `BIO_GATE_RESULTS_REMOTE` reached the fixture's gates, which then read and WROTE the
+   fixture's PASS records to the outer gate's results remote (13 assertions red, six fixture records written there).
+   Every variable the real gate sets for its units is dropped here, so a fixture always uses its own `origin`. */
+const CLEAN_ENV = (() => {
+  const e = { ...process.env };
+  for (const k of Object.keys(e)) if (/^BIO_GATE_(RESULTS|TRACE)/.test(k)) delete e[k];
+  delete e.NODE_OPTIONS;
+  return e;
+})();
 const gates = (root, args = [], env = {}) => {
   writeFileSync(LOG, "");
   const r = spawnSync(process.execPath, [join(root, "tools/gates.mjs"), ...args],
-    { cwd: root, encoding: "utf8", env: { ...process.env, GATES_FIXTURE_LOG: LOG, ...env } });
+    { cwd: root, encoding: "utf8", env: { ...CLEAN_ENV, GATES_FIXTURE_LOG: LOG, ...env } });
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   return { status: r.status, out,
     ran: [...new Set(readFileSync(LOG, "utf8").split("\n").filter(Boolean).map((l) => l.replace(/^ran /, "")))].sort(),
@@ -284,7 +296,7 @@ const l2 = gates(L, ["--full", "--no-reuse"]);
 t("THE BACKSTOP catches it: `--full --no-reuse` (every release cut; the GitHub run on main) runs beta and reads RED",
   [l2.verdict, l2.ran.includes("plane:beta.test.mjs"), l2.reused.length], ["RED", true, 0]);
 const rv = spawnSync(process.execPath, [join(L, "tools/gateresults.mjs"), "revoke", "plane:beta.test.mjs", betaKey, "--reason", "hid a red beta"],
-  { cwd: L, encoding: "utf8" });
+  { cwd: L, encoding: "utf8", env: CLEAN_ENV });
 t("the key is REVOKED by an append (`revoked/<unit>/<hash>.json`), naming the lie's writer",
   [rv.status, /"clone": "liar-clone"/.test(rv.stdout), [...remoteResults(O)].includes(revokedPath("plane:beta.test.mjs", betaKey))], [0, true, true]);
 const l3 = gates(L, ["--full"]);
@@ -324,6 +336,39 @@ git(["remote", "set-url", "origin", join(SANDBOX, "nowhere.git")], NR);
 const nr = gates(NR, ["--full"]);
 t("a results remote that cannot be fetched reuses NOTHING and says why (a fetch failure is not an absent branch)",
   [nr.reused.length, /gate-results could not be fetched from origin/.test(nr.out)], [0, true]);
+
+/* ================================================================== */
+section("the backstop (BOB #30): a FULL record is one ONLY when its run reused NOTHING and used no --since");
+const runsAt = (root, rev) => readRuns({ repo: root, tree: out1(["rev-parse", `${rev}^{tree}`], root) }).runs;
+{
+  const aRuns = runsAt(A, "HEAD");
+  t("machine A's FULL run, which REUSED NOTHING, is recorded FULL with backstop:true and reads as a BACKSTOP",
+    [aRuns.length, aRuns[0].class, aRuns[0].backstop, isBackstop(aRuns[0]), /^gates: BACKSTOP — /m.test(a1.out)], [1, "FULL", true, true, true]);
+  const bRuns = runsAt(B, "origin/main");
+  t("machine B's FULL runs, which reused units, are FULLREUSE and NEVER a backstop",
+    [bRuns.length >= 2, bRuns.every((r) => r.class === "FULLREUSE" && r.backstop === false && !isBackstop(r)),
+      /^gates: NOT A BACKSTOP — 6 unit\(s\) REUSED/m.test(b1.out)], [true, true, true]);
+}
+/* THE LIAR'S CASE: a FULL run that reused exactly ONE unit. A fresh origin whose only PASS is alpha's, written by a
+   TARGETED gate on the first machine; the second machine's `--full` then reuses that one unit and runs the rest. */
+const O5 = origin("o5");
+const X = clone(O5, "machine-x");
+put(X, "tools/alpha.mjs", "export const alpha = () => 1; // moved\n");
+commitAll(X, "alpha moves");
+const x1 = gates(X);
+t("a TARGETED gate on machine X runs alpha alone and records its one PASS", [x1.ran, x1.wrote], [["plancheck", "plane:alpha.test.mjs"], 1]);
+git(["push", "-q", "--no-verify", "origin", "main"], X);
+const Y = clone(O5, "machine-y");
+const y1 = gates(Y, ["--full"]);
+const yRun = runsAt(Y, "HEAD").pop();
+t("machine Y's FULL run reused EXACTLY ONE unit and ran every other",
+  [y1.reused, y1.ran.includes("plane:beta.test.mjs"), y1.verdict], [["plane:alpha.test.mjs"], true, "GREEN"]);
+t("...and a FULL run that reused ONE unit is FULLREUSE, backstop:false — NOT a backstop, and says so",
+  [yRun.class, yRun.backstop, isBackstop(yRun), /^gates: NOT A BACKSTOP — 1 unit\(s\) REUSED/m.test(y1.out)], ["FULLREUSE", false, false, true]);
+t("...and the same record with its class and flag EDITED to FULL/true still reads NOT a backstop (its REUSED step stands)",
+  isBackstop({ ...yRun, class: "FULL", backstop: true }), false);
+t("...and a record from before the field (no `backstop` key) is not a backstop: the absence never reads as the word",
+  isBackstop({ ...runsAt(A, "HEAD")[0], backstop: undefined }), false);
 
 /* ================================================================== */
 section("the GitHub backstop's wiring (condition 3), read from the workflow's own text");

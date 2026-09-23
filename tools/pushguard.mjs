@@ -607,6 +607,17 @@ export function effectiveVerdict(runs) {
            redRuns: [...new Set(open.values())], last: runs[runs.length - 1] };
 }
 
+/* M0-126, on BOB #30's correction to TREE-SHARING §3a condition 3: the ONE reader of "may a release cut rely on this
+   record". Only a GREEN run of class FULL that says `backstop: true` — written by `gates.mjs` for a FULL run that reused
+   no unit from `gate-results` and used no `--since`. A FULLREUSE run, a --since run, and any record from before the field
+   existed (no `backstop` key) are NOT backstops: the absence of the word never reads as the word. The run's own steps
+   are read too, so a record whose class and flag were edited by hand but which still carries a REUSED step, or a
+   `--since` pairing, reads as what it is. */
+export function isBackstop(run) {
+  return !!run && run.verdict === "GREEN" && run.class === "FULL" && run.backstop === true && !run.since
+    && Array.isArray(run.steps) && !run.steps.some((s) => s && s.reused);
+}
+
 /* The refs a push offers on the hook's stdin, deletions dropped (a deletion publishes no tree). */
 export function pushedRefs(stdin) {
   const out = [];
