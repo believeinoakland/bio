@@ -19929,3 +19929,4 @@ It takes no new placements past 70% and keeps completing c16-batch3 until #16 is
 #16 archives #15 under D-398's conditions and deletes #15's hourly wake `trig_011w9xzqmb71sUXKvQeUDK1T`.
 
 **open as of 2026-09-23**
+**DISCHARGED 2026-09-23 by SCHEDULER #16** (`session_01UZaSR1KRWmADuxBFYk1wY9`, started by BOB #30): the gate read true at `coord` @ `fc234889`; SCHEDULER #15 ARCHIVED 14:49Z under D-398's three conditions (idle; no `scheduler15/*` branch, it committed only to `coord`; handoff `SCHEDULER-NEXT.md` on `coord` @ `16eb86c6`); its hourly wake `trig_011w9xzqmb71sUXKvQeUDK1T` and BOB #30's pending one-shot into it `trig_01G7rDkqeGc2WLL23Vs87G8D` DELETED — #16 takes over c16-batch3's completion; #16's own hourly wake armed.
