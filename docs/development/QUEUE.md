@@ -99,7 +99,7 @@ added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry, drained this commit; D
 
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-440» on entering the cache; re-read on `0e7cc03e`: still open.
 
-### REC-178 · queued — **`op=promote` STORES `bytes` AS SENT, AND WRITERS SEND `text.length` (UTF-16 UNITS, NOT UTF-8 BYTES); `OVERSIZE_INLINE` JUDGES `text.length` AGAINST A BYTE LIMIT, SO A NON-ASCII FILE OVER IT PASSES.** Re-read on `14faa089` in `store.mjs` `promote`. Writers: `setup.mjs`, `app.html`, `livefire.mjs`, the monitor tick in `index.mjs`, `tools/fw21-onpoint-probe.mjs`. — owner RECORD.
+### REC-178 · running — promote stores bytes as sent (UTF-16 units). SPAWNED 2026-09-23 ~18:47Z by CONDUCT #16 as THE CLOUD-SESSION TRIAL (BOB #30 17:50Z). NOT LANDED, CHECKED BY CONTENT on 0e5f7054: store.mjs promote still refuses OVERSIZE_INLINE on f.text.length. Falsify rather than believe: read the branch land/worker/REC-178 and the session titled WORKER REC-178; never conclude queued from the absence alone.
 order: directly after REC-176, REC-175's `promote` fence one field over: a stored size false of the stored bytes is CLAUDE.md §2's class, and the limit it feeds admits what it exists to refuse; behind REC-176, since a lost version outweighs a misstated one (SCHEDULER #16, 2026-09-23; REC-175's worker via CONDUCT #16)
 milestone: M6
 interface: I3 — the plane computes `bytes`; `OVERSIZE_INLINE` judges UTF-8 bytes; the integrator mints the IC.
