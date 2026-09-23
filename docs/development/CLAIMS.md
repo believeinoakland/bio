@@ -19140,6 +19140,12 @@ paths, BY SITE:
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 
+**released: 2026-09-23 by the M0-114 worker** — built, gated GREEN FULL on tree `cdc30546` (279/279 suites, 16,789
+assertions, 0 skipped) and pushed on `worktree-agent-a7a5246aa91f3c230` at `e67773c7`; the three-column measurement is
+`MEASUREMENTS.md` M-104 (Actions ENABLED; runner 875 s, 278/278, billed 0). The paths stay reserved until CONDUCT integrates.
+Two throwaway control branches, `m0114-negctl` and `m0114-negctl-2`, could NOT be deleted from this session (the push of a
+deletion was cut by the proxy: "the remote end hung up unexpectedly"); they are for CONDUCT to delete and must never land.
+
 ## CLAIM 2026-09-22 M0 (M0-111 — every lane lands on `main` itself: lanes push `land/<lane>/<topic>`, CONDUCT lands them in one train with one gate, and the push guard refuses a lane's direct push to `main`)
 
 session: WORKER spawned 2026-09-22 by CONDUCT #14 for M0-111 (wave 4), worktree `.claude/worktrees/agent-a1898e01f099239b0`,
