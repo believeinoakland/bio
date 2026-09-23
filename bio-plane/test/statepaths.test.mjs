@@ -60,7 +60,12 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8", input, maxBuffer: 1 << 28 });
 
 /* The printed figures (see the head). */
-const UNITS_CEILING = 60;
+/* MOVED 2026-09-23 by M0-100, 60 -> 61, to the figure this suite PRINTED on the merged tree (`41c7e0c3` + M0-100): the
+   one unit more is `entries.test.mjs`, which reads the frozen `MEASUREMENTS.md` by design through `tools/entries.mjs`,
+   the one reader of both ledgers (29 readers, 4 through `coord.mjs`). `mintid.test`, `owed.test` and `pipeline-readers`
+   now reach the file through `entries.mjs` instead of `mintid.mjs`'s own string — the same units, a different edge.
+   Since M0-100 a measurement is a NEW FILE (`measurements/<id>.md`), which selects 59 units by the same method. */
+const UNITS_CEILING = 61;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 
