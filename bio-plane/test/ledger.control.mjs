@@ -199,7 +199,7 @@ const ARMS = [
     patches: [[LEDGER, "const working = c.filter((r) => !HELD_QUEUE_STATES.has(r.state));", "const working = c;"]],
     mustFail: ["INTEGRATED: P3 passes CACHE_ROWS working rows beside 5 `integrated` ones"] },
   { id: "P3o", title: "OVER-STRICTNESS — P3 refuses a cache of EXACTLY CACHE_ROWS (the limit read as exclusive)",
-    patches: [[LEDGER, "if (c.length > CACHE_ROWS) P3.push(", "if (c.length >= CACHE_ROWS) P3.push("]],
+    patches: [[LEDGER, "if (working.length > CACHE_ROWS) P3.push(", "if (working.length >= CACHE_ROWS) P3.push("]],   /* re-aimed 2026-09-23 by SCHEDULER #16: P3 now counts `working` (rows not `integrated`) */
     mustFail: ["...and passes a cache of exactly CACHE_ROWS"] },
   { id: "P4", title: "P4's LIAR — MET collapses to RESOLVES: a dependency on an OPEN row counts as met",
     patches: [[LEDGER, "if (open.length) return { met: false, why:", "if (open.length) return { met: true, why:"]],
