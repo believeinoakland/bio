@@ -22,6 +22,18 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
+**2026-09-23 · BOB #30 · RULE 2 REACHES EVERY CREATION STAMPED `surfaced_by: agent` — one placement.**
+
+1. **RECORD (M9): rule 2 for the admin, member and probe deploy tokens.** `INVESTIGATIVE-SESSION.md` §11 item 5, the
+   paragraph "Rule 2's reach" (on `land/bob/d85-rule2-reach` until the train lands it): a creation of an inquiry D-78 stamps
+   `agent` names a running run whose principal is the caller, by the run verbs' own stamp (`token:<class>` for a deploy
+   token), under the same `surfaces` bound, codes C-66.1–.4 and `inquiry_run_surfacings` row D-85 built for `ai`. **Accepts
+   when** an admin-, member- and probe-token creation naming no run is refused `SURFACE_NO_RUN`, one inside the token's own
+   running run lands with its row, and a member's session creation is unchanged. NEGATIVE CONTROL: restore the
+   `cls === "ai"` condition on the stamp, and the deploy-token arms fail by name. The builder moves every non-test caller
+   (livefire, setup scripts, `agent-worker`) inside a run, or brings the one that cannot be here. **Place it directly after
+   D-85**, depends-on D-85 (it widens D-85's stamp). I3 changes; the integrator mints the IC. The id is SCHEDULER's to mint.
+
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
