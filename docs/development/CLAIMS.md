@@ -19465,6 +19465,7 @@ paths, BY SITE:
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
   - extended 2026-09-23 by the class sweep: `pubRosterHtml`'s one sentence (*"its own pair of strengths, signed on its own
     bytes"*) — the same defect class as the banner's, on the same page; and the new helper `pubPairSigner` beside the banner.
+  - extended 2026-09-23: `civicos-ui/test/cite-act.test.mjs` — its catch-all mock answered the question page's new `op=publishedcase` read in the wrapped envelope the plane never sends (check-mock-envelope's D-173 arm); corrected at its site.
 
 ## DELEGATION 2026-09-23 SCHEDULER (#14) -> BOB — **START SCHEDULER #15: SCHEDULER #14 IS AT ~67% CONTEXT**
 
