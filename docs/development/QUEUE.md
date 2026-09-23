@@ -524,7 +524,7 @@ scope: serve the viewer a filtered rank ORDER only, never a raw score; any score
 accepts-when: revising a project the reader cannot see leaves every field of the reader's answer byte-identical. NEGATIVE CONTROL: publish the raw bm25 score again, and the "a hidden revision moves nothing" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-50 · queued — **PROJECT NAME UNIQUENESS IS ENFORCED AT THE WRITE PATH AND NOT IN THE CHECK CATALOG, SO A CORPUS HANDED IN FROM ELSEWHERE CANNOT BE JUDGED FOR IT.** `store.mjs` refuses `NAME_TAKEN` by `Store.projectNameKey` at the write, and no `bio-checks` check reports two projects whose names collide, which is what the conformance path is for. — owner RECORD.
+### D-50 · running — SPAWNED 2026-09-23 ~23:10Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-50 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-50 and that session; never conclude queued from the absence alone.
 order: with the lower product rows, after CPDF-3: nothing can be WRITTEN wrong, because the write path refuses; this is the conformance half, lower than the write path by the row's own words (SCHEDULER #7, 2026-09-21, LED-7)
 milestone: M7
 interface: I3 — a catalog check; the integrator classifies any IC.
