@@ -19657,6 +19657,7 @@ paths, BY SITE:
 **NOT CLAIMED:** `aiRunTick`, `aiRunOpen`, `AI_RUN_CHECKS` / anything in `bio-checks.mjs` (REC-169's), `runPrincipalGate`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+paths ADDED 2026-09-23 (the class sweep: fixtures that created questions under a deploy token outside any run, CORRECTED): NEW `bio-plane/test/surfacing-run.mjs` (the shared fixture); the fixture line of 62 plane suites (`withSurfacingRun(new Miniflare(…))`), `bio-plane/test/mint-ledger.test.mjs` (its question through a session), the count assertions of `gate-reads` and `meaning-bounds`; `agent-worker/test/harness.test.mjs` (FLEET's — its REC-100 fixture opens a surfacing run); 8 `civicos-ui/test/*.test.mjs` fixture lines (UI's); `tools/fw21-onpoint-probe.mjs`'s Miniflare line; `bio-plane/test/d85-surface-run.control.mjs` (the stamp anchor); `docs/architecture/construct-status.json` 11.run-production and the rendered `BIO_System_Design.md` §3; `bio-plane/scripts/coverage.mjs` REGISTER_FLOOR from printed figures only.
 
 ## CLAIM 2026-09-23 UI (UI-81 — the published case page, handed a finding id several cases pin, offers those cases as choices and never picks; `FINDING_IN_SEVERAL_CASES` gets its canned translation, C-44.2)
 
