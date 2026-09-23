@@ -19598,3 +19598,24 @@ paths, BY SITE:
 **NOT CLAIMED:** `#surfacingGate`, `promote`, `extractPropose`, `#mintsBound`, `#aiRunTerminate`, `finishedBound`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 M0 (M0-127 — a RED verdict names every cause, suite or not; a per-suite pid; D-186's control text corrected for M-111's race)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for M0-127, worktree `.claude/worktrees/agent-aa15a581d996629af`,
+branch `land/worker/M0-127`, from `origin/main` @ `b5ce975a` (cloud).
+authority: `QUEUE.md` `### M0-127 · running` (read on `origin/coord` @ `24c02d2b`); design `TREE-SHARING.md` §3, `VERIFICATION.md`.
+paths (hunks kept local; M0-126 holds the rest of `gates.mjs`/`gates.yml`/battery's verdict file):
+  - `bio-plane/scripts/battery.mjs`: the per-suite result line (` · pid N`), the D-186 LEAKING block (each residue
+    directory NAMED by path and attributed to its suite), one `battery verdict: RED …` line, and ONE new verdict-file
+    field `residue` (beside M0-126's `passed`).
+  - `tools/gates.mjs`: the step loop's reading of the verdict file (a `causes` list per step) and the final verdict
+    print (`gates: CAUSES …`); nothing in selection, reuse or the record's shape.
+  - NEW `tools/gateverdict.mjs` (the workflow's verdict annotation, composed from the gate log; RED never reads `none`).
+  - `tools/pushguard.mjs`: `parseVerdictAnnotation` only (the FAILED grammar gains `kind:detail` causes, compatibly).
+  - the workflow `gates.yml`: the gate step's verdict-writing lines only (`on:` untouched).
+  - `bio-plane/test/hygiene.test.mjs`: the D-186 control text and comment (dated correction, no assertion touched).
+  - `bio-plane/test/pushguard-check.test.mjs` (parse arms), `bio-plane/test/battery-residue.test.mjs` (pid + residue arm),
+    NEW `bio-plane/test/gateverdict.test.mjs`.
+  - `docs/development/TREE-SHARING.md` §3 (as-built sentence), `docs/development/VERIFICATION.md` (the D-186 paragraph),
+    one measurement entry.
+**open as of 2026-09-23** — OPEN while this item builds.
