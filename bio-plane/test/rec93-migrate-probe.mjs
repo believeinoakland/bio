@@ -83,7 +83,7 @@ let beforeText;
     meta: { object_type: "inquiry", group: "believe-in-oakland", title: "Does the fold migrate?",
             current_state: "open", created: T0, last_updated: T0 },
     files: [{ path: "bundle.md", text: `---\nid: ${BUNDLE}\n---\n\n## Question\n\nDoes it?\n`,
-              bytes: 60, sha256: SHA_A }],
+              bytes: 60 /* REC-175 (2026-09-23): CORRECTED — sent sha256: SHA_A ("a" x 64), not this text's digest; promote now refuses that (FILE_DIGEST_MISMATCH, C-33.38), so the plane computes it */ }],
     register: [],
   });
   const started = await POST(`op=airunopen&token=${TOK}`, {
