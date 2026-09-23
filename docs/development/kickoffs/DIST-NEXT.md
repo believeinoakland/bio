@@ -25,13 +25,8 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
 
 ## What is OWED
 
-0. **0.75.0's POINTER IS HELD: `main` is RED.** The merge `dist/merge-0.75.0` @ `126fd0e4` (origin/main `4355bfda` + the
-   cut `90bd6451`; branch LOCAL ONLY — rebuild it from those two if this clone is gone) gated **286/287** at 08:30Z. The
-   one red: `mergecarry.test.mjs` "no UNREGISTERED drop sits in main's history" → `4355bfd:docs/development/TREE-SHARING.md`,
-   `4355bfd:docs/development/kickoffs/BOB.md` (the train landing `land/bob/batch-0923a`). It reads main's history, so
-   EVERY tree on main fails it. Routed to CONDUCT #15 (`session_01DvbsQsqBM5Pjn2rcHk5rZ3`) and BOB #30
-   (`session_019unCkzAzfmAPMLVuRNPvui`). When main is green: `git merge origin/main` into the merge branch, gate GREEN,
-   push `land/dist/release-0.75.0`, tell CONDUCT. Until then `/update` offers 0.74.0 (landed `1755e57c`).
+0. **`land/dist/release-0.75.0` @ `f48b9e91` waits on CONDUCT #15's train** (main repaired at `19101d04`; merged tree
+   `889935e1` GREEN FULL 287/287 · 17284, `--since 90bd6451`). Confirm: `git merge-base --is-ancestor f48b9e91 origin/main`.
 1. **The next cut, by WHEN DIST CUTS.** `git log 90bd6451..origin/main` over the shipped paths already holds D-116 (the DO
    and members report their build; installer names the lagging part — members' SOURCE changes: re-read the fleet guard
    and deploy members from source) and CAP-13, and more — a BATCH unless a closing is among them. RELEASES row:
@@ -50,6 +45,11 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    `release/`, the embed, deploying and the live API; it lands by the train. DIST let it run (no need to own it).
    **The next batch is D-116 (IC-182, on main @ 8633310c) + DIST-6 once landed** — both reach a group ONLY through a cut;
    neither is a closing, so it is a BATCH (at most once a day), cut when main is green and DIST-6 has landed.
+   **UPDATE 09:30Z (CONDUCT #15):** DIST-6 is built and lands in CONDUCT's next batch WITH REC-169 (an AUTHORITY closing:
+   the negative refund on `airuntick`) and REC-170 — so the next cut is a CUT NOW, carrying D-116, DIST-6, REC-169, REC-170.
+   DIST-6 changes `newgroup/src` (not the embed): the wizard suite is the installer half of the gate, and the installer
+   read-back must also show the member bindings DIST-6 adds for a NEW install (fake-API fixture in the suite; live only
+   through an install DIST does not run on biosmoke7 — state that).
 2. **The tags `v0.72.0`-`v0.75.0` are not on the remote** (above) — NOT CARRIED: BOB #29 (02:52Z) judged it non-blocking (nothing
    reads it; `b942d973` is on the remote) and named it to Bob as an optional web-UI act. A future cut's tag meets the
    same 403: push the branch, and let the tag follow when Bob's act or the environment allows.
