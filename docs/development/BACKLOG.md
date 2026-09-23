@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### REC-159 · blocked — awaiting Bob's act: Bob approved it ~21:08Z (BOB #31), but CONDUCT #17's own session permission check refused the re-spawn (21:14Z); no worker runs. **AN ENROLLED ADMINISTRATOR IS REFUSED §4.9's CUSTODIAL ACTS FROM THEIR OWN SESSION, WITH A SENTENCE THAT IS FALSE OF THEM.** … (whole text: the cut archive)
+order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
+milestone: M8
+interface: I3 — four ops gain session reach and three a stamped `by`; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 (each act is EVERY administrator's) and … (whole text: the cut archive)
+depends-on: none. D-136 and REC-156 are on `main`.
+accepts-when: an enrolled administrator performs all four from their session, attributed to them; a member is refused by name. How a liar passes it: widening the class without the roster … (whole text: the cut archive)
+scope-amended: + memberset/signeradd/signerset record the server-stamped actor in a new `by` column; existing rows read `not recorded` (BOB #31 21:08Z; attribution lives in the record). The accepts-when gains an arm per op through the op, and its NEGATIVE CONTROL drops one op's stamp.
+added: 2026-09-21 · SCHEDULER #7 (REC-156's DELEGATION; `node tools/mintid.mjs REC`).
+
 ### REC-162 · queued — **A FOUNDER-ONLY OP'S REFUSAL CALLS AN ENROLLED ADMINISTRATOR A NON-ADMINISTRATOR.** Five ops sit in `SESSION_OPS.admin` and … (whole text: the cut archive)
 order: back to back after REC-159, the same two suites (`d270-refusal-truth`'s ROLE literal, `adminvote` §8f), the second re-reading the first's pins; a false refusal sentence, CLAUDE.md §2's class (BOB #23's entry, 2026-09-21; SCHEDULER #7)
 milestone: M8
@@ -81,6 +91,26 @@ scope: each list above binds ONE value, `IN (SELECT value FROM json_each(?))` wi
 accepts-when: `bio-plane/test/frontier-chunk.test.mjs` gains an arm per read, each driven through its op past 100 ids and green; `derivation-bounds.test.mjs` green. NEGATIVE CONTROL (`frontier-chunk.control.mjs`, a new arm): restore one spread `IN (?, …)`, and that read's arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (DEBT D-443, minted by D-390's worker on coord `3c0f5092`; placed by door 2, keeping its `D-` id).
 
+### UI-83 · queued — **A MEMBER CANNOT REVISE A PROGRESSION FROM THE UI: D-128 made a revision require a basis statement and a citation (`NO_BASIS`, `NO_CITATION`), and `civicos-ui/app.html`'s progression form (`progDefineDraft` / `progDefineGo`) has neither field.** Declaring a new progression still works. Re-read on `land/conduct/c17-batch3` @ `419272eb`. — owner UI.
+order: directly after D-443, first of the D-128 follow-ons: a surface that answers a member's act with a refusal it gives them no field to meet is a correction to just-landed work, which outranks new work (SCHEDULER #16, 2026-09-23; D-128's worker via CONDUCT #17)
+milestone: M8
+interface: I3 consumer (D-128's IC).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2, "The declared flow, and its revisions" (BOB #27, 2026-09-22), the ruling D-128 built.
+depends-on: D-128 (on `land/conduct/c17-batch3`).
+scope: the progression form offers, when revising an existing progression, a basis-statement field and a citation field, and sends both; a refusal still reads through `refusalWords(r)`.
+accepts-when: `civicos-ui/test/` gains a suite arm driving a revision through the form with both fields to a landed version, and one without either reading the canned refusal; the UI harness green. NEGATIVE CONTROL: drop the citation field, and the revision arm reads `NO_CITATION` and fails by name.
+added: 2026-09-23 · SCHEDULER #16 (D-128's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs UI`).
+
+### REC-184 · queued — **A PROPOSAL DISPOSITION DOES NOT RECORD THE DEFINITION VERSION IT WAS DECIDED AGAINST, SO ONE MADE UNDER VERSION 1 SILENTLY APPLIES UNDER VERSION 2.** `proposal_dispositions` is keyed `(progression_key, stage_key)` with no version (re-read on `land/conduct/c17-batch3` @ `419272eb`). Also, the stats counters beside `progressionDefs` / `progressionStages` (`store.mjs` ~26650) do not count D-128's version tables. — owner RECORD.
+order: directly after UI-83, the same D-128 follow-on: a decision the record applies to a definition nobody judged is the record claiming more than it supports (CLAUDE.md §2) (SCHEDULER #16, 2026-09-23; D-128's worker via CONDUCT #17)
+milestone: M4
+interface: I5 — a `definition_version` column on `proposal_dispositions`; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2, "The declared flow, and its revisions" (BOB #27), the ruling D-128 built.
+depends-on: D-128 (on `land/conduct/c17-batch3`).
+scope: `op=proposedispose` writes `definition_version`; a read against a later version does not treat an earlier-version disposition as current, stated; rows written before read `not recorded`; the stats counters count the version tables.
+accepts-when: `bio-plane/test/proposedispose.test.mjs` gains an arm: a disposition under version 1 does not apply under version 2, and the column reads back. NEGATIVE CONTROL: stop writing the version, and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (D-128's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs REC`).
+
 ### DIST-7 · queued — **THE INSTALLER UPLOADS EVERY GROUP'S PLANE WITH NO `limits`, SO EACH INSTANCE RUNS AT CLOUDFLARE'S DEFAULT SUBREQUEST LIMIT WHATEVER THE SIGNED RELEASE CARRIES.** Re-read on `91bcea6b`: `newgroup/src/index.mjs` `uploadInstall` and `uploadUpdate` hard-code `main_module`, `compatibility_date` and `compatibility_flags` and send no `limits`. — owner DIST.
 order: after D-443, the first installer row: a sovereign group's instance runs under a ceiling its own release does not set, so the project's measured subrequest figure does not reach a group (D-54's finding); product (M7), below the record-integrity rows (SCHEDULER #16, 2026-09-23; D-54's worker via CONDUCT #17)
 milestone: M7
@@ -120,26 +150,6 @@ depends-on: REC-155 — DRIVEN, not merely landed.
 accepts-when: a bearer `apply=1` and a bearer `provenanceroute` are refused by name; a session's succeed and the author written is the session's member, never `token:<class>`; a bearer … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #5 (BOB #20's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-158» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-178 · queued — **`op=audit`'S SWEEP HANDS `checkBundle` NO PUBLISHED REGISTRY: C-21.1 AND C-21.2 NEVER FIRE IN AN AUDIT, AND EVERY CORRECTLY** … (whole text: the cut archive)
-order: with the M10 corrections, after D-182 and above the features: the audit DIST's ladder needs clean before a version serves reports correct legs as offenders and skips the checks it exists to run, CLAUDE.md §2's class; last of them because no member reads it (SCHEDULER #12, 2026-09-22, LED-7)
-milestone: M10
-interface: I3 — `op=audit`'s tallies move; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 5 (*Inheritance is per axis*, C-21.2), with … (whole text: the cut archive)
-depends-on: none — `publishedRegistryFor` is built, and the write path's gate facts already pass it.
-accepts-when: an audit over a fixture reads a correctly inherited leg clean and an own grade on a published case as C-21.2; the count is recorded before the landing. How a liar passes it: an … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #12 (LED-7; D-178's DEBT row of 2026-08-04, verified at the code; keeps its `D-` id).
-
-### UI-74 · queued — **THE ACCEPT CEREMONY IS NOT ON `main`, SO NO SURFACE LETS A MEMBER ACCEPT A MACHINE-PROPOSED READING.** The IS plan's UI-43 … (whole text: the cut archive)
-order: the first feature, after D-52: DEC-24's member half — the machine proposes, the member concludes — has no door, and the IS plan recorded it done at 43/43; below the corrections because the status authority claims no ceremony (SCHEDULER #5, 2026-09-21)
-milestone: M9
-interface: I3 consumer (`op=versionaccept`; `op=versionstrength`'s `independence`) — both built.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §12 (a)–(b), with `docs/archive/IS-BUILD-PLAN.md`'s UI-43 row as … (whole text: the cut archive)
-depends-on: none; both ops are built — CHECK AT THE CODE at spawn.
-accepts-when: an OR accept requires the per-branch affirmation; a fixture whose two parts share a capture shows that origin before it, and one with independent parts shows NONE; driven against the real … (whole text: the cut archive)
-reference: UI-43's original build survives only on `origin/worktree-agent-a9e7e017d06799858` (tip `9706d19e`, 2026-08-09: 2 commits, 9 files, +2,338 lines; `acerRead`, `acerList`, `acerVersion`, `acerSets`, `aiSessionConditions`), six weeks stale and not mergeable; read it as a reference and rebuild on today's `app.html` (CONDUCT #16's measurement on `a13667ee`, 2026-09-23: `versionaccept` 0 times in `app.html`; D-271's plane half requires the affirmation).
-added: 2026-09-21 · SCHEDULER #5 (D-397's third branch and D-195, verified at the code; `node tools/mintid.mjs UI`).
-cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-74» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### REC-161 · queued — **NOTHING COMPUTES INDEPENDENCE OVER A PARTITION A MEMBER IS STILL PROPOSING, SO D-195's SHARED ORIGIN CANNOT BE SHOWN AT THEIR** … (whole text: the cut archive)
 order: 1 of 2, directly after UI-74, which shows the same fact at the accept ceremony (BOB #22, 2026-09-21: SCHEDULER #5's Q1, RULED)
