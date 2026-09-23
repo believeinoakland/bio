@@ -64,6 +64,7 @@
  *     only that the shipped indexes are DECLARED, so a later edit that removes
  *     one fails here rather than silently returning the two-second read.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -80,14 +81,14 @@ const IDX = SRC("index.mjs");
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
 const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
 
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-r90", MEMBER_TOKEN: "mem-r90", PROBE_TOKEN: "prb-r90",
               AI_TOKEN: "ai-r90", VERSION: "test" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

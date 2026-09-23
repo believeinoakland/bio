@@ -53,6 +53,7 @@
  * the stance surface is UI's; this suite asserts only what the plane
  * publishes and what the op does.
  * ========================================================================= */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -77,13 +78,13 @@ const t = (label, got, want) => {
 };
 
 const ADM = "adm-rec142", MEM = "mem-rec142";
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: MEM, VERSION: "test", GOVERNOR_APPETITE_PER_MIN: "600000" },
-});
+}));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,

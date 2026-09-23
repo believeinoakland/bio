@@ -69,6 +69,7 @@
  * because a `total` larger than the pages is exactly how hidden stops being
  * identical to absent.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -467,13 +468,13 @@ t("an arm composes with free text without collapsing into the MATCH",
  * ================================================================== */
 console.log("\n--- 6. the corpus, written through op=promote ---");
 const IDX = SRC("index.mjs");
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-pl8", MEMBER_TOKEN: "mem-pl8", PROBE_TOKEN: "prb-pl8", VERSION: "test" },
-});
+}));
 const post = async (op, body, tok = "mem-pl8") => (await (await mf.dispatchFetch(
   `http://x/api/?op=${op}&token=${tok}`, { method: "POST", body: JSON.stringify(body) })).json());
 const get = async (op, qs, tok = "mem-pl8") => (await (await mf.dispatchFetch(

@@ -101,6 +101,7 @@
  * AND THE CLASS SWEEP is at the foot, with its corpus and its reach PRINTED:
  * which other questions a surface plainly needs cannot be asked of the plane.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -118,14 +119,14 @@ const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SRC_STORE = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
 const SRC_SCHEMA = readFileSync(new URL("../src/schema.mjs", import.meta.url), "utf8");
 
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-r69", MEMBER_TOKEN: "mem-r69", PROBE_TOKEN: "prb-r69",
               VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

@@ -39,6 +39,7 @@
  * that is the only route a caller has and because `member` and `viewer` are
  * both server-side stamps: a store-level test could not exercise either.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -47,7 +48,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -56,7 +57,7 @@ const mf = new Miniflare({
      raced by the alarm — task-fence.test.mjs's precedent. */
   bindings: { ADMIN_TOKEN: "adm-rec20", MEMBER_TOKEN: "mem-rec20", PROBE_TOKEN: "prb-rec20",
               VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
