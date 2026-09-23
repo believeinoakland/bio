@@ -33,6 +33,16 @@ scope: every "admitted, bound not held" mint answer carries `undetermined: {leve
 accepts-when: `bio-plane/test/d420-image-page.test.mjs` reads `undetermined.level` and `undetermined.why` for a `{page, rect}` on a pre-change PDF, `d440-image-part.test.mjs` green, and `git grep -n image_bound -- bio-plane civicos-ui` returns nothing. NEGATIVE CONTROL (`nc-d420.mjs`, a new arm): restore the `image_bound` key, and D-420's suite fails by name.
 added: 2026-09-23 · SCHEDULER #16 (BOB #31's inbox entry, drained this commit; `node tools/mintid.mjs CPDF`).
 
+### REC-182 · queued — **TWO MANIFEST READS ORDER BY `created` ALONE, SO TIED ROWS COME BACK IN AN UNDEFINED ORDER: `op=export`'s `promotions` and `gateFacts`' `manifest`.** Re-read on `91bcea6b`: `store.mjs` lines 30093 and 31072 end `ORDER BY created`; D-171 made `#revisionKind` `created DESC, rowid DESC` and REC-32 the same. Harm UNDETERMINED: no consumer found that picks by position. And State Rules §6 I-20's *"immediately prior recorded snapshot"* does not say what prior means on a `created` tie. — owner RECORD.
+order: directly after CPDF-22 (REC-181 is in the cache): the same class D-171 just closed (a correction to just-landed work), the record's own order undefined on a tie; below the promote-integrity rows because no consumer is known to be harmed (SCHEDULER #16, 2026-09-23; D-171's worker via CONDUCT #17)
+milestone: M6
+interface: none (an order made total, as written); the integrator classifies.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6, I-20 (mechanical-writer conformance: the immediately prior recorded snapshot), with D-171's landed `created DESC, rowid DESC` as the precedent.
+depends-on: D-171 (its order is the precedent; on `land/conduct/c17-batch2`).
+scope: (1) both ORDER BYs gain `, rowid` (write order on a tie); a sweep of `store.mjs` manifest reads for any other untied `created` order, each tied or listed; (2) I-20's text states that on a `created` tie, prior means write order.
+accepts-when: in a NEW suite `bio-plane/test/rec-182-created-tie.test.mjs`, through the ops: two manifest rows with an equal `created` come back from `op=export` and the gate in write order on every run; I-20 names the tie rule. NEGATIVE CONTROL (`rec-182-created-tie.control.mjs`): drop `, rowid` from one read, and its arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (D-171's worker's finding via CONDUCT #17, verified at the code; `node tools/mintid.mjs REC`).
+
 ### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
 milestone: M0
@@ -1164,29 +1174,3 @@ design: `docs/development/VERIFICATION.md` §"A THROWING CONTROL DRIVER VALIDATE
 depends-on: none (M0-29 landed the sweep and its adjudication table)
 accepts-when: the census reports the sweep's tally section (0 open candidates on the estate as landed, the three retired instances listed as adjudicated); one unadjudicated candidate … (whole text: the cut archive)
 cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-33» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### SK-5 · blocked — RE-STATED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18):
-order: blocked: no plane op publishes the surface registry (SCHEDULER, first order audit, 2026-09-18)
-milestone: M9
-interface: I3 — **it needs the plane to PUBLISH the surface registry, which nothing does today; that is the** … (whole text: the cut archive)
-design: `docs/development/ASSISTANT-PILOT.md` §1 (the five-layer training pack — the **Recipes** row is this … (whole text: the cut archive)
-depends-on: a published surface registry (unbuilt). **NOT schedulable until that exists** — recorded so the … (whole text: the cut archive)
-accepts-when: (on unblocking) a recipe whose step names a surface or an op that does not exist **FAILS THE BUILD**; the pack's `absent_because` body is replaced by the layer rather than edited around.
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «SK-5» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### UI-60 · blocked — RESTORED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18):
-order: blocked: waits on Bob's re-prioritisation of UI (SCHEDULER, first order audit, 2026-09-18)
-milestone: M8
-interface: none
-depends-on: Bob's re-prioritisation of UI (DEC-33's deferral and the 2026-09-15 content direction stand)
-accepts-when: the decomposition exists as rows and this pointer is marked superseded naming them.
-cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «UI-60». A worker READS IT before building.
-
-### REC-15 · blocked
-order: blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 (SCHEDULER, first order audit, 2026-09-18)
-milestone: M10
-behind-interface: I3
-depends-on: REC-14
-accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and … (whole text: the cut archive)
-added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
-cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «REC-15». A worker READS IT before building.
