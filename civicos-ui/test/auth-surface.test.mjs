@@ -840,8 +840,14 @@ const manCall = planeP.CALLS.find(c=>c.op==="publishedmanifest");
 ok("the published space reads op=publishedmanifest", !!manCall);
 ok("IT CARRIES NO CREDENTIAL — the published record needs none, and asking for one would be a different product",
    !!manCall && manCall.token===null);
-ok("no other op is reached from the published space — nothing of the working record is touched",
-   planeP.CALLS.every(c=>c.op==="publishedmanifest"));
+/* CORRECTED 2026-09-22 (UI-77), never exempted: this read `every(c => c.op === "publishedmanifest")`. The
+   published space's header now reads `op=instancegroup` — PUBLIC since REC-163 (IC-174), the slug and nothing
+   else — to show whose record this is instead of a literal group name (Publication §7 point 1). The old
+   assertion was right that nothing of the WORKING record may be touched; it was wrong to equate that with one
+   op, because the group's slug is a public fact of the published record's own header. What it protects is
+   kept: every op reached is one of the two public reads, and none carries a credential. */
+ok("no other op is reached from the published space — nothing of the working record is touched (the case list and the header's public group read, credential-free, only)",
+   planeP.CALLS.every(c=>(c.op==="publishedmanifest" || c.op==="instancegroup") && c.token===null));
 
 const pl = E(ctxP, "#pl")._html;
 ok("every ratified case file in the manifest is listed",

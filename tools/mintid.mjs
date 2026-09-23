@@ -783,9 +783,24 @@ function recordWatermark(root, ns, floor) {
 /** Everything a caller needs to know about what its id is and is not safe against. */
 export function scopeOf({ repo = REPO_ROOT, env = process.env, root = null } = {}) {
   const r = root || ledgerRoot({ repo, env });
-  return { ledger: r, hosts: r ? ledgerHosts(r) : [],
-           overridden: Boolean(env.BIO_IDALLOC_DIR),
-           exclusive: r ? exclusivityProbe(r) : { ok: false, reason: "NO_LEDGER", detail: "no shared git directory" } };
+  /* M0-117, 2026-09-22: THE LEDGER IS CREATED BEFORE IT IS PROBED, exactly as `mint`
+     creates it. This handed the ledger path straight to `exclusivityProbe`, which writes
+     INTO it and does not create it (deliberately: its missing-directory refusal is an
+     asserted arm). A clone that had never minted therefore read PROBE_UNWRITABLE (ENOENT)
+     — a claim about a directory nobody had made yet, reported as a claim about the
+     filesystem — and every fresh clone's first full gate was RED at `mintid.test.mjs`
+     (M-99). The create is idempotent on an existing ledger; a path that cannot be created
+     answers LEDGER_UNWRITABLE, the mint's own code for the same failure. */
+  let exclusive = null;
+  if (!r) exclusive = { ok: false, reason: "NO_LEDGER", detail: "no shared git directory" };
+  else {
+    try { mkdirSync(r, { recursive: true }); }
+    catch (e) {
+      exclusive = { ok: false, reason: "LEDGER_UNWRITABLE", detail: `the ledger directory could not be created (${e.code})` };
+    }
+    if (!exclusive) exclusive = exclusivityProbe(r);
+  }
+  return { ledger: r, hosts: r ? ledgerHosts(r) : [], overridden: Boolean(env.BIO_IDALLOC_DIR), exclusive };
 }
 
 /** The sentence that must appear wherever an id does.

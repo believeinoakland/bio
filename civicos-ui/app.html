@@ -896,7 +896,7 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
 <!-- ============ WORKING SPACE ============ -->
 <div id="work">
   <div class="masthead">
-    <div class="brand"><button class="mback hidden" id="mback" onclick="navBack()" title="back to where you were, at the same place on the page">&larr;</button><button class="railtog" id="railtog" title="collapse or expand the rail" onclick="railToggle()">&#9776;</button><span class="wm">Civic<span class="os">OS</span></span><span class="mid">&middot;</span><span class="grp" id="m-grp">group</span></div>
+    <div class="brand"><button class="mback hidden" id="mback" onclick="navBack()" title="back to where you were, at the same place on the page">&larr;</button><button class="railtog" id="railtog" title="collapse or expand the rail" onclick="railToggle()">&#9776;</button><span class="wm">Civic<span class="os">OS</span></span><span class="mid">&middot;</span><span class="grp" id="m-grp" data-group="silent">This copy could not read its group just now</span></div>
     <div class="right">
       <div class="msearch"><svg width="14" height="14" viewBox="0 0 20 20" style="color:var(--muted);flex:none"><use href="#i-search"/></svg><input id="m-search" placeholder="search the record" oninput="sxSync('m')" onkeydown="if(event.key==='Enter')quickSearch()"><span class="sx hidden" id="sx-m" onclick="sxClear('m')" title="clear">&times;</span></div>
       <button class="btn hidden" id="m-fresh" style="padding:5px 12px;font-size:12.5px" onclick="location.reload()" title="a newer CivicOS build is live; reload to run it">Updated &middot; reload</button><div class="handle" id="m-handle">&mdash;</div>
@@ -909,7 +909,7 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
 
   <div class="fence">
     <div class="fl">Working record &middot; not public</div>
-    <div class="idstr" id="m-idstr">believeinoakland.org</div>
+    <div class="idstr" id="m-idstr" data-group="silent">This copy could not read its group just now</div>
   </div>
 </div>
 
@@ -917,8 +917,8 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
 <div id="pub" data-space="published">
   <div class="pub-mast">
     <div class="l">
-      <div class="mono-square" id="p-mono">B</div>
-      <div><div class="gname" id="p-gname">Believe in Oakland</div><div class="gid" id="p-gid">believeinoakland.org</div></div>
+      <div class="mono-square" id="p-mono" data-group="silent"></div>
+      <div><div class="gname" id="p-gname" data-group="silent">This copy could not read its group just now</div><div class="gid" id="p-gid"></div></div>
     </div>
     <div class="links"><a onclick="pubList()" style="cursor:pointer">Case files</a><a onclick="pubVerifyPanel()" style="cursor:pointer">Verify</a><span id="p-back"></span></div>
   </div>
@@ -964,7 +964,61 @@ async function buildCheck(){
   }catch(_){}
 }
 setInterval(buildCheck, 5*60*1000);
-const GROUP = { name:"Believe in Oakland", idstr:"believeinoakland.org", mono:"B" };
+/* UI-77, 2026-09-22 — WHOSE RECORD THIS IS, READ FROM THE RECORD AND NEVER WRITTEN HERE.
+   This line was a `const GROUP` literal — one group's display name, its domain and a monogram —
+   painted into the member fence (`#m-grp`, `#m-idstr`) and the public header (`#p-gname`, `#p-gid`,
+   `#p-mono`), with the domain a third time in `#m-idstr`'s markup. `newgroup` installs this file into
+   every sovereign group's own account, so every instance's public page claimed to be this project's —
+   the record claiming an association it cannot support, which is the defect class
+   `BIO_Publication_v0_1.md` §7 exists to refuse.
+   NOW: both surfaces read `op=instancegroup` (IC-174: `{ ok, group }` or `{ ok, group:null, detail }`)
+   and show THREE states, the setup page's own three (`bio-plane/src/setup.mjs` `groupLine`), in its words:
+     recorded — the SLUG, as the record holds it (§7 point 1: the slug is public);
+     none     — the record answered and records no group: said in words, never a blank, never a default;
+     silent   — the record did not answer (an error, a silent store, an older plane that refuses a
+                stranger, no plane at all): said as THAT, never as "none" (REC-52).
+   The markup carries the silent line, so a surface painted before any read names nobody.
+   WHAT IS NOT SHOWN, and why: a DISPLAY NAME (§7 point 2) and a VERIFIED DOMAIN (§7 point 3) are not
+   built on the plane, so `#p-gid` — where the domain stood — is left empty (a domain is shown only while
+   verified, and none is), and nothing stands in for a display name: when one exists it is shown WITH
+   the slug, never instead. The monogram is the slug's own first character, and nothing when there is no slug.
+   WHICH READ: the working space reads through `recR`, holding the member's credential, so it asks the
+   store every other read on that screen asks (a probe's scratch namespace included). The published
+   space reads through `apiQ`, holding NOTHING — its public-read seam, so a stranger's header and a
+   signed-in member's header on the public page are the same answer. */
+const GROUP_WORDS = {
+  none:   "No group is recorded for this copy yet",
+  silent: "This copy could not read its group just now",
+};
+function groupFromAnswer(r){
+  if(r && r.ok === true && typeof r.group === "string" && r.group) return { state:"recorded", slug:r.group };
+  if(r && r.ok === true && r.group === null) return { state:"none", slug:null };
+  return { state:"silent", slug:null };
+}
+async function readGroup(space){
+  if(PLANE.preview) return { state:"silent", slug:null };
+  try{
+    return groupFromAnswer(space === "published" ? await apiQ("instancegroup") : await recR("instancegroup"));
+  }catch(_){ return { state:"silent", slug:null }; }
+}
+function paintGroupAt(sel, g, words){
+  const e = $(sel); if(!e) return;
+  e.textContent = words;
+  if(e.dataset) e.dataset.group = g.state;
+}
+async function paintGroup(space){
+  const g = await readGroup(space);
+  const words = g.state === "recorded" ? g.slug : GROUP_WORDS[g.state];
+  if(space === "published"){
+    paintGroupAt("#p-gname", g, words);
+    paintGroupAt("#p-mono", g, g.slug ? g.slug.charAt(0).toUpperCase() : "");
+    if($("#p-gid")) $("#p-gid").textContent = "";
+  } else {
+    paintGroupAt("#m-grp", g, words);
+    paintGroupAt("#m-idstr", g, words);
+  }
+  return g;
+}
 
 const $ = s => document.querySelector(s);
 const esc = s => (s==null?"":String(s)).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -1335,8 +1389,7 @@ function previewShell(){
   PLANE.preview = true;
   buildRail({ administer:true });
   $("#m-handle").innerHTML = '<span style="color:var(--signal-dk)">preview &middot; not connected</span>';
-  $("#m-grp").textContent = GROUP.name;
-  $("#m-idstr").textContent = GROUP.idstr.slice(0,32);
+  paintGroup("working");   /* UI-77: preview holds no plane, so this paints the silent line */
   $("#gate").classList.add("hidden"); $("#pub").classList.remove("on");
   $("#work").classList.add("on"); document.documentElement.setAttribute("data-space","working");
   go("home", true);
@@ -1403,8 +1456,7 @@ async function boot(){
   await loadActSource(true);
   buildRail(w);
   $("#m-handle").innerHTML = (w.session ? esc(w.handle || w.member || "member") : (w.tokenClass ? esc(w.tokenClass)+" token" : "connected")) + ' <span style="color:var(--muted)">&#9662;</span>';
-  $("#m-grp").textContent = GROUP.name;
-  $("#m-idstr").textContent = GROUP.idstr.slice(0,32);
+  await paintGroup("working");   /* UI-77: the recorded slug, or the stated absence, from op=instancegroup */
   $("#gate").classList.add("hidden");
   $("#pub").classList.remove("on");
   $("#work").classList.add("on");
@@ -19585,14 +19637,15 @@ function pubLeave(){
   pubSetHash("#queue");
   go("queue", true);
 }
+let PUB_GROUP = null;   /* UI-77: the header read in flight, so a harness can await it */
 function enterPublished(fromNav){
   $("#work").classList.remove("on");
   $("#gate").classList.add("hidden");
   $("#pub").classList.add("on");
   document.documentElement.setAttribute("data-space", "published");
-  $("#p-gname").textContent = GROUP.name;
-  $("#p-gid").textContent = GROUP.idstr.slice(0, 32);
-  $("#p-mono").textContent = GROUP.mono;
+  /* UI-77: the public header reads the recorded slug holding nothing; see `paintGroup`. Not awaited — the
+     case list does not wait on the header, and the header says "could not read" until the answer lands. */
+  PUB_GROUP = paintGroup("published");
   pubPaintBack();
   if(!fromNav) pubList();
 }
