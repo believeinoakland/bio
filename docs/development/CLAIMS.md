@@ -19358,3 +19358,27 @@ never read. **Rule it in §2, or say every write may.** Nothing runnable waits o
 
 **open as of 2026-09-23**
 **DISCHARGED 2026-09-23 by BOB #29** (`5dc0bf78`): SCHEDULER's recommendation RULED in WORK-PIPELINE §2 — only a write changing the plan's membership or size (insert, row, append/line into a plan file, refill, archive) rebalances; a claim, handoff, DELEGATION or status word never does. The correction to `coord.mjs write` (it rebalances after every write) is owed, M0: place it.
+
+## CLAIM 2026-09-23 M0 (M0-100 — one file per NEW measurement and interface-change entry; the two ledgers frozen history; ONE reader module for both)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #14 for M0-100 (wave 6), worktree `.claude/worktrees/agent-a08c137666a63d52b`,
+branch `worktree-agent-a08c137666a63d52b`, from `origin/main` @ `30475ca6` (cloud).
+authority: `QUEUE.md` `### M0-100 · running` (read on `origin/coord` @ `9ed4cec8`); the row's full text under «M0-100» in
+`docs/archive/ledgers/QUEUE-cut-2026-09-22.md`; design `VERIFICATION.md` with `ORCHESTRATION.md` §"THE RECORD IS
+PARTITIONED BY WRITER" rule 3, narrowed by BOB #27 (`TREE-SHARING.md` §1).
+paths, BY SITE:
+  - NEW: `tools/entries.mjs` (the one reader), `bio-plane/test/entries.test.mjs` + `entries.control.mjs`,
+    `docs/development/measurements/` and `docs/development/interface-changes/` (one file per new entry).
+  - `docs/development/MEASUREMENTS.md`, `docs/development/INTERFACE-CHANGES.md` — ONE head line each (frozen), nothing else.
+  - `tools/mintid.mjs` (the IC and M corpora; the allocation corpus's directory expansion), `tools/plancheck.mjs` (the
+    §10 exemption and one frozen-history arm), `tools/ledger.mjs` (`find` for M- and IC- ids through the reader).
+  - Readers' suites whose assertion this supersedes (`mintid.test.mjs`, `pipeline-readers.control.mjs` NC6's anchor),
+    corrected with a dated comment, never exempted.
+  - `docs/architecture/CORPUS-STANDARD.md` §6's exclusion table (two rows for the new directories).
+  - Instruction text naming an append to either file: `CLAUDE.md` §5 line, `kickoffs/WORKER.md`, `kickoffs/README.md`,
+    `kickoffs/CONDUCT.md` (its merge rule), `kickoffs/BOB.md`, `kickoffs/CAPTURE.md`, `kickoffs/CONTENT-PDF.md`,
+    `kickoffs/FRAMEWORK.md`, `kickoffs/UI.md`, `ORCHESTRATION.md` rule 3 (as built) — within budgets.
+**NOT CLAIMED:** `tools/train.mjs`, `tools/coord.mjs`, `tools/gates.mjs` (read, not edited unless its selection is
+wrong for the new paths), any state path on `main`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
