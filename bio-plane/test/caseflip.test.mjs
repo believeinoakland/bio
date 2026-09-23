@@ -1149,6 +1149,14 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
        divergence assertion falls naming [2,2,2] where it wants [2,2,1]. Every
        altitude assertion in blocks 3, 4, 5 and 6 falls with it, in the artifact
        and in the bytes alike. -> the fixture stops diverging.
+       RE-AIMED AND RE-RUN 2026-09-23 by the D-442 worker (Publication §3 rule 12):
+       the member's edition is no longer stamped into its bytes, so the arm now
+       re-slaves the edition op=publish records for the member in the CASE DOCUMENT.
+       MEASURED: the SAME seven assertions fail by name, the divergence arm first —
+       and then the suite dies before its tally, because the committer now takes a
+       rule-12 member's edition from that document and a later fixture ratification
+       is refused on the re-slaved number. The arm bites exactly where it did; the
+       missing tally is recorded, not smoothed.
 
    (e) DROP THE LEGACY FALLBACK in `#caseOfSha`, so a pre-CASE-3 roster row whose
        pin is honestly NULL stops resolving to its case. MEASURED 51/0, GREEN AS

@@ -155,7 +155,7 @@ const except = (...xs) => ALL.filter((x) => !xs.includes(x));
    two cases exclude the memo (S4_EX2). The same moved pin, two readers further on; the arm was right both times. */
 const A_FAIL = [S1_OWN, S2_PIN, S2_BYTES, S2_FLAG, S2_SAME, S2_BLOCKS, S2_PROSE, S2_RAT, S2_AFTER, S3_AGAIN,
                 S3_NEW, S3_PIN, S3_RAT, S4_BYTES, S4_PC, S4_EXCL, S4_CONT, S4_EX1, S4_EX2];
-const EXCLUDEDBY = "    for (const x of this.#rows(\n      `SELECT x.case_id, x.edition AS case_edition,";
+const EXCLUDEDBY = "    rows.push(...this.#rows(\n      `SELECT x.bundle_id, x.ord, x.member_edition AS edition,";
 
 const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes five-arms-working from five-arms-broken",
@@ -183,7 +183,7 @@ const ARMS = {
        mustFail: [], mustNotFail: ALL, expectGreen: true },
   f: { files: [STORE],
        label: "(F) THE LIAR, reader 3 — op=excludedby answers from the members' bytes alone",
-       apply: () => edit(STORE, EXCLUDEDBY, "    for (const x of [] || this.#rows(\n      `SELECT x.case_id, x.edition AS case_edition,"),
+       apply: () => edit(STORE, EXCLUDEDBY, "    rows.push(...[] || this.#rows(\n      `SELECT x.bundle_id, x.ord, x.member_edition AS edition,"),
        mustFail: [S4_EX1, S4_EX2], mustNotFail: except(S4_EX1, S4_EX2) },
 };
 
@@ -282,7 +282,7 @@ process.exit(results.every((r) => r.verdict === "AS DECLARED") ? 0 : 1);
 /* MEASURED 2026-09-23 by the D-442 worker (`node test/d442-publish-writes-nothing.control.mjs` from `bio-plane/`,
    worktree `.claude/worktrees/agent-af1478b0c650efa08`, branch `worktree-agent-af1478b0c650efa08`). Every anchor LIVE
    at the preflight; every label fragment present in the suite; every restore sha256 MATCH, content IDENTICAL and cmp
-   SAME — store.mjs 2,810,358 B (839559e3…), index.mjs 710,297 B (822f7d90…), bio-checks.mjs 822,889 B (e000dde0…).
+   SAME — store.mjs 2,810,573 B (58f3972f…), index.mjs 710,297 B (822f7d90…), bio-checks.mjs 822,889 B (e000dde0…).
 
      baseline  35 pass, 0 fail    AS DECLARED
      (a)       16 pass, 19 fail   AS DECLARED after TWO corrections of its declaration, each recorded at A_FAIL: first

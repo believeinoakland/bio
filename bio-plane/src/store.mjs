@@ -8680,19 +8680,23 @@ export class Store extends DurableObject {
     const dfm = parseFrontmatter(d.text).data || {};
     const comp = dfm.completeness && typeof dfm.completeness === "object" ? dfm.completeness : {};
     const rows = Array.isArray(dfm.completeness_excluded) ? dfm.completeness_excluded : [];
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      if (!row || typeof row !== "object") continue;
-      this.sql.exec(
-        `INSERT INTO case_exclusions (case_id,edition,ord,target_id,description,reason,author,at)
-         VALUES (?,?,?,?,?,?,?,?)`,
-        caseId, Number(edition), i,
-        typeof row.target === "string" ? row.target : null,
-        typeof row.description === "string" ? row.description : "",
-        typeof row.reason === "string" ? row.reason : "",
-        typeof comp.author === "string" ? comp.author : "",
-        typeof comp.at === "string" ? comp.at : "");
-    }
+    const project = typeof dfm.case_project === "string" && dfm.case_project !== "null" ? dfm.case_project : null;
+    const members = (Array.isArray(dfm.case_roles) ? dfm.case_roles : [])
+      .filter((r) => r && typeof r === "object" && typeof r.target === "string");
+    for (const m of members)
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || typeof row !== "object") continue;
+        this.sql.exec(
+          `INSERT INTO case_exclusions (case_id,edition,bundle_id,ord,member_edition,project_id,target_id,description,reason,author,at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+          caseId, Number(edition), m.target, i, Number.isInteger(m.edition) ? m.edition : null, project,
+          typeof row.target === "string" ? row.target : null,
+          typeof row.description === "string" ? row.description : "",
+          typeof row.reason === "string" ? row.reason : "",
+          typeof comp.author === "string" ? comp.author : "",
+          typeof comp.at === "string" ? comp.at : "");
+      }
   }
 
   /* D-442 / BIO_Publication_v0_1.md §3 rule 12 — WHAT A CASE DOCUMENT STATES ABOUT ONE MEMBER, OR
@@ -32319,31 +32323,26 @@ export class Store extends DurableObject {
        FROM inquiry_exclusions x JOIN bundles b ON b.bundle_id = x.bundle_id
        WHERE x.target_id=? AND (${gate.sql}) ORDER BY x.bundle_id, x.ord`, targetId, ...gate.args);
     /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): AND THE CASES WHOSE DOCUMENT STATES THE EXCLUSION —
-       every case published under rule 12, whose members carry no exclusion of their own. ONE indexed
-       lookup on `case_exclusions_target`, never a scan of case documents. Each row is reported in the
-       shape above, once per MEMBER of that case the viewer can see (the member finding is still what a
-       row names, as it always was), with the case and its edition beside it. An UNSIGNED document is
-       working material and answers only to standing in its project (REC-130, `#hasCaseStanding`); a
-       ratified one is public. Legacy members keep answering through the first read (rule 12 (e)). */
-    for (const x of this.#rows(
-      `SELECT x.case_id, x.edition AS case_edition, x.ord, x.description, x.reason, x.author, x.at,
-              d.text, d.ratified_at
-         FROM case_exclusions x JOIN case_documents d ON d.case_id = x.case_id AND d.edition = x.edition
-        WHERE x.target_id=? ORDER BY x.case_id, x.edition, x.ord`, targetId)) {
-      if (!x.ratified_at && !this.#hasCaseStanding({ case_id: x.case_id, edition: x.case_edition, text: x.text }, viewer))
-        continue;
-      const dfm = parseFrontmatter(String(x.text || "")).data || {};
-      for (const r of Array.isArray(dfm.case_roles) ? dfm.case_roles : []) {
-        if (!r || typeof r.target !== "string") continue;
-        const b = this.#one(`SELECT b.current_state, b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-                            r.target, ...gate.args);
-        if (!b) continue;
-        rows.push({ bundle_id: r.target, ord: x.ord, edition: Number.isInteger(r.edition) ? r.edition : null,
-                    description: x.description, reason: x.reason, author: x.author, at: x.at,
-                    current_state: b.current_state, title: b.title,
-                    case_id: x.case_id, case_edition: x.case_edition, from: "case_document" });
-      }
-    }
+       every case published under rule 12, whose members carry no exclusion of their own. ONE indexed,
+       gated statement over `case_exclusions_target`, never a scan of case documents and no read per row:
+       the projection already holds one row per MEMBER (the finding a row has always named), with the
+       member's own edition and the publishing project. A member the viewer cannot see is gated out by the
+       SAME predicate as above. An UNSIGNED document is working material and answers only to standing in its
+       project (REC-130's rule, `#hasCaseStanding`'s predicate spelled as SQL: a member-scope viewer has it,
+       a denied one never, and any other only where it can see the project); a ratified one is public.
+       Legacy members keep answering through the first read (rule 12 (e)). */
+    const standing = gate.scope === "member" ? "1"
+      : gate.scope === "DENY" ? "0"
+      : `EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = x.project_id AND b.object_type='project' AND (${gate.sql}))`;
+    rows.push(...this.#rows(
+      `SELECT x.bundle_id, x.ord, x.member_edition AS edition, x.description, x.reason, x.author, x.at,
+              b.current_state, b.title, x.case_id, x.edition AS case_edition, 'case_document' AS "from"
+         FROM case_exclusions x
+         JOIN case_documents d ON d.case_id = x.case_id AND d.edition = x.edition
+         JOIN bundles b ON b.bundle_id = x.bundle_id
+        WHERE x.target_id=? AND (${gate.sql}) AND (d.ratified_at IS NOT NULL OR ${standing})
+        ORDER BY x.case_id, x.edition, x.bundle_id, x.ord`,
+      targetId, ...gate.args, ...(standing.startsWith("EXISTS") ? gate.args : [])));
     return { ok: true, targetId, cases: rows,
              detail: "each row is a case that named this document in its completeness exclusions, with the "
                    + "edition the assertion was taken from and the case's current state." };

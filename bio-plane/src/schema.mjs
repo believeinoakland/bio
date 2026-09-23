@@ -1848,16 +1848,23 @@ CREATE TABLE IF NOT EXISTS case_documents (
 -- description and reason are NOT NULL for inquiry_exclusions' own reason. The whole-store purge
 -- clears the rows of every UNRATIFIED document with the document itself (D-113), and keeps a
 -- ratified document's for case_documents' own reason.
+-- ONE ROW PER (case edition, MEMBER, exclusion row): an excluded document is reported on each member
+-- finding of the case, as inquiry_exclusions always reported it, and the member, its own edition
+-- and the publishing project are columns so op=excludedby answers in ONE indexed, gated statement
+-- with no read per row (derivation-bounds' class).
 CREATE TABLE IF NOT EXISTS case_exclusions (
-  case_id     TEXT NOT NULL,
-  edition     INTEGER NOT NULL,
-  ord         INTEGER NOT NULL,
-  target_id   TEXT,
-  description TEXT NOT NULL,
-  reason      TEXT NOT NULL,
-  author      TEXT NOT NULL,
-  at          TEXT NOT NULL,
-  PRIMARY KEY (case_id, edition, ord)
+  case_id        TEXT NOT NULL,
+  edition        INTEGER NOT NULL,
+  bundle_id      TEXT NOT NULL,
+  ord            INTEGER NOT NULL,
+  member_edition INTEGER,
+  project_id     TEXT,
+  target_id      TEXT,
+  description    TEXT NOT NULL,
+  reason         TEXT NOT NULL,
+  author         TEXT NOT NULL,
+  at             TEXT NOT NULL,
+  PRIMARY KEY (case_id, edition, bundle_id, ord)
 );
 CREATE INDEX IF NOT EXISTS case_exclusions_target ON case_exclusions(target_id);
 -- REC-26 / MACHINE-PROCESSES.md risk 2: the IDEMPOTENCE KEY for the two periodic

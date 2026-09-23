@@ -13239,9 +13239,11 @@ refused. How many exist in any real record is UNMEASURED (the network refuses Cl
 - `op=excludedby`: rows from `case_exclusions` join the legacy rows, one per member of the case the viewer can see, carrying
   `case_id`, `case_edition` and `from: "case_document"`; an unsigned document's rows answer only to standing in its project.
 
-**THE SHAPE, I5.** `case_exclusions (case_id, edition, ord, target_id, description, reason, author, at)`, PK `(case_id, edition,
-ord)`, index `case_exclusions_target(target_id)`; DERIVED from `case_documents.text`, re-projected whole at `op=publish`; the
-whole-store purge clears the rows of every document it clears (the unratified ones). No column moves.
+**THE SHAPE, I5.** `case_exclusions (case_id, edition, bundle_id, ord, member_edition, project_id, target_id, description,
+reason, author, at)`, PK `(case_id, edition, bundle_id, ord)` — one row per case edition, per MEMBER, per exclusion row, so
+`op=excludedby` answers in one indexed, gated statement with no read per row (`derivation-bounds`' class measured the first
+per-row draft and refused it) — index `case_exclusions_target(target_id)`; DERIVED from `case_documents.text`, re-projected whole
+at `op=publish`; the whole-store purge clears the rows of every document it clears (the unratified ones). No column moves.
 
 **WHAT IS NOT DONE, and whose it is.** The member UI's working inquiry page still reads the finding's own frozen block (UI,
 delegated). The legacy count in the record namespace (members published before this, still carrying the blocks) is

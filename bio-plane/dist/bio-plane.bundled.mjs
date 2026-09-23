@@ -1855,16 +1855,23 @@ CREATE TABLE IF NOT EXISTS case_documents (
 -- description and reason are NOT NULL for inquiry_exclusions' own reason. The whole-store purge
 -- clears the rows of every UNRATIFIED document with the document itself (D-113), and keeps a
 -- ratified document's for case_documents' own reason.
+-- ONE ROW PER (case edition, MEMBER, exclusion row): an excluded document is reported on each member
+-- finding of the case, as inquiry_exclusions always reported it, and the member, its own edition
+-- and the publishing project are columns so op=excludedby answers in ONE indexed, gated statement
+-- with no read per row (derivation-bounds' class).
 CREATE TABLE IF NOT EXISTS case_exclusions (
-  case_id     TEXT NOT NULL,
-  edition     INTEGER NOT NULL,
-  ord         INTEGER NOT NULL,
-  target_id   TEXT,
-  description TEXT NOT NULL,
-  reason      TEXT NOT NULL,
-  author      TEXT NOT NULL,
-  at          TEXT NOT NULL,
-  PRIMARY KEY (case_id, edition, ord)
+  case_id        TEXT NOT NULL,
+  edition        INTEGER NOT NULL,
+  bundle_id      TEXT NOT NULL,
+  ord            INTEGER NOT NULL,
+  member_edition INTEGER,
+  project_id     TEXT,
+  target_id      TEXT,
+  description    TEXT NOT NULL,
+  reason         TEXT NOT NULL,
+  author         TEXT NOT NULL,
+  at             TEXT NOT NULL,
+  PRIMARY KEY (case_id, edition, bundle_id, ord)
 );
 CREATE INDEX IF NOT EXISTS case_exclusions_target ON case_exclusions(target_id);
 -- REC-26 / MACHINE-PROCESSES.md risk 2: the IDEMPOTENCE KEY for the two periodic
@@ -34222,22 +34229,28 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     const dfm = parseFrontmatter(d.text).data || {};
     const comp = dfm.completeness && typeof dfm.completeness === "object" ? dfm.completeness : {};
     const rows = Array.isArray(dfm.completeness_excluded) ? dfm.completeness_excluded : [];
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      if (!row || typeof row !== "object") continue;
-      this.sql.exec(
-        `INSERT INTO case_exclusions (case_id,edition,ord,target_id,description,reason,author,at)
-         VALUES (?,?,?,?,?,?,?,?)`,
-        caseId,
-        Number(edition),
-        i,
-        typeof row.target === "string" ? row.target : null,
-        typeof row.description === "string" ? row.description : "",
-        typeof row.reason === "string" ? row.reason : "",
-        typeof comp.author === "string" ? comp.author : "",
-        typeof comp.at === "string" ? comp.at : ""
-      );
-    }
+    const project = typeof dfm.case_project === "string" && dfm.case_project !== "null" ? dfm.case_project : null;
+    const members = (Array.isArray(dfm.case_roles) ? dfm.case_roles : []).filter((r) => r && typeof r === "object" && typeof r.target === "string");
+    for (const m of members)
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || typeof row !== "object") continue;
+        this.sql.exec(
+          `INSERT INTO case_exclusions (case_id,edition,bundle_id,ord,member_edition,project_id,target_id,description,reason,author,at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+          caseId,
+          Number(edition),
+          m.target,
+          i,
+          Number.isInteger(m.edition) ? m.edition : null,
+          project,
+          typeof row.target === "string" ? row.target : null,
+          typeof row.description === "string" ? row.description : "",
+          typeof row.reason === "string" ? row.reason : "",
+          typeof comp.author === "string" ? comp.author : "",
+          typeof comp.at === "string" ? comp.at : ""
+        );
+      }
   }
   /* D-442 / BIO_Publication_v0_1.md §3 rule 12 — WHAT A CASE DOCUMENT STATES ABOUT ONE MEMBER, OR
      NULL FOR A LEGACY (/1) DOCUMENT, whose members carried these blocks in their own bytes (rule 12
@@ -56132,40 +56145,19 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       targetId,
       ...gate.args
     );
-    for (const x of this.#rows(
-      `SELECT x.case_id, x.edition AS case_edition, x.ord, x.description, x.reason, x.author, x.at,
-              d.text, d.ratified_at
-         FROM case_exclusions x JOIN case_documents d ON d.case_id = x.case_id AND d.edition = x.edition
-        WHERE x.target_id=? ORDER BY x.case_id, x.edition, x.ord`,
-      targetId
-    )) {
-      if (!x.ratified_at && !this.#hasCaseStanding({ case_id: x.case_id, edition: x.case_edition, text: x.text }, viewer))
-        continue;
-      const dfm = parseFrontmatter(String(x.text || "")).data || {};
-      for (const r of Array.isArray(dfm.case_roles) ? dfm.case_roles : []) {
-        if (!r || typeof r.target !== "string") continue;
-        const b = this.#one(
-          `SELECT b.current_state, b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-          r.target,
-          ...gate.args
-        );
-        if (!b) continue;
-        rows.push({
-          bundle_id: r.target,
-          ord: x.ord,
-          edition: Number.isInteger(r.edition) ? r.edition : null,
-          description: x.description,
-          reason: x.reason,
-          author: x.author,
-          at: x.at,
-          current_state: b.current_state,
-          title: b.title,
-          case_id: x.case_id,
-          case_edition: x.case_edition,
-          from: "case_document"
-        });
-      }
-    }
+    const standing = gate.scope === "member" ? "1" : gate.scope === "DENY" ? "0" : `EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = x.project_id AND b.object_type='project' AND (${gate.sql}))`;
+    rows.push(...this.#rows(
+      `SELECT x.bundle_id, x.ord, x.member_edition AS edition, x.description, x.reason, x.author, x.at,
+              b.current_state, b.title, x.case_id, x.edition AS case_edition, 'case_document' AS "from"
+         FROM case_exclusions x
+         JOIN case_documents d ON d.case_id = x.case_id AND d.edition = x.edition
+         JOIN bundles b ON b.bundle_id = x.bundle_id
+        WHERE x.target_id=? AND (${gate.sql}) AND (d.ratified_at IS NOT NULL OR ${standing})
+        ORDER BY x.case_id, x.edition, x.bundle_id, x.ord`,
+      targetId,
+      ...gate.args,
+      ...standing.startsWith("EXISTS") ? gate.args : []
+    ));
     return {
       ok: true,
       targetId,
