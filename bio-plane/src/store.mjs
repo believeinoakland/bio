@@ -8128,6 +8128,11 @@ export class Store extends DurableObject {
         ? `the effective bias set in force for ${proj} at publication, frozen here and never recomputed`
         : "no manifest was in force",
     };
+    /* D-150 / §3 rule 11 — WHO ACKNOWLEDGED THIS STATEMENT, read at the act that authors the
+       document the owner signs, so the list is inside the signature. An acknowledgement by the
+       member publishing is left out: at this act they become the statement's author, and the
+       rule is a SECOND person. None is required, and none is ever a gate. */
+    const acks = this.#statementAcknowledgements(proj, theCase, edition, stmt, who);
     const docText = Store.#caseDocumentText({
       caseId: theCase, edition, project: proj, scope: scp, bias: back, bar,
       roster: members, roles: memberRoles, pins: pinOf,
@@ -8138,6 +8143,8 @@ export class Store extends DurableObject {
       frozen,
       /* D-84: the lens in force, computed above and stated in the signed bytes. */
       manifest,
+      /* D-150 / §3 rule 11: the acknowledgements, read above and signed in. */
+      acks,
     });
     const docBytes = new TextEncoder().encode(docText);
     const docSha = createSha256().update(docBytes).hex();
@@ -8203,7 +8210,11 @@ export class Store extends DurableObject {
                 acknowledgement (authored), two things that travel together and are not one. */
              bias_manifest: manifest,
              completeness: { statement: stmt, subject_position: pos, subject_justification: just,
-                             author: who, at: when, excluded: rows.length },
+                             author: who, at: when, excluded: rows.length,
+                             /* D-150: what the document just authored lists, in its words. */
+                             statement_sha: acks.statementSha, acknowledgements: acks.rows,
+                             acknowledgements_truncated: acks.truncated,
+                             ...(acks.byAuthor ? { acknowledgements_by_author_not_listed: acks.byAuthor } : {}) },
              author: who, at: when, weight: "single",
              /* THERE IS NO CASE-LEVEL `strength` KEY AND THERE MUST NEVER BE
                 ONE. Two findings whose strengths differ have two answers; one
@@ -8283,7 +8294,11 @@ export class Store extends DurableObject {
                                 reason (this method is pure and static; the effective set needs the
                                 store). Absent is written as NOT IN FORCE with that sentence — never
                                 as a blank a reader could take for an empty lens. */
-                             manifest = null }) {
+                             manifest = null,
+
+                             /* D-150 / §3 rule 11: `#statementAcknowledgements`' answer — the
+                                acknowledgements of THIS statement by anybody but its author. */
+                             acks = { statementSha: null, truncated: false, rows: [] } }) {
     const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
     const lens = manifest && manifest.in_force === true ? manifest
       : { in_force: false, scope: "project", scope_id: project, statements_sha: null, bundles: [],
@@ -8355,6 +8370,12 @@ export class Store extends DurableObject {
       `  subject_justification: "${Store.#fmSafe(justification)}"`,
       `  author: ${author}`,
       `  at: "${at}"`,
+      /* D-150 / §3 rule 11 — THE STATEMENT'S SECOND READERS, IN THE SIGNED BLOCK. The hash
+         names the sentence they read (a reader can recompute it from `statement` above); the
+         count is the list's length, so ZERO is a statement — nobody but its author
+         acknowledged it — and never a blank. The list is its own top-level key, an array of
+         flat objects, for the grammar's reason `completeness_excluded` is. */
+      ...Store.#ackFrontmatterLines(acks),
       "completeness_excluded:",
       ...(excluded || []).flatMap((r) => [
         ...(r.target ? [`  - target: ${r.target}`, `    description: "${Store.#fmSafe(r.description || "")}"`]
@@ -8507,6 +8528,10 @@ export class Store extends DurableObject {
         : ["Nothing material was excluded from this case."]),
       "",
       `Position on putting this case to its subject: ${position}. ${justification}`,
+      "",
+      /* D-150 / §3 rule 11 — IN THE BODY AND IN PROSE, where the statement is: the thing a
+         member reviews and signs. The check is DISCLOSED here and enforced nowhere. */
+      ...Store.#ackBodyLines(acks, project),
       "",
       /* REC-96 / D-196 — IN THE BODY, IN PROSE, AND THIS IS NOT DECORATION. The
          whole justification for this artifact is the container manifest's
@@ -9477,6 +9502,14 @@ export class Store extends DurableObject {
                   biasAcknowledgement: params.biasAcknowledgement ?? null },
       findings, gates: gates.gates, missing: gates.missing, evaluated: gates.evaluated,
       comments, comments_truncated: commentsTruncated, list_limit: cap,
+      /* D-150 / §3 rule 11: who has acknowledged the statement AS IT STANDS NOW — the same read
+         `op=publish` lists in the case document, so a reviewer sees the list the document would print
+         (less the publisher's own, which the act leaves out). An edited statement starts empty. */
+      statement_acknowledgements: (() => {
+        const a = this.#statementAcknowledgements(d.project_id, ident.caseId, ident.edition, params.statement ?? "");
+        return { statement_sha: a.statementSha, acknowledgements: a.rows, truncated: a.truncated,
+                 act: "op=statementack&draft=" + d.draft_id };
+      })(),
       updated_by: d.updated_by, updated_at: d.updated_at,
       ...grantPart,
     };
@@ -9504,6 +9537,231 @@ export class Store extends DurableObject {
     const row = this.#one(`SELECT last_insert_rowid() AS id`);
     return { ok: true, comment: { comment_id: row ? row.id : null, draft_id: d.draft_id, author_kind: kind,
                                   author, grant_id: grantId, text: body, at: when } };
+  }
+
+  /* ===== D-150 / BIO_Publication_v0_1.md §3 rule 11 (BOB #27, 2026-09-22): THE EXCLUSION
+     STATEMENT'S ACKNOWLEDGEMENTS — checked by a SECOND PERSON, and the check is DISCLOSED,
+     never enforced. ============================================================================
+
+     WHAT AN ACKNOWLEDGEMENT IS. An authored, attributed, dated act on ONE STATEMENT TEXT, by a
+     JOINED participant of the publishing project other than the statement's author, or by a
+     review-copy recipient through their live grant (§6A). It is not a comment (a comment says
+     something; this says *I read what this case leaves out and I stand as its second reader*),
+     not a signature (it signs nothing and gates nothing), and not a vote.
+
+     WHAT IT IS BOUND TO, AND WHY THE STATEMENT'S HASH. The rule's subject is the STATEMENT, so
+     the act is keyed on `statement_sha` — the SHA-256 of the statement exactly as the case
+     document prints it (`#fmSafe`, which is idempotent, so the draft's text, the unsigned
+     document's text and the publish act's text hash alike) — beside the producing project and
+     the case identity the statement stands at (the draft's, read from the published record; or
+     the unsigned case document's own). EDIT THE STATEMENT AND EVERY ACKNOWLEDGEMENT OF THE OLD
+     TEXT STOPS MATCHING: it is kept as the act it was, and no case document lists it, because a
+     second reader of one sentence is not a second reader of another.
+
+     WHERE IT IS LISTED. `op=publish` lists, in the case document's completeness block, every
+     acknowledgement of the statement it is publishing, in this project, at this case identity —
+     or states that nobody but its author acknowledged it. The signature over that document is
+     what makes the list a signed fact. NOTHING HERE, AND NOTHING IN `publishCase`, REFUSES
+     PUBLICATION FOR WANT OF ONE: a group may be one person (Design Requirement 2), and a gate
+     that pushes a member to recruit a signature is a bug in the gate (rule 11).
+
+     THE TWO DOORS ARE THE REVIEW COPY'S, CONSUMED AND NOT RESTATED: a recipient through
+     `#liveReviewGrant`, a member through `#draftForMember` (or, for an unsigned case document,
+     `#hasCaseStanding`). Every caller neither door admits gets `#noReviewCopy`'s one answer.
+     POSITION is `#isJoinedParticipant` (an owner is a joined participant with the owner flag),
+     so an invited member who has not joined, and an administrator with sight and no position,
+     are refused by name: sight of a project is not a place in it. */
+  static STATEMENT_ACK_MAX = 500;
+  static #statementSha(s) {
+    return createSha256().update(new TextEncoder().encode(Store.#fmSafe(s))).hex();
+  }
+
+  acknowledgeStatement({ draft = null, caseId = null, edition = null, secretSha = null, viewer = null,
+                         bySecret = false } = {}) {
+    let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
+    if (bySecret) {
+      const live = this.#liveReviewGrant(secretSha);
+      if (!live || (draft && String(draft).trim() !== live.draft.draft_id)) return Store.#noReviewCopy();
+      const d = live.draft;
+      project = d.project_id; ident = this.#draftIdentity(d); draftId = d.draft_id;
+      statement = JSON.parse(d.params).statement; statementAuthor = d.updated_by;
+      kind = "recipient"; by = live.grant.grant_id; grantId = live.grant.grant_id; recipient = live.grant.recipient;
+    } else {
+      const v = String(viewer ?? "");
+      if (!v.startsWith("member:")) return Store.#noReviewCopy();
+      const who = v.slice("member:".length);
+      if (draft) {
+        const d = this.#draftForMember(draft, v);
+        if (!d) return Store.#noReviewCopy();
+        project = d.project_id; ident = this.#draftIdentity(d); draftId = d.draft_id;
+        statement = JSON.parse(d.params).statement; statementAuthor = d.updated_by;
+      } else {
+        const cid = String(caseId ?? "").trim(), ed = Number(edition);
+        if (!cid || !Number.isInteger(ed) || ed < 1)
+          return { ok: false, reason: "STATEMENT_ACK_NO_SUBJECT",
+                   detail: "name the statement to acknowledge: draft=<a draft case's id>, or case=<case id>&"
+                         + "edition=<n> for a case document authored and not yet signed." };
+        const doc = this.#one(`SELECT case_id, edition, text, ratified_at FROM case_documents
+                               WHERE case_id=? AND edition=?`, cid, ed);
+        if (!doc || !this.#hasCaseStanding(doc, v)) return Store.#noReviewCopy();
+        if (doc.ratified_at)
+          return { ok: false, reason: "STATEMENT_ACK_ALREADY_SIGNED", caseId: cid, edition: ed,
+                   detail: `case ${cid} edition ${ed} is signed, and its completeness block — which lists who `
+                         + `acknowledged its statement — is what the signature covers. An acknowledgement now `
+                         + `could appear in no signed document of this edition; a published edition is `
+                         + `corrected forward, by the next one (DEC-12).` };
+        const fm = parseFrontmatter(doc.text).data || {};
+        project = String(fm.case_project ?? "").trim();
+        ident = { caseId: cid, edition: ed };
+        const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : {};
+        statement = c.statement; statementAuthor = String(c.author ?? "").trim();
+      }
+      if (!project || !this.#isJoinedParticipant(project, who))
+        return { ok: false, reason: "STATEMENT_ACK_NOT_A_PARTICIPANT",
+                 detail: "an acknowledgement of a case's exclusion statement is given by a JOINED participant of "
+                       + "the project that produces the case, or by the recipient of a review copy through their "
+                       + "grant (BIO_Publication §3 rule 11). Sight of a project is not a place in it: an "
+                       + "invited member who has not joined, and an administrator, are neither." };
+      kind = "participant"; by = who;
+    }
+    const text = Store.#fmSafe(statement);
+    if (!text)
+      return { ok: false, reason: "STATEMENT_ACK_NO_STATEMENT",
+               detail: "this draft states nothing about what its case excludes, so there is no statement to "
+                     + "acknowledge yet. The draft's editor authors it (statement=); acknowledge it then." };
+    /* THE AUTHOR'S OWN ACKNOWLEDGEMENT IS REFUSED BY NAME. The rule's whole content is a SECOND
+       person; an author who acknowledges their own statement has made the first reading twice.
+       The author is the draft's last editor (whose edit is the statement that stands) or the
+       unsigned document's `completeness.author`. `op=publish` also leaves out an acknowledgement
+       by the member who publishes, who becomes the statement's author at that act. */
+    if (kind === "participant" && statementAuthor && by === statementAuthor)
+      return { ok: false, reason: "STATEMENT_ACK_BY_ITS_AUTHOR", author: statementAuthor,
+               detail: `you wrote this statement, and its acknowledgement is a SECOND person's reading of what `
+                     + `the case leaves out (BIO_Publication §3 rule 11). Ask a participant of this project, or `
+                     + `hand the draft to a reader through a review grant. The case publishes without one and `
+                     + `says so.` };
+    const statementSha = Store.#statementSha(text);
+    const same = this.#one(`SELECT ack_id, at FROM statement_acknowledgements
+                            WHERE project_id=? AND statement_sha=? AND case_id IS ? AND edition=?
+                              AND acknowledger_kind=? AND acknowledger=?`,
+                           project, statementSha, ident.caseId ?? null, ident.edition, kind, by);
+    const when = same ? same.at : new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    if (!same)
+      this.sql.exec(`INSERT INTO statement_acknowledgements (project_id,case_id,edition,statement_sha,draft_id,
+                     acknowledger_kind,acknowledger,recipient,at) VALUES (?,?,?,?,?,?,?,?,?)`,
+                    project, ident.caseId ?? null, ident.edition, statementSha, draftId, kind, by, recipient, when);
+    /* THE DOCUMENTS ALREADY AUTHORED FOR THIS STATEMENT, UNSIGNED, AT THIS CASE IDENTITY — the
+       case door's own document, or (through a draft) the edition `op=publish` authored from it.
+       Found by the hash the document prints beside its statement, bounded, and re-read whole. */
+    const needle = `\n  statement_sha: ${statementSha}\n`;
+    const docs = this.#rows(`SELECT case_id, edition, doc_sha, text FROM case_documents
+                             WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
+                               AND instr(text, ?) > 0 ORDER BY case_id LIMIT 8`,
+                            ident.edition, ident.caseId ?? null, ident.caseId ?? null, needle)
+      .filter((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === project);
+    const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
+    return { ok: true, existed: !!same,
+             acknowledgement: { kind, by, recipient, grant_id: grantId, at: when, project,
+                                case_id: ident.caseId ?? null, edition: ident.edition, draft_id: draftId,
+                                statement_sha: statementSha },
+             /* Each unsigned case document of this statement, re-authored to list it: its NEW hash is
+                the one the owner signs (op=caseratify refuses the old one as stale). */
+             case_documents: reauthored,
+             listed: `the completeness block of ${Store.#caseIdentitySentence(ident.caseId ?? null, ident.edition)} `
+                   + `lists this acknowledgement when its case document is authored with this exact statement `
+                   + `(op=publish), or — if that document is already authored and unsigned — now, re-authored `
+                   + `(case_documents). A statement edited afterwards is a different sentence, and this `
+                   + `acknowledgement is not listed under it.` };
+  }
+
+  /* THE TWO RENDERINGS OF THE LIST, ONE SPELLING EACH — written by `#caseDocumentText` when
+     `op=publish` authors a document, and spliced by `#reauthorAcknowledgements` when an
+     acknowledgement lands on one authored and unsigned, so the two can never print it two ways.
+     The frontmatter run starts at `  statement_sha:` and ends before `completeness_excluded:`;
+     the prose starts at `**Who else read this statement.**` and ends before the blank line that
+     precedes `## What Was Searched`. */
+  static #ackFrontmatterLines(acks) {
+    return [
+      `  statement_sha: ${acks.statementSha ?? "null"}`,
+      `  acknowledged: ${acks.rows.length}`,
+      ...(acks.truncated ? ["  acknowledgements_truncated: true"] : []),
+      "completeness_acknowledgements:",
+      ...acks.rows.flatMap((a) => [
+        `  - kind: ${a.kind}`,
+        `    by: ${a.by}`,
+        `    recipient: ${a.recipient == null ? "null" : `"${Store.#fmSafe(a.recipient)}"`}`,
+        `    at: "${a.at}"`])];
+  }
+  static ACK_PROSE_HEAD = "**Who else read this statement.**";
+  static #ackBodyLines(acks, project) {
+    return acks.rows.length
+      ? [`${Store.ACK_PROSE_HEAD} Acknowledged, as a second reader of what this case leaves out, by:`, "",
+         ...acks.rows.map((a) => a.kind === "recipient"
+           ? `- the recipient of review grant ${a.by}, addressed by its issuer as '${Store.#fmSafe(a.recipient)}', `
+             + `on ${a.at}`
+           : `- ${a.by}, a participant of ${project}, on ${a.at}`),
+         ...(acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this "
+                                + "document lists)"] : [])]
+      : [`${Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never `
+         + "required to publish — a group may be one person — and its absence is stated rather than left "
+         + "for a reader to infer."];
+  }
+
+  /* AN ACKNOWLEDGEMENT THAT LANDS WHILE ITS CASE DOCUMENT IS AUTHORED AND UNSIGNED RE-AUTHORS THAT
+     DOCUMENT, because the list must be inside the signature and `op=publish` cannot run twice over
+     one prepared edition (ALREADY_A_CASE_MEMBER). Only the list's two runs change; the document's
+     hash moves, so a signature over the old bytes is refused CASE_RATIFY_STALE and the owner reads
+     and signs what now names the second reader — the review the rule asks for, not a silent swap.
+     Written only while `sig_armored IS NULL` and only over the hash read, so a document signed or
+     re-authored in between is left alone. A document authored before this landing carries neither
+     run; it is left as it is and the answer says so: it cannot list anybody, and it is not made to. */
+  #reauthorAcknowledgements(doc) {
+    const fm = parseFrontmatter(doc.text).data || {};
+    const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : {};
+    const lines = doc.text.split("\n");
+    const f0 = lines.findIndex((l) => l.startsWith("  statement_sha: "));
+    const f1 = lines.indexOf("completeness_excluded:");
+    const b0 = lines.findIndex((l) => l.startsWith(Store.ACK_PROSE_HEAD));
+    const b1 = lines.indexOf("## What Was Searched");
+    if (f0 < 0 || f1 < f0 || b0 < 0 || b1 < b0 + 1)
+      return { case_id: doc.case_id, edition: doc.edition, reauthored: false,
+               why: "this case document was authored before acknowledgements were recorded, so it has no list "
+                  + "to add to; it is left exactly as it was signed-for-review" };
+    const project = String(fm.case_project ?? "").trim();
+    const acks = this.#statementAcknowledgements(project, doc.case_id, doc.edition, c.statement ?? "",
+                                                 String(c.author ?? "").trim() || null);
+    const text = [...lines.slice(0, f0), ...Store.#ackFrontmatterLines(acks), ...lines.slice(f1, b0),
+                  ...Store.#ackBodyLines(acks, project), ...lines.slice(b1 - 1)].join("\n");
+    if (text === doc.text) return { case_id: doc.case_id, edition: doc.edition, reauthored: false, doc_sha: doc.doc_sha };
+    const docSha = createSha256().update(new TextEncoder().encode(text)).hex();
+    this.sql.exec(`UPDATE case_documents SET doc_sha=?, text=? WHERE case_id=? AND edition=? AND doc_sha=?
+                   AND sig_armored IS NULL`, docSha, text, doc.case_id, doc.edition, doc.doc_sha);
+    const now = this.#one(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=?`, doc.case_id, doc.edition);
+    return { case_id: doc.case_id, edition: doc.edition, reauthored: !!now && now.doc_sha === docSha,
+             doc_sha: now ? now.doc_sha : null, acknowledged: acks.rows.length,
+             read: `op=casedocument&case=${doc.case_id}&edition=${doc.edition}` };
+  }
+
+  /* THE ACKNOWLEDGEMENTS OF ONE STATEMENT AT ONE CASE IDENTITY, for `op=publish` and the review
+     copy alike, so the list a reviewer sees and the list a case document prints are one read. A
+     NEW case's draft carries no case id (one is minted only by publication), so at edition 1 an
+     acknowledgement taken through such a draft matches too: it is the same statement, in the
+     same project, at the only edition a new case has. Bounded, and a list that hit the bound
+     says so rather than presenting a page as the whole. */
+  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null) {
+    const sha = Store.#statementSha(statement);
+    const rows = this.#rows(`SELECT acknowledger_kind, acknowledger, recipient, at FROM statement_acknowledgements
+                             WHERE project_id=? AND statement_sha=? AND edition=? AND (case_id IS ? OR
+                               (case_id IS NULL AND edition=1))
+                             ORDER BY at, ack_id LIMIT ?`,
+                            project, sha, edition, caseId ?? null, Store.STATEMENT_ACK_MAX + 1);
+    const truncated = rows.length > Store.STATEMENT_ACK_MAX;
+    const all = rows.slice(0, Store.STATEMENT_ACK_MAX);
+    const listed = all.filter((r) => !(exceptAuthor && r.acknowledger_kind === "participant"
+                                       && r.acknowledger === exceptAuthor));
+    return { statementSha: sha, truncated, byAuthor: all.length - listed.length,
+             rows: listed.map((r) => ({ kind: r.acknowledger_kind, by: r.acknowledger,
+                                        recipient: r.recipient ?? null, at: r.at })) };
   }
   /* ===== END REC-126 ====================================================== */
 
@@ -9714,6 +9972,17 @@ export class Store extends DurableObject {
           subject_position: fm.completeness.subject_position ?? null,
           author: fm.completeness.author ?? null,
           at: fm.completeness.at ?? null,
+          /* D-150 / §3 rule 11: THE SIGNED LIST, committed from the signed bytes. NULL — never
+             an empty list — for a document authored before acknowledgements were recorded: it
+             says nothing about who else read its statement, which is not the same fact as
+             nobody having done so. */
+          acknowledgements: Array.isArray(fm.completeness_acknowledgements)
+            ? fm.completeness_acknowledgements.filter((a) => a && typeof a === "object")
+                .map((a) => ({ kind: a.kind ?? null, by: a.by ?? null,
+                               recipient: a.recipient === "null" ? null : a.recipient ?? null, at: a.at ?? null }))
+            : null,
+          acknowledgements_truncated: Array.isArray(fm.completeness_acknowledgements)
+            ? fm.completeness.acknowledgements_truncated === true : null,
         }) : null,
         typeof fm.bias_acknowledgement === "string" ? fm.bias_acknowledgement : null,
         fm.required_strength && typeof fm.required_strength === "object"
@@ -29192,6 +29461,9 @@ export class Store extends DurableObject {
            check exists to catch, and a grant surviving its draft would be a
            capability over nothing. Cleared together, comments and grants first. */
         this.sql.exec(`DELETE FROM review_comments`);
+        /* D-150: an acknowledgement is an act ON a statement nobody has published yet; one a
+           signed case document lists survives in that document's signed bytes. */
+        this.sql.exec(`DELETE FROM statement_acknowledgements`);
         this.sql.exec(`DELETE FROM review_grants`);
         this.sql.exec(`DELETE FROM case_drafts`);
         /* D-113. Everything else derived from the corpus, and the reason this
@@ -45563,6 +45835,11 @@ export class Store extends DurableObject {
         reviewcomment: () => this.reviewComment({ draft: url.searchParams.get("draft"),
           secretSha: url.searchParams.get("secretSha"), viewer: url.searchParams.get("viewer"),
           bySecret: url.searchParams.get("bySecret") === "1", text: (body || {}).text }),
+        /* D-150: the review copy's two doors, and a member's third subject (an unsigned case document). */
+        statementack: () => this.acknowledgeStatement({ draft: url.searchParams.get("draft"),
+          caseId: url.searchParams.get("case"), edition: url.searchParams.get("edition"),
+          secretSha: url.searchParams.get("secretSha"), viewer: url.searchParams.get("viewer"),
+          bySecret: url.searchParams.get("bySecret") === "1" }),
         caseratify: () => this.ratifyCaseDocument(body || {}),
         audit: () => this.auditPass({ after: url.searchParams.get("after") || "",
                                       limit: url.searchParams.get("limit"),

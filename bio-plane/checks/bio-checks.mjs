@@ -10906,6 +10906,32 @@ export function checkCaseDocument(fm, ctx = {}) {
     if (typeof c.subject_justification !== 'string' || c.subject_justification.trim() === '')
       findings.push(f(C41.COMPLETENESS, 'error', 'a case document requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse (DEC-13)'));
   }
+  /* D-150 / BIO_Publication_v0_1.md §3 rule 11 — THE STATEMENT'S ACKNOWLEDGEMENTS, C-41.10's
+     arm because they are the completeness block's. ABSENCE IS NOT REQUIRED AWAY: a document
+     authored before acknowledgements were recorded carries no list, and it is read as saying
+     nothing about them (the ratify committer commits NULL, never an empty list), so this arm
+     cannot demand the key without refusing what already crossed (rule 1). What it refuses is a
+     list that claims more than it can support: a row naming no acknowledger or no kind, a count
+     that disagrees with the list, and the statement's own author listed as its second reader —
+     the one thing rule 11 says an acknowledgement is not. Nothing here asks for a row to exist:
+     none is ever required to publish. */
+  if (fm && fm.completeness_acknowledgements !== undefined) {
+    const acks = fm.completeness_acknowledgements;
+    if (!Array.isArray(acks)) {
+      findings.push(f(C41.COMPLETENESS, 'error', 'a case document\'s completeness_acknowledgements must be a list — empty when nobody but the statement\'s author acknowledged it (BIO_Publication §3 rule 11)'));
+    } else {
+      const author = c && typeof c.author === 'string' ? c.author : null;
+      for (const a of acks) {
+        if (!a || typeof a !== 'object' || !['participant', 'recipient'].includes(a.kind)
+            || typeof a.by !== 'string' || !a.by.trim() || typeof a.at !== 'string')
+          findings.push(f(C41.COMPLETENESS, 'error', `a case document lists an acknowledgement of its statement that names no acknowledger, kind (participant or recipient) or date (got ${JSON.stringify(a)}): an acknowledgement is an authored, attributed, dated act, and an unattributed one is the record claiming a second reader it cannot name`));
+        else if (a.kind === 'participant' && author && a.by === author)
+          findings.push(f(C41.COMPLETENESS, 'error', `a case document lists ${a.by}, the completeness statement's own author, as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication §3 rule 11), and an author acknowledging their own statement has read it once`));
+      }
+      if (c && c.acknowledged !== undefined && c.acknowledged !== acks.length)
+        findings.push(f(C41.COMPLETENESS, 'error', `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
+    }
+  }
   /* REC-96 / D-196 / IC-112 — THE `searched` SECTION, AND IT IS C-41.10's ARM
      BECAUSE IT IS THE SAME QUESTION. The completeness statement says what this
      case does not cover; this says what was looked for. A case carrying the first
