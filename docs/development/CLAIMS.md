@@ -20030,3 +20030,18 @@ Suites: `civicos-ui/test/agent-surfaced-inquiry.test.mjs` and `.control.mjs` (ne
 sites moves (named at release). `docs/development/CIVICOS_UI_STATE.md` (PREPENDED). No plane change (I3 consumer).
 **open as of 2026-09-23** — claimed at the start of the item.
 released: 2026-09-23 — pushed land/worker/D-82 @ 803556f6 (verified by ls-remote). Sites as claimed, except `queueSubjectHtml` and `renderQueue` were NOT touched: op=queue names no question as a subject today (measured), so nothing there to mark. No other suite's pin moved. Paths stay reserved until CONDUCT integrates the branch.
+
+### UI-74 · UI worker of CONDUCT #17 (cloud session WORKER UI-74 (CONDUCT #17), branch land/worker/UI-74) · 2026-09-23 — the accept ceremony: the four beats, the per-set affirmation, and D-195's shared origin shown before it
+
+Branch `land/worker/UI-74`, base `origin/main` @ `02603e88`. Scope re-derived from the stranded UI-43 branch
+(`worktree-agent-a9e7e017d06799858` @ `9706d19e`, read as evidence, never merged). Claimed BY SITE in
+`civicos-ui/app.html`: ONE NEW region `__ACCEPT_CEREMONY_START__`/`__ACCEPT_CEREMONY_END__` (new functions only); ONE
+new `SURFACES` key `accept-ceremony`; the `boot()` route chain line (one more `!…RouteFromHash()`); ONE link line inside
+`vrevVersionHtml`; ONE new data door `aiSessionConditions` inside the running-session block, returning values and no
+markup. NOT touched: every other marked region's body, every other `SURFACES` key, `actRefusalHtml`/`refusalWords`
+(reused, not copied), `versionReviewRead` (called, not re-asked). Suites: `civicos-ui/test/accept-ceremony.test.mjs`
+and `.control.mjs` (new, real plane under miniflare); `surface-registry.test.mjs` (the four version rows struck from
+`ACTS_AWAITING_SURFACE`, floors moved from printed figures); `ai-session-wire.test.mjs` (ARM C2 corrected for the data
+door, C4 arms new); `preauth-vocabulary.test.mjs` if its router census moves. `docs/development/CIVICOS_UI_STATE.md`
+(PREPENDED). No plane change (I3 consumer of `op=versionaccept` and `op=versionstrength`'s `independence`).
+**open as of 2026-09-23** — claimed at the start of the item.
