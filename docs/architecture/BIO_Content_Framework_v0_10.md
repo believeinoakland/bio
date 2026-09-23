@@ -21,6 +21,7 @@
 - §13 — **"An assistant-surfaced focus must carry the bias manifest in force" (D-85) is carried by the RUN and reached through it** (BOB #25, 2026-09-21, SCHEDULER #10's Q2). `INVESTIGATIVE-SESSION.md` §3 ruled that the run carries the manifest and §11 records it (`ai_runs.bias_manifest`, read back with whether the lens has since moved, PL-12); no production carries its own copy (D-21). What was owed is the LINK and its soundness, ruled in §11 item 5: a production names a running run its caller holds; an assistant's new question names one and the plane records it; the run records the lens in force at its open beside the one it was handed.
 - §13.1 — **evidence accruing to a bias statement (D-87) and a statement's MEASURABLE FORM (D-88) are a STATED DEFERRAL with §12's evaluator** (BOB #25, 2026-09-21). D-88 is the same construct as a satisfaction condition and is built once, with it, under the intent layer's trigger above; D-87's mechanical half is that measure taken over time. The `measure-decay` finding is catalogued (`queuestate.mjs`) with no producer until then. What needs no build is §13.1's own path from decay to a block: a member reads a statement's grounds and amends it, an authored act that generates ordinary bias debt.
 - §12.1 — CONTACT between aspirations is NAMED (the same entities, the same progressions, the same queue ordered differently) and NOT SPECIFIED, DEFERRED rather than forgotten (D-80; re-disposed by BOB #19, stated here by BOB #22, 2026-09-21). An aspiration is not an object in the plane (`node tools/status.mjs 8.goals` reads ABSENT), so specifying how two of them come into contact would design a dependent ahead of its substrate; the specification is a required clause of the design act that makes an aspiration an object. Bob's ruling stands and is not reopened: no arbiter, and a contradiction is found, never prevented.
+- §8.2 — the declared flow's REVISIONS are BUILT (D-128, 2026-09-23: append-only versions with basis, and the version named on every instance and finding); NOT BUILT: a member surface for a revision's basis, a disposition naming the version it was decided against, and the deferred third shape (a stage out of order) with institution scoping, which wait on §8.2's stated trigger.
 - §8.1 — grade D's label CORRECTED 2026-09-23 by BOB #30 (D-219); the stored method string and `schema.mjs`'s two comments still read the old wording (NOT BUILT, a row).
 
 **Contents**
@@ -871,17 +872,29 @@ flowchart LR
 Bob, 2026-08-01: *"differentiating between how things are supposed to flow and how they really flow (and the
 implications of those differences)."* A progression definition IS the declared flow — the group's claim about how a
 body ought to behave, authored and dated; its instances are the observed flow; and two shapes of their difference are
-BUILT, the missing predecessor and the overdue successor (`node tools/status.mjs progression`). **At the code the declared
-flow cannot evolve: `op=progressiondefine` UPSERTS** (`store.mjs`: `progression_defs` `ON CONFLICT … DO UPDATE`, and the
-stages deleted and rewritten), so a group's earlier understanding disappears silently and a finding read against it loses
-its basis — the record keeping less than it held, and a correction that moves nothing forward (DEC-19). **Placed now
-(door 2, keeping D-128's id):** a definition is APPEND-ONLY. A revision writes a new version carrying its author, date
+BUILT, the missing predecessor and the overdue successor (`node tools/status.mjs progression`). **Until D-128 landed
+(2026-09-23) the declared flow could not evolve: `op=progressiondefine` UPSERTED** (`progression_defs` `ON CONFLICT … DO
+UPDATE`, and the stages deleted and rewritten), so a group's earlier understanding disappeared silently and a finding read
+against it lost its basis — the record keeping less than it held, and a correction that moves nothing forward (DEC-19).
+**Placed (door 2, keeping D-128's id), and BUILT by D-128:** a definition is APPEND-ONLY. A revision writes a new version carrying its author, date
 and BASIS — where the declared flow comes from, as the member's statement and a citation, the anatomy exception documents
 already carry — the prior version stands and reads back, and an instance read and each finding name the version they
 were read against. **Deferred, with its trigger:** the third shape, a stage observed OUT OF ORDER, needs each placed
 document's OWN date (threading and capture times are not it); it is designed when a placed document carries one — a
 doctype reader's extracted date or a member's stated date with its source — and scoping a definition to an institution
 waits on the same use. Home: this section.
+
+**As built (D-128, 2026-09-23).** Every version is a row of `progression_def_versions` / `progression_stage_versions`;
+`progression_defs` / `progression_stages` hold the CURRENT version, the one every instance is assembled against. A
+re-definition that changes anything is a revision, refused `NO_BASIS` without the member's statement and `NO_CITATION`
+without its citation — judged after every stage, so a bad stage is still heard first — and a re-definition identical to
+the current version writes nothing. The first version may state a basis and is not refused for lacking one; it reads back
+`stated: false`. `op=progression&version=N` reads any version back with its author, date and basis, and every read lists
+the versions held. An instance, each `missing_predecessor` and `overdue_successor` finding, each discharge, `op=proposals`
+and `op=captureprogressions` carry `definition_version`. A definition declared before D-128 reads as version 1 with its
+basis NOT RECORDED, and its first revision writes it into the history verbatim before writing version 2. NOT BUILT: a
+member surface for the basis (the UI's progression form has no basis field, so a revision is refused there), and a
+proposal disposition does not record the version it was decided against.
 
 ## 8.3 Identifier spaces, and where grade collapses
 

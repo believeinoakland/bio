@@ -22541,10 +22541,20 @@ export class Store extends DurableObject {
      stages carrying after / cardinality / interval / required-ness (framework 8.2's
      progression table). It is a member's CLAIM about how an institution ought to behave
      (framework 8.1 note 3), so it carries its author and date; the declaring member is
-     stamped server-side. Re-defining the same key REPLACES its stages (the set is
-     editable data, not code). Both example progressions -- meeting->agenda->minutes and
-     need->award->signed-contract -- must be expressible as calls here. */
-  defineProgression({ progressionKey, label, note = null, stages, declaredBy = null } = {}) {
+     stamped server-side. Both example progressions -- meeting->agenda->minutes and
+     need->award->signed-contract -- must be expressible as calls here.
+     D-128 (framework 8.2, "The declared flow, and its revisions", BOB #27): a definition is
+     APPEND-ONLY. This comment said "re-defining the same key REPLACES its stages" and the code
+     did exactly that -- an UPSERT and a delete-and-rewrite of the stages -- so a group's earlier
+     declared flow vanished silently and a finding read against it lost its basis. Now a
+     re-definition that changes anything is a REVISION: it writes version N+1 into
+     progression_def_versions/progression_stage_versions carrying its author, date and BASIS (the
+     member's statement and a citation, the anatomy an exception document carries, both required
+     on a revision), and moves the current tables to it; every earlier version stands and reads
+     back through op=progression with version=N. A re-definition identical to the current version
+     is not a revision and writes nothing (unchanged:true). The first version may carry a basis
+     and is not refused for lacking one. */
+  defineProgression({ progressionKey, label, note = null, stages, declaredBy = null, basis = null, citation = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
       return { ok: false, reason: "NO_KEY", detail: "a progression definition is named by a key, e.g. 'meeting' or 'procurement'" };
     const key = progressionKey.trim();
@@ -22589,37 +22599,127 @@ export class Store extends DurableObject {
                  detail: `stage '${s.stage_key}' is after '${s.after_stage}', which is not a stage of this progression` };
     }
     /* END DEC-49 REGION is-progression-order */
+    const lbl = label.trim();
+    const nt = note == null ? null : String(note).slice(0, 1000);
+    const stmt = typeof basis === "string" && basis.trim() ? basis.trim().slice(0, 4000) : null;
+    const cite = typeof citation === "string" && citation.trim() ? citation.trim().slice(0, 2000) : null;
+    /* D-128: what stands now. `cur` is the current version (null for a key never declared); a
+       re-definition identical to it is no revision, and a different one must carry its basis --
+       judged AFTER every stage above, so a caller learns of a bad stage before a missing basis. */
+    const cur = this.#progressionCurrent(key);
+    if (cur) {
+      const same = cur.label === lbl && (cur.note ?? null) === nt && cur.stages.length === norm.length
+        && norm.every((s, i) => { const c = cur.stages[i];
+             return c.stage_key === s.stage_key && (c.label ?? null) === s.label && (c.after_stage ?? null) === s.after_stage
+               && c.cardinality === s.cardinality && (c.within_interval ?? null) === s.within_interval && c.required === s.required; });
+      if (same)
+        return { ok: true, progression_key: key, label: cur.label, stage_count: cur.stages.length, stages: cur.stages,
+                 declared_by: cur.declared_by, at: cur.at, version: cur.version, unchanged: true,
+                 basis: cur.basis, prior_version: null };
+      if (!stmt) return { ok: false, reason: "NO_BASIS", progression_key: key, version: cur.version,
+        detail: `'${key}' is already declared (version ${cur.version}); a revision states its basis -- why the `
+              + `declared flow changes -- and version ${cur.version} stands beside it (framework 8.2)` };
+      if (!cite) return { ok: false, reason: "NO_CITATION", progression_key: key, version: cur.version,
+        detail: "a revision of a declared flow carries a citation -- where the basis for the change is published or held" };
+    }
+    const version = cur ? cur.version + 1 : 1;
     const at = new Date().toISOString();
     const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
     this.ctx.storage.transactionSync(() => {
+      /* a definition declared before D-128 has no version rows: write it as version 1 first,
+         verbatim from the current tables, with its basis NULL (not recorded), so it stands. */
+      if (cur && !cur.version_recorded) this.#writeProgressionVersion(key, cur.version, cur, cur.stages, null, null);
       this.sql.exec(
         `INSERT INTO progression_defs (progression_key,label,note,declared_by,at) VALUES (?,?,?,?,?)
          ON CONFLICT(progression_key) DO UPDATE SET label=excluded.label, note=excluded.note,
            declared_by=excluded.declared_by, at=excluded.at`,
-        key, label.trim(), note == null ? null : String(note).slice(0, 1000), by, at);
+        key, lbl, nt, by, at);
       this.sql.exec(`DELETE FROM progression_stages WHERE progression_key=?`, key);
       for (const s of norm)
         this.sql.exec(
           `INSERT INTO progression_stages (progression_key,stage_key,stage_no,label,after_stage,cardinality,within_interval,required)
            VALUES (?,?,?,?,?,?,?,?)`,
           key, s.stage_key, s.stage_no, s.label, s.after_stage, s.cardinality, s.within_interval, s.required);
+      this.#writeProgressionVersion(key, version, { label: lbl, note: nt, declared_by: by, at }, norm, stmt, cite);
     });
-    return { ok: true, progression_key: key, label: label.trim(), stage_count: norm.length,
-             stages: norm, declared_by: by, at };
+    return { ok: true, progression_key: key, label: lbl, stage_count: norm.length,
+             stages: norm, declared_by: by, at, version, unchanged: false,
+             basis: Store.#basisView(stmt, cite), prior_version: cur ? cur.version : null };
   }
 
-  /* op=progression: read a progression definition and its ordered stages. */
-  readProgression({ progressionKey } = {}) {
-    if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "read a progression definition by its key (op=progression&key=meeting)" };
-    const key = progressionKey.trim();
+  /* D-128: the basis as it reads back. `stated:false` is a first version declared without one, or
+     one declared before D-128 -- the record says it holds none rather than inventing one. */
+  static #basisView(statement, citation) {
+    return { statement: statement ?? null, citation: citation ?? null, stated: statement != null };
+  }
+
+  /* D-128: append one version of a definition -- never updated, never deleted but by a whole-store
+     purge (INSERT, so a second write of the same version is an error, not an overwrite). */
+  #writeProgressionVersion(key, version, def, stages, statement, citation) {
+    this.sql.exec(
+      `INSERT INTO progression_def_versions (progression_key,version,label,note,declared_by,at,basis_statement,basis_citation)
+       VALUES (?,?,?,?,?,?,?,?)`,
+      key, version, def.label, def.note ?? null, def.declared_by ?? null, def.at ?? null, statement, citation);
+    for (const s of stages)
+      this.sql.exec(
+        `INSERT INTO progression_stage_versions (progression_key,version,stage_key,stage_no,label,after_stage,cardinality,within_interval,required)
+         VALUES (?,?,?,?,?,?,?,?,?)`,
+        key, version, s.stage_key, s.stage_no, s.label ?? null, s.after_stage ?? null, s.cardinality, s.within_interval ?? null, s.required);
+  }
+
+  /* D-128: the CURRENT version of a definition -- the one every instance and finding is derived
+     against -- with its number. A definition with no version rows was declared before D-128 and
+     reads as version 1, its basis not recorded (version_recorded:false). null if never declared. */
+  #progressionCurrent(key) {
     const def = this.#one(`SELECT progression_key, label, note, declared_by, at FROM progression_defs WHERE progression_key=?`, key);
-    if (!def) return { ok: true, progression_key: key, found: false, stages: [] };
+    if (!def) return null;
     const stages = this.#rows(
       `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
          FROM progression_stages WHERE progression_key=? ORDER BY stage_no`, key);
+    const v = this.#one(
+      `SELECT version, basis_statement, basis_citation FROM progression_def_versions
+         WHERE progression_key=? ORDER BY version DESC LIMIT 1`, key);
+    return { ...def, stages, version: v ? v.version : 1, version_recorded: !!v,
+             basis: v ? Store.#basisView(v.basis_statement, v.basis_citation) : Store.#basisView(null, null) };
+  }
+
+  /* op=progression: read a progression definition and its ordered stages -- the CURRENT version
+     by default, or any earlier one with version=N (D-128: a revision leaves the prior version
+     readable, with its basis). Every read names its version, whether it is current, and the list
+     of versions the record holds, each with its author, date and basis. */
+  readProgression({ progressionKey, version = null } = {}) {
+    if (typeof progressionKey !== "string" || !progressionKey.trim())
+      return { ok: false, reason: "NO_KEY", detail: "read a progression definition by its key (op=progression&key=meeting)" };
+    const key = progressionKey.trim();
+    const cur = this.#progressionCurrent(key);
+    if (!cur) return { ok: true, progression_key: key, found: false, stages: [] };
+    const recorded = this.#rows(
+      `SELECT version, declared_by, at, basis_statement, basis_citation FROM progression_def_versions
+         WHERE progression_key=? ORDER BY version`, key);
+    const versions = recorded.length
+      ? recorded.map((v) => ({ version: v.version, declared_by: v.declared_by, at: v.at,
+                               basis: Store.#basisView(v.basis_statement, v.basis_citation) }))
+      : [{ version: 1, declared_by: cur.declared_by, at: cur.at, basis: cur.basis }];
+    const want = version == null || version === "" ? cur.version : Number(version);
+    if (!Number.isInteger(want) || !versions.some((v) => v.version === want))
+      return { ok: false, reason: "NOT_FOUND", progression_key: key, version: String(version).slice(0, 40),
+               current_version: cur.version,
+               detail: `'${key}' has no version ${String(version).slice(0, 40)}; it holds versions `
+                     + versions.map((v) => v.version).join(", ") };
+    let def = cur, stages = cur.stages;
+    if (want !== cur.version) {
+      def = this.#one(
+        `SELECT label, note, declared_by, at, basis_statement, basis_citation FROM progression_def_versions
+           WHERE progression_key=? AND version=?`, key, want);
+      def.basis = Store.#basisView(def.basis_statement, def.basis_citation);
+      stages = this.#rows(
+        `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
+           FROM progression_stage_versions WHERE progression_key=? AND version=? ORDER BY stage_no`, key, want);
+    }
     return { ok: true, progression_key: key, found: true,
              label: def.label, note: def.note, declared_by: def.declared_by, at: def.at,
+             version: want, current: want === cur.version, current_version: cur.version,
+             basis: def.basis, version_count: versions.length, versions,
              stage_count: stages.length, stages };
   }
 
@@ -23056,6 +23156,12 @@ export class Store extends DurableObject {
       `SELECT progression_key, label FROM progression_defs WHERE progression_key=?`, progressionKey);
     if (!def) return { ok: true, progression_key: progressionKey, entity_id: entityId, found: false, defined: false,
                        detail: "no such progression definition (define it first, op=progressiondefine)" };
+    /* D-128: the version of the definition this instance is read against -- the CURRENT one, whose
+       stages are loaded below. Named on the instance and on every finding and discharge, so a
+       finding keeps its basis after a revision: op=progression with this version reads it back. */
+    const vrow = this.#one(
+      `SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`, progressionKey);
+    const definitionVersion = vrow && vrow.v != null ? vrow.v : 1;
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     const stageDefs = this.#rows(
       `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
@@ -23083,6 +23189,7 @@ export class Store extends DurableObject {
        has been threaded on this entity yet. */
     if (rows.length === 0)
       return { ok: true, progression_key: progressionKey, entity_id: entityId, found: false, defined: true,
+               definition_version: definitionVersion,
                label: def.label, entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
                grade: null, grade_determined: false, stage_count: stageDefs.length, placed_count: 0,
                chain: [], stages: [], findings: [], finding_count: 0, discharges: [], discharge_count: 0 };
@@ -23146,14 +23253,14 @@ export class Store extends DurableObject {
              (framework 8.2). Reported distinctly (not a finding, not hidden), carrying the same
              reason/citation the writer earned, so the record shows the skip AND its legitimacy. */
           discharges.push({ kind: "discharged_skip", stage_key: s.stage_key, stage_label: s.label,
-                            required: s.required, after_stage: s.after_stage,
+                            required: s.required, after_stage: s.after_stage, definition_version: definitionVersion,
                             documents: exceptions,
                             detail: `the '${s.stage_key}' stage is ${s.required} required and unfilled, but its skip is`
                                   + ` DISCHARGED by ${exceptions.length} exception document(s) naming why it may be missing`
                                   + ` (framework 8.2) -- a lawful, recorded skip, not a gap` });
         } else {
           findings.push({ kind: "missing_predecessor", stage_key: s.stage_key, stage_label: s.label,
-                          required: s.required, after_stage: s.after_stage,
+                          required: s.required, after_stage: s.after_stage, definition_version: definitionVersion,
                           /* every required tier is DISCHARGEABLE by an exception document (FW-10); this
                              one simply carries none. unless_exception's firing here is DEC-9's open policy. */
                           dischargeable: true,
@@ -23165,6 +23272,7 @@ export class Store extends DurableObject {
       }
     }
     return { ok: true, progression_key: progressionKey, entity_id: entityId, found: true, defined: true,
+             definition_version: definitionVersion,
              label: def.label, entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
              grade: instanceGrade, grade_determined: determined,
              established: determined && Store.#isEstablished(instanceGrade),
@@ -23505,7 +23613,8 @@ export class Store extends DurableObject {
       if (d.deadline_ms >= nowMs) continue;                    // not yet overdue
       const f = d.finding;
       out.push({ kind: "overdue_successor", stage_key: f.stage_key, stage_label: f.stage_label,
-                 required: f.required, after_stage: f.after_stage, predecessor_stage: d.predecessor_stage,
+                 required: f.required, after_stage: f.after_stage, definition_version: f.definition_version,
+                 predecessor_stage: d.predecessor_stage,
                  predecessor_at: new Date(d.predecessor_ms).toISOString(), within_interval: d.within_interval,
                  deadline: new Date(d.deadline_ms).toISOString(), overdue_by_ms: nowMs - d.deadline_ms,
                  grade: f.grade, grade_determined: f.grade_determined,
@@ -23621,6 +23730,7 @@ export class Store extends DurableObject {
       const entityLabel = inst.entity ? inst.entity.label : null;
       instances.push({
         progression_key: inst.progression_key, progression_label: inst.label,
+        definition_version: inst.definition_version,
         entity_id: inst.entity_id, entity_label: entityLabel, findings });
       /* D-79 aggregation stays ONE proposal per (progression_key, stage_key) — overdue does NOT
          split a stage into two proposals (that would drown, and would break the disposition key
@@ -23634,6 +23744,7 @@ export class Store extends DurableObject {
         if (!g) {
           g = { key, progression_key: inst.progression_key, progression_label: inst.label,
                 stage_key: f.stage_key, stage_label: f.stage_label, required: f.required,
+                definition_version: inst.definition_version,
                 surfaced_by: "machine", overdue_count: 0, instances: [] };
           groups.set(key, g);
         }
@@ -23642,7 +23753,7 @@ export class Store extends DurableObject {
         /* the finding's grade is the instance's grade (the weakest connection along its chain),
            or "undetermined" when the instance has fewer than two placed stages — never invented. */
         g.instances.push({ entity_id: inst.entity_id, entity_label: entityLabel,
-          progression_key: inst.progression_key,
+          progression_key: inst.progression_key, definition_version: inst.definition_version,
           grade: f.grade_determined ? f.grade : null, grade_determined: f.grade_determined === true,
           overdue: !!od, deadline: od ? od.deadline : null });
       }
@@ -23738,6 +23849,7 @@ export class Store extends DurableObject {
       const findings = [...missing, ...a.overdue].map(project);
       instances.push({
         progression_key: inst.progression_key, progression_label: inst.label,
+        definition_version: inst.definition_version,
         entity_id: inst.entity_id, entity_label: inst.entity ? inst.entity.label : null,
         stage_key: r.stage_key, stage_label: stage ? stage.label : r.stage_key,
         findings });
@@ -25616,6 +25728,7 @@ export class Store extends DurableObject {
         case: this.#queueAncestors(subjects, viewer),
         subject: { kind: "progression_stage", id: null,
                    progression_key: p.progression_key, stage_key: p.stage_key,
+                   definition_version: p.definition_version,
                    bundles: subjects.slice(0, Store.QUEUE_OPTION_SUBJECTS_MAX) },
         summary: `${p.progression_label}: the '${p.stage_label}' stage is ${p.required} required and absent`,
         detail: `${p.n} instance${p.n === 1 ? "" : "s"} of this progression reach${p.n === 1 ? "es" : ""} `
@@ -28740,6 +28853,10 @@ export class Store extends DurableObject {
         this.sql.exec(`DELETE FROM connections`);
         this.sql.exec(`DELETE FROM progression_stages`);
         this.sql.exec(`DELETE FROM progression_defs`);
+        /* D-128: every version of every definition, the append-only history beside the current
+           tables above -- member-declared like them, so cleared in the whole-store arm only. */
+        this.sql.exec(`DELETE FROM progression_stage_versions`);
+        this.sql.exec(`DELETE FROM progression_def_versions`);
         /* REC-5 / D-122. The connection-derive dirty-set is a transient work-queue
            DERIVED from the corpus (an entity is dirty only because a document
            resolved to it). A whole-store purge means the corpus is gone, so the
@@ -43601,7 +43718,8 @@ export class Store extends DurableObject {
                                                  limit: url.searchParams.get("limit"),
                                                  viewer: url.searchParams.get("viewer") }),
         progressiondefine: () => this.defineProgression(body || {}),
-        progression: () => this.readProgression({ progressionKey: url.searchParams.get("key") }),
+        progression: () => this.readProgression({ progressionKey: url.searchParams.get("key"),
+                                                  version: url.searchParams.get("version") }),
         /* CONSTRUCTS Step 5, SLICE B (FW-9): PROGRESSION INSTANCES and the MISSING-PREDECESSOR
            finding. op=thread threads REAL captured documents through a definition's stages by
            a threading entity (only documents that resolve to it, FW-7), stamping threaded_by

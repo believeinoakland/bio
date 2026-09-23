@@ -1178,6 +1178,39 @@ CREATE TABLE IF NOT EXISTS progression_stages (
   PRIMARY KEY (progression_key, stage_key)
 );
 CREATE INDEX IF NOT EXISTS progression_stages_key ON progression_stages(progression_key);
+-- D-128 (framework 8.2, The declared flow and its revisions, BOB #27 2026-09-22): a definition is
+-- APPEND-ONLY. The two tables above are the CURRENT version, the one every instance and finding
+-- is derived against, and these two hold EVERY version ever declared, never updated and never
+-- deleted but by a whole-store purge. A revision writes version N+1 carrying its author, date and
+-- BASIS (the member's statement and a citation, the anatomy an exception document carries); the
+-- prior version stands and reads back through op=progression with version=N. A definition
+-- declared before D-128 has no rows here -- the store reads it as version 1 with its basis NOT
+-- RECORDED, and its first revision writes that version here first, verbatim from the tables above.
+-- basis_statement and basis_citation are NULL when the declaring member stated none, which only a
+-- FIRST version may do; a revision is refused without both.
+CREATE TABLE IF NOT EXISTS progression_def_versions (
+  progression_key TEXT NOT NULL,
+  version         INTEGER NOT NULL,
+  label           TEXT NOT NULL,
+  note            TEXT,
+  declared_by     TEXT,
+  at              TEXT,
+  basis_statement TEXT,
+  basis_citation  TEXT,
+  PRIMARY KEY (progression_key, version)
+);
+CREATE TABLE IF NOT EXISTS progression_stage_versions (
+  progression_key TEXT NOT NULL,
+  version         INTEGER NOT NULL,
+  stage_key       TEXT NOT NULL,
+  stage_no        INTEGER NOT NULL,
+  label           TEXT,
+  after_stage     TEXT,
+  cardinality     TEXT NOT NULL,
+  within_interval TEXT,
+  required        TEXT NOT NULL,
+  PRIMARY KEY (progression_key, version, stage_key)
+);
 -- CONSTRUCTS Step 5, SLICE B (FW-9): a PROGRESSION INSTANCE -- an actual N-stage chain of
 -- REAL captured documents threaded through a definition's stages by a THREADING ENTITY (a
 -- contract number, a project id, a fund). Framework 8.2: "an instance of a progression is

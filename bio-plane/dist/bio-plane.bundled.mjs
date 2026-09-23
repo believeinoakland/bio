@@ -1185,6 +1185,39 @@ CREATE TABLE IF NOT EXISTS progression_stages (
   PRIMARY KEY (progression_key, stage_key)
 );
 CREATE INDEX IF NOT EXISTS progression_stages_key ON progression_stages(progression_key);
+-- D-128 (framework 8.2, The declared flow and its revisions, BOB #27 2026-09-22): a definition is
+-- APPEND-ONLY. The two tables above are the CURRENT version, the one every instance and finding
+-- is derived against, and these two hold EVERY version ever declared, never updated and never
+-- deleted but by a whole-store purge. A revision writes version N+1 carrying its author, date and
+-- BASIS (the member's statement and a citation, the anatomy an exception document carries); the
+-- prior version stands and reads back through op=progression with version=N. A definition
+-- declared before D-128 has no rows here -- the store reads it as version 1 with its basis NOT
+-- RECORDED, and its first revision writes that version here first, verbatim from the tables above.
+-- basis_statement and basis_citation are NULL when the declaring member stated none, which only a
+-- FIRST version may do; a revision is refused without both.
+CREATE TABLE IF NOT EXISTS progression_def_versions (
+  progression_key TEXT NOT NULL,
+  version         INTEGER NOT NULL,
+  label           TEXT NOT NULL,
+  note            TEXT,
+  declared_by     TEXT,
+  at              TEXT,
+  basis_statement TEXT,
+  basis_citation  TEXT,
+  PRIMARY KEY (progression_key, version)
+);
+CREATE TABLE IF NOT EXISTS progression_stage_versions (
+  progression_key TEXT NOT NULL,
+  version         INTEGER NOT NULL,
+  stage_key       TEXT NOT NULL,
+  stage_no        INTEGER NOT NULL,
+  label           TEXT,
+  after_stage     TEXT,
+  cardinality     TEXT NOT NULL,
+  within_interval TEXT,
+  required        TEXT NOT NULL,
+  PRIMARY KEY (progression_key, version, stage_key)
+);
 -- CONSTRUCTS Step 5, SLICE B (FW-9): a PROGRESSION INSTANCE -- an actual N-stage chain of
 -- REAL captured documents threaded through a definition's stages by a THREADING ENTITY (a
 -- contract number, a project id, a fund). Framework 8.2: "an instance of a progression is
@@ -47688,10 +47721,20 @@ ${words}`;
      stages carrying after / cardinality / interval / required-ness (framework 8.2's
      progression table). It is a member's CLAIM about how an institution ought to behave
      (framework 8.1 note 3), so it carries its author and date; the declaring member is
-     stamped server-side. Re-defining the same key REPLACES its stages (the set is
-     editable data, not code). Both example progressions -- meeting->agenda->minutes and
-     need->award->signed-contract -- must be expressible as calls here. */
-  defineProgression({ progressionKey, label, note = null, stages, declaredBy = null } = {}) {
+     stamped server-side. Both example progressions -- meeting->agenda->minutes and
+     need->award->signed-contract -- must be expressible as calls here.
+     D-128 (framework 8.2, "The declared flow, and its revisions", BOB #27): a definition is
+     APPEND-ONLY. This comment said "re-defining the same key REPLACES its stages" and the code
+     did exactly that -- an UPSERT and a delete-and-rewrite of the stages -- so a group's earlier
+     declared flow vanished silently and a finding read against it lost its basis. Now a
+     re-definition that changes anything is a REVISION: it writes version N+1 into
+     progression_def_versions/progression_stage_versions carrying its author, date and BASIS (the
+     member's statement and a citation, the anatomy an exception document carries, both required
+     on a revision), and moves the current tables to it; every earlier version stands and reads
+     back through op=progression with version=N. A re-definition identical to the current version
+     is not a revision and writes nothing (unchanged:true). The first version may carry a basis
+     and is not refused for lacking one. */
+  defineProgression({ progressionKey, label, note = null, stages, declaredBy = null, basis = null, citation = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
       return { ok: false, reason: "NO_KEY", detail: "a progression definition is named by a key, e.g. 'meeting' or 'procurement'" };
     const key = progressionKey.trim();
@@ -47737,16 +47780,57 @@ ${words}`;
           detail: `stage '${s.stage_key}' is after '${s.after_stage}', which is not a stage of this progression`
         };
     }
+    const lbl = label.trim();
+    const nt = note == null ? null : String(note).slice(0, 1e3);
+    const stmt = typeof basis === "string" && basis.trim() ? basis.trim().slice(0, 4e3) : null;
+    const cite = typeof citation === "string" && citation.trim() ? citation.trim().slice(0, 2e3) : null;
+    const cur = this.#progressionCurrent(key);
+    if (cur) {
+      const same = cur.label === lbl && (cur.note ?? null) === nt && cur.stages.length === norm.length && norm.every((s, i) => {
+        const c = cur.stages[i];
+        return c.stage_key === s.stage_key && (c.label ?? null) === s.label && (c.after_stage ?? null) === s.after_stage && c.cardinality === s.cardinality && (c.within_interval ?? null) === s.within_interval && c.required === s.required;
+      });
+      if (same)
+        return {
+          ok: true,
+          progression_key: key,
+          label: cur.label,
+          stage_count: cur.stages.length,
+          stages: cur.stages,
+          declared_by: cur.declared_by,
+          at: cur.at,
+          version: cur.version,
+          unchanged: true,
+          basis: cur.basis,
+          prior_version: null
+        };
+      if (!stmt) return {
+        ok: false,
+        reason: "NO_BASIS",
+        progression_key: key,
+        version: cur.version,
+        detail: `'${key}' is already declared (version ${cur.version}); a revision states its basis -- why the declared flow changes -- and version ${cur.version} stands beside it (framework 8.2)`
+      };
+      if (!cite) return {
+        ok: false,
+        reason: "NO_CITATION",
+        progression_key: key,
+        version: cur.version,
+        detail: "a revision of a declared flow carries a citation -- where the basis for the change is published or held"
+      };
+    }
+    const version = cur ? cur.version + 1 : 1;
     const at = (/* @__PURE__ */ new Date()).toISOString();
     const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
     this.ctx.storage.transactionSync(() => {
+      if (cur && !cur.version_recorded) this.#writeProgressionVersion(key, cur.version, cur, cur.stages, null, null);
       this.sql.exec(
         `INSERT INTO progression_defs (progression_key,label,note,declared_by,at) VALUES (?,?,?,?,?)
          ON CONFLICT(progression_key) DO UPDATE SET label=excluded.label, note=excluded.note,
            declared_by=excluded.declared_by, at=excluded.at`,
         key,
-        label.trim(),
-        note == null ? null : String(note).slice(0, 1e3),
+        lbl,
+        nt,
         by,
         at
       );
@@ -47764,29 +47848,128 @@ ${words}`;
           s.within_interval,
           s.required
         );
+      this.#writeProgressionVersion(key, version, { label: lbl, note: nt, declared_by: by, at }, norm, stmt, cite);
     });
     return {
       ok: true,
       progression_key: key,
-      label: label.trim(),
+      label: lbl,
       stage_count: norm.length,
       stages: norm,
       declared_by: by,
-      at
+      at,
+      version,
+      unchanged: false,
+      basis: _Store.#basisView(stmt, cite),
+      prior_version: cur ? cur.version : null
     };
   }
-  /* op=progression: read a progression definition and its ordered stages. */
-  readProgression({ progressionKey } = {}) {
-    if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "read a progression definition by its key (op=progression&key=meeting)" };
-    const key = progressionKey.trim();
+  /* D-128: the basis as it reads back. `stated:false` is a first version declared without one, or
+     one declared before D-128 -- the record says it holds none rather than inventing one. */
+  static #basisView(statement, citation) {
+    return { statement: statement ?? null, citation: citation ?? null, stated: statement != null };
+  }
+  /* D-128: append one version of a definition -- never updated, never deleted but by a whole-store
+     purge (INSERT, so a second write of the same version is an error, not an overwrite). */
+  #writeProgressionVersion(key, version, def, stages, statement, citation) {
+    this.sql.exec(
+      `INSERT INTO progression_def_versions (progression_key,version,label,note,declared_by,at,basis_statement,basis_citation)
+       VALUES (?,?,?,?,?,?,?,?)`,
+      key,
+      version,
+      def.label,
+      def.note ?? null,
+      def.declared_by ?? null,
+      def.at ?? null,
+      statement,
+      citation
+    );
+    for (const s of stages)
+      this.sql.exec(
+        `INSERT INTO progression_stage_versions (progression_key,version,stage_key,stage_no,label,after_stage,cardinality,within_interval,required)
+         VALUES (?,?,?,?,?,?,?,?,?)`,
+        key,
+        version,
+        s.stage_key,
+        s.stage_no,
+        s.label ?? null,
+        s.after_stage ?? null,
+        s.cardinality,
+        s.within_interval ?? null,
+        s.required
+      );
+  }
+  /* D-128: the CURRENT version of a definition -- the one every instance and finding is derived
+     against -- with its number. A definition with no version rows was declared before D-128 and
+     reads as version 1, its basis not recorded (version_recorded:false). null if never declared. */
+  #progressionCurrent(key) {
     const def = this.#one(`SELECT progression_key, label, note, declared_by, at FROM progression_defs WHERE progression_key=?`, key);
-    if (!def) return { ok: true, progression_key: key, found: false, stages: [] };
+    if (!def) return null;
     const stages = this.#rows(
       `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
          FROM progression_stages WHERE progression_key=? ORDER BY stage_no`,
       key
     );
+    const v = this.#one(
+      `SELECT version, basis_statement, basis_citation FROM progression_def_versions
+         WHERE progression_key=? ORDER BY version DESC LIMIT 1`,
+      key
+    );
+    return {
+      ...def,
+      stages,
+      version: v ? v.version : 1,
+      version_recorded: !!v,
+      basis: v ? _Store.#basisView(v.basis_statement, v.basis_citation) : _Store.#basisView(null, null)
+    };
+  }
+  /* op=progression: read a progression definition and its ordered stages -- the CURRENT version
+     by default, or any earlier one with version=N (D-128: a revision leaves the prior version
+     readable, with its basis). Every read names its version, whether it is current, and the list
+     of versions the record holds, each with its author, date and basis. */
+  readProgression({ progressionKey, version = null } = {}) {
+    if (typeof progressionKey !== "string" || !progressionKey.trim())
+      return { ok: false, reason: "NO_KEY", detail: "read a progression definition by its key (op=progression&key=meeting)" };
+    const key = progressionKey.trim();
+    const cur = this.#progressionCurrent(key);
+    if (!cur) return { ok: true, progression_key: key, found: false, stages: [] };
+    const recorded = this.#rows(
+      `SELECT version, declared_by, at, basis_statement, basis_citation FROM progression_def_versions
+         WHERE progression_key=? ORDER BY version`,
+      key
+    );
+    const versions = recorded.length ? recorded.map((v) => ({
+      version: v.version,
+      declared_by: v.declared_by,
+      at: v.at,
+      basis: _Store.#basisView(v.basis_statement, v.basis_citation)
+    })) : [{ version: 1, declared_by: cur.declared_by, at: cur.at, basis: cur.basis }];
+    const want = version == null || version === "" ? cur.version : Number(version);
+    if (!Number.isInteger(want) || !versions.some((v) => v.version === want))
+      return {
+        ok: false,
+        reason: "NOT_FOUND",
+        progression_key: key,
+        version: String(version).slice(0, 40),
+        current_version: cur.version,
+        detail: `'${key}' has no version ${String(version).slice(0, 40)}; it holds versions ` + versions.map((v) => v.version).join(", ")
+      };
+    let def = cur, stages = cur.stages;
+    if (want !== cur.version) {
+      def = this.#one(
+        `SELECT label, note, declared_by, at, basis_statement, basis_citation FROM progression_def_versions
+           WHERE progression_key=? AND version=?`,
+        key,
+        want
+      );
+      def.basis = _Store.#basisView(def.basis_statement, def.basis_citation);
+      stages = this.#rows(
+        `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
+           FROM progression_stage_versions WHERE progression_key=? AND version=? ORDER BY stage_no`,
+        key,
+        want
+      );
+    }
     return {
       ok: true,
       progression_key: key,
@@ -47795,6 +47978,12 @@ ${words}`;
       note: def.note,
       declared_by: def.declared_by,
       at: def.at,
+      version: want,
+      current: want === cur.version,
+      current_version: cur.version,
+      basis: def.basis,
+      version_count: versions.length,
+      versions,
       stage_count: stages.length,
       stages
     };
@@ -48077,6 +48266,11 @@ ${words}`;
       defined: false,
       detail: "no such progression definition (define it first, op=progressiondefine)"
     };
+    const vrow = this.#one(
+      `SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`,
+      progressionKey
+    );
+    const definitionVersion = vrow && vrow.v != null ? vrow.v : 1;
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     const stageDefs = this.#rows(
       `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
@@ -48114,6 +48308,7 @@ ${words}`;
         entity_id: entityId,
         found: false,
         defined: true,
+        definition_version: definitionVersion,
         label: def.label,
         entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
         grade: null,
@@ -48177,6 +48372,7 @@ ${words}`;
             stage_label: s.label,
             required: s.required,
             after_stage: s.after_stage,
+            definition_version: definitionVersion,
             documents: exceptions,
             detail: `the '${s.stage_key}' stage is ${s.required} required and unfilled, but its skip is DISCHARGED by ${exceptions.length} exception document(s) naming why it may be missing (framework 8.2) -- a lawful, recorded skip, not a gap`
           });
@@ -48187,6 +48383,7 @@ ${words}`;
             stage_label: s.label,
             required: s.required,
             after_stage: s.after_stage,
+            definition_version: definitionVersion,
             /* every required tier is DISCHARGEABLE by an exception document (FW-10); this
                one simply carries none. unless_exception's firing here is DEC-9's open policy. */
             dischargeable: true,
@@ -48203,6 +48400,7 @@ ${words}`;
       entity_id: entityId,
       found: true,
       defined: true,
+      definition_version: definitionVersion,
       label: def.label,
       entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
       grade: instanceGrade,
@@ -48605,6 +48803,7 @@ ${words}`;
         stage_label: f2.stage_label,
         required: f2.required,
         after_stage: f2.after_stage,
+        definition_version: f2.definition_version,
         predecessor_stage: d.predecessor_stage,
         predecessor_at: new Date(d.predecessor_ms).toISOString(),
         within_interval: d.within_interval,
@@ -48698,6 +48897,7 @@ ${words}`;
       instances.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
+        definition_version: inst.definition_version,
         entity_id: inst.entity_id,
         entity_label: entityLabel,
         findings
@@ -48713,6 +48913,7 @@ ${words}`;
             stage_key: f2.stage_key,
             stage_label: f2.stage_label,
             required: f2.required,
+            definition_version: inst.definition_version,
             surfaced_by: "machine",
             overdue_count: 0,
             instances: []
@@ -48725,6 +48926,7 @@ ${words}`;
           entity_id: inst.entity_id,
           entity_label: entityLabel,
           progression_key: inst.progression_key,
+          definition_version: inst.definition_version,
           grade: f2.grade_determined ? f2.grade : null,
           grade_determined: f2.grade_determined === true,
           overdue: !!od,
@@ -48819,6 +49021,7 @@ ${words}`;
       instances.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
+        definition_version: inst.definition_version,
         entity_id: inst.entity_id,
         entity_label: inst.entity ? inst.entity.label : null,
         stage_key: r.stage_key,
@@ -50558,6 +50761,7 @@ ${words}`;
           id: null,
           progression_key: p.progression_key,
           stage_key: p.stage_key,
+          definition_version: p.definition_version,
           bundles: subjects.slice(0, _Store.QUEUE_OPTION_SUBJECTS_MAX)
         },
         summary: `${p.progression_label}: the '${p.stage_label}' stage is ${p.required} required and absent`,
@@ -53107,6 +53311,8 @@ ${words}`;
         this.sql.exec(`DELETE FROM connections`);
         this.sql.exec(`DELETE FROM progression_stages`);
         this.sql.exec(`DELETE FROM progression_defs`);
+        this.sql.exec(`DELETE FROM progression_stage_versions`);
+        this.sql.exec(`DELETE FROM progression_def_versions`);
         this.sql.exec(`DELETE FROM connection_dirty`);
         this.sql.exec(`DELETE FROM proposal_dispositions`);
         this.sql.exec(`DELETE FROM finding_dispositions`);
@@ -66744,7 +66950,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer")
         }),
         progressiondefine: () => this.defineProgression(body || {}),
-        progression: () => this.readProgression({ progressionKey: url.searchParams.get("key") }),
+        progression: () => this.readProgression({
+          progressionKey: url.searchParams.get("key"),
+          version: url.searchParams.get("version")
+        }),
         /* CONSTRUCTS Step 5, SLICE B (FW-9): PROGRESSION INSTANCES and the MISSING-PREDECESSOR
            finding. op=thread threads REAL captured documents through a definition's stages by
            a threading entity (only documents that resolve to it, FW-7), stamping threaded_by
