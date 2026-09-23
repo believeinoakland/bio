@@ -472,7 +472,7 @@ accepts-when: three exports of one unchanged `.ods` agree on the evidentiary dig
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 13; keeps its `D-` id).
 uncut: restored whole from «D-351» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### FW-20 · queued — FLIPPED TO `running` AND REVERTED WITHIN THE HOUR, 2026-09-18, by CONDUCT #4, BEFORE ANY SPAWN — recorded rather than silently undone.
+### FW-20 · running — SPAWNED 2026-09-23 ~22:55Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER FW-20 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/FW-20 and that session; never conclude queued from the absence alone.
 order: runnable since CPDF-19 landed (M2 breadth); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) (SCHEDULER, first order audit, 2026-09-18)
 milestone: M2 — one content type per measured class (BREADTH §7 row 2), completed
 interface: none expected — a content type and its registration; if a reference shape moves it is I2 and the IC is minted before building
