@@ -93,6 +93,10 @@ CONDUCT #14 relayed it from REC-165. Checked at the code, not from the relay:
   FLEET's ground (`agent-worker/**`). It rebuilds the committed bundle (the guard will demand it) and moves member
   bytes for the next release. Inert until D-260 dispatches runs, so it orders with D-260 or before it.
 
+**PLACED as FL-11** (owner FLEET, M9) in `BACKLOG.md` on `coord`, directly before D-260 (SCHEDULER #14, coord
+`c3980219`, verified on `origin/coord`). Build it when it reaches the cache. `owed.mjs FLEET` does not list it and is right
+not to: it counts BLOCKED plan rows and ledger dispositions, never a `queued` row in build order.
+
 ## Carried from the old account's memory, which will not travel
 
 - A background task's exit code is its WRAPPER's. Read the tool's own completion line (`N/N suites green · …`).
