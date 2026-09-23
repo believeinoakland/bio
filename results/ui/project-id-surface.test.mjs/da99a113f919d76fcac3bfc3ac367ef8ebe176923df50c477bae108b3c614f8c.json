@@ -1,0 +1,16 @@
+{
+ "unit": "ui:project-id-surface.test.mjs",
+ "inputHash": "da99a113f919d76fcac3bfc3ac367ef8ebe176923df50c477bae108b3c614f8c",
+ "verdict": "PASS",
+ "run": "68e9062aabc69189622da9ccdce8faa84088b5c0.1790203323474.31606.json",
+ "tree": "68e9062aabc69189622da9ccdce8faa84088b5c0",
+ "head": "78a6d772d28124c0c4eb0472fc44cb64d97c0e50",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 251,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "5684be10-4191-5653-aa3c-40b54f969bb3",
+ "at": "2026-09-23T22:42:03.490Z"
+}
