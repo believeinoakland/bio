@@ -1,7 +1,7 @@
 # SCHEDULER-NEXT — the resume for SCHEDULER #17, in the cloud (written 2026-09-23 by SCHEDULER #16 at its refresh)
 
-Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` from `coord`. Measured at ~21:26Z: `origin/main` @ `02603e88`,
-`coord` @ `ab61bd52`, context 68%. A POINTER: re-measure before resting on it.
+Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` from `coord`. Measured at ~21:38Z: `origin/main` @ `02603e88`,
+`coord` @ `930455b3`, context 70%. A POINTER: re-measure before resting on it.
 
 ## How the lane runs now (Bob's rulings of 2026-09-23, via BOB #30/#31)
 
@@ -25,13 +25,14 @@ Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` from `coor
 
 ## State
 
-- **Cache:** running D-179, D-311, D-125, CAP-14, COFF-13, D-52, D-84, D-220, D-182, D-178, UI-74; queued REC-161; integrated D-128,
-  D-54, D-278, D-219 (all on `land/conduct/c17-batch3`, waiting for its train).
-- **Backlog head, in order:** REC-159 (`blocked`: Bob approved ~21:08Z but CONDUCT's permission check refused its spawn; awaiting Bob
-  starting its worker himself — flip `running` and move in when told), REC-162, REC-155 (both depend on REC-159), CPDF-22 (one
-  `undetermined` shape; BOB #31 first), REC-182, REC-183, D-443, UI-83, REC-184, UI-84, REC-185, DIST-7, M0-106 (blocked), D-65, …
-  CPDF-22 / REC-182 / REC-183 / D-443 are now runnable (their deps landed in `02603e88`); UI-83, REC-184, UI-84, REC-185, DIST-7 wait on
-  c17-batch3 (D-128, D-278, D-54).
+- **Cache (~21:38Z):** running D-179, D-125, CAP-14, D-52, D-84, D-220, D-182, D-178, UI-74, REC-161; queued CPDF-22, REC-182;
+  integrated D-219, D-54, D-128, D-278, COFF-13, D-311 (all on `land/conduct/c17-batch3` @ a8066053, waiting for its train). When it
+  lands: verify each by content, done + archive, refill, trigger CONDUCT. D-311's note carries its worker's correction (projectremove is
+  refused to any non-owner, not an administrator's act).
+- **Backlog head, in order:** REC-159 (`blocked`: Bob approved ~21:08Z; CONDUCT's permission check refused its spawn; awaits Bob
+  starting its worker himself), REC-162, REC-155 (depend on REC-159), REC-183, D-443, UI-83, REC-184, UI-84, REC-185, REC-186 (BOB #31's
+  two Membership §7 rulings; cite his 21:37Z message until he folds them), DIST-7, M0-106 (blocked), D-65, … UI-83/REC-184/UI-84/REC-185/
+  REC-186/DIST-7 wait on c17-batch3. NOT placed: D-311's worker's UI suggestion (roster acts read from op=affordances) — weigh it.
 - **Owed by BOB:** fold into home documents the two rulings drained this session (M0-138 landed; CPDF-22's design line still cites the
   drained inbox entry).
 - **LED-7:** 67 open DEBT rows; batches S16-1..S16-3 closed D-393, D-400, D-403, D-407, D-296, D-251 and placed D-121's defect (REC-179,
