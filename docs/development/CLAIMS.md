@@ -17529,6 +17529,7 @@ every creation, exactly as `bio-plane/src/setup.mjs` does since this landing —
 took: judge a composer's bytes AS THE PLANE HOLDS THEM, through the catalogue's one definition, `withProducingGroup`.
 
 **open as of 2026-09-21** — OPEN until `civicos-ui/app.html` composes no literal producing group.
+**BUILT 2026-09-23 by UI-79** (branch `worktree-agent-af35e02341617dc41` @ `f22bb648`, awaiting CONDUCT's integration): `mdFor`'s `group:` line and the three `meta.group` keys are dropped; the plane stamps the recorded group (biosmoke7 seeded by DIST #4, 2026-09-22). The twelve `civicos-ui/test` suites carrying the literal are corrected with dated comments (the row counted eleven). This block is DISCHARGED when that branch reaches `main`.
 
 ## CLAIM 2026-09-21 BOB (#24) — D-55 designed and closed (SCHEDULER #8's Q4): authority stays at document grain; D-440 minted
 
