@@ -1,48 +1,39 @@
-# SCHEDULER-NEXT — the resume for SCHEDULER #16, in the cloud (written 2026-09-23 by SCHEDULER #15 at its refresh)
+# SCHEDULER-NEXT — the resume for SCHEDULER #17, in the cloud (written 2026-09-23 by SCHEDULER #16 at its refresh)
 
-Read `CLAUDE.md`, then `kickoffs/SCHEDULER.md` (its mechanics are the practical half; the file-level steps are superseded by
-`coord`), then `docs/architecture/BIO_System_Design.md` whole, then this, then `QUEUE.md` and `BACKLOG.md` whole **from
-`coord`** (`node tools/coord.mjs read <path>`). Measured at SCHEDULER #15's refresh (2026-09-23 ~14:40Z, `origin/main` @
-`14faa089`, `coord` @ `83d706bb`, context 67%). A POINTER: re-measure before resting on it.
+Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` from `coord`. Measured at ~21:26Z: `origin/main` @ `02603e88`,
+`coord` @ `ab61bd52`, context 68%. A POINTER: re-measure before resting on it.
 
-## Who is where
+## How the lane runs now (Bob's rulings of 2026-09-23, via BOB #30/#31)
 
-- **BOB #30** `session_019unCkzAzfmAPMLVuRNPvui`. **CONDUCT #16** `session_01DEAp94ny3PfWr6deFJtTaD` is the integrator (send it
-  every cache change); **CONDUCT #15** `session_01DvbsQsqBM5Pjn2rcHk5rZ3` only relays its workers' reports (M0-132, REC-172,
-  REC-173 are its). Lane messages are one-shot `create_trigger` calls (`persistent_session_id`).
-- **My self-wake** `trig_011w9xzqmb71sUXKvQeUDK1T` (hourly, :32) fires into THIS session: delete it after you archive me (D-398's
-  three conditions: idle; my branch holds nothing unmerged — I committed nothing to `main`; handoff on `coord`), and arm your own.
-- Bob lifted the 7-worker cap at 13:15Z; CONDUCT fills to 8. CONDUCT trains on a ~2-hour cadence (BOB #30); next ~15:30Z.
+- **No timers.** Only BOB keeps timers; this lane wakes on messages. BOB deleted SCHEDULER #16's wakes: arm none.
+- **Work moves by message.** In the SAME turn rows enter the cache, `create_trigger` CONDUCT #17 (`session_01RQQSvvqhRfYC4PH1nBZQob`),
+  `run_once_at` ONE minute out, naming them. If you cannot fill, one line to BOB #31 (`session_0124NEAbkH3D4rkivNhZtJ8X`):
+  "SCHEDULER cannot fill: <why>". Never `fire_trigger` a routine to reach a session.
+- **Only SCHEDULER writes the plan pipeline.** CONDUCT writes no row; it tells you, you write.
+- **`integrated`** (on main since `af1ffa3f`): when CONDUCT reports a row finished and on a PUSHED batch, flip it `integrated` and
+  `--refill` in the same write. Integrated rows hold no slot, no bytes; they close (`done` + archive) only when their train's sha is
+  on `origin/main`, verified by content.
+- **Cache target: 12 active + at least 4 queued** (Bob). `CACHE_ROWS` is 12 on main; **16 at 48 KiB** (BOB #31's ruling) is
+  `land/scheduler16/integrated` @ `6ea0d504`, GREEN (tree `edbd78c5`), pushed, awaiting CONDUCT's next train. When it lands, refill to
+  16 in the same turn and trigger CONDUCT. Until then, say "cannot fill (4 spare)" to BOB if asked.
+- **Every row placed names its suite and NEGATIVE CONTROL** in accepts-when (a worker's whole gate is those plus plancheck). Refresh past
+  75% context (auto-compaction ~79%).
+- **Refill moves only `queued` rows.** A `running` row sitting in the backlog is moved in by hand (`--row` delete + `--insert`). A
+  refilled row that is CUT is restored whole from `QUEUE-cut-2026-09-22.md` with an `uncut:` line (the python in this session's
+  scratch did it; the pattern: take the archived block, keep the current `order:`, append `uncut:`).
+- **Never run coord writes with tools from an ungated branch checkout** — I did once (a 16-row refill under 12-row tools) and undid it.
 
-## The plan as I leave it
+## State
 
-- **Cache (8, all `running`):** REC-172, M0-132, REC-173 (all three REPORTED, done; on `land/conduct/c16-batch3`), M0-130, M0-131
-  (both DONE, same batch), M0-134, REC-174, REC-175 (running). **Do not mark any done before its merge sha is on `origin/main`.**
-- **When c16-batch3 lands** (CONDUCT #16 sends the sha): verify each by CONTENT, then ONE write: `--status done --note`, `--archive`,
-  `--refill`. Enters, in order: **REC-176** (promote overwrites a manifest row), **M0-135** (lane gate skips never-cached; RE-READ at
-  the code once M0-131 is on `main` — I saw it only in a report), **M0-136** (11 history readers; needs M0-130 done), then **D-57**,
-  **D-168**. REC-177 is `blocked` until `land/bob/batch-cadence` lands AND REC-172 is done — then unblock it (`--row`, as I did
-  REC-171/REC-173: flip the word, point the design at the landing sha, drop the branch from depends-on).
-- A refilled row that is CUT is restored WHOLE from `QUEUE-cut-2026-09-22.md` (`--row`, with an `uncut:` line); D-57 is cut.
-- **LED-7 is at the plan's FOOT** (`BACKLOG-LATER.md`), moved by me: P3 counts every cache row, so holding it cached cost CONDUCT a
-  worker. It is my own act, never a worker slot. If a refill ever pulls it back into the cache, move it out again.
-- **M0-106** stays `blocked` on DIST's act (DIST.md step 1: `--full --no-reuse` or `isBackstop()`; M0-126 is done). BOB reported
-  owing the DIST.md `--since` correction.
-
-## Owed
-
-1. c16-batch3's completions and refill, above.
-2. **LED-7, one batch per quiet wake** (74 open DEBT rows). My batches S15-1..S15-4 closed D-442, D-174, D-276, D-257, D-190 and
-   placed D-423, D-424, D-427, D-286, D-211, D-219, D-168. I skipped several quiet wakes on the account's 7-day usage warning.
-   Mechanics that bit me: the closure test's residue pattern matches "residue stated"; an OPEN row's disposition must keep its
-   leading `M<n> · open` token (append a routing note, never prefix one); build DEBT edits from the fresh `coord` tip and check the
-   base before a whole-file `--replace`.
-3. Defects arrive by trigger from CONDUCT with a named fix: verify at the code, mint (`node tools/mintid.mjs <NS>`), place with an
-   `order:` line, tell CONDUCT #16. A `design:` must name a governed home; an M0 row's must name `VERIFICATION.md` (admitted for M0
-   by name) or the LC-row-design arm refuses the write.
-
-## Rows placed today (SCHEDULER #15), for orientation
-
-M0-128 (rebalance only on plan-changing writes), REC-169..REC-177, UI-81, UI-82, M0-129..M0-136, DIST-6 — plus BOB #30's rulings
-landed as REC-171, D-168, D-219, REC-173, REC-177 and M0-106's re-narrowing. Recorded in the ledgers; look any up with
-`node tools/ledger.mjs find <ID>`.
+- **Cache:** running D-179, D-311, D-125, CAP-14, COFF-13, D-52, D-84, D-220, D-182, D-178, UI-74; queued REC-161; integrated D-128,
+  D-54, D-278, D-219 (all on `land/conduct/c17-batch3`, waiting for its train).
+- **Backlog head, in order:** REC-159 (`blocked`: Bob approved ~21:08Z but CONDUCT's permission check refused its spawn; awaiting Bob
+  starting its worker himself — flip `running` and move in when told), REC-162, REC-155 (both depend on REC-159), CPDF-22 (one
+  `undetermined` shape; BOB #31 first), REC-182, REC-183, D-443, UI-83, REC-184, UI-84, REC-185, DIST-7, M0-106 (blocked), D-65, …
+  CPDF-22 / REC-182 / REC-183 / D-443 are now runnable (their deps landed in `02603e88`); UI-83, REC-184, UI-84, REC-185, DIST-7 wait on
+  c17-batch3 (D-128, D-278, D-54).
+- **Owed by BOB:** fold into home documents the two rulings drained this session (M0-138 landed; CPDF-22's design line still cites the
+  drained inbox entry).
+- **LED-7:** 67 open DEBT rows; batches S16-1..S16-3 closed D-393, D-400, D-403, D-407, D-296, D-251 and placed D-121's defect (REC-179,
+  done) and D-443. One batch per quiet wake when BOB says the lanes are quiet.
+- **Local scratch:** `/tmp/claude-0/s16/` held the scripts; nothing there is needed.
