@@ -20046,3 +20046,11 @@ door, C4 arms new); `preauth-vocabulary.test.mjs` if its router census moves. `d
 (PREPENDED). No plane change (I3 consumer of `op=versionaccept` and `op=versionstrength`'s `independence`).
 **open as of 2026-09-23** — claimed at the start of the item.
 released: 2026-09-23 — pushed land/worker/UI-74 @ 1bb9b846 (verified by ls-remote). Sites as claimed, PLUS `member-respect.test.mjs` (one CHOOSERS row: `acerAffirmHtml`), `docs/architecture/construct-status.json` + `BIO_System_Design.md` (12.accept ABSENT -> BUILT) and one Incomplete-sections bullet in `INVESTIGATIVE-SESSION.md` front matter. The `vrevVersionHtml` link is drawn only for the review surface's own readings (the stance surface renders those cards too). `preauth-vocabulary` did move (router census 7->8). Paths stay reserved until CONDUCT integrates the branch.
+
+### DELEGATION 2026-09-23 RECORD (D-150) -> UI: **THE STATEMENT'S ACKNOWLEDGEMENTS HAVE A PLANE AND NO SURFACE** (raised by CONDUCT #18 for the D-150 worker, whose coord write was refused on P3)
+The plane half of `BIO_Publication_v0_1.md` §3 rule 11 is integrated on `land/conduct/c17-batch7` (IC-227: the `statementack` op, the signed completeness block's `acknowledgements` on the `publish`, `publishedcase` and `reviewcopy` ops). UI owes three surfaces:
+1. The review copy LEADS with the exclusion statement plus its `statement_acknowledgements`.
+2. An acknowledge act for recipients (by the grant's secret) and for joined participants (by session), with canned translations for the five `STATEMENT_ACK_*` refusal codes (DEC-49; `check-refusal-codes.mjs` census 640 at c17-batch7).
+3. The published case page renders `completeness.acknowledgements`: `[]` reads "nobody but the author acknowledged the statement"; `null` reads "the document says nothing about acknowledgements" — NEVER "nobody".
+How a liar passes it: rendering `null` and `[]` alike. The harness must assert the two sentences differ. Depends on c17-batch7 reaching `main`: verify the `statementack` op in `bio-plane/src/index.mjs` on `origin/main` before starting.
+**open as of 2026-09-23** — raised at D-150's integration; OPEN until UI lands the three surfaces.
