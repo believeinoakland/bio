@@ -324,7 +324,7 @@ accepts-when: a quote projects and reads back by counterparty and by request; a 
 added: 2026-09-22 · SCHEDULER #12 drafted it; SCHEDULER #13 placed it, re-verified on `8e2c146c` (BOB #26's inbox entry, item 1; D-148's DEBT row; keeps its `D-` id).
 uncut: restored whole from «D-148» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-149 · running — SPAWNED 2026-09-23 ~21:57Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-149 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-149 and that session; never conclude queued from the absence alone.
+### D-149 · integrated — finished; integrated on land/conduct/c17-batch7 @ f32fe714 (IC-230, I3 75.4.0; I5 3.0.0 MAJOR), waiting for its train — flipped by SCHEDULER #17
 order: directly after D-148, its sibling at M10 beside D-147 (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 2)
 milestone: M10
 interface: I3 and I5 — the action's citation list; the integrator mints and classifies the ICs.
@@ -481,6 +481,16 @@ depends-on: CPDF-19 (BREADTH §7 row 5 — read-time re-extraction to tier 3; un
 accepts-when: a staff-directory page FETCHED AND READ yields a type that recognises it, driven end to end through `identify`; **the re-taken decode census is recorded in `MEASUREMENTS.md` whichever way it comes out**; the `also` pass answers a directory that also satisfies another class; D-376's disposition moves with the commit; **the `docprofile/` change carries BOTH regenerations — `node tools/bundle-docprofile.mjs` for the UI embed AND `cd bio-plane && npm run build` for the plane bundle (D-377, and the second one is the half nobody had written down)**; `cd bio-plane && npm run test:battery` green own-baseline; `node scripts/coverage.mjs --strict` DIRECTLY, `$?` unpiped, exit 0; `node civicos-ui/test/run.mjs` from the repo root, unpiped, exit 0; `node tools/plancheck.mjs --local` 0 fail.
 cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «FW-20». A worker READS IT before building.
 uncut: restored whole from «FW-20» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
+
+### D-256 · queued — **THE WRONG "CHANGED FROM" SENTENCES ALREADY WRITTEN ARE UNCOUNTED: D-221 fixed the writer (`app.html` `addGo`'s CHANGED_FROM branch), but no read sorts the bundles whose bodies carry the old sentence into provably wrong, right and undetermined.** The bodies STAY AS WRITTEN — BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *the correction is the READ; `op=versionchain` answers from the chain, not the stored sentence* — so this row enumerates and never rewrites. — owner RECORD.
+order: after D-444, before the census rows: it measures an over-claim already in the record, the class CLAUDE.md §2 ranks worst (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
+milestone: M3
+interface: I3 additive — one admin/probe read op, `mutating:false`, `registeraudit`'s shape (proposed name changedfromaudit); the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 (the version chain), with BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded) (D-219's precedent: *a stored string is a fact about when it was written*).
+depends-on: none — `op=versionchain` (PL-10) and the history append are built.
+scope: scan bundle bodies for the sentence, resolve each named bundle through the version-chain logic, return per bundle the named id, the true predecessor and a verdict: wrong (a different predecessor), right (exactly one prior version) or undetermined (no such version); the three totals apart. Writes nothing. Extend `bio-plane/test/versionchain.test.mjs`.
+accepts-when: every affected bundle lands in exactly one class with separate totals, and every body is byte-unchanged. NEGATIVE CONTROL: resolve through the ranked search instead of the chain, and the "provably wrong" arm (a sixty-version fixture naming the oldest) fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-256's DEBT row of 2026-08-08, keeps its `D-` id).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

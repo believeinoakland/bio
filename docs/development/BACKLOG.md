@@ -123,16 +123,6 @@ scope: arm D443-7b seeds 120 ratified published cases pinning one finding sha an
 accepts-when: D443-7b is green through the op. NEGATIVE CONTROL: the existing `casereg` arm of `frontier-chunk.control.mjs` fails D443-7b by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-256 · queued — **THE WRONG "CHANGED FROM" SENTENCES ALREADY WRITTEN ARE UNCOUNTED: D-221 fixed the writer (`app.html` `addGo`'s CHANGED_FROM branch), but no read sorts the bundles whose bodies carry the old sentence into provably wrong, right and undetermined.** The bodies STAY AS WRITTEN — BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *the correction is the READ; `op=versionchain` answers from the chain, not the stored sentence* — so this row enumerates and never rewrites. — owner RECORD.
-order: after D-444, before the census rows: it measures an over-claim already in the record, the class CLAUDE.md §2 ranks worst (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
-milestone: M3
-interface: I3 additive — one admin/probe read op, `mutating:false`, `registeraudit`'s shape (proposed name changedfromaudit); the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 (the version chain), with BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded) (D-219's precedent: *a stored string is a fact about when it was written*).
-depends-on: none — `op=versionchain` (PL-10) and the history append are built.
-scope: scan bundle bodies for the sentence, resolve each named bundle through the version-chain logic, return per bundle the named id, the true predecessor and a verdict: wrong (a different predecessor), right (exactly one prior version) or undetermined (no such version); the three totals apart. Writes nothing. Extend `bio-plane/test/versionchain.test.mjs`.
-accepts-when: every affected bundle lands in exactly one class with separate totals, and every body is byte-unchanged. NEGATIVE CONTROL: resolve through the ranked search instead of the chain, and the "provably wrong" arm (a sixty-version fixture naming the oldest) fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-256's DEBT row of 2026-08-08, keeps its `D-` id).
-
 ### REC-192 · queued — **A STORED VERSION'S INDEPENDENCE CAN ONLY BE READ BESIDE ITS STRENGTH PAIR: `op=versionstrength` is the one read of it, so DEC-32 clause 5 (*the structure is authored before the strength is shown*) holds only because UI-74's page drops the pair it fetched.** BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *a read returns `independence` on its own, so clause 5's separation is structural at the wire.* — owner RECORD.
 order: after D-256: a correction to just-landed work (UI-74, REC-161) that moves a doctrine from a page's choice into the wire (SCHEDULER #17, 2026-09-23)
 milestone: M9
