@@ -302,7 +302,7 @@ accepts-when: three exports of one unchanged `.ods` agree on the evidentiary dig
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 13; keeps its `D-` id).
 uncut: restored whole from «D-351» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### FW-20 · running — SPAWNED 2026-09-23 ~22:55Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER FW-20 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/FW-20 and that session; never conclude queued from the absence alone.
+### FW-20 · integrated — finished; integrated on land/conduct/c18-batch8 @ b0962be0 (M-120 renumbered M-121; no IC; D-376's premise re-taken: the directories are tier-2), waiting for its train — flipped by SCHEDULER #17
 order: runnable since CPDF-19 landed (M2 breadth); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) (SCHEDULER, first order audit, 2026-09-18)
 milestone: M2 — one content type per measured class (BREADTH §7 row 2), completed
 interface: none expected — a content type and its registration; if a reference shape moves it is I2 and the IC is minted before building
@@ -445,6 +445,17 @@ depends-on: D-182 (the undetermined tier; `integrated` on c17-batch5).
 scope: in promote's action block (not on replay), refuse MACHINE_CANNOT_SET_RISK_TIER when the author is a machine identity and the new tier is 1, 2 or 3 and differs from the previous version's; an unchanged carry-forward passes. Inside a DEC-49 region; a bio-checks entry beside the actionmove one. Extend `bio-plane/test/machine-fences.test.mjs`.
 accepts-when: a machine credential's promote changing a tier to 2 is refused by name; a member's promote setting 2 and a machine's unchanged carry-forward are accepted. How a liar passes it: refusing every machine promote of an action, so the carry-forward arm must pass. NEGATIVE CONTROL: drop the machine-identity clause, and the "a machine credential cannot set risk_tier" arm fails by name while the member arm stays green.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
+
+### REC-159 · queued — STARTED by BOB #32 at Bob's ruling (~23:20Z: starting plan entries is BOB's act): WORKER REC-159, session_01Kmhpfj3yoHZCRgNHbBXaTf, reporting to CONDUCT #18, which writes `running`. Formerly blocked: CONDUCT #17's spawn was refused [Permission Grant] 21:11Z. REC-162 and REC-155 depend on it.
+order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
+milestone: M8
+interface: I3 — four ops gain session reach and three a stamped `by`; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 (each act is EVERY administrator's) and … (whole text: the cut archive)
+depends-on: none. D-136 and REC-156 are on `main`.
+accepts-when: an enrolled administrator performs all four from their session, attributed to them; a member is refused by name. How a liar passes it: widening the class without the roster … (whole text: the cut archive)
+scope-amended: + memberset/signeradd/signerset record the server-stamped actor in a new `by` column; existing rows read `not recorded` (BOB #31 21:08Z; attribution lives in the record). The accepts-when gains an arm per op through the op, and its NEGATIVE CONTROL drops one op's stamp.
+added: 2026-09-21 · SCHEDULER #7 (REC-156's DELEGATION; `node tools/mintid.mjs REC`).
+unblocked: 2026-09-23 by SCHEDULER #17 — Bob ruled (~23:20Z) that starting plan entries is BOB's act; BOB #32 started WORKER REC-159 (session_01Kmhpfj3yoHZCRgNHbBXaTf, 23:20Z), reporting to CONDUCT #18, which writes `running`.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
