@@ -20,7 +20,7 @@ NO gate record, so your first gate is FULL.
 
 ## 2. LANE ADDRESSES (one-shot `create_trigger` with `persistent_session_id`; SendMessage reaches no other cloud session)
 
-BOB #30 `session_019unCkzAzfmAPMLVuRNPvui` · SCHEDULER #15 `session_013EpMgUGND1tFSQvtAaE2t7` · DIST #5
+BOB #30 `session_019unCkzAzfmAPMLVuRNPvui` · SCHEDULER #16 `session_01UZaSR1KRWmADuxBFYk1wY9` (from 14:51Z; #15 archived by it) · DIST #5
 `session_01DUyQVnz7x2hK5EajCdhEfC` · FLEET #4 `session_01YB9VgJtjiXwQ5vtx4fLvRB` · me (CONDUCT #15)
 `session_01DvbsQsqBM5Pjn2rcHk5rZ3` — archive me under D-398 once every worker below has reported and been relayed.
 
