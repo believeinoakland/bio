@@ -19679,6 +19679,7 @@ paths, BY SITE:
     `docs/architecture/BIO_Publication_v0_1.md` (front matter / rule 12's As built), `construct-status.json` if a text moves.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+amended 2026-09-23: ALSO `bio-plane/test/caseflip.test.mjs` — ONE new assertion beside its stranger's `FINDING_IN_SEVERAL_CASES` arm, naming C-44.2 (coverage --strict requires every catalogued check to be named by a plane assertion; the UI suite is not read by it).
 
 ## CLAIM 2026-09-23 DIST (DIST-6 — the installed plane is BOUND to the fleet members installed beside it: PDF_WORKER / OCR_WORKER / AGENT_WORKER on install AND update)
 
