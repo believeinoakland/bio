@@ -31,6 +31,9 @@
  *   RE-RUN the same day with A7 added (an ABSENT claim resting only on a comment): seven arms, 38 pass / 0 fail.
  *   RE-RUN with A8 added (a rendering that leaves the Status date behind): eight arms.
  *   RE-RUN with A9 added (a key set that ignores additions): nine arms.
+ *   RE-RUN 2026-09-23 by M0-138 with A10 added (render whole texts again): ten arms, 54 pass / 0 fail, exit 0;
+ *     A10 FAILED at "THE RENDERED MAP FITS ITS READING BUDGET — docs/architecture/BIO_System_Design.md" (and at
+ *     "renderCell renders the first sentence"), tools/status.mjs restored by sha256 (f498cce1…) AND cmp, byte-identical.
  * AND A SECOND BY-HAND ARM ON THE PUSH GUARD (2026-09-18): `corpusCheck` made to accept any completion
  *   line regardless of its fail count -> section 8's "A STALE STATUS DATE REFUSES THE PUSH" FAILS (51/1);
  *   `tools/pushguard.mjs` restored by `cp`, verified byte-identical (sha256 7d978c73…).
@@ -54,8 +57,9 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "nod
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { evalProbe, judge, renderCell, renderMap, lookup, bumpAsOf, UI_HELPERS, ROOT, STATES }
+import { evalProbe, judge, renderCell, renderMap, lookup, bumpAsOf, firstSentence, UI_HELPERS, ROOT, STATES }
   from "../../tools/status.mjs";
+import { BUDGET, MAP as BUDGET_MAP } from "../../tools/readbudget.mjs";
 import { statusCheck, corpusCheck, markerCheck } from "../../tools/pushguard.mjs";
 import { copyFileSync } from "node:fs";
 
@@ -65,7 +69,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 9;
+const SECTIONS = 10;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -267,6 +271,34 @@ section("9 — A COMMITTED CONFLICT IS REFUSED AT THE PUSH (BOB #14 pushed three
   t("A FILE CARRYING MERGE MARKERS REFUSES THE PUSH, naming each line", [r.ok, r.marked], [false, ["a.md:2", "a.md:4", "a.md:6"]]);
   t("the sequences inside prose or a code span are NOT markers — line starts only", r.marked.some((x) => x.startsWith("b.md")), false);
   t("the real tracked tree carries no marker (a guard that refused everything would pass the arm above)", markerCheck().ok, true);
+}
+
+/* ========================================================================== */
+section("10 — §3 RENDERS EACH CLAIM'S FIRST SENTENCE, AND THE MAP FITS ITS BUDGET WITHOUT A CLAIM TRIMMED (M0-138)");
+{
+  /* BOB #31 (2026-09-23): rendering every claim WHOLE pushed the map past its 48 KiB cut on each landing that
+     added a clause, and integrators trimmed claim texts to fit — the source of truth cut to fit its rendering. */
+  t("a claim renders up to its first `. `, marked as cut", firstSentence("one rule. Then detail."), "one rule. …");
+  t("a `. ` INSIDE BACKTICKS is not a sentence end", firstSentence("reads `a. b` then stops. More."), "reads `a. b` then stops. …");
+  t("OVER-STRICTNESS: a one-sentence claim, even ending in a period, renders WHOLE",
+    [firstSentence("only one."), firstSentence("x (v1.5, §2.4) y")], ["only one.", "x (v1.5, §2.4) y"]);
+  t("a cut carries the remainder's `§N item M` citations, so the authority still cites them",
+    firstSentence("head (§3 item 1). Later §7.1 item 4 and §3 item 1."), "head (§3 item 1). … (also cites §7.1 item 4)");
+  const whole = { n: 4, name: "W", claims: [{ id: "4.a", state: "BUILT", text: "first. second", probes: [] }] };
+  t("renderCell renders the first sentence, never the whole text", renderCell(whole).includes("second"), false);
+
+  const d = judge().data;
+  const r = renderMap({ data: d });
+  const bytes = Buffer.byteLength(r.text, "utf8");
+  const claims = d.constructs.flatMap((c) => c.claims);
+  const cut = claims.filter((cl) => firstSentence(cl.text) !== cl.text);
+  console.log(`  corpus: ${claims.length} claims, ${cut.length} cut at a first sentence; rendered map ${bytes} B, budget ${BUDGET.map} B`);
+  t("the corpus is real: claims exist and some are long enough to be cut (an empty walk would pass)",
+    [claims.length > 50, cut.length > 5], [true, true]);
+  t(`THE RENDERED MAP FITS ITS READING BUDGET — ${BUDGET_MAP} (${bytes} B of ${BUDGET.map} B)`, bytes <= BUDGET.map, true);
+  t("the budget read is the map's own (readbudget's MAP is status's MAP)", BUDGET_MAP, "docs/architecture/BIO_System_Design.md");
+  t("every whole text stays in the source and is served by the lookup",
+    lookup("3.history-append").hits.map((h) => h.text), [claims.find((cl) => cl.id === "3.history-append").text]);
 }
 } finally {
   rmSync(repo, { recursive: true, force: true });
