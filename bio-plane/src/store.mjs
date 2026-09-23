@@ -473,6 +473,8 @@ import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-che
 import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
 import { PROJECT_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
+/* REC-149 / C-70: a DISCOVERABLE project's existence is seen; its doors are not (Membership v2 §7.14). */
+import { PROJECT_VISIBILITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-137 / C-57: a case ratification is signed by an OWNER of the publishing project (DEC-72 cl. 5). */
 import { CASE_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-167 / C-65: a case document is signed only while its project still stands on the conclusion it records. */
@@ -4021,6 +4023,7 @@ export class Store extends DurableObject {
     if (!sel.ok) return sel;
 
     const p = this.#one(`SELECT bundle_id, object_type, bundle_sha FROM bundles WHERE bundle_id=?`, project);
+    { const existence = p ? this.#existenceAct(p.bundle_id, viewer) : null; if (existence) return existence; }   /* REC-149 */
     /* REC-138 / D-426: sight BEFORE position — a project this viewer cannot see answers as absent. */
     if (!p || !this.#inSight(p.bundle_id, viewer)) return Store.#noSuchProject(project);
     if (p.object_type !== "project")
@@ -5514,6 +5517,8 @@ export class Store extends DurableObject {
       projRow = this.#one(
         `SELECT b.bundle_id, b.object_type, b.bundle_sha FROM bundles b
          WHERE b.bundle_id=? AND (${pgate.sql})`, pid, ...pgate.args);
+      /* REC-149: at EXISTENCE the positional C-70.1; NONE falls to the unchanged answer below. */
+      if (!projRow) { const existence = this.#existenceAct(pid, viewer); if (existence) return existence; }
       if (!projRow || normalizeType(projRow.object_type) !== "project")
         return { ok: false, reason: "NOT_A_PROJECT", target, project: pid,
                  detail: `${pid.slice(0, 60)} is not a project readable here, so there is no relationship `
@@ -7462,6 +7467,8 @@ export class Store extends DurableObject {
     const pb = this.#one(
       `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
       proj, ...gate.args);
+    /* REC-149: at EXISTENCE the positional C-70.1; NONE falls to the unchanged answer below. */
+    if (!pb) { const existence = this.#existenceAct(proj, viewer); if (existence) return existence; }
     if (!pb)
       return { ok: false, reason: "NO_SUCH_PROJECT", project: proj,
                detail: `no project answers to ${proj}. A project you cannot see is answered exactly as one that `
@@ -9559,9 +9566,12 @@ export class Store extends DurableObject {
 
   /* THE DRAFT ACT — create, or edit in place (a review copy is MUTABLE; Bob,
      2026-09-17: *"An editor must be able to edit"*). */
-  #caseDraft(who, { draft = null, project = null, ...rest } = {}) {
+  #caseDraft(who, { draft = null, project = null, viewer = null, ...rest } = {}) {
     const a = { who };
     const proj = String(project ?? "").trim();
+    /* REC-149: a NEW draft under a DISCOVERABLE project its caller is outside is refused positionally (C-70.1);
+       every other caller keeps the one answer below, which says nothing about whether the project exists. */
+    if (!draft && proj) { const existence = this.#existenceAct(proj, viewer); if (existence) return existence; }
     const existing = draft ? this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft).trim()) : null;
     if (draft && !existing) return Store.#notReviewOwner("draft");
     const owning = existing ? existing.project_id : proj;
@@ -11806,6 +11816,7 @@ export class Store extends DurableObject {
     /* REC-138 / D-426: sight BEFORE position. A project this viewer cannot see answers exactly as
        an absent id, through the one shared answer; an inquiry is shared material and always in
        sight, so the question arm is untouched. */
+    { const existence = p ? this.#existenceAct(p.bundle_id, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!p || !this.#inSight(p.bundle_id, viewer)) return Store.#noSuchProject(project);
     /* Through normalizeType, so a legacy focus/problem spelling lands on the
        inquiry arm rather than falling through to the refusal — the MAP RULE. */
@@ -15724,6 +15735,13 @@ export class Store extends DurableObject {
          C-56 — so none of them can speak to a caller who cannot see the project. A CREATION at a
          hidden id (base null) still answers EXISTS: a shared id space cannot hide that an id is
          taken, which is D-428's, stated there rather than here. */
+      /* REC-149: asked just before, at EXISTENCE only (a discoverable project, a member outside it): C-70.1,
+         positional, because the directory has shown this caller it exists. A stamped identity with no viewer is
+         asked as an EMPTY viewer, which is NONE, so the line below still fails it closed. */
+      if (cur && base !== null && pkg.actorIdentity != null) {
+        const existence = this.#existenceAct(bundleId, pkg.actorViewer ?? "");
+        if (existence) return existence;
+      }
       if (cur && base !== null && pkg.actorIdentity != null && !this.#inSight(bundleId, pkg.actorViewer ?? null))
         return Store.#promoteAbsent();
       /* ===== REC-176 — A RE-SEND OF A PROMOTION THE RECORD ALREADY HOLDS IS A NO-OP (the history law,
@@ -27793,6 +27811,8 @@ export class Store extends DurableObject {
       const row = this.#one(
         `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
         proj, ...gate.args);
+      /* REC-149: at EXISTENCE the positional C-70.1; NONE falls to the unchanged answer below. */
+      if (!row) { const existence = this.#existenceAct(proj, viewer); if (existence) return existence; }
       if (!row || normalizeType(row.object_type) !== "project")
         return { ok: false, reason: "NO_SUCH_PROJECT", project: proj, finding: find,
                  detail: "the project a judgment-layer disposition is scoped to must be a PROJECT "
@@ -29885,6 +29905,8 @@ export class Store extends DurableObject {
            change nothing. hygiene.test.mjs holds this list against BOTH files now. */
         this.sql.exec(`DELETE FROM project_participants WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=?`, bundleId);
+        /* REC-149: the visibility record is keyed on project_id too — the same arm, the same reason. */
+        this.sql.exec(`DELETE FROM project_visibility WHERE project_id=?`, bundleId);
         /* PL-12 / D-84 / D-113. An adoption is keyed (scope_type, scope_id,
            bundle_id) and a project scope_id IS a bundle id, so purging a project
            while leaving its adoptions behind would leave a LENS in force over a
@@ -30005,6 +30027,8 @@ export class Store extends DurableObject {
            is identity and not derived from captured documents. */
         this.sql.exec(`DELETE FROM project_participants`);
         this.sql.exec(`DELETE FROM project_owner_votes`);
+        /* REC-149: the visibility record goes with the participation graph it sits beside. */
+        this.sql.exec(`DELETE FROM project_visibility`);
         /* CASE-5b / D-113, AND IT IS CASE-1'S OWN REVERSAL CONDITION ARRIVING
            RATHER THAN A NEW JUDGEMENT. CASE-1 exempted `cases` from purge and
            wrote the condition that would reverse it at the site, in these words:
@@ -31355,6 +31379,152 @@ export class Store extends DurableObject {
     const g = viewerPredicate(viewer);
     return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, bundleId, ...g.args);
   }
+  /* ===== REC-149 — SIGHT HAS THREE LEVELS, AND IT IS STILL ONE PREDICATE (Membership v2 §7, item 7.14) =====
+   *
+   * Bob, 2026-09-18: *"The project's contents might be private, though the existence of the project may not
+   * be"*, and *"each project chooses"*. So a project is DISCOVERABLE or HIDDEN, and `#sight` answers:
+   *   SIGHT_NONE      — nothing: an absent id, or a project the caller cannot see at all. §7.9 exactly.
+   *   SIGHT_EXISTENCE — the project's id and name and the request to join, and nothing else: a DISCOVERABLE
+   *                     project, asked by a member SESSION (a viewer naming a member) outside its participants.
+   *   SIGHT_FULL      — what `viewerPredicate` admits today (invited, joined, an administrator, the founder,
+   *                     every machine credential). Unchanged: its SQL is asked first and alone decides FULL.
+   * EXISTENCE is asked only where FULL was refused, only of a PROJECT, and only of a viewer the gate reads as
+   * a member — so a machine credential (already FULL) and an administrator (already FULL) are unchanged, an
+   * absent or unrecognised viewer stays NONE (fail closed), and a HIDDEN project stays NONE for everybody who
+   * could not already see it. `viewerPredicate` IS NOT CHANGED: every record read, search, citation list,
+   * reverse edge and run report still compiles only FULL sight, because those reads return CONTENTS.
+   * `#inSight` IS the FULL level, asked first and unchanged, so every existing caller keeps its meaning; the
+   * acts ask `#existenceAct` just BEFORE their REC-138 line, so NONE still reaches that line and its answer. */
+  static SIGHT_NONE = "none";
+  static SIGHT_EXISTENCE = "existence";
+  static SIGHT_FULL = "full";
+  #sight(bundleId, viewer) {
+    if (this.#inSight(bundleId, viewer)) return Store.SIGHT_FULL;
+    if (!viewerPredicate(viewer).member) return Store.SIGHT_NONE;
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
+    if (!b || b.object_type !== "project") return Store.SIGHT_NONE;
+    return this.#visibilityOf(bundleId) === "discoverable" ? Store.SIGHT_EXISTENCE : Store.SIGHT_NONE;
+  }
+  /* The CURRENT setting: the latest owner's act, and HIDDEN when there is none. No row is the state of every
+     project that existed before REC-149 (each was created under §7.9's promise, and no migration writes one),
+     of a creation that carried no setting, and of anything a machine created — fail closed, disclosing nothing. */
+  #visibilityOf(projectId) {
+    const r = this.#one(`SELECT setting FROM project_visibility WHERE project_id=? ORDER BY seq DESC LIMIT 1`,
+      projectId);
+    return r && r.setting === "discoverable" ? "discoverable" : "hidden";
+  }
+  /* THE ANSWER AN ACT GIVES AT EXISTENCE, asked in ONE place so no act can say a second thing: C-70.1 when the
+     caller's sight of this id is EXISTENCE, else null — and then the act's own REC-138 line runs unchanged, so
+     NONE is still answered exactly as an id naming nothing (byte for byte) and FULL proceeds. Every act that
+     names a project asks this immediately before its sight line. A viewer never SENT is not asked
+     (`#rosterInSight`'s precedent): it is an internal caller, and NONE's line decides for it as before. */
+  #existenceAct(projectId, viewer) {
+    if (viewer === null || viewer === undefined) return null;
+    return this.#sight(projectId, viewer) === Store.SIGHT_EXISTENCE ? this.#existenceOnly(projectId) : null;
+  }
+  /* C-70.1, minted here and only here; every act RELAYS it through `#existenceAct`. The id and the name, which the
+     directory already showed this caller, and nothing else — no act, no state, no owner, no participant. */
+  #existenceOnly(projectId) {
+    const b = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, projectId);
+    const refusal = (code, detail) => {
+      const row = PROJECT_VISIBILITY_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+               project: projectId, name: b ? b.title ?? null : null };
+    };
+    /* DEC-49 REGION is-project-existence-only */
+    return refusal("PROJECT_SEEN_NOT_A_PARTICIPANT",
+      "this project is discoverable and you are not one of its participants. Its existence and name are all "
+      + "it shows you; asking to join is the one act open to you (Membership Architecture v2 §7.14).");
+    /* END DEC-49 REGION is-project-existence-only */
+  }
+
+  /** REC-149 — THE SETTING, an OWNER'S recorded act (§7.14 "The setting"). Append-only: every act is a row with
+   *  the owner, the date and an optional reason, and the current setting is the latest. Sight before position:
+   *  a caller who cannot see the project is answered as for one that does not exist, a caller at EXISTENCE gets
+   *  C-70.1, and only then is ownership asked — through `#isProjectOwner`, §7's one owner predicate, so an
+   *  administrator, the founder and every machine credential are refused (administrators direct nothing, §4.9,
+   *  and §7.13's rescue does not set it). A viewer never SENT is not asked, `#rosterInSight`'s precedent. */
+  projectVisibilitySet({ projectId, setting, reason = null, by, viewer = null } = {}) {
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    const existence = b ? this.#existenceAct(projectId, viewer) : null;
+    if (existence) return existence;
+    if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
+    const want = String(setting ?? "");
+    const refusal = (code, detail) => {
+      const row = PROJECT_VISIBILITY_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+               project: projectId };
+    };
+    /* DEC-49 REGION is-project-visibility-owner */
+    if (!this.#isProjectOwner(projectId, by))
+      return refusal("PROJECT_VISIBILITY_NOT_THE_OWNER",
+        `whether ${String(projectId).slice(0, 80)} can be found is its OWNERS' choice (Membership Architecture `
+        + `v2 §7.14), and ${String(by ?? "an unnamed caller").slice(0, 80)} is not one of them. Seeing a project `
+        + `is not directing it. Nothing was written.`);
+    if (want !== "discoverable" && want !== "hidden")
+      return refusal("PROJECT_VISIBILITY_UNKNOWN_SETTING",
+        `${JSON.stringify(want.slice(0, 40))} is not a setting: a project is "discoverable" or "hidden", and `
+        + `nothing else. Nothing was written.`);
+    /* END DEC-49 REGION is-project-visibility-owner */
+    const why = reason === null || reason === undefined || String(reason).trim() === ""
+      ? null : String(reason).slice(0, 280);
+    const at = new Date().toISOString();
+    this.sql.exec(`INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
+      projectId, want, by, why, at);
+    return { ok: true, projectId, setting: want, set_by: by, reason: why, at };
+  }
+
+  /** REC-149 — THE SETTING AND ITS HISTORY, for a caller with FULL sight (a participant, an administrator, the
+   *  founder: §7.14, "administrators and the founder see the setting and its history"). A READ, so it does not
+   *  widen: a caller without full sight is answered as for a project that does not exist. */
+  projectVisibility({ projectId, viewer = null } = {}) {
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
+    const history = this.#rows(
+      `SELECT setting, set_by, reason, at FROM project_visibility WHERE project_id=? ORDER BY seq`, projectId);
+    return { ok: true, projectId, setting: this.#visibilityOf(projectId), recorded: history.length > 0, history,
+             note: history.length ? undefined
+               : "no owner has set this project's visibility, so it is HIDDEN: a project with no record reads "
+                 + "hidden (Membership Architecture v2 §7.14)." };
+  }
+
+  /** REC-149 — THE DIRECTORY (§7.14 "The directory"): for a member session, the DISCOVERABLE projects it does
+   *  not participate in, each with its id and name and the state of the caller's OWN request to it. Nothing
+   *  else. A hidden project is never in it, so its absence here is one answer for "hidden" and "does not
+   *  exist". Every row is asked through `#sight` — the one predicate — and listed only at EXISTENCE, so a
+   *  project this caller can see fully (it is in it, or it is an administrator) is not listed as one to join.
+   *  THE REQUEST LIFECYCLE IS NOT BUILT (item 7.14's decomposition, step 2): no request can exist yet, so
+   *  `request` is null on every row and the answer says why rather than letting null read as a fact about the
+   *  caller. A viewer that names no member has no directory: it is refused by name, never answered empty. */
+  projectDirectory({ viewer = null } = {}) {
+    const member = viewerPredicate(viewer).member;
+    const refusal = (code, detail) => {
+      const row = PROJECT_VISIBILITY_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+    };
+    /* DEC-49 REGION is-project-directory-member */
+    if (!member)
+      return refusal("PROJECT_DIRECTORY_NEEDS_A_MEMBER",
+        "the project directory lists the discoverable projects a MEMBER is not in, so it is asked by a signed-in "
+        + "member. A credential with no member behind it is outside no project, and an empty list would say "
+        + "something untrue about the record.");
+    /* END DEC-49 REGION is-project-directory-member */
+    /* EVERY project is a candidate and `#sight` alone decides. The first build took its candidates from the
+       visibility table, which restated "no record = hidden" in a second place — the control's
+       `default-discoverable` arm flipped the default and the directory did not move (REC-149's own finding). */
+    const candidates = this.#rows(`SELECT bundle_id AS id FROM bundles WHERE object_type = 'project' ORDER BY bundle_id`);
+    const projects = [];
+    for (const { id } of candidates) {
+      if (this.#sight(id, viewer) !== Store.SIGHT_EXISTENCE) continue;
+      const t = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, id);
+      projects.push({ id, name: t ? t.title ?? null : null, request: null });
+    }
+    return { ok: true, projects,
+             requests: "NOT_BUILT: the request to join is not built yet (Membership Architecture v2 §7.14, "
+                     + "step 2), so no request exists and `request` is null on every row." };
+  }
   /* THE ROSTER ACTS' form of the same question, and the one difference is stated rather than hidden.
      Their positional half is `by`, and they have always been driven straight at the store by callers
      that are not requests (setup, fixtures, the store's own suites) — the same population
@@ -31544,6 +31714,7 @@ export class Store extends DurableObject {
   projectInvite({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
+    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
@@ -31563,7 +31734,10 @@ export class Store extends DurableObject {
   }
 
   /** 7.4: joining is selecting the checkbox. There is no acceptance ceremony. */
-  projectJoin({ projectId, by } = {}) {
+  projectJoin({ projectId, by, viewer = null } = {}) {
+    /* REC-149: at EXISTENCE (a discoverable project, a member outside it) the positional C-70.1; otherwise the
+       answer below is unchanged, and it already says the same thing for an absent id and a hidden one. */
+    { const existence = this.#existenceAct(projectId, viewer); if (existence) return existence; }
     const p = this.#participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_INVITED",
       detail: "a member joins a project they were invited to. Being uninvited is not a refusal you can see." };
@@ -31575,7 +31749,10 @@ export class Store extends DurableObject {
   /** 7.6: unchecking the box is a REQUEST to leave. It greys the checkmark and
    *  removes nobody; removal is 7.7's, which v2 gives to an OWNER of the project
    *  (CORRECTED 2026-09-23 by D-311 — this read "to administrators alone", v1.4's rule). */
-  projectLeave({ projectId, by, comment = null } = {}) {
+  projectLeave({ projectId, by, comment = null, viewer = null } = {}) {
+    /* REC-149: at EXISTENCE (a discoverable project, a member outside it) the positional C-70.1; otherwise the
+       answer below is unchanged, and it already says the same thing for an absent id and a hidden one. */
+    { const existence = this.#existenceAct(projectId, viewer); if (existence) return existence; }
     const p = this.#participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT" };
     if (p.state !== "joined") return { ok: false, reason: "NOT_JOINED", state: p.state };
@@ -31592,7 +31769,10 @@ export class Store extends DurableObject {
    *  ("only an administrator removes … Project owners invite; they do not remove")
    *  over code that has enforced v2's since the reversal; §11 item 5 requires it
    *  corrected rather than left to disagree in silence. */
-  projectRemove({ projectId, handle, by, comment = null } = {}) {
+  projectRemove({ projectId, handle, by, comment = null, viewer = null } = {}) {
+    /* REC-149: at EXISTENCE (a discoverable project, a member outside it) the positional C-70.1; otherwise the
+       answer below is unchanged, and it already says the same thing for an absent id and a hidden one. */
+    { const existence = this.#existenceAct(projectId, viewer); if (existence) return existence; }
     if (!this.#isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
                detail: "only an owner of this project removes a participant from it. This REVERSES the "
@@ -31617,6 +31797,7 @@ export class Store extends DurableObject {
   projectOwnerAdd({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
+    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
@@ -31708,6 +31889,7 @@ export class Store extends DurableObject {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position — so ADMIN_ONLY is said only to a member who can
        already see the project (an invited one); an administrator sees every project (§7.3). */
+    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     const blocked = this.#rescueRefusal(projectId, by);
@@ -31742,6 +31924,7 @@ export class Store extends DurableObject {
   projectOwnerRemove({ projectId, handle, by, reason, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
+    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
@@ -31834,6 +32017,7 @@ export class Store extends DurableObject {
     /* REC-138 / D-426: sight BEFORE position. NOT_A_PARTICIPANT below said *"An uninvited member
        cannot see that it exists"* while telling them exactly that; it is now said only to a caller
        who CAN see the project (an administrator not in it). */
+    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     const p = this.#participation(projectId, by);
@@ -32949,6 +33133,8 @@ export class Store extends DurableObject {
   gateFacts(bundleId, viewer = null) {
     const row = this.#one(
       `SELECT bundle_id, object_type, current_state, bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
+    /* REC-149: EXISTENCE answers C-70.1 (ratify is an act on the bundle); NONE is the line below, unchanged. */
+    { const existence = row ? this.#existenceAct(bundleId, viewer) : null; if (existence) return existence; }
     if (!row || (viewer !== null && viewer !== undefined && !this.#inSight(bundleId, viewer)))
       return { ok: false, reason: "ABSENT", bundleId };
     return {
@@ -36997,6 +37183,8 @@ export class Store extends DurableObject {
       projectRow = this.#one(
         `SELECT b.bundle_id, b.object_type, b.bundle_sha FROM bundles b
          WHERE b.bundle_id=? AND (${pgate.sql})`, projectId, ...pgate.args);
+      /* REC-149: at EXISTENCE the positional C-70.1; NONE falls to the unchanged answer below. */
+      if (!projectRow) { const existence = this.#existenceAct(projectId, a.viewer ?? null); if (existence) return existence; }
       if (!projectRow || normalizeType(projectRow.object_type) !== "project")
         return refuse("VERSION_CURRENT_UNRELATED",
           `${projectId.slice(0, 60)} is not a project readable here, so it holds no stance to move.`,
@@ -41889,6 +42077,17 @@ export class Store extends DurableObject {
        id opened for a member who had not joined it. A RELAY, like the gate's below and C-22.7's: the refusal
        is minted in `airun.mjs checkRunContextKind`, whose catalogue row names that site. Only the CONTEXT's
        open is checked; tick and close read the stored kind, which is now checked at the door it came in by. */
+    /* REC-149 (Membership v2 §7.14): a run over a DISCOVERABLE project the caller is outside is an act at
+       EXISTENCE, answered with the positional C-70.1 — never "no such context" about a project the directory
+       showed them. Asked only of a word in the closed vocabulary, so rule 1's refusal is untouched; a hidden or
+       absent id still reaches the line below and its one answer. */
+    if (Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, String(contextType ?? ""))) {
+      const existence = this.#existenceAct(String(contextId ?? ""), viewer ?? "");
+      if (existence)
+        return { run, started: false, code: existence.code, check: existence.check,
+                 translation: existence.translation, detail: existence.detail,
+                 project: existence.project, name: existence.name };
+    }
     const kind = checkRunContextKind({ contextType, contextId, found: this.#runContextKind(contextId, viewer) });
     if (kind)
       return { run, started: false,
@@ -44705,7 +44904,8 @@ export class Store extends DurableObject {
    *  manifest below requires BOTH this row AND the bundle standing at `adopted`
    *  before it reports a lens in force — which is the fail-closed direction: at
    *  no point does one act alone put a lens over somebody's work. */
-  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null, identity = null } = {}) {
+  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null, identity = null,
+              viewer = null } = {}) {
     const who = typeof author === "string" ? author.trim() : "";
     if (!who || who.startsWith(Store.BIAS_MACHINE_PREFIX))
       return this.#biasRefuse("BIAS_ADOPTION_NOT_AUTHORED",
@@ -44732,6 +44932,10 @@ export class Store extends DurableObject {
        gated it before: any member, and every administrator, could adopt a set into any project's
        scope. The instance scope is untouched (*"Admins define instance bias"*). */
     if (st === "project") {
+      /* REC-149: at EXISTENCE (a discoverable project, a member outside it) the positional C-70.1, asked of the
+         stamped VIEWER — sight is the viewer's question, position the identity's. */
+      const existence = this.#existenceAct(sid, viewer);
+      if (existence) return existence;
       const denied = this.#projectAuthority(sid, identity, "owner", "biasadopt");
       if (denied) return denied;
     }
@@ -45648,6 +45852,7 @@ export class Store extends DurableObject {
           scopeId: url.searchParams.get("scopeId"),
           author: url.searchParams.get("author"),
           identity: url.searchParams.get("identity"),   /* REC-134 */
+          viewer: url.searchParams.get("viewer"),       /* REC-149 */
         }),
         /* The policy arrives in the BODY. A policy document in a query string
            would be truncated by the first proxy with an opinion about URL
@@ -46399,13 +46604,23 @@ export class Store extends DurableObject {
         projectinvite: () => this.projectInvite({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
           viewer: url.searchParams.get("viewer") }),   /* REC-138 */
+        /* REC-149: the three take the stamped viewer too, and ask it ONLY for EXISTENCE (C-70.1). */
         projectjoin: () => this.projectJoin({ projectId: url.searchParams.get("projectId"),
-          by: url.searchParams.get("by") }),
+          by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),
         projectleave: () => this.projectLeave({ projectId: url.searchParams.get("projectId"),
-          by: url.searchParams.get("by"), comment: url.searchParams.get("comment") }),
+          by: url.searchParams.get("by"), comment: url.searchParams.get("comment"),
+          viewer: url.searchParams.get("viewer") }),
         projectremove: () => this.projectRemove({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
-          comment: url.searchParams.get("comment") }),
+          comment: url.searchParams.get("comment"), viewer: url.searchParams.get("viewer") }),
+        /* REC-149 (Membership v2 §7.14): the owner's setting, its read, and the directory. `by` and `viewer` are
+           the control plane's stamps (PROJECT_ACTIONS for the setting, the viewer stamp for all three). */
+        projectvisibilityset: () => this.projectVisibilitySet({ projectId: url.searchParams.get("projectId"),
+          setting: url.searchParams.get("setting"), reason: url.searchParams.get("reason"),
+          by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),
+        projectvisibility: () => this.projectVisibility({ projectId: url.searchParams.get("projectId"),
+          viewer: url.searchParams.get("viewer") }),
+        projectdirectory: () => this.projectDirectory({ viewer: url.searchParams.get("viewer") }),
         projectparticipants: () => this.projectParticipants({ projectId: url.searchParams.get("projectId"),
           by: url.searchParams.get("by") }),
         registeraudit: () => this.registerAudit(),
@@ -46432,7 +46647,8 @@ export class Store extends DurableObject {
         /* REC-126: the review copy's five routes. Every identity — `author`,
            `viewer`, `secretSha`, `bySecret` — is STAMPED by the control plane and
            spread SECOND, so a body naming one is overwritten, never honoured. */
-        casedraft: () => this.reviewAct({ ...(body || {}), act: "draft", author: url.searchParams.get("author") }),
+        casedraft: () => this.reviewAct({ ...(body || {}), act: "draft", author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer") }),   /* REC-149: stamped, asked only for EXISTENCE */
         reviewgrant: () => this.reviewAct({ act: "grant", draft: (body || {}).draft ?? url.searchParams.get("draft"),
           recipient: (body || {}).recipient ?? url.searchParams.get("recipient"),
           author: url.searchParams.get("author"), secretSha: url.searchParams.get("secretSha") }),
