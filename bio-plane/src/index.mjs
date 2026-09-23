@@ -805,6 +805,12 @@ const OPS = {
      machine's proposals are listed to whoever may see the question. */
   narrow:           { classes: ["admin", "member", "probe"],     mutating: true  },
   narrowcandidates: { classes: ["admin", "member", "probe"],     mutating: false },
+  /* REC-122 / IC-228 — A MEMBER CHOOSES THE ON-POINT MENTION of one end of a connection
+     (D-161 act 3). `narrow`'s class cut and `narrow`'s reasoning: what the act refuses to a
+     machine is decided by the store on the author the control plane stamps below
+     (`CONNECTION_CHOICE_NOT_A_MEMBER`, C-74.1), so a machine arriving honestly named
+     `token:<class>` is refused BY SHAPE and the probe with it. */
+  connectionchoose: { classes: ["admin", "member", "probe"],     mutating: true  },
   /* REC-146 / IC-167 — CONTRADICTION'S IDENTIFY, THE PAIRING READ. A pure read on
      `narrowcandidates`' class cut exactly: whoever may READ the record may ask which of
      its assertions are worth comparing. It writes nothing, judges nothing and mints
@@ -1872,6 +1878,9 @@ const SESSION_OPS = {
                    /* REC-86: NARROW and its candidate read — a member's act on a
                       reading of a question, reached by a signed-in member. */
                    "narrow", "narrowcandidates",
+                   /* REC-122: choosing a connection's on-point mention — a member's
+                      act, reached by a signed-in member. */
+                   "connectionchoose",
                    /* D-136: THE §4.7 VOTE BECOMES CASTABLE BY THE PEOPLE §4.7 ASSIGNS IT
                       TO — AND THAT IS WHY THE THREE ARE IN **BOTH** SETS, WHICH IS THE ONE
                       DESIGN CALL THIS ITEM HAD TO MAKE. It is `EXPERTISE_ACTIONS`' posture,
@@ -1952,6 +1961,7 @@ const SESSION_OPS = {
                       is named beside `contentmint`, whose act it reads back. */
                    "extractproposals",
                    "narrow", "narrowcandidates",
+                   "connectionchoose",
                    "contradictionpairs",
                    "transcribe", "transcriptionattest",
                    "testify",
@@ -2030,6 +2040,10 @@ const NEEDS = {
      group putting its name on anything — the new reading is born `suggested`. */
   narrow:           "contribute",
   narrowcandidates: "contribute",
+  /* REC-122: choosing a connection's on-point mention rides `contribute`, on `narrow`'s
+     reasoning — it is a member's judgment written into the working record, and nothing it
+     writes is the group putting its name on anything. */
+  connectionchoose: "contribute",
   /* REC-146: NO CAPABILITY. The pairing read takes none, on `op=content`'s and
      `op=transcription`'s reasoning: asking which of the record's own assertions are
      worth comparing is READING the record. It writes nothing into the working corpus
@@ -9723,6 +9737,10 @@ export default {
            answer exactly as one that does not exist — the version acts' reason
            one screen up. Fails closed on an absent stamp. */
         || op === "narrow" || op === "narrowcandidates"
+        /* REC-122: choosing a connection's on-point mention NAMES A DOCUMENT (the end
+           chosen on), so a document the caller was never invited to must answer exactly
+           as a connection that does not exist (C-74.2). Fails closed on an absent stamp. */
+        || op === "connectionchoose"
         /* REC-146: THE PAIRING READ names no single object and is gated for a wider
            reason than the two above — it ENUMERATES, across every question and every
            cited document, and section 6 of its design requires it to pair only what
@@ -10057,6 +10075,12 @@ export default {
        `owner` stamp and a set-application shape they do not have. */
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op)
         || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op)
+        /* REC-122: the name that goes against "this mention is the one on point for this
+           connection". Overwritten rather than honoured, so the store refuses a machine BY
+           SHAPE (C-74.1). Placed ABOVE `VERSION_ACTIONS` and not beside `narrow` below: the
+           versionstate suite pins FENCE LAYER 1 by the span from `VERSION_ACTIONS` to this
+           stamp, and a new op is not a reason to lengthen that span. */
+        || op === "connectionchoose"
         || VERSION_ACTIONS.includes(op)
         /* PL-3 / IS-4: and the suggest endpoint, for the reason one paragraph
            up. `author` here is the name that goes against a STRUCTURAL claim —
