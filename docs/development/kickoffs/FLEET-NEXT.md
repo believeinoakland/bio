@@ -71,7 +71,7 @@ measured at the time given: re-measure it.**
 - Nothing owed, nothing of FLEET's in the cache: D-260 is `queued` in `BACKLOG.md`, outside `QUEUE.md`'s cache.
 - Self-wake: one `send_later`, trigger `trig_01XwSgb6C3S5376zGgWDAfqL`, fires 2026-09-23T10:00Z (after DIST's 0.72.0
   cut can first land). Each firing re-arms the next one; a successor finds it with `list_triggers`.
-- Lands by pushing `HEAD:main` (NEW-MACHINE §0.1 measured it accepted), mirrored to its session branch.
+- Landed its stand-up by pushing `HEAD:main` (before M0-111). Superseded: see "Landing changed" below.
 
 ## The one open FLEET defect, diagnosed by FLEET #4 (2026-09-23 ~00:05Z, `origin/main` `df9eb9f9`), routed to SCHEDULER #14
 
@@ -96,6 +96,19 @@ CONDUCT #14 relayed it from REC-165. Checked at the code, not from the relay:
 **PLACED as FL-11** (owner FLEET, M9) in `BACKLOG.md` on `coord`, directly before D-260 (SCHEDULER #14, coord
 `c3980219`, verified on `origin/coord`). Build it when it reaches the cache. `owed.mjs FLEET` does not list it and is right
 not to: it counts BLOCKED plan rows and ledger dispositions, never a `queued` row in build order.
+
+**A second agent-worker defect, same file, the same kind of wrong assumption** (REC-168's worker; verified by FLEET #4 on `origin/main`,
+2026-09-23T01:34Z). `capturerequest` is sent `{ run, target, url: t.url }`, but `captureRequest` in `store.mjs` reads only
+`args.address`. So every internet-level request the fleet makes is refused `CAPTURE_REQUEST_NOT_PUBLIC`. The mocks'
+`capturerequest` handlers (`harness.test.mjs`, `fanout.test.mjs`) do not model `address`. Fix: `address: t.url`, mocks
+refusing a request without a public https address, and a control arm that reverts to `url:`. Sent to SCHEDULER #14 with
+the proposal to FOLD it into FL-11: one rebuild, member bytes move once, and both are inert until D-260 because
+`AGENT_WORKER` occurs 0 times in `bio-plane/src`. Read BACKLOG for how SCHEDULER placed it.
+
+**Landing changed (M0-111, `c5c83dc4`):** a lane no longer pushes `main`. Push `land/fleet/<topic>` and CONDUCT's train
+(`tools/train.mjs`) lands it. The handoff and claims go to `coord` via `node tools/coord.mjs write … -m "…"`. This
+section's own "Lands by pushing `HEAD:main`" line above is superseded. Run `coord.mjs` from a checkout of `origin/main`:
+a session branch cut before the cutover does not have the tool.
 
 ## Carried from the old account's memory, which will not travel
 
