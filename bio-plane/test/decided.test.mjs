@@ -64,7 +64,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { scan, registerEntries, query, render, fresh, indexTracking, INDEX_PATH, corpus } from "../../tools/decided.mjs";
-import { isMovedPath } from "../../tools/coord.mjs";
+import { isMovedPath } from "../../tools/statepaths.mjs";   /* M0-121: the predicate's walk-free home; coord.mjs re-exports it */
 import { relative, sep } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -391,6 +391,9 @@ section("8 — M0-99: THE INDEX IS PRODUCED ON DEMAND, AND NEVER COMMITTED");
     /* CORRECTED 2026-09-22 by M0-110: `decided.mjs` imports `coord.mjs` (the corpus is read through the coord layer),
        so a copy carried alone cannot load — the fixture would measure a broken import, not the rule. Carried with it. */
     put(root, "tools/coord.mjs", readFileSync(join(ROOT, "tools/coord.mjs")));
+    /* CORRECTED 2026-09-23 by M0-121: `coord.mjs` imports the state-path predicate from `statepaths.mjs`, so a copy
+       carried without it cannot load (8 assertions failed on the broken import, not the rule). Carried with it. */
+    put(root, "tools/statepaths.mjs", readFileSync(join(ROOT, "tools/statepaths.mjs")));
     put(root, "CLAUDE.md", "# fixture\n");
     if (ignore !== null) put(root, ".gitignore", ignore);
     for (const [rel, body] of Object.entries(files)) put(root, rel, body);
