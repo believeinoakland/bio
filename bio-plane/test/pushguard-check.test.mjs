@@ -180,8 +180,14 @@ section("THE END-TO-END PUSH — git calls the hook, the hook reads the check th
     }
   };
   const ENV = { BIO_GITHUB_API: pathToFileURL(FX).href, BIO_PUSHGUARD_CHECKS: "" };
-  const push = (env = ENV) => git(["push", "bare", "HEAD:refs/heads/main"], root, env);
-  const tip = () => git(["rev-parse", "--verify", "--quiet", "refs/heads/main"], bare).stdout.trim();
+  /* CORRECTED 2026-09-23 by CONDUCT #14 at the REC-168 + M0-114 train, where this item MET M0-111: the arms pushed
+     HEAD:refs/heads/main, and M0-111's main arm (landed at c5c83dc4) now refuses any push of main without the train's mark,
+     so all six push arms went red for a reason that is not this suite's subject. The check arm reads the pushed COMMIT's check
+     whatever the ref, and a lane's real push is now a land/* ref, so the fixture pushes there — as M0-111 corrected
+     pushguard.test.mjs to land/suite/work. The old assertion was not wrong about the check arm; its ref became one no lane may push. */
+  const LANDED = "land/suite/work";
+  const push = (env = ENV) => git(["push", "bare", `HEAD:refs/heads/${LANDED}`], root, env);
+  const tip = () => git(["rev-parse", "--verify", "--quiet", `refs/heads/${LANDED}`], bare).stdout.trim();
 
   const a = commit("no check yet");
   fixture(a.sha, [], {}); /* the API answers a commit with no check runs 200, `check_runs: []` */
