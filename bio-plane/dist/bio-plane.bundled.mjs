@@ -60320,11 +60320,28 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const before = [...caps].reverse().find((c) => Date.parse(c.last_retrieved) <= T) || null;
       const after = caps.find((c) => Date.parse(c.first_retrieved) >= T) || null;
       let verdict, basis, detail = null, pick = null;
-      if (bracket) {
+      const selfCap = caps.find((c) => c.capture_sha === sourceCapture) || null;
+      const oneCapture = !!(before && after && before.capture_sha === after.capture_sha);
+      if (bracket && bracket.capture_sha === sourceCapture) {
+        verdict = "contemporaneous";
+        pick = bracket;
+        basis = "this link points at the document itself: the capture the record holds of its target is this very capture, and those same bytes were seen served on both sides of its retrieval";
+        detail = `self-reference: ${bracket.capture_sha.slice(0, 12)}, observed ${bracket.observations} times between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
+      } else if (bracket) {
         verdict = "contemporaneous";
         pick = bracket;
         basis = "the same bytes were seen served on both sides of this document's retrieval and hash equal, so the target did not change across the interval";
         detail = `observed ${bracket.observations} times between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
+      } else if (selfCap && oneCapture && before.capture_sha === sourceCapture) {
+        verdict = "undetermined";
+        pick = selfCap;
+        basis = "this link points at the document itself: the capture the record holds of its target is this very capture, observed once, so no second observation says whether the target was ever served as anything else";
+        detail = `self-reference: ${selfCap.capture_sha.slice(0, 12)} retrieved ${selfCap.first_retrieved}`;
+      } else if (oneCapture) {
+        verdict = "undetermined";
+        pick = before;
+        basis = "the record holds one capture of the target made at this document's retrieval instant and observed once; one observation is not a second version, and it does not establish that the target was unchanged on either side";
+        detail = `one capture: ${before.capture_sha.slice(0, 12)} retrieved ${before.first_retrieved}`;
       } else if (before && after) {
         verdict = "undetermined";
         pick = before;

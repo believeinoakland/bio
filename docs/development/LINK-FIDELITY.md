@@ -1,6 +1,6 @@
 # Link fidelity: the partitions, the cascade, and the connections between captures
 
-**Status** · DRAFT, not ratified (its own words), written 2026-07-28 and REORDERED 2026-07-30 when Bob ruled monitoring across the interval the PRIMARY contemporaneity route and identical-byte bracketing an opportunistic bonus; the sections marked RATIFIED are settled. Mixed state, measured against `bio-plane/src` at plane 0.58.0. Steps 1-4 of the order of work are [BUILT]: the `links` table with its two keys (`schema.mjs:391-415`), append-only `link_verdicts` (`:421-432`), read-time resolution reached through `op=links` and answered by `Store#resolveLinks` (`store.mjs:25106`), `links_to` in `REL_VOCAB` (`bio-checks.mjs:1380`) projected by `projectLinks` (`store.mjs:25195`), and the four wrappers with no live `href` surviving in a companion (`subresources.mjs:666-676`), which the viewer resolves. Steps 5-8 are [DESIGNED-not-built]: no cross-bundle duplicate sweep exists anywhere, there is no `objective` object type (`OBJECT_TYPES` is information / inquiry / project / action / bias), nothing plants a cascade candidate, and nothing re-verdicts a link when its target lands. The volatile-region digest this document specifies is [BUILT] in `docprofile` and only partly adopted by the plane (D-60). as of 2026-09-14.
+**Status** · DRAFT, not ratified (its own words), written 2026-07-28 and REORDERED 2026-07-30 when Bob ruled monitoring across the interval the PRIMARY contemporaneity route and identical-byte bracketing an opportunistic bonus; the sections marked RATIFIED are settled. Mixed state, measured against `bio-plane/src` at plane 0.58.0. Steps 1-4 of the order of work are [BUILT]: the `links` table with its two keys (`schema.mjs:391-415`), append-only `link_verdicts` (`:421-432`), read-time resolution reached through `op=links` and answered by `Store#resolveLinks` (`store.mjs:25106`), `links_to` in `REL_VOCAB` (`bio-checks.mjs:1380`) projected by `projectLinks` (`store.mjs:25195`), and the four wrappers with no live `href` surviving in a companion (`subresources.mjs:666-676`), which the viewer resolves. Steps 5-8 are [DESIGNED-not-built]: no cross-bundle duplicate sweep exists anywhere, there is no `objective` object type (`OBJECT_TYPES` is information / inquiry / project / action / bias), nothing plants a cascade candidate, and nothing re-verdicts a link when its target lands. The volatile-region digest this document specifies is [BUILT] in `docprofile` and only partly adopted by the plane (D-60). as of 2026-09-14. D-57 (2026-09-23, IC-194): the read-time resolution states a SELF-REFERENCE basis for a link whose target is the source's own capture and a ONE-CAPTURE basis where one capture sits on both sides of the retrieval, per §The three-valued verdict; neither is a fourth verdict.
 
 **Place in the system** · A level-2 design serving construct 2, **intake, capture and provenance**, whose level-1 home is `BIO_Intake_Doctrine_v1_1.md` (`BIO_System_Design.md` §3 names it there). It is the citation-and-connection half of capture: it owns the link partitions, the three-valued contemporaneity verdict, the chrome question and the cascade design. It depends on `AUTHORITY-AND-TRUST.md` for transitive trust; `ARCHIVE-FALLBACK.md` supplies its PRIMARY contemporaneity route produced by a third party; `CAPTURE-SCALING.md` owns the asset-recurrence machinery its chrome section reaches for. Its cascade half is the largest unbuilt design CAPTURE owns, and D-163/D-164 (an edge that points INSIDE a document) sit one construct over in `BIO_Content_Framework_v0_10.md` Part II.
 
@@ -488,6 +488,15 @@ RATIFIED: `undetermined` is a first-class outcome.
 Verdicts are dated and appended, never overwritten, for the same reason state
 history is append-only: a verdict that changed is itself a fact about the
 record.
+
+A BASIS may say only what its captures show (D-57, 2026-09-23). A page that links to
+itself finds its OWN capture among the target's, retrieved at the very instant of the
+source's retrieval, so the one capture is both the last before and the first after it.
+That is a SELF-REFERENCE, stated as one, and never *the target changed between the
+bracketing captures*: one capture named twice is not two versions. The same holds for
+any target whose only capture on both sides is one capture made at that instant. *Changed*
+is said only of two DIFFERENT captures bracketing the retrieval. These are bases, not a
+fourth verdict; the self-link stays listed and counted.
 
 `Last-Modified` is absent from most dynamic pages, wrong on many others, and
 reset by deployments that changed nothing, so the binary comparison the obvious

@@ -36836,12 +36836,42 @@ export class Store extends DurableObject {
       const before = [...caps].reverse().find((c) => Date.parse(c.last_retrieved) <= T) || null;
       const after = caps.find((c) => Date.parse(c.first_retrieved) >= T) || null;
       let verdict, basis, detail = null, pick = null;
+      /* D-57: A SELF-REFERENCE, AND ONE CAPTURE ON BOTH SIDES, ARE NOT A CHANGE.
+         A page that links to itself (every paginated Legistar calendar does)
+         finds its OWN capture among the target's, retrieved at exactly T, so it
+         is both the last capture at-or-before T and the first at-or-after it.
+         The two-sided arm below then told a member the target CHANGED between
+         two captures and printed one hash twice — a sentence about the source
+         the record cannot support. The same happens to any target with ONE
+         capture made at the source's retrieval instant. Both are stated for
+         what they are; the VERDICT is untouched (a fourth basis, never a fourth
+         verdict), and the link stays listed and counted. */
+      const selfCap = caps.find((c) => c.capture_sha === sourceCapture) || null;
+      const oneCapture = !!(before && after && before.capture_sha === after.capture_sha);
 
-      if (bracket) {
+      if (bracket && bracket.capture_sha === sourceCapture) {
+        verdict = "contemporaneous"; pick = bracket;
+        basis = "this link points at the document itself: the capture the record holds of its target is "
+              + "this very capture, and those same bytes were seen served on both sides of its retrieval";
+        detail = `self-reference: ${bracket.capture_sha.slice(0, 12)}, observed ${bracket.observations} times `
+               + `between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
+      } else if (bracket) {
         verdict = "contemporaneous"; pick = bracket;
         basis = "the same bytes were seen served on both sides of this document's retrieval and "
               + "hash equal, so the target did not change across the interval";
         detail = `observed ${bracket.observations} times between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
+      } else if (selfCap && oneCapture && before.capture_sha === sourceCapture) {
+        verdict = "undetermined"; pick = selfCap;
+        basis = "this link points at the document itself: the capture the record holds of its target is "
+              + "this very capture, observed once, so no second observation says whether the target "
+              + "was ever served as anything else";
+        detail = `self-reference: ${selfCap.capture_sha.slice(0, 12)} retrieved ${selfCap.first_retrieved}`;
+      } else if (oneCapture) {
+        verdict = "undetermined"; pick = before;
+        basis = "the record holds one capture of the target made at this document's retrieval instant and "
+              + "observed once; one observation is not a second version, and it does not establish that "
+              + "the target was unchanged on either side";
+        detail = `one capture: ${before.capture_sha.slice(0, 12)} retrieved ${before.first_retrieved}`;
       } else if (before && after) {
         verdict = "undetermined"; pick = before;
         basis = "the target changed somewhere between the captures bracketing this document's "
