@@ -1,139 +1,85 @@
-# DIST — resume here. Written 2026-09-22 by DIST #4 for DIST #5, who may run in the CLOUD on Bob's second account with NO memory and NO .env.
+# DIST — resume here. Written 2026-09-23 by DIST #5 (cloud, Bob's second account), after 0.72.0 went live.
 
-**Bob ordered a move to cloud-based Claude Code and his second Max 20x account (relayed by BOB #27, 2026-09-22).
-This file assumes you inherit NOTHING: no memory, no `.env`, no scratchpad, no session wakes.** 0.71.0 is complete
-and live; **a BATCH, 0.72.0, is owed** (below). Read `CLAUDE.md`, then `kickoffs/DIST.md` IN FULL — its WHEN DIST
-CUTS, the `latest` pointer mechanism and its LESSONS are the process. This file is only state, MEASURED 2026-09-22
-~15:30Z. Re-measure before acting: a deployment is a fact about the ACCOUNT.
+This file is only STATE, measured 2026-09-23 ~02:15Z. The process is `kickoffs/DIST.md` (WHEN DIST CUTS, the `latest`
+pointer, the gate, the LESSONS) — read it whole. Re-measure before acting: a deployment is a fact about the ACCOUNT.
+State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path>`, write with
+`node tools/coord.mjs write --replace <path> <file> -m "<what>"`.
 
-## DIST #5, 2026-09-22 20:06Z — MEASURED in the cloud: everything but the network is in; the cut stops at the network
+## The cloud machine (DIST #5, measured)
 
-- **In, measured:** node v26.10.0; full history (not shallow); `node_modules` a real directory in `bio-plane`,
-  `pdf-worker`, `ocr-worker`, `newgroup`; `/usr/bin/ssh-keygen`; `.git/bio-idalloc`; 29 GB free; all ten key NAMES set
-  (values unprinted). `plancheck`: 0 fail, 4 warn (none DIST's). **No `.git/bio-gates` in this clone**: no GREEN FULL
-  record here, so the cut's step 1 is the whole battery (M-99: ~1,100 s in a cloud container).
-- **REFUSED, 2026-09-22T20:06Z:** `NODE_USE_ENV_PROXY=1 npx wrangler whoami` (in `bio-plane/`) → `fetch failed`;
-  `curl https://api.cloudflare.com/client/v4/` and `https://biosmoke7.workers.dev/` → the proxy's CONNECT answered 403.
-  So the Cloudflare keys stay UNCONFIRMED, and a deploy, a rollback-target read and every live verification cannot run.
-  **Only Bob's environment network setting changes this** (admit `api.cloudflare.com` and `*.workers.dev`); DIST does
-  not route around the proxy. A signed cut is NOT made ahead of it: a tagged branch nobody can deploy offers nothing and
-  goes stale as `main` moves (lesson 11).
-- **The batch grew since DIST #4 wrote below:** `66eab6a1` **REC-163 / IC-174** (I3 49.1.0 → 49.2.0): `op=instancegroup`
-  admits the PUBLIC class — a caller with no credential is answered the recorded group slug or that none is recorded, and
-  the setup page at `/` shows the slug. It **WIDENS** what a stranger may read: NAME it in the landing report beside
-  IC-173. Not a CUT NOW (it closes no defect). Shipped paths since `v0.71.0`: 3 commits in `bio-plane/src`; none in
-  `civicos-ui/app.html` or the members' source, so `civicos` stays and the members move their VERSION label only.
-- **22:09Z wake: still REFUSED** (same two forms). **The batch grew again:** REC-166, integrated at `67666897`
-  (`ad8492d9`): `op=versioncurrent&project=` writes ONLY the project, never the shared inquiry — **IC-175 resolved MAJOR,
-  I3 49.2.0 → 50.0.0** (sequences that succeeded after a make-current on a pinned finding are now refused). CONDUCT #14's
-  merge names it no security fix; DIST's own reading: it stops one project's act rewriting state another project reads,
-  so at the cut ask whether that is an AUTHORITY closing (CUT NOW) — moot while nothing can deploy. MAJOR on I3: before
-  the cut, `civicos-ui/app.html` CALLS `op=versioncurrent` (unchanged since `v0.71.0` at 22:09Z): check its handling of the new
-  refusal before the cut (lesson 6); no fleet member's source names the op (grep, 22:09Z).
-- **23:05Z: A CUT NOW IS OWED AND BLOCKED.** CONDUCT #14 named it (one-shot trigger): **REC-165, IC-176 (I3 MAJOR
-  51.0.0), integrated at `9cf59056`, an AUTHORITY closing** — `op=suggest`/`op=extractpropose` now take only a RUNNING
-  run the caller holds (`AI_RUN_NOT_PRINCIPAL`, `SUGGEST_RUN_NOT_RUNNING`, `SUGGEST_OUTSIDE_RUN_CONTEXT`); before it, a
-  caller holding another member's run id could have a version read against that member's lens. Verified at the code:
-  the two SUGGEST_ codes are in origin/main's `store.mjs` and in NO file of `v0.71.0`'s `bio-plane/src`, so the defect is
-  LIVE on biosmoke7 — and those codes are the lesson-18 positive arm. Also since v0.71.0: REC-167 (`ff90ab07`, a
-  record-integrity closing: `op=caseratify` refuses a stale preparation). agent-worker's one suggest site is affected
-  by the context half (CONDUCT: a model-written target outside the context is now refused; SCHEDULER holds it) — so
-  agent-worker's SOURCE, not only its label, is to be re-read at the cut (IC-130: it ships with the plane). Same merge
-  carries M0-107: a timeouts-only gate run records NOT MEASURED and licenses no `--since`. Wake re-test 23:05Z: still
-  REFUSED. **Routed to BOB #28** by one-shot trigger `trig_012cNf34is3fAiqykLQanPd7` (23:08Z): the one act is Bob's —
-  admit `api.cloudflare.com` and `*.workers.dev` in environment `env_01KzVwgH7Xye2XSEBvsbAPFN`. DIST cuts at the first
-  wake that is admitted, the batch bound no longer applying.
-- **23:58Z: state moved to `coord` (M0-110)** — write this file with `node tools/coord.mjs write --replace`, read it with
-  `coord.mjs read`. Still REFUSED at 23:58Z. REC-167 is **IC-177, I3 MAJOR → 52.0.0** (`op=caseratify` refuses
-  `CASE_CONCLUSION_MOVED`, C-65.1; absent from `v0.71.0`'s source). `civicos-ui/app.html` calls BOTH `op=caseratify` and
-  `op=versioncurrent`: at the cut, read how it renders both new refusals before the plane goes live (lesson 6).
-- **Self-wake:** routine `trig_014p69w2WQz7jfSkYeg4XHSF`, cron `0 4,10,16,22 * * *` UTC (the server anchors it to minute
-  :08), firing into this session. A routine does not carry `CronCreate`'s 7-day expiry (vendor's description, unmeasured);
-  re-read `list_triggers` at each wake. It fires first at 22:08Z; the first wake past the batch bound is 04:08Z.
-
-## FIRST: the secrets a cut needs — RULED by Bob: they are in your environment
-
-A cut needs these, by step (NAMES only; values never enter the repo or a message):
-- **SIGN** (`tools/release-assemble.mjs --sign`): `BIO_RELEASE_SEED` — the supply-chain key; every installer trusts it.
-- **DEPLOY / READ WHAT IS LIVE** (`bio-plane/scripts/deploy.mjs`, `tools/deploy-fleet.mjs`, `civicos-ui/deploy-ui.mjs`,
-  wrangler for `newgroup`, the deployments API): `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` (aliases `CF_TOKEN`,
-  `CF_ACCT`; the account MUST be `20b533579290b9b93168345edd3b7f72` — if anything reports another, STOP and say so).
-- **LIVE-VERIFY** biosmoke7 and `op=audit`: `BIO_ADMIN_TOKEN`, `BIO_MEMBER_TOKEN`.
-**RULED by Bob, 2026-09-22 ~15:48Z (option C, relayed by BOB #27; recorded in `NEW-MACHINE.md` §0): all ten `.env`
-keys live in the ONE cloud environment every session uses, placed there by Bob himself.** So find them as environment
-variables and confirm each by USING it — `wrangler whoami` must report `20b533579290b9b93168345edd3b7f72` — and never
-print a value. A key that is absent is absent: `release-assemble` refuses `[NO_SEED]`, correctly; say which, and stop.
-Also needed: STOCK `ssh-keygen` (the acceptance authority for every signature) and `npm ci` in `bio-plane/`,
-`pdf-worker/`, `ocr-worker/`, `newgroup/` (each `node_modules` a real directory).
+- The SessionStart hook supplies node 26, full history, the four `npm ci` installs, stock `ssh-keygen`, the id ledger.
+  All ten keys are environment variables. **Cloudflare is ADMITTED since 2026-09-23 ~01:24Z** (Bob's environment
+  setting, relayed by BOB #29): `NODE_USE_ENV_PROXY=1 npx wrangler whoami` names `20b533579290b9b93168345edd3b7f72`;
+  the deployments API and `*.believeinoakland.workers.dev` answer. `workers.cloudflare.com` is still refused (nothing
+  of DIST's needs it).
+- **A TAG CANNOT BE PUSHED FROM THIS ENVIRONMENT.** `git push origin refs/tags/v0.72.0:refs/tags/v0.72.0` → the session's
+  git proxy answers `HTTP 403` on `git-receive-pack` (2026-09-23 ~02:08Z, four retries), while branch pushes to
+  `dist/cut-0.72.0` and `main` pass. A policy denial: not routed around. **`v0.72.0` exists only in DIST #5's clone**
+  (annotated, on `b942d973`, the cut commit, which IS on the remote). Routed to BOB. Until it is pushed, `git describe`
+  and `v0.72.0..` ranges fail in every other clone: use `b942d973`.
+- A fresh cloud clone holds no gate record: a cut's step 1 is the WHOLE battery (~1,070 s here).
+- Instruments rebuilt this session live in the session scratchpad only (lost at container reclaim): `cf.mjs`
+  (deployments API), `sigctl.mjs` (signature 7/7), `call.mjs`/`probe.mjs` (live probe), `audit.mjs`, `ngread.mjs`
+  (installer read-back: the esbuild'd `RELEASE_SOURCE` is a SINGLE-quoted literal — scan by escapes, evaluate with
+  `vm.runInNewContext`, hash). Each is ~30 lines; rebuild from the lesson.
 
 ## What is OWED
 
-1. **0.72.0, a BATCH, no earlier than 2026-09-23 04:00Z** (a day after 0.71.0's cut). `git log v0.71.0..origin/main`
-   over shipped paths reads REC-157 (`1e56c1c8`, `224dce98`): **IC-173** (I3 MINOR 49.1.0) — `op=publish`'s
-   ALREADY_A_CASE_MEMBER compares the publishing project's RELATIONSHIP, so a moved conclusion takes a new case edition.
-   It **WIDENS** what a publisher may do: NAME it in the landing report to BOB. Not a CUT NOW (no security, disclosure
-   or authority defect; CONDUCT #12 concurs). Re-read the log for anything newer.
-   - **Step 1 per M0-106** (`DIST.md`): NAME main's newest GREEN FULL record — at writing `f25d43b3` (tree `0a2b5b64`,
-     file `.git/bio-gates/<tree>.*.json` in the clone that ran it: a cloud clone may hold NO record, and then step 1 is
-     the whole battery) — or `gates.mjs --since` it. Then **send SCHEDULER the cut commit and that step-1 line**: it
-     closes M0-106 on that witness.
-   - RELEASES row: `["0.71.0", "9439431e0462522a52c46932985c3ad2eebcf1c7"]`. `migrate-released` expected: baseline
-     **376/0**; `alterafter` **298/78** (sequence 135→169→186→203→220→237/66, 279/78 at 0.71.0; +19 per release row).
-   - `civicos` moves only if `civicos-ui/app.html` changed since `v0.71.0` (not at writing). Members' bytes unchanged
-     since v0.59.0 (`a7e5f590` / `0d99f5d0` / `b26dee19`): they move their VERSION label only, agent-worker FIRST.
-   - Live probe (lesson 18): refusals + a positive arm only the NEW build can pass — IC-173's refusal gains `project`,
-     `relationship`, `recorded_by`, absent from 0.71.0's answer — + a not-broken arm; every write `store=scratch`;
-     witness the real record's `op=stats`.
-2. **D-260 item 2** (not re-measured): carrying one organisation `ai` credential as a deploy secret, the way
-   `DAEMON_TOKEN` is, AFTER the plane's caller lands — `node tools/ledger.mjs find D-260` first.
-3. **Carried, not re-verified:** v0.56.0/v0.57.0 never pushed; `v0.58.0` off the mainline; v0.59.0–v0.63.0 WITHDRAWN.
+1. **The next cut, by WHEN DIST CUTS.** Read `git log b942d973..origin/main` over the shipped paths. Its RELEASES row:
+   `["0.72.0", "b942d97308195a644f5c2ecb3ba79967ce7548ef"]` in `migrate-released.test.mjs`. Expected, by arithmetic:
+   baseline 396 + 21 → **417/0** (19 per row as before, + 1 ARMED op=file, + 1 ARMED group) — MEASURE it, and record the
+   `alterafter` sequence: … 279/78 → **318/78** (0.72.0's cut).
+2. **The tag `v0.72.0` is not on the remote** (above). It must reach `origin` from a place whose git may push tags.
+3. **D-260 item 2** (not re-measured): one organisation `ai` credential as a deploy secret, the way `DAEMON_TOKEN` is,
+   AFTER the plane's caller lands — `node tools/ledger.mjs find D-260` first.
+4. **Carried, not re-verified:** v0.56.0/v0.57.0 never pushed; `v0.58.0` off the mainline; v0.59.0–v0.63.0 WITHDRAWN.
 
-## What is LIVE (deployments API at 100%, 2026-09-22 ~15:30Z) — each id is the ROLLBACK TARGET
+## What is LIVE (deployments API at 100%, 2026-09-23 ~02:13Z) — each id is the ROLLBACK TARGET for the next cut
 
-biosmoke7 `70a37b76-b199-418b-aac8-1867fa6df6c4` (0.71.0, bytes = signed `d255d1a4…`, 13 bindings) · agent-worker
-`4caffb96-c458-4a2c-8f1f-f8c83974817d` · pdf-worker `a99238d0-9099-429b-a4a8-7afe85ad6978` · ocr-worker
-`6ad45487-931f-447f-9e56-a82fb01c3d59` · civicos `7fe8fed0-9965-4baf-b558-b194c127e067` (`/build` `a13485ae…`) ·
-newgroup `62a59e41-4e27-45c2-87db-c9b7a29bb4ed` (embeds 0.71.0, bindings `[]`). Main's `release/` = 0.71.0 (landed
-`06832aff`); tag `v0.71.0` = `9439431e`.
+biosmoke7 `b7d623f4-45cc-4c0b-b67c-687cc2b22ace` (0.72.0, bytes = signed `cc68d981…`) · agent-worker
+`dccd78e8-7d4b-40c8-877a-7bc46923abf6` · pdf-worker `44272240-164e-4e2f-9a6b-a82d263cfca4` · ocr-worker
+`cd7c7c1e-70b7-45a4-8168-007948fd03a7` · civicos `7fe8fed0-9965-4baf-b558-b194c127e067` (unchanged since 0.71.0) ·
+newgroup `07924f5d-69e7-4774-a05e-8f26588c2e01` (embeds 0.72.0, `RELEASE_SOURCE` hashes to `cc68d981…`, bindings `[]`).
+The 0.71.0 ids, if 0.72.0 must be rolled back: biosmoke7 `70a37b76…` · agent-worker `4caffb96…` · pdf-worker
+`a99238d0…` · ocr-worker `6ad45487…` · newgroup `62a59e41…`.
 
-**biosmoke7's stores record their producing group: `believe-in-oakland`, source `seed`, recorded_by `token:admin`
-(2026-09-22T04:26:11Z), both `bio` and `store=scratch`. Write-once — never seed again (C-64.3).** Rolling the plane
-back does not unseed. biosmoke7 binds `INSTANCE_NAME="biosmoke7"`, its WORKER name, not its group.
-**An admin `op=livefire` with no `store` runs against `bio`** (`scopeFor`) — always name `store=scratch`.
-Scratch residue, not swept: `INFO-2026-9436-dist4-muc6a1x0`, member `dist3-rec156-muboxe9j`, livefire canaries, and 13
-July probe members (not DIST's), so `op=purge` is not used.
+**biosmoke7's stores record their producing group `believe-in-oakland` (seed, `token:admin`, 2026-09-22T04:26:11Z), both
+`bio` and `store=scratch` — write-once, never seed again (C-64.3).** Since 0.72.0 a caller with NO credential reads the
+slug (IC-174). An admin op with no `store` runs against `bio` (`scopeFor`) — always name `store=scratch`.
+Scratch residue, not swept: DIST #5's `INQ-2026-9172-dist5-{a,b}-mudgvfyx` and runs `RUN-2026-0923-dist5-mudgvfyx-1..2`
+(both closed), DIST #4's `INFO-2026-9436-dist4-muc6a1x0`, member `dist3-rec156-muboxe9j`, livefire canaries, 13 July
+probe members (not DIST's) — so `op=purge` is not used.
 
-## The instruments — DIST #4's copies were Mac-only scratch; rebuild each from its lesson
+## The 0.72.0 figures, for the next cut's comparison
 
-- live state: deployments API per worker (`/workers/scripts/<w>/deployments`, the `(100%)` version) + each version's
-  bindings (`/versions/<id>`) + `/version` / `/build` (lessons 3, 4).
-- signature controls: stock `ssh-keygen -Y verify` — 2 POSITIVE (plane sig in `bio-release`, `fleetSig` in
-  `bio-release-fleet`) beside 5 REFUSED (altered bytes, wrong namespace, wrong key, the previous release's sig, a
-  member dropped from the fleet payload `--emit-payload` writes) (gate step 5).
-- installer read-back: parse `RELEASE_SOURCE` out of the served script, EVALUATE the literal, hash it = `RELEASE.json`'s
-  sha256; `bindings: []` from `/settings`; the active version = the one just deployed (lesson 8).
-- civicos build: `worker.template.mjs` with `__APP_HTML_BASE64__` = base64(app.html) and `__BUILD_ID__` = sha256(app.html);
-  deploy with `civicos-ui/deploy-ui.mjs`; `/build` must answer that sha (gate step 12).
-
-## The 0.71.0 figures, for the next cut's comparison
-
-Gate GREEN FULL on the cut tree `dadd0b5f`: 269/269 suites · 16413 assertions (EXCLUDES 2 untallied) · signature 7/7 ·
-newgroup embed 23/0, wizard 146/0 · migrate-released 357. Trend 264·16114 → 265·16198 → 267·16264 → **269·16413**.
-Live 12/12. `op=audit`: 31 checked, 21 clean, 10 C-18.9 — the baseline ids (lesson 15): INFO-2026-0099-auditor-report-
+A CUT NOW (REC-165 / IC-176, an authority closing) carrying REC-157, REC-163, REC-166, REC-167; I3 at 52.0.0. Cut
+`b942d973` on `dist/cut-0.72.0`; its merge `2049195c` (on `origin/main` at `c5c83dc4`) is GREEN FULL on tree `8747a4d6`
+(279/279 · 16827, `--since b942d973`), pushed as **`land/dist/release-0.72.0`** for CONDUCT's train (M0-111: a direct push
+to `main` is refused). **Until the train lands it, `main`'s `release/` still reads 0.71.0 and `/update` offers 0.71.0** —
+the fix is live on biosmoke7 regardless. Confirm it landed: `git merge-base --is-ancestor 2049195c origin/main`. Gate GREEN FULL on the cut
+tree `a766042a`: **278/278 suites · 16785 assertions** (EXCLUDES 2 untallied), 1067 s. Trend 264·16114 → 265·16198 →
+267·16264 → 269·16413 → **278·16785**. Signature 7/7. newgroup embed 23/0, wizard 146/0. migrate-released 396; controls
+baseline 396/0 · alterafter 318/78 · nosecondpass 354/42 · percolumn 396/0 · firstbootalways 360/36 · firstbootnever
+395/1 · groupwipe (new) 394/2. **The 0.71.0 row falsified two premises of that suite, corrected in the cut:** 0.71.0
+stamps its recorded group into a document at promote, so op=file is compared with the OLD plane's own answer; and a
+0.71.0-born store records a group at its own first boot, so the current plane must KEEP it. Every later release does
+both, so its row takes the same path — nothing to change but the row.
+Live 12/12 (public `op=instancegroup` → slug only; `SUGGEST_RUN_NOT_RUNNING` and `SUGGEST_OUTSIDE_RUN_CONTEXT` from the
+DO, absent from v0.71.0's source; `SUGGEST_NO_RUN`; an in-context suggestion ACCEPTED; `bio` witness unchanged).
+`op=audit`: 31 checked, 21 clean, 10 C-18.9 — exactly the baseline ids (lesson 15): INFO-2026-0099-auditor-report-
 feb-2022, -0100-acfr-fy2023-24-fund-statements, -0100-adopted-budget-fy2026-27, -0103-acfr-fy2023-24-pdf,
 -0104-adopted-budget-book-pdf, -0105-adopted-budget-fy13-15-csv, -0106-acfr-fy2021-22-pdf,
 -0107-revenue-expenditure-reports-page, -0108-zolly-opinion, INFO-2026-5460-member-release-key-registry.
-**UNDETERMINED, held open:** whether wrangler's uploaded member bytes equal a build of the tagged source (lesson 7 is
-blocked by a MULTIPART answer); bounded only: member artifacts byte-identical at every tag v0.59.0 → v0.71.0.
+**UNDETERMINED, held open:** REC-167's `CASE_CONCLUSION_MOVED` was not live-probed (it needs a ratifiable case in
+scratch); the battery covers it. Whether wrangler's uploaded member bytes equal a build of the tagged source (lesson 7;
+the content API answers MULTIPART); bounded: member artifacts byte-identical at every tag v0.59.0 → v0.72.0.
+agent-worker's one suggest site: a model-written target outside its run's context is now refused and routed to ADJUST
+(CONDUCT #14; SCHEDULER holds it) — a narrowing the unchanged member meets, not a break.
 
-## Session state and rules met this session
+## Session state
 
-- **DIST #4 WOUND DOWN on Bob's order (BOB #27, 2026-09-22 16:49Z): development moves to his second account in cloud
-  Claude Code, and the 0.72.0 cut is DIST #5's there.** DIST #4 deleted every wake in its own CronList (the recurring
-  self-wake, the 5-day renewal and the 0.72.0 bound), so none fires. **Arm your own**: every 6 h, opening with
-  `get_usage` against 70%; a 5-day renewal; a one-shot bound at the batch.
-- Every DIST branch is on the remote. Worktree `.claude/worktrees/dist-4` (Mac) holds nothing unpushed.
-- Bob, 2026-09-22 (CLAUDE.md §6): never queue a gate behind another lane's. Two batteries at once thrash this Mac (a
-  630 s battery took 2784 s, and a subprocess timeout read as a RED — M0-103/M0-107).
-- A compound command wrapping `git push origin HEAD:main` was refused once without a reason; the BARE push, alone in
-  its own call, passed. A non-fast-forward is a race: fetch, merge, re-check `--since`, push.
+- **DIST #5 is live**, session `session_01DUyQVnz7x2hK5EajCdhEfC`. Self-wake: routine `trig_014p69w2WQz7jfSkYeg4XHSF`,
+  cron `0 4,10,16,22 * * *` UTC (fires at :08), into this session; re-read `list_triggers` at each wake. Context is
+  measured with `get_session`.
+- Every DIST branch is on the remote (`dist/cut-0.72.0`); the deploy worktree `/home/user/bio-deploy-0720` is removed
+  after the landing.
