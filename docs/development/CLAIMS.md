@@ -18832,6 +18832,7 @@ conflict at all.
 **DISCHARGED 2026-09-22 by CONDUCT #12, for CONDUCT only (items 5-8):** `kickoffs/CONDUCT.md` step 6, "Mechanical conflicts"
 and "REGENERATE EVERY GENERATED INDEX LAST" corrected in the landing of M0-99 (batch 4); `kickoffs/CONDUCT-NEXT.md` rewritten in
 the same landing. Items 1-4 and 9-11 stay open with their owners.
+**DISCHARGED 2026-09-22 by BOB #28, for BOB (items 1-4):** `CLAUDE.md` §1 (*finds it*), `ORCHESTRATION.md` "Before you end a turn" (a TRACKED copy), `kickoffs/BOB.md` "Closing a turn" step 1 and rule 11 (the regenerate sentence removed). Items 10-11 stay open with DIST, FLEET and the owner of `kickoffs/SKILL.md`.
 
 ## CLAIM 2026-09-22 DIST (DIST #4 — DIST-NEXT: the secrets question answered — Bob ruled option C, the keys live in the cloud environment)
 
@@ -19066,6 +19067,7 @@ does not correct, each named with its fix:
 4. **SCHEDULER — `QUEUE.md`'s own header** (line 13: *"a worker reads its own row from `origin/main`"*), a state file this
    item may not edit (the rows and their prose are CONDUCT's word and SCHEDULER's order). **Fix:** *"from `coord`"*.
 **open as of 2026-09-22** — raised with M0-110's landing; each item closes when its owner's text reads `coord`.
+**DISCHARGED 2026-09-23 by BOB #28, for BOB (items 1-2):** item 1 — no heartbeat replacement is built; `TREE-SHARING.md` §1 item 4 rules that one would read through `node tools/coord.mjs read`, and the lanes' own `send_later` and routine self-wakes stand in for it (each measured working 2026-09-22). Item 2 — `docs/archive/lane-paste-blocks-2026-09-22.md` stays verbatim as a dated record; every paste block BOB gives from now on gates on `node tools/coord.mjs read docs/development/kickoffs/<LANE>-NEXT.md | head -1` (NEW-MACHINE §7). Items 3-4 stay open with their owners.
 
 ## CLAIM 2026-09-22 UI (UI-77 — the member fence and the public header read `op=instancegroup` and show the recorded slug, or say that none is recorded; the `GROUP` literal goes: Publication §7 point 1)
 
