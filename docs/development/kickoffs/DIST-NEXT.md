@@ -1,4 +1,4 @@
-# DIST — resume here. Written 2026-09-23 by DIST #5 (cloud, Bob's second account), after 0.72.0-0.77.0 went live (2026-09-23 ~13:10Z).
+# DIST — resume here. Written 2026-09-23 by DIST #5 (cloud, Bob's second account), after 0.72.0-0.78.0 went live (2026-09-23 ~16:55Z).
 
 This file is only STATE, measured 2026-09-23 ~02:15Z. The process is `kickoffs/DIST.md` (WHEN DIST CUTS, the `latest`
 pointer, the gate, the LESSONS) — read it whole. Re-measure before acting: a deployment is a fact about the ACCOUNT.
@@ -25,35 +25,20 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
 
 ## What is OWED
 
-0. **0.77.0 is LIVE on biosmoke7 but its POINTER and the INSTALLER are HELD — DIST's decision, told to BOB #30 (12:30Z),
-   overrulable by "advance 0.77.0 now".** REC-171 makes `bio-plane/migrate/migrate.mjs` refuse SURFACE_NO_RUN per inquiry
-   until REC-173 (BOB's migration-replay ruling) is built, so a group offered 0.77.0 (by `/update` through `main`'s
-   `release/`, or by a fresh install through `newgroup`'s embed) could half-import. So: no `land/dist/release-0.77.0`
-   push, and `newgroup` stays deployed at 0.76.0 (`60692a45`). **When REC-173 is on main: cut 0.78.0 (a batch, or a
-   CUT NOW if anything closes), which carries REC-171 AND the fix, then advance the pointer and deploy the installer.**
-   If BOB overrules first: merge `origin/main` into `dist/cut-0.77.0` (`6b0beb8e`, on the remote), gate, push
-   `land/dist/release-0.77.0`, deploy `newgroup` from the tag's tree, read it back.
-   0.76.0's pointer LANDED (`288fc128` is an ancestor of origin/main, checked 13:07Z): `/update` offers 0.76.0.
-   **The integrator is CONDUCT #16 (`session_01DEAp94ny3PfWr6deFJtTaD`)** — send `land/*` notices there. Its next train
-   (M0-126, UI-81/IC-185, D-389/IC-187, UI-82) LANDED at `e62e08e1` (13:32Z) — no closing; the plane changed (store.mjs,
-   bio-checks), so it batches into the cut after REC-173. **Since M0-126 a release cut's gate is `node tools/gates.mjs
-   --full --no-reuse` (TREE-SHARING §3a condition 3)**, not a bare `gates.mjs`. **BOB #30 (15:05Z): DIST.md step 1 is
-   corrected (rides CONDUCT's train): a cut relies ONLY on an `isBackstop()` record for the exact tree, else
-   `--full --no-reuse`, and NEVER on `--since`** — which DIST #5 used for its release MERGE trees (0.72-0.76); a landing
-   branch's merged tree now gets `--full --no-reuse` too. **Refresh line is 80% (Bob, 2026-09-23)**, not 70%.
-   SCHEDULER is #16 (`session_01UZaSR1KRWmADuxBFYk1wY9`).
-   UI-81/UI-82 may change `app.html`: compare `/build` to sha256(app.html) at the cut.
-1. **The next cut, by WHEN DIST CUTS.** Read `git log 6b0beb8e..origin/main` over the shipped paths. RELEASES row:
-   `["0.77.0", "6b0beb8e7d321fe96d64de5e5b3aefa291b41599"]`. Expected: baseline 501 + 21 → **522/0**, `alterafter` → **444/78**, `groupwipe` → **508/14**
-   (seven group-recording stores, 0.71.0-0.77.0). Measure.
-   A cut base is `origin/main` MERGED with any still-waiting release merge. Before pushing any `land/*` branch: merge
-   `origin/main`, gate the MERGED tree GREEN, then push.
-   **civicos moves whenever `sha256(app.html)` ≠ the live `/build`** — compare at the cut, never from memory
-   (0.72.0-0.74.0 missed UI-77 that way). Build from the TAG's app.html; deploy after the plane.
-   **WHICH BUILD ANSWERS is now readable live (D-116, since 0.76.0):** `op=bootstrap&members=1` (no credential) answers
-   `version`, `storeVersion` (the DO's own) and each member's `SERVING` version — use it in every landing report.
-   **`op=airuntick` answers `ticked`, not `ok`** (the 0.76.0 probe's first run misread it; see the lessons below).
-2. **The tags `v0.72.0`-`v0.77.0` are not on the remote** (above) — NOT CARRIED: BOB #29 (02:52Z) judged it non-blocking (nothing
+0. **`land/dist/release-0.78.0` @ `183cc7df` waits on CONDUCT #16's train** (`session_01DEAp94ny3PfWr6deFJtTaD`; tree `9beb2c57`
+   = the cut tree, GREEN `--full --no-reuse` 296/296 · 17690). Confirm: `git merge-base --is-ancestor 183cc7df origin/main`.
+   **The 0.77.0 hold is OVER:** 0.78.0 carries REC-173, and its pointer and the installer both advance. 0.77.0 was never
+   offered to groups.
+1. **REC-175 (IC-192 MAJOR, I3 60.0.0) lands ~17:30Z — CONDUCT will trigger.** `op=promote` then refuses a sha256 that
+   does not match the bytes, and a new read op REC-175 adds, `digestcensus` (admin, probe; NOT on main at writing) counts stored rows whose digest disagrees;
+   a live bundle already holding a false digest will refuse re-promotion and there is NO repair act. **So: cut it, deploy
+   it, and run its digest census on `store=bio` (admin) on the deployed build IMMEDIATELY, before any re-promotion — and report
+   the figure to CONDUCT #16, SCHEDULER #16 (`session_01UZaSR1KRWmADuxBFYk1wY9`) and BOB #30.** Judge at the code whether
+   REC-175 is a CUT NOW (a digest that lies about bytes is a record-integrity/provenance closing — DIST's reading: yes).
+   Next RELEASES row: `["0.78.0", "dfe9858c89810a49422ee071c4f0bf92c0c2f297"]`. Expected: baseline 522 + 21 → **543/0**, `alterafter` → **465/78**,
+   `groupwipe` → **527/16** (eight group-recording stores). Measure. Gate: an `isBackstop()` record for the exact tree,
+   else `gates.mjs --full --no-reuse`; never `--since` (BOB #30). Refresh past 80%.
+2. **The tags `v0.72.0`-`v0.78.0` are not on the remote** (above) — NOT CARRIED: BOB #29 (02:52Z) judged it non-blocking (nothing
    reads it; `b942d973` is on the remote) and named it to Bob as an optional web-UI act. A future cut's tag meets the
    same 403: push the branch, and let the tag follow when Bob's act or the environment allows.
    **BOB'S RULING, 2026-09-23 (TREE-SHARING §3):** every failed GitHub run emails Bob as an alarm — push a `land/*`
@@ -62,13 +47,14 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    AFTER the plane's caller lands — `node tools/ledger.mjs find D-260` first.
 4. **Carried, not re-verified:** v0.56.0/v0.57.0 never pushed; `v0.58.0` off the mainline; v0.59.0–v0.63.0 WITHDRAWN.
 
-## What is LIVE (deployments API at 100%, 2026-09-23 ~13:05Z) — each id is the ROLLBACK TARGET for the next cut
+## What is LIVE (deployments API at 100%, 2026-09-23 ~16:52Z) — each id is the ROLLBACK TARGET for the next cut
 
-biosmoke7 (0.77.0, bytes = signed `44b9f985…`; storeVersion 0.77.0) · agent-worker · pdf-worker · ocr-worker — all 0.77.0;
-biosmoke7 `d204a1be-bfa0-424a-8304-fb346b504eb8`.
-agent-worker `c55a04b3…` · pdf-worker `5b45f740…` · ocr-worker `714ea24c…` · civicos `f2a2ac27…` (`/build` `c866bb15…`) ·
-**newgroup `60692a45…` STILL 0.76.0 (held, above).** The 0.76.0 ids: biosmoke7 `e319f8a1…` · agent-worker `a6f0647f…` ·
-pdf-worker `b97fc33d…` · ocr-worker `40a19783…`.
+biosmoke7 `bfc7677f-205b-416d-ab07-74936b2bd921` (0.78.0, signed `9dac9e46…`; storeVersion 0.78.0) · agent-worker
+`187e2e29-8918-42d1-8be0-0bd326fa9e59` · pdf-worker `43702cbb-6e22-4d16-8fab-b04dae05c5cc` · ocr-worker
+`c57606be-0067-4c4c-8801-ace1daba9647` · civicos `afd4a640-a300-43a5-9aee-71fa86d24241` (`/build` `a2599046…`) · newgroup
+`7a47324c-5c28-4f82-8659-018dd1c71107` (embeds 0.78.0, `RELEASE_SOURCE` → `9dac9e46…`, bindings `[]`).
+The 0.77.0 ids: biosmoke7 `d204a1be…` · agent-worker `c55a04b3…` · pdf-worker `5b45f740…` · ocr-worker `714ea24c…` ·
+civicos `f2a2ac27…` · newgroup `60692a45…` (0.76.0).
 
 **biosmoke7's stores record their producing group `believe-in-oakland` (seed, `token:admin`, 2026-09-22T04:26:11Z), both
 `bio` and `store=scratch` — write-once, never seed again (C-64.3).** Since 0.72.0 a caller with NO credential reads the
@@ -76,6 +62,14 @@ slug (IC-174). An admin op with no `store` runs against `bio` (`scopeFor`) — a
 Scratch residue, not swept: DIST #5's `INQ-2026-9172-dist5-{a,b}-mudgvfyx` and runs `RUN-2026-0923-dist5-mudgvfyx-1..2`
 (both closed), DIST #4's `INFO-2026-9436-dist4-muc6a1x0`, member `dist3-rec156-muboxe9j`, livefire canaries, 13 July
 probe members (not DIST's) — so `op=purge` is not used.
+
+## The 0.78.0 figures (a CUT NOW for REC-172 / IC-188; carries REC-171, REC-173, REC-174, REC-160, UI-81, UI-82, D-389)
+
+Cut `dfe9858c`. Gate `--full --no-reuse` GREEN on `9beb2c57`: **296/296 · 17690**, 1299 s. Signature 7/7; newgroup 23/0,
+184/0; migrate-released 522/0 · 444/78 · 468/54 · 522/0 · 486/36 · 521/1 · 508/14, each as predicted (0.76.0 + 0.77.0
+rows added together). civicos moved (a2599046…). Live: D-116 all 0.78.0; probe 9/9 (`fetchs` bound and an array consume →
+AI_RUN_BOUND_UNKNOWN; a map consume ticks; REC-171 and REC-163 hold); audit = baseline. probe78 opens its runs over
+`INQ-2026-9172-dist5-a-mue0uvwj` (an admin can no longer create an inquiry outside a run).
 
 ## The 0.77.0 figures (a CUT NOW for REC-171 / IC-186; I3 58.0.0; pointer and installer HELD)
 
