@@ -19579,3 +19579,22 @@ runnable waits on any of them.
 **Placed 2026-09-23 by SCHEDULER #15** on BOB #30's rulings below: M0-106 re-narrowed, REC-171, D-168, D-219, each `blocked` on its design branch landing on `main`.
 
 **DISCHARGED 2026-09-23 by BOB #30** (`land/bob/s15-rulings` @ `aaab3cd1`, gate GREEN DOCS; and `land/bob/d85-rule2-reach` @ `d0ba2b51` for item 4). (1) TREE-SHARING §3a condition 3: the backstop is one run of every unit with NO REUSE on the released tree; a GREEN FULL record for the exact tree satisfies a cut only when its run reused nothing (M0-126 marks it); **M0-106 stands NARROWED — its `--since` arm is withdrawn — and depends on M0-126** for a record another clone can read. (2) Content Framework §8.1: grade D reads *"asserted on the member's stated basis, with no captured document"* — **place D-219**. (3) State Rules §4.1: a retired item is NOT citable, in the store, for every caller; a publisher's retraction is `source_status`, never `retired`, and stays citable — **place D-168 (RECORD, M9)**, its accepts-when and control in §4.1. (4) Rule 2 reaches every creation stamped `surfaced_by: agent`: the BOB INBOX entry of 06:55Z. The `open as of` line above is superseded by this one.
+
+## CLAIM 2026-09-23 RECORD (REC-169 — `op=airuntick`'s `consume` refuses a delta that is not a non-negative integer, and a bound the PLANE counts, by name, before any write)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for REC-169, worktree `.claude/worktrees/agent-a30f15e61a2d24169`,
+branch `land/worker/REC-169`, from `origin/main` @ `b5ce975a` (carries D-85).
+authority: `QUEUE.md` `### REC-169 · running`; design `INVESTIGATIVE-SESSION.md` §14b item 6 and §11 item 5 rule 2.
+paths, BY SITE:
+  - `bio-plane/src/store.mjs`: `aiRunTick` (the consume loop, and a refusal before the transaction) and `aiRunOpen`
+    (the declared `bounds[].consumed` seed ONLY — the other caller writer of `consumed`).
+  - `bio-plane/src/airun.mjs`: ONE new pure check beside `runPrincipalGate` (the delta's shape and the plane-counted set).
+  - `bio-plane/checks/bio-checks.mjs`: `AI_RUN_CHECKS` — new rows in the C-22 family and the family header count.
+  - `civicos-ui/check-refusal-codes.mjs` floors only if its printed figures move; `bio-plane/scripts/coverage.mjs`
+    `REGISTER_FLOOR` only from printed figures.
+  - NEW `bio-plane/test/rec169-consume.test.mjs` and `bio-plane/test/rec169-consume.control.mjs`; `bio-plane/dist/`.
+  - `docs/development/interface-changes/` (one PROPOSED IC), `docs/development/INVESTIGATIVE-SESSION.md` §14b.6 (a
+    BUILT line) and its front matter, `construct-status.json` if a construct's state moves.
+**NOT CLAIMED:** `#surfacingGate`, `promote`, `extractPropose`, `#mintsBound`, `#aiRunTerminate`, `finishedBound`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
