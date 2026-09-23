@@ -5,10 +5,10 @@
  * instances of the one recogniser engine (recogniser.mjs), which is the whole claim
  * of framework §4: a third axis is a third `makeRegistry()`, not a third loop.
  *
- * SIX types are registered today -- `meeting_calendar`, `meeting_agenda`,
- * `meeting_minutes`, `staff_report`, `regulation` and the `generic` fallback (the
- * register() calls below) -- of which FIVE are measured real types, and the restraint
- * is still deliberate rather than unfinished.
+ * SEVEN types are registered today -- `meeting_calendar`, `meeting_agenda`,
+ * `meeting_minutes`, `staff_report`, `regulation`, `staff_directory` and the `generic`
+ * fallback (the register() calls below) -- of which SIX are measured real types, and the
+ * restraint is still deliberate rather than unfinished.
  *
  * CORRECTED 2026-09-14 (CPDF-17): this header used to open "Only ONE real type is
  * registered today" and went on to list an agenda among the types that "none has been
@@ -23,14 +23,16 @@
  * correction obliges every later author to move: three types were added in the order
  * M0-32's census measured (`MEASUREMENTS.md` M-18) -- meeting minutes, then the staff
  * report, then the ordinance or resolution. A staff DIRECTORY, the fourth and smallest
- * class in that order, is STILL NOT WRITTEN and the reason is measured rather than a
- * shortfall of effort: see the register() calls below.
+ * class in that order, was withheld by FW-18 on a measurement and WRITTEN BY FW-20
+ * (2026-09-23) once that measurement was re-taken and did not hold: see the register()
+ * calls below.
  *
  * Every measured type was written from a document that was actually fetched and read:
  * `meeting_calendar` from a page that was fetched, diffed and read, `meeting_agenda`
  * from a real Legistar agenda packet's Tier-1 text, and FW-18's three from the real
  * Oakland documents each names in its own header, read through the plane's own Tier-1
- * extractor. The rule has not moved: a content type invented from what a document
+ * extractor; FW-20's directory from real Oakland directories read through the plane's
+ * tier-2 member. The rule has not moved: a content type invented from what a document
  * probably looks like is a type that reassures people about things it has not
  * understood. The generic type reports change without describing it, which is noisy and
  * honest, and the noise is the prompt to go and measure. */
@@ -40,6 +42,7 @@ import meetingAgenda from "./meeting-agenda.mjs";
 import meetingMinutes from "./meeting-minutes.mjs";
 import staffReport from "./staff-report.mjs";
 import regulation from "./regulation.mjs";
+import staffDirectory from "./staff-directory.mjs";
 import generic from "./generic.mjs";
 
 /* generic carries `fallback: true`, so the shared registry returns it when nothing
@@ -68,17 +71,17 @@ types.register(meetingAgenda);
    Tier-1 output breaks phrases across lines (see `flatten` in ./index.mjs). */
 types.register(staffReport);
 types.register(regulation);
-/* NOT REGISTERED, and the absence is stated rather than left as silence: a STAFF
-   DIRECTORY, class 4 of M0-32's order (~395 items, the smallest class by a wide
-   margin). It is unwritten because no document of the class could be READ, not
-   because none was looked for. FW-18 fetched 30 name-matched directory PDFs from the
-   Oakland bucket and every one was Tier-1 UNDECODABLE (0-100 characters decoded
-   against 1,200-33,000 undetermined markers — single-page scans); a further fixed-seed
-   walk of 300 bucket PDFs decoded 45 and found none of the class. `readText` refuses a
-   document whose undetermined exceeds its decoded characters, so for these documents
-   NO reading is attempted at all and no content type is ever consulted. Writing a
-   directory type from a page nobody could read is precisely the invented type this
-   registry's rule forbids. */
+/* staff_directory (FW-20), class 4 of M0-32's order (~395 items, the smallest class).
+   FW-18 withheld it (D-376) because every directory it fetched was Tier-1 UNDECODABLE,
+   and read that as a tier-3 gap. FW-20 re-took the census through the plane with its
+   fleet bound and the premise did not survive: the markers were `no_tounicode`, TIER 2's
+   case, and with the tier-2 member bound 56 of 57 name-matched documents read from text
+   (`bio-plane/scripts/fw20-decode-census.mjs`; `docs/development/measurements/M-120.md`). So the type
+   is written from directories that were actually fetched AND read — see its own header.
+   Registered AFTER the three substance types: `recognise` breaks on the first CERTAIN,
+   and a report or an instrument that happens to carry a contact block is that document
+   first; `also` then says it is a directory too. */
+types.register(staffDirectory);
 types.register(generic);
 
 export function doctypes() { return types.all(); }
@@ -123,5 +126,5 @@ export function alsoFor(ctx, selfKey) {
   return out;
 }
 
-export { meetingCalendar, meetingAgenda, meetingMinutes, staffReport, regulation, generic };
+export { meetingCalendar, meetingAgenda, meetingMinutes, staffReport, regulation, staffDirectory, generic };
 export * from "./index.mjs";
