@@ -19501,6 +19501,7 @@ paths, BY SITE:
 a separate row), `newgroup/`, any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+**released: 2026-09-23** — built and PUSHED on `land/worker/CAP-13` @ `3fe140fd` (read back by `git ls-remote`), merged with `origin/main` @ `619dfa65`; FULL gate GREEN (284/284 suites green · 17129 assertions passing · 0 SKIP), recorded for tree `74b08a07`. IC-180 PROPOSED (MINOR). The paths stay reserved until CONDUCT integrates the branch.
 
 ## CLAIM 2026-09-23 DIST (D-116 — the DO and each fleet member report the build THEY serve; the installer names the one that lags and does not report success)
 
