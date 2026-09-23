@@ -3108,3 +3108,33 @@ depends-on: none — M0-111 is on `main`.
 scope: on a rejected push, merge `origin/main`, re-gate with `gates.mjs --since <the GREEN tip>`, re-record and push, bounded; and a `land/*` tip whose tree carries a GREEN record lands without a second gate of that tree.
 accepts-when: a train whose push is rejected once lands on the retry with one `--since` gate, not a FULL one; a recorded-GREEN branch lands with no battery run of its own tree. NEGATIVE CONTROL: drop the retry, and the moved-main arm fails by name.
 added: 2026-09-23 · SCHEDULER #14 (M0-111's finding via CONDUCT #14; `node tools/mintid.mjs M0`).
+
+### D-85 · done — integrated at 8f784dfd (train train-20260923T071448Z-23127, origin/main b5ce975a); verified: 11.run-production reads BUILT on b5ce975a
+order: directly after REC-165, the same fence one act further (BOB #25: *"after 1"*); a gap in the assistant's fence, not a false attribution (SCHEDULER #10, 2026-09-21)
+milestone: M4
+interface: I3 and I5 — a refusal, an instance row and a run field; the integrator mints and classifies the ICs.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rules 2 and 3 (BOB #25, 2026-09-21), with §3 (the run carries the lens).
+depends-on: REC-165 (the same gate).
+accepts-when: a creation outside a run, in another principal's run or past the bound is refused by name; one inside lands with its row and reads the lens and `moved`; a member's is … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #10 (BOB #25's inbox entry, items 2 and 3; D-85's DEBT row of 2026-07-30; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### UI-79 · done — integrated at 3a87666f (origin/main b5ce975a); verified: civicos-ui/app.html names believe-in-oakland 0 times
+order: directly after REC-168, with the product corrections: a sovereign group's bundles would claim this project's group, CLAUDE.md §2's class, UI-77's sibling on the write path; below D-442 and REC-168, whose defects move published pins and attribution (SCHEDULER #14, 2026-09-23; UI-77's findings, relayed by CONDUCT #14)
+milestone: M7
+interface: I3 consumer (the plane's group stamp, IC-172).
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 (a bundle's `group` is the ONE recorded value per instance, never a literal: D-436), with DEC-8 (a surface invents nothing).
+depends-on: none — D-436's stamp is on `main`.
+scope: drop the four literals so the plane stamps the group; reword the FY glossary entry and the Add form's placeholder to name no place; correct the 11 UI suites carrying the literal, each with a dated comment saying why the old pin was wrong.
+accepts-when: against a plane recording a second slug, a bundle the UI authors carries that slug and no UI source or rendered text names `believe-in-oakland` or Oakland outside quoted record content. How a liar passes it: a different hard-coded slug, so the arm plants a second one. NEGATIVE CONTROL: restore one `meta.group` literal, and the planted-slug arm fails by name.
+added: 2026-09-23 · SCHEDULER #14 (UI-77's worker's findings (a) and (b), via CONDUCT #14; `node tools/mintid.mjs UI`).
+
+### UI-80 · done — integrated at 341c623a (origin/main b5ce975a); verified: the per-case op=publishedcase reader and case-frozen-pair.test.mjs are on main
+order: FIRST of the product corrections, directly after M0-126: a public page claiming a signature that does not cover what it shows, CLAUDE.md §2's worst class, live since D-442 landed (SCHEDULER #14, 2026-09-23)
+milestone: M10
+interface: I3 consumer (IC-179: `op=publishedcase`'s `findings[].strength`, `grounds`, `frozen_from`).
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12 (b)–(d) (the pair stated once, in the case document, under its signature), with DEC-8 (a surface invents nothing).
+depends-on: none — D-442 is on `main`.
+scope: the DELEGATION's three fixes: `inquiryPair` reads each case's pair from `op=publishedcase`, one per case, never picking one; the two sentences branch on `frozen_from` (`case_document` or `member_bytes`) and name the signature that covers the pair; the placeholder follows item 1. Legacy members keep working.
+accepts-when: against the real plane, a rule-12 member shows its pair per case with the case document named as the signer, and a legacy member reads as today. How a liar passes it: a hard-coded signer sentence, so a fixture holds one member of each kind. NEGATIVE CONTROL: read `published_strength` again, and the rule-12 arm fails by name.
+added: 2026-09-23 · SCHEDULER #14 (D-442's finding (a) via CONDUCT #14; `node tools/mintid.mjs UI`).

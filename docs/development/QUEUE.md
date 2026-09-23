@@ -46,36 +46,6 @@ accepts-when: two `land/*` branches each adding a measurement land in one train 
 added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry; `node tools/mintid.mjs M0`); narrowed 2026-09-22 by BOB #27 (SCHEDULER #12).
 cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-100» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### UI-79 · running — **SPAWNED 2026-09-23 by CONDUCT #14, wave 7. NOT LANDED, CHECKED BY CONTENT: `civicos-ui/app.html` names `believe-in-oakland` 4 times on `f05c1efd`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE MEMBER UI WRITES `believe-in-oakland` AS THE GROUP OF EVERY BUNDLE IT AUTHORS, ON EVERY INSTANCE.** `civicos-ui/app.html` sends `group: believe-in-oakland` in `mdFor`'s front matter and three `meta.group` keys (re-read on `a73cba2b`), where the plane stamps the instance's recorded group (D-436, IC-172); the FY glossary entry and the Add form's placeholder name Oakland too. Found by UI-77's worker (CONDUCT #14); the open D-436 → UI DELEGATION. — owner UI.
-order: directly after REC-168, with the product corrections: a sovereign group's bundles would claim this project's group, CLAUDE.md §2's class, UI-77's sibling on the write path; below D-442 and REC-168, whose defects move published pins and attribution (SCHEDULER #14, 2026-09-23; UI-77's findings, relayed by CONDUCT #14)
-milestone: M7
-interface: I3 consumer (the plane's group stamp, IC-172).
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 (a bundle's `group` is the ONE recorded value per instance, never a literal: D-436), with DEC-8 (a surface invents nothing).
-depends-on: none — D-436's stamp is on `main`.
-scope: drop the four literals so the plane stamps the group; reword the FY glossary entry and the Add form's placeholder to name no place; correct the 11 UI suites carrying the literal, each with a dated comment saying why the old pin was wrong.
-accepts-when: against a plane recording a second slug, a bundle the UI authors carries that slug and no UI source or rendered text names `believe-in-oakland` or Oakland outside quoted record content. How a liar passes it: a different hard-coded slug, so the arm plants a second one. NEGATIVE CONTROL: restore one `meta.group` literal, and the planted-slug arm fails by name.
-added: 2026-09-23 · SCHEDULER #14 (UI-77's worker's findings (a) and (b), via CONDUCT #14; `node tools/mintid.mjs UI`).
-
-### D-85 · running — **SPAWNED 2026-09-23 by CONDUCT #14, wave 7. NOT LANDED, CHECKED BY CONTENT: construct `11.run-production` reads PARTIAL with rules 2 and 3 unbuilt on `f05c1efd`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **AN ASSISTANT CAN OPEN A QUESTION OUTSIDE ANY RUN IT HOLDS, AND A RUN KEEPS ONLY THE LENS IT WAS HANDED.** NARROWED by BOB #25 to … (whole text: the cut archive)
-order: directly after REC-165, the same fence one act further (BOB #25: *"after 1"*); a gap in the assistant's fence, not a false attribution (SCHEDULER #10, 2026-09-21)
-milestone: M4
-interface: I3 and I5 — a refusal, an instance row and a run field; the integrator mints and classifies the ICs.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rules 2 and 3 (BOB #25, 2026-09-21), with §3 (the run carries the lens).
-depends-on: REC-165 (the same gate).
-accepts-when: a creation outside a run, in another principal's run or past the bound is refused by name; one inside lands with its row and reads the lens and `moved`; a member's is … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #10 (BOB #25's inbox entry, items 2 and 3; D-85's DEBT row of 2026-07-30; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### UI-80 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT: civicos-ui/app.html inquiryPair (L7839) still reads fmj.published_strength on 95c40ed9. Authority: BIO_Publication_v0_1.md §3 rule 12, via the D-442 -> UI DELEGATION on coord CLAIMS.md. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
-order: FIRST of the product corrections, directly after M0-126: a public page claiming a signature that does not cover what it shows, CLAUDE.md §2's worst class, live since D-442 landed (SCHEDULER #14, 2026-09-23)
-milestone: M10
-interface: I3 consumer (IC-179: `op=publishedcase`'s `findings[].strength`, `grounds`, `frozen_from`).
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12 (b)–(d) (the pair stated once, in the case document, under its signature), with DEC-8 (a surface invents nothing).
-depends-on: none — D-442 is on `main`.
-scope: the DELEGATION's three fixes: `inquiryPair` reads each case's pair from `op=publishedcase`, one per case, never picking one; the two sentences branch on `frozen_from` (`case_document` or `member_bytes`) and name the signature that covers the pair; the placeholder follows item 1. Legacy members keep working.
-accepts-when: against the real plane, a rule-12 member shows its pair per case with the case document named as the signer, and a legacy member reads as today. How a liar passes it: a hard-coded signer sentence, so a fixture holds one member of each kind. NEGATIVE CONTROL: read `published_strength` again, and the rule-12 arm fails by name.
-added: 2026-09-23 · SCHEDULER #14 (D-442's finding (a) via CONDUCT #14; `node tools/mintid.mjs UI`).
-
 ### D-116 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT on 41c7e0c3: newgroup/src/index.mjs verifyUpdate (L540) reads op=bootstrap only. Authority: BIO_Distribution_v0_1.md §8, with CLAUDE.md §5. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: after D-254, above features: a group can run a stale DO or member with nothing reporting it — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19; NARROWED by FLEET #3 and verified at the code by SCHEDULER #4, 2026-09-21: `vf4-live-scratch.mjs` stores the isolate's value as `plane_durable_object`)
 milestone: M7
@@ -109,6 +79,36 @@ accepts-when: a second clone runs 0 suites over a tree whose units a first clone
 added: 2026-09-23 · SCHEDULER #14 (BOB #29's designed item; `node tools/mintid.mjs M0`).
 owed-at-integration: HOLD FOR BOB'S READ (BOB #30, 2026-09-23 06:50Z, recorded by CONDUCT #15). When land/worker/M0-126 is pushed, CONDUCT triggers BOB #30 with the branch and tip BEFORE any train takes it, and every train runs with `--drop land/worker/M0-126` until BOB answers LAND (or names a defect). BOB reads the diff whole against TREE-SHARING §3a's three REQUIRED conditions (never-cache honoured, plancheck never cached; the input trace fails under-inclusion BY NAME with no PASS written; release cuts and the GitHub run on main reuse nothing) and its negative control (drop one input file -> that unit fails by name).
 owed-at-integration: CORRECTION (BOB #30, 07:12Z; sent to the worker): per TREE-SHARING §3a cond. 3 (s15-rulings), only a FULL run that REUSED NOTHING (no REUSED unit, no --since) is marked a backstop a release cut may rely on; any reuse => never a backstop.
+
+### M0-127 · queued — **A GITHUB GATE READ RED WITH EVERY SUITE GREEN, AND ITS ANNOTATION SAID `FAILED=none`.** On tree `6ef503c4` (282/282 green) two miniflare sandboxes leaked in the runner's TMPDIR (D-186's residue check), and the verdict line named no failure; a red run emails Bob as an ALARM (`TREE-SHARING.md` §3), so a red must say what is red. **NARROWED 2026-09-23 by SCHEDULER #15 on CONDUCT #15's report: the leak itself is FIXED** (`test/sandbox.mjs`'s exit sweep raced `dispose()`'s rm; landed at `cdfaea39`, recorded as M-111); left: the verdict line and two items the diagnosis owed. — owner M0.
+order: first of the backlog, near the head: a red that names nothing is a false-looking alarm on Bob's email, and knowing what failed CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); CONDUCT #15's hold lifted with the leak fix (SCHEDULER #14, 2026-09-23; narrowed by SCHEDULER #15)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3 (a red GitHub run is an alarm that reaches Bob; *a gate test depends only on the code*), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: none — M0-114's workflow and the leak fix (`cdfaea39`) are on `main`.
+scope: (1) the verdict line (`.github/workflows/gates.yml`'s `FAILED=` and the gate's own RED line) names every non-suite failure (a residue check, a leak, a timeout), never `none` on a RED; (2) the battery's per-suite result line carries the suite's pid (`battery.mjs` already records `r.pid`), so a residue names the suite that left it; (3) `hygiene.test.mjs`'s D-186 control text, which predates the race, is corrected with a dated comment.
+accepts-when: a run whose only failure is a leaked sandbox reads RED naming the residue and the suite that left it, never `FAILED=none`. NEGATIVE CONTROL: plant one sandbox directory in TMPDIR, and the verdict names it by path.
+added: 2026-09-23 · SCHEDULER #14 (CONDUCT #14's runner finding; `node tools/mintid.mjs M0`); narrowed 2026-09-23 by SCHEDULER #15 (CONDUCT #15's report).
+
+### REC-169 · queued — **`op=airuntick`'S `consume` ADDS ANY NUMBER, A NEGATIVE ONE INCLUDED, SO A RUN'S PRINCIPAL CAN REFUND WHAT IT SPENT AND RUN PAST A PLANE-COUNTED BOUND.** `Store#aiRunTick` (`bio-plane/src/store.mjs`, re-read on `cdfaea39`) upserts `consumed = consumed + ?` with `Number(v)` for every `RUN_BOUNDS` key, unchecked, so `consume={"surfaces":-5}` lowers the count D-85's rule 2 bound reads, and a fraction or a string that coerces is admitted too. Found by D-85's worker, READ IN THE CODE, NOT DRIVEN (CONDUCT #15). — owner RECORD.
+order: first of the product rows, directly after M0-127: an authority defect on a bound the plane enforces (security outranks features, SCHEDULER.md step 3), live since D-85 made `surfaces` a plane-counted bound (SCHEDULER #15, 2026-09-23; D-85's worker via CONDUCT #15)
+milestone: M4
+interface: I3 — a new refusal on `op=airuntick`; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §14b item 6, *A RUN IS BOUNDED, AND THE BOUND IS RECORDED*, with §11 item 5 rule 2 (the `surfaces` bound).
+depends-on: D-85 (its `surfaces` bound, integrating now).
+scope: refuse a `consume` value that is not a non-negative integer, by name, before any write; decide at the code whether a bound the PLANE counts (`surfaces`, and any other it increments itself) may be consumed by the caller at all, and refuse it if not, stating which in the landing.
+accepts-when: driven through the op, a negative, a fractional and a non-numeric delta are each refused by name and the bound rows are byte-identical after; a positive integer delta still lands. NEGATIVE CONTROL: drop the check, and the negative-delta arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (D-85's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
+
+### REC-170 · queued — **`op=publishedmanifest` ANSWERS `published[].strength` NULL FOR A FINDING THE CASE DOCUMENTS PINNING IT DISAGREE ABOUT, AND DOES NOT SAY WHY, SO THE PUBLISHED INDEX TELLS A STRANGER THE FINDING HAS NO FROZEN PAIR.** Under Publication §3 rule 12 a finding in several cases has one frozen pair PER CASE; the ratify committer records the disagreement only as a boolean for `barUndetermined`'s reason (`bio-plane/src/store.mjs`, re-read on `cdfaea39`), and the manifest reads the null. Found by UI-80's worker (CONDUCT #15). — owner RECORD.
+order: directly after REC-169, first of the public-page corrections: a published page saying the record lacks what it holds, CLAUDE.md §2's class, UI-80's sibling on the index; UI-82 follows on the surface (SCHEDULER #15, 2026-09-23)
+milestone: M10
+interface: I3 — `op=publishedmanifest` gains the per-case pair; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12 (b)–(d) (the pair is stated once, in the case document, per case), with IC-74 (a finding in several cases answers every case, never one).
+depends-on: none — D-442 (rule 12) is on `main`.
+scope: each manifest entry whose pinning case documents carry differing pairs serves them per case (case id, edition, pair) or `strengthUndetermined` with its reason; a finding with one pair reads as today.
+accepts-when: a fixture finding pinned by two cases with different pairs reads both, each naming its case; a single-case finding is byte-identical. NEGATIVE CONTROL: serve the null again, and the per-case arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
