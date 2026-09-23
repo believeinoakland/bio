@@ -142,7 +142,7 @@ import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./
    implementation of the three normalisation digests, never a second copy — and
    `CONFIDENCE` (the single ladder) to gate whether a normalised digest can be
    trusted to assert two documents are the same substance. */
-import { identify, doctypeFor, profileRecord, digests, CONFIDENCE, readText } from "../../docprofile/registry.mjs";
+import { identify, doctypeFor, profileRecord, digests, CONFIDENCE, readText, assess, CONTRACT } from "../../docprofile/registry.mjs";
 
 /* The plane's identity to a source, in one place because it was in three and
    they had drifted: `bio-acquire` on capture, `bio-monitor` on monitoring, both
@@ -2583,6 +2583,89 @@ async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart) 
     boundary_missed: !!dg.boundary_missed,
     basis: `normalised under ${stackId.handler.key} v${stackId.handler.version} (certain); identity is the capture sha`,
   };
+}
+
+/* D-65 — MONITORING ADOPTS THE CONTRACTS (CONSTRUCTS.md Step 6; BIO_Content_Framework §6:
+   a content type's monitoring contract *"also sets the expected check frequency, because a
+   delisting is time-sensitive and a regulation is not"*).
+   PROVISIONAL, D-65's, and the words are the CATALOG's MONITOR_FREQ (checked below, never
+   assumed): the framework names the ORDER — a list's membership is time-sensitive, a
+   record's substance is not — and no interval, so `membership` is checked daily and
+   `substance` weekly. `unmonitorable` (a shell) has no clock: watching bytes that carry
+   no substance proves nothing, so the answer says so rather than scheduling it. */
+const CONTRACT_FREQUENCY = { membership: "daily", substance: "weekly", unmonitorable: null };
+
+/* What cadence governs a monitored document, and WHICH SOURCE SET IT. REC-26's authored
+   `monitoring.frequency` stays the choice when the document states one the catalog knows;
+   a document stating none takes its content type's contract; anything else is STATED as
+   undetermined rather than defaulted. */
+function monitorCadence(authored, content) {
+  const FREQ = CHECK_CATALOGUE.MONITOR_FREQ;
+  const contract = content ? content.contract : null;
+  if (typeof authored === "string" && FREQ.includes(authored))
+    return { frequency: authored, source: "authored", contract, content_type: content ? content.type : null };
+  if (authored != null && authored !== "")
+    return { frequency: null, source: "undetermined", contract, content_type: content ? content.type : null,
+             why: `the document states the frequency '${String(authored)}', which is not one the catalog knows (${FREQ.join(", ")})` };
+  if (!content || !contract)
+    return { frequency: null, source: "undetermined", contract: null, content_type: null,
+             why: "the document states no frequency and the fetched document's content type could not be determined" };
+  const f = Object.prototype.hasOwnProperty.call(CONTRACT_FREQUENCY, contract) ? CONTRACT_FREQUENCY[contract] : undefined;
+  if (f === undefined || (f !== null && !FREQ.includes(f)))
+    return { frequency: null, source: "undetermined", contract, content_type: content.type,
+             why: `the contract '${contract}' is given no frequency the catalog knows` };
+  return { frequency: f, source: "contract", contract, content_type: content.type,
+           ...(f === null ? { why: "an unmonitorable document has no check clock: its bytes carry no substance to watch" } : {}) };
+}
+
+/* Ask `assess` about one tick. The before-side is the BASELINE'S OWN BYTES, read back from
+   R2 under the one capture key and verified against the baseline sha; each way that fails
+   is a named `basis`, never a substitute. `content` is the fetched document's type and
+   contract (for the cadence), determined whether or not a comparison could be made. */
+async function monitorAssess(env, storeName, { baseline, seen, bytes, ctx, beforeAt, afterAt }) {
+  if (!bytes || !ctx) return { assessment: null, content: null, basis: "the source served no document to assess" };
+  const asText = profilesAsText(ctx.content_type, bytes.length, false);
+  if (!asText) return { assessment: null, content: null,
+    basis: "the fetched document is not read as text, and assess reads text documents only" };
+  const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+  const id = identify({ ...ctx, text });
+  const dt = doctypeFor({ ...ctx, text, handler: id.handler, kind: id.kind });
+  const content = { type: id.handler.shell ? null : dt.type.key, confidence: dt.confidence,
+                    contract: id.handler.shell ? CONTRACT.UNMONITORABLE : dt.type.contract };
+  if (!baseline) return { assessment: null, content, basis: "no captured baseline to compare against" };
+  if (typeof env.CAPTURES?.get !== "function")
+    return { assessment: null, content, basis: "R2 is not configured on this instance, so the baseline's bytes are not reachable" };
+  let before;
+  try {
+    const o = await env.CAPTURES.get(captureKey(storeName, baseline));
+    if (!o) return { assessment: null, content, basis: "the baseline's bytes are not held under its capture key" };
+    before = new Uint8Array(await o.arrayBuffer());
+  } catch (e) {
+    return { assessment: null, content, basis: "the baseline's bytes could not be read: " + String(e && e.message || e).slice(0, 90) };
+  }
+  if (createSha256().update(before).hex() !== baseline)
+    return { assessment: null, content, basis: "the bytes held under the baseline's capture key do not hash to it, so they are not compared" };
+  let r;
+  try {
+    r = await assess(before, bytes, { ...ctx, sha256: sha256Hex, before_at: beforeAt || null, after_at: afterAt, now: afterAt });
+  } catch (e) {
+    return { assessment: null, content, basis: "assess could not run: " + String(e && e.message || e).slice(0, 90) };
+  }
+  return { content, basis: `assessed against the baseline's own bytes (${baseline.slice(0, 12)}…)`,
+    assessment: { verdict: r.verdict, meaningful: r.meaningful ?? null, significance: r.significance ?? null,
+      stopped_at: r.stopped_at, trail: r.trail, events: r.events || [],
+      content_type: r.content_type || null, confirmation: r.confirmation || null,
+      connections: Array.isArray(r.connections) ? r.connections.length : 0, why: r.why || null } };
+}
+
+/* The look, through the store's one append site. A store silence is STATED, never read as written. */
+async function monitorRecordLook(stub, o) {
+  const q = new URLSearchParams({ actorClass: o.actorClass || "plane", actor: o.actor || "" });
+  const out = await doAnswer(stub.fetch(new Request(`http://do/monitorlook?${q}`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ bundleId: o.bundleId, address: o.address, outcome: o.outcome, baseline: o.baseline,
+                           seen: o.seen, httpStatus: o.httpStatus, reason: o.reason }) })));
+  return out.answered ? out.result : { ok: false, written: false, why: "the store did not answer the observation write" };
 }
 
 /* REC-33 / DEC-37. THE FOURTH CLASS, and what it is a class OF.
@@ -8472,32 +8555,46 @@ export default {
       /* The baseline is whatever the provenance register says was captured from
          this locator. Without one there is nothing to compare against, and the
          tick says so rather than guessing at a status. */
-      let baseline = null, baselineProfile = null;
+      let baseline = null, baselineProfile = null, baselineAt = null;
       try {
         const reg = JSON.parse(img["data/provenance.json"] || "{}");
         const match = (reg.documents || []).find((d) => d && d.locator === locator);
         baseline = match?.capture?.sha256 || null;
+        baselineAt = typeof match?.retrieved === "string" ? match.retrieved : null;
         baselineProfile = (match && match.profile && typeof match.profile === "object") ? match.profile : null;
       } catch { /* C-14.3 reports unparsable JSON; monitoring just has no baseline */ }
 
       const checked = new Date().toISOString().split(".")[0] + "Z";
       let status = null, note = null, seen = null, compared = null, comparedBasis = null;
+      /* D-65 — what `assess` said, the type the fetched document reads as, and the look. */
+      let httpStatus = null, fetchedBytes = null, fetchedCtx = null, unreachable = null;
+      const monitorLook = (o) => monitorRecordLook(stub0, { bundleId, address: normalizeAddress(locator),
+        baseline, seen, httpStatus, ...o,
+        actorClass: viaSession ? "member" : "machine",
+        actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
       try {
         /* D-95: a monitor tick is a document fetch and paces like one. A
            governed refusal is a tick outcome with a name, not an error: the
            check simply did not run, and saying so beats a fabricated status. */
         const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), locator, "monitor");
-        if (g.refusedByGovernor)
+        if (g.refusedByGovernor) {
+          /* D-65: a governed tick is still a look, and §4.1 says so with `governed = 1`. */
+          const observation = await monitorLook({ outcome: "governed", reason: g.reason });
           return json({ ok: false, reason: "HOST_COOLING_OFF",
                         detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1000)}s`,
-                        retry_in_ms: g.retry_in_ms || 0, locator }, 429);
+                        retry_in_ms: g.retry_in_ms || 0, locator, observation }, 429);
+        }
         const res = g.res;
+        httpStatus = res.status;
         if (res.status === 404 || res.status === 410) { status = "removed"; note = `the source answered ${res.status}`; }
-        else if (!res.ok) { note = `the source answered ${res.status}`; }
+        else if (!res.ok) { note = `the source answered ${res.status}`; unreachable = note; }
         else {
           const bytes = new Uint8Array(await res.arrayBuffer());
           const d = await crypto.subtle.digest("SHA-256", bytes);
           seen = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
+          fetchedBytes = bytes;
+          { const hh = {}; for (const [hk, hv] of res.headers) hh[hk.toLowerCase()] = hv;
+            fetchedCtx = { headers: hh, locator, content_type: res.headers.get("content-type") || null }; }
           if (!baseline) note = "no captured baseline to compare against; recorded the check only";
           else {
             /* D-60 — MONITORING ASKS "HAS THE SUBSTANCE CHANGED?" (DOCUMENT-PROFILES.md,
@@ -8546,12 +8643,34 @@ export default {
         }
       } catch (e) {
         note = "the source could not be reached: " + String(e && e.message || e).slice(0, 90);
+        unreachable = note;
       }
+
+      /* D-65 — ASK `assess` (BIO_Content_Framework §6, "One public function") THROUGH THE
+         CAPTURE'S HANDLER AND CONTENT TYPE, with the baseline's OWN BYTES read back from R2
+         under the one capture key and verified by hash: a before-side the record does not
+         hold is not compared. Its trail says where reasoning stopped; its events are graded
+         from the shared catalogue. Absent bytes are STATED, never approximated. */
+      const graded = await monitorAssess(env, storeName, { baseline, seen, bytes: fetchedBytes, ctx: fetchedCtx,
+        beforeAt: baselineAt, afterAt: checked });
+      const cadence = monitorCadence(fm.monitoring.frequency, graded.content);
+
+      /* THE LOOK, written to the observation log (OBSERVATION-LOG-DESIGN.md §4.1). */
+      const observation = await monitorLook({
+        outcome: status === "unchanged" ? "unchanged" : status === "modified" ? "changed"
+               : status === "removed" ? "removed" : unreachable ? "unreachable" : "unbaselined",
+        reason: unreachable });
 
       /* Rewrite ONLY the permitted fields, line by line, so nothing else can
          move by accident. A mechanical writer that rebuilt the document from a
          parse would reformat it, and reformatting is a change. */
-      const flags = status === "modified" || status === "removed";
+      /* D-65: a substance change `assess` SETTLED as not meaningful for its type (a calendar's
+         window moving: `routine`; furniture: `restyled`) raises no re-evaluation. Every other
+         verdict — `changed`, `undetermined`, `unwatchable`, or no assessment at all — keeps
+         D-60's flag, the conservative direction. */
+      const settledQuiet = !!graded.assessment
+        && ["identical", "unchanged", "restyled", "routine"].includes(graded.assessment.verdict);
+      const flags = status === "removed" || (status === "modified" && !settledQuiet);
       const out = [];
       let fence = 0, inMon = false, inRe = false;
       for (const line of live.split("\n")) {
@@ -8633,6 +8752,11 @@ export default {
         /* D-60: WHICH comparison the status rests on — "evidentiary" or "raw", null
            when none was made (no baseline, or the source did not answer) — and why. */
         compared, compared_basis: comparedBasis,
+        /* D-65: the layered verdict (`stopped_at`, `trail`, graded `events`), or null with
+           `assessment_basis` saying why none was made; the cadence and which source set it;
+           and the look as the observation log recorded it. */
+        assessment: graded.assessment, assessment_basis: graded.basis,
+        cadence, observation,
         reeval_raised: flags,
         ...(promoted.result?.ok ? { revision: promoted.result.bundleSha } : { reason: promoted.result?.reason, detail: promoted.result?.detail }),
         note2: "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",

@@ -22374,6 +22374,51 @@ async function digests(bytes, handler, ctx) {
     textual: true
   };
 }
+async function compare(before, after, handler, ctx) {
+  const a = await digests(before, handler, ctx);
+  const b = await digests(after, handler, ctx);
+  const base = {
+    handler: handler.key,
+    confidence: ctx.confidence || CONFIDENCE.NONE,
+    artifacts: [...new Set(a.applied.concat(b.applied).map((x) => x.label))],
+    applied: a.applied,
+    digests: { before: a, after: b }
+  };
+  if (a.identity === b.identity)
+    return {
+      ...base,
+      verdict: "identical",
+      evidentiary_change: false,
+      why: "the source served exactly the same document"
+    };
+  if (base.confidence !== CONFIDENCE.CERTAIN && !handler.conservative)
+    return {
+      ...base,
+      verdict: "undetermined",
+      evidentiary_change: null,
+      why: "the document differs and this kind of document is not recognised well enough to say whether the difference matters"
+    };
+  if (a.evidentiary !== b.evidentiary)
+    return {
+      ...base,
+      verdict: "changed",
+      evidentiary_change: true,
+      why: "the substance of the document differs"
+    };
+  if (a.rendition !== b.rendition)
+    return {
+      ...base,
+      verdict: "restyled",
+      evidentiary_change: false,
+      why: "the substance is the same; something around it changed, such as navigation or related links"
+    };
+  return {
+    ...base,
+    verdict: "unchanged",
+    evidentiary_change: false,
+    why: "the substance and the appearance are both the same; only machinery this site rebuilds on every visit differs"
+  };
+}
 var stacks = makeRegistry();
 function register(handler) {
   return stacks.register(handler);
@@ -24172,6 +24217,149 @@ function alsoFor(ctx, selfKey) {
     if (d.match) out.push({ key: m.key, confidence: d.confidence, signals: d.signals || [] });
   }
   return out;
+}
+
+// ../docprofile/pipeline.mjs
+var LAYER = {
+  STACK: "L1_stack",
+  BYTES: "L2_bytes",
+  NOTEWORTHY: "L3_noteworthy",
+  CONTENT_TYPE: "L4_content_type",
+  MEANING: "L5_meaning",
+  CONNECTIONS: "L6_connections"
+};
+async function assess(before, after, ctx) {
+  const trail = [];
+  const note = (layer, said, detail) => {
+    trail.push({ layer, said, ...detail || {} });
+  };
+  const text = new TextDecoder("utf-8", { fatal: false }).decode(after);
+  const id = identify({ ...ctx, text });
+  note(
+    LAYER.STACK,
+    `${id.handler.label} (${id.confidence})`,
+    { handler: id.handler.key, confidence: id.confidence, signals: id.signals }
+  );
+  const profile = profileRecord(id, ctx);
+  const out = (v) => ({ ...v, trail, profile, stopped_at: trail[trail.length - 1].layer });
+  if (id.handler.shell)
+    return out({
+      verdict: "unwatchable",
+      meaningful: null,
+      events: [],
+      connections: [],
+      why: id.handler.warning
+    });
+  const dctx = { ...ctx, text, confidence: id.confidence };
+  const cmp = await compare(before, after, id.handler, dctx);
+  const da = cmp.digests.before, db = cmp.digests.after;
+  if (cmp.verdict === "identical") {
+    note(LAYER.BYTES, "identical bytes");
+    return out({
+      verdict: "identical",
+      meaningful: false,
+      events: [],
+      connections: [],
+      confirmation: {
+        kind: "identical_bytes",
+        hash: db.identity,
+        at: ctx.after_at || null,
+        why: "the source served exactly the bytes the record holds"
+      },
+      why: "the source is still serving exactly what the record holds"
+    });
+  }
+  note(LAYER.BYTES, "the bytes differ", { before: da.identity.slice(0, 12), after: db.identity.slice(0, 12) });
+  if (cmp.verdict === "undetermined") {
+    note(LAYER.NOTEWORTHY, "cannot say: the stack is not recognised confidently enough");
+    return out({
+      verdict: "undetermined",
+      meaningful: null,
+      events: [],
+      connections: [],
+      why: "the document differs and this kind of document is not recognised well enough to say whether the difference matters"
+    });
+  }
+  if (cmp.verdict === "unchanged") {
+    note(
+      LAYER.NOTEWORTHY,
+      "only per-render machinery differs",
+      { normalised: da.mechanical_bytes }
+    );
+    return out({
+      verdict: "unchanged",
+      meaningful: false,
+      events: [],
+      connections: [],
+      confirmation: {
+        kind: "same_substance",
+        digest: db.evidentiary,
+        at: ctx.after_at || null,
+        why: "the substance is the same; only machinery this site rebuilds on every visit differs"
+      },
+      why: "the document is unchanged; only machinery this site rebuilds differs"
+    });
+  }
+  if (cmp.verdict === "restyled") {
+    note(
+      LAYER.NOTEWORTHY,
+      "only the surroundings differ",
+      { normalised: da.presentational_bytes }
+    );
+    return out({
+      verdict: "restyled",
+      meaningful: false,
+      events: [],
+      connections: [],
+      confirmation: {
+        kind: "same_substance",
+        digest: db.evidentiary,
+        at: ctx.after_at || null,
+        why: "the document itself is unchanged; the site around it changed"
+      },
+      why: "the document itself is unchanged; something around it moved, such as navigation"
+    });
+  }
+  note(LAYER.NOTEWORTHY, "the substance differs");
+  const dt = doctypeFor({ ...ctx, text, handler: id.handler, kind: id.kind });
+  note(
+    LAYER.CONTENT_TYPE,
+    dt.type.label,
+    { type: dt.type.key, confidence: dt.confidence, signals: dt.signals }
+  );
+  const textBefore = new TextDecoder("utf-8", { fatal: false }).decode(before);
+  const read = (t, at) => dt.type.parse({ ...ctx, text: t, handler: id.handler, at });
+  let a, b;
+  try {
+    a = read(textBefore, ctx.before_at);
+    b = read(text, ctx.after_at);
+  } catch (e) {
+    note(LAYER.MEANING, "the content could not be parsed, so nothing is claimed about it");
+    return out({
+      verdict: "changed",
+      meaningful: null,
+      events: [],
+      connections: [],
+      why: "the substance differs and its contents could not be read this time, so what changed is not described"
+    });
+  }
+  const m = dt.type.assess(a, b, { ...ctx, handler: id.handler });
+  note(LAYER.MEANING, m.why, { events: m.events.length, meaningful: m.meaningful });
+  const connections = dt.type.connections ? dt.type.connections(a, b, { ...ctx, events: m.events }) : [];
+  if (connections.length) note(LAYER.CONNECTIONS, `${connections.length} implied`);
+  return out({
+    verdict: m.meaningful ? "changed" : "routine",
+    meaningful: m.meaningful,
+    significance: m.significance,
+    events: m.events,
+    connections,
+    content_type: dt.type.key,
+    why: m.why,
+    /* Even a changed document confirms whatever DIDN'T change, and on a
+       list that is most of it. Discarding the confirmation because
+       something else moved is how the negative case gets lost. */
+    confirmation: m.confirmed || null
+  });
 }
 
 // ../docprofile/readtext.mjs
@@ -61953,11 +62141,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
             `SELECT target, lead_inquiry FROM capture_requests WHERE request = ? LIMIT 1`,
             a
           );
-          if (!r) unresolved = true;
-          else {
+          if (r) {
             if (r.target) out.push(r.target);
             if (r.lead_inquiry) out.push(r.lead_inquiry);
+            break;
           }
+          const b = this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id = ? LIMIT 1`, a);
+          if (b) out.push(a);
+          else unresolved = true;
           break;
         }
         case "ratify":
@@ -64651,6 +64842,97 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     );
     return { bundleId, parts, count: parts.length };
   }
+  /** D-65 — THE MONITOR'S LOOK, written to the log as `OBSERVATION-LOG-DESIGN.md` §4.1's
+   *  second row states it: *"the same vocabulary, `authority_kind = sweep`, `authority` = the
+   *  named request or ratified sweep"*. An `op=monitor` tick has no capture request; the
+   *  cadence it runs under is the one the BUNDLE ratified (`monitoring.enabled`), so the
+   *  authority is the bundle id — the "ratified cadence" arm of the `sweep` kind's own
+   *  definition (`OBSERVATION_AUTHORITY_KINDS.sweep`).
+   *
+   *  THE OUTCOME IS THE CONTROL PLANE'S, THE ROW IS DECIDED HERE, ONCE. The control plane
+   *  owns the network (VERIFICATION.md), so it fetches and compares and hands over the
+   *  outcome word; the mapping to a state is `monitorObservationFor`, one pure function,
+   *  so the tick and the suite read the same rule.
+   *
+   *  `actorClass`/`actor` come from the QUERY STRING, where the control plane stamped them. */
+  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null } = {}) {
+    const cap = typeof baseline === "string" && /^[0-9a-f]{64}$/.test(baseline) ? baseline : null;
+    switch (outcome) {
+      /* The zero-payload revisit: the record's own capture, confirmed at a date. */
+      case "unchanged":
+        return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap, detail: "unchanged" } : null;
+      /* The substance moved. §4.1 says `result_ref` = the NEW sha — but a tick does not
+         capture the new version, so the record does not hold it, and naming it as a
+         `capture` would be the log claiming a document the record lacks. The referent is
+         the capture the look was compared against; the served sha rides in `detail`.
+         (A DESIGN GAP against §4.1, raised in D-65's report.) */
+      case "changed":
+        return cap ? {
+          state: "PRESENT",
+          resultKind: "capture",
+          resultRef: cap,
+          detail: `changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}`
+        } : null;
+      case "removed":
+        return { state: "LOOKED_ABSENT", detail: `gone; the source answered ${httpStatus ?? "unknown"}` };
+      case "unreachable":
+        return {
+          state: "LOOKED_INDETERMINATE",
+          detail: `unreachable; ${String(reason || (httpStatus != null ? `the source answered ${httpStatus}` : "no answer")).slice(0, 160)}`
+        };
+      /* D-104: our pacing held us. A fact about us; LOOKED_INDETERMINATE is the only state. */
+      case "governed":
+        return {
+          state: "LOOKED_INDETERMINATE",
+          governed: true,
+          condition: "source-unreachable-governed",
+          detail: `governed; ${String(reason || "the per-host governor held the request").slice(0, 160)}`
+        };
+      /* Anything else — a fetch with no baseline to compare, an outcome word this mapping
+         does not know — writes NOTHING rather than being coerced to the nearest word. */
+      default:
+        return null;
+    }
+  }
+  recordMonitorLook({
+    bundleId = null,
+    address = null,
+    outcome = null,
+    baseline = null,
+    seen = null,
+    httpStatus = null,
+    reason = null,
+    actorClass = "plane",
+    actor = null
+  } = {}) {
+    if (!bundleId || !address) return { ok: false, written: false, why: "a monitor look needs a bundle and an address" };
+    const row = _Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason });
+    if (!row) return {
+      ok: true,
+      written: false,
+      why: outcome === "unchanged" || outcome === "changed" ? "no captured baseline, so the look has no capture to refer to and is not recorded" : `no observation is recorded for the outcome '${String(outcome)}'`
+    };
+    const cls = actorClass === "member" || actorClass === "machine" ? actorClass : "plane";
+    const now = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const bad = this.#observe({
+      actorClass: cls,
+      actor: cls === "plane" ? null : actor,
+      authorityKind: "sweep",
+      authority: String(bundleId),
+      level: "document",
+      subjectKind: "address",
+      subject: String(address),
+      state: row.state,
+      governed: row.governed === true,
+      condition: row.condition || null,
+      resultKind: row.resultKind || null,
+      resultRef: row.resultRef || null,
+      detail: row.detail
+    }, now);
+    if (bad) return { ok: false, written: false, refusal: bad };
+    const top = this.#one(`SELECT MAX(seq) m FROM observation_log`);
+    return { ok: true, written: true, seq: top ? top.m : null, at: now, state: row.state, detail: row.detail };
+  }
   /** CAP-4: append the outcome of a ratification's re-fetch of the reused parts.
    *  Appended and dated, never overwritten: a re-ratification is a fresh attempt
    *  and a fresh set of dated rows, so the history of what the source said each
@@ -66569,6 +66851,12 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         }),
         reusedparts: () => this.reusedParts(url.searchParams.get("id")),
         recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
+        /* D-65: the monitor's look. The actor is the control plane's stamp, from the query string. */
+        monitorlook: () => this.recordMonitorLook({
+          ...body || {},
+          actorClass: url.searchParams.get("actorClass"),
+          actor: url.searchParams.get("actor")
+        }),
         reuseverdicts: () => this.reuseVerdicts({
           bundleId: url.searchParams.get("bundle"),
           sourceCapture: url.searchParams.get("capture")
@@ -69881,6 +70169,114 @@ async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart) 
     boundary_missed: !!dg.boundary_missed,
     basis: `normalised under ${stackId.handler.key} v${stackId.handler.version} (certain); identity is the capture sha`
   };
+}
+var CONTRACT_FREQUENCY = { membership: "daily", substance: "weekly", unmonitorable: null };
+function monitorCadence(authored, content) {
+  const FREQ = MONITOR_FREQ;
+  const contract = content ? content.contract : null;
+  if (typeof authored === "string" && FREQ.includes(authored))
+    return { frequency: authored, source: "authored", contract, content_type: content ? content.type : null };
+  if (authored != null && authored !== "")
+    return {
+      frequency: null,
+      source: "undetermined",
+      contract,
+      content_type: content ? content.type : null,
+      why: `the document states the frequency '${String(authored)}', which is not one the catalog knows (${FREQ.join(", ")})`
+    };
+  if (!content || !contract)
+    return {
+      frequency: null,
+      source: "undetermined",
+      contract: null,
+      content_type: null,
+      why: "the document states no frequency and the fetched document's content type could not be determined"
+    };
+  const f2 = Object.prototype.hasOwnProperty.call(CONTRACT_FREQUENCY, contract) ? CONTRACT_FREQUENCY[contract] : void 0;
+  if (f2 === void 0 || f2 !== null && !FREQ.includes(f2))
+    return {
+      frequency: null,
+      source: "undetermined",
+      contract,
+      content_type: content.type,
+      why: `the contract '${contract}' is given no frequency the catalog knows`
+    };
+  return {
+    frequency: f2,
+    source: "contract",
+    contract,
+    content_type: content.type,
+    ...f2 === null ? { why: "an unmonitorable document has no check clock: its bytes carry no substance to watch" } : {}
+  };
+}
+async function monitorAssess(env, storeName, { baseline, seen, bytes, ctx, beforeAt, afterAt }) {
+  if (!bytes || !ctx) return { assessment: null, content: null, basis: "the source served no document to assess" };
+  const asText2 = profilesAsText(ctx.content_type, bytes.length, false);
+  if (!asText2) return {
+    assessment: null,
+    content: null,
+    basis: "the fetched document is not read as text, and assess reads text documents only"
+  };
+  const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+  const id = identify({ ...ctx, text });
+  const dt = doctypeFor({ ...ctx, text, handler: id.handler, kind: id.kind });
+  const content = {
+    type: id.handler.shell ? null : dt.type.key,
+    confidence: dt.confidence,
+    contract: id.handler.shell ? CONTRACT.UNMONITORABLE : dt.type.contract
+  };
+  if (!baseline) return { assessment: null, content, basis: "no captured baseline to compare against" };
+  if (typeof env.CAPTURES?.get !== "function")
+    return { assessment: null, content, basis: "R2 is not configured on this instance, so the baseline's bytes are not reachable" };
+  let before;
+  try {
+    const o = await env.CAPTURES.get(captureKey(storeName, baseline));
+    if (!o) return { assessment: null, content, basis: "the baseline's bytes are not held under its capture key" };
+    before = new Uint8Array(await o.arrayBuffer());
+  } catch (e) {
+    return { assessment: null, content, basis: "the baseline's bytes could not be read: " + String(e && e.message || e).slice(0, 90) };
+  }
+  if (createSha256().update(before).hex() !== baseline)
+    return { assessment: null, content, basis: "the bytes held under the baseline's capture key do not hash to it, so they are not compared" };
+  let r;
+  try {
+    r = await assess(before, bytes, { ...ctx, sha256: sha256Hex5, before_at: beforeAt || null, after_at: afterAt, now: afterAt });
+  } catch (e) {
+    return { assessment: null, content, basis: "assess could not run: " + String(e && e.message || e).slice(0, 90) };
+  }
+  return {
+    content,
+    basis: `assessed against the baseline's own bytes (${baseline.slice(0, 12)}\u2026)`,
+    assessment: {
+      verdict: r.verdict,
+      meaningful: r.meaningful ?? null,
+      significance: r.significance ?? null,
+      stopped_at: r.stopped_at,
+      trail: r.trail,
+      events: r.events || [],
+      content_type: r.content_type || null,
+      confirmation: r.confirmation || null,
+      connections: Array.isArray(r.connections) ? r.connections.length : 0,
+      why: r.why || null
+    }
+  };
+}
+async function monitorRecordLook(stub, o) {
+  const q = new URLSearchParams({ actorClass: o.actorClass || "plane", actor: o.actor || "" });
+  const out = await doAnswer(stub.fetch(new Request(`http://do/monitorlook?${q}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      bundleId: o.bundleId,
+      address: o.address,
+      outcome: o.outcome,
+      baseline: o.baseline,
+      seen: o.seen,
+      httpStatus: o.httpStatus,
+      reason: o.reason
+    })
+  })));
+  return out.answered ? out.result : { ok: false, written: false, why: "the store did not answer the observation write" };
 }
 async function classify(token, env) {
   if (!token) return null;
@@ -73219,36 +73615,59 @@ var index_default = {
           reason: "NO_LOCATOR",
           detail: "monitoring needs a public https locator in source.locator"
         }, 409);
-      let baseline = null, baselineProfile = null;
+      let baseline = null, baselineProfile = null, baselineAt = null;
       try {
         const reg = JSON.parse(img["data/provenance.json"] || "{}");
         const match = (reg.documents || []).find((d) => d && d.locator === locator);
         baseline = match?.capture?.sha256 || null;
+        baselineAt = typeof match?.retrieved === "string" ? match.retrieved : null;
         baselineProfile = match && match.profile && typeof match.profile === "object" ? match.profile : null;
       } catch {
       }
       const checked = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
       let status = null, note = null, seen = null, compared = null, comparedBasis = null;
+      let httpStatus = null, fetchedBytes = null, fetchedCtx = null, unreachable = null;
+      const monitorLook = (o) => monitorRecordLook(stub0, {
+        bundleId,
+        address: normalizeAddress(locator),
+        baseline,
+        seen,
+        httpStatus,
+        ...o,
+        actorClass: viaSession ? "member" : "machine",
+        actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`
+      });
       try {
         const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), locator, "monitor");
-        if (g.refusedByGovernor)
+        if (g.refusedByGovernor) {
+          const observation2 = await monitorLook({ outcome: "governed", reason: g.reason });
           return json({
             ok: false,
             reason: "HOST_COOLING_OFF",
             detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
             retry_in_ms: g.retry_in_ms || 0,
-            locator
+            locator,
+            observation: observation2
           }, 429);
+        }
         const res2 = g.res;
+        httpStatus = res2.status;
         if (res2.status === 404 || res2.status === 410) {
           status = "removed";
           note = `the source answered ${res2.status}`;
         } else if (!res2.ok) {
           note = `the source answered ${res2.status}`;
+          unreachable = note;
         } else {
           const bytes = new Uint8Array(await res2.arrayBuffer());
           const d = await crypto.subtle.digest("SHA-256", bytes);
           seen = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
+          fetchedBytes = bytes;
+          {
+            const hh = {};
+            for (const [hk, hv] of res2.headers) hh[hk.toLowerCase()] = hv;
+            fetchedCtx = { headers: hh, locator, content_type: res2.headers.get("content-type") || null };
+          }
           if (!baseline) note = "no captured baseline to compare against; recorded the check only";
           else {
             const bd = baselineProfile && baselineProfile.digests;
@@ -73300,8 +73719,23 @@ var index_default = {
         }
       } catch (e) {
         note = "the source could not be reached: " + String(e && e.message || e).slice(0, 90);
+        unreachable = note;
       }
-      const flags = status === "modified" || status === "removed";
+      const graded = await monitorAssess(env, storeName, {
+        baseline,
+        seen,
+        bytes: fetchedBytes,
+        ctx: fetchedCtx,
+        beforeAt: baselineAt,
+        afterAt: checked
+      });
+      const cadence = monitorCadence(fm.monitoring.frequency, graded.content);
+      const observation = await monitorLook({
+        outcome: status === "unchanged" ? "unchanged" : status === "modified" ? "changed" : status === "removed" ? "removed" : unreachable ? "unreachable" : "unbaselined",
+        reason: unreachable
+      });
+      const settledQuiet = !!graded.assessment && ["identical", "unchanged", "restyled", "routine"].includes(graded.assessment.verdict);
+      const flags = status === "removed" || status === "modified" && !settledQuiet;
       const out = [];
       let fence = 0, inMon = false, inRe = false;
       for (const line of live.split("\n")) {
@@ -73412,6 +73846,13 @@ var index_default = {
            when none was made (no baseline, or the source did not answer) — and why. */
         compared,
         compared_basis: comparedBasis,
+        /* D-65: the layered verdict (`stopped_at`, `trail`, graded `events`), or null with
+           `assessment_basis` saying why none was made; the cadence and which source set it;
+           and the look as the observation log recorded it. */
+        assessment: graded.assessment,
+        assessment_basis: graded.basis,
+        cadence,
+        observation,
         reeval_raised: flags,
         ...promoted.result?.ok ? { revision: promoted.result.bundleSha } : { reason: promoted.result?.reason, detail: promoted.result?.detail },
         note2: "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",
