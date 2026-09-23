@@ -336,7 +336,7 @@ t("and an OBLIGATION kind is never in the set to match, because the WRITE refuse
                  case: { ancestors: [{ id: INQ1, depth: 1 }] } }, carolMutes), null);
 
 /* ============================ the FENCE, at the ONE write ================== */
-console.log("\n--- the fence: muted_kinds may hold CONDITION kinds ONLY ---");
+console.log("\n--- the fence: muted_kinds may hold NO OBLIGATION kind (CONDITION only until D-125 admitted FINDING) ---");
 const okMute = await mute(carol, INQ1, ["text-undetermined", "partial-capture-outstanding"]);
 t("op=queuemute records the two condition kinds against (carol, INQ-1), sorted",
   [okMute.ok, okMute.case, okMute.muted_kinds],
@@ -361,10 +361,19 @@ t("the obligation the refused mute named is STILL in carol's queue — the fence
 t("and nothing was written: carol's mute set is unchanged by the refusal",
   qAfterBad.mute.cases, [INQ1]);
 
-const badFind = await mute(carol, INQ1, ["missing_predecessor"]);
-t("muting a FINDING kind is refused too, and points at the AUTHORED record act that clears one",
-  [badFind.ok ?? false, badFind.reason, badFind.kind_class, badFind.detail.includes("proposedispose")],
-  [false, "KIND_NOT_PERSONAL", "FINDING", true]);
+/* CORRECTED 2026-09-23 by D-125, never exempted. This asserted the FINDING kind
+   REFUSED, and BOB #26 ruled that refusal wrong on 2026-09-22 (NOTIFICATIONS.md
+   "MARKED AS HANDLED"): a member-keyed mute moves no other member's list and
+   writes no disposition, so a FINDING is personally mutable (DEC-10's (c)). The
+   property it protected — the finding stays open for the team — is asserted
+   end to end in d125-findingmute.test.mjs. Here the mute is made on a case
+   that holds NO finding, so this suite's later "the FINDING is still OPEN in
+   carol's feed" clause keeps measuring what it always measured. */
+const okFind = await mute(carol, INQ2, ["missing_predecessor"]);
+t("muting a FINDING kind is now ACCEPTED as a personal preference, and writes nothing of the record",
+  [okFind.ok, okFind.muted_kinds, okFind.wrote],
+  [true, ["missing_predecessor"], { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 }]);
+await mute(carol, INQ2, ["missing_predecessor"], true);
 const badUnknown = await mute(carol, INQ1, ["a-kind-nobody-declared"]);
 t("an unclassified kind is refused SEPARATELY — unknown is not the same as forbidden",
   [badUnknown.ok ?? false, badUnknown.reason, Array.isArray(badUnknown.available)],

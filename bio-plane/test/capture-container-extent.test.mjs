@@ -62,6 +62,7 @@
  */
 /* NEGATIVE CONTROL, COFF-11 (IC-100 / D-359) — SEVEN arms and a baseline, each armed ALONE with every other defence held open, re-runnable in one step with `node test/nc-coff11.mjs [arm]` from `bio-plane/`. RUN 2026-09-15, ALL SEVEN AS DECLARED, every restore verified byte-identically by sha256 AND by content with a byte count printed: `src/formats-xlsx.mjs` 33,691 B sha256 c5855053f670…, `src/pptx.mjs` 37,442 B sha256 1708977ce689…, `src/odf.mjs` 64,000 B sha256 08f4709dde58…. baseline xlsx 88/0 · pptx 116/0 · odf 140/0 · e2e 31/0 GREEN; dropxlsxbound 4/4 declared (5 failing across two suites); dropslideshapes 5/5 (6); dropodpshapes 2/2 (3); dropxlsxboundunread 1/1 (1); usedrangeasbound 4/4 (4); odsborrowsgrid 3/3 (3). TWO CAME BACK WRONG ON THE FIRST RUN AND ARE RECORDED AT THEIR SITES RATHER THAN SMOOTHED, and both were findings about the INSTRUMENT: (1) `dropxlsxbound` declared the DISAGREE assertion and it did NOT fire, because its first spelling (`rows === usedRows` expected false) is satisfied by a NULL bound too — the ASSERTION was too weak and was strengthened to require both figures be integers, which is the arm doing better than going red; (2) both xlsx arms declared the UNREAD-SHEET bound, which neither patch reaches — `xlsxText` emits the sheet object at TWO independent sites, and the seventh arm `dropxlsxboundunread` now covers the second rather than leaving it covered by nobody. AND ONE SURPRISING GREEN, kept because it is the more useful result: under `usedrangeasbound` the END-TO-END suite stayed green at 31/0 — not the arm failing but the measurement that the e2e suite cannot see this bound AT ALL today, because the acquire wire drops the producer's figure before the store reads it (D-359's residue, DELEGATED 2026-09-15). */
 /* NEGATIVE CONTROL, COFF-12 (D-359's consumer half) - SIX arms and a baseline in `test/nc-coff12.mjs`, re-runnable in one step with `node test/nc-coff12.mjs [arm]` from `bio-plane/`. Each arm edits `src/index.mjs` ALONE with every other defence held OPEN, declares BEFORE it runs what MUST fail AND WHAT MUST NOT, and every restore is verified by sha256 AND by content against a UNIQUELY-NAMED per-arm pristine copy with a byte count printed and a 400 KB minimum guarded (never `git checkout --`). RUN 2026-09-15, ALL SIX AS DECLARED, `src/index.mjs` restored byte-identically every time at 562,707 B sha256 4f4c24a76c55...: baseline 47/0 GREEN; dropcellbound 4/4 declared (5 failing); dropslideshapes 5/5 (5); slidesbyposition 5/5 (5); borrowgrid 2/2 (2); usedasbound 4/4 (7) - and in EVERY arm **0 of the declared held-open assertions also broke**. THIS HARNESS CHECKS `mustNotFail` RATHER THAN DESCRIBING IT, which `nc-coff11.mjs` and `nc-cap12.mjs` do not: REC-83's own run had an arm break its declared held-open half with nothing but a human read to catch it, and an arm that takes the whole suite down proves nothing about its own subject. `slidesbyposition` is the arm worth reading - it restores the POSITIONAL slide map this wire carried from CAP-12 until today while LEAVING the passthrough intact, so it isolates the keying; nothing in this repository could see the defect it plants before this item's gapped-deck fixture existed. `borrowgrid` and `usedasbound` arm the DECISION rather than the patch (invent a grid OpenDocument never fixes; make the bound the used range), because a decision nothing can break is a decision nothing is enforcing. AND THE ITEM'S OWN FIRST SPELLING OF THE `.ods` ASSERTION WAS WRONG, kept at its site rather than smoothed: it read `?? "MISSING"`, and `null ?? "MISSING"` is `"MISSING"` - so a correctly carried NULL bound and a dropped key were the SAME observation, in the exact direction this item is about. CAP-12's OWN HARNESS WAS RE-RUN ON THIS TREE AND TWO OF ITS NINE ARMS HAD GONE DEAD: `dropsheets` and `dropslides` both read `ARMED NO, patch matched 0x` because their anchors quoted the literal-null lines this item replaced, and `overstrict`/`overstrict2` named assertion labels that moved with the flip. All four are CORRECTED IN PLACE with the reason at the site, never exempted, and `node test/nc-cap12.mjs` now reads **every arm AS DECLARED, all nine ARMED**. A control whose anchor has drifted fails silently in the direction that looks like success. */
+/* NEGATIVE CONTROL, COFF-13 (IC-207, D-359's named residue — the DECK LENGTH) - three arms and a baseline in `test/nc-coff13.mjs`, re-runnable in one step with `node test/nc-coff13.mjs [arm]` from `bio-plane/`, driving this suite AND `formats-pptx.test.mjs`; each arm armed ALONE, declared BEFORE it runs what MUST fail and what MUST NOT, BOTH halves checked, every restore verified by sha256 AND by content against a uniquely-named per-arm pristine copy with a byte count printed and a per-file minimum guarded. RUN 2026-09-23, ALL THREE AS DECLARED, 0 held-open assertions broken in any arm; `src/pptx.mjs` restored byte-identically at 38,898 B sha256 2b29fc49d095..., `src/index.mjs` at 724,665 B sha256 406a2ccd33cf...: baseline e2e 56/0 · pptx 118/0 GREEN; `readablecount` (THE ROW'S DECLARED ARM - the pptx entry emits the READABLE slide count as the length) 8/8 declared, 9 failing - the trailing-slide arm fails BY NAME ("the entry's deckLength ... EXCEEDS the readable list", "(1) a citation of the unreadable LAST slide 3 MINTS", "(3) ... REFUSED C-45.1 ... naming the DECK's 3 slides") while the middle-gapped deck's four held; `wiredrop` (producer correct, wire ignores the length - what the record held before this item) 6/6, producer suite untouched at 118/0; `shortlength` (THE OVER-STRICTNESS ARM - a stated length SHORTER than an itemised slide) 9/9 with the middle-gapped deck's slots and citations HELD, so a stated length only ever lengthens the record. TWO DECLARATIONS WERE WRONG ON THE FIRST RUN AND ARE CORRECTED AT THEIR SITES in the harness, both findings about the ARM: the over-bound deck's "last slide MINTS" was declared to fail under `readablecount`/`wiredrop` and did not, because without a length NOTHING bounds that deck and it mints in both worlds (it is the admission half, now held open); and `shortlength` was declared against three assertions and broke nine, because on a deck whose only evidence of its length IS the stated length the lie bounds it wherever it falls. */
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -103,6 +104,12 @@ function zip(files) {
     const comp = stored ? data : deflateRawSync(data);
     const method = stored ? 0 : 8;
     const crc = crc32(data);
+    /* COFF-13: `declare` LIES in the CENTRAL DIRECTORY ONLY about the member's
+       uncompressed size — the COFF-6 metric the size guard sums before any
+       inflation — so a small fixture reaches an entry's over-the-bound branch
+       (`formats-pptx.test.mjs`'s `lieUncompressed`, the same device). The local
+       header stays honest; the member is never inflated on that branch. */
+    const declared = Number.isInteger(f.declare) ? f.declare : data.length;
     const local = Buffer.concat([
       u32le(0x04034b50), u16le(20), u16le(0x0800), u16le(method), u16le(0), u16le(0x21),
       u32le(crc), u32le(comp.length), u32le(data.length),
@@ -110,7 +117,7 @@ function zip(files) {
     ]);
     const central = Buffer.concat([
       u32le(0x02014b50), u16le(20), u16le(20), u16le(0x0800), u16le(method), u16le(0), u16le(0x21),
-      u32le(crc), u32le(comp.length), u32le(data.length),
+      u32le(crc), u32le(comp.length), u32le(declared),
       u16le(nameB.length), u16le(0), u16le(0), u16le(0), u16le(0), u32le(0), u32le(offset), nameB,
     ]);
     locals.push(local); centrals.push(central); offset += local.length;
@@ -252,6 +259,45 @@ const PPTX_GAPPED = zip([
   ])),
 ]);
 
+/* ========== THE TRAILING-UNREADABLE DECK — COFF-13's OWN FIXTURE ==========
+ *
+ * The gapped deck above is unreadable in the MIDDLE, so its highest readable
+ * slide number (3) already equals its length and a missing deck length is
+ * invisible on it. THIS deck is unreadable at the END: three slides declared,
+ * the part for slide 3 absent. Without the deck's own length the record's
+ * highest slide number is the highest READABLE one — 2 — so a TRUE citation of
+ * slide 3 is refused as past the deck (D-359's named residue). The accepts-when
+ * names the liar: an entry emitting the READABLE count as the length passes
+ * every assertion except the ones that require the length to EXCEED the
+ * readable list, so those are asserted first and by name. */
+const TRAILING_TITLES = ["AGENDA", "PROPOSED CUTS", "THE SLIDE THIS CAPTURE CANNOT READ"];
+const TRAILING_SHAPES = [3, 1, null];   // null = the part is absent
+const TRAILING_MISSING = 3;             // the LAST declared slide
+const deckZipOf = (titles, shapes, { missing = 0, declare = {} } = {}) => zip([
+  { name: "[Content_Types].xml", data: `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/presentation.xml" ContentType="${PPTX_CT}.main+xml"/>`
+      + titles.map((_, i) => `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join("")
+      + `</Types>` },
+  { name: "_rels/.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/></Relationships>` },
+  { name: "ppt/presentation.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:presentation ${P} ${R}><p:sldIdLst>`
+      + titles.map((_, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 2}"/>`).join("")
+      + `</p:sldIdLst></p:presentation>` },
+  { name: "ppt/_rels/presentation.xml.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+      + titles.map((_, i) => `<Relationship Id="rId${i + 2}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide${i + 1}.xml"/>`).join("")
+      + `</Relationships>` },
+  ...titles.flatMap((title, i) => (i + 1 === missing ? [] : [
+    { name: `ppt/slides/slide${i + 1}.xml`, data: slideXmlOfN(title, shapes[i]), declare: declare[i + 1] },
+    { name: `ppt/slides/_rels/slide${i + 1}.xml.rels`, data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>` },
+  ])),
+]);
+const PPTX_TRAILING = deckZipOf(TRAILING_TITLES, TRAILING_SHAPES, { missing: TRAILING_MISSING });
+/* AND THE SAME DECK OVER THE SIZE BOUND: every slide part present, slide 1's
+   declared uncompressed size a 64 MiB lie, so the entry reads NO slide text
+   and returns `slides: []` beside the guard — while ppt/presentation.xml,
+   which is structural and read regardless, still says how long the deck is. */
+const OVERBOUND_SHAPES = [3, 1, 2];
+const PPTX_OVERBOUND = deckZipOf(TRAILING_TITLES, OVERBOUND_SHAPES,
+  { declare: { 1: 64 * 1024 * 1024 } });
+
 /* ========== A REAL `.ods` WORKBOOK — the accepts-when clause that says an
  * HONESTLY NULL GRID BOUND MUST SURVIVE THIS WIRE ==========
  *
@@ -337,6 +383,8 @@ const mf = withSurfacingRun(new Miniflare({
     if (u.pathname === "/report.docx") return bin(DOCX, DOCX_CT);
     if (u.pathname === "/deck.pptx") return bin(PPTX, PPTX_CT);
     if (u.pathname === "/gapped.pptx") return bin(PPTX_GAPPED, PPTX_CT);
+    if (u.pathname === "/trailing.pptx") return bin(PPTX_TRAILING, PPTX_CT);
+    if (u.pathname === "/overbound.pptx") return bin(PPTX_OVERBOUND, PPTX_CT);
     if (u.pathname === "/budget.ods") return bin(ODS, ODS_CT);
     if (u.pathname === "/one.pdf") return bin(PDF, "application/pdf");
     if (u.pathname === "/calendar.html") return bin(HTML, "text/html; charset=utf-8");
@@ -824,6 +872,97 @@ t(`(4) a shape on the UNREADABLE slide ${GAPPED_MISSING} MINTS — its count is 
   [rGapUnreadable.ok !== false, rGapUnreadable.content?.[0]?.extent_kind,
    rGapUnreadable.content?.[0]?.minted],
   [true, "slide-shape", true]);
+
+/* ===== 4b'. THE DECK'S OWN LENGTH (COFF-13, IC-207) ===== */
+
+console.log("\n--- 4b'. a deck whose LAST slide is unreadable: the record must be as long as the "
+          + "DECK, not as its last readable slide ---");
+
+const trailingText = await (async () => {
+  const m = await import("../src/pptx.mjs");
+  return m.pptxEntry.text(await m.pptxEntry.parts(PPTX_TRAILING));
+})();
+console.log(`  corpus: 1 deck DECLARING ${TRAILING_TITLES.length} slides with the part for slide `
+          + `${TRAILING_MISSING} (the LAST) absent — the producer returns `
+          + `${trailingText.slides.length} readable unit(s) and deckLength ${trailingText.deckLength}`);
+/* THE LIAR'S ARM, FIRST AND BY NAME. The fixture must actually produce a
+   trailing gap (readable list shorter than the deck), and the LENGTH must
+   EXCEED that list — an entry that emitted the readable count would pass every
+   later assertion that only checks a length was present. */
+t("the fixture ARMS: the entry omits the unreadable LAST slide and STATES it — the readable list "
+  + "is one short of the deck",
+  [trailingText.slides.map((u) => u.slide),
+   trailingText.undetermined.some((u) => u.reason === "slide_unreadable")],
+  [[1, 2], true]);
+t("the entry's deckLength is the slides the DECK declares and EXCEEDS the readable list — "
+  + "emitting the readable count is the defect",
+  [trailingText.deckLength, trailingText.deckLength > trailingText.slides.length],
+  [TRAILING_TITLES.length, true]);
+
+const trailing = (await acquire("/trailing.pptx")).document;
+t("the RECORD holds a slot for EVERY slide of the deck — the unreadable last one with a NULL "
+  + "count — and the deck length BESIDE the list under its own name",
+  [Array.isArray(ext(trailing)?.slides) ? ext(trailing).slides.map((x) => x && x.shapes) : null,
+   lvl(ext(trailing), "deckLength")],
+  [TRAILING_SHAPES, TRAILING_TITLES.length]);
+
+const DOC_TRAILING = "INFO-2026-9200-trailingdeck";
+await mustPromote(DOC_TRAILING, infoMd(DOC_TRAILING), "information", { reading: trailing });
+
+const rTrailLast = await promote("INQ-2026-9200-trail-last",
+  inquiryMd("INQ-2026-9200-trail-last", { refs: [DOC_TRAILING],
+    legs: [{ target: DOC_TRAILING, kind: "slide-shape", slide: TRAILING_MISSING }] }), "inquiry");
+t(`(1) a citation of the unreadable LAST slide ${TRAILING_MISSING} MINTS — the deck has it. `
+  + `Without the deck length the record reads ${TRAILING_TITLES.length - 1} slides long and this `
+  + "TRUE citation is refused",
+  [rTrailLast.ok !== false, rTrailLast.content?.[0]?.extent_kind, rTrailLast.content?.[0]?.minted],
+  [true, "slide-shape", true]);
+
+const rTrailShape = await promote("INQ-2026-9200-trail-shape",
+  inquiryMd("INQ-2026-9200-trail-shape", { refs: [DOC_TRAILING],
+    legs: [{ target: DOC_TRAILING, kind: "slide-shape", slide: TRAILING_MISSING, shape: 7 }] }),
+  "inquiry");
+t("(2) and a SHAPE on it MINTS — its count is UNDETERMINED and skipped, never guessed",
+  [rTrailShape.ok !== false, rTrailShape.content?.[0]?.minted], [true, true]);
+
+const rTrailPast = await promote("INQ-2026-9200-trail-past",
+  inquiryMd("INQ-2026-9200-trail-past", { refs: [DOC_TRAILING],
+    legs: [{ target: DOC_TRAILING, kind: "slide-shape", slide: TRAILING_TITLES.length + 1 }] }),
+  "inquiry");
+t(`(3) a citation PAST the real deck (slide ${TRAILING_TITLES.length + 1}) is still REFUSED C-45.1 `
+  + `BY NAME, the refusal naming the DECK's ${TRAILING_TITLES.length} slides`,
+  [rTrailPast.ok, codes(rTrailPast),
+   new RegExp(`deck holds ${TRAILING_TITLES.length} slide\\(s\\) \\(1-${TRAILING_TITLES.length}\\)`)
+     .test(detail(rTrailPast))],
+  [false, ["C-45.1"], true]);
+
+/* THE OVER-THE-BOUND DECK. Its text is refused as a stated undetermined, so
+   `slides[]` comes back EMPTY — and before COFF-13 the record held NO slide
+   list for it at all, so every slide citation on it minted unbounded. The
+   length is structural and was read anyway: the OUTER bound is fed, every
+   slot's shape count is NULL, and the store names that as the missing half. */
+const overbound = (await acquire("/overbound.pptx")).document;
+t("an OVER-THE-BOUND deck: no slide text was read, and the record still holds the deck's "
+  + "length — one NULL-count slot per declared slide, the length beside it",
+  [Array.isArray(ext(overbound)?.slides) ? ext(overbound).slides.map((x) => x && x.shapes) : null,
+   lvl(ext(overbound), "deckLength")],
+  [TRAILING_TITLES.map(() => null), TRAILING_TITLES.length]);
+const DOC_OVERBOUND = "INFO-2026-9200-overbounddeck";
+await mustPromote(DOC_OVERBOUND, infoMd(DOC_OVERBOUND), "information", { reading: overbound });
+const rOverLast = await promote("INQ-2026-9200-over-last",
+  inquiryMd("INQ-2026-9200-over-last", { refs: [DOC_OVERBOUND],
+    legs: [{ target: DOC_OVERBOUND, kind: "slide-shape", slide: TRAILING_TITLES.length, shape: 50 }] }),
+  "inquiry");
+t("    its last slide, any shape, MINTS — the slide exists and its shape count was never read",
+  [rOverLast.ok !== false, rOverLast.content?.[0]?.minted], [true, true]);
+const rOverPast = await promote("INQ-2026-9200-over-past",
+  inquiryMd("INQ-2026-9200-over-past", { refs: [DOC_OVERBOUND],
+    legs: [{ target: DOC_OVERBOUND, kind: "slide-shape", slide: TRAILING_TITLES.length + 1 }] }),
+  "inquiry");
+t("    and a slide past it is REFUSED C-45.1 BY NAME with the deck's figure",
+  [rOverPast.ok, codes(rOverPast),
+   new RegExp(`deck holds ${TRAILING_TITLES.length} slide\\(s\\)`).test(detail(rOverPast))],
+  [false, ["C-45.1"], true]);
 
 /* ===== 4c. `.ods`: AN HONESTLY NULL GRID BOUND SURVIVES THE WIRE (COFF-12) ===== */
 

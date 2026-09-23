@@ -287,7 +287,7 @@ const api = `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scrip
    monitor cadence and CAP-3's archive fallback on the deployed instance, and
    the fleet bindings arm the plane's Tier-3 paths. The targets are
    pre-flighted below so a missing worker is OUR refusal, not code 10143. */
-import { deriveBindings, serviceTargets } from "./derive-bindings.mjs";
+import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack } from "./derive-bindings.mjs";
 import { stripJsonc } from "../../tools/jsonc.mjs";
 const wranglerCfg = JSON.parse(stripJsonc(
   readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8")));
@@ -303,7 +303,21 @@ const meta = {
     instanceClaudeToken: process.env.INSTANCE_CLAUDE_TOKEN || undefined,
   }),
   keep_bindings: ["secret_text", "durable_object_namespace", "service"],
+  /* D-54: the subrequest ceiling the config states with its reason, never the
+     platform's default of the month. deriveLimits REFUSES a config without it,
+     before anything is uploaded. */
+  limits: deriveLimits(wranglerCfg),
 };
+
+/* D-54's read-back: the deployed script's settings, asked of the account. */
+async function settingsNow() {
+  try {
+    const r = await fetch(`${api}/settings`, { headers: { authorization: `Bearer ${TOKEN}` } });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j && j.success ? j.result : null;
+  } catch { return null; }
+}
 
 /* Pre-flight every derived service target (except the self-reference, which
    this very PUT creates) so the refusal names the missing worker. */
@@ -357,10 +371,13 @@ if (before === want) {
     try { serving = (await (await fetch(`https://${slug}.${sub}.workers.dev/version`)).text()).trim(); }
     catch { /* unknown is not "already done" */ }
   }
-  if (serving === version) {
-    console.log(`already byte-identical AND serving ${version}; nothing to do`);
+  /* D-54: and the limits must already read back, or the metadata is not ours. */
+  const lim = limitsReadBack(await settingsNow(), meta.limits);
+  if (serving === version && lim.verdict === "MATCH") {
+    console.log(`already byte-identical AND serving ${version} AND ${lim.why}; nothing to do`);
     process.exit(0);
   }
+  if (serving === version) console.log(`bytes identical and serving ${version}, but limits: ${lim.verdict} (${lim.why}) — a METADATA deploy proceeds.`);
   console.log(`bytes are identical but the instance serves ${serving ?? "(unreadable)"} — a METADATA deploy proceeds (VERSION var, derived bindings).`);
 }
 
@@ -384,6 +401,17 @@ for (let attempt = 1; attempt <= 4; attempt++) {
   const now = await deployed();
   if (now === want) {
     console.log(`verified: deployed bytes are hash-identical to the signed asset`);
+    /* D-54: the limit is read back, never believed from the PUT. A value that is
+       not ours refuses success; a settings answer that does not state it is
+       UNDETERMINED and said so, never counted as a match. */
+    const lim = limitsReadBack(await settingsNow(), meta.limits);
+    if (lim.verdict === "MISMATCH") {
+      console.error(`REFUSING TO REPORT SUCCESS [LIMITS_MISMATCH]: ${lim.why}. The bytes are deployed; the ceiling is not the config's.`);
+      process.exit(1);
+    }
+    console.log(lim.verdict === "MATCH"
+      ? `verified: ${lim.why}`
+      : `limits: UNDETERMINED — ${lim.why}. The ceiling sent (${meta.limits.subrequests}) is NOT confirmed; establish it before stating it.`);
     await confirmServing(version);
     process.exit(0);
   }

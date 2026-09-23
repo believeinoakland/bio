@@ -24,11 +24,24 @@
  * one that presents one. The header's first draft predicted 4/20 and 2/20
  * before the arms ran; these are the measured figures.
  * Restored byte-identically after each, 20/20 green.
+ *
+ * NEGATIVE CONTROL (D-54): RUN 2026-09-23, three arms, each ALONE, pristine copy
+ * per arm, restore verified by sha256 and cmp; baseline 36/36 —
+ * (A) replace wrangler.jsonc's `"limits": { "subrequests": 10000 }` -> 34/36,
+ * FAIL "the real config states an explicit subrequest ceiling the release path
+ * derives" (NO_SUBREQUEST_LIMIT) and "the ceiling's site carries its reason" (the
+ * reason arm anchors on the `"limits"` key, so it goes with it — declared the
+ * first, observed both). (B) drop `limits: deriveLimits(wranglerCfg),` from
+ * deploy.mjs's metadata -> 35/36, FAIL "deploy.mjs's upload metadata carries the
+ * derived limits". (C) make limitsReadBack read ABSENT limits as MATCH -> 35/36,
+ * FAIL "read-back: settings stating no limits (biosmoke7's measured shape) are
+ * UNDETERMINED, never a match". Restored, 36/36 green. Over-strictness arm:
+ * cpu_ms beside subrequests is carried, not refused.
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";
 import { readFileSync } from "node:fs";
-import { deriveBindings, serviceTargets } from "../scripts/derive-bindings.mjs";
+import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack } from "../scripts/derive-bindings.mjs";
 import { stripJsonc } from "../../tools/jsonc.mjs";
 
 let pass = 0, fail = 0;
@@ -132,6 +145,73 @@ const CFG = {
     Array.isArray(b) ? serviceTargets(b, "biosmoke7").sort() : b, ["agent-worker", "ocr-worker", "pdf-worker"]);
   t("no phantom leaves the real derivation",
     Array.isArray(b) ? b.some((x) => x.service === "bio-plane") : b, false);
+}
+
+/* ---- D-54: the subrequest ceiling is declared, carried, read back -------- */
+console.log("\n--- D-54: limits.subrequests is a decision, not the platform's default ---");
+{
+  const lim = (cfg) => { try { return deriveLimits(cfg); } catch (e) { return { REFUSED: String(e.message).slice(0, 80) }; } };
+  t("an explicit ceiling derives exactly as declared",
+    lim({ ...CFG, limits: { subrequests: 10000 } }), { subrequests: 10000 });
+  t("a config with NO limits block refuses by name — no limits sent is the month's default (D-54)",
+    refusal(() => deriveLimits(CFG)), "NO_SUBREQUEST_LIMIT");
+  t("an empty limits block refuses by name",
+    refusal(() => deriveLimits({ ...CFG, limits: {} })), "NO_SUBREQUEST_LIMIT");
+  t("a non-integer ceiling (a string) refuses — the API would read a different thing",
+    refusal(() => deriveLimits({ ...CFG, limits: { subrequests: "10000" } })), "NO_SUBREQUEST_LIMIT");
+  t("a zero ceiling refuses",
+    refusal(() => deriveLimits({ ...CFG, limits: { subrequests: 0 } })), "NO_SUBREQUEST_LIMIT");
+  t("a limit key the derivation does not carry REFUSES by name, never dropped",
+    refusal(() => deriveLimits({ ...CFG, limits: { subrequests: 10, steps: 5 } })), "UNKNOWN_LIMIT_KEY");
+  /* over-strictness: correct work in a spelling not anticipated must pass */
+  t("cpu_ms beside it is carried, not refused (wrangler's own upload carries both)",
+    lim({ ...CFG, limits: { cpu_ms: 30000, subrequests: 2000 } }), { subrequests: 2000, cpu_ms: 30000 });
+
+  const want = { subrequests: 10000 };
+  t("read-back: the settings stating our figure is a MATCH",
+    limitsReadBack({ limits: { subrequests: 10000 } }, want).verdict, "MATCH");
+  t("read-back: a different figure is a MISMATCH, and the deploy must not report success",
+    limitsReadBack({ limits: { subrequests: 1000 } }, want).verdict, "MISMATCH");
+  /* The SHAPE measured on biosmoke7 2026-09-23 (GET .../scripts/biosmoke7/settings,
+     success true): keys placement, compatibility_date, compatibility_flags,
+     usage_model, tags, tail_consumers, logpush, annotations, bindings — NO limits. */
+  t("read-back: settings stating no limits (biosmoke7's measured shape) are UNDETERMINED, never a match",
+    limitsReadBack({ placement: {}, compatibility_date: "2026-07-01", usage_model: "standard", bindings: [] }, want).verdict,
+    "UNDETERMINED");
+  t("read-back: unreadable settings are UNDETERMINED",
+    limitsReadBack(null, want).verdict, "UNDETERMINED");
+}
+
+/* ---- D-54's live arms: the real config, its reason, and the release path -- */
+{
+  const src = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8");
+  const real = JSON.parse(stripJsonc(src));
+  let got; try { got = deriveLimits(real); } catch (e) { got = { REFUSED: String(e.message).slice(0, 80) }; }
+  t("the real config states an explicit subrequest ceiling the release path derives",
+    got, { subrequests: 10000 });
+  /* How a liar passes: a value equal to today's default with no reason. So the
+     site must cite D-54 and the plane's own sizing, and the sizing it cites
+     must still be the code's. */
+  const at = src.indexOf('"limits"');
+  const reason = at < 0 ? "" : src.slice(Math.max(0, at - 3000), at);
+  t("the ceiling's site carries its reason: D-54, the vendor's figure as THEIR claim, and the plane's sizing",
+    ["D-54", "Cloudflare", "THEIR claim", "SUBRESOURCE_CAP (400"].map((w) => reason.includes(w)), [true, true, true, true]);
+  const subres = readFileSync(new URL("../src/subresources.mjs", import.meta.url), "utf8");
+  t("the sizing the site cites is the code's: SUBRESOURCE_CAP is 400 in subresources.mjs",
+    /export const SUBRESOURCE_CAP = (\d+);/.exec(subres)?.[1], "400");
+  /* deploy.mjs acts on import, so its carriage is pinned at the source: the
+     upload metadata carries deriveLimits' value, and success is gated on the
+     read-back refusing a MISMATCH. */
+  const dep = readFileSync(new URL("../scripts/deploy.mjs", import.meta.url), "utf8");
+  t("deploy.mjs's upload metadata carries the derived limits",
+    /\n  limits: deriveLimits\(wranglerCfg\),\n/.test(dep), true);
+  t("deploy.mjs reads the limits back after the upload and refuses success on a MISMATCH",
+    (() => { const v = dep.indexOf("verified: deployed bytes are hash-identical");
+             const r = dep.indexOf("limitsReadBack(await settingsNow(), meta.limits);", v);
+             const m = dep.indexOf('if (lim.verdict === "MISMATCH") {', r);
+             const x = dep.indexOf("process.exit(1);", m);
+             const ok = dep.indexOf("await confirmServing(version);", m);
+             return v > 0 && r > v && m > r && x > m && ok > x; })(), true);
 }
 
 console.log(`\ndeploybindings: ${pass} passed, ${fail} failed`);

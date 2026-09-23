@@ -42,7 +42,9 @@
  *   .rels part name itself ties it to the slide), the reference stops there.
  *
  *   text(parts) -> { ok:true, container:"pptx", document,
- *     slides:[ {slide, ref:"slide <n>", part, hidden, text} ],   // per-unit
+ *     slides:[ {slide, ref:"slide <n>", part, hidden, shapes, text} ],   // per-unit
+ *     deckLength:<int | null>,   // COFF-13: the slides the DECK declares,
+ *                                // readable or not; null = order unreadable
  *     speakerNotes:[ {slide, ref:"slide <n> (notes)", part, hidden, text} ],
  *     undetermined:[ Marker... ], counts:{chars, notesChars, undetermined} }
  *   — `<a:t>` runs per slide, `<a:p>` paragraphs newline-joined. A PPTX has
@@ -699,6 +701,23 @@ async function pptxStructure(parts) {
   };
 }
 
+/* COFF-13 / D-359's residue — THE DECK'S OWN LENGTH: the slides the DECK has,
+ * never the ones this reader could open. `slides[]` OMITS a slide whose part
+ * cannot be read (the survivors keep their true numbers), so the highest
+ * READABLE slide number under-reports a deck whose TRAILING slides are
+ * unreadable, and the record then refuses a TRUE citation of the last slide
+ * as past the deck. The length is the number of `<p:sldId>` SLOTS the bytes
+ * declare — an unresolvable slot counts, exactly as `deckOf` numbers it — and
+ * it is read from ppt/presentation.xml, which is structural and read even
+ * over the text guard, so an over-bound deck still states its length.
+ * NULL when the declaration cannot be read: the deck order is then unknown,
+ * and a length counted off slide PARTS would be the filename convention this
+ * entry refuses everywhere else. Orphan slide parts outside the declaration
+ * are not in the deck as presented and do not lengthen it. */
+function deckLengthOf(parts) {
+  return Array.isArray(parts.order) ? parts.order.length : null;
+}
+
 /* ------------------------------------------------------------------ *
  * text() — <a:t> runs per slide; SPEAKER NOTES a DISTINCT unit list,
  * never merged (I7 slot 4)
@@ -713,6 +732,7 @@ async function pptxText(parts) {
      * truncation. */
     return {
       ok: true, container: "pptx", document: null, slides: [], speakerNotes: [],
+      deckLength: deckLengthOf(parts),
       undetermined: [parts.guard],
       counts: { chars: 0, notesChars: 0, undetermined: 1 },
     };
@@ -786,6 +806,7 @@ async function pptxText(parts) {
   const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
   return {
     ok: true, container: "pptx", document, slides, speakerNotes,
+    deckLength: deckLengthOf(parts),
     undetermined,
     counts: { chars: document.length, notesChars, undetermined: undetermined.length },
   };

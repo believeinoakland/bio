@@ -2271,6 +2271,10 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        its OWN mkdtemp persist root (rec178-persist-*) to find the sqlite file its census fixture plants, and the census it reads is
        asserted exactly; nothing it walks is a figure anybody floors on. */
     "bio-plane/test/rec178-bytes.test.mjs",       // its own mkdtemp persist root, to plant the census fixture; asserted exact
+    /* D-179 (2026-09-23): walks its OWN mkdtemp persist root (d179-persist-*) to find the one sqlite file holding `register`,
+       with the instance down, to read the first bundle's register row back byte for byte; it throws unless exactly ONE store
+       holds a register, and nothing it walks is a figure anybody floors on. */
+    "bio-plane/test/d179onehome.test.mjs",        // its own mkdtemp persist root, to read the register row; asserted exactly one store
     /* `bio-plane/test/walkfigure.test.mjs` STOOD HERE FROM D-265 UNTIL 2026-09-10
        AND D-301 REMOVED IT — BY MEASURING, NOT BY DECIDING. D-265's entry said the
        file CONTAINS NO WALK AT ALL: its only discovery primitive is the word
@@ -2347,11 +2351,13 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   /* MOVED 2026-09-23 BY REC-176: 38 -> 39, from the figure this suite PRINTED on the item's tree over origin/main
      0e7cc03e, never by adding to the number in the file. The one is REC-176's own suite (`test/rec176-snapkey.test.mjs`,
      named above), the only walker the item adds. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 41)`,
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 42)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
-    census.length >= 41, true);
+    /* MOVED 41 -> 42 by D-179 (d179onehome named above), from the figure this suite PRINTED on the item's tree over
+       origin/main 91bcea6b, the only walker the item adds (its control driver copies trees and walks none). */
+    census.length >= 42, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

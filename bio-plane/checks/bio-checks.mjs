@@ -512,6 +512,33 @@ STATES.problem = STATES.focus;
  * four claims to them" must be different rows in this record. */
 export const ACTION_KINDS = ['cpra_request', 'grand_jury', 'controller_referral', 'public_comment', 'media', 'litigation_support', 'request_for_comment', 'other'];
 
+/* D-182, RULED 2026-09-21 by BOB #21 (BIO_Case_Making_v0_1.md §2, "risk_tier"): the tier of an action is
+ * the ONE field that carries legal exposure, and its words are Bob's own, from the mission of record
+ * (BIO_Complete_Roadmap_v5.md §8). A code->text map, not a list, for SUFFICIENCY_CLAIM_STATES' reason: the
+ * sentence IS the tier's meaning, and a surface that renders a bare `2` has had to decide what 2 means.
+ * Published by op=affordances (vocabularies.risk_tiers) so a surface invents none (REC-38's pattern).
+ *
+ * `undetermined` is the fourth value, as it is for authority and the counterparty (D-130): WRITTEN wherever
+ * no member has stated a tier, and never a default of 1. Before this row every writer defaulted to 1, which
+ * told a member an action was safe to file freely when nobody had assessed it. Only a member's authored act
+ * sets 1, 2 or 3. An action whose bytes carry NO `risk_tier` key reads undetermined too, because that is
+ * exactly what the absence says: nobody stated one. The gate does not refuse the absence, since a gate
+ * that did would press a writer to invent the one value nobody assessed (CLAUDE.md §4). */
+export const RISK_TIERS = {
+  1: 'file freely',
+  2: 'file with caution',
+  3: 'do not file without counsel',
+  undetermined: 'not assessed: no member has stated a risk tier for this action',
+};
+/* The stored value -> one of RISK_TIERS' keys, or null for a value the vocabulary does not hold (which
+ * C-2.10 refuses by name). Absent and the literal `undetermined` read as undetermined; the NUMBERS 1, 2 and
+ * 3 read as themselves (a quoted "2" stays refused, exactly as before this row). Every reader takes this,
+ * never the literal. */
+export function riskTierState(v) {
+  if (v === undefined || v === null || v === 'undetermined') return 'undetermined';
+  return v === 1 || v === 2 || v === 3 ? v : null;
+}
+
 /* REC-24 (a): the two kinds a leg of an action's basis may carry. Exported for
  * the same reason ACTION_KINDS is — op=affordances publishes it and the store
  * projects against it, so the gate and the publication read ONE array. */
@@ -4493,7 +4520,8 @@ function checkActionExtension(ctx, findings) {
   /* The suite lives at module level as ACTION_KINDS (exported for REC-19's
      op=affordances) so the gate and the publication read one array. */
   if (!ACTION_KINDS.includes(fm.action_kind)) findings.push(f('C-2.10', 'error', `action_kind '${fm.action_kind}' is not in the suite`));
-  if (![1, 2, 3].includes(fm.risk_tier)) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not 1, 2, or 3`));
+  /* D-182: 1, 2, 3 or undetermined (absent reads undetermined); the words are RISK_TIERS'. */
+  if (riskTierState(fm.risk_tier) === null) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(', ')}`));
   checkCounterparty(fm, findings);
   /* REC-39: the four words are RESOLUTIONS at module level (exported for
      op=affordances) so this finding, op=actionmove's own refusal and the
@@ -8974,6 +9002,66 @@ export const VERSION_STRENGTH_DEFAULT_STATES =
 export const VERSION_STRENGTH_INERT_SOURCES = ['hunch'];
 
 /* ===========================================================================
+ * C-71 — THE INDEPENDENCE OF A PROPOSED PARTITION (REC-161,
+ * INVESTIGATIVE-SESSION.md §12 clause (c), BOB #22 2026-09-21).
+ *
+ * `op=partitionindependence` answers D-195's question — do these parts share an
+ * upstream origin — for a partition of a question's reasons that NOBODY HAS
+ * WRITTEN YET, so the elicitation's read-back can name every shared origin
+ * BEFORE the member's answers are written. It is gated as `op=versionstrength`
+ * is and writes nothing. C-71 is minted (`node tools/mintid.mjs C`) rather than
+ * taken as C-30.n: the op is a second door onto `#independenceOf`, not a second
+ * strength read, and none of these refusals is a statement about a strength.
+ * =========================================================================== */
+export const PARTITION_INDEPENDENCE_CHECKS = {
+  PARTITION_INDEPENDENCE_NO_INQUIRY: {
+    check: 'C-71.1',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'This asks whether the groups of reasons behind one question share a source, and no '
+      + 'question was named. There is no default question here and there must not be one.',
+  },
+  PARTITION_INDEPENDENCE_NOT_AN_INQUIRY: {
+    check: 'C-71.2',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'That is not a question you can read here, so it has no reasons to group. Only a '
+      + 'question rests on reasons, and a question you may not see answers exactly as one that does '
+      + 'not exist.',
+  },
+  PARTITION_INDEPENDENCE_UNREADABLE: {
+    check: 'C-71.3',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'The grouping of reasons could not be read. Send it as a list of groups, each group a '
+      + 'list of the positions of the reasons in it, or as groups each carrying a name and its '
+      + 'positions. Every group needs at least one reason and a name no other group has.',
+  },
+  PARTITION_INDEPENDENCE_UNKNOWN_LEG: {
+    check: 'C-71.4',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'The grouping names a reason this question does not have. It was not dropped quietly, '
+      + 'because an answer about groups the question does not hold would be an answer about something else.',
+  },
+  PARTITION_INDEPENDENCE_LEG_TWICE: {
+    check: 'C-71.5',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'One reason was put in two groups. Each reason belongs to exactly one group, because a '
+      + 'reason shared by two groups would make them share a source by construction.',
+  },
+  PARTITION_INDEPENDENCE_NOT_TOTAL: {
+    check: 'C-71.6',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'Some of this question\'s reasons are in no group. A grouping covers every reason, as a '
+      + 'written reading does, so that what is checked here is what would be written.',
+  },
+  PARTITION_INDEPENDENCE_TOO_MANY_LEGS: {
+    check: 'C-71.7',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'This question rests on more reasons than a written reading may hold, so a grouping of '
+      + 'all of them could not be written and is not checked. The bound is said here rather than '
+      + 'applied quietly.',
+  },
+};
+
+/* ===========================================================================
  * C-31 — THE QUEUE MINT: EVERY ITEM CARRIES A CLASS, AND A KIND THE CATALOGUE
  * NAMES UNDER THAT CLASS (PL-15 / D-213, NOTIFICATIONS.md).
  *
@@ -10306,10 +10394,14 @@ export const ADMISSION_CHECKS = {
    arm-C note calls that the MULTI-SITE class. Minting it in `requiredArgument`
    is what makes this row's `where` true.
 
-   WHAT IS DELIBERATELY NOT IN SCOPE, named rather than left to be noticed:
-   `op=verify` and `op=publishedbytes` make the same sha256 complaint and keep
-   their bare strings. They are PRE-AUTHENTICATION surfaces reached with no
-   credential at all, which is D-278's subject and a different determination.
+   CORRECTED 2026-09-23 BY D-278. This paragraph read *`op=verify` and
+   `op=publishedbytes` make the same sha256 complaint and keep their bare
+   strings … D-278's subject and a different determination.* BOB #26 made that
+   determination (INTERFACES.md I3, **Answers**, 2026-09-22): the PRE-
+   AUTHENTICATION argument complaints of `verify`, `publishedbytes`,
+   `publishedcase` and `knock` take THIS row, because the fact is the same fact
+   and the sentence below carries no member vocabulary. They are minted through
+   the same helper, so the row's one `where` stays true.
    =========================================================================== */
 export const REQUIRED_ARGUMENT_CHECKS = {
   /* NOTHING WAS CHANGED, and the sentence says so first. A caller who cannot
@@ -10321,6 +10413,78 @@ export const REQUIRED_ARGUMENT_CHECKS = {
     translation: 'This request left out an argument the operation cannot run without, or sent one '
       + 'in a shape it does not accept. Nothing was changed. The argument and the shape it must '
       + 'take are named beside this message.',
+  },
+};
+
+/* ===========================================================================
+   D-278 (C-68) — A FACT ABOUT THE INSTALLATION, NOT ABOUT THE REQUEST.
+
+   BOB #26's per-group ruling, PROVISIONAL, 2026-09-22 (`INTERFACES.md` I3,
+   **Answers**): the refusals that still answered only `error` are coded one
+   group at a time. Two of those groups are THIS family, because the condition
+   is the same kind of fact — something about how the copy was SET UP, which no
+   change to the request can cure:
+
+   (4) THE CAPABILITY COMPLAINTS (503). `capture`, `pdfstructure`, `acquire` and
+       `attest` on a copy with no evidence storage bound. ONE row: the condition
+       is one condition whichever op meets it, and the op is named beside it.
+       Minted in ONE governed helper, `storageAbsent`, so the row's `where` names
+       one span rather than four sites inside `fetch`.
+   (2) `claim`'s THREE BOOTSTRAP-CREDENTIAL COMPLAINTS. Pre-authentication, met
+       before anyone holds anything, and each SAYS NO MORE THAN ITS `error` DID —
+       the mismatch row in particular does not tell the caller anything about
+       the token it failed to match.
+
+   The translations are addressed to WHOEVER INSTALLED THE COPY, because that is
+   the only person who can act on them. `error` is kept beside every code
+   byte-identical (D-270's pattern), so no consumer reading it moves.
+   =========================================================================== */
+export const INSTALLATION_CHECKS = {
+  EVIDENCE_STORAGE_NOT_CONFIGURED: {
+    check: 'C-68.1',
+    where: 'src/index.mjs storageAbsent > is-storage-absent',
+    translation: 'This copy was installed without the storage it keeps captured documents in, so it cannot '
+      + 'keep or read the bytes of a captured document. That is a fact about how the copy was set up, not '
+      + 'about this request: whoever installed it can connect that storage in the hosting account. Nothing '
+      + 'was changed.',
+  },
+  BOOTSTRAP_CREDENTIAL_UNSET: {
+    check: 'C-68.2',
+    where: 'src/index.mjs fetch > is-bootstrap-claim',
+    translation: 'This copy has no administrator token set, so it cannot be claimed yet. Whoever installed it '
+      + 'sets one in the hosting account. Nothing was changed.',
+  },
+  BOOTSTRAP_CREDENTIAL_PUBLISHED: {
+    check: 'C-68.3',
+    where: 'src/index.mjs fetch > is-bootstrap-claim',
+    translation: 'This copy\'s administrator token is a value published in the project\'s public repository, '
+      + 'so it can never be used to claim the copy: anyone can read it. Whoever installed the copy sets a '
+      + 'fresh one in the hosting account. Nothing was changed.',
+  },
+  BOOTSTRAP_CREDENTIAL_MISMATCH: {
+    check: 'C-68.4',
+    where: 'src/index.mjs fetch > is-bootstrap-claim',
+    translation: 'The administrator token given does not match the one this copy holds, so the copy was not '
+      + 'claimed. Nothing was changed.',
+  },
+};
+
+/* ===========================================================================
+   D-278 (C-69) — NO OPERATION BY THAT NAME.
+
+   Group (5) of BOB #26's ruling. `error: "unknown op"` is kept BYTE-IDENTICAL
+   beside the code, and that is load-bearing rather than courtesy: `civicos-ui`
+   reads it (`queueAbsent` and its two siblings) to tell a copy running an OLDER
+   plane — one that has not got the op yet — from a refusal. The translation
+   says only what the copy knows: it has no op by that name. It does not guess
+   which of "older", "newer" or "misspelt" is true.
+   =========================================================================== */
+export const DISPATCH_CHECKS = {
+  UNKNOWN_OP: {
+    check: 'C-69.1',
+    where: 'src/index.mjs fetch > is-unknown-op',
+    translation: 'This copy has no operation by that name. A copy running an older or newer version can have '
+      + 'a different set of operations, and a misspelt name reads the same way. Nothing was changed.',
   },
 };
 
@@ -11859,6 +12023,9 @@ export const TRANSCRIBE_CHECKS = {
  *                        testimony path did not write (C-53.8, THE LIAR: a flag any
  *                        writer could set); an authored document that stops saying
  *                        so (C-53.9).
+ *   is-register-home     D-179, THE SAME FENCE ASKED OF EVERY CAPTURE (C-53.13): a
+ *                        register entry whose bytes another existing bundle
+ *                        already holds — one capture, one home, the original's.
  *
  * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's
  * and lives in C-2.8 (`checkTestimonyLeg`, IC-142), not in this family; the
@@ -11967,6 +12134,22 @@ export const TESTIMONY_CHECKS = {
     translation: 'A finding in this case rests, directly or through another finding, on a member\'s own '
       + 'firsthand observation, so the case cannot be published yet. How a published case attributes an '
       + 'observation is the observing member\'s choice, and the record cannot yet honour that choice.',
+  },
+  /* D-179 — ONE CAPTURE, ONE HOME, THE ORIGINAL's (BOB #26, 2026-09-22;
+     `BIO_Intake_Doctrine_v1_1.md` §8). C-53.8 generalised from an authored
+     observation to EVERY capture: `register` is keyed by `capture_sha`, so a
+     promote registering bytes another bundle already holds would MOVE that
+     bundle's row to the newcomer, silently. Kept in this family because it is
+     the same fence at the same line, asked of every row rather than the authored
+     one; C-53.8 still answers first for an authored capture, in its own words.
+     The holding bundle is named only to a caller who may see it (D-15). */
+  CAPTURE_HELD_BY_ANOTHER_BUNDLE: {
+    check: 'C-53.13',
+    where: 'src/store.mjs #testimonyFence > is-register-home',
+    translation: 'The record already holds this document, under another bundle. A document has one home '
+      + 'in the record — the first bundle that registered it — and registering it again here would move '
+      + 'it away from there. Nothing was written. Cite the bundle that holds it, or, if you found it at a '
+      + 'new address, that sighting is already recorded as a corroboration of the one it holds.',
   },
 };
 

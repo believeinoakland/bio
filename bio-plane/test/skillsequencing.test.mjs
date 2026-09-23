@@ -514,7 +514,12 @@ t("ARM F1: SK-4 adds no instruction-only item and does not move SK-2's and SK-3'
   + "figures. The total rises by one and the uncoded count does not",
   [totalItems, totalInstructionOnly, instructionOnlyC.length, instructionOnlyP.length,
    DEPLOYMENT_SEQUENCE.enforced_by.length === 0 && DEPLOYMENT_SEQUENCE.enforced_by_row.length > 0],
-  [16, 4, 3, 1, true]);
+  /* CORRECTED 2026-09-23 by D-220, never exempted: 16/4/3 was SK-4's moment. D-220 added ONE clause,
+     `versions-are-versions`, and it is INSTRUCTION ONLY — the run's document COUNT is code in the fleet
+     member (`documentHoldings`), but nothing refuses the model's own prose about coverage, and a fleet
+     count is not a C-number, so it is tallied with the uncoded items rather than overstated. SK-4 still
+     adds none; the SK-4 half of this arm's label still holds. */
+  [17, 5, 4, 1, true]);
 
 /* THE RESIDUE IS NOT MERELY STATED, IT IS RE-MEASURED. The record claims that
    `ai_runs.mode` is free text with no check over it; a claim like that is

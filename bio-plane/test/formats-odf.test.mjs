@@ -723,6 +723,25 @@ console.log("\n--- COFF-11: .odp carries the slide's shape COUNT, and needs no b
     T.speakerNotes.every((n) => !("shapes" in n)), true);
 }
 
+console.log("\n--- COFF-13: .odp states its DECK LENGTH, and NULL when the format cannot answer ---");
+{
+  /* Every `<draw:page>` lives in the one content.xml, so once the body is read
+     the length is the deck's own and equals the slide list (three pages in
+     ODP_BODY, the fixture's ground truth); when content.xml is absent the
+     format cannot answer, and the null is a statement — never a zero. */
+  const T = await ENTRY.odp.text(odfFixture("odp"));
+  t("a read deck states its length: the three pages ODP_BODY declares",
+    [T.deckLength, T.slides.length], [3, 3]);
+  /* A content.xml with NO `<office:presentation>` body: the package reads,
+     the deck does not. (A MISSING content.xml refuses at parts() and never
+     reaches text()'s shape — arm (1) below drives that.) */
+  const U = await ENTRY.odp.text(odfFixture("odp", {
+    content: `<?xml version="1.0"?><office:document-content ${NS}><office:body/></office:document-content>` }));
+  t("no presentation body: the length is NULL — present, stated, and not a zero",
+    [U.ok, "deckLength" in U, U.deckLength, U.slides.length, U.undetermined[0]?.reason],
+    [true, true, null, 0, "main_part_unreadable"]);
+}
+
 console.log("\n--- COFF-11: the two spreadsheet entries agree on the SHAPE and differ only where the FORMATS differ ---");
 {
   /* The cross-format pin. Both entries emit the same four keys, which is what

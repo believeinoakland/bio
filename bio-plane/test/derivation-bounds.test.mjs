@@ -581,8 +581,10 @@ const D384_LEAVES = [
       + "statements), and the per-subject cause reads run over capList, capped at the published "
       + "SEARCHED_SUBJECT_MAX. The classifier scored REC-96's batching HIGHER than the per-subject draft; "
       + "that was the header credit, and it is gone" },
-  { name: "auditPass", why: "its per-row work (readImage, checkBundle, an inquiry_basis read and "
-      + "earnedBasisRegistry per bundle) iterates a LIMIT-bounded page (cap <= 1000, published); the "
+  /* CORRECTED 2026-09-23 by D-178: the per-row list gained publishedRegistryFor (C-21.2's registry,
+     one json_each-bound read). The verdict is unchanged; the list is what a reader checks it against. */
+  { name: "auditPass", why: "its per-row work (readImage, checkBundle, an inquiry_basis read, "
+      + "earnedBasisRegistry and publishedRegistryFor per bundle) iterates a LIMIT-bounded page (cap <= 1000, published); the "
       + "unbounded `known` set is built once and used as a lookup, and the route-mark scan is read once" },
   /* CORRECTED 2026-09-19 by D-414, never exempted, and the OLD TEXT WAS RIGHT WHEN IT WAS WRITTEN:
      it read "`*eachImage` is a generator the segmenter's signature regex cannot see, so its header
@@ -1336,7 +1338,13 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    taken here. */
 /* 110 -> 111, 2026-09-23 by REC-170: the arrival is `#frozenPairsByCase`, the same method the CLASS
    ratchet above names — one new method, one unbounded row source, counted by both readers. */
-const SCANNING_MEASURED_2026_09_15 = 111;
+/* 111 -> 113, 2026-09-23 (c17-unionfix), MEASURED by running this walk on the train's union and
+   taking what the CENSUS ROSTER printed, diffed by name against origin/main's 111. Two arrivals,
+   each a per-KEY read and neither a lost LIMIT: `#progressionCurrent` (D-128 — the stages of ONE
+   progression definition, split out of readProgression so every version reads the same way) and
+   `#queueItemMutes` (D-125 — ONE member's item mutes, the twin of `#queueMutes`, already counted).
+   Neither is in the amplification CLASS; the class roster pinned by name above is unmoved. */
+const SCANNING_MEASURED_2026_09_15 = 113;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "

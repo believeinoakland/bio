@@ -588,9 +588,20 @@ console.log("\n--- 3a. D-310: op=affordances offers `publish` exactly where the 
   const machineActs = (await GET(`op=affordances&token=mem-case2&target=${encodeURIComponent(INQ_STRONG)}`))
     .result?.acts ?? [];
   console.log(`  D310-MACHINE-ACTS ${JSON.stringify(machineActs)}`);
-  t("OVER-STRICTNESS: a MACHINE credential's answer does not narrow — it holds no roster position, "
-  + "so the positional gate says nothing about it and `publish` is still published to it",
-    machineActs.some((a) => a.id === "publish"), true);
+  /* CORRECTED 2026-09-23 by D-311, never exempted. This read "OVER-STRICTNESS: a MACHINE
+     credential's answer does not narrow — it holds no roster position, so the positional gate says
+     nothing about it and `publish` is still published to it", and asserted `true`. The first half
+     STANDS and is still what the position clause does (a null never narrows it; the truth table
+     in affordances.test.mjs holds `!== false`). The second half was the pre-flight offering an act
+     the store refuses this very credential BY NAME three sections up (MACHINE_CANNOT_PUBLISH) —
+     the disagreement D-311 closes by a DIFFERENT rule at a different level: `deriveActs` withholds
+     every act in MACHINE_REFUSALS from a caller the store states `actor_is_machine`. So the
+     machine is withheld `publish`, and it is withheld by the machine rule and not the position
+     gate: the D310-MACHINE-ACTS bytes stay identical when the position clause is dropped (d310
+     control arm 1) and MOVE when the machine rule is dropped (arm 4). */
+  t("D-311: a MACHINE credential is withheld `publish` by the MACHINE rule — the store refuses its "
+  + "class by name — while the positional gate still says nothing about it",
+    [machineActs.some((a) => a.id === "publish"), machineActs.length > 0], [false, true]);
   /* DEC-69. The narrowed answer must not become a nag: the rule is stated at the
      act once and never re-confirmed. A withheld act is an ABSENCE from a list —
      no prompt rides `publish`, and the answer for a withheld caller carries no
