@@ -64,7 +64,8 @@ never grown into a second copy. Confirm with Bob before treating it as the plan.
 
 ## Deploy discipline, and releases
 
-**Land tested code on `main`; do not cut plane releases.** Areas land tested code
+**Land tested code on `main` through the train (push `land/framework/<topic>`, M0-111); do not cut plane
+releases.** Areas land tested code
 continuously and **`DIST` batches plane releases** (`kickoffs/DIST.md`). If
 FRAMEWORK's work needs a plane change shipped, land it green and hand it to DIST
 as a DELEGATION — do not bump a version, sign, tag, or run `deploy.mjs`.
@@ -99,9 +100,9 @@ reasonably concludes they have found the rule.
 
 ## What this area should know without being told
 
-**Fetch and rebase before pushing; never force-push `main`.** A rejected push
-means another area landed work: reset onto the remote, re-apply your additions,
-and check the other area's work survived.
+**Push `land/<lane>/<topic>`, never `main` (CONDUCT's train lands it, M0-111); never
+force-push.** A branch the train returns means another area landed work: rebase on
+`origin/main`, re-apply your additions, and check the other area's work survived.
 
 **Bob's standing rulings** are collected in `kickoffs/CAPTURE.md` under "Bob's
 rulings, already made", and several bind this area: `undetermined` is first-class

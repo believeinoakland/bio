@@ -197,6 +197,12 @@ const put = (root, rel, body) => { mkdirSync(dirname(join(root, rel)), { recursi
    the regeneration guarded against a refusal that no longer exists — and committing the index in a
    fixture would model the very shape M0-99 removed. Both go: the fixture carries the two tools it tests. */
 const commitAll = (root, msg) => { git(["add", "-A"], root); return git([...ID, "commit", "-q", "-m", msg], root); };
+/* CORRECTED 2026-09-22 (M0-111), never exempted. The fixture's `main` moved by a plain `git push origin main` through
+   the real hook, which was right while any session could push `main`. M0-111's guard now refuses a push to `main`
+   without the train's mark (`train.test.mjs` drives that refusal and the train's own push), so this suite — whose
+   subject is the gate and the D-293 record, not who lands `main` — MODELS the other side's landing below the hook:
+   the remote's creation and each upstream move are a landing already made, exactly what `origin/main` moving means. */
+const landMain = (root) => git(["push", "-q", "--no-verify", "origin", "main"], root);
 
 function fixture(name) {
   const root = join(SANDBOX, name);
@@ -211,7 +217,7 @@ function fixture(name) {
   git(["init", "-q", "--bare", remote], SANDBOX);
   git(["remote", "add", "origin", remote], root);
   install({ repo: root });
-  git(["push", "-q", "origin", "main"], root);
+  landMain(root);
   git(["fetch", "-q", "origin"], root);
   return { root, remote };
 }
@@ -443,7 +449,7 @@ section("M0-98 · --since — after a rebase, only what BOTH sides touched, plus
     branch(F.root, "main", "origin/main");
     appendFileSync(join(F.root, rel), text);
     commitAll(F.root, `upstream: ${rel}`);
-    git(["push", "-q", "origin", "main"], F.root);
+    landMain(F.root);
     git(["fetch", "-q", "origin"], F.root);
   };
   const mine = (b, rel, env = {}, gate = true) => {
@@ -537,7 +543,7 @@ section("M0-107 · AN EXPIRED BUDGET — recorded NOT MEASURED, never RED, never
     branch(F.root, "main", "origin/main");
     appendFileSync(join(F.root, "docs/notes/b.md"), "moved while nm was unmeasured\n");
     commitAll(F.root, "upstream: docs");
-    git(["push", "-q", "origin", "main"], F.root);
+    landMain(F.root);
     git(["fetch", "-q", "origin"], F.root);
   };
   upstreamDocs();

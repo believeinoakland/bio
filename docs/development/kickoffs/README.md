@@ -154,6 +154,11 @@ These are written by more than one thread and are the collision risk:
 
 **Fetch and rebase before pushing. Never force-push `main`.**
 
+**Nobody but CONDUCT's train pushes `main`** (M0-111, `TREE-SHARING.md` §2): push your work as
+`land/<lane>/<topic>`; the train merges every waiting `land/*` branch in one integration branch with one
+gate, and the push guard refuses a direct push of `main` by name. A branch the train returns (a conflict,
+or RED) comes back to its lane by name: rebase it on `origin/main` and push the same ref again.
+
 A rejected push means another thread has landed work. The correct response is to
 reset onto the remote, re-apply your own additions on top, and check that the
 other thread's work survived. It is never to force. Anything you cannot re-apply
