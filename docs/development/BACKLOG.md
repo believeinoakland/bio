@@ -33,6 +33,16 @@ scope: (1) an `ok: false` returned from `promote`'s callback throws `Store.#ROLL
 accepts-when: in a NEW suite `bio-plane/test/rec180-promote-rollback.test.mjs`, through the op: a project creation refused `NAME_TAKEN` after the mint leaves the sequence and `minted_ids` byte-identical; `bias.test.mjs` ARM M green reading `op=image`. NEGATIVE CONTROL (`rec180-promote-rollback.control.mjs`): return the refusal instead of throwing, and the mint arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (REC-176's worker's two findings via CONDUCT #16, verified at the code; `node tools/mintid.mjs REC`).
 
+### REC-181 · queued — **`op=promote` CAN MOVE A VERIFIED INFORMATION ITEM TO `retired` WHILE LIVE LEGS AND EDGES STILL CITE IT, BYPASSING `op=retire`'s `CITED` REFUSAL THAT State Rules §4.1 RESTS ON.** Re-read on `0e5f7054`: `store.mjs` `promote`'s only state-transition guard is the project's (`NOT_THE_OWNER`); `retire` runs `#restsOnLive` / `#citesInto` and refuses `CITED`. D-168's worker's fixture retired a cited item through promote and it answered ok. — owner RECORD.
+order: directly after REC-180, the same `promote` callback: a retired item still resting under live legs is the record claiming what §4.1 forbids (CLAUDE.md §2), and D-168 just made a retired item uncitable, so the bypass is a correction to just-landed work (SCHEDULER #16, 2026-09-23; D-168's worker via CONDUCT #16)
+milestone: M9
+interface: I3 — a new refusal on `op=promote` (`CITED`, as `op=retire` answers it); the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.1 (a retired item is NOT citable; retirement is refused while live legs cite it, BOB #30), with `op=retire`'s `CITED` refusal as the one predicate.
+depends-on: REC-176, REC-178, D-168 (the same `promote` site; on `land/conduct/c16-batch6`).
+scope: when `promote` moves an Information item INTO `retired`, it runs `retire`'s own `#restsOnLive` / `#citesInto` check and refuses `CITED` with the same offenders, before any write; or the builder routes that transition only through `op=retire`, stating which.
+accepts-when: in a NEW suite `bio-plane/test/rec-181-promote-retire.test.mjs`, through the op: a promote retiring a cited verified item is refused `CITED` with the bundle byte-identical after; an uncited one retires. NEGATIVE CONTROL (`rec-181-promote-retire.control.mjs`): skip the check, and the cited arm lands and fails by name.
+added: 2026-09-23 · SCHEDULER #16 (D-168's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs REC`).
+
 ### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
 milestone: M0
@@ -1158,22 +1168,3 @@ depends-on: none.
 accepts-when: `MEASUREMENTS.md` carries the probe with its load, its count and the build; the row closes either way. How a liar passes it: a probe lighter than July's, so the load is stated beside the row's.
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
 cut: cut to its fields (SCHEDULER #8, 2026-09-21) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-92» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### D-59 · queued — **`contemporaneous`, THE STRONGEST LINK-FIDELITY VERDICT, HAS NEVER BEEN OBSERVED ON REAL DATA, AND MAY BE UNREACHABLE FOR MOST** … (whole text: the cut archive)
-order: with the live verifications, after D-92: a measurement deciding whether a verdict arm earns its complexity, not a defect shipping, since `undetermined` is honest meanwhile (SCHEDULER #7, 2026-09-21, LED-7)
-milestone: M3
-interface: none — a probe
-design: `docs/development/LINK-FIDELITY.md`, which defines the verdict and names the establishing routes that … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `MEASUREMENTS.md` carries the per-host table with N, the interval and the build; the row closes either way. How a liar passes it: hosts chosen for static bytes, so the list … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #7 (LED-7; D-59's DEBT row of 2026-07-30; keeps its `D-` id).
-cut: cut to its fields (SCHEDULER #8, 2026-09-21) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-59» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-66 · queued — `m025-arm-anchor-witness.test.mjs` CLOSES THE COMMENTARY CLASS ON ITS LABEL HALF AND NOT ON ITS ANCHOR HALF — prose in a … (whole text: the cut archive)
-order: M0; an instrument producing false findings (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
-milestone: M0 (background lane, holds no slot) — an instrument that penalises a driver for documenting how it … (whole text: the cut archive)
-interface: none — `bio-plane/test/m025-arm-anchor-witness.test.mjs`
-design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY … (whole text: the cut archive)
-depends-on: none
-accepts-when: prose in a block comment naming an anchor-bearing shape is NOT read as an anchor; a live anchor in code still is; the reach figures before and after are stated with any … (whole text: the cut archive)
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-66» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
