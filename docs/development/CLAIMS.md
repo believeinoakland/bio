@@ -19695,6 +19695,7 @@ paths, BY SITE:
 **NOT CLAIMED, NOT TOUCHED:** `release/**`, `newgroup/src/release.mjs` (signed; DIST cuts), `newgroup/scripts/`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+**state 2026-09-23** — COMMITTED `053caa09` (local branch `worktree-agent-a91d96971f1e9a19a`, in the shared object store), NOT PUSHED under Bob's alarm rule: the FULL gate on tree `e1b46322` is RED on ONE suite, `mergecarry.test.mjs` "no UNREGISTERED drop sits in main's history", which judges origin/main's OWN train merge `4355bfd` (`TREE-SHARING.md`, `kickoffs/BOB.md`) and is RED for every tree on today's main; battery otherwise 286/287, coverage --strict, civicos-ui and plancheck --local GREEN. Returned to CONDUCT to push `land/worker/DIST-6` once main's mergecarry finding is registered or restored.
 
 ## CLAIM 2026-09-23 UI (D-286 — the ai-session-context fixture draws from ranges PROVEN disjoint, so D0b cannot fail by the draw)
 
