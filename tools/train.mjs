@@ -27,9 +27,14 @@
  *      derives the union's class from the diff against `origin/main` — and reads the verdict back from the RECORD
  *      (D-293), never from the exit status alone. RED: nothing is pushed; with one branch it is returned by name, with
  *      several the culprit is UNDETERMINED and all are named (or `--isolate` finds it). NOT MEASURED: nothing is pushed.
+ *      M0-122: a union whose TREE this clone's record already holds GREEN (a lone `land/*` branch that fast-forwards
+ *      `origin/main` merges to exactly its own tip's tree) is NOT gated again; the train says so and names the record.
  *   5. writes the train record `<git common dir>/bio-train/<id>.json` (what landed, what was returned, the gate run),
  *      which with the trailer `Bio-Train: <id>` on every merge is the mark the push guard's `main` arm requires.
- *   6. pushes `HEAD:refs/heads/main` (never force) and verifies it FROM THE REMOTE (`git ls-remote`).
+ *   6. pushes `HEAD:refs/heads/main` (never force) and verifies it FROM THE REMOTE (`git ls-remote`). M0-122: when the
+ *      push is rejected because `main` MOVED (read by ancestry after a fetch), it retries, at most MAX_ATTEMPTS pushes
+ *      in all, each stated: merge origin/main (a conflict is RETURNED by name), scan for markers, id audit, gate
+ *      `--since <the GREEN tip>`, a train record `<id>-retry<n>`, push, verify from the remote.
  *   7. deletes each landed ref — only if the remote still holds the sha it merged — and VERIFIES each deletion from the
  *      remote. MEASURED 2026-09-23T00:01Z by the M0-111 worker in the cloud: the proxy refuses a ref deletion push
  *      (HTTP 403, "send-pack: unexpected disconnect", exit 1) and git STILL prints "Everything up-to-date", while
@@ -96,12 +101,36 @@ function writeRecord(repo, rec) {
   return file;
 }
 
-/* Gate ONCE, and read the verdict back from the record keyed by the tree — never the exit status alone. */
-function gate(repo, { full, log }) {
+/* M0-122: A TREE ALREADY RECORDED GREEN IS NOT GATED A SECOND TIME. The D-293 record is keyed by the TREE, so when the
+   union's tree is one a gate in this clone's git common dir already recorded GREEN — a lone `land/*` branch that is a
+   fast-forward over `origin/main`, whose `--no-ff` merge carries exactly its tip's tree, is the common case — the
+   verdict is read through pushguard's own `readRuns` + `effectiveVerdict` (the reader the guard's `main` arm uses) and
+   the battery is NOT run again. RED, NOT MEASURED or no record: gated as before. With `--full`, only a tree that also
+   carries a GREEN FULL run is reused. Returns null when the tree must be gated. */
+function recordedGreen(repo, { full }) {
   const tree = treeOf("HEAD", { repo });
+  const runs = readRuns({ repo, tree }).runs;
+  if (effectiveVerdict(runs).verdict !== "GREEN") return null;
+  const greens = runs.filter((r) => r.verdict === "GREEN" && (!full || r.class === "FULL"));
+  const run = greens[greens.length - 1];
+  if (!run) return null;
+  return { tree, verdict: "GREEN", exit: null, class: run.class, file: run.file, recordsForTree: runs.length, reused: true };
+}
+
+/* Gate ONCE, and read the verdict back from the record keyed by the tree — never the exit status alone.
+   `since` (M0-122, the retry): `gates.mjs --since <sha>` re-checks only what both sides touched, against <sha>'s
+   GREEN record — never a FULL re-run of a union that was already measured. */
+function gate(repo, { full, since, log }) {
+  const tree = treeOf("HEAD", { repo });
+  const reuse = recordedGreen(repo, { full });
+  if (reuse) {
+    log(`\n=== train · NO GATE RUN: tree ${s8(tree)} is already recorded GREEN (class ${reuse.class}, ${reuse.file}) — read from the D-293 record, not re-measured (M0-122)`);
+    return reuse;
+  }
+  const args = full ? ["--full"] : since ? ["--since", since] : [];
   const before = readRuns({ repo, tree }).runs.length;
-  log(`\n=== train · gate: node tools/gates.mjs${full ? " --full" : ""} (tree ${s8(tree)})`);
-  const r = spawnSync(process.execPath, [join(repo, "tools/gates.mjs"), ...(full ? ["--full"] : [])], { cwd: repo, stdio: "inherit" });
+  log(`\n=== train · gate: node tools/gates.mjs${args.length ? ` ${args.join(" ")}` : ""} (tree ${s8(tree)})`);
+  const r = spawnSync(process.execPath, [join(repo, "tools/gates.mjs"), ...args], { cwd: repo, stdio: "inherit" });
   const runs = readRuns({ repo, tree }).runs;
   const mine = runs.slice(before);
   const run = mine[mine.length - 1] || null;
@@ -110,6 +139,21 @@ function gate(repo, { full, log }) {
   else if (verdict === "GREEN" && r.status !== 0) verdict = "RED";   /* exit and record disagree: never GREEN */
   return { tree, verdict, exit: r.status, class: run ? run.class : null, file: run ? run.file : null, recordsForTree: runs.length };
 }
+
+/* A merge is the only moment two branches' ids become one corpus (CONDUCT.md): the id audit runs on the union.
+   Returns null when it passed or could not run (said in the log), else why it stopped. */
+function idAudit(repo, base, log) {
+  const mintid = join(repo, "tools/mintid.mjs");
+  if (!existsSync(mintid)) { log("train: id audit NOT RUN — tools/mintid.mjs is absent from this tree"); return null; }
+  const a = spawnSync(process.execPath, [mintid, "--audit", "--base", base], { cwd: repo, encoding: "utf8", maxBuffer: 1 << 26 });
+  const line = ((a.stdout || "").match(/^audit: \d+ break\(s\)[^\n]*/m) || [""])[0];
+  log(`train: id audit — ${line || `no completion line (exit ${a.status})`}`);
+  if (a.status !== 0 || !/^audit: 0 break/.test(line)) return `the id audit over the union did not pass (${line || `exit ${a.status}`})`;
+  return null;
+}
+
+/* How many pushes of `main` a train makes when each is rejected because `main` MOVED under it (M0-122). */
+export const MAX_ATTEMPTS = 3;
 
 function mergeOne(repo, id, item, trailers) {
   const msg = [`train ${id}: land ${item.branch} @ ${s8(item.sha)}`, "",
@@ -182,15 +226,8 @@ export function runTrain(opts = {}) {
   if (!merged.length) { out.reason = "NOTHING LANDED — every waiting branch was returned"; return out; }
   const mk = markerCheck({ repo });
   if (!mk.ok) return { ...out, reason: `STOPPED — ${mk.message} ${mk.marked.slice(0, 5).join(", ")}` };
-  /* A merge is the only moment two branches' ids become one corpus (CONDUCT.md): the id audit runs on the union. */
-  const mintid = join(repo, "tools/mintid.mjs");
-  if (!existsSync(mintid)) log("train: id audit NOT RUN — tools/mintid.mjs is absent from this tree");
-  else {
-    const a = spawnSync(process.execPath, [mintid, "--audit", "--base", main], { cwd: repo, encoding: "utf8", maxBuffer: 1 << 26 });
-    const line = ((a.stdout || "").match(/^audit: \d+ break\(s\)[^\n]*/m) || [""])[0];
-    log(`train: id audit — ${line || `no completion line (exit ${a.status})`}`);
-    if (a.status !== 0 || !/^audit: 0 break/.test(line)) return { ...out, reason: `STOPPED — the id audit over the union did not pass (${line || `exit ${a.status}`}); nothing gated or pushed` };
-  }
+  const audit = idAudit(repo, main, log);
+  if (audit) return { ...out, reason: `STOPPED — ${audit}; nothing gated or pushed` };
 
   const g = gate(repo, { full: !!opts.full, log });
   out.gate = g;
@@ -221,19 +258,74 @@ export function runTrain(opts = {}) {
     return out;
   }
 
-  const head = git1(repo, ["rev-parse", "HEAD"]);
-  const rec = { v: 1, id: out.id, head, tree: g.tree, base: main, at: new Date().toISOString(),
-    landed: merged.map((w) => ({ branch: w.branch, sha: w.sha, lane: w.lane })), returned: out.returned,
-    gate: { verdict: g.verdict, class: g.class, file: g.file }, pushed: false };
+  const landedRows = merged.map((w) => ({ branch: w.branch, sha: w.sha, lane: w.lane }));
+  let head = git1(repo, ["rev-parse", "HEAD"]);
+  let rec = { v: 1, id: out.id, head, tree: g.tree, base: main, at: new Date().toISOString(),
+    landed: landedRows, returned: out.returned,
+    gate: { verdict: g.verdict, class: g.class, file: g.file, ...(g.reused ? { reused: true } : {}) }, pushed: false };
   out.record = writeRecord(repo, rec);
   if (opts.noPush) { out.reason = "GATED GREEN, NOT PUSHED (--no-push)"; out.landed = rec.landed; return out; }
 
-  const p = gitR(repo, ["push", "origin", "HEAD:refs/heads/main"]);
-  const remoteMain = (gitR(repo, ["ls-remote", "origin", "refs/heads/main"]).out.split(/\s+/)[0]) || "";
-  out.pushOutput = `${p.out}\n${p.err}`.trim();
-  for (const l of out.pushOutput.split("\n").filter((x) => /bio-pushguard|PUSH REFUSED|rejected/.test(x))) log(`train: push — ${l.trim()}`);
-  if (p.status !== 0 || remoteMain !== head)
-    return { ...out, reason: `PUSH FAILED — main on the remote reads ${s8(remoteMain)}, not ${s8(head)} (push exit ${p.status}); nothing landed`, landed: [] };
+  /* M0-122: A PUSH REJECTED BECAUSE `main` MOVED UNDER THE GATE IS RETRIED, BOUNDED BY MAX_ATTEMPTS PUSHES. Each retry
+     merges the new `origin/main` into this train branch (a conflict returns the branches that touch the conflicted
+     paths, by name), scans for markers, re-runs the id audit, re-gates with `gates.mjs --since <the GREEN tip>` —
+     never a FULL re-run — writes a train record of its own (`<id>-retry<n>`, the trailer the retry's merge carries,
+     so the guard's `main` arm reads THAT record), and pushes again, verified from the remote. "main moved" is read by
+     ANCESTRY after a fetch — the new `origin/main` descends from the train's base and is not already in HEAD — never
+     from git's words; any other rejection is a PUSH FAILED, as before. */
+  out.attempts = [];
+  let base = main, greenTip = head, gNow = g;
+  for (let attempt = 1; ; attempt++) {
+    const p = gitR(repo, ["push", "origin", "HEAD:refs/heads/main"]);
+    const remoteMain = (gitR(repo, ["ls-remote", "origin", "refs/heads/main"]).out.split(/\s+/)[0]) || "";
+    out.pushOutput = `${p.out}\n${p.err}`.trim();
+    for (const l of out.pushOutput.split("\n").filter((x) => /bio-pushguard|PUSH REFUSED|rejected/.test(x))) log(`train: push — ${l.trim()}`);
+    const landedNow = p.status === 0 && remoteMain === head;
+    out.attempts.push({ attempt, id: rec.id, head, base, gate: { verdict: gNow.verdict, class: gNow.class, reused: !!gNow.reused }, pushed: landedNow });
+    log(`train: attempt ${attempt}/${MAX_ATTEMPTS} — push of ${s8(head)} ${landedNow ? "LANDED, verified on the remote" : `REJECTED (push exit ${p.status}; the remote's main reads ${s8(remoteMain)})`}`);
+    if (landedNow) break;
+    const failed = (why) => ({ ...out, reason: `PUSH FAILED — ${why}; main on the remote reads ${s8(remoteMain)}, not ${s8(head)} (push exit ${p.status}); nothing landed`, landed: [] });
+    const f = gitR(repo, ["fetch", "-q", "origin"]);
+    const now = git1(repo, ["rev-parse", "--verify", "--quiet", "refs/remotes/origin/main"]);
+    if (f.status !== 0 || !now) return failed("the fetch after the rejection failed, so whether main moved is UNDETERMINED");
+    const moved = now !== base && gitR(repo, ["merge-base", "--is-ancestor", base, now]).status === 0
+      && gitR(repo, ["merge-base", "--is-ancestor", now, "HEAD"]).status !== 0;
+    if (!moved) return failed(now === base ? "main did not move, so the rejection was not a non-fast-forward" : `origin/main ${s8(now)} does not descend from the train's base ${s8(base)}`);
+    if (attempt >= MAX_ATTEMPTS) return failed(`main moved under the train before each of its ${MAX_ATTEMPTS} pushes (now ${s8(now)}); the retry bound is spent`);
+
+    const rid = `${out.id}-retry${attempt}`;
+    log(`\ntrain: RETRY ${attempt}/${MAX_ATTEMPTS - 1} — main moved ${s8(base)} -> ${s8(now)} under the train; merging origin/main into ${s8(head)} as ${rid}`);
+    const msg = [`train ${rid}: RETRY ${attempt} of ${out.id} after a non-fast-forward — merge origin/main ${s8(now)} into its GREEN tip ${s8(head)}`, "",
+      `${TRAIN_TRAILER}: ${rid}`, ...trailers].join("\n");
+    const mr = gitR(repo, ["merge", "--no-ff", "-m", msg, now]);
+    if (mr.status !== 0) {
+      const files = (git1(repo, ["diff", "--name-only", "--diff-filter=U"]) || "").split("\n").filter(Boolean);
+      const aborted = gitR(repo, ["merge", "--abort"]).status === 0;
+      const hit = merged.filter((w) => (git1(repo, ["diff", "--name-only", main, w.sha]) || "").split("\n").some((x) => files.includes(x)));
+      for (const w of hit.length ? hit : merged)
+        out.returned.push({ branch: w.branch, sha: w.sha, lane: w.lane, reason: `CONFLICT with main as it moved to ${s8(now)} (retry ${attempt}) in ${files.join(", ") || "(git named no file)"}${hit.length ? "" : " — UNDETERMINED which branch, so all are named"}${aborted ? "" : " — AND THE ABORT FAILED"}` });
+      log(`train:   retry ${attempt}: CONFLICT merging origin/main ${s8(now)} in ${files.join(", ")}`);
+      return { ...out, landed: [], reason: aborted ? `RETURNED — retry ${attempt}: merging origin/main ${s8(now)} conflicts; nothing pushed` : "STOPPED — a conflicting merge could not be aborted; the checkout needs a human" };
+    }
+    const mk2 = markerCheck({ repo });
+    if (!mk2.ok) return { ...out, landed: [], reason: `STOPPED — retry ${attempt}: ${mk2.message} ${mk2.marked.slice(0, 5).join(", ")}` };
+    const audit2 = idAudit(repo, now, log);
+    if (audit2) return { ...out, landed: [], reason: `STOPPED — retry ${attempt}: ${audit2}; nothing pushed` };
+    gNow = gate(repo, { full: !!opts.full, since: greenTip, log });
+    out.gate = gNow;
+    if (gNow.verdict !== "GREEN") {
+      out.suspects = merged.map((w) => w.branch);
+      return { ...out, landed: [], reason: `${gNow.verdict} — retry ${attempt}: the --since gate over origin/main ${s8(now)} merged in did not pass; nothing pushed; UNDETERMINED which of ${out.suspects.join(", ")}` };
+    }
+    writeRecord(repo, { ...rec, retriedAs: rid });
+    const sinceTip = greenTip;
+    head = git1(repo, ["rev-parse", "HEAD"]);
+    base = now; greenTip = head;
+    rec = { v: 1, id: rid, retryOf: out.id, attempt: attempt + 1, head, tree: gNow.tree, base: now, at: new Date().toISOString(),
+      landed: landedRows, returned: out.returned,
+      gate: { verdict: gNow.verdict, class: gNow.class, file: gNow.file, since: sinceTip, ...(gNow.reused ? { reused: true } : {}) }, pushed: false };
+    out.record = writeRecord(repo, rec);
+  }
   out.pushed = true; out.head = head; out.landed = rec.landed;
   writeRecord(repo, { ...rec, pushed: true, pushedAt: new Date().toISOString() });
   gitR(repo, ["fetch", "-q", "origin"]);
@@ -252,6 +344,8 @@ function report(r) {
   const nd = (r.deleted || []).filter((d) => d.state === "NOT DELETED").length;
   L.push(`train: ${r.reason} · id ${r.id} · landed ${r.landed.length}${r.landed.length ? ` (${r.landed.map((l) => l.branch).join(", ")})` : ""}`
     + ` · returned ${r.returned.length} · gate ${r.gate ? `${r.gate.verdict} class ${r.gate.class}` : "not run"}`
+    + `${(r.attempts || []).length > 1 ? ` · ${r.attempts.length} push attempts (main moved under the train)` : ""}`
+    + `${r.gate && r.gate.reused ? " · no gate run (the tree was already recorded GREEN)" : ""}`
     + `${r.pushed ? ` · main ${s8(r.head)} verified on the remote` : " · main NOT moved"}`
     + `${(r.deleted || []).length ? ` · refs deleted ${(r.deleted || []).filter((d) => d.state === "DELETED").length}/${r.deleted.length}${nd ? ` (${nd} NOT DELETED — landed by ancestry, harmless)` : ""}` : ""}`);
   return L.join("\n");
