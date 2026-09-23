@@ -18724,3 +18724,29 @@ back as one honest reader), and the readers through `coord.mjs` from 41 to 4: `l
 readers are `plancheck.mjs` (5, a real string), `pushguard.mjs` (4, walks `docs/`), `gates.mjs` (3), `corpuscheck.mjs`,
 `decided.mjs`, `mintid.mjs` (2 each), 4 suites naming the file in code, and `op-claims-ledger.mjs` (1).
 **Not measured:** the gate TIME saved (selection counts only); a real `--since` over a real rebase.
+
+## M-111 · 2026-09-23 · the runner's D-186 leak — a race in `bio-plane/test/sandbox.mjs`'s exit sweep, measured before and after the fix
+
+Instrument: `node` 26 in the cloud container (4 cores, shared), measured by CONDUCT #14's diagnosis worker; recorded here
+at integration by CONDUCT #15 from the worker's report (`origin/conduct14/reports:LEAK.md`, branch
+`worktree-agent-aba557251eb76f805` @ `4e715931`). Method: the real `sandbox.mjs` exit sweep driven through repeated
+process endings, each ending after a Miniflare `dispose()` (miniflare 4.20260722.0, whose `dispose()` fires
+`fs.promises.rm(tmpPath)` WITHOUT awaiting it); a leak is a `bio-battery-<pid>-*` directory still holding
+`miniflare-*` sandboxes after the process has exited.
+
+| arm | endings | directories left | sandboxes left |
+| --- | --- | --- | --- |
+| old sweep (sync `rmSync(SANDBOX)` in the exit listener) | 300 | **21** | **35** |
+| fix (`sweepSandbox`: `renameSync` first, then `rmSync` of the moved tree, retried ≤ 5 times until `existsSync` says gone) | 300 | **0** | **0** |
+| fix, bare (no Miniflare) | 1000 | 0 | 0 |
+| NEGATIVE CONTROL (old file restored locally; restored back by sha256 `89aef6e1…`) | 300 | 25 | 42 |
+
+CAUSE: `rmSync` walking the tree while the queued async unlinks still run on libuv's pool RETURNS NORMALLY with the tree
+left whenever one of them removes an entry under its walk. This is the exact runner shape GitHub reported on tree
+`6ef503c4` (`bio-battery-<pid>-*: [miniflare-…0, miniflare-…1]`, 282/282 green, run RED). NOT introduced by D-442, which
+touched no dispose/exit/sandbox line; at most it changed timing. Intermittent, which fits run #13 on `main` @ `41c7e0c3`
+passing. WHICH SUITE leaked on the runner is UNDETERMINED: the battery prints no per-suite pid (best fit
+`publish.test.mjs`, which disposes two Miniflares back to back before exiting). Gate of the fix's branch: GREEN TARGETED
+`272/272 suites green · 16134 assertions passing` on tree `0b31fa41`, "this run left 0 directories holding 0 miniflare
+sandboxes". Owed and routed to M0-127: the per-suite pid on the battery's result line, and hygiene.test's D-186 control
+text, which predates this race.
