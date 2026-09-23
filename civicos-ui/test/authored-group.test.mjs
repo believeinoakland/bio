@@ -45,7 +45,7 @@
  * so a mis-strip shows up as a count, not as silence.
  *
  * A VACUOUS ARM THIS SUITE SHIPPED WITH, AND WHAT CAUGHT IT: the first full gate (tree 045580b2) went RED at
- * `op-claims.test.mjs`, which found this file asking `op=record` — an op that does not exist. The NONE arm "the record
+ * `op-claims.test.mjs`, which found this file asking the plane for an op named `record` — which does not exist. The NONE arm "the record
  * holds no bundle" had read the refusal as an empty list and passed over nothing. It now asks `op=list` (the read the
  * UI's own `loadRecord` makes), and the same read of the PLANTED plane must list what the drives wrote, so an answer
  * that cannot see a write cannot read as "none".
