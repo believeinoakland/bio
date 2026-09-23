@@ -20,16 +20,18 @@ const SUITE = fileURLToPath(new URL("./d389-fullfetch.test.mjs", import.meta.url
 const OUT = fileURLToPath(new URL("./.d389-control.out", import.meta.url));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
-const HELPER = "             truncated: gated.length > cap || raw.length === limit };";
-const CONTENT_CLAIM = "              || latest.truncated,";
+/* RE-POINTED 2026-09-23 BY REC-174: the full-fetch test moved into `#frontierFetch` (shared with the never-looked /
+   missing supplies), so the page's claim reads `gated.length > cap || full`. Each arm below breaks the same act. */
+const HELPER = "             truncated: gated.length > cap || full };";
+const CONTENT_CLAIM = "              || missingFetch.full || latest.truncated,";
 const ARMS = {
   baseline: { patches: [], mustFail: [] },
   /* THE ROW'S CONTROL: the disjunct dropped from the one shared over-fetch. */
   nodisjunct: { patches: [[HELPER, "             truncated: gated.length > cap };"]],
                 mustFail: ["B1", "B2", "B3", "B4", "S1"] },
   /* THE LIAR: the helper undisjuncted, ONE arm (content) fixed on its own. */
-  onearm: { patches: [[HELPER, "             truncated: gated.length > cap, full: raw.length === limit };"],
-                      [CONTENT_CLAIM, "              || latest.truncated || latest.full,"]],
+  onearm: { patches: [[HELPER, "             truncated: gated.length > cap, full };"],
+                      [CONTENT_CLAIM, "              || missingFetch.full || latest.truncated || latest.full,"]],
             mustFail: ["B1", "B3", "B4", "S1"] },
   /* OVER-STRICTNESS: fail-safe taken past the full fetch. */
   overstrict: { patches: [[HELPER, "             truncated: true };"]],

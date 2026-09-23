@@ -38,7 +38,12 @@ const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
    named the old text would have been refused by the occurs-exactly-once guard at ZERO — an arm that cannot arm.
    Each is re-pointed at the SAME subject in the new spelling: `rawflag` still reads the RAW supply against the
    bound for the content arm alone; `fence` still drops the content gate; `missinglist` still claims over
-   `missing`; `overfetch` still narrows the content factor to `cap + 1`; `unexplained` still drops that disjunct. */
+   `missing`; `overfetch` still narrows the content factor to `cap + 1`; `unexplained` still drops that disjunct.
+   RE-ANCHORED AGAIN 2026-09-23 BY REC-174, SUBJECTS UNCHANGED: the content claim gained `|| missingFetch.full`
+   (the missing supply's full-fetch bit) before `latest.truncated`, so `rawflag`, `missinglist` and `unexplained`
+   carry it in their anchors; `unexplained` now anchors on the content arm's second line because the MEANING arm
+   now publishes the same first line (REC-174 gave it the `unexplained` disjunct) and the once-guard would refuse
+   it at 2. */
 const ARMS = {
   /* THE DEFECT ITSELF, AND THE ARM TAKES THE FLAG AND NOTHING ELSE. `page` is
      now the GATED list, so restoring D-385's semantics means going back to the
@@ -51,8 +56,8 @@ const ARMS = {
      prefix is a substring of its thirteen-space one. An arm that patched both
      would have measured two methods and reported one. */
   rawflag: [STORE,
-    "      truncated: never.length > cap || unexplained.length > cap\n              || latest.truncated,",
-    "      truncated: never.length > cap || unexplained.length > cap\n              || this.#frontierLatest("
+    "      truncated: never.length > cap || unexplained.length > cap\n              || missingFetch.full || latest.truncated,",
+    "      truncated: never.length > cap || unexplained.length > cap\n              || missingFetch.full || this.#frontierLatest("
     + "\"content\", { limit: (cap + 1) * 2, subjectKind: \"capture\" }).length > cap,",
     "MUST FAIL G1 — and it must fail PRINTING BOTH COUNTS, the gated 3 and the supply 4. "
     + "MUST NOT FAIL G1c G2 G3b G4 G4b: the entitled viewer's answers do not move, which is this "
@@ -85,8 +90,8 @@ const ARMS = {
      or `purged` fixture, which is `#missingContentCause`'s region and not this
      row's. NAMED rather than silently scored as driven. */
   missinglist: [STORE,
-    "      truncated: never.length > cap || unexplained.length > cap\n              || latest.truncated,",
-    "      truncated: missing.length > cap || latest.truncated,",
+    "      truncated: never.length > cap || unexplained.length > cap\n              || missingFetch.full || latest.truncated,",
+    "      truncated: missing.length > cap || missingFetch.full || latest.truncated,",
     "MUST FAIL G5b, STRUCTURALLY AND ONLY STRUCTURALLY — both halves of it, since the corrected "
     + "form stops matching and the old form starts. Declared NOT behaviourally drivable on this "
     + "fixture and the reason is at the arm"],
@@ -119,8 +124,8 @@ const ARMS = {
   /* THE THIRD DISJUNCT ALONE. `missing_unexplained` is cut at the bound like the
      other two lists, so a claim that omits it is the same class one list over. */
   unexplained: [STORE,
-    "      truncated: never.length > cap || unexplained.length > cap\n",
-    "      truncated: never.length > cap || false\n",
+    "      truncated: never.length > cap || unexplained.length > cap\n              || missingFetch.full",
+    "      truncated: never.length > cap || false\n              || missingFetch.full",
     "MUST FAIL G5b structurally. Declared NOT behaviourally drivable: `unexplained` is EMPTY on "
     + "this fixture, for the reason `missinglist` states"],
 };
