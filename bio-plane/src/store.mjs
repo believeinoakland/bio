@@ -39105,8 +39105,12 @@ export class Store extends DurableObject {
         case "sweep": {
           const r = this.#one(
             `SELECT target, lead_inquiry FROM capture_requests WHERE request = ? LIMIT 1`, a);
-          if (!r) unresolved = true;
-          else { if (r.target) out.push(r.target); if (r.lead_inquiry) out.push(r.lead_inquiry); }
+          if (r) { if (r.target) out.push(r.target); if (r.lead_inquiry) out.push(r.lead_inquiry); break; }
+          /* D-65 — THE RATIFIED-CADENCE ARM. `op=monitor`'s look names the BUNDLE whose
+             `monitoring.enabled` it runs under (`recordMonitorLook`), and a bundle is gated
+             exactly as `ratify`'s authority is. Anything that is neither stays UNRESOLVED. */
+          const b = this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id = ? LIMIT 1`, a);
+          if (b) out.push(a); else unresolved = true;
           break;
         }
         case "ratify": case "link": case "acquire": case "extract": case "derive": {
@@ -42229,6 +42233,70 @@ export class Store extends DurableObject {
     return { bundleId, parts, count: parts.length };
   }
 
+  /** D-65 — THE MONITOR'S LOOK, written to the log as `OBSERVATION-LOG-DESIGN.md` §4.1's
+   *  second row states it: *"the same vocabulary, `authority_kind = sweep`, `authority` = the
+   *  named request or ratified sweep"*. An `op=monitor` tick has no capture request; the
+   *  cadence it runs under is the one the BUNDLE ratified (`monitoring.enabled`), so the
+   *  authority is the bundle id — the "ratified cadence" arm of the `sweep` kind's own
+   *  definition (`OBSERVATION_AUTHORITY_KINDS.sweep`).
+   *
+   *  THE OUTCOME IS THE CONTROL PLANE'S, THE ROW IS DECIDED HERE, ONCE. The control plane
+   *  owns the network (VERIFICATION.md), so it fetches and compares and hands over the
+   *  outcome word; the mapping to a state is `monitorObservationFor`, one pure function,
+   *  so the tick and the suite read the same rule.
+   *
+   *  `actorClass`/`actor` come from the QUERY STRING, where the control plane stamped them. */
+  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null } = {}) {
+    const cap = typeof baseline === "string" && /^[0-9a-f]{64}$/.test(baseline) ? baseline : null;
+    switch (outcome) {
+      /* The zero-payload revisit: the record's own capture, confirmed at a date. */
+      case "unchanged":
+        return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap, detail: "unchanged" } : null;
+      /* The substance moved. §4.1 says `result_ref` = the NEW sha — but a tick does not
+         capture the new version, so the record does not hold it, and naming it as a
+         `capture` would be the log claiming a document the record lacks. The referent is
+         the capture the look was compared against; the served sha rides in `detail`.
+         (A DESIGN GAP against §4.1, raised in D-65's report.) */
+      case "changed":
+        return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap,
+                       detail: `changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}` } : null;
+      case "removed":
+        return { state: "LOOKED_ABSENT", detail: `gone; the source answered ${httpStatus ?? "unknown"}` };
+      case "unreachable":
+        return { state: "LOOKED_INDETERMINATE",
+                 detail: `unreachable; ${String(reason || (httpStatus != null ? `the source answered ${httpStatus}` : "no answer")).slice(0, 160)}` };
+      /* D-104: our pacing held us. A fact about us; LOOKED_INDETERMINATE is the only state. */
+      case "governed":
+        return { state: "LOOKED_INDETERMINATE", governed: true, condition: "source-unreachable-governed",
+                 detail: `governed; ${String(reason || "the per-host governor held the request").slice(0, 160)}` };
+      /* Anything else — a fetch with no baseline to compare, an outcome word this mapping
+         does not know — writes NOTHING rather than being coerced to the nearest word. */
+      default: return null;
+    }
+  }
+
+  recordMonitorLook({ bundleId = null, address = null, outcome = null, baseline = null, seen = null,
+                      httpStatus = null, reason = null, actorClass = "plane", actor = null } = {}) {
+    if (!bundleId || !address) return { ok: false, written: false, why: "a monitor look needs a bundle and an address" };
+    const row = Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason });
+    if (!row) return { ok: true, written: false,
+                       why: outcome === "unchanged" || outcome === "changed"
+                         ? "no captured baseline, so the look has no capture to refer to and is not recorded"
+                         : `no observation is recorded for the outcome '${String(outcome)}'` };
+    const cls = actorClass === "member" || actorClass === "machine" ? actorClass : "plane";
+    const now = new Date().toISOString().split(".")[0] + "Z";
+    const bad = this.#observe({
+      actorClass: cls, actor: cls === "plane" ? null : actor,
+      authorityKind: "sweep", authority: String(bundleId),
+      level: "document", subjectKind: "address", subject: String(address),
+      state: row.state, governed: row.governed === true, condition: row.condition || null,
+      resultKind: row.resultKind || null, resultRef: row.resultRef || null, detail: row.detail,
+    }, now);
+    if (bad) return { ok: false, written: false, refusal: bad };
+    const top = this.#one(`SELECT MAX(seq) m FROM observation_log`);
+    return { ok: true, written: true, seq: top ? top.m : null, at: now, state: row.state, detail: row.detail };
+  }
+
   /** CAP-4: append the outcome of a ratification's re-fetch of the reused parts.
    *  Appended and dated, never overwritten: a re-ratification is a fresh attempt
    *  and a fresh set of dated rows, so the history of what the source said each
@@ -44131,6 +44199,9 @@ export class Store extends DurableObject {
                                                         viewer: url.searchParams.get("viewer") }),
         reusedparts: () => this.reusedParts(url.searchParams.get("id")),
         recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
+        /* D-65: the monitor's look. The actor is the control plane's stamp, from the query string. */
+        monitorlook: () => this.recordMonitorLook({ ...(body || {}),
+          actorClass: url.searchParams.get("actorClass"), actor: url.searchParams.get("actor") }),
         reuseverdicts: () => this.reuseVerdicts({ bundleId: url.searchParams.get("bundle"),
                                                   sourceCapture: url.searchParams.get("capture") }),
         /* CONSTRUCTS Step 3 (FW-5): read a captured document's reading by capture
