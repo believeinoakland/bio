@@ -116,6 +116,9 @@ const RELEASES = [
   /* 0.73.0: deployed and live-verified 2026-09-23 (REC-168 / IC-178, a CUT NOW: op=capturerequest names a run
      its caller holds); the commit is dist/cut-0.73.0's cut, whose release/ holds it. RELEASES, NOT WITHDRAWN. */
   ["0.73.0", "d25684919e6748b92acbc080bca8dc2141273c44"],
+  /* 0.74.0: deployed and live-verified 2026-09-23 (D-442 / IC-179, a CUT NOW: publishing writes nothing on a
+     member finding); the commit is dist/cut-0.74.0's cut, whose release/ holds it. RELEASES, NOT WITHDRAWN. */
+  ["0.74.0", "cacebb12b7b42f4825238348c4f1e834e9a2c168"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });

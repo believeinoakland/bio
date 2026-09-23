@@ -2046,7 +2046,8 @@ CREATE TABLE IF NOT EXISTS ai_runs (
   state                 TEXT NOT NULL,
   stopped_bound         TEXT,
   stopped_condition     TEXT,
-  stopped_at            TEXT
+  stopped_at            TEXT,
+  lens_at_open          TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
 CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);
@@ -2068,6 +2069,21 @@ CREATE TABLE IF NOT EXISTS ai_run_bounds (
   consumed  INTEGER NOT NULL DEFAULT 0,
   unit      TEXT,
   PRIMARY KEY (run, bound)
+);
+
+-- D-85 (INVESTIGATIVE-SESSION.md section 11 item 5, rule 2, BOB #25, 2026-09-21): AN ASSISTANT OPENS A
+-- QUESTION ONLY INSIDE A RUN. When an 'ai' credential creates an inquiry it names a RUNNING run whose
+-- principal it is, and the plane records the link HERE, keyed by the new inquiry. It is an INSTANCE row and
+-- never a line in the inquiry's signed bytes: the run is scratch and is never published, and a pointer in
+-- published bytes that no reader can resolve is not provenance. One row per inquiry (an inquiry is created
+-- once). Its principal is the control plane's stamp for the credential that created it, never a field it sent.
+-- The column is named bundle_id so the row rides purge's TABLES list and clears in BOTH arms (D-113).
+-- NO index beyond the key: every reader asks by the inquiry.
+CREATE TABLE IF NOT EXISTS inquiry_run_surfacings (
+  bundle_id  TEXT PRIMARY KEY,
+  run        TEXT NOT NULL,
+  principal  TEXT NOT NULL,
+  at         TEXT NOT NULL
 );
 
 -- THE OBSERVATION LOG (\xA711). Where the run searched across the four levels,
@@ -3868,6 +3884,7 @@ __export(bio_checks_exports, {
   SUGGEST_CHECKS: () => SUGGEST_CHECKS,
   SUGGEST_KINDS: () => SUGGEST_KINDS,
   SUGGEST_LEVELS: () => SUGGEST_LEVELS,
+  SURFACE_CHECKS: () => SURFACE_CHECKS,
   TESTIMONY_CHECKS: () => TESTIMONY_CHECKS,
   TESTIMONY_GRADE: () => TESTIMONY_GRADE,
   TEXT_CHAIN_CHECKS: () => TEXT_CHAIN_CHECKS,
@@ -11909,6 +11926,28 @@ var CASE_CONCLUSION_CHECKS = {
     check: "C-65.1",
     where: "src/store.mjs ratifyCaseDocument > is-caseratify-conclusion-moved",
     translation: "This case document records a conclusion its project no longer stands on: since the document was prepared, the project withdrew that conclusion or concluded again differently. Signing it would publish a conclusion nobody holds. Nothing was committed. Publish the case again from the project, so the document records what the project stands on now, and sign that."
+  }
+};
+var SURFACE_CHECKS = {
+  SURFACE_NO_RUN: {
+    check: "C-66.1",
+    where: "src/store.mjs #surfacingGate > is-surface-run",
+    translation: "An assistant opens a question only inside an investigation it is running, and this one named none that can be read here. The investigation is what records the lens and the purpose the question was opened under, so without one nothing could say why it exists. Nothing was created."
+  },
+  SURFACE_RUN_NOT_RUNNING: {
+    check: "C-66.2",
+    where: "src/store.mjs #surfacingGate > is-surface-run",
+    translation: "The investigation this question was to be opened inside has ended. A question is read against the conditions of the investigation that opened it, and those stopped being current when it stopped. Nothing was created; a member can start a new investigation."
+  },
+  SURFACE_NO_BOUND: {
+    check: "C-66.3",
+    where: "src/store.mjs #surfacingGate > is-surface-run",
+    translation: "This investigation was not given a limit on how many questions it may open, so it may open none: an assistant opening questions without a limit fills the record with questions nobody asked for. The limit is set by the member who starts the investigation. Nothing was created."
+  },
+  SURFACE_BOUND_REACHED: {
+    check: "C-66.4",
+    where: "src/store.mjs #surfacingGate > is-surface-run",
+    translation: "This investigation has already opened as many questions as the member who started it allowed. Nothing was created. The investigation ends at its next step and says which limit stopped it."
   }
 };
 var RATIFY_SCOPE_CHECKS = {
@@ -26280,6 +26319,14 @@ var RUN_BOUNDS = {
        first would have renamed every such run's ending without changing anything
        about it. */
   mints: "passages a machine credential marked citable (\xA77.3 (5)) \u2014 the EXTRACT role's budget",
+  /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25): AN ASSISTANT OPENS A QUESTION ONLY INSIDE A
+     RUN, AND THE RUN BOUNDS HOW MANY. Ruled on `mints`' rule, so it is `mints`' shape: a ROW in this table, no
+     schema and no second vocabulary; declared at `op=airunopen` by the member who opens the run; a creation
+     under a run that declares none is REFUSED rather than given an allowance invented in code (a number
+     chosen here would be a measurement with no measurement behind it); and a run whose surfaces reach the
+     allowance ends at its next tick through `finishedBound`, as one that ran out of mints does. AFTER `mints`
+     in declaration order for the tie-break reason `mints` gives: appending it renames no existing ending. */
+  surfaces: "questions an assistant opened inside this run (\xA711 item 5, rule 2) \u2014 the run's bound on what it may surface",
   lease: "the run stopped heartbeating and its lease lapsed: it died rather than finished"
 };
 var RUN_ENDINGS = {
@@ -27487,7 +27534,12 @@ var Store = class _Store extends DurableObject {
          liar D-421 exists to separate (two names for one fact). NULL reads back
          as UNDETERMINED, stated, through `#deliveredBy`. */
       ["published_bundles", "delivered_by", "TEXT"],
-      ["case_documents", "delivered_by", "TEXT"]
+      ["case_documents", "delivered_by", "TEXT"],
+      /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 3): the lens IN FORCE when a run opened, computed by
+         the plane at that instant. NULLABLE AND NEVER BACK-FILLED: a run opened before this column existed
+         recorded nothing, and the only value a backfill could reach for is the manifest the run was HANDED,
+         the very value this column exists to be compared WITH. NULL reads back as `not recorded`, stated. */
+      ["ai_runs", "lens_at_open", "TEXT"]
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -27965,11 +28017,12 @@ var Store = class _Store extends DurableObject {
       );
       if (!row) return row;
       const type = normalizeType(row.object_type);
-      return {
+      const one = {
         ...row,
         ...type === "action" ? { action: this.#actionDerived(row, nowMs) } : {},
         no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOf(row.bundle_id) : null
       };
+      return type === "inquiry" ? this.#surfacedIn(row.bundle_id, viewer).then((surfaced) => ({ ...one, surfaced_in: surfaced })) : { ...one, surfaced_in: null };
     }
     const asked = Number(limit);
     const cap = Number.isFinite(asked) && asked > 0 ? Math.min(_Store.PROJECTION_LIMIT_MAX, Math.floor(asked)) : _Store.PROJECTION_LIMIT_DEFAULT;
@@ -28056,6 +28109,45 @@ var Store = class _Store extends DurableObject {
         `SELECT bundle_id FROM refs WHERE target_id=? AND kind='responds_to' ORDER BY bundle_id`,
         row.bundle_id
       ).map((r) => r.bundle_id)
+    };
+  }
+  /** D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25): WHICH RUN THIS QUESTION WAS OPENED INSIDE, AND
+   *  UNDER WHAT LENS. Read from `inquiry_run_surfacings` — the instance row `promote` writes when an assistant
+   *  creates a question — and never from the question's bytes. Four answers, never collapsed:
+   *    - `recorded: false, stated: "not recorded"` — no run is recorded: a member's own question, or an
+   *      assistant's opened before this rule. Stated, never guessed (the rule's own words).
+   *    - recorded, and the run is in this reader's sight — the run, its context and status, and its lens block
+   *      from `#biasForRun` (the one reader `op=airun` publishes: recorded, now, moved, at_open, hand).
+   *    - recorded, and the run cannot be read by this reader — `op=airun` answers `found: false` for it, so the
+   *      run and its lens are withheld, and the answer says a run IS recorded. (A run is deleted only by the
+   *      whole-store purge, which takes every link with it, so a link naming a run nobody holds is not a state
+   *      the plane reaches; were it reached it would read this way too, never as `not recorded`.)
+   *
+   *  IT READS NO ROW OF `ai_runs` ITSELF: the run's facts are `aiRunRead`'s answer, taken whole, under the same
+   *  viewer — one publisher of the run (`run-conditions.test.mjs` ARM W4), and the lens is the block `op=airun`
+   *  serves, so the question's read and the run's read cannot disagree. */
+  async #surfacedIn(bundleId, viewer) {
+    const link = this.#one(`SELECT run, principal, at FROM inquiry_run_surfacings WHERE bundle_id=?`, bundleId);
+    if (!link)
+      return { recorded: false, stated: "not recorded", run: null, lens: null };
+    const read = await this.aiRunRead({ run: link.run, viewer });
+    if (!read || read.found !== true || !read.session)
+      return {
+        recorded: true,
+        run: null,
+        by: null,
+        at: link.at,
+        lens: null,
+        stated: "this question was opened inside a run this reader cannot read"
+      };
+    return {
+      recorded: true,
+      run: link.run,
+      by: link.principal,
+      at: link.at,
+      context: read.session.context,
+      status: read.session.status,
+      lens: read.session.bias
     };
   }
   /** EXPLAIN QUERY PLAN for representative filters, so a test can assert the
@@ -39974,6 +40066,83 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     return "nothing changed";
   }
   /* ---- writes: promotion is the sole writer of live state ---- */
+  /** D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25) — MAY THIS ASSISTANT OPEN A QUESTION, AND
+   *  INSIDE WHICH RUN? Asked by `promote` of a CREATION of an inquiry that carries the control plane's
+   *  `assistantPrincipal` stamp — which `index.mjs` sets for an `ai` credential ONLY, deleting any caller's copy
+   *  first — and of nothing else: a member's creation, and every store-internal creation, carries no stamp and is
+   *  untouched. Null when the creation may land (the answer then names the run it lands inside), else the refusal.
+   *
+   *  REC-165's ORDER, the tick's (REC-152): SIGHT first — a run whose context the caller cannot see answers the
+   *  SAME SURFACE_NO_RUN a run never minted gets, and so does a creation naming no run, since both say the same
+   *  thing to the caller: there is no run of yours here; then POSITION — `runPrincipalGate`, the member who
+   *  opened the run or a credential she minted, relayed FIELD BY FIELD (a spread would hide the verdict from the
+   *  DEC-49 guard); then STATUS; then the BOUND, on `mints`' rule — a run that declares no `surfaces` bound may
+   *  surface nothing, because a default allowance chosen here would be a measurement with no measurement behind
+   *  it. The bound is asked here AND consumed inside `promote`'s transaction, so a refused creation spends none.
+   *  The caller is the STAMP, never a field the body carries; the run is the body's word, which is why every
+   *  question above is asked of it. */
+  #surfacingGate(pkg) {
+    const caller = String(pkg.assistantPrincipal ?? "").trim();
+    const run = String(pkg.run ?? "").trim();
+    const refusal7 = (code, detail, extra) => {
+      const row = SURFACE_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        run: run || null,
+        ...extra || {}
+      };
+    };
+    const runRow = run ? this.#one(`SELECT run, status, context_type, context_id, principal_plane FROM ai_runs WHERE run=?`, run) : null;
+    const runSeen = !!runRow && this.#aiRunInSight(run, pkg.actorViewer ?? null);
+    if (!runSeen)
+      return refusal7(
+        "SURFACE_NO_RUN",
+        run ? `no run named '${run.slice(0, 60)}' is open here. An assistant opens a question only inside a run it holds (INVESTIGATIVE-SESSION.md \xA711 item 5, rule 2): the run carries the lens in force and the objective the question was surfaced under. Nothing was created.` : "an assistant opens a question only inside a run it holds: pass run=<the run this question is surfaced under> in the promotion. The run carries the lens in force and the objective it pursued (INVESTIGATIVE-SESSION.md \xA711 item 5, rule 2). Nothing was created."
+      );
+    const notPrincipal = runPrincipalGate({
+      caller,
+      principal: runRow.principal_plane,
+      act: "opening a question under a run"
+    });
+    if (notPrincipal)
+      return {
+        ok: false,
+        reason: notPrincipal.code,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        run,
+        note: "an assistant opens a question only inside a run it holds. Nothing was created"
+      };
+    if (runRow.status !== "running")
+      return refusal7(
+        "SURFACE_RUN_NOT_RUNNING",
+        `the run '${run.slice(0, 60)}' has ended (${String(runRow.status).slice(0, 40)}), and a question is read against the conditions of the run that surfaced it, which stopped being current when it stopped. Nothing was created.`,
+        { status: runRow.status }
+      );
+    const bound = this.#one(
+      `SELECT allowed, consumed FROM ai_run_bounds WHERE run = ? AND bound = 'surfaces'`,
+      run
+    ) || null;
+    if (!bound || !(Number(bound.allowed) > 0))
+      return refusal7(
+        "SURFACE_NO_BOUND",
+        `the run '${run.slice(0, 60)}' declares no 'surfaces' bound, so the questions it may open would be unbounded. The bound is declared at op=airunopen, by the member who opens the run. Nothing was created.`
+      );
+    if (Number(bound.consumed) >= Number(bound.allowed))
+      return refusal7(
+        "SURFACE_BOUND_REACHED",
+        `the run '${run.slice(0, 60)}' has reached its 'surfaces' bound (${Number(bound.consumed)} of ${Number(bound.allowed)}). Nothing was created; the next tick ends the run, and the log says which bound stopped it.`,
+        { allowed: Number(bound.allowed), consumed: Number(bound.consumed) }
+      );
+    return null;
+  }
   /**
    * One transaction. Either the whole bundle advances or nothing does.
    *
@@ -40050,6 +40219,12 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             "this store records no producing group, and this creation names none \u2014 neither a group: line in its bundle.md nor a group in its meta. The record does not supply one. Nothing was created."
           );
       }
+    }
+    let surfacing = null;
+    if (base === null && meta && typeof meta === "object" && normalizeType(meta.object_type) === "inquiry" && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim()) {
+      const refusedSurface = this.#surfacingGate(pkg);
+      if (refusedSurface) return refusedSurface;
+      surfacing = { run: String(pkg.run).trim(), principal: pkg.assistantPrincipal.trim() };
     }
     return this.ctx.storage.transactionSync(() => {
       if (creatingProject) {
@@ -40935,6 +41110,31 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         );
         owner = ownerMemberId;
       }
+      let surfacedIn = null;
+      if (!cur && surfacing) {
+        const ts = (/* @__PURE__ */ new Date()).toISOString();
+        this.sql.exec(
+          `INSERT INTO inquiry_run_surfacings (bundle_id, run, principal, at) VALUES (?,?,?,?)`,
+          bundleId,
+          surfacing.run,
+          surfacing.principal,
+          ts
+        );
+        this.sql.exec(
+          `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, 'surfaces', 0, 1)
+           ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + 1`,
+          surfacing.run
+        );
+        const left = this.#one(
+          `SELECT allowed, consumed FROM ai_run_bounds WHERE run = ? AND bound = 'surfaces'`,
+          surfacing.run
+        );
+        surfacedIn = {
+          run: surfacing.run,
+          at: ts,
+          bound: { bound: "surfaces", allowed: Number(left.allowed), consumed: Number(left.consumed) }
+        };
+      }
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       this.#flagCasesOnRevision(
         bundleId,
@@ -40950,6 +41150,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         /* MK-1: present ONLY on the testimony path, which is a method of this
            class, so no existing caller's answer gains a key. */
         ...testimonyWrote ? { testimony: testimonyWrote } : {},
+        /* D-85: present ONLY on an assistant's creation of a question, naming the run it landed inside and
+           that run's `surfaces` bound after this creation — so no member's answer gains a key. */
+        ...surfacedIn ? { surfaced_in: surfacedIn } : {},
         /* REC-82 / IC-83: WHAT THE WRITER DID WITH EACH LEG'S REFERENT, on the
            write path's own surface. A mechanism believed on the strength of its
            EXISTENCE rather than its behaviour is the defect this project meets
@@ -50897,6 +51100,10 @@ ${words}`;
          surface, the same line queueState draws one row up. */
       aiRuns: n("ai_runs"),
       aiRunBounds: n("ai_run_bounds"),
+      /* D-85: the links from an assistant's questions to their runs, counted for IS-6's reason one line up — so a
+         purge can PROVE it took them (D-113). A COUNT AND NOTHING ELSE: which run opened which question is read
+         per question, under that question's gate (`op=projection`'s `surfaced_in`). */
+      inquiryRunSurfacings: n("inquiry_run_surfacings"),
       /* REC-93 / IC-92: `aiRunLog` was a count of `ai_run_log`, which no longer
          exists — `OBSERVATION-LOG-DESIGN.md` §4.4 folded it into `observations`
          and `#migrate` drops it. The key is KEPT AND RE-AIMED at the folded rows
@@ -52209,6 +52416,15 @@ ${words}`;
          corrupt the one instrument §7.3 (6) put there to catch
          manufacturing. hygiene.test.mjs holds this list against schema.mjs. */
       "proposed_readings",
+      /* D-85 / D-113: the link from an inquiry an ASSISTANT created to the run it was
+         created inside (INVESTIGATIVE-SESSION.md §11 item 5, rule 2). Keyed on the
+         INQUIRY's `bundle_id`, so it rides this list and clears in BOTH arms, as the
+         row's scope requires. Per-bundle: a link outliving its inquiry would hand the
+         next bundle allocated that id a run and a lens it was never formed under.
+         Whole-store: a scratch reset reporting scope ALL while an inquiry still read
+         its run is the silent-leftover exactly. hygiene.test.mjs holds this list
+         against schema.mjs. */
+      "inquiry_run_surfacings",
       /*__REC91_PURGE_START__*/
       /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX. It is a
          PROJECTION of a capture's extracted text -- re-derivable
@@ -62135,7 +62351,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  is a requirement and a condition that may be omitted is not recorded. It
    *  is still never derived: the plane refuses, it does not fill in. The
    *  refusal is C-22.7, built in `skillpack.mjs checkSkillVersion`. */
-  aiRunOpen({
+  async aiRunOpen({
     run,
     contextType,
     contextId,
@@ -62212,6 +62428,20 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         translation: badSkill.translation,
         note: badSkill.detail
       };
+    const lensNow = await this.biasManifest({
+      scope: String(contextType) === "project" ? "project" : "instance",
+      scopeId: String(contextType) === "project" ? String(contextId) : "",
+      viewer,
+      limit: 1
+    });
+    const lensAtOpen = JSON.stringify({
+      in_force: lensNow.in_force === true,
+      statements_sha: lensNow.in_force === true ? lensNow.statements_sha ?? null : null,
+      scope: lensNow.scope ?? null,
+      scope_id: lensNow.scope_id ?? null,
+      bundles: (Array.isArray(lensNow.bundles) ? lensNow.bundles : []).map((b) => ({ bundle_id: b.bundle_id, revision: b.revision ?? null })),
+      at: now
+    });
     if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
       return {
         run,
@@ -62226,8 +62456,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       this.sql.exec(
         `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
            principal_plane, principal_claude, principal_claude_ref, skill_version,
-           bias_manifest, standard_pair, created, updated, expires, ticks, state)
-         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+           bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open)
+         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
         run,
         label,
         mode,
@@ -62246,7 +62476,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         now,
         now,
         _Store.#aiIso(nowMs + lease),
-        JSON.stringify(state == null ? {} : state)
+        JSON.stringify(state == null ? {} : state),
+        lensAtOpen
       );
       for (const b of Array.isArray(bounds) ? bounds : []) {
         if (!b || !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, String(b.bound))) continue;
@@ -62996,21 +63227,58 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       limit: 1
     });
     const recordedSha = recorded && typeof recorded.statements_sha === "string" ? recorded.statements_sha : null;
-    return recorded === null && !unreadable ? {
-      in_force: false,
-      /* §3's exact sentence, kept verbatim so a surface that already renders
-         it does not have to learn a second wording. */
-      stated: "no manifest was in force",
-      manifest: null,
-      now: null,
-      moved: null
-    } : unreadable ? {
-      in_force: false,
-      stated: "a manifest was recorded for this run and cannot be read back",
-      manifest: null,
-      now: null,
-      moved: null
-    } : {
+    const atOpenHeld = row.lens_at_open != null && String(row.lens_at_open).trim() !== "";
+    const atOpenParsed = atOpenHeld ? safeJson(String(row.lens_at_open)) : null;
+    const atOpen = atOpenParsed && typeof atOpenParsed === "object" && !Array.isArray(atOpenParsed) ? atOpenParsed : null;
+    const atOpenUnreadable = atOpenHeld && !atOpen;
+    const shaOf = (m) => m && m.in_force === true && typeof m.statements_sha === "string" ? m.statements_sha : null;
+    const openSha = atOpen ? shaOf(atOpen) : null;
+    const nowSha = shaOf(nowManifest);
+    const nowBlock = {
+      in_force: nowManifest.in_force === true,
+      statements_sha: nowManifest.statements_sha ?? null,
+      bundles: nowManifest.bundles ?? []
+    };
+    const atOpenBlock = atOpen ? {
+      recorded: true,
+      in_force: atOpen.in_force === true,
+      statements_sha: openSha,
+      scope: atOpen.scope ?? null,
+      scope_id: atOpen.scope_id ?? null,
+      bundles: Array.isArray(atOpen.bundles) ? atOpen.bundles : [],
+      at: atOpen.at ?? null
+    } : atOpenUnreadable ? {
+      recorded: true,
+      unreadable: true,
+      stated: "the lens in force at this run's open was recorded and cannot be read back"
+    } : { recorded: false, stated: "not recorded" };
+    const handOf = (handedSha) => !atOpen ? null : handedSha === openSha ? "in_force" : "stale";
+    const basis = atOpen ? "at_open" : atOpenUnreadable ? null : "handed";
+    if (recorded === null && !unreadable) {
+      const staleEmpty = !!atOpen && atOpen.in_force === true;
+      return {
+        in_force: false,
+        stated: staleEmpty ? "no manifest was handed to this run, and one was in force when it opened" : "no manifest was in force",
+        manifest: null,
+        now: atOpen ? nowBlock : null,
+        moved: atOpen ? openSha !== nowSha : null,
+        moved_basis: atOpen ? basis : null,
+        at_open: atOpenBlock,
+        hand: handOf(null)
+      };
+    }
+    if (unreadable)
+      return {
+        in_force: false,
+        stated: "a manifest was recorded for this run and cannot be read back",
+        manifest: null,
+        now: atOpen ? nowBlock : null,
+        moved: atOpen ? openSha !== nowSha : null,
+        moved_basis: atOpen ? basis : null,
+        at_open: atOpenBlock,
+        hand: null
+      };
+    return {
       in_force: true,
       stated: null,
       /* AS RECORDED — what the run was formed under, never recomputed. */
@@ -63021,15 +63289,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         bundles: Array.isArray(recorded.bundles) ? recorded.bundles : []
       },
       /* AS THE RECORD STANDS NOW. */
-      now: {
-        in_force: nowManifest.in_force === true,
-        statements_sha: nowManifest.statements_sha ?? null,
-        bundles: nowManifest.bundles ?? []
-      },
-      /* THE COMPARISON, which is what makes bias debt computable. `null`
-         where one side has no hash to compare — an unknown is stated and
-         never rendered as `false`, which would assert the lens had held. */
-      moved: recordedSha == null || nowManifest.statements_sha == null ? null : recordedSha !== nowManifest.statements_sha
+      now: nowBlock,
+      /* THE COMPARISON, which is what makes bias debt computable. For a run with no recorded open, `null`
+         where one side has no hash to compare — an unknown is stated and never rendered as `false`, which
+         would assert the lens had held. */
+      moved: atOpen ? openSha !== nowSha : atOpenUnreadable ? null : recordedSha == null || nowManifest.statements_sha == null ? null : recordedSha !== nowManifest.statements_sha,
+      moved_basis: basis,
+      at_open: atOpenBlock,
+      hand: handOf(recordedSha)
     };
   }
   /** op=airunspawn — THE FENCE, AS CODE.
@@ -72697,6 +72964,8 @@ var index_default = {
         b.actorIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
         delete b.actorViewer;
         b.actorViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+        delete b.assistantPrincipal;
+        if (!viaSession && cls === "ai") b.assistantPrincipal = `${aiCred.principal}/${aiCred.tokenId}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({
