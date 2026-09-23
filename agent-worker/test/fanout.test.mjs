@@ -60,6 +60,7 @@ import {
    `{ ok: true, rows: [] }` for any argument, which is why its 172 assertions
    were green over a call the real plane refuses. */
 import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
+import { versionReadBranches } from "./plane-versions.mjs";
 /* D-323/D-324: the mock's `op=suggest` branch, DERIVED from the plane's own
    name grammar, kind set, level set and placeholder predicate. This suite's own
    mock used to answer `{ wrote: true }` for ANY name, kind, level and
@@ -515,6 +516,7 @@ export default {
     }
 
     ${meaningRowsBranch("[]")}
+    ${versionReadBranches()}
 
     if (op === "basisversions")
       return Response.json({ ok: true, result: { versions: [], limit: 50, truncated: false } });

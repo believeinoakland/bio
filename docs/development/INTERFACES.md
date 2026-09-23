@@ -1054,7 +1054,7 @@ for "pdf" BY NAME — the op names its format — and an absent entry is a 501
 
 - **ID:** I8
 - **Owner:** `FLEET` (the code); `DIST` releases it
-- **Version:** 0.1.0 — **PROVISIONAL, and it STAYS PROVISIONAL.** Registered 2026-08-08
+- **Version:** 0.2.0 (**0.2.0 2026-09-23, IC-213 ACCEPTED — MINOR, ADDITIVE: `POST /run` answers `holdings` (documents counted once with their versions) and the member's pinned op set gains two reads, `search` and `versionchain` (D-220). Resolved by CONDUCT #17 at c17-batch4.**) Prior: 0.1.0 — **PROVISIONAL, and it STAYS PROVISIONAL.** Registered 2026-08-08
   by FL-2, **before the first commit of the worker's code**, which is `PARALLELISM.md`'s
   rule and I6's precedent rather than a formality. It becomes 1.0.0 and STABLE when the
   shape is RE-READ from the code that exists — and the re-read is scheduled below rather
