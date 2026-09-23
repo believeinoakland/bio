@@ -26646,6 +26646,18 @@ export class Store extends DurableObject {
            inquiry_basis does not project it. The document is the authority for
            every fact in this file, which is why it is read rather than cached. */
         const fmBasis = this.#basisFrontmatter(bundleId);
+        /* REC-160 / DEC-70 (§5.4 of the State Rules): SEVERANCE DISCHARGES
+           SUPPORT, NEVER CONNECTION. A withdrawn leg still RECEIVES the
+           obligation — it is NOT filtered here, and filtering it would reverse
+           the ruling — but the read MARKS it and never describes it as resting
+           on its target. `inquiry_basis` drops the status, so it is read off the
+           dependent's own document through the ONE severance predicate
+           (D-267), exactly as `restingOn` publishes it: only a positive
+           recorded `severed` narrows; an unrecorded, unreadable or unrecognised
+           status reads `confirmed`. Asked once per dependent, because every
+           leg in `mine` names the same target and the predicate answers per
+           (citer, target). */
+        const legStatus = this.#refEdgeSevered(bundleId, t) ? "severed" : "confirmed";
         const causes = [];
         for (const c of moved.causes) causes.push(c);
         const citedEditions = [];
@@ -26658,7 +26670,19 @@ export class Store extends DurableObject {
               causes.push({ source: "edition", since: moved.edition.since, ord: l.ord,
                             cited_edition: cited, latest_edition: moved.edition.latest,
                             latest_ratified_edition: moved.edition.latest_ratified,
-                            detail: cited === null
+                            detail: legStatus === "severed"
+                              /* REC-160: a WITHDRAWN leg NAMED an edition; it
+                                 supports nothing, so the sentence says what it
+                                 named and why it is still listed (DEC-70). */
+                              ? (cited === null
+                                ? `this leg was WITHDRAWN (severed) and named no edition of ${t}, which `
+                                  + `now stands at edition ${moved.edition.latest}.`
+                                : `this leg was WITHDRAWN (severed) and named edition ${cited} of ${t}, `
+                                  + `which now stands at edition ${moved.edition.latest}.`)
+                                + ` A withdrawn leg supports nothing here: it adds nothing to strength, `
+                                + `gates nothing and counts toward no bar. It is listed because the `
+                                + `connection still informs a second look (DEC-70).`
+                              : cited === null
                               ? `this leg names no edition of ${t}, which now stands at edition `
                                 + `${moved.edition.latest}. A leg keeps citing the edition it names `
                                 + `(DEC-12) and this one names none, so which edition it rests on cannot `
@@ -26679,7 +26703,8 @@ export class Store extends DurableObject {
              answer is built — so the registry is asked ONCE for the page
              rather than once per obligation. Nothing below reads `legs`. */
           legs: mine.map((l) => ({ ...l,
-                                   target_edition: fmBasis[l.ord]?.target_edition ?? null })),
+                                   target_edition: fmBasis[l.ord]?.target_edition ?? null,
+                                   status: legStatus })),
           /* THE REUSED TRIPLE. `flag` is true because this answer only ever
              carries rows that have an obligation; `since` and `source` come
              from the first cause in the priority the derivation computed. */
@@ -26774,6 +26799,9 @@ export class Store extends DurableObject {
                  grade_axis: l.grade_axis ?? null,
                  grade_source: l.grade_source ?? null,
                  target_edition: l.target_edition ?? null,
+                 /* REC-160 / DEC-70: `severed` only on a positive recorded
+                    withdrawal; anything else reads `confirmed`. */
+                 status: l.status === "severed" ? "severed" : "confirmed",
                  grade_authored: l.grade ?? null,
                  grade_why: res ? res.why : null };
       });
