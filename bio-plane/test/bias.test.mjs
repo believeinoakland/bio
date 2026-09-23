@@ -676,6 +676,16 @@ await block("7", async () => {
     [bad.check, (bad.translation || "").includes("Nothing was saved")], ["C-26.11", true]);
   t("ARM M: nothing of the refused set reached the record",
     (await get("list", "type=bias&limit=100", MEMBER)).bundles.filter((b) => b.id === "BIAS-2026-0002-bad").length, 0);
+  /* REC-180 (2026-09-23): THE IMAGE, not only the listing. `op=list` reads the projection; `op=image` reads the
+     bundle's own files, so a refused set that left its files behind with no projection row would pass the arm above.
+     Every id in the refused set is asked, and the house lens, which LANDED, is asked beside them so a null that costs
+     nothing (an image op answering null for everything) cannot satisfy the arm. */
+  const REFUSED_SET = ["BIAS-2026-0002-bad"];
+  const imageOf = async (id) => (await get("image", `id=${encodeURIComponent(id)}`, MEMBER)) ?? null;
+  const refusedImages = [];
+  for (const id of REFUSED_SET) refusedImages.push(await imageOf(id));
+  t("ARM M: op=image answers null for every id in the refused set, and not for the set that landed",
+    [refusedImages, (await imageOf(INSTANCE_ID)) !== null], [REFUSED_SET.map(() => null), true]);
 
   /* THE PROJECTION IS A PROJECTION OF THE DOCUMENT (D-21). */
   const st = await get("stats", "", ADMIN);
