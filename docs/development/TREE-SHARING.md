@@ -159,7 +159,12 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   another either — and would cost Bob a settings act. Its one real gain is binding the PROCEDURE host-side, independent of
   a local hook, and that needs a check for it to require: **trigger, change 3 built** (the Actions check on each commit;
   M0-114 measured Actions already enabled, FULL 278/278 in 875 s on a runner). Then requiring that check on `main` is
-  brought to Bob as one setting, with change 3's figures. Earlier trigger: any commit found on `main` after `c5c83dc4`
+  brought to Bob as one setting, with change 3's figures. **AMENDED 2026-09-23 by BOB #29, the trigger having fired
+  (M0-114 landed at `30475ca6`):** the premise was incomplete. The train's `main` commit is a NEW merge commit that no
+  `land/*` push carried, so a required check would refuse every landing until the train first pushes `integrate/*`
+  and WAITS for the runner (~15 min, measured 875 s) on each landing — gate time added, which Bob ruled against the
+  same day. So it is NOT brought to Bob now. Re-trigger: a train that already lands through `integrate/*` with the
+  check read (built for its own sake), or a commit on `main` after `c5c83dc4` without a `Bio-Train` trailer. Earlier trigger: any commit found on `main` after `c5c83dc4`
   without a `Bio-Train` trailer. **(2) The kickoff is enough to keep a lane from running `train.mjs` itself.** A train
   run by the wrong lane still merges, gates, records and verifies exactly as CONDUCT's would; the rule is COORDINATION
   (one lander, so two trains do not race), and a race fails loudly (non-fast-forward), never into a false record. A
