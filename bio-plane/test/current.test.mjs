@@ -403,13 +403,30 @@ const accept = async (version, target = INQ) =>
   + "negative control arms against",
     [K1 in QUEUE_CONDITION_KINDS, K2 in QUEUE_CONDITION_KINDS,
      K1 in QUEUE_OBLIGATION_KINDS, K2 in QUEUE_OBLIGATION_KINDS], [false, false, false, false]);
-  /* CLASSIFICATION IS CHEAP; THE REFUSAL IS THE EVIDENCE. */
+  /* CLASSIFICATION IS CHEAP; THE DRIVEN MUTE IS THE EVIDENCE.
+     CORRECTED 2026-09-23 by D-125, never exempted. This pinned a REFUSAL — "a
+     member CANNOT mute a FINDING" — and BOB #26 ruled that wrong on 2026-09-22
+     (NOTIFICATIONS.md "MARKED AS HANDLED", DEC-10's (b) and (c)): the refusal
+     guarded the right hazard, one member erasing the team's question, with the
+     wrong key. A mute is keyed on the MEMBER, so it moves nobody else's list,
+     and a FINDING leaves the team's list only by the authored disposition, which
+     a mute never writes. So what is driven now is the property the old pin was
+     standing in for: the mute is ACCEPTED as a PERSONAL preference and writes
+     NOTHING of the record — no disposition, no task, no bundle. That the finding
+     stays on a second member's feed and in op=proposals is driven end to end in
+     `d125-findingmute.test.mjs`, which has the second member this suite lacks. */
   for (const k of [K1, K2]) {
     const m = await POST(`op=queuemute&token=${RUTH}`, { case: A, kinds: [k] });
-    t(`a member CANNOT mute '${k}': op=queuemute refuses, so one member's inbox hygiene cannot `
-    + "silence a divergence the whole team is standing on (D-125, DEC-16)", m.ok, false);
-    t(`and the refusal for '${k}' names the class it ACTUALLY is rather than only saying no`,
-      /FINDING/.test(JSON.stringify(m)), true);
+    t(`a member MAY mute '${k}' for themselves: op=queuemute accepts the FINDING kind on the case `
+    + "(D-125, DEC-10 (c))", [m.ok, (m.muted_kinds || []).includes(k)], [true, true]);
+    t(`and the mute of '${k}' wrote NOTHING of the record — a preference is not a disposition, so it `
+    + "cannot silence the divergence for the team (DEC-16)",
+      m.wrote, { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 });
+    /* And UNMUTED at once: the mute is real and personal, so left standing it
+       would hide these items from RUTH's feed — the one every assertion below
+       reads. That it hides them is the ruling working, not a defect. */
+    const u = await POST(`op=queuemute&token=${RUTH}`, { case: A, kinds: [k], unmute: true });
+    t(`and unmuting '${k}' restores RUTH's feed for the assertions below`, u.removed, [k]);
   }
   /* BOTH PRODUCERS EXIST IN SOURCE AND ARE WIRED INTO THE FEED. A slug with no
      generator is a word, and this project has already shipped one of those

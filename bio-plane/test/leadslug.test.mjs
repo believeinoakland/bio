@@ -32,9 +32,9 @@
  * WHAT IS ASSERTED, in the order the blocks run:
  *
  *  1. THE VOCABULARY. `out-of-inquiry-lead` is a FINDING in queuestate.mjs and
- *     in NOTIFICATIONS.md's catalogue, and the two agree. FINDING and NOT
- *     CONDITION is DRIVEN: op=queuemute REFUSES the kind, so no member can
- *     silence a lead the team must see.
+ *     in NOTIFICATIONS.md's catalogue, and the two agree. (CORRECTED
+ *     2026-09-23, D-125: op=queuemute no longer REFUSES the kind — a member may
+ *     mute it for themselves, which leaves the team's list untouched.)
  *  2. THE DOOR. A lead is optional, must name a question, and may never be the
  *     question the run is working. Both refusals driven by their C-numbers.
  *  3. THE SPINE. Request -> drain -> the lead surfaces on op=queue as a FINDING,
@@ -332,16 +332,27 @@ console.log("\n--- 1. the slug is a FINDING, in queuestate.mjs and in the catalo
   + "of its own and a slug in one and not the other is a second author appearing",
     [/out-of-inquiry lead/i.test(NOTIFICATIONS), /out-of-inquiry-lead/.test(NOTIFICATIONS)],
     [true, true]);
-  /* FINDING AND NOT CONDITION, DRIVEN rather than asserted. This is the whole
-     reason the class was chosen: a CONDITION is personally muteable, and one
-     member muting a real lead would remove it from their view while the record
-     went on believing the team had been told. */
+  /* CORRECTED 2026-09-23 by D-125, never exempted. This drove a REFUSAL — "a
+     member CANNOT mute it" — on the ground that one member muting a real lead
+     would remove it while the record believed the team had been told. BOB #26
+     ruled on 2026-09-22 (NOTIFICATIONS.md "MARKED AS HANDLED", DEC-10's (b) and
+     (c)) that the refusal guarded the right hazard with the wrong key: a mute is
+     keyed on the MEMBER, so it removes the lead from THAT member's feed only,
+     and a FINDING leaves the team's list only by the authored disposition, which
+     a mute never writes. So the property driven now is the one the refusal was
+     standing in for: the mute is ACCEPTED as personal and writes NOTHING of the
+     record. That a second member still holds the item and op=proposals still
+     carries it is driven in `d125-findingmute.test.mjs`. The mute is undone at
+     once: it is real, and CAROL's feed is what block 3 reads. */
   const m = rP(await (await mf.dispatchFetch(`http://x/api/?op=queuemute&token=${CAROL}`,
     { method: "POST", body: JSON.stringify({ case: PROJ_B, kinds: ["out-of-inquiry-lead"] }) })).json());
-  t("a member CANNOT mute it: op=queuemute refuses, because muting is personal and a lead is the "
-  + "group's (D-125, DEC-16)", m.ok, false);
-  t("and the refusal names the class it actually is rather than only saying no",
-    [typeof m.reason === "string", /FINDING/.test(JSON.stringify(m))], [true, true]);
+  t("a member MAY mute it for themselves: op=queuemute accepts the FINDING kind on the case (D-125, "
+  + "DEC-10 (c))", [m.ok, (m.muted_kinds || []).includes("out-of-inquiry-lead")], [true, true]);
+  t("and the mute wrote NOTHING of the record — no disposition, no task, no bundle — so the team was "
+  + "not un-told (DEC-16)", m.wrote, { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 });
+  const um = rP(await (await mf.dispatchFetch(`http://x/api/?op=queuemute&token=${CAROL}`,
+    { method: "POST", body: JSON.stringify({ case: PROJ_B, kinds: ["out-of-inquiry-lead"], unmute: true }) })).json());
+  t("and unmuting restores CAROL's feed for the blocks below", um.removed, ["out-of-inquiry-lead"]);
 }
 
 /* ====================================================================== 2

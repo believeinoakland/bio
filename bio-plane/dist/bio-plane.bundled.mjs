@@ -1501,6 +1501,24 @@ CREATE TABLE IF NOT EXISTS queue_state (
 );
 CREATE INDEX IF NOT EXISTS queue_state_member ON queue_state(member_id);
 CREATE INDEX IF NOT EXISTS queue_state_case ON queue_state(case_id);
+-- D-125 (DEC-10 (b), RULED 2026-09-22 by BOB #26) and D-170 (BOB #29, 2026-09-23):
+-- the PER-ITEM personal mute. One row is one member choosing not to be told
+-- about ONE queue item, keyed on the item's own stable id (the id op=queue
+-- publishes: FINDING::<progression>::<stage> is the key proposal_dispositions
+-- already uses, and CONDITION::governor-holding-host::<host> names the host).
+-- It is keyed on the MEMBER, so it moves no other member's list, and it writes
+-- no disposition: a finding leaves the team's list only by the authored act.
+-- item_class is FINDING or CONDITION and never OBLIGATION -- the fence is at
+-- the ONE write (store.mjs queueMute) for queue_state's reason. It is personal
+-- state, not corpus-derived, and it is keyed on no bundle id, so it clears in
+-- the whole-store purge arm only (D-113).
+CREATE TABLE IF NOT EXISTS queue_item_mutes (
+  member_id   TEXT NOT NULL,
+  item_id     TEXT NOT NULL,
+  item_class  TEXT NOT NULL,
+  muted_at    TEXT NOT NULL,
+  PRIMARY KEY (member_id, item_id)
+);
 -- REC-14 / C-9: what a published case says it does NOT cover. A projection of
 -- the completeness_excluded[] block in bundle.md, exactly as inquiry_basis is
 -- of basis[] -- the BYTES make the assertion storable and signable, and only
@@ -24352,11 +24370,13 @@ var QUEUE_FINDING_KINDS = {
        fact about OUR OWN MACHINERY and is personally MUTABLE (D-125, DEC-16). A
        divergence of stance is a fact about the WORLD OF THE WORK: another team
        reads the shared question differently. One member's inbox hygiene must not
-       be able to make that disappear for everybody with nothing recorded, which
-       is precisely what `op=queuemute` would allow if either were a CONDITION.
+       be able to make that disappear for everybody with nothing recorded.
        Both leave a list the way every finding does — by an authored, attributed
-       act — and `test/current.test.mjs` DRIVES the mute refusal rather than
-       asserting the classification. */
+       act. CORRECTED 2026-09-23 (D-125, BOB #26's ruling): a member MAY now mute
+       either one for THEMSELVES, because a mute is keyed on the member and moves no
+       other member's list; `test/current.test.mjs` drives exactly that — the mute
+       accepted, personal, writing no disposition, the finding still on a second
+       member's feed — where it used to drive a refusal. */
   "stance-changed-here-not-elsewhere": "a project moved what it stands on for a SHARED question and the other projects drawing on it did not: one question, two live readings, refused by nothing (\xA77, D-216 \u2014 per-project stance) \u2014 LIVE: store.mjs #findingsStanceDiverged",
   "new-version-arrived-from-another-team": "a new reading of a question this project draws on was proposed under ANOTHER project's work, so it arrived without anybody here authoring it (\xA77, D-216 \u2014 one question beneath several projects) \u2014 LIVE: store.mjs #findingsVersionFromAnotherTeam",
   /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 item 3. FINDING for §7's reason:
@@ -24372,9 +24392,19 @@ function classOfKind(kind) {
   return null;
 }
 var MUTE_REFUSAL_DETAIL = {
-  OBLIGATION: "an OBLIGATION is something a named person must do for the record to proceed, and it leaves every list only when it is RESOLVED (op=taskresolve) \u2014 record state, not a preference. Muting it would remove it from the only surface that routes it while `tasks` carries no per-member mute, so the record would go on believing the question reached a person.",
-  FINDING: "a FINDING is something that may become evidence, and it leaves the list when it is adopted, deferred or dismissed (op=proposedispose) \u2014 an AUTHORED RECORD ACT carrying its author and reason, which stays in the record. Muting it would let one member's inbox hygiene erase the group's question with nothing recorded about who did it or why."
+  OBLIGATION: "an OBLIGATION is something a named person must do for the record to proceed, and it leaves every list only when it is RESOLVED (op=taskresolve) \u2014 record state, not a preference. Muting it would remove it from the only surface that routes it while `tasks` carries no per-member mute, so the record would go on believing the question reached a person."
 };
+var PERSONALLY_MUTABLE_CLASSES = ["CONDITION", "FINDING"];
+function itemClassOf(id) {
+  if (typeof id !== "string") return null;
+  const m = /^(FINDING|CONDITION)::(.+)$/.exec(id.trim());
+  return m && m[2].trim() ? m[1] : null;
+}
+function mutedAsItem(item, itemMutes) {
+  if (!item || !itemMutes || itemMutes.size === 0) return false;
+  if (!PERSONALLY_MUTABLE_CLASSES.includes(item.class)) return false;
+  return typeof item.id === "string" && itemMutes.has(item.id);
+}
 function serializeMutedKinds(kinds) {
   return [...new Set((kinds || []).filter((k) => typeof k === "string" && k))].sort().join(",");
 }
@@ -50416,15 +50446,20 @@ ${words}`;
       items.push(...surviving);
     }
     const mutes = this.#queueMutes(me);
+    const itemMutes = this.#queueItemMutes(me);
     const suppressed = [];
     const admitted = [];
     for (const it of items) {
+      if (mutedAsItem(it, itemMutes)) {
+        suppressed.push({ id: it.id, class: it.class, kind: it.kind, case: null, scope: "item" });
+        continue;
+      }
       const by = suppressedBy(it, mutes);
       if (by === null) {
         admitted.push(it);
         continue;
       }
-      suppressed.push({ id: it.id, class: it.class, kind: it.kind, case: by });
+      suppressed.push({ id: it.id, class: it.class, kind: it.kind, case: by, scope: "case" });
     }
     items.length = 0;
     items.push(...admitted);
@@ -50479,9 +50514,12 @@ ${words}`;
       mute: {
         personal: true,
         cases: [...mutes.keys()].sort(),
+        /* D-125: every item id this member muted, whether or not it is live
+           now — a muted host that is not held today is still muted for them. */
+        items: [...itemMutes].sort(),
         suppressed,
         suppressed_count: suppressed.length,
-        detail: "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed from the record, nothing here left another member's queue, and only CONDITION kinds can be here: an OBLIGATION leaves every list when it is RESOLVED and a FINDING when it is dismissed, both of which are acts the record keeps."
+        detail: "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed from the record and nothing here left another member's queue. A CONDITION or a FINDING can be here, muted by case over the kinds you named or by its own id (`scope`); an OBLIGATION never can, because it leaves every list only when it is RESOLVED. A muted FINDING is still open for the team and in op=proposals: it leaves the team's list only when it is adopted, deferred or dismissed, an act the record keeps."
       },
       /* D-266. The other half of the sentence `mute` has just finished — a
          FINDING leaves this list when it is dismissed, and here is every one
@@ -50566,6 +50604,17 @@ ${words}`;
     }
     return out;
   }
+  /** D-125: this member's ITEM mutes, as a Set of item ids. A caller with no
+   *  member has none, for `#queueMutes`' reason. */
+  #queueItemMutes(member) {
+    const out = /* @__PURE__ */ new Set();
+    if (typeof member !== "string" || !member.trim()) return out;
+    for (const r of this.#rows(
+      `SELECT item_id FROM queue_item_mutes WHERE member_id=?`,
+      member.trim()
+    )) out.add(r.item_id);
+    return out;
+  }
   /** The case a personal preference may be attached to, resolved through the
    *  catalog's OWN machinery and gated by the viewer.
    *
@@ -50617,18 +50666,31 @@ ${words}`;
       known_state: !!(spec && spec.edges && Object.prototype.hasOwnProperty.call(spec.edges, row.current_state))
     };
   }
-  /** op=queuemute — mute CONDITION kinds on one case, for one member.
+  /** op=queuemute — a member's PERSONAL mute, in one of two forms (D-125, DEC-10).
+   *
+   *  THE CASE FORM, `{ case, kinds }` — DEC-10's (c): stop notifying ME about these
+   *  kinds on this case. Scoped to the kinds NAMED when it is made, so a new kind
+   *  on the case still reaches the member (queuestate.mjs `suppressedBy`).
+   *
+   *  THE ITEM FORM, `{ item }` — DEC-10's (b): stop notifying ME about this one
+   *  item, keyed on the item's own stable id as op=queue publishes it (a
+   *  FINDING's `FINDING::<progression>::<stage>` is the key its disposition
+   *  already uses). It names no case, so it also reaches an UNGROUPED CONDITION
+   *  (D-170, BOB #29), which the case form cannot. It writes ONE row of
+   *  `queue_item_mutes` and nothing else.
    *
    *  `member` is stamped server-side at index.mjs and is never taken from the
    *  caller: a caller who could name the member could mute somebody else's
    *  attention, which is the one thing a personal preference must not permit.
    *
-   *  THE FENCE. Every named kind must be a CONDITION kind. A kind that is an
-   *  OBLIGATION or a FINDING is refused with the kind, its ACTUAL class, and the
-   *  act that DOES clear it, because a refusal that only says no is the kind of
-   *  gate that pressures a member into finding a way around it. A kind the
-   *  catalogue does not name at all is refused separately: unknown is not the
-   *  same as wrong.
+   *  THE FENCE. Either form reaches a CONDITION or a FINDING and NEVER an
+   *  OBLIGATION (NOTIFICATIONS.md "MARKED AS HANDLED", RULED 2026-09-22 by BOB
+   *  #26): a mute is keyed on the MEMBER, so it moves no other member's list, and
+   *  a finding still leaves the TEAM's list only by the authored disposition,
+   *  which a mute never writes. An obligation is refused with its class and the
+   *  act that DOES clear it. A kind or an item the catalogue cannot classify is
+   *  refused separately: unknown is not the same as wrong. A case-less per-KIND
+   *  mute stays unavailable (REC-32's hazard): the case form requires a case.
    *
    *  It refuses an EMPTY set too. "Mute this case" with no kinds is the delete
    *  button the doctrine forbids, and accepting it as a no-op would leave a
@@ -50637,6 +50699,7 @@ ${words}`;
     member = null,
     case: caseId = null,
     kinds = null,
+    item = null,
     unmute = false,
     viewer = null,
     at = null
@@ -50647,48 +50710,99 @@ ${words}`;
       reason: "NO_MEMBER",
       detail: "a mute is PERSONAL: it is keyed to the member whose attention it is about, and a machine credential has no member behind it. There is no instance-wide mute and there must not be."
     };
-    const c = this.#queueCaseFor(caseId, viewer);
-    if (c.ok !== true) return c;
+    const mutableKinds = [...Object.keys(QUEUE_CONDITION_KINDS), ...Object.keys(QUEUE_FINDING_KINDS)];
+    const itemId = typeof item === "string" ? item.trim() : "";
     const named = Array.isArray(kinds) ? kinds.map((k) => typeof k === "string" ? k.trim() : "").filter(Boolean) : [];
-    if (named.length === 0)
-      return {
-        ok: false,
-        reason: "NO_KINDS",
-        case: c.id,
-        detail: "name the CONDITION kinds to mute. A mute is scoped to the kinds present when it was made \u2014 that is what lets a NEW kind on this case still reach you \u2014 so there is no whole-case mute to ask for.",
-        available: Object.keys(QUEUE_CONDITION_KINDS)
-      };
-    for (const k of named) {
-      if (k.includes(","))
+    let c = null;
+    const subjects = [];
+    if (itemId) {
+      if (named.length > 0 || typeof caseId === "string" && caseId.trim())
         return {
           ok: false,
           reason: "BAD_KIND",
-          kind: k,
+          item: itemId,
+          detail: "name EITHER one item (`item`) OR kinds on a case (`case` + `kinds`), not both: they are two different preferences and this plane will not guess which one you meant"
+        };
+      let cls = itemClassOf(itemId);
+      if (cls === null && this.#one(`SELECT id FROM tasks WHERE id=?`, itemId)) cls = "OBLIGATION";
+      subjects.push({ item: itemId, cls });
+    } else {
+      c = this.#queueCaseFor(caseId, viewer);
+      if (c.ok !== true) return c;
+      if (named.length === 0)
+        return {
+          ok: false,
+          reason: "NO_KINDS",
+          case: c.id,
+          detail: "name the kinds to mute, or name one `item`. A mute is scoped to the kinds present when it was made \u2014 that is what lets a NEW kind on this case still reach you \u2014 so there is no whole-case mute to ask for.",
+          available: mutableKinds
+        };
+      for (const k of named) subjects.push({ kind: k, cls: classOfKind(k) });
+    }
+    for (const sb of subjects) {
+      if (sb.kind !== void 0 && sb.kind.includes(","))
+        return {
+          ok: false,
+          reason: "BAD_KIND",
+          kind: sb.kind,
           case: c.id,
           detail: "a kind is a slug and may not contain a comma; the stored set is comma-separated"
         };
-      const cls = classOfKind(k);
-      if (cls === null)
+      if (sb.cls === null)
         return {
           ok: false,
           reason: "UNKNOWN_KIND",
-          kind: k,
-          case: c.id,
-          detail: "the notification catalogue does not name that kind. Unknown is not the same as forbidden, and this refusal is the first rather than the second.",
-          available: Object.keys(QUEUE_CONDITION_KINDS)
+          ...sb.item ? { item: sb.item } : { kind: sb.kind },
+          case: c ? c.id : null,
+          detail: sb.item ? "no queue item by that id is one this plane can classify: a FINDING's or CONDITION's id begins with its class (as op=queue publishes it), and it names no obligation. Unknown is not the same as forbidden, and this refusal is the first rather than the second." : "the notification catalogue does not name that kind. Unknown is not the same as forbidden, and this refusal is the first rather than the second.",
+          available: mutableKinds
         };
-      if (cls !== "CONDITION")
+      if (!PERSONALLY_MUTABLE_CLASSES.includes(sb.cls))
         return {
           ok: false,
           reason: "KIND_NOT_PERSONAL",
-          kind: k,
-          kind_class: cls,
-          case: c.id,
-          detail: MUTE_REFUSAL_DETAIL[cls],
-          available: Object.keys(QUEUE_CONDITION_KINDS)
+          ...sb.item ? { item: sb.item } : { kind: sb.kind },
+          kind_class: sb.cls,
+          case: c ? c.id : null,
+          detail: MUTE_REFUSAL_DETAIL[sb.cls],
+          available: mutableKinds
         };
     }
     const stamp = typeof at === "string" && at ? at : new Date(this.#nowMs(null)).toISOString();
+    if (itemId) {
+      const cls = subjects[0].cls;
+      const had2 = !!this.#one(
+        `SELECT item_id FROM queue_item_mutes WHERE member_id=? AND item_id=?`,
+        me,
+        itemId
+      );
+      if (unmute) this.sql.exec(
+        `DELETE FROM queue_item_mutes WHERE member_id=? AND item_id=?`,
+        me,
+        itemId
+      );
+      else this.sql.exec(
+        `INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES (?, ?, ?, ?)
+         ON CONFLICT(member_id, item_id) DO UPDATE SET muted_at=excluded.muted_at`,
+        me,
+        itemId,
+        cls,
+        stamp
+      );
+      return {
+        ok: true,
+        member: me,
+        form: "item",
+        item: itemId,
+        item_class: cls,
+        muted_items: [...this.#queueItemMutes(me)].sort(),
+        added: !unmute && !had2 ? [itemId] : [],
+        removed: unmute && had2 ? [itemId] : [],
+        at: stamp,
+        wrote: { queue_item_mutes: 1, queue_state: 0, tasks: 0, proposal_dispositions: 0, bundles: 0 },
+        detail: "a mute is PERSONAL: this one item leaves YOUR feed, which says so in its `mute` block. Nothing left the record, no other member's feed moved, no disposition was written, and op=proposals still carries the finding. A finding leaves the team's list only when it is adopted, deferred or dismissed (op=proposedispose). The key is the item's own id, so the same item arising again stays muted for you until you unmute it."
+      };
+    }
     const row = this.#one(
       `SELECT muted_kinds, snoozed_until FROM queue_state WHERE member_id=? AND case_id=?`,
       me,
@@ -50722,7 +50836,7 @@ ${words}`;
          so the suite can assert the boundary from the op's own answer as well as
          from the tables. */
       wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
-      detail: "a mute is PERSONAL and reaches CONDITION kinds only. Nothing left the record, nothing left another member's queue, and an OBLIGATION on this case still reaches you: an obligation leaves every list only when it is RESOLVED, which is record state."
+      detail: "a mute is PERSONAL and reaches CONDITION and FINDING kinds, never an OBLIGATION. Nothing left the record, nothing left another member's queue, no disposition was written, and an OBLIGATION on this case still reaches you: an obligation leaves every list only when it is RESOLVED, which is record state."
     };
   }
   /** op=queuesnooze — defer a case's re-notification, for one member, until an
@@ -51378,6 +51492,8 @@ ${words}`;
          NOTHING ELSE — stats is an operator surface and whose attention is muted
          on what is not an operator's business. */
       queueState: n("queue_state"),
+      /* D-125: the item mutes, a COUNT for queueState's reason. */
+      queueItemMutes: n("queue_item_mutes"),
       /* REC-82 / IC-83: the content rows — the parts of documents this record's
          edges point at — reported so a purge can PROVE it took them (D-113)
          rather than assert it, and so an operator can see the content axis's
@@ -52826,6 +52942,7 @@ ${words}`;
         this.sql.exec(`DELETE FROM proposal_dispositions`);
         this.sql.exec(`DELETE FROM finding_dispositions`);
         this.sql.exec(`DELETE FROM queue_state`);
+        this.sql.exec(`DELETE FROM queue_item_mutes`);
         this.sql.exec(`DELETE FROM observation_log`);
         this.sql.exec(`DELETE FROM leads`);
         this.sql.exec(`DELETE FROM ai_run_bounds`);

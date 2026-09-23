@@ -168,7 +168,7 @@ arm("1", "THE PLAN ROW'S ARM A — WRITE CURRENT VIA A SETTINGS ROW. `#setProjec
    "ARM 2 — the act is in the project's APPEND-ONLY HISTORY",
    "ARM 4 — STRUCTURALLY, the ONE writer performs NO table write"],
   ["PL-13's two slugs are in the catalogue and are FINDING",
-   "a member CANNOT mute 'stance-changed-here-not-elsewhere'"]);
+   "a member MAY mute 'stance-changed-here-not-elsewhere'"]);
 
 /* ====== (2) THE PLAN ROW'S ARM B — THE SHARP ONE: A MUTEABLE FINDING ====== */
 
@@ -177,7 +177,10 @@ arm("2", "THE PLAN ROW'S ARM B, AND IT IS THE SHARP ONE — SUPPRESS THE NOTIFIC
   + "QUEUE_FINDING_KINDS and into QUEUE_CONDITION_KINDS, one key, nothing else. A member may then "
   + "MUTE a real divergence and it vanishes from their feed with nothing recorded about who "
   + "silenced it or why — which is the collapse D-125 and DEC-16 exist to prevent. "
-  + "DECLARED: the FINDING-class assertion MUST fail and the DRIVEN mute refusal MUST fail. The "
+  + "DECLARED: the FINDING-class assertion MUST fail. CORRECTED 2026-09-23 by D-125 (BOB #26's "
+  + "ruling): the DRIVEN mute is no longer a refusal — a member may mute a FINDING for themselves — "
+  + "so it cannot tell the classes apart and is now declared MUST-NOT-FAIL; the class assertion "
+  + "carries this arm alone. The "
   + "mint also refuses the whole feed with KIND_MISCLASSED, because the producer still mints the "
   + "kind as a FINDING — that is the fence working and it is why arm 2b exists.",
   [["queuestate", `  "stance-changed-here-not-elsewhere":
@@ -187,16 +190,17 @@ arm("2", "THE PLAN ROW'S ARM B, AND IT IS THE SHARP ONE — SUPPRESS THE NOTIFIC
    ["queuestate", `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",`,
                   `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",
   "stance-changed-here-not-elsewhere": "MOVED BY THE CONTROL ARM — a divergence a member may silence",`]],
-  ["PL-13's two slugs are in the catalogue and are FINDING",
-   "a member CANNOT mute 'stance-changed-here-not-elsewhere'"],
+  ["PL-13's two slugs are in the catalogue and are FINDING"],
   ["ARM 1 — the pointer is a DATED FRONTMATTER ROW",
-   "ARM 2 — the act is in the project's APPEND-ONLY HISTORY"]);
+   "ARM 2 — the act is in the project's APPEND-ONLY HISTORY",
+   "a member MAY mute 'stance-changed-here-not-elsewhere'"]);
 
 arm("2b", "THE HALF ARM 2 CANNOT REACH, AND IT TAKES TWO EDITS TOGETHER ON PURPOSE. Move the kind "
   + "into CONDITION **and** flip the producer's own `class:` to match, so the mint is satisfied and "
   + "no refusal fires at all — and a real divergence between two teams is now something ONE member "
   + "can silence for themselves. This is the harm; arm 2 is only the alarm. "
-  + "DECLARED: the FINDING-class arms and the mute-refusal arm MUST fail, and the feed MUST still "
+  + "DECLARED: the FINDING-class arms MUST fail (the mute arm, since D-125 accepted either way, MUST "
+  + "NOT), and the feed MUST still "
   + "answer OK — that last part is the point, because a suite that only watched for a refusal would "
   + "see nothing wrong here.",
   [["queuestate", `  "stance-changed-here-not-elsewhere":
@@ -210,9 +214,8 @@ arm("2b", "THE HALF ARM 2 CANNOT REACH, AND IT TAKES TWO EDITS TOGETHER ON PURPO
           class: "FINDING",`,
              `          id: \`FINDING::stance-changed-here-not-elsewhere::\${inq}::\${p.id}\`,
           class: "CONDITION",`]],
-  ["PL-13's two slugs are in the catalogue and are FINDING",
-   "a member CANNOT mute 'stance-changed-here-not-elsewhere'"],
-  []);
+  ["PL-13's two slugs are in the catalogue and are FINDING"],
+  ["a member MAY mute 'stance-changed-here-not-elsewhere'"]);
 
 /* ================= (3) DIVERGENCE IS A COMPARISON, NOT A COUNT =========== */
 
