@@ -48,7 +48,7 @@ order: first of the gate-honesty rows, directly after UI-82: a red on `main` ema
 milestone: M0
 interface: none
 design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON THE CODE"*; (c): a check depending on anything but the tree never decides the verdict), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none.
+depends-on: M0-126 (BOB #30's never-cache ruling rides it; this row's residue is re-read when it lands, so it waits rather than building what M0-126 may already answer).
 scope: the arm reads a FIXED, stated range (the merges up to a pinned commit, named at the site) or HEAD's own first-parent history, never a remote ref; the M0-126 input set then covers what it reads.
 accepts-when: the arm's verdict on one tree is identical whatever `origin/main` holds (driven with a planted remote ref carrying a dropped-edit merge). NEGATIVE CONTROL: read `origin/main` again, and the planted-ref arm fails by name.
 narrowed: 2026-09-23 by SCHEDULER #15 on CONDUCT #15's report: under BOB #30's ruling a history-reading unit is never-cache, which answers the reuse half (M0-131); re-read this row's residue once M0-126 and `land/bob/nevercache` land.
@@ -59,7 +59,7 @@ order: directly after M0-130, the same red: M0-130 makes `mergecarry` depend on 
 milestone: M0
 interface: none
 design: `docs/development/TREE-SHARING.md` §2 (M0-122's reuse: *"a union whose TREE this clone's D-293 record already holds GREEN … lands with no gate run"*) and §3 (a red on `main` is an alarm), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none. **Carries BOB #30's inbox item 2 of 2026-09-23** (a REUSED tree record still runs the never-cache units; TREE-SHARING §3a condition 1 as BOB #30 ruled it: a unit reading git history or a live ref is `GATE: never-cache (history)`, on `land/bob/nevercache` until it lands). If M0-126 lands carrying it, this row closes as ABSORBED.
+depends-on: M0-126 (it builds on M0-126's landed shape). **Carries BOB #30's inbox item 2 of 2026-09-23** (a REUSED tree record still runs the never-cache units; TREE-SHARING §3a condition 1 as BOB #30 ruled it: a unit reading git history or a live ref is `GATE: never-cache (history)`, on `land/bob/nevercache` until it lands). If M0-126 lands carrying it, this row closes as ABSORBED.
 scope: on a reused tree record the train still runs the history-reading checks (`mergecarry`, `plancheck`'s carry arm, any unit that reads commits rather than the tree) on the union before pushing; the set is derived, not hand-listed, or stated at the site.
 accepts-when: a union whose tree is recorded GREEN but whose merge drops a carried edit is refused by the train naming the check. NEGATIVE CONTROL: skip the history checks on reuse, and that arm lands the bad merge and fails by name.
 added: 2026-09-23 · SCHEDULER #15 (CONDUCT #15's report of run #20; `node tools/mintid.mjs M0`).
@@ -1171,13 +1171,3 @@ depends-on: none.
 accepts-when: `node bio-plane/test/mk1-publish-probe.mjs` prints PATH 3 driven, with C-53.12's refusal code, and no DEAD ARM line for it. How a liar passes it: a path reported driven that … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-90» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-91 · queued — **NO SUITE FEEDS C-2.8 A NON-STRING `content_id`, SO THE ARM THAT CLOSED D-362 HAS NEVER BEEN DRIVEN.** `checkLegExtentGrammar` … (whole text: the cut archive)
-order: with the M0 instrument corrections (M0-74, M0-90): a fix with no arm is one refactor from being undone, and what it guards is a SILENT drop (SCHEDULER #5, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a check is evidence only where a suite … (whole text: the cut archive)
-depends-on: none.
-accepts-when: the leg is refused BY NAME at C-2.8 with the parse in the path, and the existing string arms stay green. How a liar passes it: a hand-built leg whose `content_id` is already a … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10, D-362's instrument; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-91» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
