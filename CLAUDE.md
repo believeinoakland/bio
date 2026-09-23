@@ -110,7 +110,7 @@ design, doctrine, anything for Bob → BOB) and continue.
   to get past a gate; a gate that pressures someone into inventing one is a bug in the gate.
 - **A defect you find is diagnosed until its FIX can be named**, then sent to SCHEDULER to be placed in the build plan
   in order — or to BOB first if the fix needs design (Bob, 2026-09-18). Never park it on a list. A new defect goes
-  STRAIGHT INTO THE PLAN, never into `DEBT.md`, which only shrinks (Bob, 2026-09-23) and leaves the process at 0 open rows.
+  STRAIGHT INTO THE PLAN; `DEBT.md` only shrinks, and leaves the process at 0 open rows (Bob, 2026-09-23).
 
 ## 5. How to know a thing is true
 

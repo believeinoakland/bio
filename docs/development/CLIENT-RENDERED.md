@@ -23,6 +23,7 @@
 - [There is no collision: rendering is available on the free tier](#there-is-no-collision-rendering-is-available-on-the-free-tier)
 - [What Workers Paid actually buys, for this project](#what-workers-paid-actually-buys-for-this-project)
 - [What this changes in what is already built](#what-this-changes-in-what-is-already-built)
+  - [RULED 2026-09-23 by BOB #31: third-party scripts run, and every one is recorded (D-64; SCHEDULER #17's S17-1 Q2)](#ruled-2026-09-23-by-bob-31-third-party-scripts-run-and-every-one-is-recorded-d-64-scheduler-17s-s17-1-q2)
 - [Open questions for ratification](#open-questions-for-ratification)
 
 ---
