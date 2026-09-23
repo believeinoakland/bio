@@ -8476,7 +8476,7 @@ export default {
         if (path === "bundle.md" || path.startsWith("_history/")) continue;
         if (typeof v === "string") {
           const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
-          carried.push({ path, text: v, bytes: v.length,
+          carried.push({ path, text: v, bytes: new TextEncoder().encode(v).length,
                          sha256: [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("") });
         } else carried.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
       }
@@ -8503,7 +8503,7 @@ export default {
            the worst thing in this system, and the shape of promote made it the
            DEFAULT behaviour of a careless caller. */
         files: [
-          { path: "bundle.md", text, bytes: text.length, sha256: textSha },
+          { path: "bundle.md", text, bytes: new TextEncoder().encode(text).length, sha256: textSha },
           ...carried,
         ],
         register: [],

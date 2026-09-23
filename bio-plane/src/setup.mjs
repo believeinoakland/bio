@@ -800,6 +800,9 @@ const sha256Text = async (text)=>{
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
 };
+/* REC-178: a file's bytes is the length of its UTF-8 encoding, never text.length (UTF-16 units). The plane
+   computes it over what it holds and stores that; this sends the same figure. */
+const utf8Len = (text)=> new TextEncoder().encode(text).length;
 const stamp = ()=>{
   const d = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
   let r = ""; const h = "0123456789abcdef";
@@ -893,10 +896,10 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
    that exists in the bundle, so the document is registered as a blob reference
    and the register entry names the same path. */
 async function docFiles(text, doc, textSha){
-  const files = [{ path:"bundle.md", text, bytes:text.length, sha256:textSha }];
+  const files = [{ path:"bundle.md", text, bytes:utf8Len(text), sha256:textSha }];
   if (!doc) return files;
   const prov = JSON.stringify({ documents: [doc] }, null, 1);
-  files.push({ path:"data/provenance.json", text: prov, bytes: prov.length,
+  files.push({ path:"data/provenance.json", text: prov, bytes: utf8Len(prov),
                sha256: await sha256Text(prov) });
   if (Array.isArray(doc.parts) && doc.parts.length) {
     /* A parted document has no single file: each part is registered separately
@@ -1102,7 +1105,7 @@ async function carryForward(id, exclude){
   const out = [];
   for (const [path, v] of Object.entries(img)){
     if (path === exclude || path.indexOf("_history/") === 0) continue;
-    if (typeof v === "string") out.push({ path, text: v, bytes: v.length, sha256: await sha256Text(v) });
+    if (typeof v === "string") out.push({ path, text: v, bytes: utf8Len(v), sha256: await sha256Text(v) });
     else out.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
   }
   return out;
@@ -1126,7 +1129,7 @@ $("#e-save").addEventListener("click", async ()=>{
       bundleId: EDIT_ID, base: lease.result.base, snapKey: stamp(), author: WHO,
       meta: { object_type: fmv.object_type, title: fmv.title || EDIT_ID,
               current_state: fmv.current_state, created: fmv.created || now, last_updated: now },
-      files: [{ path:"bundle.md", text: revised, bytes: revised.length, sha256: await sha256Text(revised) },
+      files: [{ path:"bundle.md", text: revised, bytes: utf8Len(revised), sha256: await sha256Text(revised) },
               ...(await carryForward(EDIT_ID, "bundle.md"))],
       register: [],
     });
