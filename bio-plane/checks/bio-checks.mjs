@@ -6405,7 +6405,9 @@ export async function checkBundle(input, opts = {}) {
  * ===========================================================================
  *
  * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
- * and §14b.6). TWELVE C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (TEN until 2026-09-19, when REC-153 added
+ * and §14b.6). FOURTEEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (TWELVE until 2026-09-23, when REC-169 added
+ * C-22.13 — a figure written into a run's bound is a non-negative integer — and C-22.14 — never for a bound the
+ * plane counts; TEN until 2026-09-19, when REC-153 added
  * C-22.11 — the run's context is the kind it says it is — and REC-152 added C-22.12 — the run's PRINCIPAL as the
  * only hand that ticks or closes it; both facts about the RUN, so both here. Combined at their integration,
  * CONDUCT #6).
@@ -6740,6 +6742,28 @@ export const AI_RUN_CHECKS = {
       + 'for it — can continue it or end it. It is not about which projects you belong to or what '
       + 'you are allowed to do in general: an investigation nobody continues ends by itself when '
       + 'its time or budget runs out.',
+  },
+  /* REC-169, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6 — A RUN IS BOUNDED, AND THE BOUND IS RECORDED). The tick
+     wrote `consumed + Number(v)` for any figure, so the run's own principal could REFUND a bound its member set
+     (`surfaces: -1`, and open another question). A figure is a non-negative whole JSON number; the refusal is the
+     whole tick's (or the whole open's, for a seed), and nothing is written. Its own code and not C-22.5's: that one
+     is a CLOSE naming no bound, this is a figure no bound can hold. */
+  AI_RUN_CONSUME_INVALID: {
+    check: 'C-22.13',
+    where: 'src/airun.mjs checkConsume, called from store.mjs aiRunTick and aiRunOpen',
+    translation: 'The investigation reported spending an amount that is not a whole number of zero or more. '
+      + 'A budget is only ever used up, one whole step at a time, so nothing was recorded for this step.',
+  },
+  /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
+     counted by promote since D-85). WHY ITS OWN CODE: the figure may be perfectly well-formed; what is wrong is WHO
+     is counting. The remedy differs too — the caller sends nothing for these, where C-22.13's caller sends a proper
+     number. A zero claims nothing and is not refused. */
+  AI_RUN_BOUND_PLANE_COUNTED: {
+    check: 'C-22.14',
+    where: 'src/airun.mjs checkConsume, called from store.mjs aiRunTick and aiRunOpen',
+    translation: 'This part of the investigation\'s budget is counted by the record itself as the work lands — '
+      + 'passages marked citable, questions opened — so the investigation cannot report it, up or down. Nothing '
+      + 'was recorded for this step.',
   },
 };
 

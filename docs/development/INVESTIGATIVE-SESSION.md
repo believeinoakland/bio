@@ -15,7 +15,7 @@
 - §Which Claude account — DS-3 and FL-6 (cascade config and runtime) are closed rows; D-218 MEASURED 2026-08-08 — the text still says "to MEASURE".
 - §Running sessions are visible in context — UI-38 absorbed the surface; F11's live budget display is a named gap.
 - §The pursue session and the daemon — the connections sidebar is BUILT (UI-44, DEC-52 final); the "remains open" clause is stale.
-- §14b — the pre-write checks landed plane-side (PL-3) and F10's denied-means-adjust row landed (FL-3); §14b.2 still frames D-222 as a precondition.
+- §14b — the pre-write checks landed plane-side (PL-3) and F10's denied-means-adjust row landed (FL-3); §14b.2 still frames D-222 as a precondition. §14b.6's bound takes no refund and no caller figure for a plane-counted bound since REC-169 (IC-184, 2026-09-23); a `consume` key naming no bound is still skipped silently (REC-169's routed finding).
 - §Published cases — IS-8/PL-16 RESHAPED by DEC-72 (a case is a production, CASE-1..6); the "no case-level bar" assumption is overtaken; DEC-33's ceremony still deferred.
 - §What is NOT settled — items 3, 3a, 7, 8 and 9 all since answered or landed; the list is history.
 - §11 — item 5, rule 2's REACH, RULED 2026-09-23 by BOB #30 (D-85's builder's question): rule 2 binds every creation D-78 stamps `surfaced_by: agent`, not the `ai` class alone. D-85 built it for `ai`; the admin, member and probe deploy tokens are NOT BUILT (a row, placed after D-85).
@@ -1369,6 +1369,13 @@ looking* are different facts, and only one of them is a licence to conclude anyt
 **The record already has the word and lacks the writer**: `runtime-ceiling-reached` exists
 in the condition vocabulary with NO producer (`queuestate.mjs:82`) — IS-9(d) builds that
 producer rather than minting a new kind.
+
+**A bound only counts up, and the plane's own counts are the plane's — BUILT 2026-09-23 by REC-169 (IC-184).** A bound is
+an allowance a member declares; the run spends it. So a figure the caller writes into one (`op=airuntick`'s `consume`, and
+`op=airunopen`'s `consumed` seed) is a non-negative whole number (`AI_RUN_CONSUME_INVALID`, C-22.13) — a negative one was a
+REFUND, driven before the fix: a run that had spent its one `surfaces` ticked `-1` and opened a second question — and a
+bound the plane counts as the work lands (`mints`, `surfaces`: `airun.mjs PLANE_COUNTED_BOUNDS`) takes no figure from the
+caller at all (`AI_RUN_BOUND_PLANE_COUNTED`, C-22.14). One bad figure refuses the whole tick; nothing is written.
 
 ### 7 · PARTIAL RESULTS SURVIVE
 
