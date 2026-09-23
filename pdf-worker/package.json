@@ -2,7 +2,7 @@
   "name": "pdf-worker",
   "private": true,
   "type": "module",
-  "version": "0.71.0",
+  "version": "0.72.0",
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node test/pdf-worker.test.mjs"
