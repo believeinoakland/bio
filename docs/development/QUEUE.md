@@ -174,7 +174,7 @@ accepts-when: an audit over a fixture reads a correctly inherited leg clean and 
 added: 2026-09-22 · SCHEDULER #12 (LED-7; D-178's DEBT row of 2026-08-04, verified at the code; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-178» on entering the cache; its `order:` line is the current one.
 
-### UI-74 · running — SPAWNED 2026-09-23 ~21:21Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER UI-74 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/UI-74 and that session; never conclude queued from the absence alone.
+### UI-74 · integrated — finished; integrated on land/conduct/c17-batch5 @ 7c4f6b5f, waiting for its train — flipped by SCHEDULER #17 (consumer only; CIVICOS_UI_STATE v104)
 order: the first feature, after D-52: DEC-24's member half — the machine proposes, the member concludes — has no door, and the IS plan recorded it done at 43/43; below the corrections because the status authority claims no ceremony (SCHEDULER #5, 2026-09-21)
 milestone: M9
 interface: I3 consumer (`op=versionaccept`; `op=versionstrength`'s `independence`) — both built.
@@ -185,7 +185,7 @@ accepts-when: an OR accept requires the per-branch affirmation; a fixture whose 
 added: 2026-09-21 · SCHEDULER #5 (D-397's third branch and D-195, verified at the code; `node tools/mintid.mjs UI`).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «UI-74» on entering the cache; its `order:` line is the current one.
 
-### REC-161 · running — SPAWNED 2026-09-23 ~21:26Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER REC-161 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-161 and that session; never conclude queued from the absence alone.
+### REC-161 · integrated — finished; integrated on land/conduct/c17-batch5 @ 7c4f6b5f, waiting for its train — flipped by SCHEDULER #17 (IC-211 renumbered IC-221, I3 72.3.0)
 order: 1 of 2, directly after UI-74, which shows the same fact at the accept ceremony (BOB #22, 2026-09-21: SCHEDULER #5's Q1, RULED)
 milestone: M9
 interface: I3 additive — an IC.
@@ -345,6 +345,26 @@ scope: as item 7.14: at EXISTENCE every act but the request is refused POSITIONA
 accepts-when: through the ops, a hidden project is byte-identical to a nonexistent one at the directory, the request and every act (REC-138's suites green UNEDITED); an uninvited member's record reads, search, backlinks and run reports never show a discoverable project's contents; a predecessor's store boots with every project HIDDEN. How a liar passes it: widening `viewerPredicate` passes the directory arm and leaks contents. NEGATIVE CONTROL: widen it, and a contents arm fails by name. Battery green own-baseline by its COMPLETION LINE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `node tools/plancheck.mjs --local` then BARE.
 added: 2026-09-19 · SCHEDULER (same entry, item 1).
 uncut: restored whole from «REC-149» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
+
+### FL-11 · queued — **`agent-worker` NEVER SETS `state.target`, SO ONCE REC-165 LANDED EVERY SUGGESTION IT SUBMITS IS REFUSED `SUGGEST_OUTSIDE_RUN_CONTEXT`.** `submit` sends whatever target the model wrote; `emptyLevelCandidates` gets a null target and the dedup reads `basisversions` with id `""` (`agent-worker/src/index.mjs`, re-read on `df9eb9f9`); the mock `test/plane-suggest.mjs` models neither the context rule nor the principal gate. REC-165's worker's finding, fix named by FLEET #4 (`FLEET-NEXT.md` on `coord`, "The one open FLEET defect"). — owner FLEET.
+order: directly before D-260: inert until D-260 dispatches runs, and D-260 would dispatch runs whose every suggestion is refused (FLEET #4: *"place it with D-260 or ahead of it"*) (SCHEDULER #14, 2026-09-23)
+milestone: M9
+interface: none on the plane — the fleet member's behaviour and its mock; the committed `agent-worker` bundle rebuilds and member bytes move at the next release (DIST's).
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, *Rule 1's target* (a suggestion lands only inside its run's context), with `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6 (the credential cascade's member).
+depends-on: none — REC-165's refusal is on `main`; `op=airun`'s read returns the run's context.
+scope: FLEET #4's four: seed `state.target` at run open from the run's context id (for a PROJECT run, a question the project confirmed-cites, never the project id); `submit` defaults a candidate's target to it; the mock gains the context rule, `SUGGEST_OUTSIDE_RUN_CONTEXT` and the principal gate; a negative control.
+accepts-when: against the mock, a run's suggestions land inside its context and one aimed outside is refused by name; the dedup and empty-level readers receive the run's target. NEGATIVE CONTROL: drop the seeding, and the harness suite fails by name.
+added: 2026-09-23 · SCHEDULER #14 (FLEET #4's trigger; `node tools/mintid.mjs FL`).
+
+### FL-12 · queued — **`agent-worker` SENDS `op=capturerequest`'s LOCATOR AS `url`, BUT THE PLANE READS ONLY `address`, SO EVERY FLEET INTERNET-LEVEL CAPTURE REQUEST IS REFUSED `CAPTURE_REQUEST_NOT_PUBLIC`.** `agent-worker/src/index.mjs` calls it with `{ run, target, url: t.url }` (re-read on `c5c83dc4`); the fleet mock does not model `address`. REC-168's worker's finding, fix named. — owner FLEET.
+order: directly after FL-11, before D-260: inert until D-260 dispatches runs, and every internet-level look a dispatched run asks for would be refused ; ONE WORKER TAKES FL-11 AND FL-12 TOGETHER, one `agent-worker` bundle rebuild, so member bytes move once (FLEET #4, 2026-09-23) (SCHEDULER #14, 2026-09-23; REC-168's finding via CONDUCT #14)
+milestone: M9
+interface: none on the plane — the fleet member's call and its mock; the `agent-worker` bundle rebuilds at the next release (DIST's).
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5 (`op=capturerequest` takes rule 1; a request names an address), with `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6.
+depends-on: none — REC-168's gate is on `main` or lands before this reaches the cache.
+scope: send `address: t.url` in `agent-worker/src/index.mjs`; the mocks (`harness.test.mjs` and `fanout.test.mjs`) read `address` and refuse a request without a public https address, as the plane does (FLEET #4).
+accepts-when: against the mock, a run's internet-level target files a request naming its address; one sent with only `url` is refused by name. NEGATIVE CONTROL: send `url` again, and the address arm fails by name.
+added: 2026-09-23 · SCHEDULER #14 (REC-168's finding via CONDUCT #14; `node tools/mintid.mjs FL`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
