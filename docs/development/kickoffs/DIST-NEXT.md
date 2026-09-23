@@ -37,7 +37,11 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    **The integrator is CONDUCT #16 (`session_01DEAp94ny3PfWr6deFJtTaD`)** — send `land/*` notices there. Its next train
    (M0-126, UI-81/IC-185, D-389/IC-187, UI-82) LANDED at `e62e08e1` (13:32Z) — no closing; the plane changed (store.mjs,
    bio-checks), so it batches into the cut after REC-173. **Since M0-126 a release cut's gate is `node tools/gates.mjs
-   --full --no-reuse` (TREE-SHARING §3a condition 3)**, not a bare `gates.mjs`; BOB owes DIST.md's `--since` correction.
+   --full --no-reuse` (TREE-SHARING §3a condition 3)**, not a bare `gates.mjs`. **BOB #30 (15:05Z): DIST.md step 1 is
+   corrected (rides CONDUCT's train): a cut relies ONLY on an `isBackstop()` record for the exact tree, else
+   `--full --no-reuse`, and NEVER on `--since`** — which DIST #5 used for its release MERGE trees (0.72-0.76); a landing
+   branch's merged tree now gets `--full --no-reuse` too. **Refresh line is 80% (Bob, 2026-09-23)**, not 70%.
+   SCHEDULER is #16 (`session_01UZaSR1KRWmADuxBFYk1wY9`).
    UI-81/UI-82 may change `app.html`: compare `/build` to sha256(app.html) at the cut.
 1. **The next cut, by WHEN DIST CUTS.** Read `git log 6b0beb8e..origin/main` over the shipped paths. RELEASES row:
    `["0.77.0", "6b0beb8e7d321fe96d64de5e5b3aefa291b41599"]`. Expected: baseline 501 + 21 → **522/0**, `alterafter` → **444/78**, `groupwipe` → **508/14**
