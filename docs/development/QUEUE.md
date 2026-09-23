@@ -77,7 +77,7 @@ scope: the draw rejects and redraws any fixture whose derived values (each remai
 accepts-when: the suite passes on every one of 500 consecutive runs of the draw alone; D0b still fails when a colliding fixture is forced. NEGATIVE CONTROL: force the measured collision (3354, 1278, 2076), and D0b fails by name.
 added: 2026-09-23 · SCHEDULER #15 (LED-7; D-286's DEBT row of 2026-08-10, verified at the code; keeps its `D-` id).
 
-### REC-172 · queued — **A RUN'S BOUNDS STILL ACCEPT WHAT REC-169 REFUSES ONE DOOR OVER: `op=airuntick` SILENTLY SKIPS A `consume` KEY THAT NAMES NO BOUND AND A `consume` SENT AS AN ARRAY, `aiRunOpen` STORES `Number(x) || 0` AS AN ALLOWANCE, AND `lease` CAN BE "CONSUMED".** Re-read on `4355bfda`: the tick's loop `continue`s on a non-`RUN_BOUNDS` key, so `bio-plane/test/vf4-live-scratch.mjs`, which sends `consume: [{ bound: "fetches", amount: 1 }]`, has NEVER had a fetch counted; `aiRunOpen` writes `Number(b.allowed) || 0` and `Number(b.consumed) || 0`, so a negative, fractional or string allowance is stored; `lease` sits in `RUN_BOUNDS` though the plane decides it. REC-169's worker's three findings (CONDUCT #15). — owner RECORD.
+### REC-172 · running — SPAWNED 2026-09-23 by CONDUCT #15 (REC-169 landed 91913d6b). NOT LANDED as read on 91913d6b (vf4 still sends an array consume). Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: first of the backlog (REC-171 is cached), the same bound fence REC-169 closes on the tick: an allowance or consumption the plane cannot trust is authority-class (SCHEDULER.md step 3); (3) is low and rides the same worker (SCHEDULER #15, 2026-09-23)
 milestone: M4
 interface: I3 — new C-22 refusals on `op=airuntick` and `op=airunopen`; the integrator mints and classifies the IC.
@@ -87,7 +87,7 @@ scope: (1) refuse a non-object `consume` and an unknown key by a new C-22 code; 
 accepts-when: through the ops, an array `consume`, an unknown key, a negative or fractional allowance and a `lease` consumption are each refused by name with the bound rows byte-identical; vf4's fetch is counted. NEGATIVE CONTROL: restore the `continue` on an unknown key, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (REC-169's worker's findings via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
 
-### UI-82 · queued — **THE PUBLISHED INDEX (`pubList`) TELLS A READER A FINDING HAS NO FROZEN PAIR WHERE ITS CASES DISAGREE ABOUT THE PAIR.** It reads `op=publishedmanifest`'s single `published[].strength`, null in that case (REC-170). UI-80's surface half on the index. — owner UI.
+### UI-82 · running — SPAWNED 2026-09-23 by CONDUCT #15 (REC-170 landed 91913d6b). NOT LANDED, CHECKED BY CONTENT: app.html names strengthByCase 0 times on 91913d6b. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly after UI-81, on REC-170's field (SCHEDULER #15, 2026-09-23)
 milestone: M10
 interface: I3 consumer (REC-170's IC).
@@ -97,7 +97,7 @@ scope: `pubList` renders the pair per case, naming each case, or the undetermine
 accepts-when: against the real plane, a finding two cases pin with different pairs lists both, each with its case; none reads "no frozen pair". NEGATIVE CONTROL: read the single field again, and the per-case arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs UI`).
 
-### D-389 · queued — **ON A FULL RAW FETCH `op=frontier` PUBLISHES `truncated: false`, A COVERAGE CLAIM THE READER CANNOT SUPPORT, IN ALL THREE ARMS.** Each arm over-fetches `R` raw rows (`(cap + 1) * 2` at document and content, `* 3` at meaning), gates them and cuts at `cap`; when the fetch comes back FULL, rows beyond it were never read, yet a gated list of `cap` or fewer reads complete. Raised by REC-109; `observation-content.test.mjs` arm G5 names this row. — owner RECORD.
+### D-389 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT: no `raw.length === R` disjunct in bio-plane/src on 91913d6b. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: after CAP-13, above the ledger tooling: CLAUDE.md §2's class, in the read that must say WHICH absence is true. The row's open question — is `true` more often acceptable? — §2 answers: a coverage claim the method did not establish is not made, and fail-safe is the direction (SCHEDULER #6, 2026-09-21, LED-7 batch 13)
 milestone: M3
 interface: I3 — `truncated` reads `true` on a full raw fetch at all three arms; the integrator mints and classifies the IC.
