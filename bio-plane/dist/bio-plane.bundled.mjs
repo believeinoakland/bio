@@ -3609,6 +3609,58 @@ CREATE TABLE IF NOT EXISTS review_comments (
 CREATE INDEX IF NOT EXISTS review_comments_draft ON review_comments(draft_id);
 -- =========================================================================
 
+-- D-162 / IC-231 -- THE THEME. BIO_Content_Framework_v0_10.md section 8.4, Bob's
+-- ruling of 2026-09-21: a connection through an IDEA, fenced four ways. Declared
+-- by a MEMBER (the declarer is stamped and shown on every reading), it carries
+-- its TEST, a sentence a document or a passage passes or fails, membership is a
+-- member's act and a machine's proposal is a HUNCH until a member confirms it,
+-- and it is NEVER the basis of a claim (C-74.1 at every leg grammar).
+--
+-- WHY A TABLE OF ITS OWN AND NOT AN ENTITY. The entity registry holds NAMED
+-- things a source's own words can be resolved to, and anything in it is a
+-- subject a connection can run through at grade A to C. A theme is one member's
+-- lens, visibly theirs, so it lives here under a THEME- id that no leg grammar
+-- accepts and that ENTITY_KINDS does not contain -- the eleventh-entity-kind
+-- liar is refused by shape as well as by name.
+--
+-- NO bundle_id: a theme is about no one document, so a per-bundle purge leaves
+-- it and the whole-store purge clears it (D-113). Never rewritten: a changed
+-- idea is a new theme, since a placement was judged against THIS test.
+CREATE TABLE IF NOT EXISTS themes (
+  theme_id     TEXT PRIMARY KEY,   -- THEME-YYYY-MMDD-hex, minted by the plane
+  declared_by  TEXT NOT NULL,      -- a member id, server-stamped, never a machine (C-74.2)
+  name         TEXT NOT NULL,      -- the idea in the declarer words, as written
+  test         TEXT NOT NULL,      -- the inclusion criterion, as written (C-74.3)
+  at           TEXT NOT NULL
+);
+-- A DOCUMENT OR A PASSAGE IN A THEME, graded like any connection (section 8.1).
+-- state member: a MEMBER placed or confirmed it, grade D -- asserted on that
+-- member stated judgement that it passes the test, with an author and a date.
+-- state hunch: PROPOSED (by a machine, or a member proposing rather than
+-- placing), grade C -- correspondence, never established, flagged for a member
+-- to confirm, and NEVER counted as membership. A confirmation turns the row to
+-- member and KEEPS who proposed it, so the record says the machine saw it first.
+-- target is a bundle id (target_kind document) or a content id (content),
+-- bundle_id is the DOCUMENT either way, so every read gates it by the viewer
+-- and a per-bundle purge takes the placement with its document (D-113).
+CREATE TABLE IF NOT EXISTS theme_placements (
+  theme_id     TEXT NOT NULL,
+  target       TEXT NOT NULL,
+  target_kind  TEXT NOT NULL CHECK (target_kind IN ('document','content')),
+  bundle_id    TEXT NOT NULL,
+  state        TEXT NOT NULL CHECK (state IN ('hunch','member')),
+  grade        TEXT NOT NULL CHECK (grade IN ('C','D')),
+  proposed_by  TEXT,               -- who proposed it as a hunch, NULL when a member placed it outright
+  proposed_at  TEXT,
+  proposal_note TEXT,
+  placed_by    TEXT,               -- the member who placed or confirmed it, NULL while a hunch
+  placed_at    TEXT,
+  placement_note TEXT,
+  PRIMARY KEY (theme_id, target)
+);
+CREATE INDEX IF NOT EXISTS theme_placements_bundle ON theme_placements(bundle_id);
+-- =========================================================================
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
@@ -3935,6 +3987,8 @@ __export(bio_checks_exports, {
   TESTIMONY_CHECKS: () => TESTIMONY_CHECKS,
   TESTIMONY_GRADE: () => TESTIMONY_GRADE,
   TEXT_CHAIN_CHECKS: () => TEXT_CHAIN_CHECKS,
+  THEME_CHECKS: () => THEME_CHECKS,
+  THEME_ID_RE: () => THEME_ID_RE,
   TRANSCRIBE_CHECKS: () => TRANSCRIBE_CHECKS,
   UNREACHABLE_CAPTURE_GRADE: () => UNREACHABLE_CAPTURE_GRADE,
   VERSION_ACT_CHECKS: () => VERSION_ACT_CHECKS,
@@ -4010,6 +4064,7 @@ __export(bio_checks_exports, {
   sshsigSignedBlob: () => sshsigSignedBlob,
   sufficiencyClaimState: () => sufficiencyClaimState,
   supersedesEdgeFindings: () => supersedesEdgeFindings,
+  themeLegFindings: () => themeLegFindings,
   userAgentIsLegible: () => userAgentIsLegible,
   verifyRegistryRoot: () => verifyRegistryRoot,
   verifyReleaseSignature: () => verifyReleaseSignature,
@@ -5945,6 +6000,7 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
       continue;
     }
     if (leadLegFindings(`basis[${i}]`, leg, findings)) continue;
+    if (themeLegFindings(`basis[${i}]`, leg, findings)) continue;
     const t = leg.target;
     let targetType = null;
     if (typeof t !== "string" || !BUNDLE_ID_RE.test(t)) {
@@ -6680,6 +6736,7 @@ function actionBasisFindings(fm, findings) {
       return;
     }
     if (leadLegFindings(`action_basis[${i}]`, l, findings)) return;
+    if (themeLegFindings(`action_basis[${i}]`, l, findings)) return;
     const target = typeof l.target === "string" ? l.target : "";
     if (!BUNDLE_ID_RE.test(target)) {
       findings.push(f(
@@ -9561,6 +9618,7 @@ function basisVersionFindings(fm, findings) {
     let unlabelled = 0;
     for (const [li, leg] of legs) {
       if (leadLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
+      if (themeLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
       const t = leg.target;
       if (typeof t !== "string" || !BUNDLE_ID_RE.test(t)) {
         push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical bundle id`);
@@ -12238,6 +12296,93 @@ function leadLegFindings(label, leg, findings) {
           "follow the lead and cite the document the look captured instead",
           "or, if you saw the thing yourself, author it as your own observation and cite that"
         ]
+      ));
+      return true;
+    }
+  }
+  return false;
+}
+var THEME_ID_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+$/;
+var THEME_REF_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+(?:[#/:?].*)?$/;
+var THEME_LEG_KEYS = ["theme", "themes"];
+var THEME_CHECKS = {
+  THEME_NOT_EVIDENCE: {
+    check: "C-74.1",
+    where: "checks/bio-checks.mjs themeLegFindings > is-theme-not-evidence",
+    translation: "That leg rests on a THEME. A theme is one member's declared lens \u2014 an idea they use to gather material \u2014 and it is never the basis of a claim, so nothing can rest on it or on a document's membership in it. Cite the document or the passage itself: what a finding rests on is content, whatever theme led you to it."
+  },
+  THEME_NOT_A_MEMBER: {
+    check: "C-74.2",
+    where: "src/store.mjs themeDeclare > is-theme-declare",
+    translation: "A theme is declared by a person, in their own name, and every reading of it shows whose lens it is. The credential that asked is an automated one, which has nobody behind it to hold the idea. Sign in and declare it yourself."
+  },
+  THEME_NO_TEST: {
+    check: "C-74.3",
+    where: "src/store.mjs themeDeclare > is-theme-declare",
+    translation: "A theme needs its TEST: one sentence a document or a passage either passes or fails, so any member can check a placement against it. Without one the theme is a label anything could wear, and it cannot be declared."
+  },
+  THEME_NO_NAME: {
+    check: "C-74.4",
+    where: "src/store.mjs themeDeclare > is-theme-declare",
+    translation: 'A theme needs its idea in a few words \u2014 what you are calling it, such as "deferred maintenance" \u2014 as well as its test. Nothing was declared.'
+  },
+  THEME_TOO_LONG: {
+    check: "C-74.5",
+    where: "src/store.mjs themeDeclare > is-theme-declare",
+    translation: "The theme's name or its test is longer than the record stores in one passage. It was refused rather than cut, so nothing you wrote is silently lost. Shorten it and declare it again."
+  },
+  THEME_NOT_FOUND: {
+    check: "C-74.6",
+    where: "src/store.mjs #themeFor > is-theme-source",
+    translation: "No theme is recorded under that id. Use the id the declaration returned, or list the themes to find it."
+  },
+  THEME_PLACEMENT_NOT_A_MEMBER: {
+    check: "C-74.7",
+    where: "src/store.mjs themePlace > is-theme-place",
+    translation: "Placing a document in a theme is a member's judgement that it passes the theme's test, recorded in their name. An automated credential may only PROPOSE a placement, which stays a hunch until a member confirms it. Sign in to place it, or propose it instead."
+  },
+  THEME_TARGET_NOT_FOUND: {
+    check: "C-74.8",
+    where: "src/store.mjs #themeTarget > is-theme-target",
+    translation: "Nothing you can see in the record answers to that document or passage id, so it cannot be placed in a theme. Name a document by its id, or a passage by the content id it was minted under."
+  },
+  THEME_REASON_TOO_LONG: {
+    check: "C-74.9",
+    where: "src/store.mjs #themeTarget > is-theme-target",
+    translation: "The note on this placement is longer than the record stores in one passage. It was refused rather than cut. Shorten it and try again."
+  },
+  THEME_NO_PROPOSER: {
+    check: "C-74.10",
+    where: "src/store.mjs themePropose > is-theme-propose",
+    translation: "A proposal must say who proposed it, and this one arrived carrying nobody. The record stamps the proposer from the credential that asked; nothing was written."
+  }
+};
+function themeLegFindings(label, leg, findings) {
+  const l = leg && typeof leg === "object" ? leg : {};
+  const refusal7 = (code, message, repairs) => f(THEME_CHECKS[code].check, "error", message, repairs, code);
+  const REPAIRS = [
+    "cite the document or the passage itself \u2014 the theme is how you found it, not what it shows",
+    "or leave the theme out of the leg: membership in a theme is never a reason a leg counts"
+  ];
+  for (const field of ["target", "content_id"]) {
+    const v = typeof l[field] === "string" ? l[field].trim() : "";
+    if (v && THEME_REF_RE.test(v)) {
+      findings.push(refusal7(
+        "THEME_NOT_EVIDENCE",
+        `${label}.${field} '${v.slice(0, 80)}' names a THEME${THEME_ID_RE.test(v) ? "" : " membership"}, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md \xA78.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it`,
+        REPAIRS
+      ));
+      return true;
+    }
+  }
+  for (const key of THEME_LEG_KEYS) {
+    const v = l[key];
+    const named = typeof v === "string" ? v.trim() !== "" : Array.isArray(v) ? v.length > 0 : v != null && v !== false;
+    if (named) {
+      findings.push(refusal7(
+        "THEME_NOT_EVIDENCE",
+        `${label}.${key} claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md \xA78.4, fence 4): the leg rests on its target or on nothing`,
+        REPAIRS
       ));
       return true;
     }
@@ -15539,7 +15684,14 @@ var RUNG_ABSENT = {
   reviewgrant: { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
   reviewrevoke: { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
   reviewcomment: { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
-  leadlook: { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" }
+  leadlook: { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" },
+  /* D-162 / IC-231 — THE THEME. Ground `undetermined` on `lead`'s measurement: none of the three
+     acts' refusals is a missing justification (a theme with no test, C-74.3, is a missing CRITERION,
+     refused before anything is written). NOT `reversible`: nothing takes a theme or a placement back
+     — a changed idea is a new theme, because every placement was judged against the old test. */
+  themedeclare: { ground: "undetermined", is: "a member declares a THEME in their own name \u2014 an idea and the TEST a document or a passage passes or fails; a lens for gathering material, visibly theirs, and never the basis of a claim (C-74.1)" },
+  themeplace: { ground: "undetermined", is: "a member places a document or a passage in a theme, or confirms a proposal standing there, on their judgement that it passes the test: membership, graded D" },
+  themepropose: { ground: "undetermined", is: "a member or a machine PROPOSES a placement in a theme: a hunch, graded C, which is never membership until a member confirms it" }
 };
 var CAPTURE_ACTS = [
   /* op=attest. The verb is "co-attest" because the group is not the only
@@ -44233,6 +44385,368 @@ ${words}`;
   static LEAD_READ_LIMIT_DEFAULT = 200;
   static LEAD_READ_LIMIT_MAX = 2e3;
   /* ====================================================================== *
+   * D-162 / IC-231 — THE THEME (`BIO_Content_Framework_v0_10.md` §8.4, Bob's
+   * ruling of 2026-09-21): a connection through an IDEA. Four acts:
+   *
+   *   op=themedeclare  a MEMBER declares a theme — its idea in a few words and
+   *                    its TEST, the sentence a document or a passage passes or
+   *                    fails. The declarer is stamped and never read from the
+   *                    body, and a machine stamp is refused BY NAME (C-74.2).
+   *   op=themeplace    a MEMBER places a document or a passage in it, or
+   *                    CONFIRMS a hunch already standing there: membership,
+   *                    graded D (§8.1 — asserted on that member's judgement that
+   *                    it passes the test, with an author and a date).
+   *   op=themepropose  anyone, a machine included, PROPOSES a placement: a
+   *                    HUNCH, graded C (§8.1 — correspondence, never
+   *                    established, flagged for a member), and never membership.
+   *   op=themeread     one theme with its members and its hunches apart, or the
+   *                    list of themes, searchable by `q`.
+   *
+   * A THEME IS NEVER EVIDENCE, held in two places on purpose, the lead's
+   * arrangement: the id shape (`THEME-…`) is no bundle id and no content id, and
+   * `ENTITY_KINDS` does not contain `theme`, so no leg grammar can accept one and
+   * no connection can run through one; and C-74.1 (`themeLegFindings`) refuses
+   * one BY NAME at every leg grammar — and a leg that claims membership in one.
+   * Nothing here mints a bundle, a content row, an entity or an edge.
+   *
+   * VISIBILITY. A theme is not existence-private — §8.4 says it may be
+   * searched, shown and followed — so every recognised viewer reads it. What a
+   * theme CONTAINS is gated per placement by `#inSight` on the placed document,
+   * so a theme is no oracle for a document in a project the reader was never
+   * invited to, and a placement the reader cannot see is omitted without a
+   * count. An unrecognised or absent viewer reads nothing (fail closed).
+   *
+   * WHO IS SHOWN. §8.4 fence 1 says the theme is declared "under that member's
+   * COVER, which every reading of the theme shows". Membership v2 §3 rules that
+   * members and the public see HANDLES and only administrators see cover and
+   * handle together. Every reading here shows the declarer's member id and
+   * handle — the record's attribution — and never the cover, since a cover
+   * beside a handle is the pairing §3 withholds. Stated as a DESIGN GAP in
+   * IC-231 rather than resolved silently in either direction. */
+  static #themeRefusal(code, detail, extra) {
+    const row = THEME_CHECKS[code];
+    return {
+      ok: false,
+      reason: code,
+      code,
+      check: row.check,
+      translation: row.translation,
+      detail,
+      ...extra || {}
+    };
+  }
+  /** The declarer as every reading shows them: the member id the act was stamped
+   *  with and the handle that member chose. Never the cover (see above). */
+  #themePerson(memberId) {
+    if (!memberId) return { id: null, handle: null };
+    const m = this.#one(`SELECT handle FROM members WHERE member_id = ?`, memberId);
+    return { id: memberId, handle: m && m.handle ? m.handle : null };
+  }
+  /** WHICH THEME. One answer for a theme that does not exist and for a viewer the
+   *  gate does not recognise, so the act and the read cannot disagree. */
+  #themeFor(id, viewer) {
+    const refusal7 = (code, detail, extra) => _Store.#themeRefusal(code, detail, extra);
+    const tid = typeof id === "string" ? id.trim() : "";
+    const g = viewerPredicate(viewer);
+    const row = tid && g.scope !== "DENY" ? this.#one(
+      `SELECT theme_id, declared_by, name, test, at FROM themes WHERE theme_id = ?`,
+      tid
+    ) : null;
+    if (!row)
+      return refusal7(
+        "THEME_NOT_FOUND",
+        tid ? `no theme is recorded under ${tid.slice(0, 60)}` : `pass theme=<THEME-\u2026>: the id op=themedeclare returned`,
+        { theme: tid || null }
+      );
+    return { ok: true, row };
+  }
+  /** WHAT IS BEING PLACED, and may this viewer name it. A bundle id is a
+   *  DOCUMENT; a content id is a PASSAGE of one. Either way the gate is asked of
+   *  the document, and a target the viewer cannot see answers exactly as one
+   *  that does not exist. */
+  #themeTarget(target, note, viewer) {
+    const refusal7 = (code, detail, extra) => _Store.#themeRefusal(code, detail, extra);
+    const t = typeof target === "string" ? target.trim() : "";
+    const words = typeof note === "string" && note.trim() ? note : null;
+    const bytes = (s) => new TextEncoder().encode(s).length;
+    let kind = null, bundleId = null;
+    if (BUNDLE_ID_RE.test(t)) {
+      const b = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id = ?`, t);
+      if (b) {
+        kind = "document";
+        bundleId = b.bundle_id;
+      }
+    } else if (/^[0-9a-f]{64}$/.test(t)) {
+      const c = this.#one(`SELECT bundle_id FROM content WHERE content_id = ?`, t);
+      if (c) {
+        kind = "content";
+        bundleId = c.bundle_id;
+      }
+    }
+    const sees = !!bundleId && this.#inSight(bundleId, viewer);
+    if (!sees)
+      return refusal7(
+        "THEME_TARGET_NOT_FOUND",
+        t ? `nothing you can see answers to ${t.slice(0, 80)}: name a document by its bundle id or a passage by its content id` : `pass target=<a document's bundle id, or a passage's content id>`,
+        { target: t || null }
+      );
+    if (words && bytes(words) > CAPTURE_TEXT_UNIT_CAP)
+      return refusal7(
+        "THEME_REASON_TOO_LONG",
+        `${bytes(words)} B of note, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to. Refused rather than cut`,
+        { limit: CAPTURE_TEXT_UNIT_CAP }
+      );
+    return { ok: true, target: t, kind, bundleId, note: words };
+  }
+  /** op=themedeclare — THE ACT. `declarer` is the control plane's stamp and never
+   *  the caller's. */
+  themeDeclare({ name = null, test = null, declarer = null } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#themeRefusal(code, detail, extra);
+    const who = typeof declarer === "string" ? declarer.trim() : "";
+    const idea = typeof name === "string" ? name : "";
+    const criterion = typeof test === "string" ? test : "";
+    const bytes = (s) => new TextEncoder().encode(s).length;
+    if (!who || isMachineIdentity(who))
+      return refusal7(
+        "THEME_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential. A theme is a PERSON's declared lens, in their own name (\xA78.4 fence 1); a machine may propose a placement, never declare a theme` : `this call carries nobody. The plane stamps the declarer from the credential that asked`
+      );
+    if (!criterion.trim())
+      return refusal7(
+        "THEME_NO_TEST",
+        `a theme carries its TEST \u2014 the sentence a document or a passage passes or fails, so any member can check a placement against it (\xA78.4 fence 2). None was given, so nothing was declared`
+      );
+    if (!idea.trim())
+      return refusal7(
+        "THEME_NO_NAME",
+        `a theme names its idea in a few words beside its test. None was given, so nothing was declared`
+      );
+    if (bytes(idea) > CAPTURE_TEXT_UNIT_CAP || bytes(criterion) > CAPTURE_TEXT_UNIT_CAP)
+      return refusal7(
+        "THEME_TOO_LONG",
+        `${bytes(idea)} B of name and ${bytes(criterion)} B of test, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut`,
+        { limit: CAPTURE_TEXT_UNIT_CAP }
+      );
+    const at = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const themeId = `THEME-${at.slice(0, 4)}-${at.slice(5, 7)}${at.slice(8, 10)}-${_Store.#rand(6)}`;
+    this.sql.exec(
+      `INSERT INTO themes (theme_id, declared_by, name, test, at) VALUES (?, ?, ?, ?, ?)`,
+      themeId,
+      who,
+      idea,
+      criterion,
+      at
+    );
+    const by = this.#themePerson(who);
+    return {
+      ok: true,
+      theme_id: themeId,
+      name: idea,
+      test: criterion,
+      at,
+      declared_by: by.id,
+      declared_by_handle: by.handle,
+      evidence: false,
+      says: `${by.handle || by.id}'s theme is declared, with its test. It is a lens for finding and gathering material, visibly theirs, and never the basis of a claim: no leg can rest on it or on membership in it`
+    };
+  }
+  /** op=themeplace — A MEMBER PLACES A DOCUMENT OR A PASSAGE, or CONFIRMS a hunch
+   *  standing at the same target. `placer` is the control plane's stamp. */
+  themePlace({ theme = null, target = null, note = null, placer = null, viewer = null } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#themeRefusal(code, detail, extra);
+    const who = typeof placer === "string" ? placer.trim() : "";
+    if (!who || isMachineIdentity(who))
+      return refusal7(
+        "THEME_PLACEMENT_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential. Placing is a member's judgement that the document passes the theme's test (\xA78.4 fence 3); a machine may only propose it, with op=themepropose, and the proposal stays a hunch until a member confirms it` : `this call carries nobody. The plane stamps the placer from the credential that asked`
+      );
+    const src = this.#themeFor(theme, viewer);
+    if (!src.ok) return src;
+    const T = src.row;
+    const tgt = this.#themeTarget(target, note, viewer);
+    if (!tgt.ok) return tgt;
+    const at = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const before = this.#one(
+      `SELECT state FROM theme_placements WHERE theme_id = ? AND target = ?`,
+      T.theme_id,
+      tgt.target
+    );
+    if (!before)
+      this.sql.exec(
+        `INSERT INTO theme_placements (theme_id, target, target_kind, bundle_id, state, grade,
+                                       placed_by, placed_at, placement_note)
+         VALUES (?, ?, ?, ?, 'member', 'D', ?, ?, ?)`,
+        T.theme_id,
+        tgt.target,
+        tgt.kind,
+        tgt.bundleId,
+        who,
+        at,
+        tgt.note
+      );
+    else if (before.state === "hunch")
+      this.sql.exec(
+        `UPDATE theme_placements SET state = 'member', grade = 'D', placed_by = ?, placed_at = ?,
+                placement_note = ? WHERE theme_id = ? AND target = ? AND state = 'hunch'`,
+        who,
+        at,
+        tgt.note,
+        T.theme_id,
+        tgt.target
+      );
+    const row = this.#one(
+      `SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`,
+      T.theme_id,
+      tgt.target
+    );
+    return {
+      ok: true,
+      theme_id: T.theme_id,
+      ...this.#placementView(row),
+      confirmed_hunch: !!before && before.state === "hunch",
+      already: !!before && before.state === "member",
+      evidence: false,
+      says: before && before.state === "member" ? `${tgt.target} was already a member of this theme; nothing changed` : `${tgt.target} is a member of the theme "${T.name.slice(0, 80)}" on ${who}'s judgement that it passes the test${before ? ", confirming a proposal" : ""}. Membership connects it to the theme's other members through this lens only, and is never a basis leg`
+    };
+  }
+  /** op=themepropose — A PROPOSED PLACEMENT, stored as a HUNCH. Any credential
+   *  may propose — the machine's half of §8.4 fence 3 — and the proposer is the
+   *  control plane's stamp (`class:<cls>` for a machine). A proposal at a target
+   *  already standing is not written again, and never demotes a member. */
+  themePropose({ theme = null, target = null, note = null, proposer = null, viewer = null } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#themeRefusal(code, detail, extra);
+    const who = typeof proposer === "string" ? proposer.trim() : "";
+    if (!who)
+      return refusal7(
+        "THEME_NO_PROPOSER",
+        `this call carries nobody. The plane stamps the proposer from the credential that asked, and a hunch nobody can be named for is one the record could say nothing about`
+      );
+    const src = this.#themeFor(theme, viewer);
+    if (!src.ok) return src;
+    const T = src.row;
+    const tgt = this.#themeTarget(target, note, viewer);
+    if (!tgt.ok) return tgt;
+    const at = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    this.sql.exec(
+      `INSERT OR IGNORE INTO theme_placements (theme_id, target, target_kind, bundle_id, state, grade,
+                                               proposed_by, proposed_at, proposal_note)
+       VALUES (?, ?, ?, ?, 'hunch', 'C', ?, ?, ?)`,
+      T.theme_id,
+      tgt.target,
+      tgt.kind,
+      tgt.bundleId,
+      who,
+      at,
+      tgt.note
+    );
+    const row = this.#one(
+      `SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`,
+      T.theme_id,
+      tgt.target
+    );
+    const fresh = row.proposed_by === who && row.proposed_at === at && row.state === "hunch";
+    return {
+      ok: true,
+      theme_id: T.theme_id,
+      ...this.#placementView(row),
+      already: !fresh,
+      evidence: false,
+      says: row.state === "member" ? `${tgt.target} is already a member of this theme, placed by ${row.placed_by}; the proposal changed nothing` : `${tgt.target} is PROPOSED for the theme "${T.name.slice(0, 80)}". It is a hunch \u2014 not membership \u2014 until a member checks it against the test and places it`
+    };
+  }
+  /** One placement as every reading shows it. `membership` is the only field a
+   *  reader should ask whether it counts, and it is true for `member` alone. */
+  #placementView(r) {
+    return {
+      target: r.target,
+      target_kind: r.target_kind,
+      document: r.bundle_id,
+      state: r.state,
+      membership: r.state === "member",
+      hunch: r.state === "hunch",
+      grade: r.grade,
+      placed_by: r.placed_by,
+      placed_at: r.placed_at,
+      note: r.placement_note,
+      proposed_by: r.proposed_by,
+      proposed_at: r.proposed_at,
+      proposal_note: r.proposal_note
+    };
+  }
+  /** op=themeread — ONE THEME (`id`), with its members and its hunches APART, or
+   *  THE THEMES (`q` narrows by a phrase in the name or the test). Bounded, and
+   *  the cut is published. */
+  themeRead({ id = null, q = null, limit = null, viewer = null } = {}) {
+    const cap = Math.max(1, Math.min(
+      Math.floor(Number(limit) || _Store.THEME_READ_LIMIT_DEFAULT),
+      _Store.THEME_READ_LIMIT_MAX
+    ));
+    const person = (m) => {
+      const p = this.#themePerson(m);
+      return { declared_by: p.id, declared_by_handle: p.handle };
+    };
+    if (id == null || String(id).trim() === "") {
+      const g2 = viewerPredicate(viewer);
+      const phrase = typeof q === "string" ? q.trim() : "";
+      const rows = g2.scope === "DENY" ? [] : this.#rows(
+        `SELECT theme_id, declared_by, name, test, at FROM themes
+          WHERE (? = '' OR instr(lower(name), lower(?)) > 0 OR instr(lower(test), lower(?)) > 0)
+          ORDER BY at DESC, theme_id LIMIT ?`,
+        phrase,
+        phrase,
+        phrase,
+        cap + 1
+      );
+      return {
+        ok: true,
+        q: phrase || null,
+        limit: cap,
+        truncated: rows.length > cap,
+        evidence: false,
+        themes: rows.slice(0, cap).map((r) => ({
+          theme_id: r.theme_id,
+          name: r.name,
+          test: r.test,
+          at: r.at,
+          ...person(r.declared_by)
+        }))
+      };
+    }
+    const src = this.#themeFor(id, viewer);
+    if (!src.ok) return src;
+    const T = src.row;
+    const g = viewerPredicate(viewer);
+    const page = (state) => this.#rows(
+      `SELECT p.* FROM theme_placements p JOIN bundles b ON b.bundle_id = p.bundle_id
+        WHERE p.theme_id = ? AND p.state = ? AND (${g.sql}) ORDER BY p.target LIMIT ?`,
+      T.theme_id,
+      state,
+      ...g.args,
+      cap + 1
+    );
+    const members = page("member");
+    const hunches = page("hunch");
+    const n = (rows) => `${Math.min(rows.length, cap)}${rows.length > cap ? "+" : ""}`;
+    return {
+      ok: true,
+      theme_id: T.theme_id,
+      name: T.name,
+      test: T.test,
+      at: T.at,
+      ...person(T.declared_by),
+      evidence: false,
+      limit: cap,
+      members: members.slice(0, cap).map((r) => this.#placementView(r)),
+      members_truncated: members.length > cap,
+      hunches: hunches.slice(0, cap).map((r) => this.#placementView(r)),
+      hunches_truncated: hunches.length > cap,
+      says: `a member's declared lens, and never the basis of a claim. ${n(members)} member(s) you can see, placed by a member against the test; ${n(hunches)} hunch(es) PROPOSED and not yet confirmed, which are not membership`
+    };
+  }
+  /* op=themeread's bound, `op=leadread`'s pair and for its reason. */
+  static THEME_READ_LIMIT_DEFAULT = 200;
+  static THEME_READ_LIMIT_MAX = 2e3;
+  /* ====================================================================== *
    * SK-8 REGION — THE EXTRACT RUN'S PRODUCTIONS, AND THE FIRST CALLER OF THE
    * DOOR ABOVE.
    * ====================================================================== *
@@ -51727,6 +52241,9 @@ ${words}`;
          PROVE it took them (D-113). What any lead says is not an operator fact —
          and since REC-131, neither is how many there are: purge's proof only. */
       ...proof ? { leads: n("leads") } : {},
+      /* D-162: the themes and their placements, a purge's PROOF only (D-113). Not on op=stats:
+         a count of members' lenses is not an operator fact this item was asked to publish. */
+      ...proof ? { themes: n("themes"), themePlacements: n("theme_placements") } : {},
       /* PL-1 / IS-1: the inquiry's alternative accounts of its evidence and
          their legs, reported so a purge can PROVE it took them (D-113). A COUNT
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
@@ -53000,6 +53517,12 @@ ${words}`;
          outliving its project would admit whoever is next allocated that id to a
          member's lead. Whole-store: the leads themselves go in the arm below. */
       "lead_shares",
+      /* D-162 / D-113: a THEME PLACEMENT, keyed on the DOCUMENT it places (a
+         passage's placement carries its document too). Per-bundle: a placement
+         outliving its document would say a file nobody holds belongs to a lens,
+         and would attach to whatever bundle was next allocated that id.
+         Whole-store: the themes themselves go in the arm below. */
+      "theme_placements",
       /* SK-8 / D-113: the PROPOSED READINGS. They ride both arms for the
          reason `content` above does and for one more that is specific to
          them: a proposal is a claim about what a DOCUMENT names, so a
@@ -53111,6 +53634,7 @@ ${words}`;
         this.sql.exec(`DELETE FROM queue_state`);
         this.sql.exec(`DELETE FROM observation_log`);
         this.sql.exec(`DELETE FROM leads`);
+        this.sql.exec(`DELETE FROM themes`);
         this.sql.exec(`DELETE FROM ai_run_bounds`);
         this.sql.exec(`DELETE FROM ai_runs`);
         this.sql.exec(`DELETE FROM suggest_refusals`);
@@ -53166,6 +53690,9 @@ ${words}`;
         aiRunLog: d("aiRunLog"),
         /* MK-4 / D-113: the leads a whole-store purge took. */
         leads: d("leads"),
+        /* D-162 / D-113: the themes and placements a purge took. */
+        themes: d("themes"),
+        themePlacements: d("themePlacements"),
         /* PL-3 / IS-4 / D-113: the stored refusals a purge took, proved
            by consequence rather than asserted. */
         suggestRefusals: d("suggestRefusals"),
@@ -67045,6 +67572,33 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer"),
           identity: url.searchParams.get("identity")
         }),
+        /* D-162 / IC-231: THE THEME. `declarer`, `placer` and `proposer` come from the
+           QUERY STRING, where the control plane stamped them, and never from the body. */
+        themedeclare: () => this.themeDeclare({
+          name: body ? body.name : null,
+          test: body ? body.test : null,
+          declarer: url.searchParams.get("declarer")
+        }),
+        themeplace: () => this.themePlace({
+          theme: body && body.theme || url.searchParams.get("theme"),
+          target: body && body.target || url.searchParams.get("target"),
+          note: body ? body.note : null,
+          placer: url.searchParams.get("placer"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        themepropose: () => this.themePropose({
+          theme: body && body.theme || url.searchParams.get("theme"),
+          target: body && body.target || url.searchParams.get("target"),
+          note: body ? body.note : null,
+          proposer: url.searchParams.get("proposer"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        themeread: () => this.themeRead({
+          id: url.searchParams.get("id"),
+          q: url.searchParams.get("q"),
+          limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer")
+        }),
         leadread: () => this.leadRead({
           id: url.searchParams.get("id"),
           limit: url.searchParams.get("limit"),
@@ -68734,6 +69288,18 @@ var OPS = {
      authored dated act — `lead`'s class cut and reason. */
   leadshare: { classes: ["admin", "member"], mutating: true },
   leadread: { classes: ["admin", "member", "probe"], mutating: false },
+  /* D-162 / IC-231 — THE THEME (BIO_Content_Framework_v0_10.md §8.4, Bob's ruling of 2026-09-21).
+     DECLARING a theme and PLACING a document in one are a PERSON's acts in their own name — a lens
+     and a judgement against its test — so both take `lead`'s class cut: `mutating: true` keeps a
+     machine credential off the session route, and the store refuses a machine stamp BY NAME again
+     (C-74.2, C-74.7). PROPOSING is the machine's half of fence 3 and takes `contentmint`'s cut
+     instead: admin, member and probe, and the `ai` class through the DEC-55 floor when its minted
+     `writes` name it — the proposal is a HUNCH, never membership, whoever proposes it. The READ is
+     open to every class that may read; placements are gated per document by the viewer stamp. */
+  themedeclare: { classes: ["admin", "member"], mutating: true },
+  themeplace: { classes: ["admin", "member"], mutating: true },
+  themepropose: { classes: ["admin", "member", "probe"], mutating: true },
+  themeread: { classes: ["admin", "member", "probe"], mutating: false },
   /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
        different cut from CPDF-10's above because a different thing is at stake.
   
@@ -69228,6 +69794,12 @@ var SESSION_OPS = {
     "lead",
     "leadlook",
     "leadshare",
+    /* D-162: THE THEME — declaring, placing and proposing, each a session
+       op for `lead`'s reason (a person's act in their own name); the
+       store refuses a machine declarer or placer by name. */
+    "themedeclare",
+    "themeplace",
+    "themepropose",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -69296,6 +69868,12 @@ var SESSION_OPS = {
     "lead",
     "leadlook",
     "leadshare",
+    /* D-162: THE THEME — declaring, placing and proposing, each a session
+       op for `lead`'s reason (a person's act in their own name); the
+       store refuses a machine declarer or placer by name. */
+    "themedeclare",
+    "themeplace",
+    "themepropose",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -69402,6 +69980,11 @@ var NEEDS = {
   lead: "contribute",
   leadlook: "contribute",
   leadshare: "contribute",
+  /* D-162: declaring a theme, placing in one and proposing a placement all write the working
+     record's lens layer, `lead`'s capability. */
+  themedeclare: "contribute",
+  themeplace: "contribute",
+  themepropose: "contribute",
   leadread: null,
   monitor: "contribute",
   cite: "contribute",
@@ -74034,7 +74617,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "contradictionpairs" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "contradictionpairs" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "themeplace" || op === "themepropose" || op === "themeread" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -74070,6 +74653,15 @@ var index_default = {
       inner.searchParams.set("looker", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "leadshare")
       inner.searchParams.set("sharer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "themedeclare")
+      inner.searchParams.set("declarer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "themeplace")
+      inner.searchParams.set("placer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "themepropose")
+      inner.searchParams.set(
+        "proposer",
+        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
     if (op === "contentmint")
       inner.searchParams.set(
         "mintedBy",

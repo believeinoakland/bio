@@ -946,6 +946,13 @@ export const RUNG_ABSENT = {
   reviewrevoke:         { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
   reviewcomment:        { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
   leadlook:             { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" },
+  /* D-162 / IC-231 — THE THEME. Ground `undetermined` on `lead`'s measurement: none of the three
+     acts' refusals is a missing justification (a theme with no test, C-74.3, is a missing CRITERION,
+     refused before anything is written). NOT `reversible`: nothing takes a theme or a placement back
+     — a changed idea is a new theme, because every placement was judged against the old test. */
+  themedeclare:         { ground: "undetermined", is: "a member declares a THEME in their own name — an idea and the TEST a document or a passage passes or fails; a lens for gathering material, visibly theirs, and never the basis of a claim (C-74.1)" },
+  themeplace:           { ground: "undetermined", is: "a member places a document or a passage in a theme, or confirms a proposal standing there, on their judgement that it passes the test: membership, graded D" },
+  themepropose:         { ground: "undetermined", is: "a member or a machine PROPOSES a placement in a theme: a hunch, graded C, which is never membership until a member confirms it" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -1730,6 +1737,13 @@ export const NON_ACTS = {
   leadlook: "lead-directed: a member records following a lead, keyed by lead id; writes one observation_log row under authority_kind lead",
   leadshare: "lead-directed: the lead's author shares it to one project they have joined, keyed by (lead id, project); writes a `lead_shares` row and no edge",
   leadread: "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope",
+  /* D-162 / IC-231. THE THEME is NOT an object-directed act: its subject is a member's IDEA, which
+     no object's facts could say when to offer, and a placement names a document without acting on
+     it — no state moves, no edge is written, nothing the document says changes. */
+  themedeclare: "member-directed: a member declares a theme (an idea and its test) keyed by nothing the record holds; writes a `themes` row, no edge and no entity, and is never evidence",
+  themeplace: "theme-directed: a member places a document or a passage in a theme, keyed by (theme id, target); writes a `theme_placements` row as membership and no edge",
+  themepropose: "theme-directed: a member or a machine proposes a placement, keyed by (theme id, target); writes a `theme_placements` row as a hunch that is never membership",
+  themeread: "read: one theme by id — its idea, its test, its declarer, its members and its hunches apart, each placement gated by the viewer's sight of the document — or the themes, searchable by a phrase",
   /* SK-8 — THE EXTRACT RUN'S TWO OPS, and the reason they are NON_ACTS is a
      stronger version of `contentmint`'s directly above rather than a weaker one.
      `extractpropose` is keyed by (RUN, document): its subject is a run's

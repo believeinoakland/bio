@@ -3602,6 +3602,58 @@ CREATE TABLE IF NOT EXISTS review_comments (
 CREATE INDEX IF NOT EXISTS review_comments_draft ON review_comments(draft_id);
 -- =========================================================================
 
+-- D-162 / IC-231 -- THE THEME. BIO_Content_Framework_v0_10.md section 8.4, Bob's
+-- ruling of 2026-09-21: a connection through an IDEA, fenced four ways. Declared
+-- by a MEMBER (the declarer is stamped and shown on every reading), it carries
+-- its TEST, a sentence a document or a passage passes or fails, membership is a
+-- member's act and a machine's proposal is a HUNCH until a member confirms it,
+-- and it is NEVER the basis of a claim (C-74.1 at every leg grammar).
+--
+-- WHY A TABLE OF ITS OWN AND NOT AN ENTITY. The entity registry holds NAMED
+-- things a source's own words can be resolved to, and anything in it is a
+-- subject a connection can run through at grade A to C. A theme is one member's
+-- lens, visibly theirs, so it lives here under a THEME- id that no leg grammar
+-- accepts and that ENTITY_KINDS does not contain -- the eleventh-entity-kind
+-- liar is refused by shape as well as by name.
+--
+-- NO bundle_id: a theme is about no one document, so a per-bundle purge leaves
+-- it and the whole-store purge clears it (D-113). Never rewritten: a changed
+-- idea is a new theme, since a placement was judged against THIS test.
+CREATE TABLE IF NOT EXISTS themes (
+  theme_id     TEXT PRIMARY KEY,   -- THEME-YYYY-MMDD-hex, minted by the plane
+  declared_by  TEXT NOT NULL,      -- a member id, server-stamped, never a machine (C-74.2)
+  name         TEXT NOT NULL,      -- the idea in the declarer words, as written
+  test         TEXT NOT NULL,      -- the inclusion criterion, as written (C-74.3)
+  at           TEXT NOT NULL
+);
+-- A DOCUMENT OR A PASSAGE IN A THEME, graded like any connection (section 8.1).
+-- state member: a MEMBER placed or confirmed it, grade D -- asserted on that
+-- member stated judgement that it passes the test, with an author and a date.
+-- state hunch: PROPOSED (by a machine, or a member proposing rather than
+-- placing), grade C -- correspondence, never established, flagged for a member
+-- to confirm, and NEVER counted as membership. A confirmation turns the row to
+-- member and KEEPS who proposed it, so the record says the machine saw it first.
+-- target is a bundle id (target_kind document) or a content id (content),
+-- bundle_id is the DOCUMENT either way, so every read gates it by the viewer
+-- and a per-bundle purge takes the placement with its document (D-113).
+CREATE TABLE IF NOT EXISTS theme_placements (
+  theme_id     TEXT NOT NULL,
+  target       TEXT NOT NULL,
+  target_kind  TEXT NOT NULL CHECK (target_kind IN ('document','content')),
+  bundle_id    TEXT NOT NULL,
+  state        TEXT NOT NULL CHECK (state IN ('hunch','member')),
+  grade        TEXT NOT NULL CHECK (grade IN ('C','D')),
+  proposed_by  TEXT,               -- who proposed it as a hunch, NULL when a member placed it outright
+  proposed_at  TEXT,
+  proposal_note TEXT,
+  placed_by    TEXT,               -- the member who placed or confirmed it, NULL while a hunch
+  placed_at    TEXT,
+  placement_note TEXT,
+  PRIMARY KEY (theme_id, target)
+);
+CREATE INDEX IF NOT EXISTS theme_placements_bundle ON theme_placements(bundle_id);
+-- =========================================================================
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
