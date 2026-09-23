@@ -58,7 +58,11 @@ const IMG = {
  "_history/bundle_20260720T000000Z_aaaa.md": "old text",
  "_history/promotion_20260721T000000Z_bbbb.json": JSON.stringify({target:"INFO-X",base:"e3b0",files:[{name:"bundle.md",sha256:null}],created:"2026-07-21T00:11:22Z",author:"bob",skill_version:"bio-plane"}),
 };
-const PROJ = { bundle_id:"INFO-X", object_type:"information", group_id:"believe-in-oakland", title:"FY2026-27 adopted budget, Sewer Service Fund",
+/* CORRECTED 2026-09-23 BY UI-79 (D-436, IC-172), never exempted: `group_id` is the instance's ONE recorded producing
+   group, which the plane writes, and this fixture pinned one real group's slug as though every record were that group's
+   — the literal the member UI itself carried. The page renders whatever the projection says ("In the record of …"), so
+   the fixture carries a slug that is deliberately no real group's. */
+const PROJ = { bundle_id:"INFO-X", object_type:"information", group_id:"fixture-group", title:"FY2026-27 adopted budget, Sewer Service Fund",
  current_state:"verified", criticality:"crucial", bundle_sha:"d".repeat(64), monitor_enabled:1, monitor_frequency:"daily",
  monitor_last_checked:"2026-07-27T12:00:00Z", reeval_flag:0, annotations_open:0, fm_json:null };
 const CITER = { bundle_id:"PROJ-1", object_type:"project", title:"Sewer franchise diversion", current_state:"forming", last_updated:"2026-07-20" };

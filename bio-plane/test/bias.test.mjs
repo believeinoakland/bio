@@ -852,10 +852,18 @@ await block("12", async () => {
   }, MEMBER);
   if (!open1.started) throw new Error(`airunopen: ${J(open1)}`);
   const r1 = await get("airun", "run=run-no-lens", MEMBER);
-  t("THE ABSENCE IS STILL SUPPORTED AND IS NOW STATED WHERE A READER CAN SEE IT — measured before this "
-  + "item, `op=airun` published NO bias field at all, so §3's honest absence was stated NOWHERE",
-    [r1.session.bias.in_force, r1.session.bias.stated, r1.session.bias.manifest],
-    [false, "no manifest was in force", null]);
+  /* CORRECTED 2026-09-23 BY D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 3, BOB #25). The old assertion
+     wanted `stated: "no manifest was in force"` for THIS run, and that sentence was FALSE of it: block 9 adopted
+     the instance set and block 10 the project's, so when `run-no-lens` opened a lens WAS in force over this
+     project — the run was merely HANDED none. The plane could not tell the two apart because `aiRunOpen`
+     recorded only the hand; rule 3 has it record the lens in force at the open too, and the read now says what
+     is true: nothing was handed, a lens was in force, and the hand is `stale`. The honest absence §3 settled for
+     is still supported and still worded verbatim where it is TRUE (`d85-surface-run.test.mjs` ARM T4). */
+  t("THE ABSENCE IS STATED WHERE A READER CAN SEE IT — and, since D-85, TRUTHFULLY: this run was handed no "
+  + "manifest while one was in force, so it does not say none was in force",
+    [r1.session.bias.in_force, r1.session.bias.stated, r1.session.bias.manifest, r1.session.bias.hand,
+     r1.session.bias.at_open?.in_force],
+    [false, "no manifest was handed to this run, and one was in force when it opened", null, "stale", true]);
 
   const live = await get("biasmanifest", `scope=project&scopeId=${PROJECT_ID}`, MEMBER);
   const open2 = await post(`airunopen`, {

@@ -2421,7 +2421,7 @@ const GLOSSARY = {
   "ACFR":       "Annual Comprehensive Financial Report: a government's audited year-end financial statements.",
   "GPF":        "General Purpose Fund: the city's main discretionary operating fund.",
   "CAFR":      "The older name for the ACFR, the audited year-end financial statements.",
-  "FY":         "Fiscal year. Oakland's runs July 1 to June 30; FY23 ends June 30, 2023.",
+  "FY":         "Fiscal year: the twelve-month period a government budgets and reports by, which need not match the calendar year. It is usually named for the year it ends in; the government's own documents give its dates.",
   "sha256":     "A cryptographic fingerprint of a file. If even one byte changes, the fingerprint changes, so matching fingerprints mean identical bytes.",
   "RFC 3161":   "A trusted-timestamp standard: an independent authority attests that these exact bytes existed no later than a certain moment.",
   "SSHSIG":     "OpenSSH's signature format. The plane's releases are signed with it, and anyone can check a signature with stock ssh-keygen.",
@@ -3119,9 +3119,17 @@ function stamp(){
   for(const x of crypto.getRandomValues(new Uint8Array(4))) r += h[x>>4] + h[x&15];
   return d + "_" + r;
 }
-/* Fifteen core fields, because C-2.2 fires once per missing one; the canonical
+/* The core fields, because C-2.2 fires once per missing one; the canonical
    heading set for the type, because C-3.1 refuses both a missing heading and an
-   unexpected one; the per-type extension fields each type's own check requires. */
+   unexpected one; the per-type extension fields each type's own check requires.
+   UI-79 (2026-09-23; D-436, IC-172; State Rules §3.1): every core field EXCEPT
+   `group`. The producing group is ONE value the instance's store records, and the
+   plane writes it into every document it creates, whatever a caller sends. This
+   function used to write one group's slug as a literal, so on every instance
+   `newgroup` installs, the member UI named THIS project's group as the producer
+   (DEC-8: a surface invents nothing). The surface names no group; on a store that
+   records none, the creation is refused C-64.1 and the plane's own sentence is
+   shown. */
 function mdFor(id, type, state, title, body, now, hasDoc, src, act){
   /* UI-19: a carried REFERENCE, and it is the honest half of a measured gap.
      The overdue act on an action's page opens a question "resting on this
@@ -3140,7 +3148,6 @@ function mdFor(id, type, state, title, body, now, hasDoc, src, act){
     "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
     "created: "+now,"last_updated: "+now,
     "produced_by:","  mode: assisted","  capability_tier: session",
-    "group: believe-in-oakland",
     ...(refs.length
       ? ["references:", ...refs.flatMap(r=>[`  - target: ${r.target}`, `    rel: ${r.rel||"cites"}`,
                                             "    status: confirmed"])]
@@ -6903,7 +6910,8 @@ async function reviseWithCapture(id, img, acq, mergedManifest){
      hash from appearing under two register entries (C-18.3). */
   const res = await recPostR("promote", {
     bundleId: id, base, snapKey: stamp(), author: who,
-    meta: { object_type: fm.object_type||"information", group:"believe-in-oakland",
+    /* UI-79: no `group` — a revision's projection keeps the group its creation wrote (IC-172). */
+    meta: { object_type: fm.object_type||"information",
             title: fm.title||id, current_state: fm.current_state,
             created: fm.created||now, last_updated: now },
     files, register: [],
@@ -16396,7 +16404,8 @@ async function doProposalAdopt(){
     const files = await docFiles(text, null, await sha256Text(text), null);
     const res = await recPostR("promote", {
       bundleId: id, base: null, snapKey: stamp(), author: who,
-      meta: { object_type: kind, group:"believe-in-oakland", title,
+      /* UI-79: no `group` — the plane stamps the instance's recorded one (IC-172). */
+      meta: { object_type: kind, title,
               current_state: vocabFor(FIRST_STATE, kind), created: now, last_updated: now },
       files, register: registerFor(null),
     });
@@ -16404,7 +16413,12 @@ async function doProposalAdopt(){
       const why = (res && (res.reason || res.error)) || "unknown";
       if(err){ err.innerHTML = why === "GATE_REFUSED"
         ? `<b>The checks refused this bundle: ${esc((res.findings||[]).map(f=>f.check).join(", "))}. Nothing was written.</b>`
-        : `<b>Refused: ${esc(why)}. Nothing was written.</b>`; err.classList.remove("hidden"); }
+        /* UI-79 (2026-09-23): this adoption no longer names a producing group, so on a store that records none the
+           plane refuses it GROUP_UNDETERMINED (C-64.1) — rendered in the plane's own words (its canned translation
+           first), never as the bare code, which is what this arm printed for every non-gate refusal. */
+        : (res && (res.translation || res.detail))
+          ? `<b>The record refused this and nothing was written.</b>` + actRefusalHtml(res)
+          : `<b>Refused: ${esc(why)}. Nothing was written.</b>`; err.classList.remove("hidden"); }
       if(go){ go.disabled=false; go.textContent = "Adopt as a question"; }
       return { refused:true, reason:why };
     }
@@ -17202,7 +17216,7 @@ async function renderAdd(){
       <label class="fld" for="a-loc">Address of the document</label>
       <input class="txt" id="a-loc" placeholder="https://&hellip;" oninput="addValidate()">
       <label class="fld" for="a-auth">Who issued it</label>
-      <input class="txt" id="a-auth" placeholder="e.g. City of Oakland, Public Works Department" oninput="addValidate()">
+      <input class="txt" id="a-auth" placeholder="e.g. the city or county, and the department that issued it" oninput="addValidate()">
       <label class="ckline"><input type="checkbox" id="a-subs" checked> Fetch the page's stylesheets and images too, so it can be shown as the source served it</label>
       <label class="ckline"><input type="checkbox" id="a-arch"> Ask a public archive to mirror it as well</label>
       ${ADD_CAPTURE_TEACH}
@@ -17461,7 +17475,8 @@ async function addGo(){
     }
     const res = await recPostR("promote", {
       ...(minted ? {} : { bundleId: id }), base: null, snapKey: stamp(), author: who,
-      meta: { object_type: type, group:"believe-in-oakland", title,
+      /* UI-79: no `group` — the plane stamps the instance's recorded one (IC-172). */
+      meta: { object_type: type, title,
               current_state: vocabFor(FIRST_STATE, type), created: now, last_updated: now },
       files, register: registerFor(doc),
     });

@@ -300,6 +300,15 @@ const ROLE = {
      column of the row to anybody (an unseen run is answered with the caller's own `run` argument and the
      not-found sentence, which is the absent run's answer). ARM W4's three publishers are untouched. */
   "#aiRunInSight":     "AUTHORISES",
+  /* D-85's, 2026-09-23, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself on the item's first
+     run of this suite. `#surfacingGate` reads `ai_runs` (`status`, `context_type`, `context_id`,
+     `principal_plane`) to decide whether a DIFFERENT act — an assistant creating a question through `promote`
+     (INVESTIGATIVE-SESSION.md §11 item 5, rule 2) — may land: `suggestVersion`'s and `captureRequest`'s role,
+     word for word. It publishes no column of the row: a refusal echoes the caller's own `run` argument and, for
+     the ended run, its status word to the run's own principal only (asked after sight and position, the
+     `suggestVersion` precedent). Its sibling `#surfacedIn` (the question's read of its run) reads NO row of
+     `ai_runs` — it takes `aiRunRead`'s answer whole — so ARM W4's three publishers are untouched. */
+  "#surfacingGate":    "AUTHORISES",
   "#aiRunReapPending": "HOUSEKEEPS",
   "#aiRunReapWake":    "HOUSEKEEPS",
   "#aiRunReap":        "HOUSEKEEPS",
@@ -934,6 +943,10 @@ const MATRIX = {
              + "model working state where the record's own words belong. SEE ARM P6: no reader "
              + "publishes it at all, which is a finding of this sweep and is delegated, not fixed here"),
       stopped_bound: "condition.bound", stopped_condition: "condition.kind", stopped_at: "condition.at",
+      /* D-85 (§11 item 5, rule 3): the lens IN FORCE at the open, which the plane computed, published inside the
+         lens block beside the manifest the run was handed. `at` because it always resolves: the matrix run opens
+         with no lens in force, so its `statements_sha` is honestly null. */
+      lens_at_open: "bias.at_open.at",
     },
   },
   aiRunSpawnPayload: {
@@ -961,6 +974,9 @@ const MATRIX = {
       stopped_bound: W("a spawn payload is built to START work; a run that has already stopped "
                      + "spawns nothing, and the ending belongs to op=airun and op=airunlog"),
       stopped_condition: W("as stopped_bound"), stopped_at: W("as stopped_bound"),
+      lens_at_open: W("as bias_manifest (D-85): the lens in force at the open is part of the LENS block, and the "
+                    + "search half never receives the lens. The composing half's envelope carries it with the rest "
+                    + "of that block"),
     },
   },
   aiRunLog: {
@@ -982,6 +998,7 @@ const MATRIX = {
       created: W("as label"), updated: W("as label"), expires: W("as label"), ticks: W("as label"),
       state: W("the work list; the LOG is the account of where the search went and is a different "
              + "object. §14b.7 resumes from THIS, which is why the log is bounded and ordered"),
+      lens_at_open: W("as bias_manifest (D-85): the lens is published ONCE, by op=airun"),
     },
   },
 };

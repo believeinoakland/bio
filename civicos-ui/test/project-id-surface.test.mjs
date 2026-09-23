@@ -39,6 +39,9 @@
  * naming C-59.2's sentence; (D) OVER-STRICTNESS: `bundleId: minted ? undefined : id` (a spelling the
  * serializer drops) -> GREEN. RUN 2026-09-19: 5/5 AS DECLARED (baseline 29/29 · A 20/29 · B 9/29 · C 11/29 ·
  * D 29/29), each RED arm's failing line naming the plane's own C-59 sentence; hashes in the control's header.
+ * RE-RUN 2026-09-23 by UI-79 after its correction (the plane records a group; the held bytes pinned as sent + id +
+ * stamp; one assertion added): 5/5 AS DECLARED (baseline 30/30 · A 21/30 · B 10/30 · C 12/30 · D 30/30), app.html
+ * b2cedae2… restored IDENTICAL.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not discard the writer's
    own output. SHARED from the plane's test estate; census: `stdio-census.test.mjs`. */
@@ -48,6 +51,7 @@ import { webcrypto } from "crypto";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { appScript } from "./extract.mjs";
+import { withProducingGroup } from "../../bio-plane/checks/bio-checks.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -69,8 +73,16 @@ const mf = new Miniflare({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-ui66", MEMBER_TOKEN: "mem-ui66", PROBE_TOKEN: "prb-ui66", VERSION: "test" },
+  bindings: { ADMIN_TOKEN: "adm-ui66", MEMBER_TOKEN: "mem-ui66", PROBE_TOKEN: "prb-ui66", VERSION: "test",
+              /* CORRECTED 2026-09-23 BY UI-79 (D-436, IC-172), never exempted. This plane recorded NO producing
+                 group, and the Add surface's creation passed only because `mdFor` wrote one group's slug as a
+                 literal — the caller's statement an unseeded store keeps. The surface now names no group, so a
+                 store recording none refuses the creation C-64.1, which is the plane's rule and not this suite's
+                 subject. The store records its group the way every installed one does: at FIRST BOOT, from the
+                 slug the installer binds. The slug is deliberately no real group's. */
+              INSTANCE_NAME: "harbour-dredging-watch" },
 });
+const HELD_GROUP = "harbour-dredging-watch";
 let exitCode = 1;
 try {
 /* Direct plane calls, for SEEDING and INDEPENDENT read-back only. The surface's calls go through the bridge. */
@@ -192,9 +204,14 @@ const heldMd = shown ? await heldBundleMd(shown) : null;
 ok("the plane holds a bundle.md at the id the surface opened", typeof heldMd === "string");
 ok("THE ID SHOWN IS THE ID IN THE REGISTERED BYTES — the id: line the plane wrote",
    typeof heldMd === "string" && topIdLine(heldMd) === shown);
-ok("and the registered bytes are the surface's own document with that one line added (nothing else rewritten)",
+/* CORRECTED 2026-09-23 BY UI-79 (D-436, IC-172): the plane now writes TWO things into a created project's bytes, its
+   minted id and the store's recorded producing group, through the catalogue's one definition `withProducingGroup` —
+   so "nothing else rewritten" is pinned as exactly those two, never as the one line the old assertion allowed. */
+ok("the bundle.md the surface sent names no producing group — the plane writes the store's recorded one",
+   typeof sentMd === "string" && !/^group:/m.test(sentMd.split("\n---")[0]));
+ok("and the registered bytes are the surface's own document with the id line added and the recorded group stamped (nothing else rewritten)",
    typeof heldMd === "string" && typeof sentMd === "string"
-   && heldMd === sentMd.replace(/^---\n/, `---\nid: ${shown}\n`));
+   && heldMd === withProducingGroup(sentMd.replace(/^---\n/, `---\nid: ${shown}\n`), HELD_GROUP));
 ok("the page the surface drew names that id", String(html("#content")).includes(String(shown)));
 ok("the page was drawn without an error", OPENED_ERR.length === 0);
 

@@ -451,10 +451,15 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
       const close = src.indexOf(`END DEC-49 REGION ${m[3]}`);
       return open >= 0 && close > open ? src.slice(open, close) : null;
     }
-    const decl = new RegExp(`\\n  ${m[2].replace(/[$#]/g, "\\$&")}\\s*\\(`).exec(src);
+    /* CORRECTED 2026-09-23 BY D-85: both patterns now admit an `async ` prefix. D-85 made `aiRunOpen` async (it
+       computes the lens in force at the open, which is hashed through `crypto.subtle`), and this reader, which
+       spelled a declaration as `  name(` only, stopped finding the function at all — C-33.29..31 failed as
+       "not minted inside the span" while the codes sat where they always had. The old pattern was right only
+       while no governed whole-function span was async; being async does not move a refusal. */
+    const decl = new RegExp(`\\n  (?:async\\s+)?${m[2].replace(/[$#]/g, "\\$&")}\\s*\\(`).exec(src);
     if (!decl) return null;
     const rest = src.slice(decl.index + 1);
-    const next = /\n  [#\w$]+\s*\([^\n]*\)\s*\{/.exec(rest.slice(10));
+    const next = /\n  (?:async\s+)?[#\w$]+\s*\([^\n]*\)\s*\{/.exec(rest.slice(10));
     return next ? rest.slice(0, next.index + 10) : rest.slice(0, 8000);
   };
 

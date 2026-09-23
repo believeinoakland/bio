@@ -81,7 +81,10 @@ function plane(instanceName){
 /* THE SECOND SLUG — a group that is not this project's, in the installer's slug grammar. */
 const SECOND = "harbour-watch-coalition";
 /* The literals the row names, matched case-insensitively and with any spacing, so a respelling is still caught. */
-const LITERALS = [/believe\s*in\s*oakland/i, /believeinoakland\.org/i];
+/* CORRECTED 2026-09-23 BY UI-79: `\s*` between the words could not see the SLUG spelling, `believe-in-oakland`, which
+   app.html still carried four times while SOURCE NO-LITERAL read GREEN over it (measured on f05c1efd: 4 hits for the
+   hyphenated form, 0 for this pattern). A separator is now any run of space, hyphen or underscore. */
+const LITERALS = [/believe[\s_-]*in[\s_-]*oakland/i, /believeinoakland\.org/i];
 const hasLiteral = (t) => LITERALS.some(re => re.test(String(t || "")));
 const NONE_RE = /\bno group\b.*\brecorded\b/i;          // the absence, said in words (not pinned to one spelling)
 const SILENT_RE = /could not read (its|the) group/i;    // the silence, said as a silence
