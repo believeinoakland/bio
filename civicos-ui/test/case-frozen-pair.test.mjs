@@ -422,8 +422,12 @@ const DOC_PAIR = [
   { axis: "connection", state: "graded", grade: "B", weakest: "INFO-2026-8082-c", load_bearing: 1, population: 1, detail: "connection B." },
 ];
 const p4 = await openMock(mockFor({ id: MQ, sha: MSHA, fm: legacyFm,
+  /* NARROWER THAN THE WIRE ON PURPOSE, and stated (M0-23's precedent): the plane's several-cases refusal
+     also carries its code and a sentence, and NOTHING on the surface reads either — `inquiryCasePairs`
+     keys on the refusal's `cases[]` and renders no part of it. Section 1 drives the plane's real answer
+     through miniflare, whole; this mock carries only the fields the reader reads. */
   answer: (params) => !params.caseId
-    ? { ok: false, reason: "FINDING_IN_SEVERAL_CASES", target: MQ, cases: [MC1, MC2], detail: "two cases" }
+    ? { ok: false, target: MQ, cases: [MC1, MC2], memberships: [{ case_id: MC1, edition: 1 }, { case_id: MC2, edition: 1 }] }
     : params.caseId === MC1 ? caseAnswer(MC1, finding(MQ, { sha: MSHA, strength: LEGACY_PAIR, from: "member_bytes" }))
     : caseAnswer(MC2, finding(MQ, { sha: MSHA, strength: DOC_PAIR, from: "case_document" })) }), MQ);
 const b4 = blocksOf(strengthOf(p4));

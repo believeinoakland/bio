@@ -7857,9 +7857,12 @@ function inquiryPair(fmj){
    case's document (`findings[].strength`) and says WHICH signature covers it
    (`findings[].frozen_from`: `case_document` | `member_bytes`). It is read through `apiQ`, the
    credential-free seam, because what it answers is the published record, which is the same for a
-   member and a stranger. A finding in several cases is answered `FINDING_IN_SEVERAL_CASES` with
-   every candidate named, and this reader then asks ONCE PER CASE, naming it. IT NEVER PICKS ONE:
-   every case's pair comes back beside that case's name, in the order the plane named them.
+   member and a stranger. A finding in several cases is REFUSED with every candidate named in
+   `cases[]` (D-309 / IC-74's resolution aid), and this reader then asks ONCE PER CASE, naming it.
+   IT NEVER PICKS ONE: every case's pair comes back beside that case's name, in the order the plane
+   named them. It keys on that SHAPE — a refusal carrying the case ids to ask about — and never
+   renders the refusal's code or sentence to anybody, because the refusal is a question to this
+   reader and not a statement for a member.
 
    THE IDENTITY IS PROVED BY HASH, never assumed from the id. The published record is pinned to
    the record namespace (index.mjs `PUBLISHED_STORE`), and the working page may be reading another
@@ -7878,7 +7881,7 @@ async function inquiryCasePairs(id, workingSha){
   let answers;
   if(first && first.ok !== false && Array.isArray(first.findings)) answers = [first];
   else if(first && first.reason === "NOT_PUBLISHED") return { state:"answered", cases:[] };
-  else if(first && first.reason === "FINDING_IN_SEVERAL_CASES" && Array.isArray(first.cases) && first.cases.length){
+  else if(first && first.ok === false && Array.isArray(first.cases) && first.cases.length){
     answers = [];
     for(const caseId of first.cases) answers.push(await ask({ id, caseId: String(caseId) }));
   }
