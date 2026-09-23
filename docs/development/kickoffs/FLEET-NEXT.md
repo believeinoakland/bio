@@ -69,8 +69,8 @@ measured at the time given: re-measure it.**
 - Opened 2026-09-22T20:05Z; kickoff gate passed on FLEET #3's header; `node -v` v26.10.0; context measured with
   `get_session` well under 70%.
 - Nothing owed, nothing of FLEET's in the cache: D-260 is `queued` in `BACKLOG.md`, outside `QUEUE.md`'s cache.
-- Self-wake: one `send_later`, trigger `trig_01XwSgb6C3S5376zGgWDAfqL`, fires 2026-09-23T10:00Z (after DIST's 0.72.0
-  cut can first land). Each firing re-arms the next one; a successor finds it with `list_triggers`.
+- Self-wake: one `send_later` at a time, each firing re-arming the next ~24h out; a successor finds the live one with
+  `list_triggers` (current: see the newest self-wake reading below).
 - Landed its stand-up by pushing `HEAD:main` (before M0-111). Superseded: see "Landing changed" below.
 
 ## The one open FLEET defect, diagnosed by FLEET #4 (2026-09-23 ~00:05Z, `origin/main` `df9eb9f9`), routed to SCHEDULER #14
@@ -142,6 +142,13 @@ checkout whose locks match, or `npm ci`).
 (merge, never rebase or force), gate the MERGED tree GREEN locally, then push. Since `41c7e0c3`, `gates.yml` fires
 GitHub only on `main` (Bob: one run per landed batch). But GitHub reads `on:` from the PUSHED commit, so a branch based
 before `41c7e0c3` still fires under the old `land/**` trigger, and a red run emails Bob.
+
+**Self-wake reading, 2026-09-23T10:01Z (`main` @ `19101d04`):** `owed.mjs FLEET` reads 0 attributed. FL-11, FL-12 and D-260 are
+still `queued` in BACKLOG, and the cache holds eight rows, all other lanes', all running. Live: three members and
+`biosmoke7` serve `0.75.0`. Releases 0.72.0 through 0.75.0 exist only as `land/dist/release-*` branches (no tags past
+v0.71.0); 0.75.0's `RELEASE.json` names `a7e5f590…`, `b26dee19…`, `0d99f5d0…`, the same member bytes as every
+release since v0.59.0. `main`'s `RELEASE.json` reads 0.74.0. Staleness on `main`: 23 checked, 0 drift, 0 unreadable.
+Context ~30%. Next self-wake `trig_01TGRNTEDZPx5KHRkz3ekU4C`, 2026-09-24T10:00Z (the earlier one fired and is spent).
 
 ## Carried from the old account's memory, which will not travel
 
