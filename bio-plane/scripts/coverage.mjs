@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git log -1 (the last commit's date), which no
+   result key can name; traced 2026-09-23. */
 /* Coverage, measured in the units this project actually fails in.
  *
  * WHY NOT LINE COVERAGE. 36 of the 38 suites drive the plane through Miniflare,

@@ -1,3 +1,5 @@
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git show of a historical merge's parent, which no
+   result key can name; traced 2026-09-23. */
 /* NEGATIVE CONTROL: (1) make `countTransitions` in scripts/control-register.mjs
  * return 0 always -> A1 and A3 FAIL with the corpus PRINTED, A2 stays GREEN
  * because an enumerated declaration never depended on arrows. (2) make

@@ -69,7 +69,11 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    own branch printed `61 unit(s) of 350` before M0-100 reached it): the one new reader is M0-127's new suite `plane:gateverdict.test.mjs`, which imports `tools/pushguard.mjs` (the FAILED= grammar's
    reader) and so "walks docs/ in tools/pushguard.mjs" — the same reach `pushguard-check.test.mjs` already had. A
    legitimately added unit, not drift; `coord.mjs`'s reach (the subject here) is not moved by it. */
-const UNITS_CEILING = 62;
+/* MOVED AGAIN 2026-09-23 by CONDUCT #16 at the merge of M0-126 with M0-127 (each branch printed 62 alone; 62 -> 63): both
+   new readers are present on the merged tree, M0-127's `gateverdict.test.mjs` and M0-126's `gateresults.test.mjs`, each
+   importing `tools/pushguard.mjs` and so walking docs/. The figure below is the one this suite PRINTED on the merge.
+   M0-126's own note, kept: `gateresults.test.mjs` drives the guard's `gate-results` arm — a legitimate reader. */
+const UNITS_CEILING = 63;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 
