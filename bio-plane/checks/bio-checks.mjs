@@ -539,6 +539,101 @@ export function riskTierState(v) {
   return v === 1 || v === 2 || v === 3 ? v : null;
 }
 
+/* D-149 (Bob, 2026-09-22; BIO_Case_Making_v0_1.md §2, *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*):
+ * THE THREE LEVELS a governing law is stated at. Exported for the reason ACTION_KINDS is: C-2.10 judges an
+ * action's `governing_laws[]` against it, `op=actionlaws` refuses against it before anything is written, and
+ * `op=affordances` publishes it — one array, three readers.
+ *
+ * THE LEVEL IS THE MEMBER'S STATEMENT AND NEVER A DERIVATION. The layers follow the AGENCY ASKED (federal FOIA
+ * governs federal agencies only; a California state or local agency is governed by the CPRA; a city with a
+ * sunshine ordinance adds its own), and which agency a request went to is a fact the member holds and the plane
+ * does not. So nothing here maps a counterparty to a level, and nothing maps a level to a rule: the plane
+ * encodes no law's fees, clocks or appeals (the design's own words), because a citation stays true when the law
+ * changes and an encoded rule goes stale silently. */
+export const LAW_LEVELS = ['federal', 'state', 'local'];
+/* The most citations one act may set. Not a legal bound — a request under three levels names a handful — but
+   a statement bound: every entry lands in the document's frontmatter and on every read of the action. */
+export const GOVERNING_LAWS_MAX = 12;
+/* The longest citation, in characters: a citation names a law ("Cal. Gov. Code § 7920.000 et seq."), it does
+   not quote one. */
+export const CITATION_MAX = 200;
+
+/** D-149: WHICH LAWS GOVERN THIS ACTION, AS THE RECORD CAN SUPPORT IT. The one reader: the action's own read
+ *  (`op=projection`'s action block) and the suite read this function, so the sentence a reader is shown and
+ *  the state it describes cannot come apart.
+ *
+ *  TWO STATES, AND THE SECOND IS THE ITEM. `stated` — a member set the list, and it is returned exactly as
+ *  authored with who set it and when. `undetermined` — no member has stated which laws govern this action, and
+ *  the answer SAYS SO IN WORDS rather than returning an empty list a reader would take as "none apply" or,
+ *  worse, as the federal default the design's earlier drafts assumed (wrong for Oakland on every axis D-149
+ *  lists). Nothing is inferred from the counterparty, the kind or the group.
+ *
+ *  `cpra_request` IS THE ONE KIND THAT NAMES A LAW, and it is read as exactly that and nothing more: the kind
+ *  is its member's statement that the CPRA governs (D-149), so the undetermined sentence names it — and the
+ *  LIST stays undetermined, because whether a federal law or a local ordinance also governs is not in the
+ *  kind. The document is not rewritten and no citation is synthesised from the kind. */
+export function governingLawsOf(fm) {
+  const raw = fm && Array.isArray(fm.governing_laws) ? fm.governing_laws : [];
+  const laws = raw.filter((l) => l && typeof l === 'object' && !Array.isArray(l))
+    .map((l) => ({ level: String(l.level ?? ''), citation: String(l.citation ?? '') }));
+  if (laws.length) {
+    return { state: 'stated', laws,
+             by: typeof fm.governing_laws_by === 'string' && fm.governing_laws_by ? fm.governing_laws_by : null,
+             at: typeof fm.governing_laws_at === 'string' && fm.governing_laws_at ? fm.governing_laws_at : null,
+             stated: `${laws.length} governing law${laws.length === 1 ? '' : 's'}, stated by a member` };
+  }
+  const kindNames = fm && fm.action_kind === 'cpra_request';
+  return { state: 'undetermined', laws: [], by: null, at: null,
+           stated: 'UNDETERMINED: no member has stated which laws govern this action. The record assumes none — '
+                 + 'not federal law, not state law, not a local ordinance. Which laws apply follows the agency '
+                 + 'asked, and a member states them, each by citation.'
+                 + (kindNames ? ' This action\'s kind, cpra_request, is its member\'s statement that the '
+                              + 'California Public Records Act governs it; nothing else is inferred from the '
+                              + 'kind.' : '') };
+}
+
+/** D-149: C-2.10's governing-law arm. Judges the SHAPE of `governing_laws[]` and the coherence of its
+ *  attribution; it cannot judge whether a citation is the right law, and says so by not trying — a member
+ *  reads the law. Absent or `[]` is the honest undetermined and passes; a list is attributed or it is refused,
+ *  because a citation nobody stated is the record asserting a legal frame no member chose. */
+function governingLawsFindings(fm, findings) {
+  const has = Object.prototype.hasOwnProperty.call(fm, 'governing_laws');
+  const by = typeof fm.governing_laws_by === 'string' ? fm.governing_laws_by.trim() : '';
+  const at = typeof fm.governing_laws_at === 'string' ? fm.governing_laws_at.trim() : '';
+  if (!has || fm.governing_laws === null || (Array.isArray(fm.governing_laws) && !fm.governing_laws.length)) {
+    if (by || at)
+      findings.push(f('C-2.10', 'error',
+        'governing_laws is empty and governing_laws_by/_at name an act that set it: an attribution with no '
+        + 'list asserts a statement the document does not carry (D-149)',
+        ['set the list with op=actionlaws', 'or remove governing_laws_by and governing_laws_at']));
+    return;
+  }
+  if (!Array.isArray(fm.governing_laws)) {
+    findings.push(f('C-2.10', 'error', 'governing_laws is not a list of {level, citation} entries (D-149)'));
+    return;
+  }
+  if (fm.governing_laws.length > GOVERNING_LAWS_MAX)
+    findings.push(f('C-2.10', 'error', `governing_laws holds ${fm.governing_laws.length} entries; at most ${GOVERNING_LAWS_MAX}`));
+  fm.governing_laws.forEach((l, i) => {
+    if (!l || typeof l !== 'object' || Array.isArray(l)) {
+      findings.push(f('C-2.10', 'error', `governing_laws[${i}] is not a {level, citation} entry`)); return;
+    }
+    if (!LAW_LEVELS.includes(l.level))
+      findings.push(f('C-2.10', 'error', `governing_laws[${i}].level '${l.level}' is not one of: ${LAW_LEVELS.join(', ')}`));
+    const c = typeof l.citation === 'string' ? l.citation.trim() : '';
+    if (!c) findings.push(f('C-2.10', 'error', `governing_laws[${i}].citation is empty: a law is named by its citation`));
+    else if (c.length > CITATION_MAX)
+      findings.push(f('C-2.10', 'error', `governing_laws[${i}].citation is longer than ${CITATION_MAX} characters`));
+  });
+  if (!by || isMachineIdentity(by))
+    findings.push(f('C-2.10', 'error',
+      by ? `governing_laws_by '${by.slice(0, 40)}' is a machine identity: the laws governing a request are a member's authored statement (D-149)`
+         : 'governing_laws carries no governing_laws_by: a list of governing laws is a member\'s authored statement and names who made it (D-149)',
+      ['set the list with op=actionlaws, signed in as a member']));
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(at))
+    findings.push(f('C-2.10', 'error', `governing_laws_at '${at}' is not a timestamp: the act that set the list is dated`));
+}
+
 /* REC-24 (a): the two kinds a leg of an action's basis may carry. Exported for
  * the same reason ACTION_KINDS is — op=affordances publishes it and the store
  * projects against it, so the gate and the publication read ONE array. */
@@ -4609,6 +4704,7 @@ function checkActionExtension(ctx, findings) {
   /* D-182: 1, 2, 3 or undetermined (absent reads undetermined); the words are RISK_TIERS'. */
   if (riskTierState(fm.risk_tier) === null) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(', ')}`));
   checkCounterparty(fm, findings);
+  governingLawsFindings(fm, findings);
   /* REC-39: the four words are RESOLUTIONS at module level (exported for
      op=affordances) so this finding, op=actionmove's own refusal and the
      published vocabulary read one array — the ACTION_KINDS line above exactly.
@@ -9522,6 +9618,64 @@ export const MACHINE_FENCE_CHECKS = {
       + 'somebody in the group answers for, and the record names who did it. The credential that asked '
       + 'here is an automated one: it can help prepare the draft, and it cannot address it to anyone. '
       + 'Sign in to do this yourself.',
+  },
+  /* D-149 (BIO_Case_Making_v0_1.md §2): stating which laws govern a records request is a member's authored
+     act — the design's words are *set by a member's authored act*, and a machine may PROPOSE a list, labelled
+     as machine work, and never set it. No proposal is built; the fence is the half that is. */
+  MACHINE_CANNOT_SET_LAWS: {
+    check: 'C-32.18',
+    where: 'src/store.mjs actionLaws > is-machine-set-laws',
+    translation: 'Which laws govern a request is a statement a member makes and is named beside: the laws '
+      + 'follow the agency asked, and somebody has to have read them. The credential that asked here is an '
+      + 'automated one, so it can gather what the agency is and cannot state which laws apply. Sign in to set '
+      + 'the list yourself.',
+  },
+};
+
+/* =========================================================================
+ * D-149 — THE GOVERNING-LAW FAMILY (C-73). `BIO_Case_Making_v0_1.md` §2, *A RECORDS REQUEST NAMES EVERY LAW
+ * THAT GOVERNS IT* (Bob, 2026-09-22).
+ *
+ * The list is set by ONE act, `op=actionlaws`, and by nothing else — not at creation, not by a revision through
+ * `op=promote`. That is what makes "an action with none reads undetermined" true of the BYTES and not only of a
+ * read: a writer that filled a citation in at creation would pass every read-side assertion while the record
+ * asserted a legal frame no member chose, so the creation arm is refused BY NAME (GOVERNING_LAWS_REWRITTEN).
+ * The machine fence is C-32.18, in its own family.
+ * ========================================================================= */
+export const GOVERNING_LAW_CHECKS = {
+  GOVERNING_LAWS_REWRITTEN: {
+    check: 'C-73.1',
+    where: 'src/store.mjs promote > is-promote-governing-laws',
+    translation: 'The laws that govern a request are set by a member with the governing-laws act, and a '
+      + 'document created or revised any other way carries them unchanged. This write would have set or '
+      + 'changed them without that act, so nothing was written. Use the governing-laws act to state them.',
+  },
+  NO_LAWS: {
+    check: 'C-73.2',
+    where: 'src/store.mjs actionLaws > is-laws-entry',
+    translation: 'The act names at least one law, each by its citation and its level. With none named there is '
+      + 'nothing to set: a request whose laws nobody has stated reads as undetermined on its own, and '
+      + 'setting an empty list would not make that any truer.',
+  },
+  BAD_LAW_LEVEL: {
+    check: 'C-73.3',
+    where: 'src/store.mjs actionLaws > is-laws-entry',
+    translation: 'Each law is stated at one of three levels: federal, state or local. One entry named a level '
+      + 'outside those three, so nothing was written.',
+  },
+  BAD_CITATION: {
+    check: 'C-73.4',
+    where: 'src/store.mjs actionLaws > is-laws-entry',
+    translation: 'Each law is named by its citation — a short reference such as a code section — and one entry '
+      + 'was empty, too long, repeated, or held a quotation mark, backslash or line break, which this record '
+      + 'cannot store. Nothing was written.',
+  },
+  TOO_MANY_LAWS: {
+    check: 'C-73.5',
+    where: 'src/store.mjs actionLaws > is-laws-entry',
+    translation: 'One act states at most twelve governing laws. A request governed at the federal, state and '
+      + 'local levels names a handful; a longer list is more likely a list of every law that might apply than '
+      + 'of the ones that do. Nothing was written.',
   },
 };
 

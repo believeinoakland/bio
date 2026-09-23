@@ -604,12 +604,12 @@ const cat = await affordances(null);
    item 7 rules APPENDS to the relationship's history. Corrected, not loosened,
    for every note above's reason; it moved by exactly the one object-directed
    op REC-136 added. */
-/* CORRECTED 2026-09-23 (D-311): TWENTY-SEVEN, with the seven roster acts folded in on the per-pair
-   fact. Corrected, not loosened, for every note above's reason; it moved by exactly the seven. */
-t("no target -> the whole catalogue: twenty-seven acts, each with id/label/weight/needs/mode/rung/prompt",
+/* CORRECTED 2026-09-23 (CONDUCT #18 at D-149's merge onto c17-batch7): TWENTY-EIGHT — D-311's twenty-seven plus
+   D-149's `actionlaws`. Each side's count was right on its own base; the union carries both. */
+t("no target -> the whole catalogue: twenty-eight acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 27, true]);
+  [true, 28, true]);
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
    null for every act no ruling attaches one to, and where a ruling does attach
    one it is the PUBLISHED constant — so a surface that has the control
@@ -1051,8 +1051,10 @@ await promote(ACTN, actnMd(ACTN), "action", "planned");
 /* CORRECTED 2026-09-23 (D-311): asked as RUTH, a member — the assertion two below drives the act
    with the machine credential and it is refused BY NAME, which is the disagreement D-311 closes. */
 const affActn = await affordances(ACTN, RUTH);
-t("an action publishes the two acts that operate it (REC-24)",
-  [affActn.ok, actIds(affActn)], [true, ["actioncorrespond", "actionmove"]]);
+/* CORRECTED 2026-09-23 (D-149): THREE, with `actionlaws`. The old assertion was right for REC-24's two and
+   is corrected rather than loosened, so a published act on an action still cannot appear unannounced. */
+t("an action publishes the three acts that operate it (REC-24's two, D-149's governing laws)",
+  [affActn.ok, actIds(affActn)], [true, ["actioncorrespond", "actionlaws", "actionmove"]]);
 /* DEC-8 both ways, in the same run and on the same object: what is published is
    what the store accepts, and what the store refuses is refused for a reason a
    surface renders rather than computes. A machine credential REACHES both and

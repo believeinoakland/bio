@@ -68,7 +68,7 @@
  */
 
 import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KINDS,
-         CORRESPONDENCE_DIRECTIONS, RESOLUTIONS, RISK_TIERS,
+         CORRESPONDENCE_DIRECTIONS, RESOLUTIONS, RISK_TIERS, LAW_LEVELS,
          /* REC-43 / DEC-39. The two letters the co-attestation fence states are
             the RULE's own, imported from where the refusal that enforces it is
             computed, so the sentence a member reads and the grade the gate will
@@ -539,6 +539,9 @@ export const RUNG_ABSENCE_GROUNDS = {
  * catalogue's own C-2.10 suite, imported from the module that enforces it. */
 export const VOCABULARIES = {
   action_kind: ACTION_KINDS,
+  /* D-149. The three levels a records request's governing law is stated at, published so the surface that
+     offers `op=actionlaws` keeps no copy — the catalog's array, which C-2.10 and the act's refusal also read. */
+  law_levels: LAW_LEVELS,
   dispositions: DISPOSITIONS,
   /* REC-14 / DEC-13. Published so a ceremony surface never keeps its own copy
      of the three positions. WHICH position a group takes gates NOTHING —
@@ -856,6 +859,7 @@ export const RUNG_ABSENT = {
   taskforward:          { ground: "undetermined", is: "moves a task to another member; assignee-fenced by the store" },
   taskresolve:          { ground: "undetermined", is: "records how a task ended" },
   actioncorrespond:     { ground: "undetermined", is: "records what came back from outside the system — REC-23's counterparty, named or honestly undetermined" },
+  actionlaws:           { ground: "undetermined", is: "a member's attributed statement of the laws governing an action's request (D-149); restated by a further act, never cleared, and the Session Log keeps what each statement replaced" },
   projectfork:          { ground: "undetermined", is: "creates a NEW project; the source object is unchanged, and nothing folds a fork back" },
   biasadopt:            { ground: "undetermined", is: "the authored, attributed adoption putting a declared-bias set in force for a scope (DEC-54 c/d)" },
   strengthbar:          { ground: "undetermined", is: "the GROUP's declared default required strength (DEC-17)" },
@@ -1514,6 +1518,10 @@ export const ACTS = [
      Weight `single`: the ledger is append-only, one entry at a time. NO RUNG,
      for actionmove's reason. */
   { id: "actioncorrespond", label: "Record correspondence", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" },
+  /* D-149. Stating which laws govern the request, on an action in ANY state, for actioncorrespond's reason:
+     the store's own guard is the object's TYPE and nothing else. Weight `single`: one list, one act. */
+  { id: "actionlaws", label: "State governing laws", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" },
   /* PL-2 / IS-2 — THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE.
    *

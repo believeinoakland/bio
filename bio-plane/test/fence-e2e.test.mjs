@@ -896,6 +896,9 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
     MACHINE_CANNOT_RESOLVE:      ["taskresolve", { id: "TASK-2026-0001-x" }],
     /* REC-126 / C-32.16 — the harvest named it until it was driven here. */
     MACHINE_CANNOT_REVIEW:       ["casedraft", { project: "PROJ-2026-9000-x" }],
+    /* D-149 / C-32.18 — stating an action's governing laws. The completeness arm went red naming it
+       until it was driven here. */
+    MACHINE_CANNOT_SET_LAWS:     ["actionlaws", { target: INQ, laws: [] }],
   };
   /* HARVESTED, NEVER TYPED: a thirteenth fence must not arrive unmeasured, and
      the harvest is asserted non-empty BEFORE anything is compared over it — a
@@ -954,15 +957,19 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
     /* MOVED 12 -> 13 on 2026-09-18 by REC-126: C-32.16 MACHINE_CANNOT_REVIEW
        arrived through the same decoration with NO edit to it, which is the
        mechanism arm below doing exactly what it promised. */
-    [mute, explained.length], [[], 13]);
+    /* MOVED 13 -> 14 on 2026-09-23 by D-149: C-32.18 MACHINE_CANNOT_SET_LAWS, through the same decoration
+       with no edit to it. */
+    [mute, explained.length], [[], 14]);
   t("(and the set is asserted EMPTY by name rather than by count, so a thirteenth fence written the "
   + "mute way lands here as a FAILURE naming itself rather than as a silent fall)",
     mute.includes("MACHINE_CANNOT_PUBLISH"), false);
   t("and it is one MECHANISM rather than twelve conformances — the decoration attaches the catalog "
   + "row on the way out, so a fence added tomorrow is explained without its author knowing this "
   + "rule exists. That is what VF-5's finding bought.",
-    explained.length === 13 && explained.includes("MACHINE_CANNOT_MOVE_VERSION")
-      && explained.includes("MACHINE_CANNOT_REVIEW"), true);
+    /* MOVED 13 -> 14 by D-149, and the fence it added is named: it was written with no knowledge of this
+       rule and arrived explained, which is the claim. */
+    explained.length === 14 && explained.includes("MACHINE_CANNOT_MOVE_VERSION")
+      && explained.includes("MACHINE_CANNOT_REVIEW") && explained.includes("MACHINE_CANNOT_SET_LAWS"), true);
 }
 
 } finally {

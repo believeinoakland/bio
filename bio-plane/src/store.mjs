@@ -192,7 +192,11 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             the canned translation are ONE ROW read from one place. */
          CONTRADICTION_PAIR_CHECKS,
          /* D-148 / C-72: the fee-quote grammar's one rule and its refusal family. */
-         QUOTE_CHECKS, quoteFindings, quoteValue, isQuoteEntry } from "../checks/bio-checks.mjs";
+         QUOTE_CHECKS, quoteFindings, quoteValue, isQuoteEntry,
+
+         /* D-149: the three levels, the two bounds and the ONE reader of an action's governing laws, from the
+            catalog that judges them (C-2.10) — the act, its refusal and the read cannot disagree. */
+         LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, governingLawsOf } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* D-440: the FORMAT registry's own answer to "does this format walk parts",
    which is what makes a capture an office container (`#containerKindOf`). */
@@ -498,6 +502,10 @@ import { RISK_TIERS, riskTierState } from "../checks/bio-checks.mjs";
    set" made structural rather than conventional: a flag any writer could set is
    the liar this item exists to refuse (MEMBER-KNOWLEDGE-DESIGN.md section 7). */
 const TESTIMONY_PATH = Symbol("mk1-testimony-path");
+/* D-149: the one write that may set or change an action's governing laws is `actionLaws`, and it says so to
+   `promote` under this Symbol. A Symbol, for TESTIMONY_PATH's reason: no JSON body a caller sends can carry
+   one, so `op=promote` cannot claim to be the act. */
+const LAWS_ACT = Symbol("d149-laws-act");
 
 /* D-309 / DEC-49, `src/airun.mjs`'s precedent exactly. THE CODE IS A STRING
    LITERAL AT ITS SITE and reaches the wire through here, because a code held in
@@ -1916,6 +1924,10 @@ export class Store extends DurableObject {
       as_of: new Date(now).toISOString(),
       basis: legs,
       correspondence: ledger,
+      /* D-149: WHICH LAWS GOVERN THIS ACTION — stated by a member, or UNDETERMINED with its sentence. Read by
+         the catalog's one reader from the document's own bytes, so an action nobody set a list on cannot read
+         as governed by anything, federal law included. */
+      governing_laws: governingLawsOf(fm),
       /* DEC-14, derived by the catalog's own function so no reader composes it. */
       consequence: consequenceState(fm),
       /* REC-24 (g)'s CONSUMER: the documents that point back at this action. */
@@ -6711,6 +6723,148 @@ export class Store extends DurableObject {
              ...(Object.keys(quote).length ? { quote } : {}),
              ...(responded ? { responds_to: responded } : {}),
              weight: "single" };
+  }
+
+  /* D-149 (Bob, 2026-09-22; BIO_Case_Making_v0_1.md §2, *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*):
+   * SETTING THE LIST OF LAWS THAT GOVERN AN ACTION.
+   *
+   * *"ALL records laws apply."* The layers follow the AGENCY ASKED — federal FOIA governs federal agencies, the
+   * CPRA a California state or local agency, and a city's sunshine ordinance adds its own — so a request carries
+   * a LIST, each law named by CITATION and stated at its level. This act is how the list is set, and the ONLY
+   * way: `promote` refuses a creation or a revision that sets or changes it without this act
+   * (GOVERNING_LAWS_REWRITTEN), so an action nobody stated a list for is undetermined IN ITS BYTES.
+   *
+   * A NAMED MEMBER SETS IT. The design: *set by a member's authored act; the machine may propose the list from
+   * the counterparty, labelled as machine work, and never sets it*. So a machine credential is refused BY NAME
+   * (MACHINE_CANNOT_SET_LAWS), the actionMove precedent. No proposal is built.
+   *
+   * THE WHOLE LIST, REPLACED. A member states the laws that govern the request as a set; adding one later is a
+   * new statement of the set, attributed and dated anew, and the Session Log keeps what it replaced. There is
+   * no act that clears it: an empty list is the undetermined state, and a member does not "set" it — nobody
+   * having stated the laws is what it means.
+   *
+   * THE PLANE ENCODES NO LAW'S RULES. A citation is stored as the member wrote it and never parsed for a fee,
+   * a clock or an appeal route, and nothing is inferred from the counterparty or the kind. */
+  actionLaws({ target, laws = null, viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-machine-set-laws — D-149/C-32.18. The fence alone. */
+    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
+      return { ok: false, reason: "MACHINE_CANNOT_SET_LAWS",
+               detail: "which laws govern a request is a named member's authored statement (D-149). A machine "
+                     + "credential may gather what the agency is and may not state the laws. Sign in as a member." };
+    /* END DEC-49 REGION is-machine-set-laws */
+    if (!target)
+      return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    let list = laws;
+    if (typeof list === "string") { try { list = JSON.parse(list); } catch { list = null; } }
+    const entries = [];
+    /* DEC-49 REGION is-laws-entry — D-149/C-73.2-5. The conditions on the LIST's own shape. */
+    if (!Array.isArray(list) || !list.length)
+      return { ok: false, reason: "NO_LAWS", legal_levels: LAW_LEVELS,
+               detail: "the act names at least one law as {level, citation}. An action whose laws nobody has "
+                     + "stated reads UNDETERMINED on its own; an empty list is not a statement." };
+    if (list.length > GOVERNING_LAWS_MAX)
+      return { ok: false, reason: "TOO_MANY_LAWS", count: list.length, max: GOVERNING_LAWS_MAX,
+               detail: `one act states at most ${GOVERNING_LAWS_MAX} governing laws` };
+    const seen = new Set();
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      const level = e && typeof e === "object" ? String(e.level ?? "").trim() : "";
+      const citation = e && typeof e === "object" && typeof e.citation === "string" ? e.citation.trim() : "";
+      if (!LAW_LEVELS.includes(level))
+        return { ok: false, reason: "BAD_LAW_LEVEL", index: i, level, legal: LAW_LEVELS,
+                 detail: `laws[${i}].level is one of ${LAW_LEVELS.join(", ")}` };
+      if (!citation || citation.length > CITATION_MAX || /["\\\r\n]/.test(citation))
+        return { ok: false, reason: "BAD_CITATION", index: i,
+                 detail: `laws[${i}].citation is 1 to ${CITATION_MAX} characters with no quote, backslash or `
+                       + "newline: the restricted frontmatter grammar has no escapes" };
+      const key = `${level}\u0000${citation.toLowerCase()}`;
+      if (seen.has(key))
+        return { ok: false, reason: "BAD_CITATION", index: i,
+                 detail: `laws[${i}] repeats an earlier entry: a law is named once at its level` };
+      seen.add(key);
+      entries.push({ level, citation });
+    }
+    /* END DEC-49 REGION is-laws-entry */
+
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
+               detail: "governing laws belong to an action: they are the laws its request is made under." };
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return { ok: false, reason: "NO_DOCUMENT", target,
+               detail: "this action has no readable bundle.md, so its governing laws cannot be set" };
+    const fm = parseFrontmatter(liveMd.content).data || {};
+    const before = governingLawsOf(fm);
+    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    let text = Store.#replaceGoverningLaws(liveMd.content, entries);
+    if (!text)
+      return { ok: false, reason: "UNSPLICEABLE_GOVERNING_LAWS", target,
+               detail: "this action's governing_laws block is not in a shape this grammar can replace in place, "
+                     + "so nothing was written." };
+    text = Store.#setOrAddScalar(text, "governing_laws_by", `"${Store.#fmSafe(who)}"`);
+    text = Store.#setOrAddScalar(text, "governing_laws_at", `"${when}"`);
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+    text = Store.#appendSessionLog(text,
+      `### Session ${when} | Governing laws stated | ${who}\n`
+      + `Trigger: op=actionlaws on ${target}\n`
+      + `Changes: governing_laws set to ${entries.map((e) => `${e.level} ${e.citation}`).join("; ")}.\n`
+      + `Replaced: ${before.state === "stated"
+          ? before.laws.map((e) => `${e.level} ${e.citation}`).join("; ") + ` (stated by ${before.by ?? "nobody recorded"})`
+          : "nothing: the list was undetermined"}\n`);
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: who, [LAWS_ACT]: true,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: fm.object_type ?? b.object_type,
+              title: fm.title, current_state: b.current_state, prior_state: fm.prior_state ?? null,
+              created: fm.created, last_updated: when, criticality: fm.criticality ?? null },
+    });
+    if (!promoted.ok) return { ...promoted, target };
+    return { ok: true, target, laws: entries, by: who, at: when,
+             replaced: before.state === "stated" ? before.laws : null, weight: "single" };
+  }
+
+  /* D-149: REPLACE the top-level `governing_laws:` block (the key line and its indented rows) with `entries`,
+     or open it before the closing fence when absent — `#spliceCorrespondence`'s grammar, whole-block. Returns
+     null for a block it cannot read as that shape (an inline value other than `[]`), refusing rather than
+     guessing: the grammar has no escapes and a wrong guess corrupts the document silently. */
+  static #replaceGoverningLaws(text, entries) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    const block = ["governing_laws:", ...entries.flatMap((e) => [
+      `  - level: ${e.level}`,
+      `    citation: "${e.citation}"`,
+    ])];
+    let gi = -1;
+    for (let i = 1; i < end; i++) if (/^governing_laws:/.test(lines[i])) { gi = i; break; }
+    if (gi === -1) return [...lines.slice(0, end), ...block, ...lines.slice(end)].join("\n");
+    const rest = lines[gi].slice("governing_laws:".length).trim();
+    if (rest !== "" && rest !== "[]") return null;
+    let last = gi;
+    if (rest === "")
+      for (let i = gi + 1; i < end; i++) {
+        if (lines[i].trim() === "") continue;
+        if (/^\s/.test(lines[i])) { last = i; continue; }
+        break;
+      }
+    return [...lines.slice(0, gi), ...block, ...lines.slice(last + 1)].join("\n");
   }
 
   /* REC-24 (g): write the `responds_to` edge onto the CAPTURED REPLY, pointing
@@ -15777,6 +15931,40 @@ export class Store extends DurableObject {
             + `surfaced a question is recorded once, at its creation; a revision carries it forward unchanged. `
             + `Nothing was written.`, { bundleId, current: was, revision: now });
         /* END DEC-49 REGION is-promote-surfaced-by */
+      }
+
+      /* D-149 / C-73.1 — AN ACTION'S GOVERNING LAWS ARE SET BY `op=actionlaws` AND BY NOTHING ELSE. Asked of
+         every CREATION of an action and every REVISION of one, after the compare-and-swap and before any write,
+         on the surfaced_by pattern above: the list, its author and its date are read by the catalog's own parser
+         from the held version and from this one, and any difference not carried under LAWS_ACT is refused. That
+         is what makes the undetermined read a fact about the BYTES: a creation that filled a citation in — the
+         liar's pass the row names — never lands, and neither does a revision (a member's or a machine's) that
+         edits the list, its `by` or its `at` around the act that names who stated it. `[]` and an absent key
+         are one state, undetermined. Every other writer in this file splices other keys and carries the block
+         forward byte-for-byte. */
+      if (!pkg[LAWS_ACT] && ((cur && normalizeType(cur.object_type) === "action")
+                             || (!cur && normalizeType(meta.object_type) === "action"))) {
+        const lawsOf = (text) => {
+          if (typeof text !== "string") return "unreadable";
+          const fm = parseFrontmatter(text).data;
+          if (!fm || typeof fm !== "object") return "unreadable";
+          const l = Array.isArray(fm.governing_laws) && fm.governing_laws.length ? fm.governing_laws
+            : (fm.governing_laws === undefined || fm.governing_laws === null
+               || (Array.isArray(fm.governing_laws) && !fm.governing_laws.length)) ? null : fm.governing_laws;
+          return JSON.stringify([l, fm.governing_laws_by ?? null, fm.governing_laws_at ?? null]);
+        };
+        const heldLaws = cur ? this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId) : null;
+        const nextLaws = files.find((f) => f && f.path === "bundle.md");
+        const was = cur ? lawsOf(heldLaws ? heldLaws.content : null) : JSON.stringify([null, null, null]);
+        const now = lawsOf(nextLaws ? nextLaws.text : null);
+        /* DEC-49 REGION is-promote-governing-laws */
+        if (was !== now)
+          return { ok: false, reason: "GOVERNING_LAWS_REWRITTEN", bundleId,
+                   detail: `${cur ? "this revision of" : "this creation of"} ${bundleId} sets or changes its `
+                         + "governing laws without op=actionlaws. The laws that govern a request are a member's "
+                         + "authored statement, set by that act and carried forward unchanged by every other "
+                         + "write. Nothing was written." };
+        /* END DEC-49 REGION is-promote-governing-laws */
       }
 
       /* MK-1 / D-184 — THE AUTHORED FLAG'S FENCE, HERE AND BEFORE THE FIRST
@@ -45559,6 +45747,12 @@ export class Store extends DurableObject {
         actionmove: () => this.actionMove({ target: url.searchParams.get("target"),
           to: url.searchParams.get("to"), reason: url.searchParams.get("reason"),
           resolution: url.searchParams.get("resolution"),
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author") }),
+        /* D-149: the list arrives in the POST body — it is several entries of prose-like citations, and a
+           query string is a poor place for them. `author` and `viewer` are the control plane's stamps. */
+        actionlaws: () => this.actionLaws({ target: url.searchParams.get("target") || (body || {}).target,
+          laws: (body || {}).laws,
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         actioncorrespond: () => this.actionCorrespond({ target: url.searchParams.get("target"),

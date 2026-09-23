@@ -675,6 +675,10 @@ const OPS = {
      checkbox these constructs exist to refuse. */
   actionmove:      { classes: ["admin", "member", "probe"],      mutating: true  },
   actioncorrespond:{ classes: ["admin", "member", "probe"],      mutating: true  },
+  /* D-149: stating the laws that govern an action's request. Conclude's class list for conclude's reason: a
+     machine class REACHES it and is refused BY THE STORE (MACHINE_CANNOT_SET_LAWS), so the refusal says what
+     is wrong. One `target`; the list arrives in the POST body. */
+  actionlaws:      { classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -1610,7 +1614,10 @@ const STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "reopen", "pu
    is in it. The author is the member whose name goes on the state_history entry
    and, on the testimony arm of a correspondence entry, on the evidence itself —
    which is the strictest reason in this file for a stamp to be the server's. */
-const ACTION_ACTIONS = ["actionmove", "actioncorrespond"];
+/* D-149 adds `actionlaws`, for REC-24's reason: it needs both SESSION_OPS lists, the server-side viewer stamp
+   and the server-side author stamp — the author is the member named beside the list of laws the request is made
+   under — and it moves no state, so STATE_ACTIONS would be the wrong list. */
+const ACTION_ACTIONS = ["actionmove", "actioncorrespond", "actionlaws"];
 /* REC-14 / DEC-17: declaring the group's default required strength is a
    session act whose AUTHOR is part of the declaration — "you can lower your own
    bar; you cannot do it quietly" — so it takes the author stamp without being a
@@ -2212,6 +2219,7 @@ const NEEDS = {
      session IS. */
   actionmove:       "contribute",
   actioncorrespond: "contribute",
+  actionlaws:       "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
