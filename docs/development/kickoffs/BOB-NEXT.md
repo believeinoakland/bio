@@ -5,6 +5,19 @@ then this. Every line is a POINTER measured at 2026-09-23 ~16:05Z; re-measure be
 (`session_019unCkzAzfmAPMLVuRNPvui`, ~68% context): this file is its running state, not yet a handoff. When a successor is
 named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from `list_triggers`) and archive it under D-398.
 
+## 0. BOB'S STANDING PRIORITY — READ FIRST, ACT ON IT EVERY TIME (Bob, 2026-09-23, said many times)
+
+**BIO development productivity is the focus; everything else is overhead or time wasted waiting. Keep the process that
+works; remove unnecessary work and pauses.** Before any act, ask: does this move product forward or unblock it? If not, don't.
+- **No releases of any kind until Bob asks.** DIST is idle; its wake is paused.
+- **Process changes go to lanes BY MESSAGE (trigger).** No branch, no commit, no push for them to take effect.
+- **Doc updates ride a train:** collect them; push one `land/bob/*` only when a train is due, never a push of their own; no separate gate.
+- **CONDUCT spawns continuously** (three hourly refill wakes :05/:25/:45) and lands every ~2h. A worker slot empty while runnable
+  rows wait is the defect to find.
+- **Refresh at 80%.** No worker cap for budget.
+- BOB #30's mistakes to not repeat: pushing docs branches outside a train; letting DIST cut releases; ruling a cadence that
+  made CONDUCT sleep; cancelling then re-arming own timers; over-correcting working processes.
+
 ## 1. THE ESTATE (~09:20Z)
 
 | lane | session | state |
