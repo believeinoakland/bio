@@ -33,7 +33,7 @@ and history belong in the design document the row cites, or in the archive.
 
 ## 2. The cycle — SCHEDULER's, as the owner of both files (`kickoffs/SCHEDULER.md`; Bob, 2026-09-18)
 
-**CONDUCT writes one word — a cached task's `queued` → `running` — and reports each completion to SCHEDULER.** Where
+**CONDUCT writes two words — a cached task's `queued` → `running`, and `running` → `integrated` once its branch is on a pushed batch — and reports each completion to SCHEDULER.** Where
 the steps below say CONDUCT refills or gates the plan, read SCHEDULER: the lane was created after this section was
 first written. SCHEDULER **replenishes** the cache; CONDUCT **fills slots**.
 
@@ -50,8 +50,10 @@ first written. SCHEDULER **replenishes** the cache; CONDUCT **fills slots**.
 
 **THE CACHE IS SIZED TO CONDUCT'S CAPACITY, NOT FIXED AT 8 — RULED 2026-09-23 by Bob, relayed by BOB #30:** *"Size the cache to CONDUCT's worker capacity, not to a fixed 8: keep at least as many runnable product rows as CONDUCT can run, plus a few spare"* (CONDUCT spawns continuously; overflow runs in cloud sessions). `CACHE_ROWS` is 12: 8 running and 4 spare, measured against the cache's own budget (8 rows and the header read 21,079 B on `coord` `3dca2f40`, so 12 sit near 34 KB of 40 KiB). Growing past it raises that budget, which every session reads whole, so it is brought to BOB with the measured need.
 
+**A FINISHED ROW WAITING ON ITS TRAIN HOLDS NO SLOT — `integrated`, 2026-09-23 (SCHEDULER #16, under the ruling above).** At 19:58Z all 12 cache rows were finished and unlanded (7 on one train, 5 on the next) and CONDUCT had nothing to spawn. So CONDUCT writes a second word: a row whose branch it has integrated on a PUSHED batch goes `running` → `integrated`. The row stays OPEN and in the cache (it is `done` only when SCHEDULER finds its sha on `origin/main`), but P3's count, the refill's room and the cache's byte budget read only the rows not `integrated` (`HELD_QUEUE_STATES` in `tools/ledger.mjs`).
+
 **The invariants, each a `plancheck` arm and a coord write's ledger check (FAIL):** every open id is in EXACTLY ONE of the cache and the backlog; no
-closed id is in either; the cache holds ≤ 12 rows and no `blocked` row; every cache row's `depends-on` is met; both files
+closed id is in either; the cache holds ≤ 12 rows not `integrated` and no `blocked` row; every cache row's `depends-on` is met; both files
 are within budget.
 
 **WHEN `BACKLOG.md` IS OVER ITS BUDGET, THE TAIL MOVES, NOT THE HEAD — RULED 2026-09-22 by BOB #28 on SCHEDULER #14's
