@@ -18993,6 +18993,48 @@ function pubGraphHtml(f, c){
       : `<p class="subj-note" data-graph="unresolved" data-graphcount="0" data-of="${of}">Every edge this case classified as servable still has a published edition behind it.</p>`}`;
 }
 
+/* UI-82 / BIO_Publication_v0_1.md §3 rule 12 (b)–(d), IC-183, IC-74: WHICH FROZEN PAIR A CASE ROW OF THE
+   INDEX DRAWS FOR ONE OF ITS MEMBERS, read off that member's `op=publishedmanifest` row `row` for case
+   edition `cs`. Under rule 12 the pair is a fact about ONE case's reading of a finding at one sha, so a
+   finding several cases pin may carry several pairs. Where their signed case documents DISAGREE the
+   plane (REC-170) serves the row's scalar `strength` as null, says why in `strengthUndetermined`, and
+   lists every ratified case edition's own pair in `strengthByCase` — and the scalar is then NOT "no
+   pair was frozen", which is what this index said of such a finding under every case until this item.
+   So, for the case row being drawn:
+     - a `strengthByCase` entry whose `case_id` AND `edition` are this row's -> THAT case's own pair,
+       and never another case's (IC-74: one case's reading shown under another is a lie with a label);
+     - `strengthByCase` present with no whole pair for this case edition -> UNDETERMINED, with the
+       reason, never a pair picked from the list and never the no-pair sentence;
+     - no list, but the scalar is null and the record marks it undetermined -> UNDETERMINED, with the
+       record's own reason (a plane answer this surface was not built against is said, not guessed);
+     - otherwise the row's scalar, exactly as before this item (one pair, or none frozen).
+   Keyed on the list's PRESENCE and never on the reason's code: the plane serves the list only where
+   the documents disagree (IC-183), and a surface that compared the code would be a second place the
+   plane's vocabulary is spelled. Returns { kind: "case" | "undetermined" | "row", pair, entry, list }. */
+function pubCasePairOf(row, cs){
+  if(!row) return { kind: "row", pair: null, entry: null, list: [] };
+  const list = Array.isArray(row.strengthByCase) ? row.strengthByCase.filter((e) => e && typeof e === "object") : null;
+  if(list){
+    const entry = list.find((e) => String(e.case_id) === String(cs && cs.case_id) && Number(e.edition) === Number(cs && cs.edition)) || null;
+    const pair = entry ? pubPair(entry) : null;
+    return pair ? { kind: "case", pair, entry, list } : { kind: "undetermined", pair: null, entry, list };
+  }
+  if(row.strength == null && row.strengthUndetermined) return { kind: "undetermined", pair: null, entry: null, list: [] };
+  return { kind: "row", pair: pubPair(row), entry: null, list: [] };
+}
+/* The sentence under a per-case pair, and the undetermined state's sentence. Both name the case, both
+   say the list exists and whose each entry is, and neither composes, picks or averages a pair. */
+function pubCasePairNoteHtml(got, row, cs, fid){
+  const named = (e) => `${esc(String(e.case_id))} edition ${esc(String(e.edition))}`;
+  const others = got.list.filter((e) => e !== got.entry);
+  if(got.kind === "case")
+    return `<span class="subj-how" data-pairfor-case="${esc(String(cs.case_id))}" data-pairfor-edition="${esc(String(cs.edition))}" data-finding="${esc(String(fid))}">This is case ${esc(String(cs.case_id))} edition ${esc(String(cs.edition))}'s own reading of this finding, as that case's signed document states it. The signed documents of the cases that pin these same bytes froze different pairs${others.length ? ` (${others.map(named).join("; ")} ${others.length === 1 ? "states its own" : "each state their own"}, shown on that case's row)` : ""}, so none of them is the finding's pair and none is combined with another here.</span>`;
+  const why = got.list.length
+    ? `the signed documents of the cases that pin these same bytes froze different pairs (the record lists ${got.list.map(named).join("; ")}), and ${got.entry ? "the entry for this case edition does not state both axes" : "this case edition is not among them"}`
+    : `the record marks this finding's frozen pair as undetermined${typeof row.strengthUndetermined === "string" ? ` and gives its reason as <b>${esc(row.strengthUndetermined)}</b>` : ""}, and lists no case's own pair`;
+  return `<span class="subj-how" data-pair-undetermined="${esc(String(fid))}" data-pairfor-case="${esc(String(cs.case_id))}" data-pairfor-edition="${esc(String(cs.edition))}">This page cannot say which frozen strength pair this case holds for this finding: ${why}. That is undetermined, not absent; no pair is picked or composed for it here.</span>`;
+}
+
 /* ============================================================
    THE INDEX — over CASE EDITIONS, per DEC-12 and DEC-44. An edition is a
    separate document and edition 1 keeps answering after edition 2 lands, so the
@@ -19196,8 +19238,14 @@ async function pubList(fromNav){
         /* THE MEMBER'S OWN RATIFIED ROW IS THE SOURCE (REC-49). `row.strength` is
            the pair frozen into the bytes that member signed — the same one the
            case page reads and the same one the container copies at assembly.
-           Read here, it answers in the awaiting window as well as after it. */
-        const pair = pubPair(row);
+           Read here, it answers in the awaiting window as well as after it.
+           CORRECTED 2026-09-23 (UI-82, IC-183), NOT EXEMPTED: "the pair frozen into the bytes that
+           member signed" stopped being the whole truth at rule 12 — the pair is each CASE's reading,
+           and where two cases' documents disagree the row's scalar is null and the pairs are listed
+           per case. `pubCasePairOf` reads THIS case edition's entry; a row with one pair reads as it
+           always did. */
+        const got = pubCasePairOf(row, cs);
+        const pair = got.pair;
         /* THE ROLE COMES OFF THE ROSTER ROW `m`, NOT OFF THE RATIFIED ROW `row`,
            and the distinction is the whole of DEC-72 clause 4: the designation is
            the PUBLISHER's authored partition of the case, which lives on
@@ -19225,7 +19273,11 @@ async function pubList(fromNav){
            What it says now is the only thing still true when it is reached:
            this ratified member has no frozen pair on the record at all. */
         return `<section class="pub-member" data-member="ratified" data-findingsec="${esc(m.bundle_id)}" data-leg="${esc(m.bundle_id)}"><span class="mono">${esc(m.bundle_id)}</span> &middot; ${esc(row.title || "untitled")}
-          <div style="margin-top:5px">${pair
+          <div style="margin-top:5px">${got.kind === "case"
+            ? `<div data-casepair-index="${esc(String(cs.case_id))}@${esc(String(cs.edition))}">${pubPairBadges(pair, m.bundle_id)}</div>${pubCasePairNoteHtml(got, row, cs, m.bundle_id)}`
+            : got.kind === "undetermined"
+            ? pubCasePairNoteHtml(got, row, cs, m.bundle_id)
+            : pair
             ? pubPairBadges(pair, m.bundle_id)
             : `<span class="subj-how" data-nopair="${esc(m.bundle_id)}">The published record carries no frozen strength pair for this ratified member: nothing was established on either axis at the edition it was ratified in. That is a fact about the record and not a gap in this page, and no pair is composed for it here.</span>`}</div>
           ${pubRoleBadgeHtml(role, m.bundle_id)}${pubOtherCasesHtml(byCaseOfFinding, m.bundle_id, cs.case_id)}</section>`;

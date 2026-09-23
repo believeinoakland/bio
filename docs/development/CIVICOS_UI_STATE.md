@@ -50,6 +50,41 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v101, 2026-09-23 session, thread UI, UI-82 (a WORKER of CONDUCT #15). Landed on `land/worker/UI-82` (base `origin/main` @
+`91913d6b`, which carries REC-170), in the commit that carries this entry. (`v100` is held by UI-81's claim, running
+beside this item; if CONDUCT integrates this first, the numbers stand as written and are only a ledger order.) SURFACE: the
+published index (`pubList`), each case row's member block.
+
+**What was wrong.** Since REC-170 (IC-183), where the ratified case documents pinning one sha state different frozen pairs,
+`op=publishedmanifest`'s `published[]` row serves `strength: null`, a reason in `strengthUndetermined`, and every case
+edition's own pair in `strengthByCase`. The index read the scalar alone, so a finding two cases froze two different pairs
+for was drawn, under BOTH cases, with *"The published record carries no frozen strength pair for this ratified member:
+nothing was established on either axis"*: false under each case. (Before REC-170 the same row showed the first case's
+pair under both, which IC-74 forbids; UI-80's v99 entry named the index as not done.)
+
+**What it does now.** For each case row it draws, the index reads the `strengthByCase` entry whose `case_id` and
+`edition` are that row's (`pubCasePairOf`, one new helper above `pubList`) and draws THAT case's pair, with a sentence
+naming the case and edition, saying the cases pinning these bytes froze different pairs, and naming the other cases whose
+rows carry theirs. None is the finding's pair and none is combined. Where the list names no whole pair for this case
+edition, or the record marks the scalar undetermined and lists none, the block says UNDETERMINED with its reason (the list's
+cases, or the record's own reason word), never the no-pair sentence and never another case's pair. The helper keys on the
+list's PRESENCE and never compares the reason's code, so no plane code is spelled in app.html (DEC-49 guard unchanged,
+353 in reach). A one-pair row, and a true no-pair row, render exactly as before.
+
+**Driven against the real plane**, `civicos-ui/test/published-index-pair.test.mjs` (20 assertions): REC-170's own fixture
+through the ops under miniflare (two projects, cases X and Y over Q, S, R; Q and S frozen B under X and C under Y; R the
+same under both; real SSHSIG), every expected pair read back from `op=publishedmanifest` and checked against
+`op=publishedcase`. The undetermined arms go over the real manifest edited in one field (the plane cannot be made to serve a
+list that misses a case it pins). On `origin/main` @ `91913d6b`'s app.html: 12/8. NEGATIVE CONTROL
+(`published-index-pair.control.mjs`), 4/4 AS DECLARED: the scalar read again RED 12/8, by name at the four PER CASE arms,
+NONE READS 'NO FROZEN PAIR' and the three UNDETERMINED arms; THE LIAR (the first listed case's pair under every case) RED
+16/4, at NEVER ONE CASE'S PAIR UNDER ANOTHER; the per-case sentence re-worded GREEN 20/0.
+
+**Not done, and where it lives.** The published case page (`pubOpen`) is UI-81's. A legacy `/1` case document does not
+join the plane's comparison (REC-170's stated limit), so a finding pinned by one `/1` and one `/2` case with different
+pairs is served as one pair, and this index draws that pair under both. That is the plane's reader and not this surface's.
+Nothing is live; no deploy is this item's.
+
 v99, 2026-09-23 session, thread UI, UI-80 (a WORKER of CONDUCT #15). Landed on `land/worker/UI-80` (base `origin/main` @
 `95c40ed9`), in the commit that carries this entry. (Written as `v98`; renumbered `v99` by CONDUCT #15 at
 integration, 2026-09-23, because UI-79's entry, integrated first in the same train, holds `v98`.) SURFACE: the working inquiry page's Strength section, and the published case
