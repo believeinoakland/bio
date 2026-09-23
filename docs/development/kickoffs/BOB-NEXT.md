@@ -6,7 +6,8 @@ re-measure before acting on a line.
 
 ## 0. YOUR FIRST ACTS
 
-1. **Confirm BOB #28 is stopped**: `list_sessions` (it is `session_01B49LNsE5y9cUtTYUj5Vvab`), and `list_triggers` shows no
+1. **Confirm BOB #28 is stopped** (it stood down at ~00:50Z on 2026-09-23 at 69.7% context, left NO self-wake armed, its
+   tree clean at `main` `7b4d3942`): `list_sessions` (it is `session_01B49LNsE5y9cUtTYUj5Vvab`), and `list_triggers` shows no
    pending `BOB #28 self-wake` (it deletes its own at the stand-down; delete any left from YOUR listing, never by an id copied
    from here). Then archive it under D-398's three conditions.
 2. **The SessionStart hook** gave you node 26, full history, the four packages, `ssh-keygen` and the id ledger's directory:
@@ -25,7 +26,7 @@ re-measure before acting on a line.
 | lane | session | context | state |
 | --- | --- | --- | --- |
 | SCHEDULER #14 | `session_01NJaaa2rxA1aZsrQYBt8ABK` | 36% | drained both BOB inboxes; LED-7 batch S14-1; placing BOB #28's three rows of `d88a2d3d` |
-| CONDUCT #14 | `session_016wUwh4LXjcdSfznta957Yb` | 34% | REC-166, REC-165, M0-107, REC-167, UI-77, M0-117 and **M0-110 INTEGRATED, `coord` CUT OVER** (triggered BOB at 23:58Z) |
+| CONDUCT #14 | `session_016wUwh4LXjcdSfznta957Yb` | 34% | REC-166, REC-165, M0-107, REC-167, UI-77, M0-117 and **M0-110 INTEGRATED, `coord` CUT OVER** (23:58Z); wave 5 running at 00:12Z: **D-442** (BOB #28's Publication §3 rule 12) and REC-168 |
 | DIST #5 | `session_01DUyQVnz7x2hK5EajCdhEfC` | 12% | 0.72.0 batch owed from 2026-09-23 04:00Z; BLOCKED on Cloudflare (§3 item 1); routine every 6 h |
 | FLEET #4 | `session_01YB9VgJtjiXwQ5vtx4fLvRB` | 11% | nothing owed; wake 2026-09-23 10:00Z |
 
@@ -44,6 +45,10 @@ The old account's sessions are invisible from here; its BOB #27 is Bob's to clos
   `BACKLOG-LATER.md`; 200 KiB until built). M0-99's four BOB sentences corrected.
 
 ## 3. OWED — in this order
+
+0. **SCHEDULER #14's DELEGATION to BOB on `coord` (00:26Z): three LED-7 design questions, D-129, D-170 and D-181.** Rule
+   each from the doctrine it rests on, verified at the code, in its home document (BOB.md rule 11), then the BOB INBOX
+   (`coord.mjs write`), and discharge the DELEGATION.
 
 1. **Cloudflare is REFUSED by the environment's proxy** (every Cloudflare host and `*.workers.dev`; retried 22:48Z, and from a
    FRESH session at 22:14Z, so it is not a new-session effect). Bob was adding two API credentials on the BIO environment:
