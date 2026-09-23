@@ -581,6 +581,13 @@ whose delivered bytes are stable and whose content is absent. Contract also sets
 expected check frequency, because a delisting is time-sensitive and a regulation is
 not.
 
+**RULED 2026-09-23 by BOB #31 — WHICH FREQUENCY A MONITOR RUNS AT (SCHEDULER #17's set 1; D-65).** An address's OWN
+authored frequency governs when it has one. Otherwise the frequency is the one the contract of the address's CURRENT
+VERSION sets. The default contract intervals are **`membership` daily** (a delisting is time-sensitive) and **`substance`
+weekly**. The fallback therefore needs the contract as the tick last read it: the plane keeps each bundle's content type
+or contract from the tick (a derived value, cleared by `purge`) and falls back to the contract's default interval.
+NOT BUILT: `#monitorCadencePlan` reads only the authored frequency (D-65's worker, 2026-09-23; rowed).
+
 ## 7. Content types: what a document contains, and what its changes mean
 
 A content type is a recogniser (§4) plus three functions:

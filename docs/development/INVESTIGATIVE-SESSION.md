@@ -998,6 +998,10 @@ disagree with the run it came from.
 - **A leg marked as a HUNCH** (§6.7 — a member marking, always) is visible as such and
   does not count as evidence.
 
+  **RULED 2026-09-23 by BOB #31 (UI-74's finding 5; S17-1 Q4):** a read answers `independence` ON ITS OWN, apart from
+  the strength pair, so the separation (a) asks for is structural at the wire and not a choice each page makes. NOT
+  BUILT on the plane (one RECORD row, with a UI row behind it if the page must switch).
+
 ## 13 · Published cases
 
 A published case is out in the wild and cannot be affected. Only a different published case

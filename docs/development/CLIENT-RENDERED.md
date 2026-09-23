@@ -338,12 +338,19 @@ not require it.
   shell's, which changes what the fetch policy sees entirely.
 - **Reuse and the site asset record are unaffected**, since they key on address.
 
+### RULED 2026-09-23 by BOB #31: third-party scripts run, and every one is recorded (D-64; SCHEDULER #17's S17-1 Q2)
+
+Scripts from third parties are ALLOWED during capture, inside the capture sandbox, and each one that runs is RECORDED. A
+capture must show what a visitor saw, and blocking scripts changes the page. The provenance names the origin of every
+script executed. A capture whose script set cannot be recorded says so: the set is `undetermined`. This settles the
+second open question below, and the attribution ruling above still governs what their output is credited to.
+
 ## Open questions for ratification
 
 - The grade and method vocabulary for a rendered capture, which should be
   settled before any code writes it into a record.
-- Whether third-party script execution during capture is permitted at all,
-  blocked by default, or recorded and allowed. Blocking changes what renders;
+- ~~Whether third-party script execution during capture is permitted at all,
+  blocked by default, or recorded and allowed.~~ RULED 2026-09-23: recorded and allowed (above). Blocking changes what renders;
   allowing puts an unknown party's content in the record.
 - Whether the rendered document or the served shell is the primary of the
   bundle, and therefore which one `snapshots/` holds and which the manifest

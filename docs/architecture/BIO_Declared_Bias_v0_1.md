@@ -236,6 +236,14 @@ humans apply by hand, evidence items need source attribution the system can
 match, which anchored citations were already going to carry (an evidence item
 is an anchored selection within a document, attributed to a source).
 
+### RULED 2026-09-23 by BOB #31: there is no credence ledger (D-53; S17-1 Q1)
+
+BIO keeps no credence, reputation or trust SCORE for a source or a piece of content, whether it is computed or authored,
+shared or a group's own. A score like that is a prior against a class of actor, and the stance refuses one: bad actors
+are identified by EVIDENCE. What a member brings is declared here as bias, and evidence accrues to it. S-11 step 5 is
+re-scoped to *show the findings the record holds ABOUT a source*. Those findings are evidence, each with its own grade.
+That read becomes a row only if S-11 is scheduled. **Bob may overrule this; it was put to him on 2026-09-23.**
+
 ## Bias debt, and HUNCH DEBT
 
 > **READ THIS FIRST — the two terms are not the same and the difference decides

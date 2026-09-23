@@ -109,8 +109,8 @@ design, doctrine, anything for Bob → BOB) and continue.
 - **Undetermined is first-class and must be STATED.** Never invent an attribution, a referent or a figure
   to get past a gate; a gate that pressures someone into inventing one is a bug in the gate.
 - **A defect you find is diagnosed until its FIX can be named**, then sent to SCHEDULER to be placed in the build plan
-  in order — or to BOB first if the fix needs design (Bob, 2026-09-18). Never park it on a list. `DEBT.md` is being
-  folded into the plan (LED-7); until then a defect is still minted there, and its row must name its fix.
+  in order — or to BOB first if the fix needs design (Bob, 2026-09-18). Never park it on a list. A new defect goes
+  STRAIGHT INTO THE PLAN, never into `DEBT.md`, which only shrinks (Bob, 2026-09-23) and leaves the process at 0 open rows.
 
 ## 5. How to know a thing is true
 

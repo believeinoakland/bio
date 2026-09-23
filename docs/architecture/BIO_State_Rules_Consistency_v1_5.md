@@ -469,6 +469,13 @@ archive as a promotion record.
 History is append-only; nothing in \_history/ is ever modified or
 deleted.
 
+**RULED 2026-09-23 by BOB #31 — A WRONG SENTENCE ALREADY WRITTEN STAYS AS WRITTEN; THE READ CORRECTS IT (D-256; S17-1
+Q3).** A stored string is a fact about when it was written (D-219's precedent). The bundles whose bodies name an earlier
+capture chosen before D-221 are not rewritten. No revision is appended to them either: a machine writing an "authored"
+correction onto a member's bundle is exactly what the fences forbid. `op=versionchain` answers the predecessor from the
+chain, and the enumeration of the affected set sorts each one as provably wrong, provably right or undetermined, and
+reports the three counts separately (rowed).
+
 ### 2.5 Accretive store and gated deletion
 
 Material is added, not removed. Deletion is exceptional and requires all
