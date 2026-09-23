@@ -45,6 +45,8 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
             governed site — the code is a STRING LITERAL there so the DEC-49
             guard's arm C can COMPARE it rather than read past a variable. */
          REQUIRED_ARGUMENT_CHECKS, INSTALLATION_CHECKS, DISPATCH_CHECKS,
+         /* D-456 / C-78: a `store=` naming no namespace, refused at the front door. */
+         NAMESPACE_CHECKS,
          /* CAP-8 / C-48: the Google Drive host stack's DEC-49 rows. Every one is
             a NAMING — a folder, a kind the address does not carry, a shape this
             recogniser does not read, the application shell, an export that could
@@ -2649,10 +2651,45 @@ async function classify(token, env) {
    nothing anyone will ever read. So the daemon class falls through to the
    default and addresses `bio` like an operator does. What bounds it is the op
    table — two verbs — and not the namespace. */
+/* D-456 (IC-236): THERE IS NO FALL-THROUGH TO `bio` ANY MORE. This function answered `bio` for EVERY `store=` value
+   it did not recognise, so `op=stats&store=biosmoke-pdf` answered `store:"bio"` and a brief or a typo naming a
+   namespace that does not exist wrote the REAL record while the caller believed it was somewhere else. The named
+   refusal is `namespaceGate`'s, at the front door, before any class is resolved, so every caller meets it first; this
+   function no longer defaults an unrecognised value to anything, and if one ever reaches it (a caller that skipped
+   the gate) it REFUSES, which the admission site answers as SCOPE_REFUSED. ABSENT `store=` IS UNCHANGED: probe reads
+   `scratch`, every other class `bio`. */
 function scopeFor(cls, url) {
+  const named = url.searchParams.has("store");
   const asked = url.searchParams.get("store");
-  if (cls === "probe") return asked && asked !== SCRATCH ? { error: `probe class is confined to the ${SCRATCH} namespace, refused request for ${JSON.stringify(asked)}` } : { name: SCRATCH };
+  if (named && !NAMESPACES.includes(asked))
+    return { error: `no namespace ${JSON.stringify(asked)} exists on this instance; the namespaces are ${NAMESPACES.join(" and ")}` };
+  if (cls === "probe") return named && asked !== SCRATCH ? { error: `probe class is confined to the ${SCRATCH} namespace, refused request for ${JSON.stringify(asked)}` } : { name: SCRATCH };
   return { name: asked === SCRATCH ? SCRATCH : "bio" };
+}
+
+/* D-456 (C-78.1, IC-236) — A NAMESPACE THAT DOES NOT EXIST IS REFUSED BY NAME, FOR EVERY CALLER, AT THE FRONT DOOR.
+ *
+ * WHAT WAS WRONG, MEASURED. `scopeFor` confined only the probe class and answered `bio` for any other `store=` value;
+ * the unauthenticated path (the invitation ops, op=instancegroup) did the same with `=== SCRATCH ? SCRATCH : "bio"`.
+ * So `store=biosmoke-pdf`, `store=Scratch` and an empty `store=` all ADDRESSED THE REAL RECORD — and a live
+ * verification whose whole no-write guarantee is naming its namespace (CLAUDE.md §5, D-325) wrote production while
+ * believing it was elsewhere. Found by CPDF-3's worker, whose brief named a namespace that has never existed.
+ *
+ * WHY HERE AND NOT ONLY IN `scopeFor`: this runs once, before a credential is classified, so the admin, member, probe,
+ * daemon and `ai` classes, a signed-in session and the no-credential path meet ONE refusal from ONE governed span
+ * (a DEC-49 row holds one `where`). The set is exact and case-sensitive: `Scratch` is not `scratch`, because a Durable
+ * Object name is an exact string and folding it here would be this function guessing what the caller meant.
+ * `store=` ABSENT is not a refusal — every class keeps its default. Nothing was read or written when this answers. */
+const NAMESPACES = Object.freeze(["bio", SCRATCH]);
+function namespaceGate(url) {
+  if (!url.searchParams.has("store")) return null;
+  const asked = url.searchParams.get("store");
+  if (NAMESPACES.includes(asked)) return null;
+  /* DEC-49 REGION is-namespace-gate */
+  return json({ ok: false, reason: "NAMESPACE_UNKNOWN", ...namespaceRow("NAMESPACE_UNKNOWN"),
+                error: `no namespace ${JSON.stringify(asked.slice(0, 80))} exists on this instance`,
+                asked: asked.slice(0, 80), namespaces: [...NAMESPACES] }, 400);
+  /* END DEC-49 REGION is-namespace-gate */
 }
 
 /* =====================================================================
@@ -3350,6 +3387,15 @@ const requiredArgumentRow = (code) => {
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`requiredArgumentRow: ${code} has no REQUIRED_ARGUMENT_CHECKS row with a canned `
                   + `translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
+/* D-456 / C-78: the namespace refusal's row reader, the same shape and the same refusal to invent. */
+const namespaceRow = (code) => {
+  const row = NAMESPACE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`namespaceRow: ${code} has no NAMESPACE_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
 
@@ -4923,6 +4969,10 @@ export default {
     if (!spec) return json({ ok: false, error: "unknown op", reason: "UNKNOWN_OP", ...dispatchRow("UNKNOWN_OP"),
                              op }, 400);
     /* END DEC-49 REGION is-unknown-op */
+
+    /* D-456: a `store=` naming no namespace is refused here, before any credential is read (`namespaceGate`). */
+    const unknownNamespace = namespaceGate(url);
+    if (unknownNamespace) return unknownNamespace;
 
     /* Unauthenticated by design. Each one gates itself. */
     if (spec.classes === null) {

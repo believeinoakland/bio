@@ -10470,6 +10470,33 @@ export const INSTALLATION_CHECKS = {
 };
 
 /* ===========================================================================
+   D-456 (C-78) — A NAMESPACE THAT DOES NOT EXIST.
+
+   An instance has exactly two namespaces, `bio` (the record) and `scratch` (the
+   place a live verification writes instead of it). `scopeFor` used to answer
+   `bio` for any other `store=` value, so a caller naming a namespace that does
+   not exist — a typo, a case variant, an empty value, a brief naming one that
+   never existed — addressed THE REAL RECORD while believing it was elsewhere.
+   That is the one refusal a live verification most needs, because naming its
+   namespace is its whole no-write guarantee (D-325). ONE row, minted in ONE
+   governed span (`namespaceGate`), met before any credential is read, so every
+   class and the no-credential path meet the same sentence.
+
+   The sentence says NOTHING WAS CHANGED first, and does not guess which
+   namespace was meant: `Scratch` is refused, not folded, because a namespace
+   name is an exact string.
+   =========================================================================== */
+export const NAMESPACE_CHECKS = {
+  NAMESPACE_UNKNOWN: {
+    check: 'C-78.1',
+    where: 'src/index.mjs namespaceGate > is-namespace-gate',
+    translation: 'This request named a part of the record that does not exist on this copy, so nothing was '
+      + 'read or changed. A copy has two: the record itself, and a scratch area kept apart for testing. The '
+      + 'name must match one of them exactly; the names are listed beside this message.',
+  },
+};
+
+/* ===========================================================================
    D-278 (C-69) — NO OPERATION BY THAT NAME.
 
    Group (5) of BOB #26's ruling. `error: "unknown op"` is kept BYTE-IDENTICAL

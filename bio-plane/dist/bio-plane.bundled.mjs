@@ -3977,6 +3977,7 @@ __export(bio_checks_exports, {
   MECHANICAL_FIELD_SETS: () => MECHANICAL_FIELD_SETS,
   MEMBER_ID_CHECKS: () => MEMBER_ID_CHECKS,
   MONITOR_FREQ: () => MONITOR_FREQ,
+  NAMESPACE_CHECKS: () => NAMESPACE_CHECKS,
   NARROW_CHECKS: () => NARROW_CHECKS,
   NON_MEMBER_AUTHORS: () => NON_MEMBER_AUTHORS,
   OBJECT_TYPES: () => OBJECT_TYPES,
@@ -11203,6 +11204,13 @@ var INSTALLATION_CHECKS = {
     check: "C-68.4",
     where: "src/index.mjs fetch > is-bootstrap-claim",
     translation: "The administrator token given does not match the one this copy holds, so the copy was not claimed. Nothing was changed."
+  }
+};
+var NAMESPACE_CHECKS = {
+  NAMESPACE_UNKNOWN: {
+    check: "C-78.1",
+    where: "src/index.mjs namespaceGate > is-namespace-gate",
+    translation: "This request named a part of the record that does not exist on this copy, so nothing was read or changed. A copy has two: the record itself, and a scratch area kept apart for testing. The name must match one of them exactly; the names are listed beside this message."
   }
 };
 var DISPATCH_CHECKS = {
@@ -70920,9 +70928,26 @@ async function classify(token, env) {
   return null;
 }
 function scopeFor(cls, url) {
+  const named = url.searchParams.has("store");
   const asked = url.searchParams.get("store");
-  if (cls === "probe") return asked && asked !== SCRATCH ? { error: `probe class is confined to the ${SCRATCH} namespace, refused request for ${JSON.stringify(asked)}` } : { name: SCRATCH };
+  if (named && !NAMESPACES.includes(asked))
+    return { error: `no namespace ${JSON.stringify(asked)} exists on this instance; the namespaces are ${NAMESPACES.join(" and ")}` };
+  if (cls === "probe") return named && asked !== SCRATCH ? { error: `probe class is confined to the ${SCRATCH} namespace, refused request for ${JSON.stringify(asked)}` } : { name: SCRATCH };
   return { name: asked === SCRATCH ? SCRATCH : "bio" };
+}
+var NAMESPACES = Object.freeze(["bio", SCRATCH]);
+function namespaceGate(url) {
+  if (!url.searchParams.has("store")) return null;
+  const asked = url.searchParams.get("store");
+  if (NAMESPACES.includes(asked)) return null;
+  return json({
+    ok: false,
+    reason: "NAMESPACE_UNKNOWN",
+    ...namespaceRow("NAMESPACE_UNKNOWN"),
+    error: `no namespace ${JSON.stringify(asked.slice(0, 80))} exists on this instance`,
+    asked: asked.slice(0, 80),
+    namespaces: [...NAMESPACES]
+  }, 400);
 }
 var AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 function aiReachesAsMember(spec) {
@@ -71192,6 +71217,12 @@ var requiredArgumentRow = (code) => {
   const row = REQUIRED_ARGUMENT_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`requiredArgumentRow: ${code} has no REQUIRED_ARGUMENT_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+var namespaceRow = (code) => {
+  const row = NAMESPACE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`namespaceRow: ${code} has no NAMESPACE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
 var installationRow = (code) => {
@@ -71968,6 +71999,8 @@ var index_default = {
       ...dispatchRow("UNKNOWN_OP"),
       op
     }, 400);
+    const unknownNamespace = namespaceGate(url);
+    if (unknownNamespace) return unknownNamespace;
     if (spec.classes === null) {
       const fp = await fingerprint(env.ADMIN_TOKEN);
       const stub2 = env.STORE.get(env.STORE.idFromName("bio"));
