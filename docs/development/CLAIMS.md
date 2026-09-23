@@ -19497,3 +19497,27 @@ paths, BY SITE:
 a separate row), `newgroup/`, any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 DIST (D-116 — the DO and each fleet member report the build THEY serve; the installer names the one that lags and does not report success)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for D-116, worktree `.claude/worktrees/agent-a90bb281bc2a47538`,
+branch `land/worker/D-116` (pushed from the worktree), from `origin/main` @ `41c7e0c3` (cloud).
+authority: `QUEUE.md` `### D-116 · running` (read on `origin/coord`); design `BIO_Distribution_v0_1.md` §4 rule 1, §6, §8,
+with `CLAUDE.md` §5 (*a deploy verified is not a build serving*). `newgroup/` is in scope BY THE ROW; `release/**` and
+`newgroup/src/release.mjs` are NOT touched.
+paths, BY SITE:
+  - `bio-plane/src/store.mjs`: the DO fetch route table's `bootstrap:` entry ONLY (it adds `storeVersion`, read from the
+    DO's own env). Nothing near `site_asset_refs` / CAP-13's functions.
+  - `bio-plane/src/index.mjs`: the unauthenticated `op=bootstrap` answer ONLY (the spread at the end of the
+    `spec.classes === null` block) and ONE new helper `memberVersions` beside it.
+  - `newgroup/src/index.mjs`: `verifyUpdate`, `verifyInstall`'s caller in `runInstall`, `installFleet`'s return value,
+    `runUpdate`'s verify step and done panel, `successPanel`, and new helpers `reportsBuilds` / `servingVerdict`.
+  - `newgroup/test/wizard.test.mjs` (new D-116 blocks; the superseded "unconfirmed reads as done" block corrected with a
+    dated comment); NEW `bio-plane/test/d116-serving-builds.test.mjs`; `bio-plane/test/members.test.mjs` (REC-41's key pin
+    moves by ONE key); `bio-plane/test/vf4-live-scratch.mjs` (its DO arm reads `storeVersion`, dated note); `bio-plane/dist/`.
+  - `docs/architecture/BIO_Distribution_v0_1.md` (front matter, §6, §8), `construct-status.json` if the construct's state
+    moves, `INTERFACE-CHANGES.md` (one IC: `op=bootstrap` gains `storeVersion` and, on `members=1`, `memberVersions`).
+**NOT CLAIMED:** `release/**`, `newgroup/src/release.mjs`, `bio-plane/scripts/deploy.mjs`, the version sites, any fleet
+member's source, any state path on `main`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
