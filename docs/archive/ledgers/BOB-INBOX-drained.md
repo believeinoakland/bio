@@ -1811,3 +1811,11 @@ Each ruling is in its home document, verified at the code; each row keeps its `D
 >    anything else is refused as today. `migrate.mjs`'s token narrows to admin; the builder confirms the provenance capture is
 >    registered BEFORE the promote. Accepts-when and NEGATIVE CONTROL in the paragraph. **Directly after REC-171**, depends-on
 >    REC-171 (REC-171 made migration refuse). I3 changes; the integrator mints the IC.
+
+> Drained 2026-09-23 by SCHEDULER #15: placed as REC-177 (blocked on `land/bob/batch-cadence` and REC-172).
+
+> **2026-09-23 · BOB #30 · A DECLARED BOUND STATES ITS ALLOWANCE — one placement.**
+> 
+> 1. **RECORD (M9): `op=airunopen` refuses a declared bound with no positive `allowed`.** `INVESTIGATIVE-SESSION.md` §14b item 6,
+>    paragraph "A declared bound STATES its allowance" (on `land/bob/batch-cadence` until the train lands it). Accepts-when and
+>    NEGATIVE CONTROL in the paragraph. Directly after REC-172, depends-on REC-172. I3 changes; the integrator mints the IC.
