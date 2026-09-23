@@ -182,7 +182,11 @@ const barOfTarget = async (target) => rP(await GET(`op=strengthbarof&token=mem-r
 const barOfGroup = async () => rP(await GET(`op=strengthbarof&token=mem-rec14&group=believe-in-oakland`));
 const editionsOf = async (id) => rP(await GET(`op=publishededitions&token=mem-rec14&id=${encodeURIComponent(id)}`));
 const excludedBy = async (id) => rP(await GET(`op=excludedby&token=mem-rec14&id=${encodeURIComponent(id)}`));
-const affordances = async (target) => rP(await GET(`op=affordances&token=mem-rec14&target=${encodeURIComponent(target)}`));
+/* CORRECTED 2026-09-23 by D-311, never exempted: this helper asked `op=affordances` as the MACHINE
+   token by default, and the store refuses that class BY NAME at the acts this suite reads it for
+   (conclude, reopen, divide, ground, publish, the version acts — MACHINE_REFUSALS). D-311 withholds
+   those from a machine, so the pre-flight is now asked of the caller who performs the acts: PILAR, the publishing project's owner, who publishes and reopens below. */
+const affordances = async (target) => rP(await GET(`op=affordances&token=${PILAR}&target=${encodeURIComponent(target)}`));
 const actIds = (r) => (r?.acts ?? []).map((a) => a.id).sort();
 const imageOf = async (id) => (await GET(`op=image&token=mem-rec14&id=${encodeURIComponent(id)}`)).result?.["bundle.md"];
 const shaOf = async (id) => ((await GET("op=list&token=mem-rec14")).result || [])

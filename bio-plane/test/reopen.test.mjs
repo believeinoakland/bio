@@ -99,7 +99,11 @@ const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
     + adoptedVersionParam()));
-const affordances = async (target, tok = "mem-rec31") =>
+/* CORRECTED 2026-09-23 by D-311, never exempted: this helper asked `op=affordances` as the MACHINE
+   token by default, and the store refuses that class BY NAME at the acts this suite reads it for
+   (conclude, reopen, divide, ground, publish, the version acts — MACHINE_REFUSALS). D-311 withholds
+   those from a machine, so the pre-flight is now asked of the caller who performs the acts: NADIA, the member who reopens below. */
+const affordances = async (target, tok = NADIA) =>
   await GET(`op=affordances&token=${tok}&target=${encodeURIComponent(target)}`);
 const actIds = (r) => (r.result?.acts ?? []).map((a) => a.id).sort();
 const imageOf = async (id, tok = "mem-rec31") =>
@@ -449,11 +453,13 @@ console.log("\n--- 5. op=affordances publishes reopen from the ONE edge table �
      accepted reading (§7.1 item 6), so INQ_CONCL carries one, and the acts a
      question with an accepted reading publishes — the reading acts PL-2 added
      and REC-136's `withdrawconclusion` — join the set. The assertion's subject
-     is unchanged and still exact: `reopen` is not among them. */
+     is unchanged and still exact: `reopen` is not among them.
+     CORRECTED 2026-09-23 (D-311): asked as NADIA now, not the machine token, and NADIA owns no
+     project, so `publish` — an owner's act (D-310) — leaves the list. `reopen` is still absent. */
   t("a CONCLUDED inquiry does NOT publish reopen — it publishes the act that moves it forward — and the store agrees",
     [actIds(await affordances(INQ_CONCL)),
      (await reopen(NADIA, { target: INQ_CONCL, reason: REOPEN_WHY })).reason],
-    [["cite", "dispose", "inquirydivide", "inquiryground", "publish", "versionconsider", "versioncurrent",
+    [["cite", "dispose", "inquirydivide", "inquiryground", "versionconsider", "versioncurrent",
       "versionhide", "versionreject", "withdrawconclusion"], "NOT_SET_DOWN"]);   // REC-37, 2026-08-04: cite joins every inquiry
   t("the deferred LEGACY focus does not publish it either: the derivation asks the DECLARED vocabulary too",
     actIds(await affordances(FOCUS_LEGACY)), ["cite", "dispose"]);   // REC-37, 2026-08-04: cite joins every inquiry

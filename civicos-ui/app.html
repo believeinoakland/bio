@@ -2234,7 +2234,12 @@ const SURFACES = {
     routes: ["object:project", "hash:project"],
     purpose: "A case's workspace: who is on it, what it holds, how ready its work product is, and what it is waiting on.",
     levels: ["documents"],
-    acts: [],
+    /* D-311 (2026-09-23): the seven roster ops are PLANE-PUBLISHED acts now (op=affordances derives
+       each from its own refusal over the caller's position in THIS project), and this surface has
+       hosted all seven since UI-3 through `ROSTER_ACTS` below — the registry said `[]` only because
+       ARM A's fiction check forbids naming an act the plane did not publish. It now names them. */
+    acts: ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
+           "projectownerremove", "projectownerrescue"],
     reads: ["projectparticipants", "projectownerarith", "projection"],
   },
   action: {

@@ -861,8 +861,8 @@ await section("ARM A · acts come from the plane", () => {
      (22, read with the floor raised out of reach on a throwaway copy): the
      stance surface now hosts `conclude` (the project's act — a SECOND placement
      of an act the question's page also hosts) and `withdrawconclusion`. */
-  ok(G.placements >= 22,
-     `ARM A3: ${G.placements} act placements are described, floor 22 (measured 2026-09-18 by UI-65 from the figure this arm PRINTED; was 20 under UI-45, 19 under UI-42, 18 under UI-52, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
+  ok(G.placements >= 29,
+     `ARM A3: ${G.placements} act placements are described, floor 29 (measured 2026-09-23 by D-311 from the figure this arm PRINTED with the floor raised out of reach on a throwaway copy — the project surface's seven roster acts, published by the plane since D-311; was 22 under UI-65, 20 under UI-45, 19 under UI-42, 18 under UI-52, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
 
   /* ---- ARM A4a · THE FICTION HALF. UNCONDITIONAL, AND IT HAS NO REGISTER.
      A surface naming an act the plane does not publish is the registry claiming
@@ -921,11 +921,11 @@ await section("ARM A · acts come from the plane", () => {
      throwaway copy): striking `withdrawconclusion` moved it out of the register
      into the catalogue-outside-it, and `inquiry-stance` now hosts it. 17 would
      have carried one act of slack in each. */
-  ok(G.baseline.length >= 18,
-     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 18 (measured 2026-09-18 by UI-65 from the figure this arm PRINTED, up from 17 when the register still named withdrawconclusion). `
+  ok(G.baseline.length >= 25,
+     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 25 (measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the plane published no roster act; 18 was UI-65's, up from 17 when the register still named withdrawconclusion). `
      + `A catalogue read as empty makes every arm above pass over nothing — the ceiling especially, which is satisfied by a gap of zero for the wrong reason.`);
-  ok(G.hostedSet.size >= 18,
-     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 18 (measured 2026-09-18 by UI-65 from the figure this arm PRINTED, up from 17 when no surface hosted withdrawconclusion). `
+  ok(G.hostedSet.size >= 25,
+     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 25 (measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the project surface could name none of its seven roster acts; 18 was UI-65's, up from 17 when no surface hosted withdrawconclusion). `
      + `A walk that found nothing would make every published act read as unhoused and send the reader to re-house a catalogue that was never the problem.`);
 
   /* ---- ARM A4f · OVER-STRICTNESS. A CORRECT ALTERNATIVE MUST PASS.

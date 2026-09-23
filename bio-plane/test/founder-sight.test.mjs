@@ -289,9 +289,15 @@ t("the MEMBER token lists iris's project (instance-level, unfiltered, as before)
   t("the admin token's internet frontier reaches no lead (empty cause `no_member`), as before",
     fiA && fiA.empty && fiA.empty.cause, "no_member");
   const affA = await GET(`op=affordances&token=${ADM}&target=${INQ}`);
-  t("the admin token is still offered `publish` on a null owner fact (a class credential holds no roster "
-    + "position, so the catalogue does not narrow — D-310's machine arm, unchanged)",
-    ((affA && affA.acts) || []).some((a) => a.id === "publish"), true);
+  /* CORRECTED 2026-09-23 by D-311, never exempted. This read "the admin token is still offered
+     `publish` on a null owner fact … D-310's machine arm, unchanged" and asserted `true`. The owner
+     fact still reads null for it and still does not narrow; what moved is a SECOND rule — the store
+     refuses a machine publication BY NAME (MACHINE_CANNOT_PUBLISH), and D-311 withholds from a
+     machine every act its class is refused. The property this section holds — the founder's
+     positional fact is its IDENTITY's, not its sight's — is asserted above and is unchanged. */
+  t("the admin token is NOT offered `publish` — the store refuses a machine publication by name "
+    + "(MACHINE_CANNOT_PUBLISH), whatever its null owner fact says (D-311)",
+    ((affA && affA.acts) || []).some((a) => a.id === "publish"), false);
 }
 {
   /* A CALLER-SUPPLIED `identity` IS NOT HONOURED: it is stamped by the server, and a
