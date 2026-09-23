@@ -19732,6 +19732,7 @@ paths, BY SITE:
 **NOT CLAIMED, NOT TOUCHED:** `bio-plane/**` (REC-170's op is consumed as landed), `civicos-ui/check-refusal-codes.mjs`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+amended 2026-09-23: ALSO a SECOND new helper directly above `pubList`, `pubCasePairNoteHtml` (the per-case sentence and the undetermined sentence), beside `pubCasePairOf`. Still NOT `pubOpen`.
 
 ## CLAIM 2026-09-23 RECORD (REC-172 — a run's bound is spent only on a NAMED bound, by a MAP; an allowance is a whole number; `lease` is the plane's)
 
