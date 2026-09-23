@@ -224,7 +224,7 @@ scope: the method string and the two `schema.mjs` comments follow §8.1's wordin
 accepts-when: a new grade-D resolution's stored method reads the new wording through the op; an older row is byte-identical. NEGATIVE CONTROL: restore the old string, and the wording arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (LED-7; D-219's DEBT row of 2026-08-06; keeps its `D-` id).
 
-### CAP-14 · queued — **A REUSED PART DOES NOT NAME THE CAPTURE ITS BYTES CAME FROM.** The manifest records WHEN (`reused_from_fetched_at`), not WHICH capture fetched them, and `reusedParts` names only the capture that reused. RULED owed by BOB #21 (2026-09-21): for a reused part, who retrieved the bytes is an EARLIER capture. — owner CAPTURE.
+### CAP-14 · running — SPAWNED 2026-09-23 ~21:08Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER CAP-14 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/CAP-14 and that session; never conclude queued from the absence alone.
 order: after D-389 and behind CAP-13, the same reuse machinery and files, one worker at a time; below CAP-13 because it adds provenance the record omits rather than correcting a figure it overstates (SCHEDULER #6, 2026-09-21; the D-339 worker's item 3, ruled)
 milestone: M2
 interface: I5 and I1 — a derived column and an additive manifest field; the integrator mints and classifies the ICs.
@@ -235,7 +235,7 @@ accepts-when: a reused part names the capture whose fetch served it, and a later
 added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CAP`).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «CAP-14» on entering the cache; its `order:` line is the current one.
 
-### COFF-13 · queued — **NO FORMAT ENTRY EMITS A DECK LENGTH, so a deck whose TRAILING slides are unreadable is recorded shorter than it is — and the content row then REFUSES A TRUE CITATION of a real trailing slide as "past the deck".** D-359's named residue, rowed at its close rather than left in prose. — owner CONTENT-OFFICE.
+### COFF-13 · running — SPAWNED 2026-09-23 ~21:08Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER COFF-13 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/COFF-13 and that session; never conclude queued from the absence alone.
 order: below the M8 corrections, above the features (it sat below LED-8, which Bob's ruling of 2026-09-22 moved behind the product rows — SCHEDULER #12): it refuses something TRUE — a record defect, not a gap — but errs in the CONSERVATIVE direction and reaches only decks with unreadable trailing slides, so it ranks under the defects above it (SCHEDULER #2, 2026-09-19)
 milestone: M9
 interface: I2 — a producer change on the text shape, so an IC is minted and the integrator classifies it.
@@ -246,7 +246,7 @@ accepts-when: a deck whose LAST slide part is unreadable still admits a citation
 added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 7, at D-359's close; `node tools/mintid.mjs COFF`).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «COFF-13» on entering the cache; its `order:` line is the current one.
 
-### D-52 · queued — **A ROOT-OF-TRUST EXPORT NOTIFIES NO ADMINISTRATOR.** `export_log` records it and `op=exportlog` reads it, so an administrator who LOOKS finds it and one who never looks never learns. The channel exists — the queue is the in-app channel, built — and `bio-plane/src/queuestate.mjs` already catalogues the FINDING `export-performed`. No generator raises it. — owner RECORD.
+### D-52 · running — SPAWNED 2026-09-23 ~21:08Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-52 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-52 and that session; never conclude queued from the absence alone.
 order: security-class, first above the features: Membership v2 §8.1's promise that an export is never silent rests on this notification and only the looking half is built; below the silent defects because the export IS logged and §8.1 says so (SCHEDULER #5, 2026-09-21)
 milestone: M7
 interface: I3 — a queue item kind gains a producer; the integrator mints and classifies the IC.
@@ -257,7 +257,7 @@ accepts-when: one export writes one item per administrator, each naming the `exp
 added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-52» on entering the cache; its `order:` line is the current one.
 
-### D-84 · queued — **A PUBLISHED CASE DOES NOT NAME THE BIAS LENS IT WAS HELD TO.** DEC-54 (d) and the bias design require every work product to cite its BIAS MANIFEST — the (bias bundle, revision) pairs in force and a hash of the effective set — travelling with publication. The plane computes it (`op=biasmanifest`, `statements_sha`) and pins each adoption (`bias_adoptions`), and no publication path writes it: `published_cases` holds the authored `bias_acknowledgement` and REC-44's container manifest, no lens. NARROWED: the rest of D-84 is built. — owner RECORD.
+### D-84 · running — SPAWNED 2026-09-23 ~21:08Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-84 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-84 and that session; never conclude queued from the absence alone.
 order: directly after D-52, above the features: DEC-20's *disclosed* — the manifest SHOWN in the artifact — is missing from every published case, and one published without it is corrected only by a new edition (DEC-19) (SCHEDULER #6, 2026-09-21, LED-7 batch 11)
 milestone: M10
 interface: I3 — the case document gains the manifest; the integrator mints and classifies the IC.
@@ -268,7 +268,7 @@ accepts-when: a case published under an adopted set names each pair and the hash
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-84» on entering the cache; its `order:` line is the current one.
 
-### D-220 · queued — **THE INVESTIGATIVE SESSION READS SIXTY CAPTURES OF ONE DOCUMENT AS SIXTY DOCUMENTS.** Bob's ruling of 2026-08-06 — link a document's versions and USE that where it helps — is built as a READ: `op=versionchain` (PL-10) exposes the join, `heldMatch` consumes it (D-221, closed) and the UI renders it. `INVESTIGATIVE-SESSION.md` names the session consumer (3), and `agent-worker` calls nine plane ops, `versionchain` not among them. NARROWED to that consumer. — owner FLEET, with SKILL for the doctrine.
+### D-220 · running — SPAWNED 2026-09-23 ~21:08Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-220 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-220 and that session; never conclude queued from the absence alone.
 order: after D-84, above the features: a deployed machine role over-counts what the record holds — the false-coverage hazard `STORE-AS-CACHE.md` names — in work a member reads and may accept; a correction to built work (SCHEDULER #6, 2026-09-21, LED-7 batch 12)
 milestone: M9
 interface: I8 consumer of `op=versionchain` (I3, built); no shape moves unless the builder finds one.
