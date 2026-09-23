@@ -19637,6 +19637,7 @@ paths, BY SITE:
 **NOT CLAIMED:** the ratify committer (`publish`), `#caseEditionState`, `civicos-ui/**` (UI-82's).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+**not released as of 2026-09-23** — built and committed at `87abe9f3` (local branch `rec170-local-landing` in the shared clone, merged with origin/main @ `4355bfda`). The push to `land/worker/REC-170` was REFUSED by the push guard: the FULL gate is RED on `mergecarry.test.mjs` ALONE, and that failure is origin/main's own train commit `4355bfd` (two unregistered drops, `TREE-SHARING.md` and `kickoffs/BOB.md`), not this branch (its own merge: DROPPED 0). Paths stay reserved until CONDUCT integrates.
 
 ## CLAIM 2026-09-23 RECORD (REC-171 — rule 2 binds every creation D-78 stamps `surfaced_by: agent`: an admin, member or probe deploy token's inquiry creation names a running run it holds)
 
