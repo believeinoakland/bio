@@ -37,16 +37,6 @@ accepts-when: a second clone runs 0 suites over a tree whose units a first clone
 added: 2026-09-23 · SCHEDULER #14 (BOB #29's designed item; `node tools/mintid.mjs M0`).
 owed-at-integration (BOB #30, 2026-09-23; each sent to the worker, recorded by CONDUCT #15): (1) HOLD: trigger BOB with land/worker/M0-126's tip BEFORE any train; every train `--drop`s it until BOB says LAND (he reads it against §3a's 3 required conditions + its negative control). (2) §3a cond. 3: only a FULL run that REUSED NOTHING is a backstop a cut may rely on. (3) §3a cond. 1: any unit reading git history or a live ref is NEVER-CACHE (`GATE: never-cache (history)`), listed and marked; a reused record still runs them.
 
-### M0-127 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT on b5ce975a: gates.yml L87 writes the verdict annotation with no FAILED detail beyond suites. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
-order: first of the backlog, near the head: a red that names nothing is a false-looking alarm on Bob's email, and knowing what failed CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); CONDUCT #15's hold lifted with the leak fix (SCHEDULER #14, 2026-09-23; narrowed by SCHEDULER #15)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §3 (a red GitHub run is an alarm that reaches Bob; *a gate test depends only on the code*), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none — M0-114's workflow and the leak fix (`cdfaea39`) are on `main`.
-scope: (1) the verdict line (`.github/workflows/gates.yml`'s `FAILED=` and the gate's own RED line) names every non-suite failure (a residue check, a leak, a timeout), never `none` on a RED; (2) the battery's per-suite result line carries the suite's pid (`battery.mjs` already records `r.pid`), so a residue names the suite that left it; (3) `hygiene.test.mjs`'s D-186 control text, which predates the race, is corrected with a dated comment.
-accepts-when: a run whose only failure is a leaked sandbox reads RED naming the residue and the suite that left it, never `FAILED=none`. NEGATIVE CONTROL: plant one sandbox directory in TMPDIR, and the verdict names it by path.
-added: 2026-09-23 · SCHEDULER #14 (CONDUCT #14's runner finding; `node tools/mintid.mjs M0`); narrowed 2026-09-23 by SCHEDULER #15 (CONDUCT #15's report).
-
 ### REC-171 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT on 4355bfda: store.mjs (≈L14572) sets the assistantPrincipal run stamp for an ai credential ONLY. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly after REC-169, the same D-85 fence widened (BOB #30: *"Place it directly after D-85"*; D-85 sits in the cache, so this is the first backlog place after it and the authority row that precedes it) (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
 milestone: M9
@@ -66,16 +56,6 @@ depends-on: none.
 scope: `pubOpen` offers the named cases as choices and opens the chosen one; and the code gets a translation row in its checks family, so the guard sees it.
 accepts-when: against the real plane, opening a finding two cases pin offers both and opens each; no raw code renders. NEGATIVE CONTROL: drop the translation row, and the DEC-49 guard fails naming the code.
 added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs UI`).
-
-### D-286 · running — SPAWNED 2026-09-23 09:15Z by CONDUCT #15 (the 7th worker under BOB #30's cap, REC-169's worker having finished). NOT LANDED, CHECKED BY CONTENT on 4355bfda: ai-session-context.test.mjs L162-163 draw with unseeded Math.random(). Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
-order: near the head with M0-106, after DIST-6: a result that moves with the draw, not the code, is a DEFECT by Bob's ruling of 2026-09-23 (`TREE-SHARING.md` §3, *a gate test depends only on the code*); on `main` its red is an ALARM to Bob, and under M0-126 a lucky PASS is cached, so it cuts gate time (SCHEDULER #15, 2026-09-23, LED-7)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON THE CODE"*), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none.
-scope: the draw rejects and redraws any fixture whose derived values (each remainder, sum or ratio D1 looks for) equal a published value, or draws from ranges proven disjoint, stated at the site; D0b unchanged; the drawn values are printed so a failure is reproducible.
-accepts-when: the suite passes on every one of 500 consecutive runs of the draw alone; D0b still fails when a colliding fixture is forced. NEGATIVE CONTROL: force the measured collision (3354, 1278, 2076), and D0b fails by name.
-added: 2026-09-23 · SCHEDULER #15 (LED-7; D-286's DEBT row of 2026-08-10, verified at the code; keeps its `D-` id).
 
 ### REC-172 · running — SPAWNED 2026-09-23 by CONDUCT #15 (REC-169 landed 91913d6b). NOT LANDED as read on 91913d6b (vf4 still sends an array consume). Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: first of the backlog (REC-171 is cached), the same bound fence REC-169 closes on the tick: an allowance or consumption the plane cannot trust is authority-class (SCHEDULER.md step 3); (3) is low and rides the same worker (SCHEDULER #15, 2026-09-23)
@@ -107,6 +87,26 @@ scope: ONE disjunct, `raw.length === R` (the supply was not exhausted), in the O
 accepts-when: a fixture whose raw supply exceeds the over-fetch reads `truncated: true` at every arm for every viewer; an exhausted supply reads as before. How a liar passes it: fixing one arm, so the fixture drives all three. NEGATIVE CONTROL: drop the disjunct, and the full-fetch arm fails by name at each level.
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 13; keeps its `D-` id).
 uncut: restored whole from the cut archive on entering the cache (SCHEDULER #15, 2026-09-23), so the worker reads its design here.
+
+### M0-132 · queued — **TWO MORE GATE SUITES DRAW FIXTURE VALUES FROM AN UNSEEDED `Math.random()` AND CAN FAIL WITH NO CODE CHANGE.** (1) `civicos-ui/test/ai-session-wire.test.mjs` (re-read on `91913d6b`): `FETCH_ALLOWED − FETCH_CONSUMED` ranges 1502–5992 and overlaps `SUBS_CONSUMED` 2003–2999, so its ARM D0b collides (1 in 2,155, measured by D-286's worker). (2) snap-key suffixes from 4–6 base36 characters of `Math.random()` (`bio-plane/test/action-loop.test.mjs` and `inquiryground.test.mjs` at 4; about 20 suites at 6) are part of the PRIMARY KEY `(bundle_id, snap_key)`, so a repeat clashes; the odds are not measured. D-286's worker's findings (CONDUCT #15). — owner M0 with UI.
+order: directly after UI-82, with D-286's class near the head: a result that moves with the draw is a DEFECT by Bob's ruling of 2026-09-23, and on `main` its red is an alarm to Bob (SCHEDULER #15, 2026-09-23)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON THE CODE"*), with `docs/development/VERIFICATION.md` (admitted for M0 by name); D-286's fix as landed is the precedent.
+depends-on: D-286 (its interval proof is reused; landing in CONDUCT's next train).
+scope: (1) D-286's interval proof plus a D0c: disjoint ranges (e.g. FETCH_ALLOWED 3001–3999, SUBS_CONSUMED 4003–4499, SUBS_ALLOWED 9001–9973), the proof checked against every published value; (2) a per-suite counter suffix for every snap key built from `Math.random`, swept by one grep and listed in the landing.
+accepts-when: the wire suite passes 500 consecutive draws and fails by name on a forced collision; no suite builds a snap key from `Math.random`. NEGATIVE CONTROL: restore one overlapping range, and D0c fails by name.
+added: 2026-09-23 · SCHEDULER #15 (D-286's worker's findings via CONDUCT #15, verified at the code; `node tools/mintid.mjs M0`).
+
+### REC-160 · queued — **`op=reevaluations` SAYS A SEVERED LEG *RESTS ON* ITS TARGET AND PUBLISHES NO STATUS.** `Store#reevaluations` reads legs from … (whole text: the cut archive)
+order: after D-389, above CAP-14: a support claim the record cannot make, CLAUDE.md §2's class, in the read that tells a member what to re-examine (SCHEDULER #7, 2026-09-21; BOB #22's inbox entry)
+milestone: M9
+interface: I3 additive — the integrator mints the IC.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §5.4 (cascade semantics: an upstream … (whole text: the cut archive)
+depends-on: none. D-280 closed; nothing is superseded.
+accepts-when: a drive through the op shows a severed leg `status: "severed"` with wording that claims no support, and a confirmed leg unchanged. How a liar passes it: filtering the severed … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-160» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

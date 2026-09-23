@@ -3200,3 +3200,23 @@ depends-on: none — D-297's fleet install is on `main`; D-116 (reporting each m
 scope: both functions bind the three members as service bindings, installing the members first or re-PUTting the plane after `installFleet`; an update of an instance installed without them gains them; the read-back names each binding.
 accepts-when: against the wizard's mock, an install and an update each leave the plane bound to all three members, and one whose member upload failed names the missing binding and does not report success. NEGATIVE CONTROL: drop one member's binding, and its arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (D-116's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs DIST`).
+
+### M0-127 · done — integrated at 77837e79 (train train-20260923T110152Z-21039, origin/main d89e04d1)
+order: first of the backlog, near the head: a red that names nothing is a false-looking alarm on Bob's email, and knowing what failed CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); CONDUCT #15's hold lifted with the leak fix (SCHEDULER #14, 2026-09-23; narrowed by SCHEDULER #15)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3 (a red GitHub run is an alarm that reaches Bob; *a gate test depends only on the code*), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: none — M0-114's workflow and the leak fix (`cdfaea39`) are on `main`.
+scope: (1) the verdict line (`.github/workflows/gates.yml`'s `FAILED=` and the gate's own RED line) names every non-suite failure (a residue check, a leak, a timeout), never `none` on a RED; (2) the battery's per-suite result line carries the suite's pid (`battery.mjs` already records `r.pid`), so a residue names the suite that left it; (3) `hygiene.test.mjs`'s D-186 control text, which predates the race, is corrected with a dated comment.
+accepts-when: a run whose only failure is a leaked sandbox reads RED naming the residue and the suite that left it, never `FAILED=none`. NEGATIVE CONTROL: plant one sandbox directory in TMPDIR, and the verdict names it by path.
+added: 2026-09-23 · SCHEDULER #14 (CONDUCT #14's runner finding; `node tools/mintid.mjs M0`); narrowed 2026-09-23 by SCHEDULER #15 (CONDUCT #15's report).
+
+### D-286 · done — integrated at 1c793c98 (origin/main d89e04d1); the draw is proved disjoint at the site
+order: near the head with M0-106, after DIST-6: a result that moves with the draw, not the code, is a DEFECT by Bob's ruling of 2026-09-23 (`TREE-SHARING.md` §3, *a gate test depends only on the code*); on `main` its red is an ALARM to Bob, and under M0-126 a lucky PASS is cached, so it cuts gate time (SCHEDULER #15, 2026-09-23, LED-7)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON THE CODE"*), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: none.
+scope: the draw rejects and redraws any fixture whose derived values (each remainder, sum or ratio D1 looks for) equal a published value, or draws from ranges proven disjoint, stated at the site; D0b unchanged; the drawn values are printed so a failure is reproducible.
+accepts-when: the suite passes on every one of 500 consecutive runs of the draw alone; D0b still fails when a colliding fixture is forced. NEGATIVE CONTROL: force the measured collision (3354, 1278, 2076), and D0b fails by name.
+added: 2026-09-23 · SCHEDULER #15 (LED-7; D-286's DEBT row of 2026-08-10, verified at the code; keeps its `D-` id).
