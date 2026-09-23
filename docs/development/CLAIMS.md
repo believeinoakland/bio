@@ -19861,6 +19861,7 @@ paths, BY SITE:
 **NOT CLAIMED:** `tools/train.mjs` (M0-131), the catch/finally shape of any suite (M0-134), `tools/plancheck.mjs`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — M0-130 built and pushed on `land/worker/M0-130` @ `7cf958aa` (gate GREEN, class TARGETED, tree `4a77fb4d`); the paths stay reserved until CONDUCT integrates the branch.
 
 ## CLAIM 2026-09-23 M0 (M0-131 — the train's reused tree record still runs the never-cached units)
 
