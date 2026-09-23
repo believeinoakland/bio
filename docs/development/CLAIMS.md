@@ -19216,3 +19216,27 @@ paths, BY SITE:
 M0-114's), `docs/development/QUEUE.md` (CONDUCT's). Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 RECORD (REC-168 — `op=capturerequest` names a run its CALLER holds: sight, then `runPrincipalGate`, and the row records the caller's principal)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #14 for REC-168 (wave 5), worktree `.claude/worktrees/agent-a960b19c9e4696303`,
+branch `worktree-agent-a960b19c9e4696303`, from `origin/main` @ `7b4d3942` (cloud).
+authority: `QUEUE.md` `### REC-168 · running` (read on `origin/coord` @ `9f6e1e94`); design `INVESTIGATIVE-SESSION.md`
+§11 item 5, the paragraph *`op=capturerequest` — RULED 2026-09-22 by BOB #28* (rule 1 applies; rule 1's target does not).
+paths, BY SITE:
+  - `bio-plane/src/store.mjs` — `captureRequest` ONLY (its run resolution and the row's `principal_plane`), and its
+    `capturerequest:` route in the DO's op map (the `caller` field). NOT `publishCase` (D-442's, concurrent).
+  - `bio-plane/src/index.mjs` — `RUN_PRODUCTION_ACTIONS` (gains `capturerequest`) and its comment ONLY; the stamp
+    expression is not rewritten.
+  - `bio-plane/src/airun.mjs` — none expected; `runPrincipalGate` is consumed, not changed.
+  - `bio-plane/dist/**` (rebuild), `bio-plane/checks/bio-checks.mjs` (C-row text for CAPTURE_REQUEST_NO_RUN, only if the
+    sight arm needs it), `bio-plane/test/rec168-capturerequest-principal.test.mjs` + `.control.mjs` (NEW), and every
+    existing suite driving `op=capturerequest` whose assertion this supersedes (corrected with a dated comment, never
+    exempted). `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` ONLY and only to printed figures.
+  - `docs/architecture/construct-status.json` (the run-production construct), `INVESTIGATIVE-SESSION.md` front matter
+    and §11 item 5's capturerequest paragraph (an "as built" sentence), `docs/development/INTERFACE-CHANGES.md` (one IC
+    PROPOSED), `docs/development/MEASUREMENTS.md` (one entry appended), this block.
+**NOT CLAIMED:** `tools/**` (four M0 workers), `publishCase` (D-442), `agent-worker/**` (measured, not edited),
+`docs/development/QUEUE.md` (CONDUCT's).
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
