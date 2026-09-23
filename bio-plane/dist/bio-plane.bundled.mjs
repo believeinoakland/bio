@@ -66441,7 +66441,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
         stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
-        bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
+        /* D-116: THE DO'S OWN BUILD, under a field that is NEVER `version`. `op=bootstrap`'s `version` is the ROUTING
+           isolate's env.VERSION, and this answer is spread AFTER it, so a `version` here would REPLACE that reading
+           rather than stand beside it. `this.env` is the env of the worker version THIS OBJECT is running, which rolls
+           out on its own (D-108); nothing in the request is read for it, so a caller cannot hand it a value to echo.
+           null, never a default: a DO with no VERSION bound cannot say which build it is, and says exactly that. */
+        bootstrap: () => ({
+          ...this.bootstrapState(url.searchParams.get("fp")),
+          storeVersion: typeof this.env?.VERSION === "string" && this.env.VERSION ? this.env.VERSION : null
+        }),
         claim: () => this.claim({ ...body || {}, tokenFp: url.searchParams.get("fp") }),
         /* D-436 / IC-172: the producing group. The seed's `author` is the control plane's stamp, read from the
            query AFTER the body is spread, so a body naming its own recorder is overwritten rather than honoured. */
@@ -69087,6 +69095,43 @@ async function captureRequestArm(env, storeName, body, cls) {
   };
 }
 var storeSilent = (op) => json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
+var FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
+var MEMBER_VERSION_WAIT_MS = 4e3;
+async function memberVersions(env) {
+  const out = {};
+  await Promise.all(FLEET_BINDINGS.map(async ([member, binding]) => {
+    const b = env[binding];
+    if (!b || typeof b.fetch !== "function") {
+      out[member] = { binding, state: "UNBOUND" };
+      return;
+    }
+    let timer;
+    try {
+      const r = await Promise.race([
+        b.fetch(`https://${member}/version`, { method: "GET" }),
+        new Promise((_, no2) => {
+          timer = setTimeout(
+            () => no2(new Error(`no answer within ${MEMBER_VERSION_WAIT_MS} ms`)),
+            MEMBER_VERSION_WAIT_MS
+          );
+        })
+      ]);
+      const j = await r.json().catch(() => null);
+      if (!r.ok || !j || typeof j.version !== "string" || !j.version) {
+        out[member] = { binding, state: "SILENT", why: `answered HTTP ${r.status} without a version` };
+      } else if (j.name !== member) {
+        out[member] = { binding, state: "MISNAMED", name: typeof j.name === "string" ? j.name : null, version: j.version };
+      } else {
+        out[member] = { binding, state: "SERVING", version: j.version };
+      }
+    } catch (e) {
+      out[member] = { binding, state: "SILENT", why: String(e && e.message || e).slice(0, 200) };
+    } finally {
+      clearTimeout(timer);
+    }
+  }));
+  return out;
+}
 var driveRow = (code) => {
   const row = DRIVE_CAPTURE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -70261,13 +70306,17 @@ var index_default = {
       }
       const out = await doAnswer(stub2.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
       if (!out.answered) return storeSilent("bootstrap");
-      return json({
-        ok: true,
-        service: "bio-plane",
-        version: env.VERSION || "0.0.0",
-        bootstrapConfigured: await liveToken(env.ADMIN_TOKEN),
-        ...out.result
-      }, 200);
+      return json(
+        {
+          ok: true,
+          service: "bio-plane",
+          version: env.VERSION || "0.0.0",
+          bootstrapConfigured: await liveToken(env.ADMIN_TOKEN),
+          ...out.result,
+          ...url.searchParams.get("members") === "1" ? { memberVersions: await memberVersions(env) } : {}
+        },
+        200
+      );
     }
     let cls = await classify(url.searchParams.get("token"), env);
     let viaSession = false;

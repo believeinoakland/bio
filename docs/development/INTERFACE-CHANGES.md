@@ -13421,3 +13421,57 @@ train, carry no IC (UI-80 consumes IC-179). **WHY I3 MAJOR:** IC-25's test — `
 REFUSES an inquiry creation it accepted (no running run the credential holds, or the run's `surfaces` bound reached). **WHY
 I5 ADDITIVE:** one new derived table (`inquiry_run_surfacings`, in both purge arms) and one nullable column; no column moved.
 **AN AUTHORITY closing** (INVESTIGATIVE-SESSION §11 item 5, rules 2 and 3): said in the merge commit and sent to DIST.
+
+## IC-182 · I3: `op=bootstrap` REPORTS THE BUILD EACH PART SERVES, READ WHERE IT RUNS — the answer gains `storeVersion`, the Durable Object's OWN `env.VERSION` (never `version`, which stays the routing isolate's); and on `members=1` it gains `memberVersions`, each fleet member's own `GET /version` asked THROUGH the plane's binding, stated per member as `SERVING` / `UNBOUND` / `SILENT` / `MISNAMED` · PROPOSED 2026-09-23 (D-116, minted with `node tools/mintid.mjs IC` BEFORE the entry was written) — the version bump, the classification and the RESOLUTION are CONDUCT's
+
+**RENUMBERED 2026-09-23 by CONDUCT #15 at integration: IC-181 → IC-182.** D-116's worker minted IC-181 in its own clone; D-85's worker minted the same id, and D-85's entry landed first (origin/main `b5ce975a`). An ID COLLISION, not one change: both bodies are kept, this one under a fresh id from `node tools/mintid.mjs IC`, with every reference D-116 added (six files) renamed with it.
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (branch `worktree-agent-a90bb281bc2a47538`,
+  base `origin/main` @ `41c7e0c3`): 54.0.0, IC-179's resolution. Proposed MINOR, ADDITIVE — 54.0.0 → 54.1.0. Read the base AT
+  RESOLUTION**, by this file's own rule.
+  **Why MINOR, by IC-25's test:** nothing that answered before is refused or changes meaning. `version`, `service`,
+  `bootstrapConfigured`, `claimed`, `rearmed` and `consumedAt` are unchanged; ONE key is added to every answer
+  (`storeVersion`), and `memberVersions` appears ONLY when a caller asks with `members=1`, which no caller did before.
+  **The one argument for MAJOR, stated so CONDUCT can weigh it:** REC-41's pin (`members.test.mjs`) held the anonymous key set
+  EXACTLY, as a disclosure fence; it moves by one key in this landing. The key is a release label beside the release label
+  already there, names nobody and carries no date, so the fence's reason (no roster, no password date) is untouched — the
+  suite's other two REC-41 arms still run over the answer and stay green.
+- **Proposer:** DIST's area, D-116 worker, 2026-09-23, spawned by CONDUCT #15.
+- **Owner to land it:** `DIST` (the row puts `newgroup/` in scope; the plane half is two local hunks).
+- **Design:** `docs/architecture/BIO_Distribution_v0_1.md` §4 rule 1, §6 and §8 (the fleet's version authority, its RUNTIME
+  half), with `CLAUDE.md` §5 (*a deploy verified is not a build serving*); FLEET #3's finding recorded at `kickoffs/DIST.md`
+  lesson 18 (`op=bootstrap` is not a reading of the DO's build).
+- **Consumers to answer, MEASURED** (every TRACKED file under `civicos-ui/`, `agent-worker/`, `pdf-worker/`, `ocr-worker/`,
+  `tools/`, `docprofile/` and `newgroup/src/`, 231 files, searched for `op=bootstrap`; and `bio-plane/src/setup.mjs`, the page
+  the plane serves): **`civicos-ui/app.html` 1 (a comment) · `civicos-ui/test/auth-surface.test.mjs` 1 (a comment) ·
+  `newgroup/src/index.mjs` 4 (the installer: the CONSUMER this exists for, migrated in this landing) ·
+  `newgroup/src/release.mjs` 1 (the embedded 0.73.0 plane, not a consumer) · `bio-plane/src/setup.mjs` calls
+  `api("bootstrap")` twice and reads `claimed` / `bootstrapConfigured` only — unaffected, and it never sends `members=1`, so
+  the setup page does not fan out to three workers.** `vf4-live-scratch.mjs` (a live instrument) moves its DO arm to
+  `storeVersion` in this landing with a dated note.
+
+**THE SHAPE.** `Store`'s fetch route `bootstrap` returns `bootstrapState(fp)` plus `storeVersion`, read from `this.env.VERSION`
+— the env of the worker version the OBJECT runs — and from nothing in the request; `null` when the DO has no VERSION bound
+(never a default). The control plane spreads the DO's answer after its own fields, as before, and writes no `storeVersion` of
+its own. `memberVersions(env)` (a new module helper in `index.mjs`) asks `env.AGENT_WORKER`, `env.PDF_WORKER` and
+`env.OCR_WORKER` for `GET https://<member>/version` in parallel, bounded at 4 s each, and copies each member's own reply:
+`{ binding, state: "SERVING", version }`, `{ binding, state: "UNBOUND" }` (this plane holds no such binding),
+`{ binding, state: "SILENT", why }` (bound, no readable version), `{ binding, state: "MISNAMED", name, version }` (something
+answered under another name). Every member is stated; none is dropped.
+
+**THE CONSUMER, MIGRATED IN THE SAME LANDING (`newgroup/src/index.mjs`).** `verifyServing` reads `op=bootstrap&members=1`
+after an update AND after an install, and `servingVerdict` requires `version`, `storeVersion` and each member it can read to
+equal the release, naming each part that does not; the install and the update then do not report success (no "Updated",
+no "Your copy is running") — the page says the upload happened and lists the lag, patiently. Whether the RELEASE can answer
+is read from the plane bytes the act uploaded (`reportsBuilds`: both field names present in the source), never from a version
+number, so a release cut before this landing states the store's and members' builds UNDETERMINED instead of claiming them.
+
+**NEGATIVE CONTROL** (recorded on both suites' `NEGATIVE CONTROL:` lines; each arm alone, sources restored by sha256 AND byte
+compare): plane — (N1, THE ROW'S) the handler copies `env.VERSION` into `storeVersion` → 13/3, failing "the DO names ITS OWN
+build, not the routing isolate's" by name; (N2) the DO route drops the field (today's main) → 13/3; (N3) members filled from
+the plane's env → 13/3. Installer — (W1) read only `version` (today's main) → 157/7; (W2) `reportsBuilds` false → 155/9.
+
+**FOR CONDUCT at integration:** resolve this IC and move I3 in `INTERFACES.md`; re-run both controls. **FOR DIST:** this takes
+effect for a group only when a release carrying it is cut, deployed and embedded; until then `newgroup` (embedding 0.73.0)
+states the store's and members' builds UNDETERMINED. The live verification of the release that carries it should read
+`op=bootstrap&members=1` on biosmoke7 (store=scratch is irrelevant: the op writes nothing) and expect the three builds equal.

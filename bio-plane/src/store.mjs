@@ -43311,7 +43311,14 @@ export class Store extends DurableObject {
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
         stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
-        bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
+        /* D-116: THE DO'S OWN BUILD, under a field that is NEVER `version`. `op=bootstrap`'s `version` is the ROUTING
+           isolate's env.VERSION, and this answer is spread AFTER it, so a `version` here would REPLACE that reading
+           rather than stand beside it. `this.env` is the env of the worker version THIS OBJECT is running, which rolls
+           out on its own (D-108); nothing in the request is read for it, so a caller cannot hand it a value to echo.
+           null, never a default: a DO with no VERSION bound cannot say which build it is, and says exactly that. */
+        bootstrap: () => ({ ...this.bootstrapState(url.searchParams.get("fp")),
+                            storeVersion: typeof this.env?.VERSION === "string" && this.env.VERSION
+                              ? this.env.VERSION : null }),
         claim: () => this.claim({ ...(body || {}), tokenFp: url.searchParams.get("fp") }),
         /* D-436 / IC-172: the producing group. The seed's `author` is the control plane's stamp, read from the
            query AFTER the body is spread, so a body naming its own recorder is overwritten rather than honoured. */
