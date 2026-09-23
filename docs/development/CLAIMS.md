@@ -19240,3 +19240,28 @@ paths, BY SITE:
 `docs/development/QUEUE.md` (CONDUCT's).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 RECORD (D-442 — `op=publish` promotes no member finding; the moved blocks are stated once in the case document)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #14 for D-442 (wave 5), worktree `.claude/worktrees/agent-af1478b0c650efa08`,
+branch `worktree-agent-af1478b0c650efa08`, from `origin/main` @ `7b4d3942` (cloud).
+authority: `QUEUE.md` `### D-442 · running` (read on `origin/coord` @ `9f6e1e94`); design `BIO_Publication_v0_1.md` §3
+rule 12, *PUBLISHING WRITES NOTHING ON A MEMBER FINDING* (BOB #28, 2026-09-22), (a)–(e).
+paths, BY SITE:
+  - `bio-plane/src/store.mjs` — `publishCase` (the member loop and its answer), `#caseDocumentText`, `caseDocumentFacts`,
+    `publish` (the ratify committer: the member's edition and frozen pair from the pinning case documents, and
+    `CASE_ASSERTION_DIVERGED` restricted to legacy documents), `#caseEditionState` (per-member frozen facts), and a new
+    private reader of a case document's per-member frozen rows. NOT `captureRequest` (REC-168's, concurrent).
+  - `bio-plane/src/index.mjs` — the `op=ratify` block's frozen reads and the `op=caseratify` gate call ONLY.
+  - `bio-plane/src/gate.mjs` — `runCaseGate`'s context. `bio-plane/checks/bio-checks.mjs` — `CASE_DOCUMENT_FORMAT`,
+    `checkCaseDocument` (the member-frozen arms, run through `checkPublishedExtension`), and comments naming the move.
+  - `bio-plane/src/affordances.mjs` — the GROUND_PROMPT header comment ONLY (prompt text unchanged).
+  - `bio-plane/dist/**` (rebuild), `bio-plane/test/d442-publish-writes-nothing.test.mjs` + `.control.mjs` (NEW), and every
+    existing suite whose assertion this supersedes (corrected with a dated comment, never exempted).
+    `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` ONLY and only to printed figures.
+  - `docs/architecture/construct-status.json`, `BIO_Publication_v0_1.md` front matter and §3 rule 12's "as built"
+    sentence, `docs/development/INTERFACE-CHANGES.md` (one IC PROPOSED), `docs/development/MEASUREMENTS.md` (one entry).
+**NOT CLAIMED:** `civicos-ui/**` (UI's: the working inquiry page's `inquiryPair` reads a member's own frozen block — a
+DELEGATION, not an edit), `tools/**` (four M0 workers), `docs/development/QUEUE.md` (CONDUCT's).
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
