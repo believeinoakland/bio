@@ -1,5 +1,14 @@
 #!/usr/bin/env node
-/* DATED NOTE, 2026-09-13, ADDED BY D-323 — READ THIS BEFORE RE-RUNNING.
+/* DATED NOTE, 2026-09-23, ADDED BY D-116 — THE DO ARM READ THE WRONG FIELD, AND NOW READS THE RIGHT ONE.
+ *
+ * Phase 0 and the closing build read recorded `plane_durable_object` from `op=bootstrap`'s `version`. That field was
+ * ALWAYS the ROUTING isolate's env.VERSION (FLEET #3, 2026-09-21; `kickoffs/DIST.md` lesson 18): the DO's answer was
+ * spread after it and carried no build, so the arm could not see a lagging DO, and M-8's DO figure is the ISOLATE's.
+ * Since D-116 (IC-181) the DO reports its own build as `storeVersion`, and the two DO reads below take it from there —
+ * the ONLY edits below this note. A plane older than D-116 answers no `storeVersion`, which reads as UNDETERMINED,
+ * never as a match.
+ *
+ * DATED NOTE, 2026-09-13, ADDED BY D-323 — READ THIS BEFORE RE-RUNNING.
  *
  * **NOTHING BELOW IS EDITED. This file is a MEASUREMENT OF RECORD and a
  * measurement is not rewritten when the world it measured moves.** What has
@@ -132,11 +141,12 @@ t("the fleet member serves the same build — fleet rule 4: each rolls out on it
    0.52.0/0.51.0 is why both are read: a probe answered by an old build looked
    exactly like a security defect in the new one. */
 const doVer = await (await fetch(`${ORIGIN}/api/?op=bootstrap`, { cache: "no-store" })).json();
-console.log(`  DO-routed op=bootstrap: version ${doVer?.version}, service ${doVer?.service}`);
-t("the DURABLE-OBJECT-routed answer names the same build — no isolate is lagging behind /version",
-  [doVer?.version, doVer?.service], ["0.57.0", "bio-plane"]);
+const doBuild = doVer?.storeVersion ?? "UNDETERMINED (no storeVersion: a plane older than D-116)";
+console.log(`  DO-routed op=bootstrap: DO build ${doBuild}, isolate ${doVer?.version}, service ${doVer?.service}`);
+t("the DURABLE OBJECT names the same build as /version — read from the DO's own storeVersion (D-116)",
+  [doBuild, doVer?.service], ["0.57.0", "bio-plane"]);
 report.phases.version = { plane_isolate: planeVer, agent_worker: agentVer?.version,
-  plane_durable_object: doVer?.version, read_at: new Date().toISOString() };
+  plane_durable_object: doBuild, read_at: new Date().toISOString() };
 
 /* ===================================================================== 1
  * THE STARTING STATE OF THE SCRATCH NAMESPACE, AND THE REAL ONE'S WITNESS.
@@ -777,11 +787,12 @@ report.phases.sweep = { purge_status: purge.status, purge: purge.body?.result ??
     const endIso = (await (await fetch(`${ORIGIN}/version`, { cache: "no-store" })).text()).trim();
     const endDo = await (await fetch(`${ORIGIN}/api/?op=bootstrap`, { cache: "no-store" })).json();
     const endAgent = await (await fetch(`${AGENT_ORIGIN}/version`, { cache: "no-store" })).json();
-    console.log(`  build at EXIT: plane isolate ${endIso}, plane DO ${endDo?.version}, agent-worker ${endAgent?.version}`);
-    report.build_at_exit = { plane_isolate: endIso, plane_durable_object: endDo?.version,
+    const endDoBuild = endDo?.storeVersion ?? "UNDETERMINED";
+    console.log(`  build at EXIT: plane isolate ${endIso}, plane DO ${endDoBuild}, agent-worker ${endAgent?.version}`);
+    report.build_at_exit = { plane_isolate: endIso, plane_durable_object: endDoBuild,
       agent_worker: endAgent?.version };
     t("NO ROLLOUT MOVED UNDER THIS RUN — every figure above is attributable to ONE build",
-      [endIso, endDo?.version, endAgent?.version], ["0.57.0", "0.57.0", "0.57.0"]);
+      [endIso, endDoBuild, endAgent?.version], ["0.57.0", "0.57.0", "0.57.0"]);
   } catch (e) { console.log(`  closing build read THREW: ${String(e?.message || e).slice(0, 200)}`); }
   report.plane_versions_seen = [...planeVersionsSeen];
   report.tally = { pass, fail };
