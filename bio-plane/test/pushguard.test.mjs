@@ -103,6 +103,9 @@ function scratchRepo(name, { withIndex = false } = {}) {
        layer), so a copy carried alone could not load and the index was never produced — the fixture measured a
        broken import, not the rule. What it imports is carried with it. */
     cpSync(join(REPO, "tools/coord.mjs"), join(root, "tools/coord.mjs"));
+    /* CORRECTED 2026-09-23 by M0-121: `coord.mjs` now imports the state-path predicate from `statepaths.mjs` (a module
+       that walks nothing), so the carried copy could not load without it — the same broken-import fixture as above. */
+    cpSync(join(REPO, "tools/statepaths.mjs"), join(root, "tools/statepaths.mjs"));
     cpSync(join(REPO, ".gitignore"), join(root, ".gitignore"));
   }
   writeFileSync(join(root, "docs/seed.md"), "# seed\n\nDEC-1 was RULED on 2026-09-17 to exist.\n");

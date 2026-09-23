@@ -68,7 +68,9 @@ import { walkResult } from "./walkfigure.mjs";
    branch `coord` (TREE-SHARING.md §1). Their op= claims are judged by the coord write's ledger checks — BOB #28's
    ruling 2: a check of a ledger's CONTENT leaves the battery — so this walk, which the battery floors on, sweeps
    `main`'s files only, and `sweep({ files })` is the one mechanism the ledger check runs over the state texts. */
-import { isMovedPath } from "../../tools/coord.mjs";
+/* M0-121: from the module that WALKS NOTHING. `coord.mjs` re-exports the same binding, but importing it from there
+   made every importer of this module inherit `coord.mjs`' walks of `docs/` in `tools/gates.mjs`' selection (M-106). */
+import { isMovedPath } from "../../tools/statepaths.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const PLANE = join(HERE, "..");
