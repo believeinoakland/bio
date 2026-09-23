@@ -67,7 +67,7 @@ scope: the exemption as ruled; `migrate.mjs`'s token narrows to admin; the build
 accepts-when: as the paragraph states it: a replay naming a matching registered provenance capture lands keeping its Drive-era stamp and reads `not recorded (migrated from the Drive era)`; a non-admin, or a capture not listing the bundle and SHA, is refused. NEGATIVE CONTROL as the paragraph names it.
 added: 2026-09-23 · SCHEDULER #15 (BOB #30's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 
-### M0-134 · queued — **27 BATTERY SUITES READ GREEN ON A THROWN FIXTURE: EACH HAS A `finally` THAT CALLS `process.exit(fail ? 1 : 0)` WITH NO `catch`, AND ONE OF THEM, `severedhomes.test.mjs`, HAS CHECKED ONLY ITS FIRST ASSERTION SINCE REC-141 (IC-158).** It throws `PROJECT_ID_SUPPLIED` at the promote of `PROJ-2026-9101-still-drawing`, prints "1 pass, 0 fail" and exits 0 (reproduced by REC-160's worker on unmodified `d89e04d1`; the `finally` re-read on `a13667ee`), so D-267's exact caller count has never been checked by the battery. Found by REC-160's worker (CONDUCT #15). — owner M0.
+### M0-134 · running — 27 suites green on a thrown fixture. SPAWNED 2026-09-23 by CONDUCT #16. NOT LANDED, CHECKED BY CONTENT on e62e08e1: severedhomes.test.mjs names makePublishingProject 0 times and still carries the literal PROJ-2026-9101. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: FIRST of the backlog: a green that measured nothing is the record claiming more than it supports (CLAUDE.md §2), in the gate every landing trusts, and under M0-126 such a false PASS is cached (SCHEDULER #15, 2026-09-23)
 milestone: M0
 interface: none
@@ -77,7 +77,7 @@ scope: (1) `severedhomes.test.mjs` mints its project fixtures and takes the retu
 accepts-when: `severedhomes.test.mjs` runs every assertion; a planted throw in any listed suite exits 1 naming it. NEGATIVE CONTROL: remove one `catch`, and the hygiene rule fails by name.
 added: 2026-09-23 · SCHEDULER #15 (REC-160's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs M0`).
 
-### M0-130 · queued — **`bio-plane/test/mergecarry.test.mjs`'S HISTORICAL-REGISTER ARM GRADES THE MERGES OF LIVE `origin/main`, SO ITS VERDICT MOVES WITH WHAT HAS LANDED, NOT WITH THE TREE UNDER TEST.** `historicalRegister({ repo })` walks `origin/main`'s merges (the arm prints *"N merge(s) in origin/main"*, re-read on `4355bfda`) and floors the finding rate over them; run #20 on `main` went RED on it (`FAILED=mergecarry.test.mjs`) when a train's merge added history. CONDUCT #15's finding, fix named by the M0-126 worker. — owner M0.
+### M0-130 · running — mergecarry's historical arm reads live origin/main. SPAWNED 2026-09-23 by CONDUCT #16 (M0-126 landed e62e08e1). NOT LANDED, CHECKED BY CONTENT on e62e08e1: mergecarry.test.mjs names origin/main 3 times. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: first of the gate-honesty rows, directly after UI-82: a red on `main` emails Bob as an ALARM and this one came from history, not code — Bob's ruling of 2026-09-23, *a gate test depends only on the code*; it cuts gate time (SCHEDULER #15, 2026-09-23)
 milestone: M0
 interface: none
@@ -88,7 +88,7 @@ accepts-when: the arm's verdict on one tree is identical whatever `origin/main` 
 narrowed: 2026-09-23 by SCHEDULER #15 on CONDUCT #15's report: under BOB #30's ruling a history-reading unit is never-cache, which answers the reuse half (M0-131); re-read this row's residue once M0-126 and `land/bob/nevercache` land.
 added: 2026-09-23 · SCHEDULER #15 (CONDUCT #15's report of run #20; `node tools/mintid.mjs M0`).
 
-### M0-131 · queued — **THE TRAIN LANDS A MERGE UNGATED WHENEVER ITS TREE IS RECORDED GREEN (M0-122's reuse), THOUGH THE MERGE ADDS HISTORY THAT HISTORY-READING CHECKS JUDGE.** `recordedGreen` in `tools/train.mjs` (re-read on `4355bfda`) returns the tree's record and the train prints *"NO GATE RUN"*; a tree record says nothing about the merge commit's new history, so run #20's red (`mergecarry`) reached `main` through it. CONDUCT #15's finding. — owner M0.
+### M0-131 · running — the train's reused tree record skips history-reading checks. SPAWNED 2026-09-23 by CONDUCT #16 (M0-126 landed e62e08e1; NOT ABSORBED: tools/train.mjs recordedGreen names never-cache 0 times on e62e08e1). Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly after M0-130, the same red: M0-130 makes `mergecarry` depend on the tree alone; this closes the door for every other history-reading check (plancheck's carry arm) (SCHEDULER #15, 2026-09-23)
 milestone: M0
 interface: none
@@ -98,7 +98,7 @@ scope: on a reused tree record the train still runs the history-reading checks (
 accepts-when: a union whose tree is recorded GREEN but whose merge drops a carried edit is refused by the train naming the check. NEGATIVE CONTROL: skip the history checks on reuse, and that arm lands the bad merge and fails by name.
 added: 2026-09-23 · SCHEDULER #15 (CONDUCT #15's report of run #20; `node tools/mintid.mjs M0`).
 
-### REC-174 · queued — **`op=frontier`'S NEVER-LOOKED AND MISSING LISTS HAVE THE FULL-FETCH HOLE D-389 CLOSED FOR `looked`: WHEN A FETCH COMES BACK FULL, `never` AND `unexplained` CAN READ AT OR UNDER THE CAP AND REPORT `truncated: false` WHILE MORE ROWS EXIST.** Document arm: `#frontierNeverLooked((cap + 1) * 2)`, then gated (`bio-plane/src/store.mjs`, re-read on `b41d1edb`); content: `missing` at `(cap + 1) * 2`, gated, then split by cause; meaning: three lists at `cap + 1` with no over-fetch, gated, then split. Found by D-389's worker (CONDUCT #15). — owner RECORD.
+### REC-174 · running — frontier never-looked/missing lists' full-fetch hole. SPAWNED 2026-09-23 by CONDUCT #16 (D-389 landed e62e08e1). NOT LANDED, CHECKED BY CONTENT on e62e08e1: store.mjs still calls #frontierNeverLooked((cap + 1) * 2) outside the exhaustion disjunct. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly before D-57 and after D-389 (in the cache), the same coverage claim in the same read, CLAUDE.md §2's class: a list saying it is complete when the reader could not see its end (SCHEDULER #15, 2026-09-23)
 milestone: M3
 interface: I3 — `truncated` reads `true` on a full fetch of these lists; the integrator mints and classifies the IC.
