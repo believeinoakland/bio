@@ -216,6 +216,48 @@ scope: (1) both ORDER BYs gain `, rowid` (write order on a tie); a sweep of `sto
 accepts-when: in a NEW suite `bio-plane/test/rec-182-created-tie.test.mjs`, through the ops: two manifest rows with an equal `created` come back from `op=export` and the gate in write order on every run; I-20 names the tie rule. NEGATIVE CONTROL (`rec-182-created-tie.control.mjs`): drop `, rowid` from one read, and its arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-171's worker's finding via CONDUCT #17, verified at the code; `node tools/mintid.mjs REC`).
 
+### REC-183 · queued — **`op=reinstate` CAN CONFIRM AN EDGE ONTO A RETIRED ITEM: `#edgeTransition` never reads the target's state, so cite, sever, retire, reinstate leaves a CONFIRMED edge on what State Rules §4.1 (D-168) makes uncitable.** Re-read on `91bcea6b`: `store.mjs` `#edgeTransition` (the reinstate/sever door) names no `current_state` and no `RETIRED_NOT_CITABLE`. — owner RECORD.
+order: directly after REC-182: the retired-not-citable fence D-168 built and REC-181 closed at promote, one door further, the record claiming what §4.1 forbids (CLAUDE.md §2); a correction to just-landed work (SCHEDULER #16, 2026-09-23; REC-181's worker via CONDUCT #17)
+milestone: M9
+interface: I3 — `op=reinstate` gains the `RETIRED_NOT_CITABLE` refusal (C-33.39); the integrator classifies the IC.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.1 (a retired item is NOT citable, for every caller; BOB #30), with D-168's `RETIRED_NOT_CITABLE` (C-33.39) as the one refusal.
+depends-on: REC-181 (on `land/conduct/c17-batch2`).
+scope: in `#edgeTransition`, when `to === "confirmed"`, refuse `RETIRED_NOT_CITABLE` for any selected member whose `current_state` is `retired`, before any write.
+accepts-when: in a NEW suite `bio-plane/test/rec-183-reinstate-retired.test.mjs`, through `op=reinstate`: cite, sever, retire, reinstate is refused `RETIRED_NOT_CITABLE` with the edge still severed; a live target reinstates. NEGATIVE CONTROL (`rec-183-reinstate-retired.control.mjs`): drop the check, and the retired arm lands and fails by name.
+added: 2026-09-23 · SCHEDULER #16 (REC-181's worker's finding via CONDUCT #17, verified at the code; `node tools/mintid.mjs REC`).
+
+### D-443 · queued — **SEVEN `IN` LISTS IN `store.mjs` CAN STILL BIND MORE THAN D-36's ~100 VARIABLES, AND workerd REFUSES THE WHOLE READ WHEN ONE DOES.** `#contentEarned` binds up to 201 (`CONTENT_EARNED_MAX`) and feeds up to 200 ids to `#attestationsOver` and `#transcriptionsOver`; `#contentStandings`, `earnedBasisRegistry`'s union (binds twice, fails from ~50), `publishedCaseRegistryFor` and the superseded-by `MAX(last_updated)` read have no cap. Found by D-390's sweep (verdict list in `frontier-chunk.test.mjs`'s head). — owner RECORD.
+order: directly after REC-183: a read that fails outright past ~100 ids refuses loudly rather than claiming what it cannot support, so it sits below the rows where the record claims too much; D-390's own precedent and suite make it one worker's afternoon (SCHEDULER #16, 2026-09-23; D-390's worker via CONDUCT #17)
+milestone: M3
+interface: none (the reads answer as before, now at any size); the integrator classifies.
+design: `docs/development/RETRIEVAL-SUBSTRATE.md` (reads over the record), with D-36's measured ~100-variable limit and D-390's `IN (SELECT value FROM json_each(?))` as the precedent.
+depends-on: D-390 (its binding and its suite are reused; on `land/conduct/c17-batch2`).
+scope: each list above binds ONE value, `IN (SELECT value FROM json_each(?))` with `JSON.stringify(ids)`, keeping each read's row source visible to `derivation-bounds.test.mjs`.
+accepts-when: `bio-plane/test/frontier-chunk.test.mjs` gains an arm per read, each driven through its op past 100 ids and green; `derivation-bounds.test.mjs` green. NEGATIVE CONTROL (`frontier-chunk.control.mjs`, a new arm): restore one spread `IN (?, …)`, and that read's arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (DEBT D-443, minted by D-390's worker on coord `3c0f5092`; placed by door 2, keeping its `D-` id).
+
+### D-65 · queued — **MONITORING NEVER CALLS THE MONITORING CONTRACTS: `op=monitor` compares raw SHA-256 on every kind of document alike and keeps no dated confirmation.** docprofile's one entry point, `assess(before, after, ctx)` (`docprofile/pipeline.mjs`), grades a change per content type; the plane imports six names from docprofile (`index.mjs`), and nothing calls `assess` or `events.mjs` (re-read 2026-09-21). — owner RECORD.
+order: directly after D-60, the same op: D-60 stops the raw-byte noise, this makes monitoring say WHAT changed for the type and keep the negative result; a gap, not an over-claim (SCHEDULER #10, 2026-09-21, LED-7)
+milestone: M3
+interface: I3 — `op=monitor` answers with the layer it stopped at and graded events; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §6 (*"One public function"*; identical bytes are *"a CONFIRMATION, stored as evidence"*; the contract *"sets the expected check frequency"*), with `docs/architecture/CONSTRUCTS.md` Step 6 and `docs/development/OBSERVATION-LOG-DESIGN.md` §4.1 (the monitor's sweep).
+depends-on: D-60 (the comparison this extends).
+scope: `op=monitor` asks `assess` through the capture's handler and content type, answers with its trail and graded events, and writes each look to the observation log as §4.1 states. REC-26's per-document `monitor_frequency` stays the authored choice; a document stating none takes its type's contract, and the answer says which.
+accepts-when: a calendar that lost a meeting inside its window reads `removed` as an `event`, a moved window reads `routine`, and an unchanged tick writes a dated `PRESENT unchanged` observation. How a liar passes it: grading every change an `event`, so the moved-window arm must read `routine`. NEGATIVE CONTROL: bypass `assess`, and the removed-meeting arm fails by name.
+added: 2026-09-21 · SCHEDULER #10 (LED-7; D-65's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
+uncut: restored whole from «D-65» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
+
+### REC-164 · queued — **A GROUP CANNOT SAY WHO IT IS BEYOND ITS SLUG: NO DISPLAY NAME AND NO VERIFIED DOMAIN ARE RECORDED OR READ.** `BIO_Publication_v0_1.md` §7 (BOB #24, 2026-09-21) designs both: a display name is the group's own words, set by an administrator, never in signed bytes and shown WITH the slug; a domain is a claim shown publicly only while a well-known-file check reads it `verified`. `bio-plane/src` records neither; the store holds the slug alone (D-436). — owner RECORD.
+order: the first feature after UI-75 (DEC-24's member half first): the group's public identity, resting on REC-163's public slug read (BOB #24: *"after REC-163"*) (SCHEDULER #9, 2026-09-21)
+milestone: M7
+interface: I3 additive (the two set acts and the public read) and I5 (two durable values with dated histories); the integrator mints and classifies the ICs.
+design: `docs/architecture/BIO_Publication_v0_1.md` §7 (the publishing group's public identity).
+depends-on: REC-163.
+scope: two values in the store's durable state, each set by an administrator's session act with `by` stamped by the server and a dated history; a verifier that fetches a well-known file on the claimed domain through the per-host governor, naming this instance's address and slug, and records `verified`, `absent` or `mismatched` with a date, re-checked on the reconciling alarm; a public read returning the display name, and a domain only while it is verified.
+accepts-when: a bearer and a caller-supplied `by` are refused; an unverified domain never appears in a public read; a well-known file naming another instance reads `mismatched`; the display name appears in no signed bytes. How a liar passes it: verifying once at set time, so the arm changes the file and the alarm's re-check moves the verdict. NEGATIVE CONTROL: skip the verdict gate on the public read, and the unverified-domain arm fails by name.
+added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry, item 2, drained this commit; `node tools/mintid.mjs REC`).
+uncut: restored whole from «REC-164» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
