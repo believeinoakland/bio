@@ -129,7 +129,7 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
 ### 2 · One lane lands on `main`, in batches
 
 - **Lanes and workers push branches only.** A branch named `land/<lane>/<topic>` means *ready to land*. **CONDUCT, the
-  integrator, lands on a cadence** (about every 30 minutes, or sooner when work waits): it merges every waiting `land/*`
+  integrator, lands on a cadence** (about every TWO HOURS, RULED 2026-09-23 by BOB #30 below; it was 30 minutes): it merges every waiting `land/*`
   branch onto `main` in one integration branch, gates ONCE on the union class, pushes `main`, and deletes the landed
   refs. A branch that conflicts or reds is returned to its lane by name and the rest land.
 - **Nobody else pushes `main`**, enforced by the push guard, not by memory; the integrator's mark is the builder's to
@@ -177,6 +177,15 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   merge carries, push, verify from the remote. And a union whose TREE this clone's D-293 record already holds GREEN —
   a lone `land/*` branch fast-forwarding `origin/main` merges to exactly its own tip's tree — lands with no gate run,
   read through pushguard's `readRuns` and `effectiveVerdict`; a tree recorded RED or NOT MEASURED is gated as before.
+  **M0-131 (2026-09-23) made that reuse run the never-cached units (§3a condition 1, BOB #30):** a tree record says nothing
+  about the union's NEW HISTORY, so a reused tree runs `gates.mjs --never-cached` — every unit `neverCacheOf` marks (the
+  `GATE: never-cache` markers and the plancheck closures, derived in the gate, never listed in the train) and plancheck —
+  recorded as class NEVERCACHE (which covers no class), and its RED refuses the union naming the unit. Every other non-FULL
+  train gate (the derived class, the retry's `--since`) carries `--with-never-cached`: its plan plus every never-cached
+  unit it left out, since a narrowed selection is a reuse too. Driven in `train.test.mjs`'s M0-131 section: a lane's tree
+  gated GREEN, then `merge -s ours` of a main carrying a `Carry:` edit, keeps that tree and drops the edit; the train
+  refuses it at the history check by name. A RED never-cached run is recorded against the TREE, so the guard's `main`
+  arm then refuses that tree too — a second refusal, found by the control's verdict-ignored arm.
   **Not built:** reuse of a record held in ANOTHER clone's git dir (a cloud session's gate is not visible to CONDUCT's
   clone), so such a branch is still gated in the train.
 
@@ -190,6 +199,19 @@ workflow triggers on — it runs locally, as every other control does (M0-114's 
 (c) a check that depends on anything but the tree — live `coord` state above all — never decides the gate's verdict (the
 defect that reddened `land/conduct/batch6`'s runs 6 and 7, placed by SCHEDULER); and (d) whoever pushed a branch that
 reads red diagnoses it at once and never leaves it red.
+
+**THE BATCH IS A TIME WINDOW, ABOUT TWO HOURS — RULED 2026-09-23 by BOB #30, on Bob's question** (*"Is there an opportunity
+to significantly increase the batch size?"*). MEASURED from `main`'s first-parent history and the workflow's runs that day:
+13 trains landed between 05:25Z and 12:54Z, about one every 35 minutes, and 6 of them carried ONE branch (two DIST
+pointers, two BOB docs branches, a leak fix, a red-main repair). Each GitHub run read 4-5 minutes only because it ran DOCS
+(M0-126's finding); from M0-126 on it runs the whole battery, which took 14-16 minutes on the runner in M0-114's runs, and
+the train's own local gate runs per train too. So: **a train runs about every two hours and takes EVERY waiting `land/*`
+branch** (lanes' docs branches and DIST's pointers included: they wait for it). Four exceptions only, each named in the
+train's commit: (1) a security fix whose release is a CUT NOW; (2) repairing a RED `main`; (3) a landing a RUNNING worker
+or a release is blocked on; (4) Bob asks. **What it costs, stated:** a finished item waits up to two hours to reach `main`,
+and a larger batch that reads red takes longer to pin. The per-suite `failedUnits` rerun and M0-126's per-unit record bound
+the second cost. **Re-measure after a day** (trains a day, branches a train, the train's gate minutes, the red-batch
+count) and widen or narrow from the figures, not from this paragraph.
 
 **ONE GITHUB RUN PER LANDED BATCH — RULED 2026-09-23 by Bob** (*"Ok, 1 github run per batch"*, on BOB #29's
 recommendation). The workflow runs on a push to `main` alone, and `main` moves only through the train, so each run audits
@@ -333,10 +355,14 @@ file from a unit's input set, and condition 2 fails that unit by name.
      arguments name a remote-tracking ref or a commit id, FAILS a cacheable unit by name (`HISTORY READ`) and writes no
      PASS; a git run in a fixture repository elsewhere does not count. The full traced gate of 2026-09-23 named eleven
      (`decided`, `migrate-released`, `mintid`, `op-claims`, `owed-controls`, `owed`, `readbudget`, `register-grammar`,
-     `retirable`, `status`, `coverage`); each is marked, with `mergecarry` (named by the ruling). And a REUSED record
+     `retirable`, `status`, `coverage`); each is marked, with `mergecarry` (named by the ruling). **Never-cache makes such
+     a unit always RUN; it does not make its VERDICT depend only on the tree (§3).** `mergecarry`'s historical register
+     read the live `origin/main` until M0-130 (2026-09-23): it now reads the merges reachable from `REGISTER_PIN`, a
+     commit named with its why in `tools/mergecarry.mjs`, and a planted-ref arm proves the verdict is the same whatever
+     `origin/main` holds; it stays never-cache (it reads history by commit id, and runs plancheck). And a REUSED record
      never answers for a never-cached unit: with the per-unit record on, §2d's tree-keyed GREEN shortcut is not taken,
      and a RERUN of what failed also runs every never-cached unit. The train's own tree-keyed reuse (M0-122's
-     `recordedGreen`) is NOT changed here: M0-131 carries it.
+     `recordedGreen`) was not changed here; M0-131 made it run every never-cached unit (§2).
      **Never cached** also covers a unit whose closure names `tools/plancheck.mjs`: it reads what plancheck reads (the
      whole tree and `origin/coord`); `ledger`, `mergecarry` and `pipeline-readers` traced 1,027–1,028 of 1,028 files
      that way. 12 units today, and the rule is coarse on purpose: `gates`, `train` and `gateresults` name the path only
@@ -369,8 +395,8 @@ file from a unit's input set, and condition 2 fails that unit by name.
   9. **Append-only is enforced at the push**: the guard's `gate-results` arm (a push of that ref alone) passes only a
      commit that descends from the remote tip and ADDS `results/…` or `revoked/…` files; a modify, a stray path, a
      rewritten history or a deletion is refused by name. `main`'s checks do not judge it, as for `coord`.
-  10. **The tree-keyed reuse stays as a local fast path** (§2d, M0-122's `recordedGreen`): correct only where no
-      never-cached unit is in scope (M0-131), and cheaper than keying; the per-unit record supersedes it as the shared
+  10. **The tree-keyed reuse stays as a local fast path** (§2d, M0-122's `recordedGreen`): it answers only for the
+      CACHEABLE units — the train's reuse runs every never-cached unit on the union (M0-131, §2) — and is cheaper than keying; the per-unit record supersedes it as the shared
       mechanism. (Corrected at integration by CONDUCT #16 on BOB #30's order, 2026-09-23: "still correct" was not — a
       tree-identical reuse skips a unit that reads history, the 4355bfda class.)
   **Not built:** a concurrent-writer race driven in the suite (the writer re-fetches and re-applies on a rejected push,
@@ -411,7 +437,8 @@ Their state is the ledger's, never this file's: `node tools/ledger.mjs find <ID>
   process tooling, no process row unless it cuts gate time or unblocks product, batch landings (`CLAUDE.md` §2;
   `SCHEDULER.md` step 3 orders the plan by it); *"Never queue a gate behind another lane's"* (`CLAUDE.md` §6); a session
   refreshes past 70% of its context, not 60% (`CLAUDE.md` §4; ruled 2026-09-21, and restated 2026-09-22 as BOB #26
-  recorded it: *"the line is 70%, not 60% — refresh less, work more"*).
+  recorded it: *"the line is 70%, not 60% — refresh less, work more"*). **RAISED TO 80% by Bob 2026-09-23** (*"I can't see a
+  downside to increasing the context limit to 75% or 80% so as to extend session lifetimes"*; `CLAUDE.md` §4).
 - **The rows:** M0-99 (`DECIDED.md` untracked, generated on demand; §1), M0-106 (DIST's release gate reuses a tree's
   GREEN record), M0-107 (a timeout reads NOT MEASURED, never a finding), M0-109 (the ledger suite's floor that the debt
   fold tripped), M0-100 (narrowed, §1; BUILT: `ORCHESTRATION.md` rule 3), M0-101 (superseded, §1), M0-114 (change 3, BUILT: §3 "As built"; it was

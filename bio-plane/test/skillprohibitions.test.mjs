@@ -200,8 +200,14 @@ const lg = await POST("op=login", { role: "member:ruth", password: "ruth-passphr
 const RUTH = lg.token;
 if (!RUTH) throw new Error(`login: ${JSON.stringify(lg)}`);
 
+/* CORRECTED 2026-09-23 by M0-132, never exempted: this snap key's suffix was drawn from `Math.random`, and the key is
+   half of the PRIMARY KEY (bundle_id, snap_key) of `manifest` and `history`, which `promote` writes `INSERT OR
+   REPLACE`: two writes to one bundle drawing the same suffix are not refused, the second SILENTLY REPLACES the
+   first's rows, so a version the suite wrote could vanish by the draw rather than the code (`TREE-SHARING.md` §3). A
+   per-suite COUNTER cannot repeat. */
+let snapKeySeq = 0;
 const promote = async (id, text, type) => POST(`op=promote&token=${RUTH}`, {
-  bundleId: id, base: null, snapKey: `${id}-${Math.random().toString(36).slice(2, 8)}`,
+  bundleId: id, base: null, snapKey: `${id}-${String(++snapKeySeq).padStart(6, "0")}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]

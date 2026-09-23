@@ -2090,6 +2090,22 @@ CREATE TABLE IF NOT EXISTS inquiry_run_surfacings (
   at         TEXT NOT NULL
 );
 
+-- REC-173 (INVESTIGATIVE-SESSION.md section 11 item 5, A MIGRATION IS A REPLAY, NOT A SURFACING, BOB #30,
+-- 2026-09-23): the inquiries whose CREATION was a server-verified MIGRATION REPLAY. The control plane admits one
+-- only for the ADMIN class and only when the drive-provenance capture it names is registered, held, and lists this
+-- bundle id and this bundle.md SHA-256. Such a question was surfaced in the Drive era, not on this plane, so no run
+-- is recorded for it and its read says so in words (not recorded, migrated from the Drive era) rather than guessing.
+-- An INSTANCE row, never a line in the question's bytes, which are the Drive era's verbatim. capture_sha is the
+-- provenance capture, promotion_key the preserved Drive promotion whose record listed the bytes. One row per
+-- inquiry, written in the creation's own transaction. Named bundle_id so it rides purge's TABLES list and clears in
+-- BOTH arms (D-113). NO index beyond the key: the one reader asks by the inquiry.
+CREATE TABLE IF NOT EXISTS inquiry_migration_replays (
+  bundle_id      TEXT PRIMARY KEY,
+  capture_sha    TEXT NOT NULL,
+  promotion_key  TEXT,
+  at             TEXT NOT NULL
+);
+
 -- THE OBSERVATION LOG (§11). Where the run searched across the four levels,
 -- what it established, where it STOPPED and why. APPEND-ONLY: 'seq' is
 -- monotonic per run and no row is ever updated, because a resumed run reads its

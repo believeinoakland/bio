@@ -1861,12 +1861,31 @@ export function checkBound(bound) {
    caller spends neither, at the tick or as a seed at the open — a zero claims nothing and is let through. */
 export const PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
 
+/* REC-172 (§14b.6) — THE BOUND THE PLANE DECIDES, and it is NOT a count. `lease` is the heartbeat whose LAPSE is how a
+   killed run is noticed (`finishedBound`'s `expired`, the `ai-run-reap` consumer): the plane reads it off the clock,
+   and nothing anywhere spends it. It is kept apart from PLANE_COUNTED_BOUNDS for two reasons, both measured: that list
+   is held EQUAL to the store's literal-named bound writers (rec169's ARM C), and `lease` has none; and a zero is not
+   let through here as it is there, because a zero `mints` is a count of nothing while a zero `lease` is still a figure
+   for a thing that has no figures — and the tick's upsert would write a `lease` row into the run's budget, which the
+   record would then show beside the allowances a member declared. So ANY figure for it is refused, at the tick and at
+   the open, under C-22.14's rationale: the plane decides it. */
+export const PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
+
 /** REC-169 — C-22.13 and C-22.14: MAY THE CALLER WRITE THIS FIGURE INTO A RUN'S BOUND? Null when every entry may be
  *  written, else the refusal for the FIRST that may not (in the order given), so the caller is told which one.
  *
- *  `entries` is `[bound, value]` pairs; a pair whose bound is not a RUN_BOUNDS row is not judged (the tick has always
- *  skipped one — a finding reported by REC-169, not decided here). `seed` is true at the open, where an ABSENT
- *  figure (undefined or null) means "none spent yet" and is not a figure at all.
+ *  `entries` is `[bound, value]` pairs. `seed` is true at the open, where an ABSENT figure (undefined or null) means
+ *  "none spent yet" (or, for `allowance`, "no ceiling declared" — stored as 0 as it always was) and is not a figure.
+ *  `allowance` is true for the MEMBER'S declared `allowed` at the open (REC-172): the same shape, and no plane-counted
+ *  refusal, because the member who opens a run is exactly who sets its `mints` and `surfaces` ceilings (D-85).
+ *  `map` is true at the tick, where `entries` is the caller's `consume` itself, and `list` at the open, where it is
+ *  the member's `bounds` itself (see the note at each branch).
+ *
+ *  REC-172 (C-22.15): A PAIR WHOSE BOUND IS NOT A RUN_BOUNDS ROW IS REFUSED, NOT SKIPPED. It was skipped — the tick
+ *  answered `ticked: true` over `{ fetchs: 1 }` and spent nothing, so the caller believed it had counted a fetch the
+ *  record never held, and a member who declared `fetchs: 3` at the open got a run with no fetch ceiling at all.
+ *  An own-property test, so `__proto__` and `constructor` name no bound either. And `lease` (PLANE_DECIDED_BOUNDS) is
+ *  refused before its figure is looked at: there is no figure for it.
  *
  *  THE RULE: a figure is a NON-NEGATIVE SAFE INTEGER, and a JSON number — never a string that looks like one. The
  *  column is declared INTEGER and counts things (fetches, sub-sessions, milliseconds, ceilings, passages,
@@ -1874,16 +1893,66 @@ export const PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
  *  what its member allowed it — a fraction and a non-finite are not counts, and a string or `true` was coerced by
  *  `Number(v) || 0` into a figure nobody sent. Refused, never clamped: a clamp answers `ticked: true` over a spend that
  *  did not happen. */
-export function checkConsume(entries, { seed = false } = {}) {
+export function checkConsume(entries, { seed = false, allowance = false, map = false, list = false } = {}) {
+  /* REC-172 — THE OPEN'S DECLARATION, held to the tick's shape: with `list`, `entries` is `op=airunopen`'s own
+     `bounds`, a LIST of `{ bound, allowed, consumed?, unit? }`; absent is a run declaring no bounds, as it always was.
+     A map, and an entry that is not an object, are C-22.15 (each was DROPPED silently, so the member got a run without
+     the ceiling they declared); then every entry's BOUND and ALLOWANCE are judged (`allowance`: an unknown name is
+     C-22.15, `lease` is C-22.14, and an `allowed` that is not a whole number of zero or more is C-22.13 — it was written
+     `Number(x) || 0`, so `-1`, `1.5` and `"3"` became a declaration nobody made), and then its `consumed` SEED, REC-169's
+     check unchanged. The first refusal wins; nothing is written. In THIS function rather than a wrapper so every one of
+     the rule's refusals sits inside the one governed span its three rows name (DEC-49's `where`). */
+  if (list) {
+    if (entries == null) return null;
+    if (!Array.isArray(entries))
+      return refusal("AI_RUN_BOUND_UNKNOWN",
+        `\`bounds\` was ${typeof entries === "object" ? "a map" : `a ${typeof entries}`}: it is a list of `
+        + "{ bound, allowed, unit }, one per bound the run is held to (§14b.6). Nothing was written", { bound: null });
+    const bad = entries.findIndex((e) => !e || typeof e !== "object" || Array.isArray(e));
+    if (bad >= 0)
+      return refusal("AI_RUN_BOUND_UNKNOWN",
+        `\`bounds[${bad}]\` is ${(JSON.stringify(entries[bad]) ?? String(entries[bad])).slice(0, 60)}, not a `
+        + "{ bound, allowed, unit } entry, so it names no bound (§14b.6). Nothing was written", { bound: null });
+    return checkConsume(entries.map((e) => [e.bound == null ? "" : String(e.bound), e.allowed]),
+                        { seed: true, allowance: true })
+        || checkConsume(entries.map((e) => [String(e.bound), e.consumed]), { seed: true });
+  }
+  /* REC-172 — C-22.15 at the TICK: with `map`, `entries` is the tick's own `consume`, a MAP from a bound's name to the
+     figure spent on it. Absent (null or undefined) is a tick that spends nothing, as it always was. Anything else that
+     is not a plain object — an ARRAY above all, whose keys are positions (`"0"`) that name no bound — was read as an
+     empty map, so the tick answered `ticked: true` and spent nothing: `vf4-live-scratch.mjs` sent `[{ bound, amount }]`
+     from the day it was written and not one of its fetches was ever counted. Refused whole, HERE rather than in a
+     wrapper, so the refusal sits inside the one governed span (DEC-49's `where`) that already holds this rule. */
+  if (map) {
+    if (entries == null) return null;
+    if (typeof entries !== "object" || Array.isArray(entries))
+      return refusal("AI_RUN_BOUND_UNKNOWN",
+        `\`consume\` was ${Array.isArray(entries) ? "an array" : `a ${typeof entries}`} `
+        + `(${(JSON.stringify(entries) ?? String(entries)).slice(0, 80)}): it is a map from a bound's name to the figure `
+        + "spent on it, e.g. { fetches: 1 }, and an array's keys are positions, which name no bound (§14b.6). "
+        + "Nothing was written", { bound: null });
+    entries = Object.entries(entries);
+  }
   for (const [k, v] of Array.isArray(entries) ? entries : []) {
     const b = String(k);
-    if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) continue;
+    if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b))
+      return refusal("AI_RUN_BOUND_UNKNOWN",
+        `'${b === "" ? "(absent)" : b.slice(0, 60)}' names no bound of a run. The bounds a caller spends are `
+        + Object.keys(RUN_BOUNDS).filter((x) => !PLANE_COUNTED_BOUNDS.includes(x) && !PLANE_DECIDED_BOUNDS.includes(x)).join(", ")
+        + ` (§14b.6); a figure for a bound that does not exist counts nothing. Nothing was written`, { bound: b });
+    if (PLANE_DECIDED_BOUNDS.includes(b))
+      return refusal("AI_RUN_BOUND_PLANE_COUNTED",
+        `'${b}' is decided by the plane — a run's lease lapses on the clock, read by the reaper, and nothing spends it `
+        + `(§14b.6) — so no figure for it, not even a zero, is the caller's to send or a member's to declare. `
+        + `Nothing was written`, { bound: b });
     if (seed && v == null) continue;
     if (!(typeof v === "number" && Number.isSafeInteger(v) && v >= 0))
       return refusal("AI_RUN_CONSUME_INVALID",
-        `'${b}' was given ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)}`
-        + ` — a bound's figure is a whole number of zero or more, and a count never goes down (§14b.6). `
-        + `Nothing was written`, { bound: b });
+        `'${b}' was ${allowance ? "declared an allowance of" : "given"} `
+        + `${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)}`
+        + ` — a bound's figure is a whole number of zero or more, ${allowance ? "allowed or spent" : "and a count never goes down"}`
+        + ` (§14b.6). Nothing was written`, { bound: b });
+    if (allowance) continue;
     if (v !== 0 && PLANE_COUNTED_BOUNDS.includes(b))
       return refusal("AI_RUN_BOUND_PLANE_COUNTED",
         `'${b}' is counted by the plane as the run's work lands, never by the caller (§11 item 5 rule 2, SK-8), `

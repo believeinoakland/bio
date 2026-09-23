@@ -16,7 +16,12 @@
    (6c) UI-49, 2026-08-07 — **ARM C2 IS SUPERSEDED AND CORRECTED IN PLACE WITH A DATED REASON, NEVER EXEMPTED.** It forbade ANY call to the block's renderers from outside the block, which was true when written — and UI-47's own sweep is what found out WHY: `aiSessionIndicatorHtml` had NO CALL SITE AT ALL, so §14a's promise was undelivered. UI-49 adds exactly the call C2 forbade; left standing it would have made delivering the promise FAIL THE BUILD. The replacement is NARROWER rather than weaker — the outside world may call ONE named door (`aiSessionContextHtml`) and none of the raw renderers — and **ARM C3 is new and is what stops C2 from passing because nothing outside renders a run at all**, which is the state UI-47 measured. **BOTH CONTROLS RUN 2026-08-07 through the whole harness, app.html restored and verified by CONTENT and sha256 after each:** removing the call from BOTH windows -> this suite fails 1 (ARM C3) and `ai-session-context.test.mjs` fails 20 INDEPENDENTLY, naming each window; adding `aiSessionPanelHtml(null, null)` to `openBundle` — a window reaching PAST the door — -> this suite fails 1 (ARM C2) and nothing else in the harness notices, which is exactly the containment this arm exists to hold. ARM V's vocabulary is also WIDENED to include `RUN_STATUS`, because UI-49 gave the indicator's animation a source and the natural wrong way to do that would have been a `=== "running"` inside this block.
    (7) POLARITY was confirmed on every pin: GREEN with the tree intact FIRST, then RED with the defect, never the reverse. ARM N5 and ARM V2 are the in-suite polarity arms and run on every pass.
    (8) OVER-STRICTNESS, IN-SUITE AND ON EVERY RUN: ARM O drives a run record shaped unlike anything this file writes — `{meter, ceiling, spent_so_far}` and `{paid_by, who}` — and requires it to RENDER, judged by the SAME function ARM W used rather than by a second, gentler one.
-   (9) THE HAND COPY, IN-SUITE AND ON EVERY RUN: ARM W6 runs a hand-authored record through the SAME `wireFailures` the real record passed, and it must FAIL. It also PRINTS what the hand copy gets for free — measured at 3 of 12 top-level values (`id`, `status`, `ticks`), which are real vocabulary rather than instance data — so the arm names what a hand copy cannot know instead of counting how much it got wrong. */
+   (9) THE HAND COPY, IN-SUITE AND ON EVERY RUN: ARM W6 runs a hand-authored record through the SAME `wireFailures` the real record passed, and it must FAIL. It also PRINTS what the hand copy gets for free — measured at 3 of 12 top-level values (`id`, `status`, `ticks`), which are real vocabulary rather than instance data — so the arm names what a hand copy cannot know instead of counting how much it got wrong.
+   (10) M0-132 — THE DRAW, RUN 2026-09-23 by the M0-132 worker, each arm ALONE through this suite (a fresh `node` per run), the file copied aside and restored by copy, every restore verified by sha256 AND cmp (suite 99eee9d2ff13… as it stood BEFORE this entry was written into it, fixture module 1cc84c6c5d7f…). Clean tree: 86 pass, 0 fail.
+       (10a) FORCE A COLLISION: at `const DRAW` pin FETCH_ALLOWED 5500, FETCH_CONSUMED 1200, SUBS_CONSUMED 4300 (the fetches remainder IS the subsessions consumption) -> **2 FAIL / 84 pass: ARM D0b by name** and ARM D1 (`fetches remainder (4300)` — D1 cannot tell the derivation from the published figure, which is exactly what D0b is there to say). D0c stays GREEN, correctly: the RULE that draws fixtures is sound; only this fixture was forced.
+       (10b) PUT ONE OLD OVERLAPPING RANGE BACK in `ai-session-fixture.mjs` (FETCH_ALLOWED 3001..6999) -> **1 FAIL / 85 pass: ARM D0c(i)**, deterministic on EVERY run, naming 4 faults: fetches remainder 1502..5992 overlaps FETCH_ALLOWED and SUBS_CONSUMED, subsessions remainder 4502..5970 overlaps FETCH_ALLOWED, and W7b's FETCH_ALLOWED overlaps OTHER_CONSUMED 6001..6999. D0c(ii) drew 0 colliding of 500 that run — the sampled half is draw-dependent, which is why the proof is the arm.
+       (10c) THE LIAR — `drawWire` answers one lucky constant fixture for every call -> **1 FAIL / 85 pass: ARM D0c(iii)**, 1 of 500 draws distinct; D0b and D0c(i)/(ii) stay GREEN, which is exactly why a pinned fixture needs an arm of its own. NOT SEEN by (iii): a liar pinning THIS suite's own `DRAW` literal while leaving `drawWire` random — D0c judges the rule, and one printed fixture cannot prove it was drawn.
+       (10d) OVER-STRICTNESS — a different but still disjoint band (SUBS_ALLOWED 9101..9499) -> exit 0, 86/86: correct work in a spelling nobody here wrote PASSES. */
 /* ai-session-wire.test.mjs — UI-47.
  *
  * THE ITEM IN ONE SENTENCE: UI-38 shipped the once-only running-session surface
@@ -154,8 +159,17 @@ const ns = await mf.getDurableObjectNamespace("STORE");
 const dobj = ns.get(ns.idFromName("bio"));
 
 /* ---- THE FIXTURE VALUES, DRAWN AT RUNTIME. See the header. ---- */
-const R = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
-const tag = () => Math.random().toString(36).slice(2, 10);
+/* CORRECTED 2026-09-23 BY M0-132, never exempted: the old draw was WRONG BY CONSTRUCTION. FETCH_ALLOWED 3001..6999
+   minus FETCH_CONSUMED gave a remainder 1502..5992 that contained SUBS_CONSUMED (2003..2999), and the subsessions
+   remainder contained FETCH_ALLOWED, so ARM D0b — correctly — went RED whenever a draw landed there (M-114: 1 in 2,155);
+   OTHER_CONSUMED could EQUAL FETCH_ALLOWED (W7b) and OTHER_ALLOWED could EQUAL SUBS_ALLOWED (W7c), both tested by raw
+   substring; and a tag's digits could spell a figure. The verdict moved with the DRAW, which `TREE-SHARING.md` §3 rules
+   a defect in the TEST. Every figure now comes from `ai-session-fixture.mjs`'s WIRE_RANGES, whose bands are PROVEN
+   disjoint from every derivation and every figure the substring arms test (ARM D0c re-computes the proof and runs 500
+   draws on every pass); the tags are drawn from letters only. Still random every run; D0b, W7b and W7c are unchanged. */
+import { drawWire, wireCollisions, wireRangeProof, WIRE_RANGES, letterTag } from "./ai-session-fixture.mjs";
+const DRAW = drawWire(Math.random);
+const tag = () => letterTag(Math.random);
 /* THE RANGES ARE WIDE AND FOUR-DIGIT ON PURPOSE, AND THE FIRST DRAFT'S NARROW
    ONES ARE THE REASON. With `subsessions` drawn at 5 allowed / 2 consumed, the
    REMAINDER was 3 — and the run's `ticks` was also 3, so ARM D could not tell a
@@ -164,11 +178,8 @@ const tag = () => Math.random().toString(36).slice(2, 10);
    every derivation out of reach of the record's own small integers, and ARM D0b
    below ASSERTS the disjointness rather than trusting it, so nobody removes the
    precaution later as an arbitrary choice of numbers. */
-const FETCH_ALLOWED  = R(3001, 6999);
-const FETCH_CONSUMED = R(1007, 1499);
-const SUBS_ALLOWED   = R(7001, 9973);
-const SUBS_CONSUMED  = R(2003, 2999);
-const RUNTIME_ALLOWED = R(2, 5);
+const { FETCH_ALLOWED, FETCH_CONSUMED, SUBS_ALLOWED, SUBS_CONSUMED, RUNTIME_ALLOWED,
+        OTHER_ALLOWED, OTHER_CONSUMED } = DRAW;
 const LABEL      = `label-${tag()}`;
 const MODE       = `mode-${tag()}`;
 const CLAUDE_LVL = `project`;                      /* §14a's cascade word; the LEVEL is a real vocabulary, so it is not randomised — the REF beside it is */
@@ -183,7 +194,8 @@ const CLAUDE_REF = `acct-${tag()}`;
    written, which is what this suite is actually about. */
 const SKILL      = `pack-${tag()}@${tag()}`;
 console.log(`  fixture drawn at runtime — fetches ${FETCH_CONSUMED}/${FETCH_ALLOWED}, `
-  + `subsessions ${SUBS_CONSUMED}/${SUBS_ALLOWED}, label ${LABEL}, ref ${CLAUDE_REF}, skill ${SKILL}`);
+  + `subsessions ${SUBS_CONSUMED}/${SUBS_ALLOWED}, other fetches ${OTHER_CONSUMED}/${OTHER_ALLOWED}, `
+  + `runtime ${RUNTIME_ALLOWED}, label ${LABEL}, ref ${CLAUDE_REF}, skill ${SKILL}`);
 console.log(`  (a literal in app.html cannot match a value that did not exist when it was written)`);
 
 /* ---- seed: one inquiry every member can see, one PROJECT nobody was invited
@@ -532,8 +544,8 @@ ok("ARM W6b: and it fails through the SAME function the real record passed, so t
    numbers must render differently, each carrying its own and NEITHER carrying
    the other's — which is the everyday form of negative control (1). */
 const RUN_OTHER = "RUN-ui47-other";
-const OTHER_ALLOWED = FETCH_ALLOWED + R(1000, 2000);
-const OTHER_CONSUMED = FETCH_CONSUMED + R(1000, 2000);
+/* OTHER_ALLOWED / OTHER_CONSUMED are drawn with the rest (M0-132): the old `FETCH_* + R(1000, 2000)` let OTHER_CONSUMED
+   equal FETCH_ALLOWED, which W7b below then found on this panel — a red by the draw, not the surface. */
 await openRun(RUN_OTHER, "inquiry", INQ,
   [{ bound: "fetches", allowed: OTHER_ALLOWED, consumed: 0, unit: "requests" }]);
 await post("airuntick", { run: RUN_OTHER, consume: { fetches: OTHER_CONSUMED } });
@@ -594,6 +606,28 @@ console.log("\n--- ARM D · no percentage, no remainder, computed by no route --
   eq("ARM D0b (instrument): no derivation this arm looks for COLLIDES with a value the record actually published — "
      + "a collision would make D1 unable to tell a forbidden derivation from a published figure, in either direction",
      collisions.map(c => c[0]), []);
+  /* ARM D0c (M0-132, 2026-09-23; D-286's arm, reused) — THE DRAW CANNOT MAKE D0b, W7b OR W7c RED. D0b judges ONE
+     fixture; this arm judges the RULE that draws them. (i) The interval proof in `ai-session-fixture.mjs`
+     (`wireRangeProof`), re-computed, not quoted: every derivation against every figure the draw publishes on ANY panel
+     (OTHER_ALLOWED and OTHER_CONSUMED included), the two substring-tested allowances against every figure beside them,
+     and consumption below allowance. (ii) 500 fresh draws through the same collision predicate: zero may collide.
+     (iii) THE LIAR'S ARM: those 500 draws must be (nearly) all DIFFERENT, and the draw must answer its range ends for the
+     ends of `rand` — so "fixing" D0b by pinning one lucky fixture fails here by name. The floor 490 of 500 is not a
+     tolerance for flakiness: over ~1e21 possible fixtures the chance of even ONE repeat in 500 is negligible. */
+  const PROOF = wireRangeProof();
+  eq("ARM D0c(i): the fixture's ranges are PROVEN disjoint — no remainder or percent ARM D derives, and neither allowance "
+     + "W7b/W7c look for, can equal a figure the draw publishes, for ANY draw", PROOF.faults, []);
+  const draws = Array.from({ length: 500 }, () => drawWire(Math.random));
+  const colliding = draws.filter(f => wireCollisions(f).length);
+  eq("ARM D0c(ii): 500 fresh draws of the fixture, zero collide", colliding.map(f => wireCollisions(f)[0]).slice(0, 3), []);
+  const distinct = new Set(draws.map(f => JSON.stringify(f))).size;
+  const ends = [drawWire(() => 0), drawWire(() => 0.9999999999)];
+  ok(`ARM D0c(iii): the fixture stays RANDOM — ${distinct} of 500 draws distinct (floor 490), and the draw spans its `
+     + `ranges (rand 0 -> every low end, rand ~1 -> every high end), so no fixture is pinned`,
+     distinct >= 490 && Object.keys(WIRE_RANGES).every(k => ends[0][k] === WIRE_RANGES[k][0] && ends[1][k] === WIRE_RANGES[k][1]));
+  console.log(`  ARM D0c: proof over ${Object.keys(PROOF.derived).length} derived intervals x `
+    + `${Object.keys(PROOF.published).length} published ranges, ${PROOF.faults.length} fault(s); 500 draws, `
+    + `${colliding.length} colliding, ${distinct} distinct; this run's own fixture collides on: ${JSON.stringify(wireCollisions(DRAW))}`);
   for(const [what, value] of derived)
     ok(`ARM D1: the surface does not compute the ${what} (${value}) — both figures are published and a third would be `
        + `this surface's own claim`,

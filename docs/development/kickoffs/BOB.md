@@ -57,15 +57,18 @@ Bob can answer sends it here, and this session carries it into his conversation.
    promptly from this lane in `auto` mode** — the wedge D-402/D-407 records was the HEARTBEAT calling it unattended,
    not this lane, so the act stays here.
 4. **Run `node tools/owed.mjs BOB`, `node tools/plancheck.mjs` and `node tools/status.mjs --check`.** And **measure every
-   live session's context** (`get_usage` per session): any over 70% is refreshed (Bob, 2026-09-21; 60% until then) — tell it to write its
+   live session's context** (`get_usage` per session): any over 80% is refreshed (Bob, 2026-09-23; 70% until then, 60% before 2026-09-21) — tell it to write its
    handoff, then file its successor's chip. Include yourself.
    **AND RECORD THE ACCOUNT'S WEEKLY FIGURE, WHICH THE SAME CALL ALREADY RETURNS** (`plan.windows`, *Weekly · all
-   models*) — **the 70% rule watches per-session CONTEXT and NOTHING watches the weekly BUDGET, which is the metric
+   models*) — **the 80% rule watches per-session CONTEXT and NOTHING watches the weekly BUDGET, which is the metric
    that ended the previous account at 91%** (FLEET #2 noticed the gap, 2026-09-20). One number per day from whoever
    opens it is enough; it costs nothing, because you are already making the call. **Do NOT project it linearly** — a
    first day carries an account switch, lanes standing up and release cuts, so a straight-line forecast from it is a
    figure that costs nothing to produce. Report the number and its reset time; let Bob judge the pace, as he did last
    time.
+   **RULED BY BOB 2026-09-23:** *"I have 2 Max 20x accounts. The other one refreshes early Saturday morning, whereas this one
+   refreshes early Tuesday. Don't sever to preserve or spread out token usage."* No cap, no throttling for the weekly figure;
+   an `allowed_warning` is recorded, not brought to him.
 5. **Read `docs/development/DECISIONS.md` and surface every `open` entry to Bob**, as written: question,
    what runs provisionally, the alternative, the recommendation, what reversing costs. When he answers,
    write `response:` and `decided:` and set it `answered`; CONDUCT enacts. An open decision never blocks

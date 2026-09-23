@@ -261,7 +261,12 @@ arm("E", "A FAITHFUL COPY. `#citesInto` stops calling the shared predicate and r
       (entry && entry.status === "severed" ? severed : confirmed).push(r.bundle_id);
     }`]],
   [{ name: OWN,
-     mustFail: ["STRUCTURAL: the severance rule has ONE definition and THREE callers"],
+     /* CORRECTED 2026-09-23 (M0-134): this read "…ONE definition and THREE callers", the label as D-267
+        wrote it. D-280 and CASE-2 relabelled the assertion (FIVE; REC-160 makes it SIX), so arm (E) came back
+        WRONG with the structural arm really failing — a stale driver label, invisible while the suite threw
+        before §5 (REC-141 to M0-134). Matched on the label's stable prefix, so a caller count moving is
+        recorded in the suite and never again in this driver. */
+     mustFail: ["STRUCTURAL: the severance rule has ONE definition and "],
      mustNotFail: ["THE DEFECT, CLOSED", "THE HALF THE ROW DID NOT PREDICT", "OVER-STRICTNESS",
                    "NOT WALKED IS NOT DELETED"] },
    { name: PL13, mustFail: [],

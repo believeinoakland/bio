@@ -3504,6 +3504,48 @@ class StoreSilent extends Error {
    read the identical object rather than two copies of the key drifting apart. */
 const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
 
+/* REC-173 (INVESTIGATIVE-SESSION.md §11 item 5, "A MIGRATION IS A REPLAY, NOT A SURFACING", BOB #30): IS THIS
+   CREATION A MIGRATION REPLAY? Condition (2) of the ruling, asked of what the SERVER holds and never of what the
+   caller says: the creation names a capture (`provenanceCapture`, a sha256) that is
+     - REGISTERED as the Drive era's provenance — at `DRIVE_PROVENANCE_PATH` — by this creation's own `register`
+       list, the one writer of the register (`promote`) and so the earliest act that can register anything against
+       a bundle that does not exist yet (the builder's DESIGN GAP, stated in the IC);
+     - HELD: its bytes are read back from R2 under the one capture key and must hash to the sha named, so the
+       provenance is the bytes already in the record, not a copy the request carries;
+     - and its PRESERVED PROMOTION RECORDS name THIS bundle id (`record.target`) and, in THE SAME record, list THIS
+       revision's `bundle.md` SHA-256 — computed here from the text being promoted, and the `sha256` the caller
+       sent must BE that value, because the store keeps the caller's figure as the bundle's head.
+   Null when any of it fails: the creation is then an ORDINARY creation and rule 2 and D-78 apply unchanged, so this
+   door cannot be used to skip a run. Condition (1), the ADMIN class, is the caller's to ask before calling this.
+   WHAT THIS CANNOT CHECK, stated rather than hidden: the provenance capture is uploaded by the root of trust, whose
+   honesty the record does not model (Membership §DEC-2, deferred). */
+const DRIVE_PROVENANCE_PATH = "migration/drive-provenance.json";
+async function migrationReplayOf(env, storeName, b) {
+  const cap = typeof b.provenanceCapture === "string" ? b.provenanceCapture.trim() : "";
+  if (!/^[0-9a-f]{64}$/.test(cap)) return null;
+  const registered = Array.isArray(b.register)
+    && b.register.some((r) => r && r.sha256 === cap && r.path === DRIVE_PROVENANCE_PATH);
+  if (!registered) return null;
+  const bm = Array.isArray(b.files) ? b.files.find((f) => f && f.path === "bundle.md" && typeof f.text === "string") : null;
+  if (!bm) return null;
+  const mdSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();
+  if (bm.sha256 !== mdSha) return null;
+  let held;
+  try { held = await env.CAPTURES.get(captureKey(storeName, cap)); } catch { return null; }
+  if (!held) return null;
+  const bytes = new Uint8Array(await held.arrayBuffer());
+  if (createSha256().update(bytes).hex() !== cap) return null;
+  let prov;
+  try { prov = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); } catch { return null; }
+  const records = Array.isArray(prov?.promotions) ? prov.promotions : [];
+  const match = records.find((p) => p && p.record && typeof p.record === "object"
+    && p.record.target === b.bundleId
+    && Array.isArray(p.record.files)
+    && p.record.files.some((f) => f && f.name === "bundle.md" && f.sha256 === mdSha));
+  if (!match) return null;
+  return { capture: cap, promotion: typeof match.key === "string" ? match.key : null, bundleMdSha: mdSha };
+}
+
 /* Escalate a PDF to the pdf-worker (I6) ONLY when Tier 1 got essentially nothing:
    more undetermined REGIONS than decoded characters. That is the measured line
    between CPDF-5's buckets — the whole-document no-/ToUnicode case (many regions,
@@ -10158,9 +10200,29 @@ export default {
            string `op=airunopen` stamped as the run's principal), and `runPrincipalGate` compares it unchanged. The
            condition is `!viaSession` and never a list of classes: a class added later is asked, not exempted. The
            alternative — restamping a deploy token's creation `human` — would invent a person, and is not done. */
+        /* REC-173 (§11 item 5, "A MIGRATION IS A REPLAY, NOT A SURFACING", BOB #30): A THIRD CASE, ADMITTED BY WHAT THE
+           SERVER CAN CHECK. A creation of an inquiry is a MIGRATION REPLAY when (1) it arrives under the ADMIN class —
+           the root of trust, a deploy token and never a session — and (2) `migrationReplayOf` finds the registered,
+           held drive-provenance capture it names listing this bundle id and this `bundle.md` SHA-256. A replay is
+           (a) exempt from rule 2 — no surfacing happens on this plane, so no `assistantPrincipal` is stamped; (b) NOT
+           restamped by D-78 below — its Drive-era `surfaced_by` is kept, because a server-verified replay of recorded
+           bytes is not a caller's assertion; and (c) recorded by the store as migrated, so its read states `not
+           recorded (migrated from the Drive era)`. `migrationReplay` is the SERVER's stamp: deleted first for every
+           caller, set only here. A verified replay is a replay: `replay` is set with it, so no creation-time stamp
+           (D-436's group) rewrites the bytes the provenance lists. Anything failing (1) or (2) falls through to the
+           ordinary creation unchanged. */
+        delete b.migrationReplay;
+        const replayed = (!viaSession && cls === "admin" && b.base === null && b.meta
+                          && normalizeType(b.meta.object_type) === "inquiry")
+          ? await migrationReplayOf(env, storeName, b) : null;
+        if (replayed) { b.migrationReplay = replayed; b.replay = true; }
         delete b.assistantPrincipal;
         if (!viaSession)
           b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+        /* REC-173 (a): a verified migration replay is exempt from rule 2 — no surfacing happens on this plane — so it
+           carries no stamp for `#surfacingGate` to ask. Written as its own line after REC-171's stamp, which stands
+           byte-for-byte for every other caller. */
+        if (replayed) delete b.assistantPrincipal;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           /* **THE SECOND SITE OF `NOT_CAPABLE`, AND REC-79 IS SAYING SO RATHER
              THAN HIDING IT.** C-38.5's `where` names the admission region above;
@@ -10200,7 +10262,7 @@ export default {
            the store recomputes nothing — the recomputed bundle.md sha below is
            what becomes the bundle_sha, so overwriting a caller's `agent` claim
            on a session write cannot smuggle a false attribution past the gate. */
-        if (b.base === null && b.meta
+        if (b.base === null && b.meta && !replayed   /* REC-173 (b): a verified migration replay keeps its Drive-era bytes */
             /* Through the catalog's normalizeType (REC-10), so the canonical
                `inquiry` spelling and both legacy spellings all get the D-78
                restamp — hand-listed spellings here is how the last rename

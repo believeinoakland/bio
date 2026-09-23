@@ -1,5 +1,8 @@
-/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads the merge history of origin/main, which no
-   result key can name; traced 2026-09-23. */
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1); traced 2026-09-23. CORRECTED 2026-09-23 (M0-130):
+   it no longer reads a LIVE REF — the historical register reads the merges up to `REGISTER_PIN`, a commit named in
+   `tools/mergecarry.mjs`, and the planted-ref section proves the verdict is the same whatever `origin/main` holds. It stays
+   never-cache because it still reads GIT HISTORY by commit id (e241672, 4355bfd, 7e5f9b0 and the pin's 752 merges), which
+   no result key names and the tracer counts as HISTORY, and because it RUNS `tools/plancheck.mjs` (§3a as-built 4). */
 /* M0-20 — A MERGE THAT SILENTLY DROPS A FILE.
  *
  * The subject is `tools/mergecarry.mjs`. The reason it exists is a measurement:
@@ -77,7 +80,16 @@
  * (9) make the `carried` classification unreachable (CONDUCT #15, 2026-09-23) -> A1b FAILS by
  * name (4355bfd's two paths read `dropped` again) and the "no UNREGISTERED historical drop"
  * arm FAILS, while e241672's real drop stays `dropped` — the proof containment is what
- * rescues 4355bfd, and that it rescues nothing that was really lost.
+ * rescues 4355bfd, and that it rescues nothing that was really lost;
+ * (10) M0-130: make `historicalRegister` read `origin/main` again instead of its pin -> the
+ * planted-ref section's "the register's verdict is IDENTICAL whatever origin/main holds" arm
+ * FAILS by name (a planted `origin/main` past the pin carries a dropped-edit merge), while the
+ * "e241672's real drop is NOT carried" arm is held open — the proof the pin is what makes the
+ * verdict a function of the tree. RUN 2026-09-23 (M0-130), arm 10 of `mergecarry.control.mjs`:
+ * ARMED, suite exit 1 at 65 pass / 4 fail — the DECLARED identity arm failed by name, with "EXACTLY the
+ * pinned corpus, 752 merges" (the shared `origin/main` had moved past the pin by then: the live-ref defect
+ * itself, seen) and the two pin-catch arms; both held-open arms green; FOOT reached; `tools/mergecarry.mjs`
+ * restored by sha256 66ba4a7aa444… and cmp; suite 69/0 after the restore.
  */
 
 /* `sandbox.mjs` FIRST, and `hygiene.test.mjs` is what found it missing rather than a reader:
@@ -94,7 +106,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync, spawnSync } from "node:child_process";
-import { auditMerge, carryAudit, historicalRegister, KNOWN_HISTORICAL_DROPS,
+import { auditMerge, carryAudit, historicalRegister, KNOWN_HISTORICAL_DROPS, REGISTER_PIN,
          unregisteredDrops } from "../../tools/mergecarry.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -108,7 +120,8 @@ const t = (label, got, want) => {
 
 /* The FOOT sentinel. A TypeError inside an assertion goes through no assertion at all and
    ends the module while the tally reads clean; this project has met that. */
-const SECTIONS = 14; /* 13 -> 14 2026-09-23 (CONDUCT #15): A1b, the `carried` class on the real 4355bfd. */
+const SECTIONS = 15; /* 13 -> 14 2026-09-23 (CONDUCT #15): A1b, the `carried` class on the real 4355bfd.
+                        14 -> 15 2026-09-23 (M0-130): the planted-ref section — the register reads its pin, not origin/main. */
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -404,13 +417,23 @@ section("B7/B8 — a fast-forward, and a branch DELETION main declined. Must PAS
 }
 
 /* ========================================================================== */
-section("the historical register, graded in BOTH directions over the REAL corpus");
+section("the historical register, graded in BOTH directions over the REAL corpus up to its PIN");
+/* CORRECTED 2026-09-23 (M0-130), never exempted: this read `historicalRegister({ repo })`, whose range was
+   `origin/main` — the LIVE remote ref — so its verdict moved with what had landed, not with the tree under
+   test (GitHub run #20 on main; TREE-SHARING §3, "A GATE TEST DEPENDS ONLY ON THE CODE"). It now reads every
+   merge reachable from `REGISTER_PIN`, named with its why in `tools/mergecarry.mjs`; the next section proves
+   the verdict does not move with `origin/main`, and that the pinned arm still catches a drop inside its range. */
 {
   const h = historicalRegister({ repo: REPO });
-  console.log(`  corpus: ${h.merges} merge(s) in origin/main · ${h.dropped.length} dropped · `
+  console.log(`  corpus: ${h.merges} merge(s) reachable from the pin ${String(h.pin).slice(0, 8)} · ${h.dropped.length} dropped · `
     + `${h.counts.goneOnMain} goneOnMain · ${h.counts.moved} moved · ${h.counts.sameEnd} sameEnd`);
+  t("the register reads the PINNED commit, never a ref name", [h.pin, /^[0-9a-f]{40}$/.test(h.pin)], [REGISTER_PIN, true]);
   /* FLOOR THE CORPUS. A totality assertion over an empty set has passed three times here. */
   t("the corpus is non-empty and large enough to mean something (>= 150 merges)", h.merges >= 150, true);
+  /* EXACT, because the range is fixed: git objects are content-addressed, so the merges reachable from one
+     commit are the same set in every clone. Measured 2026-09-23 at e62e08e1: 752. A different figure means
+     the pin moved (move this with it) or this clone cannot see the pin's history (a shallow clone). */
+  t("...and it is EXACTLY the pinned corpus, 752 merges, in every clone and on every day", h.merges, 752);
   t("no UNREGISTERED drop sits in main's history", h.fresh, []);
   t("no registered drop has quietly stopped being one", h.stale, []);
   /* CORRECTED 2026-09-14 (CONDUCT #9), 3 -> 4, never exempted: the pin exists so this list
@@ -436,6 +459,49 @@ section("the historical register, graded in BOTH directions over the REAL corpus
      cried wolf on a tenth of merges would be switched off within a week. */
   t("the finding rate over real history is under 5% of merges",
     (h.counts.dropped + h.counts.goneOnMain + h.counts.moved) / h.merges < 0.05, true);
+}
+
+/* ========================================================================== */
+section("M0-130 — THE REGISTER'S VERDICT DOES NOT MOVE WITH origin/main, AND ITS PIN DOES NOT BLIND IT");
+/* A scratch history with the register's shape: a DROPPED-EDIT merge INSIDE the pin (P1, which the arm must
+   still catch — a pinned range whose arm is never shown to find a drop in it is how a liar passes) and a
+   second dropped-edit merge PAST it (P2), which is what the planted `origin/main` carries. The arm is
+   `historicalRegister` itself, called with the fixture's pin, so the control that points it back at
+   `origin/main` breaks THIS section by name. Driven with the ref absent, at the pin, and past it: three
+   states of the remote, one tree, one verdict. */
+{
+  const d = scratch();
+  put(d, "A.md", `${BODY}\n`); put(d, "B.md", `${BODY}\n`); commit(d, "base");
+  const dropEdit = (branch, file) => {
+    g(d, "checkout", "-q", "-b", branch);
+    put(d, file, `${BODY}\nBRANCH: ${branch}'s edit\n`); commit(d, `${branch} edits ${file}`);
+    g(d, "checkout", "-q", "main");
+    put(d, file, `${BODY}\nMAIN: a different edit to ${file}\n`); commit(d, `main edits ${file}`);
+    if (merge(d, branch).status === 0) throw new Error(`expected a conflict on ${file} and got none`);
+    g(d, "checkout", "--ours", "--", file); g(d, "add", file);
+    g(d, "commit", "-q", "-m", `Merge ${branch} — took OURS on ${file}`);
+    return g(d, "rev-parse", "HEAD");
+  };
+  const P1 = dropEdit("inside", "A.md");   /* the fixture's pin: a drop the arm MUST catch */
+  const P2 = dropEdit("past", "B.md");     /* past the pin: what the planted origin/main carries */
+  t("the planted ref really carries a dropped-edit merge (else the identity below costs nothing)",
+    carryAudit({ repo: d, commit: P2 }).findings.map((f) => `${f.klass} ${f.path}`), ["dropped B.md"]);
+
+  const verdictWith = (ref) => {
+    if (ref) g(d, "update-ref", "refs/remotes/origin/main", ref);
+    else spawnSync("git", ["update-ref", "-d", "refs/remotes/origin/main"], { cwd: d });
+    const h = historicalRegister({ repo: d, pin: P1 });
+    return JSON.stringify({ merges: h.merges, dropped: h.dropped, fresh: h.fresh, stale: h.stale, counts: h.counts });
+  };
+  const vAbsent = verdictWith(null), vPin = verdictWith(P1), vPast = verdictWith(P2);
+  console.log(`  origin/main absent: ${vAbsent}\n  origin/main at pin: ${vPin}\n  origin/main planted past it: ${vPast}`);
+  t("the register's verdict is IDENTICAL whatever origin/main holds (absent / the pin / a planted ref carrying a dropped-edit merge)",
+    [vPin, vPast], [vAbsent, vAbsent]);
+  const h = JSON.parse(vPast);
+  t("...and the pinned arm still CATCHES the dropped-edit merge INSIDE its pinned range, by merge and path",
+    h.fresh, [`${P1.slice(0, 7)}:A.md`]);
+  t("...while the planted drop PAST the pin is not the pinned arm's to judge",
+    h.dropped.includes(`${P2.slice(0, 7)}:B.md`), false);
 }
 
 /* ========================================================================== */

@@ -910,9 +910,15 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
   + "reads truncated for every viewer",
     [/#frontierPage\("content", cap, \{ limit: \(cap \+ 1\) \* 2, subjectKind: "capture" \}/
        .test(SRC.store),
-     /LIMIT \?`, \(cap \+ 1\) \* 2\)\.filter\(\(r\) => visible\(r\.bundle_id\) !== null\)/
+     /* MOVED 2026-09-23 BY REC-174, NEVER EXEMPTED: the missing supply is no longer fetched bare and
+        filtered after (`LIMIT ?`, (cap + 1) * 2).filter(…)`) — it goes through `#frontierFetch` at the SAME
+        factor, so its FULL bit reaches the claim; and the full-fetch test moved from `#frontierPage`'s own
+        line into that helper (`full: raw.length === limit`), which the page's claim ORs as `|| full`. The
+        pin still names the same two facts: the factor, and the one test. */
+     /const missingFetch = this\.#frontierFetch\(\(cap \+ 1\) \* 2,[\s\S]{0,600}?LIMIT \?`, n\), \(r\) => visible\(r\.bundle_id\) !== null\)/
        .test(SRC.store),
-     /truncated: gated\.length > cap \|\| raw\.length === limit/.test(SRC.store)],
+     /truncated: gated\.length > cap \|\| full\b/.test(SRC.store)
+       && /full: raw\.length === limit/.test(SRC.store)],
     [true, true, true]);
 
   /* MOVED 2026-09-23 BY D-389: the page's disjunct is no longer spelled `page.length > cap` here — it is
@@ -923,7 +929,9 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
   + "what get cut at the bound, never `missing`, which is split by §5.1's cause before anything "
   + "is published. That was the SECOND error in the one statement D-385 named, and it is the one "
   + "CONDUCT #11 already corrected in `#frontierMeaning` on 2026-09-15",
-    [/truncated: never\.length > cap \|\| unexplained\.length > cap\s*\n\s*\|\| latest\.truncated/
+    /* MOVED 2026-09-23 BY REC-174: the claim gained `missingFetch.full` (the missing supply's full-fetch bit)
+       between the arm's own lists and the page's. `never` and `unexplained`, never `missing`, is unchanged. */
+    [/truncated: never\.length > cap \|\| unexplained\.length > cap\s*\n\s*\|\| missingFetch\.full \|\| latest\.truncated/
        .test(SRC.store),
      /truncated: [^\n]*missing\.length > cap/.test(SRC.store)],
     [true, false]);

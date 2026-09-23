@@ -29,6 +29,13 @@
  *      several the culprit is UNDETERMINED and all are named (or `--isolate` finds it). NOT MEASURED: nothing is pushed.
  *      M0-122: a union whose TREE this clone's record already holds GREEN (a lone `land/*` branch that fast-forwards
  *      `origin/main` merges to exactly its own tip's tree) is NOT gated again; the train says so and names the record.
+ *      M0-131 (BOB #30, TREE-SHARING §3a condition 1): a TREE record says nothing about the union's NEW HISTORY, which
+ *      the history-reading units judge (`mergecarry`, plancheck's carry arm) — GitHub run #20's red on main came through
+ *      exactly that door. So a reused tree still runs `gates.mjs --never-cached`: every NEVER-CACHED unit, the set
+ *      DERIVED by the gate from the `GATE: never-cache` markers, and plancheck; its RED refuses the union by the unit's
+ *      name. And every narrowed gate the train runs (a derived class, the retry's `--since`) carries
+ *      `--with-never-cached`, since a narrowed selection is a reuse of what it did not select. Only `--full` runs without it: FULL
+ *      runs every unit already.
  *   5. writes the train record `<git common dir>/bio-train/<id>.json` (what landed, what was returned, the gate run),
  *      which with the trailer `Bio-Train: <id>` on every merge is the mark the push guard's `main` arm requires.
  *   6. pushes `HEAD:refs/heads/main` (never force) and verifies it FROM THE REMOTE (`git ls-remote`). M0-122: when the
@@ -119,25 +126,38 @@ function recordedGreen(repo, { full }) {
 
 /* Gate ONCE, and read the verdict back from the record keyed by the tree — never the exit status alone.
    `since` (M0-122, the retry): `gates.mjs --since <sha>` re-checks only what both sides touched, against <sha>'s
-   GREEN record — never a FULL re-run of a union that was already measured. */
+   GREEN record — never a FULL re-run of a union that was already measured.
+   M0-131: A REUSED TREE RECORD STILL RUNS THE NEVER-CACHED UNITS (BOB #30). The union is a NEW merge commit: its tree may
+   be one a lane already gated GREEN, but its HISTORY was never measured, and a history-reading unit judges exactly that
+   (4355bfda: a tree GREEN on its record, `mergecarry` RED on GitHub). So on reuse the gate runs `--never-cached` —
+   the set is DERIVED inside gates.mjs (`neverCacheOf`, the one reader of the markers), never listed here — and its
+   verdict decides the landing, read from the record like any gate's. Every other non-FULL gate carries
+   `--with-never-cached` (its plan PLUS the never-cached units it left out): a
+   narrowed class or `--since` is itself a reuse of what it leaves out. `open` names what is red, so a refusal names
+   the check. */
 function gate(repo, { full, since, log }) {
   const tree = treeOf("HEAD", { repo });
   const reuse = recordedGreen(repo, { full });
-  if (reuse) {
-    log(`\n=== train · NO GATE RUN: tree ${s8(tree)} is already recorded GREEN (class ${reuse.class}, ${reuse.file}) — read from the D-293 record, not re-measured (M0-122)`);
-    return reuse;
-  }
-  const args = full ? ["--full"] : since ? ["--since", since] : [];
+  const args = reuse ? ["--never-cached"] : full ? ["--full"] : since ? ["--since", since, "--with-never-cached"] : ["--with-never-cached"];
+  if (reuse)
+    log(`\n=== train · NO FULL GATE: tree ${s8(tree)} is already recorded GREEN (class ${reuse.class}, ${reuse.file}) — read from the D-293 record (M0-122);`
+      + " a tree record says nothing about this union's HISTORY, so only the never-cached units run on it (M0-131, BOB #30)");
   const before = readRuns({ repo, tree }).runs.length;
-  log(`\n=== train · gate: node tools/gates.mjs${args.length ? ` ${args.join(" ")}` : ""} (tree ${s8(tree)})`);
+  log(`${reuse ? "" : "\n"}=== train · gate: node tools/gates.mjs${args.length ? ` ${args.join(" ")}` : ""} (tree ${s8(tree)})`);
   const r = spawnSync(process.execPath, [join(repo, "tools/gates.mjs"), ...args], { cwd: repo, stdio: "inherit" });
   const runs = readRuns({ repo, tree }).runs;
   const mine = runs.slice(before);
   const run = mine[mine.length - 1] || null;
-  let verdict = run ? effectiveVerdict(runs).verdict : null;
+  const eff = effectiveVerdict(runs);
+  let verdict = run ? eff.verdict : null;
   if (!run) verdict = "UNRECORDED";
   else if (verdict === "GREEN" && r.status !== 0) verdict = "RED";   /* exit and record disagree: never GREEN */
-  return { tree, verdict, exit: r.status, class: run ? run.class : null, file: run ? run.file : null, recordsForTree: runs.length };
+  const ran = run ? [...new Set((run.steps || []).flatMap((s) => s.units || []))] : [];
+  if (reuse) log(`train: the reused tree's never-cached run — ${verdict}, ${ran.length} unit(s) run: ${ran.join(", ") || "NONE"}`);
+  const open = verdict === "GREEN" ? [] : eff.open.length ? eff.open : [`exit ${r.status}`];
+  if (reuse) return { ...reuse, verdict, exit: r.status, open, recordsForTree: runs.length,
+    neverCached: { class: run ? run.class : null, file: run ? run.file : null, units: ran } };
+  return { tree, verdict, exit: r.status, class: run ? run.class : null, file: run ? run.file : null, recordsForTree: runs.length, open };
 }
 
 /* A merge is the only moment two branches' ids become one corpus (CONDUCT.md): the id audit runs on the union.
@@ -233,8 +253,8 @@ export function runTrain(opts = {}) {
   out.gate = g;
   if (g.verdict !== "GREEN") {
     if (g.verdict === "RED" && merged.length === 1) {
-      out.returned.push({ branch: merged[0].branch, sha: merged[0].sha, lane: merged[0].lane, reason: `RED — the gate failed (class ${g.class}, record ${g.file})` });
-      out.reason = "RED — nothing pushed; the one branch is returned by name";
+      out.returned.push({ branch: merged[0].branch, sha: merged[0].sha, lane: merged[0].lane, reason: `RED — the gate failed at ${(g.open || []).join(", ") || "no unit named"} (class ${g.class}${g.reused ? `, a reused tree whose never-cached run is ${g.neverCached && g.neverCached.file}` : `, record ${g.file}`})` });
+      out.reason = `RED at ${(g.open || []).join(", ") || "no unit named"} — nothing pushed; the one branch is returned by name`;
       return out;
     }
     if (g.verdict === "RED" && opts.isolate) {
@@ -253,7 +273,7 @@ export function runTrain(opts = {}) {
     }
     out.suspects = merged.map((w) => w.branch);
     out.reason = g.verdict === "RED"
-      ? `RED over ${merged.length} branches — UNDETERMINED which; nothing pushed. Re-run with --isolate, or --drop a suspect: ${out.suspects.join(", ")}`
+      ? `RED at ${(g.open || []).join(", ") || "no unit named"} over ${merged.length} branches — UNDETERMINED which; nothing pushed. Re-run with --isolate, or --drop a suspect: ${out.suspects.join(", ")}`
       : `${g.verdict} — nothing pushed; the gate measured nothing it could land on (M0-107)`;
     return out;
   }
@@ -262,7 +282,7 @@ export function runTrain(opts = {}) {
   let head = git1(repo, ["rev-parse", "HEAD"]);
   let rec = { v: 1, id: out.id, head, tree: g.tree, base: main, at: new Date().toISOString(),
     landed: landedRows, returned: out.returned,
-    gate: { verdict: g.verdict, class: g.class, file: g.file, ...(g.reused ? { reused: true } : {}) }, pushed: false };
+    gate: { verdict: g.verdict, class: g.class, file: g.file, ...(g.reused ? { reused: true, neverCached: g.neverCached } : {}) }, pushed: false };
   out.record = writeRecord(repo, rec);
   if (opts.noPush) { out.reason = "GATED GREEN, NOT PUSHED (--no-push)"; out.landed = rec.landed; return out; }
 
@@ -323,7 +343,7 @@ export function runTrain(opts = {}) {
     base = now; greenTip = head;
     rec = { v: 1, id: rid, retryOf: out.id, attempt: attempt + 1, head, tree: gNow.tree, base: now, at: new Date().toISOString(),
       landed: landedRows, returned: out.returned,
-      gate: { verdict: gNow.verdict, class: gNow.class, file: gNow.file, since: sinceTip, ...(gNow.reused ? { reused: true } : {}) }, pushed: false };
+      gate: { verdict: gNow.verdict, class: gNow.class, file: gNow.file, since: sinceTip, ...(gNow.reused ? { reused: true, neverCached: gNow.neverCached } : {}) }, pushed: false };
     out.record = writeRecord(repo, rec);
   }
   out.pushed = true; out.head = head; out.landed = rec.landed;
@@ -345,7 +365,7 @@ function report(r) {
   L.push(`train: ${r.reason} · id ${r.id} · landed ${r.landed.length}${r.landed.length ? ` (${r.landed.map((l) => l.branch).join(", ")})` : ""}`
     + ` · returned ${r.returned.length} · gate ${r.gate ? `${r.gate.verdict} class ${r.gate.class}` : "not run"}`
     + `${(r.attempts || []).length > 1 ? ` · ${r.attempts.length} push attempts (main moved under the train)` : ""}`
-    + `${r.gate && r.gate.reused ? " · no gate run (the tree was already recorded GREEN)" : ""}`
+    + `${r.gate && r.gate.reused ? ` · the tree was already recorded GREEN, so only its never-cached units ran (${((r.gate.neverCached || {}).units || []).length})` : ""}`
     + `${r.pushed ? ` · main ${s8(r.head)} verified on the remote` : " · main NOT moved"}`
     + `${(r.deleted || []).length ? ` · refs deleted ${(r.deleted || []).filter((d) => d.state === "DELETED").length}/${r.deleted.length}${nd ? ` (${nd} NOT DELETED — landed by ancestry, harmless)` : ""}` : ""}`);
   return L.join("\n");

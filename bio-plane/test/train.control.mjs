@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-/* train.control.mjs — the NEGATIVE-CONTROL DRIVER of M0-111 and M0-122, 6 ARMS PLUS A BASELINE, for `tools/train.mjs`, the push
- * guard's `main` arm in `tools/pushguard.mjs`, and their suite `bio-plane/test/train.test.mjs`.
+/* train.control.mjs — the NEGATIVE-CONTROL DRIVER of M0-111, M0-122 and M0-131, 9 ARMS PLUS A BASELINE, for `tools/train.mjs`,
+ * the push guard's `main` arm in `tools/pushguard.mjs`, `tools/gates.mjs`'s `--never-cached` set (M0-131), and their suite
+ * `bio-plane/test/train.test.mjs`.
  *
  *     node bio-plane/test/train.control.mjs        # from the repo root: the baseline, then every arm
  *     node bio-plane/test/train.control.mjs 1      # the baseline, then one arm
@@ -27,15 +28,16 @@ import { preflight } from "../scripts/armdecay.mjs";
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const GUARD = path.join(REPO, "tools", "pushguard.mjs");
 const TRAIN = path.join(REPO, "tools", "train.mjs");
+const GATES = path.join(REPO, "tools", "gates.mjs");
 const SUITE = path.join(REPO, "bio-plane", "test", "train.test.mjs");
 const PEN = path.join(REPO, ".m0111-harness");
 const ONLY = process.argv[2] || null;
-const DECLARED_ARMS = 6;
-const FLOOR = { [GUARD]: 40000, [TRAIN]: 10000 };
+const DECLARED_ARMS = 9;
+const FLOOR = { [GUARD]: 40000, [TRAIN]: 10000, [GATES]: 40000 };
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const PRISTINE = {}, DIGEST = {};
-for (const f of [GUARD, TRAIN]) {
+for (const f of [GUARD, TRAIN, GATES]) {
   PRISTINE[f] = fs.readFileSync(f); DIGEST[f] = sha(PRISTINE[f]);
   if (PRISTINE[f].length < FLOOR[f]) { console.log(`** ${f} is implausibly small (${PRISTINE[f].length} B); refusing to arm over it`); process.exit(1); }
   console.log(`pristine ${path.relative(REPO, f)}: ${PRISTINE[f].length} bytes, sha256 ${DIGEST[f].slice(0, 12)}…`);
@@ -46,7 +48,7 @@ const t = (label, ok) => { console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}`); o
 
 const WRITTEN = new Set();
 process.on("exit", (code) => {
-  for (const f of [GUARD, TRAIN]) if (sha(fs.readFileSync(f)) !== DIGEST[f]) {
+  for (const f of [GUARD, TRAIN, GATES]) if (sha(fs.readFileSync(f)) !== DIGEST[f]) {
     fs.writeFileSync(f, PRISTINE[f]);
     console.log(`  exit ${code}: ${path.relative(REPO, f)} restored from memory — sha256 ${sha(fs.readFileSync(f)) === DIGEST[f] ? "match" : "**MISMATCH**"}`);
   }
@@ -105,11 +107,29 @@ const ARMS = [
     patches: [["    if (!moved) return failed(", "    if (true) return failed("]],
     mustBreak: "A TRAIN WHOSE PUSH IS REJECTED ONCE LANDS ON THE RETRY",
     alsoBreak: ["THE RETRY IS BOUNDED"],
-    mustNotBreak: ["THE TRAIN LANDS BOTH LANES", "A RECORDED-GREEN TREE LANDS WITH NO BATTERY RUN OF ITS OWN"] },
+    mustNotBreak: ["THE TRAIN LANDS BOTH LANES", "A RECORDED-GREEN TREE LANDS WITH ONLY ITS NEVER-CACHED UNITS RUN"] },
   { id: "6", file: TRAIN, title: "THE REUSE DROPPED — a union whose tree is already recorded GREEN is gated again",
     patches: [["  const reuse = recordedGreen(repo, { full });\n", "  const reuse = null;\n"]],
-    mustBreak: "A RECORDED-GREEN TREE LANDS WITH NO BATTERY RUN OF ITS OWN",
+    mustBreak: "A RECORDED-GREEN TREE LANDS WITH ONLY ITS NEVER-CACHED UNITS RUN",
     mustNotBreak: ["THE TRAIN LANDS BOTH LANES", "A TRAIN WHOSE PUSH IS REJECTED ONCE LANDS ON THE RETRY", "OVER-REUSE CLOSED"] },
+  /* M0-131. Arm 7 is the row's NEGATIVE CONTROL: the history checks SKIPPED on reuse (M0-122's shape, `return reuse`), so
+     the union whose merge dropped a carried edit lands. Arm 8 is the liar who derives an EMPTY set (gates.mjs's
+     `--never-cached` selects nothing). Arm 9 is the liar who RUNS the set and ignores its verdict. All three run on the
+     M0-131 section's own fixture, so the earlier sections cannot cascade. */
+  { id: "7", file: TRAIN, title: "THE HISTORY CHECKS SKIPPED ON REUSE — a recorded-GREEN tree lands with no never-cached run",
+    patches: [["  const args = reuse ? [\"--never-cached\"]", "  if (reuse) return reuse;\n  const args = reuse ? [\"--never-cached\"]"]],
+    mustBreak: "A UNION WHOSE TREE IS RECORDED GREEN BUT WHOSE MERGE DROPS A CARRIED EDIT IS REFUSED BY THE TRAIN NAMING THE CHECK",
+    alsoBreak: ["THE DERIVED SET IS NOT EMPTY", "A RECORDED-GREEN TREE LANDS WITH ONLY ITS NEVER-CACHED UNITS RUN"],
+    mustNotBreak: ["THE TRAIN LANDS BOTH LANES", "A TRAIN WHOSE PUSH IS REJECTED ONCE LANDS ON THE RETRY", "OVER-REUSE CLOSED"] },
+  { id: "8", file: GATES, title: "THE DERIVED SET EMPTIED — `--never-cached` selects no unit (plancheck alone runs)",
+    patches: [["const NEVER_SET = NEVER_CACHED ? UNITS.filter((u) => neverCacheOf(u)) : [];", "const NEVER_SET = [];"]],
+    mustBreak: "A UNION WHOSE TREE IS RECORDED GREEN BUT WHOSE MERGE DROPS A CARRIED EDIT IS REFUSED BY THE TRAIN NAMING THE CHECK",
+    alsoBreak: ["THE DERIVED SET IS NOT EMPTY"],
+    mustNotBreak: ["THE TRAIN LANDS BOTH LANES", "A RECORDED-GREEN TREE LANDS WITH ONLY ITS NEVER-CACHED UNITS RUN", "OVER-REUSE CLOSED"] },
+  { id: "9", file: TRAIN, title: "THE VERDICT IGNORED — the never-cached run happens, and the reused tree reads GREEN whatever it said",
+    patches: [["  if (reuse) return { ...reuse, verdict, exit: r.status, open,", "  if (reuse) return { ...reuse, verdict: \"GREEN\", exit: r.status, open,"]],
+    mustBreak: "A UNION WHOSE TREE IS RECORDED GREEN BUT WHOSE MERGE DROPS A CARRIED EDIT IS REFUSED BY THE TRAIN NAMING THE CHECK",
+    mustNotBreak: ["THE DERIVED SET IS NOT EMPTY", "THE TRAIN LANDS BOTH LANES", "A RECORDED-GREEN TREE LANDS WITH ONLY ITS NEVER-CACHED UNITS RUN"] },
 ];
 if (ARMS.length !== DECLARED_ARMS) { console.log(`** ${ARMS.length} arms in the table against ${DECLARED_ARMS} declared — the head is wrong`); process.exit(1); }
 
@@ -169,7 +189,7 @@ console.log("\n--- CLOSING · every arm restored ---");
 {
   const s = await runSuite();
   t(`closing · the suite is GREEN again, so no arm leaked (${s.pass} pass, ${s.fail} fail)`, s.foot && s.fail === 0 && s.code === 0);
-  for (const f of [GUARD, TRAIN]) t(`closing · ${path.relative(REPO, f)} is the pristine file (sha256 ${DIGEST[f].slice(0, 12)}…)`, sha(fs.readFileSync(f)) === DIGEST[f]);
+  for (const f of [GUARD, TRAIN, GATES]) t(`closing · ${path.relative(REPO, f)} is the pristine file (sha256 ${DIGEST[f].slice(0, 12)}…)`, sha(fs.readFileSync(f)) === DIGEST[f]);
 }
 t(`the arm tally held: ${armsRun} run of ${selected.length} selected${ONLY ? "" : ` · ${DECLARED_ARMS} declared`}`, armsRun === selected.length && (ONLY || armsRun === DECLARED_ARMS));
 console.log(`\ntrain.control: ${pass} pass, ${fail} fail`);

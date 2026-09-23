@@ -2097,6 +2097,22 @@ CREATE TABLE IF NOT EXISTS inquiry_run_surfacings (
   at         TEXT NOT NULL
 );
 
+-- REC-173 (INVESTIGATIVE-SESSION.md section 11 item 5, A MIGRATION IS A REPLAY, NOT A SURFACING, BOB #30,
+-- 2026-09-23): the inquiries whose CREATION was a server-verified MIGRATION REPLAY. The control plane admits one
+-- only for the ADMIN class and only when the drive-provenance capture it names is registered, held, and lists this
+-- bundle id and this bundle.md SHA-256. Such a question was surfaced in the Drive era, not on this plane, so no run
+-- is recorded for it and its read says so in words (not recorded, migrated from the Drive era) rather than guessing.
+-- An INSTANCE row, never a line in the question's bytes, which are the Drive era's verbatim. capture_sha is the
+-- provenance capture, promotion_key the preserved Drive promotion whose record listed the bytes. One row per
+-- inquiry, written in the creation's own transaction. Named bundle_id so it rides purge's TABLES list and clears in
+-- BOTH arms (D-113). NO index beyond the key: the one reader asks by the inquiry.
+CREATE TABLE IF NOT EXISTS inquiry_migration_replays (
+  bundle_id      TEXT PRIMARY KEY,
+  capture_sha    TEXT NOT NULL,
+  promotion_key  TEXT,
+  at             TEXT NOT NULL
+);
+
 -- THE OBSERVATION LOG (\xA711). Where the run searched across the four levels,
 -- what it established, where it STOPPED and why. APPEND-ONLY: 'seq' is
 -- monotonic per run and no row is ever updated, because a resumed run reads its
@@ -8875,19 +8891,36 @@ var AI_RUN_CHECKS = {
      (`surfaces: -1`, and open another question). A figure is a non-negative whole JSON number; the refusal is the
      whole tick's (or the whole open's, for a seed), and nothing is written. Its own code and not C-22.5's: that one
      is a CLOSE naming no bound, this is a figure no bound can hold. */
+  /* REC-172, 2026-09-23: ALSO the member's `allowed` at the open (it was written `Number(x) || 0`, so `-1`, `1.5` and
+     `"3"` became a declaration nobody made). One code for both halves of a bound's figure — the rule is the same whole
+     number — and the translation widened from SPENDING to GIVING an amount so it reads true of either. */
   AI_RUN_CONSUME_INVALID: {
     check: "C-22.13",
     where: "src/airun.mjs checkConsume, called from store.mjs aiRunTick and aiRunOpen",
-    translation: "The investigation reported spending an amount that is not a whole number of zero or more. A budget is only ever used up, one whole step at a time, so nothing was recorded for this step."
+    translation: "The investigation gave an amount for its budget that is not a whole number of zero or more. A budget is set and used up in whole steps, and never goes down, so nothing was recorded for this step."
   },
   /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
      counted by promote since D-85). WHY ITS OWN CODE: the figure may be perfectly well-formed; what is wrong is WHO
      is counting. The remedy differs too — the caller sends nothing for these, where C-22.13's caller sends a proper
      number. A zero claims nothing and is not refused. */
+  /* REC-172, 2026-09-23: ALSO `lease` (`PLANE_DECIDED_BOUNDS`), at the tick and as a declaration at the open, and
+     for ANY figure including zero. Same rationale — the plane decides it, off the clock — so the same code; the
+     translation now names the lease beside the counts. */
   AI_RUN_BOUND_PLANE_COUNTED: {
     check: "C-22.14",
     where: "src/airun.mjs checkConsume, called from store.mjs aiRunTick and aiRunOpen",
-    translation: "This part of the investigation's budget is counted by the record itself as the work lands \u2014 passages marked citable, questions opened \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
+    translation: "This part of the investigation's budget is kept by the record itself \u2014 passages marked citable and questions opened are counted as the work lands, and whether the investigation is still alive is read off the clock \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
+  },
+  /* REC-172, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6). A tick's `consume` key naming no bound, and a `consume`
+     that is not a map at all (an ARRAY, whose keys are positions), were SKIPPED: the tick answered `ticked: true` and
+     spent nothing, so a caller believed it counted work the record never held (the live instrument vf4 sent an array
+     for its whole life). The open DROPPED an entry naming no bound, so a member who declared `fetchs: 3` got a run
+     with no fetch ceiling. Its own code and not C-22.13's: the figure may be perfectly good; what is wrong is that it
+     names nothing the run has, and the remedy (spell the bound, send a map) differs. */
+  AI_RUN_BOUND_UNKNOWN: {
+    check: "C-22.15",
+    where: "src/airun.mjs checkConsume (the tick's map, the open's list, and every key in either), called from store.mjs aiRunTick and aiRunOpen",
+    translation: "The investigation named a part of its budget that does not exist, or did not say which part it meant. Nothing was recorded, so no budget was spent or set that nobody could account for."
   }
 };
 var AI_RUNS_CONTEXT_CHECKS = {
@@ -26494,17 +26527,60 @@ function checkBound(bound) {
   );
 }
 var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
-function checkConsume(entries, { seed = false } = {}) {
+var PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
+function checkConsume(entries, { seed = false, allowance = false, map = false, list = false } = {}) {
+  if (list) {
+    if (entries == null) return null;
+    if (!Array.isArray(entries))
+      return refusal3(
+        "AI_RUN_BOUND_UNKNOWN",
+        `\`bounds\` was ${typeof entries === "object" ? "a map" : `a ${typeof entries}`}: it is a list of { bound, allowed, unit }, one per bound the run is held to (\xA714b.6). Nothing was written`,
+        { bound: null }
+      );
+    const bad = entries.findIndex((e) => !e || typeof e !== "object" || Array.isArray(e));
+    if (bad >= 0)
+      return refusal3(
+        "AI_RUN_BOUND_UNKNOWN",
+        `\`bounds[${bad}]\` is ${(JSON.stringify(entries[bad]) ?? String(entries[bad])).slice(0, 60)}, not a { bound, allowed, unit } entry, so it names no bound (\xA714b.6). Nothing was written`,
+        { bound: null }
+      );
+    return checkConsume(
+      entries.map((e) => [e.bound == null ? "" : String(e.bound), e.allowed]),
+      { seed: true, allowance: true }
+    ) || checkConsume(entries.map((e) => [String(e.bound), e.consumed]), { seed: true });
+  }
+  if (map) {
+    if (entries == null) return null;
+    if (typeof entries !== "object" || Array.isArray(entries))
+      return refusal3(
+        "AI_RUN_BOUND_UNKNOWN",
+        `\`consume\` was ${Array.isArray(entries) ? "an array" : `a ${typeof entries}`} (${(JSON.stringify(entries) ?? String(entries)).slice(0, 80)}): it is a map from a bound's name to the figure spent on it, e.g. { fetches: 1 }, and an array's keys are positions, which name no bound (\xA714b.6). Nothing was written`,
+        { bound: null }
+      );
+    entries = Object.entries(entries);
+  }
   for (const [k, v] of Array.isArray(entries) ? entries : []) {
     const b = String(k);
-    if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) continue;
+    if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b))
+      return refusal3(
+        "AI_RUN_BOUND_UNKNOWN",
+        `'${b === "" ? "(absent)" : b.slice(0, 60)}' names no bound of a run. The bounds a caller spends are ` + Object.keys(RUN_BOUNDS).filter((x) => !PLANE_COUNTED_BOUNDS.includes(x) && !PLANE_DECIDED_BOUNDS.includes(x)).join(", ") + ` (\xA714b.6); a figure for a bound that does not exist counts nothing. Nothing was written`,
+        { bound: b }
+      );
+    if (PLANE_DECIDED_BOUNDS.includes(b))
+      return refusal3(
+        "AI_RUN_BOUND_PLANE_COUNTED",
+        `'${b}' is decided by the plane \u2014 a run's lease lapses on the clock, read by the reaper, and nothing spends it (\xA714b.6) \u2014 so no figure for it, not even a zero, is the caller's to send or a member's to declare. Nothing was written`,
+        { bound: b }
+      );
     if (seed && v == null) continue;
     if (!(typeof v === "number" && Number.isSafeInteger(v) && v >= 0))
       return refusal3(
         "AI_RUN_CONSUME_INVALID",
-        `'${b}' was given ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)} \u2014 a bound's figure is a whole number of zero or more, and a count never goes down (\xA714b.6). Nothing was written`,
+        `'${b}' was ${allowance ? "declared an allowance of" : "given"} ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)} \u2014 a bound's figure is a whole number of zero or more, ${allowance ? "allowed or spent" : "and a count never goes down"} (\xA714b.6). Nothing was written`,
         { bound: b }
       );
+    if (allowance) continue;
     if (v !== 0 && PLANE_COUNTED_BOUNDS.includes(b))
       return refusal3(
         "AI_RUN_BOUND_PLANE_COUNTED",
@@ -28196,8 +28272,21 @@ var Store = class _Store extends DurableObject {
    *  serves, so the question's read and the run's read cannot disagree. */
   async #surfacedIn(bundleId, viewer) {
     const link = this.#one(`SELECT run, principal, at FROM inquiry_run_surfacings WHERE bundle_id=?`, bundleId);
-    if (!link)
+    if (!link) {
+      const mig = this.#one(
+        `SELECT capture_sha, promotion_key, at FROM inquiry_migration_replays WHERE bundle_id=?`,
+        bundleId
+      );
+      if (mig)
+        return {
+          recorded: false,
+          stated: "not recorded (migrated from the Drive era)",
+          run: null,
+          lens: null,
+          migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at }
+        };
       return { recorded: false, stated: "not recorded", run: null, lens: null };
+    }
     const read = await this.aiRunRead({ run: link.run, viewer });
     if (!read || read.found !== true || !read.session)
       return {
@@ -40294,6 +40383,10 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       if (refusedSurface) return refusedSurface;
       surfacing = { run: String(pkg.run).trim(), principal: pkg.assistantPrincipal.trim() };
     }
+    const migration = base === null && !surfacing && meta && typeof meta === "object" && normalizeType(meta.object_type) === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object" && typeof pkg.migrationReplay.capture === "string" && pkg.migrationReplay.capture ? {
+      capture: pkg.migrationReplay.capture,
+      promotion: typeof pkg.migrationReplay.promotion === "string" ? pkg.migrationReplay.promotion : null
+    } : null;
     return this.ctx.storage.transactionSync(() => {
       if (creatingProject) {
         bundleId = this.#mintProjectId(meta.title);
@@ -41203,6 +41296,18 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           bound: { bound: "surfaces", allowed: Number(left.allowed), consumed: Number(left.consumed) }
         };
       }
+      let migrated = null;
+      if (!cur && migration) {
+        const ts = (/* @__PURE__ */ new Date()).toISOString();
+        this.sql.exec(
+          `INSERT INTO inquiry_migration_replays (bundle_id, capture_sha, promotion_key, at) VALUES (?,?,?,?)`,
+          bundleId,
+          migration.capture,
+          migration.promotion,
+          ts
+        );
+        migrated = { capture: migration.capture, promotion: migration.promotion, at: ts };
+      }
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       this.#flagCasesOnRevision(
         bundleId,
@@ -41221,6 +41326,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         /* D-85: present ONLY on an assistant's creation of a question, naming the run it landed inside and
            that run's `surfaces` bound after this creation — so no member's answer gains a key. */
         ...surfacedIn ? { surfaced_in: surfacedIn } : {},
+        /* REC-173: present ONLY on a creation admitted as a migration replay, naming the provenance capture and the
+           Drive promotion that listed its bytes — so no other caller's answer gains a key. */
+        ...migrated ? { migration_replay: migrated } : {},
         /* REC-82 / IC-83: WHAT THE WRITER DID WITH EACH LEG'S REFERENT, on the
            write path's own surface. A mechanism believed on the strength of its
            EXISTENCE rather than its behaviour is the defect this project meets
@@ -51172,6 +51280,8 @@ ${words}`;
          purge can PROVE it took them (D-113). A COUNT AND NOTHING ELSE: which run opened which question is read
          per question, under that question's gate (`op=projection`'s `surfaced_in`). */
       inquiryRunSurfacings: n("inquiry_run_surfacings"),
+      /* REC-173: the questions whose creation was a verified migration replay, counted for D-85's reason one line up. */
+      inquiryMigrationReplays: n("inquiry_migration_replays"),
       /* REC-93 / IC-92: `aiRunLog` was a count of `ai_run_log`, which no longer
          exists — `OBSERVATION-LOG-DESIGN.md` §4.4 folded it into `observations`
          and `#migrate` drops it. The key is KEPT AND RE-AIMED at the folded rows
@@ -52498,6 +52608,10 @@ ${words}`;
          its run is the silent-leftover exactly. hygiene.test.mjs holds this list
          against schema.mjs. */
       "inquiry_run_surfacings",
+      /* REC-173 / D-113: the migration-replay row of an inquiry whose creation was a verified Drive-era
+         replay, keyed on the INQUIRY's `bundle_id`, for the reason the D-85 entry above gives: a row
+         outliving its inquiry would tell the next bundle allocated that id it was migrated. BOTH arms. */
+      "inquiry_migration_replays",
       /*__REC91_PURGE_START__*/
       /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX. It is a
          PROJECTION of a capture's extracted text -- re-derivable
@@ -61044,16 +61158,44 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  ONE DISJUNCT HERE AND NEVER PER ARM — three copies is the mirror-and-drift
    *  class the row was raised to avoid, and `d389-fullfetch.test.mjs` S1 counts
    *  it. `#frontierInternet` is NOT a caller and is not in the class: it gates
-   *  INSIDE its statement, so its `cap + 1` fetch is already exact. The
-   *  never-looked / missing lists each arm fetches beside this page are NOT
-   *  routed here (D-389's scope is this one over-fetch). */
+   *  INSIDE its statement, so its `cap + 1` fetch is already exact.
+   *
+   *  REC-174 (2026-09-23) — THE NEVER-LOOKED AND MISSING LISTS NOW TAKE THE
+   *  SAME TEST. D-389 closed this hole for `looked` and named the same shape
+   *  beside it: the document arm's `#frontierNeverLooked` fetch, the content
+   *  arm's `missing` fetch and the meaning arm's three `missing` fetches are each
+   *  gated (and split by §5.1's cause) AFTER a bounded fetch, so a viewer the
+   *  fence narrowed read `truncated: false` over a fetch that came back full.
+   *  The exhaustion test is therefore `#frontierFetch` below, written ONCE, and
+   *  this page is its first caller rather than a second copy. */
   #frontierPage(level, cap, { limit, subjectKind = null }, gate) {
-    const raw = this.#frontierLatest(level, { limit, subjectKind });
-    const gated = raw.filter(gate);
+    const { rows: gated, full } = this.#frontierFetch(
+      limit,
+      (n) => this.#frontierLatest(level, { limit: n, subjectKind }),
+      gate
+    );
     return {
       page: gated.slice(0, cap),
-      truncated: gated.length > cap || raw.length === limit
+      truncated: gated.length > cap || full
     };
+  }
+  /** REC-174 — THE ONE EXHAUSTION TEST, for every bounded fetch a frontier arm
+   *  gates or splits before it cuts: D-389's `looked` page and REC-174's
+   *  never-looked / missing supplies. `read(limit)` runs the bounded statement
+   *  AT the limit given here, so the limit fetched and the limit tested are one
+   *  value and cannot drift apart. `full` is the claim D-389 wrote: a fetch that
+   *  came back FULL did not exhaust its supply, so rows beyond it were never
+   *  fetched and their visibility is unknown. Each arm ORs `full` into its
+   *  `truncated` for every fetch it makes, and the list lengths it compares
+   *  against `cap` stay its own (they are the collections it cuts).
+   *
+   *  IT LEAKS NOTHING, FOR D-389's REASON: on a full fetch an entitled viewer's
+   *  gated rows are the whole fetch, and split two ways by cause (or three by
+   *  kind), one list exceeds `cap` — so it already read `true`; every viewer
+   *  now reads the same bit. No count of what the gate withheld is returned. */
+  #frontierFetch(limit, read, gate = null) {
+    const raw = read(limit);
+    return { rows: gate ? raw.filter(gate) : raw, full: raw.length === limit };
   }
   /** §5: *`last_verified` is the latest `PRESENT` row's `at`; source unreachable
    *  since is the earliest `LOOKED_INDETERMINATE` after it.* `STORE-AS-CACHE.md`
@@ -61370,7 +61512,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         ...this.#frontierVerification("content", r.subject_kind, r.subject)
       };
     });
-    const missing = this.#rows(
+    const missingFetch = this.#frontierFetch((cap + 1) * 2, (n) => this.#rows(
       `SELECT DISTINCT g.capture_sha AS subject, g.bundle_id AS bundle_id, g.registered AS registered
          FROM register g
         WHERE NOT EXISTS (SELECT 1 FROM observation_log o
@@ -61378,8 +61520,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
                              AND o.subject = g.capture_sha)
         ORDER BY g.capture_sha
         LIMIT ?`,
-      (cap + 1) * 2
-    ).filter((r) => visible(r.bundle_id) !== null).map((r) => ({ ...r, missing_cause: this.#missingContentCause(r.subject, r.registered) }));
+      n
+    ), (r) => visible(r.bundle_id) !== null);
+    const missing = missingFetch.rows.map((r) => ({ ...r, missing_cause: this.#missingContentCause(r.subject, r.registered) }));
     const never = missing.filter((r) => r.missing_cause === "never_looked");
     const unexplained = missing.filter((r) => r.missing_cause !== "never_looked");
     const tally = {};
@@ -61427,7 +61570,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          room being enough. */
       /* D-389: the page's claim is `latest.truncated`, written LAST so the claims this method
          still makes itself stay in the spelling `derivation-bounds.test.mjs` can grade. */
-      truncated: never.length > cap || unexplained.length > cap || latest.truncated,
+      /* REC-174: `missingFetch.full` is the same claim for the never-looked / missing supply —
+         a full fetch there reads true for every viewer, as the page's does. */
+      truncated: never.length > cap || unexplained.length > cap || missingFetch.full || latest.truncated,
       looked,
       /* REC-107 SWEPT THE CLASS RATHER THAN THE REPORTED SITE. The defect was rowed
          against the MEANING level, and this arm had it too: `missing_unexplained`
@@ -61802,8 +61947,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       ...this.#frontierVerification("meaning", r.subject_kind, r.subject)
     });
     const looked = latest.page.map(view);
-    const missing = [];
-    for (const r of this.#rows(
+    const captureFetch = this.#frontierFetch((cap + 1) * 2, (n) => this.#rows(
       `SELECT g.capture_sha AS subject, g.bundle_id AS bundle_id, g.registered AS entered
          FROM register g
         WHERE NOT EXISTS (SELECT 1 FROM observation_log o
@@ -61811,15 +61955,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
                              AND o.subject = g.capture_sha)
         ORDER BY g.capture_sha
         LIMIT ?`,
-      cap + 1
-    ))
-      if (visible(r.bundle_id) !== null)
-        missing.push({
-          subject: r.subject,
-          subject_kind: "capture",
-          missing_cause: this.#missingMeaningCause("capture", r.subject, r.entered)
-        });
-    for (const r of this.#rows(
+      n
+    ), (r) => visible(r.bundle_id) !== null);
+    const referenceFetch = this.#frontierFetch((cap + 1) * 2, (n) => this.#rows(
       `SELECT rr.ref AS subject, MIN(g.registered) AS entered, MIN(rr.bundle_id) AS bundle_id
          FROM reading_refs rr LEFT JOIN register g ON g.capture_sha = rr.capture_sha
         WHERE NOT EXISTS (SELECT 1 FROM observation_log o
@@ -61828,15 +61966,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         GROUP BY rr.ref
         ORDER BY rr.ref
         LIMIT ?`,
-      cap + 1
-    ))
-      if (visible(r.bundle_id) !== null)
-        missing.push({
-          subject: r.subject,
-          subject_kind: "reference",
-          missing_cause: this.#missingMeaningCause("reference", r.subject, r.entered)
-        });
-    for (const r of this.#rows(
+      n
+    ), (r) => visible(r.bundle_id) !== null);
+    const entityFetch = this.#frontierFetch((cap + 1) * 2, (n) => this.#rows(
       `SELECT e.entity_id AS subject, e.at AS entered
          FROM entities e
         WHERE NOT EXISTS (SELECT 1 FROM observation_log o
@@ -61844,8 +61976,22 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
                              AND o.subject = e.entity_id)
         ORDER BY e.entity_id
         LIMIT ?`,
-      cap + 1
-    ))
+      n
+    ));
+    const missing = [];
+    for (const r of captureFetch.rows)
+      missing.push({
+        subject: r.subject,
+        subject_kind: "capture",
+        missing_cause: this.#missingMeaningCause("capture", r.subject, r.entered)
+      });
+    for (const r of referenceFetch.rows)
+      missing.push({
+        subject: r.subject,
+        subject_kind: "reference",
+        missing_cause: this.#missingMeaningCause("reference", r.subject, r.entered)
+      });
+    for (const r of entityFetch.rows)
       missing.push({
         subject: r.subject,
         subject_kind: "entity",
@@ -61882,7 +62028,12 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          the collections it cuts, and is the model. NEITHER BRANCH COULD HAVE SEEN THIS:
          REC-95 wrote the method and M0-38 wrote the grader, in parallel, each green
          alone — the merge is the only place the two met. */
-      truncated: never.length > cap || latest.truncated,
+      /* REC-174 (2026-09-23): two corrections, both the cut-and-claim rule above. `unexplained` IS
+         cut at `cap` below (`missing_unexplained`) and was absent from this claim, so an entitled
+         viewer holding more unexplained rows than `cap` read `false` over a list it was not given
+         whole — the content arm has carried that disjunct since REC-109. And each of the three
+         supply fetches ORs in its FULL bit, D-389's claim at the lists it did not reach. */
+      truncated: never.length > cap || unexplained.length > cap || captureFetch.full || referenceFetch.full || entityFetch.full || latest.truncated,
       /* D-389: the page's claim is `#frontierPage`'s */
       looked,
       /* REC-107: `not_ruled_out` IS TOTAL ACROSS BOTH LISTS, and that is the point
@@ -62164,12 +62315,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       at: r.at,
       ...this.#frontierVerification("document", r.subject_kind, r.subject)
     }));
-    const never = this.#frontierNeverLooked((cap + 1) * 2).filter((r) => seenRow({
-      result_kind: "capture",
-      result_ref: r.from_document,
-      authority: null,
-      authority_kind: null
-    }));
+    const neverFetch = this.#frontierFetch(
+      (cap + 1) * 2,
+      (n) => this.#frontierNeverLooked(n),
+      (r) => seenRow({
+        result_kind: "capture",
+        result_ref: r.from_document,
+        authority: null,
+        authority_kind: null
+      })
+    );
+    const never = neverFetch.rows;
     const tally = {};
     for (const row of this.#rows(
       `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document' GROUP BY state`
@@ -62187,7 +62343,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          `truncated` computed from the raw supply would be true exactly when
          the gate dropped enough rows, which is a one-bit count of what was
          withheld, and the count is the leak. */
-      truncated: never.length > cap || latest.truncated,
+      truncated: never.length > cap || neverFetch.full || latest.truncated,
       /* D-389: the page's claim is `#frontierPage`'s */
       looked,
       never_looked: never.slice(0, cap),
@@ -62593,7 +62749,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         translation: badSkill.translation,
         note: badSkill.detail
       };
-    const badSeed = checkConsume((Array.isArray(bounds) ? bounds : []).filter((b) => b && typeof b === "object").map((b) => [String(b.bound), b.consumed]), { seed: true });
+    const badSeed = checkConsume(bounds, { list: true });
     if (badSeed)
       return {
         run,
@@ -62661,7 +62817,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            ON CONFLICT(run, bound) DO NOTHING`,
           run,
           String(b.bound),
-          Number(b.allowed) || 0,
+          b.allowed == null ? 0 : b.allowed,
+          /* REC-172: judged above; absent is 0, as ever */
           b.consumed == null ? 0 : b.consumed,
           /* REC-169: judged above */
           b.unit == null ? null : String(b.unit)
@@ -62759,7 +62916,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         bound: row.stopped_bound,
         note: "this run has ended; its log is closed and a later tick does not reopen it"
       };
-    const badConsume = checkConsume(Object.entries(consume && typeof consume === "object" ? consume : {}));
+    const badConsume = checkConsume(consume, { map: true });
     if (badConsume)
       return {
         run,
@@ -69406,6 +69563,36 @@ var StoreSilent = class extends Error {
   }
 };
 var captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
+var DRIVE_PROVENANCE_PATH = "migration/drive-provenance.json";
+async function migrationReplayOf(env, storeName, b) {
+  const cap = typeof b.provenanceCapture === "string" ? b.provenanceCapture.trim() : "";
+  if (!/^[0-9a-f]{64}$/.test(cap)) return null;
+  const registered = Array.isArray(b.register) && b.register.some((r) => r && r.sha256 === cap && r.path === DRIVE_PROVENANCE_PATH);
+  if (!registered) return null;
+  const bm = Array.isArray(b.files) ? b.files.find((f2) => f2 && f2.path === "bundle.md" && typeof f2.text === "string") : null;
+  if (!bm) return null;
+  const mdSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();
+  if (bm.sha256 !== mdSha) return null;
+  let held;
+  try {
+    held = await env.CAPTURES.get(captureKey(storeName, cap));
+  } catch {
+    return null;
+  }
+  if (!held) return null;
+  const bytes = new Uint8Array(await held.arrayBuffer());
+  if (createSha256().update(bytes).hex() !== cap) return null;
+  let prov;
+  try {
+    prov = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  } catch {
+    return null;
+  }
+  const records = Array.isArray(prov?.promotions) ? prov.promotions : [];
+  const match = records.find((p) => p && p.record && typeof p.record === "object" && p.record.target === b.bundleId && Array.isArray(p.record.files) && p.record.files.some((f2) => f2 && f2.name === "bundle.md" && f2.sha256 === mdSha));
+  if (!match) return null;
+  return { capture: cap, promotion: typeof match.key === "string" ? match.key : null, bundleMdSha: mdSha };
+}
 function needsTier2(text) {
   const c = text && text.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
@@ -73248,9 +73435,16 @@ var index_default = {
         b.actorIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
         delete b.actorViewer;
         b.actorViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+        delete b.migrationReplay;
+        const replayed = !viaSession && cls === "admin" && b.base === null && b.meta && normalizeType(b.meta.object_type) === "inquiry" ? await migrationReplayOf(env, storeName, b) : null;
+        if (replayed) {
+          b.migrationReplay = replayed;
+          b.replay = true;
+        }
         delete b.assistantPrincipal;
         if (!viaSession)
           b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+        if (replayed) delete b.assistantPrincipal;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({
@@ -73264,7 +73458,7 @@ var index_default = {
             }, 403);
           b.ownerMemberId = sessMember;
         }
-        if (b.base === null && b.meta && normalizeType(b.meta.object_type) === "inquiry" && Array.isArray(b.files)) {
+        if (b.base === null && b.meta && !replayed && normalizeType(b.meta.object_type) === "inquiry" && Array.isArray(b.files)) {
           const bm = b.files.find((f2) => f2 && f2.path === "bundle.md" && typeof f2.text === "string");
           if (bm) {
             const want = viaSession ? "human" : "agent";

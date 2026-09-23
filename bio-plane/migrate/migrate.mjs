@@ -16,7 +16,7 @@
  *
  * Usage:
  *   node migrate/migrate.mjs --root <CivicOS dir> --url <https://instance>
- *        --token <admin-or-member token> [--store bio] [--only <bundleId>]
+ *        --token <admin token> [--store bio] [--only <bundleId>]
  *        [--index <path to index.json>] [--dry] [--verify-only]
  *
  * Exit 0 only if every selected bundle migrated and verified clean.
@@ -356,6 +356,9 @@ function fileEntries(state, captureShas) {
   return entries;
 }
 
+export const DRIVE_PROVENANCE_PATH = "migration/drive-provenance.json";
+const isProvenanceEntry = (r) => r && r.path === DRIVE_PROVENANCE_PATH;
+
 export function buildPackages(bundleId, loaded, states, revisionFiles, provRegister) {
   const N = loaded.promotions.length - 1;
   const pkgs = [];
@@ -384,7 +387,21 @@ export function buildPackages(bundleId, loaded, states, revisionFiles, provRegis
          the catalog's own parser, so the migrated document carries them exactly
          as Drive wrote them and the store projects that rather than a
          re-derivation of it. */
-      register: i === N ? provRegister : [],
+      /* REC-173 (INVESTIGATIVE-SESSION.md section 11 item 5, "A MIGRATION IS A
+         REPLAY, NOT A SURFACING", BOB #30): the plane admits the CREATION of a
+         Drive-era question as a replay only when it names a drive-provenance
+         capture that is REGISTERED and HELD and whose preserved promotion records
+         list this bundle and this bundle.md SHA-256. The register has one writer,
+         promote, so the earliest act that can register the provenance against
+         this bundle is its creation: the provenance entry rides revision 0 (its
+         bytes were uploaded before any promote), and the creation names it. It
+         rides revision N too, beside the captures that exist only there, so a
+         resumed migration whose creation predates this still registers it. This
+         used to ride revision N alone, i.e. AFTER the creation. */
+      register: [...new Set([...(i === 0 ? provRegister.filter(isProvenanceEntry) : []),
+                             ...(i === N ? provRegister : [])])],
+      ...(i === 0 && provRegister.some(isProvenanceEntry)
+        ? { provenanceCapture: provRegister.find(isProvenanceEntry).sha256 } : {}),
     });
   }
   return pkgs;
@@ -424,7 +441,7 @@ export async function migrateBundle(client, bundle, { indexEntry = null, dry = f
      something this mirror did not produce, which is a hard stop. */
   const provRegister = [
     ...revisionFiles[N].filter((f) => f.blobSha).map((f) => ({ path: f.path, sha256: f.sha256, bytes: f.bytes, encoding: "binary" })),
-    { path: "migration/drive-provenance.json", sha256: provSha, bytes: provBuf.length, encoding: "utf8" },
+    { path: DRIVE_PROVENANCE_PATH, sha256: provSha, bytes: provBuf.length, encoding: "utf8" },
   ];
   const pkgs = buildPackages(bundleId, loaded, states, revisionFiles, provRegister);
   const revSha = (i) => revisionFiles[i].find((f) => f.path === "bundle.md").sha256;
@@ -544,6 +561,13 @@ async function main() {
   const self = await client.selftest();
   if (!self.ok) { console.error("selftest failed on the target instance:", JSON.stringify(self)); process.exit(1); }
   console.log(`target: ${self.service} ${self.version}, store answers, tokenClass ${self.tokenClass}`);
+  /* REC-173 (BOB #30): a migration replay is admitted only under the ADMIN class, the root of trust. Any other
+     token's creation of a Drive-era question is an ordinary creation and is refused SURFACE_NO_RUN, so the tool
+     refuses to start rather than half-migrate. */
+  if (self.tokenClass !== "admin") {
+    console.error(`the migration replays the Drive era under the ADMIN token only; this token's class is ${self.tokenClass}`);
+    process.exit(2);
+  }
 
   const index = a.index ? JSON.parse(readFileSync(a.index, "utf8")) : null;
   let bundles = discoverBundles(a.root);
