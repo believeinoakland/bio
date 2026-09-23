@@ -2,11 +2,12 @@
 
 A process document (`CORPUS-STANDARD.md` §6). **RULED BY BOB 2026-09-22: *"Yes to all 3 recommendations"*** — the three
 changes below, as BOB #26 put them to him that day. Designed here by BOB #26. **Change 1 is BUILT by M0-110** (§1 "As
-built"; live from CONDUCT's cutover); **changes 2 and 3 are NOT BUILT**. Until each change lands, the
+built"; live from CONDUCT's cutover); **change 2 is BUILT by M0-111** (§2 "As built"; live from the train that lands
+it); **change 3 is NOT BUILT**. Until each change lands, the
 rules in `CLAUDE.md` stand as written, and the landing that builds a change corrects every rule and kickoff it supersedes.
 **Revised 2026-09-22 by BOB #27** for Bob's move to cloud Claude Code under his second account (§4), with three builders'
 questions answered in §1 (M0-99, M0-100, M0-101), and M0-110's builder's four answered there by BOB #28 the same day;
-§5 points at the rest of the same day's program. Status as of 2026-09-22.
+§5 points at the rest of the same day's program. Status as of 2026-09-23.
 
 ## Why: measured on 2026-09-22
 
@@ -133,6 +134,24 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   side door.
 - **Accepts when** two lanes' `land/*` branches land in one train with one gate record, and a lane's direct push to
   `main` is refused by name. NEGATIVE CONTROL: drop the guard's `main` arm, and the refusal arm fails by name.
+- **As built (M0-111, 2026-09-23) — `tools/train.mjs`, the push guard's `main` arm (`mainArmCheck` in
+  `tools/pushguard.mjs`), their suite `bio-plane/test/train.test.mjs` and its control `train.control.mjs`.** `train.mjs
+  list` classifies every `land/*` ref by ANCESTRY against `origin/main` (LANDED or WAITING); `run` merges each waiting tip
+  (by sha, oldest first, plus any `--branch`) into `train/<id>` cut at `origin/main`, aborts and RETURNS a conflict by
+  name, scans for markers, runs `mintid --audit` on the union, gates ONCE through `gates.mjs` (the union's class) and
+  reads the verdict from the D-293 record, writes `<git common dir>/bio-train/<id>.json`, pushes `main`, verifies it
+  from the remote, and deletes each landed ref only when the remote still holds the sha it merged, reporting DELETED or
+  NOT DELETED from `ls-remote` — never from the push's exit status or words: measured 2026-09-23T00:01Z, the cloud
+  proxy answers a deletion HTTP 403 (exit 1) while git prints "Everything up-to-date".
+  A RED over several branches is UNDETERMINED and names them all, or `--isolate` gates each alone and lands the rest.
+  **The mark, and its limit:** a push to `main` passes only when its tip carries `Bio-Train: <id>`, a train record names
+  that commit and tree, and the gate recorded the tree GREEN; a deletion of `main` is refused. It proves the PROCEDURE,
+  never the actor: every session shares one credential, so no hook can tell CONDUCT from a lane, and a lane that runs
+  the train, forges the three local files (driven in the suite), uses `--no-verify`, or pushes from an unguarded clone
+  passes. **The refusal's home (§4) is the pre-push hook**, and the cloud's SessionStart hook now installs it
+  (`.claude/hooks/session-start.sh` step 2c); a host-side refusal (branch protection) is Bob's to rule and was not
+  measured. **Not built:** a train that reuses a `land/*` branch's own GREEN record (`--since`) instead of re-gating the
+  union, so a release cut is gated again in the train.
 
 ### 3 · The gates run on GitHub's machines
 

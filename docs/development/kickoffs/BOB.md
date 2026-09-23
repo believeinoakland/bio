@@ -70,9 +70,9 @@ Bob can answer sends it here, and this session carries it into his conversation.
 
 ## Closing a turn: the handoff is the deliverable
 
-1. **Publish, then verify from the remote.** `node tools/plancheck.mjs` before any push; the push guard
-   refuses a stale `DECIDED.md`, merge markers, a stale design-corpus date, and construct status that
-   disagrees with the code.
+1. **Publish, then verify from the remote.** `node tools/plancheck.mjs` before any push; push `land/bob/<topic>`
+   and CONDUCT's train lands it (M0-111). The push guard refuses a push of `main` without the train's mark, merge
+   markers, a stale design-corpus date, and construct status that disagrees with the code.
 2. **Hand the change over through the `BOB INBOX`**, newest first — SCHEDULER drains it and places each task in order.
    Name any queue item it supersedes; whether to stop a running worker is CONDUCT's call.
 3. **Correct every kickoff your change superseded, in the same turn** — the one licensed exception to

@@ -74,32 +74,28 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
      having measured the number free); **never `git stash`** (the stack is shared by every worktree: do not park at all;
      if a clean tree is needed, `git worktree add` a scratch checkout); `git fetch` and verify any dependency's symbol is in
      its tree before claiming; claim in `CLAIMS.md` before editing; **do not edit `QUEUE.md`** (the row's one word is yours,
-     its order SCHEDULER's); push the branch and verify by `ls-remote`.
+     its order SCHEDULER's); push `land/worker/<ID>` and verify by `ls-remote`.
    - **Workers spawn on Opus 5, pinned at spawn** (`claude-opus-5`; Bob, 2026-08-03). Escalating one worker is a tactical call.
    - **Spawn first, then integrate — for INDEPENDENT items**: a spawn costs seconds, an integration 10–20 minutes of an
      empty slot, and the merge conflicts land in append-only prose either way. **For an item that depends on the one you
-     are integrating: merge → gate → PUSH → spawn**, because a worker branches from `origin/main`, not from your tree.
+     are integrating: train → verify on the remote → spawn**, because a worker branches from `origin/main`, not from your tree.
    - **A freed slot is filled in the same turn it is freed.** Reporting that a slot is free is not filling it. **The end of
-     a wave is the start of the next act**: when `running` reaches zero the next thing is flip-gate-push-spawn, not a
+     a wave is the start of the next act**: when `running` reaches zero the next thing is train-flip-spawn, not a
      summary. If you must stop, say what will restart you and who has to do it. Slot-free lanes (measurement, test estate)
      run BESIDE the eight, never instead of them.
 
-2. **When a worker reports:**
-   - **Verify from the MERGED tree, COMMITTED** (your worktree with the branch merged into it — commit the merge first:
-     `coverage --strict`'s register counts only suites in a commit, D-238, so an uncommitted merge reads short): the full gate — the battery's
-     completion line (`N/N suites green · M assertions passing · run <id>`, and its SKIP count), `node scripts/coverage.mjs
-     --strict` and `node civicos-ui/test/run.mjs`, each run DIRECTLY with its exit status read UNPIPED, and
-     `node tools/plancheck.mjs`. `plancheck` green is not the gate — it does not run the battery; a docs-only commit is
-     not exempt, because prose changes what the instruments measure. Capture `df -h` in the same breath: disk pressure
-     presents as `ENOSPC`, a symlinked `node_modules`, or `SQLITE_CANTOPEN`/`SQLITE_IOERR_SHMSIZE` mid-battery — each
-     passing alone on a re-run. **Re-run the negative control yourself for anything destructive or security-sensitive.**
-     **Run the suites where two items MEET**, not only the item's own — a fix verified only at its change site is not.
-   - **Integrate by MERGING `origin/main` into an integration branch, never by rebasing it** — a rebase over a merge
-     flattens it. Run `git merge` as its own command and read its result; `merge; git add -A; commit` chained commits
-     conflict markers. Resolve EVERY conflicted file by reading both sides. **`git add -A` marks a conflicted file
-     RESOLVED WITH ITS MARKERS and makes `git diff --diff-filter=U` read EMPTY — the verification is disabled by the act
-     it verifies, and git may not have listed the file (a GENERATED one cost three suites). The only check that cannot be
-     flattered is a TREE-WIDE grep for markers after EVERY merge: it reads the FILES, not the INDEX.**
+2. **When a worker reports, and on a cadence (~30 min, or sooner when work waits) — LAND BY THE TRAIN (M0-111):**
+   - **`node tools/train.mjs run` IS the landing** (TREE-SHARING §2; `list` shows what waits). It fetches, merges every
+     WAITING `land/*` — plus each `--branch origin/<worker branch>` — into `train/<id>` cut at `origin/main`, RETURNS a
+     conflict BY NAME (aborted), audits ids on the union, gates ONCE (the union's class; `--full` forces FULL), pushes
+     `main` and verifies it from the remote. RED over several: `--isolate` names the red one, or `--drop` it. `SendMessage`
+     each RETURNED lane its branch and reason. **Nobody else pushes `main`**: the push guard refuses a push of it without
+     the train's mark, yours included; `--no-verify` is a side door, never taken. Read the gate's completion line and SKIP
+     count in the train's output, `df -h` beside it. **Re-run the negative control yourself for anything destructive or
+     security-sensitive**, and **run the suites where two items MEET**.
+   - **A conflict is the lane's to resolve** (it rebases its `land/*` branch). One you resolve yourself goes on a
+     `land/conduct/<topic>` branch: merge, never rebase; read both sides; grep the FILES for markers tree-wide after EVERY
+     merge — `git add -A` marks a conflicted file RESOLVED with its markers and empties `--diff-filter=U`.
    - **Keep-both on prose is safe against loss and not against contradiction.** After any keep-both resolution run
      `plancheck` before committing. A row appearing twice: first ask whether the two bodies are the SAME defect. Same →
      keep the copy from the branch that CLOSED or NARROWED it. Different → an ID COLLISION: mint a fresh id and renumber
@@ -110,11 +106,9 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
      path a merge kept byte-for-byte from main; when you deliberately take one side whole, declare it per path in the
      merge commit — `Dropped-from-branch: <path> — <why the branch's change is correctly superseded>`. An unfinishable
      sentence is the finding. Declare a rename there too; the checker cannot tell a rename from a deletion.
-   - **AFTER THE MERGE, BEFORE THE PUSH, run `node tools/mintid.mjs --audit --base origin/main`.** A merge is the only
-     moment two branches' ids become one corpus. Duplicate allocations and an unregistered prefix are BREAKS; an id the
-     ledger does not hold is a QUESTION you ASK the worker, never a failure, because every id before 2026-08-08 is honestly
-     unknown.
-   - **Pay every correction owed at integration, inside the merge commit, before the push.** A worker cannot be reached
+   - **The train runs `mintid.mjs --audit --base origin/main` on the union** and stops on a BREAK; an id the ledger does
+     not hold is a QUESTION you ASK the worker, never a failure (every id before 2026-08-08 is honestly unknown).
+   - **Pay every correction owed at integration on a `land/conduct/<topic>` branch in the SAME train.** A worker cannot be reached
      reliably mid-run and a push does not reach its checkout; a correction that arrived while its row was `running` is
      written ON THE ROW as an act with its actor, and paid here.
    - **Sweep the report and any claim note it carries for verbs aimed at a future actor** ("CONDUCT must…", "when X lands,
@@ -124,20 +118,14 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
      discharged or given an APPENDED dated `**open as of …**` line.
    - **A blocker a report states is a claim: grep the code it names on YOUR tree, after the merge, before it reaches a row.**
      A row's blocker is read by every session after it, including the ones deciding what not to build.
-   - **Push as a separate command from the rebase, and never behind a pipe.** A pipeline reports its LAST stage's status;
-     `git rebase … | tail -1 && git push` once published a mid-rebase detached HEAD. Before any push: `git status
-     --porcelain` clean and `git branch --show-current` non-empty (a finished rebase and an unfinished one answer
-     `REBASE_HEAD` identically). Never force-push. Verify the landing from the REMOTE.
-   - **PRUNE-ON-MERGE (D-288 item 3, BOB #12; landed by M0-49), the LAST act, after the push is verified:**
-     `git push origin --delete <the item's branch>`, then `git ls-remote --heads origin <the item's branch>` must print
-     NOTHING, then `git fetch --prune`. With pruning, a `worktree-agent-*` branch on the remote MEANS UNINTEGRATED WORK.
-     Never before the push is verified — the content would then live on this disk alone.
-     **THIS IS NOT LICENCE TO REMOVE THE WORKTREE**: deleting a merged remote branch is recoverable from two places; removing a worktree can take a live
-     worker's uncommitted tree, and is governed by "WHEN THE DISK FORCES YOUR HAND" below.
-   - **Tell SCHEDULER** the task id and the merge sha (step 0), and read out an integration's interface changes against the
+   - **PRUNE BY ANCESTRY (M0-111, replacing D-288's prune-on-merge).** The train deletes each landed ref and VERIFIES it
+     from the remote: `DELETED` or `NOT DELETED` — the cloud proxy refuses a deletion (HTTP 403) under "Everything up-to-date". A tip that is
+     an ancestor of `origin/main` is LANDED (`train.mjs list`) and never merged again, so an undeletable ref is harmless;
+     a `land/*` or `worktree-agent-*` tip that is NOT MEANS UNINTEGRATED WORK. **Not licence to remove a worktree**
+     — that is "WHEN THE DISK FORCES YOUR HAND" below.
+   - **Tell SCHEDULER** the task id and the train's merge sha (step 0), and read out an integration's interface changes against the
      base AT LANDING — an IC proposed on a stale base is resolved on today's.
-   - **Holding a merge off `main`** when a peer ruling or a live surface says so is correct: park it on a REMOTE branch,
-     `checkout -B` to `origin/main`, and land it whole later.
+   - **Holding a branch off `main`** when a peer ruling or a live surface says so: `--drop` it, and land it later.
 
 2b. **When an integration closes a security, disclosure or authority defect** — something a stranger, a machine credential
    or the wrong member could read or do — **say so in the merge commit's subject and `SendMessage` DIST** with the row and
@@ -168,7 +156,7 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
 
 ## The checkout, and a red `main`
 
-- **You do not hold the main checkout** (BOB #12, 2026-09-16): integrate from your own worktree, pushing `HEAD:main`. A
+- **You do not hold the main checkout** (BOB #12, 2026-09-16): run the train from your own worktree (it leaves it on `train/<id>`). A
   main checkout that is DIRTY is an anomaly with no benign reading — STOP AND REPORT it, never tidy it (tidying destroys the
   only evidence). A main checkout BEHIND `origin/main` is normal: nothing fetches there.
 - **A red `main` is repaired by whoever sees it when the repair is DETERMINISTIC** (regenerate an index, re-run a
@@ -181,7 +169,7 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
 ## WHEN THE DISK FORCES YOUR HAND, PRUNE BY ANCESTRY AND KEEP A LIVE-LIST
 
 A worker worktree costs ~645 MB and a concurrent gate wants ~1 GiB more, so **wave width, not the 8-slot budget, is what
-disk bounds** — and `PRUNE-ON-MERGE` is the only thing that returns it. **Estate practice (DIST, FLEET, CONDUCT, reached
+disk bounds** — and the train's pruning is the only thing that returns it. **Estate practice (DIST, FLEET, CONDUCT, reached
 independently): under ~4 GiB with a gate running, STOP THE GATE.**
 
 **Remove only a worktree whose branch tip is an ANCESTOR of `origin/main`** — never by age, name or "looks finished".
@@ -221,7 +209,7 @@ at once (D-405). A stood-down session that receives a late report MESSAGES its s
 
 - **A BOB ruling landing on a RUNNING row** goes ON the row as an `owed-at-integration:` FIELD line, is sent to the worker
   by `SendMessage`, and is VERIFIED at the merge.
-- **Batch finished items under ONE gate**, ordered deliberately (security first), each IC resolved on the base as read at
+- **Batch finished items under ONE train** (a security fix may ask for a train of its own, never a side door), each IC resolved on the base as read at
   ITS landing — **then run the suites where they MEET**: two green branches were red together.
 - **Mechanical conflicts are scriptable, the rest are not:** `docs/DECIDED.md` from a pre-M0-99 branch = the deletion; `bio-plane/dist/`
   = ours + `build-plane.mjs`; REGISTER_FLOOR = main's key + both sides' comments, re-read from `--strict` on the
@@ -231,11 +219,8 @@ at once (D-405). A stood-down session that receives a late report MESSAGES its s
   to SCHEDULER — the modification is evidence the close was wrong.
 - Check `MERGE_HEAD` before committing a re-made merge. A flip is a coord write, so it never waits on
   your tree's gate. Stop spawning before one more worker's cost crosses the line, not when the meter reaches it.
-- **`main` CAN MOVE FASTER THAN YOUR GATE RUNS** — a battery is 550–650s and `main` moved TWENTY-ONE times inside one
-  integration — so re-gating from scratch on every move NEVER CONVERGES. **Name the DELTA and classify it**
-  (`gates.mjs --since <measured commit>` once that tree RECORDED GREEN: it re-runs the units reading BOTH sides and
-  re-checks later commits; runtime on both sides → the full set, earlier figure DISCARDED). A completion line names the commit it measured; if that is not what you
-  push, say which commits it did not cover.
+- **`main` moves only by the train (M0-111)**, so no landing re-gates behind another. `gates.mjs --since <measured
+  commit>` stays the lane's tool when it rebases its `land/*` branch; a completion line names the tree it measured.
 - **REGENERATE EVERY GENERATED INDEX LAST** (a Contents, the status render), and **READ A RED'S
   ASSERTION, not the cause a handoff predicted** — 261/261 then 260/261 on prose alone, at the arm a handoff blamed on an
   unpushed branch; it was a STALE index. Same suite, same assertion, different cause.

@@ -88,7 +88,7 @@ reports scope ALL and silently leaves rows. The check that closes the class is M
 
 **A deploy verified is not a build serving** (D-108), and the rollout is per-isolate
 and not atomic. If a live probe contradicts the suite, establish which build answered
-before believing either. Land tested code on `main`; **DIST cuts releases**, and the
+before believing either. Land via `land/record/*`; **DIST cuts releases**, and the
 deploy of the real record is gated to Bob.
 
 **Two undocumented workerd ceilings bound every statement you write**: about 100 bound

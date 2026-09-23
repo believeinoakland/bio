@@ -330,7 +330,8 @@ arm 2b fails on a TRACKED or un-ignored copy (the `merge=ours` liar).
 
 ### THE LIMIT, STATED RATHER THAN IMPLIED CLOSED
 
-A fresh clone is unguarded until a gate runs once in it; `--no-verify` skips the hook. A dirty corpus
+A fresh clone is unguarded until a gate runs once in it; `--no-verify` skips the hook. Its `main` arm (M0-111)
+refuses a push without the train's mark, which proves a procedure, never an actor (TREE-SHARING §2). A dirty corpus
 gets a verdict about the TREE and is told so; a ref whose sha is not HEAD is named as unspoken-for.
 
 ### AN EXPIRED BUDGET MEASURED NOTHING (BOB #28, 2026-09-22; M0-107)

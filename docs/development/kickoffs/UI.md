@@ -95,7 +95,8 @@ type until Step 6.
 
 ## Deploy discipline, and releases
 
-**Land tested code on `main`; do not cut plane releases.** The move to parallel
+**Land tested code on `main` through the train (push `land/ui/<topic>`, M0-111); do not cut plane
+releases.** The move to parallel
 development took the release out of every area's critical path: areas land tested
 code continuously and **`DIST` batches plane releases** (`kickoffs/DIST.md`). If
 your work needs a plane change shipped, land it green and hand it to DIST as a

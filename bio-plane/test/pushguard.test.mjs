@@ -126,6 +126,13 @@ function bareRemote(name) {
 const refusedForMarkers = (p) => p.status !== 0 && p.stderr.includes(`PUSH REFUSED — ${HOOK_MARKER}`)
   && p.stderr.includes("UNRESOLVED MERGE MARKERS");
 const tip = (repo, ref) => git(["rev-parse", "--verify", "--quiet", ref], repo).stdout.trim();
+/* CORRECTED 2026-09-22 (M0-111), never exempted. Every push below went to the remote's `main`, which was right while
+   any session could push `main`. M0-111's `main` arm now refuses that push without the train's mark, so a fixture
+   pushing `main` would see THAT refusal before the one its arm is about. These arms judge markers and the shim, not
+   who lands `main`, so they push the fixture's `main` to a lane's landing ref — the push every lane now makes. The
+   `main` arm itself is driven in `train.test.mjs`. */
+const LANDED = "land/suite/work";
+const LAND = `main:refs/heads/${LANDED}`;
 
 /* ========================================================================== */
 section("THE END-TO-END PUSH — git actually calls it, and it refuses what it still refuses");
@@ -143,22 +150,22 @@ section("THE END-TO-END PUSH — git actually calls it, and it refuses what it s
   t("...and the hook file is on disk", existsSync(inst.path), true);
 
   commitAll(root, "seed, a clean tree");
-  const green = git(["push", "origin", "main"], root);
+  const green = git(["push", "origin", LAND], root);
   t("A CLEAN TREE PUSHES — exit 0", green.status, 0);
   t("...and the guard says what it checked rather than passing silently",
     green.stderr.includes(`${HOOK_MARKER}: no merge markers`), true);
-  t("...and the ref actually landed on the remote", tip(remote, "main"), tip(root, "main"));
+  t("...and the ref actually landed on the remote", tip(remote, LANDED), tip(root, "main"));
 
   writeFileSync(join(root, "docs/conflicted.md"), withMarker("# a file a merge left half-resolved\n"));
   commitAll(root, "a conflict committed, not resolved");
-  const red = git(["push", "origin", "main"], root);
+  const red = git(["push", "origin", LAND], root);
   t("A COMMITTED MERGE MARKER IS REFUSED — git called the hook, and the hook refused, in its own words", refusedForMarkers(red), true);
   t("...naming the file and line, so the reader can act in one step", red.stderr.includes("docs/conflicted.md:2"), true);
-  t("...and the marked commit did NOT reach the remote", tip(remote, "main") === tip(root, "main"), false);
+  t("...and the marked commit did NOT reach the remote", tip(remote, LANDED) === tip(root, "main"), false);
 
   writeFileSync(join(root, "docs/conflicted.md"), "# a file a merge left half-resolved, now resolved\n");
   commitAll(root, "resolved");
-  t("...and resolving it CLEARS it — the advice is true", git(["push", "origin", "main"], root).status, 0);
+  t("...and resolving it CLEARS it — the advice is true", git(["push", "origin", LAND], root).status, 0);
 }
 
 /* ========================================================================== */
@@ -179,14 +186,14 @@ section("M0-99 — THE RETIRED ARM: nothing a commit carries can be stale, so no
   commitAll(root, "base, the index regenerated and NOT committed");
   t("the fixture's index exists on disk and is NOT in the commit — the rule this section runs over",
     [existsSync(join(root, "docs/DECIDED.md")), git(["ls-files", "--", "docs/DECIDED.md"], root).stdout.trim()], [true, ""]);
-  t("the base pushes", git(["push", "-q", "origin", "main"], root).status, 0);
+  t("the base pushes", git(["push", "-q", "origin", LAND], root).status, 0);
 
   /* Cause (1), as it was: a ruling written after the regeneration, committed without one. */
   writeFileSync(join(root, "docs/later.md"), "DEC-2 was RULED on 2026-09-17, after the index was built.\n");
   commitAll(root, "a ruling added after the regeneration");
-  const c1 = git(["push", "origin", "main"], root);
+  const c1 = git(["push", "origin", LAND], root);
   t("M0-99 — A RULING ADDED AFTER THE INDEX WAS WRITTEN PUSHES (cause (1), which the retired arm refused)", c1.status, 0);
-  t("...and it landed", tip(remote, "main"), tip(root, "main"));
+  t("...and it landed", tip(remote, LANDED), tip(root, "main"));
 
   /* Cause (2), as it was, with the rebase the ONLY variable: the same branch pushed before and after. */
   git(["checkout", "-q", "-b", "peer"], root);
@@ -441,11 +448,11 @@ section("D-406 — A WORKTREE WHOSE COMMIT PREDATES THE GUARD");
      A worktree that ALREADY had the guard must still refuse, and through its OWN tracked script
      rather than the cache — worktree-first is the whole of the chosen ordering. */
   git(["remote", "add", "origin", remote], root);
-  t("a tree WITH its own script still pushes clean", git(["push", "-q", "origin", "main"], root).status, 0);
+  t("a tree WITH its own script still pushes clean", git(["push", "-q", "origin", LAND], root).status, 0);
   writeFileSync(join(root, "docs/marked.md"), withMarker("# marked on main\n"));
   commitAll(root, "a marker on main");
   t("NO REGRESSION — a tree where the guard already worked STILL refuses a committed marker",
-    refusedForMarkers(git(["push", "origin", "main"], root)), true);
+    refusedForMarkers(git(["push", "origin", LAND], root)), true);
   writeFileSync(join(root, "docs/marked.md"), "# resolved on main\n");
   commitAll(root, "resolved on main");
 
@@ -490,7 +497,7 @@ section("D-406 — A WORKTREE WHOSE COMMIT PREDATES THE GUARD");
   if (cacheSaved) writeFileSync(copy.path, "this is not valid javascript {{{\n");
   writeFileSync(join(root, "docs/after.md"), "# a clean change after the cache was corrupted\n");
   commitAll(root, "a clean change");
-  const withBadCache = git(["push", "origin", "main"], root);
+  const withBadCache = git(["push", "origin", LAND], root);
   t("WORKTREE-FIRST, DRIVEN — a corrupt CACHE cannot affect a tree that carries its own script",
     withBadCache.status, 0);
   if (cacheSaved) writeFileSync(copy.path, cacheSaved);

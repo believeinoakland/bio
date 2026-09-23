@@ -18518,3 +18518,25 @@ touched state still move `main` for their product half, but no longer carry the 
 that cost BOB #26's landing six gate runs (TREE-SHARING §"Why"). It is a figure about ONE day's shape, not a forecast:
 a day heavier in product landings moves `main` more. **Not measured:** the gate runs this would have saved — a count
 of avoided rebases needs the runs M-97 could not see either.
+
+## M-105 · 2026-09-23 · M0-111 — what the cloud's git proxy does with a ref DELETION push, and what the train's list reads
+
+Instrument: `git` through the cloud agent proxy, from the M0-111 worker's worktree (`worktree-agent-a1898e01f099239b0`),
+driven by a throwaway node script (`spawnSync` of `git push origin --delete` and `git ls-remote`, exit statuses read
+unpiped), 2026-09-23T00:01:15Z; and `node tools/train.mjs list` on that worktree's tree.
+
+1. `git push origin origin/main:refs/heads/land/worker/m0-111-delete-probe` (the probe ref at `df9eb9f9`, an ancestor of
+   `origin/main` by construction): **accepted**, `* [new branch]`.
+2. `git push origin --delete land/worker/m0-111-delete-probe`: **exit 1**; stderr `error: RPC failed; HTTP 403 curl 22
+   The requested URL returned error: 403`, `send-pack: unexpected disconnect while reading sideband packet`, `fatal: the
+   remote end hung up unexpectedly` — **and then `Everything up-to-date`**. `ls-remote` before and after: the ref at
+   `df9eb9f9`, unchanged.
+3. `node tools/train.mjs list`: `LANDED land/worker/m0-111-delete-probe @ df9eb9f9 (lane worker)` — prune by ancestry
+   reads the undeletable ref as landed, so no train merges it.
+
+**WHAT IT SAYS.** The deletion is REFUSED by the proxy (a 403 on the push RPC), not dropped silently: the exit status is
+honest here, git's last line is not. The train reports a deletion only from `ls-remote` (its suite holds it to a stricter
+remote that exits 0 and keeps the ref). **The probe ref is still on the remote**, harmless by ancestry; deleting it is an
+act for a session whose credential the proxy lets delete, or for the host's UI. **Not measured:** whether any cloud
+session can delete a ref (one session, one hour, one refspec), and whether the 403 is the proxy's policy or GitHub's
+(the proxy's own README, `/root/.ccr/README.md`, files a 403 as an organization policy denial: not retried).

@@ -96,7 +96,11 @@ incident's own shape inverted:
   released on its branch on 2026-09-15; its integrator was stood down before merging; the work
   reached nobody and sat on one disk until somebody went to that physical machine to get it.**
   You are the only actor GUARANTEED to be alive at the moment your commits exist, so the push is
-  yours. `git push origin <your-branch>:<your-branch>` — never force, never to `main`.
+  yours. **Since M0-111 (TREE-SHARING §2) the push is to a LANDING REF:**
+  `git push origin HEAD:refs/heads/land/worker/<your row id>` — never force, never to `main`. CONDUCT's train
+  (`tools/train.mjs`) merges every `land/*` branch in one integration branch with one gate; the push guard REFUSES a
+  push to `main` by name. A branch the train RETURNS (a conflict, or RED) comes back to you by name: rebase it on
+  `origin/main` and push the same ref again.
 
 ## Measurement
 
@@ -257,9 +261,9 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
    that did not exist when the fixture was written.
 4. `node tools/plancheck.mjs` — clean but for UNPUSHED. It also refuses an unresolved merge
    marker anywhere in the tree.
-5. Commit on your branch, **then PUSH IT** — `git push origin <your-branch>:<your-branch>`, never
+5. Commit on your branch, **then PUSH IT** — `git push origin HEAD:refs/heads/land/worker/<your row id>`, never
    force and never to `main`. **Do not merge; CONDUCT integrates.** Then VERIFY it arrived by
-   asking the REMOTE rather than your own tree: `git ls-remote --heads origin <your-branch>`
+   asking the REMOTE rather than your own tree: `git ls-remote --heads origin land/worker/<your row id>`
    must answer with the sha you just committed. An unverified push is a claim, and this project
    has paid for exactly that distinction (D-288).
 
