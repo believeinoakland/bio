@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-07-31; refusal renamed NOT_PROBLEMS -> NOT_INQUIRIES by REC-10 2026-08-03) disable the whole-set refusal in dispose (guard `offenders.length` with `false`, so a selection carrying a non-inquiry is narrowed instead of refused whole) -> 4 assertions fail (NOT_INQUIRIES, offenders named, nothing-moved) then the suite throws on the partially-applied set; restored, 47 pass. */
+/* NEGATIVE CONTROL: (run 2026-07-31; refusal renamed NOT_PROBLEMS -> NOT_INQUIRIES by REC-10 2026-08-03) disable the whole-set refusal in dispose (guard `offenders.length` with `false`, so a selection carrying a non-inquiry is narrowed instead of refused whole) -> 4 assertions fail (NOT_INQUIRIES, offenders named, nothing-moved) then the suite throws on the partially-applied set; restored, 47 pass. D-169 (run 2026-09-23, each arm ALONE, restored by sha256 b2a77ccd… and cmp): arm 1, restore `#setScalar` for disposition_reason in dispose -> 4 fail, both intake inquiries by name at "the reason is IN THE BYTES" and at "passes C-2.8 after deferred/dismissed" (C-2.8: deferred/dismissed state requires a non-empty disposition_reason), while the member-created arm stays GREEN (over-strictness: the line already present still disposes); arm 2, delete the line then setOrAdd it (moves it to the fence) -> 2 fail, "key sequence is unchanged" and "between the same neighbours", intake arm green; restored, 64 pass. */
 /* S-11 step 3: bulk disposition of Problems, `op=dispose`, weight `refuse`.
  *
  * Negative-control detail: disable the whole-set refusal in dispose (guard `offenders.length` with `false`, so a selection carrying a non-inquiry is narrowed instead of refused whole) -> 4 assertions fail (NOT_INQUIRIES, offenders named, nothing-moved) then the suite throws on the partially-applied set; restored, 47 pass.
@@ -40,6 +40,10 @@ const mf = new Miniflare({
   modulesRoot: "/", scriptPath: SRC("store.mjs"),
   compatibilityDate: "2026-07-01",
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  /* D-169: a recorded producing group, so a creation goes through the plane's REAL stamp (#stampGroup) the way
+     an intake write does on an installed instance. Every hand-built fixture here already names this group, and
+     a document already naming it comes back byte-identical, so the earlier blocks are unmoved by it. */
+  bindings: { INSTANCE_NAME: "believe-in-oakland" },
 });
 const call = async (p, body) => (await (await mf.dispatchFetch("http://x" + p,
   body ? { method: "POST", body: JSON.stringify(body) } : {})).json()).result;
@@ -138,7 +142,7 @@ const mk = (id, text, type) => call("/promote", {
   bundleId: id, base: null, snapKey: `${id}-new`, author: "suite",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
-          current_state: type === "problem" ? "surfaced" : "collected",
+          current_state: type === "problem" ? "surfaced" : type === "inquiry" ? "open" : "collected",
           created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" } });
 
 const IDS = ["PROB-2026-0001-a", "PROB-2026-0002-b", "PROB-2026-0003-c"];
@@ -283,6 +287,80 @@ console.log("\n--- scale: a pass on three Problems is not a pass ---");
   /* The conformance check is what makes the scale claim mean something: moving
      200 states is worthless if they are 200 documents the catalog rejects. */
   t("a sampled one is still conformant", await errorsOf(many[199]), []);
+}
+
+console.log("\n--- D-169: an inquiry created through INTAKE disposes into bytes C-2.8 accepts ---");
+/* D-169. The setup page's intake writer (mdFor) emits an inquiry with NO
+   disposition_reason line, and dispose() wrote the reason with #setScalar, which
+   returns the text UNCHANGED for an absent key: the state moved to deferred or
+   dismissed and the record held a bundle its own catalogue rejects at C-2.8.
+   Every fixture above carries the line already (probMd), so none of them could
+   see it. HOW A LIAR PASSES: a hand-built fixture already carrying the line,
+   which never meets mdFor — so this arm takes its bytes FROM mdFor, extracted
+   from SETUP_HTML exactly as inquiry.test.mjs block 5 does, and pins that the
+   line is absent before anything is disposed. */
+{
+  const { SETUP_HTML } = await import("../src/setup.mjs");
+  const script = SETUP_HTML.slice(SETUP_HTML.lastIndexOf("<script>") + 8, SETUP_HTML.lastIndexOf("</script>"));
+  const el = () => ({ addEventListener() {}, classList: { add() {}, remove() {} },
+    textContent: "", innerHTML: "", value: "", style: {}, hidden: false, dataset: {} });
+  const sandbox = {
+    document: { querySelector: () => el(), querySelectorAll: () => [], getElementById: () => el(),
+                addEventListener() {}, createElement: () => el(), body: { appendChild() {}, removeChild() {} } },
+    location: { hash: "", pathname: "/", origin: "https://x" }, history: { replaceState() {} },
+    sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
+    fetch: async () => ({ ok: true, status: 200, json: async () => ({ ok: true }) }),
+    URLSearchParams, console, JSON, Date, RegExp, String, Number, Object, Array,
+    setTimeout, TextEncoder, navigator: { clipboard: { writeText: async () => {} } },
+  };
+  sandbox.window = sandbox;
+  const ui = new Function(...Object.keys(sandbox), script + "\n;return { mdFor, FIRST_STATE, deriveInquiryTitle };")(
+    ...Object.values(sandbox));
+  const Q = "Why did the transfer basis change between the two budget cycles?";
+  const intake = ["INQ-2026-0169-defer", "INQ-2026-0169-dismiss"];
+  for (const id of intake) {
+    const text = ui.mdFor(id, "inquiry", ui.FIRST_STATE.inquiry, ui.deriveInquiryTitle(Q), Q,
+      "2026-07-24T12:00:00Z", false, null);
+    t(`${id}: the intake writer's bytes carry NO disposition_reason line (the fixture is the real shape)`,
+      /^disposition_reason:/m.test(text), false);
+    await mk(id, text, "inquiry");
+    t(`${id} starts conformant`, await errorsOf(id), []);
+  }
+  for (const [id, to, why] of [[intake[0], "deferred", "after the audit lands"],
+                               [intake[1], "dismissed", "answered elsewhere"]]) {
+    const r = await call(`/dispose?handle=${await select([id])}&to=${to}&reason=${encodeURIComponent(why)}&${STAMP}`);
+    t(`${id}: dispose to ${to} succeeds`, r.ok, true);
+    t(`${id} is ${to}`, await stateOf(id), to);
+    const doc = await docOf(id);
+    t(`${id}: the reason is IN THE BYTES, once, inside the front matter`,
+      [doc.split("\n---")[0].split("\n").filter((l) => l.startsWith("disposition_reason:")),
+       doc.split("\n").filter((l) => l.startsWith("disposition_reason:")).length],
+      [[`disposition_reason: "${why}"`], 1]);
+    t(`${id} passes C-2.8 after ${to} (no finding at all, C-2.8 or other)`, await errorsOf(id), []);
+  }
+}
+
+console.log("\n--- D-169: a member-created inquiry (line already present) disposes exactly as before ---");
+/* The other half of the accepts-when: where the line exists, setOrAdd must
+   rewrite it IN PLACE and add nothing. Pinned structurally: the front matter's
+   top-level key sequence is identical before and after, and the reason sits
+   between the same two keys it was authored between. */
+{
+  const id = "PROB-2026-0169-member";
+  await mk(id, probMd(id), "problem");
+  const keys = (d) => d.split("\n---")[0].split("\n").filter((l) => /^[a-z_]+:/.test(l)).map((l) => l.split(":")[0]);
+  const nbr = (d) => { const k = keys(d), i = k.indexOf("disposition_reason"); return [k[i - 1], k[i + 1]]; };
+  const before = await docOf(id);
+  const r = await call(`/dispose?handle=${await select([id])}&to=deferred&reason=${encodeURIComponent("next cycle")}&${STAMP}`);
+  t("the member-created one disposes", r.ok, true);
+  const after = await docOf(id);
+  t("its front-matter key sequence is unchanged: nothing added, nothing moved", keys(after), keys(before));
+  /* Not a line INDEX: the state_history entry dispose appends sits above it and shifts every later line. What
+     is pinned is that the key it follows and the key after it are the ones it was authored between. */
+  t("the reason is rewritten in place, between the same neighbours, and appears once",
+    [nbr(after), after.split("\n").filter((l) => l.startsWith("disposition_reason:"))],
+    [nbr(before), ['disposition_reason: "next cycle"']]);
+  t("and it is conformant", await errorsOf(id), []);
 }
 
 console.log("\n--- S-11 step 4: bulk RETIREMENT of Information, and why it is heavier ---");

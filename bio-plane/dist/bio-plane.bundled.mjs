@@ -30531,7 +30531,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       text = withHistory;
       text = _Store.#setScalar(text, "prior_state", cur.current_state);
       text = _Store.#setScalar(text, "current_state", to);
-      text = _Store.#setScalar(text, "disposition_reason", `"${why}"`);
+      text = _Store.#setOrAddScalar(text, "disposition_reason", `"${why}"`);
       text = _Store.#setScalar(text, "last_updated", `"${when}"`);
       const entry = `### Session ${when} | ${to === "deferred" ? "Deferred" : "Dismissed"} | ${author || "member"}
 Trigger: selection ${handle}
