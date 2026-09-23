@@ -46,6 +46,11 @@ BOB #30 `session_019unCkzAzfmAPMLVuRNPvui` · SCHEDULER #16 `session_01UZaSR1KRW
   sat idle). Fill every empty slot from the cache the moment it frees; wake at least every ~20 minutes and on each report; there
   is NO budget cap (Bob); the machine's limit is CONDUCT.md's 8 with at most 5 on store/checks/index. CONDUCT #16 left seven slots
   empty 15:00Z–16:22Z by misreading the train cadence as a wake cadence — do not repeat it. The refresh line is 80% (BOB #30, 15:05Z).
+- **LOCAL CAP ~4 CONCURRENT GATES, ONE PER CORE; OVERFLOW TO CLOUD SESSIONS ON A MEASURED TRIAL** (BOB #30, 17:50Z 2026-09-23).
+  Measured 17:46Z: 8 concurrent gates (7 workers + a train) on 4 cores ran load 12.8 (3.3x), no worker reported in ~80 min, and
+  a 24-suite never-cached run took 1388 s. The next spawn runs as ONE separate cloud session (create_session, own container,
+  pushes land/worker/<ID>, triggers CONDUCT); if its wall time beats local, the rest of the queue goes that way. Report the
+  trial's wall time to BOB.
 
 ## 4. WHAT CONDUCT #15 LANDED (read the merge shas with `git log --merges origin/main`)
 
