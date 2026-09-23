@@ -1,77 +1,50 @@
-# BOB — resume here. Written 2026-09-23 by BOB #29 for BOB #30, in cloud Claude Code under Bob's second account.
+# BOB — resume here. Written 2026-09-23 by BOB #30 (running; refreshed at 09:20Z), in cloud Claude Code under Bob's second account.
 
 Read `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` whole, `kickoffs/NEW-MACHINE.md` §0 and §0.1,
-then this. Everything below is a POINTER measured at 2026-09-23 ~06:31Z; re-measure before acting on a line.
+then this. Every line is a POINTER measured at 2026-09-23 ~09:20Z; re-measure before acting on it. BOB #30 is LIVE
+(`session_019unCkzAzfmAPMLVuRNPvui`, ~25% context): this file is its running state, not yet a handoff. When a successor is
+named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from `list_triggers`) and archive it under D-398.
 
-## 0. YOUR FIRST ACTS
-
-1. **Confirm BOB #29 stopped** (`session_01FufZUB3gKjK6tWDDqkyzec`; it stood down at ~66% context having deleted its own
-   self-wake). `list_triggers`: no `BOB #29 self-wake` may remain — delete any from YOUR listing. Then archive it under
-   D-398. Its working tree was clean at stand-down; its branches `m0126-design`, `gh-once`, `p5fix`, `gatesfix`, `rulings2`,
-   `m0122`, `combo`, `bob29` are all landed or superseded (check each by ancestry against `origin/main`; `combo` was a local
-   test merge, never pushed).
-2. `node tools/plancheck.mjs` BEFORE any push (arms the push guard). Lanes do NOT push `main`: push `land/bob/<topic>` and
-   CONDUCT's train lands it (M0-111). Push a `land/*` branch ONLY after a local GREEN gate on that tree, from a base at or
-   after `41c7e0c3` (TREE-SHARING §3, Bob's alarm rule).
-3. **Starting a lane's successor is YOUR act now, measured:** a session made by `create_session` DOES show in Bob's app —
-   Bob conversed in BOB #29, which BOB #28 created that way. BOB #29 started CONDUCT #15 and SCHEDULER #15 so. Fold this
-   into `kickoffs/BOB.md` "Spawning" (it still describes chips) in your first docs landing.
-
-## 1. THE ESTATE (~06:31Z)
+## 1. THE ESTATE (~09:20Z)
 
 | lane | session | state |
 | --- | --- | --- |
-| CONDUCT #15 | `session_01DvbsQsqBM5Pjn2rcHk5rZ3` | integrator; up 05:03Z; M0-126 worker spawned against TREE-SHARING §3a |
-| CONDUCT #14 | `session_016wUwh4LXjcdSfznta957Yb` | 70%, relaying its last workers' reports to #15; #15 archives it |
-| SCHEDULER #15 | `session_013EpMgUGND1tFSQvtAaE2t7` | started 06:31Z by BOB #29; confirm it passed its gate |
-| SCHEDULER #14 | `session_01NJaaa2rxA1aZsrQYBt8ABK` | ~67%; #15 archives it and deletes `trig_0193mK7h2ChPtjFVrGG39QUg` |
-| DIST #5 | `session_01DUyQVnz7x2hK5EajCdhEfC` | 0.72.0, 0.73.0, 0.74.0 cut and LIVE tonight; biosmoke7 answers 0.74.0 |
-| FLEET #4 | `session_01YB9VgJtjiXwQ5vtx4fLvRB` | built `preserveSymlinks` (landed) |
+| CONDUCT #15 | `session_01DvbsQsqBM5Pjn2rcHk5rZ3` | integrator, ~37%; 7 workers (M0-126, M0-127, REC-169, REC-170, REC-171, UI-81, DIST-6); CONDUCT #14 ARCHIVED |
+| SCHEDULER #15 | `session_013EpMgUGND1tFSQvtAaE2t7` | up since 06:31Z; archived #14 |
+| DIST #5 | `session_01DUyQVnz7x2hK5EajCdhEfC` | 0.75.0 DEPLOYED (D-85's cut); its update pointer HELD until main is green |
+| FLEET #4 | `session_01YB9VgJtjiXwQ5vtx4fLvRB` | idle |
 
-**Discharge the DELEGATION "START SCHEDULER #15" on `coord` CLAIMS.md** (SCHEDULER #14 -> BOB, 2026-09-23): BOB #29 started
-it at 06:31Z as above; write the DISCHARGED line and tell #15 your session id by trigger.
+## 2. WHAT BOB #30 DID (each verified on the remote)
 
-## 2. WHAT BOB #29 DID (each verified on the remote)
-
-- **Cloudflare admitted** (Bob saved the two credentials, 01:24Z): NEW-MACHINE §0.1's suspension lifted; DIST cut 0.72.0 (REC-165),
-  0.73.0 (REC-168), 0.74.0 (D-442), all live-verified; update pointers landed.
-- **Rulings, each in its home:** D-129 (Framework §14.3), D-170 (NOTIFICATIONS "MARKED AS HANDLED"), D-181 (Case Making §THE
-  ACTION PLAN item 8); REC-168's run-less request (INVESTIGATIVE-SESSION §11 item 5: a request MUST name a run); the
-  rebalance trigger (WORK-PIPELINE §2); M0-111's two questions and the branch-protection trigger AMENDED (TREE-SHARING §2).
-- **Bob's rulings of 2026-09-23, recorded in TREE-SHARING §3:** (a) a red GitHub run is an ALARM that must mean a real problem
-  (lanes push only after local GREEN; no negative control on a triggering branch); (b) ONE GitHub run per LANDED batch (the
-  workflow runs on `main` only) — CONFIRMED both ways by CONDUCT #15; (c) a gate test depends only on the code — a
-  machine-dependent result is a defect.
-- **Gate fixes built and landed on Bob's instruction ("fix these bugs and get things going"):** plancheck `stateFail` (coord
-  state never decides a tree's verdict); `gates.mjs` records each failed suite (`failedUnits`) and re-runs only those, and a
-  tree already GREEN runs nothing (REUSED record); M0-122 (train retry + reuse; a BOB worker); FLEET's `preserveSymlinks`.
-- **M0-126 DESIGNED** (TREE-SHARING §3a, adopting CONDUCT #14's proposal): the shared, per-suite, content-addressed result
-  record. Bob chose it over GitHub as the shared record ("that seems much better than getting github involved").
+- Archived BOB #29 (D-398; its tree unreadable from another container — its own report). BOB.md brought to the cloud:
+  `create_session` spawning, lane messages by trigger, the retirement sweep by hand (`retirable.mjs` cannot read the cloud
+  listing; not rowed).
+- RULED, each in its home, landed at `4355bfda`: rule 2's reach (INVESTIGATIVE-SESSION §11 item 5 "Rule 2's reach": every
+  creation stamped `surfaced_by: agent`, deploy tokens included; BOB INBOX, after D-85); TREE-SHARING §3a condition 3 (a
+  cut's backstop is a run that REUSED NOTHING; M0-106 narrowed, `--since` withdrawn; M0-126 marks such a record); Content
+  Framework §8.1 grade D's label (D-219); State Rules §4.1 a retired item is NOT citable (D-168; a publisher's retraction is
+  `source_status`, stays citable). SCHEDULER #15's DELEGATION discharged.
+- RULED, NOT YET LANDED: TREE-SHARING §3a condition 1 — a unit reading git history or a live ref is `GATE: never-cache
+  (history)` and any reuse still runs it. Local branch `bob30-nevercache` @ `f187eaea`; push `land/bob/nevercache` once main
+  is green and a local gate reads GREEN. Told to CONDUCT for the M0-126 worker already.
 
 ## 3. OWED — in this order
 
-1. **Watch M0-126** (CONDUCT #15's worker): read its diff WHOLE before it lands; the three safety conditions of §3a are
-   required, not optional.
-2. **The runner-only miniflare leak (M0-127)** — narrowed to D-442's change (its new suite or one of the 16 it corrected);
-   CONDUCT's worker is naming the leaker; and the workflow's verdict line must name a LEAK, never `FAILED=none` (SCHEDULER row).
-3. **Old `land/*` branches still carry the old workflow trigger** — each push of one fires a run until merged. CONDUCT told the
-   lanes to merge `origin/main` first. Leftover refs cannot be deleted from the cloud (proxy 403 on ref deletion); the three
-   M0-114 branches `m0114-negctl`, `m0114-negctl-2`, `land/worker/m0-111-delete-probe` need a GitHub-side delete — Bob's one
-   act, harmless to leave; bring once, low priority.
-4. **The v0.72.0-v0.74.0 tags** exist only in DIST's clone (proxy 403 on tag pushes). Nothing reads them; offered to Bob as an
-   optional web-UI act (Releases -> Draft -> tag at `dist/cut-<v>`). Do not re-ask.
-5. **Carried from BOB #28, unchanged:** re-measure M-97/M-98's git half after a working day on `coord`; the hook's
-   `CLAUDE_ENV_FILE` duplicate appends (batch with a FULL change); with Bob, unanswered — do not re-ask: Q3, D-53; carried,
-   not yet asked: Publication §3 rule 11's objection-travels question (at M10's ceremony), where a member's/project's Claude
-   key lives, MK-7's provisionals, M0-85.
+1. **Main is RED** (GitHub run #20 at `4355bfda`, `mergecarry.test`): a FALSE drop — my re-sent batch re-merged branches
+   batch4 already carried. CONDUCT's fix, `land/conduct/mergecarry-4355bfd` (`carried` class: the branch's patch reverse-applies
+   to the merged blob; `e241672` stays a drop; `95e401b`'s register row removed as never a drop, verified by BOB #30), was
+   gating at ~09:00Z. When green: push `land/bob/nevercache`; DIST releases 0.75.0's pointer; M0-126 and M0-127 push.
+2. **Read M0-126's diff WHOLE before it lands** against §3a's three conditions, the backstop mark (condition 3) and
+   never-cache(history) (condition 1). CONDUCT holds it for this lane.
+3. **Bob's open question: the weekly budget.** `get_session`'s `rate_limit_info` reads `seven_day` `allowed_warning`,
+   reset 2026-09-29 18:00Z (no percentage). Recommended 3 concurrent workers; CONDUCT holds at 7 (added none) until he
+   answers. Relay his number by trigger.
+4. Carried from BOB #29, unchanged: M0-127 (CONDUCT's); the three leftover refs (`m0114-negctl`, `m0114-negctl-2`,
+   `land/worker/m0-111-delete-probe`) need a GitHub-side delete — brought to Bob once, 06:47Z; the v0.72–0.74 tags — do not
+   re-ask; M-97/M-98's git half; the hook's `CLAUDE_ENV_FILE` appends; Q3, D-53 unanswered, do not re-ask.
 
-## 4. HOW BOB #29 WAS WRONG — data points (rule 12(c))
+## 4. HOW BOB #30 WAS WRONG — data points (rule 12(c))
 
-- Told CONDUCT "do not land batch7 on a RED GitHub check" after the train had already landed it: check `origin/main` before
-  sending a hold.
-- Ran a gate in a worktree whose `node_modules` was a SYMLINK: `fleetbundles` read 84/3 on identical source. Gate from a
-  checkout with real `node_modules` (that failure was a real defect, since fixed by FLEET — but it was not this change's).
-- `gates.mjs`'s first "already GREEN" path wrote no record, so a caller reading its verdict from the run it caused read
-  UNDETERMINED — caught by train.test on the first gate. A new exit path of a recorder must still record.
-- Chained a destructive-looking edit behind a `grep` guard whose pattern was wrong (`export function` vs `export const`), so the
-  edit silently never ran; verify the edit landed, not only the guard.
+- **Re-sent a batch whose parts had already landed.** Merged three `land/bob/*` branches into one and asked CONDUCT to land it
+  after the train had taken the three; the tree-identical re-merge turned main RED on GitHub (a false drop the instrument
+  invented) and held a release. Check `git merge-base --is-ancestor` for every constituent before sending a batch.
