@@ -35,7 +35,7 @@
  *   P1  the exactly-once check counts PRESENCE in both files     -> "P1 CATCHES an open id twice in the backlog"
  *   P2  the closed-row check blind to the backlog               -> "P2 CATCHES a closed row in the backlog…"
  *   P3  a `blocked` row in the cache never seen                 -> "P3 CATCHES a `blocked` row in the cache"
- *   P3o (OVER-STRICTNESS) the 8-row limit read as exclusive      -> "...and passes a cache of exactly 8"
+ *   P3o (OVER-STRICTNESS) the CACHE_ROWS limit read as exclusive -> "...and passes a cache of exactly CACHE_ROWS"
  *   P4  MET collapses to RESOLVES (an open row counts as met)   -> "P4 CATCHES a dependency on an OPEN row…"
  *   P4o (OVER-STRICTNESS) an ARCHIVED done row not counted met   -> "P4 (over-strictness) passes … ARCHIVED done row…"
  *   P5  the budget blind to the backlog                         -> "P5 CATCHES a backlog row over 2 KiB"
@@ -195,9 +195,9 @@ const ARMS = [
   { id: "P3", title: "P3 NEVER SEES A `blocked` ROW IN THE CACHE",
     patches: [[LEDGER, "for (const r of c) if (r.state === \"blocked\") P3.push(", "for (const r of c) if (false) P3.push("]],
     mustFail: ["P3 CATCHES a `blocked` row in the cache"] },
-  { id: "P3o", title: "OVER-STRICTNESS — P3 refuses a cache of EXACTLY 8 (the limit read as exclusive)",
+  { id: "P3o", title: "OVER-STRICTNESS — P3 refuses a cache of EXACTLY CACHE_ROWS (the limit read as exclusive)",
     patches: [[LEDGER, "if (c.length > CACHE_ROWS) P3.push(", "if (c.length >= CACHE_ROWS) P3.push("]],
-    mustFail: ["...and passes a cache of exactly 8"] },
+    mustFail: ["...and passes a cache of exactly CACHE_ROWS"] },
   { id: "P4", title: "P4's LIAR — MET collapses to RESOLVES: a dependency on an OPEN row counts as met",
     patches: [[LEDGER, "if (open.length) return { met: false, why:", "if (open.length) return { met: true, why:"]],
     /* FIRST RUN, 2026-09-18: the suite went red on the REFILL assertion but NOT on the P4 one — the P4
