@@ -359,7 +359,35 @@ file from a unit's input set, and condition 2 fails that unit by name.
      a unit always RUN; it does not make its VERDICT depend only on the tree (§3).** `mergecarry`'s historical register
      read the live `origin/main` until M0-130 (2026-09-23): it now reads the merges reachable from `REGISTER_PIN`, a
      commit named with its why in `tools/mergecarry.mjs`, and a planted-ref arm proves the verdict is the same whatever
-     `origin/main` holds; it stays never-cache (it reads history by commit id, and runs plancheck). And a REUSED record
+     `origin/main` holds; it stays never-cache (it reads history by commit id, and runs plancheck).
+     **The other eleven, examined by M0-136 (2026-09-23)** — each suite, and every module it imports, grepped for
+     `spawnSync`/`execFileSync`/`execSync`/`git` and for `origin/`, `coord`, `ls-remote`, `FETCH_HEAD`, a fetch and the
+     clock; and each run with a logging `git` first on PATH, which records every git call, its directory and its
+     arguments. Five read the LIVE `origin/coord` through `tools/coord.mjs` (and `decided`'s and `mintid`'s CLIs FETCHED
+     it: 5 and 31 fetches a run); they now read `coord` at `COORD_PIN`, a commit named with its why in
+     `bio-plane/test/coordpin.mjs`, through the layer's own override (`BIO_COORD_REF`), and each carries a planted-ref
+     arm (`origin/coord` absent, at the pin, at a planted commit whose change the reader sees when read directly: one
+     verdict). **The cost, M0-130's in this form:** a `coord` state file whose shape a lane changes after the pin is
+     judged by no gate unit until the pin moves; the live state is judged where a live read is the purpose (`plancheck`,
+     the coord write's own checks). Each of the eleven carries a dated line at its site saying what it reads.
+
+     | unit | what it reads (measured) | verdict |
+     | --- | --- | --- |
+     | `decided` | `origin/coord` via `fresh()`/`scan()` and its CLI (which fetched); the state half at `STATE_PIN` | PINNED (`COORD_PIN`; `STATE_PIN` now a full id) |
+     | `mintid` | `origin/coord` (floors, register sweep; its CLI fetched); `git diff origin/main...HEAD` in one arm | PINNED; the arm's `--base` is now `HEAD` |
+     | `op-claims` | `origin/coord` via its one `fresh()`; HEAD's tree and index | PINNED |
+     | `owed` | `origin/coord` (§6's live-estate walk) | PINNED |
+     | `readbudget` | `origin/coord` (the `*-NEXT.md` handoffs) | PINNED |
+     | `retirable` | the REAL CLI: this machine's `worktree list` and this checkout's `ls-remote origin` (network); no asserted row used either | READS NONE of this checkout: the CLI now runs from a copy in a fixture with its own `origin` |
+     | `migrate-released` | `git show` at 18 commit ids named in the suite | READS NONE (pinned ids) |
+     | `register-grammar` | `0ca7640^2`, and HEAD's tree and index | READS NONE; the abbreviated id is now full |
+     | `owed-controls` | HEAD's own history (`log -1 %cs`, via `coverage.mjs`), HEAD's tree and index | HEAD-ONLY |
+     | `status` | HEAD's own history (`log -1 %as`, via `corpuscheck.mjs`), `ls-files` | HEAD-ONLY |
+     | `coverage` | HEAD's own history (`log -1 %cs`, printed and never gated), HEAD's tree and index | HEAD-ONLY |
+
+     None of the eleven had a live read that was its PURPOSE; all stay never-cache (each reads history by commit id).
+     NEGATIVE CONTROL: `bio-plane/test/coordpin.control.mjs` points each pinned suite back at `origin/coord`, and its
+     planted-ref arm fails by name. And a REUSED record
      never answers for a never-cached unit: with the per-unit record on, §2d's tree-keyed GREEN shortcut is not taken,
      and a RERUN of what failed also runs every never-cached unit. The train's own tree-keyed reuse (M0-122's
      `recordedGreen`) was not changed here; M0-131 made it run every never-cached unit (§2).

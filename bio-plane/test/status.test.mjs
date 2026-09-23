@@ -1,5 +1,13 @@
 /* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git log -1 (the last commit's date), which no
-   result key can name; traced 2026-09-23. */
+   result key can name; traced 2026-09-23.
+   READS NO LIVE REF — M0-136, 2026-09-23. What it reads: HEAD's OWN history — `git log -1 --format=%as -- <doc>` for
+   each governed document (`tools/corpuscheck.mjs`, run by `pushguard.mjs` `corpusCheck`: a Status date the body moved
+   past), and `git ls-files` (the marker scan). No `origin/*`, `coord`, `FETCH_HEAD`, `ls-remote` or fetch: `pushguard.mjs`
+   names `coord` only for a push of that ref, which no arm here drives. HOW CHECKED: this file and the modules it imports
+   (`./stdio.mjs`, `./sandbox.mjs`, `tools/status.mjs`, `tools/pushguard.mjs`, and `tools/corpuscheck.mjs`, which the
+   guard spawns) grepped for `spawnSync`/`execFileSync`/`execSync`/`git` and those ref tokens; and the suite run with a
+   logging `git` first on PATH: 53 calls, those. The CLOCK: `status.mjs --write` stamps today's date, and §7 runs it only
+   on a fixture whose map carries no Status date; no arm compares a date to the clock. */
 /* status — the single source of truth for what is BUILT (`tools/status.mjs`,
  * `docs/architecture/construct-status.json`).
  *

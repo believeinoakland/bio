@@ -1,5 +1,11 @@
 /* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git ls-tree/show of pinned historical commits, which no
-   result key can name; traced 2026-09-23. */
+   result key can name; traced 2026-09-23. M0-136 (2026-09-23): it no longer reads the LIVE `origin/coord` — the coord state
+   is read at `COORD_PIN` (`./coordpin.mjs`, named there with its why and its cost), and a planted-ref arm below proves the
+   verdict identical whatever `origin/coord` holds.
+   NEGATIVE CONTROL (M0-136, RUN 2026-09-23 by the M0-136 worker): `node bio-plane/test/coordpin.control.mjs op-claims` —
+   this suite pointed back at the live `origin/coord` (arm L1, one line after the pin's import) -> exactly two FAILs,
+   "…reads the PINNED coord commit, never a ref name" and "…is IDENTICAL whatever origin/coord holds", 39 pass / 2 fail, exit 1;
+   the pin spelled out in the suite instead (S0, over-strictness) PASSES; each restored, sha256 and `cmp` identical. */
 /* NEGATIVE CONTROL (D-302, run 2026-09-10, worktree agent-abe820d46ab667b7d): THE FIFTH
    FLOOR'S ARM, and it is the one this suite's own residual existed for. `node
    test/walkfloor.control.mjs phantom` plants an UNCOMMITTED file carrying a TRUE routing
@@ -109,6 +115,7 @@ import { LEDGER, LEDGER_MAIN } from "../scripts/op-claims-ledger.mjs";
 import { isMovedPath } from "../../tools/statepaths.mjs";   /* M0-121: the predicate's walk-free home; coord.mjs re-exports it */
 import { stripComments } from "../scripts/walkfloor.mjs";
 import { fresh } from "../../tools/decided.mjs";   /* M0-99: the ruling index's ONE freshness call */
+import { plantedCoord, assertPlanted, REPO as PIN_REPO } from "./coordpin.mjs";   /* M0-136: coord read at a PINNED commit */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 
@@ -482,6 +489,15 @@ t("the walk reaches bio-plane source, bio-plane tests, docs/development, the "
    [...rels].some((r) => r.startsWith("newgroup/")),
    rels.has("civicos-ui/app.html")],
   [true, true, true, true, true, true, true, true]);
+
+console.log("M0-136: the coord reads are at the PINNED commit, and the verdict does not move with origin/coord");
+{
+  /* This suite's one coord read is the `fresh()` call above: it renders the ruling index from the corpus, state half included, which until M0-136 was the LIVE `origin/coord`. The probe is what `fresh()` renders; the planted commit empties CLAIMS.md, which moves it when read. */
+  const p = plantedCoord({
+    probe: `const { createHash } = await import("node:crypto");\nconst { scan, render } = await import(${JSON.stringify(PIN_REPO + "/tools/decided.mjs")});\nconst reg = []; const rows = scan(undefined, undefined, { sink: reg });\nconsole.log(JSON.stringify({ rows: rows.length, register: reg.length, index: createHash("sha256").update(render(rows, reg)).digest("hex").slice(0, 16) }));`,
+    plant: { "docs/development/CLAIMS.md": "planted by M0-136: a CLAIMS.md with no rulings\n" } });
+  assertPlanted(t, "op-claims", p);
+}
 
 console.log(`\nop-claims: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

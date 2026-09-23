@@ -1,6 +1,14 @@
 #!/usr/bin/env node
 /* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git log -1 (the last commit's date), which no
-   result key can name; traced 2026-09-23. */
+   result key can name; traced 2026-09-23.
+   READS NO LIVE REF — M0-136, 2026-09-23. What it reads: HEAD's OWN history — `git log -1 --format=%cs -- <suite>` per
+   suite (the STALENESS distribution, printed and never gated; see `lastCommitDate`) — and HEAD's tree and index through
+   `./provenance.mjs` (`ls-tree -r HEAD`, `ls-files`, `rev-parse --short HEAD`). No `origin/*`, `coord`, `FETCH_HEAD`,
+   `ls-remote` or fetch: the `origin/main` in this file is prose (merge records). HOW CHECKED: this file and its imports
+   (`./control-register.mjs`, `./declared-source.mjs`, `./walkfloor.mjs`, `./op-claims.mjs`, `./provenance.mjs`,
+   `./walkfigure.mjs`, `tools/statepaths.mjs`) grepped for `spawnSync`/`execFileSync`/`git` and those ref tokens — one git
+   site here, one in `provenance.mjs`; and `--strict` run with a logging `git` first on PATH: 254 calls, those. It reads
+   no wall clock (`Date.parse` of two dates the repository holds). */
 /* Coverage, measured in the units this project actually fails in.
  *
  * WHY NOT LINE COVERAGE. 36 of the 38 suites drive the plane through Miniflare,
