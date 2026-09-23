@@ -3967,6 +3967,7 @@ __export(bio_checks_exports, {
   checkInboxGrammar: () => checkInboxGrammar,
   checkInquiryBasis: () => checkInquiryBasis,
   checkLegExtentGrammar: () => checkLegExtentGrammar,
+  checkProjectNameUniqueness: () => checkProjectNameUniqueness,
   civicosUserAgent: () => civicosUserAgent,
   classifyDivergence: () => classifyDivergence,
   completenessFields: () => completenessFields,
@@ -4001,6 +4002,7 @@ __export(bio_checks_exports, {
   parseFrontmatter: () => parseFrontmatter,
   parseSignerTimestamp: () => parseSignerTimestamp,
   parseSshSig: () => parseSshSig,
+  projectNameKey: () => projectNameKey,
   rangeCorners: () => rangeCorners,
   releaseMessage: () => releaseMessage,
   respondsToEdgeFindings: () => respondsToEdgeFindings,
@@ -8545,6 +8547,58 @@ async function checkReleaseSignature(ctx, findings) {
       ));
     }
   }
+}
+function projectNameKey(title) {
+  return String(title ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+function checkProjectNameUniqueness(corpus) {
+  const findings = [];
+  const keyed = [];
+  let projects = 0;
+  for (const input of corpus || []) {
+    const raw = input && input.files && input.files.get ? input.files.get("bundle.md") : void 0;
+    const fm = raw == null ? null : parseFrontmatter(asText(raw)).data;
+    const label = fm && typeof fm.id === "string" && fm.id || input && input.folderName || "(unnamed bundle)";
+    if (!fm) {
+      findings.push(f(
+        "C-77.2",
+        "warning",
+        `${label}: bundle.md is ${raw == null ? "absent" : "unreadable"}, so whether it is a project, and whether its name collides, is UNDETERMINED`,
+        ["hand the corpus with this bundle's bundle.md readable and run the check again"]
+      ));
+      continue;
+    }
+    if (normalizeType(fm.object_type) !== "project") continue;
+    projects++;
+    const key = projectNameKey(fm.title);
+    if (!key) {
+      findings.push(f(
+        "C-77.2",
+        "warning",
+        `${label}: a project with no title cannot be compared for name uniqueness (the write path refuses it NO_TITLE)`,
+        ["give the project a title unique across the instance"]
+      ));
+      continue;
+    }
+    keyed.push({ id: label, title: String(fm.title), state: fm.current_state, key });
+  }
+  for (let i = 0; i < keyed.length; i++) {
+    for (let j = i + 1; j < keyed.length; j++) {
+      const a = keyed[i], b = keyed[j];
+      if (a.key !== b.key) continue;
+      const st = (p) => p.state === void 0 ? "" : ` [${p.state}]`;
+      findings.push(f(
+        "C-77.1",
+        "error",
+        `project names collide: ${a.id} "${a.title}"${st(a)} and ${b.id} "${b.title}"${st(b)} are the same name compared case-insensitively with whitespace collapsed (Membership v2 \xA77.1), which holds across deactivated projects too`,
+        [
+          "rename one of the two projects so each name identifies one project",
+          "if one is deactivated, rename the live one: the deactivated project is still cited by its name"
+        ]
+      ));
+    }
+  }
+  return { pass: !findings.some((x) => x.severity === "error"), findings, projects, judged: keyed.length };
 }
 async function checkBundle(input, opts = {}) {
   const findings = [];
@@ -54745,11 +54799,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       bundleSha: promoted.bundleSha
     };
   }
-  /** The comparison key for 7.1 project name uniqueness, in one place so the
-   *  fork check and any later write-path check cannot disagree about it. */
-  static projectNameKey(title) {
-    return String(title ?? "").trim().toLowerCase().replace(/\s+/g, " ");
-  }
+  /** The comparison key for 7.1 project name uniqueness. D-50: this IS the catalog's `projectNameKey` (the same
+   *  function object, imported, never a copy), so `promote`'s and the fork's NAME_TAKEN and the catalog's C-77
+   *  corpus check cannot disagree about what a collision is. `test/d50-project-names.test.mjs` asserts identity. */
+  static projectNameKey = projectNameKey;
   /* ---- section 8: secure verified export ----
    *
    * Export is the only real answer to a captured root of trust, because a group
