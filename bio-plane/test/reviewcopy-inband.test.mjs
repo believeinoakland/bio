@@ -353,7 +353,11 @@ console.log("\n--- 5. ONE FUNCTION: no second hasher over a manifest or a review
   const asm = idx.slice(idx.indexOf("async function assembleCaseContainer"), idx.indexOf("export default {"));
   t("the container assembly holds no SHA-256 of its own and no serialisation of the manifest of its own",
     [asm.length > 1000, /crypto\.subtle\.digest|sha256Hex\(|JSON\.stringify\(manifest/.test(asm)], [true, false]);
-  const rcSite = idx.slice(idx.indexOf('if (op === "reviewcopy" || op === "reviewcomment")'),
+  /* CONDUCT #18 at c17-batch7 (2026-09-23): the anchor was the whole condition `(op === "reviewcopy" || op ===
+     "reviewcomment")`; D-150 widened that handler to `|| op === "statementack"`, so the exact string vanished, indexOf
+     answered -1 and the slice measured the wrong code. The old anchor was wrong because it pinned the handler's
+     membership, not its start; anchor on the handler's opening prefix instead, which every widening keeps. */
+  const rcSite = idx.slice(idx.indexOf('if (op === "reviewcopy" || op === "reviewcomment"'),
                            idx.indexOf('if (op === "publishedcase" || op === "publishedbytes")'));
   t("the review copy's handler holds no SHA-256 over the answer of its own — its only digest is the secret's "
   + "fingerprint",
