@@ -385,7 +385,12 @@ CREATE TABLE IF NOT EXISTS capture_limits (
 --
 -- stable_since is the last time the sha CHANGED, not the last time it was seen,
 -- because "unchanged for three months" and "not looked at for three months" are
--- different facts and only the first licenses reuse.
+-- different facts. Neither licenses reuse. RECENCY OF FETCH does - last_fetched,
+-- the last time the source was actually seen serving these bytes, within the
+-- freshness window - together with a furniture kind and at least two distinct
+-- PAGES on the host (reuseDecision in subresources.mjs). A stability gate was
+-- measured live in 0.40.0 and reused nothing, so stable_since is a secondary
+-- confidence signal and keeps its own job in nav-change evidence.
 --
 -- The same table answers chrome detection. An address referenced by fifteen of
 -- fifteen captured documents on a host is the site's; one referenced by a single
@@ -409,10 +414,14 @@ CREATE TABLE IF NOT EXISTS site_assets (
 CREATE INDEX IF NOT EXISTS site_assets_host ON site_assets(host);
 CREATE INDEX IF NOT EXISTS site_assets_sha ON site_assets(sha256);
 
--- One row per (asset, document). Gives an exact distinct-document count rather
--- than an incrementing counter that double-counts a re-capture, and it is what
--- makes post-hoc verification possible: when an asset's sha later changes, the
--- documents that REUSED the old bytes are exactly the rows here with reused=1.
+-- One row per (asset, primary capture). It replaces an incrementing counter, and
+-- it is what makes post-hoc verification possible: when an asset's sha later
+-- changes, the captures that REUSED the old bytes are exactly the rows here with
+-- reused=1. primary_sha is the content hash of a CAPTURE, not a page: a page
+-- whose bytes changed between two captures has two rows. So the distinct-document
+-- count joins primary_sha to captured_locators and counts document ADDRESSES
+-- (siteAssets and siteChrome in store.mjs, CAP-13), and a primary with no locator
+-- row is counted apart as undetermined rather than as a page.
 CREATE TABLE IF NOT EXISTS site_asset_refs (
   host         TEXT NOT NULL,
   address_norm TEXT NOT NULL,
@@ -558,6 +567,8 @@ CREATE TABLE IF NOT EXISTS captured_locators (
   PRIMARY KEY (address_norm, capture_sha, via)
 );
 CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
+-- CAP-13: the page count in siteAssets and siteChrome joins on capture_sha.
+CREATE INDEX IF NOT EXISTS captured_locators_sha ON captured_locators(capture_sha);
 -- What the runtime was observed to COST and to ALLOW, measured rather than
 -- assumed. capture_limits holds ceilings found by being refused; this holds
 -- consumption found by measuring, which is a different kind of fact and the only
@@ -16518,7 +16529,9 @@ var REUSABLE_KINDS = /* @__PURE__ */ new Set(["stylesheet", "css-asset", "font",
 function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 1e3, minDocuments = 2 } = {}) {
   if (!known || !known.sha256) return { reuse: false, why: "not_seen_before" };
   if (!REUSABLE_KINDS.has(ref.kind)) return { reuse: false, why: "evidence_is_always_fetched" };
-  if ((known.documents || 0) < minDocuments) return { reuse: false, why: "not_yet_shared_across_documents" };
+  const pages = known.documents || 0;
+  if (pages < minDocuments)
+    return { reuse: false, why: pages + (known.documents_undetermined || 0) >= minDocuments ? "shared_across_documents_undetermined" : "not_yet_shared_across_documents" };
   const seen = Date.parse(known.last_fetched || "");
   if (!Number.isFinite(seen)) return { reuse: false, why: "no_fetch_record" };
   const age = now - seen;
@@ -16764,7 +16777,7 @@ async function captureSubresources({
           reused_from_fetched_at: known.last_fetched,
           reused_stable_since: known.stable_since,
           reused_seen_in_documents: known.documents,
-          detail: `not fetched during this capture: the source was seen serving these exact bytes at ${known.last_fetched}, across ${known.documents} documents on this host, and they are reused from the record rather than requested again`
+          detail: `not fetched during this capture: the source was seen serving these exact bytes at ${known.last_fetched}, across ${known.documents} documents on this host` + (known.documents_undetermined ? ` (and ${known.documents_undetermined} earlier capture${known.documents_undetermined === 1 ? "" : "s"} whose page the record does not name, counted as undetermined)` : "") + `, and they are reused from the record rather than requested again`
         };
         byUrl.set(cls.url, rec2);
         if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec2);
@@ -63582,21 +63595,45 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    * What a host has served
    * ------------------------------------------------------------------ */
   /** Look up assets this host has served before, by normalised address.
-   *  `documents` is counted from the ref rows rather than kept as a counter, so
-   *  re-capturing the same document twice does not inflate it into looking like
-   *  a shared asset when it is one page's own. */
+   *
+   *  `documents` counts distinct PAGES, and a page is the primary's DOCUMENT
+   *  ADDRESS: `captured_locators.address_norm` for `capture_sha = primary_sha`
+   *  (CAP-13, `CAPTURE-SCALING.md` §Job one, reuse condition 3). Until CAP-13 it
+   *  counted distinct primary SHAS, and a primary sha is the content hash of the
+   *  page's bytes, so one page whose bytes changed between two captures read as
+   *  two documents and met the two-document reuse floor on its own. The document
+   *  address is the identity the record already keys a document on (D-96: an
+   *  archive capture and a direct one land on the same locator row), and D-58
+   *  writes it for every capture.
+   *
+   *  A primary with NO locator row (a capture from before D-58, or one whose
+   *  locator write failed inside its swallowing try) cannot say which page it
+   *  was. It is counted apart, as `documents_undetermined` (distinct primary
+   *  shas), and never guessed into `documents`: it may be a page already counted
+   *  or a new one, and the record cannot say which (CLAUDE.md §2). */
   siteAssets({ host, addresses = [] }) {
     if (!host) return { host: null, assets: {} };
     const out = {};
     const want = addresses.length ? new Set(addresses) : null;
+    const counts = /* @__PURE__ */ new Map();
+    for (const c of this.sql.exec(
+      `SELECT r.address_norm AS address_norm,
+              COUNT(DISTINCT cl.address_norm) AS pages,
+              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+         FROM site_asset_refs r
+         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+        WHERE r.host = ? GROUP BY r.address_norm`,
+      host
+    ))
+      counts.set(c.address_norm, c);
     for (const r of this.sql.exec(`SELECT * FROM site_assets WHERE host = ?`, host)) {
       if (want && !want.has(r.address_norm)) continue;
-      const n = [...this.sql.exec(
-        `SELECT COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ? AND address_norm = ?`,
-        host,
-        r.address_norm
-      )][0];
-      out[r.address_norm] = { ...r, documents: n && n.n || 0 };
+      const c = counts.get(r.address_norm);
+      out[r.address_norm] = {
+        ...r,
+        documents: c && c.pages || 0,
+        documents_undetermined: c && c.unlocated || 0
+      };
     }
     return { host, assets: out, count: Object.keys(out).length };
   }
@@ -63809,20 +63846,40 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   }
   /** Chrome by RECURRENCE, which works on sites that never write a <nav>.
    *  A ratio, not a boolean: the threshold is a tuning decision and belongs to
-   *  the caller, so both numbers are returned and nothing is decided here. */
+   *  the caller, so both numbers are returned and nothing is decided here.
+   *
+   *  CAP-13: a document is a PAGE (the primary's `captured_locators.address_norm`),
+   *  exactly as in `siteAssets`, so a page captured often no longer makes its own
+   *  assets read as the site's chrome. Primaries with no page on record are
+   *  reported apart as `documents_undetermined` and enter neither the numerator
+   *  nor the denominator: the share and the verdict rest on determined pages. */
   siteChrome({ host, threshold = 0.6 }) {
-    if (!host) return { host: null, documents: 0, assets: [] };
-    const d = [...this.sql.exec(`SELECT COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ?`, host)][0];
-    const documents = d && d.n || 0;
+    if (!host) return { host: null, documents: 0, documents_undetermined: 0, assets: [] };
+    const d = [...this.sql.exec(
+      `SELECT COUNT(DISTINCT cl.address_norm) AS pages,
+              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+         FROM site_asset_refs r
+         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+        WHERE r.host = ?`,
+      host
+    )][0];
+    const documents = d && d.pages || 0;
+    const undetermined = d && d.unlocated || 0;
     const assets = [];
     for (const r of this.sql.exec(
-      `SELECT address_norm, COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ? GROUP BY address_norm`,
+      `SELECT r.address_norm AS address_norm,
+              COUNT(DISTINCT cl.address_norm) AS pages,
+              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+         FROM site_asset_refs r
+         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+        WHERE r.host = ? GROUP BY r.address_norm`,
       host
     )) {
-      const share = documents ? r.n / documents : 0;
+      const share = documents ? r.pages / documents : 0;
       assets.push({
         address_norm: r.address_norm,
-        documents: r.n,
+        documents: r.pages,
+        documents_undetermined: r.unlocated || 0,
         share,
         chrome: documents >= 3 && share >= threshold
       });
@@ -63831,9 +63888,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     return {
       host,
       documents,
+      documents_undetermined: undetermined,
       threshold,
       assets,
-      note: documents < 3 ? "fewer than three documents captured from this host: recurrence says nothing yet" : "chrome here means the address recurs across at least this share of the host's captured documents"
+      note: (documents < 3 ? "fewer than three documents captured from this host: recurrence says nothing yet" : "chrome here means the address recurs across at least this share of the host's captured documents") + (undetermined ? `; ${undetermined} further capture${undetermined === 1 ? "" : "s"} of this host name no page on record, so which document each was is undetermined and none is counted` : "")
     };
   }
   /* ------------------------------------------------------------------ *
@@ -66448,7 +66506,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
         stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
-        bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
+        /* D-116: THE DO'S OWN BUILD, under a field that is NEVER `version`. `op=bootstrap`'s `version` is the ROUTING
+           isolate's env.VERSION, and this answer is spread AFTER it, so a `version` here would REPLACE that reading
+           rather than stand beside it. `this.env` is the env of the worker version THIS OBJECT is running, which rolls
+           out on its own (D-108); nothing in the request is read for it, so a caller cannot hand it a value to echo.
+           null, never a default: a DO with no VERSION bound cannot say which build it is, and says exactly that. */
+        bootstrap: () => ({
+          ...this.bootstrapState(url.searchParams.get("fp")),
+          storeVersion: typeof this.env?.VERSION === "string" && this.env.VERSION ? this.env.VERSION : null
+        }),
         claim: () => this.claim({ ...body || {}, tokenFp: url.searchParams.get("fp") }),
         /* D-436 / IC-172: the producing group. The seed's `author` is the control plane's stamp, read from the
            query AFTER the body is spread, so a body naming its own recorder is overwritten rather than honoured. */
@@ -69094,6 +69160,43 @@ async function captureRequestArm(env, storeName, body, cls) {
   };
 }
 var storeSilent = (op) => json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
+var FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
+var MEMBER_VERSION_WAIT_MS = 4e3;
+async function memberVersions(env) {
+  const out = {};
+  await Promise.all(FLEET_BINDINGS.map(async ([member, binding]) => {
+    const b = env[binding];
+    if (!b || typeof b.fetch !== "function") {
+      out[member] = { binding, state: "UNBOUND" };
+      return;
+    }
+    let timer;
+    try {
+      const r = await Promise.race([
+        b.fetch(`https://${member}/version`, { method: "GET" }),
+        new Promise((_, no2) => {
+          timer = setTimeout(
+            () => no2(new Error(`no answer within ${MEMBER_VERSION_WAIT_MS} ms`)),
+            MEMBER_VERSION_WAIT_MS
+          );
+        })
+      ]);
+      const j = await r.json().catch(() => null);
+      if (!r.ok || !j || typeof j.version !== "string" || !j.version) {
+        out[member] = { binding, state: "SILENT", why: `answered HTTP ${r.status} without a version` };
+      } else if (j.name !== member) {
+        out[member] = { binding, state: "MISNAMED", name: typeof j.name === "string" ? j.name : null, version: j.version };
+      } else {
+        out[member] = { binding, state: "SERVING", version: j.version };
+      }
+    } catch (e) {
+      out[member] = { binding, state: "SILENT", why: String(e && e.message || e).slice(0, 200) };
+    } finally {
+      clearTimeout(timer);
+    }
+  }));
+  return out;
+}
 var driveRow = (code) => {
   const row = DRIVE_CAPTURE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -70268,13 +70371,17 @@ var index_default = {
       }
       const out = await doAnswer(stub2.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
       if (!out.answered) return storeSilent("bootstrap");
-      return json({
-        ok: true,
-        service: "bio-plane",
-        version: env.VERSION || "0.0.0",
-        bootstrapConfigured: await liveToken(env.ADMIN_TOKEN),
-        ...out.result
-      }, 200);
+      return json(
+        {
+          ok: true,
+          service: "bio-plane",
+          version: env.VERSION || "0.0.0",
+          bootstrapConfigured: await liveToken(env.ADMIN_TOKEN),
+          ...out.result,
+          ...url.searchParams.get("members") === "1" ? { memberVersions: await memberVersions(env) } : {}
+        },
+        200
+      );
     }
     let cls = await classify(url.searchParams.get("token"), env);
     let viaSession = false;

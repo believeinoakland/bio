@@ -149,8 +149,8 @@ are unaffected. Import `digests`/`compare` into monitoring, `op=audit`'s
 duplicate sweep, and `resolveLinks`' bracket arm. Do not grow a second copy.
 Read docprofile; do not change it.
 
-**(5) Close out.** Push, APPENDING to DEBT.md and MEASUREMENTS.md rather than
-rewriting them, prepend a state doc entry naming this thread, and rewrite ONLY
+**(5) Close out.** Push, APPENDING to DEBT.md and filing each figure as its own
+`measurements/<id>.md` (M0-100) rather than rewriting either, prepend a state doc entry naming this thread, and rewrite ONLY
 `docs/development/kickoffs/CAPTURE.md` for the session after.
 
 ## What this thread should know without being told

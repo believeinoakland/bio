@@ -137,6 +137,9 @@ import { ARCHIVE_TARGETS, LEDGERS } from "./ledger.mjs";
    of a corpus goes through the coord layer — the pointer is the switch — or each floor would read the one-line
    pointer and fall to zero, which is the DANGEROUS direction for an allocator (it re-issues ids). */
 import { readState, walkState, isSwitched, freshen } from "./coord.mjs";
+/* M0-100: the measurement and interface-change ledgers are a FROZEN file plus one file per new entry; their corpus is
+   named by the one reader (`tools/entries.mjs` corpus(): the frozen file and the entry directory), never spelled here. */
+import { corpus as entryCorpus } from "./entries.mjs";
 
 /* A corpus file's text as a reader sees it (absolute paths inside the repo are read by their relative path). Throws
    when absent, as `readFileSync` did, so every caller's `missing` bookkeeping is unchanged. */
@@ -166,7 +169,11 @@ function readCorpus(repo, p) {
    (M-57). They stay outside this check, and that is NAMED here rather than scored clean: a
    collision between a live id and one that exists ONLY in the August files is not seen. The
    floors are unaffected (they have always expanded the directory). */
-const allocationCorpus = (corpus) => corpus.flatMap((rel) => (rel === "docs/archive/" ? ARCHIVE_TARGETS : [rel]));
+/* M0-100: any OTHER directory entry (the per-entry ledgers' directories, `entries.mjs`) is expanded to its files, by
+   repo-relative path, so a new entry's `## <NS>-<n> ·` heading is an allocation site like any in the frozen file. Read
+   raw, a directory threw and landed in `missing`: every new entry would have sat outside duplicate detection. */
+const allocationCorpus = (corpus, repo = REPO_ROOT) => corpus.flatMap((rel) => (rel === "docs/archive/" ? ARCHIVE_TARGETS
+  : rel.endsWith("/") && !isAbsolute(rel) ? expandCorpus([rel], repo).map((p) => relative(repo, p).split(sep).join("/")) : [rel]));
 
 export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -296,7 +303,7 @@ export const NAMESPACES = {
          corpus: ["docs/archive/", "docs/development/DECISIONS.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md"], ceiling: 9999,
          allocPattern: () => /^###\s+DEC-(\d+)\s+·/gm, allocIsUnique: true },
   IC: { kind: "prose", what: "interface-change entries",
-        corpus: ["docs/archive/", "docs/development/INTERFACE-CHANGES.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md"], ceiling: 9999,
+        corpus: ["docs/archive/", ...entryCorpus("IC"), "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md"], ceiling: 9999,
         /* `## IC-n ·` opens the entry; the `### IC-n · RESPONSES / RESOLUTION /
            CONFIRM` blocks beneath it are that entry's own sub-sections and are not
            allocations — measured: IC-2 carries four of them. */
@@ -346,7 +353,7 @@ export const NAMESPACES = {
          queue's three-hash item heading is deliberately outside it. `M-8`..`M-24` have no
          queue rows at all, which is why this costs nothing today and is stated anyway. */
   M: { kind: "prose", what: "measurement entries",
-       corpus: ["docs/archive/", "docs/development/MEASUREMENTS.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md"], ceiling: 999,
+       corpus: ["docs/archive/", ...entryCorpus("M"), "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md"], ceiling: 999,
        allocPattern: () => /^##\s+M-(\d+)\s+·/gm, allocIsUnique: true },
 
   /* (ii) prose-referenced — the queue item families, one corpus between them.
@@ -552,7 +559,7 @@ export function allocations(ns, { repo = REPO_ROOT } = {}) {
 
   const sites = [];
   const missing = [];
-  for (const rel of allocationCorpus(spec.corpus)) {
+  for (const rel of allocationCorpus(spec.corpus, repo)) {
     const p = isAbsolute(rel) ? rel : join(repo, rel);
     let src;
     try { src = readCorpus(repo, p); } catch { missing.push(rel); continue; }
@@ -648,7 +655,7 @@ export function collisions({ repo = REPO_ROOT } = {}) {
 export function unregisteredNamespaces({ repo = REPO_ROOT } = {}) {
   const seen = new Map(), where = new Map();
   let read = 0;
-  for (const rel of allocationCorpus(QUEUE_CORPUS)) {
+  for (const rel of allocationCorpus(QUEUE_CORPUS, repo)) {
     let src;
     try { src = readCorpus(repo, rel); } catch { continue; }
     read++;

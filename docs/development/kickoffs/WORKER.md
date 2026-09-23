@@ -236,8 +236,9 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
 - **Never block on Bob.** Ship a provisional and record the decision in the shape
   `kickoffs/README.md` defines: what runs provisionally, why it was ambiguous, the
   alternative, your recommendation, what reversing it costs.
-- **If you change a shape another area builds against**, file the IC row in
-  `INTERFACE-CHANGES.md` with **measured** consumer impact. **CONDUCT takes the version
+- **If you change a shape another area builds against**, file the IC as its own
+  file, `docs/development/interface-changes/<id>.md` (M0-100; a figure likewise goes in
+  `measurements/<id>.md`), with **measured** consumer impact. **CONDUCT takes the version
   bump and the RESOLUTION.**
 
 ## Before you finish

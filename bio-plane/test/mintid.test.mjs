@@ -512,8 +512,13 @@ section("D-243 · TWO THINGS WEARING ONE ID — the half that needs no ledger");
   t("M is now GRADED rather than reported NOT COVERED — the gap four collisions went through",
     m.covered, true);
   t("...over a real set of entry headings rather than an empty read", m.sites.length > 5, true);
-  t("...every one of them in MEASUREMENTS.md, which is where the entries live",
-    m.sites.every((s) => s.file.endsWith("MEASUREMENTS.md")), true);
+  /* CORRECTED 2026-09-23 by M0-100: this read "every one of them in MEASUREMENTS.md, which is where the entries live",
+     true until M0-100 made each NEW measurement its own file (`docs/development/measurements/M-<n>.md`) and the old
+     file frozen history. The property it stood for is that the sites are the ENTRY headings and nothing else, so it
+     now asserts every site is in the frozen file or in an entry file of its own id, on line 1. */
+  t("...every one of them an ENTRY heading: in the frozen MEASUREMENTS.md, or line 1 of its own entry file",
+    m.sites.every((s) => s.file.endsWith("docs/development/MEASUREMENTS.md")
+      || (s.file === `docs/development/measurements/${s.id}.md` && s.line === 1)), true);
   t("...and the live corpus carries no duplicate M allocation today", m.duplicates, []);
   t("...while C stays the one registered namespace that cannot be graded at all",
     collisions().notCovered.map((n) => n.ns), ["C"]);

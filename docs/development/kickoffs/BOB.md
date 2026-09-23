@@ -44,6 +44,10 @@ Bob can answer sends it here, and this session carries it into his conversation.
    repository's sessions, M0-83); archive exactly what it calls RETIRABLE, never a HOLD row. **The standing lanes — CONDUCT,
    BOB, DIST, FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18); the tool protects their newest
    session, so do not archive one by hand on an idle reading.
+   **IN THE CLOUD THE TOOL CANNOT READ THE LISTING** (BOB #30, 2026-09-23): `list_sessions` returns `{ccr:{data:[…]}}`
+   keyed `id`/`session_status` and the tool parses a bare array of `sessionId`/`isRunning`; and no session's container is
+   readable from another, so its worktree half has nothing to judge. Not rowed (no gate time, no product). Sweep by hand:
+   a non-archived row that is not a standing lane's newest is judged by D-398 at `get_session` and its branches on `origin`.
    **THE HEARTBEAT'S OWN RUN-SESSIONS SELF-ARCHIVE ONLY INTERMITTENTLY, SO THIS SWEEP IS LOAD-BEARING RATHER THAN A
    FORMALITY** (measured 2026-09-19 by BOB #17: of 9 `conduct-heartbeat` runs that day, 4 had archived themselves and
    **5 had not**, in no pattern — two consecutive runs differed). They are finished `succeeded` sessions and are safe
@@ -66,7 +70,7 @@ Bob can answer sends it here, and this session carries it into his conversation.
    what runs provisionally, the alternative, the recommendation, what reversing costs. When he answers,
    write `response:` and `decided:` and set it `answered`; CONDUCT enacts. An open decision never blocks
    work — every entry carries a `provisional:` line. An empty file is worth one line.
-6. **Tell CONDUCT you are up**, by `SendMessage`.
+6. **Tell CONDUCT you are up**, by a one-shot `create_trigger` into its session (cloud: `SendMessage` reaches no peer, NEW-MACHINE §0.1).
 
 ## Closing a turn: the handoff is the deliverable
 
@@ -86,7 +90,7 @@ Bob can answer sends it here, and this session carries it into his conversation.
 5. **A row this lane closes leaves the ledger in the same commit**: `node tools/ledger.mjs archive <ID>`.
 
 **What this session may write:** `MILESTONES.md`, the design documents, new or PROVISIONAL entries in
-`INTERFACES.md`, appends to `DEBT.md` and `MEASUREMENTS.md`, the `BOB INBOX`, `DECISIONS.md` answers, the
+`INTERFACES.md`, appends to `DEBT.md`, measurement entries (`measurements/<id>.md`), the `BOB INBOX`, `DECISIONS.md` answers, the
 instruments it owns (`tools/status.mjs`, `owed.mjs`, `retirable.mjs`, `readbudget.mjs`), and any kickoff its
 own change superseded — claimed in `CLAIMS.md` first where another lane might be editing. **Not** the queue
 body below the inbox, and not any area's code.
@@ -236,13 +240,13 @@ which is the only reason the misroute was caught at all — make it a rule, not 
 confirm delivery says so and writes to the record instead, which is the one channel an unattended session can
 still read.
 
-**Spawning a missing area session is this lane's act, and the mechanism is the chip** (Bob, 2026-09-10):
-ensure the area's kickoff exists, then file a `spawn_task` chip whose prompt is a SELF-CONTAINED paste
-block — read `CLAUDE.md`, then the kickoff, fetch, verify state with `node tools/coord.mjs read`, claim before editing —
-and Bob clicks once. A saturating session is replaced the same way: it writes its `<AREA>-NEXT.md` first,
-and the chip refuses to work if that handoff is absent from the remote. **Title a lane's chip EXACTLY `<LANE> #<n>`:**
-the heartbeat's STEP 0 matches that form and nothing else (`retirable.mjs`'s `laneOf` also reads a suffixed title since M0-83) — a task titled `CONDUCT #8
-(BIO) — integrator lane` was invisible to both (BOB #19, 2026-09-21).
+**Spawning a missing or saturated lane's successor is this lane's act, and in the cloud the mechanism is `create_session`**
+(MEASURED 2026-09-23: a session it makes SHOWS in Bob's app — Bob conversed in BOB #29, which BOB #28 created so, and BOB #29
+started CONDUCT #15 and SCHEDULER #15 so; the desktop's `spawn_task` chip and Bob's click are retired with the Mac). Ensure
+the kickoff exists and the saturating lane wrote its `<LANE>-NEXT.md` on `coord` (currency and occupancy checked as above),
+then create the session with a SELF-CONTAINED prompt — read `CLAUDE.md`, then the kickoff, fetch, verify state with
+`node tools/coord.mjs read`, claim before editing — and tell it, by a one-shot `create_trigger`, the ids it must reach.
+**Title it EXACTLY `<LANE> #<n>`:** `retirable.mjs`'s `laneOf` and every peer match that form (BOB #19, 2026-09-21).
 
 **A stand-down is not a retirement.** A stood-down session keeps running and may hold its worktree; its
 successor archives it (above). From the moment a successor exists it owns the checkout: a replaced session
