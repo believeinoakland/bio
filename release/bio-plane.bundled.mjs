@@ -385,7 +385,12 @@ CREATE TABLE IF NOT EXISTS capture_limits (
 --
 -- stable_since is the last time the sha CHANGED, not the last time it was seen,
 -- because "unchanged for three months" and "not looked at for three months" are
--- different facts and only the first licenses reuse.
+-- different facts. Neither licenses reuse. RECENCY OF FETCH does - last_fetched,
+-- the last time the source was actually seen serving these bytes, within the
+-- freshness window - together with a furniture kind and at least two distinct
+-- PAGES on the host (reuseDecision in subresources.mjs). A stability gate was
+-- measured live in 0.40.0 and reused nothing, so stable_since is a secondary
+-- confidence signal and keeps its own job in nav-change evidence.
 --
 -- The same table answers chrome detection. An address referenced by fifteen of
 -- fifteen captured documents on a host is the site's; one referenced by a single
@@ -409,10 +414,14 @@ CREATE TABLE IF NOT EXISTS site_assets (
 CREATE INDEX IF NOT EXISTS site_assets_host ON site_assets(host);
 CREATE INDEX IF NOT EXISTS site_assets_sha ON site_assets(sha256);
 
--- One row per (asset, document). Gives an exact distinct-document count rather
--- than an incrementing counter that double-counts a re-capture, and it is what
--- makes post-hoc verification possible: when an asset's sha later changes, the
--- documents that REUSED the old bytes are exactly the rows here with reused=1.
+-- One row per (asset, primary capture). It replaces an incrementing counter, and
+-- it is what makes post-hoc verification possible: when an asset's sha later
+-- changes, the captures that REUSED the old bytes are exactly the rows here with
+-- reused=1. primary_sha is the content hash of a CAPTURE, not a page: a page
+-- whose bytes changed between two captures has two rows. So the distinct-document
+-- count joins primary_sha to captured_locators and counts document ADDRESSES
+-- (siteAssets and siteChrome in store.mjs, CAP-13), and a primary with no locator
+-- row is counted apart as undetermined rather than as a page.
 CREATE TABLE IF NOT EXISTS site_asset_refs (
   host         TEXT NOT NULL,
   address_norm TEXT NOT NULL,
@@ -558,6 +567,8 @@ CREATE TABLE IF NOT EXISTS captured_locators (
   PRIMARY KEY (address_norm, capture_sha, via)
 );
 CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
+-- CAP-13: the page count in siteAssets and siteChrome joins on capture_sha.
+CREATE INDEX IF NOT EXISTS captured_locators_sha ON captured_locators(capture_sha);
 -- What the runtime was observed to COST and to ALLOW, measured rather than
 -- assumed. capture_limits holds ceilings found by being refused; this holds
 -- consumption found by measuring, which is a different kind of fact and the only
@@ -8858,6 +8869,25 @@ var AI_RUN_CHECKS = {
     /* REC-165 (§11 item 5 rule 1, BOB #25): the run's two productions ask the same gate. */
     where: "src/airun.mjs runPrincipalGate, called from store.mjs aiRunTick/aiRunClose/suggestVersion/extractPropose",
     translation: "Only the person who started this investigation \u2014 or an AI credential they created for it \u2014 can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out."
+  },
+  /* REC-169, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6 — A RUN IS BOUNDED, AND THE BOUND IS RECORDED). The tick
+     wrote `consumed + Number(v)` for any figure, so the run's own principal could REFUND a bound its member set
+     (`surfaces: -1`, and open another question). A figure is a non-negative whole JSON number; the refusal is the
+     whole tick's (or the whole open's, for a seed), and nothing is written. Its own code and not C-22.5's: that one
+     is a CLOSE naming no bound, this is a figure no bound can hold. */
+  AI_RUN_CONSUME_INVALID: {
+    check: "C-22.13",
+    where: "src/airun.mjs checkConsume, called from store.mjs aiRunTick and aiRunOpen",
+    translation: "The investigation reported spending an amount that is not a whole number of zero or more. A budget is only ever used up, one whole step at a time, so nothing was recorded for this step."
+  },
+  /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
+     counted by promote since D-85). WHY ITS OWN CODE: the figure may be perfectly well-formed; what is wrong is WHO
+     is counting. The remedy differs too — the caller sends nothing for these, where C-22.13's caller sends a proper
+     number. A zero claims nothing and is not refused. */
+  AI_RUN_BOUND_PLANE_COUNTED: {
+    check: "C-22.14",
+    where: "src/airun.mjs checkConsume, called from store.mjs aiRunTick and aiRunOpen",
+    translation: "This part of the investigation's budget is counted by the record itself as the work lands \u2014 passages marked citable, questions opened \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
   }
 };
 var AI_RUNS_CONTEXT_CHECKS = {
@@ -16499,7 +16529,9 @@ var REUSABLE_KINDS = /* @__PURE__ */ new Set(["stylesheet", "css-asset", "font",
 function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 1e3, minDocuments = 2 } = {}) {
   if (!known || !known.sha256) return { reuse: false, why: "not_seen_before" };
   if (!REUSABLE_KINDS.has(ref.kind)) return { reuse: false, why: "evidence_is_always_fetched" };
-  if ((known.documents || 0) < minDocuments) return { reuse: false, why: "not_yet_shared_across_documents" };
+  const pages = known.documents || 0;
+  if (pages < minDocuments)
+    return { reuse: false, why: pages + (known.documents_undetermined || 0) >= minDocuments ? "shared_across_documents_undetermined" : "not_yet_shared_across_documents" };
   const seen = Date.parse(known.last_fetched || "");
   if (!Number.isFinite(seen)) return { reuse: false, why: "no_fetch_record" };
   const age = now - seen;
@@ -16745,7 +16777,7 @@ async function captureSubresources({
           reused_from_fetched_at: known.last_fetched,
           reused_stable_since: known.stable_since,
           reused_seen_in_documents: known.documents,
-          detail: `not fetched during this capture: the source was seen serving these exact bytes at ${known.last_fetched}, across ${known.documents} documents on this host, and they are reused from the record rather than requested again`
+          detail: `not fetched during this capture: the source was seen serving these exact bytes at ${known.last_fetched}, across ${known.documents} documents on this host` + (known.documents_undetermined ? ` (and ${known.documents_undetermined} earlier capture${known.documents_undetermined === 1 ? "" : "s"} whose page the record does not name, counted as undetermined)` : "") + `, and they are reused from the record rather than requested again`
         };
         byUrl.set(cls.url, rec2);
         if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec2);
@@ -26445,6 +26477,27 @@ function checkBound(bound) {
     "AI_RUN_BOUND_UNNAMED",
     `'${b || "(absent)"}' names no bound and no ending. Bounds: ${Object.keys(RUN_BOUNDS).join(", ")}; endings: ${Object.keys(RUN_ENDINGS).join(", ")} (\xA714b.6)`
   );
+}
+var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
+function checkConsume(entries, { seed = false } = {}) {
+  for (const [k, v] of Array.isArray(entries) ? entries : []) {
+    const b = String(k);
+    if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) continue;
+    if (seed && v == null) continue;
+    if (!(typeof v === "number" && Number.isSafeInteger(v) && v >= 0))
+      return refusal3(
+        "AI_RUN_CONSUME_INVALID",
+        `'${b}' was given ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)} \u2014 a bound's figure is a whole number of zero or more, and a count never goes down (\xA714b.6). Nothing was written`,
+        { bound: b }
+      );
+    if (v !== 0 && PLANE_COUNTED_BOUNDS.includes(b))
+      return refusal3(
+        "AI_RUN_BOUND_PLANE_COUNTED",
+        `'${b}' is counted by the plane as the run's work lands, never by the caller (\xA711 item 5 rule 2, SK-8), so a figure sent for it could only disagree with the count. Nothing was written`,
+        { bound: b }
+      );
+  }
+  return null;
 }
 var PROJECT_GATE_GROUNDS = {
   /* No member is behind this caller at all — a machine credential. The gate is
@@ -54082,6 +54135,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  endpoint: working material is never consulted, so there is nothing to leak,
    *  exactly as op=verify already works. */
   publishedManifest() {
+    const byCase = this.#frozenPairsByCase();
     return {
       ok: true,
       scope: "published",
@@ -54108,11 +54162,16 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         `SELECT p.bundle_id, p.edition, p.title, p.bundle_sha, p.ratified_at, p.attestor_key,
                 p.gate_version, p.strength, p.required
          FROM published_bundles p ORDER BY p.bundle_id, p.edition`
-      ).map((r) => ({
-        ...r,
-        strength: r.strength ? JSON.parse(r.strength) : null,
-        required: r.required ? JSON.parse(r.required) : null
-      })),
+      ).map((r) => {
+        const row = {
+          ...r,
+          strength: r.strength ? JSON.parse(r.strength) : null,
+          required: r.required ? JSON.parse(r.required) : null
+        };
+        const pinned = byCase.get(`${r.bundle_id}\0${r.bundle_sha}`);
+        if (!pinned || new Set(pinned.map((p) => JSON.stringify(p.strength))).size < 2) return row;
+        return { ...row, strength: null, strengthUndetermined: "CASES_DISAGREE", strengthByCase: pinned };
+      }),
       /* REC-44: the CASES, beside the findings rather than instead of them. The
          findings are what carry a signature and a frozen pair; the case is what
          carries the container's manifest, its own hash and the scope. A
@@ -54161,7 +54220,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       shas: this.#rows(
         `SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`
       ),
-      altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE has a scope, a completeness assertion, a bias acknowledgement, editions and a container; it has no strength, and composing its members' pairs into one letter would be a claim the evidence does not support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET RATIFIED: it has no pair because nothing has been signed for it, which is a state of the record and not a gap in this answer.",
+      altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE has a scope, a completeness assertion, a bias acknowledgement, editions and a container; it has no strength, and composing its members' pairs into one letter would be a claim the evidence does not support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET RATIFIED: it has no pair because nothing has been signed for it, which is a state of the record and not a gap in this answer. Since the frozen pair is stated in each CASE's document (a case's reading of the finding at that hash), a finding several cases pin may carry several pairs: where their documents disagree, `strength` is null, `strengthUndetermined` says CASES_DISAGREE, and `strengthByCase` lists every ratified case edition's own pair, named by its case and edition. None of them is the finding's pair; each is that case's.",
       detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without this instance's cooperation or continued existence. Nothing unpublished appears, by construction: this reads the published projection and never the working corpus."
     };
   }
@@ -55269,6 +55328,43 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       strength: pairs.length === 1 && seen[0].strength.length ? seen[0].strength : null,
       strengthUndetermined: pairs.length > 1
     };
+  }
+  /* REC-170 / BIO_Publication_v0_1.md §3 rule 12 (b): EVERY RATIFIED CASE EDITION'S OWN FROZEN PAIR
+     FOR EVERY PINNED SHA, keyed `bundle_id NUL bundle_sha`, for `publishedManifest`. One set-based read
+     of the pins, then `#caseDocMemberFrozen` (the one parser of the per-case facts) once per case edition
+     that pins a sha SEVERAL editions pin — a sha pinned by one edition has nothing to disagree with, so
+     its document is never opened here. EVERY ratified edition counts, not only a case's latest: each is
+     a separate signed document that stated its own reading of those bytes. A LEGACY (/1) document states
+     no pair of its own (its members carried theirs, rule 12 (e)) and is left out rather than read as an
+     empty pair — which is also where this reader is blind: a /1 reading does not join the comparison. */
+  #frozenPairsByCase() {
+    const pins = this.#rows(
+      `SELECT m.case_id, m.edition, m.bundle_id, m.version_sha FROM published_case_members m
+         JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
+        WHERE m.version_sha IS NOT NULL
+        ORDER BY m.bundle_id, m.version_sha, m.case_id, m.edition`
+    );
+    const groups = /* @__PURE__ */ new Map();
+    for (const p of pins) {
+      const k = `${p.bundle_id}\0${p.version_sha}`;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(p);
+    }
+    const docs = /* @__PURE__ */ new Map();
+    const out = /* @__PURE__ */ new Map();
+    for (const [k, ps] of groups) {
+      if (ps.length < 2) continue;
+      const stated = [];
+      for (const p of ps) {
+        const dk = `${p.case_id}\0${Number(p.edition)}`;
+        if (!docs.has(dk)) docs.set(dk, this.#caseDocMemberFrozen(p.case_id, Number(p.edition)));
+        const row = docs.get(dk) ? docs.get(dk).get(p.bundle_id) : null;
+        if (row && row.version_sha === p.version_sha)
+          stated.push({ case_id: p.case_id, edition: Number(p.edition), strength: row.strength });
+      }
+      out.set(k, stated);
+    }
+    return out;
   }
   /* REC-44: what a case edition is, and whether it is COMPLETE. One place, so
      the ratify path (which must know whether to assemble the container) and the
@@ -62428,6 +62524,16 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         translation: badSkill.translation,
         note: badSkill.detail
       };
+    const badSeed = checkConsume((Array.isArray(bounds) ? bounds : []).filter((b) => b && typeof b === "object").map((b) => [String(b.bound), b.consumed]), { seed: true });
+    if (badSeed)
+      return {
+        run,
+        started: false,
+        code: badSeed.code,
+        check: badSeed.check,
+        translation: badSeed.translation,
+        note: badSeed.detail
+      };
     const lensNow = await this.biasManifest({
       scope: String(contextType) === "project" ? "project" : "instance",
       scopeId: String(contextType) === "project" ? String(contextId) : "",
@@ -62487,7 +62593,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           run,
           String(b.bound),
           Number(b.allowed) || 0,
-          Number(b.consumed) || 0,
+          b.consumed == null ? 0 : b.consumed,
+          /* REC-169: judged above */
           b.unit == null ? null : String(b.unit)
         );
       }
@@ -62583,6 +62690,20 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         bound: row.stopped_bound,
         note: "this run has ended; its log is closed and a later tick does not reopen it"
       };
+    const badConsume = checkConsume(Object.entries(consume && typeof consume === "object" ? consume : {}));
+    if (badConsume)
+      return {
+        run,
+        ticked: false,
+        found: true,
+        status: row.status,
+        code: badConsume.code,
+        check: badConsume.check,
+        translation: badConsume.translation,
+        detail: badConsume.detail,
+        bound: badConsume.bound,
+        note: "a run's budget moves only up, by whole numbers, and only on the bounds the caller counts. Nothing was appended and no budget was spent"
+      };
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _Store.AI_RUN_LEASE_MS;
     const refused = [];
     let appended = 0;
@@ -62599,8 +62720,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
           run,
           k,
-          Number(v) || 0,
-          Number(v) || 0
+          v,
+          v
         );
       }
       this.sql.exec(
@@ -63517,21 +63638,45 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    * What a host has served
    * ------------------------------------------------------------------ */
   /** Look up assets this host has served before, by normalised address.
-   *  `documents` is counted from the ref rows rather than kept as a counter, so
-   *  re-capturing the same document twice does not inflate it into looking like
-   *  a shared asset when it is one page's own. */
+   *
+   *  `documents` counts distinct PAGES, and a page is the primary's DOCUMENT
+   *  ADDRESS: `captured_locators.address_norm` for `capture_sha = primary_sha`
+   *  (CAP-13, `CAPTURE-SCALING.md` §Job one, reuse condition 3). Until CAP-13 it
+   *  counted distinct primary SHAS, and a primary sha is the content hash of the
+   *  page's bytes, so one page whose bytes changed between two captures read as
+   *  two documents and met the two-document reuse floor on its own. The document
+   *  address is the identity the record already keys a document on (D-96: an
+   *  archive capture and a direct one land on the same locator row), and D-58
+   *  writes it for every capture.
+   *
+   *  A primary with NO locator row (a capture from before D-58, or one whose
+   *  locator write failed inside its swallowing try) cannot say which page it
+   *  was. It is counted apart, as `documents_undetermined` (distinct primary
+   *  shas), and never guessed into `documents`: it may be a page already counted
+   *  or a new one, and the record cannot say which (CLAUDE.md §2). */
   siteAssets({ host, addresses = [] }) {
     if (!host) return { host: null, assets: {} };
     const out = {};
     const want = addresses.length ? new Set(addresses) : null;
+    const counts = /* @__PURE__ */ new Map();
+    for (const c of this.sql.exec(
+      `SELECT r.address_norm AS address_norm,
+              COUNT(DISTINCT cl.address_norm) AS pages,
+              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+         FROM site_asset_refs r
+         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+        WHERE r.host = ? GROUP BY r.address_norm`,
+      host
+    ))
+      counts.set(c.address_norm, c);
     for (const r of this.sql.exec(`SELECT * FROM site_assets WHERE host = ?`, host)) {
       if (want && !want.has(r.address_norm)) continue;
-      const n = [...this.sql.exec(
-        `SELECT COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ? AND address_norm = ?`,
-        host,
-        r.address_norm
-      )][0];
-      out[r.address_norm] = { ...r, documents: n && n.n || 0 };
+      const c = counts.get(r.address_norm);
+      out[r.address_norm] = {
+        ...r,
+        documents: c && c.pages || 0,
+        documents_undetermined: c && c.unlocated || 0
+      };
     }
     return { host, assets: out, count: Object.keys(out).length };
   }
@@ -63744,20 +63889,40 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   }
   /** Chrome by RECURRENCE, which works on sites that never write a <nav>.
    *  A ratio, not a boolean: the threshold is a tuning decision and belongs to
-   *  the caller, so both numbers are returned and nothing is decided here. */
+   *  the caller, so both numbers are returned and nothing is decided here.
+   *
+   *  CAP-13: a document is a PAGE (the primary's `captured_locators.address_norm`),
+   *  exactly as in `siteAssets`, so a page captured often no longer makes its own
+   *  assets read as the site's chrome. Primaries with no page on record are
+   *  reported apart as `documents_undetermined` and enter neither the numerator
+   *  nor the denominator: the share and the verdict rest on determined pages. */
   siteChrome({ host, threshold = 0.6 }) {
-    if (!host) return { host: null, documents: 0, assets: [] };
-    const d = [...this.sql.exec(`SELECT COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ?`, host)][0];
-    const documents = d && d.n || 0;
+    if (!host) return { host: null, documents: 0, documents_undetermined: 0, assets: [] };
+    const d = [...this.sql.exec(
+      `SELECT COUNT(DISTINCT cl.address_norm) AS pages,
+              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+         FROM site_asset_refs r
+         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+        WHERE r.host = ?`,
+      host
+    )][0];
+    const documents = d && d.pages || 0;
+    const undetermined = d && d.unlocated || 0;
     const assets = [];
     for (const r of this.sql.exec(
-      `SELECT address_norm, COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ? GROUP BY address_norm`,
+      `SELECT r.address_norm AS address_norm,
+              COUNT(DISTINCT cl.address_norm) AS pages,
+              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+         FROM site_asset_refs r
+         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+        WHERE r.host = ? GROUP BY r.address_norm`,
       host
     )) {
-      const share = documents ? r.n / documents : 0;
+      const share = documents ? r.pages / documents : 0;
       assets.push({
         address_norm: r.address_norm,
-        documents: r.n,
+        documents: r.pages,
+        documents_undetermined: r.unlocated || 0,
         share,
         chrome: documents >= 3 && share >= threshold
       });
@@ -63766,9 +63931,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     return {
       host,
       documents,
+      documents_undetermined: undetermined,
       threshold,
       assets,
-      note: documents < 3 ? "fewer than three documents captured from this host: recurrence says nothing yet" : "chrome here means the address recurs across at least this share of the host's captured documents"
+      note: (documents < 3 ? "fewer than three documents captured from this host: recurrence says nothing yet" : "chrome here means the address recurs across at least this share of the host's captured documents") + (undetermined ? `; ${undetermined} further capture${undetermined === 1 ? "" : "s"} of this host name no page on record, so which document each was is undetermined and none is counted` : "")
     };
   }
   /* ------------------------------------------------------------------ *
@@ -66383,7 +66549,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
         stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
-        bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
+        /* D-116: THE DO'S OWN BUILD, under a field that is NEVER `version`. `op=bootstrap`'s `version` is the ROUTING
+           isolate's env.VERSION, and this answer is spread AFTER it, so a `version` here would REPLACE that reading
+           rather than stand beside it. `this.env` is the env of the worker version THIS OBJECT is running, which rolls
+           out on its own (D-108); nothing in the request is read for it, so a caller cannot hand it a value to echo.
+           null, never a default: a DO with no VERSION bound cannot say which build it is, and says exactly that. */
+        bootstrap: () => ({
+          ...this.bootstrapState(url.searchParams.get("fp")),
+          storeVersion: typeof this.env?.VERSION === "string" && this.env.VERSION ? this.env.VERSION : null
+        }),
         claim: () => this.claim({ ...body || {}, tokenFp: url.searchParams.get("fp") }),
         /* D-436 / IC-172: the producing group. The seed's `author` is the control plane's stamp, read from the
            query AFTER the body is spread, so a body naming its own recorder is overwritten rather than honoured. */
@@ -69029,6 +69203,43 @@ async function captureRequestArm(env, storeName, body, cls) {
   };
 }
 var storeSilent = (op) => json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
+var FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
+var MEMBER_VERSION_WAIT_MS = 4e3;
+async function memberVersions(env) {
+  const out = {};
+  await Promise.all(FLEET_BINDINGS.map(async ([member, binding]) => {
+    const b = env[binding];
+    if (!b || typeof b.fetch !== "function") {
+      out[member] = { binding, state: "UNBOUND" };
+      return;
+    }
+    let timer;
+    try {
+      const r = await Promise.race([
+        b.fetch(`https://${member}/version`, { method: "GET" }),
+        new Promise((_, no2) => {
+          timer = setTimeout(
+            () => no2(new Error(`no answer within ${MEMBER_VERSION_WAIT_MS} ms`)),
+            MEMBER_VERSION_WAIT_MS
+          );
+        })
+      ]);
+      const j = await r.json().catch(() => null);
+      if (!r.ok || !j || typeof j.version !== "string" || !j.version) {
+        out[member] = { binding, state: "SILENT", why: `answered HTTP ${r.status} without a version` };
+      } else if (j.name !== member) {
+        out[member] = { binding, state: "MISNAMED", name: typeof j.name === "string" ? j.name : null, version: j.version };
+      } else {
+        out[member] = { binding, state: "SERVING", version: j.version };
+      }
+    } catch (e) {
+      out[member] = { binding, state: "SILENT", why: String(e && e.message || e).slice(0, 200) };
+    } finally {
+      clearTimeout(timer);
+    }
+  }));
+  return out;
+}
 var driveRow = (code) => {
   const row = DRIVE_CAPTURE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -70203,13 +70414,17 @@ var index_default = {
       }
       const out = await doAnswer(stub2.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
       if (!out.answered) return storeSilent("bootstrap");
-      return json({
-        ok: true,
-        service: "bio-plane",
-        version: env.VERSION || "0.0.0",
-        bootstrapConfigured: await liveToken(env.ADMIN_TOKEN),
-        ...out.result
-      }, 200);
+      return json(
+        {
+          ok: true,
+          service: "bio-plane",
+          version: env.VERSION || "0.0.0",
+          bootstrapConfigured: await liveToken(env.ADMIN_TOKEN),
+          ...out.result,
+          ...url.searchParams.get("members") === "1" ? { memberVersions: await memberVersions(env) } : {}
+        },
+        200
+      );
     }
     let cls = await classify(url.searchParams.get("token"), env);
     let viaSession = false;

@@ -16,7 +16,7 @@
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
 
-  "vars": { "VERSION": "0.75.0" },
+  "vars": { "VERSION": "0.76.0" },
 
   // The NARROWEST binding that does the job (fleet rule 3, I6): the private
   // working corpus, and NOTHING else. No PUBLISHED — every Worker holding a
