@@ -1,0 +1,16 @@
+{
+ "unit": "plane:purge.test.mjs",
+ "inputHash": "0beae6fd95d644e1ffb44bb73473d52c1fd25921e6637fd413312bb5fbd62ff6",
+ "verdict": "PASS",
+ "run": "dd85257c326c0b4421eb5ef381a8f3b31c8feb65.1790203240865.7782.json",
+ "tree": "dd85257c326c0b4421eb5ef381a8f3b31c8feb65",
+ "head": "293bb71ad8f3a84bea31f8d81d98b62dcdd36c99",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 130,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "38fd5582-4b18-5bb1-bb13-a2e1a4de98ed",
+ "at": "2026-09-23T22:40:40.879Z"
+}
