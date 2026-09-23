@@ -23,12 +23,12 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-126 · blocked — **EVERY CLONE AND EVERY LANE RE-RUNS SUITES ANOTHER HAS ALREADY PASSED ON IDENTICAL INPUTS: THERE IS NO SHARED, PER-SUITE RESULT RECORD.** A GREEN record is keyed by a whole tree and lives in one clone (D-293); Bob's asks, 2026-09-23: *"track which suites passed so they don't run again, or those that failed so only those run"*, results shared rather than re-run. CONDUCT #14's design, adopted by BOB #29. — owner M0.
-order: FIRST of the backlog (BOB #29): every landing and every lane's gate pays for it, so it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); BLOCKED until `land/bob/gate-rerun-failed` is on `main`, which touches the same files (SCHEDULER #14, 2026-09-23; BOB #29's item)
+### M0-126 · queued — **EVERY CLONE AND EVERY LANE RE-RUNS SUITES ANOTHER HAS ALREADY PASSED ON IDENTICAL INPUTS: THERE IS NO SHARED, PER-SUITE RESULT RECORD.** A GREEN record is keyed by a whole tree and lives in one clone (D-293); Bob's asks, 2026-09-23: *"track which suites passed so they don't run again, or those that failed so only those run"*, results shared rather than re-run. CONDUCT #14's design, adopted by BOB #29. — owner M0.
+order: FIRST of the backlog (BOB #29): every landing and every lane's gate pays for it, so it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); UNBLOCKED 2026-09-23 when `land/bob/gate-rerun-failed` reached `main` (SCHEDULER #14, 2026-09-23; BOB #29's item)
 milestone: M0
 interface: none
 design: `docs/development/TREE-SHARING.md` §3 (the design text lands there on `land/bob/gh-once-per-batch`), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: `land/bob/gate-rerun-failed` on `main` (BOB's branch, the same files); not a plan row, so this row stays `blocked` until it lands.
+depends-on: none — `land/bob/gate-rerun-failed`, which touches the same files, is on `main` (`95c40ed9`, verified by ancestry by SCHEDULER #14, 2026-09-23).
 scope: a record keyed (unit, hash of its inputs: source, sibling control, transitive imports, files read, as `gates.mjs` derives per unit; a plane or fleet unit always includes the FULL runtime set), value PASS with run id and tree, on an append-only branch, one file per key; `gates.mjs` skips a unit whose key holds a PASS and prints REUSED. SAFETY, all three: a suite reading an undeclared input (clock, network, env, live coord) is NEVER-CACHED; a check FAILS when a unit reads a file its key does not cover; a FULL run at every release cut, controls kept.
 accepts-when: a second clone runs 0 suites over a tree whose units a first clone passed, and one input change re-runs exactly the units whose key moved. NEGATIVE CONTROL: drop one input from a unit's hash, and the coverage check fails by name.
 added: 2026-09-23 · SCHEDULER #14 (BOB #29's designed item; `node tools/mintid.mjs M0`).
