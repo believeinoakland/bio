@@ -692,7 +692,7 @@ t("and the owner still reads the draft, now at edition 3 — the copy is MUTABLE
 
 /* =========================================================================== 9
  * REC-198 — THE LIST OF A PROJECT'S DRAFTS, FENCED EXACTLY LIKE READING ONE.
- * BOB #32 (2026-09-23 23:08Z, cite until folded): *"a list read of a project's drafts, fenced exactly like
+ * BOB #32 (2026-09-23 23:08Z; BIO_Publication §3 rule 15 (a)): *"a list read of a project's drafts, fenced exactly like
  * reading one draft (joined participants)"*. Until this, every read of `case_drafts` was keyed by draft_id,
  * so a draft whose id was lost was a lost draft.
  *

@@ -1055,7 +1055,7 @@ const OPS = {
   reviewrevoke:   { classes: ["admin", "member", "probe"],           mutating: true  },
   reviewcopy:     { classes: null,                                   mutating: false },
   reviewcomment:  { classes: null,                                   mutating: true  },
-  /* REC-198 / BOB #32 (2026-09-23 23:08Z, cite until folded): the LIST of a project's drafts, fenced exactly
+  /* REC-198 / BOB #32 (2026-09-23 23:08Z; BIO_Publication §3 rule 15 (a)): the LIST of a project's drafts, fenced exactly
      like reading one draft. GATED, unlike `reviewcopy`: the list has no recipient door — a grant reads ONE
      draft and names it — so only the member door exists here, and a caller holding no credential of this
      instance has no business at it. The fence is the store's `#seesProjectDrafts`, the very predicate the

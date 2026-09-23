@@ -35533,7 +35533,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     if (!d) return null;
     return this.#seesProjectDrafts(d.project_id, viewer) ? d : null;
   }
-  /* REC-198 — THE DRAFT FENCE, AND THERE IS EXACTLY ONE OF IT. BOB #32 (2026-09-23 23:08Z, cite until folded):
+  /* REC-198 — THE DRAFT FENCE, AND THERE IS EXACTLY ONE OF IT. BOB #32 (2026-09-23 23:08Z; BIO_Publication §3 rule 15 (a)):
      the list of a project's drafts is *"fenced exactly like reading one draft"*. So the member door of the
      single read (`#draftForMember`, above) and the list (`caseDraftList`, below) both CALL this predicate; a
      second copy that agreed today is how the two would come apart unnoticed, and `reviewcopy.test.mjs` pins the
@@ -69683,7 +69683,7 @@ var OPS = {
   reviewrevoke: { classes: ["admin", "member", "probe"], mutating: true },
   reviewcopy: { classes: null, mutating: false },
   reviewcomment: { classes: null, mutating: true },
-  /* REC-198 / BOB #32 (2026-09-23 23:08Z, cite until folded): the LIST of a project's drafts, fenced exactly
+  /* REC-198 / BOB #32 (2026-09-23 23:08Z; BIO_Publication §3 rule 15 (a)): the LIST of a project's drafts, fenced exactly
      like reading one draft. GATED, unlike `reviewcopy`: the list has no recipient door — a grant reads ONE
      draft and names it — so only the member door exists here, and a caller holding no credential of this
      instance has no business at it. The fence is the store's `#seesProjectDrafts`, the very predicate the

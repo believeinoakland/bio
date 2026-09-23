@@ -9296,7 +9296,7 @@ export class Store extends DurableObject {
     return this.#seesProjectDrafts(d.project_id, viewer) ? d : null;
   }
 
-  /* REC-198 — THE DRAFT FENCE, AND THERE IS EXACTLY ONE OF IT. BOB #32 (2026-09-23 23:08Z, cite until folded):
+  /* REC-198 — THE DRAFT FENCE, AND THERE IS EXACTLY ONE OF IT. BOB #32 (2026-09-23 23:08Z; BIO_Publication §3 rule 15 (a)):
      the list of a project's drafts is *"fenced exactly like reading one draft"*. So the member door of the
      single read (`#draftForMember`, above) and the list (`caseDraftList`, below) both CALL this predicate; a
      second copy that agreed today is how the two would come apart unnoticed, and `reviewcopy.test.mjs` pins the
