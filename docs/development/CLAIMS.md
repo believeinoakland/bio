@@ -19793,3 +19793,26 @@ paths, BY SITE:
     `construct-status.json` if a text moves.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 UI (M0-132 — the ai-session-wire fixture draws from ranges PROVEN disjoint; no suite builds a snap key from `Math.random`)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for M0-132, worktree `.claude/worktrees/agent-a79c71128123e82b8`,
+branch `land/worker/M0-132`, from `origin/main` @ `d89e04d1` (carries D-286).
+authority: `QUEUE.md` `### M0-132 · running`; design `TREE-SHARING.md` §3 ("A GATE TEST DEPENDS ONLY ON THE CODE") with
+`VERIFICATION.md`; precedent D-286 (`civicos-ui/test/ai-session-fixture.mjs`, M-114).
+paths, BY SITE:
+  - `civicos-ui/test/ai-session-wire.test.mjs`: the fixture draw (`R`, `tag`, the drawn figures, `OTHER_ALLOWED` /
+    `OTHER_CONSUMED`), a NEW ARM D0c beside ARM D0b (D0b itself unchanged), the header's `NEGATIVE CONTROL:` entry.
+  - `civicos-ui/test/ai-session-fixture.mjs`: generic interval-proof / draw helpers EXTRACTED (D-286's exports keep their
+    behaviour) and the wire suite's ranges, derivations, collision predicate and proof ADDED.
+  - the snap-key LINE ONLY (a per-suite counter suffix replaces `Math.random`; one counter declaration beside it) in:
+    `bio-plane/test/action-loop.test.mjs`, `aicredential.test.mjs` (2 sites), `capturerequests.test.mjs`,
+    `caseobject.test.mjs`, `cite-scale.mjs`, `cite.test.mjs`, `dec65-single-part.test.mjs`, `edges.test.mjs`,
+    `fence-e2e.test.mjs`, `grounds.test.mjs`, `independence.test.mjs`, `inquiryground.test.mjs`,
+    `machine-fences.test.mjs`, `shadowed-refusals.test.mjs`, `skillprohibitions.test.mjs`, `suggest.test.mjs`,
+    `versions.test.mjs`, `versionstate.test.mjs`; and `selection.test.mjs` (the same class by the CLOCK: `Date.now()`).
+  - one NEW `docs/development/measurements/M-*.md`.
+**NOT CLAIMED:** the Miniflare/fixture lines REC-171 corrected in those suites (its sites; merged, not edited), anything
+in `bio-plane/src/`, `civicos-ui/app.html`, `ai-session-context.test.mjs`'s arms.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
