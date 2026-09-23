@@ -73,7 +73,11 @@
  * (8) point `tools/plancheck.mjs`'s section 2c at a different module -> the "plancheck
  * actually RUNS the carry check" arm FAILS, which is the arm proving the GATE and not
  * merely the library. That arm grepped plancheck's text in its first draft and a COMMENT
- * satisfied it; it now runs plancheck and reads its report.
+ * satisfied it; it now runs plancheck and reads its report;
+ * (9) make the `carried` classification unreachable (CONDUCT #15, 2026-09-23) -> A1b FAILS by
+ * name (4355bfd's two paths read `dropped` again) and the "no UNREGISTERED historical drop"
+ * arm FAILS, while e241672's real drop stays `dropped` — the proof containment is what
+ * rescues 4355bfd, and that it rescues nothing that was really lost.
  */
 
 /* `sandbox.mjs` FIRST, and `hygiene.test.mjs` is what found it missing rather than a reader:
@@ -104,7 +108,7 @@ const t = (label, got, want) => {
 
 /* The FOOT sentinel. A TypeError inside an assertion goes through no assertion at all and
    ends the module while the tally reads clean; this project has met that. */
-const SECTIONS = 13;
+const SECTIONS = 14; /* 13 -> 14 2026-09-23 (CONDUCT #15): A1b, the `carried` class on the real 4355bfd. */
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -196,6 +200,28 @@ section("A1 — THE REAL 2026-08-08 DROP. This must FAIL, from the real commits.
 }
 
 /* ========================================================================== */
+section("A1b — A MERGE THAT KEPT MAIN'S BYTES, WHICH ALREADY HELD THE BRANCH'S CHANGE: carried, never failed.");
+/* 4355bfd (CONDUCT #15's train, 2026-09-23): BOB #30's re-merge of three branches that had
+   already landed in 8633310c, tree-identical. Before the `carried` class it read DROPPED and
+   turned GitHub run #20 red on main. From the real commits, like A1. */
+{
+  const reachable = spawnSync("git", ["cat-file", "-e", "4355bfd"], { cwd: REPO }).status === 0;
+  t("the real merge 4355bfd is reachable from this worktree", reachable, true);
+  if (reachable) {
+    const r = auditMerge({ repo: REPO, commit: "4355bfd" });
+    const k = (path) => (r.sides[0].candidates.find((c) => c.path === path) || {}).klass;
+    t("4355bfd: TREE-SHARING.md is CARRIED (the branch's change is in main's bytes), not dropped",
+      k("docs/development/TREE-SHARING.md"), "carried");
+    t("4355bfd: kickoffs/BOB.md is CARRIED, not dropped", k("docs/development/kickoffs/BOB.md"), "carried");
+    t("4355bfd: nothing in it counts as dropped", r.counts.dropped, 0);
+  }
+  /* ...and the REAL drop stays one: the branch's change to check-refusal-codes.mjs is NOT in
+     e241672's blob, so containment must not rescue it. */
+  const r2 = auditMerge({ repo: REPO, commit: "e241672" });
+  t("e241672's real drop is NOT carried — containment rescues only a change the merge holds",
+    (r2.sides[0].candidates.find((c) => c.path === "civicos-ui/check-refusal-codes.mjs") || {}).klass, "dropped");
+}
+
 section("A2 — the same shape, built from scratch and driven through real git");
 {
   const r = klasses(droppedRepo());
@@ -397,8 +423,14 @@ section("the historical register, graded in BOTH directions over the REAL corpus
      merge) was found by THIS arm going red on the merged tree - a declared drop whose
      `Dropped-from-branch:` line sat outside git's trailer block and so counted as undeclared,
      pushed before the message could be amended. Registered with its why; the pin stays EXACT. */
-  t("...and the register is the FIVE the sweeps found, not a longer list",
-    KNOWN_HISTORICAL_DROPS.length, 5);
+  /* CORRECTED 2026-09-23 (CONDUCT #15), 5 -> 4, never exempted: the `carried` class (BOB #30's design,
+     GitHub run #20) finds that 95e401b's registered "drop" of bio-plane/dist/bio-plane.bundle.json
+     was never one: the branch's change (bytes 14401 -> 16413, its sha256 line) is IN the merged blob
+     (both added lines present, both removed lines absent; measured at the bytes). This file's own
+     stale-register arm went red on it, which is the arm doing its job; the row came out. The pin
+     stays EXACT. */
+  t("...and the register is the FOUR true drops the sweeps found, not a longer list",
+    KNOWN_HISTORICAL_DROPS.length, 4);
   /* THE FALSE-POSITIVE CLAIM, AS A NUMBER RATHER THAN A PROMISE. Three findings over the
      whole of main's history is what earns this check its place in the gate; a check that
      cried wolf on a tenth of merges would be switched off within a week. */
