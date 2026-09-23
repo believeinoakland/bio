@@ -495,10 +495,18 @@ console.log("\n--- 3. publishing is the CASE RELATION: the finding's lifecycle e
   /* NO TRANSITION IS INVENTED. A state_history entry naming an edge the machine
      does not have fails C-4.2 the moment it is written, and this is the arm that
      proves the act does not write one. */
-  t("and NO state transition to `published` was appended to the document's own history — the record "
-  + "of the act is the Session Log entry and the case relation, both inside the signed bytes",
-    [/to_state: published/.test(md), /Published \|/.test(md),
-     /joined case .* as a member/.test(md)], [false, true, true]);
+  /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted. The first half is
+     CASE-4's and untouched: no transition to `published` is invented. The second half demanded the act's
+     record — a `| Published |` Session Log entry — IN THE FINDING'S BYTES, which was the promotion's
+     receipt. Rule 12 (b): the receipt is the CASE DOCUMENT's history, never the finding's; op=publish
+     writes nothing on a member. So the finding's bytes must carry NO receipt, and the case's own signed
+     document must carry it, naming this member at its pin. */
+  const vDoc = String(rP(await GET(`op=casedocument&token=${VERA}&case=${V_CASE}&edition=1`))?.text || "");
+  t("and NO state transition to `published` was appended to the document's own history, and NO receipt "
+  + "either — the record of the act is the CASE DOCUMENT's Session Log, naming this member at its pin",
+    [/to_state: published/.test(md), /Published \|/.test(md), /joined case .* as a member/.test(md),
+     /\| Case published \|/.test(vDoc), vDoc.includes(`Pinned: ${V_PUB} at ${vE1.findings[0].bundleSha}`)],
+    [false, false, false, true, true]);
   /* THE ACT'S ANSWER agrees with the document. */
   t("and `op=publish`'s own answer reports the RELATION it made and no destination state",
     [vE1.to ?? null, vE1.findings[0].state, vE1.findings[0].case_id, vE1.findings[0].case_edition],

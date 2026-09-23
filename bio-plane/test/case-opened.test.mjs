@@ -351,9 +351,25 @@ t("REC-58: `Store.publishedCase()` calls the producer and PICKS ITS FIELDS — i
    has(publicReturn.text, "ratified_at"),
    has(publicReturn.text, "opened")],
   [true, true, false]);
-t("REC-58: and those are the ONLY two callers in the whole store — a third would be a third way out "
-+ "and is asserted absent rather than assumed",
-  (STORE.match(/#caseEditionState\(/g) || []).length, 3);   /* 1 definition + 2 call sites */
+/* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted: THE COUNT WAS RIGHT
+   ABOUT ITS DAY AND IS WRONG ABOUT THIS ONE. Rule 12 stops op=publish promoting a member, so several cases
+   can pin ONE sha and a case can be COMPLETE the moment its document is ratified. Two INTERNAL callers
+   were added so such a case is ever assembled: `publish()` names every completed case edition that has
+   no sole membership to carry it (`containerCases`), and `ratifyCaseDocument()` hands over the edition
+   its own ratification completed (`completedCase`). Both are Durable Object hops like `case: caseState`,
+   and the two arms after this one pin that the control plane forwards NEITHER — it passes each state to
+   `assembleCaseContainer` (whose manifest is REC-58's fenced pick) and destructures `completedCase` off
+   op=caseratify's answer before the spread. So the pin moves 3 -> 5 AND the reason a new caller is safe
+   is asserted, rather than the count simply being raised. */
+t("REC-58: and those are the ONLY callers in the whole store — the two REC-58 measured plus D-442's two "
++ "internal hops; a fifth call site would be a new way out and is asserted absent rather than assumed",
+  (STORE.match(/#caseEditionState\(/g) || []).length, 5);   /* 1 definition + 4 call sites */
+t("D-442: op=caseratify DESTRUCTURES the store's `completedCase` off its answer before spreading it, so "
++ "the internal state never reaches the wire",
+  /const \{ completedCase, \.\.\.r \} = answered \|\| \{\}/.test(INDEX_SRC), true);
+t("D-442: op=ratify hands `containerCases` to the container assembler and never spreads it",
+  [/for \(const cs of pub\.containerCases\)/.test(INDEX_SRC), /\.\.\.\s*pub\.containerCases/.test(INDEX_SRC)],
+  [true, false]);
 
 console.log("\n--- REC-58 · 4. THE FENCE AT THE CONTROL PLANE ---");
 /* This is where the ruling actually rests. `Store.publish()` hands `opened` to

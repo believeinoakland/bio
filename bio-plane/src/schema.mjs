@@ -1836,6 +1836,30 @@ CREATE TABLE IF NOT EXISTS case_documents (
   ratified_at     TEXT,
   PRIMARY KEY (case_id, edition)
 );
+-- D-442 / BIO_Publication_v0_1.md section 3 rule 12: WHICH CASES EXCLUDED THIS DOCUMENT, projected
+-- from the CASE DOCUMENT. inquiry_exclusions answered it from a FINDING's own completeness_excluded,
+-- which op=publish's promotion wrote there -- and rule 12 stops that promotion, so a case published
+-- under it states its exclusions once, in its document, and nowhere in any member. Without this
+-- projection op=excludedby would silently stop naming every case published after rule 12, which is
+-- a reader left on the old bytes. DERIVED from case_documents.text, re-projected whole for a
+-- (case_id, edition) whenever op=publish authors or re-authors that document, and never touched
+-- after it is signed (the document can no longer change). Kept for EVERY edition: a case that
+-- excluded a document at edition 1 has still excluded it there, whatever edition 2 says.
+-- description and reason are NOT NULL for inquiry_exclusions' own reason. The whole-store purge
+-- clears the rows of every UNRATIFIED document with the document itself (D-113), and keeps a
+-- ratified document's for case_documents' own reason.
+CREATE TABLE IF NOT EXISTS case_exclusions (
+  case_id     TEXT NOT NULL,
+  edition     INTEGER NOT NULL,
+  ord         INTEGER NOT NULL,
+  target_id   TEXT,
+  description TEXT NOT NULL,
+  reason      TEXT NOT NULL,
+  author      TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  PRIMARY KEY (case_id, edition, ord)
+);
+CREATE INDEX IF NOT EXISTS case_exclusions_target ON case_exclusions(target_id);
 -- REC-26 / MACHINE-PROCESSES.md risk 2: the IDEMPOTENCE KEY for the two periodic
 -- consumers that FIRE something (CAP-3's archive-monitor and REC-26's
 -- monitor-cadence). It exists because a retry is not free here: an archive

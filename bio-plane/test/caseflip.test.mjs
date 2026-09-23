@@ -103,6 +103,7 @@ import "./stdio.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
+import { parseFrontmatter } from "../checks/bio-checks.mjs"; /* D-442: the case document's roster row */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync, existsSync } from "node:fs";
@@ -836,9 +837,17 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
      ["case_id:", "case_edition:", "case_project:", "case_findings:", "case_roles:", "case_scope:",
       "bias_acknowledgement:", "required_strength:"].filter((k) => betaBytes.includes(k))],
     [true, []]);
-  t("and what a member's bytes still carry is its OWN edition on its own chain — the conflation the "
-    + "flip removed stays removed, and the case's number is not in these bytes to be confused with it",
-    [/^edition: 1$/m.test(betaBytes), /^case_edition: /m.test(betaBytes)], [true, false]);
+  /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted. This arm demanded
+     `edition: 1` IN THE MEMBER'S BYTES, which was the promotion's stamp; rule 12 stops op=publish writing
+     anything on a member, so a member's own edition is stated once, in the CASE DOCUMENT's roster row
+     beside the pin it numbers. The conflation the flip removed stays removed and is asserted exactly as
+     before (no `case_edition:` in the finding) — and the member's number is now demanded where it lives. */
+  const betaDocRow = (parseFrontmatter(String(rP(await (await anonRaw(`op=casedocument&case=${CASE}&edition=2`))
+    .json())?.text || "")).data?.case_roles || []).find((r) => r && r.target === BETA) || {};
+  t("and a member's OWN edition on its own chain is stated in the case document's roster row, not in its "
+    + "bytes — the conflation the flip removed stays removed, and the case's number is not in the member "
+    + "to be confused with it",
+    [/^edition: /m.test(betaBytes), /^case_edition: /m.test(betaBytes), betaDocRow.edition], [false, false, 1]);
   /* AND THE FACTS ARE WHERE THE ITEM SAYS THEY ARE — asserted positively as well
      as negatively, because an absence alone cannot tell a reader whether the
      facts MOVED or were simply dropped. The document is fetched through the

@@ -7395,9 +7395,27 @@ export class Store extends DurableObject {
        with the first one abandoned. It cannot override the published record:
        the disagreement refusal below runs against `belongs`, which is the
        ratified fact. */
-    const claimedInBytes = [...new Set(prepared
-      .map((p) => (typeof p.fm.case_id === "string" && p.fm.case_id !== "null" ? p.fm.case_id : null))
-      .filter(Boolean))];
+    /* D-442 / BIO_Publication_v0_1.md §3 rule 12: THE PREPARATION IS READ FROM THE CASE DOCUMENT
+       THAT PINS THESE BYTES, and no longer only from the member's frontmatter. The frontmatter pair
+       stopped being written by CASE-5b, and while every publish PROMOTED the member a re-publish in
+       the window found nothing here and minted a fresh case — harmless while the promotion moved the
+       sha, since the abandoned preparation then pinned bytes nobody held. Rule 12 stops the promotion,
+       so the abandoned preparation and the new one would pin the SAME bytes under two identities.
+       `#caseClaimInBytes` is `#caseRelationOf`'s own prepared arm — an UNRATIFIED case document naming
+       this member at its CURRENT sha — consulted here for this block's stated purpose: to land a
+       re-publish on the case this act already prepared. The legacy frontmatter claim is still read. */
+    const preparedClaims = prepared.map((p) => {
+      const legacy = typeof p.fm.case_id === "string" && p.fm.case_id !== "null" ? p.fm.case_id : null;
+      if (legacy) return { case_id: legacy, project: typeof p.fm.case_project === "string"
+        && p.fm.case_project !== "null" ? p.fm.case_project : null };
+      const c = this.#caseClaimInBytes(p.id);
+      if (!c) return null;
+      const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, c.case_id, c.edition);
+      const dfm = d && typeof d.text === "string" ? (parseFrontmatter(d.text).data || {}) : {};
+      return { case_id: c.case_id,
+               project: typeof dfm.case_project === "string" && dfm.case_project !== "null" ? dfm.case_project : null };
+    }).filter(Boolean);
+    const claimedInBytes = [...new Set(preparedClaims.map((c) => c.case_id))];
     /* DEC-49 REGION case-identity-derivation
        ---------------------------------------------------------------------
        NOTE ON THE MARKER ITSELF, because this cost a red guard: the opening
@@ -7642,9 +7660,13 @@ export class Store extends DurableObject {
        the case identity above resolves — one is the record, the other is this
        act's own unratified preparation. */
     const ownedBy = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, theCase);
+    /* D-442: the prepared claim's project comes from the case document that made the claim (see
+       `preparedClaims`), so one project's re-publish never lands on — and overwrites — another
+       project's unsigned preparation over the same bytes: it is refused by name, as it is for a
+       ratified case, and `newCase` is the door. */
     const claimedProject = ownedBy ? ownedBy.project_id
-      : [...new Set(prepared.map((p) => (typeof p.fm.case_project === "string"
-          && p.fm.case_project !== "null" ? p.fm.case_project : null)).filter(Boolean))][0] || null;
+      : [...new Set(preparedClaims.filter((c) => c.case_id === theCase).map((c) => c.project)
+          .filter(Boolean))][0] || null;
     if (claimedProject && claimedProject !== proj)
       return { ok: false, reason: "CASE_BELONGS_TO_ANOTHER_PROJECT", caseId: theCase,
                project: proj, owner: claimedProject, ratified: !!ownedBy,
@@ -7923,6 +7945,11 @@ export class Store extends DurableObject {
        ANSWERS with is what the store actually holds. */
     const docRow = this.#one(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=?`,
                              theCase, edition);
+    /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): op=excludedby FOLLOWS THE EXCLUSIONS INTO THE CASE
+       DOCUMENT. `inquiry_exclusions` projected them off a member's own bytes, where the promotion wrote
+       them; no member carries them now, so this edition's rows are projected off the document AS STORED
+       (read back, for the reason above: the write is conditional on the document being unsigned). */
+    this.#projectCaseExclusions(theCase, edition);
 
     /* CASE-4 / DEC-72: `to: "published"` is gone with the state it named. What
        the act produced is a CASE MEMBERSHIP, which `caseId` and `edition` above
@@ -8658,6 +8685,31 @@ export class Store extends DurableObject {
       out[r.target] = Array.isArray(mfm.basis) ? mfm.basis : [];
     }
     return out;
+  }
+
+  /* D-442 — `case_exclusions`, projected WHOLE for one case edition from its stored document, by the
+     delete-then-insert discipline every projection here takes. A signed document cannot change, so a
+     re-projection of one only rewrites the same rows. */
+  #projectCaseExclusions(caseId, edition) {
+    const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, caseId, Number(edition));
+    this.sql.exec(`DELETE FROM case_exclusions WHERE case_id=? AND edition=?`, caseId, Number(edition));
+    if (!d || typeof d.text !== "string") return;
+    const dfm = parseFrontmatter(d.text).data || {};
+    const comp = dfm.completeness && typeof dfm.completeness === "object" ? dfm.completeness : {};
+    const rows = Array.isArray(dfm.completeness_excluded) ? dfm.completeness_excluded : [];
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || typeof row !== "object") continue;
+      this.sql.exec(
+        `INSERT INTO case_exclusions (case_id,edition,ord,target_id,description,reason,author,at)
+         VALUES (?,?,?,?,?,?,?,?)`,
+        caseId, Number(edition), i,
+        typeof row.target === "string" ? row.target : null,
+        typeof row.description === "string" ? row.description : "",
+        typeof row.reason === "string" ? row.reason : "",
+        typeof comp.author === "string" ? comp.author : "",
+        typeof comp.at === "string" ? comp.at : "");
+    }
   }
 
   /* D-442 / BIO_Publication_v0_1.md §3 rule 12 — WHAT A CASE DOCUMENT STATES ABOUT ONE MEMBER, OR
@@ -27986,6 +28038,10 @@ export class Store extends DurableObject {
            * table covered, and it does NOT read this WHERE clause. The suite
            * that owns this behaviour drives the split instead of asserting it. */
         this.sql.exec(`DELETE FROM case_documents WHERE ratified_at IS NULL`);
+        /* D-442 / D-113: `case_exclusions` is DERIVED from case_documents, so it follows the SAME split —
+           an unratified document's rows go with it, and a ratified one's stay for that document's reason. */
+        this.sql.exec(`DELETE FROM case_exclusions WHERE NOT EXISTS (SELECT 1 FROM case_documents d
+                         WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)`);
         /* REC-126 / D-113: THE REVIEW COPY IS WORKING DATA, all three tables of
            it. A draft is a case nobody has published, its grants read only that
            draft, and its comments are about it — so a whole-store purge reporting
@@ -32279,6 +32335,32 @@ export class Store extends DurableObject {
               b.current_state, b.title
        FROM inquiry_exclusions x JOIN bundles b ON b.bundle_id = x.bundle_id
        WHERE x.target_id=? AND (${gate.sql}) ORDER BY x.bundle_id, x.ord`, targetId, ...gate.args);
+    /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): AND THE CASES WHOSE DOCUMENT STATES THE EXCLUSION —
+       every case published under rule 12, whose members carry no exclusion of their own. ONE indexed
+       lookup on `case_exclusions_target`, never a scan of case documents. Each row is reported in the
+       shape above, once per MEMBER of that case the viewer can see (the member finding is still what a
+       row names, as it always was), with the case and its edition beside it. An UNSIGNED document is
+       working material and answers only to standing in its project (REC-130, `#hasCaseStanding`); a
+       ratified one is public. Legacy members keep answering through the first read (rule 12 (e)). */
+    for (const x of this.#rows(
+      `SELECT x.case_id, x.edition AS case_edition, x.ord, x.description, x.reason, x.author, x.at,
+              d.text, d.ratified_at
+         FROM case_exclusions x JOIN case_documents d ON d.case_id = x.case_id AND d.edition = x.edition
+        WHERE x.target_id=? ORDER BY x.case_id, x.edition, x.ord`, targetId)) {
+      if (!x.ratified_at && !this.#hasCaseStanding({ case_id: x.case_id, edition: x.case_edition, text: x.text }, viewer))
+        continue;
+      const dfm = parseFrontmatter(String(x.text || "")).data || {};
+      for (const r of Array.isArray(dfm.case_roles) ? dfm.case_roles : []) {
+        if (!r || typeof r.target !== "string") continue;
+        const b = this.#one(`SELECT b.current_state, b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+                            r.target, ...gate.args);
+        if (!b) continue;
+        rows.push({ bundle_id: r.target, ord: x.ord, edition: Number.isInteger(r.edition) ? r.edition : null,
+                    description: x.description, reason: x.reason, author: x.author, at: x.at,
+                    current_state: b.current_state, title: b.title,
+                    case_id: x.case_id, case_edition: x.case_edition, from: "case_document" });
+      }
+    }
     return { ok: true, targetId, cases: rows,
              detail: "each row is a case that named this document in its completeness exclusions, with the "
                    + "edition the assertion was taken from and the case's current state." };

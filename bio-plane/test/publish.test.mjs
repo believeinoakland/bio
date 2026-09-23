@@ -540,12 +540,24 @@ console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything m
   t("the author and the time are SERVER-stamped, never taken from the caller",
     [ok.completeness.author, /^\d{4}-\d{2}-\d{2}T/.test(ok.completeness.at)], ["pilar", true]);
   const md = await imageOf(INQ_CASE);
-  t("the edition is IN the bytes that will be signed", /^edition: 1$/m.test(md), true);
+  /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted. REC-14's three facts
+     — the edition, the completeness block with the position and its justification, and the canonical
+     heading a person reads — are still demanded IN BYTES THAT WILL BE SIGNED, verbatim. What moved is which
+     bytes: op=publish's promotion wrote them into the FINDING, so one project's prepare moved every other
+     case's pin on it (M-100). Rule 12 states each ONCE in the CASE DOCUMENT (the member's edition in its
+     roster row), and the finding's own bytes carry none of them — asserted beside, because "moved" and
+     "written twice" look the same from the new home alone. */
+  const caseDocEarly = rP(await GET(`op=casedocument&token=${PILAR}&case=${ok.caseId}&edition=${ok.edition}`));
+  const cdText = String(caseDocEarly?.text || "");
+  t("the edition is IN the bytes that will be signed — the case document's roster row for this member — "
+  + "and not in the finding's",
+    [new RegExp(`^  - target: ${INQ_CASE}\n    role: load_bearing\n    version_sha: [0-9a-f]{64}\n    edition: 1$`, "m")
+       .test(cdText), /^edition: /m.test(md)], [true, false]);
   t("the completeness block is in the bytes, with the position and its justification",
-    [/^ {2}statement: /m.test(md), /^ {2}subject_position: sought_and_answered$/m.test(md),
-     /^ {2}subject_justification: /m.test(md)], [true, true, true]);
+    [/^ {2}statement: /m.test(cdText), /^ {2}subject_position: sought_and_answered$/m.test(cdText),
+     /^ {2}subject_justification: /m.test(cdText), /^completeness:$/m.test(md)], [true, true, true, false]);
   t("the canonical heading carries the assertion for a person to read",
-    md.includes("## What This Excludes"), true);
+    [cdText.includes("## What This Excludes"), md.includes("## What This Excludes")], [true, false]);
   /* CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED. REC-47 put the
      acknowledgement in the bytes THE MEMBER signs, *"beside the case scope and
      for the same reason — a stranger holding this one finding must be able to
@@ -593,8 +605,15 @@ console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything m
      "bias_acknowledgement:", "required_strength:"].filter((k) => md.includes(k)), []);
   t("a case with no authored scope is refused BY NAME: scope says what the case is ABOUT, completeness what it left OUT",
     (await publish(PILAR, { ...base, target: INQ_THIN, scope: "" })).reason, "NO_SCOPE");
-  t("R4's division disclosure is RESERVED in the shape now, so it does not change under readers later",
-    [/^division_parent: null$/m.test(md), /^division_siblings: \[\]$/m.test(md)], [true, true]);
+  /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted. REC-16's R4 keys were
+     RESERVED by op=publish's promotion — `division_parent: null`, `division_siblings: []` stamped into every
+     member so the published shape would not change under readers. Rule 12 stops that promotion: publishing
+     writes nothing on a member. What R4 needs survives: a real divided child carries the keys because
+     op=inquirydivide writes them (REC-16 is the producer), and the published graph reads them off the
+     ratified bytes, where an absent key and a reserved null say the same thing (`Store.publishedGraphEdges`).
+     So the arm now asserts the rule: publication stamped NEITHER key into a finding that carried none. */
+  t("R4's division disclosure is NOT stamped by publication — a finding that carried no division keys carries none after op=publish (rule 12)",
+    [/^division_parent:/m.test(md), /^division_siblings:/m.test(md)], [false, false]);
   t("the published document AUDITS CLEAN against the catalog",
     await errorsOf(INQ_CASE, md, undefined, await earnedFor(INQ_CASE)), []);
   /* REC-47: THE ENTRY REQUIREMENT AT THE GATE, not only at the act. The store
@@ -1019,7 +1038,12 @@ console.log("\n--- 6b. a republish that does not increment the edition is refuse
      route left once op=publish stamps the number itself, and exactly the shape
      that would leave a reader who cited "edition 2" unable to say which
      document they read. */
-  const backdated = md.replace(/^edition: 3$/m, "edition: 2");
+  /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted: the member's bytes no
+     longer carry `edition:` (the case document states it), so a hand-written claim of an edition is ADDED to
+     them rather than edited in place. The subject is unchanged: hand-written bytes claiming an edition are
+     refused by name and nothing is overwritten. */
+  const withEdition = (n) => md.replace(/^---\n/, `---\nedition: ${n}\n`);
+  const backdated = withEdition(2);
   await promote(INQ_CASE, backdated, "inquiry", "published", PILAR, await shaOf(INQ_CASE));
   const r = await ratify(INQ_CASE);
   /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
@@ -1031,7 +1055,7 @@ console.log("\n--- 6b. a republish that does not increment the edition is refuse
      EDITION_EXISTS at a PINNED sha in `caseflip`/`multifinding`/`casepin`). */
   t("ratifying different bytes under an edition already published is refused BY NAME (C-58.2: no ratified case pins them)",
     [r.ok, r.reason, r.highest], [false, "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE", undefined]);
-  const backwards = md.replace(/^edition: 3$/m, "edition: 1");
+  const backwards = withEdition(1);
   await promote(INQ_CASE, backwards, "inquiry", "published", PILAR, await shaOf(INQ_CASE));
   const r2 = await ratify(INQ_CASE);
   t("and so is a republish that moves the edition BACKWARDS (C-58.2, for the same reason)",
@@ -1117,10 +1141,30 @@ console.log("\n--- 8. C-9: an exclusion names a document OR says it in prose, an
   t("and it is ONE indexed lookup on target_id, never a scan of every completeness block",
     [/WHERE x\.target_id=\?/.test(method), (method.match(/FROM inquiry_exclusions/g) || []).length], [true, 1]);
   const rows = (await excludedBy(INFO_LEFTOUT)).cases;
-  t("a row NAMING a document is found by its id, carrying the edition it was asserted at",
-    rows.map((r) => [r.bundle_id, r.edition >= 1]), [[INQ_CASE, true]]);
-  t("a prose-only row is NOT reachable by target and is not lost either: it lives in the case's own bytes",
-    (await imageOf(INQ_CASE)).includes("2019 council minutes"), true);
+  /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted. The rows came from the
+     MEMBER's live bytes, re-projected at every promotion, so only the LATEST edition's exclusion was ever
+     askable — the method's own header says hiding an earlier edition's rows would be "the surface deciding what
+     the record forgets", and the member projection did exactly that by construction. Under rule 12 the rows are
+     projected from each CASE DOCUMENT (`case_exclusions`), kept per edition, so every edition that named this
+     document answers — here the two editions whose exclusion list names it — each on the member, with its case. */
+  t("a row NAMING a document is found by its id, carrying the edition it was asserted at — once per case edition that named it",
+    [rows.map((r) => [r.bundle_id, r.edition >= 1]), new Set(rows.map((r) => `${r.case_id}@${r.case_edition}`)).size,
+     rows.every((r) => r.from === "case_document")],
+    [[[INQ_CASE, true], [INQ_CASE, true]], 2, true]);
+  /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted: "the case's own bytes"
+     were the member's, where the promotion wrote the exclusions. Under rule 12 the case's own bytes are its
+     CASE DOCUMENT, and the prose row lives there — and not in the member. */
+  {
+    const eds = (await editionsOf(INQ_CASE)).editions || [];
+    const texts = [];
+    for (const e of eds) for (const c of (e.cases || [])) {
+      const d = rP(await GET(`op=casedocument&case=${encodeURIComponent(c.case_id)}&edition=${c.edition}`));
+      if (d && typeof d.text === "string") texts.push(d.text);
+    }
+    t("a prose-only row is NOT reachable by target and is not lost either: it lives in the case's own bytes",
+      [texts.some((x) => x.includes("2019 council minutes")), (await imageOf(INQ_CASE)).includes("2019 council minutes")],
+      [true, false]);
+  }
 }
 
 /* ================================ 9. the RE-KEY, against a store that already has rows */

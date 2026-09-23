@@ -359,9 +359,17 @@ if (!rat1.ok) throw new Error(`ratify 1: ${JSON.stringify(rat1)}`);
 
 /* The FROZEN pair, read out of the signed bytes once, and compared against
    again at the end of every block. It is the thing that must never move. */
+/* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted: the frozen pair used
+   to be read out of the FINDING's bytes, where op=publish's promotion stamped it. Rule 12 stops that
+   promotion and states the pair ONCE, in the signed CASE DOCUMENT (`case_strength`), which is as
+   immutable as the finding's signed bytes were — so the thing that must never move is read there, off
+   edition 1's document. Every comparison below is unchanged. */
 const frozenPairOf = async (id) => {
-  const fm = parseFrontmatter(await imageOf(id)).data || {};
-  return (fm.published_strength || []).map((a) => [a.axis, a.state, a.grade]);
+  const got = await GET(`op=casedocument&token=mem-rec17&case=${encodeURIComponent(pub1.caseId)}`
+    + `&edition=${pub1.edition}`);
+  const doc = got && typeof got === "object" && "result" in got ? got.result : got;
+  const fm = parseFrontmatter(String(doc?.text || "")).data || {};
+  return (fm.case_strength || []).filter((a) => a && a.target === id).map((a) => [a.axis, a.state, a.grade]);
 };
 const FROZEN_1 = await frozenPairOf(INQ_CASE);
 

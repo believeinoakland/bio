@@ -8570,9 +8570,10 @@ export default {
           deliveredBy,
         }) }));
       if (!out.answered) return storeSilent("caseratify/commit");
-      const { completedCase, ...r } = out.result || {};
-      if (!out.result || !r?.ok)
-        return json({ ok: false, ...(r && r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: out.result }),
+      const answered = out.result;
+      const { completedCase, ...r } = answered || {};
+      if (!answered || !r.ok)
+        return json({ ok: false, ...(r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: answered }),
                       store: storeName, tokenClass: cls }, 409);
       /* D-442 / BIO_Publication_v0_1.md §3 rule 12: a case whose every member was already ratified at
          its pin is COMPLETE at this act, and no op=ratify will come to assemble it — so it is

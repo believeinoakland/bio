@@ -53,6 +53,7 @@ import { readContainer, readPart } from "../src/ooxml.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
+import { parseFrontmatter } from "../checks/bio-checks.mjs"; /* D-442: the case document's roster rows */
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- multifinding ---");
@@ -418,11 +419,20 @@ console.log("\n--- 1. op=publish takes a SET: two findings, one case, one editio
                             "case_project:", "case_edition:", "bias_acknowledgement:",
                             "required_strength:"].filter((k) => md.includes(k))),
     [[], []]);
-  t("what a member's bytes still carry is its OWN edition on its own chain",
-    [/^edition: 1$/m.test(mdA), /^edition: 1$/m.test(mdB)], [true, true]);
-  t("and the completeness assertion is the CASE's — one claim, in the case document and in both members' own frozen copies",
+  /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted. Both arms demanded
+     facts IN THE MEMBERS' BYTES that op=publish's PROMOTION wrote there — each member's own edition, and a
+     frozen copy of the case's completeness claim. Rule 12 stops the promotion (one project's prepare moved
+     another project's pin, M-100) and states each ONCE in the case document. The property this suite is
+     for — the stranger reads the case without contacting this instance, off bytes a member SIGNED — is
+     unchanged; what is corrected is where the bytes are. So: each member's own edition in its roster row,
+     one completeness claim in the case document, and NO copy in either member. */
+  const rolesOf = (parseFrontmatter(doc1.text).data || {}).case_roles || [];
+  const edOf = (id) => (rolesOf.find((r) => r && r.target === id) || {}).edition ?? null;
+  t("a member's OWN edition on its own chain is stated in the case document's roster row, and not in its bytes",
+    [edOf(FIND_A), edOf(FIND_B), /^edition: /m.test(mdA), /^edition: /m.test(mdB)], [1, 1, false, false]);
+  t("and the completeness assertion is the CASE's — ONE claim, in the case document, and no copy in either member",
     [doc1.text.includes(`statement: "${STMT1}"`),
-     mdA.includes(`statement: "${STMT1}"`), mdB.includes(`statement: "${STMT1}"`)], [true, true, true]);
+     mdA.includes(`statement: "${STMT1}"`), mdB.includes(`statement: "${STMT1}"`)], [true, false, false]);
   /* REC-47 / DEC-46 (a): THE ALTITUDE, and this suite is the only place it can
      be asserted, because it is the only one with a case of more than one
      finding. The bias acknowledgement is a CASE claim: ONE acknowledgement,
