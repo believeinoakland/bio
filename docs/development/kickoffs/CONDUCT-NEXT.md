@@ -51,6 +51,12 @@ BOB #30 `session_019unCkzAzfmAPMLVuRNPvui` · SCHEDULER #16 `session_01UZaSR1KRW
   a 24-suite never-cached run took 1388 s. The next spawn runs as ONE separate cloud session (create_session, own container,
   pushes land/worker/<ID>, triggers CONDUCT); if its wall time beats local, the rest of the queue goes that way. Report the
   trial's wall time to BOB.
+- **ONE FULL GATE PER TRAIN** (BOB #30 on Bob's ruling, 18:08Z 2026-09-23). A worker runs ONLY the suites its row names (its new or
+  changed suite, the named negative control, plancheck) through the battery by name, and does NOT run `gates.mjs` FULL before
+  pushing land/* (verified: the push guard accepts land/* with no local GREEN — c16-batch1..5 were pushed ungated). The train's
+  union gate is the one full gate; on a red union name the failing unit from the per-unit record (M0-126) before `--isolate`,
+  return the branch whose diff that unit reads, land the rest. MEASURE after a day: full-gate runs per landed row; red unions
+  and their re-gate minutes. **REFRESH LINE 75%** (auto-compaction fires ~79%; BOB #30, same message).
 
 ## 4. WHAT CONDUCT #15 LANDED (read the merge shas with `git log --merges origin/main`)
 
