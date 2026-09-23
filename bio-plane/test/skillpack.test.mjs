@@ -313,7 +313,15 @@ const run = async () => {
   const SHAPE_DECL = /export const ABSENCE_ANSWER_SHAPE = \[[^\]\n]*\];/g;
   t("ARM B2-shape: the one field-name declaration blanked before the scan is found exactly once",
     (PACK_SRC.match(SHAPE_DECL) || []).length, 1);
-  const found = quotedIn(PACK_SRC.replace(SHAPE_DECL, ""), CORPUS);
+  /* CORRECTED 2026-09-23 (CONDUCT #18 at c17-batch7, for D-182), never exempted: D-182 published `risk_tiers`, a
+     code->text map whose keys are 1, 2, 3 and `undetermined`, so the word "1" became a sourced term — and this arm
+     read the pack's DOCTRINE_EDITION = "1", the edition NUMBER of the pack's own doctrine, as a copied vocabulary.
+     A homonym again, for D-149's reason above. So exactly that ONE declaration — a version string, not any
+     vocabulary's value — is blanked too, and asserted to have ARMED (found once), so it cannot silently widen. */
+  const EDITION_DECL = /export const DOCTRINE_EDITION = "[^"\n]*";/g;
+  t("ARM B2-edition: the one version declaration blanked before the scan is found exactly once",
+    (PACK_SRC.match(EDITION_DECL) || []).length, 1);
+  const found = quotedIn(PACK_SRC.replace(SHAPE_DECL, "").replace(EDITION_DECL, ""), CORPUS);
   console.log(`  corpus: ${CORPUS.length} sourced terms, scanned against ${found.literals} string `
             + `literals in src/skillpack.mjs (comments removed)`);
   console.log(`  what this instrument CANNOT see: a term reproduced in a comment (deliberately — the `
