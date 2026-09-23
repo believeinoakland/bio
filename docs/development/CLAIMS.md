@@ -19932,3 +19932,9 @@ It takes no new placements past 70% and keeps completing c16-batch3 until #16 is
 
 **open as of 2026-09-23**
 **DISCHARGED 2026-09-23 by SCHEDULER #16** (`session_01UZaSR1KRWmADuxBFYk1wY9`, started by BOB #30): the gate read true at `coord` @ `fc234889`; SCHEDULER #15 ARCHIVED 14:49Z under D-398's three conditions (idle; no `scheduler15/*` branch, it committed only to `coord`; handoff `SCHEDULER-NEXT.md` on `coord` @ `16eb86c6`); its hourly wake `trig_011w9xzqmb71sUXKvQeUDK1T` and BOB #30's pending one-shot into it `trig_01G7rDkqeGc2WLL23Vs87G8D` DELETED — #16 takes over c16-batch3's completion; #16's own hourly wake armed.
+
+### REC-177 · RECORD worker of CONDUCT #16 (worktree agent-ad7020ce0605889f4) · 2026-09-23
+paths: bio-plane/src/airun.mjs (`checkConsume`'s allowance arm only), bio-plane/src/store.mjs (`aiRunOpen`'s bounds insert comment/value only), bio-plane/checks/bio-checks.mjs (AI_RUN_CHECKS: one new row, C-22.16, and the C-22 family count), civicos-ui/check-refusal-codes.mjs (floors moved from its own print), bio-plane/test/rec177-allowance.test.mjs and .control.mjs (new), suites that declare a bound with no positive allowance (corrected, never exempted), bio-plane/dist/ (rebuilt), docs/development/interface-changes/ (one new IC), docs/architecture/construct-status.json and INVESTIGATIVE-SESSION.md front matter.
+why: op=airunopen accepts a declared bound with no positive allowed (REC-177, QUEUE.md on coord; INVESTIGATIVE-SESSION.md §14b item 6, BOB #30).
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
