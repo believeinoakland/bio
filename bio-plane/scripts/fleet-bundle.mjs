@@ -51,6 +51,17 @@
  * guard that cries wolf gets switched off, which is the same outcome as not
  * having one.
  *
+ * **The same false stale, one layer down: esbuild writes a module's RESOLVED path,
+ * and by default it resolves SYMLINKS.** Measured 2026-09-23 (BOB #29, reproduced
+ * by FLEET #4): in a worktree whose `node_modules` is a symlink to another
+ * checkout, `pdf-worker` built `// ../../../../../../../home/user/bio/pdf-worker/
+ * node_modules/unpdf/dist/pdfjs.mjs` where the committed bundle has
+ * `// node_modules/unpdf/dist/pdfjs.mjs`, and this guard read 84/3 on identical
+ * source. So `preserveSymlinks` is ON: a module is named by the path it was
+ * reached through, which is the member-relative one on every layout. A real
+ * install has no symlinks, so the committed bytes do not move, and the manifest's
+ * recipe does not record the flag because no layout makes it vary.
+ *
  * ---- WHAT THE MANIFEST IS FOR, AND WHY IT IS NOT DECORATION -----------------
  *
  * The byte-identity arm needs the member's dependencies INSTALLED (unpdf, for
@@ -207,6 +218,7 @@ export function optionsFor(member) {
   const b = member.bundle;
   return {
     absWorkingDir: member.abs,          /* PINNED — see the header. */
+    preserveSymlinks: true,             /* the install LAYOUT never reaches the bytes — see the header. */
     entryPoints: [b.entry],
     outfile: b.outfile,
     bundle: true,

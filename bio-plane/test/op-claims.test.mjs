@@ -104,7 +104,7 @@ import {
    sweeps the whole tree against it. Every other importer of `op-claims.mjs` inherited its 18 named files as inputs to
    `tools/gates.mjs` while reading none of them (why, and the figures: `../scripts/op-claims-ledger.mjs`'s head). */
 import { LEDGER, LEDGER_MAIN } from "../scripts/op-claims-ledger.mjs";
-import { isMovedPath } from "../../tools/coord.mjs";
+import { isMovedPath } from "../../tools/statepaths.mjs";   /* M0-121: the predicate's walk-free home; coord.mjs re-exports it */
 import { stripComments } from "../scripts/walkfloor.mjs";
 import { fresh } from "../../tools/decided.mjs";   /* M0-99: the ruling index's ONE freshness call */
 

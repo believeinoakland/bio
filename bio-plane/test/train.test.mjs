@@ -2,7 +2,9 @@
  * (`tools/pushguard.mjs` `mainArmCheck`). Design: `docs/development/TREE-SHARING.md` §2, ruled by Bob 2026-09-22.
  *
  * ACCEPTS WHEN (the row): two lanes' `land/*` branches land in one train with one gate record, and a lane's direct
- * push to `main` is refused by name.
+ * push to `main` is refused by name. M0-122 (the last two sections): a train whose push is rejected once because `main`
+ * moved lands on the retry with one `--since` gate, not a FULL one; and a tree already recorded GREEN lands with no
+ * gate run of its own.
  *
  * WHY A FIXTURE AND NEVER THIS REPOSITORY: a refusal or a landing arranged against this repository's remote would be
  * a real push to the real `main`. So every arm drives REAL git — a throwaway bare remote in the OS temp dir, three
@@ -35,6 +37,15 @@
  *       ancestry" FAILS; the first landing holds;
  *   (4) the train's trailer dropped from its merges -> "THE TRAIN LANDS BOTH LANES" FAILS — the guard binds the
  *       train too, so the mark is load-bearing; the direct-push refusal holds.
+ *   (5) M0-122 — THE RETRY DROPPED (a push rejected because main moved is final) -> "A TRAIN WHOSE PUSH IS REJECTED
+ *       ONCE LANDS ON THE RETRY" FAILS, and "THE RETRY IS BOUNDED" with it; the train and the reuse arm hold;
+ *   (6) M0-122 — THE REUSE DROPPED (every union gated) -> "A RECORDED-GREEN TREE LANDS WITH NO BATTERY RUN OF ITS OWN"
+ *       FAILS; the train, the retry and "OVER-REUSE CLOSED" hold.
+ *   RUN 2026-09-23 by the M0-122 worker, all six AS DECLARED: baseline 47 pass / 0 fail; failing counts per arm 9, 1, 1,
+ *   16, 7, 2; every restore byte-identical by sha256 and `cmp`, closing 47 / 0, driver 50 pass / 0 fail, pen
+ *   removed. Arm 5 failed exactly the seven assertions of the moved-main section and nothing else; arm 6 exactly the
+ *   two of the recorded-GREEN arm. Arms 1 and 4 now also redden the M0-122 sections' assertions that read the guard's
+ *   mark or need a train to land — the same cascade arm (4) already had, on fixtures of their own.
  *   RUN 2026-09-23 by the M0-111 worker, all four AS DECLARED: baseline 34 pass / 0 fail, each arm alone, every declared
  *   must-stay-green assertion green and the collateral assertion never red; failing counts per arm 7, 1, 1, 12; driver
  *   34 pass / 0 fail, every restore byte-identical by sha256 and `cmp`, closing 34 / 0, pen removed. ARM (4)'s FIRST RUN
@@ -60,7 +71,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 9;
+const SECTIONS = 11;
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -83,8 +94,13 @@ const ident = (root) => {
   git(["config", "commit.gpgsign", "false"], root);
 };
 
+/* M0-122: plancheck's stub also runs the shell script `$TRAIN_FIXTURE_MOVE` names, if it exists, DURING the gate —
+   which is how the moved-main arm moves `main` under a train's gate, exactly when CONDUCT #14's did. */
 const stub = (name) => [
   `import { existsSync } from "node:fs";`,
+  `import { spawnSync } from "node:child_process";`,
+  `const mv = ${JSON.stringify(name)} === "plancheck" && process.env.TRAIN_FIXTURE_MOVE;`,
+  `if (mv && existsSync(mv)) spawnSync("sh", [mv], { stdio: "inherit" });`,
   `const red = ${JSON.stringify(name)} === "plancheck" && existsSync(new URL("../docs/RED.flag", import.meta.url));`,
   `process.exit(red ? 1 : 0);`, ""].join("\n");
 const FILES = {
@@ -131,11 +147,12 @@ const lane = (root, branch, rel, body, msg = `work on ${rel}`) => {
   return { ...p, sha: out1(["rev-parse", "HEAD"], root) };
 };
 const fetchAll = (root) => git(["fetch", "-q", "origin"], root);
-const train = (root, args = []) => {
-  const r = spawnSync(process.execPath, [join(root, "tools/train.mjs"), ...args], { cwd: root, encoding: "utf8" });
+const train = (root, args = [], env = {}) => {
+  const r = spawnSync(process.execPath, [join(root, "tools/train.mjs"), ...args], { cwd: root, encoding: "utf8", env: { ...process.env, ...env } });
   const text = `${r.stdout || ""}${r.stderr || ""}`;
   return { status: r.status, text, summary: (text.match(/^train: (LANDED|NOTHING|RED|PUSH FAILED|REFUSED|STOPPED|GATED)[^\n]*$/m) || [""])[0],
            gates: (text.match(/^=== train · gate:/gm) || []).length,
+           gateLines: [...text.matchAll(/^=== train · gate: ([^\n]*)$/gm)].map((m) => m[1]),
            returned: [...text.matchAll(/^train: RETURNED (\S+)[^\n]*$/gm)].map((m) => m[0]),
            refs: Object.fromEntries([...text.matchAll(/^train: ref (\S+): ([A-Z ]+?) — /gm)].map((m) => [m[1], m[2]])) };
 };
@@ -281,6 +298,104 @@ section("THE STATED LIMIT, DRIVEN — forging all three artifacts by hand PASSES
   const liar = push(L.A, "HEAD:main");
   t("A LIAR WHO FORGES THE TRAILER, THE TRAIN RECORD AND A GREEN GATE RECORD PASSES — the limit is real and stated",
     [liar.status, onRemote(L.remote, "main")], [0, head]);
+}
+
+/* ========================================================================== */
+section("M0-122 · MAIN MOVES UNDER THE GATE — the rejected push is retried with ONE --since gate, bounded");
+/* Its own fixture, so a train this section leaves unlanded (the bound arm) moves nothing any other section reads.
+   `main` is moved by a MOVER clone with no hook installed — standing in for another train landing while this one
+   gates (CONDUCT #14, c5c83dc4) — from inside the gate, through plancheck's stub (`$TRAIN_FIXTURE_MOVE`). */
+{
+  const M = fixture("moved");
+  const mover = join(SANDBOX, "moved-mover");
+  git(["clone", "-q", M.remote, mover], SANDBOX); ident(mover);
+  const script = join(SANDBOX, "moved-move.sh");
+  const moveScript = (oneShot) => writeFileSync(script, ["set -e", `cd "${mover}"`, "git fetch -q origin",
+    "git checkout -q -B mv origin/main", "f=docs/notes/moved-$(date +%s%N).md", "echo \"# main moved\" > \"$f\"",
+    "git add -A", "git commit -q -m \"main moves under the train\"", "git push -q origin HEAD:refs/heads/main",
+    ...(oneShot ? [`rm -f "${script}"`] : []), ""].join("\n"));
+  const readRec = (sha) => {
+    const id = (out1(["log", "-1", "--format=%B", sha], M.remote).match(/^Bio-Train: (\S+)$/m) || [])[1];
+    const f = id ? join(trainDir({ repo: M.C }), `${id}.json`) : "";
+    return { id, rec: f && existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : {} };
+  };
+
+  const m1 = lane(M.A, "land/alpha/m1", "docs/notes/m1.md", "# alpha, landing while main moves\n");
+  const before = onRemote(M.remote, "main");
+  moveScript(true);
+  const r = train(M.C, ["run"], { TRAIN_FIXTURE_MOVE: script });
+  if (r.status !== 0) console.log(r.text.split("\n").slice(-30).join("\n"));
+  const main = onRemote(M.remote, "main");
+  const firstHead = ((r.text.match(/^train: attempt 1\/3 — push of (\S+) REJECTED/m) || [])[1]) || "";
+  t("(the fixture moved main under the gate: the first push was REJECTED, and the move script ran exactly once)",
+    [!!firstHead, /rejected/.test(r.text), existsSync(script)], [true, true, false]);
+  t("A TRAIN WHOSE PUSH IS REJECTED ONCE LANDS ON THE RETRY — exit 0, the lane's tip AND the moved main are ancestors of the remote's main",
+    [r.status, isAncestor(M.remote, m1.sha), main !== before && out1(["rev-list", "--count", `${before}..${main}`], M.remote) !== "0", /^train: attempt 2\/3 — push of \S+ LANDED/m.test(r.text)],
+    [0, true, true, true]);
+  const tree = out1(["rev-parse", `${main}^{tree}`], M.remote);
+  const runs = readRuns({ repo: M.C, tree }).runs;
+  const firstSha = firstHead && out1(["rev-parse", `${firstHead}^{commit}`], M.C);
+  t("...with TWO gate runs in all, the retry's ONE a `--since <the GREEN tip>` gate",
+    [r.gates, /^node tools\/gates\.mjs \(tree/.test(r.gateLines[0] || ""), (r.gateLines[1] || "").startsWith(`node tools/gates.mjs --since ${firstSha} `)], [2, true, true]);
+  t("...and the landed tree's ONE gate record is class SINCE against that tip — NOT a FULL re-run",
+    [runs.length, runs[0] && runs[0].verdict, runs[0] && runs[0].class, runs[0] && runs[0].since && runs[0].since.commit], [1, "GREEN", "SINCE", firstSha]);
+  const { id, rec } = readRec(main);
+  t("...and the pushed commit carries the RETRY's trailer, whose train record names it, its tree, the train it retries, and that gate",
+    [/-retry1$/.test(id || ""), rec.head, rec.tree, !!rec.retryOf && id === `${rec.retryOf}-retry1`, rec.pushed, rec.gate && rec.gate.class, rec.gate && rec.gate.since],
+    [true, main, tree, true, true, "SINCE", firstSha]);
+  t("...and the guard verified the retry's mark on the push, and the landed ref is DELETED, verified from the remote",
+    [/main carries the train's mark \(M0-111\)/.test(r.text), r.refs["land/alpha/m1"], onRemote(M.remote, "land/alpha/m1")], [true, "DELETED", ""]);
+
+  const m2 = lane(M.A, "land/alpha/m2", "docs/notes/m2.md", "# alpha, while main never stops moving\n");
+  moveScript(false);
+  const b = train(M.C, ["run"], { TRAIN_FIXTURE_MOVE: script });
+  rmSync(script, { force: true });
+  t("THE RETRY IS BOUNDED — main moving under EVERY gate stops the train after 3 pushes, said, nothing landed",
+    [b.status !== 0, /^train: attempt 3\/3 — push of \S+ REJECTED/m.test(b.text), /retry bound is spent/.test(b.summary), b.gates, isAncestor(M.remote, m2.sha)],
+    [true, true, true, 3, false]);
+  t("...and each retry's gate is `--since`, never FULL", b.gateLines.slice(1).every((l) => l.startsWith("node tools/gates.mjs --since ")) && b.gateLines.length === 3, true);
+}
+
+/* ========================================================================== */
+section("M0-122 · A TREE ALREADY RECORDED GREEN LANDS WITHOUT A SECOND GATE — and a tree recorded RED is gated");
+/* The lane here is a WORKTREE of the integrator's clone, so its gate writes its D-293 record into the SAME git common
+   dir the train reads — the estate's shape, where every worktree of one clone shares `bio-gates/`. */
+{
+  const R = fixture("reuse");
+  const wt = join(SANDBOX, "reuse-worktree");
+  git(["worktree", "add", "-q", "-b", "wk", wt, "origin/main"], R.C);
+  put(wt, "docs/notes/reuse.md", "# gated by its own lane\n"); commitAll(wt, "a lane's work, gated where it was made");
+  const tip = out1(["rev-parse", "HEAD"], wt), tipTree = out1(["rev-parse", "HEAD^{tree}"], wt);
+  const g = spawnSync(process.execPath, [join(wt, "tools/gates.mjs")], { cwd: wt, encoding: "utf8" });
+  const own = readRuns({ repo: R.C, tree: tipTree }).runs;
+  t("(the lane's own gate recorded its tip's tree GREEN in the clone's common dir)", [g.status, own.length, own[0] && own[0].verdict], [0, 1, "GREEN"]);
+  const p = push(wt, "HEAD:refs/heads/land/alpha/reuse");
+  t("(and its land/* push landed on the remote)", [p.status, onRemote(R.remote, "land/alpha/reuse")], [0, tip]);
+  const r = train(R.C, ["run"]);
+  if (r.status !== 0) console.log(r.text.split("\n").slice(-25).join("\n"));
+  const main = onRemote(R.remote, "main");
+  const runs = readRuns({ repo: R.C, tree: tipTree }).runs;
+  t("A RECORDED-GREEN TREE LANDS WITH NO BATTERY RUN OF ITS OWN — exit 0, landed, no gate run, and still ONE record for the tree",
+    [r.status, isAncestor(R.remote, tip), r.gates, /^=== train · NO GATE RUN: tree \S+ is already recorded GREEN/m.test(r.text), runs.length],
+    [0, true, 0, true, 1]);
+  const id = (out1(["log", "-1", "--format=%B", main], R.remote).match(/^Bio-Train: (\S+)$/m) || [])[1];
+  const rf = id ? join(trainDir({ repo: R.C }), `${id}.json`) : "";
+  const rec = rf && existsSync(rf) ? JSON.parse(readFileSync(rf, "utf8")) : {};
+  t("...the landed tree IS the lane's tip's tree, the train record names the lane's own gate record, and the guard verified the mark",
+    [out1(["rev-parse", `${main}^{tree}`], R.remote), rec.gate && rec.gate.reused, rec.gate && rec.gate.file === (own[0] && own[0].file), rec.pushed, /main carries the train's mark \(M0-111\)/.test(r.text)],
+    [tipTree, true, true, true, true]);
+
+  /* The converse: a tree whose record is RED is gated, never reused. The RED is recorded AFTER the lane's push (the
+     D-293 guard would refuse the push of a RED tree) and names plancheck, which the train's own gate re-runs. */
+  git(["checkout", "-q", "-B", "wk2", "origin/main"], wt);
+  put(wt, "docs/notes/reuse2.md", "# recorded red\n"); commitAll(wt, "a lane whose tree is recorded RED");
+  const t2 = out1(["rev-parse", "HEAD"], wt), t2Tree = out1(["rev-parse", "HEAD^{tree}"], wt);
+  push(wt, "HEAD:refs/heads/land/alpha/reuse2");
+  appendRun({ repo: R.C, run: { tree: t2Tree, verdict: "RED", class: "DOCS", steps: [{ label: "plancheck --local", units: ["plancheck"], ok: false }] } });
+  const r2 = train(R.C, ["run"]);
+  t("OVER-REUSE CLOSED — a tree recorded RED is GATED by the train (one gate run), and lands once that gate is GREEN",
+    [r2.status, r2.gates, /NO GATE RUN/.test(r2.text), isAncestor(R.remote, t2)], [0, 1, false, true]);
+  git(["worktree", "remove", "--force", wt], R.C);
 }
 
 /* ========================================================================== */
