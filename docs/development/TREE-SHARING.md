@@ -440,7 +440,7 @@ Their state is the ledger's, never this file's: `node tools/ledger.mjs find <ID>
   `SCHEDULER.md` step 3 orders the plan by it); *"Never queue a gate behind another lane's"* (`CLAUDE.md` §6); a session
   refreshes past 70% of its context, not 60% (`CLAUDE.md` §4; ruled 2026-09-21, and restated 2026-09-22 as BOB #26
   recorded it: *"the line is 70%, not 60% — refresh less, work more"*). **RAISED TO 80% by Bob 2026-09-23** (*"I can't see a
-  downside to increasing the context limit to 75% or 80% so as to extend session lifetimes"*; `CLAUDE.md` §4).
+  downside to increasing the context limit to 75% or 80% so as to extend session lifetimes"*; `CLAUDE.md` §4). **SET TO 75% by BOB #30 the same day, on a measurement:** the cloud environment sets `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80`, which auto-compacts at ~79% of the context `get_session` reports (BOB #30 compacted at 788,078 of 1,000,000 tokens, 18:01Z, before its 80% line), so an 80% refresh line could never be reached. The refresh line must sit BELOW the compaction point; 75% is the highest that leaves one working turn's margin. Raising the override in the environment's settings would let the line rise with it.
 - **The rows:** M0-99 (`DECIDED.md` untracked, generated on demand; §1), M0-106 (DIST's release gate reuses a tree's
   GREEN record), M0-107 (a timeout reads NOT MEASURED, never a finding), M0-109 (the ledger suite's floor that the debt
   fold tripped), M0-100 (narrowed, §1; BUILT: `ORCHESTRATION.md` rule 3), M0-101 (superseded, §1), M0-114 (change 3, BUILT: §3 "As built"; it was
