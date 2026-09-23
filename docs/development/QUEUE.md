@@ -429,7 +429,7 @@ accepts-when: a leg citing a passage whose address gained a newer capture reads 
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 12; keeps its `D-` id).
 uncut: restored whole from «D-394» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-86 · queued — **A LENS CHANGE LEAVES BIAS DEBT THAT NOTHING RAISES: the comparison is built, its producer is not.** A run records its lens at open (`ai_runs.bias_manifest`) and `aiRunRead` computes whether it has `moved` (`store.mjs`); `queuestate.mjs` registers the `bias-debt` OBLIGATION, and no generator raises one. The `overdue-scan` consumer's comment still says bias debt blocks *"a state transition"*, which DEC-20 superseded (re-read 2026-09-21). — owner RECORD.
+### D-86 · running — SPAWNED 2026-09-23 ~22:45Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-86 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-86 and that session; never conclude queued from the absence alone.
 order: with the M4 product rows, after D-394 and before D-162: it completes a built construct's half, and a new construct follows the rows completing built ones, as D-162's order line says (SCHEDULER #10, 2026-09-21, LED-7)
 milestone: M4
 interface: I3 additive — a queue item kind gains its producer; the integrator mints and classifies the IC.
@@ -440,7 +440,7 @@ accepts-when: adopting a new revision after a run opened raises one item naming 
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-86's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
 uncut: restored whole from «D-86» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-162 · queued — **A CONNECTION RUNS ONLY THROUGH A NAMED THING, SO TWO DOCUMENTS ABOUT ONE IDEA CANNOT BE CONNECTED. RULED BY BOB (2026-09-21): A THEME, DECLARED UNDER A COVER, CARRYING ITS TEST, NEVER A BASIS.** `ENTITY_KINDS` (`affordances.mjs`) holds ten named-entity kinds and no theme, and `bio-plane/src` names no theme (re-measured 2026-09-21). — owner RECORD.
+### D-162 · running — SPAWNED 2026-09-23 ~22:45Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-162 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-162 and that session; never conclude queued from the absence alone.
 order: with the meaning-layer features (M4), where BOB #23 placed it (after the instrument cluster, which Bob's ruling of 2026-09-22 moved behind the product rows — SCHEDULER #12); after D-394, since a NEW construct follows the rows completing built ones (REC-122 finishes D-161; D-394 reads the built chain) (SCHEDULER #9, 2026-09-21)
 milestone: M4
 interface: I3 additive, and I5 for the theme's tables; the integrator mints and classifies the IC.
@@ -451,7 +451,7 @@ accepts-when: a member declares a theme with a test and places two documents sha
 added: 2026-09-21 · SCHEDULER #9 (BOB #23's inbox entry, drained this commit; keeps its `D-` id).
 uncut: restored whole from «D-162» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### CAP-11 · queued — DEC-75 ENACTED, act 3 — the export step's CALIBRATION:
+### CAP-11 · running — SPAWNED 2026-09-23 ~22:45Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER CAP-11 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/CAP-11 and that session; never conclude queued from the absence alone.
 order: runnable since CAP-10 landed (M2 measurement); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) (SCHEDULER, first order audit, 2026-09-18)
 milestone: M2 — a measurement before a letter (CLAUDE.md: measure, do not assume)
 interface: none — a measurement; if the calibration record needs a home in the chain, that is CPDF-13's calibration shape, reused
