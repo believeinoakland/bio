@@ -12607,6 +12607,42 @@ export const PROJECT_AUTHORITY_CHECKS = {
   },
 };
 
+/* REC-149 / C-70 — A DISCOVERABLE PROJECT SHOWS ITS EXISTENCE, NOT ITS DOORS (Membership Architecture
+ * v2 §7, item 7.14, BOB #16 from Bob's ruling of 2026-09-18, *"each project chooses"*). A member who
+ * is outside a DISCOVERABLE project sees its id and name in the directory, and nothing else. Every act
+ * such a member aims at it — other than the request to join — is refused POSITIONALLY with this code,
+ * carrying the project's id and name and NOTHING else. A "does not exist" answer there would be false
+ * about a project the directory has just shown the caller; a HIDDEN project still answers exactly as
+ * one that does not exist (§7.9, REC-138), and this code is never said about one. Minted in ONE region,
+ * `Store#existenceOnly`, which every act's sight check relays. */
+export const PROJECT_VISIBILITY_CHECKS = {
+  PROJECT_SEEN_NOT_A_PARTICIPANT: {
+    check: 'C-70.1',
+    where: 'src/store.mjs #existenceOnly > is-project-existence-only',
+    translation: 'This project can be found, but you are not one of its participants, so you cannot do '
+      + 'that in it or see what is inside it. Nothing was changed. You can ask its owners to add you.',
+  },
+  PROJECT_VISIBILITY_NOT_THE_OWNER: {
+    check: 'C-70.2',
+    where: 'src/store.mjs projectVisibilitySet > is-project-visibility-owner',
+    translation: 'Only an owner of this project can choose whether it can be found. You are not one of '
+      + 'its owners, and seeing a project does not let you direct it — administrators included. '
+      + 'Nothing was changed.',
+  },
+  PROJECT_VISIBILITY_UNKNOWN_SETTING: {
+    check: 'C-70.3',
+    where: 'src/store.mjs projectVisibilitySet > is-project-visibility-owner',
+    translation: 'A project is either discoverable or hidden, and nothing else. Nothing was changed. '
+      + 'Choose one of the two.',
+  },
+  PROJECT_DIRECTORY_NEEDS_A_MEMBER: {
+    check: 'C-70.4',
+    where: 'src/store.mjs projectDirectory > is-project-directory-member',
+    translation: 'The list of projects you can ask to join is for a signed-in member. Sign in as yourself to '
+      + 'see it.',
+  },
+};
+
 /* REC-137 / C-57 — A CASE RATIFICATION'S AUTHORITY IS ITS SIGNATURES, AND THEY MUST INCLUDE AN
  * OWNER OF THE PUBLISHING PROJECT (Membership Architecture v2 §7, the bullet *"A CASE
  * RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18; DEC-72 clause 5:

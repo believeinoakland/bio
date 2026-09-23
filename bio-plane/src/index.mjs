@@ -439,6 +439,13 @@ const OPS = {
      enforces both halves; `by` is stamped server-side below. */
   projectownerrescue:  { classes: ["admin", "member", "probe"], mutating: true  },
   projectparticipants: { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-149 (Membership v2 §7.14): DISCOVERABLE or HIDDEN. The setting is an OWNER's recorded act (the store
+     refuses every other caller, machines included, by C-70.2); its read serves the setting and its history to a
+     caller who can see the project; the directory lists, for a member session, the discoverable projects it is
+     not in (a credential with no member is refused, C-70.4). */
+  projectvisibilityset: { classes: ["admin", "member", "probe"], mutating: true  },
+  projectvisibility:    { classes: ["admin", "member", "probe"], mutating: false },
+  projectdirectory:     { classes: ["admin", "member", "probe"], mutating: false },
   /* The 7.10 arithmetic, computed rather than transcribed, so an interface can
      tell a group what a change would take BEFORE they start one. op=adminarith
      is the same thing for section 4.7, and the two differ at n=2 on purpose. */
@@ -1674,7 +1681,9 @@ const VERSION_ACTIONS = ["versionaccept", "versionreject", "versionconsider",
                          "versionrevert", "versioncurrent", "versionhide"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
                          "projectowneradd", "projectownerremove", "projectfork",
-                         "projectownerrescue"];
+                         "projectownerrescue",
+                         /* REC-149: the owner's §7.14 setting — `by` and `viewer` stamped like every roster act. */
+                         "projectvisibilityset"];
 /* D-136 — THE SECTION 4.7 VOTE AND THE SECTION 4.9 CAPABILITY EDIT, AND THEY ARE
    ONE ARRAY BECAUSE THEY ARE ONE LANDING.
    `BIO_Membership_Architecture_v2.md` §4.7 (BOB #17, 2026-09-19, read at the
@@ -2330,6 +2339,8 @@ const NEEDS = {
   projectowneradd:  null,
   projectownerremove: null,
   projectownerrescue: null,
+  /* REC-149: §7.14's setting is an owner's act over participation-level policy, governed by §7 and not §5. */
+  projectvisibilityset: null,
   /* The one participation op that DOES carry a capability, because a fork
      creates a project. Without this any participant creates projects they were
      not trusted to create, which is create_projects defeated by a button. */
@@ -9883,7 +9894,10 @@ export default {
                                    projects that declared the bar, which is §7.9's reverse-edge
                                    walk arriving by a new door. The VALUE stays whole for every
                                    reader (DEC-17) — only the names are withheld. */
-                                "strengthbarof"];
+                                "strengthbarof",
+                                /* REC-149: the setting's read and the directory decide by the caller's SIGHT
+                                   (Membership v2 §7.14), so both take the stamp; each fails closed without it. */
+                                "projectvisibility", "projectdirectory"];
     /* PL-9: op=meaningrows is the SAME compiler read at meaning grain, so it
        takes op=search's stamp beside op=search rather than joining a list of
        reads that merely name a bundle. Its answer is a CANDIDATE LIST in §14c's
@@ -10000,6 +10014,11 @@ export default {
            gates through the same `#bundleGate` every read here compiles and
            fails closed on an absent stamp, like every op in this list. */
         || op === "biasmanifest"
+        /* REC-149 (Membership v2 §7.14): the two acts that name a project and took no viewer — a bias set adopted
+           into a project's scope, and a review copy's draft under a project. Each asks the stamp ONLY for
+           EXISTENCE (a discoverable project, a member outside it: C-70.1); every other caller's answer is
+           unchanged, because each act's own fence already answers without it. */
+        || op === "biasadopt" || op === "casedraft"
         /* PL-2 / IS-2: the six acts name an inquiry, and make-current also names
            a project. A question the caller was never invited to must refuse
            exactly as an absent one does, so the store gates both through the same
