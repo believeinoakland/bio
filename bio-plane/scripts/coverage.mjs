@@ -1456,7 +1456,8 @@ const REGISTER_FLOOR = {
   /* [REC-172 worker, branch record] 2026-09-23: RE-READ AGAIN on its COMMITTED merge with origin/main b41d1edb (ba1e8251, batch7), `--strict` exit 0 unpiped: `arms 1774/1766 · classified 283/282 · corpus (suites read) 284/283 · GREW by 8 arm(s)`, `floor 245/244 reproducible · GREW by 1` — rec172-bounds.test.mjs's eight arms over batch7's figures. ONE key set. Never added by hand. */
   /* [CONDUCT #16 at batch3's merge: REC-172 over batch1 (M0-126, UI-81, D-389, UI-82) and batch2 (REC-160)] 2026-09-23: RE-READ from `--strict` on the COMMITTED merge 02ec01b3, exit 0 unpiped: `arms 1796/1774 · classified 285/283 · corpus (suites read) 286/284 · GREW by 22 arm(s)`, `floor 247/245 reproducible · GREW by 2`. MOVED to the print: the floor had not been moved at batch1 or batch2 (each GREW, exit 0), so the growth is those items' suites and REC-172's together. */
   /* [CONDUCT #16 at batch3's second merge: REC-173] 2026-09-23: RE-READ from `--strict` on the COMMITTED merge eebe6e62, exit 0 unpiped: `arms 1808/1796 · classified 286/285 · corpus (suites read) 287/286 · GREW by 12 arm(s)`, `floor 248/247 reproducible · GREW by 1` — REC-173's new suite rec173-migration-replay.test.mjs and its control. MOVED to the print. */
-  arms: 1808,
+  /* [CONDUCT #16 at batch3's M0-134 merge] 2026-09-23: RE-READ from `--strict` on the COMMITTED merge, exit 0 unpiped: `arms 1820/1808 · classified 286/286 · corpus (suites read) 287/287 · GREW by 12 arm(s)`, `floor 250/248 reproducible · GREW by 2` — M0-134's hygiene arms and severedhomes' newly reached controls. MOVED to the print. */
+  arms: 1820,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).
   // [CONDUCT #5 at REC-136's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1417/1414 · classified 241/241 · corpus (suites read) 242/242 · GREW by 3`, `floor 204/204 reproducible`, from the print; the branch's own 1410 is replaced, never added.
@@ -1585,7 +1586,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 248,
+  run: 250,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
