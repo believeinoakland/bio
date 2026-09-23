@@ -19442,3 +19442,24 @@ paths, BY SITE:
 **NOT CLAIMED:** `agent-worker/`, `civicos-ui/` (measured, not edited unless a harness reads a new code), `newgroup/`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 UI (UI-80 — a member published under Publication §3 rule 12 shows each case's frozen pair on its working page, and the published case page names the signature that covers the pair)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for UI-80, worktree `.claude/worktrees/agent-aaae161d94604009b`,
+branch `worktree-agent-aaae161d94604009b`, from `origin/main` @ `95c40ed9` (cloud).
+authority: `QUEUE.md` `### UI-80 · running` (read on `origin/coord`); design `BIO_Publication_v0_1.md` §3 rule 12 (b)–(e)
+with DEC-8; IC-179 (I3 consumer); the `DELEGATION 2026-09-23 RECORD (D-442 worker) -> UI` block (the three fixes it names).
+paths, BY SITE:
+  - `civicos-ui/app.html` — ONLY: `inquiryPair` and the new per-case reader beside it (the working inquiry page's ONE seam
+    for the frozen pair); `strengthPanels` (its placeholder and the per-case rendering); `openInquiry`'s one line that reads
+    the pair; `pubSupersessionHtml` (the two sentences naming the signature). NOT any region marker, any `SURFACES` key,
+    `mdFor`, any `meta` object, `GLOSSARY`, the Add form (UI-79's sites), UI-77's `#m-grp`/`#m-idstr` fence, `pubOpen`,
+    `pubList`, or any other `pub*` renderer.
+  - `civicos-ui/test/inquiry-page.test.mjs`, `civicos-ui/test/publishedcase.test.mjs` — corrected at their sites where a
+    sentence moved, with a dated comment; NEW `civicos-ui/test/case-frozen-pair.test.mjs` (+ its `NEGATIVE CONTROL:` line)
+    and its entry in `run.mjs`.
+  - `docs/development/CIVICOS_UI_STATE.md` — one prepended entry; `BIO_Publication_v0_1.md` front matter (rule 12's NOT
+    BUILT reader) and `construct-status.json` if the construct's state moves.
+**NOT CLAIMED:** `bio-plane/**`, `newgroup/**`, `civicos-ui/worker.template.mjs`, any state path on `main`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
