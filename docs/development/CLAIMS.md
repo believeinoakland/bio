@@ -19684,6 +19684,7 @@ paths, BY SITE:
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 amended 2026-09-23: ALSO `bio-plane/test/caseflip.test.mjs` — ONE new assertion beside its stranger's `FINDING_IN_SEVERAL_CASES` arm, naming C-44.2 (coverage --strict requires every catalogued check to be named by a plane assertion; the UI suite is not read by it).
+released: 2026-09-23 — pushed `land/worker/UI-81` @ `8f067649` (verified by `git ls-remote`), gate GREEN · class FULL on tree `823fad3f` (merged onto origin/main `d89e04d1`: 290/290 suites green · 17394 assertions passing; civicos-ui all harnesses green; plancheck --local 0 fail). IC-185 PROPOSED (I3 additive) — its resolution is CONDUCT's. Paths stay reserved until CONDUCT integrates the branch.
 
 ## CLAIM 2026-09-23 DIST (DIST-6 — the installed plane is BOUND to the fleet members installed beside it: PDF_WORKER / OCR_WORKER / AGENT_WORKER on install AND update)
 
