@@ -83,7 +83,7 @@ accepts-when: a calendar that lost a meeting inside its window reads `removed` a
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-65's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-65» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-179 · queued — **ONE CAPTURE, ONE HOME: A SECOND REGISTRATION OF HELD BYTES SILENTLY MOVES THE REGISTER ROW.** `register.capture_sha` is the … (whole text: the cut archive)
+### D-179 · running — SPAWNED 2026-09-23 20:53Z by CONDUCT #17 from the BACKLOG (BOB #31 20:51Z), as a SEPARATE CLOUD SESSION titled WORKER D-179 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-179 and that session; never conclude queued from the absence alone.
 order: directly after D-171, beside D-169 and D-171 as BOB #26 placed it: a silent move of the record's provenance row, CLAUDE.md §2's class (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 1)
 milestone: M7
 interface: I3 — `op=promote` refuses what it accepted; the integrator mints and classifies the IC.
@@ -93,7 +93,7 @@ accepts-when: held bytes promoted under a second bundle are refused and the firs
 added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 1, drained this commit; D-179's DEBT row; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-179» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-128 · queued — **`op=progressiondefine` UPSERTS, SO A GROUP'S EARLIER DECLARED FLOW DISAPPEARS SILENTLY AND A FINDING READ AGAINST IT LOSES ITS** … (whole text: the cut archive)
+### D-128 · running — SPAWNED 2026-09-23 20:53Z by CONDUCT #17 from the BACKLOG (BOB #31 20:51Z), as a SEPARATE CLOUD SESSION titled WORKER D-128 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-128 and that session; never conclude queued from the absence alone.
 order: a correction to built work, directly after the honesty batch (D-169, D-171, D-179): the record keeping less than it held, silently, CLAUDE.md §2's class; BOB #27: *"a correction to built work: `op=progressiondefine` overwrites today"* (SCHEDULER #14, 2026-09-22; BOB #27's inbox entry, item 3)
 milestone: M4
 interface: I3 and I5 — a definition's versions, and the version an instance read and a finding name; the … (whole text: the cut archive)
@@ -113,7 +113,7 @@ accepts-when: a reused part names the capture whose fetch served it, and a later
 added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CAP`).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CAP-14» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-54 · queued — **`bio-plane/wrangler.jsonc` LEAVES `limits.subrequests` UNSET, SO THE PLANE'S SUBREQUEST CEILING IS WHATEVER CLOUDFLARE'S DEFAULT** … (whole text: the cut archive)
+### D-54 · running — SPAWNED 2026-09-23 20:53Z by CONDUCT #17 from the BACKLOG (BOB #31 20:51Z), as a SEPARATE CLOUD SESSION titled WORKER D-54 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-54 and that session; never conclude queued from the absence alone.
 order: with the product rows, after CAP-14: a preventive M7 configuration nothing reads wrong today; D-107, beside which it stood, is DIST's deploy tooling and moved behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*) (SCHEDULER #12; placed by SCHEDULER #7, 2026-09-21, LED-7)
 milestone: M7
 interface: I4 — the plane's deploy configuration; the integrator classifies it.
@@ -123,7 +123,7 @@ accepts-when: the deployed script's settings carry the explicit value, read back
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-54's DEBT row of 2026-07-29, NARROWED at the code; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-54» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### REC-159 · queued — **AN ENROLLED ADMINISTRATOR IS REFUSED §4.9's CUSTODIAL ACTS FROM THEIR OWN SESSION, WITH A SENTENCE THAT IS FALSE OF THEM.** … (whole text: the cut archive)
+### REC-159 · running — SPAWNED 2026-09-23 20:53Z by CONDUCT #17 from the BACKLOG (BOB #31 20:51Z), as a SEPARATE CLOUD SESSION titled WORKER REC-159 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-159 and that session; never conclude queued from the absence alone.
 order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
 milestone: M8
 interface: I3 — four ops gain session reach and three a stamped `by`; the integrator mints and classifies the IC.
@@ -163,7 +163,7 @@ accepts-when: a bearer `apply=1` and a bearer `provenanceroute` are refused by n
 added: 2026-09-21 · SCHEDULER #5 (BOB #20's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-158» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-311 · queued — **`op=affordances` PUBLISHES NOTHING ABOUT SEVEN ROSTER ACTS, AND OFFERS `publish` TO A MACHINE CREDENTIAL THE STORE REFUSES BY** … (whole text: the cut archive)
+### D-311 · running — SPAWNED 2026-09-23 20:53Z by CONDUCT #17 from the BACKLOG (BOB #31 20:51Z), as a SEPARATE CLOUD SESSION titled WORKER D-311 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-311 and that session; never conclude queued from the absence alone.
 order: after REC-158, with the plane's who-may-do-what: an act OFFERED that the store refuses is an overclaim in the pre-flight; the roster half costs narration only (no surface renders one off it) (SCHEDULER #6, 2026-09-21, LED-7 batch 14)
 milestone: M8
 interface: I3 — an addition to the published act set and a narrowing for machine credentials; the integrator mints and classifies the IC.
@@ -173,7 +173,7 @@ accepts-when: each roster act is offered exactly where its store act succeeds, p
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 14; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-311» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-125 · queued — **A MEMBER CANNOT MUTE A FINDING FOR THEMSELVES, SO DEC-10's (b) AND (c) CANNOT REACH THE OVERDUE SUCCESSOR THEY WERE RULED** … (whole text: the cut archive)
+### D-125 · running — SPAWNED 2026-09-23 20:53Z by CONDUCT #17 from the BACKLOG (BOB #31 20:51Z), as a SEPARATE CLOUD SESSION titled WORKER D-125 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-125 and that session; never conclude queued from the absence alone.
 order: last of the M8 corrections, after D-82: DEC-10's ruled act is missing rather than anything claimed falsely, so below the rows that correct what a member is told (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 2)
 milestone: M8
 interface: I5 and I3 — a derived table and `op=queuemute`'s item form; the integrator mints and classifies the ICs.
@@ -184,7 +184,7 @@ widened: 2026-09-23 by SCHEDULER #14 on BOB #29's ruling (D-170 folded in): A's 
 added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 2, drained this commit; D-125's DEBT row; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-125» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-278 · queued — **THE LAST CODELESS REFUSALS: THE STORAGE 503s, `unknown op` AND THE PRE-AUTHENTICATION COMPLAINTS ANSWER A SENTENCE WITH NO** … (whole text: the cut archive)
+### D-278 · running — SPAWNED 2026-09-23 20:53Z by CONDUCT #17 from the BACKLOG (BOB #31 20:51Z), as a SEPARATE CLOUD SESSION titled WORKER D-278 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-278 and that session; never conclude queued from the absence alone.
 order: after D-125 and before COFF-13, with the refusal class (UI-73, REC-159, REC-162): every site's `error` is TRUE today, so it follows the rows correcting what a member is told falsely; above COFF-13 because group (4) meets every copy installed without storage (SCHEDULER #13, 2026-09-22; BOB #26's inbox entry, item 1)
 milestone: M9
 interface: I3 — the reasons join the vocabulary, `error` kept beside each; the integrator mints and classifies the IC.
@@ -194,7 +194,7 @@ accepts-when: each site answers its `reason`, check and translation with `error`
 added: 2026-09-22 · SCHEDULER #13 (BOB #26's inbox entry, item 1; D-278's DEBT row of 2026-08-09; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-278» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-219 · queued — **A GRADE-D RESOLUTION STORES *"asserted by X with no captured basis"*, WHICH A MEMBER READS AS "NO BASIS", THOUGH `testifyResolution` REFUSES WITHOUT ONE (`NO_BASIS`).** BOB #30 corrected the design's label to *"asserted on the member's stated basis, with no captured document"*; the method string (`store.mjs`, re-read on `cdfaea39`) and two `schema.mjs` comments still carry the old wording. Its design landed at `4355bfda`. — owner RECORD.
+### D-219 · running — SPAWNED 2026-09-23 20:53Z by CONDUCT #17 from the BACKLOG (BOB #31 20:51Z), as a SEPARATE CLOUD SESSION titled WORKER D-219 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-219 and that session; never conclude queued from the absence alone.
 order: directly before D-423, one worker for both (the same `schema.mjs` comments): the record describing its own contents more weakly than they are, a correction to built work, below D-278 because the grade itself is right (SCHEDULER #15, 2026-09-23, LED-7; BOB #30's ruling)
 milestone: M8
 interface: I3 — the method string on NEW grade-D resolutions; the integrator classifies it.
@@ -1158,12 +1158,3 @@ depends-on: none.
 accepts-when: `MEASUREMENTS.md` carries the per-host table with N, the interval and the build; the row closes either way. How a liar passes it: hosts chosen for static bytes, so the list … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-59's DEBT row of 2026-07-30; keeps its `D-` id).
 cut: cut to its fields (SCHEDULER #8, 2026-09-21) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-59» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-66 · queued — `m025-arm-anchor-witness.test.mjs` CLOSES THE COMMENTARY CLASS ON ITS LABEL HALF AND NOT ON ITS ANCHOR HALF — prose in a … (whole text: the cut archive)
-order: M0; an instrument producing false findings (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
-milestone: M0 (background lane, holds no slot) — an instrument that penalises a driver for documenting how it … (whole text: the cut archive)
-interface: none — `bio-plane/test/m025-arm-anchor-witness.test.mjs`
-design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY … (whole text: the cut archive)
-depends-on: none
-accepts-when: prose in a block comment naming an anchor-bearing shape is NOT read as an anchor; a live anchor in code still is; the reach figures before and after are stated with any … (whole text: the cut archive)
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-66» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
