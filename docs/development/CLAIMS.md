@@ -19402,3 +19402,20 @@ paths, BY SITE:
 **NOT CLAIMED:** `bio-plane/**`, `newgroup/**`, `civicos-ui/worker.template.mjs`, any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 M0 (M0-121 — the state-path predicate leaves `tools/coord.mjs` for a module that walks nothing)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #14 for M0-121 (wave 7), worktree `.claude/worktrees/agent-adeead91b1dad5478`,
+branch `worktree-agent-adeead91b1dad5478`, from `origin/main` @ `f05c1efd` (cloud).
+authority: `QUEUE.md` `### M0-121 · running` (read on `origin/coord` @ `2b2868c5`); design `VERIFICATION.md` with
+`ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 1; M-106's experiment row.
+paths, BY SITE:
+  - NEW: `tools/statepaths.mjs` (MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath; no I/O, no walk), its suite and control
+    under `bio-plane/test/`.
+  - `tools/coord.mjs` (the four definitions become a re-export, nothing else).
+  - Importers that need only the predicate: `bio-plane/scripts/op-claims.mjs`, `bio-plane/test/op-claims.test.mjs`,
+    `bio-plane/test/decided.test.mjs` (import line only).
+  - `docs/development/MEASUREMENTS.md` (one entry, before/after figures).
+**NOT CLAIMED:** `tools/gates.mjs` (read, not edited), any state path on `main`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
