@@ -1,7 +1,7 @@
-# BOB — resume here. Written 2026-09-23 by BOB #30 (running; refreshed at 09:20Z), in cloud Claude Code under Bob's second account.
+# BOB — resume here. Written 2026-09-23 by BOB #30 (running; refreshed at 09:50Z), in cloud Claude Code under Bob's second account.
 
 Read `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` whole, `kickoffs/NEW-MACHINE.md` §0 and §0.1,
-then this. Every line is a POINTER measured at 2026-09-23 ~09:20Z; re-measure before acting on it. BOB #30 is LIVE
+then this. Every line is a POINTER measured at 2026-09-23 ~09:50Z; re-measure before acting on it. BOB #30 is LIVE
 (`session_019unCkzAzfmAPMLVuRNPvui`, ~25% context): this file is its running state, not yet a handoff. When a successor is
 named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from `list_triggers`) and archive it under D-398.
 
@@ -24,16 +24,14 @@ named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from 
   cut's backstop is a run that REUSED NOTHING; M0-106 narrowed, `--since` withdrawn; M0-126 marks such a record); Content
   Framework §8.1 grade D's label (D-219); State Rules §4.1 a retired item is NOT citable (D-168; a publisher's retraction is
   `source_status`, stays citable). SCHEDULER #15's DELEGATION discharged.
-- RULED, NOT YET LANDED: TREE-SHARING §3a condition 1 — a unit reading git history or a live ref is `GATE: never-cache
-  (history)` and any reuse still runs it. Local branch `bob30-nevercache` @ `f187eaea`; push `land/bob/nevercache` once main
-  is green and a local gate reads GREEN. Told to CONDUCT for the M0-126 worker already.
+- RULED, PUSHED (`land/bob/nevercache`): TREE-SHARING §3a condition 1 — a unit reading git history or a live ref is
+  `GATE: never-cache (history)` and any reuse still runs it.
 
 ## 3. OWED — in this order
 
-1. **Main is RED** (GitHub run #20 at `4355bfda`, `mergecarry.test`): a FALSE drop — my re-sent batch re-merged branches
-   batch4 already carried. CONDUCT's fix, `land/conduct/mergecarry-4355bfd` (`carried` class: the branch's patch reverse-applies
-   to the merged blob; `e241672` stays a drop; `95e401b`'s register row removed as never a drop, verified by BOB #30), was
-   gating at ~09:00Z. When green: push `land/bob/nevercache`; DIST releases 0.75.0's pointer; M0-126 and M0-127 push.
+1. **Main is GREEN again at `19101d04`** (CONDUCT's `carried` class, `cf6f14ab`; mergecarry over all of main: the 4
+   registered drops, 15 carried). `land/bob/nevercache` @ `98fb13b7` (TREE-SHARING §3a condition 1, gate GREEN DOCS 51/51)
+   is PUSHED and waits for CONDUCT's next train; verify it on main. DIST may now release 0.75.0's pointer.
 2. **Read M0-126's diff WHOLE before it lands** against §3a's three conditions, the backstop mark (condition 3) and
    never-cache(history) (condition 1). CONDUCT holds it for this lane.
 3. **Bob's open question: the weekly budget.** `get_session`'s `rate_limit_info` reads `seven_day` `allowed_warning`,
