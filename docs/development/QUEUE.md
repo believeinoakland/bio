@@ -52,17 +52,6 @@ scope: (1) D-286's interval proof plus a D0c: disjoint ranges (e.g. FETCH_ALLOWE
 accepts-when: the wire suite passes 500 consecutive draws and fails by name on a forced collision; no suite builds a snap key from `Math.random`. NEGATIVE CONTROL: restore one overlapping range, and D0c fails by name.
 added: 2026-09-23 · SCHEDULER #15 (D-286's worker's findings via CONDUCT #15, verified at the code; `node tools/mintid.mjs M0`).
 
-### REC-160 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT on d89e04d1: store.mjs still says a leg rests on edition N for every leg. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
-order: after D-389, above CAP-14: a support claim the record cannot make, CLAUDE.md §2's class, in the read that tells a member what to re-examine (SCHEDULER #7, 2026-09-21; BOB #22's inbox entry)
-milestone: M9
-interface: I3 additive — the integrator mints the IC.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §5.4 (cascade semantics: an upstream re-distribution sets a re-evaluation obligation on every dependent), DEC-70's home since BOB #23 folded it there (`43cd0caf`, 2026-09-21): *a read of the obligation marks which legs are severed and never describes one as resting on its target (REC-160)*; *the connection INFORMS, never binds*.
-depends-on: none. D-280 closed; nothing is superseded.
-scope: each obligation leg carries `status` (`severed` or `confirmed`) from `#refEdgeSevered(bundle, target)`, and a severed leg's edition detail says the withdrawn leg NAMED edition N rather than resting on it. The obligation still fires (DEC-70) and derives nothing from strength; an unrecorded or unrecognised `status` reads `confirmed`.
-accepts-when: a drive through the op shows a severed leg `status: "severed"` with wording that claims no support, and a confirmed leg unchanged. How a liar passes it: filtering the severed leg out, which reverses DEC-70, so `d280-strengthbar.test.mjs` SITE (c) stays green. NEGATIVE CONTROL: drop the status, and the severed-leg arm fails by name.
-added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
-uncut: restored whole from the cut archive on entering the cache (SCHEDULER #15, 2026-09-23), so the worker reads its design here.
-
 ### REC-173 · running — SPAWNED 2026-09-23 12:19Z by CONDUCT #15 (handed off; relays this worker's report to CONDUCT #16). NOT LANDED as read on b41d1edb: migrate.mjs still refused SURFACE_NO_RUN (REC-171). Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: FIRST of the backlog, directly after REC-171 (in the cache) as BOB #30 placed it: REC-171 makes migration refuse, and a group that cannot migrate cannot start (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
 milestone: M7
@@ -113,6 +102,16 @@ depends-on: D-389 (its disjunct in `Store#frontierPage` is reused).
 scope: route every never-looked and missing fetch through D-389's exhaustion disjunct, OR-ed into each arm's `truncated`; the meaning arm's three lists gain the same over-fetch.
 accepts-when: a fixture whose never-looked or missing supply exceeds the fetch reads `truncated: true` at every arm for every viewer; an exhausted supply reads as before. NEGATIVE CONTROL: drop the disjunct from one arm, and that arm's fixture fails by name.
 added: 2026-09-23 · SCHEDULER #15 (D-389's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
+
+### REC-175 · queued — **`op=promote` STORES A CALLER-SUPPLIED `sha256` FOR EACH INLINE FILE WITHOUT COMPUTING IT, AND TAKES `bundle.md`'S AS THE BUNDLE'S HEAD, SO THE RECORD CAN CLAIM A DIGEST ITS OWN BYTES DO NOT HAVE.** `Store` writes `INSERT INTO files (…, sha256)` with `f.sha256` as given and reads `newSha` from it (`bio-plane/src/store.mjs`, re-read on `e62e08e1`); REC-173's worker drove it: a `bundle.md` sha of `fff…` was stored with `ok: true`. REC-173 compensates only on its own replay path. — owner RECORD.
+order: FIRST of the backlog: a record stating a false digest of its own bytes is CLAUDE.md §2's worst class (the whole product is the trustworthiness of the record), above M0-134's gate honesty (SCHEDULER #15, 2026-09-23; REC-173's worker via CONDUCT #15)
+milestone: M6
+interface: I3 — a new refusal on `op=promote`; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (the bundle's anatomy and the Mechanical Verification Law: a stored digest is of the stored bytes), with `CLAUDE.md` §5 (*an equality that costs nothing to produce is not evidence*).
+depends-on: none.
+scope: promote computes the SHA-256 of every inline text file's bytes and refuses a supplied value that differs, by a new refusal code with its canned translation, before any write; a file with no supplied sha stores the computed one; blob-backed files state what is checked; a census of rows already stored whose digest disagrees with their content is measured and stated, never silently rewritten.
+accepts-when: through the op, a mismatched `sha256` is refused by name with the bundle byte-identical after; a matching one lands; the census is in the landing. NEGATIVE CONTROL: drop the comparison, and the `fff…` arm lands and fails by name.
+added: 2026-09-23 · SCHEDULER #15 (REC-173's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

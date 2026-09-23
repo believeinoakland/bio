@@ -3272,3 +3272,14 @@ depends-on: REC-170.
 scope: `pubList` renders the pair per case, naming each case, or the undetermined state with its reason; one pair renders as today.
 accepts-when: against the real plane, a finding two cases pin with different pairs lists both, each with its case; none reads "no frozen pair". NEGATIVE CONTROL: read the single field again, and the per-case arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs UI`).
+
+### REC-160 · done — landed in land/conduct/c16-batch2 @ 53363cad (train train-20260923T132559Z-14562, origin/main 14faa089)
+order: after D-389, above CAP-14: a support claim the record cannot make, CLAUDE.md §2's class, in the read that tells a member what to re-examine (SCHEDULER #7, 2026-09-21; BOB #22's inbox entry)
+milestone: M9
+interface: I3 additive — the integrator mints the IC.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §5.4 (cascade semantics: an upstream re-distribution sets a re-evaluation obligation on every dependent), DEC-70's home since BOB #23 folded it there (`43cd0caf`, 2026-09-21): *a read of the obligation marks which legs are severed and never describes one as resting on its target (REC-160)*; *the connection INFORMS, never binds*.
+depends-on: none. D-280 closed; nothing is superseded.
+scope: each obligation leg carries `status` (`severed` or `confirmed`) from `#refEdgeSevered(bundle, target)`, and a severed leg's edition detail says the withdrawn leg NAMED edition N rather than resting on it. The obligation still fires (DEC-70) and derives nothing from strength; an unrecorded or unrecognised `status` reads `confirmed`.
+accepts-when: a drive through the op shows a severed leg `status: "severed"` with wording that claims no support, and a confirmed leg unchanged. How a liar passes it: filtering the severed leg out, which reverses DEC-70, so `d280-strengthbar.test.mjs` SITE (c) stays green. NEGATIVE CONTROL: drop the status, and the severed-leg arm fails by name.
+added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+uncut: restored whole from the cut archive on entering the cache (SCHEDULER #15, 2026-09-23), so the worker reads its design here.

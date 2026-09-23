@@ -23,16 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-175 · queued — **`op=promote` STORES A CALLER-SUPPLIED `sha256` FOR EACH INLINE FILE WITHOUT COMPUTING IT, AND TAKES `bundle.md`'S AS THE BUNDLE'S HEAD, SO THE RECORD CAN CLAIM A DIGEST ITS OWN BYTES DO NOT HAVE.** `Store` writes `INSERT INTO files (…, sha256)` with `f.sha256` as given and reads `newSha` from it (`bio-plane/src/store.mjs`, re-read on `e62e08e1`); REC-173's worker drove it: a `bundle.md` sha of `fff…` was stored with `ok: true`. REC-173 compensates only on its own replay path. — owner RECORD.
-order: FIRST of the backlog: a record stating a false digest of its own bytes is CLAUDE.md §2's worst class (the whole product is the trustworthiness of the record), above M0-134's gate honesty (SCHEDULER #15, 2026-09-23; REC-173's worker via CONDUCT #15)
-milestone: M6
-interface: I3 — a new refusal on `op=promote`; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (the bundle's anatomy and the Mechanical Verification Law: a stored digest is of the stored bytes), with `CLAUDE.md` §5 (*an equality that costs nothing to produce is not evidence*).
-depends-on: none.
-scope: promote computes the SHA-256 of every inline text file's bytes and refuses a supplied value that differs, by a new refusal code with its canned translation, before any write; a file with no supplied sha stores the computed one; blob-backed files state what is checked; a census of rows already stored whose digest disagrees with their content is measured and stated, never silently rewritten.
-accepts-when: through the op, a mismatched `sha256` is refused by name with the bundle byte-identical after; a matching one lands; the census is in the landing. NEGATIVE CONTROL: drop the comparison, and the `fff…` arm lands and fails by name.
-added: 2026-09-23 · SCHEDULER #15 (REC-173's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
-
 ### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
 milestone: M0
@@ -1179,3 +1169,22 @@ design: `docs/architecture/BIO_Distribution_v0_1.md` §6 rung 6, "What 'swept af
 depends-on: none in code.
 accepts-when: a scratch purge leaves every enumerated identity table empty; a record-store purge driven through the op leaves `members` byte-identical; a new member-keyed table added to the … (whole text: the cut archive)
 cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-69» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-70 · queued — **VF-4's LIVE-SCRATCH INSTRUMENT STATES ON ITS OWN OUTPUT THAT ARM 2a LEAVES A `proposed` MEMBER BY DESIGN (Membership v2 §4.7)** … (whole text: the cut archive)
+order: M0, after M0-68 and M0-69: the same instrument file as M0-68, and its purge-after rests on M0-69 (SCHEDULER, 2026-09-19)
+milestone: M0 (background lane, holds no slot)
+interface: none — the instrument `bio-plane/test/vf4-live-scratch.mjs`
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.7 (administrator consensus) and … (whole text: the cut archive)
+depends-on: M0-69 (the purge must take scratch identity) and M0-68 (SAME FILE — one worker at a time in `vf4-live-scratch.mjs`).
+accepts-when: a run's output carries the statement at arm 2a; after the run, scratch `members` reads empty; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: a purge call … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER (BOB #16's inbox entry, item 3; id minted with `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-70» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### VF-7 · queued — CANNOT RUN until the next DIST deploy; queued now so the future act is an ITEM the deploy's integration meets, not a telling a … (whole text: the cut archive)
+order: M0 VERIFY lane, after the battery tally: it watches a credential class (DEC-43's zero), now a read-back since the 0.58.0 deploy armed it (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+milestone: M0 (VERIFY lane, holds no slot)
+interface: none — it watches, it does not publish a shape
+design: `docs/development/SCHEDULER.md` §"The mechanism, and how the next consumer joins" (the … (whole text: the cut archive)
+depends-on: **the next plane deploy through `deploy.mjs`** (DIST's next cut — D-297's release is the likely carrier)
+accepts-when: (on the deploy landing) both first activations measured and recorded with the serving build named; the first armed tick attributed to the scoped class; `op=audit` clean after … (whole text: the cut archive)
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «VF-7» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
