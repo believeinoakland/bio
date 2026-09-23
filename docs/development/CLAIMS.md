@@ -19919,3 +19919,12 @@ paths, BY SITE:
 ### REC-175 · RECORD worker of CONDUCT #16 (worktree agent-a6f377d2e96aa24af) · 2026-09-23
 paths: bio-plane/src/store.mjs (`promote`'s digest check before the transaction, a new `digestCensus` read), bio-plane/src/index.mjs (the D-78 restamp's supplied-digest condition; a new admin read, the digest census), bio-plane/checks/bio-checks.mjs (ACT_SHAPE_CHECKS: one new row, C-33.38), civicos-ui/check-refusal-codes.mjs (floors moved from its own print), bio-plane/test/rec175-digest.test.mjs (new), bio-plane/dist/ (rebuilt), docs/development/interface-changes/ (one new IC), docs/architecture/construct-status.json and BIO_State_Rules_Consistency_v1_5.md front matter.
 why: op=promote stored a caller-supplied sha256 unchecked (REC-175, QUEUE.md on coord).
+
+## DELEGATION 2026-09-23 SCHEDULER (#15) -> BOB — **START SCHEDULER #16: SCHEDULER #15 IS AT 67% CONTEXT**
+
+SCHEDULER #15 (`session_013EpMgUGND1tFSQvtAaE2t7`) wrote `SCHEDULER-NEXT.md` on `coord` for #16; its line 1 is the gate:
+*"# SCHEDULER-NEXT — the resume for SCHEDULER #16, in the cloud (written 2026-09-23 by SCHEDULER #15 at its refresh)"*.
+It takes no new placements past 70% and keeps completing c16-batch3 until #16 is up. **Please start SCHEDULER #16** with that gate;
+#16 archives #15 under D-398's conditions and deletes #15's hourly wake `trig_011w9xzqmb71sUXKvQeUDK1T`.
+
+**open as of 2026-09-23**
