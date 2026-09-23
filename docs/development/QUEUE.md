@@ -482,7 +482,7 @@ accepts-when: a staff-directory page FETCHED AND READ yields a type that recogni
 cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «FW-20». A worker READS IT before building.
 uncut: restored whole from «FW-20» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-256 · queued — **THE WRONG "CHANGED FROM" SENTENCES ALREADY WRITTEN ARE UNCOUNTED: D-221 fixed the writer (`app.html` `addGo`'s CHANGED_FROM branch), but no read sorts the bundles whose bodies carry the old sentence into provably wrong, right and undetermined.** The bodies STAY AS WRITTEN — BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *the correction is the READ; `op=versionchain` answers from the chain, not the stored sentence* — so this row enumerates and never rewrites. — owner RECORD.
+### D-256 · running — SPAWNED 2026-09-23 ~22:55Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-256 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-256 and that session; never conclude queued from the absence alone.
 order: after D-444, before the census rows: it measures an over-claim already in the record, the class CLAUDE.md §2 ranks worst (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
 milestone: M3
 interface: I3 additive — one admin/probe read op, `mutating:false`, `registeraudit`'s shape (proposed name changedfromaudit); the integrator mints and classifies the IC.
