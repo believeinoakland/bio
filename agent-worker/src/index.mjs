@@ -131,7 +131,7 @@ import {
  * driver's job is reduced to asking and obeying. Read `subsession.mjs`'s header
  * for why the rule is an exact key set rather than a list of banned fields. */
 import {
-  SUBSESSION_OPS, spawnContract, takeReports, citedAddresses,
+  SUBSESSION_OPS, spawnContract, takeReports, citedAddresses, documentHoldings, holdingsNote,
 } from "./subsession.mjs";
 
 /* FL-6 — THE CLAUDE-ACCOUNT CASCADE, in its own file and pure like the two
@@ -540,6 +540,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
        breaking its contract; a bare number would say it happened and not what. */
     reportsRefused: state.reportsRefused || [],
     citationsReread: state.rereads || 0,
+    /* D-220: the LAST pass's holdings, like `fanout`. Null when no `collect` ran,
+       which is "nothing was counted", not "nothing is held". */
+    holdings: state.holdings ?? null,
     budget: BUDGET_BOUNDS.map((b) => ({ bound: b, ...(state.budget[b] || { allowed: 0, consumed: 0 }) })),
   };
 }
@@ -739,18 +742,56 @@ async function performStep(call, state, runId) {
         if (got.refused) { rereadRefused.push(got.refused); continue; }
         reread += 1;
       }
+
+      /* D-220 — AND THE RUN COUNTS WHAT IT HOLDS IN DOCUMENTS, ITS VERSIONS AS
+         VERSIONS (§3, consumer (3)). `reread` above counts READS, one per cited
+         string, so sixty captures of one calendar cited by their sixty bundles are
+         sixty reads — true — and would be sixty documents if anything took that
+         figure as coverage, which is the false-coverage hazard `STORE-AS-CACHE.md`
+         names arriving at the document level. The document's identity is the
+         RECORD's: `op=versionchain` answers every version at an address off the
+         `captured_locators ⋈ register` join (PL-10), and `documentHoldings` groups
+         by the `address_norm` it answers with. Never by title or text.
+
+         A citation names a held BUNDLE or an ADDRESS, and the run does not guess
+         which: it asks the plane for the bundle first (`op=search`, `id:` — the
+         gated, one-compiler read), and a bundle it finds is resolved to the source
+         address its own bytes name; a citation that names no held bundle is read
+         as the address it is. Every read goes through `planeAnswer`, so a refusal
+         makes that citation's document UNDETERMINED and is published, never a zero. */
+      const resolved = [];
+      for (const address of addresses) {
+        const found = planeAnswer(await call("search",
+          { q: `id:"${address.replace(/"/g, "")}"`, limit: 1, facets: "none" }), "search");
+        if (found.silent) return { silent: found.silent };
+        if (found.refused) { rereadRefused.push(found.refused); resolved.push({ citation: address, refused: found.refused }); continue; }
+        const hit = (Array.isArray(found.result?.hits) ? found.result.hits : [])
+          .find((h) => h && h.bundle_id === address) || null;
+        if (hit && !(typeof hit.source_locator === "string" && hit.source_locator.trim())) {
+          resolved.push({ citation: address, bundle: address, address: null, chain: null,
+                          reason: "the cited bundle names no source address, so no version chain can hold it" });
+          continue;
+        }
+        const target = hit ? hit.source_locator.trim() : address;
+        const chain = planeAnswer(await call("versionchain", { address: target, limit: 1000 }), "versionchain");
+        if (chain.silent) return { silent: chain.silent };
+        if (chain.refused) { rereadRefused.push(chain.refused); resolved.push({ citation: address, refused: chain.refused }); continue; }
+        resolved.push({ citation: address, bundle: hit ? address : null, address: target, chain: chain.result });
+      }
+      const holdings = documentHoldings(resolved);
       if (rereadRefused.length) out.refused = rereadRefused;
 
       out.note = `${taken.length} REPORT(s) taken, ${refused.length} REFUSED; ${reread} of `
                + `${addresses.length} citation(s) re-read BY ADDRESS`
                + (rereadRefused.length
-                  ? `, and ${rereadRefused.length} could NOT be — the plane refused `
-                    + `'${String(rereadRefused[0].code ?? "?")}', so those addresses are UNREAD rather `
-                    + "than empty"
+                  ? `, and ${rereadRefused.length} read(s) could NOT be made — the plane refused `
+                    + `'${String(rereadRefused[0].code ?? "?")}', so what they would have answered is UNREAD `
+                    + "rather than empty"
                   : "")
+               + `; ${holdingsNote(holdings)}`
                + `. No document was returned by a sub-session and none was loaded`;
       out.state = { ...state, reports: taken, rereads: (state.rereads || 0) + reread,
-                    reportsRefused: [...(state.reportsRefused || []), ...refused] };
+                    reportsRefused: [...(state.reportsRefused || []), ...refused], holdings };
       return out;
     }
 
@@ -1091,6 +1132,10 @@ async function handleRun(req, env) {
     reports_taken: drive.reportsTaken,
     reports_refused: drive.reportsRefused,
     citations_reread: drive.citationsReread,
+    /* D-220 ON THE WIRE. `citations_reread` counts READS; this counts DOCUMENTS,
+       each once with its versions, by the record's own chain — the figure a
+       reader may take as what the run held. */
+    holdings: drive.holdings,
     budget: drive.budget,
     segment: { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE },
 

@@ -118,7 +118,11 @@ const conclude = async (tok, { target, conclusion, falsifier, noFalsifier, versi
        site in this suite produces a byte-identical request. */
     + (noFalsifier !== undefined ? `&no_falsifier=${encodeURIComponent(noFalsifier)}` : "")
     + (version !== null ? `&version=${encodeURIComponent(version)}` : "")));
-const affordances = async (target, tok = "mem-rec13") =>
+/* CORRECTED 2026-09-23 by D-311, never exempted: this helper asked `op=affordances` as the MACHINE
+   token by default, and the store refuses that class BY NAME at the acts this suite reads it for
+   (conclude, reopen, divide, ground, publish, the version acts — MACHINE_REFUSALS). D-311 withholds
+   those from a machine, so the pre-flight is now asked of the caller who performs the acts: NADIA, an administrator who owns no project, so `publish` — D-310's owner-of-some-project act — is not in her set. */
+const affordances = async (target, tok = NADIA) =>
   await GET(`op=affordances&token=${tok}&target=${encodeURIComponent(target)}`);
 const actIds = (r) => (r.result?.acts ?? []).map((a) => a.id).sort();
 const imageOf = async (id, tok = "mem-rec13") =>
@@ -521,9 +525,13 @@ console.log("\n--- 5. op=affordances publishes conclude from the ONE edge table,
      question with an accepted reading publishes — PL-2's reading acts and
      REC-136's `withdrawconclusion` — join the set. `conclude` is still absent
      and `dispose` still present, which is what this assertion is about. */
-t("a CONCLUDED inquiry publishes exactly the legal acts: dispose, divide and publish — and a conclusion nobody publishes still ages (D-79)",
+  /* CORRECTED 2026-09-23 (D-311): asked as NADIA, a member, since the machine token is now withheld
+     every act its class is refused. `publish` leaves this list because NADIA owns no project (D-310:
+     publication is an owner's, asserted per caller in caseproduction.test.mjs §3a) — the subject
+     here, dispose and divide beside a conclusion nobody publishes, is unchanged. */
+t("a CONCLUDED inquiry publishes exactly the legal acts: dispose and divide (publish is an owner's, D-310) — and a conclusion nobody publishes still ages (D-79)",
     actIds(concludedAff),
-    ["cite", "dispose", "inquirydivide", "inquiryground", "publish", "versionconsider", "versioncurrent", "versionhide", "versionreject", "withdrawconclusion"].sort());   // REC-37/REC-45, 2026-08-04 (see the notes above)
+    ["cite", "dispose", "inquirydivide", "inquiryground", "versionconsider", "versioncurrent", "versionhide", "versionreject", "withdrawconclusion"].sort());   // REC-37/REC-45, 2026-08-04 (see the notes above)
   t("conclude is UNPUBLISHED there, and the store agrees by name — publication and refusal cannot disagree",
     (await conclude(NADIA, { target: INQ_MAIN, conclusion: CONCL, falsifier: FALS })).reason,
     "ILLEGAL_TRANSITION");

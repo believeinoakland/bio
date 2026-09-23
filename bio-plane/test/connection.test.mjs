@@ -218,8 +218,16 @@ t("the award→contract link and its 90-day interval are DATA (framework §8.2 p
 t("the sole-source-able stage records unless_exception (a lawful skip needs an exception doc — slice B)",
   pRead.stages.find((s) => s.stage_key === "solicitation").required, "unless_exception");
 
-console.log("\n--- a definition is editable data: re-defining a key REPLACES its stages ---");
+/* SUPERSEDED by D-128 (framework §8.2 "The declared flow, and its revisions", BOB #27, 2026-09-22).
+   This block asserted that re-defining a key REPLACES its stages, and it did — an UPSERT that made
+   the group's earlier declared flow vanish, taking the basis of every finding read against it. A
+   definition is now APPEND-ONLY: a revision writes a new version and must state its basis (a
+   statement and a citation), and the prior version stands. So the revision below now carries its
+   basis, and the assertion is CORRECTED to the new version beside the old one rather than exempted;
+   progression-versions.test.mjs drives the versions themselves. */
+console.log("\n--- a definition is editable data: a revision is a new version, the old one stands (D-128) ---");
 const redef = await post("progressiondefine", {
+  basis: "Attendance is recorded at every public meeting.", citation: "Brown Act, Gov. Code 54953",
   progressionKey: "meeting", label: "Public meeting (with attendance)",
   stages: [
     { key: "meeting", cardinality: "1", required: "always" },
@@ -230,6 +238,8 @@ const redef = await post("progressiondefine", {
 });
 t("re-defining meeting now has four stages (the old three did not accumulate)",
   [redef.stage_count, (await get("progression", "key=meeting")).stages.length], [4, 4]);
+t("the revision is version 2 and version 1 still reads back its three stages (D-128)",
+  [redef.version, (await get("progression", "key=meeting&version=1")).stages.length], [2, 3]);
 t("a progression definition stamps its declaring member from the session",
   redef.declared_by, "class:member");
 

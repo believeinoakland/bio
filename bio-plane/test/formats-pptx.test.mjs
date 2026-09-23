@@ -422,6 +422,11 @@ console.log("\n--- the deck-order declaration unreadable: slides UNNUMBERED and 
   const tp = await entry.text(p);
   t("text units carry their part with slide:null — honestly unnumbered",
     tp.slides.map((x) => [x.slide, x.ref, x.part.endsWith(".xml")]), [[null, null, true], [null, null, true], [null, null, true]]);
+  /* COFF-13: the deck's LENGTH is the declaration's to state, so with the
+     declaration unreadable it is NULL — never counted off slide PARTS, which
+     is the filename convention this entry refuses everywhere else. */
+  t("and the deck LENGTH is NULL — present and stated, never counted off the three slide parts",
+    ["deckLength" in tp, tp.deckLength], [true, null]);
   const legistar = s.links.find((l) => l.partition === "deferred" && l.target.url === LEGISTAR_URL);
   t("no slide-shape reference is INVENTED without a number to stand on", legistar.source, null);
   t("the jump cannot honestly resolve either: stated undetermined, not an invented anchor",
@@ -451,6 +456,11 @@ console.log("\n--- the size guard: over the bound -> text-undetermined VERBATIM,
   t("naming the bound constant so nobody mistakes where the number came from",
     tb.undetermined[0].boundName, "MEASURED_OOXML_TEXT_BOUND_BYTES");
   t("counts say one undetermined, zero chars in EITHER stream", tb.counts, { chars: 0, notesChars: 0, undetermined: 1 });
+  /* COFF-13: ppt/presentation.xml is STRUCTURAL and read over the bound, so
+     the deck still states its length though no slide text was read — the
+     three sldIdLst slots PRESENTATION_XML declares. */
+  t("over the bound the deck STILL states its length — the declaration is structural and was read",
+    [tb.slides.length, tb.deckLength], [0, 3]);
   const sb = await entry.structure(pb);
   t("structure states it in the envelope too, naming the guarded part family",
     sb.evidentiary.undetermined.some((u) => u.why === "over_size_bound" && u.part === "ppt/slides/* + ppt/notesSlides/*"), true);

@@ -1002,6 +1002,28 @@ console.log("\n--- ARM C · nothing outside the block can render run data ---");
      new RegExp(`\\b${DOOR}\\s*\\(`).test(outside));
   ok(`ARM C3b: and the door is DECLARED inside the block, so the composition it performs is swept with everything else`,
      new RegExp(`function\\s+${DOOR}\\s*\\(`).test(blockM[1]));
+  /* THE DATA DOOR (UI-74, carried from UI-43's branch). The accept ceremony
+     reads a run's RECORDED CONDITIONS — its lens (DEC-46) and principal — and is
+     no running-session surface. ARM C1 is untouched: `op=airun` is still asked
+     in exactly one place. C2 lets this door through by not naming it; these
+     pins are what stop that being an omission — it lives in the block, it is
+     reached, and it hands back VALUES, never markup, so the block's rendering
+     cannot land on a screen this suite never drives. */
+  const DATA_DOOR = "aiSessionConditions";
+  ok(`ARM C4 (UI-74): the data door '${DATA_DOOR}' is DECLARED inside the block, so the one op call still stands behind it`,
+     new RegExp(`function\\s+${DATA_DOOR}\\s*\\(`).test(blockM[1]));
+  ok(`ARM C4b (UI-74): and it IS called from outside — a door nothing reaches is ARM C3's undelivered-promise shape`,
+     new RegExp(`\\b${DATA_DOOR}\\s*\\(`).test(outside));
+  const doorBody = (() => {
+    const h = blockM[1].indexOf(`async function ${DATA_DOOR}(`);
+    if(h < 0) return "";
+    const end = blockM[1].indexOf("\n}", h);
+    return end < 0 ? "" : blockM[1].slice(h, end + 2);
+  })();
+  ok(`ARM C4c (UI-74): the data door's body was read and is the real function — ${doorBody.length} chars`,
+     doorBody.length > 100 && doorBody.includes("aiSessionRead"));
+  ok(`ARM C4d (UI-74): and it composes NO markup — no tag, no class attribute`,
+     !/<[a-z]/i.test(doorBody) && !/class=/.test(doorBody));
 }
 
 /* ============================================================

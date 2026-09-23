@@ -719,7 +719,13 @@ console.log("\n--- 10. the trap: no second version table, and ONE write site ---
   const tables = [...SCHEMA_CODE.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]);
   t("EXACTLY TWO TABLES carry versions of a basis, and they are the projection pair — no third, no "
   + "shadow, no history table",
-    tables.filter((n) => /version/i.test(n)).sort(),
+    /* CORRECTED 2026-09-23 by CONDUCT #17 at c17-batch4, not exempted: the filter read ANY table whose name
+       holds "version", which is wider than this pin's own claim ("versions of a BASIS"). D-128 (framework §8.2)
+       added `progression_def_versions` / `progression_stage_versions`, the append-only history of a PROGRESSION
+       DEFINITION — not a basis, and not a second home for anything bundle.md holds — and the old filter read them
+       as a third and fourth basis-version table. The pin now names its subject: a table carrying BOTH "basis" and
+       "version". The reach arm below still plants `inquiry_basis_versions_shadow` and still finds it (3). */
+    tables.filter((n) => /version/i.test(n) && /basis/i.test(n)).sort(),
     ["inquiry_basis_version_legs", "inquiry_basis_versions"]);
   t("and there is NO version write OP: the control plane publishes a read and nothing else, because a "
   + "write op is the second authority the item exists to refuse",
@@ -732,7 +738,7 @@ console.log("\n--- 10. the trap: no second version table, and ONE write site ---
   t("REACH: the same walk over a source that DOES carry a second write site FINDS it, and over a schema "
   + "that DOES carry a third table FINDS that — the pin is a pin and not an exemption",
     [writes(withSecondWrite, "inquiry_basis_versions"),
-     [...withThirdTable.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]).filter((n) => /version/i.test(n)).length],
+     [...withThirdTable.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]).filter((n) => /version/i.test(n) && /basis/i.test(n)).length],
     [2, 3]);
 }
 

@@ -112,5 +112,34 @@
     { "binding": "SELF",         "service": "bio-plane" }
   ],
 
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+
+  // D-54 (2026-09-23): the plane's SUBREQUEST CEILING per invocation, set here
+  // because a default that moves is not a decision. It was unset, so the
+  // ceiling was whatever Cloudflare's default was that month: the default moved
+  // from 1,000 to 10,000 in February 2026 (Cloudflare's 2026-02-11 changelog —
+  // THEIR claim, recorded in docs/development/MEASUREMENTS.md "Vendor CLAIMS",
+  // with the Paid range 10,000 default, configurable to 10M). Workers Paid is
+  // required (DEC-42), so the Paid range is the one that applies.
+  //
+  // WHY 10,000, AND NOT THE DEFAULT BY COINCIDENCE. What the plane is sized
+  // for, from its own code: the widest designed invocation is a capture —
+  // one primary fetch plus at most SUBRESOURCE_CAP (400, subresources.mjs)
+  // external fetches, with one R2 write per newly held part and the Durable
+  // Object's own calls beside them — on the order of 1,000 subrequests.
+  // Ratification's re-fetch is bounded by the calibrated ceiling (index.mjs,
+  // capturelimit), and a capture that meets the ceiling resumes on the next
+  // tick rather than failing. So 10,000 is about TEN TIMES the largest sized
+  // path. Not LOWER: purge, backfill and the other bulk paths are not sized
+  // per invocation, and a fence below what every deployed instance has run
+  // under since February would be a behaviour change nobody has measured.
+  // Not HIGHER: nothing the plane does needs it, since capture resumes across
+  // ticks, and a runaway loop should hit a wall. The plane still LEARNS
+  // its ceiling by being refused (cpu.mjs, capture_limits); this pins which
+  // ceiling it will meet.
+  //
+  // CARRIED BY THE RELEASE PATH: scripts/deploy.mjs sends it through
+  // derive-bindings.mjs's deriveLimits (which REFUSES a config without it)
+  // and reads the deployed script's /settings back after the upload.
+  "limits": { "subrequests": 10000 }
 }

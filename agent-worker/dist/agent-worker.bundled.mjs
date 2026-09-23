@@ -560,6 +560,75 @@ function citedAddresses(reports) {
       if (c && typeof c.address === "string" && c.address && !out.includes(c.address)) out.push(c.address);
   return out.slice(0, CITATIONS_MAX);
 }
+function documentHoldings(resolved) {
+  const documents = /* @__PURE__ */ new Map();
+  const unchained = [], undetermined = [];
+  const list = Array.isArray(resolved) ? resolved : [];
+  for (const r of list) {
+    if (!r || typeof r !== "object") continue;
+    if (r.refused) {
+      undetermined.push({
+        citation: r.citation ?? null,
+        at: r.refused.at ?? null,
+        code: r.refused.code ?? null,
+        check: r.refused.check ?? null
+      });
+      continue;
+    }
+    const chain = r.chain && typeof r.chain === "object" ? r.chain : null;
+    const key = chain && typeof chain.address_norm === "string" ? chain.address_norm : "";
+    const held = chain ? Number(chain.total) || 0 : 0;
+    if (!key || held < 1) {
+      unchained.push({
+        citation: r.citation ?? null,
+        address: r.address ?? null,
+        reason: r.reason ?? "the record holds no captured version at this address"
+      });
+      continue;
+    }
+    const versions = Array.isArray(chain.versions) ? chain.versions : [];
+    const inChain = new Set(versions.map((v) => v && v.bundle_id).filter(Boolean));
+    let doc = documents.get(key);
+    if (!doc) {
+      doc = {
+        address_norm: key,
+        versions_held: held,
+        truncated: chain.truncated === true,
+        cited: [],
+        versions_cited: [],
+        cited_not_listed: []
+      };
+      documents.set(key, doc);
+    }
+    doc.cited.push(r.citation ?? null);
+    if (r.bundle) {
+      if (inChain.has(r.bundle)) {
+        if (!doc.versions_cited.includes(r.bundle)) doc.versions_cited.push(r.bundle);
+      } else doc.cited_not_listed.push(r.bundle);
+    }
+  }
+  const docs = [...documents.values()];
+  return {
+    /* THE COUNT A READER WILL TAKE AS COVERAGE, and it counts DOCUMENTS. */
+    documents: docs.length,
+    citations: list.length,
+    versions_cited: docs.reduce((n, d) => n + d.versions_cited.length, 0),
+    versions_held: docs.reduce((n, d) => n + d.versions_held, 0),
+    unchained: unchained.length,
+    undetermined: undetermined.length,
+    by_document: docs,
+    unchained_items: unchained,
+    undetermined_items: undetermined,
+    identity: "op=versionchain's address_norm \u2014 the record's captured_locators \u22C8 register join (PL-10), never a title, a text or a byte comparison"
+  };
+}
+function holdingsNote(h) {
+  if (!h) return "";
+  let s = `${h.documents} document(s) held across ${h.citations} citation(s), each counted ONCE with its versions (${h.versions_cited} of ${h.versions_held} held version(s) cited, read through op=versionchain)`;
+  if (h.unchained) s += `; ${h.unchained} cited item(s) in no version chain, each counted as itself`;
+  if (h.undetermined) s += `; ${h.undetermined} citation(s) whose document is UNDETERMINED \u2014 the plane refused a read, so they are counted as neither a document nor an item`;
+  return s;
+}
 
 // ../bio-plane/src/tokens.mjs
 var PUBLISHED_TOKEN_HASHES = /* @__PURE__ */ new Set([
@@ -861,6 +930,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
        breaking its contract; a bare number would say it happened and not what. */
     reportsRefused: state.reportsRefused || [],
     citationsReread: state.rereads || 0,
+    /* D-220: the LAST pass's holdings, like `fanout`. Null when no `collect` ran,
+       which is "nothing was counted", not "nothing is held". */
+    holdings: state.holdings ?? null,
     budget: BUDGET_BOUNDS.map((b) => ({ bound: b, ...state.budget[b] || { allowed: 0, consumed: 0 } }))
   };
 }
@@ -926,13 +998,48 @@ async function performStep(call, state, runId) {
         }
         reread += 1;
       }
+      const resolved = [];
+      for (const address of addresses) {
+        const found = planeAnswer(await call(
+          "search",
+          { q: `id:"${address.replace(/"/g, "")}"`, limit: 1, facets: "none" }
+        ), "search");
+        if (found.silent) return { silent: found.silent };
+        if (found.refused) {
+          rereadRefused.push(found.refused);
+          resolved.push({ citation: address, refused: found.refused });
+          continue;
+        }
+        const hit = (Array.isArray(found.result?.hits) ? found.result.hits : []).find((h) => h && h.bundle_id === address) || null;
+        if (hit && !(typeof hit.source_locator === "string" && hit.source_locator.trim())) {
+          resolved.push({
+            citation: address,
+            bundle: address,
+            address: null,
+            chain: null,
+            reason: "the cited bundle names no source address, so no version chain can hold it"
+          });
+          continue;
+        }
+        const target = hit ? hit.source_locator.trim() : address;
+        const chain = planeAnswer(await call("versionchain", { address: target, limit: 1e3 }), "versionchain");
+        if (chain.silent) return { silent: chain.silent };
+        if (chain.refused) {
+          rereadRefused.push(chain.refused);
+          resolved.push({ citation: address, refused: chain.refused });
+          continue;
+        }
+        resolved.push({ citation: address, bundle: hit ? address : null, address: target, chain: chain.result });
+      }
+      const holdings = documentHoldings(resolved);
       if (rereadRefused.length) out.refused = rereadRefused;
-      out.note = `${taken.length} REPORT(s) taken, ${refused.length} REFUSED; ${reread} of ${addresses.length} citation(s) re-read BY ADDRESS` + (rereadRefused.length ? `, and ${rereadRefused.length} could NOT be \u2014 the plane refused '${String(rereadRefused[0].code ?? "?")}', so those addresses are UNREAD rather than empty` : "") + `. No document was returned by a sub-session and none was loaded`;
+      out.note = `${taken.length} REPORT(s) taken, ${refused.length} REFUSED; ${reread} of ${addresses.length} citation(s) re-read BY ADDRESS` + (rereadRefused.length ? `, and ${rereadRefused.length} read(s) could NOT be made \u2014 the plane refused '${String(rereadRefused[0].code ?? "?")}', so what they would have answered is UNREAD rather than empty` : "") + `; ${holdingsNote(holdings)}. No document was returned by a sub-session and none was loaded`;
       out.state = {
         ...state,
         reports: taken,
         rereads: (state.rereads || 0) + reread,
-        reportsRefused: [...state.reportsRefused || [], ...refused]
+        reportsRefused: [...state.reportsRefused || [], ...refused],
+        holdings
       };
       return out;
     }
@@ -1179,6 +1286,10 @@ async function handleRun(req, env) {
     reports_taken: drive.reportsTaken,
     reports_refused: drive.reportsRefused,
     citations_reread: drive.citationsReread,
+    /* D-220 ON THE WIRE. `citations_reread` counts READS; this counts DOCUMENTS,
+       each once with its versions, by the record's own chain — the figure a
+       reader may take as what the run held. */
+    holdings: drive.holdings,
     budget: drive.budget,
     segment: { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE },
     /* THE PLANE'S STATEMENT ABOUT THE CREDENTIAL, COPIED AND NOT INTERPRETED.

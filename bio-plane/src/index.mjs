@@ -44,7 +44,7 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
             through the namespace below, because it is used AS A VALUE at the one
             governed site — the code is a STRING LITERAL there so the DEC-49
             guard's arm C can COMPARE it rather than read past a variable. */
-         REQUIRED_ARGUMENT_CHECKS,
+         REQUIRED_ARGUMENT_CHECKS, INSTALLATION_CHECKS, DISPATCH_CHECKS,
          /* CAP-8 / C-48: the Google Drive host stack's DEC-49 rows. Every one is
             a NAMING — a folder, a kind the address does not carry, a shape this
             recogniser does not read, the application shell, an export that could
@@ -870,6 +870,13 @@ const OPS = {
      a question and every document its legs rest on, so a member must not learn
      from a strength what op=list would not tell them. */
   versionstrength: { classes: ["admin", "member", "probe"],      mutating: false },
+  /* REC-161 / §12 clause (c): D-195's independence derivation over a PROPOSED
+     partition of a question's reasons — the read the elicitation's read-back
+     makes BEFORE the member's answers are written. A pure read through the one
+     `#independenceOf`; it shows no strength and writes nothing. Same classes and
+     the same fail-closed `viewer` stamp as versionstrength, below, because it
+     names a question and every document its reasons rest on. */
+  partitionindependence: { classes: ["admin", "member", "probe"], mutating: false },
 
   /* PL-12 / D-84: the bias object's three ops.
      `biasmanifest` is a READ and is gated on the viewer below, like every read
@@ -1247,7 +1254,8 @@ const OPS = {
      §8.1 connection grade (A source's own composite identifier, B the source's bare
      identifier in content, C name correspondence — never D, which the machine never
      mints); `resolvetestify` is the member's grade-D TESTIMONY path (an author and a
-     date, no captured basis). Both mutate and stamp resolved_by from the session below.
+     date, the member's stated basis, no captured document). Both mutate and stamp
+     resolved_by from the session below.
      `resolutions` reads a document's resolutions; `concerns` is the REVERSE INDEX —
      every document that concerns an entity, joined on entity_id, never through a
      declared relation. Both read-only; probe admitted so the surface is exercisable. */
@@ -3345,6 +3353,23 @@ const requiredArgumentRow = (code) => {
   return { code, check: row.check, translation: row.translation };
 };
 
+/* D-278 / C-68 and C-69: the same reader again, one per family, and the same
+   refusal to invent. */
+const installationRow = (code) => {
+  const row = INSTALLATION_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`installationRow: ${code} has no INSTALLATION_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+const dispatchRow = (code) => {
+  const row = DISPATCH_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`dispatchRow: ${code} has no DISPATCH_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
 /* =========================================================================
  * D-270 — THE SESSION GATE ANSWERED THREE DIFFERENT FACTS WITH ONE SENTENCE,
  * AND THE SENTENCE WAS FALSE FOR TWO OF THEM.
@@ -3542,6 +3567,19 @@ function requiredArgument(op, argument, shape, error) {
            detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried `
                  + `none the operation could use. Nothing was changed.` };
   /* END DEC-49 REGION is-required-argument */
+}
+
+/* THE CAPABILITY COMPLAINT (C-68.1, D-278). A copy installed with no evidence
+ * storage bound cannot serve `capture`, `pdfstructure`, `acquire` or `attest`.
+ * ONE row for the four, the op named beside it, minted here rather than at four
+ * sites inside `fetch` for the same reason `requiredArgument` is: a DEC-49 row
+ * holds one `where`. `error` is passed in BYTE-IDENTICAL from each site — the
+ * sites said two different sentences before this and still do. */
+function storageAbsent(op, error) {
+  /* DEC-49 REGION is-storage-absent */
+  return json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+                ...installationRow("EVIDENCE_STORAGE_NOT_CONFIGURED"), error, op }, 503);
+  /* END DEC-49 REGION is-storage-absent */
 }
 
 /* Some of these reads happen INSIDE a per-item renderer that returns a rendered
@@ -4877,7 +4915,14 @@ export default {
     const path = url.pathname.replace(/^\/api\/?/, "/");
     const op = url.searchParams.get("op") || path.slice(1) || "selftest";
     const spec = OPS[op];
-    if (!spec) return json({ ok: false, error: "unknown op", op }, 400);
+    /* DEC-49 REGION is-unknown-op
+       D-278 (C-69.1). `error` stays "unknown op" BYTE-IDENTICAL and stays the
+       FIRST key after `ok`: civicos-ui's `queueAbsent` reads the sentence to tell
+       an older plane from a refusal (I3), and `preauth-vocabulary.test.mjs` reads
+       it out of this line textually. */
+    if (!spec) return json({ ok: false, error: "unknown op", reason: "UNKNOWN_OP", ...dispatchRow("UNKNOWN_OP"),
+                             op }, 400);
+    /* END DEC-49 REGION is-unknown-op */
 
     /* Unauthenticated by design. Each one gates itself. */
     if (spec.classes === null) {
@@ -4897,11 +4942,18 @@ export default {
         ? env.STORE.get(env.STORE.idFromName(SCRATCH)) : stub;
       if (op === "claim") {
         const body = await req.json().catch(() => ({}));
-        if (!env.ADMIN_TOKEN) return json({ ok: false, error: "instance has no bootstrap credential set" }, 409);
+        /* DEC-49 REGION is-bootstrap-claim
+           D-278 (C-68.2–.4): installation facts, each `error` byte-identical, and
+           no row says more than its sentence did. */
+        if (!env.ADMIN_TOKEN) return json({ ok: false, reason: "BOOTSTRAP_CREDENTIAL_UNSET",
+          ...installationRow("BOOTSTRAP_CREDENTIAL_UNSET"), error: "instance has no bootstrap credential set" }, 409);
         if (!(await liveToken(env.ADMIN_TOKEN)))
-          return json({ ok: false, error: "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard" }, 409);
+          return json({ ok: false, reason: "BOOTSTRAP_CREDENTIAL_PUBLISHED", ...installationRow("BOOTSTRAP_CREDENTIAL_PUBLISHED"),
+            error: "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard" }, 409);
         if (body.bootstrapToken !== env.ADMIN_TOKEN)
-          return json({ ok: false, error: "bootstrap credential does not match" }, 403);
+          return json({ ok: false, reason: "BOOTSTRAP_CREDENTIAL_MISMATCH", ...installationRow("BOOTSTRAP_CREDENTIAL_MISMATCH"),
+            error: "bootstrap credential does not match" }, 403);
+        /* END DEC-49 REGION is-bootstrap-claim */
         const r = await stub.fetch(new Request(`http://do/claim?fp=${fp}`, {
           method: "POST", body: JSON.stringify({ role: "admin", password: body.password }) }));
         return json(await r.json(), 200);
@@ -4929,7 +4981,11 @@ export default {
       if (op === "verify") {
         const sha = (url.searchParams.get("sha256") || "").toLowerCase();
         if (!/^[0-9a-f]{64}$/.test(sha))
-          return json({ ok: false, error: "verify requires sha256=<64 lowercase hex>" }, 400);
+          /* D-278: C-61.1. `error` is written as a KEY here rather than passed into the helper, so the
+             sentence stays readable where `preauth-vocabulary.test.mjs` reads it textually; the key after
+             the spread is the one on the wire, byte-identical to the pre-D-278 answer. */
+          return json({ ok: false, ...requiredArgument("verify", "sha256", "<64 lowercase hex>"),
+            error: "verify requires sha256=<64 lowercase hex>" }, 400);
         /* REC-52, SITE (a). This read used to be
              `const out = await r.json(); return json({ ok: true, ...out.result }, 200);`
            with no look at `out.ok`, so a store failure left the plane as an
@@ -5143,8 +5199,9 @@ export default {
 
         if (op === "publishedbytes") {
           if (!/^[0-9a-f]{64}$/.test(shaParam))
-            return json({ ok: false, error: "publishedbytes requires sha256=<64 lowercase hex>. This surface "
-                        + "answers BY HASH and never by path, so there is nothing to walk." }, 400);
+            return json({ ok: false, ...requiredArgument("publishedbytes", "sha256", "<64 lowercase hex>",
+              "publishedbytes requires sha256=<64 lowercase hex>. This surface "
+                        + "answers BY HASH and never by path, so there is nothing to walk.") }, 400);
           /* THE GUARD, and it is the whole op. A sha is served if and only if a
              published_shas row names it. Everything else 404s with the SAME body
              — a hash that was never ratified and a hash that never existed are
@@ -5223,8 +5280,10 @@ export default {
         /* ---- op=publishedcase ---- */
         const id = url.searchParams.get("id");
         if (!id && !/^[0-9a-f]{64}$/.test(shaParam))
-          return json({ ok: false, error: "publishedcase requires id=<bundle id> (with an optional "
-                      + "&edition=N, latest by default) or sha256=<the bundle sha of an edition>" }, 400);
+          return json({ ok: false, ...requiredArgument("publishedcase", "id or sha256",
+            "id=<bundle id> (optional &edition=N) or sha256=<64 lowercase hex>",
+            "publishedcase requires id=<bundle id> (with an optional "
+                      + "&edition=N, latest by default) or sha256=<the bundle sha of an edition>") }, 400);
         const q = new URLSearchParams();
         if (id) q.set("id", id);
         if (url.searchParams.get("edition")) q.set("edition", url.searchParams.get("edition"));
@@ -5419,13 +5478,16 @@ export default {
           return json({ ok: false, reason: "TOO_LARGE", maxBytes: KNOCK.maxBytes }, 413);
         let body; try { body = JSON.parse(new TextDecoder().decode(raw)); } catch { body = null; }
         if (!body || (typeof body.contentB64 !== "string" && typeof body.contentText !== "string"))
-          return json({ ok: false, error: "knock requires contentB64 or contentText, plus optional note and contact" }, 400);
+          return json({ ok: false, ...requiredArgument("knock", "contentB64 or contentText",
+            "a JSON body with contentB64=<base64> or contentText=<text>",
+            "knock requires contentB64 or contentText, plus optional note and contact") }, 400);
         let bytes;
         try {
           bytes = body.contentB64 !== undefined
             ? Uint8Array.from(atob(body.contentB64), (c) => c.charCodeAt(0))
             : new TextEncoder().encode(body.contentText);
-        } catch { return json({ ok: false, error: "contentB64 is not valid base64" }, 400); }
+        } catch { return json({ ok: false, ...requiredArgument("knock", "contentB64", "<base64>",
+                    "contentB64 is not valid base64") }, 400); }
         if (bytes.length === 0) return json({ ok: false, reason: "EMPTY" }, 400);
         const r2 = typeof env.CAPTURES?.put === "function";
         const cap = r2 ? KNOCK.maxBytes : KNOCK.maxInline;
@@ -5778,9 +5840,19 @@ export default {
          object are is the whole of what this op is asked, so answering it out
          of a failure to ask would put a wrong set of affordances in front of a
          member. The store's own NO_SUCH_BUNDLE, and its 404, are untouched. */
+      /* D-311: THE TWO ACT STAMPS, composed by the SAME expressions the acts receive them by —
+         `author` as the object-directed acts' author stamp (a bearer is `token:<cls>`), `by` as the
+         roster acts' `by` stamp (a bearer is `class:<cls>`, the `ai` class included, whose
+         `identity` above is its member principal). The store asks the machine fences' predicate of
+         the first and the roster predicates of the second, so the pre-flight asks each question of
+         the caller the act will see. `d311-roster-affordances.test.mjs` pins these two expressions
+         to the stamp sites' own text. */
+      const affAuthor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
+      const affBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
       const fOut = await doAnswer(st.fetch(
         `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`
-        + `&identity=${encodeURIComponent(affIdentity)}`));
+        + `&identity=${encodeURIComponent(affIdentity)}`
+        + `&author=${encodeURIComponent(affAuthor ?? "")}&by=${encodeURIComponent(affBy ?? "")}`));
       if (!fOut.answered) return storeSilent("affordances");
       const facts = fOut.result;
       if (!facts) return storeSilent("affordances");
@@ -6136,7 +6208,7 @@ export default {
 
     if (op === "capture") {
       if (typeof env.CAPTURES?.get !== "function")
-        return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
+        return storageAbsent(op, "R2 is not configured on this instance");
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
         return json({ ok: false, ...requiredArgument("capture", "sha256", "<64 lowercase hex>",
@@ -6176,7 +6248,7 @@ export default {
        its OPS spec is non-mutating and it needs no capture-GET special-case. */
     if (op === "pdfstructure") {
       if (typeof env.CAPTURES?.get !== "function")
-        return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
+        return storageAbsent(op, "R2 is not configured on this instance");
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
         return json({ ok: false, ...requiredArgument("pdfstructure", "sha256", "<64 lowercase hex>",
@@ -6529,7 +6601,7 @@ export default {
     if (op === "acquire") {
       if (req.method !== "POST") return json({ ok: false, error: "acquire is a POST" }, 405);
       if (typeof env.CAPTURES?.put !== "function")
-        return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
+        return storageAbsent(op, "this instance has no evidence storage configured");
       const body = await req.json().catch(() => null);
       /* REC-33: THE DAEMON CLASS'S CONFINEMENT, and it belongs here rather than
          in the OPS table because the table knows only the op while the scope
@@ -7833,11 +7905,12 @@ export default {
                  * not deleted, because what it recorded was real and its closing
                  * is what a later reader needs to see.
                  *
-                 * WHAT IS STILL NOT HERE, so this block does not become the same
-                 * stale reassurance one item later: a DECK LENGTH. The entry
-                 * emits its readable slides and nothing that says how long the
-                 * deck is, so a deck whose trailing slides are unreadable is
-                 * recorded SHORTER than it is — see the keying note at the site.
+                 * THE DECK LENGTH IS HERE FROM 2026-09-23 (COFF-13). These lines
+                 * said it was not — the entry emitted its readable slides and
+                 * nothing that said how long the deck is, so a deck whose
+                 * trailing slides are unreadable was recorded SHORTER than it is.
+                 * Both deck entries now emit `deckLength` and the slide map below
+                 * is as long as the DECK — see the keying note at the site.
                  * And `.ods`/`.odp` carry an honestly NULL grid bound because
                  * OpenDocument fixes no maximum table size; that null is a
                  * STATEMENT and is not a gap in this wire.
@@ -7862,6 +7935,11 @@ export default {
                 const held = (k) => (has(k) && i2text[k].length ? i2text[k] : null);
                 if (has("sheets") || has("paragraphs") || has("slides")) {
                   const sh = held("sheets"), pa = held("paragraphs"), sl = held("slides");
+                  /* COFF-13 — THE DECK'S OWN LENGTH, as the entry states it.
+                     A positive integer or nothing: a zero-slide deck has no slot
+                     to bound and stays NULL under the never-a-zero rule below. */
+                  const deckLen = Number.isInteger(i2text.deckLength) && i2text.deckLength > 0
+                    ? i2text.deckLength : null;
                   /* COFF-12 / IC-100 / D-359 — THE INNER FIGURES ARE READ FROM THE
                      PRODUCER AND NO LONGER WRITTEN AS LITERALS. Until 2026-09-15 the
                      three lines below read `rows: null, cols: null` and `shapes: null`
@@ -7912,15 +7990,19 @@ export default {
                      AN UNFILLED SLOT IS `shapes: null` — UNDETERMINED AND STATED, never
                      a zero. The deck HAS that slide; this record could not read it, and
                      `coversSlideShape` skips a null rather than refusing every shape on
-                     it. WHAT THIS STILL CANNOT SEE, stated rather than left to be found:
-                     a deck whose LAST slides are unreadable reports a deck SHORTER than
-                     it is, because the entry emits no deck length and the highest slide
-                     number this wire can see is the highest READABLE one. That
-                     under-reports in the refusing direction and is D-359's residue after
-                     this item; closing it is a producer change (a deck length on the I2
-                     text shape) and therefore another IC, not a line here. */
+                     it. AND THE ARRAY IS AS LONG AS THE DECK, NOT AS ITS LAST READABLE
+                     SLIDE (COFF-13, IC-207). Until 2026-09-23 this paragraph said a deck
+                     whose LAST slides are unreadable reports a deck SHORTER than it is,
+                     because the entry emitted no deck length and the highest slide number
+                     this wire could see was the highest READABLE one — under-reporting in
+                     the refusing direction, D-359's named residue. Both deck entries now
+                     emit `deckLength` (the slots the deck DECLARES, readable or not), and
+                     it joins the floor: the trailing unreadable slides get their own
+                     `shapes: null` slots, so a citation of the last slide MINTS and one
+                     past the real deck is refused with the real figure. A NULL length
+                     (the deck order was unreadable) adds nothing and the old floor holds. */
                   const slideExtents = (units) => {
-                    let n = units.length;
+                    let n = Math.max(units.length, deckLen ?? 0);
                     for (const u of units)
                       if (u && Number.isInteger(u.slide) && u.slide > n) n = u.slide;
                     const out = Array.from({ length: n }, () => ({ shapes: null }));
@@ -7965,7 +8047,15 @@ export default {
                       rows: int(s && s.rows), cols: int(s && s.cols),
                       usedRows: int(s && s.usedRows), usedCols: int(s && s.usedCols) })) : null,
                     paragraphs: pa ? pa.length : null,
-                    slides: sl ? slideExtents(sl) : null,
+                    /* An over-the-bound deck returns `slides: []` beside the guard,
+                       and still states its length (presentation.xml is structural and
+                       read regardless) — so the OUTER bound is fed with every slot's
+                       shape count NULL, which the store reports by name. */
+                    slides: sl || deckLen ? slideExtents(sl || []) : null,
+                    /* Carried BESIDE the list under its own name: present-and-null when
+                       the entry answered that it cannot say, ABSENT when no entry ever
+                       answered (a capture acquired before COFF-13). */
+                    ...(has("slides") && own("deckLength") ? { deckLength: deckLen } : {}),
                     ...(own("tables") ? { tables: tablesOf(i2text.tables) } : {}),
                     ...(own("images") ? { images: imagesOf(i2text.images) } : {}),
                   };
@@ -8334,7 +8424,7 @@ export default {
     if (op === "attest") {
       if (req.method !== "POST") return json({ ok: false, error: "attest is a POST" }, 405);
       if (typeof env.CAPTURES?.put !== "function")
-        return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
+        return storageAbsent(op, "this instance has no evidence storage configured");
       const body = await req.json().catch(() => null);
       const sha = typeof body?.sha256 === "string" ? body.sha256.toLowerCase() : "";
       if (!/^[0-9a-f]{64}$/.test(sha))
@@ -9667,6 +9757,11 @@ export default {
            `#bundleGate` to the inquiry ONCE, before any leg is read, and fails
            closed on an absent stamp, like every op in this list. */
         || op === "versionstrength"
+        /* REC-161: the proposed-partition independence read names the same
+           QUESTION and the documents its reasons rest on, so it takes the same
+           stamp; the store gates the inquiry ONCE, before any leg is read, and
+           fails closed on an absent stamp. */
+        || op === "partitionindependence"
 
         /* PL-12 / D-84: a project-scoped manifest names a PROJECT bundle, and
            the adopted bias bundles are bundles too, so a caller who may not see

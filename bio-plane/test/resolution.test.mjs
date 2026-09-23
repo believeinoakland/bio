@@ -28,11 +28,14 @@
  *       resolution write empties it for a document known to concern the entity.
  *
  * NEGATIVE CONTROL: (a) make Store.#isEstablished return true for "C" in store.mjs -> op=resolutions and op=concerns report a Grade C correspondence as established:true (the "a C is never established" assertions flip). (b) neutralise the INSERT in Store.#upsertResolution -> op=resolve still REPORTS resolved but nothing is stored, so op=resolutions and the reverse index op=concerns empty for a document known to concern the entity. RUN 2026-07-31 framework-agent-fw7: (a) #isEstablished("C")=true -> 3 fail (the grade-C established assertion, the resolutions established:false, and the concerns established:false); (b) INSERT dropped -> resolutions(shaA) count 3->0 (and the reverse index concerns(E_ORD) 2->0), so the document known to concern the ordinance vanishes from the index. Both restored -> 39 pass, 0 fail.
+ * NEGATIVE CONTROL (D-219, DECLARED BEFORE ARMING, RUN 2026-09-23 by WORKER D-219, store.mjs 2,883,641 B sha256 bc9020d7b93c…, each restore sha256 MATCH and cmp IDENTICAL): (c) the grade-D method line in testifyResolution restored to the OLD literal ("... with no captured basis ...") -> MUST FAIL the three "D-219 wording" assertions (the op's answer, the stored row through op=resolutions, and a new testimony on the legacy store) and NOTHING ELSE, the legacy/older-row arms included, since the legacy build is re-pointed to the old literal whatever the source says: MEASURED 43 pass, 3 fail, exactly those three. (d) Store.#upsertResolution's KEPT path made to rewrite `method` (a re-testimony silently migrating an older row) -> MUST FAIL "a re-testimony of the SAME triple is kept and does NOT rewrite the older row" ALONE: MEASURED 45 pass, 1 fail, that one. No over-strictness arm on the wording: the row requires the exact §8.1 string, so a different spelling is meant to fail.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 
@@ -80,14 +83,14 @@ const bundleMd = (id) => [
   "## Session Log", "", "## Review Notes", "",
 ].join("\n");
 /* Promote a captured document with the given capture sha and reading entities. */
-const promoteReading = async (captureSha, entities) => {
+const promoteReading = async (captureSha, entities, postTo = post) => {
   const id = `INFO-2026-${String(++bseq).padStart(4, "0")}-res`;
   const md = bundleMd(id);
   const doc = { capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
                 reading: { content_type: "meeting_calendar", reader_version: 1, found: entities.length > 0,
                            at: NOW, entities } };
   const prov = JSON.stringify({ documents: [doc] });
-  const r = await post("promote", {
+  const r = await postTo("promote", {
     bundleId: id, base: null, snapKey: "20260724T010000Z_aaaa1111", author: "fw7",
     meta: { object_type: "information", group: "believe-in-oakland", title: `Resolution ${id}`,
             current_state: "collected", created: NOW, last_updated: NOW },
@@ -215,10 +218,22 @@ t("the recogniser left parcel:999 unresolved (shaD), honestly",
   (await post("resolve", { captureSha: shaD })).unresolved.map((u) => u.ref), ["parcel:999"]);
 const testify = await post("resolvetestify",
   { captureSha: shaD, ref: "parcel:999", entityId: parcelId, basis: "I attended the hearing; this is the parcel at issue." });
-t("testimony records a grade-D resolution, NOT established (no captured basis)",
+t("testimony records a grade-D resolution, NOT established (the member's stated basis, no captured document)",
   [testify.grade, testify.established, testify.needs_confirmation], ["D", false, false]);
 t("testimony stamps its author from the session (framework §8.1: recorded with an author)",
   testify.resolved_by, "class:member");
+/* D-219 (BOB #30, framework §8.1 "Grade D's label"): the stored method said "with no captured
+   basis", which a member reads as NO basis, though NO_BASIS below refuses a testimony without
+   one. What grade D lacks is a captured DOCUMENT. The wording is asserted EXACTLY, through the
+   op's answer AND through op=resolutions (what is stored), never by a substring a stale
+   spelling could also satisfy. */
+const GRADE_D_METHOD = "testimony -- asserted by class:member on the member's stated basis, with no captured document (framework 8.1 grade D)";
+t("D-219 wording: a new grade-D testimony's method reads §8.1's corrected label (the op's answer)",
+  testify.method, GRADE_D_METHOD);
+const resDStored = (await get("resolutions", "sha256=" + shaD)).resolutions.find((r) => r.ref === "parcel:999");
+t("D-219 wording: and that is what is STORED — op=resolutions reads it back, never the old \"no captured basis\"",
+  [resDStored.method, /no captured basis/.test(resDStored.method), resDStored.basis],
+  [GRADE_D_METHOD, false, "I attended the hearing; this is the parcel at issue."]);
 const concParcel = await get("concerns", "id=" + parcelId);
 t("op=concerns returns the testified document at grade D, not established",
   [concParcel.count, concParcel.documents[0].grade, concParcel.documents[0].established],
@@ -253,6 +268,75 @@ console.log("\n--- op=resolve refuses cleanly, and unknown references do not for
 t("resolve with no capture sha is refused by name", (await post("resolve", {})).reason, "NO_SHA");
 t("resolve of a reference the document does not carry is refused",
   (await post("resolve", { captureSha: shaA, ref: "nope:1" })).reason, "NO_SUCH_REFERENCE");
+
+console.log("\n--- D-219: a grade-D row written BEFORE the corrected wording keeps its own, byte for byte ---");
+/* D-256's shape: a stored string is a fact about WHEN it was written, so the correction applies
+   to NEW testimony only and no migration rewrites an older row. The fixture is the build a real
+   instance ran before D-219 — THIS tree's source with the method line put back to the old
+   literal at its ONE site — writing a PERSISTED store, then THIS build boots on it (the
+   founder-sight §6 precedent). What this cannot see: a row rewritten by some path other than
+   boot, op=resolutions, and a re-testimony of the same triple. */
+{
+  const root = mkdtempSync(join(tmpdir(), "d219-legacy-"));
+  try {
+    const PLANE = fileURLToPath(new URL("..", import.meta.url));
+    const REPO = fileURLToPath(new URL("../..", import.meta.url));
+    cpSync(join(PLANE, "src"), join(root, "bio-plane", "src"), { recursive: true });
+    cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
+    cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
+    const OLD_LINE = 'const method = `testimony -- asserted by ${resolvedBy || "a member"} with no captured basis (framework 8.1 grade D)`;';
+    const METHOD_LINE = /const method = `testimony -- [^`]*`;/g;
+    const storePath = join(root, "bio-plane", "src", "store.mjs");
+    const src = readFileSync(storePath, "latin1");
+    const sites = (src.match(METHOD_LINE) || []).length;
+    writeFileSync(storePath, src.replace(METHOD_LINE, OLD_LINE), "latin1");
+    const legacySrc = readFileSync(storePath, "latin1");
+    t("D-219 legacy: the pre-D-219 build is ARMED — the grade-D method line occurs exactly once and now carries the old literal",
+      [sites, legacySrc.split(OLD_LINE).length - 1], [1, 1]);
+    const persist = join(root, "persist");
+    const planeAt = (idx) => new Miniflare({
+      modules: true, modulesRoot: "/", scriptPath: idx, script: readFileSync(idx, "utf8"),
+      compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+      durableObjects: { STORE: { className: "Store", useSQLite: true } },
+      durableObjectsPersist: persist,
+      r2Buckets: ["CAPTURES", "PUBLISHED"],
+      bindings: { ADMIN_TOKEN: "adm-fw7", MEMBER_TOKEN: "mem-fw7", PROBE_TOKEN: "prb-fw7", VERSION: "test" } });
+    const on = (m) => ({
+      post: async (op, body) => rP(await (await m.dispatchFetch(`http://x/api/?op=${op}&token=mem-fw7`,
+        { method: "POST", body: JSON.stringify(body) })).json()),
+      get: async (op, qs) => rP(await (await m.dispatchFetch(`http://x/api/?op=${op}&token=mem-fw7&${qs}`)).json()) });
+    const shaOld = sha("doc-D219-old"), shaNew = sha("doc-D219-new");
+    const PARCEL_REF = [{ ref: "parcel:219", kind: "parcel", key: "219", label: "A parcel nobody registered" }];
+    const BASIS = "I was at the hearing where this parcel was named.";
+    let parcel219, oldRow;
+    const old = planeAt(join(root, "bio-plane", "src", "index.mjs"));
+    try {
+      const o = on(old);
+      parcel219 = (await o.post("entitycreate", { kind: "parcel", label: "219 Legacy Parcel" })).entity_id;
+      await promoteReading(shaOld, PARCEL_REF, o.post);
+      await promoteReading(shaNew, PARCEL_REF, o.post);
+      const w = await o.post("resolvetestify", { captureSha: shaOld, ref: "parcel:219", entityId: parcel219, basis: BASIS });
+      oldRow = (await o.get("resolutions", "sha256=" + shaOld)).resolutions[0];
+      t("D-219 legacy: the OLD build stored the OLD wording — the row a real instance may already hold",
+        [w.ok, oldRow && oldRow.method],
+        [true, "testimony -- asserted by class:member with no captured basis (framework 8.1 grade D)"]);
+    } finally { await old.dispose(); }
+    const live = planeAt(IDX);
+    try {
+      const l = on(live);
+      const back = (await l.get("resolutions", "sha256=" + shaOld)).resolutions;
+      t("D-219 older row: THIS build reads the older row BYTE-IDENTICAL — every field, the method included",
+        [back.length, JSON.stringify(back[0])], [1, JSON.stringify(oldRow)]);
+      const again = await l.post("resolvetestify", { captureSha: shaOld, ref: "parcel:219", entityId: parcel219, basis: BASIS });
+      const afterAgain = (await l.get("resolutions", "sha256=" + shaOld)).resolutions;
+      t("D-219 older row: a re-testimony of the SAME triple is kept and does NOT rewrite the older row",
+        [again.kept, afterAgain.length, JSON.stringify(afterAgain[0])], [true, 1, JSON.stringify(oldRow)]);
+      await l.post("resolvetestify", { captureSha: shaNew, ref: "parcel:219", entityId: parcel219, basis: BASIS });
+      t("D-219 wording: on the SAME store, a NEW testimony is written in the corrected wording",
+        (await l.get("resolutions", "sha256=" + shaNew)).resolutions.map((r) => r.method), [GRADE_D_METHOD]);
+    } finally { await live.dispose(); }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+}
 
 console.log("\n--- purge clears the resolutions (D-113) ---");
 const before = await get("concerns", "id=" + ordId);

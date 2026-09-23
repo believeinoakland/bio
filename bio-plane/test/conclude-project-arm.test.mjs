@@ -238,8 +238,13 @@ const acts = async (tok, target) => {
   const openFor = [];
   for (const [who, tok] of [["iris", IRIS], ["vera", VERA], ["olga", OLGA], ["ruth", RUTH], ["ADMIN", ADM]])
     if ((await acts(tok, OPENQ)).ids.includes("conclude")) openFor.push(who);
-  t("on the OPEN question conclude is offered to every caller, exactly as before (the edge table)",
-    openFor, ["iris", "vera", "olga", "ruth", "ADMIN"]);
+  /* CORRECTED 2026-09-23 by D-311, never exempted: the ADMIN machine token leaves this list. The
+     edge table still offers `conclude` on an open question to every PERSON; the store refuses a
+     machine's conclusion BY NAME (MACHINE_CANNOT_CONCLUDE), and D-311 withholds from a machine every
+     act its class is refused, so offering it there was the pre-flight disagreeing with the act. */
+  t("on the OPEN question conclude is offered to every PERSON, exactly as before (the edge table), and "
+    + "not to the machine token, whose class the store refuses by name (D-311)",
+    openFor, ["iris", "vera", "olga", "ruth"]);
 }
 
 /* ====================================================================== 2 */

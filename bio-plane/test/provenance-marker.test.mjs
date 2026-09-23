@@ -551,7 +551,14 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
      (REC-141's mint in `minted_ids`) are undone. WHY IT IS A CATCH AT ALL: the Durable Object's SQL API rolls back
      only on a throw. The worker, gating its own suites only (Bob, 2026-09-23), could not see this walk; the union
      gate is where it fires, which is why it is resolved here. */
-  const CEILING = 28;
+  /* MOVED 28 -> 29 AT INTEGRATION by c17-unionfix (2026-09-23), FROM THE FIGURE THIS WALK PRINTED on the train's union
+     (c17-batch5 + scheduler16/integrated + bob/message-driven; origin/main 02603e88 prints 28, c17-batch5 alone 29), and
+     the new site was LOOKED AT, found by diffing the catch sites of the two trees: REC-161's `partitionIndependence`,
+     `try { raw = JSON.parse(raw); } catch { raw = undefined; }`. It is not a READ OF THE RECORD at all: what it
+     parses is the CALLER's own `partition` argument, and `undefined` falls straight into the coded refusal
+     PARTITION_INDEPENDENCE_UNREADABLE, which tells the caller what shape to send. Nothing the plane could not
+     establish is smoothed into a normal-looking answer; a malformed request is refused, by code. */
+  const CEILING = 29;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 

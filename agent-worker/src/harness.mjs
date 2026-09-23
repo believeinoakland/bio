@@ -272,6 +272,8 @@ export const PLANE_OPS = {
   airunspawn:     { mutating: false, why: "PL-12's spawn payload; the search half has no manifest field to read" },
   meaningrows:    { mutating: false, why: "PL-9 / D-222 option C — the meaning-grain read. CONSUMED, never rebuilt" },
   basisversions:  { mutating: false, why: "PL-1's version set — what DEDUP compares against, read before any write" },
+  search:         { mutating: false, why: "D-220 — which held bundle a citation names, and the source address its bytes name" },
+  versionchain:   { mutating: false, why: "D-220 / PL-10 — every version at that address, so a document is counted ONCE" },
   airuntick:      { mutating: true,  why: "log-always and budget spend, through the plane's own producer" },
   suggest:        { mutating: true,  why: "PL-3 — ONE version, as formed. The only write that reaches the record" },
   capturerequest: { mutating: true,  why: "PL-4 — the internet level REQUESTS acquisition; it does not perform it" },

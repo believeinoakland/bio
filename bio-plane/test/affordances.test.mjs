@@ -110,6 +110,17 @@
  *        entangled with the gate. The isolation that matters still holds and is
  *        the declared direction: under (3) the agreement property stays GREEN, so
  *        nagging and disagreeing are distinguishable where it counts.
+ *   ==== CORRECTED AND RE-RUN 2026-09-23 BY D-311, never exempted. D-311 withholds from a
+ *        machine credential every act its class is refused by name (`MACHINE_REFUSALS`), so a
+ *        machine no longer holds `publish` for (2a) to take away: (2a)'s machine declaration moved
+ *        from "bytes MUST DIFFER" to "MUST be identical" (reason at the arm) and its op-reachable
+ *        half is now caught by this suite's truth table alone; a new arm (4) drops D-311's machine
+ *        rule and MUST move the bytes, which is the probe's own control now. Whole driver:
+ *        BASELINE caseproduction 75/0, this suite 90/0, machine acts 337 bytes; (1) 72/3 and 87/3,
+ *        machine BYTE-IDENTICAL; (2a) 75/0 and 89/1 (the truth table), machine BYTE-IDENTICAL;
+ *        (2b) 72/3, BYTE-IDENTICAL; (3) 74/1 and 89/1; (4) 74/1, machine acts 337 -> 2,819 bytes
+ *        (the pre-D-311 figure REC-157 recorded). 5 arms, 0 other than declared, every restore
+ *        verified by sha256, content and `cmp` x2.
  */
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
@@ -462,7 +473,10 @@ console.log("\n--- D-310: the position gate is a FACT consumed, never a rule thi
   const factsRegion = (() => {
     /* CORRECTED 2026-09-18 by REC-132 (D-422, IC-149), never exempted: the method gained
        `identity` — the POSITIONAL half of the one session resolver — so its signature moved. */
-    const s = storeSrc.indexOf("  affordanceFacts({ target, viewer = null, identity = null } = {}) {");
+    /* CORRECTED 2026-09-23 by D-311, never exempted: the method gained the two ACT stamps
+       (`author`, `by`) — the roster acts' per-pair fact and the machine fences' question are asked
+       of the strings the acts receive — so its signature moved again. */
+    const s = storeSrc.indexOf("  affordanceFacts({ target, viewer = null, identity = null, author = null, by = null } = {}) {");
     return s === -1 ? "" : storeSrc.slice(s, storeSrc.indexOf("\n  }\n", s));
   })();
   t("the region under test EXISTS (an empty slice would pass everything below)",
@@ -528,13 +542,24 @@ console.log("\n--- D-310: the position gate is a FACT consumed, never a rule thi
   + "leave the act published, so an undetermined position never silently withholds it",
     [true, false, null, undefined].map((v) => pub.applies({ ...concluded, project_owner: v }, "inquiry")),
     [true, false, true, true]);
-  t("and it is the ONLY act that consults the position: D-310 gated one act, and the seven roster "
-  + "acts stay NON_ACTS with their argument at that table (D-311)",
+  /* CORRECTED 2026-09-23 by D-311, never exempted — the LABEL moved, the property did not: D-310's
+     loose fact ("owner of SOME project") is still consulted by `publish` alone. The seven roster acts
+     are ACTS now and consult the PER-PAIR fact `roster`, never this one; that they do is asserted in
+     `d311-roster-affordances.test.mjs`, whose negative control swaps D-310's fact in. */
+  t("and it is the ONLY act that consults the position — the loose one: D-310 gated one act on "
+  + "`project_owner`, and the seven roster acts D-311 folded in read the per-pair `roster` fact instead",
     ACTS.filter((a) => /project_owner/.test(String(a.applies))).map((a) => a.id), ["publish"]);
-  t("the seven roster acts are still NON_ACTS, named and unmoved — the decision is that they STAY, "
-  + "and this fails by name if one is folded in without the per-pair fact D-311 owes",
+  /* CORRECTED 2026-09-23 by D-311, never exempted. This read "the seven roster acts are still
+     NON_ACTS, named and unmoved — the decision is that they STAY, and this fails by name if one is
+     folded in without the per-pair fact D-311 owes". D-311 IS that fact (the store's `roster`), so
+     the pin inverts: all seven are ACTS, none is a NON_ACT, and each reads `roster`. */
+  t("the seven roster acts are ACTS now, none left in NON_ACTS, and each reads the per-pair `roster` "
+  + "fact D-311 added — never D-310's `project_owner`",
     ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
-     "projectownerremove", "projectownerrescue"].filter((k) => !(k in NON_ACTS) || ACT_IDS.has(k)), []);
+     "projectownerremove", "projectownerrescue"]
+      .filter((k) => (k in NON_ACTS) || !ACT_IDS.has(k)
+        || !/\broster\b/.test(String(ACTS.find((a) => a.id === k)?.applies))
+        || /project_owner/.test(String(ACTS.find((a) => a.id === k)?.applies))), []);
 }
 
 /* ------------------------------------------------------- catalogue + gates */
@@ -579,10 +604,12 @@ const cat = await affordances(null);
    item 7 rules APPENDS to the relationship's history. Corrected, not loosened,
    for every note above's reason; it moved by exactly the one object-directed
    op REC-136 added. */
-t("no target -> the whole catalogue: twenty acts, each with id/label/weight/needs/mode/rung/prompt",
+/* CORRECTED 2026-09-23 (D-311): TWENTY-SEVEN, with the seven roster acts folded in on the per-pair
+   fact. Corrected, not loosened, for every note above's reason; it moved by exactly the seven. */
+t("no target -> the whole catalogue: twenty-seven acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 20, true]);
+  [true, 27, true]);
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
    null for every act no ruling attaches one to, and where a ruling does attach
    one it is the PUBLISHED constant — so a surface that has the control
@@ -821,9 +848,14 @@ t("the four resolutions reach a caller OVER THE WIRE, exactly as the catalogue h
    author the case either. Still composed rather than hand-listed: `mode` comes
    from SESSION_OPS for every act, and exactly one act names the other
    capability. */
-t("every act is session-reachable, and each carries the capability its own NEEDS entry names — publish rides the publication surface, not the contribute one",
+/* CORRECTED 2026-09-23 (D-311), never exempted: the seven roster acts carry NO capability — their
+   NEEDS entries are null on purpose (Membership §7 governs participation, not §5, and the store
+   enforces the position), so a roster act publishes `needs: null`. Still composed per act, never
+   hand-listed: the roster set is read off `roster`-reading predicates, not typed out here. */
+const ROSTER_IDS = new Set(ACTS.filter((a) => /\broster\b/.test(String(a.applies))).map((a) => a.id));
+t("every act is session-reachable, and each carries the capability its own NEEDS entry names — publish rides the publication surface, not the contribute one, and a roster act names none",
   cat.result.catalog.map((a) => [a.needs, a.mode]),
-  cat.result.catalog.map((a) => [a.id === "publish" ? "publish" : "contribute", "session"]));
+  cat.result.catalog.map((a) => [a.id === "publish" ? "publish" : ROSTER_IDS.has(a.id) ? null : "contribute", "session"]));
 /* CORRECTED BY FW-14, never exempted, and this is the pin the item MOVED rather
    than merely reworded. It read "rung is DECLARED: cite is null (no document
    assigns one — FW-14's, not ours), retire is terminal" and pinned cite's rung
@@ -855,9 +887,17 @@ await promote(A, infoMd(A, "collected", `sha256:${sha("body A")}`), "information
   { path: "data/dataset.json", text: ds, bytes: ds.length, sha256: sha(ds) },
   { path: "snapshots/page.html", text: snap, bytes: snap.length, sha256: sha(snap) },
 ]);
-const affA0 = await affordances(A);
+/* CORRECTED 2026-09-23 (D-311), never exempted: this asked through the MACHINE credential
+   (`mem-rec19`, the helper's default) and asserted `release` offered — while the act below is
+   performed by RUTH, "a named member", because `release()` refuses a machine BY NAME
+   (MACHINE_CANNOT_RELEASE). The pre-flight was asked of one caller and the act run by another; it
+   now asks the caller who acts, and the machine's own answer is asserted beside it. */
+const affA0 = await affordances(A, RUTH);
 t("collected information publishes EXACTLY the acts the plane would permit: cite and release",
   actIds(affA0), ["cite", "release"]);
+t("D-311: and the MACHINE credential is offered cite and NOT release — `release()` refuses its class "
++ "by name, so offering it would be the pre-flight disagreeing with the act",
+  actIds(await affordances(A)), ["cite"]);
 t("each act carries its needs (the capability the gate will actually ask for)",
   affA0.result.acts.map((a) => a.needs), ["contribute", "contribute"]);
 /* CORRECTED BY FW-14: cite's rung moved from null to `reversible`. The property
@@ -999,7 +1039,9 @@ t("the empty list is honest: disposing the elevated focus is refused ILLEGAL_TRA
 console.log("\n--- an action bundle: the two acts REC-24 built, and the refusals behind them ---");
 const ACTN = "ACTN-2026-0001-rec19";
 await promote(ACTN, actnMd(ACTN), "action", "planned");
-const affActn = await affordances(ACTN);
+/* CORRECTED 2026-09-23 (D-311): asked as RUTH, a member — the assertion two below drives the act
+   with the machine credential and it is refused BY NAME, which is the disagreement D-311 closes. */
+const affActn = await affordances(ACTN, RUTH);
 t("an action publishes the two acts that operate it (REC-24)",
   [affActn.ok, actIds(affActn)], [true, ["actioncorrespond", "actionmove"]]);
 /* DEC-8 both ways, in the same run and on the same object: what is published is

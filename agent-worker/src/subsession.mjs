@@ -472,3 +472,116 @@ export function citedAddresses(reports) {
       if (c && typeof c.address === "string" && c.address && !out.includes(c.address)) out.push(c.address);
   return out.slice(0, CITATIONS_MAX);
 }
+
+/* ---------------------------------------------------- D-220: WHAT THE RUN HOLDS
+ *
+ * `INVESTIGATIVE-SESSION.md` §3: *"AND IT MUST READ DOCUMENT VERSIONS AS VERSIONS
+ * (D-220, Bob 2026-08-06). Sixty captures of one calendar are sixty document
+ * versions of ONE document, not sixty documents. A run that counts them as sixty
+ * has a distorted picture of what the record holds … The session is consumer (3)
+ * on that row."*
+ *
+ * `citedAddresses` deduplicates by the STRING a sub-session wrote, so sixty
+ * captures of one calendar, cited by their sixty bundles, are sixty addresses —
+ * and `citations_reread` is a count of them. That count stays (it is a count of
+ * READS, and says so); what this adds is the count of DOCUMENTS, which it could
+ * never have been.
+ *
+ * THE DOCUMENT'S IDENTITY IS THE PLANE'S, NEVER THIS MEMBER'S. It is the
+ * `address_norm` `op=versionchain` answers with: the normalised address the
+ * record's own `captured_locators ⋈ register` join is keyed on (PL-10). This
+ * function receives the plane's answers and GROUPS by that key. It compares no
+ * title, no text and no bytes, because every one of those merges different
+ * documents — two agendas can share a title, and two documents can share text —
+ * and a title that agreed would be an equality that cost nothing (CLAUDE.md §5).
+ * The suite's fixture carries two DIFFERENT documents sharing one title to hold
+ * exactly that.
+ *
+ * FOUR OUTCOMES PER CITATION, AND ONLY ONE OF THEM IS A DOCUMENT:
+ *
+ *   chained       the plane answered a chain of one or more versions: the
+ *                 citation is (a version of) THAT document, counted once however
+ *                 many of its versions were cited.
+ *   unchained     the plane answered, and holds no captured version at the
+ *                 address the citation resolves to — or the cited bundle names no
+ *                 source address at all. It is counted as ITSELF, once, and is
+ *                 never merged with anything: no chain is not evidence of sameness.
+ *   undetermined  the plane REFUSED a read this needed. Nothing is known about
+ *                 which document it is, and it is counted as neither a document
+ *                 nor an unchained item — `CLAUDE.md`: undetermined is first-class
+ *                 and must be STATED (D-276's class, one field along).
+ *   truncated     a chain the plane answered only in part. Its document is
+ *                 counted — the chain's address is the identity, and the plane
+ *                 answered it — but a cited bundle absent from the page may be a
+ *                 version past it, so `cited_not_listed` is read beside
+ *                 `truncated`: on a WHOLE chain it names a bundle whose source is
+ *                 this address and which is not one of its captured versions.
+ *
+ * `resolved` is a list of `{ citation, bundle, address, chain, refused, reason }`
+ * as the driver built it from the plane's answers (`index.mjs`, the `collect`
+ * row). PURE, for `harness.mjs`'s reason: the suite can drive every outcome here
+ * without a plane, and through the op with one. */
+export function documentHoldings(resolved) {
+  const documents = new Map();
+  const unchained = [], undetermined = [];
+  const list = Array.isArray(resolved) ? resolved : [];
+  for (const r of list) {
+    if (!r || typeof r !== "object") continue;
+    if (r.refused) {
+      undetermined.push({ citation: r.citation ?? null, at: r.refused.at ?? null,
+                          code: r.refused.code ?? null, check: r.refused.check ?? null });
+      continue;
+    }
+    const chain = r.chain && typeof r.chain === "object" ? r.chain : null;
+    const key = chain && typeof chain.address_norm === "string" ? chain.address_norm : "";
+    const held = chain ? Number(chain.total) || 0 : 0;
+    if (!key || held < 1) {
+      unchained.push({ citation: r.citation ?? null, address: r.address ?? null,
+                       reason: r.reason ?? "the record holds no captured version at this address" });
+      continue;
+    }
+    const versions = Array.isArray(chain.versions) ? chain.versions : [];
+    const inChain = new Set(versions.map((v) => v && v.bundle_id).filter(Boolean));
+    let doc = documents.get(key);
+    if (!doc) {
+      doc = { address_norm: key, versions_held: held, truncated: chain.truncated === true,
+              cited: [], versions_cited: [], cited_not_listed: [] };
+      documents.set(key, doc);
+    }
+    doc.cited.push(r.citation ?? null);
+    /* A citation that named a BUNDLE names a version — if the chain holds it. One
+       that named the ADDRESS names the document and no particular version. */
+    if (r.bundle) {
+      if (inChain.has(r.bundle)) { if (!doc.versions_cited.includes(r.bundle)) doc.versions_cited.push(r.bundle); }
+      else doc.cited_not_listed.push(r.bundle);
+    }
+  }
+  const docs = [...documents.values()];
+  return {
+    /* THE COUNT A READER WILL TAKE AS COVERAGE, and it counts DOCUMENTS. */
+    documents: docs.length,
+    citations: list.length,
+    versions_cited: docs.reduce((n, d) => n + d.versions_cited.length, 0),
+    versions_held: docs.reduce((n, d) => n + d.versions_held, 0),
+    unchained: unchained.length,
+    undetermined: undetermined.length,
+    by_document: docs,
+    unchained_items: unchained,
+    undetermined_items: undetermined,
+    identity: "op=versionchain's address_norm — the record's captured_locators ⋈ register join (PL-10), "
+            + "never a title, a text or a byte comparison",
+  };
+}
+
+/** The sentence the `collect` row writes into the observation log. Three facts
+ *  that must not read alike: documents counted once, items no chain names, and
+ *  citations whose document is UNDETERMINED because the plane refused. */
+export function holdingsNote(h) {
+  if (!h) return "";
+  let s = `${h.documents} document(s) held across ${h.citations} citation(s), each counted ONCE with its `
+        + `versions (${h.versions_cited} of ${h.versions_held} held version(s) cited, read through op=versionchain)`;
+  if (h.unchained) s += `; ${h.unchained} cited item(s) in no version chain, each counted as itself`;
+  if (h.undetermined) s += `; ${h.undetermined} citation(s) whose document is UNDETERMINED — the plane refused `
+                         + `a read, so they are counted as neither a document nor an item`;
+  return s;
+}

@@ -902,14 +902,19 @@ console.log("\n--- I · REC-103: the document frontier withholds row-whole (§6)
               current_state: type === "project" ? "forming" : type === "inquiry" ? "open" : "collected",
               created: T0, last_updated: T0 },
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-      register: reg(capture) });
+      register: capture ? reg(capture) : [] });
     if (r.ok === false || !r.bundleId) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 400)}`);
     return r.bundleId;
   };
   await mk(OPEN, "information", SHA_OPEN);
   /* REC-153 (2026-09-19): the open run below needs a QUESTION to run over — see the note at the loop. */
   const OPEN_Q = "INQ-2026-0916-rec103-open";
-  await mk(OPEN_Q, "inquiry", SHA_OPEN);
+  /* CORRECTED 2026-09-23 by D-179, never exempted: this registered SHA_OPEN a SECOND time, under OPEN_Q, which
+     silently MOVED OPEN's register row onto the question (the register is keyed by the bytes and promote UPSERTed
+     the bundle). One capture has one home, the original's (Intake Doctrine §8, BOB #26), so that promote is now
+     refused CAPTURE_HELD_BY_ANOTHER_BUNDLE (C-53.13). The question is only a run context (REC-153): it registers
+     nothing, and SHA_OPEN stays home under OPEN — the bundle the links below already name as its source. */
+  await mk(OPEN_Q, "inquiry", null);
   const SECRET = await mk(SECRET_LABEL, "project", SHA_SECRET);
 
   /* THE THREE VECTORS, EACH THROUGH ITS OWN REAL WRITER rather than through one
