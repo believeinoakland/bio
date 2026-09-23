@@ -15701,7 +15701,12 @@ var ACTS = [
        record permits the move, not that this caller's parameters will pass — while
        no longer saying it to somebody for whom NO parameter could succeed. The
        per-pair question (may this viewer publish for THIS project) is a different
-       fact and a different item, D-311, argued at NON_ACTS' roster rows below. */
+       fact and a different item, D-311, argued at NON_ACTS' roster rows below.
+       D-311, 2026-09-23: A MACHINE IS NOW WITHHELD `publish`, AND NOT BY THIS CLAUSE. The null above
+       still does not narrow here; `deriveActs` withholds every act in `MACHINE_REFUSALS` from a caller
+       the store states `actor_is_machine`, because `publishCase()` refuses that class BY NAME
+       (MACHINE_CANNOT_PUBLISH) whatever its position. Two rules, two places — which is what this
+       paragraph asked for — and the machine's is now published instead of discovered at the act. */
   /* REC-135 / INVESTIGATIVE-SESSION.md §7.1 item 4, 2026-09-19: `concluded` IS
      ASKED OF A RELATIONSHIP, SO THE STATE WORD IS NO LONGER THE WHOLE OF IT.
      `op=conclude&project=` writes the project's adoption onto the PROJECT and
@@ -16110,12 +16115,108 @@ var ACTS = [
     weight: "refuse",
     types: ["information", "inquiry", "project"],
     applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 || ty === "project" && f2.cites_out.severed > 0 && f2.project_participant !== false
+  },
+  /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
+     They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
+     existed (its argument is kept, as history, at NON_ACTS' participation block). It exists now:
+     the store states `f.roster` — the caller's position IN THIS PROJECT, asked of the `by` stamp
+     the roster acts themselves receive — and each predicate below is its own act's refusal
+     stated as a condition, never D-310's "owner of SOME project":
+       projectinvite      NOT_THE_OWNER            (`projectInvite`)   -> owner of THIS project
+       projectjoin        NOT_INVITED              (`projectJoin`)     -> any participation row
+       projectleave       NOT_A_PARTICIPANT/NOT_JOINED (`projectLeave`) -> state `joined`
+       projectremove      NOT_THE_OWNER            (`projectRemove`)   -> owner of THIS project
+       projectowneradd    NOT_THE_OWNER            (`projectOwnerAdd`) -> owner of THIS project
+       projectownerremove NOT_THE_OWNER, LAST_OWNER (`projectOwnerRemove`) -> owner, and the
+                          one-owner floor clear (a one-owner project refuses EVERY parameter)
+       projectownerrescue ADMIN_ONLY, NO_OWNERS, OWNERS_ARE_ACTIVE (`#rescueRefusal`) -> open
+     `projectremove` IS AN OWNER'S, NOT AN ADMINISTRATOR'S: Membership Architecture v2 §7.7
+     REVERSED v1.4, and the store has refused a non-owner since. D-311's own row and D-310's
+     argument both said "an ADMINISTRATOR's" — the v1.4 reading; each predicate here is derived
+     from the refusal its op RAISES, which is what caught it.
+     `projectjoin` IS OFFERED TO EVERY PARTICIPANT, joined ones included: `projectJoin` refuses only
+     a caller with no participation row, and a joined participant's join SUCCEEDS (a leaving one's
+     withdraws the request, 7.6). Withholding it there would be a fence tighter than its rule.
+     WHAT THESE DO NOT SAY is what turns on a PARAMETER — the handle named, its status, the reason,
+     the 7.10 votes still owed (CONSENSUS_REQUIRED, VOTES_SHORT) — the release precedent: the
+     record permits the move, not that this caller's parameters will pass.
+     `=== true` EVERYWHERE, and it is the shape an ADDITION takes: `f.roster` is null when no
+     position could be asked (a DO-internal call, a non-project target), and an undetermined
+     position must not publish an act. A bearer's `by` is `class:<cls>`, which holds no row, so a
+     machine credential is offered none of the seven — each of which its class is refused.
+     Weight `single`, conclude's precedent: one project's roster at a time, no set to apply. */
+  {
+    id: "projectinvite",
+    label: "Invite a member to this project",
+    weight: "single",
+    types: ["project"],
+    applies: (f2, ty) => ty === "project" && f2.roster?.owner === true
+  },
+  {
+    id: "projectjoin",
+    label: "Join this project",
+    weight: "single",
+    types: ["project"],
+    applies: (f2, ty) => ty === "project" && typeof f2.roster?.state === "string"
+  },
+  {
+    id: "projectleave",
+    label: "Ask to leave this project",
+    weight: "single",
+    types: ["project"],
+    applies: (f2, ty) => ty === "project" && f2.roster?.state === "joined"
+  },
+  {
+    id: "projectremove",
+    label: "Remove a participant",
+    weight: "single",
+    types: ["project"],
+    applies: (f2, ty) => ty === "project" && f2.roster?.owner === true
+  },
+  {
+    id: "projectowneradd",
+    label: "Add an owner",
+    weight: "single",
+    types: ["project"],
+    applies: (f2, ty) => ty === "project" && f2.roster?.owner === true
+  },
+  {
+    id: "projectownerremove",
+    label: "Remove an owner (with a reason)",
+    weight: "single",
+    types: ["project"],
+    applies: (f2, ty) => ty === "project" && f2.roster?.owner === true && f2.roster?.owner_floor_clear === true
+  },
+  {
+    id: "projectownerrescue",
+    label: "Add an owner to a project whose owners are all inactive (with a reason)",
+    weight: "single",
+    types: ["project"],
+    applies: (f2, ty) => ty === "project" && f2.roster?.rescue_open === true
   }
 ];
+var MACHINE_REFUSALS = {
+  release: "MACHINE_CANNOT_RELEASE",
+  conclude: "MACHINE_CANNOT_CONCLUDE",
+  withdrawconclusion: "MACHINE_CANNOT_CONCLUDE",
+  reopen: "MACHINE_CANNOT_REOPEN",
+  publish: "MACHINE_CANNOT_PUBLISH",
+  inquirydivide: "MACHINE_CANNOT_DIVIDE",
+  inquiryground: "MACHINE_CANNOT_GROUND",
+  actionmove: "MACHINE_CANNOT_MOVE_ACTION",
+  actioncorrespond: "MACHINE_CANNOT_CORRESPOND",
+  versionaccept: "MACHINE_CANNOT_MOVE_VERSION",
+  versionreject: "MACHINE_CANNOT_MOVE_VERSION",
+  versionconsider: "MACHINE_CANNOT_MOVE_VERSION",
+  versionrevert: "MACHINE_CANNOT_MOVE_VERSION",
+  versioncurrent: "MACHINE_CANNOT_MOVE_VERSION",
+  versionhide: "MACHINE_CANNOT_MOVE_VERSION"
+};
 var ACT_IDS = new Set(ACTS.map((a) => a.id));
 function deriveActs(facts) {
   const ty = normalizeType(facts.object_type);
-  return ACTS.filter((a) => a.applies(facts, ty));
+  const machine = facts.actor_is_machine === true;
+  return ACTS.filter((a) => a.applies(facts, ty) && !(machine && a.id in MACHINE_REFUSALS));
 }
 
 // src/tsa.mjs
@@ -28976,7 +29077,7 @@ var Store = class _Store extends DurableObject {
    *  so the publication and the refusal cannot disagree. The DERIVATION (which
    *  acts those facts admit) happens at the control plane, where NEEDS and
    *  SESSION_OPS live; this method holds no copy of any act rule. */
-  affordanceFacts({ target, viewer = null, identity = null } = {}) {
+  affordanceFacts({ target, viewer = null, identity = null, author = null, by = null } = {}) {
     if (!target) return {
       ok: false,
       reason: "NO_TARGET",
@@ -29090,6 +29191,48 @@ var Store = class _Store extends DurableObject {
         if (normalizeType(b.object_type) !== "project") return null;
         const who = this.#positionalMember(viewer, identity);
         return who === null ? null : this.#isJoinedParticipant(b.bundle_id, who);
+      })(),
+      /* D-311: THE CALLER'S ROSTER POSITION IN THIS PROJECT — THE PAIR (this target, this
+         caller), never D-310's "owner of SOME project". Here the project IS the target of the
+         seven roster acts, so a member who owns project A and merely joined B is not an owner
+         of B, and the store refuses her invite on B NOT_THE_OWNER; a fact reusing
+         `#ownsAnyProject` would offer it (the negative control swaps exactly that in).
+         ASKED OF `by`, the control plane's roster stamp, and NOT of `identity`: `by` is the
+         string the roster acts themselves receive (`class:<cls>` for EVERY bearer, the `ai`
+         class included, whose `identity` is its member principal), so the pre-flight asks
+         the question of the same caller the act will. Each field is read through the
+         predicate its act's refusal runs — `#isProjectOwner` (invite, remove, owner-add,
+         owner-remove), `#participation` (join's NOT_INVITED, leave's NOT_JOINED),
+         `Store.ownerMath` over `#owners` (owner-remove's LAST_OWNER floor, which refuses
+         every parameter on a one-owner project) and `#rescueRefusal` (the rescue's three
+         caller-and-project conditions) — so a published act and the refusal it fronts
+         cannot disagree (DEC-8). A FACT and never a rule: the rules are the act
+         catalogue's. THREE-VALUED: null on a target that is not a project and when no
+         `by` was sent (a DO-internal call), and the catalogue offers a roster act only on
+         `=== true`, so an undetermined position never publishes an addition. */
+      roster: (() => {
+        if (normalizeType(b.object_type) !== "project") return null;
+        const actor = typeof by === "string" && by.trim() ? by.trim() : null;
+        if (actor === null) return null;
+        const p = this.#participation(b.bundle_id, actor);
+        return {
+          owner: this.#isProjectOwner(b.bundle_id, actor),
+          state: p ? p.state : null,
+          owner_floor_clear: _Store.ownerMath(this.#owners(b.bundle_id).length).possible,
+          rescue_open: this.#rescueRefusal(b.bundle_id, actor) === null
+        };
+      })(),
+      /* D-311: WHETHER THE ACT WOULD BE SIGNED BY A MACHINE — asked of `author`, the stamp
+         every object-directed act receives (`token:<cls>` for a bearer, the member for a
+         session), through the SAME expression the machine fences run
+         (`!who || isMachineIdentity(who)`, REC-46's one predicate). The act catalogue
+         withholds from a machine every act whose store method refuses its class BY NAME
+         (`MACHINE_REFUSALS` in affordances.mjs, each code driven through its op by
+         `d311-roster-affordances.test.mjs`). THREE-VALUED: null when no `author` was sent,
+         and a null never narrows. */
+      actor_is_machine: author === null ? null : (() => {
+        const who = String(author).trim();
+        return !who || isMachineIdentity(who);
       })(),
       /* REC-142 / §7.1 item 8: WHETHER THE CALLER CAN CONCLUDE THIS QUESTION FOR SOME PROJECT —
          a POSITIONAL fact on an INQUIRY target, `project_owner`'s shape exactly: asked of
@@ -48842,8 +48985,10 @@ ${words}`;
    *  byte-for-byte op=affordances' `acts`. */
   #queueOptions(subjectIds, viewer, identity = null) {
     const byId = /* @__PURE__ */ new Map();
+    const member = this.#positionalMember(viewer, identity);
+    const actor = member !== null ? member : isMachineIdentity(viewer) ? String(viewer).trim() : null;
     for (const id of (subjectIds || []).slice(0, _Store.QUEUE_OPTION_SUBJECTS_MAX)) {
-      const facts = this.affordanceFacts({ target: id, viewer, identity });
+      const facts = this.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });
       if (!facts || facts.ok !== true) continue;
       for (const a of deriveActs(facts))
         if (!byId.has(a.id)) byId.set(a.id, { id: a.id, label: a.label, weight: a.weight });
@@ -53998,8 +54143,10 @@ ${words}`;
     );
     return { ok: true, projectId, owner: memberId };
   }
-  /** 7.2: the owner invites by handle. Administrators may also invite, because
-   *  7.7 already gives them authority over participation. */
+  /** 7.2: the owner invites by handle, and only an owner (the code below). CORRECTED 2026-09-23
+   *  (D-311): this read "Administrators may also invite, because 7.7 already gives them authority
+   *  over participation" — v1.4's 7.7, which Membership Architecture v2 REVERSED; its §11 item 5
+   *  requires such a comment corrected rather than left to disagree in silence. */
   projectInvite({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     if (!b || !this.#rosterInSight(projectId, viewer)) return _Store.#noSuchProject(projectId);
@@ -54044,7 +54191,8 @@ ${words}`;
     return { ok: true, projectId, state: "joined" };
   }
   /** 7.6: unchecking the box is a REQUEST to leave. It greys the checkmark and
-   *  removes nobody, because 7.7 gives removal to administrators alone. */
+   *  removes nobody; removal is 7.7's, which v2 gives to an OWNER of the project
+   *  (CORRECTED 2026-09-23 by D-311 — this read "to administrators alone", v1.4's rule). */
   projectLeave({ projectId, by, comment = null } = {}) {
     const p = this.#participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT" };
@@ -54062,13 +54210,15 @@ ${words}`;
       projectId,
       state: "leaving",
       comment: c,
-      detail: "recorded as a request to leave. An administrator removes participants; this does not."
+      detail: "recorded as a request to leave. An owner of this project removes participants; this does not."
     };
   }
-  /** 7.7: only an administrator removes a participant, request outstanding or
-   *  not. Project owners invite; they do not remove. That keeps authority over
-   *  people with the custodial role rather than distributing it into content
-   *  work. */
+  /** 7.7, REVERSED in Membership Architecture v2: only an OWNER of the project
+   *  removes a participant, request outstanding or not, and an administrator does
+   *  not. CORRECTED 2026-09-23 by D-311 — this comment still stated v1.4's rule
+   *  ("only an administrator removes … Project owners invite; they do not remove")
+   *  over code that has enforced v2's since the reversal; §11 item 5 requires it
+   *  corrected rather than left to disagree in silence. */
   projectRemove({ projectId, handle, by, comment = null } = {}) {
     if (!this.#isProjectOwner(projectId, by))
       return {
@@ -54155,6 +54305,38 @@ ${words}`;
     );
     return { ok: true, projectId, handle, owner: true, owners: this.#owners(projectId) };
   }
+  /** D-311: THE RESCUE'S CALLER-AND-PROJECT CONDITIONS, extracted from `projectOwnerRescue` so
+   *  `op=affordances` asks the SAME predicate the act refuses on (the `#citesInto` discipline):
+   *  the caller is an administrator, the project has owner rows, and EVERY owner is inactive.
+   *  Returns the refusal the act answers, byte for byte as it answered before the extraction, or
+   *  null. What it leaves to the act is what turns on a PARAMETER (the reason, the handle). */
+  #rescueRefusal(projectId, by) {
+    if (!this.#isAdminMember(by))
+      return {
+        ok: false,
+        reason: "ADMIN_ONLY",
+        detail: "this is the single exception to administrators holding no authority over projects, and it is an administrator's to use"
+      };
+    const owners = this.#owners(projectId);
+    if (!owners.length)
+      return {
+        ok: false,
+        reason: "NO_OWNERS",
+        detail: "this project has no owner rows at all, which is a project created by a machine credential rather than a stranded one"
+      };
+    const active = owners.filter((o) => {
+      const m = this.#one(`SELECT status FROM members WHERE member_id=?`, o);
+      return m && m.status === "active";
+    });
+    if (active.length)
+      return {
+        ok: false,
+        reason: "OWNERS_ARE_ACTIVE",
+        active: active.sort(),
+        detail: "an administrator may add an owner only when EVERY owner of the project is inactive. While one is active the project is theirs to run, and 7.10 is the route."
+      };
+    return null;
+  }
   /** 7.13: the ONE participation power an administrator has, and its condition.
    *
    *  Only owners manage participation and lifecycle, and administrators may
@@ -54180,30 +54362,8 @@ ${words}`;
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     if (!b || !this.#rosterInSight(projectId, viewer)) return _Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
-    if (!this.#isAdminMember(by))
-      return {
-        ok: false,
-        reason: "ADMIN_ONLY",
-        detail: "this is the single exception to administrators holding no authority over projects, and it is an administrator's to use"
-      };
-    const owners = this.#owners(projectId);
-    if (!owners.length)
-      return {
-        ok: false,
-        reason: "NO_OWNERS",
-        detail: "this project has no owner rows at all, which is a project created by a machine credential rather than a stranded one"
-      };
-    const active = owners.filter((o) => {
-      const m = this.#one(`SELECT status FROM members WHERE member_id=?`, o);
-      return m && m.status === "active";
-    });
-    if (active.length)
-      return {
-        ok: false,
-        reason: "OWNERS_ARE_ACTIVE",
-        active: active.sort(),
-        detail: "an administrator may add an owner only when EVERY owner of the project is inactive. While one is active the project is theirs to run, and 7.10 is the route."
-      };
+    const blocked = this.#rescueRefusal(projectId, by);
+    if (blocked) return blocked;
     const why = String(reason ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
     const target = this.#memberByHandle(handle);
@@ -67014,7 +67174,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         affordancefacts: () => this.affordanceFacts({
           target: url.searchParams.get("target"),
           viewer: url.searchParams.get("viewer"),
-          identity: url.searchParams.get("identity")
+          identity: url.searchParams.get("identity"),
+          /* D-311: the two act stamps, as the acts receive them */
+          author: url.searchParams.get("author"),
+          by: url.searchParams.get("by")
         }),
         /* Selections. `viewer` and `owner` are both stamped by the control plane
            from the authenticated credential and are never taken from the
@@ -71149,8 +71312,10 @@ var index_default = {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const affViewer = viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`;
       const affIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+      const affAuthor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
+      const affBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
       const fOut = await doAnswer(st.fetch(
-        `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}&identity=${encodeURIComponent(affIdentity)}`
+        `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}&identity=${encodeURIComponent(affIdentity)}&author=${encodeURIComponent(affAuthor ?? "")}&by=${encodeURIComponent(affBy ?? "")}`
       ));
       if (!fOut.answered) return storeSilent("affordances");
       const facts = fOut.result;

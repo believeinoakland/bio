@@ -147,7 +147,11 @@ const dispose = async (tok, ids, to, reason) => {
   return rP(await GET(`op=dispose&token=${tok}&handle=${handle}&to=${to}`
     + `&reason=${encodeURIComponent(reason)}`));
 };
-const affordances = async (target, tok = "mem-rec17") =>
+/* CORRECTED 2026-09-23 by D-311, never exempted: this helper asked `op=affordances` as the MACHINE
+   token by default, and the store refuses that class BY NAME at the acts this suite reads it for
+   (conclude, reopen, divide, ground, publish, the version acts — MACHINE_REFUSALS). D-311 withholds
+   those from a machine, so the pre-flight is now asked of the caller who performs the acts: PILAR, the member who acts below. */
+const affordances = async (target, tok = PILAR) =>
   rP(await GET(`op=affordances&token=${tok}&target=${encodeURIComponent(target)}`));
 const actIds = (r) => (r?.acts ?? []).map((a) => a.id).sort();
 const imageOf = async (id) => (await GET(`op=image&token=mem-rec17&id=${encodeURIComponent(id)}`)).result?.["bundle.md"];

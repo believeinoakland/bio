@@ -5733,9 +5733,19 @@ export default {
          object are is the whole of what this op is asked, so answering it out
          of a failure to ask would put a wrong set of affordances in front of a
          member. The store's own NO_SUCH_BUNDLE, and its 404, are untouched. */
+      /* D-311: THE TWO ACT STAMPS, composed by the SAME expressions the acts receive them by —
+         `author` as the object-directed acts' author stamp (a bearer is `token:<cls>`), `by` as the
+         roster acts' `by` stamp (a bearer is `class:<cls>`, the `ai` class included, whose
+         `identity` above is its member principal). The store asks the machine fences' predicate of
+         the first and the roster predicates of the second, so the pre-flight asks each question of
+         the caller the act will see. `d311-roster-affordances.test.mjs` pins these two expressions
+         to the stamp sites' own text. */
+      const affAuthor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
+      const affBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
       const fOut = await doAnswer(st.fetch(
         `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`
-        + `&identity=${encodeURIComponent(affIdentity)}`));
+        + `&identity=${encodeURIComponent(affIdentity)}`
+        + `&author=${encodeURIComponent(affAuthor ?? "")}&by=${encodeURIComponent(affBy ?? "")}`));
       if (!fOut.answered) return storeSilent("affordances");
       const facts = fOut.result;
       if (!facts) return storeSilent("affordances");
