@@ -39851,7 +39851,9 @@ export class Store extends DurableObject {
        REC-172 (§14b.6) — AND THE DECLARATION ITSELF, before the seed: a `bounds` that is not a list, an entry that is
        not an object or names no bound (C-22.15), a `lease` entry (C-22.14 — the plane decides it), and an `allowed`
        that is not a whole number of zero or more (C-22.13). Each was DROPPED or COERCED below (`continue`, and
-       `Number(b.allowed) || 0`), so a member who declared a ceiling could get a run without it, or one they never set. */
+       `Number(b.allowed) || 0`), so a member who declared a ceiling could get a run without it, or one they never set.
+       REC-177 (§14b item 6, BOB #30) — AND AN ENTRY THAT STATES NO ALLOWANCE (`allowed` absent or 0, C-22.16): it was
+       opened at 0, which `finishedBound` reads as no ceiling, so the run recorded a bound it did not have. */
     const badSeed = checkConsume(bounds, { list: true });
     if (badSeed)
       return { run, started: false, code: badSeed.code, check: badSeed.check,
@@ -39907,7 +39909,7 @@ export class Store extends DurableObject {
         this.sql.exec(
           `INSERT INTO ai_run_bounds (run, bound, allowed, consumed, unit) VALUES (?, ?, ?, ?, ?)
            ON CONFLICT(run, bound) DO NOTHING`,
-          run, String(b.bound), b.allowed == null ? 0 : b.allowed,    /* REC-172: judged above; absent is 0, as ever */
+          run, String(b.bound), b.allowed,    /* REC-177: judged above, a whole number of one or more (C-22.16); the old `absent is 0` default was the no-ceiling path */
           b.consumed == null ? 0 : b.consumed,   /* REC-169: judged above */
           b.unit == null ? null : String(b.unit));
       }
