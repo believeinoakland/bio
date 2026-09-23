@@ -43126,8 +43126,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *  NO AUTHOR IDENTITY IS IN THE BYTES, by the same ruling: who the author is
    *  and what a published case shows of them is the attribution level's to
    *  govern (§4), and bytes are what verification publishes. The author is in
-   *  the register and the provenance document, where MK-3's projection decides
-   *  what crosses. */
+   *  the REGISTER alone (`register.author`, written only under TESTIMONY_PATH);
+   *  every other file of the bundle names them by `Store.observerRef` (§4.1). */
   static TESTIMONY_FORMAT = "bio-testimony/1";
   static testimonyBytes({ id, observedAt, words }) {
     return `${_Store.TESTIMONY_FORMAT}
@@ -43135,6 +43135,20 @@ id: ${id}
 observed_at: ${observedAt}
 
 ${words}`;
+  }
+  /** MK-6 — THE BUNDLE NEVER NAMES ITS AUTHOR (MEMBER-KNOWLEDGE-DESIGN.md §4.1,
+   *  BOB #19, 2026-09-21). §2 kept the author out of the testimony BYTES; §4.1
+   *  extends the rule to EVERY file of an authored bundle, because a ratified
+   *  bundle's files are exactly what the published bucket receives. Wherever a
+   *  file records who authored it (the Session Log, `data/provenance.json`'s
+   *  `author` and its chain's `who`), it writes this OPAQUE, PER-OBSERVATION
+   *  reference instead of the member. One reference per testimony, so two
+   *  observations by one member are unlinkable by construction. Only the
+   *  register's `author` column resolves it, privately. The bundle is therefore
+   *  the same bytes at every attribution level, and the level lives outside it
+   *  (§4.3). */
+  static observerRef(testimonyId) {
+    return `observer:${testimonyId}`;
   }
   /** MK-1 (A) — WHAT WOULD CARRY A MEMBER'S AUTHORED OBSERVATION INTO THE
    *  PUBLISHED RECORD, for the publication fence at op=ratify / op=caseratify
@@ -43354,6 +43368,7 @@ ${words}`;
       );
     const file = `snapshots/observation-${sha.slice(0, 16)}.txt`;
     const locator = "a member's firsthand observation, authored in this record";
+    const observer = _Store.observerRef(id);
     const md = [
       "---",
       `id: ${id}`,
@@ -43397,7 +43412,7 @@ ${words}`;
       "",
       "## Session Log",
       "",
-      `### Session ${recorded} | Authored | ${who}`,
+      `### Session ${recorded} | Authored | ${observer}`,
       "Trigger: testify",
       "Changes: created as a member's authored observation.",
       "",
@@ -43410,16 +43425,17 @@ ${words}`;
       retrieved: recorded,
       /* THE THREE THE DESIGN NAMES, in the register entry. `authored` is honoured
          only because this method wrote it (the fence reads the register's flag,
-         not this field); the author is the STAMP; the two dates are apart. */
+         not this field); the author is the STAMP, recorded in the register and
+         named here only by its opaque reference (MK-6, §4.1); the two dates are apart. */
       authored: true,
-      author: who,
+      author: observer,
       observed_at: obs,
       recorded_at: recorded,
       authority: "the observing member",
       authority_state: "determined",
       authority_basis: `the author of these bytes is the signed-in member the plane stamped from the session at op=testify, ${recorded}; the request could not name it`,
       provenance_chain: [{
-        who: "the observing member (stamped from the session)",
+        who: observer,
         asserts: `these are my own words, as written, about what I observed at ${obs}`,
         evidence: "authored through op=testify under a signed-in member session, hashed at receipt",
         bound: false

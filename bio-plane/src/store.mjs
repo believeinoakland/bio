@@ -18157,11 +18157,26 @@ export class Store extends DurableObject {
    *  NO AUTHOR IDENTITY IS IN THE BYTES, by the same ruling: who the author is
    *  and what a published case shows of them is the attribution level's to
    *  govern (§4), and bytes are what verification publishes. The author is in
-   *  the register and the provenance document, where MK-3's projection decides
-   *  what crosses. */
+   *  the REGISTER alone (`register.author`, written only under TESTIMONY_PATH);
+   *  every other file of the bundle names them by `Store.observerRef` (§4.1). */
   static TESTIMONY_FORMAT = "bio-testimony/1";
   static testimonyBytes({ id, observedAt, words }) {
     return `${Store.TESTIMONY_FORMAT}\nid: ${id}\nobserved_at: ${observedAt}\n\n${words}`;
+  }
+
+  /** MK-6 — THE BUNDLE NEVER NAMES ITS AUTHOR (MEMBER-KNOWLEDGE-DESIGN.md §4.1,
+   *  BOB #19, 2026-09-21). §2 kept the author out of the testimony BYTES; §4.1
+   *  extends the rule to EVERY file of an authored bundle, because a ratified
+   *  bundle's files are exactly what the published bucket receives. Wherever a
+   *  file records who authored it (the Session Log, `data/provenance.json`'s
+   *  `author` and its chain's `who`), it writes this OPAQUE, PER-OBSERVATION
+   *  reference instead of the member. One reference per testimony, so two
+   *  observations by one member are unlinkable by construction. Only the
+   *  register's `author` column resolves it, privately. The bundle is therefore
+   *  the same bytes at every attribution level, and the level lives outside it
+   *  (§4.3). */
+  static observerRef(testimonyId) {
+    return `observer:${testimonyId}`;
   }
 
   /** MK-1 (A) — WHAT WOULD CARRY A MEMBER'S AUTHORED OBSERVATION INTO THE
@@ -18408,6 +18423,10 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-testify-bytes */
     const file = `snapshots/observation-${sha.slice(0, 16)}.txt`;
     const locator = "a member's firsthand observation, authored in this record";
+    /* MK-6 (§4.1): every file below names the author by this reference, never
+       by `who`. `who` goes to the register row and the private rows beside it
+       (the content row's minter, the log's actor), which no publication carries. */
+    const observer = Store.observerRef(id);
     const md = ["---",
       `id: ${id}`, "object_type: information", "schema: information@1",
       `title: ${JSON.stringify(heading)}`, "current_state: collected", "prior_state: null",
@@ -18428,7 +18447,7 @@ export class Store extends DurableObject {
       + `by this record's clock. The author is stamped by the plane from the signed-in session. It stands on `
       + `that member's trust, graded as testimony (MEMBER-KNOWLEDGE-DESIGN.md section 3).`, "",
       "## Session Log", "",
-      `### Session ${recorded} | Authored | ${who}`,
+      `### Session ${recorded} | Authored | ${observer}`,
       "Trigger: testify",
       "Changes: created as a member's authored observation.", "",
       "## Review Notes", ""].join("\n");
@@ -18436,13 +18455,14 @@ export class Store extends DurableObject {
       file, locator, retrieved: recorded,
       /* THE THREE THE DESIGN NAMES, in the register entry. `authored` is honoured
          only because this method wrote it (the fence reads the register's flag,
-         not this field); the author is the STAMP; the two dates are apart. */
-      authored: true, author: who, observed_at: obs, recorded_at: recorded,
+         not this field); the author is the STAMP, recorded in the register and
+         named here only by its opaque reference (MK-6, §4.1); the two dates are apart. */
+      authored: true, author: observer, observed_at: obs, recorded_at: recorded,
       authority: "the observing member", authority_state: "determined",
       authority_basis: `the author of these bytes is the signed-in member the plane stamped from the session `
                      + `at op=testify, ${recorded}; the request could not name it`,
       provenance_chain: [{
-        who: "the observing member (stamped from the session)",
+        who: observer,
         asserts: `these are my own words, as written, about what I observed at ${obs}`,
         evidence: "authored through op=testify under a signed-in member session, hashed at receipt",
         bound: false,
