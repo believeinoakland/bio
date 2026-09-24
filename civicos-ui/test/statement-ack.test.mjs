@@ -35,6 +35,14 @@
  * source, comes back RED 26/2 failing BY NAME at "NULL IS NOT NOBODY" and "THE TWO SENTENCES DIFFER" while
  * sparing both live doors and the `[]` arm, which is the delegation's own acceptance. (B) RED 26/2, (C) RED 2/4,
  * (D) RED 5/1, (E) RED 27/1, (F) RED 26/2, (G) OVER-STRICTNESS 28/0 GREEN.
+ * RUN 3 (2026-09-24, D-507): RE-RUN IN FULL AFTER CORRECTING TWO OF THIS SUITE'S OWN ASSERTIONS — the author
+ * and no-statement arms now read the plane's CANNED TRANSLATION where they read its `detail`, because
+ * C-82.5 and C-82.6 exist and `refusalWords` prefers a translation. A control coupled to the words a suite
+ * asserts can be disarmed by the very edit that changes them, so the whole driver was re-run rather than
+ * reasoned about: 8/8 AS DECLARED, unchanged in shape and in tally — baseline 28/0 GREEN; (A) RED 26/2;
+ * (B) RED 26/2; (C) RED 2/4; (D) RED 5/1; (E) RED 27/1, naming the CORRECTED "BY ITS AUTHOR" label;
+ * (F) RED 26/2 at "NO MACHINE VOCABULARY"; (G) 28/0 GREEN. app.html restored IDENTICAL by sha256 and cmp
+ * after every arm (5c7ac848bf0a5382…, 1,568,991 B), driver exit 0.
  * FIRST RUN: 6/8 AS DECLARED, baseline 28/0 GREEN. Two arms came back NOT AS DECLARED and BOTH were findings
  * about the ARM rather than about the subject; both are corrected at the arm, with the measurement, and the
  * corrected pair was re-run and is RUN 2 above:
@@ -270,10 +278,21 @@ const directAuthor = await GET(`op=statementack&draft=${encodeURIComponent(DRAFT
 ok("ACT REACHES THE PLANE: the button on the copy sent op=statementack ONCE, naming THIS draft and nothing else of the member's",
    sentAck.length === 1 && sentAck[0].params.draft === DRAFT && !("case" in sentAck[0].params),
    JSON.stringify(sentAck.map((w) => w.params)));
-ok("BY ITS AUTHOR: the plane refuses the statement's own author by name, and the page renders THE PLANE'S sentence",
+/* CORRECTED 2026-09-24 (D-507), never exempted. This asserted the page renders the plane's `detail`,
+   and that was right on the tree it was written on: STATEMENT_ACK_BY_ITS_AUTHOR held no DEC-49 row, so
+   `detail` was the only sentence the plane had for it — which was UI-89's own finding and the reason
+   D-507 exists. The code now carries C-82.6's canned translation, `refusalWords` prefers a translation
+   over a detail (DEC-49's whole point: one authored sentence, not thirteen surfaces inventing wording),
+   and asserting the OLD sentence would now be asserting the defect. What is asserted instead is
+   STRONGER than what was here: the wire still carries the unchanged `reason` AND the unchanged
+   `detail` (the landing is additive), and the PAGE renders the translation. */
+ok("BY ITS AUTHOR: the plane refuses the statement's own author by name; the wire still carries its `detail` "
+ + "unchanged and the page renders THE PLANE'S CANNED TRANSLATION (C-82.6)",
    directAuthor?.reason === "STATEMENT_ACK_BY_ITS_AUTHOR" && typeof directAuthor.detail === "string"
-   && strip(readA).includes(flat(directAuthor.detail)),
-   JSON.stringify({ reason: directAuthor && directAuthor.reason }));
+   && typeof directAuthor.translation === "string" && directAuthor.translation.length > 100
+   && directAuthor.check === "C-82.6"
+   && strip(readA).includes(flat(directAuthor.translation)),
+   JSON.stringify({ reason: directAuthor && directAuthor.reason, check: directAuthor && directAuthor.check }));
 ok("NO MACHINE VOCABULARY: not one SHOUTY_CODE reaches the page the refusal was drawn on (DEC-49's whole point)",
    shouty(strip(readA)).length === 0, JSON.stringify(shouty(strip(readA))));
 
@@ -321,10 +340,16 @@ await drawn("the blank draft's copy is drawn", () => /data-rvc-copy/.test(R2.htm
 await R2.run(handler(R2.html("#pub-body"), "onclick", /rvsAcknowledge\(\)/));
 await drawn("the no-statement refusal is drawn", () => /data-rvc-refusal/.test(R2.html("#pub-body")));
 const directBlank = await GET(`op=statementack&secret=${encodeURIComponent(gr2.secret)}`);
-ok("NOTHING TO ACKNOWLEDGE: a draft with no statement is refused by name, and the page renders the plane's sentence, not its own",
-   directBlank?.reason === "STATEMENT_ACK_NO_STATEMENT"
-   && strip(R2.html("#pub-body")).includes(flat(directBlank.detail)),
-   JSON.stringify({ reason: directBlank && directBlank.reason }));
+/* CORRECTED 2026-09-24 (D-507), never exempted, for exactly the reason given at the author arm above:
+   STATEMENT_ACK_NO_STATEMENT now holds C-82.5's canned translation, and a page rendering the plane's
+   `detail` over a translation the plane sent would be the DEC-49 defect this item closed. */
+ok("NOTHING TO ACKNOWLEDGE: a draft with no statement is refused by name; the wire still carries its "
+ + "`detail` unchanged and the page renders THE PLANE'S CANNED TRANSLATION (C-82.5)",
+   directBlank?.reason === "STATEMENT_ACK_NO_STATEMENT" && typeof directBlank.detail === "string"
+   && typeof directBlank.translation === "string" && directBlank.translation.length > 100
+   && directBlank.check === "C-82.5"
+   && strip(R2.html("#pub-body")).includes(flat(directBlank.translation)),
+   JSON.stringify({ reason: directBlank && directBlank.reason, check: directBlank && directBlank.check }));
 ok("NO MACHINE VOCABULARY, RECIPIENT DOOR: no SHOUTY_CODE reaches the page a recipient was refused on",
    shouty(strip(R2.html("#pub-body"))).length === 0, JSON.stringify(shouty(strip(R2.html("#pub-body")))));
 /* THE FIVE CODES, DERIVED FROM THE PLANE'S SOURCE AND NEVER TYPED HERE — the delegation's own

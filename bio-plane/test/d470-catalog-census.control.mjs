@@ -17,7 +17,7 @@
  *  (b) ADD A CHECK WITHOUT MOVING THE VERSION — THE ROW'S OWN NAMED CONTROL, and the shape of the defect
  *      itself: one new row (`C-73.99`) in `GOVERNING_LAW_CHECKS`, the catalog moved, the stamp not.
  *      MUST FAIL: A3, the census pin, alone. MUST NOT FAIL: A1 (the census only grew), A2 (the new row is
- *      declared, not emitted), A4, A5 (the stamp still reads the catalogue's version, 1.22.0 since c20-batch13), A6, A7, A8.
+ *      declared, not emitted), A4, A5 (the stamp still reads the catalogue's version, 1.24.0 since D-507), A6, A7, A8.
  *  (c) ADD A CHECK AT AN UNRESOLVABLE EMISSION SITE — `f(NEW_FAMILY.THING, …)` inside `checkBundle`, the
  *      spelling a census that scored an unreadable site as zero would swallow. MUST FAIL: A2 alone. A3 MUST
  *      NOT FAIL, and that is the point of splitting them: "I cannot read this site" and "a check was added"
@@ -64,7 +64,7 @@ const edit = (file, needle, replacement) => {
 
 const FAMILY_HEAD = "export const GOVERNING_LAW_CHECKS = {\n";
 const EMIT_C151 = "    findings.push(f('C-15.1', 'error', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));";
-const VERSION = 'export const CATALOG_VERSION = "1.23.0";'; /* moved with the constant at c20-batch14 (CONDUCT #20) — the needle must MATCH the tree or the arm never arms, which this file's own header calls a finding. 1.22.0 is now origin/main's row (D-484's two checks) and 1.23.0 is this union's. */
+const VERSION = 'export const CATALOG_VERSION = "1.24.0";'; /* moved with the constant at D-507 (C-82.2..C-82.7), and at c20-batch14 (CONDUCT #20) before it — the needle must MATCH the tree or the arm never arms, which this file's own header calls a finding. 1.22.0 is now origin/main's row (D-484's two checks) and 1.23.0 is this union's. */
 
 const A1 = "(A1) THE CENSUS IS NON-EMPTY AND FLOORED";
 const A2 = "(A2) EVERY EMISSION SITE RESOLVES";

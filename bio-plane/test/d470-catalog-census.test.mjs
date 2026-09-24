@@ -38,8 +38,8 @@
  * The BUMP follows REC-14's precedent as `gate.mjs` records it: 1.18.0 -> 1.19.0
  * was MINOR, and so was 1.19.0 -> 1.20.0, for a change that made the catalogue
  * refuse documents that used to pass. This is the same class, and the bump is
- * MINOR: 1.20.0 -> 1.21.0, 1.21.0 -> 1.22.0 at c20-batch13 and 1.22.0 -> 1.23.0 at
- * c20-batch14 (both below).
+ * MINOR: 1.20.0 -> 1.21.0, 1.21.0 -> 1.22.0 at c20-batch13, 1.22.0 -> 1.23.0 at
+ * c20-batch14 and 1.23.0 -> 1.24.0 at D-507 (all below).
  *
  * WHAT THE CENSUS IS. The set of C-numbers THIS CATALOGUE HOLDS, taken from
  * `checks/bio-checks.mjs` by two sources that are unioned and never subtracted:
@@ -118,6 +118,13 @@
  * verified by sha256, by content and by `cmp` (gate.mjs 10,338 B; bio-checks.mjs
  * 917,688 B), driver exit 0. The arms are the same arms — what moved was the
  * figure they are armed against, which is the distinction this file is about.
+ * RE-RUN IN FULL AGAIN 2026-09-24 by D-507, for the same reason and after the same
+ * kind of edit — the catalogue version 1.23.0 -> 1.24.0, its census row, and the
+ * six C-82.2..C-82.7 rows the bump is for. Arm (d)'s needle IS that constant, so a
+ * control coupled to the old literal would have stopped arming silently; it was
+ * moved with it. 5 OF 5 AS DECLARED, unchanged in shape: baseline 9/0; (b) 8/1, A3
+ * alone; (c) 8/1, A2 alone; (d) 7/2, A3 and A5; (e) 9/0. Every restore verified by
+ * sha256, by content and by `cmp`, driver exit 0.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
@@ -248,6 +255,13 @@ const CATALOG_CENSUS = {
      published a different catalogue under it. ONE VERSION NAMES ONE CATALOGUE, which is this table's whole
      rule, so the landed row stands and this union takes the next number. */
   "1.23.0": { count: 447, digest: "3309735d2983f422ff63ba8491b6fcd3e350e1642de29716bb578dc8077ab9da" },
+  /* 1.24.0 (D-507, 2026-09-24, branch land/worker/D-507): THE THIRD MOVE. The catalogue took six rows
+     in an EXISTING family — C-82.2..C-82.7 in STATEMENT_ACK_CHECKS, the six `acknowledgeStatement`
+     refusals that reached a member with no canned translation — so 447 -> 453. ADDITIVE and MINOR on
+     the precedent below: no check moved and none left, and nothing that passed now fails. Taken from
+     THIS SUITE'S OWN PRINT on the item's tree over origin/main 68fecb8d, never computed by hand.
+     1.21.0's, 1.22.0's and 1.23.0's rows STAY: each is the census of the catalogue that stamped it. */
+  "1.24.0": { count: 453, digest: "b92168843fe6534c1a25b6b252bd540bc5aaac9c59195b3387e76ad644243da0" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -337,8 +351,8 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 /* CORRECTED at c20-batch13, never exempted: the catalogue moved under this pin
    at the union (five arrivals from c20-batch11fix's side), so 1.21.0 had stopped
    naming one catalogue — the exact defect the header describes. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.23.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.23.0)", "1.23.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.24.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.24.0)", "1.24.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

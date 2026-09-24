@@ -10120,6 +10120,19 @@ export class Store extends DurableObject {
        does not carry, and the one place UNDETERMINED is reachable. A case document states its author
        in its own bytes, so that door is not this one. */
     let authorFromDraft = false;
+    /* REC-79'S SINGLE-HELPER SHAPE, as `BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates DEC-49:
+       ONE constructor for every refusal this op makes, reading the CANNED TRANSLATION off the
+       catalogue row rather than repeating a sentence here. IT WAS DECLARED BELOW THE FIRST SIX
+       REFUSALS UNTIL D-507, and that is exactly why those six reached a member as the plane's own
+       authored `detail` with no translation at all (UI-89's worker's finding): a helper a return
+       cannot see is a helper that return does not use. Declared here, before the first refusal, so
+       every one of the seven is built the same way and each row's `where` names the smallest span in
+       which its refusal is enforced. ADDITIVE ON THE WIRE (IC-270): `reason`, the site's own `detail`
+       and its per-site keys are unchanged; `code`, `check` and `translation` JOIN them. */
+    const refusal = (code, detail, extra) => {
+      const row = STATEMENT_ACK_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+    };
     if (bySecret) {
       const live = this.#liveReviewGrant(secretSha);
       if (!live || (draft && String(draft).trim() !== live.draft.draft_id)) return Store.#noReviewCopy();
@@ -10144,38 +10157,47 @@ export class Store extends DurableObject {
       authorFromDraft = true;
       } else {
         const cid = String(caseId ?? "").trim(), ed = Number(edition);
+        /* DEC-49 REGION is-statement-ack-subject */
         if (!cid || !Number.isInteger(ed) || ed < 1)
-          return { ok: false, reason: "STATEMENT_ACK_NO_SUBJECT",
-                   detail: "name the statement to acknowledge: draft=<a draft case's id>, or case=<case id>&"
-                         + "edition=<n> for a case document authored and not yet signed." };
+          return refusal("STATEMENT_ACK_NO_SUBJECT",
+                   "name the statement to acknowledge: draft=<a draft case's id>, or case=<case id>&"
+                         + "edition=<n> for a case document authored and not yet signed.");
+        /* END DEC-49 REGION is-statement-ack-subject */
         const doc = this.#one(`SELECT case_id, edition, text, ratified_at FROM case_documents
                                WHERE case_id=? AND edition=?`, cid, ed);
         if (!doc || !this.#hasCaseStanding(doc, v)) return Store.#noReviewCopy();
+        /* DEC-49 REGION is-statement-ack-signed */
         if (doc.ratified_at)
-          return { ok: false, reason: "STATEMENT_ACK_ALREADY_SIGNED", caseId: cid, edition: ed,
-                   detail: `case ${cid} edition ${ed} is signed, and its completeness block — which lists who `
+          return refusal("STATEMENT_ACK_ALREADY_SIGNED",
+                   `case ${cid} edition ${ed} is signed, and its completeness block — which lists who `
                          + `acknowledged its statement — is what the signature covers. An acknowledgement now `
                          + `could appear in no signed document of this edition; a published edition is `
-                         + `corrected forward, by the next one (DEC-12).` };
+                         + `corrected forward, by the next one (DEC-12).`,
+                   { caseId: cid, edition: ed });
+        /* END DEC-49 REGION is-statement-ack-signed */
         const fm = parseFrontmatter(doc.text).data || {};
         project = String(fm.case_project ?? "").trim();
         ident = { caseId: cid, edition: ed };
         const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : {};
         statement = c.statement; statementAuthor = String(c.author ?? "").trim();
       }
+      /* DEC-49 REGION is-statement-ack-participant */
       if (!project || !this.#isJoinedParticipant(project, who))
-        return { ok: false, reason: "STATEMENT_ACK_NOT_A_PARTICIPANT",
-                 detail: "an acknowledgement of a case's exclusion statement is given by a JOINED participant of "
+        return refusal("STATEMENT_ACK_NOT_A_PARTICIPANT",
+                 "an acknowledgement of a case's exclusion statement is given by a JOINED participant of "
                        + "the project that produces the case, or by the recipient of a review copy through their "
                        + "grant (BIO_Publication §3 rule 11). Sight of a project is not a place in it: an "
-                       + "invited member who has not joined, and an administrator, are neither." };
+                       + "invited member who has not joined, and an administrator, are neither.");
+      /* END DEC-49 REGION is-statement-ack-participant */
       kind = "participant"; by = who;
     }
     const text = Store.#fmSafe(statement);
+    /* DEC-49 REGION is-statement-ack-statement */
     if (!text)
-      return { ok: false, reason: "STATEMENT_ACK_NO_STATEMENT",
-               detail: "this draft states nothing about what its case excludes, so there is no statement to "
-                     + "acknowledge yet. The draft's editor authors it (statement=); acknowledge it then." };
+      return refusal("STATEMENT_ACK_NO_STATEMENT",
+               "this draft states nothing about what its case excludes, so there is no statement to "
+                     + "acknowledge yet. The draft's editor authors it (statement=); acknowledge it then.");
+    /* END DEC-49 REGION is-statement-ack-statement */
     /* REC-193 / §3 rule 13 — A DRAFT WRITTEN BEFORE `statement_by` EXISTED SAYS NOTHING ABOUT WHO WROTE
        ITS STATEMENT, AND THAT IS STATED RATHER THAN GUESSED. The value a guess would reach for is
        `updated_by`, the last editor of ANY field, which would attribute the sentence to whoever last
@@ -10186,15 +10208,18 @@ export class Store extends DurableObject {
        the case: rule 11 never refuses publication for want of an acknowledgement, and an editor who
        re-saves the statement stamps it, after which this door opens. A RECIPIENT is unaffected — the
        exclusion is of the author, and a grant's holder is never the author. */
+    /* DEC-49 REGION is-statement-ack-author-undetermined */
     if (kind === "participant" && authorFromDraft && !statementAuthor)
-      return { ok: false, reason: "STATEMENT_ACK_AUTHOR_UNDETERMINED", draft: draftId, author: null,
-               detail: `this draft records no author for its exclusion statement: it was written before the `
+      return refusal("STATEMENT_ACK_AUTHOR_UNDETERMINED",
+               `this draft records no author for its exclusion statement: it was written before the `
                      + `plane stamped one, and who wrote the sentence that now stands is UNDETERMINED. An `
                      + `acknowledgement is a SECOND person's reading (BIO_Publication §3 rule 11), and the `
                      + `plane cannot tell here whether you are the first — reading the draft's last editor `
                      + `would attribute the statement to whoever last touched any part of it. An editor of `
                      + `this project saves the statement again (op=casedraft with statement=), which records `
-                     + `who wrote its current bytes; acknowledge it then. The case publishes either way.` };
+                     + `who wrote its current bytes; acknowledge it then. The case publishes either way.`,
+               { draft: draftId, author: null });
+    /* END DEC-49 REGION is-statement-ack-author-undetermined */
     /* THE AUTHOR'S OWN ACKNOWLEDGEMENT IS REFUSED BY NAME. The rule's whole content is a SECOND
        person; an author who acknowledges their own statement has made the first reading twice.
        THE AUTHOR IS THE MEMBER WHO WROTE THE STATEMENT'S CURRENT BYTES (§3 rule 13, BOB #32,
@@ -10205,12 +10230,15 @@ export class Store extends DurableObject {
        member who actually wrote the sentence was admitted as its own second reader. `op=publish`
        also leaves out an acknowledgement by the member who publishes, who becomes the statement's
        author at that act. */
+    /* DEC-49 REGION is-statement-ack-by-its-author */
     if (kind === "participant" && statementAuthor && by === statementAuthor)
-      return { ok: false, reason: "STATEMENT_ACK_BY_ITS_AUTHOR", author: statementAuthor,
-               detail: `you wrote this statement, and its acknowledgement is a SECOND person's reading of what `
+      return refusal("STATEMENT_ACK_BY_ITS_AUTHOR",
+               `you wrote this statement, and its acknowledgement is a SECOND person's reading of what `
                      + `the case leaves out (BIO_Publication §3 rule 11). Ask a participant of this project, or `
                      + `hand the draft to a reader through a review grant. The case publishes without one and `
-                     + `says so.` };
+                     + `says so.`,
+               { author: statementAuthor });
+    /* END DEC-49 REGION is-statement-ack-by-its-author */
     const statementSha = Store.#statementSha(text);
     /* THE DOCUMENTS ALREADY AUTHORED FOR THIS STATEMENT, UNSIGNED, AT THIS CASE IDENTITY, IN THIS PROJECT — the
        case door's own document, or (through a draft) the edition `op=publish` authored from it. Found by the hash
@@ -10229,10 +10257,6 @@ export class Store extends DurableObject {
                               WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
                                 AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
                              ident.edition, ident.caseId ?? null, ident.caseId ?? null, needle, projectLine, ackMax + 1);
-    const refusal = (code, detail, extra) => {
-      const row = STATEMENT_ACK_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
-    };
     /* DEC-49 REGION is-statement-ack-documents-bound */
     if (found.length > ackMax)
       return refusal("STATEMENT_ACK_DOCUMENTS_OVER_BOUND",
