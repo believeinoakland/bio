@@ -1,11 +1,10 @@
 # WORKER — the standing brief. Every spawned worker reads this FIRST.
 
-**Why this file exists — a measured failure, not tidiness.** CONDUCT hand-carried these
-practices into every spawn brief, ~2,000 words each. That made spawning expensive and
-integration look cheap, so CONDUCT ran one or two workers against a budget of eight —
-**caught by Bob four separate times, fixed four times with a RULE, and regressed every
-time.** A rule cannot beat arithmetic. The practices live here; a spawn brief is now the
-ITEM and nothing else.
+**Why this file exists — a measured failure, not tidiness.** Hand-carrying these practices into every
+spawn brief (~2,000 words each) made spawning expensive and integration look cheap, so CONDUCT ran one or two
+workers against a budget of eight — **caught by Bob four separate times, fixed four times with a RULE,
+and regressed every time.** A rule cannot beat arithmetic. The practices live here; a spawn brief is
+now the ITEM and nothing else.
 
 **If your brief contradicts this file, your brief wins** — it knows your item. If your
 brief is silent, this file governs.
@@ -43,18 +42,14 @@ also matched each other, which made the count look like real work. **No battery 
 all**; `workerd` was at zero. They spun for hours after their item had already merged, and nothing
 noticed, because **a wait that cannot fail is indistinguishable from one that has not finished.**
 
-**This is a COMMAND rather than a warning because the warning was already tried.** This file
-records the vigilance fix failing for `git stash` and for id allocation; what worked both times
-was a tool. The tool matches **positionally** — the executable must BE `node` and argv[1] must BE
+**This is a COMMAND because the warning was already tried** — here, as for `git stash` and for ids,
+what worked was a tool. It matches **positionally** — the executable must BE `node` and argv[1] must BE
 the battery path — so a shell that merely mentions the string cannot satisfy it. It is bounded,
 and on timeout it exits 2 naming what it was still seeing.
 
 **If you ever do write a wait of your own, its negative control is one command: run the predicate
 once with nothing running.** If it still matches, it will never release you. That control is the
-one nobody ran — and it is worth knowing that `waitquiet`'s own first draft failed it twice, once
-by anchoring a regex that `ps`'s output never matches, and once because its "don't match another
-waiter" line was itself a substring test that swallowed the fixture. Both were caught by the
-over-strictness arm, in the direction that releases a wait too early.
+one nobody ran, and `waitquiet`'s own first draft failed it twice (recorded in the tool).
 
 **A WAIT ENDS WHEN THE WORLD SAYS DONE, NEVER ONLY WHEN A SIGNAL SAYS SO — and "waiting" is
 not a state a worker may rest in** (2026-09-10: a CASE-4 worker's output was fully landed and
@@ -261,14 +256,18 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
    `RECORD` ITEMS EACH FOUND IT FROM A RED SUITE** — REC-119 counted them and said the remedy is a process change, not a
    better warning, which is this line. Rebuild BEFORE the battery: the guard turns red naming the artifact, not your change.
    **A COMMENT-ONLY `src/` CHANGE MAY OR MAY NOT MOVE `bundled.mjs`: MEASURE, NEVER ASSUME** (c20-batch14). THE FORM IS
-   NOT THE DISCRIMINATOR, though two rules written here from small samples said so (REC-110's "comments are
-   stripped", then "a plain one is stripped, a `/** */` docstring emitted"). MEASURED BOTH WAYS: of 25 plain
-   block comments from `index.mjs`, TWELVE are PRESENT in the bundle; render.mjs's JSDoc is ABSENT.
+   NOT THE DISCRIMINATOR, though two rules here said so from small samples (REC-110): of 25 plain block comments
+   from `index.mjs`, TWELVE are PRESENT in the bundle; render.mjs's JSDoc is ABSENT.
 
 0b. **EDITED A GOVERNED DESIGN DOC** (`docs/architecture/*`, or `docs/development/*` with front matter)?
    Move its Status `as of` to today and run `node tools/corpuscheck.mjs` to **0 fail** BEFORE the gate
    — `--write <file>` regenerates a Contents. The gate runs it, and a stale `as of` goes RED once the
    battery has cost you the round (M0-141).
+
+0c. **BUILT OR REMOVED SOMETHING? UPDATE `docs/architecture/construct-status.json` IN THE SAME COMMIT** (`CLAUDE.md` §1)
+   — and **POINT ITS PROBES AT CODE: since M0-155 `status.mjs` reads every file with its COMMENTS BLANKED**, so a `hit`
+   on a `DEC-49 REGION` marker or any other comment matches NOTHING (D-507 and D-508 wrote three; all three drifted at
+   c20-batch22's union). Name a symbol matching EXACTLY ONCE (M0-160), `node tools/status.mjs --check` to 0 drift.
 
 1. `cd bio-plane && npm run test:battery` — the WHOLE battery, green.
 2. `node scripts/coverage.mjs --strict` — run **DIRECTLY**, `$?` read **UNPIPED**, exit 0.
