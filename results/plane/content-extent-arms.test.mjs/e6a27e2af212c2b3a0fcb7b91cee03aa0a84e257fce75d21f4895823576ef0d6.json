@@ -1,0 +1,16 @@
+{
+ "unit": "plane:content-extent-arms.test.mjs",
+ "inputHash": "e6a27e2af212c2b3a0fcb7b91cee03aa0a84e257fce75d21f4895823576ef0d6",
+ "verdict": "PASS",
+ "run": "5bae378fcda3cd6fafe21b4b1f9e94c72da2354d.1790217462258.26584.json",
+ "tree": "5bae378fcda3cd6fafe21b4b1f9e94c72da2354d",
+ "head": "7b52ab9b0c4aa8fd4b20aa9a072fcfa7c28ac58a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 144,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "9657591d-7b1e-5a13-9e47-633fce2d9a24",
+ "at": "2026-09-24T02:37:42.271Z"
+}
