@@ -1,0 +1,16 @@
+{
+ "unit": "ui:add-surface.test.mjs",
+ "inputHash": "30ba408b79a6ef11cd9fb2ceb5f456f66137528727bdcc60b3ac2c7a101a3cd5",
+ "verdict": "PASS",
+ "run": "9bad0e609e51098dd727404005be6121a8f0afdc.1790284388645.6976.json",
+ "tree": "9bad0e609e51098dd727404005be6121a8f0afdc",
+ "head": "61532670c505c873981ceed9fcafe99aa846b368",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1331,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "e86b5214-a791-5048-8c12-6adff27e0da2",
+ "at": "2026-09-24T21:13:08.662Z"
+}
