@@ -1,0 +1,16 @@
+{
+ "unit": "ui:progression-revision.test.mjs",
+ "inputHash": "b1d429cc650057871f796cd5ac94ae4eb83a81f16d0d66b674e98a970d8fa726",
+ "verdict": "PASS",
+ "run": "817d3bbf45b3f10291c65f2f2cf712bdaa878cc1.1790277408587.24083.json",
+ "tree": "817d3bbf45b3f10291c65f2f2cf712bdaa878cc1",
+ "head": "44da67e7f3921aaf8cd24f8f3fd7042d98235e4a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 75,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4d334d7e-3f8a-5b8e-8e48-1c915a1033e1",
+ "at": "2026-09-24T19:16:48.601Z"
+}
