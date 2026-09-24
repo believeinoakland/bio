@@ -167,7 +167,7 @@ scope: the workspace lists the project's drafts from the plane's read; each open
 accepts-when: every draft the plane lists appears and opens. NEGATIVE CONTROL: stub the list empty, and the listed-draft arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
-### D-505 · running — **NOTHING STOPS A MACHINE CREDENTIAL FROM CHANGING A RISK TIER A MEMBER SET: BOB #32's rule of 2026-09-24 (once a member sets a tier, no machine may change it, not even back to undetermined) is NOT BUILT, and no fence refuses a machine promote that writes a determined tier.** Found by D-483's worker. — owner RECORD.
+### D-505 · integrated — **NOTHING STOPS A MACHINE CREDENTIAL FROM CHANGING A RISK TIER A MEMBER SET: BOB #32's rule of 2026-09-24 (once a member sets a tier, no machine may change it, not even back to undetermined) is NOT BUILT, and no fence refuses a machine promote that writes a determined tier.** Found by D-483's worker. — owner RECORD.
 status: running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-505 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/D-505; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: at the backlog head: an authority boundary on the one field carrying legal exposure (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z)
 milestone: M7
