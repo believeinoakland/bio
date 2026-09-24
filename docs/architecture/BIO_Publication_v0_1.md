@@ -132,6 +132,14 @@ Three consequences give the construct its shape. The record must be able to prov
     see §4: the list CALLS the single read's fence, which admits every participant and not only a joined one, a gap
     raised to BOB); (b)–(d) NOT BUILT (rowed).
 
+16. **A PUBLISHED RENDERING IS VERIFIED BY ITS PIXELS, AND ITS FILE HASH IS LABELLED BESIDE THEM** (D-246; BOB #32,
+    2026-09-23, serving DEC-41's intent that any copy of a published case is checkable). The same page rendered on two
+    runtimes gives identical pixels in different PNG bytes (129,366 B on workerd, 132,691 B on node), because the deflate
+    stream is a platform service. So `published_shas` carries `pixels_sha256`, taken over the normalised samples before
+    any container is built, as the VERIFYING value. The file's own sha256 is recorded beside it, labelled "this file's
+    bytes", and is informative only. A check that fails honestly on another runtime is a check that gets switched off.
+    NOT BUILT (rowed).
+
 ## 4. What is built
 
 - **Who may ratify, and what (REC-137 / REC-140, IC-154 / IC-157, 2026-09-18):** `caseratify` and `ratify` of a finding a ratified case pins ask ONE helper, `Store#caseAuthority` — an OWNER of the publishing project signs (C-57.1), the founder or a JOINED member delivers (C-56.1); `ratify` refuses a project bundle by type (C-58.1); both answer a caller who cannot see the project as for one that does not exist. **Since D-431 (IC-161, 2026-09-19)** `ratify` publishes nothing outside a ratified case: a finding no ratified case pins is refused C-58.2, and any other bundle crosses only as evidence a ratified case's pinned finding rests on (`Store.publishedGraphEdges`, the published graph's own edge set), under that case's authority, else C-58.3.
