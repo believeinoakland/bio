@@ -285,6 +285,15 @@ const CATALOG_CENSUS = {
      number, MINOR (two arrivals, no departures), and its count and digest are THIS SUITE'S OWN PRINT on the merged
      tree. REC-211's branch row is DROPPED (its comment kept as history). */
   "1.25.0": { count: 457, digest: "b333cf2716ad870d295d9373e081076a15e1a7543e1beda28ab312fad77ca3c5" },
+  /* 1.26.0 (D-463, 2026-09-24, REBASED onto main @ 1a7f0bcc): TWO ARRIVALS, no departures — C-78.3
+     NAMESPACE_CONFINED and C-29.10 AI_CONFINEMENT_NOT_SCRATCH, the confined-credential item's own rows.
+     457 -> 459, the count AND the digest taken from THIS SUITE'S OWN PRINT on the rebased tree and never
+     arithmetic (the digest cannot be computed by hand, which is why it is pinned beside the count).
+     **THIS BRANCH'S OWN 1.24.0 = {449, 3821d157…} IS DROPPED:** it was the census of this item's rows over
+     the OLD base e9b21be6, and main has since published a different catalogue under 1.24.0 (D-507 + D-508)
+     and another under 1.25.0 (REC-211). ONE VERSION NAMES ONE CATALOGUE, which is this table's whole rule,
+     so the landed rows stand and this item takes the next number. */
+  "1.26.0": { count: 459, digest: "e9bc6bde2664922c0898e2c0c8cb65321491e8cf6752b6878cf8b08f5aa89ed0" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -382,8 +391,13 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.24.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.25.0)", "1.25.0"]);
+/* CORRECTED 2026-09-24 by D-463: 1.25.0 -> 1.26.0, because two checks arrived (C-78.3, C-29.10) and A3 above
+   went red naming the figures until the constant moved and the new census was recorded. The old pin was right
+   for the tree it was written on. (The LABEL said 1.24.0 while the assertion read 1.25.0 — main's own drift,
+   corrected here rather than carried, since a label naming a version the arm does not check is how a stale pin
+   goes unnoticed; the census control's needle was stale in the same way and is corrected in its own file.) */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.26.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.26.0)", "1.26.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
