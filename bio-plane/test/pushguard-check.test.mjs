@@ -42,6 +42,9 @@
  *   kind"; restore MATCH 1adee7b7…, 89,717 B. (7) the workflow's `node tools/gateverdict.mjs …` line replaced by `true`
  *   -> 48 / 1, exactly "the workflow RUNS the writer and writes no annotation of its own"; restore MATCH 26a46f6a…,
  *   4,680 B. Closing 49 / 0. The liar (RED with FAILED=none) is driven in `gateverdict.test.mjs`'s control.
+ * NEGATIVE CONTROL (M0-170, RUN 2026-09-24 — the e2e section's carried modules DERIVED), driven by the M0-170 worker's scratchpad driver: a probe module `m0170probe.mjs` created beside the subject and `import "./m0170probe.mjs";` added to it, each arm ALONE, every touched file restored by sha256 AND `cmp` (all MATCH), probe removed.
+ *   Baseline 49 / 0. (A2) the import in `tools/pushguard.mjs` -> 49 / 0, AS DECLARED. (B2) the same import with the OLD
+ *   copy of the guard alone restored -> 42 / 7, first "NO CHECK: the push lands and the guard SAYS there is none".
  */
 import "./stdio.mjs";                 /* D-282 */
 import "./sandbox.mjs";
@@ -51,6 +54,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import * as guard from "../../tools/pushguard.mjs";
+import { moduleClosure } from "./moduleclosure.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "../..");
@@ -200,7 +204,16 @@ section("THE END-TO-END PUSH — git calls the hook, the hook reads the check th
 {
   const root = join(SANDBOX, "e2e");
   mkdirSync(join(root, "tools"), { recursive: true });
-  cpSync(join(REPO, "tools/pushguard.mjs"), join(root, "tools/pushguard.mjs"));
+  /* CORRECTED 2026-09-24 by M0-170: this copied `tools/pushguard.mjs` ALONE, a hand list of one. It is right today
+     BY RULE, not by luck — the guard's header requires it to stay SELF-CONTAINED (its clone-wide copy in the common dir
+     is one file), and `pushguard.test.mjs`'s D-406 section fails by name if it gains a relative import (measured by
+     M0-170's control, arm A2). But that is THAT suite's property to enforce; a second fixture silently relying on it
+     would fail here for the FIXTURE's reason (the hook dies on a missing module). So what is carried is derived by
+     `moduleClosure`'s STATIC mode (M0-169), and this section measures the check-reading arm whatever the guard imports. */
+  for (const rel of moduleClosure({ repo: REPO, roots: ["tools/pushguard.mjs"], dynamic: false })) {
+    mkdirSync(dirname(join(root, rel)), { recursive: true });
+    cpSync(join(REPO, rel), join(root, rel));
+  }
   writeFileSync(join(root, "README.md"), "# scratch\n");
   git(["init", "-q", "-b", "main"], root);
   git(["config", "user.email", "m0114@example.invalid"], root);
