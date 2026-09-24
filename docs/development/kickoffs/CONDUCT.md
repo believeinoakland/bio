@@ -138,7 +138,10 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
    negative control you brief, ask what the cheapest way to make it green would be, and if that way does not also make the
    world right, say so IN the criterion.
 4. **Keep the slots full** (step 1) — idle slots, not idle workers, are the cost. Green and stopped look identical on every
-   board; nothing but you distinguishes them.
+   board; nothing but you distinguishes them. **A slot is a WORKING SESSION, not a row** (BOB #33, 2026-09-24, measured: 9 of 16
+   working while the cache read full): a worker that goes quiet (finished, stuck, or asking) leaves its row `running`, and
+   nothing wakes you. At EVERY wake, compare `list_sessions` against the rows marked `running`; a row whose worker is idle is
+   flipped `integrated`, resumed, or answered before the wake ends.
 5. **Work `DECISIONS.md`.** Lifting in: a worker's decision item passes `kickoffs/README.md`'s three tests FIRST; what the
    repository answers, or you are better placed to decide (activation order, sequencing, mechanism, scoping), is resolved
    and recorded where it came from; only a genuine one becomes a `DEC-<n>` with a `provisional:` line (never block on it).
