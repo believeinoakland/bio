@@ -48,6 +48,7 @@ import { docxEntry } from "./docx.mjs";
 import { xlsxEntry } from "./formats-xlsx.mjs";
 import { pptxEntry } from "./pptx.mjs";
 import { odtEntry, odsEntry, odpEntry } from "./odf.mjs";
+import { csvEntry } from "./csv.mjs";
 
 /* Registration order is dispatch order within a pass: the first entry whose
    detect() answers wins that pass. Kept insertion-ordered by Map. */
@@ -230,3 +231,20 @@ registerFormat(pptxEntry);
 registerFormat(odtEntry);
 registerFormat(odsEntry);
 registerFormat(odpEntry);
+
+/* THE CSV ENTRY (FW-23, 2026-09-24) — `csv.mjs`, designed by BOB #32 and
+   written from a MEASURED page: all 166 `.csv` keys of `s3://cao-94612`,
+   fetched whole (M-144). It is the ninth entry and the first that is NOT a
+   container: one sheet, `sheet-cell` / `sheet-range` references (no new IC-1
+   union member), the delimiter and the encoding found by SIGNATURE and
+   recorded on the reading, undetermined when the bytes do not tell.
+
+   ITS DETECT ANSWERS ONLY IN PASS 2, ON PURPOSE AND FROM A MEASUREMENT: a CSV
+   has no magic bytes, and the shape a byte signature would match is a shape
+   PROSE WEARS — 5 of 8 planted non-CSV text shapes fired the candidate
+   signature, a hard-wrapped paragraph among them. So `csvEntry.detect`
+   returns null for ANY bytes and the format is claimed from the declared
+   content type alone, which 166 of 166 corpus keys carried. Registration
+   order is therefore immaterial for this entry in pass 1, and in pass 2 no
+   registered entry claims `text/csv`. */
+registerFormat(csvEntry);
