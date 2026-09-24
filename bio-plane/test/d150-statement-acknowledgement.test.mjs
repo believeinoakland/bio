@@ -32,6 +32,36 @@
    in stores written before this landing, where the migration adds the column NULL. Block 9's last arm asserts the
    totality this suite CAN reach (every draft it authored with a statement carries an author) and prints its corpus.
 
+   NEGATIVE CONTROL: RUN 2026-09-24 by the REC-194 worker on blocks 3, 6, 8, 10 and 11 (rule 13, the ONE-CASE-IDENTITY
+   NARROWING), in /home/user/bio on land/worker/REC-194, each arm ALONE on `src/store.mjs`, DECLARED BEFORE ARMING,
+   restored by `cp` from a UNIQUELY NAMED per-arm pristine copy verified by sha256 (`8f6982e4...b57b1d`, both arms) AND
+   by `cmp` (content identical, 3,231,780 B, floored at 3,000,000) — never `git checkout --`. The suite runs
+   `src/index.mjs` directly, so no bundle is in the loop.
+   (0) BASELINE, nothing armed -> 64 pass, 0 fail (and 64/0 again after the second restore, re-run to prove it).
+   (a) MATCH BY THE STATEMENT'S HASH ALONE — the row's first named control: `#statementAcknowledgements`' two
+   identity predicates made inert (`case_id IS ? OR 1=1`, `? IS NULL OR draft_id=? OR 1=1`), so the read matches
+   project + statement_sha + edition and nothing else, which is D-150's defect at its widest. DECLARED: MUST FAIL
+   block 10's "ACCEPTS-WHEN (first clause) ... TWIN-B ... lists NOBODY" BY NAME and block 3's REC-194 arms; MUST NOT
+   FAIL block 9 (REC-193's stamp, untouched), block 4's one-member arms (the SOLO project holds no other reading of
+   that sentence), or block 8's arms (which drive the DOCUMENT read, not this one) -> 51 pass, 13 fail: the named arm
+   and both of block 10's altitudes of the same claim (signed bytes, public read), block 10's review-copy arm, all six
+   of block 3, and block 6. Blocks 4, 8, 9 and 11 GREEN, as declared. ALL THIRTEEN ARE IN THE DECLARED DIRECTION, and
+   one is worth naming: block 3's "the act re-authors it" arm fails too, because under hash-only matching the
+   RE-AUTHOR path lists three readings where one is bound — the arm is sensitive to the defect at the second
+   altitude as well as the first.
+   (b) THE DRAFT DOOR MATCHED BY STATEMENT TEXT ACROSS THE PROJECT — the row's second named control:
+   `acknowledgeStatement`'s document read restored to `(case_id=? OR ? IS NULL)` with no null short-circuit, so a
+   draft naming no case reaches every same-sentence unsigned edition-1 document of the project. DECLARED: MUST FAIL
+   block 8's and block 10's "ACCEPTS-WHEN (second clause)" arms BY NAME; MUST NOT FAIL block 10's first-clause listing
+   arms, whose read this arm does not touch -> 58 pass, 6 fail: both named arms, block 8's three neighbouring
+   measurements (the re-run act, the byte-identity of every document, the unreachability measurement) and its RESIDUE
+   arm. EVERY LISTING ARM STAYED GREEN, which is the point of running the two arms separately: the listing read and
+   the document read are two mechanisms, each with its own arm, and neither control can pass for the other's reason.
+   ONE SURPRISE, RECORDED RATHER THAN SMOOTHED: block 8's "and NOTHING WAS WRITTEN" arm stayed GREEN under (b). That
+   is the arm behaving correctly — under (b) the FIRST act refuses over IC-246's bound and so writes nothing, and
+   it is the SECOND act, after one document is signed, that re-authors MAX of them; the arm that catches the write is
+   the byte-identity arm after both acts, which failed. An arm that reads "nothing was written" is about ONE act.
+
    D-150 / BIO_Publication_v0_1.md §3 rule 11 (BOB #27, 2026-09-22) — THE EXCLUSION STATEMENT IS
    CHECKED BY A SECOND PERSON, AND THE CHECK IS DISCLOSED, NEVER ENFORCED.
 
@@ -323,33 +353,80 @@ console.log("\n--- 2. an acknowledgement is of ONE sentence: an edited statement
 
 /* =========================================================================== 3 */
 console.log("\n--- 3. the SIGNED completeness block lists them ---");
+/* CORRECTED 2026-09-24 BY REC-194, NEVER EXEMPTED, AND THE OLD ASSERTION WAS WRONG RATHER THAN STALE.
+   It read: a NEW case's `op=publish` lists the acknowledgements taken through the DRAFT it was prepared
+   from — and the mechanism that made it pass matched every acknowledgement of the same SENTENCE in the
+   project at edition 1, because a draft naming no case records no case identity. That is the mechanism
+   §3 rule 13 rules out (BOB #32, 2026-09-23): the acknowledgement binds to ONE case identity, and a
+   second case of the same project whose statement is byte-identical listed the first's second readers in
+   its own SIGNED block (block 10 drives exactly that). A case id is minted only by publication, nothing
+   binds a draft to the case it became, and so the honest answer for a new case is that the record cannot
+   say — which this block now asserts, in the two halves the plane distinguishes:
+     (a) `op=publish` of a NEW case lists NOBODY and SAYS HOW MANY readings it could not bind, and the
+         document's prose states them as UNDETERMINED rather than printing "Nobody but its author";
+     (b) the same second reader acknowledging the PREPARED, UNSIGNED document — the case door, whose
+         acknowledgement IS bound to this case — is listed in the bytes the owner signs, which is the
+         property the old arms were really about.
+   WHAT IS LOST AND IS NOT PAPERED OVER: a review-copy RECIPIENT holds no session, so the case door is
+   not theirs, and their reading of a new case's draft can reach no signed document at all. That is a
+   design gap in rule 13's narrowing, reported by REC-194, not a property this suite asserts away. The
+   recipient's listing in signed bytes is driven in block 11, where the draft names an EXISTING case and
+   the acknowledgement is therefore bound. */
 const pubA = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...args(PROJ, "lead"), targets: [LEAD] })));
 if (pubA?.ok === false || !pubA?.caseDocument?.doc_sha) bail("publish lead", pubA);
 const CA = pubA.caseDocument.case_id;
-t("op=publish answers the list it just wrote into the case document, in order, with the statement's hash",
+t("REC-194: op=publish of a NEW case lists NOBODY — ella's and the recipient's readings were given for a draft "
++ "that names no case, so no case document may claim them — and the act SAYS how many it could not bind",
   [pubA?.completeness?.statement_sha === sha(STMT),
-   (pubA?.completeness?.acknowledgements || []).map((a) => [a.kind, a.by, a.recipient])],
-  [true, [["participant", "ella", null], ["recipient", G1.grantId, "Dana Ruiz, City Auditor's office"]]]);
+   (pubA?.completeness?.acknowledgements || []).map((a) => [a.kind, a.by, a.recipient]),
+   pubA?.completeness?.acknowledged ?? 0,
+   pubA?.completeness?.acknowledgements_unbindable_to_this_case],
+  [true, [], 0, 2]);
 {
-  const r = await ratify("iris", IRIS, CA, 1, pubA.caseDocument.doc_sha);
+  const doc0 = await docOf(CA, 1, IRIS);
+  t("and the document it authored states them as UNDETERMINED rather than as nobody: the count is 2 in the prose, "
+  + "no name appears, and the flat 'Nobody but its author' sentence is NOT printed",
+    [/Nobody acknowledged it FOR THIS CASE\./.test(doc0?.text || ""),
+     /holds 2 acknowledgements of this exact statement/.test(doc0?.text || ""),
+     /whether any of them is a reading of THIS case is UNDETERMINED/.test(doc0?.text || ""),
+     /Nobody but its author acknowledged it\./.test(doc0?.text || ""),
+     (doc0?.text || "").includes("- ella, a participant of " + PROJ)],
+    [true, true, true, false, false]);
+}
+const A3 = await ack(`case=${CA}&edition=1&token=${ELLA}`);
+t("ella then acknowledges THIS CASE's prepared document — the case door, whose reading IS bound to this case id "
++ "and this edition — and the act re-authors it",
+  [A3?.ok, A3?.bound_to_a_case, A3?.acknowledgement?.case_id, A3?.acknowledgement?.edition,
+   (A3?.case_documents || []).map((d) => [d.case_id, d.reauthored, d.acknowledged])],
+  [true, true, CA, 1, [[CA, true, 1]]]);
+{
+  const r = await ratify("iris", IRIS, CA, 1, (A3?.case_documents || [])[0]?.doc_sha);
   if (r?.ok === false) bail("caseratify lead", r);
   const doc = await docOf(CA, 1, IRIS);
   const fm = fmOf(doc?.text);
   t("IN THE SIGNED BYTES: the document is ratified, its completeness block names the statement's hash and a count "
-  + "of 2, and its list names ella and the grant",
+  + "of 1, and its list names ella — the reading given FOR THIS CASE, and only that one",
     [doc?.ratified, doc?.doc_sha === sha(doc?.text || ""), fm.completeness?.statement_sha === sha(STMT),
      fm.completeness?.acknowledged,
      (fm.completeness_acknowledgements || []).map((a) => [a.kind, a.by])],
-    [true, true, true, 2, [["participant", "ella"], ["recipient", G1.grantId]]]);
-  t("AND IN THE PROSE a member reviewed and signed, beside the statement: both second readers named",
+    [true, true, true, 1, [["participant", "ella"]]]);
+  /* MEASURED RATHER THAN PREDICTED: the tail counts TWO, not one. Both draft-given readings stay unbindable —
+     the recipient's, and ella's OWN reading of the draft, which is a different act from her reading of this
+     case's document (a different case identity, so a different row). The record holds three readings of this
+     sentence and can attribute exactly one of them to this case; the block names that one and the tail counts
+     the other two, which is the whole distinction this row exists to draw. */
+  t("AND IN THE PROSE a member reviewed and signed, beside the statement: ella is named, the TWO unbindable draft "
+  + "readings (the recipient's, and ella's own of the draft) travel with the list as undetermined, and the grant "
+  + "is NOT named as a reader",
     [/Who else read this statement\.\*\* Acknowledged/.test(doc?.text || ""),
      (doc?.text || "").includes("- ella, a participant of " + PROJ),
+     /holds 2 acknowledgements of this exact statement/.test(doc?.text || ""),
      (doc?.text || "").includes(`review grant ${G1.grantId}, addressed by its issuer as 'Dana Ruiz, City Auditor's office'`)],
-    [true, true, true]);
+    [true, true, true, false]);
   const pc = rP(await GET(`op=publishedcase&id=${CA}`));
   t("the published case serves the list COMMITTED FROM THE SIGNED BYTES, to a caller with no credential",
     (pc?.completeness?.acknowledgements || pc?.case?.completeness?.acknowledgements || []).map((a) => [a.kind, a.by]),
-    [["participant", "ella"], ["recipient", G1.grantId]]);
+    [["participant", "ella"]]);
 }
 
 /* =========================================================================== 4 */
@@ -431,12 +508,27 @@ console.log("\n--- 6. the member who publishes becomes the statement's author, a
     [ai?.ok, ai?.acknowledgement?.by], [true, "iris"]);
   const p = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...args(PROJ, "publisher"), targets: [PUBQ] })));
   if (p?.ok === false) bail("publish publisher", p);
-  const fm = fmOf((await docOf(p.caseDocument.case_id, 1, IRIS))?.text);
+  const doc6 = await docOf(p.caseDocument.case_id, 1, IRIS);
+  const fm = fmOf(doc6?.text);
+  /* CORRECTED 2026-09-24 BY REC-194, never exempted. The old arm asserted `acknowledgements_by_author_not_listed:
+     1` here — the publisher's own reading COUNTED as one left out. It counted because a draft-given reading
+     matched this new case by its statement's bytes, which §3 rule 13 rules out: iris's reading was given for a
+     DRAFT naming no case, so this case's document cannot count it either way. What is still true, and is what
+     the block exists for, is that iris becomes the statement's author at the publish act and her own reading is
+     not a second reader's; so the document says 0, lists nobody, and — because the only unbindable reading is
+     the AUTHOR's own, which is never a second reading — prints the plain "Nobody but its author" sentence with
+     no undetermined tail. THE COUNTING OF AN AUTHOR'S OWN IS NOT LEFT UNDRIVEN: it needs an acknowledgement
+     BOUND to the case, which after this narrowing means a draft naming an EXISTING case, and block 11 drives it
+     at that case's next edition. */
   t("but iris PUBLISHES it, becoming its author at that act: her acknowledgement is NOT listed, the document says "
-  + "0, and the act's answer counts the one it left out",
+  + "0 — and REC-194: it is not COUNTED as left out either, because a reading given for a draft that names no "
+  + "case is bound to no case, and the author's own is never an undetermined second reader",
     [fm.completeness?.author, fm.completeness?.acknowledged, fm.completeness_acknowledgements,
-     p?.completeness?.acknowledgements_by_author_not_listed],
-    ["iris", 0, [], 1]);
+     p?.completeness?.acknowledgements_by_author_not_listed ?? null,
+     p?.completeness?.acknowledgements_unbindable_to_this_case ?? null,
+     /Nobody but its author acknowledged it\./.test(doc6?.text || ""),
+     /UNDETERMINED/.test(doc6?.text || "")],
+    ["iris", 0, [], null, null, true, false]);
 }
 
 /* =========================================================================== 7 */
@@ -468,13 +560,22 @@ console.log("\n--- 7. the gate: bytes listing the author as their own second rea
 }
 
 /* =========================================================================== 8 */
-console.log("\n--- 8. IC-246: more unsigned documents than one act re-authors REFUSES, and writes nothing ---");
-/* Added at integration by c19-unionfix (2026-09-24, CONDUCT #19's spec), with the REAL bite: MAX + 1 unsigned case
-   documents of ONE statement in ONE project, reached through a draft (a new case: identity null, edition 1, so every
-   such edition-1 document is the act's to re-author), plus a document of the SAME SENTENCE in ANOTHER project.
-   Two defects of D-150's first cut are driven here: over the bound it CUT silently (`LIMIT 8`), leaving the ninth
-   document listing fewer second readers than the record held for its owner to sign; and it filtered the project
-   AFTER that limit, so another project's documents could crowd this one's out. */
+console.log("\n--- 8. REC-194: the draft door of a NEW case re-authors NO other case's document ---");
+/* WAS block 8 of IC-246 (c19-unionfix, 2026-09-24): MAX + 1 unsigned edition-1 case documents of ONE statement in
+   ONE project, reached THROUGH A DRAFT naming no case, plus a document of the same sentence in another project. Its
+   arms asserted that the act re-authored all MAX of them and refused over the bound.
+   CORRECTED 2026-09-24 BY REC-194, NEVER EXEMPTED, AND THE PREMISE WAS THE DEFECT RATHER THAN THE ARITHMETIC.
+   "every such edition-1 document is the act's to re-author" is exactly what §3 rule 13 rules out (BOB #32): those
+   MAX documents are MAX DIFFERENT CASES, and acknowledging one draft may not put a second reader's name into any of
+   them, least of all into bytes their owners then sign. So the accepts-when of REC-194 is asserted over the same
+   fixture, which is the sharpest one this suite has for it: the draft door of a new case finds NONE of them.
+   IC-246's two defects it was built for are NOT un-tested by this correction — both live in the SQL of the read
+   this narrowing replaced (a silent cut at the bound, and the project matched after the cut), and the read now
+   names `case_id` and `edition`, which are `case_documents`' PRIMARY KEY, so it returns at most ONE row: the cut
+   and the crowd-out are unreachable by construction rather than guarded. The bound's refusal
+   (STATEMENT_ACK_DOCUMENTS_OVER_BOUND, C-82.1) is therefore UNREACHABLE and is retained as a guard over the read;
+   its removal moves a DEC-49 floor and is reported by REC-194 as a nameable fix, not taken here. The arm below
+   asserts the unreachability as a MEASUREMENT rather than leaving it to be assumed. */
 {
   const SA_MAX = Number((/static STATEMENT_ACK_DOCUMENTS_MAX = (\d+);/.exec(
     readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8")) || [])[1]);
@@ -507,29 +608,44 @@ console.log("\n--- 8. IC-246: more unsigned documents than one act re-authors RE
      before.every((x) => typeof x === "string"), fmOf((await docOf(po.caseDocument.case_id, 1, SOL))?.text).case_project],
     [true, SA_MAX + 1, SA_MAX + 1, true, SOLO]);
   const over = await ack(`draft=${Dm.draftId}&token=${ELLA}`);
-  t("OVER THE BOUND THE ACT IS REFUSED BY NAME (C-82.1), naming the bound, the statement and the case identity — "
-  + "never a silent cut",
-    [over?.ok, over?.reason, over?.check, typeof over?.translation, over?.limit, over?.edition, over?.case_id,
-     /^[0-9a-f]{64}$/.test(over?.statement_sha || "")],
-    [false, "STATEMENT_ACK_DOCUMENTS_OVER_BOUND", "C-82.1", "string", SA_MAX, 1, null, true]);
-  t("and NOTHING WAS WRITTEN: every document, this project's and the other's, holds the bytes it was authored with",
+  t("ACCEPTS-WHEN (second clause): with MAX + 1 unsigned edition-1 documents of this EXACT sentence in this "
+  + "project, the draft door of a new case LANDS and re-authors NONE OF THEM — a draft that names no case has no "
+  + "document of its own, and none of those MAX + 1 cases is it",
+    [over?.ok, over?.existed, over?.bound_to_a_case, over?.acknowledgement?.case_id, over?.acknowledgement?.edition,
+     over?.acknowledgement?.draft_id, (over?.case_documents || []).length, over?.reason ?? null],
+    [true, false, false, null, 1, Dm.draftId, 0, null]);
+  t("and NOTHING WAS WRITTEN to any document: every one, this project's MAX + 1 and the other project's, holds the "
+  + "bytes it was authored with",
     await shaNow(), before);
-  /* The owner signs the bytes the document HOLDS NOW, read back, so an arm that re-authored it (a silent cut) is
-     measured by the arms below rather than ending the module at a stale signature. */
+  /* The owner signs the bytes the document HOLDS NOW, read back, so an arm that re-authored one is measured here
+     rather than ending the module at a stale signature. */
   const signed = await ratify("iris", IRIS, pubs[0].caseId, 1, (await docOf(pubs[0].caseId, 1, IRIS))?.doc_sha);
   if (signed?.ok === false) bail("caseratify many00", signed);
   const at = await ack(`draft=${Dm.draftId}&token=${ELLA}`);
   const after = await shaNow();
-  t("AT THE BOUND — one document signed, MAX unsigned remain — the act LANDS, is NEW (the refusal wrote no "
-  + "acknowledgement), and re-authors EXACTLY those MAX documents, publishing the bound",
-    [at?.ok, at?.existed, (at?.case_documents || []).map((d) => d.case_id).sort(),
-     (at?.case_documents || []).every((d) => d.reauthored), at?.case_documents_limit, at?.case_documents_truncated],
-    [true, false, pubs.slice(1).map((x) => x.caseId).sort(), true, SA_MAX, false]);
-  t("the OTHER project's document of the same sentence is untouched — the project is matched in the statement, "
-  + "never after a cut it could crowd",
-    after[after.length - 1], before[before.length - 1]);
-  t("DELTA: 'more than one act may re-author' and 'every one of them re-authored' do NOT read alike",
-    [over?.ok, at?.ok], [false, true]);
+  t("acknowledging again is the SAME act, still binds to no case, and still re-authors nothing — signing one of the "
+  + "MAX + 1 changes neither, because none of them was ever this draft's",
+    [at?.ok, at?.existed, (at?.case_documents || []).length, at?.case_documents_limit, at?.case_documents_truncated],
+    [true, true, 0, SA_MAX, false]);
+  t("every document is byte-identical to before the two acts, the OTHER project's included", after, before);
+  t("MEASURED, not assumed: the bound's refusal is unreachable through this door — over MAX + 1 same-sentence "
+  + "documents the act neither refuses nor re-authors, and the count it could reach is 0",
+    [over?.reason ?? null, at?.reason ?? null, (over?.case_documents || []).length <= 1,
+     (at?.case_documents || []).length <= 1],
+    [null, null, true, true]);
+  /* THE RESIDUE, MEASURED AND STATED RATHER THAN SCORED AWAY (REC-194). These MAX + 1 documents were authored
+     BEFORE any reading of this sentence existed, so each carries the flat "Nobody but its author acknowledged it"
+     sentence — and nothing re-authors them now, because re-authoring them is precisely the cross-case reach this
+     row forbids. So an unsigned document prepared before an unbindable reading arrived keeps a sentence that has
+     since become undetermined. It CANNOT be fixed from this side without the forbidden reach; the fix that would
+     fix it is the one REC-194 reports (op=publish naming the draft it publishes, so the reading binds and the
+     question never arises). Asserted here so the next reader finds it measured rather than assumed either way. */
+  t("RESIDUE: a document authored BEFORE the unbindable reading arrived keeps its 'Nobody but its author' sentence "
+  + "and is not re-authored — the undetermined tail reaches only documents authored after the reading",
+    [/Nobody but its author acknowledged it\./.test((await docOf(pubs[1].caseId, 1, IRIS))?.text || ""),
+     /UNDETERMINED/.test((await docOf(pubs[1].caseId, 1, IRIS))?.text || ""),
+     (await docOf(pubs[1].caseId, 1, IRIS))?.doc_sha === before[1]],
+    [true, false, true]);
 }
 
 /* =========================================================================== 9 */
@@ -635,6 +751,186 @@ console.log("\n--- 9. REC-193 / §3 rule 13: the statement's author is WHO WROTE
     + "for it — the UNDETERMINED answer is unreachable through any act on a store this code wrote",
       [rows.length > 0, withStatement.length > 0, withStatement.filter(([, by]) => !by)],
       [true, true, []]);
+  }
+}
+
+/* ========================================================================== 10 */
+console.log("\n--- 10. REC-194 / §3 rule 13: AN ACKNOWLEDGEMENT BINDS TO ONE CASE IDENTITY ---");
+/* THE ROW'S FIRST ACCEPTS-WHEN CLAUSE, AND THE DEFECT IT NAMES. Two cases of ONE project whose exclusion
+   statements are BYTE-IDENTICAL, one acknowledged. Before this landing the listing read matched
+   `(case_id IS ? OR (case_id IS NULL AND edition=1))`, so ella's reading of TWIN-A's draft was listed in
+   TWIN-B's completeness block — in the bytes B's owner signs, naming a second reader who never read B.
+   BOB #32 (2026-09-23): *an acknowledgement binds to ONE case identity. It never matches another case whose
+   statement is byte-identical, because reading A's statement is not reading B's.*
+   WHAT A LIAR WOULD DO AND WHICH ARM CATCHES IT: match by the statement's hash alone (the negative control
+   the row names) and arm 3 fails by name, because B then lists both ella's draft reading and her bound
+   reading of A. Keep the case id but restore the `case_id IS NULL` half of the OR and arm 3 still fails on
+   the draft reading alone — the two halves of the control are separable, and arm 2 pins which is which.
+   The statements are asserted byte-identical HERE, from the strings this suite passed in, so the arms cannot
+   pass over two sentences that merely look alike. */
+{
+  const TWINA = "INQ-2026-1500-twina", TWINB = "INQ-2026-1500-twinb";
+  for (const id of [TWINA, TWINB]) {
+    const r = await promote(id, withAdoptableReading(inquiryMd(id, `Was ${id} noticed?`, INFO)), "inquiry", "open");
+    if (r.ok === false) bail(`promote ${id}`, r);
+    const c = rP(await GET(`op=conclude&token=${IRIS}&target=${encodeURIComponent(id)}`
+      + `&conclusion=${encodeURIComponent(`The answer to ${id} is on the memo.`)}`
+      + `&falsifier=${encodeURIComponent(`An adopted resolution would overturn ${id}.`)}` + adoptedVersionParam()));
+    if (!c.ok) bail(`conclude ${id}`, c);
+  }
+  const TW = args(PROJ, "twin").statement;
+  const DA = rP(await POST(`op=casedraft&token=${IRIS}`, withRoles({ ...args(PROJ, "twin"), targets: [TWINA] })));
+  const DB = rP(await POST(`op=casedraft&token=${IRIS}`, withRoles({ ...args(PROJ, "twin"), targets: [TWINB] })));
+  if (!DA?.ok || !DB?.ok) bail("casedraft twins", { DA, DB });
+  const copyA = rP(await GET(`op=reviewcopy&draft=${DA.draftId}&token=${IRIS}`));
+  const copyB = rP(await GET(`op=reviewcopy&draft=${DB.draftId}&token=${IRIS}`));
+  t("FIXTURE ARMS THE TRAP: two DIFFERENT drafts of ONE project whose statements are BYTE-IDENTICAL (asserted "
+  + "from the strings this suite passed in) and whose hashes therefore agree — the only state in which a "
+  + "match by statement bytes can be told from a match by case identity",
+    [DA.draftId !== DB.draftId, copyA?.authored?.statement === TW, copyB?.authored?.statement === TW,
+     copyA?.statement_acknowledgements?.statement_sha === sha(TW),
+     copyB?.statement_acknowledgements?.statement_sha === sha(TW)],
+    [true, true, true, true, true]);
+  const AA = await ack(`draft=${DA.draftId}&token=${ELLA}`);
+  if (!AA?.ok) bail("ack twin A draft", AA);
+  t("ella acknowledges TWIN-A's DRAFT, and the review copies part company: A's lists her, B's — the same sentence, "
+  + "another production — lists NOBODY",
+    [(rP(await GET(`op=reviewcopy&draft=${DA.draftId}&token=${IRIS}`))?.statement_acknowledgements
+       ?.acknowledgements || []).map((a) => a.by),
+     (rP(await GET(`op=reviewcopy&draft=${DB.draftId}&token=${IRIS}`))?.statement_acknowledgements
+       ?.acknowledgements || []).map((a) => a.by)],
+    [["ella"], []]);
+  const PA = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...args(PROJ, "twin"), targets: [TWINA] })));
+  if (PA?.ok === false || !PA?.caseDocument?.doc_sha) bail("publish twin A", PA);
+  const TA = PA.caseDocument.case_id;
+  const AB = await ack(`case=${TA}&edition=1&token=${ELLA}`);
+  if (!AB?.ok) bail("ack twin A case door", AB);
+  t("TWIN-A is published and ella acknowledges its prepared document: that reading is BOUND to A's case id and "
+  + "edition, and A's document lists her",
+    [AB?.bound_to_a_case, AB?.acknowledgement?.case_id, (AB?.case_documents || []).map((d) => d.case_id),
+     fmOf((await docOf(TA, 1, IRIS))?.text).completeness?.acknowledged],
+    [true, TA, [TA], 1]);
+  const PB = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...args(PROJ, "twin"), targets: [TWINB] })));
+  if (PB?.ok === false || !PB?.caseDocument?.doc_sha) bail("publish twin B", PB);
+  const TB = PB.caseDocument.case_id;
+  const fmB = fmOf((await docOf(TB, 1, IRIS))?.text);
+  t("ACCEPTS-WHEN (first clause): TWIN-B is published with the BYTE-IDENTICAL statement and its completeness block "
+  + "lists NOBODY — neither ella's reading of A's draft nor her reading BOUND to A — though the statement hash "
+  + "B prints is the very hash both were recorded under",
+    [TB !== TA, fmB.completeness?.statement_sha === sha(TW), fmB.completeness?.statement_sha
+       === fmOf((await docOf(TA, 1, IRIS))?.text).completeness?.statement_sha,
+     fmB.completeness?.acknowledged, fmB.completeness_acknowledgements,
+     (PB?.completeness?.acknowledgements || []).map((a) => a.by)],
+    [true, true, true, 0, [], []]);
+  t("and B does not say NOBODY READ IT either: the one reading this record cannot bind to any case (ella's, of A's "
+  + "draft) is COUNTED as undetermined and NOT NAMED, while the reading bound to A is not mentioned at all",
+    [PB?.completeness?.acknowledgements_unbindable_to_this_case,
+     /Nobody acknowledged it FOR THIS CASE\./.test((await docOf(TB, 1, IRIS))?.text || ""),
+     /whether any of them is a reading of THIS case is UNDETERMINED/.test((await docOf(TB, 1, IRIS))?.text || ""),
+     (await docOf(TB, 1, IRIS))?.text.includes("- ella, a participant of " + PROJ)],
+    [1, true, true, false]);
+  {
+    const r = await ratify("iris", IRIS, TB, 1, PB.caseDocument.doc_sha);
+    if (r?.ok === false) bail("caseratify twin B", r);
+    const pcB = rP(await GET(`op=publishedcase&id=${TB}`));
+    t("IN B's SIGNED BYTES AND THROUGH THE PUBLIC READ: its committed list is EMPTY — a statement (nobody read "
+    + "THIS case's sentence), never null, and never the other case's readers",
+      [fmOf((await docOf(TB, 1, IRIS))?.text).completeness_acknowledgements,
+       pcB?.completeness?.acknowledgements ?? pcB?.case?.completeness?.acknowledgements ?? "absent"],
+      [[], []]);
+  }
+  /* A IS LEFT UNSIGNED FOR THIS ARM ON PURPOSE — the row's second clause is about two cases' UNSIGNED edition-1
+     documents, and a signed one refuses the act for a different reason (STATEMENT_ACK_ALREADY_SIGNED), which
+     would pass this arm without ever testing the narrowing. A is ratified after it, for the public read below. */
+  t("ACCEPTS-WHEN (second clause), at the two cases' own unsigned documents: A's document is unsigned and carries "
+  + "the identical sentence, and the draft door of B — a draft naming no case — re-authors NOTHING, not A's and "
+  + "not its own project's any other",
+    await (async () => {
+      const docA = await docOf(TA, 1, IRIS);
+      const act = await ack(`draft=${DB.draftId}&token=${ELLA}`);
+      return [docA?.ratified === true, docA?.doc_sha != null, act?.ok, act?.bound_to_a_case,
+              (act?.case_documents || []).length, (await docOf(TA, 1, IRIS))?.doc_sha === docA?.doc_sha];
+    })(),
+    [false, true, true, false, 0, true]);
+  {
+    const shaA = (await docOf(TA, 1, IRIS))?.doc_sha;
+    const r = await ratify("iris", IRIS, TA, 1, shaA);
+    if (r?.ok === false) bail("caseratify twin A", r);
+    const pcA = rP(await GET(`op=publishedcase&id=${TA}`));
+    const pcB = rP(await GET(`op=publishedcase&id=${TB}`));
+    t("THROUGH THE PUBLIC READ, BOTH CASES SIGNED: the same sentence, two cases, two answers — A names ella, B "
+    + "names nobody, and neither borrows the other's",
+      [(pcA?.completeness?.acknowledgements ?? pcA?.case?.completeness?.acknowledgements ?? "absent")
+         .map?.((a) => a.by) ?? "absent",
+       pcB?.completeness?.acknowledgements ?? pcB?.case?.completeness?.acknowledgements ?? "absent"],
+      [["ella"], []]);
+  }
+}
+
+/* ========================================================================== 11 */
+console.log("\n--- 11. REC-194: a BOUND acknowledgement at an existing case's next edition ---");
+/* WHAT THE NARROWING LEAVES REACHABLE, DRIVEN RATHER THAN ASSUMED. After it, only an acknowledgement recorded
+   AT a case identity reaches a case document — through the case door, or through a draft that NAMES AN EXISTING
+   CASE, which stands at that case's next edition (`#draftIdentity`). Two properties this suite would otherwise
+   lose with block 3's and block 6's corrections live only here, and both are about a DRAFT-given reading that
+   IS bound:
+     (a) a review-copy RECIPIENT's acknowledgement in the SIGNED bytes. A recipient holds no session, so the
+         case door is not theirs; a draft naming an existing case is the only door through which their reading
+         can reach a signature at all. (For a NEW case it cannot — REC-194's reported design gap.)
+     (b) the PUBLISHER's own reading left out AND COUNTED (`acknowledgements_by_author_not_listed`): the acker
+         must become the statement's author at the publish act, which needs the reading bound before it. */
+{
+  const ED2 = "INQ-2026-1500-ed2";
+  const r = await promote(ED2, withAdoptableReading(inquiryMd(ED2, `Was ${ED2} recorded?`, INFO)), "inquiry", "open");
+  if (r.ok === false) bail(`promote ${ED2}`, r);
+  const c = rP(await GET(`op=conclude&token=${IRIS}&target=${encodeURIComponent(ED2)}`
+    + `&conclusion=${encodeURIComponent(`The answer to ${ED2} is on the memo.`)}`
+    + `&falsifier=${encodeURIComponent(`An adopted resolution would overturn ${ED2}.`)}` + adoptedVersionParam()));
+  if (!c.ok) bail(`conclude ${ED2}`, c);
+  /* ELLA authors the draft, so the statement is HERS and iris is free to acknowledge it (§3 rule 13's
+     `statement_by`); the draft NAMES CB, the case block 5 published and ratified at edition 1. */
+  const D2 = rP(await POST(`op=casedraft&token=${ELLA}`,
+    withRoles({ ...args(PROJ, "ed2"), caseId: CB, targets: [ED2] })));
+  if (!D2?.ok) bail("casedraft ed2", D2);
+  const copy2 = rP(await GET(`op=reviewcopy&draft=${D2.draftId}&token=${IRIS}`));
+  t("FIXTURE: the draft NAMES an existing case, so its identity is that case's NEXT edition — not a new case, "
+  + "which is what makes every reading of it BINDABLE",
+    [copy2?.case?.case_id ?? copy2?.caseId ?? null, copy2?.case?.edition ?? copy2?.edition ?? null,
+     copy2?.statement_by],
+    [CB, 2, "ella"]);
+  const G2 = rP(await POST(`op=reviewgrant&token=${IRIS}`,
+    { draft: D2.draftId, recipient: "Ivo Marsh, Budget Office" }));
+  if (!G2?.ok || !G2.secret) bail("reviewgrant ed2", G2);
+  const ar = await ack(`draft=${D2.draftId}&secret=${encodeURIComponent(G2.secret)}`);
+  const ai = await ack(`draft=${D2.draftId}&token=${IRIS}`);
+  t("a RECIPIENT and the OWNER each acknowledge that draft, and BOTH readings are bound to the case and edition "
+  + "the draft stands at — never to no case",
+    [ar?.ok, ar?.bound_to_a_case, ar?.acknowledgement?.case_id, ar?.acknowledgement?.edition,
+     ai?.ok, ai?.bound_to_a_case, ai?.acknowledgement?.case_id, ai?.acknowledgement?.edition],
+    [true, true, CB, 2, true, true, CB, 2]);
+  const p2 = rP(await POST(`op=publish&token=${IRIS}`,
+    withRoles({ ...args(PROJ, "ed2"), caseId: CB, targets: [ED2] })));
+  if (p2?.ok === false || !p2?.caseDocument?.doc_sha) bail("publish ed2", p2);
+  t("IRIS publishes edition 2, becoming the statement's author at that act: the RECIPIENT's bound reading is "
+  + "listed, iris's own is left out AND COUNTED, and the edition is 2 of the same case",
+    [p2?.caseDocument?.case_id, p2?.caseDocument?.edition,
+     (p2?.completeness?.acknowledgements || []).map((a) => [a.kind, a.by, a.recipient]),
+     p2?.completeness?.author, p2?.completeness?.acknowledgements_by_author_not_listed,
+     p2?.completeness?.acknowledgements_unbindable_to_this_case ?? null],
+    [CB, 2, [["recipient", G2.grantId, "Ivo Marsh, Budget Office"]], "iris", 1, null]);
+  {
+    const rr = await ratify("iris", IRIS, CB, 2, p2.caseDocument.doc_sha);
+    if (rr?.ok === false) bail("caseratify ed2", rr);
+    const doc = await docOf(CB, 2, IRIS);
+    const fm = fmOf(doc?.text);
+    t("AND IN THE SIGNED BYTES OF EDITION 2: a count of 1, the recipient named with the addressee its issuer gave, "
+    + "iris absent, and edition 1's own list untouched by any of it",
+      [doc?.ratified, fm.completeness?.acknowledged,
+       (fm.completeness_acknowledgements || []).map((a) => [a.kind, a.by]),
+       (doc?.text || "").includes(`review grant ${G2.grantId}, addressed by its issuer as 'Ivo Marsh, Budget Office'`),
+       (doc?.text || "").includes("- iris, a participant of " + PROJ),
+       (fmOf((await docOf(CB, 1, IRIS))?.text).completeness_acknowledgements || []).map((a) => a.by)],
+      [true, 1, [["recipient", G2.grantId]], true, false, ["ella"]]);
   }
 }
 

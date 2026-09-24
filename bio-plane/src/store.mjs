@@ -8705,7 +8705,11 @@ export class Store extends DurableObject {
                              /* D-150: what the document just authored lists, in its words. */
                              statement_sha: acks.statementSha, acknowledgements: acks.rows,
                              acknowledgements_truncated: acks.truncated,
-                             ...(acks.byAuthor ? { acknowledgements_by_author_not_listed: acks.byAuthor } : {}) },
+                             ...(acks.byAuthor ? { acknowledgements_by_author_not_listed: acks.byAuthor } : {}),
+                             /* REC-194 / §3 rule 13: the readings of this exact sentence this record cannot
+                                bind to any case (a draft naming none). The document's prose states them;
+                                the act says so too, so a publisher reads it before signing. */
+                             ...(acks.unbound ? { acknowledgements_unbindable_to_this_case: acks.unbound } : {}) },
              author: who, at: when, weight: "single",
              /* THERE IS NO CASE-LEVEL `strength` KEY AND THERE MUST NEVER BE
                 ONE. Two findings whose strengths differ have two answers; one
@@ -10032,7 +10036,11 @@ export class Store extends DurableObject {
          `op=publish` lists in the case document, so a reviewer sees the list the document would print
          (less the publisher's own, which the act leaves out). An edited statement starts empty. */
       statement_acknowledgements: (() => {
-        const a = this.#statementAcknowledgements(d.project_id, ident.caseId, ident.edition, params.statement ?? "");
+        /* REC-194 / §3 rule 13: THE DRAFT IS PASSED, because for a draft naming no case the draft IS the
+           identity the reading was given for. Without it this read matched every same-sentence reading in
+           the project at edition 1 — another draft's included. */
+        const a = this.#statementAcknowledgements(d.project_id, ident.caseId, ident.edition,
+                                                  params.statement ?? "", null, d.draft_id);
         return { statement_sha: a.statementSha, acknowledgements: a.rows, truncated: a.truncated,
                  act: "op=statementack&draft=" + d.draft_id };
       })(),
@@ -10225,10 +10233,28 @@ export class Store extends DurableObject {
     const ackMax = Store.STATEMENT_ACK_DOCUMENTS_MAX;
     const needle = `\n  statement_sha: ${statementSha}\n`;
     const projectLine = `\ncase_project: ${project}\n`;
-    const found = this.#rows(`SELECT case_id, edition, doc_sha, text FROM case_documents
-                              WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
+    /* REC-194 / §3 rule 13 — THE DOOR REACHES ONLY ITS OWN DOCUMENT, AND A DRAFT OF A NEW CASE HAS NONE.
+       `(case_id=? OR ? IS NULL)` was an OR over the whole project at that edition, so a draft naming NO
+       case — identity null, edition 1 — re-authored every unsigned edition-1 document of EVERY OTHER case
+       of the project that carried the same sentence. That is the defect BOB #32 ruled out: reading A's
+       statement is not reading B's, so acknowledging A's draft may not put a second reader's name into
+       B's document, where B's owner would sign it. A draft naming an existing case reaches that case's
+       next edition and nothing else; a draft naming none reaches NOTHING, because a case id is minted
+       only by publication (DEC-12) and the document authored from such a draft cannot be named from here.
+       WHAT THIS COSTS, AND IT IS NOT HIDDEN: the acknowledgement is still recorded (below) and the review
+       copy still lists it, and `#statementAcknowledgements` states it as an UNBINDABLE reading rather
+       than letting a case document say nobody read the sentence. The fix that would bind it — `op=publish`
+       naming the draft it publishes — is a design question, reported and not invented here.
+       THE BOUND AND ITS REFUSAL ARE KEPT AND ARE NOW UNREACHABLE BY CONSTRUCTION, WHICH IS SAID RATHER
+       THAN LEFT TO BE NOTICED: `(case_id, edition)` is `case_documents`' PRIMARY KEY, so a read naming
+       both returns at most one row and `found.length` cannot exceed 1. IC-246's refusal is retained as a
+       guard over this read — deleting it would move the DEC-49 refusal floor and drop C-82.1 from the
+       catalogue, which is a landing of its own — and the removal is reported as a nameable fix. */
+    const found = ident.caseId == null ? [] : this.#rows(
+                            `SELECT case_id, edition, doc_sha, text FROM case_documents
+                              WHERE sig_armored IS NULL AND edition=? AND case_id=?
                                 AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
-                             ident.edition, ident.caseId ?? null, ident.caseId ?? null, needle, projectLine, ackMax + 1);
+                             ident.edition, ident.caseId, needle, projectLine, ackMax + 1);
     const refusal = (code, detail, extra) => {
       const row = STATEMENT_ACK_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
@@ -10263,11 +10289,29 @@ export class Store extends DurableObject {
                 the one the owner signs (op=caseratify refuses the old one as stale). */
              case_documents: reauthored,
              case_documents_limit: ackMax, case_documents_truncated: false,
-             listed: `the completeness block of ${Store.#caseIdentitySentence(ident.caseId ?? null, ident.edition)} `
+             /* REC-194 / §3 rule 13: THE ANSWER SAYS WHICH OF THE TWO THINGS HAPPENED, because they are
+                different facts and one sentence used to claim the stronger of them for both. An
+                acknowledgement given at a CASE IDENTITY is listed by that case's document and by no
+                other. One given for a draft that names NO case is a reading of the DRAFT: the review copy
+                lists it, and no case document can — a case id is minted only by publication, so nothing
+                here can say which case the draft became, and naming one would be inventing a referent. */
+             bound_to_a_case: ident.caseId != null,
+             listed: ident.caseId != null
+               ? `the completeness block of ${Store.#caseIdentitySentence(ident.caseId, ident.edition)} `
                    + `lists this acknowledgement when its case document is authored with this exact statement `
                    + `(op=publish), or — if that document is already authored and unsigned — now, re-authored `
                    + `(case_documents). A statement edited afterwards is a different sentence, and this `
-                   + `acknowledgement is not listed under it.` };
+                   + `acknowledgement is not listed under it. It is listed under NO OTHER CASE, even one whose `
+                   + `statement is byte-identical: reading this case's statement is not reading that one's.`
+               : `this is a reading of draft ${draftId}, which names no case — a case id is minted only by `
+                   + `publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy `
+                   + `lists it for this draft. NO case document lists it, and that is deliberate: a case `
+                   + `document that named you would be claiming you read ITS statement, which this record `
+                   + `cannot establish of any case (§3 rule 13). A reading reaches a case's signed bytes only `
+                   + `when it is given FOR that case, at its prepared and unsigned document — a door open to a `
+                   + `member of this project holding a session, and NOT to the holder of a review grant, which is `
+                   + `a gap in the design and is recorded as one rather than worked around here. A statement `
+                   + `edited afterwards is a different sentence, and this acknowledgement is not listed under it.` };
   }
 
   /* IC-246: the bound on the unsigned documents one acknowledgement re-authors, declared BELOW its method (REC-116).
@@ -10293,7 +10337,25 @@ export class Store extends DurableObject {
         `    at: "${a.at}"`])];
   }
   static ACK_PROSE_HEAD = "**Who else read this statement.**";
+  /* REC-194 / §3 rule 13 — THE UNBINDABLE READINGS TRAVEL WITH THE LIST, WHATEVER THE LIST SAYS. They
+     are a fact about this statement and not a substitute for an empty list, so the tail is appended to
+     the named run as well as to the nobody run: a document naming one second reader while the record
+     holds another reading it cannot attribute to this case would otherwise read as complete. Counted,
+     never named — naming is the claim that cannot be made. */
+  static #ackUnboundLines(acks, project) {
+    if (!acks.unbound) return [];
+    return ["",
+      `This record also holds ${acks.unbound} acknowledgement${acks.unbound === 1 ? "" : "s"} of this exact `
+      + `statement in ${project} given for a case whose identity was not yet allocated — a draft — and whether `
+      + "any of them is a reading of THIS case is UNDETERMINED: a case id is minted only by publication, and "
+      + "no draft is bound to the case it became, so a reading of a draft is not a reading of this case. They "
+      + "are counted here and deliberately not named, because naming them would claim they read THIS case's "
+      + "statement, which this record does not establish (BIO_Publication §3 rule 13)."];
+  }
   static #ackBodyLines(acks, project) {
+    return [...Store.#ackBodyHeadLines(acks, project), ...Store.#ackUnboundLines(acks, project)];
+  }
+  static #ackBodyHeadLines(acks, project) {
     return acks.rows.length
       ? [`${Store.ACK_PROSE_HEAD} Acknowledged, as a second reader of what this case leaves out, by:`, "",
          ...acks.rows.map((a) => a.kind === "recipient"
@@ -10302,9 +10364,20 @@ export class Store extends DurableObject {
            : `- ${a.by}, a participant of ${project}, on ${a.at}`),
          ...(acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this "
                                 + "document lists)"] : [])]
-      : [`${Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never `
-         + "required to publish — a group may be one person — and its absence is stated rather than left "
-         + "for a reader to infer."];
+      : acks.unbound
+        /* REC-194 / §3 rule 13: NOBODY AND UNDETERMINED ARE DIFFERENT FACTS, and the narrowing is what
+           made the difference reachable. This record holds readings of this exact sentence given for a
+           case whose identity was not yet allocated — a draft — and it cannot establish that any of them
+           is a reading of THIS case: a case id is minted only by publication and no draft is bound to the
+           case it became. So the block's `acknowledged: 0` is true of this case and is not the whole
+           truth, and this sentence carries the rest. Counted, never named: naming a reader here is the
+           one claim the record cannot support. */
+        ? [`${Store.ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never `
+           + "required to publish — a group may be one person — and its absence is stated rather than left "
+           + "for a reader to infer."]
+        : [`${Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never `
+           + "required to publish — a group may be one person — and its absence is stated rather than left "
+           + "for a reader to infer."];
   }
 
   /* AN ACKNOWLEDGEMENT THAT LANDS WHILE ITS CASE DOCUMENT IS AUTHORED AND UNSIGNED RE-AUTHORS THAT
@@ -10343,23 +10416,55 @@ export class Store extends DurableObject {
   }
 
   /* THE ACKNOWLEDGEMENTS OF ONE STATEMENT AT ONE CASE IDENTITY, for `op=publish` and the review
-     copy alike, so the list a reviewer sees and the list a case document prints are one read. A
-     NEW case's draft carries no case id (one is minted only by publication), so at edition 1 an
-     acknowledgement taken through such a draft matches too: it is the same statement, in the
-     same project, at the only edition a new case has. Bounded, and a list that hit the bound
-     says so rather than presenting a page as the whole. */
-  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null) {
+     copy alike, so the list a reviewer sees and the list a case document prints are one read.
+     Bounded, and a list that hit the bound says so rather than presenting a page as the whole.
+
+     REC-194 / §3 rule 13 (BOB #32, 2026-09-23): AN ACKNOWLEDGEMENT IS MATCHED BY THE IDENTITY IT
+     WAS RECORDED AT, AND BY NOTHING ELSE. D-150's first cut read `(case_id IS ? OR (case_id IS NULL
+     AND edition=1))`, and the second half of that OR is the defect: an acknowledgement taken through
+     a draft naming NO case matched EVERY edition-1 document of the project carrying the same
+     sentence, so a second case with a byte-identical statement listed the first's second readers —
+     in its SIGNED completeness block, under its owner's signature. Reading A's statement is not
+     reading B's, and a statement's bytes are not a case's identity.
+       - A CASE DOCUMENT (`caseId` given) lists the rows recorded at ITS (case_id, edition). Never a
+         row at another case's, and never one at no case at all.
+       - A DRAFT NAMING NO CASE (`caseId` null — the review copy's own read) lists the rows recorded
+         THROUGH THAT DRAFT, matched on `draft_id`. Never another draft's of the same sentence: two
+         drafts of one project may hold the same statement and be two different productions.
+     `unbound` IS THE HONEST REMAINDER, AND IT EXISTS BECAUSE THE NARROWING WOULD OTHERWISE MAKE A
+     DOCUMENT LIE. Before it, a new case's document listed a draft-given reading (possibly another
+     draft's); after it, the document lists none — and writing `Nobody but its author acknowledged
+     it` over a record that holds a reading of that exact sentence would be the record claiming more
+     than it can support, which is worse than a missing feature (`CLAUDE.md` §2). So the readings
+     this record cannot bind to any case are COUNTED and STATED in the prose beside the block, as
+     undetermined and never as nobody. The author's own is not among them: at publication the
+     publisher becomes the statement's author, and their own reading is the first, not a second. */
+  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null, draftId = null) {
     const sha = Store.#statementSha(statement);
-    const rows = this.#rows(`SELECT acknowledger_kind, acknowledger, recipient, at FROM statement_acknowledgements
-                             WHERE project_id=? AND statement_sha=? AND edition=? AND (case_id IS ? OR
-                               (case_id IS NULL AND edition=1))
+    const unallocated = caseId == null;
+    const rows = unallocated && !draftId ? [] : this.#rows(
+                           `SELECT acknowledger_kind, acknowledger, recipient, at FROM statement_acknowledgements
+                             WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS ?
+                               AND (? IS NULL OR draft_id=?)
                              ORDER BY at, ack_id LIMIT ?`,
-                            project, sha, edition, caseId ?? null, Store.STATEMENT_ACK_MAX + 1);
+                            project, sha, edition, caseId ?? null,
+                            unallocated ? draftId : null, unallocated ? draftId : null,
+                            Store.STATEMENT_ACK_MAX + 1);
     const truncated = rows.length > Store.STATEMENT_ACK_MAX;
     const all = rows.slice(0, Store.STATEMENT_ACK_MAX);
     const listed = all.filter((r) => !(exceptAuthor && r.acknowledger_kind === "participant"
                                        && r.acknowledger === exceptAuthor));
+    /* The readings of this exact sentence, in this project, at this edition, recorded at NO case
+       identity — a draft naming no case. Asked only for a case document: a draft's own read has no
+       case to be unbound from. Counted, never listed: naming somebody as a reader of THIS case is
+       exactly the claim that cannot be made of them. */
+    const unboundRow = unallocated ? null
+      : this.#one(`SELECT COUNT(*) AS n FROM statement_acknowledgements
+                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
+                     AND NOT (acknowledger_kind='participant' AND acknowledger IS ?)`,
+                  project, sha, edition, exceptAuthor ?? null);
     return { statementSha: sha, truncated, byAuthor: all.length - listed.length,
+             unbound: unboundRow ? Number(unboundRow.n) : 0,
              rows: listed.map((r) => ({ kind: r.acknowledger_kind, by: r.acknowledger,
                                         recipient: r.recipient ?? null, at: r.at })) };
   }
