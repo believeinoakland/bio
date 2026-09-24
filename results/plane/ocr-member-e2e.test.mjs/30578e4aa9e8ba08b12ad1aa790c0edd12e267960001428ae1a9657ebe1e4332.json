@@ -1,0 +1,16 @@
+{
+ "unit": "plane:ocr-member-e2e.test.mjs",
+ "inputHash": "30578e4aa9e8ba08b12ad1aa790c0edd12e267960001428ae1a9657ebe1e4332",
+ "verdict": "PASS",
+ "run": "71dd30d97cd3553be749a0f45218e8d7058d6632.1790290075294.2767.json",
+ "tree": "71dd30d97cd3553be749a0f45218e8d7058d6632",
+ "head": "2abc13905ddcf74186cb8ba17edb719cecc5d04c",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 147,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "bc476b98-fbf0-59d4-9e03-70525b3e4f47",
+ "at": "2026-09-24T22:47:55.306Z"
+}
