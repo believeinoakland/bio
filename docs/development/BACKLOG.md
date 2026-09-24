@@ -164,36 +164,6 @@ accepts-when: a proposal reads labelled machine work and the tier is unchanged u
 context: REC-216's audit (F1-F4, SCHEDULER #19's worker) and BOB #33's 21:55Z ruling: every `*propose` op is NON_ACTS in `bio-plane/src/affordances.mjs` (REC-195's reasoning) and a member states the value with their own act; so this proposal is a machine READ, never a member act in ACTS, and its surface SHOWS it beside the member's tier with no adopt control, as UI-102 (a2d974aa) does for the governing-laws proposal.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
 
-### D-521 · queued — **IC-246's STATEMENT_ACK_DOCUMENTS_OVER_BOUND (C-82.1) IS UNREACHABLE BY CONSTRUCTION: after REC-194 its read names (case_id, edition), `case_documents`' primary key, so at most one row returns and the bound can never fire.** Found by REC-194's worker (F1). — owner RECORD.
-order: after REC-213, with the corrections to just-landed work: a catalogued refusal that cannot occur is a claim the record makes about itself (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
-milestone: M10
-interface: I3 — a catalogued code retired; the catalogue version moves; the integrator classifies.
-design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, with `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13.
-depends-on: REC-194.
-scope: collapse the read to `#one`; remove the bound, C-82.1, its DEC-49 region `is-statement-ack-documents-bound` and block 8's bound arms; move each refusal-code floor to its printed figure.
-accepts-when: C-82.1 and its region are gone and the census floors read their printed figures (the measured failure it moves: a code no input can reach). NEGATIVE CONTROL: restore the region without its reachable site and check-refusal-codes names the orphan.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
-### D-524 · queued — **A MONITORED BUNDLE WITH AN ARCHIVE-SOURCED BASELINE READS "no captured baseline" FOREVER: `op=acquire` sets `body.locator = sel.replay`, so the register row names the Wayback replay URL while the capture files under the CDX original, and op=monitor's register lookup never finds it.** D-472's defect surviving on the ARCHIVE arm; found by D-472's worker (F1). — owner CAPTURE.
-order: after D-521, with the corrections to just-landed work: a monitor that reads no baseline where one is held (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:14Z)
-milestone: M3
-interface: I5 additive — `archiveHop` gains `document_address`; the integrator classifies.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §6 (the monitoring contract), with D-472's Drive arm as the precedent.
-depends-on: D-472.
-scope: give `src/cdx.mjs` `archiveHop` a `document_address` key as `driveHop` has; op=monitor's register lookup prefers the row whose hop names the bundle's locator.
-accepts-when: an archive-sourced baseline is found by op=monitor and two unchanged ticks read `unchanged` (the measured failure it moves: "no captured baseline" on every tick). NEGATIVE CONTROL: drop the hop key and the archive-baseline arm reads no baseline, failing by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
-### D-525 · queued — **A PRE-CAP-8 DRIVE BASELINE IS A CAPTURE OF GOOGLE'S SHELL, so its monitor reads `modified` on every tick permanently, and nothing lists which bundles carry one.** Found by D-472's worker (F3). — owner CAPTURE.
-order: after D-524, the same monitor path; low: the fix is a re-acquire (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:14Z)
-milestone: M3
-interface: none unless a read is added (the integrator classifies).
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §6, with CAP-8's Drive export arm.
-depends-on: D-472.
-scope: a sweep listing Drive-address bundles whose baseline capture's handler is an HTML stack (a shell); re-acquire each through the export address, recorded as a new capture, never overwriting the old.
-accepts-when: the sweep names every shell baseline and a re-acquired one reads `unchanged` across two ticks (the measured failure it moves: a permanent `modified`). NEGATIVE CONTROL: skip the re-acquire and the two-tick arm reads `modified` by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
 ### D-526 · queued — **WHICH REFUSAL A CALLER MEETS ON `op=promote` STILL DEPENDS ON THE ENVELOPE: the fences above bundle.md's parse (NAME_TAKEN, CITED retirement, LAWS_ACT carry-forward) read the envelope's type, and `#projectRow`'s action columns compare `fm.object_type === "action"` raw, not through `normalizeType`. Nothing wrong can land (D-510's fence refuses it).** Found by D-510's worker (F1, F3). — owner RECORD.
 order: after D-525, with the promote corrections: the answer a caller meets should not depend on a label D-510 ruled untrusted (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:25Z)
 milestone: M7
@@ -263,6 +233,26 @@ depends-on: none.
 scope: a gated CEILING arm in check-refusal-codes' ratchet shape at the printed count of multi-site codes, with the deliberate closures declared BY NAME (RATE_IP and RATE_GLOBAL, VERSION_ACT_UNWRITABLE); the ceiling only moves down.
 accepts-when: the gate reads the ceiling at its printed figure, and a planted second mint site of a single-site code fails by name (the measured failure it moves: 60 candidates, none gated). NEGATIVE CONTROL: plant the second site, and the ceiling arm fails naming the code.
 added: 2026-09-24 · SCHEDULER #20 (id minted by D-513's worker).
+
+### D-559 · queued — **TWO NEGATIVE-CONTROL HARNESSES HAVE DECAYED (D-353 decay mode c), on origin/main as on the branches: `nc-rec66.mjs` ARM 1 throws "anchor is not unique" on `const scan = this.#rows(` (store.mjs now holds more than one such line), and `nc-rec129.mjs` reports 10 of 19 arms "DID NOT ARM" with every restore byte-identical.** Found by M0-182's worker (via CONDUCT #20 23:00Z). — owner M0.
+order: after D-550, with the process rows behind the product rows: the controls fail loudly rather than pass falsely, so no gate result is wrong today (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` "The negative-control register" (a control must arm on the tree it runs on).
+depends-on: none.
+scope: re-anchor each arm on the current source, one unique anchor per arm, then run each control AS DECLARED and record it on its suite's NEGATIVE CONTROL line.
+accepts-when: `nc-rec66` arms all arms and `nc-rec129` arms 19 of 19 AS DECLARED (the measured failure it moves: one throw and 10 unarmed arms). NEGATIVE CONTROL: the harnesses are the controls; re-run each whole and record the counts.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs D`).
+
+### D-537 · queued — **M0-37'S CONTROL HAS NOT RUN SINCE THE COORD CUTOVER: `bio-plane/test/delegations.control.mjs` reads and writes `docs/development/CLAIMS.md` FROM THE WORKTREE, which since M0-110 is a 218-byte coord-pointer stub, so its byte floor refuses at the first arm (on origin/main too).** Found by M0-182's worker (via CONDUCT #20 23:00Z). — owner M0.
+order: after D-559, with the process rows behind the product rows: a control that cannot run is loud, not a false green (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` "The negative-control register", with TREE-SHARING.md §1's coord files (M0-110).
+depends-on: none.
+scope: read and write CLAIMS.md through `tools/coord.mjs` readState/writeState, as `tools/delegations.mjs` already does, on a planted local coord ref, and floor the byte count on the coord content.
+accepts-when: the control runs every arm AS DECLARED against the coord content (the measured failure it moves: refused at the first arm by the stub's byte floor). NEGATIVE CONTROL: point the read back at the worktree path and the byte-floor arm refuses by name.
+added: 2026-09-24 · SCHEDULER #20 (id minted by M0-182's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
@@ -1199,3 +1189,13 @@ depends-on: none.
 scope: narrow the arm's patch to revisions, keeping the stamp when the base is null.
 accepts-when: the arm runs and fails as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-369 · queued — **FIVE IN-MEMORY `truncated` SHAPES ARE NEVER DRIVEN PAST THEIR CEILING: only `op=connect` has a live over-the-ceiling arm in `derivation-bounds.test.mjs`; `queueFeed`, `biasInhale`, `documentsNamingEntity` and `#backfillLegContent` are pinned by roster alone (now 10 names).** — owner RECORD.
+order: with the M0 control rows: a verification instrument (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (test through the op), with `INVESTIGATIVE-SESSION.md` §14c.
+depends-on: none.
+scope: a live driven arm per shape. In `bio-plane/test/derivation-bounds.test.mjs`.
+accepts-when: each shape is driven past its ceiling and states `truncated`. NEGATIVE CONTROL: drop a paging LIMIT in `queueFeed`, and its live arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).

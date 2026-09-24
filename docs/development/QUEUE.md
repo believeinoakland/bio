@@ -138,7 +138,8 @@ scope: anchor a table declaration at line start OR immediately after a template 
 accepts-when: `content` matches once, and 114 declarations still read (the measured failure it moves: a second, string match that would keep a deleted table BUILT). NEGATIVE CONTROL: delete `content`'s declaration in a fixture and the probe reads NOT BUILT by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### M0-182 · running — **7 CONTROL-DRIVER PENS INSIDE THE WORKTREE ARE NOT GITIGNORED (.m0110-harness, .m0109-harness, .m037-harness, .m0100-harness, .m0107-harness, .vf1-control-pristine, .m0111-harness), so the tree is DIRTY while those controls run and a gate on it records nothing; and nothing grades the pen class.** Found by D-492's worker (F2) and M0-179's sweep. RESTATED 2026-09-24 ~22:28Z by SCHEDULER #20 to BOB #33's ruling of 17:12Z (BOB-INBOX-drained.md, the M0-155 finding-5 entry): *a control driver's PEN is not a session's SCRATCH … in-worktree, gitignored, item-named pens STAND*. The earlier text called the in-worktree pen itself the violation; that was wrong (CONDUCT #20 22:25Z, who has corrected the worker). — owner M0.
+### M0-182 · integrated — **7 CONTROL-DRIVER PENS INSIDE THE WORKTREE ARE NOT GITIGNORED (.m0110-harness, .m0109-harness, .m037-harness, .m0100-harness, .m0107-harness, .vf1-control-pristine, .m0111-harness), so the tree is DIRTY while those controls run and a gate on it records nothing; and nothing grades the pen class.** Found by D-492's worker (F2) and M0-179's sweep. RESTATED 2026-09-24 ~22:28Z by SCHEDULER #20 to BOB #33's ruling of 17:12Z (BOB-INBOX-drained.md, the M0-155 finding-5 entry): *a control driver's PEN is not a session's SCRATCH … in-worktree, gitignored, item-named pens STAND*. The earlier text called the in-worktree pen itself the violation; that was wrong (CONDUCT #20 22:25Z, who has corrected the worker). — owner M0.
+status: integrated — integrated — flipped ~23:06Z by SCHEDULER #20 on CONDUCT #20's verification (23:00Z): 413e894d, 98/98 · 7392 RECORDED GREEN; nc-m0182 5/5 AS DECLARED; class (a) only (an unignored pen), as BOB #33's ruling leaves; rides c20-batch27. RESIDUE: 16 of 74 moved drivers' controls re-run, the rest rest on the static sweep. Findings: D-537, D-559.
 order: after M0-188, AHEAD of the product rows (moved 2026-09-24 20:25Z by SCHEDULER #19): an unignored pen dirties the tree during a control, so a gate records nothing (Bob's 17:41Z rule; M0-179's sweep via CONDUCT #20)
 milestone: M0
 interface: none.
@@ -346,8 +347,8 @@ scope: replace the nine sentences with "Run `node tools/bundles.mjs`, which rebu
 accepts-when: no staleness finding names `npm run build` (the measured failure it moves: nine sites naming the one-bundle command). NEGATIVE CONTROL: restore one site's old sentence and the fleetbundles quoted-remedy arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### M0-191 · running — **NOTHING READS THE SLOTS: a `running` row whose worker FINISHED, went BLOCKED or has no session holds a slot until a lane happens to look, and a `queued` row waits with nobody spawning it.** BOB #33 21:05Z (supersedes his 18:30Z and 18:33Z entries): measured 7+ of 16 workers idle at 21:03Z. — owner M0.
-status: running — running — spawned 22:14Z 2026-09-24 by SCHEDULER #20 as WORKER M0-191 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/M0-191 and the session; never conclude queued from absence.
+### M0-191 · integrated — **NOTHING READS THE SLOTS: a `running` row whose worker FINISHED, went BLOCKED or has no session holds a slot until a lane happens to look, and a `queued` row waits with nobody spawning it.** BOB #33 21:05Z (supersedes his 18:30Z and 18:33Z entries): measured 7+ of 16 workers idle at 21:03Z. — owner M0.
+status: integrated — integrated — flipped ~23:06Z by SCHEDULER #20 on its worker's finish (session COMPLETED 22:51Z, 'slots audit passed') with land/worker/M0-191 @ ff3c7b9c pushed; NO gate line is stated anywhere, so it has NO recorded GREEN and CONDUCT merges only after verifying one.
 order: at the head of the backlog, AHEAD of product (BOB #33 21:05Z: *now placed AHEAD of product: it cost 7+ of 16 workers*); SCHEDULER #20 dispatches by a scratch script until it lands (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none (a lane tool).
@@ -357,8 +358,8 @@ scope: `tools/slots.mjs` reads a saved `list_sessions` listing on stdin (the clo
 accepts-when: on the 21:03Z listing it names D-476, D-518, UI-93, REC-199, REC-200, UI-102 and D-519 as FLIP candidates, UI-99 as ANSWER and D-516 as SPAWN (the measured failure it moves: 7+ idle slots nobody named). NEGATIVE CONTROL: match titles loosely and a `WORKER D-49` session satisfies D-492, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
 
-### D-544 · running — **`13.statement-ack` PINS `CATALOG_VERSION`, so EVERY catalogue bump turns four gate checks red for a claim that says nothing about the version: construct-status's probe `export const CATALOG_VERSION = "1.28.0"` in `bio-plane/src/gate.mjs` (measured on main 9f8b69e6).** Found by D-463's worker: its bump made the probe MISS, and `status.mjs --check`, `status.test.mjs`'s zero-drift arm, plancheck's CONSTRUCT STATUS arm and `strandedwork`'s two plancheck-exit arms all followed — one cause, four failures. — owner M0.
-status: running — running — spawned 22:14Z 2026-09-24 by SCHEDULER #20 as WORKER D-544 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-544 and the session; never conclude queued from absence.
+### D-544 · integrated — **`13.statement-ack` PINS `CATALOG_VERSION`, so EVERY catalogue bump turns four gate checks red for a claim that says nothing about the version: construct-status's probe `export const CATALOG_VERSION = "1.28.0"` in `bio-plane/src/gate.mjs` (measured on main 9f8b69e6).** Found by D-463's worker: its bump made the probe MISS, and `status.mjs --check`, `status.test.mjs`'s zero-drift arm, plancheck's CONSTRUCT STATUS arm and `strandedwork`'s two plancheck-exit arms all followed — one cause, four failures. — owner M0.
+status: integrated — integrated — flipped ~23:06Z by SCHEDULER #20 on its worker's finish (session summary 22:51Z: gate 87/87 suites green) with land/worker/D-544 @ 32ec64b8 pushed (BOB #34 22:59Z: do not wait for reports). CONDUCT verifies before merging. Finding: D-558.
 order: after M0-191, AHEAD of product: it costs a diagnosis round in the gate of every row that moves the catalogue (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24; D-463's worker)
 milestone: M0
 interface: none.
@@ -379,8 +380,8 @@ scope: generalise `migrationReplayOf` to every replayed promotion; keep D-511's 
 accepts-when: a replay whose capture does not list the bundle and SHA-256 is refused by name; a verified one is admitted. NEGATIVE CONTROL: skip the verification and the unverified arm is admitted, failing by name. AND INVERT §8 arm (δ), which D-511 pinned as the gap (admin-class replay still caller-asserted; via CONDUCT #20 19:47Z).
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
 
-### M0-192 · running — **`d470-catalog-census.control.mjs` QUOTES `CATALOG_VERSION` AS A LITERAL NEEDLE, so every catalogue bump silently disarms its arm (d), MOVE THE VERSION: line 67 holds `'export const CATALOG_VERSION = "1.28.0";'`, hand-moved at c20-batch25 after it sat at 1.24.0 through four bumps (it would have thrown NOT ARMED).** Found by CONDUCT #20 (22:09Z). — owner M0.
-status: running — running — spawned 22:17Z 2026-09-24 by SCHEDULER #20 as WORKER M0-192 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/M0-192 and the session; never conclude queued from absence.
+### M0-192 · integrated — **`d470-catalog-census.control.mjs` QUOTES `CATALOG_VERSION` AS A LITERAL NEEDLE, so every catalogue bump silently disarms its arm (d), MOVE THE VERSION: line 67 holds `'export const CATALOG_VERSION = "1.28.0";'`, hand-moved at c20-batch25 after it sat at 1.24.0 through four bumps (it would have thrown NOT ARMED).** Found by CONDUCT #20 (22:09Z). — owner M0.
+status: integrated — integrated — flipped ~23:06Z by SCHEDULER #20 on its worker's finish (session summary 22:51Z: control reads CATALOG_VERSION from gate.mjs, 73/73 suites green, acceptance met) with land/worker/M0-192 @ e5aa15f3 pushed. CONDUCT verifies before merging. Finding: D-558.
 order: after D-544, AHEAD of product: a control disarmed by an unrelated bump is a false gate result, and it recurs on every catalogue move (Bob's 17:41Z rule). Not merged with D-544: a different file and a different fix (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
@@ -499,6 +500,46 @@ depends-on: none.
 scope: one governed helper and DEC-49 region minting NO_PUBLISHED_STORE for ONE condition, with its canned translation; the ~5900 ternary says which code it mints under which condition. Move each refusal-code floor to its printed figure.
 accepts-when: both public ops answer NO_PUBLISHED_STORE with its translation from one site (the measured failure it moves: an untranslated code at two sites). NEGATIVE CONTROL: restore the literal at ~5747 and check-refusal-codes names the second site.
 added: 2026-09-24 · SCHEDULER #20 (id minted by D-513's worker).
+
+### D-558 · queued — **`bio-plane/test/ratify.test.mjs` (~240) PINS THE CATALOGUE VERSION AS A LITERAL, `"plane-gate/1.0 (bio-checks 1.28.0)"`, so every catalogue bump turns it red and it has been hand-corrected at each (five CORRECTED notes above it).** Found by D-544's and M0-192's workers independently. — owner M0.
+order: after D-545, AHEAD of product: the same bump-cost class as D-544 and M0-192, a red round on every catalogue move (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a suite pins what its claim asserts, read from the source, never a literal).
+depends-on: none.
+scope: build the expected string from `CATALOG_VERSION` imported from `bio-plane/src/gate.mjs`; keep the arm's point (the ratification records the CATALOGUE's version, not the gate's own) with a second arm that fails if the gate's own version is recorded instead; sweep `bio-plane/test/` for any other literal catalogue version and state each.
+accepts-when: a catalogue bump leaves the suite green, and recording the gate's own version fails by name (the measured failure it moves: a red on every bump). NEGATIVE CONTROL: record `plane-gate/1.0` alone and the catalogue-version arm fails by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs D`).
+
+### D-521 · queued — **IC-246's STATEMENT_ACK_DOCUMENTS_OVER_BOUND (C-82.1) IS UNREACHABLE BY CONSTRUCTION: after REC-194 its read names (case_id, edition), `case_documents`' primary key, so at most one row returns and the bound can never fire.** Found by REC-194's worker (F1). — owner RECORD.
+order: after REC-213, with the corrections to just-landed work: a catalogued refusal that cannot occur is a claim the record makes about itself (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
+milestone: M10
+interface: I3 — a catalogued code retired; the catalogue version moves; the integrator classifies.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, with `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13.
+depends-on: REC-194.
+scope: collapse the read to `#one`; remove the bound, C-82.1, its DEC-49 region `is-statement-ack-documents-bound` and block 8's bound arms; move each refusal-code floor to its printed figure.
+accepts-when: C-82.1 and its region are gone and the census floors read their printed figures (the measured failure it moves: a code no input can reach). NEGATIVE CONTROL: restore the region without its reachable site and check-refusal-codes names the orphan.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### D-524 · queued — **A MONITORED BUNDLE WITH AN ARCHIVE-SOURCED BASELINE READS "no captured baseline" FOREVER: `op=acquire` sets `body.locator = sel.replay`, so the register row names the Wayback replay URL while the capture files under the CDX original, and op=monitor's register lookup never finds it.** D-472's defect surviving on the ARCHIVE arm; found by D-472's worker (F1). — owner CAPTURE.
+order: after D-521, with the corrections to just-landed work: a monitor that reads no baseline where one is held (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:14Z)
+milestone: M3
+interface: I5 additive — `archiveHop` gains `document_address`; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §6 (the monitoring contract), with D-472's Drive arm as the precedent.
+depends-on: D-472.
+scope: give `src/cdx.mjs` `archiveHop` a `document_address` key as `driveHop` has; op=monitor's register lookup prefers the row whose hop names the bundle's locator.
+accepts-when: an archive-sourced baseline is found by op=monitor and two unchanged ticks read `unchanged` (the measured failure it moves: "no captured baseline" on every tick). NEGATIVE CONTROL: drop the hop key and the archive-baseline arm reads no baseline, failing by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### D-525 · queued — **A PRE-CAP-8 DRIVE BASELINE IS A CAPTURE OF GOOGLE'S SHELL, so its monitor reads `modified` on every tick permanently, and nothing lists which bundles carry one.** Found by D-472's worker (F3). — owner CAPTURE.
+order: after D-524, the same monitor path; low: the fix is a re-acquire (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:14Z)
+milestone: M3
+interface: none unless a read is added (the integrator classifies).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §6, with CAP-8's Drive export arm.
+depends-on: D-472.
+scope: a sweep listing Drive-address bundles whose baseline capture's handler is an HTML stack (a shell); re-acquire each through the export address, recorded as a new capture, never overwriting the old.
+accepts-when: the sweep names every shell baseline and a re-acquired one reads `unchanged` across two ticks (the measured failure it moves: a permanent `modified`). NEGATIVE CONTROL: skip the re-acquire and the two-tick arm reads `modified` by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
