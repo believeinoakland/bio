@@ -47410,11 +47410,40 @@ export class Store extends DurableObject {
         ? { address: address_norm, grade: r.grade, hops: r.hops }
         : { address: address_norm, reason: r.reason });
     }
-    /* A tick with nothing failed is FINISHED, so the epoch closes and the next
+    /* A tick is FINISHED when it accounted for every eligible subject ITSELF:
+       nothing failed AND nothing was skipped. Then the epoch closes and the next
        tick is a fresh check rather than a retry. A tick that failed on any
        address keeps its epoch OPEN: the next fire is that tick's retry, it
-       re-attempts only what failed, and the successes are already keyed. */
-    if (!failed.length) this.#closeTickEpoch("archive-monitor", epoch);
+       re-attempts only what failed, and the successes are already keyed.
+
+       D-518, 2026-09-24 — THE `skipped` HALF IS A CORRECTION, not a tightening,
+       and the old condition was wrong rather than merely loose. This read
+       `if (!failed.length)` alone, which CLOSED the epoch on a tick that fired
+       nothing and only SKIPPED subjects an earlier, still-unfinished tick had
+       claimed. Such a tick did no work and learned nothing: it inherited another
+       run's claim set. Closing on it erases the record that the earlier tick
+       failed, so the next wake mints a fresh epoch, finds the claims gone, and
+       re-fires an address that ALREADY SUCCEEDED — and a successful archive fire
+       calls recordCapturedLocator, which does `observations = observations + 1`.
+       That is MACHINE-PROCESSES.md risk 2 alive in the code that exists to close
+       it: a retry MANUFACTURING CORROBORATION, which is the class CLAUDE.md names
+       worst here because the record then claims more than it can support.
+       MEASURED on this tree before the fix: `observations` went 1 -> 2 across two
+       ticks 62ms apart in real time, with no second genuine check.
+
+       `skipped` non-empty can only mean this tick REUSED an open epoch — a fresh
+       one deletes every other epoch's monitor_fired rows before the loop, so
+       nothing can be pre-claimed under it — so the added clause says exactly
+       "this was a retry, and a retry finishes nothing." The epoch is released
+       instead by #openTickEpoch's spent-epoch rule, one whole cadence on, which
+       is the "idempotence, not amnesia" property; it is now that rule ALONE,
+       rather than a race with whatever else arms this alarm. That race was the
+       measured defect: `archive-monitor` is registered `due: (now) => now`, so it
+       runs on EVERY wake, and the wake armed at REAL now by a nested op=acquire's
+       inbox enqueue landed between two ticks a suite was driving at an injected
+       virtual `now` — which is how a suite's verdict came to depend on machine
+       load. */
+    if (!failed.length && !skipped.length) this.#closeTickEpoch("archive-monitor", epoch);
     return { monitor: { configured: true, at: nowIso, checked: rows.length,
                         epoch, eligible, fired, failed, skipped } };
     } finally { this.#tickRunning.delete("archive-monitor"); }
@@ -47619,7 +47648,14 @@ export class Store extends DurableObject {
         ? { bundle: d.bundle, frequency: d.frequency, status: r.status, reeval_raised: r.reeval }
         : { bundle: d.bundle, frequency: d.frequency, reason: r.reason });
     }
-    if (!failed.length) this.#closeTickEpoch("monitor-cadence", epoch);
+    /* D-518: the same correction as #monitorTick's, made for the same reason and
+       in the same class — a cadence tick that fired nothing and only skipped
+       bundles an unfinished tick had claimed has finished nothing, and closing on
+       it lets the next wake re-fire op=monitor, which writes a SECOND
+       monitor-tick promotion record and a second monitoring.last_checked for one
+       check. The epoch is released by the spent-epoch rule at the shortest
+       cadence instead. #monitorTick's note carries the measurement. */
+    if (!failed.length && !skipped.length) this.#closeTickEpoch("monitor-cadence", epoch);
     return { monitorcadence: { configured: true, at, epoch, monitored: plan.monitored,
                                candidates: plan.due.length, next: plan.next,
                                ticked, skipped, failed, unscheduled: plan.unscheduled } };
