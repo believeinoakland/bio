@@ -113,7 +113,7 @@ scope: `selectReaders` reads through M0-143's comment-blanking (`codeOf`); re-de
 accepts-when: a suite citing an M-id only in a comment is not a MEASUREMENTS reader. NEGATIVE CONTROL: read raw source and that suite is selected, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### M0-154 · running — **FOUR SUITES BUILD A FIXTURE REPO BY COPYING THE GATE'S TOOLS FROM A HAND-KEPT LIST (entries, gateresults, train, gates), so any new import in `gates.mjs` breaks them with ERR_MODULE_NOT_FOUND.** Found by M0-146's worker's first red. — owner M0.
+### M0-154 · integrated — **FOUR SUITES BUILD A FIXTURE REPO BY COPYING THE GATE'S TOOLS FROM A HAND-KEPT LIST (entries, gateresults, train, gates), so any new import in `gates.mjs` breaks them with ERR_MODULE_NOT_FOUND.** Found by M0-146's worker's first red. — owner M0.
 status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-154 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-154; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: after M0-153, with the gate-time rows: each new gate import costs a red round (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:33Z)
 milestone: M0
