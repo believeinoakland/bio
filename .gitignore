@@ -453,3 +453,9 @@ bio-plane/.nc-d442/
 .fw20-pen/
 # D-394's pen, on the standing rule at `.rec84-control-pristine/`: `test/nc-d394.mjs` keeps its per-arm pristine copies here.
 .d394-control-pristine/
+
+# D-470's pen (`bio-plane/test/d470-catalog-census.control.mjs`), its own line for
+# the reason every line above has one: the driver removes the pen on success, and
+# the run that MATTERS is the one where a restore FAILED and the pristine copies
+# are deliberately left behind. `git add -A` would stage them.
+bio-plane/.nc-d470/

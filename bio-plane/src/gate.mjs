@@ -34,12 +34,32 @@
 
 import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
 
-/* 1.20.0 (REC-23/D-130): C-2.10's counterparty becomes a three-valued block.
+/* 1.21.0 (D-470, 2026-09-24): THE VERSION CATCHES UP WITH THE CATALOG, AND IS
+   PINNED TO IT FROM HERE ON. The sentence below is the whole point of this
+   constant and it was NOT TRUE between 2026-09-18 and today: 1.20.0 stamped the
+   catalog REC-23/D-130 left, and then went on stamping it as C-41.10's
+   acknowledgement arms (D-150), C-44.2 (CASE_DERIVATION_CHECKS, IC-185), C-73.1
+   (GOVERNING_LAW_CHECKS, D-149) and others landed — so two different catalogs
+   answered to one number and a stranger reading `1.20.0` on two ratifications
+   could not tell them apart. That is a signed record claiming more precision
+   than it holds, which is worse than a missing feature
+   (BIO_Publication_v0_1.md §3 rule 12 (c); CLAUDE.md §2).
+   MINOR, on REC-14's precedent as the note this replaces records it: 1.18.0 ->
+   1.19.0 and 1.19.0 -> 1.20.0 were both MINOR for changes that made the catalog
+   refuse documents that used to pass. This bump is ADDITIVE in the same sense
+   and no check moves with it.
+   WHAT KEEPS IT TRUE: `test/d470-catalog-census.test.mjs` pins this string to a
+   census of the catalog's C-numbers. Add a check and that suite goes red naming
+   the figures, and it stays red until this version moves and the new census is
+   recorded beside it. DO NOT edit this constant without reading that suite's
+   header — the two are one mechanism.
+
+   1.20.0 (REC-23/D-130): C-2.10's counterparty becomes a three-valued block.
    A MINOR bump on REC-14's precedent (1.18.0 -> 1.19.0 also made the catalog
    refuse documents that used to pass) — the catalog's own version records what
    judged a bundle, and every ratification stamps it, so an action refused here
    is distinguishable from one refused by 1.19.0 without reading this file. */
-export const CATALOG_VERSION = "1.20.0";
+export const CATALOG_VERSION = "1.21.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -60,7 +80,7 @@ const te = new TextEncoder();
    THE VERSION IT REPORTS IS THE SAME `GATE_VERSION`, deliberately: what judged a
    ratification is one catalog at one version, and giving the case door a version
    of its own would let the two drift apart while each looked internally
-   consistent. A member reading `plane-gate/1.0 (bio-checks 1.20.0)` on a case
+   consistent. A member reading `plane-gate/1.0 (bio-checks 1.21.0)` on a case
    ratification and on a finding ratification has read the same fact. */
 /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): two more facts the document cannot carry about
    itself — its BODY (C-3.1's section followed the block into it) and each member's `basis` at the
