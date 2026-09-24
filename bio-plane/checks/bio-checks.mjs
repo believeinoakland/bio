@@ -10844,6 +10844,86 @@ export const INSTALLATION_CHECKS = {
 };
 
 /* ===========================================================================
+   D-64 (C-83) — THE RENDER ARM OF op=acquire: a client-rendered page captured
+   as the PAIR (CLIENT-RENDERED.md §"What must be recorded on a rendered
+   capture"; BOB #31 and BOB #32, 2026-09-23).
+
+   EVERY ROW HERE EXISTS FOR ONE RULE: THE SHELL IS NEVER FILED AS THE CONTENT.
+   A caller who asked for a render and cannot have one is told so by name and
+   nothing is filed as a document — not the shell in its place, not a partial
+   render. Two rows are checked BEFORE the shell is fetched (no renderer; the
+   allowance spent), so nothing is fetched for a render that cannot happen.
+   =========================================================================== */
+export const RENDER_CAPTURE_CHECKS = {
+  /* `render` present and not `true`. Refused rather than read as absent: a
+     `render: "yes"` answered with the plain capture would file the shell as the
+     content, which is the outcome this family exists to prevent. */
+  RENDER_FLAG_MALFORMED: {
+    check: 'C-83.1',
+    where: 'src/index.mjs fetch > is-render-admit',
+    translation: 'This request asked for a rendered capture in a form this instance does not recognise. '
+      + 'It answers render: true or nothing, so a request for the page as a visitor saw it is never '
+      + 'quietly answered with the page\'s empty frame. Nothing was fetched.',
+  },
+  /* A render combined with an arm whose bytes are not a live page: an archive
+     replay, a Drive export, or the continuation of a capture already filed. */
+  RENDER_ARM_CONFLICT: {
+    check: 'C-83.2',
+    where: 'src/index.mjs fetch > is-render-admit',
+    translation: 'A rendered capture runs the live page in a browser, and this request combined that with '
+      + 'a way of capturing that does not load a live page (an archived copy, a Drive export, or the '
+      + 'continuation of an earlier capture). Ask for one or the other. Nothing was fetched.',
+  },
+  /* No renderer bound — or the Browser Rendering binding is bound and the
+     in-plane driver over it is not built. Named rather than falling back. */
+  RENDER_NO_RENDERER: {
+    check: 'C-83.3',
+    where: 'src/index.mjs fetch > is-render-admit',
+    translation: 'This instance has no working page renderer, so it cannot capture the page as a visitor '
+      + 'saw it. Nothing was fetched, and the page\'s empty frame was not filed in its place.',
+  },
+  /* BOB #32 item 3: the daily render allowance is spent. The render is
+     DEFERRED and the deferral is recorded; the shell is never the content. */
+  RENDER_DEFERRED: {
+    check: 'C-83.4',
+    where: 'src/index.mjs fetch > is-render-admit',
+    translation: 'This instance has used today\'s allowance for rendering pages, so this render is '
+      + 'deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. It can '
+      + 'be asked again after midnight UTC.',
+  },
+  /* The render loads the page again, which is a second document load to the
+     host, so it asks the per-host governor like any other (BOB #32 item 3:
+     "through the host governor"). Refused by name when the host is cooling off. */
+  RENDER_HOST_COOLING_OFF: {
+    check: 'C-83.5',
+    where: 'src/index.mjs fetch > is-render-admit',
+    translation: 'This instance is giving that website a rest after it asked us to slow down, and a '
+      + 'rendered capture loads the page again, so it was not attempted. Nothing was fetched. Try again '
+      + 'after the wait shown beside this message.',
+  },
+  /* The shell is not an HTML page small enough to render (a PDF, an office
+     file, a multipart giant). A document that is not a page has nothing a
+     browser adds; capture it without `render`. */
+  RENDER_NOT_A_PAGE: {
+    check: 'C-83.6',
+    where: 'src/index.mjs fetch > is-render-result',
+    translation: 'The address served something that is not a web page a browser can render, such as a '
+      + 'PDF or an office file, so there is nothing for a rendered capture to add. Nothing was filed. '
+      + 'Capture it the ordinary way.',
+  },
+  /* The renderer did not produce a rendered document. The shell's bytes are
+     held content-addressed and unregistered, exactly as TOO_LARGE's parts are;
+     no document names them. */
+  RENDER_FAILED: {
+    check: 'C-83.7',
+    where: 'src/index.mjs fetch > is-render-result',
+    translation: 'The page was fetched but the renderer did not produce the page as a visitor would see '
+      + 'it, so nothing was filed: the page\'s empty frame is never filed as its content. The reason the '
+      + 'renderer gave is beside this message.',
+  },
+};
+
+/* ===========================================================================
    D-456 (C-78) — A NAMESPACE THAT DOES NOT EXIST.
 
    An instance has exactly two namespaces, `bio` (the record) and `scratch` (the

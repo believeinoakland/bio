@@ -1406,8 +1406,19 @@ CREATE TABLE IF NOT EXISTS proposal_dispositions (
   reason          TEXT NOT NULL,
   decided_by      TEXT,
   at              TEXT,
+  definition_version INTEGER,   -- REC-184: the progression definition version the decision was taken against
   PRIMARY KEY (progression_key, stage_key)
 );
+-- REC-184 (framework 8.2, The declared flow and its revisions): definition_version is the version of
+-- the progression definition CURRENT when the member decided, stamped by the store and never the
+-- caller's word. A decision applies only to the version it was taken against -- once the definition
+-- is revised the proposal is OPEN again, with the earlier decision published beside it, because a
+-- decision the record applies to a definition nobody judged is the record claiming more than it
+-- holds. NULLABLE AND NEVER BACK-FILLED: a row written before this column existed recorded no
+-- version, and the only value a backfill could reach for is the current one, which is the claim
+-- this column exists to test. NULL reads back as not recorded, stated, and such a row governs
+-- only while the definition has not been declared again since the decision was taken (the
+-- definition's own at against the row's at) -- the version stays unknown, the ORDER is recorded.
 CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at);
 -- REC-11 / DATA-MODEL D4: the INQUIRY BASIS -- the legs an inquiry rests on,
 -- and invariant 7's storage: a leg whose role is cuts_against is a ROW, so a
@@ -3901,6 +3912,21 @@ CREATE TABLE IF NOT EXISTS theme_placements (
 CREATE INDEX IF NOT EXISTS theme_placements_bundle ON theme_placements(bundle_id);
 -- =========================================================================
 
+-- D-64: the instance's DAILY RENDER ALLOWANCE, spent by the render arm of
+-- op=acquire (CLIENT-RENDERED.md, RULED 2026-09-23 by BOB #32 item 3). One row
+-- per UTC day. spent_ms is browser time the renderer REPORTED, so it is the
+-- renderer's claim summed, not a platform meter. deferred counts the renders
+-- this instance declined because the allowance was spent: a deferral is a
+-- recorded fact, never a silent fall-back to filing the shell as the content.
+-- An operational fact about this instance, not corpus-derived.
+CREATE TABLE IF NOT EXISTS render_allowance (
+  day        TEXT PRIMARY KEY,
+  spent_ms   INTEGER NOT NULL DEFAULT 0,
+  renders    INTEGER NOT NULL DEFAULT 0,
+  deferred   INTEGER NOT NULL DEFAULT 0,
+  last_at    TEXT NOT NULL
+);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
@@ -4259,6 +4285,7 @@ __export(bio_checks_exports, {
   QUOTE_KEYS: () => QUOTE_KEYS,
   RATIFY_SCOPE_CHECKS: () => RATIFY_SCOPE_CHECKS,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
+  RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
   REQUIRED_ARGUMENT_CHECKS: () => REQUIRED_ARGUMENT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
@@ -8537,31 +8564,31 @@ function scalarbase(p, s) {
   scalarmult(p, q, s);
 }
 function unpackneg(r, p) {
-  const t = gf(), chk = gf(), num = gf(), den = gf(), den2 = gf(), den4 = gf(), den6 = gf();
+  const t = gf(), chk = gf(), num2 = gf(), den = gf(), den2 = gf(), den4 = gf(), den6 = gf();
   for (let i = 0; i < 16; i++) {
     r[2][i] = GF1[i];
   }
   unpack25519(r[1], p);
-  fSq(num, r[1]);
-  fMul(den, num, DD);
-  fSub(num, num, r[2]);
+  fSq(num2, r[1]);
+  fMul(den, num2, DD);
+  fSub(num2, num2, r[2]);
   fAdd(den, r[2], den);
   fSq(den2, den);
   fSq(den4, den2);
   fMul(den6, den4, den2);
-  fMul(t, den6, num);
+  fMul(t, den6, num2);
   fMul(t, t, den);
   pow2523(t, t);
-  fMul(t, t, num);
+  fMul(t, t, num2);
   fMul(t, t, den);
   fMul(t, t, den);
   fMul(r[0], t, den);
   fSq(chk, r[0]);
   fMul(chk, chk, den);
-  if (neq25519(chk, num)) fMul(r[0], r[0], I25);
+  if (neq25519(chk, num2)) fMul(r[0], r[0], I25);
   fSq(chk, r[0]);
   fMul(chk, chk, den);
-  if (neq25519(chk, num)) return -1;
+  if (neq25519(chk, num2)) return -1;
   if (par25519(r[0]) === p[31] >> 7) fSub(r[0], GF0, r[0]);
   fMul(r[3], r[0], r[1]);
   return 0;
@@ -11712,6 +11739,61 @@ var INSTALLATION_CHECKS = {
     check: "C-68.4",
     where: "src/index.mjs fetch > is-bootstrap-claim",
     translation: "The administrator token given does not match the one this copy holds, so the copy was not claimed. Nothing was changed."
+  }
+};
+var RENDER_CAPTURE_CHECKS = {
+  /* `render` present and not `true`. Refused rather than read as absent: a
+     `render: "yes"` answered with the plain capture would file the shell as the
+     content, which is the outcome this family exists to prevent. */
+  RENDER_FLAG_MALFORMED: {
+    check: "C-83.1",
+    where: "src/index.mjs fetch > is-render-admit",
+    translation: "This request asked for a rendered capture in a form this instance does not recognise. It answers render: true or nothing, so a request for the page as a visitor saw it is never quietly answered with the page's empty frame. Nothing was fetched."
+  },
+  /* A render combined with an arm whose bytes are not a live page: an archive
+     replay, a Drive export, or the continuation of a capture already filed. */
+  RENDER_ARM_CONFLICT: {
+    check: "C-83.2",
+    where: "src/index.mjs fetch > is-render-admit",
+    translation: "A rendered capture runs the live page in a browser, and this request combined that with a way of capturing that does not load a live page (an archived copy, a Drive export, or the continuation of an earlier capture). Ask for one or the other. Nothing was fetched."
+  },
+  /* No renderer bound — or the Browser Rendering binding is bound and the
+     in-plane driver over it is not built. Named rather than falling back. */
+  RENDER_NO_RENDERER: {
+    check: "C-83.3",
+    where: "src/index.mjs fetch > is-render-admit",
+    translation: "This instance has no working page renderer, so it cannot capture the page as a visitor saw it. Nothing was fetched, and the page's empty frame was not filed in its place."
+  },
+  /* BOB #32 item 3: the daily render allowance is spent. The render is
+     DEFERRED and the deferral is recorded; the shell is never the content. */
+  RENDER_DEFERRED: {
+    check: "C-83.4",
+    where: "src/index.mjs fetch > is-render-admit",
+    translation: "This instance has used today's allowance for rendering pages, so this render is deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. It can be asked again after midnight UTC."
+  },
+  /* The render loads the page again, which is a second document load to the
+     host, so it asks the per-host governor like any other (BOB #32 item 3:
+     "through the host governor"). Refused by name when the host is cooling off. */
+  RENDER_HOST_COOLING_OFF: {
+    check: "C-83.5",
+    where: "src/index.mjs fetch > is-render-admit",
+    translation: "This instance is giving that website a rest after it asked us to slow down, and a rendered capture loads the page again, so it was not attempted. Nothing was fetched. Try again after the wait shown beside this message."
+  },
+  /* The shell is not an HTML page small enough to render (a PDF, an office
+     file, a multipart giant). A document that is not a page has nothing a
+     browser adds; capture it without `render`. */
+  RENDER_NOT_A_PAGE: {
+    check: "C-83.6",
+    where: "src/index.mjs fetch > is-render-result",
+    translation: "The address served something that is not a web page a browser can render, such as a PDF or an office file, so there is nothing for a rendered capture to add. Nothing was filed. Capture it the ordinary way."
+  },
+  /* The renderer did not produce a rendered document. The shell's bytes are
+     held content-addressed and unregistered, exactly as TOO_LARGE's parts are;
+     no document names them. */
+  RENDER_FAILED: {
+    check: "C-83.7",
+    where: "src/index.mjs fetch > is-render-result",
+    translation: "The page was fetched but the renderer did not produce the page as a visitor would see it, so nothing was filed: the page's empty frame is never filed as its content. The reason the renderer gave is beside this message."
   }
 };
 var NAMESPACE_CHECKS = {
@@ -21260,6 +21342,169 @@ function archiveLocatorFrom(res, requested) {
   return null;
 }
 
+// src/render.mjs
+var RENDER_DEFAULTS = Object.freeze({
+  viewport: Object.freeze({ width: 1280, height: 800 }),
+  dpr: 1,
+  locale: "en-US",
+  timezone: "UTC",
+  wait: Object.freeze({ until: "networkidle", timeout_ms: 15e3 })
+});
+var RENDERED_METHOD = "rendered";
+var RENDER_DAILY_ALLOWANCE_MS_DEFAULT = 20 * 60 * 1e3;
+function renderAllowanceMs(env) {
+  const v = env && env.RENDER_DAILY_ALLOWANCE_MS;
+  if (v === void 0 || v === null || v === "") return RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
+}
+var NON_DATA_TYPES = Object.freeze({
+  script: "code",
+  stylesheet: "layout",
+  font: "layout"
+});
+var isStr = (s) => typeof s === "string" && s.length > 0;
+var num = (n) => typeof n === "number" && Number.isFinite(n) ? n : null;
+function originKey(u) {
+  try {
+    const x = new URL(u);
+    return `${x.protocol}//${x.host}`;
+  } catch {
+    return null;
+  }
+}
+function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at }) {
+  if (!answer || typeof answer !== "object" || answer.ok !== true)
+    return { ok: false, problem: `the renderer did not answer ok (${answer && answer.error ? String(answer.error).slice(0, 200) : "no answer"})` };
+  if (typeof answer.html !== "string" || answer.html.length === 0)
+    return { ok: false, problem: "the renderer answered with no rendered document" };
+  const undetermined = [];
+  const pageHost = (() => {
+    try {
+      return new URL(answer.navigated_to || pageUrl).hostname.toLowerCase();
+    } catch {
+      return null;
+    }
+  })();
+  let requests = null, data = null;
+  if (Array.isArray(answer.requests)) {
+    const rq = answer.requests.filter((r) => r && typeof r === "object" && isStr(r.url));
+    const by = (o) => rq.filter((r) => r.outcome === o).length;
+    const blockedBy = {};
+    for (const r of rq) if (r.outcome === "blocked") {
+      const k = isStr(r.blocked_by) ? r.blocked_by : "unstated";
+      blockedBy[k] = (blockedBy[k] || 0) + 1;
+    }
+    const unclassified = rq.filter((r) => !["completed", "failed", "blocked"].includes(r.outcome)).length;
+    requests = {
+      made: rq.length,
+      completed: by("completed"),
+      failed: by("failed"),
+      blocked: by("blocked"),
+      blocked_by: blockedBy,
+      outcome_unstated: unclassified
+    };
+    data = rq.filter((r) => r.outcome === "completed" && !NON_DATA_TYPES[String(r.type || "").toLowerCase()]).map((r) => {
+      const o = originOf(r.url, pageHost);
+      return {
+        address: r.url,
+        type: isStr(r.type) ? r.type : null,
+        origin: o.origin,
+        host: o.host,
+        ...o.approximate ? { approximate: true } : {},
+        sha256: /^[0-9a-f]{64}$/.test(String(r.sha256 || "")) ? r.sha256 : null,
+        reported_by: "renderer"
+      };
+    });
+  } else {
+    undetermined.push("requests: the renderer did not record the page's requests, so render.requests and render.data are undetermined");
+  }
+  let scriptsExecuted = "undetermined", thirdParty = "undetermined";
+  if (Array.isArray(answer.scripts)) {
+    const origins = /* @__PURE__ */ new Map();
+    for (const s of answer.scripts) {
+      if (!s || !isStr(s.url)) continue;
+      const k = originKey(s.url);
+      if (!k) continue;
+      if (!origins.has(k)) origins.set(k, originOf(s.url, pageHost).origin);
+    }
+    scriptsExecuted = [...origins.keys()].sort();
+    thirdParty = [...origins.entries()].filter(([, o]) => o !== "same_host").map(([k]) => k).sort();
+  } else {
+    undetermined.push("scripts: the renderer could not record which scripts executed, so the script set is undetermined (BOB #31)");
+  }
+  const pick = (k, v) => {
+    if (v === null || v === void 0) undetermined.push(`${k}: not reported by the renderer`);
+    return v ?? null;
+  };
+  const render = {
+    of: shellSha,
+    engine: pick("engine", isStr(answer.engine) ? answer.engine : null),
+    engine_version: pick("engine_version", isStr(answer.engine_version) ? answer.engine_version : null),
+    viewport: pick("viewport", answer.viewport && num(answer.viewport.width) && num(answer.viewport.height) ? { width: answer.viewport.width, height: answer.viewport.height } : null),
+    dpr: pick("dpr", num(answer.dpr)),
+    locale: pick("locale", isStr(answer.locale) ? answer.locale : null),
+    timezone: pick("timezone", isStr(answer.timezone) ? answer.timezone : null),
+    wait: { asked: asked.wait, fired: pick("wait.fired", answer.wait && isStr(answer.wait.fired) ? answer.wait.fired : null) },
+    elapsed_ms: pick("elapsed_ms", num(answer.elapsed_ms)),
+    navigated_to: isStr(answer.navigated_to) ? answer.navigated_to : null,
+    status: num(answer.status),
+    requests,
+    data,
+    scripts_executed: scriptsExecuted,
+    third_party_executed: thirdParty,
+    asked: { viewport: asked.viewport, dpr: asked.dpr, locale: asked.locale, timezone: asked.timezone },
+    at: at || null,
+    undetermined
+  };
+  return { ok: true, render };
+}
+function renderedAuthority({ asserted, render, at }) {
+  const reasons = [];
+  if (!asserted) reasons.push("the served shell's own authority is undetermined: no assertion was supplied");
+  if (!Array.isArray(render.data)) reasons.push("which origins supplied data is undetermined: the renderer did not record the page's requests");
+  else {
+    const foreign = /* @__PURE__ */ new Map();
+    for (const d of render.data) if (d.origin !== "same_host") {
+      const k = originKey(d.address) || String(d.host || d.address);
+      foreign.set(k, d.origin);
+    }
+    for (const [k, o] of [...foreign.entries()].sort())
+      reasons.push(`${k} supplied data (${o === "same_site" ? "same_site, which approximates and is not the host" : o})`);
+  }
+  if (!Array.isArray(render.third_party_executed))
+    reasons.push("which scripts executed is undetermined: the renderer could not record the script set (BOB #31)");
+  else for (const k of render.third_party_executed) reasons.push(`${k} ran code`);
+  if (reasons.length === 0)
+    return {
+      authority_state: "determined",
+      authority: asserted,
+      authority_basis: `asserted by the capturing caller at intake for the served shell, and the render drew data only from the page's own host with no script from another origin executed; ${at}`
+    };
+  return {
+    authority_state: "undetermined",
+    authority_basis: `rendered capture, ${at}: ${reasons.join("; ")}. A person resolves this by an assertion carrying its basis (CLIENT-RENDERED.md, DESIGNED 2026-09-21 item 3).`,
+    authority_other_origins: Array.isArray(render.data) || Array.isArray(render.third_party_executed) ? [.../* @__PURE__ */ new Set([
+      ...Array.isArray(render.data) ? render.data.filter((d) => d.origin !== "same_host").map((d) => originKey(d.address)).filter(Boolean) : [],
+      ...Array.isArray(render.third_party_executed) ? render.third_party_executed : []
+    ])].sort() : "undetermined"
+  };
+}
+function rendererFor(env) {
+  if (env && env.RENDERER && typeof env.RENDERER.fetch === "function")
+    return { kind: "service", render: async (req) => {
+      const r = await env.RENDERER.fetch("http://renderer/render", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(req)
+      });
+      return r.json().catch(() => ({ ok: false, error: `the renderer answered HTTP ${r.status} with no JSON` }));
+    } };
+  if (env && env.BROWSER)
+    return { kind: "browser-binding-without-driver", render: null };
+  return { kind: "none", render: null };
+}
+
 // src/pdfstructure.mjs
 var PDF_LINK_TYPES = [...LINK_TYPES, "undetermined"];
 var LATIN12 = new TextDecoder("latin1");
@@ -21534,10 +21779,10 @@ var PdfDoc = class {
     const re = /(\d+)\s+(\d+)\s+obj\b/g;
     let m;
     while (m = re.exec(s)) {
-      const num = parseInt(m[1], 10);
+      const num2 = parseInt(m[1], 10);
       const bodyStart = m.index + m[0].length;
       const r = parseValueSafe(s, bodyStart);
-      if (r) this.objects.set(num, r.value);
+      if (r) this.objects.set(num2, r.value);
     }
   }
   resolve(v, seen = 0) {
@@ -21595,14 +21840,14 @@ var PdfDoc = class {
     let parms = this.resolve(streamObj.dict.DecodeParms) || this.resolve(streamObj.dict.DP);
     if (parms && parms.t === "arr") parms = this.resolve(parms.items[parms.items.length - 1]);
     if (parms && parms.t === "dict") {
-      const num = (x) => typeof (x = this.resolve(x)) === "number" ? x : void 0;
-      const predictor = num(parms.map.Predictor);
+      const num2 = (x) => typeof (x = this.resolve(x)) === "number" ? x : void 0;
+      const predictor = num2(parms.map.Predictor);
       if (predictor && predictor >= 2) {
         data = unpredict(data, {
           predictor,
-          colors: num(parms.map.Colors) ?? 1,
-          columns: num(parms.map.Columns) ?? 1,
-          bpc: num(parms.map.BitsPerComponent) ?? 8
+          colors: num2(parms.map.Colors) ?? 1,
+          columns: num2(parms.map.Columns) ?? 1,
+          bpc: num2(parms.map.BitsPerComponent) ?? 8
         });
       }
     }
@@ -21654,12 +21899,12 @@ var PdfDoc = class {
       }
     }
     this.root = root;
-    const walkRef = (num, seen) => {
-      const map = this.dictOf({ t: "ref", n: num });
+    const walkRef = (num2, seen) => {
+      const map = this.dictOf({ t: "ref", n: num2 });
       if (!map) return;
       const type = map.Type;
       if (type && type.t === "name" && type.v === "Page") {
-        this._registerPage(num);
+        this._registerPage(num2);
         return;
       }
       const kids = this.resolve(map.Kids);
@@ -21677,23 +21922,23 @@ var PdfDoc = class {
     }
     if (this.pageIndexByObj.size === 0) {
       const pages = [];
-      for (const [num, v] of this.objects) {
+      for (const [num2, v] of this.objects) {
         const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
-        if (map && map.Type && map.Type.t === "name" && map.Type.v === "Page") pages.push(num);
+        if (map && map.Type && map.Type.t === "name" && map.Type.v === "Page") pages.push(num2);
       }
       pages.sort((a, b) => a - b);
-      pages.forEach((num, i) => this.pageIndexByObj.set(num, i));
+      pages.forEach((num2, i) => this.pageIndexByObj.set(num2, i));
       this.pageCount = pages.length;
       this._pageOrder = pages;
       if (pages.length) this.note("page_order_by_object_number_fallback");
     }
   }
-  _registerPage(num) {
-    if (this.pageIndexByObj.has(num)) return;
+  _registerPage(num2) {
+    if (this.pageIndexByObj.has(num2)) return;
     const idx = this.pageIndexByObj.size;
-    this.pageIndexByObj.set(num, idx);
+    this.pageIndexByObj.set(num2, idx);
     this.pageCount = this.pageIndexByObj.size;
-    (this._pageOrder ||= []).push(num);
+    (this._pageOrder ||= []).push(num2);
   }
   /** Is this an encrypted document? Detected from the Standard Security Handler
    *  dictionary (/Filter /Standard with a revision /R) — which is itself NEVER
@@ -22647,8 +22892,8 @@ async function extractPdfStructure(bytes) {
   const doc = new PdfDoc(bytes);
   doc.scanTopLevel();
   await doc.loadObjectStreams();
-  for (const [num, v] of doc.objects) {
-    if (v && v.t === "dict") v.map.__objnum = { t: "ref", n: num };
+  for (const [num2, v] of doc.objects) {
+    if (v && v.t === "dict") v.map.__objnum = { t: "ref", n: num2 };
   }
   doc.buildPageIndex();
   const links = [];
@@ -29645,7 +29890,13 @@ var Store = class _Store extends DurableObject {
          recorded no actor, and there is no value a backfill could reach for that would not be
          invented. NULL reads back as `not recorded`, stated, through `#statusBy`. */
       ["members", "status_by", "TEXT"],
-      ["signers", "status_by", "TEXT"]
+      ["signers", "status_by", "TEXT"],
+      /* REC-184 (framework §8.2, D-128's follow-on): the progression definition version a proposal
+         disposition was decided against. NULLABLE AND NEVER BACK-FILLED: a decision taken before this
+         column existed recorded no version, and the one value a backfill could reach for is the
+         CURRENT version — the very claim the column exists to test. NULL reads back `not recorded`,
+         stated by `#dispositionVersionView`. */
+      ["proposal_dispositions", "definition_version", "INTEGER"]
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -29882,7 +30133,7 @@ var Store = class _Store extends DurableObject {
       return b && typeof b === "object" && !Array.isArray(b) ? b[key] : void 0;
     };
     const bool = (v) => v === true ? 1 : v === false ? 0 : null;
-    const num = (v) => typeof v === "number" && Number.isFinite(v) ? v : null;
+    const num2 = (v) => typeof v === "number" && Number.isFinite(v) ? v : null;
     const rp = fm.reeval_pending;
     const rpObj = rp && typeof rp === "object" && !Array.isArray(rp);
     return {
@@ -29897,14 +30148,14 @@ var Store = class _Store extends DurableObject {
       monitor_enabled: bool(nested("monitoring", "enabled")),
       monitor_frequency: s(nested("monitoring", "frequency")),
       monitor_last_checked: s(nested("monitoring", "last_checked")),
-      annotations_open: num(fm.annotations_open),
+      annotations_open: num2(fm.annotations_open),
       reeval_flag: rpObj ? bool(rp.flag) : bool(rp),
       reeval_since: rpObj ? s(rp.since) : null,
       reeval_source: rpObj ? s(rp.source) : null,
       /* REC-24 (e). Only an ACTION projects these; every other type leaves them
          NULL, which is what "this bundle is not an action" says in a column. */
       action_kind: fm.object_type === "action" ? s(fm.action_kind) : null,
-      action_risk_tier: fm.object_type === "action" ? num(fm.risk_tier) : null,
+      action_risk_tier: fm.object_type === "action" ? num2(fm.risk_tier) : null,
       action_counterparty_state: fm.object_type === "action" ? s(nested("counterparty", "state")) : null,
       action_resolution: fm.object_type === "action" ? s(fm.resolution) : null,
       action_clock_next: fm.object_type === "action" ? _Store.actionClockNext(fm) : null,
@@ -51443,6 +51694,65 @@ ${words}`;
         s.required
       );
   }
+  /* REC-184: the CURRENT version's NUMBER and the instant it came to stand, and nothing else -- the
+     light read #assembleInstance, op=proposedispose and op=proposals share, so which version is
+     current has ONE answer on the read and on the act. `at` is progression_defs.at, which every
+     declaration writes: a D-128 revision and, before D-128, every overwriting re-declaration
+     (`ON CONFLICT … DO UPDATE SET … at=excluded.at`), so it is the time the definition an instance
+     is read against was declared. null if the progression was never declared. */
+  #definitionVersionOf(key) {
+    const def = this.#one(`SELECT at FROM progression_defs WHERE progression_key=?`, key);
+    if (!def) return null;
+    const v = this.#one(
+      `SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`,
+      key
+    );
+    return { version: v && v.v != null ? v.v : 1, at: def.at ?? null };
+  }
+  /* REC-184: does a recorded proposal disposition GOVERN the definition an instance is read against
+     today? A decision is a member's judgment of the proposal a definition produced, so it applies to
+     the version it was taken against and to no later one (framework §8.2: a finding names the
+     version it was read against, and the decision about it does too). Four answers, each stated:
+       - recorded and equal to the current version      -> applies;
+       - recorded and earlier (the definition was revised since) -> does NOT apply: the proposal is
+         open again and the decision is published beside it, aged, never deleted (D-79);
+       - NOT RECORDED (a row written before this column) and the definition has not been declared
+         since the decision was taken -> applies: whatever version it was, it is still the current
+         one, because no declaration has happened in between. The version number stays unknown;
+       - NOT RECORDED and the definition was declared after it, or either instant is missing or
+         they are the same instant ->
+         does NOT apply: the decision may have judged a definition that no longer stands, and
+         applying it would be the record claiming a judgment nobody made. Resurfacing is the
+         direction that asks again rather than asserts.
+     Never back-fills the row: this is a read, and `definition_version` stays null on the record. */
+  static #dispositionVersionView(d, cur) {
+    const recorded = d.definition_version != null;
+    const current = cur ? cur.version : null;
+    let applies, because;
+    if (!cur) {
+      applies = false;
+      because = "definition_not_declared";
+    } else if (recorded) {
+      applies = Number(d.definition_version) === current;
+      because = applies ? "decided_against_current_version" : "decided_against_earlier_version";
+    } else if (cur.at == null || d.at == null || String(cur.at) === String(d.at)) {
+      applies = false;
+      because = "version_not_recorded_order_undetermined";
+    } else if (String(cur.at) > String(d.at)) {
+      applies = false;
+      because = "version_not_recorded_definition_declared_since";
+    } else {
+      applies = true;
+      because = "version_not_recorded_definition_not_declared_since";
+    }
+    return {
+      definition_version: recorded ? Number(d.definition_version) : null,
+      definition_version_state: recorded ? "recorded" : "not recorded",
+      current_definition_version: current,
+      applies,
+      applies_because: because
+    };
+  }
   /* D-128: the CURRENT version of a definition -- the one every instance and finding is derived
      against -- with its number. A definition with no version rows was declared before D-128 and
      reads as version 1, its basis not recorded (version_recorded:false). null if never declared. */
@@ -51810,11 +52120,7 @@ ${words}`;
       defined: false,
       detail: "no such progression definition (define it first, op=progressiondefine)"
     };
-    const vrow = this.#one(
-      `SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`,
-      progressionKey
-    );
-    const definitionVersion = vrow && vrow.v != null ? vrow.v : 1;
+    const definitionVersion = this.#definitionVersionOf(progressionKey).version;
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     const stageDefs = this.#rows(
       `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
@@ -52415,12 +52721,19 @@ ${words}`;
        as a second finding kind are DEFERRED as a follow-on (missing-predecessors only here). */
   proposalsFeed(nowMs) {
     const now = this.#nowMs(nowMs);
-    const disposed = /* @__PURE__ */ new Map();
+    const recorded = /* @__PURE__ */ new Map();
+    const curOf = /* @__PURE__ */ new Map();
     for (const d of this.#rows(
-      `SELECT progression_key, stage_key, state, reason, decided_by, at
+      `SELECT progression_key, stage_key, state, reason, decided_by, at, definition_version
          FROM proposal_dispositions`
-    ))
-      disposed.set(d.progression_key + "::" + d.stage_key, d);
+    )) {
+      if (!curOf.has(d.progression_key)) curOf.set(d.progression_key, this.#definitionVersionOf(d.progression_key));
+      recorded.set(
+        d.progression_key + "::" + d.stage_key,
+        { ...d, ..._Store.#dispositionVersionView(d, curOf.get(d.progression_key)) }
+      );
+    }
+    const disposed = new Map([...recorded].filter(([, d]) => d.applies));
     const pairs = this.#rows(
       `SELECT DISTINCT progression_key, entity_id FROM progression_instances
          ORDER BY progression_key, entity_id`
@@ -52450,6 +52763,7 @@ ${words}`;
         const key = inst.progression_key + "::" + f2.stage_key;
         let g = groups.get(key);
         if (!g) {
+          const prior = recorded.get(key) || null;
           g = {
             key,
             progression_key: inst.progression_key,
@@ -52460,7 +52774,17 @@ ${words}`;
             definition_version: inst.definition_version,
             surfaced_by: "machine",
             overdue_count: 0,
-            instances: []
+            instances: [],
+            prior_disposition: prior ? {
+              state: prior.state,
+              reason: prior.reason,
+              decided_by: prior.decided_by,
+              at: prior.at,
+              definition_version: prior.definition_version,
+              definition_version_state: prior.definition_version_state,
+              applies: false,
+              applies_because: prior.applies_because
+            } : null
           };
           groups.set(key, g);
         }
@@ -52489,14 +52813,21 @@ ${words}`;
       proposals.push(g);
     }
     proposals.sort((a, b) => b.n - a.n || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
-    const dispositions = [...disposed.values()].map((d) => ({
+    const dispositions = [...recorded.values()].map((d) => ({
       key: d.progression_key + "::" + d.stage_key,
       progression_key: d.progression_key,
       stage_key: d.stage_key,
       state: d.state,
       reason: d.reason,
       decided_by: d.decided_by,
-      at: d.at
+      at: d.at,
+      /* REC-184: which definition the decision judged, and whether it governs the
+         one in force — a row written before the column reads `not recorded`. */
+      definition_version: d.definition_version,
+      definition_version_state: d.definition_version_state,
+      current_definition_version: d.current_definition_version,
+      applies: d.applies,
+      applies_because: d.applies_because
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
@@ -54565,7 +54896,13 @@ ${words}`;
         state: d.state,
         reason: d.reason,
         decided_by: d.decided_by,
-        at: d.at
+        at: d.at,
+        /* REC-184: the definition version the decision judged, and whether it still ages the
+           finding — false once the definition is revised, when the finding is an OPEN item again. */
+        definition_version: d.definition_version,
+        definition_version_state: d.definition_version_state,
+        applies: d.applies,
+        applies_because: d.applies_because
       })),
       ...scopedDisposed
     ];
@@ -55227,17 +55564,20 @@ ${words}`;
       detail: `'${sk}' is not a stage of progression '${pk}' \u2014 a disposition must name a real stage`
     };
     const at = (/* @__PURE__ */ new Date()).toISOString();
+    const definitionVersion = this.#definitionVersionOf(pk).version;
     this.sql.exec(
-      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at)
-       VALUES (?,?,?,?,?,?)
+      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at,definition_version)
+       VALUES (?,?,?,?,?,?,?)
        ON CONFLICT(progression_key,stage_key) DO UPDATE SET
-         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at`,
+         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at,
+         definition_version=excluded.definition_version`,
       pk,
       sk,
       st,
       why.slice(0, _Store.EDGE_REASON_MAX),
       by.slice(0, 200),
-      at
+      at,
+      definitionVersion
     );
     return {
       ok: true,
@@ -55249,7 +55589,8 @@ ${words}`;
       reason: why,
       decided_by: by,
       at,
-      bundle: null
+      bundle: null,
+      definition_version: definitionVersion
     };
   }
   /* ---- coordination: what LockService and the nextSeq race did ---- */
@@ -55592,6 +55933,12 @@ ${words}`;
          bundles, as `connections` is (D-464's subtraction, keyed at c19-batch10's merge of D-464). */
       connectionPairChoices: n("connection_pair_choices", "a_bundle_id", "b_bundle_id"),
       progressionStages: n("progression_stages"),
+      /* REC-184: D-128's version history, counted APART from the current-version tables above —
+         a revision adds a version row and replaces the current one, so the current count alone
+         cannot tell one definition revised five times from one never revised — and so a whole-store
+         purge can PROVE it took the history (D-113). */
+      progressionDefVersions: n("progression_def_versions"),
+      progressionStageVersions: n("progression_stage_versions"),
       /* FW-9: the threaded progression instances, reported so a purge can PROVE it cleared
          them (D-113). */
       progressionInstances: n("progression_instances", "bundle_id"),
@@ -57136,6 +57483,9 @@ ${words}`;
         /* REC-122: the on-point choices a purge took (D-113). */
         connectionPairChoices: d("connectionPairChoices"),
         progressionStages: d("progressionStages"),
+        /* REC-184: D-128's version history a whole-store purge took (D-113). */
+        progressionDefVersions: d("progressionDefVersions"),
+        progressionStageVersions: d("progressionStageVersions"),
         /* FW-9: the threaded progression instances a purge took (D-113). */
         progressionInstances: d("progressionInstances"),
         /* FW-10: the exception documents a purge took (D-113). */
@@ -61969,6 +62319,85 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       samples: cur.samples + 1,
       new_peak: isPeak
     };
+  }
+  /* ------------------------------------------------------------------
+   * D-64: the daily render allowance (CLIENT-RENDERED.md, BOB #32 item 3)
+   * ------------------------------------------------------------------ */
+  /** Admit one render against today's allowance, or record it DEFERRED. The verdict
+   *  is the STRING `state` (`admitted` | `deferred`), never a leading boolean, so no
+   *  reader grades a datum as a refusal (meaning-bounds D-240 (e)). The DO
+   *  serialises, so one row per UTC day is globally correct for the instance.
+   *  Admission is decided on what has been SPENT, because a render's cost is
+   *  only known after it ran.
+   *
+   *  CORRECTED 2026-09-24 at integration (CONDUCT #20, on BOB #32's reading; VERIFIED HERE AT
+   *  THE CODE, not taken on the message's word). This said the allowance "can therefore be
+   *  overrun by at most one render". THAT IS FALSE, and it is the shape this project meets
+   *  most: a bound believed on the strength of a sentence. Admission is serialised in the DO,
+   *  but the render RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op
+   *  (`renderspend` -> `renderSpend`; the two are distinct rows of the dispatch table), so
+   *  every render IN FLIGHT AT ONCE is admitted against the same `spent_ms`. The bound that
+   *  actually holds is
+   *
+   *      overrun <= (renders in flight concurrently) x (one render's maximum time:
+   *                                                     the wait timeout plus navigation)
+   *
+   *  whose first factor nothing here bounds. Reserving at admission is D-492, placed by
+   *  SCHEDULER; until it lands this comment is the only thing that says so. Prose only — no
+   *  behaviour moved.
+   *
+   *  AND A FINDING ABOUT THE REBUILD RULE, measured making this very edit, because it came
+   *  back the opposite way to what `kickoffs/WORKER.md` step 0 predicts. That step says a
+   *  COMMENT-ONLY `src/` change leaves `bundled.mjs` BYTE-IDENTICAL (REC-110) — "if you are
+   *  hunting a diff after a comment-only change, there isn't one". This edit moved it by
+   *  1,104 bytes. THE RULE IS TRUE OF A PLAIN BLOCK COMMENT AND FALSE OF A JSDOC ONE (a block
+   *  opened with two stars). Grepped in the emitted bundle: an ordinary block comment in this
+   *  file, and one added to `index.mjs` in this same batch, are both ABSENT (0 hits), while
+   *  this JSDoc block is PRESENT verbatim (1 hit). The bundler strips block comments and
+   *  PRESERVES JSDoc. So a worker who edits a docstring and trusts the kickoff reads a real
+   *  diff as a build problem — the exact wasted hunt that line exists to prevent, one comment
+   *  form over. Reported to CONDUCT #20 with the measurement; the fix is to narrow WORKER.md
+   *  step 0 to the comment FORM rather than to "comments". */
+  renderAdmit({ allowanceMs, at = null }) {
+    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const day = now.slice(0, 10);
+    const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
+    const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
+    const spent = cur ? cur.spent_ms : 0;
+    if (spent >= allowance) {
+      if (cur) this.sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
+      else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 0, 1, ?)`, day, now);
+      return {
+        state: "deferred",
+        day,
+        spent_ms: spent,
+        allowance_ms: allowance,
+        deferred: (cur ? cur.deferred : 0) + 1,
+        renders: cur ? cur.renders : 0
+      };
+    }
+    if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, last_at = ? WHERE day = ?`, now, day);
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 1, 0, ?)`, day, now);
+    return {
+      state: "admitted",
+      day,
+      spent_ms: spent,
+      allowance_ms: allowance,
+      renders: (cur ? cur.renders : 0) + 1,
+      deferred: cur ? cur.deferred : 0
+    };
+  }
+  /** Add the browser time one render REPORTED. An unreported time adds nothing
+   *  and says so: the allowance is then under-counted, never guessed. */
+  renderSpend({ ms, at = null }) {
+    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const day = now.slice(0, 10);
+    const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
+    if (n === null) return { day, spent_ms: null, why: "the renderer reported no elapsed time, so nothing was added" };
+    const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
+    if (cur) this.sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, last_at = ? WHERE day = ?`, n, now, day);
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, ?)`, day, n, now);
+    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n };
   }
   runtimeObservations() {
     const rows = [...this.sql.exec(`SELECT * FROM runtime_observations ORDER BY metric`)];
@@ -72772,6 +73201,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           identity: url.searchParams.get("identity")
         }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
+        /* D-64: the daily render allowance. `renderadmit` takes a render or records
+           a DEFERRAL; `renderspend` adds the browser time a render reported. */
+        renderadmit: () => this.renderAdmit(body || {}),
+        renderspend: () => this.renderSpend(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),
         recordcpuprobestep: () => this.recordCpuProbeStep(body || {}),
@@ -76556,6 +76989,12 @@ var driveRow = (code) => {
     throw new Error(`driveRow: ${code} has no DRIVE_CAPTURE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
+var renderRow = (code) => {
+  const row = RENDER_CAPTURE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`renderRow: ${code} has no RENDER_CAPTURE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
 var reextractRow = (code) => {
   const row = REEXTRACT_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -78664,6 +79103,81 @@ var index_default = {
       const authorityAsserted = typeof body2?.authority === "string" && body2.authority.trim() ? body2.authority.trim() : null;
       const retrieved = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
+      const renderAsked = Object.prototype.hasOwnProperty.call(body2 || {}, "render") && body2.render !== false;
+      let renderer = null;
+      if (renderAsked) {
+        if (body2.render !== true)
+          return json({
+            ok: false,
+            reason: "RENDER_FLAG_MALFORMED",
+            ...renderRow("RENDER_FLAG_MALFORMED"),
+            op,
+            detail: `render=${JSON.stringify(body2.render).slice(0, 40)} is not a value this op reads. Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.`
+          }, 400);
+        const conflict = body2.via === "archive.org" ? "via: archive.org (an archived replay)" : driveCapture ? "a Google Drive export (a document, not a page)" : body2.continue ? "continue: <session> (a capture already filed)" : null;
+        if (conflict)
+          return json({
+            ok: false,
+            reason: "RENDER_ARM_CONFLICT",
+            ...renderRow("RENDER_ARM_CONFLICT"),
+            op,
+            conflict,
+            detail: `render: true cannot be combined with ${conflict}.`
+          }, 400);
+        renderer = rendererFor(env);
+        if (typeof renderer.render !== "function")
+          return json({
+            ok: false,
+            reason: "RENDER_NO_RENDERER",
+            ...renderRow("RENDER_NO_RENDERER"),
+            op,
+            renderer: renderer.kind,
+            detail: renderer.kind === "browser-binding-without-driver" ? "a Browser Rendering binding (BROWSER) is bound, but the in-plane driver over it is not built (D-64 shipped the seam and the record, not a CDP client). Nothing was fetched." : "no renderer is bound to this instance (no RENDERER service binding). Nothing was fetched."
+          }, 501);
+        let rHost = null;
+        try {
+          rHost = new URL(locator).host;
+        } catch {
+          rHost = null;
+        }
+        if (rHost) {
+          let g = null;
+          try {
+            g = (await (await stGov.fetch("http://x/governoradmit", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ host: rHost })
+            })).json()).result || null;
+          } catch {
+            g = null;
+          }
+          if (g && g.admitted === false)
+            return json({
+              ok: false,
+              reason: "RENDER_HOST_COOLING_OFF",
+              ...renderRow("RENDER_HOST_COOLING_OFF"),
+              op,
+              host: rHost,
+              retry_in_ms: g.retry_in_ms || 0,
+              detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).`
+            }, 429);
+        }
+        const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), at: retrieved })
+        }));
+        const adm = admOut.answered ? admOut.result : null;
+        if (!adm || adm.state !== "admitted")
+          return json({
+            ok: false,
+            reason: "RENDER_DEFERRED",
+            ...renderRow("RENDER_DEFERRED"),
+            op,
+            render: { state: "deferred", content: "undetermined", allowance: adm || null },
+            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is spent (${adm.spent_ms} ms); this render is recorded as deferred (${adm.deferred} today).` : "the render allowance could not be read, so the render is deferred rather than run unmetered."
+          }, 429);
+      }
       const via = body2?.via === "archive.org" ? "archive.org" : "direct";
       const documentAddress = via === "archive.org" && archiveAddress ? archiveAddress : driveCapture ? driveCapture.address : locator;
       const addressIsDerived = via === "archive.org" && !!archiveAddress || !!driveCapture;
@@ -78842,7 +79356,7 @@ var index_default = {
       }
       await flush();
       if (total === 0) return json({ ok: false, reason: "EMPTY", locator }, 502);
-      const sha = whole.hex();
+      let sha = whole.hex();
       let existed = false, multipart = parts.length > 1;
       if (!multipart) {
         const only = parts[0];
@@ -78855,7 +79369,7 @@ var index_default = {
         }
         existed = partHeldBefore[0];
       }
-      const ct = (res2.headers.get("content-type") || "").split(";")[0].trim();
+      let ct = (res2.headers.get("content-type") || "").split(";")[0].trim();
       const responseHeaders = [];
       for (const [k, v] of res2.headers) responseHeaders.push([k, v]);
       const transport = {
@@ -78875,6 +79389,75 @@ var index_default = {
       };
       const name = (body2.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
       const stLim = stGov;
+      let renderRecorded = null, shellRecorded = null, renderedAuth = null, renderedExisted = false;
+      if (renderAsked) {
+        const pageUrl = res2.url || locator;
+        let answer = null, rbytes = null, rb = null;
+        if (multipart || detectFormat(null, ct || null).format !== "html")
+          return json({
+            ok: false,
+            reason: "RENDER_NOT_A_PAGE",
+            ...renderRow("RENDER_NOT_A_PAGE"),
+            op,
+            content_type: ct || null,
+            bytes: total,
+            multipart,
+            detail: `the served bytes are ${multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``}, not an HTML page; nothing was filed.`
+          }, 422);
+        try {
+          answer = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS });
+        } catch (e) {
+          answer = { ok: false, error: String(e && e.message || e) };
+        }
+        try {
+          await stGov.fetch("http://x/renderspend", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ ms: answer && answer.elapsed_ms, at: retrieved })
+          });
+        } catch {
+        }
+        rb = renderBlock(answer, { pageUrl, shellSha: sha, at: retrieved });
+        if (rb.ok) rbytes = new TextEncoder().encode(answer.html);
+        if (!rb.ok || rbytes.length > MAX)
+          return json({
+            ok: false,
+            reason: "RENDER_FAILED",
+            ...renderRow("RENDER_FAILED"),
+            op,
+            shell_sha256: sha,
+            filed: false,
+            detail: rb.ok ? `the rendered document is ${rbytes.length} bytes, over this surface's ${MAX}.` : rb.problem
+          }, 502);
+        const rd = await crypto.subtle.digest("SHA-256", rbytes);
+        const rsha = [...new Uint8Array(rd)].map((x) => x.toString(16).padStart(2, "0")).join("");
+        renderedExisted = !!await env.CAPTURES.head(`${storeName}/captures/${rsha}`);
+        if (!renderedExisted) await env.CAPTURES.put(`${storeName}/captures/${rsha}`, rbytes, { sha256: rd });
+        shellRecorded = {
+          file: `snapshots/${name}.shell.html`,
+          sha256: sha,
+          bytes: total,
+          method: "bio-plane acquire, https fetch, hashed at receipt",
+          ...ct ? { content_type: ct } : {},
+          transport
+        };
+        renderRecorded = rb.render;
+        renderedAuth = renderedAuthority({ asserted: authorityAsserted, render: renderRecorded, at: retrieved });
+        if (typeof renderRecorded.status === "number") {
+          try {
+            await stGov.fetch("http://x/governorreport", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ host: new URL(pageUrl).host, status: renderRecorded.status, retry_after_ms: null })
+            });
+          } catch {
+          }
+        }
+        sha = rsha;
+        total = rbytes.length;
+        ct = "text/html";
+        existed = renderedExisted;
+      }
       try {
         await stLim.fetch("http://x/recordcapturedlocator", {
           method: "POST",
@@ -78905,7 +79488,7 @@ var index_default = {
         });
       } catch {
       }
-      if (!authorityAsserted) {
+      if (renderedAuth ? renderedAuth.authority_state === "undetermined" : !authorityAsserted) {
         try {
           await stLim.fetch("http://x/taskenqueue", {
             method: "POST",
@@ -79496,9 +80079,11 @@ var index_default = {
              both facts about how the record got here. An undetermined
              capture is held and barred from publication, never refused at
              intake (RULED, AUTHORITY-AND-TRUST.md). */
-          ...authorityAsserted ? { authority: authorityAsserted } : {},
-          authority_state: authorityAsserted ? "determined" : "undetermined",
-          authority_basis: authorityAsserted ? `asserted by the capturing ${viaSession ? "member" : "caller"} at intake, ${retrieved}` : `no assertion was supplied and no mechanical determination is implemented; recorded ${retrieved} for resolution through the task list`,
+          ...renderedAuth ? renderedAuth : {
+            ...authorityAsserted ? { authority: authorityAsserted } : {},
+            authority_state: authorityAsserted ? "determined" : "undetermined",
+            authority_basis: authorityAsserted ? `asserted by the capturing ${viaSession ? "member" : "caller"} at intake, ${retrieved}` : `no assertion was supplied and no mechanical determination is implemented; recorded ${retrieved} for resolution through the task list`
+          },
           /* The chain of custody as ordered hops from us back to the origin,
              each naming who, what they assert, the evidence, and whether the
              assertion is cryptographically bound or merely stated (RULED). A
@@ -79519,8 +80104,8 @@ var index_default = {
           provenance_chain: [
             {
               who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
-              asserts: `these bytes were served for ${locator} at ${retrieved}`,
-              evidence: "first-party https fetch, hashed at receipt, transport record on this document",
+              asserts: renderRecorded ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)` : `these bytes were served for ${locator} at ${retrieved}`,
+              evidence: renderRecorded ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment" : "first-party https fetch, hashed at receipt, transport record on this document",
               bound: false,
               via
               /* CAP-8 joins the SAME spread, and a capture is never both: an archive
@@ -79534,7 +80119,8 @@ var index_default = {
             ...driveHopRecorded ? [driveHopRecorded] : []
           ],
           capture: {
-            method: multipart ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt` : "bio-plane acquire, https fetch, hashed at receipt",
+            /* D-64 / BOB #32 item 1: the method is `rendered`; the shell keeps its own. */
+            method: renderRecorded ? RENDERED_METHOD : multipart ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt` : "bio-plane acquire, https fetch, hashed at receipt",
             /* GRADE TRACKS DIRECTNESS, NEVER TECHNIQUE (RULED). An archive hop
                is one more party between us and the publisher, so it grades
                below a direct capture of the same document even though the
@@ -79579,8 +80165,22 @@ var index_default = {
             encoding: "binary",
             bytes: total,
             ...ct ? { content_type: ct } : {},
-            transport
+            /* The HTTP exchange belongs to the SHELL; on a rendered capture it is
+               carried there, and the render's own navigation is `render.*`. */
+            ...renderRecorded ? {} : { transport }
           },
+          /* D-64: THE PAIR (BOB #32 item 2). The rendered document is PRIMARY and
+             is `file`/`capture`; the shell is beside it under its own digest, the
+             one part anyone can re-verify against the source. */
+          ...renderRecorded ? {
+            pair: {
+              primary: "rendered",
+              rendered: { file: `snapshots/${name}`, sha256: sha },
+              shell: { file: shellRecorded.file, sha256: shellRecorded.sha256 }
+            },
+            render: renderRecorded,
+            shell: shellRecorded
+          } : {},
           ...multipart ? { parts: parts.map((p, i) => ({
             file: `snapshots/${name}.part${String(i).padStart(3, "0")}`,
             sha256: p.sha256,
@@ -79631,9 +80231,11 @@ var index_default = {
           },
           files: {
             [`snapshots/${name}.render.html`]: subs.companionSha,
-            "data/snapshot-manifest.json": subs.manifestSha
+            "data/snapshot-manifest.json": subs.manifestSha,
+            ...shellRecorded ? { [shellRecorded.file]: shellRecorded.sha256 } : {}
           }
         } : {},
+        ...shellRecorded && !subs ? { files: { [shellRecorded.file]: shellRecorded.sha256 } } : {},
         ...subsSkipped ? { subresources_skipped: subsSkipped } : {},
         note: ACQUIRE_GRADE_NOTE,
         store: storeName,

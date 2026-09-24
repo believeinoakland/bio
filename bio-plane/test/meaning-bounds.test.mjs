@@ -1176,6 +1176,30 @@ console.log(`  RATCHET: ${BARE_ROSTER_MEASURED_2026_08_07} bare-collection read 
    cased in the walker, and not hidden behind a narrowed matcher: the figure
    MOVED, so the next item to add an unbounded collection read still fails here.
    ===================================================================== */
+/* ===== MOVED 43 -> 42 AT INTEGRATION by CONDUCT #20 (c20-integ1), 2026-09-24, CEILING AND FLOOR IN ONE EDIT, from the
+   roster this walk PRINTED on the union (origin/main 548eb2c5 + c19-batch10 + D-64 + REC-184), diffed BY NAME against
+   the roster the same walk printed on origin/main 548eb2c5 in a scratch worktree. ONE departure: `op=resolve`.
+
+   **AND IT IS NOT PROGRESS. THE READER LOST SIGHT OF IT — which is the exact thing this floor exists to catch, catching
+   it.** On `origin/main` `op=resolve` is BARE. On this union it is in NO collection bucket at all: not bare, not
+   bounded, not unjudged, not opaque — it fell into `NO_COLLECTION` (a dispatched op whose method this walk does not
+   see publishing a collection). Its dispatch arrow is BYTE-IDENTICAL on both trees
+   (`resolve: () => this.resolveReferences(body || {}),`), so the walk still reaches the op; what changed is the
+   METHOD. D-291 (IC-247, on c19-batch10) gave `op=resolve` a SET form, and the per-document row scan moved out of
+   `resolveReferences` into the helper `#resolveOne` — which NOTHING DISPATCHES, so this walk never follows it. The
+   scan is still there. The read is no more bounded than it was. Only the reader got shorter-sighted, and the roster
+   count alone could not tell that from a fix — `WORKER.md`'s own receipt, "a classifier grading one literal hid 27
+   ops", one level up.
+
+   THE FIX, NAMED (not taken here — it changes the instrument's reach, and an integration is the wrong place to widen
+   a classifier over a whole corpus): the walk must follow a dispatched method into the private helpers it calls, or
+   `#resolveOne` must be pinned into the roster by name as a reachable read, so that `op=resolve` is graded on where
+   its scan actually is. REPORTED to SCHEDULER by CONDUCT #20 with that fix named, and to CONDUCT #20's report.
+   Until it is taken, `op=resolve` is a BLIND SPOT and this comment is the only thing that says so.
+
+   The two other movements in this union are NOT on this roster and are named here so the figure is not read as their
+   doing: D-64's `renderadmit` and `renderspend` are store-level dispatch arrows (not OPS-table ops) and both landed
+   in UNJUDGED, which is why UNJUDGED reads 41 -> 43 while this roster moved by one in the other direction. ===== */
 /* ===== MOVED 40 -> 43 AT INTEGRATION by c19-unionfix, 2026-09-24, CEILING AND FLOOR IN ONE EDIT, from the roster this
    walk PRINTED on the union c19-batch9 (b23f5c946), diffed by name against origin/main 15b2a4c0's 40. Three
    arrivals, each a real member counted honestly and not exempted:

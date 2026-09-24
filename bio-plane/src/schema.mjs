@@ -1399,8 +1399,19 @@ CREATE TABLE IF NOT EXISTS proposal_dispositions (
   reason          TEXT NOT NULL,
   decided_by      TEXT,
   at              TEXT,
+  definition_version INTEGER,   -- REC-184: the progression definition version the decision was taken against
   PRIMARY KEY (progression_key, stage_key)
 );
+-- REC-184 (framework 8.2, The declared flow and its revisions): definition_version is the version of
+-- the progression definition CURRENT when the member decided, stamped by the store and never the
+-- caller's word. A decision applies only to the version it was taken against -- once the definition
+-- is revised the proposal is OPEN again, with the earlier decision published beside it, because a
+-- decision the record applies to a definition nobody judged is the record claiming more than it
+-- holds. NULLABLE AND NEVER BACK-FILLED: a row written before this column existed recorded no
+-- version, and the only value a backfill could reach for is the current one, which is the claim
+-- this column exists to test. NULL reads back as not recorded, stated, and such a row governs
+-- only while the definition has not been declared again since the decision was taken (the
+-- definition's own at against the row's at) -- the version stays unknown, the ORDER is recorded.
 CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at);
 -- REC-11 / DATA-MODEL D4: the INQUIRY BASIS -- the legs an inquiry rests on,
 -- and invariant 7's storage: a leg whose role is cuts_against is a ROW, so a
@@ -3893,6 +3904,21 @@ CREATE TABLE IF NOT EXISTS theme_placements (
 );
 CREATE INDEX IF NOT EXISTS theme_placements_bundle ON theme_placements(bundle_id);
 -- =========================================================================
+
+-- D-64: the instance's DAILY RENDER ALLOWANCE, spent by the render arm of
+-- op=acquire (CLIENT-RENDERED.md, RULED 2026-09-23 by BOB #32 item 3). One row
+-- per UTC day. spent_ms is browser time the renderer REPORTED, so it is the
+-- renderer's claim summed, not a platform meter. deferred counts the renders
+-- this instance declined because the allowance was spent: a deferral is a
+-- recorded fact, never a silent fall-back to filing the shell as the content.
+-- An operational fact about this instance, not corpus-derived.
+CREATE TABLE IF NOT EXISTS render_allowance (
+  day        TEXT PRIMARY KEY,
+  spent_ms   INTEGER NOT NULL DEFAULT 0,
+  renders    INTEGER NOT NULL DEFAULT 0,
+  deferred   INTEGER NOT NULL DEFAULT 0,
+  last_at    TEXT NOT NULL
+);
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and

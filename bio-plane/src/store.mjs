@@ -1133,6 +1133,12 @@ export class Store extends DurableObject {
          invented. NULL reads back as `not recorded`, stated, through `#statusBy`. */
       ["members", "status_by", "TEXT"],
       ["signers", "status_by", "TEXT"],
+      /* REC-184 (framework §8.2, D-128's follow-on): the progression definition version a proposal
+         disposition was decided against. NULLABLE AND NEVER BACK-FILLED: a decision taken before this
+         column existed recorded no version, and the one value a backfill could reach for is the
+         CURRENT version — the very claim the column exists to test. NULL reads back `not recorded`,
+         stated by `#dispositionVersionView`. */
+      ["proposal_dispositions", "definition_version", "INTEGER"],
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -24326,6 +24332,54 @@ export class Store extends DurableObject {
         key, version, s.stage_key, s.stage_no, s.label ?? null, s.after_stage ?? null, s.cardinality, s.within_interval ?? null, s.required);
   }
 
+  /* REC-184: the CURRENT version's NUMBER and the instant it came to stand, and nothing else -- the
+     light read #assembleInstance, op=proposedispose and op=proposals share, so which version is
+     current has ONE answer on the read and on the act. `at` is progression_defs.at, which every
+     declaration writes: a D-128 revision and, before D-128, every overwriting re-declaration
+     (`ON CONFLICT … DO UPDATE SET … at=excluded.at`), so it is the time the definition an instance
+     is read against was declared. null if the progression was never declared. */
+  #definitionVersionOf(key) {
+    const def = this.#one(`SELECT at FROM progression_defs WHERE progression_key=?`, key);
+    if (!def) return null;
+    const v = this.#one(
+      `SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`, key);
+    return { version: v && v.v != null ? v.v : 1, at: def.at ?? null };
+  }
+
+  /* REC-184: does a recorded proposal disposition GOVERN the definition an instance is read against
+     today? A decision is a member's judgment of the proposal a definition produced, so it applies to
+     the version it was taken against and to no later one (framework §8.2: a finding names the
+     version it was read against, and the decision about it does too). Four answers, each stated:
+       - recorded and equal to the current version      -> applies;
+       - recorded and earlier (the definition was revised since) -> does NOT apply: the proposal is
+         open again and the decision is published beside it, aged, never deleted (D-79);
+       - NOT RECORDED (a row written before this column) and the definition has not been declared
+         since the decision was taken -> applies: whatever version it was, it is still the current
+         one, because no declaration has happened in between. The version number stays unknown;
+       - NOT RECORDED and the definition was declared after it, or either instant is missing or
+         they are the same instant ->
+         does NOT apply: the decision may have judged a definition that no longer stands, and
+         applying it would be the record claiming a judgment nobody made. Resurfacing is the
+         direction that asks again rather than asserts.
+     Never back-fills the row: this is a read, and `definition_version` stays null on the record. */
+  static #dispositionVersionView(d, cur) {
+    const recorded = d.definition_version != null;
+    const current = cur ? cur.version : null;
+    let applies, because;
+    if (!cur) { applies = false; because = "definition_not_declared"; }
+    else if (recorded) {
+      applies = Number(d.definition_version) === current;
+      because = applies ? "decided_against_current_version" : "decided_against_earlier_version";
+    } else if (cur.at == null || d.at == null || String(cur.at) === String(d.at)) {
+      /* no instant, or the same millisecond: which came first is not in the record */
+      applies = false; because = "version_not_recorded_order_undetermined";
+    } else if (String(cur.at) > String(d.at)) { applies = false; because = "version_not_recorded_definition_declared_since"; }
+    else { applies = true; because = "version_not_recorded_definition_not_declared_since"; }
+    return { definition_version: recorded ? Number(d.definition_version) : null,
+             definition_version_state: recorded ? "recorded" : "not recorded",
+             current_definition_version: current, applies, applies_because: because };
+  }
+
   /* D-128: the CURRENT version of a definition -- the one every instance and finding is derived
      against -- with its number. A definition with no version rows was declared before D-128 and
      reads as version 1, its basis not recorded (version_recorded:false). null if never declared. */
@@ -24819,9 +24873,7 @@ export class Store extends DurableObject {
     /* D-128: the version of the definition this instance is read against -- the CURRENT one, whose
        stages are loaded below. Named on the instance and on every finding and discharge, so a
        finding keeps its basis after a revision: op=progression with this version reads it back. */
-    const vrow = this.#one(
-      `SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`, progressionKey);
-    const definitionVersion = vrow && vrow.v != null ? vrow.v : 1;
+    const definitionVersion = this.#definitionVersionOf(progressionKey).version;   // REC-184: the one reader
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     const stageDefs = this.#rows(
       `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
@@ -25354,11 +25406,21 @@ export class Store extends DurableObject {
        `dispositions` so the decision — its state, reason, who and when — stays on the record.
        Dropping this lookup is REC-7's negative control: with no dispositions read, an aged
        proposal reappears as open. */
-    const disposed = new Map();   // (progression_key::stage_key) -> the disposition row
+    /* REC-184: EVERY recorded disposition is read, and only the ones that GOVERN the definition in
+       force age a proposal out of open (`#dispositionVersionView`). A decision taken against an
+       earlier version of the definition leaves the proposal OPEN — carrying that decision as
+       `prior_disposition` — and stays in `dispositions[]` with `applies: false`, so the record says
+       both that a member decided and that nobody has judged the definition standing now. */
+    const recorded = new Map();   // (progression_key::stage_key) -> the disposition row, with its version view
+    const curOf = new Map();      // progression_key -> #definitionVersionOf, read once per progression
     for (const d of this.#rows(
-      `SELECT progression_key, stage_key, state, reason, decided_by, at
-         FROM proposal_dispositions`))
-      disposed.set(d.progression_key + "::" + d.stage_key, d);
+      `SELECT progression_key, stage_key, state, reason, decided_by, at, definition_version
+         FROM proposal_dispositions`)) {
+      if (!curOf.has(d.progression_key)) curOf.set(d.progression_key, this.#definitionVersionOf(d.progression_key));
+      recorded.set(d.progression_key + "::" + d.stage_key,
+                   { ...d, ...Store.#dispositionVersionView(d, curOf.get(d.progression_key)) });
+    }
+    const disposed = new Map([...recorded].filter(([, d]) => d.applies));   // the ones that AGE
     /* DISTINCT (progression_key, entity_id): the identity of an instance is the pair; a stage
        holds several documents but that is still one instance. Ordered so the feed is stable. */
     const pairs = this.#rows(
@@ -25402,10 +25464,17 @@ export class Store extends DurableObject {
         const key = inst.progression_key + "::" + f.stage_key;
         let g = groups.get(key);
         if (!g) {
+          const prior = recorded.get(key) || null;   // REC-184: a decision about an EARLIER definition
           g = { key, progression_key: inst.progression_key, progression_label: inst.label,
                 stage_key: f.stage_key, stage_label: f.stage_label, required: f.required,
                 definition_version: inst.definition_version,
-                surfaced_by: "machine", overdue_count: 0, instances: [] };
+                surfaced_by: "machine", overdue_count: 0, instances: [],
+                prior_disposition: prior
+                  ? { state: prior.state, reason: prior.reason, decided_by: prior.decided_by, at: prior.at,
+                      definition_version: prior.definition_version,
+                      definition_version_state: prior.definition_version_state,
+                      applies: false, applies_because: prior.applies_because }
+                  : null };
           groups.set(key, g);
         }
         const od = overdueByStage.get(f.stage_key) || null;
@@ -25446,10 +25515,16 @@ export class Store extends DurableObject {
        member (or UI-5) can see WHICH questions were deferred/dismissed, by whom, why and when —
        independent of whether the underlying gap still fires, because the decision stands until it
        is re-triaged. Stable order, widest identity first is meaningless here so ordered by key. */
-    const dispositions = [...disposed.values()]
+    const dispositions = [...recorded.values()]
       .map((d) => ({ key: d.progression_key + "::" + d.stage_key,
                      progression_key: d.progression_key, stage_key: d.stage_key,
-                     state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at }))
+                     state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
+                     /* REC-184: which definition the decision judged, and whether it governs the
+                        one in force — a row written before the column reads `not recorded`. */
+                     definition_version: d.definition_version,
+                     definition_version_state: d.definition_version_state,
+                     current_definition_version: d.current_definition_version,
+                     applies: d.applies, applies_because: d.applies_because }))
       .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
     return { ok: true, instances, proposals, dispositions,
              instance_count: instances.length, proposal_count: proposals.length,
@@ -27838,6 +27913,11 @@ export class Store extends DurableObject {
         id: `FINDING::${d.key}`, scope: "instance", project: null,
         key: d.key, progression_key: d.progression_key, stage_key: d.stage_key,
         state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
+        /* REC-184: the definition version the decision judged, and whether it still ages the
+           finding — false once the definition is revised, when the finding is an OPEN item again. */
+        definition_version: d.definition_version,
+        definition_version_state: d.definition_version_state,
+        applies: d.applies, applies_because: d.applies_because,
       })),
       ...scopedDisposed,
     ];
@@ -28437,17 +28517,24 @@ export class Store extends DurableObject {
     if (!stageRow) return { ok: false, reason: "BAD_STAGE", progression_key: pk, stage_key: sk,
       detail: `'${sk}' is not a stage of progression '${pk}' — a disposition must name a real stage` };
     const at = new Date().toISOString();
+    /* REC-184 (framework §8.2): the decision is taken against the definition IN FORCE, and the row
+       says which — stamped here from the store's one reader, never the caller's word, exactly as
+       the decider is. op=proposals then applies it to that version and no later one. A re-decision
+       re-stamps it: re-triaging a reopened proposal is a judgment of the definition standing now. */
+    const definitionVersion = this.#definitionVersionOf(pk).version;
     /* UPSERT on the identity: a proposal re-decided (deferred→dismissed, or a corrected reason)
        keeps ONE row, re-triageable, never a second. No bundle is written, no history, no manifest —
        declining is not authoring, so the disposition row is the whole of the act. */
     this.sql.exec(
-      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at)
-       VALUES (?,?,?,?,?,?)
+      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at,definition_version)
+       VALUES (?,?,?,?,?,?,?)
        ON CONFLICT(progression_key,stage_key) DO UPDATE SET
-         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at`,
-      pk, sk, st, why.slice(0, Store.EDGE_REASON_MAX), by.slice(0, 200), at);
+         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at,
+         definition_version=excluded.definition_version`,
+      pk, sk, st, why.slice(0, Store.EDGE_REASON_MAX), by.slice(0, 200), at, definitionVersion);
     return { ok: true, key: pk + "::" + sk, progression_key: pk, stage_key: sk,
-             to: st, state: st, reason: why, decided_by: by, at, bundle: null };
+             to: st, state: st, reason: why, decided_by: by, at, bundle: null,
+             definition_version: definitionVersion };
   }
 
   /* ---- coordination: what LockService and the nextSeq race did ---- */
@@ -28808,6 +28895,12 @@ export class Store extends DurableObject {
          bundles, as `connections` is (D-464's subtraction, keyed at c19-batch10's merge of D-464). */
       connectionPairChoices: n("connection_pair_choices", "a_bundle_id", "b_bundle_id"),
       progressionStages: n("progression_stages"),
+      /* REC-184: D-128's version history, counted APART from the current-version tables above —
+         a revision adds a version row and replaces the current one, so the current count alone
+         cannot tell one definition revised five times from one never revised — and so a whole-store
+         purge can PROVE it took the history (D-113). */
+      progressionDefVersions: n("progression_def_versions"),
+      progressionStageVersions: n("progression_stage_versions"),
       /* FW-9: the threaded progression instances, reported so a purge can PROVE it cleared
          them (D-113). */
       progressionInstances: n("progression_instances", "bundle_id"),
@@ -30912,6 +31005,9 @@ export class Store extends DurableObject {
                  /* REC-122: the on-point choices a purge took (D-113). */
                  connectionPairChoices: d("connectionPairChoices"),
                  progressionStages: d("progressionStages"),
+                 /* REC-184: D-128's version history a whole-store purge took (D-113). */
+                 progressionDefVersions: d("progressionDefVersions"),
+                 progressionStageVersions: d("progressionStageVersions"),
                  /* FW-9: the threaded progression instances a purge took (D-113). */
                  progressionInstances: d("progressionInstances"),
                  /* FW-10: the exception documents a purge took (D-113). */
@@ -35949,6 +36045,76 @@ export class Store extends DurableObject {
       ...(isPeak ? [ms, now, ms, ms, now, detail, metric] : [ms, now, ms, metric]));
     return { metric, peak_ms: isPeak ? ms : cur.peak_ms, last_ms: ms,
              samples: cur.samples + 1, new_peak: isPeak };
+  }
+
+  /* ------------------------------------------------------------------
+   * D-64: the daily render allowance (CLIENT-RENDERED.md, BOB #32 item 3)
+   * ------------------------------------------------------------------ */
+
+  /** Admit one render against today's allowance, or record it DEFERRED. The verdict
+   *  is the STRING `state` (`admitted` | `deferred`), never a leading boolean, so no
+   *  reader grades a datum as a refusal (meaning-bounds D-240 (e)). The DO
+   *  serialises, so one row per UTC day is globally correct for the instance.
+   *  Admission is decided on what has been SPENT, because a render's cost is
+   *  only known after it ran.
+   *
+   *  CORRECTED 2026-09-24 at integration (CONDUCT #20, on BOB #32's reading; VERIFIED HERE AT
+   *  THE CODE, not taken on the message's word). This said the allowance "can therefore be
+   *  overrun by at most one render". THAT IS FALSE, and it is the shape this project meets
+   *  most: a bound believed on the strength of a sentence. Admission is serialised in the DO,
+   *  but the render RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op
+   *  (`renderspend` -> `renderSpend`; the two are distinct rows of the dispatch table), so
+   *  every render IN FLIGHT AT ONCE is admitted against the same `spent_ms`. The bound that
+   *  actually holds is
+   *
+   *      overrun <= (renders in flight concurrently) x (one render's maximum time:
+   *                                                     the wait timeout plus navigation)
+   *
+   *  whose first factor nothing here bounds. Reserving at admission is D-492, placed by
+   *  SCHEDULER; until it lands this comment is the only thing that says so. Prose only — no
+   *  behaviour moved.
+   *
+   *  AND A FINDING ABOUT THE REBUILD RULE, measured making this very edit, because it came
+   *  back the opposite way to what `kickoffs/WORKER.md` step 0 predicts. That step says a
+   *  COMMENT-ONLY `src/` change leaves `bundled.mjs` BYTE-IDENTICAL (REC-110) — "if you are
+   *  hunting a diff after a comment-only change, there isn't one". This edit moved it by
+   *  1,104 bytes. THE RULE IS TRUE OF A PLAIN BLOCK COMMENT AND FALSE OF A JSDOC ONE (a block
+   *  opened with two stars). Grepped in the emitted bundle: an ordinary block comment in this
+   *  file, and one added to `index.mjs` in this same batch, are both ABSENT (0 hits), while
+   *  this JSDoc block is PRESENT verbatim (1 hit). The bundler strips block comments and
+   *  PRESERVES JSDoc. So a worker who edits a docstring and trusts the kickoff reads a real
+   *  diff as a build problem — the exact wasted hunt that line exists to prevent, one comment
+   *  form over. Reported to CONDUCT #20 with the measurement; the fix is to narrow WORKER.md
+   *  step 0 to the comment FORM rather than to "comments". */
+  renderAdmit({ allowanceMs, at = null }) {
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const day = now.slice(0, 10);
+    const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
+    const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
+    const spent = cur ? cur.spent_ms : 0;
+    if (spent >= allowance) {
+      if (cur) this.sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
+      else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 0, 1, ?)`, day, now);
+      return { state: "deferred", day, spent_ms: spent, allowance_ms: allowance,
+               deferred: (cur ? cur.deferred : 0) + 1, renders: cur ? cur.renders : 0 };
+    }
+    if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, last_at = ? WHERE day = ?`, now, day);
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 1, 0, ?)`, day, now);
+    return { state: "admitted", day, spent_ms: spent, allowance_ms: allowance,
+             renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0 };
+  }
+
+  /** Add the browser time one render REPORTED. An unreported time adds nothing
+   *  and says so: the allowance is then under-counted, never guessed. */
+  renderSpend({ ms, at = null }) {
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const day = now.slice(0, 10);
+    const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
+    if (n === null) return { day, spent_ms: null, why: "the renderer reported no elapsed time, so nothing was added" };
+    const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
+    if (cur) this.sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, last_at = ? WHERE day = ?`, n, now, day);
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, ?)`, day, n, now);
+    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n };
   }
 
   runtimeObservations() {
@@ -47515,6 +47681,10 @@ export class Store extends DurableObject {
                                                        so a body can never supply it. */
                                                     identity: url.searchParams.get("identity") }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
+        /* D-64: the daily render allowance. `renderadmit` takes a render or records
+           a DEFERRAL; `renderspend` adds the browser time a render reported. */
+        renderadmit: () => this.renderAdmit(body || {}),
+        renderspend: () => this.renderSpend(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),
         recordcpuprobestep: () => this.recordCpuProbeStep(body || {}),
