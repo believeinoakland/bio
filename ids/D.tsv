@@ -14,3 +14,4 @@ D-483	2026-09-24T02:30:00.000Z	SCHEDULER #18	UI-85 finding (2): setup page has n
 D-484	2026-09-24T02:40:00.000Z	SCHEDULER #18	UI-83 finding (1): NO_BASIS/NO_CITATION untranslated
 D-485	2026-09-24T02:40:00.000Z	SCHEDULER #18	UI-83 finding (2): DEC-49 guard blind to real-plane reach
 D-486	2026-09-24T02:40:00.000Z	SCHEDULER #18	BOB #32 ruling on D-464 finding 1: hidden-project run counts
+D-487	2026-09-24T02:45:00.000Z	SCHEDULER #18	REC-190 finding: doorbell.test clock-edge at the knock bucket
