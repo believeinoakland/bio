@@ -68,7 +68,7 @@ scope: in promote's action block (not on replay), refuse MACHINE_CANNOT_SET_RISK
 accepts-when: a machine credential's promote changing a tier to 2 is refused by name; a member's promote setting 2 and a machine's unchanged carry-forward are accepted. How a liar passes it: refusing every machine promote of an action, so the carry-forward arm must pass. NEGATIVE CONTROL: drop the machine-identity clause, and the "a machine credential cannot set risk_tier" arm fails by name while the member arm stays green.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
 
-### UI-85 · running — SPAWNED 2026-09-24 ~01:32Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER UI-85 (CONDUCT #19), base origin/main 15b2a4c0 (D-182 on main; REC-189 finished at land/worker/REC-189 @ 9d9919dd, not yet trained); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/UI-85 and that session; never conclude queued from the absence alone.
+### UI-85 · integrated — finished; integrated on land/conduct/c19-batch11 @ e49f66f8, waiting for its train — flipped by SCHEDULER #18
 order: directly after REC-189, so the plane's fence and the member's only path to a tier land together; D-182's surface half (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:48Z finding (2), verified at c17-batch5 @ 74fc2e25)
 milestone: M10
 interface: I3 consumer (`op=affordances`'s `vocabularies.risk_tiers`); none new.
@@ -139,7 +139,7 @@ scope: narrow `STORE_SHAPE` to `bio` or `scratch` with its own BAD_STORE refusal
 accepts-when: `store=biosmoke` is refused by the worker by name. NEGATIVE CONTROL: widen the shape again, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### REC-192 · running — SPAWNED 2026-09-24 ~01:16Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER REC-192 (CONDUCT #19), base origin/main 15b2a4c0 (REC-161 on main); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-192 and that session; never conclude queued from the absence alone.
+### REC-192 · integrated — finished; integrated on land/conduct/c19-batch11 @ 8646219d (IC-248, I3 84.0.0 MAJOR), waiting for its train — flipped by SCHEDULER #18
 order: after D-256: a correction to just-landed work (UI-74, REC-161) that moves a doctrine from a page's choice into the wire (SCHEDULER #17, 2026-09-23)
 milestone: M9
 interface: I3 additive — `partitionindependence` (REC-161) takes `version=<id>` and reads that stored version's legs through the same `#independenceOf`, returning no strength field; versionstrength's gate and viewer stamp kept. The integrator mints and classifies the IC.
@@ -149,7 +149,7 @@ scope: the version arm on the independence read. Extend `bio-plane/test/partitio
 accepts-when: the version arm's answer carries no strength key and equals versionstrength's `independence` for the same version. NEGATIVE CONTROL: add a strength field to the version-arm answer, and the "no strength key" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (UI-74's worker finding via CONDUCT #17; `node tools/mintid.mjs REC`).
 
-### REC-190 · running — SPAWNED 2026-09-24 ~01:43Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER REC-190 (CONDUCT #19), base origin/main 15b2a4c0 (D-179 on main), IC-251 pre-minted; gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-190 and that session; never conclude queued from the absence alone.
+### REC-190 · integrated — finished; integrated on land/conduct/c19-batch11 @ c650a697 (IC-251, I3 84.1.0), waiting for its train — flipped by SCHEDULER #18
 order: after UI-86: the census that tells whether D-179's residue exists on a live record, before anything repairs it (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (6), verified at c17-batch4 @ 65205437)
 milestone: M2
 interface: I3 additive — one new admin/probe census op, `mutating:false`, REC-175's shape (proposed name homecensus); the integrator mints and classifies the IC.
@@ -170,7 +170,7 @@ accepts-when: a rendered capture of a shell holds both artifacts and names every
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-64's DEBT row of 2026-07-30; keeps its `D-` id).
 owed-at-integration: BOB #32 ruling 2026-09-24 ~03:14Z — a render whose wait fired on its TIMEOUT keeps the capture's GRADE (grade is the chain; the method is recorded); the rendered document's COMPLETENESS is UNDETERMINED: `render.wait` records that the timeout fired and the reading states "render may be incomplete (wait timed out)"; never presented as the whole page, never refused. Actor: c20-integ1 (session_011vBzoPQBRZGhdLUxxiXzPG), paid on land/conduct/c20-integ1; BOB folds it into CLIENT-RENDERED. Sent by CONDUCT #20.
 
-### UI-83 · running — SPAWNED 2026-09-24 ~01:48Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER UI-83 (CONDUCT #19), base origin/main 15b2a4c0 (D-128 on main via c17-batch3); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/UI-83 and that session; never conclude queued from the absence alone.
+### UI-83 · integrated — finished; integrated on land/conduct/c19-batch11 @ 3e3684ee, waiting for its train — flipped by SCHEDULER #18
 order: directly after D-443, first of the D-128 follow-ons: a surface that answers a member's act with a refusal it gives them no field to meet is a correction to just-landed work, which outranks new work (SCHEDULER #16, 2026-09-23; D-128's worker via CONDUCT #17)
 milestone: M8
 interface: I3 consumer (D-128's IC).
@@ -290,6 +290,46 @@ depends-on: REC-149 (`integrated`, riding c19-batch9).
 scope: page the directory at LIMIT cap+1 with `limit` and `truncated`; the cap is a named constant declared below the method. Add a `bounds.test.mjs` drive that bites.
 accepts-when: a directory over the cap answers `truncated: true` with exactly the cap. NEGATIVE CONTROL: drop the LIMIT, and the bounds drive fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-481 · queued — **A PDF THAT PLACES EACH GLYPH WITH ITS OWN OPERATOR READS ONE GLYPH PER LINE: `pdfstructure.mjs` `extractPageText` pushes a newline on EVERY Td/TD/Tm/T\*, so Budget-Basics-FY21-23 yields 18,551 characters and fewer than 60 words — 43 of 332 plane-read documents (4.3%).** Found by D-66's worker. — owner CONTENT-PDF.
+order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-479, with the corrections: a reading that says far less than the document holds, across 4% of the corpus (SCHEDULER #17, 2026-09-24; via CONDUCT #19; renumbered from a colliding D-480)
+milestone: M2
+interface: none — the text is truer; its shape is unchanged.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (how content is extracted today).
+depends-on: none.
+scope: break only when the baseline moves — Td/TD with ty=0 and a Tm at the current line's y add nothing (a space past a word-gap advance); T\*, ', " and any y change still break. Extend the pdfstructure suite.
+accepts-when: Budget-Basics-FY21-23's bytes read at least 60 words per page. NEGATIVE CONTROL: revert the fix, and that arm reads glyph-per-line and fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-484 · queued — **`NO_BASIS` AND `NO_CITATION` HAVE NO DEC-49 TRANSLATION: neither code has a row in any `*_CHECKS` family, so a member reads the store's raw `detail`.** `NO_CITATION` is minted at 3 sites in `store.mjs` (relationdeclare, the progression revision, discharge), `NO_BASIS` at 4; `NO_CITATION` has reached two member surfaces untranslated since UI-13. Found by UI-83's worker. — owner RECORD.
+order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-481, with the corrections: a refusal a member cannot read (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:30Z)
+milestone: M2
+interface: I3 additive — two catalogued codes gain translations.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, following REC-79's single-helper shape.
+depends-on: none.
+scope: route each code's sites through ONE governed helper inside a DEC-49 REGION; a row for each in ACT_SHAPE_CHECKS (C-numbers by mintid); move the check-refusal-codes floors.
+accepts-when: each site's refusal carries its translation. NEGATIVE CONTROL: mint one site's code outside the helper and the DEC-49 guard fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### M0-142 · queued — **`meaning-bounds.test.mjs`'s BOUND_KEY HAS NO `max`: `/^(?:limit|cap|bound|page_size|[a-z_]*_limit)$/` (line 382), so a read bounded by a `max`/`*_max` key (bounded actionquotes) is counted BARE and correct work reads unbounded.** Found by c18-batch7fix's worker; verified at 548eb2c5 by CONDUCT #20 and SCHEDULER #18. — owner M0.
+order: after D-484, with the rows that cut gate time: an over-strict instrument fails correct work (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:37Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` "The negative-control register".
+depends-on: none.
+scope: add `max|[a-z_]*_max` to BOUND_KEY.
+accepts-when: actionquotes' `max` counts as a bound. NEGATIVE CONTROL: remove actionquotes' published max, and the arm names it bare.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-143 · queued — **`tools/gates.mjs` `docFacing()` MATCHES `docs/` AND `tools/<x>.mjs` AGAINST A SUITE'S RAW SOURCE, COMMENTS INCLUDED, so a comment naming a tool makes the suite doc-facing: it fails safe but over-runs suites on every prose landing.** Found by c18-batch7fix's worker; verified at 548eb2c5. — owner M0.
+order: after M0-142, the same class: gate time on every doc landing (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:37Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
+depends-on: none.
+scope: strip `//` and `/* */` comments from `src` and `ctrlSrc` before matching; strings stay.
+accepts-when: `gates.mjs --explain` on a prose diff lists fewer suites. NEGATIVE CONTROL: a suite whose only `tools/x.mjs` mention is in a comment is doc-facing before the fix and not after, named by the arm.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
