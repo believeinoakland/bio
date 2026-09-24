@@ -34,6 +34,31 @@
 #   control               — NEGATIVE CONTROLS, exits 1 on any mismatch. No network.
 #                           Includes the CONSERVATION arm and the NEUTERING arm the
 #                           M0-32 queue row demands.
+#   readsample [k] [m] [s]— D-66. A: a fixed-seed draw of k documents the body sample
+#                           judged budget_dataset, re-read, with what each HOLDS.
+#                           B: a fixed-seed draw of m spreadsheet keys (seed s+1) run
+#                           through the PLANE's format registry (`d66-office-read.mjs`).
+#
+# D-66 (2026-09-24, BREADTH §2 row 5) ADDED A SIXTH CLASS, `budget_dataset`, and
+# three things beside it, each stated at its site: `text_in_xlsx` (a workbook read as
+# rows, values included — the generic OOXML walk dropped every number); the dataset
+# arm asked of a body the PROSE gate refuses (`judge`); and escalation of an
+# unreadable PDF to the PLANE's reader (`plane_text`, FW-20's instrument unchanged),
+# with this instrument's own tier-1 verdict kept beside it (`classes_t1`) so the
+# M-18 comparison survives. `M032_PLANE=0` reproduces M-18's reader exactly.
+# Figures: `docs/development/measurements/M-123.md`.
+#
+# NEGATIVE CONTROL: (D-66, 2026-09-24, instrument sha 89cd305c… before each arm,
+#   restored by cp and verified by sha256 AND cmp, 109,241 bytes) — N1: money density
+#   made unnecessary for the budget arm -> `control` exit 1 at exactly "a memo ABOUT the
+#   budget ... is NOT budget_dataset — money density is necessary" (1 of 53). N2: commas
+#   read as cells in ANY body, not only a CSV by signature -> exit 1 at exactly "a
+#   thousands separator is not a delimiter ..." (1 of 53); DECLARED to fail the
+#   comma-prose arm too and it did NOT — that arm is fenced twice (signature + exact
+#   comma width), a finding about the arm, recorded rather than smoothed. N4 (liveness
+#   only, TWO variables moved on purpose): both fences off -> both arms fail by name.
+#   N5 (the row's liar, on the RECORDED sample): counted by FILENAME -> the real-sample
+#   arm fails; see M-123.
 #
 # WHAT A CLASS IS, AND WHY IT IS NOT A LIST OF SPELLINGS. Each class is defined by
 # what makes a document that class IN PRINCIPLE, and the recogniser implements the
@@ -83,6 +108,8 @@ import xml.etree.ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PEN = os.environ.get('M032_PEN', os.path.join(os.getcwd(), '.m032-pen'))
+# D-66: `M032_PLANE=0` reproduces M-18's reader exactly (no escalation to the plane).
+PLANE = os.environ.get('M032_PLANE', '1') != '0'
 
 
 def _office():
@@ -106,7 +133,8 @@ IMAGE_EXT = {'jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'avif', 'tif', 'tiff',
 AV_EXT = {'mp4', 'mp3', 'm4a', 'wmv', 'avi', 'mov', 'wav', 'mpg', 'mpeg', 'webm'}
 ARCHIVE_EXT = {'zip', 'gz', 'tar', 'rar', '7z'}
 
-CLASSES = ['agenda', 'minutes', 'staff_report', 'ordinance_res', 'directory']
+CLASSES = ['agenda', 'minutes', 'staff_report', 'ordinance_res', 'directory',
+           'budget_dataset']      # D-66 (2026-09-24): Bob's fifth named type
 
 
 def ext_of(key):
@@ -235,11 +263,100 @@ def text_in_pdf(data, inflate_budget=200_000_000, text_cap=4_000_000):
     return txt
 
 
+def _col_index(ref):
+    """`AB12` -> 27 (0-based column). A cell with no ref sits after the last."""
+    n = 0
+    for ch in ref:
+        if not ch.isalpha():
+            break
+        n = n * 26 + (ord(ch.upper()) - 64)
+    return n - 1
+
+
+def text_in_xlsx(z):
+    """D-66 (2026-09-24). A workbook read as ROWS: one line per `<row>`, its cells
+    joined by TAB in column order, VALUES INCLUDED. The generic OOXML walk below
+    read only `<t>` elements — the shared-string table and inline strings — so a
+    NUMBER, which a sheet stores as `<v>`, never reached the text at all, and a
+    workbook arrived as an undifferentiated run of its column headings. A dataset
+    judged from that body would be judged from its labels alone. `norm()` folds
+    the tabs back to spaces, so the M0-32 families see the same words they always
+    did plus the numbers; only the budget-or-dataset family reads the tabs."""
+    names = z.namelist()
+    shared = []
+    if 'xl/sharedStrings.xml' in names:
+        try:
+            cur = None
+            for ev, el in ET.iterparse(io.BytesIO(z.read('xl/sharedStrings.xml')),
+                                       events=('start', 'end')):
+                tag = el.tag.rsplit('}', 1)[-1]
+                if ev == 'start' and tag == 'si':
+                    cur = []
+                elif ev == 'end' and tag == 't' and cur is not None:
+                    cur.append(el.text or '')
+                elif ev == 'end' and tag == 'si':
+                    shared.append(''.join(cur or []))
+                    cur = None
+                    el.clear()
+        except ET.ParseError:
+            pass
+    sheets = sorted((n for n in names if re.match(r'xl/worksheets/sheet\d+\.xml$', n)),
+                    key=lambda s: int(re.search(r'(\d+)\.xml$', s).group(1)))
+    out = []
+    for sh in sheets:
+        at = len(out)
+        out.append('')
+        ncell = nform = 0
+        try:
+            row, ctype, cref, val, inl = None, None, '', None, []
+            for ev, el in ET.iterparse(io.BytesIO(z.read(sh)), events=('start', 'end')):
+                tag = el.tag.rsplit('}', 1)[-1]
+                if ev == 'start':
+                    if tag == 'row':
+                        row = {}
+                    elif tag == 'c':
+                        ctype, cref, val, inl = el.get('t'), el.get('r') or '', None, []
+                    continue
+                if tag == 'v':
+                    val = el.text
+                elif tag == 'f':
+                    nform += 1
+                elif tag == 't':
+                    inl.append(el.text or '')
+                elif tag == 'c' and row is not None:
+                    if ctype == 's' and val is not None and val.isdigit() \
+                            and int(val) < len(shared):
+                        s = shared[int(val)]
+                    elif ctype == 'inlineStr':
+                        s = ''.join(inl)
+                    else:
+                        s = val
+                    if s not in (None, ''):
+                        ncell += 1
+                        ci = _col_index(cref) if cref else len(row)
+                        row[ci] = s.replace('\t', ' ').replace('\n', ' ')
+                    el.clear()
+                elif tag == 'row' and row is not None:
+                    if row:
+                        w = max(row) + 1
+                        out.append('\t'.join(row.get(i, '') for i in range(w)))
+                    row = None
+                    el.clear()
+        except (ET.ParseError, KeyError):
+            pass
+        # The marker carries the sheet's FORMULA share: a calculator or an
+        # application template computes its cells; a published dataset holds them.
+        out[at] = f'[{sh.rsplit("/", 1)[-1][:-4]} cells={ncell} formulas={nform}]'
+    return '\n'.join(out)
+
+
 def text_in_ooxml(path):
     try:
         z = zipfile.ZipFile(path)
     except Exception:
         return ''
+    if 'xl/workbook.xml' in z.namelist():
+        return text_in_xlsx(z)
     out = []
     for n in z.namelist():
         ln = n.lower()
@@ -288,6 +405,9 @@ def text_in_odf(path):
 def text_in_html(s):
     s = re.sub(r'(?is)<(script|style)\b.*?</\1>', ' ', s)
     s = re.sub(r'(?i)<br\s*/?>|</(p|div|tr|li|h[1-6])>', '\n', s)
+    # D-66: a table cell ends in a TAB, so a row keeps its cells apart for the
+    # dataset family. `norm()` folds it to the space the tag removal gave before.
+    s = re.sub(r'(?i)</t[dh]>', '\t', s)
     s = re.sub(r'<[^>]+>', ' ', s)
     return (s.replace('&nbsp;', ' ').replace('&amp;', '&')
              .replace('&lt;', '<').replace('&gt;', '>').replace('&#39;', "'"))
@@ -529,6 +649,178 @@ def fam_directory(n):
     return f
 
 
+# BUDGET OR DATASET — D-66, 2026-09-24; Bob's fifth named type (BREADTH §2 row 5).
+# ONE class with TWO arms, because Bob named one type and the row counts one; the
+# arm that fired is recorded per document, so the count can be split after the fact
+# and never has to be re-run to answer "how many were budgets".
+#
+#   budget   — its body SETS OUT OR REPORTS THE ALLOCATION OF PUBLIC MONEY over a
+#              fiscal period: amounts in the body's own tables, a fiscal period
+#              named throughout, and the ledger's own vocabulary. A memo ABOUT the
+#              budget, a commission that advises on it, a staff report with a
+#              fiscal-impact paragraph — each is a REFERENCE to a budget, the same
+#              reference-vs-membership line M0-32 drew five times, and each is
+#              held below the money-density family, not below a word.
+#   dataset  — its body IS A TABLE OF RECORDS: many rows sharing one column shape,
+#              a header naming the columns, and the table is most of the document.
+#              A calculator, a form or a template has cells but not records.
+#
+# WHAT THIS CAN SEE: a dataset only where the reader keeps cells apart — a CSV, a
+# workbook read by `text_in_xlsx`, an HTML table. A dataset printed into a PDF
+# reaches this instrument as unseparated strings and is INVISIBLE to the dataset
+# arm (the budget arm, which reads amounts and not cells, is not blind there).
+# Legacy .xls is read as printable runs and is equally invisible to it.
+MONEY = re.compile(r'\$\s?\d[\d,]*(?:\.\d+)?|\b\d{1,3}(?:,\d{3})+(?:\.\d+)?\b')
+FISCAL = re.compile(r'\bfy\s?-?\s?\'?\d{2,4}\b|\bfiscal years?\s+\d{4}\b|'
+                    r'\bfiscal years?\s+\(?fy\)?\s*\d{2,4}\b')
+LEDGER = (r'\bappropriat', r'\bexpenditures?\b', r'\brevenues?\b', r'\bfund balance\b',
+          r'\bgeneral purpose fund\b|\bgeneral fund\b', r'\bfte\b|\bfull[- ]time equivalent',
+          r'\bpersonnel\b', r'\bo\s?&\s?m\b|\boperations and maintenance\b',
+          r'\btransfers? (?:in|out)\b', r'\bcarry[- ]?forward', r'\bencumbran')
+_BUDGET_TITLE = (r'\b(?:(?:proposed|adopted|biennial|mid-?\s?cycle|operating|capital|'
+                 r'annual|amended|recommended)\s+)?budget(?!\s+(?:advisory|'
+                 r'commission|committee|process|priorit|question|webinar|basics|'
+                 r'survey|town hall|hearing|workshop))\b|'
+                 r'\bcapital improvement program\b|\bfinancial plan\b')
+_EMPTYISH = {'', '0', '0.0', '-', '#DIV/0!', '#REF!', '#N/A', '#VALUE!', '#NAME?', '#NUM!'}
+_NUMCELL = re.compile(r'^\s*[-+(]?\$?\s?[\d,]*\.?\d+%?\)?\s*$')
+
+
+def _table_shape(text):
+    """(record rows, width, share of the block's lines, header ok) for the BEST
+    block. A workbook is judged SHEET BY SHEET (`text_in_xlsx` marks each with a
+    `[sheetN]` line): calibration's Major Projects List is one 131-row table on
+    sheet 1 and a 135-line helper column on sheet 2, and judged as one body the
+    helper column halved the table's share. Any other body is one block."""
+    blocks, cur, computed = [], [], [False]
+    for l in text.split('\n'):
+        m = re.fullmatch(r'\[sheet\d+(?: cells=(\d+) formulas=(\d+))?\]', l.strip())
+        if m:
+            blocks.append(cur)
+            cur = []
+            cells, forms = int(m.group(1) or 0), int(m.group(2) or 0)
+            computed.append(bool(cells) and forms / cells > 0.3)
+        else:
+            cur.append(l)
+    blocks.append(cur)
+    best = (0, 0, 0.0, False, False)
+    for b, comp in zip(blocks, computed):
+        r = _block_shape(b)
+        if comp:
+            # A COMPUTED sheet (> 30% of its filled cells are formulas) is a
+            # calculator or a template, never records — calibration: the NOFA
+            # workbook's sales-price sheet and the capital-improvement interest
+            # calculator both passed every other family.
+            r = r[:4] + (False,)
+        if r[0] >= 20 and r[3] and r[2] >= 0.6 and r[4]:
+            return r
+        if r[0] > best[0]:
+            best = r
+    return best
+
+
+def _block_shape(lines):
+    """A line's CELLS are its TAB-separated fields. COMMAS are cells only in a body
+    that IS a CSV by its own signature — at least 80% of its lines parse to one
+    field count >= 3 — and in such a body a row must have exactly that count.
+    Anywhere else a comma is punctuation or a thousands separator, never a cell:
+    calibration's mid-cycle budget PDF read as 819 "rows" when `1,234,567` was split,
+    and the control's comma-prose arm read ordinary sentences as rows; a first
+    repair (masking `d,ddd`) then merged `B2300000,100 Broadway` inside a REAL CSV.
+    The table's WIDTH is the modal cell count over lines with >= 3 cells; a TAB row
+    is a record row at half that width or more, because a sheet row stops at its
+    last filled cell (calibration: one table read as widths 23/22/21)."""
+    import csv as _csv
+    lines = [l for l in lines if l.strip()]
+    raw = []
+    for l in lines:
+        try:
+            raw.append(len(next(_csv.reader([l]))) if ',' in l and '\t' not in l else 0)
+        except Exception:
+            raw.append(0)
+    rc = collections.Counter(w for w in raw if w >= 3)
+    csv_width = rc.most_common(1)[0][0] if rc else 0
+    is_csv = bool(csv_width) and rc[csv_width] >= 0.8 * len(lines)
+    widths, tabbed = [], []
+    for l, rw in zip(lines, raw):
+        tabbed.append('\t' in l)
+        if '\t' in l:
+            n = len(l.split('\t'))
+        elif is_csv and rw:
+            n = rw
+        else:
+            n = 1
+        widths.append(n if n >= 3 else 0)
+    wc = collections.Counter(w for w in widths if w)
+    if not wc:
+        return 0, 0, 0.0, False, False
+    width = wc.most_common(1)[0][0]
+
+    def is_row(i):
+        w = widths[i]
+        return bool(w) and (w >= 0.5 * width if tabbed[i] else w == width)
+    rows = sum(1 for i in range(len(lines)) if is_row(i))
+    first = next(i for i in range(len(lines)) if is_row(i))
+    l = lines[first]
+    hcells = l.split('\t') if '\t' in l else next(_csv.reader([l]))
+    filled = [c for c in hcells if c.strip()]
+    header = (len(filled) >= 0.6 * width
+              and sum(1 for c in filled if not _NUMCELL.match(c)) >= 0.8 * len(filled))
+    # RECORDS, not a form. Calibration's NOFA application workbook has sheets of
+    # 30-80 rows of one shape that are BLANK TEMPLATE ROWS (`\t\t\t\t0`, repeated)
+    # or labelled lines computing `0` and `#DIV/0!`: cells, but no observations.
+    # A record row is DISTINCT and CARRIES at least two values that are not blank,
+    # zero or a spreadsheet error.
+    recs = [lines[i] for i in range(len(lines)) if is_row(i)]
+
+    def carries(l):
+        cells = l.split('\t') if '\t' in l else next(_csv.reader([l]))
+        return sum(1 for c in cells if c.strip() not in _EMPTYISH) >= 2
+    distinct = len(set(r.strip() for r in recs)) / max(1, len(recs))
+    carrying = sum(1 for r in recs if carries(r)) / max(1, len(recs))
+    return rows, width, rows / max(1, len(lines)), header, (distinct >= 0.8 and carrying >= 0.6)
+
+
+def fam_budget_dataset(n, raw=None):
+    f = {}
+    words = max(1, len(WORD.findall(n)))
+    money = len(MONEY.findall(n))
+    f['money density (>=40 amounts and >=4/100w)'] = (
+        money >= 40 and money / words * 100 >= 4)
+    f['fiscal period named (>=3)'] = len(FISCAL.findall(n)) >= 3
+    f['ledger vocabulary (>=3 of 11)'] = sum(
+        bool(re.search(p, n)) for p in LEDGER) >= 3
+    f['self-naming (title line)'] = self_names(n, _BUDGET_TITLE)
+    rows, width, share, header, records = _table_shape(raw if raw is not None else n)
+    f['record table (>=20 rows of one width >=3)'] = rows >= 20
+    f['header row names the columns'] = header
+    f['the table is the body (>=60% of lines)'] = share >= 0.6
+    f['rows are distinct records carrying values'] = records
+    f['_money'] = money
+    f['_rows'] = rows
+    return f
+
+
+def budget_arm(f):
+    # MONEY DENSITY IS NECESSARY. The first draft let self-naming + a fiscal period +
+    # ledger words carry a document with no amounts in it, and calibration caught it
+    # at once: the Finance Director's SUPPLEMENTAL memo on the FY 2024-25 mid-cycle
+    # General Purpose Fund deficit (15 amounts in 17,477 characters) read as a budget.
+    # It is a memo ABOUT one — a reference, not membership — and its subject line is
+    # exactly the self-naming a memo about a budget carries. What a budget has that a
+    # memo about it lacks is its own table of amounts.
+    money = f['money density (>=40 amounts and >=4/100w)']
+    return money and (f['self-naming (title line)'] or (
+        f['fiscal period named (>=3)'] and f['ledger vocabulary (>=3 of 11)']))
+
+
+def dataset_arm(f):
+    return (f['record table (>=20 rows of one width >=3)']
+            and f['header row names the columns']
+            and f['the table is the body (>=60% of lines)']
+            and f['rows are distinct records carrying values'])
+
+
 # THE THRESHOLDS. Each is the class's PRINCIPLE expressed over its families, stated
 # here rather than spread through the recogniser so a reader can see what the count
 # means.
@@ -572,11 +864,17 @@ def meets(cls, f):
     if cls == 'directory':
         return f['contact-point density (>=10 and >=0.4/100w)'] or (
             f['self-naming (title line)'] and f['_contacts'] >= 5)
+    if cls == 'budget_dataset':
+        # D-66. Set against the planted fixtures and FIVE named real documents
+        # (listed in `control` ARM 7) BEFORE the sample was drawn, and not touched
+        # after — the same discount M0-32 states above applies.
+        return budget_arm(f) or dataset_arm(f)
     raise KeyError(cls)
 
 
 FAMS = {'agenda': fam_agenda, 'minutes': fam_minutes, 'staff_report': fam_staff_report,
-        'ordinance_res': fam_ordinance_res, 'directory': fam_directory}
+        'ordinance_res': fam_ordinance_res, 'directory': fam_directory,
+        'budget_dataset': fam_budget_dataset}
 
 
 def classify_body(text, neuter=None):
@@ -589,7 +887,7 @@ def classify_body(text, neuter=None):
         if neuter == c:
             fams[c] = {}
             continue
-        f = FAMS[c](n)
+        f = FAMS[c](n, text) if c == 'budget_dataset' else FAMS[c](n)
         fams[c] = {k: v for k, v in f.items() if not k.startswith('_')}
         if meets(c, f):
             fired.append(c)
@@ -612,6 +910,11 @@ NAME_RULES = {
     'ordinance_res': r'ordinance|\bordin\b|\bord[-_ ]?no\b|resolution|\breso\b|\bres[-_ ]?no\b|'
                      r'\bc\.?m\.?s\.?\b',
     'directory': r'director(?:y|ies)|roster|contact[-_ ]?list|phone[-_ ]?list|staff[-_ ]?list',
+    # D-66. What a filename asserting a budget or a dataset says in its own words.
+    # MEASURED against the bodies in `derive`, never used to count — the row's
+    # "how a liar passes it" is exactly a count taken from this line.
+    'budget_dataset': r'budget|appropriation|capital[-_ ]?improvement[-_ ]?program|'
+                      r'financial[-_ ]?plan|data[-_ ]?set|\bdata\b',
 }
 
 
@@ -794,10 +1097,104 @@ def cmd_names(neuter=None, quiet=False):
 
 def _fetch_text(rec, tmp):
     """(text, reason_if_unreadable). Streams, writes at most one file, deletes it."""
-    mo = _office()
-    data = mo._get(rec['url'], timeout=300)
+    text, reason, _data = _fetch_text_bytes(rec, tmp)
+    return text, reason
+
+
+def _fetch_text_bytes(rec, tmp):
+    """(text, reason, bytes-or-None) — the bytes kept so a PDF this instrument's own
+    tier-1 reader cannot read can be handed to the plane's reader (D-66)."""
+    data = _office()._get(rec['url'], timeout=300)
     if data is None:
-        return '', 'fetch failed (network or 404)'
+        return '', 'fetch failed (network or 404)', None
+    text, reason = _text_of(rec, data, tmp)
+    return text, reason, data
+
+
+# THE PLANE'S READER, for a PDF this instrument cannot read (D-66, 2026-09-24).
+# This file's PDF reader is a crude tier 1 with no ToUnicode support, and M-18
+# stated its 190 of 600 unclassified as "a fact about THIS instrument ... NOT
+# evidence about what the plane's own reader can do". M-121 then measured the
+# plane's fleet reading 293 of 300 PDFs. A budget is the class that instrument
+# most under-reads: calibration's two mid-cycle budget PDFs both came back "not
+# English text" here and both read at the plane's own tier 1 in 12 s.
+#
+# So an UNUSABLE PDF is re-read by the plane — FW-20's committed instrument
+# `bio-plane/scripts/fw20-decode-census.mjs`, called UNCHANGED, which boots the
+# real plane, the committed pdf-worker bundle (tier 2) and the OCR member (tier 3,
+# one page per invocation) in miniflare, drives `op=acquire`, and with
+# FW20_TEXT_DIR set writes the text `op=pdfstructure` holds. One process per
+# document so a hang costs one document, bounded by PLANE_TIMEOUT_S. Both verdicts
+# are recorded: `classes_t1` is this instrument alone (M-18's reader, comparable
+# with M-18), `classes` is the verdict on the best text obtained.
+PLANE_SCRIPT = os.path.join(HERE, '..', 'bio-plane', 'scripts', 'fw20-decode-census.mjs')
+PLANE_TIMEOUT_S = 300
+UNUSABLE_PDF = ('no text layer', 'text too short', 'extracted bytes are not English')
+
+
+def plane_text(rec, data):
+    """(text, reader, reason). Never raises; a failure is a REASON, named."""
+    import hashlib, subprocess
+    sha = hashlib.sha256(data).hexdigest()
+    pdir, tdir = os.path.join(PEN, 'plane-pdf'), os.path.join(PEN, 'plane-text')
+    os.makedirs(pdir, exist_ok=True)
+    os.makedirs(tdir, exist_ok=True)
+    pdf = os.path.join(pdir, sha + '.pdf')
+    man = os.path.join(pdir, sha + '.json')
+    with open(pdf, 'wb') as f:
+        f.write(data)
+    with open(man, 'w') as f:
+        json.dump([{'key': rec['name'], 'sha': sha, 'bytes': len(data)}], f)
+    row, reason = None, ''
+    try:
+        p = subprocess.run(['node', PLANE_SCRIPT, man, pdir],
+                           cwd=os.path.join(HERE, '..', 'bio-plane'),
+                           env=dict(os.environ, FW20_TEXT_DIR=tdir),
+                           capture_output=True, text=True, timeout=PLANE_TIMEOUT_S)
+        for line in p.stdout.splitlines():
+            if line.startswith('{"key"'):
+                row = json.loads(line)
+        if p.returncode != 0 and row is None:
+            reason = f'plane reader exited {p.returncode}'
+    except subprocess.TimeoutExpired:
+        reason = f'plane reader timed out after {PLANE_TIMEOUT_S} s'
+    finally:
+        for x in (pdf, man):
+            if os.path.exists(x):
+                os.remove(x)
+    tp = os.path.join(tdir, sha + '.txt')
+    text = ''
+    if os.path.exists(tp):
+        text = open(tp, encoding='utf-8', errors='replace').read()
+        os.remove(tp)
+    ip = os.path.join(tdir, sha + '.i2.json')
+    if os.path.exists(ip):
+        os.remove(ip)
+    if row is None:
+        return '', 'plane (no row)', reason or 'plane reader returned no row'
+    if row.get('err'):
+        return text, 'plane (acquire refused)', 'plane acquire: ' + str(row['err'])[:160]
+    tier = row.get('structure_tier') or row.get('text_tier')
+    text, reflowed = reflow(text)
+    return text, f'plane (text tier {tier}){" REFLOWED" if reflowed else ""}', ''
+
+
+def reflow(text):
+    """(text, reflowed?). THE PLANE'S TIER-1 PAGE TEXT BREAKS A LINE AT EVERY
+    POSITIONING OPERATOR (`pdfstructure.mjs`, the per-page interpreter: `Td` `TD`
+    `Tm` `T*` each push "\n"), so a PDF that places every glyph with its own `Tm`
+    arrives ONE GLYPH PER LINE — calibration's `Budget-Basics-FY21-23` read 18,551
+    characters and fewer than 60 words. That is a defect in the plane, reported
+    under D-66 with its fix; here the instrument only undoes it, and says so on the
+    record: a body whose non-empty lines are >= 60% single characters has its line
+    breaks removed. A space glyph is its own line in such text, so words survive."""
+    lines = [l for l in text.split('\n') if l != '']
+    if len(lines) >= 50 and sum(1 for l in lines if len(l) <= 1) >= 0.6 * len(lines):
+        return re.sub(r'\n(?!\f)', '', text), True
+    return text, False
+
+
+def _text_of(rec, data, tmp):
     e = ext_of(rec['name']) or ext_of(rec.get('url', ''))
     try:
         if e == 'pdf' or data[:5] == b'%PDF-':
@@ -811,7 +1208,7 @@ def _fetch_text(rec, tmp):
                           data.decode('latin-1')), ''
         with open(tmp, 'wb') as f:
             f.write(data)
-        kind, _flav = mo.classify(tmp)
+        kind, _flav = _office().classify(tmp)
         if kind == 'ooxml':
             return text_in_ooxml(tmp), ''
         if kind == 'odf':
@@ -822,6 +1219,60 @@ def _fetch_text(rec, tmp):
     finally:
         if os.path.exists(tmp):
             os.remove(tmp)
+
+
+def judge(text, reason=''):
+    """-> (classes, families, function-word rate, gate). The ONE place a body is
+    judged, so `bodies`, `readsample` and `control` cannot drift apart.
+
+    THE PROSE GATE IS A PROSE GATE (D-66). `usable()` refuses text whose function-
+    word rate is below 0.04 — right for glyph soup, and equally true of a CSV of
+    figures, which has almost no function words BECAUSE it is a dataset. So a body
+    the gate refuses is still asked ONE question, the dataset arm's, which reads
+    cell STRUCTURE and no words. If it fires, the document is `budget_dataset` and
+    `gate` says it was judged past the prose gate; if not, it keeps its unusable
+    reason exactly as before. No other class is ever asked of such a body. A fetch
+    failure or an unread container is never asked anything."""
+    if reason:
+        return [], {}, 0.0, ''
+    ok, why, rate = usable(text)
+    if ok:
+        cs, fams = classify_body(text)
+        return cs, fams, rate, 'prose'
+    f = fam_budget_dataset(norm(text), text)
+    if dataset_arm(f):
+        return (['budget_dataset'],
+                {'budget_dataset': {k: v for k, v in f.items() if not k.startswith('_')}},
+                rate, 'dataset arm past the prose gate: ' + why)
+    return [], {}, rate, why
+
+
+def read_one(rec, tmp):
+    """-> (record, text). ONE document read and judged — the same path for `bodies`,
+    `readsample` and calibration, so none of them can drift from the others."""
+    text, reason, data = _fetch_text_bytes(rec, tmp)
+    cs, fams, rate, gate = judge(text, reason)
+    t1 = {'classes_t1': cs, 'reason_t1': reason or (
+        OTHER_REASON if gate in ('prose', '') or cs else gate)}
+    reader = 'instrument tier 1'
+    if (PLANE and not cs and data is not None and not reason
+            and (ext_of(rec['name']) == 'pdf' or data[:5] == b'%PDF-')
+            and gate.startswith(UNUSABLE_PDF)):
+        ptext, reader, preason = plane_text(rec, data)
+        if preason:
+            reason = preason
+        else:
+            text = ptext
+            cs, fams, rate, gate = judge(text, '')
+    return ({**t1, 'reader': reader,
+             'id': rec['id'], 'name': rec['name'], 'half': rec['half'],
+             'ext': ext_of(rec['name']), 'size': rec.get('size'),
+             'matter_type': rec.get('matter_type'),
+             'chars': len(text), 'fw_rate': round(rate, 4), 'classes': cs,
+             'gate': gate,
+             'reason': reason or (OTHER_REASON if gate in ('prose', '') or cs else gate),
+             'fams': {c: [k for k, v in d.items() if v] for c, d in fams.items()},
+             'name_classes': classify_name(rec['name'])}, text)
 
 
 def cmd_bodies(n=600, seed=20260914):
@@ -847,20 +1298,8 @@ def cmd_bodies(n=600, seed=20260914):
         for i, rec in enumerate(sample):
             if rec['id'] in done:
                 continue
-            text, reason = _fetch_text(rec, tmp)
-            rate = 0.0
-            if not reason:
-                ok, why, rate = usable(text)
-                reason = '' if ok else why
-            cs, fams = ([], {}) if reason else classify_body(text)
-            f.write(json.dumps({
-                'id': rec['id'], 'name': rec['name'], 'half': rec['half'],
-                'ext': ext_of(rec['name']), 'size': rec.get('size'),
-                'matter_type': rec.get('matter_type'),
-                'chars': len(text), 'fw_rate': round(rate, 4), 'classes': cs,
-                'reason': reason or 'usable text read, no class threshold met',
-                'fams': {c: [k for k, v in d.items() if v] for c, d in fams.items()},
-                'name_classes': classify_name(rec['name'])}) + '\n')
+            row, text = read_one(rec, tmp)
+            f.write(json.dumps(row) + '\n')
             f.flush()
             nread += 1
             byts += len(text)
@@ -937,6 +1376,100 @@ def cmd_media(n=120, seed=20260914):
           'so this is an UPPER bound on the blind spot, not an estimate of it.')
 
 
+def _office_read(data, ct=None):
+    """What the PLANE's format registry does with these bytes — `tools/d66-office-read.mjs`,
+    which calls `detectFormat` and the matched entry's `text()`. One JSON object."""
+    import subprocess, tempfile
+    with tempfile.NamedTemporaryFile(dir=PEN, suffix='.bin', delete=False) as f:
+        f.write(data)
+        path = f.name
+    try:
+        p = subprocess.run(['node', os.path.join(HERE, 'd66-office-read.mjs'), path]
+                           + ([ct] if ct else []), capture_output=True, text=True,
+                           timeout=120)
+        line = [l for l in p.stdout.splitlines() if l.startswith('{')]
+        return json.loads(line[-1]) if line else {'error': (p.stderr or '')[-200:]}
+    except Exception as e:
+        return {'error': str(e)[:200]}
+    finally:
+        os.remove(path)
+
+
+_CT = {'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+       'xls': 'application/vnd.ms-excel', 'csv': 'text/csv',
+       'ods': 'application/vnd.oasis.opendocument.spreadsheet'}
+SHEET_EXT = ('xlsx', 'xls', 'csv', 'ods', 'xlsm')
+
+
+def holds(row, text):
+    """What a document HOLDS, read off its body: the arm that fired, its title
+    lines, the fiscal periods it names, its amounts, and its table's shape."""
+    f = fam_budget_dataset(norm(text), text) if text else {}
+    rows, width, share, header, records = _table_shape(text) if text else (0, 0, 0, 0, 0)
+    fy = collections.Counter(re.sub(r'\s+', ' ', m.strip()) for m in FISCAL.findall(norm(text)))
+    hdr = ''
+    for l in text.split('\n'):
+        cells = l.split('\t') if '\t' in l else l.split(',')
+        if sum(1 for c in cells if c.strip()) >= 3 and not l.startswith('[sheet'):
+            hdr = ' | '.join(c.strip()[:24] for c in cells if c.strip())[:220]
+            break
+    return {
+        'arm': [a for a, ok in (('budget', f and budget_arm(f)),
+                                ('dataset', f and dataset_arm(f))) if ok],
+        'titles': [t[:90] for t in titles(norm(text), k=4)],
+        'fiscal_periods': [k for k, _ in fy.most_common(4)],
+        'amounts': f.get('_money', 0), 'table_rows': rows, 'table_width': width,
+        'first_row_of_cells': hdr,
+        'sheets': len(re.findall(r'^\[sheet\d+', text, re.M)),
+    }
+
+
+def cmd_readsample(k=25, m=45, seed=20260924):
+    """D-66's READ SAMPLE, two halves, each a fixed-seed draw stated with its N.
+    A · up to k documents the BODY SAMPLE judged budget_dataset: re-read, and what
+        each holds recorded (`holds`), plus the plane's office entry for a sheet.
+    B · m keys drawn from the SPREADSHEET keys of the whole population (xlsx, xlsm,
+        xls, csv, ods): does the plane's registry read each, and does this census
+        judge it a dataset? This answers BREADTH §2's "a dataset may already be
+        read as a spreadsheet by the office entries" by measurement."""
+    tmp = os.path.join(PEN, 'rs.tmp')
+    body = [json.loads(l) for l in open(os.path.join(PEN, 'body-class.jsonl'))]
+    pop = {r['id']: r for r in load_pop()}
+    hit = sorted([r for r in body if 'budget_dataset' in r['classes']], key=lambda r: r['id'])
+    random.seed(seed)
+    a = random.sample(hit, min(k, len(hit)))
+    sheets = sorted([r for r in pop.values() if ext_of(r['name']) in SHEET_EXT],
+                    key=lambda r: r['id'])
+    random.seed(seed + 1)
+    b = random.sample(sheets, min(m, len(sheets)))
+    print(f'READ SAMPLE A — {len(a)} of the {len(hit)} budget_dataset documents in the '
+          f'body sample (seed {seed}).\nREAD SAMPLE B — {len(b)} of the '
+          f'{len(sheets):,} spreadsheet keys in the population (seed {seed + 1}).', flush=True)
+    for half, recs in (('A', a), ('B', b)):
+        if not recs:
+            continue            # a half drawn with N = 0 is not run, and not rewritten
+        out = os.path.join(PEN, f'readsample-{half}.jsonl')
+        with open(out, 'w') as f:
+            for r in recs:
+                rec = pop[r['id']]
+                row, text = read_one(rec, tmp)
+                row['half_rs'] = half
+                row['holds'] = holds(row, text)
+                if ext_of(rec['name']) in SHEET_EXT:
+                    data = _office()._get(rec['url'], timeout=300)
+                    row['office'] = (_office_read(data, _CT.get(ext_of(rec['name'])))
+                                     if data is not None else {'error': 'fetch failed'})
+                f.write(json.dumps(row) + '\n')
+                f.flush()
+                o = row.get('office', {})
+                print(f"  [{half}] {rec['name'][:70]:70s} {','.join(row['classes']) or '-':28s} "
+                      f"arm={'+'.join(row['holds']['arm']) or '-':15s} "
+                      f"office={o.get('format', '-')}{'/read' if o.get('ok') else ''}",
+                      flush=True)
+                time.sleep(0.25)
+        print(f'-> {out}')
+
+
 def cmd_derive():
     names = [json.loads(l) for l in open(os.path.join(PEN, 'name-class.jsonl'))]
     print('=' * 78)
@@ -958,6 +1491,48 @@ def cmd_derive():
     ok3 = print_tally('BODY SAMPLE', tally(bodies),
                       f'evidence = the document text; {len(bodies)} of '
                       f'{len(text_only):,} text-bearing items')
+
+    # ---- D-66: what the fifth class is made of, and what reader found it --------
+    if any('reader' in r for r in bodies):
+        readers = collections.Counter(r.get('reader', '?').split(' REFLOWED')[0] for r in bodies)
+        print('\nREADER — which reader produced the text each document was judged on (D-66):')
+        for k, v in readers.most_common():
+            print(f'    {v:5d}  {k}')
+        print(f'    {sum(1 for r in bodies if "REFLOWED" in r.get("reader", "")):5d}  '
+              f'of them plane text REFLOWED (one glyph per line; D-467)')
+        t1 = [{'id': r['id'], 'classes': r.get('classes_t1', r['classes']),
+               'reason': r.get('reason_t1', r['reason'])} for r in bodies]
+        print_tally('BODY SAMPLE, THIS INSTRUMENT\'S TIER 1 ALONE (M-18\'s reader, '
+                    'comparable with M-18)', tally(t1), 'no escalation to the plane')
+        bd = [r for r in bodies if 'budget_dataset' in r['classes']]
+        fam = lambda r: set(r['fams'].get('budget_dataset', []))
+        def arm_of(r):
+            f = fam(r)
+            b = ('money density (>=40 amounts and >=4/100w)' in f and (
+                'self-naming (title line)' in f or ('fiscal period named (>=3)' in f
+                                                   and 'ledger vocabulary (>=3 of 11)' in f)))
+            d = {'record table (>=20 rows of one width >=3)', 'header row names the columns',
+                 'the table is the body (>=60% of lines)',
+                 'rows are distinct records carrying values'} <= f
+            return 'budget + dataset' if b and d else 'budget' if b else 'dataset' if d else '??'
+        arms = collections.Counter(arm_of(r) for r in bd)
+        print(f'\nBUDGET OR DATASET — {len(bd)} documents in the body sample, by the ARM '
+              f'that fired\n  (re-derived from the recorded families; `??` would be a '
+              f'record the families cannot explain):')
+        for k, v in arms.most_common():
+            print(f'    {v:5d}  {k}')
+        print(f'    {sum(1 for r in bd if str(r.get("gate", "")).startswith("dataset arm past")):5d}'
+              f'  of them judged PAST the prose gate (a body of figures, not prose)')
+        print('  by container (the key\'s extension):')
+        for k, v in collections.Counter(r['ext'] or '(none)' for r in bd).most_common():
+            print(f'    {v:5d}  .{k}')
+        print('  and with another class as well:')
+        for k, v in collections.Counter(' + '.join(sorted(r['classes'])) for r in bd
+                                        if len(r['classes']) > 1).most_common():
+            print(f'    {v:5d}  {k}')
+        exts = collections.Counter(r['ext'] for r in bodies)
+        print('  the sample\'s spreadsheet keys, for scale: ' + ', '.join(
+            f'.{e} {exts[e]}' for e in SHEET_EXT if exts[e]))
 
     N = len(text_only)
     n = len(bodies)
@@ -1052,6 +1627,36 @@ def cmd_derive():
           f'({100 * marg / max(1, len(oth)):.0f}%) could be a mis-scored member of '
           f'some class.\n  This is an UPPER bound, and it is stated rather than '
           f'subtracted.')
+
+    # ---- D-66's READ SAMPLE, if taken ----------------------------------------
+    for half in ('A', 'B'):
+        rp = os.path.join(PEN, f'readsample-{half}.jsonl')
+        if not os.path.exists(rp):
+            continue
+        rs = [json.loads(l) for l in open(rp)]
+        print(f'\nREAD SAMPLE {half} — N = {len(rs)}; per document: container, the census '
+              f'verdict, the arm, and what the\n  PLANE\'s format registry did with the '
+              f'bytes (a spreadsheet only):')
+        for r in rs:
+            o, h = r.get('office') or {}, r['holds']
+            off = ('-' if not o else
+                   f"{o.get('format')}" + (f" read: {o.get('sheets')} sheet(s), {o.get('cells')} cells"
+                                          if o.get('has_text_entry') else ' (no entry)')
+                   + (' — ' + o['undetermined_why'] if o.get('undetermined_why') else ''))
+            print(f"    .{r['ext']:5s} {r['name'].rsplit('/', 1)[-1][:58]:58s} "
+                  f"{'+'.join(r['classes']) or '-':26s} {'+'.join(h['arm']) or '-':15s} {off}")
+        sh = [r for r in rs if r.get('office')]
+        if sh:
+            c = collections.Counter(
+                (r['ext'], 'READ by an entry' if (r['office'].get('has_text_entry')
+                                                 and (r['office'].get('cells') or 0) > 0)
+                 else 'entry answered, 0 cells' if r['office'].get('has_text_entry')
+                 else 'NO entry (undetermined)',
+                 'dataset' if 'budget_dataset' in r['classes'] else 'not') for r in sh)
+            print(f'  SPREADSHEETS IN HALF {half} ({len(sh)}): container × what the plane did '
+                  f'× the census verdict')
+            for (e, what, v), n_ in sorted(c.items()):
+                print(f'    {n_:4d}  .{e:5s} {what:28s} census: {v}')
 
     print('\nREACH AND BLIND SPOTS — what this instrument can and cannot see:')
     for line in REACH:
@@ -1179,6 +1784,15 @@ def cmd_control():
             Parks  (510) 238-7275  parks@oaklandca.gov
             Library  (510) 238-3134  library@oaklandca.gov
         """,
+        # D-66: a budget's own schedule — amounts in its table, the fiscal period
+        # throughout, the ledger's vocabulary. Generated, so the density is real.
+        'budget_dataset': (
+            "CITY OF OAKLAND FY 2025-27 ADOPTED BUDGET\n"
+            "Summary of Appropriations by Fund, FY 2025-26 and FY 2026-27\n"
+            "General Purpose Fund expenditures, revenues, fund balance and FTE\n"
+            + ''.join(f"Fund {1000 + i} Department {i} Personnel "
+                      f"${(i + 3) * 104729:,} ${(i + 5) * 98311:,} {i + 2}.00 FTE\n"
+                      for i in range(60))),
     }
     for c, txt in FIX.items():
         got, _ = classify_body(txt)
@@ -1304,11 +1918,19 @@ def cmd_control():
             # dropping it from every document's class list. What the document is
             # otherwise still stands, so a single-class document becomes `other`
             # (unclassified-by-threshold) and a multi-class one loses one arm.
+            # D-66: a document the DATASET ARM judged PAST THE PROSE GATE was never
+            # readable prose; neutered, it returns to its unusable reason — it is
+            # UNCLASSIFIED again, not `other`. The arm declares that before it runs.
+            def _past(r):
+                return str(r.get('gate', '')).startswith('dataset arm past the prose gate')
             nu = [{'id': r['id'], 'classes': [x for x in r['classes'] if x != c],
-                   'reason': r.get('reason', '')} for i, r in corpus]
+                   'reason': (r['gate'].split(': ', 1)[1]
+                              if _past(r) and r['classes'] == [c] else r.get('reason', ''))}
+                  for i, r in corpus]
             nt = tally(nu)
             held = bt['single'][c] + sum(v for k, v in bt['multi'].items()
                                          if c in k.split(' + '))
+            past = sum(1 for i, r in corpus if _past(r) and r['classes'] == [c])
             only_c = bt['single'][c]          # documents whose ONLY class was c
             anyc = nt['single'][c] + sum(v for k, v in nt['multi'].items()
                                          if c in k.split(' + '))
@@ -1322,10 +1944,12 @@ def cmd_control():
             # true for every possible value of `rise` and therefore asserted nothing.
             d_other = nt['single']['other'] - bt['single']['other']
             d_unc = sum(nt['unclassified'].values()) - sum(bt['unclassified'].values())
-            chk(f'neuter `{c}`: the {only_c} documents that were ONLY this class '
-                f'become `other`', d_other == only_c, f'other moved by {d_other}')
-            chk(f'neuter `{c}`: NOTHING becomes unclassified (a neutered matcher '
-                f'cannot make a document unreadable)', d_unc == 0, f'moved {d_unc}')
+            chk(f'neuter `{c}`: the {only_c - past} documents that were ONLY this '
+                f'class and READ AS PROSE become `other`', d_other == only_c - past,
+                f'other moved by {d_other}')
+            chk(f'neuter `{c}`: exactly the {past} judged past the prose gate become '
+                f'unclassified again, and nothing else does', d_unc == past,
+                f'moved {d_unc}')
             def classified(x):
                 return (sum(v for k, v in x['single'].items() if k != 'other')
                         + sum(x['multi'].values()))
@@ -1354,11 +1978,138 @@ def cmd_control():
 
     # ---- 6 · the fixture corpus is NON-EMPTY (the headline-over-nothing trap) --
     print('\nARM 6 — assertions MUST NOT pass over an empty corpus.')
-    chk('the planted corpus is non-empty', len(FIX) == 5, f'{len(FIX)} fixtures')
+    chk('the planted corpus is non-empty', len(FIX) == len(CLASSES) >= 6,
+        f'{len(FIX)} fixtures')
     chk('every class has a fixture', set(FIX) == set(CLASSES))
     if os.path.exists(bp):
         chk('the real body sample is non-empty',
             len([1 for _ in open(bp)]) >= 50, f'{len([1 for _ in open(bp)])} rows')
+
+    # ---- 7 · D-66: BUDGET OR DATASET — the arms its row and calibration demand --
+    print('\nARM 7 — D-66, BUDGET OR DATASET. Each arm is a calibration finding made '
+          'on a NAMED real\n  document BEFORE the sample was drawn, planted here so it '
+          'stands without the network.\n  Calibration set (2026-09-24, s3://cao-94612): '
+          'FY23-25 Proposed Budget Book [budget];\n  FY 2020-21 Midcycle Budget '
+          'Amendments [budget + staff report]; the SUPPLEMENTAL FY 2024-25\n  GPF-deficit '
+          'memo [NOT budget]; Budget Basics FY21-23 [NOT budget]; FY 2020-21 Budget Q&A\n'
+          '  [NOT budget]; Item 8 COH staff report on budget recs [NOT budget]; Major '
+          'Projects List\n  Mar 2020 [dataset]; Paving Plan Survey Responses [dataset]; '
+          'CallNatures Public [dataset];\n  data/20230605update.csv [dataset]; NOFA '
+          '2019-20 application workbook [NOT dataset];\n  Capital Improvement Calculator '
+          '(.xlsx) [dataset: its sheet 3 is the amortization\n  schedule, a published '
+          'reference table]; the same calculator as legacy .xls [invisible].')
+    csv_rows = 'permit,address,units,issued\n' + ''.join(
+        f'B{2300000 + i},{100 + i} Broadway,{i % 7 + 1},2023-06-{i % 28 + 1:02d}\n'
+        for i in range(40))
+    got = judge(csv_rows)
+    chk('a CSV of records (almost no function words) IS budget_dataset, judged PAST '
+        'the prose gate', got[0] == ['budget_dataset'] and got[3].startswith('dataset arm'),
+        f'got {got[0]} gate={got[3][:40]}')
+    ok, why, _r = usable(csv_rows)
+    chk('...and the prose gate still refuses it (the gate is unchanged, only asked '
+        'one more question)', not ok, why)
+    got = judge('\x03\x11\x07\x02' * 400 + ' qxz vbn mlk ' * 60)
+    chk('glyph soup is NOT a dataset past the prose gate (it stays unclassified)',
+        got[0] == [] and got[3].startswith('extracted bytes'), f'got {got[0]} {got[3][:40]}')
+    memo = """
+        TO: HONORABLE MAYOR & CITY COUNCIL
+        FROM: Director of Finance
+        SUBJECT: SUPPLEMENTAL - Fiscal Year 2024-25 Midcycle Budget General Purpose Fund Deficit
+        DATE: April 11, 2024
+        Staff recommends that the Council receive this informational report on the
+        FY 2024-25 midcycle budget. The General Purpose Fund faces a deficit of
+        $176.8 million, driven by revenues below projection and expenditures above
+        it; the fund balance and reserves in FY 2023-24 and FY 2024-25 are discussed,
+        with appropriations and personnel costs reviewed in the attachments.
+    """ * 3
+    got, fams = classify_body(memo)
+    chk('a memo ABOUT the budget (subject line, fiscal period, ledger words, few '
+        'amounts) is NOT budget_dataset — money density is necessary',
+        'budget_dataset' not in got, f'got {got}')
+    chk('...and it IS read as the staff report it is', 'staff_report' in got, f'got {got}')
+    got, _ = classify_body(FIX['budget_dataset'].replace('ADOPTED BUDGET',
+                                                         'SCHEDULE OF APPROPRIATIONS'))
+    chk('OVER-STRICTNESS: a budget schedule that never names itself a budget is still '
+        'budget_dataset (money + fiscal period + ledger)', 'budget_dataset' in got,
+        f'got {got}')
+    amounts = [f'{w} {i + 1},{i * 7 % 1000:03d},{i * 13 % 1000:03d} {i * 31 + 9},{i % 1000:03d}'
+               + (f' {i},{i:03d}' if i % 3 else '') for i, w in
+               enumerate(['Personnel', 'O&M', 'Transfers', 'Capital'] * 10)]
+    chk('a thousands separator is not a delimiter: a PDF column of amounts '
+        '(`Personnel 1,007,013 9,000`) is not a CSV and has no cells',
+        _block_shape(amounts)[0] == 0, f'{_block_shape(amounts)}')
+    words = ['council', 'staff', 'public', 'auditor', 'mayor', 'clerk', 'board', 'city']
+    comma_prose = ''.join(
+        f'In year {2000 + i}, the {words[i % 8]} heard the {words[(i + 3) % 8]}, the '
+        f'{words[(i + 5) % 8]}' + ', and the residents' * (i % 3) + f', then spent '
+        f'{i + 1},{i % 10}00,000 dollars on item {i}.\n' for i in range(40))
+    got, fams = classify_body(comma_prose)
+    chk('PROSE WITH COMMAS (distinct sentences, varying clause counts) is NOT a dataset',
+        'budget_dataset' not in got, f'got {got} fams {fams.get("budget_dataset")}')
+    template = ('[sheet1 cells=200 formulas=10]\nUnit\tAMI\tRent\tTotal\n'
+                + '\t\t\t\t0\n' * 40)
+    got = judge('Instructions for applicants to the NOFA are below and apply to all '
+                'of the units in the project and the city of the applicant. ' * 8
+                + '\n' + template)
+    chk('a blank TEMPLATE (repeated empty rows computing 0) is NOT a dataset',
+        'budget_dataset' not in got[0], f'got {got[0]}')
+    computed = ('[sheet1 cells=300 formulas=250]\nPeriod\tRate\tInterest\tBalance\n'
+                + ''.join(f'{i}\t0.0{i % 9 + 1}\t{i * 13}\t{10000 - i * 97}\n'
+                          for i in range(1, 60)))
+    got = judge(computed)
+    chk('a COMPUTED sheet (> 30% formulas) is NOT a dataset, however table-shaped',
+        'budget_dataset' not in got[0], f'got {got[0]}')
+    held = computed.replace('formulas=250', 'formulas=0')
+    got = judge(held)
+    chk('...and the SAME table with its values held (0 formulas) IS one — the formula '
+        'share is the only variable moved', got[0] == ['budget_dataset'], f'got {got[0]}')
+    html_table = text_in_html('<table><tr><th>Name</th><th>Beat</th><th>Phone</th></tr>'
+                              + ''.join(f'<tr><td>Officer {i}</td><td>{i % 35}X</td>'
+                                        f'<td>ext {4000 + i}</td></tr>' for i in range(30))
+                              + '</table>')
+    got = judge(html_table)
+    chk('OVER-STRICTNESS: an HTML table of records is a dataset (cells kept apart by '
+        'the reader)', got[0] == ['budget_dataset'], f'got {got[0]}')
+    import zipfile as _zf
+    buf = io.BytesIO()
+    with _zf.ZipFile(buf, 'w') as z:
+        z.writestr('xl/workbook.xml', '<workbook/>')
+        z.writestr('xl/sharedStrings.xml',
+                   '<sst xmlns="x"><si><t>Beat</t></si><si><t>Calls</t></si></sst>')
+        z.writestr('xl/worksheets/sheet1.xml',
+                   '<worksheet xmlns="x"><sheetData><row><c r="A1" t="s"><v>0</v></c>'
+                   '<c r="B1" t="s"><v>1</v></c></row><row><c r="A2"><v>7</v></c>'
+                   '<c r="C2"><f>A2*2</f><v>14</v></c></row></sheetData></worksheet>')
+    x = text_in_xlsx(_zf.ZipFile(buf))
+    chk('text_in_xlsx keeps NUMBERS (`<v>`), shared strings, column position and the '
+        'formula count', x == '[sheet1 cells=4 formulas=1]\nBeat\tCalls\n7\t\t14',
+        repr(x))
+    glyph = ('F\ni\ns\nc\na\nl\n \nY\ne\na\nr\n \n' * 10)
+    rt, did = reflow(glyph)
+    chk('reflow undoes ONE-GLYPH-PER-LINE plane text', did and 'Fiscal Year' in rt,
+        repr(rt[:30]))
+    rt2, did2 = reflow(FIX['minutes'] * 5)
+    chk('reflow leaves ordinary text alone (over-strictness)', not did2 and rt2 == FIX['minutes'] * 5)
+
+    print('\n  THE ROW\'S LIAR — counting by FILENAME. The body decides; the name is '
+          'measured, never counted.')
+    agenda_named_budget = 'documents/FY2025-27-Adopted-Budget-Hearing.pdf'
+    chk('a filename asserting a budget IS read as one by the NAME layer',
+        'budget_dataset' in classify_name(agenda_named_budget),
+        f'{classify_name(agenda_named_budget)}')
+    got, _ = classify_body(FIX['agenda'])
+    chk('...and the agenda BODY behind that name is NOT budget_dataset',
+        'budget_dataset' not in got and 'agenda' in got, f'got {got}')
+    chk('a budget BODY behind a filename naming no kind IS budget_dataset',
+        'budget_dataset' not in classify_name('documents/Attachment-A_2024-06-10.pdf')
+        and 'budget_dataset' in classify_body(FIX['budget_dataset'])[0])
+    if os.path.exists(bp):
+        raw = [json.loads(l) for l in open(bp)]
+        body = {r['id'] for r in raw if 'budget_dataset' in r['classes']}
+        name = {r['id'] for r in raw if 'budget_dataset' in r.get('name_classes', [])}
+        chk('ON THE REAL SAMPLE the body count and the name count DIFFER — the name is '
+            'not the evidence', body != name,
+            f'body {len(body)}, name {len(name)}, both {len(body & name)}')
 
     print(f'\n{arms} arms driven, {len(fails)} failed.')
     if fails:
@@ -1377,9 +2128,12 @@ if __name__ == '__main__':
     elif m == 'names':
         cmd_names()
     elif m == 'bodies':
-        cmd_bodies(int(sys.argv[2]) if len(sys.argv) > 2 else 600)
+        cmd_bodies(int(sys.argv[2]) if len(sys.argv) > 2 else 600,
+                   int(sys.argv[3]) if len(sys.argv) > 3 else 20260914)
     elif m == 'media':
         cmd_media(int(sys.argv[2]) if len(sys.argv) > 2 else 120)
+    elif m == 'readsample':
+        cmd_readsample(*(int(x) for x in sys.argv[2:5]))
     elif m == 'derive':
         sys.exit(0 if cmd_derive() else 1)
     elif m == 'control':
