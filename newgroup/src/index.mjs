@@ -308,6 +308,23 @@ async function membersPresent(token, acct) {
   return present;
 }
 
+/* DIST-9 — THE INSTANCE'S ORGANISATION `ai` CREDENTIAL (D-260, BOB #22; `BIO_Distribution_v0_1.md` §6 and
+ * `BIO_Assistant_and_AI_Roles_v0_1.md` §6). Since D-260 the plane READS the Worker secret `INSTANCE_AI_TOKEN`
+ * (`bio-plane/src/tokens.mjs`) and, with it, re-enters the woken runs that credential opened; without it every wake
+ * entry says NO_INSTANCE_AI_CREDENTIAL. The installer CARRIES it, "as DAEMON_TOKEN is" — and differs from DAEMON_TOKEN
+ * in the one way that matters: it NEVER GENERATES ONE. A DAEMON_TOKEN is the installer's own credential, spent only by
+ * the plane over SELF, so minting it here is correct. An `ai` credential is a MEMBER's act (DEC-55 (3), DS-3): it is
+ * minted on the copy by `op=aicredentialmint`, which records its principal, and a value invented here would be resolved
+ * against no row and name no principal — a secret that claims to be a credential and is not one. So: a value the
+ * operator supplies is bound; none supplied binds nothing and the page SAYS so (an absence not stated is
+ * indistinguishable from one nobody checked). The value is never printed on any page. It rides from `/begin` to
+ * `/callback` in the same HttpOnly, Secure, SameSite=Lax cookie as the PKCE verifier, which this browser alone holds and
+ * the callback clears. */
+export const INSTANCE_AI_BINDING = "INSTANCE_AI_TOKEN";
+const INSTANCE_AI_RE = /^[\x21-\x7e]{16,512}$/;
+export const instanceAiOk = (v) => typeof v === "string" && INSTANCE_AI_RE.test(v);
+const instanceAiBinding = (v) => instanceAiOk(v) ? [{ type: "secret_text", name: INSTANCE_AI_BINDING, text: v }] : [];
+
 /* `opts.noSelf` exists for ONE reason: an install PUT names a service binding to
    the script the same PUT creates, and nothing here can prove Cloudflare accepts
    that self-reference without a real install, which is deploy-gated. So the
@@ -339,6 +356,8 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
          displayed is a credential that can leak for no gain. The ADMIN_TOKEN
          fallback stays until DEC-43's retirement conditions are measured. */
       { type: "secret_text", name: "DAEMON_TOKEN", text: secrets.daemon },
+      /* DIST-9 (D-260's deploy half): the organisation `ai` credential, ONLY when the operator supplied one. */
+      ...instanceAiBinding(secrets.instanceAi),
       { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
       ...(opts.noSelf ? [] : [selfBinding(slug)]),
@@ -405,6 +424,11 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
          kept one of the same name is the API's contract; the next gated real
          update run is where that is read back rather than trusted. */
       { type: "secret_text", name: "DAEMON_TOKEN", text: opts.daemon || rand(32) },
+      /* DIST-9: restated ONLY when the operator supplied a value on this run. When none is supplied nothing is sent,
+         and a value the copy already holds is KEPT by keep_bindings (secret_text) — an update neither sets nor clears
+         it. Unlike DAEMON_TOKEN above there is NO `|| rand(32)` here, and there must never be one: see
+         instanceAiBinding. */
+      ...instanceAiBinding(opts.instanceAi),
     ],
     /* `service` is deliberately NOT in keep_bindings: the line above binds it
        explicitly, and an explicit binding is what heals the older copies that
@@ -749,6 +773,18 @@ function streamPage(headers, shell, run) {
 
 /* ---------------------------------------------------------- provisioning */
 
+/* DIST-9: say which way the organisation `ai` credential went — never its value. */
+function instanceAiNotice(emit, mode, carried) {
+  emit.step("ai", "Your organisation's AI credential");
+  if (carried) return emit.ok("ai", "The organisation AI credential you gave was stored in your copy as a secret "
+    + "(it is not shown here). Your copy uses it to resume assistant runs that credential opened.");
+  emit.ok("ai", mode === "update"
+    ? "No organisation AI credential was given, so none was sent. One your copy already holds is kept unchanged; "
+      + "this installer never creates one."
+    : "No organisation AI credential was given, so your copy has none: it will not resume paused assistant runs on its "
+      + "own. A member mints one on the copy; running the updater with it adds it. This installer never creates one.");
+}
+
 async function runInstall(emit, code, saved) {
   const slug = saved.slug;
   let token;
@@ -852,7 +888,8 @@ async function runInstall(emit, code, saved) {
   const release = await selectRelease(emit);
 
   emit.step("gen", "Generating your credentials");
-  const secrets = { boot: rand(32), member: rand(32), probe: rand(32), daemon: rand(32) };
+  const secrets = { boot: rand(32), member: rand(32), probe: rand(32), daemon: rand(32),
+                    ...(instanceAiOk(saved.ai) ? { instanceAi: saved.ai } : {}) };
   emit.ok("gen");
 
   /* DIST-6, step 1: bind only the members this account already holds (see MEMBER_BINDINGS for the order). */
@@ -893,6 +930,8 @@ async function runInstall(emit, code, saved) {
      install kept it. */
   await bindMembers(emit, token, acct.id, slug, release, present, fleet,
     { withR2: true, daemon: secrets.daemon, noSelf: selfRefused });
+  /* DIST-9: told only AFTER the upload that carried it succeeded — never "stored" ahead of the act. */
+  instanceAiNotice(emit, "install", !!secrets.instanceAi);
 
   emit.step("addr", "Turning on your web address");
   let base;
@@ -1083,7 +1122,8 @@ async function runUpdate(emit, code, saved) {
   /* DIST-6, step 1: restate the members the account already holds, so the update never un-binds a working copy's
      members — not for its duration, and not for good when the fleet step below cannot run. */
   const present = await membersPresent(token, acct.id);
-  try { await uploadUpdate(token, acct.id, slug, withR2, release, { members: present }); emit.ok("up"); }
+  const instanceAi = instanceAiOk(saved.ai) ? saved.ai : undefined;
+  try { await uploadUpdate(token, acct.id, slug, withR2, release, { members: present, instanceAi }); emit.ok("up"); }
   catch (e) {
     emit.no("up");
     return emit.fail("The update was refused",
@@ -1097,6 +1137,7 @@ async function runUpdate(emit, code, saved) {
   const fleet = await installFleet(emit, token, acct.id, slug, release);
   /* DIST-6, step 3: this is what gives a copy installed WITHOUT member bindings its bindings. */
   await bindMembers(emit, token, acct.id, slug, release, present, fleet, { withR2 });
+  instanceAiNotice(emit, "update", !!instanceAi);
 
   emit.step("addr", "Finding your copy's address");
   let base = null;
@@ -1178,7 +1219,12 @@ export default {
         scope: CFG.SCOPES.join(" "), state: s,
         code_challenge: await s256(v), code_challenge_method: "S256",
       });
-      const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now() })));
+      /* DIST-9: an OPTIONAL organisation `ai` credential. Absent or empty is the normal case; a value that is present
+         but not credential-shaped is REFUSED by name here, before any sign-in, rather than silently dropped. */
+      const ai = typeof body.instanceAi === "string" ? body.instanceAi.trim() : "";
+      if (ai && !instanceAiOk(ai))
+        return json({ ok: false, error: "The organisation AI credential does not look like one: paste it exactly as it was shown when it was minted (16 to 512 characters, no spaces), or leave the box empty." }, 400);
+      const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...(ai ? { ai } : {}) })));
       return json({ ok: true, authorize: `${CFG.AUTHORIZE}?${q}` }, 200,
         { "set-cookie": setCookie(cookie, CFG.COOKIE_MAX_AGE_S) });
     }
