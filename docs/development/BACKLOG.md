@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### M0-194 · queued — **`kickoffs/WORKER.md`, READ BY EVERY WORKER, CARRIES EACH RULE'S HISTORY INLINE (3,959 words), so the current rule is buried and a ruling can go unread: tonight three workers were misled, and BOB #33's 17:12Z pen ruling never reached the file.** BOB #34 22:50Z. — owner M0 (BOB drafts; any worker may land it).
+order: at the head of the backlog, AHEAD of product (BOB #34 22:50Z: *it appreciably cuts wasted worker rounds: three sessions were misled tonight*) (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the reading budget: a file read whole is sized to be read whole), with CLAUDE.md §1's READING BUDGET and BOB #34's ruling of 22:50Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20).
+depends-on: none.
+scope: rewrite WORKER.md so each rule is one or two lines naming its ruling id; move the receipts and narratives VERBATIM to `docs/archive/WORKER-kickoff-2026-09-24.md`, where `decided.mjs` finds them; nothing deleted; set its readbudget to half of 3,959 words. The current pen rule (BOB #33 17:12Z: a driver's gitignored, item-named pen is not scratch) and `store=scratch` (BOB #34 22:22Z: redundant, not optional) must be stated. Other kickoffs follow one at a time only if this measurably cuts misreads.
+accepts-when: `readbudget` shows WORKER.md at or under the new budget, `decided.mjs` still finds every ruling it cited, and every old rule maps to a new line (a table in the row's measurement) (the measured failure it moves: a 3,959-word file burying current rules). NEGATIVE CONTROL: drop one mapped rule and the mapping table names it.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
+
 ### D-538 · queued — **A DRAFT THAT NAMES NO CASE AND DOES NOT SET `newCase` IS TOLD "a new case, whose identity is not yet allocated", while `publishCase` DERIVES an existing case for it: REC-199's block 10 measured draft DD saying that sentence as its gates refuse ALREADY_A_CASE_MEMBER against C1.** `Store.#caseIdentitySentence(null, 1)` is shared by the casedraft, casedrafts (REC-198) and reviewcopy reads. Found by REC-199's worker (1). — owner RECORD.
 order: after D-530, with the corrections: the record asserting a new case where it will derive an existing one (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:43Z)
 milestone: M10
@@ -123,14 +133,14 @@ scope: `queueMuteReportHtml`'s per-case undo names every kind the member muted f
 accepts-when: against a real plane a member undoes a case mute whose kind holds nothing back today (the measured failure it moves: no control drawn). NEGATIVE CONTROL: read `suppressed[]` alone again and the quiet-kind arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
 
-### D-553 · queued — **THE RETIRED-TARGET QUESTION IS SPELLED THREE WAYS IN THE STORE, AND ONLY TWO AGREE: (a) D-444's `#retiredNotCitable(id)` (store.mjs ~5185, Information-typed, not viewer-gated); (b) D-168's textually identical copy inside the DEC-49 region `is-cite-retired` at `op=cite` (~12806); (c) the suggest path's `SUGGEST_LEG_UNREACHABLE` (~40290), VIEWER-GATED and TYPE-BLIND, refusing any `retired` target with no `object_type === "information"` test.** store.mjs's comment at (b) says the suggest path "asks the same question of the same column"; the code does not. Found by D-444's worker (22:34Z). — owner RECORD.
+### D-553 · queued — **THE RETIRED-TARGET QUESTION IS SPELLED THREE WAYS IN THE STORE, AND ONLY TWO AGREE: (a) D-444's `#retiredNotCitable(id)` (store.mjs ~5185, Information-typed); (b) an identical copy in DEC-49 region `is-cite-retired` at `op=cite` (~12806); (c) `SUGGEST_LEG_UNREACHABLE` (~40290), viewer-gated and type-blind.** The comment at (b) claims the suggest path asks the same question; it does not. Found by D-444's worker (22:34Z). — owner RECORD.
 order: after UI-107, in product order: a consistency defect, probably a no-op today, since no state machine but Information's carries `retired` (not measured) (SCHEDULER #20, 2026-09-24)
 milestone: M8
-interface: I3 for half (b) (a governed region contracts); half (c)'s interface waits on BOB's determination.
+interface: I3 for (b) (a governed region contracts); the type-blind widening's IC is minted by the integrator ONLY if the measurement finds a second `retired` machine.
 design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.1 ("A RETIRED ITEM IS NOT CITABLE", BOB #30), whose Incomplete-sections bullet D-444 updated to name this.
 depends-on: D-444.
-scope: (b) call `#retiredNotCitable` at `op=cite`, moving the `is-cite-retired` `regionLines` floor to the figure printed on the MERGED source; correct the false comment at (b); MEASURE whether any corpus holds a non-Information bundle in `retired` and state the count. (c) is a DETERMINATION routed to BOB #34 by SCHEDULER #20, 2026-09-24: should a basis leg pointing at a RETIRED non-Information target be unreachable? Build (c) only to BOB's answer; until then, state the divergence at (c) in words.
-accepts-when: `affordances.test.mjs` §0's spelling count moves from TWO to ONE and (b) refuses exactly as before (the measured failure it moves: two copies that can diverge silently). NEGATIVE CONTROL: restore (b)'s inline copy and §0 names it.
+scope: BOB #34 RULED 22:55Z (drained by SCHEDULER #20): the rule WIDENS to the STATE; (c)'s type-blindness is CORRECT. ONE helper, type-blind: (a) `#retiredNotCitable` drops its Information test, (b) `op=cite` calls it (move `is-cite-retired` `regionLines` to the figure printed on the MERGED source), (c) the suggest path calls it. Viewer-gating never decides citability; only the refusal's WORDING may be viewer-gated. MEASURE which state machines carry `retired` and state the count. Correct the false comment at (b). A future machine meaning something else must name its state differently. §4.1's sentence rides BOB's batch.
+accepts-when: `affordances.test.mjs` §0's spelling count moves to ONE helper read at all three sites, and a viewer who cannot see the target is still refused (the measured failure it moves: two copies that can diverge silently). NEGATIVE CONTROL: restore (b)'s inline copy and §0 names it.
 added: 2026-09-24 · SCHEDULER #20 (id minted by D-444's worker).
 
 ### REC-218 · queued — **A CSV READING'S DIALECT IS NOT PERSISTED: FW-23 finds the delimiter and encoding by signature, and nothing keeps them on the record, so a re-read cannot say which dialect it read.** BOB #33 RULED 2026-09-24 21:55Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20): option (b), a `reading.dialect` key of its own (delimiter, encoding), persisted on the acquire document — not `container_extent`; it suits other text formats with a decoding choice. — owner RECORD.
@@ -1179,23 +1189,3 @@ depends-on: D-443 (`integrated`; its branch moved ARM 1's anchor).
 scope: rewrite ARM 1's declaration to the measured outcome with a comment saying why the old one was wrong; rename every `INF-` fixture id to `INFO-`.
 accepts-when: `node bio-plane/test/nc-m040.mjs` reports every arm as declared, and no suite names an `INF-` id. NEGATIVE CONTROL: restore the five-failure declaration, and ARM 1 reads NOT as declared by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-449 · queued — **`project-sight.control.mjs`'s `promote-stamp-dropped` ARM CANNOT RUN: it throws SURFACE_NO_RUN (0/1), identically on `main` `02603e88`, because since REC-171 removing the stamp also breaks the harness's surfacing-run creation.** — owner M0.
-order: after D-446, among the control-hygiene rows (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (break only the thing: a control that moves a second variable refutes nothing).
-depends-on: none.
-scope: narrow the arm's patch to revisions, keeping the stamp when the base is null.
-accepts-when: the arm runs and fails as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-369 · queued — **FIVE IN-MEMORY `truncated` SHAPES ARE NEVER DRIVEN PAST THEIR CEILING: only `op=connect` has a live over-the-ceiling arm in `derivation-bounds.test.mjs`; `queueFeed`, `biasInhale`, `documentsNamingEntity` and `#backfillLegContent` are pinned by roster alone (now 10 names).** — owner RECORD.
-order: with the M0 control rows: a verification instrument (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (test through the op), with `INVESTIGATIVE-SESSION.md` §14c.
-depends-on: none.
-scope: a live driven arm per shape. In `bio-plane/test/derivation-bounds.test.mjs`.
-accepts-when: each shape is driven past its ceiling and states `truncated`. NEGATIVE CONTROL: drop a paging LIMIT in `queueFeed`, and its live arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
