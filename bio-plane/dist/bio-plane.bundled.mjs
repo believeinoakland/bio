@@ -4417,6 +4417,9 @@ __export(bio_checks_exports, {
   RESOLUTIONS: () => RESOLUTIONS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   RISK_TIERS: () => RISK_TIERS,
+  RISK_TIER_HISTORY_MAX: () => RISK_TIER_HISTORY_MAX,
+  RISK_TIER_REASON_MAX: () => RISK_TIER_REASON_MAX,
+  RISK_TIER_REVISION_CHECKS: () => RISK_TIER_REVISION_CHECKS,
   ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
   SEARCHED_SUBJECT_SOURCES: () => SEARCHED_SUBJECT_SOURCES,
   SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS,
@@ -4517,6 +4520,7 @@ __export(bio_checks_exports, {
   rangeCorners: () => rangeCorners,
   releaseMessage: () => releaseMessage,
   respondsToEdgeFindings: () => respondsToEdgeFindings,
+  riskTierHistoryOf: () => riskTierHistoryOf,
   riskTierState: () => riskTierState,
   sectionText: () => sectionText,
   sha256HexSync: () => sha256HexSync,
@@ -4862,6 +4866,81 @@ var RISK_TIERS = {
 function riskTierState(v) {
   if (v === void 0 || v === null || v === "undetermined") return "undetermined";
   return v === 1 || v === 2 || v === 3 ? v : null;
+}
+var RISK_TIER_REASON_MAX = 500;
+var RISK_TIER_HISTORY_MAX = 200;
+function riskTierHistoryOf(fm) {
+  const raw = fm && Array.isArray(fm.risk_tier_history) ? fm.risk_tier_history : [];
+  const revisions = raw.map((e, i) => {
+    if (!e || typeof e !== "object" || Array.isArray(e)) return { ord: i, readable: false };
+    const tier = riskTierState(e.tier);
+    const prior = riskTierState(e.prior);
+    const by = typeof e.by === "string" && e.by.trim() ? e.by.trim() : null;
+    const at = typeof e.at === "string" && e.at.trim() ? e.at.trim() : null;
+    const reason = typeof e.reason === "string" && e.reason.trim() ? e.reason.trim() : null;
+    return {
+      ord: i,
+      readable: tier !== null && tier !== "undetermined" && prior !== null && !!by && !!at && !!reason,
+      tier,
+      tier_words: RISK_TIERS[tier] ?? null,
+      prior,
+      prior_words: RISK_TIERS[prior] ?? null,
+      by,
+      at,
+      reason
+    };
+  });
+  const current = riskTierState(fm ? fm.risk_tier : void 0);
+  const intakeTier = revisions.length ? revisions[0].prior : current;
+  return {
+    current,
+    current_words: RISK_TIERS[current] ?? null,
+    intake: {
+      tier: intakeTier,
+      tier_words: RISK_TIERS[intakeTier] ?? null,
+      by: null,
+      stated: intakeTier === "undetermined" ? "No member stated a tier when this action was created." : "Stated when this action was created. UNDETERMINED who stated it: an intake tier carries no author of its own in the record."
+    },
+    revisions,
+    stated: revisions.length ? `${revisions.length} revision${revisions.length === 1 ? "" : "s"} by a member, each with its reason; every earlier tier stays in this history` : "Never revised: the tier is the one the action was created with."
+  };
+}
+function riskTierHistoryFindings(fm, findings) {
+  if (!Object.prototype.hasOwnProperty.call(fm, "risk_tier_history") || fm.risk_tier_history === null || Array.isArray(fm.risk_tier_history) && !fm.risk_tier_history.length) return;
+  if (!Array.isArray(fm.risk_tier_history)) {
+    findings.push(f("C-2.10", "error", "risk_tier_history is not a list of revisions (REC-214)"));
+    return;
+  }
+  if (fm.risk_tier_history.length > RISK_TIER_HISTORY_MAX)
+    findings.push(f("C-2.10", "error", `risk_tier_history holds ${fm.risk_tier_history.length} entries; at most ${RISK_TIER_HISTORY_MAX}`));
+  const h = riskTierHistoryOf(fm);
+  let prev = null;
+  for (const e of h.revisions) {
+    if (!e.readable) {
+      findings.push(f("C-2.10", "error", `risk_tier_history[${e.ord}] is not a revision: each names tier (1, 2 or 3), prior, by, at and a reason (REC-214)`, ["revise the tier with op=actionrisktier"]));
+      prev = null;
+      continue;
+    }
+    if (isMachineIdentity(e.by))
+      findings.push(f("C-2.10", "error", `risk_tier_history[${e.ord}].by '${e.by.slice(0, 40)}' is a machine identity: a risk tier is revised by a member's authored act (REC-214)`));
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(e.at))
+      findings.push(f("C-2.10", "error", `risk_tier_history[${e.ord}].at '${e.at}' is not a timestamp`));
+    if (e.reason.length > RISK_TIER_REASON_MAX)
+      findings.push(f("C-2.10", "error", `risk_tier_history[${e.ord}].reason is longer than ${RISK_TIER_REASON_MAX} characters`));
+    if (e.prior === e.tier)
+      findings.push(f("C-2.10", "error", `risk_tier_history[${e.ord}] replaces tier ${e.tier} with itself: a revision changes the tier`));
+    if (prev && e.prior !== prev.tier)
+      findings.push(f("C-2.10", "error", `risk_tier_history[${e.ord}].prior is ${e.prior}, and the revision before it set ${prev.tier}: the history does not close (REC-214)`));
+    prev = e;
+  }
+  const last = h.revisions[h.revisions.length - 1];
+  if (last && last.readable && last.tier !== h.current)
+    findings.push(f(
+      "C-2.10",
+      "error",
+      `risk_tier is ${h.current} and the last revision in risk_tier_history set ${last.tier}: the tier stated is not the tier the history ends on (REC-214)`,
+      ["revise the tier with op=actionrisktier"]
+    ));
 }
 var LAW_LEVELS = ["federal", "state", "local"];
 var GOVERNING_LAWS_MAX = 12;
@@ -7500,6 +7579,7 @@ function checkActionExtension(ctx, findings) {
   if (riskTierState(fm.risk_tier) === null) findings.push(f("C-2.10", "error", `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(", ")}`));
   checkCounterparty(fm, findings);
   governingLawsFindings(fm, findings);
+  riskTierHistoryFindings(fm, findings);
   if (fm.current_state === "resolved" && !RESOLUTIONS.includes(fm.resolution)) {
     findings.push(f("C-2.10", "error", `resolved state requires resolution in: ${RESOLUTIONS.join(", ")}`));
   }
@@ -11101,10 +11181,12 @@ var MACHINE_FENCE_CHECKS = {
   /* REC-189 — D-182's ruling on the write side (BOB #21: *"Only a member's authored act sets 1, 2 or 3"*).
      Refuses a CHANGE of tier by a machine, never a presence: carrying a member's tier forward unchanged is
      not refused, nor is leaving undetermined a tier no member ever set. BOB #32 (2026-09-24 01:44Z): dropping a
-     member's tier to undetermined IS a change and is refused. Inside `promote`'s action block, not an act. */
+     member's tier to undetermined IS a change and is refused. REC-214 (BOB #33, 2026-09-24): the same code refuses a
+     machine at `op=actionrisktier`, the member's revision act, so the condition lives in ONE helper both `promote`'s
+     action block and the act ask (`#machineRiskTierRefusal`) — one code, one site, one region. */
   MACHINE_CANNOT_SET_RISK_TIER: {
     check: "C-32.19",
-    where: "src/store.mjs promote > is-machine-set-risk-tier",
+    where: "src/store.mjs #machineRiskTierRefusal > is-machine-set-risk-tier",
     translation: "A risk tier tells whoever reads this action whether it is safe to file, needs caution, or must not be filed without a lawyer, and somebody has to be answerable for that judgement. The credential that asked here is an automated one: it can carry forward the tier a member set, and where no member has set one it can leave the tier unstated, but it cannot set, change or remove one. Sign in to state the tier yourself."
   },
   MACHINE_CANNOT_CORRESPOND: {
@@ -14068,6 +14150,33 @@ var PROMOTED_TYPE_CHECKS = {
     translation: "The document being filed says what kind of thing it is, and the request that carried it says something different. The record goes by the document, so rather than file an action as information \u2014 or the reverse \u2014 and index it as neither, it stops and tells you both answers. Nothing was written. Send it again with the request naming the type the document names, or change the document first."
   }
 };
+var RISK_TIER_REVISION_CHECKS = {
+  RISK_TIER_REWRITTEN: {
+    check: "C-90.1",
+    where: "src/store.mjs promote > is-promote-risk-tier",
+    translation: "After an action is created, its risk tier changes only through the risk-tier act, which records who changed it, when and why, and keeps every earlier tier readable. This write would have changed the tier, or the record of its earlier tiers, some other way, so nothing was written. Use the risk-tier act."
+  },
+  BAD_RISK_TIER: {
+    check: "C-90.2",
+    where: "src/store.mjs actionRiskTier > is-risk-tier-act",
+    translation: 'A risk tier is 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). The act states one of those three; "not assessed" is what an action reads when nobody has stated one, and is not something to set. Nothing was written.'
+  },
+  RISK_TIER_REASON_REFUSED: {
+    check: "C-90.3",
+    where: "src/store.mjs actionRiskTier > is-risk-tier-act",
+    translation: "Changing a risk tier needs a reason, and it is kept beside the change for as long as the record lasts. The reason was missing, longer than 500 characters, or held a quotation mark, backslash or line break, which this record cannot store. Nothing was written."
+  },
+  RISK_TIER_UNCHANGED: {
+    check: "C-90.4",
+    where: "src/store.mjs actionRiskTier > is-risk-tier-act",
+    translation: "The action already has that risk tier, so there is nothing to revise. The history records changes; it has not been touched."
+  },
+  RISK_TIER_HISTORY_UNSPLICEABLE: {
+    check: "C-90.5",
+    where: "src/store.mjs actionRiskTier > is-risk-tier-act",
+    translation: "This action's record of earlier risk tiers is not in a shape the act can add to without rewriting it, and the act only ever adds. Nothing was written."
+  }
+};
 function checkConnectionPairCovers(pair, side, extentKind, extent, covers) {
   const p = pair && typeof pair === "object" ? pair : null;
   const position = p ? side === "b" ? p.b_position : p.a_position : null;
@@ -15592,7 +15701,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.28.0";
+var CATALOG_VERSION = "1.29.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -20715,6 +20824,7 @@ var RUNG_ABSENT = {
   taskresolve: { ground: "undetermined", is: "records how a task ended" },
   actioncorrespond: { ground: "undetermined", is: "records what came back from outside the system \u2014 REC-23's counterparty, named or honestly undetermined" },
   actionlaws: { ground: "undetermined", is: "a member's attributed statement of the laws governing an action's request (D-149); restated by a further act, never cleared, and the Session Log keeps what each statement replaced" },
+  actionrisktier: { ground: "undetermined", is: "a member's authored revision of an action's risk tier with a REQUIRED reason (REC-214, BOB #33); APPEND-ONLY \u2014 every earlier tier, its author and its reason stay readable in risk_tier_history, and nothing clears it" },
   actionlawspropose: { ground: "undetermined", is: "a machine's or a member's PROPOSAL of the laws governing an action's request (D-149/REC-195), stored apart from the member's list and labelled machine work; restated by a further proposal from the same proposer, never cleared, and it never sets the list" },
   projectfork: { ground: "undetermined", is: "creates a NEW project; the source object is unchanged, and nothing folds a fork back" },
   projectvisibilityset: { ground: "undetermined", is: "an owner's recorded, append-only choice of whether a project is DISCOVERABLE or HIDDEN (Membership v2 \xA77.14, REC-149); it sets no state on the project's document" },
@@ -21335,6 +21445,16 @@ var ACTS = [
     types: ["action"],
     applies: (f2, ty) => ty === "action"
   },
+  /* REC-214. Revising the risk tier, on an action in ANY state, for actioncorrespond's reason: the store's own
+     guard is the object's TYPE and nothing else — a member may re-assess the legal exposure of a resolved action
+     as much as a planned one. Weight `single`: one revision, one act, appended. NO RUNG, for actionmove's reason. */
+  {
+    id: "actionrisktier",
+    label: "Revise risk tier",
+    weight: "single",
+    types: ["action"],
+    applies: (f2, ty) => ty === "action"
+  },
   /* PL-2 / IS-2 — THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE.
    *
    * WHY THEY ARE `ACTS` AND NOT `NON_ACTS`, decided rather than assumed, and the
@@ -21638,6 +21758,9 @@ var MACHINE_REFUSALS = {
      was OFFERED "State governing laws" and refused at the act, the DEC-8 disagreement this map exists to
      prevent. Found when `d311-roster-affordances.test.mjs` gained the drive its fixture guard demanded. */
   actionlaws: "MACHINE_CANNOT_SET_LAWS",
+  /* REC-214: the store refuses a machine at the member's revision act by C-32.19's own code, through the one
+     helper `promote`'s action block also asks (`#machineRiskTierRefusal`). */
+  actionrisktier: "MACHINE_CANNOT_SET_RISK_TIER",
   versionaccept: "MACHINE_CANNOT_MOVE_VERSION",
   versionreject: "MACHINE_CANNOT_MOVE_VERSION",
   versionconsider: "MACHINE_CANNOT_MOVE_VERSION",
@@ -30626,6 +30749,7 @@ function mintRatio({ minted = 0, cited = 0 } = {}) {
 // src/store.mjs
 var TESTIMONY_PATH = Symbol("mk1-testimony-path");
 var LAWS_ACT = Symbol("d149-laws-act");
+var RISK_TIER_ACT = Symbol("rec214-risk-tier-act");
 function refusal6(key, extra = {}) {
   const row = CASE_DERIVATION_CHECKS[key];
   return { ok: false, reason: key, code: key, check: row.check, translation: row.translation, ...extra };
@@ -31631,6 +31755,10 @@ var Store = class _Store extends DurableObject {
          the catalog's one reader from the document's own bytes, so an action nobody set a list on cannot read
          as governed by anything, federal law included. */
       governing_laws: governingLawsOf(fm),
+      /* REC-214: EVERY TIER THIS ACTION HAS HELD, oldest first — each revision's tier, the tier it replaced, who,
+         when and why — and the intake tier with its author stated UNDETERMINED. Read by the catalogue's one reader
+         from the same bytes `risk_tier` above is, so the history and the current tier cannot disagree. */
+      risk_tier_history: riskTierHistoryOf(fm),
       /* REC-195: AND WHAT WAS PROPOSED, APART FROM IT. Two keys, never composed: `governing_laws` above is the
          member's statement or its honest undetermined, and this is machine work labelled as machine work
          (D-149). Nothing here is evidence that the list came from a proposal, and nothing derives one. */
@@ -36718,6 +36846,222 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
         break;
       }
     return [...lines.slice(0, gi), ...block, ...lines.slice(last + 1)].join("\n");
+  }
+  /* REC-189 / C-32.19, MOVED INTO ONE HELPER BY REC-214 — ONLY A MEMBER'S AUTHORED ACT SETS OR REVISES A RISK TIER.
+   * Two callers ask it: `promote`'s action block (a machine's revision stating a tier) and `actionRiskTier` (a
+   * machine calling the member's revision act). One helper, because DEC-49's `where` names THE smallest span in
+   * which a code is enforced, and the same code enforced in two bodies is two spans for one row.
+   *
+   * At `promote` (`act` false) it asks a CHANGE, never a presence, exactly as REC-189 and BOB #32 ruled: a machine
+   * may carry a member's tier forward unchanged, and may leave undetermined a tier no member ever set; it may not
+   * set one, change one, or drop a member's 1, 2 or 3 to undetermined. At the ACT (`act` true) there is nothing to
+   * carry forward — the act IS a revision — so a machine is refused whatever it asks for. REC-46's one predicate:
+   * a write no session or credential stamped is not a member's act either. Instance, not static, for
+   * `#lawEntries`'s reason: the guard's arm C cannot resolve a `where` naming a static method. */
+  #machineRiskTierRefusal({ who, nextTier, heldTier, cur, act }) {
+    const heldSet = heldTier === 1 || heldTier === 2 || heldTier === 3;
+    if ((!who || isMachineIdentity(who)) && (act || (nextTier === 1 || nextTier === 2 || nextTier === 3 || heldSet) && nextTier !== heldTier))
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_SET_RISK_TIER",
+        risk_tier: nextTier,
+        held: cur ? heldTier : null,
+        detail: (act ? `op=actionrisktier is a member's authored revision of this action's risk tier (held: ${heldTier}).` : cur ? `this revision states risk_tier ${nextTier} where the version it replaces states ${heldTier}.` : `this creation states risk_tier ${nextTier}.`) + ` A risk tier is a member's assessment of the legal exposure of filing this action, and only a member's authored act sets 1, 2 or 3. A machine credential may carry a member's tier forward unchanged, and may leave the tier unstated (undetermined) only where no member has set one; it may not remove a member's tier. Nothing was written.`
+      };
+    return null;
+  }
+  /** op=actionrisktier — REC-214 (BOB #33, 2026-09-24, "Risk-tier revision"; `BIO_Case_Making_v0_1.md` §2,
+   *  `risk_tier`): A MEMBER REVISES AN ACTION'S RISK TIER, AS AN AUTHORED, APPEND-ONLY ACT.
+   *
+   *  The tier carries legal exposure — 3 is "do not file without counsel" — so the record must show that it was
+   *  changed, by whom, when and why. A member may revise ANY tier, up or down, and the act:
+   *   - writes `risk_tier` through the one front-matter path every reader derives the tier from (`riskTierState`
+   *     over the document's own bytes; `#projectRow`'s `action_risk_tier` column; `op=search q=risk:`);
+   *   - APPENDS one entry to `risk_tier_history[]` — the tier set, the tier replaced (`prior`), who, when and the
+   *     REQUIRED reason — and never edits or drops an earlier one, so the prior tier, its author and its reason stay
+   *     readable (`riskTierHistoryOf`); `promote` refuses any other writer that changes either (C-90.1);
+   *   - records the revision in the Session Log as well, as every act on an action does.
+   *  A machine credential is refused by C-32.19's own code. The act states 1, 2 or 3: `undetermined` is what an
+   *  action reads when nobody has assessed it, and a member does not "set" it — actionLaws' rule for an empty list.
+   *  A revision to the tier already held is refused: it would append a change that is not one. What a machine may
+   *  PROPOSE is REC-215's, read beside this history and never written into it. */
+  actionRiskTier({ target, tier = null, reason = null, viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    const machine = this.#machineRiskTierRefusal({
+      who,
+      nextTier: riskTierState(tier),
+      heldTier: null,
+      cur: false,
+      act: true
+    });
+    if (machine) return { ...machine, target };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`,
+      target,
+      ...gate.args
+    );
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return {
+        ok: false,
+        reason: "NOT_AN_ACTION",
+        target,
+        object_type: b.object_type,
+        detail: "a risk tier belongs to an action: it is the legal exposure of filing it."
+      };
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return {
+        ok: false,
+        reason: "NO_DOCUMENT",
+        target,
+        detail: "this action has no readable bundle.md, so its risk tier cannot be revised"
+      };
+    const fm = parseFrontmatter(liveMd.content).data || {};
+    const held = riskTierState(fm.risk_tier);
+    const before = riskTierHistoryOf(fm);
+    const asked = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
+    const next = riskTierState(asked);
+    const why = typeof reason === "string" ? reason.trim() : "";
+    const text0 = _Store.#appendRiskTierHistory(liveMd.content, null);
+    if (next !== 1 && next !== 2 && next !== 3)
+      return {
+        ok: false,
+        reason: "BAD_RISK_TIER",
+        target,
+        tier: tier ?? null,
+        legal: [1, 2, 3],
+        detail: "the act states a tier of 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). Undetermined is what an action reads when nobody has assessed it, not a tier to set."
+      };
+    if (!why || why.length > RISK_TIER_REASON_MAX || /["\\\r\n]/.test(why))
+      return {
+        ok: false,
+        reason: "RISK_TIER_REASON_REFUSED",
+        target,
+        max: RISK_TIER_REASON_MAX,
+        detail: `a revision of a risk tier carries a reason of 1 to ${RISK_TIER_REASON_MAX} characters, with no quote, backslash or line break: the restricted frontmatter grammar has no escapes. It is kept beside the change for as long as the record lasts.`
+      };
+    if (next === held)
+      return {
+        ok: false,
+        reason: "RISK_TIER_UNCHANGED",
+        target,
+        risk_tier: held,
+        detail: `this action's risk tier is already ${held}; a revision changes it, and the history was not touched.`
+      };
+    if (text0 === null || before.revisions.length >= RISK_TIER_HISTORY_MAX)
+      return {
+        ok: false,
+        reason: "RISK_TIER_HISTORY_UNSPLICEABLE",
+        target,
+        revisions: before.revisions.length,
+        max: RISK_TIER_HISTORY_MAX,
+        detail: `this action's risk_tier_history is not a block the act can append to in place (or it holds ${RISK_TIER_HISTORY_MAX} revisions already); the act only appends, so nothing was written.`
+      };
+    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const entry = { tier: next, prior: held, by: _Store.#fmSafe(who), at: when, reason: why };
+    let text = _Store.#appendRiskTierHistory(liveMd.content, entry);
+    text = _Store.#setOrAddScalar(text, "risk_tier", String(next));
+    text = _Store.#setScalar(text, "last_updated", `"${when}"`);
+    text = _Store.#appendSessionLog(
+      text,
+      `### Session ${when} | Risk tier revised | ${who}
+Trigger: op=actionrisktier on ${target}
+Changes: risk_tier ${held} (${RISK_TIERS[held]}) -> ${next} (${RISK_TIERS[next]}).
+Reason: ${why}
+`
+    );
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
+      target
+    ))
+      carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target,
+      base: b.bundle_sha,
+      snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
+      author: who,
+      [RISK_TIER_ACT]: true,
+      files: [{
+        path: "bundle.md",
+        text,
+        bytes: bytes.length,
+        sha256: createSha256().update(bytes).hex()
+      }, ...carried],
+      meta: {
+        object_type: fm.object_type ?? b.object_type,
+        title: fm.title,
+        current_state: b.current_state,
+        prior_state: fm.prior_state ?? null,
+        created: fm.created,
+        last_updated: when,
+        criticality: fm.criticality ?? null
+      }
+    });
+    if (!promoted.ok) return { ...promoted, target };
+    const after = parseFrontmatter(text).data || {};
+    return {
+      ok: true,
+      target,
+      risk_tier: next,
+      risk_tier_words: RISK_TIERS[next],
+      prior: held,
+      prior_words: RISK_TIERS[held] ?? null,
+      by: who,
+      at: when,
+      reason: why,
+      risk_tier_history: riskTierHistoryOf(after),
+      weight: "single"
+    };
+  }
+  /* REC-214: APPEND one entry to the top-level `risk_tier_history:` block, or open the block before the closing
+     fence when absent — `#replaceGoverningLaws`' grammar, but it only ever ADDS rows after the last one. With
+     `entry` null it answers only whether the block can be appended to (the act asks before it refuses anything
+     that would write). Returns null for a block it cannot read as that shape — an inline value other than `[]` —
+     refusing rather than guessing: the grammar has no escapes, and a wrong guess rewrites history silently. */
+  static #appendRiskTierHistory(text, entry) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    const rows = entry ? [
+      `  - tier: ${entry.tier}`,
+      `    prior: ${entry.prior}`,
+      `    by: "${entry.by}"`,
+      `    at: "${entry.at}"`,
+      `    reason: "${entry.reason}"`
+    ] : [];
+    let hi = -1;
+    for (let i = 1; i < end; i++) if (/^risk_tier_history:/.test(lines[i])) {
+      hi = i;
+      break;
+    }
+    if (hi === -1) return [...lines.slice(0, end), "risk_tier_history:", ...rows, ...lines.slice(end)].join("\n");
+    const rest = lines[hi].slice("risk_tier_history:".length).trim();
+    if (rest !== "" && rest !== "[]") return null;
+    let last = hi;
+    if (rest === "")
+      for (let i = hi + 1; i < end; i++) {
+        if (lines[i].trim() === "") continue;
+        if (/^\s/.test(lines[i])) {
+          last = i;
+          continue;
+        }
+        break;
+      }
+    return [
+      ...lines.slice(0, hi),
+      "risk_tier_history:",
+      ...lines.slice(hi + 1, last + 1),
+      ...rows,
+      ...lines.slice(last + 1)
+    ].join("\n");
   }
   /** op=actionlawspropose — REC-195 (D-149's remaining half; `BIO_Case_Making_v0_1.md` §2, *A RECORDS REQUEST
    *  NAMES EVERY LAW THAT GOVERNS IT*): A PROPOSAL OF CITATIONS AND LEVELS, STORED APART FROM THE MEMBER'S
@@ -45599,14 +45943,22 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         const heldTier = riskTierState(heldTierFm && typeof heldTierFm === "object" ? heldTierFm.risk_tier : void 0);
         const tierWho = String(author ?? "").trim();
         const heldTierSet = heldTier === 1 || heldTier === 2 || heldTier === 3;
-        if ((!tierWho || isMachineIdentity(tierWho)) && (nextTier === 1 || nextTier === 2 || nextTier === 3 || heldTierSet) && nextTier !== heldTier)
-          return {
-            ok: false,
-            reason: "MACHINE_CANNOT_SET_RISK_TIER",
-            risk_tier: nextTier,
-            held: cur ? heldTier : null,
-            detail: (cur ? `this revision states risk_tier ${nextTier} where the version it replaces states ${heldTier}.` : `this creation states risk_tier ${nextTier}.`) + ` A risk tier is a member's assessment of the legal exposure of filing this action, and only a member's authored act sets 1, 2 or 3. A machine credential may carry a member's tier forward unchanged, and may leave the tier unstated (undetermined) only where no member has set one; it may not remove a member's tier. Nothing was written.`
-          };
+        const machineTier = this.#machineRiskTierRefusal({ who: tierWho, nextTier, heldTier, cur: !!cur, act: false });
+        if (machineTier) return machineTier;
+        if (!pkg[RISK_TIER_ACT]) {
+          const histKey = (fmX) => JSON.stringify(fmX && typeof fmX === "object" && Array.isArray(fmX.risk_tier_history) ? fmX.risk_tier_history : fmX && typeof fmX === "object" && fmX.risk_tier_history !== void 0 && fmX.risk_tier_history !== null ? fmX.risk_tier_history : []);
+          const tierMoved = cur ? nextTier !== heldTier : false;
+          const histMoved = histKey(docFmW) !== (cur ? histKey(heldTierFm) : "[]");
+          if (tierMoved || histMoved)
+            return {
+              ok: false,
+              reason: "RISK_TIER_REWRITTEN",
+              bundleId,
+              ...cur ? { held: heldTier } : {},
+              risk_tier: nextTier,
+              detail: (tierMoved ? `this revision of ${bundleId} states risk_tier ${nextTier} where the version it replaces states ${heldTier}` : `this ${cur ? "revision" : "creation"} of ${bundleId} ${cur ? "changes" : "states"} its risk_tier_history`) + " without op=actionrisktier. After intake a risk tier is revised by that act alone \u2014 it records who, when and why, and keeps every earlier tier readable. Nothing was written."
+            };
+        }
         const af = [];
         actionBasisFindings(docFmW, af);
         const aerrs = af.filter((x) => x.severity === "error");
@@ -75753,6 +76105,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author")
         }),
+        /* REC-214: the member's revision of a risk tier. `tier` and `reason` from the query or the POST body (a
+           reason is prose); `author` and `viewer` are the control plane's stamps, never a caller's field. */
+        actionrisktier: () => this.actionRiskTier({
+          target: url.searchParams.get("target") || (body || {}).target,
+          tier: url.searchParams.get("tier") ?? (body || {}).tier ?? null,
+          reason: url.searchParams.get("reason") ?? (body || {}).reason ?? null,
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author")
+        }),
         /* REC-195: the PROPOSAL, beside the act. `proposer` is the control plane's stamp and never a caller's
            field (themepropose's route); there is no `author` here, because nothing here is authored. */
         actionlawspropose: () => this.actionLawsPropose({
@@ -76822,6 +77183,10 @@ var OPS = {
      machine class REACHES it and is refused BY THE STORE (MACHINE_CANNOT_SET_LAWS), so the refusal says what
      is wrong. One `target`; the list arrives in the POST body. */
   actionlaws: { classes: ["admin", "member", "probe"], mutating: true },
+  /* REC-214 (BOB #33, 2026-09-24): a member's revision of an action's risk tier — an authored, append-only act with
+     a REQUIRED reason. `actionlaws`' class list for its reason: a machine class REACHES it and is refused BY THE
+     STORE (MACHINE_CANNOT_SET_RISK_TIER, C-32.19), so the refusal says what is wrong. */
+  actionrisktier: { classes: ["admin", "member", "probe"], mutating: true },
   /* REC-195: the PROPOSAL of that list — D-149's remaining half. `themepropose`'s class cut, for its reason:
      proposing is the MACHINE's half of the ruling, so the `ai` class reaches it through the DEC-55 floor when
      its minted `writes` name it, and the store refuses NOBODY by class here. The fence that matters is one op
@@ -77741,7 +78106,7 @@ var STATE_ACTIONS = [
   "inquirydivide",
   "withdrawconclusion"
 ];
-var ACTION_ACTIONS = ["actionmove", "actioncorrespond", "actionlaws"];
+var ACTION_ACTIONS = ["actionmove", "actioncorrespond", "actionlaws", "actionrisktier"];
 var DECLARATION_ACTIONS = ["strengthbar"];
 var STRUCTURE_ACTIONS = ["inquiryground"];
 var VERSION_ACTIONS = [
@@ -78262,6 +78627,7 @@ var NEEDS = {
   actionmove: "contribute",
   actioncorrespond: "contribute",
   actionlaws: "contribute",
+  actionrisktier: "contribute",
   /* REC-195: proposing takes `contribute` beside the act it proposes to, and the capability is the only gate
      it has — who proposed is RECORDED and labelled rather than fenced (D-149: the machine may propose). */
   actionlawspropose: "contribute",

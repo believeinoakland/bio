@@ -611,10 +611,13 @@ const cat = await affordances(null);
 /* CORRECTED 2026-09-23 (CONDUCT #18 at REC-149's merge onto c17-batch7): TWENTY-NINE — D-311's twenty-seven,
    D-149's `actionlaws` and REC-149's `projectvisibilityset`. Each side's count was right on its own base; the union
    carries all three. */
-t("no target -> the whole catalogue: twenty-nine acts, each with id/label/weight/needs/mode/rung/prompt",
+/* CORRECTED 2026-09-24 (REC-214): THIRTY, with `actionrisktier` — a member's authored, append-only revision of an
+   action's risk tier (BOB #33). Corrected, not loosened: it moved by exactly the one object-directed op REC-214
+   added. */
+t("no target -> the whole catalogue: thirty acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 29, true]);
+  [true, 30, true]);
 
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
    null for every act no ruling attaches one to, and where a ruling does attach
@@ -1063,8 +1066,9 @@ await promote(ACTN, actnMd(ACTN), "action", "planned");
 const affActn = await affordances(ACTN, RUTH);
 /* CORRECTED 2026-09-23 (D-149): THREE, with `actionlaws`. The old assertion was right for REC-24's two and
    is corrected rather than loosened, so a published act on an action still cannot appear unannounced. */
-t("an action publishes the three acts that operate it (REC-24's two, D-149's governing laws)",
-  [affActn.ok, actIds(affActn)], [true, ["actioncorrespond", "actionlaws", "actionmove"]]);
+/* CORRECTED 2026-09-24 (REC-214): FOUR, with `actionrisktier`, for the note above's reason. */
+t("an action publishes the four acts that operate it (REC-24's two, D-149's governing laws, REC-214's risk tier)",
+  [affActn.ok, actIds(affActn)], [true, ["actioncorrespond", "actionlaws", "actionmove", "actionrisktier"]]);
 /* DEC-8 both ways, in the same run and on the same object: what is published is
    what the store accepts, and what the store refuses is refused for a reason a
    surface renders rather than computes. A machine credential REACHES both and

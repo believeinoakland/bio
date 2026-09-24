@@ -851,7 +851,7 @@ const fence = (code, payload, machineAnswer) => {
   const m = await revise(AI, "risk_tier: 2");
   fence("MACHINE_CANNOT_SET_RISK_TIER",
     "a revision of a member's action, on the version it replaces, well-formed in every field, changing "
-    + "risk_tier 1 -> 2 — the payload a signed-in member lands with below",
+    + "risk_tier 1 -> 2 — the change a signed-in member lands below through op=actionrisktier",
     codeOf(m));
   const v1 = await view();
   t("  the record did not move under the machine's call: still tier 1, on the same version (the refusal "
@@ -902,10 +902,19 @@ const fence = (code, payload, machineAnswer) => {
   t("…and on a never-set tier the machine still cannot state 1 — refused by the same name",
     [codeOf(set1), (await view2()).tier], ["MACHINE_CANNOT_SET_RISK_TIER", "undetermined"]);
 
+  /* CORRECTED 2026-09-24 by REC-214 (BOB #33, "Risk-tier revision"), never exempted: this arm asserted that the
+     SAME plain-promote payload LANDS for a signed-in member. That was the over-strictness half of C-32.19 when it
+     was written, and it is now the silent overwrite the ruling closes: a member's revision of a tier is an
+     authored act with a REQUIRED reason and an append-only history (op=actionrisktier), and promote refuses the
+     plain revision BY A DIFFERENT NAME (RISK_TIER_REWRITTEN, C-90.1) — which is what keeps this arm's point: the
+     machine's refusal is about WHO, and the member is not refused by it. The member's act then lands the 2. */
   const r = await revise(RUTH, "risk_tier: 2");
-  t("  and the SAME payload (risk_tier 2, on the version it replaces) lands for a signed-in member, read "
-  + "back through op=projection",
-    [r.ok, (await view()).tier], [true, 2]);
+  t("  and the SAME payload from a signed-in member is NOT refused as a machine — it is refused RISK_TIER_REWRITTEN "
+  + "(after intake a tier moves only through op=actionrisktier), and the tier stands",
+    [codeOf(r), (await view()).tier], ["RISK_TIER_REWRITTEN", 1]);
+  const ra = await POST(`op=actionrisktier&token=${RUTH}&target=${ACT}`, { tier: 2, reason: "the member re-assessed it" });
+  t("  and the member's own act lands risk_tier 2, read back through op=projection",
+    [ra && ra.ok, (await view()).tier], [true, 2]);
 }
 
 /* ====================================================================== 3
@@ -1318,6 +1327,29 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
         pinned: pinned(s.code), pinnedTree: pinnedTree(s.code) });
     });
   }
+  /* REC-214, AN EXTENSION OF THE WALK AND NOT AN EXEMPTION. C-32.19's region moved into ONE private helper,
+     `#machineRiskTierRefusal`, that two methods ask first (`promote`'s action block and `actionRiskTier`) —
+     DEC-49's one-code-one-site rule, which a code inlined in two bodies would break. Read method by method, the
+     helper's body holds that one refusal and nothing behind it, so the walk scored the fence as shadowing NOTHING
+     while in both callers it stands in front of every payload complaint. So a fence found in a PRIVATE helper is
+     ALSO attributed to each `this.#helper(` call site, with the distinct refusals that sit behind the call in the
+     caller — which is what "shadows" has always meant. The helper's own row stays; the fence arm below judges
+     each code by its DEEPEST site. It still errs towards more work, the header's safe direction: a helper nobody
+     calls keeps its zero. */
+  for (const hr of rows.filter((r) => r.method.startsWith("#")).slice()) {
+    for (const m of methods) {
+      if (m.name === hr.method) continue;
+      const call = m.body.indexOf(`this.${hr.method}(`);
+      if (call < 0) continue;
+      const behind = new Set();
+      for (const h of m.body.slice(call).matchAll(CODE)) {
+        const c = h[1] || h[2] || h[3];
+        if (c !== hr.code) behind.add(c);
+      }
+      rows.push({ method: `${m.name} -> ${hr.method}`, code: hr.code, shadows: behind.size,
+        pinned: hr.pinned, pinnedTree: hr.pinnedTree });
+    }
+  }
   /* THE CORPUS IS FLOORED BEFORE ANY CLAIM IS MADE OVER IT. A walk that stopped
      yielding would otherwise report "nothing believed on half its evidence" and
      read as good news — REC-70's blind ratchet, one instrument over.
@@ -1356,7 +1388,8 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
     [...new Set(fences.map((r) => r.code))].sort(), HARVEST);
   t("and EVERY ONE of them shadows at least one payload complaint, which is the whole reason a "
   + "complete payload was needed to prove any of them",
-    fences.filter((r) => r.shadows < 1).map((r) => r.code), []);
+    [...new Set(fences.map((r) => r.code))]
+      .filter((c) => Math.max(...fences.filter((r) => r.code === c).map((r) => r.shadows)) < 1), []);
 
   const shadowing = rows.filter((r) => r.shadows >= 1 && !r.code.startsWith("MACHINE_CANNOT_"));
   const unpinned = [...new Set(shadowing.filter((r) => !r.pinned).map((r) => r.code))].sort();

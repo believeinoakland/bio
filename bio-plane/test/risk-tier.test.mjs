@@ -187,9 +187,18 @@ console.log("\n--- 2-4. through the ops: the no-tier action, a member's 2, and t
   t("the stated one's bytes say undetermined in the document itself",
     /^risk_tier: undetermined$/m.test(await stored(STATED)), true);
 
-  /* 3. A member's authored act sets 2: a new version of the same action, promoted by the member. */
+  /* 3. A member's authored act sets 2.
+     CORRECTED 2026-09-24 by REC-214 (BOB #33, "Risk-tier revision"): this arm set the tier by a plain op=promote
+     revision from the member, which WAS the member's authored act when it was written. It is not any more, and the
+     old assertion was wrong for a reason worth keeping: a plain revision records no reason and no history, so a
+     later 3 -> 1 by the same route would overwrite "do not file without counsel" silently. After intake the act is
+     op=actionrisktier (REQUIRED reason, APPEND-ONLY history), and promote now refuses the plain revision by name
+     (RISK_TIER_REWRITTEN, C-90.1) — which is driven in rec214-risk-tier-revision.test.mjs. Every read-side arm
+     below is unchanged: the act writes the SAME front-matter path, so the column, the bytes and the search agree. */
   const before = await projection(STATED);
-  await promoteAction(STATED, TIER.two, before.bundle_sha, RUTH);
+  const act = rP(await (await mf.dispatchFetch(`http://x/api/?op=actionrisktier&token=${RUTH}&target=${encodeURIComponent(STATED)}`,
+    { method: "POST", body: JSON.stringify({ tier: 2, reason: "a member assessed the filing" }) })).json());
+  if (act?.ok !== true) throw new Error(`actionrisktier ${STATED}: ${JSON.stringify(act)}`);
   const after = await projection(STATED);
   t("a member's act sets 2, and op=projection reads 2", after.action.risk_tier, 2);
   t("…in the plane's words: file with caution", after.action.risk_tier_words, "file with caution");

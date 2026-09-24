@@ -860,6 +860,7 @@ export const RUNG_ABSENT = {
   taskresolve:          { ground: "undetermined", is: "records how a task ended" },
   actioncorrespond:     { ground: "undetermined", is: "records what came back from outside the system — REC-23's counterparty, named or honestly undetermined" },
   actionlaws:           { ground: "undetermined", is: "a member's attributed statement of the laws governing an action's request (D-149); restated by a further act, never cleared, and the Session Log keeps what each statement replaced" },
+  actionrisktier:       { ground: "undetermined", is: "a member's authored revision of an action's risk tier with a REQUIRED reason (REC-214, BOB #33); APPEND-ONLY — every earlier tier, its author and its reason stay readable in risk_tier_history, and nothing clears it" },
   actionlawspropose:    { ground: "undetermined", is: "a machine's or a member's PROPOSAL of the laws governing an action's request (D-149/REC-195), stored apart from the member's list and labelled machine work; restated by a further proposal from the same proposer, never cleared, and it never sets the list" },
   projectfork:          { ground: "undetermined", is: "creates a NEW project; the source object is unchanged, and nothing folds a fork back" },
   projectvisibilityset: { ground: "undetermined", is: "an owner's recorded, append-only choice of whether a project is DISCOVERABLE or HIDDEN (Membership v2 §7.14, REC-149); it sets no state on the project's document" },
@@ -1544,6 +1545,11 @@ export const ACTS = [
      the store's own guard is the object's TYPE and nothing else. Weight `single`: one list, one act. */
   { id: "actionlaws", label: "State governing laws", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" },
+  /* REC-214. Revising the risk tier, on an action in ANY state, for actioncorrespond's reason: the store's own
+     guard is the object's TYPE and nothing else — a member may re-assess the legal exposure of a resolved action
+     as much as a planned one. Weight `single`: one revision, one act, appended. NO RUNG, for actionmove's reason. */
+  { id: "actionrisktier", label: "Revise risk tier", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" },
   /* PL-2 / IS-2 — THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE.
    *
    * WHY THEY ARE `ACTS` AND NOT `NON_ACTS`, decided rather than assumed, and the
@@ -1782,6 +1788,9 @@ export const MACHINE_REFUSALS = {
      was OFFERED "State governing laws" and refused at the act, the DEC-8 disagreement this map exists to
      prevent. Found when `d311-roster-affordances.test.mjs` gained the drive its fixture guard demanded. */
   actionlaws:         "MACHINE_CANNOT_SET_LAWS",
+  /* REC-214: the store refuses a machine at the member's revision act by C-32.19's own code, through the one
+     helper `promote`'s action block also asks (`#machineRiskTierRefusal`). */
+  actionrisktier:     "MACHINE_CANNOT_SET_RISK_TIER",
   versionaccept:      "MACHINE_CANNOT_MOVE_VERSION",
   versionreject:      "MACHINE_CANNOT_MOVE_VERSION",
   versionconsider:    "MACHINE_CANNOT_MOVE_VERSION",

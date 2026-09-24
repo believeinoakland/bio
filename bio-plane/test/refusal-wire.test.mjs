@@ -749,8 +749,12 @@ t("the fences this empty-payload sweep does not reach are NAMED rather than coun
      `promote`'s action block and refuses a CHANGE of an action's tier, so an empty promote — no bundle.md,
      no action — is refused by the payload complaints long before it. Reachability is REC-73's instrument
      (`machine-fences.test.mjs` block xiv drives it under a complete payload); `fence-e2e` and
-     `aicredential` carry its wire. */
-  unreached, ["MACHINE_CANNOT_MOVE_VERSION", "MACHINE_CANNOT_SET_RISK_TIER"]);
+     `aicredential` carry its wire.
+     MOVED BACK 2026-09-24 by REC-214, never exempted: C-32.19 now also stands FIRST in `op=actionrisktier`, the
+     member's revision act, above every payload complaint (through the one helper `promote` asks too) — so this
+     sweep's empty call reaches it through that op, with its translation, and it leaves the unreached set. The
+     REC-189 note above was true of `promote`, and still is. */
+  unreached, ["MACHINE_CANNOT_MOVE_VERSION"]);
 
 /* ====================================================================== 7
  * TWO PRODUCERS, ONE CODE — AND THE `detail` IS WHAT TELLS THEM APART.
