@@ -25,6 +25,7 @@
  * arm: the block reflowed to different line breaks → still green. Each restored and verified by
  * sha256 + cmp (2026-09-24, D-176 worker).
  */
+import "../../bio-plane/test/stdio.mjs";   /* D-282: this suite exits by process.exit; flush first (stdio-census ARM B1). */
 import fs from "fs";
 import { fileURLToPath } from "url";
 
