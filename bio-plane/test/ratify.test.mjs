@@ -237,7 +237,12 @@ t("attested by the key's member", rat.attestor, "sparky");
 /* CORRECTED at c20-batch23 (CONDUCT #20): 1.24.0 -> 1.25.0. REC-211's two rows (C-33.42, C-33.43) land on a
    main whose 1.24.0 already names the D-507 + D-508 catalogue, so the union's catalogue is 1.25.0; the literal
    names the catalogue that actually runs. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.25.0)");
+/* MOVED 1.25.0 -> 1.26.0 by REC-207 (2026-09-24): BOB #32's ruling of 2026-09-23 23:42Z added ten rows to
+   the catalogue (C-26.12..C-26.18, C-33.44..C-33.46), so `CATALOG_VERSION` took a MINOR bump and the stamp
+   moves with it. The LITERAL is kept rather than read from `gate.mjs`, and that is the point of this arm:
+   a pin that imported the constant would agree with whatever the constant says and would assert nothing
+   about the stamp ever having been recorded. It is moved by hand in the landing that bumps the version. */
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.26.0)");
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong
