@@ -55,6 +55,8 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
          DRIVE_CAPTURE_CHECKS,
          /* CPDF-19 / C-51: the read-time re-extraction's DEC-49 rows (D-319). */
          REEXTRACT_CHECKS,
+         /* D-64 / C-82: the render arm's DEC-49 rows. */
+         RENDER_CAPTURE_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX,
          /* REC-123: the ONE machine-identity predicate (REC-46), asked by the two
             ratification fences of the stamp an `ai` credential acts under. */
@@ -103,6 +105,9 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
+/* D-64: the render arm's pure half and its renderer seam. */
+import { RENDER_DEFAULTS, RENDERED_METHOD, renderAllowanceMs, renderBlock, renderedAuthority,
+         rendererFor } from "./render.mjs";
 /* COFF-1 (I7): the FORMAT registry is the ONLY format dispatch in this file.
    pdfstructure.mjs is no longer imported here — it is the registry's pdf
    entry, reached through getFormat("pdf").structure with byte-identical
@@ -3332,6 +3337,15 @@ const driveRow = (code) => {
   const row = DRIVE_CAPTURE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`driveRow: ${code} has no DRIVE_CAPTURE_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
+/* D-64 / C-82: the render arm's row reader, `driveRow`'s shape. */
+const renderRow = (code) => {
+  const row = RENDER_CAPTURE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`renderRow: ${code} has no RENDER_CAPTURE_CHECKS row with a canned translation `
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
@@ -6837,6 +6851,70 @@ export default {
 
       const retrieved = new Date().toISOString().split(".")[0] + "Z";
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
+      /* D-64 — THE RENDER ARM, ADMISSION (CLIENT-RENDERED.md; BOB #31, BOB #32).
+       *
+       * `render: true` asks for the page AS A VISITOR SAW IT: the served shell is
+       * fetched exactly as today, a renderer runs the page, and ONE capture holds
+       * BOTH — the rendered document PRIMARY (method `rendered`) and the shell
+       * beside it under its own digest, joined by `render.of`.
+       *
+       * EVERY WAY THIS CANNOT HAPPEN IS DECIDED HERE, BEFORE THE SHELL IS FETCHED,
+       * so nothing is fetched for a render that cannot happen and the shell can
+       * never be filed as the content by falling through. */
+      /* `render: false` is the plain capture, as an absent key is: a caller saying
+         "no render" is answered, not refused (a fence tighter than its rule). */
+      const renderAsked = Object.prototype.hasOwnProperty.call(body || {}, "render") && body.render !== false;
+      let renderer = null;
+      /* DEC-49 REGION is-render-admit
+       *
+       * THE SPAN C-82.1..C-82.5 name. Helper `renderRow`, every code a STRING
+       * LITERAL at its site. */
+      if (renderAsked) {
+        if (body.render !== true)
+          return json({ ok: false, reason: "RENDER_FLAG_MALFORMED", ...renderRow("RENDER_FLAG_MALFORMED"),
+            op, detail: `render=${JSON.stringify(body.render).slice(0, 40)} is not a value this op reads. `
+                      + `Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.` }, 400);
+        const conflict = body.via === "archive.org" ? "via: archive.org (an archived replay)"
+                       : driveCapture ? "a Google Drive export (a document, not a page)"
+                       : body.continue ? "continue: <session> (a capture already filed)" : null;
+        if (conflict)
+          return json({ ok: false, reason: "RENDER_ARM_CONFLICT", ...renderRow("RENDER_ARM_CONFLICT"),
+            op, conflict, detail: `render: true cannot be combined with ${conflict}.` }, 400);
+        renderer = rendererFor(env);
+        if (typeof renderer.render !== "function")
+          return json({ ok: false, reason: "RENDER_NO_RENDERER", ...renderRow("RENDER_NO_RENDERER"),
+            op, renderer: renderer.kind,
+            detail: renderer.kind === "browser-binding-without-driver"
+              ? "the Browser Rendering binding (BROWSER) is bound, but the in-plane driver over it is not built "
+                + "(D-64 shipped the seam and the record, not a CDP client). Nothing was fetched."
+              : "no renderer is bound to this instance (neither RENDERER nor BROWSER). Nothing was fetched." }, 501);
+        /* THROUGH THE HOST GOVERNOR: the render is a second load of the page. */
+        let rHost = null;
+        try { rHost = new URL(locator).host; } catch { rHost = null; }
+        if (rHost) {
+          let g = null;
+          try { g = (await (await stGov.fetch("http://x/governoradmit", {
+            method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ host: rHost }) })).json()).result || null; } catch { g = null; }
+          if (g && g.admitted === false)
+            return json({ ok: false, reason: "RENDER_HOST_COOLING_OFF", ...renderRow("RENDER_HOST_COOLING_OFF"),
+              op, host: rHost, retry_in_ms: g.retry_in_ms || 0,
+              detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).` }, 429);
+        }
+        /* THE DAILY ALLOWANCE (BOB #32 item 3): spent means DEFERRED, recorded. */
+        let adm = null;
+        try { adm = (await (await stGov.fetch("http://x/renderadmit", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), at: retrieved }) })).json()).result; }
+        catch { adm = null; }
+        if (!adm || adm.admitted !== true)
+          return json({ ok: false, reason: "RENDER_DEFERRED", ...renderRow("RENDER_DEFERRED"),
+            op, render: { state: "deferred", content: "undetermined", allowance: adm || null },
+            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is spent `
+                        + `(${adm.spent_ms} ms); this render is recorded as deferred (${adm.deferred} today).`
+                        : "the render allowance could not be read, so the render is deferred rather than run unmetered." }, 429);
+      }
+      /* END DEC-49 REGION is-render-admit */
       /* D-104. Every way this fetch can end is recorded against the DOCUMENT
          address, and exactly one of them is not a failure of the source.
          *
@@ -7096,7 +7174,7 @@ export default {
       }
       await flush();
       if (total === 0) return json({ ok: false, reason: "EMPTY", locator }, 502);
-      const sha = whole.hex();
+      let sha = whole.hex();
 
       /* One part and small enough to be a plain capture: store the whole under
          its own hash so the ordinary single-file shape still applies. */
@@ -7113,7 +7191,7 @@ export default {
         existed = !!(await env.CAPTURES.head(`${storeName}/captures/${sha}`));
       }
 
-      const ct = (res.headers.get("content-type") || "").split(";")[0].trim();
+      let ct = (res.headers.get("content-type") || "").split(";")[0].trim();
 
       /* WARC keeps the whole response. We kept content-type and threw the rest
          away, which meant Last-Modified and ETag were discarded at the only
@@ -7152,6 +7230,62 @@ export default {
         .replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
 
       const stLim = stGov;
+
+      /* D-64 — THE RENDER ARM, THE PAIR. The shell is held (content-addressed,
+       * exactly as fetched and hashed above). From here on `sha`, `total` and
+       * `ct` name the RENDERED document, because it is the bundle's PRIMARY
+       * (BOB #32 item 2): the address filed below, the D-98 task, subresource
+       * capture (CLIENT-RENDERED.md: "applies to the rendered document's
+       * references, not the shell's"), the profile and the reading all run over
+       * what a visitor saw. The shell survives only as `shell` and `render.of`. */
+      let renderRecorded = null, shellRecorded = null, renderedAuth = null, renderedExisted = false;
+      if (renderAsked) {
+        const pageUrl = res.url || locator;
+        let answer = null, rbytes = null, rb = null;
+        /* DEC-49 REGION is-render-result
+         *
+         * THE SPAN C-82.6 and C-82.7 name. Helper `renderRow`, codes as STRING
+         * LITERALS. Nothing below this region's refusals is filed as a document:
+         * the shell's bytes are held unregistered, as TOO_LARGE's parts are. */
+        if (multipart || detectFormat(null, ct || null).format !== "html")
+          return json({ ok: false, reason: "RENDER_NOT_A_PAGE", ...renderRow("RENDER_NOT_A_PAGE"),
+            op, content_type: ct || null, bytes: total, multipart,
+            detail: `the served bytes are ${multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``}, `
+                  + `not an HTML page; nothing was filed.` }, 422);
+        try { answer = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS }); }
+        catch (e) { answer = { ok: false, error: String(e && e.message || e) }; }
+        try { await stGov.fetch("http://x/renderspend", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ ms: answer && answer.elapsed_ms, at: retrieved }) }); }
+        catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
+        rb = renderBlock(answer, { pageUrl, shellSha: sha, at: retrieved });
+        if (rb.ok) rbytes = new TextEncoder().encode(answer.html);
+        if (!rb.ok || rbytes.length > MAX)
+          return json({ ok: false, reason: "RENDER_FAILED", ...renderRow("RENDER_FAILED"),
+            op, shell_sha256: sha, filed: false,
+            detail: rb.ok ? `the rendered document is ${rbytes.length} bytes, over this surface's ${MAX}.`
+                          : rb.problem }, 502);
+        /* END DEC-49 REGION is-render-result */
+        const rd = await crypto.subtle.digest("SHA-256", rbytes);
+        const rsha = [...new Uint8Array(rd)].map((x) => x.toString(16).padStart(2, "0")).join("");
+        renderedExisted = !!(await env.CAPTURES.head(`${storeName}/captures/${rsha}`));
+        if (!renderedExisted) await env.CAPTURES.put(`${storeName}/captures/${rsha}`, rbytes, { sha256: rd });
+        shellRecorded = {
+          file: `snapshots/${name}.shell.html`, sha256: sha, bytes: total,
+          method: "bio-plane acquire, https fetch, hashed at receipt",
+          ...(ct ? { content_type: ct } : {}), transport,
+        };
+        renderRecorded = rb.render;
+        renderedAuth = renderedAuthority({ asserted: authorityAsserted, render: renderRecorded, at: retrieved });
+        /* The render's own navigation, reported to the governor like any load. */
+        if (typeof renderRecorded.status === "number") {
+          try { await stGov.fetch("http://x/governorreport", {
+            method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ host: new URL(pageUrl).host, status: renderRecorded.status, retry_after_ms: null }) }); }
+          catch { /* an unrecorded outcome is not a failed render */ }
+        }
+        sha = rsha; total = rbytes.length; ct = "text/html"; existed = renderedExisted;
+      }
 
       /* D-58. File the address this capture holds, UNCONDITIONALLY, beside the
          capture itself. This used to sit inside the subresource branch, behind
@@ -7213,7 +7347,10 @@ export default {
          * later files. The consumer resolves the sha through the register once it
          * does, and an event whose capture is never promoted simply waits rather
          * than inventing a subject to point at. */
-      if (!authorityAsserted) {
+      /* D-64: a rendered capture raises the task whenever ITS authority is
+         undetermined — including when the shell's was asserted and another
+         origin supplied data or ran code (CLIENT-RENDERED.md item 3). */
+      if (renderedAuth ? renderedAuth.authority_state === "undetermined" : !authorityAsserted) {
         try {
           await stLim.fetch("http://x/taskenqueue", {
             method: "POST", headers: { "content-type": "application/json" },
@@ -8324,11 +8461,13 @@ export default {
              both facts about how the record got here. An undetermined
              capture is held and barred from publication, never refused at
              intake (RULED, AUTHORITY-AND-TRUST.md). */
+          ...(renderedAuth ? renderedAuth : {
           ...(authorityAsserted ? { authority: authorityAsserted } : {}),
           authority_state: authorityAsserted ? "determined" : "undetermined",
           authority_basis: authorityAsserted
             ? `asserted by the capturing ${viaSession ? "member" : "caller"} at intake, ${retrieved}`
             : `no assertion was supplied and no mechanical determination is implemented; recorded ${retrieved} for resolution through the task list`,
+          }),
           /* The chain of custody as ordered hops from us back to the origin,
              each naming who, what they assert, the evidence, and whether the
              assertion is cryptographically bound or merely stated (RULED). A
@@ -8348,8 +8487,12 @@ export default {
              * the content. */
           provenance_chain: [{
             who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
-            asserts: `these bytes were served for ${locator} at ${retrieved}`,
-            evidence: "first-party https fetch, hashed at receipt, transport record on this document",
+            asserts: renderRecorded
+              ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)`
+              : `these bytes were served for ${locator} at ${retrieved}`,
+            evidence: renderRecorded
+              ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment"
+              : "first-party https fetch, hashed at receipt, transport record on this document",
             bound: false,
             via,
           /* CAP-8 joins the SAME spread, and a capture is never both: an archive
@@ -8361,7 +8504,8 @@ export default {
           }, ...(archiveHopRecorded ? [archiveHopRecorded] : []),
              ...(driveHopRecorded ? [driveHopRecorded] : [])],
           capture: {
-            method: multipart
+            /* D-64 / BOB #32 item 1: the method is `rendered`; the shell keeps its own. */
+            method: renderRecorded ? RENDERED_METHOD : multipart
               ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt`
               : "bio-plane acquire, https fetch, hashed at receipt",
             /* GRADE TRACKS DIRECTNESS, NEVER TECHNIQUE (RULED). An archive hop
@@ -8406,8 +8550,20 @@ export default {
                parted document and what C-18.6 checks by streaming the parts. */
             sha256: sha, encoding: "binary", bytes: total,
             ...(ct ? { content_type: ct } : {}),
-            transport,
+            /* The HTTP exchange belongs to the SHELL; on a rendered capture it is
+               carried there, and the render's own navigation is `render.*`. */
+            ...(renderRecorded ? {} : { transport }),
           },
+          /* D-64: THE PAIR (BOB #32 item 2). The rendered document is PRIMARY and
+             is `file`/`capture`; the shell is beside it under its own digest, the
+             one part anyone can re-verify against the source. */
+          ...(renderRecorded ? {
+            pair: { primary: "rendered",
+                    rendered: { file: `snapshots/${name}`, sha256: sha },
+                    shell: { file: shellRecorded.file, sha256: shellRecorded.sha256 } },
+            render: renderRecorded,
+            shell: shellRecorded,
+          } : {}),
           ...(multipart ? { parts: parts.map((p, i) => ({
             file: `snapshots/${name}.part${String(i).padStart(3, "0")}`,
             sha256: p.sha256, bytes: p.bytes })) } : {}),
@@ -8449,8 +8605,10 @@ export default {
           files: {
             [`snapshots/${name}.render.html`]: subs.companionSha,
             "data/snapshot-manifest.json": subs.manifestSha,
+            ...(shellRecorded ? { [shellRecorded.file]: shellRecorded.sha256 } : {}),
           },
         } : {}),
+        ...(shellRecorded && !subs ? { files: { [shellRecorded.file]: shellRecorded.sha256 } } : {}),
         ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
         note: ACQUIRE_GRADE_NOTE,
         store: storeName, tokenClass: cls,
