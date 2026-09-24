@@ -64,7 +64,7 @@ const edit = (file, needle, replacement) => {
 
 const FAMILY_HEAD = "export const GOVERNING_LAW_CHECKS = {\n";
 const EMIT_C151 = "    findings.push(f('C-15.1', 'error', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));";
-const VERSION = 'export const CATALOG_VERSION = "1.24.0";'; /* moved with the constant at D-507 (C-82.2..C-82.7), and at c20-batch14 (CONDUCT #20) before it — the needle must MATCH the tree or the arm never arms, which this file's own header calls a finding. 1.22.0 is now origin/main's row (D-484's two checks) and 1.23.0 is this union's. */
+const VERSION = 'export const CATALOG_VERSION = "1.28.0";'; /* CONDUCT #20 at c20-batch25: moved to the UNION's constant 1.28.0 — the needle must match the tree it arms; c20-batch22/23/25 moved the constant 1.24.0 -> 1.25.0 -> 1.26.0 -> 1.27.0 -> 1.28.0 and this needle was left at 1.24.0 (it would have thrown NOT ARMED). Branch histories: D-507 and c20-batch14 (ours), D-510 1.23.0 -> 1.24.0 for C-86.1 (theirs). */
 
 const A1 = "(A1) THE CENSUS IS NON-EMPTY AND FLOORED";
 const A2 = "(A2) EVERY EMISSION SITE RESOLVES";

@@ -309,6 +309,14 @@ const CATALOG_CENSUS = {
 
   /* 1.27.0 AT THE UNION (CONDUCT #20, c20-batch25): D-472's rows over 1.26.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.27.0": { count: 460, digest: "f77e4fba4cfc5ad7e58511b035cae4584a8643bb8c9d9c2718ffbb208d24cc75" },
+  /* D-510 (2026-09-24): 1.23.0 -> 1.24.0, MINOR — one check ADDED and none changed or removed: C-86.1,
+     `ENVELOPE_TYPE_DISAGREES`, the one row of the new PROMOTED_TYPE_CHECKS family. The count and the digest
+     are THIS SUITE'S OWN PRINT on the item's tree over origin/main e9b21be6, never computed by hand.
+     CONDUCT reconciles the VERSION at integration if another branch takes 1.24.0 first; the census is the
+     catalogue's and moves with it. */
+
+  /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510's rows over 1.27.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
+  "1.28.0": { count: 461, digest: "3c28396e5c9e7c561a01625f9fe1f2965799f661b0d9a595d3ae752e21c61d89" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -406,8 +414,8 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.27.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.27.0)", "1.27.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.28.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.28.0)", "1.28.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

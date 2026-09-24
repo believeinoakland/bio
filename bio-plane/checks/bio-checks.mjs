@@ -14757,6 +14757,35 @@ export const CONNECTION_CHOICE_CHECKS = {
   },
 };
 
+/* D-510 / C-86 — THE PROMOTED DOCUMENT DECLARES ITS OWN TYPE (`BIO_Case_Making_v0_1.md` §2; C-2.5 already
+ * pins a document's type to its id prefix). ONE refusal, and the family is one row rather than padded out,
+ * because there is exactly one way for the two statements to be wrong about each other.
+ *
+ * WHY IT IS A REFUSAL AND NOT A SILENT NORMALISATION, which was the alternative the row licensed: the
+ * request carries TWO statements of what is being promoted — the document's own `object_type`, which every
+ * column of the projection is already read from, and the envelope's `meta.object_type`, which `promote`
+ * wrote into `bundles.object_type` and gated the action, bias and inquiry projections on. Obeying the
+ * envelope filed an ACTION as information with its risk tier in the bytes and its basis and correspondence
+ * never projected: a record holding an action it does not index as one. Obeying the document SILENTLY would
+ * be the other half of the same defect — the caller asked for one thing and got another, and nothing said
+ * so. So the record takes the DOCUMENT's word (the bytes are what it holds) and REFUSES the request that
+ * contradicts it, naming both answers, before anything is written.
+ *
+ * THE COMPARISON GOES THROUGH `normalizeType` ON BOTH SIDES, so `focus` and `problem` — legal legacy
+ * spellings of `inquiry` (REC-10) — are not disagreements. A fence tighter than its rule is not a safer
+ * fence. A document that states NO type is not a disagreement either: the envelope is then all there is. */
+export const PROMOTED_TYPE_CHECKS = {
+  ENVELOPE_TYPE_DISAGREES: {
+    check: 'C-86.1',
+    where: 'src/store.mjs promote > is-promoted-type-disagrees',
+    translation: 'The document being filed says what kind of thing it is, and the request that carried it '
+      + 'says something different. The record goes by the document, so rather than file an action as '
+      + 'information — or the reverse — and index it as neither, it stops and tells you both answers. '
+      + 'Nothing was written. Send it again with the request naming the type the document names, or change '
+      + 'the document first.',
+  },
+};
+
 /** May this connection's determining pair grade THIS content row's extent?
  *
  *  `pair` is the row's own `{a_ref, a_position, b_ref, b_position}` (the
