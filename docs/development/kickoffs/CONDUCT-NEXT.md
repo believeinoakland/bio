@@ -58,6 +58,7 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   (log in #20's scratchpad; if #20 died mid-train, re-read origin/main and train.mjs list).
 - c18-batch7fix REPORTED and DISPOSED (behind main; only .gitignore novel, riding integ1). Findings to SCHEDULER, D-150 design q to BOB.
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
+- D-166 DONE @ 05ec142e (125/125, skip 0, M-127; premise false — nothing moved; findings sent) — WAITING FOR A TRAIN.
 - D-453 (Oakland identifier-space measurement) RUNNING beside the eight: session_017L57JtEbWmyk63Ep8SRZoj (fresh, network FULL), branch
   land/worker/D-453, push by 05:45Z. D-166 (Tier 1 probe re-point) RUNNING beside the eight: session_01YVmxTyjL1kajX9Yam7MQgM (fresh), land/worker/D-166.
   Live at 03:12Z = 10/10 (the cap). D-479 spawned 03:35Z into D-482's slot; cache EMPTY of queued rows at 03:35Z (asked SCHEDULER to refill) (D-481, D-484 at the backlog head).
