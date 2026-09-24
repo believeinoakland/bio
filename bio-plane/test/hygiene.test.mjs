@@ -429,8 +429,15 @@ console.log("\n--- the served page template is intact ---");
   }
   t("no unescaped backtick inside it", ticks, 0);
   /* Interpolations are legitimate: the page injects the catalog's tables. They
-     are counted so a surprising jump is visible in a diff rather than silent. */
-  t("interpolations are few and deliberate", interps <= 4, true);
+     are counted so a surprising jump is visible in a diff rather than silent.
+     4 -> 6, 2026-09-24 (D-483), moved from the figure this arm PRINTED and not by
+     adding to the number: the tier chooser injects RISK_TIERS (the map op=affordances
+     publishes) and riskTierState (the plane's own reader of it), for the reason the
+     other four are injected — a surface that wrote its own copy of a catalogue table
+     would drift from it. AND THE ARM NOW PRINTS ITS COUNT: it failed reading `want
+     true / got false`, naming neither the figure nor the ceiling, so a reader had to
+     go to the source to learn what had moved. */
+  t(`interpolations are few and deliberate (${interps} of 6)`, interps <= 6, true);
 
   /* The strongest check available without a browser: the module loads, and the
      script it serves parses as JavaScript. */
