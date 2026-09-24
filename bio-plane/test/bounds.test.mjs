@@ -1593,12 +1593,16 @@ t("op=partitionindependence: a partition OVER the bound is REFUSED and the refus
    see a fee revised or a request priced twice; a list silently cut at 500 reads as every quote the record
    holds, and the one left out is exactly the one nobody would know to ask for. */
 const QT_MAX = Number((/static QUOTES_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
+/* CORRECTED 2026-09-24 at c19-batch10, never exempted: this fixture stated `risk_tier: 1` through `mem-r57`, the
+   MEMBER_TOKEN bearer — a machine identity — and REC-189's fence (C-32.19, MACHINE_CANNOT_SET_RISK_TIER) now refuses a
+   machine's creation stating a determined tier. The tier was never what this arm measures (the quote bound is), so the
+   fixture states it UNDETERMINED, as REC-189 corrected the affordances and counterparty fixtures. */
 const quoteAction = (id, n) => ["---", `id: ${id}`, "object_type: action", "schema: action@1",
   `title: "Records request ${id}"`, "current_state: active", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${NOW}"`, "produced_by:", "  mode: assisted", "  capability_tier: session",
   "group: believe-in-oakland", "references: []", "state_history: []", "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
-  "action_kind: cpra_request", "risk_tier: 1",
+  "action_kind: cpra_request", "risk_tier: undetermined",
   "counterparty:", "  state: named", "  name: Bounds Clerk r57",
   "correspondence:",
   "  - direction: sent", "    at: 2026-07-03", '    account: "The request."', "    author: r57",

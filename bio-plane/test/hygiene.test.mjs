@@ -2372,7 +2372,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      file(s)`): the one is D-394's own suite (`test/versionnotice.test.mjs`, named above), the only walker it adds. */
   /* MOVED 42 -> 43 by CONDUCT #18 at D-394's merge onto c18-batch8, which carries D-179's walker (d179onehome): the
      merged tree PRINTED 43, d179onehome and versionnotice both walkers. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 43)`,
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 44)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
@@ -2380,7 +2380,9 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        origin/main 91bcea6b, the only walker the item adds (its control driver copies trees and walks none). */
     /* MOVED 42 -> 43 by REC-190 (homecensus named above), from the figure this suite PRINTED on the item's tree over
        origin/main 15b2a4c0 (`43 walking file(s)`), the only walker the item adds. */
-    census.length >= 43, true);
+    /* MOVED 43 -> 44 by CONDUCT #19 at REC-190's merge onto c19-batch10 (the batch had reached 43 by D-394 and D-179;
+       REC-190 moved 42 -> 43 on its own base): the merged tree PRINTED 44, homecensus the one walker REC-190 adds. */
+    census.length >= 44, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,
