@@ -189,7 +189,8 @@ scope: `enteredAfterFirstRow` returns three ways (after, before, within the band
 accepts-when: arm M3's band pair reads undetermined in both readers, and pairs outside the band are unmoved (the measured failure this moves: M3's pair flipping class on the clock second). NEGATIVE CONTROL: collapse the band into a two-way comparison and the band arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (BOB #33 inbox 17:58Z; `node tools/mintid.mjs D`).
 
-### D-517 · running — **ONE READER, TWO WORD-GAP RULES: tier 1's TJ word gap is a hand-picked -100 (0.1 em) while D-502 set the run gap at a measured 0.25 em, a 2.5x disagreement inside one reader.** Found by D-502's worker (M-141). — owner CONTENT-PDF.
+### D-517 · integrated — **ONE READER, TWO WORD-GAP RULES: tier 1's TJ word gap is a hand-picked -100 (0.1 em) while D-502 set the run gap at a measured 0.25 em, a 2.5x disagreement inside one reader.** Found by D-502's worker (M-141). — owner CONTENT-PDF.
+status: integrated — integrated — flipped ~22:44Z by SCHEDULER #20 on CONDUCT #20's verification (22:41Z): 99065b61 on 9f8b69e6, FULL 360/360 · 20696 RECORDED GREEN; a substitute three-arm control is on the suite's NEGATIVE CONTROL line (M-145 measured -100 = 0.1 em exactly, confirming D-481). Rides c20-batch27. The declined downward unification is in M-145 with its reversal price; not rowed (no measured failure).
 order: after D-516, with the extraction corrections: two rules of one reader disagreeing on what a word gap is (SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:04Z)
 milestone: M2
 interface: none.
@@ -354,7 +355,7 @@ accepts-when: no staleness finding names `npm run build` (the measured failure i
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
 ### M0-191 · running — **NOTHING READS THE SLOTS: a `running` row whose worker FINISHED, went BLOCKED or has no session holds a slot until a lane happens to look, and a `queued` row waits with nobody spawning it.** BOB #33 21:05Z (supersedes his 18:30Z and 18:33Z entries): measured 7+ of 16 workers idle at 21:03Z. — owner M0.
-status: running — running — SPAWNED 2026-09-24 ~22:25Z by SCHEDULER #20 as a SEPARATE CLOUD SESSION titled WORKER M0-191 (SCHEDULER #20), base origin/main 9f8b69e6. Falsify rather than believe: a live worker holds the branch land/worker/M0-191; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+status: running — running — spawned 22:14Z 2026-09-24 by SCHEDULER #20 as WORKER M0-191 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/M0-191 and the session; never conclude queued from absence.
 order: at the head of the backlog, AHEAD of product (BOB #33 21:05Z: *now placed AHEAD of product: it cost 7+ of 16 workers*); SCHEDULER #20 dispatches by a scratch script until it lands (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none (a lane tool).
@@ -365,7 +366,7 @@ accepts-when: on the 21:03Z listing it names D-476, D-518, UI-93, REC-199, REC-2
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
 
 ### D-544 · running — **`13.statement-ack` PINS `CATALOG_VERSION`, so EVERY catalogue bump turns four gate checks red for a claim that says nothing about the version: construct-status's probe `export const CATALOG_VERSION = "1.28.0"` in `bio-plane/src/gate.mjs` (measured on main 9f8b69e6).** Found by D-463's worker: its bump made the probe MISS, and `status.mjs --check`, `status.test.mjs`'s zero-drift arm, plancheck's CONSTRUCT STATUS arm and `strandedwork`'s two plancheck-exit arms all followed — one cause, four failures. — owner M0.
-status: running — running — SPAWNED 2026-09-24 ~22:25Z by SCHEDULER #20 as a SEPARATE CLOUD SESSION titled WORKER D-544 (SCHEDULER #20), base origin/main 9f8b69e6. Falsify rather than believe: a live worker holds the branch land/worker/D-544; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+status: running — running — spawned 22:14Z 2026-09-24 by SCHEDULER #20 as WORKER D-544 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-544 and the session; never conclude queued from absence.
 order: after M0-191, AHEAD of product: it costs a diagnosis round in the gate of every row that moves the catalogue (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24; D-463's worker)
 milestone: M0
 interface: none.
@@ -376,7 +377,7 @@ accepts-when: a catalogue bump leaves `status.mjs --check` at 0 drift (the measu
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs D`).
 
 ### D-512 · running — **`replay` IS HONOURED WITHOUT SERVER VERIFICATION: the end state BOB #33 ruled is that a replayed promotion of any type or revision names its drive-provenance capture, whose held bytes' preserved promotion record lists this bundle and this revision's `bundle.md` SHA-256.** — owner RECORD.
-status: running — running — SPAWNED 2026-09-24 ~22:25Z by SCHEDULER #20 as a SEPARATE CLOUD SESSION titled WORKER D-512 (SCHEDULER #20), base origin/main 9f8b69e6. Falsify rather than believe: a live worker holds the branch land/worker/D-512; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+status: running — running — spawned 22:14Z 2026-09-24 by SCHEDULER #20 as WORKER D-512 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-512 and the session; never conclude queued from absence.
 order: after D-511, which it builds on (BOB #33, 17:05Z: *the end state, a build that depends on (1)*; SCHEDULER #18)
 milestone: M7
 interface: I3 — the integrator classifies.
@@ -387,7 +388,7 @@ accepts-when: a replay whose capture does not list the bundle and SHA-256 is ref
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
 
 ### M0-192 · running — **`d470-catalog-census.control.mjs` QUOTES `CATALOG_VERSION` AS A LITERAL NEEDLE, so every catalogue bump silently disarms its arm (d), MOVE THE VERSION: line 67 holds `'export const CATALOG_VERSION = "1.28.0";'`, hand-moved at c20-batch25 after it sat at 1.24.0 through four bumps (it would have thrown NOT ARMED).** Found by CONDUCT #20 (22:09Z). — owner M0.
-status: running — running — SPAWNED 2026-09-24 ~22:22Z by SCHEDULER #20 as a SEPARATE CLOUD SESSION titled WORKER M0-192 (SCHEDULER #20), base origin/main 9f8b69e6. Falsify rather than believe: a live worker holds the branch land/worker/M0-192; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+status: running — running — spawned 22:17Z 2026-09-24 by SCHEDULER #20 as WORKER M0-192 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/M0-192 and the session; never conclude queued from absence.
 order: after D-544, AHEAD of product: a control disarmed by an unrelated bump is a false gate result, and it recurs on every catalogue move (Bob's 17:41Z rule). Not merged with D-544: a different file and a different fix (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
@@ -398,7 +399,7 @@ accepts-when: with the constant bumped to a new value, arm (d) still arms and fa
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
 
 ### D-528 · running — **THE QUEUE TELLS EACH NAMED RECIPIENT OF A BIAS-DEBT OBLIGATION "This is not addressed to anybody": `app.html` `queueAssigneeHtml` reads `assignee == null` and never `recipients`, so the surface states something it can see is false.** Found by UI-93's worker (id minted by it). The DELEGATION RECORD (D-86) → UI on coord `CLAIMS.md` is dischargeable by this row. — owner UI.
-status: running — running — SPAWNED 2026-09-24 ~22:25Z by SCHEDULER #20 as a SEPARATE CLOUD SESSION titled WORKER D-528 (SCHEDULER #20), base origin/main 9f8b69e6. Falsify rather than believe: a live worker holds the branch land/worker/D-528; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+status: running — running — spawned 22:24Z 2026-09-24 by SCHEDULER #20 as WORKER D-528 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-528 and the session; never conclude queued from absence.
 order: after D-512, with the corrections: a surface stating a falsehood about the record is worse than a missing feature (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:06Z)
 milestone: M8
 interface: I3 consumer (IC-234).
@@ -409,7 +410,7 @@ accepts-when: an obligation with named recipients shows them, against a real-pla
 added: 2026-09-24 · SCHEDULER #19 (placed; `D-528` minted by UI-93's worker).
 
 ### D-530 · running — **`op=attest` REFUSES A PARTED CAPTURE NO_SUCH_CAPTURE, a false statement that tells a member to re-capture a document the record holds: its pre-flight (index.mjs ~9194) heads only `captures/<whole sha>`.** The ratify gate's `hasCapture(sha)` may answer `{present:false}` off the same whole-key head (not yet driven). Found by D-476's worker (B, C). — owner RECORD.
-status: running — running — SPAWNED 2026-09-24 ~22:29Z by SCHEDULER #20 as a SEPARATE CLOUD SESSION titled WORKER D-530 (SCHEDULER #20), base origin/main 9f8b69e6. Falsify rather than believe: a live worker holds the branch land/worker/D-530; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+status: running — running — spawned 22:27Z 2026-09-24 by SCHEDULER #20 as WORKER D-530 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-530 and the session; never conclude queued from absence.
 order: after D-528, with the corrections: a refusal that says a held document is absent (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:06Z)
 milestone: M2
 interface: I3 — the refusal changes, or attest succeeds; the integrator classifies.
@@ -420,7 +421,7 @@ accepts-when: attesting a held parted capture succeeds or is refused CAPTURE_HEL
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
 ### REC-217 · running — **A RECIPIENT'S READING ON A NEW CASE'S DRAFT CANNOT BIND TO THE CASE IT PRODUCED: nothing links a draft to its published case, so REC-194's provisional counts such a reading UNDETERMINED.** BOB #33 RULED 2026-09-24 19:14Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20): `op=publish` names the draft it publishes (`draft=`, optional, additive), and at that act the readings taken through that draft BIND to the case it produced — an ACT, recorded with the publisher and the time, stated in words in the case document. — owner RECORD.
-status: running — running — SPAWNED 2026-09-24 ~22:32Z by SCHEDULER #20 as a SEPARATE CLOUD SESSION titled WORKER REC-217 (SCHEDULER #20), base origin/main 9f8b69e6. Falsify rather than believe: a live worker holds the branch land/worker/REC-217; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+status: running — running — spawned 22:29Z 2026-09-24 by SCHEDULER #20 as WORKER REC-217 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/REC-217 and the session; never conclude queued from absence.
 order: after UI-106 and before D-521, as BOB ruled: *one RECORD row after REC-194 … place C-82.1's retirement as a small row after this one* (SCHEDULER #20, 2026-09-24)
 milestone: M10
 interface: I3 additive — `draft=` on `op=publish`, the stated link on the case document; the integrator mints and classifies the IC.
@@ -431,7 +432,7 @@ accepts-when: a recipient's reading on a new case's draft appears in the publish
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs REC`).
 
 ### D-552 · running — **`op=instance` RENDERS A FINDING A MEMBER ALREADY DISMISSED AND SAYS NOTHING ABOUT THE DECISION: `#assembleInstance` (store.mjs ~25693) never consults `proposal_dispositions` (the disposition read lives in `proposalsFeed`), and civicos-ui `progPaintInstance()` renders `inst.findings` verbatim, so a dismissed finding reads as an open question on the progression page.** Against D-79 (a decision AGES a finding and is never silently absent). Found via D-527's integration (CONDUCT #20 22:34Z). — owner RECORD, then UI (UI-108).
-status: running — running — SPAWNED 2026-09-24 ~22:38Z by SCHEDULER #20 as a SEPARATE CLOUD SESSION titled WORKER D-552 (SCHEDULER #20), base origin/main 9f8b69e6. Falsify rather than believe: a live worker holds the branch land/worker/D-552; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+status: running — running — spawned 22:35Z 2026-09-24 by SCHEDULER #20 as WORKER D-552 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-552 and the session; never conclude queued from absence.
 order: after D-540, with the corrections: a live surface stating an answered question as open (CLAUDE.md §2) (SCHEDULER #20, 2026-09-24; via CONDUCT #20 22:34Z)
 milestone: M4
 interface: I3 additive — a per-finding disposition view on two ops; the integrator mints and classifies the IC.
@@ -442,7 +443,7 @@ accepts-when: a dismissed finding on `op=instance` carries its disposition view 
 added: 2026-09-24 · SCHEDULER #20 (id minted by CONDUCT #20).
 
 ### D-533 · running — **`op=registeraudit` CALLS A PARTED CAPTURE'S BYTES MISSING AND THE RECORD UNSOUND: it heads only `captures/<whole sha>` (measured `unbacked: 1, sound: false`).** Found by D-476's worker (A). BOB #33 RULED 2026-09-24 21:17Z (cite until folded): YES — `sound` reads true for a row held IN PARTS when every part the record names is present, each part's digest verified; a fourth state "held in parts, all present"; a missing part is named; a row resolving neither way reads UNDETERMINED, counted OUTSIDE `sound`, never inside it. — owner RECORD.
-status: running — running — SPAWNED 2026-09-24 ~22:41Z by SCHEDULER #20 as a SEPARATE CLOUD SESSION titled WORKER D-533 (SCHEDULER #20), base origin/main 9f8b69e6. Falsify rather than believe: a live worker holds the branch land/worker/D-533; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+status: running — running — spawned 22:37Z 2026-09-24 by SCHEDULER #20 as WORKER D-533 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-533 and the session; never conclude queued from absence.
 order: after D-530, with the corrections: an audit calling held bytes missing (CLAUDE.md §2) (BOB #33, 21:17Z; SCHEDULER #19, 2026-09-24)
 milestone: M2
 interface: I3 — a fourth audit state; the integrator classifies.
@@ -453,7 +454,7 @@ accepts-when: a fully held parted capture audits "held in parts, all present" wi
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
 ### D-536 · running — **A READING DOES NOT CARRY ITS OWN PROVENANCE, so a re-read that returns different text is silent: nothing records the tier, the member that produced it, the pages transcribed, or a digest of the exact text classified.** FW-22's worker (finding 2, via CONDUCT #20). BOB #33 RULED YES 2026-09-24 21:25Z (cite until folded): a reading carries tier, producing member, pages transcribed and a SHA-256 of the exact text it classified; a re-read is compared to the earlier one and a disagreement is ATTRIBUTED ("tier 2 on ocr-worker returned different text for pages 3-4"); both readings are kept, neither overwrites; a reading from before this lands reads provenance UNDETERMINED, never inferred. Until it lands, M-143's rule stands (compare census runs only on tier 1 or on named documents). — owner CONTENT-PDF, then RECORD.
-status: running — running — SPAWNED 2026-09-24 ~22:41Z by SCHEDULER #20 as a SEPARATE CLOUD SESSION titled WORKER D-536 (SCHEDULER #20), base origin/main 9f8b69e6. Falsify rather than believe: a live worker holds the branch land/worker/D-536; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+status: running — running — spawned 22:38Z 2026-09-24 by SCHEDULER #20 as WORKER D-536 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-536 and the session; never conclude queued from absence.
 order: after D-533, in product order (BOB #33, 21:25Z: *after D-533*); the record's readings becoming attributable ahead of the risk-tier feature trio (SCHEDULER #19, 2026-09-24)
 milestone: M2
 interface: I5 — the reading's provenance columns; the integrator mints and classifies the IC.
@@ -462,6 +463,16 @@ depends-on: FW-22.
 scope: record tier, producing member, pages transcribed and the text's SHA-256 on each reading; compare a re-read and attribute any disagreement; keep both; legacy readings read provenance undetermined.
 accepts-when: a re-walk of D-66's sample reports, for each document whose class moved, which tier's text changed (the measured failure it moves: a silent re-read). NEGATIVE CONTROL: drop the text digest and the attribution arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### REC-214 · queued — **NO MEMBER CAN SET OR REVISE AN ACTION'S RISK TIER AFTER INTAKE, AND A REVISION WOULD LEAVE NO TRACE.** BOB #33 RULED 2026-09-24 (sent 21:18Z; recorded in the inbox entry of 21:55Z) (UI-101's design gap; cite until folded): the `actionrisktier` op, not yet on main (member class, `contribute`), writing through the one front-matter path every reader derives the tier from; a machine credential is refused with the existing MACHINE_CANNOT_SET_RISK_TIER; a member MAY revise any tier, up or down, as an AUTHORED act recording who, when and a REQUIRED reason; APPEND-ONLY — the prior tier, its author and reason stay readable in the action's tier history; never a silent overwrite. — owner RECORD.
+order: after D-533, first of the risk-tier trio in product order (plane, then UI-104, then REC-215), as BOB ruled; the field carries legal exposure, so the record must show a "do not file without counsel" was changed and by whom (SCHEDULER #19, 2026-09-24)
+milestone: M7
+interface: I3 additive — a new op and a tier history; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`action` is the impact substrate; `risk_tier`), with BOB #33's risk-tier ruling (sent by message 21:18Z, cited elsewhere as "21:21Z"; RECORDED in the BOB INBOX entry of 21:55Z, drained to `BOB-INBOX-drained.md` by SCHEDULER #20), which this row FOLDS into §2 in the same landing.
+depends-on: D-510.
+scope: the op; the append-only tier history on the action's read; "revised from 3 (by X) to 1 (by Y): <reason>" readable; a revision with no reason refused by name (catalogued, DEC-49).
+accepts-when: a member's revision appends history naming both authors and the reason; a reasonless revision is refused by name; a machine is refused MACHINE_CANNOT_SET_RISK_TIER (the measured failure it moves: no revision path at all). NEGATIVE CONTROL: let a revision overwrite without history and the history arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
