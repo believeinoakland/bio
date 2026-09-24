@@ -30,3 +30,4 @@ D-501	2026-09-24T05:22:42.391Z	SCHEDULER #18	D-481 findings: tier-2 award on raw
 D-502	2026-09-24T05:22:42.391Z	SCHEDULER #18	D-481 findings: tier-2 award on raw length; same-baseline column residue
 D-503	2026-09-24T05:33:58.651Z	SCHEDULER #18	index.mjs machine/operator fences not driven (D-494 finding)
 D-504	2026-09-24T05:42:15.442Z	SCHEDULER #18	D-453's open measurements (M-132)
+D-505	2026-09-24T05:53:51.155Z	SCHEDULER #18	no fence refuses a machine changing a member-set tier
