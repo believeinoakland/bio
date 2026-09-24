@@ -39,7 +39,12 @@ const RECORDED_TAIL = "</span> &middot; group instance</p>\";";
 const NONE_WORDS = "No group is recorded for this copy yet";
 const UNREAD_WORDS = "This copy could not read its group just now";
 const UNREAD_FALLBACK = "  return GROUP_LINE_UNREAD;\n}";
-const PAGE_READ = "      return new Response(setupPage(await publicInstanceGroup(env, \"bio\")),";
+/* RE-ANCHORED 2026-09-24 by D-475: the `/` route no longer writes its namespace as a literal — it reads `store=`
+   (`namespaceGate` then `pageStore`), so the page and op=instancegroup, the two surfaces over one reader, answer for
+   the same namespace. PAGE_READ follows the line; `page-reads-scratch` can no longer be spelled by swapping a literal
+   inside it and now arms on PAGE_STORE, which is where the namespace is decided. The arms are otherwise unchanged. */
+const PAGE_READ = "      return new Response(setupPage(await publicInstanceGroup(env, pageStore)),";
+const PAGE_STORE = "      const pageStore = url.searchParams.get(\"store\") === SCRATCH ? SCRATCH : \"bio\";";
 const OPS_ROW = "  instancegroup:       { classes: null,                         mutating: false },";
 const PUBLIC_SELECT = "    return slug ? { ok: true, group: slug } : { ok: true, group: null, detail: Store.NO_GROUP_RECORDED };";
 const PUBLIC_SILENCE = "        if (!pubOut.answered) return storeSilent(\"instancegroup\");";
@@ -109,7 +114,7 @@ const ARMS = {
      at their own first boots, so every install arm stays green; only the seed (made in bio) and the silence (injected
      in bio) can tell which record the page reads. */
   "page-reads-scratch": {
-    patches: [["index.mjs", PAGE_READ, "      return new Response(setupPage(await publicInstanceGroup(env, \"scratch\")),"]],
+    patches: [["index.mjs", PAGE_STORE, "      const pageStore = SCRATCH;"]],
     mustFail: ["P3b:", "P4:"],
   },
 

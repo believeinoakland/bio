@@ -5362,14 +5362,35 @@ export default {
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
     /* REC-163 / IC-174: the page names whose record this is — the group ITS record records, read when the page is
-       SERVED, through the one public read (`publicInstanceGroup`), pinned to `bio`: the instance's own record, as
-       op=verify's is. `setupPage` puts the slug in the served bytes, or says in words that none is recorded, or —
-       when the record did not answer — says THAT, never "none" and never a name. `no-store`, because the bytes now
-       carry a fact the record can change: a page kept from before a seed would go on saying none is recorded. */
+       SERVED, through the one public read (`publicInstanceGroup`). `setupPage` puts the slug in the served bytes,
+       or says in words that none is recorded, or — when the record did not answer — says THAT, never "none" and
+       never a name. `no-store`, because the bytes now carry a fact the record can change: a page kept from before a
+       seed would go on saying none is recorded.
+
+       D-475 — AND THE NAMESPACE IS THE CALLER'S TO NAME HERE, because NOTHING BELOW CAN REACH THIS ROUTE. This is an
+       HTML route: it answers before `path` and `op` exist, so D-456's `namespaceGate` and D-461's
+       `pinnedNamespaceGate`, both of which run at the op front door a few lines down, never see it. MEASURED: the
+       read was written `publicInstanceGroup(env, "bio")`, so `/?store=scratch` served `bio`'s slug as this copy's
+       own — a live verification whose whole no-write guarantee is naming its namespace (CLAUDE.md §5, D-325) read
+       production while believing it was in scratch — and `/?store=nonsense` did the same, which is D-456's own
+       defect surviving at the one route D-456 did not reach. Found by D-461's worker.
+
+       THE RULE IS op=instancegroup's, NOT A NEW ONE, and that is the decision rather than a convenience: this page
+       and that op are ONE READER (`publicInstanceGroup` — its own header says so) shown to a stranger, so a
+       namespace that does not exist is refused BY NAME through the very gate every other caller meets,
+       `store=scratch` reads scratch, and everything else reads `bio`. The page is deliberately NOT added to
+       D-461's pinned set: pinning one of two surfaces over one reader would make `store=scratch` mean two things on
+       the same copy — refused on the page, honoured on the op — and the op is exempt because it reads `store=`
+       itself, which is now exactly what the page does. `/version` and `/sign` are left alone on purpose: they
+       address no namespace, and a gate on a route that reads no record would be a fence tighter than its rule. */
     if (req.method === "GET" && !url.pathname.startsWith("/api")
-        && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op"))
-      return new Response(setupPage(await publicInstanceGroup(env, "bio")),
+        && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
+      const pageNamespace = namespaceGate(url);
+      if (pageNamespace) return pageNamespace;
+      const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
+      return new Response(setupPage(await publicInstanceGroup(env, pageStore)),
         { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+    }
 
     const path = url.pathname.replace(/^\/api\/?/, "/");
     const op = url.searchParams.get("op") || path.slice(1) || "selftest";
