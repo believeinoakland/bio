@@ -73,16 +73,6 @@ scope: measure the TJ displacement distribution over M-141's corpus; re-set the 
 accepts-when: the TJ threshold is the measured one, and M-133's agenda glue stays at 5 or below with no word lost (the measured failure it moves: the unmeasured 0.1 em constant). NEGATIVE CONTROL: restore -100 and the measured-threshold arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### M0-169 · queued — **TWO DERIVATIONS OF "A FIXTURE'S MODULE CLOSURE": `bio-plane/test/gatedeps.mjs` (M0-154; follows dynamic literals, lexer-blanked) and `civicos-ui/test/refusal-codes.test.mjs` `copyImports` (D-254; static-only, column-anchored).** Found by M0-154's worker. — owner M0 (UI reviews).
-order: after M0-168, with the gate instruments (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:50Z) AHEAD of the product rows by Bob's 17:41Z rule: a new import in gates.mjs breaks a hand-copied fixture with a false red (a false gate result costs a round) (SCHEDULER #19, 2026-09-24).
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a fixture derives what it carries; one derivation, not two).
-depends-on: M0-154.
-scope: one helper with a `dynamic: true|false` mode; refusal-codes reads it.
-accepts-when: both callers use the one helper and stay green. NEGATIVE CONTROL: add an import the static mode cannot see and the dynamic-mode arm names it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
 ### M0-170 · queued — **THREE MORE FIXTURES KEEP HAND-KEPT TOOL COPY LISTS: `pushguard.test.mjs` scratchRepo, `pushguard-check.test.mjs` and `retirable.test.mjs` (measured correct today).** Found by M0-154's worker. — owner M0.
 order: after M0-169, whose static mode it wires (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:50Z) AHEAD of the product rows by Bob's 17:41Z rule: a new import in gates.mjs breaks a hand-copied fixture with a false red (a false gate result costs a round) (SCHEDULER #19, 2026-09-24).
 milestone: M0
@@ -995,7 +985,7 @@ depends-on: M0-155.
 scope: (1) status.control.mjs removes `.status-harness/` on a clean run; (2) `.gitignore`'s pen preamble says pens are a driver's mechanism, gitignored and item-named, distinct from session scratch; (3) WORKER.md's scratch bullet adds "a control driver's declared, gitignored pen is not scratch".
 accepts-when: a clean status.control.mjs run leaves no `.status-harness/`. NEGATIVE CONTROL: remove the cleanup and the pen-gone arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:12Z; `node tools/mintid.mjs M0`).
-scope-add: 2026-09-24 by SCHEDULER #19 (D-497's worker's finding 3, via CONDUCT #20 17:25Z): about 11 control drivers write `${file}.pristine-<arm>` beside the source inside the worktree, an UNDECLARED pen (no .gitignore line), which BOB's ruling does not stand: battery-residue, contradiction-overstrict, d249-port, d301-census, d389-fullfetch, dec65-strength-reach, m041-instrument-census, m057-authority, rec174-supplyfetch, tally-through-pipe, walkfloor. Fix: a PEN from `mkdtempSync(join(tmpdir(), "<tag>-control-"))`, each pristine copy under it.
+scope-add: 2026-09-24 by SCHEDULER #19 (via CONDUCT #20, 17:25Z and 18:17Z): control drivers writing `${file}.pristine-<arm>` beside the source, an UNDECLARED pen BOB's ruling does not stand — battery-residue, contradiction-overstrict, d249-port, d301-census, d389-fullfetch, dec65-strength-reach, m041-instrument-census, m057-authority, rec174-supplyfetch, tally-through-pipe, walkfloor, and every `nc-*.mjs` harness (D-499 fixed nc-d64). Fix: a PEN from `mkdtempSync(join(tmpdir(), "<tag>-control-"))`.
 
 ### M0-174 · queued — **`mintid`'s `D` NAMESPACE STILL GRADES DUPLICATES ACROSS TWO SHAPES AS ONE: since DEBT's retirement (M0-140) a `D-` is minted as a PLAN ROW, so its allocation site is the heading `### D-n ·`; the DEBT-table rows `| D-n |` are LEGACY allocations frozen at D-443. A heading and a legacy row for one id (M-57's 17 pairs) are the item and the row it closed, never a duplicate.** BOB #33 RULED, 2026-09-24 17:35Z (drained to `BOB-INBOX-drained.md`; cite until folded). — owner M0.
 order: low in the M0 group, beside M0-172: small; fold into an open M0 batch if one fits (BOB #33, 17:35Z; SCHEDULER #19)
@@ -1296,3 +1286,13 @@ depends-on: none.
 scope: consolidate each multi-site code behind one helper, one code per slice, starting with `NO_SUCH_BUNDLE` (15 sites); re-read the partition each slice.
 accepts-when: the sliced code reads single-site and the F4 count falls by one. NEGATIVE CONTROL: restore one inline literal, and arm F fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-344 · queued — **THE CONTROL REGISTER CANNOT SEE A QUALIFIED `NEGATIVE CONTROL` DECLARATION: `control-register.mjs` `markerPositions` counts the phrase only when a separator follows it directly, so `NEGATIVE CONTROL (…)` (over sixty suites) and `NEGATIVE CONTROL, …` (three in `corpuscheck.test.mjs`) are invisible, and `register-grammar.test.mjs` C5e works around the blind spot rather than fixing it.** — owner M0 (VERIFICATION).
+order: after D-272: the register every suite's control is counted by under-reads, so coverage is claimed on less than it reads (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` §"The negative-control register".
+depends-on: none.
+scope: `markerPositions` admits one parenthesised or comma qualifier before a separator on the same line; a bare phrase with no separator still does not count; C5e corrected in the same change.
+accepts-when: `corpuscheck.test.mjs` reads five declarations and C5e's workaround falls, in `register-grammar.test.mjs`. NEGATIVE CONTROL: restore the strict separator check, and the "a qualified marker is a declaration" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
