@@ -4242,7 +4242,11 @@ var frameBytesOf = (w, h) => w * h * 4;
 var REFUSALS2 = {
   R2_NOT_CONFIGURED: "this member holds no CAPTURES binding, so it cannot read the bytes",
   BAD_SHA: "capture_sha must be 64 lowercase hex",
-  BAD_STORE: "store must be a namespace token",
+  BAD_STORE: "store must be named: this member reads a capture from one namespace and guesses none",
+  /* D-478. Deliberately says what it is NOT as well as what it is: the answer this replaces was NOT_FOUND, and a
+     reader who cannot tell the two apart reads "there is no such capture" where the truth is "there is no such
+     namespace" (CLAUDE.md §1 — *not found* is not *absent*). */
+  NAMESPACE_UNKNOWN: "no namespace by that name exists on any instance this member can be bound to, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture",
   BAD_PAGES: "pages must be a non-empty array of 0-based page numbers",
   NOT_FOUND: "no capture with that sha in that store",
   ENGINE_ABSENT: "the OCR engine did not load; this member cannot transcribe anything",
@@ -4440,6 +4444,7 @@ var SURFACE = {
   transcribe: { method: "POST", mutating: false },
   version: { method: "GET", mutating: false }
 };
+var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var json = (obj, status = 200) => new Response(JSON.stringify(obj), {
   status,
   headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
@@ -4458,8 +4463,16 @@ async function handleTranscribe(req, env) {
   const store = typeof body?.store === "string" ? body.store : "";
   if (!/^[0-9a-f]{64}$/.test(sha))
     return json({ ok: false, reason: "BAD_SHA", detail: REFUSALS2.BAD_SHA }, 400);
-  if (!store || !/^[a-z0-9_-]+$/i.test(store))
+  if (typeof body?.store !== "string")
     return json({ ok: false, reason: "BAD_STORE", detail: REFUSALS2.BAD_STORE }, 400);
+  if (!NAMESPACES.includes(store))
+    return json({
+      ok: false,
+      reason: "NAMESPACE_UNKNOWN",
+      detail: REFUSALS2.NAMESPACE_UNKNOWN,
+      asked: store.slice(0, 80),
+      namespaces: [...NAMESPACES]
+    }, 400);
   const pages = Array.isArray(body?.pages) ? body.pages : null;
   if (!pages || !pages.length)
     return json({ ok: false, reason: "BAD_PAGES", detail: REFUSALS2.BAD_PAGES }, 400);

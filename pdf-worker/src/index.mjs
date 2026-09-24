@@ -75,6 +75,31 @@ export const SURFACE = {
  * gated follow-on and will refine this. Overridable via env for testing/tuning. */
 const DEFAULT_MAX_PDF_BYTES = 16 * 1024 * 1024;
 
+/* D-478 — THE NAMESPACES THIS MEMBER WILL READ FROM: EXACTLY `bio` OR `scratch`, AND NOTHING ELSE.
+ *
+ * WHAT WAS WRONG, AND WHY IT IS A RECORD DEFECT RATHER THAN A WRITE DEFECT. The store test here read
+ * `/^[a-z0-9_-]+$/i` — "a namespace token" — so `biosmoke`, `Scratch` and any other well-shaped name was accepted
+ * and spent as the R2 key prefix `<store>/captures/<sha>`. Nothing was ever written (this member holds no STORE
+ * binding and never calls .put/.delete; IC-237 measured it), so the bucket was safe — but the ANSWER was not:
+ * a bucket with no key under a prefix that does not exist answers the same 404 `NOT_FOUND` as a capture that is
+ * genuinely absent from a real namespace. That is the one conflation CLAUDE.md §1 names outright — *not found* is
+ * not *absent* — and it is the worse half of the pair, because the caller reads a fact about the CAPTURE where
+ * the truth is a fact about the NAME it asked under. A member that answers NOT_FOUND under a namespace no
+ * instance holds is the record claiming more than it can support.
+ *
+ * WHY THE PLANE'S SPELLING IS HONEST HERE. The plane's set is not per instance: `namespaceGate` holds
+ * `Object.freeze(["bio", SCRATCH])` in code, so the fact this member states — "no such namespace exists" — is the
+ * same fact on every instance it can be bound to (D-456, C-78.1, IC-237; the member side for `agent-worker` is
+ * D-462/IC-253 and this is its I6 half). It is kept here as a COPY because a fleet member cannot import the
+ * plane's `index.mjs`, and a copy ages; `test/pdf-worker.test.mjs` reads the plane's `NAMESPACES` from its source
+ * and requires this set to equal it, so the day the plane gains a namespace this member's suite goes red. The set
+ * is exact and case-sensitive for the plane's reason: a Durable Object name, and an R2 key, is an exact string.
+ *
+ * NOT NAMING ONE IS A DIFFERENT CONDITION and keeps its old code, BAD_STORE — but it is now the condition it
+ * always claimed to be: `store` ABSENT or not a string. An empty `store: ""` is a NAMED value and meets
+ * NAMESPACE_UNKNOWN with the rest, which is the same line `agent-worker` draws. */
+const NAMESPACES = Object.freeze(["bio", "scratch"]);
+
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
     status,
@@ -119,8 +144,23 @@ async function handleStructure(req, env) {
   const store = typeof body?.store === "string" ? body.store : "";
   if (!/^[0-9a-f]{64}$/.test(sha))
     return json({ ok: false, reason: "BAD_SHA", detail: "capture_sha must be 64 lowercase hex" }, 400);
-  if (!store || !/^[a-z0-9_-]+$/i.test(store))
-    return json({ ok: false, reason: "BAD_STORE", detail: "store must be a namespace token" }, 400);
+  if (typeof body?.store !== "string")
+    return json({ ok: false, reason: "BAD_STORE",
+                  detail: "a capture lives inside one namespace and this member guesses none: the caller must "
+                        + "say which. A default namespace here would read the real record for a caller who "
+                        + "believed it was reading a scratch one." }, 400);
+  /* D-478: a NAMED namespace that is not exactly one of NAMESPACES — `biosmoke`, `Scratch`, the empty string — is
+     refused by the plane's own code, with `asked` and `namespaces` beside it, and R2 was never touched. Before
+     this, such a name reached R2 as a key prefix and came back NOT_FOUND: a statement about the capture where the
+     truth was a statement about the namespace. */
+  if (!NAMESPACES.includes(store))
+    return json({ ok: false, reason: "NAMESPACE_UNKNOWN",
+                  detail: "a capture is read from the namespace the caller names, and no namespace by that name "
+                        + "exists on any instance this member can be bound to, so nothing was read. There are "
+                        + "two: the record itself and a scratch area kept apart for testing, and the name must "
+                        + "match one of them exactly; they are listed beside this message. This is NOT the same "
+                        + "answer as NOT_FOUND, which says the namespace exists and holds no such capture.",
+                  asked: store.slice(0, 80), namespaces: [...NAMESPACES] }, 400);
 
   // I1 §2: the R2 key shape, promoted here from documentation to a load-bearing
   // dependency with a second consumer. READ ONLY — never head/put/delete.

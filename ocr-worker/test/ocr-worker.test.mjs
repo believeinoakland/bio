@@ -40,6 +40,11 @@
  * RE-DERIVED from the independent decoder, never from a failing run's "got".
  *
  * NEGATIVE CONTROL: RUN 2026-09-12 by `node test/ocr-worker.control.mjs`, SIX ARMS, each armed ALONE with the others held open, each REBUILDING the committed artifact (a mutation nobody rebuilds arms nothing — the suite boots the artifact), each declared before arming and each restored by `cp` from a per-arm pristine copy verified by sha256 AND by `cmp` with the byte count printed and floored — never by `git checkout --`, which restores to HEAD and would silently discard uncommitted work (CLAUDE.md, measured twice in two days). BASELINE 70 pass / 0 fail / exit 0 / foot reached, before each arm and after the last. (a) the PNG reader stops stripping the scanline FILTER BYTE, so every row's samples shift by one byte -> **69/1: the INDEPENDENT-digest arm alone, and THE TEXT PINS HELD, which is a finding about the arm rather than about the subject and is kept rather than smoothed — a UNIFORM horizontal shift of the whole raster does not change what the page SAYS, so the text this suite quotes is BLIND to it and only the Pillow-derived digest sees it. The digest arm is the load-bearing one here, exactly as FL-9 measured the input-hash arm being load-bearing over byte-identity**; (b) `chooseChunk` stops naming what it deferred -> **67/3**, the ONE-PAGE-PER-INVOCATION arms, because a member that quietly drops pages returns half a document with no way to tell; (c) the measured frame bound is raised past the figure that was KILLED -> **66/4**, the over-bound refusal arms; (d) the confidence basis is reported as a model's self-report rather than `engine` -> **68/2**, the basis arm and the plane's own imported `checkConfidence`, which refuses by BASIS and never by value; (e) the anchor's rect is dropped from every region -> **67/3**, the anchor arms and the plane's own imported `checkAnchor` — **and its FIRST run reported `-1 pass, -1 fail, foot NOT REACHED`: a `TypeError` on an unguarded `r.source.rect.length` ENDED THE MODULE through no assertion at all, and only the foot sentinel turned that silence into a red. That is this repository's most expensive control defect met in this item's own instrument; the reads are now null-tolerant and the arm re-run**; (f) OVER-STRICTNESS, a real but irrelevant field on the member's wire answer -> **70/0, the baseline exactly**, because a suite that fails on any change at all is a suite nobody can edit. 6 arms run, 0 not as declared on the final run, tree restored byte-identical and re-green at 70/0.
+ * **RE-MEASURED 2026-09-24 BY D-478 (cloud worker, base `e9b21be6`), because D-478 changed this suite and every figure above went stale the moment it did — corrected, never left standing. THE PEN RAN OUTSIDE THE WORKTREE** — `mkdtempSync(tmpdir())`, moved there by this item on BOB #32's ruling of the same day, which answers both horns at once (outside the tree AND unique per run, so no concurrent worker can share the path) and needs nobody to remember an option; the reasoning is at the `PEN` line. **55 of the 81 control harnesses that declare a pen still keep it in the worktree** and 7 already use this idiom — a class D-478 REPORTS to SCHEDULER rather than sweeps. New BASELINE **87 pass / 0 fail / exit 0 / foot reached** (was 70/0; +17 assertions, all D-478's §8 and §8b). Re-measured: (a) 86/1 · (b) 84/3 · (c) 83/4 · (d) 85/2 · (e) 84/3 · (f) 87/0, the baseline exactly. **8 arms run, 0 NOT as declared**, every restore byte-identical by sha256 AND `cmp`, tree re-green at 87/0.
+ * **SECTION N — D-478: THE NAMESPACE A CAPTURE IS READ FROM IS EXACTLY `bio` OR `scratch`, AND AN UNKNOWN ONE IS REFUSED BY NAME RATHER THAN ANSWERED NOT_FOUND.**
+ *   (N1) **D-478'S NAMED CONTROL — WIDEN THE SHAPE AGAIN.** The member's namespace test goes back to `/^[a-z0-9_-]+$/i`, the constant left intact -> **78 pass, 9 FAIL**: `store=biosmoke` fails BY NAME with its detail row and the refusal-lists-that-set row, and so do the hyphenated, underscored, `Scratch`, `BIO`, `ocrsuite` and distinguishability arms — **the widened member TRANSCRIBED a page from a namespace no instance holds**, which §8b can say because it seeds the scan's own bytes under that very prefix rather than refusing over an empty bucket. Held as declared: the set-equals-the-plane's pin, both BAD_STORE arms, the NOT_FOUND arm, the real page's arms, the chunk rule, the anchor arms and the writes-nothing arms.
+ *   **AND THE NAMED-EMPTY AND NOT-A-TOKEN ARMS HELD, WHICH IS A PROPERTY OF THE ARM AND WAS DECLARED WRONG FIRST ON `pdf-worker`'s N1 (4 of 5 named) BEFORE BEING DECLARED RIGHT HERE — recorded, not smoothed.** N1 swaps the CONDITION and leaves the REFUSAL BODY standing, so a name that fails `/^[a-z0-9_-]+$/i` never reaches R2 under either shape and keeps answering NAMESPACE_UNKNOWN. That is precisely what makes the SHAPE and the SET separately visible, and it is why N1 and N2 are two arms rather than one: **N1 can only reach the names the OLD SHAPE ACCEPTED.** The three it cannot reach are now MUST-NOTs, where an arm reaching them would itself be the finding.
+ *   (N2) THE COPY AGES. The member's NAMESPACES gains `biosmoke` -> **82 pass, 5 FAIL**: the set-EQUALS-the-plane pin and the refusal-lists-that-set arm fail, and so do the `biosmoke` rows (it is ACCEPTED now and transcribes the seeded page); the plane-set-was-READ arm, both BAD_STORE arms, the OTHER unknown names and the NOT_FOUND arm HELD.
  */
 import "../../bio-plane/test/sandbox.mjs";  /* D-186: owns $TMPDIR for this process */
 
@@ -157,7 +162,11 @@ const TEXTY = textPagePdf();
 
 const mf = new Miniflare({ workers: [ocrWorkerDef({ bindings: { VERSION: "member-suite" } })] });
 const bucket = await mf.getR2Bucket("CAPTURES");
-const STORE = "ocrsuite";
+/* D-478: WAS `"ocrsuite"`, AND THAT ASSERTED THE DEFECT. No instance holds a namespace by that name, so every
+   arm in this file drove the member under a name that does not exist and the member answered anyway — which is
+   precisely the condition D-478 closes. Corrected in place rather than exempted: the suite now names a namespace
+   that exists, and the non-existent ones are driven deliberately, in §6's refusal rows. */
+const STORE = "scratch";
 const puts = [["scan", SCAN], ["blank", BLANK], ["noise", NOISE], ["huge", HUGE], ["texty", TEXTY]];
 const shaOf = new Map();
 for (const [name, bytes] of puts) {
@@ -443,16 +452,85 @@ console.log("\n--- 8 · the refusals that keep a document HONESTLY UNREAD ---");
     (await ask("texty")).body.refusal.render.reason, "PAGE_HAS_TEXT_LAYER");
   t("a bad sha is refused before anything is read",
     (await call({ capture_sha: "nope", store: STORE, pages: [0] })).body.reason, "BAD_SHA");
-  t("a bad store token likewise",
-    (await call({ capture_sha: SCAN_SHA, store: "not a token", pages: [0] })).body.reason, "BAD_STORE");
+  /* D-478: `"not a token"` IS A NAMED namespace — one no instance holds — so it reads NAMESPACE_UNKNOWN now,
+     not BAD_STORE. The old assertion was wrong about what BAD_STORE means: it never drove an ABSENT store at
+     all, because the handler coerced a missing field and a bad one to the same `""`. BAD_STORE is now the
+     condition it always claimed to be, and it is driven on its own line below. */
+  t("a namespace that is not even a token is refused by NAME, not as a shape",
+    (await call({ capture_sha: SCAN_SHA, store: "not a token", pages: [0] })).body.reason, "NAMESPACE_UNKNOWN");
+  t("store ABSENT — the caller named no namespace at all — is BAD_STORE",
+    (await call({ capture_sha: SCAN_SHA, pages: [0] })).body.reason, "BAD_STORE");
+  t("store that is not a string likewise",
+    (await call({ capture_sha: SCAN_SHA, store: 7, pages: [0] })).body.reason, "BAD_STORE");
   t("an empty page list is refused rather than read as `the whole document`",
     (await call({ capture_sha: SCAN_SHA, store: STORE, pages: [] })).body.reason, "BAD_PAGES");
   const missing = await call({ capture_sha: "0".repeat(64), store: STORE, pages: [0] });
   t("a capture that is not there is a 404 naming it", [missing.status, missing.body.reason], [404, "NOT_FOUND"]);
   t("every reason this member emits is DECLARED in its own refusal table",
-    ["BAD_SHA", "BAD_STORE", "BAD_PAGES", "NOT_FOUND", "FRAME_OVER_MEASURED_BOUND",
+    ["BAD_SHA", "BAD_STORE", "NAMESPACE_UNKNOWN", "BAD_PAGES", "NOT_FOUND", "FRAME_OVER_MEASURED_BOUND",
      "NOTHING_TRANSCRIBED", "PAGE_NOT_RENDERABLE", "PIXELS_UNREADABLE"]
       .filter((k) => !(k in REFUSALS)), []);
+}
+
+console.log("\n--- 8b · D-478: *not found* is not *absent* — the namespace this member reads from is exactly `bio` or `scratch` ---");
+{
+  /* THE ARM THAT COSTS SOMETHING TO PRODUCE. An empty bucket refusing an unknown namespace proves NOTHING: the
+     refusal and the absence are indistinguishable, which is the whole defect D-478 closes, one level up. So the
+     SCANNED PAGE'S OWN BYTES are put under the unknown prefix first — if the member still spent that name on R2
+     it would find them and transcribe the page, and a green here would be free. It must refuse a namespace whose
+     bytes are sitting right there. */
+  await bucket.put(`biosmoke/captures/${SCAN_SHA}`, SCAN);
+  const unknown = await call({ capture_sha: SCAN_SHA, store: "biosmoke", pages: [0] });
+  t("store=biosmoke -> 400 NAMESPACE_UNKNOWN, naming what was asked and what exists",
+    [unknown.status, unknown.body.reason, unknown.body.asked, unknown.body.namespaces],
+    [400, "NAMESPACE_UNKNOWN", "biosmoke", ["bio", "scratch"]]);
+  t("  and it is refused EVEN THOUGH the bytes sit under that very prefix — the fence is the NAME, not an empty bucket",
+    (await bucket.get(`biosmoke/captures/${SCAN_SHA}`)) !== null, true);
+  t("  a detail a reader can act on, and it says which of the two facts this is",
+    [(unknown.body.detail ?? "").length > 40, /NOT_FOUND/.test(unknown.body.detail ?? "")], [true, true]);
+
+  /* THE DISCRIMINATION THIS ROW IS ABOUT. The two answers must not be the same answer. */
+  const absent = await call({ capture_sha: "0".repeat(64), store: STORE, pages: [0] });
+  t("a capture genuinely absent from a namespace that EXISTS still reads 404 NOT_FOUND",
+    [absent.status, absent.body.reason], [404, "NOT_FOUND"]);
+  t("  so the two are distinguishable on the wire: 400 NAMESPACE_UNKNOWN vs 404 NOT_FOUND",
+    [unknown.status, absent.status], [400, 404]);
+
+  /* THE LABEL IS A LITERAL PER ROW, NOT COMPOSED THROUGH A `${…}` SLOT — M025's rule: a driver that quotes a
+     label it can only match by eating the slot goes stale the moment the value moves. Written the composed way
+     first and caught by `m025-arm-anchor-witness.test.mjs` on this item's own first gate. */
+  for (const [label, name] of [
+    ["a hyphenated one (biosmoke-fleet) -> 400 NAMESPACE_UNKNOWN",     "biosmoke-fleet"],
+    ["an underscored one (bio_smoke) -> 400 NAMESPACE_UNKNOWN",        "bio_smoke"],
+    ["a case variant (Scratch) -> 400 NAMESPACE_UNKNOWN",              "Scratch"],
+    ["a case variant (BIO) -> 400 NAMESPACE_UNKNOWN",                  "BIO"],
+    ["this suite's OWN former namespace (ocrsuite) -> 400 NAMESPACE_UNKNOWN", "ocrsuite"],
+    ["a namespace named EMPTY -> 400 NAMESPACE_UNKNOWN",               ""],
+  ]) {
+    const r = await call({ capture_sha: SCAN_SHA, store: name, pages: [0] });
+    t(label, [r.status, r.body.reason], [400, "NAMESPACE_UNKNOWN"]);
+  }
+
+  /* OVER-STRICTNESS. Correct work must still pass. A fence tighter than its rule is an undeclared interface
+     change wearing the costume of caution — and `scratch` here is the namespace every other arm in this file
+     drives, so its acceptance is asserted by the whole suite; `bio` is asserted here because nothing else does. */
+  await bucket.put(`bio/captures/${SCAN_SHA}`, SCAN);
+  const realNs = await call({ capture_sha: SCAN_SHA, store: "bio", pages: [0] });
+  t("the namespace `bio` EXISTS and is answered, not refused", [realNs.status, realNs.body.ok], [200, true]);
+
+  /* THE COPY AGES. This member cannot import the plane's `index.mjs`, so its set is a copy; the copy is pinned to
+     the plane's own declaration READ FROM ITS SOURCE, never to a value retyped here (`agent-worker` §3's A2). */
+  const PLANE_INDEX = readFileSync(fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url)), "utf8");
+  const ENTRY = readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+  const scratchName = (PLANE_INDEX.match(/^const SCRATCH = "([^"]+)";$/m) || [])[1];
+  const planeSet = ((PLANE_INDEX.match(/^const NAMESPACES = Object\.freeze\(\[([^\]]*)\]\);$/m) || [])[1] || "")
+    .split(",").map((x) => x.trim()).filter(Boolean)
+    .map((x) => (x === "SCRATCH" ? scratchName : JSON.parse(x)));
+  const memberSet = JSON.parse(((ENTRY.match(/const NAMESPACES = Object\.freeze\((\[[^\]]*\])\);/) || [])[1]) || "null");
+  t("the plane's namespace set was READ from its source (not an empty corpus)", planeSet.length >= 2, true);
+  t("this member's namespace set EQUALS the plane's `namespaceGate` set", memberSet, planeSet);
+  t("and the refusal lists exactly that set", unknown.body.namespaces, planeSet);
 }
 
 console.log("\n--- 9 · IT WROTE NOTHING, and that is measured rather than argued ---");
