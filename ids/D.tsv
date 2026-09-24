@@ -17,3 +17,4 @@ D-486	2026-09-24T02:40:00.000Z	SCHEDULER #18	BOB #32 ruling on D-464 finding 1: 
 D-487	2026-09-24T02:45:00.000Z	SCHEDULER #18	REC-190 finding: doorbell.test clock-edge at the knock bucket
 D-490	2026-09-24T03:18:20.731Z	SCHEDULER #18	D-64 findings: renderer; render column on capture_requests
 D-491	2026-09-24T03:18:20.731Z	SCHEDULER #18	D-64 findings: renderer; render column on capture_requests
+D-492	2026-09-24T03:25:31.801Z	SCHEDULER #18	D-64 render-allowance admits concurrent renders against one spent_ms
