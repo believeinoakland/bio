@@ -327,7 +327,11 @@ section("D-293 · THE RECORD — keyed by the TREE, written only for a CLEAN tre
   appendFileSync(join(F.root, "tools/lonely.mjs"), "// uncommitted\n");
   const dirty = gates(F.root);
   t("a DIRTY tree is NOT recorded", runsFor(F.root, tree).length, 1);
-  t("...and the gate says why", dirty.out.includes("NOT RECORDED — the tree was not clean"), true);
+  /* M0-146: AND NAMES THE PATH. "not clean" alone cost D-487 fourteen minutes against a gate log it had written
+     itself, so the refusal names the dirty paths and where a worker's scratch belongs instead. */
+  t("...and the gate says why, and NAMES the path that made the tree dirty",
+    [dirty.out.includes("NOT RECORDED — the tree was not clean"), dirty.out.includes("tools/lonely.mjs"),
+     dirty.out.includes("SESSION")], [true, true, true]);
   git(["checkout", "-q", "--", "."], F.root);
 
   /* --full, so the battery step that dirties the tree RUNS whatever the selection rule says: this arm

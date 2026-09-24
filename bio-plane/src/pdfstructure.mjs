@@ -1202,6 +1202,36 @@ async function pageContent(doc, pageMap) {
   return parts.join("\n");
 }
 
+/* D-481 — THE TEXT MATRIX, ENOUGH OF IT TO KNOW WHERE A LINE IS.
+ *
+ * A PDF matrix is [a b c d e f]:  x' = a·x + c·y + e ;  y' = b·x + d·y + f.
+ * `matMul(A, B)` is "apply A, then B", the order every PDF operator composes in
+ * (ISO 32000-1 §8.3.3): `cm` premultiplies the CTM, `Td` premultiplies the text
+ * LINE matrix. Only the translation row is read back (`baselineOf`), because the
+ * only question asked of it is WHERE THE BASELINE IS.
+ *
+ * WHAT THIS DOES NOT MODEL, stated because a reader would otherwise assume it:
+ * glyph ADVANCE. No font here carries /Widths or /W, so the pen's position after
+ * a shown string is unknown, and only positions a positioning OPERATOR states are
+ * known. See the note in extractPageText on what that costs. */
+const IDENTITY_MATRIX = Object.freeze([1, 0, 0, 1, 0, 0]);
+function matMul(a, b) {
+  return [
+    a[0] * b[0] + a[1] * b[2],
+    a[0] * b[1] + a[1] * b[3],
+    a[2] * b[0] + a[3] * b[2],
+    a[2] * b[1] + a[3] * b[3],
+    a[4] * b[0] + a[5] * b[2] + b[4],
+    a[4] * b[1] + a[5] * b[3] + b[5],
+  ];
+}
+/** The device-space y of a text line matrix under a CTM — the baseline. */
+const baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
+/** Float slack only. Any baseline move a document can SEE is orders above this,
+ *  so "any y change breaks the line" survives it; identical inputs through
+ *  identical multiplies do not drift, and non-identical paths to one baseline do. */
+const BASELINE_EPS = 1e-6;
+
 /** Extract Tier 1 text from one page. Returns { text, undetermined:[markers] }.
  *  `fontCache` is keyed by font object so a font shared across pages is parsed
  *  once. Every undecodable region is recorded, never rendered. */
@@ -1277,6 +1307,55 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     for (let i = stack.length - 1; i >= 0; i--) if (stack[i].t === type) return stack[i];
     return null;
   };
+  /** The last `n` numeric operands, in the order they were written, or null. */
+  const numArgs = (n) => {
+    const out = [];
+    for (let i = stack.length - 1; i >= 0 && out.length < n; i--) {
+      if (stack[i].t === "num") out.unshift(stack[i].v);
+    }
+    return out.length === n ? out : null;
+  };
+
+  /* D-481 — A LINE BREAKS WHEN THE BASELINE MOVES, NOT WHEN THE PEN MOVES.
+   *
+   * MEASURED, not assumed. Until this item every `Td`, `TD` and `Tm` pushed a
+   * newline, on the reading that a positioning operator starts a line. It does
+   * not: `Td tx 0` moves ALONG the current baseline, and a whole class of
+   * producers positions EVERY GLYPH that way. Oakland's own
+   * `Budget-Basics-FY23-25.pdf` (Skia/PDF m131, 11 pages, fetched 2026-09-24)
+   * is written `<0021> Tj  30.6698 0 Td <01E3> Tj  11.47 0 Td <024E> Tj …`, one
+   * `Td` per glyph, so Tier 1 read it as 4,496 one-character lines — 47 words in
+   * the whole document — while the glyphs, the SPACES INCLUDED, were all there.
+   * The record said far less than the document held, and said it confidently.
+   *
+   * THE RULE, and it is the PDF's own: the text LINE matrix is what a line is.
+   *   - `Td`/`TD` with ty = 0 translate along the baseline  -> NO break.
+   *   - `Tm` landing on the current line's baseline         -> NO break.
+   *   - `T*`, `'`, `"`, and any y change                    -> BREAK.
+   * The baseline is read in DEVICE space (the line matrix composed with the
+   * CTM), never from the line matrix alone, because this same document gives
+   * every one of its real lines the IDENTICAL `1 0 0 -1 .015625 44 Tm` and
+   * separates them with `cm` — so a reading that trusted `Tm` alone would fuse
+   * all eleven pages into one line and count MORE words for it. That is why
+   * `q`, `Q` and `cm` are interpreted here.
+   *
+   * WHAT IT COSTS, stated rather than left to be discovered: two runs on ONE
+   * baseline separated only by a horizontal jump — table columns — are now
+   * CONCATENATED where they used to be split by a newline. Closing that needs
+   * the pen's position, which needs glyph widths (/Widths, /W), which this
+   * module does not read; a gap threshold guessed without them would be an
+   * invented figure. Reported as a follow-up rather than guessed here.
+   *
+   * The inline-image option stays OFF for this walk (see tokenizeContent), so
+   * an inline image's sample bytes can still be read as operators — including,
+   * now, as `cm`. That is the same exposure the walk already had to a stray
+   * `Td`, neither widened nor closed by this item. */
+  let ctm = IDENTITY_MATRIX.slice();   // the current transformation matrix
+  const ctmStack = [];                 // q / Q
+  let tlm = IDENTITY_MATRIX.slice();   // the text LINE matrix; BT resets it
+  let leading = 0;                     // TL, the leading T* moves by
+  let lineY = null;                    // the baseline of the line being written
+  const breakLine = () => { pieces.push("\n"); lineY = baselineOf(tlm, ctm); };
 
   for (const tk of toks) {
     if (tk.t !== "op") { stack.push(tk); continue; }
@@ -1305,14 +1384,54 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       }
       case "'":
       case '"': {
-        // ' : next line then show;  " : aw ac (string) — next line then show
-        pieces.push("\n");
+        // ' : next line then show;  " : aw ac (string) — next line then show.
+        // Both are T* followed by Tj, so both MOVE the line matrix and BREAK.
+        tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
+        breakLine();
         const st = lastOfType("str");
         if (st) show(st.bytes);
         break;
       }
-      case "Td": case "TD": case "Tm": case "T*":
-        pieces.push("\n"); // a new text line
+      case "q":
+        ctmStack.push(ctm.slice());
+        break;
+      case "Q":
+        if (ctmStack.length) ctm = ctmStack.pop();
+        break;
+      case "cm": {
+        const m = numArgs(6);
+        if (m) ctm = matMul(m, ctm);
+        break;
+      }
+      case "BT":
+        tlm = IDENTITY_MATRIX.slice(); // BT resets the text and line matrices
+        break;
+      case "TL": {
+        const a = numArgs(1);
+        if (a) leading = a[0];
+        break;
+      }
+      case "Td": case "TD": {
+        const a = numArgs(2);
+        if (!a) break;
+        const [tx, ty] = a;
+        if (tk.v === "TD") leading = -ty;
+        tlm = matMul([1, 0, 0, 1, tx, ty], tlm);
+        if (ty !== 0) breakLine();
+        else if (lineY === null) lineY = baselineOf(tlm, ctm);
+        break;
+      }
+      case "Tm": {
+        const m = numArgs(6);
+        if (!m) break;
+        tlm = m;
+        const y = baselineOf(tlm, ctm);
+        if (lineY === null || Math.abs(y - lineY) > BASELINE_EPS) breakLine();
+        break;
+      }
+      case "T*":
+        tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
+        breakLine();
         break;
       default:
         break;

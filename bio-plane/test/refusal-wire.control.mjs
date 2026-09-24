@@ -7,7 +7,7 @@
  *
  *     node test/refusal-wire.control.mjs            (from bio-plane/)
  *
- * NINE ARMS (seven D-262's, h and i REC-185's), each armed ALONE with every other defence held OPEN, DECLARED
+ * THIRTEEN ARMS (seven D-262's, h and i REC-185's, j and k D-494's, l and m D-495's — relabelled from j/k at the c20-batch17 union), each armed ALONE with every other defence held OPEN, DECLARED
  * BEFORE ARMING (the declarations are in the subject suite's own
  * `NEGATIVE CONTROL:` header so the next session re-runs them in one step), and
  * every restore verified BY sha256 AND BY CONTENT (`cmp`) against a UNIQUELY
@@ -127,7 +127,18 @@ const arm = (id, label, file, patch, declared) => {
     results.push({ id, label, declared, actual: verdict, pass: r.pass, fail: r.fail, exit: r.exit, out: r.out });
     console.log(`\nARM ${id} — ${label}\n  declared ${declared} · actual ${verdict} · ${r.pass} pass, ${r.fail} fail · exit ${r.exit}`);
     if (verdict === "RED") {
-      for (const line of r.out.split("\n").filter((l) => l.includes("FAIL  "))) console.log(`    ${line.trim().slice(0, 200)}`);
+      /* D-494: the FAILING line AND its `want`/`got` continuation. An arm
+         declared to fail BY NAME is only observed to have done so if the names
+         are in the driver's own output — a truncated label says a line failed
+         and not which fence it failed over, which is the count-not-names
+         reading this item exists to refuse. */
+      const lines = r.out.split("\n");
+      for (let i = 0; i < lines.length; i++) {
+        if (!lines[i].includes("FAIL  ")) continue;
+        console.log(`    ${lines[i].trim().slice(0, 200)}`);
+        for (let j = i + 1; j < lines.length && /^\s+(?:want|got) /.test(lines[j]); j++)
+          console.log(`      ${lines[j].trim().slice(0, 400)}`);
+      }
     }
   } finally {
     if (file) {
@@ -144,6 +155,14 @@ const arm = (id, label, file, patch, declared) => {
     }
   }
 };
+
+/* D-495's subject, spelled ONCE and shared by arms j and k so the two cannot drift
+   apart \u2014 and so a site edited upstream makes BOTH arms fail loudly as NEVER ARMED
+   rather than one of them silently testing nothing. */
+const SITE_J = `      return refusal("GROUP_SLUG_MALFORMED",
+        \`\${s ? \`'\${s.slice(0, 60)}' is not\` : "the request names no slug, and a group is recorded as"} a slug in the \`
+        + \`installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). \`
+        + \`Nothing was recorded.\`);`;
 
 /* ---------------------------------------------------------------- ARM a */
 arm("a", "BASELINE — nothing armed", null, null, "GREEN");
@@ -269,6 +288,79 @@ arm("i", "op=purge's refusal built AT ITS SITE in an unanticipated spelling — 
                       got: confirm, tokenClass: cls, store: storeName }, 400);`),
   "GREEN");
 
+
+/* ---------------------------------------------------------------- ARM j
+   D-494 · A FENCE'S MINT DROPPED, IN THE SOURCE AND NOT IN THE INSTRUMENT.
+   `MACHINE_CANNOT_REVIEW`'s literal is taken out of `store.mjs` at its own
+   refusal site and replaced with a code shape the harvest does not match — so
+   the catalogue still holds the row, the act still refuses, and NOTHING in the
+   plane says the fence the row governs is gone. That is the state a deleted
+   fence would leave behind, and section 3b MUST FAIL NAMING
+   `MACHINE_CANNOT_REVIEW` in `cataloguedMintedNowhere`. A run that failed here
+   on a COUNT rather than on the name would not be this arm passing.
+   Section 3's own harvest sees the same loss (it reads `store.mjs` too), so its
+   floor line may fail as well; that is the older instrument agreeing, not a
+   second variable. */
+arm("j", "MACHINE_CANNOT_REVIEW's mint removed from its site — src/store.mjs (THE SUBJECT)", STORE,
+  (s) => s.replace('return { ok: false, reason: "MACHINE_CANNOT_REVIEW",',
+                   'return { ok: false, reason: "THE_MACHINE_MAY_NOT_REVIEW",'),
+  "RED");
+
+/* ---------------------------------------------------------------- ARM k
+   D-494 · OVER-STRICTNESS, AND IT IS THE HALF THE WIDENING WAS FOR: a fence
+   MINTED THROUGH A VARIABLE. `MACHINE_CANNOT_GROUND` is hoisted into a `const`
+   above its DEC-49 region and the refusal mints the variable, which is a shape
+   section 3b was not written around and the exact shape a `machineFenceRow`
+   style refactor would produce. IT MUST PASS: the harvest walks LITERALS
+   wherever they stand, so a code that moved into a variable is still named, and
+   an instrument that demanded one syntax would be a check the next author
+   routes around. */
+arm("k", "MACHINE_CANNOT_GROUND minted through a VARIABLE — src/store.mjs (OVER-STRICTNESS)", STORE,
+  (s) => {
+    const hoisted = s.replace('    /* DEC-49 REGION is-machine-ground \u2014 REC-64/C-32.8. The fence alone. */',
+      '    const groundFenceCode = "MACHINE_CANNOT_GROUND";   /* D-494 arm k: the code in a variable */\n'
+    + '    /* DEC-49 REGION is-machine-ground \u2014 REC-64/C-32.8. The fence alone. */');
+    if (hoisted === s) throw new Error("ARM k NEVER ARMED \u2014 the region anchor matched zero times");
+    return hoisted.replace('return { ok: false, reason: "MACHINE_CANNOT_GROUND",',
+                           'return { ok: false, reason: groundFenceCode,');
+  },
+  "GREEN");
+
+/* ---------------------------------------------------------------- ARM l
+   D-495's ARM, AND IT IS AN ADMIN-CLASS REFUSAL ON PURPOSE. `op=instancegroupseed`
+   is `["admin"]` alone: it is invisible to the member drive, to section 9's pin and
+   to REC-185's hand-driven 6b, so ONLY the class drive can see this. Its refusal is
+   reverted to the pre-DEC-49 shape \u2014 a bare `error` sentence, the whole refusal and
+   not one key deleted, so the arm is the defect and not a caricature of it.
+   MUST FAIL, on 6c's residue pin, NAMING `instancegroupseed (admin)`.
+   MUST NOT FAIL: 6c's admin and probe REACH counts (the op body is still reached \u2014
+   that is what makes this a refusal finding rather than a gate finding); 6c's grade,
+   because a refusal carrying no code is not a bare TRANSLATION and must not be scored
+   as one; section 9's member+`ai` pin, which cannot see this op at all; 6b, whose
+   `op=purge` site is untouched. An arm that took any of those down with it would be
+   moving a second variable. */
+arm("l", "an ADMIN-ONLY refusal stripped of its code \u2014 src/store.mjs (THE SUBJECT, D-495)", STORE,
+  (s) => s.replace(SITE_J,
+                   `      return { ok: false, error: "that is not a slug in the installer's grammar. Nothing was recorded." };`),
+  "RED");
+
+/* ---------------------------------------------------------------- ARM m
+   OVER-STRICTNESS FOR D-495's ARM (l), on the REAL site. The same refusal is rebuilt
+   in a spelling section 6c was not written around: the code in `code` with NO
+   `reason` at all, the row IMPORTED from the catalogue rather than hand-copied,
+   and an extra key the grader has never seen. IT MUST PASS \u2014 6c asks whether the
+   caller was told WHICH condition fired, never which helper wrote the answer, and
+   a class drive that reported correct work as codeless would teach the next author
+   to route around it. */
+arm("m", "the same ADMIN-ONLY refusal in an UNANTICIPATED spelling \u2014 src/store.mjs (OVER-STRICTNESS)", STORE,
+  (s) => s.replace(SITE_J,
+                   `      return { ok: false, code: "GROUP_SLUG_MALFORMED",
+        check: INSTANCE_GROUP_CHECKS.GROUP_SLUG_MALFORMED.check,
+        translation: INSTANCE_GROUP_CHECKS.GROUP_SLUG_MALFORMED.translation,
+        sigil: 7,
+        detail: "Nope \u2014 that slug is not in the installer's grammar. Nothing was recorded." };`),
+  "GREEN");
+
 /* ------------------------------------------------------------------ FOOT */
 console.log("\n================================================== D-262 CONTROL SUMMARY");
 let wrong = 0;
@@ -285,5 +377,5 @@ for (const p of [INDEX, STORE, SUITE]) {
   execFileSync("cmp", ["-s", p, OF_RECORD[p].copy]);
 }
 for (const p of [INDEX, STORE, SUITE]) if (existsSync(`${p}.d262-of-record`)) rmSync(`${p}.d262-of-record`);
-console.log(`\n${wrong === 0 ? "ALL NINE ARMS AS DECLARED" : `${wrong} ARM(S) NOT AS DECLARED — record them, do not smooth them`}`);
+console.log(`\n${wrong === 0 ? "ALL THIRTEEN ARMS AS DECLARED" : `${wrong} ARM(S) NOT AS DECLARED — record them, do not smooth them`}`);
 process.exit(0);

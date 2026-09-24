@@ -205,6 +205,8 @@ const digestOf = (ids) => createHash("sha256").update([...ids].sort().join("\n")
  * ------------------------------------------------------------------------ */
 const CATALOG_CENSUS = {
   "1.21.0": { count: 433, digest: "7e1c85cd94bffdf2140d52e6269b6a1178d3dbc76c40f8ec1b870b5626293e02" },
+  /* 1.22.0 (CONDUCT #20, c20-batch18): D-484's C-33.40/C-33.41, from this suite's own print. */
+  "1.22.0": { count: 435, digest: "a388b6427a3c28ee399c62b7f709e38ae95a65d1119f1dbb32fd7ea25f77bb35" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -285,8 +287,8 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 }
 
 /* (A5) THE STAMP READS THE CATALOGUE'S VERSION, and reads the bumped one. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.21.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.21.0)", "1.21.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.22.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.22.0)", "1.22.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

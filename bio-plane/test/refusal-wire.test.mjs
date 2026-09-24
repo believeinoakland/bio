@@ -7,8 +7,19 @@
    (e) THE OP WALK GOES BLIND — neuter the `OPS` parse in THIS FILE. MUST FAIL on the op-corpus FLOOR for the same reason, and MUST NOT be able to report "0 violations" as good news.
    (f) A THIRTEENTH FENCE ARRIVES UNMEASURED — drop one code out of the harvested machine-fence set. MUST FAIL naming the code and the count (the set is harvested from `store.mjs`, never typed).
    (g) OVER-STRICTNESS, and it is the arm this file exists to survive: a REAL site is rewritten to carry its row itself, in a SHAPE THIS SUITE WAS NOT WRITTEN AROUND — the code spelled in `code` with NO `reason` at all, the row IMPORTED rather than hand-copied (an equality that costs nothing is not evidence), an extra key the grader has never seen. It MUST PASS. A grader that reports correct work as bare is worse than no grader, because it teaches the next author to route around it.
-   (h) REC-185 — `op=purge`'s CODED REFUSAL REVERTED TO ITS BARE SENTENCE at its site in `src/index.mjs`, the whole refusal restored to the pre-REC-185 answer rather than one key deleted, so the arm is the defect and not a caricature of it. Section 6b MUST FAIL BY NAME on four of its six lines — no code, no C-number and no canned translation, no argument/shape, and no "Nothing was changed." on the one op that destroys a record. MUST NOT FAIL: 6b's `error` line, because the sentence is byte-identical either way and that is precisely what makes this an arm about the CODE and not about the wording; nor anything in section 2c, whose two walks do not read this site (it carries no spread, and it never left by a raw `new Response`) — an arm that took those down with it would be moving a second variable.
+   (h) REC-185 — `op=purge`'s CODED REFUSAL REVERTED TO ITS BARE SENTENCE at its site in `src/index.mjs`, the whole refusal restored to the pre-REC-185 answer rather than one key deleted, so the arm is the defect and not a caricature of it. Section 6b MUST FAIL BY NAME on four of its six lines (and, FROM D-495, section 6c's residue pin fails beside them, for five failures in total rather than REC-185's four — see the D-495 run line below) — no code, no C-number and no canned translation, no argument/shape, and no "Nothing was changed." on the one op that destroys a record. MUST NOT FAIL: 6b's `error` line, because the sentence is byte-identical either way and that is precisely what makes this an arm about the CODE and not about the wording; nor anything in section 2c, whose two walks do not read this site (it carries no spread, and it never left by a raw `new Response`) — an arm that took those down with it would be moving a second variable.
    (i) REC-185's OVER-STRICTNESS ARM, on the REAL site: `op=purge`'s refusal rebuilt AT ITS SITE in a spelling 6b was not written around — the code in `code` with NO `reason`, the row IMPORTED from `REQUIRED_ARGUMENT_CHECKS` rather than hand-copied, the `detail` worded unlike anything the helper writes, an extra key the grader has never seen. It MUST PASS: 6b grades whether a caller is told the FACT, never whether the helper was the author.
+   (j) D-494 — A FENCE'S MINT DROPPED AT ITS SITE IN `src/store.mjs`: `MACHINE_CANNOT_REVIEW`'s literal replaced with a code the harvest does not match, so the catalogue row survives a fence that no longer exists. Section 3b MUST FAIL naming `MACHINE_CANNOT_REVIEW` under `cataloguedMintedNowhere` — BY NAME, never on a count. MUST NOT FAIL: 3b's template census, and nothing in 2c or 6b. Section 3's older `store.mjs`-only floor MAY also fail on the same loss; that is the two instruments agreeing over one variable, not a second variable.
+   (k) D-494's OVER-STRICTNESS ARM: `MACHINE_CANNOT_GROUND` hoisted into a `const` above its DEC-49 region and minted THROUGH THE VARIABLE — the shape a `machineFenceRow` refactor produces and the one section 3b was not written around. It MUST PASS: the widened harvest walks literals wherever they stand. A RED here would be an instrument demanding one syntax, which is how a check comes to be routed around.
+   RUN 2026-09-24 BY THE D-494 WORKER on branch `land/worker/D-494`, TWICE — once over origin/main 0fdef669 and again after rebasing onto origin/main d536f834 (which moved `src/store.mjs`, so the figures were RE-MEASURED rather than carried across the rebase; they agree), and the figures are the ones the driver PRINTED: **a GREEN 35/0 · b RED 31/4 · c RED 32/3 · d RED 1/2 · e RED 29/6 · f RED 34/1 · g GREEN 35/0 · h RED 31/4 · i GREEN 35/0 · j RED 33/2 · k GREEN 35/0 — ALL ELEVEN AS DECLARED**, all three files byte-identical to their pristine-of-record by sha256 AND by `cmp` (on d536f834: `src/store.mjs` 3164607 bytes sha `213ad1fa0b4dd608…`, `src/index.mjs` 779787 bytes sha `ee3c550c242f7895…`, `test/refusal-wire.test.mjs` 66452 bytes sha `32e24d56b970eda4…`). Arm (j)'s two failures are the declared one plus section 3's older `store.mjs`-only floor, which reads the same loss — the two instruments agreeing over one variable. **AND THE DRIVER ITSELF WAS CORRECTED BY THIS ARM RATHER THAN THE ARM BY THE DRIVER:** the first run printed arm (j) RED on a label TRUNCATED AT 200 CHARACTERS, so the driver's own output said a line had failed and NOT which fence it failed over — the count-not-names reading this item exists to refuse, in the instrument that grades the item. The driver now prints each FAIL's `want`/`got` continuation and was RE-RUN rather than adjusted on paper; the figures above are the second run's, and arm (j)'s `got` reads `cataloguedMintedNowhere: ["MACHINE_CANNOT_REVIEW"]`.
+   (l) D-495 (was j on its branch) — AN ADMIN-ONLY REFUSAL STRIPPED OF ITS CODE: `GROUP_SLUG_MALFORMED` at its site in `src/store.mjs`, reverted to a bare `error` sentence — the whole refusal and not one key deleted, so the arm is the defect and not a caricature of it. `op=instancegroupseed` is `["admin"]` ALONE, so it is invisible to the member drive, to section 9's pin and to 6b's hand-driven purge: ONLY the class drive can see it, which is what makes this the arm for D-495 rather than a second copy of (h). MUST FAIL on section 6c's residue pin, NAMING `instancegroupseed (admin)`. MUST NOT FAIL: 6c's admin and probe REACH counts, because the op body is still reached and that is what separates a refusal finding from a gate finding; 6c's grade, because a refusal carrying NO code is not a bare TRANSLATION and scoring it as one would be the instrument confusing its own two questions; section 9's member+`ai` pin, which cannot see this op at all; and 6b, whose site is untouched.
+   (m) D-495's (was k on its branch) OVER-STRICTNESS ARM, on the REAL site: the same refusal rebuilt in a spelling 6c was not written around — the code in `code` with NO `reason`, the row IMPORTED from `INSTANCE_GROUP_CHECKS` rather than hand-copied, and an extra key the grader has never seen. It MUST PASS: 6c asks whether the caller was told WHICH condition fired, never which helper wrote the answer.
+   RUN 2026-09-24 BY CONDUCT #20 ON THE c20-batch17 UNION (D-494 + D-495 together, D-495's arms relabelled l/m), the
+   figures the driver PRINTED: a GREEN 42/0 · b RED 37/5 · c RED 38/4 · d RED 1/2 · e RED 33/9 · f RED 41/1 · g GREEN 42/0 ·
+   h RED 37/5 · i GREEN 42/0 · j RED 40/2 · k GREEN 42/0 · l RED 41/1 · m GREEN 42/0 — ALL THIRTEEN AS DECLARED; index.mjs,
+   store.mjs and this suite byte-identical to pristine-of-record by sha256 and cmp. The per-branch RUN lines below are each
+   branch's own figures, kept as history.
+   RUN 2026-09-24 BY THE D-495 WORKER on branch `land/worker/D-495` over origin/main 0fdef669, and the figures are the ones the driver PRINTED: **a GREEN 40/0 · b RED 35/5 · c RED 36/4 · d RED 1/2 · e RED 31/9 · f RED 39/1 · g GREEN 40/0 · h RED 35/5 · i GREEN 40/0 · j RED 39/1 · k GREEN 40/0 — ALL ELEVEN AS DECLARED**, all three files byte-identical to their pristine-of-record by sha256 AND by `cmp` (`src/index.mjs` 779787 bytes, `src/store.mjs` 3160297 bytes, this file 71433 bytes). Arm (j)'s ONE failure is the declared one and no others. **AND ARM (h) NOW FAILS ON FIVE LINES WHERE REC-185 DECLARED AND MEASURED FOUR — recorded here rather than smoothed, because it is this item's own effect and not a drift.** The fifth is 6c's residue pin: `op=purge` is `["admin", "probe"]`, so stripping its code now makes it a codeless refusal the CLASS DRIVE sees, where before D-495 only 6b's hand-driven call could. That is the blindness closing, measured from the inside — the same defect is now caught by two instruments instead of one, and (h)'s declaration above is corrected to five for that reason rather than the arm being re-scoped.
    RUN 2026-09-24 BY THE REC-185 WORKER on branch `land/worker/REC-185` over origin/main 548eb2c5, TWICE, and the figures are the ones the driver PRINTED: FIRST PASS **ARM (f) CAME BACK GREEN 33/0 WHERE IT IS DECLARED RED** — not this item's arm and not a broken arm, but the fence floor of 12 gone slack against a family of 14, which had disarmed (f) silently. The floor was moved to the measured 14 with its reason at the site and the driver RE-RUN rather than adjusted on paper: **a GREEN 33/0 · b RED 29/4 · c RED 30/3 · d RED 1/2 · e RED 27/6 · f RED 32/1 · g GREEN 33/0 · h RED 29/4 · i GREEN 33/0 — ALL NINE AS DECLARED**, all three files byte-identical to their pristine-of-record by sha256 AND by `cmp`. Arm (h)'s four failures are exactly the four declared and no others.
    RUN 2026-08-09 IN WORKTREE agent-a0afb13cbfcc0d6b9, THREE TIMES, and the figures are the ones the driver PRINTED. FIRST RUN (suite at 22 assertions): six of seven as declared — a GREEN 22/0, b RED 18/4, c RED 19/3, e RED 15/7, f RED 21/1, g GREEN 22/0. **ARM (d) CAME BACK `NO TALLY` RATHER THAN RED, AND IT IS RECORDED HERE RATHER THAN SMOOTHED: the arm was right and the INSTRUMENT was wrong.** A blind catalogue made every later block read `ROWS.get(code).translation` on `undefined`, so a `TypeError` ended the module while the tally read clean — WORKER.md's named failure, arriving inside the file built to find that class. Corrected in two ways at once (every `ROWS.get` read is null-tolerant, and a corpus below its floor HALTS at the floor with its tally printed) and RE-RUN: all seven as declared. THIRD RUN against the FINAL suite (23 assertions, after the static-class block landed) — re-run rather than adjusted on paper, because a figure carried forward across an edit is a figure nobody measured: **ALL SEVEN AS DECLARED — (a) GREEN 23/0 · (b) RED 19/4 · (c) RED 20/3 · (d) RED 1/2 · (e) RED 16/7 · (f) RED 22/1 · (g) GREEN 23/0**, all three files byte-identical to their pristine-of-record by sha256 and by `cmp`.
  * =========================================================================
@@ -54,7 +65,12 @@
  *      staleness that produced this defect in the first place.
  *   3. THE DRIVE. Every op the surface admits, called with an EMPTY payload,
  *      under a signed-in MEMBER and again under an `ai` credential whose
- *      declared scope names every mutating op a member reaches. An empty
+ *      declared scope names every mutating op a member reaches. **AND, FROM
+ *      D-495 (2026-09-24), under the ADMIN and PROBE bearer credentials too
+ *      (section 6c)** — which takes this drive from the 183 member-class rows
+ *      to all 196 rows that name any class, closing the blindness section 9's
+ *      pin had carried in prose and that REC-185 had to drive `op=purge` by hand
+ *      around. An empty
  *      payload is not a weakness here: what is being graded is the ENVELOPE a
  *      refusal travels in, and a refusal that arrives is a refusal whatever
  *      provoked it. The machine fences sit ABOVE the payload complaints (that
@@ -88,6 +104,13 @@
  *     refusal shape that does not say `ok: false`. The last of those is the
  *     interesting one and it is COUNTED and PRINTED rather than assumed absent.
  *   - IT IS NOT A LIVE PROBE. A green harness is not a serving build (D-108).
+ *   - D-495: the four credentials cover the 196 op rows that NAME a class. The
+ *     17 that name none — the pre-authentication and public surface — are
+ *     outside every arm here and are PRINTED BY NAME in 6c rather than counted
+ *     clean; `d278-codeless-refusals.test.mjs` is their instrument. The `daemon`
+ *     class gets no arm of its own: all three rows naming it also name `admin`,
+ *     so each op body is reached — by a different caller than a daemon would be,
+ *     which is said rather than glossed.
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -213,13 +236,29 @@ const OP_ROWS = [...OPS_BLOCK.matchAll(/^ {2}([a-z0-9]+):\s*\{\s*classes:\s*(nul
     classes: m[2] === "null" ? null : m[3].split(",").map((s) => s.trim().replace(/"/g, "")).filter(Boolean),
     mutating: m[4] === "true",
   }));
-const MEMBER_OPS = OP_ROWS.filter((r) => r.classes && r.classes.includes("member"));
+const forClass = (c) => OP_ROWS.filter((r) => r.classes && r.classes.includes(c));
+const MEMBER_OPS = forClass("member");
 const MUTATING_MEMBER_OPS = MEMBER_OPS.filter((r) => r.mutating).map((r) => r.op);
+/* D-495: the other two credential classes, harvested by the SAME parse and never typed here.
+   `daemon` gets no arm of its own and that is stated rather than implied: all three rows naming
+   it (`acquire`, `monitor`, `capturerequestdrain`) also name `admin`, so every one is driven
+   below — under the ADMIN credential, which is a different caller reaching the same op body. */
+const ADMIN_OPS = forClass("admin");
+const PROBE_OPS = forClass("probe");
+const CLASSED_OPS = OP_ROWS.filter((r) => r.classes);
+const CLASSLESS_OPS = OP_ROWS.filter((r) => !r.classes).map((r) => r.op).sort();
 console.log(`    CORPUS: ${OP_ROWS.length} op row(s) parsed · ${MEMBER_OPS.length} admit the member class `
           + `· ${MUTATING_MEMBER_OPS.length} of those are mutating`);
+console.log(`    CORPUS (D-495): ${ADMIN_OPS.length} admit admin · ${PROBE_OPS.length} admit probe · `
+          + `${CLASSED_OPS.length} name a class at all · ${CLASSLESS_OPS.length} name none`);
 t("the OPS table was actually read — a silent parse failure would make every drive below vacuous, "
 + "and would report ZERO VIOLATIONS as good news", OP_ROWS.length >= 120, true);
 t("and the member-reachable subset is real too", MEMBER_OPS.length >= 100, true);
+/* D-495: the same floor for the two subsets section 6c drives. A collapsed parse here would make
+   that whole block vacuous in exactly the way the line above exists to prevent, and it would report
+   ZERO codeless refusals — the answer this item is looking for — as good news. */
+t("and the admin- and probe-reachable subsets are real too (D-495), floored before the class drive "
++ "rests anything on them", [ADMIN_OPS.length >= 150, PROBE_OPS.length >= 140], [true, true]);
 
 /* ====================================================================== 2b
  * THE STATIC CLASS — HOW BIG THE DEFECT WAS, AND WHY IT IS A DECORATION.
@@ -403,6 +442,116 @@ t("the fence harvest found a REAL family and not an empty set — and the floor 
 t("every harvested fence has a catalogue row with a canned translation — REC-64's work, and the "
 + "precondition for asking whether it reaches anybody",
   FENCES.filter((c) => !ROWS.has(c)), []);
+
+/* ====================================================================== 3b
+ * D-494 · THE HARVEST WIDENED TO BOTH SOURCES, AND THE CATALOGUE GRADED
+ * AGAINST IT BY NAME.
+ *
+ * WHY THIS EXISTS, AND IT IS REC-185's OWN FINDING RATHER THAN A TIDY-UP.
+ * Section 3's harvest reads `store.mjs` only, and only the `MACHINE_CANNOT_`
+ * spelling, so it finds 14 where `MACHINE_FENCE_CHECKS` holds 18. REC-185
+ * measured that gap, said plainly it had not derived the floor, and reported
+ * the four unseen codes to SCHEDULER by name. **Four catalogued fences were
+ * therefore governed by a catalogue nothing checked against the code**: the two
+ * `MACHINE_CANNOT_RATIFY*` rows (REC-123/IC-132) and the three
+ * `OPERATOR_TOKEN_CANNOT_*` rows (REC-125/IC-137, BOB #14's D-421) are all
+ * minted in `index.mjs`, which section 3 does not read. A row whose fence had
+ * been deleted would have read exactly the same as one whose fence is standing,
+ * which is `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 believed on the
+ * strength of its EXISTENCE rather than its behaviour — the defect this file
+ * was built to find, one level up, in this file.
+ *
+ * THE ANSWER IS A DERIVATION AND NOT A SECOND FLOOR. A number goes stale the
+ * day a nineteenth fence lands; this grades the two corpora against each other
+ * BY NAME, so a fence added, moved between sources, or deleted moves a NAME and
+ * not a count. **A catalogued fence with NO site anywhere is a DEFECT and this
+ * gate says so** — the row is either deleted or the fence is built; it is never
+ * allow-listed, because an allow-list of missing fences is the catalogue lying
+ * about the plane in the direction that costs nothing.
+ *
+ * WHAT THIS MATCHER CAN AND CANNOT SEE, and the sentence is load-bearing:
+ *   - IT CAN SEE a fence code written as a STRING LITERAL anywhere in either
+ *     source with comments blanked — at its refusal site, inside a
+ *     `machineFenceRow("…")` call, or ASSIGNED TO A VARIABLE that the refusal
+ *     then mints through. The last is why this walks literals rather than
+ *     `reason:` sites: a variable mint is still a literal somewhere, and a
+ *     harvest keyed to one syntax is the staleness this file exists to refuse.
+ *   - IT CANNOT SEE a code ASSEMBLED from a template (`` `MACHINE_CANNOT_${x}` ``)
+ *     — no static walk can name such a code. That is not left as prose: the
+ *     template census below is PRINTED and GATED AT EMPTY, so the day one
+ *     arrives it is a named failure here rather than a silent hole.
+ *   - IT IS A SOURCE WALK, not a drive. That a fence is MINTED says nothing
+ *     about whether the act reaches it; `test/machine-fences.test.mjs` grades
+ *     the fence against the act, and section 4 below grades the wire.
+ * ==================================================================== */
+console.log("\n--- 3b. D-494 · the catalogue vs the WIDENED harvest (both sources, both spellings) ---");
+
+const FENCE_LITERAL = /"((?:MACHINE|OPERATOR_TOKEN)_CANNOT_[A-Z_]+)"/g;
+const SITES = new Map();                       /* code -> [{ file, line }] */
+for (const [file, bare] of [["src/store.mjs", STORE_BARE], ["src/index.mjs", INDEX_BARE]]) {
+  for (const m of bare.matchAll(FENCE_LITERAL)) {
+    if (!SITES.has(m[1])) SITES.set(m[1], []);
+    const at = SITES.get(m[1]), line = lineOf(bare, m.index);
+    if (!at.some((s) => s.file === file && s.line === line)) at.push({ file, line });
+  }
+}
+
+/* A code this walk cannot name. Gated at empty rather than described. */
+const TEMPLATED = [];
+for (const [file, bare] of [["src/store.mjs", STORE_BARE], ["src/index.mjs", INDEX_BARE]])
+  for (const m of bare.matchAll(/`[^`\n]*(?:MACHINE|OPERATOR_TOKEN)_CANNOT_[A-Z_]*\$\{[^`\n]*`/g))
+    TEMPLATED.push(`${file} L${lineOf(bare, m.index)}  ${m[0].slice(0, 80)}`);
+
+const CAT = CHECK_CATALOGUE.MACHINE_FENCE_CHECKS;
+const CAT_CODES = Object.keys(CAT).sort();
+const whereFile = (w) => (/(src\/[A-Za-z.]+\.mjs)/.exec(String(w)) || [])[1] || null;
+const familyOf = (c) => (ROWS.get(c) || {}).family || null;
+
+console.log(`    MACHINE_FENCE_CHECKS holds ${CAT_CODES.length} row(s); the widened harvest finds `
+          + `${SITES.size} code(s) minted across src/store.mjs + src/index.mjs`);
+for (const code of [...SITES.keys()].sort()) {
+  const at = SITES.get(code).map((s) => `${s.file}:${s.line}`).join(", ");
+  console.log(`      ${(familyOf(code) === "MACHINE_FENCE_CHECKS" ? "   " : "  *")} ${code.padEnd(34)} `
+            + `${(familyOf(code) || "NO ROW IN ANY _CHECKS FAMILY").padEnd(22)} ${at}`);
+}
+for (const code of CAT_CODES) if (!SITES.has(code))
+  console.log(`      !!! ${code} — CATALOGUED AND MINTED NOWHERE (${CAT[code].check}, where says ${CAT[code].where})`);
+console.log(`    templated/assembled codes this walk cannot name: ${TEMPLATED.length}`);
+for (const l of TEMPLATED) console.log(`        ${l}`);
+
+/* THE AGREEMENT, IN NAMES. Each of the three lists is a different way for the
+   catalogue and the plane to disagree, and each is reported as NAMES so the
+   failure says WHICH fence rather than how many.
+     1. a catalogued fence minted nowhere — the DEFECT the row names;
+     2. a catalogued fence whose `where` names a source it is NOT minted in —
+        the row drifted from the code it governs (REC-123 moved two fences from
+        `store.mjs` to `index.mjs`, which is exactly this shape);
+     3. a minted fence outside `MACHINE_FENCE_CHECKS` — pinned as a SET with the
+        family that DOES hold it, so a sixteenth `MACHINE_CANNOT_*` catalogued
+        somewhere else is a name to look at and not a silent pass.
+   A code in list 3 with NO family at all is a bare code on the wire, and it
+   fails here reading `NO ROW IN ANY _CHECKS FAMILY`. */
+const cataloguedMintedNowhere = CAT_CODES.filter((c) => !SITES.has(c));
+const whereNamesTheWrongSource = CAT_CODES.filter((c) => SITES.has(c))
+  .filter((c) => whereFile(CAT[c].where) && !SITES.get(c).some((s) => s.file === whereFile(CAT[c].where)))
+  .map((c) => `${c} — where says ${whereFile(CAT[c].where)}, minted in `
+             + `${[...new Set(SITES.get(c).map((s) => s.file))].sort().join(" + ")}`);
+const mintedOutsideTheFenceFamily = [...SITES.keys()].filter((c) => !CAT_CODES.includes(c)).sort()
+  .map((c) => `${c} -> ${familyOf(c) || "NO ROW IN ANY _CHECKS FAMILY"}`);
+
+t("D-494 · the CATALOGUE and the WIDENED HARVEST agree, BY NAME and not by count: every one of "
++ "MACHINE_FENCE_CHECKS' rows is minted in the source its `where` names, and the only fence-shaped "
++ "code minted outside that family is MACHINE_CANNOT_MOVE_VERSION, which VERSION_ACT_CHECKS holds "
++ "on purpose (C-25.24, REC-46's one predicate at the six version acts' one transition). A row "
++ "minted nowhere is a DEFECT — delete the row or build the fence; it is never allow-listed here",
+  { cataloguedMintedNowhere, whereNamesTheWrongSource, mintedOutsideTheFenceFamily },
+  { cataloguedMintedNowhere: [], whereNamesTheWrongSource: [],
+    mintedOutsideTheFenceFamily: ["MACHINE_CANNOT_MOVE_VERSION -> VERSION_ACT_CHECKS"] });
+
+t("D-494 · no fence code is ASSEMBLED from a template — the one spelling no static harvest can "
++ "name, gated at empty rather than described, because a hole stated in prose is a hole nobody "
++ "is watching",
+  TEMPLATED, []);
 
 /* ====================================================================== 4
  * THE DRIVE.
@@ -663,6 +812,188 @@ console.log("\n--- 6b. op=purge without `confirm`: the coded refusal, through th
     [wire?.expected === wire?.store, wire?.got, typeof wire?.tokenClass], [true, null, "string"]);
 }
 
+/* ====================================================================== 6c
+ * D-495 — THE CLASS-FILTER BLINDNESS, CLOSED. THE SAME `record()` DRIVEN OVER
+ * THE ADMIN AND PROBE CREDENTIALS, NOT ONLY THE MEMBER-CLASS ONES.
+ *
+ * WHY. Section 9's residue pin below carries this blindness in its own words —
+ * *"it filters to member-CLASS ops, so `forbidden for token class` on a read
+ * outside that class is invisible to it"* — and 6b is the receipt that the gap
+ * was real rather than theoretical: `op=purge`, the plane's ONE destructive op,
+ * is `["admin", "probe"]`, so it answered a bare sentence outside every wire
+ * instrument until REC-185 drove it BY HAND. A hand-driven op is a list of
+ * spellings, and this file's own doctrine is to invert rather than lengthen one.
+ * So the drive is widened to the classes instead, and `purge` stops being a
+ * special case and becomes one row of a corpus.
+ *
+ * THE CLASSES SWEPT, STATED RATHER THAN IMPLIED — four credentials over the
+ * three classes that hold an op table row:
+ *   · MEMBER — Ruth's signed-in session           (section 3, 183 rows)
+ *   · ai     — the minted machine credential      (section 3, the same 183)
+ *   · ADMIN  — the ADMIN_TOKEN-class bearer        (here, 196 rows)
+ *   · PROBE  — the PROBE_TOKEN-class bearer        (here, 178 rows)
+ * Their UNION is every op row that names any class, and that is ASSERTED below
+ * against the parse rather than trusted to the arithmetic: 196 of 196.
+ *
+ * THE LIAR THIS BLOCK REFUSES TO BE, and it is the reason the reach count is
+ * pinned per class rather than the drive merely being run. A sweep whose
+ * credential is rejected ABOVE the op — unauthenticated, forbidden for its
+ * class, refused a namespace — drives nothing at all and reports a clean,
+ * confident, entirely empty result. It would look exactly like this block
+ * passing. So every call's refusal code is checked against the ADMISSION set
+ * (`NOT_AUTHENTICATED`, `CLASS_FORBIDDEN`, `SCOPE_REFUSED`,
+ * `ROOT_OF_TRUST_REQUIRED`, `NOT_CAPABLE`, `NAMESPACE_UNKNOWN` — every refusal
+ * `index.mjs` can return before dispatch), and the count that REACHED the op
+ * body is pinned at the full corpus for each class.
+ *
+ * WHAT THIS DRIVE CAN AND CANNOT SEE, and the sentence is load-bearing:
+ *   - It sweeps the 196 rows naming a class. The 17 naming NONE are outside it
+ *     and are NAMED below, not counted as clean: they are the pre-authentication
+ *     and public surface, whose codeless argument complaints were D-278's and are
+ *     graded in `d278-codeless-refusals.test.mjs`.
+ *   - PROBE is confined by `scopeFor` to the `scratch` namespace while admin and
+ *     member answer out of `bio`, so the probe arm reads a DIFFERENT and empty
+ *     store. That is the class behaving correctly, not the arm going blind, and
+ *     the reach count is what tells the two apart.
+ *   - The payload is still EMPTY, so a refusal a richer call would provoke is
+ *     invisible here, exactly as it is in section 3.
+ * ==================================================================== */
+console.log("\n--- 6c. the class drive (D-495): ADMIN and PROBE, through the same `record()` ---");
+
+/* Every refusal `index.mjs` can answer BEFORE it dispatches to the op. A call
+   refused with one of these did not reach the op body, whatever else it says. */
+const ADMISSION = new Set(["NOT_AUTHENTICATED", "CLASS_FORBIDDEN", "SCOPE_REFUSED",
+                           "ROOT_OF_TRUST_REQUIRED", "NOT_CAPABLE", "NAMESPACE_UNKNOWN"]);
+const CLASS_NO_CODE = [];    /* D-495's own residue, kept apart from section 3's */
+const CLASS_OBSERVED = new Map();   /* `${who}\u0000${code}` -> the first envelope seen */
+const REACH = {};
+
+/* `record()`'s twin, and it is a twin ON PURPOSE rather than a second opinion:
+   the same two candidate sites, the same `reason`-then-`code` precedence, the
+   same "named, never silently scored zero". It differs in exactly two ways, and
+   both are this item's subject: it keys its observations by CLASS as well as by
+   code, so a code coded for one caller and bare for another is two findings and
+   not one; and it RETURNS the code, which is what lets the reach count above be
+   taken from the same read rather than from a second call. */
+const recordAs = (op, who, wire) => {
+  if (!wire || typeof wire !== "object") { NOT_CLASSIFIED.push({ op, who, why: "no JSON body" }); return null; }
+  const candidates = [];
+  if (wire.ok === false) candidates.push(wire);
+  if (wire.result && typeof wire.result === "object" && !Array.isArray(wire.result)
+      && wire.result.ok === false) candidates.push(wire.result);
+  if (candidates.length === 0) {
+    if (wire.ok !== true && !(wire.result && typeof wire.result === "object"))
+      NOT_CLASSIFIED.push({ op, who, why: `body says neither ok:true nor ok:false (keys: ${Object.keys(wire).slice(0, 6).join(",")})` });
+    return null;
+  }
+  let first = null;
+  for (const r of candidates) {
+    const code = typeof r.reason === "string" ? r.reason
+               : typeof r.code === "string" ? r.code : null;
+    if (first === null) first = code;
+    if (!code) {
+      CLASS_NO_CODE.push({ op, who, keys: Object.keys(r).slice(0, 8),
+                           said: typeof r.error === "string" ? r.error.slice(0, 90) : null });
+      continue;
+    }
+    const k = `${who}\u0000${code}`;
+    if (!CLASS_OBSERVED.has(k)) CLASS_OBSERVED.set(k, { code, who, op, check: r.check, translation: r.translation });
+  }
+  return first;
+};
+
+for (const [who, token, rows] of [["admin", "adm-d262", ADMIN_OPS], ["probe", "prb-d262", PROBE_OPS]]) {
+  let driven = 0, reached = 0;
+  const gated = [];
+  for (const row of rows) {
+    const wire = row.mutating
+      ? (await RAW(`op=${row.op}&token=${token}`, {})).body
+      : (await RAW(`op=${row.op}&token=${token}`)).body;
+    driven++;
+    const code = recordAs(row.op, who, wire);
+    if (code && ADMISSION.has(code)) gated.push(`${row.op}:${code}`); else reached++;
+  }
+  REACH[who] = { driven, reached, gated };
+  console.log(`    DRIVEN as ${who}: ${driven} op(s) · ${reached} reached the op body · `
+            + `${gated.length} refused at the admission gate${gated.length ? ` (${gated.join(", ")})` : ""}`);
+}
+
+t("the ADMIN arm drove every op row admitting the admin class, and every one of them REACHED THE OP "
++ "BODY — a credential refused above the op drives nothing and reports a confident empty result, so "
++ "this is the line that tells this block apart from a liar",
+  [REACH.admin.driven, REACH.admin.reached], [ADMIN_OPS.length, ADMIN_OPS.length]);
+t("...and the PROBE arm likewise, out of the `scratch` namespace `scopeFor` confines it to",
+  [REACH.probe.driven, REACH.probe.reached], [PROBE_OPS.length, PROBE_OPS.length]);
+t("the three classes together reach EVERY op row that names a class — asserted against the parse and "
++ "not inferred from the three counts, because three subsets summing right is not the same fact as "
++ "their union being whole",
+  CLASSED_OPS.filter((r) => !MEMBER_OPS.includes(r) && !ADMIN_OPS.includes(r) && !PROBE_OPS.includes(r))
+             .map((r) => r.op), []);
+console.log(`    OUTSIDE THIS DRIVE: ${CLASSLESS_OPS.length} op row(s) name no class at all and are NOT`);
+console.log(`    swept here — the pre-authentication and public surface, D-278's subject, graded in`);
+console.log(`    d278-codeless-refusals.test.mjs: ${CLASSLESS_OPS.join(", ")}`);
+
+/* ---- the grade, for the two new classes ---- */
+const CBARE = [], CNOCHECK = [], CDIVERGENT = [], CCENSUS = [];
+for (const got of [...CLASS_OBSERVED.values()].sort((a, b) => (a.who + a.code).localeCompare(b.who + b.code))) {
+  const row = ROWS.get(got.code);
+  if (!row) { CCENSUS.push(`${got.code} (${got.who}, via op=${got.op})`); continue; }
+  if (typeof got.translation !== "string" || got.translation === "") CBARE.push(`${got.code} (${got.who}, op=${got.op})`);
+  else if (got.translation !== row.translation) CDIVERGENT.push(`${got.code} (${got.who}, op=${got.op})`);
+  if (got.check !== row.check) CNOCHECK.push(`${got.code} (${got.who}, op=${got.op})`);
+}
+const cGraded = CLASS_OBSERVED.size - CCENSUS.length;
+console.log(`    GRADED (admin+probe): ${cGraded} received code(s) carry a catalogue row · ${CCENSUS.length} do not`);
+t("every catalogued refusal the ADMIN or PROBE caller received carries the catalogue's own sentence "
++ "and C-number on the wire — D-262's gate, applied to the two classes it was never driven over",
+  [CBARE, CNOCHECK, CDIVERGENT], [[], [], []]);
+t("and something was actually graded for these two classes — an empty graded set satisfies the line "
++ "above by accident, which is the only way it could read as good news while meaning nothing",
+  cGraded >= 20, true);
+
+/* ---- THE RESIDUE OVER ALL THREE CLASSES, PINNED AS THE EXACT NAMED SET ---- */
+const ALL_NO_CODE = [...NO_CODE.map((n) => ({ ...n })), ...CLASS_NO_CODE];
+const RESIDUE = [...new Set(ALL_NO_CODE.map((n) => `${n.op} (${n.who})`))].sort();
+console.log(`    REFUSALS CARRYING NO CODE AT ALL, over member + ai + admin + probe: ${ALL_NO_CODE.length}`);
+for (const n of ALL_NO_CODE) console.log(`      no-code  op=${n.op} (${n.who})  keys: ${n.keys.join(",")}`
+                                       + `  said: ${n.said === null ? "— (no `error` string either)" : `"${n.said}"`}`);
+/* PINNED AS A SET AND NOT A COUNT, for the reason section 9 gives below: it then
+   fails in BOTH directions — a NEW codeless refusal anywhere in the four-credential
+   drive fails this line and must be looked at, and one of these being given a code
+   fails it too and must be STRUCK WITH ITS REASON. An allow-list widened silently
+   is the failure this shape exists to make impossible.
+ *
+ * WHAT IS IN IT TODAY, AND IT IS NOT WHAT THE ITEM EXPECTED. One op, under both
+ * classes that reach it: `op=livefire`. And it is NOT A REFUSAL — which is the
+ * finding, stated rather than smoothed into the tally. `livefire` is the plane's
+ * own canary battery, and its `ok` is a VERDICT over its 19 assertions
+ * (`src/livefire.mjs`: `ok: A.every((a) => a.ok) && r2.ok`), dispatched at
+ * `index.mjs` `op === "livefire"` as `json(out, out.ok ? 200 : 500)`. So it
+ * answers `ok:false` with no `reason`, no `code` and no `error` sentence of any
+ * kind — one layer further out than D-270's bare-sentence residue, which at
+ * least carried words.
+ *
+ * WHY IT IS A FINDING AND NOT A FALSE POSITIVE TO BE FILTERED AWAY. Every
+ * consumer that reads `ok:false` as a refusal — this instrument, and the agent
+ * worker, which deliberately holds no catalogue and passes the plane's refusal
+ * through UNCHANGED — receives from this op something it can neither translate
+ * nor name. Whether the fix is a code on the verdict or reserving `ok:false` for
+ * refusals and moving the verdict to a key of its own is an INTERFACE decision
+ * and not a translation, which is precisely the boundary D-270 drew; D-495
+ * RAISES it and does not settle it, and it is listed for placement.
+ *
+ * AND WHY THE LINE IS NON-EMPTY TODAY, stated so nobody later reads a flip as a
+ * regression: in THIS fixture the canary's verdict is false for one deterministic
+ * reason — its assertion *"no configured token is shorter than 16 characters"*,
+ * against the harness's own 8-character `adm-d262`. 18 of 19 pass. If the fixture's
+ * tokens are ever lengthened the canary answers `ok:true`, this line fails in the
+ * GOOD direction, and the entry is struck with THAT as its reason rather than the
+ * op being fixed. */
+t("the ops answering a caller with NO code at all, over ALL FOUR credentials and all three classes "
++ "(D-495) — pinned as the exact named set, so a new codeless refusal fails here and a fixed one "
++ "fails here too and must be struck with its reason",
+  RESIDUE, ["livefire (admin)", "livefire (probe)"]);
+
 /* ====================================================================== 8
  * THE OVER-STRICTNESS ARM, BUILT IN. A correct refusal in a shape this file did
  * not anticipate must be graded CLEAN.
@@ -753,7 +1084,13 @@ t("the ops answering a caller with NO code at all are NAMED — D-270, raised by
      (`op=verify`, `op=publishedbytes`) are outside it too. CORRECTED 2026-09-23 BY
      D-278: this read *"Both are D-278's"*. The pre-authentication complaints are
      coded now (C-61.1) and graded in `d278-codeless-refusals.test.mjs`; the
-     class-filter blindness is still true of this drive and is kept. */
+     class-filter blindness is CORRECTED 2026-09-24 BY D-495, and this pin is KEPT
+     rather than rewritten: it is the member+`ai` drive's residue, it is still
+     empty, and that is still worth asserting. The BLINDNESS it named is gone —
+     section 6c drives the same `record()` logic over the ADMIN and PROBE
+     credentials, 196 of 196 op rows that name a class, and pins the residue over
+     all four credentials. What remains outside EVERY drive is the 17 rows naming
+     no class, and 6c prints them by name. */
   []);
 console.log(`    BODIES THIS WALK COULD NOT CLASSIFY: ${NOT_CLASSIFIED.length}`);
 for (const n of NOT_CLASSIFIED.slice(0, 20)) console.log(`      unclassified  op=${n.op} (${n.who}) — ${n.why}`);

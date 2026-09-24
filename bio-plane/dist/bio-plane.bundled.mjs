@@ -3696,7 +3696,16 @@ CREATE TABLE IF NOT EXISTS case_drafts (
   created_by  TEXT NOT NULL,
   created_at  TEXT NOT NULL,
   updated_by  TEXT NOT NULL,      -- the editor the dry run of the publish gates acts as
-  updated_at  TEXT NOT NULL
+  updated_at  TEXT NOT NULL,
+  -- REC-193 / BIO_Publication_v0_1.md section 3 rule 13 (BOB #32, 2026-09-23): WHO WROTE THE EXCLUSION
+  -- STATEMENT'S CURRENT BYTES. Stamped by the SERVER at the draft write that changes the statement text and
+  -- left alone by every other edit, so an editor who rewrites another section does not become the statement's
+  -- author -- which is what updated_by, the last editor of ANY field, said when op=statementack read it.
+  -- NULLABLE AND NEVER BACK-FILLED: a draft written before this column existed recorded no writer, and the
+  -- only value a backfill could reach for is updated_by, the very value this column exists to stop standing
+  -- in for one. NULL reads back as UNDETERMINED, stated, and op=statementack refuses by name rather than
+  -- guess. Nothing about publication turns on it: rule 11 never refuses a case for want of an acknowledgement.
+  statement_by TEXT
 );
 CREATE INDEX IF NOT EXISTS case_drafts_project ON case_drafts(project_id);
 
@@ -11355,6 +11364,48 @@ var ACT_SHAPE_CHECKS = {
     check: "C-33.32",
     where: "src/store.mjs selectionResolve > is-selection-moved, reached from every act that takes a selection",
     translation: "This would have changed things, and the list of items it would have changed is not the list you were looking at \u2014 it has moved since you chose it. Nothing was done. Look at the selection again and choose it again, so that what you approve is what actually happens."
+  },
+  /* ---------------------------------------------------------------------------
+       D-484, 2026-09-24 — THE FIRST TWO ROWS THIS FAMILY'S OWN HEADER SAID IT
+       COULD NOT HOLD, AND THEY EXIST BECAUSE THE PLANE CHANGED SHAPE RATHER THAN
+       BECAUSE A SENTENCE WAS FINALLY WRITTEN.
+  
+       The header above states the bar and the reason: a row holds ONE `where`,
+       one code may not hold two rows, and a `where` naming one of four sites
+       would claim a span the code is not confined to — *"REC-71's overstatement
+       wearing the other face"*. It then names the honest fix — *"the refusals
+       consolidated behind one helper so there IS one site"* — and ROUTES it.
+       D-484 is that routing coming back. `NO_BASIS` was minted at four sites in
+       `store.mjs` and `NO_CITATION` at three; each is now minted at exactly ONE,
+       inside the region named below, and every former site returns through it.
+  
+       So the `where` is not a narrowing of a claim this family could not support
+       — it is now literally true, and `store.mjs` holds one `reason: "NO_BASIS"`
+       and one `reason: "NO_CITATION"` literal to prove it (a structural pin in
+       `test/d484-refusal-translation.test.mjs` asserts exactly that, because a
+       second site added later would silently make this `where` a lie again).
+  
+       EACH TRANSLATION IS TRUE AT EVERY SITE IT NOW SERVES, which is the price of
+       consolidation and is where a careless one would do harm. `NO_BASIS` covers
+       concluding an inquiry that rests on nothing, partitioning a question with no
+       legs, a grade-D testimony with no stated basis, and a revision of a declared
+       flow that does not say why it changes — so the sentence speaks about WHAT
+       THIS RESTS ON and never about legs, or documents, or flows. The per-site
+       `detail` still carries the particular, unchanged.
+  
+       THE UNDETERMINED DOOR IS NAMED, on NO_FALSIFIER's precedent (REC-117): a
+       member refused for a missing basis is a member under pressure to invent one,
+       and the record would rather carry *nothing supports this yet* in the open.
+       --------------------------------------------------------------------------- */
+  NO_BASIS: {
+    check: "C-33.40",
+    where: "src/store.mjs actNoBasis > is-act-no-basis",
+    translation: "This asks the record to stand behind something without saying what it rests on. Say what that is first \u2014 what the question is grounded in, what you personally observed, or why a settled thing is being changed \u2014 and the record carries it beside the claim, in your name, so a later reader can go and disagree with it. If the honest answer is that nothing supports it yet, write that down rather than inventing something: a stated absence is a real answer here, and an empty basis reads as one nobody checked."
+  },
+  NO_CITATION: {
+    check: "C-33.41",
+    where: "src/store.mjs actNoCitation > is-act-no-citation",
+    translation: "A citation is the address of something somebody who was not here can go and read. Without one, what you have written can only be checked by you, and the record would be claiming more than it can show. Name where the source is published or held \u2014 if it is not public, say who holds it and how it was seen, which is still an address and is still checkable."
   }
 };
 var ROUTE_MARK_CHECKS = {
@@ -13701,6 +13752,7 @@ var FIRST_STATE_JSON = JSON.stringify(
   Object.fromEntries(Object.entries(STATES).map(([t, s]) => [t, s.legal[0]]))
 );
 var HEADINGS_JSON = JSON.stringify(HEADINGS);
+var RISK_TIERS_JSON = JSON.stringify(RISK_TIERS);
 var escGroup = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 var GROUP_LINE_UNREAD = '<p class="eyebrow" id="instance-group" data-group="unread">This copy could not read its group just now</p>';
 function groupLine(read) {
@@ -13986,6 +14038,25 @@ ${GROUP_LINE_UNREAD}
         <textarea id="n-cp-basis" rows="4"></textarea>
       </div>
       <p class="hint">This action will not be sent while this is undetermined.</p>
+    </div>
+    <!-- D-483 / D-182 (BIO_Case_Making_v0_1.md section 2, RULED by BOB #21): THE RISK TIER, ASKED
+         RATHER THAN ASSUMED. This page wrote risk_tier: undetermined because it had no control to
+         ask with, which is honest and is also a missing affordance: a member who HAS assessed the
+         action had no way to say so here. The control is that way round and no further - NOTHING IS
+         PRESELECTED, because a preselected tier is this page assessing legal exposure on the
+         member's behalf, which is the overclaim D-182 exists to have removed. Leaving it alone still
+         writes undetermined.
+         THE CHOICES AND THEIR WORDS ARE NOT WRITTEN HERE. They are rendered from the injected
+         vocabulary below (REC-38's pattern, as the counterparty pair is not): a tier's MEANING is
+         the sentence, so a surface that wrote its own three labels would be deciding what 2 means.
+         The container is empty in the source on purpose - if the vocabulary ever stops arriving, a
+         member is offered nothing rather than offered a stale copy of it. -->
+    <div class="card" id="n-risk">
+      <p style="margin:0 0 10px"><b>How risky is it to file this?</b> This is the one field on an
+      action that carries legal exposure, so only a member can set it and nothing is filled in for
+      you. Choose one if you have assessed it, and leave it alone if you have not.</p>
+      <div id="n-risk-choices"></div>
+      <p class="hint" id="n-risk-unset"></p>
     </div>
   </div>
   <div class="actions" style="margin-top:16px"><button id="n-save">Create it</button></div>
@@ -14523,7 +14594,13 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
      literal, and a stray pair here parses fine under node --check and then
      fails at Miniflare's module parse. CLAUDE.md's trap, met again.) */
   if (type === "action") {
-    fm.push("action_kind: other","risk_tier: undetermined");
+    /* D-483: the tier the member chose, or undetermined when they chose none - and undetermined is
+       WRITTEN either way, never omitted, because an absent key and a stated undetermined must read
+       the same and only one of them says so in the bytes. riskTierState is the plane's own reader
+       (injected above), so what is written here is what the plane will read back. */
+    const tier = riskTierState(act && act.risk_tier !== null && act.risk_tier !== undefined
+      ? act.risk_tier : undefined);
+    fm.push("action_kind: other","risk_tier: " + (tier === null ? "undetermined" : tier));
     const cp = act && act.counterparty;
     /* The state the member chose is written even when the field beside it is
        empty: a member who answered "not determined yet" and wrote nothing has
@@ -14593,6 +14670,38 @@ function acquireWhy(a){
    pressures a member into writing what they do not know is a bug in the
    gate. */
 const deriveInquiryTitle = ${deriveInquiryTitle.toString()};
+/* D-483: the tier vocabulary and the plane's own reader of it, injected verbatim (the deriveInquiryTitle
+   pattern one line up, for its reason: the page and the plane cannot drift if they are the same code).
+   THE SETTABLE TIERS ARE DERIVED, NOT LISTED. A member may author exactly the values riskTierState reads
+   back as themselves; undetermined is not among them, because it is what the record says when NO member
+   has stated a tier, and offering it as a choice would let a member author the absence of their own
+   assessment. If the catalogue ever grows a fourth tier this control grows with it; if it grew one the
+   plane would refuse, this control would not offer it. */
+const RISK_TIERS = ${RISK_TIERS_JSON};
+const riskTierState = ${riskTierState.toString()};
+const SETTABLE_TIERS = Object.keys(RISK_TIERS).filter((k)=> riskTierState(Number(k)) === Number(k));
+/* The words are the vocabulary's, escaped because they are rendered as markup and nothing else about
+   their provenance makes them safe to interpolate raw. */
+const renderRiskTiers = ()=>{
+  const box = $("#n-risk-choices");
+  if (box) box.innerHTML = SETTABLE_TIERS.map((k)=>
+    '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">'
+    + '<input type="radio" name="n-risk" id="n-risk-' + escH(k) + '" value="' + escH(k)
+    + '" style="width:auto;margin-top:4px">'
+    + '<span>' + escH(RISK_TIERS[k]) + '</span></label>').join("");
+  /* What leaving it alone WILL write, in the plane's sentence for it rather than this page's. */
+  const unset = $("#n-risk-unset");
+  if (unset) unset.textContent = "Leave this alone and the record will say: " + RISK_TIERS.undetermined;
+};
+renderRiskTiers();
+/* null means NO MEMBER CHOSE, which mdFor writes as undetermined. A value the vocabulary does not hold
+   cannot arrive from the control above; if one ever did it would be nobody stating a tier the plane
+   accepts, so it reads as no choice here rather than being passed through to the bytes. */
+const chosenRiskTier = ()=>{
+  const el = $("input[name=n-risk]:checked");
+  const st = riskTierState(el ? Number(el.value) : undefined);
+  return st === "undetermined" || st === null ? null : st;
+};
 const syncNewForm = ()=>{
   const t = $("#n-type").value;
   const isQ = t === "inquiry";
@@ -14639,7 +14748,11 @@ $("#n-save").addEventListener("click", async ()=>{
     if (!named && !undet) { e.textContent = "Say who this is addressed to, or that it is not determined yet."; return; }
     if (named && !nm) { e.textContent = "Name the counterparty."; return; }
     if (undet && !bs) { e.textContent = "Say what is known so far, and what would settle it."; return; }
-    act = { counterparty: named ? { state:"named", name:nm } : { state:"undetermined", basis:bs } };
+    /* D-483: the tier goes with the counterparty because both are the member's answers and neither is
+       this form's. No refusal beside it: a member who assessed nothing has answered honestly, and a gate
+       that stopped them here would press them into stating the one value nobody assessed. */
+    act = { counterparty: named ? { state:"named", name:nm } : { state:"undetermined", basis:bs },
+            risk_tier: chosenRiskTier() };
   }
   $("#n-save").disabled = true;
   try {
@@ -14975,7 +15088,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.21.0";
+var CATALOG_VERSION = "1.22.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -19516,6 +19629,19 @@ async function pageContent(doc, pageMap) {
   }
   return parts.join("\n");
 }
+var IDENTITY_MATRIX = Object.freeze([1, 0, 0, 1, 0, 0]);
+function matMul(a, b) {
+  return [
+    a[0] * b[0] + a[1] * b[2],
+    a[0] * b[1] + a[1] * b[3],
+    a[2] * b[0] + a[3] * b[2],
+    a[2] * b[1] + a[3] * b[3],
+    a[4] * b[0] + a[5] * b[2] + b[4],
+    a[4] * b[1] + a[5] * b[3] + b[5]
+  ];
+}
+var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
+var BASELINE_EPS = 1e-6;
 async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
@@ -19584,6 +19710,22 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     for (let i = stack.length - 1; i >= 0; i--) if (stack[i].t === type) return stack[i];
     return null;
   };
+  const numArgs = (n) => {
+    const out = [];
+    for (let i = stack.length - 1; i >= 0 && out.length < n; i--) {
+      if (stack[i].t === "num") out.unshift(stack[i].v);
+    }
+    return out.length === n ? out : null;
+  };
+  let ctm = IDENTITY_MATRIX.slice();
+  const ctmStack = [];
+  let tlm = IDENTITY_MATRIX.slice();
+  let leading = 0;
+  let lineY = null;
+  const breakLine = () => {
+    pieces.push("\n");
+    lineY = baselineOf(tlm, ctm);
+  };
   for (const tk of toks) {
     if (tk.t !== "op") {
       stack.push(tk);
@@ -19620,16 +19762,53 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       }
       case "'":
       case '"': {
-        pieces.push("\n");
+        tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
+        breakLine();
         const st = lastOfType("str");
         if (st) show(st.bytes);
         break;
       }
+      case "q":
+        ctmStack.push(ctm.slice());
+        break;
+      case "Q":
+        if (ctmStack.length) ctm = ctmStack.pop();
+        break;
+      case "cm": {
+        const m = numArgs(6);
+        if (m) ctm = matMul(m, ctm);
+        break;
+      }
+      case "BT":
+        tlm = IDENTITY_MATRIX.slice();
+        break;
+      case "TL": {
+        const a = numArgs(1);
+        if (a) leading = a[0];
+        break;
+      }
       case "Td":
-      case "TD":
-      case "Tm":
+      case "TD": {
+        const a = numArgs(2);
+        if (!a) break;
+        const [tx, ty] = a;
+        if (tk.v === "TD") leading = -ty;
+        tlm = matMul([1, 0, 0, 1, tx, ty], tlm);
+        if (ty !== 0) breakLine();
+        else if (lineY === null) lineY = baselineOf(tlm, ctm);
+        break;
+      }
+      case "Tm": {
+        const m = numArgs(6);
+        if (!m) break;
+        tlm = m;
+        const y = baselineOf(tlm, ctm);
+        if (lineY === null || Math.abs(y - lineY) > BASELINE_EPS) breakLine();
+        break;
+      }
       case "T*":
-        pieces.push("\n");
+        tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
+        breakLine();
         break;
       default:
         break;
@@ -29122,6 +29301,34 @@ function refusal6(key, extra = {}) {
   const row = CASE_DERIVATION_CHECKS[key];
   return { ok: false, reason: key, code: key, check: row.check, translation: row.translation, ...extra };
 }
+function actNoBasis(detail, extra = {}) {
+  const row = ACT_SHAPE_CHECKS.NO_BASIS;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("actNoBasis: NO_BASIS has no ACT_SHAPE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_BASIS",
+    code: "NO_BASIS",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra
+  };
+}
+function actNoCitation(detail, extra = {}) {
+  const row = ACT_SHAPE_CHECKS.NO_CITATION;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("actNoCitation: NO_CITATION has no ACT_SHAPE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_CITATION",
+    code: "NO_CITATION",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra
+  };
+}
 var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var TASK_KINDS = ["authority-undetermined"];
@@ -29490,7 +29697,15 @@ var Store = class _Store extends DurableObject {
          recorded no actor, and there is no value a backfill could reach for that would not be
          invented. NULL reads back as `not recorded`, stated, through `#statusBy`. */
       ["members", "status_by", "TEXT"],
-      ["signers", "status_by", "TEXT"]
+      ["signers", "status_by", "TEXT"],
+      /* REC-193 (BIO_Publication_v0_1.md §3 rule 13, BOB #32): WHO WROTE THE EXCLUSION STATEMENT'S CURRENT
+         BYTES — the SERVER's stamp of the editor whose `op=casedraft` last CHANGED the statement text, never
+         the caller's word and never the last editor of another field. NULLABLE AND NEVER BACK-FILLED, D-85's
+         reasoning and sharper here: the only value a backfill could reach for is `updated_by`, which is the
+         liar this column replaces. NULL reads back as UNDETERMINED, stated, and `op=statementack` refuses by
+         name (`STATEMENT_ACK_AUTHOR_UNDETERMINED`) rather than attribute the sentence to whoever last
+         touched the draft. */
+      ["case_drafts", "statement_by", "TEXT"]
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -33620,12 +33835,7 @@ Mitigation: ${mit}
     adopted = { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 };
     const legs = Array.isArray(fm.basis) ? fm.basis : [];
     if (adopted.leg_count < 1 || !pid && legs.length < 1)
-      return {
-        ok: false,
-        reason: "NO_BASIS",
-        target,
-        detail: "a conclusion rests on something. An open inquiry may hold a claim with no legs at all \u2014 a standing objective the group means to pursue \u2014 but concluding one that rests on nothing would put the record's name to an assertion nothing supports. Add a basis[] leg (and the same target in references[]) first."
-      };
+      return actNoBasis("a conclusion rests on something. An open inquiry may hold a claim with no legs at all \u2014 a standing objective the group means to pursue \u2014 but concluding one that rests on nothing would put the record's name to an assertion nothing supports. Add a basis[] leg (and the same target in references[]) first.", { target });
     if (pid) {
       const when2 = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
       const priorRec = this.#conclusionRecordOf(pid, target, viewer);
@@ -37262,15 +37472,20 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         detail: "a draft's arguments are at most 64 KiB, the size of what op=publish would accept."
       };
     const when = (/* @__PURE__ */ new Date()).toISOString();
+    const priorStatement = existing ? _Store.#fmSafe(JSON.parse(existing.params).statement ?? "") : "";
+    const nextStatement = _Store.#fmSafe(params.statement ?? "");
+    const statementBy = !nextStatement ? null : existing && nextStatement === priorStatement && existing.statement_by ? existing.statement_by : a.who;
     let id;
     if (existing) {
       id = existing.draft_id;
       this.sql.exec(
-        `UPDATE case_drafts SET case_id=?, params=?, updated_by=?, updated_at=? WHERE draft_id=?`,
+        `UPDATE case_drafts SET case_id=?, params=?, updated_by=?, updated_at=?, statement_by=?
+                     WHERE draft_id=?`,
         named,
         json2,
         a.who,
         when,
+        statementBy,
         id
       );
     } else {
@@ -37280,8 +37495,19 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         reason: "MINT_EXHAUSTED",
         detail: "the plane could not find a free draft id; nothing was written"
       };
-      this.sql.exec(`INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
-                     updated_by,updated_at) VALUES (?,?,?,?,?,?,?,?)`, id, owning, named, json2, a.who, when, a.who, when);
+      this.sql.exec(
+        `INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
+                     updated_by,updated_at,statement_by) VALUES (?,?,?,?,?,?,?,?,?)`,
+        id,
+        owning,
+        named,
+        json2,
+        a.who,
+        when,
+        a.who,
+        when,
+        statementBy
+      );
     }
     const ident = this.#draftIdentity({ case_id: named });
     return {
@@ -37584,6 +37810,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       })(),
       updated_by: d.updated_by,
       updated_at: d.updated_at,
+      /* REC-193 / §3 rule 13: WHO WROTE THE STATEMENT THAT STANDS, beside the editor of everything else,
+         because they are two facts and one column said both. `null` is the honest answer for a draft
+         written before the stamp existed, and the sentence beside it says which. */
+      statement_by: d.statement_by ?? null,
+      statement_by_stated: d.statement_by ? `${d.statement_by} wrote the exclusion statement as it now stands` : "UNDETERMINED: this draft predates the recording of the statement's author, and its last editor is not evidence of who wrote the statement",
       ...grantPart,
       /* REC-148: the project's bar AS `op=publish` WOULD FREEZE IT (the same `#projectBar` call), for the
          control plane's in-band floors (DEC-31, §6A.3 point 1). Read now, because a draft is not frozen. */
@@ -37679,6 +37910,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     bySecret = false
   } = {}) {
     let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
+    let authorFromDraft = false;
     if (bySecret) {
       const live = this.#liveReviewGrant(secretSha);
       if (!live || draft && String(draft).trim() !== live.draft.draft_id) return _Store.#noReviewCopy();
@@ -37687,7 +37919,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       ident = this.#draftIdentity(d);
       draftId = d.draft_id;
       statement = JSON.parse(d.params).statement;
-      statementAuthor = d.updated_by;
+      statementAuthor = d.statement_by ?? null;
+      authorFromDraft = true;
       kind = "recipient";
       by = live.grant.grant_id;
       grantId = live.grant.grant_id;
@@ -37703,7 +37936,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         ident = this.#draftIdentity(d);
         draftId = d.draft_id;
         statement = JSON.parse(d.params).statement;
-        statementAuthor = d.updated_by;
+        statementAuthor = d.statement_by ?? null;
+        authorFromDraft = true;
       } else {
         const cid = String(caseId ?? "").trim(), ed = Number(edition);
         if (!cid || !Number.isInteger(ed) || ed < 1)
@@ -37745,6 +37979,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         ok: false,
         reason: "STATEMENT_ACK_NO_STATEMENT",
         detail: "this draft states nothing about what its case excludes, so there is no statement to acknowledge yet. The draft's editor authors it (statement=); acknowledge it then."
+      };
+    if (kind === "participant" && authorFromDraft && !statementAuthor)
+      return {
+        ok: false,
+        reason: "STATEMENT_ACK_AUTHOR_UNDETERMINED",
+        draft: draftId,
+        author: null,
+        detail: `this draft records no author for its exclusion statement: it was written before the plane stamped one, and who wrote the sentence that now stands is UNDETERMINED. An acknowledgement is a SECOND person's reading (BIO_Publication \xA73 rule 11), and the plane cannot tell here whether you are the first \u2014 reading the draft's last editor would attribute the statement to whoever last touched any part of it. An editor of this project saves the statement again (op=casedraft with statement=), which records who wrote its current bytes; acknowledge it then. The case publishes either way.`
       };
     if (kind === "participant" && statementAuthor && by === statementAuthor)
       return {
@@ -37969,8 +38211,9 @@ case_project: ${project}
     const cap = Number.isInteger(askedCap) && askedCap >= 1 ? Math.min(askedCap, _Store.REVIEW_LIST_MAX) : _Store.REVIEW_LIST_MAX;
     const counted = this.#one(`SELECT COUNT(*) AS n FROM case_drafts WHERE project_id=?`, pid);
     const total = counted ? Number(counted.n) : 0;
-    const rows = this.#rows(`SELECT draft_id, case_id, created_by, created_at, updated_by, updated_at
-                             FROM case_drafts WHERE project_id=? ORDER BY created_at, draft_id LIMIT ?`, pid, cap);
+    const rows = this.#rows(`SELECT draft_id, case_id, created_by, created_at, updated_by, updated_at,
+                             statement_by FROM case_drafts WHERE project_id=? ORDER BY created_at, draft_id
+                             LIMIT ?`, pid, cap);
     const drafts = rows.map((d) => {
       const ident = this.#draftIdentity(d);
       return {
@@ -37984,6 +38227,8 @@ case_project: ${project}
         created_at: d.created_at,
         updated_by: d.updated_by,
         updated_at: d.updated_at,
+        /* REC-193 / §3 rule 13: null where the draft predates the stamp — UNDETERMINED, not the editor. */
+        statement_by: d.statement_by ?? null,
         read: `op=reviewcopy&draft=${d.draft_id}`
       };
     });
@@ -38949,12 +39194,7 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
     const all = Array.isArray(fm.basis) ? fm.basis : [];
     const legs = all.filter((l) => l && typeof l === "object");
     if (!legs.length)
-      return {
-        ok: false,
-        reason: "NO_BASIS",
-        target,
-        detail: "a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite what it rests on first (op=cite); an assertion that nothing is enough on its own is not a thing the record can hold."
-      };
+      return actNoBasis("a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite what it rests on first (op=cite); an assertion that nothing is enough on its own is not a thing the record can hold.", { target });
     if (legs.length !== all.length)
       return {
         ok: false,
@@ -49712,11 +49952,7 @@ ${words}`;
       reason: "NO_JUSTIFICATION",
       detail: "a declared relation carries a justification, like a pattern statement (safeguard 4)"
     };
-    if (!cite) return {
-      ok: false,
-      reason: "NO_CITATION",
-      detail: "a declared relation carries a citation, like a pattern statement (safeguard 4)"
-    };
+    if (!cite) return actNoCitation("a declared relation carries a citation, like a pattern statement (safeguard 4)");
     const from = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, fromEntity);
     if (!from) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: fromEntity, end: "from" };
     const to = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, toEntity);
@@ -50178,11 +50414,7 @@ ${words}`;
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "testimony names the entity the reference concerns, by id" };
     const b = typeof basis === "string" ? basis.trim() : "";
-    if (!b) return {
-      ok: false,
-      reason: "NO_BASIS",
-      detail: "grade D is recorded testimony: it carries the member's stated basis, with an author and a date"
-    };
+    if (!b) return actNoBasis("grade D is recorded testimony: it carries the member's stated basis, with an author and a date");
     const rr = this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=?`, captureSha, ref);
     if (!rr) return {
       ok: false,
@@ -51145,20 +51377,14 @@ ${words}`;
           basis: cur.basis,
           prior_version: null
         };
-      if (!stmt) return {
-        ok: false,
-        reason: "NO_BASIS",
-        progression_key: key,
-        version: cur.version,
-        detail: `'${key}' is already declared (version ${cur.version}); a revision states its basis -- why the declared flow changes -- and version ${cur.version} stands beside it (framework 8.2)`
-      };
-      if (!cite) return {
-        ok: false,
-        reason: "NO_CITATION",
-        progression_key: key,
-        version: cur.version,
-        detail: "a revision of a declared flow carries a citation -- where the basis for the change is published or held"
-      };
+      if (!stmt) return actNoBasis(
+        `'${key}' is already declared (version ${cur.version}); a revision states its basis -- why the declared flow changes -- and version ${cur.version} stands beside it (framework 8.2)`,
+        { progression_key: key, version: cur.version }
+      );
+      if (!cite) return actNoCitation(
+        "a revision of a declared flow carries a citation -- where the basis for the change is published or held",
+        { progression_key: key, version: cur.version }
+      );
     }
     const version = cur ? cur.version + 1 : 1;
     const at = (/* @__PURE__ */ new Date()).toISOString();
@@ -51929,11 +52155,7 @@ ${words}`;
       detail: "an exception document carries a reason -- why the stage may lawfully be missing (framework 8.2)"
     };
     const cite = typeof citation === "string" ? citation.trim() : "";
-    if (!cite) return {
-      ok: false,
-      reason: "NO_CITATION",
-      detail: "an exception document carries a citation -- where the justification for the skip is published"
-    };
+    if (!cite) return actNoCitation("an exception document carries a citation -- where the justification for the skip is published");
     const def = this.#one(`SELECT progression_key FROM progression_defs WHERE progression_key=?`, key);
     if (!def) return {
       ok: false,
