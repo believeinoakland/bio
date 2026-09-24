@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 22 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116; G18, G19 by M0-143; G20, G21 by M0-153; G22 by M0-173) — over `tools/gates.mjs` and
+/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 25 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116; G18, G19 by M0-143; G20, G21 by M0-153; G22 by M0-173; G23-G25 by M0-176) — over `tools/gates.mjs` and
  * `tools/pushguard.mjs`, each driven through `bio-plane/test/gates.test.mjs`.
  *
  *   node bio-plane/test/gates.control.mjs          (from the repo root; one arm: add its id, e.g. G1)
@@ -410,6 +410,81 @@ const ARMS = [
                    "the SAME reader with no pin reads the MOVED state",
                    "an override already set when the gate began is kept",
                    "a checkout where origin/coord does not resolve says NOT PINNED"] },
+
+  /* M0-176's THREE ARMS. The row's own control is G23 — put the whole-`docs/` door back and the door stops
+     looking at the path. G24 and G25 are the OTHER direction, and they are the ones that earn the fix: a row
+     asking for FEWER units is passed by any break that narrows, so each clause that exists to PREVENT a false
+     green is removed in turn and the arm named that must fail. All three break the ONE function the key, the
+     DOCS step and both of `readersOf`'s bounds read through, which is why a single patch moves every site. */
+  { id: "G23", title: "the WHOLE-`docs/` door restored — a doc-facing unit takes every note again (M0-176's own control)",
+    patches: [{ file: GATES,
+      from: "  return out.size ? out : new Set(universe().under.get(\"docs\") || []);",
+      to: "  void out; return new Set(universe().under.get(\"docs\") || []);   /* M0-176 CONTROL: the whole-docs door */" }],
+    mustBreak: "the plan for each note is EXACTLY its readers plus the backstop, and never empty",
+    alsoBreak: ["...and NOT for a note it does not read — which is the whole of this row",
+                "a suite that reads its note THROUGH A TOOL is selected for that note, and not for another's",
+                "...and is BOUNDED to that directory — clause 2 is not a second way of saying 'everything'",
+                "a note NOBODY names still runs the backstop and nothing else",
+                "two notes together select the UNION, never one of them",
+                "the plan SAYS the selection is path-granular, and counts it against the derived set",
+                "a TARGETED diff carrying prose selects the doc-facing units that TAKE it, not every doc-facing unit",
+                "...and NOT a suite that only CITES the moved note in its own prose"],
+    /* The DERIVATION is a different question from the door and must be untouched — which is also why the M0-143
+       arms were moved off `batteryOf` and onto the printed set: over this arm they would otherwise all move. */
+    mustNotBreak: ["...and an EMPTY diff, which has no path to narrow by, runs the WHOLE derived set and says so",
+                   "the doc-facing set is EXACTLY this, and it is NOT EMPTY",
+                   "a suite that READS `docs/` through a STRING is doc-facing",
+                   "...and a suite whose ONLY `docs/` mention is in a COMMENT is NOT doc-facing",
+                   "every arm here is still the DOCS class",
+                   "a doc-facing suite that names NO path and NO directory keeps the whole tree",
+                   "a suite that reads ONE note is selected for THAT note"] },
+
+  { id: "G24", title: "clause 3's BACKSTOP dropped — the MENTION-blind unit narrowed to nothing (the false green this row can produce)",
+    patches: [{ file: GATES,
+      from: "  return out.size ? out : new Set(universe().under.get(\"docs\") || []);",
+      to: "  return out;   /* M0-176 CONTROL: no backstop — a unit that names nothing takes nothing */" }],
+    mustBreak: "a doc-facing suite that names NO path and NO directory keeps the whole tree",
+    alsoBreak: ["a note NOBODY names still runs the backstop and nothing else",
+                "the plan for each note is EXACTLY its readers plus the backstop, and never empty",
+                "two notes together select the UNION, never one of them",
+                "the plan SAYS the selection is path-granular, and counts it against the derived set",
+                "a TARGETED diff carrying prose selects the doc-facing units that TAKE it, not every doc-facing unit",
+                "...and NOT a suite that only CITES the moved note in its own prose"],
+    /* FEWER UNITS IS NOT THE FIX: the three units that really do name their prose must stay exactly where they were.
+       THE EMPTY-DIFF ARM IS HERE BECAUSE THE FIRST RUN OF THIS ARM PROVED THE DECLARATION WRONG, and the arm is
+       corrected rather than the reading smoothed (2026-09-24, M0-176's worker): it was declared an `alsoBreak`, on
+       the reasoning that dropping the backstop empties a unit's set and a set-driven selection would then drop it.
+       ARMED, it did NOT fail — 7 of the 8 declared did — and the subject is right: the DOCS step short-circuits on
+       `!docsChanged.length` BEFORE it asks `docsTakenBy` anything, so an empty diff runs the whole derived set
+       whatever any clause says. It is asserted UNBROKEN by all three arms, which states that insensitivity as a
+       property rather than leaving it as a gap nobody declared. */
+    mustNotBreak: ["...and an EMPTY diff, which has no path to narrow by, runs the WHOLE derived set and says so",
+                   "a suite that reads ONE note is selected for THAT note",
+                   "a suite that reads its note THROUGH A TOOL is selected for that note, and not for another's",
+                   "a suite whose tool NAMES a docs directory and walks nothing takes the prose IN it",
+                   "...and is BOUNDED to that directory — clause 2 is not a second way of saying 'everything'",
+                   "the doc-facing set is EXACTLY this, and it is NOT EMPTY"] },
+
+  { id: "G25", title: "clause 2 dropped — prose read by ASSEMBLY falls through to the backstop and the bound is lost",
+    patches: [{ file: GATES,
+      from: "  for (const p of docsDirsTaken(unit)) out.add(p);",
+      to: "  void docsDirsTaken;   /* M0-176 CONTROL: a docs DIRECTORY named in code takes nothing */" }],
+    /* THE ARM'S SHAPE IS THE FINDING, and it is declared here rather than discovered: dropping clause 2 does NOT
+       make the assembly reader miss its note — clause 3 catches it and hands it the WHOLE tree, so it is selected
+       MORE widely, not less. What fails is the BOUND. That is the two clauses being genuinely different rules
+       rather than one written twice, and it is why clause 2 is worth its cost: without it the estate's directory
+       readers each take all 280 notes. */
+    mustBreak: "...and is BOUNDED to that directory — clause 2 is not a second way of saying 'everything'",
+    alsoBreak: ["the plan for each note is EXACTLY its readers plus the backstop, and never empty",
+                "a note NOBODY names still runs the backstop and nothing else",
+                "two notes together select the UNION, never one of them",
+                "the plan SAYS the selection is path-granular, and counts it against the derived set"],
+    mustNotBreak: ["...and an EMPTY diff, which has no path to narrow by, runs the WHOLE derived set and says so",
+                   "a suite whose tool NAMES a docs directory and walks nothing takes the prose IN it",
+                   "a suite that reads ONE note is selected for THAT note",
+                   "a suite that reads its note THROUGH A TOOL is selected for that note, and not for another's",
+                   "a doc-facing suite that names NO path and NO directory keeps the whole tree",
+                   "the doc-facing set is EXACTLY this, and it is NOT EMPTY"] },
 ];
 
 /* ---------------------------------------------------------------- D-331: every anchor, before anything arms */
