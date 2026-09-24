@@ -6,7 +6,9 @@
  *   node tools/train.mjs run [options]              land every waiting branch in one train
  *       --full                                      gate FULL instead of the union's derived class
  *       --branch <ref>                              also land <ref> (e.g. origin/worktree-agent-x) — repeatable
- *       --drop <branch>                             leave a waiting branch out of this train — repeatable
+ *       --drop <branch>                             leave a waiting branch out of this train — repeatable, and a
+ *                                                   comma-separated list is SPLIT; a train REFUSES TO START when an
+ *                                                   entry names nothing it could drop (M0-159)
  *       --isolate                                   on a RED union, gate each branch ALONE to name the red ones,
  *                                                   return them by name, and land the rest in one more train
  *       --no-push                                   merge and gate, push nothing (the record says so)
@@ -217,7 +219,30 @@ export function runTrain(opts = {}) {
   const { main, rows } = listLand({ repo });
   if (!main) return { ...out, reason: "REFUSED — no origin/main" };
   out.base = main;
-  const drop = new Set(opts.drop || []);
+  /* M0-159 — A `--drop` THAT NAMES NOTHING USED TO DROP NOTHING, SILENTLY. On 2026-09-24 07:08Z
+     `node tools/train.mjs run --drop a,b,c` read the comma list as ONE branch name; it matched no WAITING row, so the
+     train dropped nothing and began merging every waiting branch — the forbidden ones included. It was killed by PID
+     before any gate or push. The only sign was `dropped: a,b,c` beside the waiting count, which reads exactly like it
+     worked. Two changes, and the SECOND is the one that makes the instrument fail loudly rather than silently:
+       1. a `--drop` value is SPLIT ON COMMAS, trimmed, and an `origin/` prefix stripped (the `--branch` test below
+          already accepted either spelling; now the WAITING test does too);
+       2. a train REFUSES TO START, naming them, when any entry matches nothing this train could drop.
+     WHAT IT IS MATCHED AGAINST, AND THE LIMIT: every row `train.mjs list` names — WAITING, LANDED or MALFORMED — plus
+     every `--branch` ref of this run. A drop naming a LANDED or MALFORMED row is ACCEPTED and is a no-op, because
+     those never merge anyway and a branch that landed between the operator's `list` and this run must not become a
+     refusal. A drop naming NOTHING is the defect, and can be nothing but a typo.
+     `dropChecked` is the `--isolate` retry below, whose drop set this function built itself from rows it has already
+     listed: no operator typo can reach it, and re-validating it would refuse the retry over a `--branch` ref that
+     resolved to nothing. */
+  const dropName = (s) => String(s).trim().replace(/^origin\//, "");
+  const drop = new Set((opts.drop || []).flatMap((d) => String(d).split(",")).map(dropName).filter(Boolean));
+  if (!opts.dropChecked) {
+    const droppable = new Set([...rows.map((r) => r.branch), ...(opts.branches || []).map(dropName)]);
+    const unknown = [...drop].filter((d) => !droppable.has(d));
+    if (unknown.length) return { ...out, reason: `REFUSED — --drop names ${unknown.length} branch(es) this train cannot drop, `
+      + `so it would have dropped NOTHING and merged everything (M0-159): ${unknown.join(", ")}. Nothing was merged. `
+      + `What it could drop: ${[...droppable].join(", ") || "nothing — no land/* ref and no --branch"}` };
+  }
   const waiting = rows.filter((r) => r.state === "WAITING" && !drop.has(r.branch));
   for (const r of rows.filter((x) => x.state === "MALFORMED"))
     out.returned.push({ branch: r.branch, sha: r.sha, lane: null, reason: "MALFORMED — not `land/<lane>/<topic>`, so no lane to land it for" });
@@ -268,7 +293,7 @@ export function runTrain(opts = {}) {
         if (alone.verdict !== "GREEN") { reds.push(w.branch); out.returned.push({ branch: w.branch, sha: w.sha, lane: w.lane, reason: `RED ALONE on origin/main (${alone.verdict}${alone.file ? `, record ${alone.file}` : ""})` }); }
       }
       if (!reds.length) { out.reason = "RED TOGETHER, GREEN ALONE — the branches fail where they MEET; UNDETERMINED which to return, nothing pushed"; out.suspects = merged.map((w) => w.branch); return out; }
-      const next = runTrain({ ...opts, id: `${out.id}-r`, noFetch: true, isolate: false, drop: [...drop, ...reds, ...out.returned.map((r) => r.branch)] });
+      const next = runTrain({ ...opts, id: `${out.id}-r`, noFetch: true, isolate: false, dropChecked: true, drop: [...drop, ...reds, ...out.returned.map((r) => r.branch)] });
       return { ...next, returned: [...out.returned, ...next.returned], isolatedFrom: out.id };
     }
     out.suspects = merged.map((w) => w.branch);
@@ -384,12 +409,23 @@ if (IS_CLI) {
     for (const r of rows) console.log(`train:   ${r.state.padEnd(9)} ${r.branch} @ ${s8(r.sha)}${r.lane ? ` (lane ${r.lane})` : ""}`);
     process.exit(0);
   } else if (cmd === "run") {
+    /* M0-159, THE SAME CLASS ONE LEVEL OUT: `many` reads the token AFTER the flag, so a flag with nothing after it —
+       the LAST token on the line — yields nothing and the run goes on as if it had never been typed. `--drop` at the
+       end of the line is the incident's own shape, in the one spelling the drop check above can never see, because
+       no entry reaches it. Refuse by name. WHAT THIS STILL CANNOT SEE, STATED: `--drop --full` takes `--full` as a
+       branch name — caught by the drop check, which refuses it by name — and `--trailer --full` takes it as trailer
+       text, which is free text and has no set to be checked against. */
+    const bare = ["--branch", "--drop", "--trailer"].filter((f) => argv.some((a, i) => a === f && !argv[i + 1]));
+    if (bare.length) {
+      console.log(`train: REFUSED — ${bare.join(", ")} given with no value after it, so it would have been read as if never typed (M0-159); nothing was merged`);
+      process.exit(1);
+    }
     const r = runTrain({ full: argv.includes("--full"), isolate: argv.includes("--isolate"), noPush: argv.includes("--no-push"),
       branches: many("--branch"), drop: many("--drop"), trailers: many("--trailer") });
     console.log("\n" + report(r));
     process.exit(r.reason === "LANDED" || r.reason === "NOTHING TO LAND" || /^GATED GREEN/.test(r.reason) ? 0 : 1);
   } else {
-    console.log("usage: node tools/train.mjs list | run [--full] [--isolate] [--no-push] [--branch <ref>]... [--drop <branch>]... [--trailer \"<line>\"]...");
+    console.log("usage: node tools/train.mjs list | run [--full] [--isolate] [--no-push] [--branch <ref>]... [--drop <branch>[,<branch>]...]... [--trailer \"<line>\"]...");
     process.exit(2);
   }
 }
