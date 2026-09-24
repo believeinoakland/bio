@@ -11955,7 +11955,7 @@ var DRIVE_CAPTURE_CHECKS = {
      could honestly hold, so the honest answer is the shape's name and the reason. */
   DRIVE_FOLDER_NOT_A_DOCUMENT: {
     check: "C-48.2",
-    where: "src/index.mjs fetch > is-drive-capture",
+    where: "src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both",
     translation: "That address is a Drive FOLDER \u2014 a listing of files rather than a document. There is nothing to export and no single set of bytes a capture of it would hold. Name the document you want; harvesting everything a folder lists is a different act."
   },
   /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an
@@ -11964,7 +11964,7 @@ var DRIVE_CAPTURE_CHECKS = {
      first-class and must be STATED. */
   DRIVE_KIND_UNDETERMINED: {
     check: "C-48.3",
-    where: "src/index.mjs fetch > is-drive-capture",
+    where: "src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",
     translation: "That Drive address names a file but not what KIND of file it is, and the kind is what decides which export to ask for. Guessing would file bytes in a format nobody established. Use the address that opens the document itself, which carries the kind."
   },
   /* A DRIVE HOST WITH AN UNREAD PATH. Named rather than harvested, and named
@@ -11972,7 +11972,7 @@ var DRIVE_CAPTURE_CHECKS = {
      document this instance can promise to have captured. */
   DRIVE_SHAPE_UNRECOGNISED: {
     check: "C-48.4",
-    where: "src/index.mjs fetch > is-drive-capture",
+    where: "src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",
     translation: "That is a Google Drive address in a form this instance does not recognise. Rather than capture whatever bytes the address happens to serve and call it the document, it says so. If this shape should be harvestable, that is a change worth making deliberately."
   },
   /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the
@@ -12004,6 +12004,33 @@ var DRIVE_CAPTURE_CHECKS = {
      address ends the capture with the failure named; it never quietly becomes a
      capture of the application page, which would look like a success and hold
      nothing. */
+  /* D-472 — THE SHELL, ON A TICK, AND WHY IT IS ITS OWN CODE RATHER THAN C-48.5
+     FIRING FROM A SECOND PLACE. A capture that meets the shell has captured
+     nothing and the member's remedy is to share the file. A TICK that meets the
+     shell has not captured anything either — it never would — and what it has
+     lost is the CHECK: the record's last comparison still stands, undisturbed,
+     and nothing about the document changed. Those are two different facts about
+     the member's own situation, and DEC-49's canned translation is the sentence
+     they actually read, so one sentence cannot be true of both. PL-4's rule cuts
+     the same way it did for C-48.5/C-48.7: two predicates, two sites, both
+     drivable — `op=acquire` drives the pair above, `op=monitor` drives this pair,
+     and `test/monitor-assess.test.mjs` drives both of these by name. */
+  DRIVE_TICK_EXPORT_IS_THE_SHELL: {
+    check: "C-48.8",
+    where: "src/index.mjs fetch > is-drive-tick-export",
+    translation: "The check of that Google Drive document did not run: the export address answered with a web page rather than a document, which is what Drive does when a file stops being shared with anyone who has the link. Nothing was compared and nothing about the record changed \u2014 what is known is that this instance could not see the document today."
+  },
+  /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
+     declared type and the first kibibyte are two different pieces of evidence,
+     and "Google told us it was a document and it was a web page" is the more
+     serious fact. On a tick the consequence is the same either way and it is
+     still worth two codes, because a tick that compared the shell would report
+     the document CHANGED on every visit — the cry-wolf this row exists to end. */
+  DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: {
+    check: "C-48.9",
+    where: "src/index.mjs fetch > is-drive-tick-bytes",
+    translation: "The check of that Google Drive document did not run: the export address said it was sending a document and sent a web page instead. This instance reads the bytes rather than the label, so the application page was recognised and not compared against the captured document \u2014 comparing it would report a change on every visit that nobody made."
+  },
   DRIVE_EXPORT_UNREACHABLE: {
     check: "C-48.6",
     where: "src/index.mjs fetch > is-drive-export",
@@ -81016,10 +81043,51 @@ var index_default = {
           reason: "NO_LOCATOR",
           detail: "monitoring needs a public https locator in source.locator"
         }, 409);
+      const driveTick = readDriveAddress(locator);
+      if (driveTick && driveTick.shape === "folder")
+        return json({
+          ok: false,
+          reason: "DRIVE_FOLDER_NOT_A_DOCUMENT",
+          ...driveRow("DRIVE_FOLDER_NOT_A_DOCUMENT"),
+          op,
+          bundleId,
+          drive: { host: driveTick.host, shape: driveTick.shape, harvestable: false },
+          locator: driveTick.address,
+          detail: driveTick.why + " Watching it is the same question one step on: a tick would compare Google's listing page, whose bytes are rebuilt on every render, and report a change nobody made."
+        }, 422);
+      if (driveTick && driveTick.shape === "file")
+        return json({
+          ok: false,
+          reason: "DRIVE_KIND_UNDETERMINED",
+          ...driveRow("DRIVE_KIND_UNDETERMINED"),
+          op,
+          bundleId,
+          drive: {
+            host: driveTick.host,
+            shape: driveTick.shape,
+            harvestable: false,
+            ...driveTick.fileId ? { file_id: driveTick.fileId } : {}
+          },
+          locator: driveTick.address,
+          detail: driveTick.why + " No export address can be composed, so there is nothing this tick could compare but the application page."
+        }, 422);
+      if (driveTick && driveTick.shape === "unknown")
+        return json({
+          ok: false,
+          reason: "DRIVE_SHAPE_UNRECOGNISED",
+          ...driveRow("DRIVE_SHAPE_UNRECOGNISED"),
+          op,
+          bundleId,
+          drive: { host: driveTick.host, shape: driveTick.shape, harvestable: false },
+          locator: driveTick.address,
+          detail: driveTick.why + " A shape this instance cannot read is a shape it cannot promise to be watching."
+        }, 422);
+      const tickAddress = driveTick && driveTick.harvestable ? driveTick.exportAddress : locator;
       let baseline = null, baselineProfile = null, baselineAt = null;
       try {
         const reg = JSON.parse(img["data/provenance.json"] || "{}");
-        const match = (reg.documents || []).find((d) => d && d.locator === locator);
+        const rows = (reg.documents || []).filter((d) => d && typeof d.locator === "string");
+        const match = (driveTick && driveTick.harvestable ? rows.find((d) => d.locator === driveTick.exportAddress) : null) || rows.find((d) => d.locator === locator);
         baseline = match?.capture?.sha256 || null;
         baselineAt = typeof match?.retrieved === "string" ? match.retrieved : null;
         baselineProfile = match && match.profile && typeof match.profile === "object" ? match.profile : null;
@@ -81039,7 +81107,7 @@ var index_default = {
         actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`
       });
       try {
-        const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), locator, "monitor");
+        const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), tickAddress, "monitor");
         if (g.refusedByGovernor) {
           const observation2 = await monitorLook({ outcome: "governed", reason: g.reason });
           return json({
@@ -81048,19 +81116,88 @@ var index_default = {
             detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
             retry_in_ms: g.retry_in_ms || 0,
             locator,
+            /* D-472: the governed host is the EXPORT's when a Drive document is
+               watched, and `docs.google.com` is not the host the bundle names. */
+            ...driveTick && driveTick.harvestable ? { fetched_address: tickAddress } : {},
             observation: observation2
           }, 429);
         }
         const res2 = g.res;
         httpStatus = res2.status;
+        const answered = driveTick && driveTick.harvestable ? `the OpenDocument export address ${driveTick.exportAddress} answered ${res2.status}` : `the source answered ${res2.status}`;
+        if (driveTick && driveTick.harvestable && res2.ok) {
+          const ect = (res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+          if (ect === "text/html" || ect === "application/xhtml+xml") {
+            try {
+              await res2.body?.cancel?.();
+            } catch {
+            }
+            const observation2 = await monitorLook({
+              outcome: "unreachable",
+              reason: `the Drive export address answered \`${ect}\`, which is the application shell`
+            });
+            return json({
+              ok: false,
+              reason: "DRIVE_TICK_EXPORT_IS_THE_SHELL",
+              ...driveRow("DRIVE_TICK_EXPORT_IS_THE_SHELL"),
+              op,
+              bundleId,
+              status: res2.status,
+              locator: driveTick.address,
+              export_address: driveTick.exportAddress,
+              declared_content_type: ect,
+              refused_on: "the declared content type",
+              drive: {
+                host: driveTick.host,
+                shape: driveTick.shape,
+                kind: driveTick.kind,
+                file_id: driveTick.fileId,
+                export_format: driveTick.format
+              },
+              observation: observation2,
+              detail: `the OpenDocument export address answered with \`${ect}\`, which is the Google Drive APPLICATION \u2014 a client-rendered shell whose bytes carry no document (framework Part I \xA76's UNWATCHABLE case). It is not compared against the capture: its bytes are rebuilt on every render, so a comparison would report this document changed today and on every later visit. Nothing about the record moved, and the look is logged as indeterminate. Google serves this when the file is no longer shared with anyone who has the link.`
+            }, 502);
+          }
+        }
         if (res2.status === 404 || res2.status === 410) {
           status = "removed";
-          note = `the source answered ${res2.status}`;
+          note = answered;
         } else if (!res2.ok) {
-          note = `the source answered ${res2.status}`;
+          note = answered;
           unreachable = note;
         } else {
           const bytes = new Uint8Array(await res2.arrayBuffer());
+          if (driveTick && driveTick.harvestable) {
+            const sniff = detectFormat(bytes.subarray(0, Math.min(bytes.length, 1024)), null);
+            if (sniff.format === "html") {
+              const observation2 = await monitorLook({
+                outcome: "unreachable",
+                reason: `the Drive export address served HTML under \`${(res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase() || "no content type"}\``
+              });
+              return json({
+                ok: false,
+                reason: "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL",
+                ...driveRow("DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL"),
+                op,
+                bundleId,
+                status: res2.status,
+                locator: driveTick.address,
+                export_address: driveTick.exportAddress,
+                declared_content_type: (res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase() || null,
+                refused_on: "the bytes",
+                detected: sniff,
+                drive: {
+                  host: driveTick.host,
+                  shape: driveTick.shape,
+                  kind: driveTick.kind,
+                  file_id: driveTick.fileId,
+                  export_format: driveTick.format
+                },
+                observation: observation2,
+                detail: `the OpenDocument export address served bytes that are HTML \u2014 ${sniff.signals.join("; ")} \u2014 while declaring otherwise. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. It is not compared against the capture: the shell is rebuilt on every render, so the comparison would report a change nobody made. Nothing about the record moved, and the look is logged as indeterminate.`
+              }, 502);
+            }
+          }
           const d = await crypto.subtle.digest("SHA-256", bytes);
           seen = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
           fetchedBytes = bytes;
@@ -81191,7 +81328,7 @@ var index_default = {
       let text = out.join("\n");
       if (!/^\s+last_checked:/m.test(text) && /^monitoring:/m.test(text))
         text = text.replace(/^monitoring:/m, "monitoring:\n  last_checked: " + checked);
-      const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked") + (compared ? ` (compared ${compared})` : "") + "\n";
+      const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked") + (compared ? ` (compared ${compared})` : "") + (driveTick && driveTick.harvestable ? ` \u2014 fetched ${driveTick.exportAddress}, the OpenDocument export this instance composed from the Drive ${driveTick.kind} in ${driveTick.address}` : "") + "\n";
       const at = text.indexOf("## Session Log");
       if (at < 0) text += "\n## Session Log\n\n" + entry;
       else {
@@ -81264,6 +81401,19 @@ var index_default = {
         assessment_basis: graded.basis,
         cadence,
         observation,
+        /* D-472: for a Drive-linked document, which address this tick actually
+           fetched and the three facts the plane derived to compose it. Absent for
+           every other document, where the locator is the address. */
+        ...driveTick && driveTick.harvestable ? {
+          drive: {
+            document_address: driveTick.address,
+            export_address: driveTick.exportAddress,
+            kind: driveTick.kind,
+            file_id: driveTick.fileId,
+            export_format: driveTick.format
+          },
+          fetched_address: tickAddress
+        } : {},
         reeval_raised: flags,
         ...promoted.result?.ok ? { revision: promoted.result.bundleSha } : { reason: promoted.result?.reason, detail: promoted.result?.detail },
         note2: "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",

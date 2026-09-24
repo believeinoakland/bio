@@ -11139,7 +11139,9 @@ export const DRIVE_CAPTURE_CHECKS = {
      could honestly hold, so the honest answer is the shape's name and the reason. */
   DRIVE_FOLDER_NOT_A_DOCUMENT: {
     check: 'C-48.2',
-    where: 'src/index.mjs fetch > is-drive-capture',
+    where: 'src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick '
+         + '(op=monitor, ungoverned span, D-472): a folder is not a document to capture and not '
+         + 'a document to watch, and one sentence is true of both',
     translation: 'That address is a Drive FOLDER — a listing of files rather than a document. There '
       + 'is nothing to export and no single set of bytes a capture of it would hold. Name the '
       + 'document you want; harvesting everything a folder lists is a different act.',
@@ -11150,7 +11152,8 @@ export const DRIVE_CAPTURE_CHECKS = {
      first-class and must be STATED. */
   DRIVE_KIND_UNDETERMINED: {
     check: 'C-48.3',
-    where: 'src/index.mjs fetch > is-drive-capture',
+    where: 'src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick '
+         + '(op=monitor, ungoverned span, D-472)',
     translation: 'That Drive address names a file but not what KIND of file it is, and the kind is '
       + 'what decides which export to ask for. Guessing would file bytes in a format nobody '
       + 'established. Use the address that opens the document itself, which carries the kind.',
@@ -11160,7 +11163,8 @@ export const DRIVE_CAPTURE_CHECKS = {
      document this instance can promise to have captured. */
   DRIVE_SHAPE_UNRECOGNISED: {
     check: 'C-48.4',
-    where: 'src/index.mjs fetch > is-drive-capture',
+    where: 'src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick '
+         + '(op=monitor, ungoverned span, D-472)',
     translation: 'That is a Google Drive address in a form this instance does not recognise. Rather '
       + 'than capture whatever bytes the address happens to serve and call it the document, it says '
       + 'so. If this shape should be harvestable, that is a change worth making deliberately.',
@@ -11198,6 +11202,39 @@ export const DRIVE_CAPTURE_CHECKS = {
      address ends the capture with the failure named; it never quietly becomes a
      capture of the application page, which would look like a success and hold
      nothing. */
+  /* D-472 — THE SHELL, ON A TICK, AND WHY IT IS ITS OWN CODE RATHER THAN C-48.5
+     FIRING FROM A SECOND PLACE. A capture that meets the shell has captured
+     nothing and the member's remedy is to share the file. A TICK that meets the
+     shell has not captured anything either — it never would — and what it has
+     lost is the CHECK: the record's last comparison still stands, undisturbed,
+     and nothing about the document changed. Those are two different facts about
+     the member's own situation, and DEC-49's canned translation is the sentence
+     they actually read, so one sentence cannot be true of both. PL-4's rule cuts
+     the same way it did for C-48.5/C-48.7: two predicates, two sites, both
+     drivable — `op=acquire` drives the pair above, `op=monitor` drives this pair,
+     and `test/monitor-assess.test.mjs` drives both of these by name. */
+  DRIVE_TICK_EXPORT_IS_THE_SHELL: {
+    check: 'C-48.8',
+    where: 'src/index.mjs fetch > is-drive-tick-export',
+    translation: 'The check of that Google Drive document did not run: the export address answered '
+      + 'with a web page rather than a document, which is what Drive does when a file stops being '
+      + 'shared with anyone who has the link. Nothing was compared and nothing about the record '
+      + 'changed — what is known is that this instance could not see the document today.',
+  },
+  /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
+     declared type and the first kibibyte are two different pieces of evidence,
+     and "Google told us it was a document and it was a web page" is the more
+     serious fact. On a tick the consequence is the same either way and it is
+     still worth two codes, because a tick that compared the shell would report
+     the document CHANGED on every visit — the cry-wolf this row exists to end. */
+  DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: {
+    check: 'C-48.9',
+    where: 'src/index.mjs fetch > is-drive-tick-bytes',
+    translation: 'The check of that Google Drive document did not run: the export address said it '
+      + 'was sending a document and sent a web page instead. This instance reads the bytes rather '
+      + 'than the label, so the application page was recognised and not compared against the '
+      + 'captured document — comparing it would report a change on every visit that nobody made.',
+  },
   DRIVE_EXPORT_UNREACHABLE: {
     check: 'C-48.6',
     where: 'src/index.mjs fetch > is-drive-export',
