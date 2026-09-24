@@ -74,8 +74,8 @@ Where `main`'s `CLAUDE.md` and this charter conflict: on `ux-study` this charter
   those flows.
 
 **Does not bind the study: the development process.** No gates, `plancheck`, `CLAIMS.md`, ledgers, `QUEUE.md`,
-`construct-status.json` upkeep, lane messaging or DIST rules. Those govern changes to the product. On the study branch this lane changes none of the product,
-and this lane changes none.
+`construct-status.json` upkeep, lane messaging or DIST rules. Those govern changes to the product,
+and the study changes none of it. A change to the UI on `main` is under them in full (§2).
 
 ## 4. Every claim carries its state
 
