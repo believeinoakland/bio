@@ -10,11 +10,17 @@
  * so an empty copy cannot "match". Declared BEFORE arming, per arm: RED or GREEN; for a RED arm the text
  * its failing lines MUST name, and the ones that MUST NOT fail (the arm broke only the thing).
  *
- * THE PEN IS OUTSIDE THE WORKTREE (`mkdtemp` under the system temp root), which is BOB #32's ruling of
- * 2026-09-24 superseding "inside your own worktree": a file in the worktree is not inert — repository-
- * walking suites walk it, `gates.mjs` §2e's under-inclusion check trips on it, and it makes the tree dirty,
- * so D-293 refuses to record a green verdict. `mkdtemp` also gives the pen a name no other session can
- * collide with, which is the other half of that rule (a shared, unqualified name is an identity nobody owns).
+ * THE PEN IS OUTSIDE THE WORKTREE (`mkdtemp` under the system temp root), AND THAT IS A CHOICE RATHER THAN
+ * A RULE — stated, because the rule next to it is easy to get backwards and this file would otherwise say
+ * so. BOB #33 RULED (2026-09-24 17:12Z, on M0-172) that **a control driver's PEN is not a session's
+ * SCRATCH**: an in-worktree, gitignored, ITEM-NAMED pen STANDS, and `statement-ack.control.mjs`'s
+ * `.ui89-harness/` and `several-cases-choice.control.mjs`'s `.ui81-harness/` are correct as written. What
+ * BOB #32 forbids the same day is a session's own scratch in the worktree, which is a different thing.
+ * This driver takes the OTHER shape M0-172's scope-add names — `mkdtempSync(join(tmpdir(), "<tag>-control-"))`
+ * — because it needs no `.gitignore` entry to be safe, cannot be walked by a repository-walking suite or
+ * trip `gates.mjs` §2e whatever happens to it, and `mkdtemp` gives it a name no concurrent session can
+ * collide with (a shared, unqualified name is an identity nobody owns — `kickoffs/WORKER.md`). It is
+ * removed on a clean run and KEPT, with its path printed, when a restore left the subject changed.
  *
  *   BASELINE                                                                            -> GREEN
  *   (A) THE ROW'S OWN CONTROL — the writer read off `completeness.author` again, which is the
@@ -120,7 +126,7 @@ for (const [k, p] of Object.entries(FILES)) {
   if (orig[k].bytes < 500000) throw new Error(`${k} is ${orig[k].bytes} bytes — too small to be the subject`);
   console.log(`${k} pristine sha256 ${orig[k].sha} (${orig[k].bytes} bytes)`);
 }
-console.log(`control pen: ${SCRATCH} (outside the worktree — BOB #32, 2026-09-24)`);
+console.log(`control pen: ${SCRATCH} (a mkdtemp pen outside the worktree — see the header; BOB #33 permits an in-worktree one)`);
 const runSuite = (key) => spawnSync("node", [SUITES[key].path], { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, cwd: REPO });
 const rows = [];
 let allAsDeclared = true;
