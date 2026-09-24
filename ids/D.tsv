@@ -19,3 +19,5 @@ D-490	2026-09-24T03:18:20.731Z	SCHEDULER #18	D-64 findings: renderer; render col
 D-491	2026-09-24T03:18:20.731Z	SCHEDULER #18	D-64 findings: renderer; render column on capture_requests
 D-492	2026-09-24T03:25:31.801Z	SCHEDULER #18	D-64 render-allowance admits concurrent renders against one spent_ms
 D-493	2026-09-24T03:41:49.190Z	SCHEDULER #18	D-166 finding: tier1 probe labels encrypted PDFs NO-TEXT-LAYER
+D-494	2026-09-24T04:21:21.119Z	SCHEDULER #18	REC-185 findings: machine-fence corpora disagree; refusal-wire sweep member-only
+D-495	2026-09-24T04:21:21.119Z	SCHEDULER #18	REC-185 findings: machine-fence corpora disagree; refusal-wire sweep member-only
