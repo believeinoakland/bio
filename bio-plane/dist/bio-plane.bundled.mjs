@@ -23849,7 +23849,13 @@ function readingPositionInExtent(position, extentKind, extent) {
   return e.shape === p.shape;
 }
 var undeterminedChars = (page) => page && Array.isArray(page.undetermined) ? page.undetermined.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0) : 0;
-var decodedChars = (page) => page && typeof page.text === "string" ? page.text.length : 0;
+var WHITESPACE = /\s/u;
+var decodedChars = (page) => {
+  if (!page || typeof page.text !== "string") return 0;
+  let n = 0;
+  for (const ch of page.text) if (!WHITESPACE.test(ch)) n++;
+  return n;
+};
 function perPageTierWinner(p1, p2) {
   if (!p2) return "tier1";
   if (!p1) return "tier2";
