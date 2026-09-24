@@ -60,6 +60,64 @@
  *
  *   9. Q12: a read-only credential sees the whole page and NO act control.
  *
+ *  10. D-149 / UI-90, §8: WHICH LAWS THIS ASK IS MADE UNDER. The undetermined
+ *      state reads the PLANE'S sentence, composed by `governingLawsOf` and
+ *      asserted verbatim against that function's own output over the same
+ *      frontmatter — with the surface proved structurally to hold no copy of it
+ *      to have agreed with. No level is preselected anywhere, in any spelling,
+ *      on either path by which the levels reach the surface. A member's list
+ *      round-trips with its levels through the act, and with the plane naming no
+ *      levels at all the chooser is ABSENT and says so.
+ *
+ * NEGATIVE CONTROL (UI-90), three arms, RUN 2026-09-24 — `civicos-ui/app.html`'s
+ * sha256 taken before, after each break and after each restore, returning to
+ * 91e94109ce7bf6eb4ae5bb3080eff83c87da42cb96a3651ab125c76c4da49d6e (1,541,395
+ * bytes) every time, verified by `cmp` against a per-arm pristine copy held
+ * OUTSIDE the worktree. Baseline 139 pass / 0 fail.
+ *
+ *   (a) A PRESELECTED LEVEL — the item's own defect. In `actionLawsPaint`, give
+ *       the chooser a default when the member has chosen nothing:
+ *         ${v===r.level||(!r.level&&v===L.levels[0])?" selected":""}
+ *       DECLARED to fail: the two no-default arms. DECLARED not to fail: the
+ *       round trip, the undetermined sentence, the empty-option ordering.
+ *       -> RUN: 137 pass, 2 FAIL — "THE ITEM: NO LEVEL IS PRESELECTED" and
+ *       "...and STILL nothing is preselected on the fallback path either".
+ *       Exactly as declared, and the SECOND is why the fallback is driven at
+ *       all: a surface that defaulted only when the publication was missing
+ *       would have been caught by one arm and not the other.
+ *       THE INSTRUMENT FINDING KEPT: "the chooser opens on an EMPTY option
+ *       BEFORE any level" stayed GREEN and COULD NOT have failed — the empty
+ *       option is still written first — so it is deliberately blind to this
+ *       break. It answers a different question (what the browser selects when
+ *       the surface marks nothing) and is kept beside the arm that does catch
+ *       this rather than reworded to overlap it (UI-19 arm (a)'s lesson).
+ *
+ *   (b) OVER-STRICTNESS — a correct chooser in a spelling this file did not
+ *       anticipate: single-quoted attributes, the levels in reverse order,
+ *       uppercase labels, a different placeholder wording.
+ *       -> FIRST RUN: 132 pass, 7 FAIL, AND EVERY ONE OF THEM WAS THIS FILE'S
+ *       FAULT. The level-presence arms, the empty-option ordering arm and the
+ *       withheld-vocabulary arms all matched only `<option value="` with double
+ *       quotes, so a correct rewrite read as a finding about the page. The
+ *       matchers were corrected — `optIdx`/`hasOpt` below are quote-agnostic
+ *       and the ordering arm compares against the FIRST LEVEL rather than
+ *       against the literal `federal` — and the preselect arm was widened at the
+ *       same time from `\sselected>` to `<option[^>]*\sselected`, which it had
+ *       to be: this arm rendered `selected="selected"`, a spelling the old
+ *       matcher could not see at all.
+ *       -> RE-RUN after the correction: 139 pass, 0 fail, and arm (a) re-run
+ *       against the corrected matchers still fails at exactly its two arms.
+ *
+ *   (c) A SURFACE-AUTHORED EMPTY-LIST SENTENCE. In `actionLawsHtml`, replace
+ *       the plane's `gl.stated` with "No governing laws have been stated for
+ *       this action." — a sentence that is not even false, which is the point.
+ *       -> RUN: 135 pass, 4 FAIL — the verbatim arm, the "record assumes none"
+ *       clause, the `cpra_request` rider, and the sweep for 'no laws'/'none
+ *       apply' phrasing. The rider arm is the sharpest of the four: the plane's
+ *       sentence says the KIND is its member's statement that the CPRA governs
+ *       and that nothing else is inferred from a kind, and no surface would
+ *       compose that sentence by accident.
+ *
  * NEGATIVE CONTROL, three arms, RUN 2026-08-05 and restored byte-identical after
  * each — `civicos-ui/app.html`'s sha256 was taken before, after the break and
  * after the restore on every arm, and all three returned to
@@ -149,6 +207,11 @@ const PUBLISHED = {
                 mode:"session", rung:null, prompt:null },
   actioncorrespond: { id:"actioncorrespond", label:"Record correspondence", weight:"single",
                       needs:"contribute", mode:"session", rung:null, prompt:null },
+  /* UI-90 / D-149. `affordances.mjs` publishes it on every action in any state — the laws a
+     request is made under are statable whenever the action exists — and it carries no rung
+     for the same reason the other two do not: no document assigns one. */
+  actionlaws: { id:"actionlaws", label:"State governing laws", weight:"single",
+                needs:"contribute", mode:"session", rung:null, prompt:null },
 };
 /* ============================================================
    THE TIE (UI-24) — this mock publishes THE PLANE'S OWN ARRAYS, imported.
@@ -187,7 +250,9 @@ const PUBLISHED = {
    literal published FOUR of the plane's EIGHT and nothing could have said so.
    ============================================================ */
 import { VOCABULARIES } from "../../bio-plane/src/affordances.mjs";
-import { STATES, RESOLUTIONS as PLANE_RESOLUTIONS } from "../../bio-plane/checks/bio-checks.mjs";
+import { STATES, RESOLUTIONS as PLANE_RESOLUTIONS,
+         LAW_LEVELS as PLANE_LAW_LEVELS, GOVERNING_LAWS_MAX,
+         governingLawsOf } from "../../bio-plane/checks/bio-checks.mjs";
 
 /* The plane's published vocabularies, as `op=affordances` answers them.
    `action_basis_kinds` is WITHHELD to begin with — not because the plane no
@@ -196,7 +261,13 @@ import { STATES, RESOLUTIONS as PLANE_RESOLUTIONS } from "../../bio-plane/checks
    over an unpublished set is the property this file proves, and it can only be
    proved by withholding one. It is published from the plane's own array below
    and the surface is watched to change with no other edit. */
-let VOCAB = { action_kind: VOCABULARIES.action_kind };
+let VOCAB = { action_kind: VOCABULARIES.action_kind,
+  /* UI-90 / D-149. THE PLANE'S OWN ARRAY, through `VOCABULARIES` — the tie above, applied to
+     the one vocabulary this item is about. A literal written here would agree with the plane
+     for free, and the whole property UI-90 has to prove is that the surface's three levels
+     came off the publication. Withheld once in section 8 to drive the refusal fallback,
+     exactly as `action_basis_kinds` is withheld to drive the absent-and-stated behaviour. */
+  law_levels: VOCABULARIES.law_levels };
 
 /* The action state machine, from the catalog's OWN table — the one
    `affordances.mjs` reads through `vocabFor(STATES, …)` and the one `op=actionmove`
@@ -248,6 +319,15 @@ const DIRECTIONS = VOCABULARIES.correspondence_directions;
       ["cpra_request","request_for_comment"].every(k=>VOCABULARIES.action_kind.includes(k)),
     "the two basis roles the picker is asserted to offer":
       ["rests_on","advances"].every(k=>VOCABULARIES.action_basis_kinds.includes(k)),
+    /* UI-90's rider, pinned by NAME for the tie's own reason: importing the plane's array
+       makes the mock follow the publication, and on its own that would make a DRIFT
+       INVISIBLE because the mock and the assertions would move together. Section 8 names
+       all three of these words in its assertions, so a rename in `bio-checks.mjs` fails
+       HERE saying which level moved. */
+    "the three levels D-149 states a governing law at, which section 8 names one by one":
+      ["federal","state","local"].every(l=>PLANE_LAW_LEVELS.includes(l))
+      && PLANE_LAW_LEVELS.length === 3
+      && VOCABULARIES.law_levels === PLANE_LAW_LEVELS,
     "the three correspondence directions, including the non-response DEC-13 records as a fact":
       ["sent","received","no_response"].every(k=>DIRECTIONS.includes(k)),
     "the five action states this harness walks":
@@ -342,6 +422,11 @@ const REF = {
   CAPTURE_AND_TESTIMONY: "what came back is captured and not summarised, so an entry holds the bytes or an account and never both.",
   NEITHER_CAPTURE_NOR_TESTIMONY: "an entry carrying neither asserts an exchange and offers no way to check that it happened.",
   UNREGISTERED_ARTIFACT: "this hash names no capture this store holds, and a hash a caller can hand us is a hash a caller can invent.",
+  MACHINE_CANNOT_SET_LAWS: "which laws govern a request is a named member's authored statement, and a machine credential may gather what the agency is and may not state the laws.",
+  NO_LAWS:          "the act names at least one law, and an action whose laws nobody has stated reads undetermined on its own rather than empty.",
+  BAD_LAW_LEVEL:    "that is not a level this record states a governing law at.",
+  BAD_CITATION:     "a citation names a law and does not quote one, and the restricted frontmatter grammar has no escapes.",
+  TOO_MANY_LAWS:    "one statement of the set carries a handful of citations and not a bibliography.",
   GATE_COUNTERPARTY: "counterparty.state is undetermined and counterparty.basis is empty: undetermined is first-class and must be STATED, so an action that does not know who it is addressed to says what it does know.",
 };
 const refuse = (reason, extra) => { SAID.push(REF[reason]); return { ok:false, reason, detail:REF[reason], ...(extra||{}) }; };
@@ -375,6 +460,12 @@ function derived(id){
     as_of: new Date(NOW_MS).toISOString(),
     basis: d.basis || [], correspondence: d.ledger || [],
     consequence: d.consequence, responses: d.responses || [],
+    /* D-149, COMPUTED BY THE PLANE'S OWN FUNCTION and never by this file. `store.mjs`'s
+       derived block calls `governingLawsOf(fm)` and so does this mock, which is what makes
+       "the undetermined sentence the member reads came over the wire" a measurement rather
+       than a claim: the string is composed in `bio-checks.mjs`, and neither this harness nor
+       the surface holds a copy of it to agree with. Reword it there and section 8 follows. */
+    governing_laws: governingLawsOf(d.fm),
   };
 }
 
@@ -412,6 +503,7 @@ function mockFetch(u, opts){
     const acts = [];
     if(EDGES[d.state].length) acts.push(PUBLISHED.actionmove);
     acts.push(PUBLISHED.actioncorrespond);
+    acts.push(PUBLISHED.actionlaws);          /* UI-90: in ANY state, like actioncorrespond */
     return W({ target:p.target, object_type:"action", current_state:d.state, acts, vocabularies:VOCAB });
   }
 
@@ -467,6 +559,41 @@ function mockFetch(u, opts){
                        : { account:acct }) });
   }
 
+  /* ---- op=actionlaws: store.mjs actionLaws()'s ORDER, mirrored exactly (D-149) ----
+     The machine fence FIRST, then the target, then the LIST'S OWN SHAPE, and the bundle is
+     not looked up until all three have passed — which is what makes the level-publishing
+     probe below safe: `NO_LAWS` is reached with nothing read and nothing written. */
+  if(op==="actionlaws"){
+    if(AS_MACHINE) return W(refuse("MACHINE_CANNOT_SET_LAWS"));
+    if(!p.target && !(body||{}).target) return W(refuse("NO_TARGET"));
+    const target = p.target || (body||{}).target;
+    let list = (body||{}).laws;
+    if(typeof list === "string"){ try{ list = JSON.parse(list); }catch(_){ list = null; } }
+    if(!Array.isArray(list) || !list.length)
+      return W(refuse("NO_LAWS", { legal_levels: PLANE_LAW_LEVELS }));
+    if(list.length > GOVERNING_LAWS_MAX)
+      return W(refuse("TOO_MANY_LAWS", { count:list.length, max:GOVERNING_LAWS_MAX }));
+    const entries = [];
+    for(let i = 0; i < list.length; i++){
+      const e = list[i] || {};
+      const level = String(e.level ?? "").trim(), citation = String(e.citation ?? "").trim();
+      if(!PLANE_LAW_LEVELS.includes(level))
+        return W(refuse("BAD_LAW_LEVEL", { index:i, level, legal:PLANE_LAW_LEVELS }));
+      if(!citation || /["\\\r\n]/.test(citation)) return W(refuse("BAD_CITATION", { index:i }));
+      entries.push({ level, citation });
+    }
+    const d = DOCS[target];
+    if(!d) return W(refuse("NO_SUCH_BUNDLE", { target }));
+    if(d.type !== "action") return W(refuse("NOT_AN_ACTION", { target }));
+    const before = governingLawsOf(d.fm);
+    d.fm.governing_laws = entries;
+    d.fm.governing_laws_by = "m_nadia";
+    d.fm.governing_laws_at = "2026-09-24T05:00:00Z";
+    COMMITS.push({ op:"actionlaws", target, count:entries.length });
+    return W({ ok:true, target, laws:entries, by:"m_nadia", at:"2026-09-24T05:00:00Z",
+               replaced: before.state === "stated" ? before.laws : null, weight:"single" });
+  }
+
   /* ---- the intake's write path ---- */
   if(op==="allocid") return W({ id:"ACTN-2026-2600" });
   if(op==="promote"){
@@ -517,6 +644,10 @@ vm.runInContext(appScript() +
   "globalThis.__moveRes=actionMoveRes;globalThis.__doMove=doActionMove;" +
   "globalThis.__openCorr=openActionCorrespond;globalThis.__corrSet=actionCorrSet;globalThis.__corrArm=actionCorrArm;" +
   "globalThis.__doCorr=doActionCorrespond;globalThis.__actsFor=actsFor;" +
+  "globalThis.__openLaws=openActionLaws;globalThis.__lawsSet=actionLawsSet;" +
+  "globalThis.__lawsAdd=actionLawsAdd;globalThis.__doLaws=doActionLaws;" +
+  "globalThis.__LAWS=()=>ACTION.laws;globalThis.__setVocabSource=(f)=>{ACT_SOURCE.vocab=f;};" +
+  "globalThis.__lawsHtml=actionLawsHtml;globalThis.__esc=esc;" +
   "globalThis.__renderAdd=renderAdd;globalThis.__addGo=addGo;globalThis.__ADD_ACT=()=>ADD_ACT;" +
   "globalThis.__addActPick=addActPick;globalThis.__addActSync=addActSync;globalThis.__addTypeSync=addTypeSync;" +
   "globalThis.__route=actionRouteFromHash;globalThis.__queueOpen=queueOpen;globalThis.__rowOpen=rowOpen;" +
@@ -569,8 +700,14 @@ ok("and offers no non-response act while nothing is overdue",
 ok("the clock row for the pending deadline is not marked overdue before the window closes",
    !/act-clock overdue/.test(before));
 ok("an empty ledger says so rather than showing nothing", /Nothing has been sent/.test(before));
-ok("the act bar carries the two acts the plane published for a planned action",
-   /Move this action/.test(before) && /Record correspondence/.test(before));
+/* CORRECTED 2026-09-24 (UI-90). This read "the two acts" and asserted two labels, and it was
+   right when it was written: the plane published exactly `actionmove` and `actioncorrespond`
+   on an action. D-149 published a THIRD, `actionlaws`, and UI-90 gave it this page — so an
+   assertion naming two would have stayed GREEN over a bar that had silently dropped the new
+   one, which is the shape CLAUDE.md says to correct rather than exempt. */
+ok("the act bar carries the three acts the plane published for a planned action",
+   /Move this action/.test(before) && /Record correspondence/.test(before)
+   && /State governing laws/.test(before));
 ok("and it renders no rung, because the record assigns these acts none",
    !/reversible|terminal|reasoned|attested/i.test(before));
 
@@ -828,6 +965,211 @@ ok("...and the kind the member chose, from the plane's published set",
    /action_kind: cpra_request/.test(wrote.text));
 
 /* =====================================================================
+   8. D-149 / UI-90 — WHICH LAWS THIS ASK IS MADE UNDER.
+
+   THE ITEM IS AN ABSENCE AND A SENTENCE, and both are asserted in the direction
+   that fails. The absence: NO LEVEL IS PRESELECTED, anywhere, ever — a form
+   that opens with one chosen is this surface making the legal claim D-149 gave
+   to a member. The sentence: an action nobody has stated laws for reads the
+   PLANE'S undetermined words, composed by `governingLawsOf` in
+   `bio-plane/checks/bio-checks.mjs`, and this file holds no copy of it to agree
+   with — it calls the same function the mock's derived block calls, so a reword
+   in the catalogue moves the expectation and the rendering together and a
+   surface-authored sentence fails here instead.
+   ===================================================================== */
+console.log("\n--- 8. the governing laws: the plane's sentence, and no default level ---");
+NOW_MS = BEFORE_MS;
+DOCS[ACT].state = "active";
+delete DOCS[ACT].fm.governing_laws;
+delete DOCS[ACT].fm.governing_laws_by;
+delete DOCS[ACT].fm.governing_laws_at;
+await fresh(ACT);
+const lawsEmpty = content();
+
+/* THE PLANE'S OWN SENTENCE, taken from the plane's own function over the same
+   frontmatter — never typed here. It is long, and its length is the point: it
+   says the record assumes NOTHING applies, and for a `cpra_request` it adds
+   that the KIND is the member's statement that the CPRA governs and that
+   nothing else is inferred from a kind. No surface would compose that. */
+const UNDET = governingLawsOf(DOCS[ACT].fm).stated;
+ok("the plane's undetermined sentence is a real sentence and not an empty string",
+   typeof UNDET === "string" && UNDET.length > 120);
+ok("an action nobody has stated laws for reads the PLANE'S undetermined sentence, VERBATIM",
+   lawsEmpty.includes(G.__esc(UNDET)));
+ok("...including the clause that the record assumes NO level applies — the sentence a surface inventing one would never write",
+   /The record assumes none/i.test(lawsEmpty));
+ok("...and the `cpra_request` rider, which is the kind read as its member's statement and nothing more",
+   /California Public Records Act governs it/.test(lawsEmpty)
+   && /nothing else is inferred from the/.test(lawsEmpty));
+ok("the empty list is NOT rendered as 'none apply', 'no laws' or an empty block",
+   !/no laws apply/i.test(lawsEmpty) && !/none apply/i.test(lawsEmpty)
+   && !/no governing laws/i.test(lawsEmpty));
+ok("the page carries the section at all, named for what it holds",
+   /The laws this ask is made under/.test(lawsEmpty));
+
+/* THE SENTENCE CAME OVER THE WIRE, STRUCTURALLY. The action page region cannot
+   contain it: if it did, the assertion above would be satisfied by a copy. */
+const LAWREGION = APP.slice(APP.indexOf("/*__ACTION_PAGE_START__*/"), APP.indexOf("/*__ACTION_PAGE_END__*/"));
+ok("...and the surface holds NO copy of that sentence to have agreed with",
+   !LAWREGION.includes(UNDET.slice(0, 60)) && !/UNDETERMINED: no member/.test(LAWREGION));
+
+/* THE THIRD ANSWER. A plane that predates D-149 answers with no block at all,
+   and that is said as an absence rather than rendered as the undetermined
+   state: two different facts about this ask. Driven through the renderer
+   directly, because the mock's derived block always carries the key. */
+ok("a derived block carrying NO governing_laws block at all says the RECORD DID NOT ANSWER, and never 'nobody has stated them'",
+   /did not answer/.test(G.__lawsHtml({ kind:"cpra_request" }))
+   && !/UNDETERMINED/.test(G.__lawsHtml({ kind:"cpra_request" })));
+
+/* ---- THE ACT, AND THE ABSENCE THAT IS THE ITEM ---- */
+ok("the act bar offers the act, with the PRODUCER'S own label",
+   /State governing laws/.test(lawsEmpty));
+await G.__openLaws(ACT, DOCS[ACT].title, PUBLISHED.actionlaws);
+const lawDlg = dialog();
+/* THE OPTION MATCHER, WRITTEN QUOTE-AGNOSTIC AND ORDER-AGNOSTIC BECAUSE THE
+   OVER-STRICTNESS ARM CAUGHT IT NOT BEING. Run 2026-09-24: rendering the same
+   correct chooser with single-quoted attributes, the levels in another order
+   and uppercase labels failed SEVEN arms of this section — none of which is a
+   property of the surface. An instrument that only recognises its author's
+   spelling would refuse a correct rewrite and, worse, would read as a finding
+   about the page. What each of these can and cannot see is stated at its own
+   line; none of them can see a level rendered by anything other than an
+   `<option>` tag, and that is what the behavioural withholding arms are for. */
+const optIdx = (html, v) => {
+  const m = new RegExp("<option\\s+value=[\"']" + v + "[\"']").exec(html);
+  return m ? m.index : -1;
+};
+const hasOpt = (html, v) => optIdx(html, v) >= 0;
+ok("the dialog offers a level chooser", /id=["']al-lv-0["']/.test(lawDlg));
+ok("THE ITEM: NO LEVEL IS PRESELECTED — not one option in the chooser carries `selected`, in any spelling",
+   !/<option[^>]*\sselected/i.test(lawDlg));
+ok("...and the chooser opens on an EMPTY option BEFORE any level, so the browser's own default selects no level either",
+   optIdx(lawDlg, "") >= 0
+   && PLANE_LAW_LEVELS.every(l => optIdx(lawDlg, "") < optIdx(lawDlg, l)));
+ok("...and the citation field opens EMPTY, with no placeholder, no template and no suggested statute",
+   /id=["']al-ct-0["'][^>]*\svalue=(""|'')/.test(lawDlg)
+   && !/placeholder=["'][^"']*(?:Code|Act|§)/.test(lawDlg));
+ok("the commit control is ABSENT until the member has chosen a level AND written a citation",
+   !/doActionLaws\(\)/.test(lawDlg));
+
+/* THE LEVELS ARE THE PLANE'S PUBLICATION, each named. Pinned to the plane's own
+   array at the tie above, so a rename fails there saying which word moved. */
+for(const lvl of PLANE_LAW_LEVELS)
+  ok(`the chooser offers the published level '${lvl}', from vocabularies.law_levels`, hasOpt(lawDlg, lvl));
+ok("...and offers NOTHING the plane did not publish",
+   (lawDlg.match(/<option\s+value=["']([a-z_]+)["']/g)||[])
+     .every(o => PLANE_LAW_LEVELS.includes(/value=["']([a-z_]+)["']/.exec(o)[1])));
+
+/* HALF A ROW IS NOT A STATEMENT. Each half alone leaves the control absent, and
+   the two are asserted separately because they are two different ways a form
+   could decide a member's statement for them. */
+G.__lawsSet(0, "level", "state");
+ok("a level with no citation names no law: the control stays absent", !/doActionLaws\(\)/.test(dialog()));
+G.__lawsSet(0, "level", "");
+G.__lawsSet(0, "citation", "Cal. Gov. Code § 7920.000 et seq.");
+ok("a citation with no level would ask this surface to pick one: the control stays absent",
+   !/doActionLaws\(\)/.test(dialog()));
+
+/* ---- THE ROUND TRIP, WITH THE LEVELS THE MEMBER CHOSE ---- */
+G.__lawsSet(0, "level", "state");
+G.__lawsAdd();
+G.__lawsSet(1, "level", "local");
+G.__lawsSet(1, "citation", "Oakland Sunshine Ordinance, O.M.C. 2.20");
+ok("with both halves of both rows written, the commit control appears", /doActionLaws\(\)/.test(dialog()));
+await G.__doLaws();
+const lawDone = dialog();
+ok("the act was accepted and the plane wrote the list",
+   COMMITS.some(c=>c.op==="actionlaws" && c.target===ACT && c.count===2));
+ok("...carrying BOTH levels exactly as the member chose them, and no level the surface added",
+   (() => { const sent = CALLS.filter(c=>c.op==="actionlaws" && c.body && c.body.laws).pop();
+            return !!sent && sent.body.laws.length === 2
+                   && sent.body.laws[0].level === "state" && sent.body.laws[1].level === "local"; })());
+ok("the receipt names who stated them and when, from the plane's answer", /m_nadia/.test(lawDone));
+
+await fresh(ACT);
+const lawsSet = content();
+ok("the page now LISTS the member's laws, each at its level",
+   /Cal\. Gov\. Code § 7920\.000/.test(lawsSet) && /Oakland Sunshine Ordinance/.test(lawsSet)
+   && />state</.test(lawsSet) && />local</.test(lawsSet));
+ok("...and the undetermined sentence is GONE, because the list is no longer undetermined",
+   !lawsSet.includes(G.__esc(UNDET)));
+ok("...attributed to the member who stated them, in the plane's own derived block",
+   /stated by m_nadia/.test(lawsSet));
+
+/* ---- THE FALLBACK: THE LEVELS ARE THE PLANE'S FROM THE OTHER PUBLICATION TOO.
+   `op=affordances` withheld, exactly as `action_basis_kinds` is withheld above,
+   and the chooser must still offer the plane's three — read off `NO_LAWS`'s
+   `legal_levels` from ONE deliberately-refused call that writes nothing. A
+   surface holding a literal would look identical here; a surface holding none
+   would offer an empty chooser and say so. ---- */
+const KEPT = VOCAB;
+VOCAB = { action_kind: VOCABULARIES.action_kind };
+G.__setVocabSource(null);
+const lawCommitsBefore = COMMITS.length;
+await G.__openLaws(ACT, DOCS[ACT].title, PUBLISHED.actionlaws);
+const fb = dialog();
+for(const lvl of PLANE_LAW_LEVELS)
+  ok(`with the vocabulary WITHHELD, the level '${lvl}' still comes from the plane — off NO_LAWS' legal_levels`,
+     hasOpt(fb, lvl));
+ok("...and the probe that published them WROTE NOTHING: NO_LAWS is judged before the bundle is read",
+   COMMITS.length === lawCommitsBefore);
+ok("...and STILL nothing is preselected on the fallback path either", !/<option[^>]*\sselected/i.test(fb));
+
+/* AND WITH NEITHER PUBLICATION, THE SURFACE OFFERS NO LEVEL AND SAYS SO —
+   the absent-and-stated behaviour, which is the only thing that proves the
+   three above were read rather than held. */
+AS_MACHINE = true;
+await G.__openLaws(ACT, DOCS[ACT].title, PUBLISHED.actionlaws);
+const none = dialog();
+AS_MACHINE = false;
+ok("with the plane naming NO levels at all, the chooser is ABSENT and the surface says why",
+   !/id=["']al-lv-0["']/.test(none) && /rather than inventing them/.test(none));
+ok("...and it invents no level to fill the gap", !PLANE_LAW_LEVELS.some(l => hasOpt(none, l)));
+VOCAB = KEPT;
+await G.__loadActSource(true);
+
+/* ---- THE REFUSAL IS THE PLANE'S, AND IT REACHES THE MEMBER ---- */
+DOCS[ACT].fm.governing_laws = [];
+await G.__openLaws(ACT, DOCS[ACT].title, PUBLISHED.actionlaws);
+G.__lawsSet(0, "level", "state");
+G.__lawsSet(0, "citation", 'a citation with a " in it');
+await G.__doLaws();
+const lawRefused = dialog();
+ok("a citation the grammar cannot hold is refused BY THE PLANE and rendered in the plane's words",
+   /BAD_CITATION|restricted frontmatter grammar has no escapes/.test(lawRefused));
+ok("...and nothing was written: the refused statement did not become the record's",
+   !COMMITS.some(c=>c.op==="actionlaws" && c.count===1));
+
+/* ---- STRUCTURAL: the region holds no copy of the levels.
+   WHAT THIS MATCHER CAN AND CANNOT SEE, stated rather than implied: it looks
+   for the level tokens as bare words anywhere in the action-page region, which
+   catches a literal array, an inline option and a sentence naming one. It
+   cannot see `state`, because `state` is this page's own word for a bundle's
+   state and appears in `sealFor("state", …)` — that third level is covered by
+   the behavioural arms above ALONE, where withholding the publication makes it
+   disappear from the chooser. ---- */
+for(const lvl of PLANE_LAW_LEVELS.filter(l => l !== "state"))
+  ok(`the action page region holds no copy of the level '${lvl}' — not as an option, not as an array, not in prose`,
+     !new RegExp("\\b" + lvl + "\\b").test(LAWREGION));
+/* AN ARM THAT WAS WRITTEN, RUN, AND REMOVED AS AN INSTRUMENT DEFECT rather than
+   quietly weakened: "the region holds no copy of the maximum the plane enforces"
+   matched `\b12\b`, and 12 occurs in the region as ordinary arithmetic. It FAILED
+   on a region that holds no bound at all — a matcher answering a question it
+   could not see. The property it meant to test is covered where it can be:
+   `actionLawsReady` bounds NOTHING and the count refusal comes back from the
+   plane, which is `TOO_MANY_LAWS` arriving through `actRefusalHtml` like every
+   other refusal, and the DEC-8 sweep below is what holds that. */
+/* AND THE SECOND DRAFT FOUND THE SAME CLASS ONE LAYER IN, which is worth the two
+   lines: `rows.length > \d` matched `L.rows.length>1`, the guard that hides the
+   "remove this law" control on a lone row. That is a LAYOUT question about one
+   form and not a bound on the record, so the matcher is narrowed to a count
+   greater than one — the only shape a surface-side maximum could take — and
+   says so rather than being deleted. */
+ok("the surface counts nothing and bounds nothing: no maximum on the list is compared against here",
+   !/GOVERNING_LAWS_MAX/.test(LAWREGION) && !/rows\.length\s*>\s*[2-9]/.test(LAWREGION)
+   && !/laws\.length\s*>/.test(LAWREGION));
+
+/* =====================================================================
    7. Q12 and DEC-8.
    ===================================================================== */
 console.log("\n--- 7. Q12, and where every refusal sentence came from ---");
@@ -847,7 +1189,8 @@ G.__PLANE.me = PLANE_ME;
    this run must be one the mock plane returned. The mock's wording is not the
    store's, so a surface that had transcribed a store sentence fails here rather
    than agreeing with itself. */
-const rendered = [content(), dialog(), before, after, illegal, noReason, resDlg, err, rfc].join("\n");
+const rendered = [content(), dialog(), before, after, illegal, noReason, resDlg, err, rfc,
+                  lawsEmpty, lawDlg, lawDone, lawsSet, fb, none, lawRefused].join("\n");
 const surfaceOwn = [
   /* The one stated exception: the surface's report about its OWN probe. It is
      not a rule of the record's and it is unreachable while the plane behaves. */

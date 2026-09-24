@@ -310,6 +310,10 @@ td.upd{color:var(--muted);font-size:12.5px;font-family:var(--font-fact)}
 .act-led-body{font-size:13px;color:var(--ink);margin-top:5px;line-height:1.55}
 .act-led-held{font-family:var(--font-fact);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-right:6px}
 .act-unproven{border-left:3px solid var(--rule)}
+/* UI-90 (D-149): a governing law as the member stated it, and the row that states one */
+.act-law{margin:8px 0 0;padding:9px 13px;border:var(--hair);background:var(--card);border-radius:var(--r-2)}
+.act-law-cite{font-family:var(--font-fact);font-size:13px;color:var(--ink)}
+.act-law-row{margin:8px 0 0;padding:10px 13px;border:var(--hair);background:var(--paper-2);border-radius:var(--r-2)}
 /* UI-9: a progression finding under an instance the document sits in */
 .docprog-finding{margin:8px 0 0;padding:8px 11px;border-left:2px solid var(--rule);background:var(--paper-2);border-radius:var(--r-2)}
 .docprog-finding.overdue{border-left-color:#d6a48c;background:var(--tint-note)}
@@ -2253,7 +2257,11 @@ const SURFACES = {
     routes: ["object:action", "hash:action"],
     purpose: "Something this group has asked of somebody outside it: the counterparty, the clock, the correspondence and what came back.",
     levels: ["documents"],
-    acts: ["actionmove", "actioncorrespond"],
+    /* UI-90: `actionlaws` joins the two REC-24 built. D-149 (BIO_Case_Making_v0_1.md §2) —
+       which laws govern a records request is a member's authored statement, and the page that
+       shows the ask is the page that offers it. The act was a ROW on `ACTS_AWAITING_SURFACE`
+       until this item; striking it there and naming it here are the same landing. */
+    acts: ["actionmove", "actioncorrespond", "actionlaws"],
     reads: ["image", "projection"],
   },
   published: {
@@ -7630,6 +7638,24 @@ async function actAsk(op, params){
   }
   return (r && r.ok === false) ? { accepted:false, refusal:r } : { accepted:true, result:r };
 }
+/* THE POST TWIN OF `actAsk` (UI-90), and it exists for the same reason `recPostR` exists
+   beside `recR`: some acts carry their subject in the BODY rather than in the query string.
+   `op=actionlaws` is the first — store.mjs reads `laws` off `(body || {}).laws` and says why
+   at its own dispatch line ("it is several entries of prose-like citations, and a query
+   string is a poor place for them"). The refusal handling is `actAsk`'s, unchanged and
+   deliberately not re-derived: a STORE refusal arrives as a value inside the envelope and is
+   handed back for the caller to RENDER, a control-plane refusal throws flat, and both reach
+   the member as the plane's own sentence. */
+async function actAskPost(op, body, params){
+  let r;
+  try{
+    r = await recPostR(op, body || {}, params || {});
+  }catch(e){
+    r = (e && typeof e === "object" && e.result !== undefined) ? e.result : e;
+    if(!r || typeof r !== "object") r = { ok:false, reason:"NO_ANSWER", detail:String(r) };
+  }
+  return (r && r.ok === false) ? { accepted:false, refusal:r } : { accepted:true, result:r };
+}
 /* THE WORDS A MEMBER READS FOR A REFUSAL, DECIDED IN ONE PLACE (UI-72).
 
    **THE ORDER IS THE PLANE'S BOTH WAYS.** DEC-49 (Bob, 2026-08-06, amending
@@ -9107,7 +9133,7 @@ async function openAction(id, fromNav){
     const der = (proj && proj.action && typeof proj.action === "object") ? proj.action : null;
     const actsR = await actsFor(id);
     ACTS_HERE = (actsR && actsR.ok) ? actsR.acts : [];
-    ACTION = { id, title, state, fm, fmj, der, mv:null, corr:null };
+    ACTION = { id, title, state, fm, fmj, der, mv:null, corr:null, laws:null };
 
     const planText = mdSectionOf(body, (vocabFor(HEADINGS, otype)||[])[0]);
     $("#content").innerHTML = `${crumb}
@@ -9124,6 +9150,9 @@ async function openAction(id, fromNav){
       <h2 class="sec">Why we are asking</h2>
       <p class="subj-note">Every finding and question this ask rests on or advances, in the order it was recorded, as rows the record holds &mdash; each one pointed at, never retyped.</p>
       ${actionBasisHtml(der)}
+      <h2 class="sec">The laws this ask is made under</h2>
+      <p class="subj-note">ALL records laws apply, and WHICH ones follows the agency asked. Each is named by its own citation, at the level the record publishes for it, by a member. Nothing here is inferred from who was asked, from the kind of ask, or from the group making it.</p>
+      ${actionLawsHtml(der)}
       <h2 class="sec">The clock</h2>
       <p class="subj-note">Every deadline carries the statute, the order, or the commitment it comes from. A date with no basis would be the record asserting a deadline it invented.</p>
       ${actionClockHtml(fmj, der)}
@@ -9198,6 +9227,37 @@ function actionClockHtml(fmj, der){
       <div class="act-clock-why">Because: ${esc(c.basis||"")}</div>
     </div>`;
   }).join("");
+}
+
+/* D-149 (Bob, 2026-09-22; BIO_Case_Making_v0_1.md §2, *A RECORDS REQUEST NAMES EVERY LAW
+   THAT GOVERNS IT*): WHICH LAWS THIS ASK IS MADE UNDER — AND THE EMPTY CASE IS THE ITEM.
+
+   THE UNDETERMINED SENTENCE IS READ, NEVER WRITTEN HERE. `governingLawsOf` composes it in
+   `bio-plane/checks/bio-checks.mjs` and `op=projection`'s derived block carries it as
+   `action.governing_laws.stated`; this function renders THAT STRING and holds no sentence of
+   its own for an empty list. A surface that wrote "no laws apply", or "none stated", or
+   anything nearby, would be the record answering a legal question no member answered — and
+   the plane's own sentence is longer and more careful than any of them, because it also says
+   that the record assumes NONE of the levels apply, and it names `cpra_request` as its member's
+   statement when the kind is that and says nothing else is inferred from a kind.
+
+   AND AN ABSENT BLOCK IS A THIRD ANSWER, said as an absence. A plane that predates D-149, or
+   a projection not yet backfilled, answers with no `governing_laws` at all; "nobody has
+   stated which laws govern this" and "the record did not answer" are different facts about
+   this ask, and collapsing them would report one as the other. Same discipline as the ledger
+   below, whose `null` and `[]` are kept apart for the same reason. */
+function actionLawsHtml(der){
+  const gl = der && der.governing_laws;
+  if(!gl || typeof gl !== "object")
+    return `<div class="empty">The record did not answer with this action's governing laws.</div>`;
+  const laws = Array.isArray(gl.laws) ? gl.laws : [];
+  if(gl.state !== "stated" || !laws.length)
+    return `<div class="empty">${esc(String(gl.stated || ""))}</div>`;
+  return `${laws.map(l=>`<div class="act-law">
+      <div class="act-law-cite"><span class="mono">${esc(l.level||"")}</span> &middot; ${esc(l.citation||"")}</div>
+    </div>`).join("")}
+    <div class="ln">${esc(String(gl.stated||""))}${gl.by?` &middot; stated by ${esc(gl.by)}`:""}${
+      gl.at?` &middot; <span class="mono">${esc(String(gl.at).slice(0,10))}</span>`:""}</div>`;
 }
 
 function actionLedgerHtml(der){
@@ -9456,6 +9516,124 @@ async function doActionCorrespond(){
   actionCorrPaint();
 }
 
+/* ---------------------------------------------------------------
+   THE GOVERNING-LAWS FLOW (UI-90, D-149) — and the whole item is ONE ABSENCE.
+
+   NO DEFAULT LEVEL, EVER. `op=actionlaws` takes a LIST, each entry a `{level, citation}`,
+   and the level is the member's. A form arriving with one of those levels already chosen is not a
+   convenience: it is the surface making the legal claim the act exists to have a member
+   make, and D-149 names it as the overclaim to remove: the levels a records ask actually
+   sits at follow the AGENCY, and a chooser that arrives already answered is this surface
+   answering. So every row opens with the level UNCHOSEN, the commit control is ABSENT until every
+   row a member has begun carries both halves, and the empty option carries no `selected`.
+
+   THE THREE LEVELS ARE THE PLANE'S, FROM ITS PUBLICATION FIRST. `op=affordances` publishes
+   them as `vocabularies.law_levels` — the catalog's own `LAW_LEVELS`, the array C-2.10
+   grades against and the act refuses `BAD_LAW_LEVEL` against, so there is one set and this
+   file does not hold it. When the publication names none, the fallback is the plane's OTHER
+   publication of the same array and not a literal here: `NO_LAWS` carries `legal_levels`,
+   and it is judged with nothing written (the act's own order — the machine fence, the
+   target, then the list's shape), so one deliberately-refused call publishes the set the
+   same way `BAD_DIRECTION` publishes the correspondence directions above. When NEITHER
+   answers, the surface offers no level and says so, because an invented option is worse than
+   none (DEC-8, and `actVocab`'s own rule).
+
+   WHAT THIS FLOW DOES NOT DO, deliberately: it proposes nothing. The design licenses a
+   machine to PROPOSE a list from the counterparty, labelled as machine work — no proposal is
+   built in the plane and none is invented here, and a surface that filled in a statute from
+   an action's KIND would be exactly the inference `governingLawsOf` refuses to make one
+   layer down — it reads `cpra_request` as its member's statement and stops there.
+   --------------------------------------------------------------- */
+async function openActionLaws(id, title, act){
+  ACTION.laws = { id, title, act, rows:[{ level:"", citation:"" }], levels:[], source:"",
+                  busy:false, refusal:null, done:null };
+  actionLawsPaint();
+  await loadActSource();
+  let levels = actVocab("law_levels"), source = "published";
+  if(!levels.length){
+    const a = await actAsk("actionlaws", { target:id });
+    const r = a.accepted ? null : a.refusal;
+    levels = (r && Array.isArray(r.legal_levels)) ? r.legal_levels.slice() : [];
+    source = levels.length ? "refusal" : "";
+  }
+  const L = ACTION.laws; if(!L || L.id !== id) return;
+  L.levels = levels; L.source = source;
+  actionLawsPaint();
+}
+function actionLawsSet(i, k, v){
+  const L = ACTION.laws; if(!L || !L.rows[i]) return;
+  L.rows[i][k] = v; actionLawsPaint();
+}
+function actionLawsAdd(){
+  const L = ACTION.laws; if(!L) return;
+  L.rows.push({ level:"", citation:"" }); actionLawsPaint();
+}
+function actionLawsDrop(i){
+  const L = ACTION.laws; if(!L) return;
+  L.rows.splice(i, 1);
+  if(!L.rows.length) L.rows.push({ level:"", citation:"" });
+  actionLawsPaint();
+}
+/* WHAT THIS FORM HAS COLLECTED — not a rule about the record. The record's rules are the
+   act's own (at least one law, at most the plane's maximum, a level from its set, a citation
+   inside its grammar) and they are stated by the plane in the plane's words when they are
+   broken. What is expressed here is only that a half-written row has nothing to send: a row
+   with a level and no citation names no law, and a row with a citation and no level would
+   ask this surface to pick one. */
+function actionLawsReady(){
+  const L = ACTION.laws; if(!L) return false;
+  const begun = L.rows.filter(r => r.level || r.citation.trim());
+  return !!begun.length && begun.every(r => r.level && r.citation.trim());
+}
+function actionLawsPaint(){
+  const L = ACTION.laws; if(!L) return;
+  if(L.done){
+    const set = Array.isArray(L.done.laws) ? L.done.laws : [];
+    actDlg(`<h3>${esc(L.act.label)}</h3>
+      <p class="lede">${esc(String(set.length))} governing law${set.length===1?"":"s"} stated by ${esc(L.done.by||"")}${
+        L.done.at?` on ${esc(String(L.done.at).slice(0,10))}`:""}.${
+        Array.isArray(L.done.replaced) && L.done.replaced.length
+          ? ` This replaced the list stated before it; the Session Log keeps what it replaced.` : ""}</p>
+      ${set.map(l=>`<div class="ln"><span class="mono">${esc(l.level||"")}</span> &middot; ${esc(l.citation||"")}</div>`).join("")}
+      <div class="rv-bar"><button class="btn" onclick="closeDialog();openAction(${esc(JSON.stringify(L.id))})">Back to the action</button></div>`);
+    return;
+  }
+  actDlg(`<h3>${esc(L.act.label)}</h3>
+    ${L.act.prompt?`<p class="lede">${esc(L.act.prompt)}</p>`:""}
+    <p class="subj-note">Which laws apply follows the agency asked. Name each one by its own citation, at the level it sits at. The record states none for you and infers none from who was asked.</p>
+    ${L.levels.length
+      ? L.rows.map((r,i)=>`<div class="act-law-row">
+          <label class="fld" for="al-lv-${i}">The level</label>
+          <select class="txt" id="al-lv-${i}" style="max-width:240px" onchange="actionLawsSet(${i},'level',this.value)">
+            <option value="">Choose one&hellip;</option>
+            ${L.levels.map(v=>`<option value="${esc(v)}"${v===r.level?" selected":""}>${esc(humanKind(v))}</option>`).join("")}
+          </select>
+          <label class="fld" for="al-ct-${i}">The citation</label>
+          <input class="txt" id="al-ct-${i}" value="${esc(r.citation)}" oninput="actionLawsSet(${i},'citation',this.value)">
+          ${L.rows.length>1?`<button class="btn ghost" onclick="actionLawsDrop(${i})">Remove this law</button>`:""}
+        </div>`).join("")
+      : `<div class="empty">The record did not publish the levels a governing law is stated at, so this surface offers none rather than inventing them.</div>`}
+    ${L.levels.length?`<div class="ln"><button class="btn ghost" onclick="actionLawsAdd()">Add another law</button></div>`:""}
+    ${L.refusal ? actRefusalHtml(L.refusal) : ""}
+    <div class="rv-bar">
+      ${actionLawsReady() ? `<button class="btn" ${L.busy?"disabled":""} onclick="doActionLaws()">${esc(L.act.label)}</button>` : ""}
+      <button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`);
+}
+async function doActionLaws(){
+  const L = ACTION.laws; if(!L || L.busy) return;
+  L.busy = true; L.refusal = null; actionLawsPaint();
+  /* THE WHOLE LIST, REPLACED — the act's own shape. A member states the laws as a SET, and a
+     law added later is a new statement of the set, attributed and dated anew. */
+  const laws = L.rows.filter(r => r.level && r.citation.trim())
+                     .map(r => ({ level:r.level, citation:r.citation.trim() }));
+  const a = await actAskPost("actionlaws", { laws }, { target:L.id });
+  L.busy = false;
+  if(!a.accepted){ L.refusal = a.refusal; actionLawsPaint(); return; }
+  IMG_CACHE.delete(L.id); PROJ_CACHE.delete(L.id); RECORD_CACHE = null;
+  L.done = a.result || {};
+  actionLawsPaint();
+}
+
 /* THE ONE ACT AN OVERDUE ACTION OFFERS, what it deliberately is not, and the
    MEASURED GAP it runs into.
 
@@ -9675,6 +9853,10 @@ const ACT_FLOW = {
   reinstate: (id, title, act) => openEdgeAct(id, title, act),
   actionmove:       (id, title, act) => openActionMove(id, title, act),
   actioncorrespond: (id, title, act) => openActionCorrespond(id, title, act),
+  /* UI-90 added `actionlaws` (D-149), and the one-entry-per-act promise held again: a flow
+     with a shape no other act here has — a LIST the member grows, each row two halves, and a
+     body-carried write — arrived and nothing above this line changed. */
+  actionlaws:       (id, title, act) => openActionLaws(id, title, act),
   /* UI-27 added DEC-32's elicitation, and the one-entry-per-act promise held a
      fourth time: a flow with a shape unlike every other one here — ordered
      phases, a derivation, and a strength that may not be shown until the record
