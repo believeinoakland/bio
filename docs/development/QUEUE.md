@@ -498,7 +498,7 @@ scope: every count served to a class other than the operator's is computed throu
 accepts-when: creating and revising a hidden project leaves a member's `op=stats` and `op=searchindexcheck` answers byte-identical. NEGATIVE CONTROL: count over the whole store again, and the hidden-creation arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-469 · queued — **`op=acquire` SAYS `existed: true` FOR EVERY FIRST-TIME SINGLE-PART CAPTURE — "WE ALREADY HELD THESE BYTES" WHEN IT DID NOT: in `index.mjs`'s acquire streaming path, `flush()` writes the single part to `captures/${psha}` (for one part, the whole-body sha), and only then does `existed = !!(await env.CAPTURES.head(…sha))` run, finding the object the same call wrote.** Held in all 48 takes of M-123; `acquire.test` asserts only the idempotent half. Read at the code on `main`. — owner CAPTURE.
+### D-469 · running — SPAWNED 2026-09-24 ~01:08Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER D-469 (CONDUCT #19), base origin/main 15b2a4c0; gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-469 and that session; never conclude queued from the absence alone.
 order: at the head, behind the safety and disclosure rows: an over-claim in the record's own provenance, the class CLAUDE.md §2 ranks worse than a missing feature (SCHEDULER #17, 2026-09-24; CAP-11's worker via CONDUCT #19, minted D-469 after a D-459 collision)
 milestone: M2
 interface: I3 — `existed` becomes truthful on first acquire; the integrator mints and classifies the IC.
