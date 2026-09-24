@@ -143,15 +143,20 @@ const ARMS = [
     patches: [[LEDGER, "out.splice(r.start, r.end - r.start);", "out.splice(r.start, r.end - r.start + 1);"]],
     /* FIRST RUN, 2026-09-18: this arm's suite went red but the ARCHIVER did not refuse — the extra
        line was an `## AREA` heading, invisible to the id multiset. That was a finding about the
-       subject, and `linesConserved` is its fix; the arm now requires the refusal to NAME both
-       losses: the heading (lines) in the QUEUE fixture and D-6 (ids) in the DEBT one. */
-    mustFail: ["archive A-2 was not refused", "archive D-5 was not refused"],
-    mustSay: /lost ×1: \\?"## AREA[\s\S]*D-6 \(1 -> 0\)/ },
+       subject, and `linesConserved` is its fix; the arm required the refusal to NAME both losses:
+       the heading (lines) in the QUEUE fixture and D-6 (ids) in the DEBT one.
+       NARROWED 2026-09-24 by M0-140: the DEBT half is gone with the construct — §1 no longer moves a DEBT row,
+       because no ledger the archiver holds has one to move. The LINE loss (the `## AREA` heading, invisible to the
+       id multiset) is the half this arm was written for and it is intact; the ID loss is still driven by C1's
+       drop-one-duplicate-one liar over the QUEUE grammar. */
+    mustFail: ["archive A-2 was not refused"],
+    mustSay: /lost ×1: \\?"## AREA/ },
   { id: "C2b", title: "THE SAME, WITH THE PRE-WRITE CHECK REMOVED — only the read-back check stands",
     patches: [[LEDGER, "out.splice(r.start, r.end - r.start);", "out.splice(r.start, r.end - r.start + 1);"],
               [LEDGER, "  if (!planned.ok)\n", "  if (false)\n"]],
-    mustFail: ["archive A-2 was not refused", "archive D-5 was not refused"],
-    mustSay: /READ BACK[\s\S]*lost ×1: \\?"## AREA[\s\S]*restored byte-identically: YES[\s\S]*READ BACK[\s\S]*D-6 \(1 -> 0\)[\s\S]*restored byte-identically: YES/ },
+    /* NARROWED 2026-09-24 by M0-140 with C2, for the same reason and to the same half. */
+    mustFail: ["archive A-2 was not refused"],
+    mustSay: /READ BACK[\s\S]*lost ×1: \\?"## AREA[\s\S]*restored byte-identically: YES/ },
   { id: "C3", title: "DEBT CLOSED REVERTS TO THE AUGUST DEFINITION — the last cell lacks `open`",
     patches: [[OWED, `  const d = String(disposition || "").replace(/\\*\\*/g, "").trim();\n`,
       `  const d = String(disposition || "").replace(/\\*\\*/g, "").trim();\n  return d !== "" && !/\\bopen\\b/i.test(d);\n`]],
@@ -248,7 +253,8 @@ const ARMS = [
     patches: [[LEDGER, "ok: ids.ok && !backlogOff.length && !cacheOff.length && !notMoved.length", "ok: ids.ok && !notMoved.length"]],
     mustFail: ["a mover that also carried a NON-ROW line out of the backlog is refused by the line check though every id conserves"] },
   { id: "F1", title: "FIND IGNORES THE BACKLOG — an id there is reported nowhere",
-    patches: [[LEDGER, "? [...PIPELINE, LEDGERS.DEBT] : [...PIPELINE]);", "? [...PIPELINE, LEDGERS.DEBT] : [LEDGERS.QUEUE]);"]],
+    /* M0-140: `LEDGERS.DEBT` is `DEBT_ARCHIVE` now — the retired ledger's archive-only descriptor. */
+    patches: [[LEDGER, "? [...PIPELINE, DEBT_ARCHIVE] : [...PIPELINE]);", "? [...PIPELINE, DEBT_ARCHIVE] : [LEDGERS.QUEUE]);"]],
     mustFail: ["find F-2 answers the BACKLOG"] },
   { id: "F2", title: "FIND READS THE SHARED ARCHIVE TWICE — every archived row answers twice",
     patches: [[LEDGER, "if (seen.has(rel)) continue;", "if (false) continue;"]],
@@ -293,7 +299,7 @@ const ARMS = [
                        "\"docs/development/DECISIONS.md\", \"docs/development/QUEUE.md\", \"docs/development/BACKLOG.md\"]"]],
     mustFail: ["DEC: an id mentioned ONLY in BACKLOG-LATER.md raises the floor", "THE TAIL CLASS: no mintid corpus names the backlog without its tail"] },
   { id: "T8", title: "FIND BLIND TO THE TAIL — a demoted id is reported nowhere",
-    patches: [[LEDGER, "? [...PIPELINE, LEDGERS.DEBT] : [...PIPELINE]);", "? [...PIPELINE, LEDGERS.DEBT] : [LEDGERS.QUEUE, LEDGERS.BACKLOG]);"]],
+    patches: [[LEDGER, "? [...PIPELINE, DEBT_ARCHIVE] : [...PIPELINE]);", "? [...PIPELINE, DEBT_ARCHIVE] : [LEDGERS.QUEUE, LEDGERS.BACKLOG]);"]],
     mustFail: ["find answers a demoted id in the TAIL"] },
   { id: "T9", title: "OVER-STRICTNESS — an ABSENT tail read as UNREADABLE (a plan with no tail yet is correct work)",
     patches: [[LEDGER, "return t === null && l.optional ? { text: \"\", absent: true }", "return false ? { text: \"\", absent: true }"]],

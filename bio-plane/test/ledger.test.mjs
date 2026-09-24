@@ -64,7 +64,10 @@
    this block and the wording of §3's comment were written after it.
    SUPERSEDED 2026-09-22 BY M0-110, AND KEPT AS THE RECORD: §3's live read and its floor left this suite for `coord.mjs`'
    ledger check LC-debt-agreement (BOB #28's ruling 2), and `debt-floor.control.mjs` was re-pointed there — its arms now
-   patch `tools/coord.mjs` and read `coord.test.mjs` §8; the run of record is on that suite's NEGATIVE CONTROL line. */
+   patch `tools/coord.mjs` and read `coord.test.mjs` §8; the run of record is on that suite's NEGATIVE CONTROL line.
+   RETIRED 2026-09-24 BY M0-140, AND KEPT AS THE RECORD: the DEBT construct is retired whole, so both floors and
+   the arms they guarded are gone, and `debt-floor.control.mjs` is DELETED with them (it patched `tools/coord.mjs`
+   at two anchors neither of which exists now). The runs above stand as what was measured on the day. */
 
 import "./stdio.mjs";
 import "./sandbox.mjs";
@@ -91,19 +94,21 @@ const code = (f) => { try { f(); return "NO REFUSAL"; } catch (e) { return e.cod
 /* A move whose refusal is RETURNED, so a broken mover reddens an assertion rather than ending the module. */
 const mv = (id, opts) => { try { return L.archiveId(id, opts); } catch (e) { return { moved: [], kept: [], results: [{ moved: [] }], refusal: `${e.code}: ${e.message}` }; } };
 
-/* A fixture repository: the files the archiver, owed, the gate and mintid read. DEBT is padded past
-   the 10,000-byte floor with prose so a move is not refused on size unless a test means it to be. */
-const PAD = "Prose above the table, as the live ledger carries. ".repeat(220) + "\n\n";
+/* A fixture repository: the files the archiver, owed, the gate and mintid read.
+   CORRECTED 2026-09-24 by M0-140, not exempted: this fixture wrote a LIVE `docs/development/DEBT.md`, and padded it
+   past a 10,000-byte floor so a move would not be refused on size. The DEBT construct is retired — there is no live
+   DEBT file and no floor — so a fixture that writes one would test a ledger the tool no longer has. What a fixture
+   still needs of DEBT is its ARCHIVE, which is real and which `find` and `mintid` still read: callers pass it as
+   `archives: { "DEBT-closed.md": DEBT([...]) }`. The PAD went with the floor. */
 /* LED-6: every fixture carries a BACKLOG (empty unless given) — the archiver refuses to move anything
    when a live file of the QUEUE grammar cannot be read. `backlog: null` leaves it absent on purpose. */
-function fixture({ queue = "", backlog = "", debt = "", archives = {}, status = null, plan = null } = {}) {
+function fixture({ queue = "", backlog = "", archives = {}, status = null, plan = null } = {}) {
   const root = mkdtempSync(join(tmpdir(), "ledger-"));
   mkdirSync(join(root, "docs/development"), { recursive: true });
   mkdirSync(join(root, "docs/archive/ledgers"), { recursive: true });
   mkdirSync(join(root, "docs/architecture"), { recursive: true });
   writeFileSync(join(root, "docs/development/QUEUE.md"), queue);
   if (backlog !== null) writeFileSync(join(root, "docs/development/BACKLOG.md"), backlog);
-  writeFileSync(join(root, "docs/development/DEBT.md"), debt);
   writeFileSync(join(root, "docs/development/DECISIONS.md"), "");
   for (const [f, body] of Object.entries(archives)) writeFileSync(join(root, "docs/archive/ledgers", f), body);
   if (status) writeFileSync(join(root, "docs/architecture/construct-status.json"), JSON.stringify(status));
@@ -113,9 +118,12 @@ function fixture({ queue = "", backlog = "", debt = "", archives = {}, status = 
 /* A file a refused move never wrote reads as "" — a missing archive must redden an assertion, not end the module. */
 const read = (root, rel) => (existsSync(join(root, rel)) ? readFileSync(join(root, rel), "utf8") : "");
 const Q = (id, state, body = "scope: something\n") => `### ${id} · ${state} — a row\n${body}\n`;
-const DEBT = (rows) => `# DEBT\n\n${PAD}| ID | Sev | Found | Item | Status |\n|---|---|---|---|---|\n${rows.join("\n")}\n`;
-/* The arming rows: LED-3 (a), LED-6 (the pipeline arms P3–P5), LED-7 (DEBT's row budget). LED-4 is kept
-   because the fixtures predate LED-6 and it is still a row of every one of them; nothing arms on it now. */
+/* An ARCHIVED DEBT ledger's text (M0-140): the grammar is unchanged — `debtRows` still parses it — but it is only
+   ever written into `docs/archive/ledgers/`, because that is the only place a DEBT row now lives. */
+const DEBT = (rows) => `# DEBT — closed rows\n\n| ID | Sev | Found | Item | Status |\n|---|---|---|---|---|\n${rows.join("\n")}\n`;
+/* The arming rows: LED-3 (a), LED-6 (the pipeline arms P3–P5). LED-7 armed DEBT's row budget and is retired with the
+   construct (M0-140); LED-4 is kept because the fixtures predate LED-6 and it is still a row of every one of them.
+   Nothing arms on either now. */
 const ARMS = Q("LED-3", "queued") + Q("LED-4", "queued") + Q("LED-6", "queued") + Q("LED-7", "queued");
 
 /* ========================================================================================== */
@@ -141,7 +149,7 @@ section("1 — CONSERVATION: the id MULTISET of live ∪ archive is identical be
 
   const queue = Q("A-1", "running") + Q("A-2", "done", "scope: the done one\nlanded: `abc`\n\n#### a sub-heading that belongs to the row\nmore\n")
               + "## AREA — ACTIVE\n\n" + Q("A-3", "queued") + ARMS;
-  const root = fixture({ queue, debt: DEBT([]) });
+  const root = fixture({ queue });
   const liveBefore = read(root, "docs/development/QUEUE.md");
   /* A refusal is CAUGHT and asserted, never allowed to end the module: a mover that breaks
      conservation must turn this suite red NAMING the id, not crash it with the tally unprinted. */
@@ -163,19 +171,16 @@ section("1 — CONSERVATION: the id MULTISET of live ∪ archive is identical be
 
   /* A heading the id grammar cannot read is a BOUNDARY, never carried under the row above it. */
   const q2 = Q("B-1", "done") + "### B-1b · done\nscope: an unparseable heading's own row\n\n" + ARMS;
-  const root2 = fixture({ queue: q2, debt: DEBT([]) });
+  const root2 = fixture({ queue: q2 });
   t("archive B-1 was not refused", mv("B-1", { repo: root2 }).refusal, undefined);
   t("a heading the id grammar cannot parse (`B-1b`) stays live rather than riding under B-1",
     read(root2, "docs/development/QUEUE.md").includes("### B-1b · done"), true);
   t("...and is not in the archive", read(root2, "docs/archive/ledgers/QUEUE-closed.md").includes("B-1b"), false);
 
-  /* DEBT: one line, verbatim, into a table. */
-  const d = "| D-5 | gap | 2026-09-18 | a body | M2 · **CLOSED 2026-09-18 by X-1** |";
-  const root3 = fixture({ queue: ARMS, debt: DEBT([d, "| D-6 | gap | 2026-09-18 | b | M2 · open |"]) });
-  t("archive D-5 was not refused", mv("D-5", { repo: root3 }).refusal, undefined);
-  const da = read(root3, "docs/archive/ledgers/DEBT-closed.md");
-  t("a DEBT row lands verbatim under the archive's table header", da.endsWith("|---|---|---|---|---|\n" + d + "\n"), true);
-  t("...and D-6 (open) is untouched in the live file", read(root3, "docs/development/DEBT.md").includes("| D-6 |"), true);
+  /* THE DEBT MOVE WAS HERE — one closed row lands verbatim under the archive's table header while the open row
+     beside it stays live. Retired with the construct (M0-140, 2026-09-24): there is no live DEBT ledger to move a
+     row out of, and `archiveId` skips a ledger whose `live` is null. The VERBATIM property it drove is the same one
+     §1 drives on the QUEUE grammar above, which is where it is still reachable. */
 }
 
 /* ========================================================================================== */
@@ -192,7 +197,12 @@ section("2 — THE FULL MIGRATION, SIMULATED ON A COPY OF THE REAL LEDGERS: ever
   const PRE_MIGRATION = "9ea2eb02";
   const atPin = (f) => { const r = spawnSync("git", ["-C", REPO, "show", `${PRE_MIGRATION}:${f}`], { encoding: "utf8", maxBuffer: 1 << 28 });
                          return r.status === 0 ? r.stdout : null; };
-  const files = ["docs/development/QUEUE.md", "docs/development/DEBT.md", "docs/development/DECISIONS.md",
+  /* CORRECTED 2026-09-24 by M0-140: `docs/development/DEBT.md` was read from the pinned tree too. This section
+     simulates the migration THE ARCHIVER PERFORMS, not the one it once performed, and today's archiver has no DEBT
+     ledger — `archiveId` skips it — so feeding it the pinned tree's DEBT.md would hand the simulation an input no
+     tool touches and then conserve it for free. The QUEUE grammar's conservation over the REAL pre-migration
+     ledgers is what this section proves, and that is unchanged. */
+  const files = ["docs/development/QUEUE.md", "docs/development/DECISIONS.md",
                  "docs/archive/IS-BUILD-PLAN.md", "docs/architecture/construct-status.json",
                  /* the archive family through the ARCHIVER's own family patterns, over the PINNED tree's own listing.
                     CORRECTED 2026-09-22 by M0-110: this listed the archive directory of the WORKING TREE, whose files
@@ -207,7 +217,8 @@ section("2 — THE FULL MIGRATION, SIMULATED ON A COPY OF THE REAL LEDGERS: ever
      is per GRAMMAR FAMILY (cache + backlog share the QUEUE archive), not per ledger: a per-ledger snapshot would
      count the shared archive under BACKLOG too, and read every QUEUE row the migration archives as GAINED there. */
   if (!existsSync(join(root, L.LEDGERS.BACKLOG.live))) writeFileSync(join(root, L.LEDGERS.BACKLOG.live), "");
-  const FAMILIES = { QUEUE: [L.LEDGERS.QUEUE, L.LEDGERS.BACKLOG], DEBT: [L.LEDGERS.DEBT] };
+  /* One family now: the DEBT family had exactly one live ledger and it is retired (M0-140). */
+  const FAMILIES = { QUEUE: [L.LEDGERS.QUEUE, L.LEDGERS.BACKLOG] };
   const ARCHIVES = [...new Set(Object.values(L.LEDGERS).map((l) => l.archive))];
   const snap = () => Object.fromEntries(Object.entries(FAMILIES).map(([name, ls]) =>
     [name, L.idCounts(ls[0], [...ls.map((l) => l.live), ...L.archiveFiles(ls[0], { repo: root })].map((f) => read(root, f)))]));
@@ -245,22 +256,37 @@ section("2 — THE FULL MIGRATION, SIMULATED ON A COPY OF THE REAL LEDGERS: ever
   t("every non-blank LINE of the two live ledgers is in live or archive exactly as often as before", lost, 0);
   const audit1 = L.ledgerAudit({ repo: root });
   t("after the migration, no closed row is live in either ledger", Object.values(audit1.closedLive).flat(), []);
-  t("THE AGREEMENT: owed.mjs answers IDENTICALLY for every lane, a nonexistent one included — "
-  + "no row the archiver moved was one owed listed (M-57: D-330, D-401, D-405, D-407)", owedSnap(), ob);
-  t("...and owed's list is not empty, so the agreement is not two empty lists agreeing", ob[0].length > 0, true);
+  /* THE AGREEMENT — owed.mjs answers IDENTICALLY for every lane before and after the migration, so no row the
+     archiver moved was one owed still listed (M-57: D-330, D-401, D-405, D-407) — IS RETIRED HERE (M0-140,
+     2026-09-24), and it is retired rather than left passing because its own non-vacuity guard caught it first.
+     `owed.mjs` read the DEBT ledger and the plan's `blocked` rows; the pinned pre-migration tree predates the
+     BACKLOG, so DEBT was its ONLY source here, and with the DEBT walk retired `owedSnap()` is four empty strings on
+     both sides. Two empty lists agreeing is the figure that costs nothing to produce, which is exactly what the
+     guard below was written to refuse — so the honest act is to delete the pair, not to delete the guard and keep
+     the comparison. The agreement between the archiver's closed test and owed's still holds where it is reachable:
+     both call `isClosedDebtRow`, and `ledger.control.mjs` C3 drives that one definition. */
   const ca = collisions({ repo: root });
   t("mintid's collision register is EXACTLY as before — a pair split into the archive is still one (M-57 breakage 2)",
     ca.found.map((x) => x.id), cb.found.map((x) => x.id));
   /* The copy carries only the ledgers, so a register entry whose sites live elsewhere (IC-30, in
      INTERFACE-CHANGES.md) is stale in BOTH arms; the property is that the move made none stale. */
   t("...and the move made no registered collision stale", ca.stale.map((x) => x.id), cb.stale.map((x) => x.id));
+  /* CORRECTED 2026-09-24 by M0-140: `D-124` was in this list and is not any more. D-124 is a registered
+     PRE-EXISTING COLLISION whose two rows were BOTH rows of `DEBT.md`, and this simulation no longer feeds the
+     pinned tree's DEBT.md to the archiver (see the input list above), so neither half is in the copy and the pair
+     cannot be seen HERE. It is not lost: D-124's pair rides with the file into `docs/archive/ledgers/`, where
+     `mintid`'s live duplicate check reads it through ARCHIVE_TARGETS. The three that remain are the ones whose
+     sites are QUEUE-grammar rows, which is what this section still migrates — and three is not zero, so the
+     non-vacuity this assertion exists for is intact. */
   t("...and the pairs M-57 named are among those still seen (else this is two empty lists agreeing)",
-    ["D-124", "CPDF-9", "FW-15", "M0-16"].filter((id) => !ca.found.some((x) => x.id === id)), []);
+    ["CPDF-9", "FW-15", "M0-16"].filter((id) => !ca.found.some((x) => x.id === id)), []);
   t("every moved id is still found, now in the archive", ids.filter((id) => !L.findId(id, { repo: root }).some((f) => f.where === "archive")), []);
   t("the three live `QUEUED <ID>` targets M-57 measured (FW-6, CAP-4) resolve in the archive",
     ["FW-6", "CAP-4"].map((id) => L.archivedQueueIds({ repo: root }).has(id)), [true, true]);
   t("the dependencies of the open rows still all resolve after the migration", audit1.depends.unresolved, []);
-  t("DEBT.md stays above nc-m039's 10,000-byte floor", read(root, L.LEDGERS.DEBT.live).length >= L.DEBT_FLOOR_BYTES, true);
+  /* The `DEBT.md stays above nc-m039's 10,000-byte floor` assertion WAS HERE. Retired with the construct
+     (M0-140): `DEBT_FLOOR_BYTES` and `LEDGERS.DEBT.live` are both gone, and a migration that no longer moves a
+     DEBT row cannot leave one too small. */
 }
 
 /* ========================================================================================== */
@@ -268,7 +294,7 @@ section("3 — CLOSED IS DEFINED ONCE: a QUEUE row by its `done`/`superseded` st
       + "`owed.mjs`'s isClosedDebtRow, which the archiver imports rather than restates");
 {
   const q = Q("C-1", "done") + Q("C-2", "superseded") + Q("C-3", "blocked") + Q("C-4", "queued") + Q("C-5", "running") + ARMS;
-  const root = fixture({ queue: q, debt: DEBT([]) });
+  const root = fixture({ queue: q });
   t("a `blocked` row is NOT closed and is refused — owed reads blocked headings", code(() => L.archiveId("C-3", { repo: root })), "NOT_CLOSED");
   t("a `queued` row is refused", code(() => L.archiveId("C-4", { repo: root })), "NOT_CLOSED");
   t("a `running` row is refused", code(() => L.archiveId("C-5", { repo: root })), "NOT_CLOSED");
@@ -310,44 +336,40 @@ section("3 — CLOSED IS DEFINED ONCE: a QUEUE row by its `done`/`superseded` st
   t("the DISPOSITION IS THE LAST CELL, even with a pipe in the body (owed read cells[5] until LED-2)",
     debtDisposition(pipeRow), "M1 · **CLOSED 2026-09-18**");
   const residuePipe = "| D-8 | gap | 2026-09-18 | body `x|y` | M0 · open — STILL OPEN: half |";
-  const o = owedFor("ZZZNOTALANE", { reader: (p) => (p.endsWith("DEBT.md") ? DEBT([pipeRow, residuePipe]) : "") });
-  t("...so owed now SEES a residue on a row with a pipe in its body, and skips the closed one", o.items.map((i) => i.id), ["D-8"]);
+  /* The `owed` half of this pair WAS HERE — owed read the live DEBT.md through its `reader` and reported the residue
+     row and not the closed one. Retired with the construct (M0-140): `owed.mjs` reads no DEBT source at all now.
+     The PROPERTY it drove — that the disposition is the LAST cell even when the body carries a pipe, so a residue on
+     such a row is still seen — is kept, driven through the reader that survives, `ledger.mjs`' `debtRows`, which is
+     what parses the archive for `find`. */
+  const parsed = L.debtRows(DEBT([pipeRow, residuePipe]));
+  t("...so the ARCHIVE's reader still sees a residue on a row with a pipe in its body, and reads the closed one closed",
+    parsed.map((r) => `${r.id} ${r.state}`), ["D-9 closed", "D-8 open"]);
 
-  /* MOVED 2026-09-22 by M0-110 (BOB #28's ruling 2), NOT DROPPED: the agreement over the REAL live DEBT.md — its
-     non-vacuity floor, "no real DEBT row declaring a residue reads closed" and "no row owed lists for ANY lane is one
-     the archiver would move" — judged the LIVE rows, which live on the branch `coord` after the cutover, where no
-     `main` gate record settles them. They are `tools/coord.mjs`' ledger check LC-debt-agreement, which every coord
-     write runs before it pushes and `plancheck` runs against the coord view; `coord.test.mjs` §8 drives its floor
-     both ways, and `debt-floor.control.mjs` was re-pointed there. What stays here is the rule's BEHAVIOUR, above, on
-     fixtures. M0-109's record below is the history of these assertions at their old site. */
-  const rows = [];
-  /* CORRECTED 2026-09-22 by M0-109, not exempted: this floor read `rows.length > 100`, which measured the ledger's SIZE
-     where the arm needs only its NON-VACUITY. LED-7's fold drains DEBT.md ON PURPOSE (WORK-PIPELINE.md §3: every open
-     row leaves by one of three doors, and the file is archived whole once empty), so the old floor turned the fold's
-     own progress into a red gate: at 99 rows a DOCS gate failed on this line alone, and on `main` every lane's would
-     have (recorded on M0-109's row). One row is enough for the two assertions below to judge something; ZERO rows is
-     the vacuous case and still FAILS HERE BY NAME, and that failure is the signal the fold's last act is owed: when
-     LED-7 archives DEBT.md whole, this arm reads the ARCHIVE instead, re-pointed in that same landing — never deleted.
-     Deleting this line is how a liar passes an empty ledger: no other assertion in this suite sees one (arm LL of the
-     M0-109 control, declared at the head of this file). */
-  const C = await import("../../tools/coord.mjs");
-  const src = readFileSync(join(REPO, "tools/coord.mjs"), "utf8");
-  t("the live agreement is a ledger check now — LC-debt-agreement is an arm of coord.mjs, with its floor, reading owed for every lane",
-    [/await arm\("LC-debt-agreement"/.test(src), /if \(!rows\.length\) return \{ fails:/.test(src), /\["BOB", "CONDUCT", "DIST", "ZZZNOTALANE"\]/.test(src), typeof C.ledgerChecks],
-    [true, true, true, "function"]);
+  /* THE LIVE AGREEMENT ARM WAS HERE and is RETIRED (M0-140, 2026-09-24). Its history: M0-109 put a NON-VACUITY
+     floor (not a size floor) on the two battery arms judging the live DEBT.md — the old `rows.length > 100` measured
+     the ledger's SIZE where the arm needed only that it judged SOMETHING, and turned LED-7's own progress into a red
+     gate at 99 rows. M0-110 then MOVED the live judgement to `coord.mjs`' ledger check LC-debt-agreement, because the
+     rows live on `coord`. Both are retired here because LED-7 is COMPLETE: DEBT.md is archived whole, there are no
+     live DEBT rows, and every one of those arms failed BY NAME at zero rows exactly so that this moment could not
+     pass silently. It did not: this landing is what they were waiting for. What survives is the rule's BEHAVIOUR,
+     above, on fixtures — `isClosedDebtRow` is still the ONE definition of a closed DEBT row, and `debtRows` still
+     applies it to the archive. `debt-floor.control.mjs`, the driver for both floors, is retired with them. */
 }
 
 /* ========================================================================================== */
 section("4 — REFUSALS: nothing written when the move is not a move");
 {
-  const small = "# DEBT\n| D-1 | gap | 2026-09-18 | b | CLOSED 2026-09-18 |\n| D-2 | gap | 2026-09-18 | b | M0 · open |\n";
-  const root = fixture({ queue: Q("E-1", "done") + ARMS, debt: small });
-  t("DEBT.md may not fall below nc-m039's 10,000-byte floor", code(() => L.archiveId("D-1", { repo: root })), "DEBT_BELOW_FLOOR");
-  t("...and nothing was written", [read(root, "docs/development/DEBT.md"), existsSync(join(root, "docs/archive/ledgers/DEBT-closed.md"))], [small, false]);
+  /* The DEBT_BELOW_FLOOR pair WAS HERE — a live DEBT.md below 10,000 bytes refused the move, and nothing was
+     written. Retired with the construct (M0-140): the floor is gone and there is no live DEBT ledger to move out of.
+     The "nothing was written" property it also carried is still driven, by C2b of `ledger.control.mjs` and by the
+     ALREADY_ARCHIVED and NOT_LIVE refusals below, which are QUEUE-grammar and unaffected. */
+  const root = fixture({ queue: Q("E-1", "done") + ARMS });
+  t("a D- id that is a row of NO live ledger is refused — the DEBT ledger is archive-only now (M0-140)",
+    code(() => L.archiveId("D-1", { repo: root })), "NOT_LIVE");
   t("an id that is nowhere is refused", code(() => L.archiveId("E-99", { repo: root })), "NOT_LIVE");
   t("archive E-1 was not refused", mv("E-1", { repo: root }).refusal, undefined);
   t("an id already archived is refused, and says where", code(() => L.archiveId("E-1", { repo: root })), "ALREADY_ARCHIVED");
-  const dry = fixture({ queue: Q("E-2", "done") + ARMS, debt: DEBT([]) });
+  const dry = fixture({ queue: Q("E-2", "done") + ARMS });
   const before = read(dry, "docs/development/QUEUE.md");
   const r = mv("E-2", { repo: dry, dryRun: true });
   t("--dry-run plans the move and writes nothing", [r.results[0].moved.length, read(dry, "docs/development/QUEUE.md") === before,
@@ -358,29 +380,49 @@ section("4 — REFUSALS: nothing written when the move is not a move");
 section("5 — AN ID IN BOTH LEDGERS, AND AN ID CARRIED TWICE: every closed row moves, every open one stays, "
       + "and mintid still sees the pair (M-57 breakage 2)");
 {
-  const debt = DEBT(["| D-7 | gap | 2026-09-18 | first | M1 · CLOSED 2026-09-18 |",
-                     "| D-7 | gap | 2026-09-18 | second, a registered-collision shape | M1 · open |"]);
-  const root = fixture({ queue: Q("D-7", "done") + ARMS, debt });
+  /* CORRECTED 2026-09-24 by M0-140, not exempted: this section read `D-7` as a row of BOTH live ledgers and moved
+     both halves in one act, and asserted mintid saw the pair across the live DEBT.md and the archive. The DEBT
+     ledger is archive-only, so the live half of the pair cannot exist. What M-57 breakage 2 actually names — that a
+     pair SPLIT between a live file and an archive is still ONE collision, and mintid sees both halves — is the
+     property worth keeping, and it is now driven in the shape the estate actually has: the QUEUE item is live, its
+     `D-` twin is in the DEBT archive. */
+  /* The SPLIT that can still arise, driven in the shape the corpus actually has. `D`'s allocation pattern is a
+     TABLE ROW (`| D-n |`), never a `### D-n ·` heading, so the QUEUE archive — where the `D-7` plan item lands —
+     is not a second site for it, and a pair split between the two ARCHIVES cannot be built either, because only
+     `DEBT-closed.md` is an ARCHIVE_TARGET (the August roll is deliberately outside the duplicate check, and
+     `mintid.mjs` says so at the exclusion). What remains, and is real, is a `| D-n |` row written into one of the
+     PLAN files, which are in `D`'s corpus: that is the prose-driven allocation `mintid` warns about, and it must
+     be seen beside the archive's row or an id is handed out twice. */
+  const root = fixture({ queue: Q("D-7", "done") + ARMS,
+                         backlog: "# Backlog\n\n| D-7 | gap | 2026-09-24 | an id-shaped row written into a plan file | M0 · open |\n",
+                         archives: { "DEBT-closed.md": DEBT(["| D-7 | gap | 2026-09-18 | the archived debt row | M1 · CLOSED 2026-09-18 |"]) } });
   const r = mv("D-7", { repo: root });
   t("archive D-7 was not refused", r.refusal, undefined);
-  t("a `D-n` QUEUE item AND the closed D-n DEBT row both move", r.moved.map((m) => m.ledger).sort(), ["DEBT", "QUEUE"]);
-  t("the OPEN D-7 DEBT row stays live, and is reported as kept", r.kept.map((k) => `${k.ledger} ${k.state}`), ["DEBT open"]);
+  t("only the QUEUE half moves — the DEBT ledger is archive-only and holds nothing to move (M0-140)",
+    r.moved.map((m) => m.ledger).sort(), ["QUEUE"]);
+  t("...and nothing is reported kept, because no live DEBT row exists to keep", r.kept.map((k) => `${k.ledger} ${k.state}`), []);
   const a = allocations("D", { repo: root });
-  t("mintid's duplicate check still sees D-7 twice — once live, once in the archive",
+  t("mintid's duplicate check still sees D-7 twice across the split — the DEBT archive and a plan file",
     (a.duplicates.find((d) => d.id === "D-7") || { at: [] }).at.map((s) => s.replace(/:\d+$/, "")).sort(),
-    ["docs/archive/ledgers/DEBT-closed.md", "docs/development/DEBT.md"]);
+    ["docs/archive/ledgers/DEBT-closed.md", "docs/development/BACKLOG.md"]);
 }
 
 /* ========================================================================================== */
 section("6 — FINDABLE BY ID IN ONE STEP (M-57 breakage 3): the lookup reads the archive, the August roll included");
 {
-  const root = fixture({ queue: Q("F-1", "done") + Q("F-2", "queued") + ARMS, debt: DEBT([]),
-                         archives: { "QUEUE-2026-08.md": "# Aug\n\n" + Q("F-0", "done") } });
+  const root = fixture({ queue: Q("F-1", "done") + Q("F-2", "queued") + ARMS,
+                         archives: { "QUEUE-2026-08.md": "# Aug\n\n" + Q("F-0", "done"),
+                                     "DEBT-closed.md": DEBT(["| D-5 | gap | 2026-09-18 | an archived debt row | M1 · CLOSED 2026-09-18 |"]) } });
   t("archive F-1 was not refused", mv("F-1", { repo: root }).refusal, undefined);
   t("find F-1 answers the new archive", L.findId("F-1", { repo: root }).map((f) => `${f.where} ${f.file} ${f.state}`),
     ["archive docs/archive/ledgers/QUEUE-closed.md done"]);
   t("find F-0 answers the August roll", L.findId("F-0", { repo: root }).map((f) => f.file), ["docs/archive/ledgers/QUEUE-2026-08.md"]);
   t("archivedQueueIds carries both, and not the live open row", [...L.archivedQueueIds({ repo: root })].sort(), ["F-0", "F-1"]);
+  /* M0-140: the retired DEBT ledger contributes its ARCHIVE and nothing else. This is the arm that says `find` still
+     answers for every `D-` the estate ever allocated — the whole reason the descriptor was kept rather than deleted. */
+  t("find D-5 answers the DEBT ARCHIVE, with no live DEBT file anywhere in the fixture",
+    L.findId("D-5", { repo: root }).map((f) => `${f.where} ${f.file} ${f.state}`),
+    ["archive docs/archive/ledgers/DEBT-closed.md closed"]);
 }
 
 /* ========================================================================================== */
@@ -395,14 +437,23 @@ section("7 — THE GATE'S THREE ARMS, on fixtures: (a) closed-live, (b) budget, 
     + dep("H-7", "2.capture") + dep("H-8", "2.firsthand") + dep("H-9", "9.nothing") + dep("H-10", "VF-4 (landed)")
     + dep("H-11", "G-3, G-1") + dep("H-12", "G-99", "done") + dep("H-13", "G-0 (archived)")
     + `### H-14 · queued — oversized\nscope: ${"x".repeat(3200)}\n\n` + ARMS;
-  const root = fixture({ queue, debt: DEBT(["| D-1 | gap | 2026-09-18 | b | CLOSED 2026-09-18 |"]), status, plan,
+  const root = fixture({ queue, status, plan,
                          archives: { "QUEUE-closed.md": L.ARCHIVE_HEADER.QUEUE + Q("G-0", "done") } });
   const a = L.ledgerAudit({ repo: root });
-  t("(a) names every closed row in each live ledger", [a.closedLive.QUEUE.sort(), a.closedLive.DEBT], [["G-1", "G-2", "H-12"], ["D-1"]]);
+  /* CORRECTED 2026-09-24 by M0-140: this asserted a `DEBT` key beside `QUEUE` on both (a) and the arming map. The
+     audit walks `LEDGERS`, which no longer holds DEBT, so a DEBT key here would be a key the tool never writes —
+     and `a.closedLive.DEBT` read `undefined`, not `[]`, which is how a retired ledger would have gone on being
+     "checked" while nothing was checked. The DEBT key is ASSERTED ABSENT rather than dropped. */
+  t("(a) names every closed row in each live ledger", a.closedLive.QUEUE.sort(), ["G-1", "G-2", "H-12"]);
+  /* LATER is absent in this fixture (it is optional and no row has been demoted), so it contributes no key either —
+     which is the same rule: a ledger the audit did not read is NOT reported as a clean one. */
+  t("(a) reports NO DEBT ledger at all — it is archive-only, and an absent key is not an empty list (M0-140)",
+    Object.keys(a.closedLive).sort(), ["BACKLOG", "QUEUE"]);
   /* CORRECTED 2026-09-18 by LED-6: (b) was armed by LED-4, which is SUPERSEDED and so could never arm. The
-     arming is now LED-3 for (a) and P2, LED-6 for the pipeline arms P3–P5, LED-7 for DEBT's row budget. */
-  t("(a), the pipeline arms and DEBT's budget are NOT armed while LED-3 / LED-6 / LED-7 are queued — they WARN",
-    a.armed, { closedLive: false, pipeline: false, debtBudget: false });
+     arming is now LED-3 for (a) and P2, LED-6 for the pipeline arms P3–P5. LED-7 armed DEBT's row budget and is
+     retired with the construct (M0-140). */
+  t("(a) and the pipeline arms are NOT armed while LED-3 / LED-6 are queued — they WARN, and `debtBudget` is gone",
+    a.armed, { closedLive: false, pipeline: false });
   t("(c) the unresolved dependencies, each named with why",
     a.depends.unresolved.map((u) => `${u.id}->${u.dep}`), ["H-4->G-99", "H-5->G-2", "H-8->2.firsthand", "H-9->9.nothing"]);
   t("(c) an open row, a done row (live or ARCHIVED), a BUILT claim, a closed plan row and a list all resolve",
@@ -414,17 +465,17 @@ section("7 — THE GATE'S THREE ARMS, on fixtures: (a) closed-live, (b) budget, 
   /* CORRECTED 2026-09-18 by LED-6 (WORK-PIPELINE §1, §4): the cache's budget is 40 KiB and the old 150 KiB
      figure moved to the BACKLOG. The 100 KiB case is the one that tells the two budgets apart. */
   t("(b) a small QUEUE is under its cache budget", a.budget.ledgers.find((x) => x.ledger === "QUEUE").over, false);
-  const big = fixture({ queue: Q("I-1", "queued") + "prose\n".repeat(26000) + ARMS, debt: DEBT([]) });
+  const big = fixture({ queue: Q("I-1", "queued") + "prose\n".repeat(26000) + ARMS });
   t("(b) a QUEUE over 150 KiB is over budget", L.ledgerAudit({ repo: big }).budget.ledgers.find((x) => x.ledger === "QUEUE").over, true);
-  const mid = fixture({ queue: Q("I-2", "queued") + "prose\n".repeat(17000) + ARMS, backlog: Q("I-3", "queued") + "prose\n".repeat(17000), debt: DEBT([]) });
+  const mid = fixture({ queue: Q("I-2", "queued") + "prose\n".repeat(17000) + ARMS, backlog: Q("I-3", "queued") + "prose\n".repeat(17000) });
   const midA = L.ledgerAudit({ repo: mid }).budget.ledgers;
   t("(b) a ~100 KiB QUEUE is OVER the cache's budget, and a ~100 KiB BACKLOG is UNDER its 150 KiB",
     [midA.find((x) => x.ledger === "QUEUE").over, midA.find((x) => x.ledger === "BACKLOG").over], [true, false]);
 
-  const armedRoot = fixture({ queue: Q("J-1", "done") + Q("LED-4", "queued"), debt: DEBT([]),
+  const armedRoot = fixture({ queue: Q("J-1", "done") + Q("LED-4", "queued"),
                               archives: { "QUEUE-closed.md": L.ARCHIVE_HEADER.QUEUE + Q("LED-3", "done") } });
   t("(a) ARMS once LED-3 is done — read from the ARCHIVE, where a done row will live", L.ledgerAudit({ repo: armedRoot }).armed.closedLive, true);
-  const noArm = fixture({ queue: Q("J-2", "done"), debt: DEBT([]) });
+  const noArm = fixture({ queue: Q("J-2", "done") });
   t("an arming row that exists nowhere is REPORTED, not silently left unarmed", L.ledgerAudit({ repo: noArm }).arming.closedLive.found, false);
 }
 
@@ -455,15 +506,16 @@ section("9 — LED-6: THE BACKLOG IS A SECOND LIVE FILE OF THE QUEUE GRAMMAR —
   const root = fixture({
     queue: Q("F-1", "queued") + Q("REC-7", "queued") + ARMS,
     backlog: "# Backlog\n\n## Rows\n\n" + Q("F-2", "queued") + Q("F-3", "superseded") + Q("REC-7", "queued") + Q("D-9", "queued"),
-    debt: DEBT(["| D-9 | gap | 2026-09-18 | a body | M1 · open |"]),
-    archives: { "QUEUE-closed.md": L.ARCHIVE_HEADER.QUEUE + Q("F-0", "done") } });
+    archives: { "QUEUE-closed.md": L.ARCHIVE_HEADER.QUEUE + Q("F-0", "done"),
+                /* M0-140: D-9's DEBT half is in the ARCHIVE, where every DEBT row now lives. */
+                "DEBT-closed.md": DEBT(["| D-9 | gap | 2026-09-18 | a body | M1 · CLOSED 2026-09-18 |"]) } });
   const where = (id) => L.findId(id, { repo: root }).map((f) => `${f.where} ${f.file} ${f.state}`);
   t("find F-1 answers the CACHE", where("F-1"), ["cache docs/development/QUEUE.md queued"]);
   t("find F-2 answers the BACKLOG", where("F-2"), ["backlog docs/development/BACKLOG.md queued"]);
   t("find F-0 answers the ARCHIVE — ONCE, though two ledgers share that archive file", where("F-0"),
     ["archive docs/archive/ledgers/QUEUE-closed.md done"]);
-  t("find D-9 answers the backlog row AND the live DEBT row", where("D-9").sort(),
-    ["backlog docs/development/BACKLOG.md queued", "live docs/development/DEBT.md open"]);
+  t("find D-9 answers the backlog row AND the ARCHIVED DEBT row — a `D-` is still both (M0-140)", where("D-9").sort(),
+    ["archive docs/archive/ledgers/DEBT-closed.md closed", "backlog docs/development/BACKLOG.md queued"]);
   t("find answers nothing for an id that is nowhere", L.findId("F-99", { repo: root }), []);
   t("ARCHIVE_TARGETS lists each archive file ONCE (mintid reads it; a repeat would be a false duplicate)",
     L.ARCHIVE_TARGETS.length, new Set(L.ARCHIVE_TARGETS).size);
@@ -477,7 +529,7 @@ section("9 — LED-6: THE BACKLOG IS A SECOND LIVE FILE OF THE QUEUE GRAMMAR —
   const dup = allocations("REC", { repo: root }).duplicates.find((d) => d.id === "REC-7") || { at: [] };
   t("mintid's duplicate check READS THE BACKLOG — REC-7 in the cache and the backlog is seen twice",
     dup.at.map((s) => s.replace(/:\d+$/, "")).sort(), ["docs/development/BACKLOG.md", "docs/development/QUEUE.md"]);
-  const nob = fixture({ queue: Q("F-4", "done") + ARMS, backlog: null, debt: DEBT([]) });
+  const nob = fixture({ queue: Q("F-4", "done") + ARMS, backlog: null });
   t("a MISSING backlog refuses the archiver outright — an unreadable ledger is not an empty one",
     code(() => L.archiveId("F-4", { repo: nob })), "LEDGER_UNREADABLE");
   t("...and ledgerAudit names it unreadable and scores no pipeline", [L.ledgerAudit({ repo: nob }).unreadable, L.ledgerAudit({ repo: nob }).pipeline],
@@ -500,7 +552,7 @@ section("10 — LED-6: `refill` moves the next RUNNABLE rows from the TOP of the
     + "### B-11 · queued — the last row, no trailing newline\ndepends-on: none\nscope: s";
   const status = { constructs: [{ n: 2, claims: [{ id: "2.capture", state: "BUILT" }] }] };
   const archives = { "QUEUE-closed.md": L.ARCHIVE_HEADER.QUEUE + Q("X-1", "done") + Q("X-2", "superseded") };
-  const mk = () => fixture({ queue: cacheText, backlog: backlogText, debt: DEBT([]), status, archives });
+  const mk = () => fixture({ queue: cacheText, backlog: backlogText, status, archives });
   const all = (root) => ({ c: read(root, L.LEDGERS.QUEUE.live), b: read(root, L.LEDGERS.BACKLOG.live),
                            a: read(root, "docs/archive/ledgers/QUEUE-closed.md") });
   const ids = (text) => L.queueRows(text).map((r) => r.id);
@@ -550,10 +602,10 @@ section("10 — LED-6: `refill` moves the next RUNNABLE rows from the TOP of the
   const dry = mk();
   const dr = rf({ repo: dry, dryRun: true });
   t("--dry-run plans the same move and writes NOTHING", [dr.moved.map((m) => m.id).length, all(dry).c === cacheText, all(dry).b === backlogText], [6, true, true]);
-  const empty = fixture({ queue: "# The work queue\n\ninbox only\n", backlog: dep("E-1", "queued", "none"), debt: DEBT([]) });
+  const empty = fixture({ queue: "# The work queue\n\ninbox only\n", backlog: dep("E-1", "queued", "none") });
   const er = rf({ repo: empty });
   t("into a cache holding NO row, a refill appends at the end", [er.moved.map((m) => m.id), ids(read(empty, L.LEDGERS.QUEUE.live))], [["E-1"], ["E-1"]]);
-  const nob = fixture({ queue: cacheText, backlog: null, debt: DEBT([]) });
+  const nob = fixture({ queue: cacheText, backlog: null });
   t("a missing backlog is REFUSED, nothing written", [/LEDGER_UNREADABLE/.test(rf({ repo: nob }).refusal || ""), read(nob, L.LEDGERS.QUEUE.live) === cacheText], [true, true]);
 
   /* THE LIARS, handed to the conservation judge directly: each must be refused. */
@@ -582,7 +634,7 @@ section("11 — LED-6: THE FIVE INVARIANTS (WORK-PIPELINE §2), each with a PLAN
      unmet because the row was NOWHERE — and arm P4 (open counted as met) left the assertion green: the
      arm fired at the wrong thing. Caught by the control's first run; this is the fix. */
   const inv = (cache, backlog) => L.pipelineInvariants(cache, backlog,
-    { repo: fixture({ queue: cache, backlog, debt: DEBT([]), archives, status }), claims });
+    { repo: fixture({ queue: cache, backlog, archives, status }), claims });
   const v = (res, k) => res.arms[k].violations;
   const cleanCache = dep("R-1", "running", "none") + dep("R-2", "queued", "X-1 (landed)") + dep("R-3", "queued", "2.capture");
   const cleanBacklog = dep("B-1", "queued", "R-2") + dep("B-2", "blocked", "none");
@@ -615,7 +667,7 @@ section("11 — LED-6: THE FIVE INVARIANTS (WORK-PIPELINE §2), each with a PLAN
     v(inv(full + held + held.replace(/H-/g, "I-") + held.replace(/H-/g, "J-") + held.replace(/H-/g, "K-"), ""), "P5").filter((x) => !x.id), []);
   t("INTEGRATED: ...while an `integrated` row is still OPEN, so P1 sees it once", v(inv(full + held, dep("H-0", "queued", "none")), "P1").map((x) => x.id), ["H-0"]);
   const selHeld = L.selectRefill(full.split("### ").slice(1, 4).map((x) => "### " + x).join("") + held,
-    dep("B-1", "queued", "none") + dep("B-2", "queued", "none"), { repo: fixture({ queue: "", backlog: "", debt: DEBT([]), archives, status }), claims, cacheRows: 4 });
+    dep("B-1", "queued", "none") + dep("B-2", "queued", "none"), { repo: fixture({ queue: "", backlog: "", archives, status }), claims, cacheRows: 4 });
   t("INTEGRATED: the refill's room ignores `integrated` rows (3 working of 4 leaves room for 1)", [selHeld.room, selHeld.take.map((r) => r.id)], [1, ["B-1"]]);
   t("P3 CATCHES a `blocked` row in the cache", v(inv(cleanCache + dep("R-4", "blocked", "none"), ""), "P3").map((x) => x.id), ["R-4"]);
   const p4 = v(inv(cleanCache + dep("R-5", "queued", "B-1") + dep("R-6", "queued", "the next deploy") + dep("R-7", "queued", "X-2")
@@ -640,7 +692,7 @@ section("11 — LED-6: THE FIVE INVARIANTS (WORK-PIPELINE §2), each with a PLAN
      CORRECTED 2026-09-22 by M0-119: `.pipeline.arms` THREW when the audit scored no pipeline, ending the module before
      its tally — found by arm T9 (an absent tail read as unreadable), whose suite crashed instead of going red. An
      unscored pipeline now reddens these assertions by name. */
-  const arm = (led3, led6) => (L.ledgerAudit({ repo: fixture({ queue: nine, debt: DEBT([]),
+  const arm = (led3, led6) => (L.ledgerAudit({ repo: fixture({ queue: nine,
     archives: { "QUEUE-closed.md": L.ARCHIVE_HEADER.QUEUE + Q("LED-3", led3) + Q("LED-6", led6) + Q("LED-7", "queued") } }) }).pipeline || { arms: {} }).arms;
   t("before LED-6 is done, P3–P5 WARN (armed false) and P1 is armed", Object.fromEntries(Object.entries(arm("done", "running")).map(([k, x]) => [k, x.armed])),
     { P1: true, P2: true, P3: false, P4: false, P5: false });
@@ -664,7 +716,9 @@ section("12 — LED-6 OVER THE REAL LEDGERS: P1 and P2 hold on the cache and bac
                               return (r.status === 0 ? r.stdout.split("\n").filter(Boolean) : []).filter((n) => L.LEDGERS.QUEUE.family.test(n)).map((n) => `${L.ARCHIVE_DIR}/${n}`); })();
   const root = mkdtempSync(join(tmpdir(), "ledger-split-"));
   const copy = (f) => { const x = pinned(f); if (x === null) return; mkdirSync(dirname(join(root, f)), { recursive: true }); writeFileSync(join(root, f), x); };
-  for (const f of [L.LEDGERS.QUEUE.live, L.LEDGERS.BACKLOG.live, L.LEDGERS.DEBT.live, "docs/archive/IS-BUILD-PLAN.md",
+  /* M0-140: `L.LEDGERS.DEBT.live` was in this list. The DEBT ledger is retired and archive-only, so there is no
+     live path to copy; the pipeline this section splits and refills is the QUEUE grammar's, which never read it. */
+  for (const f of [L.LEDGERS.QUEUE.live, L.LEDGERS.BACKLOG.live, "docs/archive/IS-BUILD-PLAN.md",
                    "docs/architecture/construct-status.json", ...pinArchive]) copy(f);
   const P = L.ledgerAudit({ repo: root }).pipeline || { cacheRows: 0, backlogRows: 0 };
   console.log(`  pinned pipeline (${STATE_PIN}): cache ${P.cacheRows} row(s), backlog ${P.backlogRows} row(s)`);
@@ -775,7 +829,7 @@ section("13 — M0-119: THE BACKLOG'S TAIL (WORK-PIPELINE §2, BOB #28) — a pl
     L.rebalanceConserved({ backlog, later: "", newBacklog: early.newBacklog, newLater: early.newLater, budget }).split, false);
 
   /* ON DISK, through the tool: `rebalance` writes both files, judges what it READS BACK, and the readers see one order. */
-  const root = fixture({ queue: "# The work queue\n\n## ROWS\n\n" + ARMS, backlog, debt: DEBT([]) });
+  const root = fixture({ queue: "# The work queue\n\n## ROWS\n\n" + ARMS, backlog });
   let r; try { r = L.rebalance({ repo: root, budget }); } catch (e) { r = { refusal: `${e.code}: ${e.message}` }; }
   t("rebalance on disk was not refused", r.refusal, undefined);
   t("...it demoted the foot and wrote the tail file", [r.demoted, existsSync(join(root, L.LEDGERS.LATER.live))], [p.demoted, true]);
@@ -793,11 +847,11 @@ section("13 — M0-119: THE BACKLOG'S TAIL (WORK-PIPELINE §2, BOB #28) — a pl
   t("P5 (over-strictness) passes a tail over 150 KiB — the tail has no whole-file budget",
     L.pipelineInvariants("", "", { repo: root, later: Array.from({ length: 120 }, (_, i) => R(`T-${i}`, 1500)).join("") }).arms.P5.violations, []);
   t("an ABSENT tail is NAMED absent by the audit, never unreadable, and scored as empty",
-    (() => { const a = L.ledgerAudit({ repo: fixture({ queue: ARMS, backlog: HEAD, debt: DEBT([]) }) }); return [a.absent, a.unreadable, (a.pipeline || {}).tailRows]; })(),
+    (() => { const a = L.ledgerAudit({ repo: fixture({ queue: ARMS, backlog: HEAD }) }); return [a.absent, a.unreadable, (a.pipeline || {}).tailRows]; })(),
     [[L.LEDGERS.LATER.live], [], 0]);
 
   /* REFILL walks the ONE order: with nothing runnable in BACKLOG.md it takes from the tail, and promotes as room frees. */
-  const rr = fixture({ queue: "# The work queue\n\n## ROWS\n\n", backlog: HEAD + R("W-1", 300, "blocked") + R("W-2", 300, "blocked"), debt: DEBT([]) });
+  const rr = fixture({ queue: "# The work queue\n\n## ROWS\n\n", backlog: HEAD + R("W-1", 300, "blocked") + R("W-2", 300, "blocked") });
   writeFileSync(join(rr, L.LEDGERS.LATER.live), L.LATER_HEADER + "\n" + R("W-3") + R("W-4"));
   let rf; try { rf = L.refill({ repo: rr, cacheRows: 1 }); } catch (e) { rf = { moved: [], refusal: `${e.code}: ${e.message}` }; }
   t("refill with no runnable row in BACKLOG.md takes the order's next runnable row FROM THE TAIL", [rf.refusal, rf.moved.map((m) => `${m.id}@${m.from}`)], [undefined, ["W-3@tail"]]);
@@ -805,12 +859,12 @@ section("13 — M0-119: THE BACKLOG'S TAIL (WORK-PIPELINE §2, BOB #28) — a pl
     [ids(read(rr, L.LEDGERS.BACKLOG.live)), ids(read(rr, L.LEDGERS.LATER.live))], [["W-1", "W-2", "W-4"], []]);
   t("...the whole pipeline conserved: cache ∪ backlog ∪ tail hold W-1..W-4 once each",
     ["W-1", "W-2", "W-3", "W-4"].map((id) => L.findId(id, { repo: rr }).length), [1, 1, 1, 1]);
-  const bare = fixture({ queue: ARMS, backlog: HEAD + R("E-1"), debt: DEBT([]) });
+  const bare = fixture({ queue: ARMS, backlog: HEAD + R("E-1") });
   const quiet = L.rebalance({ repo: bare });
   t("a rebalance with nothing to move writes NOTHING — an absent tail stays absent", [quiet.written, existsSync(join(bare, L.LEDGERS.LATER.live))], [false, false]);
   const made = L.rebalance({ repo: bare, ensure: true });
   t("...and with `ensure` (the `rebalance` intent) it writes the tail's HEADER alone", [made.created, read(bare, L.LEDGERS.LATER.live) === L.LATER_HEADER, ids(read(bare, L.LEDGERS.BACKLOG.live))], [true, true, ["E-1"]]);
-  const archived = fixture({ queue: ARMS, backlog: HEAD, debt: DEBT([]) });
+  const archived = fixture({ queue: ARMS, backlog: HEAD });
   writeFileSync(join(archived, L.LEDGERS.LATER.live), L.LATER_HEADER + "\n" + R("Z-1", 10, "superseded"));
   t("a closed row in the TAIL archives to the shared archive like any backlog row", mv("Z-1", { repo: archived }).moved.map((m) => m.ledger), ["LATER"]);
 }

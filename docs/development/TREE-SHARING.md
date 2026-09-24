@@ -43,7 +43,8 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
 ### 1 · The message board leaves `main`: a `coord` branch
 
 - **What moves.** A file moves to the branch `coord`, in this same repository, when it is STATE ABOUT THE WORK: `CLAIMS.md`,
-  `QUEUE.md`, `BACKLOG.md`, `DEBT.md` and the `kickoffs/*-NEXT.md` handoffs. Bob's ruling also settles the question
+  `QUEUE.md`, `BACKLOG.md` and the `kickoffs/*-NEXT.md` handoffs (`DEBT.md` was one until 2026-09-24, when M0-140
+  retired the construct and archived the file whole; `statepaths.mjs`' `RETIRED_FILES` names it and says where it went). Bob's ruling also settles the question
   *"DECIDED.md leaving the committed tree"* that was with him: the GENERATED `docs/DECIDED.md` leaves `main` (how: the
   next bullet, which corrects BOB #26's first text, where it moved to `coord`). A file stays on `main`
   when it DESCRIBES the system, instructs a lane, or must move with the code it concerns: `CLAUDE.md`, the kickoffs, the
@@ -111,11 +112,14 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   code before and after the cutover, and a planted fixture as itself. `occupancy.mjs` and `retirable.mjs` read no state
   file (read at the code); `gates.mjs`' derivation reads no state CONTENT and is unchanged. **Writes:** `coord.mjs
   write` with intents (append a block; a line under a block's heading; a row's status word; a row replaced, deleted, or
-  inserted before/after another; a handoff replaced; `archive`; `refill`), re-applied on every retry through a
+  inserted before/after another; a handoff replaced; a state file DELETED (M0-140, for a RETIRED path); `archive`;
+  `refill`), re-applied on every retry through a
   temporary index, pushed without force; `ledger.mjs archive|refill` route through it on a switched tree. **Ruling 2's
-  moved arms are `ledgerChecks`** — LC-markers, LC-debt-token, LC-queued-refs, LC-row-design, LC-strays,
-  LC-owed-agreement, LC-plan-fields, LC-delegations, LC-ledger, LC-debt-agreement, LC-undecided-route, LC-op-claims,
-  LC-handoff-budget — each naming the suite it left; a write runs all and is refused by name, `plancheck` §10 runs those
+  moved arms are `ledgerChecks`** — LC-markers, LC-queued-refs, LC-row-design, LC-strays,
+  LC-owed-agreement, LC-plan-fields, LC-delegations, LC-ledger, LC-undecided-route, LC-op-claims,
+  LC-handoff-budget — each naming the suite it left (LC-debt-token and LC-debt-agreement were two more until
+  2026-09-24, retired with the DEBT construct by M0-140: each failed BY NAME at zero rows, which is how the file
+  emptying could not pass in silence); a write runs all and is refused by name, `plancheck` §10 runs those
   no other section runs. **Plancheck §10** also fails a switched `main` whose state path is not exactly its pointer, and
   any `origin/main:<state path>` left in the tracked tree outside the archive and `MEASUREMENTS.md`. **The push guard**
   judges a push of `coord` alone by its own commit (no merge marker) and skips `main`'s checks. **The cutover** is

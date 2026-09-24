@@ -91,7 +91,11 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 9;
+/* 7 since M0-140 (2026-09-24), was 9: §2 and §3 are retired with the DEBT construct and the residue population —
+   the note above §1' says what they measured and where what survives is driven. §1 became §1', re-pointed onto a
+   blocked plan row's heading. This count is the guard that a section did not silently stop running, so it moves to
+   the number of sections that EXIST, never to the number that happened to run. */
+const SECTIONS = 7;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -105,66 +109,56 @@ const fixture = (files) => { const all = SOURCES.queue in files && !(SOURCES.bac
 const DEBT = (rows) => ["| id | type | date | body | disposition |", ...rows].join("\n");
 const ids = (o) => o.items.map((i) => i.id).sort();
 
-/* ========================================================================== */
-section("1 — A DISPOSITION THAT ROUTES WORK TO A LANE IS OWED; ONE THAT MERELY MENTIONS IT IS "
-      + "NOT. The first version matched the row BODY and returned 58 items, because every row "
-      + "in this ledger quotes Bob.");
-{
-  const debt = DEBT([
-    "| D-1 | gap | 2026-09-17 | Bob, 2026-08-01 — the ORIGINAL plan routed to BOB and he handed it back; that is history, not an assignment | M4 · open |",
-    "| D-2 | gap | 2026-09-17 | some body | M4 · open — routed to BOB |",
-    "| D-3 | gap | 2026-09-17 | another body | M4 · open — blocked on BOB |",
-    "| D-4 | gap | 2026-09-17 | another body | M4 · open — owed by this lane |",
-  ]);
-  const o = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: debt,
-                                               [SOURCES.decisions]: "", [SOURCES.queue]: "" }) });
-  t("a row whose DISPOSITION routes to the lane is owed", ids(o).includes("D-2"), true);
-  t("...and 'blocked on' counts", ids(o).includes("D-3"), true);
-  t("...and 'owed by this lane' counts", ids(o).includes("D-4"), true);
-  /* The body says "routed to BOB" as HISTORY. Only the disposition ASSIGNS, so a predicate
-     reading the body cannot tell a narrated assignment from a live one. */
-  t("A ROW THAT ONLY QUOTES BOB IN ITS BODY IS NOT OWED — the 58-item defect",
-    ids(o).includes("D-1"), false);
-  t("...so exactly three of four, which is discrimination rather than an empty or full walk",
-    o.counts.owed, 3);
-}
+/* ==========================================================================
+
+   SECTIONS 1, 2 and 3 WERE HERE, and are RE-POINTED (1) or RETIRED (2, 3) by M0-140, 2026-09-24, with the DEBT
+   construct. All three drove `owedFor` over a fixture DEBT ledger, and `owed.mjs` reads no DEBT source any more.
+
+   §1 — *a disposition that ROUTES work to a lane is owed; one that merely MENTIONS it is not* (the 58-item defect:
+   the first version matched the row BODY, and every row in that ledger quoted Bob). The RULE is `OWNER_RE`'s and is
+   untouched; only its subject moved, from a disposition cell to a BLOCKED PLAN ROW's heading, which is the one
+   attribution source left. It is driven in §1' below, on that subject, with the body/heading distinction intact —
+   the walk reads the heading line and nothing else, so a mention in the row's body still cannot assign.
+
+   §2 — *a declared residue is owed; the word RESIDUE in narration is not* (the second narrowing, 28 items to 14) —
+   and §3 — *a closed row owes nothing however many owner words it carries, unless it declares a residue*. Both are
+   RETIRED, and what they measured is stated plainly rather than quietly dropped: THE RESIDUE POPULATION IS GONE.
+   A residue was a DEBT disposition declaring an unfinished half, and there are no DEBT dispositions; `owedFor`
+   now returns `residue: []` for every lane, always. Nothing replaces it and nothing should — a plan row with an
+   unfinished half is a plan row that is not `done`, which P1-P5 already judge.
+
+   NEITHER PREDICATE IS UNGUARDED BY THIS. `RESIDUE_RE` and `isClosedDebtRow` are still the ONE definition of a
+   closed DEBT row, still applied by `ledger.mjs`' `debtRows` when `find` reads the archive, and their spellings —
+   every CLOSED form, every open form, and the four M-57 rows that read resolved WHILE declaring a residue — are
+   driven in `ledger.test.mjs` §3, which is where that definition now lives.
+   ========================================================================== */
 
 /* ========================================================================== */
-section("2 — A DECLARED RESIDUE IS OWED; THE WORD 'RESIDUE' IN NARRATION IS NOT. The second "
-      + "narrowing: 28 items became 14.");
+section("1' — A HEADING THAT ROUTES WORK TO A LANE IS OWED; ONE THAT MERELY MENTIONS IT IS NOT. "
+      + "§1's rule, on the subject that survives: a blocked plan row's heading (M0-140).");
 {
-  const debt = DEBT([
-    "| D-10 | gap | 2026-09-17 | body | M0 · FIXED — and the residue that is ALREADY THERE was handled |",
-    "| D-11 | gap | 2026-09-17 | body | M0 · open — STILL OPEN: the arm is undriven |",
-    "| D-12 | gap | 2026-09-17 | body | M0 · done — RESIDUE, NAMED: nothing asserts it |",
-    "| D-13 | gap | 2026-09-17 | body | M0 · open — NOT CLAIMED DONE: the wiring is unproven |",
-  ]);
-  const o = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: debt,
-                                               [SOURCES.decisions]: "", [SOURCES.queue]: "" }) });
-  t("'STILL OPEN' is a declared residue", ids(o).includes("D-11"), true);
-  t("'RESIDUE, NAMED' is a declared residue", ids(o).includes("D-12"), true);
-  t("'NOT CLAIMED DONE' is a declared residue", ids(o).includes("D-13"), true);
-  t("PROSE ABOUT a residue is NOT a declaration of one — the 28-item defect",
-    ids(o).includes("D-10"), false);
-  t("...so three of four", o.counts.owed, 3);
-}
-
-/* ========================================================================== */
-section("3 — A CLOSED ROW OWES NOTHING, HOWEVER MANY OWNER WORDS IT CARRIES — unless it declares "
-      + "a residue, which is the whole point of writing one on a closed row.");
-{
-  const debt = DEBT([
-    "| D-20 | gap | 2026-09-17 | body | M0 · CLOSED 2026-09-17 — routed to BOB originally |",
-    "| D-21 | gap | 2026-09-17 | body | M0 · FIXED AND CONFIRMED — blocked on BOB before |",
-    "| D-22 | gap | 2026-09-17 | body | M0 · CLOSED — STILL OPEN: the second half is unbuilt |",
-  ]);
-  const o = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: debt,
-                                               [SOURCES.decisions]: "", [SOURCES.queue]: "" }) });
-  t("a CLOSED row is not owed", ids(o).includes("D-20"), false);
-  t("...nor a FIXED AND CONFIRMED one", ids(o).includes("D-21"), false);
-  t("BUT a closed row DECLARING a residue still is — else closing a row would erase its own "
-  + "honest remainder", ids(o).includes("D-22"), true);
-  t("...exactly one survives, so the closed-filter is not eating everything", o.counts.owed, 1);
+  const q = "### R-1 · blocked — M4, waiting on a measurement\n"
+          + "Bob, 2026-08-01 — the ORIGINAL plan was routed to BOB and he handed it back; that is history,\n"
+          + "not an assignment, and it sits BELOW the heading where the walk does not read.\n"
+          + "### R-2 · blocked — M4, routed to BOB\n"
+          + "### R-3 · blocked — M4, blocked on BOB\n"
+          + "### R-4 · blocked — M4, and it is owed by this lane\n";
+  const o = owedFor("BOB", { reader: fixture({ [SOURCES.decisions]: "", [SOURCES.queue]: q }) });
+  t("a row whose HEADING routes to the lane is owed", ids(o).includes("R-2"), true);
+  t("...and 'blocked on' counts", ids(o).includes("R-3"), true);
+  /* CORRECTED 2026-09-24 by M0-140, not exempted: §1 asserted that `owed by this lane` COUNTS. It counted as
+     RESIDUE, never as attribution — the phrase means *the lane that wrote this row*, which this tool cannot
+     determine, and putting it in the owner pattern was the last leak (a NONEXISTENT lane came back with an
+     attributed item). With the residue population retired there is nothing for it to count AS, so the assertion
+     is inverted to what is now true, with the reason named. */
+  t("...and 'owed by this lane' counts as NOTHING now — it was RESIDUE, and the residue population is retired",
+    ids(o).includes("R-4"), false);
+  /* The row's SECOND LINE says "routed to BOB" as HISTORY. The walk reads the HEADING and stops, so a narrated
+     assignment in the body cannot be told from a live one — and is therefore never read at all. */
+  t("A ROW THAT ONLY QUOTES BOB BELOW ITS HEADING IS NOT OWED — the 58-item defect",
+    ids(o).includes("R-1"), false);
+  t("...so exactly two of four, which is discrimination rather than an empty or full walk", o.counts.owed, 2);
+  t("...and the residue population is empty, for every lane, always (M0-140)", o.counts.residue, 0);
 }
 
 /* ========================================================================== */
@@ -175,8 +169,7 @@ section("4 — THE OTHER TWO LEDGERS. An open decision is owed; an answered one 
   const q = "### REC-1 · blocked — BLOCKED ON BOB, ruled 2026-09-17\n"
           + "### REC-2 · blocked — waiting on RECORD's other item\n"
           + "### REC-3 · queued — blocked on BOB is only prose here, the state is queued\n";
-  const o = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: DEBT([]),
-                                               [SOURCES.decisions]: dec, [SOURCES.queue]: q }) });
+  const o = owedFor("BOB", { reader: fixture({ [SOURCES.decisions]: dec, [SOURCES.queue]: q }) });
   t("an OPEN decision is owed", ids(o).includes("DEC-90"), true);
   t("an ANSWERED decision is not", ids(o).includes("DEC-91"), false);
   t("a BLOCKED row naming the lane is owed", ids(o).includes("REC-1"), true);
@@ -190,39 +183,56 @@ section("5 — AN UNREADABLE LEDGER IS NOT AN EMPTY ONE. The rule this whole fam
       + "turns on, and the one a worklist must never get wrong: silence would read as 'nothing "
       + "owed' and stop the lane.");
 {
-  const o = owedFor("BOB", { reader: fixture({ [SOURCES.decisions]: "", [SOURCES.queue]: "" }) });
-  t("the unreadable ledger is NAMED", o.unreadable, [SOURCES.debt]);
+  /* CORRECTED 2026-09-24 by M0-140: the unreadable ledger this section named was `DEBT.md`, which is retired.
+     The RULE is the one this whole family of instruments turns on and it is unchanged — an unreadable source is
+     NAMED, counted and reported as UNKNOWN, never as an empty list — so it is driven on a source that still
+     exists. An absent DECISIONS.md is the same shape the DEBT case was: readable-or-not, never assumed empty. */
+  const o = owedFor("BOB", { reader: fixture({ [SOURCES.queue]: "", [SOURCES.backlog]: "" }) });
+  t("the unreadable ledger is NAMED", o.unreadable, [SOURCES.decisions]);
   t("...and counted", o.counts.unreadable, 1);
   t("...and the message says UNKNOWN rather than reporting an empty list",
     /UNKNOWN/.test(owedMessage(o)), true);
   t("...and explicitly refuses the inference", /not an empty one/.test(owedMessage(o)), true);
   /* LED-6: the backlog is a source, and a MISSING backlog is unreadable, never an empty one. */
-  const nb = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: DEBT([]), [SOURCES.decisions]: "", [SOURCES.queue]: "", [SOURCES.backlog]: null }) });
+  const nb = owedFor("BOB", { reader: fixture({ [SOURCES.decisions]: "", [SOURCES.queue]: "", [SOURCES.backlog]: null }) });
   t("an unreadable BACKLOG is NAMED too (LED-6)", nb.unreadable, [SOURCES.backlog]);
-  const bl = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: DEBT([]), [SOURCES.decisions]: "", [SOURCES.queue]: "",
+  const bl = owedFor("BOB", { reader: fixture({ [SOURCES.decisions]: "", [SOURCES.queue]: "",
     [SOURCES.backlog]: "### REC-8 · blocked — waits on a ruling. Routed to BOB.\n" }) });
   t("a blocked row in the BACKLOG routed to the lane is owed, sourced BACKLOG (LED-6)",
     bl.attributed.map((i) => `${i.source} ${i.id}`), ["BACKLOG REC-8"]);
 }
 
 /* ========================================================================== */
-section("6 — THE LIVE ESTATE. An arm that found nothing here would satisfy every fixture arm "
-      + "above it, so the real ledgers are walked and asserted NON-EMPTY.");
+section("6 — THE LIVE ESTATE. The real ledgers are walked and every one is READABLE — the "
+      + "NON-EMPTY floor is retired with the source that guaranteed it (M0-140).");
 {
   const o = owedFor("BOB");
   t("every ledger was readable", o.unreadable, []);
-  t("the walk is NON-EMPTY — the estate does owe this lane something", o.counts.owed > 0, true);
-  t("...and every item carries a source, an id and a reason",
+  /* CORRECTED 2026-09-24 by M0-140, not exempted, and this is the assertion that pays for the retirement being
+     stated rather than assumed. It read: *the walk is NON-EMPTY — the estate does owe this lane something*, and it
+     existed because an arm finding nothing here would satisfy every fixture arm above it. It is RETIRED rather
+     than re-pointed, because it would now be a floor that FAILS WHEN THE ESTATE IS HEALTHY. With DEBT retired,
+     `owedFor`'s only sources are OPEN DECISIONS and BLOCKED plan rows, and BOTH ARE LEGITIMATELY ZERO — measured
+     on `origin/main` 68fecb8d: 0 attributed and 0 residue for BOB, CONDUCT, SCHEDULER, DIST, FLEET, UI, CAPTURE,
+     FRAMEWORK, CONTENT-PDF, RECORD and M0 alike. A ledger that is empty because nobody owes anything is not the
+     empty-corpus liar this floor was written to catch; the liar is a walk that reads nothing and says so. So the
+     READABILITY arm above keeps that duty — it is the half that distinguishes *nothing owed* from *nothing read*
+     — and the discrimination this section guarded is driven on fixtures in §1' and §7, which cannot go vacuous. */
+  t("...and every item it did find carries a source, an id and a reason",
     o.items.every((i) => i.source && i.id && i.why), true);
   /* CORRECTED 2026-09-17, not exempted: the message was rewritten to count the two populations
      apart (the discrimination-control fix), so the old phrase "no boundary to stop at" is gone.
      The old assertion was pinning WORDING; this one pins the two things that must survive any
      rewrite — the rule it serves, and the fact that it names both populations. */
   t("...and the message names the rule it serves", /rule 10/.test(owedMessage(o)), true);
+  /* CORRECTED 2026-09-24 by M0-140: this read the LIVE message, which is now the EMPTY one (the estate owes BOB
+     nothing — see the retired floor above), and an empty message names no populations. The property is the
+     message's, not the estate's, so it is driven on a list that HAS an item. */
   t("...and reports BOTH populations rather than one summed figure",
-    /ATTRIBUTED to this lane, plus \d+ open residue/.test(owedMessage(o)), true);
+    /ATTRIBUTED to this lane, plus \d+ open residue/.test(owedMessage(
+      owedFor("BOB", { reader: fixture({ [SOURCES.decisions]: "", [SOURCES.queue]: "### R-6 · blocked — routed to BOB\n" }) }))), true);
   /* The empty case must still be expressible, or "keep going" could never terminate. */
-  const empty = owedFor("NOSUCHLANE", { reader: () => DEBT([]) });
+  const empty = owedFor("NOSUCHLANE", { reader: () => "" });
   t("a lane owing nothing gets the EMPTY message, so the rule can terminate",
     /the list is empty/i.test(owedMessage(empty)), true);
   t("the owner and residue patterns are declared once",
@@ -235,53 +245,58 @@ section("7 — THE DISCRIMINATION CONTROL. A NONEXISTENT LANE MUST BE ATTRIBUTED
       + "ZZZNOTALANE` returned ELEVEN items, the author read the headline, and told another "
       + "lane it owed 12 things within the hour.");
 {
-  const debt = DEBT([
-    "| D-30 | gap | 2026-09-17 | body | M0 · open — routed to BOB |",
-    "| D-31 | gap | 2026-09-17 | body | M0 · open — STILL OPEN: nobody's name on this |",
-    "| D-32 | gap | 2026-09-17 | body | M0 · open — owed by this lane |",
-  ]);
-  const files = { [SOURCES.debt]: debt, [SOURCES.decisions]: "", [SOURCES.queue]: "" };
+  /* RE-POINTED 2026-09-24 by M0-140 onto blocked plan rows, the attribution source that survives. The two
+     RESIDUE rows this fixture carried (`STILL OPEN`, `owed by this lane`) are dropped with the residue
+     population; what they guarded — that a NONEXISTENT lane is attributed NOTHING while a real one is — is the
+     arm itself, and it is intact. */
+  const q = "### R-30 · blocked — M0, routed to BOB\n"
+          + "### R-31 · blocked — M0, waiting on nobody in particular\n"
+          + "### R-32 · blocked — M0, blocked on CONDUCT for the spawn\n";
+  const files = { [SOURCES.decisions]: "", [SOURCES.queue]: q };
   const real = owedFor("BOB", { reader: fixture(files) });
   const fake = owedFor("ZZZNOTALANE", { reader: fixture(files) });
 
-  t("a real lane IS attributed its own row", real.attributed.map((i) => i.id), ["D-30"]);
+  t("a real lane IS attributed its own row", real.attributed.map((i) => i.id), ["R-30"]);
   t("A NONEXISTENT LANE IS ATTRIBUTED NOTHING", fake.attributed.length, 0);
   /* Without this pairing the arm is a liar's check: an assertion that only ever asks about REAL
      lanes cannot tell a working filter from no filter at all. */
-  t("...while BOTH still see the same lane-independent residue, which is real and must not be "
-  + "dropped", [real.counts.residue, fake.counts.residue], [2, 2]);
-  t("`owed by this lane` is RESIDUE, not attribution — it means the lane that WROTE the row, "
-  + "which this tool cannot determine", fake.residue.some((i) => i.id === "D-32"), true);
+  /* The lane-independent RESIDUE half of this pairing WAS HERE (both runs seeing the same two residue rows, and
+     `owed by this lane` reading as residue rather than attribution). Retired with the population, M0-140. The
+     PAIRING itself — the thing that tells a working filter from no filter — is what matters and is above. */
+  t("...and neither run invents a residue now: the population is retired, so both are empty (M0-140)",
+    [real.counts.residue, fake.counts.residue], [0, 0]);
   t("...so the totals differ by exactly the attributed item",
     real.counts.owed - fake.counts.owed, 1);
+  /* A SECOND REAL LANE in the same run, so the filter is shown to discriminate BETWEEN lanes and not merely
+     between a lane and a non-lane — R-32 waits on CONDUCT and on nobody else. */
+  t("...and a DIFFERENT real lane gets its own row and not BOB's",
+    owedFor("CONDUCT", { reader: fixture(files) }).attributed.map((i) => i.id), ["R-32"]);
   /* THE PERSON IS NOT THE LANE (2026-09-18). Under a whole-pattern `i` flag, *is Bob's* matched the
      BOB lane, and all four rows handed to BOB #14 as attributed were false matches of this kind. */
-  const person = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: DEBT([
-    "| D-33 | gap | 2026-09-17 | body | M0 · open — the decision about what it MEANS is Bob's or CONDUCT's |",
-    "| D-34 | gap | 2026-09-17 | body | M0 · OPEN — the INTERVENTION IS BOB'S to run |",
-  ]), [SOURCES.decisions]: "", [SOURCES.queue]: "" }) });
+  const person = owedFor("BOB", { reader: fixture({ [SOURCES.decisions]: "", [SOURCES.queue]:
+      "### R-33 · blocked — M0, the decision about what it MEANS is Bob's or CONDUCT's\n"
+    + "### R-34 · blocked — M0, the INTERVENTION IS BOB'S to run\n" }) });
   t("BOB THE PERSON IS NOT THE BOB LANE — 'is Bob's' attributes nothing, 'IS BOB'S' still does",
-    person.attributed.map((i) => i.id), ["D-34"]);
+    person.attributed.map((i) => i.id), ["R-34"]);
   /* ALL-CAPS PROSE: a possessive followed by a NOUN is the person's possession, not an assignment
      (D-127 "IS BOB'S FRAMING", D-296 "is CONDUCT's own"); followed by a preposition it IS one
      (D-283 "the correction is CONDUCT's at integration"). */
-  const caps = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: DEBT([
-    "| D-35 | gap | 2026-09-18 | body | M0 · open — THIS IS BOB'S FRAMING OF THE PROBLEM |",
-    "| D-36 | gap | 2026-09-18 | body | M0 · open — the correction is BOB's at integration |",
-    "| D-37 | gap | 2026-09-18 | body | M0 · open — THE ACT IS BOB'S, NOT ANYONE ELSE'S |",
-  ]), [SOURCES.decisions]: "", [SOURCES.queue]: "" }) });
+  const caps = owedFor("BOB", { reader: fixture({ [SOURCES.decisions]: "", [SOURCES.queue]:
+      "### R-35 · blocked — M0, THIS IS BOB'S FRAMING OF THE PROBLEM\n"
+    + "### R-36 · blocked — M0, the correction is BOB's at integration\n"
+    + "### R-37 · blocked — M0, THE ACT IS BOB'S, NOT ANYONE ELSE'S\n" }) });
   t("A POSSESSIVE FOLLOWED BY A NOUN IS NOT AN ASSIGNMENT; one followed by a preposition or ending the clause IS",
-    caps.attributed.map((i) => i.id).sort(), ["D-36", "D-37"]);
+    caps.attributed.map((i) => i.id).sort(), ["R-36", "R-37"]);
   /* A BLOCKED QUEUE ROW IS READ TO THE END OF ITS HEADING (2026-09-18). REC-100's routing sat past
      character 220 of a heading carrying its history, and the truncated read attributed nothing. */
-  const deep = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: DEBT([]), [SOURCES.decisions]: "",
+  const deep = owedFor("BOB", { reader: fixture({ [SOURCES.decisions]: "",
     [SOURCES.queue]: "### REC-9 · blocked — " + "history of the row, kept as the record. ".repeat(12)
                    + "BLOCKED ON A DESIGN RULING. Routed to BOB.\n" }) });
   t("A ROUTING DEEP IN A LONG BLOCKED HEADING IS STILL OWED — the REC-100 false absence",
     deep.attributed.map((i) => i.id), ["REC-9"]);
   /* The headline is the thing that was wrong, so the headline is asserted. */
-  t("the message counts the two populations APART", 
-    /ATTRIBUTED to this lane, plus 2 open residue/.test(owedMessage(real)), true);
+  t("the message counts the two populations APART — and says 0 residue rather than omitting the population",
+    /ATTRIBUTED to this lane, plus 0 open residue/.test(owedMessage(real)), true);
   t("...and says why they are counted apart, so the next reader does not re-sum them",
     /costs nothing to produce/.test(owedMessage(real)), true);
 }
@@ -295,37 +310,45 @@ section("8 — A DISCHARGE BY NAME ENDS ONE LANE'S PART, AND ONLY THAT LANE'S (D
      between them is the one under test. The shared text carries the near-misses a WIDENED pattern
      would take — 'Nothing' and 'falls to' in prose that discharges nobody, and 'the BOB lane' outside
      the form — so the liar's fix (widen until the count drops) fails the over-strictness arm. */
-  const base = "M4 · open — ROUTED TO BOB 2026-09-20: the ceremony is a design call for the BOB lane. "
+  /* RE-POINTED 2026-09-24 by M0-140 from a DEBT disposition to a BLOCKED PLAN ROW's heading — the same prose, the
+     same predicate, the subject that survives the construct's retirement. D-435's rule is not about DEBT: it is
+     that a tool which can attribute but never discharge owes a lane a row for ever. */
+  const base = "M4, ROUTED TO BOB 2026-09-20: the ceremony is a design call for the BOB lane. "
              + "Nothing is placeable until it is ruled; the build then falls to UI.";
-  const files = { [SOURCES.debt]: DEBT([
-    `| D-40 | gap | 2026-09-21 | body | ${base} Nothing on this row falls to the BOB lane. |`,
-    `| D-41 | gap | 2026-09-21 | body | ${base} |`,
-    "| D-42 | gap | 2026-09-21 | body | M4 · open — routed to BOB for the ruling and routed to CONDUCT for the spawn. Nothing on this row falls to CONDUCT. |",
-    "| D-43 | gap | 2026-09-21 | body | M4 · open — ROUTED TO BOB for the ruling; nothing here falls to Bob the person. |",
-    "| D-44 | gap | 2026-09-21 | body | M4 · open — routed to CONDUCT for the spawn. |",
-  ]), [SOURCES.decisions]: "", [SOURCES.queue]: "" };
+  const q = `### R-40 · blocked — ${base} Nothing on this row falls to the BOB lane.\n`
+          + `### R-41 · blocked — ${base}\n`
+          + "### R-42 · blocked — M4, routed to BOB for the ruling and routed to CONDUCT for the spawn. Nothing on this row falls to CONDUCT.\n"
+          + "### R-43 · blocked — M4, ROUTED TO BOB for the ruling; nothing here falls to Bob the person.\n"
+          + "### R-44 · blocked — M4, routed to CONDUCT for the spawn.\n";
+  const files = { [SOURCES.decisions]: "", [SOURCES.queue]: q };
   const bob = owedFor("BOB", { reader: fixture(files) }).attributed.map((i) => i.id);
   const conduct = owedFor("CONDUCT", { reader: fixture(files) }).attributed.map((i) => i.id);
   /* The not-attributed half is asserted beside a FOUND item from the same run, never alone. */
   t("A ROW CARRYING AN OWNER PHRASE AND A DISCHARGE FOR THE LANE IS NOT ATTRIBUTED — D-134's false listing",
-    [bob.includes("D-41"), bob.includes("D-40")], [true, false]);
+    [bob.includes("R-41"), bob.includes("R-40")], [true, false]);
   t("OVER-STRICTNESS: the same disposition WITHOUT the discharge IS attributed, near-misses and all",
-    bob.includes("D-41"), true);
+    bob.includes("R-41"), true);
   t("A DISCHARGE IS PER-LANE — a row discharged for CONDUCT is still attributed to BOB, which it also routes to",
-    bob.includes("D-42"), true);
+    bob.includes("R-42"), true);
   t("...and it IS discharged for CONDUCT, whose undischarged row is attributed in the same run",
-    [conduct.includes("D-44"), conduct.includes("D-42")], [true, false]);
+    [conduct.includes("R-44"), conduct.includes("R-42")], [true, false]);
   t("BOB THE PERSON DISCHARGES NOTHING — 'nothing here falls to Bob' leaves the row the BOB lane's",
-    bob.includes("D-43"), true);
+    bob.includes("R-43"), true);
 }
 
 /* ========================================================================== */
 section("9 — M0-136: THE LIVE-ESTATE WALK READS THE PINNED COORD COMMIT, AND ITS VERDICT DOES NOT MOVE WITH origin/coord");
 {
-  /* §6 walks the REAL ledgers through the coord layer, and until M0-136 that meant the LIVE `origin/coord`: its "the estate does owe this lane something" was a claim about what the lanes had written that minute. The probe is §6's own call, `owedFor("BOB")`; the planted commit empties DEBT.md, which empties the list when read. */
+  /* §6 walks the REAL ledgers through the coord layer, and until M0-136 that meant the LIVE `origin/coord`: its
+     verdict was a claim about what the lanes had written that minute. The probe is §6's own call, `owedFor("BOB")`.
+     RE-POINTED 2026-09-24 by M0-140: the plant emptied `DEBT.md`, and `owed.mjs` no longer reads DEBT at all — the
+     plant would have moved nothing, which is an arm that does not arm, and the "moves it when read directly" half
+     below is exactly the assertion that caught it. The plant now writes a BLOCKED row routed to BOB into
+     `BACKLOG.md`, a source owed DOES read through the coord layer, so it moves the list in the other direction:
+     from empty to one attributed item. */
   const p = plantedCoord({
     probe: `const { owedFor } = await import(${JSON.stringify(PIN_REPO + "/tools/owed.mjs")});\nconst o = owedFor("BOB");\nconsole.log(JSON.stringify({ counts: o.counts, unreadable: o.unreadable, items: o.items.map((i) => i.source + ":" + i.id) }));`,
-    plant: { "docs/development/DEBT.md": "planted by M0-136: a DEBT.md with no rows\n" } });
+    plant: { "docs/development/BACKLOG.md": "# Backlog\n\n### ZZ-1 · blocked — planted by M0-136, routed to BOB\n\nscope: a planted row\n" } });
   assertPlanted(t, "owed", p);
 }
 

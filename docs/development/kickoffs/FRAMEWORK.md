@@ -46,7 +46,8 @@ and never blocking.
 
 Then read: `docs/architecture/BIO_Content_Framework_v0_10.md`,
 `docs/architecture/CONSTRUCTS.md`, `docs/development/DOCUMENT-PROFILES.md`, and
-`docs/development/DEBT.md` (take the next free D-number at the moment you write).
+the build plan, as a `D-` row minted with `node tools/mintid.mjs D` at the moment you write and sent to SCHEDULER
+(`DEBT.md` retired 2026-09-24, M0-140; `CLAUDE.md` §4).
 
 ## First: decide the next work, with Bob
 
@@ -116,5 +117,5 @@ decides content. Do not re-ask what is already ruled.
 **Close the turn with the decisions that are BOB'S, and nothing else**, in the
 shape `kickoffs/README.md` defines; read its three tests first, and an empty list
 is a real answer. At the close, rewrite ONLY this file — with FRAMEWORK's own
-account of its work this time — append to `DEBT.md`, file each figure as `measurements/<id>.md`, and
+account of its work this time — send each defect to SCHEDULER as a minted `D-` row (`DEBT.md` retired, M0-140), file each figure as `measurements/<id>.md`, and
 prepend a state-doc entry naming this area.

@@ -95,7 +95,7 @@
  *     to)" — was the part that turned out to be wrong: the class has 11 sites in
  *     `store.mjs`, 9 of them SCALAR readers that are correct only while the fence
  *     holds. Reasoning in full at the refusal's own site; the remaining gap
- *     against DEC-72 clause 6 is in `DEBT.md`. Asserted below as STILL REFUSED,
+ *     against DEC-72 clause 6 is D-89's row. Asserted below as STILL REFUSED,
  *     so the state of the record is pinned rather than left ambiguous.
  */
 
@@ -943,7 +943,7 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
      SO THE FENCE IS KEPT DELIBERATELY, and this pin now records a DECISION
      rather than a deferral. It remains a PARTIAL against DEC-72 clause 6, which
      rules that a finding CAN serve many cases; the reasoning in full is at the
-     refusal's own site in `store.mjs`, and the gap is in `DEBT.md` with its cost
+     refusal's own site in `store.mjs`, and the gap is a debt row with its cost
      and its closing move rather than left as a sentence in a suite. The SURFACE
      half clause 6 asks for IS built: the published index renders a finding's
      memberships as a list, correct for any n, so the plane's half can land

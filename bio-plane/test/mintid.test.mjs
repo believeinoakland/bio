@@ -332,8 +332,10 @@ section("the ledger is a RATCHET over the corpus, never an authority");
    an id the corpus already holds. */
 {
   const repo = join(SANDBOX, "fakerepo");
-  mkdirSync(join(repo, "docs/development"), { recursive: true });
-  writeFileSync(join(repo, "docs/development/DEBT.md"),
+  /* M0-140: `docs/development/DEBT.md` left `D`'s corpus with the construct. A `D-` allocation now sits in the
+     DEBT ARCHIVE, which `docs/archive/` has always covered, so the fixture plants it where the corpus reads. */
+  mkdirSync(join(repo, "docs/archive/ledgers"), { recursive: true });
+  writeFileSync(join(repo, "docs/archive/ledgers/DEBT-closed.md"),
     "| D-1 | ... |\n| D-999 | the highest row |\n| D-17 | ... |\n");
   const f = corpusFloor("D", { repo });
   console.log(`  scratch corpus: ${f.seen} reference(s) read, floor D-${f.floor} from ${f.from}`);
@@ -372,8 +374,9 @@ section("the floor refuses year-shaped noise, and SAYS it did");
      but it is now SAID. Same lesson as the C-29 catalogue comment, whose own first
      draft spelled its warning with real C-numbers. */
   const prose = join(SANDBOX, "proserepo");
-  mkdirSync(join(prose, "docs/development"), { recursive: true });
-  writeFileSync(join(prose, "docs/development/DEBT.md"),
+  /* M0-140: re-pointed into the DEBT ARCHIVE — see the note above. */
+  mkdirSync(join(prose, "docs/archive/ledgers"), { recursive: true });
+  writeFileSync(join(prose, "docs/archive/ledgers/DEBT-closed.md"),
     "| D-100 | defect | ... a worked example: a worker writes D-150 by hand |\n");
   const pf = corpusFloor("D", { repo: prose });
   t("a number in a SENTENCE still raises the floor (over-counting is the safe direction)", pf.floor, 150);
@@ -381,7 +384,7 @@ section("the floor refuses year-shaped noise, and SAYS it did");
   t("...and the gap it will cost is NAMED rather than silent", pf.proseDriven, true);
 
   /* Over-strictness: a corpus with no prose-shaped number must NOT be flagged. */
-  writeFileSync(join(prose, "docs/development/DEBT.md"), "| D-100 | defect | nothing id-shaped here |\n");
+  writeFileSync(join(prose, "docs/archive/ledgers/DEBT-closed.md"), "| D-100 | defect | nothing id-shaped here |\n");
   const cf = corpusFloor("D", { repo: prose });
   t("a clean corpus is not flagged", [cf.floor, cf.allocFloor, cf.proseDriven], [100, 100, false]);
 
@@ -503,8 +506,9 @@ section("D-243 · TWO THINGS WEARING ONE ID — the half that needs no ledger");
      something. An instrument that has never been shown to fire is a mechanism
      believed on the strength of its existence. */
   const dupRepo = join(SANDBOX, "duprepo");
-  mkdirSync(join(dupRepo, "docs/development"), { recursive: true });
-  writeFileSync(join(dupRepo, "docs/development/DEBT.md"),
+  /* M0-140: re-pointed into the DEBT ARCHIVE — see the note above. */
+  mkdirSync(join(dupRepo, "docs/archive/ledgers"), { recursive: true });
+  writeFileSync(join(dupRepo, "docs/archive/ledgers/DEBT-closed.md"),
     "| D-10 | one thing |\n| D-11 | another |\n| D-10 | A SECOND THING WEARING D-10 |\n");
   const injected = allocations("D", { repo: dupRepo });
   console.log(`  scratch corpus: ${injected.sites.length} allocation site(s), duplicates ${JSON.stringify(injected.duplicates.map((d) => d.id))}`);
@@ -516,7 +520,7 @@ section("D-243 · TWO THINGS WEARING ONE ID — the half that needs no ledger");
   /* OVER-STRICTNESS, armed from the strict side: a corpus that is merely REPETITIVE
      in prose must not be flagged. Only an allocation SITE counts, which is the same
      distinction the prose-driven floor made. */
-  writeFileSync(join(dupRepo, "docs/development/DEBT.md"),
+  writeFileSync(join(dupRepo, "docs/archive/ledgers/DEBT-closed.md"),
     "| D-10 | one thing, and this row talks about D-10 and D-10 again in its own prose |\n| D-11 | another |\n");
   t("a corpus that MENTIONS an id repeatedly but allocates it once is NOT flagged",
     allocations("D", { repo: dupRepo }).duplicates, []);

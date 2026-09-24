@@ -25,10 +25,26 @@ export const MOVED_FILES = [
   /* M0-119 (WORK-PIPELINE §2, BOB #28): the backlog's TAIL, the same order continued. Created on `coord` by its first
      demotion (or the `rebalance` intent), so it has no pointer on `main`; `readState` finds it on the ref. */
   "docs/development/BACKLOG-LATER.md",
-  "docs/development/DEBT.md",
+  /* M0-140, 2026-09-24: `docs/development/DEBT.md` WAS HERE and is gone — the DEBT construct is retired
+     (Bob, 2026-09-24; WORK-PIPELINE §3). It is not state any more because it is not a file any more: its last
+     three rows closed and the whole file moved to `docs/archive/ledgers/DEBT-closed.md`. The archive is still
+     state through MOVED_DIRS below, so `node tools/ledger.mjs find D-n` still resolves every closed row. This
+     removal is what makes the file ABSENT for `readState`: while the path was listed here, a deleted pointer
+     on `main` fell through to the coord ref and the file read as present. */
   "docs/development/PLACEMENT.md",
 ];
 export const MOVED_DIRS = ["docs/archive/ledgers"];
+/* PATHS THAT WERE STATE AND ARE RETIRED — named, never silently forgotten (M0-140, 2026-09-24). A retired path is
+   NOT state: `isMovedPath` is false for it, so `readState` never consults the coord ref and the file is ABSENT for
+   every reader, which is the point. This list exists for the ONE act that still has to reach it — deleting the file
+   from `coord`, where it physically sits — and for the reader who greps for it and deserves to be told where it
+   went rather than finding nothing. `coord.mjs`' `delete` intent is the only caller. */
+export const RETIRED_FILES = [
+  { path: "docs/development/DEBT.md", retired: "M0-140, 2026-09-24",
+    to: "docs/archive/ledgers/DEBT-closed.md",
+    why: "the DEBT construct is retired whole (Bob, 2026-09-24; WORK-PIPELINE §3) — a defect now goes straight into the build plan" },
+];
+export const isRetiredPath = (rel) => RETIRED_FILES.some((r) => r.path === rel);
 export const NEXT_RE = /^docs\/development\/kickoffs\/[A-Z][A-Z0-9-]*-NEXT\.md$/;
 
 export const isMovedPath = (rel) =>

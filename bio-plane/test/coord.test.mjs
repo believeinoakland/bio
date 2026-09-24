@@ -11,7 +11,8 @@
  *   §2 every reader answers as it did from main — the same answers read pre-cutover from the seed's files and
  *      post-cutover through the pointers from coord;
  *   §3 a claim, a queue flip and a handoff each land on coord WITHOUT moving main, and a handoff created on coord is
- *      seen by the readers of the kickoffs directory;
+ *      seen by the readers of the kickoffs directory; and (M0-164) a flip changes the STATE WORD ALONE — the row's
+ *      headline is carried through byte-identically and the note goes on a `status:` line of the row's own;
  *   §4 a main gate record survives a coord write (the record is keyed by main's tree, D-293);
  *   §5 a new block and a line into an existing block, written CONCURRENTLY, both land with the line in its own block
  *      (the loser re-applies its intent to the fresh tip — BOB #27);
@@ -26,15 +27,46 @@
  * AND `cmp`. DECLARED: (R) `ledger.mjs`' `readRel` pointed back at the working tree's old path -> FAILS at "§2 findId
  * answers the same row from coord"; (W) `addLine` made a TAIL APPEND — what a textual merge of two tail appends
  * yields — instead of the anchored insertion -> FAILS at "§5 the line is in ITS OWN block"; (C) the write's ledger
- * checks skipped -> FAILS at "§6 the planted closed row is REFUSED". RESULT: recorded on the line below at the run.
- * NEGATIVE CONTROL RESULT: RUN 2026-09-22 by the M0-110 worker on `tools/coord.mjs` sha256 b533bac0… and `ledger.mjs`
- * 1e4f5f4a…, driver exit 0, 25 pass / 0 fail, 3 of 3 arms as declared, every restore sha256- and cmp-identical: baseline
- * 80/0; R 72/8 (§2's four answers through `readRel`, the flip read-back and the archive write among them); W 78/2 (exactly
- * the two in-block assertions); C 74/6 (§6's three, the dry run, the P2 refusal, the hook-vs-check refusal); closing 80/0.
- * AND M0-109's floors, moved here (§8): `node bio-plane/test/debt-floor.control.mjs`, RUN the same day on the same sha,
+ * checks skipped -> FAILS at "§6 the planted closed row is REFUSED"; (S, M0-164) the status note written OVER the
+ * heading's tail again, with no `status:` line -> FAILS at "M0-164 the flip leaves the row's HEADLINE byte-identical…"
+ * and "M0-164 …and the note is on a `status:` line of the row's own…". RESULT: recorded on the line below at the run.
+ * NEGATIVE CONTROL RESULT: RUN 2026-09-24 by the M0-164 worker ON THE TREE THAT MERGES M0-140 (`tools/coord.mjs`
+ * sha256 696ee4d2…, 64056 B; `ledger.mjs` 60d92531…, 81009 B), driver exit 0, 33 pass / 0 fail, 4 of 4 arms as
+ * declared, every restore sha256- AND cmp-identical: baseline 99/0; R 90/9 (§2's four answers through `readRel`, the
+ * flip read-back and the archive write among them); W 97/2 (exactly the two in-block assertions); C 93/6 (§6's three,
+ * the dry run, the P2 refusal, the hook-vs-check refusal); S 93/6 (the two declared, and as collateral the four other
+ * M0-164 assertions the defect also reaches — the over-strictness headline, the no-stacking arm, the re-flip through
+ * the write, and the archived row's headline; the no-note and NOTE_MULTILINE arms PASS under the arm, which is the
+ * correct reading: the defect was in what a NOTE did); closing 99/0. THE SUITE'S TOTAL MOVED 104 -> 99 WITH NO SOURCE
+ * CHANGE OF MINE — M0-140 retired §8's five DEBT-floor assertions in the same merge; the four arms' SHAPES are
+ * unchanged, which is what the figures are read for. The same four arms were run by M0-164 BEFORE the merge, on
+ * coord.mjs 85ede13d… (62601 B) / ledger.mjs fec76ca1… (79081 B): 33/0, 4 of 4, baseline 104/0, R 95/9, W 102/2,
+ * C 98/6, S 98/6, closing 104/0. And before that, 2026-09-22 by the M0-110 worker on coord.mjs b533bac0… /
+ * ledger.mjs 1e4f5f4a…: 25/0, 3 of 3, baseline 80/0, R 72/8, W 78/2, C 74/6, closing 80/0.
+ * AND M0-109's floors, moved here (§8) and RETIRED by M0-140 below — this is the RECORD of what
+ * `bio-plane/test/debt-floor.control.mjs` measured before it was deleted, not a command to run. RUN 2026-09-22 on the
+ * SUPERSEDED shas above (coord.mjs b533bac0… / ledger.mjs 1e4f5f4a…), not on this run's — M0-164 re-ran coord.control only,
  * exit 0, 33 pass / 0 fail, 4 of 4 arms as declared: TL 79/1 and AL 79/1 (each liar fails ONLY its own empty-ledger
  * assertion); TC 59/20 and AC 58/21 (the size floors fail the one-row assertion — and AC the hundred-row one — and every
  * small fixture write with them, the collateral the driver's head declares: a size floor fails small honest ledgers).
+ *
+ * §8 AND ITS DRIVER ARE RETIRED 2026-09-24 BY M0-140 with the DEBT construct — the run above is kept as the record of
+ * what was measured. `debt-floor.control.mjs` is deleted; its two anchors in `tools/coord.mjs` no longer exist.
+ *
+ * NEGATIVE CONTROL (M0-140, RUN 2026-09-24 by the M0-140 worker on the committed tree at 95c733a07, DECLARED BEFORE
+ * ARMING, each arm ALONE): THE RETIREMENT'S OWN CONTROL — restore one reader of the live `DEBT.md` and its arm must
+ * FAIL NAMING THE MISSING FILE. (NC-0) baseline, nothing armed: `plancheck` 1 FAIL, `UNPUSHED`, declared expected
+ * because the landing is not yet on origin/main; `coord.mjs checks` 11 arm(s), 0 failing. (NC-1) `plancheck`'s
+ * `DEBT.md` read and its MISSING requirement restored -> `FAIL  MISSING — docs/development/DEBT.md does not exist.`,
+ * exit 1, plus `UNPUBLISHED` as collateral of an on-disk arm, declared. (NC-2) `coord.mjs`' LC-debt-token restored ->
+ * `FAIL  LC-debt-token` with `docs/development/DEBT.md could not be read — an unreadable ledger is not an empty one`,
+ * 12 arm(s), 1 failing, and every other arm green. (NC-3, OVER-STRICTNESS, required) nothing armed: tree clean (0
+ * dirty paths), `coord.mjs checks` 11/0, `plancheck` back to its 1 declared FAIL — so neither arm leaked. RESTORES
+ * MEASURED, never assumed: plancheck.mjs sha256 5945d7f7… 78,119 B and coord.mjs sha256 84811625… 62,212 B, each
+ * compared by sha256 AND `cmp` against its own uniquely-named pristine copy; `git checkout --` was not used.
+ * WHAT THIS SHOWS AND WHAT IT DOES NOT: it shows the file is genuinely ABSENT for `readState` — not merely unread —
+ * because a restored reader finds nothing and says so by name. It does NOT show the archive is readable; that is
+ * `ledger.test.mjs` §6's `find D-5 answers the DEBT ARCHIVE` arm, on a fixture holding no live DEBT file at all.
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";
@@ -82,9 +114,8 @@ const ROW = (id, state, extra = "") => `### ${id} · ${state} — a fixture row\
 const FILES = {
   "docs/development/QUEUE.md": `# QUEUE — the fixture cache\n\n${ROW("ZZ-1", "queued")}\n${ROW("ZZ-2", "running")}\n## BOB INBOX\n\nnothing.\n`,
   "docs/development/BACKLOG.md": `# BACKLOG — the fixture backlog\n\n${ROW("ZZ-3", "queued")}`,
-  "docs/development/DEBT.md": "# DEBT — fixture\n\n| id | kind | date | body | disposition |\n| --- | --- | --- | --- | --- |\n"
-    + "| D-388 | gap | 2026-09-18 | the undecided set | M0 · open — drained by the corpus audit |\n"
-    + "| D-1 | gap | 2026-09-18 | a fixture gap | M0 · open |\n",
+  /* `docs/development/DEBT.md` WAS a fixture file here. Retired with the construct (M0-140, 2026-09-24): it is
+     not a state path any more, so a write naming it is refused NOT_A_STATE_FILE and no reader consults it. */
   "docs/development/CLAIMS.md": `# CLAIMS — fixture\n\n${DELEGATIONS}\n## CLAIM 2026-09-22 ZZ (the tail block)\n\npaths: a fixture path\n`,
   "docs/development/kickoffs/LANE-NEXT.md": "LANE #2 — the fixture handoff, line 1\n",
   "docs/development/kickoffs/LANE.md": "# LANE — a kickoff that stays on main (CLAIMS.md, ORCHESTRATION.md)\n",
@@ -173,7 +204,7 @@ t("findId answers an ARCHIVED row from coord's archive", AFTER.findArchived, BEF
 t("the plan's one lister (cache ∪ backlog) reads the same rows", AFTER.rows, BEFORE.rows);
 t("the archive family is listed from coord", AFTER.archived, BEFORE.archived);
 t("the ledger audit reads the same arms", AFTER.audit, BEFORE.audit);
-t("owed reads DEBT.md from coord", AFTER.owed, BEFORE.owed);
+t("owed reads its sources from coord (DEBT.md was one until M0-140)", AFTER.owed, BEFORE.owed);
 t("the delegation register reads CLAIMS.md from coord (corpus, findings)", AFTER.delegations, BEFORE.delegations);
 t("the reading budget lists the handoffs from coord", AFTER.handoffs, BEFORE.handoffs);
 t("the answers are not empty (a comparison of two empty readings proves nothing)",
@@ -197,6 +228,29 @@ t("the queue flip lands", [flip.status, flip.changed], ["pushed", ["docs/develop
 t("...main did not move", mainAt(), main0);
 C.resetCoordCache(); git(A, "fetch", "-q", "origin");
 t("the row reads `running`, with its note, through the reader", [(L.findId("ZZ-1", { repo: A })[0] || { state: "ABSENT" }).state, /flipped by the fixture/.test(C.readState(A, "docs/development/QUEUE.md"))], ["running", true]);
+/* M0-164: A STATUS WORD CHANGES STATE, NEVER THE ROW'S CLAIM (`WORK-PIPELINE.md` §1). The note used to replace the
+   heading's TAIL, so every flip overwrote the headline — the one line saying what the defect IS. All 15 rows CONDUCT
+   #20 flipped on 2026-09-24 lost theirs, and SCHEDULER #18 restored them by hand from `f8fd4a77^`/`0cf9783c^`. */
+{
+  const ls = C.readState(A, "docs/development/QUEUE.md").split("\n");
+  const i = ls.findIndex((l) => l.startsWith("### ZZ-1 · "));
+  t("M0-164 the flip leaves the row's HEADLINE byte-identical — only the state word moves", ls[i], "### ZZ-1 · running — a fixture row");
+  t("M0-164 ...and the note is on a `status:` line of the row's own, directly under the heading", ls[i + 1], "status: running — flipped by the fixture");
+}
+/* The shapes the fixture repo does not carry, driven on the exported function itself. The real write above is the
+   evidence a CALLER reaches this; these are the evidence about the TEXT, and the first is the over-strictness arm —
+   a headline in a spelling nobody anticipated (bold, with a `·` and an em dash of its own inside it) must PASS. */
+const GNARLY = "# Q\n\n### ZZ-1 · queued — **A HEADLINE · with an em dash — and bold.** Found by X. — owner M0.\nmilestone: M0\n\n### ZZ-2 · queued — plain\nmilestone: M0\n";
+const g1 = C.setStatus(GNARLY, "ZZ-1", "running", "note one");
+t("M0-164 a headline carrying `·`, `—` and bold survives the flip byte-for-byte (OVER-STRICTNESS)",
+  g1.split("\n")[2], "### ZZ-1 · running — **A HEADLINE · with an em dash — and bold.** Found by X. — owner M0.");
+const g2 = C.setStatus(g1, "ZZ-1", "integrated", "note two");
+t("M0-164 a second flip REPLACES the `status:` line — notes never stack", g2.split("\n").filter((l) => /^status:/.test(l)), ["status: integrated — note two"]);
+t("M0-164 a flip with NO note REMOVES the stale one — it described the state the row has just left",
+  C.setStatus(g2, "ZZ-1", "done").split("\n").filter((l) => /^status:/.test(l)), []);
+t("M0-164 ...and the row after it is untouched", C.setStatus(g2, "ZZ-1", "done").split("\n")[5], "### ZZ-2 · queued — plain");
+t("M0-164 a note carrying a newline is REFUSED, never written across the row's fields",
+  (() => { try { C.setStatus(GNARLY, "ZZ-1", "running", "one\ntwo"); return "NOT REFUSED"; } catch (e) { return e.code; } })(), "NOTE_MULTILINE");
 const hand = await tryWrite({ repo: A, message: "LANE #3's handoff", intents: [
   { op: "replace", file: "docs/development/kickoffs/LANE-NEXT.md", text: "LANE #3 — the next handoff, line 1\n" },
   { op: "replace", file: "docs/development/kickoffs/NEWLANE-NEXT.md", text: "NEWLANE #1 — a lane's first handoff\n" }] });
@@ -209,6 +263,14 @@ t("a handoff CREATED on coord (no pointer on main) is seen by the kickoffs' read
   RB.readSet(B).filter((r) => r.key === "next").map((r) => r.file).sort(),
   ["docs/development/kickoffs/LANE-NEXT.md", "docs/development/kickoffs/NEWLANE-NEXT.md"]);
 t("an unchanged intent is not a commit", (await tryWrite({ repo: A, message: "again", intents: [{ op: "status", id: "ZZ-1", state: "running", note: "flipped by the fixture" }] })).status, "unchanged");
+/* M0-164, through the real write: a re-flip carrying a different note replaces the `status:` line and still leaves
+   the headline alone — the accumulation this row's fix must not trade the overwrite for. */
+const reflip = await tryWrite({ repo: A, message: "ZZ-1 re-flipped", intents: [{ op: "status", id: "ZZ-1", state: "running", note: "flipped again by the fixture" }] });
+C.resetCoordCache(); git(A, "fetch", "-q", "origin");
+t("M0-164 a re-flip through the write replaces the row's `status:` line and keeps the headline",
+  (() => { const ls = C.readState(A, "docs/development/QUEUE.md").split("\n"); const i = ls.findIndex((l) => l.startsWith("### ZZ-1 · "));
+    return [reflip.status, ls[i], ls[i + 1], ls[i + 2]]; })(),
+  ["pushed", "### ZZ-1 · running — a fixture row", "status: running — flipped again by the fixture", "milestone: M0"]);
 
 /* ============================================================================================ */
 section("§4 A MAIN GATE RECORD SURVIVES A coord WRITE (D-293: the record is keyed by main's tree)");
@@ -267,6 +329,9 @@ git(A, "fetch", "-q", "origin"); C.resetCoordCache();
 t("a done flip and its archive land as ONE coord commit (P2 would refuse the flip alone)",
   [arch.status, arch.changed.sort(), L.findId("ZZ-1", { repo: A }).map((f) => `${f.where} ${f.state}`)],
   ["pushed", ["docs/archive/ledgers/QUEUE-closed.md", "docs/development/QUEUE.md"], ["archive done"]]);
+t("M0-164 ...and the archived row carries its HEADLINE into the archive, with the stale `status:` note dropped",
+  (() => { const ls = C.readState(A, "docs/archive/ledgers/QUEUE-closed.md").split("\n"); const i = ls.findIndex((l) => l.startsWith("### ZZ-1 · "));
+    return [ls[i], ls.filter((l) => /^status:/.test(l))]; })(), ["### ZZ-1 · done — a fixture row", []]);
 const backlogIds = () => { git(A, "fetch", "-q", "origin"); C.resetCoordCache(); return L.pipelineRows({ repo: A }).rows.filter((r) => r.where === "backlog").map((r) => r.id); };
 const ins = await tryWrite({ repo: A, message: "place ZZ-4 ahead of ZZ-3", intents: [{ op: "insert", file: "docs/development/BACKLOG.md", where: "before", id: "ZZ-3", text: ROW("ZZ-4", "queued") }] });
 t("a new row is PLACED by the row it precedes — the plan's order is file position (SCHEDULER's act)", [ins.status, backlogIds()], ["pushed", ["ZZ-4", "ZZ-3"]]);
@@ -299,30 +364,18 @@ t("a coord commit carrying a merge marker is refused by the hook even with the w
 t("...and with the checks on, the write refuses it before the push (LC-markers)", await code(() => C.write({ repo: A, message: "a marker", intents: [{ op: "append", file: "docs/development/CLAIMS.md", text: `${mk} HEAD\nx\n` }] })), "LEDGER_CHECK_FAILED");
 
 /* ============================================================================================ */
-section("§8 THE MOVED FLOORS — M0-109's non-vacuity floors, now LC-debt-token and LC-debt-agreement, driven both ways");
-/* M0-109 put a NON-VACUITY floor (not a size floor) on the two battery arms that judged the live DEBT.md; M0-110
-   moved both arms to the coord ledger checks, so their floors are driven here, on planted ledgers, in both
-   directions: an empty ledger FAILS by name; one row, and a hundred, PASS. `debt-floor.control.mjs` arms against
-   these assertions. Each run prints the rows its arm judged, which the control reads. */
-const plantDebt = (n) => {
-  const d = mkdtempSync(join(tmpdir(), "coord-floor-"));
-  mkdirSync(join(d, "docs/development"), { recursive: true });
-  writeFileSync(join(d, "docs/development/DEBT.md"), "# DEBT — planted\n\n| id | kind | date | body | disposition |\n| --- | --- | --- | --- | --- |\n"
-    + Array.from({ length: n }, (_, i) => `| D-${9000 + i} | gap | 2026-09-22 | planted by coord.test §8 | M0 · open |\n`).join(""));
-  return d;
-};
-const floorRun = async (n) => {
-  const r = await C.ledgerChecks({ repo: plantDebt(n), only: ["LC-debt-token", "LC-debt-agreement"] });
-  const by = Object.fromEntries(r.arms.map((a) => [a.id, a]));
-  console.log(`  LC-debt-token judged ${n} row(s): ${by["LC-debt-token"].note}; LC-debt-agreement: ${by["LC-debt-agreement"].note || by["LC-debt-agreement"].fails[0] || ""}`);
-  return by;
-};
-const f0 = await floorRun(0), f1 = await floorRun(1), f100 = await floorRun(100);
-t("§8 an EMPTY DEBT.md FAILS LC-debt-token by name", f0["LC-debt-token"].fails.some((x) => /NO debt rows/.test(x)), true);
-t("§8 an EMPTY DEBT.md FAILS LC-debt-agreement by name", f0["LC-debt-agreement"].fails.some((x) => /NO rows/.test(x)), true);
-t("§8 ONE row passes LC-debt-token (over-strictness: the fold's last row)", f1["LC-debt-token"].fails, []);
-t("§8 ONE row passes LC-debt-agreement (over-strictness: the fold's last row)", f1["LC-debt-agreement"].fails, []);
-t("§8 a hundred rows pass both — the SIZE floor M0-109 removed would fail here", [f100["LC-debt-token"].fails, f100["LC-debt-agreement"].fails], [[], []]);
+/* §8 — THE MOVED FLOORS — WAS HERE, and is RETIRED by M0-140 (2026-09-24) with the DEBT construct.
+
+   It drove M0-109's two NON-VACUITY floors, on planted DEBT ledgers, in BOTH directions: an EMPTY ledger FAILS
+   LC-debt-token and LC-debt-agreement by name; ONE row passes (the over-strictness arm — the fold's last row must
+   not redden a gate); a HUNDRED rows pass, which is the arm that tells a non-vacuity floor from the SIZE floor
+   M0-109 removed. `debt-floor.control.mjs` armed against these four assertions by name.
+
+   Both ledger checks are retired in this landing — there is no live DEBT.md for either to read — so there is
+   nothing left to drive, and `debt-floor.control.mjs` is retired with them. This is not a floor quietly dropped:
+   each of those arms FAILED BY NAME at zero rows on purpose, precisely so that the moment the file emptied could
+   not pass in silence. It did not pass in silence; it arrived here, as the landing they were written to wait for.
+   §9 below still shows every OTHER moved arm firing on a planted breach. */
 
 /* ============================================================================================ */
 section("§9 THE OTHER MOVED ARMS, each shown to FIRE on a planted breach (a check that cannot fail is worse than none)");
@@ -337,18 +390,30 @@ const plantTree = (edit) => {
 const fires = async (id, edit) => (await C.ledgerChecks({ repo: plantTree(edit), only: [id], today: TODAY })).arms[0].fails;
 t("the planted fixture passes every arm (the baseline the breaches below are measured from)",
   (await C.ledgerChecks({ repo: plantTree({}), today: TODAY })).arms.filter((a) => a.fails.length).map((a) => `${a.id}: ${a.fails[0]}`), []);
+/* M0-140: the two retired arms are asserted GONE by name, not merely unused. A `only: ["LC-debt-token"]` run
+   returns NO arm, and every caller that still named one would be selecting nothing while reporting a clean run —
+   which is how a retired check goes on looking checked. `plancheck` §2's `only` list drops both in the same act. */
+t("the retired DEBT arms answer to NOTHING — no arm is registered under either name (M0-140)",
+  (await C.ledgerChecks({ repo: plantTree({}), only: ["LC-debt-token", "LC-debt-agreement"], today: TODAY })).arms.map((a) => a.id), []);
 t("LC-queued-refs FIRES on a reference to an id that is nowhere", (await fires("LC-queued-refs", { "docs/development/INTERFACES.md": "# Interfaces\n\nQUEUED ZZ-404 is dangling.\n" })).some((x) => /ZZ-404/.test(x)), true);
 t("LC-row-design FIRES on an open row naming no design", (await fires("LC-row-design", { "docs/development/BACKLOG.md": "# BACKLOG\n\n### ZZ-3 · queued — names nothing\nmilestone: M0\ninterface: none\n" })).some((x) => /ZZ-3/.test(x)), true);
 t("LC-plan-fields FIRES on a milestone MILESTONES.md does not define", (await fires("LC-plan-fields", { "docs/development/BACKLOG.md": FILES["docs/development/BACKLOG.md"].replace("milestone: M0", "milestone: M99") })).some((x) => /M99/.test(x)), true);
 t("LC-strays FIRES on an open row under a heading the grammar cannot read", (await fires("LC-strays", { "docs/development/BACKLOG.md": FILES["docs/development/BACKLOG.md"] + "\n### ZZ-5b · queued — unreadable id\n" })).length > 0, true);
 t("LC-delegations FIRES on a silent DELEGATION block", (await fires("LC-delegations", { "docs/development/CLAIMS.md": FILES["docs/development/CLAIMS.md"] + "\n## DELEGATION 2026-09-22 ZZ -> BOB (silent)\n\nno state line.\n" })).some((x) => /SILENT/.test(x)), true);
-t("LC-debt-token FIRES on a row with no disposition token", (await fires("LC-debt-token", { "docs/development/DEBT.md": FILES["docs/development/DEBT.md"] + "| D-2 | gap | 2026-09-18 | x | nobody said |\n" })).some((x) => /D-2/.test(x)), true);
+/* The LC-debt-token breach WAS HERE (a row with no disposition token). The arm is retired with the construct
+   (M0-140, 2026-09-24), so there is no arm to fire. `fires()` reads `arms[0]`, which is `undefined` for a name no
+   arm answers to — the shape that would have let a retired arm go on looking checked. */
 /* CORRECTED 2026-09-24 by c19-unionfix: this fired when D-388, the UNDECIDED set's route, left DEBT.md. BOB #32 drained
    the table (CORPUS-STANDARD §6, folds-0924b) and the D-388 clause is RETIRED (see the arm), so the old breach is no
    breach. The arm now fires on the thing it still guards: a file listed UNDECIDED instead of classified. */
 t("LC-undecided-route FIRES when a file is listed UNDECIDED rather than classified", (await fires("LC-undecided-route", { "docs/architecture/CORPUS-STANDARD.md": "# Standard — fixture\n\n### Undecided — files the walk found\n\n| document | what is undecided |\n| --- | --- |\n| `docs/development/ZZ-UNSORTED.md` | whether it is a design |\n" })).some((x) => /ZZ-UNSORTED/.test(x)), true);
-t("...and does NOT fire once D-388 leaves DEBT.md — the retired route is no longer a condition of a coord write",
-  (await fires("LC-undecided-route", { "docs/development/DEBT.md": FILES["docs/development/DEBT.md"].replace(/^\| D-388 .*\n/m, "") })).length, 0);
+/* CORRECTED 2026-09-24 by M0-140: the over-strictness arm beside it removed D-388's row from a fixture DEBT.md to
+   show the retired route was no longer a condition of a coord write. There is no fixture DEBT.md and no D-388 row —
+   D-388 is CLOSED and archived by this landing — so the arm is re-pointed at what it actually guards: an UNDECIDED
+   table that is EMPTY passes, which is the state BOB #32 left CORPUS-STANDARD §6 in. Without this half the arm
+   above could be a check that fires on everything. */
+t("...and does NOT fire on an UNDECIDED table that is empty — every design file classified (the real state)",
+  (await fires("LC-undecided-route", { "docs/architecture/CORPUS-STANDARD.md": "# Standard — fixture\n\n### Undecided — files the walk found\n\n| document | what is undecided |\n| --- | --- |\n" })).length, 0);
 t("LC-op-claims FIRES on an op= claim naming no op", (await fires("LC-op-claims", { "docs/development/CLAIMS.md": FILES["docs/development/CLAIMS.md"] + "\nThe lane calls " + "op" + "=zznotanoprealy here.\n" /* built, so op-claims' own walk does not read THIS file as the claim */ })).some((x) => /zznotanoprealy/.test(x)), true);
 t("LC-markers FIRES on a merge marker in a state file", (await fires("LC-markers", { "docs/development/QUEUE.md": FILES["docs/development/QUEUE.md"] + `${"<".repeat(7)} HEAD\n` })).length, 1);
 t("LC-handoff-budget FIRES on a handoff over its budget once its cut has landed (a WARN otherwise, as readbudget rules)",

@@ -1011,7 +1011,7 @@ t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a 
  * whether the 21 belong in the class. Twenty-one of thirty-five memberships are held by a
  * credit this file's own header calls out of scope — "a LINEAR read over an unbounded scan is
  * NOT (this class is amplification, not size)" — so the ceiling's SOUNDNESS is an open
- * question, and it is `DEBT.md` D-384's, not this block's. Naming them is what makes that
+ * question, and it is D-384's, not this block's. Naming them is what makes that
  * question askable at all: before this, nothing in the estate could say which memberships were
  * spelling-held.
  *
