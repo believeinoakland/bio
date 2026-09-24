@@ -394,7 +394,7 @@ scope: the release live verification runs `tier1-coverage-probe.mjs --urls`; its
 accepts-when: the next release's verification carries the dated entry. NEGATIVE CONTROL: feed the preflight a refused host and it records REFUSED, not NOT_FOUND, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
-### UI-89 · queued — **THE STATEMENT'S ACKNOWLEDGEMENTS HAVE A PLANE AND NO SURFACE: the `statementack` op and the signed `completeness.acknowledgements` (D-150, IC-227) are unreachable from any page.** The DELEGATION RECORD (D-150) -> UI of 2026-09-23 on coord `CLAIMS.md` names three surfaces. — owner UI.
+### UI-89 · running — SPAWNED 2026-09-24 ~05:10Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER UI-89 (CONDUCT #20), base origin/main, into M0-143's slot; push by 06:30Z. Falsify rather than believe: read the branch land/worker/UI-89 and that session; never conclude queued from the absence alone.
 order: after REC-194, the member half of the same block (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I3 consumer (IC-227).
