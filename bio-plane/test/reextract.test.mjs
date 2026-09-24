@@ -246,9 +246,16 @@ const graded = (b) => ({ code: b?.code, check: b?.check, translation: b?.transla
    hashes to EXACTLY the two literals it replaces (scan afc32aa9…98bd, layer f0124107…ead9), so
    CPDF-18's key is the whole difference and CPDF-19's default path is still untouched. The new
    literals are the printout on the merged tree (`printout:` line above the assertions). */
+/* RE-TAKEN 2026-09-24 by D-536, AS THIS COMMENT PRESCRIBES — a later item moved the plain read ON
+   PURPOSE: `op=pdfstructure` now serves `provenance` (Part II §16, "Reading provenance"), the tier,
+   member and SHA-256 of the text it answers with, as its LAST key. PROVED rather than assumed before
+   re-pinning: the new plain answer with ONLY its `,\n "provenance": …` member cut from the RAW TEXT
+   hashes to EXACTLY the two literals it replaces (scan 335b802e…ecc3a, layer 26c35ac5…e176b7), so
+   D-536's key is the whole difference and CPDF-19's default path is still untouched. The new literals
+   are the printout on D-536's tree. */
 const PRE_ITEM_DIGEST = {
-  scan: "335b802eb860373c15e4a10546909faf699d9a9235998be9a502e71f2f9ecc3a",
-  layer: "26c35ac54f8711835001556506736868a3c9739910c483a11aa8e00ecfe176b7",
+  scan: "c5d019aedaa9afc682fdd20cc82054b7bee493a7955e09490e170bfea3861ad8",
+  layer: "2a04e765d906eeabe38cb143d8dd1dd92a4a8aa4cafc178ffe4ea7f33bdd64b1",
 };
 
 try {

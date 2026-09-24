@@ -306,6 +306,7 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
   return { res };
 }
 import { cpuProbe } from "./cpu.mjs";
+import { readingProvenance } from "./readingprov.mjs";
 import { Store } from "./store.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
@@ -7028,6 +7029,8 @@ export default {
          * called; a member that declined or failed leaves the document exactly as
          * it was read. Both answer `performed: false` WITH THE REASON — the
          * absence of a re-read is a finding and is stated, never an empty field. */
+      /* D-536: the chain the served text was composed under, when this op composed one (the re-read). */
+      let structureChain = null;
       if (ocrAsked) {
         const stored = (reBasis && reBasis.reading) || {};
         const t3 = await tier3Extend(env, { sha, storeName, i2text: structure.text, wiredTier: structureTier,
@@ -7072,6 +7075,12 @@ export default {
             ? structure.pages : (Number.isInteger(stored.page_count) ? stored.page_count : null);
           reading.container_extent = Object.prototype.hasOwnProperty.call(stored, "container_extent")
             ? stored.container_extent : null;
+          /* D-536: the re-read's own provenance, by the acquire path's rule — digested over the text
+             `readText` was just handed — so the store can compare it with the reading it replaces and
+             say WHICH tier's text moved. */
+          reading.provenance = await readingProvenance({ text: t3.i2text, chain, tier: t3.wiredTier,
+                                                         container: "pdf", planeVersion: env.VERSION || null });
+          structureChain = chain;
           /* THE RE-READ, STATED ON THE READING ITSELF: when, at whose request, by
              which engine, over which pages. It is also what `Store.#heldByReextraction`
              keys on, so an ordinary revision of the bundle cannot silently put the
@@ -7103,11 +7112,21 @@ export default {
                        found: reading.found, entities: Array.isArray(reading.entities) ? reading.entities.length : 0,
                        text_tier: reading.text_tier },
             staled: w.staled ?? 0, units: w.indexed ?? null, observed: w.observed ?? null,
+            /* D-536: this re-read against the reading it replaced, attributed; both are kept. */
+            compared: w.compared ?? null,
             candidates: "the content-axis frontier (op=frontier&level=content) lists the captures still below "
                       + "what this instance's fleet can read; this one is re-read now",
           };
         }
       }
+      /* D-536 — THE SERVED TEXT'S PROVENANCE, by the one rule a reading's is composed by: each page's
+         tier and member (the tier-2 merge's stamps, or the re-read's chain) and a SHA-256 of the text as
+         the content-type reader would be handed it. A caller that classifies this text — M-143's census
+         does — can then say, of two reads that disagree, which tier's text moved. ADDITIVE: no key this
+         op answered before changes. */
+      structure.provenance = await readingProvenance({ text: structure.text || null, chain: structureChain,
+        tier: Number.isInteger(structure.tier) ? structure.tier : null, container: "pdf",
+        planeVersion: env.VERSION || null });
       return json(structure, 200);
     }
 
@@ -8410,7 +8429,12 @@ export default {
          outlive that block, and declaring it inside was a ReferenceError on every
          acquire until this suite drove one. */
       let textUnits = null, textUnitsOverBound = 0;
+      /* D-536: THE TEXT THE CONTENT-TYPE READER WAS HANDED, kept for the reading's provenance, which
+         digests exactly it (`readingprov.mjs`). Declared here for REC-91's reason above: the format
+         wire's block closes before the provenance is composed. Null when no reader was handed text. */
+      let classifiedText = null;
       const canRead = !!profileText && typeof docType.type.parse === "function";
+      if (canRead) classifiedText = profileText;
       if (canRead) {
         try {
           const parsed = docType.type.parse({ ...profCtx, handler: stackId.handler, at: retrieved }) || {};
@@ -8914,6 +8938,8 @@ export default {
               { const u = textUnitsFor(i2text); textUnits = u.textUnits; textUnitsOverBound = u.textUnitsOverBound; }
               if (i2text) wired = readText(i2text, { headers: profHeaders,
                 locator: documentAddress, content_type: ct || null, at: retrieved });
+              /* D-536: the reader was handed `i2text` — digested as such on the reading's provenance. */
+              if (i2text) classifiedText = i2text;
               /* The chain, at last, and only if a text surface actually
                  answered. Tier 3 already set its own above (it names the engine
                  that produced it); anything else came out of the document's own
@@ -9026,6 +9052,18 @@ export default {
            * CAP-9's reasoning unchanged, on a table I5 assigns to FRAMEWORK. */
         reading.container_extent = containerExtent;
       }
+      /* D-536 — THE READING'S OWN PROVENANCE, at ONE site for every branch above (BOB #33, 21:25Z;
+         Part II §16 "Reading provenance"): the tier and the producing member of each page, the pages
+         transcribed, and a SHA-256 of the exact text the content-type reader was handed. A reading no
+         reader was handed text for carries the key with a null digest and the reason — present and
+         null, never absent, because an ABSENT key is what a reading from before D-536 looks like and
+         the store reads that as provenance UNDETERMINED. Text read at intake (an HTML page) was read in
+         the plane and on no tier of the extraction ladder, so its tier is null and its member named. */
+      reading.provenance = await readingProvenance({
+        text: classifiedText, chain: Array.isArray(reading.text_source) ? reading.text_source : null,
+        tier: Number.isInteger(reading.text_tier) ? reading.text_tier : null,
+        container: typeof reading.text_container === "string" ? reading.text_container : null,
+        planeVersion: env.VERSION || null, member: canRead ? "plane" : null });
 
       /* The shape C-18.1 requires, assembled here so the caller does not have to
          know it and cannot get it subtly wrong. */
