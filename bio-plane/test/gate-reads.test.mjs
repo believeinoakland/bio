@@ -1288,6 +1288,14 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "no row a viewer predicate could filter, and nothing a hidden project could leak through. AND PUBLIC since "
       + "REC-163 (Publication §7 point 1): a caller with no credential is answered the slug alone, which every "
       + "published bundle's signed `group` already carries, and never the row's provenance.",
+    /* CLASSIFIED at integration by c19-unionfix, 2026-09-24: REC-164's op arrived unclassified because its
+       worker gated only its own suites, and this sweep reads the whole OPS table. */
+    groupidentity: "HOLDS NO CORPUS MATERIAL: REC-164's group identity (Publication §7 points 2 and 3) — the "
+      + "slug, the group's display name and its claimed domain, with the domain's dated check verdicts. No bundle "
+      + "id and no row a viewer predicate could filter. PUBLIC on point 1's reasoning and split by the ADMISSION "
+      + "gate exactly as op=instancegroup: a caller with no credential is answered the slug, the display name only "
+      + "beside it, and the domain only while its latest verdict is `verified` (what the group asserts to the world); "
+      + "only a credential the gate admits is answered the claim, its state and both dated histories.",
     progression: "a progression DEFINITION: a member's constitutive claim about how an institution "
       + "ought to behave. It names stages, not documents.",
     proposals: "the DERIVED findings feed. Aggregated per (progression, stage) over entities and "

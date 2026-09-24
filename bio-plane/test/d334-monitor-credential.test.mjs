@@ -431,8 +431,13 @@ console.log("\n--- arm E (cont.): the fix is where it is claimed to be, structur
   /* A structural pin beside the behavioural arms, for the reason WORKER.md
      gives: a revert that happened to be behaviourally invisible in some future
      shape would still be caught here. */
+  /* CORRECTED 2026-09-24 at integration by c19-unionfix: the pin read the import as `{ liveToken }` EXACTLY, and
+     D-260 (c19-batch9) widened that same import to `{ liveToken, sha256hex, instanceAiCredential,
+     instanceClaudeToken }` — the gate's own predicate is still imported from tokens.mjs, so the old spelling was
+     pinning the SHAPE of the line rather than the property. It now asks that `liveToken` is a named import of
+     `./tokens.mjs`, and still fails on a store that re-derives it or imports it from anywhere else. */
   t("store.mjs imports the GATE'S OWN predicate rather than re-deriving one",
-    /import \{ liveToken \} from "\.\/tokens\.mjs";/.test(STORE_SRC), true);
+    /import \{[^}]*\bliveToken\b[^}]*\} from "\.\/tokens\.mjs";/.test(STORE_SRC), true);
   t("#monitorToken() is ASYNC and asks liveToken before selecting the daemon credential",
     /async #monitorToken\(\)[\s\S]{0,400}?await liveToken\(env\.DAEMON_TOKEN\)/.test(STORE_SRC), true);
   t("and asks it of ADMIN_TOKEN too — the class, not the reported half",

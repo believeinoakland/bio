@@ -480,6 +480,8 @@ import { PER_ITEM_CHECKS, TASK_ACTOR_CHECKS } from "../checks/bio-checks.mjs";
 import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-checks.mjs";
 /* D-162 / IC-241: THE THEME's refusals (C-81). */
 import { THEME_CHECKS } from "../checks/bio-checks.mjs";
+/* IC-246 / C-82: op=statementack's bound on the unsigned documents it re-authors — a refusal, never a cut. */
+import { STATEMENT_ACK_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
 import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
@@ -10081,6 +10083,36 @@ export class Store extends DurableObject {
                      + `hand the draft to a reader through a review grant. The case publishes without one and `
                      + `says so.` };
     const statementSha = Store.#statementSha(text);
+    /* THE DOCUMENTS ALREADY AUTHORED FOR THIS STATEMENT, UNSIGNED, AT THIS CASE IDENTITY, IN THIS PROJECT — the
+       case door's own document, or (through a draft) the edition `op=publish` authored from it. Found by the hash
+       the document prints beside its statement AND by its project line, both IN THE STATEMENT, and read BEFORE
+       anything is written (IC-246). Two corrections to D-150's first cut, each a defect:
+       - THE PROJECT IS MATCHED IN SQL, spelled as `#caseDocumentText` writes it. It was filtered AFTER a `LIMIT 8`,
+         so another project's documents of the same sentence could fill the page and crowd this project's out —
+         an acknowledgement recorded and never listed where it belongs.
+       - OVER THE BOUND IS A REFUSAL, NOT A CUT. A cut would leave the ninth document listing fewer second readers
+         than the record holds, and its owner would SIGN that absence. So the read is `max + 1`, and more than
+         `max` refuses by name with nothing written. The parse filter stays, applied after the bound is decided. */
+    const ackMax = Store.STATEMENT_ACK_DOCUMENTS_MAX;
+    const needle = `\n  statement_sha: ${statementSha}\n`;
+    const projectLine = `\ncase_project: ${project}\n`;
+    const found = this.#rows(`SELECT case_id, edition, doc_sha, text FROM case_documents
+                              WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
+                                AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
+                             ident.edition, ident.caseId ?? null, ident.caseId ?? null, needle, projectLine, ackMax + 1);
+    const refusal = (code, detail, extra) => {
+      const row = STATEMENT_ACK_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+    };
+    /* DEC-49 REGION is-statement-ack-documents-bound */
+    if (found.length > ackMax)
+      return refusal("STATEMENT_ACK_DOCUMENTS_OVER_BOUND",
+               `more than ${ackMax} unsigned case documents of this project carry this exact statement at `
+                     + `this case identity. Each would have to be re-authored to list the acknowledgement, and `
+                     + `re-authoring only some would leave the rest listing fewer second readers than the record `
+                     + `holds. Nothing was written: sign or supersede some of them, then acknowledge.`,
+               { limit: ackMax, statement_sha: statementSha, edition: ident.edition, case_id: ident.caseId ?? null });
+    /* END DEC-49 REGION is-statement-ack-documents-bound */
     const same = this.#one(`SELECT ack_id, at FROM statement_acknowledgements
                             WHERE project_id=? AND statement_sha=? AND case_id IS ? AND edition=?
                               AND acknowledger_kind=? AND acknowledger=?`,
@@ -10090,14 +10122,8 @@ export class Store extends DurableObject {
       this.sql.exec(`INSERT INTO statement_acknowledgements (project_id,case_id,edition,statement_sha,draft_id,
                      acknowledger_kind,acknowledger,recipient,at) VALUES (?,?,?,?,?,?,?,?,?)`,
                     project, ident.caseId ?? null, ident.edition, statementSha, draftId, kind, by, recipient, when);
-    /* THE DOCUMENTS ALREADY AUTHORED FOR THIS STATEMENT, UNSIGNED, AT THIS CASE IDENTITY — the
-       case door's own document, or (through a draft) the edition `op=publish` authored from it.
-       Found by the hash the document prints beside its statement, bounded, and re-read whole. */
-    const needle = `\n  statement_sha: ${statementSha}\n`;
-    const docs = this.#rows(`SELECT case_id, edition, doc_sha, text FROM case_documents
-                             WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
-                               AND instr(text, ?) > 0 ORDER BY case_id LIMIT 8`,
-                            ident.edition, ident.caseId ?? null, ident.caseId ?? null, needle)
+    /* The documents read above, re-read whole: the parse is the authority on the project, the SQL match its index. */
+    const docs = found
       .filter((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === project);
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
     return { ok: true, existed: !!same,
@@ -10107,12 +10133,17 @@ export class Store extends DurableObject {
              /* Each unsigned case document of this statement, re-authored to list it: its NEW hash is
                 the one the owner signs (op=caseratify refuses the old one as stale). */
              case_documents: reauthored,
+             case_documents_limit: ackMax, case_documents_truncated: false,
              listed: `the completeness block of ${Store.#caseIdentitySentence(ident.caseId ?? null, ident.edition)} `
                    + `lists this acknowledgement when its case document is authored with this exact statement `
                    + `(op=publish), or — if that document is already authored and unsigned — now, re-authored `
                    + `(case_documents). A statement edited afterwards is a different sentence, and this `
                    + `acknowledgement is not listed under it.` };
   }
+
+  /* IC-246: the bound on the unsigned documents one acknowledgement re-authors, declared BELOW its method (REC-116).
+     The figure D-150's literal carried; over it the act is REFUSED (C-82.1), never cut. */
+  static STATEMENT_ACK_DOCUMENTS_MAX = 8;
 
   /* THE TWO RENDERINGS OF THE LIST, ONE SPELLING EACH — written by `#caseDocumentText` when
      `op=publish` authors a document, and spliced by `#reauthorAcknowledgements` when an
@@ -20267,25 +20298,43 @@ export class Store extends DurableObject {
    * invited to, and a placement the reader cannot see is omitted without a
    * count. An unrecognised or absent viewer reads nothing (fail closed).
    *
-   * WHO IS SHOWN. §8.4 fence 1 says the theme is declared "under that member's
-   * COVER, which every reading of the theme shows". Membership v2 §3 rules that
-   * members and the public see HANDLES and only administrators see cover and
-   * handle together. Every reading here shows the declarer's member id and
-   * handle — the record's attribution — and never the cover, since a cover
-   * beside a handle is the pairing §3 withholds. Stated as a DESIGN GAP in
-   * IC-241 rather than resolved silently in either direction. */
+   * WHO IS SHOWN (BOB #32, 2026-09-24: Membership v2 §3 governs). Members and
+   * the public see HANDLES; only administrators see cover and handle together.
+   * So every reading that names a declarer, a placer or a proposer shows a
+   * reader who does not administer the person's HANDLE ALONE — no member id
+   * (MK-6's precedent: the member id is not published in member-facing reads)
+   * and no cover. The member id and the cover go to ADMINISTRATORS only,
+   * through the `administer` projection `memberList` already follows: the
+   * control plane stamps it from the credential (index.mjs) and anything but
+   * the affirmative stamp yields handles, so a lost stamp loses the pairing
+   * rather than leaking it. A MACHINE stamp (`class:<cls>`) is no person and no
+   * pairing, and every reader is shown it — a hunch stays attributable to the
+   * credential that proposed it. This corrects D-162's first cut, which showed
+   * every reader the member id (IC-241's DESIGN GAP, ruled). */
   static #themeRefusal(code, detail, extra) {
     const row = THEME_CHECKS[code];
     return { ok: false, reason: code, code, check: row.check, translation: row.translation,
              detail, ...(extra || {}) };
   }
 
-  /** The declarer as every reading shows them: the member id the act was stamped
-   *  with and the handle that member chose. Never the cover (see above). */
-  #themePerson(memberId) {
-    if (!memberId) return { id: null, handle: null };
-    const m = this.#one(`SELECT handle FROM members WHERE member_id = ?`, memberId);
-    return { id: memberId, handle: m && m.handle ? m.handle : null };
+  /** A person on a theme reading, projected for THIS reader (see WHO IS SHOWN): the fields
+   *  `<prefix>_handle` for everyone; `<prefix>` (the member id) and `<prefix>_cover` for an
+   *  administrator alone. The cover is NOT SELECTED for anyone else, `memberList`'s way. */
+  #themePerson(prefix, stamp, administer) {
+    const pairs = administer === true || administer === "1";
+    if (stamp && isMachineIdentity(stamp))
+      return { [prefix]: stamp, [`${prefix}_handle`]: null, ...(pairs ? { [`${prefix}_cover`]: null } : {}) };
+    const m = stamp ? this.#one(`SELECT ${pairs ? "cover, " : ""}handle FROM members WHERE member_id = ?`, stamp) : null;
+    const handle = m && m.handle ? m.handle : null;
+    if (!pairs) return { [`${prefix}_handle`]: handle };
+    return { [prefix]: stamp || null, [`${prefix}_handle`]: handle, [`${prefix}_cover`]: m && m.cover ? m.cover : null };
+  }
+
+  /** The same person in a sentence (`says`), under the same projection: a handle, a machine's
+   *  stamp, or — for a reader who does not administer — never the member id. */
+  #themeName(stamp, administer) {
+    const p = this.#themePerson("by", stamp, administer);
+    return p.by_handle || p.by || "a member whose handle is not recorded";
   }
 
   /** WHICH THEME. One answer for a theme that does not exist and for a viewer the
@@ -20339,7 +20388,7 @@ export class Store extends DurableObject {
 
   /** op=themedeclare — THE ACT. `declarer` is the control plane's stamp and never
    *  the caller's. */
-  themeDeclare({ name = null, test = null, declarer = null } = {}) {
+  themeDeclare({ name = null, test = null, declarer = null, administer = null } = {}) {
     const refusal = (code, detail, extra) => Store.#themeRefusal(code, detail, extra);
     const who = typeof declarer === "string" ? declarer.trim() : "";
     const idea = typeof name === "string" ? name : "";
@@ -20371,17 +20420,16 @@ export class Store extends DurableObject {
     const themeId = `THEME-${at.slice(0, 4)}-${at.slice(5, 7)}${at.slice(8, 10)}-${Store.#rand(6)}`;
     this.sql.exec(`INSERT INTO themes (theme_id, declared_by, name, test, at) VALUES (?, ?, ?, ?, ?)`,
                   themeId, who, idea, criterion, at);
-    const by = this.#themePerson(who);
     return { ok: true, theme_id: themeId, name: idea, test: criterion, at,
-             declared_by: by.id, declared_by_handle: by.handle, evidence: false,
-             says: `${by.handle || by.id}'s theme is declared, with its test. It is a lens for finding and `
+             ...this.#themePerson("declared_by", who, administer), evidence: false,
+             says: `${this.#themeName(who, administer)}'s theme is declared, with its test. It is a lens for finding and `
                  + `gathering material, visibly theirs, and never the basis of a claim: no leg can rest on it `
                  + `or on membership in it` };
   }
 
   /** op=themeplace — A MEMBER PLACES A DOCUMENT OR A PASSAGE, or CONFIRMS a hunch
    *  standing at the same target. `placer` is the control plane's stamp. */
-  themePlace({ theme = null, target = null, note = null, placer = null, viewer = null } = {}) {
+  themePlace({ theme = null, target = null, note = null, placer = null, viewer = null, administer = null } = {}) {
     const refusal = (code, detail, extra) => Store.#themeRefusal(code, detail, extra);
     const who = typeof placer === "string" ? placer.trim() : "";
     /* DEC-49 REGION is-theme-place */
@@ -20415,12 +20463,12 @@ export class Store extends DurableObject {
         who, at, tgt.note, T.theme_id, tgt.target);
     const row = this.#one(`SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`,
                           T.theme_id, tgt.target);
-    return { ok: true, theme_id: T.theme_id, ...this.#placementView(row),
+    return { ok: true, theme_id: T.theme_id, ...this.#placementView(row, administer),
              confirmed_hunch: !!before && before.state === "hunch",
              already: !!before && before.state === "member", evidence: false,
              says: before && before.state === "member"
                ? `${tgt.target} was already a member of this theme; nothing changed`
-               : `${tgt.target} is a member of the theme "${T.name.slice(0, 80)}" on ${who}'s judgement that it `
+               : `${tgt.target} is a member of the theme "${T.name.slice(0, 80)}" on ${this.#themeName(who, administer)}'s judgement that it `
                  + `passes the test${before ? ", confirming a proposal" : ""}. Membership connects it to the `
                  + `theme's other members through this lens only, and is never a basis leg` };
   }
@@ -20429,7 +20477,7 @@ export class Store extends DurableObject {
    *  may propose — the machine's half of §8.4 fence 3 — and the proposer is the
    *  control plane's stamp (`class:<cls>` for a machine). A proposal at a target
    *  already standing is not written again, and never demotes a member. */
-  themePropose({ theme = null, target = null, note = null, proposer = null, viewer = null } = {}) {
+  themePropose({ theme = null, target = null, note = null, proposer = null, viewer = null, administer = null } = {}) {
     const refusal = (code, detail, extra) => Store.#themeRefusal(code, detail, extra);
     const who = typeof proposer === "string" ? proposer.trim() : "";
     /* DEC-49 REGION is-theme-propose */
@@ -20457,30 +20505,32 @@ export class Store extends DurableObject {
         T.theme_id, tgt.target, tgt.kind, tgt.bundleId, who, at, tgt.note);
     const row = this.#one(`SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`,
                           T.theme_id, tgt.target);
-    return { ok: true, theme_id: T.theme_id, ...this.#placementView(row), already: !!before, evidence: false,
+    return { ok: true, theme_id: T.theme_id, ...this.#placementView(row, administer), already: !!before, evidence: false,
              says: row.state === "member"
-               ? `${tgt.target} is already a member of this theme, placed by ${row.placed_by}; the proposal `
+               ? `${tgt.target} is already a member of this theme, placed by ${this.#themeName(row.placed_by, administer)}; the proposal `
                  + `changed nothing`
                : `${tgt.target} is PROPOSED for the theme "${T.name.slice(0, 80)}". It is a hunch — not `
                  + `membership — until a member checks it against the test and places it` };
   }
 
-  /** One placement as every reading shows it. `membership` is the only field a
-   *  reader should ask whether it counts, and it is true for `member` alone. */
-  #placementView(r) {
+  /** One placement as this reader is shown it. `membership` is the only field a
+   *  reader should ask whether it counts, and it is true for `member` alone. The
+   *  placer and the proposer go through `#themePerson`'s projection. */
+  #placementView(r, administer) {
     return { target: r.target, target_kind: r.target_kind, document: r.bundle_id,
              state: r.state, membership: r.state === "member", hunch: r.state === "hunch", grade: r.grade,
-             placed_by: r.placed_by, placed_at: r.placed_at, note: r.placement_note,
-             proposed_by: r.proposed_by, proposed_at: r.proposed_at, proposal_note: r.proposal_note };
+             ...this.#themePerson("placed_by", r.placed_by, administer), placed_at: r.placed_at, note: r.placement_note,
+             ...this.#themePerson("proposed_by", r.proposed_by, administer), proposed_at: r.proposed_at,
+             proposal_note: r.proposal_note };
   }
 
   /** op=themeread — ONE THEME (`id`), with its members and its hunches APART, or
    *  THE THEMES (`q` narrows by a phrase in the name or the test). Bounded, and
    *  the cut is published. */
-  themeRead({ id = null, q = null, limit = null, viewer = null } = {}) {
+  themeRead({ id = null, q = null, limit = null, viewer = null, administer = null } = {}) {
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.THEME_READ_LIMIT_DEFAULT),
                                      Store.THEME_READ_LIMIT_MAX));
-    const person = (m) => { const p = this.#themePerson(m); return { declared_by: p.id, declared_by_handle: p.handle }; };
+    const person = (m) => this.#themePerson("declared_by", m, administer);
     if (id == null || String(id).trim() === "") {
       const g = viewerPredicate(viewer);
       const phrase = typeof q === "string" ? q.trim() : "";
@@ -20513,9 +20563,9 @@ export class Store extends DurableObject {
     return {
       ok: true, theme_id: T.theme_id, name: T.name, test: T.test, at: T.at, ...person(T.declared_by),
       evidence: false, limit: cap,
-      members: members.slice(0, cap).map((r) => this.#placementView(r)),
+      members: members.slice(0, cap).map((r) => this.#placementView(r, administer)),
       members_truncated: members.length > cap,
-      hunches: hunches.slice(0, cap).map((r) => this.#placementView(r)),
+      hunches: hunches.slice(0, cap).map((r) => this.#placementView(r, administer)),
       hunches_truncated: hunches.length > cap,
       says: `a member's declared lens, and never the basis of a claim. `
           + `${n(members)} member(s) you can see, placed by a member against the test; `
@@ -31367,6 +31417,13 @@ export class Store extends DurableObject {
   /** op=groupidentity for a credentialed reader: the public projection, and the claim, its state and both histories. */
   groupIdentity() {
     const pub = this.groupIdentityPublic();
+    /* IC-246: the check log, NEWEST FIRST, cut at a NAMED bound and the cut PUBLISHED. It was a bare `LIMIT 20`: a
+       reader could not tell twenty checks from twenty of many (the bounds sweep's PIN named it). Read at `max + 1`
+       so `truncated` is measured, never inferred from the count equalling the bound. Kept IN this method, not a
+       helper, so the bounds walk (which reads the dispatched method's segment) still sees the cap. */
+    const max = Store.GROUP_DOMAIN_CHECKS_MAX;
+    const checks = this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
+                                 FROM group_domain_checks ORDER BY seq DESC LIMIT ?`, max + 1);
     const dom = this.#groupIdentityCurrent("domain");
     return { ...pub,
              display_name_recorded: this.#groupIdentityCurrent("display_name")?.value ?? null,
@@ -31375,9 +31432,12 @@ export class Store extends DurableObject {
                                    instance_address: dom.instance_address ?? null,
                                    latest: this.#groupDomainLatestCheck(dom.value) } : null,
              domain_history: this.#groupIdentityHistory("domain"),
-             domain_checks: this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
-                                        FROM group_domain_checks ORDER BY seq DESC LIMIT 20`).map((r) => ({ ...r })) };
+             domain_checks: checks.slice(0, max).map((r) => ({ ...r })),
+             domain_checks_limit: max, domain_checks_truncated: checks.length > max };
   }
+  /* IC-246: declared BELOW its method, on REC-116's finding (`bounds.test.mjs`'s segmenter credits a constant to the
+     method above it). The figure the old literal carried. */
+  static GROUP_DOMAIN_CHECKS_MAX = 20;
 
   /* REC-175: THE ONE COMPUTATION of what a promoted file's digest IS, read by `promote` before any write and by
      `digestCensus` over what is already held, so the check at the door and the census of the past cannot disagree
@@ -47585,6 +47645,7 @@ export class Store extends DurableObject {
           name: body ? body.name : null,
           test: body ? body.test : null,
           declarer: url.searchParams.get("declarer"),
+          administer: url.searchParams.get("administer"),
         }),
         themeplace: () => this.themePlace({
           theme: (body && body.theme) || url.searchParams.get("theme"),
@@ -47592,6 +47653,7 @@ export class Store extends DurableObject {
           note: body ? body.note : null,
           placer: url.searchParams.get("placer"),
           viewer: url.searchParams.get("viewer"),
+          administer: url.searchParams.get("administer"),
         }),
         themepropose: () => this.themePropose({
           theme: (body && body.theme) || url.searchParams.get("theme"),
@@ -47599,11 +47661,13 @@ export class Store extends DurableObject {
           note: body ? body.note : null,
           proposer: url.searchParams.get("proposer"),
           viewer: url.searchParams.get("viewer"),
+          administer: url.searchParams.get("administer"),
         }),
         themeread: () => this.themeRead({ id: url.searchParams.get("id"),
                                           q: url.searchParams.get("q"),
                                           limit: url.searchParams.get("limit"),
-                                          viewer: url.searchParams.get("viewer") }),
+                                          viewer: url.searchParams.get("viewer"),
+                                          administer: url.searchParams.get("administer") }),
         leadread: () => this.leadRead({ id: url.searchParams.get("id"),
                                         limit: url.searchParams.get("limit"),
                                         viewer: url.searchParams.get("viewer"),

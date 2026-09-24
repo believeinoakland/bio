@@ -343,7 +343,12 @@ t("LC-plan-fields FIRES on a milestone MILESTONES.md does not define", (await fi
 t("LC-strays FIRES on an open row under a heading the grammar cannot read", (await fires("LC-strays", { "docs/development/BACKLOG.md": FILES["docs/development/BACKLOG.md"] + "\n### ZZ-5b · queued — unreadable id\n" })).length > 0, true);
 t("LC-delegations FIRES on a silent DELEGATION block", (await fires("LC-delegations", { "docs/development/CLAIMS.md": FILES["docs/development/CLAIMS.md"] + "\n## DELEGATION 2026-09-22 ZZ -> BOB (silent)\n\nno state line.\n" })).some((x) => /SILENT/.test(x)), true);
 t("LC-debt-token FIRES on a row with no disposition token", (await fires("LC-debt-token", { "docs/development/DEBT.md": FILES["docs/development/DEBT.md"] + "| D-2 | gap | 2026-09-18 | x | nobody said |\n" })).some((x) => /D-2/.test(x)), true);
-t("LC-undecided-route FIRES when the routed row leaves DEBT.md", (await fires("LC-undecided-route", { "docs/development/DEBT.md": FILES["docs/development/DEBT.md"].replace(/^\| D-388 .*\n/m, "") })).some((x) => /D-388/.test(x)), true);
+/* CORRECTED 2026-09-24 by c19-unionfix: this fired when D-388, the UNDECIDED set's route, left DEBT.md. BOB #32 drained
+   the table (CORPUS-STANDARD §6, folds-0924b) and the D-388 clause is RETIRED (see the arm), so the old breach is no
+   breach. The arm now fires on the thing it still guards: a file listed UNDECIDED instead of classified. */
+t("LC-undecided-route FIRES when a file is listed UNDECIDED rather than classified", (await fires("LC-undecided-route", { "docs/architecture/CORPUS-STANDARD.md": "# Standard — fixture\n\n### Undecided — files the walk found\n\n| document | what is undecided |\n| --- | --- |\n| `docs/development/ZZ-UNSORTED.md` | whether it is a design |\n" })).some((x) => /ZZ-UNSORTED/.test(x)), true);
+t("...and does NOT fire once D-388 leaves DEBT.md — the retired route is no longer a condition of a coord write",
+  (await fires("LC-undecided-route", { "docs/development/DEBT.md": FILES["docs/development/DEBT.md"].replace(/^\| D-388 .*\n/m, "") })).length, 0);
 t("LC-op-claims FIRES on an op= claim naming no op", (await fires("LC-op-claims", { "docs/development/CLAIMS.md": FILES["docs/development/CLAIMS.md"] + "\nThe lane calls " + "op" + "=zznotanoprealy here.\n" /* built, so op-claims' own walk does not read THIS file as the claim */ })).some((x) => /zznotanoprealy/.test(x)), true);
 t("LC-markers FIRES on a merge marker in a state file", (await fires("LC-markers", { "docs/development/QUEUE.md": FILES["docs/development/QUEUE.md"] + `${"<".repeat(7)} HEAD\n` })).length, 1);
 t("LC-handoff-budget FIRES on a handoff over its budget once its cut has landed (a WARN otherwise, as readbudget rules)",

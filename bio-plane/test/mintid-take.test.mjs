@@ -1,3 +1,10 @@
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict drives `take`'s
+   compare-and-swap through real git objects of this checkout (`git cat-file`, `git commit-tree` over its own history)
+   and pushes to scratch remotes, which no result key can name. Declared at integration by c19-unionfix, 2026-09-24,
+   from the gate's own trace on the union c19-batch9 (31 git commands; D-242 gated only its own suites).
+   GATE: reads tools/pushguard.mjs — the same trace (gates' UNDER-INCLUSION, M0-126 condition 2) saw this suite read it.
+   WHICH of its steps reads it was not established at integration; a push running an installed pre-push hook (D-406)
+   is the likely path and is stated as UNDETERMINED, not as the cause. */
 /* D-242 — TWO CLONES TAKING ONE NAMESPACE AT ONCE RECEIVE DISTINCT IDS, THROUGH ONE WRITER.
  *
  * The subject is `take` in `tools/mintid.mjs`: a compare-and-swap push to `<remote>/coord` (a remote ref refuses a

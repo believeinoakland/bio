@@ -65,7 +65,8 @@ console.log("4 — the budgets, declared once, and the live CLAUDE.md is inside 
   /* CORRECTED 2026-09-19 (BOB #16): the construct map joined the read set with its own budget, so the declared table
      gained `map`; the old assertion pinned three keys because there were three classes then, not because a fourth
      was wrong. */
-  t("the budgets", BUDGET, { "CLAUDE.md": 16384, kickoff: 24576, next: 12288, map: 49152 });
+  /* CORRECTED 2026-09-24 by c19-unionfix, map 49152 -> 51200, on BOB #32 2026-09-24 02:10Z ruling (a): STOPGAP until (b) — status.mjs renders each cell's first sentence capped at a word boundary with '…'; BOB builds (b) and lowers the budget back to 49,152 B. */
+  t("the budgets", BUDGET, { "CLAUDE.md": 16384, kickoff: 24576, next: 12288, map: 51200 });
   t("the construct map is read whole, at its own budget", readSet(ROOT).find((r) => r.file === "docs/architecture/BIO_System_Design.md")?.budget, BUDGET.map);
   t("...and check() judges it at that budget, not the kickoff's", check(ROOT).some((o) => o.file === "docs/architecture/BIO_System_Design.md"), false);
   t("CLAUDE.md is marked CUT", CUT.has("CLAUDE.md"), true);

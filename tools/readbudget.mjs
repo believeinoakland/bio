@@ -37,7 +37,9 @@ export const BUDGET = {
   next: 12 * 1024,
   /* The construct map (BOB #16, 2026-09-19): read whole by BOB, SCHEDULER and CONDUCT. Denser than a kickoff, so its
      own budget, set above its 45 KB size with room for a row per construct, and armed from the day it is set. */
-  map: 48 * 1024,
+  /* 48 KiB -> 50 KiB at integration by c19-unionfix, on BOB #32 2026-09-24 02:10Z ruling (a): STOPGAP until (b) — status.mjs renders each cell's first sentence capped at a word boundary with '…'; BOB builds (b) and lowers the budget back to 49,152 B.
+     The union's map read 50,146 B after BOB's 478 B trim (folds-0924b); no claim was trimmed or reworded. */
+  map: 50 * 1024,
 };
 
 /* Files whose cut has landed, by repo-relative path: over budget again is a FAIL, not a WARN. */

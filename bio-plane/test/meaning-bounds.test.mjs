@@ -1056,11 +1056,25 @@ console.log(`  RATCHET: ${BARE_ROSTER_MEASURED_2026_08_07} bare-collection read 
    cased in the walker, and not hidden behind a narrowed matcher: the figure
    MOVED, so the next item to add an unbounded collection read still fails here.
    ===================================================================== */
+/* ===== MOVED 40 -> 43 AT INTEGRATION by c19-unionfix, 2026-09-24, CEILING AND FLOOR IN ONE EDIT, from the roster this
+   walk PRINTED on the union c19-batch9 (b23f5c946), diffed by name against origin/main 15b2a4c0's 40. Three
+   arrivals, each a real member counted honestly and not exempted:
+   - `op=actionquotes` (D-148) [revised_by, quotes]: `quotes` is paged at `QUOTES_MAX + 1` with `truncated` and
+     `max` published (the walk reads `limit`, not `max`); `revised_by` is, per quote, every later quote revising
+     THAT one — a per-key read bounded by the entries one correspondence ledger carries.
+   - `op=projectvisibility` (REC-149) [history]: the setting history of ONE project, append-only, bounded by the
+     owners' own acts on it — `op=caseratify`'s "bounded by an act, not a corpus".
+   - `op=projectdirectory` (REC-149) [projects]: EVERY project the caller sees only at EXISTENCE, unpaged and
+     publishing no bound. The one arrival whose answer grows with the record: REPORTED to SCHEDULER by
+     c19-unionfix with its fix named (a LIMIT cap + 1 page with `limit`/`truncated` published, an IC on
+     op=projectdirectory), not taken at integration.
+   The FLOOR moves with it: it had been left at 39 when D-309 moved the ceiling to 40, one of slack, which a
+   floor may not carry. */
 t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publishes a collection "
 + "off an unbounded row source pushes this over the figure RE-MEASURED on 2026-08-08 over the "
 + "CORRECTED corpus (REC-70: 27 was measured over 55 of 156 dispatched ops; REC-67 removed one "
-+ "phantom; REC-66 FIXED one member), MOVED 39 -> 40 by D-309 with its reason above, and fails here",
-  BARE_OPS.length <= 40, true);
++ "phantom; REC-66 FIXED one member), MOVED 39 -> 40 by D-309 and 40 -> 43 at c19-unionfix with the reasons above, and fails here",
+  BARE_OPS.length <= 43, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
    which is precisely how this walk spent two days reporting 27. A DROP is not a
@@ -1078,7 +1092,7 @@ t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this
      job on a clean tree — it failed the moment `op=connect` came off the roster,
      which is the only reason this figure is being written by hand rather than
      drifting down unremarked. */
-  BARE_OPS.length >= 39, true);
+  BARE_OPS.length >= 43, true);
 
 /* ==========================================================================
  * REC-70 · REACH — WHAT THIS WALK REACHES, ASSERTED RATHER THAN ASSUMED.
