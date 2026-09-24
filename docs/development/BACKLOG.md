@@ -23,15 +23,15 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-194 · queued — **`kickoffs/WORKER.md`, READ BY EVERY WORKER, CARRIES EACH RULE'S HISTORY INLINE (3,959 words), so the current rule is buried and a ruling can go unread: tonight three workers were misled, and BOB #33's 17:12Z pen ruling never reached the file.** BOB #34 22:50Z. — owner M0 (BOB drafts; any worker may land it).
-order: at the head of the backlog, AHEAD of product (BOB #34 22:50Z: *it appreciably cuts wasted worker rounds: three sessions were misled tonight*) (SCHEDULER #20, 2026-09-24)
+### D-545 · queued — **`civicos-ui/check-semantics.mjs` (~352) HARVESTS PLANE STATES OVER THE RAW STORE FILE, COMMENTS INCLUDED, with `/current_state\s*[!=]==?\s*"([a-z_]+)"/`, so a `typeof` guard on that field is read as a state named after the typeof string, and the gate goes RED with "states the store writes with no semantics row" naming a state nobody wrote.** It cost REC-210 two full gate rounds, the second from a comment quoting the pattern (CONDUCT #20 22:57Z). — owner UI (the check), M0.
+order: after M0-194, AHEAD of product: a false RED that has already cost two full gate rounds (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
-design: `docs/development/VERIFICATION.md` (the reading budget: a file read whole is sized to be read whole), with CLAUDE.md §1's READING BUDGET and BOB #34's ruling of 22:50Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20).
+design: `docs/development/VERIFICATION.md` (an instrument names what it read, and a false red is a defect in the instrument).
 depends-on: none.
-scope: rewrite WORKER.md so each rule is one or two lines naming its ruling id; move the receipts and narratives VERBATIM to `docs/archive/WORKER-kickoff-2026-09-24.md`, where `decided.mjs` finds them; nothing deleted; set its readbudget to half of 3,959 words. The current pen rule (BOB #33 17:12Z: a driver's gitignored, item-named pen is not scratch) and `store=scratch` (BOB #34 22:22Z: redundant, not optional) must be stated. Other kickoffs follow one at a time only if this measurably cuts misreads.
-accepts-when: `readbudget` shows WORKER.md at or under the new budget, `decided.mjs` still finds every ruling it cited, and every old rule maps to a new line (a table in the row's measurement) (the measured failure it moves: a 3,959-word file burying current rules). NEGATIVE CONTROL: drop one mapped rule and the mapping table names it.
-added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
+scope: blank comments before harvesting; refuse a match preceded by `typeof` or whose right-hand side is not a catalogue state, and report it as an UNRECOGNISED MATCH, never as a state. Apply the same two guards to the `#setScalar` harvest beside it.
+accepts-when: a planted `typeof x.current_state === "string"` guard and a commented-out quote of the pattern leave the state set unchanged and are reported as unrecognised matches (the measured failure it moves: a RED naming a state nobody wrote). NEGATIVE CONTROL: harvest the raw file again and the planted guard is read as a state, failing by name.
+added: 2026-09-24 · SCHEDULER #20 (id minted by CONDUCT #20).
 
 ### D-538 · queued — **A DRAFT THAT NAMES NO CASE AND DOES NOT SET `newCase` IS TOLD "a new case, whose identity is not yet allocated", while `publishCase` DERIVES an existing case for it: REC-199's block 10 measured draft DD saying that sentence as its gates refuse ALREADY_A_CASE_MEMBER against C1.** `Store.#caseIdentitySentence(null, 1)` is shared by the casedraft, casedrafts (REC-198) and reviewcopy reads. Found by REC-199's worker (1). — owner RECORD.
 order: after D-530, with the corrections: the record asserting a new case where it will derive an existing one (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:43Z)
@@ -1188,4 +1188,14 @@ design: `docs/development/VERIFICATION.md` (a control declares what it measures;
 depends-on: D-443 (`integrated`; its branch moved ARM 1's anchor).
 scope: rewrite ARM 1's declaration to the measured outcome with a comment saying why the old one was wrong; rename every `INF-` fixture id to `INFO-`.
 accepts-when: `node bio-plane/test/nc-m040.mjs` reports every arm as declared, and no suite names an `INF-` id. NEGATIVE CONTROL: restore the five-failure declaration, and ARM 1 reads NOT as declared by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-449 · queued — **`project-sight.control.mjs`'s `promote-stamp-dropped` ARM CANNOT RUN: it throws SURFACE_NO_RUN (0/1), identically on `main` `02603e88`, because since REC-171 removing the stamp also breaks the harness's surfacing-run creation.** — owner M0.
+order: after D-446, among the control-hygiene rows (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (break only the thing: a control that moves a second variable refutes nothing).
+depends-on: none.
+scope: narrow the arm's patch to revisions, keeping the stamp when the base is null.
+accepts-when: the arm runs and fails as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).

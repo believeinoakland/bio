@@ -255,8 +255,8 @@ scope: promote checks each bias-set transition against the declared STATES edges
 accepts-when: `adopted` → `proposed` is refused by name; every declared edge still passes. NEGATIVE CONTROL: drop the edge check, and the backwards arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### REC-210 · running — **ADOPTING A PROPOSED BIAS REVISION DOES NOT SAY SO: REC-187 re-pins the adoption to the adopted sha, but an adoption that pins a proposed, not-yet-accepted revision reads like any other.** BOB #32's ruling of 2026-09-24 00:42Z (relayed by CONDUCT #19; cite until folded into Declared Bias): *adopting a PROPOSED revision is a REPLACEMENT; the adoption must SAY it pins a proposed revision, and `op=biasadopt`'s answer and the adoption's read state that marker.* — owner RECORD.
-status: running — SPAWNED 2026-09-24 ~21:32Z by SCHEDULER #19 (dispatch, BOB #33 21:10Z) as a SEPARATE CLOUD SESSION titled WORKER REC-210 (SCHEDULER #19), base origin/main 1a7f0bcc0. Falsify rather than believe: a live worker holds the branch land/worker/REC-210; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### REC-210 · integrated — **ADOPTING A PROPOSED BIAS REVISION DOES NOT SAY SO: REC-187 re-pins the adoption to the adopted sha, but an adoption that pins a proposed, not-yet-accepted revision reads like any other.** BOB #32's ruling of 2026-09-24 00:42Z (relayed by CONDUCT #19; cite until folded into Declared Bias): *adopting a PROPOSED revision is a REPLACEMENT; the adoption must SAY it pins a proposed revision, and `op=biasadopt`'s answer and the adoption's read state that marker.* — owner RECORD.
+status: integrated — integrated — flipped ~22:59Z by SCHEDULER #20 on CONDUCT #20's verification (22:57Z): 5cd28164 merged with 9f8b69e6, 360/360 · 20678 RECORDED GREEN; control A/B/C AS DECLARED; rides c20-batch27; CONDUCT mints its IC (I3 additive). Its case-document finding (the frozen bias_manifest has no pins_proposed field) went to BOB #34 for a /4 ruling; not rowed until ruled.
 order: after D-468, with the bias rows (SCHEDULER #17, 2026-09-24; REC-187's worker F1)
 milestone: M4
 interface: I3 additive — a marker on the adoption's answer and read; the integrator mints and classifies the IC.
@@ -463,6 +463,16 @@ depends-on: D-510.
 scope: the op; the append-only tier history on the action's read; "revised from 3 (by X) to 1 (by Y): <reason>" readable; a revision with no reason refused by name (catalogued, DEC-49).
 accepts-when: a member's revision appends history naming both authors and the reason; a reasonless revision is refused by name; a machine is refused MACHINE_CANNOT_SET_RISK_TIER (the measured failure it moves: no revision path at all). NEGATIVE CONTROL: let a revision overwrite without history and the history arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
+
+### M0-194 · queued — **`kickoffs/WORKER.md`, READ BY EVERY WORKER, CARRIES EACH RULE'S HISTORY INLINE (3,959 words), so the current rule is buried and a ruling can go unread: tonight three workers were misled, and BOB #33's 17:12Z pen ruling never reached the file.** BOB #34 22:50Z. — owner M0 (BOB drafts; any worker may land it).
+order: at the head of the backlog, AHEAD of product (BOB #34 22:50Z: *it appreciably cuts wasted worker rounds: three sessions were misled tonight*) (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the reading budget: a file read whole is sized to be read whole), with CLAUDE.md §1's READING BUDGET and BOB #34's ruling of 22:50Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20).
+depends-on: none.
+scope: rewrite WORKER.md so each rule is one or two lines naming its ruling id; move the receipts and narratives VERBATIM to `docs/archive/WORKER-kickoff-2026-09-24.md`, where `decided.mjs` finds them; nothing deleted; set its readbudget to half of 3,959 words. The current pen rule (BOB #33 17:12Z: a driver's gitignored, item-named pen is not scratch) and `store=scratch` (BOB #34 22:22Z: redundant, not optional) must be stated. Other kickoffs follow one at a time only if this measurably cuts misreads.
+accepts-when: `readbudget` shows WORKER.md at or under the new budget, `decided.mjs` still finds every ruling it cited, and every old rule maps to a new line (a table in the row's measurement) (the measured failure it moves: a 3,959-word file burying current rules). NEGATIVE CONTROL: drop one mapped rule and the mapping table names it.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
