@@ -519,10 +519,87 @@ const declaresRefusal = (ro) => {
    comparison this suite runs on every tree rather than a claim from 2026-08-08. */
 const REFUSAL_RETURN_OLD = /\bok\s*:\s*false/;
 
+/* ===== THE RETURN-DELEGATE RULE, added 2026-09-24 (c20-batch11fix) — AND IT IS A FIX TO THE
+ * READER RATHER THAN TO THE FLOOR, which is the only honest direction when a roster shrinks.
+ *
+ * WHAT HAPPENED. D-291 moved `op=resolve`'s one-document act out of `resolveReferences` and into
+ * the private `#resolveOne`, unchanged but for the connection sweep. The op did not get better and
+ * nothing about what it publishes changed: it still hands a member a `resolved` collection off an
+ * unbounded row source. But this walk segments the class BY METHOD, and `resolveReferences`' own
+ * segment now contains no `#rows(` and no collection-valued return at all — only `return set;` and
+ * `return one;`, two plain identifiers. So the walk reached no verdict, dropped the method from
+ * READS entirely, and `op=resolve` fell OFF the bare roster into NO_COLLECTION. The bare roster
+ * read 43 -> 42 and the FLOOR below is what refused to let that pass as progress. It is REC-60's
+ * own shape — "the reader lost sight of ops, not the plane got better" — arriving through a
+ * refactor instead of through a regex.
+ *
+ * THE RULE, stated so it can be judged rather than merely obeyed. **A method's published shape is
+ * what its RETURNS produce. When a return hands back a private method's result — `return
+ * this.#x(…)`, or an identifier assigned IN THE SAME SEGMENT from `this.#x(…)` — then `#x`'s
+ * returns ARE this method's returns, so the walk reads `#x`'s segment as part of it.** Nothing
+ * else is followed: not a call whose result is used and not returned, not a public method (which
+ * has its own dispatch and its own row on this roster), not a call reached through a variable
+ * assigned anywhere but this segment.
+ *
+ * WHY IT IS NARROW IN THIS DIRECTION AND NOT THE OTHER. Following every `this.#x(` in a body would
+ * credit a method with the shape of helpers it merely CONSULTS — `#one`, `#rows`, `#stamp` — and
+ * would inflate the ceiling with collections no caller ever sees, which is the "a ceiling that
+ * counts non-defects cannot be held" failure this file has already paid for three times. Following
+ * only the RETURNED delegate keeps the question the same one the walk has always asked: what does
+ * a member get back. A private method is never dispatched — `opsFor`/`dispatchedOps` capture
+ * `this.([A-Za-z_$][\w$]*)\(` and `#` is outside that class — so a delegate can never appear on an
+ * op roster itself, and reading it here double-counts no op.
+ *
+ * THE SEGMENTER ITSELF IS UNTOUCHED, DELIBERATELY. `segments()` is BYTE-COPIED into five walks and
+ * `bounds.test.mjs`'s D-414 PARITY arms hold the five to agreement. This rule composes OVER it in
+ * this walk only, so the copies stay identical and the parity arm keeps its meaning.
+ *
+ * WHAT IT STILL CANNOT SEE, at the site rather than left to be found: a delegate returned through a
+ * ternary or a `??`; a delegate assigned to a field and returned later; a delegate reached at a
+ * depth past DELEGATE_DEPTH; a delegate whose segment the segmenter never opened. Each leaves the
+ * caller exactly where it was before this rule — unjudged or absent — which is the safe direction.
+ * ===================================================================================== */
+const DELEGATE_DEPTH = 3;
+const PRIVATE_CALL = /^(?:await\s+)?this\.(#[A-Za-z_$][\w$]*)\s*\(/;
+const delegatesOf = (body) => {
+  const assigned = new Map();
+  const re = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*((?:await\s+)?this\.#[A-Za-z_$][\w$]*\s*\()/g;
+  let m; while ((m = re.exec(body))) assigned.set(m[1], PRIVATE_CALL.exec(m[2].trim())[1]);
+  const out = new Set();
+  for (const expr of returnBare(body)) {
+    const d = PRIVATE_CALL.exec(expr);
+    if (d) out.add(d[1]);
+    else if (assigned.has(expr)) out.add(assigned.get(expr));
+  }
+  return out;
+};
+/* The body this walk READS for a method: its own segment, plus the segment of every delegate it
+   RETURNS, transitively, with a visited set so a mutual delegation terminates and a depth bound so
+   a long chain is refused rather than followed forever. The delegates followed are collected by
+   name so the roster can PRINT them — a rule whose effect is invisible is one nobody can check. */
+const DELEGATED = new Map();
+const readBodyOf = (name, segs) => {
+  const seen = new Set([name]);
+  const parts = [segs.get(name) || ""];
+  const followed = [];
+  let frontier = [name];
+  for (let depth = 0; depth < DELEGATE_DEPTH && frontier.length; depth++) {
+    const next = [];
+    for (const n of frontier)
+      for (const d of delegatesOf(segs.get(n) || ""))
+        if (!seen.has(d) && segs.has(d)) { seen.add(d); next.push(d); followed.push(d); parts.push(segs.get(d)); }
+    frontier = next;
+  }
+  if (followed.length) DELEGATED.set(name, followed);
+  return parts.join("\n");
+};
+
 /* The roster: method -> what it publishes, and whether it is bounded and says so. */
 const collectionReads = (code) => {
   const out = new Map();
-  for (const [name, body] of segments(code)) {
+  const segs = segments(code);
+  for (const name of segs.keys()) {
+    const body = readBodyOf(name, segs);   /* THE RETURN-DELEGATE RULE, above */
     const locals = localCollections(body);
     const rows = rowCalls(body);
     let keys = [], bound = [], more = [], bareReturn = false;
@@ -686,6 +763,17 @@ console.log(`    ${UNJUDGED_OPS.map((o) => `op=${o}`).join(", ")}`);
    difference between a limitation and a blind spot. */
 console.log(`  OPAQUE — DISPATCHED and scanning rows, yet outside every bucket above: ${OPAQUE.length} ops`);
 console.log(`    ${OPAQUE.join(", ")}`);
+/* THE RETURN-DELEGATE RULE, PRINTED — a rule whose effect is invisible is one nobody can check,
+   and this file has already paid for a limitation nobody counts. `DELEGATED` is filled by
+   `readBodyOf` as the roster is built, so these are the follows this run actually made. */
+console.log(`  RETURN-DELEGATE (2026-09-24): ${DELEGATED.size} of ${SEGMENTS.size} methods hand back a PRIVATE `
+          + `delegate's result, so the walk read that delegate's segment as part of theirs`);
+{
+  const shown = [...DELEGATED].filter(([m]) => [...OPS.values()].includes(m)).sort();
+  console.log(`    ${shown.length} of them are reached by a DISPATCHED op: `
+            + `${shown.map(([m, ds]) => `${m}->${ds.join("+")}`).join(", ") || "none"}`);
+}
+
 /* D-240 · THE EXCLUDER, PRINTED. Every figure the block above `declaresRefusal`
    states is re-derived here on the tree the run is happening on, so a reader
    never has to trust a date. */
@@ -716,6 +804,38 @@ t("WALK GUARD: the segmenter partitions the class into a plausible number of met
 t("WALK GUARD: a segment is bounded by the NEXT method and does not run into it",
   [/ORDER BY ref, entity_id/.test(segments(CODE).get("resolutionsForCapture")),
    /documentsConcerning\(\{/.test(segments(CODE).get("resolutionsForCapture"))], [true, false]);
+/* ===== THE RETURN-DELEGATE RULE, DRIVEN RATHER THAN DESCRIBED. A mechanism believed on the
+   strength of its EXISTENCE rather than its behaviour is the defect this project meets most, so
+   the rule is asked what it does on fixtures whose answers are decidable by reading them. */
+const D_FIX = {
+  returned:  "  a() {\n    return this.#x(1);\n  }",
+  assigned:  "  b() {\n    const v = this.#x(1);\n    return v;\n  }",
+  awaited:   "  c() {\n    return await this.#x(1);\n  }",
+  consulted: "  d() {\n    const v = this.#one(`SELECT 1`);\n    return { ok: true, v };\n  }",
+  publicDel: "  e() {\n    return this.other(1);\n  }",
+};
+t("RETURN-DELEGATE: a returned private call is followed — directly, through a local assigned in the "
++ "SAME segment, and through an `await`. These three spellings are how this plane hands a helper's "
++ "answer back, and `op=resolve` writes two of them",
+  [D_FIX.returned, D_FIX.assigned, D_FIX.awaited].map((s) => [...delegatesOf(s)]),
+  [["#x"], ["#x"], ["#x"]]);
+t("RETURN-DELEGATE OVER-STRICTNESS: a private method merely CONSULTED and not returned is NOT "
++ "followed, and neither is a PUBLIC one — following every `this.#x(` would credit a method with "
++ "the shape of helpers no caller ever sees, and a ceiling that counts non-defects cannot be held",
+  [[...delegatesOf(D_FIX.consulted)], [...delegatesOf(D_FIX.publicDel)]], [[], []]);
+/* THE TWO MEMBERS THE RULE RESTORED, BY NAME AND BY THE DELEGATE THEY ARE REACHED THROUGH — so a
+   rule quietly disarmed fails HERE, naming the op, rather than only moving a number. */
+t("RETURN-DELEGATE: `op=resolve` is on the BARE roster again, reached through `#resolveOne`. D-291 "
++ "moved the one-document act out of `resolveReferences` unchanged; the op did not get better and "
++ "the READER lost sight of it, which is REC-60's shape arriving through a refactor",
+  [BARE_OPS.includes("resolve"), (DELEGATED.get("resolveReferences") || []).includes("#resolveOne")],
+  [true, true]);
+t("RETURN-DELEGATE: `op=caseratify` likewise, reached through `#caseEditionState` — and this one was "
++ "ALREADY LOST on origin/main 548eb2c5, measured there with this rule on and off (43 -> 44). It "
++ "left as UNJUDGED rather than as a shrink, which is why no floor caught it",
+  [BARE_OPS.includes("caseratify"), (DELEGATED.get("ratifyCaseDocument") || []).includes("#caseEditionState")],
+  [true, true]);
+
 t("WALK GUARD: the roster is non-trivial and reaches ops through the dispatch",
   [READS.size >= 25, OPS.size >= 20], [true, true]);
 t("WALK GUARD: every op reached carries exactly one of the three verdicts, and the UNJUDGED bucket "
@@ -1070,11 +1190,47 @@ console.log(`  RATCHET: ${BARE_ROSTER_MEASURED_2026_08_07} bare-collection read 
      op=projectdirectory), not taken at integration.
    The FLOOR moves with it: it had been left at 39 when D-309 moved the ceiling to 40, one of slack, which a
    floor may not carry. */
+/* ===== MOVED 43 -> 44, 2026-09-24 (c20-batch11fix), CEILING AND FLOOR IN ONE EDIT, and this move is
+   A FIX TO THE READER rather than an arrival in the plane. A ceiling that RISES owes its reason at the
+   site; this one owes two, because two different things happened and only one of them is new.
+
+   HOW IT WAS MEASURED, because the attribution is the whole of it. Four runs, two trees:
+     origin/main 548eb2c5, walk as it stood ........................ 43   (the figure this floor held)
+     origin/main 548eb2c5, walk WITH the return-delegate rule ...... 44   (+ op=caseratify)
+     this branch, walk as it stood ................................. 42   (- op=resolve)
+     this branch, walk WITH the rule ............................... 44   (both back)
+   The branch tree was probed in its own `git worktree` checkout of origin/main, so the two trees are
+   the variable and the walk is not.
+
+   `op=resolve` LEFT AND CAME BACK, and it never stopped being a member. D-291 moved op=resolve's
+   one-document act out of `resolveReferences` into the private `#resolveOne` — "unchanged but for the
+   sweep, which its caller arms", in its own words. It still hands a member a `resolved` collection off
+   an unbounded row source. What changed is that `resolveReferences`' own segment now holds no `#rows(`
+   and no collection-valued return, only `return set;` and `return one;`. The walk reached no verdict,
+   dropped the method, and the op fell into NO_COLLECTION. **THE FLOOR IS WHAT CAUGHT IT**, at 43
+   against a measured 42, and it is exactly the case REC-60 wrote the floor for: the roster shrank
+   because the reader lost sight of an op, not because the plane got better. The floor was NOT lowered.
+
+   `op=caseratify` IS THE NET +1, AND IT WAS ALREADY LOST BEFORE THIS BRANCH. `ratifyCaseDocument`
+   returns `this.#caseEditionState(id, ed, grp)`, and the unbounded scan behind the roster it publishes
+   lives in that private method. So on main the walk saw a method with no `#rows` at all and filed the
+   op as UNJUDGED — not as a shrink. **A member leaving the bare roster INTO the unjudged bucket is
+   invisible to a floor**, because the floor counts the bare roster and the op simply stops being
+   counted anywhere it can see. That is a blind spot in the guard and it is named here rather than
+   absorbed: the ONLY reason it surfaced is that the return-delegate rule was written for `op=resolve`
+   and swept the class. CASE-5b put `op=caseratify` on this roster on 2026-09-10 with exactly the
+   collections it publishes today (`roster`, `members`, `awaiting`, and now `findings`); it has been
+   uncounted since some edit between then and now, which this walk cannot date and does not pretend to.
+
+   WHAT DID NOT MOVE, stated so the rise cannot be read as drift: no arrival is a NEW unbounded read.
+   Nothing in this branch added a collection off an unbounded row source. The bare roster's membership
+   is 44 because the reader can now see 44, and the next item that adds a real one still fails here.
+   ===================================================================================== */
 t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publishes a collection "
 + "off an unbounded row source pushes this over the figure RE-MEASURED on 2026-08-08 over the "
 + "CORRECTED corpus (REC-70: 27 was measured over 55 of 156 dispatched ops; REC-67 removed one "
-+ "phantom; REC-66 FIXED one member), MOVED 39 -> 40 by D-309 and 40 -> 43 at c19-unionfix with the reasons above, and fails here",
-  BARE_OPS.length <= 43, true);
++ "phantom; REC-66 FIXED one member), MOVED 39 -> 40 by D-309, 40 -> 43 at c19-unionfix and 43 -> 44 at c20-batch11fix with the reasons above, and fails here",
+  BARE_OPS.length <= 44, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
    which is precisely how this walk spent two days reporting 27. A DROP is not a
@@ -1092,7 +1248,10 @@ t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this
      job on a clean tree — it failed the moment `op=connect` came off the roster,
      which is the only reason this figure is being written by hand rather than
      drifting down unremarked. */
-  BARE_OPS.length >= 43, true);
+  /* MOVED 43 -> 44, 2026-09-24 (c20-batch11fix), IN THE SAME EDIT AS THE CEILING, and this arm is
+     why the move happened at all: it went RED at a measured 42 and refused to let `op=resolve`'s
+     disappearance into a private delegate read as progress. The reason is above the ceiling. */
+  BARE_OPS.length >= 44, true);
 
 /* ==========================================================================
  * REC-70 · REACH — WHAT THIS WALK REACHES, ASSERTED RATHER THAN ASSUMED.
