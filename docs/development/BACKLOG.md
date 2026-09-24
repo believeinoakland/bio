@@ -33,6 +33,16 @@ scope: take the `head()` inside `flush()` before the part is written (it already
 accepts-when: a first acquire answers `existed: false` and a second `existed: true`. NEGATIVE CONTROL: move `head()` back after `flush()`, and the first-acquire arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (CONDUCT #19 minted it through the coord minter).
 
+### D-470 · queued — **THE RATIFICATION STAMP CANNOT TELL WHICH CATALOG JUDGED A CASE: `gate.mjs` `CATALOG_VERSION` still reads "1.20.0" after dozens of added checks, so `plane-gate/1.0 (bio-checks 1.20.0)` names the same catalog for documents judged by different rules.** Read at the code on `main`. — owner RECORD.
+order: after D-469, at the head: a signed record that claims more precision than it holds (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
+milestone: M10
+interface: I3 — the stamp's version moves; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 (the case document's gate stamp), following REC-14's version-bump precedent.
+depends-on: none.
+scope: bump `CATALOG_VERSION` MINOR now; add a suite pinning the version to the catalog's check census, so an added check fails until the version moves.
+accepts-when: the stamp reads the new version, and adding one check without a bump fails the pin by name. NEGATIVE CONTROL: add a check without moving the version, and the census-pin arm fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
 ### D-463 · queued — **NO CREDENTIAL IS CONFINED TO SCRATCH FOR LIFE: the namespace binds per CALL, so an instrument that omits `store=scratch` addresses the real record (CLAUDE.md §5's stated residue: *a sticky confinement is RECORD's and is NOT built*).** — owner RECORD.
 order: after D-462, the last of the namespace guards (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
 milestone: M0 (a guard)
@@ -895,6 +905,16 @@ scope: re-anchor arm (15) on frontier's `(n) => this.#frontierLatest(level, …)
 accepts-when: `node bio-plane/test/nc-m038.mjs` reports arm (15) run and failing as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
+### D-471 · queued — **`status.test` §6's UI_HELPERS CENSUS MISSES `queueApplySet` AND `queueSelFor`.** — owner M0 (`tools/status.mjs`).
+order: with the M0 instrument rows, after D-467 (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (a census states what it reads).
+depends-on: none.
+scope: add both to `UI_HELPERS` in `tools/status.mjs`.
+accepts-when: the census names both. NEGATIVE CONTROL: remove one, and the §6 arm fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
 ### D-457 · queued — **CPDF-20's PER-PAGE TIER IS SHIPPED AND UNRECORDED: `mergeTier2Text` has emitted `text.pages[].tier` since `1240af81` with no IC on I2, and Framework §16's closing table and front matter still list "a per-page rule for tier-2 replacement" ABSENT, though it is built and was watched live (D-283, M-120).** — owner CONTENT-PDF.
 order: with the M0 record-hygiene rows, after D-441: a record that says less than is built (SCHEDULER #17, 2026-09-23; CPDF-3's worker via CONDUCT #18 23:12Z)
 milestone: M0 (the record of what is built)
@@ -1234,13 +1254,3 @@ depends-on: M0-93, D-438.
 accepts-when: a fixture driver exiting 1 with an unknown phrase turns the census exit 1, naming it; the population is stated. How a liar passes it: teaching the matcher the fixture's phrase … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (`node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-94» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-380 · queued — **ON A FRESH WORKTREE `ocr-worker`'S SUITE IS SILENTLY UNRUN WHILE THE BATTERY READS GREEN, AND ITS SKIP GIVES A REMEDY THAT** … (whole text: the cut archive)
-order: with the instrument cluster, directly after M0-94: a gate reading green over a suite that did not run, M0-79's doctrine on the fleet side; below M0-94 because the `fleet:` line names the dark member on every run (SCHEDULER #10, 2026-09-21, LED-7)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `MEASUREMENTS.md` M-31 §6: the … (whole text: the cut archive)
-depends-on: none.
-accepts-when: with only `bio-plane/` installed, the battery runs every fleet suite and names no member dark; a member that truly cannot resolve is told a remedy that works for it. How a liar … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #10 (LED-7; D-380's DEBT row of 2026-09-16, verified at the code; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-380» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

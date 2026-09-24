@@ -9,6 +9,16 @@ ever cut to fit. No whole-file budget; a row is held to 2 KiB, as in the backlog
 
 ## Rows
 
+### D-380 · queued — **ON A FRESH WORKTREE `ocr-worker`'S SUITE IS SILENTLY UNRUN WHILE THE BATTERY READS GREEN, AND ITS SKIP GIVES A REMEDY THAT** … (whole text: the cut archive)
+order: with the instrument cluster, directly after M0-94: a gate reading green over a suite that did not run, M0-79's doctrine on the fleet side; below M0-94 because the `fleet:` line names the dark member on every run (SCHEDULER #10, 2026-09-21, LED-7)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `MEASUREMENTS.md` M-31 §6: the … (whole text: the cut archive)
+depends-on: none.
+accepts-when: with only `bio-plane/` installed, the battery runs every fleet suite and names no member dark; a member that truly cannot resolve is told a remedy that works for it. How a liar … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #10 (LED-7; D-380's DEBT row of 2026-09-16, verified at the code; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-380» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
 ### D-427 · queued — **THE UI HARNESS RUNNER JUDGES A SUITE BY ITS EXIT STATUS ALONE, SO A UI SUITE THAT PRINTS A FAILURE AND EXITS 0 READS `PASS`.** `civicos-ui/test/run.mjs` (re-read on `619dfa65`) prints `PASS` whenever `execFileSync` returns; M0-67's cross-check in `bio-plane/scripts/battery.mjs` (a printed failure with exit 0 is RED, `EXIT/TALLY DISAGREE`) never reached the UI estate. Latent (no UI suite is known to do it), but M0-126 will cache a unit's PASS, so a false one would stop re-running. — owner M0 with UI.
 order: with the instrument cluster, directly after D-380: a gate reading green over a suite that failed, M0-79's doctrine on the UI side; below D-380 because no UI suite is known to print a failure and exit 0 (SCHEDULER #15, 2026-09-23, LED-7 batch S15-1)
 milestone: M0
