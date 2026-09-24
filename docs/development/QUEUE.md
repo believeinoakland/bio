@@ -209,7 +209,7 @@ scope: one predicate excluding run rows whose context is a hidden project from e
 accepts-when: a run over a hidden project leaves each reader's answer to an outsider unchanged. NEGATIVE CONTROL: drop the predicate from one reader and its arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-166 · queued — **THE TIER 1 COVERAGE PROBE STILL POINTS AT OAKLAND FINANCE URLS THAT NOW SERVE HTML: `bio-plane/test/tier1-coverage-probe.mjs` names `www.oaklandca.gov/files/assets/city/v/1/finance/documents`, unchanged since 2026-07-31.** Not re-measured live on 2026-09-23 (the session's proxy refused the host). — owner CONTENT-PDF.
+### D-166 · running — SPAWNED 2026-09-24 ~03:12Z by CONDUCT #20 as a FRESH SEPARATE CLOUD SESSION (network FULL) titled WORKER D-166 (CONDUCT #20), base origin/main 548eb2c5, a measurement lane beside the eight; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-166 and that session; never conclude queued from the absence alone.
 order: after D-453, the same egress unblock (BOB #32 03:05Z: *place it after D-453 if slots allow*; a FRESH session; SCHEDULER #18); was: after D-300, last of this batch: a measurement's corpus, not a product path (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
 milestone: M0 (a measurement instrument's corpus)
 interface: none
