@@ -3251,14 +3251,16 @@ function mdFor(id, type, state, title, body, now, hasDoc, src, act){
      draws exactly C-2.10, which is the honest one error; an authored one draws
      none. Both directions are asserted (conformance.test.mjs, add-surface).
 
-     risk_tier IS WRITTEN `undetermined` AND IS NOT YET A MEMBER CONTROL
-     (D-182, BOB #21, 2026-09-21). This arm wrote 1, which told a member an
-     action was safe to FILE FREELY when nobody had assessed it — an overclaim
-     on the one field that carries legal exposure. The record now has the
-     undetermined value to state instead, and the plane publishes the tiers'
-     words (op=affordances' vocabularies.risk_tiers); a chooser reading those
-     words is this page's to add, and until it does no member has stated a
-     tier here, so none is written. Only a member's authored act sets 1, 2 or 3.
+     risk_tier IS THE MEMBER'S CHOICE OR IT IS `undetermined` (D-182, BOB #21,
+     2026-09-21; the chooser is UI-85's). This arm once wrote 1, which told a
+     member an action was safe to file with no assessment when nobody had assessed it — an
+     overclaim on the one field that carries legal exposure. `act.risk_tier` is
+     the key the member picked in the intake's chooser, whose options are the
+     plane's published map (op=affordances' vocabularies.risk_tiers) and nothing
+     else; `riskTierLine` writes it only when it is a key of THAT map, so a value
+     this surface did not receive from the plane is never written, and an
+     untouched chooser, a missing map or no `act` at all writes the record's own
+     undetermined. Only a member's authored act sets 1, 2 or 3.
      (The old placeholder literal is deliberately not repeated in this comment:
      counterparty.test.mjs asserts, over this file's SOURCE, that it appears
      nowhere — so a future edit that pastes it back fails there rather than at
@@ -3266,7 +3268,7 @@ function mdFor(id, type, state, title, body, now, hasDoc, src, act){
   if(type === "action"){
     const a = act || {};
     const cp = a.counterparty || null;
-    fm.push("action_kind: " + (a.kind || "other"), "risk_tier: undetermined");
+    fm.push("action_kind: " + (a.kind || "other"), riskTierLine(a.risk_tier));
     /* THE STATE THE MEMBER CHOSE IS WRITTEN EVEN WHEN THE FIELD BESIDE IT IS
        EMPTY, and that is deliberate rather than sloppy: a member who answered
        "not determined yet" and wrote no basis has made a choice and left a
@@ -7588,6 +7590,30 @@ async function loadActSource(force){
 function actVocab(name){
   const v = ACT_SOURCE.vocab && ACT_SOURCE.vocab[name];
   return Array.isArray(v) ? v : [];
+}
+/* A published vocabulary that is a MAP of token -> the plane's words, or NULL —
+   `actVocab`'s rule for the other shape. `risk_tiers` is one (D-182): the key is
+   what the record stores and the value is the sentence a member reads, so a
+   surface holding the map holds both and invents neither. Only string-valued
+   entries under a plain token are kept, because the key is written into a
+   document's front matter verbatim. */
+function actVocabMap(name){
+  const v = ACT_SOURCE.vocab && ACT_SOURCE.vocab[name];
+  if(!v || typeof v !== "object" || Array.isArray(v)) return null;
+  const out = {};
+  for(const [k, w] of Object.entries(v)) if(/^[A-Za-z0-9_]+$/.test(k) && typeof w === "string" && w.trim()) out[k] = w;
+  return Object.keys(out).length ? out : null;
+}
+/* THE ONE LINE AN ACTION'S RISK TIER IS WRITTEN AS (UI-85; D-182). A key the
+   member chose from the PUBLISHED map, or the record's undetermined — never a
+   number this surface supplied. Asked at write time against the map as it
+   stands, so a key the plane has stopped publishing is not written either. */
+function riskTierLine(chosen){
+  const words = actVocabMap("risk_tiers");
+  const k = chosen == null ? "" : String(chosen);
+  if(k && k !== "undetermined" && words && Object.prototype.hasOwnProperty.call(words, k))
+    return "risk_tier: " + k;
+  return "risk_tier: undetermined";
 }
 /* A CAPTURE-DIRECTED ACT'S PUBLISHED METADATA, or NULL (REC-38, consumed here
    by UI-24 — the last surface-authored act label in this file).
@@ -17649,7 +17675,10 @@ function addTypesFor(){
    ============================================================ */
 let ADD_ACT = null;
 function addActReset(){
-  ADD_ACT = { kind:"", cp:"", cpName:"", cpBasis:"", basis:[], clock:[],
+  /* `tier` starts at the record's undetermined and at NO number (UI-85, D-182):
+     nobody has assessed an action that has not been written yet, so the chooser
+     opens on the one answer that claims nothing. */
+  ADD_ACT = { kind:"", cp:"", cpName:"", cpBasis:"", basis:[], clock:[], tier:"undetermined",
               clockText:"", clockDesc:"", clockDate:"", clockBasis:"" };
 }
 /* The kinds this surface can COMPLETE. A kind whose entry requirements this
@@ -17695,6 +17724,16 @@ function addActionPaneHtml(){
         <div class="rv-bar" style="margin:10px 0 0"><button class="btn ghost" onclick="addActBasisAdd()">Add this leg</button></div>
       </div>`
     : `<div class="empty">The record has not said which relations a leg may carry, so this surface offers none rather than inventing one. An action written now names no legs, and the kinds that require them are not offered above.</div>`;
+  /* UI-85 (D-182; BIO_Case_Making_v0_1.md §2, risk_tier, RULED by BOB #21: "A surface publishes those words …
+     invents none"). THE OPTIONS AND THEIR WORDS ARE THE PLANE'S MAP, in the order it published them; this surface
+     spells no tier and no tier's meaning. The checked option is ADD_ACT.tier, which opens at undetermined, so an
+     untouched chooser writes undetermined and no number is ever a default. No map, no chooser: the action is then
+     written undetermined, and the page says the record has not published the words rather than inventing them. */
+  const tiers = actVocabMap("risk_tiers");
+  const tierPick = tiers
+    ? Object.entries(tiers).map(([k, w])=>`<label class="ckline"><input type="radio" name="ac-tier" value="${esc(k)}"`
+        + `${ADD_ACT.tier === k ? " checked" : ""} onchange="addActTier('${esc(k)}')"> ${esc(w)}</label>`).join("")
+    : `<div class="empty">The record has not published its words for this, so this surface offers none rather than inventing them. The action will be written as not assessed.</div>`;
   const clockRows = ADD_ACT.clock.length
     ? ADD_ACT.clock.map((c,i)=>`<div class="linkrow"><span class="lt">${esc(c.text)} &middot; ${esc(c.date)}</span>
         <span class="ln">Because: ${esc(c.basis)}
@@ -17719,6 +17758,11 @@ function addActionPaneHtml(){
 
     <h2 class="sec" style="margin-top:26px">What kind of ask this is</h2>
     ${kindPick}
+
+    <h2 class="sec" style="margin-top:26px">Whether this is safe to file</h2>
+    <p class="lede" style="margin-top:0">This is a member's judgement about the legal exposure of sending it.
+      Nothing is judged for you: it stays unassessed until a member chooses.</p>
+    <div id="ac-tier">${tierPick}</div>
 
     <h2 class="sec" style="margin-top:26px">Why we are asking</h2>
     <p class="lede" style="margin-top:0">The findings and questions this ask rests on or advances. Each one is
@@ -17750,6 +17794,14 @@ function addActPick(which){
   if(n) n.classList.toggle("hidden", which !== "named");
   if(u) u.classList.toggle("hidden", which !== "undetermined");
   addActSync();
+}
+/* The member's choice of tier, from the radio's own handler. A key the published map does not hold is not
+   taken (the writer would refuse it too); the choice survives a repaint because the pane is drawn from ADD_ACT. */
+function addActTier(k){
+  if(!ADD_ACT) addActReset();
+  const tiers = actVocabMap("risk_tiers");
+  if(tiers && Object.prototype.hasOwnProperty.call(tiers, String(k))) ADD_ACT.tier = String(k);
+  addValidate();
 }
 function addActSync(){
   if(!ADD_ACT) addActReset();
@@ -18116,7 +18168,7 @@ async function addGo(){
          cannot be supplied from somewhere else on the way through. */
       {
         ...(type === "action" && ADD_ACT
-          ? { kind: ADD_ACT.kind,
+          ? { kind: ADD_ACT.kind, risk_tier: ADD_ACT.tier,
               counterparty: ADD_ACT.cp === "named" ? { state:"named", name: ADD_ACT.cpName }
                           : ADD_ACT.cp === "undetermined" ? { state:"undetermined", basis: ADD_ACT.cpBasis }
                           : null,
