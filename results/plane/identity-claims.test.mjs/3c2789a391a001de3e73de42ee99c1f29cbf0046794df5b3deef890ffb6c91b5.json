@@ -1,0 +1,16 @@
+{
+ "unit": "plane:identity-claims.test.mjs",
+ "inputHash": "3c2789a391a001de3e73de42ee99c1f29cbf0046794df5b3deef890ffb6c91b5",
+ "verdict": "PASS",
+ "run": "e86eff1f32862aeaa712df6c4c6d66a531c0a0c4.1790288690999.4343.json",
+ "tree": "e86eff1f32862aeaa712df6c4c6d66a531c0a0c4",
+ "head": "a298aa0c234cddf70da86ca1e8c9b1bccc42d236",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 1353,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4f7e75d1-c822-553b-8f5f-57aad8e7ac2a",
+ "at": "2026-09-24T22:24:51.011Z"
+}
