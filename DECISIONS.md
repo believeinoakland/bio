@@ -13,3 +13,7 @@ Bob carries it there.
   preferred, but the Claude GitHub App cannot create repositories. The branch gives the same
   separation: `bio`'s `CLAUDE.md`, hooks and gates are not on it, CI runs only on `main`, and pruning
   touches only `land/*`.
+- **2026-09-24: the design language.** The surfaces in the Claude Design reference are **rejected**:
+  "I'm not at all happy with the actual surfaces in the design you now have." The **tokens are kept
+  for now**: "we can use the tokens for the time being." So the lane's design system carries the
+  tokens only, marked provisional, and no surface from the reference is treated as settled.
