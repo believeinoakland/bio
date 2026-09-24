@@ -42,7 +42,11 @@
    (A5) FLEET RULE 4. Remove `GET /version` from the worker, rebuild -> **44 pass, 4 FAIL**, the version arms by name. `coverage.mjs --strict` STILL EXITED 0, as declared: fleet reach is read from the SUITE's source and not the worker's, so the two halves are independent.
    (A6) THE SURFACE ROW WITHOUT ITS REACH, two stages. Stage 1 (delete the driven /version arms, keep the SURFACE row) -> `--strict` **exit 0, 4/4 reached** — DECLARED IN ADVANCE AS DOUBTFUL and it came back exactly as doubted: **the fleet reach matcher counts `/version` MENTIONED IN A COMMENT as reach.** Stage 2 (remove every textual `/version` too) -> `--strict` **EXIT 1, 3/4 reached**, naming the unreached op, fleet FLOOR silent. The gate has teeth; what it cannot see is a mention versus a driven call. Delegated, not narrowed here (REC-67's class).
    (O1) OVER-STRICTNESS, nothing broken: a correct fleet suite under a filename this session did not anticipate is DISCOVERED, RUN and `ok`, battery exit 0, member still reported as RAN.
-   Every declared-versus-actual line, and the two arms that came back wrong on the FIRST pass (A1 and A5 could not be honoured at all until the harness learned to provide `esbuild` for a rebuild — recorded, not smoothed), are in `test/pdf-worker.control.mjs`'s header. */
+   Every declared-versus-actual line, and the two arms that came back wrong on the FIRST pass (A1 and A5 could not be honoured at all until the harness learned to provide `esbuild` for a rebuild — recorded, not smoothed), are in `test/pdf-worker.control.mjs`'s header.
+   **RE-MEASURED 2026-09-24 BY D-478 (cloud worker, base `e9b21be6`), because D-478 changed this suite and the baseline above went stale the moment it did — corrected, never left standing. THE PEN RAN OUTSIDE THE WORKTREE** (`BIO_CONTROL_PEN`, added by this item on BOB #32's ruling of the same day; the in-tree default and its reasoning are kept, with the resolution recorded at the `PRISTINE` line). **The briefed/held figure of 48 was NOT stale — measured on `origin/main` @ `e9b21be6` at 48/0 and reported as right rather than assumed.** New BASELINE **67 pass / 0 fail** (+19 assertions, all D-478's).
+   (N1) **D-478'S NAMED CONTROL — WIDEN THE SHAPE AGAIN.** The member's namespace test goes back to `/^[a-z0-9_-]+$/i`, the constant left intact -> **59 pass, 8 FAIL**, 6 of 6 declared names among them: `store=biosmoke` BY NAME, its detail row, the refusal-lists-that-set row, the hyphenated / underscored / `Scratch` / `BIO` rows and the 400-vs-404 distinguishability arm — **the widened member SERVED a document from a namespace no instance holds**, which this suite can say because it seeds the bytes under that very prefix rather than refusing over an empty bucket. All 8 must-nots held: the set-equals-the-plane's pin, both BAD_STORE arms, tier 2 and the R2-unchanged arm.
+   **DECLARED WRONG ON THE FIRST PASS AND CORRECTED INTO SOMETHING STRONGER RATHER THAN SMOOTHED.** The first declaration demanded the named-empty, `a b` and trailing-space rows fail too; they did not, and the run came back **4 of 5 named** on an arm otherwise exactly as declared. The cause is a real property of the arm: it swaps the CONDITION and leaves the REFUSAL BODY standing, so a name failing `/^[a-z0-9_-]+$/i` never reaches R2 under either shape and keeps answering NAMESPACE_UNKNOWN. **That is what makes the SHAPE and the SET separately visible, and why N1 and N2 are two arms: N1 can only reach the names the OLD SHAPE ACCEPTED.** Those three rows are MUST-NOTs now, where an arm reaching them would itself be the finding — and the corrected declaration was carried straight into `ocr-worker`'s N1 before it was first run, where it held.
+   (N2) THE COPY AGES. This member's NAMESPACES gains `biosmoke` -> **62 pass, 5 FAIL**, 3 of 3 by name: the set-EQUALS-the-plane pin, the refusal-lists-that-set arm and the `store=biosmoke` row (ACCEPTED now, answering 200 from the seeded bytes). Held: the plane-set-was-READ arm, both BAD_STORE arms, the OTHER unknown names and the NOT_FOUND arm. */
 
 /* D-186: owns $TMPDIR for this process and removes it on exit. Miniflare's
    `dispose()` disarms its own exit hook and then does not wait for the removal,
@@ -69,6 +73,10 @@ const { Miniflare } = await (async () => {
 
 const BUNDLE = fileURLToPath(new URL("../dist/pdf-worker.bundled.mjs", import.meta.url));
 const WORKER_SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+/* D-478: the PLANE's own declaration, read from its source so this member's copy is pinned to the authority
+   rather than to a second copy typed here — `agent-worker`'s §3 does the same and its A2 note is about exactly
+   the failure a retyped value produces. */
+const PLANE_INDEX = readFileSync(fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url)), "utf8");
 const hex = (b) => createHash("sha256").update(b).digest("hex");
 
 let pass = 0, fail = 0;
@@ -269,10 +277,81 @@ console.log("\n--- refusals: absence, bad input ---");
   const bad = await call(mf, { capture_sha: "zz", store: STORE });
   t("malformed sha is 400", bad.status, 400);
   t("reason BAD_SHA", (await bad.json()).reason, "BAD_SHA");
-  const badStore = await call(mf, { capture_sha: CID_SHA, store: "" });
-  t("missing store is 400", badStore.status, 400);
+  /* D-478: `store: ""` IS A NAMED VALUE, not a missing one, so it now meets NAMESPACE_UNKNOWN with every other
+     name no instance holds — the line `agent-worker` draws (IC-253) and the reason this arm's old label
+     ("missing store") was wrong: it never drove a MISSING store at all, because the handler coerced an absent
+     field and an empty string to the same `""`. Both conditions are driven separately now. */
+  const namedEmpty = await call(mf, { capture_sha: CID_SHA, store: "" });
+  t("a namespace named EMPTY is 400 NAMESPACE_UNKNOWN", [namedEmpty.status, (await namedEmpty.json()).reason],
+    [400, "NAMESPACE_UNKNOWN"]);
+  const noStore = await call(mf, { capture_sha: CID_SHA });
+  t("store ABSENT is 400 BAD_STORE", [noStore.status, (await noStore.json()).reason], [400, "BAD_STORE"]);
+  const numStore = await call(mf, { capture_sha: CID_SHA, store: 7 });
+  t("store that is not a string is 400 BAD_STORE", [numStore.status, (await numStore.json()).reason],
+    [400, "BAD_STORE"]);
   const notFound = await mf.dispatchFetch("http://pdf-worker/nope", { method: "GET" });
   t("a non-structure path is 404", notFound.status, 404);
+  await mf.dispose();
+}
+
+/* ---- D-478: an unknown namespace is REFUSED BY NAME, never answered NOT_FOUND ---- */
+console.log("\n--- D-478: *not found* is not *absent* — the namespace this member reads from is exactly `bio` or `scratch` ---");
+{
+  const mf = newMf();
+  const bucket = await mf.getR2Bucket("CAPTURES");
+  /* THE ARM THAT COSTS SOMETHING TO PRODUCE. An empty bucket refusing an unknown namespace proves NOTHING — the
+     refusal and the absence are indistinguishable. So the bytes ARE put under the unknown prefix: if the member
+     still spent the name on R2 it would find them and answer 200, and if the fence fired for the wrong reason
+     (an empty bucket) this arm would go green for free. It must refuse a namespace whose bytes are right there. */
+  await bucket.put(`biosmoke/captures/${CID_SHA}`, CID_BYTES);
+  await bucket.put(KEY, CID_BYTES);
+  const keysBefore = (await bucket.list()).objects.map((o) => o.key).sort();
+
+  const unknown = await call(mf, { capture_sha: CID_SHA, store: "biosmoke" });
+  const u = await unknown.json();
+  t("store=biosmoke -> 400 NAMESPACE_UNKNOWN, naming what was asked and what exists",
+    [unknown.status, u.reason, u.asked, u.namespaces], [400, "NAMESPACE_UNKNOWN", "biosmoke", ["bio", "scratch"]]);
+  t("  and it is refused EVEN THOUGH the bytes sit under that very prefix — the fence is the NAME, not an empty bucket",
+    (await bucket.get(`biosmoke/captures/${CID_SHA}`)) !== null, true);
+  t("  a detail a reader can act on", (u.detail ?? "").length > 40, true);
+
+  /* THE DISCRIMINATION THIS ROW IS ABOUT. The two answers must not be the same answer. */
+  const absent = await call(mf, { capture_sha: "f".repeat(64), store: "scratch" });
+  t("a capture genuinely absent from a namespace that EXISTS still reads 404 NOT_FOUND",
+    [absent.status, (await absent.json()).reason], [404, "NOT_FOUND"]);
+  t("  so the two are distinguishable on the wire: 400 NAMESPACE_UNKNOWN vs 404 NOT_FOUND",
+    [unknown.status, absent.status], [400, 404]);
+
+  for (const name of ["biosmoke-fleet", "bio_smoke", "Scratch", "BIO", "a b", "scratch "]) {
+    const r = await call(mf, { capture_sha: CID_SHA, store: name });
+    t(`a namespace no instance holds (${JSON.stringify(name)}) -> 400 NAMESPACE_UNKNOWN`,
+      [r.status, (await r.json()).reason], [400, "NAMESPACE_UNKNOWN"]);
+  }
+
+  /* OVER-STRICTNESS. Correct work must still pass: both real namespaces are accepted and answered. A fence
+     tighter than its rule is an undeclared interface change wearing the costume of caution. */
+  for (const name of ["bio", "scratch"]) {
+    await bucket.put(`${name}/captures/${CID_SHA}`, CID_BYTES);
+    const r = await call(mf, { capture_sha: CID_SHA, store: name });
+    const o = await r.json();
+    t(`the namespace \`${name}\` EXISTS and is answered, not refused`, [r.status, o.ok, o.tier], [200, true, 2]);
+  }
+
+  /* THE COPY AGES. This member cannot import the plane's `index.mjs`, so its set is a copy; the copy is pinned to
+     the plane's own declaration READ FROM ITS SOURCE, never to a value retyped here. */
+  const scratchName = (PLANE_INDEX.match(/^const SCRATCH = "([^"]+)";$/m) || [])[1];
+  const planeSet = ((PLANE_INDEX.match(/^const NAMESPACES = Object\.freeze\(\[([^\]]*)\]\);$/m) || [])[1] || "")
+    .split(",").map((x) => x.trim()).filter(Boolean)
+    .map((x) => (x === "SCRATCH" ? scratchName : JSON.parse(x)));
+  const memberSet = JSON.parse(((strip(readFileSync(WORKER_SRC, "utf8"))
+    .match(/const NAMESPACES = Object\.freeze\((\[[^\]]*\])\);/) || [])[1]) || "null");
+  t("the plane's namespace set was READ from its source (not an empty corpus)", planeSet.length >= 2, true);
+  t("this member's namespace set EQUALS the plane's `namespaceGate` set", memberSet, planeSet);
+  t("and the refusal lists exactly that set", u.namespaces, planeSet);
+
+  t("R2 is byte-for-byte unchanged across every refusal above — a refusal writes nothing either",
+    (await bucket.list()).objects.map((o) => o.key).sort(),
+    [...new Set([...keysBefore, `bio/captures/${CID_SHA}`, `scratch/captures/${CID_SHA}`])].sort());
   await mf.dispose();
 }
 

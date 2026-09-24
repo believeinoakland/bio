@@ -35,10 +35,24 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MEMBER = join(HERE, "..");
-const PEN = join(MEMBER, ".cpdf10-pen");
+/* WHERE THE PEN LIVES — CORRECTED BY BOB #32, 2026-09-24, WHICH SUPERSEDES THE HEADER ABOVE.
+   The header's "THE PEN LIVES INSIDE THIS WORKTREE and never in a shared scratchpad" was written against a real
+   incident (a concurrent worker overwrote a pen between ARM and RESTORE) and its reasoning still holds — a pen
+   under a GENERIC name in a SHARED root is nobody's. What BOB #32 measured is that the other horn costs too:
+   a file in the worktree is not inert. Repository-walking suites walk it, it trips `gates.mjs` §2e's
+   under-inclusion check, and it makes the tree DIRTY, so D-293 refuses to RECORD a GREEN verdict — three items
+   paid for that in one night, one of them `.d487-gate.log` costing a 14-minute re-run of a green gate. And this
+   harness `process.exit(2)`s on four paths that never reach its `rmSync(PEN)`, so the leak is not hypothetical.
+   The resolution is BOTH rules at once: the DEFAULT is unchanged (in-tree, so nothing silently moves), and
+   `BIO_CONTROL_PEN` points it at the SESSION's own scratchpad — which is not shared BETWEEN SESSIONS only if the
+   name is the caller's, so the caller supplies the directory and this file appends a name of its own. */
+const PEN = join(process.env.BIO_CONTROL_PEN || MEMBER, ".cpdf10-pen");
 const SUITE = join(HERE, "ocr-worker.test.mjs");
 
 const SRC = {
+  /* D-478: the entry joins the pen because its namespace gate is now a subject. Adding it here also puts it in
+     TOUCHABLE, so every OTHER arm restores and verifies it too — which is the point of one pristine set. */
+  index: join(MEMBER, "src/index.mjs"),
   png: join(MEMBER, "src/pngsamples.mjs"),
   contract: join(MEMBER, "src/contract.mjs"),
   transcribe: join(MEMBER, "src/transcribe.mjs"),
@@ -194,6 +208,56 @@ arm("e · the anchor's rect is dropped from every region",
   (s) => s.replace('source: { kind: "pdf-page", ref, page, rect: [l, t0, r, b], space: "image-px",',
                    'source: { kind: "pdf-page", ref, page, space: "image-px",'),
   (r) => ({ ok: r.fail > 0 && r.foot, why: `${r.fail} failure(s); the anchor arms are the subject` }));
+
+arm("N1 · D-478'S NAMED CONTROL — widen the shape again, the constant left intact",
+  { what: "the member's namespace test goes back to `/^[a-z0-9_-]+$/i`, so any well-shaped name is spent on R2",
+    mustFail: "ONLY the rows naming names the OLD SHAPE ACCEPTED: the `store=biosmoke` row BY NAME, its detail "
+            + "row, the `refusal lists exactly that set` row, and the hyphenated / underscored / both "
+            + "case-variant / `ocrsuite` rows, plus the 400-vs-404 distinguishability arm — the widened member "
+            + "TRANSCRIBES a page from a namespace no instance holds, because §8b seeds the scan's own bytes "
+            + "under that very prefix",
+    mustNot: "the set-EQUALS-the-plane pin (the constant is untouched); the two BAD_STORE rows (absent and "
+           + "non-string); the NAMED-EMPTY and not-even-a-token rows — measured on `pdf-worker`'s N1 FIRST and "
+           + "declared here from that measurement rather than re-learned: this arm swaps the CONDITION and "
+           + "leaves the REFUSAL BODY standing, so a name failing `/^[a-z0-9_-]+$/i` never reaches R2 under "
+           + "either shape and keeps answering NAMESPACE_UNKNOWN, which is exactly what makes the SHAPE and the "
+           + "SET separately visible and why N1 and N2 are two arms; the NOT_FOUND row; the real page's arms; "
+           + "the chunk rule; the anchor arms; the writes-nothing arms" },
+  [SRC.index],
+  (s) => s.replace("  if (!NAMESPACES.includes(store))", "  if (!/^[a-z0-9_-]+$/i.test(store))"),
+  (r) => {
+    const f = (re) => re.test(r.out);
+    const byName = f(/FAIL\s+store=biosmoke -> 400 NAMESPACE_UNKNOWN/)
+                && f(/FAIL\s+a namespace no instance holds \("Scratch"\) -> 400 NAMESPACE_UNKNOWN/)
+                && f(/FAIL\s+a namespace no instance holds \("ocrsuite"\) -> 400 NAMESPACE_UNKNOWN/);
+    const held = f(/PASS\s+this member's namespace set EQUALS the plane's/)
+              && f(/PASS\s+store ABSENT — the caller named no namespace at all — is BAD_STORE/)
+              && f(/PASS\s+a namespace that is not even a token is refused by NAME, not as a shape/)
+              && f(/PASS\s+a namespace no instance holds \(""\) -> 400 NAMESPACE_UNKNOWN/)
+              && f(/PASS\s+a capture that is not there is a 404 naming it/);
+    return { ok: r.fail > 0 && r.foot && byName && held,
+             why: `${r.fail} failure(s); by-name ${byName}; the must-nots held ${held}` };
+  });
+
+arm("N2 · THE COPY AGES — this member's NAMESPACES gains a name the plane does not hold",
+  { what: "`biosmoke` is added to the member's set while the plane's stays two",
+    mustFail: "the set-EQUALS-the-plane pin, the `refusal lists exactly that set` arm, and the two "
+            + "`store=biosmoke` rows — it is ACCEPTED now and transcribes the seeded page",
+    mustNot: "the plane-set-was-READ arm, the two BAD_STORE rows, the OTHER unknown names, the NOT_FOUND row, "
+           + "the real page's arms and the writes-nothing arms. The SHAPE and the SET are separately visible" },
+  [SRC.index],
+  (s) => s.replace('const NAMESPACES = Object.freeze(["bio", "scratch"]);',
+                   'const NAMESPACES = Object.freeze(["bio", "scratch", "biosmoke"]);'),
+  (r) => {
+    const f = (re) => re.test(r.out);
+    const byName = f(/FAIL\s+this member's namespace set EQUALS the plane's/)
+                && f(/FAIL\s+and the refusal lists exactly that set/);
+    const held = f(/PASS\s+the plane's namespace set was READ from its source/)
+              && f(/PASS\s+a namespace no instance holds \("Scratch"\) -> 400 NAMESPACE_UNKNOWN/)
+              && f(/PASS\s+store ABSENT — the caller named no namespace at all — is BAD_STORE/);
+    return { ok: r.fail > 0 && r.foot && byName && held,
+             why: `${r.fail} failure(s); the pin and the set-listing arm failed ${byName}; the must-nots held ${held}` };
+  });
 
 arm("f · OVER-STRICTNESS: a real but irrelevant field on the member's wire answer",
   { what: "a change that is correct in a spelling the suite did not anticipate",
