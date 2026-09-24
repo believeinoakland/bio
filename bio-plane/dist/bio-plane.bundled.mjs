@@ -79433,11 +79433,15 @@ var index_default = {
       );
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
-    if (req.method === "GET" && !url.pathname.startsWith("/api") && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op"))
+    if (req.method === "GET" && !url.pathname.startsWith("/api") && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
+      const pageNamespace = namespaceGate(url);
+      if (pageNamespace) return pageNamespace;
+      const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
       return new Response(
-        setupPage(await publicInstanceGroup(env, "bio")),
+        setupPage(await publicInstanceGroup(env, pageStore)),
         { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }
       );
+    }
     const path = url.pathname.replace(/^\/api\/?/, "/");
     const op = url.searchParams.get("op") || path.slice(1) || "selftest";
     const spec = OPS[op];
