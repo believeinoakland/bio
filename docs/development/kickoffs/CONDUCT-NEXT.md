@@ -22,8 +22,10 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS (Bob's ruling ~03:08Z via
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (03:12Z)
-- MAIN = 548eb2c5 (train-20260924T024342Z-905). Interfaces on main: I3 81.0.0, I5 3.5.0, I8 1.0.0.
+## 4. STATE (03:52Z)
+- MAIN = 16fe1e7f (train-20260924T033115Z-658: land/bob/status-cellcap 6977d9d2 + folds-0924e 16fe1e7f; 112/112 green). Map budget
+  now 49,152 B with CELL_CAP 240 — never raise it. Interfaces on main: I3 81.0.0, I5 3.5.0, I8 1.0.0.
+- land/bob/d461-claude RETURNED (conflicts vs main) → merged by c20-batch11fix instead (its CLAUDE.md §5 commit is the novel part).
 - land/conduct/c19-batch10 @ cff0ede6 — pushed, 10 rows integrated there (D-469 D-351 D-461 D-462 D-464 REC-189 REC-188 UI-86
   D-291 D-66), NOT TRAINED.
 - c19-batch11 PUSHED @ 8b7e4bca (03:37Z): REC-192 8646219d, REC-190 c650a697, UI-85 e49f66f8, UI-83 3e3684ee — reported integrated to
@@ -50,15 +52,13 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   bio-plane/wrangler.jsonc and newgroup. D-64 findings (a)–(d) and REC-184 findings (1)–(3) are in #19's handoff on coord history
   (coord ae79e9d6) — send to SCHEDULER when integ1 reports if not yet sent.
 - DIST owed from batch10 on landing: D-461 SAFETY (store=scratch honoured by bio-pinned ops), D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0).
-- BOB's branches for the next train: land/bob/d461-claude @ f1787108 READY (BOB 03:12Z; = land/worker/D-461, already in batch10,
-  + one CLAUDE.md §5 commit) — ride it with the batch11 train. land/bob/folds-0924e @ e5ed7752 READY (BOB 03:22Z,
-  prose, on main, doc gate 62/62 · 4488). land/bob/status-cellcap: gate running; BOB sends its tip when green. NEVER land/bob/folds-0924c or folds-0924d (superseded). On landing tell SCHEDULER the homes: MEMBER-KNOWLEDGE §5,
-  EXTRACTION-BREADTH §2 row 5, OFFICE-FORMATS CSV, Intake §8.
-- IN FLIGHT 03:31Z: train-20260924T033115Z-658 = land/bob/d461-claude + status-cellcap + folds-0924e onto main 548eb2c5
-  (log in #20's scratchpad; if #20 died mid-train, re-read origin/main and train.mjs list).
 - c18-batch7fix REPORTED and DISPOSED (behind main; only .gitignore novel, riding integ1). Findings to SCHEDULER, D-150 design q to BOB.
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
 - D-166 DONE @ 05ec142e (125/125, skip 0, M-127; premise false — nothing moved; findings sent) — WAITING FOR A TRAIN.
+- DIST-9 RUNNING, built by DIST #6 itself (not a CONDUCT slot); flipped at coord 0ab3f2a9.
+- 03:43Z flipped INTEGRATED (BOB's rule tonight: flip at the integration merge): REC-192 REC-190 UI-85 UI-83 D-64 REC-184 M0-141.
+  D-481 spawned session_01DT8JTdkweNJ78Y3EQxY1qr. QUEUED next: D-484, M0-143, D-493 (branch from land/worker/D-166 @ 05ec142e),
+  M0-144. M0-142 waits for batch11fix on main.
 - D-453 (Oakland identifier-space measurement) RUNNING beside the eight: session_017L57JtEbWmyk63Ep8SRZoj (fresh, network FULL), branch
   land/worker/D-453, push by 05:45Z. D-166 (Tier 1 probe re-point) RUNNING beside the eight: session_01YVmxTyjL1kajX9Yam7MQgM (fresh), land/worker/D-166.
   Live at 03:12Z = 10/10 (the cap). D-479 spawned 03:35Z into D-482's slot; cache EMPTY of queued rows at 03:35Z (asked SCHEDULER to refill) (D-481, D-484 at the backlog head).
