@@ -1,0 +1,16 @@
+{
+ "unit": "plane:machine-fences.test.mjs",
+ "inputHash": "7e41acebd900ecc739119c710f82818d0279bd17b4bb7aba3b1846d113f867ec",
+ "verdict": "PASS",
+ "run": "b5cc9218cc64fe1136977f62bda402e916720729.1790271492009.10715.json",
+ "tree": "b5cc9218cc64fe1136977f62bda402e916720729",
+ "head": "792395ca895b2bc4dabe4b17440bbba674039c3c",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 1309,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "01c333b1-8991-508d-9432-556ed9b813dd",
+ "at": "2026-09-24T17:38:12.019Z"
+}
