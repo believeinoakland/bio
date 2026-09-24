@@ -3643,7 +3643,12 @@ async function captureRequestArm(env, storeName, body, cls) {
   }
   /* END DEC-49 REGION is-capture-request-arm */
   return { ok: true, silent: false, locator: d.address, purpose: d.purpose,
-           agent: d.ua_mode === "member-browser" ? d.agent : null };
+           agent: d.ua_mode === "member-browser" ? d.agent : null,
+           /* D-491 / IC-276: WHETHER THE ROW ASKED FOR THE RENDERED PAGE, read
+              from the row exactly as the three fields beside it are. `=== true`
+              rather than truthiness: the read answers a boolean, and a store that
+              answered something else must not become a render. */
+           render: d.render === true };
 }
 
 /* 502 rather than 500: the control plane is intact and reachable — what failed
@@ -7221,6 +7226,17 @@ export default {
         body.locator = arm.locator;
         crPurpose = arm.purpose;
         crAgent = arm.agent;
+        /* D-491 / IC-276 — THE RENDER FLAG COMES FROM THE ROW, and the body's own
+           is OVERWRITTEN rather than merged, exactly as `body.locator` above is.
+           The drain sends `via` and `request` and nothing else, so the only way a
+           `render` could be on this body is a caller that is not the drain — and
+           such a caller never reaches this line, because the arm admits a row in
+           `draining` and nothing else. Setting it here rather than refusing it
+           keeps ONE rule for the whole arm: what decides what leaves this instance
+           is the row the conduct check judged. The render admission below reads
+           `body.render` and is unchanged by this. */
+        if (arm.render) body.render = true;
+        else delete body.render;
       }
       /* CAP-8 — THE GOOGLE DRIVE HOST STACK, sited HERE for the same reason the
          archive arm is sited where it is: the recognition, the composition and

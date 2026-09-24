@@ -237,7 +237,13 @@ t("attested by the key's member", rat.attestor, "sparky");
 /* CORRECTED at c20-batch23 (CONDUCT #20): 1.24.0 -> 1.25.0. REC-211's two rows (C-33.42, C-33.43) land on a
    main whose 1.24.0 already names the D-507 + D-508 catalogue, so the union's catalogue is 1.25.0; the literal
    names the catalogue that actually runs. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.25.0)");
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.26.0)");
+/* CORRECTED 2026-09-24 (D-491): 1.23.0 -> 1.24.0, and CORRECTED rather than exempted for the
+   reason every note above says — the old literal named a catalogue that no longer exists once
+   C-28.16 joined CAPTURE_REQUEST_CHECKS (IC-276). FOUND BY ASKING WHO ELSE READS THE CONSTANT
+   rather than by a red suite: the census arm (d470 A3/A5) is what forces the bump, and this pin
+   is a SECOND reader of it, two directories away from the change. */
+/* CORRECTED at c20-batch25 (CONDUCT #20): 1.25.0 -> 1.26.0, D-491's C-28.16 over the batch23 catalogue; the literal names the catalogue that runs. */
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong

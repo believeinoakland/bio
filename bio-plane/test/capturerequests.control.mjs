@@ -247,6 +247,92 @@ arm("(8) THE COMPLETION NOTIFICATION. §4 requires the run waiting on a capture 
   ["a completed request surfaces as an item on the EXISTING catalogued kind"],
   ["a request that can name only ONE principal is refused at the drain BY NAME"]);
 
+/* ====================== (10)-(15) D-491: THE RENDER COLUMN ================
+   THE ITEM'S OWN SPINE IS ARM (10). D-491 exists because `capture_requests` had
+   no `render` column, so the unattended drain could not ask for a render at all.
+   Arms (10) and (11) break the CARRY at its two layers — the control plane's
+   capture-request arm, and the row read it takes the flag from — and arm (13)
+   breaks what the drain DOES with a refused render. Arm (14) is the
+   over-strictness arm and (15) is the host-slot rollback the deferral needs.
+   EACH IS ARMED ALONE, the others held open. Every arm here declares what must
+   fail BEFORE it is armed, and the prose says what else it is expected to move.
+   ======================================================================== */
+
+arm("(10) THE CARRY — THE ROW'S FLAG NEVER REACHES op=acquire. Drop the one line in the "
+  + "capture-request arm that sets `body.render` from the row, and the drain asks for a plain capture "
+  + "of a page it was told to render. THIS IS THE DEFECT D-491 CLOSES, arrived at from the other side: "
+  + "the request says render, the capture is the served frame, and NOTHING in the record says the "
+  + "render was not performed. It is the false-coverage hazard C-83 exists to prevent, reached through "
+  + "a consumer rather than through the op.",
+  [["index", `        if (arm.render) body.render = true;`, `        if (false) body.render = true;`]],
+  ["THE ACCEPTS-WHEN: the render request SURVIVES the drain as RENDER_DEFERRED",
+   "and the render request was never captured",
+   "NOTHING LEFT THIS INSTANCE FOR IT",
+   "the ROW carries the deferral by name",
+   "the run's log carries the deferral as a GOVERNED indeterminate",
+   "the render request is STILL queued behind it"],
+  ["a render flag that is neither true nor absent is REFUSED BY NAME",
+   "the flag is PUBLISHED on the read"]);
+
+arm("(11) THE CARRY, ONE LAYER DOWN — the row holds the flag and the DRAINING READ does not publish "
+  + "it. Answer `render: false` from `captureRequestDraining` and op=acquire is told the truth about "
+  + "the address, the purpose and the agent and a lie about the render. Same outcome as (10) and a "
+  + "different cause, which is why both are armed: a column that exists and a read that drops it is "
+  + "indistinguishable, from the record's side, from no column at all.",
+  [["store", `             render: r.render === 1,\n             run: r.run, target: r.target };`,
+    `             render: false,\n             run: r.run, target: r.target };`]],
+  ["THE ACCEPTS-WHEN: the render request SURVIVES the drain as RENDER_DEFERRED",
+   "and the render request was never captured",
+   "the ROW carries the deferral by name"],
+  ["a render flag that is neither true nor absent is REFUSED BY NAME",
+   "the flag is PUBLISHED on the read"]);
+
+arm("(12) THE DOOR'S STRICTNESS (C-28.16). Neuter the malformed-flag refusal and a `render: \"yes\"` "
+  + "becomes a PLAIN row: the caller asked for the page as a visitor saw it and the record holds the "
+  + "frame, with nothing anywhere saying a flag was dropped. EXPECTED TO MOVE MORE THAN ITS OWN ARM, "
+  + "and that is declared rather than discovered: the swallowed row is queued at the SAME host as the "
+  + "render request, so it also takes that host's one slot for the tick and the deferral arm is "
+  + "answered CAPTURE_CONDUCT_TICK_SPENT instead. A dropped flag does not stay in its own lane.",
+  [["store", `    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)`, `    if (false)`]],
+  ["a render flag that is neither true nor absent is REFUSED BY NAME",
+   "EVERY code in the family was DRIVEN out of the plane"],
+  ["`render: false` is a request for the document as the site serves it"]);
+
+arm("(13) THE HOLD. Let a refused render fall through to the ordinary fetch-failure path. The row then "
+  + "carries CAPTURE_FETCH_FAILED over a fetch that was never attempted, the run's log says the source "
+  + "could not be reached when nothing was sent to it — D-104's split inverted — and the deferral BOB "
+  + "#32 item 3 requires the tick to record is nowhere in the record.",
+  [["store", `        } else if (r.renderCode) {`, `        } else if (false) {`]],
+  ["THE ACCEPTS-WHEN: the render request SURVIVES the drain as RENDER_DEFERRED",
+   "the ROW carries the deferral by name",
+   "the run's log carries the deferral as a GOVERNED indeterminate",
+   "the render request is STILL queued behind it"],
+  ["a render flag that is neither true nor absent is REFUSED BY NAME",
+   "the flag is PUBLISHED on the read"]);
+
+arm("(14) OVER-STRICTNESS, AND IT MUST BREAK ONLY CORRECT WORK. Make the door refuse `render: false` "
+  + "as well as a malformed value. A caller saying \"no render\" is doing correct work in a spelling "
+  + "this item did not have to anticipate, and a fence that refuses it is an undeclared interface "
+  + "change wearing the costume of caution. The deferral arms must stay GREEN: this arm is about the "
+  + "fence being too tight, not about the render path being wrong.",
+  [["store", `    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)`,
+    `    if (renderRaw !== null && renderRaw !== true)`]],
+  ["`render: false` is a request for the document as the site serves it"],
+  ["THE ACCEPTS-WHEN: the render request SURVIVES the drain as RENDER_DEFERRED",
+   "a render flag that is neither true nor absent is REFUSED BY NAME"]);
+
+arm("(15) THE HOST'S SLOT, GIVEN BACK. Remove the rollback and a deferred render keeps the one fetch "
+  + "per host per tick that CONDUCT 3 allows — over a fetch it never made. The oldest row then wins "
+  + "that slot every tick and defers again, so a plain request behind a render this instance cannot do "
+  + "is answered CAPTURE_CONDUCT_TICK_SPENT until the render row expires 24 hours later. Starvation "
+  + "caused by a request that never touched the host, and the arm is here because D-491 is what makes "
+  + "it reachable: every other hold in this drain SENT something.",
+  [["store", `          hostsThisTick.set(q.host, Math.max(0, (hostsThisTick.get(q.host) || 1) - 1));\n`, ``]],
+  ["AND THE DEFERRAL GAVE THE HOST'S SLOT BACK",
+   "and it CAPTURES, exactly as every request before this column did"],
+  ["THE ACCEPTS-WHEN: the render request SURVIVES the drain as RENDER_DEFERRED",
+   "a render flag that is neither true nor absent is REFUSED BY NAME"]);
+
 /* ====================== the report ======================================= */
 
 console.log(`\n=== ${armsRun} arms run, ${armsWrong} behaved differently from their declaration`);

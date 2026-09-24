@@ -105,7 +105,18 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
 /* 1.25.0 AT THE SECOND UNION (CONDUCT #20, c20-batch23): REC-211 took 1.24.0 on its own branch for 447 + 2, but main's
    1.24.0 (c20-batch22) is already the D-507 + D-508 catalogue of 455 checks. REC-211's two rows are a DIFFERENT
    catalogue, so the union moves the stamp once more, MINOR: 455 + 2 = 457, figures re-read from the d470 suite's print. */
-export const CATALOG_VERSION = "1.25.0";
+export const CATALOG_VERSION = "1.26.0";
+/* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
+   CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
+   door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
+   catalogue moved 447 -> 448 checks and the stamp moves with it, MINOR and additive on
+   this constant's own rule. The figure and the digest recorded in
+   `test/d470-catalog-census.test.mjs` are THAT SUITE'S OWN PRINT on this tree, never
+   arithmetic on 447. THE A3 CENSUS SUITE CAUGHT IT on this item's first full gate.
+   **THREE ITEMS WERE RUNNING BESIDE THIS ONE in render and capture code (D-490, D-492,
+   D-499): if any of them also took 1.24.0, the integrator re-reads the census on the
+   union and this row takes the next number — one version names one catalogue.** */
+/* 1.26.0 AT THE THIRD UNION (CONDUCT #20, c20-batch25): D-491 took 1.24.0 on its branch for 447 + 1 (C-28.16), but main's line is already 1.25.0 = 457 (c20-batch23). ONE VERSION NAMES ONE CATALOGUE, so the union moves the stamp once more, MINOR: 458, read from the d470 suite's print. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

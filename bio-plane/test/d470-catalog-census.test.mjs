@@ -285,6 +285,19 @@ const CATALOG_CENSUS = {
      number, MINOR (two arrivals, no departures), and its count and digest are THIS SUITE'S OWN PRINT on the merged
      tree. REC-211's branch row is DROPPED (its comment kept as history). */
   "1.25.0": { count: 457, digest: "b333cf2716ad870d295d9373e081076a15e1a7543e1beda28ab312fad77ca3c5" },
+  /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): ONE arrival, no departures —
+     C-28.16 CAPTURE_REQUEST_RENDER_MALFORMED in CAPTURE_REQUEST_CHECKS, the door's refusal
+     of a `render` flag that is neither true nor absent (IC-276). 448 and the digest below
+     are THIS SUITE'S OWN PRINT on the item's committed tree, never 447 + 1: the count and
+     the digest are two facts and only one of them is arithmetic. ADDITIVE, so the bump stays
+     MINOR. 1.23.0's row STAYS — it is what the catalogue held at that version, and A4 needs
+     both rows to mean anything. IF A CONCURRENT ITEM ALSO TOOK 1.24.0 (D-490, D-492 and
+     D-499 were in render and capture code the same night), the integrator re-reads this
+     suite's print on the union and this row takes the next number: ONE VERSION NAMES ONE
+     CATALOGUE is this table's whole rule. */
+
+  /* 1.26.0 AT THE THIRD UNION (CONDUCT #20, c20-batch25): D-491's C-28.16 over 1.25.0's 457; its branch row (1.24.0 = 448) DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
+  "1.26.0": { count: 458, digest: "c7acb768bfd46e72469e9f414b2bc94151a911c6b479ffaa6ed07a9a2df82f65" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -383,7 +396,7 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
 t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.24.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.25.0)", "1.25.0"]);
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.26.0)", "1.25.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
