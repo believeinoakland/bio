@@ -42,7 +42,8 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   renderAdmit docstring fix; push by 06:15Z. FINAL TRAIN = land/conduct/c20-batch14 if it carries batch13, else batch13 then 14.
   BOB's two owed rulings (D-64 timeout, REC-184 DEFINITION_MOVED) were NOT paid → sent to SCHEDULER 04:56Z to row.
 - REC-193 spawned session_01F4H89NyikAfnwK5a5p8jHD at 05:03Z (push by 06:30Z). D-494 spawned session_01SfuiqkhBjwWXAtsg8Ny6P5 05:06Z.
-  REC-194 HELD (same statementack code as REC-193). M0-144 DONE @ 7833f860 (265/265, no id) — next train, with D-493, DIST-9.
+  REC-194 HELD (same statementack code as REC-193). M0-144 DONE @ 7833f860 (265/265, no id); M0-143 DONE @ c8a40639 (M-134) — NEXT SMALL TRAIN = D-493, M0-144,
+  M0-143, D-453, DIST-9 (+ IC for DIST-9's I8 MINOR). UI-89 spawned 05:10Z (push by 06:30Z).
 - D-486 DONE @ 9fcf876e (base batch10; IC-258 → resolve I3 86.2.0 MINOR on batch14; C-84 minted UNUSED): told c20-batch14 to merge it.
   Its watermark design question is with BOB (05:01Z). DIST-12 flipped running, DIST #6 builds it (push by 05:50Z).
 - ARCHIVE RULE (Bob via BOB 04:58Z): the moment a train lands, archive every worker whose land/worker tip is an ancestor of the new main
