@@ -43,6 +43,15 @@
  *     byte-identical. DECLARED BEFORE ARMING and held: those two must fail, the other 72 assertions must not, and
  *     section 11's over-strictness arms (a token in CODE, and a token inside a STRING LITERAL) must PASS both armed
  *     and unarmed — a strip that blanked strings would blind almost every probe in the corpus while reporting clean.
+ *   RE-RUN 2026-09-24 by M0-155 with A13 added (the declaration shape loosened): THIRTEEN arms, 71 pass / 0 fail,
+ *     exit 0; baseline and closing baseline both 77 pass / 0 fail. A13 FAILED at "A `CREATE TABLE` IN A PROSE SENTENCE
+ *     IS NOT A TABLE" and at the census assertion beside it; not collateral; tools/status.mjs restored by sha256
+ *     (4df8eb52…) AND cmp, 26557 bytes. A13 EXISTS SEPARATELY FROM A12 BECAUSE THE TWO PHANTOMS HAD DIFFERENT CAUSES:
+ *     `does` was in a JS comment, which blanking removes, and `would` was in an SQL `--` comment inside the schema
+ *     TEMPLATE LITERAL, which a JS lexer keeps as string content — so A12 alone would have left the second one standing.
+ *     AND THE ARM'S OWN FIRST SPELLING DID NOT ARM, reported rather than smoothed: its anchor was written with two
+ *     backslashes where the line it matches carries four (a regex source inside a JS string), so the patch matched
+ *     ZERO times and the driver's "the arm ARMED" assertion caught it — which is that assertion earning its place.
  * AND A SECOND BY-HAND ARM ON THE PUSH GUARD (2026-09-18): `corpusCheck` made to accept any completion
  *   line regardless of its fail count -> section 8's "A STALE STATUS DATE REFUSES THE PUSH" FAILS (51/1);
  *   `tools/pushguard.mjs` restored by `cp`, verified byte-identical (sha256 7d978c73…).
@@ -87,7 +96,6 @@ const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 const repo = mkdtempSync(join(tmpdir(), "status-suite-"));
 const put = (rel, text) => { mkdirSync(join(repo, rel, ".."), { recursive: true }); writeFileSync(join(repo, rel), text); };
 put("bio-plane/src/index.mjs", "const OPS = {\n  cite:       { classes: [\"member\"], mutating: true },\n  frontier:   { classes: [\"member\"], mutating: false },\n};\n");
-put("bio-plane/src/schema.mjs", "CREATE TABLE IF NOT EXISTS content (\n  id TEXT\n);\n");
 /* M0-155 CORRECTED THIS FIXTURE RATHER THAN ITS ASSERTIONS. Probes now read code with comments
    blanked, and `compilation` was written here ONLY inside a comment — so section 1's "`none` FAILS
    when any pattern matches" would have started passing over a blanked token, which is a fixture too
@@ -99,6 +107,14 @@ put("bio-plane/src/store.mjs", "CREATE VIRTUAL TABLE IF NOT EXISTS bundles_fts U
   + "/* compilation point, and onlyInAComment says a thing no code does */\n"
   + "const kept = \"onlyInAString\";\n");
 put("docs/notes.md", "prose with // notCode in it\n");
+/* M0-155's SECOND subject, and it is a DIFFERENT defect from the comment one: this sentence is
+   inside an SQL `--` comment in a TEMPLATE LITERAL, which is string content to a JS lexer and
+   survives comment-blanking — exactly schema.mjs's shape. It is closed by the DECLARATION SHAPE
+   (a column list or `USING`) and not by the blanking, which is why the fixture carries both. */
+put("bio-plane/src/schema.mjs", "export const SCHEMA = `\n"
+  + "CREATE TABLE IF NOT EXISTS content (\n  id TEXT\n);\n"
+  + "-- CREATE TABLE IF NOT EXISTS phantomtable would rebuild it, so we do not\n"
+  + "`;\n");
 put("civicos-ui/app.html", "<script>recR(\"frontier\"); actAsk(\"conclude\", {});</script>");
 
 try {
@@ -382,6 +398,19 @@ section("11 — A PROBE READS CODE, NOT COMMENTARY: a claim whose only match is 
      comment by construction — the guard requires the markers and `regionLines` measures them — so on
      the real tree it must NOT satisfy a probe, while the refusal the region governs must. These two
      ran the other way before this item: eleven claims named a marker and read BUILT on it. */
+  /* AND THE SECOND LEXICAL HOME, which the blanking CANNOT reach and a SHAPE closes instead: an SQL
+     `--` comment inside a template literal is STRING CONTENT to a JS lexer, so `stripComments` keeps
+     it. A `CREATE TABLE IF NOT EXISTS <name>` written there used to be counted as a table — the
+     census carried TWO such phantoms on the estate, `does` (a JS comment, blanked) and `would`
+     (schema.mjs's own SQL comment, NOT blanked). A declaration is recognised by its COLUMN LIST or
+     its `USING`, which is the shape `test/hygiene.test.mjs:685` has harvested by all along. */
+  t("A `CREATE TABLE` IN A PROSE SENTENCE IS NOT A TABLE, even where comment-blanking cannot reach it",
+    P({ table: "phantomtable" }).ok, false);
+  t("...so the census does not count it either — 2 declarations, not 3",
+    [P({ count: "tables", equals: 2 }).ok, P({ count: "tables", equals: 3 }).ok], [true, false]);
+  t("OVER-STRICTNESS: a declaration with its column list, and a VIRTUAL one with USING, BOTH still count",
+    [P({ table: "content" }).ok, P({ table: "bundles_fts" }).ok], [true, true]);
+
   const realMarker = evalProbe({ hit: "DEC-49 REGION is-register-home", in: ["bio-plane/src/store.mjs"] });
   const realCode = evalProbe({ hit: "refusal\\(\"CAPTURE_HELD_BY_ANOTHER_BUNDLE\"", in: ["bio-plane/src/store.mjs"] });
   t("ON THE REAL TREE a DEC-49 REGION MARKER — a comment — DOES NOT satisfy a probe", realMarker.ok, false);

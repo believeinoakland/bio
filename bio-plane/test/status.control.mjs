@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* The NEGATIVE CONTROL DRIVER for `tools/status.mjs` and `bio-plane/test/status.test.mjs` —
- * twelve arms plus an opening and closing baseline.
+ * thirteen arms plus an opening and closing baseline.
  *
  *   node bio-plane/test/status.control.mjs        (from the repo root)
  *
@@ -129,6 +129,19 @@ const ARMS = [
     to:   "? t : t);",
     mustBreak: "A `hit` WHOSE ONLY MATCH IS A COMMENT IS NOT BUILT",
     alsoBreak: "ON THE REAL TREE a DEC-49 REGION MARKER" },
+  /* M0-155, the SECOND defect and a separate arm because it has a separate cause: A12's blanking
+     cannot reach an SQL comment inside a template literal, so the DECLARATION SHAPE closes that one.
+     Loosen the shape back and a sentence about a table is counted as a table again — which is how
+     `would` sat in the census, and how `does` sat there before the blanking took it. */
+  { id: "A13", title: "a sentence about a table counted as a table again — the census's two phantoms (M0-155)",
+    /* The anchor is written with DOUBLED backslashes on purpose: the LINE in `status.mjs` contains
+       `"\\s*…"` (a regex source inside a JS string), so a JS literal that reproduces it needs four.
+       Spelled with two, this patch matched ZERO times and the driver's own "the arm ARMED" assertion
+       said so — an arm that did not arm is a finding, and that is the assertion that made it one. */
+    from: 'const DECL_TAIL = "\\\\s*(?:\\\\(|USING\\\\s)";',
+    to:   'const DECL_TAIL = "";',
+    mustBreak: "A `CREATE TABLE` IN A PROSE SENTENCE IS NOT A TABLE",
+    alsoBreak: "...so the census does not count it either" },
 ];
 
 for (const a of ARMS) {

@@ -106,6 +106,23 @@ function read(repo, rel) {
    `bio-plane/wrangler.jsonc` is probed and JSONC comments are JS comments; plain `.json` is out
    because JSON has no comments and lexing it could only lose something. */
 export const CODE_EXT = new Set([".mjs", ".js", ".cjs", ".html", ".jsonc"]);
+
+/* WHAT MAKES A `CREATE TABLE` A DECLARATION RATHER THAN A SENTENCE ABOUT ONE, spelled once so the
+   `table` probe and the census cannot disagree. A declaration is followed by its COLUMN LIST, or by
+   `USING` for a virtual table; a sentence is followed by an English word. THIS IS NOT A NEW IDEA and
+   it is not this item's invention — `test/hygiene.test.mjs:685` has harvested table names by
+   `IF NOT EXISTS\s+(\w+)\s*\(` for exactly this reason, and `src/schema.mjs` carries a comment
+   (§ around line 2293) recording that the sentence DESCRIBING a table's removal was itself parsed as
+   a table. Only this census stayed loose, so it counted TWO PHANTOMS, both measured by M0-155 on
+   2026-09-24: `does`, from store.mjs:833's `CREATE TABLE IF NOT EXISTS does nothing to a table that
+   already exists` (a JS comment, which comment-blanking removes), and `would`, from schema.mjs's own
+   `first read "because CREATE TABLE IF NOT EXISTS would rebuild ..."` (an SQL `--` comment INSIDE the
+   schema template literal, which is string content to a JS lexer and survives the blanking — so the
+   blanking alone could not have caught this one, and the shape had to close it). Tightened: 115 names
+   -> 114, `would` the only one dropped and nothing added. What it still cannot see is stated: a
+   declaration written with a comment between the name and its `(`. */
+const DECL = "CREATE\\s+(?:VIRTUAL\\s+)?TABLE\\s+IF\\s+NOT\\s+EXISTS\\s+";
+const DECL_TAIL = "\\s*(?:\\(|USING\\s)";
 const codeCache = new Map();
 /* WHAT EVERY PROBE READS. `stripComments` is length- and newline-preserving, so `lineOf` over this
    still names the line in the real file — a probe's evidence keeps pointing at the source. */
@@ -137,7 +154,7 @@ export function evalProbe(p, { repo = ROOT, sets = {} } = {}) {
              : { ok: false, evidence: `op=${p.op} is NOT in index.mjs's OPS table` };
   }
   if (p.table) {
-    const re = new RegExp(`CREATE\\s+(?:VIRTUAL\\s+)?TABLE\\s+IF\\s+NOT\\s+EXISTS\\s+${p.table}\\b`);
+    const re = new RegExp(`${DECL}${p.table}${DECL_TAIL}`);
     for (const f of ["bio-plane/src/schema.mjs", "bio-plane/src/store.mjs"]) {
       const t = readCode(repo, f); if (t === null) continue;
       const m = re.exec(t);
@@ -199,7 +216,7 @@ export function evalProbe(p, { repo = ROOT, sets = {} } = {}) {
       const set = new Set();
       for (const f of ["bio-plane/src/schema.mjs", "bio-plane/src/store.mjs"]) {
         const t = readCode(repo, f); if (t === null) return { ok: false, evidence: `UNREADABLE: ${f}` };
-        for (const m of t.matchAll(/CREATE\s+(?:VIRTUAL\s+)?TABLE\s+IF\s+NOT\s+EXISTS\s+([a-z_0-9]+)/g)) set.add(m[1]);
+        for (const m of t.matchAll(new RegExp(`${DECL}([a-z_0-9]+)${DECL_TAIL}`, "g"))) set.add(m[1]);
       }
       n = set.size;
     } else return { ok: false, evidence: `unknown census: ${p.count}` };
