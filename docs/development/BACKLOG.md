@@ -73,16 +73,6 @@ scope: `rvcFormFromCopy` reads `case.newCase` so a read-then-write keeps it; the
 accepts-when: against a real-plane suite a round trip through the form keeps `newCase`, and draft DD shows the derivation sentence (the measured failure it moves: `newCase` lost at the surface). NEGATIVE CONTROL: drop the read and the round-trip arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
 
-### REC-217 · queued — **A RECIPIENT'S READING ON A NEW CASE'S DRAFT CANNOT BIND TO THE CASE IT PRODUCED: nothing links a draft to its published case, so REC-194's provisional counts such a reading UNDETERMINED.** BOB #33 RULED 2026-09-24 19:14Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20): `op=publish` names the draft it publishes (`draft=`, optional, additive), and at that act the readings taken through that draft BIND to the case it produced — an ACT, recorded with the publisher and the time, stated in words in the case document. — owner RECORD.
-order: after UI-106 and before D-521, as BOB ruled: *one RECORD row after REC-194 … place C-82.1's retirement as a small row after this one* (SCHEDULER #20, 2026-09-24)
-milestone: M10
-interface: I3 additive — `draft=` on `op=publish`, the stated link on the case document; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rules 11 and 13 and the §9 frontier row "a draft bound to the case it produced", with BOB #33's ruling of 19:14Z, which this row FOLDS into §3 and closes in §9 in the same landing.
-depends-on: REC-194.
-scope: `draft=` on `op=publish`; the bind recorded with who and when; the case document states "readings given on draft <id>, which <publisher> named as this case's draft at publication"; the signed list carries those readings; without `draft=` REC-194's undetermined count stands.
-accepts-when: a recipient's reading on a new case's draft appears in the published case's signed list with the link stated, and a publish without `draft=` still reads undetermined (the measured failure it moves: every such reading undetermined). NEGATIVE CONTROL: bind by statement bytes instead of the named draft, and a twin case with the same sentence lists the reader, failing by name.
-added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs REC`).
-
 ### D-531 · queued — **A WHITESPACE-ONLY CONTENT UNIT IS STILL EMITTED AND INDEXED AS CONTENT at two emission sites: `index.mjs`'s `arm` helper and `store.mjs`'s `capture_text` ordering filter on `u.text.length`, though §16's comment at that site says a unit with no text is not emitted.** D-514's class surviving at emission; found by D-514's worker (id minted by it). — owner CONTENT-PDF, then RECORD.
 order: after UI-106, with the corrections: the record indexing blank units as content (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:46Z)
 milestone: M2
@@ -1218,3 +1208,23 @@ depends-on: none.
 scope: bring the three historical forms to the grammar; a `planning-hygiene` arm pins it.
 accepts-when: every released block carries the in-block line. NEGATIVE CONTROL: plant a `### RELEASED` heading, and the pin fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
+
+### D-459 · queued — **`case-opened.test.mjs` IS UNCLASSIFIED IN THE COVERAGE REGISTER, AND WAS BEFORE D-241.** — owner M0.
+order: with the M0 instrument rows, after D-342 (SCHEDULER #17, 2026-09-23; D-241's worker via CONDUCT #18 00:15Z)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (the negative-control register).
+depends-on: none.
+scope: classify the suite in `coverage.mjs`'s register, with its control or its stated reason for none.
+accepts-when: `coverage --strict` names no unclassified suite. NEGATIVE CONTROL: remove the classification, and `--strict` names the suite.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-466 · queued — **D-394's OFFICE EXTENT ARMS ARE UNDRIVEN BY ITS SUITE: the worker states it — the cross-version notice's office-format arms have no fixture reaching them.** — owner RECORD.
+order: with the M0 control rows, after D-459 (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (test through the op).
+depends-on: D-394 (`integrated` on c18-batch8).
+scope: office fixtures (docx, xlsx) driving each office extent arm of the notice.
+accepts-when: each office arm is driven and asserted. NEGATIVE CONTROL: break one office arm's extent match, and its fixture arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).

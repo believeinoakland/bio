@@ -314,8 +314,8 @@ scope: `affordanceFacts` gains a fact counting severed out-edges whose target is
 accepts-when: a project whose only severed edge targets a retired item is not offered reinstate; one with a severed edge to a live item is, and the store accepts it. How a liar passes it: dropping reinstate from projects entirely, so the live-target arm must be offered. NEGATIVE CONTROL: key the arm back on `cites_out.severed`, and the retired-only arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`; placed directly as a plan row, never a DEBT row — BOB #31, 2026-09-23 22:09Z).
 
-### D-445 · running — **D-443's CAP ON `publishedCaseRegistryFor` IS PINNED BY SHAPE ONLY: it binds one `json_each` value, and `frontier-chunk.test.mjs` D443-7 asserts that structurally; its own header says it was never driven past 100 ids.** D-443 is NARROWED to this one trace, not closed. — owner RECORD.
-status: running — SPAWNED 2026-09-24 ~21:58Z by SCHEDULER #19 (dispatch) as a SEPARATE CLOUD SESSION titled WORKER D-445 (SCHEDULER #19), base origin/main 1a7f0bcc0. Falsify rather than believe: a live worker holds the branch land/worker/D-445; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### D-445 · integrated — **D-443's CAP ON `publishedCaseRegistryFor` IS PINNED BY SHAPE ONLY: it binds one `json_each` value, and `frontier-chunk.test.mjs` D443-7 asserts that structurally; its own header says it was never driven past 100 ids.** D-443 is NARROWED to this one trace, not closed. — owner RECORD.
+status: integrated — integrated — flipped 2026-09-24 ~22:31Z by SCHEDULER #20 on CONDUCT #20's verification (22:28Z): 330dc978, 75/75 · 6138 GREEN, control 10/10 AS DECLARED incl. the casereg arm; rides c20-batch27; its accepts-when is met, so D-443's NARROWED trace closes when it lands. D-551 (minted by this worker: move every gitignored in-worktree pen to mkdtemp) is NOT PLACED, by SCHEDULER #20's decision: it contradicts BOB #33's 17:12Z ruling (in-worktree, gitignored, item-named pens STAND), and its narrow classes (an unignored, un-item-named or left-behind pen) are M0-182's and M0-172's ground.
 order: after D-444: a correction to just-landed work (D-443), a guarantee the suite does not yet exercise (SCHEDULER #17, 2026-09-23; D-443's worker via CONDUCT #18 22:27Z (4), verified at c17-batch7 @ f32fe714)
 milestone: M0 (a behavioural arm over M4 code)
 interface: none — a behavioural arm.
@@ -412,6 +412,16 @@ depends-on: D-476.
 scope: attest asks the whole-document question (`registerholds`) and attests the hash, or refuses by a code that says why (CAPTURE_HELD_IN_PARTS); FIRST drive the ratify gate's `hasCapture` on a parted capture and fix it the same way if it reads absent, stating the result either way.
 accepts-when: attesting a held parted capture succeeds or is refused CAPTURE_HELD_IN_PARTS, never NO_SUCH_CAPTURE, and the ratify gate's reading is recorded (the measured failure it moves: NO_SUCH_CAPTURE for held bytes). NEGATIVE CONTROL: restore the whole-key head and the parted-attest arm reads NO_SUCH_CAPTURE by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### REC-217 · queued — **A RECIPIENT'S READING ON A NEW CASE'S DRAFT CANNOT BIND TO THE CASE IT PRODUCED: nothing links a draft to its published case, so REC-194's provisional counts such a reading UNDETERMINED.** BOB #33 RULED 2026-09-24 19:14Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20): `op=publish` names the draft it publishes (`draft=`, optional, additive), and at that act the readings taken through that draft BIND to the case it produced — an ACT, recorded with the publisher and the time, stated in words in the case document. — owner RECORD.
+order: after UI-106 and before D-521, as BOB ruled: *one RECORD row after REC-194 … place C-82.1's retirement as a small row after this one* (SCHEDULER #20, 2026-09-24)
+milestone: M10
+interface: I3 additive — `draft=` on `op=publish`, the stated link on the case document; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rules 11 and 13 and the §9 frontier row "a draft bound to the case it produced", with BOB #33's ruling of 19:14Z, which this row FOLDS into §3 and closes in §9 in the same landing.
+depends-on: REC-194.
+scope: `draft=` on `op=publish`; the bind recorded with who and when; the case document states "readings given on draft <id>, which <publisher> named as this case's draft at publication"; the signed list carries those readings; without `draft=` REC-194's undetermined count stands.
+accepts-when: a recipient's reading on a new case's draft appears in the published case's signed list with the link stated, and a publish without `draft=` still reads undetermined (the measured failure it moves: every such reading undetermined). NEGATIVE CONTROL: bind by statement bytes instead of the named draft, and a twin case with the same sentence lists the reader, failing by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
