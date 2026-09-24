@@ -9919,6 +9919,26 @@ export const GOVERNING_LAW_CHECKS = {
  * family's business, and a whole-function `where` conscripts every one of them.
  * ========================================================================= */
 export const ACT_SHAPE_CHECKS = {
+  /* REC-205, 2026-09-24 — A CLASS THAT IS NOT DISPOSED AT ALL, and it is a MEMBER-FACING refusal from
+     the day the queue lets a selection carry one. D-126's per-item weight means a member ticks items and
+     applies one handler; NOTIFICATIONS.md's "MARKED AS HANDLED" section says the scope differs by class,
+     so a CONDITION is muted and an OBLIGATION is resolved and neither is DISPOSED. Before this row the act
+     answered NO_SUCH_PROGRESSION and told the member to define a progression — true of the key it read and
+     useless about what they clicked, the same fault IC-60's bridge exists to have fixed one door over.
+     THE TRANSLATION NAMES THE ACT THAT DOES REACH IT rather than only refusing, because the member is
+     holding a selection and the next move is the whole question. It does NOT say the item is gone: under
+     the per-item weight the rest of the selection was handled and this one stays in the list, which is the
+     fact a member re-reading their queue needs. Numbered inside this family (C-33.x) on REC-211's own
+     precedent two rows down — C-33.42 and C-33.43 were added to it without minting a top-level C. */
+  CLASS_NOT_DISPOSED: {
+    check: 'C-33.44',
+    where: 'src/store.mjs proposeDispose > is-dispose-class',
+    translation: 'This is not something the record disposes of. Deferring and dismissing are decisions '
+      + 'about a FINDING — the record\'s own question — and this item is a different kind of thing: a '
+      + 'CONDITION is a fact about our machinery that you silence for yourself, and an OBLIGATION is work '
+      + 'a named person owes and leaves every list when it is resolved. Nothing about it was changed, and '
+      + 'it is still in your list. The answer names the act that does reach it.',
+  },
   NO_CONCLUSION: {
     check: 'C-33.1',
     where: 'src/store.mjs conclude > is-conclude-answer',

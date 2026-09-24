@@ -17,14 +17,18 @@
  * NEGATIVE CONTROL (REC-205, 2026-09-24): THREE MORE ARMS, each declared before it ran, each armed ALONE
  * against `src/store.mjs` with every other defence held open, each restored by `cp` from a UNIQUELY-NAMED
  * per-arm pristine copy in the session scratchpad (never in the worktree, BOB #32) and verified by sha256,
- * by `cmp` and by a marker count of 0. BASELINE this suite 50/0; d266scope 38/0 and resolveset 22/0 (the
- * two other suites over the same two functions) taken on the same tree. Pristine copy 3,292,792 bytes,
- * sha256 cfb04fc8…76fc, restored identically after every arm.
+ * by `cmp` and by a marker count of 0. BASELINE this suite 51/0; d266scope 38/0 and resolveset 22/0 (the
+ * two other suites over the same two functions) taken on the same tree. Pristine copy 3,293,255 bytes,
+ * sha256 2474efca…2b43, restored identically after every arm (`cmp` equal, marker count 0).
+ * RE-RUN IN FULL AFTER THE SUBJECT MOVED — the class refusal gained C-33.44, a canned translation and a
+ * DEC-49 region, which changes what arm (3) breaks, so all three were armed AGAIN on the final tree rather
+ * than trusted from the first pass. Arms (1) and (2) came back with IDENTICAL failing sets; arm (3) gained
+ * exactly the one arm added with the code. The figures below are the RE-RUN's, the first pass in brackets.
  *   (1) THE ROW'S OWN — DROP THE PER-ITEM PROJECT (`#perItem` deletes `project` from each item before the
  *       spread, so an item cannot carry its own). DECLARED to fail: block 9's mixed-selection counts, its
  *       per-item outcomes, `recorded ... against the project IT named`, both op=queue read-backs and the
  *       two-different-projects arm. DECLARED not to fail: blocks 1-8, the shared-project arm, the
- *       over-strictness arm, the three single-act bridge arms, set_acts. **RED, exit 1, 43/7 — the seven
+ *       over-strictness arm, the three single-act bridge arms, set_acts. **RED, exit 1, 44/7 [43/7] — the seven
  *       declared, and no others.** The seventh is the STRUCTURAL pin, which reads the very line the arm
  *       edits and is declared with it. NOT A SURPRISE BUT WORTH THE LINE: the OVER-STRICTNESS arm (the
  *       project named in the shared body AND on the item) stayed GREEN, because the shared body hands back
@@ -32,13 +36,13 @@
  *       that is why the arm that names it once per item is the one the row turns on.
  *   (2) REVERT THE NARROWING (`sharedFor(it)` back to `shared`, the state of the code at 1a7f0bcc0).
  *       DECLARED to fail: ONLY the shared-project arm and the structural pin — every other arm sends each
- *       item's identity on the item, where contamination cannot reach it. **RED, exit 1, 48/2, exactly
+ *       item's identity on the item, where contamination cannot reach it. **RED, exit 1, 49/2 [48/2], exactly
  *       those two**, and d266scope 38/0 and resolveset 22/0 UNMOVED, which is the measurement that the
  *       narrowing is a no-op for an act with one identity group.
  *   (3) OVER-STRICTNESS / THE CLASS BRIDGE — remove the CLASS_NOT_DISPOSED branch. DECLARED to fail: the
- *       per-item outcomes arm, the CONDITION arm and the OBLIGATION arm; DECLARED not to fail: the FINDING
- *       bridge arm and the real-typo arm, which the widening must not have swallowed. **RED, exit 1, 47/3,
- *       as declared; d266scope 38/0.** AND THE COUNTS ARM STAYED GREEN AND IS RIGHT TO: the condition is
+ *       per-item outcomes arm, the CONDITION arm, its DEC-49-code arm and the OBLIGATION arm; DECLARED not to fail: the FINDING
+ *       bridge arm and the real-typo arm, which the widening must not have swallowed. **RED, exit 1, 47/4 [47/3, before the
+ *       code existed], as declared; d266scope 38/0.** AND THE COUNTS ARM STAYED GREEN AND IS RIGHT TO: the condition is
  *       retained either way — 2 applied, 1 retained — so only the arm that reads the refusal BY NAME can
  *       tell a useful answer from a true and useless one. A suite counting outcomes would have carried
  *       this defect indefinitely.
@@ -456,6 +460,11 @@ try {
   t("the CONDITION is told the act that DOES reach it, by name, and nothing about it was written",
     [r9.items?.[2]?.reason, r9.items?.[2]?.class, r9.items?.[2]?.kind, r9.items?.[2]?.instead],
     ["CLASS_NOT_DISPOSED", "CONDITION", "governor-holding-host", "queuemute"]);
+  t("and it is DEC-49-coded — C-33.44, with the canned translation a member reads, because a refusal a "
+  + "selection can produce is one a member will meet the day the surface offers the selection",
+    r9.items?.[2] && [r9.items[2].code, r9.items[2].check,
+                      /not something the record disposes of/.test(r9.items[2].translation || "")],
+    ["CLASS_NOT_DISPOSED", "C-33.44", true]);
   {
     const q = await queue9();
     const rows = ((q && q.disposed && Array.isArray(q.disposed.findings)) ? q.disposed.findings : [])

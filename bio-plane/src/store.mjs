@@ -29120,8 +29120,14 @@ export class Store extends DurableObject {
     const byId = !scoped && keyed ? itemClassOf(keyed) : null;
     const keyClass = byId || (!scoped ? classOfKind(pk) : null);
     const keyKind = byId ? (keyed.split("::")[1] || null) : (keyClass ? pk : null);
-    if (keyClass === "CONDITION" || keyClass === "OBLIGATION")
-      return { ok: false, reason: "CLASS_NOT_DISPOSED", class: keyClass, kind: keyKind,
+    /* DEC-49 REGION is-dispose-class — REC-205/C-33.44. The code is a STRING LITERAL at its site and the
+       translation comes off the row, so the guard can grade it and a member reads the same sentence
+       wherever this act is reached. */
+    if (keyClass === "CONDITION" || keyClass === "OBLIGATION") {
+      const row = ACT_SHAPE_CHECKS.CLASS_NOT_DISPOSED;
+      return { ok: false, reason: "CLASS_NOT_DISPOSED", code: "CLASS_NOT_DISPOSED",
+               check: row.check, translation: row.translation,
+               class: keyClass, kind: keyKind,
                instead: keyClass === "CONDITION" ? "queuemute" : "taskresolve",
                detail: `this names ${keyClass === "CONDITION" ? "a CONDITION" : "an OBLIGATION"} and `
                      + `${keyClass === "CONDITION" ? "a" : "an"} ${keyClass} is not DISPOSED: a disposition is `
@@ -29129,6 +29135,8 @@ export class Store extends DurableObject {
                      + "reach this item as its `disposition.instead`. Nothing was written. The rest of "
                      + "a selection is unaffected — under the per-item weight this item alone is kept, "
                      + "carrying this reason." };
+    }
+    /* END DEC-49 REGION is-dispose-class */
     if (keyClass === "FINDING")
       return { ok: false, reason: "NO_PROJECT_SCOPE",
                finding: byId ? keyed : `FINDING::${pk}::${sk}`,
