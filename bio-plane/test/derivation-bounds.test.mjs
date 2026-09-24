@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL (D-479's share, run 2026-09-24, driver `test/d479-bounds.control.mjs`): THIS SUITE'S FIGURES are the census 118 -> 117 and the in-memory truncation rosters 10 -> 11. Arm (1) DROP THE LIMIT in projectDirectory -> 69/3 against a 72/0 baseline: CENSUS IS A CEILING with the census back at 118, plus BOTH `SET 2` arms — not predicted, and the arm's own lesson, since a method that publishes a bound AND scans unbounded joins the set the count is blind to by construction. Arm (5) OVER-STRICTNESS (the cut written inline) -> 72/0, at baseline. The full declaration and the other three arms are recorded on `bounds.test.mjs`'s own line, which is where the subject's drive lives. */
 /* NEGATIVE CONTROL: RAN 2026-09-19 by the M0-78/D-414/D-433 worker, driver `test/nc-instr-cluster.mjs`, SEVEN ARMS PLUS A BASELINE, each armed ALONE with every other defence held open, every restore verified by sha256 AND by `cmp` against a uniquely-named per-arm pristine copy with byte counts printed and floored. ALL SEVEN AS DECLARED. BASELINE ROW FIRST (arm 7): derivation-bounds 72/0 · bounds 173/0 · witness 26/0 · DEC-49 guard exit 0 (reach 338, R3 fed 70, observed-only 4). (1) D-414 reverted in ONE walk only (derivation-bounds) so the five copies disagree: derivation-bounds 71/1 failing at CENSUS IS A CEILING with the figure back at 109, and bounds 172/1 failing at D-414 PARITY — the parity arm is what catches a liar who fixes one copy of five. (2) the SHORTER spelling `\*?\s*` in one walk, which also lets `\s*` eat a third space of indent and match at any depth: derivation-bounds 48/24, the widening measured rather than argued. (3) M0-78 reverted so a ratify-stage refusal THROWS again: the census reports FIXTURE-THREW and exits 1, where the pre-M0-78 census over the same tree printed UNCLASSIFIED, `8 anchor(s), 0 NOT LIVE`, and EXITED 0 — measured with both files reverted to HEAD, not inferred. (4) arm (H)'s registration deleted from the driver, which is how a liar passes M0-78: witness 25/1 failing at A8 by name. (5) a planted UI suite that only ASSERTS a code: reach 338 unmoved and R3 fed 70 unmoved, the code printed in the OBSERVED half. (6) the same code HANDED by a mock in the same planted suite: reach 338 -> 339 and R3 fed 70 -> 71, the over-strictness direction. */
 /* NEGATIVE CONTROL: (run 2026-08-08, rec66-agent, REC-66) FIVE armed arms and one armed by
    construction, each armed ALONE with every other held open, driven by `test/nc-rec66.mjs`
@@ -1366,7 +1367,17 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    - `actionQuotes` (D-148) — its page is `LIMIT max + 1`; the unbounded half is the per-request COUNT of
      correspondence behind an EMPTY answer (which level was empty);
    - `changedFromAudit` (D-256) — the CLASS arrival above. */
-const SCANNING_MEASURED_2026_09_15 = 118;
+/* 118 -> 117, 2026-09-24 by D-479, READ FROM THE CENSUS ROSTER THIS RUN PRINTED (117) and diffed by name
+   against the 118 above, never by decrementing the figure. ONE DEPARTURE, NO ARRIVAL: `projectDirectory`
+   (REC-149), which the 113 -> 118 note above admitted as "the one arrival whose answer grows with the record
+   and publishes no bound" and whose fix it NAMED rather than took. SCHEDULER #17 rowed it as D-479 and this is
+   that fix: the directory's candidates are read in KEYSET PAGES of `PROJECT_DIRECTORY_LIMIT + 1` and the walk
+   stops at the first page past the cap, so the method carries a SQL `LIMIT ?` and no unbounded scan.
+   THE FLOOR FALLS BECAUSE A READ WAS FIXED, which is the one reason a fall may have: the reader did not stop
+   seeing row sources — the graded truncation roster still reads this method, and `projectDirectory:projects`
+   ARRIVES in the in-memory truncation rosters below in the same edit, CUT GRADED at the published cap. A fall
+   with no such arrival anywhere would be the shrunken measurement this pair of arms exists to refuse. */
+const SCANNING_MEASURED_2026_09_15 = 117;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -1502,9 +1513,21 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
      so the grader reads the list each arm still cuts itself — `#frontierContent:never`,
      `#frontierMeaning:never`, `frontier:never` — which it could NOT read before, because it matched only
      the first disjunct. One departure of three names, four arrivals: a gain in reach, not slack. */
+  /* AN ELEVENTH DECLARED 2026-09-24 by D-479, READ FROM THIS ARM'S OWN FAILURE OUTPUT (it FAILED and NAMED the
+     arrival, which is what this pin is for) — `projectDirectory:projects`, the directory's `truncated`. WHY IT
+     CANNOT BE GRADED HERE, stated rather than left to the category: the directory's candidate rows ARE read
+     under a SQL `LIMIT ?` at `PROJECT_DIRECTORY_LIMIT + 1`, but `truncated` is not a property of any one of
+     those reads. It is measured over `projects`, the list of candidates that passed `#sight` — a JS predicate,
+     and deliberately not restated in SQL, because REC-149's first build did restate it and its own control
+     caught the restatement (the `default-discoverable` arm flipped the default and the directory did not move).
+     So the figure is assembled across as many bounded pages as it takes to find one project past the cap, and
+     no single row source carries it. Same disposition as the other ten: D-369's, not this suite's, and named
+     here so it cannot arrive ungraded and invisible. It is CUT GRADED at the published cap by the arm below,
+     with ZERO violations — the direction that says the cut and the claim agree. */
   ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
    "#frontierMeaning:never", "#frontierPage:gated", "biasInhale:bars",
-   "documentsNamingEntity:merged", "frontier:never", "queueFeed:dispAll", "queueFeed:items"]);
+   "documentsNamingEntity:merged", "frontier:never", "projectDirectory:projects",
+   "queueFeed:dispAll", "queueFeed:items"]);
 const noRowSources = CODE.replace(/#rows\(/g, "#norows(");
 t("REACH IS A DELTA (the truncation grader): over a copy of store.mjs with no `#rows(` in it, "
 + "every graded source becomes UNGRADEABLE and none is silently scored as compliant — the "
@@ -1690,10 +1713,14 @@ t("IN-MEMORY TRUNCATION: and the SOURCE BOUND is reported as TWO rosters, never 
 + "An instrument that cannot reach something must SAY SO by name rather than pass silently over "
 + "it, which is this block's entire content",
   [INMEM.source.graded.length + INMEM.source.outOfReach.length, INMEM.source.graded.length > 0],
-  [10, true]);  /* REC-92: 8 -> 9, `#contentAxisTally:raw`. Moved from the figure the
+  [11, true]);  /* REC-92: 8 -> 9, `#contentAxisTally:raw`. Moved from the figure the
                    instrument PRINTED, never by incrementing the number in this file.
                    D-389, 2026-09-23: 9 -> 10, from the printed `10 cut-graded` / `1 graded, 9 OUT OF
-                   REACH` — the roster above, one for one. */
+                   REACH` — the roster above, one for one.
+                   D-479, 2026-09-24: 10 -> 11, from the printed `11 cut-graded` / `1 graded, 10 OUT OF
+                   REACH` — `projectDirectory:projects`, the roster below, one for one. Source-graded is
+                   UNMOVED at 1: the arrival is OUT OF REACH, so this movement is a gain in what the walk
+                   SEES and not in what it can bound. */
 
 /* THE OUT-OF-REACH ROSTER, PINNED BY NAME. Same discipline as REC-99's ungraded pin: an EIGHTH
    in-memory figure, or one MIGRATING between the two rosters, must be declared here before it can
@@ -1727,9 +1754,18 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
      (see its note), and the verdict is back to SOURCE GRADED by the same cap-mention test. CONTROLLED: with the
      document arm's fetch bound to a literal `4000` instead of `(cap + 1) * 2`, both pins went red (graded 0, and
      `frontier:never` arriving in this roster); restored, byte-identical by sha256 and `cmp`. */
+  /* D-479, 2026-09-24, from the printed roster and this arm's own failure output: `projectDirectory:projects`
+     joins the ASSEMBLED members, and it is a genuine limit of a ONE-METHOD walk rather than a defect at the
+     site. The directory's candidate pages each carry a SQL `LIMIT ?` at `PROJECT_DIRECTORY_LIMIT + 1`, so the
+     source IS bounded — but `projects` is assembled by `push` across however many of those pages it takes to
+     find one project past the cap, because `#sight` is a JS predicate. A reader that follows one declaration to
+     one row source cannot attribute the figure to any of them, and `sourceOrigin` says so by name (ASSEMBLED)
+     rather than scoring it zero. Source-graded is UNMOVED at 1. WHAT WOULD MAKE IT REACHABLE is a row source
+     the sight predicate itself READS rather than a second copy of its rule — reported to SCHEDULER by D-479 as
+     a row of its own, not taken here, since it is a change to how sight is stored and not to this read. */
   ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
    "#frontierMeaning:never", "#frontierPage:gated", "biasInhale:bars",
-   "documentsNamingEntity:merged", "queueFeed:dispAll", "queueFeed:items"]);
+   "documentsNamingEntity:merged", "projectDirectory:projects", "queueFeed:dispAll", "queueFeed:items"]);
 
 /* ---- SET 2. THE METHODS THE CENSUS COUNT CANNOT GRADE BY CONSTRUCTION.
    DERIVED BY INVERSION, NEVER LISTED — AND THE INVERSION FOUND ONE MORE THAN THE LEDGER'S HAND

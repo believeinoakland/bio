@@ -32167,7 +32167,7 @@ export class Store extends DurableObject {
    *  THE REQUEST LIFECYCLE IS NOT BUILT (item 7.14's decomposition, step 2): no request can exist yet, so
    *  `request` is null on every row and the answer says why rather than letting null read as a fact about the
    *  caller. A viewer that names no member has no directory: it is refused by name, never answered empty. */
-  projectDirectory({ viewer = null } = {}) {
+  projectDirectory({ viewer = null, limit = null } = {}) {
     const member = viewerPredicate(viewer).member;
     const refusal = (code, detail) => {
       const row = PROJECT_VISIBILITY_CHECKS[code];
@@ -32180,20 +32180,73 @@ export class Store extends DurableObject {
         + "member. A credential with no member behind it is outside no project, and an empty list would say "
         + "something untrue about the record.");
     /* END DEC-49 REGION is-project-directory-member */
-    /* EVERY project is a candidate and `#sight` alone decides. The first build took its candidates from the
-       visibility table, which restated "no record = hidden" in a second place — the control's
-       `default-discoverable` arm flipped the default and the directory did not move (REC-149's own finding). */
-    const candidates = this.#rows(`SELECT bundle_id AS id FROM bundles WHERE object_type = 'project' ORDER BY bundle_id`);
+    /* D-479 — BOUNDED, AND THE BOUND IS PUBLISHED, in `op=caseflags`'s spelling: `limit` is the cap APPLIED
+       after clamping (never the number the caller asked for) and `truncated` says whether more exists. The cap
+       is `Store.PROJECT_DIRECTORY_LIMIT`, declared below this method, and it is THE CALLER'S TO LOWER AND NOT
+       TO RAISE — `op=readingname`'s shape, which `bounds.test.mjs` names as the model every capped op was
+       brought into line with, and the reason this read takes a `limit` at all: a ceiling no caller can address
+       is a bound nothing can drive.
+
+       `truncated` IS MEASURED, NEVER DERIVED. One more row than may be published is asked for and the walk
+       stops at `cap + 1`, because a `truncated` computed from the rows returned can only ever be false: a full
+       page and a complete answer read alike. The extra row is the only thing that tells them apart without a
+       second count.
+
+       THE PAGE IS OVER WHAT IS LISTED, NOT OVER WHAT IS SCANNED, and the difference is the whole reason this
+       is a walk rather than one statement. Sight is a JS predicate (`#sight`) and is DELIBERATELY not restated
+       in SQL: REC-149's first build took its candidates from the visibility table, which put "no record =
+       hidden" in a second place, and its control's `default-discoverable` arm flipped the default while the
+       directory did not move. So the candidates are read in KEYSET PAGES of `cap + 1` — each statement bounded,
+       nothing unbounded held in memory, and the loop ends the moment `cap + 1` VISIBLE projects exist. A bound
+       applied to the candidates instead would answer short of the cap whenever a hidden project sat in the
+       window, and "exactly the cap" is what a caller paging this read has to be able to rely on.
+
+       WHAT THIS BOUND DOES NOT DO, stated rather than left to be discovered: the number of STATEMENTS still
+       grows with the group's projects, because a caller who sees none of them is established only by asking
+       `#sight` about each. Bounding that needs a row source the sight predicate itself READS — not a second
+       copy of its rule — and that is a row of its own, reported to SCHEDULER by this item. */
+    const cap = Math.max(1, Math.min(Number(limit) || Store.PROJECT_DIRECTORY_LIMIT, Store.PROJECT_DIRECTORY_LIMIT));
     const projects = [];
-    for (const { id } of candidates) {
-      if (this.#sight(id, viewer) !== Store.SIGHT_EXISTENCE) continue;
-      const t = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, id);
-      projects.push({ id, name: t ? t.title ?? null : null, request: null });
+    let after = "";
+    for (;;) {
+      const page = this.#rows(
+        `SELECT bundle_id AS id, title FROM bundles
+          WHERE object_type = 'project' AND bundle_id > ?
+          ORDER BY bundle_id
+          LIMIT ?`, after, cap + 1);
+      if (!page.length) break;
+      after = page[page.length - 1].id;
+      for (const r of page) {
+        if (this.#sight(r.id, viewer) !== Store.SIGHT_EXISTENCE) continue;
+        projects.push({ id: r.id, name: r.title ?? null, request: null });
+        if (projects.length > cap) break;
+      }
+      if (projects.length > cap) break;
     }
-    return { ok: true, projects,
+    const truncated = projects.length > cap;
+    /* CUT BY A SLICE AT THE PUBLISHED CAP rather than by shortening what was measured, which is
+       `#contentAxisTally`'s spelling and D-369's readable one: the collection `truncated` was measured over
+       stays intact beside the page cut from it, so the cut and the claim can be read against each other
+       instead of one having erased the evidence for the other. */
+    const page = truncated ? projects.slice(0, cap) : projects;
+    return { ok: true, projects: page, count: page.length,
+             /* THE BOUND, BESIDE THE ANSWER: `count` is what was returned, `limit` what could be, `truncated`
+                whether more exists. A truncated answer is the FIRST `limit` discoverable projects this caller
+                is outside, in `bundle_id` order, and a caller who needs the rest lowers `limit` and asks
+                again from what it already holds — the order is stable, so a page means the same thing twice. */
+             limit: cap, truncated,
              requests: "NOT_BUILT: the request to join is not built yet (Membership Architecture v2 §7.14, "
                      + "step 2), so no request exists and `request` is null on every row." };
   }
+  /* D-479 — THE DIRECTORY'S PAGE SIZE (§7.14 "The directory"; SCHEDULER #17's finding on REC-149, 2026-09-24).
+     A CHOSEN CONSTANT and never a finding: the directory's answer grows with the group's own record — every
+     project an owner sets DISCOVERABLE that this caller is outside — and has no natural ceiling, so the read
+     publishes `limit` and `truncated` beside its answer rather than listing whatever is there. 200 is
+     deliberately generous, `CASE_FLAGS_LIMIT`'s reasoning at this read's scale: the directory is a surface a
+     member browses to find one project to ask to join, and a bound a legitimate caller trips is a bound that
+     teaches people to ignore it. It is a CEILING, not a target — a caller may ask for less and an over-ask is
+     answered here, with the ceiling published, so nobody is told they got more than they did. */
+  static PROJECT_DIRECTORY_LIMIT = 200;
   /* THE ROSTER ACTS' form of the same question, and the one difference is stated rather than hidden.
      Their positional half is `by`, and they have always been driven straight at the store by callers
      that are not requests (setup, fixtures, the store's own suites) — the same population
@@ -48421,7 +48474,9 @@ export class Store extends DurableObject {
           by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),
         projectvisibility: () => this.projectVisibility({ projectId: url.searchParams.get("projectId"),
           viewer: url.searchParams.get("viewer") }),
-        projectdirectory: () => this.projectDirectory({ viewer: url.searchParams.get("viewer") }),
+        /* D-479: `limit` reaches the directory's page (the cap is the caller's to LOWER, not to raise). */
+        projectdirectory: () => this.projectDirectory({ viewer: url.searchParams.get("viewer"),
+          limit: url.searchParams.get("limit") }),
         projectparticipants: () => this.projectParticipants({ projectId: url.searchParams.get("projectId"),
           by: url.searchParams.get("by") }),
         registeraudit: () => this.registerAudit(),
