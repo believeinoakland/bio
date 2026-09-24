@@ -13,9 +13,16 @@ steps are in `docs/CIVICOS_UI_STATE.md`; read that first.
   doctrine's recorded acknowledgment). Inlines `tokens.css` for standalone
   opening.
 - `tokens.css` — the canonical design tokens (do not fork the values).
-- `worker.template.mjs` — the dev host: serves `app.html` and proxies `/api/*`
-  to the plane via a `PLANE` service binding. `__APP_HTML_BASE64__` is filled at
-  build. Build and deploy commands are in `docs/CIVICOS_UI_STATE.md`.
+- `worker.template.mjs` — the dev host: serves `app.html`, serves the faces in
+  `fonts/` at `/fonts/`, and proxies `/api/*` to the plane via a `PLANE` service
+  binding.
+- `build-worker.mjs` — builds the deployable worker:
+  `node civicos-ui/build-worker.mjs <out.mjs>`. It embeds `app.html`, its build id
+  and every face in `fonts/`, and refuses to write a worker with a placeholder
+  unfilled. Deploy the result with `deploy-ui.mjs`. This replaces the inline
+  build snippet in `docs/CIVICOS_UI_STATE.md`, which embeds no faces.
+- `fonts/` — the OFL faces `tokens.css` declares, served from the app's own
+  origin so it never fetches a face from another (see `fonts/README.md`).
 
 ## Live (development)
 

@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>CivicOS</title>
-<!-- Dev convenience only. Production embeds the OFL faces under /fonts/ per tokens.css. -->
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Source+Sans+3:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- The faces are OFL files served by this app's own worker at /fonts/ (civicos-ui/fonts/).
+     Never fetched from another origin: a sovereign install must render offline (tokens.css). -->
 <!-- ============================================================
      tokens.css (verbatim, source of truth is /tokens.css).
      Inlined here only so this file opens standalone in a browser.
@@ -17,6 +16,7 @@
      ============================================================ -->
 <style id="tokens">
 @font-face{font-family:"Source Serif 4";src:url("/fonts/source-serif-4-var.woff2") format("woff2");font-weight:300 700;font-style:normal;font-display:swap}
+@font-face{font-family:"Source Serif 4";src:url("/fonts/source-serif-4-italic-var.woff2") format("woff2");font-weight:300 700;font-style:italic;font-display:swap}
 @font-face{font-family:"Source Sans 3";src:url("/fonts/source-sans-3-var.woff2") format("woff2");font-weight:300 700;font-style:normal;font-display:swap}
 @font-face{font-family:"Source Code Pro";src:url("/fonts/source-code-pro-var.woff2") format("woff2");font-weight:400 600;font-style:normal;font-display:swap}
 :root{
