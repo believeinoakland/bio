@@ -301,7 +301,7 @@ scope: break only when the baseline moves — Td/TD with ty=0 and a Tm at the cu
 accepts-when: Budget-Basics-FY21-23's bytes read at least 60 words per page. NEGATIVE CONTROL: revert the fix, and that arm reads glyph-per-line and fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-484 · queued — **`NO_BASIS` AND `NO_CITATION` HAVE NO DEC-49 TRANSLATION: neither code has a row in any `*_CHECKS` family, so a member reads the store's raw `detail`.** `NO_CITATION` is minted at 3 sites in `store.mjs` (relationdeclare, the progression revision, discharge), `NO_BASIS` at 4; `NO_CITATION` has reached two member surfaces untranslated since UI-13. Found by UI-83's worker. — owner RECORD.
+### D-484 · running — SPAWNED 2026-09-24 ~04:18Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-484 (CONDUCT #20), base origin/main 16fe1e7f, into REC-185's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-484 and that session; never conclude queued from the absence alone.
 order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-481, with the corrections: a refusal a member cannot read (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:30Z)
 milestone: M2
 interface: I3 additive — two catalogued codes gain translations.
