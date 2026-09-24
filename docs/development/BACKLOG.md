@@ -244,6 +244,16 @@ scope: append M0-187's per-run `nth` to `snapKey`; clear the run cache only when
 accepts-when: two fixture projects opened in one second get distinct snapKeys, and a refused purge leaves the cache (the measured failure it moves: a shared key and a cache cleared by a refusal, each driven by a planted arm). NEGATIVE CONTROL: drop `nth` from the key and clear on any attempt, and both arms fail by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
 
+### D-535 · queued — **THE PLANE'S MEMBER-FACING STRINGS CITE `MEASUREMENTS.md` BY NAME, so every suite importing the check catalogue or the plane's index counts as a MEASUREMENTS reader and a MEASUREMENTS-only diff selects it: `bio-plane/checks/bio-checks.mjs` and `bio-plane/src/index.mjs` carry four citations (one DEC-49 refusal translation, three OCR cost sentences), and gates.mjs §2e reads a directly-imported runtime module's text for path mentions.** Found by M0-176's worker (M-146 §"D-535, ISOLATED HERE"); M0-176 is NARROWED to this. — owner RECORD (index.mjs), CHECKS (bio-checks.mjs).
+order: after M0-193, with the process rows behind the product rows: it trims the doc-facing selection by two units (39 → 37, M-146), which is not an appreciable gate-time effect (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24; via CONDUCT #20 22:31Z)
+milestone: M0
+interface: I3 — one DEC-49 translation's words change; the integrator classifies.
+design: `docs/development/VERIFICATION.md` (a gate selects by what a suite reads), with DEC-49 as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it for the translation.
+depends-on: M0-176.
+scope: rewrite the four citations as prose ("the MEASUREMENTS ledger"), the correction M0-165 made to calibration.test.mjs's `measured_by` labels one level down. CAUTION: one is a DEC-49 refusal translation, so check its governed region, `regionLines`, and every refusal-wire pin that quotes the sentence.
+accepts-when: a MEASUREMENTS-only diff no longer selects `calibration.test.mjs` and selects 37 units (the measured failure it moves: 39, M0-176's unmet accepts-when). NEGATIVE CONTROL: restore one citation by name and the selection re-admits the importing suites, failing by name.
+added: 2026-09-24 · SCHEDULER #20 (id minted by M0-176's worker).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
@@ -1208,23 +1218,3 @@ depends-on: none.
 scope: bring the three historical forms to the grammar; a `planning-hygiene` arm pins it.
 accepts-when: every released block carries the in-block line. NEGATIVE CONTROL: plant a `### RELEASED` heading, and the pin fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
-
-### D-459 · queued — **`case-opened.test.mjs` IS UNCLASSIFIED IN THE COVERAGE REGISTER, AND WAS BEFORE D-241.** — owner M0.
-order: with the M0 instrument rows, after D-342 (SCHEDULER #17, 2026-09-23; D-241's worker via CONDUCT #18 00:15Z)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (the negative-control register).
-depends-on: none.
-scope: classify the suite in `coverage.mjs`'s register, with its control or its stated reason for none.
-accepts-when: `coverage --strict` names no unclassified suite. NEGATIVE CONTROL: remove the classification, and `--strict` names the suite.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-466 · queued — **D-394's OFFICE EXTENT ARMS ARE UNDRIVEN BY ITS SUITE: the worker states it — the cross-version notice's office-format arms have no fixture reaching them.** — owner RECORD.
-order: with the M0 control rows, after D-459 (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (test through the op).
-depends-on: D-394 (`integrated` on c18-batch8).
-scope: office fixtures (docx, xlsx) driving each office extent arm of the notice.
-accepts-when: each office arm is driven and asserted. NEGATIVE CONTROL: break one office arm's extent match, and its fixture arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
