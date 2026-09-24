@@ -29,6 +29,19 @@ breaking. Every `dist/` artifact equals its `release/` copy. Staleness 23 checke
 **BOB is BOB #34, `session_015xYmWbudjCX7rFPF1bDJd3`, from 2026-09-24T22:01Z** (succeeding BOB #33). Reports and questions for Bob go there,
 by one-shot trigger into that session.
 
+## A standing duty: FLEET creates every lane successor (BOB #34, 2026-09-24T23:20Z; recorded in the BOB INBOX)
+
+FLEET #4 (`session_01YB9VgJtjiXwQ5vtx4fLvRB`, origin `desktop_app`) is the only live lane with NO parent session. Every
+other lane descends from a chain that has reached the platform's depth limit: workers at depth 8 cannot create
+triggers, and each refresh adds a level. So a lane's successor is created BY FLEET, which puts it at depth 1. **BOB
+decides WHEN and whether the handoff is current; FLEET makes the `create_session` call with the title, source,
+model and prompt BOB gives, verbatim, then reports the new id to BOB by one-shot trigger** (or the exact error).
+Before calling, check that the lane's `-NEXT.md` latest commit on `coord` is the one BOB names.
+- 2026-09-24T23:22Z: **DIST #7** created, `session_01FQcUMZ2f34zhHzBkMEEdQ6` (succeeding DIST #6; DIST-NEXT @ `0f832c98`).
+
+**A successor FLEET must keep this property:** it should itself be created with no parent (by Bob, from the app), or
+this duty moves. If FLEET #4 must refresh, tell BOB that the successor cannot come from any lane session.
+
 ## State at hand-over (2026-09-24 ~03:10Z, `main` @ `548eb2c5`, `coord` @ `99cb7fc5`)
 
 | what | reading |
