@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d440-image-part.test.mjs",
+ "inputHash": "9ddf0f1c6d847691fc6bd282df180f1fc2966a8fef24ea06732ed7a2cb0d8b20",
+ "verdict": "PASS",
+ "run": "e32b4dc1c626785532cc39247fff5ab4ef3c4292.1790234037280.6884.json",
+ "tree": "e32b4dc1c626785532cc39247fff5ab4ef3c4292",
+ "head": "2eea1e0bfeecdf4c06becd3384d5c7e0d087c6af",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 143,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "1e3f58a8-03c5-5efd-b7c6-609c418f23eb",
+ "at": "2026-09-24T07:13:57.293Z"
+}
