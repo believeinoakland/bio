@@ -57,8 +57,11 @@
 #   comma-prose arm too and it did NOT — that arm is fenced twice (signature + exact
 #   comma width), a finding about the arm, recorded rather than smoothed. N4 (liveness
 #   only, TWO variables moved on purpose): both fences off -> both arms fail by name.
-#   N5 (the row's liar, on the RECORDED sample): counted by FILENAME -> the real-sample
-#   arm fails; see M-123.
+#   N5 (the row's liar, on a COPY of the recorded 1,000): budget_dataset taken from the
+#   FILENAME (30 rows changed) -> exit 1 at the declared "ON THE REAL SAMPLE the body
+#   count and the name count DIFFER" (body 20, name 20, both 20), AND at two ARM 5
+#   neutering arms not declared (6 filename-counted documents had unreadable bodies).
+#   The real record: body 18, name 20, both 4 — 85 arms, 0 failed. See M-123.
 #
 # WHAT A CLASS IS, AND WHY IT IS NOT A LIST OF SPELLINGS. Each class is defined by
 # what makes a document that class IN PRINCIPLE, and the recogniser implements the
