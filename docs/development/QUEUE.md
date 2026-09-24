@@ -282,7 +282,7 @@ scope: the refusal is `requiredArgument("purge", "confirm", "<store name>", …)
 accepts-when: `bio-plane/test/refusal-wire.test.mjs` gains an arm: `op=purge` without `confirm` answers the coded refusal with its canned translation, through the op. NEGATIVE CONTROL: restore the bare sentence, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-278's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs REC`).
 
-### D-479 · running — SPAWNED 2026-09-24 ~03:37Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-479 (CONDUCT #20), base origin/main (REC-149 on main via c19-batch9), into D-482's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-479 and that session; never conclude queued from the absence alone.
+### D-479 · integrated — finished; integrated on land/conduct/c20-batch12 @ 7127d3adc (IC-260 I3 MINOR 81.2.0), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~04:50Z
 order: after D-476, with the corrections to just-landed work: an unbounded read on a member-facing list (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
 milestone: M8
 interface: I3 additive — `limit` and `truncated` on the directory; the integrator mints and classifies the IC.
