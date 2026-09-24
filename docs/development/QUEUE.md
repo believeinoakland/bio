@@ -84,7 +84,8 @@ scope: the `csv` entry and its reader on the format axis; extend the office-form
 accepts-when: a CSV reads as addressed cells with delimiter and encoding recorded. NEGATIVE CONTROL: guess a delimiter where none is determined and the undetermined arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs FW`).
 
-### D-463 · running — **NO CREDENTIAL IS CONFINED TO SCRATCH FOR LIFE: the namespace binds per CALL, so an instrument that omits `store=scratch` addresses the real record (CLAUDE.md §5's stated residue: *a sticky confinement is RECORD's and is NOT built*).** — owner RECORD.
+### D-463 · integrated — **NO CREDENTIAL IS CONFINED TO SCRATCH FOR LIFE: the namespace binds per CALL, so an instrument that omits `store=scratch` addresses the real record (CLAUDE.md §5's stated residue: *a sticky confinement is RECORD's and is NOT built*).** — owner RECORD.
+status: integrated — VERIFIED by CONDUCT #20 22:09Z: 96d2dd60, full battery 355/355 · 20446, nc-d463 8/8 AS DECLARED; rides c20-batch27.
 order: after D-462, the last of the namespace guards (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
 milestone: M0 (a guard)
 interface: I3/I5 — a per-credential confinement; the integrator mints and classifies the IC.
