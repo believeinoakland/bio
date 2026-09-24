@@ -1,0 +1,16 @@
+{
+ "unit": "plane:bootstrap.test.mjs",
+ "inputHash": "230b2cece09c96c5bac89144fe738a5dd7839e1011be7e46b5b8f52a03a4d9a7",
+ "verdict": "PASS",
+ "run": "f739c6078d422c25b5c15e9fe8a46ca925ea4fd6.1790221864417.3042.json",
+ "tree": "f739c6078d422c25b5c15e9fe8a46ca925ea4fd6",
+ "head": "1d706d6ca6eb31b9f7d913e58ad4a60c49dbafcd",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 138,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d1c10792-2a88-5646-8737-78c21d80e26d",
+ "at": "2026-09-24T03:51:04.433Z"
+}
