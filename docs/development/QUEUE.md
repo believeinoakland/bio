@@ -402,7 +402,7 @@ scope: `enteredAfterFirstRow` returns three ways (after, before, within the band
 accepts-when: arm M3's band pair reads undetermined in both readers, and pairs outside the band are unmoved (the measured failure this moves: M3's pair flipping class on the clock second). NEGATIVE CONTROL: collapse the band into a two-way comparison and the band arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (BOB #33 inbox 17:58Z; `node tools/mintid.mjs D`).
 
-### D-517 · queued — **ONE READER, TWO WORD-GAP RULES: tier 1's TJ word gap is a hand-picked -100 (0.1 em) while D-502 set the run gap at a measured 0.25 em, a 2.5x disagreement inside one reader.** Found by D-502's worker (M-141). — owner CONTENT-PDF.
+### D-517 · running — **ONE READER, TWO WORD-GAP RULES: tier 1's TJ word gap is a hand-picked -100 (0.1 em) while D-502 set the run gap at a measured 0.25 em, a 2.5x disagreement inside one reader.** Found by D-502's worker (M-141). — owner CONTENT-PDF.
 order: after D-516, with the extraction corrections: two rules of one reader disagreeing on what a word gap is (SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:04Z)
 milestone: M2
 interface: none.
@@ -412,7 +412,7 @@ scope: measure the TJ displacement distribution over M-141's corpus; re-set the 
 accepts-when: the TJ threshold is the measured one, and M-133's agenda glue stays at 5 or below with no word lost (the measured failure it moves: the unmeasured 0.1 em constant). NEGATIVE CONTROL: restore -100 and the measured-threshold arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### REC-213 · queued — **`op=reviewcopy`'s LIVE STATEMENT LIST CAN SHOW THE WRITER'S OWN ACKNOWLEDGEMENT AMONG THE SECOND READERS, while the case document now withholds it: a row by its own writer is not a second reading (rule 11), so listing it overclaims.** REC-212's worker (F2). BOB #33 RULED YES, 2026-09-24 19:06Z (cite until folded): withheld AND COUNTED, with the count and its reason ("by the statement's writer") stated beside the list, as the case document does; §6A's "show everything recorded" holds, since nothing recorded is hidden. — owner RECORD.
+### REC-213 · running — **`op=reviewcopy`'s LIVE STATEMENT LIST CAN SHOW THE WRITER'S OWN ACKNOWLEDGEMENT AMONG THE SECOND READERS, while the case document now withholds it: a row by its own writer is not a second reading (rule 11), so listing it overclaims.** REC-212's worker (F2). BOB #33 RULED YES, 2026-09-24 19:06Z (cite until folded): withheld AND COUNTED, with the count and its reason ("by the statement's writer") stated beside the list, as the case document does; §6A's "show everything recorded" holds, since nothing recorded is hidden. — owner RECORD.
 order: after D-517, with the corrections to just-landed work: a review copy claiming a second reading that is not one (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:57Z and BOB #33 19:06Z)
 milestone: M10
 interface: I3 — the review copy's list narrows and gains the count; the integrator classifies.
@@ -422,7 +422,7 @@ scope: pass the draft's `statement_by` as `writer` at reviewCopy's one `#stateme
 accepts-when: a writer's own row is absent from the review copy's list and counted beside it (the measured failure it moves: the writer's row listed among second readers). NEGATIVE CONTROL: drop the `writer` argument and the list names the writer, failing by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
 
-### M0-176 · queued — **`gates.mjs` §2's DOC-FACING DOOR IS NOT PATH-GRANULAR: every doc-facing unit takes ANY `docs/` change, so `calibration.test.mjs` (which genuinely reads `kickoffs/SCHEDULER.md`) still runs on a MEASUREMENTS-only diff after M0-165 removed its false reader edge.** Found by M0-165's worker (M0-165 NARROWED to this). — owner M0.
+### M0-176 · running — **`gates.mjs` §2's DOC-FACING DOOR IS NOT PATH-GRANULAR: every doc-facing unit takes ANY `docs/` change, so `calibration.test.mjs` (which genuinely reads `kickoffs/SCHEDULER.md`) still runs on a MEASUREMENTS-only diff after M0-165 removed its false reader edge.** Found by M0-165's worker (M0-165 NARROWED to this). — owner M0.
 order: after M0-170, AHEAD of the product rows by Bob's 17:41Z rule: every `docs/` diff runs doc-facing units it does not touch (gate time) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:02Z)
 milestone: M0
 interface: none.
@@ -432,7 +432,7 @@ scope: a doc-facing unit takes only the `docs/` paths it, or a tool it runs, nam
 accepts-when: a MEASUREMENTS-only diff no longer selects calibration, and a kickoff diff still does. NEGATIVE CONTROL: restore the whole-`docs/` door and calibration is selected again, by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### UI-103 · queued — **THE PUBLISHED CASE PAGE NAMES THE PUBLISHER AS THE STATEMENT'S WRITER: `app.html` ~20591 (page 2) renders "Written by ${c.completeness.author}", while REC-212 split the two acts (`statement_by` wrote it, `author` published it).** The delegation RECORD (REC-212) → UI is on coord `CLAIMS.md`. — owner UI.
+### UI-103 · running — **THE PUBLISHED CASE PAGE NAMES THE PUBLISHER AS THE STATEMENT'S WRITER: `app.html` ~20591 (page 2) renders "Written by ${c.completeness.author}", while REC-212 split the two acts (`statement_by` wrote it, `author` published it).** The delegation RECORD (REC-212) → UI is on coord `CLAIMS.md`. — owner UI.
 order: after UI-102, with the surfaces owed to landed plane rows: a surface that attributes an act to the wrong member (SCHEDULER #19, 2026-09-24; REC-212's worker via CONDUCT #20 18:57Z)
 milestone: M10
 interface: I3 consumer (REC-212's IC).
