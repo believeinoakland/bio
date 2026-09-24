@@ -374,7 +374,7 @@ scope: widen the harvest to `index.mjs` and the templated/variable mints; locate
 accepts-when: the two corpora agree, 18 = 18 or each difference named. NEGATIVE CONTROL: drop one fence's mint and the agreement arm fails naming it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-495 · queued — **THE REFUSAL-WIRE SWEEP DRIVES MEMBER-CLASS OPS ONLY, so its NO_CODE empty set says nothing of ADMIN and PROBE refusals.** Found by REC-185's worker. — owner RECORD (other owners' codeless refusals it surfaces become rows).
+### D-495 · running — SPAWNED 2026-09-24 ~05:08Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-495 (CONDUCT #20), base origin/main (REC-185 on main), into D-453's slot; push by 06:30Z. Falsify rather than believe: read the branch land/worker/D-495 and that session; never conclude queued from the absence alone.
 order: after D-494, the same family (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z)
 milestone: M7
 interface: none (a test); codes it surfaces get their own rows.
