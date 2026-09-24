@@ -4564,3 +4564,13 @@ depends-on: M0-126 (the backstop mark); then DIST's first cut from a tree carryi
 scope: DIST.md step 1 reads: `gates.mjs --full --no-reuse` on the exact tree, or a record for which pushguard's `isBackstop()` (M0-126) is true, NAMED in the cut commit, else the whole battery; `--since` removed (M0-126's worker found step 1 still naming it, via CONDUCT #15); the bumped tree's own gate stays.
 accepts-when: a cut from a tree with a backstop record runs no battery and names it; a record whose run printed any REUSED unit, or a `--since`, never satisfies a cut and the battery runs.
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1; `node tools/mintid.mjs M0`); re-narrowed 2026-09-23 by SCHEDULER #15 (BOB #30's ruling).
+
+### M0-158 · done — landed as a coord write (CLAIMS.md @ 6c0f0763, an ancestor of coord); contradictory delegations 5 → 0 — SCHEDULER #18
+order: after M0-157, with the process rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 06:02Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a claim with no owner is a claim nobody verifies), with ORCHESTRATION.md "COMMUNICATING A CHANGE" for the DELEGATION form.
+depends-on: none.
+scope: read each block, name its owner, resolve each contradiction to one statement, and release or place what each delegates; a coord write, not a `main` commit.
+accepts-when: each of the five names one owner and no two contradict. NEGATIVE CONTROL: none (a ledger edit).
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).

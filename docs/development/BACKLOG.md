@@ -23,16 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-508 · queued — **THE KNOCK LIMITER'S REFUSALS ARE BARE STORE REASONS: RATE_IP and RATE_GLOBAL carry no DEC-49 code or translation, so a refused knocker reads a raw reason.** Found by D-496's worker. — owner RECORD.
-order: after D-507, the same shape (SCHEDULER #18, 2026-09-24; via CONDUCT #20 07:19Z)
-milestone: M2
-interface: I3 additive — two catalogued codes; the catalogue version moves.
-design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it.
-depends-on: D-496.
-scope: catalogue RATE_IP and RATE_GLOBAL with translations in a DEC-49 REGION on the knock path, through one helper; move the floors from the print.
-accepts-when: a rate refusal arrives with its code and translation. NEGATIVE CONTROL: return the bare reason and the guard names it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
 ### REC-212 · queued — **THE CASE DOCUMENT CONFLATES TWO ACTS: `completeness.author` names who PREPARED AND PUBLISHED it, and C-41.10's author exclusion reads that name, so the writer of the statement can ratify it when someone else published.** REC-193's finding (1). BOB #32 RULED (b), 2026-09-24 06:11Z (cite until folded): two acts, two names, never conflated. — owner RECORD.
 order: after REC-194, the same statementack family; after REC-193 lands (SCHEDULER #18, 2026-09-24)
 milestone: M10
@@ -84,6 +74,16 @@ scope: parse /Widths + /FirstChar and /W + /DW in `loadFont`, track the pen, set
 accepts-when: the agenda sample's glue tokens return to ≤ 5 without losing D-481's words/page. NEGATIVE CONTROL: ignore widths and the glue arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
+### M0-164 · queued — **`coord.mjs write --status <ID> <state> --note …` REPLACES A ROW'S HEADLINE, so every flip note overwrites the defect it names: all 15 rows CONDUCT #20 flipped on 2026-09-24 lost their headlines (restored by SCHEDULER #18 from f8fd4a77^/0cf9783c^).** Found by M0-158's worker. — owner M0.
+order: at the head of the M0 rows: every status write corrupts the plan's own record (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z)
+milestone: M0
+interface: none.
+design: `docs/development/WORK-PIPELINE.md` and `docs/development/VERIFICATION.md` (a status word changes state, never the row's claim).
+depends-on: none.
+scope: `--status` keeps the headline and writes the note on a separate `status:` line (replacing any earlier one).
+accepts-when: a flip with a note leaves the headline byte-identical. NEGATIVE CONTROL: restore the replacing behaviour and the headline arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
 ### M0-159 · queued — **`tools/train.mjs run --drop a,b,c` DROPS NOTHING: the comma list is read as ONE branch name, matches no waiting row, and is silently ignored, so every waiting branch merges (forbidden ones included); the only sign is `dropped: a,b,c` beside the waiting count.** It happened on 2026-09-24 07:08Z; CONDUCT #20 killed the run by PID before any gate or push, and main was untouched. — owner M0.
 order: at the head of the M0 rows: a process defect that risks main itself (SCHEDULER #18, 2026-09-24; via CONDUCT #20 07:15Z)
 milestone: M0
@@ -102,6 +102,26 @@ design: `docs/development/VERIFICATION.md` (a check that cannot fail is worse th
 depends-on: none.
 scope: a `--check` arm failing any probe `hit` that matches more than once in its file; re-pin every claim it names.
 accepts-when: `node tools/status.mjs --check` reads 0 ambiguous probes. NEGATIVE CONTROL: widen one claim's `hit` to match twice and the arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-162 · queued — **M0-99's DELEGATION BLOCK STAYS OPEN ON THREE STALE SENTENCES: `kickoffs/DIST.md` lesson 20, `kickoffs/SKILL.md`'s "Design sources" list, and FLEET-NEXT's "Carried memory" ("Regenerate docs/DECIDED.md; never merge it") still describe DECIDED.md as it was.** M0-158's one residue; the candidate words are written in the block on coord `CLAIMS.md`. — owner M0.
+order: after M0-160, small: the last open item of a closed contradiction sweep (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a claim to keep true).
+depends-on: M0-158.
+scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
+accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-163 · queued — **`tools/delegations.mjs` HAS NO GRAMMAR FOR A PER-ITEM CLOSURE: `**Items <range> CLOSED <date>**` reads as neither affirm nor discharge, which produced three of M0-158's five contradictions.** Found by M0-158's worker. — owner M0.
+order: after M0-162, the same register (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument reads the forms the ledger actually uses).
+depends-on: none.
+scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
+accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### M0-142 · queued — **`meaning-bounds.test.mjs`'s BOUND_KEY HAS NO `max`: `/^(?:limit|cap|bound|page_size|[a-z_]*_limit)$/` (line 382), so a read bounded by a `max`/`*_max` key (bounded actionquotes) is counted BARE and correct work reads unbounded.** Found by c18-batch7fix's worker; verified at 548eb2c5 by CONDUCT #20 and SCHEDULER #18. — owner M0.
@@ -1297,13 +1317,3 @@ depends-on: none — D-293 is on `main`.
 accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-104» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-105 · queued — **`docs/development/VERIFICATION.md` STANDS AT 24,572 OF ITS 24,576 B, SO A RULING ABOUT VERIFICATION CANNOT BE FOLDED INTO IT** … (whole text: the cut archive)
-order: directly after M0-104, whose line it folds, behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; SCHEDULER #11 on BOB #25's word); RETURNED here by SCHEDULER #14 after M0-107 folded its ruling within budget (`VERIFICATION.md` 24,319 B at `14f1b75e`)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §1's reading budget and … (whole text: the cut archive)
-depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds (BOB #25, 2026-09-22).
-accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-105» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

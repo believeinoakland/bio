@@ -45,7 +45,8 @@ BOB appends a designed item, a correction or an order change here, with its inte
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 16 in all (`CACHE_ROWS`, sized to CONDUCT's capacity plus spare: Bob, 2026-09-23, `WORK-PIPELINE.md`). **At most 10 worker sessions are live at once** (Bob, 2026-09-24 ~03:08Z, via BOB #32; until 05:00Z, then 6, and no new spawn from 06:00Z): a `running` row whose worker has FINISHED and awaits integration holds no session, so the cache keeps a few `queued` rows behind the live ten and no slot waits. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
 
-### M0-140 · running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-140 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-140; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### M0-140 · running — **MOVED TO THE HEAD OF THE CACHE 2026-09-24 by BOB #32 on Bob's instruction, and WIDENED to retire the debt construct entirely.** **DEBT.md LEAVES THE PROCESS: its last three rows (D-313, D-391, D-388) are CLOSED IN FACT on `main` 548eb2c5 and are closed BY this row, Bob's 22:09Z ruling removes it — CLAUDE.md §1/§4, `tools/owed.mjs`, plancheck's DEBT arms, `tools/ledger.mjs`'s DEBT handling, `coord.mjs`'s `LC-debt-*` and `LC-undecided-route` arms, `corpuscheck.test.mjs` §5's D-388 pin, and the kickoffs.** — owner M0 (tools), with BOB for CLAUDE.md and the kickoffs.
+status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-140 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker hold… (headline restored by SCHEDULER #18 from coord history; CONDUCT #20's F4)
 order: FIRST in the cache (Bob, 2026-09-24 ~15:15Z: "Do it ... once that is done, we can remove all reference to the debt construct"); ahead of the product rows by Bob's word.
 milestone: M0
 interface: none — process tooling.
@@ -65,7 +66,8 @@ scope: amend the claim to "at most the cap, stated as truncated"; add a probe pi
 accepts-when: `node tools/status.mjs discoverable` reads the capped claim and its probe passes. NEGATIVE CONTROL: rename the constant and the probe fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-497 · running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-497 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/D-497; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### D-497 · running — **THE PROJECT DIRECTORY'S CANDIDATE SCAN IS STILL LINEAR IN THE GROUP'S PROJECTS: `#sight` is a JS predicate, so D-479's page bounds the ANSWER but not the rows read.** Found by D-479's worker. — owner RECORD.
+status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-497 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/D-497; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: after D-495: a bound on work, not on disclosure; the answer is already capped (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
 milestone: M8
 interface: none (I5 additive if an index table is added; the integrator classifies).
@@ -75,7 +77,8 @@ scope: give sight a row source it reads (an owner-set-derived index) so the cand
 accepts-when: `bounds.test.mjs` shows the candidate read bounded. NEGATIVE CONTROL: restore the JS filter over the unbounded scan and the bounds arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### UI-100 · running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER UI-100 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/UI-100; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### UI-100 · running — **UI MOCKS OF THE PLANE'S REFUSALS ARE NARROWER THAN THE WIRE, ACROSS TWO FAMILIES: seven `unknown op` mocks carry no `translation` (act-proposal ×2, queue ×2, auth-surface, case-frozen-pair, document-structure; four compose "unknown op " + op, a sentence the plane never sent), and `requiredArgument`'s eight plane sites all carry C-61.1's translation while `publishedcase.test.mjs` mocks publishedbytes with `error` alone.** UI-84's class, found by its worker. — owner UI.
+status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER UI-100 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/UI-100; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: after UI-99, with the UI corrections to landed wire shapes (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:26Z)
 milestone: M4
 interface: none (test mocks).
@@ -85,7 +88,8 @@ scope: build every such mock from `DISPATCH_CHECKS.UNKNOWN_OP` / the requiredArg
 accepts-when: no mock in the two families types a refusal by hand. NEGATIVE CONTROL: retype one mock's `error` without `translation` and the derivation arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs UI`).
 
-### REC-195 · running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER REC-195 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/REC-195; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### REC-195 · running — **THE GOVERNING-LAWS LIST HAS NO MACHINE PROPOSAL: D-149 built the member's act and the machine refusal; the design's labelled machine proposal (*if built*) is not.** — owner RECORD.
+status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER REC-195 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/REC-195; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: after UI-90, a feature below the corrections: the list is complete without it (SCHEDULER #17, 2026-09-23; D-149's worker via CONDUCT #18)
 milestone: M10
 interface: I3 additive — a proposal read labelled machine work; the integrator mints and classifies the IC.
@@ -95,7 +99,8 @@ scope: a proposal of citations and levels for an action, stored apart from the m
 accepts-when: a proposal is read labelled machine work, and the action's list is unchanged until the member acts. NEGATIVE CONTROL: let the proposal write the list, and the "the list is the member's" arm fails by name. New suite `bio-plane/test/rec195-laws-proposal.test.mjs`.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### M0-153 · running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-153 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-153; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### M0-153 · running — **CITING AN M-ID IN A SUITE'S PROSE MAKES THAT SUITE A MEASUREMENTS READER: `gates.mjs` `selectReaders` counts a bare `M-<n>` mention, comments included, contradicting "a comment reads nothing"; `statepaths` UNITS_CEILING then has zero slack against a MEASUREMENTS change.** Found by D-481's worker; M0-143 blanks comments only in the doc-facing selector. — owner M0.
+status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-153 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-153; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: after M0-150, with the gate-time rows (M0-146 is cached) (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:21Z)
 milestone: M0
 interface: none.
@@ -105,7 +110,8 @@ scope: `selectReaders` reads through M0-143's comment-blanking (`codeOf`); re-de
 accepts-when: a suite citing an M-id only in a comment is not a MEASUREMENTS reader. NEGATIVE CONTROL: read raw source and that suite is selected, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### M0-154 · running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-154 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-154; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### M0-154 · running — **FOUR SUITES BUILD A FIXTURE REPO BY COPYING THE GATE'S TOOLS FROM A HAND-KEPT LIST (entries, gateresults, train, gates), so any new import in `gates.mjs` breaks them with ERR_MODULE_NOT_FOUND.** Found by M0-146's worker's first red. — owner M0.
+status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-154 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-154; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: after M0-153, with the gate-time rows: each new gate import costs a red round (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:33Z)
 milestone: M0
 interface: none.
@@ -115,7 +121,8 @@ scope: derive each suite's copy list from `gates.mjs`'s static imports (transiti
 accepts-when: a new import added to `gates.mjs` leaves the four suites green. NEGATIVE CONTROL: restore one hand list, add an import, and that suite fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### M0-155 · running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-155 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-155; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### M0-155 · running — **A CONSTRUCT PROBE WHOSE `hit` IS A STRING A COMMENT COULD CONTAIN CAN GO FALSE-GREEN: `8.risk-tier`'s probe was reading its own explanatory comment.** Found by D-483's worker. — owner M0.
+status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-155 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-155; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: after M0-154, with the instruments that can pass on nothing (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z)
 milestone: M0
 interface: none.
@@ -125,7 +132,8 @@ scope: `status.mjs` probes match code with comments blanked (walkfloor's `stripC
 accepts-when: `node tools/status.mjs --check` reads 0 drift with comments blanked. NEGATIVE CONTROL: a probe whose only match is a comment reads NOT BUILT, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### M0-157 · running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-157 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-157; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### M0-157 · running — **`gates.control.mjs` ARM G5 FAILS ITS OWN DECLARED ISOLATION ON MAIN (85/3): with the clean-at-start check removed, "a DIRTY tree is NOT recorded" breaks, although G5 declares the end-of-run check backs it.** Pre-existing; found by M0-146's worker. — owner M0.
+status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-157 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-157; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: after M0-156, with the gate instruments: a hand-run driver, not a battery arm (SCHEDULER #18, 2026-09-24; via CONDUCT #20 06:00Z)
 milestone: M0
 interface: none.
@@ -133,16 +141,6 @@ design: `docs/development/VERIFICATION.md` (a control's declared isolation is a 
 depends-on: none.
 scope: read the armed run to find which path writes the second record (§2d reuse or early exit, or §4 fall-through); then restore the redundancy, or correct G5's declaration at its site.
 accepts-when: G5 arms as declared, or its declaration states what it actually proves. NEGATIVE CONTROL: G5 itself, re-run after the change.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-158 · integrated — LANDED ON COORD 6c0f0763 (CLAIMS.md only; contradictory delegations 5 -> 0; no main change, no branch; gate DOCS 23/23 green). Residue F1 (M0-99's three sentences) to SCHEDULER as a row.
-order: after M0-157, with the process rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 06:02Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a claim with no owner is a claim nobody verifies), with ORCHESTRATION.md "COMMUNICATING A CHANGE" for the DELEGATION form.
-depends-on: none.
-scope: read each block, name its owner, resolve each contradiction to one statement, and release or place what each delegates; a coord write, not a `main` commit.
-accepts-when: each of the five names one owner and no two contradict. NEGATIVE CONTROL: none (a ledger edit).
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### DIST-13 · queued — **THE INSTALLER'S FALLBACK PLANE IS SEVEN RELEASES STALE: `newgroup/dist/newgroup.bundled.mjs` embeds RELEASE_VERSION 0.71.0 while `newgroup/src/release.mjs` carries signed 0.78.0 (verified at d536f834), and nothing guards the bundle's freshness.** Found by D-481's worker. — owner DIST (M0/FLEET for the guard).
@@ -155,7 +153,8 @@ scope: NARROWED 2026-09-24 06:01Z (SCHEDULER #18): the REBUILD is done (land/dis
 accepts-when: the guard passes on the rebuilt bundle. NEGATIVE CONTROL: restore the 0.71.0 bundle and the guard fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
-### UI-92 · running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER UI-92 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/UI-92; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### UI-92 · running — **THE WORKSPACE CANNOT SHOW A PROJECT'S DRAFTS.** REC-198's list, rendered. — owner UI.
+status: running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER UI-92 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/UI-92; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: directly after REC-198 (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I3 consumer (REC-198's IC).
@@ -165,7 +164,8 @@ scope: the workspace lists the project's drafts from the plane's read; each open
 accepts-when: every draft the plane lists appears and opens. NEGATIVE CONTROL: stub the list empty, and the listed-draft arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
-### D-505 · running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-505 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/D-505; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### D-505 · running — **NOTHING STOPS A MACHINE CREDENTIAL FROM CHANGING A RISK TIER A MEMBER SET: BOB #32's rule of 2026-09-24 (once a member sets a tier, no machine may change it, not even back to undetermined) is NOT BUILT, and no fence refuses a machine promote that writes a determined tier.** Found by D-483's worker. — owner RECORD.
+status: running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-505 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/D-505; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: at the backlog head: an authority boundary on the one field carrying legal exposure (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z)
 milestone: M7
 interface: I3 MAJOR — a refusal where an answer stood; the integrator classifies.
@@ -175,7 +175,8 @@ scope: a machine-fence refusal (catalogued, DEC-49 translation) on any machine w
 accepts-when: a machine promote writing a tier is refused by name; a member's own set is admitted. NEGATIVE CONTROL: drop the fence and the machine arm is admitted, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-503 · running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-503 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/D-503; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### D-503 · running — **FIVE MACHINE/OPERATOR FENCES IN `index.mjs` ARE CATALOGUED AND MINTED BUT NEVER DRIVEN: MACHINE_CANNOT_RATIFY, MACHINE_CANNOT_RATIFY_CASE, OPERATOR_TOKEN_CANNOT_RATIFY, _RATIFY_CASE and _GOVERN are outside `machine-fences.test.mjs`'s corpus (the `store.mjs` family only).** Found by D-494's worker (18 = 18 catalogued and minted). — owner RECORD.
+status: running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-503 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/D-503; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: at the backlog head: the authority boundary that no machine attests, with five of its fences asserted by nothing (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:33Z)
 milestone: M7
 interface: none.
@@ -185,7 +186,8 @@ scope: extend `machine-fences.test.mjs` to drive each `index.mjs` fence with a m
 accepts-when: all five refuse by name through the op. NEGATIVE CONTROL: remove one fence's check and its arm is admitted, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-506 · running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-506 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/D-506; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### D-506 · running — **A FAILING CANARY READS AS A BARE BOOLEAN: `op=livefire` answers `ok:false` with no reason, code or error (status 500) when its 19-assertion self-test fails (`livefire.mjs` ~192-201, `index.mjs` ~6438), so a caller learns nothing exactly when it matters.** Found by D-495's worker. BOB #32 RULED (b), 2026-09-24 06:10Z (cite until folded): `ok` keeps meaning the op answered; the result moves to `verdict: "pass"|"fail"` with `failing: [names]` (empty on pass) under `ok:true`, HTTP 200. — owner RECORD (DIST updates its release check).
+status: running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-506 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/D-506; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: after D-503: the record staying silent where it must speak, on the release's own canary (SCHEDULER #18, 2026-09-24)
 milestone: M8
 interface: I3 MAJOR — `ok`'s meaning narrows for this op; an IC entry; the integrator classifies.
@@ -195,7 +197,8 @@ scope: return `verdict` and `failing`; `ok:false` only for a catalogued refusal;
 accepts-when: a broken assertion yields `ok:true, verdict:"fail"` naming it. NEGATIVE CONTROL: break one assertion and drop its name from `failing`, and the arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### REC-194 · running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER REC-194 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/REC-194; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### REC-194 · running — **AN ACKNOWLEDGEMENT MAY MATCH ANOTHER CASE WHOSE STATEMENT IS BYTE-IDENTICAL: D-150 binds it to the statement's bytes, not to ONE case identity.** Publication §3 rule 13 (folded): *an acknowledgement binds to ONE case identity; it never matches another case whose statement is byte-identical.* — owner RECORD.
+status: running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER REC-194 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/REC-194; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: (held behind REC-193: both edit the statementack code; CONDUCT #20 05:08Z) directly after REC-193, the same block (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I3 — the `statementack` op's binding narrows to one case; the integrator mints and classifies the IC.
@@ -213,6 +216,16 @@ design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 1
 depends-on: REC-193.
 scope: rows C-82.2..C-82.7 in STATEMENT_ACK_CHECKS inside a DEC-49 REGION; route acknowledgeStatement's returns through its `refusal` helper; rebuild the bundle; move check-refusal-codes' floors from the print.
 accepts-when: each of the six arrives with its translation. NEGATIVE CONTROL: return one code outside the helper and the DEC-49 guard names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-508 · queued — **THE KNOCK LIMITER'S REFUSALS ARE BARE STORE REASONS: RATE_IP and RATE_GLOBAL carry no DEC-49 code or translation, so a refused knocker reads a raw reason.** Found by D-496's worker. — owner RECORD.
+order: after D-507, the same shape (SCHEDULER #18, 2026-09-24; via CONDUCT #20 07:19Z)
+milestone: M2
+interface: I3 additive — two catalogued codes; the catalogue version moves.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it.
+depends-on: D-496.
+scope: catalogue RATE_IP and RATE_GLOBAL with translations in a DEC-49 REGION on the knock path, through one helper; move the floors from the print.
+accepts-when: a rate refusal arrives with its code and translation. NEGATIVE CONTROL: return the bare reason and the guard names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
