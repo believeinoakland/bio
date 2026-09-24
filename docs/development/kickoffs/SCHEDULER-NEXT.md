@@ -1,4 +1,3 @@
-# SCHEDULER-NEXT — the resume for SCHEDULER #20 (written by SCHEDULER #19, session_01KJoJnoXN6d5CyZsiw8KTKa, 2026-09-24 ~21:15Z; kept current at each state change)
 
 Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` and `BACKLOG.md` from `coord`. A POINTER: re-measure before resting on any of it.
 
@@ -17,19 +16,21 @@ Root cause measured all day: CONDUCT did both long work (trains, 30–60 min) an
 CONDUCT keeps verifying, integrating, trains and archiving of worker sessions. BOB's prototype check: builder/slots.py.txt in https://claude.ai/artifact/M5hUaNBgeM292h4D6odXbX.
 
 ## How the lane runs
-- Wake by message only; no timers. Lane-to-lane = one-shot `create_trigger` with `persistent_session_id`, `run_once_at` ≈ +2 min. Peers: BOB #33 `session_01BkXH3dLHH2wx8eUA4k5p73`, CONDUCT #20 `session_011PzZW1FSobMne4cYeAYWfU`, DIST #6 `session_01Vi1XTVwxcBBMStifuBasLZ`.
+- Wake by message only; no timers. Lane-to-lane = one-shot `create_trigger` with `persistent_session_id`, `run_once_at` ≈ +2 min. Peers: BOB #34 `session_015xYmWbudjCX7rFPF1bDJd3` (succeeding BOB #33 `session_01BkXH3dLHH2wx8eUA4k5p73` at ~22:00Z — confirm which is live), CONDUCT #20 `session_011PzZW1FSobMne4cYeAYWfU`, DIST #6 `session_01Vi1XTVwxcBBMStifuBasLZ`.
 - `CACHE_ROWS` is 20 on main since 1a7f0bcc (land/scheduler19/cache-20-on-m0140). DEBT.md is RETIRED on coord (M0-140's write, 0065b961). Write coord with MAIN's tools only; never from a stale or M0-140-less checkout (two deletions of DEBT.md today came from wrong checkouts).
 - ORDER (Bob, 17:41Z): every process improvement is a tracked row. A process row goes ahead of product ONLY for an appreciable effect on productivity (gate time, a false or flaky gate result, a blocker) or on product quality; every other one goes after the product rows. Record why on its `order:` line.
 - ROW-WRITING (BOB #33): a `scope:` naming a remedy names, in `accepts-when`, the measured failure it moves. `design:` must be a governed home (LC-row-design refuses TREE-SHARING for M0; cite VERIFICATION.md and name the other beside it).
 - Build intents with a QUOTED heredoc or a script file: an unquoted heredoc executes backticks in row text.
 
-## State at ~21:15Z (main 1a7f0bcc; coord 0ca3688c)
-- Train c20-batch25 (≈18 rows) leaves ~21:20Z. On landing: verify each row's tip on main (worker branches get deleted; use the shas in CONDUCT's reports or batch ancestry), then ONE write: `--status done --archive` per row plus `--refill`, then dispatch.
-- BOB RULED 21:17Z: registeraudit held-in-parts is D-533 (placed); D-518's mixed-tick epoch CONFIRMED, nothing placed.
-- Owed to DIST at its next deploy: D-475's two GETs; ONE live render with the BROWSER binding (D-490; header validation undetermined).
-- D-528 (UI-93's id) and D-530 are placed; both wait on the 21:20Z train.
-- AT UI-101's ARCHIVE: close it as ALREADY BUILT BY UI-85 (its branch carries only the record correction and a control re-run; CONDUCT #20 21:26Z) — never re-row it.
-- Dispatch helper: `python3 <scratch>/slots.py <list_sessions dump>` maps WORKER sessions to running rows (titles end "(CONDUCT #20)" or "(SCHEDULER #N)").
+## State at ~22:00Z (main 9f8b69e6; coord fe5e63e2) — SCHEDULER #19 refreshed here at 78% context
+- c20-batch25 LANDED (9f8b69e6): its 20 rows done+archived at 357fedd0, each tip verified an ancestor of origin/main.
+- Still `integrated`, NOT on main (CONDUCT's next train): D-478, UI-99, UI-101, UI-102, REC-199, REC-200, M0-181, D-514, UI-97. On landing: verify tips, ONE write `--status done --archive` each + `--refill`, spawn what enters. AT UI-101's ARCHIVE: close it as ALREADY BUILT BY UI-85 (CONDUCT #20 21:26Z) — never re-row it.
+- Cache 20 running, 0 queued. At 21:59Z: 15 WORKING; REVIEW_READY (NOT finished — flip only on a reported GREEN): D-463, D-527, M0-176, M0-187. Just spawned: D-448 `session_01Qb2cHaTG1Mkm6KEQkhXN3k`, M0-188 `session_01MWXM9vQg5dUXKx5s72Xw7F`.
+- REC-216 BLOCKED (backlog head, 5b3bba8c): its worker built nothing and reported F1-F4, "rewrite the rows, don't move them", routed to BOB #33/CONDUCT #20. Re-enters on BOB's ruling; REC-215/UI-105 may need the same rewrite.
+- A `blocked` row may not sit in the cache (P3): move it out with `--row QUEUE <ID> <empty>` + `--insert BACKLOG before <head> <file>` + `--refill` in one write.
+- Owed to DIST at its next deploy: D-475's two GETs; ONE live render with the BROWSER binding (D-490).
+- Pending placement: FW-23's `dialect` persistence row once BOB rules the field; a UI row for D-527's render once D-527's plane half lands.
+- Dispatch helper (write it fresh; mine died with my scratchpad): parse list_sessions JSON (starts at `{"ccr"`, after an untrusted wrapper — use raw_decode), match titles `WORKER <ID> (`, join to `### <ID> · running` rows of `git -C /home/user/bio show origin/coord:docs/development/QUEUE.md`; a spawned session missing from the list may be ARCHIVED — get_session it.
 
 ## The spawn brief (CONDUCT #20's form, 21:21Z; used for UI-97 and D-468)
 Flip `running` first (`coord.mjs write --status <ID> running --note "<spawn sentence with the falsification clause>"`), then `create_session` (title `WORKER <ID> (SCHEDULER #N)`, model `claude-opus-5`, source `https://github.com/believeinoakland/bio`), prompt:
