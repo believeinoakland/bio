@@ -37784,7 +37784,14 @@ export class Store extends DurableObject {
    *  exist. It writes nothing, mints nothing, and shows NO STRENGTH — a shared
    *  origin is a provenance fact, not a grade, so DEC-32's keystone (structure
    *  authored before strength is shown) holds on the surface that calls this. It
-   *  informs; it refuses only a partition it cannot read. */
+   *  informs; it refuses only a partition it cannot read.
+   *
+   *  REC-192 ADDS THE VERSION ARM: `version=<name>` reads a STORED version's legs
+   *  instead of a proposed partition, through the same one call, and answers
+   *  `independence` ON ITS OWN, with no strength key — BOB #31's ruling of
+   *  2026-09-23 22:22Z, that the separation §12 (a) asks for is structural at the
+   *  wire and not a choice each page makes. It EQUALS `op=versionstrength`'s
+   *  `independence` for the same version. */
   partitionIndependence(a = {}) {
     const args = a || {};
     const refusal = (code, detail, extra) => {
@@ -37810,91 +37817,139 @@ export class Store extends DurableObject {
         "no question by that id is readable here, so there are no reasons of it to group.",
         { inquiry: inq });
 
-    /* THE PARTITION, as the elicitation holds it: a list of groups, each a list
-       of POSITIONS in the question's `basis[]` (the `ord` `inquiry_basis` keys
-       on). Or groups carrying their own name, `{label, legs}`, so a caller that
-       will write the partition under names can ask about it under the SAME
-       names and read back the same `shared[].a/b`. An unnamed group is filed by
-       its position — `part 1`, `part 2` — and never under a word this plane made
-       up about somebody's argument. JSON, from a query string or a body. */
-    let raw = args.partition;
-    if (typeof raw === "string") {
-      try { raw = JSON.parse(raw); } catch { raw = undefined; }
-    }
-    const unreadable = (why) => refusal("PARTITION_INDEPENDENCE_UNREADABLE", why, { inquiry: inq });
-    if (!Array.isArray(raw) || !raw.length)
-      return unreadable("pass partition=<JSON>: a non-empty list of groups, each a list of reason "
-        + "positions (e.g. [[0,1],[2]]) or {\"label\":…,\"legs\":[…]}.");
-    const legsMax = Store.BASIS_VERSION_LEGS_MAX;
-    if (raw.length > legsMax)
-      return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
-        `${raw.length} groups were proposed and a written reading holds at most ${legsMax} reasons.`,
-        { inquiry: inq, limit: legsMax });
-    const parts = [];
-    for (let k = 0; k < raw.length; k++) {
-      const g = raw[k];
-      const named = g && typeof g === "object" && !Array.isArray(g);
-      const ords = named ? g.legs : g;
-      const label = named ? String(g.label ?? "").trim() : `part ${k + 1}`;
-      if (!label)
-        return unreadable(`group ${k + 1} carries no name; leave the name out altogether to have it `
-          + "filed by its position.");
-      if (label.length > 200)
-        return unreadable(`group ${k + 1}'s name is longer than 200 characters.`);
-      if (!Array.isArray(ords) || !ords.length)
-        return unreadable(`group ${k + 1} lists no reasons; every group holds at least one.`);
-      if (!ords.every((o) => Number.isInteger(o) && o >= 0))
-        return unreadable(`group ${k + 1} names something other than a reason's position.`);
-      if (parts.some((p) => p.label === label))
-        return unreadable(`two groups are both named '${label.slice(0, 60)}'.`);
-      parts.push({ label, ords: [...ords] });
-    }
+    /* REC-192 — THE VERSION ARM (BOB #31, 2026-09-23 22:22Z, on UI-74's finding 5): *"a read answers
+       `independence` ON ITS OWN, apart from the strength pair, so the separation (a) asks for is
+       structural at the wire and not a choice each page makes."* Until this arm existed the only read of a
+       STORED version's independence was `op=versionstrength`, which returns it BESIDE the pair — so the
+       accept ceremony, asking a member to affirm independent sufficiency, could not ask without being
+       shown a strength, and keeping the pair off the screen was each page's discipline. Here the same
+       stored legs go through the same `#independenceOf`, by the same `parts` count, and NO strength key
+       is on the answer: the separation is the wire's shape.
 
-    /* THE QUESTION'S OWN REASONS, over-fetched by one so a basis larger than a
-       written reading may hold is OBSERVED, not inferred. A partition checked
-       over a truncated basis could pass as covering reasons it never saw. */
-    const legRows = this.#rows(
-      `SELECT ord, target_id, target_type, role FROM inquiry_basis WHERE bundle_id=? ORDER BY ord LIMIT ?`,
-      inq, legsMax + 1);
-    if (legRows.length > legsMax)
-      return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
-        `${inq.slice(0, 60)} rests on more than ${legsMax} reasons.`, { inquiry: inq, limit: legsMax });
-    const byOrd = new Map(legRows.map((l) => [l.ord, l]));
-    const placed = new Map();
-    for (const p of parts)
-      for (const o of p.ords) {
-        if (!byOrd.has(o))
-          return refusal("PARTITION_INDEPENDENCE_UNKNOWN_LEG",
-            `'${p.label.slice(0, 60)}' names reason position ${o}, and ${inq.slice(0, 60)} has `
-            + `${legRows.length} reason(s)${legRows.length ? ` at positions ${legRows.map((l) => l.ord).join(", ")}` : ""}.`,
-            { inquiry: inq, ord: o });
-        if (placed.has(o))
-          return refusal("PARTITION_INDEPENDENCE_LEG_TWICE",
-            `reason position ${o} is in both '${placed.get(o).slice(0, 60)}' and '${p.label.slice(0, 60)}'.`,
-            { inquiry: inq, ord: o });
-        placed.set(o, p.label);
+       NO STATE SET, deliberately, and it is the one place this read differs from `op=versionstrength`'s
+       gate. A state set is §12's filter on a STRENGTH (§6 rule 6's what-if), and this answer carries
+       none; the reading a member is asked to affirm at the accept ceremony is by construction one not yet
+       accepted, so a default of `accepted` would refuse exactly the read the ceremony makes. The version's
+       own state is served as a fact beside the answer. The inquiry gate and the viewer stamp are
+       versionstrength's, unchanged, and already applied above. ONE SUBJECT PER ASK: a version and a
+       partition together are refused rather than one silently preferred. */
+    const wantVersion = String(args.version ?? "").trim();
+    const partitionNamed = args.partition != null && args.partition !== "";
+    if (wantVersion && partitionNamed)
+      return refusal("PARTITION_INDEPENDENCE_TWO_SUBJECTS",
+        "name EITHER a written reading (version=<name>) OR a proposed grouping (partition=<JSON>), not "
+        + "both: this answers for one of them, and which one was meant is not this plane's to guess.",
+        { inquiry: inq });
+    let legs, head;
+    if (wantVersion) {
+      const row = this.#one(
+        `SELECT name, state, leg_count FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`,
+        inq, wantVersion);
+      if (!row)
+        return refusal("PARTITION_INDEPENDENCE_NO_SUCH_VERSION",
+          `no reading named '${wantVersion.slice(0, 60)}' belongs to ${inq.slice(0, 60)}.`,
+          { inquiry: inq, version: wantVersion.slice(0, 200) });
+      /* THE SAME ROWS `versionStrength` READS — same table, same order, same bound — with the grade
+         columns left unread, because nothing here may carry a grade; `#independenceOf` reads only the
+         target and the group. Handed over UNCHANGED, so the groups are named as that read names them. */
+      legs = this.#rows(
+        `SELECT ord, target_id, target_type, role, ground
+           FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
+        inq, row.name, Store.BASIS_VERSION_LEGS_MAX);
+      head = { version: row.name, version_state: row.state, legs_read: legs.length,
+               legs_complete: legs.length === row.leg_count };
+    } else {
+      /* THE PARTITION, as the elicitation holds it: a list of groups, each a list
+         of POSITIONS in the question's `basis[]` (the `ord` `inquiry_basis` keys
+         on). Or groups carrying their own name, `{label, legs}`, so a caller that
+         will write the partition under names can ask about it under the SAME
+         names and read back the same `shared[].a/b`. An unnamed group is filed by
+         its position — `part 1`, `part 2` — and never under a word this plane made
+         up about somebody's argument. JSON, from a query string or a body. */
+      let raw = args.partition;
+      if (typeof raw === "string") {
+        try { raw = JSON.parse(raw); } catch { raw = undefined; }
       }
-    const unplaced = legRows.filter((l) => !placed.has(l.ord)).map((l) => l.ord);
-    if (unplaced.length)
-      return refusal("PARTITION_INDEPENDENCE_NOT_TOTAL",
-        `reason position(s) ${unplaced.slice(0, 20).join(", ")} are in no group.`,
-        { inquiry: inq, unplaced: unplaced.slice(0, 20) });
+      const unreadable = (why) => refusal("PARTITION_INDEPENDENCE_UNREADABLE", why, { inquiry: inq });
+      if (!Array.isArray(raw) || !raw.length)
+        return unreadable("pass partition=<JSON>: a non-empty list of groups, each a list of reason "
+          + "positions (e.g. [[0,1],[2]]) or {\"label\":…,\"legs\":[…]} — or version=<name> to read a "
+          + "written reading's groups instead.");
+      const legsMax = Store.BASIS_VERSION_LEGS_MAX;
+      if (raw.length > legsMax)
+        return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
+          `${raw.length} groups were proposed and a written reading holds at most ${legsMax} reasons.`,
+          { inquiry: inq, limit: legsMax });
+      const parts = [];
+      for (let k = 0; k < raw.length; k++) {
+        const g = raw[k];
+        const named = g && typeof g === "object" && !Array.isArray(g);
+        const ords = named ? g.legs : g;
+        const label = named ? String(g.label ?? "").trim() : `part ${k + 1}`;
+        if (!label)
+          return unreadable(`group ${k + 1} carries no name; leave the name out altogether to have it `
+            + "filed by its position.");
+        if (label.length > 200)
+          return unreadable(`group ${k + 1}'s name is longer than 200 characters.`);
+        if (!Array.isArray(ords) || !ords.length)
+          return unreadable(`group ${k + 1} lists no reasons; every group holds at least one.`);
+        if (!ords.every((o) => Number.isInteger(o) && o >= 0))
+          return unreadable(`group ${k + 1} names something other than a reason's position.`);
+        if (parts.some((p) => p.label === label))
+          return unreadable(`two groups are both named '${label.slice(0, 60)}'.`);
+        parts.push({ label, ords: [...ords] });
+      }
+
+      /* THE QUESTION'S OWN REASONS, over-fetched by one so a basis larger than a
+         written reading may hold is OBSERVED, not inferred. A partition checked
+         over a truncated basis could pass as covering reasons it never saw. */
+      const legRows = this.#rows(
+        `SELECT ord, target_id, target_type, role FROM inquiry_basis WHERE bundle_id=? ORDER BY ord LIMIT ?`,
+        inq, legsMax + 1);
+      if (legRows.length > legsMax)
+        return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
+          `${inq.slice(0, 60)} rests on more than ${legsMax} reasons.`, { inquiry: inq, limit: legsMax });
+      const byOrd = new Map(legRows.map((l) => [l.ord, l]));
+      const placed = new Map();
+      for (const p of parts)
+        for (const o of p.ords) {
+          if (!byOrd.has(o))
+            return refusal("PARTITION_INDEPENDENCE_UNKNOWN_LEG",
+              `'${p.label.slice(0, 60)}' names reason position ${o}, and ${inq.slice(0, 60)} has `
+              + `${legRows.length} reason(s)${legRows.length ? ` at positions ${legRows.map((l) => l.ord).join(", ")}` : ""}.`,
+              { inquiry: inq, ord: o });
+          if (placed.has(o))
+            return refusal("PARTITION_INDEPENDENCE_LEG_TWICE",
+              `reason position ${o} is in both '${placed.get(o).slice(0, 60)}' and '${p.label.slice(0, 60)}'.`,
+              { inquiry: inq, ord: o });
+          placed.set(o, p.label);
+        }
+      const unplaced = legRows.filter((l) => !placed.has(l.ord)).map((l) => l.ord);
+      if (unplaced.length)
+        return refusal("PARTITION_INDEPENDENCE_NOT_TOTAL",
+          `reason position(s) ${unplaced.slice(0, 20).join(", ")} are in no group.`,
+          { inquiry: inq, unplaced: unplaced.slice(0, 20) });
+      legs = legRows.map((l) => ({ ...l, ground: placed.get(l.ord) }));
+      /* WHAT WAS PROPOSED, read back with the documents each group rests on, so
+         the surface names the reasons it asked about rather than re-deriving them. */
+      head = { partition: parts.map((p) => ({ label: p.label, legs: p.ords,
+                 targets: p.ords.map((o) => byOrd.get(o).target_id) })),
+               legs_read: legRows.length };
+    }
     /* END DEC-49 REGION is-partition-independence */
 
-    const legs = legRows.map((l) => ({ ...l, ground: placed.get(l.ord) }));
+    /* THE ONE CALL, for both arms — the third consumer of `#independenceOf`, the one implementation.
+       `parts` is counted exactly as `versionStrength` counts it off stored legs: the distinct NON-BLANK
+       groups the legs carry (a proposed group's name is never blank, so over a partition this is its
+       group count). The same legs and the same count through the same function is what makes the
+       version arm's answer EQUAL `op=versionstrength`'s `independence`, rather than agree with it today. */
     return {
       ok: true,
       inquiry: inq,
-      /* WHAT WAS PROPOSED, read back with the documents each group rests on, so
-         the surface names the reasons it asked about rather than re-deriving them. */
-      partition: parts.map((p) => ({ label: p.label, legs: p.ords,
-        targets: p.ords.map((o) => byOrd.get(o).target_id) })),
-      legs_read: legRows.length,
+      ...head,
       wrote: false,
-      /* THROUGH `#independenceOf` — the third consumer, the one implementation.
-         `parts` is counted the way `versionStrength` counts it off stored legs:
-         the distinct non-blank groups the legs carry. */
-      independence: this.#independenceOf(legs, new Set(legs.map((l) => l.ground)).size),
+      independence: this.#independenceOf(legs,
+        new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean)).size),
     };
   }
 
@@ -47478,6 +47533,8 @@ export class Store extends DurableObject {
         partitionindependence: () => this.partitionIndependence({
           id: url.searchParams.get("id"),
           partition: (body && body.partition !== undefined) ? body.partition : url.searchParams.get("partition"),
+          /* REC-192: a STORED version's independence, on its own, with no strength key. */
+          version: url.searchParams.get("version"),
           viewer: url.searchParams.get("viewer"),
         }),
         /* PL-12 / D-84. Three ops. `author` on the adoption is stamped by the

@@ -20,6 +20,7 @@
  * arm through the Durable Object with no stamp, not a member who was not invited.
  *
  * NEGATIVE CONTROL: three arms, RUN 2026-09-23 by WORKER REC-161 with `node test/nc-rec161.mjs` from bio-plane/, each armed ALONE against a patched copy of src/store.mjs (2,911,504 bytes, sha256 b2369af69dcb…), every restore verified by sha256 AND cmp against a uniquely-named per-arm pristine copy, byte count printed and a minimum guarded. (0) BASELINE first and last -> 18 pass, 0 fail both times. (1) SECOND DERIVATION — `partitionIndependence` computes its own origin walk that agrees on bundles and captures and OMITS the ADDRESS branch, instead of calling `#independenceOf` -> 16/2, FAILS ARM D2 (the equality over an address-shared partition) and ARM E1 (the pin), AS DECLARED; A1, B1, C1 and D1 stay green, which is the liar's case: it agrees on everything but one branch. (2) OVER-STRICT — `#independenceOf` reports every pair of groups as sharing -> 13/5, FAILS B1, B2, D1, AS DECLARED, plus D2 and WITNESS, UNDECLARED and explained: the write gate (CHECK 4, the same function) now refuses the suggestions block D writes, so the correct fixture cannot be written — a fence this wide makes correct work unwritable. (3) DROP THE TOTALITY FENCE -> 17/1, FAILS ARM F4 ALONE, AS DECLARED.
+ * NEGATIVE CONTROL (REC-192, the VERSION arm, block H): RUN 2026-09-24 by WORKER REC-192 with `node test/nc-rec192.mjs` from bio-plane/, each arm ALONE against src/store.mjs (2,955,366 bytes, sha256 3a6b4cdf8adb…), every restore verified by sha256 AND cmp against a per-arm pristine copy. (0) BASELINE first and last -> 27 pass, 0 fail both times. (1) A STRENGTH FIELD ON THE VERSION-ARM ANSWER (`pair: {capture, connection, testimony}` added to its head) -> 25/2, FAILS ARM H2 (NO STRENGTH KEY) and ARM H3 (the whole answer), AS DECLARED; H0, H1, H4-H8, D1, D2, E1 stay green. (2) OVER-STRICT — versionstrength's default state set borrowed onto the version arm (a reading not `accepted` refused as absent) -> 23/4, FAILS H1, H3, H4, H5, AS DECLARED; H6 (the accepted reading) stays green, which is what tells a borrowed gate from a broken read. REC-161's three arms RE-RUN on this tree after nc-rec161.mjs was RE-ANCHORED (the partition arm moved one block in): all AS DECLARED — second-derivation 24/3 (D2, E1, and now H1: the version arm goes through the same call), overstrict 15/12 (B1, B2, D1 declared; D2, WITNESS and H0-H6 because CHECK 4 then refuses block D's writes, so the readings H reads are never written — REC-161's explanation, extended), no-totality 26/1 (F4 alone).
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
@@ -313,7 +314,91 @@ console.log("\n--- G. over-strictness: correct work in spellings the author did 
     [true, true, true, true]);
 }
 
-/* THE WITNESS, re-read: the reads wrote nothing. The two versions D wrote are D's own writes. */
+/* ====================================================================== H */
+console.log("\n--- H. REC-192: the VERSION arm — a written reading's independence ON ITS OWN, no strength key ---");
+{
+  /* BOB #31, 2026-09-23 22:22Z (INVESTIGATIVE-SESSION.md §12, UI-74's finding 5): *"a read answers
+     `independence` ON ITS OWN, apart from the strength pair, so the separation (a) asks for is structural
+     at the wire and not a choice each page makes."* The two readings block D wrote are the subjects: one
+     clean, one sharing an origin through an ADDRESS recorded after its write. */
+  const vi = async (version, extra = "") => GET(`op=partitionindependence&token=${RUTH}&id=${enc(INQ)}`
+    + `&version=${enc(version)}${extra}`);
+  const vs = async (version, states = "") => GET(`op=versionstrength&token=${RUTH}&id=${enc(INQ)}`
+    + `&version=${enc(version)}${states ? `&states=${enc(states)}` : ""}`);
+  /* THE STRENGTH VOCABULARY, taken from the answer that DOES carry a strength rather than typed from
+     memory: every key `op=versionstrength` returns that `op=partitionindependence`'s partition arm does
+     not, minus the two facts about the version itself. A key added to versionstrength later joins it. */
+  const keysDeep = (o, out = new Set()) => {
+    if (o && typeof o === "object")
+      for (const [k, v] of Object.entries(o)) { if (!Array.isArray(o)) out.add(k); keysDeep(v, out); }
+    return out;
+  };
+  const vsClean = await vs("clean grouping", "suggested");
+  const piShape = new Set(Object.keys(await pi([[0, 1], [2, 3]])));
+  const FACTS = new Set(["version", "version_state", "legs_complete"]);
+  const STRENGTH = [...Object.keys(vsClean ?? {})].filter((k) => !piShape.has(k) && !FACTS.has(k));
+  console.log(`  strength vocabulary, derived from op=versionstrength's answer: ${STRENGTH.join(", ")}`);
+  t("ARM H0 — THE DETECTOR IS NOT EMPTY: the vocabulary derived from op=versionstrength's answer holds "
+  + "`pair` and more, and walking versionstrength's OWN answer finds it — so an absence below is a finding",
+    [vsClean?.ok, STRENGTH.includes("pair"), STRENGTH.length >= 5,
+     STRENGTH.some((k) => keysDeep(vsClean).has(k))], [true, true, true, true]);
+
+  const clean = await vi("clean grouping"), split = await vi("split grouping");
+  const vsSplit = await vs("split grouping", "suggested");
+  t("ARM H1 — EQUALITY: the version arm's `independence` EQUALS op=versionstrength's `independence` for "
+  + "the same version, every field, over the clean reading AND over the one sharing an origin through an address",
+    [clean?.ok, split?.ok,
+     JSON.stringify(ind(clean)) === JSON.stringify(ind(vsClean)),
+     JSON.stringify(ind(split)) === JSON.stringify(ind(vsSplit)),
+     ind(clean)?.shared, (ind(split)?.shared ?? []).length, ind(split)?.checked],
+    [true, true, true, true, [], 1, true]);
+
+  const found = [...keysDeep(clean)].filter((k) => STRENGTH.includes(k))
+    .concat([...keysDeep(split)].filter((k) => STRENGTH.includes(k)));
+  t("ARM H2 — NO STRENGTH KEY: nowhere in the version arm's answer, at any depth, is there a key of the "
+  + "strength vocabulary — no pair, no axis, no grade, no state set",
+    found, []);
+  t("ARM H3 — THE WHOLE ANSWER, and nothing a later edit could slip a strength into unnoticed: exactly "
+  + "the question, the reading, its state, the legs read, whether they were complete, `wrote: false`, and `independence`",
+    Object.keys(clean ?? {}),
+    ["ok", "inquiry", "version", "version_state", "legs_read", "legs_complete", "wrote", "independence"]);
+  t("ARM H4 — the facts served beside it are the version's own: its name, its state, its legs",
+    [clean?.version, clean?.version_state, clean?.legs_read, clean?.legs_complete, clean?.wrote],
+    ["clean grouping", "suggested", 4, true, false]);
+
+  /* OVER-STRICTNESS: the reading a member affirms at the accept ceremony is by construction NOT YET
+     accepted, so a state gate borrowed from versionstrength would refuse exactly the read this exists for. */
+  const vsDefault = await vs("split grouping");
+  t("ARM H5 — NOT STATE-GATED: a `suggested` reading answers here, where op=versionstrength's default "
+  + "(accepted) refuses it — a state set filters a STRENGTH, and this answer carries none",
+    [split?.ok, vsDefault?.code], [true, "VERSION_STRENGTH_STATE_EXCLUDED"]);
+  const acc = await POST(`op=versionaccept&token=${RUTH}&target=${enc(INQ)}`
+    + `&version=${enc("clean grouping")}&reason=${enc("the evidence holds")}`
+    + `&affirmed=${enc("the ledger and minutes,the audit")}`, {});
+  if (!acc?.ok) console.log(`  accept: ${JSON.stringify(acc).slice(0, 500)}`);
+  const accV = await vi("clean grouping"), accS = await vs("clean grouping");
+  t("ARM H6 — and once ACCEPTED, the version arm still equals op=versionstrength's DEFAULT read, and "
+  + "serves the new state",
+    [acc?.ok, accS?.ok, accV?.version_state, JSON.stringify(ind(accV)) === JSON.stringify(ind(accS))],
+    [true, true, "accepted", true]);
+
+  const code = (r) => [r?.ok, r?.code, r?.check];
+  t("ARM H7 — a reading the question does not hold, and a version AND a partition named together, are "
+  + "each refused by name; nothing is substituted and neither is silently preferred",
+    [code(await vi("no such reading")),
+     code(await vi("clean grouping", `&partition=${enc("[[0,1],[2,3]]")}`))],
+    [[false, "PARTITION_INDEPENDENCE_NO_SUCH_VERSION", "C-71.9"],
+     [false, "PARTITION_INDEPENDENCE_TWO_SUBJECTS", "C-71.8"]]);
+  const noStamp = await DO(`partitionindependence?id=${enc(INQ)}&version=${enc("clean grouping")}`);
+  const absent = await DO(`partitionindependence?id=${enc("INQ-2026-5161-nobody-asked")}&version=${enc("clean grouping")}`);
+  t("ARM H8 — versionstrength's GATE KEPT: with no viewer stamp the version arm on a real question "
+  + "refuses BYTE-IDENTICALLY to a question that does not exist, before any leg is read",
+    [code(noStamp), JSON.stringify(noStamp) === JSON.stringify({ ...absent, inquiry: INQ })],
+    [[false, "PARTITION_INDEPENDENCE_NOT_AN_INQUIRY", "C-71.2"], true]);
+}
+
+/* THE WITNESS, re-read: the reads wrote nothing. The two versions D wrote are D's own writes; H's accept
+   moves one of them to `accepted` and mints no version. */
 const versionsAfter = (await GET(`op=basisversions&token=${RUTH}&id=${enc(INQ)}`))?.total;
 t("WITNESS — the question holds exactly the two readings block D WROTE through op=suggest, and no "
 + "partition read added one",
