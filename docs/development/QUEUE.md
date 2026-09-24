@@ -291,6 +291,7 @@ scope: name ONE ignored scratch path for workers' files and gate logs in WORKER.
 accepts-when: a worktree with a root scratch dir gates identically to one without. NEGATIVE CONTROL: remove the exclusion and the count moves, failing by name.
 note: 2026-09-24 05:02Z by SCHEDULER #18 (D-486's finding 6, via CONDUCT #20): a scratch COPY of the repo inside the worktree is walked too — statepaths read 36 files of `.d486/before1/`; the one ignored scratch path must exclude repo-walking suites as well.
 note: 2026-09-24 05:05Z — BOB #32 RULED the choice (05:04Z): WORKER.md's 'keep scratch inside your worktree' collides with M0-126; it becomes 'keep scratch in the session scratchpad, OUTSIDE the worktree'. That is this row's fix; an in-worktree ignored path is not.
+note: 2026-09-24 05:22Z (CONDUCT #20, integ1b): also correct WORKER.md step 0's REC-110 sentence — a plain /* */ or // comment leaves bundled.mjs byte-identical, a /** */ docstring IS emitted (measured +1,104 B); byte-neutral, WORKER.md is 2 B under budget.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### D-483 · running — SPAWNED 2026-09-24 ~04:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-483 (CONDUCT #20), base origin/main, into D-493's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-483 and that session; never conclude queued from the absence alone.

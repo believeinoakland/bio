@@ -41,6 +41,7 @@ design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2 "The declared f
 depends-on: REC-184.
 scope: the disposition act carries `definitionVersion`; if the definition moved since, refuse DEFINITION_MOVED by name, catalogued with its DEC-49 translation.
 accepts-when: a stale-version disposition is refused DEFINITION_MOVED and a current one is admitted. NEGATIVE CONTROL: drop the version check and the stale-version arm is admitted, failing by name.
+note: 2026-09-24 05:22Z (CONDUCT #20, integ1b report 2): the READ half is built (a disposition records the version it judged; applies/applies_because say whether it still governs); this row is the WRITE half only.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs REC`).
 
 ### D-500 · queued — **THE OBSERVATION-LOG WATERMARK CLASSIFIES A RECORD DIFFERENTLY FROM RUN TO RUN: `#hiddenSets`' watermark read and `#contentAxisTally` compare MIN(at) with `register.registered` at different precisions (one-second against milliseconds), so a same-second pair flips class intermittently.** D-486's narrowed trace. BOB #32 RULED (2026-09-24 05:04Z): the watermark STAYS VIEWER-INDEPENDENT (never taken through the caller's sight, never narrowed per viewer); a hidden run's reclassification is the accepted cost ONLY IF DETERMINISTIC. — owner RECORD.
@@ -101,6 +102,7 @@ design: `docs/development/CLIENT-RENDERED.md` "What must be recorded on a render
 depends-on: D-64.
 scope: the render block records `wait.fired: "timeout"|"condition"`; the reading derives "render may be incomplete (wait timed out)". Drive with a stub renderer through `op=acquire`.
 accepts-when: a timed-out render reads the sentence with its grade intact; a condition-met render does not. NEGATIVE CONTROL: record every wait as `condition` and the timeout arm fails by name.
+note: 2026-09-24 05:22Z (CONDUCT #20): first confirm D-64's `rendererFor` seam admits a stub; if it does not, making it do so is this row's first act.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### DIST-11 · queued — **THE DEPLOY DERIVATION REFUSES A `browser` BINDING (UNKNOWN_BINDING_CLASS), so no instance can hold the `BROWSER` binding D-64's render arm needs.** BOB #32 asked for it (~03:14Z, via CONDUCT #20). — owner DIST.
