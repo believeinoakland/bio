@@ -47,7 +47,8 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   EXTRACTION-BREADTH §2 row 5, OFFICE-FORMATS CSV, Intake §8.
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
 - D-453 (Oakland identifier-space measurement) RUNNING beside the eight: session_017L57JtEbWmyk63Ep8SRZoj (fresh, network FULL), branch
-  land/worker/D-453, push by 05:45Z. D-166 (Tier 1 probe re-point, fresh session needed) is QUEUED: takes the first freed slot.
+  land/worker/D-453, push by 05:45Z. D-166 (Tier 1 probe re-point) RUNNING beside the eight: session_01YVmxTyjL1kajX9Yam7MQgM (fresh), land/worker/D-166.
+  Live at 03:12Z = 8 slot workers + 2 measurement lanes. Queued left: D-479 (D-481, D-484 at the backlog head).
 - To archive after integ1 lands: WORKER D-64 session_011NsrFb1XMsrK73ukion49o, WORKER REC-184 session_0168F3n5XEbnzSJutjKHxZ2t,
   c18-batch7fix session_01Pho5eXgBrQK8TjhnKHW6fa; after batch11 trains: its 4 row workers + batch10/batch11 sessions.
 
