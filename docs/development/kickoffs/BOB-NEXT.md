@@ -89,3 +89,7 @@ commit on main for 120+ min. INBOX → SCHEDULER: undrained BOB INBOX entries.
   may deploy on Bob's or BOB's ask; CONDUCT may run train.mjs). BOB #32 prepared it (local branch land/bob/automode-lanes in
   /home/user/wt-lanes, UNPUSHED) but the classifier HARD-refuses a session pushing its own permission rules even with Bob's approval: only
   Bob can commit it (GitHub web editor). Until he does, a release needs Bob to type the ask in DIST's own session.
+- **CORRECTION 13:05Z (supersedes the autoMode line above):** cloud sessions offer only Auto, Accept edits and Plan; bypassPermissions is
+  not available on the web, and cloud sessions IGNORE settings-file defaultMode/autoMode (docs: code.claude.com/docs/en/permission-modes.md).
+  So the settings fix would not work and is ABANDONED (local branch land/bob/automode-lanes never pushed; do not push it). Standing
+  arrangement: everything relays through BOB EXCEPT a release deploy, which needs Bob's one line typed in DIST's own session.
