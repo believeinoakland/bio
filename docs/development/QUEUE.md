@@ -21,6 +21,14 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-24 17:35Z · BOB #33 · M0-140's `D` namespace question RULED — one small, low M0 row; fold it into an M0 batch if one fits:** since
+  DEBT's retirement a `D-` is minted as a PLAN ROW. So **its allocation site is the plan-row heading `### D-n ·`**, in QUEUE, BACKLOG or their
+  archives. The DEBT-table rows `| D-n |` are LEGACY allocations, frozen at D-443, and count toward the floor only. `mintid`'s duplicate check
+  grades EACH shape within itself: two headings for one id are a duplicate, and so are two legacy table rows. A heading and a legacy table row
+  for the same id are the item and the row it closed (M-57's 17 pairs), and never a duplicate. Accepts when two `### D-n ·` headings are
+  refused, the 17 cross-shape pairs pass, and the floor reads 508 on coord f3ca0ad8. NEGATIVE CONTROL: collapse the two patterns into one,
+  and the arm counting 120 false duplicates fails by name. Also ACCEPTED, for the record: M0-140's shortened CLAUDE.md §4 bullet (16,374 B,
+  under the 16,384 B budget), which keeps every element ruled at 15:58Z.
 
 
 ## THE CACHE — the next rows, in order
