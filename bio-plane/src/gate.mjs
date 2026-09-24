@@ -81,6 +81,10 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    refuse documents that used to pass) — the catalog's own version records what
    judged a bundle, and every ratification stamps it, so an action refused here
    is distinguishable from one refused by 1.19.0 without reading this file. */
+/* 1.22.0 (CONDUCT #20 at c20-batch18, 2026-09-24): D-484 added C-33.40 NO_BASIS and C-33.41
+   NO_CITATION to ACT_SHAPE_CHECKS, so the catalogue moved 433 -> 435 checks and the stamp moves
+   with it, MINOR and additive on this constant's own rule (Publication §3 rule 17). The d470
+   census suite caught it on the c20-batch17 train (A3). */
 export const CATALOG_VERSION = "1.23.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 

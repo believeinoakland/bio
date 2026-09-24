@@ -536,6 +536,61 @@ function refusal(key, extra = {}) {
   return { ok: false, reason: key, code: key, check: row.check, translation: row.translation, ...extra };
 }
 
+/* D-484 / DEC-49 (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10) — THE TWO
+   MULTI-SITE ACT-SHAPE CODES, CONSOLIDATED SO THERE IS ONE SITE.
+ *
+ * WHY A HELPER RATHER THAN A TRANSLATION AT EACH SITE, and ACT_SHAPE_CHECKS's
+ * own header is the argument. A row holds ONE `where`, a `where` names THE
+ * SMALLEST SPAN IN WHICH THE ROW'S REFUSAL IS ENFORCED, and one code may not
+ * hold two rows — so a code minted at four sites could not be given a row at
+ * all, and that header named the honest fix as *"the refusals consolidated
+ * behind one helper so there IS one site"* and routed it rather than attempting
+ * it. This is that fix for the two codes D-484 names: `NO_BASIS` was minted at
+ * four sites and `NO_CITATION` at three, and each now has exactly one.
+ *
+ * THE CODE IS A STRING LITERAL HERE, which is DEC-49's rule and the reason the
+ * consolidation works at all: the guard's arm C COMPARES a literal and reads
+ * past a variable, and a code held in a variable once shipped
+ * `translation: undefined` to a member. Each helper THROWS on a missing row for
+ * `admissionRow`'s reason — a throw is a 500 in a test, which is loud, where a
+ * missing sentence is silent and reaches a person.
+ *
+ * ADDITIVE ON THE WIRE (I3). `reason` and every per-site key the callers passed
+ * before — `target`, `progression_key`, `version` — are unchanged and still
+ * first; `detail` is still the site's own sentence, because the canned
+ * translation is the MEMBER's answer and the detail is the caller's. What is new
+ * is `code`, `check` and `translation` beside them. No existing reader loses a
+ * key it read. */
+
+function actNoBasis(detail, extra = {}) {
+  /* DEC-49 REGION is-act-no-basis — D-484 / C-33.40. The ONE site at which the
+     plane says a thing the record would have to stand behind rests on nothing:
+     a conclusion with no legs, a grouping of a question that rests on nothing, a
+     grade-D testimony with no stated basis, a revision of a declared flow that
+     does not say why it changes. */
+  const row = ACT_SHAPE_CHECKS.NO_BASIS;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("actNoBasis: NO_BASIS has no ACT_SHAPE_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_BASIS", code: "NO_BASIS", check: row.check,
+           translation: row.translation, detail, ...extra };
+  /* END DEC-49 REGION is-act-no-basis */
+}
+
+function actNoCitation(detail, extra = {}) {
+  /* DEC-49 REGION is-act-no-citation — D-484 / C-33.41. The ONE site at which the
+     plane says a written thing names no source anybody else could go and read: a
+     declared entity relation, a revision of a declared flow, an exception
+     document discharging a skipped stage. */
+  const row = ACT_SHAPE_CHECKS.NO_CITATION;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("actNoCitation: NO_CITATION has no ACT_SHAPE_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_CITATION", code: "NO_CITATION", check: row.check,
+           translation: row.translation, detail, ...extra };
+  /* END DEC-49 REGION is-act-no-citation */
+}
+
 /* BIO store, plane layer, step 1.
  *
  * Replaces storeReadAdapter_, storeWriteAdapter_, indexWriteAdapter_ and the
@@ -1139,6 +1194,14 @@ export class Store extends DurableObject {
          CURRENT version — the very claim the column exists to test. NULL reads back `not recorded`,
          stated by `#dispositionVersionView`. */
       ["proposal_dispositions", "definition_version", "INTEGER"],
+      /* REC-193 (BIO_Publication_v0_1.md §3 rule 13, BOB #32): WHO WROTE THE EXCLUSION STATEMENT'S CURRENT
+         BYTES — the SERVER's stamp of the editor whose `op=casedraft` last CHANGED the statement text, never
+         the caller's word and never the last editor of another field. NULLABLE AND NEVER BACK-FILLED, D-85's
+         reasoning and sharper here: the only value a backfill could reach for is `updated_by`, which is the
+         liar this column replaces. NULL reads back as UNDETERMINED, stated, and `op=statementack` refuses by
+         name (`STATEMENT_ACK_AUTHOR_UNDETERMINED`) rather than attribute the sentence to whoever last
+         touched the draft. */
+      ["case_drafts", "statement_by", "TEXT"],
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -5709,11 +5772,12 @@ export class Store extends DurableObject {
        which C-2.8 still requires of a concluded inquiry's own bytes. One
        refusal, one site. */
     if (adopted.leg_count < 1 || (!pid && legs.length < 1))
-      return { ok: false, reason: "NO_BASIS", target,
-               detail: "a conclusion rests on something. An open inquiry may hold a claim with no legs at "
-                     + "all — a standing objective the group means to pursue — but concluding one that "
-                     + "rests on nothing would put the record's name to an assertion nothing supports. "
-                     + "Add a basis[] leg (and the same target in references[]) first." };
+      /* D-484: routed through the ONE governed site so the code carries its canned
+         translation; `reason`, `target` and this sentence are unchanged. */
+      return actNoBasis("a conclusion rests on something. An open inquiry may hold a claim with no legs at "
+                      + "all — a standing objective the group means to pursue — but concluding one that "
+                      + "rests on nothing would put the record's name to an assertion nothing supports. "
+                      + "Add a basis[] leg (and the same target in references[]) first.", { target });
 
     /* REC-124: THE PROJECT'S CONCLUSION IS WRITTEN ON THE PROJECT AND NOWHERE
        ELSE. The shared inquiry's bytes, its state and every other project's
@@ -9697,11 +9761,27 @@ export class Store extends DurableObject {
       return { ok: false, reason: "REVIEW_DRAFT_TOO_LARGE",
                detail: "a draft's arguments are at most 64 KiB, the size of what op=publish would accept." };
     const when = new Date().toISOString();
+    /* REC-193 / §3 rule 13 (BOB #32, 2026-09-23) — THE STATEMENT'S AUTHOR IS THE MEMBER WHO WROTE ITS
+       CURRENT BYTES, AND THE SERVER SAYS WHO THAT IS. Stamped here, at the write, from the session the act
+       runs as (`a.who`); no caller-supplied field reaches it. An edit that leaves the statement text alone
+       leaves the stamp alone, so an editor who rewrites the scope does not become the statement's author —
+       which is exactly what `updated_by` claimed when `op=statementack` read it (D-150's first cut, marked
+       PROVISIONAL in the rule). The comparison is on the text as the case document would PRINT it
+       (`#fmSafe`), the same normalisation `#statementSha` hashes, so two spellings the record cannot tell
+       apart do not move the author either. A write that supplies a statement to a draft whose author is
+       UNRECORDED stamps it: that member did write the bytes that now stand, which is a measurement of this
+       act rather than a backfill's guess about an older one. An emptied statement has no author. */
+    const priorStatement = existing ? Store.#fmSafe(JSON.parse(existing.params).statement ?? "") : "";
+    const nextStatement = Store.#fmSafe(params.statement ?? "");
+    const statementBy = !nextStatement ? null
+      : (existing && nextStatement === priorStatement && existing.statement_by) ? existing.statement_by
+      : a.who;
     let id;
     if (existing) {
       id = existing.draft_id;
-      this.sql.exec(`UPDATE case_drafts SET case_id=?, params=?, updated_by=?, updated_at=? WHERE draft_id=?`,
-                    named, json, a.who, when, id);
+      this.sql.exec(`UPDATE case_drafts SET case_id=?, params=?, updated_by=?, updated_at=?, statement_by=?
+                     WHERE draft_id=?`,
+                    named, json, a.who, when, statementBy, id);
     } else {
       /* REC-151: OPAQUE, never the DRAFT counter (Membership v2 §7) — a draft is its project's editors' alone. */
       id = this.#mintOpaqueId("DRAFT", when.slice(0, 4), "", (d) =>
@@ -9710,7 +9790,8 @@ export class Store extends DurableObject {
       if (!id) return { ok: false, reason: "MINT_EXHAUSTED",
                         detail: "the plane could not find a free draft id; nothing was written" };
       this.sql.exec(`INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
-                     updated_by,updated_at) VALUES (?,?,?,?,?,?,?,?)`, id, owning, named, json, a.who, when, a.who, when);
+                     updated_by,updated_at,statement_by) VALUES (?,?,?,?,?,?,?,?,?)`,
+                    id, owning, named, json, a.who, when, a.who, when, statementBy);
     }
     const ident = this.#draftIdentity({ case_id: named });
     return { ok: true, draftId: id, project: owning, edited: !!existing,
@@ -9956,6 +10037,14 @@ export class Store extends DurableObject {
                  act: "op=statementack&draft=" + d.draft_id };
       })(),
       updated_by: d.updated_by, updated_at: d.updated_at,
+      /* REC-193 / §3 rule 13: WHO WROTE THE STATEMENT THAT STANDS, beside the editor of everything else,
+         because they are two facts and one column said both. `null` is the honest answer for a draft
+         written before the stamp existed, and the sentence beside it says which. */
+      statement_by: d.statement_by ?? null,
+      statement_by_stated: d.statement_by
+        ? `${d.statement_by} wrote the exclusion statement as it now stands`
+        : "UNDETERMINED: this draft predates the recording of the statement's author, and its last editor "
+          + "is not evidence of who wrote the statement",
       ...grantPart,
       /* REC-148: the project's bar AS `op=publish` WOULD FREEZE IT (the same `#projectBar` call), for the
          control plane's in-band floors (DEC-31, §6A.3 point 1). Read now, because a draft is not frozen. */
@@ -10027,12 +10116,19 @@ export class Store extends DurableObject {
   acknowledgeStatement({ draft = null, caseId = null, edition = null, secretSha = null, viewer = null,
                          bySecret = false } = {}) {
     let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
+    /* REC-193: whether the author was read from a DRAFT's `statement_by` — the column an older draft
+       does not carry, and the one place UNDETERMINED is reachable. A case document states its author
+       in its own bytes, so that door is not this one. */
+    let authorFromDraft = false;
     if (bySecret) {
       const live = this.#liveReviewGrant(secretSha);
       if (!live || (draft && String(draft).trim() !== live.draft.draft_id)) return Store.#noReviewCopy();
       const d = live.draft;
       project = d.project_id; ident = this.#draftIdentity(d); draftId = d.draft_id;
-      statement = JSON.parse(d.params).statement; statementAuthor = d.updated_by;
+      /* REC-193 / §3 rule 13: the statement's author is WHO WROTE ITS CURRENT BYTES, stamped at the
+         draft write that changed them — never `updated_by`, which is the last editor of any field. */
+      statement = JSON.parse(d.params).statement; statementAuthor = d.statement_by ?? null;
+      authorFromDraft = true;
       kind = "recipient"; by = live.grant.grant_id; grantId = live.grant.grant_id; recipient = live.grant.recipient;
     } else {
       const v = String(viewer ?? "");
@@ -10042,7 +10138,10 @@ export class Store extends DurableObject {
         const d = this.#draftForMember(draft, v);
         if (!d) return Store.#noReviewCopy();
         project = d.project_id; ident = this.#draftIdentity(d); draftId = d.draft_id;
-        statement = JSON.parse(d.params).statement; statementAuthor = d.updated_by;
+        /* REC-193 / §3 rule 13: the statement's author is WHO WROTE ITS CURRENT BYTES, stamped at the
+         draft write that changed them — never `updated_by`, which is the last editor of any field. */
+      statement = JSON.parse(d.params).statement; statementAuthor = d.statement_by ?? null;
+      authorFromDraft = true;
       } else {
         const cid = String(caseId ?? "").trim(), ed = Number(edition);
         if (!cid || !Number.isInteger(ed) || ed < 1)
@@ -10077,11 +10176,35 @@ export class Store extends DurableObject {
       return { ok: false, reason: "STATEMENT_ACK_NO_STATEMENT",
                detail: "this draft states nothing about what its case excludes, so there is no statement to "
                      + "acknowledge yet. The draft's editor authors it (statement=); acknowledge it then." };
+    /* REC-193 / §3 rule 13 — A DRAFT WRITTEN BEFORE `statement_by` EXISTED SAYS NOTHING ABOUT WHO WROTE
+       ITS STATEMENT, AND THAT IS STATED RATHER THAN GUESSED. The value a guess would reach for is
+       `updated_by`, the last editor of ANY field, which would attribute the sentence to whoever last
+       touched the scope — the defect this landing removes. Refused rather than admitted, because an
+       acknowledgement recorded against an unknown author may BE the author's own, and the case document
+       would then list a second reader the record cannot support (`CLAUDE.md` §2: a defect that makes the
+       record claim more than it can support is worse than a missing feature). It costs the act and not
+       the case: rule 11 never refuses publication for want of an acknowledgement, and an editor who
+       re-saves the statement stamps it, after which this door opens. A RECIPIENT is unaffected — the
+       exclusion is of the author, and a grant's holder is never the author. */
+    if (kind === "participant" && authorFromDraft && !statementAuthor)
+      return { ok: false, reason: "STATEMENT_ACK_AUTHOR_UNDETERMINED", draft: draftId, author: null,
+               detail: `this draft records no author for its exclusion statement: it was written before the `
+                     + `plane stamped one, and who wrote the sentence that now stands is UNDETERMINED. An `
+                     + `acknowledgement is a SECOND person's reading (BIO_Publication §3 rule 11), and the `
+                     + `plane cannot tell here whether you are the first — reading the draft's last editor `
+                     + `would attribute the statement to whoever last touched any part of it. An editor of `
+                     + `this project saves the statement again (op=casedraft with statement=), which records `
+                     + `who wrote its current bytes; acknowledge it then. The case publishes either way.` };
     /* THE AUTHOR'S OWN ACKNOWLEDGEMENT IS REFUSED BY NAME. The rule's whole content is a SECOND
        person; an author who acknowledges their own statement has made the first reading twice.
-       The author is the draft's last editor (whose edit is the statement that stands) or the
-       unsigned document's `completeness.author`. `op=publish` also leaves out an acknowledgement
-       by the member who publishes, who becomes the statement's author at that act. */
+       THE AUTHOR IS THE MEMBER WHO WROTE THE STATEMENT'S CURRENT BYTES (§3 rule 13, BOB #32,
+       2026-09-23): a draft's `statement_by`, stamped by the server at the write that changed the
+       text, or the unsigned document's `completeness.author`. It was the draft's LAST EDITOR until
+       REC-193, which the rule marked PROVISIONAL and which is a different fact — an editor who
+       rewrote the scope after somebody else wrote the statement was refused here by name, and the
+       member who actually wrote the sentence was admitted as its own second reader. `op=publish`
+       also leaves out an acknowledgement by the member who publishes, who becomes the statement's
+       author at that act. */
     if (kind === "participant" && statementAuthor && by === statementAuthor)
       return { ok: false, reason: "STATEMENT_ACK_BY_ITS_AUTHOR", author: statementAuthor,
                detail: `you wrote this statement, and its acknowledgement is a SECOND person's reading of what `
@@ -10260,8 +10383,9 @@ export class Store extends DurableObject {
               : Store.REVIEW_LIST_MAX;
     const counted = this.#one(`SELECT COUNT(*) AS n FROM case_drafts WHERE project_id=?`, pid);
     const total = counted ? Number(counted.n) : 0;
-    const rows = this.#rows(`SELECT draft_id, case_id, created_by, created_at, updated_by, updated_at
-                             FROM case_drafts WHERE project_id=? ORDER BY created_at, draft_id LIMIT ?`, pid, cap);
+    const rows = this.#rows(`SELECT draft_id, case_id, created_by, created_at, updated_by, updated_at,
+                             statement_by FROM case_drafts WHERE project_id=? ORDER BY created_at, draft_id
+                             LIMIT ?`, pid, cap);
     const drafts = rows.map((d) => {
       const ident = this.#draftIdentity(d);
       return { draft_id: d.draft_id,
@@ -10269,6 +10393,8 @@ export class Store extends DurableObject {
                        identity: Store.#caseIdentitySentence(ident.caseId, ident.edition) },
                created_by: d.created_by, created_at: d.created_at,
                updated_by: d.updated_by, updated_at: d.updated_at,
+               /* REC-193 / §3 rule 13: null where the draft predates the stamp — UNDETERMINED, not the editor. */
+               statement_by: d.statement_by ?? null,
                read: `op=reviewcopy&draft=${d.draft_id}` };
     });
     return { ok: true, kind: "review-drafts", project: pid, drafts, count: drafts.length,
@@ -11262,10 +11388,10 @@ export class Store extends DurableObject {
     const all = Array.isArray(fm.basis) ? fm.basis : [];
     const legs = all.filter((l) => l && typeof l === "object");
     if (!legs.length)
-      return { ok: false, reason: "NO_BASIS", target,
-               detail: "a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite "
-                     + "what it rests on first (op=cite); an assertion that nothing is enough on its own is "
-                     + "not a thing the record can hold." };
+      /* D-484: routed through the ONE governed site (see `actNoBasis`). */
+      return actNoBasis("a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite "
+                      + "what it rests on first (op=cite); an assertion that nothing is enough on its own is "
+                      + "not a thing the record can hold.", { target });
     if (legs.length !== all.length)
       return { ok: false, reason: "UNSPLICEABLE_BASIS", target,
                detail: "this question's basis carries an entry that is not a leg, so the ordinals a "
@@ -22931,8 +23057,8 @@ export class Store extends DurableObject {
        cannot enter the registry. */
     if (!just) return { ok: false, reason: "NO_JUSTIFICATION",
       detail: "a declared relation carries a justification, like a pattern statement (safeguard 4)" };
-    if (!cite) return { ok: false, reason: "NO_CITATION",
-      detail: "a declared relation carries a citation, like a pattern statement (safeguard 4)" };
+    /* D-484: routed through the ONE governed site (see `actNoCitation`). */
+    if (!cite) return actNoCitation("a declared relation carries a citation, like a pattern statement (safeguard 4)");
     const from = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, fromEntity);
     if (!from) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: fromEntity, end: "from" };
     const to = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, toEntity);
@@ -23309,8 +23435,8 @@ export class Store extends DurableObject {
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "testimony names the entity the reference concerns, by id" };
     const b = typeof basis === "string" ? basis.trim() : "";
-    if (!b) return { ok: false, reason: "NO_BASIS",
-      detail: "grade D is recorded testimony: it carries the member's stated basis, with an author and a date" };
+    /* D-484: routed through the ONE governed site (see `actNoBasis`). */
+    if (!b) return actNoBasis("grade D is recorded testimony: it carries the member's stated basis, with an author and a date");
     const rr = this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=?`, captureSha, ref);
     if (!rr) return { ok: false, reason: "NO_SUCH_REFERENCE", capture_sha: captureSha, ref,
       detail: "this captured document's reading carries no such reference to testify about" };
@@ -24281,11 +24407,13 @@ export class Store extends DurableObject {
         return { ok: true, progression_key: key, label: cur.label, stage_count: cur.stages.length, stages: cur.stages,
                  declared_by: cur.declared_by, at: cur.at, version: cur.version, unchanged: true,
                  basis: cur.basis, prior_version: null };
-      if (!stmt) return { ok: false, reason: "NO_BASIS", progression_key: key, version: cur.version,
-        detail: `'${key}' is already declared (version ${cur.version}); a revision states its basis -- why the `
-              + `declared flow changes -- and version ${cur.version} stands beside it (framework 8.2)` };
-      if (!cite) return { ok: false, reason: "NO_CITATION", progression_key: key, version: cur.version,
-        detail: "a revision of a declared flow carries a citation -- where the basis for the change is published or held" };
+      /* D-484: routed through the ONE governed site (see `actNoBasis`). */
+      if (!stmt) return actNoBasis(`'${key}' is already declared (version ${cur.version}); a revision states its basis -- why the `
+                                 + `declared flow changes -- and version ${cur.version} stands beside it (framework 8.2)`,
+                                  { progression_key: key, version: cur.version });
+      /* D-484: routed through the ONE governed site (see `actNoCitation`). */
+      if (!cite) return actNoCitation("a revision of a declared flow carries a citation -- where the basis for the change is published or held",
+                                      { progression_key: key, version: cur.version });
     }
     const version = cur ? cur.version + 1 : 1;
     const at = new Date().toISOString();
@@ -25150,8 +25278,8 @@ export class Store extends DurableObject {
     if (!rsn) return { ok: false, reason: "NO_REASON",
       detail: "an exception document carries a reason -- why the stage may lawfully be missing (framework 8.2)" };
     const cite = typeof citation === "string" ? citation.trim() : "";
-    if (!cite) return { ok: false, reason: "NO_CITATION",
-      detail: "an exception document carries a citation -- where the justification for the skip is published" };
+    /* D-484: routed through the ONE governed site (see `actNoCitation`). */
+    if (!cite) return actNoCitation("an exception document carries a citation -- where the justification for the skip is published");
     const def = this.#one(`SELECT progression_key FROM progression_defs WHERE progression_key=?`, key);
     if (!def) return { ok: false, reason: "NO_SUCH_PROGRESSION", progression_key: key,
       detail: "define the progression first (op=progressiondefine), then discharge a skip in one of its instances" };

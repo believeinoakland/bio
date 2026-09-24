@@ -52,7 +52,15 @@ export const STATES = ["BUILT", "PARTIAL", "ABSENT", "DEFERRED", "UNDETERMINED"]
 /* + `queueApplySet`, `queueSelFor` (D-291, 2026-09-24, from the suite's own derivation): D-126's queue selection
    (`queueApplySet(op, …)` → `recPostR(op, …)`; `queueSelFor("taskresolve")` names an op) arrived on a base older than
    this list's check, so the union reported them missing; added here rather than exempted. */
-export const UI_HELPERS = ["recR", "recPostR", "actAsk", "intentAsk", "intentPreflight",
+export const UI_HELPERS = ["recR", "recPostR", "actAsk",
+  /* UI-90 (2026-09-24): `actAskPost` is `actAsk`'s POST twin, added for `op=actionlaws`, whose list of
+     citations travels in the body. NAMED HERE BECAUSE status.test.mjs's re-derivation FAILED THE GATE on
+     it — a helper the list does not know is a blind spot every `uinone` claim through it inherits, which
+     is the arm doing exactly its job. It goes AFTER "actAsk" on purpose: status.control.mjs arm A5
+     anchors on the literal `["recR", "recPostR", "actAsk",`, and inserting ahead of it would have
+     disarmed the control that guards this very list. No `uinone` claim names actionlaws, so registering
+     it flips no absence claim — checked, not assumed. */
+  "actAskPost", "intentAsk", "intentPreflight",
   "captureAct", "apiQ", "apiR", "api",
   /* D-126's queue set-apply (`recPostR(op, …)` over a selection), added at integration by c19-unionfix, 2026-09-24,
      when the suite's re-derivation named it. `queueSelFor` is D-291's (comment above); c19-batch11 carries both. */

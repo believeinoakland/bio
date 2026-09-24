@@ -237,8 +237,17 @@ const digestOf = (ids) => createHash("sha256").update([...ids].sort().join("\n")
  * ------------------------------------------------------------------------ */
 const CATALOG_CENSUS = {
   "1.21.0": { count: 433, digest: "7e1c85cd94bffdf2140d52e6269b6a1178d3dbc76c40f8ec1b870b5626293e02" },
-  "1.22.0": { count: 438, digest: "1cce052ae21076c6f7f5f0fafe13c2cc25b834a546dd108480dd6b873b81772b" },
-  "1.23.0": { count: 445, digest: "b8b84189e7daa40a396c11badac3a92e625260c9e8f8ad09b863d2dec37b118b" },
+  /* 1.22.0 (CONDUCT #20, c20-batch18): D-484's C-33.40/C-33.41, from this suite's own print. */
+  "1.22.0": { count: 435, digest: "a388b6427a3c28ee399c62b7f709e38ae95a65d1119f1dbb32fd7ea25f77bb35" },
+  /* 1.23.0 (CONDUCT #20, c20-batch14, 2026-09-24): THE UNION'S OWN catalogue, 447 checks, from THIS SUITE'S
+     OWN PRINT on the merged tree and never arithmetic. 433 (origin/main's 1.21.0) + FOURTEEN arrivals, no
+     departures: c20-batch11fix's five (C-32.19, C-41.13, C-71.8, C-71.9, C-78.2), c20-integ1b's seven (D-64's
+     C-83.1..7) and origin/main's two (D-484's C-33.40, C-33.41). ADDITIVE, so the bump stays MINOR.
+     **c20-batch13's 1.22.0 = {438, 1cce052a…} IS DROPPED HERE AND THE ROW ABOVE IS origin/main's {435,
+     a388b642…}**: that branch wrote a 1.22.0 for ITS union and the number never reached `main`, which then
+     published a different catalogue under it. ONE VERSION NAMES ONE CATALOGUE, which is this table's whole
+     rule, so the landed row stands and this union takes the next number. */
+  "1.23.0": { count: 447, digest: "3309735d2983f422ff63ba8491b6fcd3e350e1642de29716bb578dc8077ab9da" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the

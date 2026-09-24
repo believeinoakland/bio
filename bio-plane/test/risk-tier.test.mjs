@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL: (RUN 2026-09-23 by the D-182 worker; each arm ALONE, restored from a per-arm pristine copy and verified by sha256 AND cmp; baseline 31 pass / 0 fail before and after) (A) THE ROW'S CONTROL, restore the default of 1 - in checks/bio-checks.mjs riskTierState return 1 instead of 'undetermined' for an absent/undetermined tier -> 5 FAIL, declared and actual: the no-tier arms fail BY NAME ("a stated undetermined READS UNDETERMINED through op=projection", "an action whose bytes carry no tier READS UNDETERMINED through op=projection", both words arms, and the riskTierState unit arm); the member's-2 and over-strictness arms stayed green, as declared. (B) THE WRITER'S DEFAULT - in src/setup.mjs write "risk_tier: 1" again -> 3 FAIL: the source arm and both driven-writer arms. (C) THE LIAR the row names, a read rendering UNDETERMINED whatever is stored - in src/store.mjs #actionDerived set risk_tier to the constant "undetermined" -> 1 FAIL, "a member's act sets 2, and op=projection reads 2"; every no-tier arm stays GREEN over the constant, which is declared and is why sections 2 and 3 also read the STORED column and bytes. Also found while writing, not by an arm: the first draft's risk:1 search arm was VACUOUS (it read a result key the answer does not carry, so it passed over an empty list); the risk:2 positive beside it caught that and the key was corrected. */
+/* NEGATIVE CONTROL, D-483's section 6: (RUN 2026-09-24 by the D-483 worker; each arm ALONE in src/setup.mjs, restored from a per-arm pristine copy and verified by sha256 AND cmp at 96708072...; baseline 58 pass / 0 fail before and after every arm) (A) THE ROW'S CONTROL, default the group to 1 - render ' checked' on SETTABLE_TIERS[0] -> 1 FAIL, declared and actual: "THE DEFAULT IS UNSET: no rendered radio carries a checked attribute". The write arms stayed GREEN, AS DECLARED and not as slack: the driver supplies :checked itself, so markup cannot reach them - which is why arm B exists. (B) THE SAME LIE IN THE WRITER, chosenRiskTier() returning 1 when nothing is checked -> 5 FAIL by name: "reports NO CHOICE" and all four unset arms through the op; the three CHOSEN-tier arms stayed green, the over-strictness direction. (C) HARD-CODED LABELS, the row's second liar - render a literal 'file freely'/'file with caution'/'do not file without counsel' instead of RISK_TIERS[k] -> 2 FAIL: the literal arm and the mechanism arm. THE FINDING WORTH KEEPING, a surprising green: the BEHAVIOURAL label arm ("each label is the PLANE's sentence") stayed GREEN under C, because a hand copy agrees with the vocabulary for free (WORKER.md: an equality that costs nothing is not evidence). A suite holding only that arm would have gone green over a page that had stopped reading the vocabulary at all, which is the drift this row exists to prevent - so the textual and mechanism arms are the load-bearing ones and the behavioural arm is the one that proves they are about a control a member actually sees. */
 /* D-182 (BIO_Case_Making_v0_1.md §2, "`risk_tier`, RULED 2026-09-21 by BOB #21"): an action's risk tier gains
  * UNDETERMINED, and the plane publishes the three words.
  *
@@ -243,6 +244,180 @@ console.log("\n--- 5. nothing writes 1 by default ---");
     "Intake check", "What the member wrote.", NOW);
   t("setup.mjs's writer, driven, writes risk_tier: undetermined", /^risk_tier: undetermined$/m.test(text), true);
   t("…and no tier 1", /^risk_tier:\s*1\s*$/m.test(text), false);
+}
+
+/* ------------------------------------- 6. D-483: the member's chooser on the setup page */
+/* D-483 (the same design section, BOB #21's ruling): D-182 left this page writing UNDETERMINED because it
+ * had no control to ask with. That is truthful and it is also a MISSING AFFORDANCE — a member who HAS
+ * assessed the action could not say so at the one surface a sovereign copy serves at `/`. The row adds a
+ * radio group over the published vocabulary, UNSET by default, and unset still writes undetermined.
+ *
+ * THE TWO LIARS THIS SECTION REFUSES, both named by the row:
+ *   A PRESELECTED TIER, so nothing is ever undetermined — D-182's overclaim re-entering through the
+ *   control built to remove it. The rendered markup is read for `checked` and the page's own reader is
+ *   asked what it reports with nothing chosen.
+ *   HARD-CODED LABELS, so the page decides what 2 MEANS. The rendered choices and their words are compared
+ *   against the catalogue's map, the settable keys are derived INDEPENDENTLY here and compared with the
+ *   page's own derivation, and the source is read for the sentences as literals.
+ *
+ * AND IT IS DRIVEN THROUGH THE OP, not judged as markup: what the page's writer produces for a chosen tier
+ * and for no choice is promoted into a real store and read back through op=projection, because a control
+ * that collects a value the write path drops would satisfy every markup arm above.
+ *
+ * WHAT THIS SECTION CANNOT SEE. It drives `mdFor` with what `chosenRiskTier()` returns, as the save handler
+ * does; it does not dispatch the button's click event, so the wiring between them is pinned STRUCTURALLY
+ * (the save path is read for the call) rather than executed. And the markup arms compare raw sentences, so
+ * an arm asserts the vocabulary carries no markup-significant byte that the page's escaper would move.
+ */
+console.log("\n--- 6. D-483: the tier chooser, unset by default, over the published vocabulary ---");
+{
+  const setupSrc = readFileSync(fileURLToPath(new URL("../src/setup.mjs", import.meta.url)), "utf8");
+  const { SETUP_HTML } = await import("../src/setup.mjs");
+  const script = SETUP_HTML.slice(SETUP_HTML.lastIndexOf("<script>") + 8, SETUP_HTML.lastIndexOf("</script>"));
+
+  /* The settable tiers, derived HERE from the catalogue and never read from the page, so the comparison
+     below is between two derivations rather than a value compared with itself. */
+  const SETTABLE = Object.keys(RISK_TIERS).filter((k) => riskTierState(Number(k)) === Number(k));
+  console.log(`  corpus: ${SETTABLE.length} settable tiers ${JSON.stringify(SETTABLE)}; vocabulary has ${Object.keys(RISK_TIERS).length} keys`);
+  t("the vocabulary offered is NON-EMPTY and holds the three tiers (no arm below may pass over nothing)",
+    [SETTABLE.length, SETTABLE.includes("undetermined")], [3, false]);
+
+  /* A DOM stub that REMEMBERS its elements, unlike section 5's: this arm reads back what the page WROTE
+     into the choices container, and a fresh stub per query would discard the subject. `checked` is the
+     member's state: null is a form nobody has touched. */
+  const drive = (checked) => {
+    const nodes = new Map();
+    const node = () => ({ addEventListener() {}, classList: { add() {}, remove() {} }, checked: false,
+      textContent: "", innerHTML: "", value: "", style: {}, hidden: false, dataset: {} });
+    const querySelector = (sel) => {
+      if (sel === "input[name=n-risk]:checked")
+        return checked === null ? null : { value: String(checked), checked: true };
+      if (!nodes.has(sel)) nodes.set(sel, node());
+      return nodes.get(sel);
+    };
+    const sandbox = {
+      document: { querySelector, querySelectorAll: () => [], getElementById: () => node(),
+                  addEventListener() {}, createElement: () => node(),
+                  body: { appendChild() {}, removeChild() {} } },
+      location: { hash: "", pathname: "/", origin: "https://x" }, history: { replaceState() {} },
+      sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
+      fetch: async () => ({ ok: true, status: 200, json: async () => ({ ok: true }) }),
+      URLSearchParams, console, JSON, Date, RegExp, String, Number, Object, Array, crypto: webcrypto,
+      setTimeout, TextEncoder, navigator: { clipboard: { writeText: async () => {} } },
+    };
+    sandbox.window = sandbox;
+    const ui = new Function(...Object.keys(sandbox),
+      script + "\n;return { mdFor, FIRST_STATE, chosenRiskTier, SETTABLE_TIERS };")(...Object.values(sandbox));
+    return { ui, nodes };
+  };
+
+  /* --- the control as a member first meets it: nothing touched --- */
+  const fresh = drive(null);
+  const html = fresh.nodes.get("#n-risk-choices").innerHTML;
+  t("the chooser RENDERED: one radio per settable tier, and the container is not empty",
+    (html.match(/type="radio"/g) || []).length, SETTABLE.length);
+  t("THE DEFAULT IS UNSET: no rendered radio carries a checked attribute",
+    /\bchecked\b/.test(html), false);
+  t("…and with nothing chosen the page reports NO CHOICE, never a tier", fresh.ui.chosenRiskTier(), null);
+  t("the page's own derivation of the settable tiers matches the catalogue's, key for key",
+    fresh.ui.SETTABLE_TIERS, SETTABLE);
+
+  /* --- the choices are the vocabulary's, and the words are the plane's --- */
+  const values = [...html.matchAll(/value="([^"]+)"/g)].map((m) => m[1]);
+  t("the choices ARE the vocabulary's settable keys, in its own order", values, SETTABLE);
+  const labels = [...html.matchAll(/<span>([^<]*)<\/span>/g)].map((m) => m[1]);
+  t("…and each label is the PLANE's sentence for that tier, not a word this page chose",
+    labels, SETTABLE.map((k) => RISK_TIERS[k]));
+  t("what leaving it alone will write is stated in the vocabulary's OWN undetermined sentence",
+    fresh.nodes.get("#n-risk-unset").textContent.includes(RISK_TIERS.undetermined), true);
+  /* THE SENTENCES ARE NOT WRITTEN IN THE PAGE. Judged over the source with its COMMENTS REMOVED, and the
+     narrowing is a finding rather than a convenience: the first form of this arm read the whole file and
+     failed on D-182's own history comment in mdFor, which says an old default "told a member the action
+     was safe to file freely" — prose EXPLAINING the rule, cited by the arm enforcing it (WORKER.md's
+     sweep-arm shape). A comment cannot become a label; only a literal can. The stripper's limit, stated:
+     it can only over-strip, which WEAKENS this arm and can never make it fail falsely, so the floor below
+     guards that it did not eat the file, and the two arms after it pin the mechanism and the behaviour. */
+  const nocomment = setupSrc.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/<!--[\s\S]*?-->/g, " ");
+  console.log(`  setup.mjs: ${setupSrc.length} B, ${nocomment.length} B with comments stripped`);
+  t("the comment stripper left a real file behind (it cannot fail this arm falsely, only weaken it)",
+    nocomment.length > setupSrc.length * 0.5, true);
+  t("src/setup.mjs carries NONE of the tier sentences as a literal — the words arrive from the catalogue",
+    SETTABLE.map((k) => nocomment.includes(RISK_TIERS[k])).concat(nocomment.includes(RISK_TIERS.undetermined)),
+    [false, false, false, false]);
+  t("…and the one expression that becomes a label reads the MAP, by key, through the page's escaper",
+    /escH\(RISK_TIERS\[k\]\)/.test(setupSrc), true);
+  /* THE MATCHER'S DECLARED LIMIT: the two arms above compare raw sentences against rendered markup, which
+     is only sound while no sentence carries a byte the page's escaper moves. Asserted, so a future
+     sentence with one fails HERE by name instead of quietly weakening those arms. */
+  t("…(the arms above compare raw text: the vocabulary carries no markup-significant byte)",
+    Object.values(RISK_TIERS).map((w) => /[&<>"]/.test(w)), [false, false, false, false]);
+  /* The wiring between the control and the writer, pinned structurally: this section drives mdFor the way
+     the save handler does, so an arm is owed that the save handler really does it that way. */
+  t("the form's save path sends the chosen tier alongside the counterparty (the page's real route)",
+    /risk_tier:\s*chosenRiskTier\(\)/.test(setupSrc), true);
+
+  /* --- and through the op: what the page WRITES for each answer, promoted and read back --- */
+  const bytesFor = (checked, id) => {
+    const { ui } = drive(checked);
+    return ui.mdFor(id, "action", ui.FIRST_STATE.action, "Intake check", "What the member wrote.", NOW,
+      false, null, { counterparty: { state: "named", name: "City Clerk" }, risk_tier: ui.chosenRiskTier() });
+  };
+
+  const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+  const mf = new Miniflare({
+    modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
+    compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+    durableObjects: { STORE: { className: "Store", useSQLite: true } },
+    bindings: { ADMIN_TOKEN: "adm-d483", MEMBER_TOKEN: "mem-d483", PROBE_TOKEN: "prb-d483", VERSION: "test" },
+  });
+  const post = async (op, body) => (await mf.dispatchFetch("http://x/api/?op=" + op + "&token=mem-d483",
+    { method: "POST", body: JSON.stringify(body) })).json();
+  const get = async (qs) => (await mf.dispatchFetch("http://x/api/?token=mem-d483&" + qs)).json();
+  const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
+  let seq = 0;
+  const promoteText = async (id, text) => {
+    const r = await post("promote", {
+      bundleId: id, base: null, snapKey: `20260724T020000Z_d483${String(++seq).padStart(4, "0")}`,
+      author: "member-ruth",
+      meta: { object_type: "action", group: "believe-in-oakland", title: "Intake check",
+              current_state: "planned", created: NOW, last_updated: NOW },
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+    });
+    if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
+    return r;
+  };
+  const projection = async (id) => rP(await get(`op=projection&id=${encodeURIComponent(id)}`));
+  const stored = async (id) => (await get(`op=image&id=${encodeURIComponent(id)}`)).result["bundle.md"];
+
+  /* THE ROW'S accepts-when, both halves, through a route a caller has. Tier 1 is driven as well as 2: the
+     control must still let a member author FILE FREELY, which is the over-strictness direction — a fix that
+     made the riskiest-sounding value unwritable would pass every arm about undetermined. */
+  const CHOSEN = [[1, "ACTN-2026-0011-member-chose-1"], [2, "ACTN-2026-0012-member-chose-2"],
+                  [3, "ACTN-2026-0013-member-chose-3"]];
+  for (const [tier, id] of CHOSEN) {
+    await promoteText(id, bytesFor(tier, id));
+    const p = await projection(id);
+    t(`a member choosing tier ${tier} has it WRITTEN THROUGH THE OP: op=projection reads ${tier}`,
+      p.action.risk_tier, tier);
+    t(`…in the plane's words for ${tier}, not the page's`, p.action.risk_tier_words, RISK_TIERS[tier]);
+    t(`…and the stored column and the document's own bytes both say ${tier}`,
+      [p.action_risk_tier, new RegExp("^risk_tier: " + tier + "$", "m").test(await stored(id))], [tier, true]);
+  }
+
+  const NONE = "ACTN-2026-0014-member-chose-nothing";
+  await promoteText(NONE, bytesFor(null, NONE));
+  const pn = await projection(NONE);
+  t("a member choosing NOTHING still writes undetermined: op=projection reads undetermined",
+    pn.action.risk_tier, "undetermined");
+  t("…carrying the plane's undetermined sentence", pn.action.risk_tier_words, RISK_TIERS.undetermined);
+  t("…and the stored column holds NO tier while the bytes SAY undetermined (absence stated, not omitted)",
+    [pn.action_risk_tier, /^risk_tier: undetermined$/m.test(await stored(NONE))], [null, true]);
+  t("…and no tier 1 reached those bytes", /^risk_tier:\s*1\s*$/m.test(await stored(NONE)), false);
+
+  const audit = (await get("op=audit&limit=1000")).result;
+  t("op=audit: none of the four actions this page wrote draws C-2.10", audit.tally?.["C-2.10"] ?? 0, 0);
+
+  await mf.dispose();
 }
 
 console.log(`\nrisk-tier: ${pass} pass, ${fail} fail`);

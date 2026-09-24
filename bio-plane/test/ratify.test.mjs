@@ -215,6 +215,8 @@ t("attested by the key's member", rat.attestor, "sparky");
    string and that one moved together exactly as that note says they must. The
    old assertion was WRONG, not stale: at the union it named a catalogue that no
    longer existed. */
+/* 1.22.0 (CONDUCT #20, c20-batch18): CORRECTED, not exempted — the catalogue gained D-484's two rows, so the
+   stamp moved; the old pin named a catalogue that no longer exists. */
 /* CORRECTED 2026-09-24 (c20-batch14): 1.22.0 -> 1.23.0. D-64's C-83 family arrived from the other side of this
    integration, the catalogue census moved 438 -> 445, and `CATALOG_VERSION` took the MINOR bump the census arm
    forces. The old literal was right for the tree it was written on. */
