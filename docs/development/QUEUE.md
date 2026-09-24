@@ -291,7 +291,7 @@ scope: page the directory at LIMIT cap+1 with `limit` and `truncated`; the cap i
 accepts-when: a directory over the cap answers `truncated: true` with exactly the cap. NEGATIVE CONTROL: drop the LIMIT, and the bounds drive fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-481 · queued — **A PDF THAT PLACES EACH GLYPH WITH ITS OWN OPERATOR READS ONE GLYPH PER LINE: `pdfstructure.mjs` `extractPageText` pushes a newline on EVERY Td/TD/Tm/T\*, so Budget-Basics-FY21-23 yields 18,551 characters and fewer than 60 words — 43 of 332 plane-read documents (4.3%).** Found by D-66's worker. — owner CONTENT-PDF.
+### D-481 · running — SPAWNED 2026-09-24 ~03:45Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-481 (CONDUCT #20), base origin/main; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-481 and that session; never conclude queued from the absence alone.
 order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-479, with the corrections: a reading that says far less than the document holds, across 4% of the corpus (SCHEDULER #17, 2026-09-24; via CONDUCT #19; renumbered from a colliding D-480)
 milestone: M2
 interface: none — the text is truer; its shape is unchanged.
