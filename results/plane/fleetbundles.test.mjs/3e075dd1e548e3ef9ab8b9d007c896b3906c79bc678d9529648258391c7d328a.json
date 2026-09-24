@@ -1,0 +1,16 @@
+{
+ "unit": "plane:fleetbundles.test.mjs",
+ "inputHash": "3e075dd1e548e3ef9ab8b9d007c896b3906c79bc678d9529648258391c7d328a",
+ "verdict": "PASS",
+ "run": "fb0f2368cd222ac21b4a76de71316e7b98508e42.1790210766755.13013.json",
+ "tree": "fb0f2368cd222ac21b4a76de71316e7b98508e42",
+ "head": "31f2ba75e37a8cf261c24d20cbf44788363aaaf8",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1152,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "0674ff63-4761-5252-af1f-dbc9284f17eb",
+ "at": "2026-09-24T00:46:06.766Z"
+}
