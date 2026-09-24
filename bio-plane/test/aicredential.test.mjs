@@ -595,8 +595,19 @@ console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNO
      ungraded. */
   const minted = [...new Set([...STORE_BARE.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1]))].sort();
   t("(the harvest found a real family, not an empty one)", minted.length >= 12, true);
-  t("EVERY MACHINE_CANNOT_* the plane can mint was driven under an `ai` credential — this is a "
-  + "complete sweep and it says so because it was checked, not because it looks like one",
+  /* CORRECTED 2026-09-24 by D-503's class sweep, never exempted, and the correction is to the CLAIM
+     rather than to the corpus. This label read "EVERY MACHINE_CANNOT_* THE PLANE can mint", which is
+     wider than `minted` can support: the harvest above reads `STORE_BARE` alone, and the plane mints
+     five more fence codes in `src/index.mjs` — MACHINE_CANNOT_RATIFY and MACHINE_CANNOT_RATIFY_CASE
+     among them, both of which ARE `ai`-class fences, so the over-claim was material and not merely
+     verbal. Those two are driven under an `ai` credential by `machine-attest.test.mjs` (REC-123) and,
+     with the other three and the harvest-to-drive equality over `src/index.mjs`, by
+     `machine-fences.test.mjs` block 3b (D-503). The corpus is NOT widened here: this suite's subject
+     is the store's fence set under a credential, and widening it would make this arm red over acts
+     it was never written to drive. */
+  t("EVERY MACHINE_CANNOT_* `src/store.mjs` mints was driven under an `ai` credential — a complete "
+  + "sweep OF THAT CORPUS, and it says so because it was checked, not because it looks like one. The "
+  + "five `src/index.mjs` mints are machine-fences.test.mjs block 3b's (D-503)",
     minted.filter((c) => !(c in ACTS)), []);
   t("and nothing was graded that the plane does not mint", Object.keys(ACTS).filter((c) => !minted.includes(c)), []);
 
