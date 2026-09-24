@@ -18,7 +18,7 @@ BOB #32 `session_01HhTF36TQSDaFr9RAxfFnKX` · SCHEDULER #18 `session_01MgL7YDGux
 If the account switched, these sessions may be unreachable from the new account: route through the record (coord) and Bob.
 
 ## 3. STANDING RULINGS — CONDUCT.md holds them; #19's §3 lessons still bind
-No timers; act on messages. ≤10 LIVE WORKER SESSIONS (Bob's ruling ~03:08Z via BOB #32; 6 from 05:00Z; none spawned from 06:00Z). NO RELEASES until Bob asks. Refresh at 75%. Flip `queued→running` BEFORE the
+No timers; act on messages. ≤10 LIVE WORKER SESSIONS until 05:45Z, 6 from 05:45Z, NO spawns from 06:45Z (Bob via BOB 05:01Z: steps moved 45 min; leave quota for a CLEAN handoff). NO RELEASES until Bob asks. Refresh at 75%. Flip `queued→running` BEFORE the
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
@@ -41,6 +41,7 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   moves its content onto batch11fix (IC-252 → I3 86.0.0 MAJOR, IC-255 → 86.1.0), merges batch13 when pushed, adds the
   renderAdmit docstring fix; push by 06:15Z. FINAL TRAIN = land/conduct/c20-batch14 if it carries batch13, else batch13 then 14.
   BOB's two owed rulings (D-64 timeout, REC-184 DEFINITION_MOVED) were NOT paid → sent to SCHEDULER 04:56Z to row.
+- REC-193 spawned session_01F4H89NyikAfnwK5a5p8jHD at 05:03Z (push by 06:30Z).
 - D-486 DONE @ 9fcf876e (base batch10; IC-258 → resolve I3 86.2.0 MINOR on batch14; C-84 minted UNUSED): told c20-batch14 to merge it.
   Its watermark design question is with BOB (05:01Z). DIST-12 flipped running, DIST #6 builds it (push by 05:50Z).
 - ARCHIVE RULE (Bob via BOB 04:58Z): the moment a train lands, archive every worker whose land/worker tip is an ancestor of the new main
@@ -94,5 +95,5 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   c18-batch7fix session_01Pho5eXgBrQK8TjhnKHW6fa; after batch11 trains: its 4 row workers + batch10/batch11 sessions.
 
 ## 5. QUOTA PLAN (Bob via BOB #32, 03:00Z)
-Until 05:00Z full speed (≤10 live); 05:00Z ≤6 live; 06:00Z spawn NOTHING — finish, push, integrate, train; list to BOB every worker that needs
+Until 05:45Z ≤10 live; 05:45Z ≤6 live; 06:45Z spawn NOTHING — finish, push, integrate, train; list to BOB every worker that needs
 Bob (exact question + session id), leave them open; write this file for the other account's CONDUCT, verify on the remote, stop.
