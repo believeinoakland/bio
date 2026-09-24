@@ -204,6 +204,15 @@ let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
 const SANDBOX = mkdtempSync(join(tmpdir(), "mintid-"));
+/* A scratch bare repository with a `coord` branch: the remote a CLI take is pointed at (D-242). */
+const scratchCoordRemote = (bare) => {
+  const env = { ...process.env, GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@t.invalid", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@t.invalid" };
+  execFileSync("git", ["init", "-q", "--bare", bare], { stdio: "ignore" });
+  const tree = execFileSync("git", ["--git-dir", bare, "mktree"], { input: "", encoding: "utf8" }).trim();
+  const c = execFileSync("git", ["--git-dir", bare, "commit-tree", tree, "-m", "scratch coord"], { env, encoding: "utf8" }).trim();
+  execFileSync("git", ["--git-dir", bare, "update-ref", "refs/heads/coord", c]);
+  return bare;
+};
 const ledgerFor = (name) => { const p = join(SANDBOX, name); mkdirSync(p, { recursive: true }); return p; };
 
 /* ========================================================================== */
@@ -225,17 +234,26 @@ section("the primitive: an exclusive create cannot be won twice");
 section("THE RACE, DRIVEN — eight processes, one ledger, one namespace");
 /* Eight because that is the standing concurrency budget (ORCHESTRATION.md), and
    the collision count is a measured function of that budget: one at two, seven
-   at eight. The children are the REAL CLI, not the exported function, because
-   what a worker runs is the CLI and an arm that reads only a return value can
-   leave a printed branch dark in silence. */
+   at eight.
+   CORRECTED 2026-09-23 (D-242), never exempted: the children WERE the real CLI, "because what a worker runs is the
+   CLI". Since D-242 the CLI takes through the ONE WRITER (`take`, a CAS push to coord), which this arm does not
+   test — `mintid-take.test.mjs` races that, across two separate clones. What this arm tests is the LOCAL LEDGER's
+   exclusive create, which `mint` still is (this clone's record, and `exportnotice.test.mjs`'s allocator), so the
+   children now run `mint` itself in eight real processes; the printed words are the CLI's, so the arms below read
+   unchanged, and control (1) still breaks exactly this arm. */
 {
   const ledger = ledgerFor("race");
   const N = 8;
   const started = [], ended = [], out = [];
   const kids = [];
+  const LOCAL_MINT = `const { mint } = await import(${JSON.stringify(TOOL)});\n`
+    + `const r = mint("D", { who: process.argv[1] });\n`
+    + `if (!r.ok) { console.log("REFUSED " + r.reason); process.exit(3); }\n`
+    + `for (const id of r.ids) console.log("MINTED " + id);\n`
+    + `if (r.collided.length) console.log("  " + r.collided.length + " id(s) ALREADY HELD and stepped over: " + r.collided.join(", "));`;
   for (let i = 0; i < N; i++) {
     const t0 = Date.now();
-    const kid = spawn(process.execPath, [TOOL, "D", "--who", `racer-${i}`],
+    const kid = spawn(process.execPath, ["--input-type=module", "-e", LOCAL_MINT, `racer-${i}`],
       { env: { ...process.env, BIO_IDALLOC_DIR: ledger }, stdio: ["ignore", "pipe", "pipe"] });
     started.push(t0);
     let buf = "";
@@ -783,10 +801,15 @@ section("M0-52: an allocation is unambiguous to its caller, in BOTH directions")
    documented invocations are driven too, and they must still WORK, not merely not
    crash: the minting ones must still put a claim file in the ledger. */
 {
+  /* D-242: the CLI now TAKES through the one writer, a CAS push to `<remote>/coord`. Every run here names a SCRATCH
+     bare remote (BIO_IDTAKE_REMOTE), so no arm of this suite can push to the real coord — and the take refuses one
+     that planted BIO_IDALLOC_DIR without naming it. The take still RECORDS each id in the local ledger, which is what
+     `claims` counts, so the load-bearing ledger assertions below read the same artifact. */
+  const TAKE_REMOTE = scratchCoordRemote(join(SANDBOX, "m052-take.git"));
   const runIn = (dir, args) => {
     const kid = spawnSync(process.execPath, [TOOL, ...args], {
       encoding: "utf8", cwd: REPO_ROOT,
-      env: { ...process.env, BIO_IDALLOC_DIR: dir },
+      env: { ...process.env, BIO_IDALLOC_DIR: dir, BIO_IDTAKE_REMOTE: TAKE_REMOTE },
     });
     return { code: kid.status, out: kid.stdout, err: kid.stderr };
   };
