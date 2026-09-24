@@ -20142,3 +20142,20 @@ choice starts unmade rather than guessed"*), and that sentence is now false.
 existing `case_id` branch, which keeps precedence — the plane refuses both together as `CASE_IDENTITY_AMBIGUOUS`),
 and corrects that comment.** RECORD does not edit `civicos-ui/**`. The plane-side arm that proves the round trip is
 `bio-plane/test/reviewcopy.test.mjs` block 10; the surface's own round trip is not driven anywhere yet.
+
+### UI-103 · UI worker of CONDUCT #20 (cloud session WORKER UI-103 (CONDUCT #20), branch land/worker/UI-103) · 2026-09-24 — the published case page names the WRITER of the exclusion statement apart from the case's PUBLISHER (§3 rule 13; REC-212's delegation)
+
+Branch `land/worker/UI-103`, base `origin/main` @ `1a7f0bcc0`. **CLAIMED BY SITE, not by file** — `civicos-ui/app.html`
+is shared ground and several UI workers may be live in it (`kickoffs/UI.md`).
+
+- `civicos-ui/app.html`, THREE SITES ONLY: the function `pubCaseAuthors`; the new function
+  `pubStatementWriterHtml` beside `pubStatementAcksHtml`; and the `p2` template literal inside `pubCaseHtml`
+  (the "What this case excludes" page). **NOT TOUCHED:** every `DEC-49 REGION` marker, every act dialog, the
+  router, the `SURFACES` registry, `pubInbandHtml`'s own body, the review-copy surfaces (`rvcOpen`/`rvsOpen`)
+  and `pubStatementAcksHtml` itself.
+- `civicos-ui/test/statement-writer.test.mjs` and `civicos-ui/test/statement-writer.control.mjs` — NEW, this item's own.
+- `civicos-ui/test/publishedcase.test.mjs`, TWO assertions CORRECTED (never exempted), each with a dated comment
+  saying why the old assertion was wrong: the one reading `Written by vera on 2026-07-20` and the one reading
+  `vera (completeness, for the case)`.
+
+Discharges **DELEGATION 2026-09-24 RECORD (REC-212) -> UI** (above): its own block carries the discharge.
