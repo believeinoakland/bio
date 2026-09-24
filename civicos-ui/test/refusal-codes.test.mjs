@@ -258,6 +258,9 @@ import path from "path";
 import os from "os";
 import { fileURLToPath } from "url";
 import { execFileSync } from "child_process";
+import { moduleClosure } from "../../bio-plane/test/moduleclosure.mjs";   /* M0-169: ONE
+   derivation of "what a fixture must carry", shared with the four gate suites — see the note
+   over `copyImports` below, and that file's header for the reach and the modes. */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UIDIR = path.join(HERE, "..");
@@ -282,33 +285,47 @@ function t(name, got, want) {
 const REPO = path.join(UIDIR, "..");
 const READER_REL = path.join("bio-plane", "test", "verdict-reader.mjs");
 
-/* THE MODULES A SOURCE IMPORTS BY RELATIVE PATH (D-254) — a static `import … from
-   "./x"`, `export … from "./x"` or bare `import "./x"`, beginning in column zero
-   where every import statement in this estate begins, so a comment line that
-   happens to start with the word is never read as one. A bare specifier (`fs`,
-   `node:path`) is the runtime's, not the tree's. CANNOT SEE a computed
-   `await import(…)`, and is not asked to: the guard's one dynamic import is arm
-   E's, whose target is a PLANE source the fixture already writes. */
-const RELATIVE_IMPORT = /^(?:import|export)\s(?:[^;"'`]*?\sfrom\s*)?["'](\.{1,2}\/[^"'\n]+)["']/gm;
+/* THE MODULES A SOURCE IMPORTS BY RELATIVE PATH (D-254), DERIVED BY THE ESTATE'S ONE
+   WALK SINCE M0-169. This suite kept its own derivation (`RELATIVE_IMPORT`, static-only
+   and anchored to column zero to keep comments out) while `bio-plane/test/gatedeps.mjs`
+   kept a second one (dynamic literals followed, comments blanked by the estate's lexer).
+   M0-154 found the two; M0-169 folded them into `bio-plane/test/moduleclosure.mjs` and
+   this reads it — SHARED from the plane's test estate rather than copied into this one,
+   the same reason `../../bio-plane/test/stdio.mjs` is imported above: ONE implementation,
+   so a fix or a widening happens once and both estates go red together rather than half.
+
+   MEASURED 2026-09-24 before the fold: over this guard the closure is the SAME two modules
+   under all four combinations of {column-anchored, unanchored} x {lexer, no lexer}, so
+   trading D-254's anchor for the lexer moved nothing here — and the anchor was a second
+   comment mechanism, which is what the fold removes.
+
+   STATIC mode, stated at the call and DRIVEN there (`moduleClosure` probes its matchers
+   against a dynamic specimen and throws if the mode is merely claimed): the guard's own
+   dynamic imports are COMPUTED (`import("file://" + CATALOG)`), so no walk can see them,
+   and they are not asked for — arm E's target is a PLANE source this fixture already
+   writes. `unresolved: "throw"` is D-254's guarantee kept: a module the guard reaches
+   that is missing, or outside the repository, is not something a fixture can carry
+   honestly, and it is named rather than silently dropped. */
+const GUARD_REL = path.join("civicos-ui", "check-refusal-codes.mjs");
 
 /* Copy every module the (mutated) guard imports into the fixture at the SAME
-   repo-relative path, then every module THOSE import, to a fixpoint. Returns the
+   repo-relative path, then every module THOSE import, to a fixpoint. The closure is
+   derived from the GUARD SOURCE THIS FIXTURE WILL RUN, not from the tree's copy, so an
+   arm that drops the guard's import drops the module from the fixture too. Returns the
    repo-relative paths copied, so ARM 1 can floor and print what was derived. */
 function copyImports(guardSrc, root) {
-  const seen = new Set();
-  const queue = [...guardSrc.matchAll(RELATIVE_IMPORT)].map((m) => path.join("civicos-ui", m[1]));
-  while (queue.length) {
-    const rel = path.normalize(queue.shift());
-    if (seen.has(rel)) continue;
-    if (rel.startsWith("..") || path.isAbsolute(rel))
-      throw new Error(`copyImports: the guard reaches ${rel}, OUTSIDE the repository — a fixture cannot copy that honestly`);
-    seen.add(rel);
-    const text = fs.readFileSync(path.join(REPO, rel), "utf8");
+  const copied = moduleClosure({
+    repo: REPO,
+    roots: [{ rel: GUARD_REL, code: guardSrc }],
+    dynamic: false,
+    includeRoots: false,   /* `buildTree` writes the guard itself, one step above this call */
+    unresolved: "throw",
+  });
+  for (const rel of copied) {
     fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
-    fs.writeFileSync(path.join(root, rel), text);
-    for (const m of text.matchAll(RELATIVE_IMPORT)) queue.push(path.join(path.dirname(rel), m[1]));
+    fs.writeFileSync(path.join(root, rel), fs.readFileSync(path.join(REPO, rel), "utf8"));
   }
-  return [...seen].sort();
+  return copied;
 }
 
 /* A mutation that changes nothing THROWS (see `buildTree`). */
