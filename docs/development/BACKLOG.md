@@ -23,6 +23,26 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-507 · queued — **SIX STATEMENT_ACK_* REFUSALS REACH A MEMBER UNTRANSLATED: NO_SUBJECT, ALREADY_SIGNED, NOT_A_PARTICIPANT, NO_STATEMENT, BY_ITS_AUTHOR and REC-193's AUTHOR_UNDETERMINED have no row in any `*_CHECKS` family (only DOCUMENTS_OVER_BOUND, C-82.1, does), so the member reads the plane's authored `detail` with no DEC-49 translation.** Found by UI-89's worker. — owner RECORD (BOB sees the six sentences' wording).
+order: at the backlog head: refusals a member cannot read, on a landed surface (SCHEDULER #18, 2026-09-24; via CONDUCT #20 07:19Z)
+milestone: M10
+interface: I3 additive — six catalogued codes; the catalogue version moves; FULL gate.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, following REC-79's single-helper shape.
+depends-on: REC-193.
+scope: rows C-82.2..C-82.7 in STATEMENT_ACK_CHECKS inside a DEC-49 REGION; route acknowledgeStatement's returns through its `refusal` helper; rebuild the bundle; move check-refusal-codes' floors from the print.
+accepts-when: each of the six arrives with its translation. NEGATIVE CONTROL: return one code outside the helper and the DEC-49 guard names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-508 · queued — **THE KNOCK LIMITER'S REFUSALS ARE BARE STORE REASONS: RATE_IP and RATE_GLOBAL carry no DEC-49 code or translation, so a refused knocker reads a raw reason.** Found by D-496's worker. — owner RECORD.
+order: after D-507, the same shape (SCHEDULER #18, 2026-09-24; via CONDUCT #20 07:19Z)
+milestone: M2
+interface: I3 additive — two catalogued codes; the catalogue version moves.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it.
+depends-on: D-496.
+scope: catalogue RATE_IP and RATE_GLOBAL with translations in a DEC-49 REGION on the knock path, through one helper; move the floors from the print.
+accepts-when: a rate refusal arrives with its code and translation. NEGATIVE CONTROL: return the bare reason and the guard names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
 ### REC-212 · queued — **THE CASE DOCUMENT CONFLATES TWO ACTS: `completeness.author` names who PREPARED AND PUBLISHED it, and C-41.10's author exclusion reads that name, so the writer of the statement can ratify it when someone else published.** REC-193's finding (1). BOB #32 RULED (b), 2026-09-24 06:11Z (cite until folded): two acts, two names, never conflated. — owner RECORD.
 order: after REC-194, the same statementack family; after REC-193 lands (SCHEDULER #18, 2026-09-24)
 milestone: M10
@@ -1277,23 +1297,3 @@ depends-on: M0-136 (touches the same history readers; on `land/conduct/c16-batch
 scope: every commit id a suite passes to git in CODE is the full 40-hex id (`9ea2eb022b5d6490c9e9e96b93037040193084d3`, `de40aa56f5d397666228502132d56756f51ff6b9`, `e2416725d2504485443ea24bb68a00009e886570`); a sweep of `bio-plane/test/` and `tools/` for other short ids passed to git, each lengthened or listed. Prose citations may stay short.
 accepts-when: `ledger.test.mjs` and `mergecarry.test.mjs` green with only 40-hex ids in their git calls, and a hygiene arm in `mergecarry.test.mjs` that fails by name on a short id passed to git. NEGATIVE CONTROL: shorten one id back, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (M0-136's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs M0`).
-
-### M0-104 · queued — **A GATE RUN ON A DIRTY TREE RECORDS NOTHING, SO D-293's OWN SHAPE — A RED GATE, THEN `git add -A && git commit && git push`** … (whole text: the cut archive)
-order: behind the product rows, the first process row after D-50 (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; it neither cuts gate time nor unblocks product, as a commit-then-gate is recorded already); a correction to D-293 (SCHEDULER #11 on BOB #25's word)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section; the dirty-tree … (whole text: the cut archive)
-depends-on: none — D-293 is on `main`.
-accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-104» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-105 · queued — **`docs/development/VERIFICATION.md` STANDS AT 24,572 OF ITS 24,576 B, SO A RULING ABOUT VERIFICATION CANNOT BE FOLDED INTO IT** … (whole text: the cut archive)
-order: directly after M0-104, whose line it folds, behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; SCHEDULER #11 on BOB #25's word); RETURNED here by SCHEDULER #14 after M0-107 folded its ruling within budget (`VERIFICATION.md` 24,319 B at `14f1b75e`)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §1's reading budget and … (whole text: the cut archive)
-depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds (BOB #25, 2026-09-22).
-accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-105» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
