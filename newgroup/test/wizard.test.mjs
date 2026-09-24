@@ -85,6 +85,16 @@
  * "missing binding NAMED" arms (the install reads "Your copy is running." over a failed ocr-worker); (A7) the update's
  * first upload restates no member -> 180/4, the kept-bindings arm and the D-297-population arms. `newgroup/src/index.mjs`
  * restored after each by cp from a per-arm pristine copy and verified by sha256 AND byte compare (83b6af0d…).
+ *
+ * NEGATIVE CONTROL (DIST-9, DIST #6, 2026-09-24), DECLARED BEFORE ARMING, each arm ALONE, baseline 200/200: (N1) THE
+ * INVENTOR — `instanceAiBinding` generates `rand(32)` when no value is supplied (DAEMON_TOKEN's shape) -> 190 passed,
+ * 10 failed: the four declared DIST-9 NO-INVENTION / KEPT arms by name, and the four older arms that count secrets
+ * exactly (four secrets, distinct 4, the SELF-retry's 4, the update's "NO password"), as declared; PLUS two NOT
+ * declared — both "supplied" arms — because the install's step-3 re-PUT and the update's bindMembers re-PUT pass no
+ * value, so the inventor OVERWRITES the operator's value with its own. Recorded, not smoothed: it shows the no-invention
+ * rule also protects a supplied value. (N2) `uploadUpdate` drops the binding -> 199/1, exactly "DIST-9 UPDATE,
+ * supplied", as declared. `newgroup/src/index.mjs` restored after each by cp from a pristine copy, verified by sha256
+ * (c53fa1ee…) AND byte compare; 200/200 after.
  */
 import worker, { CFG, ARMED_SIGNERS, reportsBuilds } from "../src/index.mjs";
 /* DIST-6 reads MEMBER_BINDINGS off the namespace, so a tree without the export fails its PIN by name rather than
@@ -149,8 +159,8 @@ function script(rules) {
 
 const req = (path, init) => worker.fetch(new Request("https://newgroup.believeinoakland.workers.dev" + path, init));
 
-async function begin(slug, mode = "install") {
-  const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug, mode }) });
+async function begin(slug, mode = "install", extra = {}) {
+  const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug, mode, ...extra }) });
   const j = await r.json();
   const cookie = (r.headers.get("set-cookie") || "").split(";")[0];
   const state = j.ok ? new URL(j.authorize).searchParams.get("state") : null;
@@ -1270,7 +1280,7 @@ const fleetSig6 = await signAsset(new TextEncoder().encode(fleetStatement({ vers
 const manifest6 = { version: FLEET_VER, sha256: repoSha6, bytes: repoSrc6.length, asset: "bio-plane.bundled.mjs",
                     sig: sig6, fleet: fleet6, fleetSig: fleetSig6 };
 /* One stateful account. `pre` is what the account holds before the act: { [script]: bindings[] }. */
-async function dist6(slug, { mode = "install", pre = {}, manifest = manifest6, broken = null } = {}) {
+async function dist6(slug, { mode = "install", pre = {}, manifest = manifest6, broken = null, ai = undefined } = {}) {
   armWith(relPubLine);
   const realTimeout = globalThis.setTimeout;
   globalThis.setTimeout = (fn) => realTimeout(fn, 0);
@@ -1301,7 +1311,7 @@ async function dist6(slug, { mode = "install", pre = {}, manifest = manifest6, b
     if (name === slug) planePuts.push(acct.get(slug));
     return cfok({ id: name });
   };
-  const { cookie, state } = await begin(slug, mode);
+  const { cookie, state } = await begin(slug, mode, ai === undefined ? {} : { instanceAi: ai });
   const calls = script([
     ...REL({ manifest: () => jres(manifest), asset: () => new Response(repoSrc6) }),
     ...PLANE_FLEET.map(([member]) => ({ m: (u) => u.endsWith(`/release/${member}.bundled.mjs`),
@@ -1397,6 +1407,66 @@ const oldMember = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
   t("UPDATE, agent-worker's upload FAILED: AGENT_WORKER unbound, the missing binding NAMED, the update NOT reported done",
     [r.svc("AGENT_WORKER"), r.body.includes("agent-worker could not be installed, so your copy has no AGENT_WORKER connection"),
      /<b>Updated (from|to)/.test(r.body)], [null, true, false]);
+}
+
+/* ---- DIST-9 (D-260's deploy half): THE ORGANISATION `ai` CREDENTIAL IS CARRIED, NEVER INVENTED ---------------------
+   Added 2026-09-24 (DIST #6). The plane reads the Worker secret INSTANCE_AI_TOKEN since D-260 and resumes the woken runs
+   that credential opened; nothing placed it. Install and update now CARRY a value the operator supplies, as DAEMON_TOKEN
+   is carried, and differ from DAEMON_TOKEN in the load-bearing way: none supplied -> NONE SENT (a member mints the
+   credential on the copy, DS-3; an invented value names no principal). HOW A LIAR WOULD PASS: generate a value when
+   none is given (the DAEMON_TOKEN `|| rand(32)` shape) — the NO-INVENTION arms read every plane PUT for the binding.
+   NEGATIVE CONTROL: see the DIST-9 entry below this block's arms. */
+console.log("\n--- DIST-9: the organisation ai credential is carried when supplied, and never invented ---");
+{
+  const AI = "aik-" + "d9".repeat(20);
+  const aiOf = (b) => (b || []).filter((x) => x.name === "INSTANCE_AI_TOKEN");
+  const sentIn = async (calls, slug) => {
+    const out = [];
+    for (const c of calls.filter((c) => c.method === "PUT" && c.u.endsWith(`/workers/scripts/${slug}`)))
+      out.push(...aiOf((await metadataOf(c)).bindings));
+    return out;
+  };
+  t("DIST-9: /begin REFUSES by name a supplied value that is not credential-shaped (too short), before any sign-in",
+    (await (await req("/begin", { method: "POST", body: JSON.stringify({ slug: "ai-town", instanceAi: "short" }) })).json()).ok,
+    false);
+  t("DIST-9: /begin REFUSES a value with a space in it", (await (await req("/begin", { method: "POST",
+    body: JSON.stringify({ slug: "ai-town", instanceAi: "aik-has a space-0123456789" }) })).json()).ok, false);
+  t("DIST-9: an EMPTY value is the normal case, not a refusal", (await (await req("/begin", { method: "POST",
+    body: JSON.stringify({ slug: "ai-town", instanceAi: "" }) })).json()).ok, true);
+
+  const i1 = await dist6("ai-install", { ai: AI });
+  t("DIST-9 INSTALL, supplied: INSTANCE_AI_TOKEN is bound as a secret carrying EXACTLY the operator's value",
+    aiOf(i1.planePuts.at(-1)).map((b) => [b.type, b.text]), [["secret_text", AI]]);
+  t("DIST-9 INSTALL, supplied: the value is on NO page the installer renders", i1.body.includes(AI), false);
+  t("DIST-9 INSTALL, supplied: the page says it was stored", i1.body.includes("The organisation AI credential you gave was stored"), true);
+
+  const i0 = await dist6("ai-none-install");
+  t("DIST-9 NO-INVENTION (install): with none supplied, NO plane PUT carries INSTANCE_AI_TOKEN",
+    (await sentIn(i0.calls, "ai-none-install")).length, 0);
+  t("DIST-9 NO-INVENTION (install): and the copy holds none after the whole act", aiOf(i0.planePuts.at(-1)).length, 0);
+  t("DIST-9 (install): the absence is STATED on the page, not left silent",
+    i0.body.includes("No organisation AI credential was given, so your copy has none"), true);
+
+  const u1 = await dist6("ai-update", { mode: "update", ai: AI, pre: { "ai-update": planeBase("ai-update") } });
+  t("DIST-9 UPDATE, supplied: a copy that held none now holds EXACTLY the operator's value",
+    aiOf(u1.planePuts.at(-1)).map((b) => [b.type, b.text]), [["secret_text", AI]]);
+  t("DIST-9 UPDATE, supplied: the value is on no page", u1.body.includes(AI), false);
+
+  const OLD = "aik-" + "0a".repeat(20);
+  const u0 = await dist6("ai-kept", { mode: "update",
+    pre: { "ai-kept": [...planeBase("ai-kept"), { type: "secret_text", name: "INSTANCE_AI_TOKEN", text: OLD }] } });
+  t("DIST-9 NO-INVENTION (update): with none supplied, NO plane PUT carries INSTANCE_AI_TOKEN",
+    (await sentIn(u0.calls, "ai-kept")).length, 0);
+  t("DIST-9 (update, none supplied): the value the copy already held is KEPT, unchanged (keep_bindings: secret_text)",
+    aiOf(u0.planePuts.at(-1)).map((b) => b.text), [OLD]);
+  t("DIST-9 (update): the page says none was sent and that the installer never creates one",
+    u0.body.includes("No organisation AI credential was given, so none was sent"), true);
+
+  const upPage = await (await req("/update")).text();
+  const homePage = await (await req("/")).text();
+  t("DIST-9: the UPDATE page offers the optional credential box, as a password field",
+    /<input id="ai" type="password"/.test(upPage), true);
+  t("DIST-9: the INSTALL page does not (a new copy has no member yet to mint one)", homePage.includes('id="ai"'), false);
 }
 
 console.log(`\nwizard: ${pass} passed, ${fail} failed`);

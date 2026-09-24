@@ -25,6 +25,10 @@
  * before the arms ran; these are the measured figures.
  * Restored byte-identically after each, 20/20 green.
  *
+ * NEGATIVE CONTROL (DIST-9): RUN 2026-09-24, one arm, declared before arming: delete the INSTANCE_AI_TOKEN push from
+ * `deriveBindings` -> 37 passed, 1 failed, exactly "DIST-9: INSTANCE_AI_TOKEN is SENT…". Restored by cp, verified by
+ * sha256 (2981bdfb…) and byte compare; 38/38 after. The NO-INVENTION arm cannot fail by that arm; it is armed by
+ * the wizard suite's N1, where invention has a place to happen.
  * NEGATIVE CONTROL (D-54): RUN 2026-09-23, three arms, each ALONE, pristine copy
  * per arm, restore verified by sha256 and cmp; baseline 36/36 —
  * (A) replace wrangler.jsonc's `"limits": { "subrequests": 10000 }` -> 34/36,
@@ -108,6 +112,17 @@ const CFG = {
   t("the cascade secret is sent only when the environment carries it",
     [(Array.isArray(withTok) ? withTok : []).filter((x) => x.type === "secret_text").length,
      (Array.isArray(without) ? without : []).filter((x) => x.type === "secret_text").length], [1, 0]);
+}
+
+/* ---- DIST-9: the organisation `ai` credential, carried and NEVER invented ---- */
+{
+  const withAi = derive(CFG, { slug: "s", version: "1", instanceAiToken: "aik-operator-value-0123456789" });
+  const none = derive(CFG, { slug: "s", version: "1" });
+  const ai = (b) => (Array.isArray(b) ? b : []).filter((x) => x.name === "INSTANCE_AI_TOKEN");
+  t("DIST-9: INSTANCE_AI_TOKEN is SENT, as a secret, carrying exactly the environment's value",
+    ai(withAi).map((x) => [x.type, x.text]), [["secret_text", "aik-operator-value-0123456789"]]);
+  t("DIST-9 NO-INVENTION: with no INSTANCE_AI_TOKEN in the environment, no such binding is derived (none generated)",
+    ai(none).length, 0);
 }
 
 /* ---- the refusals: loud, by name, never a silent drop -------------------- */

@@ -24,7 +24,8 @@
  * resumed run's calls back) goes through the control plane.
  *
  * WHAT THIS SUITE CANNOT SEE: (i) the deploy half — install and update carrying `INSTANCE_AI_TOKEN` as a secret is
- * DIST's (`BIO_Distribution_v0_1.md` §6) and is not built; (ii) a live model turn — `agent-worker` still runs none
+ * DIST's (`BIO_Distribution_v0_1.md` §6; BUILT by DIST-9, 2026-09-24 — this line said "not built" until then, which was
+ * true of its day) and is tested in `newgroup/test/wizard.test.mjs` and `test/deploybindings.test.mjs`, not here; (ii) a live model turn — `agent-worker` still runs none
  * (`turns_run: 0`), so "resumes" here means the plane handed the run over and the member drove the run's table
  * against the record under the run's own credential; (iii) the `scratch` namespace's cross-object credential
  * lookup is exercised only by `#aiRunResumer`'s code path, not by an arm (scratch cannot mint an `ai` credential,
