@@ -64,8 +64,7 @@ scope: NARROWED 2026-09-24 06:01Z (SCHEDULER #18): the REBUILD is done (land/dis
 accepts-when: the guard passes on the rebuilt bundle. NEGATIVE CONTROL: restore the 0.71.0 bundle and the guard fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
-### REC-194 · running — **AN ACKNOWLEDGEMENT MAY MATCH ANOTHER CASE WHOSE STATEMENT IS BYTE-IDENTICAL: D-150 binds it to the statement's bytes, not to ONE case identity.** Publication §3 rule 13 (folded): *an acknowledgement binds to ONE case identity; it never matches another case whose statement is byte-identical.* — owner RECORD.
-status: running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER REC-194 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/REC-194; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
+### REC-194 · integrated — **AN ACKNOWLEDGEMENT MAY MATCH ANOTHER CASE WHOSE STATEMENT IS BYTE-IDENTICAL: D-150 binds it to the statement's bytes, not to ONE case identity.** Publication §3 rule 13 (folded): *an acknowledgement binds to ONE case identity; it never matches another case whose statement is byte-identical.* — owner RECORD.
 order: (held behind REC-193: both edit the statementack code; CONDUCT #20 05:08Z) directly after REC-193, the same block (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I3 — the `statementack` op's binding narrows to one case; the integrator mints and classifies the IC.
@@ -155,7 +154,7 @@ scope: one helper with a `dynamic: true|false` mode; refusal-codes reads it.
 accepts-when: both callers use the one helper and stay green. NEGATIVE CONTROL: add an import the static mode cannot see and the dynamic-mode arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-518 · running — **`monitor-cadence.test.mjs` FAILS UNDER LOAD: 57/2 in a gate on tree 64bc5e3e while a second full gate ran in the same container, 59/0 alone on the identical tree. Both failures are the third tick ("the key is idempotence, not amnesia": `later.fired` expected [A]; observations 2). `Store#monitorTick` takes the injected now (T1 + 3600000 + 1); the fire goes through `op=acquire` over SELF, and something below it reads the real clock or a wall-clock budget (the host governor's window, or a fetch timeout to the fake Archive), so under load the fire does not land.** Found by DIST #6 (18:52Z). — owner RECORD (the suite with M0).
+### D-518 · integrated — **`monitor-cadence.test.mjs` FAILS UNDER LOAD: 57/2 in a gate on tree 64bc5e3e while a second full gate ran in the same container, 59/0 alone on the identical tree. Both failures are the third tick ("the key is idempotence, not amnesia": `later.fired` expected [A]; observations 2). `Store#monitorTick` takes the injected now (T1 + 3600000 + 1); the fire goes through `op=acquire` over SELF, and something below it reads the real clock or a wall-clock budget (the host governor's window, or a fetch timeout to the fake Archive), so under load the fire does not land.** Found by DIST #6 (18:52Z). — owner RECORD (the suite with M0).
 order: at the backlog head, beside M0-173: a gate whose verdict depends on machine load costs every FULL gate a red round (Bob's 17:41Z rule: a false or flaky gate result goes ahead) (SCHEDULER #19, 2026-09-24)
 milestone: M0 (a diagnosis, then its fix)
 interface: none unless the fix threads `now` through `op=acquire` (the integrator classifies).
@@ -175,7 +174,7 @@ scope: one `tools/` command that rebuilds every bundle whose manifest names a to
 accepts-when: a `bio-plane/src` edit read by pdf-worker, then the command, leaves `fleetbundles.test.mjs` green (the measured failure it moves: three stale bundles after one src edit). NEGATIVE CONTROL: rebuild only the plane's bundle and fleetbundles names the stale member.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### D-476 · running — **A MULTI-PART CAPTURE ALWAYS ANSWERS `existed: false`, EVEN ON A RE-FETCH OF BYTES THE RECORD HOLDS: the per-part write guard cannot see the whole document.** It under-claims (never over-claims), so it follows D-469. — owner CAPTURE.
+### D-476 · integrated — **A MULTI-PART CAPTURE ALWAYS ANSWERS `existed: false`, EVEN ON A RE-FETCH OF BYTES THE RECORD HOLDS: the per-part write guard cannot see the whole document.** It under-claims (never over-claims), so it follows D-469. — owner CAPTURE.
 order: after D-472, with the acquire corrections (SCHEDULER #17, 2026-09-24; D-469's worker via CONDUCT #19)
 milestone: M2
 interface: I3 — `existed` becomes `null` (stated undetermined) or a whole-document lookup; the integrator mints and classifies the IC.
@@ -326,7 +325,7 @@ scope: the date is the last change's; the container stamp as ruled. Extend the r
 accepts-when: a comment moves both the hash and the date. NEGATIVE CONTROL: keep the old date, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### UI-93 · running — **A BIAS-DEBT OBLIGATION NAMES A RUN AND THE QUEUE RENDERS NO RUN: D-86 raises an OBLIGATION whose subject is of kind `run`, and `app.html` `queueSubjectHtml` returns "" for it, so the item never says WHICH run.** The DELEGATION RECORD (D-86) -> UI of 2026-09-23 is on coord `CLAIMS.md`. — owner UI.
+### UI-93 · integrated — **A BIAS-DEBT OBLIGATION NAMES A RUN AND THE QUEUE RENDERS NO RUN: D-86 raises an OBLIGATION whose subject is of kind `run`, and `app.html` `queueSubjectHtml` returns "" for it, so the item never says WHICH run.** The DELEGATION RECORD (D-86) -> UI of 2026-09-23 is on coord `CLAIMS.md`. — owner UI.
 order: after UI-86, the same queue surface; a correction that D-86's landing exposes (SCHEDULER #17, 2026-09-23; via CONDUCT #18 23:35Z)
 milestone: M8
 interface: I3 consumer (IC-234).
