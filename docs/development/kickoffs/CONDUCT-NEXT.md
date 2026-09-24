@@ -58,6 +58,7 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
 - IN FLIGHT 04:17Z: train-20260924T041650Z-598 = D-482 + D-166 + REC-185 onto main 16fe1e7f (merged clean, gating). If #20 is gone,
   read origin/main's log for it. OWED at the next integration: IC-257 (REC-185) resolved I3 MINOR on INTERFACES.
+- UI-84 DONE @ 8f8b7be7 (124/124, M-130, no IC) — NEXT TRAIN. M0-144 spawned session_01ERbJKhXFUofstFpHerqrEx into its slot.
 - D-487 DONE @ 14e9140d (101/101, M-128, no IC) — NEXT TRAIN. BOB asked: knock limiter bound or budget (sliding-window fix named).
   D-493 spawned session_01XknYRN5Zzyw2fU3nRqF8F9 from land/worker/D-166 into its slot.
 - D-470 DONE @ 8344367c (102/102, skip 0) — NEXT TRAIN. OWED at its integration: mint its IC (I3 MINOR, gateVersion string
