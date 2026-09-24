@@ -61,3 +61,31 @@ BOB #32 `session_01HhTF36TQSDaFr9RAxfFnKX` · SCHEDULER #18 `session_01MgL7YDGux
 
 ## 5. WORKTREES (my container; gone with it)
 /home/user/wtrain (train; real npm ci) · w8 (batch9 builder) · w242 (D-242 minter) · wg, wh (gates). Nothing unpushed in them.
+
+## 6. ARRIVED AFTER THE HANDOFF WAS WRITTEN (03:02Z) — integrate at once (finished rows hold cache slots)
+- D-64 DONE: land/worker/D-64 @ b1ffb5a0 (base main 15b2a4c0). Gate: 323/323 suites green · 18627 assertions, skip 0.
+  IC-252 (coord-minted, OK): I1 MINOR, I5 MINOR (table render_allowance); I3 MINOR or MAJOR is yours. Edge: a non-boolean
+  `render` was ignored and is now refused 400; no caller sends it. By IC-25's test that is MAJOR.
+  ID COLLISION: its refusal family RENDER_CAPTURE_CHECKS is numbered C-82.1..7, minted clone-locally. MAIN 548eb2c5 already
+  holds C-82 (unionfix, STATEMENT_ACK_CHECKS). Mint a new C with `node tools/mintid.mjs C` and renumber D-64 at every literal
+  site: the rows, the suite's pin, claim 2.rendered text, IC-252, the check-refusal-codes floor notes. Its floors (families
+  +1, rows +7, regions +2, regionLines +68…) are re-read from the union's --strict print.
+  Findings for SCHEDULER: (a) no renderer exists (fix: @cloudflare/puppeteer behind rendererFor(env.BROWSER), or a RENDER
+  fleet member); (b) sweep deferral NARROWED (fix: `render` column on capture_requests through captureRequestDrain →
+  #fireCaptureRequest, held as RENDER_DEFERRED); (c) DESIGN GAP for BOB: CLIENT-RENDERED.md §What must be recorded — does a
+  wait that fired on TIMEOUT make the capture undetermined?; (d) the allowance can overrun by one render (stated).
+  DIST OWES at landing: teach the deploy derivation the `browser` binding class (it refuses UNKNOWN_BINDING_CLASS today), then
+  add "browser": {"binding":"BROWSER"} to bio-plane/wrangler.jsonc and to newgroup. Live today: every render:true answers
+  501 RENDER_NO_RENDERER.
+  Session: archive after integration (its id is in the report trigger trig_01PyovCeTTBxucrykFtGGy7F; find it with list_sessions, title WORKER D-64).
+- REC-184 DONE: land/worker/REC-184 @ 36b1f505 (base main 15b2a4c0). Gate GREEN (run 2 FULLREUSE; run 1 was 321/322, with a
+  status date fixed in 36b1f505), skip 0, no refusal code minted, no floor moved. IC-255 (coord-minted): I5 + I3 MINOR
+  ADDITIVE on the wire, with ONE behaviour change: a pre-revision disposition no longer ages a revised definition's
+  proposal. Classify it; IC-25 asks whether any answer that stood now refuses — none does, so MINOR. Name the column on
+  INTERFACES I5's proposal_dispositions line at the bump.
+  Findings for SCHEDULER: (1) RACE — the act stamps the version at the act, not the version the member saw (fix: accept
+  definitionVersion, refuse DEFINITION_MOVED; the UI sends it) — BOB may want the design call, framework §8.2; (2) UI shows
+  none of the new keys; (3) D-128's UI basis field is still NOT BUILT.
+- With these two finished, the ONLY live worker is c19-batch11. Spawn ONE integration worker: branch from batch11's tip when it
+  pushes, or from batch10 cff0ede6 + main 548eb2c5 if you do not want to wait. It merges D-64 + REC-184 + the .gitignore carry
+  + M0-141, and reports; then you report D-64 and REC-184 integrated to SCHEDULER.
