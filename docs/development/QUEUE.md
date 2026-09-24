@@ -545,7 +545,8 @@ scope: a sweep listing Drive-address bundles whose baseline capture's handler is
 accepts-when: the sweep names every shell baseline and a re-acquired one reads `unchanged` across two ticks (the measured failure it moves: a permanent `modified`). NEGATIVE CONTROL: skip the re-acquire and the two-tick arm reads `modified` by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-526 · queued — **WHICH REFUSAL A CALLER MEETS ON `op=promote` STILL DEPENDS ON THE ENVELOPE: the fences above bundle.md's parse (NAME_TAKEN, CITED retirement, LAWS_ACT carry-forward) read the envelope's type, and `#projectRow`'s action columns compare `fm.object_type === "action"` raw, not through `normalizeType`. Nothing wrong can land (D-510's fence refuses it).** Found by D-510's worker (F1, F3). — owner RECORD.
+### D-526 · running — **WHICH REFUSAL A CALLER MEETS ON `op=promote` STILL DEPENDS ON THE ENVELOPE: the fences above bundle.md's parse (NAME_TAKEN, CITED retirement, LAWS_ACT carry-forward) read the envelope's type, and `#projectRow`'s action columns compare `fm.object_type === "action"` raw, not through `normalizeType`. Nothing wrong can land (D-510's fence refuses it).** Found by D-510's worker (F1, F3). — owner RECORD.
+status: running — SCHEDULER #21 23:50Z spawns WORKER D-526 (depth 2, can report); base origin/main 9f8b69e6
 order: after D-525, with the promote corrections: the answer a caller meets should not depend on a label D-510 ruled untrusted (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:25Z)
 milestone: M7
 interface: none unless a refusal's order changes on the wire (the integrator classifies).
@@ -555,7 +556,8 @@ scope: parse bundle.md at the top of promote's `act` and derive the type there f
 accepts-when: an envelope-mislabelled action meets the same refusal as a correctly labelled one (the measured failure it moves: fences reading the envelope's type). NEGATIVE CONTROL: read the envelope's type in one fence again and that arm's refusal differs, failing by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### M0-170 · queued — **THREE MORE FIXTURES KEEP HAND-KEPT TOOL COPY LISTS: `pushguard.test.mjs` scratchRepo, `pushguard-check.test.mjs` and `retirable.test.mjs` (measured correct today).** Found by M0-154's worker. — owner M0.
+### M0-170 · running — **THREE MORE FIXTURES KEEP HAND-KEPT TOOL COPY LISTS: `pushguard.test.mjs` scratchRepo, `pushguard-check.test.mjs` and `retirable.test.mjs` (measured correct today).** Found by M0-154's worker. — owner M0.
+status: running — SCHEDULER #21 23:50Z spawns WORKER M0-170 (depth 2, can report); base origin/main 9f8b69e6
 order: after M0-169, whose static mode it wires (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:50Z) AHEAD of the product rows by Bob's 17:41Z rule: a new import in gates.mjs breaks a hand-copied fixture with a false red (a false gate result costs a round) (SCHEDULER #19, 2026-09-24).
 milestone: M0
 interface: none.
@@ -565,7 +567,8 @@ scope: wire the three to M0-169's static-only mode; delete the hand lists. ALSO 
 accepts-when: an import added to the subject leaves all three green. NEGATIVE CONTROL: restore one hand list, add an import, and that suite fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-541 · queued — **`tools/rowsubstrate.mjs` `anchorPairs` CAPTURES DIGITS AND DOTS ONLY (`§\s*(\d+(?:\.\d+)*)`), so `§6A` reads as `6`, and D-404's design-coverage arm falsely notes "substrate not evident" for REC-213, REC-199 and D-448.** Found by REC-213's worker (via CONDUCT #20 22:11Z). A false NOTE, not a failure. — owner M0.
+### D-541 · running — **`tools/rowsubstrate.mjs` `anchorPairs` CAPTURES DIGITS AND DOTS ONLY (`§\s*(\d+(?:\.\d+)*)`), so `§6A` reads as `6`, and D-404's design-coverage arm falsely notes "substrate not evident" for REC-213, REC-199 and D-448.** Found by REC-213's worker (via CONDUCT #20 22:11Z). A false NOTE, not a failure. — owner M0.
+status: running — SCHEDULER #21 23:50Z spawns WORKER D-541 (depth 2, can report); base origin/main 9f8b69e6
 order: after M0-142, with the process rows behind the product rows ahead of them: it prints a false note but fails nothing, so it does not cut gate time (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
@@ -575,7 +578,8 @@ scope: capture `(\d+(?:\.\d+)*[A-Za-z]?)`, compute depth from the dotted part, a
 accepts-when: rowsubstrate reads REC-213's `§6A` as §6A and the three false notes are gone (the measured failure it moves: three rows noted "substrate not evident"). NEGATIVE CONTROL: restore the digits-only capture and the §6A arm reads §6, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by REC-213's worker).
 
-### D-550 · queued — **NO GATED INSTRUMENT HOLDS A CATALOGUED REFUSAL CODE TO ONE MINT SITE: `bio-plane/test/dec49-onecode-twoconditions.sweep.mjs` measures it (60 multi-site candidates today) but has no floor, ceiling or gate, so a new second site passes silently.** Found by D-513's worker (via CONDUCT #20 22:59Z). — owner M0 (the instrument).
+### D-550 · running — **NO GATED INSTRUMENT HOLDS A CATALOGUED REFUSAL CODE TO ONE MINT SITE: `bio-plane/test/dec49-onecode-twoconditions.sweep.mjs` measures it (60 multi-site candidates today) but has no floor, ceiling or gate, so a new second site passes silently.** Found by D-513's worker (via CONDUCT #20 22:59Z). — owner M0 (the instrument).
+status: running — SCHEDULER #21 23:50Z spawns WORKER D-550 (depth 2, can report); base origin/main 9f8b69e6
 order: after D-535, with the process rows behind the product rows: it prevents a regression and does not cut gate time (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
@@ -585,7 +589,8 @@ scope: a gated CEILING arm in check-refusal-codes' ratchet shape at the printed 
 accepts-when: the gate reads the ceiling at its printed figure, and a planted second mint site of a single-site code fails by name (the measured failure it moves: 60 candidates, none gated). NEGATIVE CONTROL: plant the second site, and the ceiling arm fails naming the code.
 added: 2026-09-24 · SCHEDULER #20 (id minted by D-513's worker).
 
-### D-559 · queued — **TWO NEGATIVE-CONTROL HARNESSES HAVE DECAYED (D-353 decay mode c), on origin/main as on the branches: `nc-rec66.mjs` ARM 1 throws "anchor is not unique" on `const scan = this.#rows(` (store.mjs now holds more than one such line), and `nc-rec129.mjs` reports 10 of 19 arms "DID NOT ARM" with every restore byte-identical.** Found by M0-182's worker (via CONDUCT #20 23:00Z). — owner M0.
+### D-559 · running — **TWO NEGATIVE-CONTROL HARNESSES HAVE DECAYED (D-353 decay mode c), on origin/main as on the branches: `nc-rec66.mjs` ARM 1 throws "anchor is not unique" on `const scan = this.#rows(` (store.mjs now holds more than one such line), and `nc-rec129.mjs` reports 10 of 19 arms "DID NOT ARM" with every restore byte-identical.** Found by M0-182's worker (via CONDUCT #20 23:00Z). — owner M0.
+status: running — SCHEDULER #21 23:50Z spawns WORKER D-559 (depth 2, can report); base origin/main 9f8b69e6
 order: after D-550, with the process rows behind the product rows: the controls fail loudly rather than pass falsely, so no gate result is wrong today (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
@@ -605,7 +610,8 @@ scope: read and write CLAIMS.md through `tools/coord.mjs` readState/writeState, 
 accepts-when: the control runs every arm AS DECLARED against the coord content (the measured failure it moves: refused at the first arm by the stub's byte floor). NEGATIVE CONTROL: point the read back at the worktree path and the byte-floor arm refuses by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by M0-182's worker).
 
-### D-520 · queued — **THE RENDER RESERVATION'S 30,000 ms NAVIGATION BOUND IS CHOSEN, NOT MEASURED, AND NOTHING CAPS CONCURRENT RENDERS: D-492 made the allowance an honest account, not a throttle.** BOB #33 RULED YES to both, 2026-09-24 19:11Z (cite until folded). — owner CAPTURE.
+### D-520 · running — **THE RENDER RESERVATION'S 30,000 ms NAVIGATION BOUND IS CHOSEN, NOT MEASURED, AND NOTHING CAPS CONCURRENT RENDERS: D-492 made the allowance an honest account, not a throttle.** BOB #33 RULED YES to both, 2026-09-24 19:11Z (cite until folded). — owner CAPTURE.
+status: running — SCHEDULER #21 23:50Z spawns WORKER D-520 (depth 2, can report); base origin/main 9f8b69e6
 order: after D-478, in normal product order behind D-64's render rows (BOB #33, 19:11Z: *product, not ahead of it*; SCHEDULER #19, 2026-09-24)
 milestone: M2
 interface: none unless the waiting render's state is published (the integrator classifies).
