@@ -135,7 +135,7 @@ scope: in promote's admission, delete a caller's `replay` unless the call is ADM
 accepts-when: a machine or session sending `replay: true` is refused C-32.19 by name, and the migration suite migrates clean. NEGATIVE CONTROL: drop the class test and arm (ix) fails by name.
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
 
-### D-510 · running — **`promote` TRUSTS THE ENVELOPE'S TYPE OVER THE DOCUMENT'S: `bundles.object_type` and the action_basis/correspondence projection are gated on the caller's `meta.object_type`, while `#projectRow`'s action columns come from the document's own front matter — so a member can promote an ACTION under an envelope saying information: it lands typed information with `action_risk_tier` set and its basis and correspondence never projected.** Found by D-505's worker (finding 3). — owner RECORD.
+### D-510 · integrated — **`promote` TRUSTS THE ENVELOPE'S TYPE OVER THE DOCUMENT'S: `bundles.object_type` and the action_basis/correspondence projection are gated on the caller's `meta.object_type`, while `#projectRow`'s action columns come from the document's own front matter — so a member can promote an ACTION under an envelope saying information: it lands typed information with `action_risk_tier` set and its basis and correspondence never projected.** Found by D-505's worker (finding 3). — owner RECORD.
 order: at the backlog head: the record holding an action it does not index as one (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:48Z)
 milestone: M7
 interface: I3 — a disagreeing envelope refused (or normalised); the integrator classifies.
@@ -215,7 +215,7 @@ scope: a credential may be minted confined to `scratch`; every call it makes res
 accepts-when: a confined credential writing without `store=` lands in scratch, and `bio`'s counters are unchanged. NEGATIVE CONTROL: drop the confinement, and that arm moves `bio` and fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-475 · running — **THE `/` SETUP PAGE READS `bio`'s GROUP SLUG WHATEVER `store=` SAYS: it is an HTML route, not an op, so D-461's refusal on the bio-pinned ops does not reach it.** Read-only and public, so low priority. Found by D-461's worker. — owner RECORD.
+### D-475 · integrated — **THE `/` SETUP PAGE READS `bio`'s GROUP SLUG WHATEVER `store=` SAYS: it is an HTML route, not an op, so D-461's refusal on the bio-pinned ops does not reach it.** Read-only and public, so low priority. Found by D-461's worker. — owner RECORD.
 order: behind the namespace guards (D-462, D-463), low: read-only, public, and names no member (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
 milestone: M0 (the namespace guard's last door)
 interface: none — the page's read.
@@ -225,7 +225,7 @@ scope: pass the store through `publicInstanceGroup`, or refuse `store=scratch` o
 accepts-when: `/?store=scratch` reads scratch's slug or is refused by name. NEGATIVE CONTROL: ignore the parameter again, and that arm reads `bio`'s slug and fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### M0-179 · running — **`origin/gate-results` HAD ITS HISTORY REWRITTEN (`gates.mjs`: "1d02a4d9 does not descend from the remote tip 78f2412e"), though TREE-SHARING §3a makes it append-only; and `gates.mjs` still REUSES from a tip it does not descend from, failing only the write.** REC-211's worker's measurement at its hour, unverified by CONDUCT (via CONDUCT #20 18:57Z). — owner M0.
+### M0-179 · integrated — **`origin/gate-results` HAD ITS HISTORY REWRITTEN (`gates.mjs`: "1d02a4d9 does not descend from the remote tip 78f2412e"), though TREE-SHARING §3a makes it append-only; and `gates.mjs` still REUSES from a tip it does not descend from, failing only the write.** REC-211's worker's measurement at its hour, unverified by CONDUCT (via CONDUCT #20 18:57Z). — owner M0.
 order: at the backlog head, after D-519: a gate that reuses verdicts from a rewritten cache can report green on a record nobody can trace (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24)
 milestone: M0
 interface: none.
