@@ -429,7 +429,15 @@ async function csvParts(bytes) {
 
 /** The dialect AS RECORDED ON THE READING (BOB #32: "found by signature and
  *  RECORDED on the reading"). One builder, so `structure()` and `text()`
- *  cannot state two different dialects for one body. */
+ *  cannot state two different dialects for one body.
+ *
+ *  IC-283 (I2 2.8.0 proposed, MINOR ADDITIVE) is this key. READ ITS RESIDUE
+ *  BEFORE BELIEVING THE KEY ARRIVES ANYWHERE: the acquire wire's
+ *  `containerExtent` projection in `index.mjs` writes a NAMED key list and
+ *  `dialect` is not in it, so today the dialect reaches a caller that invokes
+ *  this entry and does NOT reach the record. COFF-11's finding one construct
+ *  over, named here rather than left for somebody to discover from an empty
+ *  column. The passthrough is another area's path and is rowed, not done. */
 function dialectOf(parts) {
   return {
     encoding: parts.encoding.encoding,

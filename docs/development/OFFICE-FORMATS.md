@@ -251,6 +251,12 @@ so it cannot see the limit that matters. **The deciding measurement — a deploy
 scratch namespace — has NOT been taken, because deploying is DIST's.** The bound stands meanwhile and excludes exactly 1
 of 166 keys, whose dialect is still stated. M-144 §5 carries the figures.
 
+**THE INTERFACE HALF IS `IC-283`** (I2 2.7.0 → 2.8.0 proposed, MINOR ADDITIVE: the `dialect` key on the entry's
+`structure()` and `text()`), and its RESIDUE is the part to carry forward: **the dialect is EMITTED AND NOT
+PERSISTED.** The acquire wire's `container_extent` projection writes a named key list and `dialect` is not in it,
+so the delimiter and the encoding reach a caller that invokes the entry and do NOT reach the record — COFF-11's
+finding one construct over, and the passthrough is rowed rather than done.
+
 The 50 legacy `.xls` keys wait on the section below.
 
 ## Legacy binary formats are a SEPARATE and LATER decision
