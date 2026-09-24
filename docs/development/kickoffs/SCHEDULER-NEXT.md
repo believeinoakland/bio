@@ -5,8 +5,7 @@ Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` and `BACKL
 ## DISPATCH IS THIS LANE'S, END TO END (BOB #33, 2026-09-24 21:10Z, under Bob's direction)
 Root cause measured all day: CONDUCT did both long work (trains, 30–60 min) and short work (flips, spawns), so slots emptied while it trained. FROM NOW ON, at EVERY wake and after EVERY write:
 1. `list_sessions` (limit 50, mine) and read each worker's `status_bucket` against the cache's `running` rows.
-   - COMPLETED or REVIEW_READY **and its branch `land/worker/<ID>` pushed** → flip the row `integrated` (`coord.mjs write --status <ID> integrated`).
-     REVIEW_READY often means "gate running in the session"; with no pushed branch it is NOT finished.
+   - FLIP a row `integrated` ONLY when its worker REPORTED finished, or its branch is pushed WITH A RECORDED GREEN (BOB #33 21:17Z correction: an idle or REVIEW_READY bucket is NOT finished; workers gate in the background). REC-200 was flipped early at 21:12Z and says so on its row.
    - BLOCKED → forward the question to CONDUCT, or to BOB if it is design.
    - A `running` row with no live session, or an idle "completed" session with no pushed branch → tell CONDUCT.
 2. Refill to `CACHE_ROWS` (20).
@@ -26,6 +25,6 @@ CONDUCT keeps verifying, integrating, trains and archiving of worker sessions. B
 
 ## State at ~21:15Z (main 1a7f0bcc; coord 0ca3688c)
 - Train c20-batch25 (≈18 rows) leaves ~21:20Z. On landing: verify each row's tip on main (worker branches get deleted; use the shas in CONDUCT's reports or batch ancestry), then ONE write: `--status done --archive` per row plus `--refill`, then dispatch.
-- Waiting on BOB: registeraudit soundness for a parted capture (D-476 finding A); confirmation of D-518's mixed-tick epoch behaviour.
+- BOB RULED 21:17Z: registeraudit held-in-parts is D-533 (placed); D-518's mixed-tick epoch CONFIRMED, nothing placed.
 - Owed to DIST at its next deploy: D-475's two GETs; ONE live render with the BROWSER binding (D-490; header validation undetermined).
 - D-528 (UI-93's id) and D-530 are placed; both wait on the 21:20Z train.
