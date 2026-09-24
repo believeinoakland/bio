@@ -150,6 +150,28 @@ const MEMBER = await (async () => {
   return lg.token;
 })();
 
+/* CONDUCT #20 at c20-batch25: THE ADMIN'S SURFACING RUN, opened HERE rather than by `surfacing-run.mjs`'s wrapper.
+   D-511 (IC-278, same batch) honours `replay` only from the ADMIN class with no session, so this suite's replay arms
+   run under "adm-d510" — and an admin-class CREATION of an inquiry is asked for its surfacing run (REC-171, C-66.1).
+   The shared wrapper opens that run by promoting a TYPED fixture project WITHOUT `replay`, which this suite's own
+   over-strict control arm (`refuse-always`) refuses — so the fixture died before the arm could be measured. The
+   project here is promoted UNDER `replay`, which every arm exempts, and the run is passed explicitly. */
+const ADMIN_RUN = await (async () => {
+  const pmd = ["---", "object_type: project", "current_state: forming", `created: "${NOW}"`, `last_updated: "${NOW}"`,
+               "references: []", "---", "", "## Summary", "", "The D-510 suite's surfacing-run project.", "", "## Session Log", ""].join(NL);
+  const pr = await post("promote", { base: null, snapKey: "20260724T025900Z_d510run", replay: true,
+    meta: { object_type: "project", title: "D-510 run project", current_state: "forming", group: "believe-in-oakland", created: NOW, last_updated: NOW },
+    files: [{ path: "bundle.md", text: pmd, bytes: pmd.length, sha256: sha(pmd) }], register: [] }, "adm-d510");
+  const project = pr && pr.bundleId;
+  if (!project) throw new Error(`d510 run project: ${JSON.stringify(pr).slice(0, 400)}`);
+  const run = "RUN-2026-0724-d510-admin-surfacing";
+  const ro = await post("airunopen", { run, contextType: "project", contextId: project, label: "D-510 admin surfacing run",
+    mode: "check", principalClaude: "instance", principalClaudeRef: "fixture/claude", skillVersion: "investigative-session@1",
+    bounds: [{ bound: "surfaces", allowed: 1000, unit: "questions" }], leaseMs: 86_400_000 }, "adm-d510");
+  if (!ro || ro.started !== true) throw new Error(`d510 run open: ${JSON.stringify(ro).slice(0, 400)}`);
+  return run;
+})();
+
 /* THE QUESTION EVERY ACTION BELOW RESTS ON. Real, because the store refuses an `action_basis` leg naming a
    bundle it does not hold — so without it the divergent action would be refused ACTION_BASIS_REFUSED and §1's
    "nothing landed" arm would be carried by that fence rather than by this item's. */
@@ -159,7 +181,7 @@ const MEMBER = await (async () => {
      arm under test can kill turns an over-strictness measurement into a suite that never reached its foot,
      and a tally that never printed reads -1 (WORKER.md), not zero. Nothing here is about how it was made. */
   const made = await promote(INQ_FIXTURE, inquiryMd(INQ_FIXTURE),
-                             { metaType: "inquiry", state: "open", token: MEMBER, extra: { replay: true } });
+                             { metaType: "inquiry", state: "open", token: "adm-d510", extra: { replay: true, run: ADMIN_RUN } });
   if (made?.ok !== true) throw new Error(`fixture inquiry: ${JSON.stringify(made).slice(0, 400)}`);
 }
 
@@ -199,8 +221,12 @@ console.log("\n--- 3. a REPLAYED divergent package lands TYPED ACTION, with its 
    derivation, so this is the one package that both diverges and lands — and the only place the derivation
    half is observable end to end. BEFORE D-510 this landed typed `information` with NO action block at all,
    which is the row's headline defect; the control arm drives that. */
+/* CORRECTED at c20-batch25 (CONDUCT #20), not exempted: D-511 (IC-278, same batch) made `replay` the SERVER's word —
+   honoured only from the ADMIN class with no session. This suite's three replay arms asserted it under the member
+   credentials, which now have it stripped, so they measured D-511's fence instead of this item's derivation. The
+   CREDENTIAL moves to the admin token; what a replay does, which is this suite's subject, is unchanged. */
 const REPLAYED = "ACTN-2026-0512-replayed-divergent";
-const landed = await promote(REPLAYED, actionMd(REPLAYED), { metaType: "information", extra: { replay: true } });
+const landed = await promote(REPLAYED, actionMd(REPLAYED), { metaType: "information", token: "adm-d510", extra: { replay: true } });
 t("the replayed divergent package LANDS (replay is exempt from the refusal, not from the derivation)",
   landed?.ok, true);
 const p = await get(`op=projection&id=${encodeURIComponent(REPLAYED)}`);
@@ -253,7 +279,7 @@ const idiv = await promote(IDIV, inquiryMd(IDIV), { metaType: "information", sta
 t("an INQUIRY document under an information envelope is refused by the same name",
   [idiv?.ok, idiv?.reason], [false, "ENVELOPE_TYPE_DISAGREES"]);
 const IREP = "INQ-2026-0518-replayed-divergent-inquiry";
-const irep = await promote(IREP, inquiryMd(IREP), { metaType: "information", state: "open", extra: { replay: true } });
+const irep = await promote(IREP, inquiryMd(IREP), { metaType: "information", state: "open", token: "adm-d510", extra: { replay: true, run: ADMIN_RUN } });
 t("…and replayed, it lands TYPED INQUIRY — the derivation is not the action projection's alone",
   [irep?.ok, (await get(`op=projection&id=${encodeURIComponent(IREP)}`))?.object_type], [true, "inquiry"]);
 
