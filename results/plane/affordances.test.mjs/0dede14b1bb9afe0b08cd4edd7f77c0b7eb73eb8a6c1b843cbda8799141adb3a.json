@@ -1,0 +1,16 @@
+{
+ "unit": "plane:affordances.test.mjs",
+ "inputHash": "0dede14b1bb9afe0b08cd4edd7f77c0b7eb73eb8a6c1b843cbda8799141adb3a",
+ "verdict": "PASS",
+ "run": "7df9d2d568c7462c821a59adaff2070ec5a8b6fe.1790237524457.23461.json",
+ "tree": "7df9d2d568c7462c821a59adaff2070ec5a8b6fe",
+ "head": "f4a45b82d0b7414d1fffcdb5c15625f5dd413a14",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 399,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "f10bcd14-20b8-558c-82f4-c8baf6d20158",
+ "at": "2026-09-24T08:12:04.479Z"
+}
