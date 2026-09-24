@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d311-roster-affordances.test.mjs",
+ "inputHash": "070d09d643072c63719754102b723b51c96fe2ecb298b73496bb857e0dbe195a",
+ "verdict": "PASS",
+ "run": "bd89c13d5a9723106279774354babe63a92dad05.1790210305967.31088.json",
+ "tree": "bd89c13d5a9723106279774354babe63a92dad05",
+ "head": "7696c63aafab3bd9dc5aa7f67c9d4c7eaeb63c19",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "DOCS",
+ "inputs": 147,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "5684be10-4191-5653-aa3c-40b54f969bb3",
+ "at": "2026-09-24T00:38:25.979Z"
+}
