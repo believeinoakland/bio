@@ -9590,6 +9590,33 @@ export const CASE_DERIVATION_CHECKS = {
       + 'pick one of them for you. Nothing is wrong with the finding. Choose the case file you mean, and '
       + 'it opens with this finding in it.',
   },
+  /* REC-217 (BIO_Publication_v0_1.md §3 rule 13; BOB #33, 2026-09-24 19:14Z) — THE PUBLISHER NAMES THE DRAFT
+     A CASE WAS PREPARED IN, and at that act the readings taken through it bind to the case it produced. The
+     three conditions under which that link would be FALSE are refused here, in this family because each is
+     about the case identity the act publishes: the same question C-44.1 asks of the members, asked of the
+     draft. Each is its own row and its own region, for three different mistakes. Asked before a case id is
+     minted, so a refusal spends none — and none of them can refuse a publication that names no draft. */
+  PUBLISH_DRAFT_NOT_FOUND: {
+    check: 'C-44.3',
+    where: 'src/store.mjs publishCase > is-publish-draft-found',
+    translation: 'The draft named for this case is not a draft of this project that you can open. Nothing was '
+      + 'published. Name the draft this case was prepared in, or publish without naming one; readings of a '
+      + 'draft that was not named are then counted in the case file and not attributed to anyone.',
+  },
+  PUBLISH_DRAFT_NOT_THIS_CASE: {
+    check: 'C-44.4',
+    where: 'src/store.mjs publishCase > is-publish-draft-this-case',
+    translation: 'The draft named here was prepared for a different case than the one being published, so its '
+      + 'readers did not read this one. Nothing was published. Publish the case that draft is for, or name '
+      + 'the draft of this case.',
+  },
+  PUBLISH_DRAFT_ALREADY_BOUND: {
+    check: 'C-44.5',
+    where: 'src/store.mjs publishCase > is-publish-draft-bound',
+    translation: 'That draft has already been named as the draft of another published case, and the people who '
+      + 'read it are listed there. One draft becomes one case, so it cannot be named for this one too. '
+      + 'Nothing was published.',
+  },
 };
 
 /* =========================================================================

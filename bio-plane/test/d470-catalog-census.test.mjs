@@ -317,6 +317,12 @@ const CATALOG_CENSUS = {
 
   /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510's rows over 1.27.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.28.0": { count: 461, digest: "3c28396e5c9e7c561a01625f9fe1f2965799f661b0d9a595d3ae752e21c61d89" },
+  /* 1.29.0 (REC-217, 2026-09-24, branch land/worker/REC-217): C-44.3 PUBLISH_DRAFT_NOT_FOUND, C-44.4
+     PUBLISH_DRAFT_NOT_THIS_CASE and C-44.5 PUBLISH_DRAFT_ALREADY_BOUND joined CASE_DERIVATION_CHECKS — the three
+     refusals of a draft link that would be false (BIO_Publication §3 rule 13, BOB #33 19:14Z). THREE ARRIVALS, NO
+     DEPARTURES. Count and digest are THIS SUITE'S PRINT on this branch; if another branch also took 1.29.0, the
+     integrator re-reads the census on the union and one of them takes the next number. */
+  "1.29.0": { count: 464, digest: "848ae7ec501cbf77dd0089fa077d444a3361968380e2b69d9ad007740766779b" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -414,8 +420,8 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.28.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.28.0)", "1.28.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

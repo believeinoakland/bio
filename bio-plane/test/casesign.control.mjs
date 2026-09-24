@@ -134,10 +134,12 @@ const ARMS = {
              + "fact is committed by any route, so the case never exists and the unsigned-commit arm has "
              + "nothing to refuse. This is the tree as it would be if the deletion had been done first",
         apply: () => edit(STORE,
+          /* REC-217 (2026-09-24): the anchor follows the statement, which gained `draft_id` (the publisher's
+             named draft); left at the old column list it would match nothing and the arm would never arm. */
           "    this.sql.exec(\n"
-        + "      `INSERT INTO case_documents (case_id,edition,doc_sha,text,authored_at,authored_by)",
+        + "      `INSERT INTO case_documents (case_id,edition,doc_sha,text,authored_at,authored_by,draft_id)",
           "    if (false) this.sql.exec(\n"
-        + "      `INSERT INTO case_documents (case_id,edition,doc_sha,text,authored_at,authored_by)") },
+        + "      `INSERT INTO case_documents (case_id,edition,doc_sha,text,authored_at,authored_by,draft_id)") },
 
   /* ===== (c) WAS ARMED IN THE WRONG DIRECTION ON ITS FIRST RUN AND CAME BACK
      GREEN — 50 pass, 0 fail — AND THE CORRECTION IS WORTH MORE THAN THE ARM.
