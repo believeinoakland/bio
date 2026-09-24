@@ -31,6 +31,12 @@
  *
  * ------------------------------------------------------------ RESULTS, RUN
  *
+ * RUN 2026-09-24 by UI-85, after adding arms (5), (6) and (6b) — the risk-tier chooser's. EIGHT arms, each
+ * armed ALONE, every restore verified by sha256 AND `cmp` against two pristine copies (app.html 1,478,680
+ * bytes). FINAL: 8 arms, 8 AS DECLARED, 0 not; both watched files byte-identical. (5) default-to-1 RED at
+ * "UI-85 UNTOUCHED" by name, the first failure; (6) hard-coded words RED at "UI-85 IDENTITY"; (6b) GREEN
+ * 190/190; arms (1)-(3b) and the baseline unchanged from UI-54's run below, now at 190 assertions.
+ *
  * RUN 2026-08-10 in worktree `agent-afd442fede94e63fe`. FIVE arms, each armed
  * ALONE; every restore verified by sha256 AND `cmp` against two independent
  * pristine copies, byte counts printed and floored.
@@ -83,7 +89,7 @@ import { fileURLToPath } from "url";
 /* THE RECORD'S OWN WORDS AND THE ENFORCED RULE, IMPORTED. Nothing below spells
    a grade letter or a doctrine sentence; the patches are composed from these. */
 import { ACQUIRE_GRADE_NOTE } from "../../bio-plane/src/affordances.mjs";
-import { EARNED_CAPTURE_CEILING } from "../../bio-plane/checks/bio-checks.mjs";
+import { EARNED_CAPTURE_CEILING, RISK_TIERS } from "../../bio-plane/checks/bio-checks.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UI = path.join(HERE, "..");
@@ -165,6 +171,43 @@ const ARMS = [
       if (t.split(a).length - 1 !== 1) return null;
       return t.replace(a, "/* UI-54 CONTROL 3b: a capture from this surface earns Grade "
         + EARNED_CAPTURE_CEILING + ", and saying so in a comment reaches nobody. */\n" + a);
+    } },
+
+  /* (5) UI-85'S ROW CONTROL, VERBATIM FROM ITS ROW: "default the chooser to 1, and the 'an untouched chooser
+     writes undetermined' arm fails by name." The default lives in ONE place, `addActReset`, and both the
+     preselected radio and what `addGo` hands `mdFor` are read from it — so this is the whole defect D-182 names,
+     re-entered through the chooser. It must go RED at the plane-driven UNTOUCHED arm, BY NAME. */
+  { id: "5-ui85-chooser-defaults-to-1", file: APP, run: [MINE], mustFail: true,
+    says: "UI-85 UNTOUCHED: an untouched chooser writes undetermined",
+    what: "UI-85: THE CHOOSER DEFAULTS TO 1 — `addActReset` opens `tier` at 1 instead of undetermined, so an action nobody assessed is written FILE FREELY",
+    patch: (t) => {
+      const a = 'clock:[], tier:"undetermined",';
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, 'clock:[], tier:"1",');
+    } },
+
+  /* (6) UI-85'S LIAR, the one its row names: the three words HARD-CODED, beside the published map. Every
+     behavioural arm over the REAL map stays green — that is why the row names it — so the IDENTITY arm, which
+     swaps the map for words drawn per run, must go RED by name. The words are serialised from the catalogue's
+     export at run time, so this driver holds no copy of its own. */
+  { id: "6-ui85-tier-words-hard-coded", file: APP, run: [MINE], mustFail: true,
+    says: "UI-85 IDENTITY: the page follows a SWAPPED map",
+    what: "UI-85: THE LIAR — the chooser renders the catalogue's three words from a literal map, falling back to the published word only for a key the literal lacks",
+    patch: (t) => {
+      const a = '${ADD_ACT.tier === k ? " checked" : ""} onchange="addActTier(\'${esc(k)}\')"> ${esc(w)}</label>';
+      if (t.split(a).length - 1 !== 1) return null;
+      const lit = JSON.stringify({ 1: RISK_TIERS[1], 2: RISK_TIERS[2], 3: RISK_TIERS[3] });
+      return t.replace(a, a.replace("${esc(w)}", "${esc((" + lit + ")[k] || w)}"));
+    } },
+
+  /* (6b) THE OVER-STRICTNESS PAIR: the preselection spelled `checked="checked"`, which is the same HTML. The
+     suite reads the attribute, not one spelling of it, and must stay GREEN. */
+  { id: "6b-ui85-checked-spelled-long", file: APP, run: [MINE], mustFail: false,
+    what: "OVER-STRICTNESS (UI-85) — the preselected radio written `checked=\"checked\"` rather than bare `checked`. Correct HTML in a spelling the suite did not write, and it must PASS",
+    patch: (t) => {
+      const a = '${ADD_ACT.tier === k ? " checked" : ""}';
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, '${ADD_ACT.tier === k ? \' checked="checked"\' : ""}');
     } },
 
   { id: "4-baseline", file: APP, run: [MINE], mustFail: false,

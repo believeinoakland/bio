@@ -41,8 +41,13 @@
  *      CO-ATTESTATION clause ships — the clause a tidying edit removes, because
  *      the act is unavailable here, and the one sentence that stops a member
  *      reaching for co-attestation to solve a problem it does not address.
+ *   7. THE ACTION'S RISK TIER IS A MEMBER'S CHOICE IN THE PLANE'S WORDS, OR IT IS UNDETERMINED (UI-85,
+ *      2026-09-24; D-182, BIO_Case_Making_v0_1.md §2). Driven through the REAL plane by a SIGNED-IN MEMBER
+ *      SESSION: an untouched chooser writes undetermined, a member's 2 reads 2 through op=projection. And the
+ *      identity arms swap the published map, because a surface that hard-coded the three words would pass
+ *      every arm over the real one.
  *
- * NEGATIVE CONTROL: sixteen. Eleven RUN BY HAND — six 2026-08-04 (UI-15) and five 2026-08-04 (UI-32), each arm mutating ONE file, restored byte-identical afterwards with sha256 compared, and re-run against the FINAL files (144 assertions at the time; 167 now). FIVE MORE, UI-54's, are DRIVEN and re-runnable in one step: `node civicos-ui/test/add-surface.control.mjs` — arms (1)(2)(3) declared RED and (3b)(4) declared GREEN, all five AS DECLARED on 2026-08-10, both watched files restored byte-identical by sha256 AND `cmp` against two independent pristine copies. The arms and their measured outcomes are written out in that file's header; they are NOT duplicated here, because two accounts of one run is the drift this suite's own subject is about. RE-RUN 2026-09-23 by UI-79 after its correction (the catalogue arms judge bytes as the plane holds them; 168 assertions): 5 arms run, 5 AS DECLARED, every watched file restored byte-identical (sha256 + cmp).
+ * NEGATIVE CONTROL: nineteen. Eleven RUN BY HAND — six 2026-08-04 (UI-15) and five 2026-08-04 (UI-32), each arm mutating ONE file, restored byte-identical afterwards with sha256 compared, and re-run against the FINAL files (144 assertions at the time; 167 now). FIVE MORE, UI-54's, are DRIVEN and re-runnable in one step: `node civicos-ui/test/add-surface.control.mjs` — arms (1)(2)(3) declared RED and (3b)(4) declared GREEN, all five AS DECLARED on 2026-08-10, both watched files restored byte-identical by sha256 AND `cmp` against two independent pristine copies. The arms and their measured outcomes are written out in that file's header; they are NOT duplicated here, because two accounts of one run is the drift this suite's own subject is about. RE-RUN 2026-09-23 by UI-79 after its correction (the catalogue arms judge bytes as the plane holds them; 168 assertions): 5 arms run, 5 AS DECLARED, every watched file restored byte-identical (sha256 + cmp). UI-85 ADDED THREE DRIVEN ARMS to the same driver, RUN 2026-09-24 (190 assertions; app.html 1,478,680 bytes, sha256 41484a19…): (5) THE ROW'S CONTROL, the chooser defaulted to 1 in `addActReset` -> declared RED, RED, failing FIRST and BY NAME at "UI-85 UNTOUCHED: an untouched chooser writes undetermined"; (6) THE LIAR, the three tier words hard-coded beside the published map -> declared RED, RED at "UI-85 IDENTITY: the page follows a SWAPPED map"; (6b) OVER-STRICTNESS, the preselection spelled `checked="checked"` -> declared GREEN, GREEN 190/190. With the baseline: 8 arms run, 8 AS DECLARED, both watched files restored byte-identical (sha256 + cmp).
  *
  *  (a) THE ITEM'S OWN CONTROL. Delete the `const ADD_TICKS = 8;` declaration in
  *      civicos-ui/app.html (beside `ADD_BUSY`, ~:9411) -> `ReferenceError:
@@ -222,6 +227,7 @@ ok("INSTRUMENT: while a claim standing BESIDE the publication is still found",
                   + UNREACHABLE_CAPTURE_GRADE + ".</p>").length === 1);
 
 /* ---- load the UI runtime ---- */
+const AFF = { vocab: null };
 const els = new Map();
 /* Listeners are RECORDED rather than dropped, because the dialog that asks the
    member what to do resolves on a click and a stub that swallows the handler
@@ -250,13 +256,18 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
       if(!b) return { ok:false, json: async () => ({ ok:false, reason:"NOT_FOUND" }) };
       return { ok:true, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) };
     }
+    /* UI-85: op=affordances answers the vocabularies an arm PUBLISHES (wrapped, as the plane answers), and
+       nothing when no arm has — which is what every arm before UI-85's was written against. */
+    if(q.get("op") === "affordances" && AFF.vocab)
+      return { ok:true, json: async () => ({ ok:true, result:{ catalog: [], vocabularies: AFF.vocab } }) };
     return { ok:true, json: async () => ({ ok:true, result:{} }) };
   } };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
 vm.runInContext(appScript() + `;globalThis.__X={mdFor,docFiles,registerFor,schemaFor,reviseText,acquireWhy,
   FIRST_STATE,HEADINGS,SCHEMA_OF,PREFIX,ADD_TYPES,typeLabel,renderAdd,addValidate,addIncomplete,
-  canContribute,canDo,addTypesFor,addCapture,buildRail,heldMatch,PLANE};`, ctx);
+  canContribute,canDo,addTypesFor,addCapture,buildRail,heldMatch,PLANE,
+  loadActSource,addActTier,addActRepaint,riskTierLine};`, ctx);
 const G = ctx.__X;
 const SRC = fs.readFileSync(new URL("../app.html", import.meta.url), "utf8");
 const lines = (re) => SRC.split("\n").filter(l => re.test(l)).length;
@@ -718,6 +729,177 @@ ok("the machine writes no counterparty of its own on that path — no name, no b
 ok("and the writer still keeps its action arm, because actions already in the record are still revised",
    /action_kind: /.test(bare.text) && /^risk_tier: undetermined$/m.test(bare.text)
    && !/^risk_tier:\s*1\s*$/m.test(bare.text));
+
+/* ============================================================
+   UI-85 — THE RISK-TIER CHOOSER (D-182's surface half; BIO_Case_Making_v0_1.md §2, `risk_tier`, RULED by
+   BOB #21: *"A surface publishes those words (REC-38's pattern) and invents none"*; *"Only a member's authored
+   act sets 1, 2 or 3"*). The action intake offers the tiers of `op=affordances`' `vocabularies.risk_tiers`, in
+   the plane's words, with `undetermined` preselected and no number a default; `mdFor` writes `risk_tier: <n>`
+   only when the member chose one.
+
+   HELD IN THE DIRECTION THAT FAILS, and in this order so the row's control fails at its NAMED arm first:
+     P. THROUGH THE REAL PLANE (miniflare from bio-plane/src/index.mjs), driven by a SIGNED-IN MEMBER SESSION —
+        never MEMBER_TOKEN, which REC-189 found is a MACHINE identity (`token:member`), so a tier it wrote would
+        be the ruling's own overclaim passing as a member's act. The app's own `addGo` writes; `op=projection`
+        and `op=image` are read back. (1) an untouched chooser writes undetermined; (2) a member who picks 2
+        reads 2, in the plane's words.
+     V. THE WORDS ARE THE PLANE'S. How a liar passes P: hard-code the three words. So the published map is
+        SWAPPED — random words, then a map holding only two keys — and the page must follow it word for word
+        and key for key; the writer must refuse a key the map no longer holds; no map, no chooser.
+   ============================================================ */
+{
+  const { createRequire } = await import("node:module");
+  const { pathToFileURL } = await import("node:url");
+  const { randomBytes } = await import("node:crypto");
+  const { VOCABULARIES } = await import("../../bio-plane/src/affordances.mjs");
+  const PUBLISHED = VOCABULARIES.risk_tiers;
+  const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
+  const radios = (html) => [...String(html).matchAll(/<input type="radio" name="ac-tier" value="([^"]*)"([^>]*)>/g)]
+    .map(m => ({ key: m[1], checked: /\bchecked\b/.test(m[2]), onchange: (/onchange="([^"]*)"/.exec(m[2]) || [])[1] }));
+  const plain = (h) => String(h).replace(/<[^>]*>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ");
+
+  /* ---- P. the real plane, a signed-in member ---- */
+  const req = createRequire(new URL("../../bio-plane/package.json", import.meta.url));
+  let Miniflare;
+  try{ ({ Miniflare } = await import(pathToFileURL(req.resolve("miniflare")).href)); }
+  catch(e){ ok("UI-85: the real plane can be started (miniflare is installed: run `npm ci` in bio-plane/) — " + (e && e.message), false); }
+  const IDX = new URL("../../bio-plane/src/index.mjs", import.meta.url);
+  const mf = new Miniflare({
+    modules: true, modulesRoot: "/", scriptPath: IDX.pathname, script: fs.readFileSync(IDX, "utf8"),
+    compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+    durableObjects: { STORE: { className: "Store", useSQLite: true } }, r2Buckets: ["CAPTURES", "PUBLISHED"],
+    bindings: { ADMIN_TOKEN: "adm-ui85", MEMBER_TOKEN: "mem-ui85", PROBE_TOKEN: "prb-ui85", VERSION: "test",
+                INSTANCE_NAME: HELD_GROUP },
+  });
+  try{
+    const post = async (op, body, tok) => rP(await (await mf.dispatchFetch(
+      `http://x/api/?op=${op}${tok ? "&token=" + tok : ""}`, { method: "POST", body: JSON.stringify(body) })).json());
+    /* The roster's own order (ADMINS_FIRST): two administrators, then the ordinary member who drives the form. */
+    const signIn = async (id, role) => {
+      const add = await post("memberadd", { memberId: id, cover: `cover for ${id}`, role, capabilities: ["contribute"] }, "adm-ui85");
+      const en = add && add.invite ? await post("enroll", { invite: add.invite, handle: id, password: `${id}-passphrase-1` }) : null;
+      const lg = en && en.ok ? await post("login", { role: `member:${id}`, password: `${id}-passphrase-1` }) : null;
+      ok(`UI-85: ${id} signs in (memberadd -> enroll -> login answered ${JSON.stringify(lg || en || add).slice(0, 160)})`,
+         !!(lg && lg.token));
+      return lg.token;
+    };
+    await signIn("ruth", "admin"); await signIn("gus", "admin");
+    const SESSION = await signIn("olive", "member");
+    const read = async (op, qs) => rP(await (await mf.dispatchFetch(`http://x/api/?op=${op}&token=${SESSION}&${qs || ""}`)).json());
+
+    /* The app, loaded against that plane: its own fetch bridged to miniflare, its own boot's two reads. */
+    const pels = new Map();
+    const pel = () => { const e = { classList:{add(){},remove(){},toggle(){},contains(){return false}}, style:{}, dataset:{},
+      value:"", _html:"", textContent:"", disabled:false, checked:false, addEventListener(){}, click(){},
+      querySelector:()=>pel(), querySelectorAll:()=>[], insertAdjacentHTML(){}, focus(){}, remove(){},
+      setAttribute(){}, getAttribute(){ return null; } };
+      Object.defineProperty(e, "innerHTML", { get(){ return e._html; }, set(v){ e._html = v; } }); return e; };
+    const $$ = (s) => { if(!pels.has(s)) pels.set(s, pel()); return pels.get(s); };
+    const pctx = { console:{ log(){}, warn(){}, error(){}, info(){} }, URL, URLSearchParams, JSON, Array, Object, String,
+      Number, Math, Date, RegExp, Promise, Uint8Array, Uint16Array, Map, Set, TextEncoder, TextDecoder,
+      crypto: webcrypto, Blob: class {}, setInterval:()=>1, clearInterval(){}, setTimeout:fn=>{fn();return 1},
+      requestAnimationFrame:fn=>fn(), matchMedia:()=>({matches:false}),
+      document:{ querySelector:$$, querySelectorAll:()=>[], addEventListener(){}, documentElement:{setAttribute(){}},
+        getElementById:()=>pel(), hidden:false, createElement:()=>pel(), body:{appendChild(){},removeChild(){}} },
+      location:{ protocol:"https:", hash:"" }, history:{ pushState(){}, back(){}, replaceState(){} },
+      localStorage:{ getItem:()=>null, setItem(){} }, window:{ addEventListener(){}, open:()=>null },
+      fetch: (u, o) => mf.dispatchFetch(new URL(u, "http://x").toString(), o) };
+    pctx.globalThis = pctx; vm.createContext(pctx);
+    vm.runInContext(appScript() + ";globalThis.__P = {PLANE, recR, loadActSource, renderAdd, addTypeSync, addActPick, addActSync, addGo, addActKinds};", pctx);
+    const U = pctx.__P;
+    const OPENED = []; pctx.__open = async (id) => { OPENED.push(id); };
+    vm.runInContext("openBundle = globalThis.__open;", pctx);
+    U.PLANE.token = SESSION; U.PLANE.session = true;
+    U.PLANE.me = await U.recR("whoami");                  /* boot()'s own first read */
+    await U.loadActSource(true);                          /* and its second */
+    ok(`UI-85: the credential driving the chooser is a SIGNED-IN MEMBER SESSION, not a deploy token (whoami ${JSON.stringify(U.PLANE.me).slice(0, 160)})`,
+       U.PLANE.me && U.PLANE.me.session === true && U.PLANE.me.member === "olive");
+
+    const drive = async (title, pick) => {
+      await U.renderAdd();
+      $$("#a-type").value = "action"; $$("#a-title").value = title; $$("#a-body").value = "Ask for the transfer ledger.";
+      U.addTypeSync();
+      const kinds = U.addActKinds();
+      U.addActPick("named"); $$("#ac-name").value = "City Clerk";
+      $$("#ac-kind").value = kinds.includes("cpra_request") ? "cpra_request" : kinds[0]; U.addActSync();
+      const offered = radios($$("#content").innerHTML);
+      if(pick != null){
+        const r = offered.find(x => x.key === String(pick));
+        ok(`UI-85: the chooser the member sees offers tier ${pick}, with its own handler (offered ${JSON.stringify(offered.map(x => x.key))})`,
+           !!(r && r.onchange));
+        vm.runInContext(r.onchange, pctx);               /* the radio's own onchange: the member's click */
+      }
+      OPENED.length = 0;
+      await U.addGo();
+      const id = OPENED[0];
+      ok(`UI-85: addGo wrote the action through the plane (${id || plain($$("#a-err").innerHTML).slice(0, 300)})`, !!id);
+      const pj = await read("projection", `id=${encodeURIComponent(id)}`);
+      const img = await read("image", `id=${encodeURIComponent(id)}`);
+      return { id, offered, action: pj && pj.action, md: img && img["bundle.md"] };
+    };
+
+    const untouched = await drive("Records request, nobody assessed", null);
+    console.log(`  UI-85 untouched: offered ${JSON.stringify(untouched.offered.map(x => x.key + (x.checked ? "*" : "")))}; `
+              + `projection ${JSON.stringify(untouched.action && { t: untouched.action.risk_tier, w: untouched.action.risk_tier_words })}`);
+    ok("UI-85 UNTOUCHED: an untouched chooser writes undetermined — op=projection reads undetermined and the stored bytes say so",
+       untouched.action && untouched.action.risk_tier === "undetermined"
+       && /^risk_tier: undetermined$/m.test(String(untouched.md)) && !/^risk_tier:\s*[0-9]/m.test(String(untouched.md)));
+    ok("UI-85 UNTOUCHED: …read back in the plane's own words for undetermined",
+       untouched.action.risk_tier_words === PUBLISHED.undetermined);
+
+    const two = await drive("Records request, filed with care", 2);
+    console.log(`  UI-85 picked 2: projection ${JSON.stringify(two.action && { t: two.action.risk_tier, w: two.action.risk_tier_words })}`);
+    ok("UI-85 POSITIVE: a member picks tier 2 and op=projection reads 2",
+       two.action && two.action.risk_tier === 2 && /^risk_tier: 2$/m.test(String(two.md)));
+    ok("UI-85 POSITIVE: …with the published words for 2, which are the words the member was offered",
+       two.action.risk_tier_words === PUBLISHED[2] && plain($$("#content").innerHTML).includes(PUBLISHED[2]));
+  } finally { await mf.dispose(); }
+
+  /* ---- V. the words are the plane's ---- */
+  const publish = async (map) => { AFF.vocab = map ? { risk_tiers: map } : null; await G.loadActSource(true); };
+  const form = async () => { await G.renderAdd(); els.get("#a-type").value = "action"; return els.get("#content").innerHTML; };
+
+  await publish(PUBLISHED);
+  let h = await form();
+  let r = radios(h);
+  ok(`UI-85 WORDS: the chooser offers exactly the published keys, in the published order (${JSON.stringify(r.map(x => x.key))})`,
+     JSON.stringify(r.map(x => x.key)) === JSON.stringify(Object.keys(PUBLISHED)));
+  ok("UI-85 WORDS: …each in the plane's own words", Object.values(PUBLISHED).every(w => plain(h).includes(w)));
+  ok(`UI-85 DEFAULT: undetermined is preselected and no number is (checked: ${JSON.stringify(r.filter(x => x.checked).map(x => x.key))})`,
+     JSON.stringify(r.filter(x => x.checked).map(x => x.key)) === JSON.stringify(["undetermined"]));
+  G.addActTier("2"); G.addActRepaint();
+  /* The repaint replaces the pane's own element (`#a-act`'s outerHTML), which is what is read. */
+  ok("UI-85: a chosen tier survives the pane's repaint (adding a leg or a deadline redraws it)",
+     JSON.stringify(radios(els.get("#a-act").outerHTML).filter(x => x.checked).map(x => x.key)) === JSON.stringify(["2"]));
+
+  /* THE IDENTITY ARM: a map no literal can equal, drawn per run. */
+  const w = () => "tier-" + [...randomBytes(6)].map(b => "abcdefghijklmnopqrstuvwxyz"[b % 26]).join("");
+  const SWAP = { 1: w(), 2: w(), 3: w(), undetermined: w() };
+  await publish(SWAP);
+  h = await form();
+  ok(`UI-85 IDENTITY: the page follows a SWAPPED map word for word (${JSON.stringify(SWAP)})`,
+     Object.values(SWAP).every(x => plain(h).includes(x)));
+  const stale = Object.values(PUBLISHED).filter(x => plain(h).toLowerCase().includes(x.toLowerCase()));
+  ok(`UI-85 IDENTITY: …and none of the words the plane is not publishing any more is on the page (found ${JSON.stringify(stale)})`,
+     stale.length === 0);
+  const TWO_KEYS = { 2: w(), undetermined: w() };
+  await publish(TWO_KEYS);
+  h = await form(); r = radios(h);
+  ok(`UI-85 IDENTITY: the options are the map's KEYS, not a surface's 1-3 (offered ${JSON.stringify(r.map(x => x.key))})`,
+     JSON.stringify(r.map(x => x.key)) === JSON.stringify(["2", "undetermined"]));
+  G.addActTier("3");
+  ok("UI-85 WRITER: a key the map does not hold is neither taken by the chooser nor written",
+     vm.runInContext("ADD_ACT.tier", ctx) === "undetermined" && G.riskTierLine("3") === "risk_tier: undetermined");
+  ok("UI-85 WRITER (over-strictness): a published key the member chose IS written, as the record's token",
+     G.riskTierLine("2") === "risk_tier: 2" && G.riskTierLine(2) === "risk_tier: 2");
+  await publish(null);
+  h = await form();
+  ok("UI-85 ABSENT: no published map, no chooser — nothing offered, the absence said, and the writer writes undetermined",
+     radios(h).length === 0 && /has not published its words/.test(h) && G.riskTierLine("2") === "risk_tier: undetermined");
+  const srcHits = Object.values(PUBLISHED).filter(x => SRC.toLowerCase().includes(x.toLowerCase()));
+  ok(`UI-85 SOURCE: app.html spells none of the plane's tier words, comments included (found ${JSON.stringify(srcHits)})`,
+     srcHits.length === 0 && Object.keys(PUBLISHED).length >= 4);
+}
 
 /* THE OVERDUE ACT'S CARRY, and the measured gap it works around. C-2.8 refuses
    a question's basis leg pointing at an ACTION ("a leg rests on information or
