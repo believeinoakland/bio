@@ -9022,6 +9022,29 @@ export const CAPTURE_REQUEST_CHECKS = {
       + 'evidence for it, and flagging it as belonging somewhere else would put a note in front of '
       + 'you saying a document you just asked for is about something other than what you asked.',
   },
+  /* D-491 / IC-276 — THE RENDER FLAG AT THE DOOR, AND IT IS C-83.1's ARGUMENT
+     ONE LAYER UP. op=acquire refuses a `render` that is present and not `true`
+     rather than reading it as absent, because a `render: "yes"` answered with the
+     plain capture files the served shell as the content — the one outcome the
+     whole C-83 family exists to prevent. The same value arriving at THIS door is
+     the same defect with a delay on it, and worse in one respect: the row
+     outlives the call, so the drain fetches under a flag nobody can see was
+     dropped and the request reads afterwards as one that never asked.
+
+     IN THIS FAMILY AND NOT IN C-83, on PL-15's precedent (its two lead rows) and
+     for PL-15's reason: it is enforced inside `is-capture-request`, which is THIS
+     family's governed span, so a row filed under C-83 would leave a code in a
+     region whose rows do not name it and arm C would report a site it could not
+     judge. C-28.16 — C-28.5 and C-28.12 stay UNALLOCATED, because reusing a
+     number this file records as deleted would make its own history unreadable. */
+  CAPTURE_REQUEST_RENDER_MALFORMED: {
+    check: 'C-28.16',
+    where: 'src/store.mjs captureRequest > is-capture-request',
+    translation: 'This asked for the page as a visitor would see it in a form this instance does not '
+      + 'recognise. It reads render: true, or nothing at all for the document as the site serves it, so a '
+      + 'request for the rendered page is never quietly turned into a request for the page\'s empty frame. '
+      + 'Nothing was queued.',
+  },
 };
 
 /* =========================================================================
@@ -11058,8 +11081,15 @@ export const RENDER_CAPTURE_CHECKS = {
       + 'a way of capturing that does not load a live page (an archived copy, a Drive export, or the '
       + 'continuation of an earlier capture). Ask for one or the other. Nothing was fetched.',
   },
-  /* No renderer bound — or the Browser Rendering binding is bound and the
-     in-plane driver over it is not built. Named rather than falling back. */
+  /* No renderer bound: no RENDERER service binding and no BROWSER binding — or a
+     BROWSER bound to something that is not a Fetcher, so there is no endpoint to
+     open a devtools session on. Named rather than falling back.
+     CORRECTED BY D-490: this comment read "the Browser Rendering binding is bound
+     and the in-plane driver over it is not built", which was the state D-64 shipped
+     and is the state D-490 ended (`src/browserrender.mjs`). The TRANSLATION below
+     did not move and did not need to — "no working page renderer" is true of every
+     case this code still names — but a comment describing a condition that no longer
+     exists is how the next reader is told the wrong thing by the record. */
   RENDER_NO_RENDERER: {
     check: 'C-83.3',
     where: 'src/index.mjs fetch > is-render-admit',
@@ -11285,7 +11315,9 @@ export const DRIVE_CAPTURE_CHECKS = {
      could honestly hold, so the honest answer is the shape's name and the reason. */
   DRIVE_FOLDER_NOT_A_DOCUMENT: {
     check: 'C-48.2',
-    where: 'src/index.mjs fetch > is-drive-capture',
+    where: 'src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick '
+         + '(op=monitor, ungoverned span, D-472): a folder is not a document to capture and not '
+         + 'a document to watch, and one sentence is true of both',
     translation: 'That address is a Drive FOLDER — a listing of files rather than a document. There '
       + 'is nothing to export and no single set of bytes a capture of it would hold. Name the '
       + 'document you want; harvesting everything a folder lists is a different act.',
@@ -11296,7 +11328,8 @@ export const DRIVE_CAPTURE_CHECKS = {
      first-class and must be STATED. */
   DRIVE_KIND_UNDETERMINED: {
     check: 'C-48.3',
-    where: 'src/index.mjs fetch > is-drive-capture',
+    where: 'src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick '
+         + '(op=monitor, ungoverned span, D-472)',
     translation: 'That Drive address names a file but not what KIND of file it is, and the kind is '
       + 'what decides which export to ask for. Guessing would file bytes in a format nobody '
       + 'established. Use the address that opens the document itself, which carries the kind.',
@@ -11306,7 +11339,8 @@ export const DRIVE_CAPTURE_CHECKS = {
      document this instance can promise to have captured. */
   DRIVE_SHAPE_UNRECOGNISED: {
     check: 'C-48.4',
-    where: 'src/index.mjs fetch > is-drive-capture',
+    where: 'src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick '
+         + '(op=monitor, ungoverned span, D-472)',
     translation: 'That is a Google Drive address in a form this instance does not recognise. Rather '
       + 'than capture whatever bytes the address happens to serve and call it the document, it says '
       + 'so. If this shape should be harvestable, that is a change worth making deliberately.',
@@ -11344,6 +11378,39 @@ export const DRIVE_CAPTURE_CHECKS = {
      address ends the capture with the failure named; it never quietly becomes a
      capture of the application page, which would look like a success and hold
      nothing. */
+  /* D-472 — THE SHELL, ON A TICK, AND WHY IT IS ITS OWN CODE RATHER THAN C-48.5
+     FIRING FROM A SECOND PLACE. A capture that meets the shell has captured
+     nothing and the member's remedy is to share the file. A TICK that meets the
+     shell has not captured anything either — it never would — and what it has
+     lost is the CHECK: the record's last comparison still stands, undisturbed,
+     and nothing about the document changed. Those are two different facts about
+     the member's own situation, and DEC-49's canned translation is the sentence
+     they actually read, so one sentence cannot be true of both. PL-4's rule cuts
+     the same way it did for C-48.5/C-48.7: two predicates, two sites, both
+     drivable — `op=acquire` drives the pair above, `op=monitor` drives this pair,
+     and `test/monitor-assess.test.mjs` drives both of these by name. */
+  DRIVE_TICK_EXPORT_IS_THE_SHELL: {
+    check: 'C-48.8',
+    where: 'src/index.mjs fetch > is-drive-tick-export',
+    translation: 'The check of that Google Drive document did not run: the export address answered '
+      + 'with a web page rather than a document, which is what Drive does when a file stops being '
+      + 'shared with anyone who has the link. Nothing was compared and nothing about the record '
+      + 'changed — what is known is that this instance could not see the document today.',
+  },
+  /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
+     declared type and the first kibibyte are two different pieces of evidence,
+     and "Google told us it was a document and it was a web page" is the more
+     serious fact. On a tick the consequence is the same either way and it is
+     still worth two codes, because a tick that compared the shell would report
+     the document CHANGED on every visit — the cry-wolf this row exists to end. */
+  DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: {
+    check: 'C-48.9',
+    where: 'src/index.mjs fetch > is-drive-tick-bytes',
+    translation: 'The check of that Google Drive document did not run: the export address said it '
+      + 'was sending a document and sent a web page instead. This instance reads the bytes rather '
+      + 'than the label, so the application page was recognised and not compared against the '
+      + 'captured document — comparing it would report a change on every visit that nobody made.',
+  },
   DRIVE_EXPORT_UNREACHABLE: {
     check: 'C-48.6',
     where: 'src/index.mjs fetch > is-drive-export',
@@ -14694,6 +14761,35 @@ export const CONNECTION_CHOICE_CHECKS = {
       + 'is among the places the record actually read the subject in this document, by the '
       + 'reference as the reading recorded it; a mention the record never read cannot be the one '
       + 'a connection rests on.',
+  },
+};
+
+/* D-510 / C-86 — THE PROMOTED DOCUMENT DECLARES ITS OWN TYPE (`BIO_Case_Making_v0_1.md` §2; C-2.5 already
+ * pins a document's type to its id prefix). ONE refusal, and the family is one row rather than padded out,
+ * because there is exactly one way for the two statements to be wrong about each other.
+ *
+ * WHY IT IS A REFUSAL AND NOT A SILENT NORMALISATION, which was the alternative the row licensed: the
+ * request carries TWO statements of what is being promoted — the document's own `object_type`, which every
+ * column of the projection is already read from, and the envelope's `meta.object_type`, which `promote`
+ * wrote into `bundles.object_type` and gated the action, bias and inquiry projections on. Obeying the
+ * envelope filed an ACTION as information with its risk tier in the bytes and its basis and correspondence
+ * never projected: a record holding an action it does not index as one. Obeying the document SILENTLY would
+ * be the other half of the same defect — the caller asked for one thing and got another, and nothing said
+ * so. So the record takes the DOCUMENT's word (the bytes are what it holds) and REFUSES the request that
+ * contradicts it, naming both answers, before anything is written.
+ *
+ * THE COMPARISON GOES THROUGH `normalizeType` ON BOTH SIDES, so `focus` and `problem` — legal legacy
+ * spellings of `inquiry` (REC-10) — are not disagreements. A fence tighter than its rule is not a safer
+ * fence. A document that states NO type is not a disagreement either: the envelope is then all there is. */
+export const PROMOTED_TYPE_CHECKS = {
+  ENVELOPE_TYPE_DISAGREES: {
+    check: 'C-86.1',
+    where: 'src/store.mjs promote > is-promoted-type-disagrees',
+    translation: 'The document being filed says what kind of thing it is, and the request that carried it '
+      + 'says something different. The record goes by the document, so rather than file an action as '
+      + 'information — or the reverse — and index it as neither, it stops and tells you both answers. '
+      + 'Nothing was written. Send it again with the request naming the type the document names, or change '
+      + 'the document first.',
   },
 };
 

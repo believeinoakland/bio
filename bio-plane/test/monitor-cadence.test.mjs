@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (a) delete the #claimFire guard in store.mjs #monitorTick -> a retry re-fires a succeeded address and observations goes 1->2 (risk 2 reproduced), 5 assertions fail; (b) in #monitorCadencePlan use `Store.MONITOR_CADENCE_MS.daily` instead of `Store.monitorIntervalMs(r.monitor_frequency)` -> every document is checked at one global interval and per_meeting gets an interval nobody derived, 6 assertions fail. Both RUN 2026-08-04, restored 59/59 green. */
+/* NEGATIVE CONTROL: (a) delete the #claimFire guard in store.mjs #monitorTick -> a retry re-fires a succeeded address and observations goes 1->2 (risk 2 reproduced), 5 assertions fail; (b) in #monitorCadencePlan use `Store.MONITOR_CADENCE_MS.daily` instead of `Store.monitorIntervalMs(r.monitor_frequency)` -> every document is checked at one global interval and per_meeting gets an interval nobody derived, 6 assertions fail. Both RUN 2026-08-04, restored 59/59 green. (c) D-518, RUN 2026-09-24: in #monitorTick restore `if (!failed.length)` in place of `if (!failed.length && !skipped.length)` -> the REAL-clock wake closes an epoch it did not finish, the retry mints a new one and re-fires the address that already succeeded, and observations goes 1->2 for one check; 5 assertions fail by name, listed in full in the header. Restored and verified by sha256 and cmp, 64/64 green. */
 /* REC-26: the two live M1 gaps — env.SELF bound nowhere, op=monitor with no caller.
  *
  * MILESTONES.md's corrected M1 note names exactly two things that did not close
@@ -58,6 +58,37 @@
  *      NOT given an interval and NOT checked" (want false got true), "it is reported
  *      UNSCHEDULED by name" (want ["INFO-2026-0803-meeting"] got []) and "with the
  *      reason stated rather than a guessed interval". 53 pass, 6 fail.
+ *
+ *  (c) D-518 — CLOSE THE EPOCH ON A TICK THAT FINISHED NOTHING. In
+ *      src/store.mjs #monitorTick, restore the pre-D-518 condition
+ *      `if (!failed.length) this.#closeTickEpoch("archive-monitor", epoch);`
+ *      in place of `if (!failed.length && !skipped.length)`. RUN 2026-09-24: the
+ *      REAL-clock wake this suite now drives reuses the open epoch, skips both
+ *      claims, reports nothing failed and CLOSES the epoch; the retry that follows
+ *      mints a new epoch, finds the claims gone, and RE-FIRES the address that
+ *      already succeeded, so captured_locators.observations goes 1 -> 2 for ONE
+ *      genuine check. That is risk 2 reproduced through a DIFFERENT door from arm
+ *      (a) — the key is intact and its RELEASE is wrong — which is why both arms
+ *      are needed. The suite FAILS 5 assertions naming it: "and the retry left the
+ *      epoch OPEN, because a tick that fired nothing finished nothing" (want 1 got
+ *      0), "a wake nobody scheduled fires nothing: every subject is already
+ *      claimed" (want [] got ["https://www.oaklandca.gov/agenda.pdf"]), "it skips
+ *      the claims it inherited" (want both addresses got []), "so observations is
+ *      not inflated by an alarm that did no work" (want 1 got 2 — risk 2 by name)
+ *      and "and re-checks the address, which is what a monitor is for" (want
+ *      ["https://www.oaklandca.gov/agenda.pdf"] got []). 59 pass, 5 fail. Restored
+ *      by sha256 and cmp, 64/64 green.
+ *      ONE SURPRISING GREEN, RECORDED RATHER THAN SMOOTHED: "it does NOT close an
+ *      epoch it did not finish" PASSES under this arm (want 1 got 1). It is not
+ *      diagnostic here, because the stray tick's OWN fire of the budget address
+ *      fails, so the stray leaves an epoch of its own open and the COUNT is 1
+ *      either way. The count cannot tell WHICH epoch it holds; the three arms
+ *      beside it can, and they do. A count is a weaker instrument than an
+ *      identity, and this is the shape of that weakness.
+ *      OVER-STRICTNESS ARM, RUN 2026-09-24: the same guard spelled
+ *      `if (!skipped.length && !failed.length)` — the two clauses in the other
+ *      order — PASSES 64/64, so the arm is coupled to the behaviour and not to the
+ *      source's shape.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -452,6 +483,38 @@ const pkg = (id, n, frequency) => {
        SCHEDULED tick, which is what an hourly cadence is for. */
     t("and the address that failed is not re-attempted inside the same tick either",
       retry.skipped.includes(B), true);
+    /* D-518. The retry finished NOTHING — it fired nothing and only skipped claims
+       another tick made — so it must leave the epoch exactly as it found it. Until
+       this assertion existed the code closed it, and nothing anywhere pinned the
+       closing rule, so the epoch's release raced whatever else armed this alarm. */
+    t("and the retry left the epoch OPEN, because a tick that fired nothing finished nothing",
+      (await obj.stats()).monitorTickEpoch, 1);
+
+    console.log("\n--- an alarm on the REAL clock, arriving between the retry and the next cadence ---");
+    /* D-518, and this arm is the WHOLE REASON THE ROW EXISTS: the suite drives
+       onAlarm at an injected virtual `now`, but workerd ALSO fires the DO alarm on
+       the REAL clock, and `archive-monitor` is registered `due: (now) => now` so it
+       runs on EVERY wake. Tick 1's nested op=acquire enqueues an inbox task and arms
+       that wake at real-now plus the drain delay, so on a LOADED machine — where
+       tick 1 spends longer in wall-clock time than the delay — an unbidden tick
+       lands between the ticks the suite drives. MEASURED 2026-09-24 by stalling the
+       fake Archive's replay hop 2.6s: the stray tick reused the open epoch, skipped
+       both claims, reported nothing failed, and CLOSED an epoch it had not finished;
+       the retry then minted a new epoch and re-fired the address that had already
+       succeeded, and `observations` went 1 -> 2 for one genuine check. DIST #6 met
+       the same thing as a gate that read 57/2 under a concurrent full gate and 59/0
+       alone on the identical tree.
+       So the alarm is DRIVEN here rather than waited for. That is what makes this
+       suite's verdict independent of the load it runs under (VERIFICATION.md), and
+       it is the difference between a property asserted and a race nobody sees. */
+    const stray = (await obj.onAlarm(Date.now())).monitor;
+    t("a wake nobody scheduled fires nothing: every subject is already claimed",
+      stray.fired.map((f) => f.address), []);
+    t("it skips the claims it inherited", stray.skipped.sort(), [A, B].sort());
+    t("it does NOT close an epoch it did not finish, which is what let a retry re-fire",
+      (await obj.stats()).monitorTickEpoch, 1);
+    t("so observations is not inflated by an alarm that did no work",
+      await obs(A_ARCHIVED), 1);
 
     console.log("\n--- the key is idempotence, not amnesia: the next CADENCE really re-checks ---");
     /* One whole MONITOR_TICK_MS on, the open epoch is spent. Without this the key

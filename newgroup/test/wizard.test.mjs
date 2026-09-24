@@ -86,6 +86,12 @@
  * first upload restates no member -> 180/4, the kept-bindings arm and the D-297-population arms. `newgroup/src/index.mjs`
  * restored after each by cp from a per-arm pristine copy and verified by sha256 AND byte compare (83b6af0d…).
  *
+ * NEGATIVE CONTROL (DIST-11, DIST #6, 2026-09-24), declared before arming: the BROWSER restatement dropped from
+ * `uploadUpdate` -> 201 passed, 2 failed: DIST-11 UPDATE as declared, AND DIST-11 INSTALL — the install's step-3 re-PUT
+ * takes the update's shape and `browser` is not in keep_bindings, so a fresh install would end WITHOUT the binding too.
+ * Recorded: it is why the update's restatement is load-bearing for both paths. Restored by cp, sha256 (4884ebbe…) and
+ * cmp; 203/203 after.
+ *
  * NEGATIVE CONTROL (DIST-9, DIST #6, 2026-09-24), DECLARED BEFORE ARMING, each arm ALONE, baseline 200/200: (N1) THE
  * INVENTOR — `instanceAiBinding` generates `rand(32)` when no value is supplied (DAEMON_TOKEN's shape) -> 190 passed,
  * 10 failed: the four declared DIST-9 NO-INVENTION / KEPT arms by name, and the four older arms that count secrets
@@ -1468,6 +1474,21 @@ console.log("\n--- DIST-9: the organisation ai credential is carried when suppli
   t("DIST-9: the UPDATE page offers the optional credential box, as a password field",
     /<input id="ai" type="password"/.test(upPage), true);
   t("DIST-9: the INSTALL page does not (a new copy has no member yet to mint one)", homePage.includes('id="ai"'), false);
+}
+
+/* ---- DIST-11 (IC-252): both upload paths declare the Browser Rendering binding, named as the plane's config names it ---- */
+console.log("\n--- DIST-11: install and update declare BROWSER ---");
+{
+  const planeCfg = readFileSync(new URL("../../bio-plane/wrangler.jsonc", import.meta.url), "utf8");
+  const cfgName = (planeCfg.match(/"browser":\s*\{\s*"binding":\s*"([A-Z_]+)"/) || [])[1] || null;
+  t("DIST-11 PIN: the installer's BROWSER binding carries the name the plane's wrangler.jsonc declares",
+    [NG.BROWSER_BINDING?.type ?? null, NG.BROWSER_BINDING?.name ?? null], ["browser", cfgName]);
+  const i = await dist6("br-install");
+  t("DIST-11 INSTALL: the plane is uploaded holding a browser binding named BROWSER",
+    (i.planePuts.at(-1) || []).filter((b) => b.type === "browser").map((b) => b.name), ["BROWSER"]);
+  const u = await dist6("br-update", { mode: "update", pre: { "br-update": planeBase("br-update") } });
+  t("DIST-11 UPDATE: a copy installed before DIST-11 gains BROWSER (browser is not kept by keep_bindings, so it is restated)",
+    (u.planePuts.at(-1) || []).filter((b) => b.type === "browser").map((b) => b.name), ["BROWSER"]);
 }
 
 console.log(`\nwizard: ${pass} passed, ${fail} failed`);

@@ -523,8 +523,14 @@ console.log("\n--- 6. chore (2): affordanceFacts' project arm goes through the m
       "export const LEGACY_TYPE_ALIASES = { problem: 'inquiry', focus: 'inquiry' };",
       "export const LEGACY_TYPE_ALIASES = { problem: 'inquiry', focus: 'inquiry', dossier: 'project' };");
     const storePath = join(dir, "bio-plane/src/store.mjs");
+    /* ANCHOR CORRECTED 2026-09-24 BY D-510, NEVER EXEMPTED: `promote`'s normalisation site 3 of 4 read
+       `const projectedType = normalizeType(meta.object_type);` and now reads `const projectedType =
+       promotedType;` — the type is decided once, above, from the PROMOTED DOCUMENT rather than the caller's
+       envelope. The rehearsal is unchanged in what it does (neuter the stored column's normalisation so a
+       legacy-spelled ROW exists) and unchanged in what it proves; only the marker moved, which is exactly
+       what the arm below is for and it CAUGHT IT. */
     const patchedStore = readFileSync(storePath, "utf8").replace(
-      "const projectedType = normalizeType(meta.object_type);",
+      "const projectedType = promotedType;",
       "const projectedType = meta.object_type;");
     t("the rehearsal's two patches found their sites (markers moved if this fails)",
       [patchedCat !== catSrc, patchedStore.includes("const projectedType = meta.object_type;")],
@@ -646,8 +652,38 @@ console.log("\n--- 7. chore (3): a capture-axis grade on an INQ- leg has no refe
   const HIST = "INQ-2026-1400-historical";
   const histMd = inquiryMd(HIST, { question: "A row written before the refusal existed?",
     ...legTo(INQ_OPEN, "capture") });
+  /* CORRECTED 2026-09-24 by D-511, never exempted, and it moved TWO things. (1) THE CREDENTIAL. This drove the
+     replay under the MEMBER deploy token and it landed, because the exemption was the CALLER'S to claim; BOB #33
+     ruled `replay` the SERVER'S word (INVESTIGATIVE-SESSION.md §11 item 5) and the plane now deletes a caller's
+     flag unless the call arrives under the ADMIN class with no session — the one class `migrate.mjs` uses. (2) THE
+     SHAPE, and it makes the arm say what its own label always said. It was a CREATION of a new inquiry, and an
+     ADMIN-class creation of a question is asked for its surfacing run (REC-171): moving the credential alone would
+     have measured C-66.1 rather than this arm's subject. `withSurfacingRun` cannot supply that run for a SECOND
+     deploy token in one store — its fixture project is created by title and the second token is refused NAME_TAKEN,
+     after which the wrapper passes the creation through un-run (measured 2026-09-24 by D-511; reported, not fixed
+     here, because that fixture is shared by dozens of suites). A REVISION meets none of that, and the subject is a
+     revision: the record's own past may hold such a leg, and a plane that could not carry it verbatim would be
+     rewriting history to suit a rule made later. So the question is seeded under the member token with a leg the
+     write admits, and the root of trust then replays the historical shape over it. */
+  const histSeed = await seed(HIST, inquiryMd(HIST, { question: "A row written before the refusal existed?",
+    ...legTo(INQ_OPEN, "connection", "hunch", HUNCH) }), "inquiry", "open");
+  t("REACH: the question exists to be revised, so the arm below is about the replay and not about a missing base",
+    typeof histSeed.bundleSha, "string");
   t("a REPLAYED revision carrying the same leg is ADMITTED: the record must be able to hold its own past",
-    (await promote(HIST, histMd, "inquiry", "open", "mem-rec31", { replay: true })).ok, true);
+    (await promote(HIST, histMd, "inquiry", "open", "adm-rec31",
+                   { replay: true, base: histSeed.bundleSha, snapKey: `${HIST}-replay` })).ok, true);
+  /* D-511, the other half of the rule driven HERE, where the replay exemption is what the arm above rests on: the
+     SAME package under the MEMBER deploy token is refused, because the flag is deleted before the store sees it
+     and the leg is judged by REC-12's rule again. Without this arm the one above would pass over a plane that had
+     simply stopped asking, and the credential it names would be decoration. */
+  const HIST2 = "INQ-2026-1400-historical-machine-asserted";
+  const seed2 = await seed(HIST2, inquiryMd(HIST2, { question: "And asserted by a machine?",
+    ...legTo(INQ_OPEN, "connection", "hunch", HUNCH) }), "inquiry", "open");
+  const asserted = await promote(HIST2, inquiryMd(HIST2, { question: "And asserted by a machine?",
+    ...legTo(INQ_OPEN, "capture") }), "inquiry", "open", "mem-rec31",
+    { replay: true, base: seed2.bundleSha, snapKey: `${HIST2}-replay` });
+  t("D-511: the MEMBER deploy token asserting `replay` over the same historical shape is REFUSED by name",
+    [asserted.ok, asserted.reason], [false, "BASIS_REFUSED"]);
   const storeSrc = readFileSync(STORE_SRC_PATH, "utf8");
   t("so the derivation's no-referent arm stays, and its comment now points at the refusal instead of at the gap",
     /* CORRECTED BY MK-2 (IC-142), never exempted: this pinned the literal

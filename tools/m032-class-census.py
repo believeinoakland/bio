@@ -31,6 +31,9 @@
 #   derive                — every derived figure, read back out of the logs. No
 #                           network, runs in a second, so each number in
 #                           MEASUREMENTS.md is traceable to a line.
+#   classhash             — FW-22. The sha256 of the CLASSIFICATION PATH alone, read
+#                           out of the AST, so "the thresholds did not move" is a
+#                           digest rather than a reading of the edit history.
 #   control               — NEGATIVE CONTROLS, exits 1 on any mismatch. No network.
 #                           Includes the CONSERVATION arm and the NEUTERING arm the
 #                           M0-32 queue row demands.
@@ -63,6 +66,37 @@
 #   neutering arms not declared (6 filename-counted documents had unreadable bodies).
 #   The real record: body 18, name 20, both 4 — 85 arms, 0 failed. See M-126.
 #
+# FW-22 (2026-09-24, BOB #32) ADDED A SEVENTH CLASS, `financial_report`, and put its
+# predicate INSIDE the budget type: an ACFR/CAFR or an agency's audited statements is
+# not a budget, so `budget_arm` requires `not is_financial_report`, with
+# `budget_arm_d66` kept beside it as the baseline the recount is measured against.
+# Also: `M032_HALVES` (the recount must be of D-66's sample, so the Legistar half,
+# reachable again today and absent from D-66's population, is excluded by name);
+# `classhash` (the digest of the classification path, the claim M-126 could not make);
+# read sample half C (the new class, read). Figures:
+# `docs/development/measurements/M-143.md`.
+#
+# NEGATIVE CONTROL: (FW-22, 2026-09-24; instrument FROZEN at sha 80d76f6d... 19:13:20Z
+#   BEFORE the 1,000-document walk, which loaded that file at start; classification
+#   path `161d2ff9...` (38 defs, 26,117 B) IDENTICAL in the frozen file and in this
+#   one, by `classhash`, so the post-walk additions provably moved no threshold.
+#   Restored by cp from uniquely-named per-arm pristine copies, verified by sha256 AND
+#   cmp, 137,263 bytes, floored at 100,000. Baseline 110 arms, 0 failed.) —
+#   N1, THE ROW'S ARM: BOB #32's conjunct folded back into budget in the RE-DERIVATION
+#   the recount is computed from (`_fw22_budget`) -> exit 1 at exactly "ON THE REAL
+#   SAMPLE the RECOUNT MOVES: at least one document D-66 counted as budget_dataset is
+#   an audited financial statement and is now counted apart" (1 of 110), and nothing
+#   else. N2: the same conjunct folded back in the RECOGNISER (`budget_arm`) -> exit 1
+#   at exactly "...and is NOT budget_dataset - BOB #32's exclusion" (1 of 110), leaving
+#   ARM 1's planted financial_report, ARM 5's neutering arms and N1's real-sample arm
+#   untouched, as declared: that arm reads the RECORDED families and cannot see a
+#   recogniser edit. UNPLANNED AND KEPT: `classhash` told the two arms apart — N1 left
+#   the digest at 161d2ff9..., N2 moved it to 7e311aa6... . Restored: 110 arms, 0
+#   failed, exit 0. TWO DEFECTS THE ARMS FOUND BEFORE THE FREEZE, both now standing
+#   arms: `[ac]afr` matches cafr and aafr and NEVER ACFR (the spelling Oakland has
+#   used since FY2021); and an arm written `'<family>' in fams[c]` tested a DICT's
+#   KEYS, reporting families that never fired and unable to fail.
+#
 # WHAT A CLASS IS, AND WHY IT IS NOT A LIST OF SPELLINGS. Each class is defined by
 # what makes a document that class IN PRINCIPLE, and the recogniser implements the
 # principle as a THRESHOLD OVER INDEPENDENT EVIDENCE FAMILIES — never one literal.
@@ -94,6 +128,16 @@
 #                   Families: contact-point DENSITY (a count and a rate, not a
 #                   word) · a roster shape (many short lines, little narrative) ·
 #                   self-naming (directory / roster / contact list).
+#   financial_report
+#                 — it REPORTS THE ACTUALS of a period that has ENDED, on an
+#                   auditor's authority: an ACFR/CAFR, an agency's audited
+#                   statements, a single-audit report. Families: self-naming in a
+#                   title line · an auditor's opinion · the audited-statement spine
+#                   (the GAAP statements, the notes, MD&A, RSI) · a period that has
+#                   ENDED. **BOB #32 ruled on 2026-09-24 that the BUDGET type does
+#                   not admit these** (`EXTRACTION-BREADTH-DESIGN.md` §2 row 5): a
+#                   budget is a PLAN for money not yet spent and a statement reports
+#                   what was, so they are a separate type, counted apart.
 #   other         — usable text was read and NO class threshold was met. A positive
 #                   finding about a readable document.
 #   UNCLASSIFIED  — no usable evidence was obtained. NEVER folded into `other`, and
@@ -137,7 +181,8 @@ AV_EXT = {'mp4', 'mp3', 'm4a', 'wmv', 'avi', 'mov', 'wav', 'mpg', 'mpeg', 'webm'
 ARCHIVE_EXT = {'zip', 'gz', 'tar', 'rar', '7z'}
 
 CLASSES = ['agenda', 'minutes', 'staff_report', 'ordinance_res', 'directory',
-           'budget_dataset']      # D-66 (2026-09-24): Bob's fifth named type
+           'budget_dataset',      # D-66 (2026-09-24): Bob's fifth named type
+           'financial_report']    # FW-22 (2026-09-24, BOB #32): counted APART from it
 
 
 def ext_of(key):
@@ -685,6 +730,45 @@ _BUDGET_TITLE = (r'\b(?:(?:proposed|adopted|biennial|mid-?\s?cycle|operating|cap
                  r'commission|committee|process|priorit|question|webinar|basics|'
                  r'survey|town hall|hearing|workshop))\b|'
                  r'\bcapital improvement program\b|\bfinancial plan\b')
+# FW-22 (2026-09-24, BOB #32) — AN AUDITED FINANCIAL STATEMENT IS NOT A BUDGET.
+# A budget is a PLAN for money not yet spent; a financial report states the ACTUALS of
+# a period that has ENDED, on an auditor's authority. D-66 measured two of its eight
+# budgets to be exactly that (M-126 rows 14 and 15: the 2010 CAFR and the Redevelopment
+# Agency's FY 2007-08 statements) and named the question; Bob answered it.
+#
+# THE EXCLUSION IS PART OF WHAT `budget` IS, not a by-product of this class existing.
+# `budget_arm` consults `is_financial_report` directly, so neutering `financial_report`
+# does NOT re-admit an ACFR to the budget count — which is what keeps ARM 5's "neutering
+# one class touches no other" TRUE rather than convenient. The DATASET arm is untouched
+# on purpose: a dataset is a FORM (a table of records), not a subject, and a workbook of
+# audited figures is honestly both — such a document is reported MULTI-CLASS, never
+# silently added to two totals.
+_FR_TITLE = (r'\b(?:comprehensive annual|annual comprehensive)\s+financial report\b|'
+             # `(?:cafr|acfr)`, NOT `[ac]afr`: that class matches cafr and aafr
+             # and never ACFR, the spelling Oakland has used since FY2021. ARM 8's
+             # name arm caught it.
+             r'\b(?:cafr|acfr)\b|\bsingle audit report\b|'
+             r'\b(?:audited|basic|annual) financial (?:reports?|statements?)\b|'
+             r'\bfinancial statements?\s+(?:and|with)\s+(?:the\s+)?'
+             r'(?:report of the\s+)?independent auditors?\b|'
+             r'\bindependent auditors?.{0,3} reports?\b')
+_FR_OPINION = (r'\bindependent auditors?.{0,3} report\b', r'\bwe have audited\b',
+               r'\bin our opinion\b',
+               r'\bpresent(?:s)? fairly, in all material respects\b',
+               r'\bgovernment auditing standards\b',
+               r'\bauditing standards generally accepted\b')
+_FR_SPINE = (r'\bstatements? of net (?:position|assets)\b',
+             r'\bstatements? of activities\b',
+             r'\bstatements? of revenues?,? expenditures?,? and changes in fund '
+             r'(?:balance|equity)',
+             r'\bstatements? of cash flows\b',
+             r'\bnotes to (?:the )?(?:basic )?financial statements\b',
+             r'\bmanagement.{0,3}s discussion and analysis\b',
+             r'\brequired supplementary information\b', r'\bbalance sheets?\b',
+             r'\bgovernmental accounting standards board\b|\bgasb\b',
+             r'\bgenerally accepted accounting principles\b')
+_FR_ENDED = re.compile(r'\b(?:fiscal )?years? ended\b|\byears? then ended\b|'
+                       r'\bas of june 30,? \d{4}\b')
 _EMPTYISH = {'', '0', '0.0', '-', '#DIV/0!', '#REF!', '#N/A', '#VALUE!', '#NAME?', '#NUM!'}
 _NUMCELL = re.compile(r'^\s*[-+(]?\$?\s?[\d,]*\.?\d+%?\)?\s*$')
 
@@ -784,6 +868,44 @@ def _block_shape(lines):
     return rows, width, rows / max(1, len(lines)), header, (distinct >= 0.8 and carrying >= 0.6)
 
 
+def fam_financial_report(n):
+    f = {}
+    words = max(1, len(WORD.findall(n)))
+    money = len(MONEY.findall(n))
+    f['money density (>=40 amounts and >=4/100w)'] = (
+        money >= 40 and money / words * 100 >= 4)
+    f['self-naming (title line)'] = self_names(n, _FR_TITLE)
+    f["an auditor's opinion (>=2 of 6)"] = sum(
+        bool(re.search(p, n)) for p in _FR_OPINION) >= 2
+    f['the audited-statement spine (>=3 of 10)'] = sum(
+        bool(re.search(p, n)) for p in _FR_SPINE) >= 3
+    f['a period that has ENDED (>=2)'] = len(_FR_ENDED.findall(n)) >= 2
+    f['_money'] = money
+    return f
+
+
+def financial_report_arm(f):
+    # MONEY DENSITY IS NECESSARY, for D-66's own reason and its receipt: a staff report
+    # TRANSMITTING the ACFR self-names in its subject line and holds no statements of
+    # its own. What a financial report has that a memo about one lacks is its tables of
+    # actuals. Then ONE of three: it names itself; an auditor's opinion is in the body;
+    # or the statement spine is joined by A PERIOD THAT HAS ENDED. That last conjunct IS
+    # the plan/actuals line Bob drew, and it is what stops a budget book's fund-balance
+    # schedules (a balance sheet, governmental funds, GASB in its notes — three spine
+    # hits) from reading as a financial report: a budget names a period that has NOT
+    # ended. The spine ALONE is not enough, and ARM 8 drives that arm both ways.
+    return f['money density (>=40 amounts and >=4/100w)'] and (
+        f['self-naming (title line)'] or f["an auditor's opinion (>=2 of 6)"]
+        or (f['the audited-statement spine (>=3 of 10)']
+            and f['a period that has ENDED (>=2)']))
+
+
+def is_financial_report(n):
+    """The predicate BOB #32's ruling puts INSIDE the budget type's definition. Called
+    from `budget_arm`, so the exclusion holds whether or not the class is neutered."""
+    return financial_report_arm(fam_financial_report(n))
+
+
 def fam_budget_dataset(n, raw=None):
     f = {}
     words = max(1, len(WORD.findall(n)))
@@ -799,6 +921,10 @@ def fam_budget_dataset(n, raw=None):
     f['header row names the columns'] = header
     f['the table is the body (>=60% of lines)'] = share >= 0.6
     f['rows are distinct records carrying values'] = records
+    # FW-22 (BOB #32): the budget type does NOT admit an audited financial statement.
+    # Recorded as a FAMILY, so every document's count is auditable back to it and the
+    # recount can be re-derived from the log without a second network run.
+    f['not an audited financial statement (BOB #32)'] = not is_financial_report(n)
     f['_money'] = money
     f['_rows'] = rows
     return f
@@ -812,6 +938,16 @@ def budget_arm(f):
     # It is a memo ABOUT one — a reference, not membership — and its subject line is
     # exactly the self-naming a memo about a budget carries. What a budget has that a
     # memo about it lacks is its own table of amounts.
+    # FW-22: and it is not an audited financial statement (BOB #32, 2026-09-24) —
+    # `budget_arm_d66` below is the SAME arm without that conjunct, kept so the recount
+    # is a difference this instrument prints rather than one a reader must take on faith.
+    return budget_arm_d66(f) and f.get(
+        'not an audited financial statement (BOB #32)', True)
+
+
+def budget_arm_d66(f):
+    """D-66's budget arm as it stood before BOB #32 — the baseline the recount is
+    measured AGAINST, and the only thing `derive`'s recount line subtracts."""
     money = f['money density (>=40 amounts and >=4/100w)']
     return money and (f['self-naming (title line)'] or (
         f['fiscal period named (>=3)'] and f['ledger vocabulary (>=3 of 11)']))
@@ -867,6 +1003,11 @@ def meets(cls, f):
     if cls == 'directory':
         return f['contact-point density (>=10 and >=0.4/100w)'] or (
             f['self-naming (title line)'] and f['_contacts'] >= 5)
+    if cls == 'financial_report':
+        # FW-22, BOB #32 (2026-09-24). Set against the planted fixtures and the SIX
+        # named real documents of ARM 8 BEFORE the sample was re-walked, and not
+        # touched after — the same discount M0-32 states above applies.
+        return financial_report_arm(f)
     if cls == 'budget_dataset':
         # D-66. Set against the planted fixtures and FIVE named real documents
         # (listed in `control` ARM 7) BEFORE the sample was drawn, and not touched
@@ -877,7 +1018,8 @@ def meets(cls, f):
 
 FAMS = {'agenda': fam_agenda, 'minutes': fam_minutes, 'staff_report': fam_staff_report,
         'ordinance_res': fam_ordinance_res, 'directory': fam_directory,
-        'budget_dataset': fam_budget_dataset}
+        'budget_dataset': fam_budget_dataset,
+        'financial_report': fam_financial_report}
 
 
 def classify_body(text, neuter=None):
@@ -918,6 +1060,12 @@ NAME_RULES = {
     # "how a liar passes it" is exactly a count taken from this line.
     'budget_dataset': r'budget|appropriation|capital[-_ ]?improvement[-_ ]?program|'
                       r'financial[-_ ]?plan|data[-_ ]?set|\bdata\b',
+    # FW-22. Same standing as the line above: MEASURED against the bodies in `derive`,
+    # never counted. `financial[-_ ]?plan` stays with budget, where BOB #32 left it.
+    'financial_report': r'\b(?:cafr|acfr)\b|comprehensive[-_ ]?annual[-_ ]?financial|'
+                        r'annual[-_ ]?comprehensive[-_ ]?financial|'
+                        r'financial[-_ ]?statement|audited[-_ ]?financial|'
+                        r'single[-_ ]?audit|audit(?:or)?[-_ ]?report',
 }
 
 
@@ -1057,10 +1205,25 @@ def cmd_list(bucket='cao-94612'):
 
 
 def load_pop():
+    """FW-22: `M032_HALVES=bucket` restricts the population to the bucket half.
+
+    THE RECOUNT MUST BE OF D-66'S SAMPLE, not of a fresh draw. D-66's population was
+    the bucket alone — `webapi.legistar.com` refused that container's CONNECT (M-126)
+    — and on 2026-09-24 ~19:00Z it ANSWERED this one, 766 attachments over 250 matters.
+    Left in, those rows change the population, so `random.sample` at the same seed
+    draws DIFFERENT documents and the recount would not be a recount. Naming the half
+    reproduces D-66's stratum exactly: 28,915 text-bearing items with a url, the figure
+    M-126 states. That the Legistar half is reachable today is a finding, recorded in
+    FW-22's measurement; it is not this row's to fold in."""
     p = os.path.join(PEN, 'population.jsonl')
     if not os.path.exists(p):
         sys.exit(f'no population at {p} — run `list` first')
-    return [json.loads(l) for l in open(p)]
+    rows = [json.loads(l) for l in open(p)]
+    halves = os.environ.get('M032_HALVES', '')
+    if halves:
+        keep = set(halves.split(','))
+        rows = [r for r in rows if r['half'] in keep]
+    return rows
 
 
 def cmd_names(neuter=None, quiet=False):
@@ -1416,9 +1579,16 @@ def holds(row, text):
         if sum(1 for c in cells if c.strip()) >= 3 and not l.startswith('[sheet'):
             hdr = ' | '.join(c.strip()[:24] for c in cells if c.strip())[:220]
             break
+    fr = fam_financial_report(norm(text)) if text else {}
     return {
         'arm': [a for a, ok in (('budget', f and budget_arm(f)),
-                                ('dataset', f and dataset_arm(f))) if ok],
+                                ('dataset', f and dataset_arm(f)),
+                                # FW-22: and whether BOB #32's type took it, so a read
+                                # sample says which of the three arms a document is in.
+                                ('financial report', fr and financial_report_arm(fr)),
+                                ) if ok],
+        'budget_arm_d66': bool(f) and budget_arm_d66(f),
+        'fr_families': [k for k, v in fr.items() if v and not k.startswith('_')],
         'titles': [t[:90] for t in titles(norm(text), k=4)],
         'fiscal_periods': [k for k, _ in fy.most_common(4)],
         'amounts': f.get('_money', 0), 'table_rows': rows, 'table_width': width,
@@ -1434,7 +1604,10 @@ def cmd_readsample(k=25, m=45, seed=20260924):
     B · m keys drawn from the SPREADSHEET keys of the whole population (xlsx, xlsm,
         xls, csv, ods): does the plane's registry read each, and does this census
         judge it a dataset? This answers BREADTH §2's "a dataset may already be
-        read as a spreadsheet by the office entries" by measurement."""
+        read as a spreadsheet by the office entries" by measurement.
+    C · FW-22: EVERY document the body sample judged `financial_report`, re-read the
+        same way, so BOB #32's new class is READ and not only counted — and half A,
+        drawn from the RECOUNTED budget_dataset set, no longer holds them."""
     tmp = os.path.join(PEN, 'rs.tmp')
     body = [json.loads(l) for l in open(os.path.join(PEN, 'body-class.jsonl'))]
     pop = {r['id']: r for r in load_pop()}
@@ -1448,7 +1621,11 @@ def cmd_readsample(k=25, m=45, seed=20260924):
     print(f'READ SAMPLE A — {len(a)} of the {len(hit)} budget_dataset documents in the '
           f'body sample (seed {seed}).\nREAD SAMPLE B — {len(b)} of the '
           f'{len(sheets):,} spreadsheet keys in the population (seed {seed + 1}).', flush=True)
-    for half, recs in (('A', a), ('B', b)):
+    c = sorted([r for r in body if 'financial_report' in r['classes']],
+               key=lambda r: r['id'])
+    print(f'READ SAMPLE C — all {len(c)} financial_report documents in the body sample '
+          f'(FW-22; not a draw, the whole class).', flush=True)
+    for half, recs in (('A', a), ('B', b), ('C', c)):
         if not recs:
             continue            # a half drawn with N = 0 is not run, and not rewritten
         out = os.path.join(PEN, f'readsample-{half}.jsonl')
@@ -1471,6 +1648,26 @@ def cmd_readsample(k=25, m=45, seed=20260924):
                       flush=True)
                 time.sleep(0.25)
         print(f'-> {out}')
+
+
+def _bd_fams(r):
+    return set(r.get('fams', {}).get('budget_dataset', []))
+
+
+def _d66_budget(r):
+    """D-66's budget arm, re-derived from the families the row RECORDED — the
+    baseline the recount is measured against (FW-22)."""
+    f = _bd_fams(r)
+    return ('money density (>=40 amounts and >=4/100w)' in f
+            and ('self-naming (title line)' in f
+                 or ('fiscal period named (>=3)' in f
+                     and 'ledger vocabulary (>=3 of 11)' in f)))
+
+
+def _fw22_budget(r):
+    """The same arm with BOB #32's conjunct."""
+    return _d66_budget(r) and (
+        'not an audited financial statement (BOB #32)' in _bd_fams(r))
 
 
 def cmd_derive():
@@ -1536,6 +1733,50 @@ def cmd_derive():
         exts = collections.Counter(r['ext'] for r in bodies)
         print('  the sample\'s spreadsheet keys, for scale: ' + ', '.join(
             f'.{e} {exts[e]}' for e in SHEET_EXT if exts[e]))
+
+    # ---- FW-22: THE RECOUNT, and what the seventh class is made of -----------
+    if any('not an audited financial statement (BOB #32)' in r['fams'].get(
+            'budget_dataset', []) for r in bodies):
+        print('\n' + '-' * 78)
+        print('FW-22 — BOB #32, 2026-09-24: AN AUDITED FINANCIAL STATEMENT IS NOT A '
+              'BUDGET.\nRe-derived from the recorded families, so the recount is a '
+              'DIFFERENCE this instrument\nprints and not one a reader must take on '
+              'faith. `budget_arm_d66` is D-66\'s arm\nexactly; `budget_arm` is the '
+              'same arm with BOB #32\'s conjunct.')
+        d66 = [r for r in bodies if _d66_budget(r)]
+        moved = [r for r in bodies if _d66_budget(r) and not _fw22_budget(r)]
+        keptb = [r for r in bodies if _fw22_budget(r)]
+        frs = [r for r in bodies if 'financial_report' in r['classes']]
+        print(f'  D-66\'s BUDGET ARM took          {len(d66):4d} documents')
+        print(f'  BOB #32 excludes                {len(moved):4d} — audited financial '
+              f'statements, counted apart')
+        print(f'  the RECOUNTED budget arm keeps  {len(keptb):4d}')
+        print(f'  FINANCIAL REPORT, counted in its own right (the arm asked of every '
+              f'body, not\n  only of the ones the budget arm took): {len(frs)} — of '
+              f'which {len(moved)} came from D-66\'s budget count\n  and '
+              f'{len(frs) - len(set(r["id"] for r in moved) & set(r["id"] for r in frs))} '
+              f'the budget arm never had.')
+        print('  THE DOCUMENTS THE RECOUNT MOVED, named:')
+        for r in moved or []:
+            print(f"    - {r['name'][:72]}")
+        if not moved:
+            print('    (none — a FINDING about this sample, recorded rather than '
+                  'smoothed)')
+        print('  FINANCIAL REPORT — by the family that carried it:')
+        fc = collections.Counter()
+        for r in frs:
+            for k in r['fams'].get('financial_report', []):
+                fc[k] += 1
+        for k, v in fc.most_common():
+            print(f'    {v:5d}  {k}')
+        print('  by container: ' + (', '.join(
+            f'.{k or "(none)"} {v}' for k, v in collections.Counter(
+                r['ext'] for r in frs).most_common()) or '(none)'))
+        multi = collections.Counter(' + '.join(sorted(r['classes'])) for r in frs
+                                    if len(r['classes']) > 1)
+        print('  and with another class as well: ' + (', '.join(
+            f'{k} ({v})' for k, v in multi.most_common()) or '(none)'))
+        print('-' * 78)
 
     N = len(text_only)
     n = len(bodies)
@@ -1632,7 +1873,7 @@ def cmd_derive():
           f'subtracted.')
 
     # ---- D-66's READ SAMPLE, if taken ----------------------------------------
-    for half in ('A', 'B'):
+    for half in ('A', 'B', 'C'):
         rp = os.path.join(PEN, f'readsample-{half}.jsonl')
         if not os.path.exists(rp):
             continue
@@ -1695,6 +1936,52 @@ REACH = [
 # ---------------------------------------------------------------------------
 # NEGATIVE CONTROLS
 # ---------------------------------------------------------------------------
+CLASSIFICATION_PATH = (
+    # Every top-level name the verdict of `classify_body`/`judge` depends on. M-126
+    # (D-66) had to say its post-sample edits touched no classification path "from the
+    # edit history, NOT from a hash of the classification functions, which was not
+    # taken". FW-22 takes it: `classhash` hashes exactly these definitions out of the
+    # AST, so an edit to `derive`, `holds`, `readsample` or a comment moves nothing and
+    # an edit to a threshold moves the digest. A name added to a class MUST be added
+    # here, and `control` asserts every FAMS entry and every arm is in the list.
+    'MONEY', 'FISCAL', 'LEDGER', '_BUDGET_TITLE', '_EMPTYISH', '_NUMCELL', '_TITLE_VERB',
+    '_FR_TITLE', '_FR_OPINION', '_FR_SPINE', '_FR_ENDED', 'CLASSES',
+    'LETTERS', 'WORD', 'STOP',
+    'norm', '_head', 'titles', 'self_names', 'usable', 'judge',
+    'fam_agenda', 'fam_minutes', 'fam_staff_report', 'fam_ordinance_res',
+    'fam_directory', 'fam_budget_dataset', 'fam_financial_report',
+    '_table_shape', '_block_shape', 'budget_arm', 'budget_arm_d66', 'dataset_arm',
+    'financial_report_arm', 'is_financial_report', 'meets', 'FAMS', 'classify_body',
+)
+
+
+def cmd_classhash():
+    """The digest of the CLASSIFICATION PATH alone — the claim M-126 could not make."""
+    import ast, hashlib
+    src = open(os.path.abspath(__file__), encoding='utf-8').read()
+    tree = ast.parse(src)
+    seg, missing = [], []
+    for name in CLASSIFICATION_PATH:
+        node = None
+        for nd in tree.body:
+            if isinstance(nd, (ast.FunctionDef, ast.ClassDef)) and nd.name == name:
+                node = nd
+            elif isinstance(nd, ast.Assign) and any(
+                    isinstance(t, ast.Name) and t.id == name for t in nd.targets):
+                node = nd
+        if node is None:
+            missing.append(name)
+            continue
+        seg.append(name + '\n' + ast.get_source_segment(src, node))
+    if missing:
+        sys.exit('classhash: NOT IN THE FILE: ' + ', '.join(missing))
+    blob = '\n'.join(seg).encode()
+    print(f'classification path: {len(CLASSIFICATION_PATH)} definitions, '
+          f'{len(blob):,} bytes')
+    print('sha256 ' + hashlib.sha256(blob).hexdigest())
+    return 0
+
+
 def cmd_control():
     fails, arms = [], 0
 
@@ -1795,6 +2082,32 @@ def cmd_control():
             "General Purpose Fund expenditures, revenues, fund balance and FTE\n"
             + ''.join(f"Fund {1000 + i} Department {i} Personnel "
                       f"${(i + 3) * 104729:,} ${(i + 5) * 98311:,} {i + 2}.00 FTE\n"
+                      for i in range(60))),
+        # FW-22, BOB #32. PLANTED TO BE TAKEN BY D-66'S BUDGET ARM — it carries the FY
+        # tokens and the ledger vocabulary a real ACFR carries, which is exactly how
+        # M-126's rows 14 and 15 were counted as budgets. So the ONLY thing keeping it
+        # out of the budget count is the exclusion, and ARM 8's fold-back moves one
+        # variable. Generated, so the money density is real.
+        'financial_report': (
+            "CITY OF OAKLAND, CALIFORNIA\n"
+            "COMPREHENSIVE ANNUAL FINANCIAL REPORT\n"
+            "For the Fiscal Year Ended June 30, 2010 (FY 2009-10)\n"
+            "INDEPENDENT AUDITOR'S REPORT\n"
+            "We have audited the accompanying financial statements of the governmental "
+            "activities and each major fund of the City of Oakland as of and for the "
+            "year ended June 30, 2010.\n"
+            "In our opinion, the financial statements referred to above present fairly, "
+            "in all material respects, the respective financial position of the city.\n"
+            "MANAGEMENT'S DISCUSSION AND ANALYSIS\n"
+            "STATEMENT OF NET POSITION\n"
+            "STATEMENT OF ACTIVITIES\n"
+            "BALANCE SHEET - GOVERNMENTAL FUNDS\n"
+            "NOTES TO THE BASIC FINANCIAL STATEMENTS\n"
+            "REQUIRED SUPPLEMENTARY INFORMATION\n"
+            "Schedule of revenues, expenditures and fund balance, General Fund, "
+            "FY 2009-10 and FY 2008-09, in thousands:\n"
+            + ''.join(f"Fund {1000 + i} General Fund revenues expenditures "
+                      f"{(i + 3) * 104729:,} {(i + 5) * 98311:,} {(i + 7) * 41113:,}\n"
                       for i in range(60))),
     }
     for c, txt in FIX.items():
@@ -1983,6 +2296,18 @@ def cmd_control():
     print('\nARM 6 — assertions MUST NOT pass over an empty corpus.')
     chk('the planted corpus is non-empty', len(FIX) == len(CLASSES) >= 6,
         f'{len(FIX)} fixtures')
+    # FW-22: a hash over a list that has fallen behind the code is a hash of nothing.
+    # The FUNCTION names, not the class names: `tuple(FAMS)` is ('agenda', ...) and
+    # would have certified a list holding none of the recognisers. The arm caught that
+    # on its first run, which is the whole reason it is here.
+    missing = [n for n in ('FAMS', 'meets', 'classify_body', 'judge', 'usable',
+                           'budget_arm', 'dataset_arm', 'financial_report_arm',
+                           'is_financial_report')
+               + tuple(f.__name__ for f in FAMS.values())
+               if n not in CLASSIFICATION_PATH]
+    chk('every recogniser the verdict depends on is in CLASSIFICATION_PATH, so '
+        '`classhash` cannot certify a threshold it never read', not missing,
+        f'missing {missing}')
     chk('every class has a fixture', set(FIX) == set(CLASSES))
     if os.path.exists(bp):
         chk('the real body sample is non-empty',
@@ -2114,6 +2439,103 @@ def cmd_control():
             'not the evidence', body != name,
             f'body {len(body)}, name {len(name)}, both {len(body & name)}')
 
+    # ---- 8 · FW-22: AN AUDITED FINANCIAL STATEMENT IS NOT A BUDGET ------------
+    print('\nARM 8 — FW-22, BOB #32 (2026-09-24). The seventh class, and the RECOUNT '
+          'it forces.\n  Calibration set, ELEVEN named real documents read from '
+          's3://cao-94612 on 2026-09-24\n  BEFORE the sample was walked and not '
+          'touched after: OAK025620 [the 2010 CAFR];\n  OAK071404 [the Redevelopment '
+          "Agency's FY 2007-08 statements]; CAFR-2017; ORSA FY22\n  Audited Financial "
+          'Statements [read at plane tier 2]; OAK063800 [the FY 2015-17 proposed\n  '
+          'budget packet — NOT a financial report]; FY 2020-21 Midcycle Amendments '
+          '[NOT];\n  FY25-27 Errata Budget Book [NOT]; Budget PPT June 2021 [NOT]; '
+          'Semi-Annual Grants\n  Report [NOT]; INFO-MEMO on the FY23 ACFR '
+          'presentation [NOT — a memo ABOUT one];\n  CAFR.htm [a landing page, 1,760 '
+          'chars — NOT]. TWO MISSES, both to the reader and\n  not to a threshold: '
+          '2024-Single-Audit-Report and CAFR-2020 have NO TEXT LAYER and are\n  '
+          'invisible to this instrument. Recorded in the measurement and in REACH, '
+          'not smoothed.')
+    fr_fix = FIX['financial_report']
+    got, _ = classify_body(fr_fix)
+    chk('the planted ACFR IS financial_report', 'financial_report' in got, f'got {got}')
+    chk('...and is NOT budget_dataset — BOB #32\'s exclusion',
+        'budget_dataset' not in got, f'got {got}')
+    _ff = fam_budget_dataset(norm(fr_fix), fr_fix)
+    chk("...and D-66'S ARM WOULD HAVE TAKEN IT, so the fixture is not vacuous and the "
+        "fold-back moves ONE variable", budget_arm_d66(_ff),
+        f'D-66 arm {budget_arm_d66(_ff)}, FW-22 arm {budget_arm(_ff)}')
+    no_title = fr_fix.replace('COMPREHENSIVE ANNUAL FINANCIAL REPORT\n', '')
+    got, _ = classify_body(no_title)
+    chk('OVER-STRICTNESS: an audited statement that never names itself a CAFR is still '
+        "financial_report (the auditor's opinion carries it — measured in the wild on "
+        'CAFR-2017, whose title lines are only "city of oakland | california")',
+        'financial_report' in got, f'got {got}')
+    got, _ = classify_body(FIX['budget_dataset'])
+    chk('DISCRIMINATION: a budget is NOT a financial report',
+        'financial_report' not in got and 'budget_dataset' in got, f'got {got}')
+    sched = FIX['budget_dataset'] + (
+        '\nBALANCE SHEET\nGOVERNMENTAL FUNDS\nThe fund statements are prepared in '
+        'accordance with GASB Statement No. 54 and with generally accepted accounting '
+        'principles as they apply to governmental units.\n')
+    got, fams = classify_body(sched)
+    # `classify_body` hands back a DICT of every family with its verdict, so `in` and
+    # `sorted()` over it report families that did NOT fire — an arm written that way
+    # cannot fail. Read the VALUES. (Found by this arm on its first run.)
+    fired = lambda d: sorted(k for k, v in d.items() if v)
+    chk('DISCRIMINATION, THE HARD ONE: a budget carrying a balance sheet, governmental '
+        'funds and GASB (THREE spine hits) is STILL NOT a financial report — its period '
+        'has not ENDED',
+        'financial_report' not in got and 'budget_dataset' in got,
+        f'got {got} fired {fired(fams.get("financial_report", {}))}')
+    chk('...and the spine family DID fire, so the arm above turned on the ENDED '
+        'conjunct and not on a family that never armed',
+        'the audited-statement spine (>=3 of 10)' in fired(fams.get('financial_report', {})),
+        f'fired {fired(fams.get("financial_report", {}))}')
+    ended = sched + ('For the fiscal year ended June 30, 2024 the general fund closed; '
+                     'for the year ended June 30, 2023 it did likewise.\n')
+    got, _ = classify_body(ended)
+    chk('...and the SAME text with a period that HAS ended IS a financial report — the '
+        'ENDED conjunct is the only variable moved', 'financial_report' in got, f'got {got}')
+    about = """
+        TO: HONORABLE MAYOR & CITY COUNCIL
+        FROM: Director of Finance
+        SUBJECT: INFORMATIONAL MEMORANDUM - Fiscal Year 2023 Annual Comprehensive
+        Financial Report (ACFR) Presentation
+        DATE: March 19, 2024
+        Staff will present the FY 2023 ACFR to the Finance and Management Committee.
+        The independent auditor issued an unmodified opinion. The city closed the year
+        with a general fund balance of $123,456,789 and expenditures of $1,987,654,321.
+    """ * 3
+    got, _ = classify_body(about)
+    chk('a memo ABOUT the ACFR (self-naming subject, an opinion cited, few amounts) is '
+        'NOT financial_report — money density is necessary here for D-66\'s reason',
+        'financial_report' not in got, f'got {got}')
+    chk('...and it IS read as the staff report it is', 'staff_report' in got, f'got {got}')
+    got = classify_name('documents/2024-City-of-Oakland-ACFR_final-121324.pdf')
+    chk('the NAME layer reads an ACFR filename', 'financial_report' in got, f'got {got}')
+    chk('the NAME layer refuses a filename that asserts no kind',
+        'financial_report' not in classify_name('documents/Attachment-A_2024-06-10.pdf'))
+    if os.path.exists(bp):
+        raw = [json.loads(l) for l in open(bp)]
+        d66 = [r for r in raw if _d66_budget(r)]
+        moved = [r for r in raw if _d66_budget(r) and not _fw22_budget(r)]
+        frs = [r for r in raw if 'financial_report' in r['classes']]
+        chk('ON THE REAL SAMPLE the RECOUNT MOVES: at least one document D-66 counted '
+            'as budget_dataset is an audited financial statement and is now counted '
+            'apart', len(moved) >= 1,
+            f'D-66 budget arm {len(d66)}, moved {len(moved)}, recounted '
+            f'{len(d66) - len(moved)}')
+        chk('ON THE REAL SAMPLE every document the recount moved IS in the new class '
+            '— it is counted APART, never dropped',
+            all('financial_report' in r['classes'] for r in moved),
+            f'{sum(1 for r in moved if "financial_report" not in r["classes"])} of '
+            f'{len(moved)} moved out of both counts')
+        chk('ON THE REAL SAMPLE the new class is non-empty', len(frs) >= 1,
+            f'{len(frs)} financial_report documents')
+        chk('ON THE REAL SAMPLE the recounted budget arm is exactly D-66\'s minus the '
+            'moved documents — nothing else changed',
+            len([r for r in raw if _fw22_budget(r)]) == len(d66) - len(moved),
+            f'{len([r for r in raw if _fw22_budget(r)])} vs {len(d66)} - {len(moved)}')
+
     print(f'\n{arms} arms driven, {len(fails)} failed.')
     if fails:
         for f in fails:
@@ -2141,5 +2563,7 @@ if __name__ == '__main__':
         sys.exit(0 if cmd_derive() else 1)
     elif m == 'control':
         cmd_control()
+    elif m == 'classhash':
+        sys.exit(cmd_classhash())
     else:
         sys.exit('unknown mode ' + m)

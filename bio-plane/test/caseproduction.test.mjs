@@ -1,4 +1,27 @@
 /* NEGATIVE CONTROL: RAN 2026-09-19 by the M0-78/D-414/D-433 worker, driver `test/nc-instr-cluster.mjs`, SEVEN ARMS PLUS A BASELINE, each armed ALONE with every other defence held open, every restore verified by sha256 AND by `cmp` against a uniquely-named per-arm pristine copy with byte counts printed and floored. ALL SEVEN AS DECLARED. BASELINE ROW FIRST (arm 7): derivation-bounds 72/0 · bounds 173/0 · witness 26/0 · DEC-49 guard exit 0 (reach 338, R3 fed 70, observed-only 4). (1) D-414 reverted in ONE walk only (derivation-bounds) so the five copies disagree: derivation-bounds 71/1 failing at CENSUS IS A CEILING with the figure back at 109, and bounds 172/1 failing at D-414 PARITY — the parity arm is what catches a liar who fixes one copy of five. (2) the SHORTER spelling `\*?\s*` in one walk, which also lets `\s*` eat a third space of indent and match at any depth: derivation-bounds 48/24, the widening measured rather than argued. (3) M0-78 reverted so a ratify-stage refusal THROWS again: the census reports FIXTURE-THREW and exits 1, where the pre-M0-78 census over the same tree printed UNCLASSIFIED, `8 anchor(s), 0 NOT LIVE`, and EXITED 0 — measured with both files reverted to HEAD, not inferred. (4) arm (H)'s registration deleted from the driver, which is how a liar passes M0-78: witness 25/1 failing at A8 by name. (5) a planted UI suite that only ASSERTS a code: reach 338 unmoved and R3 fed 70 unmoved, the code printed in the OBSERVED half. (6) the same code HANDED by a mock in the same planted suite: reach 338 -> 339 and R3 fed 70 -> 71, the over-strictness direction. */
+/* NEGATIVE CONTROL (D-519, THE INSTANCE_NAME RENAME ARM — run 2026-09-24 on branch land/worker/D-519 over
+   origin/main 1a7f0bcc0, armed ALONE, restored and verified by sha256 AND by content (`cmp`) against a
+   uniquely-named per-arm pristine copy held OUTSIDE the worktree (BOB #32), byte counts printed).
+   THE ARM: rename THIS FILE'S `INSTANCE_NAME` binding — ONE line, nothing else — so the store's producing group
+   stops spelling the slug the bar read names. DECLARED: the act's landing-site arm (`set.group`) and the group
+   read MUST fail BY NAME, and the suite MUST REACH ITS FOOT; every other assertion MUST pass.
+   MEASURED BEFORE THE FIX, on a pristine origin/main worktree rather than reasoned about: the read `g.bar.capture` threw an UNCAUGHT TypeError that KILLED THE PROCESS after 43 PASS lines with NO tally line at all (reported as -1, never 0) — a run indistinguishable from an infrastructure failure.
+   MEASURED AFTER: 73 pass / 2 fail of 75 — two named failures, no throw, and the tally line present.
+   THAT DELTA IS THE WHOLE OF WHAT THIS ROW BOUGHT. The assertion did not merely agree for free; when write and
+   read disagreed it took the module down, so the defect's own failure mode HID the assertions behind it.
+   OVER-STRICTNESS ARM (run on d280-strengthbar.test.mjs, the representative suite): have the act name the group
+   EXPLICITLY in its payload — a correct spelling this fix did not anticipate — and the suite reads 35 pass /
+   0 fail, exit 0. Naming the group refuses no correct work. A FIRST ATTEMPT AT THIS ARM DID NOT ARM (a perl
+   substitution matched zero times) and its 35/0 was the UNMODIFIED suite; that reading is void and the figure
+   above is from the re-armed run, checked by grepping the armed text before running. An arm that did not arm is
+   a finding, not a pass.
+   THE TWO CONTROL HARNESSES THIS ROW NAMES WERE RE-RUN AND ATTRIBUTED BY RE-RUNNING THE TRUE BASELINE, never by
+   subtraction: `caseproduction.control.mjs` 8 arms / 0 NOT AS DECLARED, exit 0, every per-arm figure identical on
+   this tree and on pristine origin/main; `d280-strengthbar.control.mjs` 3 arms / 1 NOT as declared (arm (C2)),
+   with a line-for-line IDENTICAL verdict on pristine origin/main — so (C2)'s miss is PRE-EXISTING and is the
+   stale control this file's header already records, NOT this change.
+   WHAT THIS BLOCK DOES NOT CLAIM: the write is still left on D-436's default on purpose, so this suite does not
+   test a caller-named group; the over-strictness arm above is the only place that spelling is driven. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/caseproduction.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (`d280-strengthbar.control.mjs`'s precedent, `severedhomes.control.mjs` before it). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad (PL-10). Every arm is armed ALONE with every other defence held OPEN, every restore is verified BY sha256 AND BY CONTENT against a per-arm pristine copy named with the ARM ID as well as the path, and every arm DECLARES before it runs what MUST fail and what MUST NOT. Run in one step with `node test/caseproduction.control.mjs [arm]`.
    (A) THE PROJECT-LESS PATH RESTORED — CASE-1's handed-over arm, and the one that makes `cases.project_id NOT NULL` real through an op instead of structurally. In src/store.mjs publishCase() replace `if (!proj)` with `if (false)` -> a case publishes naming no project, which is the path DEC-72 deletes. MUST FAIL: §2's refusal arm. MUST NOT FAIL: §3's owner arms — armed apart on purpose, because one fence covering for another is how a half-fix reads as a whole one.
    (B) THE OWNER FENCE NEUTERED. In src/store.mjs publishCase() replace `if (!this.#isProjectOwner(proj, who))` with `if (false)` -> any member with the publish capability publishes another project's production. MUST FAIL: §3's non-owner arm. MUST NOT FAIL: §2, §5.
@@ -102,6 +125,19 @@ const mf = new Miniflare({
      group. 'believe-in-oakland' is this project's own group, the one these fixtures' documents already name. */
   bindings: { INSTANCE_NAME: "believe-in-oakland", ADMIN_TOKEN: "adm-case2", MEMBER_TOKEN: "mem-case2", PROBE_TOKEN: "prb-case2", VERSION: "test" },
 });
+
+/* D-519: THE GROUP THE BAR ARMS ADDRESS, AS ITS OWN LITERAL — AND IT IS DELIBERATELY *NOT* DERIVED FROM THE
+   INSTANCE_NAME BINDING ABOVE. The `op=strengthbar` act below names no group, so D-436 sends the write to the
+   store's PRODUCING group (`#producingGroup()`, recorded from INSTANCE_NAME at first boot) while the read named
+   the literal 'believe-in-oakland'. The two agreed ONLY because the binding happens to spell the same slug, which
+   is an equality that costs nothing to produce (`VERIFICATION.md`) — D-509 found the identical shape in
+   machine-fences.test.mjs, where the binding spells `biosmoke-rec73` and the assertion was passing over a group
+   the act never touched. THE WRITE IS LEFT ON THE DEFAULT ON PURPOSE, because D-436's default-resolution is part
+   of what this block measures; what changes is that the act's landing site is now ASSERTED (`set.group`) against
+   the same constant the read names, so the agreement is pinned instead of coincidental. Tying this constant to the
+   binding would re-make the coincidence in one place and disarm the control, so they stay two literals that an
+   assertion compares. */
+const BAR_GROUP = "believe-in-oakland";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -841,13 +877,19 @@ console.log("\n--- 7. the removal: DEC-17's composition and the group-default pu
     await (async () => {
       const set = await strengthbar(NADIA, { capture: "A", connection: "A" });
       const other = rP(await GET(`op=strengthbarof&token=${PILAR}&project=${PROJ_OTHER}`));
-      return [set.ok, set.capture, other.bar.declared, other.bar.source, other.bar.capture];
-    })(), [true, "A", false, "none", null]);
+      /* D-519: `set.group` IS THE ARM THAT SAYS WHERE THE WRITE LANDED, and without it the group
+         read below agreed with this act for free. */
+      return [set.ok, set.capture, set.group, other.bar.declared, other.bar.source, other.bar.capture];
+    })(), [true, "A", BAR_GROUP, false, "none", null]);
   t("and DEC-17's SURVIVING HALF stands and says what it is for — the group default SEEDS a new "
   + "project, which is the half the supersession table explicitly keeps",
     await (async () => {
-      const g = rP(await GET(`op=strengthbarof&token=${PILAR}&group=believe-in-oakland`));
-      return [g.ok, g.bar.capture, g.seeds_new_projects];
+      /* D-519: named from BAR_GROUP, and read with `?? null` rather than a bare `.bar.capture` — a
+         group the act never wrote to answers `bar: null`, and the bare read threw a TypeError that
+         ended the module and took every assertion behind it with it (MEASURED in
+         d280-strengthbar.test.mjs: 35 assertions down to 9). */
+      const g = rP(await GET(`op=strengthbarof&token=${PILAR}&group=${BAR_GROUP}`));
+      return [g.ok, g.bar?.capture ?? null, g.seeds_new_projects];
     })(), [true, "A", true]);
   t("a FINDING's bar is refused by name rather than answered, because no bar attaches to a finding",
     rP(await GET(`op=strengthbarof&token=${PILAR}&target=${INQ_STRONG}`)).reason,
