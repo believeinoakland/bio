@@ -1,49 +1,50 @@
-# BOB — resume here. Written by BOB #31 (session_0124NEAbkH3D4rkivNhZtJ8X) at 70% context, 2026-09-23 ~22:22Z; successor: **BOB #32**
+# BOB — resume here. Written by BOB #32 (session_01HhTF36TQSDaFr9RAxfFnKX), 2026-09-24 ~03:05Z, interim (refreshed again at wind-down); successor: **BOB #33, on Bob's OTHER account**
 
-Read `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` whole, then this. Every line is a POINTER, measured ~22:20Z.
+Read `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` whole, then this. Every line is a POINTER, measured ~03:05Z.
 
-## 0. BOB'S STANDING PRIORITY
-**BIO development productivity is the focus; waiting is waste. The process must keep working** (Bob, 2026-09-23, many times). When one
-of OUR rules holds workers idle, work around it at once WITHOUT weakening a check, and fix the rule in parallel. Bob pushes back
-hard on any stall and on unexamined tradeoffs; reason from measured figures (he caught a wrong train-size ruling at 22:14Z).
-- **ONLY BOB KEEPS TIMERS** (Bob ~20:28Z): (a) a ONE-SHOT 20-min idle timer (`send_later`, "BOB #<n> idle timer (20 min)"), RESET
-  at the end of any turn a lane's message woke; it runs a stall probe and triggers the lane that can act; (b) ONE hourly recurring
-  dead-man check re-arming (a). **ON DAY ONE: create both for yourself, then DELETE BOB #31's: dead-man `trig_01L7SyX4CRWy6y8iKodNmkZd`
-  and any pending "BOB #31 idle timer" (list_triggers).** CONDUCT and SCHEDULER have NO timers; they act on messages.
-- **Never `fire_trigger`** a routine to reach a session (it starts a NEW stray session).
-- **SCHEDULER alone writes the plan** (Bob 20:57Z). CONDUCT's words: `queued→running`, `running→integrated`. `integrated` rows hold
-  no slot. Cache 16 = 12 working + ≥4 queued (16-at-48-KiB rides land/scheduler16/integrated @ 6ea0d504; until on main, main's
-  tools REFUSE coord writes: write coord from a worktree of that branch).
-- **Trains run BACK TO BACK with everything integrated** (22:14Z, corrected after Bob's challenge); ratchet fixes at integration;
-  CONDUCT reports per-train figures after 3 trains — relay them to Bob.
-- **Archive a predecessor as soon as its successor confirms up and its work is pushed** (Bob 21:59Z: "why is SCHEDULER #16 still around?").
-- Workers are cloud sessions; one FULL gate per train; no releases until Bob asks; refresh at 75%.
-- **DEBT.md only shrinks** (22:07Z): new defects go straight into the plan. **Bob 22:09Z: at 0 open rows, REMOVE DEBT.md FROM THE
-  PROCESS** (CLAUDE.md §1/§4, owed.mjs, plancheck's DEBT arms, ledger, kickoffs). 50 open at 22:18Z (89 at the day's start).
+## 0. BOB'S STANDING PRIORITY, AND TONIGHT'S ACCOUNT SWITCH
+**Productivity is the focus; waiting is waste; the process must keep working** (Bob, 2026-09-23). **2026-09-24 03:00Z (Bob):** this
+account's weekly quota was at 80% at 8pm PT and runs out tonight. The plan: at **05:00Z (90%)** CONDUCT caps workers at 6; at **06:00Z (95%)**
+nothing new is spawned, running workers finish, commit and push, every lane writes its `<LANE>-NEXT.md` for the OTHER account, and workers
+that need Bob stay OPEN with their questions listed to him. The work continues on Bob's second Max 20x account (it resets early Saturday;
+this one early Tuesday). **BOB #33's first act on the other account: stand up CONDUCT, SCHEDULER, DIST and FLEET from their `-NEXT.md`
+(create_session, titled `<LANE> #<n>`), then carry the open questions below to Bob.** Sessions on this account cannot be messaged from
+the other one; read their state from `coord` and `origin`.
+- **ONLY BOB KEEPS TIMERS:** a one-shot 20-min idle timer (send_later, reset at the end of every message-woken turn) and one hourly
+  dead-man check. Never `fire_trigger`. Lanes act on messages.
+- **Starting build-plan entries is BOB's act, never Bob's** (Bob, 2026-09-23 ~23:20Z). BOB #32 started REC-159 on that instruction.
+- **Bob asks for plain words** when you explain; the plain-words plan page is https://claude.ai/artifact/M5hUaNBgeM292h4D6odXbX
+  (republished 23:27Z; its builder is `extract.mjs` + `build.mjs`, rebuild them: rows from coord QUEUE+BACKLOG, prose drafted by 4 subagents).
 
-## 1. ESTATE (~22:20Z)
-CONDUCT #18 `session_01SGdcPXVjS2wofYoj3tBuKF`; SCHEDULER #17 `session_014MckoGTYSjDfckPqTKUpAp`; FLEET #4 (one-shot 2026-09-24
-10:00Z); DIST #5 idle (a release: START A FRESH DIST). Archived today: BOB #30, CONDUCT #16, #17, SCHEDULER #16. main 02603e88 (21:21Z).
-Workers spawned by CONDUCT #17 report to BOB (it is archived): RELAY each to CONDUCT #18, rule any design gap in it.
-In flight: WORKER c17-unionfix (batch4's 5 union-only ratchets) reports to BOB → CONDUCT #18 trains it ALONE first.
+## 1. ESTATE (~03:05Z, this account)
+CONDUCT #19 `session_01Kqy1X9xDKa4PAWtmqTaiRx`; SCHEDULER #18 `session_01MgL7YDGuxH1F7e3zxx6GSp`; DIST #6 `session_01Vi1XTVwxcBBMStifuBasLZ`
+(idle, no release until Bob asks); FLEET #4 `session_01YB9VgJtjiXwQ5vtx4fLvRB`. Archived tonight: BOB #31, CONDUCT #18, SCHEDULER #17
+(by #18), DIST #5, workers c17-unionfix. main `548eb2c5` (02:43Z train: c19-batch9 + my folds fb24040e/bde7644d + the map-budget stopgap).
 
-## 2. OWED
-1. **REC-159 BLOCKED on Bob's own act** (approved 21:08Z; the permission classifier refuses any session spawning it — never retry
-   or re-frame). Paste prompt given to Bob 21:16Z. When he starts it, tell SCHEDULER to flip it `running`.
-2. **Doc landing owed** (land/bob/message-driven @ 58f6d4ed rides the next train; its ca38625a part was in batch4, which went RED):
-   fold these rulings into their homes, then push one more commit on a fresh `land/bob/*`:
-   - SCHEDULER #17 set 1 (22:00Z): monitor frequency = the address's setting, else the current version's (Framework §6 / monitoring);
-     the D-179 census stands alone; bio-case-document/3 for the required bias manifest (Publication §3); no CAP-14 report row.
-   - D-65 (22:10Z): the default contract intervals, membership daily and substance weekly; an address's own setting overrides.
-   - REC-164 (22:16Z): Publication §7 point 3, a fourth verdict `undetermined` (domain not shown); /.well-known/civicos-group.json.
-   - S17-1 (22:18Z): D-53 NO credence ledger (tell Bob; his to overrule); D-64 third-party scripts ALLOWED AND RECORDED in the
-     capture sandbox (CLIENT-RENDERED.md); D-256 bodies stay, the read corrects; `independence` readable alone.
-   - M0-71 (22:16Z): the contradiction gate's THRESHOLD = 0, PROVISIONAL (CONTRADICTION-IDENTIFY-DESIGN §7).
-   - CLAUDE.md §4: "a defect is still minted there" → new defects go straight into the plan.
-3. Gate ruling KEPT (BOB #30); weekly budget `allowed_warning`, resets 2026-09-29 18:00Z — recorded, never brought to Bob.
-4. Plain-words plan page: https://claude.ai/artifact/M5hUaNBgeM292h4D6odXbX (snapshot 19:40Z; republish on ask, same file path is lost
-   with BOB #31's container — pass its URL to update).
+## 2. OWED BY BOB (open at 03:05Z)
+1. **land/bob/status-cellcap** (worktree /home/user/wt-bob2 on this account; rebuild if lost): `tools/status.mjs` caps a map cell's first
+   sentence at CELL_CAP=240 chars at a word boundary outside backticks, marked ` …`; status.test +2 arms, status.control A11 (59/0). Map
+   44,934 → 41,335 B on main. THEN lower the map budget back from the 51,200 B stopgap to 49,152 B (readbudget.mjs, status.test, plancheck).
+2. **land/bob/folds-0924e** (NOT built yet): rebuild onto current main the content of folds-0924d MINUS its CORPUS-STANDARD revert —
+   MEMBER-KNOWLEDGE §5 (hidden project undisclosed, D-464/D-486), EXTRACTION-BREADTH §2 row 5 (FINANCIAL REPORT type, FW-22), OFFICE-FORMATS
+   "CSV" (FW-23) — plus Intake Doctrine §8 (REC-190: a home is fixed by the first REGISTRATION; only rows PROVEN moved are repaired).
+   **Do NOT merge folds-0924c/0924d**: each reverts CORPUS-STANDARD §6, which main now carries.
+3. **land/bob/d461-claude @ f1787108**: D-461 + CLAUDE.md §5's scratch rule corrected (full gate 195/195). CONDUCT integrates it in place
+   of land/worker/D-461.
+4. DEBT.md: 3 → 0 as main now carries D-313/D-391 folds and D-388; M0-140 removes DEBT.md from the process (SCHEDULER placed it).
 
-## 3. STALL PROBE (rebuild in your scratchpad; do not row it)
-Fetch coord + main. STALL → CONDUCT: cache `queued` ≥ `running` for 5+ min, or queued untouched 10+ min. TRAIN → CONDUCT: no
-`^train ` commit on main for 120+ min. INBOX → SCHEDULER: undrained BOB INBOX entries. Also count land/worker branches not on main.
+## 3. RULED TONIGHT (folded or rowed; `node tools/decided.mjs` finds the folded ones)
+§18.1 (Bob: option D — a published case's OWNERS alone are told once); D-388 (MILESTONES/CIVICOS_UI_STATE ledgers, SESSION-KICKOFF-UI a
+kickoff redirect); REC-189 F2 (no machine changes a member-set risk tier); D-450, D-64 ×4, D-65 changed-tick capture, REC-149 §7.14 (a)/(b),
+D-86 settling acts, D-50 NFC names, D-246 pixel hash, D-291 enumerated set (§S), REC-187 F1 (adopting a proposal replaces), D-162 (handle,
+not cover), D-464 (hidden project's run output is its thinking), D-66 (financial report ≠ budget), CSV design, REC-190 §8, REC-198 fence,
+REC-159 (founder refusal on scratch stands), map budget (a) stopgap 51,200 B then (b) render cap.
+
+## 4. WITH BOB
+- **Network access:** Bob to switch the BIO environment to **Full** (claude.ai/code → environment selector → hover BIO → settings icon →
+  Network access → Full → Save). Then unblock D-453 (Oakland identifier measurement) and REC-203. On the other account, check that
+  account's environment too.
+
+## 5. STALL PROBE (rebuild in your scratchpad; do not row it)
+Fetch coord + main. STALL → CONDUCT only when queued ≥ running AND running < the worker budget, for 5+ min. TRAIN → CONDUCT: no `^train `
+commit on main for 120+ min. INBOX → SCHEDULER: undrained BOB INBOX entries.
