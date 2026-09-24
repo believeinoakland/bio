@@ -55,6 +55,19 @@ BOB appends a designed item, a correction or an order change here, with its inte
   WORKING count, and exits 1 when anything is owed. BOB's prototype is `slots.py` (in the plan-page artifact's files, builder/slots.py.txt);
   port it to node. Accepts when, on the 21:03Z listing, it names D-476, D-518, UI-93, REC-199, REC-200, UI-102 and D-519 as FLIP, UI-99 as ANSWER, and
   D-516 as SPAWN. NEGATIVE CONTROL: read session status in place of the bucket, and the seven FLIPs vanish, failing by name.
+- **2026-09-24 21:55Z · BOB #33 · THE RECORD OF RULINGS SENT ONLY BY MESSAGE TODAY, so `decided.mjs` finds them (REC-216's worker caught that two rows cite a ruling of 21:21Z that nobody can look up). Each row folds its ruling into the named home document when it lands:**
+  - **REC-212 determinations (18:44Z):** no-draft publish credits the publisher as writer, and the document says so; with the writer undetermined, participant acks are withheld and COUNTED; C-41.10 keeps both exclusions → Publication §3 rule 13 (folded by REC-212).
+  - **C-82.6/C-82.7 words (19:04Z):** CONDUCT's generalised sentences accepted; one code each.
+  - **Review copy (19:06Z):** the writer's own ack is withheld from the second-reader list AND counted beside it → Publication §6A (REC-213).
+  - **Render throttle (19:10Z):** measure the navigation bound; a concurrency cap from the vendor's stated limit, labelled; over-cap renders wait → CLIENT-RENDERED (D-520).
+  - **D-491 (19:54Z):** a held render expires to UNDETERMINED with its reason; op=queue shows a waiting render → CLIENT-RENDERED (D-523).
+  - **D-490 (21:05Z):** a per-subresource SHA-256 on rendered captures, undetermined where the bytes were not kept; no puppeteer → CLIENT-RENDERED (D-529).
+  - **registeraudit (21:17Z):** `sound` is true for a row held in parts with every named part present and verified; fourth state "held in parts, all present"; unresolvable rows are UNDETERMINED, outside `sound` → Intake Doctrine §8 (D-533). D-518's mixed-tick epoch is confirmed.
+  - **Risk-tier revision (the "21:21Z" ruling, sent 21:18Z):** a new member-class act `actionrisktier` (NOT BUILT); a revision is an authored, append-only act with a REQUIRED reason, the prior tier and author stay readable, and machines are refused → Case Making §2 (REC-214, UI-104); a labelled machine proposal (REC-215).
+  - **Reading provenance (21:25Z):** a reading carries tier, member, pages and a text SHA-256; re-read disagreements are attributed; both readings are kept → Framework §16 (D-536).
+  - **REC-216 (21:55Z): DO NOT publish `actionlawspropose` in ACTS.** REC-195's NON_ACTS reasoning stands: every `*propose` op is NON_ACTS, and a member states the list with `actionlaws`. What D-149 owes is a surface that SHOWS the machine proposal beside the member's list. REC-216 is SUPERSEDED (close it with this reason). UI-105 is rewritten to SHOW the proposal, with no member "propose" act.
+  - **FW-23 dialect (21:55Z): (b), a `reading.dialect` key of its own** (delimiter, encoding), persisted on the acquire document; not `container_extent`. It suits other text formats with a decoding choice. One RECORD I1 row.
+  - **FROM NOW ON, BOB writes each ruling to this INBOX in the same act as its message**, so no row cites a ruling the record cannot find.
 
 
 ## THE CACHE — the next rows, in order
