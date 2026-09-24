@@ -19,9 +19,11 @@ the other one; read their state from `coord` and `origin`.
 ## 1. ESTATE AT THE WIND-DOWN (~07:30Z, Bob's FIRST account — these sessions are unreachable from the other account)
 All four lanes STOPPED and wrote final NEXT files on coord, each verified on the remote by its writer: CONDUCT-NEXT @ 098a7328
 (for CONDUCT #21), SCHEDULER-NEXT @ 62f73707, DIST-NEXT @ b6b5f84c, FLEET-NEXT @ a1d2b1ba (still true: no fleet path changed).
-main `454a02bc` (c20-batch18 landed 06:34Z). **A TRAIN WAS IN FLIGHT at CONDUCT's stop:** land/conduct/c20-batch19 @ 2cc51798 =
-main + UI-89 + D-496 (IC-262 I3 82.0.0, MAJOR). CONDUCT #21's FIRST act: check `git log origin/main` for that train; if it did not
-land, re-run it alone (CONDUCT-NEXT §3 says how). **train.mjs `--drop a,b` DROPS NOTHING** (M0-159, head of M0): one --drop per branch.
+main `454a02bc` (c20-batch18 landed 06:34Z). **UPDATE 07:45Z (CONDUCT #20's final report):** c20-batch19 LANDED at main 6761e903 (UI-89, D-496; IC-262 I3 82.0.0 MAJOR, 346/346
+green). CONDUCT-NEXT final @ fbf83843. ONE WORKER LEFT OPEN on this account, still working: c20-batch14 session_01Ya8PUPivB6xpvV51uhcZa9
+(batch10/11's 14 rows + d461-claude + integ1b + batch13 + D-486), told to merge main, renumber I3 above 82.0.0 and report in its last
+commit message: CONDUCT #21 trains it ALONE; then DIST owes the D-461/D-464/D-462 (I8 2.0.0)/DIST-11 deploy items. Archive CONDUCT #20
+under D-398 once #21 is up (from this account only). **train.mjs `--drop a,b` DROPS NOTHING** (M0-159, head of M0): one --drop per branch.
 **No worker needs Bob** (CONDUCT #20, 07:10Z). Open for the other account: 15 queued rows (D-505, D-503, D-506, REC-194 …), D-507/D-508
 (untranslated STATEMENT_ACK_* / RATE_* codes) at the head. DIST owes: rebuild newgroup/dist from current main (it embeds 0.71.0; live is 0.78.0).
 Live plane 0.78.0 on all six workers. No timers anywhere on this account.
