@@ -58,6 +58,9 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
 - IN FLIGHT 04:17Z: train-20260924T041650Z-598 = D-482 + D-166 + REC-185 onto main 16fe1e7f (merged clean, gating). If #20 is gone,
   read origin/main's log for it. OWED at the next integration: IC-257 (REC-185) resolved I3 MINOR on INTERFACES.
+- D-470 DONE @ 8344367c (102/102, skip 0) — NEXT TRAIN. OWED at its integration: mint its IC (I3 MINOR, gateVersion string
+  1.20.0→1.21.0) and fold its design gap into BIO_Publication_v0_1.md §3 Incomplete ("the catalogue version must move with the
+  catalogue" is stated nowhere; rule sent to BOB). M0-143 spawned session_01M7BzVNbCiY4Q4dqVLxDvUw into its slot.
 - REC-185 DONE @ 72757288 (343/343, IC-257, M-129; findings sent). D-484 spawned session_014Ef8JECzL8eJFPhut7GVed into its slot.
 - D-166 DONE @ 05ec142e (125/125, skip 0, M-127; premise false — nothing moved; findings sent) — WAITING FOR A TRAIN.
 - DIST-9 RUNNING, built by DIST #6 itself (not a CONDUCT slot); flipped at coord 0ab3f2a9.
