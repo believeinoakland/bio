@@ -50,6 +50,74 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v116, 2026-09-24 session, thread UI, UI-99 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-99` (base `origin/main` @ `1a7f0bcc`, the c20-batch24c train), in the commit that carries this
+entry. It was written as `v113` against `origin/main` @ `e9b21be6` and RENUMBERED to `v114` when the rebase onto
+the batch-22/23/24c trains found UI-92 already holding `v113` on main; CONDUCT renumbers again at integration if
+a concurrent entry took this one. SURFACES:
+**the PROGRESSIONS screen's read pane and the QUEUE.** Design: `BIO_Content_Framework_v0_10.md` §8.2,
+"The declared flow, and its revisions" (D-128 and REC-184 on the plane; BOB #27's ruling).
+
+**THE ITEM IS ONE SHAPE OF DEFECT SEEN TWICE: THE RECORD HELD MORE THAN IT SHOWED.** The area's standing
+rules are written against the opposite error — *delete the false sentence, do not write a better one* —
+and this is its mirror. Both halves were BUILT ON THE PLANE, TESTED ON THE PLANE, and reached no page.
+
+**HALF ONE — a revision's basis.** D-128 made a progression definition APPEND-ONLY: a revision writes a
+new version with its author, date and BASIS (the member's statement of why the declared flow changes, and
+a citation for where that is published or held), every earlier version stands, and `op=progression`
+returns the whole list. UI-83 built the form that SENDS those two fields, and its receipt tells the member
+the earlier version *"stays on the record beside it"*. `progLoad` read `op=progression` for its stages and
+threw `versions[]` away, so that promise was kept by the plane and by no page: the basis a member wrote,
+the author and date the plane stamped, and the standing earlier version were nowhere. `progVersionsHtml`
+now renders them, and `progVersionBasisHtml` states an absent basis as `not recorded` IN WORDS — the
+first declaration is not required to carry one, and a definition declared before D-128 has none to carry,
+so both read the same honest sentence rather than one the screen guesses between. It renders as soon as
+the DEFINITION reads back, which also fixed a smaller thing found while building: the path where the
+subject is not in the registry used to leave a member a refusal sentence and no sight of the flow they had
+just revised.
+
+**HALF TWO — the version a decision judged.** REC-184 made `op=proposedispose` stamp the definition
+version in force, made a decision age its proposal only while that version is current, and published the
+version, its state and whether it still applies on `op=queue`'s `disposed` block. **No surface read
+`disposed` at all** (`grep` over `civicos-ui/`: one hit, `res.disposed`, inside an act's own receipt).
+The only set-aside decisions a member ever saw were the ones `notifDisposedHtml` remembered from THIS
+page's own acts — which the plane's own comment on that block names as the honest stopgap it replaces,
+and which survive neither a reload nor a second member, and which can never read `not recorded` because a
+fresh act is always stamped. `queueDisposedRecordHtml` now renders the record's own block, and
+`disposedFlowVersionHtml` says per row which version it judged, whether that version is still the one
+standing, and `not recorded` where the record holds no version — with no number put in its place.
+`notifDisposedHtml` now renders only what the record's block does not yet carry, so one decision is shown
+once: two renderings would be a second place a fact is stated (D-21/DEC-8), which is the defect
+`disposed` exists to end.
+
+**THE SUITE IS REAL-PLANE AND THE `not recorded` ROW IS MADE, NOT MOCKED.**
+`civicos-ui/test/declared-flow-surface.test.mjs` runs `app.html`'s own handlers against miniflare with a
+signed-in enrolled member (never the deploy `MEMBER_TOKEN` — REC-189: that is a machine identity), and
+reaches the pre-REC-184 shape the way `bio-plane/test/proposedispose.test.mjs` reaches it: a ProbeStore
+subclass adding ONE raw-SQL route, the column DROPPED on a live store, the store re-booted on the same
+storage so `#migrate` puts it back NULL. Five arms, 38 assertions. Every sentence assertion runs over what
+a member READS — tags stripped, entities opened, case-insensitive — so the control's over-strictness arm
+is a real arm and not a spelling test.
+
+**NEGATIVE CONTROL, the row's own: 4/4 AS DECLARED.** `not recorded` is written in two places, so it is
+hidden in each ALONE. (A) hidden on the disposition -> RED 2 of 38, both naming THE ROW'S SECOND HALF,
+with the basis arms green. (B) hidden on a version's basis -> **RED 1 of 38, and nothing else** — which is
+the receipt that the two surfaces write the same words and neither inherits the other's coverage.
+(C) over-strictness, the same words upper-cased inside `<em>` -> GREEN 38/0. Run three times in all (twice
+before the rebase onto the c20-batch24c train and once after two corrections this item's own diff review
+found), 4/4 every time. `app.html` restored by `cp`
+from a per-arm pristine copy, sha256 and `cmp` verified, identical at the end.
+
+**WHAT IS STILL UNBUILT AND IS NAMED RATHER THAN LEFT TO BE INFERRED.** `op=proposals`' own
+`prior_disposition` — the earlier decision the plane carries beside a proposal a revision REOPENED —
+reaches no page, and cannot from here: UI-14 retired `op=proposals` from every surface in favour of
+`op=queue`, and `op=queue`'s FINDING items carry `subject.definition_version` but NOT
+`prior_disposition`. So a member meeting a reopened question is not shown that somebody already decided
+it once; they are shown the decision in the set-aside block, under its own heading, which is a weaker
+join than the plane can make. That is a plane-side gap (a field on an op a surface reads), it is stated
+in §8.2's As-built paragraph and in UI-99's report to CONDUCT, and it is not fixed here.
+(Renumbered v114 -> v116 by CONDUCT #20 at c20-batch26: UI-102 took v114 and UI-101 v115.)
+
 v115, 2026-09-24 session, thread UI, UI-101 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-101` (base `origin/main` @ `1a7f0bcc`), in the commit that carries this entry. (Claimed
 `v113`, which UI-92 holds on main; renumbered here when this branch rebased onto c20-batch24c, and v114 -> v115 by CONDUCT #20 at c20-batch26 because UI-102 took v114. Only the

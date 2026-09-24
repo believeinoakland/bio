@@ -15247,6 +15247,7 @@ function queuePaint(){
        obligations is entitled to know about as much as one reading none. */
     + notifAbsenceHtml()
     + notifDisposedHtml()
+    + queueDisposedRecordHtml()          /* UI-99: the RECORD's own set-aside findings, with the flow version each judged */
     + queueMuteReportHtml()
     + queueSelBarHtml()
     + queueRetainedGoneHtml()
@@ -16687,6 +16688,62 @@ async function progDefineGo(){
   if(!r.unchanged) await progStandingLoad();
 }
 
+/* ---- UI-99: HOW A DECLARED FLOW HAS CHANGED, AND THE BASIS BESIDE EACH VERSION ----
+   Framework §8.2, "The declared flow, and its revisions"; D-128 on the plane (2026-09-23).
+   A progression definition is a group's CLAIM about how a body ought to behave, and D-128 made
+   it APPEND-ONLY: a revision writes a new version carrying its author, its date and its BASIS —
+   the member's statement of why the declared flow changes and a citation for where that is
+   published or held — and every earlier version stands and reads back. UI-83 built the form that
+   SENDS those two fields; its receipt even tells the member the earlier version "stays on the
+   record beside it". NOTHING SHOWED IT BACK. `progLoad` read `op=progression` for its stages and
+   threw the `versions` list away, so the basis a member wrote, the author and date the plane
+   stamped, and the earlier version the receipt promised were on no page at all — the record
+   holding more than it showed, which is the same class of defect as showing more than it holds.
+   This renders exactly what the plane published: the version number, its author and its date are
+   the record's, the statement and the citation are the member's own words, and a version the
+   record holds no basis for SAYS SO IN WORDS — `not recorded`, never an empty line, because a
+   blank reads as a basis of nothing (CLAUDE.md §4: undetermined is first-class and must be
+   STATED). Composed nowhere else: the first declaration is not required to carry a basis, and a
+   definition declared before D-128 has none to carry, so both read the same honest sentence
+   rather than one this screen guesses between. */
+function progVersionBasisHtml(v){
+  const b = (v && v.basis) || null;
+  const stmt = (b && typeof b.statement === "string") ? b.statement.trim() : "";
+  const cite = (b && typeof b.citation === "string") ? b.citation.trim() : "";
+  if(!stmt && !cite)
+    return `<div class="subj-just">Why this version says what it says is <b>not recorded</b>: the record holds no statement of it and no citation for it, and neither is composed here.</div>`;
+  return (stmt
+      ? `<div class="subj-just">Why it changed, in the words of the member who declared it: ${esc(stmt)}</div>`
+      : `<div class="subj-just">Why it changed is <b>not recorded</b>: the record holds no statement of it.</div>`)
+    + (cite
+      ? `<div class="subj-cite">Where that is published or held: ${esc(cite)}</div>`
+      : `<div class="subj-cite">Where that is published or held is <b>not recorded</b>.</div>`);
+}
+function progVersionsHtml(def){
+  if(!def || def.found === false) return "";
+  const vs = Array.isArray(def.versions) ? def.versions : [];
+  if(!vs.length)
+    return `<div class="q-gap">The record did not say which versions of this declared flow it holds, so nothing is claimed about them here.</div>`;
+  const cur = (def.current_version == null) ? null : Number(def.current_version);
+  const rows = vs.slice().sort((a,b)=>Number(b.version)-Number(a.version)).map(v=>{
+    const standing = (cur != null && Number(v.version) === cur)
+      ? " &mdash; what stands now"
+      : (cur != null ? " &mdash; kept on the record, and not what stands now"
+                     : " &mdash; the record did not say whether this is what stands now");
+    const who = String((v && v.declared_by) || "").trim();
+    const at  = String((v && v.at) || "").trim();
+    return `<div class="subj-doc"><div class="top"><span><b>Version ${esc(String(v.version))}</b>${standing}</span></div>`
+      + `<div class="subj-cite">`
+      + (who ? `Declared by ${esc(who)}` : `Who declared it is <b>not recorded</b>`)
+      + (at ? `, ${esc(at)}` : `, and when is <b>not recorded</b>`)
+      + `.</div>`
+      + progVersionBasisHtml(v)
+      + `</div>`;
+  }).join("");
+  return `<div class="intent-sub"><h3>How this declared flow has changed</h3>
+      <p class="subj-note">A declared flow is this group&rsquo;s claim about how something is supposed to go. It is never overwritten: a revision is kept as a new version and every earlier one stays on the record beside it, with who declared it, when, and what they said the change rests on.</p></div>`
+    + rows;
+}
 /* ---- reading one progression, and threading a subject through it ---- */
 function renderProgressionRead(){
   const box = $("#prog-read"); if(!box) return;
@@ -16711,10 +16768,15 @@ async function progLoad(){
     return;
   }
   PROG.def = def;
+  /* UI-99: the flow's own history belongs to the DEFINITION, not to an instance of it, so it is
+     rendered the moment the definition reads back — including on the path below where the SUBJECT
+     is not known, which until now left the member a refusal sentence and no sight of the declared
+     flow they had just revised. */
+  const flowHtml = progVersionsHtml(def);
   let ents = [];
   try{ ents = (await recR("entitybyalias", { alias:name })).entities || []; }catch(_){ ents = []; }
   if(!ents.length){
-    out.innerHTML = `<div class="empty">No subject in the registry is known by &ldquo;${esc(name)}&rdquo;. A progression is threaded by a subject the record knows.</div>`;
+    out.innerHTML = `<div class="empty">No subject in the registry is known by &ldquo;${esc(name)}&rdquo;. A progression is threaded by a subject the record knows.</div>` + flowHtml;
     return;
   }
   PROG.entity = ents[0];
@@ -16749,6 +16811,7 @@ async function progPaintInstance(){
       }).join("")
     + ((inst && inst.findings || []).map(f=>
         `<div class="subj-doc"><div class="top"><span>${esc(f.detail || f.finding || "a stage the record expected is missing")}</span></div></div>`).join(""))
+    + progVersionsHtml(PROG.def)                      /* UI-99: the declared flow's versions and their basis */
     + (canIntentWrite() ? progThreadHtml(stages, docs, concernsAns) : "");
   if(canIntentWrite()){
     for(const s of stages){
@@ -23407,7 +23470,18 @@ function notifRememberDisposition(res){
 }
 function notifDisposedHtml(){
   if(!NOTIF_DISPOSED.size) return "";
-  const rows = [...NOTIF_DISPOSED.values()].map(r => {
+  /* UI-99: (4c) below renders every set-aside decision the RECORD publishes, so a decision this
+     page performed is shown ONCE — here only while the feed has not yet come back carrying it.
+     Two renderings of one decision would be a second place a fact is stated (D-21/DEC-8), which
+     is the defect `op=queue`'s own `disposed` block exists to end; the plane's comment on that
+     block names THIS map as the honest stopgap it replaces. Keyed on the decision's own key,
+     which both producers spell the same way. */
+  const qd = queueData();
+  const held = new Set(((qd && qd.disposed && Array.isArray(qd.disposed.findings)) ? qd.disposed.findings : [])
+    .map(r => String((r && r.key) || "")).filter(Boolean));
+  const mine = [...NOTIF_DISPOSED.values()].filter(r => !held.has(String((r && r.key) || "")));
+  if(!mine.length) return "";
+  const rows = mine.map(r => {
     const state = String(r.to || r.state || "").trim();
     const who = String(r.decided_by || "").trim();
     const at = String(r.at || "").trim();
@@ -23431,6 +23505,95 @@ function notifDisposedHtml(){
   return '<div class="q-aged"><b>Questions you set aside in this session.</b> A finding that simply '
     + 'disappeared would be indistinguishable from one nobody ever raised, so what left the open list '
     + 'is shown here with the record\'s own account of why.</div>' + rows;
+}
+
+/* ------------------------- (4c) WHICH VERSION OF THE DECLARED FLOW A DECISION JUDGED */
+/* UI-99. Framework §8.2, "The declared flow, and its revisions"; REC-184 on the plane, 2026-09-24.
+
+   A decision to set a finding aside is a member's judgment of the DECLARED FLOW that produced it,
+   so it applies to the version it was taken against and to no later one. The plane records that
+   version, publishes it on every row of `op=queue`'s `disposed` block, and — for a decision taken
+   before it kept the column — publishes `not recorded` rather than a number it does not have.
+   NO PAGE READ ANY OF IT. `op=queue`'s `disposed` block was read by no surface at all: the only
+   set-aside decisions a member ever saw were the ones (4b) above remembered from THIS page's own
+   acts, which survive neither a reload nor a second member, and which carry no version because a
+   fresh act is always stamped with one. So the record's own block is rendered here, each row
+   saying which version of the flow it judged and whether it still governs, and a decision whose
+   version the record does not hold SAYS `not recorded` IN WORDS — never a blank, which would read
+   as a version of nothing (CLAUDE.md §4: undetermined is first-class and must be STATED).
+
+   WHAT IS THE RECORD'S AND WHAT IS NOT. The version number, the state word, whether the decision
+   still governs, the state, reason, author and instant of each decision, and the bound on the list
+   are all `op=queue`'s. A row the plane publishes NO version field on gets no version sentence
+   invented for it — the presence of the field is the test, never a list of the scopes that carry
+   one, so a third scope arriving is stated rather than silently scored as not recorded. */
+function disposedFlowVersionHtml(r){
+  if(!r || !Object.prototype.hasOwnProperty.call(r, "definition_version_state"))
+    return `<span class="q-gap">The record published no declared-flow version for this decision, and none is invented here.</span>`;
+  const v = r.definition_version;
+  const head = (String(r.definition_version_state || "").trim() === "recorded" && v != null && v !== "")
+    ? `It judged <b>version ${esc(String(v))}</b> of the declared flow.`
+    : `Which version of the declared flow it judged is <b>not recorded</b>: it was decided before the record kept the version, and no number is put there in its place.`;
+  const stands = r.applies === true
+    ? `That version is still the one standing, so the decision still answers the question and the question stays off the open list.`
+    : r.applies === false
+      ? `It no longer answers the question: the record has stopped letting this decision stand for the flow as it now reads, so the question is asked again wherever the record still finds the gap. The decision is kept, never deleted.`
+      : `The record did not say whether it still answers the question, so nothing is claimed about that here.`;
+  return `<span class="q-gap">${head} ${stands}</span>`;
+}
+function queueDisposedRecordHtml(){
+  const d = queueData();
+  const blk = d && d.disposed;
+  if(!blk || typeof blk !== "object") return "";
+  const rows = Array.isArray(blk.findings) ? blk.findings : [];
+  const lede = `<div class="q-aged"><b>What the record itself holds as set aside.</b> A finding that simply `
+    + `disappeared would be indistinguishable from one nobody ever raised, so every finding an authored `
+    + `decision took off the open list is shown here with the decision&rsquo;s own account of itself &mdash; `
+    + `and with the version of the declared flow it judged, because a decision about a flow that has been `
+    + `revised since is not a decision about the flow standing now.</div>`;
+  if(!rows.length)
+    return `<div class="q-gap"><b>Nothing has been set aside.</b> The record looked and holds no authored `
+      + `decision taking a finding off this list &mdash; which is a different fact from a list nobody has `
+      + `asked yet, and is why it is said rather than left to a quiet screen.</div>`;
+  const bound = (blk.truncated === true)
+    ? `<div class="q-gap">The record held some back: it is showing ${esc(String(blk.count))} of `
+      + `${esc(String(blk.recorded))} it holds, bounded at ${esc(String(blk.bound))}. What is not shown is `
+      + `not nothing, and this list is not the whole of them.</div>`
+    : "";
+  const list = rows.map(r => {
+    const state = String((r && r.state) || "").trim();
+    const who   = String((r && r.decided_by) || "").trim();
+    const at    = String((r && r.at) || "").trim();
+    const why   = String((r && r.reason) || "").trim();
+    const pk    = String((r && r.progression_key) || "").trim();
+    const sk    = String((r && r.stage_key) || "").trim();
+    const scope = String((r && r.scope) || "").trim();
+    const proj  = String((r && r.project) || "").trim();
+    const gaps = [];
+    if(!state) gaps.push("what it was set aside as");
+    if(!who)   gaps.push("who decided");
+    if(!at)    gaps.push("when");
+    if(!why)   gaps.push("their reason");
+    const subject = pk
+      ? `${esc(humanKind(pk))}${sk ? `, the ${esc(humanKind(sk))} stage` : ""}`
+      : esc(String((r && r.id) || "a finding the record did not name here"));
+    /* WHOSE LIST EACH DECISION GOVERNS IS ON THE ROW (D-266/IC-60), so it is said on the row. */
+    /* WHOSE decision it is, never what it DID to the list: a row whose `applies` is false no longer
+       takes anything off anybody's list, and a sentence saying it did would contradict the version
+       sentence directly below it. `scope` is what the plane publishes and it stays true either way. */
+    const whose = scope === "project"
+      ? (proj ? ` It is the case ${esc(proj)}&rsquo;s own decision and governs no other case.` : ` It is one case&rsquo;s own decision and governs no other; which case is <b>not recorded</b>.`)
+      : scope === "instance" ? ` It is a decision about the shared record, not one team&rsquo;s.`
+      : ` Whose decision it is, is <b>not recorded</b>.`;
+    return `<div class="q-notice" data-flowdisposed="${esc(String((r && r.key) || ""))}">`
+      + `<b>${subject} &mdash; set aside${state ? " as " + esc(state) : ""}`
+      + `${who ? " by " + esc(who) : ""}${at ? " on " + esc(at) : ""}.</b>${whose}`
+      + (why ? ` <span class="q-notice-why">Their reason, as the record recorded it: ${esc(why)}</span>` : "")
+      + (gaps.length ? ` <span class="q-gap">The record did not say ${esc(gaps.join(", "))}, and none of it is invented here.</span>` : "")
+      + disposedFlowVersionHtml(r)
+      + `</div>`;
+  }).join("");
+  return lede + bound + list;
 }
 
 function notifAbsenceHtml(){
