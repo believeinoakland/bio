@@ -38,3 +38,4 @@ D-509	2026-09-24T16:45:13.274Z	land/worker/D-503
 D-510	2026-09-24T16:49:06.868Z	SCHEDULER #18	promote type divergence (D-505 finding 3)
 D-511	2026-09-24T17:12:18.472Z	SCHEDULER #18	BOB #33 replay ruling: fence, then server-verified replay
 D-512	2026-09-24T17:12:18.472Z	SCHEDULER #18	BOB #33 replay ruling: fence, then server-verified replay
+D-513	2026-09-24T17:48:02.178Z	HEAD	
