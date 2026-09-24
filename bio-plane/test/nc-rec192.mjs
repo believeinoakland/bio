@@ -1,5 +1,5 @@
-/* REC-161's NEGATIVE CONTROL for test/partitionindependence.test.mjs. Run from bio-plane/:
- *   node test/nc-rec161.mjs
+/* REC-192's NEGATIVE CONTROL for test/partitionindependence.test.mjs. Run from bio-plane/:
+ *   node test/nc-rec192.mjs
  * Each arm patches src/store.mjs ALONE, runs the suite, and restores from a UNIQUELY-NAMED per-arm pristine
  * copy kept inside this worktree, verified by sha256 AND by content (cmp), with the byte count printed and a
  * minimum guarded. An arm whose patch anchor does not occur exactly once is reported as NOT ARMED. */
@@ -11,7 +11,7 @@ import { dirname, join } from "node:path";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STORE = join(ROOT, "src", "store.mjs");
-const PEN = join(ROOT, ".nc-rec161");
+const PEN = join(ROOT, ".nc-rec192");
 mkdirSync(PEN, { recursive: true });
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const ORIG = readFileSync(STORE);
@@ -28,34 +28,19 @@ const run = () => {
 };
 
 const ARMS = [
-  { name: "second-derivation",
-    /* A copy of the walk that agrees on bundles and captures and OMITS the address branch. */
-    /* RE-ANCHORED 2026-09-24 by REC-192, never exempted: the one call now serves the version arm too and
-       counts `parts` as versionStrength does (distinct NON-BLANK groups), so the line this arm replaces moved.
-       The replacement is unchanged — it still swaps the whole expression for a second derivation. */
-    from: "      independence: this.#independenceOf(legs,\n        new Set(legs.map((l) => String(l.ground ?? \"\").trim()).filter(Boolean)).size),\n",
-    to: `      independence: (() => {
-        const by = new Map();
-        for (const l of legs) { if (!by.has(l.ground)) by.set(l.ground, new Set()); const s = by.get(l.ground);
-          s.add("bundle:" + l.target_id);
-          for (const c of this.sql.exec("SELECT capture_sha FROM register WHERE bundle_id=? LIMIT 201", l.target_id).toArray())
-            s.add("capture:" + c.capture_sha); }
-        const e = [...by]; const shared = [];
-        if (e.length > 1) for (let i = 0; i < e.length; i++) for (let j = i + 1; j < e.length; j++) {
-          const common = [...e[i][1]].filter((o) => e[j][1].has(o));
-          if (common.length) shared.push({ a: e[i][0], b: e[j][0], through: common.slice(0, 5) }); }
-        return { checked: e.length > 1, parts: e.length, shared, complete: e.length > 1 ? true : null, limit: 200 };
-      })(),\n`,
-    mustFail: ["ARM D2", "ARM E1"], mustPass: ["ARM A1", "ARM B1", "ARM C1", "ARM D1"] },
-  { name: "overstrict",
-    from: "          if (common.length)\n            shared.push({ a: originSets[i][0], b: originSets[j][0], through: common.slice(0, 5) });\n",
-    to: "          if (true)\n            shared.push({ a: originSets[i][0], b: originSets[j][0], through: common.slice(0, 5) });\n",
-    mustFail: ["ARM B1", "ARM B2", "ARM D1"], mustPass: ["ARM A1", "ARM C1", "ARM E1", "ARM F4"] },
-  { name: "no-totality",
-    /* RE-ANCHORED 2026-09-24 by REC-192: the partition arm moved one block in (an `else` beside the version arm). */
-    from: "      if (unplaced.length)\n        return refusal(\"PARTITION_INDEPENDENCE_NOT_TOTAL\",",
-    to: "      if (false)\n        return refusal(\"PARTITION_INDEPENDENCE_NOT_TOTAL\",",
-    mustFail: ["ARM F4"], mustPass: ["ARM A1", "ARM B1", "ARM C1", "ARM D1", "ARM D2", "ARM E1", "ARM F5", "ARM F6"] },
+  { name: "strength-field",
+    /* THE ROW'S OWN CONTROL: a strength field on the version-arm answer. */
+    from: "      head = { version: row.name, version_state: row.state, legs_read: legs.length,\n",
+    to: "      head = { pair: { capture: null, connection: null, testimony: null },\n               version: row.name, version_state: row.state, legs_read: legs.length,\n",
+    mustFail: ["ARM H2", "ARM H3"],
+    mustPass: ["ARM H0", "ARM H1", "ARM H4", "ARM H5", "ARM H6", "ARM H7", "ARM H8", "ARM D1", "ARM D2", "ARM E1"] },
+  { name: "state-gated",
+    /* OVER-STRICT: versionstrength's default state set borrowed onto the version arm — a reading not yet
+       accepted is refused as if absent, which is exactly the reading the accept ceremony asks about. */
+    from: "      if (!row)\n        return refusal(\"PARTITION_INDEPENDENCE_NO_SUCH_VERSION\",",
+    to: "      if (!row || row.state !== \"accepted\")\n        return refusal(\"PARTITION_INDEPENDENCE_NO_SUCH_VERSION\",",
+    mustFail: ["ARM H1", "ARM H3", "ARM H4", "ARM H5"],
+    mustPass: ["ARM H0", "ARM H2", "ARM H6", "ARM H7", "ARM H8", "ARM D1", "ARM D2", "ARM E1"] },
 ];
 
 const rows = [];
@@ -91,5 +76,5 @@ rows.push(["baseline-last", base1.pass, base1.fail, base1.failed.join(" "), base
 console.log("\nRESULTS");
 for (const r of rows) console.log(`  ${r[0]}: ${r[1]} pass / ${r[2]} fail  [${r[3]}]  ${r[4]}`);
 const ok = rows.every((r) => r[4] === "AS DECLARED");
-console.log(`nc-rec161: ${ok ? "ALL ARMS AS DECLARED" : "SOME ARM NOT AS DECLARED"}`);
+console.log(`nc-rec192: ${ok ? "ALL ARMS AS DECLARED" : "SOME ARM NOT AS DECLARED"}`);
 process.exit(ok ? 0 : 1);

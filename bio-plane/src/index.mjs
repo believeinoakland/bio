@@ -920,7 +920,9 @@ const OPS = {
      makes BEFORE the member's answers are written. A pure read through the one
      `#independenceOf`; it shows no strength and writes nothing. Same classes and
      the same fail-closed `viewer` stamp as versionstrength, below, because it
-     names a question and every document its reasons rest on. */
+     names a question and every document its reasons rest on. REC-192: `version=`
+     reads a STORED version's independence ON ITS OWN, with no strength key (BOB #31,
+     2026-09-23 22:22Z), under the same classes and stamp. */
   partitionindependence: { classes: ["admin", "member", "probe"], mutating: false },
 
   /* PL-12 / D-84: the bias object's three ops.
