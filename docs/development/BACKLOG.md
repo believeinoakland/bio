@@ -274,16 +274,6 @@ scope: each recorded subresource carries its SHA-256; one the render loaded whos
 accepts-when: a rendered capture's subresources each verify by digest, and an unkept one reads undetermined with its reason (the measured failure it moves: subresources recorded with no digest). NEGATIVE CONTROL: drop the digest and the verify arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-445 · queued — **D-443's CAP ON `publishedCaseRegistryFor` IS PINNED BY SHAPE ONLY: it binds one `json_each` value, and `frontier-chunk.test.mjs` D443-7 asserts that structurally; its own header says it was never driven past 100 ids.** D-443 is NARROWED to this one trace, not closed. — owner RECORD.
-order: after D-444: a correction to just-landed work (D-443), a guarantee the suite does not yet exercise (SCHEDULER #17, 2026-09-23; D-443's worker via CONDUCT #18 22:27Z (4), verified at c17-batch7 @ f32fe714)
-milestone: M0 (a behavioural arm over M4 code)
-interface: none — a behavioural arm.
-design: `docs/development/VERIFICATION.md` (test through the op), with D-36's bound on bound variables.
-depends-on: D-443 (`integrated` on c17-batch6).
-scope: arm D443-7b seeds 120 ratified published cases pinning one finding sha and gates that finding through the op that reaches `gateFacts`. In `bio-plane/test/frontier-chunk.test.mjs`.
-accepts-when: D443-7b is green through the op. NEGATIVE CONTROL: the existing `casereg` arm of `frontier-chunk.control.mjs` fails D443-7b by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
 ### D-448 · queued — **ELEVEN REVIEW-COPY REFUSAL CODES REACH A MEMBER WITH NO CANNED TRANSLATION: UI-68's surface now shows `REVIEW_NOT_PROJECT_OWNER`, `REVIEW_NO_PROJECT`, `REVIEW_DRAFT_CHANGES_PROJECT`, `REVIEW_NO_SUCH_CASE`, `REVIEW_DRAFT_TOO_LARGE`, `REVIEW_NO_RECIPIENT`, `REVIEW_NO_SECRET`, `REVIEW_NO_GRANT`, `REVIEW_NO_COMMENT_TEXT`, `REVIEW_UNKNOWN_ACT` and `NO_REVIEW_COPY`, and none has a DEC-49 row.** — owner RECORD.
 order: after D-445: a correction to just-landed work (UI-68) that shows members untranslated codes (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
 milestone: M10
@@ -1257,3 +1247,13 @@ depends-on: none.
 scope: enumerate every `existed`/`created`/`new` answer in `store.mjs` derived after its own write; for each, show it is read before the write or fix it; name each site in the sweep's verdict list.
 accepts-when: the verdict list names every site with its evidence, and any wrong site is fixed with a first-call arm. NEGATIVE CONTROL: for a fixed site, move the read after the write again, and its first-call arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-457 · queued — **CPDF-20's PER-PAGE TIER IS SHIPPED AND UNRECORDED: `mergeTier2Text` has emitted `text.pages[].tier` since `1240af81` with no IC on I2, and Framework §16's closing table and front matter still list "a per-page rule for tier-2 replacement" ABSENT, though it is built and was watched live (D-283, M-120).** — owner CONTENT-PDF.
+order: with the M0 record-hygiene rows, after D-441: a record that says less than is built (SCHEDULER #17, 2026-09-23; CPDF-3's worker via CONDUCT #18 23:12Z)
+milestone: M0 (the record of what is built)
+interface: I2 additive MINOR — filed by CONTENT-PDF, resolved by CONDUCT.
+design: `docs/development/VERIFICATION.md` (the construct record is checked against the code), for `docs/architecture/BIO_Content_Framework_v0_10.md` §16.
+depends-on: none.
+scope: file the I2 IC for `tier`; correct §16's table and front matter; add a construct-5 claim in `construct-status.json` probing `export function mergeTier2Text(` in `textchain.mjs`.
+accepts-when: `node tools/status.mjs 5` reads the per-page rule BUILT by its probe, and I2 documents `tier`. NEGATIVE CONTROL: rename the probed function, and the status check fails naming the claim.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).

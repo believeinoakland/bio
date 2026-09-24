@@ -262,7 +262,8 @@ scope: one line in WORKER.md beside the name-collision receipt: capture evidence
 accepts-when: the line is on main (the measured failure it moves: REC-194's scratch files vanishing mid-session). NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### D-478 · running — **`pdf-worker` AND `ocr-worker` ACCEPT ANY `store` TOKEN AND ANSWER AN UNKNOWN NAMESPACE WITH NOT_FOUND: nothing is written (IC-237 measured it), but "not found" reads as the capture's ABSENCE when the truth is that the namespace does not exist.** Found by D-462's worker. — owner CONTENT-PDF.
+### D-478 · integrated — **`pdf-worker` AND `ocr-worker` ACCEPT ANY `store` TOKEN AND ANSWER AN UNKNOWN NAMESPACE WITH NOT_FOUND: nothing is written (IC-237 measured it), but "not found" reads as the capture's ABSENCE when the truth is that the namespace does not exist.** Found by D-462's worker. — owner CONTENT-PDF.
+status: integrated — CONDUCT #20 verified 21:49Z: c5c42044, full battery 354/354, N1/N2 AS DECLARED; into c20-batch26; a DIST deploy of pdf-worker and ocr-worker after landing.
 order: last of the namespace guards, low: read-only, no write; placed because *not found* is not *absent* (CLAUDE.md §1) (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
 milestone: M0 (the members' side of the guard)
 interface: I6 — a named refusal on the members' routes; the integrator mints and classifies the IC.
@@ -548,6 +549,16 @@ depends-on: REC-183 (finished, awaiting integration).
 scope: `affordanceFacts` gains a fact counting severed out-edges whose target is NOT retired (e.g. `cites_out.severed_reinstatable`), read by the same predicate `#edgeTransition` runs; the PROJECT arm keys on it. Extend `bio-plane/test/affordances.test.mjs`.
 accepts-when: a project whose only severed edge targets a retired item is not offered reinstate; one with a severed edge to a live item is, and the store accepts it. How a liar passes it: dropping reinstate from projects entirely, so the live-target arm must be offered. NEGATIVE CONTROL: key the arm back on `cites_out.severed`, and the retired-only arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`; placed directly as a plan row, never a DEBT row — BOB #31, 2026-09-23 22:09Z).
+
+### D-445 · queued — **D-443's CAP ON `publishedCaseRegistryFor` IS PINNED BY SHAPE ONLY: it binds one `json_each` value, and `frontier-chunk.test.mjs` D443-7 asserts that structurally; its own header says it was never driven past 100 ids.** D-443 is NARROWED to this one trace, not closed. — owner RECORD.
+order: after D-444: a correction to just-landed work (D-443), a guarantee the suite does not yet exercise (SCHEDULER #17, 2026-09-23; D-443's worker via CONDUCT #18 22:27Z (4), verified at c17-batch7 @ f32fe714)
+milestone: M0 (a behavioural arm over M4 code)
+interface: none — a behavioural arm.
+design: `docs/development/VERIFICATION.md` (test through the op), with D-36's bound on bound variables.
+depends-on: D-443 (`integrated` on c17-batch6).
+scope: arm D443-7b seeds 120 ratified published cases pinning one finding sha and gates that finding through the op that reaches `gateFacts`. In `bio-plane/test/frontier-chunk.test.mjs`.
+accepts-when: D443-7b is green through the op. NEGATIVE CONTROL: the existing `casereg` arm of `frontier-chunk.control.mjs` fails D443-7b by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

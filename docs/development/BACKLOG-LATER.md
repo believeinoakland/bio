@@ -9,16 +9,6 @@ ever cut to fit. No whole-file budget; a row is held to 2 KiB, as in the backlog
 
 ## Rows
 
-### D-457 · queued — **CPDF-20's PER-PAGE TIER IS SHIPPED AND UNRECORDED: `mergeTier2Text` has emitted `text.pages[].tier` since `1240af81` with no IC on I2, and Framework §16's closing table and front matter still list "a per-page rule for tier-2 replacement" ABSENT, though it is built and was watched live (D-283, M-120).** — owner CONTENT-PDF.
-order: with the M0 record-hygiene rows, after D-441: a record that says less than is built (SCHEDULER #17, 2026-09-23; CPDF-3's worker via CONDUCT #18 23:12Z)
-milestone: M0 (the record of what is built)
-interface: I2 additive MINOR — filed by CONTENT-PDF, resolved by CONDUCT.
-design: `docs/development/VERIFICATION.md` (the construct record is checked against the code), for `docs/architecture/BIO_Content_Framework_v0_10.md` §16.
-depends-on: none.
-scope: file the I2 IC for `tier`; correct §16's table and front matter; add a construct-5 claim in `construct-status.json` probing `export function mergeTier2Text(` in `textchain.mjs`.
-accepts-when: `node tools/status.mjs 5` reads the per-page rule BUILT by its probe, and I2 documents `tier`. NEGATIVE CONTROL: rename the probed function, and the status check fails naming the claim.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
 ### D-458 · queued — **C-77 EXISTS AND NOTHING RUNS IT OVER A RECORD: Membership §11 item 9's live recheck of project-name uniqueness has a check (D-50) and no op hands the store's project bundles to `checkProjectNameUniqueness`.** — owner RECORD.
 order: after D-457, with the record-hygiene rows (SCHEDULER #17, 2026-09-23; D-50's worker via CONDUCT #18 23:55Z)
 milestone: M7
