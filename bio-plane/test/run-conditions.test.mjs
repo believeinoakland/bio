@@ -325,6 +325,14 @@ const ROLE = {
      the lifecycle column the reaper reads. */
   "#aiRunWakeHolds":   "HOUSEKEEPS",
   "#aiRunWakeRuns":    "HOUSEKEEPS",
+  /* D-86's two, 2026-09-23, and ARM W3 IS WHY THEY ARE HERE — they arrived as a FAILURE naming both on the item's
+     first run of this suite. `#biasDebtPending` asks whether ANY run exists (`SELECT 1 ... LIMIT 1`) to decide
+     whether the bias-debt consumer wakes at all: the reaper's HOUSEKEEPS question, and it publishes nothing.
+     `#biasDebtSweep` is SELECTS word for word: it projects the key alone (`SELECT run`) to choose which runs to
+     read, and DELEGATES every fact it writes into `bias_debts` — the context, `moved`, the two hashes — to
+     `aiRunRead` by calling it, which ARM W8 drives. ARM W4's three publishers are untouched. */
+  "#biasDebtPending":  "HOUSEKEEPS",
+  "#biasDebtSweep":    "SELECTS",
   purge:               "HOUSEKEEPS",
   /* PL-13's, AND ARM W3 IS AGAIN WHY IT IS HERE — it arrived as a FAILURE
      naming itself, on the item's first full battery, which is the third time

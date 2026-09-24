@@ -333,6 +333,9 @@ const run = async () => {
      DOCTRINE_EDITION = "1" because D-182's risk_tiers KEY "1" had become a sourced term. main fixed the same collision
      at its cause — ARM B1c: a digit-only vocabulary KEY is not a term, the word it maps to is — so "1" is no longer
      in the corpus and that second blanking would hide nothing true. It is removed rather than kept as a dead fence. */
+  /* CONDUCT #18 at main's merge into c17-batch7 (2026-09-23): D-182's "1" homonym is handled by c17-unionfix's
+     digit-key rule (numeral KEYS out of the corpus, their WORDS in, arms B1c/B1d), which supersedes the
+     DOCTRINE_EDITION blanking this branch carried; D-149's field-name blanking stays, since `state` is a word. */
   const found = quotedIn(PACK_SRC.replace(SHAPE_DECL, ""), CORPUS);
   console.log(`  corpus: ${CORPUS.length} sourced terms, scanned against ${found.literals} string `
             + `literals in src/skillpack.mjs (comments removed)`);

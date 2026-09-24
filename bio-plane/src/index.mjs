@@ -96,7 +96,7 @@ import { readDriveAddress, driveHop, callerSuppliedHopFacts,
    `ATTEST_FENCE` — a different act, a different reader — but it states the same
    doctrine, so its two grade letters come from the same place the refusal reads
    them. The reasoning is on `acquireGradeNote` itself, beside the fence. */
-import { ACTS, RUNGS, RUNG_ABSENT, VOCABULARIES, CAPTURE_ACTS, deriveActs,
+import { ACTS, RUNGS, RUNG_ABSENT, VOCABULARIES, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs,
          ACQUIRE_GRADE_NOTE } from "./affordances.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
@@ -6029,13 +6029,19 @@ export default {
           catalog: ACTS.map((a) => ({ ...decorate(a), appliesTo: a.types })),
           vocabularies: VOCABULARIES,
           capture_acts: CAPTURE_ACTS.map(decorate),
+          /* D-126: the acts that take a SET under the `per-item` weight (affordances.mjs PER_ITEM_ACTS),
+             decorated from the same tables as every act, with the bound the store enforces. */
+          set_acts: PER_ITEM_ACTS.map((a) => ({ ...decorate(a), set_key: a.set_key, item_keys: a.item_keys,
+                                               shared_keys: a.shared_keys, max_items: PER_ITEM_MAX })),
           detail: "pass target=<bundle id> for the acts available on that object right now; "
                 + "rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE "
                 + "at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is "
                 + "null only where the act carries a STATED absence — read rung_absence for the "
                 + "ground, and vocabularies.rung_absence_grounds for what that ground means; "
                 + "capture_acts are keyed by a capture sha rather than by a bundle, so they are "
-                + "published with their metadata and never derived against an object's state",
+                + "published with their metadata and never derived against an object's state; "
+                + "set_acts take a selection as `items` under the per-item weight: each item is "
+                + "applied or RETAINED with its own act's reason, and none stops the others",
         }, store: storeName, tokenClass: cls }, 200);
       }
       const st = env.STORE.get(env.STORE.idFromName(storeName));

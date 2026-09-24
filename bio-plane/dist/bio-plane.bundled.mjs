@@ -3816,6 +3816,39 @@ CREATE TABLE IF NOT EXISTS project_visibility (
 CREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility(project_id, seq);
 -- =========================================================================
 
+-- D-86 (NOTIFICATIONS.md, The catalogue: a re-run owed after a lens change, an OBLIGATION, DISCLOSED and never
+-- blocking, DEC-20, with BIO_Content_Framework_v0_10.md section 13): the BIAS DEBT a run carries once the lens it
+-- was formed under has moved. ONE ROW PER RUN, keyed by the run and nothing else, so the sweep is idempotent by
+-- construction: a second alarm tick finds the row and writes nothing new. Written ONLY by the bias-debt consumer
+-- on the one alarm, from the answer aiRunRead publishes (its bias block: moved, moved_basis, the two hashes) and
+-- never from a second comparison. lens_then is the side the comparison was against (the lens at the open for a
+-- recorded open, else the manifest the run was handed), lens_now the lens at the sweep, NULL where none is in
+-- force. cleared_at is set, never a DELETE, when a later sweep reads moved false again: the obligation leaves the
+-- queue and the row keeps what was observed. recipients is a JSON array of member ids, each one checked through
+-- the run's own read gate at the sweep. A run is purged only by the whole-store arm, which takes this with it.
+CREATE TABLE IF NOT EXISTS bias_debts (
+  run           TEXT PRIMARY KEY,
+  context_type  TEXT NOT NULL,
+  context_id    TEXT NOT NULL,
+  moved_basis   TEXT,
+  lens_then     TEXT,
+  lens_now      TEXT,
+  recipients    TEXT NOT NULL,
+  raised        TEXT NOT NULL,
+  observed      TEXT NOT NULL,
+  cleared_at    TEXT
+);
+-- D-86: the sweep's own place in its work. fingerprint is the lens-input fingerprint the LAST COMPLETE sweep read
+-- (every adoption with its bundle's current sha and state), so an alarm with no lens change asks nothing of any
+-- run. target and cursor carry a sweep that spans several ticks, restarted from the top when the lens moves again.
+CREATE TABLE IF NOT EXISTS bias_debt_sweeps (
+  k            TEXT PRIMARY KEY,
+  fingerprint  TEXT,
+  target       TEXT,
+  cursor       TEXT NOT NULL DEFAULT '',
+  at           TEXT NOT NULL
+);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
@@ -4127,6 +4160,7 @@ __export(bio_checks_exports, {
   NON_MEMBER_AUTHORS: () => NON_MEMBER_AUTHORS,
   OBJECT_TYPES: () => OBJECT_TYPES,
   PARTITION_INDEPENDENCE_CHECKS: () => PARTITION_INDEPENDENCE_CHECKS,
+  PER_ITEM_CHECKS: () => PER_ITEM_CHECKS,
   PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
   PROJECT_ID_CHECKS: () => PROJECT_ID_CHECKS,
   PROJECT_VISIBILITY_CHECKS: () => PROJECT_VISIBILITY_CHECKS,
@@ -4151,6 +4185,7 @@ __export(bio_checks_exports, {
   SUGGEST_KINDS: () => SUGGEST_KINDS,
   SUGGEST_LEVELS: () => SUGGEST_LEVELS,
   SURFACE_CHECKS: () => SURFACE_CHECKS,
+  TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
   TESTIMONY_CHECKS: () => TESTIMONY_CHECKS,
   TESTIMONY_GRADE: () => TESTIMONY_GRADE,
   TEXT_CHAIN_CHECKS: () => TEXT_CHAIN_CHECKS,
@@ -13092,6 +13127,40 @@ function coversImagePlacement(e, container) {
   const listed = onPage.slice(0, 6).map((x) => `[${norm(x.rect).join(", ")}]`).join(" ");
   return `page ${e.page} of this capture paints ${onPage.length} image(s)${onPage.length ? ` (${listed}${onPage.length > 6 ? " \u2026" : ""})` : ""} and none at [${want.join(", ")}], the rectangle the extent names`;
 }
+var TASK_ACTOR_CHECKS = {
+  NOT_YOURS: {
+    check: "C-76.1",
+    where: "src/store.mjs #refuseNotYours > is-task-actor-fence",
+    translation: "This task is not yours to act on: it is with another member now, so nothing was done to it. The record says below who holds it. Ask them, or an administrator, if it still needs you."
+  }
+};
+var PER_ITEM_CHECKS = {
+  SET_NO_ITEMS: {
+    check: "C-75.1",
+    where: "src/store.mjs #perItem > is-per-item-set-shape",
+    translation: "Nothing was selected, so nothing was done. Choose at least one item and try again."
+  },
+  SET_TOO_LARGE: {
+    check: "C-75.2",
+    where: "src/store.mjs #perItem > is-per-item-set-shape",
+    translation: "That selection is larger than the record acts on at once, so nothing was done to any of it. Select fewer items and apply the action again."
+  },
+  SET_ITEM_MALFORMED: {
+    check: "C-75.3",
+    where: "src/store.mjs #perItem > is-per-item-malformed",
+    translation: "This item could not be read as an item, so it was left as it was. The rest of the selection was still acted on, one by one."
+  },
+  SET_ITEM_FAILED: {
+    check: "C-75.4",
+    where: "src/store.mjs #perItem > is-per-item-failed",
+    translation: "The record could not complete the action on this item and did not change it. It stays in your list. The rest of the selection was still acted on, one by one."
+  },
+  SET_ITEMS_RETAINED: {
+    check: "C-75.5",
+    where: "src/store.mjs #perItem > is-per-item-retained",
+    translation: "Not every selected item was handled. The ones that were have left your list; the ones that were not are still there, each with the reason the record gave for it, so you can take a different action on them."
+  }
+};
 var CONNECTION_PAIR_CHECKS = {
   /* THE FORGED PAIR. A pair whose recorded position is NOT inside the extent
      being graded may not grade it — which sounds obvious and is exactly the
@@ -17002,6 +17071,33 @@ var MACHINE_REFUSALS = {
   versioncurrent: "MACHINE_CANNOT_MOVE_VERSION",
   versionhide: "MACHINE_CANNOT_MOVE_VERSION"
 };
+var PER_ITEM_MAX = 100;
+var PER_ITEM_ACTS = [
+  {
+    id: "proposedispose",
+    label: "Defer or dismiss the selected findings",
+    weight: "per-item",
+    set_key: "items",
+    item_keys: [["key"], ["progressionKey", "stageKey"], ["project", "finding"]],
+    shared_keys: ["to", "reason", "kind"]
+  },
+  {
+    id: "taskresolve",
+    label: "Resolve the selected obligations",
+    weight: "per-item",
+    set_key: "items",
+    item_keys: [["id"]],
+    shared_keys: []
+  },
+  {
+    id: "taskforward",
+    label: "Forward the selected obligations",
+    weight: "per-item",
+    set_key: "items",
+    item_keys: [["id"]],
+    shared_keys: ["to"]
+  }
+];
 var ACT_IDS = new Set(ACTS.map((a) => a.id));
 function deriveActs(facts) {
   const ty = normalizeType(facts.object_type);
@@ -25393,8 +25489,10 @@ var QUEUE_OBLIGATION_KINDS = {
      too, so nothing about this kind blocks anything. The producer is unbuilt
      (D-86's remaining half), which is why this is free to correct now — and
      exactly why it had to be, since the producer would have been built to the
-     sentence. The identical wording in NOTIFICATIONS.md is corrected with it. */
-  "bias-debt": "a re-run is owed after a lens change (D-86) \u2014 DISCLOSED, never blocking (DEC-20)",
+     sentence. The identical wording in NOTIFICATIONS.md is corrected with it.
+     LIVE from 2026-09-23 (D-86): the `bias-debt` consumer on the one alarm raises one item per run whose lens
+     `moved`, read from aiRunRead and never compared again; store.mjs #obligationsBiasDebt serves it on op=queue. */
+  "bias-debt": "a re-run is owed after a lens change (D-86) \u2014 DISCLOSED, never blocking (DEC-20) \u2014 LIVE: store.mjs #biasDebtSweep",
   "endorsement-owed": "an endorsement is owed on a pending administrator or owner vote",
   "expertise-confirmation-owed": "an expertise declaration awaits an administrator's confirmation",
   "membership-request": "a membership request is at the doorbell",
@@ -30633,10 +30731,15 @@ var Store = class _Store extends DurableObject {
          interval, or nothing threaded holds no alarm. It does NOT mint a task/focus per overdue
          instance (D-79 don't-drown; escalation is DEC-10, Bob's). Uses the firing instant `now`,
          the virtual clock a suite drives onAlarm(now) with, exactly as the other consumers do.
-         DEFERRED and flagged (D-86, the other half): bias-debt — a decayed bias measure is the
-         SAME shape (an obligation with a clock, blocking a state transition, settleable in batches),
-         and rides THIS consumer shape later with a different producer. REC-8 builds only the temporal
-         half; a bias-debt sweep would register beside overdue-scan and inherit the reconcile. */
+         D-86, the other half: bias-debt is the SAME shape (an obligation with a clock, attached to an
+         object, settleable in batches) and rides THIS alarm with a different producer — the `bias-debt`
+         consumer at the foot of this registry, which inherits the reconcile. REC-8 built only the
+         temporal half.
+         CORRECTED 2026-09-23 (D-86, per DEC-20 / D-188): this read that bias debt is "blocking a state
+         transition". It is not and never was under DEC-20 — ordinary bias debt is DISCLOSED and travels
+         with the work; only an uncleared HUNCH refuses publication. The temporal half blocks; the bias
+         half surfaces. The sentence stood here after `queuestate.mjs`, `NOTIFICATIONS.md` and framework
+         §13 had all been corrected on 2026-08-05, which is the copy-that-agreed-once hazard exactly. */
       {
         name: "overdue-scan",
         due: (now) => now,
@@ -30900,6 +31003,27 @@ var Store = class _Store extends DurableObject {
         due: () => this.#groupDomainWake(),
         wake: () => this.#groupDomainWake(),
         tick: () => this.#groupDomainTick()
+      },
+      /* D-86 (NOTIFICATIONS.md §The catalogue: *"a re-run owed after a lens change `[OBLIGATION]` — DISCLOSED,
+               never blocking"*; framework §13, bias debt and ageing are one mechanism): THE BIAS-DEBT SWEEP, the
+               TWELFTH consumer on the one alarm and ONE APPENDED ENTRY exactly as SCHEDULER.md instructs. It is
+               overdue-scan's other half and registers on the same alarm; it is APPENDED rather than inserted beside
+               it because an insertion renumbers every consumer a later census names (`airun.test.mjs` ARM S3b).
+      
+               IT RAISES ONE OBLIGATION PER RUN WHOSE RECORDED LENS MOVED, AND IT NEVER COMPARES A HASH ITSELF. The
+               comparison is `aiRunRead`'s — `#biasForRun`, the one reader `op=airun` publishes — read whole per run;
+               a second comparison here would agree today and drift tomorrow, and D-86's control changes that ONE
+               function and watches the item follow it. `moved: null` raises nothing and clears nothing: undetermined
+               is stated, never rounded to either side. Nothing is refused anywhere (DEC-20).
+      
+               INTERVAL-consumer shape, and it self-terminates: due and wake only while the lens inputs have moved
+               since the last complete sweep (`#biasDebtPending`, one small read), so an instance whose lens has not
+               changed holds no alarm for it. The lens-changing doors (`promote`, `biasadopt`) arm it. */
+      {
+        name: "bias-debt",
+        due: (now) => this.#biasDebtPending() ? now : null,
+        wake: (now) => this.#biasDebtPending() ? now + this.#biasDebtDelayMs() : null,
+        tick: (now) => this.#biasDebtSweep(now).then((b) => ({ biasdebt: b }))
       }
     ];
     for (const name of Object.keys(probe || {})) {
@@ -30931,7 +31055,7 @@ var Store = class _Store extends DurableObject {
     const probe = await this.#probeState(now);
     const reg = this.#schedConsumers(probe);
     const grace = _Store.SCHED_GRACE_MS;
-    let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null, queuerenotify = null, monitorcadence = null, airunreap = null, capturerequests = null, airunwake = null, calibration = null, groupdomain = null;
+    let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null, queuerenotify = null, monitorcadence = null, airunreap = null, capturerequests = null, airunwake = null, calibration = null, groupdomain = null, biasdebt = null;
     const probes = [];
     for (const c of reg) {
       const d2 = c.due(now);
@@ -30949,6 +31073,7 @@ var Store = class _Store extends DurableObject {
       else if (c.name === "ai-run-wake") airunwake = r && r.airunwake;
       else if (c.name === "calibration-reprobe") calibration = r && r.calibration;
       else if (c.name === "group-domain-recheck") groupdomain = r && r.groupdomain;
+      else if (c.name === "bias-debt") biasdebt = r && r.biasdebt;
       else probes.push(c.name);
     }
     const nextAt = await this.#reconcileAlarm(now, reg, true);
@@ -30974,7 +31099,8 @@ var Store = class _Store extends DurableObject {
       ...capturerequests ? { capturerequests } : {},
       ...airunwake ? { airunwake } : {},
       ...calibration ? { calibration } : {},
-      ...groupdomain ? { groupdomain } : {}
+      ...groupdomain ? { groupdomain } : {},
+      ...biasdebt ? { biasdebt } : {}
     };
   }
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -53041,6 +53167,7 @@ ${words}`;
         options: this.#queueOptions([subject], viewer, identity)
       });
     }
+    items.push(...this.#obligationsBiasDebt(viewer, me, now, identity));
     const feed = this.proposalsFeed(nowMs);
     const findingSeen = this.#bundleGate("pi.bundle_id", viewer);
     for (const p of feed.proposals) {
@@ -53758,8 +53885,16 @@ ${words}`;
     reason,
     decidedBy = null,
     viewer = null,
-    identity = null
+    identity = null,
+    items
   } = {}) {
+    if (items !== void 0)
+      return this.#perItem(
+        "proposedispose",
+        { items, progressionKey, stageKey, key, project, finding, kind, to, state, reason },
+        { decidedBy, viewer, identity },
+        (b) => this.proposeDispose(b)
+      );
     const proj = typeof project === "string" ? project.trim() : "";
     const find = typeof finding === "string" ? finding.trim() : "";
     const scoped = !!(proj || find);
@@ -55734,6 +55869,8 @@ ${words}`;
         this.sql.exec(`DELETE FROM observation_log`);
         this.sql.exec(`DELETE FROM leads`);
         this.sql.exec(`DELETE FROM ai_run_bounds`);
+        this.sql.exec(`DELETE FROM bias_debts`);
+        this.sql.exec(`DELETE FROM bias_debt_sweeps`);
         this.sql.exec(`DELETE FROM ai_runs`);
         this.sql.exec(`DELETE FROM suggest_refusals`);
         this.sql.exec(`DELETE FROM capture_requests`);
@@ -67646,6 +67783,224 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       hand: handOf(recordedSha)
     };
   }
+  /** D-86 — THE BIAS-DEBT SWEEP. NOTIFICATIONS.md §The catalogue: *"a re-run owed after a lens change
+   *  `[OBLIGATION]` (D-86 — DISCLOSED, never blocking)"*; framework §13: *"Bias debt says: the lens changed, so
+   *  this analysis owes a re-run"*, one mechanism with the temporal half, and what differs is what each consumer
+   *  DOES when the clock runs out — the temporal half blocks, the bias half SURFACES.
+   *
+   *  ONE COMPARISON, AND IT IS NOT HERE. Whether a run's lens moved is `aiRunRead`'s answer — `#biasForRun`, the
+   *  block `op=airun` publishes — read whole for each run under the operator-internal viewer. This method reads
+   *  `moved` and the two hashes that block names; it holds no hash and compares none. A comparison of its own
+   *  would agree with the reader today and be the thing that drifts (D-86's row: *"how a liar passes this: a
+   *  second comparison in the sweep that happens to agree today"*), so the control alters the ONE function and
+   *  the item must follow it.
+   *
+   *  THREE ANSWERS, NEVER COLLAPSED. `moved: true` raises (or restates) the run's ONE item. `moved: false` raises
+   *  nothing, and CLEARS a live item — stamped, never deleted — because an obligation claiming a lens moved while
+   *  the reader says it did not would be the record claiming more than it can support. `moved: null` does
+   *  NEITHER: undetermined is not evidence in either direction, so an item stands as it was and none is minted.
+   *
+   *  IDEMPOTENT BY ITS KEY, NOT BY CARE. `bias_debts` is keyed by the run alone, so a second tick finds the row
+   *  and, when nothing moved, writes nothing. A lens that moves AGAIN restates the same row with the new hash —
+   *  still one item per run — and one that moves back clears it.
+   *
+   *  RECIPIENTS, NAMED BY THIS PRODUCER AND EACH ONE INSIDE THE RUN'S READ GATE. The run's own principal when it is
+   *  a member, and for a run over a project that project's active owners (DEC-72 clause 5: manager is the owner
+   *  role) — each kept only if `aiRunRead` answers `found` for them, the same read that gates `op=airun`, so the
+   *  item never reaches a member who could not open the run it is about. None nameable is STATED, and the item is
+   *  then offered to every member who can read the run, the `unassigned` task's precedent (D-98, DEC-7).
+   *
+   *  BOUNDED. At most BIAS_DEBT_BATCH runs per tick, with a cursor; a sweep that spans ticks keeps the consumer
+   *  due, and a lens that moves mid-sweep restarts it from the top. The fingerprint is recorded only when a sweep
+   *  COMPLETES, so an alarm with no lens change asks nothing of any run. */
+  static BIAS_DEBT_DELAY_MS = 1e3;
+  static BIAS_DEBT_BATCH = 50;
+  /* Overridable, on the connection-derive consumer's precedent: a suite pins the delay far out so the alarm it
+     drives by hand is the only one that fires, and pins the batch to 1 to PROVE a sweep spans ticks. */
+  #biasDebtDelayMs() {
+    const v = Number(this.env && this.env.BIAS_DEBT_DELAY_MS);
+    return Number.isFinite(v) && v >= 0 ? v : _Store.BIAS_DEBT_DELAY_MS;
+  }
+  #biasDebtBatch() {
+    const v = Math.floor(Number(this.env && this.env.BIAS_DEBT_BATCH));
+    return Number.isFinite(v) && v >= 1 ? Math.min(v, 500) : _Store.BIAS_DEBT_BATCH;
+  }
+  static BIAS_DEBT_VIEWER = "admin";
+  /** Every input the lens NOW is computed from, and nothing it is not: each adoption row with its bundle's current
+   *  sha and state (`biasManifest` reads statements through exactly these). Synchronous and small, so a consumer's
+   *  `due`/`wake` can ask it. It is a TRIGGER, never a comparison of lenses — whether a run moved is still
+   *  `aiRunRead`'s answer. */
+  #biasDebtFingerprint() {
+    const cap = _Store.BIAS_DEBT_FINGERPRINT_MAX;
+    const n = this.#one(`SELECT count(*) AS n FROM bias_adoptions`).n;
+    return JSON.stringify([n, ...this.#rows(
+      `SELECT a.scope_type AS t, a.scope_id AS s, a.bundle_id AS b, bd.bundle_sha AS sha, bd.current_state AS st
+         FROM bias_adoptions a LEFT JOIN bundles bd ON bd.bundle_id = a.bundle_id
+        ORDER BY a.scope_type, a.scope_id, a.bundle_id LIMIT ?`,
+      cap
+    ).map((r) => [r.t, r.s, r.b, r.sha ?? null, r.st ?? null])]);
+  }
+  static BIAS_DEBT_FINGERPRINT_MAX = 1e3;
+  static BIAS_DEBT_OWNERS_MAX = 50;
+  /** Due while the lens inputs differ from the last COMPLETE sweep's. An instance with no run owes no debt; one
+   *  that has never adopted a lens cannot have one move (a recorded open compares two absent hashes, and a
+   *  pre-D-85 hand against no lens reads `moved: null`), so it holds no alarm for this consumer either. */
+  #biasDebtPending() {
+    if (!this.#one(`SELECT 1 AS x FROM ai_runs LIMIT 1`)) return false;
+    const st = this.#one(`SELECT fingerprint FROM bias_debt_sweeps WHERE k = 'lens'`);
+    if (!st) return !!this.#one(`SELECT 1 AS x FROM bias_adoptions LIMIT 1`);
+    return st.fingerprint !== this.#biasDebtFingerprint();
+  }
+  async #biasDebtRecipients(run, session) {
+    const cands = /* @__PURE__ */ new Set();
+    const pm = /^member:([A-Za-z0-9._:-]{1,128}?)(?:\/.*)?$/.exec(String(session?.principal?.plane || ""));
+    if (pm) cands.add(pm[1]);
+    if (session?.context?.type === "project")
+      for (const r of this.#rows(
+        `SELECT pp.member_id FROM project_participants pp WHERE pp.project_id = ? AND pp.owner = 1
+          ORDER BY pp.member_id LIMIT ?`,
+        session.context.id,
+        _Store.BIAS_DEBT_OWNERS_MAX
+      )) cands.add(r.member_id);
+    const out = [];
+    for (const id of [...cands].sort()) {
+      if (!this.#one(`SELECT 1 AS x FROM members WHERE member_id = ? AND status = 'active'`, id)) continue;
+      const sight = await this.aiRunRead({ run, viewer: `member:${id}` });
+      if (sight && sight.found === true) out.push(id);
+    }
+    return out;
+  }
+  async #biasDebtSweep(nowMs) {
+    const at = _Store.#aiIso(nowMs);
+    const cap = this.#biasDebtBatch();
+    const fp = this.#biasDebtFingerprint();
+    const st = this.#one(`SELECT fingerprint, target, cursor FROM bias_debt_sweeps WHERE k = 'lens'`);
+    const from = st && st.target === fp ? String(st.cursor || "") : "";
+    const rows = this.#rows(`SELECT run FROM ai_runs WHERE run > ? ORDER BY run LIMIT ?`, from, cap + 1);
+    const batch = rows.slice(0, cap);
+    const out = {
+      read: 0,
+      raised: [],
+      restated: [],
+      cleared: [],
+      undetermined: [],
+      unchanged: 0,
+      complete: rows.length <= cap,
+      batch: cap
+    };
+    for (const { run } of batch) {
+      const read = await this.aiRunRead({ run, viewer: _Store.BIAS_DEBT_VIEWER });
+      out.read++;
+      const session = read && read.found === true ? read.session : null;
+      const bias = session ? session.bias : null;
+      const moved = bias ? bias.moved : null;
+      const prior = this.#one(`SELECT * FROM bias_debts WHERE run = ?`, run);
+      if (moved === true) {
+        const then = bias.moved_basis === "at_open" ? bias.at_open && typeof bias.at_open.statements_sha === "string" ? bias.at_open.statements_sha : null : bias.manifest && typeof bias.manifest.statements_sha === "string" ? bias.manifest.statements_sha : null;
+        const now = bias.now && typeof bias.now.statements_sha === "string" ? bias.now.statements_sha : null;
+        const recipients = JSON.stringify(await this.#biasDebtRecipients(run, session));
+        if (!prior) {
+          this.sql.exec(
+            `INSERT INTO bias_debts (run, context_type, context_id, moved_basis, lens_then, lens_now, recipients,
+                                     raised, observed, cleared_at)
+             VALUES (?,?,?,?,?,?,?,?,?,NULL)`,
+            run,
+            session.context.type,
+            session.context.id,
+            bias.moved_basis ?? null,
+            then,
+            now,
+            recipients,
+            at,
+            at
+          );
+          out.raised.push(run);
+        } else if (prior.cleared_at != null || prior.lens_now !== now || prior.lens_then !== then || prior.recipients !== recipients) {
+          this.sql.exec(
+            `UPDATE bias_debts SET moved_basis = ?, lens_then = ?, lens_now = ?, recipients = ?, observed = ?,
+                    raised = CASE WHEN cleared_at IS NULL THEN raised ELSE ? END, cleared_at = NULL
+              WHERE run = ?`,
+            bias.moved_basis ?? null,
+            then,
+            now,
+            recipients,
+            at,
+            at,
+            run
+          );
+          out.restated.push(run);
+        } else out.unchanged++;
+      } else if (moved === false) {
+        if (prior && prior.cleared_at == null) {
+          this.sql.exec(`UPDATE bias_debts SET cleared_at = ?, observed = ? WHERE run = ?`, at, at, run);
+          out.cleared.push(run);
+        } else out.unchanged++;
+      } else out.undetermined.push(run);
+    }
+    const last = batch.length ? batch[batch.length - 1].run : "";
+    this.sql.exec(
+      `INSERT INTO bias_debt_sweeps (k, fingerprint, target, cursor, at) VALUES ('lens', ?, ?, ?, ?)
+       ON CONFLICT(k) DO UPDATE SET fingerprint = excluded.fingerprint, target = excluded.target,
+                                    cursor = excluded.cursor, at = excluded.at`,
+      out.complete ? fp : st ? st.fingerprint : null,
+      fp,
+      out.complete ? "" : last,
+      at
+    );
+    return out;
+  }
+  /** D-86: the OBLIGATION items the sweep raised, for `queueFeed`. Synchronous, like every producer there. The
+   *  row is gated by `#bundleGate` over the run's `context_id` — the predicate `aiRunRead` compiles for the run
+   *  itself, so an item about a run is shown exactly to the readers of that run. A member who is not a recipient
+   *  is skipped unless the producer could name nobody, which is stated on the item. */
+  #obligationsBiasDebt(viewer, me, now, identity) {
+    const seen = this.#bundleGate("bd.context_id", viewer);
+    const items = [];
+    for (const row of this.#rows(
+      `SELECT bd.* FROM bias_debts bd WHERE bd.cleared_at IS NULL AND (${seen.sql})
+        ORDER BY bd.raised DESC, bd.run LIMIT ?`,
+      ...seen.args,
+      _Store.BIAS_DEBT_QUEUE_MAX
+    )) {
+      const recipients = safeJson(row.recipients);
+      const named = Array.isArray(recipients) ? recipients.filter((x) => typeof x === "string") : [];
+      if (me && named.length && !named.includes(me)) continue;
+      const raisedMs = Date.parse(row.raised);
+      items.push({
+        id: `OBLIGATION::bias-debt::${row.run}`,
+        class: "OBLIGATION",
+        kind: "bias-debt",
+        case: this.#queueAncestors([row.context_id], viewer),
+        subject: { kind: "run", id: row.run, context: { type: row.context_type, id: row.context_id } },
+        summary: "The lens this assistant's run was formed under has changed since it opened; a re-run under the lens now in force is owed. This is disclosed and blocks nothing.",
+        detail: null,
+        basis: {
+          source: "bias_debts",
+          computed_by: "aiRunRead",
+          run: row.run,
+          moved: true,
+          moved_basis: row.moved_basis,
+          lens_then: row.lens_then,
+          lens_now: row.lens_now,
+          observed: row.observed,
+          stated: `the run's lens was ${row.lens_then ?? "none in force"} (${row.moved_basis === "at_open" ? "the lens in force when it opened" : "the lens it was handed"}) and is ${row.lens_now ?? "none in force"} now`,
+          detail: "bias debt is DISCLOSED and travels with the work; only an uncleared hunch refuses publication (DEC-20). Whether the lens moved is op=airun's own comparison, read by the sweep and never recomputed."
+        },
+        age: Number.isFinite(raisedMs) ? { state: "determined", since: row.raised, ms: Math.max(0, now - raisedMs) } : {
+          state: "undetermined",
+          reason: "unparseable_raised",
+          detail: "the debt row carries a raised stamp this producer cannot read as an instant"
+        },
+        assignee: null,
+        assignee_role: null,
+        recipients: named,
+        ...named.length ? {} : { recipients_stated: "no member could be named inside this run's read gate, so it is offered to every member who can read the run" },
+        options: this.#queueOptions([row.context_id], viewer, identity)
+      });
+    }
+    return items;
+  }
+  static BIAS_DEBT_QUEUE_MAX = 200;
   /** op=airunspawn — THE FENCE, AS CODE.
    *
    *  `INVESTIGATIVE-SESSION.md` §14, and the sweep's own correction of v2:
@@ -68657,6 +69012,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     return {
       ok: false,
       reason: "NOT_YOURS",
+      code: "NOT_YOURS",
+      check: TASK_ACTOR_CHECKS.NOT_YOURS.check,
+      translation: TASK_ACTOR_CHECKS.NOT_YOURS.translation,
       detail: `this task is not yours to ${verb}; it is with ${row.assignee}`,
       assignee: row.assignee,
       assignee_role: row.assignee_role
@@ -68691,7 +69049,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  are derived from the SAME `MACHINE_STAMP_PREFIXES` in the catalog, so the
    *  spelling still moves in one place and moves here too; what is deliberately
    *  not shared is the bare-class arm, for the reason in the paragraph above. */
-  taskForward({ id = null, to = null, actor = null, now = null } = {}) {
+  taskForward({ id = null, to = null, actor = null, now = null, items } = {}) {
+    if (items !== void 0)
+      return this.#perItem("taskforward", { items, to, now }, { actor }, (b) => this.taskForward(b));
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a forward is recorded under the member who made it" };
     if (isMachineStamp(actor))
       return {
@@ -68740,7 +69100,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  `taskDrain` is deliberately untouched and is the daemon's path: draining
    *  turns queued events into tasks and ROUTES them, which is surfacing work
    *  rather than discharging it. Nothing a drain does closes an obligation. */
-  taskResolve({ id = null, actor = null, now = null } = {}) {
+  taskResolve({ id = null, actor = null, now = null, items } = {}) {
+    if (items !== void 0)
+      return this.#perItem("taskresolve", { items, now }, { actor }, (b) => this.taskResolve(b));
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a resolution is recorded under the member who made it" };
     if (isMachineStamp(actor))
       return {
@@ -68768,6 +69130,112 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       id
     );
     return { ok: true, id, status: "resolved", resolved_at: at };
+  }
+  /* ==================================================================== D-126
+   * THE PER-ITEM WEIGHT — "each item independently succeeds or is RETAINED WITH A REASON"
+   * (NOTIFICATIONS.md §Applying a handler to a selection; Bob: *"If that action didn't work for one or
+   * more, they'd stay in the list so that the user can take a different action."*).
+   *
+   * ONE HELPER, THREE ACTS. `op=proposedispose`, `op=taskresolve` and `op=taskforward` each take a SET
+   * when the body carries `items` — the branch is the first statement of each act's own method, so the
+   * dispatch map is unchanged — and without `items` each is the single-key act it was. The
+   * set form is NOT a second implementation of any act: every item goes through the SAME method the
+   * single form calls, so an item is accepted and refused by exactly the rules one key would be, and its
+   * reason is that act's own refusal, verbatim. This helper words only what belongs to the SET (C-75).
+   *
+   * WHAT IT REFUSES TO BE, and each is how a liar would pass the row:
+   *   - ALL-OR-NOTHING RELABELLED. A refusal on item k does not stop item k+1; nothing here breaks out of
+   *     the loop, and the `refuse` weight's stop-on-drift is exactly the behaviour this weight is not.
+   *   - SILENT SKIPPING. Every item the caller sent has exactly one outcome in `items[]`, at its own
+   *     `index`, `applied` or `retained`, and `applied + retained === count` by construction. A retained
+   *     item carries its act's `reason` (and `code`/`translation` where that act has them).
+   *   - `ok: true` OVER A MIXED SET. `ok` is true only when EVERY item applied; otherwise the answer is
+   *     C-75.5's summary refusal WITH `items[]` beside it, so a caller reading `ok` alone is told the
+   *     truth about the set and a caller reading `items[]` is told the truth about each item.
+   *
+   * THE SERVER'S STAMPS WIN OVER EVERY ITEM. `stamped` is what the control plane stamped (the actor, the
+   * decider) or the URL carries (viewer, identity); it is spread LAST, so an item that names its own
+   * actor is overwritten exactly as a single-key body is. The rest of the body is SHARED — a common
+   * `reason`, `to` or disposition — and an item may override it for itself.
+   *
+   * ITEMS ARE NOT IN ONE TRANSACTION, deliberately: independence is the weight. Each single act writes
+   * at most once, after all of its own refusals, so an item that is refused has written nothing. */
+  static PER_ITEM_MAX = PER_ITEM_MAX;
+  /* affordances.mjs: ONE number, published as set_acts[].max_items */
+  #perItem(act, body, stamped, one) {
+    const refusal7 = (code, detail, extra) => {
+      const row = PER_ITEM_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const { items, ...shared } = body || {};
+    const count = Array.isArray(items) ? items.length : 0;
+    if (!Array.isArray(items) || items.length === 0)
+      return refusal7(
+        "SET_NO_ITEMS",
+        `op=${act} was sent as a set and the set holds no items. Send \`items\` as a non-empty array, or send one item's fields without \`items\` for the single act. Nothing was done.`,
+        { op: act, weight: "per-item", count: 0 }
+      );
+    if (items.length > _Store.PER_ITEM_MAX)
+      return refusal7(
+        "SET_TOO_LARGE",
+        `op=${act} acts on at most ${_Store.PER_ITEM_MAX} items at once and this set holds ${items.length}. Refused WHOLE, before any item was tried, so no item moved.`,
+        { op: act, weight: "per-item", count: items.length, max: _Store.PER_ITEM_MAX }
+      );
+    const echo = (it) => {
+      const o = {};
+      for (const [k, v] of Object.entries(it)) {
+        if (typeof v === "string") o[k] = v.slice(0, 400);
+        else if (typeof v === "number" || typeof v === "boolean" || v === null) o[k] = v;
+      }
+      return o;
+    };
+    const outcomes = [];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (!it || typeof it !== "object" || Array.isArray(it)) {
+        outcomes.push({
+          index: i,
+          outcome: "retained",
+          asked: null,
+          ...refusal7("SET_ITEM_MALFORMED", `item ${i} is not an object naming one ${act} subject; it was left as it was and the other items were still tried.`)
+        });
+        continue;
+      }
+      let r;
+      try {
+        r = one({ ...shared, ...it, ...stamped, items: void 0 });
+      } catch (e) {
+        r = refusal7("SET_ITEM_FAILED", `op=${act} threw on item ${i} rather than refusing it: ` + String(e && e.message || e).slice(0, 200) + `. Nothing about the item is claimed.`);
+      }
+      const res = r && typeof r === "object" ? r : { ok: false };
+      outcomes.push({ index: i, outcome: res.ok === true ? "applied" : "retained", asked: echo(it), ...res });
+    }
+    const applied = outcomes.filter((o) => o.outcome === "applied").length;
+    const retained = outcomes.length - applied;
+    const head = { op: act, weight: "per-item", count, applied, retained, items: outcomes };
+    if (retained === 0)
+      return {
+        ok: true,
+        ...head,
+        detail: `every one of the ${count} item(s) was applied, each by op=${act}'s own rules.`
+      };
+    return {
+      ok: false,
+      reason: "SET_ITEMS_RETAINED",
+      code: "SET_ITEMS_RETAINED",
+      check: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.check,
+      translation: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.translation,
+      detail: `${applied} of ${count} item(s) applied and ${retained} RETAINED; each retained item in items[] carries its own act's reason. The applied items stand \u2014 this is not a rollback.`,
+      ...head
+    };
   }
   /* ---- D-104: source reachability ----
    *
@@ -69924,6 +70392,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
             const row = this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, r.bundleId);
             if (row && row.monitor_enabled === 1) await this.#armScheduler();
           }
+          if (r && r.ok && this.#biasDebtPending()) await this.#armScheduler();
           return r;
         },
         allocid: () => this.allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
@@ -70450,16 +70919,20 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           offset: url.searchParams.get("offset"),
           viewer: url.searchParams.get("viewer")
         }),
-        biasadopt: () => this.biasAdopt({
-          bundleId: url.searchParams.get("bundleId"),
-          scope: url.searchParams.get("scope"),
-          scopeId: url.searchParams.get("scopeId"),
-          author: url.searchParams.get("author"),
-          identity: url.searchParams.get("identity"),
-          /* REC-134 */
-          viewer: url.searchParams.get("viewer")
-          /* REC-149 */
-        }),
+        biasadopt: async () => {
+          const r = this.biasAdopt({
+            bundleId: url.searchParams.get("bundleId"),
+            scope: url.searchParams.get("scope"),
+            scopeId: url.searchParams.get("scopeId"),
+            author: url.searchParams.get("author"),
+            identity: url.searchParams.get("identity"),
+            /* REC-134 */
+            viewer: url.searchParams.get("viewer")
+            /* REC-149 */
+          });
+          if (r && r.ok && this.#biasDebtPending()) await this.#armScheduler();
+          return r;
+        },
         /* The policy arrives in the BODY. A policy document in a query string
            would be truncated by the first proxy with an opinion about URL
            length, and a truncated policy silently produces a smaller residue —
@@ -75360,7 +75833,16 @@ var index_default = {
           catalog: ACTS.map((a) => ({ ...decorate(a), appliesTo: a.types })),
           vocabularies: VOCABULARIES,
           capture_acts: CAPTURE_ACTS.map(decorate),
-          detail: "pass target=<bundle id> for the acts available on that object right now; rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is null only where the act carries a STATED absence \u2014 read rung_absence for the ground, and vocabularies.rung_absence_grounds for what that ground means; capture_acts are keyed by a capture sha rather than by a bundle, so they are published with their metadata and never derived against an object's state"
+          /* D-126: the acts that take a SET under the `per-item` weight (affordances.mjs PER_ITEM_ACTS),
+             decorated from the same tables as every act, with the bound the store enforces. */
+          set_acts: PER_ITEM_ACTS.map((a) => ({
+            ...decorate(a),
+            set_key: a.set_key,
+            item_keys: a.item_keys,
+            shared_keys: a.shared_keys,
+            max_items: PER_ITEM_MAX
+          })),
+          detail: "pass target=<bundle id> for the acts available on that object right now; rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is null only where the act carries a STATED absence \u2014 read rung_absence for the ground, and vocabularies.rung_absence_grounds for what that ground means; capture_acts are keyed by a capture sha rather than by a bundle, so they are published with their metadata and never derived against an object's state; set_acts take a selection as `items` under the per-item weight: each item is applied or RETAINED with its own act's reason, and none stops the others"
         }, store: storeName, tokenClass: cls }, 200);
       }
       const st = env.STORE.get(env.STORE.idFromName(storeName));
