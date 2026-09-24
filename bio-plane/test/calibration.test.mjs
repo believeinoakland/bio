@@ -369,11 +369,19 @@ console.log("\n--- CLAUSE (b): A TRANSCRIPTION NAMES THE MEASUREMENT ITS GRADE R
    with `.md` merely dropped, the estate went 45 -> 42 units and this suite stayed selected, reason `names
    "MEASUREMENTS"`. So the undated labels name the ledger in prose instead. The DATED ones below need no such
    help: a space follows the stem, so the token probe cannot close.
-   This suite is STILL selected for a MEASUREMENTS-only change, and that is a DELIBERATE CLOSURE, not a residue:
-   it really does open `docs/development/SCHEDULER.md` below and assert on its text, so it sits in DOCS' own
-   doc-facing set, and gates.mjs §2's "net" bound hands every doc-facing unit any `docs/` change — prose is
-   never checked more narrowly than DOCS checks it. It was in that set before this item too, verified in a clone
-   of the unchanged tree. What LEFT here is the false claim that this suite READS the measurements ledger. */
+   This suite is STILL selected for a MEASUREMENTS-only change. What LEFT here is the false claim that this
+   suite READS the measurements ledger; what did NOT leave is the selection, and the REASON written here for
+   that was wrong — CORRECTED 2026-09-24 by M0-176, never exempted. It read: a DELIBERATE CLOSURE, because the
+   suite opens `docs/development/SCHEDULER.md` below, so it sits in DOCS' own doc-facing set, and `gates.mjs`
+   §2's bound handed every doc-facing unit any `docs/` change. The first half is true and the second is the
+   defect M0-176 removed: a doc-facing unit now takes only the prose it names (§2f), and this suite's six docs
+   paths are its own. `MEASUREMENTS.md` is STILL one of them, for a cause one level down and outside this file:
+   `bio-plane/checks/bio-checks.mjs` and `bio-plane/src/index.mjs` cite the ledger BY NAME inside member-facing
+   strings, and `gates.mjs` §2e reads a DIRECTLY-IMPORTED runtime module's text for path mentions — so every
+   suite importing the check catalogue or the plane's index is a MEASUREMENTS reader. That is D-535, measured in
+   `docs/development/measurements/M-146.md`: rewrite those four citations as prose and this suite leaves the
+   MEASUREMENTS-only selection. So the labels below are still right to say it in prose, and the closure named
+   above is now a DEFERRAL with a row, not a closure. */
 const boundChain = [
   { step: "pixels", cap: "C", measured_by: "the MEASUREMENTS ledger", calibration: first.calibration_id },
   { step: "ocr", engine: "pdfjs", version: "4.2.67", cap: "C",
