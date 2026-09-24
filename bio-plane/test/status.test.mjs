@@ -92,6 +92,14 @@
  *     probe's new count gave that prefix a second match — `armPatch` writes nothing at two hits, and the
  *     driver's own "matched exactly once" assertion is what would have said so. Spelled whole, it names
  *     the `hit` branch alone. The figures above are the run AFTER both corrections.
+ * AND D-544's BY-HAND CORPUS ARMS (2026-09-24, base 9f8b69e6; they arm the corpus and gate.mjs, not the tool):
+ *   A) the CATALOG_VERSION probe still in 13.statement-ack, gate.mjs's constant bumped 1.28.0 -> 1.29.0 -> 88/1,
+ *      FAILED at "ZERO drift: every claim's probes agree with the code on this tree" (status --check: 1 drift).
+ *   B) the probe dropped, the same bump -> status --check 0 drift, this suite green: a bump no longer moves it.
+ *   C) the probe restored, NO bump -> 91/1, FAILED at "NO `hit` PINS A RELEASE-VERSION LITERAL" while ZERO drift
+ *      PASSED — the class guard bites before a bump does. Declared and held: the fixture arm's 'C-82.6' must PASS.
+ *   gate.mjs restored by cp, sha256 492fe85e… and cmp, 15779 bytes; construct-status.json restored by cp, sha256
+ *   353cbda5… and cmp, 407395 bytes.
  * AND A SECOND BY-HAND ARM ON THE PUSH GUARD (2026-09-18): `corpusCheck` made to accept any completion
  *   line regardless of its fail count -> section 8's "A STALE STATUS DATE REFUSES THE PUSH" FAILS (51/1);
  *   `tools/pushguard.mjs` restored by `cp`, verified byte-identical (sha256 7d978c73…).
@@ -318,6 +326,26 @@ section("6 — THE ESTATE ITSELF: the real source of truth agrees with the real 
     [j.claims.length > 50, new Set(j.claims.map((c) => c.n)).size], [true, 15]);
   const drift = j.claims.filter((c) => c.problems.length).map((c) => `${c.id}: ${c.problems[0]}`);
   t("ZERO drift: every claim's probes agree with the code on this tree", drift, []);
+  /* D-544: a `hit` quoting a release-version literal pins a STAMP that moves on every bump, not the thing its claim
+     asserts. 13.statement-ack carried `export const CATALOG_VERSION = "1.28.0"`, so each catalogue bump drifted a
+     claim that says nothing about the version and turned four gate checks red (D-463's worker). The class is any
+     quoted N.N.N in a hit's source, escaped or not; a C-number such as 'C-82.6' is two-part and must pass. */
+  const pinsVersion = (src) => /(["'`])v?\d+\\?\.\d+\\?\.\d+(?:[-+][\w.]+)?\1/.test(src);
+  t("the version-literal matcher bites and does not over-reach (fixtures)",
+    [pinsVersion('export const CATALOG_VERSION = "1.28.0"'), pinsVersion("X = '2\\.0\\.1'"),
+     pinsVersion("check: 'C-82.6'"), pinsVersion("storeVersion: typeof this\\.env\\?\\.VERSION")],
+    [true, true, false, false]);
+  const cs = JSON.parse(readFileSync(join(ROOT, "docs/architecture/construct-status.json"), "utf8"));
+  const hits = [];
+  const walk = (o) => { if (Array.isArray(o)) o.forEach(walk);
+    else if (o && typeof o === "object") {
+      if (o.id && Array.isArray(o.probes)) for (const p of o.probes)
+        for (const h of [p.hit ?? []].flat()) hits.push([o.id, h]);
+      Object.values(o).forEach(walk); } };
+  walk(cs);
+  t("the probe walk reached the corpus (a walk finding no `hit` would pass the next assertion)", hits.length > 300, true);
+  t("NO `hit` PINS A RELEASE-VERSION LITERAL — it would drift its claim on every bump (D-544)",
+    hits.filter(([, h]) => pinsVersion(h)).map(([id, h]) => `${id}: ${h}`), []);
   const r = renderMap();
   t("§3's state column is exactly its rendering (run `node tools/status.mjs --write`)", r.text === r.current, true);
   t("every construct has a row in §3", r.missing, []);
