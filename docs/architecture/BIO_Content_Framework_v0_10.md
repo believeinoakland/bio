@@ -22,7 +22,7 @@
 - §13 — **"An assistant-surfaced focus must carry the bias manifest in force" (D-85) is carried by the RUN and reached through it** (BOB #25, 2026-09-21, SCHEDULER #10's Q2). `INVESTIGATIVE-SESSION.md` §3 ruled that the run carries the manifest and §11 records it (`ai_runs.bias_manifest`, read back with whether the lens has since moved, PL-12); no production carries its own copy (D-21). What was owed is the LINK and its soundness, ruled in §11 item 5: a production names a running run its caller holds; an assistant's new question names one and the plane records it; the run records the lens in force at its open beside the one it was handed.
 - §13.1 — **evidence accruing to a bias statement (D-87) and a statement's MEASURABLE FORM (D-88) are a STATED DEFERRAL with §12's evaluator** (BOB #25, 2026-09-21). D-88 is the same construct as a satisfaction condition and is built once, with it, under the intent layer's trigger above; D-87's mechanical half is that measure taken over time. The `measure-decay` finding is catalogued (`queuestate.mjs`) with no producer until then. What needs no build is §13.1's own path from decay to a block: a member reads a statement's grounds and amends it, an authored act that generates ordinary bias debt.
 - §12.1 — CONTACT between aspirations is NAMED (the same entities, the same progressions, the same queue ordered differently) and NOT SPECIFIED, DEFERRED rather than forgotten (D-80; re-disposed by BOB #19, stated here by BOB #22, 2026-09-21). An aspiration is not an object in the plane (`node tools/status.mjs 8.goals` reads ABSENT), so specifying how two of them come into contact would design a dependent ahead of its substrate; the specification is a required clause of the design act that makes an aspiration an object. Bob's ruling stands and is not reopened: no arbiter, and a contradiction is found, never prevented.
-- §8.2 — the declared flow's REVISIONS are BUILT (D-128, 2026-09-23: append-only versions with basis, and the version named on every instance and finding); NOT BUILT: a member surface for a revision's basis, a disposition naming the version it was decided against, and the deferred third shape (a stage out of order) with institution scoping, which wait on §8.2's stated trigger.
+- §8.2 — the declared flow's REVISIONS are BUILT (D-128, 2026-09-23: append-only versions with basis, and the version named on every instance and finding); the member surface for a revision's basis BUILT by UI-83 (2026-09-24: the progression form offers the statement and citation on a held key and sends both; the refusal a member meets without them carries no canned translation, a DEC-49 row owed on the plane); NOT BUILT: a disposition naming the version it was decided against, and the deferred third shape (a stage out of order) with institution scoping, which wait on §8.2's stated trigger.
 - §8.1 — grade D's label CORRECTED 2026-09-23 by BOB #30 (D-219); the stored method string and `schema.mjs`'s two comments still read the old wording (NOT BUILT, a row).
 
 **Contents**
@@ -908,9 +908,13 @@ the current version writes nothing. The first version may state a basis and is n
 `stated: false`. `op=progression&version=N` reads any version back with its author, date and basis, and every read lists
 the versions held. An instance, each `missing_predecessor` and `overdue_successor` finding, each discharge, `op=proposals`
 and `op=captureprogressions` carry `definition_version`. A definition declared before D-128 reads as version 1 with its
-basis NOT RECORDED, and its first revision writes it into the history verbatim before writing version 2. NOT BUILT: a
-member surface for the basis (the UI's progression form has no basis field, so a revision is refused there), and a
-proposal disposition does not record the version it was decided against.
+basis NOT RECORDED, and its first revision writes it into the history verbatim before writing version 2. **The member surface
+(UI-83, 2026-09-24):** the progression form offers the basis statement and its citation when the key names a
+progression the record already holds (read by `op=progression`, never guessed), sends both, and its receipt names the
+version written and the one standing beside it; a refusal reads through `refusalWords(r)`, and the no-basis and
+no-citation refusals carry NO canned translation yet (no DEC-49 row; the citation code is minted at three sites), so
+a member reads the store's own detail. NOT BUILT: a proposal disposition does not record the version it was decided
+against.
 
 ## 8.3 Identifier spaces, and where grade collapses
 
