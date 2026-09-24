@@ -19,6 +19,7 @@
  *   §6 BOB #28's ruling 2 negative control: a write that plants a closed row in the cache is REFUSED by name, and
  *      neither branch moves;
  *   §7 refusals, the archive run inside a write, the read command, the churn figure, the push guard's coord-only arm.
+ *   §11 (M0-173) the `BIO_COORD_REF` override — a gate's coord pin — governs reads of THIS repository only.
  *   §10 (M0-119) a placement over the backlog's budget, through a real write, moves WHOLE rows from BACKLOG.md's foot to
  *      the head of BACKLOG-LATER.md: every id in exactly one file, in order, none cut; room freed brings them back; the
  *      `swap` and `rebalance` intents. Its control is `ledger.control.mjs` arm T5 (the write's rebalance skipped).
@@ -46,6 +47,12 @@
  * AND M0-109's floors, moved here (§8) and RETIRED by M0-140 below — this is the RECORD of what
  * `bio-plane/test/debt-floor.control.mjs` measured before it was deleted, not a command to run. RUN 2026-09-22 on the
  * SUPERSEDED shas above (coord.mjs b533bac0… / ledger.mjs 1e4f5f4a…), not on this run's — M0-164 re-ran coord.control only,
+ * checks skipped -> FAILS at "§6 the planted closed row is REFUSED"; (T, M0-173; S at its branch) `coordRef` unscoped — the override
+ * honoured for EVERY repository again -> FAILS at §11's two assertions, because the lane clone then resolves a sha it
+ * does not hold. RESULT: recorded on the line below at the run.
+ * ARM T (S on its branch) RUN 2026-09-24 by the M0-173 worker on `tools/coord.mjs` sha256 2b7496b6…, driver exit 0, 13 pass / 0 fail,
+ * the restore sha256- and cmp-identical at 62,139 B: baseline 98/0; T (the `BIO_COORD_REF` override unscoped, so a
+ * lane clone resolves a sha it does not hold) 96/2 — exactly §11's two assertions and no third; closing 98/0.
  * exit 0, 33 pass / 0 fail, 4 of 4 arms as declared: TL 79/1 and AL 79/1 (each liar fails ONLY its own empty-ledger
  * assertion); TC 59/20 and AC 58/21 (the size floors fail the one-row assertion — and AC the hundred-row one — and every
  * small fixture write with them, the collateral the driver's head declares: a size floor fails small honest ledgers).
@@ -461,6 +468,33 @@ section("§10 M0-119 — A PLACEMENT OVER BUDGET MOVES THE TAIL, NEVER CUTS A RO
   t("the `rebalance` intent on a balanced pair changes nothing — the emptied tail keeps its header (the file stays)",
     await (async () => { const r = await tryWrite({ repo: A, message: "rebalance again", intents: [{ op: "rebalance" }] }); C.resetCoordCache(); git(A, "fetch", "-q", "origin");
       return [r.status, C.readState(A, LATER) === L.LATER_HEADER]; })(), ["unchanged", true]);
+}
+
+/* ============================================================================================ */
+section("§11 M0-173 — THE OVERRIDE IS THIS REPOSITORY'S: another repository's read resolves ITS OWN origin/coord");
+{
+  /* A gate pins `BIO_COORD_REF` for its whole run (`tools/gates.mjs` §0b) and EVERY child inherits it, this suite
+     among them. The override names a commit in the repository the module lives in; a lane clone here is another
+     repository, where that sha is not an object at all. MEASURED 2026-09-24, before the scoping landed: with
+     `BIO_COORD_REF` set to `origin/coord`'s tip this suite THREW at §2 ("docs/development/CLAIMS.md could not be read
+     (working tree or coord) — an unreadable register is not an empty one"), where it reads 95 / 0 with it unset. */
+  const QUEUE = "docs/development/QUEUE.md";
+  const PLANT = `${"0".repeat(39)}1`;                    /* a well-formed sha no repository holds */
+  const before = process.env.BIO_COORD_REF;
+  C.resetCoordCache();
+  const plain = C.readState(A, QUEUE);
+  process.env.BIO_COORD_REF = PLANT;
+  C.resetCoordCache();
+  const overridden = C.readState(A, QUEUE);
+  const refs = [C.coordRef(A), C.coordRef()];
+  if (before === undefined) delete process.env.BIO_COORD_REF; else process.env.BIO_COORD_REF = before;
+  C.resetCoordCache();
+  t("§11 a lane clone's read is UNCHANGED by an override naming a commit that clone does not hold",
+    [overridden === plain, typeof plain === "string" && plain.length > 40], [true, true]);
+  t("§11 ...because the ref resolved for ANOTHER repository is that repository's own origin/coord, while THIS repository honours the override",
+    refs, ["origin/coord", PLANT]);
+  t("§11 and the plant was put back (an arm that leaks its own plant refutes nothing)",
+    process.env.BIO_COORD_REF ?? null, before ?? null);
 }
 
 console.log(`\ncoord: ${pass} pass, ${fail} fail`);

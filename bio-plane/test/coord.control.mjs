@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* coord.control.mjs — M0-110's NEGATIVE-CONTROL DRIVER: three arms plus a baseline, against `coord.test.mjs`.
+/* coord.control.mjs — M0-110's NEGATIVE-CONTROL DRIVER: four arms plus a baseline, against `coord.test.mjs` (S added by M0-173).
  *
  *     node bio-plane/test/coord.control.mjs          # from the repo root: the baseline, then every arm
  *     node bio-plane/test/coord.control.mjs R        # the baseline, then the named arm(s)
@@ -19,6 +19,10 @@
  *      CONDUCT #20 flipped on 2026-09-24 lost the headlines naming their defects.
  *        MUST FAIL: "M0-164 the flip leaves the row's HEADLINE byte-identical — only the state word moves" and
  *        "M0-164 ...and the note is on a `status:` line of the row's own, directly under the heading".
+ *   T  THE OVERRIDE UNSCOPED (M0-173) — `coordRef` honours `BIO_COORD_REF` for EVERY repository again, as it did
+ *      before the gate pinned it for a whole run. A lane clone then resolves a sha that is not an object there.
+ *        MUST FAIL: "§11 a lane clone's read is UNCHANGED by an override naming a commit that clone does not hold"
+ *        and "§11 ...because the ref resolved for ANOTHER repository is that repository's own origin/coord…".
  * What MUST NOT fail: the baseline and the closing run, and every restore. Arms W and C may redden OTHER assertions
  * too (the in-block arm has two halves; with the checks off, every refusal-by-check in §6–§7 goes) — each arm
  * declares the names that MUST be among its failures, and prints every failure it saw, so collateral is visible.
@@ -45,7 +49,7 @@ const LEDGER = path.join(REPO, "tools", "ledger.mjs");
 const PEN = path.join(REPO, ".m0110-harness");
 const PEN_IGNORE = path.join(PEN, ".gitignore");
 const ONLY = process.argv.slice(2);
-const DECLARED_ARMS = 4;
+const DECLARED_ARMS = 5;   /* M0-164's S and M0-173's arm, renamed T at the c20-batch25 union (both branches named theirs S) */
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const EMPTY_SHA = sha(Buffer.alloc(0));
@@ -109,6 +113,7 @@ const anchorChecks = "      if (checks) {\n        checked = await ledgerChecks(
    defect — the note written over the heading's tail, and no `status:` line at all. */
 const anchorHead = "  return [...lines.slice(0, start), `${head[1]}${state}${head[3]}`, ...body, ...lines.slice(end)].join(\"\\n\");";
 const armHead = "  return [...lines.slice(0, start), `${head[1]}${state}${note === null ? head[3] : ` \u2014 ${note}`}`, ...lines.slice(start + 1, end), ...lines.slice(end)].join(\"\\n\");";
+const anchorScope = "export const coordRef = (repo = ROOT) => (thisRepo(repo) ? process.env.BIO_COORD_REF || DEFAULT_REF : DEFAULT_REF);";
 const ARMS = [
   { id: "R", title: "ONE READER pointed back at main's old path (`ledger.mjs` readRel reads the working tree again)",
     must: ["§2 findId answers the same row from coord"],
@@ -123,6 +128,10 @@ const ARMS = [
     must: ["M0-164 the flip leaves the row's HEADLINE byte-identical — only the state word moves",
            "M0-164 ...and the note is on a `status:` line of the row's own, directly under the heading"],
     patches: [[COORD, anchorHead, armHead]] },
+  { id: "T", title: "the BIO_COORD_REF override UNSCOPED — honoured for every repository again (M0-173)",
+    must: ["§11 a lane clone's read is UNCHANGED by an override naming a commit that clone does not hold",
+           "§11 ...because the ref resolved for ANOTHER repository is that repository's own origin/coord, while THIS repository honours the override"],
+    patches: [[COORD, anchorScope, "export const coordRef = (repo = ROOT) => process.env.BIO_COORD_REF || DEFAULT_REF;"]] },
 ];
 if (ARMS.length !== DECLARED_ARMS) { console.log(`** ${ARMS.length} arms against ${DECLARED_ARMS} declared — the head is wrong`); process.exit(1); }
 const selected = ARMS.filter((a) => !ONLY.length || ONLY.includes(a.id));

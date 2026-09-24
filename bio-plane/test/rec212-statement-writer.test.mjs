@@ -497,11 +497,22 @@ let SPLIT_CASE = null;
     [fm.completeness?.statement_by === null,
      /\*\*Who wrote this statement\.\*\* UNDETERMINED/.test(bodyOf(d?.text))],
     [true, true]);
-  t("THE PARTICIPANT ACKNOWLEDGEMENT ALREADY RECORDED IS WITHHELD AND COUNTED, never listed and never "
-  + "silently dropped: the record cannot say ella is not the writer, so it does not claim she is a reader",
+  /* CORRECTED 2026-09-24 BY REC-194 AT THE UNION, never exempted, and the PROPERTY IS UNCHANGED: ella's
+     row is still COUNTED and still never listed. What moved is WHICH count holds it, and the new one is a
+     STRONGER reason. ella acknowledged a DRAFT of a case whose id did not exist yet, so after §3 rule 13's
+     one-case-identity narrowing her reading is not this case's to withhold in the first place: it is
+     UNBINDABLE. That dominates the writer question — the row could not be listed here even if the writer
+     were known — so the document counts it as unbindable and the writer withholding never runs. Asserting
+     the old key would now assert 0 dressed as 1. THE WITHHOLDING ITSELF IS NOT LEFT UNDRIVEN: it needs a
+     row BOUND to the case, which after the narrowing means a draft naming an EXISTING case, and block 5b
+     drives exactly that. */
+  t("THE PARTICIPANT ACKNOWLEDGEMENT ALREADY RECORDED IS COUNTED AND NEVER LISTED — and after REC-194 it is "
+  + "counted as UNBINDABLE rather than as withheld: ella read a DRAFT of a case that had no id yet, so it "
+  + "is not this case's reading to withhold, which is the stronger of the two reasons",
     [fm.completeness?.acknowledged, fm.completeness_acknowledgements,
-     p.completeness?.acknowledgements_withheld_writer_undetermined],
-    [0, [], 1]);
+     p.completeness?.acknowledgements_unbindable_to_this_case,
+     p.completeness?.acknowledgements_withheld_writer_undetermined ?? null],
+    [0, [], 1, null]);
   t("so the bytes op=publish authored pass their own gate — it can never author a document C-41.10 refuses",
     [gate(fm, d.text).ok, checksOf(fm, d.text)], [true, []]);
   t("ella is refused at the door BY NAME, with the UNDETERMINED code and not the author code — the plane "
@@ -517,6 +528,61 @@ let SPLIT_CASE = null;
   + "publication (rule 11) — the case crosses, and says what it does not know",
     [r?.ok, r?.statement?.by, /^UNDETERMINED: this case document states/.test(r?.statement?.stated || "")],
     [true, null, true]);
+}
+
+/* ========================================================================= 5b */
+console.log("\n--- 5b. REC-194 at the union: the writer withholding, driven through a BOUND acknowledgement ---");
+/* ADDED 2026-09-24 BY REC-194 AT THE UNION, because the narrowing took block 5's row out of the writer
+   withholding's reach and a mechanism nobody drives is the defect this project meets most often. After the
+   narrowing, `withheldWriterUndetermined` needs a row BOUND to the case identity, which means a draft that
+   NAMES AN EXISTING CASE — it stands at that case's next edition, so a reading of it is that edition's.
+   SPLIT_CASE is ratified at edition 1 above, so this drives edition 2: two drafts naming it hold one
+   sentence under two authors (the writer is genuinely unestablishable), ella acknowledges PAT's draft (whose
+   own `statement_by` is pat, so the door admits her), and iris publishes. Her row is BOUND, so REC-194 does
+   not touch it; the writer is UNDETERMINED, so REC-212 withholds it and COUNTS it. The last arm is the
+   DELTA that tells the two counts apart: unbindable here is ABSENT where block 5 had it, and withheld is
+   PRESENT where block 5 does not. */
+{
+  const SPLIT2 = "INQ-2026-2120-split2";
+  const r0 = await promote(SPLIT2, withAdoptableReading(inquiryMd(SPLIT2, "Was the second notice given?", INFO)),
+                           "inquiry", "open");
+  if (r0.ok === false) bail(`promote ${SPLIT2}`, r0);
+  const c0 = rP(await GET(`op=conclude&token=${IRIS}&target=${encodeURIComponent(SPLIT2)}`
+    + `&conclusion=${encodeURIComponent(`The answer to ${SPLIT2} is on the memo.`)}`
+    + `&falsifier=${encodeURIComponent(`An adopted resolution would overturn ${SPLIT2}.`)}`
+    + adoptedVersionParam()));
+  if (!c0.ok) bail(`conclude ${SPLIT2}`, c0);
+  const S2 = args("split2", { caseId: SPLIT_CASE });
+  const dE2 = rP(await POST(`op=casedraft&token=${ELLA}`, withRoles({ ...S2, targets: [SPLIT2] })));
+  const dP2 = rP(await POST(`op=casedraft&token=${PAT}`, withRoles({ ...S2, targets: [SPLIT2] })));
+  if (!dE2?.ok || !dP2?.ok || dE2.draftId === dP2.draftId) bail("casedraft split2", { dE2, dP2 });
+  const cpE = rP(await GET(`op=reviewcopy&draft=${dE2.draftId}&token=${IRIS}`));
+  const cpP = rP(await GET(`op=reviewcopy&draft=${dP2.draftId}&token=${IRIS}`));
+  t("FIXTURE ARMS THE TRAP: both drafts NAME the ratified case, so both stand at its NEXT edition (2) and a "
+  + "reading of either is BOUND — and they hold one sentence under two authors, so the writer is undetermined",
+    [cpE?.case?.case_id ?? cpE?.caseId ?? null, cpE?.case?.edition ?? cpE?.edition ?? null,
+     cpP?.case?.edition ?? cpP?.edition ?? null, cpE?.statement_by, cpP?.statement_by],
+    [SPLIT_CASE, 2, 2, "ella", "pat"]);
+  const a2 = await ack(`draft=${dP2.draftId}&token=${ELLA}`);
+  t("ella acknowledges PAT's draft — that draft's own writer is pat, so the door admits her — and the row is "
+  + "BOUND to the case and the edition, not to no case at all",
+    [a2?.ok, a2?.bound_to_a_case, a2?.acknowledgement?.case_id, a2?.acknowledgement?.edition],
+    [true, true, SPLIT_CASE, 2]);
+  const p2 = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...S2, targets: [SPLIT2] })));
+  if (!p2?.ok) bail("publish split2", p2);
+  const d2 = await docOf(SPLIT_CASE, 2, IRIS);
+  const fm2 = fmOf(d2?.text);
+  t("THE WITHHOLDING RUNS AND IS COUNTED: edition 2 states its writer UNDETERMINED, lists NOBODY, and says in "
+  + "its own answer that ONE participant row was withheld because the record cannot rule out that she wrote it",
+    [p2?.caseDocument?.edition, fm2.completeness?.statement_by, fm2.completeness?.acknowledged,
+     fm2.completeness_acknowledgements,
+     p2.completeness?.acknowledgements_withheld_writer_undetermined],
+    [2, null, 0, [], 1]);
+  t("DELTA between the two reasons, which is why both counts exist: block 5's row was UNBINDABLE and not "
+  + "withheld; this one is WITHHELD and not unbindable — neither count stands in for the other",
+    [p2.completeness?.acknowledgements_unbindable_to_this_case ?? null,
+     p2.completeness?.acknowledgements_withheld_writer_undetermined ?? null],
+    [null, 1]);
 }
 
 /* =========================================================================== 6 */

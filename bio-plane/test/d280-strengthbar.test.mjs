@@ -5,6 +5,29 @@
    **WHERE THE PREDICATE'S WIDTH IS NOW PINNED:** `severedhomes.test.mjs` §4 (D-267's own suite) drives all four severance spellings through the homes walk. This suite's §3 no longer can, and says so in its own block rather than here.
    **CASE-2'S OWN CONTROLS FOR WHAT REPLACED THIS ARE IN `caseproduction.control.mjs`**, including the arm that would catch the composition being restored.
    ======================================================================================================= */
+/* NEGATIVE CONTROL (D-519, THE INSTANCE_NAME RENAME ARM — run 2026-09-24 on branch land/worker/D-519 over
+   origin/main 1a7f0bcc0, armed ALONE, restored and verified by sha256 AND by content (`cmp`) against a
+   uniquely-named per-arm pristine copy held OUTSIDE the worktree (BOB #32), byte counts printed).
+   THE ARM: rename THIS FILE'S `INSTANCE_NAME` binding — ONE line, nothing else — so the store's producing group
+   stops spelling the slug the bar read names. DECLARED: the act's landing-site arm (`set.group`) and the group
+   read MUST fail BY NAME, and the suite MUST REACH ITS FOOT; every other assertion MUST pass.
+   MEASURED BEFORE THE FIX, on a pristine origin/main worktree rather than reasoned about: the read `grp.bar.capture` threw a TypeError that the suite's own wrapper caught as `the suite threw`, ending the module at 9 pass / 1 fail against a 35-assertion baseline — 26 assertions never ran.
+   MEASURED AFTER: 33 pass / 2 fail of 35 — two named failures, no throw, and the tally line present.
+   THAT DELTA IS THE WHOLE OF WHAT THIS ROW BOUGHT. The assertion did not merely agree for free; when write and
+   read disagreed it took the module down, so the defect's own failure mode HID the assertions behind it.
+   OVER-STRICTNESS ARM (run on d280-strengthbar.test.mjs, the representative suite): have the act name the group
+   EXPLICITLY in its payload — a correct spelling this fix did not anticipate — and the suite reads 35 pass /
+   0 fail, exit 0. Naming the group refuses no correct work. A FIRST ATTEMPT AT THIS ARM DID NOT ARM (a perl
+   substitution matched zero times) and its 35/0 was the UNMODIFIED suite; that reading is void and the figure
+   above is from the re-armed run, checked by grepping the armed text before running. An arm that did not arm is
+   a finding, not a pass.
+   THE TWO CONTROL HARNESSES THIS ROW NAMES WERE RE-RUN AND ATTRIBUTED BY RE-RUNNING THE TRUE BASELINE, never by
+   subtraction: `caseproduction.control.mjs` 8 arms / 0 NOT AS DECLARED, exit 0, every per-arm figure identical on
+   this tree and on pristine origin/main; `d280-strengthbar.control.mjs` 3 arms / 1 NOT as declared (arm (C2)),
+   with a line-for-line IDENTICAL verdict on pristine origin/main — so (C2)'s miss is PRE-EXISTING and is the
+   stale control this file's header already records, NOT this change.
+   WHAT THIS BLOCK DOES NOT CLAIM: the write is still left on D-436's default on purpose, so this suite does not
+   test a caller-named group; the over-strictness arm above is the only place that spelling is driven. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/d280-strengthbar.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (`severedhomes.control.mjs`'s precedent, PL-13's `current.control.mjs` before it). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad (PL-10). Every arm is armed ALONE with every other defence held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`) against a per-arm pristine copy named with the ARM ID as well as the path, and every arm DECLARES before it runs what MUST fail and what MUST NOT.
    (A) THE DRIVEN SITE'S CONFIRMATION, REVERTED. In src/store.mjs #requiredStrengthFor delete the `if (kinds.every((k) => this.#refEdgeSevered(citerId, bundleId, k || null))) continue;` line -> D-280's defect exactly: a project whose ONLY citing relation is `status: severed` sets the publication bar on the document it left. MUST FAIL: §2's headline bar arm and §2's strictest-per-axis arm (the withdrawn project's STRICTER bar binds again and its id is named in `projects`). MUST NOT FAIL: every over-strictness arm in §3, §5's routing arms, §6's restson arms — which is what makes this arm measure the bar read and not the predicate.
    (B) THE ROUTING SITE'S CONFIRMATION, REVERTED. In src/store.mjs #routeTask replace the `find` over `citeEdges` with `[...citeEdges][0]` -> the obligation is addressed to the owner of a project that WITHDREW. MUST FAIL: §5's routing arm. MUST NOT FAIL: §2, §3, §6 — armed apart from (A) on purpose, because one confirmation covering for another is exactly how a half-fix reads as a whole one.
@@ -124,6 +147,18 @@ const mf = withSurfacingRun(new Miniflare({
   bindings: { INSTANCE_NAME: "believe-in-oakland", ADMIN_TOKEN: "adm-d280", MEMBER_TOKEN: "mem-d280", PROBE_TOKEN: "prb-d280",
               VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
 }));
+
+/* D-519: THE GROUP THE BAR ARMS ADDRESS, AS ITS OWN LITERAL — AND IT IS DELIBERATELY *NOT* DERIVED FROM THE
+   INSTANCE_NAME BINDING ABOVE. §(d)'s `op=strengthbar` act names no group, so D-436 sends the write to the store's
+   PRODUCING group (`#producingGroup()`, recorded from INSTANCE_NAME at first boot) while the read named the literal
+   'believe-in-oakland'. The two agreed ONLY because the binding happens to spell the same slug, which is an equality
+   that costs nothing to produce (`VERIFICATION.md`) — D-509 found the identical shape in machine-fences.test.mjs,
+   where the binding spells `biosmoke-rec73` and the assertion was passing over a group the act never touched.
+   THE WRITE IS LEFT ON THE DEFAULT ON PURPOSE, because D-436's default-resolution IS part of what §(d) measures;
+   what changes is that the act's landing site is now ASSERTED (`set.group`) against the same constant the read
+   names, so the agreement is pinned instead of coincidental. Tying this constant to the binding would re-make the
+   coincidence in one place and disarm the control, so they stay two literals that an assertion compares. */
+const BAR_GROUP = "believe-in-oakland";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -465,13 +500,19 @@ console.log("\n--- 2. DEC-72: the bar is a PROJECT's property, so the question t
      DEFAULT". The default is declared through the act, exactly as before, and
      then a project that declares nothing is measured against it. */
   const set = await POST(`op=strengthbar&token=${NADIA}`, { capture: "C", connection: "C" });
+  /* D-519: `set.group` IS THE ARM THAT SAYS WHERE THE WRITE LANDED, and without it the read below
+     agreed with this act for free. */
   t("the GROUP declares its default through op=strengthbar, carrying its author — UNCHANGED, and "
-  + "DEC-17's group-default half STANDS",
-    [set.ok, set.capture, set.connection, set.author], [true, "C", "C", "nadia"]);
-  const grp = await GET(`op=strengthbarof&token=${MACHINE}&group=believe-in-oakland`);
+  + "DEC-17's group-default half STANDS, AND THE ACT NAMES THE GROUP IT WROTE TO",
+    [set.ok, set.capture, set.connection, set.author, set.group], [true, "C", "C", "nadia", BAR_GROUP]);
+  const grp = await GET(`op=strengthbarof&token=${MACHINE}&group=${BAR_GROUP}`);
+  /* D-519: read through `g()` — the file's own PL-1 discipline, which this arm did not follow. With a
+     bare `grp.bar.capture` a group the act never wrote to threw a TypeError here rather than failing by
+     name, and MEASURED on this tree the throw ended the module and took the 26 assertions behind it with
+     it, printing `9 pass, 1 fail` for a suite whose baseline is 35. */
   t("and the group arm still answers it, now SAYING what it is for: the default SEEDS a new project "
   + "and is not a publication bar",
-    [grp.ok, grp.bar.capture, grp.seeds_new_projects], [true, "C", true]);
+    [grp.ok, g(grp, "bar.capture"), grp.seeds_new_projects], [true, "C", true]);
   /* THE FIXTURE'S OWN VACUITY GUARD, INVERTED INTO THE ARM THAT MATTERS. D-280
      used `capture: A` against a group default of `C` so a wrongly-withdrawn
      citer would fall through and be caught. The same asymmetry now proves the

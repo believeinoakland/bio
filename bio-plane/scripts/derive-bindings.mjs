@@ -28,13 +28,13 @@
  * defect that left biosmoke7 with zero service bindings for a month.
  */
 
-const CARRIED = new Set(["vars", "r2_buckets", "services", "durable_objects"]);
+const CARRIED = new Set(["vars", "r2_buckets", "services", "durable_objects", "browser"]);
 /* Binding-declaring wrangler keys this derivation would MISCARRY if present.
    Listed explicitly so a new class in the config fails the deploy loudly in
    the same turn it appears, instead of deploying a plane quietly missing it. */
 const KNOWN_BINDING_KEYS = [
   "kv_namespaces", "d1_databases", "queues", "analytics_engine_datasets",
-  "ai", "browser", "vectorize", "hyperdrive", "dispatch_namespaces",
+  "ai", "vectorize", "hyperdrive", "dispatch_namespaces",
   "mtls_certificates", "send_email", "wasm_modules", "data_blobs", "text_blobs",
 ];
 
@@ -80,6 +80,14 @@ export function deriveBindings(cfg, { slug, version, instanceClaudeToken, instan
   for (const s of cfg.services || []) {
     bindings.push({ type: "service", name: s.binding,
                     service: s.service === "bio-plane" ? slug : s.service });
+  }
+  /* DIST-11 (IC-252's owed act): the Browser Rendering binding D-64's render arm looks for (`render.mjs` `rendererFor`).
+     A config that declares `browser` must NAME its binding; one that does not declare it derives none, and the plane
+     answers `renderer: "none"` exactly as before. */
+  if (cfg.browser !== undefined) {
+    if (!cfg.browser || typeof cfg.browser.binding !== "string" || !cfg.browser.binding)
+      throw new Error("REFUSED [BROWSER_BINDING_UNNAMED]: wrangler.jsonc declares `browser` without a `binding` name.");
+    bindings.push({ type: "browser", name: cfg.browser.binding });
   }
   if (instanceClaudeToken) {
     bindings.push({ type: "secret_text", name: "INSTANCE_CLAUDE_TOKEN", text: instanceClaudeToken });

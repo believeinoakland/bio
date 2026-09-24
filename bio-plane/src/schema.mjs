@@ -2027,8 +2027,16 @@ CREATE INDEX IF NOT EXISTS monitor_fired_epoch ON monitor_fired(consumer, epoch)
 -- across an alarm retry. A retry arrives with a NEW Date.now(), so now cannot
 -- identify the tick; the epoch has to be remembered. A row here means "a tick
 -- started and did not finish cleanly", so the next tick REUSES its epoch and is
--- that tick's retry rather than a fresh one. It is deleted when a tick completes
--- with nothing failed, which is what lets the NEXT cadence really re-check.
+-- that tick's retry rather than a fresh one. It is deleted when a tick ACCOUNTS
+-- FOR EVERY ELIGIBLE SUBJECT ITSELF -- nothing failed AND nothing was skipped --
+-- which is what lets the NEXT cadence really re-check.
+-- D-518, 2026-09-24: the second half of that condition is a CORRECTION. This line
+-- read "when a tick completes with nothing failed", and so did the code, which
+-- deleted the row on a tick that fired nothing and only SKIPPED subjects an
+-- earlier unfinished tick had claimed. That tick learned nothing, and dropping the
+-- row let the next wake mint a fresh epoch and re-fire an address that already
+-- succeeded, inflating captured_locators.observations -- corroboration nobody
+-- produced. The release is now the spent-epoch rule alone, one whole cadence on.
 CREATE TABLE IF NOT EXISTS monitor_tick_epoch (
   consumer   TEXT PRIMARY KEY,
   epoch      INTEGER NOT NULL,
@@ -2725,7 +2733,31 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   -- column existed was never woken -- nothing existed to wake it -- and the
   -- consumer's own predicate requires the run to still be running, so a request
   -- belonging to a run that has already ended is never woken retroactively.
-  run_woken_at      TEXT
+  run_woken_at      TEXT,
+  -- D-491 / IC-276 / CLIENT-RENDERED.md, BOB #32 item 3: DOES THIS REQUEST ASK
+  -- FOR THE PAGE AS A VISITOR SAW IT. 0 is the served document, captured exactly
+  -- as every request before this column was. 1 asks the drain for the rendered
+  -- pair, and BOB #32 item 3 is what makes that askable at all -- an unattended
+  -- sweep MAY render, within the allowance and through the host governor.
+  --
+  -- NOT NULL DEFAULT 0, AND THAT IS THE HONEST DEFAULT HERE WHERE IT WOULD NOT
+  -- BE ON THE TWO COLUMNS ABOVE. lead_inquiry and run_woken_at are nullable
+  -- because a legacy row had an unstated value that a default would invent. This
+  -- column has no unstated value to invent: a request written before it existed
+  -- could not ask for a render, because no door read the flag and no drain could
+  -- have honoured one, so 0 states what was true of it rather than guessing.
+  --
+  -- IT IS THE ROW AND NOT THE CALL THAT CARRIES IT, for the reason address,
+  -- purpose and ua_mode are on the row: op=acquire reads it through
+  -- captureRequestDraining, so what this instance renders is what the drain
+  -- judged. The drain still sends two fields and nothing else.
+  --
+  -- WHEN THE RENDER CANNOT HAPPEN THE ROW IS HELD, never captured: op=acquire
+  -- answers a named C-83 refusal before anything is fetched, the drain records
+  -- that code and leaves the row in requested, and the served shell is NEVER
+  -- filed as though it were the content. That sentence is the whole of C-83 and
+  -- the reason this column cannot be read as advisory.
+  render            INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
 CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);

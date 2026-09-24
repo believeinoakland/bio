@@ -267,6 +267,8 @@ function uploadForm(meta, source) {
    updates keeps monitoring on ADMIN_TOKEN, which is exactly the population that
    report exists to name. */
 const selfBinding = (slug) => ({ type: "service", name: "SELF", service: slug });
+/* DIST-11 (IC-252's owed act): the Browser Rendering binding, the same name the plane's `wrangler.jsonc` declares. */
+export const BROWSER_BINDING = Object.freeze({ type: "browser", name: "BROWSER" });
 
 /* DIST-6 — THE PLANE IS BOUND TO THE FLEET MEMBERS INSTALLED BESIDE IT (`BIO_Distribution_v0_1.md` §2, §4).
  *
@@ -361,6 +363,9 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
       ...(opts.noSelf ? [] : [selfBinding(slug)]),
+      /* DIST-11 (IC-252): the Browser Rendering binding D-64's render arm looks for. On every Workers tier, so an
+         install is never refused over it; the plane reports it as a binding whose in-plane driver is not built. */
+      BROWSER_BINDING,
       /* DIST-6: the members this account already holds (none on a fresh account — see MEMBER_BINDINGS). */
       ...memberBindings(opts.members),
     ],
@@ -411,6 +416,9 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
       /* DIST-6: the fleet members, by the same healing shape as SELF — an update of a copy installed without them
          gains them (step 3 of the order at MEMBER_BINDINGS), and one that has them keeps them (step 1). */
       ...memberBindings(opts.members),
+      /* DIST-11: restated on every update, because `browser` is not in keep_bindings below — an update that did not
+         name it would DROP it from a copy that holds it, and one installed before DIST-11 gains it here. */
+      BROWSER_BINDING,
       /* DIST-2: bound on UPDATE as well, same healing shape as SELF above — an
          instance installed before the daemon class existed has no DAEMON_TOKEN
          and keep_bindings cannot create what was never there, so without this

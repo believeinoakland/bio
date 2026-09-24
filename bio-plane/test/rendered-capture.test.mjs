@@ -33,9 +33,16 @@
  *   - The D-98 task the rendered arm enqueues when its authority is undetermined:
  *     the enqueue condition changed, and no read in this suite drives the task
  *     consumer, so that change is asserted by nothing here.
- *   - An UNATTENDED caller that asks for a render: capture_requests carries no
- *     render request, so the drain never asks. The deferral is driven here through
- *     the op, by a member; the sweep's own path to it is not built.
+ *   - CORRECTED 2026-09-24 BY D-491 / IC-276, NOT EXEMPTED. This read: *"An
+ *     UNATTENDED caller that asks for a render: capture_requests carries no render
+ *     request, so the drain never asks."* That was true when it was written and is
+ *     now false in its premise: `capture_requests.render` exists, the door reads
+ *     `render: true`, and the drain asks op=acquire for the render through the ROW
+ *     (never through its two-field body). The sweep's path to the DEFERRAL is
+ *     driven in `capturerequests.test.mjs` block 7c, whose fixture binds a renderer
+ *     and a zero allowance. WHAT IS STILL NOT DRIVEN ANYWHERE, and what this bullet
+ *     now means: an unattended render that SUCCEEDS. No instance has a renderer
+ *     (2.rendered), and this suite's success arms are a member's, through the op.
  *   - Promotion of the pair into a bundle and the catalogue's C-18.1 over it.
  */
 import "./stdio.mjs";                 /* D-282 */
@@ -299,8 +306,18 @@ console.log("\n--- G. every way a render cannot happen is refused by name; the s
   await none.dispose();
   const bb = plane({ BROWSER: "bound-but-no-driver" }, {});
   const b = await acq(bb)({ locator: `https://${HOST}/same`, render: true });
-  t("G6 the BROWSER binding alone is reported, never mistaken for a renderer",
-    [refusal(b), b.renderer, /in-plane driver over it is not built/.test(b.detail || "")],
+  /* CORRECTED BY D-490, NOT EXEMPTED. As written this arm asserted the refusal's
+     sentence read "the in-plane driver over it is not built", which was true when
+     D-64 shipped the seam without a driver. D-490 built the driver
+     (`src/browserrender.mjs`), so that sentence became FALSE while this assertion
+     went on passing — a test pinning a claim the code no longer supports. The kind
+     and the code are unchanged and still correct: this fixture binds BROWSER to a
+     STRING, which has no `fetch`, and a binding the plane cannot speak to is still
+     never mistaken for a renderer. Only the sentence moved. D-490's own suite
+     (`browser-render.test.mjs`, block A) is where a WORKING browser binding is
+     driven. */
+  t("G6 a BROWSER binding the plane cannot speak to is reported, never mistaken for a renderer",
+    [refusal(b), b.renderer, /not a Fetcher/.test(b.detail || "")],
     [row("RENDER_NO_RENDERER"), "browser-binding-without-driver", true]);
   await bb.dispose();
 }
