@@ -11,3 +11,5 @@ M0-151	2026-09-24T05:02:04.011Z	SCHEDULER #18	observation-log.test two sections 
 M0-152	2026-09-24T05:15:36.768Z	SCHEDULER #18	fleetbundles.control arm 5(b) reads suite whole (M0-143 finding)
 M0-153	2026-09-24T05:22:46.709Z	SCHEDULER #18	selectReaders counts an M-id in suite comments
 M0-154	2026-09-24T05:34:03.186Z	SCHEDULER #18	gate fixture repos copy tools from a hand-kept list (M0-146 finding)
+M0-155	2026-09-24T05:53:55.532Z	SCHEDULER #18	construct probes read comments; refusal codes minted outside governed regions
+M0-156	2026-09-24T05:53:55.532Z	SCHEDULER #18	construct probes read comments; refusal codes minted outside governed regions
