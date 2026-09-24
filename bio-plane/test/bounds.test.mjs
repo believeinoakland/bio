@@ -15,6 +15,7 @@
 /* NEGATIVE CONTROL: (run 2026-08-07, rec60-agent, REC-60/D-225) THIS SUITE'S SHARE of REC-60's controls, run against the three ops that JOINED its roster when they gained a bound, each restored byte-identically. (1) RESTORE EACH UNBOUNDED READ in src/store.mjs — drop `LIMIT ?`/`cap + 1` and the `limit:`/`truncated` keys — and this file fails FOUR arms per op, every one naming it: the bound-applied arm, both direction arms, and the DELTA. Run per op: resolutionsForCapture 4, documentsConcerning 4, connectionsFor 4. (2) COUNT WHAT IT SENT (`const truncated = false;` beside a real slice) -> 2 fail per op here, the cut-answer arm and the DELTA. Note that the WALK stays green under (2) — the scan is still capped, so `OPS.size` is still 14 and only the LIVE arms catch a dishonest answer. (3)/(4) are `test/meaning-bounds.test.mjs`'s, which is where REC-60's own walk and its reach deltas live. */
 /* NEGATIVE CONTROL: (run 2026-08-08, rec67-agent, REC-67) FIVE arms, each armed ALONE with every other held open, every file restored from a PRISTINE pre-arm copy and verified by sha256 AND by `cmp`. Baseline 147/0. (1) PLANT A REAL CORPUS-ARM CALL SITE — a new file `civicos-ui/nc-rec67-arm1.mjs` calling `ask("projection", "jsonPath=…")` through an ordinary local helper -> 146/1, the ONE failure being `civicos-ui reaches op=projection ONLY through the &id= arm`, and the helper roster PRINTS the planted file and its callee. **This is the arm proving the narrowing did not blind the walk.** (2) PLANT UI-46's EXACT REGRESSION — `CLASS.methods.get("projection")` in `civicos-ui/nc-rec67-arm2.mjs` -> 147/0, GREEN, the planted file absent from the roster and the site count unmoved at 40. **A green arm proves nothing on its own, so the same planted file was read by the PRE-FIX matcher in the same turn: it classified it `helper corpus-bare civicos-ui/nc-rec67-arm2.mjs:3` and took the count to 41** — which is the 106/106 -> 105/106 failure reproduced and then shown fixed. (3) NEUTER THE RESOLUTION (`if (false && TRANSPORT.test(b))`) -> 142/5, the helper roster PRINTED as `0 site(s) … NONE`, the total dropping 40 -> 38, and the two REC-67 HELPER REACH arms among the failures with both synthetic guards. (4) OVER-STRICTNESS — a real call through `zzq` -> `hop` -> `fetch`, a spelling no list ever carried, two hops deep -> 146/1, FOUND and named `via zzq()`. The old list-based matcher could not have passed this arm. (5) is `meaning-bounds.test.mjs`'s and (6) `plane-envelope.test.mjs`'s — the two sibling walks in the same class, recorded in their own headers. THE HARNESS'S OWN FAULT, RECORDED RATHER THAN SMOOTHED: its first run reported `exit 1 · null pass, null fail` for EVERY arm INCLUDING THE BASELINE, because it joined the suite path onto the repo root while running with `cwd=bio-plane`. Only the baseline row made it visible; without one, six arms failing for a reason unrelated to their subject read exactly like six arms working. */
 /* NEGATIVE CONTROL: (run 2026-09-23, c18-batch7fix, D-148's arms joined at the c17-batch7 union) ONE arm, RUN. (1) COUNT WHAT IT SENT — in src/store.mjs actionQuotes, `const truncated = rows.length > max;` -> `const truncated = false;`, anchor asserted to occur exactly once, restored by cp from a pristine copy and verified by sha256 AND cmp (419e0f54…, 3,023,229 B). DECLARED: the bite arm and the DELTA fail; the whole arm and every other arm hold. RESULT 173/5 against a 175/3 baseline, AS DECLARED: exactly "op=actionquotes: publishes the bound it APPLIED (`max`), and a cut answer SAYS SO …" and "op=actionquotes: DELTA …" were added; the three standing reds (PIN GUARD and both PIN arms, naming groupidentity/statementack and biasmanifest) were red before arming.  ALSO RUN 2026-09-24 by c19-unionfix (IC-246, CONDUCT #19's spec), ONE arm, alone, restored by cp from a per-arm pristine copy verified by sha256 AND cmp (store.mjs 3,160,297 B). (gi) the NAMED bound undone — op=groupidentity's `LIMIT ?` with max + 1 -> the literal `LIMIT 20`. DECLARED: the bite and the DELTA fail. RESULT 191/2 against a 193/0 baseline, AS DECLARED: exactly "op=groupidentity: THE BITE …" and "op=groupidentity: DELTA …". */
+/* NEGATIVE CONTROL: (run 2026-09-24, WORKER D-482, driver `.nc-D482-driver.sh` from the repo root) FOUR ARMS PLUS A BASELINE, each armed ALONE with every other defence held open, the anchor asserted to occur EXACTLY ONCE so an arm that does not arm says so — the driver's first draft armed NONE of the four through a `perl -0p` \Q…\E pattern that never matched, and reported four clean 195/0 runs, which is an arm that did not arm wearing a green result; every restore is by `cp` from a UNIQUELY-NAMED per-arm pristine copy verified by sha256 AND by `cmp` with the byte count printed and floored at 170,000 B. THE ARMED SUBJECT IS THIS FILE AS COMMITTED, declaration included: the arms were re-run after this record was written, because a control re-read after the subject changes is the rule and a declaration is part of the subject's bytes; the per-arm digests are in D-482's report rather than here, since a file cannot pin its own sha without moving it. BASELINE ROW FIRST (arm 0): bounds 195/0, call sites `64 total — id-arm 49, corpus-bare 12, corpus-filter 3`. (1) THE ROW'S DECLARED CONTROL — drop BOTH quotes from the class in `callSites`, `[?&,{\s"']` -> `[?&,{\s]` -> 195/0 -> 194/1, the one failure being `D-482 OVER-STRICTNESS: A QUOTED `id=` IS STILL THE `&id=` ARM` by name. (2) drop ONLY the double quote -> 194/1, the SAME arm. (3) drop ONLY the single quote -> 194/1, the SAME arm — (2) and (3) are what say each character is load-bearing rather than one carrying the other. (4) THE LIAR'S DIRECTION, because a matcher passes an over-strictness arm for free by widening until nothing fails: `(?:^|[?&,{\s"'])` -> `(?:^|.)`, any character a boundary -> 194/1, and the failure is the OTHER arm, `D-482 REFUSES THE LOOSENING…`, with the over-strictness arm still green — so the pair fails in both directions and neither can be satisfied alone. AND THE FINDING THE ARMS PRINTED RATHER THAN THE ARMS THEMSELVES: the call-site line read `64 total — id-arm 49, corpus-bare 12, corpus-filter 3` UNMOVED in the baseline and in all four arms, and unmoved before and after the fix (measured with a per-site probe printing `f`/`arm`/`via`, diff empty). NO CONSUMER IN THIS TREE SPELLS IT WITH A QUOTE TODAY, so the widening reclassifies nothing live and the synthetic arm is its ONLY witness — which is the reason it is synthetic and permanent rather than a control somebody has to remember to re-run. */
 /* REC-57 · EVERY CAPPED OP PUBLISHES THE BOUND IT APPLIED, AND WHETHER IT BIT.
  * ===================================================================== *
  * UI-39 measured this one layer up: a plane that caps and does not say so forces
@@ -2142,7 +2143,15 @@ const callSites = (files, resolve = requestFormingHelpers) => {
          expected-answer map by `"op=projection"`, derived from a request made on
          another line — counting it would be counting one call twice. */
       if (/^\s*:/.test(c.code.slice(L.end + 1))) continue;
-      out.push({ f: c.f, via, arm: /(?:^|[?&,{\s])id[=:}]|`id=/.test(params) ? "id"
+      /* THE QUOTE IS A SEPARATOR (D-482). A consumer that builds its query by
+         concatenation hands the helper `"id=" + x`, so the character immediately
+         before `id` is the QUOTE and not `?`, `&` or a space. Until D-482 the
+         class refused it and a correct call read `corpus-bare` — an instrument
+         failing honest work, which costs every lane gate time. The BOUNDARY is
+         still required: `"gid="` is not the id arm, and the synthetic below
+         pins that, because the way a matcher passes an over-strictness arm for
+         free is by widening until nothing fails. */
+      out.push({ f: c.f, via, arm: /(?:^|[?&,{\s"'])id[=:}]|`id=/.test(params) ? "id"
                             : /jsonPath|jsonEquals/.test(params) ? "corpus-filter" : "corpus-bare" });
     }
   }
@@ -2276,6 +2285,22 @@ const SYNTH = {
     'async function ask(op, params) { const j = await wire(op, params); return j.result; }',
     'const answer = await ask("projection", { id: "INFO-1" });',
   ].join("\n") },
+  /* (5) and (6) are D-482's over-strictness half: the CONCATENATED query, in
+     both quote spellings, because adding one character to the class and not its
+     twin is the same defect wearing the fix's clothes. (7) is the refusal that
+     makes (5)/(6) worth anything. */
+  quotedId: { f: "synthetic/quoted-id.mjs", code: [
+    'const zap = async (op, qs) => (await fetch("/api/?op=" + op + "&" + qs)).json();',
+    'const answer = await zap("projection", "id=" + infoId);',
+  ].join("\n") },
+  quotedIdSingle: { f: "synthetic/quoted-id-single.mjs", code: [
+    "const zap = async (op, qs) => (await fetch('/api/?op=' + op + '&' + qs)).json();",
+    "const answer = await zap('projection', 'id=' + infoId);",
+  ].join("\n") },
+  quotedNotId: { f: "synthetic/quoted-not-id.mjs", code: [
+    'const zap = async (op, qs) => (await fetch("/api/?op=" + op + "&" + qs)).json();',
+    'const answer = await zap("projection", "gid=" + groupId);',
+  ].join("\n") },
 };
 t("REC-67 REFUSES A METHOD NAME: `CLASS.methods.get(\"projection\")` — a Map read of a METHOD BODY, a "
 + "request to nothing — is NOT a call site. This is the exact line that turned `civicos-ui`'s suite red "
@@ -2292,6 +2317,18 @@ t("REC-67 FOLLOWS THE DELEGATION: a helper that carries no transport itself and 
 + "still a call to the plane — which is not hypothetical, it is exactly how `civicos-ui`'s `recR` reaches "
 + "`rec`, so a one-level check would have lost the UI consumer entirely",
   [callSites([SYNTH.twoHops]).length, callSites([SYNTH.twoHops])[0]?.arm], [1, "id"]);
+t("D-482 OVER-STRICTNESS: A QUOTED `id=` IS STILL THE `&id=` ARM. A consumer that concatenates its "
++ "query hands the helper `\"id=\" + x`, so the character before `id` is the QUOTE — and until D-482 the "
++ "class refused it and read an honest id call as `corpus-bare`. BOTH quote spellings are driven, and the "
++ "site count is asserted too, so a fixture that armed nothing cannot pass this by returning no sites",
+  [callSites([SYNTH.quotedId]).length, callSites([SYNTH.quotedId])[0]?.arm,
+   callSites([SYNTH.quotedIdSingle]).length, callSites([SYNTH.quotedIdSingle])[0]?.arm],
+  [1, "id", 1, "id"]);
+t("D-482 REFUSES THE LOOSENING THAT WOULD PASS THE ARM ABOVE FOR FREE: the way a liar green-lights an "
++ "over-strictness arm is to widen the class until nothing fails, so a quoted param whose name merely "
++ "ENDS in `id` — `\"gid=\" + x`, a group id and not the `&id=` arm — must STILL read `corpus-bare`. The "
++ "boundary before `id` is what the widened class keeps, and this is the assertion that says so",
+  [callSites([SYNTH.quotedNotId]).length, callSites([SYNTH.quotedNotId])[0]?.arm], [1, "corpus-bare"]);
 
 /* =================================================================== * OVER-STRICTNESS. A pin that only accepts the phrasing its author wrote is
  * measuring its author. These are answers that are GENUINELY HONEST and look
