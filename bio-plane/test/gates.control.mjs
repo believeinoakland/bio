@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 21 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116; G18, G19 by M0-143; G20, G21 by M0-153) — over `tools/gates.mjs` and
+/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 22 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116; G18, G19 by M0-143; G20, G21 by M0-153; G22 by M0-173) — over `tools/gates.mjs` and
  * `tools/pushguard.mjs`, each driven through `bio-plane/test/gates.test.mjs`.
  *
  *   node bio-plane/test/gates.control.mjs          (from the repo root; one arm: add its id, e.g. G1)
@@ -394,6 +394,22 @@ const ARMS = [
     mustNotBreak: ["...and a suite whose ONLY mention of that same tool is a COMMENT is NOT selected — a comment runs nothing",
                    "...and selects its IMPORTER", "...and the suite that WALKS tools/",
                    "a suite that READS the file through a STRING path is selected — selecting nothing is not the fix"] },
+
+  { id: "G22", title: "the COORD PIN not set — every unit reads the moving origin/coord again (M0-173)",
+    patches: [{ file: GATES,
+      from: "  process.env.BIO_COORD_REF = sha;",
+      to: "  void sha;                                     /* M0-173 CONTROL: the pin is NOT set */" }],
+    mustBreak: "every unit of one run read the SAME coord commit and the SAME state",
+    /* The printed line and the record break too, and ONLY because they are read back from the variable that governs
+       the children rather than from this block having run: with `pinned` hardcoded they would have gone on claiming a
+       pin over units that read the moved ref, which is this estate's most-met defect wearing the fix's clothes. */
+    alsoBreak: ["the gate PINNED the commit origin/coord held when it began",
+                "...including the battery's own read AFTER its fetch",
+                "...and the RECORD names the pinned coord commit"],
+    mustNotBreak: ["the fetch mid-run really MOVED origin/coord",
+                   "the SAME reader with no pin reads the MOVED state",
+                   "an override already set when the gate began is kept",
+                   "a checkout where origin/coord does not resolve says NOT PINNED"] },
 ];
 
 /* ---------------------------------------------------------------- D-331: every anchor, before anything arms */

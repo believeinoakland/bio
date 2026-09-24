@@ -8,7 +8,7 @@ built"). Until each change lands, the
 rules in `CLAUDE.md` stand as written, and the landing that builds a change corrects every rule and kickoff it supersedes.
 **Revised 2026-09-22 by BOB #27** for Bob's move to cloud Claude Code under his second account (§4), with three builders'
 questions answered in §1 (M0-99, M0-100, M0-101), and M0-110's builder's four answered there by BOB #28 the same day;
-§5 points at the rest of the same day's program. Status as of 2026-09-23.
+§5 points at the rest of the same day's program. Status as of 2026-09-24.
 
 ## Why: measured on 2026-09-22
 
@@ -394,6 +394,27 @@ file from a unit's input set, and condition 2 fails that unit by name.
      | `coverage` | HEAD's own history (`log -1 %cs`, printed and never gated), HEAD's tree and index | HEAD-ONLY |
 
      None of the eleven had a live read that was its PURPOSE; all stay never-cache (each reads history by commit id).
+
+     **AND THE HALF PER-SUITE PINS COULD NOT REACH: THE GATE ITSELF PINS `coord` FOR THE WHOLE RUN (M0-173,
+     2026-09-24).** M0-136 pinned the five suites that read the state IN PROCESS, and left every unit that reads it
+     THROUGH `plancheck` — 11 units on `58293bf3`, measured by `gates.mjs --inputs all` — reading the LIVE
+     `origin/coord`, which this very checkout moves whenever a unit's CLI fetches it. **MEASURED by CONDUCT #20 on
+     2026-09-24:** a train's gate read `planning-hygiene.test.mjs` 75 pass / 1 fail at ~17:1xZ and the IDENTICAL tree,
+     re-run by hand, read 76 / 0 — the arm that flips is "plancheck's own count of open rows equals this suite's",
+     which holds the suite's own read of the plan against the figure a separately-spawned `plancheck` printed, so a
+     write to `coord` between the two reads is a red round costing the whole battery. **`tools/gates.mjs` §0b now
+     resolves `origin/coord` ONCE, at the start of the run, and sets `BIO_COORD_REF` to that COMMIT**; every step
+     inherits it, so every unit and every CLI a unit spawns reads the same bytes, and a tool whose override is set does
+     not fetch (`freshen`) — which is what moved the ref mid-run. The gate PRINTS the pinned commit and its RECORD
+     names it (`coord`, `coordPinned`), both read back from the variable the children are actually given rather than
+     from the pinning block having run. A suite with a pin of its own keeps it (it sets the variable after the gate),
+     and an override already in the environment is a plant and is never overridden. **The override names a commit in
+     THIS repository:** `coordRef(repo)` answers `origin/coord` for any other repository, because a fixture clone a
+     suite builds does not hold that sha — unscoped, a set `BIO_COORD_REF` made `coord.test.mjs` THROW (measured
+     2026-09-24, 95 / 0 with it unset). **What it does not claim:** a battery run by hand outside the gate is
+     unpinned, and the live state is still judged where a live read is the PURPOSE (`plancheck` bare, and the coord
+     write's own ledger checks). NEGATIVE CONTROL: `gates.control.mjs` arm G22 (the pin not set) and
+     `coord.control.mjs` arm S (the override unscoped).
      NEGATIVE CONTROL: `bio-plane/test/coordpin.control.mjs` points each pinned suite back at `origin/coord`, and its
      planted-ref arm fails by name. And a REUSED record
      never answers for a never-cached unit: with the per-unit record on, §2d's tree-keyed GREEN shortcut is not taken,
