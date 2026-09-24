@@ -502,6 +502,9 @@ import { SURFACE_CHECKS } from "../checks/bio-checks.mjs";
 import { RATIFY_SCOPE_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-141 / C-59: the plane mints project ids; a caller-supplied one is refused with one answer. */
 import { PROJECT_ID_CHECKS } from "../checks/bio-checks.mjs";
+/* D-510: the one refusal of `promote`'s envelope-versus-document check, held in the catalogue with every
+   other DEC-49 row so the code, its check number and its canned translation live in one place. */
+import { PROMOTED_TYPE_CHECKS } from "../checks/bio-checks.mjs";
 /* D-436 / C-64: the instance's producing group, recorded once and never a literal — and the ONE definition of how it
    is written into a document's bytes, which the suites judging a composer's bytes call too. */
 import { INSTANCE_GROUP_CHECKS, withProducingGroup } from "../checks/bio-checks.mjs";
@@ -16487,7 +16490,6 @@ export class Store extends DurableObject {
        * history was acyclic when it was written, so an honest replay never
        * meets them.
        */
-      const isInquiry = normalizeType(meta.object_type) === "inquiry";
       const basisMd = files.find((f) => f.path === "bundle.md");
       /* Parsed ONCE for both arms below. REC-16's supersession check is NOT
          inquiry-scoped — `supersedes` is in the vocabulary for every type and
@@ -16496,6 +16498,66 @@ export class Store extends DurableObject {
          re-parsed. */
       const docFmW = basisMd && typeof basisMd.text === "string"
         ? parseFrontmatter(basisMd.text).data : null;
+      /* ===== D-510 (`BIO_Case_Making_v0_1.md` §2, `action` IS the impact substrate; C-2.5 pins a document's
+       * type to its id prefix) — THE PROMOTED DOCUMENT DECLARES ITS OWN TYPE, AND AN ENVELOPE THAT DISAGREES
+       * IS REFUSED. D-505's worker found this beside the risk-tier fence (its finding 3).
+       *
+       * THE DEFECT, measured at the code: `bundles.object_type` was written from `normalizeType(meta.object_type)`
+       * — the CALLER'S envelope — and the action, bias and inquiry projections below were gated on the same
+       * envelope, while `#projectRow`'s action COLUMNS (`action_kind`, `action_risk_tier`,
+       * `action_counterparty_state`, `action_resolution`, the clock) are read off the promoted DOCUMENT'S own
+       * front matter. So an ACTION promoted under `meta: { object_type: "information" }` landed TYPED
+       * INFORMATION with `action_risk_tier` set from its bytes and its `action_basis` and `correspondence`
+       * NEVER PROJECTED — the record holding an action it does not index as one, which is worse than not
+       * holding it (CLAUDE.md §2). D-505 measured the same disagreement from the other side and pinned it.
+       *
+       * TWO HALVES, AND THEY ARE DIFFERENT CLAIMS.
+       *   (1) DERIVATION. `promotedType` below is the DOCUMENT's own type through the catalogue's
+       *       `normalizeType`, and every site that decides WHAT THE RECORD SAYS ABOUT THESE BYTES reads it:
+       *       `bundles.object_type` itself, `isInquiry` (the inquiry_basis and basis-version projections),
+       *       the bias projection, and the action_basis / correspondence / action_quotes projections. A
+       *       projection is a view of the document (D-21); it may not be keyed on something the document
+       *       does not say.
+       *   (2) REFUSAL. An envelope that STATES a type contradicting the document's is refused by name, here,
+       *       before the first write — never silently obeyed and never silently overridden, because a caller
+       *       who asked for one thing and got another was told nothing either way.
+       *
+       * REPLAY IS EXEMPT FROM (2) AND NOT FROM (1), and the split is the point: the record's own history may
+       * contain a package whose envelope and document disagree and must stay holdable verbatim — but what the
+       * record SAYS about those bytes is the bytes' own word. So a replayed action lands TYPED ACTION with its
+       * basis and correspondence projected, rather than as mislabelled information. That exemption is
+       * CALLER-ASSERTED, which is D-505's declared residue and D-511's subject, and nothing here closes it.
+       *
+       * WHAT IS ABOVE THIS LINE AND STILL READS THE ENVELOPE, stated rather than left to be found: the project
+       * name scan, the `CITED` retirement arm and D-149's `LAWS_ACT` carry-forward run before `bundle.md` is
+       * parsed, so a divergent envelope reaches them on the envelope's word. Nothing they let through can LAND
+       * — this refusal is still ahead of the first write, and REC-180's rollback is the net under it — so the
+       * only thing undecided is WHICH refusal a caller meets when both apply. Moving them would mean parsing
+       * the document at the top of `act`, which is a bigger change than this row, and `isAction` (D-505) stays
+       * a UNION for the same reason it was built as one: a union can only add refusals, and it is still
+       * reachable where the envelope states no type at all. ===== */
+      const typeStated = (v) => (typeof v === "string" && v.trim() !== "" ? normalizeType(v) : null);
+      const documentType = docFmW && typeof docFmW === "object" ? typeStated(docFmW.object_type) : null;
+      const envelopeType = typeStated(meta.object_type);
+      /* DEC-49 REGION is-promoted-type-disagrees */
+      if (documentType !== null && envelopeType !== null && documentType !== envelopeType && !pkg.replay) {
+        const dtRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TYPE_DISAGREES;
+        return { ok: false, reason: "ENVELOPE_TYPE_DISAGREES", code: "ENVELOPE_TYPE_DISAGREES",
+                 check: dtRow.check, translation: dtRow.translation,
+                 document_type: documentType, envelope_type: envelopeType,
+                 detail: `the document being promoted says object_type `
+                       + `'${String(docFmW.object_type).slice(0, 40)}' and this request's meta says `
+                       + `'${String(meta.object_type).slice(0, 40)}'. The record goes by the document, and it `
+                       + `will not file one kind of thing as another: what a document IS decides which `
+                       + `columns, projections and reads it gets. Send it again with the meta naming the type `
+                       + `the document names, or change the document first. Nothing was written.` };
+      }
+      /* END DEC-49 REGION is-promoted-type-disagrees */
+      /* The one value every projection below reads. The envelope is the FALLBACK and not the authority: a
+         bundle.md held as a blob, or one stating no type, leaves the record nothing else to go on, and that
+         case is byte-identical to what this line did before D-510. */
+      const promotedType = documentType ?? normalizeType(meta.object_type);
+      const isInquiry = promotedType === "inquiry";
       const basisFm = isInquiry ? docFmW : null;
       const basisLegs = basisFm && Array.isArray(basisFm.basis)
         ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
@@ -17135,8 +17197,11 @@ export class Store extends DurableObject {
       /* Normalisation site 3 of 4 (REC-10): the projected type goes through
          the CATALOG'S OWN normalizeType rather than an inline restatement of
          it, so the store's view and the checker's view cannot disagree — the
-         same reason this file imports the catalog's parser. */
-      const projectedType = normalizeType(meta.object_type);
+         same reason this file imports the catalog's parser.
+         D-510: and what it normalises is the PROMOTED DOCUMENT's own type, decided once above. This column
+         is what every reader asks "is this an action" of — `#projectRow` was already reading the action
+         columns beside it off these same bytes, and the two could disagree. */
+      const projectedType = promotedType;
       /* C-16: an inquiry's title is DERIVED from its `## Question` section
          and never separately authored — deriveInquiryTitle (the catalog
          holds the one rule) over the document being promoted, with the
@@ -17501,7 +17566,8 @@ export class Store extends DurableObject {
          re-ordered and an override that silently re-pointed would be safeguard
          1 failing quietly. */
       this.sql.exec(`DELETE FROM bias_statements WHERE bundle_id=?`, bundleId);
-      if (normalizeType(meta.object_type) === "bias") {
+      /* D-510: the PROMOTED DOCUMENT's type, not the envelope's — a projection is a view of the bytes. */
+      if (promotedType === "bias") {
         for (const r of Store.#biasStatementRows(bundleId, docFmW))
           this.sql.exec(
             `INSERT INTO bias_statements
@@ -17549,7 +17615,10 @@ export class Store extends DurableObject {
          entries' own quote_* keys — a projection of the bytes, never a second
          place to state a quote (D-21). */
       this.sql.exec(`DELETE FROM action_quotes WHERE bundle_id=?`, bundleId);
-      if (normalizeType(meta.object_type) === "action" && docFmW) {
+      /* D-510 — THE ROW'S OWN SITE. These three projections were gated on the CALLER'S envelope while
+         `#projectRow`'s action columns came from the document, so an action under an `information` envelope
+         landed with its tier in a column and its basis and correspondence in no table at all. */
+      if (promotedType === "action" && docFmW) {
         const alegs = Array.isArray(docFmW.action_basis) ? docFmW.action_basis : [];
         for (let i = 0; i < alegs.length; i++) {
           const leg = alegs[i];

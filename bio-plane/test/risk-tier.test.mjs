@@ -1,6 +1,6 @@
 /* NEGATIVE CONTROL: (RUN 2026-09-23 by the D-182 worker; each arm ALONE, restored from a per-arm pristine copy and verified by sha256 AND cmp; baseline 31 pass / 0 fail before and after) (A) THE ROW'S CONTROL, restore the default of 1 - in checks/bio-checks.mjs riskTierState return 1 instead of 'undetermined' for an absent/undetermined tier -> 5 FAIL, declared and actual: the no-tier arms fail BY NAME ("a stated undetermined READS UNDETERMINED through op=projection", "an action whose bytes carry no tier READS UNDETERMINED through op=projection", both words arms, and the riskTierState unit arm); the member's-2 and over-strictness arms stayed green, as declared. (B) THE WRITER'S DEFAULT - in src/setup.mjs write "risk_tier: 1" again -> 3 FAIL: the source arm and both driven-writer arms. (C) THE LIAR the row names, a read rendering UNDETERMINED whatever is stored - in src/store.mjs #actionDerived set risk_tier to the constant "undetermined" -> 1 FAIL, "a member's act sets 2, and op=projection reads 2"; every no-tier arm stays GREEN over the constant, which is declared and is why sections 2 and 3 also read the STORED column and bytes. Also found while writing, not by an arm: the first draft's risk:1 search arm was VACUOUS (it read a result key the answer does not carry, so it passed over an empty list); the risk:2 positive beside it caught that and the key was corrected. */
 /* NEGATIVE CONTROL, D-483's section 6: (RUN 2026-09-24 by the D-483 worker; each arm ALONE in src/setup.mjs, restored from a per-arm pristine copy and verified by sha256 AND cmp at 96708072...; baseline 58 pass / 0 fail before and after every arm) (A) THE ROW'S CONTROL, default the group to 1 - render ' checked' on SETTABLE_TIERS[0] -> 1 FAIL, declared and actual: "THE DEFAULT IS UNSET: no rendered radio carries a checked attribute". The write arms stayed GREEN, AS DECLARED and not as slack: the driver supplies :checked itself, so markup cannot reach them - which is why arm B exists. (B) THE SAME LIE IN THE WRITER, chosenRiskTier() returning 1 when nothing is checked -> 5 FAIL by name: "reports NO CHOICE" and all four unset arms through the op; the three CHOSEN-tier arms stayed green, the over-strictness direction. (C) HARD-CODED LABELS, the row's second liar - render a literal 'file freely'/'file with caution'/'do not file without counsel' instead of RISK_TIERS[k] -> 2 FAIL: the literal arm and the mechanism arm. THE FINDING WORTH KEEPING, a surprising green: the BEHAVIOURAL label arm ("each label is the PLANE's sentence") stayed GREEN under C, because a hand copy agrees with the vocabulary for free (WORKER.md: an equality that costs nothing is not evidence). A suite holding only that arm would have gone green over a page that had stopped reading the vocabulary at all, which is the drift this row exists to prevent - so the textual and mechanism arms are the load-bearing ones and the behavioural arm is the one that proves they are about a control a member actually sees. */
-/* NEGATIVE CONTROL, D-505's section 7: (RUN 2026-09-24 by the D-505 worker; each arm ALONE on the ONE predicate the item changed - `isAction`, the guard of promote's action block in src/store.mjs - restored after every arm from a uniquely-named pristine copy (d505-pristine-store.mjs, in the session scratchpad and never in the worktree) and verified BY sha256 dd606e24... AND BY cmp at 3,224,435 B; baseline 77 pass / 0 fail before and after every arm) (A) THE ROW'S CONTROL, drop the fence's reach - restore the predicate to `normalizeType(meta.object_type) === "action"` alone, which is what REC-189 left. DECLARED: the EIGHT section-7 arms about the divergent envelope FAIL BY NAME, and nothing else moves - in particular the over-strictness arms (iv), (iv-b), (v), (vi), (vii) and the residue arm (ix) must stay GREEN. ACTUAL: AS DECLARED, 69 pass / 8 fail, every failure in section 7 and named, sections 1-6 untouched. (B) OVER-STRICTNESS, a spelling the item did not anticipate - the same union written as `[meta.object_type, docFmW?.object_type].some(tt => normalizeType(tt) === "action")`. DECLARED: all green, the suite being coupled to behaviour and not to an expression. ACTUAL: AS DECLARED, 77 pass / 0 fail. (C) THE HALF-UNION, AND IT IS THE ARM THAT CHANGED THE SUITE - the meta half dropped, a document-only predicate. FIRST RUN: 76 pass / 0 FAIL, ALL GREEN - a surprising green, and a finding about the ARMS rather than the subject: every arm written to that point handed the plane a document whose bytes said action, so the suite could not tell the union from half of it and a later 'simplification' would have silently given back REC-189's reach. Arm (iv-b), the mirror shape, was written for it; the control re-run then read 1 FAIL by name and is recorded above as the second measurement, not as the first. TWO FURTHER DEFECTS IN THE ARMS THEMSELVES were found by arm (A) and corrected before landing, both recorded at their sites: an 'and NOTHING landed' arm that compared `gone?.ok === true` against false over an answer carrying no `ok` key at all - VACUOUS IN BOTH DIRECTIONS, and it PASSED under the armed control - and a pair of revision arms sharing one bundle and one base, where with the fence removed the first landed, the second came back CAS_STALE (failing for the wrong reason) and the read-back died on a TypeError that goes through NO assertion at all. */
+/* NEGATIVE CONTROL, D-505's section 7: (RUN 2026-09-24 by the D-505 worker; each arm ALONE on the ONE predicate the item changed - `isAction`, the guard of promote's action block in src/store.mjs - restored after every arm from a uniquely-named pristine copy (d505-pristine-store.mjs, in the session scratchpad and never in the worktree) and verified BY sha256 dd606e24... AND BY cmp at 3,224,435 B; baseline 77 pass / 0 fail before and after every arm) (A) THE ROW'S CONTROL, drop the fence's reach - restore the predicate to `normalizeType(meta.object_type) === "action"` alone, which is what REC-189 left. DECLARED: the EIGHT section-7 arms about the divergent envelope FAIL BY NAME, and nothing else moves - in particular the over-strictness arms (iv), (iv-b), (v), (vi), (vii) and the residue arm (ix) must stay GREEN. ACTUAL: AS DECLARED, 69 pass / 8 fail, every failure in section 7 and named, sections 1-6 untouched. (B) OVER-STRICTNESS, a spelling the item did not anticipate - the same union written as `[meta.object_type, docFmW?.object_type].some(tt => normalizeType(tt) === "action")`. DECLARED: all green, the suite being coupled to behaviour and not to an expression. ACTUAL: AS DECLARED, 77 pass / 0 fail. (C) THE HALF-UNION, AND IT IS THE ARM THAT CHANGED THE SUITE - the meta half dropped, a document-only predicate. FIRST RUN: 76 pass / 0 FAIL, ALL GREEN - a surprising green, and a finding about the ARMS rather than the subject: every arm written to that point handed the plane a document whose bytes said action, so the suite could not tell the union from half of it and a later 'simplification' would have silently given back REC-189's reach. Arm (iv-b), the mirror shape, was written for it; the control re-run then read 1 FAIL by name and is recorded above as the second measurement, not as the first. TWO FURTHER DEFECTS IN THE ARMS THEMSELVES were found by arm (A) and corrected before landing, both recorded at their sites: an 'and NOTHING landed' arm that compared `gone?.ok === true` against false over an answer carrying no `ok` key at all - VACUOUS IN BOTH DIRECTIONS, and it PASSED under the armed control - and a pair of revision arms sharing one bundle and one base, where with the fence removed the first landed, the second came back CAS_STALE (failing for the wrong reason) and the read-back died on a TypeError that goes through NO assertion at all. RE-RUN 2026-09-24 BY D-510, which CORRECTED this section's arms and therefore owes its control again (CLAUDE.md §5: a suite coupled to behaviour survives a change that disarms the control coupled to shape). Both arms re-run ALONE against the REAL `src/store.mjs`, restored from a uniquely-named pristine copy in the session scratchpad (never in the worktree) and verified BY sha256 93648670... AND BY cmp at 3,242,874 B after each; baseline 78 pass / 0 fail before and after. (A) the meta-only predicate -> **74 pass, 4 FAIL**, every failure named and in section 7: the envelope-states-no-type arm (i-b) and the three arms moved to that shape (the DROP, the CHANGE, and the tier-untouched read-back). The figure moved from D-505's 69/8 because the DIVERGENT-envelope arms no longer reach this predicate at all — D-510 refuses them above it — and that is the correction, measured rather than asserted. (C) the half-union, document-only -> **77 pass, 1 FAIL**, arm (iv-b) by name, exactly as D-505 declared: the mirror arm is untouched by this item and still discriminates. So BOTH halves of D-505's union are still driven after the correction, which is the thing a correction most often loses. */
 /* D-182 (BIO_Case_Making_v0_1.md §2, "`risk_tier`, RULED 2026-09-21 by BOB #21"): an action's risk tier gains
  * UNDETERMINED, and the plane publishes the three words.
  *
@@ -475,9 +475,19 @@ console.log("\n--- 6. D-483: the tier chooser, unset by default, over the publis
  * record was on another, so the one field carrying legal exposure was machine-settable by renaming the envelope.
  *
  * THE FIX IS A UNION, so this section's load-bearing arms are the OVER-STRICTNESS ones: the old shape must
- * still refuse (the predicate was added to, not swapped), a divergent envelope with NO tier must still land,
- * and a MEMBER's divergent promote must still land and read its tier — the fence is about WHO writes, and
- * widening what counts as an action must not have widened who is refused.
+ * still refuse (the predicate was added to, not swapped), a promote that reaches the union with NO tier must
+ * still land, and a MEMBER's must still land and read its tier — the fence is about WHO writes, and widening
+ * what counts as an action must not have widened who is refused.
+ *
+ * CORRECTED 2026-09-24 BY D-510, NEVER EXEMPTED, and the shape of the correction is recorded because the
+ * arms did not merely move. D-510 makes `promote` REFUSE an envelope whose stated type contradicts the
+ * document's (ENVELOPE_TYPE_DISAGREES, C-86.1), above this fence, so THE DIVERGENT ENVELOPE NO LONGER
+ * REACHES C-32.19 AT ALL: arms (i), (iii), (v) and (vi) were written on that shape and would have gone green
+ * for free on a refusal that is not this fence's. The arms that test the UNION are moved to the shape that
+ * still reaches it — an envelope stating NO type, where the DOCUMENT is the only thing saying `action` — and
+ * (i) is re-pointed at the new refusal so the divergent shape is still driven to a named answer. Arm (vii),
+ * which asserted that `action_risk_tier` and `bundles.object_type` DISAGREED, is INVERTED rather than
+ * deleted: that disagreement is exactly what D-510 closed. Every correction carries its reason at its site.
  *
  * WHAT THIS SECTION CANNOT SEE, stated rather than left to be discovered: the `!pkg.replay` exemption. A
  * machine credential that puts `replay: true` in the promote body still lands a stated tier, and arm (ix)
@@ -486,7 +496,7 @@ console.log("\n--- 6. D-483: the tier chooser, unset by default, over the publis
  * that is D-505's reported finding, routed rather than fixed here: the fix spans every replay-exempt arm in
  * `promote`, not this one, and REC-173's server-verified migration replay is its precedent.
  */
-console.log("\n--- 7. D-505: a divergent envelope does not disarm C-32.19 ---");
+console.log("\n--- 7. D-505: the fence reads the DOCUMENT's type, not the envelope's (D-510: and a disagreeing envelope is refused above it) ---");
 {
   const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
   const mf = new Miniflare({
@@ -520,26 +530,51 @@ console.log("\n--- 7. D-505: a divergent envelope does not disarm C-32.19 ---");
   /* ONE driver for every arm, so the ONLY thing an arm varies is what it names: the envelope's type, the
      credential, the tier lines, and whether it asserts `replay`. It RETURNS the answer rather than throwing,
      because half these arms are about a refusal. */
-  const promote = async (id, tierLines, { metaType = "action", token = "mem-d505", base = null, extra = {} } = {}) => {
+  /* `noMetaType` ADDED 2026-09-24 BY D-510, and it is what keeps this section driving D-505's union after
+     that landing: `promote` now refuses an envelope whose stated type contradicts the document's, so the
+     DIVERGENT shape can no longer reach C-32.19 at all. The shape that still reaches the union's DOCUMENT
+     arm is an envelope that states NO type — the document is then the only thing saying `action`, which is
+     exactly the half a document-only-blind predicate would lose. */
+  const promote = async (id, tierLines, { metaType = "action", token = "mem-d505", base = null, extra = {},
+                                          noMetaType = false } = {}) => {
     const text = actionMd(id, tierLines);
+    const meta = { group: "believe-in-oakland", title: "Records request",
+                   current_state: "planned", created: NOW, last_updated: NOW };
+    if (!noMetaType) meta.object_type = metaType;
     return post("promote", {
       bundleId: id, base, snapKey: `20260724T030000Z_d505${String(++seq).padStart(4, "0")}`,
-      author: "member-ruth",
-      meta: { object_type: metaType, group: "believe-in-oakland", title: "Records request",
-              current_state: "planned", created: NOW, last_updated: NOW },
+      author: "member-ruth", meta,
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [], ...extra,
     }, token);
   };
 
-  /* (i) THE ROW'S ARM. The envelope says information; the bytes say action and state tier 1. */
+  /* (i) THE ROW'S ARM. The envelope says information; the bytes say action and state tier 1.
+     CORRECTED 2026-09-24 BY D-510, NEVER EXEMPTED — and the old assertions are quoted here because they were
+     RIGHT WHEN WRITTEN and the reason they stopped being right is the point. This read
+     `MACHINE_CANNOT_SET_RISK_TIER` / `C-32.19` / *"only a member's authored act sets 1, 2 or 3"*. D-510
+     refuses a divergent envelope OUTRIGHT — `ENVELOPE_TYPE_DISAGREES`, C-86.1 — at the top of `promote`'s
+     type-dependent region, above this fence, because the request contradicts itself before any question
+     about who may set a tier arises. D-505's guarantee is kept A FORTIORI: this promote still lands nothing,
+     which (ii) drives from the read side. What is LOST is that this shape drives the union; arm (i-b) below
+     is the shape that still does, and it is added rather than the coverage being quietly given up. */
   const DIVERGENT = "ACTN-2026-0021-divergent-envelope";
   const refused = await promote(DIVERGENT, TIER.one, { metaType: "information" });
   t("a MACHINE promote calling its action `information` in the envelope is refused BY NAME",
-    [refused?.ok, refused?.reason], [false, "MACHINE_CANNOT_SET_RISK_TIER"]);
-  t("…and the refusal names the check the catalogue holds", refused?.check, "C-32.19");
-  t("…and says what it is about: a member's assessment, and that nothing was written",
-    /only a member's authored act sets 1, 2 or 3/.test(refused?.detail ?? "")
+    [refused?.ok, refused?.reason], [false, "ENVELOPE_TYPE_DISAGREES"]);
+  t("…and the refusal names the check the catalogue holds", refused?.check, "C-86.1");
+  t("…and says what it is about: the document's word against the envelope's, and that nothing was written",
+    /The record goes by the document/.test(refused?.detail ?? "")
       && /Nothing was written\./.test(refused?.detail ?? ""), true);
+
+  /* (i-b) AND THE UNION, STILL DRIVEN — added 2026-09-24 by D-510 for the coverage (i) gave up. The envelope
+     states NO type at all, so the DOCUMENT is the only thing saying `action`: D-510 does not refuse that (it
+     is not a disagreement, it is a silence), and C-32.19 must still refuse the tier. A document-only-blind
+     predicate — REC-189's original `meta.object_type` alone — LANDS this, which is what makes the arm
+     discriminating rather than decorative. */
+  const NOENV = "ACTN-2026-0029-envelope-states-no-type";
+  const noEnv = await promote(NOENV, TIER.one, { noMetaType: true });
+  t("a MACHINE promote whose envelope states NO type still reaches C-32.19 off the document's own bytes",
+    [noEnv?.ok, noEnv?.reason, noEnv?.check], [false, "MACHINE_CANNOT_SET_RISK_TIER", "C-32.19"]);
 
   /* (ii) NOTHING LANDED. The refusal is worth nothing if the bytes arrived anyway — and this is the arm that
      would have caught the defect from the READ side, which is where a reader meets it. */
@@ -573,10 +608,15 @@ console.log("\n--- 7. D-505: a divergent envelope does not disarm C-32.19 ---");
   const pChange = await heldTwo(CHANGE);
   t("a member's 2 lands and reads 2 (the held tier these arms are about)",
     [pDrop.action.risk_tier, pChange.action.risk_tier], [2, 2]);
-  const dropped = await promote(DROP, TIER.absent, { metaType: "information", base: pDrop.bundle_sha });
-  t("a MACHINE revision under a divergent envelope may not DROP the member's 2 either",
+  /* CORRECTED 2026-09-24 BY D-510, NEVER EXEMPTED, for the reason at (i): these two read
+     `MACHINE_CANNOT_SET_RISK_TIER` and a divergent envelope no longer reaches that fence. They are moved to
+     the envelope-states-NO-type shape rather than re-pointed at the new code, because what BOB #32's clause
+     needs driven is that a machine may neither DROP nor CHANGE a member's tier — not which refusal a
+     self-contradicting request meets. The old code is asserted at (i) instead. */
+  const dropped = await promote(DROP, TIER.absent, { noMetaType: true, base: pDrop.bundle_sha });
+  t("a MACHINE revision whose envelope states no type may not DROP the member's 2 either",
     [dropped?.ok, dropped?.reason], [false, "MACHINE_CANNOT_SET_RISK_TIER"]);
-  const changed = await promote(CHANGE, TIER.three, { metaType: "information", base: pChange.bundle_sha });
+  const changed = await promote(CHANGE, TIER.three, { noMetaType: true, base: pChange.bundle_sha });
   t("…nor CHANGE it to 3 under one", [changed?.ok, changed?.reason], [false, "MACHINE_CANNOT_SET_RISK_TIER"]);
   t("…and each member's tier is untouched after its refusal",
     [await tierOf(DROP), await tierOf(CHANGE)], [2, 2]);
@@ -607,25 +647,38 @@ console.log("\n--- 7. D-505: a divergent envelope does not disarm C-32.19 ---");
 
   /* (v) OVER-STRICTNESS: the union costs a machine nothing where no tier is at stake. A divergent envelope is
      not itself the offence — stating a tier is. */
+  /* CORRECTED 2026-09-24 BY D-510, NEVER EXEMPTED: this read `metaType: "information"` and asserted the
+     promote LANDED, which was true and is not any more — D-510 refuses the divergent envelope itself. The
+     arm's CLAIM is unchanged and is still the one worth making (the union costs a machine nothing where no
+     tier is at stake), so it is moved to the envelope-states-no-type shape, where the union is still what
+     decides. */
   const NOTIER = "ACTN-2026-0024-divergent-no-tier";
-  const landed = await promote(NOTIER, TIER.undetermined, { metaType: "information" });
-  t("OVER-STRICTNESS: a machine's divergent-envelope promote stating NO tier still LANDS", landed?.ok, true);
+  const landed = await promote(NOTIER, TIER.undetermined, { noMetaType: true });
+  t("OVER-STRICTNESS: a machine's promote reaching the union but stating NO tier still LANDS", landed?.ok, true);
   t("…and reads undetermined, with no tier in the stored column",
     [(await get(`op=projection&id=${encodeURIComponent(NOTIER)}`)).action_risk_tier], [null]);
 
   /* (vi) OVER-STRICTNESS, the direction that matters most: the fence is about WHO WRITES. Widening what counts
      as an action must not have widened who is refused, so a MEMBER's divergent promote still authors a tier. */
+  /* CORRECTED 2026-09-24 BY D-510, NEVER EXEMPTED: this read `metaType: "information"` and asserted the
+     MEMBER's divergent promote LANDED. D-510's refusal is about the REQUEST and not about the credential, so
+     a member's self-contradicting envelope is refused too — that is a deliberate widening and it is asserted
+     as its own arm in `d510-promoted-type.test.mjs` §2. What THIS arm is for is unchanged and still needed:
+     the C-32.19 fence is about WHO WRITES, so widening what counts as an action must not have widened who is
+     refused. It is moved to the shape that still reaches the union. */
   const MDIV = "ACTN-2026-0025-member-divergent";
-  const mlanded = await promote(MDIV, TIER.three, { metaType: "information", token: MEMBER });
-  t("OVER-STRICTNESS: a MEMBER's promote under the same divergent envelope LANDS", mlanded?.ok, true);
+  const mlanded = await promote(MDIV, TIER.three, { noMetaType: true, token: MEMBER });
+  t("OVER-STRICTNESS: a MEMBER's promote reaching the union by the document alone still LANDS", mlanded?.ok, true);
   const mp = await get(`op=projection&id=${encodeURIComponent(MDIV)}`);
-  /* (vii) AND THIS IS THE MEASURED FACT THE FIX RESTS ON, driven rather than asserted from the source: the
-     stored tier is derived from the DOCUMENT'S object_type while the bundle's own type came from the
-     ENVELOPE. The two disagree here, which is exactly why the fence may not read the envelope. Without this
-     arm every arm above could pass over a store that had simply stopped projecting tiers at all. */
+  /* (vii) INVERTED 2026-09-24 BY D-510, AND THE INVERSION IS THE ITEM. This arm asserted the DISAGREEMENT the
+     fix rested on: `action_risk_tier` 3 read off the document while `object_type` read `information` off the
+     envelope. That disagreement is what D-510 closed — `bundles.object_type` is now the DOCUMENT's own type —
+     so the arm asserts the agreement instead of being deleted, and it still discriminates in the direction
+     that matters: it fails over a store that had simply stopped projecting tiers, and it fails again the day
+     anything goes back to typing a bundle from its envelope. */
   t("the stored tier column is derived from the DOCUMENT's object_type…", mp.action_risk_tier, 3);
-  t("…while the bundle's own type came from the ENVELOPE — the disagreement the fence must not trust",
-    mp.object_type, "information");
+  t("…and since D-510 the bundle's own type is derived from the SAME bytes: they can no longer disagree",
+    mp.object_type, "action");
 
   /* (viii) THE MATCHER'S REACH, stated: `promote` is the ONE writer of `bundle.md` in `src/store.mjs`, so a
      fence there is a fence on the write. Pinned structurally, because the sentence above is load-bearing and

@@ -4336,6 +4336,7 @@ __export(bio_checks_exports, {
   PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
   PROJECT_ID_CHECKS: () => PROJECT_ID_CHECKS,
   PROJECT_VISIBILITY_CHECKS: () => PROJECT_VISIBILITY_CHECKS,
+  PROMOTED_TYPE_CHECKS: () => PROMOTED_TYPE_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   QUOTE_CHECKS: () => QUOTE_CHECKS,
   QUOTE_KEYS: () => QUOTE_KEYS,
@@ -13798,6 +13799,13 @@ var CONNECTION_CHOICE_CHECKS = {
     check: "C-74.3",
     where: "src/store.mjs chooseConnectionPair > is-connection-choice",
     translation: "The mention named is not one this document carries for that subject. The choice is among the places the record actually read the subject in this document, by the reference as the reading recorded it; a mention the record never read cannot be the one a connection rests on."
+  }
+};
+var PROMOTED_TYPE_CHECKS = {
+  ENVELOPE_TYPE_DISAGREES: {
+    check: "C-86.1",
+    where: "src/store.mjs promote > is-promoted-type-disagrees",
+    translation: "The document being filed says what kind of thing it is, and the request that carried it says something different. The record goes by the document, so rather than file an action as information \u2014 or the reverse \u2014 and index it as neither, it stops and tells you both answers. Nothing was written. Send it again with the request naming the type the document names, or change the document first."
   }
 };
 function checkConnectionPairCovers(pair, side, extentKind, extent, covers) {
@@ -44386,9 +44394,26 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             findings: errs.map((x) => ({ check: x.check, detail: x.message }))
           };
       }
-      const isInquiry = normalizeType(meta.object_type) === "inquiry";
       const basisMd = files.find((f2) => f2.path === "bundle.md");
       const docFmW = basisMd && typeof basisMd.text === "string" ? parseFrontmatter(basisMd.text).data : null;
+      const typeStated = (v) => typeof v === "string" && v.trim() !== "" ? normalizeType(v) : null;
+      const documentType = docFmW && typeof docFmW === "object" ? typeStated(docFmW.object_type) : null;
+      const envelopeType = typeStated(meta.object_type);
+      if (documentType !== null && envelopeType !== null && documentType !== envelopeType && !pkg.replay) {
+        const dtRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TYPE_DISAGREES;
+        return {
+          ok: false,
+          reason: "ENVELOPE_TYPE_DISAGREES",
+          code: "ENVELOPE_TYPE_DISAGREES",
+          check: dtRow.check,
+          translation: dtRow.translation,
+          document_type: documentType,
+          envelope_type: envelopeType,
+          detail: `the document being promoted says object_type '${String(docFmW.object_type).slice(0, 40)}' and this request's meta says '${String(meta.object_type).slice(0, 40)}'. The record goes by the document, and it will not file one kind of thing as another: what a document IS decides which columns, projections and reads it gets. Send it again with the meta naming the type the document names, or change the document first. Nothing was written.`
+        };
+      }
+      const promotedType = documentType ?? normalizeType(meta.object_type);
+      const isInquiry = promotedType === "inquiry";
       const basisFm = isInquiry ? docFmW : null;
       const basisLegs = basisFm && Array.isArray(basisFm.basis) ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
       if (basisFm && !pkg.replay && (basisFm.basis !== void 0 && basisFm.basis !== null || basisFm.grounds !== void 0 && basisFm.grounds !== null)) {
@@ -44834,7 +44859,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           f2.sha256
         );
       const newSha = files.find((f2) => f2.path === "bundle.md")?.sha256;
-      const projectedType = normalizeType(meta.object_type);
+      const projectedType = promotedType;
       const mdForTitle = files.find((x) => x.path === "bundle.md");
       const projectedTitle = projectedType === "inquiry" ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? meta.title : meta.title;
       this.sql.exec(
@@ -45073,7 +45098,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         }
       }
       this.sql.exec(`DELETE FROM bias_statements WHERE bundle_id=?`, bundleId);
-      if (normalizeType(meta.object_type) === "bias") {
+      if (promotedType === "bias") {
         for (const r of _Store.#biasStatementRows(bundleId, docFmW))
           this.sql.exec(
             `INSERT INTO bias_statements
@@ -45106,7 +45131,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       this.sql.exec(`DELETE FROM action_basis WHERE bundle_id=?`, bundleId);
       this.sql.exec(`DELETE FROM correspondence WHERE bundle_id=?`, bundleId);
       this.sql.exec(`DELETE FROM action_quotes WHERE bundle_id=?`, bundleId);
-      if (normalizeType(meta.object_type) === "action" && docFmW) {
+      if (promotedType === "action" && docFmW) {
         const alegs = Array.isArray(docFmW.action_basis) ? docFmW.action_basis : [];
         for (let i = 0; i < alegs.length; i++) {
           const leg = alegs[i];
