@@ -1,0 +1,16 @@
+{
+ "unit": "plane:task-drain-alarm.test.mjs",
+ "inputHash": "1832f866ba0dd4f8141e39d1bc9cf22c503d4769b54384fc446d4cf20f43072e",
+ "verdict": "PASS",
+ "run": "8b98dc75c3a5a24b75c10bed24ba66097e2f4363.1790280996122.3045.json",
+ "tree": "8b98dc75c3a5a24b75c10bed24ba66097e2f4363",
+ "head": "bf877d26a8b8adcd932be49a113271f95641fb49",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 149,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "be46c746-0c73-5566-8b15-d21178502528",
+ "at": "2026-09-24T20:16:36.136Z"
+}
