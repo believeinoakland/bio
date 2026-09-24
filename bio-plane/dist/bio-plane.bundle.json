@@ -228,8 +228,8 @@
     },
     {
       "path": "src/render.mjs",
-      "bytes": 14399,
-      "sha256": "6e0b4585bab370cd10755b0f0150a53abef952a0cddc14654a47e7c847fb2adc"
+      "bytes": 14480,
+      "sha256": "22e1a369531a40923077fcce2904aedd49ff9e9e38a136d6250ffff192c284ce"
     },
     {
       "path": "src/schema.mjs",
