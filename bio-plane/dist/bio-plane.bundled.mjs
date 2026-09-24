@@ -1406,8 +1406,19 @@ CREATE TABLE IF NOT EXISTS proposal_dispositions (
   reason          TEXT NOT NULL,
   decided_by      TEXT,
   at              TEXT,
+  definition_version INTEGER,   -- REC-184: the progression definition version the decision was taken against
   PRIMARY KEY (progression_key, stage_key)
 );
+-- REC-184 (framework 8.2, The declared flow and its revisions): definition_version is the version of
+-- the progression definition CURRENT when the member decided, stamped by the store and never the
+-- caller's word. A decision applies only to the version it was taken against -- once the definition
+-- is revised the proposal is OPEN again, with the earlier decision published beside it, because a
+-- decision the record applies to a definition nobody judged is the record claiming more than it
+-- holds. NULLABLE AND NEVER BACK-FILLED: a row written before this column existed recorded no
+-- version, and the only value a backfill could reach for is the current one, which is the claim
+-- this column exists to test. NULL reads back as not recorded, stated, and such a row governs
+-- only while the definition has not been declared again since the decision was taken (the
+-- definition's own at against the row's at) -- the version stays unknown, the ORDER is recorded.
 CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at);
 -- REC-11 / DATA-MODEL D4: the INQUIRY BASIS -- the legs an inquiry rests on,
 -- and invariant 7's storage: a leg whose role is cuts_against is a ROW, so a
@@ -3910,6 +3921,21 @@ CREATE TABLE IF NOT EXISTS theme_placements (
 CREATE INDEX IF NOT EXISTS theme_placements_bundle ON theme_placements(bundle_id);
 -- =========================================================================
 
+-- D-64: the instance's DAILY RENDER ALLOWANCE, spent by the render arm of
+-- op=acquire (CLIENT-RENDERED.md, RULED 2026-09-23 by BOB #32 item 3). One row
+-- per UTC day. spent_ms is browser time the renderer REPORTED, so it is the
+-- renderer's claim summed, not a platform meter. deferred counts the renders
+-- this instance declined because the allowance was spent: a deferral is a
+-- recorded fact, never a silent fall-back to filing the shell as the content.
+-- An operational fact about this instance, not corpus-derived.
+CREATE TABLE IF NOT EXISTS render_allowance (
+  day        TEXT PRIMARY KEY,
+  spent_ms   INTEGER NOT NULL DEFAULT 0,
+  renders    INTEGER NOT NULL DEFAULT 0,
+  deferred   INTEGER NOT NULL DEFAULT 0,
+  last_at    TEXT NOT NULL
+);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
@@ -3998,7 +4024,7 @@ var sha256 = async (s) => {
   const b = await crypto.subtle.digest("SHA-256", typeof s === "string" ? new TextEncoder().encode(s) : s);
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 };
-async function livefire(env, storeName, { capacity = false } = {}) {
+async function livefire(env, storeName, { capacity = false, viewer = null } = {}) {
   const t0 = Date.now();
   const stub = env.STORE.get(env.STORE.idFromName(storeName));
   const post = async (op, body) => {
@@ -4154,7 +4180,7 @@ rev ${rev}
     assert("R2 exercised without error", false, true);
   }
   const tw = Date.now();
-  const stats = await get(`stats?capacity=${capacity ? "1" : "0"}`);
+  const stats = await get(`stats?capacity=${capacity ? "1" : "0"}&viewer=${encodeURIComponent(viewer ?? "")}`);
   const dang = await get("dangling");
   const wholeMs = Date.now() - tw;
   const passed = A.filter((a) => a.ok).length;
@@ -4205,6 +4231,7 @@ __export(bio_checks_exports, {
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
   CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED,
   CASE_DOCUMENT_FORMAT_LEGACY: () => CASE_DOCUMENT_FORMAT_LEGACY,
+  CASE_DOCUMENT_FORMAT_V2: () => CASE_DOCUMENT_FORMAT_V2,
   CASE_MEMBER_ROLES: () => CASE_MEMBER_ROLES,
   CHECK_RETIREMENTS: () => CHECK_RETIREMENTS,
   CITATION_MAX: () => CITATION_MAX,
@@ -4267,6 +4294,7 @@ __export(bio_checks_exports, {
   QUOTE_KEYS: () => QUOTE_KEYS,
   RATIFY_SCOPE_CHECKS: () => RATIFY_SCOPE_CHECKS,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
+  RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
   REQUIRED_ARGUMENT_CHECKS: () => REQUIRED_ARGUMENT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
@@ -4311,6 +4339,7 @@ __export(bio_checks_exports, {
   canonicalExtent: () => canonicalExtent,
   canonicalJson: () => canonicalJson,
   canonicalRange: () => canonicalRange,
+  caseDocumentRequiresDisclosures: () => caseDocumentRequiresDisclosures,
   caseDocumentStatesMemberBlocks: () => caseDocumentStatesMemberBlocks,
   caseEditionClaimed: () => caseEditionClaimed,
   checkBiasExtension: () => checkBiasExtension,
@@ -8544,31 +8573,31 @@ function scalarbase(p, s) {
   scalarmult(p, q, s);
 }
 function unpackneg(r, p) {
-  const t = gf(), chk = gf(), num = gf(), den = gf(), den2 = gf(), den4 = gf(), den6 = gf();
+  const t = gf(), chk = gf(), num2 = gf(), den = gf(), den2 = gf(), den4 = gf(), den6 = gf();
   for (let i = 0; i < 16; i++) {
     r[2][i] = GF1[i];
   }
   unpack25519(r[1], p);
-  fSq(num, r[1]);
-  fMul(den, num, DD);
-  fSub(num, num, r[2]);
+  fSq(num2, r[1]);
+  fMul(den, num2, DD);
+  fSub(num2, num2, r[2]);
   fAdd(den, r[2], den);
   fSq(den2, den);
   fSq(den4, den2);
   fMul(den6, den4, den2);
-  fMul(t, den6, num);
+  fMul(t, den6, num2);
   fMul(t, t, den);
   pow2523(t, t);
-  fMul(t, t, num);
+  fMul(t, t, num2);
   fMul(t, t, den);
   fMul(t, t, den);
   fMul(r[0], t, den);
   fSq(chk, r[0]);
   fMul(chk, chk, den);
-  if (neq25519(chk, num)) fMul(r[0], r[0], I25);
+  if (neq25519(chk, num2)) fMul(r[0], r[0], I25);
   fSq(chk, r[0]);
   fMul(chk, chk, den);
-  if (neq25519(chk, num)) return -1;
+  if (neq25519(chk, num2)) return -1;
   if (par25519(r[0]) === p[31] >> 7) fSub(r[0], GF0, r[0]);
   fMul(r[3], r[0], r[1]);
   return 0;
@@ -10836,6 +10865,20 @@ var PARTITION_INDEPENDENCE_CHECKS = {
     check: "C-71.7",
     where: "src/store.mjs partitionIndependence > is-partition-independence",
     translation: "This question rests on more reasons than a written reading may hold, so a grouping of all of them could not be written and is not checked. The bound is said here rather than applied quietly."
+  },
+  /* REC-192 — THE VERSION ARM (BOB #31, 2026-09-23 22:22Z): the same read over a WRITTEN reading's
+     groups, answering independence on its own with no strength beside it. Two refusals the arm owes,
+     numbered on in C-71 because they are refusals of the same op and neither is a statement about a
+     strength. */
+  PARTITION_INDEPENDENCE_TWO_SUBJECTS: {
+    check: "C-71.8",
+    where: "src/store.mjs partitionIndependence > is-partition-independence",
+    translation: "Both a written reading and a proposed grouping were named. This answers for one of them at a time, and which one was meant is not something to guess, so name only the one you want."
+  },
+  PARTITION_INDEPENDENCE_NO_SUCH_VERSION: {
+    check: "C-71.9",
+    where: "src/store.mjs partitionIndependence > is-partition-independence",
+    translation: "No reading by that name belongs to this question, so there are no written groups of it to check. Nothing was substituted for it."
   }
 };
 var QUEUE_MINT_CHECKS = {
@@ -10892,6 +10935,15 @@ var MACHINE_FENCE_CHECKS = {
     check: "C-32.3",
     where: "src/store.mjs actionMove > is-machine-move-action",
     translation: "Advancing an action is a decision to reach outside this system, or to declare that reaching out is finished, and either way somebody is answerable for it. The credential that asked here is an automated one, so it can prepare the action and cannot move it. Sign in to move it yourself."
+  },
+  /* REC-189 — D-182's ruling on the write side (BOB #21: *"Only a member's authored act sets 1, 2 or 3"*).
+     Refuses a CHANGE of tier by a machine, never a presence: carrying a member's tier forward unchanged is
+     not refused, nor is leaving undetermined a tier no member ever set. BOB #32 (2026-09-24 01:44Z): dropping a
+     member's tier to undetermined IS a change and is refused. Inside `promote`'s action block, not an act. */
+  MACHINE_CANNOT_SET_RISK_TIER: {
+    check: "C-32.19",
+    where: "src/store.mjs promote > is-machine-set-risk-tier",
+    translation: "A risk tier tells whoever reads this action whether it is safe to file, needs caution, or must not be filed without a lawyer, and somebody has to be answerable for that judgement. The credential that asked here is an automated one: it can carry forward the tier a member set, and where no member has set one it can leave the tier unstated, but it cannot set, change or remove one. Sign in to state the tier yourself."
   },
   MACHINE_CANNOT_CORRESPOND: {
     check: "C-32.4",
@@ -11740,11 +11792,74 @@ var INSTALLATION_CHECKS = {
     translation: "The administrator token given does not match the one this copy holds, so the copy was not claimed. Nothing was changed."
   }
 };
+var RENDER_CAPTURE_CHECKS = {
+  /* `render` present and not `true`. Refused rather than read as absent: a
+     `render: "yes"` answered with the plain capture would file the shell as the
+     content, which is the outcome this family exists to prevent. */
+  RENDER_FLAG_MALFORMED: {
+    check: "C-83.1",
+    where: "src/index.mjs fetch > is-render-admit",
+    translation: "This request asked for a rendered capture in a form this instance does not recognise. It answers render: true or nothing, so a request for the page as a visitor saw it is never quietly answered with the page's empty frame. Nothing was fetched."
+  },
+  /* A render combined with an arm whose bytes are not a live page: an archive
+     replay, a Drive export, or the continuation of a capture already filed. */
+  RENDER_ARM_CONFLICT: {
+    check: "C-83.2",
+    where: "src/index.mjs fetch > is-render-admit",
+    translation: "A rendered capture runs the live page in a browser, and this request combined that with a way of capturing that does not load a live page (an archived copy, a Drive export, or the continuation of an earlier capture). Ask for one or the other. Nothing was fetched."
+  },
+  /* No renderer bound — or the Browser Rendering binding is bound and the
+     in-plane driver over it is not built. Named rather than falling back. */
+  RENDER_NO_RENDERER: {
+    check: "C-83.3",
+    where: "src/index.mjs fetch > is-render-admit",
+    translation: "This instance has no working page renderer, so it cannot capture the page as a visitor saw it. Nothing was fetched, and the page's empty frame was not filed in its place."
+  },
+  /* BOB #32 item 3: the daily render allowance is spent. The render is
+     DEFERRED and the deferral is recorded; the shell is never the content. */
+  RENDER_DEFERRED: {
+    check: "C-83.4",
+    where: "src/index.mjs fetch > is-render-admit",
+    translation: "This instance has used today's allowance for rendering pages, so this render is deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. It can be asked again after midnight UTC."
+  },
+  /* The render loads the page again, which is a second document load to the
+     host, so it asks the per-host governor like any other (BOB #32 item 3:
+     "through the host governor"). Refused by name when the host is cooling off. */
+  RENDER_HOST_COOLING_OFF: {
+    check: "C-83.5",
+    where: "src/index.mjs fetch > is-render-admit",
+    translation: "This instance is giving that website a rest after it asked us to slow down, and a rendered capture loads the page again, so it was not attempted. Nothing was fetched. Try again after the wait shown beside this message."
+  },
+  /* The shell is not an HTML page small enough to render (a PDF, an office
+     file, a multipart giant). A document that is not a page has nothing a
+     browser adds; capture it without `render`. */
+  RENDER_NOT_A_PAGE: {
+    check: "C-83.6",
+    where: "src/index.mjs fetch > is-render-result",
+    translation: "The address served something that is not a web page a browser can render, such as a PDF or an office file, so there is nothing for a rendered capture to add. Nothing was filed. Capture it the ordinary way."
+  },
+  /* The renderer did not produce a rendered document. The shell's bytes are
+     held content-addressed and unregistered, exactly as TOO_LARGE's parts are;
+     no document names them. */
+  RENDER_FAILED: {
+    check: "C-83.7",
+    where: "src/index.mjs fetch > is-render-result",
+    translation: "The page was fetched but the renderer did not produce the page as a visitor would see it, so nothing was filed: the page's empty frame is never filed as its content. The reason the renderer gave is beside this message."
+  }
+};
 var NAMESPACE_CHECKS = {
   NAMESPACE_UNKNOWN: {
     check: "C-78.1",
     where: "src/index.mjs namespaceGate > is-namespace-gate",
     translation: "This request named a part of the record that does not exist on this copy, so nothing was read or changed. A copy has two: the record itself, and a scratch area kept apart for testing. The name must match one of them exactly; the names are listed beside this message."
+  },
+  /* D-461 (C-78.2): the scratch area named on a public operation that only ever answers from the record itself.
+     Twelve such operations used to answer from the record while the caller believed it was in scratch — one of
+     them, a knock, WROTE there. The sentence says nothing happened first and names no remedy but the true one. */
+  NAMESPACE_PINNED: {
+    check: "C-78.2",
+    where: "src/index.mjs pinnedNamespaceGate > is-pinned-namespace-gate",
+    translation: "This request asked for the scratch area, but this operation only ever answers from the record itself and has no scratch version, so nothing was read or changed. To use it, leave the scratch area out of the request, knowing it then reaches the real record."
   }
 };
 var DISPATCH_CHECKS = {
@@ -11869,10 +11984,12 @@ var REEXTRACT_CHECKS = {
     translation: "This record holds no reading of that document for you to re-read. A capture is read when it is filed into the record, so file it first; re-reading replaces a reading that already exists."
   }
 };
-var CASE_DOCUMENT_FORMAT = "bio-case-document/2";
+var CASE_DOCUMENT_FORMAT = "bio-case-document/3";
+var CASE_DOCUMENT_FORMAT_V2 = "bio-case-document/2";
 var CASE_DOCUMENT_FORMAT_LEGACY = "bio-case-document/1";
-var CASE_DOCUMENT_FORMATS_ACCEPTED = [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_LEGACY];
-var caseDocumentStatesMemberBlocks = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
+var CASE_DOCUMENT_FORMATS_ACCEPTED = [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY];
+var caseDocumentStatesMemberBlocks = (fm) => fm?.format === CASE_DOCUMENT_FORMAT || fm?.format === CASE_DOCUMENT_FORMAT_V2;
+var caseDocumentRequiresDisclosures = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
 var SEARCHED_SUBJECT_SOURCES = {
   case_basis: "the subjects were taken from the CASE -- its members' basis legs and the content rows those legs name -- and the observation log was consulted only to ask what became of each. The log never supplies the subject set; a section computed the other way round is 100% searched by construction and says nothing about the case"
 };
@@ -11888,7 +12005,8 @@ var CASE_DOCUMENT_FAMILY = {
   PINS: { check: "C-41.9", what: "the version hash per member (DEC-72 clause 3)" },
   COMPLETENESS: { check: "C-41.10", what: "the completeness block (REC-14)" },
   EXCLUDED: { check: "C-41.11", what: "the exclusion list field (C-9)" },
-  BAR: { check: "C-41.12", what: "required_strength \u2014 the standard of evidence (DEC-17 as DEC-72 rehomes it)" }
+  BAR: { check: "C-41.12", what: "required_strength \u2014 the standard of evidence (DEC-17 as DEC-72 rehomes it)" },
+  DISCLOSURES: { check: "C-41.13", what: "bias_manifest and the statement's acknowledgement list, required of a bio-case-document/3 (REC-188)" }
 };
 var C41 = Object.fromEntries(
   Object.entries(CASE_DOCUMENT_FAMILY).map(([k, v]) => [k, v.check])
@@ -11900,7 +12018,7 @@ function checkCaseDocument(fm, ctx = {}) {
     findings.push(f(
       C41.FORMAT,
       "error",
-      `a case document declares format '${CASE_DOCUMENT_FORMAT}' (or, authored before BIO_Publication_v0_1.md \xA73 rule 12, '${CASE_DOCUMENT_FORMAT_LEGACY}') (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
+      `a case document declares format '${CASE_DOCUMENT_FORMAT}' (or, authored before REC-188, '${CASE_DOCUMENT_FORMAT_V2}'; or, authored before BIO_Publication_v0_1.md \xA73 rule 12, '${CASE_DOCUMENT_FORMAT_LEGACY}') (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
       ["re-publish through op=publish, which authors the case document"]
     ));
   }
@@ -12025,6 +12143,55 @@ function checkCaseDocument(fm, ctx = {}) {
       }
       if (c && c.acknowledged !== void 0 && c.acknowledged !== acks.length)
         findings.push(f(C41.COMPLETENESS, "error", `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
+    }
+  }
+  if (caseDocumentRequiresDisclosures(fm)) {
+    const bm = fm?.bias_manifest;
+    if (!bm || typeof bm !== "object" || Array.isArray(bm) || typeof bm.in_force !== "boolean") {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document requires a bias_manifest map with a boolean in_force (got ${JSON.stringify(bm ?? null)}): a published case CARRIES the bias it was produced under (DEC-20), and the manifest is the lens itself \u2014 computed and stamped by the plane beside the acknowledgement the publisher authors (DEC-46). A document silent about the lens cannot be told from one produced under none`,
+        ["re-publish through op=publish, which stamps the manifest in force for the case's project into the case document"]
+      ));
+    } else if (bm.in_force === true && !(typeof bm.statements_sha === "string" && /^[0-9a-f]{64}$/.test(bm.statements_sha))) {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (bundle, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
+        ["re-publish through op=publish"]
+      ));
+    } else if (bm.in_force === false && !(typeof bm.stated === "string" && bm.stated.trim())) {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says no lens was in force and does not SAY so (stated is empty): "no manifest was in force" is a statement, and a blank is not one`,
+        ["re-publish through op=publish"]
+      ));
+    }
+    if (bm && typeof bm === "object" && !Array.isArray(fm?.bias_manifest_bundles)) {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias bundle was in force) and is legal \u2014 an ABSENT field is silence about which revisions the lens was`,
+        ["re-publish through op=publish"]
+      ));
+    }
+    if (!c || !Number.isInteger(c.acknowledged) || c.acknowledged < 0) {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.acknowledged, the count of second readers of its statement (got '${c ? c.acknowledged : void 0}'): ZERO is a statement \u2014 nobody but its author acknowledged it \u2014 and is legal; an absent count is silence (BIO_Publication \xA73 rule 11). An acknowledgement is never required to publish`,
+        ["re-publish through op=publish, which lists every acknowledgement of the statement it publishes"]
+      ));
+    }
+    if (!Array.isArray(fm?.completeness_acknowledgements)) {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal \u2014 an ABSENT field is silence about who else read what this case leaves out (BIO_Publication \xA73 rule 11)`,
+        ["re-publish through op=publish, which lists every acknowledgement of the statement it publishes"]
+      ));
     }
   }
   const srch = typeof fm?.searched === "object" && fm.searched || null;
@@ -15088,7 +15255,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.22.0";
+var CATALOG_VERSION = "1.23.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -15998,6 +16165,3676 @@ async function inbandQuartet({ subject, over, date = null, author = null, bar = 
       author: author ?? null,
       floors: floorsOf(bar)
     }
+  };
+}
+
+// src/cpu.mjs
+function makeMeter() {
+  const seg = /* @__PURE__ */ Object.create(null);
+  const bump = (label, bytes) => {
+    const e = seg[label] || (seg[label] = { calls: 0, bytes: 0 });
+    e.calls++;
+    if (typeof bytes === "number" && Number.isFinite(bytes)) e.bytes += bytes;
+  };
+  return {
+    /** Run a synchronous block, counting it. `bytes` is the size of what it
+     *  worked on, when that is known and meaningful. */
+    sync(label, fn, bytes) {
+      bump(label, bytes);
+      return fn();
+    },
+    /** Same, for an await that is compute rather than I/O: a crypto digest is
+     *  async in the Workers API and is not a network wait. */
+    async cpuAwait(label, fn, bytes) {
+      bump(label, bytes);
+      return await fn();
+    },
+    report() {
+      const calls = Object.values(seg).reduce((a, e) => a + e.calls, 0);
+      const bytes = Object.values(seg).reduce((a, e) => a + e.bytes, 0);
+      return {
+        work_calls: calls,
+        work_bytes: bytes,
+        segments: { ...seg },
+        measured_ms: null,
+        note: "COUNTS, not times. Cloudflare freezes Date.now() during synchronous execution as a timing-attack defence, so a Worker cannot measure its own compute and any millisecond figure reported from inside one is meaningless. These are the quantities that DRIVE the cost and that would explain a kill afterwards. The ceiling is measured separately, in reference iterations, by op=cpuprobe."
+      };
+    }
+  };
+}
+function burn(iterations) {
+  let x = 1;
+  for (let i = 0; i < iterations; i++) x = (x * 1103515245 + 12345) % 2147483647;
+  return x;
+}
+async function cpuProbe({
+  checkpoint,
+  startStep = 0,
+  maxStep = 40,
+  iterationsPerStep = 2e6,
+  budgetMs = 2e4,
+  now = () => Date.now()
+}) {
+  const t0 = now();
+  let step = startStep;
+  for (; step < maxStep; step++) {
+    burn(iterationsPerStep);
+    const elapsed = now() - t0;
+    await checkpoint(step + 1, elapsed);
+    if (elapsed >= budgetMs) return { completed: step + 1, elapsed_ms: elapsed, reason: "BUDGET_REACHED" };
+  }
+  return { completed: step, elapsed_ms: now() - t0, reason: "MAX_STEP_REACHED" };
+}
+
+// src/subresources.mjs
+var SUBRESOURCE_CAP = 400;
+var SUBRESOURCE_MAX = 8 * 1024 * 1024;
+var SUBRESOURCE_BUDGET = 64 * 1024 * 1024;
+var CSS_MAX_DEPTH = 2;
+var STRIPPED_ELEMENTS = ["script", "iframe", "object", "embed", "applet", "frame", "frameset", "noembed"];
+var REFUSED_SCHEMES = ["javascript:", "data:", "blob:", "about:", "mailto:", "tel:", "file:", "ftp:", "ws:", "wss:", "chrome:", "chrome-extension:", "view-source:"];
+var TAG_RE = /<(\/?[a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
+var ATTR_RE = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+var CSS_URL_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)/gi;
+var CSS_IMPORT_RE = /@import\s+(?:url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)|"([^"]*)"|'([^']*)')/gi;
+var STYLE_EL_RE = /<style\b([^>]*)>([\s\S]*?)<\/style\s*>/gi;
+var COMMENT_RE = /<!--[\s\S]*?-->/g;
+var placeholderFor = (sha) => `about:capture#${sha}`;
+var PLACEHOLDER_MISSING = "about:capture#unavailable";
+function attrsOf(blob) {
+  const out = [];
+  ATTR_RE.lastIndex = 0;
+  let m;
+  while (m = ATTR_RE.exec(blob)) {
+    if (!m[0].trim()) {
+      if (ATTR_RE.lastIndex <= m.index) ATTR_RE.lastIndex = m.index + 1;
+      continue;
+    }
+    out.push({
+      name: m[1].toLowerCase(),
+      raw: m[0],
+      value: m[3] !== void 0 ? m[3] : m[4] !== void 0 ? m[4] : m[5] !== void 0 ? m[5] : null,
+      quote: m[3] !== void 0 ? '"' : m[4] !== void 0 ? "'" : "",
+      present: m[2] !== void 0
+    });
+  }
+  return out;
+}
+var attr = (as, n) => {
+  const a = as.find((x) => x.name === n);
+  return a ? a.value : null;
+};
+function srcsetUrls(v) {
+  const out = [];
+  const s = String(v);
+  let i = 0;
+  const isWs = (c) => c === " " || c === "	" || c === "\n" || c === "\r" || c === "\f";
+  while (i < s.length) {
+    while (i < s.length && (isWs(s[i]) || s[i] === ",")) i++;
+    if (i >= s.length) break;
+    const start = i;
+    while (i < s.length && !isWs(s[i])) i++;
+    let url = s.slice(start, i);
+    if (url.endsWith(",")) {
+      out.push(url.replace(/,+$/, ""));
+      continue;
+    }
+    out.push(url);
+    let depth = 0;
+    while (i < s.length) {
+      if (s[i] === "(") depth++;
+      else if (s[i] === ")" && depth) depth--;
+      else if (s[i] === "," && !depth) {
+        i++;
+        break;
+      }
+      i++;
+    }
+  }
+  return out.filter(Boolean);
+}
+function cssRefs(css) {
+  const out = [];
+  CSS_URL_RE.lastIndex = 0;
+  let m;
+  while (m = CSS_URL_RE.exec(css)) {
+    const u = m[1] ?? m[2] ?? m[3] ?? "";
+    if (u.trim()) out.push(u.trim());
+  }
+  CSS_IMPORT_RE.lastIndex = 0;
+  while (m = CSS_IMPORT_RE.exec(css)) {
+    const u = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? "";
+    if (u.trim()) out.push(u.trim());
+  }
+  return out;
+}
+var FURNITURE_TAGS = /* @__PURE__ */ new Set(["nav", "footer", "header", "aside"]);
+var FURNITURE_ROLES = /* @__PURE__ */ new Set(["navigation", "banner", "contentinfo", "complementary", "search"]);
+var BODY_TAGS = /* @__PURE__ */ new Set(["article", "main"]);
+function pickSrcsetCandidate(cands) {
+  const score = (raw) => {
+    const d = /\s(\d+(?:\.\d+)?)([wx])\s*$/.exec(raw || "");
+    if (!d) return 1;
+    return d[2] === "w" ? Number(d[1]) : Number(d[1]) * 1e3;
+  };
+  const sorted = [...cands].sort((a, b) => score(b.raw) - score(a.raw));
+  return { pick: sorted[0], rest: sorted.slice(1) };
+}
+function parseHtmlRefs(html) {
+  const src = String(html).replace(COMMENT_RE, "");
+  const refs = [];
+  const region = [];
+  const here = () => {
+    const body = region.find((r) => r.region === "body");
+    if (body) return body;
+    const furn = region[region.length - 1];
+    return furn || { region: "body", basis: "default" };
+  };
+  const add = (ref, kind, where, extra) => {
+    if (!ref || !ref.trim()) return;
+    const r = here();
+    refs.push({ ref: ref.trim(), kind, where, region: r.region, region_basis: r.basis, ...extra || {} });
+  };
+  TAG_RE.lastIndex = 0;
+  let m;
+  while (m = TAG_RE.exec(src)) {
+    const raw = m[1];
+    const closing = raw.startsWith("/");
+    const tag = (closing ? raw.slice(1) : raw).toLowerCase();
+    if (closing) {
+      if (FURNITURE_TAGS.has(tag) || BODY_TAGS.has(tag)) {
+        for (let i = region.length - 1; i >= 0; i--)
+          if (region[i].tag === tag) {
+            region.splice(i, 1);
+            break;
+          }
+      }
+      continue;
+    }
+    const as = attrsOf(m[2] || "");
+    {
+      const role = (attr(as, "role") || "").toLowerCase().trim();
+      if (FURNITURE_ROLES.has(role)) region.push({ tag, region: "furniture", basis: `role=${role}` });
+      else if (role === "main" || role === "article") region.push({ tag, region: "body", basis: `role=${role}` });
+      else if (FURNITURE_TAGS.has(tag)) region.push({ tag, region: "furniture", basis: `<${tag}>` });
+      else if (BODY_TAGS.has(tag)) region.push({ tag, region: "body", basis: `<${tag}>` });
+    }
+    const inlineStyle = attr(as, "style");
+    if (inlineStyle) for (const u of cssRefs(inlineStyle)) add(u, "css-asset", `${tag}[style]`);
+    if (tag === "link") {
+      const rel = (attr(as, "rel") || "").toLowerCase().split(/\s+/).filter(Boolean);
+      const href = attr(as, "href");
+      if (!href) continue;
+      if (rel.includes("stylesheet")) add(href, "stylesheet", "link[rel=stylesheet]");
+      else if (rel.some((r) => r === "icon" || r === "shortcut" || r === "apple-touch-icon" || r === "mask-icon" || r === "apple-touch-icon-precomposed"))
+        add(href, "icon", `link[rel=${rel.join(" ")}]`);
+      else if (rel.includes("preload")) {
+        const as_ = (attr(as, "as") || "").toLowerCase();
+        if (as_ === "style") add(href, "stylesheet", "link[rel=preload][as=style]");
+        else if (as_ === "image") add(href, "image", "link[rel=preload][as=image]");
+        else if (as_ === "font") add(href, "font", "link[rel=preload][as=font]");
+      }
+      continue;
+    }
+    if (tag === "img" || tag === "input" || tag === "source" || tag === "video" || tag === "audio" || tag === "track" || tag === "image" || tag === "use") {
+      if (tag === "input" && (attr(as, "type") || "").toLowerCase() !== "image") continue;
+      const kind = tag === "video" || tag === "audio" || tag === "track" ? "media" : "image";
+      const ss = attr(as, "srcset") || attr(as, "imagesrcset");
+      if (ss) {
+        const rawCands = ss.split(",").map((x) => x.trim()).filter(Boolean);
+        const cands = srcsetUrls(ss).map((u, i) => ({ url: u, raw: rawCands[i] || u }));
+        const fb = attr(as, "src");
+        if (fb && !cands.some((c) => c.url === fb)) cands.push({ url: fb, raw: fb });
+        const { pick, rest } = pickSrcsetCandidate(cands);
+        const meta = { family: "srcset", family_size: cands.length, evidentiary_prior: "weak_against" };
+        if (pick) add(pick.url, kind, `${tag}[srcset]`, meta);
+        for (const r of rest) add(r.url, kind, `${tag}[srcset]`, { ...meta, collapsed: true });
+        const po = attr(as, "poster");
+        if (po) add(po, "image", `${tag}[poster]`);
+        continue;
+      }
+      for (const n of ["src", "poster", "href", "xlink:href"]) {
+        const v = attr(as, n);
+        if (v) add(v, n === "poster" ? "image" : kind, `${tag}[${n}]`);
+      }
+      continue;
+    }
+    if (tag === "script") {
+      const s = attr(as, "src");
+      if (s) add(s, "script", "script[src]");
+      continue;
+    }
+  }
+  STYLE_EL_RE.lastIndex = 0;
+  while (m = STYLE_EL_RE.exec(src))
+    for (const u of cssRefs(m[2] || "")) add(u, "css-asset", "style");
+  return refs;
+}
+function classifyRef(ref, base, isPublic) {
+  const lower = ref.toLowerCase();
+  for (const s of REFUSED_SCHEMES) {
+    if (lower.startsWith(s)) return { ok: false, reason: "REFUSED_SCHEME", scheme: s, url: ref };
+  }
+  let abs;
+  try {
+    abs = new URL(ref, base).toString();
+  } catch {
+    return { ok: false, reason: "UNRESOLVABLE", url: ref };
+  }
+  const clean = abs.split("#")[0];
+  if (!isPublic(clean)) return { ok: false, reason: "REFUSED_LOCATOR", url: clean };
+  return { ok: true, url: clean };
+}
+var CSP = "default-src 'none'; img-src blob: about:; style-src blob: about: 'unsafe-inline'; font-src blob: about:; media-src blob: about:; script-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'";
+var BANNER = (primarySha, when) => `<!-- DERIVED ARTIFACT, not evidence. Generated by bio-plane from the capture
+     ${primarySha}
+     at ${when}. The raw bytes as served are the evidence and are stored
+     separately, unmodified. This file has had scripts and frames removed and
+     every subresource reference replaced with an about:capture#<sha256>
+     placeholder resolved from data/snapshot-manifest.json. Opened without a
+     resolving viewer it renders blank, on purpose. -->
+`;
+function stripElements(html) {
+  let out = html;
+  for (const el of STRIPPED_ELEMENTS) {
+    out = out.replace(new RegExp(`<${el}\\b[^>]*>[\\s\\S]*?<\\/${el}\\s*>`, "gi"), "");
+    out = out.replace(new RegExp(`<${el}\\b[^>]*\\/?>`, "gi"), "");
+    out = out.replace(new RegExp(`<\\/${el}\\s*>`, "gi"), "");
+  }
+  out = out.replace(/<base\b[^>]*>/gi, "");
+  out = out.replace(/<meta\b[^>]*http-equiv\s*=\s*["']?\s*refresh[^>]*>/gi, "");
+  return out;
+}
+function rewriteCssText(css, resolve) {
+  const one = (whole, u) => {
+    const t = resolve(u);
+    return t === null ? whole : whole.replace(/url\(\s*(?:"[^"]*"|'[^']*'|[^)'"\s]*)\s*\)/i, `url("${t}")`);
+  };
+  let out = css.replace(CSS_URL_RE, (whole, a, b, c) => one(whole, (a ?? b ?? c ?? "").trim()));
+  out = out.replace(CSS_IMPORT_RE, (whole, a, b, c, d, e) => {
+    const u = (a ?? b ?? c ?? d ?? e ?? "").trim();
+    const t = resolve(u);
+    return t === null ? whole : `@import url("${t}")`;
+  });
+  return out;
+}
+function renderCompanion(html, { resolve, classifyLink, primarySha, when }) {
+  let src = stripElements(String(html));
+  src = src.replace(STYLE_EL_RE, (whole, attrsBlob, body) => `<style${attrsBlob}>${rewriteCssText(body, (u) => resolve(u, "css-asset"))}</style>`);
+  src = src.replace(TAG_RE, (whole, name, blob, selfClose) => {
+    const tag = name.toLowerCase();
+    const as = attrsOf(blob || "");
+    if (!as.length) return whole;
+    const kept = [];
+    for (const a of as) {
+      if (/^on[a-z]+$/.test(a.name)) continue;
+      if (a.name === "integrity" || a.name === "nonce") continue;
+      if (!a.present || a.value === null) {
+        kept.push(a.raw);
+        continue;
+      }
+      const q = a.quote || '"';
+      const put = (v) => kept.push(`${a.name}=${q}${v}${q}`);
+      if (a.name === "style") {
+        put(rewriteCssText(a.value, (u) => resolve(u, "css-asset")));
+        continue;
+      }
+      if (a.name === "srcset" || a.name === "imagesrcset") {
+        const live = [];
+        let anyDead = false;
+        for (const cand of a.value.split(",")) {
+          const trimmed = cand.trim();
+          if (!trimmed) continue;
+          const bits = trimmed.split(/\s+/);
+          const t = resolve(bits[0], "image");
+          if (t === PLACEHOLDER_MISSING) {
+            anyDead = true;
+            continue;
+          }
+          bits[0] = t === null ? bits[0] : t;
+          live.push(bits.join(" "));
+        }
+        if (!live.length) {
+          put(PLACEHOLDER_MISSING);
+          continue;
+        }
+        put(live.length === 1 && anyDead ? live[0].split(/\s+/)[0] : live.join(", "));
+        continue;
+      }
+      if (a.name === "href" || a.name === "src" || a.name === "poster" || a.name === "xlink:href" || a.name === "data") {
+        if (tag === "a" || tag === "area") {
+          const L = classifyLink(a.value);
+          kept.push(`data-bio-link="${L.type}"`);
+          if (L.address) kept.push(`data-bio-href="${L.address.replace(/"/g, "&quot;")}"`);
+          put(L.wrapper);
+          continue;
+        }
+        const t = resolve(a.value, tag === "script" ? "script" : "asset");
+        put(t === null ? a.value : t);
+        continue;
+      }
+      kept.push(a.raw);
+    }
+    return `<${name}${kept.length ? " " + kept.join(" ") : ""}${selfClose}>`;
+  });
+  const head = BANNER(primarySha, when) + `<meta http-equiv="Content-Security-Policy" content="${CSP}">
+`;
+  const at = src.search(/<head\b[^>]*>/i);
+  if (at !== -1) {
+    const end = src.indexOf(">", at) + 1;
+    return src.slice(0, end) + "\n" + head + src.slice(end);
+  }
+  return head + src;
+}
+function originOf(url, baseHost) {
+  let h;
+  try {
+    h = new URL(url).hostname.toLowerCase();
+  } catch {
+    return { origin: "unknown", host: null };
+  }
+  const b = String(baseHost || "").toLowerCase();
+  if (h === b) return { origin: "same_host", host: h };
+  const tail = (x) => x.split(".").slice(-2).join(".");
+  if (b && tail(h) === tail(b)) return { origin: "same_site", host: h, approximate: true };
+  return { origin: "third_party", host: h };
+}
+var FETCH_PRIORITY = { stylesheet: 0, "css-asset": 1, font: 1, icon: 2, image: 3, media: 4, script: 5 };
+var priorityOf = (ref) => (FETCH_PRIORITY[ref.kind] ?? 3) + (ref.region === "furniture" ? 10 : 0);
+function normalizeAddress(url) {
+  let u;
+  try {
+    u = new URL(url);
+  } catch {
+    return String(url || "").trim();
+  }
+  u.hash = "";
+  u.protocol = u.protocol.toLowerCase();
+  u.hostname = u.hostname.toLowerCase();
+  if (u.protocol === "https:" && u.port === "443" || u.protocol === "http:" && u.port === "80") u.port = "";
+  const ps = [...u.searchParams.entries()].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] < b[1] ? -1 : 1);
+  u.search = ps.length ? "?" + ps.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&") : "";
+  return u.toString();
+}
+function normalizeCitation(url) {
+  const raw = String(url || "").trim();
+  const hash = raw.indexOf("#");
+  if (hash === -1) return normalizeAddress(raw);
+  const frag = raw.slice(hash + 1);
+  return normalizeAddress(raw.slice(0, hash)) + (frag ? "#" + frag : "");
+}
+function fragmentOf(url) {
+  const raw = String(url || "").trim();
+  const hash = raw.indexOf("#");
+  if (hash === -1) return null;
+  const frag = raw.slice(hash + 1).trim();
+  return frag || null;
+}
+var REUSABLE_KINDS = /* @__PURE__ */ new Set(["stylesheet", "css-asset", "font", "icon"]);
+function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 1e3, minDocuments = 2 } = {}) {
+  if (!known || !known.sha256) return { reuse: false, why: "not_seen_before" };
+  if (!REUSABLE_KINDS.has(ref.kind)) return { reuse: false, why: "evidence_is_always_fetched" };
+  const pages = known.documents || 0;
+  if (pages < minDocuments)
+    return { reuse: false, why: pages + (known.documents_undetermined || 0) >= minDocuments ? "shared_across_documents_undetermined" : "not_yet_shared_across_documents" };
+  const seen = Date.parse(known.last_fetched || "");
+  if (!Number.isFinite(seen)) return { reuse: false, why: "no_fetch_record" };
+  const age = now - seen;
+  if (age > freshWindowMs) return { reuse: false, why: "last_seen_served_too_long_ago", age_ms: age };
+  const stable = Date.parse(known.stable_since || "");
+  return {
+    reuse: true,
+    fetched_age_ms: age,
+    stable_for_ms: Number.isFinite(stable) ? now - stable : null,
+    changes: known.changes || 0
+  };
+}
+function fetchPolicy(ref, origin) {
+  if (ref.collapsed)
+    return {
+      fetch: false,
+      reason: "COLLAPSED_SRCSET_FAMILY",
+      detail: `one of ${ref.family_size} responsive candidates for one picture; the largest is captured`
+    };
+  if (ref.kind === "stylesheet" || ref.kind === "css-asset" || ref.kind === "font" || ref.kind === "icon")
+    return { fetch: true, why: "layout" };
+  if (origin === "third_party" && (ref.kind === "script" || ref.kind === "image" || ref.kind === "media"))
+    return {
+      fetch: false,
+      reason: "THIRD_PARTY",
+      detail: "cross-origin script, image, or media: advertising, analytics, and social widgets are not part of the document"
+    };
+  if (ref.kind === "script") return { fetch: true, why: "served_with_the_page" };
+  if (ref.region === "furniture")
+    return {
+      fetch: false,
+      reason: "OUTSIDE_THE_DOCUMENT",
+      detail: `found in ${ref.region_basis}, which belongs to the site rather than to this document`
+    };
+  return { fetch: true, why: "in_the_document" };
+}
+var LINK_TYPES = ["anchor", "intra", "deferred", "refused"];
+var linkWrapper = {
+  anchor: (frag) => frag,
+  intra: (sha) => `about:capture#${sha}`,
+  deferred: (url) => `about:link#${encodeURIComponent(url)}`,
+  refused: () => "about:link#refused"
+};
+async function captureSubresources({
+  html,
+  base,
+  primarySha,
+  primaryFile,
+  fetchOne,
+  put,
+  sha256: sha2562,
+  isPublic,
+  cap = SUBRESOURCE_CAP,
+  perMax = SUBRESOURCE_MAX,
+  budget = SUBRESOURCE_BUDGET,
+  now = () => /* @__PURE__ */ new Date(),
+  /* What this runtime was last OBSERVED to allow, passed in by the caller from
+     whatever it recorded last time, or null the first time anything runs here.
+     Never a constant in this file: the number belongs to the platform, changes
+     without notice, and differs per account, so the only honest source for it
+     is having hit it. */
+  platformCeiling = null,
+  platformMargin = 5,
+  subrequestsAlreadySpent = 1,
+  /* What this host has served before. `siteLookup(addressNorm)` returns the
+     stored record or null; absent, nothing is ever reused and behaviour is
+     exactly what it was before reuse existed. */
+  siteLookup = null,
+  reuseFreshWindowMs = 24 * 3600 * 1e3,
+  reuseMinDocuments = 2,
+  /* Reads a stored capture back as text, so a REUSED stylesheet can have its own
+     url() targets followed just as a freshly fetched one does. Without it a
+     reused stylesheet would render without its sprites. */
+  readBack = null,
+  /* Resuming a capture that ran out of budget. `resume` carries what an earlier
+     tick accumulated and what it had left to do. Nothing is re-fetched and
+     nothing is re-parsed: the queue is restored rather than rediscovered,
+     because rediscovering it means reading every stylesheet back out of R2 to
+     re-derive its url() targets, and on a Legistar page that is thirty storage
+     reads spent to learn what one row already knew. */
+  resume = null,
+  /* Measured, not assumed. Every synchronous compute segment in here is timed so
+     the record can say what a capture actually costs against whatever ceiling
+     the runtime has. Network waits are never inside a segment. */
+  meter = makeMeter()
+}) {
+  const noReuse = [];
+  const rec_noreuse = (stem, dec) => noReuse.push({ url: stem.url, kind: stem.kind, why: dec.why });
+  const stamp = () => now().toISOString().split(".")[0] + "Z";
+  const records = [];
+  const bySha = /* @__PURE__ */ new Map();
+  const byUrl = /* @__PURE__ */ new Map();
+  const refToUrl = /* @__PURE__ */ new Map();
+  let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false, platformHit = false;
+  let observedCeiling = null, deferred = 0, reused = 0;
+  const siteObservations = [];
+  const links = [];
+  const outstanding = [];
+  const ceilingBudget = platformCeiling == null ? Infinity : Math.max(0, platformCeiling - platformMargin - subrequestsAlreadySpent);
+  let baseHost = null;
+  try {
+    baseHost = new URL(base).hostname;
+  } catch {
+    baseHost = null;
+  }
+  let queue;
+  if (resume) {
+    for (const r of resume.records || []) {
+      records.push(r);
+      if (r.url) byUrl.set(r.url, r);
+      if (r.ok && r.sha256 && !bySha.has(r.sha256)) bySha.set(r.sha256, r);
+    }
+    for (const l of resume.links || []) links.push(l);
+    for (const [k, v] of Object.entries(resume.refToUrl || {})) refToUrl.set(k, v);
+    for (const o of resume.siteObservations || []) siteObservations.push(o);
+    discovered = resume.discovered || records.length;
+    spent = resume.spent || 0;
+    queue = (resume.queue || []).map((q) => ({
+      ...q,
+      cssOwner: q.cssOwnerIdx == null ? void 0 : records[q.cssOwnerIdx]
+    }));
+    const retry = new Set(queue.map((q) => q.retryUrl).filter(Boolean));
+    for (let i = records.length - 1; i >= 0; i--)
+      if (records[i].reason === "DEFERRED" && retry.has(records[i].url)) {
+        byUrl.delete(records[i].url);
+        records.splice(i, 1);
+        discovered--;
+      }
+  } else {
+    queue = meter.sync("parse_html", () => parseHtmlRefs(html), html.length).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
+  }
+  const settle = (item, rec) => {
+    if (rec) records.push(rec);
+    if (item.cssOwner)
+      item.cssOwner.rewrite.push({ ref: item.ref, sha256: rec && rec.ok ? rec.sha256 : null });
+  };
+  while (queue.length) {
+    let at_ = 0, best = priorityOf(queue[0]);
+    for (let i = 1; i < queue.length; i++) {
+      const p = priorityOf(queue[i]);
+      if (p < best) {
+        best = p;
+        at_ = i;
+      }
+    }
+    const item = queue.splice(at_, 1)[0];
+    discovered++;
+    const cls = classifyRef(item.ref, item.against, isPublic);
+    if (item.depth === 1 && !refToUrl.has(item.ref)) refToUrl.set(item.ref, cls.ok ? cls.url : null);
+    const at = stamp();
+    const org = cls.ok ? originOf(cls.url, baseHost) : { origin: "unknown", host: null };
+    const stem = {
+      url: cls.ok ? cls.url : item.ref,
+      kind: item.kind,
+      via: item.where,
+      from: item.from,
+      depth: item.depth,
+      region: item.region || "body",
+      region_basis: item.region_basis || "default",
+      ...org,
+      ...item.family ? { family: item.family, family_size: item.family_size } : {},
+      ...item.evidentiary_prior ? { evidentiary_prior: item.evidentiary_prior } : {},
+      fetched_at: at
+    };
+    if (!cls.ok) {
+      settle(item, {
+        ...stem,
+        ok: false,
+        status: null,
+        reason: cls.reason,
+        ...cls.scheme ? { scheme: cls.scheme } : {},
+        detail: cls.reason === "REFUSED_SCHEME" ? `a ${cls.scheme} reference is not something this surface fetches` : "the address is not public https, and the fence that guards the primary locator guards this one"
+      });
+      continue;
+    }
+    const pol = fetchPolicy(item, org.origin);
+    if (!pol.fetch) {
+      settle(item, {
+        ...stem,
+        ok: false,
+        status: null,
+        fetched: false,
+        reason: pol.reason,
+        detail: pol.detail
+      });
+      continue;
+    }
+    const already = byUrl.get(cls.url);
+    if (already) {
+      if (item.cssOwner)
+        item.cssOwner.rewrite.push({ ref: item.ref, sha256: already.ok ? already.sha256 : null });
+      continue;
+    }
+    if (platformHit || attempted >= ceilingBudget) {
+      deferred++;
+      outstanding.push({
+        ...{ ...item, cssOwner: void 0 },
+        cssOwnerIdx: item.cssOwner ? records.indexOf(item.cssOwner) : null,
+        retryUrl: cls.url
+      });
+      settle(item, {
+        ...stem,
+        ok: false,
+        status: null,
+        reason: "DEFERRED",
+        detail: platformHit ? "this invocation reached the runtime's outbound request limit; the reference is outstanding, not failed, and a continuation can fetch it" : "held back from a previously observed runtime limit so the invocation ends on our terms rather than mid-fetch"
+      });
+      continue;
+    }
+    if (attempted >= cap) {
+      truncated = true;
+      settle(item, {
+        ...stem,
+        ok: false,
+        status: null,
+        reason: "CAP_REACHED",
+        cap,
+        detail: "the fanout cap was reached before this reference; it is recorded rather than dropped so the truncation is visible"
+      });
+      continue;
+    }
+    if (spent >= budget) {
+      budgetHit = true;
+      settle(item, { ...stem, ok: false, status: null, reason: "BUDGET_EXHAUSTED", budgetBytes: budget });
+      continue;
+    }
+    if (siteLookup) {
+      const known = await siteLookup(normalizeAddress(cls.url));
+      const dec = reuseDecision(item, known, { now: Date.now(), freshWindowMs: reuseFreshWindowMs, minDocuments: reuseMinDocuments });
+      if (dec.reuse) {
+        reused++;
+        const rec2 = {
+          ...stem,
+          ok: true,
+          status: null,
+          sha256: known.sha256,
+          bytes: known.bytes,
+          ...known.content_type ? { content_type: known.content_type } : {},
+          existed: true,
+          /* The honesty fields. A reader must never be led to believe a byte was
+             verified against the source during THIS capture when it was not. */
+          fetched_this_capture: false,
+          /* CAP-14 (CAPTURE-SCALING.md §Job one, RULED 2026-09-21 by BOB #21): the
+             capture whose FETCH served these bytes, so a reader can follow them to
+             the fetch that saw them served. null when the record names none (a
+             fetch recorded before the build): UNDETERMINED as to source, never
+             inferred from timestamps. */
+          reused_from: known.last_fetched_by || null,
+          reused_from_fetched_at: known.last_fetched,
+          reused_stable_since: known.stable_since,
+          reused_seen_in_documents: known.documents,
+          detail: `not fetched during this capture: the source was seen serving these exact bytes at ${known.last_fetched}` + (known.last_fetched_by ? ` by capture ${known.last_fetched_by}` : ` by a capture the record does not name (undetermined)`) + `, across ${known.documents} documents on this host` + (known.documents_undetermined ? ` (and ${known.documents_undetermined} earlier capture${known.documents_undetermined === 1 ? "" : "s"} whose page the record does not name, counted as undetermined)` : "") + `, and they are reused from the record rather than requested again`
+        };
+        byUrl.set(cls.url, rec2);
+        if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec2);
+        siteObservations.push({
+          address: cls.url,
+          address_norm: normalizeAddress(cls.url),
+          sha256: known.sha256,
+          kind: item.kind,
+          reused: true,
+          reused_from: known.last_fetched_by || null
+        });
+        if ((item.kind === "stylesheet" || known.content_type === "text/css") && item.depth < CSS_MAX_DEPTH && readBack) {
+          const text = await readBack(known.sha256);
+          if (text != null) {
+            rec2.css = true;
+            rec2.rewrite = [];
+            for (const u of cssRefs(text))
+              queue.push({
+                ref: u,
+                kind: "css-asset",
+                where: `url() in ${cls.url}`,
+                depth: item.depth + 1,
+                from: cls.url,
+                against: cls.url,
+                cssOwner: rec2,
+                region: rec2.region,
+                region_basis: rec2.region_basis
+              });
+          }
+        }
+        settle(item, rec2);
+        continue;
+      }
+      if (known) rec_noreuse(stem, dec);
+    }
+    attempted++;
+    let r;
+    try {
+      r = await fetchOne(cls.url);
+    } catch (e) {
+      const msg = String(e && e.message || e);
+      const platform = /too many subrequests|subrequest limit|exceeded.*limit/i.test(msg);
+      r = {
+        ok: false,
+        status: 0,
+        reason: platform ? "PLATFORM_LIMIT" : "FETCH_FAILED",
+        detail: platform ? "the runtime refused another outbound request in this invocation; the source was never asked, and this says nothing about whether it would have answered" : msg
+      };
+      if (platform && !platformHit) {
+        platformHit = true;
+        observedCeiling = attempted + subrequestsAlreadySpent;
+      }
+    }
+    if (!r || !r.ok) {
+      const rec2 = {
+        ...stem,
+        ok: false,
+        status: r ? r.status ?? null : null,
+        reason: r?.reason || "SOURCE_REFUSED",
+        ...r?.detail ? { detail: r.detail } : {}
+      };
+      byUrl.set(cls.url, rec2);
+      settle(item, rec2);
+      continue;
+    }
+    const bytes = r.bytes || new Uint8Array(0);
+    if (bytes.length > perMax) {
+      const rec2 = {
+        ...stem,
+        ok: false,
+        status: r.status ?? 200,
+        reason: "TOO_LARGE",
+        bytes: bytes.length,
+        maxBytes: perMax
+      };
+      byUrl.set(cls.url, rec2);
+      settle(item, rec2);
+      continue;
+    }
+    spent += bytes.length;
+    const sha = await meter.cpuAwait("hash_subresource", () => sha2562(bytes), bytes.length);
+    const { existed } = await put(sha, bytes);
+    const ct = (r.contentType || "").split(";")[0].trim();
+    const rec = {
+      ...stem,
+      ok: true,
+      status: r.status ?? 200,
+      sha256: sha,
+      bytes: bytes.length,
+      ...ct ? { content_type: ct } : {},
+      existed: !!existed
+    };
+    rec.fetched_this_capture = true;
+    byUrl.set(cls.url, rec);
+    if (!bySha.has(sha)) bySha.set(sha, rec);
+    siteObservations.push({
+      address: cls.url,
+      address_norm: normalizeAddress(cls.url),
+      sha256: sha,
+      kind: item.kind,
+      bytes: bytes.length,
+      content_type: ct || null,
+      reused: false
+    });
+    const isCss = item.kind === "stylesheet" || ct === "text/css";
+    if (isCss && item.depth < CSS_MAX_DEPTH) {
+      let text = "";
+      try {
+        text = meter.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes), bytes.length);
+      } catch {
+        text = "";
+      }
+      rec.css = true;
+      rec.rewrite = [];
+      for (const u of meter.sync("parse_css", () => cssRefs(text)))
+        queue.push({
+          ref: u,
+          kind: "css-asset",
+          where: `url() in ${cls.url}`,
+          depth: item.depth + 1,
+          from: cls.url,
+          against: cls.url,
+          cssOwner: rec,
+          /* A stylesheet's own assets carry the stylesheet's region,
+             not the region of whatever tag happened to be open. */
+          region: rec.region,
+          region_basis: rec.region_basis
+        });
+    }
+    settle(item, rec);
+  }
+  const resolve = (ref, kind) => {
+    const trimmed = String(ref || "").trim();
+    if (!trimmed) return null;
+    if (kind === "script") return PLACEHOLDER_MISSING;
+    const abs = refToUrl.has(trimmed) ? refToUrl.get(trimmed) : (() => {
+      const c = classifyRef(trimmed, base, isPublic);
+      return c.ok ? c.url : null;
+    })();
+    if (abs === null) return PLACEHOLDER_MISSING;
+    const rec = byUrl.get(abs);
+    if (!rec) return PLACEHOLDER_MISSING;
+    if (rec.kind === "script") return PLACEHOLDER_MISSING;
+    return rec.ok ? placeholderFor(rec.sha256) : PLACEHOLDER_MISSING;
+  };
+  const when0 = resume && resume.when0 ? resume.when0 : stamp();
+  const seenLink = new Map(links.map((l) => [`${l.type}\0${l.citation || l.address || l.ref}`, true]));
+  const classifyLink = (ref) => {
+    const raw = String(ref || "").trim();
+    const note = (type, address, extra = {}) => {
+      const key = `${type}\0${extra.citation || address || raw}`;
+      if (!seenLink.has(key)) {
+        seenLink.set(key, true);
+        links.push({
+          ref: raw,
+          type,
+          address: address || null,
+          as_of: when0,
+          ...address ? originOf(address, baseHost) : {},
+          ...extra
+        });
+      }
+      return { type, address, ...extra };
+    };
+    if (!raw) return { type: "refused", wrapper: linkWrapper.refused(), address: null };
+    if (raw.startsWith("#")) {
+      note("anchor", base, { fragment: fragmentOf(raw), citation: normalizeCitation(base + raw) });
+      return { type: "anchor", wrapper: linkWrapper.anchor(raw), address: null };
+    }
+    const cls = classifyRef(raw, base, isPublic);
+    if (!cls.ok) {
+      note("refused", cls.url, { reason: cls.reason, ...cls.scheme ? { scheme: cls.scheme } : {} });
+      return { type: "refused", wrapper: linkWrapper.refused(), address: null };
+    }
+    const held = byUrl.get(cls.url);
+    if (held && held.ok) {
+      note("intra", cls.url, {
+        sha256: held.sha256,
+        fragment: fragmentOf(raw),
+        citation: normalizeCitation(new URL(raw, base).toString())
+      });
+      return { type: "intra", wrapper: linkWrapper.intra(held.sha256), address: cls.url };
+    }
+    note("deferred", cls.url, {
+      held_at_capture: false,
+      fragment: fragmentOf(raw),
+      citation: normalizeCitation(new URL(raw, base).toString())
+    });
+    return { type: "deferred", wrapper: linkWrapper.deferred(cls.url), address: cls.url };
+  };
+  const when = when0;
+  const companionText = meter.sync("render_companion", () => renderCompanion(html, { resolve, classifyLink, primarySha, when }), html.length);
+  const companionBytes = meter.sync("encode_companion", () => new TextEncoder().encode(companionText), companionText.length);
+  const companionSha = await meter.cpuAwait("hash_companion", () => sha2562(companionBytes));
+  await put(companionSha, companionBytes);
+  const fetched = records.filter((r) => r.ok);
+  const manifest = {
+    version: 1,
+    derived: true,
+    of: primaryFile,
+    of_sha256: primarySha,
+    base,
+    generated: when,
+    render: `${primaryFile}.render.html`,
+    render_sha256: companionSha,
+    placeholder_scheme: "about:capture#<sha256>",
+    unavailable: PLACEHOLDER_MISSING,
+    limits: { cap, per_max_bytes: perMax, budget_bytes: budget, css_max_depth: CSS_MAX_DEPTH },
+    discovered,
+    attempted,
+    truncated,
+    budget_exhausted: budgetHit,
+    complete: !platformHit && !truncated && !budgetHit && deferred === 0,
+    compute: meter.report(),
+    reuse: {
+      reused,
+      fetched: fetched.length - reused,
+      not_reused: noReuse,
+      fresh_window_ms: reuseFreshWindowMs,
+      min_documents: reuseMinDocuments,
+      note: "entries with fetched_this_capture:false were NOT fetched during this capture; their bytes come from an earlier fetch of the same address on this host, made by the capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. A capture ratified as evidence must re-fetch them."
+    },
+    outstanding: deferred,
+    platform: {
+      limited: platformHit,
+      /* Discovered, never declared. null means this run never found the edge,
+         which tells the caller only that the ceiling is AT LEAST what was spent,
+         not what it is. */
+      observed_ceiling: observedCeiling,
+      ceiling_used: platformCeiling,
+      spent_this_invocation: attempted + subrequestsAlreadySpent,
+      note: observedCeiling ? "the runtime refused an outbound request at this count; record it and pass it back as platformCeiling" : "no limit was reached, so the ceiling is at least spent_this_invocation and its true value is unknown"
+    },
+    counts: {
+      fetched: fetched.length,
+      failed: records.filter((r) => !r.ok && (r.reason === "SOURCE_REFUSED" || r.reason === "FETCH_FAILED" || r.reason === "TOO_LARGE")).length,
+      platform_limited: records.filter((r) => r.reason === "PLATFORM_LIMIT").length,
+      deferred: records.filter((r) => r.reason === "DEFERRED").length,
+      refused: records.filter((r) => !r.ok && (r.reason === "REFUSED_SCHEME" || r.reason === "REFUSED_LOCATOR" || r.reason === "UNRESOLVABLE")).length,
+      /* Deliberately not fetched: policy skips, plus the two bounds. Every
+         record lands in exactly one of fetched/failed/refused/skipped, and the
+         subresources test asserts that identity, so a new reason that forgets
+         to name a bucket fails rather than quietly vanishing from the totals. */
+      skipped: records.filter((r) => !r.ok && (r.reason === "OUTSIDE_THE_DOCUMENT" || r.reason === "THIRD_PARTY" || r.reason === "COLLAPSED_SRCSET_FAMILY" || r.reason === "CAP_REACHED" || r.reason === "BUDGET_EXHAUSTED" || r.reason === "PLATFORM_LIMIT" || r.reason === "DEFERRED")).length,
+      scripts_held_unreferenced: fetched.filter((r) => r.kind === "script").length,
+      bytes: spent,
+      not_fetched: {
+        outside_the_document: records.filter((r) => r.reason === "OUTSIDE_THE_DOCUMENT").length,
+        third_party: records.filter((r) => r.reason === "THIRD_PARTY").length,
+        collapsed_srcset: records.filter((r) => r.reason === "COLLAPSED_SRCSET_FAMILY").length
+      },
+      by_origin: {
+        same_host: records.filter((r) => r.origin === "same_host").length,
+        same_site: records.filter((r) => r.origin === "same_site").length,
+        third_party: records.filter((r) => r.origin === "third_party").length
+      },
+      links: {
+        anchor: links.filter((l) => l.type === "anchor").length,
+        intra: links.filter((l) => l.type === "intra").length,
+        deferred: links.filter((l) => l.type === "deferred").length,
+        refused: links.filter((l) => l.type === "refused").length
+      }
+    },
+    subresources: records,
+    links,
+    link_note: "Every <a> the page carried, characterised. `intra` resolves inside this bundle and is final. `deferred` is an address whose partition depends on what the store holds and is therefore NOT final: held_at_capture records only what was true when this page was captured, and a viewer must re-resolve it against the store at read time. A deferred link that later resolves to a capture in another bundle is a link to THAT VERSION of the target only if the target's capture can be shown to be the version the source was pointing at on this page's retrieval date. Until that is established the link is unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.",
+    note: "Every entry the viewer renders must be fetched by sha256 through op=capture and verified against that sha before use. Entries with ok:false are recorded because a stylesheet the source failed to serve is part of what the source served that day. Script entries hold bytes and are never referenced by the render companion."
+  };
+  const manifestBytes = meter.sync("serialise_manifest", () => new TextEncoder().encode(JSON.stringify(manifest, null, 1)), records.length);
+  const manifestSha = await meter.cpuAwait("hash_manifest", () => sha2562(manifestBytes));
+  await put(manifestSha, manifestBytes);
+  return {
+    subresources: records,
+    links,
+    siteObservations,
+    reused,
+    meter,
+    /* Everything the next tick needs, and nothing it does not. The primary HTML
+       is NOT in here: it is already in the store under primarySha, and carrying
+       a copy in session state would be a second, unverified copy of evidence. */
+    resumeState: outstanding.length ? {
+      when0,
+      discovered,
+      spent,
+      queue: outstanding,
+      records,
+      links,
+      siteObservations,
+      refToUrl: Object.fromEntries(refToUrl)
+    } : null,
+    manifest,
+    manifestSha,
+    manifestBytes,
+    companionText,
+    companionSha,
+    companionBytes,
+    truncated,
+    discovered,
+    attempted,
+    /* `renditions`, not `derived`. C-18.1 already spends `derived` on a
+       different claim: that THIS document is itself a derivation of something
+       else, with a transform and a reason. What is being named here is the
+       opposite direction, artifacts derived FROM this document, so it needs its
+       own key. It borrows the transform/reason vocabulary because the honesty
+       requirement is identical: a rendering that does not say what was done to
+       it and why is indistinguishable from evidence. */
+    renditions: [
+      {
+        file: `${primaryFile}.render.html`,
+        kind: "render_companion",
+        from_file: primaryFile,
+        sha256: companionSha,
+        bytes: companionBytes.length,
+        content_type: "text/html",
+        transform: "scripts and frames removed; subresource references replaced with about:capture#<sha256> placeholders; a content security policy added",
+        reason: "the raw capture is the evidence and is never rewritten, so showing the page as it was needs a separate artifact that says it is one"
+      },
+      {
+        file: "data/snapshot-manifest.json",
+        kind: "snapshot_manifest",
+        from_file: primaryFile,
+        sha256: manifestSha,
+        bytes: manifestBytes.length,
+        content_type: "application/json",
+        transform: "index of the render companion's placeholders to the content-addressed captures they resolve to",
+        reason: "a viewer must be able to verify every byte it substitutes against the record before showing it"
+      }
+    ]
+  };
+}
+
+// src/docx.mjs
+var UTF82 = new TextDecoder("utf-8", { fatal: false });
+var DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+var CONTENT_TYPES_PART2 = "[Content_Types].xml";
+var MAIN_PART = "word/document.xml";
+var COMMENTS_PART = "word/comments.xml";
+var EMBEDDINGS_DIR = "word/embeddings/";
+function docParaRef(para, run = null) {
+  const ref = { kind: "doc-para", ref: `\xB6${para + 1}`, para };
+  if (run != null) ref.run = run;
+  return ref;
+}
+function docTableRef(table, cell = null) {
+  const out = { kind: "doc-table", ref: `table ${table + 1}${cell != null ? `, ${cell}` : ""}`, table };
+  if (cell != null) out.cell = cell;
+  return out;
+}
+function decodeEntities(s) {
+  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
+    if (e[0] === "#") {
+      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+    }
+    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
+  });
+}
+function attrsOf2(raw) {
+  const attrs = {};
+  for (const a of (raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
+    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
+    attrs[local] = decodeEntities(a[3] ?? a[4] ?? "");
+  }
+  return attrs;
+}
+var TOKEN_RE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
+var localOf = (name) => name.includes(":") ? name.split(":").pop() : name;
+function walkDocumentBody(xml) {
+  const paragraphs = [];
+  const hyperlinks = [];
+  const bookmarks = /* @__PURE__ */ new Map();
+  const changes = [];
+  const commentRefs = /* @__PURE__ */ new Map();
+  const ridUsage = /* @__PURE__ */ new Map();
+  let para = -1;
+  let run = -1;
+  let inPara = false;
+  let textTarget = null;
+  const hyperStack = [];
+  const insStack = [];
+  const delStack = [];
+  const noteRid = (attrs) => {
+    if (!inPara) return;
+    for (const key of ["id", "embed", "link"]) {
+      const v = attrs[key];
+      if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
+        ridUsage.set(v, { para, run: run >= 0 ? run : null });
+    }
+  };
+  const appendVisible = (s) => {
+    if (!inPara || !s) return;
+    paragraphs[para].text += s;
+    for (const c of insStack) c.text += s;
+  };
+  TOKEN_RE.lastIndex = 0;
+  let m, prev = 0;
+  while ((m = TOKEN_RE.exec(xml)) !== null) {
+    if (textTarget && m.index > prev) {
+      const data = decodeEntities(xml.slice(prev, m.index));
+      if (textTarget === "t") appendVisible(data);
+      else if (textTarget === "delText" && delStack.length) delStack[delStack.length - 1].text += data;
+    }
+    prev = TOKEN_RE.lastIndex;
+    if (m[1] === void 0) continue;
+    const name = localOf(m[1]);
+    const selfClosed = m[3] === "/";
+    const closing = m[0][1] === "/";
+    if (closing) {
+      if (name === "t" || name === "delText") textTarget = null;
+      else if (name === "p") {
+        inPara = false;
+      } else if (name === "hyperlink") {
+        const h = hyperStack.pop();
+        if (h) hyperlinks.push(h);
+      } else if (name === "ins") {
+        const c = insStack.pop();
+        if (c) changes.push(c);
+      } else if (name === "del") {
+        const c = delStack.pop();
+        if (c) changes.push(c);
+      }
+      continue;
+    }
+    const attrs = m[2] && m[2].includes("=") ? attrsOf2(m[2]) : {};
+    switch (name) {
+      case "p":
+        if (!selfClosed) {
+          para++;
+          run = -1;
+          inPara = true;
+          paragraphs.push({ para, text: "" });
+        } else {
+          para++;
+          run = -1;
+          paragraphs.push({ para, text: "" });
+        }
+        break;
+      case "r":
+        if (inPara && !selfClosed) {
+          run++;
+          for (const c of hyperStack) if (c.run == null) c.run = run;
+          for (const c of insStack) if (c.run == null) c.run = run;
+          for (const c of delStack) if (c.run == null) c.run = run;
+        }
+        break;
+      case "t":
+        if (!selfClosed) textTarget = "t";
+        break;
+      case "delText":
+        if (!selfClosed) textTarget = "delText";
+        break;
+      case "tab":
+        appendVisible("	");
+        break;
+      case "br":
+      case "cr":
+        appendVisible("\n");
+        break;
+      case "hyperlink":
+        noteRid(attrs);
+        if (!selfClosed && inPara)
+          hyperStack.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
+        else if (selfClosed && inPara)
+          hyperlinks.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
+        break;
+      case "ins":
+        if (!selfClosed && inPara)
+          insStack.push({ change: "insertion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
+        break;
+      case "del":
+        if (!selfClosed && inPara)
+          delStack.push({ change: "deletion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
+        break;
+      case "bookmarkStart":
+        if (attrs.name != null && !bookmarks.has(attrs.name))
+          bookmarks.set(attrs.name, para >= 0 ? para : 0);
+        break;
+      case "commentReference":
+        if (attrs.id != null && !commentRefs.has(attrs.id))
+          commentRefs.set(attrs.id, { para, run: run >= 0 ? run : null });
+        break;
+      default:
+        noteRid(attrs);
+    }
+  }
+  return { paragraphs, hyperlinks, bookmarks, changes, commentRefs, ridUsage };
+}
+function parseComments(xml) {
+  if (typeof xml !== "string" || !/<(?:[\w.-]+:)?comments\b/.test(xml)) {
+    return { ok: false, why: "comments_unparseable" };
+  }
+  const comments = [];
+  const re = /<(?:[\w.-]+:)?comment\b((?:[^>"']|"[^"]*"|'[^']*')*?)>([\s\S]*?)<\/(?:[\w.-]+:)?comment>/g;
+  for (const m of xml.matchAll(re)) {
+    const a = attrsOf2(m[1]);
+    const paras = [];
+    for (const pm of m[2].split(/<\/(?:[\w.-]+:)?p>/)) {
+      let text = "";
+      for (const t of pm.matchAll(/<(?:[\w.-]+:)?t\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?t>/g))
+        text += decodeEntities(t[1]);
+      if (text) paras.push(text);
+    }
+    comments.push({
+      id: a.id ?? null,
+      author: a.author ?? null,
+      date: a.date ?? null,
+      initials: a.initials ?? null,
+      text: paras.join("\n")
+    });
+  }
+  return { ok: true, comments };
+}
+function classifyUri(uri) {
+  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
+  const scheme = m ? m[1].toLowerCase() : null;
+  if (scheme === "http" || scheme === "https") return "deferred";
+  if (!scheme && uri) return "deferred";
+  return "refused";
+}
+function deferredOrRefusedRecord(uri, source) {
+  const partition = classifyUri(uri);
+  return {
+    partition,
+    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(uri),
+    target: { url: uri },
+    source
+  };
+}
+function undeterminedRecord(source, why, extra = {}) {
+  return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
+}
+var HEX = "0123456789abcdef";
+async function sha256Hex(u8) {
+  const d = await crypto.subtle.digest("SHA-256", u8);
+  const b = new Uint8Array(d);
+  let out = "";
+  for (let i = 0; i < b.length; i++) out += HEX[b[i] >> 4] + HEX[b[i] & 15];
+  return out;
+}
+function resolveRelTarget(relsPart, target) {
+  const t = String(target || "");
+  if (t.startsWith("/")) return normalizePartName(t);
+  const baseDir = relsPart.replace(/_rels\/[^/]*\.rels$/, "");
+  const segs = (baseDir + t).split("/");
+  const out = [];
+  for (const s of segs) {
+    if (s === "" || s === ".") continue;
+    if (s === "..") out.pop();
+    else out.push(s);
+  }
+  return out.join("/");
+}
+async function docxParts(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const d = await discriminate(b);
+  if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
+  if (d.format !== "docx") {
+    return {
+      ok: false,
+      why: d.format === "undetermined" ? d.why : `not_docx:${d.format}`,
+      signals: d.signals
+    };
+  }
+  const container = readContainer(b);
+  if (!container.ok) return { ok: false, why: container.why, signals: d.signals };
+  const undetermined = [];
+  const mainPart = normalizePartName(d.mainPart || MAIN_PART);
+  let declaredTextBytes2 = 0;
+  for (const partName of [mainPart, COMMENTS_PART]) {
+    const e = container.byName.get(partName);
+    if (e) declaredTextBytes2 += e.uncompressedSize;
+  }
+  const guardR = sizeGuard(declaredTextBytes2);
+  const guard = guardR.ok ? null : guardR;
+  let documentXml = null;
+  let commentsXml = null;
+  if (!guard) {
+    const main = await readPart(b, container, mainPart);
+    if (main.ok) documentXml = UTF82.decode(main.bytes);
+    else undetermined.push({ part: mainPart, why: main.why });
+    if (container.byName.has(COMMENTS_PART)) {
+      const com = await readPart(b, container, COMMENTS_PART);
+      if (com.ok) commentsXml = UTF82.decode(com.bytes);
+      else undetermined.push({ part: COMMENTS_PART, why: com.why });
+    }
+  }
+  const rels = await walkRels(b, container);
+  let core = null;
+  if (container.byName.has(CORE_PROPERTIES_PART)) {
+    const c = await readCoreProperties(b, container);
+    if (c.ok) core = c;
+    else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
+  }
+  return { ok: true, format: "docx", bytes: b, container, mainPart, documentXml, commentsXml, rels, core, guard, undetermined };
+}
+function walkDocumentTables(xml) {
+  const done = [];
+  const stack = [];
+  let next = 0;
+  TOKEN_RE.lastIndex = 0;
+  let m;
+  while ((m = TOKEN_RE.exec(xml)) !== null) {
+    if (m[1] === void 0) continue;
+    const name = localOf(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    const top = stack.length ? stack[stack.length - 1] : null;
+    if (closing) {
+      if (name === "tbl" && stack.length) {
+        const t = stack.pop();
+        done[t.table] = {
+          table: t.table,
+          rows: t.rows,
+          cols: t.gridCols > 0 ? t.gridCols : t.maxTc > 0 ? t.maxTc : null
+        };
+      } else if (name === "tr" && top) {
+        if (top.tc > top.maxTc) top.maxTc = top.tc;
+      }
+      continue;
+    }
+    if (name === "tbl" && !selfClosed) stack.push({ table: next++, rows: 0, gridCols: 0, tc: 0, maxTc: 0 });
+    else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null };
+    else if (!top) continue;
+    else if (name === "gridCol") top.gridCols++;
+    else if (name === "tr") {
+      top.rows++;
+      top.tc = 0;
+    } else if (name === "tc") top.tc++;
+  }
+  while (stack.length) {
+    const t = stack.pop();
+    done[t.table] = {
+      table: t.table,
+      rows: t.rows || null,
+      cols: t.gridCols > 0 ? t.gridCols : t.maxTc > 0 ? t.maxTc : null
+    };
+  }
+  return done;
+}
+async function docxStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  const notes = [];
+  const links = [];
+  const walk = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
+  if (!walk) {
+    notes.push(parts.guard ? "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "word/document.xml unreadable: element references unavailable (stated)");
+  }
+  const docRelsPart = relsPartFor(parts.mainPart);
+  for (const rel of parts.rels.outbound) {
+    if (rel.part === docRelsPart && walk) {
+      const usages = walk.hyperlinks.filter((h) => h.rid === rel.id);
+      if (usages.length) {
+        for (const u of usages)
+          links.push(deferredOrRefusedRecord(rel.target, docParaRef(u.para, u.run)));
+        continue;
+      }
+    }
+    links.push(deferredOrRefusedRecord(rel.target, null));
+  }
+  for (const u of parts.rels.undetermined) {
+    links.push(undeterminedRecord(null, "rels_unreadable", { part: u.part, detail: u.why }));
+  }
+  if (walk) {
+    for (const h of walk.hyperlinks) {
+      if (h.rid != null || h.anchor == null) continue;
+      const source = docParaRef(h.para, h.run);
+      if (walk.bookmarks.has(h.anchor)) {
+        const targetPara = walk.bookmarks.get(h.anchor);
+        const fragment = `#para=${targetPara + 1}`;
+        links.push({
+          partition: "anchor",
+          wrapper: linkWrapper.anchor(fragment),
+          target: { para: targetPara, fragment, bookmark: h.anchor },
+          source
+        });
+      } else {
+        links.push(undeterminedRecord(source, "bookmark_unresolved", { bookmark: h.anchor }));
+      }
+    }
+  }
+  const embeddingRids = /* @__PURE__ */ new Map();
+  for (const bp of parts.rels.byPart) {
+    if (bp.part !== docRelsPart) continue;
+    for (const r of bp.relationships) {
+      if (r.external || !r.target) continue;
+      const resolved = resolveRelTarget(bp.part, r.target);
+      if (resolved.startsWith(EMBEDDINGS_DIR)) embeddingRids.set(resolved, r.id);
+    }
+  }
+  for (const entry of parts.container.entries) {
+    const name = normalizePartName(entry.name);
+    if (!name.startsWith(EMBEDDINGS_DIR) || name === EMBEDDINGS_DIR) continue;
+    const rid = embeddingRids.get(name) ?? null;
+    const at = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
+    const source = at ? docParaRef(at.para, at.run) : null;
+    const read = await readPart(parts.bytes, parts.container, name);
+    if (!read.ok) {
+      links.push(undeterminedRecord(source, "embedded_part_unreadable", { part: name, detail: read.why }));
+      continue;
+    }
+    const sha = await sha256Hex(read.bytes);
+    links.push({
+      partition: "intra",
+      wrapper: linkWrapper.intra(sha),
+      target: { sha256: sha, name: name.slice(name.lastIndexOf("/") + 1), bytes: read.bytes.length },
+      source
+    });
+  }
+  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
+  for (const l of links) counts[l.partition]++;
+  const items = [];
+  if (walk) {
+    for (const c of walk.changes) {
+      const item = {
+        kind: "tracked-change",
+        change: c.change,
+        author: c.author,
+        date: c.date,
+        source: docParaRef(c.para, c.run)
+      };
+      if (c.change === "deletion") item.superseded = c.text;
+      else item.text = c.text;
+      items.push(item);
+    }
+  }
+  const evUndetermined = [...parts.undetermined];
+  if (parts.guard) evUndetermined.push({ part: parts.mainPart, why: "over_size_bound", guard: parts.guard });
+  if (parts.commentsXml != null) {
+    const parsed = parseComments(parts.commentsXml);
+    if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
+    else {
+      for (const c of parsed.comments) {
+        const at = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
+        items.push({
+          kind: "comment",
+          id: c.id,
+          author: c.author,
+          date: c.date,
+          initials: c.initials,
+          text: c.text,
+          source: at ? docParaRef(at.para, at.run) : null
+        });
+      }
+    }
+  }
+  if (parts.core) {
+    items.push({
+      kind: "core-properties",
+      creator: parts.core.creator,
+      lastModifiedBy: parts.core.lastModifiedBy,
+      revision: parts.core.revision,
+      revisionNumber: parts.core.revisionNumber,
+      created: parts.core.created,
+      modified: parts.core.modified,
+      title: parts.core.title,
+      source: null
+    });
+  }
+  const evCounts = {};
+  for (const it of items) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
+  const evidentiary = {
+    container: "docx",
+    kinds: [...new Set(items.map((it) => it.kind))],
+    items,
+    undetermined: evUndetermined,
+    counts: evCounts
+  };
+  return {
+    ok: true,
+    container: "docx",
+    paragraphs: walk ? walk.paragraphs.length : null,
+    // null = honestly unknown
+    links,
+    counts,
+    evidentiary,
+    notes
+  };
+}
+async function docxText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "docx",
+      document: null,
+      paragraphs: [],
+      tables: null,
+      undetermined: [parts.guard],
+      counts: { chars: 0, undetermined: 1 }
+    };
+  }
+  if (parts.documentXml == null) {
+    const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
+    return {
+      ok: true,
+      container: "docx",
+      document: null,
+      paragraphs: [],
+      tables: null,
+      undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart, why: stated?.why ?? "unreadable" }],
+      counts: { chars: 0, undetermined: 1 }
+    };
+  }
+  const walk = walkDocumentBody(parts.documentXml);
+  const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `\xB6${p.para + 1}`, text: p.text }));
+  const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
+  const tables = walkDocumentTables(parts.documentXml).filter(Boolean).map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
+  return {
+    ok: true,
+    container: "docx",
+    document,
+    paragraphs,
+    tables,
+    undetermined: [],
+    counts: { chars: document.length, undetermined: 0 }
+  };
+}
+var docxEntry = {
+  format: "docx",
+  detect(bytes, contentType) {
+    if (bytes) {
+      if (!hasZipMagic(bytes)) return null;
+      const container = readContainer(bytes);
+      if (!container.ok) return null;
+      if (container.byName.has(CONTENT_TYPES_PART2) && container.byName.has(MAIN_PART)) {
+        return {
+          format: "docx",
+          confidence: "likely",
+          signals: [
+            "magic: PK\\x03\\x04 with a readable central directory",
+            `part: ${CONTENT_TYPES_PART2} present`,
+            `part: ${MAIN_PART} present`,
+            "likely, not certain: the OPC content-type declaration is deflated \u2014 parts() discriminates"
+          ]
+        };
+      }
+      return null;
+    }
+    if (contentType === DOCX_CONTENT_TYPE) {
+      return { format: "docx", confidence: "likely", signals: [`content type "${contentType}"`] };
+    }
+    return null;
+  },
+  parts: (bytes) => docxParts(bytes),
+  structure: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await docxParts(partsOrBytes) : partsOrBytes;
+    return docxStructure(parts);
+  },
+  text: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await docxParts(partsOrBytes) : partsOrBytes;
+    return withContainerImages(docxText(parts), parts, "word/media/");
+  }
+};
+
+// src/formats-xlsx.mjs
+var UTF83 = new TextDecoder("utf-8", { fatal: false });
+var XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+var WORKBOOK_PART = "xl/workbook.xml";
+var SHARED_STRINGS_PART = "xl/sharedStrings.xml";
+function decodeXmlEntities2(s) {
+  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
+    if (e[0] === "#") {
+      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+    }
+    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
+  });
+}
+function parseAttrs(raw) {
+  const attrs = {};
+  for (const a of String(raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
+    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
+    attrs[local] = decodeXmlEntities2(a[3] ?? a[4] ?? "");
+  }
+  return attrs;
+}
+function elements(xml, localName) {
+  const out = [];
+  const open = new RegExp(`<((?:[\\w.-]+:)?${localName})\\b([^>]*?)(/)?>`, "g");
+  let m;
+  while (m = open.exec(xml)) {
+    const attrs = parseAttrs(m[2]);
+    if (m[3]) {
+      out.push({ attrs, inner: "" });
+      continue;
+    }
+    const close = xml.indexOf(`</${m[1]}>`, open.lastIndex);
+    if (close < 0) {
+      out.push({ attrs, inner: "" });
+      continue;
+    }
+    out.push({ attrs, inner: xml.slice(open.lastIndex, close) });
+    open.lastIndex = close + m[1].length + 3;
+  }
+  return out;
+}
+function textRuns(inner) {
+  return elements(inner, "t").map((t) => decodeXmlEntities2(t.inner)).join("");
+}
+var HEX2 = "0123456789abcdef";
+async function sha256Hex2(u8) {
+  const d = await crypto.subtle.digest("SHA-256", u8);
+  const b = new Uint8Array(d);
+  let out = "";
+  for (let i = 0; i < b.length; i++) out += HEX2[b[i] >> 4] + HEX2[b[i] & 15];
+  return out;
+}
+function sheetCellRef(sheet, cell) {
+  return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
+}
+function sheetRangeRef(sheet, range) {
+  return { kind: "sheet-range", ref: `${sheet}!${range}`, sheet, range };
+}
+function columnLetters(n) {
+  let out = "";
+  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + (c - 1) % 26) + out;
+  return out;
+}
+function usedSheetRange(name, usedRows, usedCols) {
+  if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
+  return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
+}
+var XLSX_GRID_ROWS = 1048576;
+var XLSX_GRID_COLS = 16384;
+function a1Col(ref) {
+  const m = /^\$?([A-Za-z]{1,3})\$?\d+$/.exec(String(ref ?? "").trim());
+  if (!m) return null;
+  let n = 0;
+  for (const ch of m[1].toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
+  return n;
+}
+function classifyUrl(url) {
+  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(url || "");
+  const scheme = m ? m[1].toLowerCase() : null;
+  if (scheme === "http" || scheme === "https") return "deferred";
+  if (!scheme && url) return "deferred";
+  return "refused";
+}
+function resolveTarget(fromPart, target) {
+  if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(target) || target.startsWith("/")) {
+    return normalizePartName(target);
+  }
+  const base = fromPart.split("/").slice(0, -1);
+  for (const seg of target.split("/")) {
+    if (seg === "" || seg === ".") continue;
+    if (seg === "..") base.pop();
+    else base.push(seg);
+  }
+  return base.join("/");
+}
+async function xlsxParts(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const undetermined = [];
+  const disc = await discriminate(b);
+  if (!disc.ok) return { ok: false, why: disc.why, signals: disc.signals };
+  if (disc.format !== "xlsx") {
+    return { ok: false, why: `not_xlsx:${disc.format}`, signals: disc.signals };
+  }
+  const container = readContainer(b);
+  const wbRead = await readPart(b, container, WORKBOOK_PART);
+  if (!wbRead.ok) return { ok: false, why: `workbook_unreadable:${wbRead.why}` };
+  const wbXml = UTF83.decode(wbRead.bytes);
+  const relsById = /* @__PURE__ */ new Map();
+  const wbRelsRead = await readPart(b, container, relsPartFor(WORKBOOK_PART));
+  if (wbRelsRead.ok) {
+    const parsed = parseRels(UTF83.decode(wbRelsRead.bytes));
+    if (parsed.ok) {
+      for (const r of parsed.relationships) if (r.id) relsById.set(r.id, r);
+    } else undetermined.push({ part: relsPartFor(WORKBOOK_PART), why: parsed.why });
+  } else undetermined.push({ part: relsPartFor(WORKBOOK_PART), why: wbRelsRead.why });
+  const sheets = elements(wbXml, "sheet").map((s, index) => {
+    const state = s.attrs.state === "hidden" || s.attrs.state === "veryHidden" ? s.attrs.state : "visible";
+    const rel = s.attrs.id ? relsById.get(s.attrs.id) : null;
+    return {
+      index,
+      name: s.attrs.name ?? `sheet${index + 1}`,
+      sheetId: s.attrs.sheetId ?? null,
+      state,
+      hidden: state === "visible" ? false : state,
+      part: rel && !rel.external ? resolveTarget(WORKBOOK_PART, rel.target) : null,
+      xml: null,
+      why: rel ? null : "sheet_rel_unresolved"
+    };
+  });
+  const definedNames = elements(wbXml, "definedName").filter((d) => d.attrs.name != null).map((d) => ({ name: d.attrs.name, ref: decodeXmlEntities2(d.inner).trim() }));
+  const sheetParts = new Set(sheets.map((s) => s.part).filter(Boolean));
+  const isTextPart = (n) => sheetParts.has(n) || n === SHARED_STRINGS_PART;
+  const declared = declaredTextBytes(container, isTextPart);
+  const guardR = sizeGuard(declared.total);
+  const guard = guardR.ok ? null : guardR;
+  let sharedStrings = null;
+  if (!guard) {
+    if (container.byName.has(SHARED_STRINGS_PART)) {
+      const ss = await readPart(b, container, SHARED_STRINGS_PART);
+      if (ss.ok) sharedStrings = elements(UTF83.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
+      else undetermined.push({ part: SHARED_STRINGS_PART, why: ss.why });
+    }
+    for (const sheet of sheets) {
+      if (!sheet.part) {
+        undetermined.push({ part: `(sheet ${sheet.name})`, why: sheet.why });
+        continue;
+      }
+      const read = await readPart(b, container, sheet.part);
+      if (read.ok) sheet.xml = UTF83.decode(read.bytes);
+      else {
+        sheet.why = read.why;
+        undetermined.push({ part: sheet.part, why: read.why });
+      }
+    }
+  }
+  let core = null;
+  if (container.byName.has(CORE_PROPERTIES_PART)) {
+    const c = await readCoreProperties(b, container);
+    if (c.ok) core = c;
+    else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
+  }
+  return {
+    ok: true,
+    format: "xlsx",
+    bytes: b,
+    container,
+    sheets,
+    definedNames,
+    sharedStrings,
+    core,
+    declared,
+    guard,
+    undetermined
+  };
+}
+function walkSheetXml(xml) {
+  const rows = elements(xml, "row").map((row) => ({
+    r: row.attrs.r != null ? parseInt(row.attrs.r, 10) : null,
+    hidden: row.attrs.hidden === "1" || row.attrs.hidden === "true",
+    cells: elements(row.inner, "c").map((c) => {
+      const f2 = elements(c.inner, "f");
+      const v = elements(c.inner, "v");
+      const is = elements(c.inner, "is");
+      return {
+        cell: c.attrs.r ?? null,
+        t: c.attrs.t ?? null,
+        f: f2.length ? decodeXmlEntities2(f2[0].inner) : null,
+        v: v.length ? decodeXmlEntities2(v[0].inner) : null,
+        is: is.length ? textRuns(is[0].inner) : null
+      };
+    })
+  }));
+  const hiddenRows = rows.filter((r) => r.hidden && r.r != null).map((r) => r.r);
+  const hiddenCols = elements(xml, "col").filter((c) => c.attrs.hidden === "1" || c.attrs.hidden === "true").map((c) => ({ min: parseInt(c.attrs.min, 10), max: parseInt(c.attrs.max, 10) }));
+  const hyperlinks = elements(xml, "hyperlink").map((h) => ({
+    cell: h.attrs.ref ?? null,
+    relId: h.attrs.id ?? null,
+    location: h.attrs.location ?? null,
+    display: h.attrs.display ?? null
+  }));
+  let usedRows = 0, usedCols = 0;
+  for (const row of rows) {
+    if (!row.cells.length) continue;
+    if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
+    for (const c of row.cells) {
+      const col = a1Col(c.cell);
+      if (col != null && col > usedCols) usedCols = col;
+    }
+  }
+  return { rows, hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols };
+}
+function cellValue(c, sharedStrings) {
+  if (c.t === "s") {
+    const i = c.v != null ? parseInt(c.v, 10) : NaN;
+    if (sharedStrings && Number.isInteger(i) && i >= 0 && i < sharedStrings.length)
+      return { value: sharedStrings[i] };
+    return { undetermined: sharedStrings ? "shared_string_index_out_of_range" : "shared_strings_unreadable" };
+  }
+  if (c.t === "inlineStr") return { value: c.is ?? "" };
+  if (c.t === "b") return { value: c.v === "1" ? "TRUE" : c.v === "0" ? "FALSE" : c.v };
+  return { value: c.v };
+}
+async function xlsxStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "xlsx", reason: parts ? parts.why : "PARTS_ABSENT" };
+  }
+  const { bytes, container, sheets, definedNames, guard } = parts;
+  const links = [];
+  const notes = [];
+  const evItems = [];
+  const evUndetermined = [...parts.undetermined];
+  for (const sheet of sheets) {
+    const relTargets = /* @__PURE__ */ new Map();
+    if (sheet.part) {
+      const relsPart = relsPartFor(sheet.part);
+      if (container.byName.has(relsPart)) {
+        const read = await readPart(bytes, container, relsPart);
+        const parsed = read.ok ? parseRels(UTF83.decode(read.bytes)) : null;
+        if (parsed && parsed.ok) {
+          for (const r of parsed.relationships) if (r.id) relTargets.set(r.id, r);
+        } else {
+          evUndetermined.push({ part: relsPart, why: read.ok ? parsed.why : read.why });
+        }
+      }
+    }
+    if (sheet.xml == null) {
+      const why = guard == null ? sheet.why ?? "sheet_unreadable" : "over_size_bound";
+      for (const [, r] of relTargets) {
+        if (!r.external) continue;
+        const partition = classifyUrl(r.target);
+        links.push({
+          partition,
+          wrapper: partition === "deferred" ? linkWrapper.deferred(r.target) : linkWrapper.refused(),
+          target: { url: r.target },
+          source: null,
+          note: `cell_join_unavailable:${why}`
+        });
+      }
+      continue;
+    }
+    const walked = walkSheetXml(sheet.xml);
+    for (const h of walked.hyperlinks) {
+      const source = h.cell ? sheetCellRef(sheet.name, h.cell) : null;
+      if (h.relId) {
+        const rel = relTargets.get(h.relId);
+        if (!rel) {
+          links.push({
+            partition: "undetermined",
+            wrapper: null,
+            target: { why: "hyperlink_rel_unresolved", relId: h.relId },
+            source
+          });
+          continue;
+        }
+        if (!rel.external) {
+          links.push({
+            partition: "undetermined",
+            wrapper: null,
+            target: { why: "hyperlink_rel_not_external", relId: h.relId, part: rel.target },
+            source
+          });
+          continue;
+        }
+        const partition = classifyUrl(rel.target);
+        links.push({
+          partition,
+          wrapper: partition === "deferred" ? linkWrapper.deferred(rel.target) : linkWrapper.refused(),
+          target: { url: rel.target },
+          source
+        });
+        continue;
+      }
+      if (h.location) {
+        const fragment = `#${h.location}`;
+        links.push({
+          partition: "anchor",
+          wrapper: linkWrapper.anchor(fragment),
+          target: { location: h.location, fragment },
+          source
+        });
+        continue;
+      }
+      links.push({
+        partition: "undetermined",
+        wrapper: null,
+        target: { why: "hyperlink_without_target" },
+        source
+      });
+    }
+    for (const row of walked.rows) {
+      for (const c of row.cells) {
+        if (c.f == null) continue;
+        evItems.push({
+          kind: "formula",
+          source: c.cell ? sheetCellRef(sheet.name, c.cell) : null,
+          formula: c.f,
+          value: c.v
+          // the cached result, null when the file carries none — stated, not invented
+        });
+      }
+    }
+    if (walked.hiddenRows.length) {
+      evItems.push({
+        kind: "hidden-rows",
+        sheet: sheet.name,
+        rows: walked.hiddenRows,
+        count: walked.hiddenRows.length,
+        source: null
+      });
+    }
+    if (walked.hiddenCols.length) {
+      evItems.push({
+        kind: "hidden-cols",
+        sheet: sheet.name,
+        cols: walked.hiddenCols,
+        count: walked.hiddenCols.length,
+        source: null
+      });
+    }
+  }
+  for (const sheet of sheets) {
+    if (sheet.hidden) {
+      evItems.push({ kind: "hidden-sheet", sheet: sheet.name, state: sheet.state, source: null });
+    }
+  }
+  if (guard) {
+    notes.push("text_parts_over_bound");
+    evUndetermined.push({ part: "(text parts: worksheets + sharedStrings)", why: "over_size_bound", guard });
+  }
+  for (const dn of definedNames) {
+    const fragment = `#${dn.ref}`;
+    links.push({
+      partition: "anchor",
+      wrapper: linkWrapper.anchor(fragment),
+      target: { definedName: dn.name, ref: dn.ref, fragment },
+      source: null
+    });
+  }
+  for (const entry of container.entries) {
+    const name = normalizePartName(entry.name);
+    if (!/^xl\/embeddings\//.test(name)) continue;
+    const read = await readPart(bytes, container, name);
+    if (!read.ok) {
+      links.push({
+        partition: "undetermined",
+        wrapper: null,
+        target: { why: `embedding_unreadable:${read.why}`, name },
+        source: null
+      });
+      continue;
+    }
+    const sha = await sha256Hex2(read.bytes);
+    links.push({
+      partition: "intra",
+      wrapper: linkWrapper.intra(sha),
+      target: { sha256: sha, name, bytes: read.bytes.length },
+      source: null
+    });
+  }
+  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
+  for (const l of links) counts[l.partition]++;
+  if (parts.core) {
+    evItems.push({
+      kind: "core-properties",
+      creator: parts.core.creator,
+      lastModifiedBy: parts.core.lastModifiedBy,
+      revision: parts.core.revision,
+      revisionNumber: parts.core.revisionNumber,
+      created: parts.core.created,
+      modified: parts.core.modified,
+      title: parts.core.title,
+      source: null
+    });
+  }
+  const evCounts = {};
+  for (const it of evItems) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
+  return {
+    ok: true,
+    container: "xlsx",
+    sheets: sheets.map((s) => ({
+      sheet: s.index,
+      name: s.name,
+      sheetId: s.sheetId,
+      state: s.state,
+      hidden: s.hidden
+    })),
+    links,
+    counts,
+    /* The IC-2 envelope AS ACCEPTED (COFF-4 filed it first, from docx.mjs as
+     * built; this entry CONFIRMS — same key, same fields, no variant). */
+    evidentiary: {
+      container: "xlsx",
+      kinds: [...new Set(evItems.map((it) => it.kind))],
+      items: evItems,
+      undetermined: evUndetermined,
+      counts: evCounts
+    },
+    notes
+  };
+}
+function xlsxText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "xlsx", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  const { sheets, sharedStrings, guard } = parts;
+  if (guard) {
+    return {
+      ok: true,
+      container: "xlsx",
+      document: null,
+      sheets: [],
+      undetermined: [guard],
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
+    };
+  }
+  const outSheets = [];
+  const allUndetermined = [];
+  let cellCount = 0, formulaCount = 0;
+  for (const sheet of sheets) {
+    if (sheet.xml == null) {
+      const marker = { sheet: sheet.index, cell: null, reason: sheet.why ?? "sheet_unreadable" };
+      outSheets.push({
+        sheet: sheet.index,
+        name: sheet.name,
+        hidden: sheet.hidden,
+        rows: XLSX_GRID_ROWS,
+        cols: XLSX_GRID_COLS,
+        usedRows: null,
+        usedCols: null,
+        range: null,
+        text: "",
+        undetermined: [marker]
+      });
+      allUndetermined.push(marker);
+      continue;
+    }
+    const walked = walkSheetXml(sheet.xml);
+    const undetermined = [];
+    const lines = [];
+    for (const row of walked.rows) {
+      const vals = [];
+      for (const c of row.cells) {
+        if (c.f != null) formulaCount++;
+        const r = cellValue(c, sharedStrings);
+        if (r.undetermined) {
+          undetermined.push({ sheet: sheet.index, cell: c.cell, reason: r.undetermined });
+          continue;
+        }
+        if (r.value == null || r.value === "") continue;
+        cellCount++;
+        vals.push(r.value);
+      }
+      if (vals.length) lines.push(vals.join("	"));
+    }
+    const text = lines.join("\n");
+    outSheets.push({
+      sheet: sheet.index,
+      name: sheet.name,
+      hidden: sheet.hidden,
+      rows: XLSX_GRID_ROWS,
+      cols: XLSX_GRID_COLS,
+      usedRows: walked.usedRows,
+      usedCols: walked.usedCols,
+      /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
+      range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
+      text,
+      undetermined
+    });
+    for (const u of undetermined) allUndetermined.push(u);
+  }
+  const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
+  return {
+    ok: true,
+    container: "xlsx",
+    document,
+    sheets: outSheets,
+    undetermined: allUndetermined,
+    counts: {
+      chars: document.length,
+      cells: cellCount,
+      formulas: formulaCount,
+      undetermined: allUndetermined.length
+    }
+  };
+}
+var xlsxEntry = {
+  format: "xlsx",
+  detect(bytes, contentType) {
+    if (bytes) {
+      if (!hasZipMagic(bytes)) return null;
+      const c = readContainer(bytes);
+      if (!c.ok) return null;
+      if (c.byName.has(CONTENT_TYPES_PART) && c.byName.has(WORKBOOK_PART)) {
+        return { format: "xlsx", confidence: "likely", signals: [
+          "magic: PK\\x03\\x04 with a readable central directory",
+          `parts: ${CONTENT_TYPES_PART} and ${WORKBOOK_PART} present`,
+          "likely, not certain: the declared main content type lives in a deflated part; parts() completes the discrimination"
+        ] };
+      }
+      return null;
+    }
+    if (contentType === XLSX_CONTENT_TYPE) {
+      return {
+        format: "xlsx",
+        confidence: "likely",
+        signals: [`content type "${contentType}"`]
+      };
+    }
+    return null;
+  },
+  parts: (bytes) => xlsxParts(bytes),
+  /* Accept either parts() output or raw bytes, exactly as docx.mjs does, so
+     detect→structure works uniformly at the registry seam while a caller that
+     already paid for parts() does not pay twice. */
+  structure: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await xlsxParts(partsOrBytes) : partsOrBytes;
+    return xlsxStructure(parts);
+  },
+  text: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await xlsxParts(partsOrBytes) : partsOrBytes;
+    return withContainerImages(xlsxText(parts), parts, "xl/media/");
+  }
+};
+
+// src/pptx.mjs
+var UTF84 = new TextDecoder("utf-8", { fatal: false });
+var PPTX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+var CONTENT_TYPES_PART3 = "[Content_Types].xml";
+var MAIN_PART2 = "ppt/presentation.xml";
+var EMBEDDINGS_DIR2 = "ppt/embeddings/";
+var SLIDE_PART_RE = /^ppt\/slides\/[^/]+\.xml$/;
+var NOTES_PART_RE = /^ppt\/notesSlides\/[^/]+\.xml$/;
+function slideShapeRef(slide, shape = null) {
+  const ref = { kind: "slide-shape", ref: `slide ${slide}`, slide };
+  if (shape != null) ref.shape = shape;
+  return ref;
+}
+function decodeEntities2(s) {
+  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
+    if (e[0] === "#") {
+      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+    }
+    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
+  });
+}
+function attrsOf3(raw) {
+  const attrs = {};
+  for (const a of (raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
+    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
+    attrs[local] = decodeEntities2(a[3] ?? a[4] ?? "");
+  }
+  return attrs;
+}
+var TOKEN_RE2 = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
+var localOf2 = (name) => name.includes(":") ? name.split(":").pop() : name;
+var SHAPE_TAGS = /* @__PURE__ */ new Set(["sp", "pic", "graphicFrame", "cxnSp", "grpSp"]);
+var declaresNotShown = (v) => v === "0" || v === "false";
+var SLD_ROOT_RE = /<(?:[\w.-]+:)?sld(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/;
+var SHOW_ATTR_RE = /(?:^|\s)(?:[\w.-]+:)?show\s*=\s*(?:"([^"]*)"|'([^']*)')/;
+var showAttrOf = (rawAttrs) => {
+  const m = (rawAttrs || "").match(SHOW_ATTR_RE);
+  return m ? m[1] ?? m[2] : null;
+};
+function walkSlide(xml) {
+  const paragraphs = [];
+  const hlinks = [];
+  const ridUsage = /* @__PURE__ */ new Map();
+  let shape = -1;
+  let cur = null;
+  let inText = false;
+  const noteRid = (attrs) => {
+    for (const key of ["id", "embed", "link"]) {
+      const v = attrs[key];
+      if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
+        ridUsage.set(v, shape >= 0 ? shape : null);
+    }
+  };
+  TOKEN_RE2.lastIndex = 0;
+  let m, prev = 0;
+  while ((m = TOKEN_RE2.exec(xml)) !== null) {
+    if (inText && cur != null && m.index > prev) cur += decodeEntities2(xml.slice(prev, m.index));
+    prev = TOKEN_RE2.lastIndex;
+    if (m[1] === void 0) continue;
+    const name = localOf2(m[1]);
+    const selfClosed = m[3] === "/";
+    const closing = m[0][1] === "/";
+    if (closing) {
+      if (name === "t") inText = false;
+      else if (name === "p") {
+        if (cur != null) {
+          paragraphs.push(cur);
+          cur = null;
+        }
+      }
+      continue;
+    }
+    if (SHAPE_TAGS.has(name)) shape++;
+    const attrs = m[2] && m[2].includes("=") ? attrsOf3(m[2]) : {};
+    switch (name) {
+      case "p":
+        if (!selfClosed) cur = "";
+        break;
+      case "t":
+        if (!selfClosed) inText = true;
+        break;
+      case "br":
+        if (cur != null) cur += "\n";
+        break;
+      case "hlinkClick":
+        noteRid(attrs);
+        if (attrs.id && /^rId/.test(attrs.id))
+          hlinks.push({ rid: attrs.id, shape: shape >= 0 ? shape : null });
+        break;
+      default:
+        noteRid(attrs);
+    }
+  }
+  const text = paragraphs.filter((t) => t.length).join("\n");
+  return { paragraphs, text, shapes: shape + 1, hlinks, ridUsage };
+}
+function classifyUri2(uri) {
+  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
+  const scheme = m ? m[1].toLowerCase() : null;
+  if (scheme === "http" || scheme === "https") return "deferred";
+  if (!scheme && uri) return "deferred";
+  return "refused";
+}
+function deferredOrRefusedRecord2(uri, source) {
+  const partition = classifyUri2(uri);
+  return {
+    partition,
+    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(uri),
+    target: { url: uri },
+    source
+  };
+}
+function undeterminedRecord2(source, why, extra = {}) {
+  return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
+}
+var HEX3 = "0123456789abcdef";
+async function sha256Hex3(u8) {
+  const d = await crypto.subtle.digest("SHA-256", u8);
+  const b = new Uint8Array(d);
+  let out = "";
+  for (let i = 0; i < b.length; i++) out += HEX3[b[i] >> 4] + HEX3[b[i] & 15];
+  return out;
+}
+function resolveRelTarget2(relsPart, target) {
+  const t = String(target || "");
+  if (t.startsWith("/")) return normalizePartName(t);
+  const baseDir = relsPart.replace(/_rels\/[^/]*\.rels$/, "");
+  const segs = (baseDir + t).split("/");
+  const out = [];
+  for (const s of segs) {
+    if (s === "" || s === ".") continue;
+    if (s === "..") out.pop();
+    else out.push(s);
+  }
+  return out.join("/");
+}
+async function pptxParts(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const d = await discriminate(b);
+  if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
+  if (d.format !== "pptx") {
+    return {
+      ok: false,
+      why: d.format === "undetermined" ? d.why : `not_pptx:${d.format}`,
+      signals: d.signals
+    };
+  }
+  const container = readContainer(b);
+  if (!container.ok) return { ok: false, why: container.why, signals: d.signals };
+  const undetermined = [];
+  const mainPart = normalizePartName(d.mainPart || MAIN_PART2);
+  const slideParts = [];
+  const notesParts = [];
+  for (const e of container.entries) {
+    const n = normalizePartName(e.name);
+    if (SLIDE_PART_RE.test(n)) slideParts.push(n);
+    else if (NOTES_PART_RE.test(n)) notesParts.push(n);
+  }
+  let declaredTextBytes2 = 0;
+  for (const n of [...slideParts, ...notesParts]) {
+    const e = container.byName.get(n);
+    if (e) declaredTextBytes2 += e.uncompressedSize;
+  }
+  const guardR = sizeGuard(declaredTextBytes2);
+  const guard = guardR.ok ? null : guardR;
+  const rels = await walkRels(b, container);
+  let presentationXml = null;
+  const main = await readPart(b, container, mainPart);
+  if (main.ok) presentationXml = UTF84.decode(main.bytes);
+  else undetermined.push({ part: mainPart, why: main.why });
+  let order = null;
+  const hiddenParts = /* @__PURE__ */ new Set();
+  if (presentationXml != null) {
+    const presRelsPart = relsPartFor(mainPart);
+    const presRels = rels.byPart.find((p) => p.part === presRelsPart);
+    if (!presRels) {
+      const stated = rels.undetermined.find((u) => u.part === presRelsPart);
+      undetermined.push({ part: presRelsPart, why: stated?.why ?? "part_absent" });
+    } else {
+      const byId = new Map(presRels.relationships.map((r) => [r.id, r]));
+      order = [];
+      const sldIdRe = /<(?:[\w.-]+:)?sldId\b((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/g;
+      for (const m of presentationXml.matchAll(sldIdRe)) {
+        const rid = m[1].match(/[\w.-]+:id\s*=\s*(?:"([^"]*)"|'([^']*)')/);
+        const id = rid ? rid[1] ?? rid[2] : null;
+        const rel = id != null ? byId.get(id) : null;
+        if (!rel || rel.external || !rel.target) {
+          order.push(null);
+          undetermined.push({ part: mainPart, why: `sldid_rel_unresolved:${id ?? "no_rid"}` });
+          continue;
+        }
+        const resolved = resolveRelTarget2(presRelsPart, rel.target);
+        order.push(resolved);
+        if (declaresNotShown(showAttrOf(m[1]))) hiddenParts.add(resolved);
+      }
+    }
+  }
+  const slideXml = /* @__PURE__ */ new Map();
+  const notesXml = /* @__PURE__ */ new Map();
+  if (!guard) {
+    for (const n of slideParts) {
+      const r = await readPart(b, container, n);
+      if (r.ok) {
+        const xml = UTF84.decode(r.bytes);
+        slideXml.set(n, xml);
+        const root = xml.match(SLD_ROOT_RE);
+        if (root && declaresNotShown(showAttrOf(root[1]))) hiddenParts.add(n);
+      } else undetermined.push({ part: n, why: r.why });
+    }
+    for (const n of notesParts) {
+      const r = await readPart(b, container, n);
+      if (r.ok) notesXml.set(n, UTF84.decode(r.bytes));
+      else undetermined.push({ part: n, why: r.why });
+    }
+  }
+  const notesOf = /* @__PURE__ */ new Map();
+  for (const bp of rels.byPart) {
+    const m = bp.part.match(/^(ppt\/slides\/)_rels\/([^/]+\.xml)\.rels$/);
+    if (!m) continue;
+    const slidePart = m[1] + m[2];
+    for (const r of bp.relationships) {
+      if (!r.external && r.type && r.type.endsWith("/notesSlide") && r.target) {
+        notesOf.set(slidePart, resolveRelTarget2(bp.part, r.target));
+        break;
+      }
+    }
+  }
+  let core = null;
+  if (container.byName.has(CORE_PROPERTIES_PART)) {
+    const c = await readCoreProperties(b, container);
+    if (c.ok) core = c;
+    else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
+  }
+  return {
+    ok: true,
+    format: "pptx",
+    bytes: b,
+    container,
+    mainPart,
+    presentationXml,
+    order,
+    slideParts,
+    notesParts,
+    slideXml,
+    notesXml,
+    notesOf,
+    hiddenParts,
+    rels,
+    core,
+    guard,
+    undetermined
+  };
+}
+function deckOf(parts) {
+  const seq = [];
+  const seen = /* @__PURE__ */ new Set();
+  if (parts.order) {
+    parts.order.forEach((part, i) => {
+      if (part == null) return;
+      seq.push({ part, slide: i + 1 });
+      seen.add(part);
+    });
+  }
+  for (const p of parts.slideParts) if (!seen.has(p)) seq.push({ part: p, slide: null });
+  return seq;
+}
+var GUARDED_PARTS = "ppt/slides/* + ppt/notesSlides/*";
+async function pptxStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "pptx", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  const notes = [];
+  const links = [];
+  const deck = deckOf(parts);
+  const slideNoOf = /* @__PURE__ */ new Map();
+  for (const d of deck) if (d.slide != null) slideNoOf.set(d.part, d.slide);
+  if (!parts.order) {
+    notes.push("deck order undeclared-or-unreadable (ppt/presentation.xml sldIdLst): slides are UNNUMBERED \u2014 slide:null, sources null \u2014 stated, never numbered off filenames");
+  }
+  if (parts.guard) {
+    notes.push("slide/notes parts not read: over the size bound (stated in evidentiary.undetermined and by text())");
+  }
+  const walks = /* @__PURE__ */ new Map();
+  for (const { part } of deck) {
+    const xml = parts.slideXml.get(part);
+    if (xml != null) walks.set(part, walkSlide(xml));
+  }
+  const relsPartToSlide = /* @__PURE__ */ new Map();
+  for (const { part } of deck) relsPartToSlide.set(relsPartFor(part), part);
+  const slideLevelSource = (slidePart) => {
+    const n = slideNoOf.get(slidePart);
+    return n != null ? slideShapeRef(n) : null;
+  };
+  for (const rel of parts.rels.outbound) {
+    const slidePart = relsPartToSlide.get(rel.part);
+    if (slidePart) {
+      const slideNo = slideNoOf.get(slidePart) ?? null;
+      const w = walks.get(slidePart);
+      const usages = w ? w.hlinks.filter((h) => h.rid === rel.id) : [];
+      if (usages.length) {
+        for (const u of usages) {
+          links.push(deferredOrRefusedRecord2(
+            rel.target,
+            slideNo != null ? slideShapeRef(slideNo, u.shape) : null
+          ));
+        }
+        continue;
+      }
+      links.push(deferredOrRefusedRecord2(rel.target, slideLevelSource(slidePart)));
+      continue;
+    }
+    links.push(deferredOrRefusedRecord2(rel.target, null));
+  }
+  for (const u of parts.rels.undetermined) {
+    links.push(undeterminedRecord2(null, "rels_unreadable", { part: u.part, detail: u.why }));
+  }
+  for (const bp of parts.rels.byPart) {
+    const slidePart = relsPartToSlide.get(bp.part);
+    if (!slidePart) continue;
+    const w = walks.get(slidePart);
+    if (!w) continue;
+    const slideNo = slideNoOf.get(slidePart) ?? null;
+    for (const r of bp.relationships) {
+      if (r.external || !r.type || !r.type.endsWith("/slide") || !r.target) continue;
+      const usages = w.hlinks.filter((h) => h.rid === r.id);
+      if (!usages.length) continue;
+      const resolved = resolveRelTarget2(bp.part, r.target);
+      const targetNo = slideNoOf.get(resolved) ?? null;
+      for (const u of usages) {
+        const source = slideNo != null ? slideShapeRef(slideNo, u.shape) : null;
+        if (targetNo != null) {
+          const fragment = `#slide=${targetNo}`;
+          links.push({
+            partition: "anchor",
+            wrapper: linkWrapper.anchor(fragment),
+            target: { slide: targetNo, fragment, part: resolved },
+            source
+          });
+        } else {
+          links.push(undeterminedRecord2(source, "slide_unresolved", { part: resolved }));
+        }
+      }
+    }
+  }
+  const embeddingRefs = /* @__PURE__ */ new Map();
+  for (const bp of parts.rels.byPart) {
+    const slidePart = relsPartToSlide.get(bp.part) ?? null;
+    for (const r of bp.relationships) {
+      if (r.external || !r.target) continue;
+      const resolved = resolveRelTarget2(bp.part, r.target);
+      if (resolved.startsWith(EMBEDDINGS_DIR2) && !embeddingRefs.has(resolved))
+        embeddingRefs.set(resolved, { slidePart, rid: r.id });
+    }
+  }
+  for (const entry of parts.container.entries) {
+    const name = normalizePartName(entry.name);
+    if (!name.startsWith(EMBEDDINGS_DIR2) || name === EMBEDDINGS_DIR2) continue;
+    const refd = embeddingRefs.get(name) ?? null;
+    let source = null;
+    if (refd && refd.slidePart) {
+      const slideNo = slideNoOf.get(refd.slidePart) ?? null;
+      if (slideNo != null) {
+        const w = walks.get(refd.slidePart);
+        const shape = w && w.ridUsage.has(refd.rid) ? w.ridUsage.get(refd.rid) : null;
+        source = slideShapeRef(slideNo, shape);
+      }
+    }
+    const read = await readPart(parts.bytes, parts.container, name);
+    if (!read.ok) {
+      links.push(undeterminedRecord2(source, "embedded_part_unreadable", { part: name, detail: read.why }));
+      continue;
+    }
+    const sha = await sha256Hex3(read.bytes);
+    links.push({
+      partition: "intra",
+      wrapper: linkWrapper.intra(sha),
+      target: { sha256: sha, name: name.slice(name.lastIndexOf("/") + 1), bytes: read.bytes.length },
+      source
+    });
+  }
+  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
+  for (const l of links) counts[l.partition]++;
+  const items = [];
+  const evUndetermined = [...parts.undetermined];
+  if (parts.guard) evUndetermined.push({ part: GUARDED_PARTS, why: "over_size_bound", guard: parts.guard });
+  for (const { part, slide } of deck) {
+    if (!parts.hiddenParts.has(part)) continue;
+    items.push({
+      kind: "hidden-slide",
+      slide,
+      part,
+      source: slide != null ? slideShapeRef(slide) : null
+    });
+  }
+  const mappedNotes = /* @__PURE__ */ new Set();
+  for (const { part, slide } of deck) {
+    const notesPart = parts.notesOf.get(part) ?? null;
+    if (!notesPart) continue;
+    mappedNotes.add(notesPart);
+    const xml = parts.notesXml.get(notesPart);
+    if (xml == null) {
+      if (!parts.guard && !parts.container.byName.has(notesPart))
+        evUndetermined.push({ part: notesPart, why: "part_absent" });
+      continue;
+    }
+    items.push({
+      kind: "speaker-notes",
+      slide,
+      part: notesPart,
+      text: walkSlide(xml).text,
+      source: slide != null ? slideShapeRef(slide) : null
+    });
+  }
+  for (const np of parts.notesParts) {
+    if (mappedNotes.has(np) || !parts.notesXml.has(np)) continue;
+    items.push({ kind: "speaker-notes", slide: null, part: np, text: walkSlide(parts.notesXml.get(np)).text, source: null });
+  }
+  if (parts.core) {
+    items.push({
+      kind: "core-properties",
+      creator: parts.core.creator,
+      lastModifiedBy: parts.core.lastModifiedBy,
+      revision: parts.core.revision,
+      revisionNumber: parts.core.revisionNumber,
+      created: parts.core.created,
+      modified: parts.core.modified,
+      title: parts.core.title,
+      source: null
+    });
+  }
+  const evCounts = {};
+  for (const it of items) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
+  const evidentiary = {
+    container: "pptx",
+    kinds: [...new Set(items.map((it) => it.kind))],
+    items,
+    undetermined: evUndetermined,
+    counts: evCounts
+  };
+  return {
+    ok: true,
+    container: "pptx",
+    slides: deck.length,
+    links,
+    counts,
+    evidentiary,
+    notes
+  };
+}
+function deckLengthOf(parts) {
+  return Array.isArray(parts.order) ? parts.order.length : null;
+}
+async function pptxText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "pptx", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "pptx",
+      document: null,
+      slides: [],
+      speakerNotes: [],
+      deckLength: deckLengthOf(parts),
+      undetermined: [parts.guard],
+      counts: { chars: 0, notesChars: 0, undetermined: 1 }
+    };
+  }
+  const deck = deckOf(parts);
+  const slides = [];
+  const speakerNotes = [];
+  const undetermined = [];
+  for (const { part, slide } of deck) {
+    const hidden = parts.hiddenParts.has(part);
+    const xml = parts.slideXml.get(part);
+    if (xml == null) {
+      const stated = parts.undetermined.find((u) => u.part === part);
+      undetermined.push({ reason: "slide_unreadable", part, why: stated?.why ?? "unreadable" });
+    } else {
+      const walked = walkSlide(xml);
+      slides.push({
+        slide,
+        ref: slide != null ? `slide ${slide}` : null,
+        part,
+        hidden,
+        shapes: walked.shapes,
+        text: walked.text
+      });
+    }
+    const notesPart = parts.notesOf.get(part) ?? null;
+    if (!notesPart) continue;
+    const nxml = parts.notesXml.get(notesPart);
+    if (nxml == null) {
+      const stated = parts.undetermined.find((u) => u.part === notesPart);
+      undetermined.push({ reason: "notes_unreadable", part: notesPart, why: stated?.why ?? "unreadable" });
+    } else {
+      speakerNotes.push({ slide, ref: slide != null ? `slide ${slide} (notes)` : null, part: notesPart, hidden, text: walkSlide(nxml).text });
+    }
+  }
+  const mapped = /* @__PURE__ */ new Set([...parts.notesOf.values()]);
+  for (const np of parts.notesParts) {
+    if (mapped.has(np) || !parts.notesXml.has(np)) continue;
+    speakerNotes.push({ slide: null, ref: null, part: np, hidden: null, text: walkSlide(parts.notesXml.get(np)).text });
+  }
+  const document = slides.map((s) => s.text).filter((t) => t.length).join("\n");
+  const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
+  return {
+    ok: true,
+    container: "pptx",
+    document,
+    slides,
+    speakerNotes,
+    deckLength: deckLengthOf(parts),
+    undetermined,
+    counts: { chars: document.length, notesChars, undetermined: undetermined.length }
+  };
+}
+var pptxEntry = {
+  format: "pptx",
+  detect(bytes, contentType) {
+    if (bytes) {
+      if (!hasZipMagic(bytes)) return null;
+      const container = readContainer(bytes);
+      if (!container.ok) return null;
+      if (container.byName.has(CONTENT_TYPES_PART3) && container.byName.has(MAIN_PART2)) {
+        return {
+          format: "pptx",
+          confidence: "likely",
+          signals: [
+            "magic: PK\\x03\\x04 with a readable central directory",
+            `part: ${CONTENT_TYPES_PART3} present`,
+            `part: ${MAIN_PART2} present`,
+            "likely, not certain: the OPC content-type declaration is deflated \u2014 parts() discriminates"
+          ]
+        };
+      }
+      return null;
+    }
+    if (contentType === PPTX_CONTENT_TYPE) {
+      return { format: "pptx", confidence: "likely", signals: [`content type "${contentType}"`] };
+    }
+    return null;
+  },
+  parts: (bytes) => pptxParts(bytes),
+  structure: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await pptxParts(partsOrBytes) : partsOrBytes;
+    return pptxStructure(parts);
+  },
+  text: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await pptxParts(partsOrBytes) : partsOrBytes;
+    return withContainerImages(pptxText(parts), parts, "ppt/media/");
+  }
+};
+
+// src/odf.mjs
+var UTF85 = new TextDecoder("utf-8", { fatal: false });
+var ODF_ROWS = CONTAINER_FLAVOURS.filter((f2) => f2.partMap === "odf");
+function odfRow(flavour) {
+  const row = ODF_ROWS.find((f2) => f2.flavour === flavour);
+  if (!row) throw new Error(`odf.mjs: no partMap:"odf" row for "${flavour}" in ooxml.mjs`);
+  return row;
+}
+var ODT_ROW = odfRow("odt");
+var ODS_ROW = odfRow("ods");
+var ODP_ROW = odfRow("odp");
+var ODT_CONTENT_TYPE = ODT_ROW.mimetype;
+var ODS_CONTENT_TYPE = ODS_ROW.mimetype;
+var ODP_CONTENT_TYPE = ODP_ROW.mimetype;
+var CONTENT_PART = normalizePartName(ODT_ROW.conventionalMainPart);
+var META_PART = "meta.xml";
+function decodeEntities3(s) {
+  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
+    if (e[0] === "#") {
+      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+    }
+    return { amp: "&", lt: "<", gt: ">", quot: "'" === e ? "'" : '"', apos: "'" }[e] ?? m;
+  });
+}
+function attrsOf4(raw) {
+  const attrs = {};
+  for (const a of String(raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
+    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
+    attrs[local] = decodeEntities3(a[3] ?? a[4] ?? "");
+  }
+  return attrs;
+}
+var localOf3 = (n) => n.includes(":") ? n.split(":").pop() : n;
+var tokens = () => /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/)?>/g;
+function elementsNested(xml, localName) {
+  const out = [];
+  const RE = tokens();
+  let m, depth = 0, start = -1, openAttrs = null;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m[1] === void 0) continue;
+    if (localOf3(m[1]) !== localName) continue;
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (closing) {
+      depth--;
+      if (depth === 0 && start >= 0) {
+        out.push({ attrs: openAttrs, inner: xml.slice(start, m.index) });
+        start = -1;
+        openAttrs = null;
+      }
+      continue;
+    }
+    if (selfClosed) {
+      if (depth === 0) out.push({ attrs: attrsOf4(m[2]), inner: "" });
+      continue;
+    }
+    if (depth === 0) {
+      start = RE.lastIndex;
+      openAttrs = attrsOf4(m[2]);
+    }
+    depth++;
+  }
+  return out;
+}
+function stripElement(xml, localName) {
+  let out = "";
+  let cut = 0;
+  const RE = tokens();
+  let m, depth = 0, start = -1;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m[1] === void 0) continue;
+    if (localOf3(m[1]) !== localName) continue;
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (selfClosed) {
+      if (depth === 0) {
+        out += xml.slice(cut, m.index);
+        cut = RE.lastIndex;
+      }
+      continue;
+    }
+    if (closing) {
+      depth--;
+      if (depth === 0 && start >= 0) {
+        cut = RE.lastIndex;
+        start = -1;
+      }
+      continue;
+    }
+    if (depth === 0) {
+      out += xml.slice(cut, m.index);
+      start = m.index;
+    }
+    depth++;
+  }
+  return out + xml.slice(cut);
+}
+function visibleText(xml) {
+  let out = "";
+  let prev = 0;
+  const RE = tokens();
+  let m;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m.index > prev) out += decodeEntities3(xml.slice(prev, m.index));
+    prev = RE.lastIndex;
+    if (m[1] === void 0) continue;
+    if (m[0][1] === "/") continue;
+    const name = localOf3(m[1]);
+    if (name === "s") {
+      const c = parseInt(attrsOf4(m[2]).c ?? "1", 10);
+      out += " ".repeat(Number.isFinite(c) && c > 0 ? c : 1);
+    } else if (name === "tab") out += "	";
+    else if (name === "line-break") out += "\n";
+  }
+  if (xml.length > prev) out += decodeEntities3(xml.slice(prev));
+  return out;
+}
+function automaticStyles(xml) {
+  const tableDisplay = /* @__PURE__ */ new Map();
+  const pageVisible = /* @__PURE__ */ new Map();
+  for (const block of elementsNested(xml, "automatic-styles")) {
+    for (const st of elementsNested(block.inner, "style")) {
+      const name = st.attrs["name"];
+      if (!name) continue;
+      if (st.attrs.family === "table") {
+        for (const p of elementsNested(st.inner, "table-properties")) {
+          if (p.attrs.display != null) tableDisplay.set(name, p.attrs.display !== "false");
+        }
+      } else if (st.attrs.family === "drawing-page") {
+        for (const p of elementsNested(st.inner, "drawing-page-properties")) {
+          if (p.attrs.visibility != null) pageVisible.set(name, p.attrs.visibility !== "hidden");
+        }
+      }
+    }
+  }
+  return { tableDisplay, pageVisible };
+}
+function classifyUri3(uri) {
+  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
+  const scheme = m ? m[1].toLowerCase() : null;
+  if (scheme === "http" || scheme === "https") return "deferred";
+  if (!scheme && uri) return "deferred";
+  return "refused";
+}
+function linkRecord(uri, source) {
+  if (typeof uri === "string" && uri.startsWith("#")) {
+    return {
+      partition: "anchor",
+      wrapper: linkWrapper.anchor(uri),
+      target: { fragment: uri, name: uri.slice(1) },
+      source
+    };
+  }
+  const partition = classifyUri3(uri);
+  return {
+    partition,
+    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(),
+    target: { url: uri },
+    source
+  };
+}
+function hrefsIn(xml) {
+  const out = [];
+  const RE = tokens();
+  let m;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m[1] === void 0 || m[0][1] === "/") continue;
+    if (localOf3(m[1]) !== "a") continue;
+    const href = attrsOf4(m[2]).href;
+    if (href != null) out.push(href);
+  }
+  return out;
+}
+function readStoredMemberSync(bytes, container, name, maxBytes) {
+  const want = normalizePartName(name);
+  const entry = container.byName.get(want) ?? container.entries.find((e) => normalizePartName(e.name) === want);
+  if (!entry) return null;
+  if (entry.method !== 0) return null;
+  if (entry.uncompressedSize > maxBytes) return null;
+  const lh = entry.localHeaderOffset;
+  if (lh + 30 > bytes.length) return null;
+  const nameLen = bytes[lh + 26] | bytes[lh + 27] << 8;
+  const extraLen = bytes[lh + 28] | bytes[lh + 29] << 8;
+  const start = lh + 30 + nameLen + extraLen;
+  const end = start + entry.compressedSize;
+  if (end > bytes.length) return null;
+  const out = bytes.subarray(start, end);
+  if (out.length !== entry.uncompressedSize) return null;
+  if (crc32(out) !== entry.crc32) return null;
+  return UTF85.decode(out);
+}
+function detectOdf(row, bytes, contentType) {
+  if (bytes) {
+    if (!hasZipMagic(bytes)) return null;
+    const container = readContainer(bytes);
+    if (!container.ok) return null;
+    const first = container.entries[0];
+    if (!first || normalizePartName(first.name) !== ODF_MIMETYPE_PART) return null;
+    const declared = readStoredMemberSync(bytes, container, ODF_MIMETYPE_PART, ODF_MIMETYPE_MAX_BYTES);
+    if (declared !== row.mimetype) return null;
+    const main = normalizePartName(row.conventionalMainPart);
+    const present = container.byName.has(main) || container.entries.some((e) => normalizePartName(e.name) === main);
+    if (!present) return null;
+    return {
+      format: row.flavour,
+      confidence: "certain",
+      signals: [
+        "magic: PK\\x03\\x04 with a readable central directory",
+        `part: ${ODF_MIMETYPE_PART} is the FIRST member, STORED, CRC-verified`,
+        `odf:${ODF_MIMETYPE_PART}=${row.mimetype} (exact match, not trimmed)`,
+        `part: ${main} present`
+      ]
+    };
+  }
+  if (contentType === row.mimetype) {
+    return { format: row.flavour, confidence: "likely", signals: [`content type "${contentType}"`] };
+  }
+  return null;
+}
+async function odfParts(row, bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const d = await discriminate(b);
+  if (!d.ok) return { ok: false, container: row.flavour, why: d.why, signals: d.signals };
+  if (d.format !== row.flavour) {
+    const absent = d.why === "declared_main_part_absent";
+    return {
+      ok: false,
+      container: row.flavour,
+      why: d.format === "undetermined" ? d.why : `not_${row.flavour}:${d.format}`,
+      part: absent ? CONTENT_PART : null,
+      flavourDeclared: d.flavourDeclared ?? null,
+      signals: d.signals
+    };
+  }
+  const container = readContainer(b);
+  if (!container.ok) return { ok: false, container: row.flavour, why: container.why, signals: d.signals };
+  const undetermined = [];
+  const declared = declaredTextBytes(container, (n) => n === CONTENT_PART);
+  const guardR = sizeGuard(declared.total);
+  const guard = guardR.ok ? null : guardR;
+  let contentXml = null;
+  if (!guard) {
+    const read = await readPart(b, container, CONTENT_PART);
+    if (read.ok) contentXml = UTF85.decode(read.bytes);
+    else undetermined.push({ part: CONTENT_PART, why: read.why });
+  }
+  undetermined.push({
+    part: META_PART,
+    why: "outside_content_xml_not_read",
+    detail: "OpenDocument carries the core properties (creator, title, created/modified, revision) in meta.xml; this entry reads content.xml only, so NO core-properties item is emitted and its absence is not evidence the document carries none"
+  });
+  undetermined.push({
+    part: ODF_MANIFEST_PART,
+    why: "outside_content_xml_not_read",
+    detail: "OpenDocument lists embedded objects and images as separate package members in META-INF/manifest.xml; this entry reads content.xml only, so NO intra link is content-addressed and a zero intra count means NOT LOOKED, never NONE PRESENT"
+  });
+  return { ok: true, format: row.flavour, row, bytes: b, container, contentXml, declared, guard, undetermined };
+}
+function officeBody(contentXml, kind) {
+  if (contentXml == null) return null;
+  const body = elementsNested(contentXml, "body")[0];
+  if (!body) return null;
+  const inner = elementsNested(body.inner, kind)[0];
+  return inner ? inner.inner : null;
+}
+function envelopeUndetermined(parts) {
+  const out = [...parts.undetermined];
+  if (parts.guard) out.push({ part: CONTENT_PART, why: "over_size_bound", guard: parts.guard });
+  return out;
+}
+function envelopeOf(container, items, undetermined) {
+  const counts = {};
+  for (const it of items) counts[it.kind] = (counts[it.kind] ?? 0) + 1;
+  return {
+    container,
+    kinds: [...new Set(items.map((it) => it.kind))],
+    items,
+    undetermined,
+    counts
+  };
+}
+function countPartitions(links) {
+  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
+  for (const l of links) counts[l.partition]++;
+  return counts;
+}
+var NO_INTRA_NOTE = "no intra link is emitted: embedded members live outside content.xml (stated in evidentiary.undetermined)";
+function walkTextBody(bodyXml) {
+  const paragraphs = [];
+  const hyperlinks = [];
+  const annotations = [];
+  const marks = [];
+  const openChanges = /* @__PURE__ */ new Map();
+  const served = stripElement(bodyXml, "tracked-changes");
+  const RE = tokens();
+  let m, prev = 0;
+  let para = -1;
+  let inPara = false;
+  let depthInPara = 0;
+  let skipDepth = 0;
+  let paraStart = -1;
+  const openStack = [];
+  while ((m = RE.exec(served)) !== null) {
+    if (m[1] === void 0) {
+      prev = RE.lastIndex;
+      continue;
+    }
+    const name = localOf3(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (skipDepth > 0) {
+      if (!closing && !selfClosed) skipDepth++;
+      else if (closing) skipDepth--;
+      prev = RE.lastIndex;
+      continue;
+    }
+    if (!closing && !selfClosed && name === "annotation") {
+      const rest = served.slice(m.index);
+      const ann = elementsNested(rest, "annotation")[0];
+      annotations.push({ attrs: attrsOf4(m[2]), inner: ann ? ann.inner : "", para: para >= 0 ? para : null });
+      skipDepth = 1;
+      prev = RE.lastIndex;
+      continue;
+    }
+    if (!closing && (name === "p" || name === "h")) {
+      if (!selfClosed) {
+        if (!inPara) {
+          para++;
+          inPara = true;
+          depthInPara = 1;
+          paraStart = RE.lastIndex;
+          openStack.length = 0;
+        } else depthInPara++;
+      } else {
+        if (!inPara) {
+          para++;
+          paragraphs.push({ para, text: "" });
+        }
+      }
+      prev = RE.lastIndex;
+      continue;
+    }
+    if (closing && (name === "p" || name === "h") && inPara) {
+      depthInPara--;
+      if (depthInPara === 0) {
+        const raw = served.slice(paraStart, m.index);
+        paragraphs.push({ para, text: visibleText(stripElement(raw, "annotation")) });
+        inPara = false;
+        paraStart = -1;
+      }
+      prev = RE.lastIndex;
+      continue;
+    }
+    const attrs = m[2] && m[2].includes("=") ? attrsOf4(m[2]) : {};
+    if (!closing && name === "a" && attrs.href != null) {
+      hyperlinks.push({ href: attrs.href, para: para >= 0 ? para : null });
+    } else if (name === "change-start" && attrs["change-id"] != null) {
+      openChanges.set(attrs["change-id"], { para: para >= 0 ? para : null });
+      marks.push({ id: attrs["change-id"], para: para >= 0 ? para : null });
+    } else if (name === "change" && attrs["change-id"] != null) {
+      marks.push({ id: attrs["change-id"], para: para >= 0 ? para : null });
+    }
+    prev = RE.lastIndex;
+  }
+  return { paragraphs, hyperlinks, annotations, marks, openChanges };
+}
+function insertedTextFor(bodyXml, id) {
+  const served = stripElement(bodyXml, "tracked-changes");
+  const startRe = new RegExp(`<(?:[\\w.-]+:)?change-start\\b[^>]*change-id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`);
+  const endRe = new RegExp(`<(?:[\\w.-]+:)?change-end\\b[^>]*change-id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`);
+  const s = served.match(startRe);
+  const e = served.match(endRe);
+  if (!s || !e || e.index < s.index) return null;
+  return visibleText(served.slice(s.index + s[0].length, e.index));
+}
+function parseTrackedChanges(bodyXml) {
+  const block = elementsNested(bodyXml, "tracked-changes")[0];
+  if (!block) return [];
+  const out = [];
+  for (const region of elementsNested(block.inner, "changed-region")) {
+    const id = region.attrs.id ?? null;
+    for (const [kind, change] of [["insertion", "insertion"], ["deletion", "deletion"]]) {
+      for (const el of elementsNested(region.inner, kind)) {
+        const info = elementsNested(el.inner, "change-info")[0];
+        const creator = info ? elementsNested(info.inner, "creator")[0] : null;
+        const date = info ? elementsNested(info.inner, "date")[0] : null;
+        out.push({
+          id,
+          change,
+          author: creator ? visibleText(creator.inner) : null,
+          // null, never invented
+          date: date ? visibleText(date.inner) : null,
+          /* A deletion's own paragraphs ARE the superseded wording. An
+             insertion's content is in the body, not here. */
+          superseded: change === "deletion" ? elementsNested(stripElement(el.inner, "change-info"), "p").map((p) => visibleText(p.inner)).join("\n") : null
+        });
+      }
+    }
+  }
+  return out;
+}
+function odtStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  const notes = [NO_INTRA_NOTE];
+  const links = [];
+  const items = [];
+  const body = officeBody(parts.contentXml, "text");
+  if (!body) {
+    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:text>: element references unavailable (stated)");
+  }
+  let paragraphs = null;
+  if (body) {
+    const walk = walkTextBody(body);
+    paragraphs = walk.paragraphs.length;
+    for (const h of walk.hyperlinks) {
+      links.push(linkRecord(h.href, h.para == null ? null : docParaRef(h.para)));
+    }
+    const markFor = /* @__PURE__ */ new Map();
+    for (const mk of walk.marks) if (!markFor.has(mk.id)) markFor.set(mk.id, mk.para);
+    for (const c of parseTrackedChanges(parts.contentXml)) {
+      const at = c.id != null ? markFor.get(c.id) : void 0;
+      const item = {
+        kind: "tracked-change",
+        change: c.change,
+        author: c.author,
+        date: c.date,
+        source: at == null ? null : docParaRef(at)
+      };
+      if (c.change === "deletion") item.superseded = c.superseded;
+      else item.text = c.id != null ? insertedTextFor(body, c.id) : null;
+      if (at === void 0) item.why = "change_region_unmarked_in_body";
+      items.push(item);
+    }
+    for (const a of walk.annotations) {
+      const creator = elementsNested(a.inner, "creator")[0];
+      const date = elementsNested(a.inner, "date")[0];
+      const initials = elementsNested(a.inner, "creator-initials")[0];
+      items.push({
+        kind: "comment",
+        id: a.attrs.name ?? null,
+        author: creator ? visibleText(creator.inner) : null,
+        date: date ? visibleText(date.inner) : null,
+        initials: initials ? visibleText(initials.inner) : null,
+        text: elementsNested(stripElement(a.inner, "change-info"), "p").map((p) => visibleText(p.inner)).join("\n"),
+        source: a.para == null ? null : docParaRef(a.para)
+      });
+    }
+  }
+  return {
+    ok: true,
+    container: "odt",
+    paragraphs,
+    // null = honestly unknown, the docx.mjs convention
+    links,
+    counts: countPartitions(links),
+    evidentiary: envelopeOf("odt", items, envelopeUndetermined(parts)),
+    notes
+  };
+}
+function walkOdfTables(bodyXml) {
+  const done = [];
+  const stack = [];
+  let next = 0;
+  const RE = tokens();
+  const rep = (v) => {
+    const n = parseInt(v ?? "1", 10);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  };
+  let m;
+  while ((m = RE.exec(bodyXml)) !== null) {
+    if (m[1] === void 0) continue;
+    const name = localOf3(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    const top = stack.length ? stack[stack.length - 1] : null;
+    if (closing) {
+      if (name === "table" && stack.length) {
+        const t = stack.pop();
+        done[t.table] = { table: t.table, rows: t.rows, cols: t.cols > 0 ? t.cols : null };
+      }
+      continue;
+    }
+    if (name === "table") {
+      if (selfClosed) done[next] = { table: next++, rows: 0, cols: null };
+      else stack.push({ table: next++, rows: 0, cols: 0 });
+      continue;
+    }
+    if (!top) continue;
+    const attrs = m[2] && m[2].includes("=") ? attrsOf4(m[2]) : {};
+    if (name === "table-column") top.cols += rep(attrs["number-columns-repeated"]);
+    else if (name === "table-row") top.rows += rep(attrs["number-rows-repeated"]);
+  }
+  while (stack.length) {
+    const t = stack.pop();
+    done[t.table] = { table: t.table, rows: t.rows || null, cols: t.cols > 0 ? t.cols : null };
+  }
+  return done.filter(Boolean);
+}
+function odtText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "odt",
+      document: null,
+      paragraphs: [],
+      tables: null,
+      undetermined: [parts.guard],
+      // the marker VERBATIM, never a truncation
+      counts: { chars: 0, undetermined: 1 }
+    };
+  }
+  const body = officeBody(parts.contentXml, "text");
+  if (!body) {
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    return {
+      ok: true,
+      container: "odt",
+      document: null,
+      paragraphs: [],
+      tables: null,
+      undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_text_body" }],
+      counts: { chars: 0, undetermined: 1 }
+    };
+  }
+  const walk = walkTextBody(body);
+  const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `\xB6${p.para + 1}`, text: p.text }));
+  const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
+  const tables = walkOdfTables(stripElement(body, "tracked-changes")).map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
+  return {
+    ok: true,
+    container: "odt",
+    document,
+    paragraphs,
+    tables,
+    undetermined: [],
+    counts: { chars: document.length, undetermined: 0 }
+  };
+}
+function columnName(i) {
+  let n = i, out = "";
+  do {
+    out = String.fromCharCode(65 + n % 26) + out;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return out;
+}
+function walkSheet(tableXml) {
+  const rows = [];
+  const hiddenRows = [];
+  const hiddenCols = [];
+  let colIndex = 0;
+  for (const col of elementsNested(tableXml, "table-column")) {
+    const rep = parseInt(col.attrs["number-columns-repeated"] ?? "1", 10);
+    const n = Number.isFinite(rep) && rep > 0 ? rep : 1;
+    const vis = col.attrs.visibility;
+    if (vis === "collapse" || vis === "filter") {
+      hiddenCols.push({ min: colIndex + 1, max: colIndex + n, visibility: vis });
+    }
+    colIndex += n;
+  }
+  let rowIndex = 0;
+  for (const row of elementsNested(tableXml, "table-row")) {
+    const rep = parseInt(row.attrs["number-rows-repeated"] ?? "1", 10);
+    const nRows = Number.isFinite(rep) && rep > 0 ? rep : 1;
+    const vis = row.attrs.visibility;
+    const cells = [];
+    let c = 0;
+    for (const cell of elementsNested(row.inner, "table-cell")) {
+      const crep = parseInt(cell.attrs["number-columns-repeated"] ?? "1", 10);
+      const nCols = Number.isFinite(crep) && crep > 0 ? crep : 1;
+      const carries = cell.attrs["value-type"] != null || cell.attrs.formula != null || cell.inner.trim() !== "";
+      const emit = carries ? nCols : 0;
+      for (let k = 0; k < emit; k++) {
+        cells.push({
+          col: c + k,
+          cell: `${columnName(c + k)}${rowIndex + 1}`,
+          valueType: cell.attrs["value-type"] ?? null,
+          value: cell.attrs.value ?? cell.attrs["string-value"] ?? cell.attrs["date-value"] ?? cell.attrs["time-value"] ?? cell.attrs["boolean-value"] ?? null,
+          formula: cell.attrs.formula ?? null,
+          /* The DISPLAYED form: ODF writes what the sheet shows as the cell's
+             `<text:p>` children, which is the analogue of xlsx's cached <v>. */
+          display: elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n"),
+          hrefs: hrefsIn(cell.inner)
+        });
+      }
+      c += nCols;
+    }
+    const materialise = cells.length ? nRows : 0;
+    for (let k = 0; k < materialise; k++) {
+      const r = rowIndex + k;
+      if (vis === "collapse" || vis === "filter") hiddenRows.push(r + 1);
+      rows.push({
+        r: r + 1,
+        hidden: vis === "collapse" || vis === "filter" ? vis : false,
+        cells: cells.map((cell) => ({ ...cell, cell: `${columnName(cell.col)}${r + 1}` }))
+      });
+    }
+    if (!materialise && (vis === "collapse" || vis === "filter")) {
+      for (let k = 0; k < nRows; k++) hiddenRows.push(rowIndex + k + 1);
+    }
+    rowIndex += nRows;
+  }
+  return { rows, hiddenRows, hiddenCols };
+}
+function sheetsOf(bodyXml, styles) {
+  return elementsNested(bodyXml, "table").map((tbl, index) => {
+    const styleName = tbl.attrs["style-name"] ?? null;
+    const fromElement = tbl.attrs.display != null ? tbl.attrs.display !== "false" : null;
+    const fromStyle = styleName != null && styles.tableDisplay.has(styleName) ? styles.tableDisplay.get(styleName) : null;
+    const displayed = fromElement ?? fromStyle ?? true;
+    return {
+      index,
+      name: tbl.attrs.name ?? `table${index + 1}`,
+      /* ODF identifies a table by NAME only — there is no numeric sheet id.
+         null is the FORMAT speaking, not a gap in this reader. */
+      sheetId: null,
+      /* ODF's visibility is a boolean, so there is no xlsx "veryHidden". */
+      state: displayed ? "visible" : "hidden",
+      hidden: displayed ? false : "hidden",
+      xml: tbl.inner
+    };
+  });
+}
+function odsStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  const notes = [NO_INTRA_NOTE];
+  const links = [];
+  const items = [];
+  const body = officeBody(parts.contentXml, "spreadsheet");
+  if (!body) {
+    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:spreadsheet>: element references unavailable (stated)");
+  }
+  if (parts.guard) notes.push("text_parts_over_bound");
+  const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
+  const sheets = body ? sheetsOf(body, styles) : [];
+  for (const sheet of sheets) {
+    const walked = walkSheet(sheet.xml);
+    for (const row of walked.rows) {
+      for (const cell of row.cells) {
+        const ref = sheetCellRef(sheet.name, cell.cell);
+        for (const href of cell.hrefs) links.push(linkRecord(href, ref));
+        if (cell.formula != null) {
+          items.push({
+            kind: "formula",
+            source: ref,
+            formula: cell.formula,
+            value: cell.display !== "" ? cell.display : cell.value
+            // the cached result; null when the file carries none
+          });
+        }
+      }
+    }
+    if (walked.hiddenRows.length) {
+      items.push({
+        kind: "hidden-rows",
+        sheet: sheet.name,
+        rows: walked.hiddenRows,
+        count: walked.hiddenRows.length,
+        source: null
+      });
+    }
+    if (walked.hiddenCols.length) {
+      items.push({
+        kind: "hidden-cols",
+        sheet: sheet.name,
+        cols: walked.hiddenCols,
+        count: walked.hiddenCols.length,
+        source: null
+      });
+    }
+  }
+  for (const sheet of sheets) {
+    if (sheet.hidden) items.push({ kind: "hidden-sheet", sheet: sheet.name, state: sheet.state, source: null });
+  }
+  return {
+    ok: true,
+    container: "ods",
+    sheets: sheets.map((s) => ({ sheet: s.index, name: s.name, sheetId: s.sheetId, state: s.state, hidden: s.hidden })),
+    links,
+    counts: countPartitions(links),
+    evidentiary: envelopeOf("ods", items, envelopeUndetermined(parts)),
+    notes
+  };
+}
+function odsText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "ods",
+      document: null,
+      sheets: [],
+      undetermined: [parts.guard],
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
+    };
+  }
+  const body = officeBody(parts.contentXml, "spreadsheet");
+  if (!body) {
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    const marker = { sheet: null, cell: null, reason: stated?.why ?? "no_office_spreadsheet_body" };
+    return {
+      ok: true,
+      container: "ods",
+      document: null,
+      sheets: [],
+      undetermined: [marker],
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
+    };
+  }
+  const styles = automaticStyles(parts.contentXml);
+  const outSheets = [];
+  let cellCount = 0, formulaCount = 0;
+  for (const sheet of sheetsOf(body, styles)) {
+    const walked = walkSheet(sheet.xml);
+    const lines = [];
+    for (const row of walked.rows) {
+      const vals = [];
+      for (const c of row.cells) {
+        if (c.formula != null) formulaCount++;
+        const v = c.display !== "" ? c.display : c.value;
+        if (v == null || v === "") continue;
+        cellCount++;
+        vals.push(v);
+      }
+      if (vals.length) lines.push(vals.join("	"));
+    }
+    const text = lines.join("\n");
+    let usedRows = 0, usedCols = 0;
+    for (const row of walked.rows) {
+      if (!row.cells.length) continue;
+      if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
+      for (const c of row.cells) {
+        if (Number.isInteger(c.col) && c.col + 1 > usedCols) usedCols = c.col + 1;
+      }
+    }
+    outSheets.push({
+      sheet: sheet.index,
+      name: sheet.name,
+      hidden: sheet.hidden,
+      rows: null,
+      cols: null,
+      usedRows,
+      usedCols,
+      /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
+      range: usedSheetRange(sheet.name, usedRows, usedCols),
+      text,
+      undetermined: []
+    });
+  }
+  const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
+  return {
+    ok: true,
+    container: "ods",
+    document,
+    sheets: outSheets,
+    undetermined: [],
+    counts: { chars: document.length, cells: cellCount, formulas: formulaCount, undetermined: 0 }
+  };
+}
+var ODP_SHAPE_TAGS = /* @__PURE__ */ new Set([
+  "frame",
+  "custom-shape",
+  "rect",
+  "ellipse",
+  "circle",
+  "line",
+  "polyline",
+  "polygon",
+  "path",
+  "connector",
+  "measure",
+  "caption",
+  "g",
+  "page-thumbnail",
+  "control",
+  "object",
+  "image"
+]);
+function walkPage(pageXml) {
+  const slideOnly = stripElement(pageXml, "notes");
+  const shapes = [];
+  const RE = tokens();
+  let m;
+  let index = -1;
+  const open = [];
+  while ((m = RE.exec(slideOnly)) !== null) {
+    if (m[1] === void 0) continue;
+    const name = localOf3(m[1]);
+    if (!ODP_SHAPE_TAGS.has(name)) continue;
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (closing) {
+      const o = open.pop();
+      if (o) shapes.push({ shape: o.index, inner: slideOnly.slice(o.start, m.index) });
+      continue;
+    }
+    index++;
+    if (selfClosed) {
+      shapes.push({ shape: index, inner: "" });
+      continue;
+    }
+    open.push({ index, start: RE.lastIndex });
+  }
+  shapes.sort((a, b) => a.shape - b.shape);
+  return {
+    count: index + 1,
+    shapes: shapes.map((s) => ({
+      shape: s.shape,
+      /* A group's text is the text of the shapes inside it, which are their
+         own entries; taking the group's inner markup would double-count it in
+         the slide's text, so a shape's OWN text is its `<draw:text-box>`
+         paragraphs only. */
+      text: elementsNested(s.inner, "text-box").map((tb) => elementsNested(tb.inner, "p").map((p) => visibleText(p.inner)).join("\n")).join("\n"),
+      hrefs: hrefsIn(s.inner)
+    }))
+  };
+}
+function notesTextOf(pageXml) {
+  const notes = elementsNested(pageXml, "notes")[0];
+  if (!notes) return null;
+  return elementsNested(notes.inner, "text-box").map((tb) => elementsNested(tb.inner, "p").map((p) => visibleText(p.inner)).join("\n")).filter((t) => t.length).join("\n");
+}
+function deckOf2(bodyXml, styles) {
+  return elementsNested(bodyXml, "page").map((page, i) => {
+    const styleName = page.attrs["style-name"] ?? null;
+    const fromElement = page.attrs.visibility != null ? page.attrs.visibility !== "hidden" : null;
+    const fromStyle = styleName != null && styles.pageVisible.has(styleName) ? styles.pageVisible.get(styleName) : null;
+    const visible = fromElement ?? fromStyle ?? true;
+    return { slide: i + 1, name: page.attrs.name ?? null, hidden: !visible, xml: page.inner };
+  });
+}
+function odpStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  const notes = [NO_INTRA_NOTE];
+  const links = [];
+  const items = [];
+  const body = officeBody(parts.contentXml, "presentation");
+  if (!body) {
+    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:presentation>: element references unavailable (stated)");
+  }
+  const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
+  const deck = body ? deckOf2(body, styles) : null;
+  if (deck) {
+    for (const page of deck) {
+      const walked = walkPage(page.xml);
+      for (const s of walked.shapes) {
+        for (const href of s.hrefs) links.push(linkRecord(href, slideShapeRef(page.slide, s.shape)));
+      }
+      const nt = notesTextOf(page.xml);
+      if (nt != null && nt.length) {
+        items.push({
+          kind: "speaker-notes",
+          slide: page.slide,
+          part: CONTENT_PART,
+          text: nt,
+          source: slideShapeRef(page.slide)
+        });
+      }
+      if (page.hidden) {
+        items.push({
+          kind: "hidden-slide",
+          slide: page.slide,
+          part: CONTENT_PART,
+          source: slideShapeRef(page.slide)
+        });
+      }
+    }
+  }
+  return {
+    ok: true,
+    container: "odp",
+    slides: deck ? deck.length : null,
+    // null = honestly unknown
+    links,
+    counts: countPartitions(links),
+    evidentiary: envelopeOf("odp", items, envelopeUndetermined(parts)),
+    notes
+  };
+}
+function odpText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "odp",
+      document: null,
+      slides: [],
+      speakerNotes: [],
+      deckLength: null,
+      undetermined: [parts.guard],
+      counts: { chars: 0, notesChars: 0, undetermined: 1 }
+    };
+  }
+  const body = officeBody(parts.contentXml, "presentation");
+  if (!body) {
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    return {
+      ok: true,
+      container: "odp",
+      document: null,
+      slides: [],
+      speakerNotes: [],
+      deckLength: null,
+      undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_presentation_body" }],
+      counts: { chars: 0, notesChars: 0, undetermined: 1 }
+    };
+  }
+  const styles = automaticStyles(parts.contentXml);
+  const slides = [];
+  const speakerNotes = [];
+  const deck = deckOf2(body, styles);
+  for (const page of deck) {
+    const walked = walkPage(page.xml);
+    const text = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
+    slides.push({
+      slide: page.slide,
+      ref: `slide ${page.slide}`,
+      part: CONTENT_PART,
+      hidden: page.hidden,
+      shapes: walked.count,
+      text
+    });
+    const nt = notesTextOf(page.xml);
+    if (nt != null && nt.length) {
+      speakerNotes.push({
+        slide: page.slide,
+        ref: `slide ${page.slide} (notes)`,
+        part: CONTENT_PART,
+        hidden: page.hidden,
+        text: nt
+      });
+    }
+  }
+  const document = slides.map((s) => s.text).filter((t) => t.length).join("\n");
+  const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
+  return {
+    ok: true,
+    container: "odp",
+    document,
+    slides,
+    speakerNotes,
+    /* COFF-13 — THE DECK'S OWN LENGTH, on pptx.mjs's key. Every `<draw:page>`
+       lives in the one content.xml, so once the body is read no slide can be
+       unreadable on its own and the length EQUALS the slide list — emitted
+       anyway, so the wire reads one key from every deck entry rather than
+       inferring it from which entry answered. */
+    deckLength: deck.length,
+    undetermined: [],
+    counts: { chars: document.length, notesChars, undetermined: 0 }
+  };
+}
+function entryFor(row, structureOf, textOf2) {
+  return {
+    format: row.flavour,
+    detect: (bytes, contentType) => detectOdf(row, bytes, contentType),
+    parts: (bytes) => odfParts(row, bytes),
+    /* Accept either parts() output or raw bytes, exactly as the three OOXML
+       entries do, so detect→structure works uniformly at the registry seam
+       while a caller that already paid for parts() does not pay twice. */
+    structure: async (partsOrBytes) => structureOf(
+      partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes
+    ),
+    /* FW-19 / IC-124: `images` under the package's `Pictures/` directory,
+       exhaustive or NULL, through the one enumerator the OOXML entries use.
+       Read off the central directory, so it does NOT depend on
+       META-INF/manifest.xml — the `outside_content_xml_not_read` marker about
+       the manifest stays TRUE and stays emitted: it speaks about `intra`
+       embedded objects, which this does not content-address. */
+    text: async (partsOrBytes) => {
+      const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes;
+      return withContainerImages(textOf2(parts), parts, "Pictures/");
+    }
+  };
+}
+var odtEntry = entryFor(ODT_ROW, odtStructure, odtText);
+var odsEntry = entryFor(ODS_ROW, odsStructure, odsText);
+var odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
+var ODF_EVIDENTIARY_VERSION = 1;
+var ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
+var ODF_EVIDENTIARY_MEASURED = Object.freeze({
+  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 \xA74) and 18/18 over 3 census targets (M-123)"
+});
+var ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
+  odt: "the .odt content.xml differs on every Google export (MEASUREMENTS.md 2026-09-14 \xA74; M-123 found random xml:id values on text:list, on 2 documents); the normalisation that would discount them is not measured by this build, so no evidentiary digest is claimed for .odt",
+  odp: "no .odp export has been measured for content.xml stability (M-123: the census holds no Slides target), so no evidentiary digest is claimed for .odp"
+});
+function referencedMembers(contentXml, container) {
+  const names = container.entries.map((e) => normalizePartName(e.name));
+  const hit = /* @__PURE__ */ new Set();
+  const RE = tokens();
+  let m;
+  while ((m = RE.exec(contentXml)) !== null) {
+    if (m[1] === void 0 || m[0][1] === "/") continue;
+    const href = attrsOf4(m[2]).href;
+    if (typeof href !== "string" || !href || href.startsWith("#")) continue;
+    if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(href)) continue;
+    const want = normalizePartName(href.replace(/^(?:\.\/)+/, "").replace(/\/+$/, ""));
+    if (!want) continue;
+    for (const n of names)
+      if (n === want || n.startsWith(want + "/")) hit.add(n);
+  }
+  return [...hit];
+}
+async function odfEvidentiaryDigest(bytes, sha256Hex6) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
+  const no2 = (flavour2, basis) => ({ determined: false, flavour: flavour2, evidentiary: null, basis });
+  let row = null;
+  for (const r of [ODT_ROW, ODS_ROW, ODP_ROW]) {
+    const d = detectOdf(r, b, null);
+    if (d && d.confidence === "certain") {
+      row = r;
+      break;
+    }
+  }
+  if (!row) return no2(null, "the bytes are not an OpenDocument package detected with certainty, so no container digest was taken");
+  const flavour = row.flavour;
+  if (!ODF_EVIDENTIARY_MEASURED[flavour])
+    return no2(flavour, ODF_EVIDENTIARY_UNMEASURED[flavour] || `no .${flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed`);
+  const container = readContainer(b);
+  if (!container.ok) return no2(flavour, `the package's central directory could not be read (${container.why})`);
+  const declared = declaredTextBytes(container, (n) => n === CONTENT_PART);
+  const guard = sizeGuard(declared.total);
+  if (!guard.ok) return no2(flavour, `content.xml is over the declared-uncompressed text bound (${guard.why || "size_guard"}), so it was not inflated and no digest was taken`);
+  const read = await readPart(b, container, CONTENT_PART);
+  if (!read.ok) return no2(flavour, `content.xml could not be read whole (${read.why})`);
+  const refs = referencedMembers(UTF85.decode(read.bytes), container);
+  if (refs.length)
+    return no2(flavour, `content.xml references ${refs.length} package member(s) whose bytes it does not hold (${refs.slice(0, 3).join(", ")}${refs.length > 3 ? ", \u2026" : ""}); a digest of content.xml cannot speak for them, so none is claimed`);
+  return {
+    determined: true,
+    flavour,
+    over: CONTENT_PART,
+    evidentiary: await sha256Hex6(read.bytes),
+    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified), odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml and thumbnails are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`
   };
 }
 
@@ -17495,6 +21332,17 @@ var PER_ITEM_ACTS = [
     set_key: "items",
     item_keys: [["id"]],
     shared_keys: ["to"]
+  },
+  /* D-291 (BIO_Interaction_Constructs §S, BOB #32 2026-09-23 23:30Z): a member's selection of captured
+     documents resolved in ONE call — each document's references run through the recogniser exactly as the
+     single act runs them, each document applied or retained with that act's own reason. */
+  {
+    id: "resolve",
+    label: "Resolve the selected documents' references",
+    weight: "per-item",
+    set_key: "items",
+    item_keys: [["captureSha"], ["captureSha", "ref"]],
+    shared_keys: ["ref"]
   }
 ];
 var ACT_IDS = new Set(ACTS.map((a) => a.id));
@@ -17607,996 +21455,167 @@ function archiveLocatorFrom(res, requested) {
   return null;
 }
 
-// src/cpu.mjs
-function makeMeter() {
-  const seg = /* @__PURE__ */ Object.create(null);
-  const bump = (label, bytes) => {
-    const e = seg[label] || (seg[label] = { calls: 0, bytes: 0 });
-    e.calls++;
-    if (typeof bytes === "number" && Number.isFinite(bytes)) e.bytes += bytes;
-  };
-  return {
-    /** Run a synchronous block, counting it. `bytes` is the size of what it
-     *  worked on, when that is known and meaningful. */
-    sync(label, fn, bytes) {
-      bump(label, bytes);
-      return fn();
-    },
-    /** Same, for an await that is compute rather than I/O: a crypto digest is
-     *  async in the Workers API and is not a network wait. */
-    async cpuAwait(label, fn, bytes) {
-      bump(label, bytes);
-      return await fn();
-    },
-    report() {
-      const calls = Object.values(seg).reduce((a, e) => a + e.calls, 0);
-      const bytes = Object.values(seg).reduce((a, e) => a + e.bytes, 0);
-      return {
-        work_calls: calls,
-        work_bytes: bytes,
-        segments: { ...seg },
-        measured_ms: null,
-        note: "COUNTS, not times. Cloudflare freezes Date.now() during synchronous execution as a timing-attack defence, so a Worker cannot measure its own compute and any millisecond figure reported from inside one is meaningless. These are the quantities that DRIVE the cost and that would explain a kill afterwards. The ceiling is measured separately, in reference iterations, by op=cpuprobe."
-      };
-    }
-  };
+// src/render.mjs
+var RENDER_DEFAULTS = Object.freeze({
+  viewport: Object.freeze({ width: 1280, height: 800 }),
+  dpr: 1,
+  locale: "en-US",
+  timezone: "UTC",
+  wait: Object.freeze({ until: "networkidle", timeout_ms: 15e3 })
+});
+var RENDERED_METHOD = "rendered";
+var RENDER_DAILY_ALLOWANCE_MS_DEFAULT = 20 * 60 * 1e3;
+function renderAllowanceMs(env) {
+  const v = env && env.RENDER_DAILY_ALLOWANCE_MS;
+  if (v === void 0 || v === null || v === "") return RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
 }
-function burn(iterations) {
-  let x = 1;
-  for (let i = 0; i < iterations; i++) x = (x * 1103515245 + 12345) % 2147483647;
-  return x;
-}
-async function cpuProbe({
-  checkpoint,
-  startStep = 0,
-  maxStep = 40,
-  iterationsPerStep = 2e6,
-  budgetMs = 2e4,
-  now = () => Date.now()
-}) {
-  const t0 = now();
-  let step = startStep;
-  for (; step < maxStep; step++) {
-    burn(iterationsPerStep);
-    const elapsed = now() - t0;
-    await checkpoint(step + 1, elapsed);
-    if (elapsed >= budgetMs) return { completed: step + 1, elapsed_ms: elapsed, reason: "BUDGET_REACHED" };
-  }
-  return { completed: step, elapsed_ms: now() - t0, reason: "MAX_STEP_REACHED" };
-}
-
-// src/subresources.mjs
-var SUBRESOURCE_CAP = 400;
-var SUBRESOURCE_MAX = 8 * 1024 * 1024;
-var SUBRESOURCE_BUDGET = 64 * 1024 * 1024;
-var CSS_MAX_DEPTH = 2;
-var STRIPPED_ELEMENTS = ["script", "iframe", "object", "embed", "applet", "frame", "frameset", "noembed"];
-var REFUSED_SCHEMES = ["javascript:", "data:", "blob:", "about:", "mailto:", "tel:", "file:", "ftp:", "ws:", "wss:", "chrome:", "chrome-extension:", "view-source:"];
-var TAG_RE = /<(\/?[a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
-var ATTR_RE = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
-var CSS_URL_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)/gi;
-var CSS_IMPORT_RE = /@import\s+(?:url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)|"([^"]*)"|'([^']*)')/gi;
-var STYLE_EL_RE = /<style\b([^>]*)>([\s\S]*?)<\/style\s*>/gi;
-var COMMENT_RE = /<!--[\s\S]*?-->/g;
-var placeholderFor = (sha) => `about:capture#${sha}`;
-var PLACEHOLDER_MISSING = "about:capture#unavailable";
-function attrsOf(blob) {
-  const out = [];
-  ATTR_RE.lastIndex = 0;
-  let m;
-  while (m = ATTR_RE.exec(blob)) {
-    if (!m[0].trim()) {
-      if (ATTR_RE.lastIndex <= m.index) ATTR_RE.lastIndex = m.index + 1;
-      continue;
-    }
-    out.push({
-      name: m[1].toLowerCase(),
-      raw: m[0],
-      value: m[3] !== void 0 ? m[3] : m[4] !== void 0 ? m[4] : m[5] !== void 0 ? m[5] : null,
-      quote: m[3] !== void 0 ? '"' : m[4] !== void 0 ? "'" : "",
-      present: m[2] !== void 0
-    });
-  }
-  return out;
-}
-var attr = (as, n) => {
-  const a = as.find((x) => x.name === n);
-  return a ? a.value : null;
-};
-function srcsetUrls(v) {
-  const out = [];
-  const s = String(v);
-  let i = 0;
-  const isWs = (c) => c === " " || c === "	" || c === "\n" || c === "\r" || c === "\f";
-  while (i < s.length) {
-    while (i < s.length && (isWs(s[i]) || s[i] === ",")) i++;
-    if (i >= s.length) break;
-    const start = i;
-    while (i < s.length && !isWs(s[i])) i++;
-    let url = s.slice(start, i);
-    if (url.endsWith(",")) {
-      out.push(url.replace(/,+$/, ""));
-      continue;
-    }
-    out.push(url);
-    let depth = 0;
-    while (i < s.length) {
-      if (s[i] === "(") depth++;
-      else if (s[i] === ")" && depth) depth--;
-      else if (s[i] === "," && !depth) {
-        i++;
-        break;
-      }
-      i++;
-    }
-  }
-  return out.filter(Boolean);
-}
-function cssRefs(css) {
-  const out = [];
-  CSS_URL_RE.lastIndex = 0;
-  let m;
-  while (m = CSS_URL_RE.exec(css)) {
-    const u = m[1] ?? m[2] ?? m[3] ?? "";
-    if (u.trim()) out.push(u.trim());
-  }
-  CSS_IMPORT_RE.lastIndex = 0;
-  while (m = CSS_IMPORT_RE.exec(css)) {
-    const u = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? "";
-    if (u.trim()) out.push(u.trim());
-  }
-  return out;
-}
-var FURNITURE_TAGS = /* @__PURE__ */ new Set(["nav", "footer", "header", "aside"]);
-var FURNITURE_ROLES = /* @__PURE__ */ new Set(["navigation", "banner", "contentinfo", "complementary", "search"]);
-var BODY_TAGS = /* @__PURE__ */ new Set(["article", "main"]);
-function pickSrcsetCandidate(cands) {
-  const score = (raw) => {
-    const d = /\s(\d+(?:\.\d+)?)([wx])\s*$/.exec(raw || "");
-    if (!d) return 1;
-    return d[2] === "w" ? Number(d[1]) : Number(d[1]) * 1e3;
-  };
-  const sorted = [...cands].sort((a, b) => score(b.raw) - score(a.raw));
-  return { pick: sorted[0], rest: sorted.slice(1) };
-}
-function parseHtmlRefs(html) {
-  const src = String(html).replace(COMMENT_RE, "");
-  const refs = [];
-  const region = [];
-  const here = () => {
-    const body = region.find((r) => r.region === "body");
-    if (body) return body;
-    const furn = region[region.length - 1];
-    return furn || { region: "body", basis: "default" };
-  };
-  const add = (ref, kind, where, extra) => {
-    if (!ref || !ref.trim()) return;
-    const r = here();
-    refs.push({ ref: ref.trim(), kind, where, region: r.region, region_basis: r.basis, ...extra || {} });
-  };
-  TAG_RE.lastIndex = 0;
-  let m;
-  while (m = TAG_RE.exec(src)) {
-    const raw = m[1];
-    const closing = raw.startsWith("/");
-    const tag = (closing ? raw.slice(1) : raw).toLowerCase();
-    if (closing) {
-      if (FURNITURE_TAGS.has(tag) || BODY_TAGS.has(tag)) {
-        for (let i = region.length - 1; i >= 0; i--)
-          if (region[i].tag === tag) {
-            region.splice(i, 1);
-            break;
-          }
-      }
-      continue;
-    }
-    const as = attrsOf(m[2] || "");
-    {
-      const role = (attr(as, "role") || "").toLowerCase().trim();
-      if (FURNITURE_ROLES.has(role)) region.push({ tag, region: "furniture", basis: `role=${role}` });
-      else if (role === "main" || role === "article") region.push({ tag, region: "body", basis: `role=${role}` });
-      else if (FURNITURE_TAGS.has(tag)) region.push({ tag, region: "furniture", basis: `<${tag}>` });
-      else if (BODY_TAGS.has(tag)) region.push({ tag, region: "body", basis: `<${tag}>` });
-    }
-    const inlineStyle = attr(as, "style");
-    if (inlineStyle) for (const u of cssRefs(inlineStyle)) add(u, "css-asset", `${tag}[style]`);
-    if (tag === "link") {
-      const rel = (attr(as, "rel") || "").toLowerCase().split(/\s+/).filter(Boolean);
-      const href = attr(as, "href");
-      if (!href) continue;
-      if (rel.includes("stylesheet")) add(href, "stylesheet", "link[rel=stylesheet]");
-      else if (rel.some((r) => r === "icon" || r === "shortcut" || r === "apple-touch-icon" || r === "mask-icon" || r === "apple-touch-icon-precomposed"))
-        add(href, "icon", `link[rel=${rel.join(" ")}]`);
-      else if (rel.includes("preload")) {
-        const as_ = (attr(as, "as") || "").toLowerCase();
-        if (as_ === "style") add(href, "stylesheet", "link[rel=preload][as=style]");
-        else if (as_ === "image") add(href, "image", "link[rel=preload][as=image]");
-        else if (as_ === "font") add(href, "font", "link[rel=preload][as=font]");
-      }
-      continue;
-    }
-    if (tag === "img" || tag === "input" || tag === "source" || tag === "video" || tag === "audio" || tag === "track" || tag === "image" || tag === "use") {
-      if (tag === "input" && (attr(as, "type") || "").toLowerCase() !== "image") continue;
-      const kind = tag === "video" || tag === "audio" || tag === "track" ? "media" : "image";
-      const ss = attr(as, "srcset") || attr(as, "imagesrcset");
-      if (ss) {
-        const rawCands = ss.split(",").map((x) => x.trim()).filter(Boolean);
-        const cands = srcsetUrls(ss).map((u, i) => ({ url: u, raw: rawCands[i] || u }));
-        const fb = attr(as, "src");
-        if (fb && !cands.some((c) => c.url === fb)) cands.push({ url: fb, raw: fb });
-        const { pick, rest } = pickSrcsetCandidate(cands);
-        const meta = { family: "srcset", family_size: cands.length, evidentiary_prior: "weak_against" };
-        if (pick) add(pick.url, kind, `${tag}[srcset]`, meta);
-        for (const r of rest) add(r.url, kind, `${tag}[srcset]`, { ...meta, collapsed: true });
-        const po = attr(as, "poster");
-        if (po) add(po, "image", `${tag}[poster]`);
-        continue;
-      }
-      for (const n of ["src", "poster", "href", "xlink:href"]) {
-        const v = attr(as, n);
-        if (v) add(v, n === "poster" ? "image" : kind, `${tag}[${n}]`);
-      }
-      continue;
-    }
-    if (tag === "script") {
-      const s = attr(as, "src");
-      if (s) add(s, "script", "script[src]");
-      continue;
-    }
-  }
-  STYLE_EL_RE.lastIndex = 0;
-  while (m = STYLE_EL_RE.exec(src))
-    for (const u of cssRefs(m[2] || "")) add(u, "css-asset", "style");
-  return refs;
-}
-function classifyRef(ref, base, isPublic) {
-  const lower = ref.toLowerCase();
-  for (const s of REFUSED_SCHEMES) {
-    if (lower.startsWith(s)) return { ok: false, reason: "REFUSED_SCHEME", scheme: s, url: ref };
-  }
-  let abs;
+var NON_DATA_TYPES = Object.freeze({
+  script: "code",
+  stylesheet: "layout",
+  font: "layout"
+});
+var isStr = (s) => typeof s === "string" && s.length > 0;
+var num = (n) => typeof n === "number" && Number.isFinite(n) ? n : null;
+function originKey(u) {
   try {
-    abs = new URL(ref, base).toString();
+    const x = new URL(u);
+    return `${x.protocol}//${x.host}`;
   } catch {
-    return { ok: false, reason: "UNRESOLVABLE", url: ref };
+    return null;
   }
-  const clean = abs.split("#")[0];
-  if (!isPublic(clean)) return { ok: false, reason: "REFUSED_LOCATOR", url: clean };
-  return { ok: true, url: clean };
 }
-var CSP = "default-src 'none'; img-src blob: about:; style-src blob: about: 'unsafe-inline'; font-src blob: about:; media-src blob: about:; script-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'";
-var BANNER = (primarySha, when) => `<!-- DERIVED ARTIFACT, not evidence. Generated by bio-plane from the capture
-     ${primarySha}
-     at ${when}. The raw bytes as served are the evidence and are stored
-     separately, unmodified. This file has had scripts and frames removed and
-     every subresource reference replaced with an about:capture#<sha256>
-     placeholder resolved from data/snapshot-manifest.json. Opened without a
-     resolving viewer it renders blank, on purpose. -->
-`;
-function stripElements(html) {
-  let out = html;
-  for (const el of STRIPPED_ELEMENTS) {
-    out = out.replace(new RegExp(`<${el}\\b[^>]*>[\\s\\S]*?<\\/${el}\\s*>`, "gi"), "");
-    out = out.replace(new RegExp(`<${el}\\b[^>]*\\/?>`, "gi"), "");
-    out = out.replace(new RegExp(`<\\/${el}\\s*>`, "gi"), "");
-  }
-  out = out.replace(/<base\b[^>]*>/gi, "");
-  out = out.replace(/<meta\b[^>]*http-equiv\s*=\s*["']?\s*refresh[^>]*>/gi, "");
-  return out;
-}
-function rewriteCssText(css, resolve) {
-  const one = (whole, u) => {
-    const t = resolve(u);
-    return t === null ? whole : whole.replace(/url\(\s*(?:"[^"]*"|'[^']*'|[^)'"\s]*)\s*\)/i, `url("${t}")`);
-  };
-  let out = css.replace(CSS_URL_RE, (whole, a, b, c) => one(whole, (a ?? b ?? c ?? "").trim()));
-  out = out.replace(CSS_IMPORT_RE, (whole, a, b, c, d, e) => {
-    const u = (a ?? b ?? c ?? d ?? e ?? "").trim();
-    const t = resolve(u);
-    return t === null ? whole : `@import url("${t}")`;
-  });
-  return out;
-}
-function renderCompanion(html, { resolve, classifyLink, primarySha, when }) {
-  let src = stripElements(String(html));
-  src = src.replace(STYLE_EL_RE, (whole, attrsBlob, body) => `<style${attrsBlob}>${rewriteCssText(body, (u) => resolve(u, "css-asset"))}</style>`);
-  src = src.replace(TAG_RE, (whole, name, blob, selfClose) => {
-    const tag = name.toLowerCase();
-    const as = attrsOf(blob || "");
-    if (!as.length) return whole;
-    const kept = [];
-    for (const a of as) {
-      if (/^on[a-z]+$/.test(a.name)) continue;
-      if (a.name === "integrity" || a.name === "nonce") continue;
-      if (!a.present || a.value === null) {
-        kept.push(a.raw);
-        continue;
-      }
-      const q = a.quote || '"';
-      const put = (v) => kept.push(`${a.name}=${q}${v}${q}`);
-      if (a.name === "style") {
-        put(rewriteCssText(a.value, (u) => resolve(u, "css-asset")));
-        continue;
-      }
-      if (a.name === "srcset" || a.name === "imagesrcset") {
-        const live = [];
-        let anyDead = false;
-        for (const cand of a.value.split(",")) {
-          const trimmed = cand.trim();
-          if (!trimmed) continue;
-          const bits = trimmed.split(/\s+/);
-          const t = resolve(bits[0], "image");
-          if (t === PLACEHOLDER_MISSING) {
-            anyDead = true;
-            continue;
-          }
-          bits[0] = t === null ? bits[0] : t;
-          live.push(bits.join(" "));
-        }
-        if (!live.length) {
-          put(PLACEHOLDER_MISSING);
-          continue;
-        }
-        put(live.length === 1 && anyDead ? live[0].split(/\s+/)[0] : live.join(", "));
-        continue;
-      }
-      if (a.name === "href" || a.name === "src" || a.name === "poster" || a.name === "xlink:href" || a.name === "data") {
-        if (tag === "a" || tag === "area") {
-          const L = classifyLink(a.value);
-          kept.push(`data-bio-link="${L.type}"`);
-          if (L.address) kept.push(`data-bio-href="${L.address.replace(/"/g, "&quot;")}"`);
-          put(L.wrapper);
-          continue;
-        }
-        const t = resolve(a.value, tag === "script" ? "script" : "asset");
-        put(t === null ? a.value : t);
-        continue;
-      }
-      kept.push(a.raw);
-    }
-    return `<${name}${kept.length ? " " + kept.join(" ") : ""}${selfClose}>`;
-  });
-  const head = BANNER(primarySha, when) + `<meta http-equiv="Content-Security-Policy" content="${CSP}">
-`;
-  const at = src.search(/<head\b[^>]*>/i);
-  if (at !== -1) {
-    const end = src.indexOf(">", at) + 1;
-    return src.slice(0, end) + "\n" + head + src.slice(end);
-  }
-  return head + src;
-}
-function originOf(url, baseHost) {
-  let h;
-  try {
-    h = new URL(url).hostname.toLowerCase();
-  } catch {
-    return { origin: "unknown", host: null };
-  }
-  const b = String(baseHost || "").toLowerCase();
-  if (h === b) return { origin: "same_host", host: h };
-  const tail = (x) => x.split(".").slice(-2).join(".");
-  if (b && tail(h) === tail(b)) return { origin: "same_site", host: h, approximate: true };
-  return { origin: "third_party", host: h };
-}
-var FETCH_PRIORITY = { stylesheet: 0, "css-asset": 1, font: 1, icon: 2, image: 3, media: 4, script: 5 };
-var priorityOf = (ref) => (FETCH_PRIORITY[ref.kind] ?? 3) + (ref.region === "furniture" ? 10 : 0);
-function normalizeAddress(url) {
-  let u;
-  try {
-    u = new URL(url);
-  } catch {
-    return String(url || "").trim();
-  }
-  u.hash = "";
-  u.protocol = u.protocol.toLowerCase();
-  u.hostname = u.hostname.toLowerCase();
-  if (u.protocol === "https:" && u.port === "443" || u.protocol === "http:" && u.port === "80") u.port = "";
-  const ps = [...u.searchParams.entries()].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] < b[1] ? -1 : 1);
-  u.search = ps.length ? "?" + ps.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&") : "";
-  return u.toString();
-}
-function normalizeCitation(url) {
-  const raw = String(url || "").trim();
-  const hash = raw.indexOf("#");
-  if (hash === -1) return normalizeAddress(raw);
-  const frag = raw.slice(hash + 1);
-  return normalizeAddress(raw.slice(0, hash)) + (frag ? "#" + frag : "");
-}
-function fragmentOf(url) {
-  const raw = String(url || "").trim();
-  const hash = raw.indexOf("#");
-  if (hash === -1) return null;
-  const frag = raw.slice(hash + 1).trim();
-  return frag || null;
-}
-var REUSABLE_KINDS = /* @__PURE__ */ new Set(["stylesheet", "css-asset", "font", "icon"]);
-function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 1e3, minDocuments = 2 } = {}) {
-  if (!known || !known.sha256) return { reuse: false, why: "not_seen_before" };
-  if (!REUSABLE_KINDS.has(ref.kind)) return { reuse: false, why: "evidence_is_always_fetched" };
-  const pages = known.documents || 0;
-  if (pages < minDocuments)
-    return { reuse: false, why: pages + (known.documents_undetermined || 0) >= minDocuments ? "shared_across_documents_undetermined" : "not_yet_shared_across_documents" };
-  const seen = Date.parse(known.last_fetched || "");
-  if (!Number.isFinite(seen)) return { reuse: false, why: "no_fetch_record" };
-  const age = now - seen;
-  if (age > freshWindowMs) return { reuse: false, why: "last_seen_served_too_long_ago", age_ms: age };
-  const stable = Date.parse(known.stable_since || "");
-  return {
-    reuse: true,
-    fetched_age_ms: age,
-    stable_for_ms: Number.isFinite(stable) ? now - stable : null,
-    changes: known.changes || 0
-  };
-}
-function fetchPolicy(ref, origin) {
-  if (ref.collapsed)
-    return {
-      fetch: false,
-      reason: "COLLAPSED_SRCSET_FAMILY",
-      detail: `one of ${ref.family_size} responsive candidates for one picture; the largest is captured`
-    };
-  if (ref.kind === "stylesheet" || ref.kind === "css-asset" || ref.kind === "font" || ref.kind === "icon")
-    return { fetch: true, why: "layout" };
-  if (origin === "third_party" && (ref.kind === "script" || ref.kind === "image" || ref.kind === "media"))
-    return {
-      fetch: false,
-      reason: "THIRD_PARTY",
-      detail: "cross-origin script, image, or media: advertising, analytics, and social widgets are not part of the document"
-    };
-  if (ref.kind === "script") return { fetch: true, why: "served_with_the_page" };
-  if (ref.region === "furniture")
-    return {
-      fetch: false,
-      reason: "OUTSIDE_THE_DOCUMENT",
-      detail: `found in ${ref.region_basis}, which belongs to the site rather than to this document`
-    };
-  return { fetch: true, why: "in_the_document" };
-}
-var LINK_TYPES = ["anchor", "intra", "deferred", "refused"];
-var linkWrapper = {
-  anchor: (frag) => frag,
-  intra: (sha) => `about:capture#${sha}`,
-  deferred: (url) => `about:link#${encodeURIComponent(url)}`,
-  refused: () => "about:link#refused"
-};
-async function captureSubresources({
-  html,
-  base,
-  primarySha,
-  primaryFile,
-  fetchOne,
-  put,
-  sha256: sha2562,
-  isPublic,
-  cap = SUBRESOURCE_CAP,
-  perMax = SUBRESOURCE_MAX,
-  budget = SUBRESOURCE_BUDGET,
-  now = () => /* @__PURE__ */ new Date(),
-  /* What this runtime was last OBSERVED to allow, passed in by the caller from
-     whatever it recorded last time, or null the first time anything runs here.
-     Never a constant in this file: the number belongs to the platform, changes
-     without notice, and differs per account, so the only honest source for it
-     is having hit it. */
-  platformCeiling = null,
-  platformMargin = 5,
-  subrequestsAlreadySpent = 1,
-  /* What this host has served before. `siteLookup(addressNorm)` returns the
-     stored record or null; absent, nothing is ever reused and behaviour is
-     exactly what it was before reuse existed. */
-  siteLookup = null,
-  reuseFreshWindowMs = 24 * 3600 * 1e3,
-  reuseMinDocuments = 2,
-  /* Reads a stored capture back as text, so a REUSED stylesheet can have its own
-     url() targets followed just as a freshly fetched one does. Without it a
-     reused stylesheet would render without its sprites. */
-  readBack = null,
-  /* Resuming a capture that ran out of budget. `resume` carries what an earlier
-     tick accumulated and what it had left to do. Nothing is re-fetched and
-     nothing is re-parsed: the queue is restored rather than rediscovered,
-     because rediscovering it means reading every stylesheet back out of R2 to
-     re-derive its url() targets, and on a Legistar page that is thirty storage
-     reads spent to learn what one row already knew. */
-  resume = null,
-  /* Measured, not assumed. Every synchronous compute segment in here is timed so
-     the record can say what a capture actually costs against whatever ceiling
-     the runtime has. Network waits are never inside a segment. */
-  meter = makeMeter()
-}) {
-  const noReuse = [];
-  const rec_noreuse = (stem, dec) => noReuse.push({ url: stem.url, kind: stem.kind, why: dec.why });
-  const stamp = () => now().toISOString().split(".")[0] + "Z";
-  const records = [];
-  const bySha = /* @__PURE__ */ new Map();
-  const byUrl = /* @__PURE__ */ new Map();
-  const refToUrl = /* @__PURE__ */ new Map();
-  let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false, platformHit = false;
-  let observedCeiling = null, deferred = 0, reused = 0;
-  const siteObservations = [];
-  const links = [];
-  const outstanding = [];
-  const ceilingBudget = platformCeiling == null ? Infinity : Math.max(0, platformCeiling - platformMargin - subrequestsAlreadySpent);
-  let baseHost = null;
-  try {
-    baseHost = new URL(base).hostname;
-  } catch {
-    baseHost = null;
-  }
-  let queue;
-  if (resume) {
-    for (const r of resume.records || []) {
-      records.push(r);
-      if (r.url) byUrl.set(r.url, r);
-      if (r.ok && r.sha256 && !bySha.has(r.sha256)) bySha.set(r.sha256, r);
-    }
-    for (const l of resume.links || []) links.push(l);
-    for (const [k, v] of Object.entries(resume.refToUrl || {})) refToUrl.set(k, v);
-    for (const o of resume.siteObservations || []) siteObservations.push(o);
-    discovered = resume.discovered || records.length;
-    spent = resume.spent || 0;
-    queue = (resume.queue || []).map((q) => ({
-      ...q,
-      cssOwner: q.cssOwnerIdx == null ? void 0 : records[q.cssOwnerIdx]
-    }));
-    const retry = new Set(queue.map((q) => q.retryUrl).filter(Boolean));
-    for (let i = records.length - 1; i >= 0; i--)
-      if (records[i].reason === "DEFERRED" && retry.has(records[i].url)) {
-        byUrl.delete(records[i].url);
-        records.splice(i, 1);
-        discovered--;
-      }
-  } else {
-    queue = meter.sync("parse_html", () => parseHtmlRefs(html), html.length).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
-  }
-  const settle = (item, rec) => {
-    if (rec) records.push(rec);
-    if (item.cssOwner)
-      item.cssOwner.rewrite.push({ ref: item.ref, sha256: rec && rec.ok ? rec.sha256 : null });
-  };
-  while (queue.length) {
-    let at_ = 0, best = priorityOf(queue[0]);
-    for (let i = 1; i < queue.length; i++) {
-      const p = priorityOf(queue[i]);
-      if (p < best) {
-        best = p;
-        at_ = i;
-      }
-    }
-    const item = queue.splice(at_, 1)[0];
-    discovered++;
-    const cls = classifyRef(item.ref, item.against, isPublic);
-    if (item.depth === 1 && !refToUrl.has(item.ref)) refToUrl.set(item.ref, cls.ok ? cls.url : null);
-    const at = stamp();
-    const org = cls.ok ? originOf(cls.url, baseHost) : { origin: "unknown", host: null };
-    const stem = {
-      url: cls.ok ? cls.url : item.ref,
-      kind: item.kind,
-      via: item.where,
-      from: item.from,
-      depth: item.depth,
-      region: item.region || "body",
-      region_basis: item.region_basis || "default",
-      ...org,
-      ...item.family ? { family: item.family, family_size: item.family_size } : {},
-      ...item.evidentiary_prior ? { evidentiary_prior: item.evidentiary_prior } : {},
-      fetched_at: at
-    };
-    if (!cls.ok) {
-      settle(item, {
-        ...stem,
-        ok: false,
-        status: null,
-        reason: cls.reason,
-        ...cls.scheme ? { scheme: cls.scheme } : {},
-        detail: cls.reason === "REFUSED_SCHEME" ? `a ${cls.scheme} reference is not something this surface fetches` : "the address is not public https, and the fence that guards the primary locator guards this one"
-      });
-      continue;
-    }
-    const pol = fetchPolicy(item, org.origin);
-    if (!pol.fetch) {
-      settle(item, {
-        ...stem,
-        ok: false,
-        status: null,
-        fetched: false,
-        reason: pol.reason,
-        detail: pol.detail
-      });
-      continue;
-    }
-    const already = byUrl.get(cls.url);
-    if (already) {
-      if (item.cssOwner)
-        item.cssOwner.rewrite.push({ ref: item.ref, sha256: already.ok ? already.sha256 : null });
-      continue;
-    }
-    if (platformHit || attempted >= ceilingBudget) {
-      deferred++;
-      outstanding.push({
-        ...{ ...item, cssOwner: void 0 },
-        cssOwnerIdx: item.cssOwner ? records.indexOf(item.cssOwner) : null,
-        retryUrl: cls.url
-      });
-      settle(item, {
-        ...stem,
-        ok: false,
-        status: null,
-        reason: "DEFERRED",
-        detail: platformHit ? "this invocation reached the runtime's outbound request limit; the reference is outstanding, not failed, and a continuation can fetch it" : "held back from a previously observed runtime limit so the invocation ends on our terms rather than mid-fetch"
-      });
-      continue;
-    }
-    if (attempted >= cap) {
-      truncated = true;
-      settle(item, {
-        ...stem,
-        ok: false,
-        status: null,
-        reason: "CAP_REACHED",
-        cap,
-        detail: "the fanout cap was reached before this reference; it is recorded rather than dropped so the truncation is visible"
-      });
-      continue;
-    }
-    if (spent >= budget) {
-      budgetHit = true;
-      settle(item, { ...stem, ok: false, status: null, reason: "BUDGET_EXHAUSTED", budgetBytes: budget });
-      continue;
-    }
-    if (siteLookup) {
-      const known = await siteLookup(normalizeAddress(cls.url));
-      const dec = reuseDecision(item, known, { now: Date.now(), freshWindowMs: reuseFreshWindowMs, minDocuments: reuseMinDocuments });
-      if (dec.reuse) {
-        reused++;
-        const rec2 = {
-          ...stem,
-          ok: true,
-          status: null,
-          sha256: known.sha256,
-          bytes: known.bytes,
-          ...known.content_type ? { content_type: known.content_type } : {},
-          existed: true,
-          /* The honesty fields. A reader must never be led to believe a byte was
-             verified against the source during THIS capture when it was not. */
-          fetched_this_capture: false,
-          /* CAP-14 (CAPTURE-SCALING.md §Job one, RULED 2026-09-21 by BOB #21): the
-             capture whose FETCH served these bytes, so a reader can follow them to
-             the fetch that saw them served. null when the record names none (a
-             fetch recorded before the build): UNDETERMINED as to source, never
-             inferred from timestamps. */
-          reused_from: known.last_fetched_by || null,
-          reused_from_fetched_at: known.last_fetched,
-          reused_stable_since: known.stable_since,
-          reused_seen_in_documents: known.documents,
-          detail: `not fetched during this capture: the source was seen serving these exact bytes at ${known.last_fetched}` + (known.last_fetched_by ? ` by capture ${known.last_fetched_by}` : ` by a capture the record does not name (undetermined)`) + `, across ${known.documents} documents on this host` + (known.documents_undetermined ? ` (and ${known.documents_undetermined} earlier capture${known.documents_undetermined === 1 ? "" : "s"} whose page the record does not name, counted as undetermined)` : "") + `, and they are reused from the record rather than requested again`
-        };
-        byUrl.set(cls.url, rec2);
-        if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec2);
-        siteObservations.push({
-          address: cls.url,
-          address_norm: normalizeAddress(cls.url),
-          sha256: known.sha256,
-          kind: item.kind,
-          reused: true,
-          reused_from: known.last_fetched_by || null
-        });
-        if ((item.kind === "stylesheet" || known.content_type === "text/css") && item.depth < CSS_MAX_DEPTH && readBack) {
-          const text = await readBack(known.sha256);
-          if (text != null) {
-            rec2.css = true;
-            rec2.rewrite = [];
-            for (const u of cssRefs(text))
-              queue.push({
-                ref: u,
-                kind: "css-asset",
-                where: `url() in ${cls.url}`,
-                depth: item.depth + 1,
-                from: cls.url,
-                against: cls.url,
-                cssOwner: rec2,
-                region: rec2.region,
-                region_basis: rec2.region_basis
-              });
-          }
-        }
-        settle(item, rec2);
-        continue;
-      }
-      if (known) rec_noreuse(stem, dec);
-    }
-    attempted++;
-    let r;
+function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at }) {
+  if (!answer || typeof answer !== "object" || answer.ok !== true)
+    return { ok: false, problem: `the renderer did not answer ok (${answer && answer.error ? String(answer.error).slice(0, 200) : "no answer"})` };
+  if (typeof answer.html !== "string" || answer.html.length === 0)
+    return { ok: false, problem: "the renderer answered with no rendered document" };
+  const undetermined = [];
+  const pageHost = (() => {
     try {
-      r = await fetchOne(cls.url);
-    } catch (e) {
-      const msg = String(e && e.message || e);
-      const platform = /too many subrequests|subrequest limit|exceeded.*limit/i.test(msg);
-      r = {
-        ok: false,
-        status: 0,
-        reason: platform ? "PLATFORM_LIMIT" : "FETCH_FAILED",
-        detail: platform ? "the runtime refused another outbound request in this invocation; the source was never asked, and this says nothing about whether it would have answered" : msg
-      };
-      if (platform && !platformHit) {
-        platformHit = true;
-        observedCeiling = attempted + subrequestsAlreadySpent;
-      }
+      return new URL(answer.navigated_to || pageUrl).hostname.toLowerCase();
+    } catch {
+      return null;
     }
-    if (!r || !r.ok) {
-      const rec2 = {
-        ...stem,
-        ok: false,
-        status: r ? r.status ?? null : null,
-        reason: r?.reason || "SOURCE_REFUSED",
-        ...r?.detail ? { detail: r.detail } : {}
-      };
-      byUrl.set(cls.url, rec2);
-      settle(item, rec2);
-      continue;
+  })();
+  let requests = null, data = null;
+  if (Array.isArray(answer.requests)) {
+    const rq = answer.requests.filter((r) => r && typeof r === "object" && isStr(r.url));
+    const by = (o) => rq.filter((r) => r.outcome === o).length;
+    const blockedBy = {};
+    for (const r of rq) if (r.outcome === "blocked") {
+      const k = isStr(r.blocked_by) ? r.blocked_by : "unstated";
+      blockedBy[k] = (blockedBy[k] || 0) + 1;
     }
-    const bytes = r.bytes || new Uint8Array(0);
-    if (bytes.length > perMax) {
-      const rec2 = {
-        ...stem,
-        ok: false,
-        status: r.status ?? 200,
-        reason: "TOO_LARGE",
-        bytes: bytes.length,
-        maxBytes: perMax
-      };
-      byUrl.set(cls.url, rec2);
-      settle(item, rec2);
-      continue;
-    }
-    spent += bytes.length;
-    const sha = await meter.cpuAwait("hash_subresource", () => sha2562(bytes), bytes.length);
-    const { existed } = await put(sha, bytes);
-    const ct = (r.contentType || "").split(";")[0].trim();
-    const rec = {
-      ...stem,
-      ok: true,
-      status: r.status ?? 200,
-      sha256: sha,
-      bytes: bytes.length,
-      ...ct ? { content_type: ct } : {},
-      existed: !!existed
+    const unclassified = rq.filter((r) => !["completed", "failed", "blocked"].includes(r.outcome)).length;
+    requests = {
+      made: rq.length,
+      completed: by("completed"),
+      failed: by("failed"),
+      blocked: by("blocked"),
+      blocked_by: blockedBy,
+      outcome_unstated: unclassified
     };
-    rec.fetched_this_capture = true;
-    byUrl.set(cls.url, rec);
-    if (!bySha.has(sha)) bySha.set(sha, rec);
-    siteObservations.push({
-      address: cls.url,
-      address_norm: normalizeAddress(cls.url),
-      sha256: sha,
-      kind: item.kind,
-      bytes: bytes.length,
-      content_type: ct || null,
-      reused: false
+    data = rq.filter((r) => r.outcome === "completed" && !NON_DATA_TYPES[String(r.type || "").toLowerCase()]).map((r) => {
+      const o = originOf(r.url, pageHost);
+      return {
+        address: r.url,
+        type: isStr(r.type) ? r.type : null,
+        origin: o.origin,
+        host: o.host,
+        ...o.approximate ? { approximate: true } : {},
+        sha256: /^[0-9a-f]{64}$/.test(String(r.sha256 || "")) ? r.sha256 : null,
+        reported_by: "renderer"
+      };
     });
-    const isCss = item.kind === "stylesheet" || ct === "text/css";
-    if (isCss && item.depth < CSS_MAX_DEPTH) {
-      let text = "";
-      try {
-        text = meter.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes), bytes.length);
-      } catch {
-        text = "";
-      }
-      rec.css = true;
-      rec.rewrite = [];
-      for (const u of meter.sync("parse_css", () => cssRefs(text)))
-        queue.push({
-          ref: u,
-          kind: "css-asset",
-          where: `url() in ${cls.url}`,
-          depth: item.depth + 1,
-          from: cls.url,
-          against: cls.url,
-          cssOwner: rec,
-          /* A stylesheet's own assets carry the stylesheet's region,
-             not the region of whatever tag happened to be open. */
-          region: rec.region,
-          region_basis: rec.region_basis
-        });
-    }
-    settle(item, rec);
+  } else {
+    undetermined.push("requests: the renderer did not record the page's requests, so render.requests and render.data are undetermined");
   }
-  const resolve = (ref, kind) => {
-    const trimmed = String(ref || "").trim();
-    if (!trimmed) return null;
-    if (kind === "script") return PLACEHOLDER_MISSING;
-    const abs = refToUrl.has(trimmed) ? refToUrl.get(trimmed) : (() => {
-      const c = classifyRef(trimmed, base, isPublic);
-      return c.ok ? c.url : null;
-    })();
-    if (abs === null) return PLACEHOLDER_MISSING;
-    const rec = byUrl.get(abs);
-    if (!rec) return PLACEHOLDER_MISSING;
-    if (rec.kind === "script") return PLACEHOLDER_MISSING;
-    return rec.ok ? placeholderFor(rec.sha256) : PLACEHOLDER_MISSING;
+  let scriptsExecuted = "undetermined", thirdParty = "undetermined";
+  if (Array.isArray(answer.scripts)) {
+    const origins = /* @__PURE__ */ new Map();
+    for (const s of answer.scripts) {
+      if (!s || !isStr(s.url)) continue;
+      const k = originKey(s.url);
+      if (!k) continue;
+      if (!origins.has(k)) origins.set(k, originOf(s.url, pageHost).origin);
+    }
+    scriptsExecuted = [...origins.keys()].sort();
+    thirdParty = [...origins.entries()].filter(([, o]) => o !== "same_host").map(([k]) => k).sort();
+  } else {
+    undetermined.push("scripts: the renderer could not record which scripts executed, so the script set is undetermined (BOB #31)");
+  }
+  const pick = (k, v) => {
+    if (v === null || v === void 0) undetermined.push(`${k}: not reported by the renderer`);
+    return v ?? null;
   };
-  const when0 = resume && resume.when0 ? resume.when0 : stamp();
-  const seenLink = new Map(links.map((l) => [`${l.type}\0${l.citation || l.address || l.ref}`, true]));
-  const classifyLink = (ref) => {
-    const raw = String(ref || "").trim();
-    const note = (type, address, extra = {}) => {
-      const key = `${type}\0${extra.citation || address || raw}`;
-      if (!seenLink.has(key)) {
-        seenLink.set(key, true);
-        links.push({
-          ref: raw,
-          type,
-          address: address || null,
-          as_of: when0,
-          ...address ? originOf(address, baseHost) : {},
-          ...extra
-        });
-      }
-      return { type, address, ...extra };
+  const render = {
+    of: shellSha,
+    engine: pick("engine", isStr(answer.engine) ? answer.engine : null),
+    engine_version: pick("engine_version", isStr(answer.engine_version) ? answer.engine_version : null),
+    viewport: pick("viewport", answer.viewport && num(answer.viewport.width) && num(answer.viewport.height) ? { width: answer.viewport.width, height: answer.viewport.height } : null),
+    dpr: pick("dpr", num(answer.dpr)),
+    locale: pick("locale", isStr(answer.locale) ? answer.locale : null),
+    timezone: pick("timezone", isStr(answer.timezone) ? answer.timezone : null),
+    wait: { asked: asked.wait, fired: pick("wait.fired", answer.wait && isStr(answer.wait.fired) ? answer.wait.fired : null) },
+    elapsed_ms: pick("elapsed_ms", num(answer.elapsed_ms)),
+    navigated_to: isStr(answer.navigated_to) ? answer.navigated_to : null,
+    status: num(answer.status),
+    requests,
+    data,
+    scripts_executed: scriptsExecuted,
+    third_party_executed: thirdParty,
+    asked: { viewport: asked.viewport, dpr: asked.dpr, locale: asked.locale, timezone: asked.timezone },
+    at: at || null,
+    undetermined
+  };
+  return { ok: true, render };
+}
+function renderedAuthority({ asserted, render, at }) {
+  const reasons = [];
+  if (!asserted) reasons.push("the served shell's own authority is undetermined: no assertion was supplied");
+  if (!Array.isArray(render.data)) reasons.push("which origins supplied data is undetermined: the renderer did not record the page's requests");
+  else {
+    const foreign = /* @__PURE__ */ new Map();
+    for (const d of render.data) if (d.origin !== "same_host") {
+      const k = originKey(d.address) || String(d.host || d.address);
+      foreign.set(k, d.origin);
+    }
+    for (const [k, o] of [...foreign.entries()].sort())
+      reasons.push(`${k} supplied data (${o === "same_site" ? "same_site, which approximates and is not the host" : o})`);
+  }
+  if (!Array.isArray(render.third_party_executed))
+    reasons.push("which scripts executed is undetermined: the renderer could not record the script set (BOB #31)");
+  else for (const k of render.third_party_executed) reasons.push(`${k} ran code`);
+  if (reasons.length === 0)
+    return {
+      authority_state: "determined",
+      authority: asserted,
+      authority_basis: `asserted by the capturing caller at intake for the served shell, and the render drew data only from the page's own host with no script from another origin executed; ${at}`
     };
-    if (!raw) return { type: "refused", wrapper: linkWrapper.refused(), address: null };
-    if (raw.startsWith("#")) {
-      note("anchor", base, { fragment: fragmentOf(raw), citation: normalizeCitation(base + raw) });
-      return { type: "anchor", wrapper: linkWrapper.anchor(raw), address: null };
-    }
-    const cls = classifyRef(raw, base, isPublic);
-    if (!cls.ok) {
-      note("refused", cls.url, { reason: cls.reason, ...cls.scheme ? { scheme: cls.scheme } : {} });
-      return { type: "refused", wrapper: linkWrapper.refused(), address: null };
-    }
-    const held = byUrl.get(cls.url);
-    if (held && held.ok) {
-      note("intra", cls.url, {
-        sha256: held.sha256,
-        fragment: fragmentOf(raw),
-        citation: normalizeCitation(new URL(raw, base).toString())
-      });
-      return { type: "intra", wrapper: linkWrapper.intra(held.sha256), address: cls.url };
-    }
-    note("deferred", cls.url, {
-      held_at_capture: false,
-      fragment: fragmentOf(raw),
-      citation: normalizeCitation(new URL(raw, base).toString())
-    });
-    return { type: "deferred", wrapper: linkWrapper.deferred(cls.url), address: cls.url };
-  };
-  const when = when0;
-  const companionText = meter.sync("render_companion", () => renderCompanion(html, { resolve, classifyLink, primarySha, when }), html.length);
-  const companionBytes = meter.sync("encode_companion", () => new TextEncoder().encode(companionText), companionText.length);
-  const companionSha = await meter.cpuAwait("hash_companion", () => sha2562(companionBytes));
-  await put(companionSha, companionBytes);
-  const fetched = records.filter((r) => r.ok);
-  const manifest = {
-    version: 1,
-    derived: true,
-    of: primaryFile,
-    of_sha256: primarySha,
-    base,
-    generated: when,
-    render: `${primaryFile}.render.html`,
-    render_sha256: companionSha,
-    placeholder_scheme: "about:capture#<sha256>",
-    unavailable: PLACEHOLDER_MISSING,
-    limits: { cap, per_max_bytes: perMax, budget_bytes: budget, css_max_depth: CSS_MAX_DEPTH },
-    discovered,
-    attempted,
-    truncated,
-    budget_exhausted: budgetHit,
-    complete: !platformHit && !truncated && !budgetHit && deferred === 0,
-    compute: meter.report(),
-    reuse: {
-      reused,
-      fetched: fetched.length - reused,
-      not_reused: noReuse,
-      fresh_window_ms: reuseFreshWindowMs,
-      min_documents: reuseMinDocuments,
-      note: "entries with fetched_this_capture:false were NOT fetched during this capture; their bytes come from an earlier fetch of the same address on this host, made by the capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. A capture ratified as evidence must re-fetch them."
-    },
-    outstanding: deferred,
-    platform: {
-      limited: platformHit,
-      /* Discovered, never declared. null means this run never found the edge,
-         which tells the caller only that the ceiling is AT LEAST what was spent,
-         not what it is. */
-      observed_ceiling: observedCeiling,
-      ceiling_used: platformCeiling,
-      spent_this_invocation: attempted + subrequestsAlreadySpent,
-      note: observedCeiling ? "the runtime refused an outbound request at this count; record it and pass it back as platformCeiling" : "no limit was reached, so the ceiling is at least spent_this_invocation and its true value is unknown"
-    },
-    counts: {
-      fetched: fetched.length,
-      failed: records.filter((r) => !r.ok && (r.reason === "SOURCE_REFUSED" || r.reason === "FETCH_FAILED" || r.reason === "TOO_LARGE")).length,
-      platform_limited: records.filter((r) => r.reason === "PLATFORM_LIMIT").length,
-      deferred: records.filter((r) => r.reason === "DEFERRED").length,
-      refused: records.filter((r) => !r.ok && (r.reason === "REFUSED_SCHEME" || r.reason === "REFUSED_LOCATOR" || r.reason === "UNRESOLVABLE")).length,
-      /* Deliberately not fetched: policy skips, plus the two bounds. Every
-         record lands in exactly one of fetched/failed/refused/skipped, and the
-         subresources test asserts that identity, so a new reason that forgets
-         to name a bucket fails rather than quietly vanishing from the totals. */
-      skipped: records.filter((r) => !r.ok && (r.reason === "OUTSIDE_THE_DOCUMENT" || r.reason === "THIRD_PARTY" || r.reason === "COLLAPSED_SRCSET_FAMILY" || r.reason === "CAP_REACHED" || r.reason === "BUDGET_EXHAUSTED" || r.reason === "PLATFORM_LIMIT" || r.reason === "DEFERRED")).length,
-      scripts_held_unreferenced: fetched.filter((r) => r.kind === "script").length,
-      bytes: spent,
-      not_fetched: {
-        outside_the_document: records.filter((r) => r.reason === "OUTSIDE_THE_DOCUMENT").length,
-        third_party: records.filter((r) => r.reason === "THIRD_PARTY").length,
-        collapsed_srcset: records.filter((r) => r.reason === "COLLAPSED_SRCSET_FAMILY").length
-      },
-      by_origin: {
-        same_host: records.filter((r) => r.origin === "same_host").length,
-        same_site: records.filter((r) => r.origin === "same_site").length,
-        third_party: records.filter((r) => r.origin === "third_party").length
-      },
-      links: {
-        anchor: links.filter((l) => l.type === "anchor").length,
-        intra: links.filter((l) => l.type === "intra").length,
-        deferred: links.filter((l) => l.type === "deferred").length,
-        refused: links.filter((l) => l.type === "refused").length
-      }
-    },
-    subresources: records,
-    links,
-    link_note: "Every <a> the page carried, characterised. `intra` resolves inside this bundle and is final. `deferred` is an address whose partition depends on what the store holds and is therefore NOT final: held_at_capture records only what was true when this page was captured, and a viewer must re-resolve it against the store at read time. A deferred link that later resolves to a capture in another bundle is a link to THAT VERSION of the target only if the target's capture can be shown to be the version the source was pointing at on this page's retrieval date. Until that is established the link is unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.",
-    note: "Every entry the viewer renders must be fetched by sha256 through op=capture and verified against that sha before use. Entries with ok:false are recorded because a stylesheet the source failed to serve is part of what the source served that day. Script entries hold bytes and are never referenced by the render companion."
-  };
-  const manifestBytes = meter.sync("serialise_manifest", () => new TextEncoder().encode(JSON.stringify(manifest, null, 1)), records.length);
-  const manifestSha = await meter.cpuAwait("hash_manifest", () => sha2562(manifestBytes));
-  await put(manifestSha, manifestBytes);
   return {
-    subresources: records,
-    links,
-    siteObservations,
-    reused,
-    meter,
-    /* Everything the next tick needs, and nothing it does not. The primary HTML
-       is NOT in here: it is already in the store under primarySha, and carrying
-       a copy in session state would be a second, unverified copy of evidence. */
-    resumeState: outstanding.length ? {
-      when0,
-      discovered,
-      spent,
-      queue: outstanding,
-      records,
-      links,
-      siteObservations,
-      refToUrl: Object.fromEntries(refToUrl)
-    } : null,
-    manifest,
-    manifestSha,
-    manifestBytes,
-    companionText,
-    companionSha,
-    companionBytes,
-    truncated,
-    discovered,
-    attempted,
-    /* `renditions`, not `derived`. C-18.1 already spends `derived` on a
-       different claim: that THIS document is itself a derivation of something
-       else, with a transform and a reason. What is being named here is the
-       opposite direction, artifacts derived FROM this document, so it needs its
-       own key. It borrows the transform/reason vocabulary because the honesty
-       requirement is identical: a rendering that does not say what was done to
-       it and why is indistinguishable from evidence. */
-    renditions: [
-      {
-        file: `${primaryFile}.render.html`,
-        kind: "render_companion",
-        from_file: primaryFile,
-        sha256: companionSha,
-        bytes: companionBytes.length,
-        content_type: "text/html",
-        transform: "scripts and frames removed; subresource references replaced with about:capture#<sha256> placeholders; a content security policy added",
-        reason: "the raw capture is the evidence and is never rewritten, so showing the page as it was needs a separate artifact that says it is one"
-      },
-      {
-        file: "data/snapshot-manifest.json",
-        kind: "snapshot_manifest",
-        from_file: primaryFile,
-        sha256: manifestSha,
-        bytes: manifestBytes.length,
-        content_type: "application/json",
-        transform: "index of the render companion's placeholders to the content-addressed captures they resolve to",
-        reason: "a viewer must be able to verify every byte it substitutes against the record before showing it"
-      }
-    ]
+    authority_state: "undetermined",
+    authority_basis: `rendered capture, ${at}: ${reasons.join("; ")}. A person resolves this by an assertion carrying its basis (CLIENT-RENDERED.md, DESIGNED 2026-09-21 item 3).`,
+    authority_other_origins: Array.isArray(render.data) || Array.isArray(render.third_party_executed) ? [.../* @__PURE__ */ new Set([
+      ...Array.isArray(render.data) ? render.data.filter((d) => d.origin !== "same_host").map((d) => originKey(d.address)).filter(Boolean) : [],
+      ...Array.isArray(render.third_party_executed) ? render.third_party_executed : []
+    ])].sort() : "undetermined"
   };
+}
+function rendererFor(env) {
+  if (env && env.RENDERER && typeof env.RENDERER.fetch === "function")
+    return { kind: "service", render: async (req) => {
+      const r = await env.RENDERER.fetch("http://renderer/render", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(req)
+      });
+      return r.json().catch(() => ({ ok: false, error: `the renderer answered HTTP ${r.status} with no JSON` }));
+    } };
+  if (env && env.BROWSER)
+    return { kind: "browser-binding-without-driver", render: null };
+  return { kind: "none", render: null };
 }
 
 // src/pdfstructure.mjs
@@ -18873,10 +21892,10 @@ var PdfDoc = class {
     const re = /(\d+)\s+(\d+)\s+obj\b/g;
     let m;
     while (m = re.exec(s)) {
-      const num = parseInt(m[1], 10);
+      const num2 = parseInt(m[1], 10);
       const bodyStart = m.index + m[0].length;
       const r = parseValueSafe(s, bodyStart);
-      if (r) this.objects.set(num, r.value);
+      if (r) this.objects.set(num2, r.value);
     }
   }
   resolve(v, seen = 0) {
@@ -18934,14 +21953,14 @@ var PdfDoc = class {
     let parms = this.resolve(streamObj.dict.DecodeParms) || this.resolve(streamObj.dict.DP);
     if (parms && parms.t === "arr") parms = this.resolve(parms.items[parms.items.length - 1]);
     if (parms && parms.t === "dict") {
-      const num = (x) => typeof (x = this.resolve(x)) === "number" ? x : void 0;
-      const predictor = num(parms.map.Predictor);
+      const num2 = (x) => typeof (x = this.resolve(x)) === "number" ? x : void 0;
+      const predictor = num2(parms.map.Predictor);
       if (predictor && predictor >= 2) {
         data = unpredict(data, {
           predictor,
-          colors: num(parms.map.Colors) ?? 1,
-          columns: num(parms.map.Columns) ?? 1,
-          bpc: num(parms.map.BitsPerComponent) ?? 8
+          colors: num2(parms.map.Colors) ?? 1,
+          columns: num2(parms.map.Columns) ?? 1,
+          bpc: num2(parms.map.BitsPerComponent) ?? 8
         });
       }
     }
@@ -18993,12 +22012,12 @@ var PdfDoc = class {
       }
     }
     this.root = root;
-    const walkRef = (num, seen) => {
-      const map = this.dictOf({ t: "ref", n: num });
+    const walkRef = (num2, seen) => {
+      const map = this.dictOf({ t: "ref", n: num2 });
       if (!map) return;
       const type = map.Type;
       if (type && type.t === "name" && type.v === "Page") {
-        this._registerPage(num);
+        this._registerPage(num2);
         return;
       }
       const kids = this.resolve(map.Kids);
@@ -19016,23 +22035,23 @@ var PdfDoc = class {
     }
     if (this.pageIndexByObj.size === 0) {
       const pages = [];
-      for (const [num, v] of this.objects) {
+      for (const [num2, v] of this.objects) {
         const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
-        if (map && map.Type && map.Type.t === "name" && map.Type.v === "Page") pages.push(num);
+        if (map && map.Type && map.Type.t === "name" && map.Type.v === "Page") pages.push(num2);
       }
       pages.sort((a, b) => a - b);
-      pages.forEach((num, i) => this.pageIndexByObj.set(num, i));
+      pages.forEach((num2, i) => this.pageIndexByObj.set(num2, i));
       this.pageCount = pages.length;
       this._pageOrder = pages;
       if (pages.length) this.note("page_order_by_object_number_fallback");
     }
   }
-  _registerPage(num) {
-    if (this.pageIndexByObj.has(num)) return;
+  _registerPage(num2) {
+    if (this.pageIndexByObj.has(num2)) return;
     const idx = this.pageIndexByObj.size;
-    this.pageIndexByObj.set(num, idx);
+    this.pageIndexByObj.set(num2, idx);
     this.pageCount = this.pageIndexByObj.size;
-    (this._pageOrder ||= []).push(num);
+    (this._pageOrder ||= []).push(num2);
   }
   /** Is this an encrypted document? Detected from the Standard Security Handler
    *  dictionary (/Filter /Standard with a revision /R) — which is itself NEVER
@@ -19173,7 +22192,7 @@ function readProducer(doc) {
     return classifyProducer({ unreadable: "info_unreadable" });
   }
 }
-function classifyUri(uri) {
+function classifyUri4(uri) {
   const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
   const scheme = m ? m[1].toLowerCase() : null;
   if (scheme === "http" || scheme === "https") return "deferred";
@@ -19250,29 +22269,29 @@ function searchNameTree(doc, node, name, depth = 0) {
   }
   return null;
 }
-var HEX = "0123456789abcdef";
+var HEX4 = "0123456789abcdef";
 function toHex(u8) {
   let out = "";
-  for (let i = 0; i < u8.length; i++) out += HEX[u8[i] >> 4] + HEX[u8[i] & 15];
+  for (let i = 0; i < u8.length; i++) out += HEX4[u8[i] >> 4] + HEX4[u8[i] & 15];
   return out;
 }
-async function sha256Hex(u8) {
+async function sha256Hex4(u8) {
   const d = await crypto.subtle.digest("SHA-256", u8);
   return toHex(new Uint8Array(d));
 }
 async function embeddedFileRecord(doc, filespec, sourcePage, rect, name) {
   const fs = doc.dictOf(filespec);
-  if (!fs) return undeterminedRecord({ page: sourcePage, rect }, "embedded_filespec_unresolved", { name });
+  if (!fs) return undeterminedRecord3({ page: sourcePage, rect }, "embedded_filespec_unresolved", { name });
   const ef = doc.dictOf(fs.EF);
   const streamRef = ef && (ef.F || ef.UF || ef.DOS || ef.Mac || ef.Unix);
   const stream = doc.resolve(streamRef);
   const label = name || strOf(doc, fs.UF) || strOf(doc, fs.F) || null;
   if (!stream || stream.t !== "stream")
-    return undeterminedRecord({ page: sourcePage, rect }, "embedded_stream_absent", { name: label });
+    return undeterminedRecord3({ page: sourcePage, rect }, "embedded_stream_absent", { name: label });
   const bytes = await doc.streamDecoded(stream);
   if (!bytes)
-    return undeterminedRecord({ page: sourcePage, rect }, "embedded_stream_undecodable", { name: label });
-  const sha = await sha256Hex(bytes);
+    return undeterminedRecord3({ page: sourcePage, rect }, "embedded_stream_undecodable", { name: label });
+  const sha = await sha256Hex4(bytes);
   return {
     partition: "intra",
     wrapper: linkWrapper.intra(sha),
@@ -19284,8 +22303,8 @@ function strOf(doc, v) {
   v = doc.resolve(v);
   return v && v.t === "str" ? v.v : null;
 }
-function deferredOrRefusedRecord(uri, source) {
-  const partition = classifyUri(uri);
+function deferredOrRefusedRecord3(uri, source) {
+  const partition = classifyUri4(uri);
   return {
     partition,
     wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(uri),
@@ -19302,7 +22321,7 @@ function anchorRecord(doc, targetPage, source, destName) {
     source
   };
 }
-function undeterminedRecord(source, why, extra = {}) {
+function undeterminedRecord3(source, why, extra = {}) {
   return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
 }
 function tokenizeContent(s, opts = {}) {
@@ -19590,7 +22609,7 @@ var HEX_CAP = 64;
 function bytesToHex(bytes, cap = HEX_CAP) {
   const n = Math.min(bytes.length, cap);
   let out = "";
-  for (let i = 0; i < n; i++) out += HEX[bytes[i] >> 4] + HEX[bytes[i] & 15];
+  for (let i = 0; i < n; i++) out += HEX4[bytes[i] >> 4] + HEX4[bytes[i] & 15];
   if (bytes.length > cap) out += "\u2026";
   return out;
 }
@@ -20052,8 +23071,8 @@ async function extractPdfStructure(bytes) {
   const doc = new PdfDoc(bytes);
   doc.scanTopLevel();
   await doc.loadObjectStreams();
-  for (const [num, v] of doc.objects) {
-    if (v && v.t === "dict") v.map.__objnum = { t: "ref", n: num };
+  for (const [num2, v] of doc.objects) {
+    if (v && v.t === "dict") v.map.__objnum = { t: "ref", n: num2 };
   }
   doc.buildPageIndex();
   const links = [];
@@ -20079,10 +23098,10 @@ async function extractPdfStructure(bytes) {
       if (sName === "URI") {
         const uri = strOf(doc, action.URI);
         if (uri != null) {
-          links.push(deferredOrRefusedRecord(uri, source));
+          links.push(deferredOrRefusedRecord3(uri, source));
           continue;
         }
-        links.push(undeterminedRecord(source, "uri_action_without_uri"));
+        links.push(undeterminedRecord3(source, "uri_action_without_uri"));
         continue;
       }
       if (sName === "GoTo" || map.Dest) {
@@ -20091,15 +23110,15 @@ async function extractPdfStructure(bytes) {
         if (res.ok) {
           links.push(anchorRecord(doc, res.page, source, destNameOf(doc, dest)));
         } else {
-          links.push(undeterminedRecord(source, res.why, { dest: res.dest }));
+          links.push(undeterminedRecord3(source, res.why, { dest: res.dest }));
         }
         continue;
       }
       if (sName === "GoToR" || sName === "Launch") {
-        links.push(undeterminedRecord(source, `unsupported_action_${sName}`));
+        links.push(undeterminedRecord3(source, `unsupported_action_${sName}`));
         continue;
       }
-      links.push(undeterminedRecord(source, sName ? `unsupported_action_${sName}` : "link_without_action_or_dest"));
+      links.push(undeterminedRecord3(source, sName ? `unsupported_action_${sName}` : "link_without_action_or_dest"));
     }
   }
   for (const rec of await documentEmbeddedFiles(doc)) links.push(rec);
@@ -20152,2625 +23171,6 @@ function collectNameTreePairs(doc, node, depth = 0, acc = []) {
   if (kids && kids.t === "arr") for (const kid of kids.items) collectNameTreePairs(doc, kid, depth + 1, acc);
   return acc;
 }
-
-// src/docx.mjs
-var UTF82 = new TextDecoder("utf-8", { fatal: false });
-var DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-var CONTENT_TYPES_PART2 = "[Content_Types].xml";
-var MAIN_PART = "word/document.xml";
-var COMMENTS_PART = "word/comments.xml";
-var EMBEDDINGS_DIR = "word/embeddings/";
-function docParaRef(para, run = null) {
-  const ref = { kind: "doc-para", ref: `\xB6${para + 1}`, para };
-  if (run != null) ref.run = run;
-  return ref;
-}
-function docTableRef(table, cell = null) {
-  const out = { kind: "doc-table", ref: `table ${table + 1}${cell != null ? `, ${cell}` : ""}`, table };
-  if (cell != null) out.cell = cell;
-  return out;
-}
-function decodeEntities(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
-    if (e[0] === "#") {
-      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
-    }
-    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
-  });
-}
-function attrsOf2(raw) {
-  const attrs = {};
-  for (const a of (raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
-    attrs[local] = decodeEntities(a[3] ?? a[4] ?? "");
-  }
-  return attrs;
-}
-var TOKEN_RE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
-var localOf = (name) => name.includes(":") ? name.split(":").pop() : name;
-function walkDocumentBody(xml) {
-  const paragraphs = [];
-  const hyperlinks = [];
-  const bookmarks = /* @__PURE__ */ new Map();
-  const changes = [];
-  const commentRefs = /* @__PURE__ */ new Map();
-  const ridUsage = /* @__PURE__ */ new Map();
-  let para = -1;
-  let run = -1;
-  let inPara = false;
-  let textTarget = null;
-  const hyperStack = [];
-  const insStack = [];
-  const delStack = [];
-  const noteRid = (attrs) => {
-    if (!inPara) return;
-    for (const key of ["id", "embed", "link"]) {
-      const v = attrs[key];
-      if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
-        ridUsage.set(v, { para, run: run >= 0 ? run : null });
-    }
-  };
-  const appendVisible = (s) => {
-    if (!inPara || !s) return;
-    paragraphs[para].text += s;
-    for (const c of insStack) c.text += s;
-  };
-  TOKEN_RE.lastIndex = 0;
-  let m, prev = 0;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    if (textTarget && m.index > prev) {
-      const data = decodeEntities(xml.slice(prev, m.index));
-      if (textTarget === "t") appendVisible(data);
-      else if (textTarget === "delText" && delStack.length) delStack[delStack.length - 1].text += data;
-    }
-    prev = TOKEN_RE.lastIndex;
-    if (m[1] === void 0) continue;
-    const name = localOf(m[1]);
-    const selfClosed = m[3] === "/";
-    const closing = m[0][1] === "/";
-    if (closing) {
-      if (name === "t" || name === "delText") textTarget = null;
-      else if (name === "p") {
-        inPara = false;
-      } else if (name === "hyperlink") {
-        const h = hyperStack.pop();
-        if (h) hyperlinks.push(h);
-      } else if (name === "ins") {
-        const c = insStack.pop();
-        if (c) changes.push(c);
-      } else if (name === "del") {
-        const c = delStack.pop();
-        if (c) changes.push(c);
-      }
-      continue;
-    }
-    const attrs = m[2] && m[2].includes("=") ? attrsOf2(m[2]) : {};
-    switch (name) {
-      case "p":
-        if (!selfClosed) {
-          para++;
-          run = -1;
-          inPara = true;
-          paragraphs.push({ para, text: "" });
-        } else {
-          para++;
-          run = -1;
-          paragraphs.push({ para, text: "" });
-        }
-        break;
-      case "r":
-        if (inPara && !selfClosed) {
-          run++;
-          for (const c of hyperStack) if (c.run == null) c.run = run;
-          for (const c of insStack) if (c.run == null) c.run = run;
-          for (const c of delStack) if (c.run == null) c.run = run;
-        }
-        break;
-      case "t":
-        if (!selfClosed) textTarget = "t";
-        break;
-      case "delText":
-        if (!selfClosed) textTarget = "delText";
-        break;
-      case "tab":
-        appendVisible("	");
-        break;
-      case "br":
-      case "cr":
-        appendVisible("\n");
-        break;
-      case "hyperlink":
-        noteRid(attrs);
-        if (!selfClosed && inPara)
-          hyperStack.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
-        else if (selfClosed && inPara)
-          hyperlinks.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
-        break;
-      case "ins":
-        if (!selfClosed && inPara)
-          insStack.push({ change: "insertion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
-        break;
-      case "del":
-        if (!selfClosed && inPara)
-          delStack.push({ change: "deletion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
-        break;
-      case "bookmarkStart":
-        if (attrs.name != null && !bookmarks.has(attrs.name))
-          bookmarks.set(attrs.name, para >= 0 ? para : 0);
-        break;
-      case "commentReference":
-        if (attrs.id != null && !commentRefs.has(attrs.id))
-          commentRefs.set(attrs.id, { para, run: run >= 0 ? run : null });
-        break;
-      default:
-        noteRid(attrs);
-    }
-  }
-  return { paragraphs, hyperlinks, bookmarks, changes, commentRefs, ridUsage };
-}
-function parseComments(xml) {
-  if (typeof xml !== "string" || !/<(?:[\w.-]+:)?comments\b/.test(xml)) {
-    return { ok: false, why: "comments_unparseable" };
-  }
-  const comments = [];
-  const re = /<(?:[\w.-]+:)?comment\b((?:[^>"']|"[^"]*"|'[^']*')*?)>([\s\S]*?)<\/(?:[\w.-]+:)?comment>/g;
-  for (const m of xml.matchAll(re)) {
-    const a = attrsOf2(m[1]);
-    const paras = [];
-    for (const pm of m[2].split(/<\/(?:[\w.-]+:)?p>/)) {
-      let text = "";
-      for (const t of pm.matchAll(/<(?:[\w.-]+:)?t\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?t>/g))
-        text += decodeEntities(t[1]);
-      if (text) paras.push(text);
-    }
-    comments.push({
-      id: a.id ?? null,
-      author: a.author ?? null,
-      date: a.date ?? null,
-      initials: a.initials ?? null,
-      text: paras.join("\n")
-    });
-  }
-  return { ok: true, comments };
-}
-function classifyUri2(uri) {
-  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
-  const scheme = m ? m[1].toLowerCase() : null;
-  if (scheme === "http" || scheme === "https") return "deferred";
-  if (!scheme && uri) return "deferred";
-  return "refused";
-}
-function deferredOrRefusedRecord2(uri, source) {
-  const partition = classifyUri2(uri);
-  return {
-    partition,
-    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(uri),
-    target: { url: uri },
-    source
-  };
-}
-function undeterminedRecord2(source, why, extra = {}) {
-  return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
-}
-var HEX2 = "0123456789abcdef";
-async function sha256Hex2(u8) {
-  const d = await crypto.subtle.digest("SHA-256", u8);
-  const b = new Uint8Array(d);
-  let out = "";
-  for (let i = 0; i < b.length; i++) out += HEX2[b[i] >> 4] + HEX2[b[i] & 15];
-  return out;
-}
-function resolveRelTarget(relsPart, target) {
-  const t = String(target || "");
-  if (t.startsWith("/")) return normalizePartName(t);
-  const baseDir = relsPart.replace(/_rels\/[^/]*\.rels$/, "");
-  const segs = (baseDir + t).split("/");
-  const out = [];
-  for (const s of segs) {
-    if (s === "" || s === ".") continue;
-    if (s === "..") out.pop();
-    else out.push(s);
-  }
-  return out.join("/");
-}
-async function docxParts(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  const d = await discriminate(b);
-  if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
-  if (d.format !== "docx") {
-    return {
-      ok: false,
-      why: d.format === "undetermined" ? d.why : `not_docx:${d.format}`,
-      signals: d.signals
-    };
-  }
-  const container = readContainer(b);
-  if (!container.ok) return { ok: false, why: container.why, signals: d.signals };
-  const undetermined = [];
-  const mainPart = normalizePartName(d.mainPart || MAIN_PART);
-  let declaredTextBytes2 = 0;
-  for (const partName of [mainPart, COMMENTS_PART]) {
-    const e = container.byName.get(partName);
-    if (e) declaredTextBytes2 += e.uncompressedSize;
-  }
-  const guardR = sizeGuard(declaredTextBytes2);
-  const guard = guardR.ok ? null : guardR;
-  let documentXml = null;
-  let commentsXml = null;
-  if (!guard) {
-    const main = await readPart(b, container, mainPart);
-    if (main.ok) documentXml = UTF82.decode(main.bytes);
-    else undetermined.push({ part: mainPart, why: main.why });
-    if (container.byName.has(COMMENTS_PART)) {
-      const com = await readPart(b, container, COMMENTS_PART);
-      if (com.ok) commentsXml = UTF82.decode(com.bytes);
-      else undetermined.push({ part: COMMENTS_PART, why: com.why });
-    }
-  }
-  const rels = await walkRels(b, container);
-  let core = null;
-  if (container.byName.has(CORE_PROPERTIES_PART)) {
-    const c = await readCoreProperties(b, container);
-    if (c.ok) core = c;
-    else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
-  }
-  return { ok: true, format: "docx", bytes: b, container, mainPart, documentXml, commentsXml, rels, core, guard, undetermined };
-}
-function walkDocumentTables(xml) {
-  const done = [];
-  const stack = [];
-  let next = 0;
-  TOKEN_RE.lastIndex = 0;
-  let m;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    if (m[1] === void 0) continue;
-    const name = localOf(m[1]);
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    const top = stack.length ? stack[stack.length - 1] : null;
-    if (closing) {
-      if (name === "tbl" && stack.length) {
-        const t = stack.pop();
-        done[t.table] = {
-          table: t.table,
-          rows: t.rows,
-          cols: t.gridCols > 0 ? t.gridCols : t.maxTc > 0 ? t.maxTc : null
-        };
-      } else if (name === "tr" && top) {
-        if (top.tc > top.maxTc) top.maxTc = top.tc;
-      }
-      continue;
-    }
-    if (name === "tbl" && !selfClosed) stack.push({ table: next++, rows: 0, gridCols: 0, tc: 0, maxTc: 0 });
-    else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null };
-    else if (!top) continue;
-    else if (name === "gridCol") top.gridCols++;
-    else if (name === "tr") {
-      top.rows++;
-      top.tc = 0;
-    } else if (name === "tc") top.tc++;
-  }
-  while (stack.length) {
-    const t = stack.pop();
-    done[t.table] = {
-      table: t.table,
-      rows: t.rows || null,
-      cols: t.gridCols > 0 ? t.gridCols : t.maxTc > 0 ? t.maxTc : null
-    };
-  }
-  return done;
-}
-async function docxStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  const notes = [];
-  const links = [];
-  const walk = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
-  if (!walk) {
-    notes.push(parts.guard ? "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "word/document.xml unreadable: element references unavailable (stated)");
-  }
-  const docRelsPart = relsPartFor(parts.mainPart);
-  for (const rel of parts.rels.outbound) {
-    if (rel.part === docRelsPart && walk) {
-      const usages = walk.hyperlinks.filter((h) => h.rid === rel.id);
-      if (usages.length) {
-        for (const u of usages)
-          links.push(deferredOrRefusedRecord2(rel.target, docParaRef(u.para, u.run)));
-        continue;
-      }
-    }
-    links.push(deferredOrRefusedRecord2(rel.target, null));
-  }
-  for (const u of parts.rels.undetermined) {
-    links.push(undeterminedRecord2(null, "rels_unreadable", { part: u.part, detail: u.why }));
-  }
-  if (walk) {
-    for (const h of walk.hyperlinks) {
-      if (h.rid != null || h.anchor == null) continue;
-      const source = docParaRef(h.para, h.run);
-      if (walk.bookmarks.has(h.anchor)) {
-        const targetPara = walk.bookmarks.get(h.anchor);
-        const fragment = `#para=${targetPara + 1}`;
-        links.push({
-          partition: "anchor",
-          wrapper: linkWrapper.anchor(fragment),
-          target: { para: targetPara, fragment, bookmark: h.anchor },
-          source
-        });
-      } else {
-        links.push(undeterminedRecord2(source, "bookmark_unresolved", { bookmark: h.anchor }));
-      }
-    }
-  }
-  const embeddingRids = /* @__PURE__ */ new Map();
-  for (const bp of parts.rels.byPart) {
-    if (bp.part !== docRelsPart) continue;
-    for (const r of bp.relationships) {
-      if (r.external || !r.target) continue;
-      const resolved = resolveRelTarget(bp.part, r.target);
-      if (resolved.startsWith(EMBEDDINGS_DIR)) embeddingRids.set(resolved, r.id);
-    }
-  }
-  for (const entry of parts.container.entries) {
-    const name = normalizePartName(entry.name);
-    if (!name.startsWith(EMBEDDINGS_DIR) || name === EMBEDDINGS_DIR) continue;
-    const rid = embeddingRids.get(name) ?? null;
-    const at = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
-    const source = at ? docParaRef(at.para, at.run) : null;
-    const read = await readPart(parts.bytes, parts.container, name);
-    if (!read.ok) {
-      links.push(undeterminedRecord2(source, "embedded_part_unreadable", { part: name, detail: read.why }));
-      continue;
-    }
-    const sha = await sha256Hex2(read.bytes);
-    links.push({
-      partition: "intra",
-      wrapper: linkWrapper.intra(sha),
-      target: { sha256: sha, name: name.slice(name.lastIndexOf("/") + 1), bytes: read.bytes.length },
-      source
-    });
-  }
-  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
-  for (const l of links) counts[l.partition]++;
-  const items = [];
-  if (walk) {
-    for (const c of walk.changes) {
-      const item = {
-        kind: "tracked-change",
-        change: c.change,
-        author: c.author,
-        date: c.date,
-        source: docParaRef(c.para, c.run)
-      };
-      if (c.change === "deletion") item.superseded = c.text;
-      else item.text = c.text;
-      items.push(item);
-    }
-  }
-  const evUndetermined = [...parts.undetermined];
-  if (parts.guard) evUndetermined.push({ part: parts.mainPart, why: "over_size_bound", guard: parts.guard });
-  if (parts.commentsXml != null) {
-    const parsed = parseComments(parts.commentsXml);
-    if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
-    else {
-      for (const c of parsed.comments) {
-        const at = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
-        items.push({
-          kind: "comment",
-          id: c.id,
-          author: c.author,
-          date: c.date,
-          initials: c.initials,
-          text: c.text,
-          source: at ? docParaRef(at.para, at.run) : null
-        });
-      }
-    }
-  }
-  if (parts.core) {
-    items.push({
-      kind: "core-properties",
-      creator: parts.core.creator,
-      lastModifiedBy: parts.core.lastModifiedBy,
-      revision: parts.core.revision,
-      revisionNumber: parts.core.revisionNumber,
-      created: parts.core.created,
-      modified: parts.core.modified,
-      title: parts.core.title,
-      source: null
-    });
-  }
-  const evCounts = {};
-  for (const it of items) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
-  const evidentiary = {
-    container: "docx",
-    kinds: [...new Set(items.map((it) => it.kind))],
-    items,
-    undetermined: evUndetermined,
-    counts: evCounts
-  };
-  return {
-    ok: true,
-    container: "docx",
-    paragraphs: walk ? walk.paragraphs.length : null,
-    // null = honestly unknown
-    links,
-    counts,
-    evidentiary,
-    notes
-  };
-}
-async function docxText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  if (parts.guard) {
-    return {
-      ok: true,
-      container: "docx",
-      document: null,
-      paragraphs: [],
-      tables: null,
-      undetermined: [parts.guard],
-      counts: { chars: 0, undetermined: 1 }
-    };
-  }
-  if (parts.documentXml == null) {
-    const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
-    return {
-      ok: true,
-      container: "docx",
-      document: null,
-      paragraphs: [],
-      tables: null,
-      undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart, why: stated?.why ?? "unreadable" }],
-      counts: { chars: 0, undetermined: 1 }
-    };
-  }
-  const walk = walkDocumentBody(parts.documentXml);
-  const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `\xB6${p.para + 1}`, text: p.text }));
-  const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
-  const tables = walkDocumentTables(parts.documentXml).filter(Boolean).map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
-  return {
-    ok: true,
-    container: "docx",
-    document,
-    paragraphs,
-    tables,
-    undetermined: [],
-    counts: { chars: document.length, undetermined: 0 }
-  };
-}
-var docxEntry = {
-  format: "docx",
-  detect(bytes, contentType) {
-    if (bytes) {
-      if (!hasZipMagic(bytes)) return null;
-      const container = readContainer(bytes);
-      if (!container.ok) return null;
-      if (container.byName.has(CONTENT_TYPES_PART2) && container.byName.has(MAIN_PART)) {
-        return {
-          format: "docx",
-          confidence: "likely",
-          signals: [
-            "magic: PK\\x03\\x04 with a readable central directory",
-            `part: ${CONTENT_TYPES_PART2} present`,
-            `part: ${MAIN_PART} present`,
-            "likely, not certain: the OPC content-type declaration is deflated \u2014 parts() discriminates"
-          ]
-        };
-      }
-      return null;
-    }
-    if (contentType === DOCX_CONTENT_TYPE) {
-      return { format: "docx", confidence: "likely", signals: [`content type "${contentType}"`] };
-    }
-    return null;
-  },
-  parts: (bytes) => docxParts(bytes),
-  structure: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await docxParts(partsOrBytes) : partsOrBytes;
-    return docxStructure(parts);
-  },
-  text: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await docxParts(partsOrBytes) : partsOrBytes;
-    return withContainerImages(docxText(parts), parts, "word/media/");
-  }
-};
-
-// src/formats-xlsx.mjs
-var UTF83 = new TextDecoder("utf-8", { fatal: false });
-var XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-var WORKBOOK_PART = "xl/workbook.xml";
-var SHARED_STRINGS_PART = "xl/sharedStrings.xml";
-function decodeXmlEntities2(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
-    if (e[0] === "#") {
-      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
-    }
-    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
-  });
-}
-function parseAttrs(raw) {
-  const attrs = {};
-  for (const a of String(raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
-    attrs[local] = decodeXmlEntities2(a[3] ?? a[4] ?? "");
-  }
-  return attrs;
-}
-function elements(xml, localName) {
-  const out = [];
-  const open = new RegExp(`<((?:[\\w.-]+:)?${localName})\\b([^>]*?)(/)?>`, "g");
-  let m;
-  while (m = open.exec(xml)) {
-    const attrs = parseAttrs(m[2]);
-    if (m[3]) {
-      out.push({ attrs, inner: "" });
-      continue;
-    }
-    const close = xml.indexOf(`</${m[1]}>`, open.lastIndex);
-    if (close < 0) {
-      out.push({ attrs, inner: "" });
-      continue;
-    }
-    out.push({ attrs, inner: xml.slice(open.lastIndex, close) });
-    open.lastIndex = close + m[1].length + 3;
-  }
-  return out;
-}
-function textRuns(inner) {
-  return elements(inner, "t").map((t) => decodeXmlEntities2(t.inner)).join("");
-}
-var HEX3 = "0123456789abcdef";
-async function sha256Hex3(u8) {
-  const d = await crypto.subtle.digest("SHA-256", u8);
-  const b = new Uint8Array(d);
-  let out = "";
-  for (let i = 0; i < b.length; i++) out += HEX3[b[i] >> 4] + HEX3[b[i] & 15];
-  return out;
-}
-function sheetCellRef(sheet, cell) {
-  return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
-}
-function sheetRangeRef(sheet, range) {
-  return { kind: "sheet-range", ref: `${sheet}!${range}`, sheet, range };
-}
-function columnLetters(n) {
-  let out = "";
-  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + (c - 1) % 26) + out;
-  return out;
-}
-function usedSheetRange(name, usedRows, usedCols) {
-  if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
-  return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
-}
-var XLSX_GRID_ROWS = 1048576;
-var XLSX_GRID_COLS = 16384;
-function a1Col(ref) {
-  const m = /^\$?([A-Za-z]{1,3})\$?\d+$/.exec(String(ref ?? "").trim());
-  if (!m) return null;
-  let n = 0;
-  for (const ch of m[1].toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
-  return n;
-}
-function classifyUrl(url) {
-  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(url || "");
-  const scheme = m ? m[1].toLowerCase() : null;
-  if (scheme === "http" || scheme === "https") return "deferred";
-  if (!scheme && url) return "deferred";
-  return "refused";
-}
-function resolveTarget(fromPart, target) {
-  if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(target) || target.startsWith("/")) {
-    return normalizePartName(target);
-  }
-  const base = fromPart.split("/").slice(0, -1);
-  for (const seg of target.split("/")) {
-    if (seg === "" || seg === ".") continue;
-    if (seg === "..") base.pop();
-    else base.push(seg);
-  }
-  return base.join("/");
-}
-async function xlsxParts(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  const undetermined = [];
-  const disc = await discriminate(b);
-  if (!disc.ok) return { ok: false, why: disc.why, signals: disc.signals };
-  if (disc.format !== "xlsx") {
-    return { ok: false, why: `not_xlsx:${disc.format}`, signals: disc.signals };
-  }
-  const container = readContainer(b);
-  const wbRead = await readPart(b, container, WORKBOOK_PART);
-  if (!wbRead.ok) return { ok: false, why: `workbook_unreadable:${wbRead.why}` };
-  const wbXml = UTF83.decode(wbRead.bytes);
-  const relsById = /* @__PURE__ */ new Map();
-  const wbRelsRead = await readPart(b, container, relsPartFor(WORKBOOK_PART));
-  if (wbRelsRead.ok) {
-    const parsed = parseRels(UTF83.decode(wbRelsRead.bytes));
-    if (parsed.ok) {
-      for (const r of parsed.relationships) if (r.id) relsById.set(r.id, r);
-    } else undetermined.push({ part: relsPartFor(WORKBOOK_PART), why: parsed.why });
-  } else undetermined.push({ part: relsPartFor(WORKBOOK_PART), why: wbRelsRead.why });
-  const sheets = elements(wbXml, "sheet").map((s, index) => {
-    const state = s.attrs.state === "hidden" || s.attrs.state === "veryHidden" ? s.attrs.state : "visible";
-    const rel = s.attrs.id ? relsById.get(s.attrs.id) : null;
-    return {
-      index,
-      name: s.attrs.name ?? `sheet${index + 1}`,
-      sheetId: s.attrs.sheetId ?? null,
-      state,
-      hidden: state === "visible" ? false : state,
-      part: rel && !rel.external ? resolveTarget(WORKBOOK_PART, rel.target) : null,
-      xml: null,
-      why: rel ? null : "sheet_rel_unresolved"
-    };
-  });
-  const definedNames = elements(wbXml, "definedName").filter((d) => d.attrs.name != null).map((d) => ({ name: d.attrs.name, ref: decodeXmlEntities2(d.inner).trim() }));
-  const sheetParts = new Set(sheets.map((s) => s.part).filter(Boolean));
-  const isTextPart = (n) => sheetParts.has(n) || n === SHARED_STRINGS_PART;
-  const declared = declaredTextBytes(container, isTextPart);
-  const guardR = sizeGuard(declared.total);
-  const guard = guardR.ok ? null : guardR;
-  let sharedStrings = null;
-  if (!guard) {
-    if (container.byName.has(SHARED_STRINGS_PART)) {
-      const ss = await readPart(b, container, SHARED_STRINGS_PART);
-      if (ss.ok) sharedStrings = elements(UTF83.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
-      else undetermined.push({ part: SHARED_STRINGS_PART, why: ss.why });
-    }
-    for (const sheet of sheets) {
-      if (!sheet.part) {
-        undetermined.push({ part: `(sheet ${sheet.name})`, why: sheet.why });
-        continue;
-      }
-      const read = await readPart(b, container, sheet.part);
-      if (read.ok) sheet.xml = UTF83.decode(read.bytes);
-      else {
-        sheet.why = read.why;
-        undetermined.push({ part: sheet.part, why: read.why });
-      }
-    }
-  }
-  let core = null;
-  if (container.byName.has(CORE_PROPERTIES_PART)) {
-    const c = await readCoreProperties(b, container);
-    if (c.ok) core = c;
-    else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
-  }
-  return {
-    ok: true,
-    format: "xlsx",
-    bytes: b,
-    container,
-    sheets,
-    definedNames,
-    sharedStrings,
-    core,
-    declared,
-    guard,
-    undetermined
-  };
-}
-function walkSheetXml(xml) {
-  const rows = elements(xml, "row").map((row) => ({
-    r: row.attrs.r != null ? parseInt(row.attrs.r, 10) : null,
-    hidden: row.attrs.hidden === "1" || row.attrs.hidden === "true",
-    cells: elements(row.inner, "c").map((c) => {
-      const f2 = elements(c.inner, "f");
-      const v = elements(c.inner, "v");
-      const is = elements(c.inner, "is");
-      return {
-        cell: c.attrs.r ?? null,
-        t: c.attrs.t ?? null,
-        f: f2.length ? decodeXmlEntities2(f2[0].inner) : null,
-        v: v.length ? decodeXmlEntities2(v[0].inner) : null,
-        is: is.length ? textRuns(is[0].inner) : null
-      };
-    })
-  }));
-  const hiddenRows = rows.filter((r) => r.hidden && r.r != null).map((r) => r.r);
-  const hiddenCols = elements(xml, "col").filter((c) => c.attrs.hidden === "1" || c.attrs.hidden === "true").map((c) => ({ min: parseInt(c.attrs.min, 10), max: parseInt(c.attrs.max, 10) }));
-  const hyperlinks = elements(xml, "hyperlink").map((h) => ({
-    cell: h.attrs.ref ?? null,
-    relId: h.attrs.id ?? null,
-    location: h.attrs.location ?? null,
-    display: h.attrs.display ?? null
-  }));
-  let usedRows = 0, usedCols = 0;
-  for (const row of rows) {
-    if (!row.cells.length) continue;
-    if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
-    for (const c of row.cells) {
-      const col = a1Col(c.cell);
-      if (col != null && col > usedCols) usedCols = col;
-    }
-  }
-  return { rows, hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols };
-}
-function cellValue(c, sharedStrings) {
-  if (c.t === "s") {
-    const i = c.v != null ? parseInt(c.v, 10) : NaN;
-    if (sharedStrings && Number.isInteger(i) && i >= 0 && i < sharedStrings.length)
-      return { value: sharedStrings[i] };
-    return { undetermined: sharedStrings ? "shared_string_index_out_of_range" : "shared_strings_unreadable" };
-  }
-  if (c.t === "inlineStr") return { value: c.is ?? "" };
-  if (c.t === "b") return { value: c.v === "1" ? "TRUE" : c.v === "0" ? "FALSE" : c.v };
-  return { value: c.v };
-}
-async function xlsxStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "xlsx", reason: parts ? parts.why : "PARTS_ABSENT" };
-  }
-  const { bytes, container, sheets, definedNames, guard } = parts;
-  const links = [];
-  const notes = [];
-  const evItems = [];
-  const evUndetermined = [...parts.undetermined];
-  for (const sheet of sheets) {
-    const relTargets = /* @__PURE__ */ new Map();
-    if (sheet.part) {
-      const relsPart = relsPartFor(sheet.part);
-      if (container.byName.has(relsPart)) {
-        const read = await readPart(bytes, container, relsPart);
-        const parsed = read.ok ? parseRels(UTF83.decode(read.bytes)) : null;
-        if (parsed && parsed.ok) {
-          for (const r of parsed.relationships) if (r.id) relTargets.set(r.id, r);
-        } else {
-          evUndetermined.push({ part: relsPart, why: read.ok ? parsed.why : read.why });
-        }
-      }
-    }
-    if (sheet.xml == null) {
-      const why = guard == null ? sheet.why ?? "sheet_unreadable" : "over_size_bound";
-      for (const [, r] of relTargets) {
-        if (!r.external) continue;
-        const partition = classifyUrl(r.target);
-        links.push({
-          partition,
-          wrapper: partition === "deferred" ? linkWrapper.deferred(r.target) : linkWrapper.refused(),
-          target: { url: r.target },
-          source: null,
-          note: `cell_join_unavailable:${why}`
-        });
-      }
-      continue;
-    }
-    const walked = walkSheetXml(sheet.xml);
-    for (const h of walked.hyperlinks) {
-      const source = h.cell ? sheetCellRef(sheet.name, h.cell) : null;
-      if (h.relId) {
-        const rel = relTargets.get(h.relId);
-        if (!rel) {
-          links.push({
-            partition: "undetermined",
-            wrapper: null,
-            target: { why: "hyperlink_rel_unresolved", relId: h.relId },
-            source
-          });
-          continue;
-        }
-        if (!rel.external) {
-          links.push({
-            partition: "undetermined",
-            wrapper: null,
-            target: { why: "hyperlink_rel_not_external", relId: h.relId, part: rel.target },
-            source
-          });
-          continue;
-        }
-        const partition = classifyUrl(rel.target);
-        links.push({
-          partition,
-          wrapper: partition === "deferred" ? linkWrapper.deferred(rel.target) : linkWrapper.refused(),
-          target: { url: rel.target },
-          source
-        });
-        continue;
-      }
-      if (h.location) {
-        const fragment = `#${h.location}`;
-        links.push({
-          partition: "anchor",
-          wrapper: linkWrapper.anchor(fragment),
-          target: { location: h.location, fragment },
-          source
-        });
-        continue;
-      }
-      links.push({
-        partition: "undetermined",
-        wrapper: null,
-        target: { why: "hyperlink_without_target" },
-        source
-      });
-    }
-    for (const row of walked.rows) {
-      for (const c of row.cells) {
-        if (c.f == null) continue;
-        evItems.push({
-          kind: "formula",
-          source: c.cell ? sheetCellRef(sheet.name, c.cell) : null,
-          formula: c.f,
-          value: c.v
-          // the cached result, null when the file carries none — stated, not invented
-        });
-      }
-    }
-    if (walked.hiddenRows.length) {
-      evItems.push({
-        kind: "hidden-rows",
-        sheet: sheet.name,
-        rows: walked.hiddenRows,
-        count: walked.hiddenRows.length,
-        source: null
-      });
-    }
-    if (walked.hiddenCols.length) {
-      evItems.push({
-        kind: "hidden-cols",
-        sheet: sheet.name,
-        cols: walked.hiddenCols,
-        count: walked.hiddenCols.length,
-        source: null
-      });
-    }
-  }
-  for (const sheet of sheets) {
-    if (sheet.hidden) {
-      evItems.push({ kind: "hidden-sheet", sheet: sheet.name, state: sheet.state, source: null });
-    }
-  }
-  if (guard) {
-    notes.push("text_parts_over_bound");
-    evUndetermined.push({ part: "(text parts: worksheets + sharedStrings)", why: "over_size_bound", guard });
-  }
-  for (const dn of definedNames) {
-    const fragment = `#${dn.ref}`;
-    links.push({
-      partition: "anchor",
-      wrapper: linkWrapper.anchor(fragment),
-      target: { definedName: dn.name, ref: dn.ref, fragment },
-      source: null
-    });
-  }
-  for (const entry of container.entries) {
-    const name = normalizePartName(entry.name);
-    if (!/^xl\/embeddings\//.test(name)) continue;
-    const read = await readPart(bytes, container, name);
-    if (!read.ok) {
-      links.push({
-        partition: "undetermined",
-        wrapper: null,
-        target: { why: `embedding_unreadable:${read.why}`, name },
-        source: null
-      });
-      continue;
-    }
-    const sha = await sha256Hex3(read.bytes);
-    links.push({
-      partition: "intra",
-      wrapper: linkWrapper.intra(sha),
-      target: { sha256: sha, name, bytes: read.bytes.length },
-      source: null
-    });
-  }
-  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
-  for (const l of links) counts[l.partition]++;
-  if (parts.core) {
-    evItems.push({
-      kind: "core-properties",
-      creator: parts.core.creator,
-      lastModifiedBy: parts.core.lastModifiedBy,
-      revision: parts.core.revision,
-      revisionNumber: parts.core.revisionNumber,
-      created: parts.core.created,
-      modified: parts.core.modified,
-      title: parts.core.title,
-      source: null
-    });
-  }
-  const evCounts = {};
-  for (const it of evItems) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
-  return {
-    ok: true,
-    container: "xlsx",
-    sheets: sheets.map((s) => ({
-      sheet: s.index,
-      name: s.name,
-      sheetId: s.sheetId,
-      state: s.state,
-      hidden: s.hidden
-    })),
-    links,
-    counts,
-    /* The IC-2 envelope AS ACCEPTED (COFF-4 filed it first, from docx.mjs as
-     * built; this entry CONFIRMS — same key, same fields, no variant). */
-    evidentiary: {
-      container: "xlsx",
-      kinds: [...new Set(evItems.map((it) => it.kind))],
-      items: evItems,
-      undetermined: evUndetermined,
-      counts: evCounts
-    },
-    notes
-  };
-}
-function xlsxText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "xlsx", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  const { sheets, sharedStrings, guard } = parts;
-  if (guard) {
-    return {
-      ok: true,
-      container: "xlsx",
-      document: null,
-      sheets: [],
-      undetermined: [guard],
-      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
-    };
-  }
-  const outSheets = [];
-  const allUndetermined = [];
-  let cellCount = 0, formulaCount = 0;
-  for (const sheet of sheets) {
-    if (sheet.xml == null) {
-      const marker = { sheet: sheet.index, cell: null, reason: sheet.why ?? "sheet_unreadable" };
-      outSheets.push({
-        sheet: sheet.index,
-        name: sheet.name,
-        hidden: sheet.hidden,
-        rows: XLSX_GRID_ROWS,
-        cols: XLSX_GRID_COLS,
-        usedRows: null,
-        usedCols: null,
-        range: null,
-        text: "",
-        undetermined: [marker]
-      });
-      allUndetermined.push(marker);
-      continue;
-    }
-    const walked = walkSheetXml(sheet.xml);
-    const undetermined = [];
-    const lines = [];
-    for (const row of walked.rows) {
-      const vals = [];
-      for (const c of row.cells) {
-        if (c.f != null) formulaCount++;
-        const r = cellValue(c, sharedStrings);
-        if (r.undetermined) {
-          undetermined.push({ sheet: sheet.index, cell: c.cell, reason: r.undetermined });
-          continue;
-        }
-        if (r.value == null || r.value === "") continue;
-        cellCount++;
-        vals.push(r.value);
-      }
-      if (vals.length) lines.push(vals.join("	"));
-    }
-    const text = lines.join("\n");
-    outSheets.push({
-      sheet: sheet.index,
-      name: sheet.name,
-      hidden: sheet.hidden,
-      rows: XLSX_GRID_ROWS,
-      cols: XLSX_GRID_COLS,
-      usedRows: walked.usedRows,
-      usedCols: walked.usedCols,
-      /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
-      range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
-      text,
-      undetermined
-    });
-    for (const u of undetermined) allUndetermined.push(u);
-  }
-  const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
-  return {
-    ok: true,
-    container: "xlsx",
-    document,
-    sheets: outSheets,
-    undetermined: allUndetermined,
-    counts: {
-      chars: document.length,
-      cells: cellCount,
-      formulas: formulaCount,
-      undetermined: allUndetermined.length
-    }
-  };
-}
-var xlsxEntry = {
-  format: "xlsx",
-  detect(bytes, contentType) {
-    if (bytes) {
-      if (!hasZipMagic(bytes)) return null;
-      const c = readContainer(bytes);
-      if (!c.ok) return null;
-      if (c.byName.has(CONTENT_TYPES_PART) && c.byName.has(WORKBOOK_PART)) {
-        return { format: "xlsx", confidence: "likely", signals: [
-          "magic: PK\\x03\\x04 with a readable central directory",
-          `parts: ${CONTENT_TYPES_PART} and ${WORKBOOK_PART} present`,
-          "likely, not certain: the declared main content type lives in a deflated part; parts() completes the discrimination"
-        ] };
-      }
-      return null;
-    }
-    if (contentType === XLSX_CONTENT_TYPE) {
-      return {
-        format: "xlsx",
-        confidence: "likely",
-        signals: [`content type "${contentType}"`]
-      };
-    }
-    return null;
-  },
-  parts: (bytes) => xlsxParts(bytes),
-  /* Accept either parts() output or raw bytes, exactly as docx.mjs does, so
-     detect→structure works uniformly at the registry seam while a caller that
-     already paid for parts() does not pay twice. */
-  structure: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await xlsxParts(partsOrBytes) : partsOrBytes;
-    return xlsxStructure(parts);
-  },
-  text: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await xlsxParts(partsOrBytes) : partsOrBytes;
-    return withContainerImages(xlsxText(parts), parts, "xl/media/");
-  }
-};
-
-// src/pptx.mjs
-var UTF84 = new TextDecoder("utf-8", { fatal: false });
-var PPTX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-var CONTENT_TYPES_PART3 = "[Content_Types].xml";
-var MAIN_PART2 = "ppt/presentation.xml";
-var EMBEDDINGS_DIR2 = "ppt/embeddings/";
-var SLIDE_PART_RE = /^ppt\/slides\/[^/]+\.xml$/;
-var NOTES_PART_RE = /^ppt\/notesSlides\/[^/]+\.xml$/;
-function slideShapeRef(slide, shape = null) {
-  const ref = { kind: "slide-shape", ref: `slide ${slide}`, slide };
-  if (shape != null) ref.shape = shape;
-  return ref;
-}
-function decodeEntities2(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
-    if (e[0] === "#") {
-      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
-    }
-    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
-  });
-}
-function attrsOf3(raw) {
-  const attrs = {};
-  for (const a of (raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
-    attrs[local] = decodeEntities2(a[3] ?? a[4] ?? "");
-  }
-  return attrs;
-}
-var TOKEN_RE2 = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
-var localOf2 = (name) => name.includes(":") ? name.split(":").pop() : name;
-var SHAPE_TAGS = /* @__PURE__ */ new Set(["sp", "pic", "graphicFrame", "cxnSp", "grpSp"]);
-var declaresNotShown = (v) => v === "0" || v === "false";
-var SLD_ROOT_RE = /<(?:[\w.-]+:)?sld(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/;
-var SHOW_ATTR_RE = /(?:^|\s)(?:[\w.-]+:)?show\s*=\s*(?:"([^"]*)"|'([^']*)')/;
-var showAttrOf = (rawAttrs) => {
-  const m = (rawAttrs || "").match(SHOW_ATTR_RE);
-  return m ? m[1] ?? m[2] : null;
-};
-function walkSlide(xml) {
-  const paragraphs = [];
-  const hlinks = [];
-  const ridUsage = /* @__PURE__ */ new Map();
-  let shape = -1;
-  let cur = null;
-  let inText = false;
-  const noteRid = (attrs) => {
-    for (const key of ["id", "embed", "link"]) {
-      const v = attrs[key];
-      if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
-        ridUsage.set(v, shape >= 0 ? shape : null);
-    }
-  };
-  TOKEN_RE2.lastIndex = 0;
-  let m, prev = 0;
-  while ((m = TOKEN_RE2.exec(xml)) !== null) {
-    if (inText && cur != null && m.index > prev) cur += decodeEntities2(xml.slice(prev, m.index));
-    prev = TOKEN_RE2.lastIndex;
-    if (m[1] === void 0) continue;
-    const name = localOf2(m[1]);
-    const selfClosed = m[3] === "/";
-    const closing = m[0][1] === "/";
-    if (closing) {
-      if (name === "t") inText = false;
-      else if (name === "p") {
-        if (cur != null) {
-          paragraphs.push(cur);
-          cur = null;
-        }
-      }
-      continue;
-    }
-    if (SHAPE_TAGS.has(name)) shape++;
-    const attrs = m[2] && m[2].includes("=") ? attrsOf3(m[2]) : {};
-    switch (name) {
-      case "p":
-        if (!selfClosed) cur = "";
-        break;
-      case "t":
-        if (!selfClosed) inText = true;
-        break;
-      case "br":
-        if (cur != null) cur += "\n";
-        break;
-      case "hlinkClick":
-        noteRid(attrs);
-        if (attrs.id && /^rId/.test(attrs.id))
-          hlinks.push({ rid: attrs.id, shape: shape >= 0 ? shape : null });
-        break;
-      default:
-        noteRid(attrs);
-    }
-  }
-  const text = paragraphs.filter((t) => t.length).join("\n");
-  return { paragraphs, text, shapes: shape + 1, hlinks, ridUsage };
-}
-function classifyUri3(uri) {
-  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
-  const scheme = m ? m[1].toLowerCase() : null;
-  if (scheme === "http" || scheme === "https") return "deferred";
-  if (!scheme && uri) return "deferred";
-  return "refused";
-}
-function deferredOrRefusedRecord3(uri, source) {
-  const partition = classifyUri3(uri);
-  return {
-    partition,
-    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(uri),
-    target: { url: uri },
-    source
-  };
-}
-function undeterminedRecord3(source, why, extra = {}) {
-  return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
-}
-var HEX4 = "0123456789abcdef";
-async function sha256Hex4(u8) {
-  const d = await crypto.subtle.digest("SHA-256", u8);
-  const b = new Uint8Array(d);
-  let out = "";
-  for (let i = 0; i < b.length; i++) out += HEX4[b[i] >> 4] + HEX4[b[i] & 15];
-  return out;
-}
-function resolveRelTarget2(relsPart, target) {
-  const t = String(target || "");
-  if (t.startsWith("/")) return normalizePartName(t);
-  const baseDir = relsPart.replace(/_rels\/[^/]*\.rels$/, "");
-  const segs = (baseDir + t).split("/");
-  const out = [];
-  for (const s of segs) {
-    if (s === "" || s === ".") continue;
-    if (s === "..") out.pop();
-    else out.push(s);
-  }
-  return out.join("/");
-}
-async function pptxParts(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  const d = await discriminate(b);
-  if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
-  if (d.format !== "pptx") {
-    return {
-      ok: false,
-      why: d.format === "undetermined" ? d.why : `not_pptx:${d.format}`,
-      signals: d.signals
-    };
-  }
-  const container = readContainer(b);
-  if (!container.ok) return { ok: false, why: container.why, signals: d.signals };
-  const undetermined = [];
-  const mainPart = normalizePartName(d.mainPart || MAIN_PART2);
-  const slideParts = [];
-  const notesParts = [];
-  for (const e of container.entries) {
-    const n = normalizePartName(e.name);
-    if (SLIDE_PART_RE.test(n)) slideParts.push(n);
-    else if (NOTES_PART_RE.test(n)) notesParts.push(n);
-  }
-  let declaredTextBytes2 = 0;
-  for (const n of [...slideParts, ...notesParts]) {
-    const e = container.byName.get(n);
-    if (e) declaredTextBytes2 += e.uncompressedSize;
-  }
-  const guardR = sizeGuard(declaredTextBytes2);
-  const guard = guardR.ok ? null : guardR;
-  const rels = await walkRels(b, container);
-  let presentationXml = null;
-  const main = await readPart(b, container, mainPart);
-  if (main.ok) presentationXml = UTF84.decode(main.bytes);
-  else undetermined.push({ part: mainPart, why: main.why });
-  let order = null;
-  const hiddenParts = /* @__PURE__ */ new Set();
-  if (presentationXml != null) {
-    const presRelsPart = relsPartFor(mainPart);
-    const presRels = rels.byPart.find((p) => p.part === presRelsPart);
-    if (!presRels) {
-      const stated = rels.undetermined.find((u) => u.part === presRelsPart);
-      undetermined.push({ part: presRelsPart, why: stated?.why ?? "part_absent" });
-    } else {
-      const byId = new Map(presRels.relationships.map((r) => [r.id, r]));
-      order = [];
-      const sldIdRe = /<(?:[\w.-]+:)?sldId\b((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/g;
-      for (const m of presentationXml.matchAll(sldIdRe)) {
-        const rid = m[1].match(/[\w.-]+:id\s*=\s*(?:"([^"]*)"|'([^']*)')/);
-        const id = rid ? rid[1] ?? rid[2] : null;
-        const rel = id != null ? byId.get(id) : null;
-        if (!rel || rel.external || !rel.target) {
-          order.push(null);
-          undetermined.push({ part: mainPart, why: `sldid_rel_unresolved:${id ?? "no_rid"}` });
-          continue;
-        }
-        const resolved = resolveRelTarget2(presRelsPart, rel.target);
-        order.push(resolved);
-        if (declaresNotShown(showAttrOf(m[1]))) hiddenParts.add(resolved);
-      }
-    }
-  }
-  const slideXml = /* @__PURE__ */ new Map();
-  const notesXml = /* @__PURE__ */ new Map();
-  if (!guard) {
-    for (const n of slideParts) {
-      const r = await readPart(b, container, n);
-      if (r.ok) {
-        const xml = UTF84.decode(r.bytes);
-        slideXml.set(n, xml);
-        const root = xml.match(SLD_ROOT_RE);
-        if (root && declaresNotShown(showAttrOf(root[1]))) hiddenParts.add(n);
-      } else undetermined.push({ part: n, why: r.why });
-    }
-    for (const n of notesParts) {
-      const r = await readPart(b, container, n);
-      if (r.ok) notesXml.set(n, UTF84.decode(r.bytes));
-      else undetermined.push({ part: n, why: r.why });
-    }
-  }
-  const notesOf = /* @__PURE__ */ new Map();
-  for (const bp of rels.byPart) {
-    const m = bp.part.match(/^(ppt\/slides\/)_rels\/([^/]+\.xml)\.rels$/);
-    if (!m) continue;
-    const slidePart = m[1] + m[2];
-    for (const r of bp.relationships) {
-      if (!r.external && r.type && r.type.endsWith("/notesSlide") && r.target) {
-        notesOf.set(slidePart, resolveRelTarget2(bp.part, r.target));
-        break;
-      }
-    }
-  }
-  let core = null;
-  if (container.byName.has(CORE_PROPERTIES_PART)) {
-    const c = await readCoreProperties(b, container);
-    if (c.ok) core = c;
-    else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
-  }
-  return {
-    ok: true,
-    format: "pptx",
-    bytes: b,
-    container,
-    mainPart,
-    presentationXml,
-    order,
-    slideParts,
-    notesParts,
-    slideXml,
-    notesXml,
-    notesOf,
-    hiddenParts,
-    rels,
-    core,
-    guard,
-    undetermined
-  };
-}
-function deckOf(parts) {
-  const seq = [];
-  const seen = /* @__PURE__ */ new Set();
-  if (parts.order) {
-    parts.order.forEach((part, i) => {
-      if (part == null) return;
-      seq.push({ part, slide: i + 1 });
-      seen.add(part);
-    });
-  }
-  for (const p of parts.slideParts) if (!seen.has(p)) seq.push({ part: p, slide: null });
-  return seq;
-}
-var GUARDED_PARTS = "ppt/slides/* + ppt/notesSlides/*";
-async function pptxStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "pptx", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  const notes = [];
-  const links = [];
-  const deck = deckOf(parts);
-  const slideNoOf = /* @__PURE__ */ new Map();
-  for (const d of deck) if (d.slide != null) slideNoOf.set(d.part, d.slide);
-  if (!parts.order) {
-    notes.push("deck order undeclared-or-unreadable (ppt/presentation.xml sldIdLst): slides are UNNUMBERED \u2014 slide:null, sources null \u2014 stated, never numbered off filenames");
-  }
-  if (parts.guard) {
-    notes.push("slide/notes parts not read: over the size bound (stated in evidentiary.undetermined and by text())");
-  }
-  const walks = /* @__PURE__ */ new Map();
-  for (const { part } of deck) {
-    const xml = parts.slideXml.get(part);
-    if (xml != null) walks.set(part, walkSlide(xml));
-  }
-  const relsPartToSlide = /* @__PURE__ */ new Map();
-  for (const { part } of deck) relsPartToSlide.set(relsPartFor(part), part);
-  const slideLevelSource = (slidePart) => {
-    const n = slideNoOf.get(slidePart);
-    return n != null ? slideShapeRef(n) : null;
-  };
-  for (const rel of parts.rels.outbound) {
-    const slidePart = relsPartToSlide.get(rel.part);
-    if (slidePart) {
-      const slideNo = slideNoOf.get(slidePart) ?? null;
-      const w = walks.get(slidePart);
-      const usages = w ? w.hlinks.filter((h) => h.rid === rel.id) : [];
-      if (usages.length) {
-        for (const u of usages) {
-          links.push(deferredOrRefusedRecord3(
-            rel.target,
-            slideNo != null ? slideShapeRef(slideNo, u.shape) : null
-          ));
-        }
-        continue;
-      }
-      links.push(deferredOrRefusedRecord3(rel.target, slideLevelSource(slidePart)));
-      continue;
-    }
-    links.push(deferredOrRefusedRecord3(rel.target, null));
-  }
-  for (const u of parts.rels.undetermined) {
-    links.push(undeterminedRecord3(null, "rels_unreadable", { part: u.part, detail: u.why }));
-  }
-  for (const bp of parts.rels.byPart) {
-    const slidePart = relsPartToSlide.get(bp.part);
-    if (!slidePart) continue;
-    const w = walks.get(slidePart);
-    if (!w) continue;
-    const slideNo = slideNoOf.get(slidePart) ?? null;
-    for (const r of bp.relationships) {
-      if (r.external || !r.type || !r.type.endsWith("/slide") || !r.target) continue;
-      const usages = w.hlinks.filter((h) => h.rid === r.id);
-      if (!usages.length) continue;
-      const resolved = resolveRelTarget2(bp.part, r.target);
-      const targetNo = slideNoOf.get(resolved) ?? null;
-      for (const u of usages) {
-        const source = slideNo != null ? slideShapeRef(slideNo, u.shape) : null;
-        if (targetNo != null) {
-          const fragment = `#slide=${targetNo}`;
-          links.push({
-            partition: "anchor",
-            wrapper: linkWrapper.anchor(fragment),
-            target: { slide: targetNo, fragment, part: resolved },
-            source
-          });
-        } else {
-          links.push(undeterminedRecord3(source, "slide_unresolved", { part: resolved }));
-        }
-      }
-    }
-  }
-  const embeddingRefs = /* @__PURE__ */ new Map();
-  for (const bp of parts.rels.byPart) {
-    const slidePart = relsPartToSlide.get(bp.part) ?? null;
-    for (const r of bp.relationships) {
-      if (r.external || !r.target) continue;
-      const resolved = resolveRelTarget2(bp.part, r.target);
-      if (resolved.startsWith(EMBEDDINGS_DIR2) && !embeddingRefs.has(resolved))
-        embeddingRefs.set(resolved, { slidePart, rid: r.id });
-    }
-  }
-  for (const entry of parts.container.entries) {
-    const name = normalizePartName(entry.name);
-    if (!name.startsWith(EMBEDDINGS_DIR2) || name === EMBEDDINGS_DIR2) continue;
-    const refd = embeddingRefs.get(name) ?? null;
-    let source = null;
-    if (refd && refd.slidePart) {
-      const slideNo = slideNoOf.get(refd.slidePart) ?? null;
-      if (slideNo != null) {
-        const w = walks.get(refd.slidePart);
-        const shape = w && w.ridUsage.has(refd.rid) ? w.ridUsage.get(refd.rid) : null;
-        source = slideShapeRef(slideNo, shape);
-      }
-    }
-    const read = await readPart(parts.bytes, parts.container, name);
-    if (!read.ok) {
-      links.push(undeterminedRecord3(source, "embedded_part_unreadable", { part: name, detail: read.why }));
-      continue;
-    }
-    const sha = await sha256Hex4(read.bytes);
-    links.push({
-      partition: "intra",
-      wrapper: linkWrapper.intra(sha),
-      target: { sha256: sha, name: name.slice(name.lastIndexOf("/") + 1), bytes: read.bytes.length },
-      source
-    });
-  }
-  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
-  for (const l of links) counts[l.partition]++;
-  const items = [];
-  const evUndetermined = [...parts.undetermined];
-  if (parts.guard) evUndetermined.push({ part: GUARDED_PARTS, why: "over_size_bound", guard: parts.guard });
-  for (const { part, slide } of deck) {
-    if (!parts.hiddenParts.has(part)) continue;
-    items.push({
-      kind: "hidden-slide",
-      slide,
-      part,
-      source: slide != null ? slideShapeRef(slide) : null
-    });
-  }
-  const mappedNotes = /* @__PURE__ */ new Set();
-  for (const { part, slide } of deck) {
-    const notesPart = parts.notesOf.get(part) ?? null;
-    if (!notesPart) continue;
-    mappedNotes.add(notesPart);
-    const xml = parts.notesXml.get(notesPart);
-    if (xml == null) {
-      if (!parts.guard && !parts.container.byName.has(notesPart))
-        evUndetermined.push({ part: notesPart, why: "part_absent" });
-      continue;
-    }
-    items.push({
-      kind: "speaker-notes",
-      slide,
-      part: notesPart,
-      text: walkSlide(xml).text,
-      source: slide != null ? slideShapeRef(slide) : null
-    });
-  }
-  for (const np of parts.notesParts) {
-    if (mappedNotes.has(np) || !parts.notesXml.has(np)) continue;
-    items.push({ kind: "speaker-notes", slide: null, part: np, text: walkSlide(parts.notesXml.get(np)).text, source: null });
-  }
-  if (parts.core) {
-    items.push({
-      kind: "core-properties",
-      creator: parts.core.creator,
-      lastModifiedBy: parts.core.lastModifiedBy,
-      revision: parts.core.revision,
-      revisionNumber: parts.core.revisionNumber,
-      created: parts.core.created,
-      modified: parts.core.modified,
-      title: parts.core.title,
-      source: null
-    });
-  }
-  const evCounts = {};
-  for (const it of items) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
-  const evidentiary = {
-    container: "pptx",
-    kinds: [...new Set(items.map((it) => it.kind))],
-    items,
-    undetermined: evUndetermined,
-    counts: evCounts
-  };
-  return {
-    ok: true,
-    container: "pptx",
-    slides: deck.length,
-    links,
-    counts,
-    evidentiary,
-    notes
-  };
-}
-function deckLengthOf(parts) {
-  return Array.isArray(parts.order) ? parts.order.length : null;
-}
-async function pptxText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "pptx", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  if (parts.guard) {
-    return {
-      ok: true,
-      container: "pptx",
-      document: null,
-      slides: [],
-      speakerNotes: [],
-      deckLength: deckLengthOf(parts),
-      undetermined: [parts.guard],
-      counts: { chars: 0, notesChars: 0, undetermined: 1 }
-    };
-  }
-  const deck = deckOf(parts);
-  const slides = [];
-  const speakerNotes = [];
-  const undetermined = [];
-  for (const { part, slide } of deck) {
-    const hidden = parts.hiddenParts.has(part);
-    const xml = parts.slideXml.get(part);
-    if (xml == null) {
-      const stated = parts.undetermined.find((u) => u.part === part);
-      undetermined.push({ reason: "slide_unreadable", part, why: stated?.why ?? "unreadable" });
-    } else {
-      const walked = walkSlide(xml);
-      slides.push({
-        slide,
-        ref: slide != null ? `slide ${slide}` : null,
-        part,
-        hidden,
-        shapes: walked.shapes,
-        text: walked.text
-      });
-    }
-    const notesPart = parts.notesOf.get(part) ?? null;
-    if (!notesPart) continue;
-    const nxml = parts.notesXml.get(notesPart);
-    if (nxml == null) {
-      const stated = parts.undetermined.find((u) => u.part === notesPart);
-      undetermined.push({ reason: "notes_unreadable", part: notesPart, why: stated?.why ?? "unreadable" });
-    } else {
-      speakerNotes.push({ slide, ref: slide != null ? `slide ${slide} (notes)` : null, part: notesPart, hidden, text: walkSlide(nxml).text });
-    }
-  }
-  const mapped = /* @__PURE__ */ new Set([...parts.notesOf.values()]);
-  for (const np of parts.notesParts) {
-    if (mapped.has(np) || !parts.notesXml.has(np)) continue;
-    speakerNotes.push({ slide: null, ref: null, part: np, hidden: null, text: walkSlide(parts.notesXml.get(np)).text });
-  }
-  const document = slides.map((s) => s.text).filter((t) => t.length).join("\n");
-  const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
-  return {
-    ok: true,
-    container: "pptx",
-    document,
-    slides,
-    speakerNotes,
-    deckLength: deckLengthOf(parts),
-    undetermined,
-    counts: { chars: document.length, notesChars, undetermined: undetermined.length }
-  };
-}
-var pptxEntry = {
-  format: "pptx",
-  detect(bytes, contentType) {
-    if (bytes) {
-      if (!hasZipMagic(bytes)) return null;
-      const container = readContainer(bytes);
-      if (!container.ok) return null;
-      if (container.byName.has(CONTENT_TYPES_PART3) && container.byName.has(MAIN_PART2)) {
-        return {
-          format: "pptx",
-          confidence: "likely",
-          signals: [
-            "magic: PK\\x03\\x04 with a readable central directory",
-            `part: ${CONTENT_TYPES_PART3} present`,
-            `part: ${MAIN_PART2} present`,
-            "likely, not certain: the OPC content-type declaration is deflated \u2014 parts() discriminates"
-          ]
-        };
-      }
-      return null;
-    }
-    if (contentType === PPTX_CONTENT_TYPE) {
-      return { format: "pptx", confidence: "likely", signals: [`content type "${contentType}"`] };
-    }
-    return null;
-  },
-  parts: (bytes) => pptxParts(bytes),
-  structure: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await pptxParts(partsOrBytes) : partsOrBytes;
-    return pptxStructure(parts);
-  },
-  text: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await pptxParts(partsOrBytes) : partsOrBytes;
-    return withContainerImages(pptxText(parts), parts, "ppt/media/");
-  }
-};
-
-// src/odf.mjs
-var UTF85 = new TextDecoder("utf-8", { fatal: false });
-var ODF_ROWS = CONTAINER_FLAVOURS.filter((f2) => f2.partMap === "odf");
-function odfRow(flavour) {
-  const row = ODF_ROWS.find((f2) => f2.flavour === flavour);
-  if (!row) throw new Error(`odf.mjs: no partMap:"odf" row for "${flavour}" in ooxml.mjs`);
-  return row;
-}
-var ODT_ROW = odfRow("odt");
-var ODS_ROW = odfRow("ods");
-var ODP_ROW = odfRow("odp");
-var ODT_CONTENT_TYPE = ODT_ROW.mimetype;
-var ODS_CONTENT_TYPE = ODS_ROW.mimetype;
-var ODP_CONTENT_TYPE = ODP_ROW.mimetype;
-var CONTENT_PART = normalizePartName(ODT_ROW.conventionalMainPart);
-var META_PART = "meta.xml";
-function decodeEntities3(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
-    if (e[0] === "#") {
-      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
-    }
-    return { amp: "&", lt: "<", gt: ">", quot: "'" === e ? "'" : '"', apos: "'" }[e] ?? m;
-  });
-}
-function attrsOf4(raw) {
-  const attrs = {};
-  for (const a of String(raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
-    attrs[local] = decodeEntities3(a[3] ?? a[4] ?? "");
-  }
-  return attrs;
-}
-var localOf3 = (n) => n.includes(":") ? n.split(":").pop() : n;
-var tokens = () => /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/)?>/g;
-function elementsNested(xml, localName) {
-  const out = [];
-  const RE = tokens();
-  let m, depth = 0, start = -1, openAttrs = null;
-  while ((m = RE.exec(xml)) !== null) {
-    if (m[1] === void 0) continue;
-    if (localOf3(m[1]) !== localName) continue;
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    if (closing) {
-      depth--;
-      if (depth === 0 && start >= 0) {
-        out.push({ attrs: openAttrs, inner: xml.slice(start, m.index) });
-        start = -1;
-        openAttrs = null;
-      }
-      continue;
-    }
-    if (selfClosed) {
-      if (depth === 0) out.push({ attrs: attrsOf4(m[2]), inner: "" });
-      continue;
-    }
-    if (depth === 0) {
-      start = RE.lastIndex;
-      openAttrs = attrsOf4(m[2]);
-    }
-    depth++;
-  }
-  return out;
-}
-function stripElement(xml, localName) {
-  let out = "";
-  let cut = 0;
-  const RE = tokens();
-  let m, depth = 0, start = -1;
-  while ((m = RE.exec(xml)) !== null) {
-    if (m[1] === void 0) continue;
-    if (localOf3(m[1]) !== localName) continue;
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    if (selfClosed) {
-      if (depth === 0) {
-        out += xml.slice(cut, m.index);
-        cut = RE.lastIndex;
-      }
-      continue;
-    }
-    if (closing) {
-      depth--;
-      if (depth === 0 && start >= 0) {
-        cut = RE.lastIndex;
-        start = -1;
-      }
-      continue;
-    }
-    if (depth === 0) {
-      out += xml.slice(cut, m.index);
-      start = m.index;
-    }
-    depth++;
-  }
-  return out + xml.slice(cut);
-}
-function visibleText(xml) {
-  let out = "";
-  let prev = 0;
-  const RE = tokens();
-  let m;
-  while ((m = RE.exec(xml)) !== null) {
-    if (m.index > prev) out += decodeEntities3(xml.slice(prev, m.index));
-    prev = RE.lastIndex;
-    if (m[1] === void 0) continue;
-    if (m[0][1] === "/") continue;
-    const name = localOf3(m[1]);
-    if (name === "s") {
-      const c = parseInt(attrsOf4(m[2]).c ?? "1", 10);
-      out += " ".repeat(Number.isFinite(c) && c > 0 ? c : 1);
-    } else if (name === "tab") out += "	";
-    else if (name === "line-break") out += "\n";
-  }
-  if (xml.length > prev) out += decodeEntities3(xml.slice(prev));
-  return out;
-}
-function automaticStyles(xml) {
-  const tableDisplay = /* @__PURE__ */ new Map();
-  const pageVisible = /* @__PURE__ */ new Map();
-  for (const block of elementsNested(xml, "automatic-styles")) {
-    for (const st of elementsNested(block.inner, "style")) {
-      const name = st.attrs["name"];
-      if (!name) continue;
-      if (st.attrs.family === "table") {
-        for (const p of elementsNested(st.inner, "table-properties")) {
-          if (p.attrs.display != null) tableDisplay.set(name, p.attrs.display !== "false");
-        }
-      } else if (st.attrs.family === "drawing-page") {
-        for (const p of elementsNested(st.inner, "drawing-page-properties")) {
-          if (p.attrs.visibility != null) pageVisible.set(name, p.attrs.visibility !== "hidden");
-        }
-      }
-    }
-  }
-  return { tableDisplay, pageVisible };
-}
-function classifyUri4(uri) {
-  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
-  const scheme = m ? m[1].toLowerCase() : null;
-  if (scheme === "http" || scheme === "https") return "deferred";
-  if (!scheme && uri) return "deferred";
-  return "refused";
-}
-function linkRecord(uri, source) {
-  if (typeof uri === "string" && uri.startsWith("#")) {
-    return {
-      partition: "anchor",
-      wrapper: linkWrapper.anchor(uri),
-      target: { fragment: uri, name: uri.slice(1) },
-      source
-    };
-  }
-  const partition = classifyUri4(uri);
-  return {
-    partition,
-    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(),
-    target: { url: uri },
-    source
-  };
-}
-function hrefsIn(xml) {
-  const out = [];
-  const RE = tokens();
-  let m;
-  while ((m = RE.exec(xml)) !== null) {
-    if (m[1] === void 0 || m[0][1] === "/") continue;
-    if (localOf3(m[1]) !== "a") continue;
-    const href = attrsOf4(m[2]).href;
-    if (href != null) out.push(href);
-  }
-  return out;
-}
-function readStoredMemberSync(bytes, container, name, maxBytes) {
-  const want = normalizePartName(name);
-  const entry = container.byName.get(want) ?? container.entries.find((e) => normalizePartName(e.name) === want);
-  if (!entry) return null;
-  if (entry.method !== 0) return null;
-  if (entry.uncompressedSize > maxBytes) return null;
-  const lh = entry.localHeaderOffset;
-  if (lh + 30 > bytes.length) return null;
-  const nameLen = bytes[lh + 26] | bytes[lh + 27] << 8;
-  const extraLen = bytes[lh + 28] | bytes[lh + 29] << 8;
-  const start = lh + 30 + nameLen + extraLen;
-  const end = start + entry.compressedSize;
-  if (end > bytes.length) return null;
-  const out = bytes.subarray(start, end);
-  if (out.length !== entry.uncompressedSize) return null;
-  if (crc32(out) !== entry.crc32) return null;
-  return UTF85.decode(out);
-}
-function detectOdf(row, bytes, contentType) {
-  if (bytes) {
-    if (!hasZipMagic(bytes)) return null;
-    const container = readContainer(bytes);
-    if (!container.ok) return null;
-    const first = container.entries[0];
-    if (!first || normalizePartName(first.name) !== ODF_MIMETYPE_PART) return null;
-    const declared = readStoredMemberSync(bytes, container, ODF_MIMETYPE_PART, ODF_MIMETYPE_MAX_BYTES);
-    if (declared !== row.mimetype) return null;
-    const main = normalizePartName(row.conventionalMainPart);
-    const present = container.byName.has(main) || container.entries.some((e) => normalizePartName(e.name) === main);
-    if (!present) return null;
-    return {
-      format: row.flavour,
-      confidence: "certain",
-      signals: [
-        "magic: PK\\x03\\x04 with a readable central directory",
-        `part: ${ODF_MIMETYPE_PART} is the FIRST member, STORED, CRC-verified`,
-        `odf:${ODF_MIMETYPE_PART}=${row.mimetype} (exact match, not trimmed)`,
-        `part: ${main} present`
-      ]
-    };
-  }
-  if (contentType === row.mimetype) {
-    return { format: row.flavour, confidence: "likely", signals: [`content type "${contentType}"`] };
-  }
-  return null;
-}
-async function odfParts(row, bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  const d = await discriminate(b);
-  if (!d.ok) return { ok: false, container: row.flavour, why: d.why, signals: d.signals };
-  if (d.format !== row.flavour) {
-    const absent = d.why === "declared_main_part_absent";
-    return {
-      ok: false,
-      container: row.flavour,
-      why: d.format === "undetermined" ? d.why : `not_${row.flavour}:${d.format}`,
-      part: absent ? CONTENT_PART : null,
-      flavourDeclared: d.flavourDeclared ?? null,
-      signals: d.signals
-    };
-  }
-  const container = readContainer(b);
-  if (!container.ok) return { ok: false, container: row.flavour, why: container.why, signals: d.signals };
-  const undetermined = [];
-  const declared = declaredTextBytes(container, (n) => n === CONTENT_PART);
-  const guardR = sizeGuard(declared.total);
-  const guard = guardR.ok ? null : guardR;
-  let contentXml = null;
-  if (!guard) {
-    const read = await readPart(b, container, CONTENT_PART);
-    if (read.ok) contentXml = UTF85.decode(read.bytes);
-    else undetermined.push({ part: CONTENT_PART, why: read.why });
-  }
-  undetermined.push({
-    part: META_PART,
-    why: "outside_content_xml_not_read",
-    detail: "OpenDocument carries the core properties (creator, title, created/modified, revision) in meta.xml; this entry reads content.xml only, so NO core-properties item is emitted and its absence is not evidence the document carries none"
-  });
-  undetermined.push({
-    part: ODF_MANIFEST_PART,
-    why: "outside_content_xml_not_read",
-    detail: "OpenDocument lists embedded objects and images as separate package members in META-INF/manifest.xml; this entry reads content.xml only, so NO intra link is content-addressed and a zero intra count means NOT LOOKED, never NONE PRESENT"
-  });
-  return { ok: true, format: row.flavour, row, bytes: b, container, contentXml, declared, guard, undetermined };
-}
-function officeBody(contentXml, kind) {
-  if (contentXml == null) return null;
-  const body = elementsNested(contentXml, "body")[0];
-  if (!body) return null;
-  const inner = elementsNested(body.inner, kind)[0];
-  return inner ? inner.inner : null;
-}
-function envelopeUndetermined(parts) {
-  const out = [...parts.undetermined];
-  if (parts.guard) out.push({ part: CONTENT_PART, why: "over_size_bound", guard: parts.guard });
-  return out;
-}
-function envelopeOf(container, items, undetermined) {
-  const counts = {};
-  for (const it of items) counts[it.kind] = (counts[it.kind] ?? 0) + 1;
-  return {
-    container,
-    kinds: [...new Set(items.map((it) => it.kind))],
-    items,
-    undetermined,
-    counts
-  };
-}
-function countPartitions(links) {
-  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
-  for (const l of links) counts[l.partition]++;
-  return counts;
-}
-var NO_INTRA_NOTE = "no intra link is emitted: embedded members live outside content.xml (stated in evidentiary.undetermined)";
-function walkTextBody(bodyXml) {
-  const paragraphs = [];
-  const hyperlinks = [];
-  const annotations = [];
-  const marks = [];
-  const openChanges = /* @__PURE__ */ new Map();
-  const served = stripElement(bodyXml, "tracked-changes");
-  const RE = tokens();
-  let m, prev = 0;
-  let para = -1;
-  let inPara = false;
-  let depthInPara = 0;
-  let skipDepth = 0;
-  let paraStart = -1;
-  const openStack = [];
-  while ((m = RE.exec(served)) !== null) {
-    if (m[1] === void 0) {
-      prev = RE.lastIndex;
-      continue;
-    }
-    const name = localOf3(m[1]);
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    if (skipDepth > 0) {
-      if (!closing && !selfClosed) skipDepth++;
-      else if (closing) skipDepth--;
-      prev = RE.lastIndex;
-      continue;
-    }
-    if (!closing && !selfClosed && name === "annotation") {
-      const rest = served.slice(m.index);
-      const ann = elementsNested(rest, "annotation")[0];
-      annotations.push({ attrs: attrsOf4(m[2]), inner: ann ? ann.inner : "", para: para >= 0 ? para : null });
-      skipDepth = 1;
-      prev = RE.lastIndex;
-      continue;
-    }
-    if (!closing && (name === "p" || name === "h")) {
-      if (!selfClosed) {
-        if (!inPara) {
-          para++;
-          inPara = true;
-          depthInPara = 1;
-          paraStart = RE.lastIndex;
-          openStack.length = 0;
-        } else depthInPara++;
-      } else {
-        if (!inPara) {
-          para++;
-          paragraphs.push({ para, text: "" });
-        }
-      }
-      prev = RE.lastIndex;
-      continue;
-    }
-    if (closing && (name === "p" || name === "h") && inPara) {
-      depthInPara--;
-      if (depthInPara === 0) {
-        const raw = served.slice(paraStart, m.index);
-        paragraphs.push({ para, text: visibleText(stripElement(raw, "annotation")) });
-        inPara = false;
-        paraStart = -1;
-      }
-      prev = RE.lastIndex;
-      continue;
-    }
-    const attrs = m[2] && m[2].includes("=") ? attrsOf4(m[2]) : {};
-    if (!closing && name === "a" && attrs.href != null) {
-      hyperlinks.push({ href: attrs.href, para: para >= 0 ? para : null });
-    } else if (name === "change-start" && attrs["change-id"] != null) {
-      openChanges.set(attrs["change-id"], { para: para >= 0 ? para : null });
-      marks.push({ id: attrs["change-id"], para: para >= 0 ? para : null });
-    } else if (name === "change" && attrs["change-id"] != null) {
-      marks.push({ id: attrs["change-id"], para: para >= 0 ? para : null });
-    }
-    prev = RE.lastIndex;
-  }
-  return { paragraphs, hyperlinks, annotations, marks, openChanges };
-}
-function insertedTextFor(bodyXml, id) {
-  const served = stripElement(bodyXml, "tracked-changes");
-  const startRe = new RegExp(`<(?:[\\w.-]+:)?change-start\\b[^>]*change-id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`);
-  const endRe = new RegExp(`<(?:[\\w.-]+:)?change-end\\b[^>]*change-id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`);
-  const s = served.match(startRe);
-  const e = served.match(endRe);
-  if (!s || !e || e.index < s.index) return null;
-  return visibleText(served.slice(s.index + s[0].length, e.index));
-}
-function parseTrackedChanges(bodyXml) {
-  const block = elementsNested(bodyXml, "tracked-changes")[0];
-  if (!block) return [];
-  const out = [];
-  for (const region of elementsNested(block.inner, "changed-region")) {
-    const id = region.attrs.id ?? null;
-    for (const [kind, change] of [["insertion", "insertion"], ["deletion", "deletion"]]) {
-      for (const el of elementsNested(region.inner, kind)) {
-        const info = elementsNested(el.inner, "change-info")[0];
-        const creator = info ? elementsNested(info.inner, "creator")[0] : null;
-        const date = info ? elementsNested(info.inner, "date")[0] : null;
-        out.push({
-          id,
-          change,
-          author: creator ? visibleText(creator.inner) : null,
-          // null, never invented
-          date: date ? visibleText(date.inner) : null,
-          /* A deletion's own paragraphs ARE the superseded wording. An
-             insertion's content is in the body, not here. */
-          superseded: change === "deletion" ? elementsNested(stripElement(el.inner, "change-info"), "p").map((p) => visibleText(p.inner)).join("\n") : null
-        });
-      }
-    }
-  }
-  return out;
-}
-function odtStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
-  }
-  const notes = [NO_INTRA_NOTE];
-  const links = [];
-  const items = [];
-  const body = officeBody(parts.contentXml, "text");
-  if (!body) {
-    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:text>: element references unavailable (stated)");
-  }
-  let paragraphs = null;
-  if (body) {
-    const walk = walkTextBody(body);
-    paragraphs = walk.paragraphs.length;
-    for (const h of walk.hyperlinks) {
-      links.push(linkRecord(h.href, h.para == null ? null : docParaRef(h.para)));
-    }
-    const markFor = /* @__PURE__ */ new Map();
-    for (const mk of walk.marks) if (!markFor.has(mk.id)) markFor.set(mk.id, mk.para);
-    for (const c of parseTrackedChanges(parts.contentXml)) {
-      const at = c.id != null ? markFor.get(c.id) : void 0;
-      const item = {
-        kind: "tracked-change",
-        change: c.change,
-        author: c.author,
-        date: c.date,
-        source: at == null ? null : docParaRef(at)
-      };
-      if (c.change === "deletion") item.superseded = c.superseded;
-      else item.text = c.id != null ? insertedTextFor(body, c.id) : null;
-      if (at === void 0) item.why = "change_region_unmarked_in_body";
-      items.push(item);
-    }
-    for (const a of walk.annotations) {
-      const creator = elementsNested(a.inner, "creator")[0];
-      const date = elementsNested(a.inner, "date")[0];
-      const initials = elementsNested(a.inner, "creator-initials")[0];
-      items.push({
-        kind: "comment",
-        id: a.attrs.name ?? null,
-        author: creator ? visibleText(creator.inner) : null,
-        date: date ? visibleText(date.inner) : null,
-        initials: initials ? visibleText(initials.inner) : null,
-        text: elementsNested(stripElement(a.inner, "change-info"), "p").map((p) => visibleText(p.inner)).join("\n"),
-        source: a.para == null ? null : docParaRef(a.para)
-      });
-    }
-  }
-  return {
-    ok: true,
-    container: "odt",
-    paragraphs,
-    // null = honestly unknown, the docx.mjs convention
-    links,
-    counts: countPartitions(links),
-    evidentiary: envelopeOf("odt", items, envelopeUndetermined(parts)),
-    notes
-  };
-}
-function walkOdfTables(bodyXml) {
-  const done = [];
-  const stack = [];
-  let next = 0;
-  const RE = tokens();
-  const rep = (v) => {
-    const n = parseInt(v ?? "1", 10);
-    return Number.isFinite(n) && n > 0 ? n : 1;
-  };
-  let m;
-  while ((m = RE.exec(bodyXml)) !== null) {
-    if (m[1] === void 0) continue;
-    const name = localOf3(m[1]);
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    const top = stack.length ? stack[stack.length - 1] : null;
-    if (closing) {
-      if (name === "table" && stack.length) {
-        const t = stack.pop();
-        done[t.table] = { table: t.table, rows: t.rows, cols: t.cols > 0 ? t.cols : null };
-      }
-      continue;
-    }
-    if (name === "table") {
-      if (selfClosed) done[next] = { table: next++, rows: 0, cols: null };
-      else stack.push({ table: next++, rows: 0, cols: 0 });
-      continue;
-    }
-    if (!top) continue;
-    const attrs = m[2] && m[2].includes("=") ? attrsOf4(m[2]) : {};
-    if (name === "table-column") top.cols += rep(attrs["number-columns-repeated"]);
-    else if (name === "table-row") top.rows += rep(attrs["number-rows-repeated"]);
-  }
-  while (stack.length) {
-    const t = stack.pop();
-    done[t.table] = { table: t.table, rows: t.rows || null, cols: t.cols > 0 ? t.cols : null };
-  }
-  return done.filter(Boolean);
-}
-function odtText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
-  }
-  if (parts.guard) {
-    return {
-      ok: true,
-      container: "odt",
-      document: null,
-      paragraphs: [],
-      tables: null,
-      undetermined: [parts.guard],
-      // the marker VERBATIM, never a truncation
-      counts: { chars: 0, undetermined: 1 }
-    };
-  }
-  const body = officeBody(parts.contentXml, "text");
-  if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
-    return {
-      ok: true,
-      container: "odt",
-      document: null,
-      paragraphs: [],
-      tables: null,
-      undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_text_body" }],
-      counts: { chars: 0, undetermined: 1 }
-    };
-  }
-  const walk = walkTextBody(body);
-  const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `\xB6${p.para + 1}`, text: p.text }));
-  const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
-  const tables = walkOdfTables(stripElement(body, "tracked-changes")).map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
-  return {
-    ok: true,
-    container: "odt",
-    document,
-    paragraphs,
-    tables,
-    undetermined: [],
-    counts: { chars: document.length, undetermined: 0 }
-  };
-}
-function columnName(i) {
-  let n = i, out = "";
-  do {
-    out = String.fromCharCode(65 + n % 26) + out;
-    n = Math.floor(n / 26) - 1;
-  } while (n >= 0);
-  return out;
-}
-function walkSheet(tableXml) {
-  const rows = [];
-  const hiddenRows = [];
-  const hiddenCols = [];
-  let colIndex = 0;
-  for (const col of elementsNested(tableXml, "table-column")) {
-    const rep = parseInt(col.attrs["number-columns-repeated"] ?? "1", 10);
-    const n = Number.isFinite(rep) && rep > 0 ? rep : 1;
-    const vis = col.attrs.visibility;
-    if (vis === "collapse" || vis === "filter") {
-      hiddenCols.push({ min: colIndex + 1, max: colIndex + n, visibility: vis });
-    }
-    colIndex += n;
-  }
-  let rowIndex = 0;
-  for (const row of elementsNested(tableXml, "table-row")) {
-    const rep = parseInt(row.attrs["number-rows-repeated"] ?? "1", 10);
-    const nRows = Number.isFinite(rep) && rep > 0 ? rep : 1;
-    const vis = row.attrs.visibility;
-    const cells = [];
-    let c = 0;
-    for (const cell of elementsNested(row.inner, "table-cell")) {
-      const crep = parseInt(cell.attrs["number-columns-repeated"] ?? "1", 10);
-      const nCols = Number.isFinite(crep) && crep > 0 ? crep : 1;
-      const carries = cell.attrs["value-type"] != null || cell.attrs.formula != null || cell.inner.trim() !== "";
-      const emit = carries ? nCols : 0;
-      for (let k = 0; k < emit; k++) {
-        cells.push({
-          col: c + k,
-          cell: `${columnName(c + k)}${rowIndex + 1}`,
-          valueType: cell.attrs["value-type"] ?? null,
-          value: cell.attrs.value ?? cell.attrs["string-value"] ?? cell.attrs["date-value"] ?? cell.attrs["time-value"] ?? cell.attrs["boolean-value"] ?? null,
-          formula: cell.attrs.formula ?? null,
-          /* The DISPLAYED form: ODF writes what the sheet shows as the cell's
-             `<text:p>` children, which is the analogue of xlsx's cached <v>. */
-          display: elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n"),
-          hrefs: hrefsIn(cell.inner)
-        });
-      }
-      c += nCols;
-    }
-    const materialise = cells.length ? nRows : 0;
-    for (let k = 0; k < materialise; k++) {
-      const r = rowIndex + k;
-      if (vis === "collapse" || vis === "filter") hiddenRows.push(r + 1);
-      rows.push({
-        r: r + 1,
-        hidden: vis === "collapse" || vis === "filter" ? vis : false,
-        cells: cells.map((cell) => ({ ...cell, cell: `${columnName(cell.col)}${r + 1}` }))
-      });
-    }
-    if (!materialise && (vis === "collapse" || vis === "filter")) {
-      for (let k = 0; k < nRows; k++) hiddenRows.push(rowIndex + k + 1);
-    }
-    rowIndex += nRows;
-  }
-  return { rows, hiddenRows, hiddenCols };
-}
-function sheetsOf(bodyXml, styles) {
-  return elementsNested(bodyXml, "table").map((tbl, index) => {
-    const styleName = tbl.attrs["style-name"] ?? null;
-    const fromElement = tbl.attrs.display != null ? tbl.attrs.display !== "false" : null;
-    const fromStyle = styleName != null && styles.tableDisplay.has(styleName) ? styles.tableDisplay.get(styleName) : null;
-    const displayed = fromElement ?? fromStyle ?? true;
-    return {
-      index,
-      name: tbl.attrs.name ?? `table${index + 1}`,
-      /* ODF identifies a table by NAME only — there is no numeric sheet id.
-         null is the FORMAT speaking, not a gap in this reader. */
-      sheetId: null,
-      /* ODF's visibility is a boolean, so there is no xlsx "veryHidden". */
-      state: displayed ? "visible" : "hidden",
-      hidden: displayed ? false : "hidden",
-      xml: tbl.inner
-    };
-  });
-}
-function odsStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
-  }
-  const notes = [NO_INTRA_NOTE];
-  const links = [];
-  const items = [];
-  const body = officeBody(parts.contentXml, "spreadsheet");
-  if (!body) {
-    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:spreadsheet>: element references unavailable (stated)");
-  }
-  if (parts.guard) notes.push("text_parts_over_bound");
-  const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
-  const sheets = body ? sheetsOf(body, styles) : [];
-  for (const sheet of sheets) {
-    const walked = walkSheet(sheet.xml);
-    for (const row of walked.rows) {
-      for (const cell of row.cells) {
-        const ref = sheetCellRef(sheet.name, cell.cell);
-        for (const href of cell.hrefs) links.push(linkRecord(href, ref));
-        if (cell.formula != null) {
-          items.push({
-            kind: "formula",
-            source: ref,
-            formula: cell.formula,
-            value: cell.display !== "" ? cell.display : cell.value
-            // the cached result; null when the file carries none
-          });
-        }
-      }
-    }
-    if (walked.hiddenRows.length) {
-      items.push({
-        kind: "hidden-rows",
-        sheet: sheet.name,
-        rows: walked.hiddenRows,
-        count: walked.hiddenRows.length,
-        source: null
-      });
-    }
-    if (walked.hiddenCols.length) {
-      items.push({
-        kind: "hidden-cols",
-        sheet: sheet.name,
-        cols: walked.hiddenCols,
-        count: walked.hiddenCols.length,
-        source: null
-      });
-    }
-  }
-  for (const sheet of sheets) {
-    if (sheet.hidden) items.push({ kind: "hidden-sheet", sheet: sheet.name, state: sheet.state, source: null });
-  }
-  return {
-    ok: true,
-    container: "ods",
-    sheets: sheets.map((s) => ({ sheet: s.index, name: s.name, sheetId: s.sheetId, state: s.state, hidden: s.hidden })),
-    links,
-    counts: countPartitions(links),
-    evidentiary: envelopeOf("ods", items, envelopeUndetermined(parts)),
-    notes
-  };
-}
-function odsText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
-  }
-  if (parts.guard) {
-    return {
-      ok: true,
-      container: "ods",
-      document: null,
-      sheets: [],
-      undetermined: [parts.guard],
-      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
-    };
-  }
-  const body = officeBody(parts.contentXml, "spreadsheet");
-  if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
-    const marker = { sheet: null, cell: null, reason: stated?.why ?? "no_office_spreadsheet_body" };
-    return {
-      ok: true,
-      container: "ods",
-      document: null,
-      sheets: [],
-      undetermined: [marker],
-      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
-    };
-  }
-  const styles = automaticStyles(parts.contentXml);
-  const outSheets = [];
-  let cellCount = 0, formulaCount = 0;
-  for (const sheet of sheetsOf(body, styles)) {
-    const walked = walkSheet(sheet.xml);
-    const lines = [];
-    for (const row of walked.rows) {
-      const vals = [];
-      for (const c of row.cells) {
-        if (c.formula != null) formulaCount++;
-        const v = c.display !== "" ? c.display : c.value;
-        if (v == null || v === "") continue;
-        cellCount++;
-        vals.push(v);
-      }
-      if (vals.length) lines.push(vals.join("	"));
-    }
-    const text = lines.join("\n");
-    let usedRows = 0, usedCols = 0;
-    for (const row of walked.rows) {
-      if (!row.cells.length) continue;
-      if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
-      for (const c of row.cells) {
-        if (Number.isInteger(c.col) && c.col + 1 > usedCols) usedCols = c.col + 1;
-      }
-    }
-    outSheets.push({
-      sheet: sheet.index,
-      name: sheet.name,
-      hidden: sheet.hidden,
-      rows: null,
-      cols: null,
-      usedRows,
-      usedCols,
-      /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
-      range: usedSheetRange(sheet.name, usedRows, usedCols),
-      text,
-      undetermined: []
-    });
-  }
-  const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
-  return {
-    ok: true,
-    container: "ods",
-    document,
-    sheets: outSheets,
-    undetermined: [],
-    counts: { chars: document.length, cells: cellCount, formulas: formulaCount, undetermined: 0 }
-  };
-}
-var ODP_SHAPE_TAGS = /* @__PURE__ */ new Set([
-  "frame",
-  "custom-shape",
-  "rect",
-  "ellipse",
-  "circle",
-  "line",
-  "polyline",
-  "polygon",
-  "path",
-  "connector",
-  "measure",
-  "caption",
-  "g",
-  "page-thumbnail",
-  "control",
-  "object",
-  "image"
-]);
-function walkPage(pageXml) {
-  const slideOnly = stripElement(pageXml, "notes");
-  const shapes = [];
-  const RE = tokens();
-  let m;
-  let index = -1;
-  const open = [];
-  while ((m = RE.exec(slideOnly)) !== null) {
-    if (m[1] === void 0) continue;
-    const name = localOf3(m[1]);
-    if (!ODP_SHAPE_TAGS.has(name)) continue;
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    if (closing) {
-      const o = open.pop();
-      if (o) shapes.push({ shape: o.index, inner: slideOnly.slice(o.start, m.index) });
-      continue;
-    }
-    index++;
-    if (selfClosed) {
-      shapes.push({ shape: index, inner: "" });
-      continue;
-    }
-    open.push({ index, start: RE.lastIndex });
-  }
-  shapes.sort((a, b) => a.shape - b.shape);
-  return {
-    count: index + 1,
-    shapes: shapes.map((s) => ({
-      shape: s.shape,
-      /* A group's text is the text of the shapes inside it, which are their
-         own entries; taking the group's inner markup would double-count it in
-         the slide's text, so a shape's OWN text is its `<draw:text-box>`
-         paragraphs only. */
-      text: elementsNested(s.inner, "text-box").map((tb) => elementsNested(tb.inner, "p").map((p) => visibleText(p.inner)).join("\n")).join("\n"),
-      hrefs: hrefsIn(s.inner)
-    }))
-  };
-}
-function notesTextOf(pageXml) {
-  const notes = elementsNested(pageXml, "notes")[0];
-  if (!notes) return null;
-  return elementsNested(notes.inner, "text-box").map((tb) => elementsNested(tb.inner, "p").map((p) => visibleText(p.inner)).join("\n")).filter((t) => t.length).join("\n");
-}
-function deckOf2(bodyXml, styles) {
-  return elementsNested(bodyXml, "page").map((page, i) => {
-    const styleName = page.attrs["style-name"] ?? null;
-    const fromElement = page.attrs.visibility != null ? page.attrs.visibility !== "hidden" : null;
-    const fromStyle = styleName != null && styles.pageVisible.has(styleName) ? styles.pageVisible.get(styleName) : null;
-    const visible = fromElement ?? fromStyle ?? true;
-    return { slide: i + 1, name: page.attrs.name ?? null, hidden: !visible, xml: page.inner };
-  });
-}
-function odpStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
-  }
-  const notes = [NO_INTRA_NOTE];
-  const links = [];
-  const items = [];
-  const body = officeBody(parts.contentXml, "presentation");
-  if (!body) {
-    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:presentation>: element references unavailable (stated)");
-  }
-  const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
-  const deck = body ? deckOf2(body, styles) : null;
-  if (deck) {
-    for (const page of deck) {
-      const walked = walkPage(page.xml);
-      for (const s of walked.shapes) {
-        for (const href of s.hrefs) links.push(linkRecord(href, slideShapeRef(page.slide, s.shape)));
-      }
-      const nt = notesTextOf(page.xml);
-      if (nt != null && nt.length) {
-        items.push({
-          kind: "speaker-notes",
-          slide: page.slide,
-          part: CONTENT_PART,
-          text: nt,
-          source: slideShapeRef(page.slide)
-        });
-      }
-      if (page.hidden) {
-        items.push({
-          kind: "hidden-slide",
-          slide: page.slide,
-          part: CONTENT_PART,
-          source: slideShapeRef(page.slide)
-        });
-      }
-    }
-  }
-  return {
-    ok: true,
-    container: "odp",
-    slides: deck ? deck.length : null,
-    // null = honestly unknown
-    links,
-    counts: countPartitions(links),
-    evidentiary: envelopeOf("odp", items, envelopeUndetermined(parts)),
-    notes
-  };
-}
-function odpText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
-  }
-  if (parts.guard) {
-    return {
-      ok: true,
-      container: "odp",
-      document: null,
-      slides: [],
-      speakerNotes: [],
-      deckLength: null,
-      undetermined: [parts.guard],
-      counts: { chars: 0, notesChars: 0, undetermined: 1 }
-    };
-  }
-  const body = officeBody(parts.contentXml, "presentation");
-  if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
-    return {
-      ok: true,
-      container: "odp",
-      document: null,
-      slides: [],
-      speakerNotes: [],
-      deckLength: null,
-      undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_presentation_body" }],
-      counts: { chars: 0, notesChars: 0, undetermined: 1 }
-    };
-  }
-  const styles = automaticStyles(parts.contentXml);
-  const slides = [];
-  const speakerNotes = [];
-  const deck = deckOf2(body, styles);
-  for (const page of deck) {
-    const walked = walkPage(page.xml);
-    const text = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
-    slides.push({
-      slide: page.slide,
-      ref: `slide ${page.slide}`,
-      part: CONTENT_PART,
-      hidden: page.hidden,
-      shapes: walked.count,
-      text
-    });
-    const nt = notesTextOf(page.xml);
-    if (nt != null && nt.length) {
-      speakerNotes.push({
-        slide: page.slide,
-        ref: `slide ${page.slide} (notes)`,
-        part: CONTENT_PART,
-        hidden: page.hidden,
-        text: nt
-      });
-    }
-  }
-  const document = slides.map((s) => s.text).filter((t) => t.length).join("\n");
-  const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
-  return {
-    ok: true,
-    container: "odp",
-    document,
-    slides,
-    speakerNotes,
-    /* COFF-13 — THE DECK'S OWN LENGTH, on pptx.mjs's key. Every `<draw:page>`
-       lives in the one content.xml, so once the body is read no slide can be
-       unreadable on its own and the length EQUALS the slide list — emitted
-       anyway, so the wire reads one key from every deck entry rather than
-       inferring it from which entry answered. */
-    deckLength: deck.length,
-    undetermined: [],
-    counts: { chars: document.length, notesChars, undetermined: 0 }
-  };
-}
-function entryFor(row, structureOf, textOf2) {
-  return {
-    format: row.flavour,
-    detect: (bytes, contentType) => detectOdf(row, bytes, contentType),
-    parts: (bytes) => odfParts(row, bytes),
-    /* Accept either parts() output or raw bytes, exactly as the three OOXML
-       entries do, so detect→structure works uniformly at the registry seam
-       while a caller that already paid for parts() does not pay twice. */
-    structure: async (partsOrBytes) => structureOf(
-      partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes
-    ),
-    /* FW-19 / IC-124: `images` under the package's `Pictures/` directory,
-       exhaustive or NULL, through the one enumerator the OOXML entries use.
-       Read off the central directory, so it does NOT depend on
-       META-INF/manifest.xml — the `outside_content_xml_not_read` marker about
-       the manifest stays TRUE and stays emitted: it speaks about `intra`
-       embedded objects, which this does not content-address. */
-    text: async (partsOrBytes) => {
-      const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes;
-      return withContainerImages(textOf2(parts), parts, "Pictures/");
-    }
-  };
-}
-var odtEntry = entryFor(ODT_ROW, odtStructure, odtText);
-var odsEntry = entryFor(ODS_ROW, odsStructure, odsText);
-var odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
 
 // src/formats.mjs
 var REGISTRY = /* @__PURE__ */ new Map();
@@ -29698,6 +30098,12 @@ var Store = class _Store extends DurableObject {
          invented. NULL reads back as `not recorded`, stated, through `#statusBy`. */
       ["members", "status_by", "TEXT"],
       ["signers", "status_by", "TEXT"],
+      /* REC-184 (framework §8.2, D-128's follow-on): the progression definition version a proposal
+         disposition was decided against. NULLABLE AND NEVER BACK-FILLED: a decision taken before this
+         column existed recorded no version, and the one value a backfill could reach for is the
+         CURRENT version — the very claim the column exists to test. NULL reads back `not recorded`,
+         stated by `#dispositionVersionView`. */
+      ["proposal_dispositions", "definition_version", "INTEGER"],
       /* REC-193 (BIO_Publication_v0_1.md §3 rule 13, BOB #32): WHO WROTE THE EXCLUSION STATEMENT'S CURRENT
          BYTES — the SERVER's stamp of the editor whose `op=casedraft` last CHANGED the statement text, never
          the caller's word and never the last editor of another field. NULLABLE AND NEVER BACK-FILLED, D-85's
@@ -29942,7 +30348,7 @@ var Store = class _Store extends DurableObject {
       return b && typeof b === "object" && !Array.isArray(b) ? b[key] : void 0;
     };
     const bool = (v) => v === true ? 1 : v === false ? 0 : null;
-    const num = (v) => typeof v === "number" && Number.isFinite(v) ? v : null;
+    const num2 = (v) => typeof v === "number" && Number.isFinite(v) ? v : null;
     const rp = fm.reeval_pending;
     const rpObj = rp && typeof rp === "object" && !Array.isArray(rp);
     return {
@@ -29957,14 +30363,14 @@ var Store = class _Store extends DurableObject {
       monitor_enabled: bool(nested("monitoring", "enabled")),
       monitor_frequency: s(nested("monitoring", "frequency")),
       monitor_last_checked: s(nested("monitoring", "last_checked")),
-      annotations_open: num(fm.annotations_open),
+      annotations_open: num2(fm.annotations_open),
       reeval_flag: rpObj ? bool(rp.flag) : bool(rp),
       reeval_since: rpObj ? s(rp.since) : null,
       reeval_source: rpObj ? s(rp.source) : null,
       /* REC-24 (e). Only an ACTION projects these; every other type leaves them
          NULL, which is what "this bundle is not an action" says in a column. */
       action_kind: fm.object_type === "action" ? s(fm.action_kind) : null,
-      action_risk_tier: fm.object_type === "action" ? num(fm.risk_tier) : null,
+      action_risk_tier: fm.object_type === "action" ? num2(fm.risk_tier) : null,
       action_counterparty_state: fm.object_type === "action" ? s(nested("counterparty", "state")) : null,
       action_resolution: fm.object_type === "action" ? s(fm.resolution) : null,
       action_clock_next: fm.object_type === "action" ? _Store.actionClockNext(fm) : null,
@@ -30923,10 +31329,20 @@ var Store = class _Store extends DurableObject {
          gated with it (REC-25: a total bigger than the pages says something is
          hidden). `indexed` counts INDEX rows, which is the substrate side of the
          parity this op exists to check and the number the orphan finding is read
-         against — a count that names nothing is not identity. */
+         against — a count that names nothing is not identity.
+         CORRECTED 2026-09-24 BY D-464, and the old sentence was half right: an ORPHAN names nothing, but a row a
+         bundle CLAIMS is that bundle's, and `indexed` over the whole index moved when a project the caller cannot
+         see was created (MEASUREMENTS M-122). So `indexed` drops the rows a bundle the gate does NOT pass claims —
+         the complement of the same gate, interpolated — and keeps every orphan: parity is still `indexed` against
+         `keyed` plus the orphans, now over what the caller can see. An unfiltered credential's answer is unchanged. */
       counts: {
         bundles: this.#one(`SELECT count(*) c FROM bundles b WHERE (${gate.sql})`, ...gate.args).c,
-        indexed: this.#one(`SELECT count(*) c FROM bundles_fts`).c,
+        indexed: this.#one(
+          `SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
+                                      (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN
+                                        (SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql})))`,
+          ...gate.args
+        ).c,
         keyed: this.#one(
           `SELECT count(*) c FROM bundles b WHERE b.fts_id IS NOT NULL AND (${gate.sql})`,
           ...gate.args
@@ -32150,7 +32566,7 @@ var Store = class _Store extends DurableObject {
       gate: { applied: tally.applied }
     };
   }
-  selectionList({ owner = null } = {}) {
+  selectionList({ owner = null, viewer } = {}) {
     this.#sweepSelections();
     if (!owner) return { ok: false, reason: "NO_OWNER" };
     return {
@@ -32161,7 +32577,19 @@ var Store = class _Store extends DurableObject {
         owner
       ),
       caps: { maxItems: _Store.SELECTION_MAX_ITEMS, maxPerOwner: _Store.SELECTION_MAX_PER_OWNER },
-      bytes: this.#one(`SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items`).b
+      /* D-464: the instance's selection bytes, and a row naming a bundle the caller cannot see is not in them —
+         another member's selection of a project this caller was never invited to moved this figure by that id's
+         length (§7.9). The complement of the one gate, as `#counts` takes it; `viewer === undefined` is a direct
+         internal call and stays whole. The rest stays instance-wide: other members' selections of what this caller
+         CAN see are not ruled private. */
+      bytes: (() => {
+        const g = viewer === void 0 ? null : viewerPredicate(viewer);
+        const hide = g && g.scope !== "member";
+        return this.#one(
+          `SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items` + (hide ? ` WHERE bundle_id NOT IN (SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${g.sql}))` : ""),
+          ...hide ? g.args : []
+        ).b;
+      })()
     };
   }
   selectionRelease({ handle = null, owner = null } = {}) {
@@ -43800,6 +44228,20 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       const isAction = normalizeType(meta.object_type) === "action";
       if (isAction && docFmW && !pkg.replay) {
+        const nextTier = riskTierState(docFmW.risk_tier);
+        const heldTierMd = cur ? this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId) : null;
+        const heldTierFm = heldTierMd && typeof heldTierMd.content === "string" ? parseFrontmatter(heldTierMd.content).data : null;
+        const heldTier = riskTierState(heldTierFm && typeof heldTierFm === "object" ? heldTierFm.risk_tier : void 0);
+        const tierWho = String(author ?? "").trim();
+        const heldTierSet = heldTier === 1 || heldTier === 2 || heldTier === 3;
+        if ((!tierWho || isMachineIdentity(tierWho)) && (nextTier === 1 || nextTier === 2 || nextTier === 3 || heldTierSet) && nextTier !== heldTier)
+          return {
+            ok: false,
+            reason: "MACHINE_CANNOT_SET_RISK_TIER",
+            risk_tier: nextTier,
+            held: cur ? heldTier : null,
+            detail: (cur ? `this revision states risk_tier ${nextTier} where the version it replaces states ${heldTier}.` : `this creation states risk_tier ${nextTier}.`) + ` A risk tier is a member's assessment of the legal exposure of filing this action, and only a member's authored act sets 1, 2 or 3. A machine credential may carry a member's tier forward unchanged, and may leave the tier unstated (undetermined) only where no member has set one; it may not remove a member's tier. Nothing was written.`
+          };
         const af = [];
         actionBasisFindings(docFmW, af);
         const aerrs = af.filter((x) => x.severity === "error");
@@ -50338,7 +50780,20 @@ ${words}`;
      resolutions. With a `ref`, resolve just that reference; without one, resolve every
      reference the document's reading carries. A reference matching no entity is returned
      UNRESOLVED and honestly so -- there is no row, no force-match. */
-  async resolveReferences({ captureSha, ref = null, resolvedBy = null } = {}) {
+  async resolveReferences({ captureSha, ref = null, resolvedBy = null, items } = {}) {
+    if (items !== void 0) {
+      const set = this.#perItem("resolve", { items, ref }, { resolvedBy }, (b) => this.#resolveOne(b));
+      if ((set.items || []).some((o) => o.outcome === "applied" && (o.resolved || []).some((m) => !m.kept)))
+        await this.#armConnectionDerive();
+      return set;
+    }
+    const one = this.#resolveOne({ captureSha, ref, resolvedBy });
+    if (one.ok && one.resolved.some((m) => !m.kept)) await this.#armConnectionDerive();
+    return one;
+  }
+  /* D-291: op=resolve's ONE-DOCUMENT act, synchronous, shared by the single form and every item of the set
+     form. Moved out of `resolveReferences` unchanged but for the sweep, which its caller arms. */
+  #resolveOne({ captureSha, ref = null, resolvedBy = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return { ok: false, reason: "NO_SHA", detail: "a resolution is over a captured document, named by its capture sha256" };
     let refs;
@@ -50388,7 +50843,6 @@ ${words}`;
         for (const m of matches) resolved.push(m);
       }
     });
-    if (resolved.some((m) => !m.kept)) await this.#armConnectionDerive();
     return {
       ok: true,
       capture_sha: captureSha,
@@ -51466,6 +51920,65 @@ ${words}`;
         s.required
       );
   }
+  /* REC-184: the CURRENT version's NUMBER and the instant it came to stand, and nothing else -- the
+     light read #assembleInstance, op=proposedispose and op=proposals share, so which version is
+     current has ONE answer on the read and on the act. `at` is progression_defs.at, which every
+     declaration writes: a D-128 revision and, before D-128, every overwriting re-declaration
+     (`ON CONFLICT … DO UPDATE SET … at=excluded.at`), so it is the time the definition an instance
+     is read against was declared. null if the progression was never declared. */
+  #definitionVersionOf(key) {
+    const def = this.#one(`SELECT at FROM progression_defs WHERE progression_key=?`, key);
+    if (!def) return null;
+    const v = this.#one(
+      `SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`,
+      key
+    );
+    return { version: v && v.v != null ? v.v : 1, at: def.at ?? null };
+  }
+  /* REC-184: does a recorded proposal disposition GOVERN the definition an instance is read against
+     today? A decision is a member's judgment of the proposal a definition produced, so it applies to
+     the version it was taken against and to no later one (framework §8.2: a finding names the
+     version it was read against, and the decision about it does too). Four answers, each stated:
+       - recorded and equal to the current version      -> applies;
+       - recorded and earlier (the definition was revised since) -> does NOT apply: the proposal is
+         open again and the decision is published beside it, aged, never deleted (D-79);
+       - NOT RECORDED (a row written before this column) and the definition has not been declared
+         since the decision was taken -> applies: whatever version it was, it is still the current
+         one, because no declaration has happened in between. The version number stays unknown;
+       - NOT RECORDED and the definition was declared after it, or either instant is missing or
+         they are the same instant ->
+         does NOT apply: the decision may have judged a definition that no longer stands, and
+         applying it would be the record claiming a judgment nobody made. Resurfacing is the
+         direction that asks again rather than asserts.
+     Never back-fills the row: this is a read, and `definition_version` stays null on the record. */
+  static #dispositionVersionView(d, cur) {
+    const recorded = d.definition_version != null;
+    const current = cur ? cur.version : null;
+    let applies, because;
+    if (!cur) {
+      applies = false;
+      because = "definition_not_declared";
+    } else if (recorded) {
+      applies = Number(d.definition_version) === current;
+      because = applies ? "decided_against_current_version" : "decided_against_earlier_version";
+    } else if (cur.at == null || d.at == null || String(cur.at) === String(d.at)) {
+      applies = false;
+      because = "version_not_recorded_order_undetermined";
+    } else if (String(cur.at) > String(d.at)) {
+      applies = false;
+      because = "version_not_recorded_definition_declared_since";
+    } else {
+      applies = true;
+      because = "version_not_recorded_definition_not_declared_since";
+    }
+    return {
+      definition_version: recorded ? Number(d.definition_version) : null,
+      definition_version_state: recorded ? "recorded" : "not recorded",
+      current_definition_version: current,
+      applies,
+      applies_because: because
+    };
+  }
   /* D-128: the CURRENT version of a definition -- the one every instance and finding is derived
      against -- with its number. A definition with no version rows was declared before D-128 and
      reads as version 1, its basis not recorded (version_recorded:false). null if never declared. */
@@ -51833,11 +52346,7 @@ ${words}`;
       defined: false,
       detail: "no such progression definition (define it first, op=progressiondefine)"
     };
-    const vrow = this.#one(
-      `SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`,
-      progressionKey
-    );
-    const definitionVersion = vrow && vrow.v != null ? vrow.v : 1;
+    const definitionVersion = this.#definitionVersionOf(progressionKey).version;
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     const stageDefs = this.#rows(
       `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
@@ -52434,12 +52943,19 @@ ${words}`;
        as a second finding kind are DEFERRED as a follow-on (missing-predecessors only here). */
   proposalsFeed(nowMs) {
     const now = this.#nowMs(nowMs);
-    const disposed = /* @__PURE__ */ new Map();
+    const recorded = /* @__PURE__ */ new Map();
+    const curOf = /* @__PURE__ */ new Map();
     for (const d of this.#rows(
-      `SELECT progression_key, stage_key, state, reason, decided_by, at
+      `SELECT progression_key, stage_key, state, reason, decided_by, at, definition_version
          FROM proposal_dispositions`
-    ))
-      disposed.set(d.progression_key + "::" + d.stage_key, d);
+    )) {
+      if (!curOf.has(d.progression_key)) curOf.set(d.progression_key, this.#definitionVersionOf(d.progression_key));
+      recorded.set(
+        d.progression_key + "::" + d.stage_key,
+        { ...d, ..._Store.#dispositionVersionView(d, curOf.get(d.progression_key)) }
+      );
+    }
+    const disposed = new Map([...recorded].filter(([, d]) => d.applies));
     const pairs = this.#rows(
       `SELECT DISTINCT progression_key, entity_id FROM progression_instances
          ORDER BY progression_key, entity_id`
@@ -52469,6 +52985,7 @@ ${words}`;
         const key = inst.progression_key + "::" + f2.stage_key;
         let g = groups.get(key);
         if (!g) {
+          const prior = recorded.get(key) || null;
           g = {
             key,
             progression_key: inst.progression_key,
@@ -52479,7 +52996,17 @@ ${words}`;
             definition_version: inst.definition_version,
             surfaced_by: "machine",
             overdue_count: 0,
-            instances: []
+            instances: [],
+            prior_disposition: prior ? {
+              state: prior.state,
+              reason: prior.reason,
+              decided_by: prior.decided_by,
+              at: prior.at,
+              definition_version: prior.definition_version,
+              definition_version_state: prior.definition_version_state,
+              applies: false,
+              applies_because: prior.applies_because
+            } : null
           };
           groups.set(key, g);
         }
@@ -52508,14 +53035,21 @@ ${words}`;
       proposals.push(g);
     }
     proposals.sort((a, b) => b.n - a.n || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
-    const dispositions = [...disposed.values()].map((d) => ({
+    const dispositions = [...recorded.values()].map((d) => ({
       key: d.progression_key + "::" + d.stage_key,
       progression_key: d.progression_key,
       stage_key: d.stage_key,
       state: d.state,
       reason: d.reason,
       decided_by: d.decided_by,
-      at: d.at
+      at: d.at,
+      /* REC-184: which definition the decision judged, and whether it governs the
+         one in force — a row written before the column reads `not recorded`. */
+      definition_version: d.definition_version,
+      definition_version_state: d.definition_version_state,
+      current_definition_version: d.current_definition_version,
+      applies: d.applies,
+      applies_because: d.applies_because
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
@@ -54584,7 +55118,13 @@ ${words}`;
         state: d.state,
         reason: d.reason,
         decided_by: d.decided_by,
-        at: d.at
+        at: d.at,
+        /* REC-184: the definition version the decision judged, and whether it still ages the
+           finding — false once the definition is revised, when the finding is an OPEN item again. */
+        definition_version: d.definition_version,
+        definition_version_state: d.definition_version_state,
+        applies: d.applies,
+        applies_because: d.applies_because
       })),
       ...scopedDisposed
     ];
@@ -55246,17 +55786,20 @@ ${words}`;
       detail: `'${sk}' is not a stage of progression '${pk}' \u2014 a disposition must name a real stage`
     };
     const at = (/* @__PURE__ */ new Date()).toISOString();
+    const definitionVersion = this.#definitionVersionOf(pk).version;
     this.sql.exec(
-      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at)
-       VALUES (?,?,?,?,?,?)
+      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at,definition_version)
+       VALUES (?,?,?,?,?,?,?)
        ON CONFLICT(progression_key,stage_key) DO UPDATE SET
-         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at`,
+         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at,
+         definition_version=excluded.definition_version`,
       pk,
       sk,
       st,
       why.slice(0, _Store.EDGE_REASON_MAX),
       by.slice(0, 200),
-      at
+      at,
+      definitionVersion
     );
     return {
       ok: true,
@@ -55268,7 +55811,8 @@ ${words}`;
       reason: why,
       decided_by: by,
       at,
-      bundle: null
+      bundle: null,
+      definition_version: definitionVersion
     };
   }
   /* ---- coordination: what LockService and the nextSeq race did ---- */
@@ -55496,23 +56040,100 @@ ${words}`;
    *  `capacity=` is overwritten, never honoured. An absent stamp is `false` — a door that forgets
    *  to stamp loses `dbBytes` rather than leaking it. It is a stamp and not a second method
    *  because it must ride the one DO route every door already fetches. */
-  stats({ capacity = false } = {}) {
-    return this.#counts({ proof: false, capacity: capacity === true });
+  stats({ capacity = false, viewer } = {}) {
+    return this.#counts({ proof: false, capacity: capacity === true, viewer });
+  }
+  /** D-486 — THE ONE PREDICATE THAT WITHHOLDS A HIDDEN PROJECT'S RUN ATTRIBUTION, AND THE ONE PLACE
+   *  THE THREE SETS ARE SPELLED. Five readers take it (`#counts`' `aiRunLog` and
+   *  `observationsNonLead`, and the document, content and meaning frontier tallies), because a rule
+   *  with five spellings is the mirror-and-drift class this file refuses for gates.
+   *
+   *  **RULED BY BOB #32, 2026-09-24 02:30Z, on the question D-464 routed rather than decided**
+   *  (`BIO_Membership_Architecture_v2.md` §7 item 7.9; `OBSERVATION-LOG-DESIGN.md` §6): *a hidden
+   *  project's run output is the PROJECT'S THINKING until something outside uses it; the bytes stay
+   *  shared, only the run's ATTRIBUTION is withheld.* So nothing here touches the evidence — a
+   *  capture, a content row, a reading a hidden project's run produced stays in every corpus count
+   *  it was ever in. What leaves an outsider's tallies is the LOG ROW that says a run happened, and
+   *  it leaves because that row is §7.9's *"not its existence"* arriving as an aggregate: a member
+   *  diffing `op=stats` or `op=frontier` across a colleague's work learned that a project they were
+   *  never invited to had RUN.
+   *
+   *  THE PREDICATE IS A SET SUBTRACTION AND DELIBERATELY NOT A RESOLVER, which is what makes it
+   *  admissible where REC-110 (D-386) refused gating these tallies. That ruling's premise (2) is
+   *  that `observation_log` has no bundle column, so a bundle gate here would be the SECOND
+   *  implementation of `#observationBundles` REC-92 refused; its premise (3) is that applying that
+   *  resolver per row is `derivation-bounds.test.mjs`'s amplification class. Neither is touched:
+   *  this reads ONE indexed set of run ids (`observation_log_authority` is `(authority_kind,
+   *  authority, seq)`) and subtracts it, with no per-row work and no second resolver. Premise (1) —
+   *  *`op=stats` answers the same question to the same audience through a door of identical width* —
+   *  is KEPT TRUE BY MOVING BOTH DOORS IN ONE LANDING rather than by leaving the tallies whole; that
+   *  is why D-486's row says *all five readers together*, and why gating four of them would have
+   *  been the documented hole the premise warns about. Premise (4) is untouched: the field still
+   *  counts every row at its level rather than this page's states.
+   *
+   *  WHO IS FILTERED IS THE GATE'S WORD (D-464's sentence, inherited rather than restated): a
+   *  credential `viewerPredicate` does not filter — scope `member`, the four token classes and an
+   *  organisation `ai` key — and an enrolled administrator's session get `null` here, i.e. exactly
+   *  the count they always got. A viewer SENT but unrecognised is DENY, so every project is hidden
+   *  and every project-context run's rows drop: FAILS CLOSED.
+   *
+   *  THE NEVER-SENT STAMP IS THE CALLER'S CONVENTION AND NOT THIS METHOD'S, and the two callers
+   *  differ ON PURPOSE rather than by omission. `#counts` passes `viewer` straight through, so a
+   *  direct INTERNAL call (`undefined`: the DO route passes the parameter only when present) stays
+   *  WHOLE — purge's proof and the store-level suites, D-464's correction. `frontier()` defaults
+   *  `viewer` to `null`, which compiles DENY, so an ABSENT control-plane stamp sees no run at all —
+   *  `#frontierDocumentVisible`'s posture one method away (*a missing stamp is an outage and never a
+   *  leak*), and `index.mjs` stamps `op=frontier` for exactly that reason. */
+  #hiddenSets(viewer) {
+    const gate = viewer === void 0 ? null : viewerPredicate(viewer);
+    const hid = gate && gate.scope !== "member" ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args } : null;
+    const hidRuns = hid && {
+      sql: `(SELECT run FROM ai_runs WHERE context_type = 'project' AND context_id IN ${hid.sql})`,
+      args: hid.args
+    };
+    const runRows = hidRuns && {
+      sql: `NOT (authority_kind = 'run' AND COALESCE(authority, '') IN ${hidRuns.sql})`,
+      args: hidRuns.args
+    };
+    return { gate, hid, hidRuns, runRows };
+  }
+  /** D-486's predicate as a WHERE tail, for the three frontier tallies. Returns `""` and no args when
+   *  nothing is withheld, so the unfiltered SQL is byte-identical to what it was before this landing. */
+  #hiddenRunTail(viewer) {
+    const { runRows } = this.#hiddenSets(viewer);
+    return runRows ? { sql: ` AND ${runRows.sql}`, args: runRows.args } : { sql: "", args: [] };
   }
   /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
    *  on any key but the ones the ruling names. `proof` is PRIVATE: only `purge` passes it, because
    *  its before/after ARE D-113's proof that it took what it says it took, and that proof stays
    *  WHOLE (§5: *the purge proof's own count stays whole*) — `observations` over the whole log,
    *  `leads`, and `dbBytes`, exactly as `op=purge` has always answered. No route reaches it. */
-  #counts({ proof, capacity = false }) {
-    const n = (t) => this.#one(`SELECT count(*) c FROM ${t}`).c;
+  #counts({ proof, capacity = false, viewer }) {
+    const { hid, hidRuns, runRows } = this.#hiddenSets(viewer);
+    const nx = (t, where, keys = [], runKeys = [], whereArgs = []) => {
+      const conds = where ? [where] : [], args = [...whereArgs];
+      if (hid) {
+        for (const k of keys) {
+          conds.push(`COALESCE(${k}, '') NOT IN ${hid.sql}`);
+          args.push(...hid.args);
+        }
+        for (const k of runKeys) {
+          conds.push(`COALESCE(${k}, '') NOT IN ${hidRuns.sql}`);
+          args.push(...hidRuns.args);
+        }
+      }
+      return this.#one(`SELECT count(*) c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`, ...args).c;
+    };
+    const n = (t, ...keys) => nx(t, null, keys);
+    const indexed = hid ? this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
+                     (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN ${hid.sql})`, ...hid.args).c : n("bundles_fts");
     return {
-      bundles: n("bundles"),
-      files: n("files"),
-      history: n("history"),
-      refs: n("refs"),
-      register: n("register"),
-      indexed: n("bundles_fts"),
+      bundles: n("bundles", "bundle_id"),
+      files: n("files", "bundle_id"),
+      history: n("history", "bundle_id"),
+      refs: n("refs", "bundle_id", "target_id"),
+      register: n("register", "bundle_id"),
+      indexed,
       /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX, reported for exactly the
          reason every other row on this list is -- so a purge can PROVE it took
          the rows rather than assert it.
@@ -55537,7 +56158,7 @@ ${words}`;
          * and measured to catch the same orphan plain `integrity-check` (rank 0)
          * passes over. It costs a walk of the index, which is why it belongs on
          * an admin read taken deliberately and not on a member path. */
-      textUnits: n("capture_text"),
+      textUnits: n("capture_text", "bundle_id"),
       textIndexOk: (() => {
         try {
           this.sql.exec(`INSERT INTO capture_text_fts(capture_text_fts, rank) VALUES('integrity-check', 1)`);
@@ -55546,11 +56167,19 @@ ${words}`;
           return false;
         }
       })(),
-      selections: n("selections"),
-      selectionItems: n("selection_items"),
+      /* A selection holding a bundle the caller cannot see is a count over a row they cannot read (BOB #15), so the
+         whole handle leaves `selections`; `selectionItems` drops only the hidden rows, which name the bundle. */
+      selections: hid ? nx(
+        "selections",
+        `handle NOT IN (SELECT handle FROM selection_items WHERE bundle_id IN ${hid.sql})`,
+        [],
+        [],
+        hid.args
+      ) : n("selections"),
+      selectionItems: n("selection_items", "bundle_id"),
       /* Reported so a purge can prove it took them, and so an operator can see
          inbox and reachability depth without a second call. */
-      tasks: n("tasks"),
+      tasks: n("tasks", "refers_to"),
       taskQueue: n("task_queue"),
       sourceReachability: n("source_reachability"),
       /* REC-26: the monitoring consumers' idempotence state, reported so a purge
@@ -55565,26 +56194,34 @@ ${words}`;
       entityAliases: n("entity_aliases"),
       entityRelations: n("entity_relations"),
       /* FW-7: the recogniser's resolutions, reported so a purge can PROVE it took them. */
-      resolutions: n("resolutions"),
+      resolutions: n("resolutions", "bundle_id"),
       /* REC-24: the action loop's two projections, reported so a purge can PROVE
          it cleared them (D-113) rather than assert it. */
-      actionBasis: n("action_basis"),
-      correspondence: n("correspondence"),
-      /* D-148: the fee-quote projection, counted so a purge can PROVE it took it. */
-      actionQuotes: n("action_quotes"),
+      actionBasis: n("action_basis", "bundle_id", "target_id"),
+      correspondence: n("correspondence", "bundle_id", "artifact_bundle_id"),
+      /* D-148: the fee-quote projection, counted so a purge can PROVE it took it. Its rows name the action
+         (`bundle_id`), so D-464's subtraction takes it (keyed at c19-batch10's merge of D-464). */
+      actionQuotes: n("action_quotes", "bundle_id"),
       /* FW-8: the derived connections and the member-declared progression definitions,
          reported so a whole-store purge can PROVE it cleared them (D-113). */
-      connections: n("connections"),
+      connections: n("connections", "a_bundle_id", "b_bundle_id"),
       progressionDefs: n("progression_defs"),
-      /* REC-122: the member on-point choices, so a purge can PROVE it took them (D-113). */
-      connectionPairChoices: n("connection_pair_choices"),
+      /* REC-122: the member on-point choices, so a purge can PROVE it took them (D-113). Keyed by both ends'
+         bundles, as `connections` is (D-464's subtraction, keyed at c19-batch10's merge of D-464). */
+      connectionPairChoices: n("connection_pair_choices", "a_bundle_id", "b_bundle_id"),
       progressionStages: n("progression_stages"),
+      /* REC-184: D-128's version history, counted APART from the current-version tables above —
+         a revision adds a version row and replaces the current one, so the current count alone
+         cannot tell one definition revised five times from one never revised — and so a whole-store
+         purge can PROVE it took the history (D-113). */
+      progressionDefVersions: n("progression_def_versions"),
+      progressionStageVersions: n("progression_stage_versions"),
       /* FW-9: the threaded progression instances, reported so a purge can PROVE it cleared
          them (D-113). */
-      progressionInstances: n("progression_instances"),
+      progressionInstances: n("progression_instances", "bundle_id"),
       /* FW-10: the exception documents that discharge a lawful skip, reported so a purge can
          PROVE it cleared them (D-113). */
-      progressionExceptions: n("progression_exceptions"),
+      progressionExceptions: n("progression_exceptions", "bundle_id"),
       /* REC-5 / D-122: the connection-derive dirty-set's depth, reported so a whole-store
          purge can PROVE it cleared the pending work-queue (D-113) and so an operator can
          see how many entities are awaiting a sweep. */
@@ -55598,32 +56235,32 @@ ${words}`;
          a single quantity while the two govern different sets of feeds — and it is precisely the
          distinction this item exists to draw, so the count that proves the purge took them must
          not be the one place it is lost. */
-      findingDispositions: n("finding_dispositions"),
+      findingDispositions: n("finding_dispositions", "project_id"),
       /* REC-27 / D-137: the participation graph and the pending owner-governance
          votes, reported so a purge can PROVE it took them (both are keyed on
          project_id, a bundle id, and were the silent-leftover the D-113 check
          could not see). */
-      projectParticipants: n("project_participants"),
-      projectOwnerVotes: n("project_owner_votes"),
+      projectParticipants: n("project_participants", "project_id"),
+      projectOwnerVotes: n("project_owner_votes", "project_id"),
       /* REC-21: members' personal queue state, reported so a purge can PROVE it
          cleared the mutes and snoozes it took (D-113). A COUNT OF ROWS AND
          NOTHING ELSE — stats is an operator surface and whose attention is muted
          on what is not an operator's business. */
-      queueState: n("queue_state"),
+      queueState: n("queue_state", "case_id"),
       /* D-125: the item mutes, a COUNT for queueState's reason. */
       queueItemMutes: n("queue_item_mutes"),
       /* REC-82 / IC-83: the content rows — the parts of documents this record's
          edges point at — reported so a purge can PROVE it took them (D-113)
          rather than assert it, and so an operator can see the content axis's
          depth beside the document count it has always been able to see. */
-      content: n("content"),
+      content: n("content", "bundle_id"),
       /* REC-82: and how many of them were minted against a transcription that
          has since MOVED. Counted apart from the total and never folded into it:
          a re-extraction marks rows stale and DELETES NONE, so the total alone
          cannot distinguish "nothing was re-read" from "everything was" — which
          is the one fact an operator needs before believing a content-grain
          answer, and the one this count exists to make visible. */
-      contentStale: this.#one(`SELECT count(*) c FROM content WHERE stale=1`).c,
+      contentStale: nx("content", "stale=1", ["bundle_id"]),
       /* SK-8: the EXTRACT role's proposed readings, reported so a purge can
          PROVE it took them (D-113) and — the part that is not housekeeping — so
          an operator can see the assistant's production volume beside the content
@@ -55633,20 +56270,20 @@ ${words}`;
          here and is deliberately not: it is scoped to a run or a document
          (`op=extractproposals`), and an instance-wide fraction would average
          across projects that have nothing to do with each other. */
-      proposedReadings: n("proposed_readings"),
+      proposedReadings: n("proposed_readings", "bundle_id"),
       /* IS-6: the investigative runs, their budgets and their observation logs,
          reported so a whole-store purge can PROVE it took them (D-113) and so an
          operator can see how many runs are in flight without opening one. A
          COUNT AND NOTHING ELSE — what a run is looking into is not an operator
          surface, the same line queueState draws one row up. */
-      aiRuns: n("ai_runs"),
-      aiRunBounds: n("ai_run_bounds"),
+      aiRuns: n("ai_runs", "context_id"),
+      aiRunBounds: nx("ai_run_bounds", null, [], ["run"]),
       /* D-85: the links from an assistant's questions to their runs, counted for IS-6's reason one line up — so a
          purge can PROVE it took them (D-113). A COUNT AND NOTHING ELSE: which run opened which question is read
          per question, under that question's gate (`op=projection`'s `surfaced_in`). */
-      inquiryRunSurfacings: n("inquiry_run_surfacings"),
+      inquiryRunSurfacings: n("inquiry_run_surfacings", "bundle_id"),
       /* REC-173: the questions whose creation was a verified migration replay, counted for D-85's reason one line up. */
-      inquiryMigrationReplays: n("inquiry_migration_replays"),
+      inquiryMigrationReplays: n("inquiry_migration_replays", "bundle_id"),
       /* REC-93 / IC-92: `aiRunLog` was a count of `ai_run_log`, which no longer
          exists — `OBSERVATION-LOG-DESIGN.md` §4.4 folded it into `observations`
          and `#migrate` drops it. The key is KEPT AND RE-AIMED at the folded rows
@@ -55655,7 +56292,16 @@ ${words}`;
          from that proof reads as a table nobody is checking. `observations` is
          counted WHOLE beside it: the log is the coverage record and its size is
          an operator fact, while what any single row was looking for is not. */
-      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,
+      /* D-486 / BOB #32 (2026-09-24): AND IT IS TAKEN THROUGH THE CALLER'S OWN SIGHT. This key is the
+         `authority_kind = 'run'` SLICE of the log, so every row it counts is a run saying it looked —
+         which for a project the caller cannot see is that project's THINKING, withheld by the ruling.
+         `runRows` is D-464's `hidRuns` inverted into a row predicate at `#hiddenSets`, one compilation
+         point for this key, `observationsNonLead` below and the three frontier tallies. Unfiltered
+         callers get `null` and the count they always got; purge's `observations` below stays WHOLE. */
+      aiRunLog: this.#one(
+        `SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'${runRows ? ` AND ${runRows.sql}` : ""}`,
+        ...runRows ? runRows.args : []
+      ).c,
       /* REC-131 / IC-148 — `leads` IS NOT ON THE WIRE FOR ANY CLASS, AND THE WIRE'S LOG COUNT IS A
          DIFFERENT KEY FROM PURGE'S. BOB #15's CORRECTED ruling (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A
          COUNT IS A DISCLOSURE OF EXISTENCE*): a counter over rows a caller could not all read goes
@@ -55673,7 +56319,15 @@ ${words}`;
          * the wire because OBSERVATION-LOG-DESIGN §6's REC-110 ruling rests on it (premise 1): the
          * three built frontier levels' tallies count no lead row either. `aiRunLog` above is
          * untouched: no lead act writes a 'run' row. */
-      ...proof ? { observations: n("observation_log") } : { observationsNonLead: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c },
+      ...proof ? { observations: n("observation_log") } : { observationsNonLead: this.#one(
+        /* D-486 / BOB #32: the wire's log count subtracts a hidden project's RUN rows for the same reason
+           `aiRunLog` does — and ONLY those. The lead exclusion and this one are two predicates over one
+           table and are deliberately not folded: `authority_kind <> 'lead'` states the key's NAME (REC-131:
+           a key never carries two meanings), while the run subtraction is the CALLER's sight and moves with
+           the viewer. A rename would be an IC; this is a subtraction inside the name the key already has. */
+        `SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'${runRows ? ` AND ${runRows.sql}` : ""}`,
+        ...runRows ? runRows.args : []
+      ).c },
       /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
          PROVE it took them (D-113). What any lead says is not an operator fact —
          and since REC-131, neither is how many there are: purge's proof only. */
@@ -55686,31 +56340,31 @@ ${words}`;
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
          readings of the evidence exist is an operator fact, and what they say is
          not an operator surface. */
-      basisVersions: n("inquiry_basis_versions"),
-      basisVersionLegs: n("inquiry_basis_version_legs"),
+      basisVersions: n("inquiry_basis_versions", "bundle_id"),
+      basisVersionLegs: n("inquiry_basis_version_legs", "bundle_id", "target_id"),
       /* PL-3 / IS-4: F10's stored refusals, reported so a purge can PROVE it
          took them (D-113) and so an operator can see that a run is looping
          against a refusal without opening one. A COUNT AND NOTHING ELSE — the
          same line queueState, aiRuns and basisVersions draw. */
-      suggestRefusals: n("suggest_refusals"),
+      suggestRefusals: n("suggest_refusals", "target"),
       /* PL-4 / IS-4: the outbound work list, reported for the same reason and
          with one more of its own — this is the only counter in the store that
          says how much traffic this instance is about to send to somebody else's
          server, and a purge that reported scope ALL while it stood would leave a
          leftover visible from OUTSIDE the instance. */
-      captureRequests: n("capture_requests"),
+      captureRequests: n("capture_requests", "lead_inquiry"),
       /* PL-12 / D-84: the declared-bias statements and the adoptions that put
          them in force, reported so a whole-store purge can PROVE it took them
          (D-113) and so an operator can see that a lens IS in force without
          opening one. A COUNT AND NOTHING ELSE — what a group's declared bias
          SAYS is the group's business and travels with their published work,
          not an operator surface, the same line queueState and aiRuns draw. */
-      biasStatements: n("bias_statements"),
-      biasAdoptions: n("bias_adoptions"),
+      biasStatements: n("bias_statements", "bundle_id"),
+      biasAdoptions: n("bias_adoptions", "bundle_id", "scope_id"),
       /* REC-63 / DEC-56: the standing route markers, reported so a whole-store
          purge can PROVE it took them (D-113) and so an operator can see that the
          record is carrying doubts at all without having to sweep for them. */
-      routeMarks: n("provenance_route_marks"),
+      routeMarks: n("provenance_route_marks", "bundle_id"),
       /* REC-131 / IC-148: the ADMIN class's and purge's only — see `stats()`. THE RESIDUE, STATED
          RATHER THAN HIDDEN (BOB #15): the admin class still receives a figure that moves in whole
          pages on every write, a large lead's included, so the operator can detect that SOMETHING
@@ -57123,6 +57777,9 @@ ${words}`;
         /* REC-122: the on-point choices a purge took (D-113). */
         connectionPairChoices: d("connectionPairChoices"),
         progressionStages: d("progressionStages"),
+        /* REC-184: D-128's version history a whole-store purge took (D-113). */
+        progressionDefVersions: d("progressionDefVersions"),
+        progressionStageVersions: d("progressionStageVersions"),
         /* FW-9: the threaded progression instances a purge took (D-113). */
         progressionInstances: d("progressionInstances"),
         /* FW-10: the exception documents a purge took (D-113). */
@@ -58630,6 +59287,68 @@ ${words}`;
     }
     out.note = "read-only: a bundle whose manifest holds fewer rows than it has promotions lost a row to a repeated snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a bundle with no creation row, which an overwrite and a store predating the creation row both produce. Which key collided is not recorded and is not guessed.";
     return out;
+  }
+  /* REC-190: THE CENSUS OF DISPLACED HOMES (`BIO_Intake_Doctrine_v1_1.md` §8, ONE CAPTURE, ONE HOME — the ORIGINAL's;
+     D-179's residue). Before D-179's fence `op=promote` UPSERTed `register.bundle_id` on the `capture_sha` key, so a
+     second bundle registering bytes the record already held MOVED the first bundle's register row to itself, and the
+     first bundle's own `files` / `history` rows kept carrying bytes the register now says live elsewhere. This lists
+     every such row: a `files` or `history` row whose sha256 the register assigns to a DIFFERENT bundle that STILL
+     EXISTS, with both bundles named, grouped by the sha. READ-ONLY and never a repair (BOB #31, 2026-09-23 22:03Z: the
+     census's report STANDS ALONE): WHICH BUNDLE HELD THE CAPTURE FIRST IS UNDETERMINED — the register keeps one holder
+     and no prior one, and a row a bundle carried without ever registering it reads the same — so the answer names the
+     register's CURRENT holder as that and nothing more, and says so. A sha shared by several bundles that the register
+     does not assign elsewhere (an identical ordinary file, or the holder's own revisions) is NOT a displaced home and
+     is not listed: only the register decides a home. A register row whose bundle no longer exists names no home and
+     is counted apart (`home_absent`), never listed. The digest-level duplicate (the same content in different bytes)
+     is out of reach: this compares the bytes' digest and nothing about their meaning. Shas are compared lower-cased on
+     both sides, so a spelling difference is not a second identity. Bounded by `limit` shas listed (the counts are
+     always whole). */
+  homeCensus({ limit } = {}) {
+    const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
+    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
+    const homes = /* @__PURE__ */ new Map();
+    const reg = { rows: 0, home_absent: 0 };
+    for (const r of this.sql.exec(`SELECT r.capture_sha, r.bundle_id, r.path, b.bundle_id AS present
+                                     FROM register r LEFT JOIN bundles b ON b.bundle_id = r.bundle_id`)) {
+      reg.rows++;
+      if (r.present === null) {
+        reg.home_absent++;
+        continue;
+      }
+      homes.set(String(r.capture_sha).toLowerCase(), { bundle_id: r.bundle_id, path: r.path });
+    }
+    const bySha = /* @__PURE__ */ new Map();
+    const walk = (table) => {
+      const out = { rows: 0, displaced: 0 };
+      for (const r of this.sql.exec(table === "files" ? `SELECT bundle_id, NULL AS snap_key, path, sha256 FROM files` : `SELECT bundle_id, snap_key, path, sha256 FROM history`)) {
+        out.rows++;
+        const s = String(r.sha256 ?? "").toLowerCase();
+        const home = homes.get(s);
+        if (!home) continue;
+        if (home.bundle_id === r.bundle_id) continue;
+        out.displaced++;
+        if (!bySha.has(s)) bySha.set(s, { capture_sha: s, home: { ...home }, held_by: [] });
+        bySha.get(s).held_by.push({
+          table,
+          bundle_id: r.bundle_id,
+          path: r.path,
+          ...r.snap_key ? { snap_key: r.snap_key } : {}
+        });
+      }
+      return out;
+    };
+    const files = walk("files"), history = walk("history");
+    return {
+      ok: true,
+      register: reg,
+      files,
+      history,
+      shas: bySha.size,
+      listed: [...bySha.values()].slice(0, cap),
+      first_holder: "UNDETERMINED",
+      rewritten: 0,
+      note: "read-only: each listed sha is registered to `home` and ALSO carried by every `held_by` row, a different bundle that still exists. Nothing is rewritten or repaired. `home` is the register's current holder, never a finding about which bundle held the capture first \u2014 that is undetermined. The same content in different bytes is not reached."
+    };
   }
   static #promoteAbsent() {
     return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
@@ -61937,6 +62656,89 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       new_peak: isPeak
     };
   }
+  /* ------------------------------------------------------------------
+   * D-64: the daily render allowance (CLIENT-RENDERED.md, BOB #32 item 3)
+   * ------------------------------------------------------------------ */
+  /** Admit one render against today's allowance, or record it DEFERRED. The verdict
+   *  is the STRING `state` (`admitted` | `deferred`), never a leading boolean, so no
+   *  reader grades a datum as a refusal (meaning-bounds D-240 (e)). The DO
+   *  serialises, so one row per UTC day is globally correct for the instance.
+   *  Admission is decided on what has been SPENT, because a render's cost is
+   *  only known after it ran.
+   *
+   *  CORRECTED 2026-09-24 at integration (CONDUCT #20, on BOB #32's reading; VERIFIED HERE AT
+   *  THE CODE, not taken on the message's word). This said the allowance "can therefore be
+   *  overrun by at most one render". THAT IS FALSE, and it is the shape this project meets
+   *  most: a bound believed on the strength of a sentence. Admission is serialised in the DO,
+   *  but the render RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op
+   *  (`renderspend` -> `renderSpend`; the two are distinct rows of the dispatch table), so
+   *  every render IN FLIGHT AT ONCE is admitted against the same `spent_ms`. The bound that
+   *  actually holds is
+   *
+   *      overrun <= (renders in flight concurrently) x (one render's maximum time:
+   *                                                     the wait timeout plus navigation)
+   *
+   *  whose first factor nothing here bounds. Reserving at admission is D-492, placed by
+   *  SCHEDULER; until it lands this comment is the only thing that says so. Prose only — no
+   *  behaviour moved.
+   *
+   *  AND A FINDING ABOUT THE REBUILD RULE, measured making this very edit, because it came
+   *  back the opposite way to what `kickoffs/WORKER.md` step 0 predicted. That step said a
+   *  COMMENT-ONLY `src/` change leaves `bundled.mjs` BYTE-IDENTICAL (REC-110) — "if you are
+   *  hunting a diff after a comment-only change, there isn't one". This edit moved it by
+   *  1,104 bytes: the JSDoc block you are reading is PRESENT in the emitted bundle, verbatim.
+   *
+   *  THE DISCRIMINATOR FIRST PROPOSED HERE — "the bundler strips block comments and PRESERVES
+   *  JSDoc" — IS ITSELF REFUTED, and by a wider sample taken at c20-batch14 rather than by
+   *  argument. Counted over the emitted bundle: of 25 plain block comments sampled from
+   *  `index.mjs`, TWELVE are PRESENT (every one inspected sits inside the OPS table), and
+   *  `render.mjs`'s own JSDoc block is ABSENT. So the FORM does not decide it; position and
+   *  file do, by a rule nothing here has established. What is safe to say, and all that
+   *  `WORKER.md` step 0 now says, is that a comment-only change MAY move the bundle and the
+   *  answer is MEASURED, never assumed. A surprising green is a finding about the arm: the
+   *  first reading of this measurement generalised from three greps, which is the same error,
+   *  one sample size down, as the line it was correcting. */
+  renderAdmit({ allowanceMs, at = null }) {
+    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const day = now.slice(0, 10);
+    const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
+    const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
+    const spent = cur ? cur.spent_ms : 0;
+    if (spent >= allowance) {
+      if (cur) this.sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
+      else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 0, 1, ?)`, day, now);
+      return {
+        state: "deferred",
+        day,
+        spent_ms: spent,
+        allowance_ms: allowance,
+        deferred: (cur ? cur.deferred : 0) + 1,
+        renders: cur ? cur.renders : 0
+      };
+    }
+    if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, last_at = ? WHERE day = ?`, now, day);
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 1, 0, ?)`, day, now);
+    return {
+      state: "admitted",
+      day,
+      spent_ms: spent,
+      allowance_ms: allowance,
+      renders: (cur ? cur.renders : 0) + 1,
+      deferred: cur ? cur.deferred : 0
+    };
+  }
+  /** Add the browser time one render REPORTED. An unreported time adds nothing
+   *  and says so: the allowance is then under-counted, never guessed. */
+  renderSpend({ ms, at = null }) {
+    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const day = now.slice(0, 10);
+    const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
+    if (n === null) return { day, spent_ms: null, why: "the renderer reported no elapsed time, so nothing was added" };
+    const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
+    if (cur) this.sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, last_at = ? WHERE day = ?`, n, now, day);
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, ?)`, day, n, now);
+    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n };
+  }
   runtimeObservations() {
     const rows = [...this.sql.exec(`SELECT * FROM runtime_observations ORDER BY metric`)];
     return {
@@ -63764,7 +64566,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  exist. It writes nothing, mints nothing, and shows NO STRENGTH — a shared
    *  origin is a provenance fact, not a grade, so DEC-32's keystone (structure
    *  authored before strength is shown) holds on the surface that calls this. It
-   *  informs; it refuses only a partition it cannot read. */
+   *  informs; it refuses only a partition it cannot read.
+   *
+   *  REC-192 ADDS THE VERSION ARM: `version=<name>` reads a STORED version's legs
+   *  instead of a proposed partition, through the same one call, and answers
+   *  `independence` ON ITS OWN, with no strength key — BOB #31's ruling of
+   *  2026-09-23 22:22Z, that the separation §12 (a) asks for is structural at the
+   *  wire and not a choice each page makes. It EQUALS `op=versionstrength`'s
+   *  `independence` for the same version. */
   partitionIndependence(a = {}) {
     const args = a || {};
     const refusal7 = (code, detail, extra) => {
@@ -63803,95 +64612,132 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         "no question by that id is readable here, so there are no reasons of it to group.",
         { inquiry: inq }
       );
-    let raw = args.partition;
-    if (typeof raw === "string") {
-      try {
-        raw = JSON.parse(raw);
-      } catch {
-        raw = void 0;
+    const wantVersion = String(args.version ?? "").trim();
+    const partitionNamed = args.partition != null && args.partition !== "";
+    if (wantVersion && partitionNamed)
+      return refusal7(
+        "PARTITION_INDEPENDENCE_TWO_SUBJECTS",
+        "name EITHER a written reading (version=<name>) OR a proposed grouping (partition=<JSON>), not both: this answers for one of them, and which one was meant is not this plane's to guess.",
+        { inquiry: inq }
+      );
+    let legs, head;
+    if (wantVersion) {
+      const row = this.#one(
+        `SELECT name, state, leg_count FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`,
+        inq,
+        wantVersion
+      );
+      if (!row)
+        return refusal7(
+          "PARTITION_INDEPENDENCE_NO_SUCH_VERSION",
+          `no reading named '${wantVersion.slice(0, 60)}' belongs to ${inq.slice(0, 60)}.`,
+          { inquiry: inq, version: wantVersion.slice(0, 200) }
+        );
+      legs = this.#rows(
+        `SELECT ord, target_id, target_type, role, ground
+           FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
+        inq,
+        row.name,
+        _Store.BASIS_VERSION_LEGS_MAX
+      );
+      head = {
+        version: row.name,
+        version_state: row.state,
+        legs_read: legs.length,
+        legs_complete: legs.length === row.leg_count
+      };
+    } else {
+      let raw = args.partition;
+      if (typeof raw === "string") {
+        try {
+          raw = JSON.parse(raw);
+        } catch {
+          raw = void 0;
+        }
       }
-    }
-    const unreadable = (why) => refusal7("PARTITION_INDEPENDENCE_UNREADABLE", why, { inquiry: inq });
-    if (!Array.isArray(raw) || !raw.length)
-      return unreadable('pass partition=<JSON>: a non-empty list of groups, each a list of reason positions (e.g. [[0,1],[2]]) or {"label":\u2026,"legs":[\u2026]}.');
-    const legsMax = _Store.BASIS_VERSION_LEGS_MAX;
-    if (raw.length > legsMax)
-      return refusal7(
-        "PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
-        `${raw.length} groups were proposed and a written reading holds at most ${legsMax} reasons.`,
-        { inquiry: inq, limit: legsMax }
-      );
-    const parts = [];
-    for (let k = 0; k < raw.length; k++) {
-      const g = raw[k];
-      const named = g && typeof g === "object" && !Array.isArray(g);
-      const ords = named ? g.legs : g;
-      const label = named ? String(g.label ?? "").trim() : `part ${k + 1}`;
-      if (!label)
-        return unreadable(`group ${k + 1} carries no name; leave the name out altogether to have it filed by its position.`);
-      if (label.length > 200)
-        return unreadable(`group ${k + 1}'s name is longer than 200 characters.`);
-      if (!Array.isArray(ords) || !ords.length)
-        return unreadable(`group ${k + 1} lists no reasons; every group holds at least one.`);
-      if (!ords.every((o) => Number.isInteger(o) && o >= 0))
-        return unreadable(`group ${k + 1} names something other than a reason's position.`);
-      if (parts.some((p) => p.label === label))
-        return unreadable(`two groups are both named '${label.slice(0, 60)}'.`);
-      parts.push({ label, ords: [...ords] });
-    }
-    const legRows = this.#rows(
-      `SELECT ord, target_id, target_type, role FROM inquiry_basis WHERE bundle_id=? ORDER BY ord LIMIT ?`,
-      inq,
-      legsMax + 1
-    );
-    if (legRows.length > legsMax)
-      return refusal7(
-        "PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
-        `${inq.slice(0, 60)} rests on more than ${legsMax} reasons.`,
-        { inquiry: inq, limit: legsMax }
-      );
-    const byOrd = new Map(legRows.map((l) => [l.ord, l]));
-    const placed = /* @__PURE__ */ new Map();
-    for (const p of parts)
-      for (const o of p.ords) {
-        if (!byOrd.has(o))
-          return refusal7(
-            "PARTITION_INDEPENDENCE_UNKNOWN_LEG",
-            `'${p.label.slice(0, 60)}' names reason position ${o}, and ${inq.slice(0, 60)} has ${legRows.length} reason(s)${legRows.length ? ` at positions ${legRows.map((l) => l.ord).join(", ")}` : ""}.`,
-            { inquiry: inq, ord: o }
-          );
-        if (placed.has(o))
-          return refusal7(
-            "PARTITION_INDEPENDENCE_LEG_TWICE",
-            `reason position ${o} is in both '${placed.get(o).slice(0, 60)}' and '${p.label.slice(0, 60)}'.`,
-            { inquiry: inq, ord: o }
-          );
-        placed.set(o, p.label);
+      const unreadable = (why) => refusal7("PARTITION_INDEPENDENCE_UNREADABLE", why, { inquiry: inq });
+      if (!Array.isArray(raw) || !raw.length)
+        return unreadable(`pass partition=<JSON>: a non-empty list of groups, each a list of reason positions (e.g. [[0,1],[2]]) or {"label":\u2026,"legs":[\u2026]} \u2014 or version=<name> to read a written reading's groups instead.`);
+      const legsMax = _Store.BASIS_VERSION_LEGS_MAX;
+      if (raw.length > legsMax)
+        return refusal7(
+          "PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
+          `${raw.length} groups were proposed and a written reading holds at most ${legsMax} reasons.`,
+          { inquiry: inq, limit: legsMax }
+        );
+      const parts = [];
+      for (let k = 0; k < raw.length; k++) {
+        const g = raw[k];
+        const named = g && typeof g === "object" && !Array.isArray(g);
+        const ords = named ? g.legs : g;
+        const label = named ? String(g.label ?? "").trim() : `part ${k + 1}`;
+        if (!label)
+          return unreadable(`group ${k + 1} carries no name; leave the name out altogether to have it filed by its position.`);
+        if (label.length > 200)
+          return unreadable(`group ${k + 1}'s name is longer than 200 characters.`);
+        if (!Array.isArray(ords) || !ords.length)
+          return unreadable(`group ${k + 1} lists no reasons; every group holds at least one.`);
+        if (!ords.every((o) => Number.isInteger(o) && o >= 0))
+          return unreadable(`group ${k + 1} names something other than a reason's position.`);
+        if (parts.some((p) => p.label === label))
+          return unreadable(`two groups are both named '${label.slice(0, 60)}'.`);
+        parts.push({ label, ords: [...ords] });
       }
-    const unplaced = legRows.filter((l) => !placed.has(l.ord)).map((l) => l.ord);
-    if (unplaced.length)
-      return refusal7(
-        "PARTITION_INDEPENDENCE_NOT_TOTAL",
-        `reason position(s) ${unplaced.slice(0, 20).join(", ")} are in no group.`,
-        { inquiry: inq, unplaced: unplaced.slice(0, 20) }
+      const legRows = this.#rows(
+        `SELECT ord, target_id, target_type, role FROM inquiry_basis WHERE bundle_id=? ORDER BY ord LIMIT ?`,
+        inq,
+        legsMax + 1
       );
-    const legs = legRows.map((l) => ({ ...l, ground: placed.get(l.ord) }));
+      if (legRows.length > legsMax)
+        return refusal7(
+          "PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
+          `${inq.slice(0, 60)} rests on more than ${legsMax} reasons.`,
+          { inquiry: inq, limit: legsMax }
+        );
+      const byOrd = new Map(legRows.map((l) => [l.ord, l]));
+      const placed = /* @__PURE__ */ new Map();
+      for (const p of parts)
+        for (const o of p.ords) {
+          if (!byOrd.has(o))
+            return refusal7(
+              "PARTITION_INDEPENDENCE_UNKNOWN_LEG",
+              `'${p.label.slice(0, 60)}' names reason position ${o}, and ${inq.slice(0, 60)} has ${legRows.length} reason(s)${legRows.length ? ` at positions ${legRows.map((l) => l.ord).join(", ")}` : ""}.`,
+              { inquiry: inq, ord: o }
+            );
+          if (placed.has(o))
+            return refusal7(
+              "PARTITION_INDEPENDENCE_LEG_TWICE",
+              `reason position ${o} is in both '${placed.get(o).slice(0, 60)}' and '${p.label.slice(0, 60)}'.`,
+              { inquiry: inq, ord: o }
+            );
+          placed.set(o, p.label);
+        }
+      const unplaced = legRows.filter((l) => !placed.has(l.ord)).map((l) => l.ord);
+      if (unplaced.length)
+        return refusal7(
+          "PARTITION_INDEPENDENCE_NOT_TOTAL",
+          `reason position(s) ${unplaced.slice(0, 20).join(", ")} are in no group.`,
+          { inquiry: inq, unplaced: unplaced.slice(0, 20) }
+        );
+      legs = legRows.map((l) => ({ ...l, ground: placed.get(l.ord) }));
+      head = {
+        partition: parts.map((p) => ({
+          label: p.label,
+          legs: p.ords,
+          targets: p.ords.map((o) => byOrd.get(o).target_id)
+        })),
+        legs_read: legRows.length
+      };
+    }
     return {
       ok: true,
       inquiry: inq,
-      /* WHAT WAS PROPOSED, read back with the documents each group rests on, so
-         the surface names the reasons it asked about rather than re-deriving them. */
-      partition: parts.map((p) => ({
-        label: p.label,
-        legs: p.ords,
-        targets: p.ords.map((o) => byOrd.get(o).target_id)
-      })),
-      legs_read: legRows.length,
+      ...head,
       wrote: false,
-      /* THROUGH `#independenceOf` — the third consumer, the one implementation.
-         `parts` is counted the way `versionStrength` counts it off stored legs:
-         the distinct non-blank groups the legs carry. */
-      independence: this.#independenceOf(legs, new Set(legs.map((l) => l.ground)).size)
+      independence: this.#independenceOf(
+        legs,
+        new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean)).size
+      )
     };
   }
   /* ==============================================================   * PL-2 / IS-2 — THE SIXTH STATE MACHINE'S SIX MEMBER OPS.
@@ -67288,9 +68134,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const missing = missingFetch.rows.map((r) => ({ ...r, missing_cause: this.#missingContentCause(r.subject, r.registered) }));
     const never = missing.filter((r) => r.missing_cause === "never_looked");
     const unexplained = missing.filter((r) => r.missing_cause !== "never_looked");
+    const hidTail = this.#hiddenRunTail(viewer);
     const tally = {};
     for (const row of this.#rows(
-      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content' GROUP BY state`
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content'${hidTail.sql} GROUP BY state`,
+      ...hidTail.args
     ))
       tally[row.state] = row.n;
     const candidates = looked.filter((r) => r.recandidate);
@@ -67682,7 +68530,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const owner = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
       return owner ? visible(owner.bundle_id) !== null : false;
     };
+    const runSeen = (r) => r.authority_kind !== "run" || !r.authority || this.aiRunLog({ run: r.authority, viewer, limit: 1 }).found === true;
     const latest = this.#frontierPage("meaning", cap, { limit: (cap + 1) * 3 }, (r) => {
+      if (!runSeen(r)) return false;
       if (r.subject_kind === "capture") return captureSeen(r.subject);
       if (r.subject_kind === "reference")
         return r.authority ? captureSeen(r.authority) : false;
@@ -67762,9 +68612,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       });
     const never = missing.filter((r) => r.missing_cause === "never_looked");
     const unexplained = missing.filter((r) => r.missing_cause !== "never_looked");
+    const hidTail = this.#hiddenRunTail(viewer);
     const tally = {};
     for (const row of this.#rows(
-      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'meaning' GROUP BY state`
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'meaning'${hidTail.sql} GROUP BY state`,
+      ...hidTail.args
     ))
       tally[row.state] = row.n;
     const by_subject_kind = {};
@@ -68089,9 +68941,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       })
     );
     const never = neverFetch.rows;
+    const hidTail = this.#hiddenRunTail(viewer);
     const tally = {};
     for (const row of this.#rows(
-      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document' GROUP BY state`
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document'${hidTail.sql} GROUP BY state`,
+      ...hidTail.args
     ))
       tally[row.state] = row.n;
     return {
@@ -72265,6 +73119,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           limit: url.searchParams.get("limit"),
           offset: url.searchParams.get("offset")
         }),
+        /* REC-190: the census of displaced homes, read-only (see `homeCensus`). */
+        homecensus: () => this.homeCensus({ limit: url.searchParams.get("limit") }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,
@@ -72693,6 +73549,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           identity: url.searchParams.get("identity")
         }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
+        /* D-64: the daily render allowance. `renderadmit` takes a render or records
+           a DEFERRAL; `renderspend` adds the browser time a render reported. */
+        renderadmit: () => this.renderAdmit(body || {}),
+        renderspend: () => this.renderSpend(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),
         recordcpuprobestep: () => this.recordCpuProbeStep(body || {}),
@@ -72767,6 +73627,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         partitionindependence: () => this.partitionIndependence({
           id: url.searchParams.get("id"),
           partition: body && body.partition !== void 0 ? body.partition : url.searchParams.get("partition"),
+          /* REC-192: a STORED version's independence, on its own, with no strength key. */
+          version: url.searchParams.get("version"),
           viewer: url.searchParams.get("viewer")
         }),
         /* PL-12 / D-84. Three ops. `author` on the adoption is stamped by the
@@ -73316,7 +74178,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           identity: url.searchParams.get("identity")
           /* REC-134 */
         }),
-        selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner") }),
+        selectionlist: () => this.selectionList({
+          owner: url.searchParams.get("owner"),
+          viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : void 0
+        }),
         selectionrelease: () => this.selectionRelease({
           handle: url.searchParams.get("handle"),
           owner: url.searchParams.get("owner")
@@ -73330,7 +74195,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
-        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
+        stats: () => this.stats({
+          capacity: url.searchParams.get("capacity") === "1",
+          viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : void 0
+        }),
         /* D-116: THE DO'S OWN BUILD, under a field that is NEVER `version`. `op=bootstrap`'s `version` is the ROUTING
            isolate's env.VERSION, and this answer is spread AFTER it, so a `version` here would REPLACE that reading
            rather than stand beside it. `this.env` is the env of the worker version THIS OBJECT is running, which rolls
@@ -74456,7 +75324,9 @@ var OPS = {
      makes BEFORE the member's answers are written. A pure read through the one
      `#independenceOf`; it shows no strength and writes nothing. Same classes and
      the same fail-closed `viewer` stamp as versionstrength, below, because it
-     names a question and every document its reasons rest on. */
+     names a question and every document its reasons rest on. REC-192: `version=`
+     reads a STORED version's independence ON ITS OWN, with no strength key (BOB #31,
+     2026-09-23 22:22Z), under the same classes and stamp. */
   partitionindependence: { classes: ["admin", "member", "probe"], mutating: false },
   /* PL-12 / D-84: the bias object's three ops.
      `biasmanifest` is a READ and is gated on the viewer below, like every read
@@ -74710,6 +75580,11 @@ var OPS = {
      to learn whether `op=promote`'s old unchecked digest left a false one behind. Admin and probe, as
      `registeraudit` beside it: it is an audit of the working corpus, and it lists paths. */
   digestcensus: { classes: ["admin", "probe"], mutating: false },
+  /* REC-190: the census of displaced homes — every `files` / `history` row whose sha the register assigns to a
+     DIFFERENT bundle that still exists (D-179's residue: the pre-fence promote MOVED a register row), both bundles
+     named, NEVER repaired; which bundle held it first is undetermined and the answer says so. Admin and probe, as
+     `digestcensus` beside it: an audit of the working corpus that lists bundle ids and paths. */
+  homecensus: { classes: ["admin", "probe"], mutating: false },
   /* CONSTRUCTS Step 3 (FW-5): the reading persisted at promote. `reading` reads
      one captured document's reading (entities + document facts) by its capture
      sha; `readingref` is the reverse index — which documents' readings carry a
@@ -76003,11 +76878,44 @@ async function sha256Hex5(v) {
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+var ODF_DIGEST_MAX = 8 * 1024 * 1024;
 function profilesAsText(ct, total, multipart) {
   return !multipart && total <= PROFILE_TEXT_MAX && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "");
 }
-async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart) {
+async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes = null) {
   const digestCertain = !!profileBytes && stackId.handler.textual === true && stackId.confidence === CONFIDENCE.CERTAIN;
+  if (!digestCertain && !profileBytes && containerBytes && !multipart) {
+    let od;
+    try {
+      od = await odfEvidentiaryDigest(containerBytes, sha256Hex5);
+    } catch (e) {
+      od = {
+        determined: false,
+        flavour: "unread",
+        basis: `the container digest could not be taken (${String(e && e.message || e).slice(0, 90)}), so none is claimed`
+      };
+    }
+    if (od.determined) {
+      if (await sha256Hex5(containerBytes) !== sha)
+        return {
+          determined: false,
+          rendition: null,
+          evidentiary: null,
+          basis: "the container bytes read back from the store did not hash to the capture identity, so no container digest could be trusted"
+        };
+      return {
+        determined: true,
+        rendition: null,
+        evidentiary: od.evidentiary,
+        over: od.over,
+        container: od.flavour,
+        boundary_missed: false,
+        basis: od.basis
+      };
+    }
+    if (od.flavour)
+      return { determined: false, rendition: null, evidentiary: null, container: od.flavour, basis: od.basis };
+  }
   if (!digestCertain)
     return {
       determined: false,
@@ -76167,6 +77075,20 @@ function namespaceGate(url) {
     error: `no namespace ${JSON.stringify(asked.slice(0, 80))} exists on this instance`,
     asked: asked.slice(0, 80),
     namespaces: [...NAMESPACES]
+  }, 400);
+}
+var SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup", "groupidentity"]);
+function pinnedNamespaceGate(url, op, spec) {
+  if (spec.classes !== null || SCRATCH_ADDRESSING_PUBLIC_OPS.includes(op)) return null;
+  if (url.searchParams.get("store") !== SCRATCH) return null;
+  return json({
+    ok: false,
+    reason: "NAMESPACE_PINNED",
+    ...namespaceRow("NAMESPACE_PINNED"),
+    error: `op=${op} always answers from the bio namespace and has no ${SCRATCH} counterpart; nothing was read or written`,
+    op,
+    asked: SCRATCH,
+    pinned: "bio"
   }, 400);
 }
 var AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
@@ -76419,6 +77341,12 @@ var driveRow = (code) => {
   const row = DRIVE_CAPTURE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`driveRow: ${code} has no DRIVE_CAPTURE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+var renderRow = (code) => {
+  const row = RENDER_CAPTURE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`renderRow: ${code} has no RENDER_CAPTURE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
 var reextractRow = (code) => {
@@ -77251,6 +78179,8 @@ var index_default = {
     }, 400);
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return unknownNamespace;
+    const pinnedNamespace = pinnedNamespaceGate(url, op, spec);
+    if (pinnedNamespace) return pinnedNamespace;
     if (spec.classes === null) {
       const fp = await fingerprint(env.ADMIN_TOKEN);
       const stub2 = env.STORE.get(env.STORE.idFromName("bio"));
@@ -77993,7 +78923,9 @@ var index_default = {
         out.r2 = "MISCONFIGURED: one bucket bound without the other; the fence requires both or neither";
       }
       try {
-        const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}`));
+        const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}&viewer=${encodeURIComponent(
+          viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+        )}`));
         if (!sOut.answered) {
           out.ok = false;
           out.store = "ERR the store did not answer /stats";
@@ -78038,7 +78970,10 @@ var index_default = {
         }, 400);
     }
     if (op === "livefire") {
-      const out = await livefire(env, storeName, { capacity: cls === "admin" });
+      const out = await livefire(env, storeName, {
+        capacity: cls === "admin",
+        viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`
+      });
       return json(out, out.ok ? 200 : 500);
     }
     if (op === "runtime") {
@@ -78535,6 +79470,81 @@ var index_default = {
       const authorityAsserted = typeof body2?.authority === "string" && body2.authority.trim() ? body2.authority.trim() : null;
       const retrieved = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
+      const renderAsked = Object.prototype.hasOwnProperty.call(body2 || {}, "render") && body2.render !== false;
+      let renderer = null;
+      if (renderAsked) {
+        if (body2.render !== true)
+          return json({
+            ok: false,
+            reason: "RENDER_FLAG_MALFORMED",
+            ...renderRow("RENDER_FLAG_MALFORMED"),
+            op,
+            detail: `render=${JSON.stringify(body2.render).slice(0, 40)} is not a value this op reads. Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.`
+          }, 400);
+        const conflict = body2.via === "archive.org" ? "via: archive.org (an archived replay)" : driveCapture ? "a Google Drive export (a document, not a page)" : body2.continue ? "continue: <session> (a capture already filed)" : null;
+        if (conflict)
+          return json({
+            ok: false,
+            reason: "RENDER_ARM_CONFLICT",
+            ...renderRow("RENDER_ARM_CONFLICT"),
+            op,
+            conflict,
+            detail: `render: true cannot be combined with ${conflict}.`
+          }, 400);
+        renderer = rendererFor(env);
+        if (typeof renderer.render !== "function")
+          return json({
+            ok: false,
+            reason: "RENDER_NO_RENDERER",
+            ...renderRow("RENDER_NO_RENDERER"),
+            op,
+            renderer: renderer.kind,
+            detail: renderer.kind === "browser-binding-without-driver" ? "a Browser Rendering binding (BROWSER) is bound, but the in-plane driver over it is not built (D-64 shipped the seam and the record, not a CDP client). Nothing was fetched." : "no renderer is bound to this instance (no RENDERER service binding). Nothing was fetched."
+          }, 501);
+        let rHost = null;
+        try {
+          rHost = new URL(locator).host;
+        } catch {
+          rHost = null;
+        }
+        if (rHost) {
+          let g = null;
+          try {
+            g = (await (await stGov.fetch("http://x/governoradmit", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ host: rHost })
+            })).json()).result || null;
+          } catch {
+            g = null;
+          }
+          if (g && g.admitted === false)
+            return json({
+              ok: false,
+              reason: "RENDER_HOST_COOLING_OFF",
+              ...renderRow("RENDER_HOST_COOLING_OFF"),
+              op,
+              host: rHost,
+              retry_in_ms: g.retry_in_ms || 0,
+              detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).`
+            }, 429);
+        }
+        const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), at: retrieved })
+        }));
+        const adm = admOut.answered ? admOut.result : null;
+        if (!adm || adm.state !== "admitted")
+          return json({
+            ok: false,
+            reason: "RENDER_DEFERRED",
+            ...renderRow("RENDER_DEFERRED"),
+            op,
+            render: { state: "deferred", content: "undetermined", allowance: adm || null },
+            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is spent (${adm.spent_ms} ms); this render is recorded as deferred (${adm.deferred} today).` : "the render allowance could not be read, so the render is deferred rather than run unmetered."
+          }, 429);
+      }
       const via = body2?.via === "archive.org" ? "archive.org" : "direct";
       const documentAddress = via === "archive.org" && archiveAddress ? archiveAddress : driveCapture ? driveCapture.address : locator;
       const addressIsDerived = via === "archive.org" && !!archiveAddress || !!driveCapture;
@@ -78625,6 +79635,7 @@ var index_default = {
       const MAX = 256 * 1024 * 1024;
       const whole = createSha256();
       const parts = [];
+      const partHeldBefore = [];
       let total = 0, held = [], heldBytes = 0, oversize = false;
       const flush = async () => {
         if (!heldBytes) return;
@@ -78638,9 +79649,11 @@ var index_default = {
         heldBytes = 0;
         const d = await crypto.subtle.digest("SHA-256", buf);
         const psha = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
-        if (!await env.CAPTURES.head(`${storeName}/captures/${psha}`))
+        const heldBefore = !!await env.CAPTURES.head(`${storeName}/captures/${psha}`);
+        if (!heldBefore)
           await env.CAPTURES.put(`${storeName}/captures/${psha}`, buf, { sha256: d });
         parts.push({ sha256: psha, bytes: buf.length });
+        partHeldBefore.push(heldBefore);
       };
       const driveHead = driveCapture ? new Uint8Array(1024) : null;
       let driveHeadBytes = 0;
@@ -78710,7 +79723,7 @@ var index_default = {
       }
       await flush();
       if (total === 0) return json({ ok: false, reason: "EMPTY", locator }, 502);
-      const sha = whole.hex();
+      let sha = whole.hex();
       let existed = false, multipart = parts.length > 1;
       if (!multipart) {
         const only = parts[0];
@@ -78721,9 +79734,9 @@ var index_default = {
             detail: "the incremental hash and the block hash of the same bytes differ"
           }, 500);
         }
-        existed = !!await env.CAPTURES.head(`${storeName}/captures/${sha}`);
+        existed = partHeldBefore[0];
       }
-      const ct = (res2.headers.get("content-type") || "").split(";")[0].trim();
+      let ct = (res2.headers.get("content-type") || "").split(";")[0].trim();
       const responseHeaders = [];
       for (const [k, v] of res2.headers) responseHeaders.push([k, v]);
       const transport = {
@@ -78743,6 +79756,75 @@ var index_default = {
       };
       const name = (body2.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
       const stLim = stGov;
+      let renderRecorded = null, shellRecorded = null, renderedAuth = null, renderedExisted = false;
+      if (renderAsked) {
+        const pageUrl = res2.url || locator;
+        let answer = null, rbytes = null, rb = null;
+        if (multipart || detectFormat(null, ct || null).format !== "html")
+          return json({
+            ok: false,
+            reason: "RENDER_NOT_A_PAGE",
+            ...renderRow("RENDER_NOT_A_PAGE"),
+            op,
+            content_type: ct || null,
+            bytes: total,
+            multipart,
+            detail: `the served bytes are ${multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``}, not an HTML page; nothing was filed.`
+          }, 422);
+        try {
+          answer = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS });
+        } catch (e) {
+          answer = { ok: false, error: String(e && e.message || e) };
+        }
+        try {
+          await stGov.fetch("http://x/renderspend", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ ms: answer && answer.elapsed_ms, at: retrieved })
+          });
+        } catch {
+        }
+        rb = renderBlock(answer, { pageUrl, shellSha: sha, at: retrieved });
+        if (rb.ok) rbytes = new TextEncoder().encode(answer.html);
+        if (!rb.ok || rbytes.length > MAX)
+          return json({
+            ok: false,
+            reason: "RENDER_FAILED",
+            ...renderRow("RENDER_FAILED"),
+            op,
+            shell_sha256: sha,
+            filed: false,
+            detail: rb.ok ? `the rendered document is ${rbytes.length} bytes, over this surface's ${MAX}.` : rb.problem
+          }, 502);
+        const rd = await crypto.subtle.digest("SHA-256", rbytes);
+        const rsha = [...new Uint8Array(rd)].map((x) => x.toString(16).padStart(2, "0")).join("");
+        renderedExisted = !!await env.CAPTURES.head(`${storeName}/captures/${rsha}`);
+        if (!renderedExisted) await env.CAPTURES.put(`${storeName}/captures/${rsha}`, rbytes, { sha256: rd });
+        shellRecorded = {
+          file: `snapshots/${name}.shell.html`,
+          sha256: sha,
+          bytes: total,
+          method: "bio-plane acquire, https fetch, hashed at receipt",
+          ...ct ? { content_type: ct } : {},
+          transport
+        };
+        renderRecorded = rb.render;
+        renderedAuth = renderedAuthority({ asserted: authorityAsserted, render: renderRecorded, at: retrieved });
+        if (typeof renderRecorded.status === "number") {
+          try {
+            await stGov.fetch("http://x/governorreport", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ host: new URL(pageUrl).host, status: renderRecorded.status, retry_after_ms: null })
+            });
+          } catch {
+          }
+        }
+        sha = rsha;
+        total = rbytes.length;
+        ct = "text/html";
+        existed = renderedExisted;
+      }
       try {
         await stLim.fetch("http://x/recordcapturedlocator", {
           method: "POST",
@@ -78773,7 +79855,7 @@ var index_default = {
         });
       } catch {
       }
-      if (!authorityAsserted) {
+      if (renderedAuth ? renderedAuth.authority_state === "undetermined" : !authorityAsserted) {
         try {
           await stLim.fetch("http://x/taskenqueue", {
             method: "POST",
@@ -79063,7 +80145,16 @@ var index_default = {
           { retrieved, resolved: res2.url || null, detected: profile.format }
         );
       }
-      profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart);
+      let containerBytes = null;
+      const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
+      if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
+        try {
+          const cobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
+          if (cobj) containerBytes = new Uint8Array(await cobj.arrayBuffer());
+        } catch {
+        }
+      }
+      profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
       let reading;
       let textUnits = null, textUnitsOverBound = 0;
       const canRead = !!profileText && typeof docType.type.parse === "function";
@@ -79355,9 +80446,11 @@ var index_default = {
              both facts about how the record got here. An undetermined
              capture is held and barred from publication, never refused at
              intake (RULED, AUTHORITY-AND-TRUST.md). */
-          ...authorityAsserted ? { authority: authorityAsserted } : {},
-          authority_state: authorityAsserted ? "determined" : "undetermined",
-          authority_basis: authorityAsserted ? `asserted by the capturing ${viaSession ? "member" : "caller"} at intake, ${retrieved}` : `no assertion was supplied and no mechanical determination is implemented; recorded ${retrieved} for resolution through the task list`,
+          ...renderedAuth ? renderedAuth : {
+            ...authorityAsserted ? { authority: authorityAsserted } : {},
+            authority_state: authorityAsserted ? "determined" : "undetermined",
+            authority_basis: authorityAsserted ? `asserted by the capturing ${viaSession ? "member" : "caller"} at intake, ${retrieved}` : `no assertion was supplied and no mechanical determination is implemented; recorded ${retrieved} for resolution through the task list`
+          },
           /* The chain of custody as ordered hops from us back to the origin,
              each naming who, what they assert, the evidence, and whether the
              assertion is cryptographically bound or merely stated (RULED). A
@@ -79378,8 +80471,8 @@ var index_default = {
           provenance_chain: [
             {
               who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
-              asserts: `these bytes were served for ${locator} at ${retrieved}`,
-              evidence: "first-party https fetch, hashed at receipt, transport record on this document",
+              asserts: renderRecorded ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)` : `these bytes were served for ${locator} at ${retrieved}`,
+              evidence: renderRecorded ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment" : "first-party https fetch, hashed at receipt, transport record on this document",
               bound: false,
               via
               /* CAP-8 joins the SAME spread, and a capture is never both: an archive
@@ -79393,7 +80486,8 @@ var index_default = {
             ...driveHopRecorded ? [driveHopRecorded] : []
           ],
           capture: {
-            method: multipart ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt` : "bio-plane acquire, https fetch, hashed at receipt",
+            /* D-64 / BOB #32 item 1: the method is `rendered`; the shell keeps its own. */
+            method: renderRecorded ? RENDERED_METHOD : multipart ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt` : "bio-plane acquire, https fetch, hashed at receipt",
             /* GRADE TRACKS DIRECTNESS, NEVER TECHNIQUE (RULED). An archive hop
                is one more party between us and the publisher, so it grades
                below a direct capture of the same document even though the
@@ -79438,8 +80532,22 @@ var index_default = {
             encoding: "binary",
             bytes: total,
             ...ct ? { content_type: ct } : {},
-            transport
+            /* The HTTP exchange belongs to the SHELL; on a rendered capture it is
+               carried there, and the render's own navigation is `render.*`. */
+            ...renderRecorded ? {} : { transport }
           },
+          /* D-64: THE PAIR (BOB #32 item 2). The rendered document is PRIMARY and
+             is `file`/`capture`; the shell is beside it under its own digest, the
+             one part anyone can re-verify against the source. */
+          ...renderRecorded ? {
+            pair: {
+              primary: "rendered",
+              rendered: { file: `snapshots/${name}`, sha256: sha },
+              shell: { file: shellRecorded.file, sha256: shellRecorded.sha256 }
+            },
+            render: renderRecorded,
+            shell: shellRecorded
+          } : {},
           ...multipart ? { parts: parts.map((p, i) => ({
             file: `snapshots/${name}.part${String(i).padStart(3, "0")}`,
             sha256: p.sha256,
@@ -79490,9 +80598,11 @@ var index_default = {
           },
           files: {
             [`snapshots/${name}.render.html`]: subs.companionSha,
-            "data/snapshot-manifest.json": subs.manifestSha
+            "data/snapshot-manifest.json": subs.manifestSha,
+            ...shellRecorded ? { [shellRecorded.file]: shellRecorded.sha256 } : {}
           }
         } : {},
+        ...shellRecorded && !subs ? { files: { [shellRecorded.file]: shellRecorded.sha256 } } : {},
         ...subsSkipped ? { subresources_skipped: subsSkipped } : {},
         note: ACQUIRE_GRADE_NOTE,
         store: storeName,
@@ -79717,14 +80827,24 @@ var index_default = {
                 text: asText2 ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : ""
               };
               const stackId = identify(profCtx);
-              const fresh = await substanceDigests(asText2 ? bytes : null, stackId, profCtx, seen, false);
-              if (stackId.handler.key !== baselineProfile.handler || stackId.handler.version !== baselineProfile.handler_version)
+              const fresh = await substanceDigests(
+                asText2 ? bytes : null,
+                stackId,
+                profCtx,
+                seen,
+                false,
+                asText2 || bytes.length > ODF_DIGEST_MAX ? null : bytes
+              );
+              const bdOver = bd.over || null, freshOver = fresh.over || null;
+              if (bdOver !== freshOver)
+                comparedBasis = `the baseline's evidentiary digest was taken over ${bdOver || "the normalised text"} but the fetched bytes' over ${freshOver || "the normalised text"}, so the raw bytes were compared`;
+              else if (stackId.handler.key !== baselineProfile.handler || stackId.handler.version !== baselineProfile.handler_version)
                 comparedBasis = `the fetched bytes identify as ${stackId.handler.key} v${stackId.handler.version} but the baseline was normalised under ${baselineProfile.handler} v${baselineProfile.handler_version}, so the raw bytes were compared`;
               else if (!fresh.determined)
                 comparedBasis = `the fetched bytes' substance digest is undetermined (${fresh.basis}), so the raw bytes were compared`;
               else {
                 compared = "evidentiary";
-                comparedBasis = `the evidentiary digests were compared, both normalised under ${stackId.handler.key} v${stackId.handler.version} (certain)`;
+                comparedBasis = freshOver ? `the evidentiary digests were compared, both taken over the package's ${freshOver} (${fresh.basis})` : `the evidentiary digests were compared, both normalised under ${stackId.handler.key} v${stackId.handler.version} (certain)`;
                 if (fresh.evidentiary !== bd.evidentiary) {
                   status = "modified";
                   note = "the substance of the source differs from the capture";
@@ -79733,7 +80853,7 @@ var index_default = {
                   note = "the source still serves the captured bytes";
                 } else {
                   status = "unchanged";
-                  note = fresh.rendition === bd.rendition ? "the substance is unchanged; only machinery the source rebuilds on every visit differs from the capture" : "the substance is unchanged; machinery or furniture around it differs from the capture";
+                  note = fresh.rendition != null && fresh.rendition === bd.rendition ? "the substance is unchanged; only machinery the source rebuilds on every visit differs from the capture" : "the substance is unchanged; machinery or furniture around it differs from the capture";
                 }
               }
             }
@@ -80511,7 +81631,7 @@ var index_default = {
       "projectvisibility",
       "projectdirectory"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "themeplace" || op === "themepropose" || op === "themeread" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "stats" || op === "selectionlist" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`

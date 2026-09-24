@@ -49,6 +49,9 @@ export const STATES = ["BUILT", "PARTIAL", "ABSENT", "DEFERRED", "UNDETERMINED"]
 /* The member UI's call helpers, DERIVED 2026-09-18 by matching every OPS name against
    `helper("op"` in app.html — not recalled. A new helper is a probe blind spot; the suite
    re-derives this list and fails if a helper calling an op is missing from it. */
+/* + `queueApplySet`, `queueSelFor` (D-291, 2026-09-24, from the suite's own derivation): D-126's queue selection
+   (`queueApplySet(op, …)` → `recPostR(op, …)`; `queueSelFor("taskresolve")` names an op) arrived on a base older than
+   this list's check, so the union reported them missing; added here rather than exempted. */
 export const UI_HELPERS = ["recR", "recPostR", "actAsk",
   /* UI-90 (2026-09-24): `actAskPost` is `actAsk`'s POST twin, added for `op=actionlaws`, whose list of
      citations travels in the body. NAMED HERE BECAUSE status.test.mjs's re-derivation FAILED THE GATE on
@@ -60,8 +63,8 @@ export const UI_HELPERS = ["recR", "recPostR", "actAsk",
   "actAskPost", "intentAsk", "intentPreflight",
   "captureAct", "apiQ", "apiR", "api",
   /* D-126's queue set-apply (`recPostR(op, …)` over a selection), added at integration by c19-unionfix, 2026-09-24,
-     when the suite's re-derivation named it. */
-  "queueApplySet"];
+     when the suite's re-derivation named it. `queueSelFor` is D-291's (comment above); c19-batch11 carries both. */
+  "queueApplySet", "queueSelFor"];
 
 const cache = new Map();
 function read(repo, rel) {

@@ -48,6 +48,28 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    1.19.0 and 1.19.0 -> 1.20.0 were both MINOR for changes that made the catalog
    refuse documents that used to pass. This bump is ADDITIVE in the same sense
    and no check moves with it.
+
+   1.23.0 (CONDUCT #20, c20-batch14, 2026-09-24): MINOR, ADDITIVE, and the census arm
+   forced it a SECOND time at the union of c20-batch13 and c20-integ1b. D-64's
+   `RENDER_CAPTURE_CHECKS` family arrived from the other side of the integration, so
+   the catalogue went 438 -> 445 checks: SEVEN ARRIVALS, NO DEPARTURES (C-83.1 to
+   C-83.7). The figure is the one `d470-catalog-census.test.mjs` PRINTED on this tree,
+   never 438 plus seven. Same precedent as the bump below, one integration on.
+
+   1.22.0 (CONDUCT #20, c20-batch13, 2026-09-24): MINOR, ADDITIVE, AND IT IS THE
+   FIRST MOVE D-470'S OWN CENSUS FORCED RATHER THAN A HAND DECIDING TO MOVE IT.
+   D-470 recorded 1.21.0's census on ITS OWN BASE. The other side of this
+   integration, c20-batch11fix, GREW the catalog while standing at 1.20.0 with no
+   census suite on it to notice — FIVE checks, all arrivals and no departures:
+   C-32.19, C-41.13 (REC-188's disclosures arm), C-71.8, C-71.9 and C-78.2
+   (D-461's NAMESPACE_PINNED). So at the union the catalog was NOT the catalog
+   1.21.0 recorded, and `d470-catalog-census.test.mjs` went RED at A3 naming the
+   exact remedy it is written to name. This is the failure mode the note above
+   describes — two different catalogs answering to one number — caught by the
+   instrument instead of by a stranger reading a ratification, which is the whole
+   reason the census exists. ADDITIVE on the same precedent: five checks arrive,
+   none moves and none leaves.
+
    WHAT KEEPS IT TRUE: `test/d470-catalog-census.test.mjs` pins this string to a
    census of the catalog's C-numbers. Add a check and that suite goes red naming
    the figures, and it stays red until this version moves and the new census is
@@ -63,7 +85,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    NO_CITATION to ACT_SHAPE_CHECKS, so the catalogue moved 433 -> 435 checks and the stamp moves
    with it, MINOR and additive on this constant's own rule (Publication §3 rule 17). The d470
    census suite caught it on the c20-batch17 train (A3). */
-export const CATALOG_VERSION = "1.22.0";
+export const CATALOG_VERSION = "1.23.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

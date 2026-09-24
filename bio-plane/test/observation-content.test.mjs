@@ -1003,8 +1003,34 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
     [/REC-110, 2026-09-17, D-386 CLOSED/.test(
        SRC.store.slice(SRC.store.indexOf("#frontierContent("),
                        SRC.store.indexOf("#frontierMeaning("))),
-     /level = 'content' GROUP BY state/.test(SRC.store)],
+     /* CORRECTED 2026-09-24 BY D-486, NEVER EXEMPTED. This read `/level = 'content' GROUP BY state/`,
+        an ADJACENCY pin — and the adjacency is exactly what BOB #32's ruling had to break: the tally now
+        interpolates `#hiddenRunTail(viewer)` between the level literal and the GROUP BY, so the two tokens
+        are no longer neighbours. **THE OLD ASSERTION WAS PINNING A SPELLING RATHER THAN THE RULE**, which
+        is why it went red on a change that strengthens the very thing J3 exists to protect. What the rule
+        actually is: this site counts the WHOLE level (not the page), grouped by state. Both halves are
+        pinned below as their own tokens, so a future narrowing to the page still fails here. */
+     /level = 'content'\$\{hidTail\.sql\} GROUP BY state/.test(SRC.store)],
     [true, true]);
+
+  /* J5 — D-486 / BOB #32 (2026-09-24): THE ONE NARROWING, AND ITS PIN. REC-110's ruling is NOT reopened —
+     the tally still counts every row at this level for every viewer and still does not follow the page.
+     What it no longer counts is a run row whose project the caller cannot see, because Bob ruled a hidden
+     project's run output to be THE PROJECT'S THINKING until something outside uses it. The pin here is that
+     the narrowing is spelled ONCE: all five readers take `#hiddenSets`' predicate, and this site reaches it
+     through the shared `#hiddenRunTail` rather than restating the subtraction — one rule with five spellings
+     is the mirror-and-drift class, and it is the failure mode REC-110's own J3 was written against.
+     The LIVE arm is `project-sight.test.mjs` §9, which drives a real run over a real hidden project through
+     the op; this is the SITE arm, J3's job for the new rule. */
+  t("J5: D-486's narrowing is at this site and is the SHARED predicate, not a second spelling — this tally "
+  + "calls `#hiddenRunTail`, the helper names BOB #32's ruling, and the subtraction itself is written in "
+  + "exactly ONE place in the file (`#hiddenSets`), which is what keeps the five readers one rule",
+    [/const hidTail = this\.#hiddenRunTail\(viewer\);/.test(
+       SRC.store.slice(SRC.store.indexOf("#frontierContent("), SRC.store.indexOf("#frontierMeaning("))),
+     /BOB #32, 2026-09-24 02:30Z/.test(SRC.store),
+     (SRC.store.match(/NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) IN /g) || []).length,
+     (SRC.store.match(/this\.#hiddenRunTail\(viewer\)/g) || []).length],
+    [true, true, 1, 3]);
 }
 
 /* ===================================================================== *

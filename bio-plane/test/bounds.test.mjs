@@ -1620,7 +1620,11 @@ const quoteAction = (id, n) => ["---", `id: ${id}`, "object_type: action", "sche
   `created: "${NOW}"`, `last_updated: "${NOW}"`, "produced_by:", "  mode: assisted", "  capability_tier: session",
   "group: believe-in-oakland", "references: []", "state_history: []", "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
-  "action_kind: cpra_request", "risk_tier: 1",
+  /* CORRECTED 2026-09-24 by CONDUCT #19 (c19-batch11): this fixture stated `risk_tier: 1`, legal when D-148 wrote it;
+     REC-189's fence (C-32.19, IC-249) now refuses a machine credential's promote that SETS a tier, and `mem-r57` is one.
+     The tier is not this block's subject (the quotes bound is), so the fixture leaves it undetermined, which a machine
+     may do where no member set one (BOB #32). The old assertion was right for its day, not wrong. */
+  "action_kind: cpra_request", "risk_tier: undetermined",
   "counterparty:", "  state: named", "  name: Bounds Clerk r57",
   "correspondence:",
   "  - direction: sent", "    at: 2026-07-03", '    account: "The request."', "    author: r57",

@@ -134,6 +134,119 @@ const ARMS = {
     mustFail: [],
   },
 
+  /* D-464 — THE BRIEF'S CONTROL: `op=stats` counts over the WHOLE store again (no bundle is subtracted for anyone).
+     The hidden creation and revision then move vera's stats by name, and the EXACT arm reads a zero difference. The
+     searchindexcheck and selectionlist arms must NOT fail — they are the next two arms' subjects. */
+  "stats-whole-store": {
+    patches: [["store.mjs", `    const hid = gate && gate.scope !== "member"\n`, `    const hid = null && gate && gate.scope !== "member"\n`]],
+    /* DECLARATION EXTENDED 2026-09-24 BY D-486, never exempted: this arm breaks `op=stats` for EVERY key, and
+       §9 now reads two of its keys, so §9's arms go red too. They are DECLARED rather than left as
+       "failed but not declared" — an arm whose declaration is stale reads as a control that surprised its
+       author, which is the one signal this register exists to keep meaningful. */
+    mustFail: ["A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats", "MOVE NOTHING: op=stats (status",
+               "EXACT: the ADMIN token's bundles less vera's",
+               "A HIDDEN PROJECT'S RUN MOVES NONE OF VERA'S FIVE", "A HIDDEN PROJECT'S RUN MOVES NOTHING AT ALL in op=stats and in the DOCUMENT frontier",
+               "EXACT: the ADMIN token's aiRunLog less vera's",
+               "THE TALLY — D-486's OWN SUBJECT"],
+  },
+  /* D-464: `op=searchindexcheck`'s `indexed` over the whole text index again (M-122's second leak). */
+  "indexcheck-whole-index": {
+    patches: [["store.mjs", "indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN\n",
+               "indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE 1=1 OR rowid NOT IN\n"]],
+    mustFail: ["MOVE NOTHING: op=searchindexcheck (status", "MOVE NOTHING: op=searchindexcheck&limit=1 (status",
+               "still a parity check over what she can see"],
+  },
+  /* D-464: `op=selectionlist`'s `bytes` over every selection row again — iris's selection of the hidden project moves it. */
+  "selectionbytes-whole": {
+    patches: [["store.mjs", `        const hide = g && g.scope !== "member";`, `        const hide = false && g;`]],
+    mustFail: ["MOVE NOTHING: op=selectionlist (status"],
+  },
+  /* D-464: the control plane's viewer stamp on op=stats dropped. A viewer NEVER SENT is the store's direct-internal
+     call and counts WHOLE, so the stamp is load-bearing: vera's stats move again, by name, exactly as the brief's arm.
+     RECORDED, NOT SMOOTHED: this arm was first declared (and first run) against a store that read an ABSENT stamp as
+     DENY — there it failed LIVE, the witness and EXACT and passed the headline (three zeros agree). That reading was
+     then corrected because it zeroed the counters four store-level suites read off the DO route directly; the arm
+     was re-declared for the store as landed. */
+  "stats-stamp-dropped": {
+    patches: [["index.mjs", `        || op === "stats"\n`, ``]],
+    /* DECLARATION EXTENDED 2026-09-24 BY D-486, never exempted: this arm breaks `op=stats` for EVERY key, and
+       §9 now reads two of its keys, so §9's arms go red too. They are DECLARED rather than left as
+       "failed but not declared" — an arm whose declaration is stale reads as a control that surprised its
+       author, which is the one signal this register exists to keep meaningful. The `tally` arm is NOT declared here and must stay
+       green: dropping the stamp makes `op=stats` DENY-scoped, which SUBTRACTS MORE rather than less, so the
+       frontier reads are untouched — the asymmetry against `stats-whole-store` above is the measurement. */
+    mustFail: ["A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats", "MOVE NOTHING: op=stats (status",
+               "EXACT: the ADMIN token's bundles less vera's",
+               "A HIDDEN PROJECT'S RUN MOVES NONE OF VERA'S FIVE", "A HIDDEN PROJECT'S RUN MOVES NOTHING AT ALL in op=stats and in the DOCUMENT frontier",
+               "EXACT: the ADMIN token's aiRunLog less vera's"],
+  },
+  /* D-464 OVER-STRICTNESS: the subtraction taken for EVERY sent viewer, unfiltered ones included — correct work in a
+     spelling the suite did not anticipate (an unfiltered gate's complement is empty). Nothing may fail. */
+  "subtract-for-everyone": {
+    patches: [["store.mjs", `    const hid = gate && gate.scope !== "member"\n`, `    const hid = gate\n`]],
+    mustFail: [],
+  },
+
+  /* ------------------------------------------------------------------ D-486 / BOB #32 (2026-09-24)
+     THE ROW'S OWN CONTROL: *drop the predicate from ONE reader and its arm fails by name.* Three
+     breaking arms — one per KIND of reader, so a pass here is not one reader's luck: a frontier tally,
+     an `op=stats` key, and the meaning level's row-whole run fence this item found missing. Each holds
+     the other four open, which is what makes the failure attributable.
+     HOW A LIAR WOULD MAKE §9 GREEN WITHOUT BUILDING IT, and what refuses each route: (1) subtract EVERY
+     run rather than a hidden project's — refused by the two `STILL LIVE` arms, which require a run over
+     a context vera CAN see to move all five of her figures by exactly three rows each; (2) subtract for
+     EVERY caller including the unfiltered — refused by `WHOLE FOR THE UNFILTERED` and by `EXACT`, which
+     reads the ADMIN token's surplus back out of the hidden run's own log rather than out of this suite's
+     arithmetic; (3) return an empty or absent answer to vera — refused by the opening arm, which requires
+     all five figures to be present before anything is written; (4) withhold the EVIDENCE too and call it
+     safety — refused by `THE BYTES STAY SHARED`, which is the second half of Bob's ruling. */
+  /* CORRECTED BEFORE LANDING, AND THE CORRECTION IS THE `BREAK ONLY THE THING` RULE CATCHING THIS ARM
+     RATHER THAN THE SUBJECT. The first spelling removed `${hidTail.sql}` from the SQL and LEFT
+     `...hidTail.args` in the call, so the statement took bindings it had no placeholders for and the
+     content frontier THREW for every filtered viewer. It came back NOT AS DECLARED with three arms red
+     that this patch has no business touching — including one that reads BEFORE anything is written,
+     which is the tell: an arm whose failure precedes its own cause has moved a second variable. The
+     honest arm removes the predicate AND its bindings, which is what a session reverting D-486 would
+     actually write. */
+  "d486-content-tally-unsubtracted": {
+    /* CORRECTED AGAIN 2026-09-24, and M-25's ARM L3 IS WHY — it caught this driver BY NAME on the full battery.
+       The second spelling replaced the whole statement with the SQL as it reads once `${hidTail.sql}` renders
+       EMPTY, which is a quote that resolves against the source only by eating its slot: it goes stale the moment
+       the interpolation moves, and M-25 exists to refuse exactly that. The third spelling neuters the HELPER's
+       result instead and leaves every `${…}` in place, so the arm still drops the predicate from THIS one reader
+       (and keeps its arity: the args are empty rather than absent) while quoting nothing rendered. */
+    patches: [["store.mjs", "    const hidTail = this.#hiddenRunTail(viewer);\n    const tally = {};\n"
+               + "    for (const row of this.#rows(\n"
+               + "      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content'${hidTail.sql}",
+               "    const hidTail = { sql: \"\", args: [] };   /* D-486 CONTROL ARM: the predicate dropped from this ONE reader */\n    const tally = {};\n"
+               + "    for (const row of this.#rows(\n"
+               + "      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content'${hidTail.sql}"]],
+    mustFail: ["A HIDDEN PROJECT'S RUN MOVES NONE OF VERA'S FIVE",
+               "THE TALLY — D-486's OWN SUBJECT"],
+  },
+  "d486-stats-airunlog-unsubtracted": {
+    patches: [["store.mjs", "      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'${runRows ? ` AND ${runRows.sql}` : \"\"}`,\n                          ...(runRows ? runRows.args : [])).c,",
+               "      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,"]],
+    mustFail: ["A HIDDEN PROJECT'S RUN MOVES NONE OF VERA'S FIVE",
+               "A HIDDEN PROJECT'S RUN MOVES NOTHING AT ALL in op=stats and in the DOCUMENT frontier",
+               "EXACT: the ADMIN token's aiRunLog less vera's"],
+  },
+  /* The meaning level's fourth-subject-kind leak, restored. The TALLY still subtracts, so this arm
+     measures the ROW-WHOLE fence alone — and the arm that must catch it is the one asserting the run's
+     own id never appears in vera's bytes, which is the difference between a wrong number and a leak. */
+  "d486-meaning-run-ungated": {
+    patches: [["store.mjs", "      if (!runSeen(r)) return false;\n", ""]],
+    mustFail: ["THE TALLY — D-486's OWN SUBJECT",
+               "AND THE RESIDUE IS A RECLASSIFICATION, NEVER A DISCLOSURE OF THE RUN ITSELF"],
+  },
+  /* D-486 OVER-STRICTNESS: the same predicate in its De Morgan spelling — correct work in a form the
+     suite did not anticipate. Nothing may fail. */
+  "d486-predicate-de-morgan": {
+    patches: [["store.mjs", "`NOT (authority_kind = 'run' AND COALESCE(authority, '') IN ${hidRuns.sql})`",
+               "`(authority_kind <> 'run' OR COALESCE(authority, '') NOT IN ${hidRuns.sql})`"]],
+    mustFail: [],
+  },
+
   /* OVER-STRICTNESS: the same sight question asked through the store's OTHER spelling of it,
      `#bundleRedactor` — correct work in a form the suite did not anticipate. Nothing may fail. */
   "sight-via-redactor": {

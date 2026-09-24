@@ -37,7 +37,11 @@
  *   (6) the all-clear WITHHELD while one feed pends;
  *   (7) the ordering rule STATED on the surface (Q13: longest-waiting first is
  *       the RULE, and the word "proxy" is gone);
- *   (8) a CONDITION group's mute control reaching CONDITIONS ONLY.
+ *   (8) a case group's mute control reaching CONDITION and FINDING kinds and never
+ *       an OBLIGATION — CORRECTED IN PLACE by UI-86: this read "reaching
+ *       CONDITIONS ONLY", right until BOB #26 (2026-09-22) admitted FINDING kinds to
+ *       the personal mute and D-125 built it on the plane; plus UI-86's per-item
+ *       mute, `{ item }`, which also reaches an UNGROUPED condition (D-170).
  *
  * NEGATIVE CONTROL, three arms, RUN 2026-08-04 and RESTORED byte-identical after
  * each — app.html's sha256 compared before and after every arm, and all three
@@ -129,6 +133,10 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
    import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+/* UI-86: the mock's mute fence asks the plane's OWN class lookup, imported not
+   copied — a hand list of condition kinds is what made this mock refuse a FINDING
+   kind the plane accepts from D-125 on. */
+import { classOfKind } from "../../bio-plane/src/queuestate.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -275,15 +283,30 @@ function makePlane(opts){
         { member_id:"m_bob",   handle:"bob",   status:"active" } ] } });
     if(op === "queuemute"){
       const kinds = (body && body.kinds) || [];
-      const CONDITION_KINDS = ["governor-holding-host", "partial-capture-outstanding",
-                               "capture-completed-unattended"];
+      /* UI-86: THE ITEM FORM (D-125), keyed on the item's own id and on no case.
+         Refused beside a case or kinds, refused for an OBLIGATION by class —
+         `store.mjs` `queueMute`, mirrored. */
+      if(body && typeof body.item === "string" && body.item){
+        if(kinds.length || body.case) return R({ ok:true, result:{ ok:false, reason:"BAD_KIND", item:body.item,
+          detail:"name EITHER one item OR kinds on a case, not both" } });
+        const it = state.items.find(i => String(i.id) === body.item);
+        if(!state.lenientMute && !(it && (it.class === "CONDITION" || it.class === "FINDING")))
+          return R({ ok:true, result:{ ok:false, reason:"KIND_NOT_PERSONAL", item:body.item,
+            kind_class:"OBLIGATION", detail:"an obligation leaves every list only when it is RESOLVED." } });
+        state.muted.push({ item:body.item });
+        state.items = state.items.filter(i => i !== it);
+        state.mute = { ...state.mute, items:[...(state.mute.items||[]), body.item].sort(),
+          suppressed:[...(state.mute.suppressed||[]), ...(it ? [{ id:it.id, class:it.class, kind:it.kind, case:null, scope:"item" }] : [])],
+          suppressed_count:(state.mute.suppressed_count||0) + (it ? 1 : 0) };
+        return R({ ok:true, result:{ ok:true, member:"m_alice", form:"item", item:body.item } });
+      }
       /* The real fence is queuestate.mjs's, at the WRITE, and it is the single
          authority. The mock mirrors it so a surface that named the wrong kind
          gets the plane's own refusal here, exactly as it would live. */
       if(!state.lenientMute){
-        const bad = kinds.find(k => !CONDITION_KINDS.includes(k));
+        const bad = kinds.find(k => !["CONDITION","FINDING"].includes(classOfKind(k)));
         if(bad) return R({ ok:true, result:{ ok:false, reason:"KIND_NOT_PERSONAL", kind:bad,
-          kind_class:"OBLIGATION", case:body.case,
+          kind_class:classOfKind(bad) || "OBLIGATION", case:body.case,
           detail:"an obligation is something a named person must do for the record to proceed; it "
                + "leaves every list when it is RESOLVED, which is record state, not a preference." } });
       }
@@ -360,6 +383,7 @@ function makeCtx(plane){
 
 const EXPORTS = ";globalThis.__PLANE=PLANE;globalThis.__renderQueue=renderQueue;"
   + "globalThis.__queueRetry=queueRetry;globalThis.__queueMuteCase=queueMuteCase;"
+  + "globalThis.__queueMuteItem=queueMuteItem;"
   + "globalThis.__resolveTask=resolveTask;globalThis.__forwardTask=forwardTask;"
   + "globalThis.__queueRun=queueRun;globalThis.__FEEDS=QUEUE_FEEDS;globalThis.__RULE=QUEUE_ORDER_RULE;"
   + "globalThis.__mutableKinds=queueMutableKinds;globalThis.__order=queueOrder;"
@@ -386,6 +410,7 @@ async function click(ctx, attr, value){
   if(!hit.includes(value)) throw new Error(`no control data-${attr}="${value}" on the painted queue`);
   if(attr === "retry") return ctx.__queueRetry(value);
   if(attr === "mute")  return ctx.__queueMuteCase(value);
+  if(attr === "muteitem") return ctx.__queueMuteItem(value);
   if(attr === "res")   return ctx.__resolveTask(value);
   throw new Error("unhandled control " + attr);
 }
@@ -616,7 +641,14 @@ async function click(ctx, attr, value){
      && q(ctxB).includes("this producer refuses to emit a classless item"));
 }
 
-/* ========= (7) the mute: on the ENTRY, reaching CONDITIONS only =========== */
+/* ========= (7) the mute: on the ENTRY, reaching CONDITIONS and FINDINGS, never an OBLIGATION ===
+   CORRECTED IN PLACE BY UI-86 (2026-09-24). Four arms here pinned the old rule —
+   the label "Mute conditions on this case", "names CONDITION kinds and nothing
+   else", "a case with no condition on it gets no mute control" and the copy
+   "It reaches condition kinds only". Each was right until BOB #26 ruled on
+   2026-09-22 that a member's PERSONAL mute admits FINDING kinds and D-125 built it
+   (NOTIFICATIONS.md "MARKED AS HANDLED"). What they really guarded — an OBLIGATION
+   is never offered, and the record changes for nobody — is asserted unchanged. */
 {
   const plane = makePlane({});
   const ctx = boot(plane);
@@ -624,18 +656,25 @@ async function click(ctx, attr, value){
   const html = q(ctx);
   const proj = html.slice(html.indexOf('data-case="PROJ-2026-0001"'));
 
-  ok("the mute control reads exactly 'Mute conditions on this case'",
-     />Mute conditions on this case</.test(proj));
+  ok("the mute control reads exactly 'Mute these kinds on this case'",
+     />Mute these kinds on this case</.test(proj));
   ok("the mute control is on the CASE GROUP in the queue, not on an object's control strip",
      proj.indexOf('data-mute="PROJ-2026-0001"') < proj.indexOf('<article class="q-item'));
-  ok("the mute control names CONDITION kinds and nothing else",
+  ok("the mute control names CONDITION and FINDING kinds and never an OBLIGATION kind",
      ctx.__mutableKinds([OB_TWO, FINDING, COND_A, COND_B]).join(",")
-       === "governor-holding-host,partial-capture-outstanding");
-  ok("a case with no condition on it gets no mute control at all",
-     !html.slice(html.indexOf('data-case="INQ-2026-0001"')).startsWith("x")
-     && !/data-mute="INQ-2026-0001"/.test(html));
-  ok("the control says what muting does NOT do — the record is unchanged, and an obligation still reaches you",
-     /Muting changes nothing about the record and nothing for anybody else, and an obligation on this case still reaches you/.test(proj));
+       === "governor-holding-host,missing_predecessor,partial-capture-outstanding");
+  ok("a case holding a FINDING now gets the mute control too (DEC-10's (c), D-125)",
+     /data-mute="INQ-2026-0001"/.test(html));
+  {
+    const pOb = makePlane({ items:[OB_TWO, OB_LONE] });
+    const cOb = boot(pOb);
+    await cOb.__renderQueue();
+    const hOb = q(cOb);
+    ok("a case holding only an OBLIGATION gets no mute control at all, and no obligation gets an item mute",
+       /data-case="PROJ-2026-0001"/.test(hOb) && !/data-mute=/.test(hOb) && !/data-muteitem=/.test(hOb));
+  }
+  ok("the control says what muting does NOT do — the record is unchanged, a finding stays open for everyone else, and an obligation still reaches you",
+     /Muting changes nothing about the record and nothing for anybody else\. A finding you mute stays open for everyone else until somebody adopts, defers or dismisses it, and an obligation on this case still reaches you/.test(proj));
 
   await click(ctx, "mute", "PROJ-2026-0001");
   const muteCall = plane.CALLS.find(c=>c.op==="queuemute");
@@ -668,11 +707,15 @@ async function click(ctx, attr, value){
   await ctxL.__renderQueue();
   await ctxL.__queueMuteCase("PROJ-2026-0001");
   const laxCall = lax.CALLS.find(c=>c.op==="queuemute");
-  ok("against a plane with NO fence, the surface still names CONDITION kinds only",
+  ok("against a plane with NO fence, the surface still names no OBLIGATION kind — the two conditions on this case and nothing else",
      laxCall.body.kinds.join(",") === "governor-holding-host,partial-capture-outstanding");
   ok("an OBLIGATION on a muted case still reaches the member, even when the plane would have hidden it",
      q(ctxL).includes('data-id="T-88"'));
-  ok("and the FINDING survives too — a mute is not a way to clear the record's own questions",
+  /* UI-86: this read "a mute is not a way to clear the record's own questions".
+     A FINDING may now be muted personally, so the reason the finding survives
+     HERE is narrower and exact: the mute was drawn on the project, and the
+     finding is filed under the question. */
+  ok("and the FINDING under the OTHER case survives too — a case mute reaches only the case it was drawn on",
      q(ctxL).includes('data-id="FINDING::procurement::solicitation"'));
   ok("what the lenient plane did hide is the two conditions, and it is reported",
      !q(ctxL).includes("CONDITION::governor-holding-host") && /2 items are not shown to you below/.test(q(ctxL)));
@@ -693,6 +736,44 @@ async function click(ctx, attr, value){
      j.ok === false && j.reason === "KIND_NOT_PERSONAL" && j.kind_class === "OBLIGATION");
   ok("and the surface has no refusal string of its own to render instead",
      !SRC.includes("KIND_NOT_PERSONAL"));
+}
+
+/* ===== (7b) UI-86 · the ITEM mute, `{ item }` — and it reaches an UNGROUPED condition (D-170) =====
+   A held host nothing rests on has NO case, so the case form cannot reach it
+   (REC-32); D-125's item form can, keyed on the item's published id. Clicked
+   through the wiring, and judged on the BODY that travelled. */
+{
+  const LOOSE = { ...cond("governor-holding-host", "our own pacing is holding records.example.gov"),
+    id:"CONDITION::governor-holding-host::records.example.gov",
+    case:{ state:"determined", ungrouped:true, reasons:[], depth_bound:6, ancestors:[] } };
+  const plane = makePlane({ items:[OB_TWO, FINDING, OB_LONE, COND_A, LOOSE] });
+  const ctx = boot(plane);
+  await ctx.__renderQueue();
+  const html = q(ctx);
+  const loose = html.slice(html.indexOf('data-case="__ungrouped__"'));
+  ok("UI-86: the UNGROUPED condition carries the per-item mute, in the ungrouped section (D-170)",
+     html.includes('data-case="__ungrouped__"')
+     && loose.includes('data-muteitem="CONDITION::governor-holding-host::records.example.gov"'));
+  ok("UI-86: every CONDITION and FINDING carries the per-item mute, and no OBLIGATION does",
+     html.includes('data-muteitem="FINDING::procurement::solicitation"')
+     && html.includes('data-muteitem="CONDITION::governor-holding-host::x"')
+     && !html.includes('data-muteitem="T-88"') && !html.includes('data-muteitem="T-300"'));
+  await click(ctx, "muteitem", "CONDITION::governor-holding-host::records.example.gov");
+  const mc = plane.CALLS.filter(c => c.op === "queuemute");
+  ok("UI-86: the per-item mute sends the ITEM form — exactly { item }, no case and no kinds",
+     mc.length === 1 && JSON.stringify(Object.keys(mc[0].body)) === '["item"]'
+     && mc[0].body.item === "CONDITION::governor-holding-host::records.example.gov");
+  const after = q(ctx);
+  ok("UI-86: the muted item leaves this member's feed and NOTHING else does — the same kind on the project stays",
+     !after.includes('data-id="CONDITION::governor-holding-host::records.example.gov"')
+     && after.includes('data-id="CONDITION::governor-holding-host::x"')
+     && after.includes('data-id="T-88"') && after.includes('data-id="FINDING::procurement::solicitation"'));
+  ok("UI-86: the suppression is REPORTED from mute.items, naming the item",
+     /You asked not to be notified about 1 item one at a time/.test(after)
+     && after.includes('<span class="mono">CONDITION::governor-holding-host::records.example.gov</span>')
+     && /It is live, and not shown to you below/.test(after));
+  ok("UI-86: an item mute is not reported as a case mute — no case sentence is drawn when no case was muted",
+     !/You muted .* on \d+ case/.test(after));
 }
 
 /* ============ (8) Q12 narration, and no refusal computed here ============= */
@@ -823,4 +904,4 @@ async function click(ctx, attr, value){
 }
 
 if(fails.length){ console.error(`queue: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`queue: ${n} assertions, all green — one surface over three, grouped by case, one event under two homes clearing everywhere with the resolver named, an ungrouped item, per-feed failure named and count-free, Retry scoped to the failed feed, the all-clear withheld, the ordering rule stated, a mute that reaches conditions only, and a case heading that travels BY TYPE to the workspace / the question page`);
+console.log(`queue: ${n} assertions, all green — one surface over three, grouped by case, one event under two homes clearing everywhere with the resolver named, an ungrouped item, per-feed failure named and count-free, Retry scoped to the failed feed, the all-clear withheld, the ordering rule stated, a mute that reaches conditions and findings and never an obligation (per case or per item), and a case heading that travels BY TYPE to the workspace / the question page`);

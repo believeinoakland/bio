@@ -313,6 +313,30 @@ const ROLE = {
   "#aiRunReapPending": "HOUSEKEEPS",
   "#aiRunReapWake":    "HOUSEKEEPS",
   "#aiRunReap":        "HOUSEKEEPS",
+  /* D-464's, 2026-09-24, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself. `#counts` (op=stats'
+     and purge's proof) always COUNTED `ai_runs`, through a table name the walk could not see; D-464 made it SELECT
+     `run` WHERE the context is a project the caller cannot see, to subtract that run's bounds from the caller's
+     counts. It projects the key only, publishes a NUMBER and no fact of any run, and is purge's proof besides —
+     the purge half of HOUSEKEEPS. Not SELECTS: it delegates to no PUBLISHES reader, because it publishes no run. */
+  /* CORRECTED 2026-09-24 BY D-486, NEVER EXEMPTED, and W3 AND W3b CAUGHT IT TOGETHER — W3 named a thirteenth
+     reader (`#hiddenSets`) and W3b named a cell the walk no longer finds (`#counts`), which is the pair of arms
+     doing exactly what their comments promise. The SELECT did not appear or disappear: D-486 MOVED it. Three more
+     readers needed the same subtraction — the document, content and meaning frontier tallies — so the compilation
+     point was lifted out of `#counts` into `#hiddenSets`, and `#counts` now calls it. One rule with five spellings
+     is the drift class, and this row is the register of that move rather than of a new reader.
+     **`#counts`' CELL IS REMOVED RATHER THAN KEPT, AND W3b IS WHY — the first correction kept both and W3b
+     refused it BY NAME on the next run.** That arm's rule is that this table names nothing the WALK did not
+     find, and the walk's reader is a method whose own body names `ai_runs`; `#counts` no longer has one. Keeping
+     a cell for a caller that reaches the table only through a helper is precisely the stale green W3b exists to
+     kill — and the reasoning that `#counts` is "still a reader really" is the shape of every stale cell ever
+     defended. It is a CALLER now, and callers are not in this table.
+     HOUSEKEEPS, on D-464's unchanged reasoning carried to the new site: the helper projects the KEY only
+     (`SELECT run …`), the result is consumed as a set to SUBTRACT rows from counts and tallies, and no column of
+     any run reaches any caller through it. Not AUTHORISES: it gates no act and refuses nothing — it changes a
+     NUMBER. Not SELECTS: it delegates to no PUBLISHES reader, because it publishes no run. `#counts` is still
+     purge's proof and still counts `ai_runs` by table name; that is `n("ai_runs", "context_id")`, which this walk
+     has never counted as a read of the row. ARM W4's three publishers are untouched — asserted one arm down. */
+  "#hiddenSets":       "HOUSEKEEPS",
   /* FL-4's two, and ARM W3 IS WHY THEY ARE HERE — they arrived as a FAILURE
      naming both of them by name, which is the sweep behaving exactly as its own
      comment promises rather than absorbing a new reader in silence.

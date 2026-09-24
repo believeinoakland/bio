@@ -648,8 +648,14 @@ ok("the document whose recorded name IS this subject's name is offered", cands.i
      rows.some(d => d.correspondence === "name" && d.grade_if_resolved === "C"));
   ok("and the A tier is answered beside it for the same document, from the ONE call",
      rows.some(d => d.correspondence === "reference" && d.grade_if_resolved === "A"));
+  /* CORRECTED 2026-09-24 by D-291, not exempted: this counted every occurrence of the document's SHA in the list
+     (`<= 1`) as its proxy for "offered". D-291 gave each candidate a selection tick naming the SAME document
+     (`data-rsel` / `resolveSelectionToggle`) beside its one button, so the sha now occurs more than once in ONE
+     candidate row and the proxy stopped meaning what it was written for. What "offered twice" means is two
+     candidate ROWS, so the offer is counted where it is made: the one `resolvePick(<sha>)` button per document. */
   ok("the surface shows that document once, at the strongest of them — a member is not offered it twice",
-     rows.length === 2 && (cands.match(new RegExp(SHA_C, "g")) || []).length <= 1);
+     rows.length === 2 && (cands.match(new RegExp(`resolvePick\\('${SHA_C}'\\)`, "g")) || []).length <= 1
+     && (cands.match(new RegExp(`resolvePick\\('${SHA_C}'\\)`, "g")) || []).length >= 1);
 }
 ok("a document naming nothing the registry knows is not offered", !cands.includes(BID_D));
 

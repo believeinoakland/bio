@@ -30,7 +30,10 @@ const run = () => {
 const ARMS = [
   { name: "second-derivation",
     /* A copy of the walk that agrees on bundles and captures and OMITS the address branch. */
-    from: "      independence: this.#independenceOf(legs, new Set(legs.map((l) => l.ground)).size),\n",
+    /* RE-ANCHORED 2026-09-24 by REC-192, never exempted: the one call now serves the version arm too and
+       counts `parts` as versionStrength does (distinct NON-BLANK groups), so the line this arm replaces moved.
+       The replacement is unchanged — it still swaps the whole expression for a second derivation. */
+    from: "      independence: this.#independenceOf(legs,\n        new Set(legs.map((l) => String(l.ground ?? \"\").trim()).filter(Boolean)).size),\n",
     to: `      independence: (() => {
         const by = new Map();
         for (const l of legs) { if (!by.has(l.ground)) by.set(l.ground, new Set()); const s = by.get(l.ground);
@@ -49,8 +52,9 @@ const ARMS = [
     to: "          if (true)\n            shared.push({ a: originSets[i][0], b: originSets[j][0], through: common.slice(0, 5) });\n",
     mustFail: ["ARM B1", "ARM B2", "ARM D1"], mustPass: ["ARM A1", "ARM C1", "ARM E1", "ARM F4"] },
   { name: "no-totality",
-    from: "    if (unplaced.length)\n      return refusal(\"PARTITION_INDEPENDENCE_NOT_TOTAL\",",
-    to: "    if (false)\n      return refusal(\"PARTITION_INDEPENDENCE_NOT_TOTAL\",",
+    /* RE-ANCHORED 2026-09-24 by REC-192: the partition arm moved one block in (an `else` beside the version arm). */
+    from: "      if (unplaced.length)\n        return refusal(\"PARTITION_INDEPENDENCE_NOT_TOTAL\",",
+    to: "      if (false)\n        return refusal(\"PARTITION_INDEPENDENCE_NOT_TOTAL\",",
     mustFail: ["ARM F4"], mustPass: ["ARM A1", "ARM B1", "ARM C1", "ARM D1", "ARM D2", "ARM E1", "ARM F5", "ARM F6"] },
 ];
 

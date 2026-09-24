@@ -43,11 +43,19 @@ const SUITES = [
 const MIN_BYTES = 500000;
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
-/* The document arm's tally, verbatim — the anchor for three of the four arms. */
+/* The document arm's tally, verbatim — the anchor for three of the four arms.
+ * CORRECTED 2026-09-24 BY D-486, NEVER EXEMPTED. It read the pre-D-486 three lines; BOB #32's ruling adds
+ * `#hiddenRunTail(viewer)` to the statement and its bindings to the call, so the old anchor matched ZERO times
+ * and every arm resting on it would have "passed" WITHOUT ARMING — which this file's own rule calls a finding,
+ * not a pass. THE ARMS THEMSELVES ARE UNCHANGED IN MEANING: each still gates, narrows, unsays or perturbs the
+ * DOCUMENT arm's tally, and (a), (b) and (d) keep D-486's subtraction in place while they do it, so they
+ * measure REC-110's ruling and not D-486's. `armed()` below is what would have caught a stale anchor; it is
+ * cheaper to keep the anchor true. */
 const DOC_TALLY =
   "    const tally = {};\n"
 + "    for (const row of this.#rows(\n"
-+ "      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document' GROUP BY state`))\n"
++ "      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document'${hidTail.sql} GROUP BY state`,\n"
++ "      ...hidTail.args))\n"
 + "      tally[row.state] = row.n;";
 
 /* Each arm: [file, anchor, replacement, declared]. */
@@ -66,6 +74,8 @@ const ARMS = {
      stays green over a real change of meaning. This is the silent value change
      inside an unchanged envelope that IC-118's rule names. */
   bound: [STORE, DOC_TALLY,
+    /* D-486: the bound-cut list is still UNGATED across readers (that is what makes this arm J2's and not
+       J1's), so `hidTail` is simply not consulted here — the arm replaces the whole statement. */
     "    const tally = {};\n"
     + "    for (const r of this.#frontierLatest(\"document\", { limit: cap, subjectKind: \"address\" }))\n"
     + "      tally[r.state] = (tally[r.state] || 0) + 1;",
@@ -89,7 +99,8 @@ const ARMS = {
   overstrict: [STORE, DOC_TALLY,
     "    const tally = {};\n"
     + "    for (const row of this.#rows(\n"
-    + "      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document' GROUP BY state`))\n"
+    + "      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document'${hidTail.sql} GROUP BY state`,\n"
+    + "      ...hidTail.args))\n"
     + "      tally[row.state] = row.n + 1000;",
     "MUST NOT FAIL ANYTHING. The values move; the invariance does not. A red here means the pin "
     + "is tighter than its rule"],

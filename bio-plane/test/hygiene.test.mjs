@@ -804,6 +804,9 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     knock_rate:           "fixed-window knock rate accounting; transient, self-pruning as windows pass",
     capture_limits:       "measured per-runtime subrequest ceiling; a capability fact, relearned by being refused, not corpus-derived",
     runtime_observations: "measured CPU cost; a capability fact, not corpus-derived",
+    /* D-64: the instance's daily render allowance and its deferrals, an operational
+       budget in runtime_observations' family — no bundle_id, nothing corpus-derived. */
+    render_allowance:     "the daily render allowance spent and the renders deferred (D-64); an operational budget, not corpus-derived",
     /* CPDF-13 / D-183. The three calibration tables sit in `runtime_observations`'
        family and NOT in `reading_text_source`'s, and the distinction is the whole
        reason the exemption is defensible rather than convenient.
@@ -2294,6 +2297,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        with the instance down, to read the first bundle's register row back byte for byte; it throws unless exactly ONE store
        holds a register, and nothing it walks is a figure anybody floors on. */
     "bio-plane/test/d179onehome.test.mjs",        // its own mkdtemp persist root, to read the register row; asserted exactly one store
+    /* REC-190 (2026-09-24): D-179's shape exactly — walks its OWN mkdtemp persist root (rec190-persist-*), with the instance down,
+       to find the one sqlite file holding `register`: to SEED the pre-fence move and an orphan row, and to read the register back
+       as a witness. It throws unless exactly ONE store holds a register, each seed's change count is asserted exactly (`1`), and
+       nothing it walks is a figure anybody floors on. Its control driver copies trees and walks none. */
+    "bio-plane/test/homecensus.test.mjs",         // its own mkdtemp persist root, to seed the moved row; asserted exactly one store
     /* `bio-plane/test/walkfigure.test.mjs` STOOD HERE FROM D-265 UNTIL 2026-09-10
        AND D-301 REMOVED IT — BY MEASURING, NOT BY DECIDING. D-265's entry said the
        file CONTAINS NO WALK AT ALL: its only discovery primitive is the word
@@ -2374,13 +2382,17 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      file(s)`): the one is D-394's own suite (`test/versionnotice.test.mjs`, named above), the only walker it adds. */
   /* MOVED 42 -> 43 by CONDUCT #18 at D-394's merge onto c18-batch8, which carries D-179's walker (d179onehome): the
      merged tree PRINTED 43, d179onehome and versionnotice both walkers. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 43)`,
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 44)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
     /* MOVED 41 -> 42 by D-179 (d179onehome named above), from the figure this suite PRINTED on the item's tree over
        origin/main 91bcea6b, the only walker the item adds (its control driver copies trees and walks none). */
-    census.length >= 43, true);
+    /* MOVED 42 -> 43 by REC-190 (homecensus named above), from the figure this suite PRINTED on the item's tree over
+       origin/main 15b2a4c0 (`43 walking file(s)`), the only walker the item adds. */
+    /* MOVED 43 -> 44 by CONDUCT #19 at REC-190's merge onto c19-batch11 (which carries D-394's versionnotice and D-179's
+       d179onehome): the merged tree PRINTED `44 walking file(s)`, homecensus the one walker this merge adds. */
+    census.length >= 44, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

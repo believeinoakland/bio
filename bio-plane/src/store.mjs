@@ -1188,6 +1188,12 @@ export class Store extends DurableObject {
          invented. NULL reads back as `not recorded`, stated, through `#statusBy`. */
       ["members", "status_by", "TEXT"],
       ["signers", "status_by", "TEXT"],
+      /* REC-184 (framework §8.2, D-128's follow-on): the progression definition version a proposal
+         disposition was decided against. NULLABLE AND NEVER BACK-FILLED: a decision taken before this
+         column existed recorded no version, and the one value a backfill could reach for is the
+         CURRENT version — the very claim the column exists to test. NULL reads back `not recorded`,
+         stated by `#dispositionVersionView`. */
+      ["proposal_dispositions", "definition_version", "INTEGER"],
       /* REC-193 (BIO_Publication_v0_1.md §3 rule 13, BOB #32): WHO WROTE THE EXCLUSION STATEMENT'S CURRENT
          BYTES — the SERVER's stamp of the editor whose `op=casedraft` last CHANGED the statement text, never
          the caller's word and never the last editor of another field. NULLABLE AND NEVER BACK-FILLED, D-85's
@@ -2745,9 +2751,17 @@ export class Store extends DurableObject {
          gated with it (REC-25: a total bigger than the pages says something is
          hidden). `indexed` counts INDEX rows, which is the substrate side of the
          parity this op exists to check and the number the orphan finding is read
-         against — a count that names nothing is not identity. */
+         against — a count that names nothing is not identity.
+         CORRECTED 2026-09-24 BY D-464, and the old sentence was half right: an ORPHAN names nothing, but a row a
+         bundle CLAIMS is that bundle's, and `indexed` over the whole index moved when a project the caller cannot
+         see was created (MEASUREMENTS M-122). So `indexed` drops the rows a bundle the gate does NOT pass claims —
+         the complement of the same gate, interpolated — and keeps every orphan: parity is still `indexed` against
+         `keyed` plus the orphans, now over what the caller can see. An unfiltered credential's answer is unchanged. */
       counts: { bundles: this.#one(`SELECT count(*) c FROM bundles b WHERE (${gate.sql})`, ...gate.args).c,
-                indexed: this.#one(`SELECT count(*) c FROM bundles_fts`).c,
+                indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
+                                      (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN
+                                        (SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql})))`,
+                                   ...gate.args).c,
                 keyed: this.#one(`SELECT count(*) c FROM bundles b WHERE b.fts_id IS NOT NULL AND (${gate.sql})`,
                                  ...gate.args).c },
       /* REC-57: `cursor` IS this op's truncation signal and is UNTOUCHED — a
@@ -4013,7 +4027,7 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-selection-moved */
   }
 
-  selectionList({ owner = null } = {}) {
+  selectionList({ owner = null, viewer } = {}) {
     this.#sweepSelections();
     if (!owner) return { ok: false, reason: "NO_OWNER" };
     return {
@@ -4021,7 +4035,18 @@ export class Store extends DurableObject {
       selections: this.#rows(
         `SELECT handle, kind, q, n, created, touched, expires FROM selections WHERE owner=? ORDER BY created DESC`, owner),
       caps: { maxItems: Store.SELECTION_MAX_ITEMS, maxPerOwner: Store.SELECTION_MAX_PER_OWNER },
-      bytes: this.#one(`SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items`).b,
+      /* D-464: the instance's selection bytes, and a row naming a bundle the caller cannot see is not in them —
+         another member's selection of a project this caller was never invited to moved this figure by that id's
+         length (§7.9). The complement of the one gate, as `#counts` takes it; `viewer === undefined` is a direct
+         internal call and stays whole. The rest stays instance-wide: other members' selections of what this caller
+         CAN see are not ruled private. */
+      bytes: (() => {
+        const g = viewer === undefined ? null : viewerPredicate(viewer);
+        const hide = g && g.scope !== "member";
+        return this.#one(`SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items`
+          + (hide ? ` WHERE bundle_id NOT IN (SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${g.sql}))` : ""),
+          ...(hide ? g.args : [])).b;
+      })(),
     };
   }
 
@@ -16458,6 +16483,44 @@ export class Store extends DurableObject {
        * which only the store can see). */
       const isAction = normalizeType(meta.object_type) === "action";
       if (isAction && docFmW && !pkg.replay) {
+        /* REC-189 / C-32.19 — ONLY A MEMBER'S AUTHORED ACT SETS A RISK TIER (D-182, BOB #21:
+           *"Only a member's authored act sets 1, 2 or 3"*; `BIO_Case_Making_v0_1.md` §2). D-182 built the
+           UNDETERMINED reading and left the write open: a machine credential's promote could still stamp
+           `risk_tier: 1` — "file freely" — on an action nobody assessed, the overclaim the ruling names on the
+           one field carrying legal exposure. `actionMove`'s fence, on the same author stamp and REC-46's one
+           predicate (`!who`: a write no session or credential stamped is not a member's act either).
+           WHAT IT ASKS IS A CHANGE, NEVER A PRESENCE: the tier this revision states against the tier the
+           version it replaces states (a creation replaces nothing, so any stated tier is a change). A machine
+           revising an action a member assessed carries the member's tier forward unchanged and lands; one that
+           states no tier lands only where no member has set one (BOB #32, below: removing a member's tier is a change). Both sides read through
+           `riskTierState`, so a respelling of the same value is not a change. A value outside the vocabulary
+           is not this fence's — the catalogue refuses it by name. Before any write. Replay is exempt with the
+           block: a replayed promotion is the record re-stating its own past. */
+        const nextTier = riskTierState(docFmW.risk_tier);
+        const heldTierMd = cur ? this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId) : null;
+        const heldTierFm = heldTierMd && typeof heldTierMd.content === "string" ? parseFrontmatter(heldTierMd.content).data : null;
+        const heldTier = riskTierState(heldTierFm && typeof heldTierFm === "object" ? heldTierFm.risk_tier : undefined);
+        const tierWho = String(author ?? "").trim();
+        /* BOB #32, 2026-09-24 01:44Z, paid at c19-batch10: once a MEMBER has set a tier, a machine may not write it
+           AT ALL — dropping a member's 1, 2 or 3 to `undetermined` is a change too, and is refused by the same name.
+           Where no member ever set one (the held tier is undetermined) the machine may leave it undetermined. A held
+           1, 2 or 3 is read as a member's: since this fence, no other writer can put one there. */
+        const heldTierSet = heldTier === 1 || heldTier === 2 || heldTier === 3;
+        /* DEC-49 REGION is-machine-set-risk-tier */
+        if ((!tierWho || isMachineIdentity(tierWho))
+            && ((nextTier === 1 || nextTier === 2 || nextTier === 3) || heldTierSet)
+            && nextTier !== heldTier)
+          return { ok: false, reason: "MACHINE_CANNOT_SET_RISK_TIER", risk_tier: nextTier,
+                   held: cur ? heldTier : null,
+                   detail: (cur ? `this revision states risk_tier ${nextTier} where the version it replaces states `
+                                  + `${heldTier}.`
+                                : `this creation states risk_tier ${nextTier}.`)
+                         + ` A risk tier is a member's assessment of the legal exposure of filing `
+                         + `this action, and only a member's authored act sets 1, 2 or 3. A machine credential `
+                         + `may carry a member's tier forward unchanged, and may leave the tier unstated `
+                         + `(undetermined) only where no member has set one; it may not remove a member's tier. `
+                         + `Nothing was written.` };
+        /* END DEC-49 REGION is-machine-set-risk-tier */
         const af = [];
         actionBasisFindings(docFmW, af);
         const aerrs = af.filter((x) => x.severity === "error");
@@ -23276,7 +23339,37 @@ export class Store extends DurableObject {
      resolutions. With a `ref`, resolve just that reference; without one, resolve every
      reference the document's reading carries. A reference matching no entity is returned
      UNRESOLVED and honestly so -- there is no row, no force-match. */
-  async resolveReferences({ captureSha, ref = null, resolvedBy = null } = {}) {
+  async resolveReferences({ captureSha, ref = null, resolvedBy = null, items } = {}) {
+    /* D-291 (BIO_Interaction_Constructs §S, named by BOB #32's ruling of 2026-09-23 23:30Z): WITH `items`,
+       the act takes a SET of documents under D-126's PER-ITEM weight — ONE motion over a member's
+       selection, never a surface looping N calls. Every item is resolved by `#resolveOne`, the SAME code
+       the single form runs, so a document is accepted and refused by exactly the rules one sha is and a
+       retained document carries that act's own reason. `resolvedBy` (the control plane's stamp) is forced
+       onto every item; a shared `ref` is overridable per item.
+       THE CONNECTION SWEEP IS ARMED ONCE FOR THE SET, and only when an APPLIED item inserted or raised a
+       resolution — the single form's own rule (REC-5 / D-122), asked of the set rather than N times.
+       A CAPTURE IS CONTENT-ADDRESSED, so the set cannot DRIFT under the member the way a bundle
+       selection can (§S's `refuse` weight exists for that): what the member saw is what each sha names.
+       What CAN change between the sight and the act is whether a sha names a document with a reading,
+       and that is exactly what an item's own refusal (NO_SUCH_REFERENCE) reports, per item. */
+    if (items !== undefined) {
+      const set = this.#perItem("resolve", { items, ref }, { resolvedBy }, (b) => this.#resolveOne(b));
+      if ((set.items || []).some((o) => o.outcome === "applied" && (o.resolved || []).some((m) => !m.kept)))
+        await this.#armConnectionDerive();
+      return set;
+    }
+    const one = this.#resolveOne({ captureSha, ref, resolvedBy });
+    /* REC-5 / D-122: #recognise stamped every entity whose resolution was inserted
+       or raised (never a kept one). If anything was dirtied, ARM the scheduled
+       connection-derive sweep so the entity axis self-populates without a manual
+       op=connect. Producer-side only: it SCHEDULES, it never derives here. */
+    if (one.ok && one.resolved.some((m) => !m.kept)) await this.#armConnectionDerive();
+    return one;
+  }
+
+  /* D-291: op=resolve's ONE-DOCUMENT act, synchronous, shared by the single form and every item of the set
+     form. Moved out of `resolveReferences` unchanged but for the sweep, which its caller arms. */
+  #resolveOne({ captureSha, ref = null, resolvedBy = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return { ok: false, reason: "NO_SHA", detail: "a resolution is over a captured document, named by its capture sha256" };
     let refs;
@@ -23323,11 +23416,6 @@ export class Store extends DurableObject {
         for (const m of matches) resolved.push(m);
       }
     });
-    /* REC-5 / D-122: #recognise stamped every entity whose resolution was inserted
-       or raised (never a kept one). If anything was dirtied, ARM the scheduled
-       connection-derive sweep so the entity axis self-populates without a manual
-       op=connect. Producer-side only: it SCHEDULES, it never derives here. */
-    if (resolved.some((m) => !m.kept)) await this.#armConnectionDerive();
     return { ok: true, capture_sha: captureSha, references: refs.length,
              resolved_count: resolved.length, unresolved_count: unresolved.length, resolved, unresolved };
   }
@@ -24372,6 +24460,54 @@ export class Store extends DurableObject {
         key, version, s.stage_key, s.stage_no, s.label ?? null, s.after_stage ?? null, s.cardinality, s.within_interval ?? null, s.required);
   }
 
+  /* REC-184: the CURRENT version's NUMBER and the instant it came to stand, and nothing else -- the
+     light read #assembleInstance, op=proposedispose and op=proposals share, so which version is
+     current has ONE answer on the read and on the act. `at` is progression_defs.at, which every
+     declaration writes: a D-128 revision and, before D-128, every overwriting re-declaration
+     (`ON CONFLICT … DO UPDATE SET … at=excluded.at`), so it is the time the definition an instance
+     is read against was declared. null if the progression was never declared. */
+  #definitionVersionOf(key) {
+    const def = this.#one(`SELECT at FROM progression_defs WHERE progression_key=?`, key);
+    if (!def) return null;
+    const v = this.#one(
+      `SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`, key);
+    return { version: v && v.v != null ? v.v : 1, at: def.at ?? null };
+  }
+
+  /* REC-184: does a recorded proposal disposition GOVERN the definition an instance is read against
+     today? A decision is a member's judgment of the proposal a definition produced, so it applies to
+     the version it was taken against and to no later one (framework §8.2: a finding names the
+     version it was read against, and the decision about it does too). Four answers, each stated:
+       - recorded and equal to the current version      -> applies;
+       - recorded and earlier (the definition was revised since) -> does NOT apply: the proposal is
+         open again and the decision is published beside it, aged, never deleted (D-79);
+       - NOT RECORDED (a row written before this column) and the definition has not been declared
+         since the decision was taken -> applies: whatever version it was, it is still the current
+         one, because no declaration has happened in between. The version number stays unknown;
+       - NOT RECORDED and the definition was declared after it, or either instant is missing or
+         they are the same instant ->
+         does NOT apply: the decision may have judged a definition that no longer stands, and
+         applying it would be the record claiming a judgment nobody made. Resurfacing is the
+         direction that asks again rather than asserts.
+     Never back-fills the row: this is a read, and `definition_version` stays null on the record. */
+  static #dispositionVersionView(d, cur) {
+    const recorded = d.definition_version != null;
+    const current = cur ? cur.version : null;
+    let applies, because;
+    if (!cur) { applies = false; because = "definition_not_declared"; }
+    else if (recorded) {
+      applies = Number(d.definition_version) === current;
+      because = applies ? "decided_against_current_version" : "decided_against_earlier_version";
+    } else if (cur.at == null || d.at == null || String(cur.at) === String(d.at)) {
+      /* no instant, or the same millisecond: which came first is not in the record */
+      applies = false; because = "version_not_recorded_order_undetermined";
+    } else if (String(cur.at) > String(d.at)) { applies = false; because = "version_not_recorded_definition_declared_since"; }
+    else { applies = true; because = "version_not_recorded_definition_not_declared_since"; }
+    return { definition_version: recorded ? Number(d.definition_version) : null,
+             definition_version_state: recorded ? "recorded" : "not recorded",
+             current_definition_version: current, applies, applies_because: because };
+  }
+
   /* D-128: the CURRENT version of a definition -- the one every instance and finding is derived
      against -- with its number. A definition with no version rows was declared before D-128 and
      reads as version 1, its basis not recorded (version_recorded:false). null if never declared. */
@@ -24865,9 +25001,7 @@ export class Store extends DurableObject {
     /* D-128: the version of the definition this instance is read against -- the CURRENT one, whose
        stages are loaded below. Named on the instance and on every finding and discharge, so a
        finding keeps its basis after a revision: op=progression with this version reads it back. */
-    const vrow = this.#one(
-      `SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`, progressionKey);
-    const definitionVersion = vrow && vrow.v != null ? vrow.v : 1;
+    const definitionVersion = this.#definitionVersionOf(progressionKey).version;   // REC-184: the one reader
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     const stageDefs = this.#rows(
       `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
@@ -25400,11 +25534,21 @@ export class Store extends DurableObject {
        `dispositions` so the decision — its state, reason, who and when — stays on the record.
        Dropping this lookup is REC-7's negative control: with no dispositions read, an aged
        proposal reappears as open. */
-    const disposed = new Map();   // (progression_key::stage_key) -> the disposition row
+    /* REC-184: EVERY recorded disposition is read, and only the ones that GOVERN the definition in
+       force age a proposal out of open (`#dispositionVersionView`). A decision taken against an
+       earlier version of the definition leaves the proposal OPEN — carrying that decision as
+       `prior_disposition` — and stays in `dispositions[]` with `applies: false`, so the record says
+       both that a member decided and that nobody has judged the definition standing now. */
+    const recorded = new Map();   // (progression_key::stage_key) -> the disposition row, with its version view
+    const curOf = new Map();      // progression_key -> #definitionVersionOf, read once per progression
     for (const d of this.#rows(
-      `SELECT progression_key, stage_key, state, reason, decided_by, at
-         FROM proposal_dispositions`))
-      disposed.set(d.progression_key + "::" + d.stage_key, d);
+      `SELECT progression_key, stage_key, state, reason, decided_by, at, definition_version
+         FROM proposal_dispositions`)) {
+      if (!curOf.has(d.progression_key)) curOf.set(d.progression_key, this.#definitionVersionOf(d.progression_key));
+      recorded.set(d.progression_key + "::" + d.stage_key,
+                   { ...d, ...Store.#dispositionVersionView(d, curOf.get(d.progression_key)) });
+    }
+    const disposed = new Map([...recorded].filter(([, d]) => d.applies));   // the ones that AGE
     /* DISTINCT (progression_key, entity_id): the identity of an instance is the pair; a stage
        holds several documents but that is still one instance. Ordered so the feed is stable. */
     const pairs = this.#rows(
@@ -25448,10 +25592,17 @@ export class Store extends DurableObject {
         const key = inst.progression_key + "::" + f.stage_key;
         let g = groups.get(key);
         if (!g) {
+          const prior = recorded.get(key) || null;   // REC-184: a decision about an EARLIER definition
           g = { key, progression_key: inst.progression_key, progression_label: inst.label,
                 stage_key: f.stage_key, stage_label: f.stage_label, required: f.required,
                 definition_version: inst.definition_version,
-                surfaced_by: "machine", overdue_count: 0, instances: [] };
+                surfaced_by: "machine", overdue_count: 0, instances: [],
+                prior_disposition: prior
+                  ? { state: prior.state, reason: prior.reason, decided_by: prior.decided_by, at: prior.at,
+                      definition_version: prior.definition_version,
+                      definition_version_state: prior.definition_version_state,
+                      applies: false, applies_because: prior.applies_because }
+                  : null };
           groups.set(key, g);
         }
         const od = overdueByStage.get(f.stage_key) || null;
@@ -25492,10 +25643,16 @@ export class Store extends DurableObject {
        member (or UI-5) can see WHICH questions were deferred/dismissed, by whom, why and when —
        independent of whether the underlying gap still fires, because the decision stands until it
        is re-triaged. Stable order, widest identity first is meaningless here so ordered by key. */
-    const dispositions = [...disposed.values()]
+    const dispositions = [...recorded.values()]
       .map((d) => ({ key: d.progression_key + "::" + d.stage_key,
                      progression_key: d.progression_key, stage_key: d.stage_key,
-                     state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at }))
+                     state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
+                     /* REC-184: which definition the decision judged, and whether it governs the
+                        one in force — a row written before the column reads `not recorded`. */
+                     definition_version: d.definition_version,
+                     definition_version_state: d.definition_version_state,
+                     current_definition_version: d.current_definition_version,
+                     applies: d.applies, applies_because: d.applies_because }))
       .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
     return { ok: true, instances, proposals, dispositions,
              instance_count: instances.length, proposal_count: proposals.length,
@@ -27884,6 +28041,11 @@ export class Store extends DurableObject {
         id: `FINDING::${d.key}`, scope: "instance", project: null,
         key: d.key, progression_key: d.progression_key, stage_key: d.stage_key,
         state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
+        /* REC-184: the definition version the decision judged, and whether it still ages the
+           finding — false once the definition is revised, when the finding is an OPEN item again. */
+        definition_version: d.definition_version,
+        definition_version_state: d.definition_version_state,
+        applies: d.applies, applies_because: d.applies_because,
       })),
       ...scopedDisposed,
     ];
@@ -28483,17 +28645,24 @@ export class Store extends DurableObject {
     if (!stageRow) return { ok: false, reason: "BAD_STAGE", progression_key: pk, stage_key: sk,
       detail: `'${sk}' is not a stage of progression '${pk}' — a disposition must name a real stage` };
     const at = new Date().toISOString();
+    /* REC-184 (framework §8.2): the decision is taken against the definition IN FORCE, and the row
+       says which — stamped here from the store's one reader, never the caller's word, exactly as
+       the decider is. op=proposals then applies it to that version and no later one. A re-decision
+       re-stamps it: re-triaging a reopened proposal is a judgment of the definition standing now. */
+    const definitionVersion = this.#definitionVersionOf(pk).version;
     /* UPSERT on the identity: a proposal re-decided (deferred→dismissed, or a corrected reason)
        keeps ONE row, re-triageable, never a second. No bundle is written, no history, no manifest —
        declining is not authoring, so the disposition row is the whole of the act. */
     this.sql.exec(
-      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at)
-       VALUES (?,?,?,?,?,?)
+      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at,definition_version)
+       VALUES (?,?,?,?,?,?,?)
        ON CONFLICT(progression_key,stage_key) DO UPDATE SET
-         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at`,
-      pk, sk, st, why.slice(0, Store.EDGE_REASON_MAX), by.slice(0, 200), at);
+         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at,
+         definition_version=excluded.definition_version`,
+      pk, sk, st, why.slice(0, Store.EDGE_REASON_MAX), by.slice(0, 200), at, definitionVersion);
     return { ok: true, key: pk + "::" + sk, progression_key: pk, stage_key: sk,
-             to: st, state: st, reason: why, decided_by: by, at, bundle: null };
+             to: st, state: st, reason: why, decided_by: by, at, bundle: null,
+             definition_version: definitionVersion };
   }
 
   /* ---- coordination: what LockService and the nextSeq race did ---- */
@@ -28728,18 +28897,130 @@ export class Store extends DurableObject {
    *  `capacity=` is overwritten, never honoured. An absent stamp is `false` — a door that forgets
    *  to stamp loses `dbBytes` rather than leaking it. It is a stamp and not a second method
    *  because it must ride the one DO route every door already fetches. */
-  stats({ capacity = false } = {}) { return this.#counts({ proof: false, capacity: capacity === true }); }
+  stats({ capacity = false, viewer } = {}) { return this.#counts({ proof: false, capacity: capacity === true, viewer }); }
+
+  /** D-486 — THE ONE PREDICATE THAT WITHHOLDS A HIDDEN PROJECT'S RUN ATTRIBUTION, AND THE ONE PLACE
+   *  THE THREE SETS ARE SPELLED. Five readers take it (`#counts`' `aiRunLog` and
+   *  `observationsNonLead`, and the document, content and meaning frontier tallies), because a rule
+   *  with five spellings is the mirror-and-drift class this file refuses for gates.
+   *
+   *  **RULED BY BOB #32, 2026-09-24 02:30Z, on the question D-464 routed rather than decided**
+   *  (`BIO_Membership_Architecture_v2.md` §7 item 7.9; `OBSERVATION-LOG-DESIGN.md` §6): *a hidden
+   *  project's run output is the PROJECT'S THINKING until something outside uses it; the bytes stay
+   *  shared, only the run's ATTRIBUTION is withheld.* So nothing here touches the evidence — a
+   *  capture, a content row, a reading a hidden project's run produced stays in every corpus count
+   *  it was ever in. What leaves an outsider's tallies is the LOG ROW that says a run happened, and
+   *  it leaves because that row is §7.9's *"not its existence"* arriving as an aggregate: a member
+   *  diffing `op=stats` or `op=frontier` across a colleague's work learned that a project they were
+   *  never invited to had RUN.
+   *
+   *  THE PREDICATE IS A SET SUBTRACTION AND DELIBERATELY NOT A RESOLVER, which is what makes it
+   *  admissible where REC-110 (D-386) refused gating these tallies. That ruling's premise (2) is
+   *  that `observation_log` has no bundle column, so a bundle gate here would be the SECOND
+   *  implementation of `#observationBundles` REC-92 refused; its premise (3) is that applying that
+   *  resolver per row is `derivation-bounds.test.mjs`'s amplification class. Neither is touched:
+   *  this reads ONE indexed set of run ids (`observation_log_authority` is `(authority_kind,
+   *  authority, seq)`) and subtracts it, with no per-row work and no second resolver. Premise (1) —
+   *  *`op=stats` answers the same question to the same audience through a door of identical width* —
+   *  is KEPT TRUE BY MOVING BOTH DOORS IN ONE LANDING rather than by leaving the tallies whole; that
+   *  is why D-486's row says *all five readers together*, and why gating four of them would have
+   *  been the documented hole the premise warns about. Premise (4) is untouched: the field still
+   *  counts every row at its level rather than this page's states.
+   *
+   *  WHO IS FILTERED IS THE GATE'S WORD (D-464's sentence, inherited rather than restated): a
+   *  credential `viewerPredicate` does not filter — scope `member`, the four token classes and an
+   *  organisation `ai` key — and an enrolled administrator's session get `null` here, i.e. exactly
+   *  the count they always got. A viewer SENT but unrecognised is DENY, so every project is hidden
+   *  and every project-context run's rows drop: FAILS CLOSED.
+   *
+   *  THE NEVER-SENT STAMP IS THE CALLER'S CONVENTION AND NOT THIS METHOD'S, and the two callers
+   *  differ ON PURPOSE rather than by omission. `#counts` passes `viewer` straight through, so a
+   *  direct INTERNAL call (`undefined`: the DO route passes the parameter only when present) stays
+   *  WHOLE — purge's proof and the store-level suites, D-464's correction. `frontier()` defaults
+   *  `viewer` to `null`, which compiles DENY, so an ABSENT control-plane stamp sees no run at all —
+   *  `#frontierDocumentVisible`'s posture one method away (*a missing stamp is an outage and never a
+   *  leak*), and `index.mjs` stamps `op=frontier` for exactly that reason. */
+  #hiddenSets(viewer) {
+    const gate = viewer === undefined ? null : viewerPredicate(viewer);
+    const hid = gate && gate.scope !== "member"
+      ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args }
+      : null;
+    const hidRuns = hid && { sql: `(SELECT run FROM ai_runs WHERE context_type = 'project' AND context_id IN ${hid.sql})`,
+                             args: hid.args };
+    /* `COALESCE(authority, '')`: a NULL authority names no run, and `NULL IN (…)` is NULL — the row would be
+       kept by a bare `NOT (… IN …)` only by accident, and dropped by the inverted spelling. It is written so the
+       answer does not depend on which way round the next reader spells it. The `authority_kind = 'run'` conjunct
+       is LOAD-BEARING and not decoration: `authority` also holds sweep request ids, lead ids and the document a
+       link came from, and a subtraction keyed on the value alone would drop a sweep that happened to share a
+       run's spelling — a fence tighter than its rule. */
+    const runRows = hidRuns && { sql: `NOT (authority_kind = 'run' AND COALESCE(authority, '') IN ${hidRuns.sql})`,
+                                 args: hidRuns.args };
+    return { gate, hid, hidRuns, runRows };
+  }
+
+  /** D-486's predicate as a WHERE tail, for the three frontier tallies. Returns `""` and no args when
+   *  nothing is withheld, so the unfiltered SQL is byte-identical to what it was before this landing. */
+  #hiddenRunTail(viewer) {
+    const { runRows } = this.#hiddenSets(viewer);
+    return runRows ? { sql: ` AND ${runRows.sql}`, args: runRows.args } : { sql: "", args: [] };
+  }
 
   /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
    *  on any key but the ones the ruling names. `proof` is PRIVATE: only `purge` passes it, because
    *  its before/after ARE D-113's proof that it took what it says it took, and that proof stays
    *  WHOLE (§5: *the purge proof's own count stays whole*) — `observations` over the whole log,
    *  `leads`, and `dbBytes`, exactly as `op=purge` has always answered. No route reaches it. */
-  #counts({ proof, capacity = false }) {
-    const n = (t) => this.#one(`SELECT count(*) c FROM ${t}`).c;
+  #counts({ proof, capacity = false, viewer }) {
+    /* D-464 — A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT (Membership v2 §7.9, *"Not its existence"*).
+     *
+     * WHAT WAS WRONG, measured at the op (`project-sight.test.mjs` §8; MEASUREMENTS M-122 first saw it): every
+     * counter here was `count(*)` over the whole table, so a member diffing their own `op=stats` across a colleague's
+     * work learned that a project they were never invited to had been CREATED (`bundles`, `files`, `refs`, `indexed`,
+     * `projectParticipants`) and REVISED (`history`, `files`, `refs`). BOB #15's rule (MEMBER-KNOWLEDGE-DESIGN §5, *A
+     * COUNT IS A DISCLOSURE OF EXISTENCE*) is the same sentence: a count over rows the caller could not all read.
+     *
+     * THE FIX IS SUBTRACTION, NEVER A SECOND RULE. `hid` is every bundle the caller's `viewerPredicate` does NOT pass
+     * — the complement of the one compiled gate, interpolated (a use, not a mint) — and every counter whose rows NAME
+     * a bundle drops the rows naming one in `hid`. Today the gate hides PROJECTS only, so `hid` is the projects the
+     * caller cannot see; were the gate ever to hide more, these counts follow it without an edit. A key is named per
+     * counter below (which column names a bundle); a counter with no such column counts rows that name no bundle —
+     * an instance fact (REC-110) — and is untouched.
+     *
+     * WHO IS FILTERED IS THE GATE'S WORD, NOT THIS FUNCTION'S. A credential the gate does not filter (scope `member`:
+     * the four token classes and an organisation `ai` key) gets `hid` = nothing, i.e. exactly the count it always got,
+     * and an enrolled ADMINISTRATOR's session passes every project (§7.9). A viewer SENT but not
+     * recognised (an empty stamp included) is DENY, so `hid` is every bundle — fails closed. A viewer NEVER SENT
+     * (`undefined`: the DO route passes one only when the parameter is present) is a direct INTERNAL call and stays
+     * WHOLE — purge's proof, and the suites that read the store's own counters — `Store#rosterInSight`'s never-sent
+     * precedent. So the stamp is LOAD-BEARING at the control plane: every door (`op=stats`, `op=selftest`,
+     * `op=livefire`) sets it, and the `stats-stamp-dropped` control arm measures what dropping it discloses.
+     * CORRECTED before landing: the first draft read an absent parameter as DENY, which zeroed the counters four
+     * store-level suites read straight off the DO route (projects, search, selection, status) — a direct internal
+     * call is not a caller. */
+    /* D-486 / BOB #32: the three sets are compiled in ONE place now (`#hiddenSets`), because the frontier's
+       three tallies take the same predicate this function's `aiRunLog` and `observationsNonLead` take and a rule
+       with five spellings is the drift class. D-464's reading of the never-sent stamp is unchanged and lives
+       there: `undefined` is a direct internal call and stays WHOLE. */
+    const { hid, hidRuns, runRows } = this.#hiddenSets(viewer);
+    /* `COALESCE(k, '')`: a NULL key names no bundle, and `NULL NOT IN (…)` is NULL — the row would be dropped. */
+    const nx = (t, where, keys = [], runKeys = [], whereArgs = []) => {
+      const conds = where ? [where] : [], args = [...whereArgs];
+      if (hid) {
+        for (const k of keys) { conds.push(`COALESCE(${k}, '') NOT IN ${hid.sql}`); args.push(...hid.args); }
+        for (const k of runKeys) { conds.push(`COALESCE(${k}, '') NOT IN ${hidRuns.sql}`); args.push(...hidRuns.args); }
+      }
+      return this.#one(`SELECT count(*) c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`, ...args).c;
+    };
+    const n = (t, ...keys) => nx(t, null, keys);
+    /* The text index's rows are keyed by `bundles.fts_id`, not by a bundle id: the rows a hidden bundle claims go.
+       An ORPHAN (a row no bundle claims) names nothing and stays, so a reader's parity still sees one. */
+    const indexed = hid
+      ? this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
+                     (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN ${hid.sql})`, ...hid.args).c
+      : n("bundles_fts");
     return {
-      bundles: n("bundles"), files: n("files"), history: n("history"),
-      refs: n("refs"), register: n("register"), indexed: n("bundles_fts"),
+      bundles: n("bundles", "bundle_id"), files: n("files", "bundle_id"), history: n("history", "bundle_id"),
+      refs: n("refs", "bundle_id", "target_id"), register: n("register", "bundle_id"), indexed,
       /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX, reported for exactly the
          reason every other row on this list is -- so a purge can PROVE it took
          the rows rather than assert it.
@@ -28764,15 +29045,20 @@ export class Store extends DurableObject {
          * and measured to catch the same orphan plain `integrity-check` (rank 0)
          * passes over. It costs a walk of the index, which is why it belongs on
          * an admin read taken deliberately and not on a member path. */
-      textUnits: n("capture_text"),
+      textUnits: n("capture_text", "bundle_id"),
       textIndexOk: (() => {
         try { this.sql.exec(`INSERT INTO capture_text_fts(capture_text_fts, rank) VALUES('integrity-check', 1)`); return true; }
         catch { return false; }
       })(),
-      selections: n("selections"), selectionItems: n("selection_items"),
+      /* A selection holding a bundle the caller cannot see is a count over a row they cannot read (BOB #15), so the
+         whole handle leaves `selections`; `selectionItems` drops only the hidden rows, which name the bundle. */
+      selections: hid ? nx("selections", `handle NOT IN (SELECT handle FROM selection_items WHERE bundle_id IN ${hid.sql})`,
+                           [], [], hid.args)
+                      : n("selections"),
+      selectionItems: n("selection_items", "bundle_id"),
       /* Reported so a purge can prove it took them, and so an operator can see
          inbox and reachability depth without a second call. */
-      tasks: n("tasks"), taskQueue: n("task_queue"), sourceReachability: n("source_reachability"),
+      tasks: n("tasks", "refers_to"), taskQueue: n("task_queue"), sourceReachability: n("source_reachability"),
       /* REC-26: the monitoring consumers' idempotence state, reported so a purge
          can PROVE it took them (D-113) and so an operator can see a tick that is
          still open — a non-zero monitorTickEpoch means the last tick failed on
@@ -28782,24 +29068,33 @@ export class Store extends DurableObject {
          PROVE it cleared the registry rather than assert it (D-113). */
       entities: n("entities"), entityAliases: n("entity_aliases"), entityRelations: n("entity_relations"),
       /* FW-7: the recogniser's resolutions, reported so a purge can PROVE it took them. */
-      resolutions: n("resolutions"),
+      resolutions: n("resolutions", "bundle_id"),
       /* REC-24: the action loop's two projections, reported so a purge can PROVE
          it cleared them (D-113) rather than assert it. */
-      actionBasis: n("action_basis"), correspondence: n("correspondence"),
-      /* D-148: the fee-quote projection, counted so a purge can PROVE it took it. */
-      actionQuotes: n("action_quotes"),
+      actionBasis: n("action_basis", "bundle_id", "target_id"),
+      correspondence: n("correspondence", "bundle_id", "artifact_bundle_id"),
+      /* D-148: the fee-quote projection, counted so a purge can PROVE it took it. Its rows name the action
+         (`bundle_id`), so D-464's subtraction takes it (keyed at c19-batch10's merge of D-464). */
+      actionQuotes: n("action_quotes", "bundle_id"),
       /* FW-8: the derived connections and the member-declared progression definitions,
          reported so a whole-store purge can PROVE it cleared them (D-113). */
-      connections: n("connections"), progressionDefs: n("progression_defs"),
-      /* REC-122: the member on-point choices, so a purge can PROVE it took them (D-113). */
-      connectionPairChoices: n("connection_pair_choices"),
+      connections: n("connections", "a_bundle_id", "b_bundle_id"), progressionDefs: n("progression_defs"),
+      /* REC-122: the member on-point choices, so a purge can PROVE it took them (D-113). Keyed by both ends'
+         bundles, as `connections` is (D-464's subtraction, keyed at c19-batch10's merge of D-464). */
+      connectionPairChoices: n("connection_pair_choices", "a_bundle_id", "b_bundle_id"),
       progressionStages: n("progression_stages"),
+      /* REC-184: D-128's version history, counted APART from the current-version tables above —
+         a revision adds a version row and replaces the current one, so the current count alone
+         cannot tell one definition revised five times from one never revised — and so a whole-store
+         purge can PROVE it took the history (D-113). */
+      progressionDefVersions: n("progression_def_versions"),
+      progressionStageVersions: n("progression_stage_versions"),
       /* FW-9: the threaded progression instances, reported so a purge can PROVE it cleared
          them (D-113). */
-      progressionInstances: n("progression_instances"),
+      progressionInstances: n("progression_instances", "bundle_id"),
       /* FW-10: the exception documents that discharge a lawful skip, reported so a purge can
          PROVE it cleared them (D-113). */
-      progressionExceptions: n("progression_exceptions"),
+      progressionExceptions: n("progression_exceptions", "bundle_id"),
       /* REC-5 / D-122: the connection-derive dirty-set's depth, reported so a whole-store
          purge can PROVE it cleared the pending work-queue (D-113) and so an operator can
          see how many entities are awaiting a sweep. */
@@ -28813,32 +29108,32 @@ export class Store extends DurableObject {
          a single quantity while the two govern different sets of feeds — and it is precisely the
          distinction this item exists to draw, so the count that proves the purge took them must
          not be the one place it is lost. */
-      findingDispositions: n("finding_dispositions"),
+      findingDispositions: n("finding_dispositions", "project_id"),
       /* REC-27 / D-137: the participation graph and the pending owner-governance
          votes, reported so a purge can PROVE it took them (both are keyed on
          project_id, a bundle id, and were the silent-leftover the D-113 check
          could not see). */
-      projectParticipants: n("project_participants"),
-      projectOwnerVotes: n("project_owner_votes"),
+      projectParticipants: n("project_participants", "project_id"),
+      projectOwnerVotes: n("project_owner_votes", "project_id"),
       /* REC-21: members' personal queue state, reported so a purge can PROVE it
          cleared the mutes and snoozes it took (D-113). A COUNT OF ROWS AND
          NOTHING ELSE — stats is an operator surface and whose attention is muted
          on what is not an operator's business. */
-      queueState: n("queue_state"),
+      queueState: n("queue_state", "case_id"),
       /* D-125: the item mutes, a COUNT for queueState's reason. */
       queueItemMutes: n("queue_item_mutes"),
       /* REC-82 / IC-83: the content rows — the parts of documents this record's
          edges point at — reported so a purge can PROVE it took them (D-113)
          rather than assert it, and so an operator can see the content axis's
          depth beside the document count it has always been able to see. */
-      content: n("content"),
+      content: n("content", "bundle_id"),
       /* REC-82: and how many of them were minted against a transcription that
          has since MOVED. Counted apart from the total and never folded into it:
          a re-extraction marks rows stale and DELETES NONE, so the total alone
          cannot distinguish "nothing was re-read" from "everything was" — which
          is the one fact an operator needs before believing a content-grain
          answer, and the one this count exists to make visible. */
-      contentStale: this.#one(`SELECT count(*) c FROM content WHERE stale=1`).c,
+      contentStale: nx("content", "stale=1", ["bundle_id"]),
       /* SK-8: the EXTRACT role's proposed readings, reported so a purge can
          PROVE it took them (D-113) and — the part that is not housekeeping — so
          an operator can see the assistant's production volume beside the content
@@ -28848,19 +29143,19 @@ export class Store extends DurableObject {
          here and is deliberately not: it is scoped to a run or a document
          (`op=extractproposals`), and an instance-wide fraction would average
          across projects that have nothing to do with each other. */
-      proposedReadings: n("proposed_readings"),
+      proposedReadings: n("proposed_readings", "bundle_id"),
       /* IS-6: the investigative runs, their budgets and their observation logs,
          reported so a whole-store purge can PROVE it took them (D-113) and so an
          operator can see how many runs are in flight without opening one. A
          COUNT AND NOTHING ELSE — what a run is looking into is not an operator
          surface, the same line queueState draws one row up. */
-      aiRuns: n("ai_runs"), aiRunBounds: n("ai_run_bounds"),
+      aiRuns: n("ai_runs", "context_id"), aiRunBounds: nx("ai_run_bounds", null, [], ["run"]),
       /* D-85: the links from an assistant's questions to their runs, counted for IS-6's reason one line up — so a
          purge can PROVE it took them (D-113). A COUNT AND NOTHING ELSE: which run opened which question is read
          per question, under that question's gate (`op=projection`'s `surfaced_in`). */
-      inquiryRunSurfacings: n("inquiry_run_surfacings"),
+      inquiryRunSurfacings: n("inquiry_run_surfacings", "bundle_id"),
       /* REC-173: the questions whose creation was a verified migration replay, counted for D-85's reason one line up. */
-      inquiryMigrationReplays: n("inquiry_migration_replays"),
+      inquiryMigrationReplays: n("inquiry_migration_replays", "bundle_id"),
       /* REC-93 / IC-92: `aiRunLog` was a count of `ai_run_log`, which no longer
          exists — `OBSERVATION-LOG-DESIGN.md` §4.4 folded it into `observations`
          and `#migrate` drops it. The key is KEPT AND RE-AIMED at the folded rows
@@ -28869,7 +29164,14 @@ export class Store extends DurableObject {
          from that proof reads as a table nobody is checking. `observations` is
          counted WHOLE beside it: the log is the coverage record and its size is
          an operator fact, while what any single row was looking for is not. */
-      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,
+      /* D-486 / BOB #32 (2026-09-24): AND IT IS TAKEN THROUGH THE CALLER'S OWN SIGHT. This key is the
+         `authority_kind = 'run'` SLICE of the log, so every row it counts is a run saying it looked —
+         which for a project the caller cannot see is that project's THINKING, withheld by the ruling.
+         `runRows` is D-464's `hidRuns` inverted into a row predicate at `#hiddenSets`, one compilation
+         point for this key, `observationsNonLead` below and the three frontier tallies. Unfiltered
+         callers get `null` and the count they always got; purge's `observations` below stays WHOLE. */
+      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'${runRows ? ` AND ${runRows.sql}` : ""}`,
+                          ...(runRows ? runRows.args : [])).c,
       /* REC-131 / IC-148 — `leads` IS NOT ON THE WIRE FOR ANY CLASS, AND THE WIRE'S LOG COUNT IS A
          DIFFERENT KEY FROM PURGE'S. BOB #15's CORRECTED ruling (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A
          COUNT IS A DISCLOSURE OF EXISTENCE*): a counter over rows a caller could not all read goes
@@ -28889,7 +29191,14 @@ export class Store extends DurableObject {
          * untouched: no lead act writes a 'run' row. */
       ...(proof
         ? { observations: n("observation_log") }   /* PURGE'S PROOF: the WHOLE log. The TABLE it counts is `observation_log` — renamed by CONDUCT #11 at integration on BOB #11's correction, because one word over three unrelated things is the defect, not the noun */
-        : { observationsNonLead: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c }),
+        : { observationsNonLead: this.#one(
+              /* D-486 / BOB #32: the wire's log count subtracts a hidden project's RUN rows for the same reason
+                 `aiRunLog` does — and ONLY those. The lead exclusion and this one are two predicates over one
+                 table and are deliberately not folded: `authority_kind <> 'lead'` states the key's NAME (REC-131:
+                 a key never carries two meanings), while the run subtraction is the CALLER's sight and moves with
+                 the viewer. A rename would be an IC; this is a subtraction inside the name the key already has. */
+              `SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'${runRows ? ` AND ${runRows.sql}` : ""}`,
+              ...(runRows ? runRows.args : [])).c }),
       /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
          PROVE it took them (D-113). What any lead says is not an operator fact —
          and since REC-131, neither is how many there are: purge's proof only. */
@@ -28902,18 +29211,19 @@ export class Store extends DurableObject {
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
          readings of the evidence exist is an operator fact, and what they say is
          not an operator surface. */
-      basisVersions: n("inquiry_basis_versions"), basisVersionLegs: n("inquiry_basis_version_legs"),
+      basisVersions: n("inquiry_basis_versions", "bundle_id"),
+      basisVersionLegs: n("inquiry_basis_version_legs", "bundle_id", "target_id"),
       /* PL-3 / IS-4: F10's stored refusals, reported so a purge can PROVE it
          took them (D-113) and so an operator can see that a run is looping
          against a refusal without opening one. A COUNT AND NOTHING ELSE — the
          same line queueState, aiRuns and basisVersions draw. */
-      suggestRefusals: n("suggest_refusals"),
+      suggestRefusals: n("suggest_refusals", "target"),
       /* PL-4 / IS-4: the outbound work list, reported for the same reason and
          with one more of its own — this is the only counter in the store that
          says how much traffic this instance is about to send to somebody else's
          server, and a purge that reported scope ALL while it stood would leave a
          leftover visible from OUTSIDE the instance. */
-      captureRequests: n("capture_requests"),
+      captureRequests: n("capture_requests", "lead_inquiry"),
 
       /* PL-12 / D-84: the declared-bias statements and the adoptions that put
          them in force, reported so a whole-store purge can PROVE it took them
@@ -28921,11 +29231,11 @@ export class Store extends DurableObject {
          opening one. A COUNT AND NOTHING ELSE — what a group's declared bias
          SAYS is the group's business and travels with their published work,
          not an operator surface, the same line queueState and aiRuns draw. */
-      biasStatements: n("bias_statements"), biasAdoptions: n("bias_adoptions"),
+      biasStatements: n("bias_statements", "bundle_id"), biasAdoptions: n("bias_adoptions", "bundle_id", "scope_id"),
       /* REC-63 / DEC-56: the standing route markers, reported so a whole-store
          purge can PROVE it took them (D-113) and so an operator can see that the
          record is carrying doubts at all without having to sweep for them. */
-      routeMarks: n("provenance_route_marks"),
+      routeMarks: n("provenance_route_marks", "bundle_id"),
       /* REC-131 / IC-148: the ADMIN class's and purge's only — see `stats()`. THE RESIDUE, STATED
          RATHER THAN HIDDEN (BOB #15): the admin class still receives a figure that moves in whole
          pages on every write, a large lead's included, so the operator can detect that SOMETHING
@@ -30897,6 +31207,9 @@ export class Store extends DurableObject {
                  /* REC-122: the on-point choices a purge took (D-113). */
                  connectionPairChoices: d("connectionPairChoices"),
                  progressionStages: d("progressionStages"),
+                 /* REC-184: D-128's version history a whole-store purge took (D-113). */
+                 progressionDefVersions: d("progressionDefVersions"),
+                 progressionStageVersions: d("progressionStageVersions"),
                  /* FW-9: the threaded progression instances a purge took (D-113). */
                  progressionInstances: d("progressionInstances"),
                  /* FW-10: the exception documents a purge took (D-113). */
@@ -32334,6 +32647,58 @@ export class Store extends DurableObject {
       + "row, which an overwrite and a store predating the creation row both produce. Which key collided is not "
       + "recorded and is not guessed.";
     return out;
+  }
+  /* REC-190: THE CENSUS OF DISPLACED HOMES (`BIO_Intake_Doctrine_v1_1.md` §8, ONE CAPTURE, ONE HOME — the ORIGINAL's;
+     D-179's residue). Before D-179's fence `op=promote` UPSERTed `register.bundle_id` on the `capture_sha` key, so a
+     second bundle registering bytes the record already held MOVED the first bundle's register row to itself, and the
+     first bundle's own `files` / `history` rows kept carrying bytes the register now says live elsewhere. This lists
+     every such row: a `files` or `history` row whose sha256 the register assigns to a DIFFERENT bundle that STILL
+     EXISTS, with both bundles named, grouped by the sha. READ-ONLY and never a repair (BOB #31, 2026-09-23 22:03Z: the
+     census's report STANDS ALONE): WHICH BUNDLE HELD THE CAPTURE FIRST IS UNDETERMINED — the register keeps one holder
+     and no prior one, and a row a bundle carried without ever registering it reads the same — so the answer names the
+     register's CURRENT holder as that and nothing more, and says so. A sha shared by several bundles that the register
+     does not assign elsewhere (an identical ordinary file, or the holder's own revisions) is NOT a displaced home and
+     is not listed: only the register decides a home. A register row whose bundle no longer exists names no home and
+     is counted apart (`home_absent`), never listed. The digest-level duplicate (the same content in different bytes)
+     is out of reach: this compares the bytes' digest and nothing about their meaning. Shas are compared lower-cased on
+     both sides, so a spelling difference is not a second identity. Bounded by `limit` shas listed (the counts are
+     always whole). */
+  homeCensus({ limit } = {}) {
+    const asked = limit === undefined || limit === null || limit === "" ? NaN : Number(limit);
+    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
+    const homes = new Map();
+    const reg = { rows: 0, home_absent: 0 };
+    for (const r of this.sql.exec(`SELECT r.capture_sha, r.bundle_id, r.path, b.bundle_id AS present
+                                     FROM register r LEFT JOIN bundles b ON b.bundle_id = r.bundle_id`)) {
+      reg.rows++;
+      if (r.present === null) { reg.home_absent++; continue; }
+      homes.set(String(r.capture_sha).toLowerCase(), { bundle_id: r.bundle_id, path: r.path });
+    }
+    const bySha = new Map();
+    const walk = (table) => {
+      const out = { rows: 0, displaced: 0 };
+      for (const r of this.sql.exec(table === "files"
+          ? `SELECT bundle_id, NULL AS snap_key, path, sha256 FROM files`
+          : `SELECT bundle_id, snap_key, path, sha256 FROM history`)) {
+        out.rows++;
+        const s = String(r.sha256 ?? "").toLowerCase();
+        const home = homes.get(s);
+        if (!home) continue;
+        if (home.bundle_id === r.bundle_id) continue;                     /* the different-bundle predicate */
+        out.displaced++;
+        if (!bySha.has(s)) bySha.set(s, { capture_sha: s, home: { ...home }, held_by: [] });
+        bySha.get(s).held_by.push({ table, bundle_id: r.bundle_id, path: r.path,
+                                    ...(r.snap_key ? { snap_key: r.snap_key } : {}) });
+      }
+      return out;
+    };
+    const files = walk("files"), history = walk("history");
+    return { ok: true, register: reg, files, history, shas: bySha.size, listed: [...bySha.values()].slice(0, cap),
+             first_holder: "UNDETERMINED", rewritten: 0,
+             note: "read-only: each listed sha is registered to `home` and ALSO carried by every `held_by` row, a "
+                 + "different bundle that still exists. Nothing is rewritten or repaired. `home` is the register's "
+                 + "current holder, never a finding about which bundle held the capture first — that is undetermined. "
+                 + "The same content in different bytes is not reached." };
   }
   static #promoteAbsent() {
     return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
@@ -35971,6 +36336,80 @@ export class Store extends DurableObject {
              samples: cur.samples + 1, new_peak: isPeak };
   }
 
+  /* ------------------------------------------------------------------
+   * D-64: the daily render allowance (CLIENT-RENDERED.md, BOB #32 item 3)
+   * ------------------------------------------------------------------ */
+
+  /** Admit one render against today's allowance, or record it DEFERRED. The verdict
+   *  is the STRING `state` (`admitted` | `deferred`), never a leading boolean, so no
+   *  reader grades a datum as a refusal (meaning-bounds D-240 (e)). The DO
+   *  serialises, so one row per UTC day is globally correct for the instance.
+   *  Admission is decided on what has been SPENT, because a render's cost is
+   *  only known after it ran.
+   *
+   *  CORRECTED 2026-09-24 at integration (CONDUCT #20, on BOB #32's reading; VERIFIED HERE AT
+   *  THE CODE, not taken on the message's word). This said the allowance "can therefore be
+   *  overrun by at most one render". THAT IS FALSE, and it is the shape this project meets
+   *  most: a bound believed on the strength of a sentence. Admission is serialised in the DO,
+   *  but the render RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op
+   *  (`renderspend` -> `renderSpend`; the two are distinct rows of the dispatch table), so
+   *  every render IN FLIGHT AT ONCE is admitted against the same `spent_ms`. The bound that
+   *  actually holds is
+   *
+   *      overrun <= (renders in flight concurrently) x (one render's maximum time:
+   *                                                     the wait timeout plus navigation)
+   *
+   *  whose first factor nothing here bounds. Reserving at admission is D-492, placed by
+   *  SCHEDULER; until it lands this comment is the only thing that says so. Prose only — no
+   *  behaviour moved.
+   *
+   *  AND A FINDING ABOUT THE REBUILD RULE, measured making this very edit, because it came
+   *  back the opposite way to what `kickoffs/WORKER.md` step 0 predicted. That step said a
+   *  COMMENT-ONLY `src/` change leaves `bundled.mjs` BYTE-IDENTICAL (REC-110) — "if you are
+   *  hunting a diff after a comment-only change, there isn't one". This edit moved it by
+   *  1,104 bytes: the JSDoc block you are reading is PRESENT in the emitted bundle, verbatim.
+   *
+   *  THE DISCRIMINATOR FIRST PROPOSED HERE — "the bundler strips block comments and PRESERVES
+   *  JSDoc" — IS ITSELF REFUTED, and by a wider sample taken at c20-batch14 rather than by
+   *  argument. Counted over the emitted bundle: of 25 plain block comments sampled from
+   *  `index.mjs`, TWELVE are PRESENT (every one inspected sits inside the OPS table), and
+   *  `render.mjs`'s own JSDoc block is ABSENT. So the FORM does not decide it; position and
+   *  file do, by a rule nothing here has established. What is safe to say, and all that
+   *  `WORKER.md` step 0 now says, is that a comment-only change MAY move the bundle and the
+   *  answer is MEASURED, never assumed. A surprising green is a finding about the arm: the
+   *  first reading of this measurement generalised from three greps, which is the same error,
+   *  one sample size down, as the line it was correcting. */
+  renderAdmit({ allowanceMs, at = null }) {
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const day = now.slice(0, 10);
+    const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
+    const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
+    const spent = cur ? cur.spent_ms : 0;
+    if (spent >= allowance) {
+      if (cur) this.sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
+      else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 0, 1, ?)`, day, now);
+      return { state: "deferred", day, spent_ms: spent, allowance_ms: allowance,
+               deferred: (cur ? cur.deferred : 0) + 1, renders: cur ? cur.renders : 0 };
+    }
+    if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, last_at = ? WHERE day = ?`, now, day);
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 1, 0, ?)`, day, now);
+    return { state: "admitted", day, spent_ms: spent, allowance_ms: allowance,
+             renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0 };
+  }
+
+  /** Add the browser time one render REPORTED. An unreported time adds nothing
+   *  and says so: the allowance is then under-counted, never guessed. */
+  renderSpend({ ms, at = null }) {
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const day = now.slice(0, 10);
+    const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
+    if (n === null) return { day, spent_ms: null, why: "the renderer reported no elapsed time, so nothing was added" };
+    const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
+    if (cur) this.sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, last_at = ? WHERE day = ?`, n, now, day);
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, ?)`, day, n, now);
+    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n };
+  }
+
   runtimeObservations() {
     const rows = [...this.sql.exec(`SELECT * FROM runtime_observations ORDER BY metric`)];
     return { metrics: rows.map((r) => ({ ...r, mean_ms: r.samples ? r.total_ms / r.samples : null })),
@@ -37856,7 +38295,14 @@ export class Store extends DurableObject {
    *  exist. It writes nothing, mints nothing, and shows NO STRENGTH — a shared
    *  origin is a provenance fact, not a grade, so DEC-32's keystone (structure
    *  authored before strength is shown) holds on the surface that calls this. It
-   *  informs; it refuses only a partition it cannot read. */
+   *  informs; it refuses only a partition it cannot read.
+   *
+   *  REC-192 ADDS THE VERSION ARM: `version=<name>` reads a STORED version's legs
+   *  instead of a proposed partition, through the same one call, and answers
+   *  `independence` ON ITS OWN, with no strength key — BOB #31's ruling of
+   *  2026-09-23 22:22Z, that the separation §12 (a) asks for is structural at the
+   *  wire and not a choice each page makes. It EQUALS `op=versionstrength`'s
+   *  `independence` for the same version. */
   partitionIndependence(a = {}) {
     const args = a || {};
     const refusal = (code, detail, extra) => {
@@ -37882,91 +38328,139 @@ export class Store extends DurableObject {
         "no question by that id is readable here, so there are no reasons of it to group.",
         { inquiry: inq });
 
-    /* THE PARTITION, as the elicitation holds it: a list of groups, each a list
-       of POSITIONS in the question's `basis[]` (the `ord` `inquiry_basis` keys
-       on). Or groups carrying their own name, `{label, legs}`, so a caller that
-       will write the partition under names can ask about it under the SAME
-       names and read back the same `shared[].a/b`. An unnamed group is filed by
-       its position — `part 1`, `part 2` — and never under a word this plane made
-       up about somebody's argument. JSON, from a query string or a body. */
-    let raw = args.partition;
-    if (typeof raw === "string") {
-      try { raw = JSON.parse(raw); } catch { raw = undefined; }
-    }
-    const unreadable = (why) => refusal("PARTITION_INDEPENDENCE_UNREADABLE", why, { inquiry: inq });
-    if (!Array.isArray(raw) || !raw.length)
-      return unreadable("pass partition=<JSON>: a non-empty list of groups, each a list of reason "
-        + "positions (e.g. [[0,1],[2]]) or {\"label\":…,\"legs\":[…]}.");
-    const legsMax = Store.BASIS_VERSION_LEGS_MAX;
-    if (raw.length > legsMax)
-      return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
-        `${raw.length} groups were proposed and a written reading holds at most ${legsMax} reasons.`,
-        { inquiry: inq, limit: legsMax });
-    const parts = [];
-    for (let k = 0; k < raw.length; k++) {
-      const g = raw[k];
-      const named = g && typeof g === "object" && !Array.isArray(g);
-      const ords = named ? g.legs : g;
-      const label = named ? String(g.label ?? "").trim() : `part ${k + 1}`;
-      if (!label)
-        return unreadable(`group ${k + 1} carries no name; leave the name out altogether to have it `
-          + "filed by its position.");
-      if (label.length > 200)
-        return unreadable(`group ${k + 1}'s name is longer than 200 characters.`);
-      if (!Array.isArray(ords) || !ords.length)
-        return unreadable(`group ${k + 1} lists no reasons; every group holds at least one.`);
-      if (!ords.every((o) => Number.isInteger(o) && o >= 0))
-        return unreadable(`group ${k + 1} names something other than a reason's position.`);
-      if (parts.some((p) => p.label === label))
-        return unreadable(`two groups are both named '${label.slice(0, 60)}'.`);
-      parts.push({ label, ords: [...ords] });
-    }
+    /* REC-192 — THE VERSION ARM (BOB #31, 2026-09-23 22:22Z, on UI-74's finding 5): *"a read answers
+       `independence` ON ITS OWN, apart from the strength pair, so the separation (a) asks for is
+       structural at the wire and not a choice each page makes."* Until this arm existed the only read of a
+       STORED version's independence was `op=versionstrength`, which returns it BESIDE the pair — so the
+       accept ceremony, asking a member to affirm independent sufficiency, could not ask without being
+       shown a strength, and keeping the pair off the screen was each page's discipline. Here the same
+       stored legs go through the same `#independenceOf`, by the same `parts` count, and NO strength key
+       is on the answer: the separation is the wire's shape.
 
-    /* THE QUESTION'S OWN REASONS, over-fetched by one so a basis larger than a
-       written reading may hold is OBSERVED, not inferred. A partition checked
-       over a truncated basis could pass as covering reasons it never saw. */
-    const legRows = this.#rows(
-      `SELECT ord, target_id, target_type, role FROM inquiry_basis WHERE bundle_id=? ORDER BY ord LIMIT ?`,
-      inq, legsMax + 1);
-    if (legRows.length > legsMax)
-      return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
-        `${inq.slice(0, 60)} rests on more than ${legsMax} reasons.`, { inquiry: inq, limit: legsMax });
-    const byOrd = new Map(legRows.map((l) => [l.ord, l]));
-    const placed = new Map();
-    for (const p of parts)
-      for (const o of p.ords) {
-        if (!byOrd.has(o))
-          return refusal("PARTITION_INDEPENDENCE_UNKNOWN_LEG",
-            `'${p.label.slice(0, 60)}' names reason position ${o}, and ${inq.slice(0, 60)} has `
-            + `${legRows.length} reason(s)${legRows.length ? ` at positions ${legRows.map((l) => l.ord).join(", ")}` : ""}.`,
-            { inquiry: inq, ord: o });
-        if (placed.has(o))
-          return refusal("PARTITION_INDEPENDENCE_LEG_TWICE",
-            `reason position ${o} is in both '${placed.get(o).slice(0, 60)}' and '${p.label.slice(0, 60)}'.`,
-            { inquiry: inq, ord: o });
-        placed.set(o, p.label);
+       NO STATE SET, deliberately, and it is the one place this read differs from `op=versionstrength`'s
+       gate. A state set is §12's filter on a STRENGTH (§6 rule 6's what-if), and this answer carries
+       none; the reading a member is asked to affirm at the accept ceremony is by construction one not yet
+       accepted, so a default of `accepted` would refuse exactly the read the ceremony makes. The version's
+       own state is served as a fact beside the answer. The inquiry gate and the viewer stamp are
+       versionstrength's, unchanged, and already applied above. ONE SUBJECT PER ASK: a version and a
+       partition together are refused rather than one silently preferred. */
+    const wantVersion = String(args.version ?? "").trim();
+    const partitionNamed = args.partition != null && args.partition !== "";
+    if (wantVersion && partitionNamed)
+      return refusal("PARTITION_INDEPENDENCE_TWO_SUBJECTS",
+        "name EITHER a written reading (version=<name>) OR a proposed grouping (partition=<JSON>), not "
+        + "both: this answers for one of them, and which one was meant is not this plane's to guess.",
+        { inquiry: inq });
+    let legs, head;
+    if (wantVersion) {
+      const row = this.#one(
+        `SELECT name, state, leg_count FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`,
+        inq, wantVersion);
+      if (!row)
+        return refusal("PARTITION_INDEPENDENCE_NO_SUCH_VERSION",
+          `no reading named '${wantVersion.slice(0, 60)}' belongs to ${inq.slice(0, 60)}.`,
+          { inquiry: inq, version: wantVersion.slice(0, 200) });
+      /* THE SAME ROWS `versionStrength` READS — same table, same order, same bound — with the grade
+         columns left unread, because nothing here may carry a grade; `#independenceOf` reads only the
+         target and the group. Handed over UNCHANGED, so the groups are named as that read names them. */
+      legs = this.#rows(
+        `SELECT ord, target_id, target_type, role, ground
+           FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
+        inq, row.name, Store.BASIS_VERSION_LEGS_MAX);
+      head = { version: row.name, version_state: row.state, legs_read: legs.length,
+               legs_complete: legs.length === row.leg_count };
+    } else {
+      /* THE PARTITION, as the elicitation holds it: a list of groups, each a list
+         of POSITIONS in the question's `basis[]` (the `ord` `inquiry_basis` keys
+         on). Or groups carrying their own name, `{label, legs}`, so a caller that
+         will write the partition under names can ask about it under the SAME
+         names and read back the same `shared[].a/b`. An unnamed group is filed by
+         its position — `part 1`, `part 2` — and never under a word this plane made
+         up about somebody's argument. JSON, from a query string or a body. */
+      let raw = args.partition;
+      if (typeof raw === "string") {
+        try { raw = JSON.parse(raw); } catch { raw = undefined; }
       }
-    const unplaced = legRows.filter((l) => !placed.has(l.ord)).map((l) => l.ord);
-    if (unplaced.length)
-      return refusal("PARTITION_INDEPENDENCE_NOT_TOTAL",
-        `reason position(s) ${unplaced.slice(0, 20).join(", ")} are in no group.`,
-        { inquiry: inq, unplaced: unplaced.slice(0, 20) });
+      const unreadable = (why) => refusal("PARTITION_INDEPENDENCE_UNREADABLE", why, { inquiry: inq });
+      if (!Array.isArray(raw) || !raw.length)
+        return unreadable("pass partition=<JSON>: a non-empty list of groups, each a list of reason "
+          + "positions (e.g. [[0,1],[2]]) or {\"label\":…,\"legs\":[…]} — or version=<name> to read a "
+          + "written reading's groups instead.");
+      const legsMax = Store.BASIS_VERSION_LEGS_MAX;
+      if (raw.length > legsMax)
+        return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
+          `${raw.length} groups were proposed and a written reading holds at most ${legsMax} reasons.`,
+          { inquiry: inq, limit: legsMax });
+      const parts = [];
+      for (let k = 0; k < raw.length; k++) {
+        const g = raw[k];
+        const named = g && typeof g === "object" && !Array.isArray(g);
+        const ords = named ? g.legs : g;
+        const label = named ? String(g.label ?? "").trim() : `part ${k + 1}`;
+        if (!label)
+          return unreadable(`group ${k + 1} carries no name; leave the name out altogether to have it `
+            + "filed by its position.");
+        if (label.length > 200)
+          return unreadable(`group ${k + 1}'s name is longer than 200 characters.`);
+        if (!Array.isArray(ords) || !ords.length)
+          return unreadable(`group ${k + 1} lists no reasons; every group holds at least one.`);
+        if (!ords.every((o) => Number.isInteger(o) && o >= 0))
+          return unreadable(`group ${k + 1} names something other than a reason's position.`);
+        if (parts.some((p) => p.label === label))
+          return unreadable(`two groups are both named '${label.slice(0, 60)}'.`);
+        parts.push({ label, ords: [...ords] });
+      }
+
+      /* THE QUESTION'S OWN REASONS, over-fetched by one so a basis larger than a
+         written reading may hold is OBSERVED, not inferred. A partition checked
+         over a truncated basis could pass as covering reasons it never saw. */
+      const legRows = this.#rows(
+        `SELECT ord, target_id, target_type, role FROM inquiry_basis WHERE bundle_id=? ORDER BY ord LIMIT ?`,
+        inq, legsMax + 1);
+      if (legRows.length > legsMax)
+        return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
+          `${inq.slice(0, 60)} rests on more than ${legsMax} reasons.`, { inquiry: inq, limit: legsMax });
+      const byOrd = new Map(legRows.map((l) => [l.ord, l]));
+      const placed = new Map();
+      for (const p of parts)
+        for (const o of p.ords) {
+          if (!byOrd.has(o))
+            return refusal("PARTITION_INDEPENDENCE_UNKNOWN_LEG",
+              `'${p.label.slice(0, 60)}' names reason position ${o}, and ${inq.slice(0, 60)} has `
+              + `${legRows.length} reason(s)${legRows.length ? ` at positions ${legRows.map((l) => l.ord).join(", ")}` : ""}.`,
+              { inquiry: inq, ord: o });
+          if (placed.has(o))
+            return refusal("PARTITION_INDEPENDENCE_LEG_TWICE",
+              `reason position ${o} is in both '${placed.get(o).slice(0, 60)}' and '${p.label.slice(0, 60)}'.`,
+              { inquiry: inq, ord: o });
+          placed.set(o, p.label);
+        }
+      const unplaced = legRows.filter((l) => !placed.has(l.ord)).map((l) => l.ord);
+      if (unplaced.length)
+        return refusal("PARTITION_INDEPENDENCE_NOT_TOTAL",
+          `reason position(s) ${unplaced.slice(0, 20).join(", ")} are in no group.`,
+          { inquiry: inq, unplaced: unplaced.slice(0, 20) });
+      legs = legRows.map((l) => ({ ...l, ground: placed.get(l.ord) }));
+      /* WHAT WAS PROPOSED, read back with the documents each group rests on, so
+         the surface names the reasons it asked about rather than re-deriving them. */
+      head = { partition: parts.map((p) => ({ label: p.label, legs: p.ords,
+                 targets: p.ords.map((o) => byOrd.get(o).target_id) })),
+               legs_read: legRows.length };
+    }
     /* END DEC-49 REGION is-partition-independence */
 
-    const legs = legRows.map((l) => ({ ...l, ground: placed.get(l.ord) }));
+    /* THE ONE CALL, for both arms — the third consumer of `#independenceOf`, the one implementation.
+       `parts` is counted exactly as `versionStrength` counts it off stored legs: the distinct NON-BLANK
+       groups the legs carry (a proposed group's name is never blank, so over a partition this is its
+       group count). The same legs and the same count through the same function is what makes the
+       version arm's answer EQUAL `op=versionstrength`'s `independence`, rather than agree with it today. */
     return {
       ok: true,
       inquiry: inq,
-      /* WHAT WAS PROPOSED, read back with the documents each group rests on, so
-         the surface names the reasons it asked about rather than re-deriving them. */
-      partition: parts.map((p) => ({ label: p.label, legs: p.ords,
-        targets: p.ords.map((o) => byOrd.get(o).target_id) })),
-      legs_read: legRows.length,
+      ...head,
       wrote: false,
-      /* THROUGH `#independenceOf` — the third consumer, the one implementation.
-         `parts` is counted the way `versionStrength` counts it off stored legs:
-         the distinct non-blank groups the legs carry. */
-      independence: this.#independenceOf(legs, new Set(legs.map((l) => l.ground)).size),
+      independence: this.#independenceOf(legs,
+        new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean)).size),
     };
   }
 
@@ -41874,9 +42368,18 @@ export class Store extends DurableObject {
        REC-110's row exists to end, one method away from where it was being
        prevented. Pinned by `observation-content.test.mjs` section J, which goes
        red if a later session quietly gates this or narrows it to the page. */
+    /* D-486 / BOB #32 (2026-09-24) — REC-110's ruling STANDS AND IS NARROWED BY ONE ROW CLASS, which is
+       the opposite of the quiet gating section J refuses. The tally still counts EVERY row at this level
+       for every viewer, still does not follow the page, and still names no bundle, subject or address.
+       What it no longer counts is a run row whose project the caller cannot see: `#hiddenSets` compiles
+       that one predicate for all five readers, and the premise-(1) door — `op=stats`' `observationsNonLead`
+       and `aiRunLog` — subtracts the same rows IN THIS LANDING, so the two ops still answer one question to
+       one audience. The reasoning is at `#hiddenSets` and is not restated here; the site-pin arm is section J. */
+    const hidTail = this.#hiddenRunTail(viewer);
     const tally = {};
     for (const row of this.#rows(
-      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content' GROUP BY state`))
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content'${hidTail.sql} GROUP BY state`,
+      ...hidTail.args))
       tally[row.state] = row.n;
     const candidates = looked.filter((r) => r.recandidate);
     return {
@@ -42310,8 +42813,29 @@ export class Store extends DurableObject {
     /* A REFERENCE IS GATED THROUGH THE CAPTURE THAT CARRIED IT, which is the row's
        own AUTHORITY — so the gate asks about the document the look was made for
        and not about some other document that happens to carry the same name. */
+    /* D-486 — THE RUN REFERENT, AND IT IS A DEFECT THIS ITEM'S OWN ARM FOUND RATHER THAN A WIDENING.
+       The header declares THREE subject kinds here and gates two of them; the third arm reads
+       `return true` and is REASONED for an ENTITY (the subject registry is instance-wide). A RUN's row
+       is not an entity: `#aiRunAppend` stamps every run row `subject_kind = 'unstated'`, a FOURTH kind
+       the meaning arm never had, and it fell through the entity branch — so `op=frontier&level=meaning`
+       published a hidden project's run rows WHOLE to an uninvited member, `authority` (the run id) and
+       `ran_and_found_nothing` included, while the document arm one method up withheld the same rows.
+       Measured at the op by `project-sight.test.mjs` §9 before this line existed: vera's `looked`,
+       `never_looked` and `by_subject_kind` all moved on iris's run over a project vera cannot see.
+       THE RULE IS §6's ROW-WHOLE FENCE AS WRITTEN — *a row is published only when every bundle it names
+       … through a run's context … is one this viewer may see* — and it is DELEGATED to the reader that
+       already gates it rather than spelled a second time, exactly as `#frontierDocumentVisible` does:
+       `aiRunLog` answers `found: false` both for a run this viewer may not see and for one that does not
+       exist, so the unknown run and the unviewable run read identically and both fail closed. Bounded at
+       one entry — nothing here reads the log, only whether the run is reachable at all — and bounded in
+       total by `#frontierPage`'s over-fetch, which is the document arm's arrangement and stays inside
+       `derivation-bounds.test.mjs`' blessed form. A row with a NULL authority names no run and is
+       untouched. THE ENTITY DECISION IS NOT REOPENED: an entity row with no run authority still passes. */
+    const runSeen = (r) => r.authority_kind !== "run" || !r.authority
+      || this.aiRunLog({ run: r.authority, viewer, limit: 1 }).found === true;
     /* D-389: the over-fetch, gate, cut and claim are `#frontierPage`'s, shared with the other two arms. */
     const latest = this.#frontierPage("meaning", cap, { limit: (cap + 1) * 3 }, (r) => {
+      if (!runSeen(r)) return false;
       if (r.subject_kind === "capture") return captureSeen(r.subject);
       if (r.subject_kind === "reference")
         return r.authority ? captureSeen(r.authority) : false;
@@ -42404,9 +42928,18 @@ export class Store extends DurableObject {
        is the whole-level count and is. Pinned by `observation-meaning.test.mjs`
        section J, which goes red if a later session quietly gates this or narrows
        it to the page. */
+    /* D-486 / BOB #32 (2026-09-24) — REC-110's ruling STANDS AND IS NARROWED BY ONE ROW CLASS, which is
+       the opposite of the quiet gating section J refuses. The tally still counts EVERY row at this level
+       for every viewer, still does not follow the page, and still names no bundle, subject or address.
+       What it no longer counts is a run row whose project the caller cannot see: `#hiddenSets` compiles
+       that one predicate for all five readers, and the premise-(1) door — `op=stats`' `observationsNonLead`
+       and `aiRunLog` — subtracts the same rows IN THIS LANDING, so the two ops still answer one question to
+       one audience. The reasoning is at `#hiddenSets` and is not restated here; the site-pin arm is section J. */
+    const hidTail = this.#hiddenRunTail(viewer);
     const tally = {};
     for (const row of this.#rows(
-      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'meaning' GROUP BY state`))
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'meaning'${hidTail.sql} GROUP BY state`,
+      ...hidTail.args))
       tally[row.state] = row.n;
     /* THE TALLY BY SUBJECT KIND, because one number over three acts would answer
        none of the three questions this level asks. It is a projection of `looked`
@@ -42721,9 +43254,18 @@ export class Store extends DurableObject {
       (r) => seenRow({ result_kind: "capture", result_ref: r.from_document,
                        authority: null, authority_kind: null }));
     const never = neverFetch.rows;
+    /* D-486 / BOB #32 (2026-09-24) — REC-110's ruling STANDS AND IS NARROWED BY ONE ROW CLASS, which is
+       the opposite of the quiet gating section J refuses. The tally still counts EVERY row at this level
+       for every viewer, still does not follow the page, and still names no bundle, subject or address.
+       What it no longer counts is a run row whose project the caller cannot see: `#hiddenSets` compiles
+       that one predicate for all five readers, and the premise-(1) door — `op=stats`' `observationsNonLead`
+       and `aiRunLog` — subtracts the same rows IN THIS LANDING, so the two ops still answer one question to
+       one audience. The reasoning is at `#hiddenSets` and is not restated here; the site-pin arm is section J. */
+    const hidTail = this.#hiddenRunTail(viewer);
     const tally = {};
     for (const row of this.#rows(
-      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document' GROUP BY state`))
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document'${hidTail.sql} GROUP BY state`,
+      ...hidTail.args))
       tally[row.state] = row.n;
     /* NEVER_LOOKED is reported as its own count and is NEVER folded into the
        tally above, because it is the one state that is the ABSENCE of a row —
@@ -47109,6 +47651,8 @@ export class Store extends DurableObject {
            (see `changedFromAudit`). */
         changedfromaudit: () => this.changedFromAudit({
           limit: url.searchParams.get("limit"), offset: url.searchParams.get("offset") }),
+        /* REC-190: the census of displaced homes, read-only (see `homeCensus`). */
+        homecensus: () => this.homeCensus({ limit: url.searchParams.get("limit") }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,
@@ -47478,6 +48022,10 @@ export class Store extends DurableObject {
                                                        so a body can never supply it. */
                                                     identity: url.searchParams.get("identity") }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
+        /* D-64: the daily render allowance. `renderadmit` takes a render or records
+           a DEFERRAL; `renderspend` adds the browser time a render reported. */
+        renderadmit: () => this.renderAdmit(body || {}),
+        renderspend: () => this.renderSpend(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),
         recordcpuprobestep: () => this.recordCpuProbeStep(body || {}),
@@ -47550,6 +48098,8 @@ export class Store extends DurableObject {
         partitionindependence: () => this.partitionIndependence({
           id: url.searchParams.get("id"),
           partition: (body && body.partition !== undefined) ? body.partition : url.searchParams.get("partition"),
+          /* REC-192: a STORED version's independence, on its own, with no strength key. */
+          version: url.searchParams.get("version"),
           viewer: url.searchParams.get("viewer"),
         }),
         /* PL-12 / D-84. Three ops. `author` on the adoption is stamped by the
@@ -48051,7 +48601,8 @@ export class Store extends DurableObject {
           author: url.searchParams.get("author"),
           identity: url.searchParams.get("identity"),   /* REC-134 */
         }),
-        selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner") }),
+        selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner"),
+                                                  viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined }),
         selectionrelease: () => this.selectionRelease({
           handle: url.searchParams.get("handle"), owner: url.searchParams.get("owner") }),
         searchindexcheck: () => this.searchIndexCheck({
@@ -48063,7 +48614,8 @@ export class Store extends DurableObject {
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
-        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
+        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1",
+                                   viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined }),
         /* D-116: THE DO'S OWN BUILD, under a field that is NEVER `version`. `op=bootstrap`'s `version` is the ROUTING
            isolate's env.VERSION, and this answer is spread AFTER it, so a `version` here would REPLACE that reading
            rather than stand beside it. `this.env` is the env of the worker version THIS OBJECT is running, which rolls

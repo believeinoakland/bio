@@ -226,7 +226,11 @@ console.log("\n--- 4 · every site in src/index.mjs that reads the `store` param
   };
   const found = sites.map((n) => `${owner(n)}@${n}`);
   console.log(`  ${found.length} site(s): ${found.join(", ")}`);
-  const KNOWN = new Set(["scopeFor", "namespaceGate", "unauthenticated-block", "op=instancegroup", "op=groupidentity"]);
+  /* CORRECTED 2026-09-24 by D-461: `pinnedNamespaceGate` is a fifth reader, added on purpose — it refuses
+     `store=scratch` on the public ops that always answer from `bio` (C-78.2), and
+     `test/d461-pinned-namespace.test.mjs` drives it. The old set was right for its day, not wrong.
+     c19-batch11 union: `op=groupidentity` (C-82/IC-246, from c19-unionfix) is carried beside it. */
+  const KNOWN = new Set(["scopeFor", "namespaceGate", "pinnedNamespaceGate", "unauthenticated-block", "op=instancegroup", "op=groupidentity"]);
   t("the sweep found readers (a sweep over nothing is not a sweep)", found.length >= 4, true);
   t("every reader of `store` is one this suite drives (a new one must be added here, by name)",
     sites.map(owner).filter((o) => !KNOWN.has(o)), []);

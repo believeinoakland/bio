@@ -55,6 +55,8 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
          DRIVE_CAPTURE_CHECKS,
          /* CPDF-19 / C-51: the read-time re-extraction's DEC-49 rows (D-319). */
          REEXTRACT_CHECKS,
+         /* D-64 / C-83: the render arm's DEC-49 rows. */
+         RENDER_CAPTURE_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX,
          /* REC-123: the ONE machine-identity predicate (REC-46), asked by the two
             ratification fences of the stamp an `ai` credential acts under. */
@@ -86,6 +88,7 @@ import { inbandQuartet } from "./inband.mjs";   /* REC-148: DEC-31's in-band qua
    three facts — export address, export format, producer — is readable off a
    request body, and `callerSuppliedHopFacts` makes an attempt to supply one a
    NAMED refusal rather than a silent drop (D-112). */
+import { odfEvidentiaryDigest, ODF_FORMATS } from "./odf.mjs";
 import { readDriveAddress, driveHop, callerSuppliedHopFacts,
          DRIVE_PRODUCER, driveConvertStep } from "./drive.mjs";
 /* REC-19 / DEC-8: the act catalogue and derivation behind op=affordances. The
@@ -104,6 +107,9 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
+/* D-64: the render arm's pure half and its renderer seam. */
+import { RENDER_DEFAULTS, RENDERED_METHOD, renderAllowanceMs, renderBlock, renderedAuthority,
+         rendererFor } from "./render.mjs";
 /* COFF-1 (I7): the FORMAT registry is the ONLY format dispatch in this file.
    pdfstructure.mjs is no longer imported here — it is the registry's pdf
    entry, reached through getFormat("pdf").structure with byte-identical
@@ -919,7 +925,9 @@ const OPS = {
      makes BEFORE the member's answers are written. A pure read through the one
      `#independenceOf`; it shows no strength and writes nothing. Same classes and
      the same fail-closed `viewer` stamp as versionstrength, below, because it
-     names a question and every document its reasons rest on. */
+     names a question and every document its reasons rest on. REC-192: `version=`
+     reads a STORED version's independence ON ITS OWN, with no strength key (BOB #31,
+     2026-09-23 22:22Z), under the same classes and stamp. */
   partitionindependence: { classes: ["admin", "member", "probe"], mutating: false },
 
   /* PL-12 / D-84: the bias object's three ops.
@@ -1174,6 +1182,11 @@ const OPS = {
      to learn whether `op=promote`'s old unchecked digest left a false one behind. Admin and probe, as
      `registeraudit` beside it: it is an audit of the working corpus, and it lists paths. */
   digestcensus: { classes: ["admin", "probe"],                     mutating: false },
+  /* REC-190: the census of displaced homes — every `files` / `history` row whose sha the register assigns to a
+     DIFFERENT bundle that still exists (D-179's residue: the pre-fence promote MOVED a register row), both bundles
+     named, NEVER repaired; which bundle held it first is undetermined and the answer says so. Admin and probe, as
+     `digestcensus` beside it: an audit of the working corpus that lists bundle ids and paths. */
+  homecensus:   { classes: ["admin", "probe"],                     mutating: false },
   /* CONSTRUCTS Step 3 (FW-5): the reading persisted at promote. `reading` reads
      one captured document's reading (entities + document facts) by its capture
      sha; `readingref` is the reverse index — which documents' readings carry a
@@ -2735,6 +2748,10 @@ async function sha256Hex(v) {
    when it records a capture and by op=monitor when it compares one (D-60), so the
    two cannot disagree about which bytes were eligible to be normalised. */
 const PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+/* D-351: the bound on reading an OpenDocument capture back whole for its
+   container digest — the single-part bound, since a multipart capture is never
+   digested, and above M-123's largest Drive export (~3.4 MB). Chosen, not measured. */
+const ODF_DIGEST_MAX = 8 * 1024 * 1024;
 function profilesAsText(ct, total, multipart) {
   return !multipart && total <= PROFILE_TEXT_MAX
     && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "");
@@ -2748,9 +2765,35 @@ function profilesAsText(ct, total, multipart) {
    text; `sha` is the identity the bytes must hash to. Returns the `profile.digests`
    object acquire records: `determined` true only under a CERTAIN textual handler
    whose read-back bytes hash to `sha`, and null digests otherwise, never invented. */
-async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart) {
+async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes = null) {
   const digestCertain = !!profileBytes && stackId.handler.textual === true
     && stackId.confidence === CONFIDENCE.CERTAIN;
+  /* D-351 — THE CONTAINER ARM. A document that is not read as text may still be
+     an OpenDocument package whose substance member is measured stable while its
+     ZIP envelope is not (a Google Drive export). `odfEvidentiaryDigest` decides,
+     per flavour and from the bytes alone, whether content.xml can speak for the
+     substance, and states why when it cannot. The identity check below is the
+     text arm's own: the bytes digested must be the bytes registered. `rendition`
+     stays null — "would it look the same?" needs styles.xml and nothing measured
+     it — and `over` names the member, so no reader mistakes this digest for the
+     text arm's and a monitor compares like with like. */
+  if (!digestCertain && !profileBytes && containerBytes && !multipart) {
+    /* A reader that throws is an UNREAD package, never a failed capture: the
+       capture is already filed, and a digest the gate could not take is stated. */
+    let od;
+    try { od = await odfEvidentiaryDigest(containerBytes, sha256Hex); }
+    catch (e) { od = { determined: false, flavour: "unread",
+      basis: `the container digest could not be taken (${String(e && e.message || e).slice(0, 90)}), so none is claimed` }; }
+    if (od.determined) {
+      if (await sha256Hex(containerBytes) !== sha)
+        return { determined: false, rendition: null, evidentiary: null,
+          basis: "the container bytes read back from the store did not hash to the capture identity, so no container digest could be trusted" };
+      return { determined: true, rendition: null, evidentiary: od.evidentiary,
+               over: od.over, container: od.flavour, boundary_missed: false, basis: od.basis };
+    }
+    if (od.flavour)
+      return { determined: false, rendition: null, evidentiary: null, container: od.flavour, basis: od.basis };
+  }
   if (!digestCertain)
     return {
       determined: false, rendition: null, evidentiary: null,
@@ -2953,6 +2996,39 @@ function namespaceGate(url) {
                 error: `no namespace ${JSON.stringify(asked.slice(0, 80))} exists on this instance`,
                 asked: asked.slice(0, 80), namespaces: [...NAMESPACES] }, 400);
   /* END DEC-49 REGION is-namespace-gate */
+}
+
+/* D-461 (C-78.2, IC-250) — A PUBLIC OP THAT ALWAYS ANSWERS FROM `bio` REFUSES `store=scratch` BY NAME.
+ *
+ * WHAT WAS WRONG, MEASURED. The unauthenticated block opens ONE stub on `bio` and twelve of its fifteen ops answer
+ * through it whatever `store=` says — three of them MUTATING (`knock`, `claim`, `reviewcomment`). So
+ * `op=knock&store=scratch` passed D-456's gate (`scratch` is a namespace), filed a knock in the REAL record's inbox,
+ * and answered `ok` without saying which store it wrote. A live verification whose no-write guarantee is naming
+ * `store=scratch` on every call (CLAUDE.md §5, D-325) wrote production while believing it was in scratch.
+ *
+ * WHY REFUSE AND NOT REDIRECT. Claiming and logging in are pinned on purpose (an instance has ONE identity), and the
+ * published reads are the record's public face; answering them from scratch would change what they MEAN. Refusal is
+ * also D-456's rule for a namespace the op cannot serve: the caller is told, never silently answered elsewhere.
+ *
+ * THE SET IS INVERTED ON PURPOSE. It lists the public ops that DO address scratch — the invitation ops and
+ * op=instancegroup, each of which reads `store=` itself — and every other `classes: null` op is pinned. A public op
+ * added later is refused `store=scratch` until somebody makes it answer from scratch and lists it here, which is the
+ * safe direction: the unlisted default is the refusal, never the real record. Gated ops take their namespace from
+ * `scopeFor` and are not this function's. `store=bio` and an absent `store=` are unchanged. Nothing is read or
+ * written when this answers.
+ *
+ * + `groupidentity` (CONDUCT #19, c19-batch11, 2026-09-24): REC-164's op reads `store=` itself, op=instancegroup's way
+ * (a credential's store from `scopeFor`, else `store=scratch` honoured), and d456-namespace-scope drives it answering
+ * from scratch; it met this list only at the union, where the pin refused it (400) and that suite went red. */
+const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup", "groupidentity"]);
+function pinnedNamespaceGate(url, op, spec) {
+  if (spec.classes !== null || SCRATCH_ADDRESSING_PUBLIC_OPS.includes(op)) return null;
+  if (url.searchParams.get("store") !== SCRATCH) return null;
+  /* DEC-49 REGION is-pinned-namespace-gate */
+  return json({ ok: false, reason: "NAMESPACE_PINNED", ...namespaceRow("NAMESPACE_PINNED"),
+                error: `op=${op} always answers from the bio namespace and has no ${SCRATCH} counterpart; nothing was read or written`,
+                op, asked: SCRATCH, pinned: "bio" }, 400);
+  /* END DEC-49 REGION is-pinned-namespace-gate */
 }
 
 /* =====================================================================
@@ -3627,6 +3703,15 @@ const driveRow = (code) => {
   const row = DRIVE_CAPTURE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`driveRow: ${code} has no DRIVE_CAPTURE_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
+/* D-64 / C-83: the render arm's row reader, `driveRow`'s shape. */
+const renderRow = (code) => {
+  const row = RENDER_CAPTURE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`renderRow: ${code} has no RENDER_CAPTURE_CHECKS row with a canned translation `
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
@@ -5285,6 +5370,9 @@ export default {
     /* D-456: a `store=` naming no namespace is refused here, before any credential is read (`namespaceGate`). */
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return unknownNamespace;
+    /* D-461: `store=scratch` on a public op that always answers from `bio` is refused here (`pinnedNamespaceGate`). */
+    const pinnedNamespace = pinnedNamespaceGate(url, op, spec);
+    if (pinnedNamespace) return pinnedNamespace;
 
     /* Unauthenticated by design. Each one gates itself. */
     if (spec.classes === null) {
@@ -6417,7 +6505,8 @@ export default {
         /* REC-131 / IC-148: selftest RELAYS the store's stats — the same answer through a second
            door, under op=stats' one stamp: `dbBytes` for the admin class only (see op=stats). */
         const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
-          .fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}`));
+          .fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}&viewer=${encodeURIComponent(
+            viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
         if (!sOut.answered) { out.ok = false; out.store = "ERR the store did not answer /stats"; }
         else out.store = sOut.result;
       } catch (e) { out.ok = false; out.store = "ERR " + String(e && e.message || e); }
@@ -6463,7 +6552,8 @@ export default {
     }
 
     if (op === "livefire") {
-      const out = await livefire(env, storeName, { capacity: cls === "admin" });
+      const out = await livefire(env, storeName, { capacity: cls === "admin",
+        viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
       return json(out, out.ok ? 200 : 500);
     }
 
@@ -7207,6 +7297,71 @@ export default {
 
       const retrieved = new Date().toISOString().split(".")[0] + "Z";
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
+      /* D-64 — THE RENDER ARM, ADMISSION (CLIENT-RENDERED.md; BOB #31, BOB #32).
+       *
+       * `render: true` asks for the page AS A VISITOR SAW IT: the served shell is
+       * fetched exactly as today, a renderer runs the page, and ONE capture holds
+       * BOTH — the rendered document PRIMARY (method `rendered`) and the shell
+       * beside it under its own digest, joined by `render.of`.
+       *
+       * EVERY WAY THIS CANNOT HAPPEN IS DECIDED HERE, BEFORE THE SHELL IS FETCHED,
+       * so nothing is fetched for a render that cannot happen and the shell can
+       * never be filed as the content by falling through. */
+      /* `render: false` is the plain capture, as an absent key is: a caller saying
+         "no render" is answered, not refused (a fence tighter than its rule). */
+      const renderAsked = Object.prototype.hasOwnProperty.call(body || {}, "render") && body.render !== false;
+      let renderer = null;
+      /* DEC-49 REGION is-render-admit
+       *
+       * THE SPAN C-83.1..C-83.5 name. Helper `renderRow`, every code a STRING
+       * LITERAL at its site. */
+      if (renderAsked) {
+        if (body.render !== true)
+          return json({ ok: false, reason: "RENDER_FLAG_MALFORMED", ...renderRow("RENDER_FLAG_MALFORMED"),
+            op, detail: `render=${JSON.stringify(body.render).slice(0, 40)} is not a value this op reads. `
+                      + `Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.` }, 400);
+        const conflict = body.via === "archive.org" ? "via: archive.org (an archived replay)"
+                       : driveCapture ? "a Google Drive export (a document, not a page)"
+                       : body.continue ? "continue: <session> (a capture already filed)" : null;
+        if (conflict)
+          return json({ ok: false, reason: "RENDER_ARM_CONFLICT", ...renderRow("RENDER_ARM_CONFLICT"),
+            op, conflict, detail: `render: true cannot be combined with ${conflict}.` }, 400);
+        renderer = rendererFor(env);
+        if (typeof renderer.render !== "function")
+          return json({ ok: false, reason: "RENDER_NO_RENDERER", ...renderRow("RENDER_NO_RENDERER"),
+            op, renderer: renderer.kind,
+            detail: renderer.kind === "browser-binding-without-driver"
+              ? "a Browser Rendering binding (BROWSER) is bound, but the in-plane driver over it is not built "
+                + "(D-64 shipped the seam and the record, not a CDP client). Nothing was fetched."
+              : "no renderer is bound to this instance (no RENDERER service binding). Nothing was fetched." }, 501);
+        /* THROUGH THE HOST GOVERNOR: the render is a second load of the page. */
+        let rHost = null;
+        try { rHost = new URL(locator).host; } catch { rHost = null; }
+        if (rHost) {
+          let g = null;
+          try { g = (await (await stGov.fetch("http://x/governoradmit", {
+            method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ host: rHost }) })).json()).result || null; } catch { g = null; }
+          if (g && g.admitted === false)
+            return json({ ok: false, reason: "RENDER_HOST_COOLING_OFF", ...renderRow("RENDER_HOST_COOLING_OFF"),
+              op, host: rHost, retry_in_ms: g.retry_in_ms || 0,
+              detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).` }, 429);
+        }
+        /* THE DAILY ALLOWANCE (BOB #32 item 3): spent means DEFERRED, recorded. */
+        /* A store that did not answer DEFERS the render rather than running it
+           unmetered: the answered-guard, never a bare `.result` read. */
+        const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), at: retrieved }) }));
+        const adm = admOut.answered ? admOut.result : null;
+        if (!adm || adm.state !== "admitted")
+          return json({ ok: false, reason: "RENDER_DEFERRED", ...renderRow("RENDER_DEFERRED"),
+            op, render: { state: "deferred", content: "undetermined", allowance: adm || null },
+            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is spent `
+                        + `(${adm.spent_ms} ms); this render is recorded as deferred (${adm.deferred} today).`
+                        : "the render allowance could not be read, so the render is deferred rather than run unmetered." }, 429);
+      }
+      /* END DEC-49 REGION is-render-admit */
       /* D-104. Every way this fetch can end is recorded against the DOCUMENT
          address, and exactly one of them is not a failure of the source.
          *
@@ -7363,6 +7518,12 @@ export default {
       const MAX = 256 * 1024 * 1024;
       const whole = createSha256();
       const parts = [];
+      /* D-469: whether the store held each part BEFORE this call wrote it, in
+         step with `parts`. The head() below is the write guard and the only
+         moment the answer is true: asked after the put, it finds the object this
+         same call just wrote, and a first-time capture said `existed: true`. Kept
+         off `parts` itself so nothing new reaches the wire through it. */
+      const partHeldBefore = [];
       let total = 0, held = [], heldBytes = 0, oversize = false;
 
       const flush = async () => {
@@ -7372,9 +7533,11 @@ export default {
         held = []; heldBytes = 0;
         const d = await crypto.subtle.digest("SHA-256", buf);
         const psha = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
-        if (!(await env.CAPTURES.head(`${storeName}/captures/${psha}`)))
+        const heldBefore = !!(await env.CAPTURES.head(`${storeName}/captures/${psha}`));
+        if (!heldBefore)
           await env.CAPTURES.put(`${storeName}/captures/${psha}`, buf, { sha256: d });
         parts.push({ sha256: psha, bytes: buf.length });
+        partHeldBefore.push(heldBefore);
       };
 
       /* CAP-8: the first kibibyte of a DRIVE export, kept so the shell can be
@@ -7466,7 +7629,7 @@ export default {
       }
       await flush();
       if (total === 0) return json({ ok: false, reason: "EMPTY", locator }, 502);
-      const sha = whole.hex();
+      let sha = whole.hex();
 
       /* One part and small enough to be a plain capture: store the whole under
          its own hash so the ordinary single-file shape still applies. */
@@ -7480,10 +7643,17 @@ export default {
           return json({ ok: false, reason: "HASH_DISAGREEMENT",
                         detail: "the incremental hash and the block hash of the same bytes differ" }, 500);
         }
-        existed = !!(await env.CAPTURES.head(`${storeName}/captures/${sha}`));
+        /* D-469: the answer flush() took BEFORE it wrote the one part, which for
+           one part is the whole. Re-asking here would find this call's own write. */
+        existed = partHeldBefore[0];
       }
+      /* D-469, THE MULTI-PART CASE: `existed` stays false and is NOT asked. The
+         whole is never stored under its own hash, and part boundaries follow the
+         stream's chunking, so "every part was already held" is not the same claim
+         as "this document was already held". False here under-claims a re-fetch;
+         it never over-claims a first one. */
 
-      const ct = (res.headers.get("content-type") || "").split(";")[0].trim();
+      let ct = (res.headers.get("content-type") || "").split(";")[0].trim();
 
       /* WARC keeps the whole response. We kept content-type and threw the rest
          away, which meant Last-Modified and ETag were discarded at the only
@@ -7522,6 +7692,62 @@ export default {
         .replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
 
       const stLim = stGov;
+
+      /* D-64 — THE RENDER ARM, THE PAIR. The shell is held (content-addressed,
+       * exactly as fetched and hashed above). From here on `sha`, `total` and
+       * `ct` name the RENDERED document, because it is the bundle's PRIMARY
+       * (BOB #32 item 2): the address filed below, the D-98 task, subresource
+       * capture (CLIENT-RENDERED.md: "applies to the rendered document's
+       * references, not the shell's"), the profile and the reading all run over
+       * what a visitor saw. The shell survives only as `shell` and `render.of`. */
+      let renderRecorded = null, shellRecorded = null, renderedAuth = null, renderedExisted = false;
+      if (renderAsked) {
+        const pageUrl = res.url || locator;
+        let answer = null, rbytes = null, rb = null;
+        /* DEC-49 REGION is-render-result
+         *
+         * THE SPAN C-83.6 and C-83.7 name. Helper `renderRow`, codes as STRING
+         * LITERALS. Nothing below this region's refusals is filed as a document:
+         * the shell's bytes are held unregistered, as TOO_LARGE's parts are. */
+        if (multipart || detectFormat(null, ct || null).format !== "html")
+          return json({ ok: false, reason: "RENDER_NOT_A_PAGE", ...renderRow("RENDER_NOT_A_PAGE"),
+            op, content_type: ct || null, bytes: total, multipart,
+            detail: `the served bytes are ${multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``}, `
+                  + `not an HTML page; nothing was filed.` }, 422);
+        try { answer = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS }); }
+        catch (e) { answer = { ok: false, error: String(e && e.message || e) }; }
+        try { await stGov.fetch("http://x/renderspend", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ ms: answer && answer.elapsed_ms, at: retrieved }) }); }
+        catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
+        rb = renderBlock(answer, { pageUrl, shellSha: sha, at: retrieved });
+        if (rb.ok) rbytes = new TextEncoder().encode(answer.html);
+        if (!rb.ok || rbytes.length > MAX)
+          return json({ ok: false, reason: "RENDER_FAILED", ...renderRow("RENDER_FAILED"),
+            op, shell_sha256: sha, filed: false,
+            detail: rb.ok ? `the rendered document is ${rbytes.length} bytes, over this surface's ${MAX}.`
+                          : rb.problem }, 502);
+        /* END DEC-49 REGION is-render-result */
+        const rd = await crypto.subtle.digest("SHA-256", rbytes);
+        const rsha = [...new Uint8Array(rd)].map((x) => x.toString(16).padStart(2, "0")).join("");
+        renderedExisted = !!(await env.CAPTURES.head(`${storeName}/captures/${rsha}`));
+        if (!renderedExisted) await env.CAPTURES.put(`${storeName}/captures/${rsha}`, rbytes, { sha256: rd });
+        shellRecorded = {
+          file: `snapshots/${name}.shell.html`, sha256: sha, bytes: total,
+          method: "bio-plane acquire, https fetch, hashed at receipt",
+          ...(ct ? { content_type: ct } : {}), transport,
+        };
+        renderRecorded = rb.render;
+        renderedAuth = renderedAuthority({ asserted: authorityAsserted, render: renderRecorded, at: retrieved });
+        /* The render's own navigation, reported to the governor like any load. */
+        if (typeof renderRecorded.status === "number") {
+          try { await stGov.fetch("http://x/governorreport", {
+            method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ host: new URL(pageUrl).host, status: renderRecorded.status, retry_after_ms: null }) }); }
+          catch { /* an unrecorded outcome is not a failed render */ }
+        }
+        sha = rsha; total = rbytes.length; ct = "text/html"; existed = renderedExisted;
+      }
 
       /* D-58. File the address this capture holds, UNCONDITIONALLY, beside the
          capture itself. This used to sit inside the subresource branch, behind
@@ -7583,7 +7809,10 @@ export default {
          * later files. The consumer resolves the sha through the register once it
          * does, and an event whose capture is never promoted simply waits rather
          * than inventing a subject to point at. */
-      if (!authorityAsserted) {
+      /* D-64: a rendered capture raises the task whenever ITS authority is
+         undetermined — including when the shell's was asserted and another
+         origin supplied data or ran code (CLIENT-RENDERED.md item 3). */
+      if (renderedAuth ? renderedAuth.authority_state === "undetermined" : !authorityAsserted) {
         try {
           await stLim.fetch("http://x/taskenqueue", {
             method: "POST", headers: { "content-type": "application/json" },
@@ -7973,7 +8202,20 @@ export default {
       /* D-60: the gate and the computation are `substanceDigests`, the ONE function
          op=monitor also calls, so the digest a capture records and the digest a
          monitor tick compares it with are produced by the same rule. */
-      profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart);
+      /* D-351: an OpenDocument capture — detected from the bytes, or declared by
+         the source — is read back WHOLE, bounded, for the container arm of
+         `substanceDigests`. The FORMAT wire below reads the same object again;
+         that second read is the price of keeping the digest beside its siblings
+         here rather than splitting the one gate across two blocks. */
+      let containerBytes = null;
+      const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
+      if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
+        try {
+          const cobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
+          if (cobj) containerBytes = new Uint8Array(await cobj.arrayBuffer());
+        } catch { /* unread is undetermined: the digest below says so */ }
+      }
+      profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
 
       /* 2026-09-14, REC-81: every citation into the content framework in this file
          names a SECTION rather than a line. The line numbers they carried went stale
@@ -8694,11 +8936,13 @@ export default {
              both facts about how the record got here. An undetermined
              capture is held and barred from publication, never refused at
              intake (RULED, AUTHORITY-AND-TRUST.md). */
+          ...(renderedAuth ? renderedAuth : {
           ...(authorityAsserted ? { authority: authorityAsserted } : {}),
           authority_state: authorityAsserted ? "determined" : "undetermined",
           authority_basis: authorityAsserted
             ? `asserted by the capturing ${viaSession ? "member" : "caller"} at intake, ${retrieved}`
             : `no assertion was supplied and no mechanical determination is implemented; recorded ${retrieved} for resolution through the task list`,
+          }),
           /* The chain of custody as ordered hops from us back to the origin,
              each naming who, what they assert, the evidence, and whether the
              assertion is cryptographically bound or merely stated (RULED). A
@@ -8718,8 +8962,12 @@ export default {
              * the content. */
           provenance_chain: [{
             who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
-            asserts: `these bytes were served for ${locator} at ${retrieved}`,
-            evidence: "first-party https fetch, hashed at receipt, transport record on this document",
+            asserts: renderRecorded
+              ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)`
+              : `these bytes were served for ${locator} at ${retrieved}`,
+            evidence: renderRecorded
+              ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment"
+              : "first-party https fetch, hashed at receipt, transport record on this document",
             bound: false,
             via,
           /* CAP-8 joins the SAME spread, and a capture is never both: an archive
@@ -8731,7 +8979,8 @@ export default {
           }, ...(archiveHopRecorded ? [archiveHopRecorded] : []),
              ...(driveHopRecorded ? [driveHopRecorded] : [])],
           capture: {
-            method: multipart
+            /* D-64 / BOB #32 item 1: the method is `rendered`; the shell keeps its own. */
+            method: renderRecorded ? RENDERED_METHOD : multipart
               ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt`
               : "bio-plane acquire, https fetch, hashed at receipt",
             /* GRADE TRACKS DIRECTNESS, NEVER TECHNIQUE (RULED). An archive hop
@@ -8776,8 +9025,20 @@ export default {
                parted document and what C-18.6 checks by streaming the parts. */
             sha256: sha, encoding: "binary", bytes: total,
             ...(ct ? { content_type: ct } : {}),
-            transport,
+            /* The HTTP exchange belongs to the SHELL; on a rendered capture it is
+               carried there, and the render's own navigation is `render.*`. */
+            ...(renderRecorded ? {} : { transport }),
           },
+          /* D-64: THE PAIR (BOB #32 item 2). The rendered document is PRIMARY and
+             is `file`/`capture`; the shell is beside it under its own digest, the
+             one part anyone can re-verify against the source. */
+          ...(renderRecorded ? {
+            pair: { primary: "rendered",
+                    rendered: { file: `snapshots/${name}`, sha256: sha },
+                    shell: { file: shellRecorded.file, sha256: shellRecorded.sha256 } },
+            render: renderRecorded,
+            shell: shellRecorded,
+          } : {}),
           ...(multipart ? { parts: parts.map((p, i) => ({
             file: `snapshots/${name}.part${String(i).padStart(3, "0")}`,
             sha256: p.sha256, bytes: p.bytes })) } : {}),
@@ -8819,8 +9080,10 @@ export default {
           files: {
             [`snapshots/${name}.render.html`]: subs.companionSha,
             "data/snapshot-manifest.json": subs.manifestSha,
+            ...(shellRecorded ? { [shellRecorded.file]: shellRecorded.sha256 } : {}),
           },
         } : {}),
+        ...(shellRecorded && !subs ? { files: { [shellRecorded.file]: shellRecorded.sha256 } } : {}),
         ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
         note: ACQUIRE_GRADE_NOTE,
         store: storeName, tokenClass: cls,
@@ -9045,18 +9308,26 @@ export default {
               const profCtx = { headers, locator, content_type: ct || null,
                                 text: asText ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "" };
               const stackId = identify(profCtx);
-              const fresh = await substanceDigests(asText ? bytes : null, stackId, profCtx, seen, false);
-              if (stackId.handler.key !== baselineProfile.handler || stackId.handler.version !== baselineProfile.handler_version)
+              const fresh = await substanceDigests(asText ? bytes : null, stackId, profCtx, seen, false,
+                                                   asText || bytes.length > ODF_DIGEST_MAX ? null : bytes);
+              /* D-351: a container digest is compared only with a container digest
+                 over the SAME member; a text-arm baseline has no `over`. */
+              const bdOver = bd.over || null, freshOver = fresh.over || null;
+              if (bdOver !== freshOver)
+                comparedBasis = `the baseline's evidentiary digest was taken over ${bdOver || "the normalised text"} but the fetched bytes' over ${freshOver || "the normalised text"}, so the raw bytes were compared`;
+              else if (stackId.handler.key !== baselineProfile.handler || stackId.handler.version !== baselineProfile.handler_version)
                 comparedBasis = `the fetched bytes identify as ${stackId.handler.key} v${stackId.handler.version} but the baseline was normalised under ${baselineProfile.handler} v${baselineProfile.handler_version}, so the raw bytes were compared`;
               else if (!fresh.determined)
                 comparedBasis = `the fetched bytes' substance digest is undetermined (${fresh.basis}), so the raw bytes were compared`;
               else {
                 compared = "evidentiary";
-                comparedBasis = `the evidentiary digests were compared, both normalised under ${stackId.handler.key} v${stackId.handler.version} (certain)`;
+                comparedBasis = freshOver
+                  ? `the evidentiary digests were compared, both taken over the package's ${freshOver} (${fresh.basis})`
+                  : `the evidentiary digests were compared, both normalised under ${stackId.handler.key} v${stackId.handler.version} (certain)`;
                 if (fresh.evidentiary !== bd.evidentiary) { status = "modified"; note = "the substance of the source differs from the capture"; }
                 else if (seen === baseline) { status = "unchanged"; note = "the source still serves the captured bytes"; }
                 else { status = "unchanged";
-                       note = fresh.rendition === bd.rendition
+                       note = fresh.rendition != null && fresh.rendition === bd.rendition
                          ? "the substance is unchanged; only machinery the source rebuilds on every visit differs from the capture"
                          : "the substance is unchanged; machinery or furniture around it differs from the capture"; }
               }
@@ -10327,6 +10598,13 @@ export default {
            as one that does not exist — `contentmint`'s reason. Fails closed on an
            absent stamp. */
         || op === "themeplace" || op === "themepropose" || op === "themeread"
+        /* D-464: the COUNTS. Every counter `op=stats` serves names rows, and a row naming a project the caller
+           cannot see is that project's existence (§7.9) — so the counts are taken through the caller's own
+           sight, and fail closed on an absent stamp. `op=selftest` relays the same answer and stamps the same
+           viewer at its own fetch. */
+        || op === "stats"
+        /* D-464: `op=selectionlist`'s `bytes` sums every owner's selection rows, so it takes the same stamp. */
+        || op === "selectionlist"
         /* REC-138 / D-426: the ROSTER acts name a project, so one the caller cannot see must
            answer exactly as one that does not exist — asked of SIGHT before any positional test
            (`Store#inSight`). `by` (below) stays the positional half; this is the visibility half.

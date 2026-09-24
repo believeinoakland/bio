@@ -24,8 +24,10 @@
  *
  * WHAT IT CANNOT SEE. A row written BEFORE this landed at the old default reads 1, because its bytes say 1, and
  * nothing in the record distinguishes a stated 1 from a defaulted one; the row forbids back-filling an
- * assessment nobody made, so none is. No fence refuses a MACHINE credential's promote that writes a determined
- * tier: "only a member's authored act sets 1, 2 or 3" is honoured by the writers, not enforced at promote.
+ * assessment nobody made, so none is. CORRECTED 2026-09-24 by REC-189: this said no fence refused a MACHINE
+ * credential's promote writing a determined tier. One does now — C-32.19 MACHINE_CANNOT_SET_RISK_TIER, in
+ * `promote`'s action block — and `machine-fences.test.mjs` block (xiv) drives it; this suite's member arm is a
+ * signed-in session for that reason.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -125,17 +127,38 @@ console.log("\n--- 2-4. through the ops: the no-tier action, a member's 2, and t
   const get = async (qs) => (await mf.dispatchFetch("http://x/api/?token=mem-d182&" + qs)).json();
   const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 
+  /* CORRECTED 2026-09-24 by REC-189, never exempted: section 3's "a member's authored act sets 2" was driven
+     through `token=mem-d182` — the MEMBER_TOKEN DEPLOY credential, which the control plane stamps `token:member`,
+     a MACHINE identity by REC-46's one predicate. The arm was asserting the ruling's OWN overclaim as its positive:
+     a machine setting 2 read as a member doing so. REC-189's fence (C-32.19) refuses exactly that, so the member's
+     act is now a SIGNED-IN SESSION's, and the writers' no-tier creations stay on the machine credential (they state
+     no tier, which the fence does not refuse). AND THE THROW BELOW WAS VACUOUS: the answer arrives wrapped in
+     `result`, so `r.ok === false` read `undefined` and a refused promote went on as if it had landed — which is
+     how the refusal surfaced as five read-back FAILs rather than one named throw. It now reads through `rP`. */
+  const RUTH = await (async () => {
+    const add = rP(await (await mf.dispatchFetch("http://x/api/?op=memberadd&token=adm-d182",
+      { method: "POST", body: JSON.stringify({ memberId: "ruth", cover: "cover for ruth", role: "admin",
+                                               capabilities: ["contribute"] }) })).json());
+    const en = rP(await (await mf.dispatchFetch("http://x/api/?op=enroll",
+      { method: "POST", body: JSON.stringify({ invite: add.invite, handle: "ruth", password: "ruth-passphrase-1" }) })).json());
+    if (!en?.ok) throw new Error(`enroll ruth: ${JSON.stringify(en)}`);
+    const lg = rP(await (await mf.dispatchFetch("http://x/api/?op=login",
+      { method: "POST", body: JSON.stringify({ role: "member:ruth", password: "ruth-passphrase-1" }) })).json());
+    if (!lg?.token) throw new Error(`login ruth: ${JSON.stringify(lg)}`);
+    return lg.token;
+  })();
+
   let seq = 0;
-  const promoteAction = async (id, tierLines, base = null) => {
+  const promoteAction = async (id, tierLines, base = null, token = "mem-d182") => {
     const text = actionMd(id, tierLines);
-    const r = await post("promote", {
+    const r = rP(await (await mf.dispatchFetch("http://x/api/?op=promote&token=" + token, { method: "POST", body: JSON.stringify({
       bundleId: id, base, snapKey: `20260724T010000Z_d182${String(++seq).padStart(4, "0")}`, author: "member-ruth",
       meta: { object_type: "action", group: "believe-in-oakland", title: "Records request",
               current_state: "planned", created: NOW, last_updated: NOW },
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
       register: [],
-    });
-    if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
+    }) })).json());
+    if (r?.ok !== true) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
     return r;
   };
   const projection = async (id) => rP(await get(`op=projection&id=${encodeURIComponent(id)}`));
@@ -159,7 +182,7 @@ console.log("\n--- 2-4. through the ops: the no-tier action, a member's 2, and t
 
   /* 3. A member's authored act sets 2: a new version of the same action, promoted by the member. */
   const before = await projection(STATED);
-  await promoteAction(STATED, TIER.two, before.bundle_sha);
+  await promoteAction(STATED, TIER.two, before.bundle_sha, RUTH);
   const after = await projection(STATED);
   t("a member's act sets 2, and op=projection reads 2", after.action.risk_tier, 2);
   t("…in the plane's words: file with caution", after.action.risk_tier_words, "file with caution");
@@ -347,20 +370,60 @@ console.log("\n--- 6. D-483: the tier chooser, unset by default, over the publis
     durableObjects: { STORE: { className: "Store", useSQLite: true } },
     bindings: { ADMIN_TOKEN: "adm-d483", MEMBER_TOKEN: "mem-d483", PROBE_TOKEN: "prb-d483", VERSION: "test" },
   });
-  const post = async (op, body) => (await mf.dispatchFetch("http://x/api/?op=" + op + "&token=mem-d483",
-    { method: "POST", body: JSON.stringify(body) })).json();
+  const post = async (op, body, token = "mem-d483") =>
+    (await mf.dispatchFetch("http://x/api/?op=" + op + "&token=" + token,
+      { method: "POST", body: JSON.stringify(body) })).json();
   const get = async (qs) => (await mf.dispatchFetch("http://x/api/?token=mem-d483&" + qs)).json();
   const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
+
+  /* NEGATIVE CONTROL FOR THIS CORRECTION, RUN 2026-09-24 at c20-batch14, one arm, restored from a
+     uniquely-named pristine copy and verified BY sha256 AND BY `cmp` (33,710 B, floored):
+       (A) the writer put back on the MACHINE credential (`token = "mem-d483"`), everything else held.
+           DECLARED: the suite must FAIL AT THE ACT, naming the refusal. ACTUAL: AS DECLARED — it throws
+           `promote ACTN-2026-0011-member-chose-1: {"ok":false,"reason":"MACHINE_CANNOT_SET_RISK_TIER",
+           "check":"C-32.19",…}` from `promoteText`, which is the whole point of the change: before it, the
+           identical refusal produced a TypeError at `p.action.risk_tier` and a tally of "assertions unknown".
+     BASELINE, unarmed, before and after: 58 pass / 0 fail. */
+  /* CORRECTED 2026-09-24 AT INTEGRATION (c20-batch14), never exempted, and it is section 3's correction
+     arriving here one landing later — the note at the head of section 3 describes this exact pair of defects
+     and this block was written on a base that did not yet carry the fix.
+       (1) THE WRITER WAS A MACHINE. These arms promote through `token=mem-d483`, the MEMBER_TOKEN DEPLOY
+           credential, which the control plane stamps `token:member` — a MACHINE identity by REC-46's one
+           predicate, not a member. REC-189's fence (C-32.19, on BOB #21's D-182 and widened by BOB #32)
+           refuses a machine credential that STATES a tier of 1, 2 or 3, so on this union every arm below
+           promoted nothing. The arms claim "a member choosing tier N", so the member is now a SIGNED-IN
+           SESSION's, exactly as section 3's writer is.
+       (2) THE THROW WAS VACUOUS. The refusal arrives WRAPPED — MEASURED at the op on this tree:
+           `{"ok":true,"result":{"ok":false,"reason":"MACHINE_CANNOT_SET_RISK_TIER","check":"C-32.19",…}}` —
+           so `r.ok === false` read `undefined`, a refused promote went on as if it had landed, and the suite
+           died at `p.action.risk_tier` with a TypeError that went through NO assertion at all (the tally read
+           "assertions unknown"). It now reads through `rP` and demands `ok === true`, so a refusal throws by
+           name at the act instead of surfacing as a null three lines later.
+     The old arms were right about the SUBJECT — D-483's chooser writes what the member picked — and wrong
+     about WHO was writing. Neither figure nor claim is weakened: the same three tiers and the same no-choice
+     case are driven, through a caller the fence lets author. */
+  const RUTH = await (async () => {
+    const add = rP(await post("memberadd", { memberId: "ruth", cover: "cover for ruth", role: "admin",
+                                             capabilities: ["contribute"] }, "adm-d483"));
+    const en = rP(await (await mf.dispatchFetch("http://x/api/?op=enroll",
+      { method: "POST", body: JSON.stringify({ invite: add.invite, handle: "ruth", password: "ruth-passphrase-1" }) })).json());
+    if (!en?.ok) throw new Error(`enroll ruth: ${JSON.stringify(en)}`);
+    const lg = rP(await (await mf.dispatchFetch("http://x/api/?op=login",
+      { method: "POST", body: JSON.stringify({ role: "member:ruth", password: "ruth-passphrase-1" }) })).json());
+    if (!lg?.token) throw new Error(`login ruth: ${JSON.stringify(lg)}`);
+    return lg.token;
+  })();
+
   let seq = 0;
-  const promoteText = async (id, text) => {
-    const r = await post("promote", {
+  const promoteText = async (id, text, token = RUTH) => {
+    const r = rP(await post("promote", {
       bundleId: id, base: null, snapKey: `20260724T020000Z_d483${String(++seq).padStart(4, "0")}`,
       author: "member-ruth",
       meta: { object_type: "action", group: "believe-in-oakland", title: "Intake check",
               current_state: "planned", created: NOW, last_updated: NOW },
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-    });
-    if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
+    }, token));
+    if (r?.ok !== true) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
     return r;
   };
   const projection = async (id) => rP(await get(`op=projection&id=${encodeURIComponent(id)}`));

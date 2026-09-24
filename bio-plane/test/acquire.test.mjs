@@ -4,7 +4,8 @@
    REC-48's THREE ARMS (run 2026-08-04, rec48-agent), each broken ALONE and every file restored BYTE-IDENTICALLY with sha256 compared before and after (src/index.mjs 16cf4e2f..., checks/bio-checks.mjs d8da7b9d...); whole = acquire 79, hygiene 369, earnedbasis 54; ALL THREE RE-RUN against the final files, so the counts name the files that are on disk.
    (a) THE ITEM'S OWN — PUBLISH THE NOTE AS A HAND-TYPED LITERAL COPY. Replace `note: ACQUIRE_GRADE_NOTE,` in src/index.mjs with the same sentence typed out ("Grade B: bytes as fetched … Co-attestation raises B toward evidentiary weight.") -> THIS SUITE STAYS 79 PASS, 0 FAIL. Every behavioural pin — the wire equality, the composer equality, both interpolation pins, the not-the-attest-fence pin — is satisfied by a copy that agrees today at zero cost. Only hygiene.test.mjs moves: 367/2, both detectors naming `index.mjs:1822 "Grade B"` and `"Grade A"`. REC-35's finding restated a fifth time and REC-43's measurement reproduced on a second sentence: THE STRUCTURAL PIN IS THE WHOLE OF THIS CONTROL, and a suite that owns the sentence cannot be the suite that catches the copy.
    (b) THE SAME LITERAL, AND THEN MOVE THE RULE — keep the literal and set `EARNED_CAPTURE_CEILING = 'C'` in checks/bio-checks.mjs -> 74 pass, 5 FAIL, and they name the note that still says B in both directions: the letter claimed is no longer the letter the gate enforces, the ceiling is not interpolated, the derived unreachable grade is not named, the wire is not the composition, and it is not the published constant. THIS IS WHAT THE COPY COSTS — a caller is told the capture it just made is Grade B while the gate refuses any leg above C, the record overclaiming on a doctrine sentence, which CLAUDE.md ranks worse than a missing feature. hygiene 367/2 and earnedbasis 50/4 alongside.
-   (c) THE COMPOSED NOTE UNDER THE SAME MOVED RULE -> 78 pass, 1 FAIL, and the difference between (b) and (c) is the whole item: the note now says Grade C and no caller is told a grade the gate will not accept. The ONE remaining failure is a REAL FINDING and not this item's doing — "the letter it claims is the one the gate ENFORCES" fires on `src/index.mjs`'s `grade: via === "archive.org" ? "C" : "B"`, the STAMPED grade, which is a value copy of the ceiling that REC-48 deliberately did not close because its other arm (the archive-sourced letter) has no exported constant to compose from and minting one is a doctrine act. Routed to CONDUCT; the assertion is left in so the gap is MEASURED rather than remembered. */
+   (c) THE COMPOSED NOTE UNDER THE SAME MOVED RULE -> 78 pass, 1 FAIL, and the difference between (b) and (c) is the whole item: the note now says Grade C and no caller is told a grade the gate will not accept. The ONE remaining failure is a REAL FINDING and not this item's doing — "the letter it claims is the one the gate ENFORCES" fires on `src/index.mjs`'s `grade: via === "archive.org" ? "C" : "B"`, the STAMPED grade, which is a value copy of the ceiling that REC-48 deliberately did not close because its other arm (the archive-sourced letter) has no exported constant to compose from and minting one is a doctrine act. Routed to CONDUCT; the assertion is left in so the gap is MEASURED rather than remembered.
+   D-469's TWO ARMS (run 2026-09-24, worker D-469), each broken ALONE in src/index.mjs and restored by cp from a per-arm pristine copy, sha256 2be01329... before and after and cmp identical; whole = 87 pass. (a) THE ITEM'S OWN — move the head() back after flush(): replace `existed = partHeldBefore[0];` with the old `existed = !!(await env.CAPTURES.head(`${storeName}/captures/${sha}`));` -> 86 pass, 1 FAIL, "a first acquire says the store did not already hold the bytes" (want false, got true): the head finds the object the same call just wrote, the overclaim M-123 measured live. The idempotent pin and the multi-part pin stay green, as declared. (b) OVER-CORRECTION — hard-code `existed = false;` -> 86 pass, 1 FAIL, "acquiring the same document again is idempotent" (want true, got false): the first-acquire pin alone would pass a field that never says true, so the two pins are one control and neither may be dropped. */
 /* Acquisition: the fetch layer, and the honesty of what it claims.
  *
  * Negative-control detail: overclaim the capture grade in the acquire path (index.mjs: a direct fetch stamps "A" instead of "B") -> 1 assertion fails (the load-bearing "acquire says B, a Worker cannot produce a grade-A capture"); restored, 72 pass.
@@ -99,6 +100,11 @@ const GOOD = { locator: "https://www.oaklandca.gov/report.pdf", authority: "City
 console.log("\n--- a public https locator is fetched, hashed, and stored ---");
 const a = await acquire(GOOD);
 t("acquisition succeeds", a.ok, true);
+/* D-469: the FIRST acquire of bytes the store has never seen must say so. The
+   idempotent pin further down asserted only the second half, an equality that
+   costs nothing: `existed` was asked AFTER the write and read true every time,
+   so the record claimed it already held bytes it had never seen. */
+t("a first acquire says the store did not already hold the bytes", a.existed, false);
 t("the bytes hash to what the source served", a.document.capture.sha256, DOC_SHA);
 t("the size is recorded", a.document.capture.bytes, DOC.length);
 t("the locator is carried verbatim", a.document.locator, GOOD.locator);
@@ -316,6 +322,9 @@ const HUGE_SHA = createHash("sha256").update(HUGE).digest("hex");
 const huge = await acquire({ ...GOOD, locator: "https://www.oaklandca.gov/huge" });
 t("the capture succeeds where it used to be refused", huge.ok, true);
 t("it came in parts", huge.parts > 1, true);
+/* D-469: a multi-part capture never asks, so `existed` is false; it may
+   under-claim a re-fetch, and this pins that it never over-claims a first. */
+t("a first multi-part acquire does not claim the bytes were held", huge.existed, false);
 t("and the whole hashes correctly across them", huge.document.capture.sha256, HUGE_SHA);
 t("the recorded size is the whole document", huge.document.capture.bytes, HUGE.length);
 t("each part names a file inside the bundle",

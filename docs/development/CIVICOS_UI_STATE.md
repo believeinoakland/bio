@@ -50,9 +50,11 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
-v107, 2026-09-24 session, thread UI, UI-84 (a WORKER of CONDUCT #20, cloud session). Landed on `land/worker/UI-84`
+v111, 2026-09-24 session, thread UI, UI-84 (a WORKER of CONDUCT #20, cloud session). Landed on `land/worker/UI-84`
 (base `origin/main` @ `548eb2c5`), in the commit that carries this entry; the version number is provisional and
-CONDUCT renumbers it at integration if a concurrent entry took it. SURFACE: **none — instrument only.** No byte of
+CONDUCT renumbers it at integration if a concurrent entry took it. (It did, and in bulk: the other side of this
+integration carries UI-86 at `v107`, D-291 `v108`, UI-85 `v109` and UI-83 `v110`, so CONDUCT #20 renumbered this
+entry `v111` at c20-batch13. Only the number moved; both sides' entries are kept in full and in version order.) SURFACE: **none — instrument only.** No byte of
 `civicos-ui/app.html` is touched. What moved is what two SUITES believe a member reads, and the entry is here
 because that belief was wrong for one day and nothing said so.
 
@@ -146,6 +148,104 @@ trade and is kept**: a literal would be the hand copy this item exists to remove
 loudly at the two catalogue assertions. But the walk undercounts by one because of it, and saying so is owed.
 
 Nothing is live; no deploy is this item's.
+
+v110, 2026-09-24 session, thread UI, UI-83 (a WORKER of CONDUCT #19, cloud session). Landed on `land/worker/UI-83` (base
+`origin/main` @ `15b2a4c0`), in the commit that carries this entry. (Claimed `v105`, which UI-68 holds on the batch
+(D-126 `v106`, UI-86 `v107`, D-291 `v108`, UI-85 `v109`); renumbered `v110` at c19-batch11.) SURFACE: the Progressions screen's "Declare how something is supposed to go" form.
+
+**What was absent.** D-128 made a progression definition APPEND-ONLY on the plane (framework §8.2, "The declared flow,
+and its revisions"): a revision of a declared key is refused without the member's statement of why the declared flow
+changes and without its citation. The form had neither field, so every revision a member attempted there was refused
+with nothing on the page to meet the refusal — a correction to just-landed work.
+
+**What moved.** When the key names a progression the record already holds — asked of `op=progression`, never guessed —
+the form offers a statement field and a citation field, names the version the plane says stands, and says the earlier
+version stays on the record. It sends both when written; whether a revision needs them stays the plane's rule, and a
+refusal still reads through `refusalWords(r)`. The receipt distinguishes a first declaration, a new version beside the
+one it replaced, and a declaration identical to what stands (nothing written). Functions: `progKeyChanged`,
+`progStandingLoad`, `progReviseHtml` (new); `renderProgressions`, `renderProgressionNew`, `progDefineDraft`,
+`progDefineGo` (edited). No DEC-49 region, no `SURFACES` key and no other marked region touched.
+
+**Instrument.** `civicos-ui/test/progression-revision.test.mjs` (new, 30 assertions) drives the form against the real
+plane in miniflare as an ENROLLED, SIGNED-IN member (never the deploy member token, REC-189): the first declaration,
+the offered fields, a revision without either (the plane's refusal, read as exactly `refusalWords(r)`, nothing
+written) and a revision with both (version 2 authored by her, basis verbatim, version 1 beside it). Negative control on
+its `NEGATIVE CONTROL:` line.
+
+**Finding, not closed here.** The no-basis and no-citation refusals of this op carry NO canned translation (no DEC-49
+row), so the member reads the store's own detail. The citation code is minted at three sites (relation declare,
+discharge and this revision) and already reached two member surfaces that way before this item; the DEC-49 guard
+cannot see it, because its R3 walk counts only codes a mock FEEDS and the intent suites assert it by regex against
+the real plane. The fix is the plane's: one governed helper and one row. Routed in UI-83's report.
+
+v109, 2026-09-24 session, thread UI, UI-85 (a WORKER of CONDUCT #19, cloud session). Landed on `land/worker/UI-85` (base
+`origin/main` @ `15b2a4c0`), in the commit that carries this entry. (Claimed `v105`, which UI-68 holds on the batch
+(D-126 `v106`, UI-86 `v107`, D-291 `v108`); renumbered `v109` at c19-batch11.) SURFACE: the Add form's action intake gains "Whether this is safe to file".
+
+**What was absent.** D-182 (BIO_Case_Making_v0_1.md §2, `risk_tier`, RULED by BOB #21) built the plane's half: the three
+tiers in Bob's words plus UNDETERMINED, published as `op=affordances`' `vocabularies.risk_tiers`, and both intake writers
+writing undetermined. No member could state a tier, so every action the member UI wrote read "not assessed" forever.
+
+**What a member now sees.** One radio per entry of the PUBLISHED map, in the plane's order and the plane's words, with
+undetermined preselected and no number a default; the choice survives the pane's repaint. `mdFor` writes `risk_tier: <k>`
+only when `k` is a key of the published map at write time (`riskTierLine`), otherwise undetermined. No map, no chooser:
+the page says the record has not published the words and the action is written undetermined. The surface spells none of
+the tier words, comments included (asserted over the source).
+
+**Verified through the op, as a member.** `add-surface.test.mjs` drives the app's own `addGo` against the real plane in
+miniflare with a SIGNED-IN MEMBER SESSION (memberadd → enroll → login; `whoami` asserted `session: true`), never
+`MEMBER_TOKEN`, which REC-189 found is a machine identity: an untouched chooser reads `undetermined` through
+`op=projection` and in the stored bytes; a member who picks 2 reads 2, "in the plane's words". The identity arms swap the
+published map (words drawn per run; then a map of two keys) and the page follows it word for word and key for key.
+Control: `add-surface.control.mjs` arms (5) default-to-1 RED at "UI-85 UNTOUCHED" by name, (6) the three words hard-coded
+RED at "UI-85 IDENTITY", (6b) `checked="checked"` GREEN.
+
+**Not built here.** The plane's own setup page (`bio-plane/src/setup.mjs`) still offers no chooser and writes
+undetermined, which is honest and not an overclaim; it is plane ground, not this area's.
+
+v108, 2026-09-24 session, thread UI, D-291 (a WORKER of CONDUCT #19, cloud session). Landed on `land/worker/D-291`
+(base `origin/main` @ `3f4b8f8c` with `land/worker/D-126` @ `168895a4` merged in, because D-126 is not on `main`), in the
+commit that carries this entry; claimed `v107`, which UI-86 holds on the batch (UI-68 `v105`, D-126 `v106`), so renumbered
+`v108` at c19-batch10. SURFACE: the subject page's "Resolve the documents that mention this subject".
+
+**What was absent.** The resolve list drew one button per candidate document and nothing else: a member with forty
+candidates made forty motions, and UI-55's ARM 4c carried the row as "UI-56 (carried)" because `op=resolve` took ONE
+`captureSha` — a bulk path had to be the plane accepting a set, never this surface looping (DEC-52).
+
+**What a member now sees.** Every candidate keeps its own button (pick one, look at it, resolve it) and gains a tick,
+drawn only where the plane publishes `resolve` in `set_acts` under `per-item`. The ticked documents go as ONE
+`op=resolve` carrying `items[]`; the receipt counts what the record answered; a document the record did not resolve
+stays ticked with the record's reason on it; the subject's read panes are re-read. Nothing on the surface grades.
+
+**Suites.** `resolve-set.test.mjs` (new, 17, real plane under miniflare; the wire is counted, the record read back) and
+`.control.mjs` (baseline + 3 arms, every arm as declared — the row's own control, a client-side loop, RED 14/3 at the
+two one-call arms). Moved: `member-respect` (the SETS row re-keyed `loadResolveCandidates` → `resolveCandPaint`, bulk
+now built; ARM 4d's `resolve` carry STRUCK and the set form measured instead; the footer's written "Two" carried sets
+is now counted). The retained path is driven by ONE doctored candidate and the suite says why: `op=resolve` over a
+content-addressed document refuses only an absent sha, so the plane hands this list no real refusable candidate.
+
+v107, 2026-09-24 session, thread UI, UI-86 (a WORKER of CONDUCT #19, cloud session). Landed on `land/worker/UI-86` (base
+`origin/main` @ `3f4b8f8c`), in the commit that carries this entry. (UI-68 holds `v105` and D-126 `v106`; renumbered this
+entry `v107` at c19-batch10.) SURFACES: the QUEUE (`SURFACES["queue"]`) — the case group's mute, each item's own controls, and the
+feed's mute report.
+
+**What was untrue.** D-125 (2026-09-23) built BOB #26's ruling on the plane — a member's PERSONAL mute admits FINDING kinds,
+per case over the kinds named (DEC-10's (c)) and per item by its own id (DEC-10's (b)), and the item form reaches an ungrouped
+CONDITION (D-170, BOB #29) — while the surface still filtered its mute to `class === "CONDITION"`, said *"It reaches condition
+kinds only"*, drew no per-item control, and returned no report unless a CASE had been muted. So a member was told a finding
+could not be muted when the record would honour it, and an item mute (from any client) made the feed quietly shorter.
+
+**What moved.** One class predicate, `queueMutableItem` (CONDITION or FINDING), now decides both forms. The case group's control
+reads "Mute these kinds on this case" and names finding kinds too, and says a muted finding stays open for everyone else until
+somebody adopts, defers or dismisses it. Every CONDITION and FINDING item — the ungrouped section included — carries "Stop
+notifying me about this one", which sends `op=queuemute` exactly `{ item }` (`queueItemMuteHtml`, `queueMuteItem`, wired on
+`data-muteitem`). `queueMuteReportHtml` reads `mute.items` as well as `mute.cases`, splits `suppressed[]` by `scope`, and reports
+an item muted earlier that is not live now. No OBLIGATION is offered either form.
+
+**Pins corrected in place, each with why:** `notifications.test.mjs` §2 "NO MUTE IS OFFERED ON A FINDING" (PL-15's, right until
+D-125) and §4's whole-page kind read (now the level block it was about); `queue.test.mjs` (7)'s four CONDITION-only arms.
+`member-respect.test.mjs` registers `queueItemMuteHtml` as a SET with both modes. **Not built, and stated:** UNMUTE — the plane
+takes `unmute` in both forms and no surface sends it, so a mute cannot be undone from the app.
 
 v106, 2026-09-23 session, thread UI, D-126 (a WORKER of CONDUCT #18, cloud session). Landed on `land/worker/D-126` (base
 `origin/main` @ `02603e88`), in the commit that carries this entry; the version number is provisional and CONDUCT
