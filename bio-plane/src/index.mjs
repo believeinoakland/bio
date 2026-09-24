@@ -109,7 +109,7 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 /* D-64: the render arm's pure half and its renderer seam. */
 import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, renderAllowanceMs, renderBlock,
-         renderedAuthority, rendererFor } from "./render.mjs";
+         renderedAuthority, renderReserveMs, rendererFor } from "./render.mjs";
 /* COFF-1 (I7): the FORMAT registry is the ONLY format dispatch in this file.
    pdfstructure.mjs is no longer imported here — it is the registry's pdf
    entry, reached through getFormat("pdf").structure with byte-identical
@@ -7343,6 +7343,11 @@ export default {
          "no render" is answered, not refused (a fence tighter than its rule). */
       const renderAsked = Object.prototype.hasOwnProperty.call(body || {}, "render") && body.render !== false;
       let renderer = null;
+      /* D-492: the reservation this render took from the day's allowance, declared HERE beside
+         `renderer` because the admission and the release sit in two different `renderAsked`
+         blocks — the first before the shell is fetched, the second after — and the release must
+         name the SAME figure the admission took. */
+      let renderReserved = 0;
       /* DEC-49 REGION is-render-admit
        *
        * THE SPAN C-83.1..C-83.5 name. Helper `renderRow`, every code a STRING
@@ -7379,18 +7384,26 @@ export default {
               op, host: rHost, retry_in_ms: g.retry_in_ms || 0,
               detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).` }, 429);
         }
-        /* THE DAILY ALLOWANCE (BOB #32 item 3): spent means DEFERRED, recorded. */
+        /* THE DAILY ALLOWANCE (BOB #32 item 3): committed means DEFERRED, recorded. */
         /* A store that did not answer DEFERS the render rather than running it
            unmetered: the answered-guard, never a bare `.result` read. */
+        /* D-492: the admission RESERVES this render's maximum cost, so the renders already in
+           flight — whose cost nothing has reported yet — are counted against the allowance too.
+           The reservation is released by the `renderspend` below, on every path out of the
+           render arm that knows what the render cost, including the paths that know it cost
+           nothing. `renderReserved` is read ONCE here so the release names the same figure the
+           admission took, not a figure recomputed later from a mutated environment. */
+        renderReserved = renderReserveMs(RENDER_DEFAULTS);
         const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), at: retrieved }) }));
+          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), reserveMs: renderReserved, at: retrieved }) }));
         const adm = admOut.answered ? admOut.result : null;
         if (!adm || adm.state !== "admitted")
           return json({ ok: false, reason: "RENDER_DEFERRED", ...renderRow("RENDER_DEFERRED"),
             op, render: { state: "deferred", content: "undetermined", allowance: adm || null },
-            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is spent `
-                        + `(${adm.spent_ms} ms); this render is recorded as deferred (${adm.deferred} today).`
+            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is committed `
+                        + `(${adm.spent_ms} ms spent, ${adm.reserved_ms} ms reserved by renders in flight), and this `
+                        + `render reserves ${adm.reserve_ms} ms; it is recorded as deferred (${adm.deferred} today).`
                         : "the render allowance could not be read, so the render is deferred rather than run unmetered." }, 429);
       }
       /* END DEC-49 REGION is-render-admit */
@@ -7741,16 +7754,26 @@ export default {
          * THE SPAN C-83.6 and C-83.7 name. Helper `renderRow`, codes as STRING
          * LITERALS. Nothing below this region's refusals is filed as a document:
          * the shell's bytes are held unregistered, as TOO_LARGE's parts are. */
-        if (multipart || detectFormat(null, ct || null).format !== "html")
+        if (multipart || detectFormat(null, ct || null).format !== "html") {
+          /* D-492: NO RENDERER WAS EVER ASKED on this path, so no browser time was spent and the
+             reservation is released WITHOUT CHARGE. Letting it stand would charge the day's
+             allowance for a render that did not happen, and a caller could empty the allowance
+             with addresses that serve PDFs. This is the one release with `ms: 0`; every other
+             path either reports the render's time or leaves the reservation charged on purpose. */
+          try { await stGov.fetch("http://x/renderspend", {
+            method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ ms: 0, releaseMs: renderReserved, at: retrieved }) }); }
+          catch { /* an unreleased reservation under-uses the allowance; it never fails the refusal */ }
           return json({ ok: false, reason: "RENDER_NOT_A_PAGE", ...renderRow("RENDER_NOT_A_PAGE"),
             op, content_type: ct || null, bytes: total, multipart,
             detail: `the served bytes are ${multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``}, `
                   + `not an HTML page; nothing was filed.` }, 422);
+        }
         try { answer = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS }); }
         catch (e) { answer = { ok: false, error: String(e && e.message || e) }; }
         try { await stGov.fetch("http://x/renderspend", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ ms: answer && answer.elapsed_ms, at: retrieved }) }); }
+          body: JSON.stringify({ ms: answer && answer.elapsed_ms, releaseMs: renderReserved, at: retrieved }) }); }
         catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
         rb = renderBlock(answer, { pageUrl, shellSha: sha, at: retrieved });
         if (rb.ok) rbytes = new TextEncoder().encode(answer.html);

@@ -3955,9 +3955,19 @@ CREATE INDEX IF NOT EXISTS theme_placements_bundle ON theme_placements(bundle_id
 -- this instance declined because the allowance was spent: a deferral is a
 -- recorded fact, never a silent fall-back to filing the shell as the content.
 -- An operational fact about this instance, not corpus-derived.
+-- D-492: reserved_ms is browser time COMMITTED to renders now in flight and not
+-- yet reported. spent_ms alone could not bound the allowance, because a render
+-- runs in the Worker and reports its cost afterwards, so every render in flight
+-- at once was admitted against one spent_ms. A render reserves its maximum cost
+-- at admission and releases the reservation when it reports, so the figure the
+-- admission test reads is spent_ms + reserved_ms. A render that never reports
+-- stays charged for the day: the allowance is then UNDER-used, which is the
+-- direction that cannot overrun. Added to an existing store by the additive
+-- pass in store.mjs #migrate, so a store written before D-492 reads 0.
 CREATE TABLE IF NOT EXISTS render_allowance (
   day        TEXT PRIMARY KEY,
   spent_ms   INTEGER NOT NULL DEFAULT 0,
+  reserved_ms INTEGER NOT NULL DEFAULT 0,
   renders    INTEGER NOT NULL DEFAULT 0,
   deferred   INTEGER NOT NULL DEFAULT 0,
   last_at    TEXT NOT NULL
@@ -11964,12 +11974,18 @@ var RENDER_CAPTURE_CHECKS = {
     where: "src/index.mjs fetch > is-render-admit",
     translation: "This instance has no working page renderer, so it cannot capture the page as a visitor saw it. Nothing was fetched, and the page's empty frame was not filed in its place."
   },
-  /* BOB #32 item 3: the daily render allowance is spent. The render is
-     DEFERRED and the deferral is recorded; the shell is never the content. */
+  /* BOB #32 item 3: the daily render allowance is COMMITTED — spent, or reserved by
+     renders in flight (D-492). The render is DEFERRED and the deferral is recorded;
+     the shell is never the content. CORRECTED 2026-09-24 (D-492), and the old sentence
+     is why: it said the allowance had been USED, which was true only of the time
+     already reported. Since a render now reserves its maximum cost at admission, a
+     deferral can also mean the day's remaining time is held by renders still running,
+     and a member told "used" would have gone away for the day when the answer may be a
+     minute off. The sentence says which, without naming a mechanism. */
   RENDER_DEFERRED: {
     check: "C-83.4",
     where: "src/index.mjs fetch > is-render-admit",
-    translation: "This instance has used today's allowance for rendering pages, so this render is deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. It can be asked again after midnight UTC."
+    translation: "Today's allowance for rendering pages is fully committed \u2014 either already used, or held by renders this instance is running right now \u2014 so this render is deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in flight have finished, or after midnight UTC."
   },
   /* The render loads the page again, which is a second document load to the
      host, so it asks the per-host governor like any other (BOB #32 item 3:
@@ -21685,6 +21701,17 @@ function archiveLocatorFrom(res, requested) {
 
 // src/render.mjs
 var RENDER_DEFAULTS = Object.freeze({
+  /* D-492: THE NAVIGATION BOUND, ASKED OF THE RENDERER AND RESERVED AGAINST THE
+     ALLOWANCE. A render's maximum browser cost is the time it may spend getting to
+     the page plus the time the wait condition may burn once there, so the two
+     together are what `renderReserveMs` reserves at admission. CHOSEN, NOT MEASURED,
+     and stated as chosen for the same reason the daily allowance is: no instrument
+     here has timed a navigation, and no platform enforces this number for us. What
+     it buys is that the reservation is a bound the renderer was ASKED to hold, not
+     one this module invented for the arithmetic — a renderer that overruns its own
+     asked bounds overruns the reservation too, and `renderSpend` then records the
+     time it REPORTED, which is the only figure the plane ever has. */
+  navigation_timeout_ms: 3e4,
   viewport: Object.freeze({ width: 1280, height: 800 }),
   dpr: 1,
   locale: "en-US",
@@ -21712,6 +21739,15 @@ function renderAllowanceMs(env) {
   if (v === void 0 || v === null || v === "") return RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
+}
+function renderReserveMs(asked = RENDER_DEFAULTS) {
+  const pos = (v, fallback) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 ? n : fallback;
+  };
+  const wait = pos(asked && asked.wait && asked.wait.timeout_ms, RENDER_DEFAULTS.wait.timeout_ms);
+  const nav = pos(asked && asked.navigation_timeout_ms, RENDER_DEFAULTS.navigation_timeout_ms);
+  return Math.ceil(wait + nav);
 }
 var NON_DATA_TYPES = Object.freeze({
   script: "code",
@@ -30580,7 +30616,12 @@ var Store = class _Store extends DurableObject {
          liar this column replaces. NULL reads back as UNDETERMINED, stated, and `op=statementack` refuses by
          name (`STATEMENT_ACK_AUTHOR_UNDETERMINED`) rather than attribute the sentence to whoever last
          touched the draft. */
-      ["case_drafts", "statement_by", "TEXT"]
+      ["case_drafts", "statement_by", "TEXT"],
+      /* D-492: browser time COMMITTED to renders in flight and not yet reported. NOT NULL with a
+         DEFAULT because it is a running total and not an attribution: a store written before this
+         column existed had no renders in flight at the moment it gained the column, so 0 is the
+         MEASURED truth for every old row rather than a value a backfill reached for. */
+      ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"]
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -63643,24 +63684,39 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  is the STRING `state` (`admitted` | `deferred`), never a leading boolean, so no
    *  reader grades a datum as a refusal (meaning-bounds D-240 (e)). The DO
    *  serialises, so one row per UTC day is globally correct for the instance.
-   *  Admission is decided on what has been SPENT, because a render's cost is
-   *  only known after it ran.
+   *  Admission is decided on what has been SPENT PLUS WHAT IS RESERVED, because a render's
+   *  cost is only known after it ran and the renders in flight have not reported theirs.
    *
-   *  CORRECTED 2026-09-24 at integration (CONDUCT #20, on BOB #32's reading; VERIFIED HERE AT
-   *  THE CODE, not taken on the message's word). This said the allowance "can therefore be
-   *  overrun by at most one render". THAT IS FALSE, and it is the shape this project meets
-   *  most: a bound believed on the strength of a sentence. Admission is serialised in the DO,
-   *  but the render RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op
-   *  (`renderspend` -> `renderSpend`; the two are distinct rows of the dispatch table), so
-   *  every render IN FLIGHT AT ONCE is admitted against the same `spent_ms`. The bound that
-   *  actually holds is
+   *  THE BOUND THIS NOW HOLDS (D-492, 2026-09-24), stated as the thing a reader may rely on:
    *
-   *      overrun <= (renders in flight concurrently) x (one render's maximum time:
-   *                                                     the wait timeout plus navigation)
+   *      at every moment, spent_ms + reserved_ms <= allowance
    *
-   *  whose first factor nothing here bounds. Reserving at admission is D-492, placed by
-   *  SCHEDULER; until it lands this comment is the only thing that says so. Prose only — no
-   *  behaviour moved.
+   *  because a render is admitted only when `spent + reserved + its own reservation` fits, and
+   *  its reservation is the MAXIMUM the asked environment permits it to cost (`renderReserveMs`:
+   *  the navigation timeout plus the wait timeout). So the allowance is not overrun by renders
+   *  in flight, however many there are, and the first factor of the old bound no longer has to
+   *  be bounded by anything.
+   *
+   *  THE TWO RESIDUES, NAMED RATHER THAN ROUNDED OFF, because neither is closed by this:
+   *  (1) the reservation binds only a renderer that HONOURS what it was asked. A renderer that
+   *      spends longer than its own navigation and wait timeouts reports that longer time and
+   *      `renderSpend` adds it, so `spent_ms` can pass the allowance by exactly the excess the
+   *      renderer took beyond what it was asked for. The plane cannot check this: the elapsed
+   *      time is the RENDERER'S CLAIM, as `render.mjs` says of everything else it reports.
+   *  (2) the allowance is an ACCOUNT, not a throttle. Nothing here caps CONCURRENCY, and
+   *      nothing here is a platform meter (`RENDER_DAILY_ALLOWANCE_MS` is this instance's own
+   *      fence). A day's renders are bounded in total browser time, not in how many run at once.
+   *
+   *  WHAT WAS CORRECTED, kept because the error is the shape this project meets most — a bound
+   *  believed on the strength of a sentence. This said the allowance "can therefore be overrun
+   *  by at most one render". That was FALSE: admission is serialised in the DO, but the render
+   *  RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op (`renderspend` ->
+   *  `renderSpend`; the two are distinct rows of the dispatch table), so every render IN FLIGHT
+   *  AT ONCE was admitted against the same `spent_ms` and the overrun was
+   *  (renders in flight) x (one render's maximum time), whose first factor nothing bounded.
+   *  CONDUCT #20 diagnosed it at integration and corrected the prose alone; the reservation
+   *  below is the fix, and the docstring above is now a claim about behaviour rather than a
+   *  claim about intent.
    *
    *  AND A FINDING ABOUT THE REBUILD RULE, measured making this very edit, because it came
    *  back the opposite way to what `kickoffs/WORKER.md` step 0 predicted. That step said a
@@ -63678,46 +63734,84 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  answer is MEASURED, never assumed. A surprising green is a finding about the arm: the
    *  first reading of this measurement generalised from three greps, which is the same error,
    *  one sample size down, as the line it was correcting. */
-  renderAdmit({ allowanceMs, at = null }) {
+  renderAdmit({ allowanceMs, reserveMs = 0, at = null }) {
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);
     const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
+    const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
     const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
     const spent = cur ? cur.spent_ms : 0;
-    if (spent >= allowance) {
+    const reserved = cur ? cur.reserved_ms || 0 : 0;
+    const defer = (why) => {
       if (cur) this.sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
-      else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 0, 1, ?)`, day, now);
+      else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, 0, 0, 1, ?)`, day, now);
       return {
         state: "deferred",
         day,
         spent_ms: spent,
+        reserved_ms: reserved,
+        reserve_ms: reserve,
         allowance_ms: allowance,
         deferred: (cur ? cur.deferred : 0) + 1,
-        renders: cur ? cur.renders : 0
+        renders: cur ? cur.renders : 0,
+        why
       };
-    }
-    if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, last_at = ? WHERE day = ?`, now, day);
-    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 1, 0, ?)`, day, now);
+    };
+    if (!(reserve > 0))
+      return defer("no reservation was offered, and an unreserved admission is the overrun D-492 closed");
+    if (spent + reserved + reserve > allowance)
+      return defer(null);
+    if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, reserved_ms = reserved_ms + ?, last_at = ? WHERE day = ?`, reserve, now, day);
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
     return {
       state: "admitted",
       day,
       spent_ms: spent,
+      reserved_ms: reserved + reserve,
+      reserve_ms: reserve,
       allowance_ms: allowance,
       renders: (cur ? cur.renders : 0) + 1,
       deferred: cur ? cur.deferred : 0
     };
   }
-  /** Add the browser time one render REPORTED. An unreported time adds nothing
-   *  and says so: the allowance is then under-counted, never guessed. */
-  renderSpend({ ms, at = null }) {
+  /** Add the browser time one render REPORTED, and RELEASE the reservation `renderAdmit` took
+   *  for it. An unreported time adds nothing and says so: the allowance is then under-counted,
+   *  never guessed.
+   *
+   *  AN UNREPORTED RENDER STAYS CHARGED (D-492), and that is the whole safety of the
+   *  reservation rather than an edge case. A render that reported no elapsed time may have
+   *  burned any amount of browser time up to its reservation — a renderer that threw, a Worker
+   *  that died, a fetch that never came back — and the plane has no figure for it. Releasing
+   *  the reservation on that path would hand the allowance back for time that may well have
+   *  been spent, so the reservation is KEPT for the rest of the UTC day. The allowance is then
+   *  under-used, which is the direction that cannot overrun, and `reserved_ms` says how much is
+   *  held that way. The caller RELEASES WITHOUT CHARGE (`ms: 0`) only where it knows no render
+   *  ran at all, which is the `RENDER_NOT_A_PAGE` path in `src/index.mjs`. */
+  renderSpend({ ms, releaseMs = 0, at = null }) {
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);
     const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
-    if (n === null) return { day, spent_ms: null, why: "the renderer reported no elapsed time, so nothing was added" };
+    const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
     const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
-    if (cur) this.sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, last_at = ? WHERE day = ?`, n, now, day);
-    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, ?)`, day, n, now);
-    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n };
+    if (n === null)
+      return {
+        day,
+        spent_ms: cur ? cur.spent_ms : 0,
+        reserved_ms: cur ? cur.reserved_ms || 0 : 0,
+        released_ms: 0,
+        why: "the renderer reported no elapsed time, so nothing was added and its reservation stays charged for the day"
+      };
+    const held = cur ? cur.reserved_ms || 0 : 0;
+    const released = Math.min(held, rel);
+    if (cur) this.sql.exec(
+      `UPDATE render_allowance SET spent_ms = spent_ms + ?, reserved_ms = ?, last_at = ? WHERE day = ?`,
+      n,
+      held - released,
+      now,
+      day
+    );
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, 0, ?)`, day, n, now);
+    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n, reserved_ms: held - released, released_ms: released };
   }
   runtimeObservations() {
     const rows = [...this.sql.exec(`SELECT * FROM runtime_observations ORDER BY metric`)];
@@ -80474,6 +80568,7 @@ var index_default = {
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
       const renderAsked = Object.prototype.hasOwnProperty.call(body2 || {}, "render") && body2.render !== false;
       let renderer = null;
+      let renderReserved = 0;
       if (renderAsked) {
         if (body2.render !== true)
           return json({
@@ -80531,10 +80626,11 @@ var index_default = {
               detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).`
             }, 429);
         }
+        renderReserved = renderReserveMs(RENDER_DEFAULTS);
         const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), at: retrieved })
+          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), reserveMs: renderReserved, at: retrieved })
         }));
         const adm = admOut.answered ? admOut.result : null;
         if (!adm || adm.state !== "admitted")
@@ -80544,7 +80640,7 @@ var index_default = {
             ...renderRow("RENDER_DEFERRED"),
             op,
             render: { state: "deferred", content: "undetermined", allowance: adm || null },
-            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is spent (${adm.spent_ms} ms); this render is recorded as deferred (${adm.deferred} today).` : "the render allowance could not be read, so the render is deferred rather than run unmetered."
+            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is committed (${adm.spent_ms} ms spent, ${adm.reserved_ms} ms reserved by renders in flight), and this render reserves ${adm.reserve_ms} ms; it is recorded as deferred (${adm.deferred} today).` : "the render allowance could not be read, so the render is deferred rather than run unmetered."
           }, 429);
       }
       const via = body2?.via === "archive.org" ? "archive.org" : "direct";
@@ -80762,7 +80858,15 @@ var index_default = {
       if (renderAsked) {
         const pageUrl = res2.url || locator;
         let answer = null, rbytes = null, rb = null;
-        if (multipart || detectFormat(null, ct || null).format !== "html")
+        if (multipart || detectFormat(null, ct || null).format !== "html") {
+          try {
+            await stGov.fetch("http://x/renderspend", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ ms: 0, releaseMs: renderReserved, at: retrieved })
+            });
+          } catch {
+          }
           return json({
             ok: false,
             reason: "RENDER_NOT_A_PAGE",
@@ -80773,6 +80877,7 @@ var index_default = {
             multipart,
             detail: `the served bytes are ${multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``}, not an HTML page; nothing was filed.`
           }, 422);
+        }
         try {
           answer = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS });
         } catch (e) {
@@ -80782,7 +80887,7 @@ var index_default = {
           await stGov.fetch("http://x/renderspend", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ ms: answer && answer.elapsed_ms, at: retrieved })
+            body: JSON.stringify({ ms: answer && answer.elapsed_ms, releaseMs: renderReserved, at: retrieved })
           });
         } catch {
         }

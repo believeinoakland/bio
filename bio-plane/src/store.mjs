@@ -1214,6 +1214,11 @@ export class Store extends DurableObject {
          name (`STATEMENT_ACK_AUTHOR_UNDETERMINED`) rather than attribute the sentence to whoever last
          touched the draft. */
       ["case_drafts", "statement_by", "TEXT"],
+      /* D-492: browser time COMMITTED to renders in flight and not yet reported. NOT NULL with a
+         DEFAULT because it is a running total and not an attribution: a store written before this
+         column existed had no renders in flight at the moment it gained the column, so 0 is the
+         MEASURED truth for every old row rather than a value a backfill reached for. */
+      ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -37072,24 +37077,39 @@ export class Store extends DurableObject {
    *  is the STRING `state` (`admitted` | `deferred`), never a leading boolean, so no
    *  reader grades a datum as a refusal (meaning-bounds D-240 (e)). The DO
    *  serialises, so one row per UTC day is globally correct for the instance.
-   *  Admission is decided on what has been SPENT, because a render's cost is
-   *  only known after it ran.
+   *  Admission is decided on what has been SPENT PLUS WHAT IS RESERVED, because a render's
+   *  cost is only known after it ran and the renders in flight have not reported theirs.
    *
-   *  CORRECTED 2026-09-24 at integration (CONDUCT #20, on BOB #32's reading; VERIFIED HERE AT
-   *  THE CODE, not taken on the message's word). This said the allowance "can therefore be
-   *  overrun by at most one render". THAT IS FALSE, and it is the shape this project meets
-   *  most: a bound believed on the strength of a sentence. Admission is serialised in the DO,
-   *  but the render RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op
-   *  (`renderspend` -> `renderSpend`; the two are distinct rows of the dispatch table), so
-   *  every render IN FLIGHT AT ONCE is admitted against the same `spent_ms`. The bound that
-   *  actually holds is
+   *  THE BOUND THIS NOW HOLDS (D-492, 2026-09-24), stated as the thing a reader may rely on:
    *
-   *      overrun <= (renders in flight concurrently) x (one render's maximum time:
-   *                                                     the wait timeout plus navigation)
+   *      at every moment, spent_ms + reserved_ms <= allowance
    *
-   *  whose first factor nothing here bounds. Reserving at admission is D-492, placed by
-   *  SCHEDULER; until it lands this comment is the only thing that says so. Prose only — no
-   *  behaviour moved.
+   *  because a render is admitted only when `spent + reserved + its own reservation` fits, and
+   *  its reservation is the MAXIMUM the asked environment permits it to cost (`renderReserveMs`:
+   *  the navigation timeout plus the wait timeout). So the allowance is not overrun by renders
+   *  in flight, however many there are, and the first factor of the old bound no longer has to
+   *  be bounded by anything.
+   *
+   *  THE TWO RESIDUES, NAMED RATHER THAN ROUNDED OFF, because neither is closed by this:
+   *  (1) the reservation binds only a renderer that HONOURS what it was asked. A renderer that
+   *      spends longer than its own navigation and wait timeouts reports that longer time and
+   *      `renderSpend` adds it, so `spent_ms` can pass the allowance by exactly the excess the
+   *      renderer took beyond what it was asked for. The plane cannot check this: the elapsed
+   *      time is the RENDERER'S CLAIM, as `render.mjs` says of everything else it reports.
+   *  (2) the allowance is an ACCOUNT, not a throttle. Nothing here caps CONCURRENCY, and
+   *      nothing here is a platform meter (`RENDER_DAILY_ALLOWANCE_MS` is this instance's own
+   *      fence). A day's renders are bounded in total browser time, not in how many run at once.
+   *
+   *  WHAT WAS CORRECTED, kept because the error is the shape this project meets most — a bound
+   *  believed on the strength of a sentence. This said the allowance "can therefore be overrun
+   *  by at most one render". That was FALSE: admission is serialised in the DO, but the render
+   *  RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op (`renderspend` ->
+   *  `renderSpend`; the two are distinct rows of the dispatch table), so every render IN FLIGHT
+   *  AT ONCE was admitted against the same `spent_ms` and the overrun was
+   *  (renders in flight) x (one render's maximum time), whose first factor nothing bounded.
+   *  CONDUCT #20 diagnosed it at integration and corrected the prose alone; the reservation
+   *  below is the fix, and the docstring above is now a claim about behaviour rather than a
+   *  claim about intent.
    *
    *  AND A FINDING ABOUT THE REBUILD RULE, measured making this very edit, because it came
    *  back the opposite way to what `kickoffs/WORKER.md` step 0 predicted. That step said a
@@ -37107,35 +37127,69 @@ export class Store extends DurableObject {
    *  answer is MEASURED, never assumed. A surprising green is a finding about the arm: the
    *  first reading of this measurement generalised from three greps, which is the same error,
    *  one sample size down, as the line it was correcting. */
-  renderAdmit({ allowanceMs, at = null }) {
+  renderAdmit({ allowanceMs, reserveMs = 0, at = null }) {
     const now = at || new Date().toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);
     const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
+    /* CEILED, never floored: a reservation rounded DOWN is a reservation short of the cost it
+       stands for, which is the direction that overruns. */
+    const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
     const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
     const spent = cur ? cur.spent_ms : 0;
-    if (spent >= allowance) {
+    const reserved = cur ? (cur.reserved_ms || 0) : 0;
+    const defer = (why) => {
       if (cur) this.sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
-      else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 0, 1, ?)`, day, now);
-      return { state: "deferred", day, spent_ms: spent, allowance_ms: allowance,
-               deferred: (cur ? cur.deferred : 0) + 1, renders: cur ? cur.renders : 0 };
-    }
-    if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, last_at = ? WHERE day = ?`, now, day);
-    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 1, 0, ?)`, day, now);
-    return { state: "admitted", day, spent_ms: spent, allowance_ms: allowance,
-             renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0 };
+      else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, 0, 0, 1, ?)`, day, now);
+      return { state: "deferred", day, spent_ms: spent, reserved_ms: reserved, reserve_ms: reserve,
+               allowance_ms: allowance, deferred: (cur ? cur.deferred : 0) + 1,
+               renders: cur ? cur.renders : 0, why };
+    };
+    /* A CALLER THAT OFFERS NO RESERVATION IS DEFERRED, NOT ADMITTED. Defaulting the reservation
+       to zero and admitting anyway would restore D-492's defect silently for any future caller
+       that forgot the argument, and a fence that a caller can switch off by omission is the
+       "mechanism believed on the strength of its existence" this repo keeps paying for. There is
+       one caller (`src/index.mjs`, the render arm of op=acquire) and it passes `renderReserveMs()`. */
+    if (!(reserve > 0))
+      return defer("no reservation was offered, and an unreserved admission is the overrun D-492 closed");
+    if (spent + reserved + reserve > allowance)
+      return defer(null);
+    if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, reserved_ms = reserved_ms + ?, last_at = ? WHERE day = ?`, reserve, now, day);
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
+    return { state: "admitted", day, spent_ms: spent, reserved_ms: reserved + reserve, reserve_ms: reserve,
+             allowance_ms: allowance, renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0 };
   }
 
-  /** Add the browser time one render REPORTED. An unreported time adds nothing
-   *  and says so: the allowance is then under-counted, never guessed. */
-  renderSpend({ ms, at = null }) {
+  /** Add the browser time one render REPORTED, and RELEASE the reservation `renderAdmit` took
+   *  for it. An unreported time adds nothing and says so: the allowance is then under-counted,
+   *  never guessed.
+   *
+   *  AN UNREPORTED RENDER STAYS CHARGED (D-492), and that is the whole safety of the
+   *  reservation rather than an edge case. A render that reported no elapsed time may have
+   *  burned any amount of browser time up to its reservation — a renderer that threw, a Worker
+   *  that died, a fetch that never came back — and the plane has no figure for it. Releasing
+   *  the reservation on that path would hand the allowance back for time that may well have
+   *  been spent, so the reservation is KEPT for the rest of the UTC day. The allowance is then
+   *  under-used, which is the direction that cannot overrun, and `reserved_ms` says how much is
+   *  held that way. The caller RELEASES WITHOUT CHARGE (`ms: 0`) only where it knows no render
+   *  ran at all, which is the `RENDER_NOT_A_PAGE` path in `src/index.mjs`. */
+  renderSpend({ ms, releaseMs = 0, at = null }) {
     const now = at || new Date().toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);
     const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
-    if (n === null) return { day, spent_ms: null, why: "the renderer reported no elapsed time, so nothing was added" };
+    const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
     const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
-    if (cur) this.sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, last_at = ? WHERE day = ?`, n, now, day);
-    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, ?)`, day, n, now);
-    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n };
+    if (n === null)
+      return { day, spent_ms: cur ? cur.spent_ms : 0, reserved_ms: cur ? (cur.reserved_ms || 0) : 0, released_ms: 0,
+               why: "the renderer reported no elapsed time, so nothing was added and its reservation stays charged for the day" };
+    /* Clamped at zero: a double release, or a release naming more than was reserved, must never
+       make the day's committed time read NEGATIVE, which would admit renders the allowance
+       cannot pay for. */
+    const held = cur ? (cur.reserved_ms || 0) : 0;
+    const released = Math.min(held, rel);
+    if (cur) this.sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, reserved_ms = ?, last_at = ? WHERE day = ?`,
+                           n, held - released, now, day);
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, 0, ?)`, day, n, now);
+    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n, reserved_ms: held - released, released_ms: released };
   }
 
   runtimeObservations() {

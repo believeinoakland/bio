@@ -8,9 +8,9 @@
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SUITE = `${ROOT}test/rendered-capture.test.mjs`;
@@ -24,6 +24,7 @@ const SUITE = `${ROOT}test/rendered-capture.test.mjs`;
    rather than generically, because a shared temp root spans every session on this
    machine and a generic name is an identity nobody owns. */
 const PRISTINE = join(tmpdir(), `nc-d64-pristine-${process.pid}-${randomUUID()}`);
+mkdirSync(PRISTINE, { recursive: true });   /* CONDUCT #20 at c20-batch24: D-492's mkdtemp line lost to D-499's named path at the union; create it here */
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 const ARMS = {
@@ -72,7 +73,6 @@ const run = () => {
   return { exit: r.status, pass: m ? +m[1] : -1, fail: m ? +m[2] : -1, fails };
 };
 
-mkdirSync(PRISTINE, { recursive: true });
 const want = process.argv[2];
 const rows = [];
 rows.push({ arm: "baseline", ...run() });
