@@ -38,6 +38,8 @@ decides WHEN and whether the handoff is current; FLEET makes the `create_session
 model and prompt BOB gives, verbatim, then reports the new id to BOB by one-shot trigger** (or the exact error).
 Before calling, check that the lane's `-NEXT.md` latest commit on `coord` is the one BOB names.
 - 2026-09-24T23:22Z: **DIST #7** created, `session_01FQcUMZ2f34zhHzBkMEEdQ6` (succeeding DIST #6; DIST-NEXT @ `0f832c98`).
+- 2026-09-24T23:37Z: **SCHEDULER #21** created, `session_01EW169eb7SVoxFrivnk6P1f` (succeeding SCHEDULER #20; SCHEDULER-NEXT @ `e2647f99`).
+  SCHEDULER now creates its own WORKERS directly (depth 2); workers create no sessions (the BOB INBOX, 23:20Z and 23:35Z).
 
 **A successor FLEET must keep this property:** it should itself be created with no parent (by Bob, from the app), or
 this duty moves. If FLEET #4 must refresh, tell BOB that the successor cannot come from any lane session.
