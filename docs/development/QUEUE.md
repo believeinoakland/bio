@@ -300,7 +300,7 @@ scope: in promote's admission, delete a caller's `replay` unless the call is ADM
 accepts-when: a machine or session sending `replay: true` is refused C-32.19 by name, and the migration suite migrates clean. NEGATIVE CONTROL: drop the class test and arm (ix) fails by name.
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
 
-### D-509 · running — **A FALSE GREEN ON THE MACHINE-FENCE SENTINEL: `machine-fences.control.mjs` arm (2) stays green when it must fail. Driven, not read: with the identity predicate neutered, a machine's `op=strengthbar` DOES set the group's required evidentiary strength, but block (ix) reads back group=believe-in-oakland while the act writes to the store's PRODUCING group (D-436 moved the write, not the read).** Found by D-503's worker (id minted by it). — owner RECORD.
+### D-509 · integrated — **A FALSE GREEN ON THE MACHINE-FENCE SENTINEL: `machine-fences.control.mjs` arm (2) stays green when it must fail. Driven, not read: with the identity predicate neutered, a machine's `op=strengthbar` DOES set the group's required evidentiary strength, but block (ix) reads back group=believe-in-oakland while the act writes to the store's PRODUCING group (D-436 moved the write, not the read).** Found by D-503's worker (id minted by it). — owner RECORD.
 order: at the backlog head: a control that cannot fail on the authority boundary no machine may cross (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:52Z)
 milestone: M7
 interface: none.
