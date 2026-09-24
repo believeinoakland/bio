@@ -83,3 +83,9 @@ commit on main for 120+ min. INBOX → SCHEDULER: undrained BOB INBOX entries.
 - 12:35Z (Bob asked why three rows were blocked): REC-147 UNBLOCKED (queued; recall must be reported, baseline 2/9 is the bar). REC-203 still blocked but ONLY on BOB #33 folding M-132 into Framework §8.3 (concurrent project-number forms, C.M.S. referent + coverage floor, APN apn_sort + retired parcels) — DO THIS FIRST, then unblock it. M0-106 correctly waits on DIST's next release cut (no release until Bob asks).
 - 12:28Z: CONDUCT-NEXT is now CURRENT (261b2ac8, verified by CONDUCT #20: batch14 landed, no train owed, archive list done). DIST-NEXT is also CURRENT (ed2f0e0b, main 13073707, owed D-461/D-464/D-462). Every lane file now agrees; the "STALE" warning above is resolved.
 - CORRECTION (DIST #6, 12:29Z, verified at the code): DIST-11 is NOT landed; it is a queued backlog row. Wherever this file or SCHEDULER-NEXT lists DIST-11 among the deploy items owed from batch14, read only D-461, D-464, D-462. Also: main's newgroup/dist bundle reads 0.78.0 but predates DIST-9 (instanceAiBinding 0 in bundle, 4 in src); the rebuild from current main is DIST's first act.
+- **12:55Z — RELEASE 0.79.0: ASKED BY BOB, NOT STARTED.** DIST #6's auto-mode classifier refused the cut because Bob's ask arrived relayed,
+  not typed in DIST's session. Live is still 0.78.0 on all six. DIST-NEXT (d91b0e8c) carries the full resume plan. Bob APPROVED a lasting
+  fix (an `autoMode` block in `.claude/settings.json`: a BOB-relayed instruction carries Bob's authority for the receiving lane's act; DIST
+  may deploy on Bob's or BOB's ask; CONDUCT may run train.mjs). BOB #32 prepared it (local branch land/bob/automode-lanes in
+  /home/user/wt-lanes, UNPUSHED) but the classifier HARD-refuses a session pushing its own permission rules even with Bob's approval: only
+  Bob can commit it (GitHub web editor). Until he does, a release needs Bob to type the ask in DIST's own session.
