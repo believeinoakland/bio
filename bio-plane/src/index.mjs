@@ -1110,6 +1110,11 @@ const OPS = {
      to learn whether `op=promote`'s old unchecked digest left a false one behind. Admin and probe, as
      `registeraudit` beside it: it is an audit of the working corpus, and it lists paths. */
   digestcensus: { classes: ["admin", "probe"],                     mutating: false },
+  /* REC-190: the census of displaced homes — every `files` / `history` row whose sha the register assigns to a
+     DIFFERENT bundle that still exists (D-179's residue: the pre-fence promote MOVED a register row), both bundles
+     named, NEVER repaired; which bundle held it first is undetermined and the answer says so. Admin and probe, as
+     `digestcensus` beside it: an audit of the working corpus that lists bundle ids and paths. */
+  homecensus:   { classes: ["admin", "probe"],                     mutating: false },
   /* CONSTRUCTS Step 3 (FW-5): the reading persisted at promote. `reading` reads
      one captured document's reading (entities + document facts) by its capture
      sha; `readingref` is the reverse index — which documents' readings carry a
