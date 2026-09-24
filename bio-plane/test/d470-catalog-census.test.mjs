@@ -248,6 +248,12 @@ const CATALOG_CENSUS = {
      published a different catalogue under it. ONE VERSION NAMES ONE CATALOGUE, which is this table's whole
      rule, so the landed row stands and this union takes the next number. */
   "1.23.0": { count: 447, digest: "3309735d2983f422ff63ba8491b6fcd3e350e1642de29716bb578dc8077ab9da" },
+  /* 1.24.0 (REC-211, 2026-09-24): IC-273's two arrivals — C-33.42 NO_DEFINITION_VERSION and C-33.43
+     DEFINITION_MOVED, `op=proposedispose` binding the definition version the member SAW. 449, FROM
+     THIS SUITE'S OWN PRINT on this tree and never 447 + 2: the figure is a measurement of the
+     catalogue that is here, and the arithmetic would agree with it for free. TWO ARRIVALS, NO
+     DEPARTURES, so the bump is MINOR on the rule above. */
+  "1.24.0": { count: 449, digest: "3d3efa8656cc78f2dbccfc57f03220062ed283aee436ea0972a082b70d316127" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -337,8 +343,8 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 /* CORRECTED at c20-batch13, never exempted: the catalogue moved under this pin
    at the union (five arrivals from c20-batch11fix's side), so 1.21.0 had stopped
    naming one catalogue — the exact defect the header describes. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.23.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.23.0)", "1.23.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.24.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.24.0)", "1.24.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

@@ -14280,7 +14280,16 @@ async function queueApplySet(op, shared){
   const ids = queueSelFor(op);
   try{
     if(!ids.length) return;
-    const items = ids.map(id => op === "proposedispose" ? { key: queueFindingKey(QUEUE_ITEMS.get(id)) } : { id });
+    /* REC-211 / IC-273: a progression disposition BINDS THE VERSION OF THE DECLARED FLOW THIS
+       PAGE WAS SHOWING (framework 8.2, BOB #32). It is sent per ITEM, not once for the set, because
+       a selection can span progressions standing at different versions; it is taken off the item's
+       own published `disposition` block — the same block the key comes from — and never composed or
+       re-read here. A set that names a version the record has since revised is RETAINED with the
+       plane's own DEFINITION_MOVED words, exactly as a missing reason already is. */
+    const items = ids.map(id => op === "proposedispose"
+      ? { key: queueFindingKey(QUEUE_ITEMS.get(id)),
+          definitionVersion: queueDispositionVersion(QUEUE_ITEMS.get(id)) }
+      : { id });
     const res = await recPostR(op, { ...(shared || {}), items });
     const outs = (res && Array.isArray(res.items)) ? res.items : null;
     if(!outs){ QUEUE_SET_ERR = queueReason(res); return; }
@@ -14678,6 +14687,14 @@ function queueEntryControlsHtml(it){
    (progression, stage) — so nothing here re-reads op=proposals to aggregate the
    same thing a second time. */
 function queueFindingKey(it){ return String((it && it.id) || "").replace(/^FINDING::/, ""); }
+/* REC-211 / IC-273: the version `op=proposedispose` now binds, read in ONE place off the plane's own
+   `disposition` block. A finding the plane published no version for sends null and is refused by the
+   record in its own words, which is the shape this surface already takes everywhere: the page does
+   not invent a version, and it does not compute the refusal for one it lacks. */
+function queueDispositionVersion(it){
+  const d = (it && it.disposition) || null;
+  return (d && Number.isInteger(d.definition_version)) ? d.definition_version : null;
+}
 function queueFindingAsProposal(it){
   const b = (it && it.basis) || {};
   return { key: queueFindingKey(it),
@@ -14686,6 +14703,9 @@ function queueFindingAsProposal(it){
     required: null, n: Number.isFinite(b.n) ? b.n : 0,
     grade: b.grade ?? null, grade_determined: b.grade_determined !== false,
     surfaced_by: b.surfaced_by || "machine", instances: [],
+    /* REC-211: carried so the single act sends the same version the set act does, from the same
+       published block — two send paths reading one field rather than two answers. */
+    definition_version: queueDispositionVersion(it),
     /* The producer's own sentence, so the act dialog quotes the record rather
        than a sentence this browser composed. */
     summary: it.summary || null };
@@ -17134,7 +17154,13 @@ async function doProposalDispose(){
   const key = PROP_ACT.key, to = PROP_ACT.to, reason = PROP_ACT.reason.trim();
   PROP_ACT.busy = true; PROP_ACT.refusal = null; proposalActPaint();
   try{
-    const out = await recPostR("proposedispose", { key, to, reason });
+    /* REC-211 / IC-273: the version the member was actually reading, off the proposal this dialog
+       was opened on (op=proposals publishes it; a finding opened from the queue carries it through
+       queueFindingAsProposal). Never the current version fetched now — that is precisely the
+       substitution BOB #32 ruled against, and it would make this page the thing that hid a revision. */
+    const out = await recPostR("proposedispose", { key, to, reason,
+      definitionVersion: (PROP_ACT.proposal && Number.isInteger(PROP_ACT.proposal.definition_version))
+        ? PROP_ACT.proposal.definition_version : null });
     if(!PROP_ACT || PROP_ACT.key !== key) return;
     PROP_ACT.busy = false;
     if(out && out.ok === false){ PROP_ACT.refusal = out; proposalActPaint(); return { refused:true, reason: out.reason }; }

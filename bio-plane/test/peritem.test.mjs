@@ -195,7 +195,12 @@ try {
              { key: "voted", label: "Voted", after: "heard", cardinality: "1", required: "always" },
              { key: "closed", label: "Closed", after: "voted", cardinality: "1", required: "always" }] }));
   if (!def.ok) throw new Error(`progressiondefine: ${JSON.stringify(def).slice(0, 400)}`);
+  /* CORRECTED 2026-09-24 (REC-211): `definitionVersion` is sent ONCE as a shared field of the set —
+     every item here is a stage of `d126-flow`, standing at version 1. That it carries from the set to
+     each item is the property `#perItem` is for, and the retained items below still fail on their own
+     conditions (BAD_STAGE, NO_REASON), which are asked before this one. */
   const r5 = R(await POST(`op=proposedispose&${S_mona}`, { to: "dismissed", reason: "not this group's to chase",
+    definitionVersion: 1,
     items: [{ key: "d126-flow::filed", decidedBy: "somebody-else" }, { key: "d126-flow::nope" },
             { key: "d126-flow::heard", reason: "" }, { key: "d126-flow::voted", to: "deferred" },
             /* OVER-STRICTNESS: the explicit pair, a spelling of the same identity the set form must not

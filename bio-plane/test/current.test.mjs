@@ -900,8 +900,13 @@ const beforeShaA = await shaOf(A);
     [th?.ok !== false,
      ((await GET(`op=proposals&token=${RUTH}`))?.proposals || []).some((p) => p.key === "pl13-flow::filed")],
     [true, true]);
+/* CORRECTED 2026-09-24 (REC-211): the act now binds the definition version the member READ and
+   refuses one that names none (NO_DEFINITION_VERSION) — so this call names the version standing for
+   its fixture. The assertion's subject is unchanged; what was wrong in the old call is that it was
+   admitted at all (BOB #32, framework 8.2). */
   const real = await POST(`op=proposedispose&token=${RUTH}`,
-    { key: "pl13-flow::heard", to: "deferred", reason: "parked for the next budget cycle" });
+    { key: "pl13-flow::heard", to: "deferred", reason: "parked for the next budget cycle",
+      definitionVersion: 1 });
   t("DRIVEN — the pair the plane publishes as `keyed_on` is the pair the act ACCEPTS: a real "
   + "(progression, stage) disposes and is recorded",
     [real.ok, real.key], [true, "pl13-flow::heard"]);
@@ -935,12 +940,17 @@ const beforeShaA = await shaOf(A);
      instanceScoped.every((i) => /^[^:]+::.+$/.test(S(i.disposition.key) || ""))],
     [true, ["FINDING"], ["proposedispose"], true, true]);
   const byKey = dispositionable.find((i) => i.disposition.key === "pl13-flow::filed");
+  /* CORRECTED 2026-09-24 (REC-211): the VERSION is taken off the published item too, which is this
+     arm's own property one field wider — the act now also requires `definitionVersion`, and a caller
+     that must go and find it elsewhere is exactly the composing this arm exists to refuse. */
   const drivenReal = await POST(`op=proposedispose&token=${RUTH}`,
     { key: byKey ? byKey.disposition.key : "NO-SUCH-ITEM", to: "dismissed",
+      definitionVersion: byKey ? byKey.disposition.definition_version : null,
       reason: "the filing predates the record and is not obtainable" });
   t("DRIVEN — the key taken STRAIGHT OFF THE ITEM the plane published is accepted by the act "
-  + "without the caller composing anything, which is the whole point of publishing it",
-    [drivenReal.ok, drivenReal.key], [true, "pl13-flow::filed"]);
+  + "without the caller composing anything, which is the whole point of publishing it — and since "
+  + "REC-211 the VERSION it must be decided against comes off the same block",
+    [drivenReal.ok, drivenReal.key, drivenReal.definition_version], [true, "pl13-flow::filed", 1]);
 }
 
 /* ====================================================================== 8
