@@ -1,0 +1,16 @@
+{
+ "unit": "ui:connections-sidebar.test.mjs",
+ "inputHash": "2a74b971e895a1684b830ea44330845e401472f49c3a7135a783316283d37940",
+ "verdict": "PASS",
+ "run": "470d60407bbaba79aab507d6750f8c6930894960.1790216996342.11017.json",
+ "tree": "470d60407bbaba79aab507d6750f8c6930894960",
+ "head": "0ecd728bbb4a6e9a02a6e1c2e1cdc01f11e84097",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "DOCS",
+ "inputs": 243,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "5684be10-4191-5653-aa3c-40b54f969bb3",
+ "at": "2026-09-24T02:29:56.358Z"
+}
