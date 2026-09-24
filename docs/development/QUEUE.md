@@ -211,90 +211,6 @@ scope: one line in `docs/development/kickoffs/WORKER.md` "Before you finish": ed
 accepts-when: the line is on `main`; the next worker's first gate is not RED on corpuscheck. NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-481 · integrated — finished; integrated on land/conduct/c20-batch16 @ 47dba3a38; Content Framework §16 limit folded, trains after c20-batch15 — flipped by CONDUCT #20 2026-09-24 ~05:55Z
-order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-479, with the corrections: a reading that says far less than the document holds, across 4% of the corpus (SCHEDULER #17, 2026-09-24; via CONDUCT #19; renumbered from a colliding D-480)
-milestone: M2
-interface: none — the text is truer; its shape is unchanged.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (how content is extracted today).
-depends-on: none.
-scope: break only when the baseline moves — Td/TD with ty=0 and a Tm at the current line's y add nothing (a space past a word-gap advance); T\*, ', " and any y change still break. Extend the pdfstructure suite.
-accepts-when: Budget-Basics-FY21-23's bytes read at least 60 words per page. NEGATIVE CONTROL: revert the fix, and that arm reads glyph-per-line and fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-owed-at-integration: fold into docs/architecture/BIO_Content_Framework_v0_10.md §16 as a stated LIMIT (the worker's design gap, SCHEDULER #18 placed the fold with the integrator 05:27Z; D-502 cites it): "Tier-1 PDF text breaks a line when the baseline moves; two runs sharing a baseline and separated only by a horizontal jump are concatenated, because glyph advance widths are not read (D-502 reads them)." Move §16's Status `as of`, run corpuscheck. Actor: whoever integrates land/worker/D-481 @ dbe88ab9. Recorded by CONDUCT #20.
-
-### D-484 · integrated — finished; integrated on land/conduct/c20-batch16 @ 0e27ffa9e (IC-263, I3 MINOR 81.4.0), trains after c20-batch15 — flipped by CONDUCT #20 2026-09-24 ~05:55Z
-order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-481, with the corrections: a refusal a member cannot read (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:30Z)
-milestone: M2
-interface: I3 additive — two catalogued codes gain translations.
-design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, following REC-79's single-helper shape.
-depends-on: none.
-scope: route each code's sites through ONE governed helper inside a DEC-49 REGION; a row for each in ACT_SHAPE_CHECKS (C-numbers by mintid); move the check-refusal-codes floors.
-accepts-when: each site's refusal carries its translation. NEGATIVE CONTROL: mint one site's code outside the helper and the DEC-49 guard fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
-### M0-146 · integrated — finished (BOB #32's ruled shape, 1d7a2c5b); integrated on land/conduct/c20-batch17 @ f8e71683, trains after c20-batch16b — flipped by CONDUCT #20 2026-09-24 ~05:58Z
-order: AT THE BACKLOG HEAD: two workers lost a full-gate round to it in one night (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z and 04:25Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a gate measures the tree it names).
-depends-on: none.
-scope: name ONE ignored scratch path for workers' files and gate logs in WORKER.md and `.gitignore`, and have §2e's derivation and the clean-tree check both skip it; stated in both files.
-accepts-when: a worktree with a root scratch dir gates identically to one without. NEGATIVE CONTROL: remove the exclusion and the count moves, failing by name.
-note: 2026-09-24 05:02Z by SCHEDULER #18 (D-486's finding 6, via CONDUCT #20): a scratch COPY of the repo inside the worktree is walked too — statepaths read 36 files of `.d486/before1/`; the one ignored scratch path must exclude repo-walking suites as well.
-note: 2026-09-24 05:05Z — BOB #32 RULED the choice (05:04Z): WORKER.md's 'keep scratch inside your worktree' collides with M0-126; it becomes 'keep scratch in the session scratchpad, OUTSIDE the worktree'. That is this row's fix; an in-worktree ignored path is not.
-note: 2026-09-24 05:22Z (CONDUCT #20, integ1b): also correct WORKER.md step 0's REC-110 sentence — a plain /* */ or // comment leaves bundled.mjs byte-identical, a /** */ docstring IS emitted (measured +1,104 B); byte-neutral, WORKER.md is 2 B under budget.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### D-483 · integrated — finished; integrated on land/conduct/c20-batch16 @ f8b72f02d, trains after c20-batch15 — flipped by CONDUCT #20 2026-09-24 ~05:55Z
-order: after D-478, low: truthful today (it writes undetermined, never an invented tier); a missing affordance, not an overclaim (SCHEDULER #18, 2026-09-24)
-milestone: M2
-interface: none — consumes `vocabularies.risk_tiers` as published.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`risk_tier`, RULED by BOB #21: only a member's authored act sets 1, 2 or 3).
-depends-on: none.
-scope: a radio group over `vocabularies.risk_tiers` in SETUP_HTML's action arm, unset by default; unset still writes undetermined.
-accepts-when: a chosen tier is written; none chosen writes undetermined. NEGATIVE CONTROL: default the group to 1 and the unset arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
-### REC-193 · integrated — finished; integrated on land/conduct/c20-batch18 @ 283c48ed9 (IC-264, I5 MINOR 3.6.0), trains after c20-batch17 — flipped by CONDUCT #20 2026-09-24 ~06:25Z
-order: after REC-188, the same completeness block: a correction to just-landed work (D-150) on who may attest (SCHEDULER #17, 2026-09-23)
-milestone: M10
-interface: I5 additive — a `statement_by` value recorded at the draft write; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 11, with Publication §3 rule 13 (BOB #32's ruling, folded).
-depends-on: D-150 (on `main` at 548eb2c5).
-scope: record `statement_by` (server-stamped) at every draft write that changes the statement text; C-41.10's author exclusion reads it. Extend D-150's suite (`bio-plane/test/d150*.test.mjs`).
-accepts-when: B edits another section after A wrote the statement, and B may acknowledge while A is refused by name. NEGATIVE CONTROL: read the last editor again, and the "the statement's writer is refused" arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (BOB #32's G2; `node tools/mintid.mjs REC`).
-
-### D-494 · integrated — finished; integrated on land/conduct/c20-batch16 @ 5ad782d3c, trains after c20-batch15 — flipped by CONDUCT #20 2026-09-24 ~05:55Z
-order: at the backlog head (D-493 is cached): an authority boundary (no machine attests) whose instrument cannot see half its sites (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z)
-milestone: M7
-interface: none.
-design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 4 (no machine credential performs the attested act), with DEC-49 for the catalogue.
-depends-on: REC-185 (its train).
-scope: widen the harvest to `index.mjs` and the templated/variable mints; locate each OPERATOR_TOKEN_* site; one arm asserting catalogue and harvest agree, a row with no site named (delete it or build the fence).
-accepts-when: the two corpora agree, 18 = 18 or each difference named. NEGATIVE CONTROL: drop one fence's mint and the agreement arm fails naming it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
-### D-495 · integrated — finished; integrated on land/conduct/c20-batch17 @ 3e1fe781 (keep-both with D-494's arms; union control 13/13 as declared), on its train — flipped by CONDUCT #20 2026-09-24 ~06:03Z
-order: after D-494, the same family (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z)
-milestone: M7
-interface: none (a test); codes it surfaces get their own rows.
-design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it.
-depends-on: REC-185 (its train).
-scope: drive `record()` over ADMIN and PROBE classes; list every codeless refusal found, by op, as a finding for placement.
-accepts-when: the sweep states its classes and the NO_CODE set over all three. NEGATIVE CONTROL: strip one admin refusal's code and the admin arm names it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
-### DIST-12 · integrated — finished; integrated on land/conduct/c20-batch16 @ 1ddb740aa, trains after c20-batch15 — flipped by CONDUCT #20 2026-09-24 ~05:55Z
-order: after DIST-11, with DIST's small rows: a measurement at a step DIST already takes, no daemon (SCHEDULER #18, 2026-09-24)
-milestone: M0 (a measurement instrument's corpus)
-interface: none.
-design: `docs/architecture/BIO_Distribution_v0_1.md` §6 "The deploy-to-serve ladder", with BOB #32's ruling of 2026-09-24 03:45Z (cite until folded).
-depends-on: D-166 (the `--urls` preflight).
-scope: the release live verification runs `tier1-coverage-probe.mjs --urls`; its verdict lands in `MEASUREMENTS.md` as a dated entry, one line per URL (LIVE / NOT_PDF / NOT_FOUND / REFUSED). REFUSED is recorded as refused, never as rotted; a rotted URL becomes a plan row naming the fixture that depends on it.
-accepts-when: the next release's verification carries the dated entry. NEGATIVE CONTROL: feed the preflight a refused host and it records REFUSED, not NOT_FOUND, by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
-
 ### UI-89 · integrated — finished; integrated on land/conduct/c20-batch19 @ 2cc51798 (merged batch18 itself, tip af8e080d), on its train 07:09Z
 order: after REC-194, the member half of the same block (SCHEDULER #17, 2026-09-23)
 milestone: M10
@@ -304,16 +220,6 @@ depends-on: D-150 (`integrated` on c17-batch7; verify `statementack` in `index.m
 scope: (1) the review copy leads with the exclusion statement and its acknowledgements; (2) an acknowledge act for recipients (by the grant's secret) and joined participants (by session), with DEC-49 translations for the five `STATEMENT_ACK_*` codes; (3) the published case page renders `[]` as "nobody but the author acknowledged the statement" and `null` as "the document says nothing about acknowledgements", never "nobody".
 accepts-when: the three surfaces render against a live answer, and the empty and null cases read different sentences. NEGATIVE CONTROL: render `null` as `[]`, and the "null is not nobody" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (the D-150 delegation; `node tools/mintid.mjs UI`).
-
-### UI-90 · integrated — finished; integrated on land/conduct/c20-batch18 @ f778ea014, trains after c20-batch17 — flipped by CONDUCT #20 2026-09-24 ~06:25Z
-order: after UI-89, the member half of D-149 (SCHEDULER #17, 2026-09-23; D-149's worker via CONDUCT #18)
-milestone: M10
-interface: I3 consumer (IC-230).
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*, Bob's ruling of 2026-09-22).
-depends-on: D-149 (`integrated` on c17-batch7; verify the op on `main` first).
-scope: the action page lists the governing laws, each with the level the plane publishes (`law_levels`), offers the member's act to set them with no default level, and shows the plane's undetermined sentence for an empty list; the act is struck from `ACTS_AWAITING_SURFACE`. Extend `civicos-ui/test/surface-registry.test.mjs` and the action page's suite.
-accepts-when: an empty list reads the plane's undetermined sentence, and a member's list round-trips with its levels. NEGATIVE CONTROL: preselect a level, and the "no default level" arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
 ### D-498 · queued — **CONSTRUCT CLAIM `1.discoverable` SAYS THE DIRECTORY "LISTS A MEMBER'S DISCOVERABLE PROJECTS", but since D-479 it lists AT MOST `PROJECT_DIRECTORY_LIMIT` and says `truncated`.** Found by D-479's worker. — owner RECORD.
 order: at the backlog head: the record claiming more than the plane does, one line (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
@@ -434,6 +340,46 @@ depends-on: REC-198.
 scope: the workspace lists the project's drafts from the plane's read; each opens.
 accepts-when: every draft the plane lists appears and opens. NEGATIVE CONTROL: stub the list empty, and the listed-draft arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
+
+### D-505 · queued — **NOTHING STOPS A MACHINE CREDENTIAL FROM CHANGING A RISK TIER A MEMBER SET: BOB #32's rule of 2026-09-24 (once a member sets a tier, no machine may change it, not even back to undetermined) is NOT BUILT, and no fence refuses a machine promote that writes a determined tier.** Found by D-483's worker. — owner RECORD.
+order: at the backlog head: an authority boundary on the one field carrying legal exposure (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z)
+milestone: M7
+interface: I3 MAJOR — a refusal where an answer stood; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`risk_tier`: only a member's authored act sets 1, 2 or 3), with BOB #32's 2026-09-24 rule (cite until folded).
+depends-on: D-483.
+scope: a machine-fence refusal (catalogued, DEC-49 translation) on any machine write of a determined tier, or a change to a member-set one; D-494's harvest/catalogue agreement arm covers it.
+accepts-when: a machine promote writing a tier is refused by name; a member's own set is admitted. NEGATIVE CONTROL: drop the fence and the machine arm is admitted, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-503 · queued — **FIVE MACHINE/OPERATOR FENCES IN `index.mjs` ARE CATALOGUED AND MINTED BUT NEVER DRIVEN: MACHINE_CANNOT_RATIFY, MACHINE_CANNOT_RATIFY_CASE, OPERATOR_TOKEN_CANNOT_RATIFY, _RATIFY_CASE and _GOVERN are outside `machine-fences.test.mjs`'s corpus (the `store.mjs` family only).** Found by D-494's worker (18 = 18 catalogued and minted). — owner RECORD.
+order: at the backlog head: the authority boundary that no machine attests, with five of its fences asserted by nothing (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:33Z)
+milestone: M7
+interface: none.
+design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 4 (no machine credential performs the attested act).
+depends-on: D-494.
+scope: extend `machine-fences.test.mjs` to drive each `index.mjs` fence with a machine or operator credential on a payload that would otherwise succeed, asserting the named refusal.
+accepts-when: all five refuse by name through the op. NEGATIVE CONTROL: remove one fence's check and its arm is admitted, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-506 · queued — **A FAILING CANARY READS AS A BARE BOOLEAN: `op=livefire` answers `ok:false` with no reason, code or error (status 500) when its 19-assertion self-test fails (`livefire.mjs` ~192-201, `index.mjs` ~6438), so a caller learns nothing exactly when it matters.** Found by D-495's worker. BOB #32 RULED (b), 2026-09-24 06:10Z (cite until folded): `ok` keeps meaning the op answered; the result moves to `verdict: "pass"|"fail"` with `failing: [names]` (empty on pass) under `ok:true`, HTTP 200. — owner RECORD (DIST updates its release check).
+order: after D-503: the record staying silent where it must speak, on the release's own canary (SCHEDULER #18, 2026-09-24)
+milestone: M8
+interface: I3 MAJOR — `ok`'s meaning narrows for this op; an IC entry; the integrator classifies.
+design: `docs/architecture/BIO_Distribution_v0_1.md` §6 "The deploy-to-serve ladder" (the live verification), with BOB #32's ruling of 06:10Z (cite until folded).
+depends-on: none.
+scope: return `verdict` and `failing`; `ok:false` only for a catalogued refusal; update in the SAME landing every caller that reads livefire's `ok` as the verdict (grep: battery.mjs, coverage.mjs, affordances.mjs, newgroup/src/release.mjs, DIST's release check, any UI).
+accepts-when: a broken assertion yields `ok:true, verdict:"fail"` naming it. NEGATIVE CONTROL: break one assertion and drop its name from `failing`, and the arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### REC-194 · queued — **AN ACKNOWLEDGEMENT MAY MATCH ANOTHER CASE WHOSE STATEMENT IS BYTE-IDENTICAL: D-150 binds it to the statement's bytes, not to ONE case identity.** Publication §3 rule 13 (folded): *an acknowledgement binds to ONE case identity; it never matches another case whose statement is byte-identical.* — owner RECORD.
+order: (held behind REC-193: both edit the statementack code; CONDUCT #20 05:08Z) directly after REC-193, the same block (SCHEDULER #17, 2026-09-23)
+milestone: M10
+interface: I3 — the `statementack` op's binding narrows to one case; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 (BOB #32's ruling, folded).
+depends-on: D-150, REC-193.
+scope: an acknowledgement records and is matched by the case identity it was given for; a second case in the project with byte-identical statement text lists none of the first's.; and the DRAFT DOOR matches only the draft's own document/case, never an unsigned edition-1 document of another case with the same statement text (widened by SCHEDULER #18 2026-09-24 on BOB #32's 03:40Z instruction via CONDUCT #20; c18-batch7fix's finding). Extend D-150's suite.
+accepts-when: two cases with identical statements, one acknowledged: the other's completeness block lists nobody; and two cases' unsigned edition-1 documents with identical statements: the draft door of one finds none of the other's. NEGATIVE CONTROL: match by statement hash alone, and the "the twin case lists nobody" arm fails by name; match the draft door by statement text across the project, and the draft-door arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (BOB #32's G3; `node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
