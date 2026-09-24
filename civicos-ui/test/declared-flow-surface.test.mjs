@@ -49,7 +49,7 @@
  * UI-99's report, not fixed here).
  *
  * NEGATIVE CONTROL: RUN 2026-09-24 by UI-99 against `civicos-ui/app.html`
- * `cc76798ea5c9644f8eab7851cac32d3051394858fbf40a4f882009cb34eb3b42` (1,582,075 bytes), four arms, each
+ * `415fd2b0e785917755f7642ea8d670a7408dc5565c5004cd66d94e7e883ae0db` (1,590,012 bytes), four arms, each
  * armed ALONE by ONE anchored replacement asserted to match exactly once, each restored by `cp` from a
  * PER-ARM pristine copy with sha256 AND `cmp` verified and the byte count guarded, the file IDENTICAL to
  * pristine at the end — **4/4 AS DECLARED**. BASELINE GREEN 37 asserted / 0 failed.
@@ -62,6 +62,10 @@
  *       green. -> RED, 1 of 37 — "version 1's absent basis is stated as `not recorded` IN WORDS, never
  *       left blank", and nothing else. THAT ONE-LINE RESULT IS THE POINT OF ARMING THE TWO PLACES APART:
  *       the two surfaces write the same words and neither inherits the other's coverage.
+ *   RE-RUN 2026-09-24 after the rebase onto `origin/main` @ `1a7f0bcc` (the c20-batch24c train, carrying
+ *       REC-211): 4/4 AGAIN, the same figures, against the sha above. The first run was against app.html
+ *       `cc76798ea5c9644f8eab7851cac32d3051394858fbf40a4f882009cb34eb3b42` (1,582,075 bytes) and is kept here
+ *       because a control's value is the arms it ran, and both runs ran them.
  *   (C) OVER-STRICTNESS — both sentences rewritten in a spelling this suite was not written against: the
  *       words upper-cased and marked up with `<em>` instead of `<b>`. DECLARED GREEN -> GREEN 37 / 0,
  *       because every sentence assertion here runs over what a member READS (tags stripped, entities
@@ -330,9 +334,13 @@ await post("resolve", { captureSha:gAward }, IRIS);
 await post("thread", { progressionKey:"grant", entityId:eG.entity_id,
   placements:[{ stage:"award", captureSha:gAward }] }, IRIS);
 await sleep(5);   /* the decision's instant is strictly after the declaration's (REC-184's order rule) */
-const disp = await post("proposedispose", { key:"grant::application", to:"dismissed",
+/* REC-211 (IC-273, 2026-09-24): the ACT now binds the version the MEMBER SAW — an act naming none is
+   refused NO_DEFINITION_VERSION and one naming a version that is not standing is refused
+   DEFINITION_MOVED, both before any write. So the version is sent, exactly as `app.html`'s own send
+   paths send it off the plane's published `disposition` block. */
+const disp = await post("proposedispose", { key:"grant::application", to:"dismissed", definitionVersion:1,
   reason:"This fund took applications by telephone that year, so there is no document to find." }, IRIS);
-ok("the member's decision is recorded against version 1 of the flow, stamped by the store",
+ok("the member's decision is recorded against version 1 of the flow — the version the act named and the store held",
    disp && disp.ok !== false && disp.definition_version === 1);
 
 /* ============================================================
