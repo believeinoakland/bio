@@ -357,6 +357,12 @@ import { runPrincipalGate } from "./airun.mjs";
    level — decided ONCE in `airun.mjs`, beside the cause vocabulary it answers into, and asked by the content
    and meaning readers below. Its own import line, for the reason REC-152's gives. */
 import { enteredAfterFirstRow } from "./airun.mjs";
+/* D-516 / BOB #33: that rule now answers THREE ways, so the two readers below map an ANSWER to a cause
+   word instead of reading a boolean. The words and the band's cause key are imported rather than spelled
+   at either site, for the reason the line above gives: the point of D-500 was one rule in one place, and a
+   literal `"within_band"` typed at two readers is that rule growing two spellings again. Its own import
+   line, for the reason REC-152's gives. */
+import { WATERMARK_AFTER, WATERMARK_WITHIN_BAND, WATERMARK_BAND_CAUSE } from "./airun.mjs";
 /* REC-169: a figure written into a run's bound is a non-negative integer and never a plane-counted bound's — decided
    once in `airun.mjs`, asked by the tick and by the open's seed. Its own line, for the reason REC-152's gives.
    REC-172: the tick hands it its `consume` whole (`map: true` — a MAP of named bounds) and the open its `bounds`
@@ -43060,7 +43066,17 @@ export class Store extends DurableObject {
        watermark's real one-second uncertainty instead. Every answer this suite
        and the case document's `searched` section drive is unmoved; what moved is
        that the answer no longer depends on where the second fell. */
-    return enteredAfterFirstRow(reg, firstContentAt) ? "never_looked" : "purged";
+    /* D-516 / BOB #33 (2026-09-24 17:58Z) — THE ANSWER IS THREE-WAY AND THIS SITE
+       MAPS IT, it does not re-decide it. The band is the one clock second before
+       the watermark's own second, where the stored precision leaves REC-94's tie
+       open; the reader states that rather than choosing a side, and the reason is
+       at the rule. A TERNARY HERE WOULD BE SILENTLY WRONG — every one of the three
+       answers is a truthy string — which is why the three arms are spelled out and
+       why arm M1b pins that no reader of this rule tests it as a boolean. */
+    const order = enteredAfterFirstRow(reg, firstContentAt);
+    if (order === WATERMARK_AFTER) return "never_looked";
+    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
+    return "purged";
   }
 
   #missingContentCause(captureSha, registeredAt = null) {
@@ -44140,7 +44156,14 @@ export class Store extends DurableObject {
        watermark moved this level's `never_looked` and `missing_unexplained` keys
        on one run and not on the next (M-131). The reasoning, and REC-94's tie
        narrowed to an equality of instants, are at the function. */
-    return enteredAfterFirstRow(entered, firstAt) ? "never_looked" : "purged";
+    /* D-516 — THE SAME THREE-WAY ANSWER MAPPED THE SAME WAY, and the mapping is
+       the only thing this arm spells: the band's meaning-level sentence is in
+       `MEANING_MISSING_ROW_CAUSES` beside the other three, and the set it cannot
+       narrow comes from `causesNotRuledOut` exactly as `purged`'s does. */
+    const order = enteredAfterFirstRow(entered, firstAt);
+    if (order === WATERMARK_AFTER) return "never_looked";
+    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
+    return "purged";
   }
 
   /** REC-107 — **THE TWO FIELDS THAT PUT §5.1's UNDETERMINED SET ON THE ROW**, for
