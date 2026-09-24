@@ -1,4 +1,45 @@
-/* NEGATIVE CONTROL (D-508, 2026-09-24): `node test/nc-d508.mjs` — SIX arms, each ALONE with the others held
+/* NEGATIVE CONTROL (D-513, 2026-09-24, branch land/worker/D-513): `node test/nc-d513.mjs` — FOUR arms, each
+   ALONE with the others held open, run against THREE instruments per arm, because D-513's three claims fail in
+   three different places: the DEC-49 GUARD (`civicos-ui/check-refusal-codes.mjs --strict`), the SWEEP
+   (`test/dec49-onecode-twoconditions.sweep.mjs`, which counts a catalogued code's literal return sites) and
+   THIS SUITE driven end to end through `op=knock`. Both baselines AS DECLARED (guard exit 0 / 0 fails / F4=100 /
+   untranslated=292; sweep naming none of the three codes, 60 multi-site candidates; suite 72 pass, 0 fail, foot
+   reached — 57/0 on origin/main 1a7f0bcc0 before this item, MEASURED in a scratch worktree and not subtracted).
+   ALL FOUR AS DECLARED, one declaration CORRECTED FROM ITS FIRST RUN AND NOT SMOOTHED:
+     (1) SECOND-SITE, THE ROW'S OWN ARM — `KNOCK_EMPTY` minted at the call site OUTSIDE the helper, the helper
+         and its region intact. GUARD GREEN (exit 0, F4 and untranslated unmoved), SWEEP names it at 2 sites,
+         SUITE 72/0. **THE ROW DECLARED THAT ARM F WOULD NAME IT MULTI-SITE; ARM F CANNOT.** Arm F partitions
+         `untranslated`, and a code with a family row is in `translated` by construction, so none of D-513's
+         three codes can ever enter that arm's subject. The row named the wrong instrument; the sweep is the
+         right one, and it saw the second site.
+     (2) MINT-OUTSIDE-HELPER — the call-site mint AND `knockEmpty()`'s own refusal replaced by a success, so the
+         code is minted at exactly ONE site and that site is not the governed one. GUARD FAILS 4, the first
+         naming the region: *"arm C judged NO refusal inside the region `is-knock-empty` of knockEmpty"*, with
+         the `codesChecked`, `refusalsJudged` and `outcomeReturns` floors behind it. SWEEP reports ONE site — **a
+         site count cannot tell a governed site from an ungoverned one**, which is the other half of the finding
+         about the row's arm. SUITE 72/0 AGAIN: `dec49Decorate` fills `code`, `check` and `translation` from the
+         catalogue alone, so no behavioural arm can see this and the control HAS to be structural, exactly as the
+         row said.
+     (3) BLANK-TRANSLATION — `KNOCK_EMPTY`'s sentence emptied in the catalogue, row and check intact. GUARD FAILS
+         by name (*"KNOCK_CHECKS.KNOCK_EMPTY has NO CANNED TRANSLATION"*, the perimeter gate, gated at zero).
+         **THE DECLARATION WAS WRONG AND IS CORRECTED AT THE DRIVER**: it said the five empty-knock arms would
+         FAIL BY NAME. They cannot — the helper THROWS rather than let a code reach a stranger with no sentence,
+         and the suite dies on `.json()` over a non-JSON 500 BEFORE its first empty-knock assertion. Measured:
+         exit 1, NO tally (reported -1/-1, never 0), zero FAIL lines, 4.9s against 33s. The arm now declares
+         DIES-BEFORE-ITS-FOOT and checks that none of those five arms PASSED, so "died somewhere" cannot be read
+         as "died here". The ARM was right and the DECLARATION was wrong.
+     (4) OVERSTRICT-SPELLING — the same mint with its properties reordered and extra whitespace, on the same
+         number of lines so no region line count moves. GUARD GREEN, SWEEP unchanged, SUITE 72/0: correct work in
+         a spelling nothing anticipated still passes.
+   Every restore verified by sha256 AND byte-for-byte (`Buffer.equals`) against a uniquely-named per-arm pristine
+   copy, with the byte count printed and a 6000-byte floor guarded; every anchor required to match EXACTLY ONCE,
+   and an arm that did not arm is reported as a finding rather than scored a pass. THE PEN IS OUTSIDE THE
+   WORKTREE (BOB #32, 2026-09-24), `NC_D513_PEN` or the OS temp root, named for this item and this process.
+   WHAT THESE ARMS CANNOT SEE: whether any canned sentence is a GOOD sentence, and whether a surface renders it —
+   `knock` occurs 0 times in `civicos-ui/app.html`, so the reader these are written for is a stranger's own
+   client, outside this repository.
+
+   NEGATIVE CONTROL (D-508, 2026-09-24): `node test/nc-d508.mjs` — SIX arms, each ALONE with the others held
    open, run against TWO instruments per arm (the DEC-49 guard `civicos-ui/check-refusal-codes.mjs --strict`
    and this suite, driven end to end through `op=knock`). Both baselines GREEN (guard exit 0 / 0 fails; suite
    57 pass, 0 fail, foot reached) and ALL SIX CAME BACK AS DECLARED on both instruments. Every restore verified
@@ -160,7 +201,12 @@ const A = call(withR2), B = call(noR2);
  * WHAT THIS CANNOT SEE: whether the sentence is a GOOD one. That is not a thing
  * a suite can judge, and the DEC-49 guard's totality arms are what establish
  * that every code has one at all. */
-const ratePaper = (label, r, code, check) => {
+/* RENAMED FROM `ratePaper` BY D-513 (2026-09-24). Nothing in it was ever
+   rate-specific: it grades the four papers ANY DEC-49 refusal owes, and D-513
+   asks the same four of the three refusals this door makes BEFORE the store is
+   reached. The old name said the subject was the limiter; the subject is the
+   code. */
+const dec49Paper = (label, r, code, check) => {
   const row = KNOCK_CHECKS[code];
   t(`${label}: the refusal carries its DEC-49 code`, r?.code, code);
   t(`${label}: it names the check the code belongs to`, r?.check, check);
@@ -224,7 +270,16 @@ t("a knock id comes back", /^KNOCK-\d{4}-\d{2}-\d{2}-/.test(k1.knockId), true);
 
 console.log("\n--- what the doorbell refuses ---");
 t("GET is not a knock", (await A.GET("op=knock")).error, "knock is a POST");
-t("empty knock refused", (await A.POST("op=knock", { contentText: "" }, "203.0.113.11")).reason, "EMPTY");
+/* CORRECTED BY D-513 (2026-09-24), NOT EXEMPTED. The old assertion wanted
+   `EMPTY`, and it was right about the plane it was written against — but that
+   token was ALSO minted for an enumerated selection and for a capture that came
+   back with no bytes, so no DEC-49 row could ever hold it without claiming
+   those sites too, and this door's refusal reached a stranger with a machine
+   token and no sentence. The condition and the status are unchanged; the code
+   is now this door's own and carries its canned translation. */
+const emptyKnock = await A.POST("op=knock", { contentText: "" }, "203.0.113.11");
+t("empty knock refused", emptyKnock.reason, "KNOCK_EMPTY");
+dec49Paper("empty knock", emptyKnock, "KNOCK_EMPTY", "C-85.5");
 t("bodyless knock refused", (await A.POST("op=knock", { note: "hi" }, "203.0.113.11")).error,
   "knock requires contentB64 or contentText, plus optional note and contact");
 t("non-base64 refused", (await A.POST("op=knock", { contentB64: "!!!!not base64!!!!" }, "203.0.113.11")).error,
@@ -234,11 +289,27 @@ console.log("\n--- size caps differ by what the instance can store ---");
 const big = new Uint8Array(200_000).map((_, i) => i % 256);
 t("R2 instance accepts a 200KB attachment", (await A.POST("op=knock", { contentB64: b64(big) }, "203.0.113.12")).ok, true);
 const small = await B.POST("op=knock", { contentB64: b64(big) }, "203.0.113.12");
-t("inline instance refuses it", small.reason, "TOO_LARGE");
+/* CORRECTED BY D-513 (2026-09-24), NOT EXEMPTED, for the same reason as the
+   empty arm above and one more: `TOO_LARGE` was minted at TWO sites in this op
+   for TWO conditions — a request body this door will not read, and a payload
+   this instance cannot hold — so one row's sentence could only ever have been
+   true of one of them. They are two codes now. `detail` is unchanged and is
+   still the site's own sentence beside the canned translation. */
+t("inline instance refuses it", small.reason, "KNOCK_PAYLOAD_TOO_LARGE");
 t("and explains what is missing", /evidence storage configured/.test(small.detail), true);
+t("and the cap it names is this instance's, not the R2 one", small.maxBytes, 64 * 1024);
+dec49Paper("oversize payload", small, "KNOCK_PAYLOAD_TOO_LARGE", "C-85.4");
 t("inline instance still takes a note-sized knock", (await B.POST("op=knock", { contentText: "short tip" }, "203.0.113.12")).ok, true);
-t("oversize body is rejected before it is parsed",
-  (await A.RAW("op=knock", "x".repeat(8 * 1024 * 1024 + 8192), "203.0.113.13")).status, 413);
+/* D-513: the SAME arm, now reading the BODY as well as the status. The two
+   oversize refusals are graded separately on purpose — this one fires before a
+   byte is decoded, and a suite that only read the status could not tell which
+   of the two answered. */
+const envelopeRes = await A.RAW("op=knock", "x".repeat(8 * 1024 * 1024 + 8192), "203.0.113.13");
+const envelope = await envelopeRes.json();
+t("oversize body is rejected before it is parsed", envelopeRes.status, 413);
+t("and it is the ENVELOPE refusal, not the payload one", envelope.reason, "KNOCK_ENVELOPE_TOO_LARGE");
+t("and it names the size this door will read", envelope.maxBytes, 8 * 1024 * 1024);
+dec49Paper("oversize envelope", envelope, "KNOCK_ENVELOPE_TOO_LARGE", "C-85.3");
 
 console.log("\n--- rate limits bound the damage ---");
 /* D-487: the window read off the PLANE's own source, so raising KNOCK.windowMs
@@ -362,7 +433,7 @@ t("the refusal publishes the bound in words",
    different things arriving in one 429, and the arms are kept apart for that
    reason: `stated` moves when this instance's limits move, the translation does
    not, and collapsing either into the other would give the bound two authorities. */
-ratePaper("per-source", postEdge.find((r) => !r.ok), "RATE_IP", "C-85.1");
+dec49Paper("per-source", postEdge.find((r) => !r.ok), "RATE_IP", "C-85.1");
 
 console.log("\n--- D-496: the instance-wide bound straddles the edge too ---");
 /* 300 is the instance's bound, so this arm costs 301 knocks and there is no
@@ -392,7 +463,7 @@ t("it publishes the instance-wide bound in words", wideAfter.at(-1).stated,
    per-source one on purpose: what a refused knocker can usefully do about "you
    are sending too fast" and about "this whole instance is full" is not the same
    thing, and one sentence serving both would tell half of them something false. */
-ratePaper("instance-wide", wideAfter.at(-1), "RATE_GLOBAL", "C-85.2");
+dec49Paper("instance-wide", wideAfter.at(-1), "RATE_GLOBAL", "C-85.2");
 t("the two rate refusals do not share one sentence",
   KNOCK_CHECKS.RATE_IP.translation === KNOCK_CHECKS.RATE_GLOBAL.translation, false);
 

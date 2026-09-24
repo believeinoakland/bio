@@ -11207,9 +11207,40 @@ export const DISPATCH_CHECKS = {
    the drift every header in this file defends against — and the floor it buys is
    paid once and measured in the same turn (D-508 moved it from this guard's own
    print). The family is named for the DOOR rather than for the limiter, so the
-   two knock refusals that are still codeless today — `TOO_LARGE` and `EMPTY`,
-   minted in `index.mjs` before the store is ever called, REPORTED by D-508 and
-   in the plan rather than taken here — have a home to arrive in.
+   two knock refusals that were still codeless when D-508 wrote this line — the
+   oversize and empty complaints minted in `index.mjs` before the store is ever
+   called, REPORTED by D-508 and put in the plan rather than taken there — had a
+   home to arrive in. D-513 is them arriving, and they arrive as THREE rows
+   rather than two.
+
+   WHY THREE, AND WHY UNDER NAMES OF THEIR OWN (D-513, 2026-09-24). The oversize
+   complaint was minted at two sites in `index.mjs` and those are TWO CONDITIONS:
+   a request body this door will not READ (the bytes are past the ceiling before
+   anything is decoded, so nothing about the material has been judged) and a
+   decoded payload THIS INSTANCE cannot HOLD (a far smaller number where no
+   evidence storage is configured, with a different remedy). A row holds ONE
+   `where` and one canned translation, and a translation that misdescribes the
+   condition that fired is the record telling a member something untrue about
+   their own input — the class `dec49-onecode-twoconditions.sweep.mjs` walks. So
+   each condition takes a row, which is three.
+   And the OLD TOKENS COULD NOT BE THE KEYS. Both are minted across this plane —
+   a captured subresource, a container, an enumerated selection — and a row under
+   either name would have claimed every one of those sites for the doorbell's
+   sentence. The oversize token is the sharper case: `app.html` already words it
+   for a capture PART, so the DEC-49 guard reads it as TRANSLATED, and a sentence
+   about a document too large to keep was standing in the census as this door's
+   answer to a stranger who will never load that page. A second row under the
+   same key would have failed arm A's translated-twice gate outright. Hence
+   `KNOCK_ENVELOPE_TOO_LARGE`, `KNOCK_PAYLOAD_TOO_LARGE` and `KNOCK_EMPTY`, and
+   hence the wire token moving at those three sites (IC-286, PROPOSED) — the one
+   part of D-513 that is not additive, stated here rather than left to be found.
+
+   THREE MORE REGIONS, one per row, in `src/index.mjs` rather than in the store:
+   these three refusals fire in the CONTROL PLANE, before `Store.knock` is
+   reached, so that is where the smallest span in which each is enforced lives.
+   Each is a module-scope helper holding ONE code as a string literal, on D-484's
+   shape (`actNoBasis`, `actNoCitation`) — the consolidation that made a `where`
+   possible at all for a code that used to be minted at several sites.
 
    ONE REGION, `knock > is-knock-rate`, in `Store#knock`; one helper, the local
    `refusal` closure this file's other families are minted through (IC-246's
@@ -11245,6 +11276,37 @@ export const KNOCK_CHECKS = {
       + 'the inbox — and it lifts on its own shortly; the bound is published beside this message. '
       + 'Nothing was stored and nothing was read, so send the same material again a little later. '
       + 'If it keeps happening, the group\'s members can be told the doorbell is saturated.',
+  },
+  /* D-513 — THE THREE REFUSALS THIS DOOR MAKES BEFORE THE STORE IS CALLED. Each
+     `where` names a module-scope helper in the CONTROL plane and the region
+     inside it, because that is where each refusal is enforced; the two oversize
+     rows are two conditions and deliberately not one row with a widened
+     sentence. */
+  KNOCK_ENVELOPE_TOO_LARGE: {
+    check: 'C-85.3',
+    where: 'src/index.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large',
+    translation: 'This group\'s inbox did not read what you sent, because the request itself is larger '
+      + 'than this door accepts. Nothing was stored, nothing was opened, and nothing about your '
+      + 'material was judged — its size was read off the request and it stopped there. The size this '
+      + 'instance will read is published beside this message. Send the material again smaller, or as '
+      + 'more than one knock, and it will be read.',
+  },
+  KNOCK_PAYLOAD_TOO_LARGE: {
+    check: 'C-85.4',
+    where: 'src/index.mjs knockPayloadTooLarge > is-knock-payload-too-large',
+    translation: 'This group\'s inbox read your material and cannot keep it, because it is larger than '
+      + 'this instance stores. That is a fact about how this group has set its instance up rather '
+      + 'than a judgement about what you sent — a group that has configured evidence storage can keep '
+      + 'far more — and the size this one can keep is published beside this message. Nothing was '
+      + 'stored. Send something smaller, or ask the group\'s members how to get the whole of it to them.',
+  },
+  KNOCK_EMPTY: {
+    check: 'C-85.5',
+    where: 'src/index.mjs knockEmpty > is-knock-empty',
+    translation: 'This group\'s inbox has nothing to keep, because what you sent decoded to no bytes at '
+      + 'all. The request itself was well formed and named its content, so this is most likely an '
+      + 'empty file or an empty box rather than anything wrong with how you sent it. Nothing was '
+      + 'stored. Check what you attached and knock again.',
   },
 };
 
