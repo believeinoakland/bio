@@ -1,4 +1,4 @@
-# DIST — resume here. Written 2026-09-24 by DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, cloud), last updated 14:45Z (0.79.0 complete), for the DIST on Bob's OTHER account.
+# DIST — resume here. Written 2026-09-24 by DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, cloud), last updated 15:45Z: the quota reset and the account switch is CANCELLED (BOB #32) — DIST #6 continues on this account; standing: NO release until Bob asks, typed in DIST's own session.
 
 Why now: this account's weekly quota ends ~07:00Z 2026-09-24 (Bob, relayed by BOB #32 at 03:00Z); work continues on the
 other account. This file is STATE, measured 03:05Z. The process is `kickoffs/DIST.md` (WHEN DIST CUTS, the `latest`
