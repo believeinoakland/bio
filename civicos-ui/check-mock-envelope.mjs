@@ -204,6 +204,15 @@ const FLAT_OPS = new Map(Object.entries({
      on both wires, and `statement-ack.test.mjs` drives the REAL plane rather than mocking it — this line is
      what lets that suite's own answers be judged instead of being read as a mock of the wrong shape. */
   statementack:   'index.mjs op==="statementack" — the same handler, reviewAnswer\'s json({ ok: true, ...r }, 200)',
+  /* UI-92. REC-198's list of a project's drafts returns through `reviewAnswer` TOO — index.mjs's
+     `if (op === "casedrafts") return reviewAnswer(await doAnswer(...), op)`, whose success tail is
+     `json({ ok: true, ...r }, 200)` — and deliberately so: IC-243's rule is that a caller its fence
+     refuses receives the SINGLE READ's dead answer byte for byte, which cannot be true of one shape
+     wrapped and the other flat. This line arrives with the op's first UI call site (UI-92's list on
+     the project workspace), and until there was one nothing in this harness could observe the op;
+     FOUR suites drive it against the real plane the moment the workspace does, and each of the four
+     read as a mock of the wrong shape against a missing line rather than against a wrong answer. */
+  casedrafts:     'index.mjs op==="casedrafts" — reviewAnswer\'s json({ ok: true, ...r }, 200) over the DO\'s result',
 }));
 const wireShapeOf = op => FLAT_OPS.has(op) ? "flat" : "wrapped";
 
