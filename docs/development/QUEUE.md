@@ -221,7 +221,7 @@ scope: find the documents' current locations, re-point the probe's Oakland half,
 accepts-when: every URL the probe names returns bytes beginning `%PDF`, recorded with date and instrument. NEGATIVE CONTROL: point one entry back at an HTML page, and the probe names it as not a PDF.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
 
-### D-470 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-470 (CONDUCT #20), base origin/main 548eb2c5; must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/D-470 and that session; never conclude queued from the absence alone.
+### D-470 · integrated — finished; integrated on land/conduct/c20-batch12 @ d6bcab616 (IC-259 I3 MINOR 81.1.0; BOB's rule folded as Publication §3 rule 17 — owed acts PAID), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~04:40Z
 order: after D-469, at the head: a signed record that claims more precision than it holds (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
 milestone: M10
 interface: I3 — the stamp's version moves; the integrator mints and classifies the IC.
@@ -252,7 +252,7 @@ scope: one line in `docs/development/kickoffs/WORKER.md` "Before you finish": ed
 accepts-when: the line is on `main`; the next worker's first gate is not RED on corpuscheck. NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-487 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-487 (CONDUCT #20), base origin/main 548eb2c5; must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/D-487 and that session; never conclude queued from the absence alone.
+### D-487 · integrated — finished; integrated on land/conduct/c20-batch12 @ aa8988644 (M-128), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~04:40Z
 order: after M0-141, with the rows that cut gate time: a suite that fails correct work by the clock costs a full-gate round (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:42Z)
 milestone: M0
 interface: none.
@@ -262,7 +262,7 @@ scope: the suite waits past a bucket edge before its run, or the window reads an
 accepts-when: the suite passes with its run started seconds before a bucket edge. NEGATIVE CONTROL: remove the edge guard, start the run just before a rollover, and the twelve-knock arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### UI-84 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER UI-84 (CONDUCT #20), base origin/main 548eb2c5; must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/UI-84 and that session; never conclude queued from the absence alone.
+### UI-84 · integrated — finished; integrated on land/conduct/c20-batch12 @ 246e38aab (M-130), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~04:40Z
 order: after REC-184, with the D-278 follow-ons: a suite that pins what a member reads against a mock narrower than the wire can pass while the member reads something else, a correction to just-landed work (SCHEDULER #16, 2026-09-23; D-278's worker via CONDUCT #17)
 milestone: M8
 interface: none (test mocks); the integrator classifies.
