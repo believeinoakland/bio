@@ -44226,7 +44226,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             }]
           };
       }
-      const isAction = normalizeType(meta.object_type) === "action";
+      const isAction = normalizeType(meta.object_type) === "action" || docFmW && typeof docFmW === "object" && normalizeType(docFmW.object_type) === "action";
       if (isAction && docFmW && !pkg.replay) {
         const nextTier = riskTierState(docFmW.risk_tier);
         const heldTierMd = cur ? this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId) : null;
