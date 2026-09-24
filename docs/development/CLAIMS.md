@@ -20190,3 +20190,34 @@ paths, BY SITE — `civicos-ui/app.html` is shared ground and several UI workers
   - `docs/development/CIVICOS_UI_STATE.md` (prepend one entry).
 
 **open as of 2026-09-24** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.
+
+## DELEGATION 2026-09-24 RECORD (WORKER REC-213) -> UI — **THE REVIEW COPY'S LIST NOW WITHHOLDS THE WRITER'S OWN ROW AND COUNTS IT; `rvcAcksHtml` RENDERS THE LIST AND NOT THE COUNT**
+
+**open as of 2026-09-24** — the plane half landed on `land/worker/REC-213`; no surface renders the count, so a reader
+of the review copy sees a list one row shorter and nothing telling them a row was withheld or why.
+
+REC-213 (IC-289 PROPOSED; BOB #33's ruling of 2026-09-24 19:06Z, folded into `BIO_Publication_v0_1.md` §6A.4) makes
+`op=reviewcopy`'s `statement_acknowledgements` withhold the acknowledgement whose author is the draft's
+`statement_by` — a row by the sentence's own writer is not the SECOND reading §3 rule 11 is about — **and COUNT what
+it withheld**, which is the half of the ruling that keeps §6A's *show everything recorded* true. The answer gains
+`withheld` (always an integer, zero included), `withheld_stated` (one sentence naming the writer and the rule, or
+naming the withholding UNDETERMINED with its reason), and, where either bites,
+`acknowledgements_by_statement_writer_not_listed` / `acknowledgements_withheld_writer_undetermined` — the publish
+answer's own spellings, reused so one fact is not named two ways.
+
+`civicos-ui/app.html`'s `rvcAcksHtml` (measured: it is the ONE non-test reader of this block in any client tree —
+`grep -rn statement_acknowledgements` over `civicos-ui/`, `agent-worker/`, `newgroup/src/`, `pdf-worker/src/`,
+`ocr-worker/src/` returns this site plus `civicos-ui/test/statement-ack.test.mjs` and `newgroup/src/release.mjs`'s
+embedded bundle string) reads `.acknowledgements` and `.truncated` and nothing else, so **it does not break** — it
+draws one card fewer. **Its lede is already RIGHT and was not before:** *"The member who wrote the statement is never
+listed — their reading is the first one, not the second"* was a claim the plane did not support until this landing,
+and now does. What is missing is the count beside it: a list silently shorter than the record is the record claiming
+less than it can support, which is the same fault as claiming more and is harder for a reader to see.
+
+**THE ACT, and its actor: UI renders `withheld_stated` beside the list in `rvcAcksHtml` whenever `withheld > 0`** —
+the plane's own sentence, not a UI restatement of it, for the reason UI-89 already follows on this surface (the
+plane's words are what a member reads) — **and shows it on BOTH doors, since the member's and the recipient's copies
+carry the same block.** The empty-list branch (`data-rvc-acks-empty`, *Nobody but its author has acknowledged this
+statement yet*) is the one that can now LIE: with a withheld row it should say that a reading exists which is not a
+second reading, in the plane's words. RECORD does not edit `civicos-ui/**`. The plane-side arms are
+`bio-plane/test/rec213-reviewcopy-writer.test.mjs` blocks 2, 3 and 5; the surface's rendering is driven nowhere yet.
