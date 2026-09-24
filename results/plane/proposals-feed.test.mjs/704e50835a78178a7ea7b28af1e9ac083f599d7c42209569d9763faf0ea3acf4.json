@@ -1,0 +1,16 @@
+{
+ "unit": "plane:proposals-feed.test.mjs",
+ "inputHash": "704e50835a78178a7ea7b28af1e9ac083f599d7c42209569d9763faf0ea3acf4",
+ "verdict": "PASS",
+ "run": "12ed04faccadd0a62669b6cbe11c360d5b2fb5c3.1790213934027.1616.json",
+ "tree": "12ed04faccadd0a62669b6cbe11c360d5b2fb5c3",
+ "head": "4fefd587e028ee494fdaba3f481657dc6faf7368",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 916,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "47fa66ed-7c66-5f68-b62b-ac919d6d2a8b",
+ "at": "2026-09-24T01:38:54.040Z"
+}

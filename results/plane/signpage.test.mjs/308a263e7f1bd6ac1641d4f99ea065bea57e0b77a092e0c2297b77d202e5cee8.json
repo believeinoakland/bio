@@ -1,0 +1,16 @@
+{
+ "unit": "plane:signpage.test.mjs",
+ "inputHash": "308a263e7f1bd6ac1641d4f99ea065bea57e0b77a092e0c2297b77d202e5cee8",
+ "verdict": "PASS",
+ "run": "12ed04faccadd0a62669b6cbe11c360d5b2fb5c3.1790213934027.1616.json",
+ "tree": "12ed04faccadd0a62669b6cbe11c360d5b2fb5c3",
+ "head": "4fefd587e028ee494fdaba3f481657dc6faf7368",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 130,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "47fa66ed-7c66-5f68-b62b-ac919d6d2a8b",
+ "at": "2026-09-24T01:38:54.041Z"
+}
