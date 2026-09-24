@@ -16,3 +16,5 @@ M0-156	2026-09-24T05:53:55.532Z	SCHEDULER #18	construct probes read comments; re
 M0-157	2026-09-24T06:00:59.420Z	SCHEDULER #18	gates.control arm G5 fails its declared isolation (M0-146 finding)
 M0-158	2026-09-24T06:03:05.590Z	SCHEDULER #18	5 contradictory DELEGATION blocks in coord CLAIMS.md need owners (D-495 finding)
 M0-159	2026-09-24T07:15:51.335Z	SCHEDULER #18	train.mjs --drop with a comma list drops nothing (CONDUCT #20 07:15Z)
+M0-160	2026-09-24T16:13:54.046Z	SCHEDULER #18	status.mjs ambiguous probe; capped-read claim sweep (D-498 findings)
+M0-161	2026-09-24T16:13:54.046Z	SCHEDULER #18	status.mjs ambiguous probe; capped-read claim sweep (D-498 findings)
