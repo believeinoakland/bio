@@ -255,15 +255,15 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
 
 ## Before you finish
 
-0. **IF YOU TOUCHED ANYTHING UNDER `bio-plane/src/`, REBUILD THE BUNDLE FIRST: `cd bio-plane && npm run build`.** The
-   committed `dist/bio-plane.bundled.mjs` is a TRACKED ARTIFACT and `FL-10`'s freshness guard fires when it does not
-   match `src/`. **It is owed by every `src/`-touching worker, was in NO kickoff until 2026-09-18, and THREE CONSECUTIVE
-   `RECORD` ITEMS EACH FOUND IT FROM A RED SUITE** — REC-119 counted them and said the remedy is a process change, not a
-   better warning, which is this line. Rebuild BEFORE the battery: the guard turns red naming the artifact, not your change.
-   **A COMMENT-ONLY `src/` CHANGE MAY OR MAY NOT MOVE `bundled.mjs`: MEASURE, NEVER ASSUME** (c20-batch14). THE FORM IS
-   NOT THE DISCRIMINATOR, though two rules written here from small samples said so (REC-110's "comments are
-   stripped", then "a plain one is stripped, a `/** */` docstring emitted"). MEASURED BOTH WAYS: of 25 plain
-   block comments from `index.mjs`, TWELVE are PRESENT in the bundle; render.mjs's JSDoc is ABSENT.
+0. **TOUCHED A BUNDLED SOURCE? REBUILD EVERY STALE ONE WITH `node tools/bundles.mjs`** (`--check` reports without
+   writing). It asks the committed manifests which bundles name a file you moved, rebuilds each through that member's
+   own build, and says which. **ONE `bio-plane/src/` EDIT STALES THREE** (`pdf-worker` and `ocr-worker` read
+   `../bio-plane/src/{cpu,pdfstructure,subresources}.mjs`, `agent-worker` `src/tokens.mjs`), and **A COMMENT-ONLY
+   CHANGE MAY OR MAY NOT MOVE A BUNDLE — THE FORM IS NOT THE DISCRIMINATOR** (REC-110, c20-batch14: 12 of 25 plain
+   block comments in `index.mjs` are PRESENT in the bundle; render.mjs's JSDoc is ABSENT). Rebuild BEFORE the battery:
+   `FL-10`'s guard turns red naming the TRACKED ARTIFACT, not your change. This step named the plane's bundle ALONE
+   until M0-178 (2026-09-24) — measured: the plane alone left 2 FAILs — and named NONE before 2026-09-18, which THREE
+   CONSECUTIVE `RECORD` ITEMS found from a red suite (REC-119: the remedy is a process change, not a warning).
 
 0b. **EDITED A GOVERNED DESIGN DOC** (`docs/architecture/*`, or `docs/development/*` with front matter)?
    Move its Status `as of` to today and run `node tools/corpuscheck.mjs` to **0 fail** BEFORE the gate
