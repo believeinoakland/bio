@@ -48,7 +48,7 @@
  * nothing about `op=proposals`' own `prior_disposition`, which no surface reads at all (named in
  * UI-99's report, not fixed here).
  *
- * GATE: reads bio-plane/src/ bio-plane/checks/bio-checks.mjs
+ * GATE: reads bio-plane/src/ bio-plane/checks/bio-checks.mjs docprofile/
  *   (M0-126 condition 2, declared because `mention` CANNOT see these reads and the first gate said so — RED with
  *   `underinclusion:ui:declared-flow-surface.test.mjs`, naming 50 files. The sibling `progression-revision.test.mjs`
  *   needs no such line because it hands miniflare `new URL("../../bio-plane/src/index.mjs")` and reads that file, so
@@ -58,7 +58,12 @@
  *   which is `bio-plane/test/proposedispose.test.mjs`'s own arrangement. So the plane it actually runs is invisible to
  *   the derivation, and the honest fix is to declare it rather than to decorate the source with a read it does not do.
  *   The directory, not a list of 50 names: a plane file added tomorrow is one this suite runs and one no list would
- *   name — and over-inclusion costs only a re-run.)
+ *   name — and over-inclusion costs only a re-run. `docprofile/` is the third token and it was NOT free: the first
+ *   declaration was built from the twelve names the gate PRINTED, and the message ends `(+38 more)` — so the second
+ *   gate came back RED again, at 17, every one of them under `docprofile/`, which the plane imports. Recorded because
+ *   the lesson is the instrument's, not this suite's: a truncated list is a POINTER to the trace, never the trace, and
+ *   a declaration derived from what fits on one line is a declaration derived from a sample. Each token is a
+ *   DIRECTORY and `under` maps every ancestor prefix, so each covers its whole subtree.)
  *
  * NEGATIVE CONTROL: RUN 2026-09-24 by UI-99 against `civicos-ui/app.html`
  * `2f62b15f48064f84875ec0c4434781d5e41787daee62ad8a31151de68fc85c72` (1,590,490 bytes), four arms, each
