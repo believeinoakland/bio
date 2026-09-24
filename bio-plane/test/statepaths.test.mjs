@@ -31,6 +31,11 @@
  * 17/3 at 89 units, 42 through coord.mjs; arm (b) 16/4 at 89 units, "imports nothing" failing too; arm (c) 20/0 at
  * 60 units. Every restore byte-identical by sha256 + cmp + size (statepaths.mjs d7c599ed…, coord.mjs 00b2a83e…,
  * op-claims.mjs 372a05d4…), and re-checked by `sha256sum -c` after the driver exited.
+ * RE-RUN 2026-09-24 by the M0-169 worker after that item moved `UNITS_CEILING` from 45 to 46 for its own new
+ * suite, because a ceiling move is a change to this suite's subject and a control not re-run after one is a
+ * control nobody has: driver 23 pass, 0 fail, all three arms exactly as declared, every restore byte-identical
+ * again. The driver matches its arms by the SUBSTRING "selects at most" rather than by the number, so it
+ * survives a ceiling move by design — which is the property this re-run establishes rather than assumes.
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";
@@ -137,7 +142,17 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    left and came BACK, because it really does load `tools/pushguard.mjs` — through `join(REPO, "tools",
    "pushguard.mjs")`, whose literal spelling lived only in a comment — and §2b now reads that assembled spelling too.
    A CEILING IS NOT A RATCHET: left at the printed figure, with no slack bought for a future landing. */
-const UNITS_CEILING = 45;
+/* MOVED 45 -> 46 by M0-169 (2026-09-24), from the figure THIS suite PRINTED on its own clone of the M0-169 tree
+   (`46 unit(s) of 429 selected · 32 MEASUREMENTS reader(s) · 4 through tools/coord.mjs · 0 citing statepaths.mjs`),
+   never by adding to the old number. THE ONE new unit is M0-169's own suite, `plane:moduleclosure.test.mjs`, and it
+   is attributed rather than assumed: the SAME arm run with that file moved out of the tree printed `45 unit(s) of
+   428 selected · 31 MEASUREMENTS reader(s)`, 20 pass / 0 fail — the ceiling exactly — and the file was restored and
+   verified by sha256 and `cmp`. THE EDGE, checked at the code and not inferred from the count: the suite's closure
+   NAMES `tools/gates.mjs` (its own ARM H does, and so does `test/gatedeps.mjs`, which it imports), `gates.mjs` is a
+   walker and carries a quoted `docs` token, so `reads()` selects the unit with `walks docs/ in tools/gates.mjs`.
+   That is the SAME edge the four gate-fixture suites already have and it is not avoidable for a suite that
+   exercises `gateDeps` at all. A CEILING IS NOT A RATCHET: left at the printed figure, no slack bought. */
+const UNITS_CEILING = 46;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 

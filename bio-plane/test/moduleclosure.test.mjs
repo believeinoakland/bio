@@ -14,7 +14,7 @@
  * it, four arms hand-driven against the subject, each ALONE, others held open, every restore verified
  * by sha256 AND by `cmp` against a per-arm pristine copy with its byte count printed, every run read
  * to THIS suite's own foot line. Declared before arming; RUN 2026-09-24 by the M0-169 worker on
- * `land/worker/M0-169`. Baseline 32 pass, 0 fail.
+ * `land/worker/M0-169`. Baseline 31 pass, 0 fail.
  *   (a) THE MODES COLLAPSED — `STATIC_IMPORT_RE` widened to follow `import("./x")` as well.
  *       DECLARED MUST FAIL: `assertMode` refuses the static call before any walk, so the suite dies
  *       at ARM A. RUN: exit 1 at ARM A, ZERO assertions reached and NO foot line, on
@@ -23,23 +23,23 @@
  *       thing this arm establishes is the REFUSAL's wording and position, and the arms that DO grade
  *       the collapse in a live suite are (b)'s three.
  *   (b) THE MODE CHECK NEUTERED — `assertMode` returns before it probes. DECLARED MUST FAIL on ARM D
- *       alone, and MUST NOT move ARM A, B or C, whose matchers are honest. RUN: 29 pass, 3 fail,
+ *       alone, and MUST NOT move ARM A, B or C, whose matchers are honest. RUN: 28 pass, 3 fail,
  *       exactly ARM D's three mode-probe refusals. The other three ARM D arms hold, correctly: they
  *       are argument checks, not mode probes.
  *   (c) THE LEXER DROPPED — the walk reads raw source instead of `stripComments`. DECLARED MUST FAIL
- *       on ARM C alone. RUN: 27 pass, 5 fail — ARM C's two, AND ARM A's, ARM E's and ARM G's set
+ *       on ARM C alone. RUN: 26 pass, 5 fail — ARM C's two, AND ARM A's, ARM E's and ARM G's set
  *       equalities, because `tools/commented.mjs` enters every derived set once a comment is read as
  *       code. WIDER THAN DECLARED AND RECORDED THAT WAY: the declaration was wrong about the reach of
  *       its own arm, not the suite about the lexer.
  *   (d) OVER-STRICTNESS — the fixture subject's imports re-spelled in a shape nothing here
  *       anticipated: single quotes, one specifier per line with a trailing comma, a TAB-indented
- *       top-level import, and a one-line `export … from`. DECLARED MUST PASS. RUN: 32 pass, 0 fail,
+ *       top-level import, and a one-line `export … from`. DECLARED MUST PASS. RUN: 31 pass, 0 fail,
  *       the closure byte-identical. (An indented import is the edge D-254's column anchor could not
  *       have seen; one lives in the fixture permanently as ARM A's `tools/indented.mjs`.)
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, readdirSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -203,12 +203,14 @@ t("ARM H: the STATIC closure of the same root is strictly smaller — measured h
 console.log("\n--- ARM I · the fixture leaves nothing behind ---");
 rmSync(ROOT, { recursive: true, force: true });
 t("ARM I: the fixture tree is removed", existsSync(ROOT), false);
-/* `./sandbox.mjs` (D-186) re-points `os.tmpdir()` at a per-process directory it removes
-   SYNCHRONOUSLY on exit, so this reads inside that sandbox and is a check on THIS run's own
-   housekeeping, not on the machine's temp root — stated because "no residue" read as a claim about
-   the machine would be a stronger sentence than the instrument can support. */
-t("ARM I: and no sibling `bio-m0169-closure-*` survives this run, inside this process's own sandbox",
-  readdirSync(tmpdir()).filter((e) => e.startsWith("bio-m0169-closure-")), []);
+/* AND NOT A DIRECTORY WALK, DELIBERATELY. The first draft asserted this a second way — a
+   `readdirSync(tmpdir())` finding no `bio-m0169-closure-*` sibling — and `hygiene.test.mjs`'s
+   class census caught it by name: a new walk of a directory with a discovery primitive is a
+   DECISION, not a silence, and it enters an estate-wide census that has to be named and floored.
+   The decision is NOT to add one. It bought nothing this suite did not already have: `./sandbox.mjs`
+   (D-186) re-points `os.tmpdir()` at a per-process directory it removes SYNCHRONOUSLY on exit, so
+   the read would have been inside this run's own sandbox — and only ONE fixture root is ever made,
+   so there is no sibling for it to find. The line above is the whole of what could be checked. */
 t("ARM I: FOOT — this suite reached its own foot (a module that dies inside an assertion leaves a clean count)",
   true, true);
 
