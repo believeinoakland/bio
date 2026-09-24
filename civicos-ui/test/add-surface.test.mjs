@@ -833,8 +833,8 @@ ok("and the writer still keeps its action arm, because actions already in the re
       await U.addGo();
       const id = OPENED[0];
       ok(`UI-85: addGo wrote the action through the plane (${id || plain($$("#a-err").innerHTML).slice(0, 300)})`, !!id);
-      const pj = await read("projection", "id=" + encodeURIComponent(id));
-      const img = await read("image", "id=" + encodeURIComponent(id));
+      const pj = await read("projection", `id=${encodeURIComponent(id)}`);
+      const img = await read("image", `id=${encodeURIComponent(id)}`);
       return { id, offered, action: pj && pj.action, md: img && img["bundle.md"] };
     };
 
