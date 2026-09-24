@@ -168,7 +168,8 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    doc-facing unit any `docs/` change — prose is never checked more narrowly than DOCS checks it. It was in that
    set before this item too, verified in a clone of the unchanged tree. A CEILING IS NOT A RATCHET: left at the
    printed figure, with no slack bought for a future landing. */
-const UNITS_CEILING = 42;
+/* CONDUCT #20 at c20-batch25: 42 -> 43, READ from this suite's print on the merged tree (`43 unit(s) of 431 selected`): M0-165's 42 plus M0-169's plane:moduleclosure.test.mjs, the edge M0-169 attributed (its closure names tools/gates.mjs). */
+const UNITS_CEILING = 43;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 
