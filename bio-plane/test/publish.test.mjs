@@ -101,6 +101,43 @@ const mf = new Miniflare({
   bindings: { INSTANCE_NAME: "believe-in-oakland", ADMIN_TOKEN: "adm-rec14", MEMBER_TOKEN: "mem-rec14", PROBE_TOKEN: "prb-rec14", VERSION: "test" },
 });
 
+/* NEGATIVE CONTROL (D-519, THE INSTANCE_NAME RENAME ARM — run 2026-09-24 on branch land/worker/D-519 over
+   origin/main 1a7f0bcc0, armed ALONE, restored and verified by sha256 AND by content (`cmp`) against a
+   uniquely-named per-arm pristine copy held OUTSIDE the worktree (BOB #32), byte counts printed).
+   THE ARM: rename THIS FILE'S `INSTANCE_NAME` binding — ONE line, nothing else — so the store's producing group
+   stops spelling the slug the bar read names. DECLARED: the act's landing-site arm (`set.group`) and the group
+   read MUST fail BY NAME, and the suite MUST REACH ITS FOOT; every other assertion MUST pass.
+   MEASURED BEFORE THE FIX, on a pristine origin/main worktree rather than reasoned about: the read `(await barOfGroup()).bar.capture` threw an UNCAUGHT TypeError that KILLED THE PROCESS after 47 PASS lines with NO tally line at all (reported as -1, never 0) — a run indistinguishable from an infrastructure failure.
+   MEASURED AFTER: 97 pass / 2 fail of 99 — two named failures, no throw, and the tally line present.
+   THAT DELTA IS THE WHOLE OF WHAT THIS ROW BOUGHT. The assertion did not merely agree for free; when write and
+   read disagreed it took the module down, so the defect's own failure mode HID the assertions behind it.
+   OVER-STRICTNESS ARM (run on d280-strengthbar.test.mjs, the representative suite): have the act name the group
+   EXPLICITLY in its payload — a correct spelling this fix did not anticipate — and the suite reads 35 pass /
+   0 fail, exit 0. Naming the group refuses no correct work. A FIRST ATTEMPT AT THIS ARM DID NOT ARM (a perl
+   substitution matched zero times) and its 35/0 was the UNMODIFIED suite; that reading is void and the figure
+   above is from the re-armed run, checked by grepping the armed text before running. An arm that did not arm is
+   a finding, not a pass.
+   THE TWO CONTROL HARNESSES THIS ROW NAMES WERE RE-RUN AND ATTRIBUTED BY RE-RUNNING THE TRUE BASELINE, never by
+   subtraction: `caseproduction.control.mjs` 8 arms / 0 NOT AS DECLARED, exit 0, every per-arm figure identical on
+   this tree and on pristine origin/main; `d280-strengthbar.control.mjs` 3 arms / 1 NOT as declared (arm (C2)),
+   with a line-for-line IDENTICAL verdict on pristine origin/main — so (C2)'s miss is PRE-EXISTING and is the
+   stale control this file's header already records, NOT this change.
+   WHAT THIS BLOCK DOES NOT CLAIM: the write is still left on D-436's default on purpose, so this suite does not
+   test a caller-named group; the over-strictness arm above is the only place that spelling is driven. */
+
+/* D-519: THE GROUP THE BAR ARMS ADDRESS, AS ITS OWN LITERAL — AND IT IS DELIBERATELY *NOT* DERIVED FROM THE
+   INSTANCE_NAME BINDING ABOVE. The `op=strengthbar` act below names no group, so D-436 sends the write to the
+   store's PRODUCING group (`#producingGroup()`, recorded from INSTANCE_NAME at first boot) while the read named
+   the literal 'believe-in-oakland'. The two agreed ONLY because the binding happens to spell the same slug, which
+   is an equality that costs nothing to produce (`VERIFICATION.md`) — D-509 found the identical shape in
+   machine-fences.test.mjs, where the binding spells `biosmoke-rec73` and the assertion was passing over a group
+   the act never touched. THE WRITE IS LEFT ON THE DEFAULT ON PURPOSE, because D-436's default-resolution is part
+   of what this block measures; what changes is that the act's landing site is now ASSERTED (`set.group`) against
+   the same constant the read names, so the agreement is pinned instead of coincidental. Tying this constant to the
+   binding would re-make the coincidence in one place and disarm the control, so they stay two literals that an
+   assertion compares. */
+const BAR_GROUP = "believe-in-oakland";
+
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
   const ok = JSON.stringify(got) === JSON.stringify(want);
@@ -179,7 +216,7 @@ const strengthbar = async (tok, body) => rP(await POST(`op=strengthbar&token=${t
    check. */
 const barOfProject = async (id) => rP(await GET(`op=strengthbarof&token=mem-rec14&project=${encodeURIComponent(id)}`));
 const barOfTarget = async (target) => rP(await GET(`op=strengthbarof&token=mem-rec14&target=${encodeURIComponent(target)}`));
-const barOfGroup = async () => rP(await GET(`op=strengthbarof&token=mem-rec14&group=believe-in-oakland`));
+const barOfGroup = async () => rP(await GET(`op=strengthbarof&token=mem-rec14&group=${BAR_GROUP}`));
 const editionsOf = async (id) => rP(await GET(`op=publishededitions&token=mem-rec14&id=${encodeURIComponent(id)}`));
 const excludedBy = async (id) => rP(await GET(`op=excludedby&token=mem-rec14&id=${encodeURIComponent(id)}`));
 /* CORRECTED 2026-09-23 by D-311, never exempted: this helper asked `op=affordances` as the MACHINE
@@ -735,8 +772,11 @@ console.log("\n--- 4. DEC-17: the declared bar, stamped beside the derived pair 
   t("the bar is a PAIR: a single grade is refused as a shape, because a scalar re-collapses the two axes",
     (await strengthbar(NADIA, { capture: "Z", connection: "B" })).reason, "BAD_GRADE");
   const set = await strengthbar(NADIA, { capture: "B", connection: "C" });
-  t("the GROUP declares the default, and the declaration carries its author and its date",
-    [set.ok, set.capture, set.connection, set.author], [true, "B", "C", "nadia"]);
+  /* D-519: `set.group` IS THE ARM THAT SAYS WHERE THE WRITE LANDED, and without it the group read
+     below agreed with this act for free. */
+  t("the GROUP declares the default, and the declaration carries its author and its date — AND NAMES "
+  + "THE GROUP IT WROTE TO",
+    [set.ok, set.capture, set.connection, set.author, set.group], [true, "B", "C", "nadia", BAR_GROUP]);
   /* ==== CORRECTED 2026-08-10, CASE-2 / DEC-72, AND NEVER EXEMPTED ==========
      THREE ASSERTIONS STOOD HERE AND ALL THREE WERE RIGHT WHEN THEY WERE
      WRITTEN. What they measured was DEC-17 as this plane implemented it:
@@ -761,8 +801,11 @@ console.log("\n--- 4. DEC-17: the declared bar, stamped beside the derived pair 
     [(await barOfTarget(INQ_CASE)).ok, (await barOfTarget(INQ_CASE)).reason,
      (await barOfTarget(INQ_CASE)).detail.includes("property of a PROJECT")],
     [false, "BAR_IS_A_PROJECT_PROPERTY", true]);
+  /* D-519: `?? null` rather than a bare `.bar.capture` — a group the act never wrote to answers
+     `bar: null`, and the bare read threw a TypeError that ended the module and took every assertion
+     behind it with it (MEASURED in d280-strengthbar.test.mjs: 35 assertions down to 9). */
   t("the GROUP default still answers and still SAYS what it is for — DEC-17's surviving half, which SEEDS a new project",
-    [(await barOfGroup()).ok, (await barOfGroup()).bar.capture, (await barOfGroup()).seeds_new_projects],
+    [(await barOfGroup()).ok, (await barOfGroup()).bar?.capture ?? null, (await barOfGroup()).seeds_new_projects],
     [true, "B", true]);
   t("and the group default declares NO bar on the project: an undeclared project is an ABSENT bar, never the group's",
     [(await barOfProject(PROJ)).bar.declared, (await barOfProject(PROJ)).bar.source,
