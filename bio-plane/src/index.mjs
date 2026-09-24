@@ -2709,6 +2709,16 @@ const KNOCK = {
   maxBytes: 8 * 1024 * 1024,   // with R2: enough for a captured PDF
   maxInline: 64 * 1024,        // without R2: inline into the DO, small only
 };
+/* D-496: THE SENTENCE THE INSTANCE PUBLISHES ABOUT ITS OWN DOORBELL, BUILT FROM
+   THE LIMITS IT PUBLISHES so the words and the numbers cannot drift apart — the
+   drift is the whole defect BOB #32 ruled on (2026-09-24 04:28Z: a published
+   limit is a BOUND). It says "estimated by a sliding window" because the two-
+   bucket estimate in `Store.knock` IS approximate, and a record that states the
+   bound without stating how it is reached claims more than it can support. */
+KNOCK.statedPerIp =
+  `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 60000} minutes, estimated by a sliding window`;
+KNOCK.statedGlobal =
+  `at most ${KNOCK.global} knocks to this instance in any ${KNOCK.windowMs / 60000} minutes, estimated by a sliding window`;
 
 const SCRATCH = "scratch";
 /* REC-22: the ONE namespace the public read path answers from. An instance has
@@ -5958,7 +5968,12 @@ export default {
                         detail: r2 ? undefined : "this instance stores knocks inline; large material needs its evidence storage configured" }, 413);
         const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
           .map((x) => x.toString(16).padStart(2, "0")).join("");
-        const win = Math.floor(Date.now() / KNOCK.windowMs);
+        const nowMs = Date.now();
+        const win = Math.floor(nowMs / KNOCK.windowMs);
+        /* D-496: how far into the current bucket we are, which is the weight the
+           store gives the PREVIOUS bucket. Read once, beside `win`, so the two
+           cannot describe different instants. */
+        const elapsedFrac = (nowMs - win * KNOCK.windowMs) / KNOCK.windowMs;
         const ipHash = (await fingerprint(req.headers.get("cf-connecting-ip") || "unknown")) || "unknown";
         const knockId = `KNOCK-${new Date().toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
         const rec = await doAnswer(stub.fetch(new Request("http://do/knock", {
@@ -5966,7 +5981,9 @@ export default {
             knockId, sha256: sha, bytes: bytes.length,
             content: r2 ? null : new TextDecoder().decode(bytes),
             inR2: r2, note: body.note, contact: body.contact,
-            ipBucket: `ip:${ipHash}:${win}`, globalBucket: `all:${win}`,
+            ipBucket: `ip:${ipHash}:${win}`, ipPrevBucket: `ip:${ipHash}:${win - 1}`,
+            globalBucket: `all:${win}`, globalPrevBucket: `all:${win - 1}`,
+            elapsedFrac,
             perIpLimit: KNOCK.perIp, globalLimit: KNOCK.global,
           }) })));
         /* REC-52: `if (!rec.result?.ok) return json({ ok:false, ...rec.result }, 429)`
@@ -5976,7 +5993,17 @@ export default {
            when in fact nobody counted. The rate refusal the store really sends
            is unchanged and still arrives whole. */
         if (!rec.answered) return storeSilent("knock");
-        if (!rec.result?.ok) return json({ ok: false, ...rec.result }, 429);
+        if (!rec.result?.ok) {
+          /* D-496: the bound is PUBLISHED at the one moment a caller is actually
+             held to it. Before this the 429 carried a bare `RATE_IP` and the
+             limit was stated to nobody — the record held a number the caller
+             could only infer by hitting it. The sentence names the window and
+             says the count is an estimate, so it does not claim more than the
+             two-bucket window in `Store.knock` can support. */
+          const stated = rec.result.reason === "RATE_IP" ? KNOCK.statedPerIp
+                       : rec.result.reason === "RATE_GLOBAL" ? KNOCK.statedGlobal : null;
+          return json({ ok: false, ...rec.result, ...(stated ? { stated } : {}) }, 429);
+        }
         if (r2) await env.CAPTURES.put(`bio/inbox/${sha}`, bytes,
           { sha256: await crypto.subtle.digest("SHA-256", bytes) });
         return json({ ok: true, knockId, sha256: sha, bytes: bytes.length,

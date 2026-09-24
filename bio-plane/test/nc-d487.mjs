@@ -30,6 +30,12 @@
  * without anyone remembering. An arm that goes red in the right total and the
  * wrong places is the *break only the thing* failure.
  *
+ * D-496 ADDED THE `fixed-bucket` ARM to this driver rather than starting a second
+ * one, because the SUBJECT is the same suite and a second driver would mean a
+ * second pen, a second baseline and two places to keep the assertion roster
+ * true. That arm restores the fixed bucket the row replaced and the straddling
+ * burst is re-admitted — the row's own negative control, failing by name.
+ *
  * THE THREE `edge-*` ARMS ARE THE OVER-STRICTNESS HALF and they are the point
  * of the row: they pin the suite's clock 1 ms BEFORE a bucket edge, exactly ON
  * one, and 1 ms after — correct work in the three spellings that used to be
@@ -72,7 +78,20 @@ const RATE_ARMS = [
   "the thirteenth is refused by name",
   "a different source is unaffected",
   "refusal is a 429, not a 500",
-  "a new window starts a new count for the same source",
+  "a source served again a window on is carrying a decayed count, not a wiped one",
+  /* D-496's arms, declared here for the same reason D-487's are: an arm that
+     silently RENAMES an assertion must be caught rather than scored as "did not
+     fail". */
+  "seven knocks land in the last millisecond of a bucket",
+  "the straddling burst is held to twelve, not twenty-four",
+  "the knock over the line is refused by name",
+  "the refusal publishes the bound in words",
+  "150 knocks from fifteen sources land before the edge",
+  "the instance is held to 300 across the edge, not 450",
+  "the instance-wide refusal is named",
+  "it publishes the instance-wide bound in words",
+  "twelve knocks spread evenly over twenty minutes are all accepted",
+  "and none of them was refused for any reason",
 ];
 
 const GUARD = "const EDGE_GUARD = true;";
@@ -83,19 +102,47 @@ const ARMS = {
   "limiter-off": {
     file: STORE,
     why: "THE 2026-07-31 CONTROL FOR THE LIMITER ITSELF, RE-RUN because D-487 changed the suite around it and a control whose figures were taken against a different suite is a claim about that day. Disable the per-IP guard in the store so one source is never throttled.",
-    anchor: 'if (cnt(ipBucket) >= perIpLimit) return { ok: false, reason: "RATE_IP" };',
+    /* D-496 MOVED THIS ANCHOR. The guard now reads the two-bucket estimate, so
+       the 2026-07-31 spelling occurs ZERO times and this arm would have printed
+       "ANCHOR OCCURS 0 TIMES — ARM DID NOT ARM". It is re-anchored rather than
+       retired, because the control it runs is still the right one: disable the
+       per-source guard and one source is never throttled. */
+    anchor: 'if (est(ipBucket, ipPrevBucket) >= perIpLimit) return { ok: false, reason: "RATE_IP" };',
     patch: 'if (false) return { ok: false, reason: "RATE_IP" };',
     mustFail: ["one source gets twelve and no more",
                "the thirteenth is refused by name",
-               "refusal is a 429, not a 500"],
+               "refusal is a 429, not a 500",
+               "the straddling burst is held to twelve, not twenty-four",
+               "the knock over the line is refused by name",
+               "the refusal publishes the bound in words"],
+  },
+  "fixed-bucket": {
+    file: STORE,
+    why: "D-496's OWN CONTROL: restore the FIXED BUCKET by dropping the previous bucket's weighted carry from the estimate, leaving the current bucket's raw count — the code as it stood before this row. The limits, the prune and the published sentence are untouched, so what this measures is the window and nothing else.",
+    anchor: "const est = (cur, prev) => cnt(prev) * decay + cnt(cur);",
+    patch: "const est = (cur, prev) => cnt(cur);",
+    mustFail: ["the straddling burst is held to twelve, not twenty-four",
+               "the knock over the line is refused by name",
+               "the refusal publishes the bound in words",
+               "the instance is held to 300 across the edge, not 450",
+               "the instance-wide refusal is named",
+               "it publishes the instance-wide bound in words"],
   },
   straddle: {
     file: SUITE,
     why: "REMOVE THE EDGE GUARD: the pinned clock steps to the next bucket in the middle of the flood, which is exactly what the wall clock used to do at random. The limiter is untouched and behaves correctly throughout.",
     anchor: GUARD, patch: "const EDGE_GUARD = false;",
+    /* D-496 ADDED THE FOURTH, and the addition is a finding about the subject
+       rather than about this arm. Under the fixed bucket a flood split across
+       the edge left the second bucket holding nine and a tenth knock was served
+       from zero; under the sliding window the six behind the edge still weigh
+       three half a window on, so nine plus three reaches the limit and the
+       source is refused. The arm takes down one more assertion because the
+       limiter now sees the straddle it used to be blind to. */
     mustFail: ["one source gets twelve and no more",
                "the thirteenth is refused by name",
-               "refusal is a 429, not a 500"],
+               "refusal is a 429, not a 500",
+               "a source served again a window on is carrying a decayed count, not a wiped one"],
   },
   "edge-minus-1": {
     file: SUITE,

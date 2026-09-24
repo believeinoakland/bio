@@ -2283,7 +2283,7 @@ const SURFACES = {
     purpose: "A draft of a case shown, before and without publication, to the people it is addressed to, inside this record: marked as what it is, as complete as it can be, and listing in the publish gates' own words what a publication would still need. Its editors draft it; its project's owner gives and withdraws access; members and recipients comment. Nothing on it leaves the instance.",
     levels: ["meaning", "documents"],
     acts: [],
-    reads: ["casedraft", "reviewcopy", "reviewgrant", "reviewrevoke", "reviewcomment"],
+    reads: ["casedraft", "reviewcopy", "reviewgrant", "reviewrevoke", "reviewcomment", "statementack"],
   },
   "published-case": {
     routes: ["hash:case"],
@@ -19523,6 +19523,70 @@ function dec34Header(c, floors, f){
 /* A PAGE-SHAPED ARTIFACT. One section, one header, always — and it declares
    which ALTITUDE it is at, so the harness can sweep the case-level pages for a
    strength that must not be on them. */
+/* D-150 / BIO_Publication §3 rule 11 — WHO ELSE READ THE EXCLUSION STATEMENT, AND
+   THE TWO FACTS THAT ARE NOT ONE FACT.
+
+   `completeness.acknowledgements` arrives in three shapes and each is a
+   DIFFERENT statement about the record:
+
+     a list with rows  — these people, named and dated, read the statement and
+                         said so; the author's own is never among them.
+     `[]`              — the document CARRIES the list and the list is empty:
+                         nobody but its author acknowledged it.
+     `null`            — the document says NOTHING about acknowledgements. The
+                         plane writes null and never an empty list for a case
+                         document authored before the list existed
+                         (`store.mjs`: "NULL — never an empty list"), because a
+                         document that was never asked the question has not
+                         answered it.
+
+   RENDERING `null` AS `[]` IS THE LIE THIS FUNCTION EXISTS TO REFUSE: it turns
+   "the record does not say" into "nobody did", which is the record claiming more
+   than it can support (CLAUDE.md §2 — worse than a missing feature). Neither
+   sentence is the bare word "nobody" either: the empty one says nobody BUT ITS
+   AUTHOR, because the author's reading is the one reading a statement always has
+   and is never the second one rule 11 is about.
+
+   `bio-case-document/3` will REQUIRE the list even when empty (§3 rule 13, NOT
+   BUILT), so the null branch is not a legacy curiosity to be tidied away — it is
+   what every `/1` and `/2` document in the record answers today. */
+function pubAckRowHtml(a){
+  const kind = (a && a.kind) === "recipient"
+    ? 'A reader this case was shown to before publication, through a review copy'
+    : (a && a.kind) === "participant"
+      ? 'A joined participant of the publishing project'
+      : 'The record does not say which door this acknowledgement came through';
+  const who = (a && a.kind) === "recipient"
+    ? (a.recipient ? esc(a.recipient) : 'whose name the record does not carry')
+    : (a && a.by) ? '<span class="mono">' + esc(a.by) + '</span>' : 'unnamed in the record';
+  return '<li data-pub-ack data-ack-kind="' + esc((a && a.kind) || "") + '">' + who
+    + ' &mdash; ' + kind + ', on <span class="mono">' + esc((a && a.at) || "an unrecorded date") + '</span>.</li>';
+}
+function pubStatementAcksHtml(c){
+  /* Bytes that are not a member of any published case carry no case completeness
+     assertion at all, and the page already says so above. Nothing is invented for
+     them here, and no acknowledgement sentence is either. */
+  if(!pubCaseId(c) || !(c && c.completeness)) return "";
+  const a = c.completeness.acknowledgements;
+  const head = '<h2>Who else read this statement</h2>';
+  if(!Array.isArray(a))
+    return head + '<div class="pub-excl" data-pub-acks="undetermined">This document says nothing about '
+      + 'acknowledgements of its exclusion statement. That is not a record of nobody having read it: it is '
+      + 'the absence of the record, and what happened is undetermined from these bytes.</div>';
+  if(!a.length)
+    return head + '<div class="pub-excl" data-pub-acks="none">Nobody but the author of this statement '
+      + 'acknowledged it. The record carries the list and the list is empty, which is a different fact from '
+      + 'the document not saying. A case is never refused publication for want of an acknowledgement.</div>';
+  return head
+    + '<p class="subj-note" data-pub-acks="listed">Each of these people read what this case says it leaves out, '
+      + 'and said so on the record. The member who wrote the statement is never listed: the point of rule 11 is a '
+      + 'SECOND reader. Signed into the case document, so this list is covered by the same signature the statement is.</p>'
+    + '<ul class="pub-acks">' + a.map(pubAckRowHtml).join("") + '</ul>'
+    + (c.completeness.acknowledgements_truncated === true
+        ? '<p class="subj-note" data-pub-acks-bound>The signed document lists this many and states that the record '
+          + 'held more at the moment it was authored. What is above is what was signed.</p>'
+        : '');
+}
 function pubPage(c, floors, f, inner){
   const at = f ? ` data-page="finding" data-findingsec="${esc(String(f.bundle_id))}"` : ` data-page="case" data-caselevel="1"`;
   return `<section class="pub-page"${at}>${dec34Header(c, floors, f)}${inner}</section>`;
@@ -20526,7 +20590,8 @@ function pubCaseHtml(c, floors){
      <p class="subj-note">Printed verbatim from the signed bytes, with the member who wrote it and the date it was written. It is the CASE's assertion, made once for this edition, and not a claim any one finding makes on its own.
        Written by ${esc((c.completeness && c.completeness.author) || "an unnamed member")} on ${esc((c.completeness && c.completeness.at) || "an unrecorded date")}.</p>
      <div class="pub-excl">${esc((c.completeness && c.completeness.statement) || (pubCaseId(c) ? "The published bytes carry no completeness statement for this case." : "These bytes are not a member of any published case and carry no case completeness assertion."))}</div>
-     <p class="subj-note">Position on putting this case to its subject: ${esc((c.completeness && c.completeness.subject_position) || "not stated")}. ${esc((c.completeness && c.completeness.subject_justification) || "")}</p>`);
+     <p class="subj-note">Position on putting this case to its subject: ${esc((c.completeness && c.completeness.subject_position) || "not stated")}. ${esc((c.completeness && c.completeness.subject_justification) || "")}</p>
+     ${pubStatementAcksHtml(c)}`);
 
   /* THE FINDINGS, each in its own pages. */
   const fp = findings.map((f, i) => pubFindingPages(c, f, i, roster.length, floors)).join("");
@@ -23819,7 +23884,7 @@ function rvcExcludedHtml(a){
 
 /* THE COPY ITSELF, the same for both doors: what a reader is shown is what the
    draft holds, in the order §6A puts it. */
-function rvcCopyHtml(c){
+function rvcCopyHtml(c, door){
   const a = c.authored || {};
   return '<div class="rvc-copy" data-rvc-copy>'
     + '<div class="rvc-marking" data-rvc-marking>' + esc(c.marking || "") + '</div>'
@@ -23828,6 +23893,7 @@ function rvcCopyHtml(c){
     + '<h2 class="sec">What this case leaves out</h2>'
     + '<p class="subj-note">Shown first, so it can be tested first.</p>'
     + rvcSaid(a.statement) + rvcExcludedHtml(a)
+    + rvcAcksHtml(c, door)
     + '<h2 class="sec">What a publication would still need</h2>'
     + rvcMissingHtml(c)
     + '<h2 class="sec">What the case covers</h2>' + rvcSaid(a.scope)
@@ -23841,6 +23907,82 @@ function rvcCopyHtml(c){
     + '<p class="subj-note" data-rvc-updated>Last changed by <span class="mono">' + esc(c.updated_by || "") + '</span> at <span class="mono">'
     + esc(c.updated_at || "") + '</span>.</p>'
     + '</div>';
+}
+/* D-150 / BIO_Publication §3 rule 11 — THE STATEMENT'S ACKNOWLEDGEMENTS, BESIDE
+   THE STATEMENT, ON BOTH DOORS; AND THE ACT.
+
+   §6A.4: "the recipient is shown what the case leaves out first, asked to attack
+   it, and may acknowledge it or comment on it through the grant." So this block
+   renders where the statement already leads the copy, and not in a panel further
+   down: the list of who else has read it is a fact ABOUT the statement, and a
+   reader deciding whether to be the second reader needs it at the moment they
+   read it.
+
+   THE ACT IS OFFERED ON BOTH DOORS BECAUSE THE PLANE TAKES BOTH (`op=statementack`,
+   ungated): a review-copy recipient by their grant's secret, a joined participant
+   of the publishing project by session. It is offered to EVERYONE the plane will
+   take a call from, and the plane's own refusal is what says no — the author's own
+   acknowledgement, an invited member who has not joined, an administrator, a
+   signed document. A surface that tried to decide those itself would be computing
+   a refusal (DEC-8), and it would get them wrong: whether THIS reader is the
+   statement's author is a fact about the draft's last editor that this page does
+   not hold.
+
+   `acknowledgements` here is always a list — `op=reviewcopy` reads it live and an
+   edited statement starts empty. The `null` case belongs to a SIGNED case document
+   and is rendered on the published case page (`pubStatementAcksHtml`), which is
+   where the two facts are told apart. */
+function rvcAckWhoHtml(k){
+  const who = (k && k.kind) === "recipient"
+    ? (k.recipient ? '<b>' + esc(k.recipient) + '</b>, who a copy of this draft was addressed to'
+                   : 'a reader a copy was addressed to, whose name the record does not carry')
+    : '<span class="mono">' + esc((k && k.by) || "") + '</span>, a joined participant of this project';
+  return '<div class="card" data-rvc-ack data-ack-kind="' + esc((k && k.kind) || "") + '"><div class="subj-note">'
+    + who + ' &middot; <span class="mono">' + esc((k && k.at) || "") + '</span></div></div>';
+}
+function rvcAcksHtml(c, door){
+  const sa = (c && c.statement_acknowledgements) || {};
+  const list = Array.isArray(sa.acknowledgements) ? sa.acknowledgements : [];
+  const st = door === "recipient" ? RVS : RVC;
+  const rows = list.map(rvcAckWhoHtml).join("");
+  const done = (st && st.acked)
+    ? '<div class="intent-box" data-rvc-acked><div class="intent-lede">'
+      + ((st.acked.existed === true) ? 'You had already acknowledged this statement' : 'You acknowledged this statement')
+      + '</div><p class="subj-note" data-rvc-acked-listed>' + esc(st.acked.listed || "") + '</p></div>'
+    : '';
+  return '<h2 class="sec">Who else has read this statement</h2>'
+    + '<p class="subj-note" data-rvc-ack-lede>An acknowledgement is a second person saying they read what this case '
+      + 'says it leaves out. It is disclosed and never required: the case publishes without one and says so. The '
+      + 'member who wrote the statement is never listed &mdash; their reading is the first one, not the second.</p>'
+    + (rows || '<div class="empty" data-rvc-acks-empty>Nobody but its author has acknowledged this statement yet.</div>')
+    + (sa.truncated === true ? '<p class="subj-note" data-rvc-acks-bound>Only the first acknowledgements are shown; the record holds more.</p>' : '')
+    + done
+    + ((st && st.ackRefusal) ? rvcRefusalHtml(st.ackRefusal) : '')
+    + '<div class="intent-box" data-rvc-ack-box><p class="subj-note">Acknowledging says you read this statement. It '
+      + 'does not say you agree with it, and it does not approve the case.</p>'
+      + '<button class="btn ghost" id="rv-ack" onclick="' + (door === "recipient" ? 'rvsAcknowledge()' : 'rvcAcknowledge()')
+      + '">I have read what this case leaves out</button></div>';
+}
+/* The member door's act. `op=statementack` is answered by index.mjs's review handler,
+   which forwards it to the Durable Object as a GET carrying no body — so this is `recR`
+   and not `recPostR`, matching the one handler that answers it. */
+async function rvcAcknowledge(){
+  if(!RVC || !RVC.copy) return;
+  RVC.ackRefusal = null; RVC.acked = null;
+  try{ RVC.acked = await recR("statementack", { draft: RVC.draft }); }
+  catch(e){ RVC.ackRefusal = rvcIsAnswer(e) ? e : { detail: RVC_UNREACHED }; }
+  await rvcLoad();
+}
+/* The recipient door's. It carries the grant's secret as a parameter and NO token —
+   the whole point of the door — so it goes through `apiQ`, the credential-free seam. */
+async function rvsAcknowledge(){
+  if(!RVS || !RVS.copy) return;
+  RVS.ackRefusal = null; RVS.acked = null;
+  try{
+    const r = await apiQ("statementack", { secret: RVS.secret });
+    if(r && r.ok === true) RVS.acked = r; else RVS.ackRefusal = r || {};
+  }catch(_){ RVS.ackRefusal = { detail: RVC_UNREACHED }; }
+  await rvsLoad();
 }
 function rvcCommentsHtml(c, door){
   const list = Array.isArray(c.comments) ? c.comments : [];
@@ -23888,7 +24030,8 @@ async function rvcOpen(draftId){
   const id = String(draftId == null ? "" : draftId).trim();
   if(!id) return;
   RVC = { mode:"read", draft:id, copy:null, refusal:null, err:null, busy:true, saved:null, issued:null,
-          recipient:"", grantRefusal:null, revokeRefusal:null, comment:"", commentRefusal:null };
+          recipient:"", grantRefusal:null, revokeRefusal:null, comment:"", commentRefusal:null,
+          acked:null, ackRefusal:null };
   rvcSetHash("#draft/" + id);
   await rvcLoad();
 }
@@ -24041,7 +24184,7 @@ function rvcHtml(){
       + '</div><p class="subj-note">It stands as ' + esc(RVC.saved.caseIdentity || "") + '.</p></div>' : '';
   return head + saved
     + '<button class="btn ghost" onclick="rvcEdit()">Edit this draft</button>'
-    + rvcCopyHtml(c)
+    + rvcCopyHtml(c, "member")
     + rvcGrantsHtml(c)
     + rvcCommentsHtml(c, "member");
 }
@@ -24082,7 +24225,8 @@ function reviewCopyEntryHtml(){
 /* ---------------- THE RECIPIENT DOOR ---------------- */
 function rvsField(k, v){ if(RVS) RVS[k] = String(v == null ? "" : v); }
 async function rvsOpen(secret){
-  RVS = { secret:String(secret || ""), copy:null, dead:null, err:null, busy:true, comment:"", commentRefusal:null };
+  RVS = { secret:String(secret || ""), copy:null, dead:null, err:null, busy:true, comment:"", commentRefusal:null,
+          acked:null, ackRefusal:null };
   if(typeof PUB !== "undefined" && PUB){ PUB.id = null; PUB.edition = null; }
   await rvsLoad();
 }
@@ -24119,7 +24263,7 @@ function rvsHtml(){
   return '<h1 class="rec">Review copy</h1>'
     + '<p class="subj-note" data-rvc-addressed>Addressed to <b>' + esc(g.recipient || "") + '</b> by <span class="mono">'
     + esc(g.issued_by || "") + '</span> at <span class="mono">' + esc(g.issued_at || "") + '</span>. You can read it and comment on it here; it is not a publication.</p>'
-    + rvcCopyHtml(c)
+    + rvcCopyHtml(c, "recipient")
     + rvcCommentsHtml(c, "recipient");
 }
 function rvsPaint(){
