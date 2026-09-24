@@ -4807,7 +4807,18 @@ var STATES = {
      append-only history — which re-pins — or a retirement and a successor.
      DELIBERATELY NOT ADDED: `draft -> adopted`. It is the only edge that could
      let a set become binding without ever having been proposed, and closing it
-     is what makes the proposed state load-bearing rather than ceremonial. */
+     is what makes the proposed state load-bearing rather than ceremonial.
+     AND SINCE D-468 (2026-09-24) THIS TABLE IS ENFORCED AT THE WRITE PATH AND NOT
+     ONLY DESCRIBED HERE. Everything above was true of the table and false of the
+     plane: `op=promote` consulted no edge table, so `adopted -> proposed` landed
+     and moved the head — a constraint that existed as a comment, which is the
+     defect this repository meets most. `promote`'s `bias-state-edge` region now
+     reads this table through `vocabFor` and refuses any move it does not declare
+     (BIAS_ILLEGAL_TRANSITION, C-26.12). A revision that leaves a set where it
+     stands is not a move and is not asked: that is how an adopted set is amended
+     (`BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption"). This fence is
+     THIS machine's alone — `promote` still asks no edge table for any other
+     object_type. */
   bias: {
     legal: ["draft", "proposed", "adopted", "retired"],
     edges: {
@@ -10622,6 +10633,40 @@ var BIAS_CHECKS = {
     check: "C-26.11",
     where: "src/store.mjs promote > bias-set-refusal, reached from op=promote",
     translation: "That bias set was not written. One or more of its statements is not something the record can honour, and each one is named below with what is wrong with it. Nothing was saved, so nothing needs undoing \u2014 correct the statements and write it again."
+  },
+  /* D-468 — THE MACHINE IS ENFORCED AT THE WRITE PATH, AND IT WAS NOT.
+     `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption" gives bias sets
+     bundle governance — *"append-only history, member-authored transitions,
+     convergent promotion"* — and the STATES comment beside `bias` states the
+     edge that matters in its own words: *"NO EDGE OUT OF `adopted` EXCEPT
+     `retired`, and that is deliberate. An adopted set is PINNED (DEC-54 (d))
+     and a published case names the version it was held to; a set that could
+     slide back to draft in place would make 'the lens this case was produced
+     under' unresolvable after the fact."*
+     THAT SENTENCE DESCRIBED A CONSTRAINT NOTHING ENFORCED. `op=promote` writes
+     `meta.current_state` into the bundles row and consulted no edge table for
+     ANY type, so a bias set standing at `adopted` accepted a revision naming
+     `proposed` and moved backwards — measured by REC-187's worker (its F4) and
+     by `d84-case-manifest.test.mjs` §4, which drove the move and read a new
+     head back. A mechanism believed on the strength of its EXISTENCE rather
+     than its behaviour is this repository's most-met defect, and this is one.
+     WHY IT IS THE RECORD'S PROBLEM AND NOT A TIDINESS ONE: the manifest a
+     published case carries names the ADOPTED revision (REC-187), and
+     `op=biasadopt` pins the head of a set standing at `proposed` or `adopted`.
+     With the backwards move available, an adopted set could be returned to
+     `proposed` and re-adopted onto those bytes — which lifts the lens a case
+     was published under while the case still names it. Closing the edge closes
+     that, which is why construct 7's own residue sentence goes with it.
+     ITS `where` NAMES `store.mjs` RATHER THAN THE CATALOGUE, like its
+     `BIAS_REFUSED` sibling and for the same reason: that is where it FIRES, and
+     naming the site is what puts the code inside DEC-49's governed set. The
+     span is a REGION and not the function — `promote` both validates and
+     writes, which the note on `BIAS_REFUSED` below says is the one shape a
+     whole-function `where` may never claim. */
+  BIAS_ILLEGAL_TRANSITION: {
+    check: "C-26.12",
+    where: "src/store.mjs promote > bias-state-edge, reached from op=promote",
+    translation: "That is not a move this bias set can make from where it stands. A set is written, then offered, then adopted \u2014 and once it is adopted the only move left is to retire it, because a case published under it names the revision it was held to and a set that could slide backwards would make that unresolvable after the fact. To change an adopted set, write the amendment AS the adopted set \u2014 a new revision re-pins the lens \u2014 or retire it and adopt a successor. Nothing was written."
   },
   BIAS_ADOPTION_NOT_PROPOSED: {
     check: "C-26.10",
@@ -45343,6 +45388,23 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             reason: "BASIS_CYCLE",
             path: cycle,
             detail: `this write would close a cycle: ${cycle.join(" -> ")}. An inquiry's basis is a DAG; the chain above already rests on ${bundleId}.`
+          };
+      }
+      const biasDeclared = docFmW && typeof docFmW.object_type === "string" ? docFmW.object_type : typeof meta.object_type === "string" ? meta.object_type : null;
+      const biasSpelling = normalizeType(biasDeclared) === "bias" ? biasDeclared : cur && normalizeType(cur.object_type) === "bias" ? cur.object_type : null;
+      if (cur && biasSpelling) {
+        const from = cur.current_state, to = meta.current_state;
+        const legalFrom = vocabFor(STATES, biasSpelling)?.edges?.[from] || [];
+        if (to !== from && !legalFrom.includes(to))
+          return {
+            ...this.#biasRefuse(
+              "BIAS_ILLEGAL_TRANSITION",
+              `${bundleId} stands at '${from}' and this promotion names '${to === void 0 || to === null ? "no state" : to}'. A bias set at '${from}' moves to ${legalFrom.length ? legalFrom.join(" or ") : "no other state"}${legalFrom.length ? "" : " \u2014 it is terminal"}, and a revision that leaves it where it stands is how an adopted set is amended. The table is the catalogue's and this path holds no copy of it. Nothing was written.`
+            ),
+            from,
+            to: to ?? null,
+            object_type: biasSpelling,
+            legal_from: legalFrom
           };
       }
       if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
