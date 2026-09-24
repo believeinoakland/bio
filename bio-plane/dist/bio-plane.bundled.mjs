@@ -81126,15 +81126,16 @@ var index_default = {
         httpStatus = res2.status;
         const answered = driveTick && driveTick.harvestable ? `the OpenDocument export address ${driveTick.exportAddress} answered ${res2.status}` : `the source answered ${res2.status}`;
         if (driveTick && driveTick.harvestable && res2.ok) {
-          const ect = (res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
-          if (ect === "text/html" || ect === "application/xhtml+xml") {
+          const declaredType = (res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+          const servedAsPage = declaredType === "text/html" || declaredType === "application/xhtml+xml";
+          if (servedAsPage) {
             try {
               await res2.body?.cancel?.();
             } catch {
             }
             const observation2 = await monitorLook({
               outcome: "unreachable",
-              reason: `the Drive export address answered \`${ect}\`, which is the application shell`
+              reason: `the Drive export address answered \`${declaredType}\`, which is the application shell`
             });
             return json({
               ok: false,
@@ -81145,7 +81146,7 @@ var index_default = {
               status: res2.status,
               locator: driveTick.address,
               export_address: driveTick.exportAddress,
-              declared_content_type: ect,
+              declared_content_type: declaredType,
               refused_on: "the declared content type",
               drive: {
                 host: driveTick.host,
@@ -81155,7 +81156,7 @@ var index_default = {
                 export_format: driveTick.format
               },
               observation: observation2,
-              detail: `the OpenDocument export address answered with \`${ect}\`, which is the Google Drive APPLICATION \u2014 a client-rendered shell whose bytes carry no document (framework Part I \xA76's UNWATCHABLE case). It is not compared against the capture: its bytes are rebuilt on every render, so a comparison would report this document changed today and on every later visit. Nothing about the record moved, and the look is logged as indeterminate. Google serves this when the file is no longer shared with anyone who has the link.`
+              detail: `the OpenDocument export address answered with \`${declaredType}\`, which is the Google Drive APPLICATION \u2014 a client-rendered shell whose bytes carry no document (framework Part I \xA76's UNWATCHABLE case). It is not compared against the capture: its bytes are rebuilt on every render, so a comparison would report this document changed today and on every later visit. Nothing about the record moved, and the look is logged as indeterminate. Google serves this when the file is no longer shared with anyone who has the link.`
             }, 502);
           }
         }
@@ -81168,11 +81169,12 @@ var index_default = {
         } else {
           const bytes = new Uint8Array(await res2.arrayBuffer());
           if (driveTick && driveTick.harvestable) {
-            const sniff = detectFormat(bytes.subarray(0, Math.min(bytes.length, 1024)), null);
-            if (sniff.format === "html") {
+            const sniffed = detectFormat(bytes.subarray(0, Math.min(bytes.length, 1024)), null);
+            const servedType = (res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+            if (sniffed.format === "html") {
               const observation2 = await monitorLook({
                 outcome: "unreachable",
-                reason: `the Drive export address served HTML under \`${(res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase() || "no content type"}\``
+                reason: `the Drive export address served HTML under \`${servedType || "no content type"}\``
               });
               return json({
                 ok: false,
@@ -81183,9 +81185,9 @@ var index_default = {
                 status: res2.status,
                 locator: driveTick.address,
                 export_address: driveTick.exportAddress,
-                declared_content_type: (res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase() || null,
+                declared_content_type: servedType || null,
                 refused_on: "the bytes",
-                detected: sniff,
+                detected: sniffed,
                 drive: {
                   host: driveTick.host,
                   shape: driveTick.shape,
@@ -81194,7 +81196,7 @@ var index_default = {
                   export_format: driveTick.format
                 },
                 observation: observation2,
-                detail: `the OpenDocument export address served bytes that are HTML \u2014 ${sniff.signals.join("; ")} \u2014 while declaring otherwise. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. It is not compared against the capture: the shell is rebuilt on every render, so the comparison would report a change nobody made. Nothing about the record moved, and the look is logged as indeterminate.`
+                detail: `the OpenDocument export address served bytes that are HTML \u2014 ${sniffed.signals.join("; ")} \u2014 while declaring otherwise. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. It is not compared against the capture: the shell is rebuilt on every render, so the comparison would report a change nobody made. Nothing about the record moved, and the look is logged as indeterminate.`
               }, 502);
             }
           }

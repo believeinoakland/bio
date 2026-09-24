@@ -220,7 +220,11 @@ t("attested by the key's member", rat.attestor, "sparky");
 /* CORRECTED 2026-09-24 (c20-batch14): 1.22.0 -> 1.23.0. D-64's C-83 family arrived from the other side of this
    integration, the catalogue census moved 438 -> 445, and `CATALOG_VERSION` took the MINOR bump the census arm
    forces. The old literal was right for the tree it was written on. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.23.0)");
+/* CORRECTED 2026-09-24 by D-472, never exempted: `op=monitor` gained C-48.8 and C-48.9, the census arm
+   forced the MINOR bump 1.23.0 -> 1.24.0, and the old literal named a catalogue that no longer exists.
+   The stamp is the CATALOGUE's version, so it moves whenever the catalogue does — which is the whole
+   point of the pin, and why this assertion is corrected rather than loosened. */
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.24.0)");
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong

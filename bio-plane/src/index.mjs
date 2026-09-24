@@ -9395,19 +9395,28 @@ export default {
          * own `source_status` and `last_checked` are left exactly as they were,
          * and the refusal says which address answered and how. */
         if (driveTick && driveTick.harvestable && res.ok) {
-          const ect = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
-          if (ect === "text/html" || ect === "application/xhtml+xml") {
+          /* THE PREDICATE IS NAMED HERE RATHER THAN SPELLED AS `op=acquire`'s TWIN,
+             and that is a property of this estate rather than a style choice:
+             `test/drive.control.mjs` arms acquire's declared-type check (arm 4a) by
+             quoting its line VERBATIM and patching the single occurrence. A second
+             byte-identical copy in this same file makes that exactly-once patch
+             ambiguous and silently arms the wrong site — WORKER.md's "anchor
+             occurred twice" receipt, which `test/m025-arm-anchor-witness.test.mjs`
+             A5 catches. Measured: it caught this file's first draft. */
+          const declaredType = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+          const servedAsPage = declaredType === "text/html" || declaredType === "application/xhtml+xml";
+          if (servedAsPage) {
             try { await res.body?.cancel?.(); } catch { /* the source may already be gone */ }
             const observation = await monitorLook({ outcome: "unreachable",
-              reason: `the Drive export address answered \`${ect}\`, which is the application shell` });
+              reason: `the Drive export address answered \`${declaredType}\`, which is the application shell` });
             return json({ ok: false, reason: "DRIVE_TICK_EXPORT_IS_THE_SHELL",
               ...driveRow("DRIVE_TICK_EXPORT_IS_THE_SHELL"), op, bundleId, status: res.status,
               locator: driveTick.address, export_address: driveTick.exportAddress,
-              declared_content_type: ect, refused_on: "the declared content type",
+              declared_content_type: declaredType, refused_on: "the declared content type",
               drive: { host: driveTick.host, shape: driveTick.shape, kind: driveTick.kind,
                        file_id: driveTick.fileId, export_format: driveTick.format },
               observation,
-              detail: `the OpenDocument export address answered with \`${ect}\`, which is the Google Drive `
+              detail: `the OpenDocument export address answered with \`${declaredType}\`, which is the Google Drive `
                     + `APPLICATION — a client-rendered shell whose bytes carry no document (framework Part I `
                     + `§6's UNWATCHABLE case). It is not compared against the capture: its bytes are rebuilt on `
                     + `every render, so a comparison would report this document changed today and on every `
@@ -9430,19 +9439,22 @@ export default {
            * are drivable — the declared-type one from the header, this one from the
            * first kibibyte — which is the whole of PL-4's rule. */
           if (driveTick && driveTick.harvestable) {
-            const sniff = detectFormat(bytes.subarray(0, Math.min(bytes.length, 1024)), null);
-            if (sniff.format === "html") {
+            /* `sniffed`, not `sniff`, for the reason named at the declared-type arm
+               above: acquire's twin line is a control driver's anchor. */
+            const sniffed = detectFormat(bytes.subarray(0, Math.min(bytes.length, 1024)), null);
+            const servedType = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+            if (sniffed.format === "html") {
               const observation = await monitorLook({ outcome: "unreachable",
-                reason: `the Drive export address served HTML under \`${(res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase() || "no content type"}\`` });
+                reason: `the Drive export address served HTML under \`${servedType || "no content type"}\`` });
               return json({ ok: false, reason: "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL",
                 ...driveRow("DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL"), op, bundleId, status: res.status,
                 locator: driveTick.address, export_address: driveTick.exportAddress,
-                declared_content_type: (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase() || null,
-                refused_on: "the bytes", detected: sniff,
+                declared_content_type: servedType || null,
+                refused_on: "the bytes", detected: sniffed,
                 drive: { host: driveTick.host, shape: driveTick.shape, kind: driveTick.kind,
                          file_id: driveTick.fileId, export_format: driveTick.format },
                 observation,
-                detail: `the OpenDocument export address served bytes that are HTML — ${sniff.signals.join("; ")} `
+                detail: `the OpenDocument export address served bytes that are HTML — ${sniffed.signals.join("; ")} `
                       + `— while declaring otherwise. That is the Google Drive APPLICATION, not the document, and `
                       + `the declared type did not say so. It is not compared against the capture: the shell is `
                       + `rebuilt on every render, so the comparison would report a change nobody made. Nothing `

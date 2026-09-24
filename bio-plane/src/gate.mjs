@@ -49,6 +49,16 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    refuse documents that used to pass. This bump is ADDITIVE in the same sense
    and no check moves with it.
 
+   1.24.0 (D-472, 2026-09-24, cloud session WORKER D-472 under CONDUCT #20): MINOR,
+   ADDITIVE, and the census arm forced it again on a WORKER's branch rather than at an
+   integration. `op=monitor` gained its own two Drive-shell refusals — C-48.8
+   (DRIVE_TICK_EXPORT_IS_THE_SHELL) and C-48.9 (DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL) —
+   so the catalogue went 447 -> 449 checks: TWO ARRIVALS, NO DEPARTURES. The figure is the
+   one `d470-catalog-census.test.mjs` PRINTED on this tree, never 447 plus two.
+   **THE NUMBER AND THE CENSUS ARE PROPERTIES OF THE MERGED CATALOGUE: if another branch in
+   the same batch also adds rows, CONDUCT re-reads BOTH at integration** — which is what
+   every note below this one records happening.
+
    1.23.0 (CONDUCT #20, c20-batch14, 2026-09-24): MINOR, ADDITIVE, and the census arm
    forced it a SECOND time at the union of c20-batch13 and c20-integ1b. D-64's
    `RENDER_CAPTURE_CHECKS` family arrived from the other side of the integration, so
@@ -85,7 +95,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    NO_CITATION to ACT_SHAPE_CHECKS, so the catalogue moved 433 -> 435 checks and the stamp moves
    with it, MINOR and additive on this constant's own rule (Publication §3 rule 17). The d470
    census suite caught it on the c20-batch17 train (A3). */
-export const CATALOG_VERSION = "1.23.0";
+export const CATALOG_VERSION = "1.24.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

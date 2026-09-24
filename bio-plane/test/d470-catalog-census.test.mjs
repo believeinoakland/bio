@@ -248,6 +248,15 @@ const CATALOG_CENSUS = {
      published a different catalogue under it. ONE VERSION NAMES ONE CATALOGUE, which is this table's whole
      rule, so the landed row stands and this union takes the next number. */
   "1.23.0": { count: 447, digest: "3309735d2983f422ff63ba8491b6fcd3e350e1642de29716bb578dc8077ab9da" },
+  /* 1.24.0 (D-472, 2026-09-24, WORKER D-472 under CONDUCT #20, branch land/worker/D-472): TWO ARRIVALS,
+     NO DEPARTURES — C-48.8 and C-48.9, `op=monitor`'s own two Drive-shell refusals, which are NOT
+     `op=acquire`'s C-48.5/C-48.7 firing from a second site (a capture that meets the shell has captured
+     nothing; a TICK that meets it has lost the CHECK, and one canned sentence cannot be true of both).
+     447 -> 449, count AND digest from THIS SUITE'S OWN PRINT on this tree, never arithmetic on 447.
+     1.23.0's row STAYS: it is what the catalogue held at that version, and A4 needs both to mean anything.
+     **IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE UNION'S: CONDUCT takes the
+     next number and re-reads the census from this suite's print on the merged tree.** */
+  "1.24.0": { count: 449, digest: "5f750014c52093e4c345bd15a08fde27b660976d150c3abadfe6247948638eb2" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -337,8 +346,11 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 /* CORRECTED at c20-batch13, never exempted: the catalogue moved under this pin
    at the union (five arrivals from c20-batch11fix's side), so 1.21.0 had stopped
    naming one catalogue — the exact defect the header describes. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.23.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.23.0)", "1.23.0"]);
+/* CORRECTED 2026-09-24 by D-472, never exempted: the catalogue gained C-48.8 and C-48.9, so the stamp
+   moved 1.23.0 -> 1.24.0 and the old literal named a catalogue that no longer exists. It was right for
+   the tree it was written on. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.24.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.24.0)", "1.24.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
