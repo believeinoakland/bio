@@ -363,6 +363,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* D-149, 2026-09-23 — a machine credential may not state the laws that govern an action's request
        (BIO_Case_Making_v0_1.md §2). D-PIN-B failed naming exactly this row until it was written here. */
     ["C-32.18", "MACHINE_CANNOT_SET_LAWS"],
+    /* REC-189, 2026-09-24 (minted C-32.18; renumbered C-32.19 at c19-batch10, D-149 holding C-32.18) — D-182's ruling on the write side: a machine credential may not set or change an
+       action's risk tier. Inside `promote`'s action block, a region and not a method. D-PIN-B failed naming
+       exactly this row until it was written here. */
+    ["C-32.19", "MACHINE_CANNOT_SET_RISK_TIER"],
     /* ACT_SHAPE_CHECKS — the single-homed tail, plus §14a's capability sentence */
     ["C-33.1", "NO_CONCLUSION"],
     ["C-33.2", "NO_FALSIFIER"],
@@ -527,7 +531,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
   /* MOVED 54 -> 55 on 2026-09-23 (REC-175), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 55 rows across 2 families" on the item's tree
      over origin/main 14faa089) and not by adding to the number in the file: C-33.38 FILE_DIGEST_MISMATCH. */
   t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two, REC-125's two, "
-    + "REC-126's one, REC-124's three, REC-136's one, D-136's one, REC-175's one, REC-176's one, D-168's one and D-149's one — a walk that lost a "
+    + "REC-126's one, REC-124's three, REC-136's one, D-136's one, REC-175's one, REC-176's one, D-168's one, D-149's one and REC-189's one — a walk that lost a "
     + "family would run fewer arms and every one of them would still pass",
     /* MOVED 54 -> 55 on 2026-09-23 (REC-176), FROM THE FIGURE THIS INSTRUMENT PRINTED on the item's tree over
        origin/main 0e7cc03e and not by adding to the number in the file: C-67.1 SNAP_KEY_TAKEN. */
@@ -536,7 +540,9 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* MOVED 56 -> 57 by CONDUCT #16 at D-168's merge (D-168 moved 54 -> 55 on its own base: C-33.39 RETIRED_NOT_CITABLE); the figure below is the one PRINTED on the merged tree. */
     /* MOVED 57 -> 58 on 2026-09-23 (D-149), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 58 rows across 2 families")
        on the item's tree over origin/main 02603e88: C-32.18 MACHINE_CANNOT_SET_LAWS. */
-    rowsSeen, 58);
+    /* MOVED 58 -> 59 at c19-batch10 (REC-189 merged over D-149; each moved 57 -> 58 from its own base): C-32.19
+       MACHINE_CANNOT_SET_RISK_TIER (minted C-32.18). The figure is re-read from this instrument's print on the merged tree. */
+    rowsSeen, 59);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

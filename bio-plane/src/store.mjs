@@ -16320,6 +16320,37 @@ export class Store extends DurableObject {
        * which only the store can see). */
       const isAction = normalizeType(meta.object_type) === "action";
       if (isAction && docFmW && !pkg.replay) {
+        /* REC-189 / C-32.19 — ONLY A MEMBER'S AUTHORED ACT SETS A RISK TIER (D-182, BOB #21:
+           *"Only a member's authored act sets 1, 2 or 3"*; `BIO_Case_Making_v0_1.md` §2). D-182 built the
+           UNDETERMINED reading and left the write open: a machine credential's promote could still stamp
+           `risk_tier: 1` — "file freely" — on an action nobody assessed, the overclaim the ruling names on the
+           one field carrying legal exposure. `actionMove`'s fence, on the same author stamp and REC-46's one
+           predicate (`!who`: a write no session or credential stamped is not a member's act either).
+           WHAT IT ASKS IS A CHANGE, NEVER A PRESENCE: the tier this revision states against the tier the
+           version it replaces states (a creation replaces nothing, so any stated tier is a change). A machine
+           revising an action a member assessed carries the member's tier forward unchanged and lands; one that
+           states no tier lands (it reads UNDETERMINED, which claims nothing). Both sides read through
+           `riskTierState`, so a respelling of the same value is not a change. A value outside the vocabulary
+           is not this fence's — the catalogue refuses it by name. Before any write. Replay is exempt with the
+           block: a replayed promotion is the record re-stating its own past. */
+        const nextTier = riskTierState(docFmW.risk_tier);
+        const heldTierMd = cur ? this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId) : null;
+        const heldTierFm = heldTierMd && typeof heldTierMd.content === "string" ? parseFrontmatter(heldTierMd.content).data : null;
+        const heldTier = riskTierState(heldTierFm && typeof heldTierFm === "object" ? heldTierFm.risk_tier : undefined);
+        const tierWho = String(author ?? "").trim();
+        /* DEC-49 REGION is-machine-set-risk-tier */
+        if ((!tierWho || isMachineIdentity(tierWho)) && (nextTier === 1 || nextTier === 2 || nextTier === 3)
+            && nextTier !== heldTier)
+          return { ok: false, reason: "MACHINE_CANNOT_SET_RISK_TIER", risk_tier: nextTier,
+                   held: cur ? heldTier : null,
+                   detail: (cur ? `this revision states risk_tier ${nextTier} where the version it replaces states `
+                                  + `${heldTier}.`
+                                : `this creation states risk_tier ${nextTier}.`)
+                         + ` A risk tier is a member's assessment of the legal exposure of filing `
+                         + `this action, and only a member's authored act sets 1, 2 or 3. A machine credential `
+                         + `may carry a member's tier forward unchanged, or leave it unstated (undetermined). `
+                         + `Nothing was written.` };
+        /* END DEC-49 REGION is-machine-set-risk-tier */
         const af = [];
         actionBasisFindings(docFmW, af);
         const aerrs = af.filter((x) => x.severity === "error");

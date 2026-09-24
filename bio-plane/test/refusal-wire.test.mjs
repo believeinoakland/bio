@@ -470,7 +470,12 @@ t("every machine fence this sweep REACHED carries its canned translation to the 
 t("the fences this empty-payload sweep does not reach are NAMED rather than counted, so the corpus "
 + "cannot quietly shrink — REC-73 drives all twelve under complete payloads and is the instrument "
 + "for reachability; this one is the instrument for the envelope",
-  unreached, ["MACHINE_CANNOT_MOVE_VERSION"]);
+  /* MOVED 2026-09-24 by REC-189, never exempted: C-32.19 MACHINE_CANNOT_SET_RISK_TIER stands INSIDE
+     `promote`'s action block and refuses a CHANGE of an action's tier, so an empty promote — no bundle.md,
+     no action — is refused by the payload complaints long before it. Reachability is REC-73's instrument
+     (`machine-fences.test.mjs` block xiv drives it under a complete payload); `fence-e2e` and
+     `aicredential` carry its wire. */
+  unreached, ["MACHINE_CANNOT_MOVE_VERSION", "MACHINE_CANNOT_SET_RISK_TIER"]);
 
 /* ====================================================================== 7
  * TWO PRODUCERS, ONE CODE — AND THE `detail` IS WHAT TELLS THEM APART.

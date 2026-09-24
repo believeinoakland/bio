@@ -535,6 +535,18 @@ console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNO
      passes the gate. What is being measured here is the IDENTITY layer, with the
      credential layer deliberately held open. PL-2 ran the three-layer version of
      this one item over; this is the two-layer version of the same discipline. */
+  const riskTierCreation = (id) => {
+    const text = ["---", `id: ${id}`, "object_type: action", "schema: action@1", `title: "Action ${id}"`,
+      "current_state: planned", "prior_state: null", 'created: "2026-07-01T00:00:00Z"',
+      'last_updated: "2026-07-01T00:00:00Z"', "produced_by:", "  mode: assisted", "  capability_tier: session",
+      "group: believe-in-oakland", "references: []", "state_history: []", "action_kind: cpra_request",
+      "risk_tier: 2", "counterparty:", "  state: named", "  name: City Clerk", "---", "", "## Plan", "", "P.",
+      "", "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    return { bundleId: id, base: null, snapKey: `${id}-000001`, register: [],
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+      meta: { object_type: "action", group: "believe-in-oakland", title: `Action ${id}`, current_state: "planned",
+              created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } };
+  };
   const ACTS = {
     MACHINE_CANNOT_RELEASE:      ["release", { handle: "believe-in-oakland", acknowledgment: "x", mitigation: "y" }],
     MACHINE_CANNOT_CONCLUDE:     ["conclude", { id: INQ, disposition: "supported", statement: "s" }],
@@ -554,6 +566,10 @@ console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNO
     /* D-149 / C-32.18 — stating an action's governing laws. The completeness arm went red naming it
        until it was driven here. */
     MACHINE_CANNOT_SET_LAWS:     ["actionlaws", { target: INQ, laws: [] }],
+    /* REC-189 / C-32.19 (minted C-32.18, renumbered at c19-batch10: D-149 holds C-32.18): NOT an act — the fence stands inside `promote`'s action block and asks whether a
+       machine CHANGES an action's risk tier, so the thinnest payload that reaches it is a whole action
+       stating one. A creation replaces no version, so any stated tier is a change. */
+    MACHINE_CANNOT_SET_RISK_TIER: ["promote", riskTierCreation("ACTN-2026-5100-risk-tier")],
   };
   const broad = await mint({ tokenId: "held-open", taskScope: "the negative control's own",
     writes: [...new Set(Object.values(ACTS).map(([op]) => op))] });

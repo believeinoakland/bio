@@ -407,7 +407,11 @@ const actnMd = (id) => [
      legal flat string until C-2.10 made the field three-valued. The FACT this
      fixture asserts is unchanged — this action is addressed to the City Clerk —
      so it is corrected into the block that states it, not exempted. */
-  "action_kind: cpra_request", "risk_tier: 1",
+  "action_kind: cpra_request", /* CORRECTED 2026-09-24 by REC-189, never exempted: `risk_tier: 1` ("file freely") was a tier this
+     fixture states through a DEPLOY token — a machine identity — and C-32.19 now refuses a machine
+     setting 1, 2 or 3 (D-182: only a member's authored act does). The tier is not this suite's subject,
+     so the fixture states what an unassessed action honestly is. */
+  "risk_tier: undetermined",
   "counterparty:", "  state: named", "  name: City Clerk",
   "---", "", "## Plan", "", "P.", "", "## Status", "", "## Correspondence", "",
   "## Session Log", "", "## Review Notes", "",
