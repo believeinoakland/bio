@@ -27,22 +27,40 @@
  *                                                     every other FULL category.
  *   G4  selection by IMPORT ALONE (the liar the    -> "SELECTION IS BY MENTION" FAILS. MUST NOT:
  *       row names)                                    the IMPORTER is still selected.
- *   G5  the CLEAN-AT-START check removed           -> "...and the gate says why" FAILS, and so do
- *                                                     "a DIRTY tree is NOT recorded" and, behind it,
- *                                                     "a tree that CHANGES while the gate runs is
- *                                                     NOT recorded".
- *       CORRECTED 2026-09-24 (M0-153), never exempted. This arm declared the first of those a
- *       MUST-NOT-BREAK, on the reasoning that "the end-of-run check backs it, and that redundancy is
- *       real and is KEPT". IT IS NOT REAL, and the arm itself is the evidence: armed, the DIRTY run
- *       IS recorded. The end-of-run check asks whether the tree CHANGED DURING the run, and a tree
- *       dirty BEFORE the run and unchanged through it passes that question — so nothing but the
- *       clean-at-start check refuses it, which is exactly what this assertion was written to detect.
- *       The third failure is a CASCADE, not an independent break: these arms count records
- *       CUMULATIVELY (`runsFor(...).length` must stay 1), so the extra record the dirty run leaves
- *       makes the next assertion read 2. MEASURED BOTH WAYS on 2026-09-24: this FAIL reproduces
- *       identically on an untouched `68fecb8d` clone (armed 93 pass / 3 fail, closing 96 / 0), so it
- *       is the DECLARATION that was stale and not the subject — the arm has been finding a real
- *       redundancy gap and calling it collateral.
+ *   G5  the CLEAN-AT-START check removed           -> "...and the gate says why" FAILS. MUST NOT:
+ *                                                     "a DIRTY tree is NOT recorded" — the
+ *                                                     end-of-run check backs it, and that
+ *                                                     redundancy is real and is KEPT.
+ *       TWO WORKERS CORRECTED THIS ARM IN OPPOSITE DIRECTIONS ON 2026-09-24 AND BOTH RUNS ARE KEPT,
+ *       because the disagreement is the useful part. The shared OBSERVATION is not in dispute and
+ *       each measured it independently on `68fecb8d`: armed, the arm reads 93 pass / 3 fail, the
+ *       MUST-NOT-BREAK among the failures, closing 96/0. What was in dispute is WHICH CHECK LET IT
+ *       THROUGH, and that decides whether the remedy is to believe the arm less or to fix the subject.
+ *         M0-153 read it as the end-of-run check being too weak — "it asks whether the tree CHANGED
+ *         DURING the run, and a tree dirty BEFORE the run and unchanged through it passes that
+ *         question" — and downgraded both assertions to `alsoBreak`.
+ *         M0-157 DROVE IT INSTEAD OF READING IT, and that account does not survive the code or the
+ *         run. §4's condition is `endStatus !== "" || endTree !== START.tree`: the FIRST disjunct is
+ *         "dirty at the END", not "changed", so a tree dirty before and unchanged through it FAILS
+ *         that question and is refused. The armed gate never reached §4 at all — §2d's tree-keyed
+ *         shortcut ran first, wrote a SECOND record (GREEN, class REUSED, `already GREEN by <the clean
+ *         run's own record>`) and exited 0. THE ARTIFACT that settles it: with §2d fixed and this arm
+ *         still ARMED, the same dirty-before-and-unchanged tree prints `NOT RECORDED — the tree
+ *         changed while the gate ran (1 path(s) dirty at the end)` — and "(1 path(s) dirty at the
+ *         end)" is the `endTree === START.tree` branch of that sentence's own ternary, i.e. the tree
+ *         did NOT change and the end-of-run check refused it anyway. So the redundancy was real and
+ *         UNREACHED, not absent.
+ *       M0-153 WAS RIGHT THAT SOMETHING REAL WAS BEING CALLED COLLATERAL, and its sentence for it —
+ *       "the arm has been finding a real redundancy gap" — is the true half of its account; the gap
+ *       was a verdict write in front of §4, not a weak §4. M0-157 closed it at the subject: §2d now
+ *       re-reads `status` and `HEAD^{tree}` for itself, declines the shortcut on a disagreement, and
+ *       lets the run reach §4. The third failure IS a cascade of the cumulative record count, exactly
+ *       as M0-153 said, and it disappears when the count does — which is the discriminator, and is
+ *       why it is now a MUST-NOT-BREAK rather than an expected one. 95/1 after, the one being
+ *       `mustBreak`. GENERAL FORM, and the reason this paragraph is long: an arm that asserts a
+ *       REDUNDANCY fails when a SITE is added in front of it, and the failure looks identical to the
+ *       redundancy not existing. Distinguishing the two costs one probe of the armed subject's own
+ *       output, and the cheaper reading is the one that quietly weakens the estate's controls.
  *   G6  the END-OF-RUN check removed               -> "a tree that CHANGES while the gate runs is
  *                                                     NOT recorded" FAILS. MUST NOT: the dirty-
  *                                                     at-start arm (the start check holds it).
@@ -222,16 +240,23 @@ const ARMS = [
     alsoBreak: ["...and the suite that WALKS tools/"],
     mustNotBreak: ["...and selects its IMPORTER", "a tree that CHANGES while the gate runs is NOT recorded"] },
 
+  /* M0-157: the arm is UNCHANGED — it was the declaration that was false, and the SUBJECT that was fixed. Its
+     `mustNotBreak` is the whole point of it: it asserts a REDUNDANCY, and an arm asserting a redundancy is the only
+     instrument that can tell a real one from a paragraph. Re-armed after the fix it reads 95 pass / 1 fail, the one
+     being `mustBreak`. See the G5 paragraph in the header for what it measured and why 93/3 was not isolated. */
   { id: "G5", title: "the CLEAN-AT-START check removed",
     patches: [{ file: GATES,
       from: "const CLEAN_AT_START = START.status === \"\" && !!START.tree;",
       to: "const CLEAN_AT_START = !!START.tree;" }],
     mustBreak: "...and the gate says why",
-    /* CORRECTED 2026-09-24 (M0-153) — see this arm's row in the header table. Both of these were
-       declared MUST-NOT-BREAK and both break: the first because only the clean-at-start check refuses
-       a tree dirty BEFORE the run, the second as a cascade of the cumulative record count. */
-    alsoBreak: ["a DIRTY tree is NOT recorded", "a tree that CHANGES while the gate runs is NOT recorded"],
-    mustNotBreak: ["a CLEAN run is RECORDED, keyed by HEAD's tree", "--explain records nothing"] },
+    /* M0-153 downgraded both of these to `alsoBreak` on 2026-09-24 and M0-157 RESTORED them the same
+       day, after FIXING THE SUBJECT. Both corrections are kept in the record deliberately, because the
+       disagreement is the useful part and neither worker was careless: M0-153's OBSERVATION was right
+       (armed, on `68fecb8d`, the dirty run IS recorded and this arm was not isolated — 93/3) and its
+       CAUSE was wrong, which is why its remedy was to believe the arm less. M0-153's two added
+       isolation assertions are KEPT — they are a real widening of the arm. */
+    mustNotBreak: ["a DIRTY tree is NOT recorded", "a tree that CHANGES while the gate runs is NOT recorded",
+                   "a CLEAN run is RECORDED, keyed by HEAD's tree", "--explain records nothing"] },
 
   { id: "G6", title: "the END-OF-RUN check removed — a run across a change, recorded",
     patches: [{ file: GATES,

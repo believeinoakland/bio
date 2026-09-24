@@ -32,6 +32,11 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
   checks: ROOT + "checks/bio-checks.mjs",
   suite: ROOT + "test/machine-fences.test.mjs",
+  /* ADDED 2026-09-24 by D-503: block 3b's five fences are minted in `src/index.mjs`,
+     and arms (6)-(10) below break them one at a time. `restoreAll` covers every key
+     in this map by sha256 AND by content, so adding the file here is what puts the
+     new arms under the same restore guarantee as the old ones. */
+  index: ROOT + "src/index.mjs",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
@@ -166,8 +171,16 @@ arm("(4) **A THIRTEENTH FENCE MUST NOT ARRIVE UNMEASURED.** Drop one act out of 
   + "comparison is live rather than decorative.",
   [["suite", `  DRIVEN.push({ code, payload, machineAnswer });`,
               `  if (code !== "MACHINE_CANNOT_GROUND") DRIVEN.push({ code, payload, machineAnswer });`]],
-  ["EVERY MACHINE_CANNOT_* the plane can mint was driven under a COMPLETE payload",
-   "(twelve acts were actually driven"],
+  /* CORRECTED 2026-09-24 by D-503, and it is a FINDING about this harness rather than a tidy-up:
+     BOTH fragments had gone stale against the labels they quote, so this arm was reporting
+     "** WRONG: expected an assertion naming ... to FAIL and none did" on a control that was in
+     fact arming correctly. The count label moved 12 -> 13 (REC-126) -> 14 (D-149) -> 15
+     (REC-189) and this line still said "twelve acts"; the completeness label was re-worded by
+     D-503 itself ("the plane can mint" -> "`src/store.mjs` mints", the over-claim corrected at
+     its site). A control whose declaration cannot match its subject's output reads as a broken
+     arm, which is the one failure mode that trains a reader to ignore it. */
+  ["EVERY MACHINE_CANNOT_* `src/store.mjs` mints was driven under a COMPLETE payload",
+   "fences were actually driven"],
   ["the walk SEES the class it was built from",
    "MACHINE_CANNOT_GROUND — the machine is refused BY NAME"]);
 
@@ -199,6 +212,12 @@ console.log("\n=== (5) OVER-STRICTNESS, AND IT IS BUILT INTO EVERY PIN. Each of 
     "and the SAME payload accepts the reading for a signed-in member",
     "and the SAME payload forwards it for the signed-in assignee",
     "and the SAME payload resolves it for the signed-in assignee",
+    /* ADDED 2026-09-24 by D-503: block 3b's three member twins, which are that block's
+       over-strictness arms for the same reason — a payload is shown COMPLETE only by a
+       human's own signed-in session succeeding with it. */
+    "OVER-STRICTNESS, and the evidence the payload was COMPLETE: ruth committing THE SAME signed",
+    "OVER-STRICTNESS, and the evidence the payload was COMPLETE: ruth ratifying THE SAME signed",
+    "OVER-STRICTNESS, and the evidence the payload was COMPLETE: ruth making THE SAME edit",
   ];
   console.log(`  MEASURED: ${r.pass} pass, ${r.fail} fail`);
   const broken = want.filter((w) => r.named.some((n) => n.includes(w)));
@@ -209,6 +228,126 @@ console.log("\n=== (5) OVER-STRICTNESS, AND IT IS BUILT INTO EVERY PIN. Each of 
     console.log(`  all ${want.length} member arms GREEN — every one of the twelve payloads is one the plane ACCEPTS`);
   }
 }
+
+
+/* ===================== (6)-(10) D-503 · THE FIVE FENCES `src/index.mjs` MINTS
+ *
+ * BLOCK 3b's ARMS. The five fences the control plane mints are broken ONE AT A
+ * TIME with every other defence held open, and the declaration below says for
+ * each arm what MUST fail and what MUST NOT. Two of them are here because the
+ * obvious prediction is WRONG and saying so is the point:
+ *
+ *   - `op=ratify` and `op=caseratify` are DOUBLY FENCED. Drop the `ai` fence and
+ *     the machine does not get through — it falls into the session fence one
+ *     region below and answers OPERATOR_TOKEN_CANNOT_RATIFY*. So the arm's pin
+ *     fails BY NAME while the read-back ("the case is NOT committed") stays
+ *     GREEN, and a control that had only checked "did anything land" would have
+ *     read this edit as no effect at all. REC-125 recorded the same shape in
+ *     `machine-attest.control.mjs`; it is restated here because it is the
+ *     declaration for THESE arms, not a cross-reference.
+ *   - The governance fence has a LAYER BEHIND IT ON PURPOSE (D-136): with the
+ *     fence gone the `by` stamp still refuses the bearer, as NOT_AN_ADMIN — a
+ *     refusal that is correct and whose SENTENCE IS FALSE, which is why the
+ *     fence exists. So arm (8)'s pin fails by name over `NOT_AN_ADMIN` while
+ *     "nothing the bearer asked for landed" stays GREEN.
+ *
+ * RESULTS: see the RESULTS line in `machine-fences.test.mjs` block 3b's header,
+ * written from this harness's own output and never from a prediction.
+ * ========================================================================= */
+
+const MACHINE_CASE_FENCE =
+  '      if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))\n'
++ '        return json({ ok: false, reason: "MACHINE_CANNOT_RATIFY_CASE",';
+
+arm("(6) **D-503 · DROP THE MACHINE FENCE AT `op=caseratify`.** The `ai` credential carries ruth's "
+  + "REAL signature over a real case document at edition 1 — the payload a member commits with on the "
+  + "very next line — so with this fence gone nothing about the PAYLOAD is left to refuse it. DECLARED: "
+  + "3b's MACHINE_CANNOT_RATIFY_CASE pin MUST fail by name. DECLARED AND NOT OBVIOUS: the case still is "
+  + "NOT committed, because the session fence in the region below catches the same caller — so that "
+  + "read-back MUST STAY GREEN and the pin's `got` should read OPERATOR_TOKEN_CANNOT_RATIFY_CASE.",
+  [["index", MACHINE_CASE_FENCE, MACHINE_CASE_FENCE.replace("if (aiCred &&", "if (false && aiCred &&")]],
+  ["MACHINE_CANNOT_RATIFY_CASE — refused BY NAME through the op",
+   "every one of them answered with its OWN name, stated once as a set"],
+  ["MACHINE_CANNOT_RATIFY — refused BY NAME through the op",
+   "OPERATOR_TOKEN_CANNOT_GOVERN — refused BY NAME through the op",
+   "and the case is NOT committed under the machine's call",
+   "OVER-STRICTNESS, and the evidence the payload was COMPLETE: ruth committing THE SAME signed"]);
+
+const OPERATOR_RATIFY_FENCE =
+  '      if (!viaSession)\n'
++ '        return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY",';
+
+/* THE TITLE BELOW DELIBERATELY DOES NOT QUOTE THE REFUSAL'S OWN SENTENCE, and it was CORRECTED to
+   stop doing so: its first spelling read "the operator's `admin`-class bearer token", which is
+   `src/index.mjs`'s composed detail line with the rendered value sitting in the `${cls}` slot.
+   `m025-arm-anchor-witness.test.mjs` L3 caught it and is right to — a driver fragment that resolves
+   against a label only by eating a template slot goes stale the day the value moves, and the arm then
+   looks like it is checking something it is not. */
+arm("(7) **D-503 · DROP THE SESSION FENCE AT `op=ratify`.** The operator's bearer token, on the ADMIN "
+  + "binding, carries the same signed bytes ruth ratifies with. DECLARED: 3b's OPERATOR_TOKEN_CANNOT_RATIFY pin "
+  + "MUST fail by name, AND — because nothing else stands between a bearer and the published corpus — "
+  + "the read-back \"the finding is STILL not published\" MUST fail too: the finding is PUBLISHED BY A "
+  + "TOKEN. That second failure is the arm's real content and the reason this fence exists (D-421). "
+  + "The `ai` fence above it is untouched, so MACHINE_CANNOT_RATIFY MUST STAY GREEN, as must every "
+  + "caseratify arm. What ruth's own call then answers is RECORDED rather than declared: the act she "
+  + "was going to perform has already been performed by a credential that is not her.",
+  [["index", OPERATOR_RATIFY_FENCE, OPERATOR_RATIFY_FENCE.replace("if (!viaSession)", "if (false && !viaSession)")]],
+  ["OPERATOR_TOKEN_CANNOT_RATIFY — refused BY NAME through the op",
+   "and the finding is STILL not published"],
+  ["MACHINE_CANNOT_RATIFY — refused BY NAME through the op",
+   "MACHINE_CANNOT_RATIFY_CASE — refused BY NAME through the op",
+   "OPERATOR_TOKEN_CANNOT_RATIFY_CASE — refused BY NAME through the op"]);
+
+const GOVERN_FENCE =
+  '    if (GOVERNANCE_ACTIONS.includes(op) && !viaSession)\n'
++ '      return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_GOVERN",';
+
+arm("(8) **D-503 · DROP THE GOVERNANCE FENCE.** DECLARED: 3b's OPERATOR_TOKEN_CANNOT_GOVERN pin MUST "
+  + "fail by name. DECLARED AND NOT OBVIOUS, and it is D-136's own argument arriving as a measurement: "
+  + "the capability edit STILL does not land, because the `by` stamp becomes `class:admin`, matches no "
+  + "roster row, and the store answers NOT_AN_ADMIN — a refusal that is CORRECT and whose SENTENCE IS "
+  + "FALSE, since the fact is that a token is not a person. So \"nothing the bearer asked for landed\" "
+  + "MUST STAY GREEN and the pin's `got` should read NOT_AN_ADMIN. The two layers are both load-bearing "
+  + "and this arm breaks one of them alone.",
+  [["index", GOVERN_FENCE, GOVERN_FENCE.replace("if (GOVERNANCE_ACTIONS", "if (false && GOVERNANCE_ACTIONS")]],
+  ["OPERATOR_TOKEN_CANNOT_GOVERN — refused BY NAME through the op",
+   "every one of them answered with its OWN name, stated once as a set"],
+  ["MACHINE_CANNOT_RATIFY — refused BY NAME through the op",
+   "and nothing the bearer asked for landed: anna's capabilities are the ones she had",
+   "OVER-STRICTNESS, and the evidence the payload was COMPLETE: ruth making THE SAME edit"]);
+
+arm("(9) **D-503 · OVER-STRICTNESS, AND IT IS THE ARM THAT TELLS A FENCE FROM A WALL.** Widen the "
+  + "`op=caseratify` machine fence from the `ai` class to EVERY caller. A fence that refuses everyone "
+  + "reads exactly like a fence holding, and only the MEMBER arm can tell them apart. DECLARED: ruth's "
+  + "own signed-in session committing her own signed bytes MUST FAIL, and the operator pin MUST FAIL "
+  + "too — the bearer now answers MACHINE_CANNOT_RATIFY_CASE instead of its own code, which is a fence "
+  + "lying about which caller it refused. DECLARED TO STAY GREEN: the MACHINE pin itself, because a "
+  + "fence that refuses everyone still refuses the machine.",
+  [["index", MACHINE_CASE_FENCE, MACHINE_CASE_FENCE.replace(
+      "if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))",
+      "if (true)")]],
+  ["OVER-STRICTNESS, and the evidence the payload was COMPLETE: ruth committing THE SAME signed",
+   "OPERATOR_TOKEN_CANNOT_RATIFY_CASE — refused BY NAME through the op"],
+  ["MACHINE_CANNOT_RATIFY_CASE — refused BY NAME through the op",
+   "MACHINE_CANNOT_RATIFY — refused BY NAME through the op",
+   "OPERATOR_TOKEN_CANNOT_GOVERN — refused BY NAME through the op"]);
+
+arm("(10) **D-503 · A SIXTH FENCE MUST NOT ARRIVE UNDRIVEN — THE WHOLE POINT OF BLOCK 3b.** This is "
+  + "the failure the block exists for and the one no instrument could see before it: a fence code "
+  + "minted in `src/index.mjs` with nothing driving it read exactly like the five standing, because "
+  + "block 1 harvests `src/store.mjs` alone. Plant one literal and the equality must name it. Note "
+  + "what this arm does NOT do: it does not touch a fence, so every pin MUST STAY GREEN — a red pin "
+  + "here would mean the arm had moved a second variable.",
+  [["index", 'const GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];',
+             'const GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];\n'
+           + 'const D503_ARM_TEN = "MACHINE_CANNOT_ARRIVE_UNMEASURED";   /* D-503 arm 10: a sixth fence, minted and driven by nothing */']],
+  ["D-503 · EVERY fence src/index.mjs mints was DRIVEN THROUGH ITS OP"],
+  ["MACHINE_CANNOT_RATIFY — refused BY NAME through the op",
+   "MACHINE_CANNOT_RATIFY_CASE — refused BY NAME through the op",
+   "OPERATOR_TOKEN_CANNOT_RATIFY — refused BY NAME through the op",
+   "OPERATOR_TOKEN_CANNOT_RATIFY_CASE — refused BY NAME through the op",
+   "OPERATOR_TOKEN_CANNOT_GOVERN — refused BY NAME through the op",
+   "and nothing was driven that src/index.mjs does not mint"]);
 
 /* ====================== the report ======================================= */
 

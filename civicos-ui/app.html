@@ -20734,15 +20734,32 @@ function pubFooterHtml(c, floors){
    the plane said is selection; the sentence is never edited, and the code still
    reaches the reader whenever it is all the plane sent.
    AND WHERE IT IS PUT ON THE PAGE IS PART OF NOT EDITING IT. The plane's
-   refusals do not all end in a full stop — "verify requires sha256=<64 lowercase
-   hex>" and "unknown op" do not — so a sentence of this surface's own set
-   directly after one of them runs the two together and a reader gets a single
-   ungrammatical run of text with no way to tell where ours stops and theirs
-   starts. The gate has never had this problem because `teach()` puts the plane's
-   sentence in `#g-err` ALONE, which is the precedent followed here: this
+   refusals do not all end in a full stop — so a sentence of this surface's own
+   set directly after one of them runs the two together and a reader gets a
+   single ungrammatical run of text with no way to tell where ours stops and
+   theirs starts. The gate has never had this problem because `teach()` puts the
+   plane's sentence in `#g-err` ALONE, which is the precedent followed here: this
    surface's own words come FIRST and complete, and the plane's follow behind an
    explicit attribution, in their own element. Adding punctuation to the plane's
-   sentence would have been the easy fix and is exactly the edit DEC-8 forbids. */
+   sentence would have been the easy fix and is exactly the edit DEC-8 forbids.
+   **THE TWO EXAMPLES THAT STOOD HERE ARE CORRECTED 2026-09-24 (UI-100), NOT
+   DELETED, AND THE CONCLUSION IS UNCHANGED.** They were "verify requires
+   sha256=<64 lowercase hex>" and "unknown op", and both were true of the wire
+   when this was written. D-278 (2026-09-23) gave BOTH of those refusals a DEC-49
+   code and a CANNED TRANSLATION — C-61.1 through `requiredArgument` and C-69.1
+   through `dispatchRow` — and `refusalWords`, which `planeSaid` now goes
+   through, renders the translation FIRST. Every canned sentence in the catalogue
+   ends in a full stop, so the two sentences this comment cited as the problem
+   are no longer what a member reads, and the reader who checked them against the
+   plane would have found the account of the wire false. THE LAYOUT RULE STILL
+   HOLDS AND IS WHY THE CORRECTION IS A CORRECTION RATHER THAN A DELETION: this
+   function is reached by refusals from the whole catalogue, and `refusalWords`
+   falls through to `detail` and then to `error` whenever a code has no canned
+   translation — which is the overwhelming majority of them (UI-84 measured two
+   of 592 gaining one). A refusal with no sentence of its own still arrives here
+   as a bare SCREAMING_SNAKE code, which ends in no punctuation at all. So the
+   rule is not weakened by D-278; it is only no longer illustrated by the two
+   refusals that used to illustrate it. */
 function planeSaid(x){
   if(!x || typeof x !== "object") return "";
   /* UI-73: the sentence is `refusalWords`' (DEC-49's canned translation

@@ -202,7 +202,11 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
 
          /* D-149: the three levels, the two bounds and the ONE reader of an action's governing laws, from the
             catalog that judges them (C-2.10) — the act, its refusal and the read cannot disagree. */
-         LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, governingLawsOf } from "../checks/bio-checks.mjs";
+         LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, governingLawsOf,
+
+         /* REC-195: the LABEL a proposal of those laws is read under — machine work or a member's, composed in
+            the catalogue so the act and the read publish one answer and no surface judges an identity. */
+         lawProposalLabel } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* D-440: the FORMAT registry's own answer to "does this format walk parts",
    which is what makes a capture an office container (`#containerKindOf`). */
@@ -2022,6 +2026,10 @@ export class Store extends DurableObject {
          the catalog's one reader from the document's own bytes, so an action nobody set a list on cannot read
          as governed by anything, federal law included. */
       governing_laws: governingLawsOf(fm),
+      /* REC-195: AND WHAT WAS PROPOSED, APART FROM IT. Two keys, never composed: `governing_laws` above is the
+         member's statement or its honest undetermined, and this is machine work labelled as machine work
+         (D-149). Nothing here is evidence that the list came from a proposal, and nothing derives one. */
+      governing_laws_proposals: this.#lawProposalsFor(row.bundle_id),
       /* DEC-14, derived by the catalog's own function so no reader composes it. */
       consequence: consequenceState(fm),
       /* REC-24 (g)'s CONSUMER: the documents that point back at this action. */
@@ -6916,37 +6924,9 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-machine-set-laws */
     if (!target)
       return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    let list = laws;
-    if (typeof list === "string") { try { list = JSON.parse(list); } catch { list = null; } }
-    const entries = [];
-    /* DEC-49 REGION is-laws-entry — D-149/C-73.2-5. The conditions on the LIST's own shape. */
-    if (!Array.isArray(list) || !list.length)
-      return { ok: false, reason: "NO_LAWS", legal_levels: LAW_LEVELS,
-               detail: "the act names at least one law as {level, citation}. An action whose laws nobody has "
-                     + "stated reads UNDETERMINED on its own; an empty list is not a statement." };
-    if (list.length > GOVERNING_LAWS_MAX)
-      return { ok: false, reason: "TOO_MANY_LAWS", count: list.length, max: GOVERNING_LAWS_MAX,
-               detail: `one act states at most ${GOVERNING_LAWS_MAX} governing laws` };
-    const seen = new Set();
-    for (let i = 0; i < list.length; i++) {
-      const e = list[i];
-      const level = e && typeof e === "object" ? String(e.level ?? "").trim() : "";
-      const citation = e && typeof e === "object" && typeof e.citation === "string" ? e.citation.trim() : "";
-      if (!LAW_LEVELS.includes(level))
-        return { ok: false, reason: "BAD_LAW_LEVEL", index: i, level, legal: LAW_LEVELS,
-                 detail: `laws[${i}].level is one of ${LAW_LEVELS.join(", ")}` };
-      if (!citation || citation.length > CITATION_MAX || /["\\\r\n]/.test(citation))
-        return { ok: false, reason: "BAD_CITATION", index: i,
-                 detail: `laws[${i}].citation is 1 to ${CITATION_MAX} characters with no quote, backslash or `
-                       + "newline: the restricted frontmatter grammar has no escapes" };
-      const key = `${level}\u0000${citation.toLowerCase()}`;
-      if (seen.has(key))
-        return { ok: false, reason: "BAD_CITATION", index: i,
-                 detail: `laws[${i}] repeats an earlier entry: a law is named once at its level` };
-      seen.add(key);
-      entries.push({ level, citation });
-    }
-    /* END DEC-49 REGION is-laws-entry */
+    const read = this.#lawEntries(laws);
+    if (!read.ok) return read;
+    const entries = read.entries;
 
     const gate = viewerPredicate(viewer);
     const b = this.#one(
@@ -7000,6 +6980,59 @@ export class Store extends DurableObject {
              replaced: before.state === "stated" ? before.laws : null, weight: "single" };
   }
 
+  /* D-149 — WHAT A WELL-FORMED LIST OF GOVERNING LAWS IS, decided in ONE place.
+   *
+   * EXTRACTED FROM `actionLaws` BY REC-195, and the extraction is the point rather than tidiness. REC-195 adds a
+   * SECOND caller — `actionLawsPropose`, the machine's proposal — and a second caller judging the same shape is
+   * how REC-46's eleven-copies-of-one-predicate failure arrives at a grammar. The alternative was a second family
+   * of refusal codes saying the same four things about the same four conditions, which would have made the
+   * catalogue claim the plane draws a distinction it does not draw. So both acts ask this, both refuse with
+   * C-73.2..5, and a change to what a citation may be cannot reach one act and miss the other.
+   *
+   * IT JUDGES THE SHAPE AND NEVER THE LAW. Whether a citation is the RIGHT law for the agency asked is a member's
+   * reading and the plane does not try (D-149: the plane encodes no law's rules). Returns the parsed entries or
+   * the refusal, and writes nothing. */
+  /* AN INSTANCE METHOD AND NOT A STATIC ONE, which is a property of the INSTRUMENT rather than of the code:
+     `check-refusal-codes.mjs`'s arm C finds the function a `where` names by a pattern that admits `export`,
+     `async` and `function` before the name and NOT `static`, so a `where` pointing at a static method resolves
+     to nothing — and a `where` that resolves to nothing takes its four rows OUT of the judged set while every
+     arm still reports green (measured here: regions 157 -> 156, codesChecked 429 -> 424). Written this way so
+     the guard can see it; it reads no instance state. */
+  #lawEntries(laws) {
+    let list = laws;
+    if (typeof list === "string") { try { list = JSON.parse(list); } catch { list = null; } }
+    const entries = [];
+    /* DEC-49 REGION is-laws-entry — D-149/C-73.2-5. The conditions on the LIST's own shape. */
+    if (!Array.isArray(list) || !list.length)
+      return { ok: false, reason: "NO_LAWS", legal_levels: LAW_LEVELS,
+               detail: "the act names at least one law as {level, citation}. An action whose laws nobody has "
+                     + "stated reads UNDETERMINED on its own; an empty list is not a statement." };
+    if (list.length > GOVERNING_LAWS_MAX)
+      return { ok: false, reason: "TOO_MANY_LAWS", count: list.length, max: GOVERNING_LAWS_MAX,
+               detail: `one act states at most ${GOVERNING_LAWS_MAX} governing laws` };
+    const seen = new Set();
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      const level = e && typeof e === "object" ? String(e.level ?? "").trim() : "";
+      const citation = e && typeof e === "object" && typeof e.citation === "string" ? e.citation.trim() : "";
+      if (!LAW_LEVELS.includes(level))
+        return { ok: false, reason: "BAD_LAW_LEVEL", index: i, level, legal: LAW_LEVELS,
+                 detail: `laws[${i}].level is one of ${LAW_LEVELS.join(", ")}` };
+      if (!citation || citation.length > CITATION_MAX || /["\\\r\n]/.test(citation))
+        return { ok: false, reason: "BAD_CITATION", index: i,
+                 detail: `laws[${i}].citation is 1 to ${CITATION_MAX} characters with no quote, backslash or `
+                       + "newline: the restricted frontmatter grammar has no escapes" };
+      const key = `${level}\u0000${citation.toLowerCase()}`;
+      if (seen.has(key))
+        return { ok: false, reason: "BAD_CITATION", index: i,
+                 detail: `laws[${i}] repeats an earlier entry: a law is named once at its level` };
+      seen.add(key);
+      entries.push({ level, citation });
+    }
+    /* END DEC-49 REGION is-laws-entry */
+    return { ok: true, entries };
+  }
+
   /* D-149: REPLACE the top-level `governing_laws:` block (the key line and its indented rows) with `entries`,
      or open it before the closing fence when absent — `#spliceCorrespondence`'s grammar, whole-block. Returns
      null for a block it cannot read as that shape (an inline value other than `[]`), refusing rather than
@@ -7026,6 +7059,122 @@ export class Store extends DurableObject {
         break;
       }
     return [...lines.slice(0, gi), ...block, ...lines.slice(last + 1)].join("\n");
+  }
+
+  /** op=actionlawspropose — REC-195 (D-149's remaining half; `BIO_Case_Making_v0_1.md` §2, *A RECORDS REQUEST
+   *  NAMES EVERY LAW THAT GOVERNS IT*): A PROPOSAL OF CITATIONS AND LEVELS, STORED APART FROM THE MEMBER'S
+   *  LIST AND LABELLED MACHINE WORK.
+   *
+   *  THE RULING'S OWN WORDS: *the machine may propose the list from the counterparty, labelled as machine work,
+   *  and never sets it.* D-149 built the half that REFUSES (the machine fence at C-32.18, spelled without backticks here
+   *  because machinefences-dec49's ARM B2 reads a quoted fence literal in this file as a FENCE SITE and asks
+   *  whether it sits inside a governed region — a mention in prose is not one) and said in this
+   *  file's own comment that no proposal was built. This is that proposal, and every line of it is about the
+   *  difference between the two halves.
+   *
+   *  IT NEVER SETS THE LIST, AND THAT IS STRUCTURAL RATHER THAN POLICED. This method does not call `promote`, it
+   *  writes no file, and it never touches `governing_laws`, `governing_laws_by` or `governing_laws_at`. The list
+   *  is the member's and moves only through `actionLaws`; the fence that keeps a revision from moving it
+   *  (C-73.1) is untouched and unreachable from here, because nothing here writes bytes at all. The suite's
+   *  named control arms this method to write the list and the arm that fails is the one whose name says the
+   *  list is the member's.
+   *
+   *  ANY CREDENTIAL MAY PROPOSE, AND THE LABEL CARRIES THE MEANING — `themePropose`'s shape, for its reason
+   *  (§8.4 fence 3). A fence admitting only machines would be a fence TIGHTER THAN ITS RULE: D-149 says a
+   *  machine MAY propose, not that nobody else may, and a member's proposal to whoever states the list is a
+   *  real act with an obvious surface. What the record owes is the LABEL, and `lawProposalLabel` composes it in
+   *  one place so the plane answers the question rather than publishing an identity for a surface to judge.
+   *
+   *  THE WHOLE PROPOSAL, REPLACED, PER PROPOSER. A proposer restating replaces its OWN standing proposal and
+   *  nobody else's: two machines proposing different lists are two proposals, and the record says who proposed
+   *  which. There is no act that clears one and none that adopts one — adopting is `op=actionlaws`, which is a
+   *  member's authored statement of the laws and not an acceptance of anybody's suggestion. **NOTHING HERE OR
+   *  IN THE READ DERIVES A RELATION BETWEEN A PROPOSAL AND THE LIST**, even when they hold the same citations:
+   *  that a member's list came FROM a machine's proposal is a claim about why somebody acted, and the record
+   *  cannot support it. */
+  actionLawsPropose({ target, laws = null, proposer = null, viewer = null } = {}) {
+    const who = String(proposer ?? "").trim();
+    if (!who)
+      return { ok: false, reason: "NO_AUTHOR",
+               detail: "this call carries nobody. The plane stamps the proposer from the credential that "
+                     + "asked, and a proposal nobody can be named for is one the record could say nothing "
+                     + "about: the label IS the act." };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const read = this.#lawEntries(laws);
+    if (!read.ok) return read;
+    const entries = read.entries;
+
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+      target, ...gate.args);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
+               detail: "governing laws belong to an action: they are the laws its request is made under." };
+    const at = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    /* REPLACE THIS PROPOSER'S OWN ROWS AND NOBODY ELSE'S. Keyed on both columns, never on the bundle alone. */
+    this.sql.exec(`DELETE FROM action_law_proposals WHERE bundle_id=? AND proposed_by=?`, target, who);
+    entries.forEach((e, i) => this.sql.exec(
+      `INSERT INTO action_law_proposals (bundle_id, proposed_by, ord, level, citation, proposed_at)
+       VALUES (?, ?, ?, ?, ?, ?)`, target, who, i, e.level, e.citation, at));
+
+    /* THE ACT'S OWN ANSWER SAYS WHAT IT DID NOT DO, read through the ONE reader of the list (`governingLawsOf`)
+       so the act and the action's own read cannot disagree about whose the list is. */
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    const fm = liveMd && liveMd.content !== null ? (parseFrontmatter(liveMd.content).data || {}) : null;
+    const listed = governingLawsOf(fm);
+    return { ok: true, target, weight: "single",
+             proposal: { ...lawProposalLabel(who), at, laws: entries },
+             governing_laws: listed, evidence: false,
+             says: `${entries.length} citation${entries.length === 1 ? " is" : "s are"} proposed for this `
+                 + `action. This is not the action's list of governing laws and did not change it: that list `
+                 + `${listed.state === "stated" ? `is ${listed.laws.length} law(s) stated by a member` : "is UNDETERMINED"}`
+                 + ", and only a member's own act states it." };
+  }
+
+  /** REC-195: THE PROPOSALS STANDING AGAINST ONE ACTION, for `op=projection`'s action block.
+   *
+   *  THE EMPTY ANSWER IS A STATEMENT, NOT AN EMPTY LIST — REC-146's finding on the pairing read, which is the
+   *  same failure one construct over: `proposals: []` printed bare reads as *nothing has been proposed, so
+   *  nothing applies*, and on this surface the second half would be the record claiming what nobody said. So
+   *  the block always carries `says`, and what it says about an empty set is only that the set is empty.
+   *
+   *  BOUNDED, AND THE CUT IS PUBLISHED. One proposer holds at most `GOVERNING_LAWS_MAX` citations, and the
+   *  number of PROPOSERS is not bounded by anything, so the read takes the most recent `LAW_PROPOSALS_READ_MAX`
+   *  proposals and says when it cut. The row limit is sized so every proposal returned is COMPLETE: a partial
+   *  list would read as a shorter proposal than the one that was made.
+   *
+   *  NO VIEWER GATE OF ITS OWN, deliberately: its one caller has already resolved the action through the
+   *  viewer's own gate, so a reader holding the action holds its proposals. A second gate here would be a
+   *  second answer to one question. */
+  #lawProposalsFor(bundleId) {
+    const cap = Store.LAW_PROPOSALS_READ_MAX;
+    const rowCap = (cap + 1) * GOVERNING_LAWS_MAX;
+    const rows = this.#rows(
+      `SELECT proposed_by, ord, level, citation, proposed_at FROM action_law_proposals
+        WHERE bundle_id=? ORDER BY proposed_at DESC, proposed_by, ord LIMIT ?`, bundleId, rowCap + 1);
+    const byProposer = new Map();
+    for (const r of rows) {
+      if (!byProposer.has(r.proposed_by))
+        byProposer.set(r.proposed_by, { ...lawProposalLabel(r.proposed_by), at: r.proposed_at, laws: [] });
+      byProposer.get(r.proposed_by).laws.push({ level: r.level, citation: r.citation });
+    }
+    const all = [...byProposer.values()];
+    const proposals = all.slice(0, cap);
+    const machine = proposals.filter((p) => p.machine_work).length;
+    return {
+      proposals, limit: cap, truncated: all.length > cap,
+      says: proposals.length
+        ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of the laws that govern this `
+          + `action, ${machine} of them machine work. A proposal is not this action's list of governing laws `
+          + `and nothing here states which laws apply: the list is the member's own act, and it is stated `
+          + `beside this one.`
+        : "no proposal of the laws governing this action stands in the record. That is a statement about "
+          + "proposals and about nothing else: whether any law governs this request is answered beside this, "
+          + "and a member states it.",
+    };
   }
 
   /* REC-24 (g): write the `responds_to` edge onto the CAPTURED REPLY, pointing
@@ -16481,7 +16630,27 @@ export class Store extends DurableObject {
        * inquiries), the LEDGER (CORRESPONDENCE_REFUSED — capture-or-testify),
        * and RESOLUTION (a leg or a hash that points at nothing in this store,
        * which only the store can see). */
-      const isAction = normalizeType(meta.object_type) === "action";
+      /* D-505 (`BIO_Case_Making_v0_1.md` §2, `risk_tier`; BOB #32's 2026-09-24 rule): ASK BOTH SPELLINGS OF
+       * "THIS IS AN ACTION", AND THE UNION CAN ONLY ADD REFUSALS. This read `meta.object_type` ALONE — the
+       * CALLER'S meta — while everything downstream of the write derives the action from the DOCUMENT'S OWN
+       * `object_type`: `#projectRow` writes `action_risk_tier: fm.object_type === "action" ? num(fm.risk_tier)
+       * : null` off the promoted bytes, and `query.mjs`'s `risk:` search reads that column. So the fence was
+       * asking one question and the record was answering another.
+       *
+       * MEASURED 2026-09-24 through op=promote on a machine credential (D-505's probe, and section 7 of
+       * `risk-tier.test.mjs` now drives it): a document whose bytes say `object_type: action` and
+       * `risk_tier: 1`, promoted with `meta: { object_type: "information" }`, LANDED — C-32.19 never ran, the
+       * stored bundle.md carried `risk_tier: 1`, `action_risk_tier` read 1, and `op=search q=risk:1` FOUND it.
+       * A machine set the one field carrying legal exposure by calling its own action something else in the
+       * envelope. `promote` is the ONE writer of bundle.md in this file (every other writer in it, including
+       * this op's own splicing callers, comes back through here), so closing it here closes the write.
+       *
+       * IT IS A UNION AND NEVER A SWAP: every promote refused before this line is refused still, and the only
+       * promotes it newly reaches are the ones whose OWN BYTES say action — which is precisely the set whose
+       * risk tier the record will go on to publish. Replay stays exempt with the block, for the reason the
+       * block states; that exemption is caller-asserted, which is D-505's reported finding and not this fix. */
+      const isAction = normalizeType(meta.object_type) === "action"
+        || (docFmW && typeof docFmW === "object" && normalizeType(docFmW.object_type) === "action");
       if (isAction && docFmW && !pkg.replay) {
         /* REC-189 / C-32.19 — ONLY A MEMBER'S AUTHORED ACT SETS A RISK TIER (D-182, BOB #21:
            *"Only a member's authored act sets 1, 2 or 3"*; `BIO_Case_Making_v0_1.md` §2). D-182 built the
@@ -20706,6 +20875,9 @@ export class Store extends DurableObject {
   }
   /* op=themeread's bound, `op=leadread`'s pair and for its reason. */
   static THEME_READ_LIMIT_DEFAULT = 200;
+  /* REC-195: the most PROPOSALS one action's read returns (each at most GOVERNING_LAWS_MAX citations). A cut,
+     published beside the answer — never a claim that no more exist. */
+  static LAW_PROPOSALS_READ_MAX = 12;
   static THEME_READ_LIMIT_MAX = 2000;
 
   /* ====================================================================== *
@@ -29206,6 +29378,9 @@ export class Store extends DurableObject {
       /* D-162: the themes and their placements, a purge's PROOF only (D-113). Not on op=stats:
          a count of members' lenses is not an operator fact this item was asked to publish. */
       ...(proof ? { themes: n("themes"), themePlacements: n("theme_placements") } : {}),
+      /* REC-195: the standing proposals of an action's governing laws, a purge's PROOF only (D-113). Not on
+         op=stats: how many citations a machine has proposed is not an operator fact. */
+      ...(proof ? { actionLawProposals: n("action_law_proposals", "bundle_id") } : {}),
       /* PL-1 / IS-1: the inquiry's alternative accounts of its evidence and
          their legs, reported so a purge can PROVE it took them (D-113). A COUNT
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
@@ -30722,6 +30897,11 @@ export class Store extends DurableObject {
                        set a purged action's quotes beside the living ones by counterparty,
                        naming a request the record no longer holds. */
                     "action_quotes",
+                    /* REC-195 / D-113: `action_law_proposals` holds a machine's PROPOSED citations for an
+                       action and carries bundle_id, so it clears in BOTH arms here. Left out, a purge
+                       reporting scope ALL would leave citations standing against a request the record no
+                       longer holds — and they are the one kind of row here that nobody authored. */
+                    "action_law_proposals",
                     /* REC-63 / D-113: the route markers are keyed on `bundle_id`, so they
                        ride this list and are cleared in BOTH arms — a marker outliving the
                        document it doubts would attach itself to whatever bundle was next
@@ -31232,6 +31412,8 @@ export class Store extends DurableObject {
                  leads: d("leads"),
                  /* D-162 / D-113: the themes and placements a purge took. */
                  themes: d("themes"), themePlacements: d("themePlacements"),
+                 /* REC-195 / D-113: the governing-law proposals a purge took. */
+                 actionLawProposals: d("actionLawProposals"),
                  /* PL-3 / IS-4 / D-113: the stored refusals a purge took, proved
                     by consequence rather than asserted. */
                  suggestRefusals: d("suggestRefusals"),
@@ -48464,6 +48646,13 @@ export class Store extends DurableObject {
           laws: (body || {}).laws,
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
+        /* REC-195: the PROPOSAL, beside the act. `proposer` is the control plane's stamp and never a caller's
+           field (themepropose's route); there is no `author` here, because nothing here is authored. */
+        actionlawspropose: () => this.actionLawsPropose({
+          target: url.searchParams.get("target") || (body || {}).target,
+          laws: (body || {}).laws,
+          viewer: url.searchParams.get("viewer"),
+          proposer: url.searchParams.get("proposer") }),
         actioncorrespond: () => this.actionCorrespond({ target: url.searchParams.get("target"),
           direction: url.searchParams.get("direction"), at: url.searchParams.get("at"),
           medium: url.searchParams.get("medium"), party: url.searchParams.get("party"),
