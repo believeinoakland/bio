@@ -23,6 +23,7 @@
 - [Integration with the epistemics ladder](#integration-with-the-epistemics-ladder)
   - [RULED 2026-09-23 by BOB #31: there is no credence ledger (D-53; S17-1 Q1)](#ruled-2026-09-23-by-bob-31-there-is-no-credence-ledger-d-53-s17-1-q1)
 - [Bias debt, and HUNCH DEBT](#bias-debt-and-hunch-debt)
+  - [RULED 2026-09-23 by BOB #32: what settles a bias-debt obligation (D-86)](#ruled-2026-09-23-by-bob-32-what-settles-a-bias-debt-obligation-d-86)
   - [RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT](#ruled-2026-08-01-a-hunch-is-temporary-declared-bias-and-it-is-hunch-debt)
 - [The bias acknowledgement, authored at export](#the-bias-acknowledgement-authored-at-export)
 - [Differential traversal and the cross-group rerun](#differential-traversal-and-the-cross-group-rerun)
@@ -309,6 +310,15 @@ So: ordinary bias debt marks the work, travels with it, is shown to the reader, 
 does NOT block ratification. Uncleared HUNCH debt refuses publication, by name,
 before any signature exists (`op=publishpreflight` → `UNCLEARED_HUNCH`). The
 workproduct_state half of the old rule is likewise narrowed to hunches.
+
+### RULED 2026-09-23 by BOB #32: what settles a bias-debt obligation (D-86)
+
+Three acts settle a bias-debt obligation, and each is RECORDED; none clears it silently. (1) **The lens moves back**,
+as built. (2) **A re-run under the CURRENT lens** discharges the debt of the run it re-runs, and the obligation is
+closed with the discharging run's id and lens pins, so a reader sees WHICH run settled it. A re-run under any other
+lens discharges nothing. (3) **A member's resolve with a REQUIRED stated reason**: an authored act, attributed, dated
+and append-only. It needs no re-run, because a member may judge that the lens change does not bear on the finding.
+Derived informs, authored binds (DEC-24), and a member is never forced (DEC-69). NOT BUILT (REC-207).
 
 ### RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT
 

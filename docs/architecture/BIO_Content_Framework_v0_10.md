@@ -1985,6 +1985,22 @@ group's instance has no OCR member until the fleet is deployed to it, and takes 
 branch that claims nothing about a scan's text. Some code comments still describe tier 3 as
 untaken; they are stale and rowed for correction.
 
+**THREE STATED LIMITS AND ONE DESIGN (BOB #32, 2026-09-23).**
+- **The image-only page is RARE AND CLUMPED (D-313).** CPDF-15 censused 1,377 Legistar pages twice and found ZERO
+  image-only pages; CPDF-14 had found 13 of 1,458 on the same surface weeks earlier, in TWO documents. So a corpus arm
+  that needs image-only pages cannot rely on harvesting them, and an n=0 is a statement about recent traffic, not about
+  the engine. This is a MEASUREMENT, not a capability, and a probe states its named fallback.
+- **The OCR per-page costs are denominated in the wrong runtime (D-391 part 1).** CONTENT-PDF's "CPU per page" row
+  converts node-proxy milliseconds and compares them with a ceiling measured on a deployed Worker. Against FL-1's
+  deployed 1,071 ms, every per-page share is UNDERSTATED by **1.43×** (page 1 `best_int` reads 134% of the window and is
+  193%). The row's verdict survives: one page per invocation is at the ceiling's order. The figure stays as its authors
+  wrote it; this is its stated correction, and wasm was measured in neither runtime.
+- **Positional text, designed (CPDF-3's gap; M-120).** Tier-1 text units carry no position, and a LinkRecord carries
+  no anchor text, so an agenda item's membership in a file exists today only as rectangles an instrument co-locates.
+  I2 gains a page and rect on each tier-1 text unit, and anchor text plus a rect on each LinkRecord. An agenda item's
+  membership in a file is then DERIVED from containment: labelled as machine work, graded as inferred, and never
+  presented as the publisher's own link. NOT BUILT (REC-206, I2 PROVISIONAL).
+
 **EVERY CORPUS-SCALE FIDELITY FIGURE IS AGREEMENT, NOT ACCURACY — A STATED, PERMANENT LIMITATION AS OF
 2026-09-19 (BOB #17, D-306), and the purchase that would close it is NOT FUNDED on DEC-74's own pattern.**
 Human ground truth exists for exactly ONE page in this project (`GT_PAGE2`, 2,687 normalised characters,

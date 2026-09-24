@@ -829,6 +829,9 @@ Prose sections: \## Statement, \## Why It Matters, \## Open Questions,
 
 ### 4.3 Project
 
+*A project's `title` is unique across the instance (`BIO_Membership_Architecture_v2.md` §7.1, Unicode-equivalent titles
+counting as one; Membership §11 item 8's cross-document half, folded 2026-09-23 by BOB #32).*
+
 Record files: analysis.md (the cumulative analytical record, revised in
 place, never a changelog), workproduct.md (the focused derived view,
 once focusing begins).

@@ -144,7 +144,10 @@ Rules:
   at merge.
 - **A claim is released explicitly**, with a date. An unreleased claim older
   than its expected scope is stale and `ARCH` may reassign it; silence does not
-  hold ground forever.
+  hold ground forever. **The one release grammar is a `released: <date> …` line
+  INSIDE the claim's own block** (D-342; BOB #32, 2026-09-23). Three historical forms read as released and are
+  brought to it: a `### RELEASED` heading, a `released:` line at the file's end after a later block, and a dated
+  release sentence. A scan that trusts the field must also read those three until they are brought over.
 - **Unclaimed paths are nobody's**, which is a collision risk rather than a
   licence. Claim before editing, even briefly.
 

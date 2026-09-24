@@ -323,7 +323,10 @@ reviewing hosting-account membership. The interface states this at the
 moment of ejection rather than leaving a group to discover it after the
 fact.
 
-**4.9 What an administrator does.** Confirmed July 26, 2026.
+**4.9 What an administrator does.** Confirmed July 26, 2026. *(BOB #32, 2026-09-23, on REC-159's finding: the founder's
+session is refused `NOT_AN_ADMIN` at the four custodial acts on an UNCLAIMED store such as scratch. That stands, and
+it fails closed. Authority does not carry across namespaces, so a live verification claims an administrator in
+scratch first.)*
 
 An administrator holds the custodial powers over MEMBERSHIP, and only those:
 
@@ -607,6 +610,11 @@ membership itself stays custodial and is untouched by this.
 project and is its sole initial owner. A project created by a machine credential
 has no owner, because there is no member behind a credential and inventing one
 would put a name on the record that nobody holds.
+
+**Unicode-equivalent titles are ONE name** (BOB #32, 2026-09-23, D-50's gap). The name key normalises to NFC before
+the comparison below. Two titles a member cannot tell apart on screen must not be two names, or a lookalike could
+claim a name that is taken. Existing titles stay as written, and a pair the census finds colliding after normalising
+is STATED, never renamed. NOT BUILT (REC-208).
 
 **A project's name is unique across the instance.** Confirmed July 26, 2026.
 The name is the `title` field of the project bundle's frontmatter, which is
