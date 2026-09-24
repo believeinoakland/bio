@@ -1,0 +1,16 @@
+{
+ "unit": "plane:check-firing.test.mjs",
+ "inputHash": "9dbadb96c178981db07a7fe4160e08822a78521b3078a9cf6aa695c9980ed1d1",
+ "verdict": "PASS",
+ "run": "202a0610b6877697c256cb304b7afc80e9df3680.1790280162542.31406.json",
+ "tree": "202a0610b6877697c256cb304b7afc80e9df3680",
+ "head": "b0f76b2e9b954c3d1c85364b7d6ad973d0b6e788",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 992,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "b0bf4019-105d-5ba6-9ed7-fa014d6de31b",
+ "at": "2026-09-24T20:02:42.554Z"
+}
