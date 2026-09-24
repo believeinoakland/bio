@@ -35738,17 +35738,51 @@ export class Store extends DurableObject {
      an attacker cannot slip past the caps on a race. The worst case is by
      construction a full inbox. */
   knock({ knockId, sha256, bytes, content, inR2, note, contact,
-          ipBucket, globalBucket, perIpLimit, globalLimit } = {}) {
+          ipBucket, ipPrevBucket, globalBucket, globalPrevBucket, elapsedFrac,
+          perIpLimit, globalLimit } = {}) {
     return this.ctx.storage.transactionSync(() => {
-      const cnt = (b) => this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0;
-      if (cnt(ipBucket) >= perIpLimit) return { ok: false, reason: "RATE_IP" };
-      if (cnt(globalBucket) >= globalLimit) return { ok: false, reason: "RATE_GLOBAL" };
+      const cnt = (b) => (b ? this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0 : 0);
+      /* D-496: a TWO-BUCKET WEIGHTED SLIDING WINDOW, because the fixed bucket
+         published a bound it did not hold. Counting into a bucket NAMED for
+         `floor(now/W)` and comparing that count alone means the count restarts
+         at the edge: a caller who sends the limit just before the edge and the
+         limit again just after it gets TWICE the published number inside a
+         span shorter than one window, and the limiter is behaving exactly as
+         written while the record's claim is false. BOB #32 ruled it (2026-09-24
+         04:28Z): a published limit is a BOUND, so the code holds it or the text
+         stops claiming it.
+
+         The estimate weights the PREVIOUS bucket by how much of it is still
+         inside the trailing window — `est = prev x (1 - elapsed/W) + cur` —
+         and refuses at `est >= limit`. It is the standard approximation and it
+         is APPROXIMATE IN BOTH DIRECTIONS: it assumes the previous bucket's
+         knocks were spread evenly through it, so a caller who front-loaded a
+         bucket is charged for knocks that have already aged out, and one who
+         back-loaded it is charged for fewer than it really holds. That is why
+         the published sentence in `index.mjs` says "estimated by a sliding
+         window" rather than stating a bound it cannot hold to the knock — a
+         record that claims more than it can support is the defect this row
+         exists to remove, and swapping one overstatement for another would be
+         the same defect wearing the opposite sign.
+
+         No schema change: the two buckets are the two rows already written, the
+         previous one kept alive by the prune below. */
+      const decay = 1 - Math.min(1, Math.max(0, Number(elapsedFrac) || 0));
+      const est = (cur, prev) => cnt(prev) * decay + cnt(cur);
+      if (est(ipBucket, ipPrevBucket) >= perIpLimit) return { ok: false, reason: "RATE_IP" };
+      if (est(globalBucket, globalPrevBucket) >= globalLimit) return { ok: false, reason: "RATE_GLOBAL" };
       for (const b of [ipBucket, globalBucket])
         this.sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1)
                        ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
-      /* Prune buckets from past windows; bucket names embed their window. */
+      /* Prune buckets from past windows; bucket names embed their window. D-496:
+         the prune keeps win AND win-1, because the previous bucket is now read
+         rather than merely stale. Deleting it would silently restore the fixed
+         bucket at the edge, which is the defect, so this line is part of the
+         subject and not housekeeping. */
       const win = globalBucket.split(":").pop();
-      this.sql.exec(`DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ?`, win);
+      const prevWin = String(Number(win) - 1);
+      this.sql.exec(`DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ? AND bucket NOT LIKE '%:' || ?`,
+                    win, prevWin);
       this.sql.exec(
         `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status)
          VALUES (?,?,?,?,?,?,?,?,'new')`,

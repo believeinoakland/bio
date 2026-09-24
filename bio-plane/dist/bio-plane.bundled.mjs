@@ -61612,19 +61612,29 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     note,
     contact,
     ipBucket,
+    ipPrevBucket,
     globalBucket,
+    globalPrevBucket,
+    elapsedFrac,
     perIpLimit,
     globalLimit
   } = {}) {
     return this.ctx.storage.transactionSync(() => {
-      const cnt = (b) => this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0;
-      if (cnt(ipBucket) >= perIpLimit) return { ok: false, reason: "RATE_IP" };
-      if (cnt(globalBucket) >= globalLimit) return { ok: false, reason: "RATE_GLOBAL" };
+      const cnt = (b) => b ? this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0 : 0;
+      const decay = 1 - Math.min(1, Math.max(0, Number(elapsedFrac) || 0));
+      const est = (cur, prev) => cnt(prev) * decay + cnt(cur);
+      if (est(ipBucket, ipPrevBucket) >= perIpLimit) return { ok: false, reason: "RATE_IP" };
+      if (est(globalBucket, globalPrevBucket) >= globalLimit) return { ok: false, reason: "RATE_GLOBAL" };
       for (const b of [ipBucket, globalBucket])
         this.sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1)
                        ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
       const win = globalBucket.split(":").pop();
-      this.sql.exec(`DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ?`, win);
+      const prevWin = String(Number(win) - 1);
+      this.sql.exec(
+        `DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ? AND bucket NOT LIKE '%:' || ?`,
+        win,
+        prevWin
+      );
       this.sql.exec(
         `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status)
          VALUES (?,?,?,?,?,?,?,?,'new')`,
@@ -75757,6 +75767,8 @@ var KNOCK = {
   maxInline: 64 * 1024
   // without R2: inline into the DO, small only
 };
+KNOCK.statedPerIp = `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
+KNOCK.statedGlobal = `at most ${KNOCK.global} knocks to this instance in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
 var SCRATCH = "scratch";
 var PUBLISHED_STORE = "bio";
 async function fingerprint(v) {
@@ -77452,7 +77464,9 @@ var index_default = {
             detail: r2 ? void 0 : "this instance stores knocks inline; large material needs its evidence storage configured"
           }, 413);
         const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
-        const win = Math.floor(Date.now() / KNOCK.windowMs);
+        const nowMs = Date.now();
+        const win = Math.floor(nowMs / KNOCK.windowMs);
+        const elapsedFrac = (nowMs - win * KNOCK.windowMs) / KNOCK.windowMs;
         const ipHash = await fingerprint(req.headers.get("cf-connecting-ip") || "unknown") || "unknown";
         const knockId = `KNOCK-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
         const rec = await doAnswer(stub2.fetch(new Request("http://do/knock", {
@@ -77466,13 +77480,19 @@ var index_default = {
             note: body2.note,
             contact: body2.contact,
             ipBucket: `ip:${ipHash}:${win}`,
+            ipPrevBucket: `ip:${ipHash}:${win - 1}`,
             globalBucket: `all:${win}`,
+            globalPrevBucket: `all:${win - 1}`,
+            elapsedFrac,
             perIpLimit: KNOCK.perIp,
             globalLimit: KNOCK.global
           })
         })));
         if (!rec.answered) return storeSilent("knock");
-        if (!rec.result?.ok) return json({ ok: false, ...rec.result }, 429);
+        if (!rec.result?.ok) {
+          const stated = rec.result.reason === "RATE_IP" ? KNOCK.statedPerIp : rec.result.reason === "RATE_GLOBAL" ? KNOCK.statedGlobal : null;
+          return json({ ok: false, ...rec.result, ...stated ? { stated } : {} }, 429);
+        }
         if (r2) await env.CAPTURES.put(
           `bio/inbox/${sha}`,
           bytes,
