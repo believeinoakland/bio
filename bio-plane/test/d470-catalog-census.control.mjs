@@ -17,13 +17,14 @@
  *  (b) ADD A CHECK WITHOUT MOVING THE VERSION — THE ROW'S OWN NAMED CONTROL, and the shape of the defect
  *      itself: one new row (`C-73.99`) in `GOVERNING_LAW_CHECKS`, the catalog moved, the stamp not.
  *      MUST FAIL: A3, the census pin, alone. MUST NOT FAIL: A1 (the census only grew), A2 (the new row is
- *      declared, not emitted), A4, A5 (the stamp still reads the catalogue's version, 1.24.0 since D-507), A6, A7, A8.
+ *      declared, not emitted), A4, A5 (the stamp still reads the catalogue's version), A6, A7, A8.
  *  (c) ADD A CHECK AT AN UNRESOLVABLE EMISSION SITE — `f(NEW_FAMILY.THING, …)` inside `checkBundle`, the
  *      spelling a census that scored an unreadable site as zero would swallow. MUST FAIL: A2 alone. A3 MUST
  *      NOT FAIL, and that is the point of splitting them: "I cannot read this site" and "a check was added"
  *      are different facts, and collapsing them is how a sweep reports a clean result while looking in the
  *      wrong place.
- *  (d) MOVE THE VERSION AND LEAVE THE PIN — `CATALOG_VERSION` to 1.99.0. MUST FAIL: A3 (no census recorded
+ *  (d) MOVE THE VERSION AND LEAVE THE PIN — `CATALOG_VERSION` to 1.99.0 (1.98.0 if the tree already reads
+ *      1.99.0), the needle READ from gate.mjs's own declaration at run time (M0-192). MUST FAIL: A3 (no census recorded
  *      for that version) and A5 (the stamp no longer reads the bumped version). MUST NOT FAIL: the rest.
  *  (e) OVER-STRICTNESS — correct work in a spelling this suite did not anticipate: C-15.1's emission site
  *      rewritten with its arguments across four lines and extra whitespace. EVERY ARM MUST STAY GREEN. This
@@ -64,7 +65,23 @@ const edit = (file, needle, replacement) => {
 
 const FAMILY_HEAD = "export const GOVERNING_LAW_CHECKS = {\n";
 const EMIT_C151 = "    findings.push(f('C-15.1', 'error', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));";
-const VERSION = 'export const CATALOG_VERSION = "1.28.0";'; /* CONDUCT #20 at c20-batch25: moved to the UNION's constant 1.28.0 — the needle must match the tree it arms; c20-batch22/23/25 moved the constant 1.24.0 -> 1.25.0 -> 1.26.0 -> 1.27.0 -> 1.28.0 and this needle was left at 1.24.0 (it would have thrown NOT ARMED). Branch histories: D-507 and c20-batch14 (ours), D-510 1.23.0 -> 1.24.0 for C-86.1 (theirs). */
+/* M0-192: THE NEEDLE IS READ FROM gate.mjs AT RUN TIME, NEVER QUOTED. The quoted literal this replaces was wrong
+   by construction, not by neglect: it pinned the value of a constant whose whole job is to MOVE on every catalogue
+   change, so every bump disarmed arm (d). It sat at 1.24.0 through four bumps (1.24.0 -> 1.28.0) and would have
+   thrown NOT ARMED until CONDUCT #20 hand-moved it at c20-batch25. Now the arm reads the ONE line that declares the
+   constant, whatever it holds, and requires it to occur EXACTLY ONCE — zero or two is refused by name here, before
+   the preflight, because a needle computed from nothing would arm nothing. */
+const VERSION_LINE = /^export const CATALOG_VERSION = "([^"\n]+)";$/gm;
+const versionFound = [...readFileSync(GATE, "utf8").matchAll(VERSION_LINE)];
+if (versionFound.length !== 1) {
+  console.error(`NOT ARMED: arm (d) needs gate.mjs to declare \`export const CATALOG_VERSION = "…";\` on ONE line; `
+              + `found ${versionFound.length} in ${GATE}`);
+  process.exit(4);
+}
+const VERSION = versionFound[0][0];
+const CURRENT_VERSION = versionFound[0][1];
+/* The arm's bumped value must differ from the tree's, or arm (d) is a no-op edit: "1.99.0" unless that IS current. */
+const BUMPED_VERSION = CURRENT_VERSION === "1.99.0" ? "1.98.0" : "1.99.0";
 
 const A1 = "(A1) THE CENSUS IS NON-EMPTY AND FLOORED";
 const A2 = "(A2) EVERY EMISSION SITE RESOLVES";
@@ -90,8 +107,8 @@ const ARMS = {
        apply: () => edit(CATALOG, EMIT_C151,
          EMIT_C151 + "\n    if (false) findings.push(f(NEW_FAMILY.THING, 'error', 'a control arm the census cannot read'));"),
        mustFail: [A2], mustNotFail: except(A2) },
-  d: { files: [GATE], label: "(D) MOVE THE VERSION AND LEAVE THE PIN — CATALOG_VERSION to 1.99.0",
-       apply: () => edit(GATE, VERSION, 'export const CATALOG_VERSION = "1.99.0";'),
+  d: { files: [GATE], label: `(D) MOVE THE VERSION AND LEAVE THE PIN — CATALOG_VERSION ${CURRENT_VERSION} -> ${BUMPED_VERSION}`,
+       apply: () => edit(GATE, VERSION, `export const CATALOG_VERSION = "${BUMPED_VERSION}";`),
        mustFail: [A3, A5], mustNotFail: except(A3, A5) },
   e: { files: [CATALOG], label: "(E) OVER-STRICTNESS — C-15.1's emission site rewritten across lines; every arm must stay GREEN",
        apply: () => edit(CATALOG, EMIT_C151,
@@ -210,3 +227,17 @@ process.exit(results.every((r) => r.verdict === "AS DECLARED") ? 0 : 1);
    NOTHING CAME BACK OTHER THAN AS DECLARED, which is itself worth reading with suspicion rather than relief —
    so the baseline row is above, and arm (c) was written specifically to try to make the pin lie in the
    direction a census usually lies (silence over an unreadable site) rather than the direction it is aimed at. */
+
+/* MEASURED 2026-09-24 by the M0-192 worker (cloud clone, branch `land/worker/M0-192`, base origin/main 9f8b69e6,
+   CATALOG_VERSION 1.28.0; gate.mjs 15,779 B, 492fe85ed26fcc1e…). THE NEEDLE IS NOW READ, NOT QUOTED:
+     tree as-is, every arm          baseline 9/0 · (b) 8/1 A3 · (c) 8/1 A2 · (d) 7/2 A3+A5 · (e) 9/0 — all AS DECLARED
+     ACCEPTS-WHEN: gate.mjs's constant hand-bumped to 1.29.0, `d` alone
+                                    arm (d) ARMED (1.29.0 to 1.99.0), 7/2, A3 and A5 by name, AS DECLARED, exit 0
+     NEGATIVE CONTROL: the pre-M0-192 driver (literal needle "1.28.0") restored, constant at 1.29.0, `d` alone
+                                    exit 1, refused BY NAME before anything armed: `ARM PREFLIGHT d  <<< occurs 0 times
+                                    (want 1) in …/src/gate.mjs` / `ARM PREFLIGHT FAILED … d:0` — the NOT ARMED the row
+                                    names, which the fixed driver no longer produces on a bump
+     THE FIX'S OWN REFUSAL: the declaration respaced (`CATALOG_VERSION="1.28.0";`), `d` alone
+                                    exit 4, `NOT ARMED: arm (d) needs gate.mjs to declare … found 0` — a reformatted
+                                    declaration is refused loudly, never read as a silent no-op
+   Every edit to gate.mjs and to this file restored from a scratchpad copy and verified sha256 OK and cmp SAME. */
