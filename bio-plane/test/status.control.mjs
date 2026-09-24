@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* The NEGATIVE CONTROL DRIVER for `tools/status.mjs` and `bio-plane/test/status.test.mjs` —
- * thirteen arms plus an opening and closing baseline.
+ * fourteen arms plus an opening and closing baseline.
  *
  *   node bio-plane/test/status.control.mjs        (from the repo root)
  *
@@ -142,6 +142,17 @@ const ARMS = [
     to:   'const DECL_TAIL = "";',
     mustBreak: "A `CREATE TABLE` IN A PROSE SENTENCE IS NOT A TABLE",
     alsoBreak: "...so the census does not count it either" },
+  /* M0-160, 2026-09-24. The property is new, and it is the one a probe's whole worth rests on: a
+     `hit` names ONE site or it names nothing. Armed, the tool takes the FIRST match again and
+     reports that line as evidence — which is exactly how D-498's probe matched 24 sites in
+     `store.mjs` and stayed green over an op its subject never touched. The arm must NOT touch the
+     miss ("matches nowhere") or the unique pin, because a guard that failed every `hit` would pass
+     the ambiguity arms while blinding the corpus. */
+  { id: "A14", title: "a `hit` satisfied by its FIRST of many matches again — a probe that pins nothing reads as one that pins the right site (M0-160)",
+    from: "    if (sites.length === 1) return { ok: true, evidence:",
+    to:   "    if (sites.length >= 1) return { ok: true, evidence:",
+    mustBreak: "A `hit` MATCHING TWICE IN ITS FILE IS NOT ok",
+    alsoBreak: "TWO FILES MATCHING ONCE EACH IS AMBIGUOUS TOO" },
 ];
 
 for (const a of ARMS) {
