@@ -4168,6 +4168,7 @@ rev ${rev}
       if (bytes !== buf.length) {
         r2.sizes.push({ sizeMB: mb, error: "length mismatch, NO NUMBER REPORTED" });
         r2.ok = false;
+        assert(`R2 ${mb}MB round trip read back its own length`, bytes, buf.length);
         continue;
       }
       r2.sizes.push({ sizeMB: mb, putMs, getMs, putMBps: +(mb / (putMs / 1e3)).toFixed(1), getMBps: +(mb / (getMs / 1e3)).toFixed(1) });
@@ -4184,8 +4185,13 @@ rev ${rev}
   const dang = await get("dangling");
   const wholeMs = Date.now() - tw;
   const passed = A.filter((a) => a.ok).length;
+  const failing = A.filter((a) => !a.ok).map((a) => a.name);
+  if (!r2.ok && failing.length === 0) failing.push("R2 measurement failed, naming no assertion");
+  const verdict = A.every((a) => a.ok) && r2.ok ? "pass" : "fail";
   return {
-    ok: A.every((a) => a.ok) && r2.ok,
+    ok: true,
+    verdict,
+    failing,
     ranAt: (/* @__PURE__ */ new Date()).toISOString(),
     store: storeName,
     nonce: NONCE,
@@ -78974,7 +78980,7 @@ var index_default = {
         capacity: cls === "admin",
         viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`
       });
-      return json(out, out.ok ? 200 : 500);
+      return json(out, out.verdict === "pass" ? 200 : 500);
     }
     if (op === "runtime") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));

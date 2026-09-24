@@ -968,36 +968,45 @@ for (const n of ALL_NO_CODE) console.log(`      no-code  op=${n.op} (${n.who})  
    fails it too and must be STRUCK WITH ITS REASON. An allow-list widened silently
    is the failure this shape exists to make impossible.
  *
- * WHAT IS IN IT TODAY, AND IT IS NOT WHAT THE ITEM EXPECTED. One op, under both
- * classes that reach it: `op=livefire`. And it is NOT A REFUSAL — which is the
- * finding, stated rather than smoothed into the tally. `livefire` is the plane's
- * own canary battery, and its `ok` is a VERDICT over its 19 assertions
- * (`src/livefire.mjs`: `ok: A.every((a) => a.ok) && r2.ok`), dispatched at
- * `index.mjs` `op === "livefire"` as `json(out, out.ok ? 200 : 500)`. So it
- * answers `ok:false` with no `reason`, no `code` and no `error` sentence of any
- * kind — one layer further out than D-270's bare-sentence residue, which at
- * least carried words.
+ * WHAT WAS IN IT, AND WHAT STRUCK IT — the pin working exactly as the paragraph
+ * above says it must. D-495 found one op here, under both classes that reach it:
+ * `op=livefire`, and it was NOT A REFUSAL, which was the finding rather than a
+ * false positive to filter away. `livefire` is the plane's own canary battery,
+ * and its `ok` WAS a VERDICT over its 19 assertions (`src/livefire.mjs`:
+ * `ok: A.every((a) => a.ok) && r2.ok`), dispatched at `index.mjs` as
+ * `json(out, out.ok ? 200 : 500)`. So it answered `ok:false` with no `reason`,
+ * no `code` and no `error` sentence of any kind — one layer further out than
+ * D-270's bare-sentence residue, which at least carried words — and every
+ * consumer that reads `ok:false` as a refusal (this instrument, and the agent
+ * worker, which deliberately holds no catalogue and passes a plane refusal
+ * through UNCHANGED) received something it could neither translate nor name.
  *
- * WHY IT IS A FINDING AND NOT A FALSE POSITIVE TO BE FILTERED AWAY. Every
- * consumer that reads `ok:false` as a refusal — this instrument, and the agent
- * worker, which deliberately holds no catalogue and passes the plane's refusal
- * through UNCHANGED — receives from this op something it can neither translate
- * nor name. Whether the fix is a code on the verdict or reserving `ok:false` for
- * refusals and moving the verdict to a key of its own is an INTERFACE decision
- * and not a translation, which is precisely the boundary D-270 drew; D-495
- * RAISES it and does not settle it, and it is listed for placement.
+ * STRUCK 2026-09-24 BY D-506 (IC-265), WITH ITS REASON, and it is the SECOND of
+ * the two directions this line was written to fail in: not a new codeless refusal,
+ * but this one being FIXED. BOB #32 ruled the interface question D-495 raised and
+ * deliberately did not settle — D-270's boundary, a code on the verdict versus
+ * reserving `ok:false` for refusals — at 06:07Z: **`ok` says the op ANSWERED, and
+ * the canary's result moves to `verdict` with `failing` naming the assertions.**
+ * So `op=livefire` no longer answers `ok:false` at all in this drive; it is not a
+ * refusal candidate here, and the residue is EMPTY.
  *
- * AND WHY THE LINE IS NON-EMPTY TODAY, stated so nobody later reads a flip as a
- * regression: in THIS fixture the canary's verdict is false for one deterministic
- * reason — its assertion *"no configured token is shorter than 16 characters"*,
- * against the harness's own 8-character `adm-d262`. 18 of 19 pass. If the fixture's
- * tokens are ever lengthened the canary answers `ok:true`, this line fails in the
- * GOOD direction, and the entry is struck with THAT as its reason rather than the
- * op being fixed. */
+ * AN EMPTY PIN IS NOT A VACUOUS ONE, and this file is the place that has to say
+ * so. `[]` still fails the moment any op in the four-credential drive answers
+ * `ok:false` with no code, and the drive it is taken over is floored by the
+ * `cGraded >= 20` line above, which exists precisely so an empty result cannot be
+ * read as good news while meaning nothing.
+ *
+ * THE FIXTURE IS UNCHANGED AND THE CANARY STILL GOES RED HERE, which is worth
+ * stating so nobody later "repairs" it: the harness's own 8-character `adm-d262`
+ * still fails the assertion *"no configured token is shorter than 16 characters"*,
+ * 18 of 19 pass, and the op now answers `ok:true`, `verdict:"fail"` and that
+ * assertion's name in `failing`. What left this set is the SILENCE, not the
+ * finding. `installer.test.mjs` pins that shape on its own published-token
+ * fixture; this line only records that the codeless answer is gone. */
 t("the ops answering a caller with NO code at all, over ALL FOUR credentials and all three classes "
 + "(D-495) — pinned as the exact named set, so a new codeless refusal fails here and a fixed one "
 + "fails here too and must be struck with its reason",
-  RESIDUE, ["livefire (admin)", "livefire (probe)"]);
+  RESIDUE, []);
 
 /* ====================================================================== 8
  * THE OVER-STRICTNESS ARM, BUILT IN. A correct refusal in a shape this file did
