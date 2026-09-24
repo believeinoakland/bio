@@ -83,6 +83,16 @@ scope: render on the queue's FINDING item who reopened it, the earlier decision,
 accepts-when: against a real-plane suite a reopened finding's queue item shows its earlier decision (the measured failure it moves: the reopened question shown as one nobody has answered). NEGATIVE CONTROL: omit `prior_disposition` from the render and the reopened-item arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs UI`).
 
+### REC-219 · queued — **A PUBLISHED CASE SIGNS "no manifest was in force" WHILE ITS SCOPE'S ONLY ADOPTION PINS A PROPOSED REVISION: the frozen `bias_manifest` block of `bio-case-document/3` has no field for REC-210's `pins_proposed`, so a later reader takes "a declaration was pending" for "nobody declared anything".** Found at REC-210's integration (CONDUCT #20 22:57Z). BOB #34 RULED YES 2026-09-24 23:08Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20): `bio-case-document/4`, whose frozen `bias_manifest` states both facts as they stood at signing — none in force, and an adoption pinning a proposed revision (its id), not yet in force — and says nothing about when or whether it takes effect; /3 documents stay valid, read as they are, never re-signed. — owner RECORD.
+order: after UI-109, IN PRODUCT ORDER after REC-210 lands, not ahead (BOB #34 23:08Z) (SCHEDULER #20, 2026-09-24)
+milestone: M10
+interface: I3 — a format bump; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 (the case-document format, rules 12-13's /3 bump) with `docs/architecture/BIO_Declared_Bias_v0_1.md` "Bias bundles and adoption", and BOB #34's ruling of 23:08Z, which this row FOLDS into §3.
+depends-on: REC-210.
+scope: bump to `/4`; the frozen block carries the pending-adoption fact with the revision id; a new C-41 check refuses a /4 document whose block omits it where the record held one. BOB named C-41.13, but /3's obligation already holds C-41.13 (bio-checks ~11548), so use the next free C-41 number and say so. /3, /2 and /1 stay accepted.
+accepts-when: a case published under a proposed-only adoption signs a /4 block naming the pending revision, and a /3 document still ratifies unchanged (the measured failure it moves: "no manifest was in force" alone). NEGATIVE CONTROL: omit the field and the new check refuses by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs REC`).
+
 ### UI-106 · queued — **THE REVIEW-COPY SURFACE LOSES `newCase` AND WILL SHOW THE CORRECTED IDENTITY SENTENCE UNREAD: `app.html`'s `rvcFormFromCopy` does not read `case.newCase` (DELEGATION RECORD (WORKER REC-199) -> UI on coord CLAIMS.md), and UI-92's draft list draws `#caseIdentitySentence`, which D-538 changes.** — owner UI.
 order: after D-539, the surface half of the review-copy corrections (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:43Z)
 milestone: M10
@@ -1179,23 +1189,3 @@ depends-on: D-443 (`integrated`; its branch moved ARM 1's anchor).
 scope: rewrite ARM 1's declaration to the measured outcome with a comment saying why the old one was wrong; rename every `INF-` fixture id to `INFO-`.
 accepts-when: `node bio-plane/test/nc-m040.mjs` reports every arm as declared, and no suite names an `INF-` id. NEGATIVE CONTROL: restore the five-failure declaration, and ARM 1 reads NOT as declared by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-449 · queued — **`project-sight.control.mjs`'s `promote-stamp-dropped` ARM CANNOT RUN: it throws SURFACE_NO_RUN (0/1), identically on `main` `02603e88`, because since REC-171 removing the stamp also breaks the harness's surfacing-run creation.** — owner M0.
-order: after D-446, among the control-hygiene rows (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (break only the thing: a control that moves a second variable refutes nothing).
-depends-on: none.
-scope: narrow the arm's patch to revisions, keeping the stamp when the base is null.
-accepts-when: the arm runs and fails as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-369 · queued — **FIVE IN-MEMORY `truncated` SHAPES ARE NEVER DRIVEN PAST THEIR CEILING: only `op=connect` has a live over-the-ceiling arm in `derivation-bounds.test.mjs`; `queueFeed`, `biasInhale`, `documentsNamingEntity` and `#backfillLegContent` are pinned by roster alone (now 10 names).** — owner RECORD.
-order: with the M0 control rows: a verification instrument (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (test through the op), with `INVESTIGATIVE-SESSION.md` §14c.
-depends-on: none.
-scope: a live driven arm per shape. In `bio-plane/test/derivation-bounds.test.mjs`.
-accepts-when: each shape is driven past its ceiling and states `truncated`. NEGATIVE CONTROL: drop a paging LIMIT in `queueFeed`, and its live arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
