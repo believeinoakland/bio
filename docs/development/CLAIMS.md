@@ -20162,6 +20162,7 @@ is shared ground and several UI workers may be live in it (`kickoffs/UI.md`).
   `vera (completeness, for the case)`.
 
 Discharges **DELEGATION 2026-09-24 RECORD (REC-212) -> UI** (above): its own block carries the discharge.
+released: 2026-09-24 — UI-103 landed at `596486d03` on `land/worker/UI-103`, PUSHED and verified from the remote (`git ls-remote --heads origin land/worker/UI-103` -> `596486d0389fa4a7599477363ac269c268237e72`). Gate GREEN on the committed tree `252af9f3`, class FULL: `297/297 suites green · 17419 assertions passing`, coverage `--strict` exit 0, UI harness 73/73 green, `plancheck` clean but for UNPUSHED (now pushed). The three app.html sites are released; the two new test files and the two CORRECTED assertions in `publishedcase.test.mjs` are released with them. REC-212 -> UI is DISCHARGED in its own block above.
 
 ## CLAIM 2026-09-24 UI (UI-97 — a member can UNDO a mute from the app: the queue's own mute report carries the two unmute controls `op=queuemute` already takes)
 
