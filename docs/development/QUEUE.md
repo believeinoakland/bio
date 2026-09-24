@@ -341,7 +341,7 @@ scope: `/(?:^|[{,\s])(["']?)([A-Z][A-Z0-9_]{2,})\1\s*:/g` with `.map(x => x[2])`
 accepts-when: a 3-key fixture with quoted keys returns all three. NEGATIVE CONTROL: restore the old pattern and the quoted-key arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### DIST-9 · queued — **D-260's DIST HALF HAS NO ROW: install and update do not carry the instance's organisation `ai` credential as the Worker secret `INSTANCE_AI_TOKEN`, as they carry DAEMON_TOKEN, so on every installed instance each wake says NO_INSTANCE_AI_CREDENTIAL** (`15.instance-ai-secret` ABSENT at 548eb2c5; I8 1.0.0 STABLE since IC-242). Found by DIST #6. — owner DIST.
+### DIST-9 · running — 2026-09-24 ~03:52Z by CONDUCT #20: built by DIST #6 itself (session_01Vi1XTVwxcBBMStifuBasLZ), not a CONDUCT worker; base origin/main 16fe1e7f; no release until Bob asks; push land/dist/DIST-9 by 05:45Z. Falsify rather than believe: read DIST's branch and session; never conclude queued from the absence alone.
 order: after D-484: the dependent half of a landed ruling, whose plane half (D-260) reads a secret nothing places; DIST builds it, no release until Bob asks (SCHEDULER #18, 2026-09-24; DIST #6 03:06Z)
 milestone: M8
 interface: I8 additive — the installer takes an optional operator-supplied value; the integrator classifies.
