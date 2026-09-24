@@ -27,9 +27,10 @@
  *
  * Run:  node test/ocr-worker.control.mjs
  */
-import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync, existsSync, mkdtempSync } from "node:fs";
 import { spawnSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -37,16 +38,16 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const MEMBER = join(HERE, "..");
 /* WHERE THE PEN LIVES — CORRECTED BY BOB #32, 2026-09-24, WHICH SUPERSEDES THE HEADER ABOVE.
    The header's "THE PEN LIVES INSIDE THIS WORKTREE and never in a shared scratchpad" was written against a real
-   incident (a concurrent worker overwrote a pen between ARM and RESTORE) and its reasoning still holds — a pen
-   under a GENERIC name in a SHARED root is nobody's. What BOB #32 measured is that the other horn costs too:
-   a file in the worktree is not inert. Repository-walking suites walk it, it trips `gates.mjs` §2e's
+   incident (a concurrent worker overwrote a pen between ARM and RESTORE), and the half of it that is right is
+   that a pen under a GENERIC name in a SHARED root is nobody's. What BOB #32 measured is that the other horn
+   costs too: a file in the worktree is not inert. Repository-walking suites walk it, it trips `gates.mjs` §2e's
    under-inclusion check, and it makes the tree DIRTY, so D-293 refuses to RECORD a GREEN verdict — three items
-   paid for that in one night, one of them `.d487-gate.log` costing a 14-minute re-run of a green gate. And this
-   harness `process.exit(2)`s on four paths that never reach its `rmSync(PEN)`, so the leak is not hypothetical.
-   The resolution is BOTH rules at once: the DEFAULT is unchanged (in-tree, so nothing silently moves), and
-   `BIO_CONTROL_PEN` points it at the SESSION's own scratchpad — which is not shared BETWEEN SESSIONS only if the
-   name is the caller's, so the caller supplies the directory and this file appends a name of its own. */
-const PEN = join(process.env.BIO_CONTROL_PEN || MEMBER, ".cpdf10-pen");
+   paid for that in one night. And this harness `process.exit(2)`s on four paths that never reach its
+   `rmSync(PEN)`, so the leak was not hypothetical. `mkdtempSync` answers BOTH at once and needs nobody to
+   remember anything: outside the worktree, and a fresh UNIQUE directory per run, so no concurrent worker can be
+   writing the same path. Seven harnesses in this estate already do exactly this; 55 of the 81 that declare a pen
+   still do not, which is a class D-478 reports rather than sweeps. */
+const PEN = mkdtempSync(join(tmpdir(), "d478-ocr-worker-pen-"));
 const SUITE = join(HERE, "ocr-worker.test.mjs");
 
 const SRC = {
@@ -228,12 +229,12 @@ arm("N1 · D-478'S NAMED CONTROL — widen the shape again, the constant left in
   (r) => {
     const f = (re) => re.test(r.out);
     const byName = f(/FAIL\s+store=biosmoke -> 400 NAMESPACE_UNKNOWN/)
-                && f(/FAIL\s+a namespace no instance holds \("Scratch"\) -> 400 NAMESPACE_UNKNOWN/)
-                && f(/FAIL\s+a namespace no instance holds \("ocrsuite"\) -> 400 NAMESPACE_UNKNOWN/);
+                && f(/FAIL\s+a case variant \(Scratch\) -> 400 NAMESPACE_UNKNOWN/)
+                && f(/FAIL\s+this suite's OWN former namespace \(ocrsuite\) -> 400 NAMESPACE_UNKNOWN/);
     const held = f(/PASS\s+this member's namespace set EQUALS the plane's/)
               && f(/PASS\s+store ABSENT — the caller named no namespace at all — is BAD_STORE/)
               && f(/PASS\s+a namespace that is not even a token is refused by NAME, not as a shape/)
-              && f(/PASS\s+a namespace no instance holds \(""\) -> 400 NAMESPACE_UNKNOWN/)
+              && f(/PASS\s+a namespace named EMPTY -> 400 NAMESPACE_UNKNOWN/)
               && f(/PASS\s+a capture that is not there is a 404 naming it/);
     return { ok: r.fail > 0 && r.foot && byName && held,
              why: `${r.fail} failure(s); by-name ${byName}; the must-nots held ${held}` };
@@ -253,7 +254,7 @@ arm("N2 · THE COPY AGES — this member's NAMESPACES gains a name the plane doe
     const byName = f(/FAIL\s+this member's namespace set EQUALS the plane's/)
                 && f(/FAIL\s+and the refusal lists exactly that set/);
     const held = f(/PASS\s+the plane's namespace set was READ from its source/)
-              && f(/PASS\s+a namespace no instance holds \("Scratch"\) -> 400 NAMESPACE_UNKNOWN/)
+              && f(/PASS\s+a case variant \(Scratch\) -> 400 NAMESPACE_UNKNOWN/)
               && f(/PASS\s+store ABSENT — the caller named no namespace at all — is BAD_STORE/);
     return { ok: r.fail > 0 && r.foot && byName && held,
              why: `${r.fail} failure(s); the pin and the set-listing arm failed ${byName}; the must-nots held ${held}` };

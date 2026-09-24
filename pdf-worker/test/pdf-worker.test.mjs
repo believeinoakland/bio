@@ -43,10 +43,11 @@
    (A6) THE SURFACE ROW WITHOUT ITS REACH, two stages. Stage 1 (delete the driven /version arms, keep the SURFACE row) -> `--strict` **exit 0, 4/4 reached** — DECLARED IN ADVANCE AS DOUBTFUL and it came back exactly as doubted: **the fleet reach matcher counts `/version` MENTIONED IN A COMMENT as reach.** Stage 2 (remove every textual `/version` too) -> `--strict` **EXIT 1, 3/4 reached**, naming the unreached op, fleet FLOOR silent. The gate has teeth; what it cannot see is a mention versus a driven call. Delegated, not narrowed here (REC-67's class).
    (O1) OVER-STRICTNESS, nothing broken: a correct fleet suite under a filename this session did not anticipate is DISCOVERED, RUN and `ok`, battery exit 0, member still reported as RAN.
    Every declared-versus-actual line, and the two arms that came back wrong on the FIRST pass (A1 and A5 could not be honoured at all until the harness learned to provide `esbuild` for a rebuild — recorded, not smoothed), are in `test/pdf-worker.control.mjs`'s header.
-   **RE-MEASURED 2026-09-24 BY D-478 (cloud worker, base `e9b21be6`), because D-478 changed this suite and the baseline above went stale the moment it did — corrected, never left standing. THE PEN RAN OUTSIDE THE WORKTREE** (`BIO_CONTROL_PEN`, added by this item on BOB #32's ruling of the same day; the in-tree default and its reasoning are kept, with the resolution recorded at the `PRISTINE` line). **The briefed/held figure of 48 was NOT stale — measured on `origin/main` @ `e9b21be6` at 48/0 and reported as right rather than assumed.** New BASELINE **67 pass / 0 fail** (+19 assertions, all D-478's).
+   **RE-MEASURED 2026-09-24 BY D-478 (cloud worker, base `e9b21be6`), because D-478 changed this suite and the baseline above went stale the moment it did — corrected, never left standing. THE PEN RAN OUTSIDE THE WORKTREE** — `mkdtempSync(tmpdir())`, moved there by this item on BOB #32's ruling of the same day; reasoning at the `PRISTINE` line. **AND THE PRISTINE SET GAINED `dist/pdf-worker.bundle.json`, WHICH IS A DEFECT THIS HARNESS HAD.** `scripts/build.mjs` writes the manifest as well as the bundle and this harness restored only the bundle, so every arm that rebuilt left the manifest describing the ARMED build. No arm here reads it, so nothing noticed — `bio-plane/test/fleetbundles.test.mjs` did, going RED on this item's own first gate with three findings that were one cause. `ocr-worker.control.mjs` already had it right. **The briefed/held figure of 48 was NOT stale — measured on `origin/main` @ `e9b21be6` at 48/0 and reported as right rather than assumed.** New BASELINE **67 pass / 0 fail** (+19 assertions, all D-478's).
    (N1) **D-478'S NAMED CONTROL — WIDEN THE SHAPE AGAIN.** The member's namespace test goes back to `/^[a-z0-9_-]+$/i`, the constant left intact -> **59 pass, 8 FAIL**, 6 of 6 declared names among them: `store=biosmoke` BY NAME, its detail row, the refusal-lists-that-set row, the hyphenated / underscored / `Scratch` / `BIO` rows and the 400-vs-404 distinguishability arm — **the widened member SERVED a document from a namespace no instance holds**, which this suite can say because it seeds the bytes under that very prefix rather than refusing over an empty bucket. All 8 must-nots held: the set-equals-the-plane's pin, both BAD_STORE arms, tier 2 and the R2-unchanged arm.
    **DECLARED WRONG ON THE FIRST PASS AND CORRECTED INTO SOMETHING STRONGER RATHER THAN SMOOTHED.** The first declaration demanded the named-empty, `a b` and trailing-space rows fail too; they did not, and the run came back **4 of 5 named** on an arm otherwise exactly as declared. The cause is a real property of the arm: it swaps the CONDITION and leaves the REFUSAL BODY standing, so a name failing `/^[a-z0-9_-]+$/i` never reaches R2 under either shape and keeps answering NAMESPACE_UNKNOWN. **That is what makes the SHAPE and the SET separately visible, and why N1 and N2 are two arms: N1 can only reach the names the OLD SHAPE ACCEPTED.** Those three rows are MUST-NOTs now, where an arm reaching them would itself be the finding — and the corrected declaration was carried straight into `ocr-worker`'s N1 before it was first run, where it held.
-   (N2) THE COPY AGES. This member's NAMESPACES gains `biosmoke` -> **62 pass, 5 FAIL**, 3 of 3 by name: the set-EQUALS-the-plane pin, the refusal-lists-that-set arm and the `store=biosmoke` row (ACCEPTED now, answering 200 from the seeded bytes). Held: the plane-set-was-READ arm, both BAD_STORE arms, the OTHER unknown names and the NOT_FOUND arm. */
+   (N2) THE COPY AGES. This member's NAMESPACES gains `biosmoke` -> **62 pass, 5 FAIL**, 3 of 3 by name: the set-EQUALS-the-plane pin, the refusal-lists-that-set arm and the `store=biosmoke` row (ACCEPTED now, answering 200 from the seeded bytes). Held: the plane-set-was-READ arm, both BAD_STORE arms, the OTHER unknown names and the NOT_FOUND arm.
+   **AND THE SIX UNKNOWN-NAME ROWS' LABELS ARE LITERALS PER ROW rather than composed through a `${…}` slot, because `m025-arm-anchor-witness.test.mjs` caught the composed form on this item's first gate and named all six: a driver that quotes a label it can only match by eating the slot goes stale the moment the value moves. `agent-worker` §3 is the shape they should have had.** Both arms re-measured after the change: N1 6 of 6 named with all 8 must-nots held, N2 3 of 3, every restore verified by sha256 AND `cmp` including the manifest, tree re-green at 67/0. */
 
 /* D-186: owns $TMPDIR for this process and removes it on exit. Miniflare's
    `dispose()` disarms its own exit hook and then does not wait for the removal,
@@ -322,19 +323,32 @@ console.log("\n--- D-478: *not found* is not *absent* — the namespace this mem
   t("  so the two are distinguishable on the wire: 400 NAMESPACE_UNKNOWN vs 404 NOT_FOUND",
     [unknown.status, absent.status], [400, 404]);
 
-  for (const name of ["biosmoke-fleet", "bio_smoke", "Scratch", "BIO", "a b", "scratch "]) {
+  /* THE LABEL IS A LITERAL PER ROW, NOT COMPOSED THROUGH A `${…}` SLOT, and that is M025's rule rather than
+     taste: a driver that quotes a label it can only match by eating the slot goes stale the moment the value
+     moves. This loop was written the composed way and `m025-arm-anchor-witness.test.mjs` caught it on this
+     item's own first gate, naming all six rows. `agent-worker` §3 is the shape it should have had. */
+  for (const [label, name] of [
+    ["a hyphenated one (biosmoke-fleet) -> 400 NAMESPACE_UNKNOWN",        "biosmoke-fleet"],
+    ["an underscored one (bio_smoke) -> 400 NAMESPACE_UNKNOWN",           "bio_smoke"],
+    ["a case variant (Scratch) -> 400 NAMESPACE_UNKNOWN",                 "Scratch"],
+    ["a case variant (BIO) -> 400 NAMESPACE_UNKNOWN",                     "BIO"],
+    ["a namespace that is not a token (a b) -> 400 NAMESPACE_UNKNOWN",    "a b"],
+    ["a namespace with a trailing space -> 400 NAMESPACE_UNKNOWN",        "scratch "],
+  ]) {
     const r = await call(mf, { capture_sha: CID_SHA, store: name });
-    t(`a namespace no instance holds (${JSON.stringify(name)}) -> 400 NAMESPACE_UNKNOWN`,
-      [r.status, (await r.json()).reason], [400, "NAMESPACE_UNKNOWN"]);
+    t(label, [r.status, (await r.json()).reason], [400, "NAMESPACE_UNKNOWN"]);
   }
 
   /* OVER-STRICTNESS. Correct work must still pass: both real namespaces are accepted and answered. A fence
      tighter than its rule is an undeclared interface change wearing the costume of caution. */
-  for (const name of ["bio", "scratch"]) {
+  for (const [label, name] of [
+    ["the namespace `bio` EXISTS and is answered, not refused",     "bio"],
+    ["the namespace `scratch` EXISTS and is answered, not refused", "scratch"],
+  ]) {
     await bucket.put(`${name}/captures/${CID_SHA}`, CID_BYTES);
     const r = await call(mf, { capture_sha: CID_SHA, store: name });
     const o = await r.json();
-    t(`the namespace \`${name}\` EXISTS and is answered, not refused`, [r.status, o.ok, o.tier], [200, true, 2]);
+    t(label, [r.status, o.ok, o.tier], [200, true, 2]);
   }
 
   /* THE COPY AGES. This member cannot import the plane's `index.mjs`, so its set is a copy; the copy is pinned to
