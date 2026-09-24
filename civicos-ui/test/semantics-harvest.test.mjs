@@ -28,6 +28,7 @@
  *   (f) the lexer eats the whole store -> F0 FAILS on the reach floor.
  *   Figures of each run: `docs/development/measurements/M-148.md`.
  */
+import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not discard its output. */
 import fs from "fs";
 import os from "os";
 import path from "path";
