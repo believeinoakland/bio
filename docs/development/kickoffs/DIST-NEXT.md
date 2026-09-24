@@ -34,36 +34,16 @@ the ten-id baseline. M-137: URL preflight 14/14 LIVE; digestcensus 0/0; changedf
 biosmoke7's stores record group `believe-in-oakland` (never seed again). D-461 is live: a public op pinned to `bio` now
 REFUSES `store=scratch` (NAMESPACE_PINNED) — probes of public ops must name `store=bio` or nothing.
 
-## What waits for the release Bob asks for (origin/main @ `548eb2c5`; re-read `git log 38b49c50..origin/main` at the cut — never this list)
-**Live check owed at the next deploy (D-475, c20-batch25, SCHEDULER #19 20:46Z) — both read-only and public:** `GET /?store=scratch`
-shows scratch's slug or the "no group recorded" words; `GET /?store=nonsense` returns 400 NAMESPACE_UNKNOWN.
-**Second live check owed at the next deploy (D-490, c20-batch25, SCHEDULER #19 21:02Z):** deploy WITH the BROWSER binding
-(DIST-11 must be in the release), then run ONE live render (`op=acquire` with `render: true`) in `store=scratch`, the `bio`
-counters witnessed before and after. No live render has ever run. D-490 sends `cf-brapi-client: bio-plane`; whether the
-service validates it is UNDETERMINED — if it does, the render answers RENDER_FAILED naming the status. Report either outcome.
-**UPDATE 12:25Z (BOB #32, verified at the code by DIST #6): main = `13073707`** (c20-batch14 landed 11:39Z; gate GREEN
-351/351 · 19,983 per BOB). Now ALSO owed at the next release: **D-461** (SAFETY: `store=scratch` on a public op pinned to
-`bio` is refused by name, C-78.2; CLAUDE.md §5 updated — a probe of a public op on scratch is REFUSED), **D-464**
-(DISCLOSURE: every count a member session is served goes through its own sight — name it in the landing report),
-**D-462** (agent-worker names its namespace exactly; **I8 2.0.0 MAJOR** — agent-worker ships FIRST or with the plane,
-member bytes move). **DIST-11** (the `browser` binding class, before any BROWSER binding) is a BACKLOG row, not built
-(`ledger.mjs find DIST-11`: queued, after D-64).
+## What the NEXT release owes (re-read `git log 5f116f33..origin/main` at the cut — never this list)
 
-**Name in the landing report (security / disclosure):** D-456 (IC-237: unknown `store=` refused), D-447 (IC-238: ranked
-search drops `score`, ranks over visible rows only), MK-6 (member id no longer published in observations; IC-226), D-162's
-handle correction (a theme reading shows members only the declarer's handle), the `statementack` case-document bound
-(C-82, IC-246: refuses over the bound), the `actionlaws` machine refusal (`op=affordances` no longer offers it to machines).
-Also REC-179, REC-177, REC-181, REC-180, D-440, D-420, REC-176's snap-key census op, the corrected `livefire.mjs`.
-**Post-deploy reads owed (run on `store=bio` under admin, report figures to CONDUCT, SCHEDULER, BOB):**
-REC-175 `op=digestcensus` (incl. `bytes_disagree`); D-256's `changedfromaudit` read (NOT on main at writing) (affected / wrong / right / undetermined);
-after D-178 lands, `op=audit` on `store=bio` into a `measurements/<id>.md` (M-117 predicts no change vs the ten-id baseline);
-REC-190's `homecensus` read with `store=bio` → report `shas`, no repair (REC-190 NOT on main at writing — check).
-**Fleet moves:** D-452 / FL-11 / FL-12 rebuilt the agent-worker bundle — MEMBER BYTES MOVE; agent-worker first or with the
-plane (IC-130). I8 is **1.0.0 STABLE** (IC-242, D-260): the plane now calls `AGENT_WORKER` for woken runs. D-462 (I8 2.0.0,
-agent-worker namespace narrowing) is coming in c19-batch10/11 — read every IC since 0.78.0 in `INTERFACE-CHANGES.md` and
-state which members move. Coming next, not on main at writing: D-461 (`store=scratch` refused on the 12 public ops — a
-probe that reads a public op on scratch will be refused), D-464, D-462, REC-190.
-**civicos** moves with the plane (gate step 12): check `civicos-ui/app.html`'s diff since 0.78.0's tag commit.
+Everything through 0.79.0 SHIPPED (its pointer landed at `5f116f33`). The next cut adds DIST-11 (the BROWSER binding) and
+DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the trains carry. **Live checks owed at that deploy:**
+- **D-475** (read-only, public): `GET /?store=scratch` shows scratch's slug or the "no group recorded" words; `GET /?store=nonsense`
+  returns 400 NAMESPACE_UNKNOWN.
+- **D-490, the FIRST live render ever:** deploy WITH BROWSER, run ONE `op=acquire` `render: true` in `store=scratch` with the `bio`
+  counters witnessed. D-490 sends `cf-brapi-client: bio-plane`; whether the service validates it is UNDETERMINED (if so:
+  RENDER_FAILED naming the status). Report either outcome.
+- D-461 is live: a public op pinned to `bio` REFUSES `store=scratch` (NAMESPACE_PINNED); probe public ops with `store=bio` or none.
 
 ## DIST's rows
 
@@ -109,19 +89,13 @@ probe that reads a public op on scratch will be refused), D-464, D-462, REC-190.
 - Push a `land/*` branch only after its local gate is GREEN on that tree; never push a negative control to `land/*` or
   `integrate/*` (Bob: every failed GitHub run emails him).
 
-## The next cut's expected figures (from 0.78.0's cut; measure, compare, record the SEQUENCE — lesson 19)
+## The next cut's figures (lesson 19: record the SEQUENCE)
 
-Next RELEASES row: `["0.78.0", "dfe9858c89810a49422ee071c4f0bf92c0c2f297"]`. Expected migrate-released: baseline 522+21 →
-**543/0**, `alterafter` **465/78**, `groupwipe` **527/16** — trains since may change other arms; predict before arming.
-Trends: gate 278·16785 (0.72) → 281·16989 → 282·17056 → 284·17175 → 289·17362 → 291·17466 → **296·17690 (0.78.0,
-`--full --no-reuse` on `9beb2c57`, 1299 s)**; main at 15b2a4c0 gated 322/322 per CONDUCT #19 (a pointer, not a measurement). `alterafter` pass: 318 →
-339 → 360 → 381 → 402 → 423 → **444** (fail fixed at 78). Signature 7/7; newgroup embed 23/0, wizard 184/0 at 0.78.0.
-**op=audit baseline (lesson 15), 10 C-18.9 ids:** INFO-2026-0099-auditor-report-feb-2022, -0100-acfr-fy2023-24-fund-
-statements, -0100-adopted-budget-fy2026-27, -0103-acfr-fy2023-24-pdf, -0104-adopted-budget-book-pdf, -0105-adopted-budget-
-fy13-15-csv, -0106-acfr-fy2021-22-pdf, -0107-revenue-expenditure-reports-page, -0108-zolly-opinion,
-INFO-2026-5460-member-release-key-registry. A live probe opens runs over an EXISTING scratch inquiry (REC-171: an admin
-cannot promote/create an inquiry outside a run); pair refusals with a positive arm whose wire code is absent from the prior
-signed bundle (lesson 18); since D-116 read `storeVersion` and `members=1`.
+Next RELEASES row: `["0.79.0", "dd324152…"]` (full sha from `git rev-parse dd324152`). **Not run at 0.79.0, so owed at the next cut:**
+the migrate-released control arms (predict from 0.78.0's 522/0 · alterafter 444/78 plus two rows) and lesson 7's member byte
+compare. Gate trend: 296·17690 (0.78.0) → **351·20004 (0.79.0, `--full --no-reuse` BACKSTOP)**. Signature controls 7/7 at both.
+op=audit baseline: the ten C-18.9 ids listed in M-137 (unchanged at 0.79.0). A live probe pairs refusals with a wire code
+absent from the prior signed bundle (lesson 18); since D-116 read `storeVersion` and `members=1`.
 
 ## Carried, not re-verified
 
