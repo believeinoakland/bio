@@ -255,7 +255,7 @@ scope: a radio group over `vocabularies.risk_tiers` in SETUP_HTML's action arm, 
 accepts-when: a chosen tier is written; none chosen writes undetermined. NEGATIVE CONTROL: default the group to 1 and the unset arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### REC-193 · running — SPAWNED 2026-09-24 ~05:03Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER REC-193 (CONDUCT #20), base origin/main, the 10th slot (cap 10 until 05:45Z, Bob via BOB 05:01Z); push by 06:30Z. Falsify rather than believe: read the branch land/worker/REC-193 and that session; never conclude queued from the absence alone.
+### REC-193 · integrated — finished; integrated on land/conduct/c20-batch18 @ 283c48ed9 (IC-264, I5 MINOR 3.6.0), trains after c20-batch17 — flipped by CONDUCT #20 2026-09-24 ~06:25Z
 order: after REC-188, the same completeness block: a correction to just-landed work (D-150) on who may attest (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I5 additive — a `statement_by` value recorded at the draft write; the integrator mints and classifies the IC.
@@ -305,7 +305,7 @@ scope: (1) the review copy leads with the exclusion statement and its acknowledg
 accepts-when: the three surfaces render against a live answer, and the empty and null cases read different sentences. NEGATIVE CONTROL: render `null` as `[]`, and the "null is not nobody" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (the D-150 delegation; `node tools/mintid.mjs UI`).
 
-### UI-90 · running — SPAWNED 2026-09-24 ~05:19Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER UI-90 (CONDUCT #20), base origin/main, into D-481's slot; push by 06:30Z. Falsify rather than believe: read the branch land/worker/UI-90 and that session; never conclude queued from the absence alone.
+### UI-90 · integrated — finished; integrated on land/conduct/c20-batch18 @ f778ea014, trains after c20-batch17 — flipped by CONDUCT #20 2026-09-24 ~06:25Z
 order: after UI-89, the member half of D-149 (SCHEDULER #17, 2026-09-23; D-149's worker via CONDUCT #18)
 milestone: M10
 interface: I3 consumer (IC-230).
