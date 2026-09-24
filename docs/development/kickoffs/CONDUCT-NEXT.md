@@ -43,6 +43,8 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   BOB's two owed rulings (D-64 timeout, REC-184 DEFINITION_MOVED) were NOT paid → sent to SCHEDULER 04:56Z to row.
 - M0-146 @ 3f939f53 built the `.scratch/` ignored path BOB RULED AGAINST (05:04Z) — NOT TRAINABLE as is; sent back 05:33Z to rework
   (scratch in the session scratchpad, WORKER.md under 24,576 B, JSDoc sentence); push by 06:30Z. If not reworked, carry the row.
+- DIST-12 DONE: land/dist/DIST-12 @ 1a0fc88f (127/127, M-136, no IC; accepts-when waits for the next release, so it cannot close tonight).
+  NEXT SMALL TRAIN after batch15: D-481 + D-494 + DIST-12 (fold D-481's §16 limit — it is on D-481's row).
 - D-494 DONE @ 6283fe29 (96/96; 18=18 fences) — next small train. D-496 spawned 05:31Z (push by 06:40Z).
 - D-481 DONE @ dbe88ab9 (343/343, M-133; rebuilt plane+pdf+ocr dists) — NEXT TRAIN after batch15; fold its §16 limit (Content
   Framework) at integration. UI-90 spawned session_017i3ve8jwjhLq19sBHCcrWe 05:19Z. M-126 lives on batch11fix (not a defect).
