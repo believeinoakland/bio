@@ -20075,3 +20075,25 @@ REC-212 (IC-272 PROPOSED, on `land/worker/REC-212`) splits the case document's o
 UI owes: page 2's sentence reading `completeness.statement_by` for who wrote it and `completeness.author` for who prepared and published it, told apart in words; and the THREE states rendered as three, exactly as UI-89 already tells `[]` from `null` for the acknowledgement list — a NAME; `null`, which is the plane SAYING it could not establish the writer (UNDETERMINED, never rendered as nobody and never as the publisher); and NO KEY at all, a document authored before rule 13, which says NOTHING about the writer (`op=publishedcase` serves `completeness.statement_by_stated`, a sentence committed from the signed bytes' key, which distinguishes the last two and can be rendered as-is). Optionally `pubCaseAuthors` naming the writer beside the block's author.
 Depends on `land/worker/REC-212` reaching `main`: verify `completeness.statement_by` in `bio-plane/src/store.mjs`'s `#caseDocumentText` and the committed `statement_by` in `ratifyCaseDocument` on `origin/main` before starting.
 **open as of 2026-09-24** — raised at REC-212's landing; OPEN until UI lands page 2's two names.
+
+### D-490 · CAPTURE worker of CONDUCT #20 (cloud session WORKER D-490 (CONDUCT #20), branch land/worker/D-490) · 2026-09-24 — an in-plane renderer over the Browser Rendering binding, so `render: true` stops answering 501
+
+Branch `land/worker/D-490`, base `origin/main` @ `58293bf31`. Claimed BY SITE, kept narrow because D-491, D-492 and
+D-499 run beside me in the same render/capture code:
+- `bio-plane/src/render.mjs` — **ONE function only, `rendererFor`**, plus the doc comment above it. Nothing else in
+  the file is touched (`renderBlock`, `renderedAuthority`, `RENDER_DEFAULTS`, the allowance, `NON_DATA_TYPES` are
+  READ, never edited) — those are D-492's and D-499's ground.
+- `bio-plane/src/browserrender.mjs` — **NEW FILE**, the CDP driver over the `BROWSER` binding. No other area's path.
+- `bio-plane/test/browser-render.test.mjs` — **NEW SUITE**, so `rendered-capture.test.mjs` (D-499's likely subject)
+  takes no hunk from me.
+- `bio-plane/dist/bio-plane.bundled.mjs` + `dist/bio-plane.bundle.json` — the FL-10 rebuild every `src/`-touching
+  worker owes.
+- `docs/architecture/construct-status.json` (`2.rendered`) and `docs/development/CLIENT-RENDERED.md` front matter —
+  the construct moves and its home document says so in the same commit.
+- `docs/development/interface-changes/IC-277.md` — NEW FILE (PROPOSED; CONDUCT takes the bump and the resolution).
+
+NOT touched: `bio-plane/src/index.mjs` (the render arm's admission and result regions are already built and are
+D-491's/D-492's ground — my landing changes only what `rendererFor` RETURNS, which those regions already read),
+`bio-plane/src/schema.mjs`, `bio-plane/wrangler.jsonc` (the `browser` binding line is **DIST-11's**, and this landing
+is ordered behind it), `newgroup/**`, `civicos-ui/**`.
+**open as of 2026-09-24** — claimed at the start of the item.
