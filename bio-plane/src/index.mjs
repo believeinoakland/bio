@@ -6554,7 +6554,14 @@ export default {
     if (op === "livefire") {
       const out = await livefire(env, storeName, { capacity: cls === "admin",
         viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
-      return json(out, out.ok ? 200 : 500);
+      /* D-506 / IC-265, on BOB #32's ruling of 2026-09-24 06:07Z. This read `out.ok ? 200 : 500`, and
+         `out.ok` WAS the canary's verdict — which is why a failing canary answered `ok:false` with no
+         code of any kind to every consumer that reads `ok:false` as a refusal. `out.ok` is now
+         `true` whenever the op answered, and the verdict lives in `out.verdict` / `out.failing`.
+         THE STATUS IS KEYED TO THE VERDICT, so it is byte-for-byte what it was for every outcome: a
+         DIST gate or a curl that reads the status alone loses nothing to this change, which is the
+         whole point of moving the verdict to keys of its own rather than deleting it from the wire. */
+      return json(out, out.verdict === "pass" ? 200 : 500);
     }
 
     /* capture is the one op that moves bytes. PUT or POST writes capture

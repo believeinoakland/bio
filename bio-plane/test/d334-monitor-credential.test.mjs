@@ -38,6 +38,13 @@
  * uses for its published-value audit). It is a FLOOR on the class, not a ceiling,
  * which is why the behavioural arms above carry the weight.
  *
+ * NEGATIVE CONTROL: D-506 re-ran this suite as a SUBJECT of its own three arms on 2026-09-24 (the arms are
+ * in `src/livefire.mjs`; the full record is on `test/installer.test.mjs`'s NEGATIVE CONTROL line). Arm 1
+ * and arm 2 each took this suite to 45/1, failing ONLY the arm declared, and arm 3 left it 46/46. This
+ * suite's own arm B gained an INSTANCE_NAME binding in that landing and the count moved 45+1 -> 46; see
+ * the comment at the binding for why, and `CLAUDE.md` §5 on re-running a control after changing its
+ * subject — the three arms below were NOT re-run by D-506 and their figures are 2026-09-14's.
+ *
  * NEGATIVE CONTROL: RUN 2026-09-14, three arms, each armed ALONE, others held
  * open, on the real source with a uniquely-named per-arm pristine copy taken
  * first and the restore verified by sha256 AND `cmp` with a printed byte count
@@ -153,6 +160,14 @@ function instance(bindings) {
       GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0",
       /* Pinned far out of the test window: only the hand-driven onAlarm ticks. */
       MONITOR_TICK_MS: "3600000",
+      /* ADDED BY D-506, and found by it. This fixture bound no INSTANCE_NAME, so its store records no
+         producing group and D-436 (IC-172) has it REFUSE the canary's creation by name (C-64.1) — so
+         `op=livefire` here failed FOURTEEN assertions, thirteen of them that cascade and nothing to do
+         with the credential this suite is about. Nothing said so, because `livefire`'s answer was a
+         bare `ok:false` until D-506 gave it `failing`. Every install binds INSTANCE_NAME (D-102), so
+         binding it is what makes this fixture an instance rather than a store no install produces, and
+         it lets arm B pin the canary's failure as the EXACT set it claims to be about. */
+      INSTANCE_NAME: "d334-fixture",
       ...bindings,
     },
     serviceBindings: { SELF: async (request) => MF.dispatchFetch(request) },
@@ -280,7 +295,14 @@ t("and every live fixture really is live, so a green arm is not green by acciden
     console.log("\n--- arm B (cont.): the THIRD truth — livefire still fails on the binding by NAME ---");
     const lf = await (await mf.dispatchFetch(`http://x/api/?op=livefire&token=${LIVE_PROBE}`)).json();
     const a = lf.assertions.find((x) => x.name === "no configured token is a published repository value");
-    t("livefire goes red on the published daemon binding", [lf.ok, a.ok], [false, false]);
+    /* CORRECTED BY D-506 (IC-265), never exempted: `lf.ok` was the canary's VERDICT and is now the op
+       ANSWERING, so the old pin's `false` would have been testing that the op refused — which it never
+       did. The truth this arm states is unchanged: the canary goes red on the published daemon binding
+       AND says which assertion. `failing` is read here as well, because the finding this arm exists to
+       carry is the NAME of the credential defect, not the colour. */
+    t("livefire goes red on the published daemon binding", [lf.ok, lf.verdict, a.ok], [true, "fail", false]);
+    t("and the verdict NAMES the token-hygiene assertion",
+      lf.failing, ["no configured token is a published repository value"]);
     t("naming the BINDING, never the value", JSON.stringify(a.got), JSON.stringify(["DAEMON_TOKEN"]));
     t("and the livefire answer never contains the value",
       JSON.stringify(lf).includes(DEAD_DAEMON), false);

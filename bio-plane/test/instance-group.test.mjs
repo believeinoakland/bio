@@ -337,8 +337,11 @@ const IRIS = await enrol(DA, "iris", ["contribute", "publish", "create_projects"
   const canary = scratch.texts.filter((x) => x.path.startsWith("_history/") && /livefire/.test(x.id));
   t(`W7: op=livefire (its canary's meta carried the literal) passes whole in scratch, and the canary's CREATION names `
     + `scratch's own '${SLUG}' — with nothing in scratch naming the literal`,
-    [lf?.ok, lf?.store, scratch.bundles >= 1, canary.some((x) => groupIn(x.v) === SLUG), holding(scratch, LITERAL)],
-    [true, "scratch", true, true, []]);
+    /* CORRECTED BY D-506 (IC-265), never exempted: `lf.ok` was the canary's verdict and is now the op
+       ANSWERING, so a `true` here would have stopped saying "passes whole" the moment `ok` stopped
+       meaning it. The claim this arm makes is the verdict's, so it reads the verdict. */
+    [lf?.verdict, lf?.store, scratch.bundles >= 1, canary.some((x) => groupIn(x.v) === SLUG), holding(scratch, LITERAL)],
+    ["pass", "scratch", true, true, []]);
 
   /* W8 — THE ROW'S ACCEPTANCE, over the WHOLE record: every bundle this install wrote, every file, live and history. */
   const all = await everyText(DA);
