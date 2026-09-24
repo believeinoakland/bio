@@ -907,7 +907,24 @@ const CLASS_RANK = (c) => (c === "FULL" || c === "FULLREUSE" ? 2 : c === "NEVERC
 /* M0-131: a NEVERCACHE run ran only the never-cached units, so it COVERS no class (rank 0): it can never be the record
    this shortcut stands on. */
 const PER_UNIT_ON = !RESULTS_OFF && isFile(join(REPO, "tools/gateresults.mjs"));
-if (CLEAN_AT_START && !FORCE_FULL && !NO_REUSE && SINCE === null && !NEVER_ONLY) {
+/* M0-157: THIS SHORTCUT READS THE TREE ITSELF, because it is the ONE verdict write `§4`'s end-of-run check can never
+   back. The REUSED record below is written and the process EXITS 0 here, BEFORE `§4` — so `CLEAN_AT_START` was the
+   only thing standing between a working tree that is not the tree HEAD names and a GREEN record the push guard
+   honours. MEASURED 2026-09-24 (M0-157) by arming `bio-plane/test/gates.control.mjs` G5, which breaks exactly that
+   boolean: the armed gate took this shortcut over a DIRTY tree, wrote a SECOND record for it — `GREEN`, class
+   `REUSED`, `already GREEN by <the clean run's own record>` — and exited 0, which is why G5's "a DIRTY tree is NOT
+   recorded" failed although G5 declared the end-of-run check backed it. It could not: this path never reaches it.
+   So the shortcut re-reads `status` and `HEAD^{tree}` for itself. On a clean tree the read agrees with `START` and
+   nothing changes but one `git status` on the runs that would take the shortcut; when it DISAGREES the shortcut is
+   not taken and the run falls through to `§4`, whose end-of-run check refuses the record — which is the redundancy
+   G5 declares, now real. A disagreement is PRINTED rather than silent: it means either a broken start check or a
+   tree that moved under the gate, and both are findings. */
+const SHORTCUT_CLEAN = (CLEAN_AT_START && !FORCE_FULL && !NO_REUSE && SINCE === null && !NEVER_ONLY)
+  ? (statusNow() === "" && treeNow() === START.tree) : null;
+if (SHORTCUT_CLEAN === false)
+  console.log("gates: the record shortcut (§2d) is NOT taken — its own read of the tree disagrees with the start check,"
+    + " so no record answers for this working tree and everything selected runs (D-293, M0-157)");
+if (SHORTCUT_CLEAN) {
   const own = readRuns({ repo: REPO, tree: START.tree });
   const eff = effectiveVerdict(own.runs);
   const covering = own.runs.some((r) => CLASS_RANK(r.class) >= CLASS_RANK(cls));

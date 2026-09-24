@@ -20,7 +20,9 @@
  *       `--since` arm with it; tools-only still reads TARGETED and every other FULL category still FULL;
  *   (4) selection by import alone -> the COMPUTED-path arm FAILS, with the walker arm; the importer is still selected;
  *   (5) the clean-at-start check removed -> "...and the gate says why" FAILS; the dirty run is still not recorded,
- *       because the end-of-run check backs it — a real redundancy, kept;
+ *       because the end-of-run check backs it — a real redundancy, kept. **TRUE WHEN WRITTEN, FALSE FROM
+ *       2026-09-23 (`7eace1e21` put a second verdict write in front of §4) AND TRUE AGAIN FROM M0-157**: the
+ *       dated control block at the foot of this header says what it measured;
  *   (6) the end-of-run check removed -> "a tree that CHANGES while the gate runs is NOT recorded" FAILS;
  *   (7) `--since` ignoring the record -> both fallback arms FAIL; disjoint docs still re-run only plancheck;
  *   (8) both sides read as the SAME FILE changed on both -> "a unit reading BOTH sides re-runs" FAILS;
@@ -71,6 +73,48 @@
  *       ITS comment reaches no prose…" FAILS by name, with the whole-set pin, and NOTHING else (2 fail of 96);
  *   (17) re-read: blanking strings now also fails the doc-facing STRING reader and the whole-set pin, because M0-143
  *       put §2 under the SAME `codeOf`. Declared in the arm rather than discovered — 11 fail of 96.
+ *
+ * NEGATIVE CONTROL: G5 RE-RUN 2026-09-24 by the M0-157 worker, ALONE, on the fix it drove — the arm asserts a
+ * REDUNDANCY, and it was the assertion that was right and the SUBJECT that was wrong:
+ *   (5) re-read, BEFORE the fix: baseline 96/0, armed **93/3** and NOT isolated. The MUST NOT failed — the dirty run
+ *       WAS recorded — and a THIRD failure nobody had declared came with it. Diagnosed at the armed gate's own
+ *       output rather than by reading the source: `gates.mjs` §2d's tree-keyed shortcut, reached because the armed
+ *       `CLEAN_AT_START` read clean, wrote a SECOND record for that tree (`GREEN`, class `REUSED`, `already GREEN by
+ *       <the clean run's record>`) and exited 0 — BEFORE §4, which is the ONLY site the end-of-run check guards. The
+ *       undeclared third failure, "a tree that CHANGES while the gate runs is NOT recorded", asserts the same record
+ *       COUNT and fell with it: collateral, and it is now DECLARED in G5's `mustNotBreak` so a re-run cannot absorb it.
+ *   (5) re-read, AFTER it: baseline 96/0, armed **95/1** — the one being the declared `mustBreak` — closing 96/0,
+ *       both subjects restored sha256- and cmp-identical. §2d now re-reads `status` and `HEAD^{tree}` itself, declines
+ *       the shortcut when its own read disagrees with the start check, and lets the run reach §4. MEASURED at the
+ *       sentence, not inferred: the armed gate prints `NOT RECORDED — the tree changed while the gate ran (1 path(s)
+ *       dirty at the end)`, so the check doing the refusing really is the end-of-run one this arm names.
+ *   AND THE ARM IS UNCHANGED, which is the finding's shape: **the declaration was TRUE when it was written and a
+ *   landing in the SUBJECT made it false, with nothing re-running it.** Dated: G5 last read isolated on 2026-09-22
+ *   (M0-116's re-run, seventeen arms as declared, driver 123/0), when §4 held the only `appendRun` in `gates.mjs`
+ *   and its end-of-run check therefore backed every verdict write there was. §2d itself (BOB #29, `6873215ac`,
+ *   2026-09-23) still wrote none — CHECKED, not assumed: that commit's `gates.mjs` holds ONE `appendRun` call. The
+ *   SECOND landed later the same day in `7eace1e21` (BOB #29, "a gate that finds its tree already GREEN still RECORDS
+ *   its answer (REUSED)"), whose own reason is sound and is quoted at the site — a caller reads its verdict from the
+ *   run it caused, so writing nothing read as UNDETERMINED. It is the SITE, not the reason, that invalidated this arm.
+ *   The 2026-09-24 re-run above ran G17-G19 only, so no run of G5 stood between that landing and M0-146's worker
+ *   finding it. The general form,
+ *   which is why it is written here rather than in a report: **an arm that asserts a REDUNDANCY is invalidated by a
+ *   change that adds a SITE, not by a change to either check it names** — so `gates.mjs` gaining an `appendRun` is
+ *   the event that owes this driver a re-run, and `grep -n appendRun tools/gates.mjs` (2 sites, 2026-09-24) is the
+ *   one-line instrument that says whether it does.
+ *   AND ONE TRAP PAID FOR HERE, so the next editor of this header does not pay it again: the first draft of the line
+ *   above pointed a reader at this block BY NAMING THE REGISTER'S MARKER PHRASE, and `control-register.mjs`
+ *   `declarationAt` ends a declaration at any line CONTAINING that phrase (`text.includes(MARKER_PHRASE)` — "the next
+ *   declaration begins"). So a CITATION reads as a new marker: the (1)-(17) declaration was cut off at (5) and this
+ *   file's recorded arms fell 17 -> 5, taking `coverage --strict` to `arms 2081/2093` and exit 1 — MEASURED both ways
+ *   against origin/main 68fecb8d, which prints 2093/2093 and exit 0. The line is reworded, not the floor moved: a
+ *   floor that falls for a citation is not slack. Refer to a control block by where it sits, never by the phrase.
+ *   AND THE WHOLE DRIVER RAN, not only the arm whose row it was — the subject `tools/gates.mjs` is every arm's
+ *   subject, so a change to it owes all of them: **19 arms plus baseline and closing, driver 145 pass / 0 fail, exit 0
+ *   read UNPIPED**, baseline and closing 96/0, both subjects restored sha256- and cmp-identical at 89,602 and 94,212
+ *   bytes after every arm. Every arm as declared. Per-arm armed tallies of 96: G1 87/9 · G2 67/29 · G3 87/9 ·
+ *   G4 88/8 · G5 95/1 · G6 94/2 · G7 93/3 · G8 95/1 · G11 95/1 · G12 90/6 · G13 95/1 · G9 95/1 · G10 94/2 ·
+ *   G14 93/3 · G15 95/1 · G16 95/1 · G17 85/11 · G18 93/3 · G19 94/2.
  *
  * WHY THIS SUITE DRIVES A FIXTURE AND NEVER THIS REPOSITORY. `gates.mjs` is every lane's gate and
  * `pushguard.mjs` runs on every lane's push; a refusal arranged against this repository's remote

@@ -31,6 +31,17 @@
  *                                                     "a DIRTY tree is NOT recorded" — the
  *                                                     end-of-run check backs it, and that
  *                                                     redundancy is real and is KEPT.
+ *       THE REDUNDANCY WAS NOT REAL WHEN THAT WAS WRITTEN, and this arm is what measured it (M0-157,
+ *       2026-09-24, found by M0-146's worker): the armed gate took `gates.mjs` §2d's tree-keyed
+ *       shortcut over the dirty tree, wrote a SECOND record there — GREEN, class REUSED — and exited 0
+ *       BEFORE §4, the only site the end-of-run check guards. So the arm read 93/3, its MUST NOT
+ *       failing, with a third failure NOBODY DECLARED: "a tree that CHANGES while the gate runs is NOT
+ *       recorded", which asserts the same record COUNT and so falls with it — collateral, not an
+ *       independent effect, and the discriminator is that it disappears when the count does. M0-157
+ *       RESTORED the redundancy rather than downgrading the claim: §2d now re-reads `status` and
+ *       `HEAD^{tree}` for itself and, on a disagreement, declines the shortcut and lets the run reach
+ *       §4 — measured, the gate then prints the END-OF-RUN sentence ("the tree changed while the gate
+ *       ran"), which is this declaration honoured at its own words. 95/1 after.
  *   G6  the END-OF-RUN check removed               -> "a tree that CHANGES while the gate runs is
  *                                                     NOT recorded" FAILS. MUST NOT: the dirty-
  *                                                     at-start arm (the start check holds it).
@@ -200,12 +211,16 @@ const ARMS = [
     alsoBreak: ["...and the suite that WALKS tools/"],
     mustNotBreak: ["...and selects its IMPORTER", "a tree that CHANGES while the gate runs is NOT recorded"] },
 
+  /* M0-157: the arm is UNCHANGED — it was the declaration that was false, and the SUBJECT that was fixed. Its
+     `mustNotBreak` is the whole point of it: it asserts a REDUNDANCY, and an arm asserting a redundancy is the only
+     instrument that can tell a real one from a paragraph. Re-armed after the fix it reads 95 pass / 1 fail, the one
+     being `mustBreak`. See the G5 paragraph in the header for what it measured and why 93/3 was not isolated. */
   { id: "G5", title: "the CLEAN-AT-START check removed",
     patches: [{ file: GATES,
       from: "const CLEAN_AT_START = START.status === \"\" && !!START.tree;",
       to: "const CLEAN_AT_START = !!START.tree;" }],
     mustBreak: "...and the gate says why",
-    mustNotBreak: ["a DIRTY tree is NOT recorded"] },
+    mustNotBreak: ["a DIRTY tree is NOT recorded", "a tree that CHANGES while the gate runs is NOT recorded"] },
 
   { id: "G6", title: "the END-OF-RUN check removed — a run across a change, recorded",
     patches: [{ file: GATES,
