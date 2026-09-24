@@ -1387,6 +1387,58 @@ const BASELINE_EPS = 1e-6;
  * ≤ 0.21 em (kerning and overprint) and four are ≥ 2.68 em. */
 const WORD_GAP_EM = 0.25;
 
+/* D-517 — THE SECOND WORD-GAP RULE, MEASURED (M-145), AND WHY IT KEEPS A
+ * CONSTANT OF ITS OWN RATHER THAN BORROWING THE ONE ABOVE.
+ *
+ * This reader has TWO word-gap rules and they disagreed by 2.5x: the one above
+ * judges a jump a POSITIONING OPERATOR makes between two runs, this one judges
+ * a displacement the producer wrote INSIDE one shown run, as a number in a TJ
+ * array. D-481 picked -100 thousandths by hand; D-502 kept it and said the
+ * populations differ; this row MEASURED the second population and the two
+ * statements now rest on figures rather than on each other.
+ *
+ * THE DISTRIBUTION, over 14,067 TJ numeric elements in M-141's own nine Oakland
+ * PDFs (8,432 forward, 5,635 backward; shas and instrument in
+ * `measurements/M-145.md`). The discriminator the run-gap population did not
+ * need is WHAT THE ELEMENT FOLLOWS: a positioning operator's jump is always
+ * between runs, while a TJ number sits wherever the producer put it, so a space
+ * there either separates two words or doubles a separator already present.
+ * Counting only the elements that follow a LETTER OR DIGIT — the ones where a
+ * space is a claim about a word boundary —
+ *
+ *   ≤ 0.020 em          3,818   intra-word kerning: splitting here invents words
+ *   0.020 … 0.180 em        0   <- THE VALLEY, and it is EMPTY, not merely thin
+ *   ≥ 0.180 em             86   the producer's own word gaps
+ *
+ * so the valley runs from 0.020 to 0.180 em and 0.100 is its midpoint. D-481's
+ * hand-picked figure was RIGHT and is confirmed here rather than replaced; what
+ * it lacked was the measurement, which is what this constant now carries.
+ *
+ * AND THE SWEEP, which says the same thing the other way: tokens, words and
+ * glue are FLAT at 14,039 / 13,396 / 17 from 0.02 to 0.18 em — a factor of
+ * nine — collapse at 0 to 17,322 tokens with 3,481 of them ONE CHARACTER LONG
+ * (float noise become a word gap, the same cliff M-141 found above), and decay
+ * ABOVE the valley: at 0.25 em the corpus loses 75 words and gains 9 glue
+ * tokens on `legistar-73545` alone.
+ *
+ * WHICH IS WHY UNIFYING THE TWO CONSTANTS AT 0.25 IS REFUSED BY MEASUREMENT,
+ * not by preference: 75 of the 86 real word gaps here sit in (0.180, 0.25],
+ * a band the run-gap population has nothing in. Unifying DOWNWARD at 0.1 was
+ * measured too and is nearly free (+2 tokens), and is still not taken: it would
+ * move 297 jumps M-141 classified as kerning into the word-gap class, against
+ * that row's own measured valley, which this row did not re-measure. M-145
+ * records both readings.
+ *
+ * ONE-SIDED, unlike the rule above, and this is measured rather than inherited:
+ * of 5,635 BACKWARD elements not one exceeds 0.075 em, so the magnitude form is
+ * byte-identical on this corpus — an equality that costs nothing to produce and
+ * is therefore no evidence. The reason it stays forward-only is structural: a
+ * backward displacement inside ONE shown run is the producer tightening or
+ * overprinting, never a new run, while a backward jump BETWEEN runs is a column
+ * drawn out of order, which is what the rule above is for. A suite arm pins the
+ * asymmetry so it is not tidied away. */
+const TJ_WORD_GAP_EM = 0.1;
+
 /** Extract Tier 1 text from one page. Returns { text, undetermined:[markers] }.
  *  `fontCache` is keyed by font object so a font shared across pages is parsed
  *  once. Every undecodable region is recorded, never rendered. */
@@ -1457,8 +1509,10 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
            itself. `softSpace` cannot see what is coming, so the symmetric half
            of the rule lives here and in `breakLine`: a separator this reader
            added is kept only where it actually separates something. The net
-           property, and it is the one worth stating: D-502 adds a separator
-           ONLY where the document wrote none. */
+           property, and it is the one worth stating: this reader adds a
+           separator ONLY where the document wrote none. (D-502 for a
+           positioning operator's jump; SINCE D-517 for a TJ displacement too,
+           which until then pushed its space past both halves of this rule.) */
         if (softAt === pieces.length && /^\s/.test(u)) { pieces.pop(); softAt = -1; }
         pieces.push(u);
       }
@@ -1534,7 +1588,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
        is the length `pieces` had immediately after that push, so it still
        matches ONLY if nothing has been shown since — which is exactly the
        case where the jump turned out to end the line. A space the DOCUMENT
-       wrote, or one the TJ rule read out of a displacement, never matches. */
+       wrote never matches. [CORRECTED BY D-517, 2026-09-24: this said a space
+       "the TJ rule read out of a displacement" never matches either, which was
+       true when written and is not now — that rule emits through `softSpace`
+       too, so its separators are withdrawn on the same terms. Measured at
+       M-145: 122 space characters and 12 whitespace-only lines leave the
+       corpus, and not one token, word, glue token or non-whitespace character
+       moves.] */
     if (softAt === pieces.length && pieces.length) { pieces.pop(); softAt = -1; }
     pieces.push("\n");
     lineY = baselineOf(tlm, ctm);
@@ -1672,15 +1732,20 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           if (!inArr) continue;
           if (it.t === "str") show(it.bytes);
           else if (it.t === "num") {
-            /* D-481's rule, KEPT rather than replaced by D-502's threshold, and
-               the reason is that they answer different questions. A TJ number
-               is a displacement the producer wrote INSIDE one shown run; the
-               threshold D-502 measures is for a jump between two runs a
-               positioning operator separates. Re-deciding this one needs its
-               own distribution over its own population, which is not this
-               row's. It still moves the pen, because the next positioning
-               operator's gap is measured from wherever it left it. */
-            if (it.v < -100) pieces.push(" "); // a large negative advance is a word gap
+            /* D-517 — THE SAME RULE ON A MEASURED CONSTANT AND THE SHARED
+               EMITTER. D-502 kept D-481's hand-picked -100 and said the two
+               populations answer different questions and need their own
+               distribution; M-145 measured it, and the figure is the same 0.1
+               em, now stated in the unit the other rule is stated in so the two
+               are comparable at the site. `-it.v / 1000` IS the displacement in
+               ems — the horizontal-scale factor cancels, since the device
+               advance is (-v/1000)·tfs·th·|m| and one em of that same text is
+               tfs·th·|m| — and this predicate is the one `it.v < -100` was, on
+               every one of the 417 distinct values the corpus holds and on the
+               boundary in both directions (M-145). It still moves the pen,
+               because the next positioning operator's gap is measured from
+               wherever it left it. */
+            if (-it.v / 1000 > TJ_WORD_GAP_EM) softSpace();
             advanceBy(it.v);
           }
         }

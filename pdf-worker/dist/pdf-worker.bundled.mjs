@@ -40761,6 +40761,7 @@ function matMul(a2, b2) {
 var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
 var BASELINE_EPS = 1e-6;
 var WORD_GAP_EM = 0.25;
+var TJ_WORD_GAP_EM = 0.1;
 async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
@@ -40966,7 +40967,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           if (!inArr) continue;
           if (it2.t === "str") show(it2.bytes);
           else if (it2.t === "num") {
-            if (it2.v < -100) pieces.push(" ");
+            if (-it2.v / 1e3 > TJ_WORD_GAP_EM) softSpace();
             advanceBy(it2.v);
           }
         }
