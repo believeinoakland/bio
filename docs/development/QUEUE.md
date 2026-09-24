@@ -59,7 +59,7 @@ scope: NARROWED 2026-09-24 06:01Z (SCHEDULER #18): the REBUILD is done (land/dis
 accepts-when: the guard passes on the rebuilt bundle. NEGATIVE CONTROL: restore the 0.71.0 bundle and the guard fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
-### UI-92 · running — **THE WORKSPACE CANNOT SHOW A PROJECT'S DRAFTS.** REC-198's list, rendered. — owner UI.
+### UI-92 · integrated — **THE WORKSPACE CANNOT SHOW A PROJECT'S DRAFTS.** REC-198's list, rendered. — owner UI.
 status: running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER UI-92 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/UI-92; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: directly after REC-198 (SCHEDULER #17, 2026-09-23)
 milestone: M10
