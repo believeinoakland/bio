@@ -9,13 +9,15 @@
  * WHAT THIS SUITE ASSERTS, and how a liar would pass a weaker one:
  *   1. the pinned set is ENUMERATED FROM THE OPS TABLE at run time (every `classes: null` op), never typed here, so a
  *      public op added later is driven without anyone remembering to add it;
- *   2. every op in it but the three that address scratch answers `store=scratch` with 400 NAMESPACE_PINNED, judged by
+ *   2. every op in it but the FOUR that address scratch answers `store=scratch` with 400 NAMESPACE_PINNED, judged by
  *      code, C-number and the row's own sentence (imported, never typed);
  *   3. THE WITNESS: the record's counters in BOTH namespaces — op=stats, the inbox, the member roster, and the R2 keys
  *      under `bio/inbox/` — read before and after, unmoved; and the witness is shown to SEE a knock that does land in
  *      `bio`, because an unmoved counter that could not have moved is no evidence;
  *   4. OVER-STRICTNESS: every pinned op answers `store=bio` and an absent `store=` without this refusal; the three
- *      exempt ops really do answer from scratch (proved by a scratch-only invitation that `bio` cannot see); a gated
+ *      exempt ops (four since c19-batch11 added `groupidentity`; the header said THREE, true for the tree this suite
+ *      was written on, and the EXEMPT constant below was corrected at that union while this sentence was not) really do
+ *      answer from scratch (proved by a scratch-only invitation that `bio` cannot see); a gated
  *      op naming scratch still answers from scratch.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
