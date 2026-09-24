@@ -29311,7 +29311,15 @@ var Store = class _Store extends DurableObject {
          is a match of a ref row's `at` against `last_fetched` -- whole seconds, a row overwritten in place -- which
          costs nothing and proves nothing. NULL reads back as UNDETERMINED as to source, stated by `reusedParts`. */
       ["site_assets", "last_fetched_by", "TEXT"],
-      ["site_asset_refs", "reused_from", "TEXT"]
+      ["site_asset_refs", "reused_from", "TEXT"],
+      /* REC-159 (Membership v2 §4.9, scope amended by BOB #31): WHO put a member's or a signing key's
+         status where it is -- the SERVER's stamp of the administrator whose `op=memberset`,
+         `op=signeradd` or `op=signerset` last set it, or `class:<cls>` for the operator's bearer.
+         NULLABLE AND NEVER BACK-FILLED, D-85's reasoning: a row changed before this column existed
+         recorded no actor, and there is no value a backfill could reach for that would not be
+         invented. NULL reads back as `not recorded`, stated, through `#statusBy`. */
+      ["members", "status_by", "TEXT"],
+      ["signers", "status_by", "TEXT"]
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -58765,6 +58773,32 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const claimed = !!this.#one(`SELECT role FROM credentials WHERE role=?`, _Store.ROOT_ADMIN);
     return claimed ? [_Store.ROOT_ADMIN, ...rows] : rows;
   }
+  /* REC-159 — THE ROSTER ANSWERS §4.9's CUSTODIAL ACTS, and it is asked BEFORE anything is looked up,
+   * so a caller with no standing learns nothing about the member or key it named. `by` is the control
+   * plane's STAMP (`CUSTODIAL_ACTIONS` in index.mjs), relayed from the query and never from a body.
+   * THREE SHAPES AND THREE ANSWERS, each true of the caller:
+   *   - a member's id — a signed-in session: admitted only if they are an ACTIVE administrator, else
+   *     NOT_AN_ADMIN, by name, D-136's refusal at `memberCaps`;
+   *   - `class:<cls>` — the operator's bearer, which BOB #22 RULED keeps these acts; the plane's
+   *     `machineClasses` decides which classes reach here, and the record names the credential;
+   *   - absent — a route with no plane in front of it. Nothing is attributed, and the row records
+   *     `not recorded`, which is what it is.
+   * ANSWERS NULL when the act may proceed. */
+  #custodialBar(by, act) {
+    if (by === null || by === void 0 || by === "") return null;
+    if (String(by).startsWith(MACHINE_CLASS_PREFIX)) return null;
+    if (this.#activeAdmins().includes(by)) return null;
+    return {
+      ok: false,
+      reason: "NOT_AN_ADMIN",
+      by,
+      detail: `${act} is an administrator's act (4.9), and the plane stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators.`
+    };
+  }
+  /* REC-159: the stored actor, or the stated absence of one. */
+  static #statusBy(v) {
+    return typeof v === "string" && v !== "" ? v : "not recorded";
+  }
   #capsOf(row) {
     try {
       const v = JSON.parse(row.capabilities || "[]");
@@ -58930,6 +58964,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     expertise = null,
     by = null
   } = {}) {
+    const barAdd = this.#custodialBar(by, "adding a member");
+    if (barAdd) return barAdd;
     const label = typeof cover === "string" && cover.trim() ? cover : name;
     if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
       return { ok: false, reason: "BAD_MEMBER_ID", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
@@ -59080,19 +59116,23 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
   memberList({ administer } = {}) {
     const pairs = administer === true || administer === "1";
     return { members: this.#rows(
-      `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, capabilities, created, updated,
+      `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, status_by, capabilities, created, updated,
               CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending
        FROM members ORDER BY member_id`
     ).map((r) => ({
       ...r,
       capabilities: this.#capsOf(r),
+      status_by: _Store.#statusBy(r.status_by),
+      /* REC-159: who set the status, or `not recorded` */
       /* D-51: served from `member_expertise`, not from the dead column on
          this row. Two places answering the same question, one of them never
          updated, is the shape that produces a roster nobody can trust. */
       expertise: this.expertiseList({ memberId: r.member_id }).expertise
     })) };
   }
-  memberSet({ memberId, status } = {}) {
+  memberSet({ memberId, status, by = null } = {}) {
+    const barSet = this.#custodialBar(by, "setting a member's status");
+    if (barSet) return barSet;
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     const m = this.#one(`SELECT status, role FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
@@ -59104,20 +59144,22 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       };
     const demoted = status === "active" && m.role === "admin" && m.status !== "active";
     const now = (/* @__PURE__ */ new Date()).toISOString();
+    const actor = by || null;
     if (demoted)
       this.sql.exec(
-        `UPDATE members SET status=?, role='member', updated=? WHERE member_id=?`,
+        `UPDATE members SET status=?, role='member', status_by=?, updated=? WHERE member_id=?`,
         status,
+        actor,
         now,
         memberId
       );
     else
-      this.sql.exec(`UPDATE members SET status=?, updated=? WHERE member_id=?`, status, now, memberId);
+      this.sql.exec(`UPDATE members SET status=?, status_by=?, updated=? WHERE member_id=?`, status, actor, now, memberId);
     if (status === "revoked") {
       this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
-      this.sql.exec(`UPDATE signers SET status='revoked' WHERE member_id=?`, memberId);
+      this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, actor, memberId);
     }
-    return { ok: true, memberId, status, ...demoted ? {
+    return { ok: true, memberId, status, by: _Store.#statusBy(actor), ...demoted ? {
       demoted: true,
       detail: "reactivated as an ordinary member. Administrator status is not restored by reactivation: the group voted them out under 4.7, and putting them back is an appointment, which needs the consensus of all existing administrators like any other."
     } : {} };
@@ -59195,21 +59237,24 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       `${m.member_id} is on the roster with status '${m.status}' rather than 'active'. op=ratify weighs a signature against the member's own standing and would refuse this one. Nothing was written.`
     );
   }
-  signerAdd({ keyB64, memberId, comment } = {}) {
+  signerAdd({ keyB64, memberId, comment, by = null } = {}) {
+    const barCust = this.#custodialBar(by, "registering a signing key");
+    if (barCust) return barCust;
     if (!keyB64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(keyB64))
       return { ok: false, reason: "BAD_KEY", detail: "expected the base64 field of an ssh-ed25519 public key" };
     const barAdd = this.#signerMemberBar(memberId);
     if (barAdd) return barAdd;
     this.sql.exec(
-      `INSERT INTO signers (key_b64,member_id,comment,status,added) VALUES (?,?,?,'active',?)
+      `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by) VALUES (?,?,?,'active',?,?)
        ON CONFLICT(key_b64) DO UPDATE SET member_id=excluded.member_id,
-         comment=excluded.comment, status='active'`,
+         comment=excluded.comment, status='active', status_by=excluded.status_by`,
       keyB64,
       memberId,
       comment ?? null,
-      (/* @__PURE__ */ new Date()).toISOString()
+      (/* @__PURE__ */ new Date()).toISOString(),
+      by || null
     );
-    return { ok: true, keyB64, memberId };
+    return { ok: true, keyB64, memberId, by: _Store.#statusBy(by) };
   }
   /* D-158 — THE ROSTER SAYS WHICH STATE EACH KEY IS ACTUALLY IN.
    *
@@ -59236,7 +59281,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    * up. Undetermined is first-class and gets said. */
   signerList() {
     return { signers: this.#rows(
-      `SELECT s.key_b64, s.member_id, s.comment, s.status, s.added, m.status AS member_status,
+      `SELECT s.key_b64, s.member_id, s.comment, s.status, s.added, s.status_by, m.status AS member_status,
               CASE WHEN ${_Store.SIGNER_ATTESTS} THEN 1 ELSE 0 END AS attests
          FROM signers s LEFT JOIN members m ON m.member_id = s.member_id
         ORDER BY s.added`
@@ -59246,12 +59291,16 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       comment: r.comment,
       status: r.status,
       added: r.added,
+      status_by: _Store.#statusBy(r.status_by),
+      /* REC-159 */
       member_status: r.member_status ?? null,
       attests: r.attests === 1,
       attests_why: r.attests === 1 ? null : r.status !== "active" ? "key_revoked" : r.member_status === null || r.member_status === void 0 ? "member_absent" : r.member_status !== "active" ? `member_${r.member_status}` : "undetermined"
     })) };
   }
-  signerSet({ keyB64, status } = {}) {
+  signerSet({ keyB64, status, by = null } = {}) {
+    const barCust = this.#custodialBar(by, "setting a signing key's status");
+    if (barCust) return barCust;
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     const row = this.#one(`SELECT key_b64, member_id FROM signers WHERE key_b64=?`, keyB64);
     if (!row) return { ok: false, reason: "NO_SUCH_KEY" };
@@ -59259,8 +59308,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       const barSet = this.#signerMemberBar(row.member_id);
       if (barSet) return barSet;
     }
-    this.sql.exec(`UPDATE signers SET status=? WHERE key_b64=?`, status, keyB64);
-    return { ok: true, keyB64, status };
+    this.sql.exec(`UPDATE signers SET status=?, status_by=? WHERE key_b64=?`, status, by || null, keyB64);
+    return { ok: true, keyB64, status, by: _Store.#statusBy(by) };
   }
   /* ---- ratification support: facts out, published rows in ----
   
@@ -72315,7 +72364,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         enroll: () => this.enroll(body || {}),
         invitelook: () => this.inviteLook(body || {}),
         memberlist: () => this.memberList({ administer: url.searchParams.get("administer") }),
-        memberset: () => this.memberSet(body || {}),
+        /* REC-159: `memberadd`'s relay shape, for its reason — spread the body, THEN the stamp. */
+        memberset: () => this.memberSet({ ...body || {}, by: url.searchParams.get("by") }),
         /* The membership model's member half. `memberadd`, `memberset`,
            `membercaps`, `adminendorse` and `adminremove` are admin-only at the
            control plane — section 4 governance. `memberlist` is NOT, and the
@@ -72644,9 +72694,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         registeraudit: () => this.registerAudit(),
         /* REC-175: the digest census, read-only (see `digestCensus`). */
         digestcensus: () => this.digestCensus({ limit: url.searchParams.get("limit") }),
-        signeradd: () => this.signerAdd(body || {}),
+        signeradd: () => this.signerAdd({ ...body || {}, by: url.searchParams.get("by") }),
+        /* REC-159 */
         signerlist: () => this.signerList(),
-        signerset: () => this.signerSet(body || {}),
+        signerset: () => this.signerSet({ ...body || {}, by: url.searchParams.get("by") }),
+        /* REC-159 */
         /* REC-140: the ratifier's viewer, when sent, is asked for sight (`gateFacts`). */
         gatefacts: () => this.gateFacts(
           url.searchParams.get("id"),
@@ -73564,11 +73616,20 @@ var OPS = {
   inbox: { classes: ["admin", "member", "probe"], mutating: false },
   inboxget: { classes: ["admin", "member", "probe"], mutating: false },
   inboxresolve: { classes: ["admin", "member", "probe"], mutating: true },
-  memberadd: { classes: ["admin", "probe"], mutating: true },
+  /* REC-159 (Membership v2 §4.9: each custodial act is EVERY administrator's): `member` joins
+     the four rows below so an ENROLLED administrator's session, whose `kind` is `member`,
+     passes this table; the roster then decides (`CUSTODIAL_ACTIONS`). `machineClasses` is
+     what keeps that from being a widening for anybody else: a caller that did NOT arrive by
+     a session is judged against it instead of `classes`, so the MEMBER_TOKEN bearer and an
+     `ai` credential stay refused exactly as they were, and the operator's `admin` and
+     `probe` bearers keep the reach BOB #22 ruled they keep. */
+  memberadd: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true },
   memberlist: { classes: ["admin", "member", "probe"], mutating: false },
-  memberset: { classes: ["admin", "probe"], mutating: true },
+  memberset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true },
   /* The membership model's member half. `memberadd`, `memberset`, `membercaps`,
-     `adminendorse` and `adminremove` are admin-only: section 4 governance.
+     `adminendorse` and `adminremove` are ADMINISTRATOR acts: section 4 governance,
+     decided by the roster (REC-159 moved the first two, with `signeradd` and
+     `signerset`, onto D-136's footing below).
      D-136: the last three gain `member` and a server-stamped `by`
      (`GOVERNANCE_ACTIONS` below), and the grant is `expertiseconfirm`'s six
      rows up rather than a new idea — an ADMINISTRATOR-ONLY act carrying
@@ -73969,15 +74030,19 @@ var OPS = {
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
      governorconfig sets a host's appetite and is admin/probe because tuning how
-     hard we lean on a counterparty is an operator decision, not a member one,
-     the same line memberset and signerset draw. Neither is a capacity FINDING:
+     hard we lean on a counterparty is an operator decision, not a member one —
+     and not an administrator's either (§4.9, RULED by BOB #23). CORRECTED
+     2026-09-23 by REC-159: this ended "the same line memberset and signerset
+     draw", which that landing made false — both are EVERY administrator's now,
+     and governorconfig is the one op the founder's session alone reaches. Neither is a capacity FINDING:
      a refusal still teaches capacity through governorReport on the fetch path.
      This only exposes what the DO already tracks; it discovers nothing new. */
   governorstate: { classes: ["admin", "member", "probe"], mutating: false },
   governorconfig: { classes: ["admin", "probe"], mutating: true },
-  signeradd: { classes: ["admin", "probe"], mutating: true },
+  /* REC-159: `member` and `machineClasses` for the reason written at `memberadd`. */
+  signeradd: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true },
   signerlist: { classes: ["admin", "member", "probe"], mutating: false },
-  signerset: { classes: ["admin", "probe"], mutating: true },
+  signerset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true },
   /* The bootstrap trio and the doorbell are the unauthenticated surface.
      Each enforces its own gate: bootstrap reveals nothing but
      claimed/unclaimed, claim requires the bootstrap secret and refuses once
@@ -74043,6 +74108,7 @@ var PROJECT_ACTIONS = [
 ];
 var GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];
 var IDENTITY_ACTIONS = ["groupnameset", "groupdomainset"];
+var CUSTODIAL_ACTIONS = ["memberadd", "memberset", "signeradd", "signerset"];
 var EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
 var REGISTRY_ACTIONS = [
   "entitycreate",
@@ -74189,6 +74255,10 @@ var SESSION_OPS = {
        (c)), and this is the item that discharges it. */
     ...IDENTITY_ACTIONS,
     ...GOVERNANCE_ACTIONS,
+    /* REC-159: §4.9's custodial acts, in BOTH sets for D-136's reason
+       above — the roster decides them, asked by the store against the
+       stamped `by`, and an ordinary member is told NOT_AN_ADMIN. */
+    ...CUSTODIAL_ACTIONS,
     /* REC-146: THE CONTRADICTION PAIRING READ. It reads across QUESTIONS,
        their accepted readings and the documents those rest on, so the
        viewer decides what it may pair at all — the session route is the
@@ -74304,12 +74374,9 @@ var SESSION_OPS = {
     ...DECLARATION_ACTIONS,
     ...STRUCTURE_ACTIONS,
     ...VERSION_ACTIONS,
-    "memberadd",
-    "memberset",
     ...IDENTITY_ACTIONS,
     ...GOVERNANCE_ACTIONS,
-    "signeradd",
-    "signerset",
+    ...CUSTODIAL_ACTIONS,
     "governorstate",
     "governorconfig",
     "aicredentialmint",
@@ -74631,6 +74698,10 @@ var NEEDS = {
      direction either. */
   expertisedeclare: null,
   expertiseconfirm: null,
+  /* REC-159: still NO working capability now that an enrolled administrator's
+     session reaches these (and `signeradd`/`signerset` below): what bounds them is
+     the ROSTER, asked by the store against the stamped `by` — D-136's reasoning
+     for the three that follow, applied again. */
   memberadd: null,
   memberset: null,
   /* D-136: NO WORKING CAPABILITY, and the reason is §5's own rather than
@@ -74667,8 +74738,10 @@ var NEEDS = {
   aicredentialmint: null,
   aicredentialrevoke: null,
   /* D-103: setting a host's appetite is an operator act bounded by
-     SESSION_OPS.admin, the same as the roster ops above, not a section-5
-     working capability. governorstate is a read and needs no entry at all. */
+     SESSION_OPS.admin, not a section-5 working capability. CORRECTED 2026-09-23
+     by REC-159: this read "the same as the roster ops above", and REC-159 moved
+     those into both session sets; governorconfig is the operator's (§4.9, BOB #23).
+     governorstate is a read and needs no entry at all. */
   governorconfig: null,
   /* REC-4 / D-98: forwarding or resolving a task carries NO working capability.
      The authorization is not "may this member contribute" but "is this THIS
@@ -75025,7 +75098,7 @@ function namespaceGate(url) {
 }
 var AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 function aiReachesAsMember(spec) {
-  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member");
+  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member") && !Array.isArray(spec.machineClasses);
 }
 function aiScopeDeclaration(writes) {
   const refusal7 = (code, detail, extra) => {
@@ -76638,7 +76711,7 @@ var index_default = {
     if (cls === "ai") {
       const scoped = aiTaskScope(aiCred, op, spec);
       if (scoped.error) return json({ ok: false, ...scoped.error, op, cls }, 403);
-    } else if (!spec.classes.includes(cls)) {
+    } else if (!(viaSession || !Array.isArray(spec.machineClasses) ? spec.classes : spec.machineClasses).includes(cls)) {
       return json({
         ok: false,
         reason: "CLASS_FORBIDDEN",
@@ -79422,7 +79495,7 @@ var index_default = {
         tokenClass: cls,
         detail: `the group's display name and its domain claim are set by a named administrator's own signed-in session, and the record names who set each one (Publication \xA77). The credential that asked is the operator's \`${cls}\`-class bearer token, which holds no place on the roster. Nothing was changed.`
       }, 403);
-    if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith" || op === "memberadd")
+    if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith" || CUSTODIAL_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (IDENTITY_ACTIONS.includes(op)) {
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);

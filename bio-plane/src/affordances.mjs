@@ -1987,8 +1987,8 @@ export const NON_ACTS = {
   /* Identity, roster and operator surface. */
   expertisedeclare: "a member's own declaration, not a corpus act",
   expertiseconfirm: "administrator act on a declaration, class-gated",
-  memberadd: "roster governance, bounded by SESSION_OPS.admin",
-  memberset: "roster governance, bounded by SESSION_OPS.admin",
+  memberadd: "roster governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
+  memberset: "roster governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   /* D-136. THE THREE ARRIVE HERE BECAUSE THEY ARRIVED IN `NEEDS`, and that is
      the totality guard doing its job rather than a formality: giving them
      session reach put them in the capability table, and every key there is an
@@ -2008,8 +2008,8 @@ export const NON_ACTS = {
      public identity (Publication §7 points 2 and 3), never a bundle. */
   groupnameset: "the group's public display name — the subject is the instance's identity, not a bundle",
   groupdomainset: "the group's claimed domain — the subject is the instance's identity, not a bundle",
-  signeradd: "signer governance, bounded by SESSION_OPS.admin",
-  signerset: "signer governance, bounded by SESSION_OPS.admin",
+  signeradd: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
+  signerset: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   governorconfig: "operator tuning of the per-host governor",
   /* Task acts: their subject is a TASK row, assignee-fenced by the store
      (NOT_YOURS), published with the task itself via op=tasks. */

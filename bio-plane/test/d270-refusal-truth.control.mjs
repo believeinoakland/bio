@@ -54,7 +54,11 @@ const ARMS = [
      one-name arm could be satisfied by a plane that had collapsed everything
      except `memberadd`. `signeradd` is in the ROLE arm, is untouched by this
      item, and is a different family from `memberadd`. */
-  { id: "b", file: SRC, expect: "RED", armedExpect: 2, mustName: ["memberadd", "signeradd"],
+  /* CORRECTED 2026-09-23 (REC-159), the same way and for the same reason as D-136's correction above:
+     `memberadd` and `signeradd` joined BOTH session sets, so the gate returns early for them and
+     collapsing the split changes nothing they are told. `governorconfig` (the ROLE arm's one op now)
+     and `provenanceroute` (an OMISSION) replace them — still two ops, from two different arms. */
+  { id: "b", file: SRC, expect: "RED", armedExpect: 2, mustName: ["governorconfig", "provenanceroute"],
     what: "THE SPLIT COLLAPSED — sessionOpGate's three outcomes reduced to the single "
         + "MACHINE_CREDENTIAL_REQUIRED `main` sent before D-270. This is the arm the row's "
         + "accepts-when demands: it proves the suite grades the DISTINCTION, not a code's presence.",

@@ -330,7 +330,9 @@ const indexSrc = readFileSync(IDX, "utf8");
 const storeSrc = readFileSync(STORE_SRC, "utf8");
 const expr = (re) => { const m = re.exec(indexSrc); return m ? m[1].trim() : null; };
 const authorAtAct = expr(/\|\| op === "narrow"\)\s*\n\s*inner\.searchParams\.set\("author", ([^;]+)\);/);
-const byAtAct = expr(/\|\| op === "memberadd"\)\s*\n\s*inner\.searchParams\.set\("by", ([^;]+)\);/);
+/* CORRECTED 2026-09-23 (REC-159), never exempted: the stamp's last disjunct was `op === "memberadd"`;
+   REC-159 widened it to `CUSTODIAL_ACTIONS.includes(op)`, the four §4.9 acts. Same ONE expression. */
+const byAtAct = expr(/\|\| CUSTODIAL_ACTIONS\.includes\(op\)\)\s*\n\s*inner\.searchParams\.set\("by", ([^;]+)\);/);
 const affAuthor = expr(/const affAuthor = ([^;]+);/);
 const affBy = expr(/const affBy = ([^;]+);/);
 t("op=affordances sends `author` and `by` composed by the SAME expressions the object-directed acts' "

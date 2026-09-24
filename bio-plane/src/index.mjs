@@ -1111,11 +1111,20 @@ const OPS = {
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
   inboxget:     { classes: ["admin", "member", "probe"],           mutating: false },
   inboxresolve: { classes: ["admin", "member", "probe"],           mutating: true  },
-  memberadd:    { classes: ["admin", "probe"],                     mutating: true  },
+  /* REC-159 (Membership v2 §4.9: each custodial act is EVERY administrator's): `member` joins
+     the four rows below so an ENROLLED administrator's session, whose `kind` is `member`,
+     passes this table; the roster then decides (`CUSTODIAL_ACTIONS`). `machineClasses` is
+     what keeps that from being a widening for anybody else: a caller that did NOT arrive by
+     a session is judged against it instead of `classes`, so the MEMBER_TOKEN bearer and an
+     `ai` credential stay refused exactly as they were, and the operator's `admin` and
+     `probe` bearers keep the reach BOB #22 ruled they keep. */
+  memberadd:    { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
   memberlist:   { classes: ["admin", "member", "probe"],           mutating: false },
-  memberset:    { classes: ["admin", "probe"],                     mutating: true  },
+  memberset:    { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
   /* The membership model's member half. `memberadd`, `memberset`, `membercaps`,
-     `adminendorse` and `adminremove` are admin-only: section 4 governance.
+     `adminendorse` and `adminremove` are ADMINISTRATOR acts: section 4 governance,
+     decided by the roster (REC-159 moved the first two, with `signeradd` and
+     `signerset`, onto D-136's footing below).
      D-136: the last three gain `member` and a server-stamped `by`
      (`GOVERNANCE_ACTIONS` below), and the grant is `expertiseconfirm`'s six
      rows up rather than a new idea — an ADMINISTRATOR-ONLY act carrying
@@ -1516,15 +1525,19 @@ const OPS = {
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
      governorconfig sets a host's appetite and is admin/probe because tuning how
-     hard we lean on a counterparty is an operator decision, not a member one,
-     the same line memberset and signerset draw. Neither is a capacity FINDING:
+     hard we lean on a counterparty is an operator decision, not a member one —
+     and not an administrator's either (§4.9, RULED by BOB #23). CORRECTED
+     2026-09-23 by REC-159: this ended "the same line memberset and signerset
+     draw", which that landing made false — both are EVERY administrator's now,
+     and governorconfig is the one op the founder's session alone reaches. Neither is a capacity FINDING:
      a refusal still teaches capacity through governorReport on the fetch path.
      This only exposes what the DO already tracks; it discovers nothing new. */
   governorstate:  { classes: ["admin", "member", "probe"],           mutating: false },
   governorconfig: { classes: ["admin", "probe"],                     mutating: true  },
-  signeradd:    { classes: ["admin", "probe"],                     mutating: true  },
+  /* REC-159: `member` and `machineClasses` for the reason written at `memberadd`. */
+  signeradd:    { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
   signerlist:   { classes: ["admin", "member", "probe"],           mutating: false },
-  signerset:    { classes: ["admin", "probe"],                     mutating: true  },
+  signerset:    { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
   /* The bootstrap trio and the doorbell are the unauthenticated surface.
      Each enforces its own gate: bootstrap reveals nothing but
      claimed/unclaimed, claim requires the bootstrap secret and refuses once
@@ -1745,6 +1758,25 @@ const GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];
    both session sets (an enrolled administrator holds `member:<id>`, so the admin set alone is the founder alone),
    a fence that refuses any caller who did not arrive by a session, and a `by` stamp the store asks the roster. */
 const IDENTITY_ACTIONS = ["groupnameset", "groupdomainset"];
+/* REC-159 — §4.9's CUSTODIAL ACTS, AND EACH IS EVERY ADMINISTRATOR'S. `BIO_Membership_Architecture_v2.md`
+   §4.7's block *"WHAT IS STILL NOT CLOSED"* named this fix and REC-156 measured the defect: the four sat in
+   `SESSION_OPS.admin` alone — the FOUNDER'S password session — so an enrolled administrator was refused
+   them with a sentence calling the op an administrator's, which she IS. D-136's call, applied again, in
+   three halves that ship together or not at all:
+     (1) REACH — spread into BOTH `SESSION_OPS` sets, and `member` in each OPS row's `classes`, because an
+         enrolled administrator's `kind` is `member` however her roster row reads;
+     (2) THE STAMP — a disjunct of the `by` stamp, so the SERVER names who acted, and the store's relays
+         read `by` from the query over anything in the body;
+     (3) THE ROSTER — each store method refuses a member-named `by` that is not an ACTIVE administrator,
+         NOT_AN_ADMIN, before it looks anything up (`Store#custodialBar`).
+   Reach without the roster would hand an ordinary member the roster; the roster without the stamp would
+   let a caller name somebody who passes it.
+   **NOT `GOVERNANCE_ACTIONS`, and that is the one call this array exists to make.** That array also
+   carries the operator fence (C-32.17), and BOB #22 RULED that an operator's bearer keeps reaching these
+   four, its `by` stamped `class:<cls>` and naming no person. So the bearer route is bounded by each row's
+   `machineClasses` instead — `admin` and `probe`, the classes it held before — which keeps the
+   MEMBER_TOKEN bearer and an `ai` credential out exactly as they were. */
+const CUSTODIAL_ACTIONS = ["memberadd", "memberset", "signeradd", "signerset"];
 /* Section 1.3. Both are in the MEMBER set: a member declares their own, and a
    member reaching confirm is refused by the store with ADMIN_ONLY, which says
    what is wrong. Putting confirm in the admin set alone would answer "requires a
@@ -1984,6 +2016,10 @@ const SESSION_OPS = {
                       (c)), and this is the item that discharges it. */
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
+                   /* REC-159: §4.9's custodial acts, in BOTH sets for D-136's reason
+                      above — the roster decides them, asked by the store against the
+                      stamped `by`, and an ordinary member is told NOT_AN_ADMIN. */
+                   ...CUSTODIAL_ACTIONS,
                    /* REC-146: THE CONTRADICTION PAIRING READ. It reads across QUESTIONS,
                       their accepted readings and the documents those rest on, so the
                       viewer decides what it may pair at all — the session route is the
@@ -2044,10 +2080,11 @@ const SESSION_OPS = {
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
                    ...BIAS_ACTIONS,
-                   ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS, "memberadd", "memberset",
+                   ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS,
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
-                   "signeradd", "signerset", "governorstate", "governorconfig",
+                   ...CUSTODIAL_ACTIONS,
+                   "governorstate", "governorconfig",
                    "aicredentialmint", "aicredentialrevoke",
                    "casedraft", "reviewgrant", "reviewrevoke"]),
 };
@@ -2385,6 +2422,10 @@ const NEEDS = {
      direction either. */
   expertisedeclare: null,
   expertiseconfirm: null,
+  /* REC-159: still NO working capability now that an enrolled administrator's
+     session reaches these (and `signeradd`/`signerset` below): what bounds them is
+     the ROSTER, asked by the store against the stamped `by` — D-136's reasoning
+     for the three that follow, applied again. */
   memberadd:        null,
   memberset:        null,
   /* D-136: NO WORKING CAPABILITY, and the reason is §5's own rather than
@@ -2421,8 +2462,10 @@ const NEEDS = {
   aicredentialmint:   null,
   aicredentialrevoke: null,
   /* D-103: setting a host's appetite is an operator act bounded by
-     SESSION_OPS.admin, the same as the roster ops above, not a section-5
-     working capability. governorstate is a read and needs no entry at all. */
+     SESSION_OPS.admin, not a section-5 working capability. CORRECTED 2026-09-23
+     by REC-159: this read "the same as the roster ops above", and REC-159 moved
+     those into both session sets; governorconfig is the operator's (§4.9, BOB #23).
+     governorstate is a read and needs no entry at all. */
   governorconfig:   null,
   /* REC-4 / D-98: forwarding or resolving a task carries NO working capability.
      The authorization is not "may this member contribute" but "is this THIS
@@ -2929,7 +2972,11 @@ const AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
  * than throwing, and that is the fail-closed direction: they enforce their own
  * gates and an agent credential has no business inside a bootstrap claim. */
 function aiReachesAsMember(spec) {
-  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member");
+  /* REC-159: a row that bounds machine credentials by `machineClasses` hands an agent nothing —
+     no row names `ai` there either — so the four custodial ops stay beyond every scope, as they
+     were before `member` joined their `classes` for an enrolled administrator's session. */
+  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member")
+    && !Array.isArray(spec.machineClasses);
 }
 
 /* THE DECLARATION, judged once when a member AUTHORS it. Separate from the gate
@@ -5973,7 +6020,10 @@ export default {
     if (cls === "ai") {
       const scoped = aiTaskScope(aiCred, op, spec);
       if (scoped.error) return json({ ok: false, ...scoped.error, op, cls }, 403);
-    } else if (!spec.classes.includes(cls)) {
+    } else if (!(viaSession || !Array.isArray(spec.machineClasses) ? spec.classes : spec.machineClasses).includes(cls)) {
+      /* REC-159: a row carrying `machineClasses` judges a caller that did NOT arrive by a session
+         against THAT list, so granting `member` to an enrolled administrator's session admits no
+         MEMBER_TOKEN bearer (the four custodial ops' rows). One refusal, the same code and sentence. */
       return json({ ok: false, reason: "CLASS_FORBIDDEN", ...admissionRow("CLASS_FORBIDDEN"),
         error: "forbidden for token class", op, cls }, 403);
     }
@@ -10640,9 +10690,14 @@ export default {
        would be attributed to whoever the caller named"*) would be FALSE here,
        which is D-270's class. REVERSING IT costs one disjunct on the fence above
        and a founder-session fixture for every caller named in M-84. */
+    /* REC-159 widens REC-156's disjunct from `op === "memberadd"` to the four §4.9 custodial acts,
+       one expression still: a session stamps its member — now an ENROLLED administrator's too — and
+       a bearer `class:<cls>`, which the store records as the operator's credential and never as a
+       person. `memberset`, `signeradd` and `signerset` write the stamp into the row they change
+       (`status_by`); the store refuses a member-named `by` that is not an active administrator. */
     if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op)
         || op === "projectparticipants" || op === "projectownerarith"
-        || op === "memberadd")
+        || CUSTODIAL_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* REC-164: the setter of the group's display name or domain is the SERVER's stamp — set after the caller's
        parameters were copied, so a caller's `by` is overwritten rather than honoured, and the store asks the roster
