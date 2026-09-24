@@ -294,6 +294,16 @@ scope: add `group: GROUP` to block (ix)'s strengthbar body; re-measure the publi
 accepts-when: `node test/machine-fences.control.mjs` exits 0 with every arm as declared. NEGATIVE CONTROL: arm (2) itself — neuter the predicate and it now fails by name.
 added: 2026-09-24 · SCHEDULER #18 (placed; `D-509` minted by land/worker/D-503).
 
+### D-510 · queued — **`promote` TRUSTS THE ENVELOPE'S TYPE OVER THE DOCUMENT'S: `bundles.object_type` and the action_basis/correspondence projection are gated on the caller's `meta.object_type`, while `#projectRow`'s action columns come from the document's own front matter — so a member can promote an ACTION under an envelope saying information: it lands typed information with `action_risk_tier` set and its basis and correspondence never projected.** Found by D-505's worker (finding 3). — owner RECORD.
+order: at the backlog head: the record holding an action it does not index as one (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:48Z)
+milestone: M7
+interface: I3 — a disagreeing envelope refused (or normalised); the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`action` is the impact substrate), with C-2.5 (a document's type is pinned to its id prefix).
+depends-on: D-505.
+scope: `promote` derives the projected type from the promoted document; an envelope `meta.object_type` that disagrees is refused by name (catalogued, DEC-49), not silently obeyed.
+accepts-when: an action promoted under an information envelope is refused (or lands typed action with its basis and correspondence projected). NEGATIVE CONTROL: gate on the envelope again and that arm lands typed information, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
