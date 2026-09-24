@@ -14,6 +14,11 @@
 import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { controlPen } from "./pen.mjs";
+
+const PEN = controlPen("rec99");
+/* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
+const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 const STORE = new URL("../src/store.mjs", import.meta.url).pathname;
 const SUITE = new URL("./derivation-bounds.test.mjs", import.meta.url).pathname;
@@ -94,7 +99,7 @@ if (base.fail !== 0 || base.pass < 1) { console.log("REFUSING TO ARM: the baseli
 let armed = 0;
 for (const [label, file, find, replace, declared] of ARMS) {
   const tag = label.slice(1, label.indexOf(")")).replace(/\W/g, "");
-  const pristine = `${file}.pristine-rec99-arm${tag}`;
+  const pristine = penPath(file, `pristine-rec99-arm${tag}`);
   copyFileSync(file, pristine);
   const before = readFileSync(file, "utf8");
   const occurrences = before.split(find).length - 1;
@@ -133,7 +138,7 @@ for (const [label, file, find, replace, declared] of ARMS) {
   if (!ok || !identical) { console.log("    *** STOPPING: an unrestored tree makes every later arm meaningless."); process.exit(1); }
   unlinkSync(pristine);
 }
-console.log(`\n${armed} of ${ARMS.length} arms armed. Pristine copies: ${ARMS.map(([l]) => `${STORE}.pristine-rec99-arm${l.slice(1, l.indexOf(")")).replace(/\W/g, "")}`).filter(existsSync).length} left behind (must be 0).`);
+console.log(`\n${armed} of ${ARMS.length} arms armed. Pristine copies: ${ARMS.map(([l]) => penPath(STORE, `pristine-rec99-arm${l.slice(1, l.indexOf(")")).replace(/\W/g, "")}`)).filter(existsSync).length} left behind (must be 0).`);
 const after = run("derivation-bounds");
 console.log(`CLOSING BASELINE — derivation-bounds ${after.pass}/${after.fail}, census ${after.census} `
           + `(must equal the opening row ${base.pass}/${base.fail}, census ${base.census})`);

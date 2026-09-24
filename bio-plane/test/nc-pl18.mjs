@@ -45,6 +45,7 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 
 const P = (rel) => fileURLToPath(new URL(rel, import.meta.url));
 const STORE = P("../src/store.mjs");
@@ -211,6 +212,7 @@ const tally = (out) => {
 const failedArms = (out) => [...new Set(out.split("\n").filter((l) => l.includes("FAIL  "))
   .map((l) => (/FAIL\s+(FIXTURE|ARM\s+[A-Z]\d*[a-z]?)/.exec(l) || [, "?"])[1].replace(/\s+/g, " ")))];
 
+const PEN = controlPen("pl18");
 const rows = [];
 for (const arm of ARMS) {
   console.log(`\n=== ARM ${arm.id} ===\n  DECLARED : ${arm.declared}`);
@@ -218,7 +220,7 @@ for (const arm of ARMS) {
   console.log(`  MUST NOT : ${arm.mustNotFail}`);
   let before = null, backup = null;
   if (arm.file) {
-    backup = `${arm.file}.pristine.${arm.id}`;
+    backup = `${PEN}/${arm.file.split("/").pop()}.pristine.${arm.id}`;
     copyFileSync(arm.file, backup);
     before = sha(arm.file);
     const src = readFileSync(arm.file, "utf8");

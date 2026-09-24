@@ -110,6 +110,7 @@ import { readFileSync, writeFileSync, copyFileSync, statSync, unlinkSync, mkdirS
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 
 const PLANE = fileURLToPath(new URL("../", import.meta.url));
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
@@ -119,7 +120,7 @@ const INDEX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const CATALOG = fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url));
 const GUARD = fileURLToPath(new URL("../../civicos-ui/check-refusal-codes.mjs", import.meta.url));
 
-const DIR = fileURLToPath(new URL("./.nc-d508-pen/", import.meta.url));
+const DIR = `${controlPen("d508")}/`;
 mkdirSync(DIR, { recursive: true });
 process.on("exit", () => { try { rmdirSync(DIR); } catch { /* not empty: the evidence stays */ } });
 

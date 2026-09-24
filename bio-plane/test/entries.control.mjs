@@ -10,7 +10,7 @@
  * and DECLARES before arming which NAMED assertion must fail and which must NOT; the suite must reach its own foot; one
  * assertion no arm can reach — the frozen history's floor — must stay green, so a red is not collateral. D-331: every
  * anchor is counted BEFORE anything is armed, through `preflight`. Every restore is verified by sha256 AND `cmp` against
- * the arm's own uniquely-named copy in `.m0100-harness/`, with the byte count printed and floored; an `exit` hook
+ * the arm's own uniquely-named copy in `controlPen("m0100")`, OUTSIDE the worktree (M0-182), with the byte count printed and floored; an `exit` hook
  * restores every file from memory and removes the pen on EVERY exit. The suite runs as an asynchronous child, so a
  * signal is honoured when it arrives. RUN LOCALLY ONLY: a control is never pushed to a branch (Bob, 2026-09-23).
  *
@@ -24,13 +24,14 @@ import { createHash } from "node:crypto";
 import { spawn, execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
+import { controlPen } from "./pen.mjs";
 
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const MINTID = path.join(REPO, "tools", "mintid.mjs");
 const LEDGER = path.join(REPO, "tools", "ledger.mjs");
 const ENTRIES = path.join(REPO, "tools", "entries.mjs");
 const SUITE = path.join(REPO, "bio-plane", "test", "entries.test.mjs");
-const PEN = path.join(REPO, ".m0100-harness");
+const PEN = controlPen("m0100");
 const ONLY = process.argv[2] || null;
 const DECLARED_ARMS = 4;
 const FILES = [MINTID, LEDGER, ENTRIES];

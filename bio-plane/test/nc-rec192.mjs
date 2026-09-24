@@ -1,17 +1,18 @@
 /* REC-192's NEGATIVE CONTROL for test/partitionindependence.test.mjs. Run from bio-plane/:
  *   node test/nc-rec192.mjs
  * Each arm patches src/store.mjs ALONE, runs the suite, and restores from a UNIQUELY-NAMED per-arm pristine
- * copy kept inside this worktree, verified by sha256 AND by content (cmp), with the byte count printed and a
+ * copy kept in a pen OUTSIDE this worktree (`controlPen("rec192")`; M0-182), verified by sha256 AND by content (cmp), with the byte count printed and a
  * minimum guarded. An arm whose patch anchor does not occur exactly once is reported as NOT ARMED. */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STORE = join(ROOT, "src", "store.mjs");
-const PEN = join(ROOT, ".nc-rec192");
+const PEN = controlPen("rec192");
 mkdirSync(PEN, { recursive: true });
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const ORIG = readFileSync(STORE);

@@ -37,6 +37,7 @@ import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
+import { controlPen } from "./pen.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));          /* bio-plane/ */
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
@@ -54,7 +55,7 @@ const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
 const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) => [k, sha(v)]));
 
-const PEN = ROOT + "../.nc-instr-cluster";
+const PEN = controlPen("instr-cluster");
 rmSync(PEN, { recursive: true, force: true });
 mkdirSync(PEN, { recursive: true });
 for (const [k, p] of Object.entries(F)) copyFileSync(p, join(PEN, `record.${k}`));

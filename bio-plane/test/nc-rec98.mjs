@@ -73,11 +73,12 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SUITE = join(HERE, "tier2-wire.test.mjs");
 const FIX = join(HERE, "fixtures", "cpdf20");
-const PEN = join(HERE, ".nc-rec98-pristine");
+const PEN = controlPen("rec98");
 
 /* TWO SUBJECTS, because the item has two. The WIRE is `index.mjs`'s and every
    arm but one aims there. A3 aims at the RULE in `textchain.mjs` — not to

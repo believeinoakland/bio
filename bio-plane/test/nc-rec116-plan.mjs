@@ -29,9 +29,10 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, mkdirSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DIR = join(HERE, ".rec116-plan");          /* INSIDE this worktree, never a shared scratchpad */
+const DIR = controlPen("rec116-plan");
 const DB = join(DIR, "plan.db");
 const SCHEMA_SRC = readFileSync(join(HERE, "..", "src", "schema.mjs"), "utf8");
 const STORE_SRC = readFileSync(join(HERE, "..", "src", "store.mjs"), "utf8");

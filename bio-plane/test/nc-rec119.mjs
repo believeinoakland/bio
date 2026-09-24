@@ -25,6 +25,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const ARM = (process.argv[2] || "").trim();
 const ARMS = ["none", "a", "b", "c", "d", "e"];
@@ -36,7 +37,7 @@ const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./rec119-version-legs-earned.test.mjs", import.meta.url));
 const PHASE = fileURLToPath(new URL("./nc-rec119-freeze-phase.mjs", import.meta.url));
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SNAP = `${STORE}.nc-rec119-${ARM}.pristine`;
+const SNAP = `${controlPen("rec119")}/store.mjs.nc-rec119-${ARM}.pristine`;
 const FLOOR = 500 * 1024;   /* a restore that lands a file smaller than this is not a restore */
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
