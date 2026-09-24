@@ -16,22 +16,30 @@ rule on**, not code. The current UI is evidence to study, not a constraint to pr
 and evolves the UX that is actually built and integrated into the BIO code base. **It may touch
 whatever in the `bio` repo it needs to for that.** There is no path fence.
 
-**Where the work lives:**
+**Everything this lane saves is DISJOINT from BIO development** (Bob, 2026-09-24). BIO development
+runs separately, under a different account. This lane never writes where that process writes.
 
-- **`ux-study` (this branch):** the study record. Inventory, journeys, rounds with claude.ai,
-  patterns, prototypes, the proposal. It shares no history with `main` and never merges into it.
-  Here, only this charter governs.
-- **`main`:** the UX as built, meaning the UI (`civicos-ui/`), its documents, and anything else the UX
-  needs changed. A change on `main` follows the rules every lane follows there, because they protect
-  the record, not because this lane is fenced:
-  - claims, gates and `construct-status.json`
-  - landing through CONDUCT's train
-  - minting a defect found and placing it in the plan
-  - `civicos`, the UI worker, is deployed by whoever lands the UI change (kickoffs/UI.md). The plane
-    and the installer are deployed only by DIST.
+- **Refs it writes:** `ux-study` (the study record) and branches named `ux/<topic>` (a finished
+  change to the product, based on `main`). No others.
+- **Refs it never writes:** `main`, `coord`, `land/*`, worker branches, `gate-results`, or any other
+  branch it did not create.
+- **Shared state it never writes:**
+  - no `tools/mintid.mjs` (the lane numbers its own items `UX-n`)
+  - no `coord.mjs write`: no BOB INBOX, QUEUE, CLAIMS or handoffs
+  - no ledger rows or measurements filed into BIO's registers
+  - no messages into the dev lanes
+  - no deploys
+- **Reading is unrestricted:** `main`, `coord`, the tools, the corpus, and the running UI (with
+  `store=scratch` on every live call).
 
-Where `main`'s `CLAUDE.md` and this charter conflict: on `ux-study` this charter governs, and on
-`main` `main`'s governs.
+**How the UX reaches the product.** A `ux/<topic>` branch carries a complete, tested change: it runs
+`main`'s own suites green, and its commit says what it changes and why. It enters `main` only when
+Bob hands it to BIO development, which integrates it by its own process: rows, gates, the train and
+deploys. Because live UI work also touches `civicos-ui/app.html`, a `ux/` branch stays small and is
+rebased onto `main` just before handoff.
+
+**On `ux-study`, this charter governs.** A `ux/` branch is held to `main`'s test suites so that it can
+be integrated, but it is not bound by `main`'s process, which is for the lanes that write to `main`.
 
 ## 3. What binds, and what does not
 
@@ -58,7 +66,7 @@ Where `main`'s `CLAUDE.md` and this charter conflict: on `ux-study` this charter
 
 **Does not bind the study: the development process.** No gates, `plancheck`, `CLAIMS.md`, ledgers, `QUEUE.md`,
 `construct-status.json` upkeep, lane messaging or DIST rules. Those govern changes to the product,
-and the study changes none of it. A change on `main` is under them in full (§2).
+and the study changes none of it. The lane does not change `main` itself (§2).
 
 ## 4. Every claim carries its state
 

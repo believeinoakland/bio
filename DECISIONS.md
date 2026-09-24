@@ -26,3 +26,11 @@ Bob carries it there.
   whether to study options or to create and evolve the UX design that will actually be developed and
   integrated with the rest of the BIO code base." The path fence is removed (charter §2). Changes on
   `main` still follow `main`'s rules, which bind every lane.
+- **2026-09-24: disjoint.** "This work is being done separately from other work currently being done
+  elsewhere in the repo (and under a different account). So we need to make sure that all work this
+  lane saves in the repo is disjoint from changes being made by the BIO development process." The lane
+  writes only `ux-study` and `ux/*` branches, never `main`, `coord`, `land/*` or BIO's shared registers.
+  Changes reach `main` when Bob hands a `ux/` branch to BIO development (charter §2). **Retraction on
+  the record:** before this ruling, the lane took id D-555 from BIO's id ledger and appended a D-555
+  entry to the BOB INBOX on `coord` (165d236d). The entry was withdrawn undrained, and `QUEUE.md` is
+  byte-identical to its prior state (3583e336, fae4d303). The id D-555 stays taken and unused.
