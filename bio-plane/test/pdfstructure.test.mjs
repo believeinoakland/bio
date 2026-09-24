@@ -20,6 +20,9 @@
  *   - TJ word-gap number                            -> a space; a small kern -> none
  *   - a CID font with NO /ToUnicode                 -> undetermined NAMING the font
  *   - a code absent from the CMap                   -> unmapped_code, never guessed
+ *   - ONE Td PER GLYPH, every ty=0                 -> one line, read as WORDS (D-481)
+ *   - T*, a Td with ty!=0, a Tm at another baseline -> STILL a line break (D-481)
+ *   - the same Tm under a different cm             -> still two lines (D-481)
  *
  * D-251 fixtures cover the /Info read at the parser, and specifically the half
  * the acquire-driven suite cannot reach:
@@ -40,6 +43,24 @@
  * with classifyUri forced to always return "deferred", the mailto assertion
  * FAILS (refused expected, deferred got).
  */
+/* NEGATIVE CONTROL (D-481, 2026-09-24, TWO ARMS, each armed ALONE, each restored by sha256 AND cmp against a per-arm
+   pristine copy of bio-plane/src/pdfstructure.mjs — 83,282 B, sha256 be8ee479fb248212dff2c7a4dfc24ac248334b6e81dacd98a42a100826f972d4):
+   ARM 1 — REVERT THE SUBJECT: make Td/TD and Tm break unconditionally again (2 sites). DECLARED must fail: the two
+   per-glyph arms and the two same-baseline arms; must pass: everything else. RUN: 9 of 107 failed — "eleven glyphs
+   placed by eleven Td read as ONE line", "and as WORDS, not characters", "a Tm at the SAME baseline does NOT break
+   it", "and under the SAME cm as one line", AND the four baseline-move arms (T*, Td ty!=0, TD ty!=0, Tm at a
+   different baseline), AND the then-counts.chars floor. TWO SURPRISES, RECORDED RATHER THAN SMOOTHED: (a) the four
+   baseline-move arms were DECLARED must-pass and FAILED, because each writes the same per-glyph line on BOTH sides
+   of its mover, so the revert corrupts them too — they discriminate for ARM 2, not for ARM 1; (b) the "non-empty"
+   floor was written against counts.chars, which is the document LENGTH and so MOVES WITH THE NEWLINES — a floor that
+   cannot survive an arm is not a floor, and it was rewritten to count the ten non-whitespace glyphs before this line
+   was. All 91 pre-existing assertions PASSED under this arm, so nothing in the old suite pinned the old behaviour.
+   ARM 2 — THE LIAR: make breakLine() emit no newline at all (1 site) — the reading whose word count rises while
+   every real line break is lost. DECLARED must fail: every real-break arm; must pass: the per-glyph arms and the
+   floor. RUN: exactly 7 of 107 failed — T*, Td ty!=0, TD ty!=0, Tm at a different baseline, the ' and " arm, the
+   two-cm arm, and the three-Td-lines over-strictness arm. The per-glyph arms and the floor PASSED, which IS the
+   point: this suite refuses the liar. All 91 pre-existing assertions PASSED.
+   Restored after each arm -> 107 pass, 0 fail. */
 /* NEGATIVE CONTROL: in loadFont skip the /ToUnicode lookup (`const tu = false && doc.resolve(map.ToUnicode)`) so no CMap ever loads -> the decoded-text assertions fail. RUN 2026-07-31: 14 of 75 failed (every "decodes to"/document/per-page text assertion + the unmapped_code region — all runs collapse to no_tounicode); the CMap-independent doctrine assertions (CID-no-ToUnicode acceptance, no_current_font, empty-text shape) still passed; restored -> 75 pass 0 fail. */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { extractPdfStructure, PDF_LINK_TYPES } from "../src/pdfstructure.mjs";
@@ -579,6 +600,111 @@ console.log("\n--- D-251: /Info is read from BOTH trailer shapes, and the last o
   const out = await extractPdfStructure(bytes);
   t("a dangling /Info reference falls back to the readable candidate instead of reporting no metadata",
     ocrOf(out).engine, "OmniPage Ultimate 19");
+}
+
+
+/* ------------------------------------------------------------------ *
+ * D-481 — A LINE BREAKS WHEN THE BASELINE MOVES
+ * ------------------------------------------------------------------ *
+ * These fixtures are the two halves of one claim, and NEITHER ALONE IS THE
+ * CLAIM. A reading that simply stopped emitting newlines would make the first
+ * half green — its word count would rise, because a document's own spaces are
+ * already among its glyphs — while destroying every real line in the document.
+ * So the same block asserts that T*, a Td with ty != 0, a Tm at a different
+ * baseline, ' and " ALL STILL BREAK, and that two runs at the SAME Tm under
+ * DIFFERENT CTMs break too — the shape Oakland's Budget-Basics is written in.
+ */
+
+/* codes 01..08 -> H e l o SPACE w r d ; enough to spell two words */
+const GLYPHS = cmap1(
+  "8 beginbfchar\n<01> <0048>\n<02> <0065>\n<03> <006C>\n<04> <006F>\n" +
+  "<05> <0020>\n<06> <0077>\n<07> <0072>\n<08> <0064>\nendbfchar");
+/* "Hello world" written ONE Td PER GLYPH, every one with ty = 0 — the exact
+   shape Oakland's Budget-Basics PDFs are written in (Skia/PDF, measured
+   2026-09-24: 4,496 of 4,528 lines came out a single character long). */
+const PER_GLYPH = "<01> Tj 8 0 Td <02> Tj 8 0 Td <03> Tj 8 0 Td <03> Tj 8 0 Td <04> Tj " +
+                  "8 0 Td <05> Tj 8 0 Td <06> Tj 8 0 Td <04> Tj 8 0 Td <07> Tj 8 0 Td " +
+                  "<03> Tj 8 0 Td <08> Tj";
+const wordsOf = (s) => (s.match(/[^\s]+/g) || []).filter((w) => w.length >= 2);
+
+console.log("\n--- D-481: a per-glyph-positioned line READS AS WORDS (a Td with ty=0 is not a line) ---");
+{
+  const bytes = textPdf({
+    content: "BT /F1 12 Tf 72 700 Td " + PER_GLYPH + " ET",
+    fontBody: SIMPLE_FONT, cmapBody: GLYPHS,
+  });
+  const out = await extractPdfStructure(bytes);
+  t("eleven glyphs placed by eleven Td read as ONE line", out.text.document, "Hello world");
+  t("and as WORDS, not characters — the figure the row is about", wordsOf(out.text.document).length, 2);
+  /* A FLOOR that survives every control arm, so a run of them cannot all fail
+     for the same uninteresting reason: the GLYPHS are ten non-space characters
+     however the lines fall. counts.chars is the document LENGTH and moves with
+     the newlines, which is why it is not the floor. */
+  t("the fixture is non-empty: ten glyphs really did decode",
+    out.text.document.replace(/\s/g, "").length, 10);
+}
+
+console.log("\n--- D-481 THE LIAR ARM: a real baseline move STILL breaks the line ---");
+{
+  /* Each arm is the SAME per-glyph line twice, separated by ONE real move. A
+     reading that stopped breaking altogether would fail every arm here while
+     passing the arm above — which is the whole reason both exist. */
+  const twice = (mover) => textPdf({
+    content: "BT /F1 12 Tf 14 TL 72 700 Td " + PER_GLYPH + " " + mover + " " + PER_GLYPH + " ET",
+    fontBody: SIMPLE_FONT, cmapBody: GLYPHS,
+  });
+  const doc = async (mover) => (await extractPdfStructure(twice(mover))).text.document;
+  t("T* breaks the line", await doc("T*"), "Hello world\nHello world");
+  t("a Td with ty != 0 breaks the line", await doc("0 -14 Td"), "Hello world\nHello world");
+  t("a TD with ty != 0 breaks the line", await doc("0 -14 TD"), "Hello world\nHello world");
+  t("a Tm at a DIFFERENT baseline breaks the line", await doc("1 0 0 1 72 686 Tm"), "Hello world\nHello world");
+  t("a Tm at the SAME baseline does NOT break it (a continuation run)",
+    await doc("1 0 0 1 172 700 Tm"), "Hello worldHello world");
+}
+
+console.log("\n--- D-481: ' and \" still break, and move by their own leading ---");
+{
+  const bytes = textPdf({
+    content: "BT /F1 12 Tf 14 TL 72 700 Td <01> Tj <02> ' 0 0 <03> \" ET",
+    fontBody: SIMPLE_FONT, cmapBody: GLYPHS,
+  });
+  t("' and \" each start a new line", (await extractPdfStructure(bytes)).text.document, "H\ne\nl");
+}
+
+console.log("\n--- D-481: the SAME Tm under a DIFFERENT CTM is a DIFFERENT line ---");
+{
+  /* Budget-Basics gives every one of its lines the identical
+     `1 0 0 -1 .015625 44 Tm` and separates them with `cm`. A reading that
+     compared the text matrix alone would fuse a whole document into one line
+     and count MORE words for it. */
+  const bytes = textPdf({
+    content: "q 1 0 0 1 0 700 cm BT /F1 12 Tf 1 0 0 1 0 0 Tm <01> Tj ET Q " +
+             "q 1 0 0 1 0 680 cm BT /F1 12 Tf 1 0 0 1 0 0 Tm <02> Tj ET Q",
+    fontBody: SIMPLE_FONT, cmapBody: GLYPHS,
+  });
+  t("two identical Tm under two cm read as two lines", (await extractPdfStructure(bytes)).text.document, "H\ne");
+  const same = textPdf({
+    content: "q 1 0 0 1 0 700 cm BT /F1 12 Tf 1 0 0 1 0 0 Tm <01> Tj ET Q " +
+             "q 1 0 0 1 0 700 cm BT /F1 12 Tf 1 0 0 1 0 0 Tm <02> Tj ET Q",
+    fontBody: SIMPLE_FONT, cmapBody: GLYPHS,
+  });
+  t("and under the SAME cm as one line", (await extractPdfStructure(same)).text.document, "He");
+}
+
+console.log("\n--- D-481 OVER-STRICTNESS: conventionally written text is unchanged ---");
+{
+  /* One Td per LINE — how most producers write — must read exactly as it read
+     before this item. A fix that only knew the per-glyph shape would break it. */
+  const bytes = textPdf({
+    content: "BT /F1 12 Tf 72 700 Td <010203> Tj 0 -14 Td <040506> Tj 0 -14 Td <070801> Tj ET",
+    fontBody: SIMPLE_FONT, cmapBody: GLYPHS,
+  });
+  t("three Td-separated lines stay three lines", (await extractPdfStructure(bytes)).text.document, "Hel\no w\nrdH");
+  const tj = textPdf({
+    content: "BT /F1 12 Tf 72 700 Td [(\\001)-250(\\002)] TJ ET",
+    fontBody: SIMPLE_FONT, cmapBody: GLYPHS,
+  });
+  t("the TJ word-gap rule is untouched", (await extractPdfStructure(tj)).text.document, "H e");
 }
 
 console.log(`\npdfstructure: ${pass} passed, ${fail} failed`);
