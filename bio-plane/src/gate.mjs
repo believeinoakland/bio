@@ -91,6 +91,13 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    rule 17). Nothing that passed is refused by the move: the six conditions already refused, at the
    same six sites, under the same six `reason`s — what they gained is a row and a canned translation.
    The d470 census suite named the figures before this line moved. */
+/* 1.24.0 (D-508, 2026-09-24): the doorbell's two rate refusals take catalogue rows — C-85.1 RATE_IP and
+   C-85.2 RATE_GLOBAL in the new `KNOCK_CHECKS` family — so the catalogue moved 447 -> 449 checks and the
+   stamp moves with it, MINOR and additive on this constant's own rule (Publication §3 rule 17). TWO
+   ARRIVALS, NO DEPARTURES. D-507 adds six rows to `STATEMENT_ACK_CHECKS` in parallel and moves this same
+   constant and the same census row; CONDUCT reconciles the number and RE-READS the census from the d470
+   suite's own print on the merged tree, because neither branch's figure is the union's. */
+/* 1.24.0 AT THE UNION (CONDUCT #20, c20-batch22): D-507 and D-508 each took 1.24.0 on its own branch for a DIFFERENT catalogue, and neither reached main. The union takes 1.24.0 ONCE for the catalogue that actually runs (447 + 6 + 2), census re-read from the d470 suite's own print on the merged tree; both branch rows are dropped. */
 export const CATALOG_VERSION = "1.24.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 

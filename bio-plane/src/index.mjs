@@ -6016,6 +6016,15 @@ export default {
              could only infer by hitting it. The sentence names the window and
              says the count is an estimate, so it does not claim more than the
              two-bucket window in `Store.knock` can support. */
+          /* D-508: and the refusal itself now carries its DEC-49 code, check and canned
+             translation, minted in `Store.knock`'s `is-knock-rate` region from
+             `KNOCK_CHECKS` (C-85.1, C-85.2) — so the spread below carries them out
+             unchanged. THE TWO ARE DIFFERENT THINGS AND ARE NOT FOLDED TOGETHER:
+             `stated` is THIS instance's published NUMBER, composed here from the limits
+             it runs and moving when they move; the translation is the member-facing
+             SENTENCE, the same in every instance and naming no figure. The comparison
+             below READS a code the plane sent, which is what DEC-49 licenses a surface
+             to do; it is not a second mint, and the mint stays the one region. */
           const stated = rec.result.reason === "RATE_IP" ? KNOCK.statedPerIp
                        : rec.result.reason === "RATE_GLOBAL" ? KNOCK.statedGlobal : null;
           return json({ ok: false, ...rec.result, ...(stated ? { stated } : {}) }, 429);

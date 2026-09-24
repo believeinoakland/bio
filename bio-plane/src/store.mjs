@@ -490,6 +490,9 @@ import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-che
 import { THEME_CHECKS } from "../checks/bio-checks.mjs";
 /* IC-246 / C-82: op=statementack's bound on the unsigned documents it re-authors — a refusal, never a cut. */
 import { STATEMENT_ACK_CHECKS } from "../checks/bio-checks.mjs";
+/* D-508 / C-85: the doorbell's rate refusals — the one door open to the public, and the one
+   refusal surface whose reader is guaranteed not to be a member. */
+import { KNOCK_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
 import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
@@ -598,6 +601,7 @@ function actNoCitation(detail, extra = {}) {
            translation: row.translation, detail, ...extra };
   /* END DEC-49 REGION is-act-no-citation */
 }
+
 
 /* BIO store, plane layer, step 1.
  *
@@ -36557,8 +36561,34 @@ export class Store extends DurableObject {
          previous one kept alive by the prune below. */
       const decay = 1 - Math.min(1, Math.max(0, Number(elapsedFrac) || 0));
       const est = (cur, prev) => cnt(prev) * decay + cnt(cur);
-      if (est(ipBucket, ipPrevBucket) >= perIpLimit) return { ok: false, reason: "RATE_IP" };
-      if (est(globalBucket, globalPrevBucket) >= globalLimit) return { ok: false, reason: "RATE_GLOBAL" };
+      /* D-508 / DEC-49 (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10) — THE ONE
+         HELPER THE TWO RATE REFUSALS ARE MINTED THROUGH, on `acknowledgeStatement`'s
+         precedent (IC-246) and REC-79's shape before it: the row is read from the
+         catalogue at the moment of the refusal, so this file holds no member-facing
+         word, and THE CODE STAYS A STRING LITERAL AT ITS SITE below — which is
+         DEC-49's rule and the reason a helper may stand here at all, because the
+         guard COMPARES that literal against the row and reads past a code held in a
+         variable (one reached a member as `translation: undefined` that way).
+         It THROWS on a missing row for `actNoBasis`'s reason: a throw is a 500 in a
+         test, which is loud, where a missing sentence is silent and reaches a
+         person — and at this door that person is a stranger with no account and no
+         other way to find out what happened. */
+      const refusal = (code, extra) => {
+        const row = KNOCK_CHECKS[code];
+        if (!row || typeof row.translation !== "string" || !row.translation)
+          throw new Error(`knock: ${code} has no KNOCK_CHECKS row with a canned translation (DEC-49).`);
+        return { ok: false, reason: code, code, check: row.check, translation: row.translation, ...(extra || {}) };
+      };
+      /* DEC-49 REGION is-knock-rate — D-508 / C-85.1, C-85.2. The SMALLEST SPAN in
+         which either rate refusal is enforced: the two estimates and their two
+         returns, and nothing else in this method. Before D-508 both returns were
+         BARE STORE REASONS (`{ ok: false, reason: "RATE_IP" }`), so the one door
+         open to the public answered a stranger with a token and no sentence.
+         `index.mjs` adds the instance's published bound (`stated`) on top of what
+         these return — that is the NUMBER, and it is never the translation. */
+      if (est(ipBucket, ipPrevBucket) >= perIpLimit) return refusal("RATE_IP");
+      if (est(globalBucket, globalPrevBucket) >= globalLimit) return refusal("RATE_GLOBAL");
+      /* END DEC-49 REGION is-knock-rate */
       for (const b of [ipBucket, globalBucket])
         this.sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1)
                        ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);

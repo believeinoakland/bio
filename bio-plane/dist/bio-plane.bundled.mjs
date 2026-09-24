@@ -4340,6 +4340,7 @@ __export(bio_checks_exports, {
   INSTALLATION_CHECKS: () => INSTALLATION_CHECKS,
   INSTANCE_GROUP_CHECKS: () => INSTANCE_GROUP_CHECKS,
   ISO_TS_RE: () => ISO_TS_RE,
+  KNOCK_CHECKS: () => KNOCK_CHECKS,
   LAW_LEVELS: () => LAW_LEVELS,
   LAW_PROPOSAL_STATES: () => LAW_PROPOSAL_STATES,
   LAW_PROPOSAL_WHY_MAX: () => LAW_PROPOSAL_WHY_MAX,
@@ -11965,6 +11966,18 @@ var DISPATCH_CHECKS = {
     check: "C-69.1",
     where: "src/index.mjs fetch > is-unknown-op",
     translation: "This copy has no operation by that name. A copy running an older or newer version can have a different set of operations, and a misspelt name reads the same way. Nothing was changed."
+  }
+};
+var KNOCK_CHECKS = {
+  RATE_IP: {
+    check: "C-85.1",
+    where: "src/store.mjs knock > is-knock-rate",
+    translation: "This group's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly \u2014 the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive."
+  },
+  RATE_GLOBAL: {
+    check: "C-85.2",
+    where: "src/store.mjs knock > is-knock-rate",
+    translation: "This group's inbox is not taking any more material from anyone just now. The whole instance is at its limit rather than you \u2014 the cap exists so that no one sender can fill the inbox \u2014 and it lifts on its own shortly; the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later. If it keeps happening, the group's members can be told the doorbell is saturated."
   }
 };
 var DRIVE_CAPTURE_CHECKS = {
@@ -63165,8 +63178,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       const cnt = (b) => b ? this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0 : 0;
       const decay = 1 - Math.min(1, Math.max(0, Number(elapsedFrac) || 0));
       const est = (cur, prev) => cnt(prev) * decay + cnt(cur);
-      if (est(ipBucket, ipPrevBucket) >= perIpLimit) return { ok: false, reason: "RATE_IP" };
-      if (est(globalBucket, globalPrevBucket) >= globalLimit) return { ok: false, reason: "RATE_GLOBAL" };
+      const refusal7 = (code, extra) => {
+        const row = KNOCK_CHECKS[code];
+        if (!row || typeof row.translation !== "string" || !row.translation)
+          throw new Error(`knock: ${code} has no KNOCK_CHECKS row with a canned translation (DEC-49).`);
+        return { ok: false, reason: code, code, check: row.check, translation: row.translation, ...extra || {} };
+      };
+      if (est(ipBucket, ipPrevBucket) >= perIpLimit) return refusal7("RATE_IP");
+      if (est(globalBucket, globalPrevBucket) >= globalLimit) return refusal7("RATE_GLOBAL");
       for (const b of [ipBucket, globalBucket])
         this.sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1)
                        ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
