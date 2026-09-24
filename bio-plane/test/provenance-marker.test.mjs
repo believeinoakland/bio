@@ -567,7 +567,9 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
      PARTITION_INDEPENDENCE_UNREADABLE, which tells the caller what shape to send. Nothing the plane could not
      establish is smoothed into a normal-looking answer; a malformed request is refused, by code. */
   /* (CARRIED BACK 2026-09-24 by c18-batch7fix: the note above was dropped by this branch's merge 01c7c7b, which kept
-     this side's 28 -> 35 whole; registered in tools/mergecarry.mjs KNOWN_HISTORICAL_DROPS.) */
+     this side's 28 -> 35 whole; registered in the merge-carry tool's KNOWN_HISTORICAL_DROPS. The path is
+     deliberately not spelled here: gates.mjs reads a `tools/<name>` string in a suite as the suite reading that tool,
+     and this suite reads no document.) */
   /* MOVED 28 -> 35 AT INTEGRATION by c18-batch7fix for CONDUCT #18 (2026-09-23, land/conduct/c17-batch7), FROM THE
      FIGURE THIS WALK PRINTED on the union tree. Measured with this walk's own regex, per tree: main 02603e88 prints 28;
      c17-batch5 prints 29; REC-164's branch alone prints 33; D-149's branch alone prints 29; the union prints 35. No
