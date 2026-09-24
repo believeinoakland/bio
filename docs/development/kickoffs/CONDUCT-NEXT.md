@@ -22,8 +22,8 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS until 05:45Z, 6 from 05:4
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (05:00Z)
-- MAIN = 0fdef669 (train-20260924T041650Z-598: D-482 61b5ceca, D-166 958ad9ac, REC-185 0fdef669 — reported). Before it 16fe1e7f (train-20260924T033115Z-658: land/bob/status-cellcap 6977d9d2 + folds-0924e 16fe1e7f; 112/112 green). Map budget
+## 4. STATE (05:17Z)
+- MAIN = d536f834 (train-20260924T044500Z-4275: c20-batch12 = D-470 D-487 UI-84 D-479; I3 81.3.0; workers archived). Before: 0fdef669 (train-20260924T041650Z-598: D-482 61b5ceca, D-166 958ad9ac, REC-185 0fdef669 — reported). Before it 16fe1e7f (train-20260924T033115Z-658: land/bob/status-cellcap 6977d9d2 + folds-0924e 16fe1e7f; 112/112 green). Map budget
   now 49,152 B with CELL_CAP 240 — never raise it. Interfaces on main: I3 81.0.0, I5 3.5.0, I8 1.0.0.
 - land/bob/d461-claude RETURNED (conflicts vs main) → merged by c20-batch11fix instead (its CLAUDE.md §5 commit is the novel part).
 - land/conduct/c19-batch10 MOVED to 6a3dd8eb at 04:06Z (#19's batch10 worker pushed a PARALLEL union of batch11's rows). SUPERSEDED
@@ -72,12 +72,10 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
 - DIST owed from batch10 on landing: D-461 SAFETY (store=scratch honoured by bio-pinned ops), D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0).
 - c18-batch7fix REPORTED and DISPOSED (behind main; only .gitignore novel, riding integ1). Findings to SCHEDULER, D-150 design q to BOB.
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
-- land/conduct/c20-batch12 @ fe5442cf ON ITS TRAIN since 04:47Z (log: #20 scratchpad train3.log): D-470 D-487 UI-84 D-479 + main
-  0fdef669; IC-259, IC-260, IC-257 all resolved MINOR → I3 81.3.0; D-470's §3 rule 17 folded. If #20 died mid-train: check
-  origin/main for 'train-…: land land/conduct/c20-batch12'; else re-run `train.mjs run` dropping every other WAITING.
-  M0-146 spawned session_01Ff67qPyPcjycvojZ6EcFqY at 04:44Z into D-479's slot.
-- D-493 DONE @ 9649acf5 (125/125, M-135, no IC; base D-166, on main) — NOT on any integration branch: put it on the next train
-  (with c20-batch13). D-483 spawned session_0133FxhF1BsMJ5tLXVfjwW5m at ~04:50Z (last spawn before the 05:00Z cap).
+- TRAIN RUNNING 05:15Z: land/conduct/c20-batch15 @ 83b83f00 (worktree /home/user/w12; log train4.log) = main d536f834 + D-493 M0-144
+  M0-143 D-453 DIST-9 (flipped integrated), IC-261 I4 MINOR 2.2.0 (row said I8 — wrong interface, stated). ON LANDING: archive their
+  workers (D-493 session_01XknYRN5Zzyw2fU3nRqF8F9, M0-144 session_01ERbJKhXFUofstFpHerqrEx, M0-143 session_01M7BzVNbCiY4Q4dqVLxDvUw,
+  D-453 session_017L57JtEbWmyk63Ep8SRZoj) after ancestry check; DIST-9 is DIST's own session (not archived).
 - UI-84 DONE @ 8f8b7be7 (124/124, M-130, no IC) — NEXT TRAIN. M0-144 spawned session_01ERbJKhXFUofstFpHerqrEx into its slot.
 - D-487 DONE @ 14e9140d (101/101, M-128, no IC) — NEXT TRAIN. BOB asked: knock limiter bound or budget (sliding-window fix named).
   D-493 spawned session_01XknYRN5Zzyw2fU3nRqF8F9 from land/worker/D-166 into its slot.
