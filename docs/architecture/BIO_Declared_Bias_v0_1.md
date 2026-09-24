@@ -24,6 +24,7 @@
 - [Integration with the epistemics ladder](#integration-with-the-epistemics-ladder)
   - [RULED 2026-09-23 by BOB #31: there is no credence ledger (D-53; S17-1 Q1)](#ruled-2026-09-23-by-bob-31-there-is-no-credence-ledger-d-53-s17-1-q1)
 - [Bias debt, and HUNCH DEBT](#bias-debt-and-hunch-debt)
+  - [RULED 2026-09-24 by BOB #32: adopting a PROPOSED revision replaces the lens (REC-187's finding)](#ruled-2026-09-24-by-bob-32-adopting-a-proposed-revision-replaces-the-lens-rec-187s-finding)
   - [RULED 2026-09-23 by BOB #32: what settles a bias-debt obligation (D-86)](#ruled-2026-09-23-by-bob-32-what-settles-a-bias-debt-obligation-d-86)
   - [RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT](#ruled-2026-08-01-a-hunch-is-temporary-declared-bias-and-it-is-hunch-debt)
 - [The bias acknowledgement, authored at export](#the-bias-acknowledgement-authored-at-export)
@@ -311,6 +312,13 @@ So: ordinary bias debt marks the work, travels with it, is shown to the reader, 
 does NOT block ratification. Uncleared HUNCH debt refuses publication, by name,
 before any signature exists (`op=publishpreflight` → `UNCLEARED_HUNCH`). The
 workproduct_state half of the old rule is likewise narrowed to hunches.
+
+### RULED 2026-09-24 by BOB #32: adopting a PROPOSED revision replaces the lens (REC-187's finding)
+
+An adoption pins exactly the bytes the member read and chose. Adopting a proposed, not-yet-accepted revision is a
+REPLACEMENT: the adopter's lens becomes those bytes, and it stays on them whatever later happens to the proposal. It is
+never a pre-authorisation of whatever the proposal becomes. The adoption and its read SAY that they pin a proposed
+revision. NOT BUILT (REC-210).
 
 ### RULED 2026-09-23 by BOB #32: what settles a bias-debt obligation (D-86)
 
