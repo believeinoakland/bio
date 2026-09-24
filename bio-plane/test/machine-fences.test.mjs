@@ -70,11 +70,34 @@
    because `barOf()` reads `group=believe-in-oakland` while the act, whose payload names no group, writes to the store's
    PRODUCING group (`#producingGroup()`, the INSTANCE_NAME binding `biosmoke-rec73`) — D-436's rule that "the default is
    the store's recorded group, never a literal" moved the write and nothing moved the read-back with it. So block (ix)'s
-   guard and its read-back are BOTH passing over the wrong group, and the arm's declaration was RIGHT. THE FIX IS
-   NAMEABLE AND IS NOT TAKEN HERE, because it is outside this row and a group-wide bar declared mid-suite can gate the
-   publication arms that run after block (ix): name the group in the act's payload (`BODY.group = GROUP`) so the write
-   and the read-back address the same one, then re-run arm (2), which should then fail as declared. Reported to CONDUCT
-   for SCHEDULER to place. */
+   guard and its read-back are BOTH passing over the wrong group, and the arm's declaration was RIGHT. THE FIX WAS
+   NAMEABLE AND WAS NOT TAKEN HERE, because it was outside that row: name the group in the act's payload so the write
+   and the read-back address the same one, then re-run the arm, which should then fail as declared. Reported to CONDUCT,
+   placed by SCHEDULER, and **TAKEN 2026-09-24 BY D-509**, whose own declaration is the block below; the D-503 worker's
+   diagnosis and its named fix were both confirmed by running them, and the paragraph above is left as it was written
+   rather than rewritten into hindsight. */
+/* NEGATIVE CONTROL (D-509, THE SENTINEL'S OWN ARM, RUN TWICE — the whole harness `test/machine-fences.control.mjs`,
+   all ten arms, 2026-09-24 on branch land/worker/D-509 over origin/main e9b21be66, every restore verified by sha256
+   AND by content by the harness's own `restoreAll`, baseline 87 pass / 0 fail before each arm).
+   BEFORE THE FIX, MEASURED ON THIS TREE RATHER THAN TAKEN FROM THE ROW: ten arms run, ONE behaved differently from its
+   declaration — the sentinel arm, whose second assertion "and NOTHING was declared by the machine's call" stayed GREEN
+   with the identity predicate neutered; the harness exited 1. That reproduced D-503's report exactly.
+   AFTER: ten arms run, ZERO behaved differently from their declaration, and the harness exited 0. The sentinel arm now
+   takes down BOTH of the assertions it declares — the MACHINE_CANNOT_DECLARE pin AND the read-back — which is the whole
+   of what this row bought: a machine getting past the refusal and a machine changing what the group requires of its own
+   evidence are two facts, and only the second one was unpinned.
+   WHAT MOVED, AND IT IS EXACTLY ONE FAILURE IN EXACTLY THE TWO ARMS THAT NEUTER THE IDENTITY PREDICATE: the item arm
+   49 pass / 38 fail -> 48 pass / 39 fail, and the sentinel arm 56 pass / 31 fail -> 55 pass / 32 fail. Every other
+   arm's printed figure is unchanged (85/2, 85/2, 87/0, 84/3, 83/4, 84/3, 82/5, 86/1), so the edit moved the sentinel
+   and nothing else — the over-strictness arm's 87/0 is the direct evidence that naming the group refuses no correct work.
+   AND THE RE-MEASUREMENT THIS ROW REQUIRED, BECAUSE A GROUP-WIDE BAR DECLARED MID-SUITE COULD HAVE GATED WHAT RUNS
+   AFTER BLOCK ix: the whole suite reads 87 pass / 0 fail both before and after, and a line-for-line diff of the two
+   runs' output moves TWO LABELS AND NO VERDICT. MOVE_VERSION, REVIEW, SET_LAWS and SET_RISK_TIER — and every member
+   twin below them — are GREEN in both. The reading that agrees with the measurement, stated as the reading and not as
+   the evidence: `group_strength_bar` has exactly two sites in `src/store.mjs`, this write and `strengthBarOf`'s read,
+   and DEC-72 withdrew the group bar as a publication bar, leaving it the SEED a new project starts from.
+   WHAT THIS BLOCK DOES NOT CLAIM: the arms were not re-derived, only re-run. Their declarations are unchanged and live
+   in the harness; this block records what running them produced. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/machine-fences.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (PL-3's, PL-4's and PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, and every restore is verified BY sha256 AND BY CONTENT.
    ALL FIVE ARMS RUN 2026-08-08 IN WORKTREE agent-a75c0395e77e7eaed, every one behaving as declared, baseline 45/0 before each. Figures below are MEASURED.
    (1) NEUTER THE PREDICATE — `isMachineStamp` returns false in checks/bio-checks.mjs — and ALL TWELVE complete-payload arms FAIL NAMING THE MACHINE REFUSAL, not a payload complaint -> 15 pass, 30 FAIL. **AND HERE IS WHAT THE COMPLETE PAYLOAD BOUGHT, WHICH IS MORE THAN THE ITEM PREDICTED: TEN OF THE TWELVE ACTS THEN WENT ALL THE WAY THROUGH.** The machine RELEASED a collected document to `verified`, CONCLUDED a question, REOPENED one, PUBLISHED a case at edition 1, MOVED an action, wrote a CORRESPONDENCE entry at ord 0, DIVIDED a question into two children, GROUPED a basis, SET THE GROUP'S REQUIRED EVIDENTIARY STRENGTH (`author: token:ai` in the row, read back), and ACCEPTED a reading. Under PL-11's payloads the same edit produced ONE success and eleven payload complaints; under these it produces ten. **THE TWO THAT DID NOT: `taskforward` and `taskresolve`, both answering `NOT_YOURS` — REC-4's assignee fence catching what the machine fence let past.** Those two verbs are the only pair in the family with a SECOND independent fence behind the first, and nobody knew that until the arm was run with a payload good enough to reach it.
@@ -620,19 +643,39 @@ const fence = (code, payload, machineAnswer) => {
   const barOf = async () => (await GET(`op=strengthbarof&token=${RUTH}&group=${GROUP}`))?.bar ?? null;
   t("  no bar is declared for this group before either call — the guard, so 'it was set' cannot be "
   + "true before the act", await barOf(), null);
-  const BODY = { capture: "B", connection: "C" };
+  /* D-509: `group: GROUP` IS LOAD-BEARING AND ITS ABSENCE WAS A FALSE GREEN. Without it this act
+     names no group, so D-436's default sends the write to the STORE'S PRODUCING group
+     (`#producingGroup()`, the INSTANCE_NAME binding `biosmoke-rec73`) while `barOf()` above reads
+     back `group=believe-in-oakland`. The read-back below then found `null` whatever the act did,
+     so the sentinel's second assertion PASSED OVER THE WRONG GROUP and stayed green under the
+     control's arm (2) — measured on origin/main e9b21be66, where a machine with the identity
+     predicate neutered DID set the bar and the suite said nothing was declared. Naming the group
+     puts the write and the read-back on the same one. It is also the group every fixture in this
+     file is promoted into, so the bar this block leaves behind is the one a reader would expect. */
+  const BODY = { group: GROUP, capture: "B", connection: "C" };
 
   const m = await POST(`op=strengthbar&token=${AI}`, BODY);
   fence("MACHINE_CANNOT_DECLARE",
-    "a legal grade on BOTH axes and the group defaulted — the payload PL-11 measured going all the "
+    /* CORRECTED 2026-09-24 by D-509. It read "and the group defaulted", which was true of the
+       payload and was the reason the read-back below could not see the act: the default is the
+       PRODUCING group and the read-back names this one. The payload now names the group, so the
+       sentence does too — an old assertion's description that outlives the payload it describes
+       is how a suite comes to say something it no longer tests. */
+    "a legal grade on BOTH axes and the group NAMED — the payload PL-11 measured going all the "
     + "way through, which is why this act is the regression sentinel rather than the exception",
     codeOf(m));
   t("  and NOTHING was declared by the machine's call — the sentinel's whole point, since this is "
   + "the act PL-11 measured going through", await barOf(), null);
 
   const r = await POST(`op=strengthbar&token=${RUTH}`, BODY);
-  t("  and the SAME payload sets the group's required strength for a signed-in member holding `publish`",
-    [r.ok, r.capture, r.connection, r.author], [true, "B", "C", "ruth"]);
+  /* D-509 ADDED `r.group` TO THIS TUPLE. The member twin is the only arm that can say WHERE the
+     write landed, and pinning it here is what makes the read-back above address the same row as
+     the act rather than agreeing with it for free — the property whose absence made the sentinel
+     unable to fail. A future default that moves the write again turns this suite red by name
+     instead of turning the control quietly green. */
+  t("  and the SAME payload sets the group's required strength for a signed-in member holding `publish`, "
+  + "ON THE GROUP THE PAYLOAD NAMED — which is the group `barOf()` reads",
+    [r.ok, r.group, r.capture, r.connection, r.author], [true, GROUP, "B", "C", "ruth"]);
 }
 
 /* -------------------------------------------------------- (x) MOVE_VERSION */
