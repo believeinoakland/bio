@@ -273,6 +273,17 @@ depends-on: D-394 (`integrated` on c18-batch8).
 scope: where a citation is shown, render the notice's state as the plane states it, including "the chain could not be read"; replace 4.cross-version-ui's probe.
 accepts-when: a citation to a superseded passage shows the notice; an unread newer capture reads as not read, never as unchanged. NEGATIVE CONTROL: collapse "not read" into "unchanged", and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
+note: 2026-09-24 — BOB #32's ruling of 2026-09-24 00:05Z (cite until folded into §18.1): the notice also reaches members of a PUBLISHED case, ONCE, at the case, pointing only at the new-edition door; never on the public surface (delivery is REC-209).
+
+### REC-209 · queued — **A PUBLISHED CASE'S MEMBERS ARE NEVER TOLD ITS CITED DOCUMENT HAS A NEWER VERSION: D-394's notice answers only when asked.** BOB #32's ruling of 2026-09-24 00:05Z (cite until folded into §18.1): *YES, INFORM ONCE — the case's project members are told ONCE at the case, never nagged (DEC-69); the published case is NOT marked, flagged or altered (DEC-19); the notice points only at the existing door, a new edition, the members' choice; never on the public surface; anyone may still ASK through D-394's `versionnotice` read.* — owner RECORD.
+order: after UI-96, the notice's delivery (SCHEDULER #17, 2026-09-24)
+milestone: M10
+interface: I3 — one queue item per published case and newer version; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1, with BOB #32's ruling of 2026-09-24 00:05Z (cite until folded into §18.1).
+depends-on: D-394 (`integrated` on c18-batch8).
+scope: when a published case's cited document gains a newer version, raise one queue item to the case's project members, recorded so it is never raised twice for that pair; nothing written to the published case or the public surface.
+accepts-when: a newer version raises exactly one item to members; a second tick raises none; the published bytes and public reads are unchanged. NEGATIVE CONTROL: drop the once-only record, and the second-tick arm fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
 ### REC-192 · queued — **A STORED VERSION'S INDEPENDENCE CAN ONLY BE READ BESIDE ITS STRENGTH PAIR: `op=versionstrength` is the one read of it, so DEC-32 clause 5 (*the structure is authored before the strength is shown*) holds only because UI-74's page drops the pair it fetched.** BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *a read returns `independence` on its own, so clause 5's separation is structural at the wire.* — owner RECORD.
 order: after D-256: a correction to just-landed work (UI-74, REC-161) that moves a doctrine from a page's choice into the wire (SCHEDULER #17, 2026-09-23)
@@ -1214,13 +1225,3 @@ depends-on: none — M0-79 is on `main`.
 accepts-when: slack in a coverage floor exits non-zero naming it; an untracked file cannot hide a fall of `r3Fed`; `nc-rec64.mjs` runs every arm AS DECLARED. How a liar passes it: gating … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #8 (verified at the code; `node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-102» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-93 · queued — **`bio-plane/test/delegations.control.mjs` IS RED ON `main`: ITS A1 AND A6 ASSUME ONE AFFIRMATION LINE PER DELEGATION BLOCK, AND** … (whole text: the cut archive)
-order: with D-438, first of the instrument cluster: a control red on a green `main` (SCHEDULER #7, 2026-09-21; D-355's route via CONDUCT #10)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with its M0-51 rule: *never rename a … (whole text: the cut archive)
-depends-on: none.
-accepts-when: the control reads every arm AS DECLARED on `main` with the two-line block in place, and leaves the tree byte-identical. How a liar passes it: deleting the older line, so the … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #7 (`node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-93» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
