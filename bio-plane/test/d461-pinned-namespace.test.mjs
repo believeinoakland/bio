@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-09-24, D-461) `node test/nc-d461.mjs` — four arms, each ALONE against a uniquely-named pristine copy of `src/index.mjs`, restore verified by sha256 AND byte comparison. (A) THE BRIEF'S ARM, accept and ignore `store=scratch` again (the gate answers nothing) -> FAIL 38/55, at `no credential · op=knock · store=scratch -> 400 NAMESPACE_PINNED` and at `witness: after the refused knock the REAL record's counters did not move` BY NAME — AS DECLARED; (B) a partial fix, `knock` exempted -> FAIL 49/55 at the knock assertion, the witness and the exemption-list pin — AS DECLARED; (C) OVER-STRICTNESS, the gate refuses any named store, `bio` included -> FAIL 42/55 at `op=verify · store=bio -> not NAMESPACE_PINNED` — AS DECLARED; (D) OVER-STRICTNESS, the exemption list emptied -> FAIL 51/55 at `exempt · op=instancegroup · store=scratch -> answered from scratch` — AS DECLARED. 4/4 as declared, index.mjs restored to e9dc4c9d4b27. */
+/* NEGATIVE CONTROL: RE-RUN 2026-09-24 by CONDUCT #19 (c19-batch11) after `groupidentity` joined the exemption list (driver re-anchored): 4/4 arms as declared — A 41/59, B 53/59, C 45/59, D 54/59 — each restore sha256+cmp identical. (run 2026-09-24, D-461) `node test/nc-d461.mjs` — four arms, each ALONE against a uniquely-named pristine copy of `src/index.mjs`, restore verified by sha256 AND byte comparison. (A) THE BRIEF'S ARM, accept and ignore `store=scratch` again (the gate answers nothing) -> FAIL 38/55, at `no credential · op=knock · store=scratch -> 400 NAMESPACE_PINNED` and at `witness: after the refused knock the REAL record's counters did not move` BY NAME — AS DECLARED; (B) a partial fix, `knock` exempted -> FAIL 49/55 at the knock assertion, the witness and the exemption-list pin — AS DECLARED; (C) OVER-STRICTNESS, the gate refuses any named store, `bio` included -> FAIL 42/55 at `op=verify · store=bio -> not NAMESPACE_PINNED` — AS DECLARED; (D) OVER-STRICTNESS, the exemption list emptied -> FAIL 51/55 at `exempt · op=instancegroup · store=scratch -> answered from scratch` — AS DECLARED. 4/4 as declared, index.mjs restored to e9dc4c9d4b27. */
 /* D-461 · A PUBLIC OP THAT ALWAYS ANSWERS FROM `bio` REFUSES `store=scratch` BY NAME (C-78.2, IC-250).
  *
  * THE DEFECT. D-456 refused a namespace that does not exist. `scratch` DOES exist, so it passed that gate — and twelve
@@ -72,7 +72,10 @@ const src = readFileSync(SRC("index.mjs"), "utf8");
 const opsStart = src.indexOf("const OPS = {");
 const PUBLIC = [...src.slice(opsStart).matchAll(/^\s+(\w+):\s*\{\s*classes:\s*null\b[^}]*mutating:\s*(true|false)/gm)]
   .map((m) => ({ op: m[1], mutating: m[2] === "true" }));
-const EXEMPT = ["invitelook", "enroll", "instancegroup"];
+/* CORRECTED 2026-09-24 by CONDUCT #19 (c19-batch11): + `groupidentity`. REC-164's op reads `store=` itself,
+   op=instancegroup's way, and d456-namespace-scope drives it answering from scratch; the two suites met only at the
+   union, where this list's three pinned it and d456 went red. The old list was right for the tree it was written on. */
+const EXEMPT = ["invitelook", "enroll", "instancegroup", "groupidentity"];
 const PINNED = PUBLIC.filter((p) => !EXEMPT.includes(p.op));
 console.log(`  classes:null ops read from the OPS table: ${PUBLIC.length} — ${PUBLIC.map((p) => p.op + (p.mutating ? "*" : "")).join(", ")}`);
 console.log(`  pinned (every one but ${EXEMPT.join(", ")}): ${PINNED.length}`);
@@ -154,6 +157,8 @@ for (const p of PINNED) {
 {
   const ig = await call("op=instancegroup&store=scratch");
   t("exempt · op=instancegroup · store=scratch -> answered from scratch", [ig.status, ig.body?.store], [200, "scratch"]);
+  const gi = await call("op=groupidentity&store=scratch");
+  t("exempt · op=groupidentity · store=scratch -> answered from scratch", [gi.status, gi.body?.store], [200, "scratch"]);
   const lookScr = rP((await call(`op=invitelook&store=scratch`, { invite: INV_SCR })).body);
   const lookBio = rP((await call(`op=invitelook`, { invite: INV_SCR })).body);
   t("exempt · op=invitelook · store=scratch finds the scratch-only invitation, and bio does not (it really addresses scratch)",
@@ -185,7 +190,7 @@ console.log("\n--- 5 · the gate's place ---");
     [g > src.indexOf("const unknownNamespace = namespaceGate(url);"), g < src.indexOf("if (spec.classes === null) {"),
      g < src.indexOf("let cls = await classify(")], [true, true, true]);
   const ex = src.match(/const SCRATCH_ADDRESSING_PUBLIC_OPS = Object\.freeze\((\[[^\]]*\])\)/);
-  t("the plane's exemption list is exactly the three this suite proved address scratch",
+  t("the plane's exemption list is exactly the four this suite proved address scratch",
     ex ? JSON.parse(ex[1]).sort() : null, [...EXEMPT].sort());
 }
 

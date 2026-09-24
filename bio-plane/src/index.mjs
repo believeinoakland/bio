@@ -3000,8 +3000,12 @@ function namespaceGate(url) {
  * added later is refused `store=scratch` until somebody makes it answer from scratch and lists it here, which is the
  * safe direction: the unlisted default is the refusal, never the real record. Gated ops take their namespace from
  * `scopeFor` and are not this function's. `store=bio` and an absent `store=` are unchanged. Nothing is read or
- * written when this answers. */
-const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup"]);
+ * written when this answers.
+ *
+ * + `groupidentity` (CONDUCT #19, c19-batch11, 2026-09-24): REC-164's op reads `store=` itself, op=instancegroup's way
+ * (a credential's store from `scopeFor`, else `store=scratch` honoured), and d456-namespace-scope drives it answering
+ * from scratch; it met this list only at the union, where the pin refused it (400) and that suite went red. */
+const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup", "groupidentity"]);
 function pinnedNamespaceGate(url, op, spec) {
   if (spec.classes !== null || SCRATCH_ADDRESSING_PUBLIC_OPS.includes(op)) return null;
   if (url.searchParams.get("store") !== SCRATCH) return null;

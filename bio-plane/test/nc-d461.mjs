@@ -22,15 +22,17 @@ const PRISTINE = readFileSync(SRC);
 if (PRISTINE.length < 100000) throw new Error(`pristine index.mjs is ${PRISTINE.length} bytes — refusing to arm`);
 const H0 = hash(PRISTINE);
 
-const EXEMPT = `const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup"]);`;
+/* RE-ANCHORED 2026-09-24 by CONDUCT #19 (c19-batch11): the plane's list gained `groupidentity` at the union (REC-164's op
+   addresses scratch itself); the anchor follows it, and arm B appends after it. The arms are otherwise unchanged. */
+const EXEMPT = `const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup", "groupidentity"]);`;
 const ASKED = `  if (url.searchParams.get("store") !== SCRATCH) return null;\n  /* DEC-49 REGION is-pinned-namespace-gate */`;
 const KNOCK_FAIL = /FAIL  no credential · op=knock · store=scratch -> 400 NAMESPACE_PINNED/;
 const WITNESS_FAIL = /FAIL  witness: after the refused knock the REAL record's counters did not move/;
 const ARMS = [
   { id: "A", declared: "FAIL", must: [KNOCK_FAIL, WITNESS_FAIL],
     patch: [[ASKED, `  return null;\n  /* DEC-49 REGION is-pinned-namespace-gate */`]] },
-  { id: "B", declared: "FAIL", must: [KNOCK_FAIL, WITNESS_FAIL, /FAIL  the plane's exemption list is exactly the three/],
-    patch: [[EXEMPT, EXEMPT.replace(`"instancegroup"]`, `"instancegroup", "knock"]`)]] },
+  { id: "B", declared: "FAIL", must: [KNOCK_FAIL, WITNESS_FAIL, /FAIL  the plane's exemption list is exactly the four/],
+    patch: [[EXEMPT, EXEMPT.replace(`"groupidentity"]`, `"groupidentity", "knock"]`)]] },
   { id: "C", declared: "FAIL", must: [/FAIL  op=verify · store=bio -> not NAMESPACE_PINNED/],
     patch: [[ASKED, `  if (!url.searchParams.has("store")) return null;\n  /* DEC-49 REGION is-pinned-namespace-gate */`]] },
   { id: "D", declared: "FAIL", must: [/FAIL  exempt · op=instancegroup · store=scratch -> answered from scratch/],
