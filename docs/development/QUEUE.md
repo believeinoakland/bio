@@ -362,7 +362,7 @@ scope: name ONE ignored scratch path for workers' files and gate logs in WORKER.
 accepts-when: a worktree with a root scratch dir gates identically to one without. NEGATIVE CONTROL: remove the exclusion and the count moves, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-483 · queued — **THE PLANE'S SETUP PAGE OFFERS NO RISK-TIER CHOOSER, so every action it files is `risk_tier: undetermined` (`setup.mjs`, D-182) and a member there cannot state 1, 2 or 3.** Found by UI-85's worker, optional residue. — owner RECORD (DIST reviews the installer page).
+### D-483 · running — SPAWNED 2026-09-24 ~04:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-483 (CONDUCT #20), base origin/main, into D-493's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-483 and that session; never conclude queued from the absence alone.
 order: after D-478, low: truthful today (it writes undetermined, never an invented tier); a missing affordance, not an overclaim (SCHEDULER #18, 2026-09-24)
 milestone: M2
 interface: none — consumes `vocabularies.risk_tiers` as published.
