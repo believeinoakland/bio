@@ -2,17 +2,26 @@
  *
  * Each arm breaks ONE thing in ONE file, runs the suite, records its tally and the
  * FAIL labels, and restores the file by copy from a uniquely-named pristine copy
- * INSIDE this worktree, verified by sha256 AND by content with the byte count
+ * OUTSIDE this worktree, verified by sha256 AND by content with the byte count
  * printed and floored. A baseline row runs first and last. An arm whose patch
- * matched anything but exactly once is reported as NOT ARMED, never as a result. */
-import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync } from "node:fs";
+ * matched anything but exactly once is reported as NOT ARMED, never as a result.
+ *
+ * CORRECTED 2026-09-24 (D-492): the pristine copies were written to `bio-plane/.nc-d64-pristine`,
+ * INSIDE the worktree. BOB #32 ruled the same day that a file in the worktree is not inert —
+ * repository-walking suites walk it, it trips `gates.mjs` §2e's under-inclusion check, and it makes
+ * the tree DIRTY so D-293 refuses to record a green verdict — and three items paid for it in one
+ * night. This harness only ever removed the directory on a clean finish, so an arm that threw left
+ * it behind. It is now a per-run `mkdtemp` under the system temp root, named for the item. */
+import { readFileSync, writeFileSync, copyFileSync, mkdtempSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SUITE = `${ROOT}test/rendered-capture.test.mjs`;
-const PRISTINE = `${ROOT}.nc-d64-pristine`;
+const PRISTINE = mkdtempSync(join(tmpdir(), "nc-d64-pristine-"));
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 const ARMS = {
@@ -44,7 +53,6 @@ const run = () => {
   return { exit: r.status, pass: m ? +m[1] : -1, fail: m ? +m[2] : -1, fails };
 };
 
-mkdirSync(PRISTINE, { recursive: true });
 const want = process.argv[2];
 const rows = [];
 rows.push({ arm: "baseline", ...run() });

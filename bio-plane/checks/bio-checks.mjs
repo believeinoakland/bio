@@ -10933,14 +10933,21 @@ export const RENDER_CAPTURE_CHECKS = {
     translation: 'This instance has no working page renderer, so it cannot capture the page as a visitor '
       + 'saw it. Nothing was fetched, and the page\'s empty frame was not filed in its place.',
   },
-  /* BOB #32 item 3: the daily render allowance is spent. The render is
-     DEFERRED and the deferral is recorded; the shell is never the content. */
+  /* BOB #32 item 3: the daily render allowance is COMMITTED — spent, or reserved by
+     renders in flight (D-492). The render is DEFERRED and the deferral is recorded;
+     the shell is never the content. CORRECTED 2026-09-24 (D-492), and the old sentence
+     is why: it said the allowance had been USED, which was true only of the time
+     already reported. Since a render now reserves its maximum cost at admission, a
+     deferral can also mean the day's remaining time is held by renders still running,
+     and a member told "used" would have gone away for the day when the answer may be a
+     minute off. The sentence says which, without naming a mechanism. */
   RENDER_DEFERRED: {
     check: 'C-83.4',
     where: 'src/index.mjs fetch > is-render-admit',
-    translation: 'This instance has used today\'s allowance for rendering pages, so this render is '
-      + 'deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. It can '
-      + 'be asked again after midnight UTC.',
+    translation: 'Today\'s allowance for rendering pages is fully committed — either already used, or '
+      + 'held by renders this instance is running right now — so this render is deferred, and that is '
+      + 'recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in '
+      + 'flight have finished, or after midnight UTC.',
   },
   /* The render loads the page again, which is a second document load to the
      host, so it asks the per-host governor like any other (BOB #32 item 3:

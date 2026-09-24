@@ -28,6 +28,17 @@ import { originOf } from "./subresources.mjs";
    the renderer honoured it: `render.*` carries what the renderer SAID it used, and
    `render.asked` what was asked, so a disagreement is visible rather than averaged. */
 export const RENDER_DEFAULTS = Object.freeze({
+  /* D-492: THE NAVIGATION BOUND, ASKED OF THE RENDERER AND RESERVED AGAINST THE
+     ALLOWANCE. A render's maximum browser cost is the time it may spend getting to
+     the page plus the time the wait condition may burn once there, so the two
+     together are what `renderReserveMs` reserves at admission. CHOSEN, NOT MEASURED,
+     and stated as chosen for the same reason the daily allowance is: no instrument
+     here has timed a navigation, and no platform enforces this number for us. What
+     it buys is that the reservation is a bound the renderer was ASKED to hold, not
+     one this module invented for the arithmetic — a renderer that overruns its own
+     asked bounds overruns the reservation too, and `renderSpend` then records the
+     time it REPORTED, which is the only figure the plane ever has. */
+  navigation_timeout_ms: 30000,
   viewport: Object.freeze({ width: 1280, height: 800 }),
   dpr: 1,
   locale: "en-US",
@@ -52,6 +63,27 @@ export function renderAllowanceMs(env) {
   if (v === undefined || v === null || v === "") return RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
+}
+
+/* D-492: WHAT ONE RENDER RESERVES AT ADMISSION — its MAXIMUM cost, not its expected
+   one. The allowance used to be checked against what had been SPENT, and a render's
+   cost is only spent after it finishes, so N renders in flight at once were all
+   admitted against the same figure and the bound the docstring claimed ("at most one
+   render") was held by nothing. The reservation is what makes the admission test a
+   bound: `spent + reserved + this <= allowance`.
+
+   It is the sum of the two bounds the renderer is ASKED to hold — the navigation
+   timeout and the wait timeout — because a render that hits both is the worst case
+   the asked environment permits. It is deliberately PESSIMISTIC: a render that
+   finishes in a second releases the whole reservation and charges the second, so the
+   cost of the pessimism is throughput within a day, never a mis-stated record. The
+   failure direction is over-charging (an unreported render stays charged, D-492),
+   which under-uses the allowance and never overruns it. */
+export function renderReserveMs(asked = RENDER_DEFAULTS) {
+  const pos = (v, fallback) => { const n = Number(v); return Number.isFinite(n) && n >= 0 ? n : fallback; };
+  const wait = pos(asked && asked.wait && asked.wait.timeout_ms, RENDER_DEFAULTS.wait.timeout_ms);
+  const nav = pos(asked && asked.navigation_timeout_ms, RENDER_DEFAULTS.navigation_timeout_ms);
+  return Math.ceil(wait + nav);
 }
 
 /* Which responses are DATA and which are not (CLIENT-RENDERED.md, DESIGNED

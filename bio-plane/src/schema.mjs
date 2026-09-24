@@ -3921,9 +3921,19 @@ CREATE INDEX IF NOT EXISTS theme_placements_bundle ON theme_placements(bundle_id
 -- this instance declined because the allowance was spent: a deferral is a
 -- recorded fact, never a silent fall-back to filing the shell as the content.
 -- An operational fact about this instance, not corpus-derived.
+-- D-492: reserved_ms is browser time COMMITTED to renders now in flight and not
+-- yet reported. spent_ms alone could not bound the allowance, because a render
+-- runs in the Worker and reports its cost afterwards, so every render in flight
+-- at once was admitted against one spent_ms. A render reserves its maximum cost
+-- at admission and releases the reservation when it reports, so the figure the
+-- admission test reads is spent_ms + reserved_ms. A render that never reports
+-- stays charged for the day: the allowance is then UNDER-used, which is the
+-- direction that cannot overrun. Added to an existing store by the additive
+-- pass in store.mjs #migrate, so a store written before D-492 reads 0.
 CREATE TABLE IF NOT EXISTS render_allowance (
   day        TEXT PRIMARY KEY,
   spent_ms   INTEGER NOT NULL DEFAULT 0,
+  reserved_ms INTEGER NOT NULL DEFAULT 0,
   renders    INTEGER NOT NULL DEFAULT 0,
   deferred   INTEGER NOT NULL DEFAULT 0,
   last_at    TEXT NOT NULL

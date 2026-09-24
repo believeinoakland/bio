@@ -1,4 +1,5 @@
-/* NEGATIVE CONTROL: re-run with `node test/nc-d64.mjs` (one arm: `node test/nc-d64.mjs <arm>`). Run 2026-09-24 on base origin/main 15b2a4c0 plus this item, SIX rows — four arms each armed ALONE, a baseline first and last — each file copied to a UNIQUELY-NAMED per-arm pristine copy inside this worktree, every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (4 of 4 MATCH/IDENTICAL). BASELINE 61 pass 0 fail; BASELINE-LAST 61/0 (re-run after the `render: false` correction, I4 and the C-number pin; the first run, at 59, read every arm identically). (1) `determined` — THE ROW'S CONTROL — force `determined` on a page drawing data from a second origin (renderedAuthority stops naming foreign data origins): DECLARED red on B1 by name, B2-B4 and E1, nothing else; ACTUAL 56/5 failing exactly B1 B2 B3 B4 E1, AS DECLARED. (2) `emptyscripts` — a script set nobody recorded read as `[]` (none ran): DECLARED D1 D2 D4; ACTUAL 58/3 D1 D2 D4, AS DECLARED (D3, the stated gap, is written by another line and stays green). (3) `shellprimary` — the shell kept as the PRIMARY (the swap to the rendered sha removed): DECLARED A2 A3 A4; ACTUAL 58/3 A2 A3 A4, AS DECLARED — A7/A8 stay green because both artifacts are still stored; only the primary moved, which is exactly what those three read. (4) `overstrict` — OVER-STRICTNESS — the host's own data read as foreign: DECLARED A16 alone (a correct page refused determination); ACTUAL 60/1 A16, AS DECLARED. */
+/* NEGATIVE CONTROL: re-run with `node test/nc-d64.mjs` (one arm: `node test/nc-d64.mjs <arm>`). Run 2026-09-24 on base origin/main 15b2a4c0 plus this item, SIX rows — four arms each armed ALONE, a baseline first and last — each file copied to a UNIQUELY-NAMED per-arm pristine copy OUTSIDE this worktree (moved there 2026-09-24 by D-492 under BOB #32's ruling; it was inside), every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (4 of 4 MATCH/IDENTICAL). RE-MEASURED 2026-09-24 on origin/main 58293bf31 plus D-492 — the rule that a suite's control is re-armed after the suite changes, and it came back arm-for-arm identical in its NAMES with every tally +8, which is D-492's eight new assertions and nothing else. BASELINE 69 pass 0 fail; BASELINE-LAST 69/0. (1) `determined` — THE ROW'S CONTROL — force `determined` on a page drawing data from a second origin (renderedAuthority stops naming foreign data origins): DECLARED red on B1 by name, B2-B4 and E1, nothing else; ACTUAL 64/5 failing exactly B1 B2 B3 B4 E1, AS DECLARED (was 56/5 before D-492). (2) `emptyscripts` — a script set nobody recorded read as `[]` (none ran): DECLARED D1 D2 D4; ACTUAL 66/3 D1 D2 D4, AS DECLARED (D3, the stated gap, is written by another line and stays green). (3) `shellprimary` — the shell kept as the PRIMARY (the swap to the rendered sha removed): DECLARED A2 A3 A4; ACTUAL 66/3 A2 A3 A4, AS DECLARED — A7/A8 stay green because both artifacts are still stored; only the primary moved, which is exactly what those three read. (4) `overstrict` — OVER-STRICTNESS — the host's own data read as foreign: DECLARED A16 alone (a correct page refused determination); ACTUAL 68/1 A16, AS DECLARED. */
+/* NEGATIVE CONTROL (D-492, the RESERVATION): re-run with `node test/nc-d492.mjs` (one arm: `node test/nc-d492.mjs <arm>`). Run 2026-09-24 on base origin/main 58293bf31 plus this item — RE-RUN after the concurrency wait moved from a hand-rolled `Date.now()` deadline to `until`+`budgetAssert` (M0-107), which `budget-sweep.test.mjs` graded UNCHECKED by name and which added the budget's own assertion (68 -> 69); the first run read every arm identically at one tally lower — SIX rows — four arms each armed ALONE, a baseline first and last — each file copied to a UNIQUELY-NAMED per-arm pristine copy OUTSIDE the worktree (BOB #32), every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (4 of 4 MATCH/IDENTICAL). BASELINE 69 pass 0 fail; BASELINE-LAST 69/0. (1) `noreserve` — THE ROW'S CONTROL — drop the reservation and admit on what has been SPENT, the rule D-492 replaced: DECLARED red on J1 by name, with J2 J3 J4 J5 H2 H3 H4, nothing else — and the wait's `stop` (all K renderers inside means every request was ADMITTED, so no deferral can still be coming) is what keeps this arm pointed at J1 rather than reporting the budget NOT MEASURED; ACTUAL 61/8 failing exactly H2 H3 H4 J1 J2 J3 J4 J5, AS DECLARED — the four concurrent admits all succeed against one `spent_ms`. (2) `norelease` — the reservation is never given back: DECLARED H1 H3 J6; ACTUAL 66/3 H1 H3 J6, AS DECLARED. (3) `releaseunreported` — an unreported render hands its reservation back, D-492's rule inverted: DECLARED J5 ALONE; ACTUAL 68/1 J5, AS DECLARED. (4) `overstrict` — OVER-STRICTNESS — a CORRECT reservation spelled as a JSON string rather than a number must be admitted exactly as before: DECLARED nothing fails; ACTUAL 69/0, the baseline's own tally, AS DECLARED. */
 /* D-64 — THE RENDER ARM OF op=acquire, driven THROUGH THE OP.
  *
  * Design: `CLIENT-RENDERED.md` (a development design, cited here and never read by this suite) §"What must be recorded on a
@@ -44,7 +45,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { RENDER_CAPTURE_CHECKS } from "../checks/bio-checks.mjs";
-import { RENDERED_METHOD, NON_DATA_TYPES } from "../src/render.mjs";
+import { RENDERED_METHOD, NON_DATA_TYPES, renderReserveMs } from "../src/render.mjs";
+import { until, budgetAssert } from "./budget.mjs";   /* M0-107: a wall-clock deadline is spelled ONCE */
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -288,21 +290,146 @@ console.log("\n--- G. every way a render cannot happen is refused by name; the s
 }
 
 /* ====================================================================== H */
-console.log("\n--- H. the daily allowance: spent means DEFERRED, recorded, nothing fetched ---");
+console.log("\n--- H. the daily allowance: committed means DEFERRED, recorded, nothing fetched ---");
+/* CORRECTED 2026-09-24 BY D-492, NEVER EXEMPTED, and the old figures say why the old
+   assertion was wrong rather than merely stale. This block ran on an allowance of 1500 ms
+   with renders reporting 1000 ms each, which was a coherent fixture ONLY under the
+   admission rule D-492 removed: admit while `spent_ms < allowance`, deciding a render on
+   the time ALREADY REPORTED and therefore admitting every render in flight against one
+   figure. It could not distinguish the bound the docstring claimed from no bound at all,
+   because nothing here ever had two renders in flight at once. The rule is now
+   `spent + reserved + this render's RESERVATION <= allowance`, so an allowance smaller
+   than one reservation admits NOTHING, and the fixture's 1500 ms would have made every
+   arm below read DEFERRED for the wrong reason — a suite agreeing with the code by
+   refusing everything. The allowance is therefore one reservation plus the two 1000 ms
+   renders this block spends MINUS one, which keeps the block's SUBJECT (two fit, the
+   third does not) and makes the third's deferral the allowance's doing and not the
+   reservation's: at 46,000 the second render's 1,000 ms plus one reservation is exactly
+   the allowance and fits, and the third's 2,000 ms plus one reservation is 1 ms over.
+   Block J drives the reservation itself. */
+const RESERVE = 45000;            /* the wait timeout (15,000) plus the navigation bound (30,000) */
 {
-  const small = plane({ RENDER_DAILY_ALLOWANCE_MS: "1500" });
+  /* PINNED AS A LITERAL, not read from the module into both sides of the comparison: a
+     figure the suite takes from the code agrees with the code for free (WORKER.md). If
+     either bound moves, this fails by name and the arithmetic below is re-read. */
+  t("H0 one render reserves the wait timeout plus the navigation bound", renderReserveMs(), RESERVE);
+  const small = plane({ RENDER_DAILY_ALLOWANCE_MS: String(RESERVE + 1000) });
   const a = acq(small);
   const r1 = await a({ locator: `https://${HOST}/same`, render: true });
   const r2 = await a({ locator: `https://${HOST}/same`, render: true });
   const hits = pageHits["/same"] || 0;
   const r3 = await a({ locator: `https://${HOST}/same`, render: true });
-  t("H1 two renders fit (0 then 1000 ms spent of 1500)", [r1.ok, r2.ok], [true, true]);
+  t("H1 two renders fit: each releases its reservation and charges the 1000 ms it reported",
+    [r1.ok, r2.ok], [true, true]);
   t("H2 the third is DEFERRED by name", refusal(r3), row("RENDER_DEFERRED"));
-  t("H3 the deferral says content undetermined and counts itself",
-    r3.render && [r3.render.state, r3.render.content, r3.render.allowance.spent_ms, r3.render.allowance.deferred],
-    ["deferred", "undetermined", 2000, 1]);
+  t("H3 the deferral says content undetermined, counts itself, and reads the allowance as spent with nothing reserved",
+    r3.render && [r3.render.state, r3.render.content, r3.render.allowance.spent_ms,
+                  r3.render.allowance.reserved_ms, r3.render.allowance.deferred],
+    ["deferred", "undetermined", 2000, 0, 1]);
   t("H4 nothing was fetched for the deferred render, and no document filed", [(pageHits["/same"] || 0) - hits, "document" in r3], [0, false]);
   await small.dispose();
+}
+
+/* ====================================================================== J */
+console.log("\n--- J. D-492: the allowance is RESERVED at admission, so renders in flight are counted ---");
+/* ACCEPTS-WHEN (QUEUE.md D-492): K concurrent admits against room for exactly J
+   reservations admit J and defer K-J, the admits interleaved BEFORE any spend.
+   WHAT THIS BLOCK CANNOT SEE: whether a real browser honours the navigation and wait
+   timeouts it is asked for. The reservation is the maximum the ASKED environment
+   permits; a renderer that overruns its own bounds reports the longer time and the
+   allowance is passed by exactly that excess (store.mjs renderAdmit, residue 1). This
+   fixture's renderer honours them by construction, so this suite proves the ACCOUNTING
+   and nothing about the renderer. */
+{
+  const K = 4, J = 2;
+  let entered = 0, settled = 0, release = null;
+  const gate = new Promise((r) => { release = r; });
+  /* A RENDERER THAT DOES NOT RETURN until it is let go, which is the only way to put
+     several renders IN FLIGHT AT ONCE through the op. Under the rule D-492 replaced,
+     all four would be admitted here: each read the same `spent_ms` of 0. */
+  const held = async (request) => {
+    const q = await request.json();
+    entered++;
+    await gate;
+    return Response.json({
+      ok: true, html: rendered("/same"), engine: "chromium", engine_version: "fixture-1",
+      viewport: q.viewport, dpr: q.dpr, locale: q.locale, timezone: q.timezone,
+      wait: { condition: q.wait, fired: "networkidle" }, elapsed_ms: 1000,
+      navigated_to: q.url, status: 200, requests: PAGES["/same"].requests, scripts: PAGES["/same"].scripts });
+  };
+  const conc = plane({ RENDER_DAILY_ALLOWANCE_MS: String(RESERVE * J) }, { RENDERER: held });
+  const ca = acq(conc);
+  const flight = Array.from({ length: K }, () =>
+    ca({ locator: `https://${HOST}/same`, render: true }).then((v) => { settled++; return v; }));
+  /* THE WAIT IS A BUDGET, SPELLED ONCE (M0-107, `test/budget.mjs`), never a hand-rolled
+     `Date.now()` deadline — `budget-sweep.test.mjs` grades that UNCHECKED by name, and the
+     reason is this block exactly: an expired deadline MEASURED NOTHING, and reading
+     `atRelease` after one would report a machine under load as a broken reservation.
+     The gate is released only once J renderers are inside AND the other K-J have already
+     been ANSWERED, which is what makes the deferrals happen while the admitted renders are
+     still running rather than after they reported. On expiry it is released ANYWAY — the
+     flight must resolve or the suite hangs — and J1-J4 are SKIPPED and named, never graded
+     over a wait that did not finish.
+
+     `stop` IS WHAT KEEPS THE ROW'S CONTROL POINTED AT THE SUBJECT, and it is the reason
+     this is `until` rather than a deadline: once ALL K renderers are inside, every request
+     was ADMITTED and no deferral can still be coming, so the wait is OVER and NOT expired.
+     That is `until`'s own rule — a subject that ended before the predicate is a FINDING
+     about the subject, never a timeout — and without it the arm that drops the reservation
+     would sit out the full budget and report NOT MEASURED where J1 should name the defect. */
+  const WAIT_MS = 20000;
+  const waited = await until(() => entered >= J && settled >= K - J, WAIT_MS,
+    { stepMs: 25, stop: () => entered >= K });
+  const atRelease = [entered, settled];
+  release();
+  const out = await Promise.all(flight);
+  if (budgetAssert(t, "J the wait for J renderers in flight with the other K-J already answered",
+      waited, WAIT_MS,
+      "J1 J2 J3 J4 — how many of K were admitted, that each refusal is RENDER_DEFERRED by name, "
+      + "that the admits interleaved BEFORE any spend, and what a deferral names as reserved")) {
+    const ok = out.filter((r) => r.ok === true).length;
+    const deferred = out.filter((r) => r.reason === "RENDER_DEFERRED");
+    t("J1 K concurrent admits against room for exactly J reservations admit J and defer K-J",
+      [K, ok, deferred.length], [4, J, K - J]);
+    /* THE CORPUS IS FLOORED AND PRINTED IN THE ASSERTION ITSELF (WORKER.md: a headline
+       totality assertion over an EMPTY corpus passes and proves nothing — measured three
+       times in this repo). Under the arm that drops the reservation there are NO deferrals,
+       and a bare `deferred.map(...)` on both sides would agree on the empty list. */
+    t("J2 every deferral is RENDER_DEFERRED by name, with the deferred content undetermined",
+      [deferred.length, ...deferred.map((r) => [refusal(r), r.render && r.render.state, r.render && r.render.content])],
+      [K - J, ...deferred.map(() => [row("RENDER_DEFERRED"), "deferred", "undetermined"])]);
+    t("J3 the admits INTERLEAVED BEFORE ANY SPEND: J renderers were still running when the other K-J were refused",
+      atRelease, [J, K - J]);
+    t("J4 a deferral names what is reserved by the renders in flight, not only what is spent",
+      [deferred.length, ...deferred.map((r) => [r.render.allowance.spent_ms, r.render.allowance.reserved_ms, r.render.allowance.reserve_ms])],
+      [K - J, ...deferred.map(() => [0, RESERVE * J, RESERVE])]);
+  }
+  await conc.dispose();
+}
+{
+  /* AN UNREPORTED RENDER STAYS CHARGED (D-492's scope). The renderer answers `/fail` with
+     no document and no elapsed time, so the plane has no figure for what it cost: the
+     reservation is KEPT rather than handed back for time that may well have been spent. */
+  const failing = plane({ RENDER_DAILY_ALLOWANCE_MS: String(RESERVE + 2000) });
+  const fa = acq(failing);
+  const f1 = await fa({ locator: `https://${HOST}/fail`, render: true });
+  const f2 = await fa({ locator: `https://${HOST}/same`, render: true });
+  t("J5 a render that reported no time is RENDER_FAILED and its reservation stays charged, so the next render is deferred",
+    [refusal(f1), refusal(f2), f2.render && f2.render.allowance.reserved_ms],
+    [row("RENDER_FAILED"), row("RENDER_DEFERRED"), RESERVE]);
+  await failing.dispose();
+}
+{
+  /* RELEASED WITHOUT CHARGE where no renderer was ever asked. Over-strictness arm for the
+     reservation: a caller pointed at a PDF must not burn the day's allowance for a render
+     that did not happen, so the next render is ADMITTED. */
+  const notpage = plane({ RENDER_DAILY_ALLOWANCE_MS: String(RESERVE + 2000) });
+  const na = acq(notpage);
+  const n1 = await na({ locator: `https://${HOST}/doc.pdf`, render: true });
+  const n2 = await na({ locator: `https://${HOST}/same`, render: true });
+  t("J6 a shell that is not a page releases the reservation without charge, and the next render is admitted",
+    [refusal(n1), n2.ok, n2.document && n2.document.capture.method], [row("RENDER_NOT_A_PAGE"), true, RENDERED_METHOD]);
+  await notpage.dispose();
 }
 
 /* ====================================================================== I */
