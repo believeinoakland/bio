@@ -1598,7 +1598,14 @@ const quoteAction = (id, n) => ["---", `id: ${id}`, "object_type: action", "sche
   `created: "${NOW}"`, `last_updated: "${NOW}"`, "produced_by:", "  mode: assisted", "  capability_tier: session",
   "group: believe-in-oakland", "references: []", "state_history: []", "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
-  "action_kind: cpra_request", "risk_tier: 1",
+  "action_kind: cpra_request", /* CORRECTED 2026-09-24 at integration (CONDUCT #20, c20-integ1), never exempted, in
+     REC-189's own spelling two suites over: `risk_tier: 1` ("file freely") was a tier this fixture states through
+     the MEMBER_TOKEN BEARER — a machine identity by `isMachineIdentity`, not a member's session — and C-32.19
+     (REC-189, on BOB #21's D-182) now refuses a machine setting 1, 2 or 3. THE TWO ITEMS NEVER MET BEFORE THIS
+     MERGE: this D-148 quote fixture landed on `main` with c19-unionfix and the fence landed on c19-batch10, each
+     green on its own branch. The tier is not this suite's subject — op=actionquotes' bound is — so the fixture
+     states what an unassessed action honestly is. */
+  "risk_tier: undetermined",
   "counterparty:", "  state: named", "  name: Bounds Clerk r57",
   "correspondence:",
   "  - direction: sent", "    at: 2026-07-03", '    account: "The request."', "    author: r57",
