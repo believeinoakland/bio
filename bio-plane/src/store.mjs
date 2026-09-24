@@ -27235,19 +27235,60 @@ export class Store extends DurableObject {
    *  questions that could possibly diverge. A question ONE project draws on can
    *  hold no divergence and is never opened.
    *
-   *  THE `HAVING COUNT(*) > 1` IS ON THE UNGATED TABLE ON PURPOSE. It is a
-   *  CANDIDATE filter, not the answer: the gate and the severed-status
-   *  confirmation both run afterwards in `#projectsDrawingOn`, and either can
-   *  take the real count back below two, in which case no item is minted. Doing
-   *  it the other way — gating first — would make the candidate set a function
-   *  of the viewer and turn one indexed group-by into a per-viewer scan, for a
-   *  narrowing the second step performs anyway. */
-  #queueSharedInquiryCandidates() {
+   *  D-480 — THE GROUP RUNS OVER WHAT THE CALLER CAN SEE, AND THE PARAGRAPH
+   *  THAT USED TO STAND HERE WAS WRONG IN A WAY WORTH KEEPING ON THE RECORD.
+   *  It said the `HAVING COUNT(DISTINCT bundle_id) > 1` was on the UNGATED
+   *  table ON PURPOSE — a CANDIDATE filter, not the answer, since
+   *  `#projectsDrawingOn` gates afterwards and can take the real count back
+   *  below two. **That is true of every candidate the page REACHES and says
+   *  nothing about the page's EDGE**, which is the whole defect (found by
+   *  D-464's worker, `BIO_Membership_Architecture_v2.md` §7 item 7.9). The
+   *  candidate read is BOUNDED at `QUEUE_SHARED_INQUIRIES_MAX` and ordered by
+   *  `target_id`, so a hidden project's citations do two things a later gate
+   *  cannot undo: they make a question that only ONE visible project draws on
+   *  qualify as shared, and that question then TAKES A SLOT — displacing a
+   *  visible one past the cap and flipping the `inquiries_truncated` the feed
+   *  publishes on every item. A count-shaped side channel, D-447's and D-464's
+   *  class: *"Not its existence"* arriving as an aggregate.
+   *
+   *  THE FIX IS D-464'S AND D-486'S SUBTRACTION, NOT A SECOND SIGHT RULE, and
+   *  that is also the answer to the old paragraph's performance objection.
+   *  `#hiddenSets(viewer).hid` is the ONE set of bundles the caller's own
+   *  `viewerPredicate` does not pass, spelled once and read here as a set —
+   *  `NOT IN`, an indexed subtraction SQLite materialises once per statement,
+   *  never the per-row correlated gate the old paragraph rightly refused. Who
+   *  is filtered is the gate's word, inherited rather than restated: a
+   *  credential the gate does not filter (scope `member`) and an enrolled
+   *  administrator get `hid` = nothing and the read they always got, and a
+   *  viewer SENT but unrecognised is DENY, so every bundle is hidden and the
+   *  candidate set is empty — fails closed.
+   *
+   *  BOTH ENDS OF THE EDGE, and the second is not scope creep but the same
+   *  sentence: a question the caller cannot see is dropped by
+   *  `#queueSharedInquiry` a few lines below, so it never mints an item — but
+   *  until this landing it still consumed a slot on the way there. The
+   *  subtraction is over `bundles`, so a `target_id` naming NOTHING (a
+   *  `references[]` entry for a document nobody has captured — the common case)
+   *  is in no hidden set and is kept exactly as before, then dropped by the
+   *  same existence check that always dropped it. Nothing here tightens what is
+   *  ANSWERED; it decides only which rows are allowed to fill the bounded page.
+   *
+   *  THE CANDIDATE FILTER IS STILL A CANDIDATE FILTER. The severed-status
+   *  confirmation and the per-project frontmatter read still run afterwards in
+   *  `#projectsDrawingOn` and can still take the real count back below two, in
+   *  which case no item is minted. */
+  #queueSharedInquiryCandidates(viewer) {
     const cap = Store.QUEUE_SHARED_INQUIRIES_MAX;
+    const { hid } = this.#hiddenSets(viewer);
+    /* `hid` is null for a caller the gate does not filter: the statement is then
+       BYTE-IDENTICAL to the one this method ran before D-480, which is what
+       keeps the unfiltered classes measurably unmoved. */
+    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : "";
+    const args = hid ? [...hid.args, ...hid.args] : [];
     const rows = this.#rows(
-      `SELECT target_id FROM refs WHERE kind='cites'
-        GROUP BY target_id HAVING COUNT(DISTINCT bundle_id) > 1
-        ORDER BY target_id LIMIT ?`, cap + 1);
+      `SELECT rf.target_id AS target_id FROM refs rf WHERE rf.kind='cites'${where}
+        GROUP BY rf.target_id HAVING COUNT(DISTINCT rf.bundle_id) > 1
+        ORDER BY rf.target_id LIMIT ?`, ...args, cap + 1);
     const out = rows.slice(0, cap).map((r) => r.target_id);
     out.truncated = rows.length > cap;
     out.bound = cap;
@@ -27331,7 +27372,7 @@ export class Store extends DurableObject {
    *  disagreement when it may be one project that simply has not caught up. */
   #findingsStanceDiverged(viewer, now, identity = null) {
     const out = [];
-    const shared = this.#queueSharedInquiryCandidates();
+    const shared = this.#queueSharedInquiryCandidates(viewer);
     for (const inq of shared) {
       const q = this.#queueSharedInquiry(inq, viewer);
       if (!q) continue;
@@ -27504,7 +27545,7 @@ export class Store extends DurableObject {
      * so the two are counted together and the answer says they are. */
     let unattributed = 0;
     const unattributedIn = [];
-    const shared = this.#queueSharedInquiryCandidates();
+    const shared = this.#queueSharedInquiryCandidates(viewer);
     for (const inq of shared) {
       const q = this.#queueSharedInquiry(inq, viewer);
       if (!q) continue;
@@ -27686,7 +27727,7 @@ export class Store extends DurableObject {
    *  member's inbox hygiene must not make it vanish for the team. */
   #findingsConcludedElsewhere(viewer, now) {
     const out = [];
-    const shared = this.#queueSharedInquiryCandidates();
+    const shared = this.#queueSharedInquiryCandidates(viewer);
     for (const inq of shared) {
       const q = this.#queueSharedInquiry(inq, viewer);
       if (!q) continue;
