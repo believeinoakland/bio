@@ -282,7 +282,7 @@ scope: `newgroup/src/index.mjs`, `release.mjs` and `bio-plane/scripts/deploy.mjs
 accepts-when: `15.instance-ai-secret` BUILT by its probe. NEGATIVE CONTROL: have the installer generate a value when none is supplied, and the no-invention arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
-### M0-146 · running — SPAWNED 2026-09-24 ~04:44Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-146 (CONDUCT #20), base origin/main, into D-479's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/M0-146 and that session; never conclude queued from the absence alone.
+### M0-146 · integrated — finished (BOB #32's ruled shape, 1d7a2c5b); integrated on land/conduct/c20-batch17 @ f8e71683, trains after c20-batch16b — flipped by CONDUCT #20 2026-09-24 ~05:58Z
 order: AT THE BACKLOG HEAD: two workers lost a full-gate round to it in one night (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z and 04:25Z)
 milestone: M0
 interface: none.
