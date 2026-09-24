@@ -207,18 +207,32 @@ export function judge({ repo = ROOT, data = null } = {}) {
    sentences (8.claim's §7.1 items 4 and 9, found by corpuscheck.test on this item's first render). So a
    cut carries the remainder's citations, verbatim, after the ellipsis: the authority cites what it cited. */
 const CITE = /§\s*\d+(?:\.\d+)*\s+item\s+\d+/gi;
+/* AND A CAP ON THE SENTENCE ITSELF (BOB #32, 2026-09-24, ruling CONDUCT #19's map-budget block): some first sentences
+   run 500–700 B, so the first-sentence rule alone let the map outgrow its budget again. A cell's sentence is cut at
+   CELL_CAP characters, at the last word boundary OUTSIDE backticks, and marked ` …` like any cut. The claim text is
+   untouched: this is the rendering's limit, and no author rewords a claim to fit it. */
+export const CELL_CAP = 240;
+function capAtWord(head) {
+  if (head.length <= CELL_CAP) return { text: head, cut: false };
+  let tick = false, lastSpace = -1;
+  for (let i = 0; i < CELL_CAP; i++) {
+    if (head[i] === "`") tick = !tick;
+    else if (head[i] === " " && !tick) lastSpace = i;
+  }
+  return { text: head.slice(0, lastSpace > 0 ? lastSpace : CELL_CAP).replace(/[\s,;:(—–-]+$/, ""), cut: true };
+}
 export function firstSentence(text) {
   const s = String(text);
-  let tick = false;
+  let tick = false, end = s.length;
   for (let i = 0; i < s.length - 1; i++) {
     if (s[i] === "`") tick = !tick;
-    else if (!tick && s[i] === "." && s[i + 1] === " ") {
-      const head = s.slice(0, i + 1);
-      const cites = [...new Set(s.slice(i + 1).match(CITE) || [])].filter((c) => !head.includes(c));
-      return head + " …" + (cites.length ? ` (also cites ${cites.join(", ")})` : "");
-    }
+    else if (!tick && s[i] === "." && s[i + 1] === " ") { end = i + 1; break; }
   }
-  return s;
+  const capped = capAtWord(s.slice(0, end));
+  if (end === s.length && !capped.cut) return s;
+  const head = capped.text;
+  const cites = [...new Set(s.slice(head.length).match(CITE) || [])].filter((c) => !head.includes(c));
+  return head + " …" + (cites.length ? ` (also cites ${cites.join(", ")})` : "");
 }
 
 /* §3's state column, RENDERED. A cell never carries a pipe, so the table cannot break. */

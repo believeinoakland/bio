@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* The NEGATIVE CONTROL DRIVER for `tools/status.mjs` and `bio-plane/test/status.test.mjs` —
- * ten arms plus an opening and closing baseline.
+ * eleven arms plus an opening and closing baseline.
  *
  *   node bio-plane/test/status.control.mjs        (from the repo root)
  *
@@ -114,6 +114,10 @@ const ARMS = [
     to:   "(by[cl.state] = by[cl.state] || []).push(cl.text);",
     mustBreak: "THE RENDERED MAP FITS ITS READING BUDGET — docs/architecture/BIO_System_Design.md",
     alsoBreak: "renderCell renders the first sentence, never the whole text" },
+  { id: "A11", title: "the cell cap lifted — a 700 B first sentence renders whole again (BOB #32, 2026-09-24)",
+    from: "export const CELL_CAP = 240;",
+    to:   "export const CELL_CAP = 1e9;",
+    mustBreak: "a first sentence past CELL_CAP is cut, marked, and no longer than the cap plus its mark" },
 ];
 
 for (const a of ARMS) {

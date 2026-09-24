@@ -34,6 +34,8 @@
  *   RE-RUN 2026-09-23 by M0-138 with A10 added (render whole texts again): ten arms, 54 pass / 0 fail, exit 0;
  *     A10 FAILED at "THE RENDERED MAP FITS ITS READING BUDGET — docs/architecture/BIO_System_Design.md" (and at
  *     "renderCell renders the first sentence"), tools/status.mjs restored by sha256 (f498cce1…) AND cmp, byte-identical.
+ *   RE-RUN 2026-09-24 by BOB #32 with A11 added (the cell cap lifted): eleven arms, 59 pass / 0 fail, exit 0; A11
+ *     FAILED at "a first sentence past CELL_CAP is cut, marked, …"; tools/status.mjs restored (sha256 21ebc265…).
  * AND A SECOND BY-HAND ARM ON THE PUSH GUARD (2026-09-18): `corpusCheck` made to accept any completion
  *   line regardless of its fail count -> section 8's "A STALE STATUS DATE REFUSES THE PUSH" FAILS (51/1);
  *   `tools/pushguard.mjs` restored by `cp`, verified byte-identical (sha256 7d978c73…).
@@ -57,7 +59,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "nod
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { evalProbe, judge, renderCell, renderMap, lookup, bumpAsOf, firstSentence, UI_HELPERS, ROOT, STATES }
+import { evalProbe, judge, renderCell, renderMap, lookup, bumpAsOf, firstSentence, CELL_CAP, UI_HELPERS, ROOT, STATES }
   from "../../tools/status.mjs";
 import { BUDGET, MAP as BUDGET_MAP } from "../../tools/readbudget.mjs";
 import { statusCheck, corpusCheck, markerCheck } from "../../tools/pushguard.mjs";
@@ -279,6 +281,12 @@ section("10 — §3 RENDERS EACH CLAIM'S FIRST SENTENCE, AND THE MAP FITS ITS BU
   /* BOB #31 (2026-09-23): rendering every claim WHOLE pushed the map past its 48 KiB cut on each landing that
      added a clause, and integrators trimmed claim texts to fit — the source of truth cut to fit its rendering. */
   t("a claim renders up to its first `. `, marked as cut", firstSentence("one rule. Then detail."), "one rule. …");
+  /* BOB #32, 2026-09-24: a first sentence past CELL_CAP is cut at a word boundary outside backticks, marked ` …`. */
+  { const long = "w ".repeat(200) + "tail";
+    const r = firstSentence(long);
+    t("a first sentence past CELL_CAP is cut, marked, and no longer than the cap plus its mark",
+      [r.endsWith(" …"), r.length <= CELL_CAP + 2], [true, true]);
+    t("the cap never cuts inside backticks", firstSentence("word `" + "x".repeat(300) + "` tail"), "word …"); }
   t("a `. ` INSIDE BACKTICKS is not a sentence end", firstSentence("reads `a. b` then stops. More."), "reads `a. b` then stops. …");
   t("OVER-STRICTNESS: a one-sentence claim, even ending in a period, renders WHOLE",
     [firstSentence("only one."), firstSentence("x (v1.5, §2.4) y")], ["only one.", "x (v1.5, §2.4) y"]);
