@@ -13,7 +13,18 @@
    spread `IN (${marks})`. ACTUAL, all AS DECLARED (10/10): baseline 14/0 · `standings` fails D443-1 (+0,2,3,4,5,
    the same promotes) · `earned` D443-2 (+0,3,4,5) · `attest` D443-3 (+0,2,5; D443-4 holds, Q_T is one capture)
    · `txrows` D443-4 (+0,2,3,5) · `txatts` D443-4 ALONE · `union` D443-5 (+0,2,3) · `supmax` D443-6 ALONE ·
-   `casereg` D443-7 ALONE · `overstrict` (an aliased json_each spelling on the structural pin) 14/0. */
+   `casereg` D443-7 ALONE · `overstrict` (an aliased json_each spelling on the structural pin) 14/0.
+   NEGATIVE CONTROL (D-445, declared and RUN 2026-09-24, session WORKER D-445): the SAME control, re-run
+   whole after D443-7b joined the suite — `node test/frontier-chunk.control.mjs`, subject src/store.mjs
+   3,286,109 B sha256 55d8ebfd…, TEN arms each ALONE, each anchor matched exactly once, every restore
+   verified by sha256 AND by byte comparison against a per-arm pristine copy (all ten `cmp identical`).
+   ACTUAL, all AS DECLARED (10/10), baseline 16/0: the seven arms above are UNMOVED, and `casereg` now
+   fails BOTH halves of its read — D443-7 (the shape) and D443-7b (the drive), 14/2. D443-7b's own answer
+   under the arm is the refusal D-36 predicts, read at the op: `ok` false, `STORE_DID_NOT_ANSWER`, no
+   edition written. D443-0b HELD under that arm, which is the discriminator it exists for — it is read
+   BEFORE the drive and through ops that never reach this function, so a fixture that failed to build its
+   120 cases fails there instead. `overstrict` (the aliased json_each spelling) 16/0, D443-7b included:
+   an alias binds one variable too, and the behaviour is unmoved. */
 /*
  * D-390 — `#frontierContent`'s index-state read, CHUNKED.
  *
@@ -57,10 +68,19 @@
 
 import "./stdio.mjs";
 import "./sandbox.mjs";
+/* D-445: the three shared fixtures the case ceremony owes — the publishing project (CASE-2), the
+   adoptable reading a no-project conclusion names (REC-136), and the case-level signature (CASE-5b). */
+import { makePublishingProject } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { ratifyCase } from "./caseceremony.mjs";
+import { parseFrontmatter } from "../checks/bio-checks.mjs";  /* D-445: a case document's roster row */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { execFileSync, spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const TOK = "mem-d390";
@@ -107,12 +127,19 @@ const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?
  *   D443-4 `#transcriptionsOver` ...... op=earnedbasis on Q_T (M ids, then M transcription rows — both lists)
  *   D443-5 `earnedBasisRegistry` union  op=earnedbasis on Q_C with `targets=` the M superseders (2M bound)
  *   D443-6 superseded-by MAX .......... op=reevaluations&target=SUP (M superseding ids)
- *   D443-7 `publishedCaseRegistryFor` . NOT DRIVEN PAST THE CEILING, and stated rather than rounded off. Its
- *       one caller feeds it `#caseClaimsOf`: the cases whose roster PINS this finding's CURRENT sha, or else
- *       the one case its bytes claim. Past 100 would take 101 signed case ratifications all pinning ONE
- *       byte-identical version of one finding, and no route hands the function a list of its own. So D443-7
- *       pins it STRUCTURALLY: the statement binds one json_each value and no spread marks. What this cannot
- *       see: that read answering a list past 100, live.
+ *   D443-7 `publishedCaseRegistryFor` . STRUCTURAL: the statement binds one json_each value and no spread
+ *       marks. Its one caller feeds it `#caseClaimsOf`: the cases whose roster PINS this finding's CURRENT
+ *       sha, or else the one case its bytes claim.
+ *   D443-7b the same read, DRIVEN — added by D-445, and it is the CORRECTION of what this header used to
+ *       say. It read: *"Past 100 would take 101 signed case ratifications all pinning ONE byte-identical
+ *       version of one finding, and no route hands the function a list of its own"*, and closed "what this
+ *       cannot see: that read answering a list past 100, live." The first half was a true reading of the
+ *       PRICE and a wrong one about the ROUTE: D-442 / `BIO_Publication_v0_1.md` §3 rule 12 stopped
+ *       op=publish promoting its members, so a second case pins the SAME bytes and 120 ratified cases over
+ *       one version are reachable through op=publish and op=caseratify alone. The price is paid rather than
+ *       avoided (120 real ssh signatures), and D443-7b drives the read through op=ratify. D443-7 STAYS
+ *       beside it: the shape pin and the drive fail to different things, which is why D-390 kept both for
+ *       `publishedRegistryFor` too.
  * D443-0 is the liar's clause for all of them: the fixture's sizes, counted from the plane's own answers.
  * ==================================================================================================== */
 async function d443() {
@@ -269,12 +296,192 @@ async function d443() {
   const src = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
   const body = (name) => { const i = src.indexOf(`\n  ${name}(`); return i < 0 ? "" : src.slice(i, src.indexOf("\n  }\n", i)); };
   const pcr = body("publishedCaseRegistryFor");
-  t("D443-7: `publishedCaseRegistryFor` binds its case list as ONE json_each value (STRUCTURAL — not "
-  + "drivable past 100 through its op; see the header)",
+  /* CORRECTED 2026-09-24 (D-445), never exempted: this label said "not drivable past 100 through its op".
+     That was the header's reading of the plane and D-445 falsified it — D-442 rule 12 makes 120 ratified
+     cases over one version reachable, and D443-7b below drives them. The ASSERTION is unchanged and still
+     right: what it pins is the statement's SHAPE, which no drive can see. */
+  t("D443-7: `publishedCaseRegistryFor` binds its case list as ONE json_each value (STRUCTURAL — the shape "
+  + "a drive cannot see; D443-7b drives the same read)",
     /* Any spelling that binds the list through json_each passes (the control's `overstrict` arm drives an
        aliased one); a spread `IN (${…})` fails. */
     [pcr.length > 0, /IN\s*\(\s*SELECT\s+\w*\.?value\s+FROM\s+json_each\(\?\)/i.test(pcr), /IN \(\$\{/.test(pcr)],
     [true, true, false]);
+}
+
+/* ====================================================================================================
+ * D-445 — D443-7b: THE SAME READ, DRIVEN. 120 RATIFIED CASES OVER ONE VERSION OF ONE FINDING.
+ *
+ * WHY IT IS A SECOND FUNCTION rather than three lines inside `d443()`. Every other arm above is reached
+ * by promoting documents; this one needs the whole publication ceremony — a signing key, a publishing
+ * project with an owner, a concluded finding, then 120 × (op=publish, op=caseratify) — and none of that
+ * belongs to the fixture the other seven share. It runs against the SAME store, after them, and touches
+ * none of their ids.
+ *
+ * THE ROUTE, named before it is walked: `#caseClaimsOf(bundleId)` returns every case whose ratified
+ * roster pins this finding's CURRENT `bundle_sha`, and `gateFacts` hands that list straight to
+ * `publishedCaseRegistryFor`. `gateFacts` has exactly ONE op in front of it — `op=ratify`, which reads
+ * `do/gatefacts` before it weighs a signature (`index.mjs`, REC-140) — so gating the finding IS the drive.
+ *
+ * WHAT MAKES 120 CASES OVER ONE VERSION REACHABLE, and it is D-442's gift rather than this suite's
+ * cleverness: §3 rule 12 stopped op=publish promoting its members, so each further case pins the bytes
+ * the first one pinned. Under the shape that preceded rule 12 every join minted a new version and only
+ * the last membership pinned the head, so `#caseClaimsOf` could never answer with more than one.
+ *
+ * WHAT THIS ARM CAN AND CANNOT SEE. It sees the read ANSWER over a 120-id list through a public op, which
+ * is the thing D443-7's structural pin cannot reach. It does NOT exercise the registry's CONTENT: every
+ * case here stands at edition 1, so C-21.1's freshness comparison — this edition's completeness against
+ * the PREVIOUS edition's — has no prior edition to compare and never fires. Stated rather than rounded off.
+ * ================================================================================================== */
+async function d443b() {
+  console.log("\n--- D-445 · `publishedCaseRegistryFor` driven past the ceiling through op=ratify ---");
+  /* The ceremony needs REAL signatures over both the case document and the finding, so the arm cannot be
+     staged without the external binary. It SKIPS loudly rather than passing over a fixture it could not
+     build — an arm that did not arm is a finding, never a green. */
+  if (spawnSync("ssh-keygen", ["-Q"]).error) {
+    console.log("  SKIP  D443-7b and D443-0b — ssh-keygen is not on PATH; 120 RATIFIED cases need 120 real "
+      + "bio-ratify-case signatures and one bio-ratify signature, and none can be forged here. D443-7 above "
+      + "still pins the statement's shape.");
+    return;
+  }
+  const M = 120;                       /* the same M the seven arms above use: above D-36's ~100 */
+  const V = "2026-09-23T11:00:00Z";
+  const dir = mkdtempSync(join(tmpdir(), "d445-"));   /* $TMPDIR is this suite's own (sandbox.mjs, D-186) */
+  execFileSync("ssh-keygen", ["-t", "ed25519", "-N", "", "-C", "vera445", "-f", join(dir, "vera445"), "-q"]);
+  const keyB64 = readFileSync(join(dir, "vera445.pub"), "utf8").trim().split(/\s+/)[1];
+  const sign = (nspace, statement) => {
+    const f = join(dir, `d445stmt-${Math.random().toString(36).slice(2)}`);
+    writeFileSync(f, statement);
+    execFileSync("ssh-keygen", ["-Y", "sign", "-f", join(dir, "vera445"), "-n", nspace, f],
+      { stdio: ["ignore", "ignore", "ignore"] });
+    return readFileSync(f + ".sig", "utf8");
+  };
+  const must = (what, r) => {
+    if (!r || r.ok === false) throw new Error(`d443b ${what}: ${JSON.stringify(r).slice(0, 700)}`);
+    return r;
+  };
+  /* AN ORDINARY MEMBER, not a third administrator: adding one past the second needs the consensus of
+     every existing admin (ruth443 and sam443 above), and publishing is a CAPABILITY rather than a role
+     (`caseflip.test.mjs`'s rosa is the precedent). */
+  const add = await POST(`op=memberadd&token=${ADM}`, { memberId: "vera445", cover: "d445",
+    role: "member", capabilities: ["contribute", "publish"] });
+  await POST(`op=enroll`, { invite: add && add.invite, handle: "vera445", password: "vera445-passphrase-1" });
+  const lg = await POST(`op=login`, { role: "member:vera445", password: "vera445-passphrase-1" });
+  if (!lg || !lg.token) throw new Error(`d443b login: ${JSON.stringify([add, lg]).slice(0, 400)}`);
+  const VERA = lg.token;
+  must("signeradd", await POST(`op=signeradd&token=${ADM}`, { keyB64, memberId: "vera445", comment: "vera laptop" }));
+
+  /* NO BAR IS DECLARED on the project (`publishingproject.mjs`'s default), so the fixture adds a publisher
+     and never a gate — the legs below are graded anyway, because an ungraded load-bearing member is a
+     strength question this arm is not about and must not be stopped by. */
+  const PROJ = await makePublishingProject({ post: POST, mf, sha, machineToken: ADM, owner: "vera445",
+    name: "PROJ-2026-0923-d445", created: V, updated: V });
+
+  const DOC = "INFO-2026-0923-d445doc", F = "INQ-2026-0923-d445f";
+  const docMd = [...["---", `id: ${DOC}`, "object_type: information", "schema: information@1",
+    `title: "D-445 ${DOC}"`, "current_state: collected", "prior_state: null", `created: "${V}"`,
+    `last_updated: "${V}"`, "produced_by:", "  mode: agent", "  capability_tier: high",
+    "group: believe-in-oakland", "references: []", "state_history: []", "annotations_open: 0",
+    "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
+    "criticality: supporting", "source:", '  locator: "in hand"', '  authority: "synthetic"',
+    `  retrieved: "${V.slice(0, 10)}"`, "monitoring:", "  enabled: false", "  frequency: none", "---", "",
+    "## Summary", "", "A captured document.", "", "## Provenance Notes", "", "## Session Log", "",
+    "## Review Notes", ""]].flat().join("\n");
+  /* BOTH AXES CARRY A GRADED LEG for `caseflip.test.mjs`'s reason: `unrated` is a frozen FACT and not a
+     weak grade (R2 / DEC-21), so a load-bearing member missing one is refused on strength — a refusal
+     that belongs to CASE-2's suite and would stop this one before it reaches what it is about. */
+  const findingMd = ["---", `id: ${F}`, "object_type: inquiry", "schema: inquiry@1",
+    `title: "What does ${F} rest on?"`, "current_state: open", "prior_state: null", `created: "${V}"`,
+    `last_updated: "${V}"`, "produced_by:", "  mode: agent", "  capability_tier: high",
+    "group: believe-in-oakland", "references:", `  - target: ${DOC}`, "    rel: cites",
+    "    status: confirmed", "state_history: []", "annotations_open: 0",
+    "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
+    "surfaced_by: agent", 'disposition_reason: ""',
+    "recheck_triggers:", "  - text: Revisit after the next budget cycle",
+    "    description: The adopted budget may restate the transfer basis.",
+    "basis:", `  - target: ${DOC}`, "    role: supports", "    grade: B", "    grade_axis: capture",
+    "    grade_source: capture", `  - target: ${DOC}`, "    role: supports", "    grade: C",
+    "    grade_axis: connection", "    grade_source: hunch", "    author: vera445",
+    `    date: ${V.slice(0, 10)}`,
+    "---", "", "## Question", "", `What does ${F} rest on?`, "", "## What It Rests On", "",
+    "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+    `### Session ${V} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "",
+    "## Review Notes", ""].join("\n");
+  let s445 = 0;
+  const put = async (id, text, type, state, register = []) => POST(`op=promote&token=${VERA}`, {
+    bundleId: id, base: null,
+    snapKey: `20260923T${String(600000 + (++s445)).slice(-6)}Z_${sha(`d445-${s445}`).slice(0, 8)}`,
+    meta: { object_type: type, group: "believe-in-oakland", title: `D-445 ${id}`, current_state: state,
+            created: V, last_updated: V },
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register });
+  /* A REGISTERED CAPTURE on the document, because C-2.8 refuses a capture grade over a document whose
+     arrival the record never witnessed. */
+  must(`promote ${DOC}`, await put(DOC, docMd, "information", "collected",
+    [{ path: "snapshots/source.bin", sha256: sha("d445-doc-bytes"), bytes: 512, encoding: "binary" }]));
+  must(`promote ${F}`, await put(F, withAdoptableReading(findingMd, { by: "vera445", at: V }), "inquiry", "open"));
+  must("conclude", await GET(`op=conclude&token=${VERA}&target=${encodeURIComponent(F)}`
+    + `&conclusion=${encodeURIComponent("The record the finding cites answers its question.")}`
+    + `&falsifier=${encodeURIComponent("A council minute showing the vote was never taken.")}`
+    + adoptedVersionParam()));
+
+  /* THE PIN, TAKEN FROM THE PLANE BEFORE THE FIRST CASE and never read back out of a case document: every
+     equality below is against THIS value, so the two sides of the "one version" claim cannot move together. */
+  const shaOf = async (id) => {
+    const l = await GET(`op=list&token=${VERA}&limit=1000`);
+    return (((l && l.bundles) || l || []).find((b) => b.bundle_id === id) || {}).bundle_sha ?? null;
+  };
+  const PIN = await shaOf(F);
+  const cases = [];
+  for (let i = 0; i < M; i++) {
+    const p = await POST(`op=publish&token=${VERA}`, { project: PROJ, newCase: true, targets: [F],
+      roles: { [F]: "load_bearing" },
+      scope: `Whether the record answers ${F}, read for case ${i}.`,
+      statement: `This case does not cover the 2025 transfers (case ${i}).`,
+      subjectPosition: "sought_no_answer",
+      subjectJustification: `The subject was asked and declined to comment (case ${i}).`,
+      biasAcknowledgement: `The publishing project holds a declared position on fund transfers (case ${i}).`,
+      excluded: [{ target: null, description: `The 2025 transfers (case ${i})`, reason: "Out of scope." }] });
+    if (!p || p.ok !== true) throw new Error(`d443b publish ${i}: ${JSON.stringify(p).slice(0, 700)}`);
+    await ratifyCase(async (q, b) => POST(q, b), p, { dir, key: "vera445", token: VERA });
+    cases.push(p.caseId);
+  }
+
+  /* D443-0b: THE LIAR'S CLAUSE, and it is read BEFORE the subject is driven and through an op that does
+     not touch it. `op=publishedcase` holding only the finding's id is refused FINDING_IN_SEVERAL_CASES and
+     NAMES every case — anonymously, so no credential shapes the count. The one-version half is the plane's
+     own `op=list` answer for the finding's head, unmoved across 120 ceremonies, plus the FIRST and LAST
+     case documents' own roster rows pinning exactly that sha. */
+  const amb = rP(await (await mf.dispatchFetch(
+    `http://x/api/?op=publishedcase&id=${encodeURIComponent(F)}`)).json());
+  const named = Array.isArray(amb && amb.cases) ? amb.cases : [];
+  const rosterSha = async (caseId) => {
+    const d = await GET(`op=casedocument&token=${VERA}&case=${encodeURIComponent(caseId)}&edition=1`);
+    const fm = parseFrontmatter(String((d && d.text) || "")).data || {};
+    return ((Array.isArray(fm.case_roles) ? fm.case_roles : []).find((r) => r && r.target === F) || {}).version_sha ?? null;
+  };
+  t("D443-0b: the fixture is ABOVE D-36's ~100-variable ceiling and stands on ONE version — counted from "
+  + "the plane's own answers: op=publishedcase refuses a bare finding id naming every case; the finding's "
+  + "head never moved across the 120 ceremonies; the first and last case documents pin that same sha",
+    [amb && amb.reason, named.length > 100 ? "C" : named.length, new Set(named).size === named.length,
+     (await shaOf(F)) === PIN, await rosterSha(cases[0]) === PIN, await rosterSha(cases[M - 1]) === PIN],
+    ["FINDING_IN_SEVERAL_CASES", "C", true, true, true, true]);
+
+  /* D443-7b: THE DRIVE. op=ratify reads `do/gatefacts` before it weighs the signature, and `gateFacts`
+     feeds `publishedCaseRegistryFor` the whole list `#caseClaimsOf` answered — 120 ids in one statement.
+     A spread `IN` there is refused by workerd and the gate cannot answer, so this arm reads the op's
+     answer and never an absence of error: `ok`, the finding's own published edition, and the container
+     the ratification assembled. */
+  const rat = await POST(`op=ratify&token=${VERA}`,
+    { bundleId: F, expectedSha: PIN, sig: sign("bio-ratify", `bio-ratify ${F} ${PIN}\n`) });
+  const ed = await GET(`op=publishededitions&token=${VERA}&id=${encodeURIComponent(F)}`);
+  const e1 = (Array.isArray(ed && ed.editions) ? ed.editions : []).find((e) => Number(e.edition) === 1) || {};
+  t("D443-7b: `publishedCaseRegistryFor` DRIVEN past the ceiling — with 120 ratified cases pinning one "
+  + "version of the finding, op=ratify (the ONE op that reaches `gateFacts`) ANSWERS, the gate having "
+  + "read a 120-id registry, and the edition it wrote names all 120 cases",
+    [rat && rat.ok, (rat || {}).reason ?? null, rat && rat.bundleSha === PIN, rat && rat.edition,
+     typeof (rat && rat.container && rat.container.manifest_sha),
+     Array.isArray(e1.cases) ? e1.cases.filter((c) => !cases.includes(c && c.case_id)).length : "no edition 1",
+     Array.isArray(e1.cases) ? e1.cases.length : -1],
+    [true, null, true, 1, "string", 0, M]);
 }
 
 try {
@@ -349,6 +556,7 @@ try {
   }
 
   await d443();
+  await d443b();
   reachedFoot = true;
 } catch (e) {
   console.log(`  FAIL  the suite threw before its foot: ${e && e.stack || e}`);

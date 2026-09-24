@@ -16,7 +16,16 @@
 
 # NEGATIVE-CONTROL PENS. A control driver copies pristine sources into a pen
 # inside its own worktree (WORKER.md: never a shared scratchpad) and restores
-# from them; UI-50's `.ui50-harness/` and UI-42's `.ui42-harness/` are the
+# from them;
+# SUPERSEDED IN PART, 2026-09-24 (BOB #32, recorded in `kickoffs/WORKER.md`): a pen
+# belongs OUTSIDE the worktree after all — a file in the tree is walked by
+# repository-walking suites, counted by `gates.mjs` §2e and makes the tree DIRTY, and
+# "never a shared scratchpad" is answered properly by a per-run `mkdtempSync` name
+# rather than by moving into the tree. `bio-plane/test/frontier-chunk.control.mjs`
+# pens that way since D-445 and has no line here. EVERY LINE BELOW STILL STANDS: its
+# driver still pens in-tree, and moving them is each driver's own act, not a rule
+# change made by deleting the lines that describe what the code does today.
+# UI-50's `.ui50-harness/` and UI-42's `.ui42-harness/` are the
 # pattern. The drivers remove their pen on a clean run, but a driver INTERRUPTED
 # mid-arm leaves one behind — and an untracked scratch file left in a worktree
 # has already been swept into another item's walk (CLAIMS.md, UI-38's delegation
