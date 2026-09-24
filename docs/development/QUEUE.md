@@ -356,7 +356,7 @@ scope: anchor a table declaration at line start OR immediately after a template 
 accepts-when: `content` matches once, and 114 declarations still read (the measured failure it moves: a second, string match that would keep a deleted table BUILT). NEGATIVE CONTROL: delete `content`'s declaration in a fixture and the probe reads NOT BUILT by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### M0-182 · queued — **47 OF 80 `bio-plane/test/nc-*.mjs` HARNESSES STILL WRITE THEIR PRISTINE COPY INSIDE THE WORKTREE, AND NOTHING GRADES THE CLASS (23 more unclassified, named not scored).** BOB #32 ruled a harness's pristine copy lives outside the worktree. Found by D-492's worker (F2). — owner M0.
+### M0-182 · running — **47 OF 80 `bio-plane/test/nc-*.mjs` HARNESSES STILL WRITE THEIR PRISTINE COPY INSIDE THE WORKTREE, AND NOTHING GRADES THE CLASS (23 more unclassified, named not scored).** BOB #32 ruled a harness's pristine copy lives outside the worktree. Found by D-492's worker (F2). — owner M0.
 order: after M0-188, AHEAD of the product rows (moved 2026-09-24 20:25Z by SCHEDULER #19): 7 in-worktree pens are NOT gitignored (.m0110-harness, .m0109-harness, .m037-harness, .m0100-harness, .m0107-harness, .vf1-control-pristine, .m0111-harness), so the tree is DIRTY while those controls run and a gate on it records nothing (Bob's 17:41Z rule; M0-179's sweep via CONDUCT #20)
 milestone: M0
 interface: none.
@@ -366,7 +366,7 @@ scope: one helper `controlPen(item)` (`mkdtempSync(join(tmpdir(), "nc-<item>-"))
 accepts-when: the sweep reads 0 IN-WORKTREE (the measured failure it moves: 47 of 80). NEGATIVE CONTROL: point one harness back into the worktree and the sweep names it.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### D-513 · queued — **`op=knock`'s TOO_LARGE (two sites) and EMPTY STILL REACH A KNOCKER UNTRANSLATED at the door D-508 catalogued, and `d278-codeless-refusals.test.mjs`'s header calls them "coded already" (true of `reason`, false of the translation).** Found by D-508's worker. — owner RECORD.
+### D-513 · running — **`op=knock`'s TOO_LARGE (two sites) and EMPTY STILL REACH A KNOCKER UNTRANSLATED at the door D-508 catalogued, and `d278-codeless-refusals.test.mjs`'s header calls them "coded already" (true of `reason`, false of the translation).** Found by D-508's worker. — owner RECORD.
 order: after D-510, with the product corrections: refusals a member cannot read at a public door, D-507's and D-508's class (SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:47Z)
 milestone: M2
 interface: I3 additive — three catalogued codes; the catalogue version moves; the integrator classifies.
@@ -376,7 +376,7 @@ scope: consolidate each code behind one governed helper (arm F reads them F4 mul
 accepts-when: each of the three arrives with its translation, and arm F reads each single-site. NEGATIVE CONTROL: return one code outside the helper and arm F names it multi-site (a behavioural arm cannot see it: `dec49Decorate` translates from the catalogue alone).
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-514 · queued — **THREE MORE READER SITES MEASURE RAW LENGTH WHERE D-501 RULED GLYPHS: `index.mjs` ~4519 attributes a whitespace-only page to the `layer` part on `p.text.length` (legistar-73550 p1: 39 characters, 0 glyphs); `mergeTier2Text` (textchain ~1365) and `mergeTier3Text` (index ~4313) refuse a whitespace-only base SAYING "it already holds N decoded character(s)", which is false; `needsTier2` (index ~4086) escalates on raw `counts.chars`.** Found by D-501's worker (F5, F3, F2). — owner CONTENT-PDF.
+### D-514 · running — **THREE MORE READER SITES MEASURE RAW LENGTH WHERE D-501 RULED GLYPHS: `index.mjs` ~4519 attributes a whitespace-only page to the `layer` part on `p.text.length` (legistar-73550 p1: 39 characters, 0 glyphs); `mergeTier2Text` (textchain ~1365) and `mergeTier3Text` (index ~4313) refuse a whitespace-only base SAYING "it already holds N decoded character(s)", which is false; `needsTier2` (index ~4086) escalates on raw `counts.chars`.** Found by D-501's worker (F5, F3, F2). — owner CONTENT-PDF.
 order: after D-513, with the extraction corrections: two of the three make the record claim what it does not hold, CLAUDE.md §2's worst class (SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:51Z)
 milestone: M2
 interface: none (`counts.chars` unchanged).
