@@ -69,7 +69,7 @@ const ARMS = {
 const run = () => {
   const r = spawnSync(process.execPath, [SUITE], { cwd: ROOT, encoding: "utf-8", timeout: 900000 });
   const out = (r.stdout || "") + (r.stderr || "");
-  const m = out.match(/browser-render: (\d+) pass (\d+) fail/);
+  const m = out.match(/browser-render: (\d+) pass, (\d+) fail/);
   const fails = [...out.matchAll(/^\s+FAIL\s+(\S+)/gm)].map((x) => x[1]);
   /* A SUITE THAT NEVER REACHED ITS OWN FOOT REPORTS -1, NEVER 0: a TypeError inside
      an assertion ends the module with the tally reading clean. */
