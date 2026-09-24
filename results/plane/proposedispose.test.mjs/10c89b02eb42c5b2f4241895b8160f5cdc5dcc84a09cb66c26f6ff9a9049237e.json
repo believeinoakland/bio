@@ -1,0 +1,16 @@
+{
+ "unit": "plane:proposedispose.test.mjs",
+ "inputHash": "10c89b02eb42c5b2f4241895b8160f5cdc5dcc84a09cb66c26f6ff9a9049237e",
+ "verdict": "PASS",
+ "run": "43227e602c6aabb32a706c221a6e51e78b8c8cc4.1790286877427.9447.json",
+ "tree": "43227e602c6aabb32a706c221a6e51e78b8c8cc4",
+ "head": "97e3fb7f4147346659ea7215eff4c0ecee432650",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 140,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "3d653bdb-372f-59a0-8308-d3da7604e52f",
+ "at": "2026-09-24T21:54:37.449Z"
+}
