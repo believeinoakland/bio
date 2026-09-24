@@ -1825,3 +1825,51 @@ Each ruling is in its home document, verified at the code; each row keeps its `D
 > **2026-09-23 ~19:58Z · BOB #31 · RULED: ONE SHAPE FOR "ADMITTED, BOUND NOT HELD" (CONDUCT #17's finding 1; D-420's worker flagged it too).** On `land/conduct/c17-batch1` @ 03035d2b, the same statement has two shapes on I5 mint answers: D-440 (IC-198) returns `undetermined: {level, why}` for an image `{part}`, and D-420 (IC-203/IC-204) returns `image_bound: {determined:false, empty_level, why}` for an image `{page, rect}`. RULING: every "admitted, but the bound is not held" answer carries ONE field, `undetermined: {level, why}`. That is D-440's shape, and it is the record's UNDETERMINED primitive (BIO_System_Design §3, construct 12). `image_bound` is withdrawn before any client reads it. Change it through ONE IC. PLACE: first in the backlog, depends-on the train that lands c17-batch1, because no client may read `image_bound` first. owner CONTENT-PDF (D-420's paths). ACCEPTS-WHEN: D-420's suite reads `undetermined.level` and `undetermined.why` for a `{page, rect}` on a pre-change PDF, and `git grep -n image_bound -- bio-plane civicos-ui` returns nothing. NEGATIVE CONTROL: restore the `image_bound` key, and D-420's suite fails by name.
 
 > **2026-09-23 ~19:58Z · BOB #31 · RULED: §3 OF THE MAP RENDERS EACH CLAIM'S FIRST SENTENCE, NOT ITS WHOLE TEXT (CONDUCT #17's finding 2: a merge tax).** `tools/status.mjs` `renderCell` joins every claim's whole text into `BIO_System_Design.md` §3. The map is CUT at 48 KiB (`tools/readbudget.mjs`), so every landing that adds a clause pushes it over. CONDUCT #17 had to trim 5 claim texts in construct-status.json to land one batch, which cuts the source of truth to fit its rendering. RULING: `renderCell` renders each claim's FIRST SENTENCE (up to the first `. ` outside backticks). The whole text stays in construct-status.json and is served by `node tools/status.mjs <n>`, whose pointer every cell already carries. The design pointer stays verbatim. The budget does not move. INTEGRATORS STOP TRIMMING CLAIM TEXTS FROM NOW ON (told to CONDUCT by trigger). PLACE: first in the backlog, ahead of the row above, because every train pays this cost. owner BOB-instrument (`tools/status.mjs`; BOB.md lists it among this lane's instruments), built by a worker. ACCEPTS-WHEN: `status.mjs --check` shows 0 drift after `--write`; the map is under budget with the 5 trimmed attributions restored in construct-status.json; and every OTHER reader of §3 is checked green, namely `statussweep` and `corpuscheck --authority` (they read the design pointer's "§N item M" pairs) and plancheck's front-matter arm. NEGATIVE CONTROL: render whole texts again, and the budget check FAILs naming the map.
+
+### Drained 2026-09-24 by SCHEDULER #18 — D-507's approved wording (a note on the running row), D-508's design home (a note; Intake Doctrine §2a once on main), D-511 and D-512 (replay), M0-172 (scratch pens)
+
+> - **2026-09-24 16:25Z · BOB #33 · D-507 WORDING APPROVED — amend the row's scope, no order change.** The six member-facing translations,
+>   drafted from each code's `detail` in `acknowledgeStatement` (store.mjs, origin/main 68fecb8d) in C-82.1's register. The worker uses
+>   these words as the `translation:` values (it may fix a factual error it finds at the code, and says so in its commit):
+>   - C-82.2 `STATEMENT_ACK_NO_SUBJECT`: "Say which statement you are acknowledging: a draft case, or a case document, by its case and
+>     edition, that has been written but not yet signed."
+>   - C-82.3 `STATEMENT_ACK_ALREADY_SIGNED`: "This edition of the case is already signed, and the signature covers its list of who
+>     acknowledged the statement, so a new acknowledgement could not appear in it. A signed edition is corrected only by publishing the
+>     next edition."
+>   - C-82.4 `STATEMENT_ACK_NOT_A_PARTICIPANT`: "Only someone who has joined the project that makes this case, or someone given a review
+>     copy of it, can acknowledge its statement. Being able to see a project is not the same as having joined it: an invited member who
+>     has not joined yet, and an administrator, cannot acknowledge it."
+>   - C-82.5 `STATEMENT_ACK_NO_STATEMENT`: "This draft does not yet say what its case leaves out, so there is nothing to acknowledge.
+>     Once an editor of the draft writes that statement, you can acknowledge it."
+>   - C-82.6 `STATEMENT_ACK_BY_ITS_AUTHOR`: "You wrote this statement. An acknowledgement means a second person has read what the case
+>     leaves out, so it has to come from someone else: another participant in the project, or a reader given a review copy. The case
+>     can be published without one, and will say so."
+>   - C-82.7 `STATEMENT_ACK_AUTHOR_UNDETERMINED`: "This draft does not record who wrote its statement, because it was written before the
+>     system kept that record, so it cannot tell whether you are its author. Ask an editor of the project to save the statement again;
+>     that records who wrote it, and you can acknowledge it after that. The case can be published either way."
+> - **2026-09-24 16:45Z · BOB #33 · CONSTRUCT 14's DOORBELL NOW HAS A DESIGN HOME: `docs/development/DOORBELL.md`** (land/bob/doorbell-home @ 0de38ae8, handed to
+>   CONDUCT to train). It folds BOB #32's 04:28Z knock-limit ruling at §4. Once it is on main, D-496's and D-508's `design:` lines cite
+>   `DOORBELL.md` §4 in place of BIO_System_Design §3 construct 14. No order change.
+> - **2026-09-24 17:00Z · BOB #33 · CORRECTION to the 16:45Z entry (Bob asked why the doorbell sat in a separate document):** there is NO
+>   `DOORBELL.md`. The doorbell is intake, and its design is folded into `docs/architecture/BIO_Intake_Doctrine_v1_1.md` **§2a** (same branch,
+>   land/bob/doorbell-home, new tip). Once it is on main, D-496's and D-508's `design:` lines cite Intake Doctrine §2a.
+> - **2026-09-24 17:05Z · BOB #33 · D-505's `replay` QUESTION RULED — two rows for RECORD, in this order** (design: INVESTIGATIVE-SESSION.md §11 item 5,
+>   "`replay` IS THE SERVER'S WORD", on land/bob/replay-ruling @ 8474837c, going out in CONDUCT's next train):
+>   (1) **A FENCE, small, placed high because it is a live hole in a landed fence:** in `op=promote`'s admission, delete a caller's `replay` unless
+>   the call is ADMIN class with no session (the class `migrate.mjs` uses since REC-173). Every other caller's promotion meets every fence. INVERT
+>   (do not delete) D-505's `risk-tier.test.mjs` §7 arm (ix). Accepts when a machine or session sending `replay: true` is refused C-32.19 by name
+>   and the migration suite migrates clean. NEGATIVE CONTROL: drop the class test, and arm (ix) fails by name. I3, FULL gate.
+>   (2) **The end state, a build that depends on (1):** honour `replay` only where the server verifies it: every replayed promotion, of any type
+>   and revision, names its drive-provenance capture, whose held bytes' preserved promotion record lists this bundle and this revision's `bundle.md`
+>   SHA-256 (REC-173's `migrationReplayOf`, generalised). Keep (1)'s class test as a second condition.
+> - **2026-09-24 17:12Z · BOB #33 · M0-155 finding 5 (scratch pens) RULED — one small M0 row, fold it into any open M0 batch rather than its own gate:**
+>   **A control driver's PEN is not a session's SCRATCH, and the two rules do not conflict.** BOB #32's 05:04Z rule (WORKER.md, "keep every
+>   scratch file out of your worktree") governs files a SESSION makes by hand: logs, baselines, clones. Those are untracked and NOT ignored, so
+>   they dirty the tree and get walked. A pen is a TOOL's own mechanism. It must work for any caller (cloud, Mac, the gate), and none of those
+>   can rely on a harness-named scratchpad. It is item-named and listed in `.gitignore`, so it neither dirties the tree nor enters git's view.
+>   **So in-worktree, gitignored, item-named pens STAND.** The row: (1) `status.control.mjs` removes `.status-harness/` on a clean run, like every
+>   other driver (M0-155 measured `pristine.status`, 25 KB, left behind); (2) `.gitignore`'s pen preamble stops citing WORKER.md as "never a shared
+>   scratchpad" and says instead: pens are a driver's mechanism, gitignored and item-named, and distinct from session scratch, which WORKER.md keeps
+>   in the session scratchpad; (3) WORKER.md's scratch bullet gains one clause: "a control driver's declared, gitignored pen is not scratch".
+>   Accepts when a clean `status.control.mjs` run leaves no `.status-harness/`. NEGATIVE CONTROL: remove the cleanup, and the arm that asserts the
+>   pen is gone fails by name.

@@ -23,6 +23,26 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-511 · queued — **A LIVE HOLE IN A LANDED FENCE: `op=promote` honours a caller's `replay: true`, so any machine or session can exempt its promotion from the fences D-505 built.** BOB #33 RULED (2026-09-24 17:05Z): *`replay` IS THE SERVER'S WORD* (INVESTIGATIVE-SESSION.md §11 item 5, on land/bob/replay-ruling @ 8474837c; cite until on main). — owner RECORD.
+order: at the backlog head: a live hole in a landed fence (BOB #33, 17:05Z: *placed high*; SCHEDULER #18)
+milestone: M7
+interface: I3 — a refusal where an answer stood; FULL gate.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 "The RUN is an object", item 5 as BOB #33's ruling states it (cite until folded).
+depends-on: D-505.
+scope: in promote's admission, delete a caller's `replay` unless the call is ADMIN class with no session (the class migrate.mjs uses since REC-173); INVERT, never delete, D-505's `risk-tier.test.mjs` §7 arm (ix).
+accepts-when: a machine or session sending `replay: true` is refused C-32.19 by name, and the migration suite migrates clean. NEGATIVE CONTROL: drop the class test and arm (ix) fails by name.
+added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
+
+### D-512 · queued — **`replay` IS HONOURED WITHOUT SERVER VERIFICATION: the end state BOB #33 ruled is that a replayed promotion of any type or revision names its drive-provenance capture, whose held bytes' preserved promotion record lists this bundle and this revision's `bundle.md` SHA-256.** — owner RECORD.
+order: after D-511, which it builds on (BOB #33, 17:05Z: *the end state, a build that depends on (1)*; SCHEDULER #18)
+milestone: M7
+interface: I3 — the integrator classifies.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 "The RUN is an object", item 5 as BOB #33's ruling states it (cite until folded), with REC-173's `migrationReplayOf`.
+depends-on: D-511.
+scope: generalise `migrationReplayOf` to every replayed promotion; keep D-511's class test as a second condition.
+accepts-when: a replay whose capture does not list the bundle and SHA-256 is refused by name; a verified one is admitted. NEGATIVE CONTROL: skip the verification and the unverified arm is admitted, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
+
 ### D-509 · queued — **A FALSE GREEN ON THE MACHINE-FENCE SENTINEL: `machine-fences.control.mjs` arm (2) stays green when it must fail. Driven, not read: with the identity predicate neutered, a machine's `op=strengthbar` DOES set the group's required evidentiary strength, but block (ix) reads back group=believe-in-oakland while the act writes to the store's PRODUCING group (D-436 moved the write, not the read).** Found by D-503's worker (id minted by it). — owner RECORD.
 order: at the backlog head: a control that cannot fail on the authority boundary no machine may cross (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:52Z)
 milestone: M7
@@ -53,15 +73,15 @@ scope: add the `\s*\(` tail `hygiene.test.mjs` (~line 685) uses; re-read the tab
 accepts-when: versions.test's table census equals M0-155's 114. NEGATIVE CONTROL: drop the tail and the `would` phantom returns, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### M0-165 · queued — **FOUR SUITES ARE SELECTED FOR ANY MEASUREMENTS-ONLY CHANGE BY A DATA STRING: `measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)"` in calibration, reextract, textchain and tier3-layer-parts reads to the gate as a MEASUREMENTS reader.** Found by M0-153's worker. — owner M0.
-order: after M0-160, with the gate-time rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:33Z)
+### M0-172 · queued — **`status.control.mjs` LEAVES ITS PEN BEHIND (`.status-harness/`, 25 KB `pristine.status`), and `.gitignore`'s pen preamble mis-cites WORKER.md.** BOB #33 RULED (17:12Z): a control driver's PEN is not a session's SCRATCH; in-worktree, gitignored, item-named pens STAND. — owner M0 (fold into any open M0 batch).
+order: after M0-171, small; fold into an open M0 batch rather than its own gate (BOB #33, 17:12Z; SCHEDULER #18)
 milestone: M0
 interface: none.
-design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
-depends-on: M0-153.
-scope: drop `.md` from those provenance labels; textchain's own /MEASUREMENTS/ assertion survives; expect ~45 → ~41 units, measured.
-accepts-when: a MEASUREMENTS-only diff no longer selects the four. NEGATIVE CONTROL: restore one `.md` label and that suite is selected again, by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+design: `docs/development/VERIFICATION.md` (a driver cleans up after a clean run), with BOB #33's ruling of 17:12Z (cite until folded).
+depends-on: M0-155.
+scope: (1) status.control.mjs removes `.status-harness/` on a clean run; (2) `.gitignore`'s pen preamble says pens are a driver's mechanism, gitignored and item-named, distinct from session scratch; (3) WORKER.md's scratch bullet adds "a control driver's declared, gitignored pen is not scratch".
+accepts-when: a clean status.control.mjs run leaves no `.status-harness/`. NEGATIVE CONTROL: remove the cleanup and the pen-gone arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:12Z; `node tools/mintid.mjs M0`).
 
 ### M0-166 · queued — **`VERIFICATION.md` HAS NO PROSE ON HOW THE GATE CLASSIFIES A DIFF OR SELECTS UNITS: the rule lives only in `gates.mjs`'s header comments, and M0-116, M0-143 and M0-153 each had to rediscover it.** Found by M0-153's worker. — owner M0 (the document's owner).
 order: after M0-165, the same subject; prose, small (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:33Z)
@@ -343,6 +363,16 @@ design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`risk_tier`: the words 
 depends-on: D-483.
 scope: a choice over `vocabularies.risk_tiers` in the app's action intake, unset by default, unset writing undetermined, words taken from the plane.
 accepts-when: a chosen tier is written and none chosen writes undetermined, against a real-plane suite. NEGATIVE CONTROL: default the choice to 1 and the unset arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs UI`).
+
+### UI-102 · queued — **A GOVERNING-LAWS PROPOSAL HAS A PLANE AND NO SURFACE: REC-195's the `actionlawspropose` op (not yet on main) and `action.governing_laws_proposals` reach no page (`8.governing-laws`: NOT BUILT, a MEMBER SURFACE for the proposal).** — owner UI.
+order: after UI-101, with the surfaces owed to landed plane rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 17:11Z)
+milestone: M4
+interface: I3 consumer (IC-267).
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (the governing laws of a records request, D-149).
+depends-on: REC-195.
+scope: the action page renders each proposal beside the governing-laws list under the plane's OWN `says`; it NEVER offers a proposal as a way to set the list.
+accepts-when: proposals render beside the list against a real-plane suite, and no control on the page sets the list from one. NEGATIVE CONTROL: add a "use this" control and the no-setter arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs UI`).
 
 ### REC-199 · queued — **`op=reviewcopy` DOES NOT ANSWER `newCase`, SO AN EDIT THAT WRITES THE READ BACK LOSES IT.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *op=reviewcopy answers `newCase`.* — owner RECORD.
@@ -1296,23 +1326,3 @@ depends-on: none.
 scope: `gates.mjs` (or the battery) runs the clock-advanced sweep at plus one year on the full class and prints its result line; each suite it turns red is named.
 accepts-when: the sweep runs without anyone starting it and its line is printed on a full gate. NEGATIVE CONTROL: plant a fixture dated thirty days ahead, and the sweep arm fails naming the suite.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### M0-135 · queued — **A LANE'S OWN `gates.mjs` ON A TREE ALREADY RECORDED GREEN TAKES §2d's TREE-KEYED SHORTCUT AND RUNS NO NEVER-CACHED UNIT (with `BIO_GATE_RESULTS=off`), SO A HISTORY- OR REF-READING CHECK IS SKIPPED ON A LANE'S PUSH.** M0-131 closed this for the TRAIN (`gates.mjs --never-cached` on a reused tree, so `main` is covered); a lane's gate is not. M0-131's worker's finding, verified in its report (CONDUCT #16); RE-READ 2026-09-23 by SCHEDULER #16 on `0e7cc03e` (M0-131 landed): NARROWED — with the per-unit record on (the default) §2d does not take the shortcut and the never-cached units run; the bare shortcut stands only with `BIO_GATE_RESULTS=off` (or no `tools/gateresults.mjs`) and no `--with-never-cached`. — owner M0.
-order: behind the product rows, first of the process block (moved 2026-09-23 by SCHEDULER #16): re-read at the code, the default path already runs the never-cached units, so this closes a non-default mode, neither cutting gate time nor unblocking product — Bob, 2026-09-22: *"The goal is BIO work; process is overhead"* (was: directly after REC-176, SCHEDULER #15)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §3a condition 1 (never-cached units always run) and §2 (M0-122's reuse), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: M0-131 (its derived never-cached set and `--never-cached` run are reused).
-scope: with the per-unit record off, §2d's shortcut on a recorded-GREEN tree behaves as `--with-never-cached`: it runs the derived never-cached set and records the tree GREEN only when they pass; the printed line says which units ran.
-accepts-when: `gates.mjs` on a recorded-GREEN tree with a planted history defect reads RED naming the never-cached unit. NEGATIVE CONTROL: restore the bare shortcut, and the planted arm reads GREEN and fails by name.
-added: 2026-09-23 · SCHEDULER #15 (M0-131's worker's finding via CONDUCT #16; `node tools/mintid.mjs M0`).
-
-### M0-137 · queued — **SUITES PASS ABBREVIATED COMMIT IDS TO GIT, SO A FETCH THAT BRINGS A COLLIDING PREFIX TURNS A GREEN SUITE RED WITH NO CODE CHANGE.** Re-read on `origin/main` @ `38b49c50`: `bio-plane/test/ledger.test.mjs` `PRE_MIGRATION = "9ea2eb02"` and `STATE_PIN = "de40aa56"`; `bio-plane/test/mergecarry.test.mjs` passes `"e241672"` to `git cat-file`, `auditMerge`, `git show` and the `tools/mergecarry.mjs --commit` CLI. — owner M0.
-order: first of the process block, directly after M0-135: a red on `main` from a git object, not the code, is TREE-SHARING §3's alarm to Bob, but no collision has happened, so it sits behind the product rows (SCHEDULER #16, 2026-09-23; M0-136's worker via CONDUCT #16)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON THE CODE"*), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: M0-136 (touches the same history readers; on `land/conduct/c16-batch6`).
-scope: every commit id a suite passes to git in CODE is the full 40-hex id (`9ea2eb022b5d6490c9e9e96b93037040193084d3`, `de40aa56f5d397666228502132d56756f51ff6b9`, `e2416725d2504485443ea24bb68a00009e886570`); a sweep of `bio-plane/test/` and `tools/` for other short ids passed to git, each lengthened or listed. Prose citations may stay short.
-accepts-when: `ledger.test.mjs` and `mergecarry.test.mjs` green with only 40-hex ids in their git calls, and a hygiene arm in `mergecarry.test.mjs` that fails by name on a short id passed to git. NEGATIVE CONTROL: shorten one id back, and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #16 (M0-136's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs M0`).

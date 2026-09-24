@@ -21,51 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
-- **2026-09-24 16:25Z · BOB #33 · D-507 WORDING APPROVED — amend the row's scope, no order change.** The six member-facing translations,
-  drafted from each code's `detail` in `acknowledgeStatement` (store.mjs, origin/main 68fecb8d) in C-82.1's register. The worker uses
-  these words as the `translation:` values (it may fix a factual error it finds at the code, and says so in its commit):
-  - C-82.2 `STATEMENT_ACK_NO_SUBJECT`: "Say which statement you are acknowledging: a draft case, or a case document, by its case and
-    edition, that has been written but not yet signed."
-  - C-82.3 `STATEMENT_ACK_ALREADY_SIGNED`: "This edition of the case is already signed, and the signature covers its list of who
-    acknowledged the statement, so a new acknowledgement could not appear in it. A signed edition is corrected only by publishing the
-    next edition."
-  - C-82.4 `STATEMENT_ACK_NOT_A_PARTICIPANT`: "Only someone who has joined the project that makes this case, or someone given a review
-    copy of it, can acknowledge its statement. Being able to see a project is not the same as having joined it: an invited member who
-    has not joined yet, and an administrator, cannot acknowledge it."
-  - C-82.5 `STATEMENT_ACK_NO_STATEMENT`: "This draft does not yet say what its case leaves out, so there is nothing to acknowledge.
-    Once an editor of the draft writes that statement, you can acknowledge it."
-  - C-82.6 `STATEMENT_ACK_BY_ITS_AUTHOR`: "You wrote this statement. An acknowledgement means a second person has read what the case
-    leaves out, so it has to come from someone else: another participant in the project, or a reader given a review copy. The case
-    can be published without one, and will say so."
-  - C-82.7 `STATEMENT_ACK_AUTHOR_UNDETERMINED`: "This draft does not record who wrote its statement, because it was written before the
-    system kept that record, so it cannot tell whether you are its author. Ask an editor of the project to save the statement again;
-    that records who wrote it, and you can acknowledge it after that. The case can be published either way."
-- **2026-09-24 16:45Z · BOB #33 · CONSTRUCT 14's DOORBELL NOW HAS A DESIGN HOME: `docs/development/DOORBELL.md`** (land/bob/doorbell-home @ 0de38ae8, handed to
-  CONDUCT to train). It folds BOB #32's 04:28Z knock-limit ruling at §4. Once it is on main, D-496's and D-508's `design:` lines cite
-  `DOORBELL.md` §4 in place of BIO_System_Design §3 construct 14. No order change.
-- **2026-09-24 17:00Z · BOB #33 · CORRECTION to the 16:45Z entry (Bob asked why the doorbell sat in a separate document):** there is NO
-  `DOORBELL.md`. The doorbell is intake, and its design is folded into `docs/architecture/BIO_Intake_Doctrine_v1_1.md` **§2a** (same branch,
-  land/bob/doorbell-home, new tip). Once it is on main, D-496's and D-508's `design:` lines cite Intake Doctrine §2a.
-- **2026-09-24 17:05Z · BOB #33 · D-505's `replay` QUESTION RULED — two rows for RECORD, in this order** (design: INVESTIGATIVE-SESSION.md §11 item 5,
-  "`replay` IS THE SERVER'S WORD", on land/bob/replay-ruling @ 8474837c, going out in CONDUCT's next train):
-  (1) **A FENCE, small, placed high because it is a live hole in a landed fence:** in `op=promote`'s admission, delete a caller's `replay` unless
-  the call is ADMIN class with no session (the class `migrate.mjs` uses since REC-173). Every other caller's promotion meets every fence. INVERT
-  (do not delete) D-505's `risk-tier.test.mjs` §7 arm (ix). Accepts when a machine or session sending `replay: true` is refused C-32.19 by name
-  and the migration suite migrates clean. NEGATIVE CONTROL: drop the class test, and arm (ix) fails by name. I3, FULL gate.
-  (2) **The end state, a build that depends on (1):** honour `replay` only where the server verifies it: every replayed promotion, of any type
-  and revision, names its drive-provenance capture, whose held bytes' preserved promotion record lists this bundle and this revision's `bundle.md`
-  SHA-256 (REC-173's `migrationReplayOf`, generalised). Keep (1)'s class test as a second condition.
-- **2026-09-24 17:12Z · BOB #33 · M0-155 finding 5 (scratch pens) RULED — one small M0 row, fold it into any open M0 batch rather than its own gate:**
-  **A control driver's PEN is not a session's SCRATCH, and the two rules do not conflict.** BOB #32's 05:04Z rule (WORKER.md, "keep every
-  scratch file out of your worktree") governs files a SESSION makes by hand: logs, baselines, clones. Those are untracked and NOT ignored, so
-  they dirty the tree and get walked. A pen is a TOOL's own mechanism. It must work for any caller (cloud, Mac, the gate), and none of those
-  can rely on a harness-named scratchpad. It is item-named and listed in `.gitignore`, so it neither dirties the tree nor enters git's view.
-  **So in-worktree, gitignored, item-named pens STAND.** The row: (1) `status.control.mjs` removes `.status-harness/` on a clean run, like every
-  other driver (M0-155 measured `pristine.status`, 25 KB, left behind); (2) `.gitignore`'s pen preamble stops citing WORKER.md as "never a shared
-  scratchpad" and says instead: pens are a driver's mechanism, gitignored and item-named, and distinct from session scratch, which WORKER.md keeps
-  in the session scratchpad; (3) WORKER.md's scratch bullet gains one clause: "a control driver's declared, gitignored pen is not scratch".
-  Accepts when a clean `status.control.mjs` run leaves no `.status-harness/`. NEGATIVE CONTROL: remove the cleanup, and the arm that asserts the
-  pen is gone fails by name.
+
 
 ## THE CACHE — the next rows, in order
 
@@ -221,6 +177,7 @@ design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 1
 depends-on: REC-193.
 scope: rows C-82.2..C-82.7 in STATEMENT_ACK_CHECKS inside a DEC-49 REGION; route acknowledgeStatement's returns through its `refusal` helper; rebuild the bundle; move check-refusal-codes' floors from the print.
 accepts-when: each of the six arrives with its translation. NEGATIVE CONTROL: return one code outside the helper and the DEC-49 guard names it.
+note: 2026-09-24 16:25Z — BOB #33 APPROVED the six `translation:` values (C-82.2..C-82.7): use them verbatim, as drained to `docs/archive/ledgers/BOB-INBOX-drained.md` ("Drained 2026-09-24 by SCHEDULER #18"); the worker may fix a factual error at the code and says so in its commit.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### D-508 · running — **THE KNOCK LIMITER'S REFUSALS ARE BARE STORE REASONS: RATE_IP and RATE_GLOBAL carry no DEC-49 code or translation, so a refused knocker reads a raw reason.** Found by D-496's worker. — owner RECORD.
@@ -231,6 +188,7 @@ design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 1
 depends-on: D-496.
 scope: catalogue RATE_IP and RATE_GLOBAL with translations in a DEC-49 REGION on the knock path, through one helper; move the floors from the print.
 accepts-when: a rate refusal arrives with its code and translation. NEGATIVE CONTROL: return the bare reason and the guard names it.
+note: 2026-09-24 17:00Z — BOB #33: the doorbell's design folds into `BIO_Intake_Doctrine_v1_1.md` §2a (land/bob/doorbell-home); once on main, this row's `design:` cites Intake Doctrine §2a.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### REC-212 · running — **THE CASE DOCUMENT CONFLATES TWO ACTS: `completeness.author` names who PREPARED AND PUBLISHED it, and C-41.10's author exclusion reads that name, so the writer of the statement can ratify it when someone else published.** REC-193's finding (1). BOB #32 RULED (b), 2026-09-24 06:11Z (cite until folded): two acts, two names, never conflated. — owner RECORD.
@@ -312,6 +270,16 @@ design: `docs/development/VERIFICATION.md` (a check that cannot fail is worse th
 depends-on: none.
 scope: a `--check` arm failing any probe `hit` that matches more than once in its file; re-pin every claim it names.
 accepts-when: `node tools/status.mjs --check` reads 0 ambiguous probes. NEGATIVE CONTROL: widen one claim's `hit` to match twice and the arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-165 · queued — **FOUR SUITES ARE SELECTED FOR ANY MEASUREMENTS-ONLY CHANGE BY A DATA STRING: `measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)"` in calibration, reextract, textchain and tier3-layer-parts reads to the gate as a MEASUREMENTS reader.** Found by M0-153's worker. — owner M0.
+order: after M0-160, with the gate-time rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:33Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
+depends-on: M0-153.
+scope: drop `.md` from those provenance labels; textchain's own /MEASUREMENTS/ assertion survives; expect ~45 → ~41 units, measured.
+accepts-when: a MEASUREMENTS-only diff no longer selects the four. NEGATIVE CONTROL: restore one `.md` label and that suite is selected again, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
