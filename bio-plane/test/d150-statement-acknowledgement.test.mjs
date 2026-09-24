@@ -72,6 +72,34 @@
    it is the SECOND act, after one document is signed, that re-authors MAX of them; the arm that catches the write is
    the byte-identity arm after both acts, which failed. An arm that reads "nothing was written" is about ONE act.
 
+   NEGATIVE CONTROL: RE-RUN 2026-09-24 ON THE UNION by the REC-194 worker, after CONDUCT #20's merge of
+   c20-batch24b (REC-212's `writer` exclusion) into this branch. **RE-RUN BECAUSE THE SUBJECT MOVED, NOT AS
+   DILIGENCE:** the union put a parameter between `exceptAuthor` and `draftId` and rewrote the predicates
+   these arms break, so a control taken before it is a claim about a function that no longer exists. Each arm
+   ALONE on `src/store.mjs`, restored by `cp` from a uniquely-named per-arm pristine copy verified by sha256
+   (`3d0a2e09...`, both arms) AND by `cmp` (content identical, 3,297,589 B, floored at 3,000,000) — never
+   `git checkout --`. BOTH ARMS WERE RUN AGAINST TWO SUITES, because after the union two suites read this one
+   function: this one and `rec212-statement-writer.test.mjs`.
+   (0) BASELINE on the union, nothing armed -> d150 64/0, rec212 45/0, d507 63/0; and 64/0 again after EACH
+   restore, re-run to prove the restore rather than trusting `cp`.
+   (a) MATCH BY THE STATEMENT'S HASH ALONE (`case_id IS ? OR 1=1`, `? = '*' OR draft_id = ? OR 1=1`)
+   -> d150 51/13, the named twin-case arm failing BY NAME, exactly as on the pre-union tree; AND rec212
+   44/1. **THAT SECOND FIGURE IS THE MOST USEFUL THING THIS RE-RUN PRODUCED.** REC-194's narrowing moved a
+   draft-given row out of REC-212's writer withholding and into `unbound`, so block 5's arm there had to be
+   corrected — and a correction that merely ACCOMMODATED the narrowing would pass under this arm too. It
+   fails instead, `want [0,[],1,null]` against `got [0,[],1,1]`: with hash-only matching the row is matched
+   again and withheld as possibly-the-writer's, so the corrected arm PINS the narrowing at REC-212's altitude
+   rather than yielding to it. A corrected assertion that cannot fail is worse than none.
+   (b) THE DRAFT DOOR MATCHED BY STATEMENT TEXT ACROSS THE PROJECT -> d150 58/6, both accepts-when
+   second-clause arms failing BY NAME, every LISTING arm green; rec212 45/0 UNTOUCHED, as it must be — that
+   arm breaks the DOCUMENT read and REC-212 reads the LISTING one. The two arms remain separable on the union.
+   AND D-507'S OWN CONTROL WAS RE-RUN ON THE UNION IN ONE STEP (`node
+   test/d507-statement-ack-translation.control.mjs`, CONDUCT #20 asked for it because its arm (a) needle
+   quotes the by-its-author region this merge touched): baseline 63/0 guard exit 0, arm (a) 61/2 guard exit 1
+   naming `is-statement-ack-by-its-author`, arm (b) 61/2 guard exit 1, arm (c) over-strictness 63/0 guard
+   exit 0 — ALL FOUR AS DECLARED, every restore verified by sha256, content AND `cmp`, pen removed. The
+   union disarmed none of it.
+
    D-150 / BIO_Publication_v0_1.md §3 rule 11 (BOB #27, 2026-09-22) — THE EXCLUSION STATEMENT IS
    CHECKED BY A SECOND PERSON, AND THE CHECK IS DISCLOSED, NEVER ENFORCED.
 
