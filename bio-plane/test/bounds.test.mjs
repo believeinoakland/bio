@@ -573,6 +573,10 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      not the caller's, and it REFUSES rather than cuts: `BASIS_VERSION_LEGS_MAX` over the question's
      reasons, because a partition checked over a truncated basis could pass as covering reasons it never
      saw. DRIVEN below with the refusal arm, and carried in DRIVEN_ELSEWHERE for versionstrength's reason. */
+  /* MOVED 36 -> 37 on 2026-09-23 by D-256, from THIS ARM'S OWN FAILURE OUTPUT (`want 36 / got 37`), never by
+     adding: op=changedfromaudit, born with its bound as named constants (CHANGED_FROM_AUDIT_LIMIT_DEFAULT/_MAX,
+     op=versionchain's pair reused) declared BELOW the method on REC-116's finding. It bounds a listing by
+     `slice`, biasManifest's shape, because the three totals must be counted over every affected bundle. */
   /* MOVED 37 -> 39 AT INTEGRATION by c18-batch7fix for CONDUCT #18 (2026-09-23, land/conduct/c17-batch7), from
      THIS ARM'S OWN FAILURE OUTPUT on the union tree (`want 37 / got 39`), never by adding. Three rows met here,
      each gating only its own suites: D-148's `op=actionquotes` (`LIMIT ?` against the named `QUOTES_MAX`),
@@ -581,7 +585,7 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      same union: `op=biasmanifest` still dispatches to `biasManifest`, which now only delegates to the private
      `#biasManifestNow` where the cap lives, so the dispatched segment carries no cap and c17-batch5 alone prints
      36 (that departure, and the "driven but not found" arm it causes, are c17-unionfix's). Neither side's figure is the other's plus three: 39 is what this walk printed. */
-  OPS.size, 39);
+  OPS.size, 40);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1363,6 +1367,13 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      versionstrength's reason: a caller has no business asking for HALF a
                                      partition. Its bound REFUSES (C-71.7) and is driven below. */
                                   "partitionindependence",
+                                  /* D-256: op=changedfromaudit bounds its LISTING under
+                                     CHANGED_FROM_AUDIT_LIMIT_MAX (its three totals are always whole).
+                                     Its BITE needs bodies carrying addGo's changed-from sentence at
+                                     addresses with a version chain, which is `versionchain.test.mjs`'s
+                                     sixty-version fixture — so the bite, the clamp, `truncated` and total
+                                     paging are driven there in section 15; the envelope arm is below. */
+                                  "changedfromaudit",
                                   /* D-148, joined at integration by c18-batch7fix (2026-09-23): op=actionquotes
                                      takes NO `limit` from the caller — its bound is `QUOTES_MAX`, published as
                                      `max` beside `truncated`, so the loop's descriptor (ask for a bite of one,
@@ -1617,6 +1628,10 @@ const answersByOp = new Map([
   /* REC-126: the envelope of the review copy's read with no draft to key on — the ONE dead answer, an
      object and never an array. The bite is driven in `test/reviewcopy.test.mjs` (DRIVEN_ELSEWHERE). */
   ["reviewcopy", await GET("op=reviewcopy&token=mem-r57&draft=DRAFT-2026-0000&limit=1")],
+  /* D-256: the envelope of the changed-from audit over a store holding no such sentence — an object with its
+     totals, never an array. Admin-fenced, so the admin token. The bite is driven in `test/versionchain.test.mjs`
+     section 15 (DRIVEN_ELSEWHERE). */
+  ["changedfromaudit", await GET("op=changedfromaudit&token=adm-r57&limit=1")],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

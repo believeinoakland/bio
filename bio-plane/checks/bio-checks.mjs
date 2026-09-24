@@ -12607,6 +12607,42 @@ export const PROJECT_AUTHORITY_CHECKS = {
   },
 };
 
+/* REC-149 / C-70 — A DISCOVERABLE PROJECT SHOWS ITS EXISTENCE, NOT ITS DOORS (Membership Architecture
+ * v2 §7, item 7.14, BOB #16 from Bob's ruling of 2026-09-18, *"each project chooses"*). A member who
+ * is outside a DISCOVERABLE project sees its id and name in the directory, and nothing else. Every act
+ * such a member aims at it — other than the request to join — is refused POSITIONALLY with this code,
+ * carrying the project's id and name and NOTHING else. A "does not exist" answer there would be false
+ * about a project the directory has just shown the caller; a HIDDEN project still answers exactly as
+ * one that does not exist (§7.9, REC-138), and this code is never said about one. Minted in ONE region,
+ * `Store#existenceOnly`, which every act's sight check relays. */
+export const PROJECT_VISIBILITY_CHECKS = {
+  PROJECT_SEEN_NOT_A_PARTICIPANT: {
+    check: 'C-70.1',
+    where: 'src/store.mjs #existenceOnly > is-project-existence-only',
+    translation: 'This project can be found, but you are not one of its participants, so you cannot do '
+      + 'that in it or see what is inside it. Nothing was changed. You can ask its owners to add you.',
+  },
+  PROJECT_VISIBILITY_NOT_THE_OWNER: {
+    check: 'C-70.2',
+    where: 'src/store.mjs projectVisibilitySet > is-project-visibility-owner',
+    translation: 'Only an owner of this project can choose whether it can be found. You are not one of '
+      + 'its owners, and seeing a project does not let you direct it — administrators included. '
+      + 'Nothing was changed.',
+  },
+  PROJECT_VISIBILITY_UNKNOWN_SETTING: {
+    check: 'C-70.3',
+    where: 'src/store.mjs projectVisibilitySet > is-project-visibility-owner',
+    translation: 'A project is either discoverable or hidden, and nothing else. Nothing was changed. '
+      + 'Choose one of the two.',
+  },
+  PROJECT_DIRECTORY_NEEDS_A_MEMBER: {
+    check: 'C-70.4',
+    where: 'src/store.mjs projectDirectory > is-project-directory-member',
+    translation: 'The list of projects you can ask to join is for a signed-in member. Sign in as yourself to '
+      + 'see it.',
+  },
+};
+
 /* REC-137 / C-57 — A CASE RATIFICATION'S AUTHORITY IS ITS SIGNATURES, AND THEY MUST INCLUDE AN
  * OWNER OF THE PUBLISHING PROJECT (Membership Architecture v2 §7, the bullet *"A CASE
  * RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18; DEC-72 clause 5:
@@ -13664,8 +13700,48 @@ export const CONNECTION_PAIR_CHECKS = {
       + 'linked the two documents through the strongest-graded mention without anyone choosing '
       + 'which mention is the one on point. Because another mention bears on the part you cited, '
       + 'whether this connection reaches your citation is undetermined rather than yes or no. A '
-      + 'citation of the document as a whole is answered today; choosing which mention is the '
-      + 'on-point one for this connection is not yet something the record lets anyone do.',
+      + 'citation of the document as a whole is answered today; a member may also choose which '
+      + 'mention is the on-point one for this connection, and the answer then follows that choice.',
+  },
+};
+
+/* REC-122 / D-161 act (3) / IC-232 — THE MEMBER'S CHOICE OF THE ON-POINT PAIR, C-74
+ * (minted with `node tools/mintid.mjs C`; C-68 was minted first and found TAKEN on an
+ * in-flight landing branch, so it was abandoned — gaps cost nothing).
+ *
+ * ITS OWN FAMILY AND NOT A SUB-NUMBER OF C-49, because C-49 is a READ's answer about
+ * what a portion may earn and this is an ACT's refusal: the three ways a member's
+ * choice could record something that was not established — a choice nobody made
+ * (a machine credential, or no name at all), a choice about a connection the record
+ * does not hold (or holds out of the chooser's sight, answered identically), and a
+ * choice of a mention the document does not carry. REC-86's C-50.5 is the leg-side
+ * twin of the first and its wording is mirrored on purpose.
+ *
+ * ONE REGION, `is-connection-choice`, in `Store#chooseConnectionPair`; one helper
+ * named `refusal`; every code a literal at its site. */
+export const CONNECTION_CHOICE_CHECKS = {
+  CONNECTION_CHOICE_NOT_A_MEMBER: {
+    check: 'C-74.1',
+    where: 'src/store.mjs chooseConnectionPair > is-connection-choice',
+    translation: 'Choosing which mention of a subject is the one on point for a connection is a '
+      + 'member\'s own act, done in their name. A machine may point out the mentions a document '
+      + 'holds, but deciding which one a connection rests on is a judgment a person signs for.',
+  },
+  CONNECTION_CHOICE_NO_CONNECTION: {
+    check: 'C-74.2',
+    where: 'src/store.mjs chooseConnectionPair > is-connection-choice',
+    translation: 'That request does not name a connection this record holds and you can see. A '
+      + 'connection is named by the two documents it joins and the subject that joins them, and '
+      + 'it exists once the record has derived it — choose after it appears among the document\'s '
+      + 'connections.',
+  },
+  CONNECTION_CHOICE_NOT_A_MENTION: {
+    check: 'C-74.3',
+    where: 'src/store.mjs chooseConnectionPair > is-connection-choice',
+    translation: 'The mention named is not one this document carries for that subject. The choice '
+      + 'is among the places the record actually read the subject in this document, by the '
+      + 'reference as the reading recorded it; a mention the record never read cannot be the one '
+      + 'a connection rests on.',
   },
 };
 

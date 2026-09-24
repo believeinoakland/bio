@@ -861,6 +861,7 @@ export const RUNG_ABSENT = {
   actioncorrespond:     { ground: "undetermined", is: "records what came back from outside the system — REC-23's counterparty, named or honestly undetermined" },
   actionlaws:           { ground: "undetermined", is: "a member's attributed statement of the laws governing an action's request (D-149); restated by a further act, never cleared, and the Session Log keeps what each statement replaced" },
   projectfork:          { ground: "undetermined", is: "creates a NEW project; the source object is unchanged, and nothing folds a fork back" },
+  projectvisibilityset: { ground: "undetermined", is: "an owner's recorded, append-only choice of whether a project is DISCOVERABLE or HIDDEN (Membership v2 §7.14, REC-149); it sets no state on the project's document" },
   biasadopt:            { ground: "undetermined", is: "the authored, attributed adoption putting a declared-bias set in force for a scope (DEC-54 c/d)" },
   strengthbar:          { ground: "undetermined", is: "the GROUP's declared default required strength (DEC-17)" },
   entitycreate:         { ground: "undetermined", is: "a registry write introducing a SUBJECT (safeguard 4)" },
@@ -928,6 +929,12 @@ export const RUNG_ABSENT = {
      rather than undoing the first. The act writes a NEW reading, born `suggested`,
      and moves nothing existing — so it is corrected forward and never signed. */
   narrow:               { ground: "undetermined", is: "a member writes a NEW reading of a question's evidence with one citation pointing at LESS of its document; the old reading and its citation are untouched, and the new one is born suggested (Bob's 5.3)" },
+  /* REC-122 / IC-232 — CHOOSING A CONNECTION'S ON-POINT MENTION, ground `undetermined` on
+     `narrow`'s measurement one row up: none of its refusals (C-74) is in
+     `JUSTIFICATION_REFUSALS`, and widening that class would be this item re-grading the ladder
+     to suit itself. NOT `reversible`: nothing takes a choice back; a re-choice SUPERSEDES it and
+     the old row is retained, which is corrected forward. Never signed, and never the machine's. */
+  connectionchoose:     { ground: "undetermined", is: "a member records WHICH mention of a subject, on one end of one connection, is the one on point; the machine's strongest-graded pair is kept beside it, and a re-choice supersedes and retains the old (Bob's 5.4 second pass)" },
   /* REC-87 / IC-128 — TRANSCRIBE and the attestation of a typing. Ground
      `undetermined` on `attesttext`'s and `narrow`'s measurement: neither act's
      refusals are in `JUSTIFICATION_REFUSALS` (an empty typing, C-52.6, is not a
@@ -1723,6 +1730,16 @@ export const ACTS = [
   { id: "projectownerrescue", label: "Add an owner to a project whose owners are all inactive (with a reason)",
     weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.rescue_open === true },
+  /* REC-149 (Membership v2 §7.14): WHETHER THIS PROJECT CAN BE FOUND — an OWNER's recorded act on the project
+     that is the TARGET. It asks the PAIR fact `project_target_owner` (`#isProjectOwner(target, caller)`, the one
+     owner predicate `projectVisibilitySet` refuses on), never D-310's `project_owner` (owner of SOME project),
+     which would offer it on every project to anyone owning any — D-311's argument (2) for the roster acts. It is
+     offered on `=== true` ONLY: the store refuses every other caller, a machine credential included (C-70.2),
+     so a null (no roster position) must not publish it — this is a NEW act, so no existing act set moves.
+     Weight `single`: one project, one setting. */
+  { id: "projectvisibilityset", label: "Choose whether this project can be found", weight: "single",
+    types: ["project"],
+    applies: (f, ty) => ty === "project" && f.project_target_owner === true },
 ];
 
 /* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
@@ -1800,6 +1817,11 @@ export const NON_ACTS = {
   narrow: "leg-directed: makes ONE leg of ONE reading point at less of its document, keyed by (inquiry, reading, ordinal); writes a new reading and moves nothing existing",
   /* REC-86: the candidate list is a READ, on `extractproposals`' reasoning below. */
   narrowcandidates: "read: the machine's proposals for making one leg more specific, keyed by (inquiry, reading, ordinal); labelled machine work and writes nothing",
+  /* REC-122 / IC-232. NOT an object-directed act, for `narrow`'s reason: its subject is ONE END
+     of ONE CONNECTION — (capture, other capture, entity) — and `affordanceFacts` carries no
+     connections, so an applies() over those facts would offer it on every document. The surface
+     that offers it is the connection display (UI's, DELEGATED), where the connection is in hand. */
+  connectionchoose: "connection-directed: records which mention is on point on ONE end of ONE connection, keyed by (capture, other capture, entity); writes a choice row beside the machine's pair and moves nothing existing",
   /* REC-146: the CONTRADICTION pairing read is a NON_ACT for a reason one step
      stronger than `narrowcandidates`' above, and it is worth stating because the
      surfacing item (PRESENT) will be tempted to make it one. It is not

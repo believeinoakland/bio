@@ -870,6 +870,12 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     projectownerarith: "REC-30: an owner count is existence",
     projectparticipants: "7.8, gated by PARTICIPATION on the server-stamped `by`: a non-participant "
       + "is told what a nonexistent project would tell them",
+    /* REC-149 (Membership v2 §7.14), classified at birth. */
+    projectvisibility: "REC-149: the setting and its history are answered only through `#inSight` (FULL sight, "
+      + "the D-15 predicate); a caller without it is told what a nonexistent project would tell them",
+    projectdirectory: "REC-149: every row is asked through `Store#sight` and listed only at EXISTENCE — a "
+      + "DISCOVERABLE project the caller is outside; it names the id and name and nothing else, and a hidden "
+      + "project is never in it (driven in project-discoverable.test.mjs §2-§3)",
     /* REC-14's reads, classified at the merge (2026-08-04, rec30-agent). The
        classifications are security judgments and they are this item's to make. */
     excludedby: "REC-14 gated it at birth, correctly and through the same one compilation point. It is "
@@ -1279,6 +1285,11 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     snapkeycensus: "CLASS-FENCED to admin and probe (no member class), so no member session reaches it — "
       + "registeraudit's fence, and for its reason: it is an audit of the working corpus that lists bundle ids whose "
       + "manifest lost a row to a repeated snap key; probe is confined by scopeFor to the scratch namespace, a "
+      + "different Durable Object. It writes nothing.",
+    /* D-256, 2026-09-23. Classified by the item that adds it. */
+    changedfromaudit: "CLASS-FENCED to admin and probe (no member class), so no member session reaches it — "
+      + "registeraudit's fence, and for its reason: it is an audit of the working corpus that lists bundle ids whose "
+      + "body carries addGo's changed-from sentence; probe is confined by scopeFor to the scratch namespace, a "
       + "different Durable Object. It writes nothing.",
     /* PL-4 / IS-4, 2026-08-08. Classified by the item that adds it. */
     capturerequestdraining: "CLASS-FENCED to admin, probe and daemon (NO MEMBER CLASS), so no member "

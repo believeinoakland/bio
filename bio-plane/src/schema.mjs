@@ -1146,6 +1146,34 @@ CREATE INDEX IF NOT EXISTS connections_a ON connections(a_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_b ON connections(b_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_a_bundle ON connections(a_bundle_id);
 CREATE INDEX IF NOT EXISTS connections_b_bundle ON connections(b_bundle_id);
+-- REC-122 / D-161 act (3) / IC-232, 2026-09-23: A MEMBER'S CHOICE OF THE ON-POINT
+-- MENTION on one end of a connection (Bob's 5.4 second pass: specificity is worked
+-- for, not merely permitted). The connection's own pair stays the machine's
+-- strongest-graded selection and is NEVER rewritten by a choice -- a re-derivation
+-- would overwrite it, and the machine's selection and a member's judgment are two
+-- facts. So the choice lives beside the row, keyed by the connection's own primary
+-- key plus the END ('a' or 'b') it is about, and names the mention by its reference
+-- exactly as the reading recorded it (resolutions.ref). APPEND-ONLY: a re-choice
+-- stamps superseded_at on the current row and writes a new one, so the old is
+-- retained (REC-86's rule). superseded_at NULL = the current choice. The two bundle
+-- ids are carried so a per-bundle purge clears a choice with the connection it is
+-- about (D-113). No position is stored: WHERE the mention was read is the reading's
+-- fact (reading_refs), read at answer time, so a choice cannot freeze a position the
+-- record later corrects.
+CREATE TABLE IF NOT EXISTS connection_pair_choices (
+  choice_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  a_capture_sha TEXT NOT NULL,
+  b_capture_sha TEXT NOT NULL,
+  entity_id     TEXT NOT NULL,
+  side          TEXT NOT NULL,  -- which end the choice is about, a or b
+  ref           TEXT NOT NULL,  -- the chosen mention, as resolutions.ref holds it
+  a_bundle_id   TEXT,
+  b_bundle_id   TEXT,
+  chosen_by     TEXT NOT NULL,  -- the member, stamped by the control plane
+  at            TEXT NOT NULL,
+  superseded_at TEXT            -- NULL = current, else when a later choice replaced it
+);
+CREATE INDEX IF NOT EXISTS connection_pair_choices_end ON connection_pair_choices(a_capture_sha, b_capture_sha, entity_id, side);
 -- CONSTRUCTS Step 5, SLICE A (FW-8): the PROGRESSION DEFINITION as data (framework
 -- section 8.2, "generalises the connection table rather than sitting beside it"). A
 -- definition is a named ordered set of STAGES with the rules a progression's junction
@@ -3760,6 +3788,26 @@ CREATE TABLE IF NOT EXISTS group_domain_checks (
   status      INTEGER,
   detail      TEXT
 );
+-- REC-149 (Membership Architecture v2 section 7, item 7.14, BOB #16 from Bob's
+-- ruling of 2026-09-18, "each project chooses"): DISCOVERABLE or HIDDEN, as an
+-- OWNER'S RECORDED ACT and never a field of the project document, because a
+-- joined participant may revise that document and would then set an owner's
+-- choice. APPEND-ONLY, one row per act, the current setting is the LATEST row
+-- (highest seq for the project). A project with NO row reads HIDDEN: every
+-- project that existed before this table was created under section 7.9's
+-- promise that the uninvited see not its existence, and no migration writes a
+-- row for any of them. Keyed on project_id, a bundle id, so both purge arms
+-- clear it with the project (the project_participants precedent).
+CREATE TABLE IF NOT EXISTS project_visibility (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id TEXT NOT NULL,
+  setting    TEXT NOT NULL CHECK (setting IN ('discoverable','hidden')),
+  set_by     TEXT NOT NULL,       -- the owner who set it, a member id
+  reason     TEXT,                -- optional, the owner's own words
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility(project_id, seq);
+-- =========================================================================
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
