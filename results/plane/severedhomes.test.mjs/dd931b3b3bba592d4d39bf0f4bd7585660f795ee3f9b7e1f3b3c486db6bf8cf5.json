@@ -1,0 +1,16 @@
+{
+ "unit": "plane:severedhomes.test.mjs",
+ "inputHash": "dd931b3b3bba592d4d39bf0f4bd7585660f795ee3f9b7e1f3b3c486db6bf8cf5",
+ "verdict": "PASS",
+ "run": "71af025a092b3781b3e0560db536ef1886b1ae5f.1790257735523.1172.json",
+ "tree": "71af025a092b3781b3e0560db536ef1886b1ae5f",
+ "head": "dd324152c9d999b9a0cc8cadc99947c15bebdd88",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 998,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "5681ba5f-7f41-5042-972d-e173019e22a7",
+ "at": "2026-09-24T13:48:55.539Z"
+}
