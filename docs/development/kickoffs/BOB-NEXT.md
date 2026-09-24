@@ -67,3 +67,4 @@ commit on main for 120+ min. INBOX → SCHEDULER: undrained BOB INBOX entries.
   BOB #32's 04:28Z knock-limit ruling there (the limiter is a BOUND, a sliding window, not a rate target; IC-262 made it I3 82.0.0).
   D-496 and D-508 cite BIO_System_Design §3 construct 14 until then. Also: D-507 (six STATEMENT_ACK_* codes untranslated) asks BOB to
   approve the six member-facing sentences' wording.
+- 08:44Z: c20-batch14 FINISHED (tip d026654d, gate green, I3 86.3.0) WITHOUT merging main 6761e903: the merger renumbers IC-262 to I3 87.0.0, re-reads ratchets, trains it alone (CONDUCT-NEXT @ aa4de671).
