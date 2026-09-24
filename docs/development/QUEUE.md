@@ -205,7 +205,7 @@ added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 order: after D-480, the same disclosure class at the head (BOB #32, 02:30Z: *"Row it as disclosure-class, beside D-480 at the head"*; SCHEDULER #18, 2026-09-24)
 milestone: M8
 interface: I3 — the served counts subtract; shapes unchanged.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.9), with BOB #32's ruling of 2026-09-24 02:30Z (cite until folded): a hidden project's run output is the PROJECT'S THINKING until something outside uses it; the bytes stay shared, only the run's attribution is withheld. `OBSERVATION-LOG-DESIGN.md` §6 ties the readers.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.9), and `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5 (BOB #32's ruling, folded at 16fe1e7f): a run over a hidden project is the project's thinking; the bytes stay shared, only the run's attribution is withheld. `OBSERVATION-LOG-DESIGN.md` §6 ties the readers.
 depends-on: none.
 scope: one predicate excluding run rows whose context is a hidden project from every tally a caller outside its sight reads, all five readers together.
 accepts-when: a run over a hidden project leaves each reader's answer to an outsider unchanged. NEGATIVE CONTROL: drop the predicate from one reader and its arm fails by name.
