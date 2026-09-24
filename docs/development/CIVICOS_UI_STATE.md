@@ -50,6 +50,64 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v107, 2026-09-24 session, thread UI, UI-84 (a WORKER of CONDUCT #20, cloud session). Landed on `land/worker/UI-84`
+(base `origin/main` @ `548eb2c5`), in the commit that carries this entry; the version number is provisional and
+CONDUCT renumbers it at integration if a concurrent entry took it. SURFACE: **none — instrument only.** No byte of
+`civicos-ui/app.html` is touched. What moved is what two SUITES believe a member reads, and the entry is here
+because that belief was wrong for one day and nothing said so.
+
+**THE DEFECT.** D-278 landed on 2026-09-23 and gave two pre-authentication refusals a code and DEC-49's canned
+translation: `op=verify`'s malformed-hash arm (C-61.1, minted through `requiredArgument`) and the dispatch miss
+(C-69.1, through `dispatchRow`). `refusalWords` — UI-73's own helper, landed the same day — renders a translation
+FIRST. So from that landing a stranger at the published case page read the CANNED sentence, while
+`preauth-vocabulary.test.mjs` went on pinning the sentence written for a CALLER of the op, **and every assertion in
+it stayed green.** A suite that pins what a member reads against a mock narrower than the wire passes while the
+member reads something else. UI-73 had written that failure mode down at `DEC49_SUBJECT` the day before, in a note
+whose own words — *"`op=verify`'s refusal is the control plane's bare `error` with no code at all"* — stopped being
+true within twenty-four hours. That clause is **corrected in place and left standing as the receipt**, not deleted.
+
+**WHAT LANDED.** Five mock sites in `preauth-vocabulary.test.mjs` and one arm in
+`refusal-translation-surface.test.mjs`, plus a new control file. The fixtures are now DERIVED, never typed: the CODE
+is read out of `bio-plane/src/index.mjs` AT THE SITE THAT MINTS IT, the SENTENCE out of
+`bio-plane/checks/bio-checks.mjs` under that code by a lookup that DISCOVERS the family rather than naming one, and
+`requiredArgument`'s own two-chunk `detail` template out of its body. A hand copy agrees with its source at zero
+cost; nothing here can be made green by one. **Both directions are pinned**, which is what this adds over UI-73's
+login guard: narrow (a fixture missing a sentence the wire sends) by the REACH arms, and WIDE (a fixture carrying
+one the wire does not) by two SITE assertions that read the plane's decoration structurally.
+
+**Four superseded assertions CORRECTED AT THEIR SITES, never exempted**, each with a dated reason — the `#v-refused`
+pin, the `#v-unknownop` pin, the published INDEX and the case ADDRESS — and the true-negative half of the
+index pair tightened with them, so the pair's discriminator moves together. One arm's MESSAGE was corrected as well
+as its assertion: it explained itself by a wire that had moved, and a true pin under a false account of the wire
+misleads the next reader more than either alone. In `refusal-translation-surface.test.mjs` the over-strictness arm
+kept its subject (a refusal carrying `error` alone must still reach the member) but stopped using `unknown op` as
+its specimen — since D-278 no real `unknown op` answer has that shape — and the REAL one is asserted beside it.
+
+**THE MEASUREMENT** is `docs/development/measurements/M-130.md`, every figure PRINTED by the instrument on its own
+tree and none of them subtracted. **DEC-49's subject SHRANK, and this is the first time a plane-sourced row has left
+that table by being ANSWERED rather than by a surface editing it:** plane vocabulary reaching an unauthenticated
+reader fell from **11 of 21 surfaces to 10**, and from **77 occurrences (67 visible) to 76 (66)**; `"sha256"` went
+x35(31) -> x34(30), losing its `#v-refused` source. The whole delta is one source on one term, every other report
+line character-identical by a line-by-line diff. The +671 characters are the canned sentences being LONGER; the -1
+occurrence is plane vocabulary being DISPLACED by them. **DEC-49 remains OPEN and `REPORT_ONLY` is unchanged** —
+two of the plane's 592 codes gaining a sentence is not a ruling answered, and eleven plane-sourced rows still stand
+on these surfaces.
+
+**NEGATIVE CONTROL:** `node civicos-ui/test/ui84-mock-wire.control.mjs`, a baseline row plus four arms, each armed
+ALONE with its patch required to match exactly once, every file restored from a uniquely-named per-arm pristine and
+verified by sha256 AND `cmp` with a floored byte count. **4 of 4 as declared** against the final file. **Arm (C)
+came back RED against a GREEN declaration on its first spelling and that is recorded rather than smoothed** — it
+renamed the catalogue family to `DISPATCH_XCHECKS`, which does not match `/_CHECKS$/`, so it moved two variables at
+once: the family's name, which it meant to move, and its membership of the convention every consumer keys on, which
+makes it a row WITHDRAWN rather than renamed. The arm was wrong, not the subject.
+
+**NOT DONE, and where it lives.** The class sweep found **eight more `unknown op` mocks** elsewhere in the UI test
+estate whose fixtures carry no `translation`. Every one of them is a GAP-DETECTION fixture — `queueAbsent` and the
+`gap:true` paths read a SUBSTRING of `error`, so their subject is recognition and not rendering, and none of them
+is touched here. **Whether any of those surfaces also RENDERS the refusal to a member is NOT MEASURED**, and that
+is the honest statement of this sweep's reach: it is named as a finding for SCHEDULER with its fix, not parked.
+Nothing is live; no deploy is this item's.
+
 v106, 2026-09-23 session, thread UI, D-126 (a WORKER of CONDUCT #18, cloud session). Landed on `land/worker/D-126` (base
 `origin/main` @ `02603e88`), in the commit that carries this entry; the version number is provisional and CONDUCT
 renumbers it at integration if a concurrent entry took it. (It did: UI-74 holds `v104` and UI-68 `v105`, so CONDUCT #18
