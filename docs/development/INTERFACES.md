@@ -1056,7 +1056,7 @@ for "pdf" BY NAME — the op names its format — and an absent entry is a 501
 
 - **ID:** I8
 - **Owner:** `FLEET` (the code); `DIST` releases it
-- **Version:** 1.0.0 STABLE (**1.0.0 2026-09-24, IC-242 ACCEPTED — MAJOR, I8 LEAVES PROVISIONAL: the plane grows its first `AGENT_WORKER` caller — FL-4's wake hands a woken run to `POST /run` under the instance's organisation `ai` credential, only for runs that credential opened (D-260; minted as IC-237, renumbered). The FL-3 re-read's three conditions are met: FL-6's cascade, DIST-6's binding, and this caller; the shape is the code's on both sides. OWED, not built: DIST provisions `INSTANCE_AI_TOKEN` in `newgroup` and `deploy.mjs` — until then a deployed instance dispatches nothing and says why in the wake entry. Resolved by CONDUCT #19 at c19-batch9.**) Prior: **0.2.0 2026-09-23, IC-213 ACCEPTED — MINOR, ADDITIVE: `POST /run` answers `holdings` (documents counted once with their versions) and the member's pinned op set gains two reads, `search` and `versionchain` (D-220). Resolved by CONDUCT #17 at c17-batch4.**) Prior: 0.1.0 — **PROVISIONAL, and it STAYS PROVISIONAL.** Registered 2026-08-08
+- **Version:** 2.0.0 STABLE (**2.0.0 2026-09-24, IC-253 ACCEPTED — MAJOR, BREAKING (a refusal where none stood): `POST /run`'s `store` is exactly `"bio"` or `"scratch"`, and any other named value (`biosmoke-fleet`, `Scratch`, …) is refused with the plane's own `NAMESPACE_UNKNOWN` (C-78.1, `asked` and `namespaces`) before the cascade and before any plane call; an absent or non-string `store` keeps `BAD_STORE` (D-462). Resolved by CONDUCT #19 at c19-batch10; proposed as IC-245.** **1.0.0 2026-09-24, IC-242 ACCEPTED — MAJOR, I8 LEAVES PROVISIONAL: the plane grows its first `AGENT_WORKER` caller — FL-4's wake hands a woken run to `POST /run` under the instance's organisation `ai` credential, only for runs that credential opened (D-260; minted as IC-237, renumbered). The FL-3 re-read's three conditions are met: FL-6's cascade, DIST-6's binding, and this caller; the shape is the code's on both sides. OWED, not built: DIST provisions `INSTANCE_AI_TOKEN` in `newgroup` and `deploy.mjs` — until then a deployed instance dispatches nothing and says why in the wake entry. Resolved by CONDUCT #19 at c19-batch9.**) Prior: **0.2.0 2026-09-23, IC-213 ACCEPTED — MINOR, ADDITIVE: `POST /run` answers `holdings` (documents counted once with their versions) and the member's pinned op set gains two reads, `search` and `versionchain` (D-220). Resolved by CONDUCT #17 at c17-batch4.**) Prior: 0.1.0 — **PROVISIONAL, and it STAYS PROVISIONAL.** Registered 2026-08-08
   by FL-2, **before the first commit of the worker's code**, which is `PARALLELISM.md`'s
   rule and I6's precedent rather than a formality. It becomes 1.0.0 and STABLE when the
   shape is RE-READ from the code that exists — and the re-read is scheduled below rather
@@ -1098,12 +1098,12 @@ no `https://` plane URL and no bare global `fetch(` — the binding or nothing.
 **In:** `POST /run`
 
     { run_id:     <opaque, the PLANE's run identity — the member mints none>,
-      store:      <namespace token>,
+      store:      "bio" | "scratch"  (exact, case-sensitive; any other named value is refused NAMESPACE_UNKNOWN before any plane call — IC-253),
       credential: <the `ai`-class token, shape aik-<64 lowercase hex> (PL-11)>,
       turns:      <optional, the segment size the caller wants> }
 
     { run_id:     <opaque, the PLANE's run identity — the member mints none>,
-      store:      <namespace token>,
+      store:      "bio" | "scratch"  (exact, case-sensitive; any other named value is refused NAMESPACE_UNKNOWN before any plane call — IC-253),
       credential: <the `ai`-class token, shape aik-<64 lowercase hex> (PL-11)>,
       turns:      <optional, the segment size the caller wants>,
       judgements: <optional, ordered; FL-3. One entry per JUDGED row of the
