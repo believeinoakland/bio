@@ -15,7 +15,7 @@ translations of `RATE_IP` / `RATE_GLOBAL`), `bio-plane/test/doorbell.test.mjs`.
 
 **Incomplete sections** ·
 - §3 — the member side (triage of a knock into the working corpus) is described only as its three ops. What `pulled` commits a member to,
-  and whether a pulled knock carries the doorbell as its provenance into a capture, is not designed here.
+  and whether a pulled knock carries the doorbell as its provenance into a capture, is not designed here (verified 2026-09-24 by BOB #33: no document in the corpus names a knock's provenance into a capture).
 - §4 — `RATE_IP` and `RATE_GLOBAL` have no DEC-49 translation yet; D-508 owns that.
 
 **Contents**
