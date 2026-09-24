@@ -1,0 +1,16 @@
+{
+ "unit": "plane:derivation-bounds.test.mjs",
+ "inputHash": "4c7791b76ffa7f22f63c917a6b5488306158ad8d23d2b5bf499c52f2690ae6db",
+ "verdict": "PASS",
+ "run": "ae7716af89ecf5c588150c5e83575eab93edd270.1790212288172.22784.json",
+ "tree": "ae7716af89ecf5c588150c5e83575eab93edd270",
+ "head": "f76bf8ce2a51608ce8bfcbb9de385cd8fca4f65c",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 147,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "28dc5b1d-3820-55c2-9b29-2a3bf85134d3",
+ "at": "2026-09-24T01:11:28.186Z"
+}
