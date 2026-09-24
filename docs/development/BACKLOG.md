@@ -507,7 +507,7 @@ scope: measure (1)–(4) with a fresh network session (www.oaklandca.gov's 403 i
 accepts-when: each item recorded with date, instrument and counts, a refused host named as refused. NEGATIVE CONTROL: `tools/m132-negative-control.py`'s planted join counts exactly one.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### REC-203 · blocked — awaiting egress to Oakland's hosts (D-453; Bob's environment setting) — **OAKLAND'S THREE SHARED IDENTIFIER SPACES ARE DESIGNED AND NOT BUILT: the project number (budget line to Legistar award, the grade C→B lever), the C.M.S. number (any citing document to the Legistar matter by MatterEnactmentNumber), and the fund code (counted only when the fund NAME agrees).** — owner RECORD.
+### REC-203 · blocked — RE-STATED 2026-09-24 by BOB #32: its egress blocker is MET (D-453 done, M-132; D-74 done; §8.3 on main). It now waits ONLY on BOB folding M-132 into Framework §8.3 before it is built: (1) project numbers run in TWO CONCURRENT FORMS (2000-2026 and 2015-2026), not a dated era change, so eras-by-date is wrong; (2) a C.M.S. recogniser must check the referent (the 87751/87551 transposition) and carry the record's coverage floor (outside the record's reach, not not-found); (3) an APN recogniser normalises to the roll's apn_sort key and tells a RETIRED parcel from no such parcel. Owed by BOB #33 first.
 order: behind D-453, whose measurements it rests on, as BOB #32 ruled (*Row them RECORD, blocked behind D-453's egress*) (SCHEDULER #17, 2026-09-23)
 milestone: M4
 interface: I3/I5 — three recognisers and their eras; the integrator mints and classifies the ICs.
@@ -717,7 +717,7 @@ accepts-when: an opinion lands as a case element with its attribution and is ref
 added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
 cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «MK-5» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### REC-147 · blocked — **CONTRADICTION'S IDENTIFY, 3 of 3: THE JUDGEMENT AND THE CANDIDATE TABLE — §5's five labels as labelled machine work through** … (whole text: the cut archive)
+### REC-147 · queued — UNBLOCKED 2026-09-24 by BOB #32: its dependency is met (M0-71 done, gate on main; M-118). The old block confused an ACCEPTANCE condition with a precondition — the judgement this row builds is what the gate measures. RULED: accepts-when adds that the run REPORTS recall beside false conflicts on M0-71's gate (the gate alone cannot see a detector that abstains); a judgement whose recall does not beat the lexical baseline's 2/9 (M-118) is the finding and returns to BOB.
 order: blocked on M0-71's measured gate (SCHEDULER, 2026-09-19)
 milestone: M9
 interface: I3 and I5 (a table; ICs minted with `node tools/mintid.mjs IC`)
