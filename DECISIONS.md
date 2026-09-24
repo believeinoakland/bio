@@ -17,3 +17,7 @@ Bob carries it there.
   "I'm not at all happy with the actual surfaces in the design you now have." The **tokens are kept
   for now**: "we can use the tokens for the time being." So the lane's design system carries the
   tokens only, marked provisional, and no surface from the reference is treated as settled.
+- **2026-09-24: the write boundary.** "This lane only writes to the portion of the bio repo where the
+  ux work is held." Read as: `ux-study`, plus the UX portion of `main` (`civicos-ui/**` and the UI's
+  documents), with `main`'s full process applying to any change there. See charter §2. This replaces
+  the earlier rule that the lane never writes to `bio`.

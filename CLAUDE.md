@@ -14,14 +14,41 @@ rule on**, not code. The current UI is evidence to study, not a constraint to pr
 
 This lane runs **beside** BIO development, not inside it (Bob, 2026-09-24).
 
-- It lives on the `ux-study` branch of `believeinoakland/bio`, which shares no history with `main` and
-  never merges into it.
-- It **reads** `main`: the corpus, the code, the tools and the running UI. It **never writes**
-  to `main` or to any other branch of `bio`: no commits, no ledger rows, no claims, no messages into the dev lanes' channels.
-- Its record lives on **this** branch. What BIO should take from it reaches BIO only when Bob carries it
-  there.
-- `main`'s `CLAUDE.md` may load when you work inside a checkout of `main`. Where it conflicts with this charter,
-  **this charter governs this lane's work**. §3 says which of its rules still bind.
+**Where it may write** (Bob, 2026-09-24: "this lane only writes to the portion of the bio repo
+where the ux work is held"):
+
+- **The `ux-study` branch.** This is its study record. It shares no history with `main` and never
+  merges into it. Here, only this charter governs.
+- **The UX portion of `main`:**
+  - `civicos-ui/**`
+  - the UI's documents: `docs/development/CIVICOS_UI_STATE.md`, `docs/development/UI-PLAN.md` and
+    `docs/development/UI-KICKOFF.md`
+  - the bookkeeping `main`'s rules require for a change there (see below).
+
+  Nothing else on `main` or any other branch: no plane, installer, fleet, ledgers outside that
+  bookkeeping, or other lanes' kickoffs.
+
+**On `main`, `main`'s rules govern in full.** A write to the UX portion is BIO development and follows
+`main`'s `CLAUDE.md` exactly:
+
+- Claim the paths in `CLAIMS.md` for an edit that spans landings.
+- Run the gates and keep `construct-status.json` true.
+- Land through CONDUCT's train, never a direct push to `main`.
+- A defect found is minted and sent to SCHEDULER.
+- **Only DIST deploys.**
+
+This lane's exemptions (§3) apply to the study, never to a change to the product.
+
+**Two kinds of work, kept apart:**
+
+- **Studying and proposing** happens on `ux-study`.
+- **Changing the UI** happens on `main`, one scoped change at a time. Each change carries its
+  reason: a finding or ruling recorded here.
+
+A redesign is not landed piecemeal on `main` ahead of Bob's ruling on the proposal.
+
+Where `main`'s `CLAUDE.md` and this charter conflict: on `ux-study` this charter governs, and on
+`main` `main`'s governs.
 
 ## 3. What binds, and what does not
 
@@ -46,8 +73,8 @@ This lane runs **beside** BIO development, not inside it (Bob, 2026-09-24).
   (invitelook, enroll, instancegroup, groupidentity) against the live instance. Use the UI's mocks for
   those flows.
 
-**Does not bind: the development process.** No gates, `plancheck`, `CLAIMS.md`, ledgers, `QUEUE.md`,
-`construct-status.json` upkeep, lane messaging or DIST rules. Those govern changes to the product,
+**Does not bind the study: the development process.** No gates, `plancheck`, `CLAIMS.md`, ledgers, `QUEUE.md`,
+`construct-status.json` upkeep, lane messaging or DIST rules. Those govern changes to the product. On the study branch this lane changes none of the product,
 and this lane changes none.
 
 ## 4. Every claim carries its state
