@@ -1,13 +1,13 @@
 # BIO Declared Bias, v0.1 DRAFT
 
-**Status** · The doctrine of bias as a declared, justified, first-class construct: three statement kinds, bundles and adoption, the subject registry and the masking safeguards, bias debt versus HUNCH DEBT, the authored acknowledgement at export, differential traversal and the cross-group rerun. Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK sentence (D-188), and the plane carries `object_type: bias`, `op=biasmanifest`, the acknowledgement, and — since D-84 (2026-09-23) — the manifest stamped into every newly published case document. Partially complete: a v0.1 body with dated rulings layered in place and a header never re-dated. Read the "READ THIS FIRST" banner in the hunch section before anything else — bias debt and HUNCH DEBT mean opposite things for publication and the body once said otherwise. Bias debt is RAISED since D-86 (2026-09-23): one disclosed, never-blocking obligation per run whose lens moved (`construct-status.json` 7.bias-debt). Since REC-188 the gate refuses a `bio-case-document/3` without the manifest (C-41.13). as of 2026-09-24 (REC-187 BUILT BOB #31's ruling: the manifest names the ADOPTED revision and hashes exactly its statements).
+**Status** · The doctrine of bias as a declared, justified, first-class construct: three statement kinds, bundles and adoption, the subject registry and the masking safeguards, bias debt versus HUNCH DEBT, the authored acknowledgement at export, differential traversal and the cross-group rerun. Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK sentence (D-188), and the plane carries `object_type: bias`, `op=biasmanifest`, the acknowledgement, and — since D-84 (2026-09-23) — the manifest stamped into every newly published case document. Partially complete: a v0.1 body with dated rulings layered in place and a header never re-dated. Read the "READ THIS FIRST" banner in the hunch section before anything else — bias debt and HUNCH DEBT mean opposite things for publication and the body once said otherwise. Bias debt is RAISED since D-86 (2026-09-23): one disclosed, never-blocking obligation per run whose lens moved (`construct-status.json` 7.bias-debt). Since REC-188 the gate refuses a `bio-case-document/3` without the manifest (C-41.13). as of 2026-09-24 (REC-187 BUILT BOB #31's ruling — the manifest names the ADOPTED revision and hashes exactly its statements; REC-210 BUILT BOB #32's: an adoption pinning a still-PROPOSED revision is a REPLACEMENT and SAYS so, on the act's answer and on op=biasmanifest, and the ruling moved into §"Bias bundles and adoption").
 
 **Place in the system** · Owns construct 7 of `BIO_System_Design.md` §3 (declared bias) and the subject-registry requirement, which D-83 makes the same construct as the Content Framework's entity axis. `BIO_Content_Framework_v0_10.md` §13 defers to it; `BIO_Interaction_Constructs_v0_1.md` consumes it for the TASK clock; `BIO_Case_Making_v0_1.md` for hunch debt on plan premises.
 
 **Incomplete sections** ·
 - §header — "no check exists, no code implements it" is stale; the bias type, the manifest op and the acknowledgement exist.
 - §Statement anatomy — the subject lists are superseded; both defer to the registry vocabulary (RULED 2026-08-01).
-- §Bias bundles and adoption — the manifest now travels with publication (D-84, 2026-09-23): stamped into the signed case document and frozen. Since REC-187 (2026-09-24) a manifest's `revision` is the ADOPTED revision and `statements_sha` is over exactly its statements (BOB #31). Since REC-188 (2026-09-24) the gate REQUIRES the block of a `bio-case-document/3`, which op=publish authors (C-41.13); a /2 document authored before D-84 carries none and still ratifies. Still open: `op=biasadopt` taken on a later PROPOSED revision re-pins to those proposed bytes, lifting the adopted lens until that revision is promoted.
+- §Bias bundles and adoption — the manifest now travels with publication (D-84, 2026-09-23): stamped into the signed case document and frozen. Since REC-187 (2026-09-24) a manifest's `revision` is the ADOPTED revision and `statements_sha` is over exactly its statements (BOB #31). Since REC-188 (2026-09-24) the gate REQUIRES the block of a `bio-case-document/3`, which op=publish authors (C-41.13); a /2 document authored before D-84 carries none and still ratifies. `op=biasadopt` taken on a later PROPOSED revision re-pins to those proposed bytes and lifts the adopted lens: RULED a REPLACEMENT by BOB #32 (2026-09-24) and MARKED since REC-210 — `pins_proposed` on the act's answer and `pins_proposed[]` on op=biasmanifest. Still open: the FROZEN case-document block carries no marker, so a case published in that state signs `no manifest was in force` and says nothing about the replacement; the field is a `bio-case-document/4` and C-41.13's.
 - §Integration with the epistemics ladder — the mechanical binding is a stated prerequisite; no ruling, no op.
 - §Bias debt, and HUNCH DEBT — bias debt is now RAISED (D-86, 2026-09-23: one disclosed obligation per run whose lens moved, `construct-status.json` 7.bias-debt) and nothing DISCHARGES it but the lens moving back; the section does not say what settles a debt, and no act does.
 - §Bias debt, and HUNCH DEBT — says `op=publishpreflight` "exists"; it is deferred with REC-15 behind DEC-33; the sequencing paragraph predates PL-12.
@@ -20,11 +20,11 @@
   - [The malformedness rule (the discipline that keeps this honest)](#the-malformedness-rule-the-discipline-that-keeps-this-honest)
   - [Statement anatomy](#statement-anatomy)
 - [Bias bundles and adoption](#bias-bundles-and-adoption)
+  - [RULED 2026-09-24 by BOB #32: adopting a PROPOSED revision replaces the lens (REC-187's finding)](#ruled-2026-09-24-by-bob-32-adopting-a-proposed-revision-replaces-the-lens-rec-187s-finding)
   - [RULED 2026-08-01: the subject vocabulary is the registry's, and the malformedness rule is the constraint](#ruled-2026-08-01-the-subject-vocabulary-is-the-registrys-and-the-malformedness-rule-is-the-constraint)
 - [Integration with the epistemics ladder](#integration-with-the-epistemics-ladder)
   - [RULED 2026-09-23 by BOB #31: there is no credence ledger (D-53; S17-1 Q1)](#ruled-2026-09-23-by-bob-31-there-is-no-credence-ledger-d-53-s17-1-q1)
 - [Bias debt, and HUNCH DEBT](#bias-debt-and-hunch-debt)
-  - [RULED 2026-09-24 by BOB #32: adopting a PROPOSED revision replaces the lens (REC-187's finding)](#ruled-2026-09-24-by-bob-32-adopting-a-proposed-revision-replaces-the-lens-rec-187s-finding)
   - [RULED 2026-09-23 by BOB #32: what settles a bias-debt obligation (D-86)](#ruled-2026-09-23-by-bob-32-what-settles-a-bias-debt-obligation-d-86)
   - [RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT](#ruled-2026-08-01-a-hunch-is-temporary-declared-bias-and-it-is-hunch-debt)
 - [The bias acknowledgement, authored at export](#the-bias-acknowledgement-authored-at-export)
@@ -177,6 +177,38 @@ MANIFEST: the list of (bias bundle id, revision) in force plus a hash of the
 computed effective statement set. The manifest is part of the evidentiary
 record and travels with publication.
 
+### RULED 2026-09-24 by BOB #32: adopting a PROPOSED revision replaces the lens (REC-187's finding)
+
+*Raised by REC-187 as a finding and ruled at 00:42Z; MOVED here from "Bias debt, and HUNCH DEBT" by REC-210, where it
+had been recorded beside the debt it is not about — this section is where adoption is specified, and a ruling about what
+an adoption PINS belongs in it.*
+
+An adoption pins exactly the bytes the member read and chose. Adopting a proposed, not-yet-accepted revision is a
+REPLACEMENT: the adopter's lens becomes those bytes, and it stays on them whatever later happens to the proposal. It is
+never a pre-authorisation of whatever the proposal becomes. The adoption and its read SAY that they pin a proposed
+revision.
+
+**BUILT (REC-210, 2026-09-24) — the marker, in both places the ruling names.** `op=biasadopt` answers
+`pins_proposed`, true exactly when the revision it froze stands at `proposed`, and its `note` says the act REPLACES
+that scope's lens with bytes the group has offered and not accepted rather than pre-authorising whatever the
+proposal becomes. `op=biasmanifest` carries `pins_proposed[]` — one entry per adoption whose PINNED revision is not
+`adopted`, naming the set, the revision, that revision's own state and the member who adopted it — with
+`pins_proposed_stated` saying what the list means. Both fields are ABSENT when no adoption pins a proposed revision,
+so their presence is the claim; adopting an accepted revision marks nothing.
+
+**It is a fact about the PIN, not a second spelling of `in_force`, and not a second column.** It is derived from the
+pinned revision's own bytes, so it moves by itself when promotion re-pins an adoption to the revision it mints
+(BOB #31, REC-187) and moves back when a member adopts a later proposal. `in_force: false` says no lens stands over
+the scope's work; the marker says a member's authored act put proposed bytes there instead. That difference is the
+whole ruling: before REC-210 the read of a scope whose adoption had been moved onto a later proposal was
+indistinguishable from the read of a group that had never adopted anything. The required sentence *"no manifest was
+in force"* is true of such a moment and is unchanged; the marker sits beside it.
+
+**What is NOT marked, stated.** The FROZEN `bias_manifest` block a published case document carries (D-84, format
+`bio-case-document/3`) has no field for this, so a case published while the scope's only adoption pins a proposed
+revision still signs *"no manifest was in force"* — true of that moment, silent about the replacement. Carrying the
+marker into the signed bytes is a document-format change (a `/4`) and C-41.13's, and is not REC-210's.
+
 ### RULED 2026-08-01: the subject vocabulary is the registry's, and the malformedness rule is the constraint
 
 **Every kind the SUBJECT REGISTRY carries is a legal subject for a bias statement.**
@@ -312,13 +344,6 @@ So: ordinary bias debt marks the work, travels with it, is shown to the reader, 
 does NOT block ratification. Uncleared HUNCH debt refuses publication, by name,
 before any signature exists (`op=publishpreflight` → `UNCLEARED_HUNCH`). The
 workproduct_state half of the old rule is likewise narrowed to hunches.
-
-### RULED 2026-09-24 by BOB #32: adopting a PROPOSED revision replaces the lens (REC-187's finding)
-
-An adoption pins exactly the bytes the member read and chose. Adopting a proposed, not-yet-accepted revision is a
-REPLACEMENT: the adopter's lens becomes those bytes, and it stays on them whatever later happens to the proposal. It is
-never a pre-authorisation of whatever the proposal becomes. The adoption and its read SAY that they pin a proposed
-revision. NOT BUILT (REC-210).
 
 ### RULED 2026-09-23 by BOB #32: what settles a bias-debt obligation (D-86)
 

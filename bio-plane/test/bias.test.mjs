@@ -66,9 +66,57 @@
  *     per-finding translation was present, and the code on the ENVELOPE — the
  *     one a surface keys on FIRST — had no row at all.
  *
+ * (8) REC-210's MARKER, RUN 2026-09-24 against src/store.mjs, THREE ARMS, each
+ *     ALONE, others held open, from a per-arm uniquely-named pristine copy in
+ *     the session scratchpad; every restore verified by sha256 AND by `cmp` AND
+ *     by the mutation's own marker being gone, at 3,293,074 B floored above 2 MB.
+ *     RE-RUN IN FULL after the subject changed (the `pinned_state` guard was
+ *     rewritten to get past `check-semantics.mjs`, below): identical figures, and
+ *     the arms re-anchored on the new bytes rather than believed from the old.
+ *     BASELINE, unmutated, measured before and after the whole control:
+ *     **138 pass, 0 fail, exit 0** both times (the baseline row exists because a
+ *     harness whose every arm reads the same is indistinguishable from one whose
+ *     arms never armed). DECLARED BEFORE ARMING, and each came back as declared:
+ *     ARM A — delete `pins_proposed` from `biasAdopt`'s ANSWER (the row's own
+ *     declared control) -> **135/3**, and the three are the three ANSWER arms by
+ *     name: block 8's "the answer SAYS it pins a PROPOSED revision", block 9's
+ *     "an adoption TAKEN while the set stands at `adopted` answers the marker
+ *     FALSE", block 15b's "the re-adoption is ACCEPTED … answers the marker".
+ *     The READ arms stayed GREEN, which is the point of running two arms: the two
+ *     halves the ruling names are pinned INDEPENDENTLY, so neither can be carried
+ *     by the other.
+ *     ARM B — restore the pre-REC-210 silent skip in `biasManifest`
+ *     (`if (fm.current_state !== "adopted") continue;`) -> **136/2**, and the two
+ *     are the READ arms by name: block 8's "and THE READ says so too" and block
+ *     15b's "THE READ, AND THE WHOLE POINT". The ANSWER arms stayed green.
+ *     ARM C — OVER-STRICTNESS, two correct spellings this suite did not
+ *     anticipate, armed together: `pins_proposed: b.current_state !== "adopted"`
+ *     (equivalent, because C-26.10 admits only `proposed` and `adopted` at this
+ *     door) and the marker object's keys written in another order -> **138/0,
+ *     exit 0**. A marker arm that refused either spelling would be a fence
+ *     tighter than its rule.
+ *     AN INSTRUMENT FINDING THIS CONTROL DID NOT PRODUCE AND THE GATE DID, worth
+ *     the lines because the next author pays it too: `civicos-ui/check-semantics.mjs`
+ *     harvests the states the plane writes by matching `current_state` followed by
+ *     an equality and a quoted lower-case word, over the RAW file. So a `typeof`
+ *     guard on that field in its ordinary spelling is harvested as a state named
+ *     after the string type, and the gate goes RED with `states the store writes
+ *     with no semantics row`, naming a state nobody wrote. It cost this item one
+ *     full gate round — and then a SECOND, because the comment written to explain
+ *     the trap quoted the expression and re-armed it, the walk reading comments
+ *     too. Worked around here by hoisting the field into a local; the over-match
+ *     is reported as its own defect and not smoothed over.
+ *     WHAT THIS CONTROL CANNOT SEE, stated: it arms `store.mjs` only, so it says
+ *     nothing about the FROZEN `bias_manifest` block of a published case document
+ *     — which carries no marker at all (a `bio-case-document/4` and C-41.13's, not
+ *     REC-210's), and is why no arm here mutates `publishCase`.
+ *
  * ALL FIGURES ABOVE RE-MEASURED 2026-08-08 against the C-26 numbering and the
  * post-rebase corpus. Every arm still fires; every restore still verifies by
- * CONTENT as well as by sha256.
+ * CONTENT as well as by sha256. (8) IS LATER AND ITS OWN FIGURES ARE 2026-09-24's.
+ * REC-210's arms were run against a suite standing at 128 on origin/main 1a7f0bcc0
+ * and at 138 with the item's ten arms added — the baseline measured by re-running
+ * the suite at that sha, never by subtracting.
  *
  * ---------------------------------------------------------------------------
  * WHAT THIS ITEM IS
@@ -726,10 +774,36 @@ await block("8", async () => {
   + "to be discovered",
     adopted.in_force, false);
 
+  /* REC-210 — BOB #32, 2026-09-24, `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption":
+     *"Adopting a proposed, not-yet-accepted revision is a REPLACEMENT … The adoption and its read
+     SAY that they pin a proposed revision."* THE ANSWER'S HALF. The note is read for the two
+     sentences that carry the ruling and not for its whole text, so re-wording it does not fail
+     this arm while DROPPING the claim does. */
+  t("REC-210: the answer SAYS it pins a PROPOSED revision — a reader cannot tell a proposed sha from "
+  + "an adopted one by looking at it, so `pinned.bundle_sha` alone lets a REPLACEMENT read like an "
+  + "ordinary adoption",
+    [adopted.pins_proposed, /PINS A PROPOSED REVISION/.test(String(adopted.note)),
+     /REPLACES this scope's lens/.test(String(adopted.note))],
+    [true, true, true]);
+
   const still = await get("biasmanifest", "scope=instance", MEMBER);
   t("FAIL-CLOSED: with the row written and the bundle still at `proposed`, NO lens is in force — at no "
   + "point does one act alone put a lens over somebody's work",
     [still.in_force, still.stated], [false, "no manifest was in force"]);
+
+  /* REC-210 — THE READ'S HALF, and the arm that matters most: this answer USED TO BE the row above
+     and nothing else, so a scope holding an authored adoption of proposed bytes was indistinguishable
+     from a group that had never adopted anything. The doctrinal sentence is asserted UNCHANGED beside
+     the marker on purpose (it is true, and `INVESTIGATIVE-SESSION.md` §3 requires it verbatim):
+     the fix is a field, never a rewritten sentence. */
+  t("REC-210: and THE READ says so too — the adoption is listed with the revision it pins, that "
+  + "revision's own state and its author, beside the unchanged sentence",
+    [still.pins_proposed?.length ?? -1, still.pins_proposed?.[0]?.bundle_id ?? null,
+     still.pins_proposed?.[0]?.revision === adopted.pinned?.bundle_sha,
+     still.pins_proposed?.[0]?.pinned_state ?? null, still.pins_proposed?.[0]?.adopted_by ?? null,
+     still.pins_proposed?.[0]?.scope ?? null,
+     /REPLACED that scope's lens/.test(String(still.pins_proposed_stated))],
+    [1, INSTANCE_ID, true, "proposed", "mo", "instance", true]);
 });
 
 /* ---- IN FORCE ---- */
@@ -761,6 +835,21 @@ await block("9", async () => {
   t("DEC-54 (b): THE RESIDUE TRAVELS WITH THE MANIFEST, read from the bundle's own bytes",
     [m.residue.length, m.residue[0].stated, m.residue[0].text.includes("direct knowledge")],
     [1, true, true]);
+
+  /* REC-210 — THE OTHER HALF OF THE ROW'S accepts-when: *"adopting an accepted one does not"*. Both
+     directions, because a marker that is always present says nothing by being there: the READ of
+     the same adoption, now that promote() has re-pinned it to the adopted revision (REC-187), and a
+     FRESH adoption taken while the set already stands at `adopted`. */
+  t("REC-210: ADOPTING AN ACCEPTED ONE DOES NOT MARK — with the pin moved to the adopted revision the "
+  + "read carries NO marker and no sentence, which is what makes the field's PRESENCE mean something",
+    [m.pins_proposed ?? null, m.pins_proposed_stated ?? null], [null, null]);
+  const again = await get("biasadopt", `bundleId=${INSTANCE_ID}`, MEMBER);
+  const mAgain = await get("biasmanifest", "scope=instance", MEMBER);
+  t("REC-210: and an adoption TAKEN while the set stands at `adopted` answers the marker FALSE, is in "
+  + "force at once, and leaves the read unmarked and the hash where it was",
+    [again.ok, again.pins_proposed, again.in_force, /PINS A PROPOSED REVISION/.test(String(again.note)),
+     mAgain.pins_proposed ?? null, mAgain.statements_sha === m.statements_sha],
+    [true, false, true, false, null, true]);
 });
 
 /* ---- the project layer, the overrides, and the LOCK ---- */
@@ -1059,6 +1148,99 @@ await block("15", async () => {
   t("and NOTHING in this item reads WHICH bias is named at publication, which is DEC-20's disclosure rule: "
   + "declaring a bias never blocks a case",
     /reads WHICH bias/.test(STORE_SRC), true);
+});
+
+/* ====================================================================== 15b
+ * REC-210 — THE CASE BOB #32'S RULING IS ACTUALLY ABOUT, driven end to end.
+ *
+ * Blocks 8 and 9 cover the marker on a FIRST adoption (pinned at `proposed`,
+ * then re-pinned by promote to the adopted revision). This block drives the one
+ * the ruling was raised for and the one the design's Incomplete sections named
+ * as still open: a set ALREADY IN FORCE, a LATER revision merely proposed, and a
+ * member adopting THAT. The pin moves onto proposed bytes and the adopted lens
+ * is LIFTED — which BOB #32 ruled is correct and is a REPLACEMENT, provided the
+ * record SAYS the pin is on a proposed revision.
+ *
+ * WHY IT IS THE ARM THAT COSTS SOMETHING: in blocks 8 and 9 nothing was in force
+ * either way, so `in_force: false` was already the honest answer and the marker
+ * only added detail. HERE a lens WAS in force, and without the marker this read
+ * answers `in_force: false` with *"no manifest was in force"* — a sentence that
+ * is true of the moment and false about the group, and one a case document would
+ * sign. The marker is the difference between "nobody adopted" and "a member
+ * replaced the lens with bytes the group has not accepted".
+ *
+ * PLACED LAST, before the purge, because it moves the instance set's head and
+ * lifts the instance lens: no block after it reads either.
+ * ===================================================================== */
+console.log("\n--- 15b. REC-210: a LATER PROPOSAL adopted REPLACES the lens, and the record says so ---");
+await block("15b", async () => {
+  /* The revision in force now — read rather than remembered, so this block does not rest on a sha
+     another block happened to leave in a variable. */
+  const m0 = await get("biasmanifest", "scope=instance", MEMBER);
+  const ADOPTED_REV = m0.bundles?.find((b) => b.bundle_id === INSTANCE_ID)?.revision ?? null;
+  t("the fixture ARMS THE TRAP: a lens IS in force over the instance, at a revision this block can name",
+    [m0.in_force, typeof ADOPTED_REV, ADOPTED_REV?.length ?? null, m0.pins_proposed ?? null],
+    [true, "string", 64, null]);
+
+  /* A LATER REVISION, PROPOSED, with a statement whose TEXT DIFFERS — so an answer that read the
+     head's statements instead of the pin's would be visible as a different hash, and the lens being
+     lifted cannot be mistaken for the same lens under another name. */
+  const laterStatements = [
+    { id: "s1", kind: "scrutiny", subject: "ENT-2026-0007",
+      text: "Claims from the city attorney's office need TWO independent records before they bear load.",
+      justification: "The office is a party to several matters this group is examining.",
+      citations: [], locked: true },
+  ];
+  const later = await write(INSTANCE_ID, biasMd(instanceFm("proposed", { statements: laterStatements })),
+                            "bias", "proposed", MEMBER);
+  const LATER_REV = later?.bundleSha ?? null;
+  t("a LATER revision is OFFERED — three distinct facts to separate: the adopted revision, the later "
+  + "proposal, and the statement text that tells their bytes apart",
+    [later.ok, typeof LATER_REV, LATER_REV !== ADOPTED_REV], [true, "string", true]);
+
+  /* REC-187's guarantee, re-asserted here because this block's own arm depends on it: the mere
+     PROPOSAL moves nothing. If it lifted the lens by itself, the marker below would be crediting the
+     adoption with an effect the proposal had already had. */
+  const m1 = await get("biasmanifest", "scope=instance", MEMBER);
+  t("REC-187 holds: the PROPOSAL alone neither moves nor lifts the lens — still in force, still the "
+  + "ADOPTED revision, still its hash, and still NO marker",
+    [m1.in_force, m1.bundles?.find((b) => b.bundle_id === INSTANCE_ID)?.revision, m1.statements_sha === m0.statements_sha,
+     m1.pins_proposed ?? null, m1.statements.some((x) => x.text.includes("TWO independent records"))],
+    [true, ADOPTED_REV, true, null, false]);
+
+  /* THE ACT THE RULING IS ABOUT. */
+  const re = await get("biasadopt", `bundleId=${INSTANCE_ID}`, MEMBER);
+  t("REC-210: the re-adoption is ACCEPTED (BOB #32: it is a REPLACEMENT, not a refusal), pins the "
+  + "LATER PROPOSED revision, answers the marker, and says in force FALSE",
+    [re.ok, re.pinned?.bundle_sha, re.pins_proposed, re.in_force,
+     /PINS A PROPOSED REVISION/.test(String(re.note)), /REPLACES this scope's lens/.test(String(re.note)),
+     /pre-authorising whatever the proposal becomes/.test(String(re.note))],
+    [true, LATER_REV, true, false, true, true, true]);
+
+  const m2 = await get("biasmanifest", "scope=instance", MEMBER);
+  t("REC-210 — THE READ, AND THE WHOLE POINT: the adopted lens is LIFTED, and the answer no longer "
+  + "reads like a group that never adopted anything — the marker names the set, the proposed revision "
+  + "it pins, that revision's state and the member who adopted it, beside the unchanged sentence",
+    [m2.in_force, m2.stated, m2.statements_sha, m2.bundles,
+     m2.pins_proposed?.length ?? -1, m2.pins_proposed?.[0]?.bundle_id ?? null,
+     m2.pins_proposed?.[0]?.revision ?? null, m2.pins_proposed?.[0]?.pinned_state ?? null,
+     m2.pins_proposed?.[0]?.adopted_by ?? null,
+     /not a pre-authorisation of whatever the proposal becomes/.test(String(m2.pins_proposed_stated))],
+    [false, "no manifest was in force", null, [], 1, INSTANCE_ID, LATER_REV, "proposed", "mo", true]);
+
+  /* OVER-STRICTNESS, in the direction that matters: the marker must not be a one-way latch. Promote
+     the SAME later revision to `adopted` — promote() re-pins (REC-187) — and the marker must GO,
+     with the lens in force at the new revision and a hash that MOVED (the statement text changed),
+     so nothing here passes by the lens having quietly stayed where it was. */
+  const accepted = await write(INSTANCE_ID, biasMd(instanceFm("adopted", { statements: laterStatements })),
+                               "bias", "adopted", MEMBER);
+  const m3 = await get("biasmanifest", "scope=instance", MEMBER);
+  t("OVER-STRICTNESS: once the group ACCEPTS that revision the marker is GONE — in force at the newly "
+  + "adopted revision, a hash that MOVED because the statement did, and no marker and no sentence",
+    [accepted.ok, m3.in_force, m3.bundles?.find((b) => b.bundle_id === INSTANCE_ID)?.revision === accepted.bundleSha,
+     m3.statements_sha !== m0.statements_sha, m3.statements.some((x) => x.text.includes("TWO independent records")),
+     m3.pins_proposed ?? null, m3.pins_proposed_stated ?? null],
+    [true, true, true, true, true, null, null]);
 });
 
 /* ======================================================================= 16
