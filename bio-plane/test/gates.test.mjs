@@ -112,7 +112,7 @@ const t = (label, got, want) => {
 };
 /* The FOOT sentinel (`mintid.test.mjs`'s): a TypeError inside an assertion ends the module while the
    tally still reads clean, so every section bumps this and the last assertion requires all of them. */
-const SECTIONS = 10;  /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1; M0-143: +1 */
+const SECTIONS = 11;  /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1; M0-143: +1; M0-153: +1 */
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -206,6 +206,17 @@ const FILES = {
     `const F = new URL("../../data/figures.txt", import.meta.url);`,
     `process.exit(readFileSync(F, "utf8").length ? 0 : 1);`, ""].join("\n"),
   "bio-plane/test/figcomment.test.mjs": `/* the figures this suite was tuned against are in figures.txt (M-1) */\nprocess.exit(0);\n`,
+  /* M0-153: the CLOSURE'S EDGES, read as code. `figtool.mjs` READS the figures (a string path); one suite names it
+     through the ASSEMBLED spelling `join(REPO, "tools", "figtool.mjs")` — the slash never written — and one names
+     it only in its prose. Neither spells `data/figures.txt` itself, so what selects them is the EDGE and nothing else. */
+  "tools/figtool.mjs": `export const F = "data/figures.txt";\nexport const read = () => F;\n`,
+  "bio-plane/test/asmtool.test.mjs": [
+    `import { join, dirname } from "node:path";`,
+    `import { fileURLToPath } from "node:url";`,
+    `const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");`,
+    `const mod = await import(join(REPO, "tools", "figtool.mjs"));`,
+    `process.exit(mod.read() ? 0 : 1);`, ""].join("\n"),
+  "bio-plane/test/asmcomment.test.mjs": `/* the figures behind this suite are what tools/figtool.mjs reads */\nprocess.exit(0);\n`,
   /* two suites through a shared HELPER: one helper names a tool only in a COMMENT, the other in CODE */
   "bio-plane/test/helper-prose.mjs": `/* this helper's prose cites tools/lonely.mjs and reads nothing */\nexport const h = 1;\n`,
   "bio-plane/test/helped.test.mjs": `import { h } from "./helper-prose.mjs";\nprocess.exit(h === 1 ? 0 : 1);\n`,
@@ -213,7 +224,14 @@ const FILES = {
   "bio-plane/test/helped2.test.mjs": `import { TOOL } from "./helper-code.mjs";\nprocess.exit(TOOL ? 0 : 1);\n`,
   "bio-plane/test/unrelated.test.mjs": "process.exit(0);\n",
   "civicos-ui/test/run.mjs": stub("ui-harness"),
-  "civicos-ui/test/uiwidget.test.mjs": `// drives tools/widget.mjs from the UI side\n${stub("ui-uiwidget")}`,
+  /* CORRECTED 2026-09-24 (M0-153), never exempted: it named `tools/widget.mjs` in a `//` COMMENT, which stood
+     for "drives the tool" only while the CLOSURE'S EDGES were cut from a unit's whole text. They are now cut from
+     its code, so a comment drives nothing and the arm below asked its question of a suite that named no tool at
+     all. A UI suite that really drives a tool spells it in code, which is what this fixture now does. */
+  "civicos-ui/test/uiwidget.test.mjs": `const TOOL = "tools/widget.mjs"; // driven from the UI side\n${stub("ui-uiwidget")}`,
+  /* ...and the other direction, so "fewer units" cannot pass for the fix: a UI suite whose ONLY mention of that
+     same tool is a comment. */
+  "civicos-ui/test/uicomment.test.mjs": `// tuned against tools/widget.mjs, which this suite does not drive\n${stub("ui-uicomment")}`,
   "civicos-ui/app.html": "<!doctype html>\n",
   "pdf-worker/fleet-member.json": `${JSON.stringify({ name: "pdf-worker", entry: "src/index.mjs", testDir: "test" })}\n`,
   "pdf-worker/src/index.mjs": "export default {};\n",
@@ -421,7 +439,8 @@ section("M0-98 · THE CLASS — TARGETED by MENTION, and what stays FULL");
   t("a tools-only diff reads TARGETED", tools.cls, "TARGETED");
   t("...and selects its IMPORTER", tools.units.includes("plane:widget.test.mjs"), true);
   t("...and the suite that WALKS tools/", tools.units.includes("plane:walker.test.mjs"), true);
-  t("...and a UI suite that names the tool", tools.units.includes("ui:uiwidget.test.mjs"), true);
+  t("...and a UI suite that names the tool in CODE", tools.units.includes("ui:uiwidget.test.mjs"), true);
+  t("...and NOT a UI suite that names it only in a COMMENT", tools.units.includes("ui:uicomment.test.mjs"), false);
   t("...and NOT a suite that reads none of it",
     ["plane:unrelated.test.mjs", "plane:computed.test.mjs", "plane:prose.test.mjs", "fleet:pdf-worker/member.test.mjs"]
       .filter((u) => tools.units.includes(u)), []);
@@ -505,6 +524,32 @@ section("M0-143 · THE DOC-FACING SET IS READ AS CODE — a comment names `docs/
     [batteryOf(d), batteryOf(d).length > 0], [["prose.test.mjs", "toolstring.test.mjs"], true]);
   t("...and the plan SAYS the set was read as code, so the selection stays auditable",
     d.out.includes("doc-facing suites derived fresh, read as code, comments blanked (strings kept)"), true);
+}
+
+/* ========================================================================== */
+section("M0-153 · THE CLOSURE'S EDGES ARE READ AS CODE — a tool NAMED IN PROSE is a tool nothing runs");
+{
+  /* THE LAST RAW READER IN THE SELECTION PATH. `fileHit` and `isWalker` were corrected by M0-116 and §2's two
+     sites by M0-143, but `edgesOf` still cut a unit's edges from its WHOLE text — so a tool named in a comment
+     entered the closure, and everything that tool reads became something the unit "reads". Measured on the estate
+     at 68fecb8d by `statepaths.test.mjs`'s own printed line: a MEASUREMENTS-only change selected 47 units before
+     and 45 after, and `plane:m025-arm-anchor-witness.test.mjs` stopped being NEVER-CACHED — it never ran
+     `tools/plancheck.mjs`, it only quotes the name in the paragraph explaining why its corpus walks `tools/`.
+
+     HOW A LIAR PASSES THIS, stated first: blanking the comments ALSO blanks the only literal spelling of a tool a
+     unit really runs through an ASSEMBLED path (`join(REPO, "tools", "x.mjs")`) — eight files on the estate, among
+     them `entries.control.mjs`, whose lost edge was `tools/entries.mjs`, the very tool it drives. So the
+     comment-only arm is asserted BESIDE the assembled reader that must STAY, and a fix that merely selects fewer
+     units fails here. */
+  branch(F.root, "edgecode");
+  const figs = withEdits(F.root, ["data/figures.txt"], () => gates(F.root, ["--explain"]));
+  t("a data-only diff reads TARGETED", figs.cls, "TARGETED");
+  t("a suite naming, through the ASSEMBLED spelling in CODE, a tool that READS the file is selected — it is the edge, "
+    + "not the path, that selects it", figs.units.includes("plane:asmtool.test.mjs"), true);
+  t("...and a suite whose ONLY mention of that same tool is a COMMENT is NOT selected — a comment runs nothing",
+    figs.units.includes("plane:asmcomment.test.mjs"), false);
+  t("...and the plan SAYS the edges were read as code, so the selection stays auditable",
+    figs.out.includes("the `tools/x.mjs` spelling and the assembled `join(…, \"tools\", \"x.mjs\")` one both name a tool (M0-153)"), true);
 }
 
 /* ========================================================================== */

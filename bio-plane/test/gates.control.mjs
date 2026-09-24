@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 19 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116; G18, G19 by M0-143) — over `tools/gates.mjs` and
+/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 21 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116; G18, G19 by M0-143; G20, G21 by M0-153) — over `tools/gates.mjs` and
  * `tools/pushguard.mjs`, each driven through `bio-plane/test/gates.test.mjs`.
  *
  *   node bio-plane/test/gates.control.mjs          (from the repo root; one arm: add its id, e.g. G1)
@@ -27,10 +27,22 @@
  *                                                     every other FULL category.
  *   G4  selection by IMPORT ALONE (the liar the    -> "SELECTION IS BY MENTION" FAILS. MUST NOT:
  *       row names)                                    the IMPORTER is still selected.
- *   G5  the CLEAN-AT-START check removed           -> "...and the gate says why" FAILS. MUST NOT:
- *                                                     "a DIRTY tree is NOT recorded" — the
- *                                                     end-of-run check backs it, and that
- *                                                     redundancy is real and is KEPT.
+ *   G5  the CLEAN-AT-START check removed           -> "...and the gate says why" FAILS, and so do
+ *                                                     "a DIRTY tree is NOT recorded" and, behind it,
+ *                                                     "a tree that CHANGES while the gate runs is
+ *                                                     NOT recorded".
+ *       CORRECTED 2026-09-24 (M0-153), never exempted. This arm declared the first of those a
+ *       MUST-NOT-BREAK, on the reasoning that "the end-of-run check backs it, and that redundancy is
+ *       real and is KEPT". IT IS NOT REAL, and the arm itself is the evidence: armed, the DIRTY run
+ *       IS recorded. The end-of-run check asks whether the tree CHANGED DURING the run, and a tree
+ *       dirty BEFORE the run and unchanged through it passes that question — so nothing but the
+ *       clean-at-start check refuses it, which is exactly what this assertion was written to detect.
+ *       The third failure is a CASCADE, not an independent break: these arms count records
+ *       CUMULATIVELY (`runsFor(...).length` must stay 1), so the extra record the dirty run leaves
+ *       makes the next assertion read 2. MEASURED BOTH WAYS on 2026-09-24: this FAIL reproduces
+ *       identically on an untouched `68fecb8d` clone (armed 93 pass / 3 fail, closing 96 / 0), so it
+ *       is the DECLARATION that was stale and not the subject — the arm has been finding a real
+ *       redundancy gap and calling it collateral.
  *   G6  the END-OF-RUN check removed               -> "a tree that CHANGES while the gate runs is
  *                                                     NOT recorded" FAILS. MUST NOT: the dirty-
  *                                                     at-start arm (the start check holds it).
@@ -76,6 +88,16 @@
  *       fix: one site patched, one left)              NOT: the tool that READS prose still makes its
  *                                                     namer doc-facing; the comment-only suite is
  *                                                     still NOT doc-facing.
+ *   G20 the CLOSURE'S EDGES cut from the WHOLE     -> "...and a suite whose ONLY mention of that same
+ *       text again — break M0-153's fix at            tool is a COMMENT is NOT selected" FAILS, and
+ *       `edgesOf`, the row's own liar                 the UI comment arm with it. MUST NOT: the
+ *                                                     ASSEMBLED reader is still selected; the
+ *                                                     IMPORTER and the WALKER still are.
+ *   G21 the ASSEMBLED spelling dropped — the       -> "a suite naming, through the ASSEMBLED spelling
+ *       OTHER liar: a narrowing that also loses       in CODE, a tool that READS the file is
+ *       a REAL edge reads as "fewer units"            selected" FAILS. MUST NOT: the comment-only
+ *                                                     suite is still NOT selected (so a fix that
+ *                                                     selects nothing cannot pass either arm).
  *
  * Every arm asserts its DOWNSTREAM failure, never merely its patch count: `hits === 1` proves a
  * patch applied, and only the named assertion proves it had an effect (M-60 Q9).
@@ -205,7 +227,11 @@ const ARMS = [
       from: "const CLEAN_AT_START = START.status === \"\" && !!START.tree;",
       to: "const CLEAN_AT_START = !!START.tree;" }],
     mustBreak: "...and the gate says why",
-    mustNotBreak: ["a DIRTY tree is NOT recorded"] },
+    /* CORRECTED 2026-09-24 (M0-153) — see this arm's row in the header table. Both of these were
+       declared MUST-NOT-BREAK and both break: the first because only the clean-at-start check refuses
+       a tree dirty BEFORE the run, the second as a cascade of the cumulative record count. */
+    alsoBreak: ["a DIRTY tree is NOT recorded", "a tree that CHANGES while the gate runs is NOT recorded"],
+    mustNotBreak: ["a CLEAN run is RECORDED, keyed by HEAD's tree", "--explain records nothing"] },
 
   { id: "G6", title: "the END-OF-RUN check removed — a run across a change, recorded",
     patches: [{ file: GATES,
@@ -324,6 +350,25 @@ const ARMS = [
     mustNotBreak: ["a suite that names a doc-READING tool in CODE is doc-facing",
                    "...and a suite whose ONLY `docs/` mention is in a COMMENT is NOT doc-facing",
                    "a suite that READS `docs/` through a STRING is doc-facing"] },
+
+  { id: "G20", title: "the CLOSURE'S EDGES cut from the WHOLE text again — break M0-153's fix at `edgesOf`",
+    patches: [{ file: GATES,
+      from: "function edgesOf(abs, top) {\n  const src = codeOf(abs) || \"\";",
+      to: "function edgesOf(abs, top) {\n  const src = textOf(abs) || \"\";" }],
+    mustBreak: "...and a suite whose ONLY mention of that same tool is a COMMENT is NOT selected — a comment runs nothing",
+    alsoBreak: ["...and NOT a UI suite that names it only in a COMMENT"],
+    mustNotBreak: ["a suite naming, through the ASSEMBLED spelling in CODE, a tool that READS the file is selected — it is the edge, not the path, that selects it",
+                   "...and selects its IMPORTER", "...and the suite that WALKS tools/",
+                   "...and a UI suite that names the tool in CODE"] },
+
+  { id: "G21", title: "the ASSEMBLED spelling dropped — the liar: losing a REAL edge also reads as fewer units",
+    patches: [{ file: GATES,
+      from: "    for (const m of src.matchAll(ASM_RE)) namedIn(m[1], m[2]);",
+      to: "    for (const m of [].values()) namedIn(m[1], m[2]);" }],
+    mustBreak: "a suite naming, through the ASSEMBLED spelling in CODE, a tool that READS the file is selected — it is the edge, not the path, that selects it",
+    mustNotBreak: ["...and a suite whose ONLY mention of that same tool is a COMMENT is NOT selected — a comment runs nothing",
+                   "...and selects its IMPORTER", "...and the suite that WALKS tools/",
+                   "a suite that READS the file through a STRING path is selected — selecting nothing is not the fix"] },
 ];
 
 /* ---------------------------------------------------------------- D-331: every anchor, before anything arms */
