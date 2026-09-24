@@ -50,6 +50,29 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v107, 2026-09-24 session, thread UI, UI-86 (a WORKER of CONDUCT #19, cloud session). Landed on `land/worker/UI-86` (base
+`origin/main` @ `3f4b8f8c`), in the commit that carries this entry. (UI-68 holds `v105` and D-126 `v106`; renumbered this
+entry `v107` at c19-batch10.) SURFACES: the QUEUE (`SURFACES["queue"]`) — the case group's mute, each item's own controls, and the
+feed's mute report.
+
+**What was untrue.** D-125 (2026-09-23) built BOB #26's ruling on the plane — a member's PERSONAL mute admits FINDING kinds,
+per case over the kinds named (DEC-10's (c)) and per item by its own id (DEC-10's (b)), and the item form reaches an ungrouped
+CONDITION (D-170, BOB #29) — while the surface still filtered its mute to `class === "CONDITION"`, said *"It reaches condition
+kinds only"*, drew no per-item control, and returned no report unless a CASE had been muted. So a member was told a finding
+could not be muted when the record would honour it, and an item mute (from any client) made the feed quietly shorter.
+
+**What moved.** One class predicate, `queueMutableItem` (CONDITION or FINDING), now decides both forms. The case group's control
+reads "Mute these kinds on this case" and names finding kinds too, and says a muted finding stays open for everyone else until
+somebody adopts, defers or dismisses it. Every CONDITION and FINDING item — the ungrouped section included — carries "Stop
+notifying me about this one", which sends `op=queuemute` exactly `{ item }` (`queueItemMuteHtml`, `queueMuteItem`, wired on
+`data-muteitem`). `queueMuteReportHtml` reads `mute.items` as well as `mute.cases`, splits `suppressed[]` by `scope`, and reports
+an item muted earlier that is not live now. No OBLIGATION is offered either form.
+
+**Pins corrected in place, each with why:** `notifications.test.mjs` §2 "NO MUTE IS OFFERED ON A FINDING" (PL-15's, right until
+D-125) and §4's whole-page kind read (now the level block it was about); `queue.test.mjs` (7)'s four CONDITION-only arms.
+`member-respect.test.mjs` registers `queueItemMuteHtml` as a SET with both modes. **Not built, and stated:** UNMUTE — the plane
+takes `unmute` in both forms and no surface sends it, so a mute cannot be undone from the app.
+
 v106, 2026-09-23 session, thread UI, D-126 (a WORKER of CONDUCT #18, cloud session). Landed on `land/worker/D-126` (base
 `origin/main` @ `02603e88`), in the commit that carries this entry; the version number is provisional and CONDUCT
 renumbers it at integration if a concurrent entry took it. (It did: UI-74 holds `v104` and UI-68 `v105`, so CONDUCT #18

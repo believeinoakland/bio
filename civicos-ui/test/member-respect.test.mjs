@@ -705,7 +705,9 @@ const SETS = {
   "rvcGrantsHtml": { single: true, bulk: false, op: "reviewrevoke",
     why: "UI-68 (carried): one Withdraw per live grant on a review copy. `op=reviewrevoke` takes ONE `grant`, and each withdrawal is its own attributed act on the record (BIO_Publication §6A.2: the grant names who issued it, to whom and when; the withdrawal names who withdrew it). A bulk path is the PLANE accepting a set, not this surface looping — N calls over N grants is the forty-dialogs shape wearing a bulk control's clothes (DEC-52, `loadResolveCandidates`' own note)." },
   "queueMuteHtml": { single: true, bulk: true, op: "queuemute",
-    why: "CORRECTED IN PLACE by UI-55. This was the amendment's BULK-ONLY half: one control muted every condition kind on the case and the member could not say 'just this one'. `op=queuemute` already took an arbitrary subset, so the single-kind path was one parameter away and no plane change was owed." },
+    why: "CORRECTED IN PLACE by UI-55. This was the amendment's BULK-ONLY half: one control muted every condition kind on the case and the member could not say 'just this one'. `op=queuemute` already took an arbitrary subset, so the single-kind path was one parameter away and no plane change was owed. UI-86 widened it to FINDING kinds (BOB #26, D-125)." },
+  "queueItemMuteHtml": { single: true, bulk: true, op: "queuemute",
+    why: "UI-86. DEC-10's (b), 'stop notifying me about this one': ONE `{ item }` per control, keyed on the item's own id (D-125). It is the SINGLE-item mode; the case group's kind mute (`queueMuteHtml`, above) is the set mode over the same class rule (`queueMutableItem`), so neither is forced. Where an item has no case — an ungrouped condition (D-170) — the item form is the only mute the record has, and that is the plane's shape, not a mode withheld here." },
 };
 {
   let classified = 0;
@@ -769,6 +771,12 @@ for(const [host, s] of Object.entries(SETS)){
   const wire = FN_BY_NAME.get("queueWire");
   ok(!!wire && /data-mute1/.test(wire.body),
      "ARM 4d: the per-kind control is WIRED — a control the surface draws and never binds is worse than none");
+  /* UI-86: the per-item mute, measured the same way. The plane's item form is
+     the claim its SETS row rests on, so it is re-read from the plane's source. */
+  ok(/queueMute\(\{[^}]*\bitem\s*=\s*null/.test(store),
+     "ARM 4d: `op=queuemute` still takes an `item` — the single-item mute's SETS row rests on that");
+  ok(!!wire && /data-muteitem/.test(wire.body),
+     "ARM 4d: the per-item mute is WIRED — a control the surface draws and never binds is worse than none");
 }
 
 /* ========================================================================== */

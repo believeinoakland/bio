@@ -1009,8 +1009,12 @@ const FLOOR = {
      RAISED 70 -> 71 on 2026-09-22 by UI-77, from the figure this instrument PRINTED (`measured 71`): the new
      `group-surface.test.mjs` FEEDS `NOT_AUTHENTICATED` to the public header — the refusal an older plane (before
      REC-163/IC-174) answers a stranger's `op=instancegroup` with — so the header can be shown saying it could not
-     read the group rather than that none is recorded. A real widening, which this floor says should raise it. */
-  r3Fed: 72, /* D-126 (2026-09-23, branch land/worker/D-126): MOVED 71 -> 72 from this guard's own print at the COMMIT that adds civicos-ui/test/queue-peritem.test.mjs (D-257: the working tree read it before the file was committed) — the suite FEEDS NOT_YOURS into the queue surface through a real plane. */
+     read the group rather than that none is recorded. A real widening, which this floor says should raise it.
+     RAISED 71 -> 72 on 2026-09-24 by UI-86, from the figure this instrument PRINTED (`measured 72`): the queue's
+     item mute (`op=queuemute`'s `{ item }` form, D-125) is now FED `BAD_KIND` by `queue.test.mjs` and
+     `notifications.test.mjs` — the plane's refusal of an item named beside a case or kinds — where no suite fed it
+     before. A real widening. */
+  r3Fed: 73, /* CONDUCT #19 (c19-batch10, 2026-09-24): UI-86 (the queue's item mute feeds BAD_KIND; D-126 and UI-86 each moved 71 -> 72 from the same base) merged over the batch; 72 -> 73 RE-READ from this guard's --strict print on the merged tree, never added by hand. */ /* D-126 (2026-09-23, branch land/worker/D-126): MOVED 71 -> 72 from this guard's own print at the COMMIT that adds civicos-ui/test/queue-peritem.test.mjs (D-257: the working tree read it before the file was committed) — the suite FEEDS NOT_YOURS into the queue surface through a real plane. */
 };
 
 /* THE OTHER HALF OF THE RATCHET. A floor catches an instrument going blind; a

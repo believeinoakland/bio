@@ -40,6 +40,13 @@
  * general rule is now written at the arm: `says` quotes the ASSERTION, never
  * the source.
  *
+ * UI-86, RUN 2026-09-24: sixteen arms, 16 as declared, 0 not, exit 0; every
+ * restore verified by sha256 AND cmp. ARM 12 (restore the CONDITION-only filter)
+ * RED at "§2 a FINDING is offered a mute" and the case-form arm beside it; ARM 13
+ * (the liar — control offered, case form sent) RED at "…AS THE ITEM FORM"; ARM
+ * 13b (report ignores `mute.items`) RED at "…SUPPRESSION READS UNDER mute.items"
+ * and the not-live arm; ARM 14 (over-strictness, `includes` spelling) GREEN.
+ *
  * THE TWO THE ITEM'S ROW NAMES ARE ARMS 1 AND 3:
  *
  *   (1) RENDER A SLUG WITH SURFACE-AUTHORED WORDING — the queue's item renderer
@@ -196,6 +203,42 @@ const ARMS = [
       const a = "const keep = (where, html) => { PHASES.push([where, html]); return html; };";
       if (t.split(a).length - 1 !== 1) return null;
       return t.replace(a, "const keep = (where, html) => { return html; };");
+    } },
+
+  /* UI-86's arms. The row's NEGATIVE CONTROL is 12; 13 is its "how a liar passes
+     it" clause made into an arm; 13b breaks the report's read of `mute.items`;
+     14 is the over-strictness half. */
+  { id: "12-condition-only-mute-filter", file: APP, mustFail: true, says: "a FINDING is offered a mute",
+    what: "RESTORE THE CONDITION-ONLY FILTER — `queueMutableItem` admits CONDITION alone, the pre-D-125 rule, so a finding is offered no mute in either form",
+    patch: (t) => {
+      const a = '  return !!it && (it.class === "CONDITION" || it.class === "FINDING");';
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, '  return !!it && it.class === "CONDITION";');
+    } },
+
+  { id: "13-liar-sends-case-form", file: APP, mustFail: true, says: "AS THE ITEM FORM",
+    what: "THE LIAR — the per-item control is still OFFERED, but what it sends is the CASE form over the item's kind, which would silence every item of that kind on the case",
+    patch: (t) => {
+      const a = '    const res = await recPostR("queuemute", { item: itemId });';
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, '    const it0 = QUEUE_ITEMS.get(String(itemId)) || {};\n'
+        + '    const res = await recPostR("queuemute", { case: (((it0.case||{}).ancestors||[])[0]||{}).id || null, kinds: [it0.kind] });');
+    } },
+
+  { id: "13b-report-ignores-items", file: APP, mustFail: true, says: "SUPPRESSION READS UNDER mute.items",
+    what: "THE REPORT STOPS READING `mute.items` — the pre-UI-86 report, which drew nothing unless a CASE was muted, so an item mute made the feed quietly shorter",
+    patch: (t) => {
+      const a = '  const muted = Array.isArray(m.items) ? m.items : [];';
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, '  const muted = [];');
+    } },
+
+  { id: "14-over-strictness-mutable", file: APP, mustFail: false,
+    what: "OVER-STRICTNESS — `queueMutableItem` written with `includes` over the two classes, the same rule in a spelling this suite's author did not choose, which must PASS",
+    patch: (t) => {
+      const a = '  return !!it && (it.class === "CONDITION" || it.class === "FINDING");';
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, '  return !!it && ["FINDING", "CONDITION"].includes(it.class);');
     } },
 
   { id: "11-baseline", file: APP, mustFail: false,
