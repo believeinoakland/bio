@@ -16481,7 +16481,27 @@ export class Store extends DurableObject {
        * inquiries), the LEDGER (CORRESPONDENCE_REFUSED — capture-or-testify),
        * and RESOLUTION (a leg or a hash that points at nothing in this store,
        * which only the store can see). */
-      const isAction = normalizeType(meta.object_type) === "action";
+      /* D-505 (`BIO_Case_Making_v0_1.md` §2, `risk_tier`; BOB #32's 2026-09-24 rule): ASK BOTH SPELLINGS OF
+       * "THIS IS AN ACTION", AND THE UNION CAN ONLY ADD REFUSALS. This read `meta.object_type` ALONE — the
+       * CALLER'S meta — while everything downstream of the write derives the action from the DOCUMENT'S OWN
+       * `object_type`: `#projectRow` writes `action_risk_tier: fm.object_type === "action" ? num(fm.risk_tier)
+       * : null` off the promoted bytes, and `query.mjs`'s `risk:` search reads that column. So the fence was
+       * asking one question and the record was answering another.
+       *
+       * MEASURED 2026-09-24 through op=promote on a machine credential (D-505's probe, and section 7 of
+       * `risk-tier.test.mjs` now drives it): a document whose bytes say `object_type: action` and
+       * `risk_tier: 1`, promoted with `meta: { object_type: "information" }`, LANDED — C-32.19 never ran, the
+       * stored bundle.md carried `risk_tier: 1`, `action_risk_tier` read 1, and `op=search q=risk:1` FOUND it.
+       * A machine set the one field carrying legal exposure by calling its own action something else in the
+       * envelope. `promote` is the ONE writer of bundle.md in this file (every other writer in it, including
+       * this op's own splicing callers, comes back through here), so closing it here closes the write.
+       *
+       * IT IS A UNION AND NEVER A SWAP: every promote refused before this line is refused still, and the only
+       * promotes it newly reaches are the ones whose OWN BYTES say action — which is precisely the set whose
+       * risk tier the record will go on to publish. Replay stays exempt with the block, for the reason the
+       * block states; that exemption is caller-asserted, which is D-505's reported finding and not this fix. */
+      const isAction = normalizeType(meta.object_type) === "action"
+        || (docFmW && typeof docFmW === "object" && normalizeType(docFmW.object_type) === "action");
       if (isAction && docFmW && !pkg.replay) {
         /* REC-189 / C-32.19 — ONLY A MEMBER'S AUTHORED ACT SETS A RISK TIER (D-182, BOB #21:
            *"Only a member's authored act sets 1, 2 or 3"*; `BIO_Case_Making_v0_1.md` §2). D-182 built the
