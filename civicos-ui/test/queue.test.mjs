@@ -137,6 +137,8 @@ import { appScript } from "./extract.mjs";
    copied — a hand list of condition kinds is what made this mock refuse a FINDING
    kind the plane accepts from D-125 on. */
 import { classOfKind } from "../../bio-plane/src/queuestate.mjs";
+import { unknownOpWire, UNKNOWN_OP_CODE, UNKNOWN_OP_CANNED, UNKNOWN_OP_ERROR } from "./plane-refusal-wire.mjs";   /* UI-100: the dispatch miss is DERIVED from index.mjs and the DEC-49
+      catalogue, never typed — see that module's header. */
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -248,7 +250,16 @@ function makePlane(opts){
     const R = x => ({ ok:true, json:async()=>x });
     const NO = x => ({ ok:false, json:async()=>x });
     if(op === "queue"){
-      if(state.queueAbsent) return NO({ ok:false, error:"unknown op queue" });
+      /* CORRECTED 2026-09-24 (UI-100), never exempted. This read `{ ok:false,
+         error:"unknown op queue" }` — a sentence THE PLANE HAS NEVER SENT: `error`
+         is "unknown op" byte-identical and the op travels in its own key. Worse, it
+         was narrower than the wire in the direction that matters HERE: since D-278
+         the dispatch miss carries `reason`, `code`, `check` and DEC-49's canned
+         `translation`, and this feed's absent branch RENDERS the plane's words
+         (`queueFeedHtml` prints `queueReason(e)` = reason + `refusalWords(e)` in
+         `.q-feed-why`). So the old fixture made a member-facing assertion against a
+         sentence no member is ever sent. */
+      if(state.queueAbsent) return NO(unknownOpWire("queue"));
       if(state.queueFails)  return NO({ ok:false, ...state.queueFails });
       const live = state.items.filter(i => !state.resolved.some(r => String(r.id) === String(i.id)));
       return R({ ok:true, result:{ ok:true, member:"m_alice", items:live,
@@ -262,7 +273,9 @@ function makePlane(opts){
                  suppressed:state.mute.suppressed_count } } });
     }
     if(op === "tasks"){
-      if(state.resAbsent) return NO({ ok:false, error:"unknown op tasks" });
+      /* CORRECTED 2026-09-24 (UI-100), for the reason at `op=queue` above — this
+         composed "unknown op tasks" and this feed RENDERS the refusal too. */
+      if(state.resAbsent) return NO(unknownOpWire("tasks"));
       if(state.resFails)  return NO({ ok:false, ...state.resFails });
       if(state.resHangs)  return new Promise(()=>{});        // never settles
       return R({ ok:true, result:{ ok:true, tasks:state.resolved.slice(), counts:{} } });
@@ -590,6 +603,41 @@ async function click(ctx, attr, value){
   ok("it shows no count either", /No count is shown for it/.test(html2));
   ok("the two treatments are DISTINCT strings — the old Proposals screen collapsed them",
      /This op is not on this plane/.test(html2) && !/This op is not on this plane/.test(html));
+
+  /* ---- WHAT THE PLANE SAID, ON THE PAGE — UI-100, 2026-09-24 ----------------
+     THE REACH ARM, and it is the half this block did not have. The five
+     assertions above read THIS SURFACE'S OWN five sentences. `queueFeedHtml`'s
+     absent branch also prints `st.why` — `queueReason(e)`, the code joined to
+     `refusalWords(e)` — in `.q-feed-why`, so this screen RENDERS the plane's
+     refusal to a member and is the ONE member of UI-100's `unknown op` family
+     that does (the other four GAP-DETECT: `docProgressions` and `proposalAct`
+     substitute a sentence of their own, `inquiryCasePairs` renders none by
+     design, and `auth-surface`'s is a fallthrough nothing drives).
+     THAT IS WHY IT WENT UNCAUGHT. Correcting the fixture to the wire changed
+     what this screen renders — from the composed "unknown op tasks" to
+     `UNKNOWN_OP · <DEC-49's canned sentence>` — and THIS FILE STAYED GREEN AT
+     140 ASSERTIONS, because not one of them read the span. It is UI-84's own
+     finding one surface over, and M0-23's before it: a fixture that cannot
+     represent the wire cannot assert against it, and one that CAN still asserts
+     nothing until somebody writes the assertion. These are that assertion.
+     BOTH DIRECTIONS, and both values DERIVED: what a member must now read, and
+     the invented sentence they must NOT — no fixture in this file can make
+     either of these green by agreeing with itself. */
+  const why2 = (/<span class="q-feed-why">([^<]*)<\/span>/.exec(html2) || [])[1] || "";
+  ok("the absent feed's `.q-feed-why` is non-empty before anything is asserted about its contents",
+     why2.length > 40, JSON.stringify(why2));
+  ok("REACH: a member reads DEC-49's CANNED sentence for the dispatch miss, the one the catalogue holds "
+     + "under the code the plane mints at its own `if (!spec)` site — not a sentence written here",
+     why2.includes(UNKNOWN_OP_CANNED.translation), JSON.stringify(why2));
+  ok("and the wire code travels beside it, which is `queueReason`'s own order (reason, then the sentence)",
+     why2.startsWith(UNKNOWN_OP_CODE + " \u00b7 "), JSON.stringify(why2));
+  ok("THE INVENTED SENTENCE IS GONE: this fixture composed \"unknown op tasks\" until 2026-09-24 and the "
+     + "plane has never sent it — `error` is " + JSON.stringify(UNKNOWN_OP_ERROR) + " byte-identical and "
+     + "the op travels in its own key",
+     !/unknown op tasks/.test(html2) && !/unknown op queue/.test(html2));
+  ok("and the terse wire word is DISPLACED rather than added to: `refusalWords` renders the canned "
+     + "translation FIRST, so the member reads the sentence and not the two run together",
+     !why2.includes(UNKNOWN_OP_ERROR));
 }
 
 /* ================ (5) Retry re-runs ONLY the failed feed ================== */

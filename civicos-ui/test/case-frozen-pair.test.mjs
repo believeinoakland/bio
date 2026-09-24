@@ -61,6 +61,8 @@ import vm from "vm";
 import { createRequire } from "module";
 import { pathToFileURL } from "url";
 import { webcrypto, createHash } from "crypto";
+import { unknownOpWire } from "./plane-refusal-wire.mjs";   /* UI-100: the dispatch miss is DERIVED from index.mjs and the DEC-49
+      catalogue, never typed — see that module's header. */
 import { execFileSync, spawnSync } from "child_process";
 import { mkdtempSync, writeFileSync, readFileSync } from "fs";
 import { tmpdir } from "os";
@@ -446,9 +448,28 @@ ok("LEGACY+RULE 12: and each block carries its own case's pair (C/UNRATED under 
    5. SILENCE AND IDENTITY
    ============================================================ */
 console.log("\n--- 5. a published read that does not answer; a case pinned at another sha ---");
+/* CORRECTED 2026-09-24 (UI-100), never exempted: the silent-read specimen below
+   was a bare `{ ok:false, error:"unknown op" }`, true to the wire until D-278
+   (2026-09-23) and not since — the dispatch miss now carries `reason`, `code`,
+   `check` and DEC-49's canned `translation`. `inquiryCasePairs` only GAP-DETECTS,
+   and deliberately: its own header says it "never renders the refusal's code or
+   sentence to anybody, because the refusal is a question to this reader and not a
+   statement for a member". So no assertion here moves — but the corrected envelope
+   now also proves the branch order holds against the real wire, which is the part
+   that could have broken silently: `reason` arrives POPULATED (the dispatch miss's own code) where
+   it used to be absent, and the read must still fall past the `NOT_PUBLISHED` test
+   into `silent` rather than being mistaken for the true negative.
+   THE CODE IS NAMED UNQUOTED HERE, ON PURPOSE AND NOT AS A STYLE. UI-100's own
+   measurement: `check-refusal-codes.mjs`' R3-FED walk harvests any SCREAMING_SNAKE
+   token in quotes or backticks ANYWHERE in a suite's source, comments included, and
+   counts it as a code this suite FEEDS to a surface. Backticking it here raised the
+   `r3Fed` floor by prose — a floor moved by a sentence is not a ratchet. The hand-off
+   is real and is made by the derived envelope above; it is invisible to that walk for
+   the reason UI-84 recorded (it keys on literals and this one arrives through a
+   function), and it must not be made visible by writing the literal down. */
 const pairless = { basis: LEGS };
 const p5 = await openMock(mockFor({ id: "INQ-2026-8084", sha: "c".repeat(64), fm: pairless,
-  answer: { ok: false, error: "unknown op" } }), "INQ-2026-8084");
+  answer: unknownOpWire("publishedcase") }), "INQ-2026-8084");
 ok("SILENCE: a published read that did not answer is SAID as that — never as 'not published'",
    /data-published-read="silent"/.test(p5) && /could not read the published record/.test(strip(p5))
    && !/not published to this page yet/.test(p5));
