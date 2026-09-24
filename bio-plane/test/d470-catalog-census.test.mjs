@@ -38,7 +38,7 @@
  * The BUMP follows REC-14's precedent as `gate.mjs` records it: 1.18.0 -> 1.19.0
  * was MINOR, and so was 1.19.0 -> 1.20.0, for a change that made the catalogue
  * refuse documents that used to pass. This is the same class, and the bump is
- * MINOR: 1.20.0 -> 1.21.0.
+ * MINOR: 1.20.0 -> 1.21.0, and 1.21.0 -> 1.22.0 at c20-batch13 (below).
  *
  * WHAT THE CENSUS IS. The set of C-numbers THIS CATALOGUE HOLDS, taken from
  * `checks/bio-checks.mjs` by two sources that are unioned and never subtracted:
@@ -108,6 +108,15 @@
  * AS DECLARED (baseline 9 pass 0 fail; (b) 8/1, A3 alone; (c) 8/1, A2 alone, A3
  * green; (d) 7/2, A3 and A5; (e) 9/0, green). The per-arm figures and the restore
  * digests are at the foot of the driver.
+ * RE-RUN IN FULL 2026-09-24 at c20-batch13 (CONDUCT #20) AFTER MOVING THIS
+ * SUITE'S SUBJECT — the catalogue version 1.21.0 -> 1.22.0, its census row and
+ * the C41.DISCLOSURES relay — because a control coupled to the old constant can
+ * be disarmed by the very edit it is meant to guard, and arm (d)'s needle IS
+ * that constant. 5 OF 5 AS DECLARED, unchanged in shape: baseline 9/0; (b) 8/1,
+ * A3 alone; (c) 8/1, A2 alone; (d) 7/2, A3 and A5; (e) 9/0. Every restore
+ * verified by sha256, by content and by `cmp` (gate.mjs 10,338 B; bio-checks.mjs
+ * 917,688 B), driver exit 0. The arms are the same arms — what moved was the
+ * figure they are armed against, which is the distinction this file is about.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
@@ -202,9 +211,22 @@ const digestOf = (ids) => createHash("sha256").update([...ids].sort().join("\n")
  * something from here on, and 1.20.0 is deliberately absent because nobody
  * measured the catalogue it stamped and inventing that figure now would be the
  * defect this row is closing, wearing the other face.
+ *
+ * 1.22.0 (CONDUCT #20, c20-batch13, 2026-09-24): THE FIRST MOVE THIS CENSUS
+ * FORCED, and it is the arm working rather than the arm being maintained. D-470
+ * measured 433 on ITS OWN BASE; the other side of this integration,
+ * c20-batch11fix, had grown the catalogue while standing at 1.20.0 with no
+ * census suite on it to notice. At the union A3 went red naming both figures and
+ * the exact line to write, and this is that line: 438, from the digest THIS
+ * SUITE PRINTED on the merged tree, never arithmetic on 433. FIVE ARRIVALS, NO
+ * DEPARTURES — C-32.19, C-41.13, C-71.8, C-71.9 and C-78.2 — so the bump is
+ * ADDITIVE and MINOR on the same precedent as the one above. 1.21.0's row STAYS:
+ * it is what the catalogue held at that version and A4 needs both to mean
+ * anything. (A4's own arm confirms the two censuses differ, which they do.)
  * ------------------------------------------------------------------------ */
 const CATALOG_CENSUS = {
   "1.21.0": { count: 433, digest: "7e1c85cd94bffdf2140d52e6269b6a1178d3dbc76c40f8ec1b870b5626293e02" },
+  "1.22.0": { count: 438, digest: "1cce052ae21076c6f7f5f0fafe13c2cc25b834a546dd108480dd6b873b81772b" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -216,6 +238,12 @@ const RELAYS = {
   "C41.ROSTER": "CASE_DOCUMENT_FAMILY", "C41.ROLES": "CASE_DOCUMENT_FAMILY",
   "C41.PINS": "CASE_DOCUMENT_FAMILY", "C41.COMPLETENESS": "CASE_DOCUMENT_FAMILY",
   "C41.EXCLUDED": "CASE_DOCUMENT_FAMILY", "C41.BAR": "CASE_DOCUMENT_FAMILY",
+  /* ADDED at c20-batch13 (CONDUCT #20, 2026-09-24): REC-188's disclosures arm
+     (C-41.13) landed on the OTHER side of this integration, so D-470's table —
+     written on a base without it — could not name it and A2 went red at the
+     union. It is the thirteenth member of the SAME family as the twelve above,
+     relayed the same way; nothing about the mechanism changed. */
+  "C41.DISCLOSURES": "CASE_DOCUMENT_FAMILY",
   "row.check": "BASIS_VERSION_CHECKS and SUGGEST_CHECKS (basisVersionFindings' two push helpers)",
   "checkId": "checkLegExtentGrammar's parameter — 'C-2.8' here, 'C-25.10' from src/store.mjs "
            + "(BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE)",
@@ -285,8 +313,11 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 }
 
 /* (A5) THE STAMP READS THE CATALOGUE'S VERSION, and reads the bumped one. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.21.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.21.0)", "1.21.0"]);
+/* CORRECTED at c20-batch13, never exempted: the catalogue moved under this pin
+   at the union (five arrivals from c20-batch11fix's side), so 1.21.0 had stopped
+   naming one catalogue — the exact defect the header describes. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.22.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.22.0)", "1.22.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

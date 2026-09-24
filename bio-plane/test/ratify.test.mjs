@@ -206,8 +206,16 @@ t("attested by the key's member", rat.attestor, "sparky");
    number is now HELD to the catalog by `test/d470-catalog-census.test.mjs`, so
    the next check that lands turns that suite red until this string and that one
    move together. Still the exact version and still not a pattern, for the reason
-   above. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.21.0)");
+   above.
+   1.22.0 (CONDUCT #20, c20-batch13, 2026-09-24): CORRECTED AGAIN, and this time
+   the correction was FORCED rather than noticed — which is the mechanism the
+   note above promised. Five checks arrived from the other side of this
+   integration (C-32.19, C-41.13, C-71.8, C-71.9, C-78.2),
+   `test/d470-catalog-census.test.mjs` went red at its census pin, and this
+   string and that one moved together exactly as that note says they must. The
+   old assertion was WRONG, not stale: at the union it named a catalogue that no
+   longer existed. */
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.22.0)");
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong
