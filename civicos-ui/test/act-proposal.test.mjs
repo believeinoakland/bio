@@ -39,6 +39,8 @@ import { appScript } from "./extract.mjs";
 /* The catalog, so what ADOPT writes is pinned to the type and first state the
    plane itself would accept rather than to a literal in this file (UI-10). */
 import { STATES } from "../../bio-plane/checks/bio-checks.mjs";
+import { unknownOpWire } from "./plane-refusal-wire.mjs";   /* UI-100: the dispatch miss is DERIVED from index.mjs and the DEC-49
+      catalogue, never typed — see that module's header. */
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -80,7 +82,15 @@ function makePlane(opts){
        It answered a bare `{ok:false, reason:"NO_REASON"}` with no detail, which
        let the surface's invented sentence look necessary. */
     if(op==="proposedispose"){
-      if(opts.noDisposeOp) return { ok:false, json:async()=>({ ok:false, error:"unknown op" }) };
+      /* CORRECTED 2026-09-24 (UI-100). The bare `{ error:"unknown op" }` was true
+         to the wire until D-278 (2026-09-23) and is not since: the dispatch miss now
+         carries `reason`, `code`, `check` and DEC-49's canned `translation`. The
+         surface only GAP-DETECTS here — `proposalAct`'s catch matches `error` as a
+         substring and then substitutes its OWN refusal (`NO_SUCH_OP_HERE`), so the
+         plane's sentence is never rendered on this path — but a fixture that cannot
+         represent the wire cannot assert against it, and the corrected one proves
+         the detector still fires on the envelope the plane really sends. */
+      if(opts.noDisposeOp) return { ok:false, json:async()=>unknownOpWire("proposedispose") };
       const to = body && body.to;
       const reason = String((body&&body.reason)||"").trim();
       const REF = x => ({ ok:false, json:async()=>({ ok:true, result:x }) });
@@ -96,7 +106,8 @@ function makePlane(opts){
       return R({ ok:true, result:{ target:null, catalog:[],
         vocabularies:{ dispositions:["deferred","dismissed"] } } });
     if(op==="proposals"){
-      if(opts.noFeedOp) return { ok:false, json:async()=>({ ok:false, error:"unknown op" }) };
+      /* CORRECTED 2026-09-24 (UI-100), for the reason at `op=proposedispose` above. */
+      if(opts.noFeedOp) return { ok:false, json:async()=>unknownOpWire("proposals") };
       return R({ result:{ instances: opts.instances||[] } });
     }
     return R({ ok:false, reason:"unexpected op "+op });

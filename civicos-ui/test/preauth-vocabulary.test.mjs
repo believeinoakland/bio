@@ -793,31 +793,20 @@ ok("the plane's own refusal for an op it does not have is readable from here too
    and wide are both pinned here. UI-73's login guard above pins only narrow,
    and correctly — `SIGN_IN_REFUSED` is in no family at all, so the only way
    that one can move is by gaining a row. */
-const CATALOGUE = await import("../../bio-plane/checks/bio-checks.mjs");
-/* The CODE, read at the site that mints it. GUARDED for the reason every read in
-   this file is: an extraction that silently yielded "" would find no catalogue
-   row, and an assertion that a fixture matches nothing passes for free. */
-const planeCodeAt = (re) => { const m = re.exec(INDEX_SRC); return m ? m[1] : ""; };
-const UNKNOWN_OP_CODE = planeCodeAt(
-  /if \(!spec\) return json\(\{[\s\S]{0,240}?\.\.\.dispatchRow\("([A-Z_0-9]+)"\)/);
-const VERIFY_ARG_CODE = planeCodeAt(
-  /function requiredArgument\([\s\S]{0,900}?\.\.\.requiredArgumentRow\("([A-Z_0-9]+)"\)/);
-/* The SENTENCE, from whichever `*_CHECKS` family holds that code — the family is
-   DISCOVERED rather than named here, so a row moved between families by a
-   renumbering (D-126 moved two on 2026-09-23) does not silently empty a fixture. */
-function cannedFor(code){
-  if(!code) return null;
-  for(const k of Object.keys(CATALOGUE)){
-    const fam = CATALOGUE[k];
-    if(!/_CHECKS$/.test(k) || !fam || typeof fam !== "object") continue;
-    const row = fam[code];
-    if(row && typeof row.translation === "string" && row.translation)
-      return { family:k, check:row.check, translation:row.translation };
-  }
-  return null;
-}
-const UNKNOWN_OP_CANNED = cannedFor(UNKNOWN_OP_CODE);
-const VERIFY_ARG_CANNED = cannedFor(VERIFY_ARG_CODE);
+/* MOVED 2026-09-24 (UI-100) AND NOT WEAKENED. The derivation below — the code read
+   at the site that mints it, the sentence found by DISCOVERING the `*_CHECKS`
+   family rather than naming one, `requiredArgument`'s own two-chunk `detail`
+   template, and the guard that makes an empty read THROW instead of yielding a
+   fixture that asserts nothing — was written here by UI-84 and is now
+   `./plane-refusal-wire.mjs`, imported. It moved because UI-84's own class sweep
+   found SEVEN more `unknown op` mocks and one `requiredArgument` mock in this
+   estate, all typed by hand: a technique copied nine times has a ninth copy that
+   goes stale, which is the defect `kickoffs/UI.md` records for the analyst's
+   vocabulary and answers with one imported module. Every assertion below is
+   unchanged and still reads the plane, not this file. */
+const { UNKNOWN_OP_CODE, UNKNOWN_OP_CANNED, unknownOpWire,
+        REQUIRED_ARGUMENT_CODE: VERIFY_ARG_CODE, REQUIRED_ARGUMENT_CANNED: VERIFY_ARG_CANNED,
+        requiredArgumentDetail, requiredArgumentWire } = await import("./plane-refusal-wire.mjs");
 ok("D-278's code for the dispatch miss is read at its own site in index.mjs and the catalogue holds a "
    + "canned translation under it — " + JSON.stringify(UNKNOWN_OP_CODE) + " in "
    + (UNKNOWN_OP_CANNED ? UNKNOWN_OP_CANNED.family + " (" + UNKNOWN_OP_CANNED.check + ")" : "NO FAMILY"),
@@ -844,32 +833,29 @@ ok("MEASURED IN THE PLANE'S SOURCE: the dispatch miss leaves `fetch` DECORATED �
 ok("MEASURED IN THE PLANE'S SOURCE: op=verify's malformed-hash refusal is minted through `requiredArgument`, "
    + "so it too reaches a stranger with DEC-49's canned sentence standing in front of the caller's one",
    VERIFY_DECORATED);
-/* `requiredArgument`'s own `detail` template, so the fixture's caller-facing
-   sentence is not a hand copy either. The helper builds it from two backtick
-   chunks; both are collected and the substitutions are the plane's own. */
-function planeRequiredArgumentDetail(op, argument, shape){
-  const body = /function requiredArgument\([\s\S]*?\n\}/.exec(INDEX_SRC);
-  if(!body) return "";
-  const d = /detail: ([\s\S]*?)\};/.exec(body[0]);
-  if(!d) return "";
-  return [...d[1].matchAll(/`([^`]*)`/g)].map(x => x[1]).join("")
-    .replace(/\$\{op\}/g, op).replace(/\$\{argument\}/g, argument).replace(/\$\{shape\}/g, shape);
-}
-const VERIFY_ARG_DETAIL = planeRequiredArgumentDetail("verify", "sha256", "<64 lowercase hex>");
+/* `requiredArgument`'s own `detail` template — the module's reader, which collects
+   BOTH backtick chunks and not the first (a one-chunk read hands a caller half a
+   sentence and every arm asserting a prefix of it still passes). */
+const VERIFY_ARG_DETAIL = requiredArgumentDetail("verify", "sha256", "<64 lowercase hex>");
 ok("and `requiredArgument`'s own detail template is readable from here WHOLE — both chunks, not the first — "
    + JSON.stringify(VERIFY_ARG_DETAIL),
    /^op=verify needs 'sha256' in the shape <64 lowercase hex>,/.test(VERIFY_ARG_DETAIL)
    && /Nothing was changed\.$/.test(VERIFY_ARG_DETAIL));
-/* THE TWO FIXTURES, in the wire's own key order and with every value derived above. */
-const VERIFY_REFUSAL_WIRE = {
-  ok:false, reason:VERIFY_ARG_CODE, code:VERIFY_ARG_CODE,
-  check:VERIFY_ARG_CANNED && VERIFY_ARG_CANNED.check,
-  translation:VERIFY_ARG_CANNED && VERIFY_ARG_CANNED.translation,
-  error:VERIFY_REFUSAL, op:"verify", argument:"sha256", shape:"<64 lowercase hex>", detail:VERIFY_ARG_DETAIL };
-const unknownOpWire = (op) => ({
-  ok:false, error:UNKNOWN_OP_REFUSAL, reason:UNKNOWN_OP_CODE, code:UNKNOWN_OP_CODE,
-  check:UNKNOWN_OP_CANNED && UNKNOWN_OP_CANNED.check,
-  translation:UNKNOWN_OP_CANNED && UNKNOWN_OP_CANNED.translation, op });
+/* THE TWO FIXTURES, in the wire's own key order and with every value derived by
+   the module above — `unknownOpWire` is imported and used verbatim, and
+   `op=verify`'s is the module's `requiredArgumentWire` read at the plane's own
+   call site. MOVED 2026-09-24 (UI-100) from two object literals written here.
+   THE READ IS FLOORED BEFORE ANY ARM USES IT: `requiredArgumentWire` returns null
+   when the call site cannot be found, and a spread of null is an EMPTY object —
+   exactly the shape that makes every assertion below pass for free. */
+const VERIFY_REFUSAL_WIRE = requiredArgumentWire("verify");
+ok("op=verify's whole refusal envelope is readable from the plane's own call site — its `error` the "
+   + "byte-identical sentence this file reads separately, its `op`, `argument` and `shape` the call's "
+   + "own arguments — so no key of this fixture is typed here",
+   !!VERIFY_REFUSAL_WIRE && VERIFY_REFUSAL_WIRE.error === VERIFY_REFUSAL
+   && VERIFY_REFUSAL_WIRE.op === "verify" && VERIFY_REFUSAL_WIRE.argument === "sha256"
+   && VERIFY_REFUSAL_WIRE.shape === "<64 lowercase hex>",
+   JSON.stringify(VERIFY_REFUSAL_WIRE));
 /* The two sentences a STRANGER now reads, named once so every arm below pins the
    same derived value rather than re-deriving it, and FLOORED — an arm asserting a
    pane contains "" passes for free, which is the shape every read in this file is

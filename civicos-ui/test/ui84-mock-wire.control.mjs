@@ -51,6 +51,18 @@
  *
  *       MEASURED: RED 5 of 84, the SITE assertion among them BY NAME — so the declaration held, but it
  *       named the MINIMUM and the blast radius is larger, which is recorded rather than rounded off.
+ *
+ *       **CORRECTED 2026-09-24 (UI-100), NEVER EXEMPTED — THE RESULT MOVED AND THE OLD ONE WOULD NOW
+ *       READ AS A REGRESSION.** Re-run against the moved derivation, this arm no longer reports RED 5
+ *       of 85: it reports NO TALLY LINE, exit 1 — the suite does not reach its own foot. That is the
+ *       intended behaviour of the shared module and it is STRICTLY STRONGER than five failed
+ *       assertions. `plane-refusal-wire.mjs` calls `assertDerived()` at import, so a plane that stops
+ *       decorating stops every importing suite AT THE IMPORT with a sentence naming which derivation
+ *       came back empty, rather than letting five assertions fail and the other eighty pass on a
+ *       fixture that silently lost its translation. WHAT MUST STILL BE TRUE IS UNCHANGED AND IS WHAT
+ *       THIS ARM IS FOR: the wide direction must be impossible — a plane that stopped decorating must
+ *       never leave a fixture asserting a sentence the wire does not send. A dead suite says that
+ *       louder than a failing assertion does. The RUN LINE to read this against is "NO TALLY LINE".
  *       The other four fall out of the same cause and they carry the item's best property: the CODE is
  *       read at the plane's own site, so when the plane stops decorating, `cannedFor("")` finds nothing
  *       and the fixture goes NARROW — it carries no translation — instead of going WIDE. **A fixture
@@ -76,13 +88,24 @@ import path from "path";
 
 const ROOT = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
 const SUITE  = path.join(ROOT, "civicos-ui/test/preauth-vocabulary.test.mjs");
+/* RE-ANCHORED 2026-09-24 (UI-100), never exempted. Arms (A) and (B) patched two lines
+   that used to live in SUITE and now live in `plane-refusal-wire.mjs`: UI-100 moved this
+   derivation out of the suite so the seven other `unknown op` mocks and the one
+   `requiredArgument` mock in this estate could be built from it too. Run against the moved
+   tree, both arms reported NEVER ARMED — which is this control working, and is why the
+   anchors follow the subject rather than the subject being left where the control could
+   still find it. The arms are STRONGER in the new place, not weaker: dropping a
+   `translation` there drops it for every suite that imports the module, so what used to
+   break one file's fixture now breaks the class. The DECLARATIONS above are unchanged and
+   are still about SUITE, because SUITE is still the only thing this control runs. */
+const MODULE = path.join(ROOT, "civicos-ui/test/plane-refusal-wire.mjs");
 const PLANE  = path.join(ROOT, "bio-plane/src/index.mjs");
 const CATLG  = path.join(ROOT, "bio-plane/checks/bio-checks.mjs");
 const TMP    = path.join(ROOT, "civicos-ui/test/.ui84-control");   /* INSIDE this worktree: /tmp is shared
    across every session on this machine and a generic name there is an identity nobody owns (WORKER.md). */
 
 const sha = (p) => crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");
-const MIN_BYTES = { [SUITE]: 100000, [PLANE]: 400000, [CATLG]: 300000 };
+const MIN_BYTES = { [SUITE]: 100000, [PLANE]: 400000, [CATLG]: 300000, [MODULE]: 5000 };
 
 function runSuite(){
   try{
@@ -104,10 +127,10 @@ const failingLines = (out) => out.split("\n").filter(l => /^\s*FAIL /.test(l))
   .map(l => l.trim().slice(0, 150));
 
 const ARMS = [
-  { id:"A", file:SUITE, why:"the row's own: `translation` dropped from the op=verify fixture",
-    from:`  translation:VERIFY_ARG_CANNED && VERIFY_ARG_CANNED.translation,`,
-    to:  `  translation:undefined,` },
-  { id:"B", file:SUITE, why:"the other refusal alone: `translation` dropped from unknownOpWire",
+  { id:"A", file:MODULE, why:"the row's own: `translation` dropped from the op=verify fixture",
+    from:`           translation:REQUIRED_ARGUMENT_CANNED && REQUIRED_ARGUMENT_CANNED.translation,`,
+    to:  `           translation:undefined,` },
+  { id:"B", file:MODULE, why:"the other refusal alone: `translation` dropped from unknownOpWire",
     from:`  translation:UNKNOWN_OP_CANNED && UNKNOWN_OP_CANNED.translation, op });`,
     to:  `  translation:undefined, op });` },
   { id:"C", file:CATLG, why:"OVER-STRICTNESS: the catalogue family renamed; same row, same sentence",
