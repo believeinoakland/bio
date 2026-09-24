@@ -63,7 +63,18 @@ const AGENDA_RECT = [244.8, 484.9, 363.6, 602.25];
    walk added a tokenizer option; these pins are what says the text walk did
    not feel it. */
 const TEXT_PIN_SYNTH = "11304705928975fe3dfefe4fbbd1d91d8ffb41067a9864407eba87af04a0b821";
-const TEXT_PIN_AGENDA = "4c7c378c212a875ebf7d7079d3822b0f121b4c763a04b3c4305baff41e262bc3";
+/* RE-PINNED 2026-09-24 by D-481, and the CLAIM is unchanged: this pair still says
+   the image walk does not perturb the text walk. What moved is the text itself.
+   D-481 stopped `Td`/`TD`/`Tm` breaking a line when the baseline does NOT move, so
+   the agenda now reads 397 lines where it read 421, and its digest necessarily
+   moved with it. THE OLD VALUE WAS NOT WRONG WHEN IT WAS TAKEN — it was the
+   pristine reading of 2026-09-18 — it is SUPERSEDED, and it is corrected rather
+   than exempted. Two facts make the re-pin honest rather than a rubber stamp:
+   the SYNTHETIC fixture's pin did NOT move (it positions no glyph on a shared
+   baseline, so D-481 cannot touch it), and the new agenda digest reproduced on
+   two consecutive runs. Taken from the figure the suite PRINTED, never computed
+   by hand. Figures: docs/development/measurements/M-133.md. */
+const TEXT_PIN_AGENDA = "aa1703bafc6165324b52dd832d6a15401920f968650ab7ac8b33393e4bb80949";
 
 /* ---- a tiny PDF assembler (capture-pagecount's) ---- */
 function pdf(objs) {
