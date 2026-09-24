@@ -28722,7 +28722,13 @@ export class Store extends DurableObject {
        COMPARISON: what the act says it judged against what is standing now. It refuses in BOTH
        directions — an earlier version (the revision landed in the window) and a version that never
        stood (a caller inventing one) — because each is a decision about something other than the
-       record's current question, and the plane cannot tell which from the number alone. */
+       record's current question, and the plane cannot tell which from the number alone.
+       MEASURED, NOT ASSUMED — REC-211's control arm (B) removed the check ABOVE and this suite
+       still refused and still wrote nothing: an act naming no version arrives here with
+       `seenVersion` = NaN, and `NaN !== 4`. **THIS LINE CARRIES THE SAFETY; THE ONE ABOVE CARRIES
+       THE HONESTY.** Delete the named check and a member who named nothing is told the declared
+       flow was revised — which this plane does not know, and which is the invented-reason defect
+       one refusal over. Neither is redundant and neither substitutes for the other. */
     if (seenVersion !== currentVersion) {
       const row = ACT_SHAPE_CHECKS.DEFINITION_MOVED;
       return { ok: false, reason: "DEFINITION_MOVED", code: "DEFINITION_MOVED",
