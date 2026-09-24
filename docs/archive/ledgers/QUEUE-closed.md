@@ -4134,3 +4134,33 @@ scope: the delegation's four surfaces; nothing leaves the instance from the UI.
 accepts-when: the harness drafts, grants, reads by secret, comments and revokes against the real plane, and a revoked secret reads nothing. How a liar passes it: a hidden export path (a print stylesheet, a blob link), so the harness asserts NO such affordance exists. NEGATIVE CONTROL: add a download link, and the no-export arm fails by name. `node civicos-ui/test/run.mjs` from the repo root, unpiped, exit 0; `node tools/plancheck.mjs --local` then BARE.
 added: 2026-09-19 · SCHEDULER (BOB #16 inbox "THREE DESIGNS AT THEIR HOMES", item 6).
 uncut: restored whole from «UI-68» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
+
+### D-482 · done — on main at 0fdef669 (train-20260924T041650Z-598) — SCHEDULER #18
+order: after D-481: an instrument that fails correct work costs every lane gate time (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:24Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` "The negative-control register".
+depends-on: none.
+scope: add `"` and `'` to the class in `callSites`; add an over-strictness arm reading a quoted `"id=" + x` site as `id`.
+accepts-when: the new arm passes. NEGATIVE CONTROL: drop the quotes from the class and that arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-166 · done — on main at 0fdef669 (train-20260924T041650Z-598) — SCHEDULER #18
+order: after D-453, the same egress unblock (BOB #32 03:05Z: *place it after D-453 if slots allow*; a FRESH session; SCHEDULER #18); was: after D-300, last of this batch: a measurement's corpus, not a product path (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
+milestone: M0 (a measurement instrument's corpus)
+interface: none
+design: `docs/development/VERIFICATION.md` (a measurement names its instrument and date), for the Tier 1 coverage entry in `docs/development/MEASUREMENTS.md`.
+depends-on: none.
+scope: find the documents' current locations, re-point the probe's Oakland half, keep the old URLs as history in the entry.
+accepts-when: every URL the probe names returns bytes beginning `%PDF`, recorded with date and instrument. NEGATIVE CONTROL: point one entry back at an HTML page, and the probe names it as not a PDF.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
+
+### REC-185 · done — on main at 0fdef669 (train-20260924T041650Z-598) — SCHEDULER #18
+order: directly after UI-84, the same D-278 class: a refusal with no code a member cannot be told in words (CLAUDE.md §2) (SCHEDULER #16, 2026-09-23; D-278's worker via CONDUCT #17)
+milestone: M7
+interface: I3 — `op=purge`'s refusal gains a code through `requiredArgument`; the integrator classifies the IC.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, with D-278's landed `requiredArgument` as the precedent.
+depends-on: D-278 (on `land/conduct/c17-batch3`).
+scope: the refusal is `requiredArgument("purge", "confirm", "<store name>", …)`; the sweep's two blind spots (spread-forwarded codes, refusals built without `json()`) are measured and each listed or coded.
+accepts-when: `bio-plane/test/refusal-wire.test.mjs` gains an arm: `op=purge` without `confirm` answers the coded refusal with its canned translation, through the op. NEGATIVE CONTROL: restore the bare sentence, and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (D-278's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs REC`).

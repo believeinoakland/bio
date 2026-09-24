@@ -211,16 +211,6 @@ scope: one predicate excluding run rows whose context is a hidden project from e
 accepts-when: a run over a hidden project leaves each reader's answer to an outsider unchanged. NEGATIVE CONTROL: drop the predicate from one reader and its arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-166 · running — SPAWNED 2026-09-24 ~03:12Z by CONDUCT #20 as a FRESH SEPARATE CLOUD SESSION (network FULL) titled WORKER D-166 (CONDUCT #20), base origin/main 548eb2c5, a measurement lane beside the eight; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-166 and that session; never conclude queued from the absence alone.
-order: after D-453, the same egress unblock (BOB #32 03:05Z: *place it after D-453 if slots allow*; a FRESH session; SCHEDULER #18); was: after D-300, last of this batch: a measurement's corpus, not a product path (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0 (a measurement instrument's corpus)
-interface: none
-design: `docs/development/VERIFICATION.md` (a measurement names its instrument and date), for the Tier 1 coverage entry in `docs/development/MEASUREMENTS.md`.
-depends-on: none.
-scope: find the documents' current locations, re-point the probe's Oakland half, keep the old URLs as history in the entry.
-accepts-when: every URL the probe names returns bytes beginning `%PDF`, recorded with date and instrument. NEGATIVE CONTROL: point one entry back at an HTML page, and the probe names it as not a PDF.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
 ### D-470 · integrated — finished; integrated on land/conduct/c20-batch12 @ d6bcab616 (IC-259 I3 MINOR 81.1.0; BOB's rule folded as Publication §3 rule 17 — owed acts PAID), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~04:40Z
 order: after D-469, at the head: a signed record that claims more precision than it holds (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
 milestone: M10
@@ -231,16 +221,6 @@ scope: bump `CATALOG_VERSION` MINOR now; add a suite pinning the version to the 
 accepts-when: the stamp reads the new version, and adding one check without a bump fails the pin by name. NEGATIVE CONTROL: add a check without moving the version, and the census-pin arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 owed-at-integration: BOB #32 (2026-09-24 ~04:25Z) STATED the rule; fold it VERBATIM into BIO_Publication_v0_1.md §3 in place of an Incomplete note (the words are BOB's, the fold licensed to CONDUCT): "**THE GATE STAMP'S CATALOGUE VERSION MOVES WHENEVER THE CATALOGUE DOES** (BOB #32, 2026-09-24, D-470). A case document's gate stamp names the check-catalogue version it was judged against, so one version names exactly one catalogue: any added, removed or changed check moves the version in the same landing. The per-version census pin enforces it and fails by name. A stamp whose version is ambiguous proves nothing about what judged it." Also owed: mint D-470's IC, I3 MINOR (gateVersion string 1.20.0 → 1.21.0). Actor: whoever integrates land/worker/D-470 @ 8344367c. Recorded by CONDUCT #20.
-
-### D-482 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-482 (CONDUCT #20), base origin/main 548eb2c5; must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/D-482 and that session; never conclude queued from the absence alone.
-order: after D-481: an instrument that fails correct work costs every lane gate time (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:24Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` "The negative-control register".
-depends-on: none.
-scope: add `"` and `'` to the class in `callSites`; add an over-strictness arm reading a quoted `"id=" + x` site as `id`.
-accepts-when: the new arm passes. NEGATIVE CONTROL: drop the quotes from the class and that arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### M0-141 · integrated — finished; integrated on land/conduct/c20-integ1 @ ad7afc3a, waiting for its train — flipped by CONDUCT #20 2026-09-24 ~03:43Z
 order: after D-482, with the rows that cut gate time (product before process, Bob 2026-09-22: a process row that cuts gate time may sit near the head; SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:31Z)
@@ -271,16 +251,6 @@ depends-on: D-278 (on `land/conduct/c17-batch3`).
 scope: every mock refusal for `verify` and `unknown op` carries `translation`, imported from `bio-checks.mjs` (never retyped); DEC-49's SUBJECT arm in `preauth-vocabulary.test.mjs` re-pinned with the movement stated (old and new figures and why).
 accepts-when: `civicos-ui/test/preauth-vocabulary.test.mjs` and `refusal-translation-surface.test.mjs` green with the imported translations; the UI harness green. NEGATIVE CONTROL: drop `translation` from one mock, and the SUBJECT arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-278's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs UI`).
-
-### REC-185 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER REC-185 (CONDUCT #20), base origin/main 548eb2c5; must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/REC-185 and that session; never conclude queued from the absence alone.
-order: directly after UI-84, the same D-278 class: a refusal with no code a member cannot be told in words (CLAUDE.md §2) (SCHEDULER #16, 2026-09-23; D-278's worker via CONDUCT #17)
-milestone: M7
-interface: I3 — `op=purge`'s refusal gains a code through `requiredArgument`; the integrator classifies the IC.
-design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, with D-278's landed `requiredArgument` as the precedent.
-depends-on: D-278 (on `land/conduct/c17-batch3`).
-scope: the refusal is `requiredArgument("purge", "confirm", "<store name>", …)`; the sweep's two blind spots (spread-forwarded codes, refusals built without `json()`) are measured and each listed or coded.
-accepts-when: `bio-plane/test/refusal-wire.test.mjs` gains an arm: `op=purge` without `confirm` answers the coded refusal with its canned translation, through the op. NEGATIVE CONTROL: restore the bare sentence, and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #16 (D-278's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs REC`).
 
 ### D-479 · integrated — finished; integrated on land/conduct/c20-batch12 @ 7127d3adc (IC-260 I3 MINOR 81.2.0), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~04:50Z
 order: after D-476, with the corrections to just-landed work: an unbounded read on a member-facing list (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
@@ -391,6 +361,46 @@ depends-on: D-150 (on `main` at 548eb2c5).
 scope: an acknowledgement records and is matched by the case identity it was given for; a second case in the project with byte-identical statement text lists none of the first's.; and the DRAFT DOOR matches only the draft's own document/case, never an unsigned edition-1 document of another case with the same statement text (widened by SCHEDULER #18 2026-09-24 on BOB #32's 03:40Z instruction via CONDUCT #20; c18-batch7fix's finding). Extend D-150's suite.
 accepts-when: two cases with identical statements, one acknowledged: the other's completeness block lists nobody; and two cases' unsigned edition-1 documents with identical statements: the draft door of one finds none of the other's. NEGATIVE CONTROL: match by statement hash alone, and the "the twin case lists nobody" arm fails by name; match the draft door by statement text across the project, and the draft-door arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (BOB #32's G3; `node tools/mintid.mjs REC`).
+
+### D-494 · queued — **THE MACHINE-FENCE HARVEST IS BLIND OUTSIDE `store.mjs`: MACHINE_FENCE_CHECKS holds 18 rows, the harvest finds 14; MACHINE_CANNOT_RATIFY(_CASE) are minted in `index.mjs` (2 hits at 16fe1e7f), and three are OPERATOR_TOKEN_*. The two corpora are never asserted to agree, so a catalogued fence nobody enforces would pass.** Found by REC-185's worker; narrowed by SCHEDULER #18 (the ratify fences exist). — owner RECORD.
+order: at the backlog head (D-493 is cached): an authority boundary (no machine attests) whose instrument cannot see half its sites (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z)
+milestone: M7
+interface: none.
+design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 4 (no machine credential performs the attested act), with DEC-49 for the catalogue.
+depends-on: REC-185 (its train).
+scope: widen the harvest to `index.mjs` and the templated/variable mints; locate each OPERATOR_TOKEN_* site; one arm asserting catalogue and harvest agree, a row with no site named (delete it or build the fence).
+accepts-when: the two corpora agree, 18 = 18 or each difference named. NEGATIVE CONTROL: drop one fence's mint and the agreement arm fails naming it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-495 · queued — **THE REFUSAL-WIRE SWEEP DRIVES MEMBER-CLASS OPS ONLY, so its NO_CODE empty set says nothing of ADMIN and PROBE refusals.** Found by REC-185's worker. — owner RECORD (other owners' codeless refusals it surfaces become rows).
+order: after D-494, the same family (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z)
+milestone: M7
+interface: none (a test); codes it surfaces get their own rows.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it.
+depends-on: REC-185 (its train).
+scope: drive `record()` over ADMIN and PROBE classes; list every codeless refusal found, by op, as a finding for placement.
+accepts-when: the sweep states its classes and the NO_CODE set over all three. NEGATIVE CONTROL: strip one admin refusal's code and the admin arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### DIST-12 · queued — **NOTHING NOTICES WHEN THE TIER 1 CORPUS URLS ROT: the probe's `--urls` preflight (D-166) runs only when someone runs it, and a network check cannot sit in the battery.** BOB #32 RULED (2026-09-24 03:45Z, cite until folded): the liveness check runs at EACH RELEASE'S LIVE VERIFICATION, by DIST. — owner DIST.
+order: after DIST-11, with DIST's small rows: a measurement at a step DIST already takes, no daemon (SCHEDULER #18, 2026-09-24)
+milestone: M0 (a measurement instrument's corpus)
+interface: none.
+design: `docs/architecture/BIO_Distribution_v0_1.md` §6 "The deploy-to-serve ladder", with BOB #32's ruling of 2026-09-24 03:45Z (cite until folded).
+depends-on: D-166 (the `--urls` preflight).
+scope: the release live verification runs `tier1-coverage-probe.mjs --urls`; its verdict lands in `MEASUREMENTS.md` as a dated entry, one line per URL (LIVE / NOT_PDF / NOT_FOUND / REFUSED). REFUSED is recorded as refused, never as rotted; a rotted URL becomes a plan row naming the fixture that depends on it.
+accepts-when: the next release's verification carries the dated entry. NEGATIVE CONTROL: feed the preflight a refused host and it records REFUSED, not NOT_FOUND, by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
+
+### UI-89 · queued — **THE STATEMENT'S ACKNOWLEDGEMENTS HAVE A PLANE AND NO SURFACE: the `statementack` op and the signed `completeness.acknowledgements` (D-150, IC-227) are unreachable from any page.** The DELEGATION RECORD (D-150) -> UI of 2026-09-23 on coord `CLAIMS.md` names three surfaces. — owner UI.
+order: after REC-194, the member half of the same block (SCHEDULER #17, 2026-09-23)
+milestone: M10
+interface: I3 consumer (IC-227).
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 11 and §6A.4 (the review copy leads with the statement).
+depends-on: D-150 (`integrated` on c17-batch7; verify `statementack` in `index.mjs` on `main` first).
+scope: (1) the review copy leads with the exclusion statement and its acknowledgements; (2) an acknowledge act for recipients (by the grant's secret) and joined participants (by session), with DEC-49 translations for the five `STATEMENT_ACK_*` codes; (3) the published case page renders `[]` as "nobody but the author acknowledged the statement" and `null` as "the document says nothing about acknowledgements", never "nobody".
+accepts-when: the three surfaces render against a live answer, and the empty and null cases read different sentences. NEGATIVE CONTROL: render `null` as `[]`, and the "null is not nobody" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (the D-150 delegation; `node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

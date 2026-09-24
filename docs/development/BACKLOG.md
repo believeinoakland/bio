@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-498 · queued — **CONSTRUCT CLAIM `1.discoverable` SAYS THE DIRECTORY "LISTS A MEMBER'S DISCOVERABLE PROJECTS", but since D-479 it lists AT MOST `PROJECT_DIRECTORY_LIMIT` and says `truncated`.** Found by D-479's worker. — owner RECORD.
+order: at the backlog head: the record claiming more than the plane does, one line (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
+milestone: M8
+interface: none.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.14).
+depends-on: D-479 (its train).
+scope: amend the claim to "at most the cap, stated as truncated"; add a probe pinning `PROJECT_DIRECTORY_LIMIT`.
+accepts-when: `node tools/status.mjs discoverable` reads the capped claim and its probe passes. NEGATIVE CONTROL: rename the constant and the probe fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
 ### D-496 · queued — **THE KNOCK LIMITER DOES NOT KEEP ITS PUBLISHED BOUND: a FIXED 10-minute bucket (`index.mjs` `win = Math.floor(Date.now() / KNOCK.windowMs)`) lets a source bursting across a bucket edge knock 24 times where the bound says 12, and the instance-wide 300 (the cap on hostile evidence-storage writes) doubles the same way.** BOB #32 RULED (2026-09-24 04:28Z, cite until folded): *a published limit is a BOUND; the record must not claim a limit it does not keep.* — owner RECORD (the plane estate).
 order: at the backlog head (M0-146 is cached): a record claiming a bound it does not hold (CLAUDE.md §2), small enough for tonight (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:31Z)
 milestone: M2
@@ -33,24 +43,14 @@ scope: a two-bucket weighted sliding window in `Store.knock` (est = prev × (1 �
 accepts-when: a burst straddling the edge is refused at the stated limit, per source and instance-wide, in `doorbell.test.mjs`. NEGATIVE CONTROL: restore the fixed bucket and the straddling burst is re-admitted, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-494 · queued — **THE MACHINE-FENCE HARVEST IS BLIND OUTSIDE `store.mjs`: MACHINE_FENCE_CHECKS holds 18 rows, the harvest finds 14; MACHINE_CANNOT_RATIFY(_CASE) are minted in `index.mjs` (2 hits at 16fe1e7f), and three are OPERATOR_TOKEN_*. The two corpora are never asserted to agree, so a catalogued fence nobody enforces would pass.** Found by REC-185's worker; narrowed by SCHEDULER #18 (the ratify fences exist). — owner RECORD.
-order: at the backlog head (D-493 is cached): an authority boundary (no machine attests) whose instrument cannot see half its sites (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z)
-milestone: M7
-interface: none.
-design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 4 (no machine credential performs the attested act), with DEC-49 for the catalogue.
-depends-on: REC-185 (its train).
-scope: widen the harvest to `index.mjs` and the templated/variable mints; locate each OPERATOR_TOKEN_* site; one arm asserting catalogue and harvest agree, a row with no site named (delete it or build the fence).
-accepts-when: the two corpora agree, 18 = 18 or each difference named. NEGATIVE CONTROL: drop one fence's mint and the agreement arm fails naming it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
-### D-495 · queued — **THE REFUSAL-WIRE SWEEP DRIVES MEMBER-CLASS OPS ONLY, so its NO_CODE empty set says nothing of ADMIN and PROBE refusals.** Found by REC-185's worker. — owner RECORD (other owners' codeless refusals it surfaces become rows).
-order: after D-494, the same family (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z)
-milestone: M7
-interface: none (a test); codes it surfaces get their own rows.
-design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it.
-depends-on: REC-185 (its train).
-scope: drive `record()` over ADMIN and PROBE classes; list every codeless refusal found, by op, as a finding for placement.
-accepts-when: the sweep states its classes and the NO_CODE set over all three. NEGATIVE CONTROL: strip one admin refusal's code and the admin arm names it.
+### D-497 · queued — **THE PROJECT DIRECTORY'S CANDIDATE SCAN IS STILL LINEAR IN THE GROUP'S PROJECTS: `#sight` is a JS predicate, so D-479's page bounds the ANSWER but not the rows read.** Found by D-479's worker. — owner RECORD.
+order: after D-495: a bound on work, not on disclosure; the answer is already capped (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
+milestone: M8
+interface: none (I5 additive if an index table is added; the integrator classifies).
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (items 7.9, 7.14): one sight rule, never a second copy.
+depends-on: D-479 (its train).
+scope: give sight a row source it reads (an owner-set-derived index) so the candidate query bounds in SQL, with the sight rule stated once.
+accepts-when: `bounds.test.mjs` shows the candidate read bounded. NEGATIVE CONTROL: restore the JS filter over the unbounded scan and the bounds arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### M0-142 · queued — **`meaning-bounds.test.mjs`'s BOUND_KEY HAS NO `max`: `/^(?:limit|cap|bound|page_size|[a-z_]*_limit)$/` (line 382), so a read bounded by a `max`/`*_max` key (bounded actionquotes) is counted BARE and correct work reads unbounded.** Found by c18-batch7fix's worker; verified at 548eb2c5 by CONDUCT #20 and SCHEDULER #18. — owner M0.
@@ -61,6 +61,26 @@ design: `docs/development/VERIFICATION.md` "The negative-control register".
 depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds.test.mjs's segmenter; CONDUCT #20 03:46Z).
 scope: add `max|[a-z_]*_max` to BOUND_KEY.
 accepts-when: actionquotes' `max` counts as a bound. NEGATIVE CONTROL: remove actionquotes' published max, and the arm names it bare.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-149 · queued — **A PUBLISHED `limit` HAS ONE GUARD: only `bounds.test` checks it; `meaning-bounds` grades the row source, not whether an op in the BOUNDED roster publishes its bound.** Found by D-479's worker. — owner M0.
+order: after M0-142, the same suite (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the negative-control register).
+depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds' segmenter).
+scope: a meaning-bounds arm asserting every op in the BOUNDED roster publishes a non-empty `bound`.
+accepts-when: the arm lists the roster and passes. NEGATIVE CONTROL: drop the directory's published bound and the arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-150 · queued — **AN OP LEAVING THE BARE ROSTER INTO THE UNJUDGED BUCKET IS INVISIBLE TO THE FLOOR, which counts only what it still sees: `op=caseratify` was lost that way on `main`, found only by c20-batch11fix's RETURN-DELEGATE rule.** — owner M0.
+order: after M0-149, the same suite; the class behind a silent loss (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure is not a floor).
+depends-on: land/conduct/c20-batch11fix on `main`.
+scope: an arm asserting every op the walk files is in exactly one judged bucket, or a ratchet on the UNJUDGED bucket's size.
+accepts-when: the walk's buckets partition its ops. NEGATIVE CONTROL: hide one op's body behind an unfollowed delegate and the arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### D-492 · queued — **D-64's RENDER ALLOWANCE CLAIMS A BOUND THE CODE DOES NOT HOLD: `renderAdmit` admits while `spent_ms < allowance`, but `renderSpend` adds the time only AFTER the Worker's render finishes, so N concurrent renders are all admitted against one `spent_ms`. The overrun is in-flight × (wait timeout 15,000 ms + navigation), not "at most one render" as its docstring says.** Diagnosed by CONDUCT #20 at `land/worker/D-64` @ b1ffb5a0. — owner CAPTURE.
@@ -81,16 +101,6 @@ design: `docs/development/CLIENT-RENDERED.md` "There is no collision: rendering 
 depends-on: D-64.
 scope: teach the deploy derivation the `browser` class FIRST; then add `"browser": {"binding": "BROWSER"}` to `bio-plane/wrangler.jsonc` and newgroup's config.
 accepts-when: a deploy derived with the binding succeeds and a config without it still installs. NEGATIVE CONTROL: drop the class and the derivation refuses UNKNOWN_BINDING_CLASS by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
-
-### DIST-12 · queued — **NOTHING NOTICES WHEN THE TIER 1 CORPUS URLS ROT: the probe's `--urls` preflight (D-166) runs only when someone runs it, and a network check cannot sit in the battery.** BOB #32 RULED (2026-09-24 03:45Z, cite until folded): the liveness check runs at EACH RELEASE'S LIVE VERIFICATION, by DIST. — owner DIST.
-order: after DIST-11, with DIST's small rows: a measurement at a step DIST already takes, no daemon (SCHEDULER #18, 2026-09-24)
-milestone: M0 (a measurement instrument's corpus)
-interface: none.
-design: `docs/architecture/BIO_Distribution_v0_1.md` §6 "The deploy-to-serve ladder", with BOB #32's ruling of 2026-09-24 03:45Z (cite until folded).
-depends-on: D-166 (the `--urls` preflight).
-scope: the release live verification runs `tier1-coverage-probe.mjs --urls`; its verdict lands in `MEASUREMENTS.md` as a dated entry, one line per URL (LIVE / NOT_PDF / NOT_FOUND / REFUSED). REFUSED is recorded as refused, never as rotted; a rotted URL becomes a plan row naming the fixture that depends on it.
-accepts-when: the next release's verification carries the dated entry. NEGATIVE CONTROL: feed the preflight a refused host and it records REFUSED, not NOT_FOUND, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
 ### D-490 · queued — **NO RENDERER EXISTS: D-64's render arm answers every `render: true` with 501 RENDER_NO_RENDERER, so a client-rendered source is still captured as its empty shell.** Found by D-64's worker. — owner CAPTURE.
@@ -203,16 +213,6 @@ depends-on: D-462 (finished; rides the train after c19-batch9).
 scope: the same NAMESPACES set and a NAMESPACE_UNKNOWN refusal in `pdf-worker/src` and `ocr-worker/src`.
 accepts-when: `store=biosmoke` is refused NAMESPACE_UNKNOWN by name by both members. NEGATIVE CONTROL: accept the token again, and the arm reads NOT_FOUND and fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### UI-89 · queued — **THE STATEMENT'S ACKNOWLEDGEMENTS HAVE A PLANE AND NO SURFACE: the `statementack` op and the signed `completeness.acknowledgements` (D-150, IC-227) are unreachable from any page.** The DELEGATION RECORD (D-150) -> UI of 2026-09-23 on coord `CLAIMS.md` names three surfaces. — owner UI.
-order: after REC-194, the member half of the same block (SCHEDULER #17, 2026-09-23)
-milestone: M10
-interface: I3 consumer (IC-227).
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 11 and §6A.4 (the review copy leads with the statement).
-depends-on: D-150 (`integrated` on c17-batch7; verify `statementack` in `index.mjs` on `main` first).
-scope: (1) the review copy leads with the exclusion statement and its acknowledgements; (2) an acknowledge act for recipients (by the grant's secret) and joined participants (by session), with DEC-49 translations for the five `STATEMENT_ACK_*` codes; (3) the published case page renders `[]` as "nobody but the author acknowledged the statement" and `null` as "the document says nothing about acknowledgements", never "nobody".
-accepts-when: the three surfaces render against a live answer, and the empty and null cases read different sentences. NEGATIVE CONTROL: render `null` as `[]`, and the "null is not nobody" arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (the D-150 delegation; `node tools/mintid.mjs UI`).
 
 ### UI-99 · queued — **A DEFINITION REVISION'S BASIS AND A DISPOSITION'S VERSION HAVE A PLANE AND NO SURFACE: D-128's revision basis and REC-184's `definition_version` (and its `not recorded`) reach no page.** Found by REC-184's worker. — owner UI.
 order: after UI-89, with the surfaces owed to landed plane rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:17Z)
@@ -1275,3 +1275,13 @@ depends-on: Bob's approval of the definition edit (BOB #19 took it to him, 2026-
 accepts-when: a heartbeat run's `queued`/`running` counts equal those of `git show origin/main:docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### D-412 · queued — **THE ESTATE AUDITS EXPOSURE AND NOBODY AUDITS RESIDUE: a worktree that is registered, clean, merged and owned by no live session** … (whole text: the cut archive)
+order: with the session-hygiene instruments, after M0-84: disk is CONDUCT's binding constraint (M-80 and M-81 each measure ~286 MiB per retired tree) and this names the residue nothing reclaims; below M0-81 and M0-84, which prevent and detect a lane fault rather than a cost (SCHEDULER #5, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-398's three conditions asked of a TREE rather than a session.
+depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the repo where a suite drives it, the ACT in the harness.
+accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
