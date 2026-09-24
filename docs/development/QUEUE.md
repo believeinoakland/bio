@@ -22,6 +22,15 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
+**2026-09-24 ~22:50Z · D-555 · Bob's order ("go"), relayed from his conversation with the UX lane (session bio-65; lane charter on branch `ux-study`)**
+**THE MEMBER-FACING UI LOADS ITS TYPEFACES FROM GOOGLE ON EVERY PAGE LOAD: `civicos` serves no `/fonts/`, so the sovereign path fails and the app falls back to its dev-only Google Fonts link.** — owner UI.
+- found: `civicos-ui/app.html` declares `@font-face` at `/fonts/source-serif-4-var.woff2`, `/fonts/source-sans-3-var.woff2` and `/fonts/source-code-pro-var.woff2`. Its comment says the Google link is "dev convenience only. Production embeds the OFL faces under /fonts/ per tokens.css". But `civicos-ui/worker.template.mjs` serves only `/`, `/build` and `/api/*`, so `/fonts/*` is a 404. The repo holds no `.woff2` files at all (`git ls-files | grep -c woff2` → 0 at `9f8b69e6`).
+- why it matters: `tokens.css` says "Never fetch at runtime: a sovereign install must work offline". The design handoff calls an external font request "a network tell".
+- design: none needed. The target is already stated in `civicos-ui/tokens.css` (the faces block) and `CIVICOS_UI_STATE.md` ("The design source of truth").
+- scope: add the three families as OFL variable WOFF2 (latin subset) with `OFL.txt` under `civicos-ui/fonts/`; have the worker serve `/fonts/*`, embedded at build as it embeds the page; delete the Google Fonts link from `app.html`; add a UI suite.
+- accepts-when: the served app makes no request off its own origin for a face, and each `/fonts/*.woff2` answers 200 `font/woff2`. NEGATIVE CONTROL: restore the Google link, or drop the worker's font route, and the suite fails by name.
+- intended place: UI's area, touching only `civicos-ui/app.html`'s head, `worker.template.mjs`, `deploy-ui.mjs` and new files. Bob asked for it to be built now by the UX lane session under `main`'s rules: claim, gates, the train, and UI's own `civicos` deploy (kickoffs/UI.md, "Deploy discipline").
+
 
 ## THE CACHE — the next rows, in order
 
