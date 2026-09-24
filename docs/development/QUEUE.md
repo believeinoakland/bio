@@ -168,7 +168,8 @@ scope: count glyphs (non-whitespace code points) at all three sites through D-50
 accepts-when: legistar-73550 p1 is not attributed to `layer`; a whitespace-only base takes tier 2 and tier 3; `needsTier2` reads glyphs. NEGATIVE CONTROL: restore raw length at the layer filter and the whitespace-page arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-516 · running — **INSIDE THE ONE-SECOND BAND THE OBSERVATION-LOG READERS PICK A CLASS THEY CANNOT TELL: a subject entering 1-2 s before a level's first row reads `never_looked` or `purged` depending on where the clock second fell (D-500's arm M3).** BOB #33 RULED 2026-09-24 17:58Z (drained to `BOB-INBOX-drained.md`; cite until folded): `observation_log.at` STAYS whole-second; within the band the reader states undetermined. — owner RECORD.
+### D-516 · integrated — **INSIDE THE ONE-SECOND BAND THE OBSERVATION-LOG READERS PICK A CLASS THEY CANNOT TELL: a subject entering 1-2 s before a level's first row reads `never_looked` or `purged` depending on where the clock second fell (D-500's arm M3).** BOB #33 RULED 2026-09-24 17:58Z (drained to `BOB-INBOX-drained.md`; cite until folded): `observation_log.at` STAYS whole-second; within the band the reader states undetermined. — owner RECORD.
+status: integrated — integrated — flipped ~23:01Z by SCHEDULER #20 on CONDUCT #20's verification (22:58Z): e5775cb9 merged with 9f8b69e6, FULL 360/360 · 20680 RECORDED GREEN; collapse control failed 5 more arms than declared (none that must not), each explained on the suite's line; rides c20-batch27; CONDUCT resolves IC-288 there. No new row.
 order: after D-514, with the corrections to just-landed work: the record choosing between two claims it cannot tell apart (CLAUDE.md §2) (BOB #33, 17:58Z; SCHEDULER #19, 2026-09-24)
 milestone: M8
 interface: I3 additive — a published state on a new path; the integrator classifies.
@@ -474,6 +475,16 @@ depends-on: none.
 scope: rewrite WORKER.md so each rule is one or two lines naming its ruling id; move the receipts and narratives VERBATIM to `docs/archive/WORKER-kickoff-2026-09-24.md`, where `decided.mjs` finds them; nothing deleted; set its readbudget to half of 3,959 words. The current pen rule (BOB #33 17:12Z: a driver's gitignored, item-named pen is not scratch) and `store=scratch` (BOB #34 22:22Z: redundant, not optional) must be stated. Other kickoffs follow one at a time only if this measurably cuts misreads.
 accepts-when: `readbudget` shows WORKER.md at or under the new budget, `decided.mjs` still finds every ruling it cited, and every old rule maps to a new line (a table in the row's measurement) (the measured failure it moves: a 3,959-word file burying current rules). NEGATIVE CONTROL: drop one mapped rule and the mapping table names it.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
+
+### D-545 · queued — **`civicos-ui/check-semantics.mjs` (~352) HARVESTS PLANE STATES OVER THE RAW STORE FILE, COMMENTS INCLUDED, with `/current_state\s*[!=]==?\s*"([a-z_]+)"/`, so a `typeof` guard on that field is read as a state named after the typeof string, and the gate goes RED with "states the store writes with no semantics row" naming a state nobody wrote.** It cost REC-210 two full gate rounds, the second from a comment quoting the pattern (CONDUCT #20 22:57Z). — owner UI (the check), M0.
+order: after M0-194, AHEAD of product: a false RED that has already cost two full gate rounds (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument names what it read, and a false red is a defect in the instrument).
+depends-on: none.
+scope: blank comments before harvesting; refuse a match preceded by `typeof` or whose right-hand side is not a catalogue state, and report it as an UNRECOGNISED MATCH, never as a state. Apply the same two guards to the `#setScalar` harvest beside it.
+accepts-when: a planted `typeof x.current_state === "string"` guard and a commented-out quote of the pattern leave the state set unchanged and are reported as unrecognised matches (the measured failure it moves: a RED naming a state nobody wrote). NEGATIVE CONTROL: harvest the raw file again and the planted guard is read as a state, failing by name.
+added: 2026-09-24 · SCHEDULER #20 (id minted by CONDUCT #20).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

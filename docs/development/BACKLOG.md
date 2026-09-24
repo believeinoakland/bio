@@ -23,16 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-545 · queued — **`civicos-ui/check-semantics.mjs` (~352) HARVESTS PLANE STATES OVER THE RAW STORE FILE, COMMENTS INCLUDED, with `/current_state\s*[!=]==?\s*"([a-z_]+)"/`, so a `typeof` guard on that field is read as a state named after the typeof string, and the gate goes RED with "states the store writes with no semantics row" naming a state nobody wrote.** It cost REC-210 two full gate rounds, the second from a comment quoting the pattern (CONDUCT #20 22:57Z). — owner UI (the check), M0.
-order: after M0-194, AHEAD of product: a false RED that has already cost two full gate rounds (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (an instrument names what it read, and a false red is a defect in the instrument).
-depends-on: none.
-scope: blank comments before harvesting; refuse a match preceded by `typeof` or whose right-hand side is not a catalogue state, and report it as an UNRECOGNISED MATCH, never as a state. Apply the same two guards to the `#setScalar` harvest beside it.
-accepts-when: a planted `typeof x.current_state === "string"` guard and a commented-out quote of the pattern leave the state set unchanged and are reported as unrecognised matches (the measured failure it moves: a RED naming a state nobody wrote). NEGATIVE CONTROL: harvest the raw file again and the planted guard is read as a state, failing by name.
-added: 2026-09-24 · SCHEDULER #20 (id minted by CONDUCT #20).
-
 ### D-538 · queued — **A DRAFT THAT NAMES NO CASE AND DOES NOT SET `newCase` IS TOLD "a new case, whose identity is not yet allocated", while `publishCase` DERIVES an existing case for it: REC-199's block 10 measured draft DD saying that sentence as its gates refuse ALREADY_A_CASE_MEMBER against C1.** `Store.#caseIdentitySentence(null, 1)` is shared by the casedraft, casedrafts (REC-198) and reviewcopy reads. Found by REC-199's worker (1). — owner RECORD.
 order: after D-530, with the corrections: the record asserting a new case where it will derive an existing one (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:43Z)
 milestone: M10
@@ -1199,3 +1189,13 @@ depends-on: none.
 scope: narrow the arm's patch to revisions, keeping the stamp when the base is null.
 accepts-when: the arm runs and fails as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-369 · queued — **FIVE IN-MEMORY `truncated` SHAPES ARE NEVER DRIVEN PAST THEIR CEILING: only `op=connect` has a live over-the-ceiling arm in `derivation-bounds.test.mjs`; `queueFeed`, `biasInhale`, `documentsNamingEntity` and `#backfillLegContent` are pinned by roster alone (now 10 names).** — owner RECORD.
+order: with the M0 control rows: a verification instrument (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (test through the op), with `INVESTIGATIVE-SESSION.md` §14c.
+depends-on: none.
+scope: a live driven arm per shape. In `bio-plane/test/derivation-bounds.test.mjs`.
+accepts-when: each shape is driven past its ceiling and states `truncated`. NEGATIVE CONTROL: drop a paging LIMIT in `queueFeed`, and its live arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
