@@ -1,0 +1,16 @@
+{
+ "unit": "plane:airuns.test.mjs",
+ "inputHash": "87bc23b00c888a3dc975595ffd23d3c557e48678c34e54a029aeefc193ce219c",
+ "verdict": "PASS",
+ "run": "8d2409b8d1197db37e3a5fb26f1d58a61293a5b6.1790271932487.2603.json",
+ "tree": "8d2409b8d1197db37e3a5fb26f1d58a61293a5b6",
+ "head": "bc72d0381746a857296659724a4a13c154b185a5",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 946,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "10f7145e-b3a6-58c5-85fa-aedc13369db7",
+ "at": "2026-09-24T17:45:32.499Z"
+}
