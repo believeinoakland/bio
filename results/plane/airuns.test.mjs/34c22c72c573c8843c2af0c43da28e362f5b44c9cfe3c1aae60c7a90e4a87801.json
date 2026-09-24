@@ -1,0 +1,16 @@
+{
+ "unit": "plane:airuns.test.mjs",
+ "inputHash": "34c22c72c573c8843c2af0c43da28e362f5b44c9cfe3c1aae60c7a90e4a87801",
+ "verdict": "PASS",
+ "run": "bd30eb6188964f7135de3bd163bed6411fc5904f.1790286074520.3993.json",
+ "tree": "bd30eb6188964f7135de3bd163bed6411fc5904f",
+ "head": "38af046d475407f8035a78d3594169dff88c170b",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 957,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "93760989-3c18-5291-8eb0-13de86350284",
+ "at": "2026-09-24T21:41:14.533Z"
+}
