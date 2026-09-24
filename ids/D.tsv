@@ -54,3 +54,4 @@ D-525	2026-09-24T20:15:09.776Z	HEAD
 D-526	2026-09-24T20:26:03.449Z	HEAD	
 D-527	2026-09-24T20:46:07.969Z	land/worker/UI-99	op=queue's FINDING item does not publish prior_disposition, so a REOPENED question cannot say on any page that a member already decided it once (framework 8.2, REC-184); found by UI-99 at the code
 D-528	2026-09-24T20:46:48.285Z	land/worker/UI-93	
+D-529	2026-09-24T21:06:14.454Z	HEAD	
