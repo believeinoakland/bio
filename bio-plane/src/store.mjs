@@ -10561,8 +10561,8 @@ export class Store extends DurableObject {
        naming the draft it publishes — is a design question, reported and not invented here.
        D-521 — AT MOST ONE DOCUMENT, AND THE READ SAYS SO BY ITS SHAPE: `(case_id, edition)` is
        `case_documents`' PRIMARY KEY, so a read naming both returns at most one row. IC-246's bound on
-       this read (STATEMENT_ACK_DOCUMENTS_MAX, read at max + 1) and its refusal
-       (STATEMENT_ACK_DOCUMENTS_OVER_BOUND, C-82.1) guarded a many-row read that REC-194 made a keyed one;
+       this read, the constant STATEMENT_ACK_DOCUMENTS_MAX read at max + 1, and its refusal C-82.1 named
+       STATEMENT_ACK_DOCUMENTS_OVER_BOUND guarded a many-row read that REC-194 made a keyed one;
        no input could reach the refusal, and a catalogued refusal that cannot occur is a claim the record
        makes about itself. So the read is `#one`, and the bound, the refusal, its catalogue row and its
        DEC-49 region are RETIRED together (D-521). */
