@@ -15,13 +15,12 @@
  * (N2) the summary cross-check removed -> the FORMAT_DRIFT arm fails by name. MEASURED, baseline 12/0: N1 -> 6 passed,
  * 6 failed, WIDER THAN DECLARED by two, both by name and both the same confusion: (A)'s "one table line per URL, each
  * REFUSED" and (B)'s "four rows, one per verdict" also fell, since the rewritten verdict is read everywhere downstream.
- * N2 -> 11/1, exactly the FORMAT_DRIFT arm, as declared. Restored byte-identically (sha256 0d7f41c1…). The (A) arm
+ * N2 -> 11/1, exactly the FORMAT_DRIFT arm, as declared. Restored byte-identically (sha256 0d7f41c1…); RE-RUN after the
+ * spawn's timeout was removed (budget-sweep) and stdio imported, sha256 87175f0a…: identical figures. The (A) arm
  * DISCRIMINATES: in the same hour the same 14 URLs read 14/14 LIVE through the session's real egress (M-136), so
  * the arm's REFUSED comes from the dead proxy and not from the origins.
  */
-import { spawnSync } from "node:child_process";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { parsePreflight, renderEntry, runPreflight } from "../../tools/urlpreflight-entry.mjs";
 
 let pass = 0, fail = 0;

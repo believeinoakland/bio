@@ -78,7 +78,7 @@ export function renderEntry({ at, rows, live, total }, { release = "UNSTATED", i
 
 export function runPreflight(env = process.env) {
   const r = spawnSync(process.execPath, ["test/tier1-coverage-probe.mjs", "--urls"],
-    { cwd: join(REPO, "bio-plane"), env, encoding: "utf8", timeout: 300_000 });
+    { cwd: join(REPO, "bio-plane"), env, encoding: "utf8" });
   return { stdout: r.stdout || "", stderr: r.stderr || "", exit: r.status };
 }
 
