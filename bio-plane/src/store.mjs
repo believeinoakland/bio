@@ -750,6 +750,13 @@ const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp
    collapse that distinction by accident. */
 const SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
 const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+
+/* REC-207 (BOB #32, 2026-09-23 23:42Z): the two settlements of a bias debt that a MEMBER or a RUN made,
+   as against the one the sweep derives when the lens moves back. The distinction is read on the sweep's
+   hot path and decides whether an unchanged lens delta re-raises the obligation, so it is a SET here
+   rather than a disjunction written out at the branch — a third authored act would otherwise have to be
+   remembered at the branch as well as at its own door, and the branch is the place nobody looks. */
+const SETTLED_BY_AN_ACT = new Set(["rerun", "resolved"]);
 /* Single line, length-capped, control characters stripped. Newlines go first
    because a multi-line subject is how a plausible-looking instruction gets
    room to look like a message rather than a label. */
@@ -1219,6 +1226,21 @@ export class Store extends DurableObject {
          column existed had no renders in flight at the moment it gained the column, so 0 is the
          MEASURED truth for every old row rather than a value a backfill reached for. */
       ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],
+      /* REC-207 (BOB #32, 2026-09-23 23:42Z): THE RUN THIS RUN RE-RUNS, as its opener AUTHORED it. A link
+         nothing derives: DEC-24's authored-binds side, because "is this a re-run of that" is a judgement
+         about what was asked, and a plane inferring it from a context and a clock would be guessing. NULLABLE
+         AND NEVER BACK-FILLED — a run opened before this column existed named nothing, and the value a
+         backfill could reach for (the previous run in the same context) is exactly the guess this column
+         refuses to make. NULL reads back as `not a re-run`, which is what it is. */
+      ["ai_runs", "rerun_of", "TEXT"],
+      /* REC-207: WHICH OF THE THREE ACTS SETTLED THIS DEBT, beside the `cleared_at` D-86 already wrote. The
+         full record is `bias_debt_settlements`, append-only, one row per act; this column is what the SWEEP
+         reads on its hot path to tell an AUTHORED settlement (a re-run, a member's resolve) from the lens
+         having moved back, because the two behave differently when the sweep next sees the same lens delta.
+         NULLABLE AND NEVER BACK-FILLED: a debt cleared before this column existed was cleared by the lens
+         moving back — that was the only act there was — but writing that in would be back-filling an
+         attribution, so it reads UNDETERMINED and `#biasDebtSettlement` says so. */
+      ["bias_debts", "settled_kind", "TEXT"],
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -27988,12 +28010,23 @@ export class Store extends DurableObject {
                && Number.isInteger(item.subject.definition_version)
       ? item.subject.definition_version : null;
     if (item.class === "OBLIGATION")
+      /* REC-207: AND `instead` NAMES THE DOOR THIS ITEM ACTUALLY HAS. `op=taskresolve` addresses rows in
+         `tasks` by id; a bias-debt obligation is keyed by the RUN it is about and has no task row, so
+         every bias-debt item published before this named a door it could not go through — the row's own
+         headline. The kind decides, not a list of exceptions to keep in step: a producer whose items are
+         resolved somewhere else will need its own answer here and will find this line when it does. */
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "an_obligation_is_resolved_not_disposed",
-               instead: "taskresolve",
+               instead: item.kind === "bias-debt" ? "biasdebtresolve" : "taskresolve",
                detail: "an OBLIGATION is something a named person must do for the record to proceed "
                      + "and it leaves every list when it is RESOLVED (D-125, DEC-16). Disposing of it "
-                     + "is not a narrower version of that act, it is a different one." };
+                     + "is not a narrower version of that act, it is a different one."
+                     + (item.kind === "bias-debt"
+                        ? " This one is a bias debt, which is keyed by the RUN it is about rather than by "
+                        + "a task, so it is settled through op=biasdebtresolve with a stated reason — or "
+                        + "by a re-run under the lens now in force, or by the lens moving back "
+                        + "(BOB #32, 2026-09-23)."
+                        : "") };
     if (item.class === "CONDITION")
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "a_condition_is_acknowledged_or_muted",
@@ -31810,6 +31843,9 @@ export class Store extends DurableObject {
         /* D-86 / D-113: a run's bias debt goes with the run it is about, and the sweep's place with the lens it
            was reading — a debt outliving its run would name a run nobody can open. */
         this.sql.exec(`DELETE FROM bias_debts`);
+        /* REC-207: and what SETTLED each of them. A settlement outliving its debt would name a run nobody can
+           open, which is the same leftover the line above refuses one table over. */
+        this.sql.exec(`DELETE FROM bias_debt_settlements`);
         this.sql.exec(`DELETE FROM bias_debt_sweeps`);
         this.sql.exec(`DELETE FROM ai_runs`);
         /* PL-3 / IS-4 / D-113. F10's stored refusals go with the corpus they are
@@ -44512,6 +44548,12 @@ export class Store extends DurableObject {
               principalPlane = null, principalClaude = null, principalClaudeRef = null,
               skillVersion = null, biasManifest = null, standardPair = null,
               bounds = null, state = null, leaseMs = null, at = null,
+              /* REC-207 (BOB #32, 2026-09-23 23:42Z): WHICH RUN THIS ONE RE-RUNS, the opener's own word
+                 and nothing derived. It is what makes discharge (2) addressable at all — without it there
+                 is no link in the record between a re-run and the debt it settles, and a plane inferring
+                 one from a context and a clock would be guessing at a judgement. Optional and additive: a
+                 run that names none is exactly the run this op opened before. */
+              rerunOf = null,
               /* PL-18 / DEC-63: WHICH MEMBER IS ASKING, stamped server-side by
                  `index.mjs` and empty for a machine credential. Never a
                  caller's word — a principal a caller can name is not one, which
@@ -44688,13 +44730,56 @@ export class Store extends DurableObject {
                translation: ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.translation,
                note: "a run with this id already exists" };
 
+    /* REC-207 — THE RE-RUN LINK IS JUDGED BEFORE IT IS WRITTEN, because a link the record cannot stand
+       behind is worse than none: `aiRunClose` settles a bias debt on the strength of this field, so a
+       `rerun_of` naming a run that is not there, or that is somewhere else, would be a discharge resting
+       on the caller's word. Asked LAST of the open's guards — after authority and after shape — so a
+       caller with no standing here learns nothing about which runs exist.
+       NO `DEC-49 REGION` MARKER HERE, and the absence is a CORRECTION this item's own guard run forced —
+       the same shape as the note at this function's project gate, one cause down. The three rows'
+       `where` is the WHOLE FUNCTION, as its three existing rows' are, because `check-refusal-codes.mjs`
+       judges a region's refusals at the region AND again at an enclosing whole-function site, where the
+       code is not one of that site's rows: a region inside a function that keeps a whole-function `where`
+       fails all three by name. Measured on the first run of this item. The row's own header in
+       bio-checks.mjs carries the argument and names the honest fix as REC-71's work. */
+    const reRuns = String(rerunOf ?? "").trim();
+    if (reRuns) {
+      if (reRuns === String(run))
+        return { run, started: false,
+                 code: "AI_RUN_RERUN_SELF",
+                 check: ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.check,
+                 translation: ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.translation,
+                 note: "a run cannot be the re-run of itself: the link exists to say which EARLIER run's "
+                     + "work this one repeats, and a self-reference would let one run discharge its own "
+                     + "bias debt" };
+      const target = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, reRuns);
+      /* UNSEEN ANSWERS AS ABSENT, byte for byte — `aiRunClose`'s own posture and REC-25/REC-30's rule.
+         A caller must not be able to establish that a run exists by offering to re-run it. */
+      if (!target || !this.#aiRunInSight(reRuns, viewer))
+        return { run, started: false,
+                 code: "AI_RUN_RERUN_UNKNOWN",
+                 check: ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.check,
+                 translation: ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.translation,
+                 note: "no such run: it either never existed, was purged, or is not one this caller can "
+                     + "open" };
+      if (target.context_type !== String(contextType) || target.context_id !== String(contextId))
+        return { run, started: false,
+                 code: "AI_RUN_RERUN_OTHER_CONTEXT",
+                 check: ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.check,
+                 translation: ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.translation,
+                 note: "a re-run runs the same question or project again. The lens a bias debt is owed "
+                     + "against is the one in force for the INDEBTED run's context, so a re-run somewhere "
+                     + "else would be measured against a different lens entirely" };
+    }
+
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : Store.AI_RUN_LEASE_MS;
     this.ctx.storage.transactionSync(() => {
       this.sql.exec(
         `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
            principal_plane, principal_claude, principal_claude_ref, skill_version,
-           bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open)
-         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+           bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open,
+           rerun_of)
+         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
         run, label, mode, String(contextType), String(contextId),
         /* SK-1: TRIMMED, and the reason is PL-4's measurement one field over —
            a value that survives a falsiness guard while naming nothing reads as
@@ -44703,7 +44788,10 @@ export class Store extends DurableObject {
         String(principalPlane), String(principalClaude), principalClaudeRef,
         String(skillVersion).trim(),
         biasManifest, standardPair, now, now, Store.#aiIso(nowMs + lease),
-        JSON.stringify(state == null ? {} : state), lensAtOpen);
+        JSON.stringify(state == null ? {} : state), lensAtOpen,
+        /* REC-207: judged above, and stored as every empty case on this open is stored — absent rather
+           than defaulted. A run that names no re-run reads `rerun_of` NULL, which is what it is. */
+        reRuns || null);
       for (const b of Array.isArray(bounds) ? bounds : []) {
         if (!b || !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, String(b.bound))) continue;
         this.sql.exec(
@@ -44721,7 +44809,13 @@ export class Store extends DurableObject {
        that never ran. Stating it is the same obligation as stating which
        absence was found. */
     return { run, started: true, status: "running", ticks: 1, created: now,
-             expires: Store.#aiIso(nowMs + lease), ...Store.#aiRunGateStated(gate) };
+             expires: Store.#aiIso(nowMs + lease),
+             /* REC-207: the link, echoed, and ONLY when there is one. A caller that named a re-run should
+                be able to see that the record took it, because the discharge at this run's close rests on
+                it — and an echo that appeared as `null` on every other open would be a new key on an
+                answer every existing reader parses, for no fact. */
+             ...(reRuns ? { rerun_of: reRuns } : {}),
+             ...Store.#aiRunGateStated(gate) };
   }
 
   /** REC-152 — CAN THIS VIEWER SEE THIS RUN? `aiRunRead`'s own predicate (D-15's `#bundleGate` over the
@@ -44867,7 +44961,13 @@ export class Store extends DurableObject {
    *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
    *  to the one exit, and a caller who names no bound is refused by C-22.5
    *  rather than having "completed" inferred from its silence. */
-  aiRunClose({ run, bound = null, condition = null, at = null, actor = null, viewer = null,
+  /* REC-207 — ASYNC, and the change is one `await` at the foot. A re-run's own close is where discharge
+     (2) is taken (see `#biasDebtDischargeByRerun` for why the close and not the open), and reading what
+     lens this run was formed under goes through `#biasForRun`, which is async because `biasManifest` is.
+     ADDITIVE ON THE WIRE: the DO's dispatch already `await`s every op, `#aiRunTerminate` is untouched and
+     still synchronous, and the REAPER still calls it directly — so a lapsed run is closed by the clock on
+     exactly the path it was before, with no member and no discharge. */
+  async aiRunClose({ run, bound = null, condition = null, at = null, actor = null, viewer = null,
                /* REC-152: the caller's PRINCIPAL, stamped server-side — see `aiRunTick`. */
                caller = null } = {}) {
     const now = at ? Store.#aiIso(Date.parse(at)) : Store.#aiIso(Date.now());
@@ -44917,7 +45017,16 @@ export class Store extends DurableObject {
                      + "(DEC-63), and the contribute capability is only the floor beneath "
                      + "that. The run is untouched and is still running" };
     }
-    return this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
+    const ended = this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
+    /* REC-207 — THE DISCHARGE, AND ONLY OVER A RUN THAT ACTUALLY ENDED HERE. A refused close and a run
+       that was already closed both leave `terminated` other than true, and neither is a re-run having
+       run. The block is attached only when there was a link to follow, so an ordinary close answers
+       byte-for-byte what it answered before this item. */
+    if (ended && ended.terminated === true) {
+      const discharge = await this.#biasDebtDischargeByRerun({ run, at: now });
+      if (discharge) return { ...ended, bias_debt: discharge };
+    }
+    return ended;
   }
 
   /* ---- the reaper's three parts, and none of them decides anything ----
@@ -45867,7 +45976,11 @@ export class Store extends DurableObject {
     const from = st && st.target === fp ? String(st.cursor || "") : "";
     const rows = this.#rows(`SELECT run FROM ai_runs WHERE run > ? ORDER BY run LIMIT ?`, from, cap + 1);
     const batch = rows.slice(0, cap);
-    const out = { read: 0, raised: [], restated: [], cleared: [], undetermined: [], unchanged: 0,
+    /* REC-207: `held` is the fifth outcome and it is NOT a kind of `unchanged`. A debt SETTLED by an
+       authored act (a re-run, a member's resolve) whose lens delta has not moved is deliberately left
+       settled — see the branch below — and a sweep that reported that as "nothing to do" would make the
+       one outcome this item added invisible to the instrument that watches the sweep. */
+    const out = { read: 0, raised: [], restated: [], cleared: [], held: [], undetermined: [], unchanged: 0,
                   complete: rows.length <= cap, batch: cap };
     for (const { run } of batch) {
       const read = await this.aiRunRead({ run, viewer: Store.BIAS_DEBT_VIEWER });
@@ -45891,19 +46004,44 @@ export class Store extends DurableObject {
              VALUES (?,?,?,?,?,?,?,?,?,NULL)`,
             run, session.context.type, session.context.id, bias.moved_basis ?? null, then, now, recipients, at, at);
           out.raised.push(run);
+        } else if (prior.cleared_at != null && SETTLED_BY_AN_ACT.has(prior.settled_kind)
+                   && prior.lens_now === now && prior.lens_then === then) {
+          /* REC-207 — SETTLED BY AN AUTHORED ACT, OVER EXACTLY THIS LENS DELTA, SO IT STAYS SETTLED.
+             D-86's rule that a cleared debt found moved again is NEW debt is UNCHANGED and is the branch
+             below; it is written for the settlement D-86 had, the lens moving BACK, where the delta
+             genuinely reappearing is a new fact about the lens. The two acts this item adds settle a
+             STATED delta — the member resolved *this* change, the re-run ran under *this* lens — so
+             re-raising the identical `lens_then`/`lens_now` pair would be asking the same member the same
+             question again, which is the nagging DEC-69 refuses. A lens that moves ONWARDS moves `now` and
+             falls through to the branch below as new debt, which is the whole of what keeps this honest.
+             The recipients are refreshed without re-opening: a settled debt is in nobody's queue, so the
+             list is a fact about the run's readers rather than about anyone's attention. */
+          if (prior.recipients !== recipients)
+            this.sql.exec(`UPDATE bias_debts SET recipients = ?, observed = ? WHERE run = ?`,
+              recipients, at, run);
+          out.held.push(run);
         } else if (prior.cleared_at != null || prior.lens_now !== now || prior.lens_then !== then
                    || prior.recipients !== recipients) {
-          /* A CLEARED debt that moves again is NEW debt and ages from now; a live one restated keeps its age. */
+          /* A CLEARED debt that moves again is NEW debt and ages from now; a live one restated keeps its age.
+             REC-207: and `settled_kind` is cleared with `cleared_at`, because the settlement it named is a
+             fact about the debt that just ended and not about the one being raised now. The settlement ROW
+             stays where it is — `bias_debt_settlements` is append-only and this is not a write to it. */
           this.sql.exec(
             `UPDATE bias_debts SET moved_basis = ?, lens_then = ?, lens_now = ?, recipients = ?, observed = ?,
-                    raised = CASE WHEN cleared_at IS NULL THEN raised ELSE ? END, cleared_at = NULL
+                    raised = CASE WHEN cleared_at IS NULL THEN raised ELSE ? END, cleared_at = NULL,
+                    settled_kind = NULL
               WHERE run = ?`,
             bias.moved_basis ?? null, then, now, recipients, at, at, run);
           out.restated.push(run);
         } else out.unchanged++;
       } else if (moved === false) {
         if (prior && prior.cleared_at == null) {
-          this.sql.exec(`UPDATE bias_debts SET cleared_at = ?, observed = ? WHERE run = ?`, at, at, run);
+          /* REC-207: THROUGH THE ONE WRITER, so the lens moving back leaves a row saying so. It wrote a bare
+             `cleared_at` before this item, which is the silent clearing BOB #32's ruling names — and the
+             settlement that was ALREADY built is the one that most needed the record, because it is the one
+             no member is present for. The two hashes recorded are the debt's own, as it stood. */
+          this.#biasDebtSettle({ run, kind: "lens_returned", at,
+                                 lensThen: prior.lens_then, lensNow: prior.lens_now });
           out.cleared.push(run);
         } else out.unchanged++;
       } else out.undetermined.push(run);
@@ -45964,6 +46102,262 @@ export class Store extends DurableObject {
     return items;
   }
   static BIAS_DEBT_QUEUE_MAX = 200;
+
+  /* ==================================================================== REC-207
+   * WHAT SETTLES A BIAS-DEBT OBLIGATION — BOB #32's ruling of 2026-09-23 23:42Z
+   * (`BIO_Declared_Bias_v0_1.md`, "Bias debt, and HUNCH DEBT"):
+   *
+   *   *"Three acts settle a bias-debt obligation, and each is RECORDED; none clears it silently.
+   *   (1) The lens moves back, as built. (2) A re-run under the CURRENT lens discharges the debt of
+   *   the run it re-runs, and the obligation is closed with the discharging run's id and lens pins,
+   *   so a reader sees WHICH run settled it. A re-run under any other lens discharges nothing.
+   *   (3) A member's resolve with a REQUIRED stated reason: an authored act, attributed, dated and
+   *   append-only. It needs no re-run, because a member may judge that the lens change does not bear
+   *   on the finding. Derived informs, authored binds (DEC-24), and a member is never forced (DEC-69)."*
+   *
+   * WHAT WAS WRONG BEFORE THIS, measured on `1a7f0bcc0`: D-86 raised the obligation and NOTHING but the
+   * lens moving back took it out of the queue. `op=taskresolve` addresses rows in `tasks` and a bias debt
+   * is not a task — `#dispositionOf` pointed every OBLIGATION at that op, so the queue named a door a
+   * bias-debt item cannot go through. And the one settlement that did exist wrote a bare `cleared_at`, so
+   * a reader who came afterwards could see THAT the obligation had gone and never WHY.
+   *
+   * THE THREE ACTS GO THROUGH ONE WRITER, `#biasDebtSettle`, and that is the structural half of
+   * "each is RECORDED". A second writer is how one of the three comes to clear a debt without a row —
+   * exactly the silent clearing the ruling forbids — so there is one, and the sweep's own clear was moved
+   * onto it rather than left as the UPDATE it was.
+   *
+   * WHAT A SETTLEMENT IS NOT: a state a later sweep may overwrite. The lens moving AGAIN raises NEW debt
+   * (D-86's rule, unchanged) and writes a further settlement row when that one is settled in turn; the
+   * settled row is never edited and never deleted. So the sequence for a run IS its history.
+   * ==================================================================== */
+
+  /** The longest reason this store will hold, stated rather than hidden. A bound, not a judgement about
+   *  what a good reason looks like: DEC-69 and the ruling require a reason to be STATED, and a floor on
+   *  its length would be this plane grading a member's sentence, which is a fence tighter than its rule. */
+  static BIAS_DEBT_REASON_MAX = 4000;
+  /** The settlements `op=biasdebt` publishes for one run, and the bound is published with them. */
+  static BIAS_DEBT_SETTLEMENTS_MAX = 50;
+
+  /** THE ONE WRITER OF A SETTLEMENT. Every act that settles a bias debt — the sweep's lens-return, a
+   *  re-run's discharge, a member's resolve — appends its row HERE and stamps `bias_debts` from the same
+   *  values, so the append-only record and the debt's own state cannot disagree about which act closed it.
+   *  Synchronous, like every write on the sweep's path. */
+  #biasDebtSettle({ run, kind, at, actor = null, reason = null, byRun = null, lensThen = null, lensNow = null }) {
+    this.sql.exec(
+      `INSERT INTO bias_debt_settlements (run, kind, at, actor, reason, by_run, lens_then, lens_now)
+       VALUES (?,?,?,?,?,?,?,?)`,
+      run, kind, at, actor, reason, byRun, lensThen, lensNow);
+    this.sql.exec(
+      `UPDATE bias_debts SET cleared_at = ?, settled_kind = ?, observed = ? WHERE run = ?`,
+      at, kind, at, run);
+    return { run, kind, at, actor, reason, by_run: byRun, lens_then: lensThen, lens_now: lensNow };
+  }
+
+  /** The settlements on record for one run, oldest first, BOUNDED and the bound stated. Rows only — the
+   *  gate is the caller's, because this is called from two doors that have already asked it. */
+  #biasDebtSettlements(run, limit) {
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.BIAS_DEBT_SETTLEMENTS_MAX),
+                                     Store.BIAS_DEBT_SETTLEMENTS_MAX));
+    const rows = this.#rows(
+      `SELECT seq, kind, at, actor, reason, by_run, lens_then, lens_now
+         FROM bias_debt_settlements WHERE run = ? ORDER BY seq LIMIT ?`, run, cap + 1);
+    return { settlements: rows.slice(0, cap).map((r) => ({
+               seq: r.seq, kind: r.kind, at: r.at, actor: r.actor ?? null, reason: r.reason ?? null,
+               by_run: r.by_run ?? null, lens_then: r.lens_then ?? null, lens_now: r.lens_now ?? null })),
+             limit: cap, truncated: rows.length > cap };
+  }
+
+  /** How a SETTLED debt row reads. `cleared_at` set with NO `settled_kind` is a debt cleared before this
+   *  item existed, when the lens moving back was the only act there was — and it reads UNDETERMINED rather
+   *  than being attributed to that act, because a back-filled attribution is an invented one (D-85's rule
+   *  one table over, and `CLAUDE.md` §4: undetermined is first-class and must be STATED). */
+  static #biasDebtSettledView(row) {
+    if (row.cleared_at == null) return { settled: false };
+    if (row.settled_kind == null)
+      return { settled: true, at: row.cleared_at, kind: null, kind_state: "undetermined",
+               stated: "this debt was settled before the record kept which act settled it. The only act "
+                     + "there was then is the lens moving back, and naming it here would be attributing "
+                     + "the settlement to an act nobody recorded" };
+    return { settled: true, at: row.cleared_at, kind: row.settled_kind, kind_state: "determined" };
+  }
+
+  /** op=biasdebtresolve — DISCHARGE (3): A MEMBER'S RESOLVE, WITH A REQUIRED STATED REASON.
+   *
+   *  *"It needs no re-run, because a member may judge that the lens change does not bear on the finding"*
+   *  (BOB #32). So this act does not ask for evidence and does not re-open anything; what it requires is
+   *  that the judgement be SAID, by a named member, on a date, in a row nothing later edits. DEC-24's
+   *  authored half, and DEC-69: a member is never forced to re-run.
+   *
+   *  WHY A DOOR OF ITS OWN AND NOT `op=taskresolve`. That op addresses `tasks` by id and a bias debt is
+   *  keyed by the RUN it is about; there is no task row to resolve, and manufacturing one would put a
+   *  second writer on the obligation. The row's own headline is this sentence.
+   *
+   *  WHO MAY: any member the debt's own read gate admits — `#bundleGate` over the run's context, the SAME
+   *  predicate `#obligationsBiasDebt` compiles to decide who is shown the item. Deliberately NOT narrowed
+   *  to the producer's `recipients`: that list is who the item is OFFERED to, and D-86 already states that
+   *  where it can name nobody the obligation is offered to everyone who can read the run. A fence tighter
+   *  than that would refuse a member the queue had just asked. WHO resolved it is recorded either way.
+   *
+   *  A MACHINE MAY NOT, by SHAPE and before the row is read — `taskResolve`'s MACHINE_CANNOT_RESOLVE
+   *  precedent exactly: settling an obligation is a named member's judgement, and a credential with no
+   *  person behind it cannot hold one. */
+  biasDebtResolve({ run = null, reason = null, actor = null, viewer = null, at = null } = {}) {
+    /* NAMED `refusal`, shadowing the module helper, and the name is LOAD-BEARING rather than a style:
+       `check-refusal-codes.mjs` arm C reads a family helper's call sites by that identifier, so a helper
+       called anything else makes every refusal in this method invisible to the guard and each region
+       `where` below reads as a marker that has drifted off its arm. Measured on this item's first run:
+       both regions printed `0 judged, 0 code(s) checked` and the guard failed naming them. `aiRunsInContext`
+       shadows it the same way and for the same reason. Every code inside is a STRING LITERAL at its site. */
+    const refusal = (code, detail, extra = {}) => {
+      const row = BIAS_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra };
+    };
+    const id = String(run ?? "").trim();
+    const who = String(actor ?? "").trim();
+    const said = typeof reason === "string" ? reason.trim() : "";
+    /* DEC-49 REGION is-bias-debt-resolve-shape — the four conditions that are about the ACT rather than
+       about the debt, asked BEFORE the record is read, so a caller who may not see the run learns nothing
+       from the order of the answers. */
+    if (!id)
+      return refusal("BIAS_DEBT_NO_RUN",
+        "a bias debt is keyed by the run it is about, so the act has to name one");
+    if (!who)
+      return refusal("BIAS_DEBT_NO_ACTOR",
+        "a resolution is recorded under the member who made it, and there is no member on this call");
+    if (isMachineStamp(who))
+      return refusal("BIAS_DEBT_MACHINE_CANNOT_RESOLVE",
+        "settling a bias debt is a judgement that the lens change does not bear on the finding, and that "
+        + "is a named member's judgement (DEC-24: derived informs, authored binds). A machine credential "
+        + "may raise the obligation, surface it and prepare what it needs, and may not answer it");
+    if (!said)
+      return refusal("BIAS_DEBT_NO_REASON",
+        "this act settles an obligation the record raised, and the whole of what it records is the "
+        + "member's stated ground for settling it. Without the reason the row would say that somebody "
+        + "decided and not what they decided");
+    if (said.length > Store.BIAS_DEBT_REASON_MAX)
+      return refusal("BIAS_DEBT_REASON_TOO_LONG",
+        `the stated reason is ${said.length} characters and this record holds at most `
+        + `${Store.BIAS_DEBT_REASON_MAX}`, { limit: Store.BIAS_DEBT_REASON_MAX, length: said.length });
+    /* END DEC-49 REGION is-bias-debt-resolve-shape */
+    const seen = this.#bundleGate("bd.context_id", viewer);
+    const row = this.#one(`SELECT bd.* FROM bias_debts bd WHERE bd.run = ? AND (${seen.sql})`, id, ...seen.args);
+    /* DEC-49 REGION is-bias-debt-resolve-subject — the two conditions about the debt itself. A debt this
+       viewer may not see answers EXACTLY as one that was never raised (REC-25/REC-30: a refusal that tells
+       "not yours" apart from "does not exist" has told the caller the thing it was withholding). */
+    if (!row)
+      return refusal("BIAS_DEBT_NO_SUCH_DEBT",
+        "no open bias debt stands against this run here: it either never carried one, it has already been "
+        + "settled, or this reader cannot open the run it is about", { run: id });
+    if (row.cleared_at != null)
+      return refusal("BIAS_DEBT_ALREADY_SETTLED",
+        "this obligation has already been settled, and a settlement is appended rather than replaced",
+        { run: id, settled: Store.#biasDebtSettledView(row) });
+    /* END DEC-49 REGION is-bias-debt-resolve-subject */
+    const when = at && ISO_INSTANT.test(at) ? at : new Date().toISOString().split(".")[0] + "Z";
+    const settled = this.#biasDebtSettle({ run: id, kind: "resolved", at: when, actor: who, reason: said,
+                                           lensThen: row.lens_then, lensNow: row.lens_now });
+    return { ok: true, run: id, settled };
+  }
+
+  /** op=biasdebt — THE READ, and it is what makes "RECORDED, never cleared silently" a fact a reader can
+   *  check rather than a promise. One run's debt and every settlement on it, in order.
+   *
+   *  GATED on the run's context through `#bundleGate`, the one predicate `#obligationsBiasDebt` and
+   *  `op=airun` compile. A debt the viewer may not see answers BYTE-IDENTICALLY to a run that never
+   *  carried one — one answer, not two.
+   *
+   *  BOUNDED, and the bound is PUBLISHED: `limit` and `truncated` beside the rows. */
+  biasDebtRead({ run = null, viewer = null, limit = null } = {}) {
+    const id = String(run ?? "").trim();
+    const absent = { ok: true, run: id || null, found: false,
+                     note: "no bias debt is on record for this run: it either never carried one, or the "
+                         + "run is not one this reader can open" };
+    if (!id) return absent;
+    const seen = this.#bundleGate("bd.context_id", viewer);
+    const row = this.#one(`SELECT bd.* FROM bias_debts bd WHERE bd.run = ? AND (${seen.sql})`, id, ...seen.args);
+    if (!row) return absent;
+    const s = this.#biasDebtSettlements(id, limit);
+    return {
+      ok: true, run: id, found: true,
+      open: row.cleared_at == null,
+      context: { type: row.context_type, id: row.context_id },
+      raised: row.raised, observed: row.observed,
+      moved_basis: row.moved_basis ?? null, lens_then: row.lens_then ?? null, lens_now: row.lens_now ?? null,
+      settled: Store.#biasDebtSettledView(row),
+      settlements: s.settlements, limit: s.limit, truncated: s.truncated,
+      stated: "bias debt is DISCLOSED and blocks nothing (DEC-20). Three acts settle it and each is on "
+            + "record here: the lens moving back, a re-run under the lens now in force, and a member's "
+            + "resolve with a stated reason (BOB #32, 2026-09-23)",
+    };
+  }
+
+  /** DISCHARGE (2): A RE-RUN UNDER THE CURRENT LENS, taken at the re-run's OWN CLOSE.
+   *
+   *  WHY AT THE CLOSE AND NOT AT THE OPEN, and this is the load-bearing choice in the whole discharge.
+   *  The obligation says a RE-RUN is owed. A run that was opened and never ran has not re-run anything, so
+   *  discharging at the open would settle a debt on the strength of a row EXISTING rather than of anything
+   *  having happened — *"a mechanism believed on the strength of its EXISTENCE rather than its behaviour is
+   *  the defect this project meets most"* (`kickoffs/WORKER.md`). The LINK is authored at the open
+   *  (`ai_runs.rerun_of`, the opener's own word about what this re-runs) and the DISCHARGE is taken here.
+   *
+   *  AND ONLY THROUGH THE MEMBER'S DOOR. The reaper closes a lapsed run by calling `#aiRunTerminate`
+   *  directly and never comes through `aiRunClose`, so a re-run that ran out of lease discharges nothing.
+   *  That is the honest reading and it is stated rather than left to be inferred from the call graph.
+   *
+   *  "UNDER THE CURRENT LENS" IS ONE COMPARISON AND IT IS NOT MADE HERE. `#biasForRun` — the one reader
+   *  `op=airun` publishes, and the one D-86's sweep already follows — answers what this run was FORMED
+   *  under (the manifest it was handed) and what is in force NOW for its context. This method reads those
+   *  two hashes and compares nothing else. A second comparison of its own would agree with that reader
+   *  today and be the thing that drifts, which is D-86's own recorded liar.
+   *
+   *  AND AN EQUALITY THAT COSTS NOTHING IS NOT EVIDENCE. Where either side has no hash — nothing was
+   *  handed to this run, or no lens is in force — the two absences are NOT read as agreement: the answer
+   *  is UNDETERMINED, stated, and nothing is discharged. Two empty digests agree on nothing.
+   *
+   *  THE CONTEXT IS ALREADY THE SAME ONE: `aiRunOpen` refuses a `rerun_of` naming a run in another context
+   *  (AI_RUN_RERUN_OTHER_CONTEXT), so the lens in force for this run IS the lens the debt is owed against.
+   *  Without that fence a re-run in another project would be measured against another project's lens. */
+  async #biasDebtDischargeByRerun({ run, at }) {
+    const row = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
+    const target = row && row.rerun_of != null && String(row.rerun_of).trim()
+      ? String(row.rerun_of).trim() : null;
+    if (!target) return null;
+    const debt = this.#one(`SELECT * FROM bias_debts WHERE run = ? AND cleared_at IS NULL`, target);
+    /* `outcome`, NOT `reason`, and the three values are lower case. Neither is style: this is a SUCCESS
+       answer stating what the discharge attempt found, and a `reason` key holding an upper-case word is
+       exactly what `check-refusal-codes.mjs`'s census reads as a
+       refusal the plane can mint — and it reads the source TEXT, so the pattern must not appear even in
+       a comment explaining it, which is why this sentence describes it in words. Measured on this item's
+       first run the three values, then spelled in upper case, entered the census as untranslated refusal
+       codes and moved its floor — codes no member can ever be refused with. A word that means "refusal"
+       to the instruments must not be used for anything else. */
+    if (!debt)
+      return { re_ran: target, discharged: false, outcome: "no_open_debt",
+               stated: "no open bias debt stands against the run this one re-ran" };
+    const bias = await this.#biasForRun(row, Store.BIAS_DEBT_VIEWER);
+    const formed = bias && bias.in_force === true && bias.manifest
+                   && typeof bias.manifest.statements_sha === "string"
+      ? bias.manifest.statements_sha : null;
+    const inForce = bias && bias.now && bias.now.in_force === true
+                    && typeof bias.now.statements_sha === "string"
+      ? bias.now.statements_sha : null;
+    if (formed == null || inForce == null)
+      return { re_ran: target, discharged: false, outcome: "lens_undetermined",
+               lens_ran_under: formed, lens_in_force: inForce,
+               stated: formed == null
+                 ? "this run was handed no lens that can be read, so whether it ran under the lens now in "
+                 + "force is undetermined and it discharges nothing"
+                 : "no lens is in force for this run's context, so whether it ran under the current one is "
+                 + "undetermined and it discharges nothing" };
+    if (formed !== inForce)
+      return { re_ran: target, discharged: false, outcome: "other_lens",
+               lens_ran_under: formed, lens_in_force: inForce,
+               stated: "this run was formed under a lens other than the one now in force, so it discharges "
+                     + "nothing (BOB #32: a re-run under any other lens discharges nothing)" };
+    const settled = this.#biasDebtSettle({ run: target, kind: "rerun", at, byRun: run,
+                                           lensThen: debt.lens_then, lensNow: formed });
+    return { re_ran: target, discharged: true, lens_ran_under: formed, lens_in_force: inForce, settled };
+  }
 
   /** op=airunspawn — THE FENCE, AS CODE.
    *
@@ -49177,6 +49571,15 @@ export class Store extends DurableObject {
                                             caller: url.searchParams.get("principal") }),
         airun: () => this.aiRunRead({ run: url.searchParams.get("run"),
                                       viewer: url.searchParams.get("viewer") }),
+        /* REC-207: the two doors BOB #32's ruling needs. `actor` rides in the BODY, stamped there by
+           index.mjs on `op=taskresolve`'s precedent, so the store sees a machine credential honestly
+           named `token:<class>` and can refuse it BY SHAPE; `viewer` is the query stamp every gated read
+           here takes, set after the body's spread so a caller's own is overwritten rather than believed. */
+        biasdebtresolve: () => this.biasDebtResolve({ ...(body || {}),
+                                                      viewer: url.searchParams.get("viewer") }),
+        biasdebt: () => this.biasDebtRead({ run: url.searchParams.get("run"),
+                                            viewer: url.searchParams.get("viewer"),
+                                            limit: url.searchParams.get("limit") }),
         airunlog: () => this.aiRunLog({ run: url.searchParams.get("run"),
                                         viewer: url.searchParams.get("viewer"),
                                         limit: url.searchParams.get("limit") }),

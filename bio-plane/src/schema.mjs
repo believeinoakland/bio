@@ -4005,6 +4005,34 @@ CREATE TABLE IF NOT EXISTS action_law_proposals (
   PRIMARY KEY (bundle_id, proposed_by, ord)
 );
 
+-- REC-207 (BIO_Declared_Bias_v0_1.md, "Bias debt, and HUNCH DEBT", BOB #32's ruling of 2026-09-23 23:42Z):
+-- WHAT SETTLED A BIAS-DEBT OBLIGATION, ONE APPEND-ONLY ROW PER SETTLING ACT. Three acts settle a debt and each is
+-- RECORDED, and none clears it silently. Before this table the only settlement was the lens moving back and it wrote
+-- a timestamp on bias_debts and nothing else, so a reader who came later could see THAT the obligation had gone and
+-- never WHY -- which is the record saying less than it knows.
+-- kind is one of three words. lens_returned is the sweep reading moved false again, derived, with no member behind
+-- it. rerun is a run that NAMES the indebted run as the one it re-runs, CLOSED under the lens in force, where by_run
+-- is that run and lens_now is the sha it ran under. resolved is a member's authored act with a REQUIRED stated
+-- reason, where actor is that member.
+-- APPEND-ONLY BY USE, not by a trigger. Nothing in the store updates or deletes a row here, and a debt raised again
+-- after a settlement (the lens moved once more) writes a FURTHER row rather than editing this one, so the sequence
+-- IS the history. seq orders and keys it, and a settlement is never addressed by anything but its run and its seq.
+-- actor is NULL for lens_returned, because a sweep is not a person and attributing it to one would be an invented
+-- attribution, and reason is NULL for the two acts that state their ground in the record rather than in words.
+-- A run is purged only by the whole-store arm, which takes this with it, beside bias_debts.
+CREATE TABLE IF NOT EXISTS bias_debt_settlements (
+  seq        INTEGER PRIMARY KEY,
+  run        TEXT NOT NULL,
+  kind       TEXT NOT NULL CHECK (kind IN ('lens_returned','rerun','resolved')),
+  at         TEXT NOT NULL,
+  actor      TEXT,
+  reason     TEXT,
+  by_run     TEXT,
+  lens_then  TEXT,
+  lens_now   TEXT
+);
+CREATE INDEX IF NOT EXISTS bias_debt_settlements_run ON bias_debt_settlements(run, seq);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

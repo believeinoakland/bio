@@ -1464,6 +1464,21 @@ const OPS = {
   airunclose:         { classes: ["admin", "member", "probe"],      mutating: true  },
   airun:              { classes: ["admin", "member", "probe"],      mutating: false },
   airunlog:           { classes: ["admin", "member", "probe"],      mutating: false },
+  /* REC-207 (BOB #32, 2026-09-23 23:42Z): the two doors that settle a bias-debt obligation and read what
+     settled it.
+
+     `biasdebtresolve` HAS NO PROBE CLASS, and the reason is the one `queuemute` records two blocks up
+     rather than a new one: settling a bias debt is a member's judgement that a lens change does not bear
+     on a finding, so a credential with no person behind it has no judgement to record. The store refuses
+     a machine BY SHAPE as well (BIAS_DEBT_MACHINE_CANNOT_RESOLVE, `taskResolve`'s precedent), so a bypass
+     of this list fails closed rather than writing a row attributed to a token.
+
+     `biasdebt` IS a read and carries the run reads' classes: it names a RUN and answers about the
+     obligation on it, so it is gated on the run's context exactly as op=airun and op=airunlog are, and a
+     debt on a run the caller cannot open answers byte-identically to a run that never carried one. It is
+     classified in test/gate-reads.test.mjs, where every read op must be. */
+  biasdebtresolve:    { classes: ["admin", "member"],               mutating: true  },
+  biasdebt:           { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-93 / IC-92 — THE FRONTIER READ (`OBSERVATION-LOG-DESIGN.md` §6 row 1):
      *what have we looked for at this level, and what came of it* — the candidate
      list for FETCH / EXTRACT / DERIVE. A READ, so `mutating: false`.
@@ -1927,6 +1942,17 @@ const POSITIONAL_ACTS = ["cite", "sever", "reinstate", "versioncurrent", "propos
    administrator is a member too, and because the doctrine puts instance bias
    with the admins and project bias with the project managers, who are members. */
 const BIAS_ACTIONS = ["biasadopt"];
+/* REC-207 (BOB #32, 2026-09-23 23:42Z): SETTLING A BIAS-DEBT OBLIGATION, which is a MEMBER's act through
+   their session and nothing else. `op=biasdebt` is not here for the reason restated on BIAS_ACTIONS above —
+   SESSION_OPS gates MUTATING ops alone — and this array is the third place the resolve's member-only nature
+   is enforced rather than a fourth place it is stated: the OPS table admits no probe class, this list is what
+   a signed-in session actually reaches, and the store refuses a machine BY SHAPE.
+   ITS OWN ARRAY, on BIAS_ACTIONS's and QUEUE_ACTIONS's reasoning: adopting a lens and answering the debt a
+   lens change left are two different doctrines, and one control over both is how they come to drift.
+   WITHOUT THIS LINE THE DOOR DOES NOT EXIST FOR A PERSON — measured on this item's first suite run, where a
+   signed-in member's resolve was answered SESSION_ROUTE_NOT_RECORDED, D-270's honest "no session reaches
+   this and no decision says why". It is in BOTH lists because an administrator is a member too. */
+const BIAS_DEBT_ACTIONS = ["biasdebtresolve"];
 /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISER actions. A member RESOLVES a
    captured document's references to registry entities (resolve), TESTIFIES a grade-D
    connection (resolvetestify), and READS the resolutions of a document (resolutions)
@@ -2086,6 +2112,7 @@ const SESSION_OPS = {
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
+                   ...BIAS_DEBT_ACTIONS,
                    ...BIAS_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS,
                    /* PL-11 / IS-5 / D-199 (3): MINTING AN AI TOKEN IS A MEMBER ACT,
@@ -2131,6 +2158,7 @@ const SESSION_OPS = {
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
+                   ...BIAS_DEBT_ACTIONS,
                    ...BIAS_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS,
                    ...IDENTITY_ACTIONS,
@@ -2650,6 +2678,14 @@ const NEEDS = {
   airunopen:        "contribute",
   airuntick:        "contribute",
   airunclose:       "contribute",
+  /* REC-207: NO CAPABILITY on either, and `op=taskresolve`'s entry above is the precedent rather than a
+     new argument. Settling an obligation the record raised is answering something addressed to you; it is
+     not the corpus-shaping surface `contribute` separates out, and a view-only member who is shown a
+     bias-debt obligation and cannot answer it has been handed an item they can receive and never
+     discharge. What DOES bound the act is its class list (no probe), the store's own machine refusal by
+     shape, and the run's read gate — an identity question, like the task fence, not a capability one. */
+  biasdebtresolve:  null,
+  biasdebt:         null,
   /* PL-3 / IS-4. A suggestion is `contribute` and deliberately NOT `publish`:
      §1's three verbs are kept apart, and proposing a reading of the evidence is
      suggesting. Nothing this op writes is the group putting its name on
@@ -10570,6 +10606,13 @@ export default {
            gates through the same `#bundleGate` every read here compiles and
            fails closed on an absent stamp, like every op in this list. */
         || op === "biasmanifest"
+        /* REC-207: the bias-debt READ names a RUN and its answer names the run's context, so it takes the
+           same fail-closed stamp its three run-read siblings do — a debt on a run the caller was never
+           invited to must be absent byte-identically to a run that never carried one. And the RESOLVE
+           takes it too, because its refusal is asked through the SAME `#bundleGate`: an unseen debt and an
+           absent one are deliberately one answer, which they cannot be if the gate is not stamped. Fails
+           closed on an absent stamp, like every op in this list. */
+        || op === "biasdebt" || op === "biasdebtresolve"
         /* REC-149 (Membership v2 §7.14): the two acts that name a project and took no viewer — a bias set adopted
            into a project's scope, and a review copy's draft under a project. Each asks the stamp ONLY for
            EXISTENCE (a discoverable project, a member outside it: C-70.1); every other caller's answer is
@@ -11691,7 +11734,12 @@ export default {
        taskForward/taskResolve can refuse it BY SHAPE (MACHINE_CANNOT_FORWARD /
        MACHINE_CANNOT_RESOLVE). `taskdrain` keeps the stamp and no such refusal:
        routing an event into a task is the daemon's job. */
-    if ((op === "taskforward" || op === "taskresolve" || op === "taskdrain") && passBody) {
+    /* REC-207: `op=biasdebtresolve` takes the SAME body stamp and for the same reason. WHO settled the
+       obligation is the whole of what the act records beside the reason, so it is the server's word and
+       never the caller's; and a machine credential arriving honestly named `token:<class>` is precisely
+       what lets the store refuse it BY SHAPE rather than by guessing from an absence. */
+    if ((op === "taskforward" || op === "taskresolve" || op === "taskdrain"
+         || op === "biasdebtresolve") && passBody) {
       try {
         const b = JSON.parse(passBody);
         b.actor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;

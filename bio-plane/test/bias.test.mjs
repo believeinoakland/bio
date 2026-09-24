@@ -461,7 +461,7 @@ console.log("\n--- 3. OVER-STRICTNESS: correct statements phrased unlike anythin
 console.log("\n--- 4. the refusals, each a C-number with a code and a canned translation from ONE place ---");
 {
   const rows = Object.entries(BIAS_CHECKS);
-  t("ELEVEN refusals are allocated, and every one carries check + where + translation",
+  t("EIGHTEEN refusals are allocated, and every one carries check + where + translation",
     /* C-26, not C-25 — the family moved at the rebase because PL-1 landed first
        and took C-25 (see the note at BIAS_CHECKS). THIS LINE IS WHY THE ARM IS
        WORTH HAVING: the wholesale renumber was a regex on `C-25.<digits>`, and
@@ -472,8 +472,16 @@ console.log("\n--- 4. the refusals, each a C-number with a code and a canned tra
     [rows.length, rows.every(([, r]) => /^C-26\.\d+$/.test(r.check) && r.where && r.translation.length > 60)],
     /* ELEVEN, not ten: C-26.11 (BIAS_REFUSED) was added 2026-08-08 when VF-2's
        DEC-49 guard measured that the write path's ENVELOPE code carried no
-       translation. Corrected here rather than exempted. */
-    [11, true]);
+       translation. Corrected here rather than exempted.
+       EIGHTEEN, not eleven, 2026-09-24 (REC-207): BOB #32's ruling of 2026-09-23
+       23:42Z gave a bias debt two settling acts it did not have, and the member's
+       resolve brought SEVEN refusals with it (C-26.12 to C-26.18, the two regions
+       in `biasDebtResolve`). CORRECTED HERE RATHER THAN EXEMPTED, and the old
+       figure was not WRONG — it was true of its family on its day, which is what
+       a count like this one is for: it is the arm that made the C-25 -> C-26
+       renumber's one missed reference visible, and it can only do that while it
+       is moved by hand every time the family grows. */
+    [18, true]);
   t("the C-numbers are unique — an allocation reused is an allocation nobody can act on",
     new Set(rows.map(([, r]) => r.check)).size, rows.length);
   t("DEC-54's four scopes each have a NUMBER, which is what makes each a mechanism rather than a paragraph",
