@@ -3689,7 +3689,16 @@ CREATE TABLE IF NOT EXISTS case_drafts (
   created_by  TEXT NOT NULL,
   created_at  TEXT NOT NULL,
   updated_by  TEXT NOT NULL,      -- the editor the dry run of the publish gates acts as
-  updated_at  TEXT NOT NULL
+  updated_at  TEXT NOT NULL,
+  -- REC-193 / BIO_Publication_v0_1.md section 3 rule 13 (BOB #32, 2026-09-23): WHO WROTE THE EXCLUSION
+  -- STATEMENT'S CURRENT BYTES. Stamped by the SERVER at the draft write that changes the statement text and
+  -- left alone by every other edit, so an editor who rewrites another section does not become the statement's
+  -- author -- which is what updated_by, the last editor of ANY field, said when op=statementack read it.
+  -- NULLABLE AND NEVER BACK-FILLED: a draft written before this column existed recorded no writer, and the
+  -- only value a backfill could reach for is updated_by, the very value this column exists to stop standing
+  -- in for one. NULL reads back as UNDETERMINED, stated, and op=statementack refuses by name rather than
+  -- guess. Nothing about publication turns on it: rule 11 never refuses a case for want of an acknowledgement.
+  statement_by TEXT
 );
 CREATE INDEX IF NOT EXISTS case_drafts_project ON case_drafts(project_id);
 
