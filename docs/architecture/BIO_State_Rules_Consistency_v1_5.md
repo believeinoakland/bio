@@ -734,7 +734,9 @@ retraction: a publisher that withdraws or changes a document is the `source_stat
 both versions preserved, flagged as potential concealment evidence), never `retired`, and stays citable. **Accepts when**
 `op=cite` onto a retired Information bundle is refused by name for a member and a machine credential alike, one onto a
 `source_status: removed` bundle lands, and a confirmed leg that predates the retirement is untouched. NEGATIVE CONTROL:
-drop the retired check from `op=cite`, and the member arm fails by name.
+drop the retired check from `op=cite`, and the member arm fails by name. **WIDENED 2026-09-24 by BOB #34 (D-553 (c)):**
+the rule follows the STATE, not the type: any object in a `retired` state is not citable, by any door and for every caller;
+only a refusal's WORDING may be viewer-gated. A future state machine that means something else must name its state differently.
 
 **WITHDRAWING A CITATION BEFORE A RETIREMENT — RULED 2026-09-23 by BOB #31 (REC-181's worker's question).** The terminal
 transition refuses while a LIVE edge cites the item, so the citation goes first — by the door its kind has. A project's
