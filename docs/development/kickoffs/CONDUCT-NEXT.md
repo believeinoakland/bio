@@ -37,8 +37,8 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   main's 81.x chain and batch11fix's 85.0.0 must become ONE linear sequence. DROP c19-batch10, c19-batch11, c20-integ1 (broken
   trailers), c20-batch11fix, c20-batch12, c20-batch16 from trains; they are inside the batches. On landing: DIST owed D-461 SAFETY,
   D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0), DIST-11 browser class.
-- ROW WORKERS LIVE (push by 06:30-06:40Z): REC-193 session_01F4H89NyikAfnwK5a5p8jHD · D-495 session_019x11DhDVVY9438CbTY8yro ·
-  UI-89 session_01WVb7DA8n2nySoZyKzqKR3C · UI-90 session_017i3ve8jwjhLq19sBHCcrWe · D-496 session_011bP9kqUTyWrRzBL7A7jTv8.
+- REC-193 DONE @ e6716189 (IC to mint: I5 ADDITIVE) — NEXT BATCH (c20-batch18) after batch17. REC-194 unblocked, NOT spawned (wind-down).
+- ROW WORKERS LIVE (push by 06:30-06:40Z): UI-89 session_01WVb7DA8n2nySoZyKzqKR3C · UI-90 session_017i3ve8jwjhLq19sBHCcrWe · D-496 session_011bP9kqUTyWrRzBL7A7jTv8.
   REC-194 HELD (shares statementack code with REC-193).
 - Unpaid BOB rulings are ROWS now: REC-211 (DEFINITION_MOVED, write half), D-499 (render wait.fired), D-500 (watermark precision).
 - To archive after their tips reach main (ancestry check first): D-493 D-453 M0-144 M0-143 (batch15); D-481 D-494 D-483 D-484 M0-146
