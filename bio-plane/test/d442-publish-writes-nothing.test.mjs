@@ -313,9 +313,13 @@ t("(fixture) B's case document is readable and non-empty", [docB?.ok, (docB?.tex
 {
   const row = (fmB.case_roles || []).find((r) => r && r.target === Q) || {};
   const sRows = (fmB.case_strength || []).filter((r) => r && r.target === Q);
-  t("THE CASE DOCUMENT CARRIES EVERY MOVED BLOCK: the /2 format; per member its role, its pinned sha and "
-  + "its own edition",
-    [fmB.format, row.role, row.version_sha === PIN, row.edition], ["bio-case-document/2", "load_bearing", true, 1]);
+  /* CORRECTED 2026-09-24 (REC-188), never exempted: this row pinned `bio-case-document/2`, the token D-442
+     moved op=publish to. REC-188 moved it to `/3` (rule 12's shape PLUS the bias manifest and the statement's
+     acknowledgement list, both now REQUIRED), and /3 states every block this row is about exactly as /2 did
+     (`caseDocumentStatesMemberBlocks` answers yes for both). The pin stays EXACT, never a prefix. */
+  t("THE CASE DOCUMENT CARRIES EVERY MOVED BLOCK: the format op=publish authors (/3, rule 12's shape); per "
+  + "member its role, its pinned sha and its own edition",
+    [fmB.format, row.role, row.version_sha === PIN, row.edition], ["bio-case-document/3", "load_bearing", true, 1]);
   t("… the frozen pair, capture and connection once each, equal to what op=publish answered",
     [sRows.map((r) => r.axis).sort(),
      JSON.stringify(sRows.map((r) => ({ axis: r.axis, state: r.state, grade: r.grade, weakest: r.weakest })))

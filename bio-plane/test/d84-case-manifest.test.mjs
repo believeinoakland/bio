@@ -38,6 +38,19 @@
    (f) IN FORCE ASKED OF THE HEAD (the pre-REC-187 join) -> **20 pass, 5 fail**, EQUALITY ARM by name: a
    later PROPOSAL lifts the adopted lens, and case D signs a manifest without it.
 
+    [c19-batch10: REC-188's two arms were lettered (d) and (e) on its branch, which REC-187's arms above also hold;
+    relettered (g) and (h) at the merge, and REC-188's section 4 is section 5 on the batch.]
+   (d) REC-188 (declared and RUN 2026-09-24, WORKER REC-188 (CONDUCT #19)), THE ROW'S OWN ARM — DROP THE NEW
+   CHECK'S PUSH: C-41.13's first `findings.push` (the bias_manifest map) disabled in `checks/bio-checks.mjs`,
+   armed ALONE, restored by sha256 AND `cmp` against a per-arm pristine copy (4dac91af…, 903,635 bytes).
+   BASELINE with nothing armed -> **27 pass, 0 fail**. Declared: MUST fail NO-MANIFEST-REFUSED by name; MUST
+   NOT fail sections 1-3, PUBLISHED-READS-/3, the NO-ACK rows or /2-STILL-RATIFIES -> **24 pass, 3 fail**:
+   NO-MANIFEST-REFUSED, the scalar/no-hash row, and the /3 twin's count of three, exactly as declared.
+
+   (e) REC-188, THE OVER-STRICT LIAR — `caseDocumentRequiresDisclosures` made true for EVERY format, armed
+   ALONE, restored and verified the same way (4dac91af…, 903,635 bytes). Declared: MUST fail
+   /2-STILL-RATIFIES by name and nothing else -> **26 pass, 1 fail**: /2-STILL-RATIFIES, as declared.
+
    ---
 
    D-84 — THE BIAS MANIFEST IS STAMPED INTO THE SIGNED CASE DOCUMENT, FROZEN.
@@ -461,6 +474,82 @@ t("OVER-STRICTNESS ARM: once the later revision is itself promoted to `adopted`,
   [ADOPTED_Q2, ADOPTED_Q2, recompute(pairsOf(FE).map((p) => [p[0], p[1]]))]);
 t("and case D, published under the earlier adoption, still names it — frozen, never recomputed",
   [revOf(parseFrontmatter((await readDoc(pubD)).text).data.bias_manifest_bundles, BQ)], [ADOPTED_Q]);
+
+/* ===========================================================================
+   5. REC-188 — `bio-case-document/3`: THE GATE REFUSES THE ABSENCE.
+
+   `BIO_Publication_v0_1.md` §3 rules 11 and 12, `BIO_Declared_Bias_v0_1.md` §"The bias
+   acknowledgement, authored at export"; the bump CONFIRMED by BOB #31 and widened by BOB #32 (*ONE format
+   bump carries both requirements*). DEC-20's "bias accompanies every published case" held only while
+   op=publish HAPPENED to write the manifest: under /2 the gate could not require it, nor the statement's
+   acknowledgement list (D-150), without refusing a /2 document authored before them.
+
+   ACCEPTS-WHEN, clause by clause:
+     - a published case reads /3                                           -> the PUBLISHED-READS-/3 row
+     - a /3 document lacking `bias_manifest` is refused by C-41.13          -> the NO-MANIFEST-REFUSED row
+     - a /3 document lacking the acknowledgement list is refused by C-41.13 -> the NO-ACK-LIST rows
+     - a /2 document without either still ratifies                         -> the /2-STILL-RATIFIES row
+   HOW A LIAR PASSES IT: bump the token and require nothing, so every /3 row reads right and the gate
+   still accepts silence; or require the keys of EVERY format, so the /3 rows go red-for-the-right-reason
+   while every /2 document already crossed stops ratifying. The refusal rows ask for C-41.13 BY NAME
+   against a document the plane itself authored with ONE key removed, and the /2 row asks the same gate to
+   pass the same document with only the token changed back — so neither lie survives both.
+
+   WHAT THIS CANNOT SEE: the /2 row runs `runCaseGate` — the function op=caseratify runs, and nothing else
+   does — over bytes op=publish authored with the token set back to /2. It does NOT drive a /2 document
+   through op=caseratify, because no op authors /2 any more and this plane has no SQL surface to plant one.
+   =========================================================================== */
+console.log("\n--- 5. REC-188: a published case reads /3, and the gate refuses a /3 document silent about the lens or its second readers ---");
+{
+  const { runCaseGate } = await import("../src/gate.mjs");
+  const gateOf = (fm, body = null) => runCaseGate({ caseId: fm.case_id, edition: fm.case_edition, fm, priorCase: null,
+                                                     body });
+  const idsOf = (g) => g.findings.map((x) => x.check);
+  const has41_13 = (g) => idsOf(g).filter((c) => c === "C-41.13");
+  t("PUBLISHED-READS-/3: every case this suite published and ratified is `bio-case-document/3` — "
+  + "with no lens, under one, and after it moved",
+    [FA.format, FB.format, FC.format], ["bio-case-document/3", "bio-case-document/3", "bio-case-document/3"]);
+  t("REACH: each carries the two disclosures the row makes required — the manifest map, its bundle list, "
+  + "the acknowledged count (ZERO: nobody acknowledged) and its EMPTY list",
+    [typeof FB.bias_manifest, Array.isArray(FB.bias_manifest_bundles), FB.completeness?.acknowledged,
+     FB.completeness_acknowledgements],
+    ["object", true, 0, []]);
+  t("BASELINE: the ratify gate accepts both published documents as signed — the no-lens one and the lensed one",
+    [gateOf(FA, docA.text).ok, idsOf(gateOf(FA, docA.text)), gateOf(FB, docB.text).ok, idsOf(gateOf(FB, docB.text))],
+    [true, [], true, []]);
+
+  const without = (fm, key) => { const d = JSON.parse(JSON.stringify(fm)); delete d[key]; return d; };
+  t("NO-MANIFEST-REFUSED: a /3 document without the bias_manifest map is refused, by C-41.13 and by nothing else",
+    [gateOf(without(FB, "bias_manifest")).ok, idsOf(gateOf(without(FB, "bias_manifest")))],
+    [false, ["C-41.13"]]);
+  t("and so is one whose manifest is a scalar rather than a map, or claims a lens in force with no hash",
+    [has41_13(gateOf({ ...FB, bias_manifest: "none" })).length > 0,
+     has41_13(gateOf({ ...FB, bias_manifest: { ...FB.bias_manifest, statements_sha: null } })).length > 0],
+    [true, true]);
+  t("NO-ACK-LIST-REFUSED: a /3 document without completeness_acknowledgements is refused, by C-41.13",
+    [gateOf(without(FB, "completeness_acknowledgements")).ok,
+     idsOf(gateOf(without(FB, "completeness_acknowledgements")))],
+    [false, ["C-41.13"]]);
+  const noCount = JSON.parse(JSON.stringify(FB)); delete noCount.completeness.acknowledged;
+  t("NO-ACK-COUNT-REFUSED: a /3 document without completeness.acknowledged is refused, by C-41.13",
+    [gateOf(noCount).ok, idsOf(gateOf(noCount))], [false, ["C-41.13"]]);
+
+  const asV2 = (fm) => ({ ...fm, format: "bio-case-document/2" });
+  const bare = without(without(without(FB, "bias_manifest"), "bias_manifest_bundles"), "completeness_acknowledgements");
+  delete bare.completeness.acknowledged; delete bare.completeness.statement_sha;
+  t("/2-STILL-RATIFIES: the same document as a /2, carrying NEITHER the manifest NOR the acknowledgement count "
+  + "or list, passes the ratify gate with no finding — what already crossed stays crossed (rule 1)",
+    [gateOf(asV2(bare), docB.text).ok, idsOf(gateOf(asV2(bare), docB.text))], [true, []]);
+  t("and the /3 twin of that document is refused on BOTH halves, by C-41.13 alone",
+    [gateOf(bare, docB.text).ok, [...new Set(idsOf(gateOf(bare, docB.text)))], has41_13(gateOf(bare, docB.text)).length],
+    [false, ["C-41.13"], 3]);
+  t("OVER-STRICTNESS: a /3 document with a REAL acknowledgement on its list (count 1) passes — the check asks "
+  + "that the list be stated, never that it be empty or full",
+    idsOf(gateOf({ ...FB, completeness: { ...FB.completeness, acknowledged: 1 },
+                   completeness_acknowledgements: [{ kind: "recipient", by: "RG-1", recipient: "a reader",
+                                                     at: "2026-07-02T00:00:00Z" }] }, docB.text)),
+    []);
+}
 
 console.log(`\nd84-case-manifest: ${pass} pass, ${fail} fail  [FOOT REACHED]`);
 await mf.dispose();

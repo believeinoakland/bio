@@ -4196,6 +4196,7 @@ __export(bio_checks_exports, {
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
   CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED,
   CASE_DOCUMENT_FORMAT_LEGACY: () => CASE_DOCUMENT_FORMAT_LEGACY,
+  CASE_DOCUMENT_FORMAT_V2: () => CASE_DOCUMENT_FORMAT_V2,
   CASE_MEMBER_ROLES: () => CASE_MEMBER_ROLES,
   CHECK_RETIREMENTS: () => CHECK_RETIREMENTS,
   CITATION_MAX: () => CITATION_MAX,
@@ -4301,6 +4302,7 @@ __export(bio_checks_exports, {
   canonicalExtent: () => canonicalExtent,
   canonicalJson: () => canonicalJson,
   canonicalRange: () => canonicalRange,
+  caseDocumentRequiresDisclosures: () => caseDocumentRequiresDisclosures,
   caseDocumentStatesMemberBlocks: () => caseDocumentStatesMemberBlocks,
   caseEditionClaimed: () => caseEditionClaimed,
   checkBiasExtension: () => checkBiasExtension,
@@ -11834,10 +11836,12 @@ var REEXTRACT_CHECKS = {
     translation: "This record holds no reading of that document for you to re-read. A capture is read when it is filed into the record, so file it first; re-reading replaces a reading that already exists."
   }
 };
-var CASE_DOCUMENT_FORMAT = "bio-case-document/2";
+var CASE_DOCUMENT_FORMAT = "bio-case-document/3";
+var CASE_DOCUMENT_FORMAT_V2 = "bio-case-document/2";
 var CASE_DOCUMENT_FORMAT_LEGACY = "bio-case-document/1";
-var CASE_DOCUMENT_FORMATS_ACCEPTED = [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_LEGACY];
-var caseDocumentStatesMemberBlocks = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
+var CASE_DOCUMENT_FORMATS_ACCEPTED = [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY];
+var caseDocumentStatesMemberBlocks = (fm) => fm?.format === CASE_DOCUMENT_FORMAT || fm?.format === CASE_DOCUMENT_FORMAT_V2;
+var caseDocumentRequiresDisclosures = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
 var SEARCHED_SUBJECT_SOURCES = {
   case_basis: "the subjects were taken from the CASE -- its members' basis legs and the content rows those legs name -- and the observation log was consulted only to ask what became of each. The log never supplies the subject set; a section computed the other way round is 100% searched by construction and says nothing about the case"
 };
@@ -11853,7 +11857,8 @@ var CASE_DOCUMENT_FAMILY = {
   PINS: { check: "C-41.9", what: "the version hash per member (DEC-72 clause 3)" },
   COMPLETENESS: { check: "C-41.10", what: "the completeness block (REC-14)" },
   EXCLUDED: { check: "C-41.11", what: "the exclusion list field (C-9)" },
-  BAR: { check: "C-41.12", what: "required_strength \u2014 the standard of evidence (DEC-17 as DEC-72 rehomes it)" }
+  BAR: { check: "C-41.12", what: "required_strength \u2014 the standard of evidence (DEC-17 as DEC-72 rehomes it)" },
+  DISCLOSURES: { check: "C-41.13", what: "bias_manifest and the statement's acknowledgement list, required of a bio-case-document/3 (REC-188)" }
 };
 var C41 = Object.fromEntries(
   Object.entries(CASE_DOCUMENT_FAMILY).map(([k, v]) => [k, v.check])
@@ -11865,7 +11870,7 @@ function checkCaseDocument(fm, ctx = {}) {
     findings.push(f(
       C41.FORMAT,
       "error",
-      `a case document declares format '${CASE_DOCUMENT_FORMAT}' (or, authored before BIO_Publication_v0_1.md \xA73 rule 12, '${CASE_DOCUMENT_FORMAT_LEGACY}') (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
+      `a case document declares format '${CASE_DOCUMENT_FORMAT}' (or, authored before REC-188, '${CASE_DOCUMENT_FORMAT_V2}'; or, authored before BIO_Publication_v0_1.md \xA73 rule 12, '${CASE_DOCUMENT_FORMAT_LEGACY}') (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
       ["re-publish through op=publish, which authors the case document"]
     ));
   }
@@ -11990,6 +11995,55 @@ function checkCaseDocument(fm, ctx = {}) {
       }
       if (c && c.acknowledged !== void 0 && c.acknowledged !== acks.length)
         findings.push(f(C41.COMPLETENESS, "error", `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
+    }
+  }
+  if (caseDocumentRequiresDisclosures(fm)) {
+    const bm = fm?.bias_manifest;
+    if (!bm || typeof bm !== "object" || Array.isArray(bm) || typeof bm.in_force !== "boolean") {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document requires a bias_manifest map with a boolean in_force (got ${JSON.stringify(bm ?? null)}): a published case CARRIES the bias it was produced under (DEC-20), and the manifest is the lens itself \u2014 computed and stamped by the plane beside the acknowledgement the publisher authors (DEC-46). A document silent about the lens cannot be told from one produced under none`,
+        ["re-publish through op=publish, which stamps the manifest in force for the case's project into the case document"]
+      ));
+    } else if (bm.in_force === true && !(typeof bm.statements_sha === "string" && /^[0-9a-f]{64}$/.test(bm.statements_sha))) {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (bundle, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
+        ["re-publish through op=publish"]
+      ));
+    } else if (bm.in_force === false && !(typeof bm.stated === "string" && bm.stated.trim())) {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says no lens was in force and does not SAY so (stated is empty): "no manifest was in force" is a statement, and a blank is not one`,
+        ["re-publish through op=publish"]
+      ));
+    }
+    if (bm && typeof bm === "object" && !Array.isArray(fm?.bias_manifest_bundles)) {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias bundle was in force) and is legal \u2014 an ABSENT field is silence about which revisions the lens was`,
+        ["re-publish through op=publish"]
+      ));
+    }
+    if (!c || !Number.isInteger(c.acknowledged) || c.acknowledged < 0) {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.acknowledged, the count of second readers of its statement (got '${c ? c.acknowledged : void 0}'): ZERO is a statement \u2014 nobody but its author acknowledged it \u2014 and is legal; an absent count is silence (BIO_Publication \xA73 rule 11). An acknowledgement is never required to publish`,
+        ["re-publish through op=publish, which lists every acknowledgement of the statement it publishes"]
+      ));
+    }
+    if (!Array.isArray(fm?.completeness_acknowledgements)) {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal \u2014 an ABSENT field is silence about who else read what this case leaves out (BIO_Publication \xA73 rule 11)`,
+        ["re-publish through op=publish, which lists every acknowledgement of the statement it publishes"]
+      ));
     }
   }
   const srch = typeof fm?.searched === "object" && fm.searched || null;
