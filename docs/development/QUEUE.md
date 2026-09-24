@@ -36,7 +36,7 @@ scope: (1) close D-313, D-391, D-388 (dispositions drafted on `scheduler18/row-d
 accepts-when: `node tools/plancheck.mjs`, the coord ledger checks and the full gate pass with no DEBT.md; `git grep -il "debt"` over live tools, suites, CLAUDE.md, kickoffs and development docs returns only archive pointers, each named in the landing; D-313/D-391/D-388 read done in the ledger archive. NEGATIVE CONTROL: restore one reader, and its arm fails naming the missing file.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs M0`).
 
-### D-498 · running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-498 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/D-498; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### D-498 · integrated — finished; land/worker/D-498 @ 9f46d90c (one line in construct-status 1.discoverable + 3 probes; gate TARGETED 42/42 green), merges clean onto 68fecb8d; rides the next train
 order: at the backlog head: the record claiming more than the plane does, one line (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
 milestone: M8
 interface: none.
