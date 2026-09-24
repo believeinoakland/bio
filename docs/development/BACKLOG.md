@@ -486,7 +486,8 @@ scope: (a) and (b) as ruled.
 accepts-when: in a NEW suite `bio-plane/test/rec-186-leave-join.test.mjs`, through the ops: the last owner's leave is refused with the membership rows byte-identical after, a co-owner's leave lands; affordances offers no join to a joined participant and does offer it to an invited non-participant. NEGATIVE CONTROL (`rec-186-leave-join.control.mjs`): drop the owner check, and the refusal arm fails by name; offer join unconditionally, and the join arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (BOB #31's ruling; `node tools/mintid.mjs REC`).
 
-### DIST-7 · queued — **THE INSTALLER UPLOADS EVERY GROUP'S PLANE WITH NO `limits`, SO EACH INSTANCE RUNS AT CLOUDFLARE'S DEFAULT SUBREQUEST LIMIT WHATEVER THE SIGNED RELEASE CARRIES.** Re-read on `91bcea6b`: `newgroup/src/index.mjs` `uploadInstall` and `uploadUpdate` hard-code `main_module`, `compatibility_date` and `compatibility_flags` and send no `limits`. — owner DIST.
+### DIST-7 · integrated — **THE INSTALLER UPLOADS EVERY GROUP'S PLANE WITH NO `limits`, SO EACH INSTANCE RUNS AT CLOUDFLARE'S DEFAULT SUBREQUEST LIMIT WHATEVER THE SIGNED RELEASE CARRIES.** Re-read on `91bcea6b`: `newgroup/src/index.mjs` `uploadInstall` and `uploadUpdate` hard-code `main_module`, `compatibility_date` and `compatibility_flags` and send no `limits`. — owner DIST.
+status: integrated — integrated — NARROWED at c1cc9d90 (GREEN); residue DIST-15.
 order: after D-443, the first installer row: a sovereign group's instance runs under a ceiling its own release does not set, so the project's measured subrequest figure does not reach a group (D-54's finding); product (M7), below the record-integrity rows (SCHEDULER #16, 2026-09-23; D-54's worker via CONDUCT #17)
 milestone: M7
 interface: I5 (the installer's upload metadata); the integrator classifies.
@@ -495,6 +496,16 @@ depends-on: D-54 (its `limits.subrequests` and `15.subrequest-limit` claim; on `
 scope: `uploadInstall` and `uploadUpdate` carry `limits.subrequests` from the signed release, as `compat` is carried, never falling back to the default; at the next cut DIST reads `deploy.mjs`'s `limits.subrequests` read-back line (or its UNDETERMINED line) and moves `15.subrequest-limit` to match. UNDETERMINED: whether `/settings` reports `limits` once set; if not, the read-back uses the script-versions API.
 accepts-when: `newgroup`'s wizard suite (`newgroup/test/`) asserts both uploads send the release's `limits.subrequests`, and a release without it is refused by name; `status.mjs --check` 0 drift. NEGATIVE CONTROL: drop `limits` from `uploadUpdate`, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-54's worker's finding via CONDUCT #17, verified at the code; `node tools/mintid.mjs DIST`).
+
+### DIST-15 · queued — **THE INSTALLER'S `limits.subrequests` IS PINNED TO `wrangler.jsonc`, NOT CARRIED FROM THE SIGNED RELEASE, and a release without it is not refused: the signed manifest has no plane-limits field.** DIST-7's residue (DIST #6, 23:15Z): adding the field to the fleet statement (`bio-release-fleet/2`) would break every older installer's fleetSig reconstruction and degrade its updates to a plane-only install. — owner DIST.
+order: directly after DIST-7's place, in product order; the release-format choice is DIST's own (SCHEDULER #20, 2026-09-24)
+milestone: M7
+interface: I5 — a release-format change; the integrator classifies.
+design: `docs/architecture/BIO_Distribution_v0_1.md` (the installer installs the signed release as released), with IC-82's carry of `compat` as the precedent.
+depends-on: DIST-7.
+scope: DIST decides the format first and records it in Distribution: a SEPARATELY signed plane-limits field, or a `/3` statement older installers are told to skip; then the installer carries `limits.subrequests` from the signed release and refuses a release without it by name.
+accepts-when: `newgroup/test/` asserts both uploads send the RELEASE's `limits.subrequests`, a release without it is refused by name, and an older installer still verifies its fleet signature (the measured failure it moves: the value read from `wrangler.jsonc`, not the signed release). NEGATIVE CONTROL: strip the field from a signed release and the refusal arm fails by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs DIST`).
 
 ### DIST-8 · queued — **SCRATCH ON THE LIVE INSTANCE HOLDS OTHER, GONE SESSIONS' RESIDUE (CPDF-3 counted 17 bundles, 11 aiRuns and more).** BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *scratch hygiene belongs to the session that wrote it; residue left by sessions that are gone is DIST's, swept at each cut's live verification.* — owner DIST.
 order: with DIST's rows; one sweep now, then at each cut (SCHEDULER #17, 2026-09-23, LED-7 S17-4)
@@ -1169,23 +1180,3 @@ depends-on: none.
 scope: `coverage.mjs`'s report names each cause per suite: "no lowercase parenthesised ordinal found"; "declaration split at a second marker at line N".
 accepts-when: each UNDETERMINED suite in the report carries its cause (the measured failure it moves: a bare null). NEGATIVE CONTROL: plant a second marker in a fixture and the report names its line.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
-### M0-190 · queued — **THE GATE-RESULTS DESCENT RECORD IS PER-CLONE, so a fresh clone cannot judge a rewrite of `origin/gate-results` that predates it.** Found by M0-179's worker, who RECOMMENDS NOT BUILDING IT: no measured need, and it is process tooling. — owner M0.
-order: after M0-189, behind the product rows and last of the group: tracked by Bob's 17:41Z rule, with its finder's advice against it recorded; build only on a measured need (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:25Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a gate record is trusted only by its descent), with TREE-SHARING §3a (the gate-results branch is append-only) and M0-179's refutation.
-depends-on: M0-179.
-scope: pin a known-good gate-results tip in the tree, which a fresh clone's gate checks its descent from; FIRST re-measure whether any clone has met a pre-clone rewrite, and if none has, close this row as not owed with that measurement.
-accepts-when: the pin is checked by a fresh clone, OR the measurement closes the row (the measured failure it moves: none yet, which is why the measurement comes first). NEGATIVE CONTROL: a fixture tip not descending from the pin is refused by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
-### D-446 · queued — **`nc-m040.mjs` ARM 1 DECLARES FIVE FAILURES AND MEASURES ONE (derivation-bounds 71/1 on `main`), AND FIVE SUITES NAME INFORMATION FIXTURES `INF-…` WHERE `OBJECT_TYPES` HAS `INFO`.** The fixtures: `frontier-chunk` (D-390's), `d389-fullfetch`, `observation-content`, `observation-log`, `cap14-reused-from`. — owner M0.
-order: after M0-139, among the control-hygiene rows; after c17-batch7 lands (SCHEDULER #17, 2026-09-23; via CONDUCT #18 22:27Z (4), measured by SCHEDULER #17's verifier)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a control declares what it measures; correct superseded tests, never exempt them).
-depends-on: D-443 (`integrated`; its branch moved ARM 1's anchor).
-scope: rewrite ARM 1's declaration to the measured outcome with a comment saying why the old one was wrong; rename every `INF-` fixture id to `INFO-`.
-accepts-when: `node bio-plane/test/nc-m040.mjs` reports every arm as declared, and no suite names an `INF-` id. NEGATIVE CONTROL: restore the five-failure declaration, and ARM 1 reads NOT as declared by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
