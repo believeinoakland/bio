@@ -94,7 +94,8 @@
  * value, so the inventor OVERWRITES the operator's value with its own. Recorded, not smoothed: it shows the no-invention
  * rule also protects a supplied value. (N2) `uploadUpdate` drops the binding -> 199/1, exactly "DIST-9 UPDATE,
  * supplied", as declared. `newgroup/src/index.mjs` restored after each by cp from a pristine copy, verified by sha256
- * (c53fa1ee…) AND byte compare; 200/200 after.
+ * (c53fa1ee…) AND byte compare; 200/200 after. RE-RUN after the install notice moved behind the upload (dc6f3528…):
+ * identical figures, N1 190/10 and N2 199/1, restored byte-identically.
  */
 import worker, { CFG, ARMED_SIGNERS, reportsBuilds } from "../src/index.mjs";
 /* DIST-6 reads MEMBER_BINDINGS off the namespace, so a tree without the export fails its PIN by name rather than

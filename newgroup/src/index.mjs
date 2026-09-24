@@ -891,7 +891,6 @@ async function runInstall(emit, code, saved) {
   const secrets = { boot: rand(32), member: rand(32), probe: rand(32), daemon: rand(32),
                     ...(instanceAiOk(saved.ai) ? { instanceAi: saved.ai } : {}) };
   emit.ok("gen");
-  instanceAiNotice(emit, "install", !!secrets.instanceAi);
 
   /* DIST-6, step 1: bind only the members this account already holds (see MEMBER_BINDINGS for the order). */
   const present = await membersPresent(token, acct.id);
@@ -931,6 +930,8 @@ async function runInstall(emit, code, saved) {
      install kept it. */
   await bindMembers(emit, token, acct.id, slug, release, present, fleet,
     { withR2: true, daemon: secrets.daemon, noSelf: selfRefused });
+  /* DIST-9: told only AFTER the upload that carried it succeeded — never "stored" ahead of the act. */
+  instanceAiNotice(emit, "install", !!secrets.instanceAi);
 
   emit.step("addr", "Turning on your web address");
   let base;
