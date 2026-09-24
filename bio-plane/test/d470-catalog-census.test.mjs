@@ -298,6 +298,17 @@ const CATALOG_CENSUS = {
 
   /* 1.26.0 AT THE THIRD UNION (CONDUCT #20, c20-batch25): D-491's C-28.16 over 1.25.0's 457; its branch row (1.24.0 = 448) DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.26.0": { count: 458, digest: "c7acb768bfd46e72469e9f414b2bc94151a911c6b479ffaa6ed07a9a2df82f65" },
+  /* 1.24.0 (D-472, 2026-09-24, WORKER D-472 under CONDUCT #20, branch land/worker/D-472): TWO ARRIVALS,
+     NO DEPARTURES — C-48.8 and C-48.9, `op=monitor`'s own two Drive-shell refusals, which are NOT
+     `op=acquire`'s C-48.5/C-48.7 firing from a second site (a capture that meets the shell has captured
+     nothing; a TICK that meets it has lost the CHECK, and one canned sentence cannot be true of both).
+     447 -> 449, count AND digest from THIS SUITE'S OWN PRINT on this tree, never arithmetic on 447.
+     1.23.0's row STAYS: it is what the catalogue held at that version, and A4 needs both to mean anything.
+     **IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE UNION'S: CONDUCT takes the
+     next number and re-reads the census from this suite's print on the merged tree.** */
+
+  /* 1.27.0 AT THE UNION (CONDUCT #20, c20-batch25): D-472's rows over 1.26.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
+  "1.27.0": { count: 460, digest: "f77e4fba4cfc5ad7e58511b035cae4584a8643bb8c9d9c2718ffbb208d24cc75" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -395,8 +406,8 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.26.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.26.0)", "1.26.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.27.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.27.0)", "1.27.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

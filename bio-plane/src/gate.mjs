@@ -49,6 +49,16 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    refuse documents that used to pass. This bump is ADDITIVE in the same sense
    and no check moves with it.
 
+   1.24.0 (D-472, 2026-09-24, cloud session WORKER D-472 under CONDUCT #20): MINOR,
+   ADDITIVE, and the census arm forced it again on a WORKER's branch rather than at an
+   integration. `op=monitor` gained its own two Drive-shell refusals — C-48.8
+   (DRIVE_TICK_EXPORT_IS_THE_SHELL) and C-48.9 (DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL) —
+   so the catalogue went 447 -> 449 checks: TWO ARRIVALS, NO DEPARTURES. The figure is the
+   one `d470-catalog-census.test.mjs` PRINTED on this tree, never 447 plus two.
+   **THE NUMBER AND THE CENSUS ARE PROPERTIES OF THE MERGED CATALOGUE: if another branch in
+   the same batch also adds rows, CONDUCT re-reads BOTH at integration** — which is what
+   every note below this one records happening.
+
    1.23.0 (CONDUCT #20, c20-batch14, 2026-09-24): MINOR, ADDITIVE, and the census arm
    forced it a SECOND time at the union of c20-batch13 and c20-integ1b. D-64's
    `RENDER_CAPTURE_CHECKS` family arrived from the other side of the integration, so
@@ -105,7 +115,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
 /* 1.25.0 AT THE SECOND UNION (CONDUCT #20, c20-batch23): REC-211 took 1.24.0 on its own branch for 447 + 2, but main's
    1.24.0 (c20-batch22) is already the D-507 + D-508 catalogue of 455 checks. REC-211's two rows are a DIFFERENT
    catalogue, so the union moves the stamp once more, MINOR: 455 + 2 = 457, figures re-read from the d470 suite's print. */
-export const CATALOG_VERSION = "1.26.0";
+export const CATALOG_VERSION = "1.27.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
@@ -117,6 +127,7 @@ export const CATALOG_VERSION = "1.26.0";
    D-499): if any of them also took 1.24.0, the integrator re-reads the census on the
    union and this row takes the next number — one version names one catalogue.** */
 /* 1.26.0 AT THE THIRD UNION (CONDUCT #20, c20-batch25): D-491 took 1.24.0 on its branch for 447 + 1 (C-28.16), but main's line is already 1.25.0 = 457 (c20-batch23). ONE VERSION NAMES ONE CATALOGUE, so the union moves the stamp once more, MINOR: 458, read from the d470 suite's print. */
+/* 1.27.0 AT THE UNION (CONDUCT #20, c20-batch25): D-472 took a branch version over its own base; the line already stood at 1.26.0, so the union takes the next number once, MINOR, its census read from the d470 suite's print. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
