@@ -1,4 +1,4 @@
-# DIST — resume here. Written 2026-09-24 ~03:10Z by DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, cloud) for the DIST on Bob's OTHER account.
+# DIST — resume here. Written 2026-09-24 by DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, cloud), last updated 06:48Z at the quota line, for the DIST on Bob's OTHER account.
 
 Why now: this account's weekly quota ends ~07:00Z 2026-09-24 (Bob, relayed by BOB #32 at 03:00Z); work continues on the
 other account. This file is STATE, measured 03:05Z. The process is `kickoffs/DIST.md` (WHEN DIST CUTS, the `latest`
@@ -60,19 +60,16 @@ probe that reads a public op on scratch will be refused), D-464, D-462, REC-190.
   and writes one dated line per URL (DIST.md gate step 7a); REFUSED = this hour, never rotted; NOT_FOUND → a SCHEDULER
   row naming its fixture. First reading M-136: 14/14 LIVE (05:01Z). Accepts-when: the NEXT release's verification
   writes its own entry (`--release X.Y.Z --id <M-id> --out docs/development/measurements/<M-id>.md`).
-- **newgroup/dist re-cut on 0.78.0 — `land/dist/newgroup-dist-078` @ `cfe2d0cc`, waiting for the train** (GREEN 72/72 on
-  `a6c3d796`). The committed bundle (DEPLOY.md's manual path) embedded 0.71.0: cuts 0.72–0.78 deployed the installer from
-  `src/` and never rebuilt it. **Rebuild it (`cd newgroup && npm run build`) at EVERY cut AND after any `newgroup/src`
-  change lands** (DIST-9 lands after it, so the bundle lags DIST-9 until the next rebuild). The freshness guard is
-  routed to SCHEDULER by CONDUCT #20 (owner DIST, guard M0/FLEET).
+- **newgroup/dist: `land/dist/newgroup-dist-078` @ `cfe2d0cc` is SUPERSEDED — do not train it as is.** main's committed
+  `newgroup/dist/newgroup.bundled.mjs` still embeds 0.71.0 (06:47Z). That branch was built BEFORE DIST-9 landed, so its
+  bundle lacks DIST-9's installer code. OWED, first act: from origin/main run `cd newgroup && npm run build`; check the
+  bundle's RELEASE_VERSION is 0.78.0 and its evaluated RELEASE_SOURCE hashes to `9dac9e46…` (= RELEASE.json); build twice
+  for byte-identity; gate; push a NEW land/dist branch; tell CONDUCT to drop `newgroup-dist-078`. Rebuild at EVERY cut
+  and after any `newgroup/src` change lands. Freshness guard: routed to SCHEDULER by CONDUCT #20.
 - **DIST-7 · queued, BACKLOG**: installer uploads carry `limits.subrequests` from the signed release (depends on D-54).
-- **DIST-9 · BUILT, on `land/dist/DIST-9` @ `41c195d5`, waiting for CONDUCT #20's train** (flipped `running` 03:52Z; base
-  `16fe1e7f`; merges cleanly onto `0fdef669`). Gate GREEN on tree `4d107829`: 326/326 · 18418 (FULLREUSE, not a backstop).
-  Install and update CARRY an operator-supplied `INSTANCE_AI_TOKEN` (the /update page's optional password box; `/begin`
-  refuses a malformed value); `deploy.mjs` sends it only from its environment. NEVER generated: none supplied sends none;
-  an update keeps a held value. `15.instance-ai-secret` → BUILT. Wizard 200/0, deploybindings 38/0; controls N1 190/10,
-  N2 199/1, deploy 37/1. Reaches groups only with the next release. On the deploy that carries it: `deploy.mjs` prints
-  whether INSTANCE_AI_TOKEN was sent; whether biosmoke7 should hold one is Bob's/a member's (minting is a member act).
+- **DIST-9 · LANDED on main** (in train `135abf3b`, c20-batch15, with IC-261; verified 06:47Z: `41c195d5` is an
+  ancestor of origin/main). Install/update CARRY an operator-supplied `INSTANCE_AI_TOKEN`, never generate one;
+  `15.instance-ai-secret` BUILT. Reaches groups only with the next release.
 
 ## The cloud machine
 
