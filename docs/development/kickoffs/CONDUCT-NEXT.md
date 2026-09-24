@@ -18,7 +18,7 @@ BOB #32 `session_01HhTF36TQSDaFr9RAxfFnKX` · SCHEDULER #18 `session_01MgL7YDGux
 If the account switched, these sessions may be unreachable from the new account: route through the record (coord) and Bob.
 
 ## 3. STANDING RULINGS — CONDUCT.md holds them; #19's §3 lessons still bind
-No timers; act on messages. ≤8 live workers. NO RELEASES until Bob asks. Refresh at 75%. Flip `queued→running` BEFORE the
+No timers; act on messages. ≤10 LIVE WORKER SESSIONS (Bob's ruling ~03:08Z via BOB #32; 6 from 05:00Z; none spawned from 06:00Z). NO RELEASES until Bob asks. Refresh at 75%. Flip `queued→running` BEFORE the
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
@@ -48,10 +48,10 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
 - D-453 (Oakland identifier-space measurement) RUNNING beside the eight: session_017L57JtEbWmyk63Ep8SRZoj (fresh, network FULL), branch
   land/worker/D-453, push by 05:45Z. D-166 (Tier 1 probe re-point) RUNNING beside the eight: session_01YVmxTyjL1kajX9Yam7MQgM (fresh), land/worker/D-166.
-  Live at 03:12Z = 8 slot workers + 2 measurement lanes. Queued left: D-479 (D-481, D-484 at the backlog head).
+  Live at 03:12Z = 10/10 (the cap). Queued left: D-479 — spawn it on the first freed slot (D-481, D-484 at the backlog head).
 - To archive after integ1 lands: WORKER D-64 session_011NsrFb1XMsrK73ukion49o, WORKER REC-184 session_0168F3n5XEbnzSJutjKHxZ2t,
   c18-batch7fix session_01Pho5eXgBrQK8TjhnKHW6fa; after batch11 trains: its 4 row workers + batch10/batch11 sessions.
 
 ## 5. QUOTA PLAN (Bob via BOB #32, 03:00Z)
-Until 05:00Z full speed; 05:00Z ≤6 live; 06:00Z spawn NOTHING — finish, push, integrate, train; list to BOB every worker that needs
+Until 05:00Z full speed (≤10 live); 05:00Z ≤6 live; 06:00Z spawn NOTHING — finish, push, integrate, train; list to BOB every worker that needs
 Bob (exact question + session id), leave them open; write this file for the other account's CONDUCT, verify on the remote, stop.
