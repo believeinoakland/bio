@@ -6,3 +6,4 @@ IC-245	2026-09-24T01:08:57.811Z	CONDUCT #19	renumber at integration: D-351's IC-
 IC-246	2026-09-24T01:10:07.260Z	c19-unionfix	op=groupidentity domain_checks cut + op=statementack documents bound refusal (I3)
 IC-247	2026-09-24T01:14:49.338Z	CONDUCT #19	renumber at integration: D-291's IC-240 (REC-187 holds IC-240)
 IC-248	2026-09-24T01:15:07.504Z	CONDUCT #19	pre-minted for WORKER REC-192 (main's mintid is clone-local until D-242 lands)
+IC-249	2026-09-24T01:31:00.616Z	CONDUCT #19	REC-189's IC (MACHINE_CANNOT_SET_RISK_TIER on op=promote), minted at integration
