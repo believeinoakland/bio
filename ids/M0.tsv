@@ -27,3 +27,4 @@ M0-167	2026-09-24T16:36:29.016Z	SCHEDULER #18	M0-157 findings: gates.control und
 M0-168	2026-09-24T16:36:29.016Z	SCHEDULER #18	M0-157 findings: gates.control undeclared failures; control-register declarationAt truncates on citation
 M0-169	2026-09-24T16:50:41.323Z	SCHEDULER #18	one fixture-closure helper; three hand-kept tool lists (M0-154 findings)
 M0-170	2026-09-24T16:50:41.323Z	SCHEDULER #18	one fixture-closure helper; three hand-kept tool lists (M0-154 findings)
+M0-171	2026-09-24T17:07:32.240Z	SCHEDULER #18	versions.test loose CREATE TABLE harvest (M0-155 finding 4)
