@@ -5,7 +5,7 @@ Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` from `coor
 
 ## How the lane runs (Bob's rulings of 2026-09-23)
 - No timers. Wake on messages. Lane-to-lane = one-shot `create_trigger` with `persistent_session_id`, `run_once_at` ONE minute out (compute it with `date -u -d '+1 min'`; twice I typed a later minute by hand and had to `update_trigger`). Never `fire_trigger`.
-- Peers: **BOB #32** `session_01HhTF36TQSDaFr9RAxfFnKX`; **CONDUCT #18** `session_01SGdcPXVjS2wofYoj3tBuKF`. No DIST session is visible to this lane: relay DIST's work through CONDUCT.
+- Peers: **BOB #32** `session_01HhTF36TQSDaFr9RAxfFnKX`; **CONDUCT #19** `session_01Kqy1X9xDKa4PAWtmqTaiRx` (from 00:20Z 2026-09-24; #18 retired). No DIST session is visible to this lane: relay DIST's work through CONDUCT.
 - Cache 16 at 48 KiB is ON MAIN since train-20260923T230849Z-25194 (main a8f6094a, 23:45Z): write coord with main's tools (worktree `/home/user/s17main`, refresh it to origin/main).
 - CONDUCT reports `integrated` / findings; I verify the batch branch holds the merge (`git log origin/land/conduct/<batch>`), flip, `--refill`, restore refilled CUT rows whole from `QUEUE-cut-2026-09-{19,21,22}.md` (script pattern: take the «ID» block, strip `> `, keep the current `order:`, append `uncut:`), and trigger CONDUCT. A whole row over 3072 B stays cut (REC-122 did).
 - **DEBT.md ONLY SHRINKS** (BOB #31, 22:09Z): a new defect is `mintid D` and placed directly as a plan row. LED-7 batch per turn with room; report the count to BOB. When DEBT.md reaches 0, tell BOB at once.
@@ -18,3 +18,9 @@ Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` from `coor
 - Backlog head: REC-187, D-447→cache, REC-188 (widened: /3 carries bias manifest + acknowledgement list), REC-193, REC-194, UI-89, UI-90, REC-195, REC-189, UI-85, UI-86, D-444, D-445, D-256→cache, REC-192, UI-88, D-448, D-450, D-451, D-454, UI-91, D-242 (moved up), REC-190, D-64 (blocked), D-453 (blocked: egress), REC-191, REC-159 (blocked on Bob) …
 - Owed by BOB (asked 22:56Z, 23:03Z, 23:06Z): D-450's fix side; D-64's three questions; capture-on-`changed`; REC-149's §7.14 (a)(b); UI-68 drafts list and `newCase`; REC-148 §6A.3 author/date; D-148 counterparty; `records_request` kind; D-209/D-224/D-176 statements; inquiry-grain acts; D-124 ×2; D-74's three recognisers + §8.3 gap; egress to Oakland hosts; front-matter corrections (INVESTIGATIVE-SESSION §14c and §3, CAPTURE-SCALING item 5); RECORD.md over budget.
 - When `land/bob/rulings-0923b` @ 78a6d772 lands: re-point rows citing BOB #31/#32 messages to the folded sections (BOB #32, 22:44Z list: Framework §6 frequency; Publication §3 rule 13; §7 point 3; CLIENT-RENDERED RULED; CONTRADICTION §7; INVESTIGATIVE §12; State Rules §2.4; Declared Bias no-credence).
+
+## Update ~00:22Z 2026-09-24 (coord 8aeae3c7)
+- main 15b2a4c0: the security train (D-456, D-447) landed; both done. D-461 (safety) and D-464 (disclosure) head the backlog, runnable.
+- DEBT.md 3: D-313, D-391 (close on BOB's §16/§4.3 statement), D-388 (after M0-115 + Bob on MILESTONES.md).
+- Trains: c19-batch9 = c18-batch7fix + c18-batch8 + main; its I3 numbers were re-resolved two majors up — write the landed numbers when closing rows.
+- Rows citing BOB #31/#32 MESSAGES may now cite the folded sections on main (rulings-0923b landed at 3f4b8f8c) — a hygiene pass owed, not urgent.
