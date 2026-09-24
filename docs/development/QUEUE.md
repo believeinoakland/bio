@@ -363,7 +363,7 @@ scope: an acknowledgement records and is matched by the case identity it was giv
 accepts-when: two cases with identical statements, one acknowledged: the other's completeness block lists nobody; and two cases' unsigned edition-1 documents with identical statements: the draft door of one finds none of the other's. NEGATIVE CONTROL: match by statement hash alone, and the "the twin case lists nobody" arm fails by name; match the draft door by statement text across the project, and the draft-door arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (BOB #32's G3; `node tools/mintid.mjs REC`).
 
-### D-494 · queued — **THE MACHINE-FENCE HARVEST IS BLIND OUTSIDE `store.mjs`: MACHINE_FENCE_CHECKS holds 18 rows, the harvest finds 14; MACHINE_CANNOT_RATIFY(_CASE) are minted in `index.mjs` (2 hits at 16fe1e7f), and three are OPERATOR_TOKEN_*. The two corpora are never asserted to agree, so a catalogued fence nobody enforces would pass.** Found by REC-185's worker; narrowed by SCHEDULER #18 (the ratify fences exist). — owner RECORD.
+### D-494 · running — SPAWNED 2026-09-24 ~05:06Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-494 (CONDUCT #20), base origin/main (REC-185 on main), into M0-144's slot; REC-194 held back because it shares statementack code with running REC-193; push by 06:30Z. Falsify rather than believe: read the branch land/worker/D-494 and that session; never conclude queued from the absence alone.
 order: at the backlog head (D-493 is cached): an authority boundary (no machine attests) whose instrument cannot see half its sites (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z)
 milestone: M7
 interface: none.
