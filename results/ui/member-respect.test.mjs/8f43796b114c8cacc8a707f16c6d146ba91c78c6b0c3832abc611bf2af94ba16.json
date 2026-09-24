@@ -1,0 +1,16 @@
+{
+ "unit": "ui:member-respect.test.mjs",
+ "inputHash": "8f43796b114c8cacc8a707f16c6d146ba91c78c6b0c3832abc611bf2af94ba16",
+ "verdict": "PASS",
+ "run": "e40a66c13489e2cac2ea1a8a5ad086ae56973eb4.1790287454705.588.json",
+ "tree": "e40a66c13489e2cac2ea1a8a5ad086ae56973eb4",
+ "head": "466c02cd03f755b5e35b3508a5d7a33a24775d88",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "DOCS",
+ "inputs": 1215,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "06fd284c-aa3a-5e44-9db4-1ed02f42f04b",
+ "at": "2026-09-24T22:04:14.715Z"
+}
