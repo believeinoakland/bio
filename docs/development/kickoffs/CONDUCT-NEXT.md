@@ -46,8 +46,8 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   — BOB confirms tips. NEVER land/bob/folds-0924c or folds-0924d (superseded). On landing tell SCHEDULER the homes: MEMBER-KNOWLEDGE §5,
   EXTRACTION-BREADTH §2 row 5, OFFICE-FORMATS CSV, Intake §8.
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
-- D-453 (Oakland identifier-space measurement): network opened FULL ~03:02Z for FRESH sessions; asked SCHEDULER to cache it; spawn it
-  in a NEW session, beside the eight.
+- D-453 (Oakland identifier-space measurement) RUNNING beside the eight: session_017L57JtEbWmyk63Ep8SRZoj (fresh, network FULL), branch
+  land/worker/D-453, push by 05:45Z. D-166 (Tier 1 probe re-point, fresh session needed) is QUEUED: takes the first freed slot.
 - To archive after integ1 lands: WORKER D-64 session_011NsrFb1XMsrK73ukion49o, WORKER REC-184 session_0168F3n5XEbnzSJutjKHxZ2t,
   c18-batch7fix session_01Pho5eXgBrQK8TjhnKHW6fa; after batch11 trains: its 4 row workers + batch10/batch11 sessions.
 
