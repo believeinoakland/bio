@@ -23,16 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-469 · queued — **`op=acquire` SAYS `existed: true` FOR EVERY FIRST-TIME SINGLE-PART CAPTURE — "WE ALREADY HELD THESE BYTES" WHEN IT DID NOT: in `index.mjs`'s acquire streaming path, `flush()` writes the single part to `captures/${psha}` (for one part, the whole-body sha), and only then does `existed = !!(await env.CAPTURES.head(…sha))` run, finding the object the same call wrote.** Held in all 48 takes of M-123; `acquire.test` asserts only the idempotent half. Read at the code on `main`. — owner CAPTURE.
-order: at the head, behind the safety and disclosure rows: an over-claim in the record's own provenance, the class CLAUDE.md §2 ranks worse than a missing feature (SCHEDULER #17, 2026-09-24; CAP-11's worker via CONDUCT #19, minted D-469 after a D-459 collision)
-milestone: M2
-interface: I3 — `existed` becomes truthful on first acquire; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (one capture, one home), with M-123 §"A defect found on the way".
-depends-on: none.
-scope: take the `head()` inside `flush()` before the part is written (it already runs there as the write guard) and carry its answer out for the single-part case. Extend `bio-plane/test/acquire.test.mjs` with a first-acquire arm.
-accepts-when: a first acquire answers `existed: false` and a second `existed: true`. NEGATIVE CONTROL: move `head()` back after `flush()`, and the first-acquire arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (CONDUCT #19 minted it through the coord minter).
-
 ### D-470 · queued — **THE RATIFICATION STAMP CANNOT TELL WHICH CATALOG JUDGED A CASE: `gate.mjs` `CATALOG_VERSION` still reads "1.20.0" after dozens of added checks, so `plane-gate/1.0 (bio-checks 1.20.0)` names the same catalog for documents judged by different rules.** Read at the code on `main`. — owner RECORD.
 order: after D-469, at the head: a signed record that claims more precision than it holds (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
 milestone: M10
@@ -42,6 +32,27 @@ depends-on: none.
 scope: bump `CATALOG_VERSION` MINOR now; add a suite pinning the version to the catalog's check census, so an added check fails until the version moves.
 accepts-when: the stamp reads the new version, and adding one check without a bump fails the pin by name. NEGATIVE CONTROL: add a check without moving the version, and the census-pin arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### UI-84 · queued — **THE UI's MOCK REFUSALS FOR `verify` AND `unknown op` CARRY NO `translation`, WHILE THE LIVE WIRE NOW DOES (C-61.1, C-69.1, D-278), AND `refusalWords` RENDERS THE TRANSLATION FIRST — SO THE MOCKS ARE NARROWER THAN THE WIRE (the M-72 class).** Found in `civicos-ui/test/preauth-vocabulary.test.mjs` and sibling mocks; re-read on `land/conduct/c17-batch3` @ `d93d29c4`. — owner UI.
+order: after REC-184, with the D-278 follow-ons: a suite that pins what a member reads against a mock narrower than the wire can pass while the member reads something else, a correction to just-landed work (SCHEDULER #16, 2026-09-23; D-278's worker via CONDUCT #17)
+milestone: M8
+interface: none (test mocks); the integrator classifies.
+design: DEC-49 (`node tools/decided.mjs "DEC-49"`) as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it: every condition has a named code and a canned translation.
+depends-on: D-278 (on `land/conduct/c17-batch3`).
+scope: every mock refusal for `verify` and `unknown op` carries `translation`, imported from `bio-checks.mjs` (never retyped); DEC-49's SUBJECT arm in `preauth-vocabulary.test.mjs` re-pinned with the movement stated (old and new figures and why).
+accepts-when: `civicos-ui/test/preauth-vocabulary.test.mjs` and `refusal-translation-surface.test.mjs` green with the imported translations; the UI harness green. NEGATIVE CONTROL: drop `translation` from one mock, and the SUBJECT arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (D-278's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs UI`).
+
+## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
+
+`docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
+
+| who | row | what | blocked on |
+| --- | --- | --- | --- |
+| RECORD | PL-16 | the published case (IS-8, M10) — **RESHAPED BY DEC-72, not merely blocked.** Its finding-side stamping and its NO-case-level-bar assumption are both overtaken; `CASE-AS-PRODUCTION.md` and the CASE-1..CASE-6 rows are the live decomposition | **Bob** (DEC-33's ceremony deferral) **AND now DEC-72's redesign.** Read the design doc before touching it — supersession is never silent, so the row keeps its id and names what overtook it |
+| **DIST** | DS-1 | D-115 — the installer installs the FLEET | **DONE 2026-09-19 — THIS TABLE WAS THE RECORD THAT WAS WRONG, corrected here with the reason (DIST-5's own act).** Landed at `8decf468` ("D-297: the installer installs the FLEET — verified, templated, degrading per member, on install AND update"). DIST #2 confirmed at its touch; VERIFIED INDEPENDENTLY BY SCHEDULER #2 AT THE CODE, not from either row: `8decf468` is an ancestor of `origin/main`, and `newgroup/src/index.mjs` carries a section headed "the fleet (IC-82/D-297)" and names `fleet` **27 times** — D-297's own opening measurement was that this file mentioned it **zero** times, which is the evidence from D-297 itself that DIST-5's accepts-when demanded |
+| **DIST** | DS-2 | D-116 — version authority spans the fleet | **DONE 2026-09-19**, landed at `da3d4f17` ("DS-2: the version authority spans the fleet — and five of six sites disagreed with it"). VERIFIED BY SCHEDULER #2 AT THE CODE: ancestor of `origin/main`; `bio-plane/scripts/resolve-version.mjs` CONSUMES FLEET's own `discoverMembers` rather than re-implementing it, so the set checked cannot drift from the set built, and takes `bio-plane/package.json` as THE authority; `tools/release-assemble.mjs` refuses `VERSION_SKEW` and `VERSION_DISAGREES`; `resolveversion.test.mjs` arms BEHIND (ARM 2) and AHEAD (ARM 3) — the direction a one-sided check misses |
+| **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | **D-260, PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling (its item 2 is DIST's deploy half).** Before that: **D-260 — NARROWED, and no longer blocked on DS-1 or unread** (DIST #3, then FLEET #3, 2026-09-21; verified at the code by SCHEDULER #4): its CONFIG half LANDED at `2de6f25f` (2026-09-12 — `instanceClaudeStatus`/`instanceClaudeToken` in `tokens.mjs`, the deploy sending and keeping the secret, the denylist's revocation-by-publication). Its acceptance — a configured instance token resolving at FL-6's third level — cannot be met by ANY configuration until the plane's calling side exists: `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`, and `instanceClaudeToken` has no non-test caller. The dispatch fix is named on D-260. The member and project token surfaces are ABSENT, a design question DIST #3 sent to BOB |
 
 ### D-463 · queued — **NO CREDENTIAL IS CONFINED TO SCRATCH FOR LIFE: the namespace binds per CALL, so an instrument that omits `store=scratch` addresses the real record (CLAUDE.md §5's stated residue: *a sticky confinement is RECORD's and is NOT built*).** — owner RECORD.
 order: after D-462, the last of the namespace guards (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
@@ -1224,33 +1235,3 @@ depends-on: none — M0-110 is done.
 scope: the control plants through a local ref named by `BIO_COORD_REF` (as `coord.test.mjs` does), never the working tree's pointer, and asserts before arming that the file it plants into is not a pointer.
 accepts-when: every PLANT arm reads AS DECLARED, each failing by name with its plant in place, and the tree is byte-identical after. NEGATIVE CONTROL: plant into the pointer again, and the new not-a-pointer assertion fails by name.
 added: 2026-09-23 · SCHEDULER #14 (M0-119's worker's finding via CONDUCT #14, verified at the code; `node tools/mintid.mjs M0`).
-
-### M0-124 · queued — **THREE CONTROL ARMS DIE ON THE BASE ITSELF SINCE REC-167: `case-edition-conclusion.control.mjs` (d) and (e) and `caselifecycle.control.mjs` (c).** C-65.1 (`CASE_CONCLUSION_MOVED`) now refuses each fixture's ratification before the arm's break is reached, so the arms fail for a reason unrelated to what they declare. D-442's worker's finding, fix named (CONDUCT #14). — owner M0.
-order: with the instrument cluster, directly after M0-123: controls that fail on an unbroken subject measure nothing, D-438's class; behind the product rows (SCHEDULER #14, 2026-09-23)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): *break only the thing* — a control that moves a second variable refutes nothing.
-depends-on: none — REC-167 is on `main`.
-scope: re-aim each arm to break only `op=publish`'s use of the conclusion reader, with a fixture whose ratification C-65.1 admits.
-accepts-when: each of the three arms reads AS DECLARED: green unbroken, failing by name when armed; the files byte-identical after. NEGATIVE CONTROL: arm each against the unbroken base, and it stays green.
-added: 2026-09-23 · SCHEDULER #14 (D-442's worker's finding via CONDUCT #14; `node tools/mintid.mjs M0`).
-
-### D-424 · queued — **`nc-mk4.mjs`'S `machinewide` ARM ANCHORS ON `gate.member == null) return false;`, WHICH NO LONGER EXISTS IN `src/`, SO BOB #14'S VISIBILITY RULING HAS NO LIVE CONTROL.** The rule moved into `Store#leadReach` at REC-129 and REC-132 (`#positionalMember`; `who == null` returns null); the arm's anchor (`bio-plane/test/nc-mk4.mjs`, re-read on `619dfa65`) matches 0 times in `bio-plane/src/`, so the arm cannot arm, and `lead.test.mjs`'s `NEGATIVE CONTROL:` line still records it as run AS DECLARED on 2026-09-18. — owner M0 with RECORD.
-order: with the instrument cluster, directly after M0-124: a control that cannot arm measures nothing, D-438's class; behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #15, 2026-09-23, LED-7 batch S15-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a control is evidence only when it fails at a named assertion; *break only the thing*.
-depends-on: none — REC-129 and REC-132 are on `main`.
-scope: re-point the arm at `#leadReach`'s rule (widen the machine read to unfiltered where `who == null`), assert each anchor matches exactly once before arming, re-run the arm, and re-date `lead.test.mjs`'s `NEGATIVE CONTROL:` line with the result.
-accepts-when: the `machinewide` arm reads AS DECLARED, failing by name on the member-token and organisation-key arms; the tree is byte-identical after. NEGATIVE CONTROL: restore the stale anchor, and the match-once assertion fails by name.
-added: 2026-09-23 · SCHEDULER #15 (LED-7 batch S15-1; D-424's DEBT row of 2026-09-18, verified at the code; keeps its `D-` id).
-
-### M0-94 · queued — **`bio-plane/test/m025-arm-census.mjs` PRINTS AN `UNCLASSIFIED` DRIVER, ONE EXITING NON-ZERO WITH NO PHRASE ITS MATCHER KNOWS** … (whole text: the cut archive)
-order: directly after M0-93 and D-438, the two drivers it would turn red on landing: a gate that reports where it should fail cannot fail, M0-79's doctrine on the census side (SCHEDULER #7, 2026-09-21; D-355's route via CONDUCT #10)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the census's own D-333 and M0-78 … (whole text: the cut archive)
-depends-on: M0-93, D-438.
-accepts-when: a fixture driver exiting 1 with an unknown phrase turns the census exit 1, naming it; the population is stated. How a liar passes it: teaching the matcher the fixture's phrase … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #7 (`node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-94» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

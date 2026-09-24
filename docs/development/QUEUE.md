@@ -498,6 +498,16 @@ scope: every count served to a class other than the operator's is computed throu
 accepts-when: creating and revising a hidden project leaves a member's `op=stats` and `op=searchindexcheck` answers byte-identical. NEGATIVE CONTROL: count over the whole store again, and the hidden-creation arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
+### D-469 · queued — **`op=acquire` SAYS `existed: true` FOR EVERY FIRST-TIME SINGLE-PART CAPTURE — "WE ALREADY HELD THESE BYTES" WHEN IT DID NOT: in `index.mjs`'s acquire streaming path, `flush()` writes the single part to `captures/${psha}` (for one part, the whole-body sha), and only then does `existed = !!(await env.CAPTURES.head(…sha))` run, finding the object the same call wrote.** Held in all 48 takes of M-123; `acquire.test` asserts only the idempotent half. Read at the code on `main`. — owner CAPTURE.
+order: at the head, behind the safety and disclosure rows: an over-claim in the record's own provenance, the class CLAUDE.md §2 ranks worse than a missing feature (SCHEDULER #17, 2026-09-24; CAP-11's worker via CONDUCT #19, minted D-469 after a D-459 collision)
+milestone: M2
+interface: I3 — `existed` becomes truthful on first acquire; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (one capture, one home), with M-123 §"A defect found on the way".
+depends-on: none.
+scope: take the `head()` inside `flush()` before the part is written (it already runs there as the write guard) and carry its answer out for the single-part case. Extend `bio-plane/test/acquire.test.mjs` with a first-acquire arm.
+accepts-when: a first acquire answers `existed: false` and a second `existed: true`. NEGATIVE CONTROL: move `head()` back after `flush()`, and the first-acquire arm fails by name.
+added: 2026-09-24 · SCHEDULER #17 (CONDUCT #19 minted it through the coord minter).
+
 ### D-462 · queued — **`agent-worker`'s `STORE_SHAPE` ACCEPTS ANY TOKEN, SO A FLEET RUN CAN NAME A NAMESPACE THE PLANE NOW REFUSES (D-456) AND ONLY LEARN AT THE PLANE.** — owner FLEET.
 order: after D-464 (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
 milestone: M0 (the fleet's side of the same guard)
@@ -557,16 +567,6 @@ depends-on: D-128 (on `land/conduct/c17-batch3`).
 scope: `op=proposedispose` writes `definition_version`; a read against a later version does not treat an earlier-version disposition as current, stated; rows written before read `not recorded`; the stats counters count the version tables.
 accepts-when: `bio-plane/test/proposedispose.test.mjs` gains an arm: a disposition under version 1 does not apply under version 2, and the column reads back. NEGATIVE CONTROL: stop writing the version, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-128's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs REC`).
-
-### UI-84 · queued — **THE UI's MOCK REFUSALS FOR `verify` AND `unknown op` CARRY NO `translation`, WHILE THE LIVE WIRE NOW DOES (C-61.1, C-69.1, D-278), AND `refusalWords` RENDERS THE TRANSLATION FIRST — SO THE MOCKS ARE NARROWER THAN THE WIRE (the M-72 class).** Found in `civicos-ui/test/preauth-vocabulary.test.mjs` and sibling mocks; re-read on `land/conduct/c17-batch3` @ `d93d29c4`. — owner UI.
-order: after REC-184, with the D-278 follow-ons: a suite that pins what a member reads against a mock narrower than the wire can pass while the member reads something else, a correction to just-landed work (SCHEDULER #16, 2026-09-23; D-278's worker via CONDUCT #17)
-milestone: M8
-interface: none (test mocks); the integrator classifies.
-design: DEC-49 (`node tools/decided.mjs "DEC-49"`) as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it: every condition has a named code and a canned translation.
-depends-on: D-278 (on `land/conduct/c17-batch3`).
-scope: every mock refusal for `verify` and `unknown op` carries `translation`, imported from `bio-checks.mjs` (never retyped); DEC-49's SUBJECT arm in `preauth-vocabulary.test.mjs` re-pinned with the movement stated (old and new figures and why).
-accepts-when: `civicos-ui/test/preauth-vocabulary.test.mjs` and `refusal-translation-surface.test.mjs` green with the imported translations; the UI harness green. NEGATIVE CONTROL: drop `translation` from one mock, and the SUBJECT arm fails by name.
-added: 2026-09-23 · SCHEDULER #16 (D-278's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
