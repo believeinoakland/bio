@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 19 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116; G18, G19 by M0-143) — over `tools/gates.mjs` and
+/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 21 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116; G18, G19 by M0-143; G20, G21 by M0-153) — over `tools/gates.mjs` and
  * `tools/pushguard.mjs`, each driven through `bio-plane/test/gates.test.mjs`.
  *
  *   node bio-plane/test/gates.control.mjs          (from the repo root; one arm: add its id, e.g. G1)
@@ -31,17 +31,36 @@
  *                                                     "a DIRTY tree is NOT recorded" — the
  *                                                     end-of-run check backs it, and that
  *                                                     redundancy is real and is KEPT.
- *       THE REDUNDANCY WAS NOT REAL WHEN THAT WAS WRITTEN, and this arm is what measured it (M0-157,
- *       2026-09-24, found by M0-146's worker): the armed gate took `gates.mjs` §2d's tree-keyed
- *       shortcut over the dirty tree, wrote a SECOND record there — GREEN, class REUSED — and exited 0
- *       BEFORE §4, the only site the end-of-run check guards. So the arm read 93/3, its MUST NOT
- *       failing, with a third failure NOBODY DECLARED: "a tree that CHANGES while the gate runs is NOT
- *       recorded", which asserts the same record COUNT and so falls with it — collateral, not an
- *       independent effect, and the discriminator is that it disappears when the count does. M0-157
- *       RESTORED the redundancy rather than downgrading the claim: §2d now re-reads `status` and
- *       `HEAD^{tree}` for itself and, on a disagreement, declines the shortcut and lets the run reach
- *       §4 — measured, the gate then prints the END-OF-RUN sentence ("the tree changed while the gate
- *       ran"), which is this declaration honoured at its own words. 95/1 after.
+ *       TWO WORKERS CORRECTED THIS ARM IN OPPOSITE DIRECTIONS ON 2026-09-24 AND BOTH RUNS ARE KEPT,
+ *       because the disagreement is the useful part. The shared OBSERVATION is not in dispute and
+ *       each measured it independently on `68fecb8d`: armed, the arm reads 93 pass / 3 fail, the
+ *       MUST-NOT-BREAK among the failures, closing 96/0. What was in dispute is WHICH CHECK LET IT
+ *       THROUGH, and that decides whether the remedy is to believe the arm less or to fix the subject.
+ *         M0-153 read it as the end-of-run check being too weak — "it asks whether the tree CHANGED
+ *         DURING the run, and a tree dirty BEFORE the run and unchanged through it passes that
+ *         question" — and downgraded both assertions to `alsoBreak`.
+ *         M0-157 DROVE IT INSTEAD OF READING IT, and that account does not survive the code or the
+ *         run. §4's condition is `endStatus !== "" || endTree !== START.tree`: the FIRST disjunct is
+ *         "dirty at the END", not "changed", so a tree dirty before and unchanged through it FAILS
+ *         that question and is refused. The armed gate never reached §4 at all — §2d's tree-keyed
+ *         shortcut ran first, wrote a SECOND record (GREEN, class REUSED, `already GREEN by <the clean
+ *         run's own record>`) and exited 0. THE ARTIFACT that settles it: with §2d fixed and this arm
+ *         still ARMED, the same dirty-before-and-unchanged tree prints `NOT RECORDED — the tree
+ *         changed while the gate ran (1 path(s) dirty at the end)` — and "(1 path(s) dirty at the
+ *         end)" is the `endTree === START.tree` branch of that sentence's own ternary, i.e. the tree
+ *         did NOT change and the end-of-run check refused it anyway. So the redundancy was real and
+ *         UNREACHED, not absent.
+ *       M0-153 WAS RIGHT THAT SOMETHING REAL WAS BEING CALLED COLLATERAL, and its sentence for it —
+ *       "the arm has been finding a real redundancy gap" — is the true half of its account; the gap
+ *       was a verdict write in front of §4, not a weak §4. M0-157 closed it at the subject: §2d now
+ *       re-reads `status` and `HEAD^{tree}` for itself, declines the shortcut on a disagreement, and
+ *       lets the run reach §4. The third failure IS a cascade of the cumulative record count, exactly
+ *       as M0-153 said, and it disappears when the count does — which is the discriminator, and is
+ *       why it is now a MUST-NOT-BREAK rather than an expected one. 95/1 after, the one being
+ *       `mustBreak`. GENERAL FORM, and the reason this paragraph is long: an arm that asserts a
+ *       REDUNDANCY fails when a SITE is added in front of it, and the failure looks identical to the
+ *       redundancy not existing. Distinguishing the two costs one probe of the armed subject's own
+ *       output, and the cheaper reading is the one that quietly weakens the estate's controls.
  *   G6  the END-OF-RUN check removed               -> "a tree that CHANGES while the gate runs is
  *                                                     NOT recorded" FAILS. MUST NOT: the dirty-
  *                                                     at-start arm (the start check holds it).
@@ -87,6 +106,16 @@
  *       fix: one site patched, one left)              NOT: the tool that READS prose still makes its
  *                                                     namer doc-facing; the comment-only suite is
  *                                                     still NOT doc-facing.
+ *   G20 the CLOSURE'S EDGES cut from the WHOLE     -> "...and a suite whose ONLY mention of that same
+ *       text again — break M0-153's fix at            tool is a COMMENT is NOT selected" FAILS, and
+ *       `edgesOf`, the row's own liar                 the UI comment arm with it. MUST NOT: the
+ *                                                     ASSEMBLED reader is still selected; the
+ *                                                     IMPORTER and the WALKER still are.
+ *   G21 the ASSEMBLED spelling dropped — the       -> "a suite naming, through the ASSEMBLED spelling
+ *       OTHER liar: a narrowing that also loses       in CODE, a tool that READS the file is
+ *       a REAL edge reads as "fewer units"            selected" FAILS. MUST NOT: the comment-only
+ *                                                     suite is still NOT selected (so a fix that
+ *                                                     selects nothing cannot pass either arm).
  *
  * Every arm asserts its DOWNSTREAM failure, never merely its patch count: `hits === 1` proves a
  * patch applied, and only the named assertion proves it had an effect (M-60 Q9).
@@ -220,7 +249,14 @@ const ARMS = [
       from: "const CLEAN_AT_START = START.status === \"\" && !!START.tree;",
       to: "const CLEAN_AT_START = !!START.tree;" }],
     mustBreak: "...and the gate says why",
-    mustNotBreak: ["a DIRTY tree is NOT recorded", "a tree that CHANGES while the gate runs is NOT recorded"] },
+    /* M0-153 downgraded both of these to `alsoBreak` on 2026-09-24 and M0-157 RESTORED them the same
+       day, after FIXING THE SUBJECT. Both corrections are kept in the record deliberately, because the
+       disagreement is the useful part and neither worker was careless: M0-153's OBSERVATION was right
+       (armed, on `68fecb8d`, the dirty run IS recorded and this arm was not isolated — 93/3) and its
+       CAUSE was wrong, which is why its remedy was to believe the arm less. M0-153's two added
+       isolation assertions are KEPT — they are a real widening of the arm. */
+    mustNotBreak: ["a DIRTY tree is NOT recorded", "a tree that CHANGES while the gate runs is NOT recorded",
+                   "a CLEAN run is RECORDED, keyed by HEAD's tree", "--explain records nothing"] },
 
   { id: "G6", title: "the END-OF-RUN check removed — a run across a change, recorded",
     patches: [{ file: GATES,
@@ -339,6 +375,25 @@ const ARMS = [
     mustNotBreak: ["a suite that names a doc-READING tool in CODE is doc-facing",
                    "...and a suite whose ONLY `docs/` mention is in a COMMENT is NOT doc-facing",
                    "a suite that READS `docs/` through a STRING is doc-facing"] },
+
+  { id: "G20", title: "the CLOSURE'S EDGES cut from the WHOLE text again — break M0-153's fix at `edgesOf`",
+    patches: [{ file: GATES,
+      from: "function edgesOf(abs, top) {\n  const src = codeOf(abs) || \"\";",
+      to: "function edgesOf(abs, top) {\n  const src = textOf(abs) || \"\";" }],
+    mustBreak: "...and a suite whose ONLY mention of that same tool is a COMMENT is NOT selected — a comment runs nothing",
+    alsoBreak: ["...and NOT a UI suite that names it only in a COMMENT"],
+    mustNotBreak: ["a suite naming, through the ASSEMBLED spelling in CODE, a tool that READS the file is selected — it is the edge, not the path, that selects it",
+                   "...and selects its IMPORTER", "...and the suite that WALKS tools/",
+                   "...and a UI suite that names the tool in CODE"] },
+
+  { id: "G21", title: "the ASSEMBLED spelling dropped — the liar: losing a REAL edge also reads as fewer units",
+    patches: [{ file: GATES,
+      from: "    for (const m of src.matchAll(ASM_RE)) namedIn(m[1], m[2]);",
+      to: "    for (const m of [].values()) namedIn(m[1], m[2]);" }],
+    mustBreak: "a suite naming, through the ASSEMBLED spelling in CODE, a tool that READS the file is selected — it is the edge, not the path, that selects it",
+    mustNotBreak: ["...and a suite whose ONLY mention of that same tool is a COMMENT is NOT selected — a comment runs nothing",
+                   "...and selects its IMPORTER", "...and the suite that WALKS tools/",
+                   "a suite that READS the file through a STRING path is selected — selecting nothing is not the fix"] },
 ];
 
 /* ---------------------------------------------------------------- D-331: every anchor, before anything arms */

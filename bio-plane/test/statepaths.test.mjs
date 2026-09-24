@@ -127,7 +127,17 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    and the selected set does NOT. So the figure is unchanged and no slack is bought; the superseded move is recorded
    here rather than silently dropped, because a constant that moved twice in one day and came back is exactly the
    history a later reader needs. */
-const UNITS_CEILING = 47;
+/* MOVED 47 -> 45 by M0-153 (2026-09-24), from the figure THIS suite PRINTED on its own clone of the M0-153 tree
+   (`45 unit(s) of 427 selected · 31 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`), never by subtracting from
+   the old number. THE REASON, and it is again a narrowing rather than slack: `gates.mjs` §2b now cuts the CLOSURE'S
+   OWN EDGES from a unit's code rather than its whole text, so a tool NAMED IN A COMMENT no longer enters the closure
+   and no longer lends the unit everything that tool reads. The two that left are `plane:fleetbundles.test.mjs`
+   (its header names `tools/gates.mjs` in the sentence saying it does NOT drive it) and `plane:hygiene.test.mjs`
+   (a comment names `scripts/op-claims-ledger.mjs`); both were checked at the code. `plane:gateverdict.test.mjs`
+   left and came BACK, because it really does load `tools/pushguard.mjs` — through `join(REPO, "tools",
+   "pushguard.mjs")`, whose literal spelling lived only in a comment — and §2b now reads that assembled spelling too.
+   A CEILING IS NOT A RATCHET: left at the printed figure, with no slack bought for a future landing. */
+const UNITS_CEILING = 45;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 
