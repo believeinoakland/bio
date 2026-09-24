@@ -1,0 +1,16 @@
+{
+ "unit": "plane:progression-instance.test.mjs",
+ "inputHash": "f0b5d5168a3e707147d65ee181536b4a9d3da5c9937a59b65ccf5f8ac2f58195",
+ "verdict": "PASS",
+ "run": "80289e39c27214a1f810d4551a8797ad9de20be1.1790267953679.4339.json",
+ "tree": "80289e39c27214a1f810d4551a8797ad9de20be1",
+ "head": "28417888637be510a868a136dff489ff0321ef94",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 139,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "cd30f851-18f7-5717-82a2-65cb9dc8517b",
+ "at": "2026-09-24T16:39:13.691Z"
+}
