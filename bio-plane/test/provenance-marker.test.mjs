@@ -584,7 +584,17 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
        claims nothing about a re-check (no field says one is armed), and the next arm by any consumer reconciles the
        domain wake, since `#reconcileAlarm` weighs the whole registry. So it overclaims nothing — but a failed arm is
        silent until that next arm, which is the residue this entry states rather than hides. */
-  const CEILING = 35;
+  /* MOVED 35 -> 36 by c18-batch7fix (2026-09-24), FROM THE FIGURE THIS WALK PRINTED (`36 of 35`) on the merge of
+     c17-batch7 @ 0b189430, which brought D-126. The new site was LOOKED AT: `#perItem`, the per-item weight's one
+     helper, wraps each item's call to the act's own method and turns a THROW into the named refusal
+     `SET_ITEM_FAILED` (C-75), carrying the thrown message and "Nothing about the item is claimed", with the item
+     `retained`. THE CLASS'S REMEDY, NOT AN INSTANCE OF IT: nothing the plane could not establish is smoothed into a
+     normal-looking answer — the caller reads that item k threw, and why. What it rests on, stated rather than
+     assumed: D-126's header says each single act writes at most once, after all of its own refusals, so a throw
+     before that write leaves the item unwritten; that was not re-driven here. WHY IT IS A CATCH AT ALL: without it
+     one item's throw would end the whole set with no answer, which is the all-or-nothing the weight exists to
+     refuse. */
+  const CEILING = 36;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 
