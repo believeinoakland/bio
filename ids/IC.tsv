@@ -48,3 +48,4 @@ IC-287	2026-09-24T20:58:36.736Z	HEAD
 IC-288	2026-09-24T21:23:56.774Z	land/worker/D-516	
 IC-289	2026-09-24T21:24:48.479Z	land/worker/REC-213	
 IC-290	2026-09-24T22:39:25.759Z	land/worker/D-552	
+IC-291	2026-09-24T22:47:09.352Z	WORKER REC-214	REC-214: promote refuses a non-act revision changing an action's risk tier or its history; op=actionrisktier added
