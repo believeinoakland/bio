@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d86-bias-debt.test.mjs",
+ "inputHash": "24f65cd9f8088b4e96821c81f60c087ec958ac9e7200aa2a65d87e8c5835fd0c",
+ "verdict": "PASS",
+ "run": "fcbc79f7a997f3f3bcdb0ce1a44d934fc112c703.1790281756369.8769.json",
+ "tree": "fcbc79f7a997f3f3bcdb0ce1a44d934fc112c703",
+ "head": "ad410f0e34e9e5ed23057cfb093a24f6ca3428c6",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 137,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "1800c35d-36b8-5cae-bb8d-07ddc3929158",
+ "at": "2026-09-24T20:29:16.382Z"
+}

@@ -1,0 +1,16 @@
+{
+ "unit": "plane:fleetposture.test.mjs",
+ "inputHash": "4cc8908737b3102bc6c494e02439b1bfa2d52bd8943e03d49122d1255131c874",
+ "verdict": "PASS",
+ "run": "fcbc79f7a997f3f3bcdb0ce1a44d934fc112c703.1790281756369.8769.json",
+ "tree": "fcbc79f7a997f3f3bcdb0ce1a44d934fc112c703",
+ "head": "ad410f0e34e9e5ed23057cfb093a24f6ca3428c6",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 135,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "1800c35d-36b8-5cae-bb8d-07ddc3929158",
+ "at": "2026-09-24T20:29:16.382Z"
+}
