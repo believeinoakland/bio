@@ -30,22 +30,10 @@ node tools/waitquiet.mjs --check          # answer once: 0 quiet, 1 busy
 ```
 
 Up to eight workers share this machine, so an uncontended figure sometimes needs a wait. **Do not
-hand-roll it.** On 2026-08-09 three workers sat in
-
-```
-until ! pgrep -f "scripts/battery.mjs"; do sleep 10; done      # DEADLOCKS. ALWAYS.
-```
-
-**forever.** `pgrep -f` matches the FULL COMMAND LINE, and the waiter's own command line contains
-the string it searches for — so each loop found itself, slept, and found itself again. The three
-also matched each other, which made the count look like real work. **No battery was running at
-all**; `workerd` was at zero. They spun for hours after their item had already merged, and nothing
-noticed, because **a wait that cannot fail is indistinguishable from one that has not finished.**
-
-**This is a COMMAND because the warning was already tried** — here, as for `git stash` and for ids,
-what worked was a tool. It matches **positionally** — the executable must BE `node` and argv[1] must BE
-the battery path — so a shell that merely mentions the string cannot satisfy it. It is bounded,
-and on timeout it exits 2 naming what it was still seeing.
+hand-roll it:** on 2026-08-09 three workers' `until ! pgrep -f "scripts/battery.mjs"` loops matched THEIR OWN
+command lines and spun for hours with no battery running (the full receipt is in `tools/waitquiet.mjs`'s
+header). **A wait that cannot fail is indistinguishable from one that has not finished.** The tool matches
+POSITIONALLY (argv[0] `node`, argv[1] the battery path), is bounded, and on timeout exits 2 naming what it saw.
 
 **If you ever do write a wait of your own, its negative control is one command: run the predicate
 once with nothing running.** If it still matches, it will never release you. That control is the
@@ -250,14 +238,15 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
 
 ## Before you finish
 
-0. **IF YOU TOUCHED ANYTHING UNDER `bio-plane/src/`, REBUILD THE BUNDLE FIRST: `cd bio-plane && npm run build`.** The
-   committed `dist/bio-plane.bundled.mjs` is a TRACKED ARTIFACT and `FL-10`'s freshness guard fires when it does not
-   match `src/`. **It is owed by every `src/`-touching worker, was in NO kickoff until 2026-09-18, and THREE CONSECUTIVE
-   `RECORD` ITEMS EACH FOUND IT FROM A RED SUITE** — REC-119 counted them and said the remedy is a process change, not a
-   better warning, which is this line. Rebuild BEFORE the battery: the guard turns red naming the artifact, not your change.
-   **A COMMENT-ONLY `src/` CHANGE MAY OR MAY NOT MOVE `bundled.mjs`: MEASURE, NEVER ASSUME** (c20-batch14). THE FORM IS
-   NOT THE DISCRIMINATOR, though two rules here said so from small samples (REC-110): of 25 plain block comments
-   from `index.mjs`, TWELVE are PRESENT in the bundle; render.mjs's JSDoc is ABSENT.
+0. **TOUCHED A BUNDLED SOURCE? REBUILD EVERY STALE ONE WITH `node tools/bundles.mjs`** (`--check` reports without
+   writing). It asks the committed manifests which bundles name a file you moved, rebuilds each through that member's
+   own build, and says which. **ONE `bio-plane/src/` EDIT STALES THREE** (`pdf-worker` and `ocr-worker` read
+   `../bio-plane/src/{cpu,pdfstructure,subresources}.mjs`, `agent-worker` `src/tokens.mjs`), and **A COMMENT-ONLY
+   CHANGE MAY OR MAY NOT MOVE A BUNDLE — THE FORM IS NOT THE DISCRIMINATOR** (REC-110, c20-batch14: 12 of 25 plain
+   block comments in `index.mjs` are PRESENT in the bundle; render.mjs's JSDoc is ABSENT). Rebuild BEFORE the battery:
+   `FL-10`'s guard turns red naming the TRACKED ARTIFACT, not your change. This step named the plane's bundle ALONE
+   until M0-178 (2026-09-24) — measured: the plane alone left 2 FAILs — and named NONE before 2026-09-18, which THREE
+   CONSECUTIVE `RECORD` ITEMS found from a red suite (REC-119: the remedy is a process change, not a warning).
 
 0b. **EDITED A GOVERNED DESIGN DOC** (`docs/architecture/*`, or `docs/development/*` with front matter)?
    Move its Status `as of` to today and run `node tools/corpuscheck.mjs` to **0 fail** BEFORE the gate
