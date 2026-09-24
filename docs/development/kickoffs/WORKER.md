@@ -29,10 +29,9 @@ node tools/waitquiet.mjs                  # wait, bounded, then measure
 node tools/waitquiet.mjs --check          # answer once: 0 quiet, 1 busy
 ```
 
-Up to eight workers share this machine, so an uncontended figure sometimes needs a wait. **Do not
-hand-roll it:** on 2026-08-09 three workers' `until ! pgrep -f "scripts/battery.mjs"` loops matched THEIR OWN
-command lines and spun for hours with no battery running (the full receipt is in `tools/waitquiet.mjs`'s
-header). **A wait that cannot fail is indistinguishable from one that has not finished.** The tool matches
+Workers share this machine, so an uncontended figure may need a wait. **Do not hand-roll it:** on
+2026-08-09 three workers' `until ! pgrep -f "scripts/battery.mjs"` loops matched THEIR OWN command
+lines and spun for hours with no battery running (receipt: `tools/waitquiet.mjs`'s header). **A wait that cannot fail is indistinguishable from one that has not finished.** The tool matches
 POSITIONALLY (argv[0] `node`, argv[1] the battery path), is bounded, and on timeout exits 2 naming what it saw.
 
 **If you ever do write a wait of your own, its negative control is one command: run the predicate
@@ -76,9 +75,8 @@ incident's own shape inverted:
   GREEN verdict. **THREE ITEMS PAID IN ONE NIGHT (2026-09-24):** REC-185's
   `.rec185/` moved the battery's assertion total 19513 -> 19512 with no source change; D-487's
   `bio-plane/.d487-gate.log` cost a 14-minute re-run of a green gate; D-486's scratch
-  clone was walked by `statepaths`, 36 files. **The scratchpad is NOT isolated between
-  sessions** — two workers reported that — so name every file there for YOUR item, never
-  generically (and see the `provenance:` rule below).
+  clone was walked by `statepaths`, 36 files. **The scratchpad is neither ISOLATED between sessions
+  (two workers reported that) nor DURABLE — the `/tmp` section below carries both rules.**
 - **PUSH YOUR OWN BRANCH. Do not merge, and never push to `main`.** CONDUCT integrates; you make
   your work SURVIVE. CORRECTED 2026-09-16 (D-288, ruled by BOB #12) — this line read *do not push*
   for five weeks and that is the instruction that strands the work: `CLAUDE.md`'s rule is that a
@@ -295,6 +293,12 @@ so the obvious next move, bisecting your own change, is wasted work on a subject
 print, read the log's `provenance:` line against your own HEAD** — the only discriminator, because
 a foreign battery's contents are indistinguishable from yours. **The general form:** a shared,
 unqualified name is an identity nobody owns, so two facts arrive under it and nothing fails loudly.
+
+**AND A SCRATCHPAD FILE IS NOT DURABLE — IT CAN VANISH MID-SESSION.** REC-194's worker (F6) lost gate
+logs and pristine copies while same-age neighbours survived, and **the cause is UNDETERMINED**: M0-183 ruled
+out only an age-based cleaner (no `cron` runs, and systemd is not PID 1 here, so its timer cannot). What
+survived was the harness's own `tasks/<id>.output`, so **keep no evidence ONLY in `/tmp`** — print each figure
+as you take it, and COMMIT the artifact a claim will rest on (`measurements/<id>.md`).
 
 ## KILL BY PID, OR BY THE PROCESS GROUP YOU STARTED — NEVER BY A MACHINE-WIDE PATTERN.
 
