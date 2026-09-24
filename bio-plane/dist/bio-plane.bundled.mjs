@@ -62252,8 +62252,36 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  reader grades a datum as a refusal (meaning-bounds D-240 (e)). The DO
    *  serialises, so one row per UTC day is globally correct for the instance.
    *  Admission is decided on what has been SPENT, because a render's cost is
-   *  only known after it ran; the allowance can therefore be overrun by at most
-   *  one render, and that is stated rather than hidden. */
+   *  only known after it ran.
+   *
+   *  CORRECTED 2026-09-24 at integration (CONDUCT #20, on BOB #32's reading; VERIFIED HERE AT
+   *  THE CODE, not taken on the message's word). This said the allowance "can therefore be
+   *  overrun by at most one render". THAT IS FALSE, and it is the shape this project meets
+   *  most: a bound believed on the strength of a sentence. Admission is serialised in the DO,
+   *  but the render RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op
+   *  (`renderspend` -> `renderSpend`; the two are distinct rows of the dispatch table), so
+   *  every render IN FLIGHT AT ONCE is admitted against the same `spent_ms`. The bound that
+   *  actually holds is
+   *
+   *      overrun <= (renders in flight concurrently) x (one render's maximum time:
+   *                                                     the wait timeout plus navigation)
+   *
+   *  whose first factor nothing here bounds. Reserving at admission is D-492, placed by
+   *  SCHEDULER; until it lands this comment is the only thing that says so. Prose only — no
+   *  behaviour moved.
+   *
+   *  AND A FINDING ABOUT THE REBUILD RULE, measured making this very edit, because it came
+   *  back the opposite way to what `kickoffs/WORKER.md` step 0 predicts. That step says a
+   *  COMMENT-ONLY `src/` change leaves `bundled.mjs` BYTE-IDENTICAL (REC-110) — "if you are
+   *  hunting a diff after a comment-only change, there isn't one". This edit moved it by
+   *  1,104 bytes. THE RULE IS TRUE OF A PLAIN BLOCK COMMENT AND FALSE OF A JSDOC ONE (a block
+   *  opened with two stars). Grepped in the emitted bundle: an ordinary block comment in this
+   *  file, and one added to `index.mjs` in this same batch, are both ABSENT (0 hits), while
+   *  this JSDoc block is PRESENT verbatim (1 hit). The bundler strips block comments and
+   *  PRESERVES JSDoc. So a worker who edits a docstring and trusts the kickoff reads a real
+   *  diff as a build problem — the exact wasted hunt that line exists to prevent, one comment
+   *  form over. Reported to CONDUCT #20 with the measurement; the fix is to narrow WORKER.md
+   *  step 0 to the comment FORM rather than to "comments". */
   renderAdmit({ allowanceMs, at = null }) {
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);
