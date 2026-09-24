@@ -3696,7 +3696,16 @@ CREATE TABLE IF NOT EXISTS case_drafts (
   created_by  TEXT NOT NULL,
   created_at  TEXT NOT NULL,
   updated_by  TEXT NOT NULL,      -- the editor the dry run of the publish gates acts as
-  updated_at  TEXT NOT NULL
+  updated_at  TEXT NOT NULL,
+  -- REC-193 / BIO_Publication_v0_1.md section 3 rule 13 (BOB #32, 2026-09-23): WHO WROTE THE EXCLUSION
+  -- STATEMENT'S CURRENT BYTES. Stamped by the SERVER at the draft write that changes the statement text and
+  -- left alone by every other edit, so an editor who rewrites another section does not become the statement's
+  -- author -- which is what updated_by, the last editor of ANY field, said when op=statementack read it.
+  -- NULLABLE AND NEVER BACK-FILLED: a draft written before this column existed recorded no writer, and the
+  -- only value a backfill could reach for is updated_by, the very value this column exists to stop standing
+  -- in for one. NULL reads back as UNDETERMINED, stated, and op=statementack refuses by name rather than
+  -- guess. Nothing about publication turns on it: rule 11 never refuses a case for want of an acknowledgement.
+  statement_by TEXT
 );
 CREATE INDEX IF NOT EXISTS case_drafts_project ON case_drafts(project_id);
 
@@ -29490,7 +29499,15 @@ var Store = class _Store extends DurableObject {
          recorded no actor, and there is no value a backfill could reach for that would not be
          invented. NULL reads back as `not recorded`, stated, through `#statusBy`. */
       ["members", "status_by", "TEXT"],
-      ["signers", "status_by", "TEXT"]
+      ["signers", "status_by", "TEXT"],
+      /* REC-193 (BIO_Publication_v0_1.md §3 rule 13, BOB #32): WHO WROTE THE EXCLUSION STATEMENT'S CURRENT
+         BYTES — the SERVER's stamp of the editor whose `op=casedraft` last CHANGED the statement text, never
+         the caller's word and never the last editor of another field. NULLABLE AND NEVER BACK-FILLED, D-85's
+         reasoning and sharper here: the only value a backfill could reach for is `updated_by`, which is the
+         liar this column replaces. NULL reads back as UNDETERMINED, stated, and `op=statementack` refuses by
+         name (`STATEMENT_ACK_AUTHOR_UNDETERMINED`) rather than attribute the sentence to whoever last
+         touched the draft. */
+      ["case_drafts", "statement_by", "TEXT"]
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -37262,15 +37279,20 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         detail: "a draft's arguments are at most 64 KiB, the size of what op=publish would accept."
       };
     const when = (/* @__PURE__ */ new Date()).toISOString();
+    const priorStatement = existing ? _Store.#fmSafe(JSON.parse(existing.params).statement ?? "") : "";
+    const nextStatement = _Store.#fmSafe(params.statement ?? "");
+    const statementBy = !nextStatement ? null : existing && nextStatement === priorStatement && existing.statement_by ? existing.statement_by : a.who;
     let id;
     if (existing) {
       id = existing.draft_id;
       this.sql.exec(
-        `UPDATE case_drafts SET case_id=?, params=?, updated_by=?, updated_at=? WHERE draft_id=?`,
+        `UPDATE case_drafts SET case_id=?, params=?, updated_by=?, updated_at=?, statement_by=?
+                     WHERE draft_id=?`,
         named,
         json2,
         a.who,
         when,
+        statementBy,
         id
       );
     } else {
@@ -37280,8 +37302,19 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         reason: "MINT_EXHAUSTED",
         detail: "the plane could not find a free draft id; nothing was written"
       };
-      this.sql.exec(`INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
-                     updated_by,updated_at) VALUES (?,?,?,?,?,?,?,?)`, id, owning, named, json2, a.who, when, a.who, when);
+      this.sql.exec(
+        `INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
+                     updated_by,updated_at,statement_by) VALUES (?,?,?,?,?,?,?,?,?)`,
+        id,
+        owning,
+        named,
+        json2,
+        a.who,
+        when,
+        a.who,
+        when,
+        statementBy
+      );
     }
     const ident = this.#draftIdentity({ case_id: named });
     return {
@@ -37584,6 +37617,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       })(),
       updated_by: d.updated_by,
       updated_at: d.updated_at,
+      /* REC-193 / §3 rule 13: WHO WROTE THE STATEMENT THAT STANDS, beside the editor of everything else,
+         because they are two facts and one column said both. `null` is the honest answer for a draft
+         written before the stamp existed, and the sentence beside it says which. */
+      statement_by: d.statement_by ?? null,
+      statement_by_stated: d.statement_by ? `${d.statement_by} wrote the exclusion statement as it now stands` : "UNDETERMINED: this draft predates the recording of the statement's author, and its last editor is not evidence of who wrote the statement",
       ...grantPart,
       /* REC-148: the project's bar AS `op=publish` WOULD FREEZE IT (the same `#projectBar` call), for the
          control plane's in-band floors (DEC-31, §6A.3 point 1). Read now, because a draft is not frozen. */
@@ -37679,6 +37717,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     bySecret = false
   } = {}) {
     let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
+    let authorFromDraft = false;
     if (bySecret) {
       const live = this.#liveReviewGrant(secretSha);
       if (!live || draft && String(draft).trim() !== live.draft.draft_id) return _Store.#noReviewCopy();
@@ -37687,7 +37726,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       ident = this.#draftIdentity(d);
       draftId = d.draft_id;
       statement = JSON.parse(d.params).statement;
-      statementAuthor = d.updated_by;
+      statementAuthor = d.statement_by ?? null;
+      authorFromDraft = true;
       kind = "recipient";
       by = live.grant.grant_id;
       grantId = live.grant.grant_id;
@@ -37703,7 +37743,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         ident = this.#draftIdentity(d);
         draftId = d.draft_id;
         statement = JSON.parse(d.params).statement;
-        statementAuthor = d.updated_by;
+        statementAuthor = d.statement_by ?? null;
+        authorFromDraft = true;
       } else {
         const cid = String(caseId ?? "").trim(), ed = Number(edition);
         if (!cid || !Number.isInteger(ed) || ed < 1)
@@ -37745,6 +37786,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         ok: false,
         reason: "STATEMENT_ACK_NO_STATEMENT",
         detail: "this draft states nothing about what its case excludes, so there is no statement to acknowledge yet. The draft's editor authors it (statement=); acknowledge it then."
+      };
+    if (kind === "participant" && authorFromDraft && !statementAuthor)
+      return {
+        ok: false,
+        reason: "STATEMENT_ACK_AUTHOR_UNDETERMINED",
+        draft: draftId,
+        author: null,
+        detail: `this draft records no author for its exclusion statement: it was written before the plane stamped one, and who wrote the sentence that now stands is UNDETERMINED. An acknowledgement is a SECOND person's reading (BIO_Publication \xA73 rule 11), and the plane cannot tell here whether you are the first \u2014 reading the draft's last editor would attribute the statement to whoever last touched any part of it. An editor of this project saves the statement again (op=casedraft with statement=), which records who wrote its current bytes; acknowledge it then. The case publishes either way.`
       };
     if (kind === "participant" && statementAuthor && by === statementAuthor)
       return {
@@ -37969,8 +38018,9 @@ case_project: ${project}
     const cap = Number.isInteger(askedCap) && askedCap >= 1 ? Math.min(askedCap, _Store.REVIEW_LIST_MAX) : _Store.REVIEW_LIST_MAX;
     const counted = this.#one(`SELECT COUNT(*) AS n FROM case_drafts WHERE project_id=?`, pid);
     const total = counted ? Number(counted.n) : 0;
-    const rows = this.#rows(`SELECT draft_id, case_id, created_by, created_at, updated_by, updated_at
-                             FROM case_drafts WHERE project_id=? ORDER BY created_at, draft_id LIMIT ?`, pid, cap);
+    const rows = this.#rows(`SELECT draft_id, case_id, created_by, created_at, updated_by, updated_at,
+                             statement_by FROM case_drafts WHERE project_id=? ORDER BY created_at, draft_id
+                             LIMIT ?`, pid, cap);
     const drafts = rows.map((d) => {
       const ident = this.#draftIdentity(d);
       return {
@@ -37984,6 +38034,8 @@ case_project: ${project}
         created_at: d.created_at,
         updated_by: d.updated_by,
         updated_at: d.updated_at,
+        /* REC-193 / §3 rule 13: null where the draft predates the stamp — UNDETERMINED, not the editor. */
+        statement_by: d.statement_by ?? null,
         read: `op=reviewcopy&draft=${d.draft_id}`
       };
     });

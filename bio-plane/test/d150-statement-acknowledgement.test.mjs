@@ -15,6 +15,23 @@
    the at-the-bound arm fails -> 38/2: it and the DELTA — the other project's same-sentence document is the ninth
    row, so the act refuses where it should land. The refusal and nothing-written arms stay green.
 
+   NEGATIVE CONTROL: RUN 2026-09-24 by the REC-193 worker on block 9 (rule 13, `statement_by`), in /home/user/bio on
+   land/worker/REC-193, the arm ALONE on `src/store.mjs`, declared before arming, restored by `cp` from a per-arm
+   pristine copy verified by sha256 (`sha256sum -c` OK, b23856ca…5dfc) AND `cmp` (content identical, 3,166,538 B) —
+   never `git checkout --`. The suite runs `src/index.mjs` directly, so no rebuild is in the loop.
+   (0) BASELINE, nothing armed -> 49 pass, 0 fail.
+   (le) THE LAST EDITOR READ AGAIN — `statementAuthor = d.statement_by ?? null` reverted to `d.updated_by` at BOTH
+   draft doors, which is precisely the liar the row names (keep reading the last editor and add a column nobody
+   reads). Declared: MUST FAIL block 9's accepts-when arm (B may acknowledge) and its "A is refused by name" arm;
+   MUST NOT fail blocks 1–8, whose author is in every case also the last editor -> 46 pass, 3 fail: those two, and
+   block 9's OVER-STRICTNESS arm (iris re-saves ella's sentence, so the last editor and the author disagree the
+   other way round). One more than declared, in the declared direction, and it is the arm that measures the stamp
+   following the TEXT rather than the act of editing. Blocks 1–8 green, as declared.
+   NOT DRIVEN, AND SAID RATHER THAN SCORED: no arm exercises `STATEMENT_ACK_AUTHOR_UNDETERMINED`. A draft holding a
+   statement and no `statement_by` cannot be produced by any act on a store this code wrote — the state exists only
+   in stores written before this landing, where the migration adds the column NULL. Block 9's last arm asserts the
+   totality this suite CAN reach (every draft it authored with a statement carries an author) and prints its corpus.
+
    D-150 / BIO_Publication_v0_1.md §3 rule 11 (BOB #27, 2026-09-22) — THE EXCLUSION STATEMENT IS
    CHECKED BY A SECOND PERSON, AND THE CHECK IS DISCLOSED, NEVER ENFORCED.
 
@@ -506,6 +523,112 @@ console.log("\n--- 8. IC-246: more unsigned documents than one act re-authors RE
     after[after.length - 1], before[before.length - 1]);
   t("DELTA: 'more than one act may re-author' and 'every one of them re-authored' do NOT read alike",
     [over?.ok, at?.ok], [false, true]);
+}
+
+/* =========================================================================== 9 */
+console.log("\n--- 9. REC-193 / §3 rule 13: the statement's author is WHO WROTE ITS CURRENT BYTES ---");
+/* THE DEFECT THIS BLOCK EXISTS TO CATCH, and D-150 named it PROVISIONAL at the site: the author was read
+   from `case_drafts.updated_by`, which is the last editor of ANY field. So a participant who corrected the
+   SCOPE after somebody else wrote the statement was refused as its author, and the member who actually wrote
+   the sentence was admitted as its own second reader — rule 11 inverted, in both directions at once, with
+   nothing in the record reading differently. The stamp is the server's, at the write that CHANGES THE TEXT.
+   WHAT A LIAR WOULD DO: keep reading the last editor and add a column nobody reads. Arms 2 and 3 fail it by
+   name (the negative control at the head of this file arms exactly that), and arm 5 fails it in the OTHER
+   direction — the liar's answer there is right for the wrong reason, so arm 5 alone proves nothing and is
+   here to pin the stamp to the TEXT rather than to the act of editing. */
+{
+  const S_A = "Written by iris: this case covers the FY2024 transfer only (rule13); the FY2023 memo is out of it.";
+  const S_B = "Rewritten by ella: the FY2022 ledger is out of this case too (rule13).";
+  const mk = (over = {}) => withRoles({ ...args(PROJ, "rule13", { statement: S_A, ...over }), targets: [DOCQ] });
+  const D9r = rP(await POST(`op=casedraft&token=${IRIS}`, mk()));
+  if (!D9r?.ok) bail("casedraft D9", D9r);
+  const D9 = D9r.draftId;
+  const fresh = rP(await GET(`op=reviewcopy&draft=${D9}&token=${IRIS}`));
+  t("A WRITES THE STATEMENT and the SERVER stamps who wrote it — no caller field reaches it (the act passed "
+  + "none), and the draft's own editor reads the same at this moment",
+    [fresh?.statement_by, fresh?.updated_by, /wrote the exclusion statement/.test(fresh?.statement_by_stated || "")],
+    ["iris", "iris", true]);
+  /* B EDITS ANOTHER SECTION: a different scope, the statement BYTE FOR BYTE what A wrote. */
+  const ed = rP(await POST(`op=casedraft&token=${ELLA}`,
+    { draft: D9, ...mk({ scope: "Whether the transfer was authorised (rule13, as ella narrowed the scope)." }) }));
+  if (!ed?.ok) bail("edit D9 as ella", ed);
+  const copy = rP(await GET(`op=reviewcopy&draft=${D9}&token=${IRIS}`));
+  t("FIXTURE ARMS THE TRAP: ella edited LAST, iris wrote the statement, and the statement text has NOT MOVED — "
+  + "the two facts now disagree, which is the only state in which either arm below can be read",
+    [copy?.updated_by, copy?.statement_by, copy?.authored?.statement === S_A,
+     copy?.statement_acknowledgements?.statement_sha === sha(S_A)],
+    ["ella", "iris", true, true]);
+  const byB = await ack(`draft=${D9}&token=${ELLA}`);
+  t("ACCEPTS-WHEN: B, WHO EDITED ANOTHER SECTION AFTER A WROTE THE STATEMENT, MAY ACKNOWLEDGE — editing the "
+  + "scope is not writing the sentence, and her reading of it is a second person's",
+    [byB?.ok, byB?.acknowledgement?.kind, byB?.acknowledgement?.by,
+     byB?.acknowledgement?.statement_sha === sha(S_A)],
+    [true, "participant", "ella", true]);
+  const byA = await ack(`draft=${D9}&token=${IRIS}`);
+  t("AND A, WHO WROTE THE STATEMENT, IS REFUSED BY NAME — named as the author in the refusal, though she is "
+  + "not the draft's last editor",
+    [byA?.ok, byA?.reason, byA?.author], [false, "STATEMENT_ACK_BY_ITS_AUTHOR", "iris"]);
+  /* THE STAMP FOLLOWS THE TEXT, NOT THE EDITOR: B rewrites the SENTENCE and becomes its author. */
+  const ed2 = rP(await POST(`op=casedraft&token=${ELLA}`, { draft: D9, ...mk({ statement: S_B }) }));
+  if (!ed2?.ok) bail("rewrite D9 statement as ella", ed2);
+  const copy2 = rP(await GET(`op=reviewcopy&draft=${D9}&token=${IRIS}`));
+  const byA2 = await ack(`draft=${D9}&token=${IRIS}`);
+  const byB2 = await ack(`draft=${D9}&token=${ELLA}`);
+  t("B THEN REWRITES THE STATEMENT ITSELF: the stamp MOVES to her, A may acknowledge the new sentence, and B "
+  + "is now the one refused by name — the stamp tracks the TEXT, not the act of editing",
+    [copy2?.statement_by, copy2?.authored?.statement === S_B,
+     byA2?.ok, byA2?.acknowledgement?.by, byA2?.acknowledgement?.statement_sha === sha(S_B),
+     byB2?.ok, byB2?.reason, byB2?.author],
+    ["ella", true, true, "iris", true, false, "STATEMENT_ACK_BY_ITS_AUTHOR", "ella"]);
+  /* OVER-STRICTNESS ARM: an edit that re-saves the SAME sentence in a spelling the plane normalises the same
+     way must NOT move the author. `#fmSafe` is what the case document prints and what `#statementSha` hashes,
+     so two statements the record cannot tell apart must not have different authors either. */
+  const ed3 = rP(await POST(`op=casedraft&token=${IRIS}`, { draft: D9, ...mk({ statement: S_B }) }));
+  if (!ed3?.ok) bail("re-save D9 statement as iris", ed3);
+  const copy3 = rP(await GET(`op=reviewcopy&draft=${D9}&token=${IRIS}`));
+  t("OVER-STRICTNESS: iris SAVES ella's sentence again, unchanged — the author does not move to the saver, and "
+  + "ella stays refused while iris stays admitted",
+    [copy3?.statement_by, copy3?.updated_by, (await ack(`draft=${D9}&token=${ELLA}`))?.reason,
+     (await ack(`draft=${D9}&token=${IRIS}`))?.ok],
+    ["ella", "iris", "STATEMENT_ACK_BY_ITS_AUTHOR", true]);
+  /* A RECIPIENT IS UNAFFECTED: the exclusion is of the AUTHOR, and a grant's holder is never one. */
+  const G9 = rP(await POST(`op=reviewgrant&token=${IRIS}`, { draft: D9, recipient: "Rae Kim, records desk" }));
+  if (!G9?.ok || !G9.secret) bail("reviewgrant D9", G9);
+  t("a REVIEW-COPY RECIPIENT still acknowledges through the grant: the author exclusion is about the author, "
+  + "and this landing narrowed nothing else",
+    [(await ack(`draft=${D9}&secret=${encodeURIComponent(G9.secret)}`))?.acknowledgement?.kind], ["recipient"]);
+  /* AN EMPTIED STATEMENT HAS NO AUTHOR — the column is not a record of who once wrote one. */
+  {
+    const De = rP(await POST(`op=casedraft&token=${IRIS}`, { draft: D9, ...mk({ statement: "" }) }));
+    if (!De?.ok) bail("empty D9 statement", De);
+    const ce = rP(await GET(`op=reviewcopy&draft=${D9}&token=${IRIS}`));
+    t("the statement is EMPTIED: no sentence stands, so no author is recorded, and the act refuses for want of "
+    + "a statement rather than naming a stale author",
+      [ce?.statement_by, /^UNDETERMINED/.test(ce?.statement_by_stated || ""),
+       (await ack(`draft=${D9}&token=${ELLA}`))?.reason],
+      [null, true, "STATEMENT_ACK_NO_STATEMENT"]);
+  }
+  /* WHAT THIS BLOCK CANNOT DRIVE, STATED RATHER THAN SCORED ZERO. `STATEMENT_ACK_AUTHOR_UNDETERMINED` answers a
+     draft that holds a statement and NO `statement_by`. No act can produce that row on a store this code wrote:
+     every write through `op=casedraft` stamps one whenever a statement stands, and the state exists only in
+     stores written BEFORE this landing, where the migration adds the column NULL. So the arm below is a
+     TOTALITY assertion in the direction this suite can reach — every draft it has authored with a statement
+     carries an author — and it says nothing about the refusal's own text, which is exercised by no arm here.
+     The corpus is printed so a reader can see it is not empty. */
+  {
+    const list = rP(await GET(`op=casedrafts&token=${IRIS}&project=${encodeURIComponent(PROJ)}`));
+    const rows = (list?.drafts || []);
+    const withStatement = [];
+    for (const r of rows) {
+      const c = rP(await GET(`op=reviewcopy&draft=${r.draft_id}&token=${IRIS}`));
+      if (c?.authored?.statement) withStatement.push([r.draft_id, c.statement_by]);
+    }
+    console.log(`         corpus: ${rows.length} draft(s) of ${PROJ}, ${withStatement.length} holding a statement`);
+    t("TOTALITY, over a non-empty corpus: EVERY draft of this project that holds a statement carries an author "
+    + "for it — the UNDETERMINED answer is unreachable through any act on a store this code wrote",
+      [rows.length > 0, withStatement.length > 0, withStatement.filter(([, by]) => !by)],
+      [true, true, []]);
+  }
 }
 
 console.log(`\nd150-statement-acknowledgement: ${pass} pass, ${fail} fail`);
