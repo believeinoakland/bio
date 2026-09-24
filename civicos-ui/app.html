@@ -14991,7 +14991,77 @@ function queueMuteReportHtml(){
         : (n === 0 ? `None of them is on your list right now; if one comes back it stays muted for you.`
                    : `${n} of them ${n===1?"is":"are"} live, and not shown to you below.`)));
   }
-  return `<div class="q-muted"><b>${parts.join(" ")}</b> ${esc(m.detail||"")}</div>`;
+  /* UI-97 · UNDOING A MUTE, FROM THE ONE PLACE THAT KNOWS WHAT IS MUTED.
+     `op=queuemute` has taken `unmute: true` in BOTH of its forms since D-125
+     and NO CLIENT EVER SENT IT: a member could silence something from this
+     surface and had no way back, which is a door the plane opens and the app
+     kept shut. The controls belong HERE and nowhere else, because a muted item
+     is NOT IN THE FEED to carry one — this report is the only place a member's
+     own mutes are named at all.
+
+     THE TWO FORMS STAY APART, exactly as the mute's two do: `{ item,
+     unmute:true }` on its own attribute and `{ case, kinds, unmute:true }` on
+     another, so undoing one item can never be read as undoing a case. Each
+     control sends ONE call and nothing is looped.
+
+     AND THE CASE FORM NAMES ONLY THE KINDS THIS ANSWER CAN NAME. `op=queue`
+     publishes `mute.cases` as case IDS and publishes the muted KINDS nowhere;
+     the only kinds this surface can see are the ones on `suppressed[]` rows,
+     which exist for a kind that is holding something back TODAY. So a case
+     whose mute is suppressing nothing right now gets NO control and a sentence
+     saying why: an "Unmute" over kinds this page had to guess at would let back
+     in something other than what the member muted, and a control the record
+     cannot honour is worse than no control. THAT GAP IS THE PLANE'S, MINTED AS
+     D-534 and sent to SCHEDULER, not a choice taken here. */
+  const undo = [];
+  if(PLANE.me && PLANE.me.session){
+    if(cases.length) undo.push(cases.map(cid => {
+      const kinds = [...new Set(byCase.filter(s => s.case === cid).map(s => s.kind).filter(Boolean))].sort();
+      if(!kinds.length)
+        return `<div class="q-unmute q-unmute-none" data-unmutenone="${esc(cid)}">
+    <span class="q-mute-what">Nothing you muted on <span class="mono">${esc(cid)}</span> is being kept from you right now, so this page cannot name those kinds back to you — the record's answer names the case you muted and not the kinds. There is no undo control here rather than one that would let back in something other than what you chose.</span>
+  </div>`;
+      return `<div class="q-unmute q-unmute-case">
+    <button class="tbtn q-unmutebtn" data-unmutecase="${esc(cid)}" data-unmutekinds="${esc(kinds.join(","))}">Let these reach me again</button>
+    <span class="q-mute-what">Only for you, and only these: ${kinds.map(k=>`<span class="mono">${esc(k)}</span>`).join(", ")} on <span class="mono">${esc(cid)}</span>. Anything else you muted on this case stays muted, and nothing about the record changes.</span>
+    <div class="q-mute-err" data-unmutecaseerr="${esc(cid)}"></div>
+  </div>`;
+    }).join(""));
+    if(muted.length) undo.push(muted.map(id => `<div class="q-unmute q-unmute-item">
+    <button class="tbtn q-unmuteitembtn" data-unmuteitem="${esc(id)}">Let this reach me again</button>
+    <span class="q-mute-what"><span class="mono">${esc(id)}</span> — only this one, and only for you. It comes back to your list as soon as the record has it to show you.</span>
+    <div class="q-mute-err" data-unmuteitemerr="${esc(id)}"></div>
+  </div>`).join(""));
+  }
+  return `<div class="q-muted"><b>${parts.join(" ")}</b> ${esc(m.detail||"")}${undo.join("")}</div>`;
+}
+/* UI-97 · the two undo acts. Each is `queueMuteItem`/`queueMuteCase` with
+   `unmute: true` added and NOTHING else changed — the same op, the same
+   server-side member stamp, the same rule that the plane's refusal is rendered
+   rather than one composed here. */
+async function queueUnmuteItem(itemId){
+  if(QUEUE_BUSY) return; QUEUE_BUSY = true;
+  const host = document.querySelector(`[data-unmuteitemerr="${itemId}"]`);
+  try{
+    const res = await recPostR("queuemute", { item: itemId, unmute: true });
+    if(res && res.ok === false){ if(host) host.textContent = queueReason(res); return; }
+    await queueRun(["queue"]);
+  }catch(e){ if(host) host.textContent = queueReason(e); }
+  finally{ QUEUE_BUSY = false; }
+}
+/* The kinds travel on the control as the record's own slugs, comma-joined,
+   which is safe for the reason the plane states at the write: a kind is a slug
+   and MAY NOT CONTAIN A COMMA, because the stored set is comma-separated. */
+async function queueUnmuteCase(caseId, kinds){
+  if(QUEUE_BUSY) return; QUEUE_BUSY = true;
+  const host = document.querySelector(`[data-unmutecaseerr="${caseId}"]`);
+  try{
+    const named = String(kinds||"").split(",").filter(Boolean);
+    const res = await recPostR("queuemute", { case: caseId, kinds: named, unmute: true });
+    if(res && res.ok === false){ if(host) host.textContent = queueReason(res); return; }
+    await queueRun(["queue"]);
+  }catch(e){ if(host) host.textContent = queueReason(e); }
+  finally{ QUEUE_BUSY = false; }
 }
 
 /* ---- DEC-16's receipts: what became of an item that is no longer here ---- */
@@ -15216,6 +15286,11 @@ function queueWire(){
   /* UI-86: the ITEM form, on its own attribute for the same reason — a per-item
      button must never be read as a case or a kind. */
   document.querySelectorAll("#q [data-muteitem]").forEach(b=>b.onclick=()=>queueMuteItem(b.dataset.muteitem));
+  /* UI-97: the two UNDO controls, each on its own attribute for the reason the
+     mute's two are — an undo of one item must never be picked up by a selector
+     that would hand a case to the plane, and the other way round. */
+  document.querySelectorAll("#q [data-unmuteitem]").forEach(b=>b.onclick=()=>queueUnmuteItem(b.dataset.unmuteitem));
+  document.querySelectorAll("#q [data-unmutecase]").forEach(b=>b.onclick=()=>queueUnmuteCase(b.dataset.unmutecase, b.dataset.unmutekinds));
 }
 /*__QUEUE_END__*/
 

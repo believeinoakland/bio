@@ -50,6 +50,58 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v114, 2026-09-24 session, thread UI, UI-97 (a WORKER of SCHEDULER #19 under BOB #33's 21:10Z dispatch, cloud
+session). Landed on `land/worker/UI-97` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry;
+the version number is provisional, since a concurrent UI worker may take v114 on main first — renumber it at
+integration and keep both entries in full and in version order. SURFACE: **the QUEUE's mute report now carries the
+two UNDO controls, so a member can take a mute back.**
+
+**WHAT IT CLOSES.** D-125 gave `op=queuemute` `unmute: true` in BOTH forms on 2026-09-23 and UI-86 gave the member
+both ways to MUTE on 2026-09-24. Nothing ever sent the flag. So the app had a one-way door: a member could silence
+a finding or a held host from the queue and had no way back, and `NOTIFICATIONS.md`'s own front matter said so
+(*"UNMUTE … has NO surface"*).
+
+**WHERE THE CONTROLS HAD TO GO, and it is the item's one real design point.** Not on the item: a muted item is NOT
+IN THE FEED, so there is nothing there to carry a control. The mute REPORT (`queueMuteReportHtml`) is the only
+place a member's own mutes are named at all, which makes it the only place an undo can live. Each form keeps its
+own attribute — `data-unmuteitem` sends `{ item, unmute:true }`, `data-unmutecase` sends `{ case, kinds,
+unmute:true }` — for the reason UI-86 gave for the mute's two: an undo of one item must never be picked up by a
+selector that hands a case to the plane.
+
+**AND WHAT THE SURFACE CANNOT NAME IS SAID RATHER THAN GUESSED AT.** `op=queue` publishes `mute.cases` as case IDS
+and publishes the muted KINDS nowhere; the only kinds this page can see are the ones on `suppressed[]`, which exist
+for a kind holding something back TODAY. So a case whose mute is suppressing nothing gets NO undo control and a
+sentence saying why. An "Unmute" over kinds this page had to guess would let back in something other than what the
+member muted, and *a control the record cannot honour is worse than no control* (`v83`). The gap is the PLANE's and
+is minted as **D-534**, sent to SCHEDULER — not a mode this surface withheld.
+
+**THE ACCEPTS-WHEN IS AGAINST A REAL PLANE**, in a new suite rather than folded into the mock one: `queue-unmute.test.mjs`
+(19/0) runs `bio-plane/src/index.mjs` under miniflare with two enrolled members, a threaded progression under a real
+case and a real held host, and drives both round trips through the surface's own acts — mute, undo, the item back
+on the painted feed AND read back from `op=queue`, with ben's feed asserted unmoved at every stage. It is its own
+file because `notifications.test.mjs`'s fixture rule is that NOTHING IS DRAWN AT RUNTIME, and a real plane mints
+ids, instants and tokens at runtime; the two instruments cannot share a file without one of them lying about itself.
+
+**CONTROLS.** `queue-unmute.control.mjs`, five arms on the EXTRACTED script (app.html never edited): baseline 19/0;
+`noflagitem` and `noflagcase` (the row's own — omit `unmute:true`, and the plane's idempotent upsert silently
+RE-MUTES) 15/4 each, exactly the declared arms; `noreport` (no undo drawn at all — the state this item found) 17/2;
+`overstrict` (the flag as `Boolean(1)`) GREEN. `notifications.control.mjs` re-run whole with four new arms: 20 of 20
+as declared, exit 0, every restore verified by sha256 and cmp.
+
+**AND ONE CORRECTION TO A DRIVER, never an exemption.** `notifications.control.mjs` kept its pristine copies in
+`.ui45-harness/` INSIDE the worktree — two full copies of `app.html` there for the length of every run. BOB #32
+ruled on 2026-09-24 that a file in a worktree is not inert (repository-walking suites walk it, it trips `gates.mjs`
+§2e, and it makes the tree dirty, so D-293 refuses to record a GREEN verdict; three items paid for it in one night).
+The pen is now a per-run `mkdtemp` outside the worktree, and the driver's own practice line says why it moved. Its
+collision reasoning was right and is KEPT — `mkdtemp` answers it by uniqueness rather than by location.
+
+Suites, each baseline RE-MEASURED at `1a7f0bcc0` in a scratch worktree rather than taken from the brief:
+`notifications.test.mjs` 75/0 -> 86/0 (§2, eleven new assertions, and its §6 sweep floor MOVED 11 -> 22 from the
+figure the run printed — the corpus was already 18, so the floor had SEVEN phases of slack before this item added
+four); `member-respect.test.mjs` 495/0 -> 503/0 (one new `SETS` row, `queueMuteReportHtml`, which the walk finds at
+three sites, plus two ARM 4d measurements of the plane's `unmute`); `queue-unmute.test.mjs` NEW, 19/0.
+`construct-status.json` gains `12.unmute`.
+
 v113, 2026-09-24 session, thread UI, UI-92 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-92` (base `origin/main` @ `68fecb8d`), in the commit that carries this entry; the version number
 was provisional; CONDUCT #20 renumbered it v112 -> v113 at c20-batch22 because UI-100 took v112 on main. SURFACE: **the PROJECT

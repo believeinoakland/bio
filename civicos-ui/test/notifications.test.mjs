@@ -80,6 +80,15 @@
  * liar: control offered, CASE form sent) fails "…AS THE ITEM FORM"; ARM 13b (the
  * report stops reading `mute.items`) fails "…SUPPRESSION READS UNDER mute.items";
  * ARM 14 (the class rule in another spelling) stays GREEN.
+ * UI-97, RUN 2026-09-24: TWENTY arms, 20 of 20 as declared, exit 0, every restore
+ * verified by sha256 and cmp. ARM 15 (the report offers no undo — the state this
+ * item found) fails "…carries a per-item undo" and the two case arms; ARM 16 (the
+ * row's own control: the undo omits `unmute:true`, so the plane's idempotent
+ * upsert silently RE-MUTES) fails "…AS THE ITEM FORM CARRYING unmute" and both
+ * round-trip arms; ARM 16b (the case undo drawn over kinds this surface cannot
+ * see) fails "…draws NO undo control"; ARM 17 (the flag in another spelling)
+ * stays GREEN. The driver's scratch pen MOVED OUT OF THE WORKTREE in the same
+ * edit (BOB #32, 2026-09-24), which is why its own header's practice line changed.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
@@ -298,6 +307,11 @@ function makePlane(cfg){
      phase that shows the report reads `mute.items` and not only `suppressed`. */
   const MUTED_ITEMS = new Set(cfg.mutedItems || []);
   const MUTED_CASE = new Map();          // case -> Set(kinds)
+  /* UI-97: a case mute SEEDED rather than made by a call, so a case whose muted
+     kinds are holding nothing back today can be driven. That phase is the one
+     that shows what `op=queue` does NOT publish — `mute.cases` is case ids and
+     the muted KINDS are published nowhere, so the surface cannot name them. */
+  for(const [cid, kinds] of Object.entries(cfg.mutedCases || {})) MUTED_CASE.set(cid, new Set(kinds));
   /* THE BODY IS READ, NOT ONLY THE QUERY. `op=proposedispose` is a POST and its
      key, disposition and reason travel in the JSON body — a mock reading only
      `searchParams` would receive three undefineds and answer happily, which is
@@ -356,16 +370,37 @@ function makePlane(cfg){
         const cls = /^(FINDING|CONDITION)::/.exec(item);
         if(!cls) return R({ ok:false, reason:"KIND_NOT_PERSONAL", item, kind_class:"OBLIGATION",
           detail:"an obligation leaves every list only when it is resolved" });
+        /* UI-97: D-125's `unmute` mirrored. This mock carried the MUTE half
+           only, which would have let an undo control "pass" against a plane
+           that never undid anything — an equality that costs nothing. The real
+           `queueMute` DELETEs the row for the item form and takes the
+           DIFFERENCE for the case form; both are reproduced. */
+        if(body.unmute === true){
+          const had = MUTED_ITEMS.delete(item);
+          return R({ ok:true, member:"m_alice", form:"item", item, item_class:cls[1],
+                     added:[], removed: had ? [item] : [], muted_items:[...MUTED_ITEMS].sort() });
+        }
         MUTED_ITEMS.add(item);
         return R({ ok:true, member:"m_alice", form:"item", item, item_class:cls[1],
-                   muted_items:[...MUTED_ITEMS].sort() });
+                   added:[item], removed:[], muted_items:[...MUTED_ITEMS].sort() });
       }
       const bad = kinds.find(k => !["CONDITION","FINDING"].includes(classOfKind(k)));
       if(!body.case || !kinds.length || bad) return R({ ok:false, reason:"KIND_NOT_PERSONAL", kind:bad || null,
         kind_class: bad ? classOfKind(bad) : null, detail:"an obligation leaves every list only when it is resolved" });
       if(!MUTED_CASE.has(body.case)) MUTED_CASE.set(body.case, new Set());
-      for(const k of kinds) MUTED_CASE.get(body.case).add(k);
-      return R({ ok:true, member:"m_alice", case:body.case, muted_kinds:[...MUTED_CASE.get(body.case)].sort() });
+      const held = MUTED_CASE.get(body.case);
+      if(body.unmute === true){
+        const removed = kinds.filter(k => held.delete(k));
+        /* `#queueMutes` only lists a case whose set is NON-EMPTY, so a case
+           unmuted down to nothing leaves `mute.cases` — the plane's own shape. */
+        if(held.size === 0) MUTED_CASE.delete(body.case);
+        return R({ ok:true, member:"m_alice", case:body.case, added:[], removed,
+                   muted_kinds:[...(MUTED_CASE.get(body.case) || [])].sort() });
+      }
+      const added = kinds.filter(k => !held.has(k));
+      for(const k of kinds) held.add(k);
+      return R({ ok:true, member:"m_alice", case:body.case, added, removed:[],
+                 muted_kinds:[...held].sort() });
     }
     if(op === "proposedispose"){
       DISPOSED.add(String(p.key || ""));
@@ -434,6 +469,8 @@ const EXPORTS = ";globalThis.__PLANE=PLANE;globalThis.__renderQueue=renderQueue;
   + "globalThis.__keyed=notifDispositionKeyed;globalThis.__grain=notifOptionsGrainHtml;"
   + "globalThis.__entry=notifBasisEntryHtml;globalThis.__absence=notifAbsenceHtml;"
   + "globalThis.__mutable=queueMutableKinds;globalThis.__muteItem=queueMuteItem;"
+  + "globalThis.__muteCase=queueMuteCase;globalThis.__unmuteItem=queueUnmuteItem;"
+  + "globalThis.__unmuteCase=queueUnmuteCase;"
   + "globalThis.__stanceOpen=stanceOpen;globalThis.__stanceSend=stanceSend;"
   + "globalThis.__stanceRoute=stanceRouteFromHash;globalThis.__STANCE=()=>STANCE;"
   + "globalThis.__STANCE_ASK=STANCE_ASK;globalThis.__STATE_WORD=VREV_STATE_WORD;"
@@ -604,6 +641,83 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
      + "this member if it comes back, and the page says so",
      /You asked not to be notified about 1 item one at a time/.test(h5)
      && /It is not on your list right now; if it comes back it stays muted for you/.test(h5));
+
+  /* ======================= UI-97 · AND IT CAN BE UNDONE =======================
+     The row: `op=queuemute` has taken `unmute:true` for `{item}` and for
+     `{case,kinds}` since D-125 and NO CLIENT SENT IT, so a member could silence
+     something here and had no way back. The controls are in the REPORT and
+     nowhere else, because a muted item is not in the feed to carry one — this
+     block is the only place a member's own mutes are named at all.
+
+     THE MOCK'S `unmute` WAS BUILT IN THE SAME EDIT as these arms, and it had to
+     be: a mock that took the flag and undid nothing would make an undo control
+     pass while the member stayed silenced, which is an equality that costs
+     nothing to produce (CLAUDE.md §5). It mirrors `queueMute`'s own two halves —
+     DELETE for the item form, DIFFERENCE for the case form. */
+  ok("§2 the mute REPORT carries a per-item undo, keyed on the muted item's own published id",
+     /data-unmuteitem="FINDING::out-of-inquiry-lead::CR-2026-0031"/.test(afterMute));
+  ok("§2 and it is WIRED to the undo act — a control drawn and never bound is worse than none",
+     /querySelectorAll\("#q \[data-unmuteitem\]"\)\.forEach\(b=>b\.onclick=\(\)=>queueUnmuteItem\(b\.dataset\.unmuteitem\)\)/.test(APPTXT));
+  const beforeUn = plane.CALLS.length;
+  await ctx.__unmuteItem("FINDING::out-of-inquiry-lead::CR-2026-0031");
+  const un = plane.CALLS.slice(beforeUn).filter(c => c.op === "queuemute");
+  ok("§2 the undo REACHES op=queuemute AS THE ITEM FORM CARRYING unmute — the body is exactly "
+     + "{ item, unmute:true }: no case, no kinds, no member, and the flag is a real true",
+     un.length === 1 && JSON.stringify(Object.keys(un[0].body).sort()) === '["item","unmute"]'
+     && un[0].body.item === "FINDING::out-of-inquiry-lead::CR-2026-0031" && un[0].body.unmute === true);
+  const afterUn = keep("the lead after its item mute was undone", q(ctx));
+  ok("§2 ACCEPTS (the mock half): the unmuted lead REACHES THIS MEMBER AGAIN — it is back in the feed",
+     afterUn.includes('data-id="FINDING::out-of-inquiry-lead::CR-2026-0031"'));
+  ok("§2 and the report stops naming it, because nothing is being kept from this member any more",
+     !/You asked not to be notified about/.test(afterUn) && !/data-unmuteitem=/.test(afterUn));
+
+  /* THE CASE FORM. Muting the case names the kinds PRESENT on it; the undo names
+     the kinds this answer can still SEE, which is what the report is allowed to
+     claim and no more. */
+  const p6 = makePlane({ items:[LEAD("absent")] });
+  const c6 = boot(p6);
+  await c6.__renderQueue();
+  await c6.__muteCase(INQ_B);
+  const h6 = keep("a case mute of the lead's kind, reported with its undo", q(c6));
+  ok("§2 the report carries a per-case undo naming the case AND the kinds it can see, on its own "
+     + "attribute so an undo of one item can never be read as an undo of a case",
+     /data-unmutecase="INQ-2026-0002"/.test(h6) && /data-unmutekinds="out-of-inquiry-lead"/.test(h6)
+     && !/data-unmuteitem=/.test(h6));
+  ok("§2 and the per-case undo is WIRED, carrying the kinds the control names",
+     /querySelectorAll\("#q \[data-unmutecase\]"\)\.forEach\(b=>b\.onclick=\(\)=>queueUnmuteCase\(b\.dataset\.unmutecase, b\.dataset\.unmutekinds\)\)/.test(APPTXT));
+  const before6 = p6.CALLS.length;
+  await c6.__unmuteCase("INQ-2026-0002", "out-of-inquiry-lead");
+  const un6 = p6.CALLS.slice(before6).filter(c => c.op === "queuemute");
+  ok("§2 the case undo REACHES op=queuemute AS THE CASE FORM CARRYING unmute — { case, kinds, "
+     + "unmute:true } and nothing else, the kinds being exactly the ones the control named",
+     un6.length === 1 && JSON.stringify(Object.keys(un6[0].body).sort()) === '["case","kinds","unmute"]'
+     && un6[0].body.case === "INQ-2026-0002" && un6[0].body.unmute === true
+     && JSON.stringify(un6[0].body.kinds) === '["out-of-inquiry-lead"]');
+  const after6 = keep("the case mute undone", q(c6));
+  ok("§2 ACCEPTS (the case form): the lead reaches this member again and the report is gone",
+     after6.includes('data-id="FINDING::out-of-inquiry-lead::CR-2026-0031"')
+     && !/data-unmutecase=/.test(after6));
+
+  /* WHAT THE SURFACE CANNOT NAME, SAID RATHER THAN GUESSED AT. `op=queue`
+     publishes `mute.cases` as case IDS and publishes the muted KINDS nowhere, so
+     the only kinds this page can see are the ones on `suppressed[]` — which exist
+     for a kind holding something back TODAY. A case whose mute is suppressing
+     nothing gets NO control: an "Unmute" over kinds this page had to guess would
+     let back in something other than what the member muted, and a control the
+     record cannot honour is worse than none (`CIVICOS_UI_STATE.md` v83). The gap
+     is the plane's and is minted as D-534. */
+  const p7 = makePlane({ items:[CONDITION], mutedCases:{ [INQ_B]: ["out-of-inquiry-lead"] } });
+  const c7 = boot(p7);
+  await c7.__renderQueue();
+  const h7 = keep("a case mute whose kinds are holding nothing back today", q(c7));
+  ok("§2 a case mute the report cannot name the kinds of draws NO undo control, and says WHY — the "
+     + "record's answer names the case and not the kinds, so nothing is guessed at",
+     /data-unmutenone="INQ-2026-0002"/.test(h7) && !/data-unmutecase=/.test(h7)
+     && /cannot name those kinds back to you/.test(h7)
+     && /names the case you muted and not the kinds/.test(h7));
+  ok("§2 INSTRUMENT: and that phase really is the one with a case mute and no suppression — the "
+     + "report still reports the mute itself, so the silence is about the CONTROL and not the block",
+     /You muted kinds on 1 case/.test(h7) && /none of the kinds you muted is on your list/.test(h7));
 }
 
 /* ====== 3. DERIVED, AGGREGATED, AND AGED RATHER THAN VANISHED (§6.4) ====== */
@@ -842,8 +956,17 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
      that was actually reaching members (D-269). Consuming the derived family
      STRICTLY WIDENS what this sweep sees; nothing it caught before is lost. */
   console.log("  " + reachLine());
-  ok("§6 REACH: the sweep has a corpus — " + PHASES.length + " phases were kept, floor 11 "
-     + "(a sweep over nothing reports clean)", PHASES.length >= 11);
+  /* PRINTED, not only asserted: a corpus a reader cannot see is a reach nobody
+     can check (WORKER.md, "print your corpus size and reach"). */
+  console.log(`  §6 corpus: ${PHASES.length} phase(s) swept — ${PHASES.map(([w]) => w).join(" · ")}`);
+  /* FLOOR MOVED 2026-09-24 by UI-97, FROM THE FIGURE THIS RUN PRINTED and never
+     by adding to the number in the file. It read 11 over a corpus of 18 — seven
+     phases of slack, accumulated since UI-45 wrote it, so it was not a ratchet
+     and had not been one for some time. UI-97's four undo phases take the corpus
+     to 22, which is what this floor now is (CLAUDE.md §5; WORKER.md "DEC-49 and
+     the floors"). */
+  ok("§6 REACH: the sweep has a corpus — " + PHASES.length + " phases were kept, floor 22 "
+     + "(a sweep over nothing reports clean)", PHASES.length >= 22);
   ok("§6 INSTRUMENT: the fixture really does carry the banned words, so a surface that printed the "
      + "record's own labels would be caught here rather than passing for free",
      analystHits(LEAKY_LABEL).length > 0);
