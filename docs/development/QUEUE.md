@@ -191,7 +191,7 @@ accepts-when: `bio-plane/test/proposedispose.test.mjs` gains an arm: a dispositi
 added: 2026-09-23 · SCHEDULER #16 (D-128's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs REC`).
 owed-at-integration: BOB #32 ruling 2026-09-24 ~03:14Z (Framework §8.2) — a disposition binds the definition version the member SAW: the act carries definitionVersion; if the definition has moved since, it is refused DEFINITION_MOVED by name, and the member re-reads and acts again. Authored acts bind what was authored. The worker's proposed fix is right; build it. Actor: c20-integ1 (session_011vBzoPQBRZGhdLUxxiXzPG), paid on land/conduct/c20-integ1; BOB folds it into Framework §8.2. Sent by CONDUCT #20.
 
-### D-453 · running — SPAWNED 2026-09-24 ~03:12Z by CONDUCT #20 as a FRESH SEPARATE CLOUD SESSION (network FULL) titled WORKER D-453 (CONDUCT #20), base origin/main 548eb2c5, a measurement lane beside the eight; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-453 and that session; never conclude queued from the absence alone.
+### D-453 · integrated — finished; integrated on land/conduct/c20-batch15 @ 9cde34b9f, on its train — flipped by CONDUCT #20 2026-09-24 ~05:18Z
 order: AT THE HEAD (Bob set the environment network to FULL ~03:02Z; BOB #32 03:05Z: *place it at the head as a measurement that can finish before the 06:00Z wind-down*; SCHEDULER #18); was: after D-64, a measurement blocked on the environment; its results feed BOB's three recogniser designs (SCHEDULER #17, 2026-09-23; D-74's worker via CONDUCT #18 22:58Z)
 milestone: M0 (a measurement for M4's identifier spaces)
 interface: none — measurements.
@@ -282,7 +282,7 @@ scope: route each code's sites through ONE governed helper inside a DEC-49 REGIO
 accepts-when: each site's refusal carries its translation. NEGATIVE CONTROL: mint one site's code outside the helper and the DEC-49 guard fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### M0-143 · running — SPAWNED 2026-09-24 ~04:20Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-143 (CONDUCT #20), base origin/main, into D-470's freed slot; carries D-470's measurement (30 of 72 doc-facing suites by a comment mention alone) and its second site toolReachesDocs(); push by 05:45Z. Falsify rather than believe: read the branch land/worker/M0-143 and that session; never conclude queued from the absence alone.
+### M0-143 · integrated — finished; integrated on land/conduct/c20-batch15 @ fce988085, on its train — flipped by CONDUCT #20 2026-09-24 ~05:18Z
 order: after M0-142, the same class: gate time on every doc landing (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:37Z)
 milestone: M0
 interface: none.
@@ -292,7 +292,7 @@ scope: strip `//` and `/* */` comments from `src` and `ctrlSrc` before matching;
 accepts-when: `gates.mjs --explain` on a prose diff lists fewer suites. NEGATIVE CONTROL: a suite whose only `tools/x.mjs` mention is in a comment is doc-facing before the fix and not after, named by the arm.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-493 · running — SPAWNED 2026-09-24 ~04:23Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-493 (CONDUCT #20), base land/worker/D-166 @ 05ec142e (the probe's changes), into D-487's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-493 and that session; never conclude queued from the absence alone.
+### D-493 · integrated — finished; integrated on land/conduct/c20-batch15 @ 01815614a, on its train — flipped by CONDUCT #20 2026-09-24 ~05:18Z
 order: at the backlog head: a published figure's bucket is wrong in the direction of overclaiming a need, and the fix is small enough for tonight's window (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:41Z)
 milestone: M0 (a measurement instrument)
 interface: none.
@@ -302,7 +302,7 @@ scope: in `classify()`, before the NO-TEXT-LAYER branches, return `ENCRYPTED` wh
 accepts-when: the two named documents classify ENCRYPTED and the rollup counts them. NEGATIVE CONTROL: drop the branch and both read NO-TEXT-LAYER, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### M0-144 · running — SPAWNED 2026-09-24 ~04:25Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-144 (CONDUCT #20), base origin/main, into UI-84's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/M0-144 and that session; never conclude queued from the absence alone.
+### M0-144 · integrated — finished; integrated on land/conduct/c20-batch15 @ 6dd9d4f6f, on its train — flipped by CONDUCT #20 2026-09-24 ~05:18Z
 order: after M0-143, with the instrument rows: a guard with a blind spot, not yet bitten (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:38Z)
 milestone: M0
 interface: none.
@@ -312,7 +312,7 @@ scope: `/(?:^|[{,\s])(["']?)([A-Z][A-Z0-9_]{2,})\1\s*:/g` with `.map(x => x[2])`
 accepts-when: a 3-key fixture with quoted keys returns all three. NEGATIVE CONTROL: restore the old pattern and the quoted-key arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### DIST-9 · running — 2026-09-24 ~03:52Z by CONDUCT #20: built by DIST #6 itself (session_01Vi1XTVwxcBBMStifuBasLZ), not a CONDUCT worker; base origin/main 16fe1e7f; no release until Bob asks; push land/dist/DIST-9 by 05:45Z. Falsify rather than believe: read DIST's branch and session; never conclude queued from the absence alone.
+### DIST-9 · integrated — finished; integrated on land/conduct/c20-batch15 @ da1324814 (IC-261, I4 MINOR 2.2.0), on its train — flipped by CONDUCT #20 2026-09-24 ~05:18Z
 order: after D-484: the dependent half of a landed ruling, whose plane half (D-260) reads a secret nothing places; DIST builds it, no release until Bob asks (SCHEDULER #18, 2026-09-24; DIST #6 03:06Z)
 milestone: M8
 interface: I8 additive — the installer takes an optional operator-supplied value; the integrator classifies.
