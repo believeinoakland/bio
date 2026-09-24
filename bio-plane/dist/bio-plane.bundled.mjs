@@ -20348,6 +20348,73 @@ function callerSuppliedHopFacts(body) {
   if (!body || typeof body !== "object") return [];
   return DRIVE_HOP_FACT_KEYS.filter((k) => Object.prototype.hasOwnProperty.call(body, k));
 }
+var HTML_TYPE = /^\s*(text\/html|application\/xhtml\+xml)\s*(;|$)/i;
+function driveBaselineRow(rows, drive, locator) {
+  const docs = (Array.isArray(rows) ? rows : []).filter((d) => d && typeof d.locator === "string");
+  return (drive && drive.harvestable ? docs.find((d) => d.locator === drive.exportAddress) : null) || docs.find((d) => d.locator === locator) || null;
+}
+function classifyDriveBaseline({ drive, locator, rows, retrievals = [] }) {
+  const row = driveBaselineRow(rows, drive, locator);
+  if (!row) return {
+    verdict: "no_baseline",
+    baseline: null,
+    basis: "the register holds no row naming the document or its export address, so there is no baseline to judge"
+  };
+  const profile = row.profile && typeof row.profile === "object" ? row.profile : {};
+  const format = profile.format && typeof profile.format === "object" && typeof profile.format.format === "string" ? profile.format.format : null;
+  const declared = typeof profile.source_content_type === "string" ? profile.source_content_type : typeof row.capture?.content_type === "string" ? row.capture.content_type : null;
+  const kind = typeof profile.document_kind === "string" ? profile.document_kind : null;
+  const htmlSaid = format === "html" || declared !== null && HTML_TYPE.test(declared) || kind === "shell";
+  const docSaid = !htmlSaid && format !== null && format !== "html" && format !== "undetermined";
+  const fetched = (Array.isArray(retrievals) ? retrievals : []).map((r) => r.via && r.via !== "direct" ? { via: r.via, at: r.retrieval_locator || null } : { via: "direct", at: r.retrieval_locator || r.address || null });
+  const fromExport = fetched.some((f2) => f2.via === "direct" && f2.at === drive.exportAddress);
+  const fromPage = fetched.some((f2) => f2.via === "direct" && f2.at && f2.at !== drive.exportAddress);
+  const fetchedAddress = fromExport ? drive.exportAddress : (fetched.find((f2) => f2.via === "direct" && f2.at) || {}).at || null;
+  const facts = {
+    baseline: {
+      sha256: row.capture?.sha256 || null,
+      locator: row.locator,
+      retrieved: typeof row.retrieved === "string" ? row.retrieved : null
+    },
+    handler: typeof profile.handler === "string" ? profile.handler : null,
+    document_kind: kind,
+    format,
+    declared_content_type: declared,
+    fetched_address: fetchedAddress,
+    fetched_record: fetched.length ? fromExport && fromPage ? "both" : fromExport ? "export" : fromPage ? "page" : "other" : "none"
+  };
+  const said = htmlSaid ? "the register's profile says HTML" : docSaid ? `the register's profile says ${format}` : "the register's profile names no format";
+  if (fromExport && !fromPage) return {
+    verdict: htmlSaid ? "undetermined" : "export",
+    ...facts,
+    basis: htmlSaid ? `the plane recorded fetching the export address, but ${said}; the two disagree and neither is taken over the other` : `the plane recorded fetching the export address ${drive.exportAddress} (CAP-8), and ${said}`
+  };
+  if (fromPage && !fromExport) return {
+    verdict: docSaid ? "undetermined" : "shell",
+    ...facts,
+    basis: docSaid ? `the plane recorded fetching ${fetchedAddress}, not the export, but ${said}; the two disagree and neither is taken over the other` : `the plane recorded fetching ${fetchedAddress}, not the export address \u2014 Google serves the application there, not the document \u2014 and ${said}`
+  };
+  if (fromExport && fromPage) return {
+    verdict: "undetermined",
+    ...facts,
+    basis: `the plane recorded these bytes from BOTH the export and ${fetchedAddress}; which one the baseline is cannot be told`
+  };
+  if (row.locator === drive.exportAddress && !htmlSaid) return {
+    verdict: "export",
+    ...facts,
+    basis: `the register row names the export address and ${said}; the plane holds no retrieval record for these bytes`
+  };
+  if (htmlSaid && row.locator !== drive.exportAddress) return {
+    verdict: "shell",
+    ...facts,
+    basis: `${said} for a row at the document address; the plane holds no retrieval record for these bytes, so this rests on the register alone`
+  };
+  return {
+    verdict: "undetermined",
+    ...facts,
+    basis: `the plane holds no direct retrieval record for these bytes and ${said}`
+  };
+}
 
 // src/affordances.mjs
 var DISPOSITIONS = ["deferred", "dismissed"];
@@ -44785,6 +44852,102 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
          FROM bundles b WHERE (${gate.sql}) ORDER BY b.bundle_id`,
         ...gate.args
       )
+    };
+  }
+  /** D-525 — THE DRIVE SHELL SWEEP. Every bundle this viewer may see whose
+   *  `source.locator` is a harvestable Drive DOCUMENT address, with its baseline
+   *  classified by `classifyDriveBaseline` (`drive.mjs` carries the reasoning).
+   *  READ-ONLY: it lists and names the remedy, and never re-acquires — the
+   *  re-acquire is `op=acquire` on the document address, which CAP-8 routes
+   *  through the export and files as a NEW capture beside the old one.
+   *
+   *  WHAT THIS SWEEP CAN AND CANNOT SEE, stated because the sentence is
+   *  load-bearing: it sees bundles by the PROJECTED `source_locator` column
+   *  (`projectionOf`), so a bundle whose projection was never written is not
+   *  walked, and it sees a register only when `data/provenance.json` is held
+   *  INLINE (a register spilled to R2 is named in `unreadable`, never scored).
+   *  A Drive address that is not a document (folder, file, published, unknown)
+   *  is COUNTED in `not_documents` by shape — CAP-8 refuses to watch those, so
+   *  they carry no shell baseline this remedy could fix. */
+  driveShells({ viewer = null } = {}) {
+    const gate = viewerPredicate(viewer);
+    const rows = this.#rows(
+      `SELECT b.bundle_id AS id, b.source_locator AS locator, b.monitor_enabled AS monitored
+         FROM bundles b WHERE b.source_locator IS NOT NULL AND (${gate.sql}) ORDER BY b.bundle_id`,
+      ...gate.args
+    );
+    const out = {
+      swept: rows.length,
+      drive: 0,
+      shells: [],
+      export: [],
+      undetermined: [],
+      no_baseline: [],
+      unreadable: [],
+      not_documents: {}
+    };
+    for (const r of rows) {
+      const drive = readDriveAddress(r.locator);
+      if (!drive) continue;
+      out.drive++;
+      if (!drive.harvestable) {
+        out.not_documents[drive.shape] = (out.not_documents[drive.shape] || 0) + 1;
+        continue;
+      }
+      const f2 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, r.id);
+      const base = {
+        bundle: r.id,
+        locator: r.locator,
+        monitored: r.monitored === 1,
+        export_address: drive.exportAddress,
+        kind: drive.kind
+      };
+      let reg = null;
+      if (f2 && typeof f2.content === "string") {
+        try {
+          reg = JSON.parse(f2.content);
+        } catch {
+          reg = null;
+        }
+      } else if (f2) {
+        out.unreadable.push({ ...base, reason: "the register is not held inline" });
+        continue;
+      }
+      if (f2 && !reg) {
+        out.unreadable.push({ ...base, reason: "the register is not parsable JSON" });
+        continue;
+      }
+      const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
+      const row = driveBaselineRow(docs, drive, r.locator);
+      const sha = row && row.capture && typeof row.capture.sha256 === "string" ? row.capture.sha256 : null;
+      const retrievals = sha ? this.#rows(
+        `SELECT address, via, retrieval_locator FROM captured_locators WHERE capture_sha=?`,
+        sha
+      ) : [];
+      const c = classifyDriveBaseline({ drive, locator: r.locator, rows: docs, retrievals });
+      const entry = { ...base, ...c };
+      if (c.verdict === "shell")
+        entry.reacquire = {
+          op: "acquire",
+          locator: r.locator,
+          fetches: drive.exportAddress,
+          files: "a NEW capture of the export, under the document address, beside the shell's; nothing is overwritten",
+          then: "append the answer's `document` to data/provenance.json \u2014 op=monitor prefers the row naming the export address"
+        };
+      ({ shell: out.shells, export: out.export, undetermined: out.undetermined, no_baseline: out.no_baseline })[c.verdict].push(entry);
+    }
+    return {
+      ok: true,
+      generated: (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z",
+      ...out,
+      counts: {
+        drive: out.drive,
+        shells: out.shells.length,
+        export: out.export.length,
+        undetermined: out.undetermined.length,
+        no_baseline: out.no_baseline.length,
+        unreadable: out.unreadable.length
+      }
     };
   }
   /** REC-25: may this viewer see this bundle at all? The D-15 predicate over a
@@ -74860,6 +75023,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer")
         }),
         index: () => this.buildIndex({ viewer: url.searchParams.get("viewer") }),
+        /* D-525: the Drive shell sweep, under the same D-15 stamp as the index. */
+        driveshells: () => this.driveShells({ viewer: url.searchParams.get("viewer") }),
         /* REC-25: the gated backlink read — reverse edges into a bundle,
            filtered by the viewer's position (7.9). */
         backlinks: () => this.backlinks({
@@ -77600,6 +77765,12 @@ var OPS = {
      the D-15 viewer stamp in the store, never by the class here — the same line
      `airuns` draws two rows down. */
   frontier: { classes: ["admin", "member", "probe"], mutating: false },
+  /* D-525 — THE DRIVE SHELL SWEEP: which Drive-linked bundles hold a baseline
+     captured from Google's application page rather than the export (a pre-CAP-8
+     acquire), so their monitor reads `modified` on every tick. A READ that lists
+     and names the remedy; it never re-acquires. Classes and the D-15 stamp are
+     op=index's, because it walks the same working corpus and names bundle ids. */
+  driveshells: { classes: ["admin", "member", "probe"], mutating: false },
   /* REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS READ (`OBSERVATION-LOG-DESIGN.md`
      section 4.2, section 6 row 2): *which of the four content-axis states is this
      capture in, and why*. A READ, so `mutating: false`.
@@ -83551,7 +83722,7 @@ var index_default = {
       "projectvisibility",
       "projectdirectory"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
