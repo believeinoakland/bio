@@ -3929,6 +3929,45 @@ CREATE TABLE IF NOT EXISTS render_allowance (
   last_at    TEXT NOT NULL
 );
 
+-- REC-195 (D-149's remaining half, BIO_Case_Making_v0_1.md §2): A MACHINE'S
+-- PROPOSAL OF THE LAWS GOVERNING AN ACTION, STORED APART FROM THE MEMBER'S LIST.
+--
+-- D-149: *the machine may propose the list from the counterparty, labelled as
+-- machine work, and never sets it*. THE WHOLE POINT OF THIS TABLE IS THE WORD
+-- APART. The member's list lives in the action's own frontmatter
+-- (governing_laws[], set by op=actionlaws and by nothing else, C-73.1), and a
+-- proposal that shared that home would BE the list the moment anything read the
+-- document -- the overclaim this row exists to refuse. So a proposal is not a
+-- projection of the bytes, nothing writes it into them, and no read composes the
+-- two: op=projection's action block serves governing_laws and
+-- governing_laws_proposals as two separate answers, each saying whose it is.
+--
+-- KEYED (bundle_id, proposed_by, ord): ONE STANDING PROPOSAL PER PROPOSER, its
+-- citations ordered as proposed. A proposer restating replaces its own rows and
+-- nobody else's, which is themes' hunch discipline one construct over: the
+-- record keeps who proposed what, and two machines proposing different lists is
+-- two proposals rather than one overwriting the other.
+--
+-- NOTHING HERE IS DERIVED FROM THE COUNTERPARTY BY THIS PLANE. The proposer
+-- supplies the citations and the levels, and the plane stores them under that
+-- proposer's name and encodes no law's rules (D-149), which is why there is no
+-- column mapping an agency to a law.
+--
+-- Carries bundle_id, so it clears in BOTH purge arms through the TABLES list
+-- (D-113), and hygiene.test.mjs holds that list against this file. A proposal
+-- outliving the action it was made against would attach itself to whatever
+-- bundle was next allocated that id -- somebody else's request wearing a
+-- machine's citations.
+CREATE TABLE IF NOT EXISTS action_law_proposals (
+  bundle_id   TEXT NOT NULL,   -- the action
+  proposed_by TEXT NOT NULL,   -- the control plane's stamp: class:<cls>, class:ai/<tokenId>, or a member handle
+  ord         INTEGER NOT NULL,-- position in the proposed list
+  level       TEXT NOT NULL,   -- one of LAW_LEVELS, judged before the write
+  citation    TEXT NOT NULL,   -- as the proposer wrote it, and never parsed for a rule
+  proposed_at TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, proposed_by, ord)
+);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

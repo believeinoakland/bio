@@ -38,6 +38,23 @@
  * uses for its published-value audit). It is a FLOOR on the class, not a ceiling,
  * which is why the behavioural arms above carry the weight.
  *
+ * RE-RUN IN FULL 2026-09-24 BY D-506, BECAUSE D-506 CHANGED THIS SUITE (`CLAUDE.md` §5: re-run the
+ * subject's negative control after changing it — a suite coupled to behaviour survives a refactor that
+ * disarms a control coupled to shape). D-506 gave arm B an INSTANCE_NAME binding and one new arm, so the
+ * baseline moved 45 -> 46. All three arms below were re-run with `control.sh` (adapted only in its shebang,
+ * its `cd` and its scratch paths, this machine having no zsh and a SHARED /tmp — see WORKER.md), and
+ * **EVERY ARM BIT AT EXACTLY ITS RECORDED STRENGTH: the FAILURE counts are identical to 2026-09-14's and
+ * only the PASS count rose, by the one arm added.** Arm 1: 35/10 -> 36/10, the same ten, arm B still 0 as
+ * declared. Arm 2: 42/3 -> 43/3, the same three. Arm 3: 41/4 -> 42/4, the same four. Baseline and every
+ * post-restore run 46/46, exit 0; `src/store.mjs` restored IDENTICAL
+ * (736ebdd3e4ebb225178b267c0a2c134ea5e60c2071e34e36377aa1c7aadb1cfc, 3,222,501 B) and `src/index.mjs`
+ * IDENTICAL (595c23dc62de1d6170989a72768fe009fa9f09b95a6a9bbdeadfda587b13a703, 802,790 B).
+ * **A RESULT WORTH STATING RATHER THAN ASSUMING:** D-506's two new livefire arms in arm B did NOT fail
+ * under arm 1 or arm 3, which is correct and is the suite's own THIRD TRUTH — `op=livefire` reads `env`
+ * directly, so neither healing selection nor healing the selftest report can quiet it. D-506's own three
+ * arms, in `src/livefire.mjs`, are recorded on `test/installer.test.mjs`'s NEGATIVE CONTROL line; under
+ * them this suite read 45/1 twice and 46/46 once, failing only the arm declared each time.
+ *
  * NEGATIVE CONTROL: RUN 2026-09-14, three arms, each armed ALONE, others held
  * open, on the real source with a uniquely-named per-arm pristine copy taken
  * first and the restore verified by sha256 AND `cmp` with a printed byte count
@@ -153,6 +170,14 @@ function instance(bindings) {
       GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0",
       /* Pinned far out of the test window: only the hand-driven onAlarm ticks. */
       MONITOR_TICK_MS: "3600000",
+      /* ADDED BY D-506, and found by it. This fixture bound no INSTANCE_NAME, so its store records no
+         producing group and D-436 (IC-172) has it REFUSE the canary's creation by name (C-64.1) — so
+         `op=livefire` here failed FOURTEEN assertions, thirteen of them that cascade and nothing to do
+         with the credential this suite is about. Nothing said so, because `livefire`'s answer was a
+         bare `ok:false` until D-506 gave it `failing`. Every install binds INSTANCE_NAME (D-102), so
+         binding it is what makes this fixture an instance rather than a store no install produces, and
+         it lets arm B pin the canary's failure as the EXACT set it claims to be about. */
+      INSTANCE_NAME: "d334-fixture",
       ...bindings,
     },
     serviceBindings: { SELF: async (request) => MF.dispatchFetch(request) },
@@ -280,7 +305,14 @@ t("and every live fixture really is live, so a green arm is not green by acciden
     console.log("\n--- arm B (cont.): the THIRD truth — livefire still fails on the binding by NAME ---");
     const lf = await (await mf.dispatchFetch(`http://x/api/?op=livefire&token=${LIVE_PROBE}`)).json();
     const a = lf.assertions.find((x) => x.name === "no configured token is a published repository value");
-    t("livefire goes red on the published daemon binding", [lf.ok, a.ok], [false, false]);
+    /* CORRECTED BY D-506 (IC-265), never exempted: `lf.ok` was the canary's VERDICT and is now the op
+       ANSWERING, so the old pin's `false` would have been testing that the op refused — which it never
+       did. The truth this arm states is unchanged: the canary goes red on the published daemon binding
+       AND says which assertion. `failing` is read here as well, because the finding this arm exists to
+       carry is the NAME of the credential defect, not the colour. */
+    t("livefire goes red on the published daemon binding", [lf.ok, lf.verdict, a.ok], [true, "fail", false]);
+    t("and the verdict NAMES the token-hygiene assertion",
+      lf.failing, ["no configured token is a published repository value"]);
     t("naming the BINDING, never the value", JSON.stringify(a.got), JSON.stringify(["DAEMON_TOKEN"]));
     t("and the livefire answer never contains the value",
       JSON.stringify(lf).includes(DEAD_DAEMON), false);

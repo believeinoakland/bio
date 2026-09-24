@@ -1524,8 +1524,16 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
      no single row source carries it. Same disposition as the other ten: D-369's, not this suite's, and named
      here so it cannot arrive ungraded and invisible. It is CUT GRADED at the published cap by the arm below,
      with ZERO violations — the direction that says the cut and the claim agree. */
+  /* A TWELFTH DECLARED 2026-09-24 by REC-195, READ FROM THIS ARM'S OWN FAILURE OUTPUT (it FAILED and NAMED the
+     arrival, which is what this pin is for) — `#lawProposalsFor:all`, the `truncated` on an action's
+     governing-law PROPOSALS. WHY IT CANNOT BE GRADED HERE: the rows ARE read under a SQL `LIMIT ?` sized
+     `(cap + 1) * GOVERNING_LAWS_MAX + 1`, but `truncated` is not a property of that read — it is measured over
+     `all`, the PROPOSALS those rows are grouped into, one per proposer, and a proposer holds however many
+     citations it proposed. So the figure is assembled in memory from one bounded read and no single row source
+     carries it, exactly `projectDirectory:projects`' disposition one entry up. It is CUT GRADED at the
+     published cap by the arm below, with ZERO violations. */
   ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
-   "#frontierMeaning:never", "#frontierPage:gated", "biasInhale:bars",
+   "#frontierMeaning:never", "#frontierPage:gated", "#lawProposalsFor:all", "biasInhale:bars",
    "documentsNamingEntity:merged", "frontier:never", "projectDirectory:projects",
    "queueFeed:dispAll", "queueFeed:items"]);
 const noRowSources = CODE.replace(/#rows\(/g, "#norows(");
@@ -1713,7 +1721,10 @@ t("IN-MEMORY TRUNCATION: and the SOURCE BOUND is reported as TWO rosters, never 
 + "An instrument that cannot reach something must SAY SO by name rather than pass silently over "
 + "it, which is this block's entire content",
   [INMEM.source.graded.length + INMEM.source.outOfReach.length, INMEM.source.graded.length > 0],
-  [11, true]);  /* REC-92: 8 -> 9, `#contentAxisTally:raw`. Moved from the figure the
+  [12, true]);  /* REC-195 (2026-09-24): 11 -> 12, `#lawProposalsFor:all`, MOVED FROM THE FIGURE THIS
+                   INSTRUMENT PRINTED on the item's tree ("source bound 1 graded, 11 OUT OF REACH") and never
+                   by incrementing the number here. Source-graded is unmoved at 1; the arrival is out of reach
+                   for the reason written beside its roster entry below. PRIOR: REC-92: 8 -> 9, `#contentAxisTally:raw`. Moved from the figure the
                    instrument PRINTED, never by incrementing the number in this file.
                    D-389, 2026-09-23: 9 -> 10, from the printed `10 cut-graded` / `1 graded, 9 OUT OF
                    REACH` — the roster above, one for one.
@@ -1763,8 +1774,14 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
      rather than scoring it zero. Source-graded is UNMOVED at 1. WHAT WOULD MAKE IT REACHABLE is a row source
      the sight predicate itself READS rather than a second copy of its rule — reported to SCHEDULER by D-479 as
      a row of its own, not taken here, since it is a change to how sight is stored and not to this read. */
+  /* REC-195, 2026-09-24, from the printed roster and this arm's own failure output: `#lawProposalsFor:all`
+     joins the ASSEMBLED members for `projectDirectory:projects`' reason exactly. The proposals ARE read under
+     one SQL `LIMIT ?`, sized so every proposal returned is complete, but `truncated` is measured over the
+     PROPOSALS those rows are grouped into rather than over the rows — a Map keyed by proposer, filled in a
+     loop — so a reader that follows one declaration to one row source cannot attribute the figure to it, and
+     `sourceOrigin` says ASSEMBLED by name rather than scoring it zero. Source-graded is UNMOVED at 1. */
   ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
-   "#frontierMeaning:never", "#frontierPage:gated", "biasInhale:bars",
+   "#frontierMeaning:never", "#frontierPage:gated", "#lawProposalsFor:all", "biasInhale:bars",
    "documentsNamingEntity:merged", "projectDirectory:projects", "queueFeed:dispAll", "queueFeed:items"]);
 
 /* ---- SET 2. THE METHODS THE CENSUS COUNT CANNOT GRADE BY CONSTRUCTION.
