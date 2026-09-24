@@ -344,16 +344,6 @@ added: 2026-07-31 · CONDUCT
 landed:
 uncut: restored whole from «CPDF-3» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-447 · integrated — finished; integrated on land/conduct/c18-d456 @ dad5def2 (IC-235 renumbered IC-238, I3 MAJOR 74.0.0; M-122; the ORDER leaked too and both are closed), waiting for its train (the security train c18-d456) — flipped by SCHEDULER #17
-order: directly after REC-187, ahead of every correction and feature: a disclosure defect outranks both (CLAUDE.md §2; the lane's law) (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
-milestone: M8
-interface: I3 — the search answer stops publishing raw scores; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.9: a project the caller cannot see answers exactly as one that does not exist).
-depends-on: none.
-scope: serve the viewer a filtered rank ORDER only, never a raw score; any score that survives is computed over what the viewer can see. Extend `bio-plane/test/project-sight.test.mjs`.
-accepts-when: revising a project the reader cannot see leaves every field of the reader's answer byte-identical. NEGATIVE CONTROL: publish the raw bm25 score again, and the "a hidden revision moves nothing" arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
 ### D-50 · integrated — finished; integrated on land/conduct/c18-batch8 @ 624c1b7d (C-77, no IC), waiting for its train — flipped by SCHEDULER #17
 order: with the lower product rows, after CPDF-3: nothing can be WRITTEN wrong, because the write path refuses; this is the conformance half, lower than the write path by the row's own words (SCHEDULER #7, 2026-09-21, LED-7)
 milestone: M7
@@ -384,16 +374,6 @@ depends-on: none — REC-95's observation is built.
 scope: the entity arm reads the latest derivation observation for that entity and publishes `derivation {state, at, documents}`, `null` stated as never derived; no schema column (supersedes the row's first proposal).
 accepts-when: op=connect over more than 32 documents, then op=connections, says the derivation was cut. NEGATIVE CONTROL: remove the observation read, and that arm fails by name. New suite `bio-plane/test/d241-derivation-stated.test.mjs`.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-241's DEBT row of 2026-08-08, verified at the code on `02603e88`; keeps its `D-` id).
-
-### D-456 · integrated — finished; integrated on land/conduct/c18-d456 @ f9064f56 (IC-236 renumbered IC-237, I3 MAJOR 73.0.0; C-78), waiting for its train (the security train c18-d456) — flipped by SCHEDULER #17
-order: FIRST in the backlog: a safety defect on the record itself — a live verification that believes it is in a namespace writes the real record — outranks every correction and feature (SCHEDULER #17, 2026-09-23; CPDF-3's worker via CONDUCT #18 23:12Z)
-milestone: M0 (a guard at the plane's front door)
-interface: I3 — one DEC-49 refusal; the integrator mints and classifies the IC.
-design: `docs/development/VERIFICATION.md` (CLAUDE.md §5's *NAME `store=scratch` ON EVERY CALL*; D-325's scope rule).
-depends-on: none.
-scope: `scopeFor` refuses any `store=` value other than `bio` or `scratch` with a named refusal for every class; correct `kickoffs/CONTENT-PDF.md` step (5) and `PARALLELISM.md`'s "one instance per area", which name namespaces that do not exist. Extend the scope suite (`bio-plane/test/*scope*.test.mjs`).
-accepts-when: `store=biosmoke-pdf` is refused by name for admin, member and probe; `bio` and `scratch` answer as today. NEGATIVE CONTROL: restore the fall-through to `bio`, and the unknown-namespace arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ### REC-198 · running — SPAWNED 2026-09-23 ~23:30Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER REC-198 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-198 and that session; never conclude queued from the absence alone.
 order: after REC-195, the review-copy block (SCHEDULER #17, 2026-09-23; UI-68's worker)

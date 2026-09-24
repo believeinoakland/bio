@@ -3735,3 +3735,23 @@ scope: UI-43's scope RE-DERIVED on current `main` — the branch is EVIDENCE, 1,
 accepts-when: an OR accept requires the per-branch affirmation; a fixture whose two parts share a capture shows that origin before it, and one with independent parts shows NONE; driven against the real plane. NEGATIVE CONTROLS: drop the affirmation, or hide the field, and each arm fails by name.
 added: 2026-09-21 · SCHEDULER #5 (D-397's third branch and D-195, verified at the code; `node tools/mintid.mjs UI`).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «UI-74» on entering the cache; its `order:` line is the current one.
+
+### D-456 · done — on_origin/main_15b2a4c0_(the_security_train),_worker_merge_verified_by_SCHEDULER_#17
+order: FIRST in the backlog: a safety defect on the record itself — a live verification that believes it is in a namespace writes the real record — outranks every correction and feature (SCHEDULER #17, 2026-09-23; CPDF-3's worker via CONDUCT #18 23:12Z)
+milestone: M0 (a guard at the plane's front door)
+interface: I3 — one DEC-49 refusal; the integrator mints and classifies the IC.
+design: `docs/development/VERIFICATION.md` (CLAUDE.md §5's *NAME `store=scratch` ON EVERY CALL*; D-325's scope rule).
+depends-on: none.
+scope: `scopeFor` refuses any `store=` value other than `bio` or `scratch` with a named refusal for every class; correct `kickoffs/CONTENT-PDF.md` step (5) and `PARALLELISM.md`'s "one instance per area", which name namespaces that do not exist. Extend the scope suite (`bio-plane/test/*scope*.test.mjs`).
+accepts-when: `store=biosmoke-pdf` is refused by name for admin, member and probe; `bio` and `scratch` answer as today. NEGATIVE CONTROL: restore the fall-through to `bio`, and the unknown-namespace arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-447 · done — on_origin/main_15b2a4c0_(the_security_train),_worker_merge_verified_by_SCHEDULER_#17
+order: directly after REC-187, ahead of every correction and feature: a disclosure defect outranks both (CLAUDE.md §2; the lane's law) (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
+milestone: M8
+interface: I3 — the search answer stops publishing raw scores; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.9: a project the caller cannot see answers exactly as one that does not exist).
+depends-on: none.
+scope: serve the viewer a filtered rank ORDER only, never a raw score; any score that survives is computed over what the viewer can see. Extend `bio-plane/test/project-sight.test.mjs`.
+accepts-when: revising a project the reader cannot see leaves every field of the reader's answer byte-identical. NEGATIVE CONTROL: publish the raw bm25 score again, and the "a hidden revision moves nothing" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
