@@ -12006,7 +12006,7 @@ var CASE_DOCUMENT_FAMILY = {
   COMPLETENESS: { check: "C-41.10", what: "the completeness block (REC-14)" },
   EXCLUDED: { check: "C-41.11", what: "the exclusion list field (C-9)" },
   BAR: { check: "C-41.12", what: "required_strength \u2014 the standard of evidence (DEC-17 as DEC-72 rehomes it)" },
-  DISCLOSURES: { check: "C-41.13", what: "bias_manifest and the statement's acknowledgement list, required of a bio-case-document/3 (REC-188)" }
+  DISCLOSURES: { check: "C-41.13", what: "bias_manifest, the statement's acknowledgement list and the statement's WRITER, required of a bio-case-document/3 (REC-188; the writer REC-212)" }
 };
 var C41 = Object.fromEntries(
   Object.entries(CASE_DOCUMENT_FAMILY).map(([k, v]) => [k, v.check])
@@ -12134,13 +12134,20 @@ function checkCaseDocument(fm, ctx = {}) {
     if (!Array.isArray(acks)) {
       findings.push(f(C41.COMPLETENESS, "error", "a case document's completeness_acknowledgements must be a list \u2014 empty when nobody but the statement's author acknowledged it (BIO_Publication \xA73 rule 11)"));
     } else {
-      const author = c && typeof c.author === "string" ? c.author : null;
+      const publisher = c && typeof c.author === "string" ? c.author : null;
+      const statesWriter = !!c && Object.prototype.hasOwnProperty.call(c, "statement_by");
+      const writer = statesWriter && typeof c.statement_by === "string" && c.statement_by.trim() ? c.statement_by.trim() : null;
+      const writerUndetermined = statesWriter && !writer;
       for (const a of acks) {
         if (!a || typeof a !== "object" || !["participant", "recipient"].includes(a.kind) || typeof a.by !== "string" || !a.by.trim() || typeof a.at !== "string")
           findings.push(f(C41.COMPLETENESS, "error", `a case document lists an acknowledgement of its statement that names no acknowledger, kind (participant or recipient) or date (got ${JSON.stringify(a)}): an acknowledgement is an authored, attributed, dated act, and an unattributed one is the record claiming a second reader it cannot name`));
-        else if (a.kind === "participant" && author && a.by === author)
-          findings.push(f(C41.COMPLETENESS, "error", `a case document lists ${a.by}, the completeness statement's own author, as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11), and an author acknowledging their own statement has read it once`));
+        else if (a.kind === "participant" && writer && a.by === writer)
+          findings.push(f(C41.COMPLETENESS, "error", `a case document lists ${a.by}, the member who WROTE its exclusion statement (completeness.statement_by), as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11), and the writer of the sentence has read it once. Who wrote the statement and who published the case are two acts and two names (\xA73 rule 13) \u2014 this is the writer, whether or not they are also completeness.author`));
+        else if (a.kind === "participant" && publisher && a.by === publisher)
+          findings.push(f(C41.COMPLETENESS, "error", `a case document lists ${a.by}, completeness.author \u2014 the member who PREPARED AND PUBLISHED this case and authored this completeness block at that act \u2014 as having acknowledged its statement: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11), and the member who authored the block is its first reader by construction`));
       }
+      if (writerUndetermined && acks.some((a) => a && typeof a === "object" && a.kind === "participant"))
+        findings.push(f(C41.COMPLETENESS, "error", `a case document states that who wrote its exclusion statement is UNDETERMINED (completeness.statement_by is null) and lists ${acks.filter((a) => a && typeof a === "object" && a.kind === "participant").length} participant acknowledgement(s) of it: an acknowledgement is a SECOND person's reading (BIO_Publication \xA73 rule 11), and a document that cannot say who the FIRST reader was cannot support the claim that any of these is a second. Publish the edition again from a draft whose statement carries an author, or let the list stand with its recipients alone \u2014 a recipient of a review copy is never the statement's writer`));
       if (c && c.acknowledged !== void 0 && c.acknowledged !== acks.length)
         findings.push(f(C41.COMPLETENESS, "error", `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
     }
@@ -12191,6 +12198,14 @@ function checkCaseDocument(fm, ctx = {}) {
         "error",
         `a ${CASE_DOCUMENT_FORMAT} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal \u2014 an ABSENT field is silence about who else read what this case leaves out (BIO_Publication \xA73 rule 11)`,
         ["re-publish through op=publish, which lists every acknowledgement of the statement it publishes"]
+      ));
+    }
+    if (!c || !Object.prototype.hasOwnProperty.call(c, "statement_by") || !(c.statement_by === null || typeof c.statement_by === "string" && c.statement_by.trim())) {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.statement_by, the member who WROTE its exclusion statement \u2014 a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication \xA73 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got ${c ? JSON.stringify(c.statement_by ?? null) : void 0}${c && !Object.prototype.hasOwnProperty.call(c, "statement_by") ? ", with no such key" : ""})`,
+        ["re-publish through op=publish, which carries the draft's server-stamped statement_by onto the document"]
       ));
     }
   }
@@ -36804,7 +36819,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       lock_violations: Array.isArray(lens.lock_violations) ? lens.lock_violations.length : 0,
       stated: lens.in_force === true ? `the effective bias set in force for ${proj} at publication, frozen here and never recomputed` : lens.in_force === null ? String(lens.stated) : "no manifest was in force"
     };
-    const acks = this.#statementAcknowledgements(proj, theCase, edition, stmt, who);
+    const writer = this.#statementWriter(proj, theCase, edition, stmt, who);
+    const acks = this.#statementAcknowledgements(proj, theCase, edition, stmt, who, writer);
     const docText = _Store.#caseDocumentText({
       caseId: theCase,
       edition,
@@ -36823,6 +36839,9 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       at: when,
       searched,
       conclusions: conclusionRows,
+      /* REC-212 / §3 rule 13: the writer of the statement, beside the author of the block. */
+      statementBy: writer.by,
+      statementByStated: writer.stated,
       /* D-442 / rule 12 (b): per member its own edition and the frozen pair and
          grounds, read at this act — stated here ONCE instead of in the member. */
       frozen,
@@ -36913,7 +36932,15 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         statement_sha: acks.statementSha,
         acknowledgements: acks.rows,
         acknowledgements_truncated: acks.truncated,
-        ...acks.byAuthor ? { acknowledgements_by_author_not_listed: acks.byAuthor } : {}
+        ...acks.byAuthor ? { acknowledgements_by_author_not_listed: acks.byAuthor } : {},
+        /* REC-212 / §3 rule 13: the writer of the sentence, named beside the author of
+           this block, with what the record knows about how it knows. The two counts
+           below are what the list LEFT OUT and why — an acknowledgement withheld and
+           not stated would be the list claiming fewer readers than the record holds. */
+        statement_by: writer.by,
+        statement_by_stated: writer.stated,
+        ...acks.byWriter ? { acknowledgements_by_statement_writer_not_listed: acks.byWriter } : {},
+        ...acks.withheldWriterUndetermined ? { acknowledgements_withheld_writer_undetermined: acks.withheldWriterUndetermined } : {}
       },
       author: who,
       at: when,
@@ -36973,6 +37000,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     excluded,
     author,
     at,
+    /* REC-212 / IC-272 / BIO_Publication_v0_1.md §3 rule 13 (BOB #32 (b),
+       2026-09-24): WHO WROTE THE STATEMENT, as distinct from `author`, who
+       PREPARED AND PUBLISHED the case. Two acts, two names, never conflated.
+       Computed by the caller (`#statementWriter`) for the reason `searched` and
+       `conclusions` are — this method is pure and static and the answer needs the
+       store. `null` is UNDETERMINED and is STATED, never filled in from `author`. */
+    statementBy = null,
+    statementByStated = "",
     /* REC-96 / IC-112: the `searched` section, COMPUTED BY THE CALLER
        and passed in, because this method is pure and static on purpose
        and the section needs the store. It is REQUIRED rather than
@@ -37083,6 +37118,16 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       `  subject_position: ${position}`,
       `  subject_justification: "${_Store.#fmSafe(justification)}"`,
       `  author: ${author}`,
+      /* REC-212 / §3 rule 13 — TWO ACTS, TWO NAMES, IN THE SIGNED BLOCK. `author` above is the member
+         who PREPARED AND PUBLISHED this case and authored this block; this is the member who wrote the
+         sentence `statement` prints. They are the same person in the common case and are NOT one fact:
+         while this key did not exist, C-41.10's exclusion had only `author` to read, so the writer of
+         the statement could be listed as its own second reader whenever somebody else published.
+         `null` is UNDETERMINED — stated, never back-filled from `author` (BOB #32 (b), 2026-09-24).
+         IT SITS ABOVE `statement_sha` ON PURPOSE: `#reauthorAcknowledgements` re-splices the frontmatter
+         run that STARTS at `  statement_sha:`, so a key written below this point would be silently
+         dropped by the next acknowledgement that lands on an unsigned document. */
+      `  statement_by: ${statementBy ?? "null"}`,
       `  at: "${at}"`,
       /* D-150 / §3 rule 11 — THE STATEMENT'S SECOND READERS, IN THE SIGNED BLOCK. The hash
          names the sentence they read (a reader can recompute it from `statement` above); the
@@ -37218,6 +37263,13 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       ...(excluded || []).length ? (excluded || []).map((r) => `- ${r.target ? r.target + " \u2014 " : ""}${r.description || "(named above)"}: ${r.reason}`) : ["Nothing material was excluded from this case."],
       "",
       `Position on putting this case to its subject: ${position}. ${justification}`,
+      "",
+      /* REC-212 / §3 rule 13 — IN THE BODY, BESIDE THE SENTENCE IT IS ABOUT, for this method's own
+         reason: a member reviews and signs the BODY, and a key-value pair they have to decode is not a
+         thing anybody reviewed. It states WHERE the name came from as well as the name, which is what
+         makes UNDETERMINED readable rather than blank. ABOVE the acknowledgement prose, whose head
+         `#reauthorAcknowledgements` splices from, so a later acknowledgement leaves this line alone. */
+      `**Who wrote this statement.** ${statementByStated}`,
       "",
       /* D-150 / §3 rule 11 — IN THE BODY AND IN PROSE, where the statement is: the thing a
          member reviews and signs. The check is DISCLOSED here and enforced nowhere. */
@@ -38339,6 +38391,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
   } = {}) {
     let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
     let authorFromDraft = false;
+    let authorStatedUndetermined = false;
+    let blockAuthor = null;
     if (bySecret) {
       const live = this.#liveReviewGrant(secretSha);
       if (!live || draft && String(draft).trim() !== live.draft.draft_id) return _Store.#noReviewCopy();
@@ -38390,7 +38444,13 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         ident = { caseId: cid, edition: ed };
         const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : {};
         statement = c.statement;
-        statementAuthor = String(c.author ?? "").trim();
+        if (Object.prototype.hasOwnProperty.call(c, "statement_by")) {
+          statementAuthor = typeof c.statement_by === "string" ? c.statement_by.trim() : "";
+          authorStatedUndetermined = !statementAuthor;
+          blockAuthor = String(c.author ?? "").trim() || null;
+        } else {
+          statementAuthor = String(c.author ?? "").trim();
+        }
       }
       if (!project || !this.#isJoinedParticipant(project, who))
         return {
@@ -38408,20 +38468,20 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         reason: "STATEMENT_ACK_NO_STATEMENT",
         detail: "this draft states nothing about what its case excludes, so there is no statement to acknowledge yet. The draft's editor authors it (statement=); acknowledge it then."
       };
-    if (kind === "participant" && authorFromDraft && !statementAuthor)
+    if (kind === "participant" && (authorFromDraft || authorStatedUndetermined) && !statementAuthor)
       return {
         ok: false,
         reason: "STATEMENT_ACK_AUTHOR_UNDETERMINED",
         draft: draftId,
         author: null,
-        detail: `this draft records no author for its exclusion statement: it was written before the plane stamped one, and who wrote the sentence that now stands is UNDETERMINED. An acknowledgement is a SECOND person's reading (BIO_Publication \xA73 rule 11), and the plane cannot tell here whether you are the first \u2014 reading the draft's last editor would attribute the statement to whoever last touched any part of it. An editor of this project saves the statement again (op=casedraft with statement=), which records who wrote its current bytes; acknowledge it then. The case publishes either way.`
+        detail: (authorFromDraft ? `this draft records no author for its exclusion statement: it was written before the plane stamped one, and who wrote the sentence that now stands is UNDETERMINED. ` : `this case document states that who wrote its exclusion statement could not be established, so the author of the sentence is UNDETERMINED \u2014 and it is not the member named as the case's author, who prepared and published it (BIO_Publication \xA73 rule 13). `) + `An acknowledgement is a SECOND person's reading (BIO_Publication \xA73 rule 11), and the plane cannot tell here whether you are the first \u2014 reading the draft's last editor would attribute the statement to whoever last touched any part of it. ` + (authorFromDraft ? `An editor of this project saves the statement again (op=casedraft with statement=), which records who wrote its current bytes; acknowledge it then. ` : `Publish this edition again from a draft whose statement carries an author (op=publish), and this document will name the member who wrote the sentence. `) + `The case publishes either way.`
       };
-    if (kind === "participant" && statementAuthor && by === statementAuthor)
+    if (kind === "participant" && (statementAuthor && by === statementAuthor || blockAuthor && by === blockAuthor))
       return {
         ok: false,
         reason: "STATEMENT_ACK_BY_ITS_AUTHOR",
-        author: statementAuthor,
-        detail: `you wrote this statement, and its acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11). Ask a participant of this project, or hand the draft to a reader through a review grant. The case publishes without one and says so.`
+        author: statementAuthor && by === statementAuthor ? statementAuthor : blockAuthor,
+        detail: (statementAuthor && by === statementAuthor ? `you wrote this statement, and its acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11). ` : `you prepared and published this case and authored its completeness block at that act, so you are its FIRST reader; an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11). Who WROTE the statement is a separate fact, stated separately in these bytes (\xA73 rule 13). `) + `Ask a participant of this project, or hand the draft to a reader through a review grant. The case publishes without one and says so.`
       };
     const statementSha = _Store.#statementSha(text);
     const ackMax = _Store.STATEMENT_ACK_DOCUMENTS_MAX;
@@ -38559,12 +38619,14 @@ case_project: ${project}
         why: "this case document was authored before acknowledgements were recorded, so it has no list to add to; it is left exactly as it was signed-for-review"
       };
     const project = String(fm.case_project ?? "").trim();
+    const writer = Object.prototype.hasOwnProperty.call(c, "statement_by") ? { by: typeof c.statement_by === "string" && c.statement_by.trim() ? c.statement_by.trim() : null } : null;
     const acks = this.#statementAcknowledgements(
       project,
       doc.case_id,
       doc.edition,
       c.statement ?? "",
-      String(c.author ?? "").trim() || null
+      String(c.author ?? "").trim() || null,
+      writer
     );
     const text = [
       ...lines.slice(0, f0),
@@ -38593,7 +38655,21 @@ case_project: ${project}
      acknowledgement taken through such a draft matches too: it is the same statement, in the
      same project, at the only edition a new case has. Bounded, and a list that hit the bound
      says so rather than presenting a page as the whole. */
-  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null) {
+  /* REC-212 / §3 rule 13 — `writer` IS THE SECOND EXCLUSION, AND IT IS A DIFFERENT ONE FROM
+     `exceptAuthor`. `exceptAuthor` is the member PUBLISHING: they author the completeness block at that
+     act, so their own acknowledgement of it is not a second reading, and `op=publish` has left it out
+     since D-150. `writer` is the member who wrote the SENTENCE (`#statementWriter`), which rule 11's
+     exclusion is actually about and which nothing here could see until rule 13 gave it a name.
+       - `writer === null` means NOT ASKED, and is the review copy's live list: it shows a reader every
+         acknowledgement recorded, ahead of any act that decides what a document may print.
+       - `{ by: '<member>' }` withholds that member's own.
+       - `{ by: null }` is UNDETERMINED, and withholds EVERY participant row, because any one of them
+         may BE the writer's own and a list that cannot rule that out is the record claiming a second
+         reader it cannot support (`CLAUDE.md` §2). A RECIPIENT row is never withheld by either: a grant's
+         holder is never the writer (REC-193's own sentence).
+     EVERY WITHHOLDING IS COUNTED AND RETURNED, in its own key. A row left out and not stated would make
+     the document list fewer second readers than the record holds, which its owner would then SIGN. */
+  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null, writer = null) {
     const sha = _Store.#statementSha(statement);
     const rows = this.#rows(
       `SELECT acknowledger_kind, acknowledger, recipient, at FROM statement_acknowledgements
@@ -38608,17 +38684,110 @@ case_project: ${project}
     );
     const truncated = rows.length > _Store.STATEMENT_ACK_MAX;
     const all = rows.slice(0, _Store.STATEMENT_ACK_MAX);
-    const listed = all.filter((r) => !(exceptAuthor && r.acknowledger_kind === "participant" && r.acknowledger === exceptAuthor));
+    const byPublisher = (r) => !!(exceptAuthor && r.acknowledger_kind === "participant" && r.acknowledger === exceptAuthor);
+    const byTheWriter = (r) => !!(writer && writer.by && r.acknowledger_kind === "participant" && r.acknowledger === writer.by && !byPublisher(r));
+    const undeterminedWithheld = (r) => !!(writer && writer.by === null && r.acknowledger_kind === "participant" && !byPublisher(r));
+    const listed = all.filter((r) => !byPublisher(r) && !byTheWriter(r) && !undeterminedWithheld(r));
     return {
       statementSha: sha,
       truncated,
-      byAuthor: all.length - listed.length,
+      /* UNCHANGED IN MEANING: the publisher's own, counted apart from every exclusion added since,
+         so a caller reading this number reads the same fact it has read since D-150. */
+      byAuthor: all.filter(byPublisher).length,
+      byWriter: all.filter(byTheWriter).length,
+      withheldWriterUndetermined: all.filter(undeterminedWithheld).length,
       rows: listed.map((r) => ({
         kind: r.acknowledger_kind,
         by: r.acknowledger,
         recipient: r.recipient ?? null,
         at: r.at
       }))
+    };
+  }
+  /* REC-212 / IC-272 / BIO_Publication_v0_1.md §3 rule 13 — WHO WROTE THE STATEMENT THIS CASE IS ABOUT
+       TO PUBLISH, AS DISTINCT FROM WHO PREPARED AND PUBLISHED IT. BOB #32 ruled (b), 2026-09-24: *two acts,
+       two names, never conflated*. `completeness.author` is the publisher — they author the block, date it
+       and hand the document to be signed — and it was ALSO the only name C-41.10's acknowledgement
+       exclusion had, so the member who wrote the sentence could be listed as its own second reader
+       whenever somebody else published. That is the record claiming a reading nobody made.
+  
+       THIS MEASURES NOTHING NEW. `case_drafts.statement_by` already records the writer (REC-193), stamped
+       by the SERVER at the draft write that CHANGED the statement text. This carries that stamp onto the
+       document, and it carries it by the STATEMENT'S OWN IDENTITY: `#fmSafe` of the sentence — the
+       normalisation `#statementSha` hashes, and the one REC-193's stamp itself compares — at the case
+       identity `#statementAcknowledgements` binds an acknowledgement to (this case, or a draft naming no
+       case at edition 1, which is the only edition a new case has). One identity for the writer of the
+       bytes and for their readers, never two.
+  
+       FOUR ANSWERS, EACH A FACT AND NONE A FALLBACK:
+         (1) drafts at this identity hold this sentence and AGREE on its author — that member;
+         (2) NO draft at this identity holds it — the PUBLISHER wrote these bytes AT THIS ACT. `op=publish`
+             takes `statement=` as an authored argument (it refuses NO_STATEMENT without one), so a
+             sentence no draft holds arrived in this call from this caller: a measurement of this act, not
+             a guess about an older one;
+         (3) a matching draft records NO author (written before REC-193's column), or two matching drafts
+             name DIFFERENT members — UNDETERMINED, stated, and NEVER read off `author`;
+         (4) the project holds more drafts than one bounded read lists — UNDETERMINED, with that reason.
+       The bound is `REVIEW_LIST_MAX`, `op=casedrafts`' own bound, so this scan sees exactly what a
+       project's draft list can show: one bound for both, not a second nobody decided.
+  
+       RESIDUE, STATED RATHER THAN SMOOTHED: a publisher who retypes a sentence an editor wrote in a draft
+       that has SINCE BEEN EDITED is credited with it by (2) — no draft holds those bytes any more, and the
+       record keeps no history of a draft's statement text to ask. It is the one answer here that is thin,
+       and it is why the document PRINTS where the name came from beside the name, in a sentence a member
+       reviews, instead of printing the name alone. A caller who wants the editor named publishes the
+       statement the draft holds. */
+  #statementWriter(project, caseId, edition, statement, publisher) {
+    const want = _Store.#fmSafe(statement);
+    const notFromAuthor = `It is NOT read off ${publisher}, who prepared and published this case: preparing a case is not writing its statement (BIO_Publication \xA73 rule 13).`;
+    if (!want) return {
+      by: null,
+      from: "no_statement",
+      stated: "UNDETERMINED: this case document prints no exclusion statement, so there is no sentence for anybody to have written."
+    };
+    const cap = _Store.REVIEW_LIST_MAX;
+    const rows = this.#rows(`SELECT draft_id, case_id, params, statement_by FROM case_drafts
+                             WHERE project_id=? ORDER BY created_at, draft_id LIMIT ?`, project, cap + 1);
+    if (rows.length > cap)
+      return {
+        by: null,
+        from: "drafts_unbounded",
+        stated: `UNDETERMINED: ${project} holds more drafts than one bounded read of them lists (${cap}), so which draft this sentence was written in \u2014 and therefore who wrote it \u2014 cannot be established here. ${notFromAuthor}`
+      };
+    const here = (d) => (d.case_id ?? null) === (caseId ?? null) || (d.case_id ?? null) === null && Number(edition) === 1;
+    const matches = rows.filter((d) => {
+      if (!here(d)) return false;
+      let p = null;
+      try {
+        p = JSON.parse(d.params);
+      } catch {
+        return false;
+      }
+      return _Store.#fmSafe(p && p.statement) === want;
+    });
+    if (!matches.length)
+      return {
+        by: publisher,
+        from: "this_act",
+        stated: `${publisher} wrote this exclusion statement in the act that published this case, and prepared and published the case \u2014 two acts, one member: no draft of ${project} at this case identity holds this sentence, so these bytes arrived with this publication.`
+      };
+    if (matches.some((d) => !d.statement_by))
+      return {
+        by: null,
+        from: "draft_unrecorded",
+        stated: `UNDETERMINED: the draft this sentence stands in (${matches.map((d) => d.draft_id).join(", ")}) records no author \u2014 it was written before the plane stamped one \u2014 so who wrote the bytes this case publishes cannot be established. ${notFromAuthor} An editor who saves the statement again records who wrote the bytes that stand.`
+      };
+    const names = [...new Set(matches.map((d) => d.statement_by))];
+    if (names.length > 1)
+      return {
+        by: null,
+        from: "drafts_disagree",
+        stated: `UNDETERMINED: ${names.length} drafts of ${project} at this case identity hold this sentence and name different authors (${names.join(", ")}), so which member wrote the bytes this case publishes cannot be established. ${notFromAuthor}`
+      };
+    return {
+      by: names[0],
+      from: "draft",
+      stated: names[0] === publisher ? `${names[0]} wrote this exclusion statement, in the draft it was prepared in, and also prepared and published the case \u2014 two acts, one member.` : `${names[0]} wrote this exclusion statement, in the draft it was prepared in. ${publisher} prepared and published the case: two acts, two names (BIO_Publication \xA73 rule 13).`
     };
   }
   /* REC-198 / BIO_Publication §6A.4 — THE LIST OF A PROJECT'S DRAFTS. Every other read of `case_drafts` is keyed
@@ -38821,6 +38990,16 @@ case_project: ${project}
         );
       }
       const now = (/* @__PURE__ */ new Date()).toISOString();
+      const stmtWriter = (() => {
+        const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : null;
+        const pub = c && typeof c.author === "string" && c.author.trim() ? c.author.trim() : "(unnamed)";
+        if (!c || !Object.prototype.hasOwnProperty.call(c, "statement_by"))
+          return { by: null, stated: `this case document says nothing about who wrote its exclusion statement: it was authored before the record told the statement's writer apart from the case's publisher (BIO_Publication \xA73 rule 13), and ${pub}, who prepared and published it, is not evidence of either.` };
+        const by = typeof c.statement_by === "string" && c.statement_by.trim() ? c.statement_by.trim() : null;
+        if (!by)
+          return { by: null, stated: `UNDETERMINED: this case document states that who wrote its exclusion statement could not be established, and it is NOT read off ${pub}, who prepared and published the case (BIO_Publication \xA73 rule 13).` };
+        return { by, stated: by === pub ? `${by} wrote this case's exclusion statement, and prepared and published the case \u2014 two acts, one member.` : `${by} wrote this case's exclusion statement; ${pub} prepared and published the case \u2014 two acts, two names (BIO_Publication \xA73 rule 13).` };
+      })();
       const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
       if (owner && owner.project_id !== project)
         return {
@@ -38854,6 +39033,15 @@ case_project: ${project}
           ...completenessFields(fm),
           subject_position: fm.completeness.subject_position ?? null,
           author: fm.completeness.author ?? null,
+          /* REC-212 / §3 rule 13: WHO WROTE THE STATEMENT, committed FROM THE SIGNED BYTES and never
+             from `author` above, who prepared and published the case. THREE STATES, not two, and the
+             sentence beside the name is what tells them apart for a reader of `op=publishedcase`: a
+             name; `null` where this plane established that it could not say (a stated UNDETERMINED);
+             and a document authored before this key existed, which says NOTHING about the writer —
+             and whose publisher's name is not evidence of either. The last two both commit as null,
+             which is why the sentence is committed with them rather than derived by each reader. */
+          statement_by: stmtWriter.by,
+          statement_by_stated: stmtWriter.stated,
           at: fm.completeness.at ?? null,
           /* D-150 / §3 rule 11: THE SIGNED LIST, committed from the signed bytes. NULL — never
              an empty list — for a document authored before acknowledgements were recorded: it
@@ -38923,6 +39111,14 @@ case_project: ${project}
         edition: ed,
         project,
         roster,
+        /* REC-212 / §3 rule 13: BOTH NAMES IN THIS ACT'S ANSWER — who wrote the statement and who
+           prepared and published the case — from the one read above, so the answer and the
+           committed row are one fact. */
+        statement: {
+          author: fm.completeness && typeof fm.completeness === "object" ? fm.completeness.author ?? null : null,
+          by: stmtWriter.by,
+          stated: stmtWriter.stated
+        },
         ...completedCase && completedCase.complete && !completedCase.manifest_sha ? { completedCase } : {},
         members: roster.map((m) => {
           const r = rows.find((x) => x.target === m) || {};
