@@ -105,6 +105,11 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
 /* 1.25.0 AT THE SECOND UNION (CONDUCT #20, c20-batch23): REC-211 took 1.24.0 on its own branch for 447 + 2, but main's
    1.24.0 (c20-batch22) is already the D-507 + D-508 catalogue of 455 checks. REC-211's two rows are a DIFFERENT
    catalogue, so the union moves the stamp once more, MINOR: 455 + 2 = 457, figures re-read from the d470 suite's print. */
+/* 1.26.0 (D-468, 2026-09-24): ONE arrival, C-26.12 BIAS_ILLEGAL_TRANSITION — `op=promote` holding a bias set to
+   the declared STATES edges read from its head, which STATES.bias described and nothing enforced. 457 -> 458
+   checks, read from d470-catalog-census.test.mjs's own print and never 457 + 1. MINOR: one arrival, no
+   departures. THREE PLACES MOVE WITH THIS CONSTANT and the gate names each if one is missed: the census row in
+   d470, that suite's (A5) literal, and ratify.test.mjs's gateVersion literal. */
 export const CATALOG_VERSION = "1.26.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 

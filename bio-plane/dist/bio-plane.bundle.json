@@ -178,8 +178,8 @@
     },
     {
       "path": "src/gate.mjs",
-      "bytes": 13460,
-      "sha256": "d77eee7d8bac31ebb972891d019197a1affe091769a3884c926bc102bfb9ba5a"
+      "bytes": 13983,
+      "sha256": "5f209f9ee812c23ac3e30ee0a8b163f581aaa466ccb6d3c14f15843d2ab2b74f"
     },
     {
       "path": "src/inband.mjs",
