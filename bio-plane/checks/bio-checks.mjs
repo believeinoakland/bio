@@ -11502,7 +11502,7 @@ export const CASE_DOCUMENT_FAMILY = {
   COMPLETENESS: { check: 'C-41.10', what: 'the completeness block (REC-14)' },
   EXCLUDED:     { check: 'C-41.11', what: 'the exclusion list field (C-9)' },
   BAR:          { check: 'C-41.12', what: 'required_strength — the standard of evidence (DEC-17 as DEC-72 rehomes it)' },
-  DISCLOSURES:  { check: 'C-41.13', what: 'bias_manifest and the statement\'s acknowledgement list, required of a bio-case-document/3 (REC-188)' },
+  DISCLOSURES:  { check: 'C-41.13', what: 'bias_manifest, the statement\'s acknowledgement list and the statement\'s WRITER, required of a bio-case-document/3 (REC-188; the writer REC-212)' },
 };
 const C41 = Object.fromEntries(
   Object.entries(CASE_DOCUMENT_FAMILY).map(([k, v]) => [k, v.check]));
@@ -11628,20 +11628,50 @@ export function checkCaseDocument(fm, ctx = {}) {
      list that claims more than it can support: a row naming no acknowledger or no kind, a count
      that disagrees with the list, and the statement's own author listed as its second reader —
      the one thing rule 11 says an acknowledgement is not. Nothing here asks for a row to exist:
-     none is ever required to publish. */
+     none is ever required to publish.
+
+     REC-212 / §3 rule 13 (BOB #32 ruled (b), 2026-09-24: *two acts, two names, never conflated*) —
+     THE EXCLUSION READS THE STATEMENT'S WRITER, WHICH IT COULD NOT DO BEFORE. It read
+     `completeness.author`, and that names the member who PREPARED AND PUBLISHED the case. Where an
+     editor wrote the exclusion statement and somebody else published it, this arm admitted the
+     editor's own acknowledgement of their own sentence — so a signed case document claimed a second
+     reading nobody made, which is the overclaim this catalogue exists to refuse, in the artifact a
+     stranger holds. `completeness.statement_by` (REC-212, carried onto the document from the draft's
+     server stamp) is the writer, and THREE STATES are told apart rather than two:
+       - a NAME — an acknowledgement by that member is refused, and this is the arm the row is about;
+       - `null`, the plane SAYING it could not establish the writer — then EVERY participant row is
+         refused, once, because any one of them may BE the writer's own and a list that cannot rule
+         that out is the record claiming a reader it cannot support. A RECIPIENT row is untouched: a
+         grant's holder is never the writer;
+       - NO KEY — a /1 or /2 document, authored before rule 13, read IN ITS OWN SHAPE: `author` is
+         the only name those bytes hold, and refusing every acknowledgement of them would refuse what
+         already crossed (rule 1).
+     THE PUBLISHER'S OWN STAYS REFUSED, on its own reason and in its own words. They author this block
+     and date it at the act of publishing, so their acknowledgement of it is not a second reading
+     either, and `op=publish` has left it out since D-150. Two exclusions, two messages: one name for
+     each act is the whole content of the ruling, and a single message covering both is how the two
+     came to be one field in the first place. */
   if (fm && fm.completeness_acknowledgements !== undefined) {
     const acks = fm.completeness_acknowledgements;
     if (!Array.isArray(acks)) {
       findings.push(f(C41.COMPLETENESS, 'error', 'a case document\'s completeness_acknowledgements must be a list — empty when nobody but the statement\'s author acknowledged it (BIO_Publication §3 rule 11)'));
     } else {
-      const author = c && typeof c.author === 'string' ? c.author : null;
+      const publisher = c && typeof c.author === 'string' ? c.author : null;
+      const statesWriter = !!c && Object.prototype.hasOwnProperty.call(c, 'statement_by');
+      const writer = statesWriter && typeof c.statement_by === 'string' && c.statement_by.trim()
+        ? c.statement_by.trim() : null;
+      const writerUndetermined = statesWriter && !writer;
       for (const a of acks) {
         if (!a || typeof a !== 'object' || !['participant', 'recipient'].includes(a.kind)
             || typeof a.by !== 'string' || !a.by.trim() || typeof a.at !== 'string')
           findings.push(f(C41.COMPLETENESS, 'error', `a case document lists an acknowledgement of its statement that names no acknowledger, kind (participant or recipient) or date (got ${JSON.stringify(a)}): an acknowledgement is an authored, attributed, dated act, and an unattributed one is the record claiming a second reader it cannot name`));
-        else if (a.kind === 'participant' && author && a.by === author)
-          findings.push(f(C41.COMPLETENESS, 'error', `a case document lists ${a.by}, the completeness statement's own author, as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication §3 rule 11), and an author acknowledging their own statement has read it once`));
+        else if (a.kind === 'participant' && writer && a.by === writer)
+          findings.push(f(C41.COMPLETENESS, 'error', `a case document lists ${a.by}, the member who WROTE its exclusion statement (completeness.statement_by), as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication §3 rule 11), and the writer of the sentence has read it once. Who wrote the statement and who published the case are two acts and two names (§3 rule 13) — this is the writer, whether or not they are also completeness.author`));
+        else if (a.kind === 'participant' && publisher && a.by === publisher)
+          findings.push(f(C41.COMPLETENESS, 'error', `a case document lists ${a.by}, completeness.author — the member who PREPARED AND PUBLISHED this case and authored this completeness block at that act — as having acknowledged its statement: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication §3 rule 11), and the member who authored the block is its first reader by construction`));
       }
+      if (writerUndetermined && acks.some((a) => a && typeof a === 'object' && a.kind === 'participant'))
+        findings.push(f(C41.COMPLETENESS, 'error', `a case document states that who wrote its exclusion statement is UNDETERMINED (completeness.statement_by is null) and lists ${acks.filter((a) => a && typeof a === 'object' && a.kind === 'participant').length} participant acknowledgement(s) of it: an acknowledgement is a SECOND person's reading (BIO_Publication §3 rule 11), and a document that cannot say who the FIRST reader was cannot support the claim that any of these is a second. Publish the edition again from a draft whose statement carries an author, or let the list stand with its recipients alone — a recipient of a review copy is never the statement's writer`));
       if (c && c.acknowledged !== undefined && c.acknowledged !== acks.length)
         findings.push(f(C41.COMPLETENESS, 'error', `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
     }
@@ -11682,6 +11712,21 @@ export function checkCaseDocument(fm, ctx = {}) {
     if (!Array.isArray(fm?.completeness_acknowledgements)) {
       findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal — an ABSENT field is silence about who else read what this case leaves out (BIO_Publication §3 rule 11)`,
         ['re-publish through op=publish, which lists every acknowledgement of the statement it publishes']));
+    }
+    /* REC-212 — (c) `completeness.statement_by`: WHO WROTE THE STATEMENT, told apart from
+       `completeness.author`, who PREPARED AND PUBLISHED the case (§3 rule 13, BOB #32 (b), 2026-09-24).
+       REQUIRED AS A KEY, /3 AND ONLY /3, for REC-188's own reason: a /1 or /2 document was never
+       obliged to carry it and is read in its own shape, and the token is what tells a document that was
+       never obliged from one that left its obligation out. `null` IS LEGAL AND IS A STATEMENT — the
+       plane could not establish who wrote the sentence, said rather than guessed and never back-filled
+       from `author`. What is refused is SILENCE: a /3 document handing a reader only the publisher's
+       name leaves the two acts looking like one, which is the conflation this key exists to end. A
+       document caught here is UNSIGNED — it is authored again by `op=publish`, which stamps the key —
+       so nothing that already crossed is disturbed (rule 1). */
+    if (!c || !Object.prototype.hasOwnProperty.call(c, 'statement_by')
+        || !(c.statement_by === null || (typeof c.statement_by === 'string' && c.statement_by.trim()))) {
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.statement_by, the member who WROTE its exclusion statement — a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication §3 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got ${c ? JSON.stringify(c.statement_by ?? null) : undefined}${c && !Object.prototype.hasOwnProperty.call(c, 'statement_by') ? ', with no such key' : ''})`,
+        ['re-publish through op=publish, which carries the draft\'s server-stamped statement_by onto the document']));
     }
   }
   /* REC-96 / D-196 / IC-112 — THE `searched` SECTION, AND IT IS C-41.10's ARM

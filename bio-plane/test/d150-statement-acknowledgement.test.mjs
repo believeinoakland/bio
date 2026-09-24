@@ -447,10 +447,20 @@ console.log("\n--- 7. the gate: bytes listing the author as their own second rea
     .filter((x) => x.severity === "error" && /acknowledg/.test(x.message || x.msg || "")).map((x) => x.check);
   t("the signed document op=publish authored raises no acknowledgement finding",
     errs(good), []);
+  /* CORRECTED 2026-09-24 (REC-212), never exempted: this arm's ASSERTION stands — the bytes it builds are
+     still refused by C-41.10 — but its LABEL said "its statement's AUTHOR" of `completeness.author`, and
+     §3 rule 13 (BOB #32 (b)) rules that field to be who PREPARED AND PUBLISHED the case, with the
+     statement's writer a separate name (`completeness.statement_by`, REC-212). In THIS fixture the two
+     coincide — iris wrote the draft's statement in block 1 and iris published — so this arm cannot tell
+     them apart and must not be read as covering rule 13: `rec212-statement-writer.test.mjs` is where the
+     two names are driven apart, and it is the suite whose control arms the exclusion. The label now says
+     which field these bytes name. */
   const self = { ...good, completeness_acknowledgements: [{ kind: "participant", by: good.completeness.author,
                                                             recipient: null, at: "2026-09-23T00:00:00Z" }],
                  completeness: { ...good.completeness, acknowledged: 1 } };
-  t("a document listing its statement's AUTHOR as having acknowledged it is refused, C-41.10",
+  t("a document listing the member named in completeness.author as having acknowledged it is refused, C-41.10 "
+  + "(in this fixture that member also WROTE the statement, so this arm does not separate the two names — "
+  + "rec212-statement-writer does)",
     errs(self), ["C-41.10"]);
   const miscount = { ...good, completeness: { ...good.completeness, acknowledged: 5 } };
   t("and so is a count that disagrees with its own list", errs(miscount), ["C-41.10"]);
