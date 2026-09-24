@@ -342,7 +342,7 @@ scope: a radio group over `vocabularies.risk_tiers` in SETUP_HTML's action arm, 
 accepts-when: a chosen tier is written; none chosen writes undetermined. NEGATIVE CONTROL: default the group to 1 and the unset arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### REC-193 · queued — **C-41.10's AUTHOR EXCLUSION READS THE DRAFT'S LAST EDITOR, NOT THE STATEMENT'S AUTHOR: D-150's worker used the last editor PROVISIONALLY, so a participant who edited another section could be refused acknowledging a statement they did not write, and its writer admitted.** Publication §3 rule 13 (BOB #32's ruling, folded): *the statement's author is the member who wrote the statement's CURRENT BYTES.* — owner RECORD.
+### REC-193 · running — SPAWNED 2026-09-24 ~05:03Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER REC-193 (CONDUCT #20), base origin/main, the 10th slot (cap 10 until 05:45Z, Bob via BOB 05:01Z); push by 06:30Z. Falsify rather than believe: read the branch land/worker/REC-193 and that session; never conclude queued from the absence alone.
 order: after REC-188, the same completeness block: a correction to just-landed work (D-150) on who may attest (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I5 additive — a `statement_by` value recorded at the draft write; the integrator mints and classifies the IC.
