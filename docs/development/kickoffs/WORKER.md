@@ -1,339 +1,133 @@
-# WORKER — the standing brief. Every spawned worker reads this FIRST.
+# WORKER — the standing brief. Every spawned worker reads this FIRST, WHOLE.
 
-**Why this file exists — a measured failure, not tidiness.** Hand-carrying these practices into every
-spawn brief (~2,000 words each) made spawning expensive and integration look cheap, so CONDUCT ran one or two
-workers against a budget of eight — **caught by Bob four separate times, fixed four times with a RULE,
-and regressed every time.** A rule cannot beat arithmetic. The practices live here; a spawn brief is
-now the ITEM and nothing else.
+One rule per line, each naming its ruling. **The receipts and the reasoning are in
+`docs/archive/WORKER-kickoff-2026-09-24.md`, verbatim, under the same headings** (M0-194, BOB #34 2026-09-24 22:50Z);
+`node tools/decided.mjs "<id>"` finds them. `id undetermined` means the old text named no ruling for that rule: the
+rule stands, its receipt is in the archive, and nobody has minted it an id. Every line carries a tag `W<n>`; the map
+from the old text's rules to these tags is `measurements/M-147.md`, checked by `node tools/rulemap.mjs`.
 
-**If your brief contradicts this file, your brief wins** — it knows your item. If your
-brief is silent, this file governs.
+- **W1** · A spawn brief is the ITEM and nothing else; the practices live here (id undetermined — Bob caught the hand-carried brief four times).
+- **W2** · Your brief contradicts this file → your brief wins. Your brief is silent → this file governs (id undetermined).
 
-## Read the design before the code (added 2026-09-14 — `CORPUS-STANDARD.md` §4.7)
+## Read the design before the code
 
-Your row names the governed design document and section that is your scope's authority
-(for example `BIO_Content_Framework_v0_10.md` Part II §18 and an IC). **Read that section
-first, then the code.** Its front matter — Status, Place in the system, Incomplete sections —
-tells you how complete the design is and what it already admits it lacks. If the code and the
-design disagree, the document's Status says which is the authority; do not resolve the
-disagreement silently in either direction. If you find a gap in the design, say so in your
-REPORT under a heading `DESIGN GAP:` naming the document and section — CONDUCT folds it into
-the document's Incomplete sections at integration. If the section your row names does not
-exist, stop and report that before building anything: a row with no design is the failure this
-rule exists to catch.
+- **W3** · Read the design section your row names FIRST, then the code; its front matter says how complete it is (`CORPUS-STANDARD.md` §4.7, 2026-09-14).
+- **W4** · Code and design disagree → the document's Status says which is the authority; never resolve it silently (§4.7).
+- **W5** · A gap in the design goes in your REPORT under `DESIGN GAP:` naming document and section (§4.7).
+- **W6** · The section your row names does not exist → stop and report before building anything (§4.7).
 
-## TO WAIT FOR A QUIET MACHINE, RUN `node tools/waitquiet.mjs`. DO NOT WRITE THE LOOP.
+## Waiting
 
-```
-node tools/waitquiet.mjs                  # wait, bounded, then measure
-node tools/waitquiet.mjs --check          # answer once: 0 quiet, 1 busy
-```
-
-Workers share this machine, so an uncontended figure may need a wait. **Do not hand-roll it:** on
-2026-08-09 three workers' `until ! pgrep -f "scripts/battery.mjs"` loops matched THEIR OWN command
-lines and spun for hours with no battery running (receipt: `tools/waitquiet.mjs`'s header). **A wait that cannot fail is indistinguishable from one that has not finished.** The tool matches
-POSITIONALLY (argv[0] `node`, argv[1] the battery path), is bounded, and on timeout exits 2 naming what it saw.
-
-**If you ever do write a wait of your own, its negative control is one command: run the predicate
-once with nothing running.** If it still matches, it will never release you. That control is the
-one nobody ran, and `waitquiet`'s own first draft failed it twice (recorded in the tool).
-
-**A WAIT ENDS WHEN THE WORLD SAYS DONE, NEVER ONLY WHEN A SIGNAL SAYS SO — and "waiting" is
-not a state a worker may rest in** (2026-09-10: a CASE-4 worker's output was fully landed and
-integrated while the worker sat "waiting for the battery to complete" on a machine with ZERO
-battery, workerd or miniflare processes — the run had finished, the completion signal was
-missed or already consumed, and nothing would ever arrive to wake it). Three rules, each the
-incident's own shape inverted:
-
-1. **Launch a long run so its EXIT is your signal** — foreground, or backgrounded through the
-   harness so completion re-invokes you. Never "start it and wait to hear."
-2. **Any hand-rolled wait is BOUNDED, and at every poll and at its timeout it checks the
-   PROCESS, not the signal**: no battery/workerd process means the wait is OVER — read the
-   result from what the run wrote (the suite output, the exit file, git state) rather than
-   waiting longer. An absent process is a completed wait wearing silence.
-3. **A worker is either RUNNING A TOOL or DONE AND SAYING SO.** Ending a turn with "waiting
-   for X" and no pending tool call is a hang with a status message, not a state — if there is
-   nothing left to run, verify, report, and EXIT, and let CONDUCT reap the worktree.
+- **W7** · To wait for a quiet machine run `node tools/waitquiet.mjs` (`--check` answers once); never hand-roll the loop (id undetermined; receipt 2026-08-09, the tool's header).
+- **W8** · A wait you do write: its negative control is running the predicate once with nothing running (id undetermined).
+- **W9** · Launch a long run so its EXIT is your signal — foreground, or backgrounded through the harness (id undetermined; receipt CASE-4, 2026-09-10).
+- **W10** · A hand-rolled wait is BOUNDED and checks the PROCESS, not the signal; no process means the run is over — read what it wrote (id undetermined; CASE-4).
+- **W11** · A worker is RUNNING A TOOL or DONE AND SAYING SO; "waiting for X" with no pending call is a hang (id undetermined; CASE-4).
 
 ## Your environment
 
-- Your worktree may arrive **without `bio-plane/node_modules`**. If a battery reports ~14
-  green with a hundred `ERR_MODULE_NOT_FOUND`, run `npm ci` in `bio-plane/`. Read every
-  exit status **unpiped** — a pre-install run once reported `exit 0` THROUGH `tail` while
-  104 suites failed.
-- Your worktree may be **one merge behind `main`**. Check, and fast-forward before you
-  measure anything.
-- **DO NOT USE `git stash`.** `refs/stash` is repository-wide across all sixty checkouts,
-  so `stash@{0}` means *what any of the sixty pushed last*, and `push -u` carries untracked
-  files. That is how one worker's untracked suite was materialised into another's tree and
-  **counted into its baseline**. Need a clean tree? `git worktree add` a scratch checkout.
-- **KEEP EVERY SCRATCH FILE OUT OF YOUR WORKTREE — in the SESSION SCRATCHPAD your harness names:**
-  logs, baseline captures, copies YOU make of files, and above all a scratch COPY OR CLONE OF THE REPO.
-  A driver's or tool's own pen, GITIGNORED and ITEM-NAMED, stays in the worktree (BOB #33, 2026-09-24).
-  **RULED by BOB #32, 2026-09-24**, superseding "inside your own worktree": a file in the worktree
-  is not inert. Repository-walking suites WALK IT, it trips
-  `gates.mjs` §2e's under-inclusion check, and it makes the tree DIRTY, so D-293 refuses to RECORD a
-  GREEN verdict. **THREE ITEMS PAID IN ONE NIGHT (2026-09-24):** REC-185's
-  `.rec185/` moved the battery's assertion total 19513 -> 19512 with no source change; D-487's
-  `bio-plane/.d487-gate.log` cost a 14-minute re-run of a green gate; D-486's scratch
-  clone was walked by `statepaths`, 36 files. **The scratchpad is neither ISOLATED between sessions
-  (two workers reported that) nor DURABLE — the `/tmp` section below carries both rules.**
-- **PUSH YOUR OWN BRANCH. Do not merge, and never push to `main`.** CONDUCT integrates; you make
-  your work SURVIVE. CORRECTED 2026-09-16 (D-288, ruled by BOB #12) — this line read *do not push*
-  for five weeks and that is the instruction that strands the work: `CLAUDE.md`'s rule is that a
-  change is made when it is COMMITTED AND PUSHED, `plancheck` enforces it for `main` and for the
-  planning surfaces, and NOTHING enforced it for a worker branch — which is where your item's code
-  sits between your report and CONDUCT's merge. **The receipt: REC-91 finished, committed and
-  released on its branch on 2026-09-15; its integrator was stood down before merging; the work
-  reached nobody and sat on one disk until somebody went to that physical machine to get it.**
-  You are the only actor GUARANTEED to be alive at the moment your commits exist, so the push is
-  yours. **Since M0-111 (TREE-SHARING §2) the push is to a LANDING REF:**
-  `git push origin HEAD:refs/heads/land/worker/<your row id>` — never force, never to `main`. CONDUCT's train
-  (`tools/train.mjs`) merges every `land/*` branch in one integration branch with one gate; the push guard REFUSES a
-  push to `main` by name. A branch the train RETURNS (a conflict, or RED) comes back to you by name: rebase it on
-  `origin/main` and push the same ref again.
+- **W12** · No `node_modules`? `npm ci` in `bio-plane/`, `pdf-worker/`, `ocr-worker/`; read every exit status UNPIPED (id undetermined; `CLAUDE.md` §5, §6).
+- **W13** · Your worktree may be one merge behind `main`: check, and bring it level before you measure (id undetermined).
+- **W14** · Never `git stash` — `refs/stash` is shared by every checkout; need a clean tree, `git worktree add` one (id undetermined).
+- **W15** · Files YOU make — logs, baselines, copies of files, a clone of the repo — go in your session scratchpad, never the worktree (BOB #32, 2026-09-24).
+- **W16** · A control driver's or tool's own pen, GITIGNORED and ITEM-NAMED, stays in the worktree: it is not scratch (BOB #33, 2026-09-24 17:12Z).
+- **W17** · The scratchpad is not isolated between sessions: name every file there for YOUR item, never generically (BOB #32, 2026-09-24).
+- **W18** · PUSH your own branch: `git push origin HEAD:refs/heads/land/worker/<row id>`; never to `main`, never force, never merge (D-288, BOB #12; M0-111).
+- **W19** · A branch the train RETURNS comes back by name: rebase it on `origin/main` and push the same ref (M0-111, TREE-SHARING §2).
+- **W20** · Name `store=scratch` on every live call. A confined credential makes the naming REDUNDANT, not OPTIONAL (BOB #34, 2026-09-24 22:22Z; D-463).
 
 ## Measurement
 
-- **MEASURE YOUR OWN BASELINE AND TRUST IT OVER YOUR BRIEF.** Twelve items found a briefed
-  figure stale by measuring it; several then found theirs exactly right and **said so** — the
-  practice is to trust the measurement, not the streak. Report either way.
-- **Attribute your delta PER SUITE by re-running the true baseline**, never by subtraction.
-- **A vendor's documentation is a CLAIM, not a measurement**, and gets labelled as theirs.
-- **An equality or outcome that costs nothing to produce is not evidence.** A hand copy
-  agrees for free — measured five times, including a complete hand copy of 131 op names
-  that passed.
-- **A corpus figure is not stable while a battery runs against the same checkout** (116 vs
-  118, measured). Take instrument figures on a quiet tree.
+- **W21** · Measure your own baseline and trust it over your brief; report either way (id undetermined).
+- **W22** · Attribute your delta PER SUITE by re-running the true baseline, never by subtraction (id undetermined).
+- **W23** · A vendor's documentation is a CLAIM, labelled as theirs (id undetermined; `CLAUDE.md` §5).
+- **W24** · An equality or outcome that costs nothing to produce is not evidence (id undetermined; `CLAUDE.md` §5).
+- **W25** · A corpus figure moves while a battery runs on the same checkout: take instrument figures on a quiet tree (id undetermined).
 
 ## Negative controls
 
-- **Break what you tested and confirm the suite fails.** Each arm **ALONE**, others held
-  open. **Declare before arming what MUST fail and what MUST NOT.**
-- Always include an **over-strictness arm**: correct work in a spelling you did not
-  anticipate must PASS.
-- **Verify every restore by sha256 AND by content (`cmp`)**, against **uniquely-named
-  per-arm** pristine copies, printing a byte count and guarding a minimum.
-- **A surprising green is a finding about your ARM. Record it; do not smooth it.**
-
-**Controls here find the instrument wrong more often than the subject. Real receipts:**
-
-- A `TypeError` inside an assertion **goes through no assertion at all** — it ends the
-  module while the tally reads clean. **Check your suite reached its own FOOT before
-  believing any count**, and report a missing tally as `-1`, never `0`.
-- Two harnesses reported a restore byte-identical **over an EMPTY manifest**, caught only
-  because a digest read `e3b0c442…`, the sha256 of the empty string.
-- Arms that **NEVER ARMED** (patch matched zero times; anchor occurred twice; wrote to a
-  path a worktree's gitdir lacks). *An arm that did not arm is a finding.*
-- Arms that **could never have been honoured** (a field set on objects the code rebuilds).
-- **Headline totality assertions that PASSED OVER AN EMPTY CORPUS — three times.** Assert
-  your fixture is non-empty, print your corpus, and floor it.
-- A harness whose first run reported `null` for **every arm including the BASELINE** —
-  only the baseline row distinguished six-arms-broken from six-arms-working. **Have one.**
-- A revert that was **behaviourally invisible** because a transform was idempotent; only a
-  structural pin could see it.
-- A **sweep arm that failed by citing itself**, and a check that caught **its own
-  correction** because the correction quoted the token it was correcting.
+- **W26** · Break what you tested and see the suite fail; each arm ALONE; declare before arming what MUST fail and what MUST NOT (id undetermined; `CLAUDE.md` §5).
+- **W27** · Always include an over-strictness arm: correct work in a spelling you did not anticipate must PASS (id undetermined).
+- **W28** · Verify every restore by sha256 AND `cmp` against uniquely-named per-arm pristine copies, printing a byte count and guarding a minimum (id undetermined).
+- **W29** · A surprising green is a finding about your ARM: record it, do not smooth it (id undetermined).
+- **W30** · Check your suite reached its own FOOT before believing a count; a missing tally is `-1`, never `0` (id undetermined).
+- **W31** · A digest of `e3b0c442…` is the empty string: a restore "identical" over an EMPTY manifest proves nothing (id undetermined).
+- **W32** · An arm that never ARMED (zero matches, a doubled anchor, a missing path) is a finding (id undetermined).
+- **W33** · An arm that could never have been honoured (a field on objects the code rebuilds) is a finding (id undetermined).
+- **W34** · Totality assertions pass over an empty corpus: assert the fixture non-empty, print it, floor it (id undetermined).
+- **W35** · Keep a BASELINE row: it alone tells six arms broken from six arms working (id undetermined).
+- **W36** · An idempotent transform hides a revert from behaviour; pin the structure too (id undetermined).
+- **W37** · A sweep arm can fail by citing itself, and a check catch its own correction: suspect the instrument first (id undetermined).
 
 ## Sweep for the class
 
-**Never fix only what was reported.** Ask what KIND the defect is and find every instance.
-**Print your corpus size and reach**, and **state plainly what your matcher can and cannot
-see** — that sentence is load-bearing and is what lets the next reader tell a clean result
-from a walk looking in the wrong place.
-
-**Distinguish a defect from a deliberate closure.** Two sweeps earned their trust by
-finding sites that were the same class **closed on purpose** and saying so.
-
-**Invert, do not lengthen a list.** A classifier grading one literal hid 27 ops and read as
-a complete sweep. Ask what makes something recognisable *in principle*; a list of spellings
-goes stale the moment a fourth is written. **And print what you could not classify** — a
-thing the matcher does not understand must be NAMED, never silently scored zero.
+- **W38** · Never fix only what was reported: find every instance of the KIND, print corpus size and reach, and state what your matcher cannot see (id undetermined).
+- **W39** · Distinguish a defect from a deliberate closure, and say which (id undetermined).
+- **W40** · Invert, do not lengthen a list; and print what you could not classify, never score it zero (id undetermined).
 
 ## The record's rules
 
-- **Undetermined is first-class and must be STATED.** Never invent an attribution to pass a
-  gate; a gate that pressures you into one is a bug in the gate.
-- **A defect that makes the record claim more than it can support is worse than a missing
-  feature**, and much worse than an ugly one.
-- **Correct superseded tests, never exempt them.** Say in a comment why the old one was
-  wrong. An exempted test is a rule nobody is enforcing and nobody remembers deleting.
-- **Test through the op.** A store-level test and a passing battery are not evidence a
-  caller can reach the feature — `op=invitelook` shipped with a ReferenceError while 1,276
-  assertions passed.
-- **A mechanism believed on the strength of its EXISTENCE rather than its behaviour is the
-  defect this project meets most.** Eleven fences that did not fire; ten of twelve acts
-  going all the way through; a documented branch that could not be reached; a comment
-  describing a constraint nothing enforced. **Drive it.**
-- **A fence tighter than its rule is not a safer fence** — it is an undeclared interface
-  change wearing the costume of caution.
+- **W41** · Undetermined is first-class and must be STATED; never invent an attribution to pass a gate (`CLAUDE.md` §4).
+- **W42** · A defect that makes the record claim more than it can support is worse than a missing feature (`CLAUDE.md` §2).
+- **W43** · Correct superseded tests, never exempt them, with a comment saying why the old one was wrong (`CLAUDE.md` §5).
+- **W44** · Test through the op: a store-level test is not evidence a caller can reach the feature (`CLAUDE.md` §5; receipt `op=invitelook`).
+- **W45** · A mechanism believed for its EXISTENCE rather than its behaviour is this project's commonest defect: drive it (id undetermined).
+- **W46** · A fence tighter than its rule is an undeclared interface change, not a safer fence (id undetermined).
 
 ## DEC-49 and the floors
 
-- Every refusable condition carries a **code with a canned translation**, the code a
-  **STRING LITERAL** at its site through a helper named `refusal`. A code in a variable is
-  invisible to the guard, and one shipped `translation: undefined` to a member that way.
-- A row's `where` names **the SMALLEST SPAN** — a REGION between
-  `DEC-49 REGION <name>` / `END DEC-49 REGION <name>` markers, **never a whole function**.
-- **MOVE EVERY FLOOR YOU INVALIDATE IN THE SAME TURN, from the figures the instrument
-  PRINTED** — never by adding to the number in the file. Five consecutive items found a
-  floor already stale by measuring it; one sat 19 codes low and **had already flipped a
-  control from RED to GREEN**.
-- **A ceiling is not a ratchet, and a floor with slack is not one either.**
-- **A floor that FALLS needs its reason at the site**: one falling because an instrument
-  stopped double-counting is not slack; one falling for any other reason is.
-- **`regionLines` is a property of the MERGED source** and has moved at integration five
-  times. If you touch a governed region, **say so in your report** and CONDUCT re-reads it.
-- **`REGISTER_FLOOR` in `bio-plane/scripts/coverage.mjs` has ONE key set on purpose.**
-  Keep-both merges left duplicate `arms:` keys there **six times** — valid JavaScript where
-  the last silently wins, and once the last was the lowest. **If you conflict there,
-  COLLAPSE TO ONE SET and re-read the printed figures.**
-- **`_CHECKS` is a RESERVED SUFFIX** — the DEC-49 guard harvests every `/_CHECKS$/` export
-  as a refusal family, and a table named that way grew a ratchet's floor falsely.
+- **W47** · Every refusable condition has a code with a canned translation, a STRING LITERAL at its site through the helper `refusal` (DEC-49).
+- **W48** · A row's `where` names the SMALLEST span: a `DEC-49 REGION <name>` / `END DEC-49 REGION <name>` pair, never a whole function (DEC-49).
+- **W49** · Move every floor you invalidate in the SAME TURN, from the figures the instrument PRINTED, never by arithmetic on the file (DEC-49).
+- **W50** · A ceiling is not a ratchet, and a floor with slack is not one either (DEC-49).
+- **W51** · A floor that FALLS carries its reason at the site (DEC-49).
+- **W52** · `regionLines` is a property of the MERGED source: touch a governed region and say so in your report (DEC-49).
+- **W53** · `REGISTER_FLOOR` in `bio-plane/scripts/coverage.mjs` has ONE key set: on a conflict, collapse to one and re-read the printed figures (DEC-49).
+- **W54** · `_CHECKS` is a reserved suffix: the DEC-49 guard harvests every `/_CHECKS$/` export as a refusal family (DEC-49).
 
 ## Ids
 
-**Take every new id with `node tools/mintid.mjs <NS>`** (C, D, DEC, IC, REC, UI, CPDF, FL,
-PL, SK, M0, …). **Seven items collided on an id in one day, every one having measured the
-number free and every one right when it looked** — the convention was the defect, and the
-vigilance fix was already tried. **Since D-242 (2026-09-24) a take is a compare-and-swap push of `ids/<NS>.tsv` to
-`origin/coord`**, because every worker is its own cloud clone and a clone-local lock was exclusive against nothing
-(IC-222 and IC-231 were each minted three times on 2026-09-23). So a take NEEDS the network: when it cannot push it
-REFUSES and hands out nothing — report that, never fall back to reading the file and adding one. **Never write a worked example naming "the next free
-number" into a corpus file**; the tool caught its own debt row poisoning its own floor.
+- **W55** · Take every new id with `node tools/mintid.mjs <NS>`: a compare-and-swap push to `origin/coord`; if it cannot push it refuses — report that, never number by hand (D-242).
+- **W56** · Never write a worked example naming "the next free number" into a corpus file (id undetermined).
 
 ## Boundaries
 
-- **Claim your paths in `docs/development/CLAIMS.md` BEFORE editing.** It lives on the branch `coord` (M0-110): append
-  the block with `node tools/coord.mjs write -m "<why>" --append docs/development/CLAIMS.md <file>`, and later add its
-  `released:` line INTO that block with `--line docs/development/CLAIMS.md "<its heading>" <file>` — never a commit.
-- **Do not edit another area's paths.** Append a DELEGATION and continue.
-- **A DELEGATION YOU RAISE CARRIES ITS STATE ON A LINE OF ITS OWN, DATED, OR `plancheck`
-  FAILS (M0-37, 2026-09-16).** Write `**open as of YYYY-MM-DD** — <why it is open>` under the
-  block when you raise it. That is one line and it costs you nothing, and it is the whole
-  difference between a register that accumulates and one that is re-affirmed: **until this
-  landed, a block carried only the date it was RAISED on, so 38 of the 49 blocks in
-  `CLAIMS.md` said nothing about their own state — and adjudicating them found 21 already
-  CLOSED IN THE TREE and saying so nowhere.** If your own landing closes somebody else's
-  delegation, write the discharge **in that block**, not in your claim or your report: this
-  file has held a discharge written 2,415 lines away from the delegation it closed, which
-  reads as open to everyone who goes and looks.
-- **Never leave an owed act in a release note, a claim's prose, or your report alone**
-  (added 2026-09-14; FL-10's handoff line sat in a release note nothing drains and cost
-  a measured >3h false stall). If your landing obliges a future actor to do something —
-  flip a row, resolve an IC, run a follow-up — it goes in a DELEGATION or your report's
-  own "for CONDUCT" list, stated as an ACT with its actor, and you name it even if it
-  feels implied. A note is not an item, and a note in a region nothing drains is not
-  even a note.
-- **Do not deploy, do not bump a version, do not cut a tag** — that is DIST's.
-  `newgroup/**` is out of bounds without an explicit instruction.
-- **Never block on Bob.** Ship a provisional and record the decision in the shape
-  `kickoffs/README.md` defines: what runs provisionally, why it was ambiguous, the
-  alternative, your recommendation, what reversing it costs.
-- **If you change a shape another area builds against**, file the IC as its own
-  file, `docs/development/interface-changes/<id>.md` (M0-100; a figure likewise goes in
-  `measurements/<id>.md`), with **measured** consumer impact. **CONDUCT takes the version
-  bump and the RESOLUTION.**
+- **W57** · Claim your paths in `CLAIMS.md` on `coord`, through `node tools/coord.mjs`, before an edit that spans landings; none for one landing (BOB #27, 2026-09-22; M0-110).
+- **W58** · Do not edit another area's paths: append a DELEGATION and continue (`CLAUDE.md` §4).
+- **W59** · A DELEGATION you raise carries `**open as of YYYY-MM-DD** — <why>` on its own line, or `plancheck` fails (M0-37).
+- **W60** · Your landing closes someone's delegation → write the discharge IN THAT BLOCK (M0-37).
+- **W61** · An owed act never lives only in a note: a DELEGATION or your report's "for CONDUCT" list, as an ACT with its actor (id undetermined; receipt FL-10, 2026-09-14).
+- **W62** · Do not deploy, bump a version or cut a tag — DIST's; `newgroup/**` is out of bounds without an explicit instruction (`CLAUDE.md` §4).
+- **W63** · Never block on Bob: ship a provisional recorded in the shape `kickoffs/README.md` defines (`CLAUDE.md` §3).
+- **W64** · Change a shape another area builds against → file the IC as `interface-changes/<id>.md` with MEASURED consumer impact; CONDUCT takes the bump and RESOLUTION (M0-100).
 
 ## Before you finish
 
-0. **TOUCHED A BUNDLED SOURCE? REBUILD EVERY STALE ONE WITH `node tools/bundles.mjs`** (`--check` reports without
-   writing). It asks the committed manifests which bundles name a file you moved, rebuilds each through that member's
-   own build, and says which. **ONE `bio-plane/src/` EDIT STALES THREE** (`pdf-worker` and `ocr-worker` read
-   `../bio-plane/src/{cpu,pdfstructure,subresources}.mjs`, `agent-worker` `src/tokens.mjs`), and **A COMMENT-ONLY
-   CHANGE MAY OR MAY NOT MOVE A BUNDLE — THE FORM IS NOT THE DISCRIMINATOR** (REC-110, c20-batch14: 12 of 25 plain
-   block comments in `index.mjs` are PRESENT in the bundle; render.mjs's JSDoc is ABSENT). Rebuild BEFORE the battery:
-   `FL-10`'s guard turns red naming the TRACKED ARTIFACT, not your change. This step named the plane's bundle ALONE
-   until M0-178 (2026-09-24) — measured: the plane alone left 2 FAILs — and named NONE before 2026-09-18, which THREE
-   CONSECUTIVE `RECORD` ITEMS found from a red suite (REC-119: the remedy is a process change, not a warning).
-
-0b. **EDITED A GOVERNED DESIGN DOC** (`docs/architecture/*`, or `docs/development/*` with front matter)?
-   Move its Status `as of` to today and run `node tools/corpuscheck.mjs` to **0 fail** BEFORE the gate
-   — `--write <file>` regenerates a Contents. The gate runs it, and a stale `as of` goes RED once the
-   battery has cost you the round (M0-141).
-
-0c. **BUILT OR REMOVED SOMETHING? UPDATE `docs/architecture/construct-status.json` IN THE SAME COMMIT** (`CLAUDE.md` §1)
-   — and **POINT ITS PROBES AT CODE: since M0-155 `status.mjs` reads every file with its COMMENTS BLANKED**, so a `hit`
-   on a `DEC-49 REGION` marker or any other comment matches NOTHING (D-507 and D-508 wrote three; all three drifted at
-   c20-batch22's union). Name a symbol matching EXACTLY ONCE (M0-160), `node tools/status.mjs --check` to 0 drift.
-
-1. `cd bio-plane && npm run test:battery` — the WHOLE battery, green.
-2. `node scripts/coverage.mjs --strict` — run **DIRECTLY**, `$?` read **UNPIPED**, exit 0.
-3. `node civicos-ui/test/run.mjs` — **from the REPO ROOT**, exit read UNPIPED, 0. Run it even
-   if you believe you did not touch the UI: CONDUCT once pushed `main` with it red at 32
-   failures, and twice a fixture drawing a value at runtime was refused by a plane check that
-   did not exist when the fixture was written.
-4. `node tools/plancheck.mjs` — clean but for UNPUSHED. It also refuses an unresolved merge
-   marker anywhere in the tree.
-5. Commit, **then PUSH** — `git push origin HEAD:refs/heads/land/worker/<your row id>` (the rule, and
-   why, under "Your environment"). Then VERIFY it arrived by asking the REMOTE, not your tree:
-   `git ls-remote --heads origin land/worker/<your row id>` must answer with the sha you just
-   committed. An unverified push is a claim, and this project has paid for that distinction (D-288).
+- **W65** · Touched a bundled source → `node tools/bundles.mjs` rebuilds every stale bundle, BEFORE the battery; a comment-only change may move one (M0-178; REC-110, REC-119).
+- **W66** · Edited a governed design doc → move its Status `as of` to today, `node tools/corpuscheck.mjs` to 0 fail (M0-141).
+- **W67** · Built or removed something → `construct-status.json` in the same commit, probes on CODE naming a symbol that matches exactly once; `status.mjs --check` to 0 drift (M0-155, M0-160).
+- **W68** · `cd bio-plane && npm run test:battery` — the WHOLE battery, green (id undetermined).
+- **W69** · `node scripts/coverage.mjs --strict` — directly, `$?` read unpiped, exit 0 (id undetermined).
+- **W70** · `node civicos-ui/test/run.mjs` from the REPO ROOT, exit 0, even if you think you did not touch the UI (id undetermined).
+- **W71** · `node tools/plancheck.mjs` — clean but for UNPUSHED; it refuses a merge marker anywhere (id undetermined).
+- **W72** · Commit, PUSH, then `git ls-remote --heads origin land/worker/<row id>` must answer your sha (D-288).
 
 ## Report back
 
-Your final text **is the return value**, not a message to a human. Give CONDUCT: **your PUSHED
-branch name and its sha, read back from `git ls-remote` and not from your tree** (D-288 — a report
-naming a branch nobody else can fetch is worse than no report); what landed and where; the numbers (baseline, final, per-suite attribution, coverage, UI
-harness, every floor moved); **every control arm with its declared and actual result,
-including the ones that came back wrong**; what the class sweep found and **what it could
-not see**; what your brief did not predict; every delegation; any decision for Bob.
+- **W73** · Your final text is the return value: pushed branch and sha read from `git ls-remote`, what landed, the numbers, every control arm declared and actual, the sweep and its blind spots, delegations, decisions for Bob (D-288).
+- **W74** · State plainly what you could NOT do; a narrowed unknown is a legitimate result (id undetermined).
 
-**State plainly what you could NOT do.** A partial item reported honestly is worth more
-than a complete one reported loosely, and a narrowed unknown is a legitimate result.
+## Logs and the scratchpad
 
-## A LOG FILE UNDER `/tmp` WITH A GENERIC NAME IS NOT YOURS.
+- **W75** · A log with a generic name is not yours: name every scratchpad file for your item, and check a log's `provenance:` line against your HEAD before believing it (id undetermined; receipt REC-98).
+- **W76** · A scratchpad file can vanish mid-session: print each figure as you take it and COMMIT the artifact a claim rests on (M0-183; receipt REC-194).
 
-**Measured 2026-09-15 by the REC-98 worker.** A battery redirected to `/tmp/final-battery.log` came
-back **198/202 with four suites FAILED — all four of which pass alone at exit 0. It was another
-session's run:** a shared temp root spans every session, a generic name collides, the second writer
-wins, and its `provenance:` line named a DIFFERENT HEAD and a suite that never existed in that
-worktree. **It looked exactly like damage the worker had done** — all four are repository readers —
-so the obvious next move, bisecting your own change, is wasted work on a subject never yours.
-**So: name every scratchpad file for YOUR item, and before you believe a figure you did not watch
-print, read the log's `provenance:` line against your own HEAD** — the only discriminator, because
-a foreign battery's contents are indistinguishable from yours. **The general form:** a shared,
-unqualified name is an identity nobody owns, so two facts arrive under it and nothing fails loudly.
+## Killing processes
 
-**AND A SCRATCHPAD FILE IS NOT DURABLE — IT CAN VANISH MID-SESSION.** REC-194's worker (F6) lost gate
-logs and pristine copies while same-age neighbours survived, and **the cause is UNDETERMINED**: M0-183 ruled
-out only an age-based cleaner (no `cron` runs, and systemd is not PID 1 here, so its timer cannot). What
-survived was the harness's own `tasks/<id>.output`, so **keep no evidence ONLY in `/tmp`** — print each figure
-as you take it, and COMMIT the artifact a claim will rest on (`measurements/<id>.md`).
+- **W77** · Kill by PID, or the process group you started — never `pkill -f` a machine-wide pattern (id undetermined; receipt REC-105).
+- **W78** · Read the battery's own completion line and exit, never a wrapper's; no completion line means it did not finish (id undetermined; receipt M0-38).
+- **W79** · Killed something on a shared machine → say so in your report and name the window (id undetermined; receipt REC-105).
 
-## KILL BY PID, OR BY THE PROCESS GROUP YOU STARTED — NEVER BY A MACHINE-WIDE PATTERN.
+## Searching
 
-**Reported by the REC-105 worker against itself, 2026-09-15, with ~six batteries live.**
-It ran `pkill -f "scripts/battery.mjs"` to stop ONE stale run of its own. **That pattern does not
-know whose battery it is.** Every worker here runs exactly that script, and the machine read
-QUIET immediately afterwards.
-
-**The practice is one line: read the process table, take the PID you mean, kill that.** Or kill
-the process group you started. **`pkill -f` matches across every worktree and every session and
-is never the right tool here** — the same reasoning as *kill the tree, not the leaf* in
-`kickoffs/CONDUCT.md`, one scope out: that rule is about killing too little, this about far too much.
-
-**WHAT MAKES IT WORTH A SECTION RATHER THAN A WARNING IS THAT THE VICTIM CANNOT TELL.** A battery
-killed mid-run does not report a kill. **A compound command reports the WRAPPER's status — so a
-`&&` chain prints exit 0 over a battery that died at suite 165 of 205 with zero failures**, and
-a truncated run containing no failures is indistinguishable from a green one. The M0-38 worker
-caught exactly this **only because it read the battery's own `BATTERY EXIT=143` line instead of
-the wrapper's.** **Read the battery's own completion line and its own exit, never the wrapper's**,
-and if a run ends without its completion line, it did not finish no matter what the shell said.
-
-**If you kill something on a shared machine, SAY SO in your report and name the window.** REC-105
-did, and named three worktrees as candidates rather than as attribution — which is what let those
-runs be checked instead of trusted. **A kill you do not report is indistinguishable from a
-mysterious failure in somebody else's item.**
-
-## A FAILED SEARCH CAN RETURN ITS OWN ERROR TEXT AS MATCHES.
-
-**Measured by BOB #11, 2026-09-15, checking its own logs for the kill signature above.** A shell
-regex the local `grep` could not compile produced **five "matches" that were the tool's own error
-output** — a false positive that reads exactly like a finding, in a search run to establish that
-something was ABSENT. Re-run properly it returned a clean zero.
-
-**So a search is an instrument and gets the same treatment as one: check that it COMPILED before
-you believe what it found, and be most suspicious when a search for absence comes back with
-hits.** This is the *break only the thing you are testing* rule arriving in the SEARCH rather
-than in the control, and it is worse there, because nobody declares a control arm for a `grep`.
+- **W80** · A search is an instrument: check it COMPILED before believing it, most of all when a search for absence returns hits (id undetermined; receipt BOB #11).

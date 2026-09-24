@@ -42,10 +42,15 @@ export const BUDGET = {
   map: 48 * 1024,
 };
 
+/* A WORD budget for one file, on top of its class's byte budget (M0-194, BOB #34 2026-09-24 22:50Z): WORKER.md, read by
+   every worker, was cut to one line per rule at HALF its 3,959 words, 1,979. The ruling set it in words, so it is
+   measured in words (whitespace-separated, as `wc -w` counts), and the byte budget still applies beside it. */
+export const WORD_BUDGET = { "docs/development/kickoffs/WORKER.md": 1979 };
+
 /* Files whose cut has landed, by repo-relative path: over budget again is a FAIL, not a WARN. */
 export const CUT = new Set(["CLAUDE.md", "docs/development/kickoffs/BOB.md", "docs/development/kickoffs/CONDUCT.md",
                             "docs/development/ORCHESTRATION.md", "docs/architecture/BIO_System_Design.md",
-                            "docs/development/VERIFICATION.md"]);
+                            "docs/development/VERIFICATION.md", "docs/development/kickoffs/WORKER.md"]);
 
 /* Read-whole documents outside the kickoffs directory. */
 export const READ_WHOLE_DOCS = ["docs/development/ORCHESTRATION.md", "docs/development/VERIFICATION.md"];
@@ -66,7 +71,7 @@ export function readSet(root = ROOT) {
   return out;
 }
 
-export function check(root = ROOT, { budget = BUDGET, cut = CUT } = {}) {
+export function check(root = ROOT, { budget = BUDGET, cut = CUT, words = WORD_BUDGET } = {}) {
   const over = [];
   for (const r of readSet(root)) {
     const text = readState(root, r.file);
@@ -78,14 +83,21 @@ export function check(root = ROOT, { budget = BUDGET, cut = CUT } = {}) {
     const bytes = Buffer.byteLength(text, "utf8");
     if (bytes > b) over.push({ file: r.file, bytes, budget: b,
                                verdict: cut.has(r.file) ? "FAIL" : "WARN" });
+    const w = words[r.file];
+    if (w !== undefined) {
+      const n = text.split(/\s+/).filter(Boolean).length;
+      if (n > w) over.push({ file: r.file, words: n, budget: w, unit: "words",
+                             verdict: cut.has(r.file) ? "FAIL" : "WARN" });
+    }
   }
-  return over.sort((a, b) => b.bytes - a.bytes);
+  return over.sort((a, b) => (b.bytes ?? 0) - (a.bytes ?? 0));
 }
 
 if (process.argv[1] && process.argv[1].endsWith("readbudget.mjs")) {
   const over = check();
   for (const o of over)
-    console.log(`${o.verdict}  ${o.file} is ${o.bytes} B against ${o.budget} B`);
+    console.log(o.unit === "words" ? `${o.verdict}  ${o.file} is ${o.words} words against ${o.budget} words`
+                                   : `${o.verdict}  ${o.file} is ${o.bytes} B against ${o.budget} B`);
   console.log(`readbudget: ${readSet().length} read-whole file(s), ${over.length} over budget, `
             + `${over.filter((o) => o.verdict === "FAIL").length} failing`);
   process.exit(over.some((o) => o.verdict === "FAIL") ? 1 : 0);
