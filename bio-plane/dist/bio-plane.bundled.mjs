@@ -55412,18 +55412,73 @@ ${words}`;
   stats({ capacity = false, viewer } = {}) {
     return this.#counts({ proof: false, capacity: capacity === true, viewer });
   }
-  /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
-   *  on any key but the ones the ruling names. `proof` is PRIVATE: only `purge` passes it, because
-   *  its before/after ARE D-113's proof that it took what it says it took, and that proof stays
-   *  WHOLE (§5: *the purge proof's own count stays whole*) — `observations` over the whole log,
-   *  `leads`, and `dbBytes`, exactly as `op=purge` has always answered. No route reaches it. */
-  #counts({ proof, capacity = false, viewer }) {
+  /** D-486 — THE ONE PREDICATE THAT WITHHOLDS A HIDDEN PROJECT'S RUN ATTRIBUTION, AND THE ONE PLACE
+   *  THE THREE SETS ARE SPELLED. Five readers take it (`#counts`' `aiRunLog` and
+   *  `observationsNonLead`, and the document, content and meaning frontier tallies), because a rule
+   *  with five spellings is the mirror-and-drift class this file refuses for gates.
+   *
+   *  **RULED BY BOB #32, 2026-09-24 02:30Z, on the question D-464 routed rather than decided**
+   *  (`BIO_Membership_Architecture_v2.md` §7 item 7.9; `OBSERVATION-LOG-DESIGN.md` §6): *a hidden
+   *  project's run output is the PROJECT'S THINKING until something outside uses it; the bytes stay
+   *  shared, only the run's ATTRIBUTION is withheld.* So nothing here touches the evidence — a
+   *  capture, a content row, a reading a hidden project's run produced stays in every corpus count
+   *  it was ever in. What leaves an outsider's tallies is the LOG ROW that says a run happened, and
+   *  it leaves because that row is §7.9's *"not its existence"* arriving as an aggregate: a member
+   *  diffing `op=stats` or `op=frontier` across a colleague's work learned that a project they were
+   *  never invited to had RUN.
+   *
+   *  THE PREDICATE IS A SET SUBTRACTION AND DELIBERATELY NOT A RESOLVER, which is what makes it
+   *  admissible where REC-110 (D-386) refused gating these tallies. That ruling's premise (2) is
+   *  that `observation_log` has no bundle column, so a bundle gate here would be the SECOND
+   *  implementation of `#observationBundles` REC-92 refused; its premise (3) is that applying that
+   *  resolver per row is `derivation-bounds.test.mjs`'s amplification class. Neither is touched:
+   *  this reads ONE indexed set of run ids (`observation_log_authority` is `(authority_kind,
+   *  authority, seq)`) and subtracts it, with no per-row work and no second resolver. Premise (1) —
+   *  *`op=stats` answers the same question to the same audience through a door of identical width* —
+   *  is KEPT TRUE BY MOVING BOTH DOORS IN ONE LANDING rather than by leaving the tallies whole; that
+   *  is why D-486's row says *all five readers together*, and why gating four of them would have
+   *  been the documented hole the premise warns about. Premise (4) is untouched: the field still
+   *  counts every row at its level rather than this page's states.
+   *
+   *  WHO IS FILTERED IS THE GATE'S WORD (D-464's sentence, inherited rather than restated): a
+   *  credential `viewerPredicate` does not filter — scope `member`, the four token classes and an
+   *  organisation `ai` key — and an enrolled administrator's session get `null` here, i.e. exactly
+   *  the count they always got. A viewer SENT but unrecognised is DENY, so every project is hidden
+   *  and every project-context run's rows drop: FAILS CLOSED.
+   *
+   *  THE NEVER-SENT STAMP IS THE CALLER'S CONVENTION AND NOT THIS METHOD'S, and the two callers
+   *  differ ON PURPOSE rather than by omission. `#counts` passes `viewer` straight through, so a
+   *  direct INTERNAL call (`undefined`: the DO route passes the parameter only when present) stays
+   *  WHOLE — purge's proof and the store-level suites, D-464's correction. `frontier()` defaults
+   *  `viewer` to `null`, which compiles DENY, so an ABSENT control-plane stamp sees no run at all —
+   *  `#frontierDocumentVisible`'s posture one method away (*a missing stamp is an outage and never a
+   *  leak*), and `index.mjs` stamps `op=frontier` for exactly that reason. */
+  #hiddenSets(viewer) {
     const gate = viewer === void 0 ? null : viewerPredicate(viewer);
     const hid = gate && gate.scope !== "member" ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args } : null;
     const hidRuns = hid && {
       sql: `(SELECT run FROM ai_runs WHERE context_type = 'project' AND context_id IN ${hid.sql})`,
       args: hid.args
     };
+    const runRows = hidRuns && {
+      sql: `NOT (authority_kind = 'run' AND COALESCE(authority, '') IN ${hidRuns.sql})`,
+      args: hidRuns.args
+    };
+    return { gate, hid, hidRuns, runRows };
+  }
+  /** D-486's predicate as a WHERE tail, for the three frontier tallies. Returns `""` and no args when
+   *  nothing is withheld, so the unfiltered SQL is byte-identical to what it was before this landing. */
+  #hiddenRunTail(viewer) {
+    const { runRows } = this.#hiddenSets(viewer);
+    return runRows ? { sql: ` AND ${runRows.sql}`, args: runRows.args } : { sql: "", args: [] };
+  }
+  /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
+   *  on any key but the ones the ruling names. `proof` is PRIVATE: only `purge` passes it, because
+   *  its before/after ARE D-113's proof that it took what it says it took, and that proof stays
+   *  WHOLE (§5: *the purge proof's own count stays whole*) — `observations` over the whole log,
+   *  `leads`, and `dbBytes`, exactly as `op=purge` has always answered. No route reaches it. */
+  #counts({ proof, capacity = false, viewer }) {
+    const { hid, hidRuns, runRows } = this.#hiddenSets(viewer);
     const nx = (t, where, keys = [], runKeys = [], whereArgs = []) => {
       const conds = where ? [where] : [], args = [...whereArgs];
       if (hid) {
@@ -55600,7 +55655,16 @@ ${words}`;
          from that proof reads as a table nobody is checking. `observations` is
          counted WHOLE beside it: the log is the coverage record and its size is
          an operator fact, while what any single row was looking for is not. */
-      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,
+      /* D-486 / BOB #32 (2026-09-24): AND IT IS TAKEN THROUGH THE CALLER'S OWN SIGHT. This key is the
+         `authority_kind = 'run'` SLICE of the log, so every row it counts is a run saying it looked —
+         which for a project the caller cannot see is that project's THINKING, withheld by the ruling.
+         `runRows` is D-464's `hidRuns` inverted into a row predicate at `#hiddenSets`, one compilation
+         point for this key, `observationsNonLead` below and the three frontier tallies. Unfiltered
+         callers get `null` and the count they always got; purge's `observations` below stays WHOLE. */
+      aiRunLog: this.#one(
+        `SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'${runRows ? ` AND ${runRows.sql}` : ""}`,
+        ...runRows ? runRows.args : []
+      ).c,
       /* REC-131 / IC-148 — `leads` IS NOT ON THE WIRE FOR ANY CLASS, AND THE WIRE'S LOG COUNT IS A
          DIFFERENT KEY FROM PURGE'S. BOB #15's CORRECTED ruling (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A
          COUNT IS A DISCLOSURE OF EXISTENCE*): a counter over rows a caller could not all read goes
@@ -55618,7 +55682,15 @@ ${words}`;
          * the wire because OBSERVATION-LOG-DESIGN §6's REC-110 ruling rests on it (premise 1): the
          * three built frontier levels' tallies count no lead row either. `aiRunLog` above is
          * untouched: no lead act writes a 'run' row. */
-      ...proof ? { observations: n("observation_log") } : { observationsNonLead: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c },
+      ...proof ? { observations: n("observation_log") } : { observationsNonLead: this.#one(
+        /* D-486 / BOB #32: the wire's log count subtracts a hidden project's RUN rows for the same reason
+           `aiRunLog` does — and ONLY those. The lead exclusion and this one are two predicates over one
+           table and are deliberately not folded: `authority_kind <> 'lead'` states the key's NAME (REC-131:
+           a key never carries two meanings), while the run subtraction is the CALLER's sight and moves with
+           the viewer. A rename would be an IC; this is a subtraction inside the name the key already has. */
+        `SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'${runRows ? ` AND ${runRows.sql}` : ""}`,
+        ...runRows ? runRows.args : []
+      ).c },
       /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
          PROVE it took them (D-113). What any lead says is not an operator fact —
          and since REC-131, neither is how many there are: purge's proof only. */
@@ -67184,9 +67256,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const missing = missingFetch.rows.map((r) => ({ ...r, missing_cause: this.#missingContentCause(r.subject, r.registered) }));
     const never = missing.filter((r) => r.missing_cause === "never_looked");
     const unexplained = missing.filter((r) => r.missing_cause !== "never_looked");
+    const hidTail = this.#hiddenRunTail(viewer);
     const tally = {};
     for (const row of this.#rows(
-      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content' GROUP BY state`
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content'${hidTail.sql} GROUP BY state`,
+      ...hidTail.args
     ))
       tally[row.state] = row.n;
     const candidates = looked.filter((r) => r.recandidate);
@@ -67578,7 +67652,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const owner = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
       return owner ? visible(owner.bundle_id) !== null : false;
     };
+    const runSeen = (r) => r.authority_kind !== "run" || !r.authority || this.aiRunLog({ run: r.authority, viewer, limit: 1 }).found === true;
     const latest = this.#frontierPage("meaning", cap, { limit: (cap + 1) * 3 }, (r) => {
+      if (!runSeen(r)) return false;
       if (r.subject_kind === "capture") return captureSeen(r.subject);
       if (r.subject_kind === "reference")
         return r.authority ? captureSeen(r.authority) : false;
@@ -67658,9 +67734,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       });
     const never = missing.filter((r) => r.missing_cause === "never_looked");
     const unexplained = missing.filter((r) => r.missing_cause !== "never_looked");
+    const hidTail = this.#hiddenRunTail(viewer);
     const tally = {};
     for (const row of this.#rows(
-      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'meaning' GROUP BY state`
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'meaning'${hidTail.sql} GROUP BY state`,
+      ...hidTail.args
     ))
       tally[row.state] = row.n;
     const by_subject_kind = {};
@@ -67985,9 +68063,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       })
     );
     const never = neverFetch.rows;
+    const hidTail = this.#hiddenRunTail(viewer);
     const tally = {};
     for (const row of this.#rows(
-      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document' GROUP BY state`
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document'${hidTail.sql} GROUP BY state`,
+      ...hidTail.args
     ))
       tally[row.state] = row.n;
     return {

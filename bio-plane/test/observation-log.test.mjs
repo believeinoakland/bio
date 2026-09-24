@@ -1450,6 +1450,51 @@ console.log("\n--- J · REC-110: the tally is ungated ON PURPOSE (D-386 ruled (a
      (SRC.match(/REC-110, 2026-09-17, D-386 CLOSED/g) || []).length,
      (SRC.match(/SELECT state, COUNT\(\*\) n FROM observation_log/g) || []).length],
     [1, 2, 3]);
+
+  /* J5 — D-486 / BOB #32 (2026-09-24): THE ONE NARROWING, AND WHAT IT DOES TO J1's CLAIM.
+   *
+   *  **J1 ABOVE IS STILL TRUE AND IS NO LONGER TRUE UNCONDITIONALLY, AND SAYING SO IS THIS ARM'S WHOLE JOB.**
+   *  Bob ruled on 2026-09-24 at 02:30Z that a hidden project's run output is THE PROJECT'S THINKING until
+   *  something outside uses it, so all five readers of `observation_log` — `op=stats`' `aiRunLog` and
+   *  `observationsNonLead`, and the three bundle-level tallies — now subtract the log rows of a run whose
+   *  context is a project the caller cannot see. J1's byte-identity therefore holds for THIS fixture because
+   *  THIS fixture opens no run over a project, and that precondition is ASSERTED here rather than left to be
+   *  true by luck: a suite whose headline equality quietly depends on an unstated condition is the
+   *  costs-nothing shape this file refuses everywhere else. If a later session adds a project-context run to
+   *  this fixture, THIS arm goes red first and names the reason, instead of J1 going red looking like a
+   *  regression in a ruling that was never reopened.
+   *
+   *  REC-110 IS NOT REOPENED, AND THE DISTINCTION IS EXACT. Its premise (2) (no bundle column, so a gate here
+   *  would be the forbidden second resolver) and premise (3) (per-row resolution is the amplification class)
+   *  are both untouched: D-486 subtracts ONE indexed set of run ids and does no per-row work. Its premise (1)
+   *  (`op=stats` answers the same question to the same audience) is KEPT TRUE by moving both doors in one
+   *  landing — which is why D-486's row reads *all five readers together*. The LIVE arm, over a real hidden
+   *  project through the op, is `project-sight.test.mjs` §9. */
+  /* THE PRECONDITION IS MEASURED, NOT ASSERTED FROM READING THE FIXTURE — and the first spelling of this arm got
+     it wrong, which is why it is measured. It declared *this fixture holds NO run* and came back `2`: the suite
+     has TWO sections labelled `I`, and the FIRST one (REC-103's fence, line 883) does open a run over a PROJECT.
+     Section H purges the whole store BETWEEN them, so by here that run is gone and the two live runs are both
+     `inquiry`-context. **The arm was right and the reading of the fixture was wrong**, which is the direction this
+     project wants the surprise to come from. It now measures the thing that actually matters — whether the
+     subtraction moves anything here — rather than a proxy for it. (The duplicated section letter is reported as a
+     finding by D-486; it is cosmetic and is not fixed here.) */
+  const st = await DO("stats"), sFiltered = await DO("stats", "viewer=member:not-invited");
+  t("J5: J1's EQUALITY IS ARMED AND ITS PRECONDITION IS NOW STATED AND MEASURED — this fixture DOES hold runs "
+  + "(so the arm is not vacuous about runs existing) and a filtered viewer DOES lose bundles here (so the gate "
+  + "is live), but NO surviving run's context is a project that viewer cannot see, so D-486 subtracts nothing "
+  + "at this fixture and J1 above really is three answers over one whole log. Add a project-context run to this "
+  + "fixture and THIS arm goes red first, naming the reason, instead of J1 reading like a reopened ruling",
+    [st.aiRuns > 0, st.bundles > sFiltered.bundles,
+     sFiltered.aiRunLog === st.aiRunLog, sFiltered.observationsNonLead === st.observationsNonLead],
+    [true, true, true, true]);
+  t("J5b: AND THE NARROWING IS AT ALL THREE TALLY SITES AND IS ONE PREDICATE — each site reaches it through the "
+  + "shared `#hiddenRunTail`, the subtraction itself is written in exactly ONE place (`#hiddenSets`), and the "
+  + "ruling that licensed it is named at that place. Five readers, one rule: three spellings is the drift class "
+  + "REC-110's own J3 was written against, and five would be worse",
+    [(SRC.match(/this\.#hiddenRunTail\(viewer\)/g) || []).length,
+     (SRC.match(/NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) IN /g) || []).length,
+     /BOB #32, 2026-09-24 02:30Z/.test(SRC)],
+    [3, 1, true]);
 }
 
 /* ------------------------------------------------------------------------- *
