@@ -48610,10 +48610,41 @@ export class Store extends DurableObject {
                 second condition to be discovered would be the overclaim this
                 project's whole threat model is about. */
              in_force: b.current_state === "adopted",
+             /* REC-210 — THE MARKER. Ruled by BOB #32 on 2026-09-24 and folded into
+                `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption": *"Adopting a proposed,
+                not-yet-accepted revision is a REPLACEMENT: the adopter's lens becomes those bytes,
+                and it stays on them whatever later happens to the proposal. It is never a
+                pre-authorisation of whatever the proposal becomes. The adoption and its read SAY
+                that they pin a proposed revision."*
+
+                IT IS A FACT ABOUT THE PIN, NOT A SECOND SPELLING OF `in_force`. The two agree in
+                THIS answer because the pin is the head at this instant; they come apart at the
+                READ, in both directions. promote() re-pins an adoption taken at `proposed` to the
+                sha the promotion to `adopted` mints (REC-187), so this row stops pinning a proposed
+                revision with nobody adopting again — and a re-adoption of an ALREADY ADOPTED set on
+                a later proposal moves the pin back onto proposed bytes and LIFTS a lens that was in
+                force. `in_force: false` says no lens stands over this scope's work; the marker says
+                what was frozen instead, and that the group has not accepted it.
+
+                STATED RATHER THAN LEFT TO BE INFERRED, for the reason `in_force` itself is:
+                `pinned.bundle_sha` is 64 hex characters that no reader can tell from an adopted
+                revision's without going and fetching the bytes, so an answer without this field
+                lets a REPLACEMENT read exactly like an ordinary adoption — the record claiming more
+                than it can support, which is the defect this project ranks worst. */
+             pins_proposed: b.current_state === "proposed",
              note: b.current_state === "adopted"
                ? "this set is in force for that scope"
-               : "recorded and pinned; the set is in force once the bundle itself stands at 'adopted', "
-                 + "which is a member-authored transition through op=promote" };
+               /* CORRECTED by REC-210, and the correction is not cosmetic: this sentence read
+                  "recorded and pinned; the set is in force once THE BUNDLE ITSELF stands at
+                  'adopted'", which was true of a first adoption and false of a re-adoption on a
+                  later proposal — that bundle already stands at `adopted`, and what governs is the
+                  state of the REVISION THIS ROW PINS. It also said nothing about the lens the act
+                  had just displaced. */
+               : "PINS A PROPOSED REVISION: this adoption froze bytes the group has offered and not "
+                 + "yet accepted, so it REPLACES this scope's lens with them rather than "
+                 + "pre-authorising whatever the proposal becomes; a lens is in force once the "
+                 + "revision THIS ROW PINS stands at 'adopted', which is a member-authored "
+                 + "transition through op=promote" };
   }
   /* NOT a literal. `MACHINE_AUTHOR_PREFIX` is the catalogue's, imported at the
      top of this file and already reused by the queue's own machine-author test
@@ -48722,6 +48753,16 @@ export class Store extends DurableObject {
     const pinned = [];
     const pinnedText = new Map();
     const unresolved = [];
+    /* REC-210 — BOB #32, 2026-09-24: AN ADOPTION WHOSE PIN IS A PROPOSED REVISION, which this read
+       DROPPED IN SILENCE. *"Adopting a proposed, not-yet-accepted revision is a REPLACEMENT … The
+       adoption and its read SAY that they pin a proposed revision."* The silence was the defect the
+       ruling is about: a scope whose only adoption pins proposed bytes answered `in_force: false`
+       and *"no manifest was in force"* with nothing beside it, which is indistinguishable from a
+       group that never adopted anything — and for a set already in force whose adoption was moved
+       onto a later proposal, it is the record reporting an absence where a member's authored act
+       had REPLACED the lens. The sentence stays exactly as it is, because it is TRUE and
+       `INVESTIGATIVE-SESSION.md` §3 requires it verbatim; the marker is its own field beside it. */
+    const pinsProposed = [];
     const adoptionsFor = (type, id) => {
       const out = [];
       const rows = this.#rows(
@@ -48736,7 +48777,31 @@ export class Store extends DurableObject {
            occurs it is UNDETERMINED and said so, never dropped into "not in force". */
         if (text === null) { unresolved.push({ bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type }); continue; }
         const fm = parseFrontmatter(text).data || {};
-        if (fm.current_state !== "adopted") continue;
+        if (fm.current_state !== "adopted") {
+          /* REC-210: RECORDED, not dropped. `pinned_state` is the pinned revision's OWN state and
+             is carried rather than assumed `proposed`: op=biasadopt refuses a set that is in
+             neither `proposed` nor `adopted` (C-26.10), so `proposed` is the only state this plane
+             can produce here — but a state it cannot produce must be NAMED if it ever appears
+             rather than silently scored as the expected one.
+
+             THE STATE IS HOISTED INTO A LOCAL BEFORE IT IS TYPE-CHECKED, and that is not style.
+             `civicos-ui/check-semantics.mjs` harvests the states this plane writes by matching the
+             field name followed by an equality and a quoted lower-case word, over the RAW file. So
+             the ordinary spelling of this guard — a `typeof` comparison of `fm`'s field against the
+             name of the string type — is read by that walk as the plane writing a state CALLED
+             after that type, and the gate goes RED naming a state nobody wrote. Measured on this
+             landing, at the cost of one gate round; and then a SECOND round, because the first
+             version of this comment EXPLAINED the trap by quoting the expression, which re-armed it
+             — the walk reads comments, and a correction that spells the token it is correcting is a
+             receipt `kickoffs/WORKER.md` already carries. Written through `pinnedState` the guard is
+             identical and the walk sees nothing. The walk's own over-match is reported as its own
+             defect rather than worked around in silence. */
+          const pinnedState = fm.current_state;
+          pinsProposed.push({ bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type,
+                              pinned_state: typeof pinnedState === "string" ? pinnedState : null,
+                              adopted_by: a.author, adopted_at: a.at });
+          continue;
+        }
         pinned.push([a.bundle_id, fm]);
         pinnedText.set(a.bundle_id, text);
         out.push(a);
@@ -48748,10 +48813,25 @@ export class Store extends DurableObject {
     const projectAdoptions = st === "project" ? adoptionsFor("project", sid) : [];
     const adoptions = [...instanceAdoptions, ...projectAdoptions];
 
+    /* REC-210: SPREAD INTO EVERY ANSWER BELOW THAT COULD CARRY IT, and ABSENT when the list is
+       empty — `unresolved_pins`' own shape, for its reason: a key that is always present teaches a
+       consumer nothing by being there, and BOB #32's rule is that the read of an adoption pinning a
+       proposed revision SAYS SO, while an ordinary adoption's read does not. The sentence states
+       what the list MEANS, the way `statements_sha_covers` does, so no consumer has to reconstruct
+       the doctrine from a field name. */
+    const marker = pinsProposed.length === 0 ? {} : {
+      pins_proposed: pinsProposed,
+      pins_proposed_stated:
+        "each entry is an adoption whose PINNED REVISION is one the group has offered and not "
+        + "accepted: the member's act REPLACED that scope's lens with those bytes and is not a "
+        + "pre-authorisation of whatever the proposal becomes (BOB #32, 2026-09-24), and such a pin "
+        + "puts no lens in force until the revision it names stands at 'adopted'",
+    };
+
     if (unresolved.length > 0)
       return { ok: true, scope: st, scope_id: sid, in_force: null,
                bundles: [], statements: [], residue: [], lock_violations: [],
-               statements_sha: null, unresolved_pins: unresolved,
+               statements_sha: null, unresolved_pins: unresolved, ...marker,
                count: 0, total: 0, limit: 0, offset: 0, truncated: false,
                stated: "undetermined: an adoption pins a revision whose bytes this record cannot produce, "
                      + "so which statements are in force cannot be computed" };
@@ -48759,7 +48839,7 @@ export class Store extends DurableObject {
     if (adoptions.length === 0)
       return { ok: true, scope: st, scope_id: sid, in_force: false,
                bundles: [], statements: [], residue: [], lock_violations: [],
-               statements_sha: null,
+               statements_sha: null, ...marker,
                count: 0, total: 0, limit: 0, offset: 0, truncated: false,
                stated: "no manifest was in force" };
 
@@ -48879,6 +48959,11 @@ export class Store extends DurableObject {
       /* Stated in the answer rather than left to be inferred: the hash covers
          the whole set even when the page does not. */
       statements_sha_covers: "the whole effective set, before any bound was applied",
+      /* REC-210: A LENS IN FORCE AND AN ADOPTION PINNING A PROPOSED REVISION ARE NOT EXCLUSIVE —
+         one set's pin may stand at `adopted` while another's was moved onto a later proposal, and
+         the instance and project layers can differ. So the marker travels here too, and the
+         statements above are the effective set of the pins that ARE adopted, never of these. */
+      ...marker,
       statements: page,
       residue,
       lock_violations: lockViolations,

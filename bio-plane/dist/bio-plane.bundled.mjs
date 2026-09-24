@@ -74393,7 +74393,29 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          second condition to be discovered would be the overclaim this
          project's whole threat model is about. */
       in_force: b.current_state === "adopted",
-      note: b.current_state === "adopted" ? "this set is in force for that scope" : "recorded and pinned; the set is in force once the bundle itself stands at 'adopted', which is a member-authored transition through op=promote"
+      /* REC-210 — THE MARKER. Ruled by BOB #32 on 2026-09-24 and folded into
+                      `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption": *"Adopting a proposed,
+                      not-yet-accepted revision is a REPLACEMENT: the adopter's lens becomes those bytes,
+                      and it stays on them whatever later happens to the proposal. It is never a
+                      pre-authorisation of whatever the proposal becomes. The adoption and its read SAY
+                      that they pin a proposed revision."*
+      
+                      IT IS A FACT ABOUT THE PIN, NOT A SECOND SPELLING OF `in_force`. The two agree in
+                      THIS answer because the pin is the head at this instant; they come apart at the
+                      READ, in both directions. promote() re-pins an adoption taken at `proposed` to the
+                      sha the promotion to `adopted` mints (REC-187), so this row stops pinning a proposed
+                      revision with nobody adopting again — and a re-adoption of an ALREADY ADOPTED set on
+                      a later proposal moves the pin back onto proposed bytes and LIFTS a lens that was in
+                      force. `in_force: false` says no lens stands over this scope's work; the marker says
+                      what was frozen instead, and that the group has not accepted it.
+      
+                      STATED RATHER THAN LEFT TO BE INFERRED, for the reason `in_force` itself is:
+                      `pinned.bundle_sha` is 64 hex characters that no reader can tell from an adopted
+                      revision's without going and fetching the bytes, so an answer without this field
+                      lets a REPLACEMENT read exactly like an ordinary adoption — the record claiming more
+                      than it can support, which is the defect this project ranks worst. */
+      pins_proposed: b.current_state === "proposed",
+      note: b.current_state === "adopted" ? "this set is in force for that scope" : "PINS A PROPOSED REVISION: this adoption froze bytes the group has offered and not yet accepted, so it REPLACES this scope's lens with them rather than pre-authorising whatever the proposal becomes; a lens is in force once the revision THIS ROW PINS stands at 'adopted', which is a member-authored transition through op=promote"
     };
   }
   /* NOT a literal. `MACHINE_AUTHOR_PREFIX` is the catalogue's, imported at the
@@ -74505,6 +74527,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const pinned = [];
     const pinnedText = /* @__PURE__ */ new Map();
     const unresolved = [];
+    const pinsProposed = [];
     const adoptionsFor = (type, id) => {
       const out = [];
       const rows = this.#rows(
@@ -74523,7 +74546,18 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           continue;
         }
         const fm = parseFrontmatter(text).data || {};
-        if (fm.current_state !== "adopted") continue;
+        if (fm.current_state !== "adopted") {
+          const pinnedState = fm.current_state;
+          pinsProposed.push({
+            bundle_id: a.bundle_id,
+            revision: a.bundle_sha,
+            scope: a.scope_type,
+            pinned_state: typeof pinnedState === "string" ? pinnedState : null,
+            adopted_by: a.author,
+            adopted_at: a.at
+          });
+          continue;
+        }
         pinned.push([a.bundle_id, fm]);
         pinnedText.set(a.bundle_id, text);
         out.push(a);
@@ -74533,6 +74567,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const instanceAdoptions = adoptionsFor("instance", "");
     const projectAdoptions = st === "project" ? adoptionsFor("project", sid) : [];
     const adoptions = [...instanceAdoptions, ...projectAdoptions];
+    const marker = pinsProposed.length === 0 ? {} : {
+      pins_proposed: pinsProposed,
+      pins_proposed_stated: "each entry is an adoption whose PINNED REVISION is one the group has offered and not accepted: the member's act REPLACED that scope's lens with those bytes and is not a pre-authorisation of whatever the proposal becomes (BOB #32, 2026-09-24), and such a pin puts no lens in force until the revision it names stands at 'adopted'"
+    };
     if (unresolved.length > 0)
       return {
         ok: true,
@@ -74545,6 +74583,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         lock_violations: [],
         statements_sha: null,
         unresolved_pins: unresolved,
+        ...marker,
         count: 0,
         total: 0,
         limit: 0,
@@ -74563,6 +74602,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         residue: [],
         lock_violations: [],
         statements_sha: null,
+        ...marker,
         count: 0,
         total: 0,
         limit: 0,
@@ -74656,6 +74696,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       /* Stated in the answer rather than left to be inferred: the hash covers
          the whole set even when the page does not. */
       statements_sha_covers: "the whole effective set, before any bound was applied",
+      /* REC-210: A LENS IN FORCE AND AN ADOPTION PINNING A PROPOSED REVISION ARE NOT EXCLUSIVE —
+         one set's pin may stand at `adopted` while another's was moved onto a later proposal, and
+         the instance and project layers can differ. So the marker travels here too, and the
+         statements above are the effective set of the pins that ARE adopted, never of these. */
+      ...marker,
       statements: page,
       residue,
       lock_violations: lockViolations,
