@@ -116,7 +116,7 @@ scope: read the armed run to find which path writes the second record (§2d reus
 accepts-when: G5 arms as declared, or its declaration states what it actually proves. NEGATIVE CONTROL: G5 itself, re-run after the change.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### M0-158 · running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-158 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-158; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### M0-158 · integrated — LANDED ON COORD 6c0f0763 (CLAIMS.md only; contradictory delegations 5 -> 0; no main change, no branch; gate DOCS 23/23 green). Residue F1 (M0-99's three sentences) to SCHEDULER as a row.
 order: after M0-157, with the process rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 06:02Z)
 milestone: M0
 interface: none.
