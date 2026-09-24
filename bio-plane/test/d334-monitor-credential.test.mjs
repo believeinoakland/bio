@@ -38,12 +38,22 @@
  * uses for its published-value audit). It is a FLOOR on the class, not a ceiling,
  * which is why the behavioural arms above carry the weight.
  *
- * NEGATIVE CONTROL: D-506 re-ran this suite as a SUBJECT of its own three arms on 2026-09-24 (the arms are
- * in `src/livefire.mjs`; the full record is on `test/installer.test.mjs`'s NEGATIVE CONTROL line). Arm 1
- * and arm 2 each took this suite to 45/1, failing ONLY the arm declared, and arm 3 left it 46/46. This
- * suite's own arm B gained an INSTANCE_NAME binding in that landing and the count moved 45+1 -> 46; see
- * the comment at the binding for why, and `CLAUDE.md` §5 on re-running a control after changing its
- * subject — the three arms below were NOT re-run by D-506 and their figures are 2026-09-14's.
+ * RE-RUN IN FULL 2026-09-24 BY D-506, BECAUSE D-506 CHANGED THIS SUITE (`CLAUDE.md` §5: re-run the
+ * subject's negative control after changing it — a suite coupled to behaviour survives a refactor that
+ * disarms a control coupled to shape). D-506 gave arm B an INSTANCE_NAME binding and one new arm, so the
+ * baseline moved 45 -> 46. All three arms below were re-run with `control.sh` (adapted only in its shebang,
+ * its `cd` and its scratch paths, this machine having no zsh and a SHARED /tmp — see WORKER.md), and
+ * **EVERY ARM BIT AT EXACTLY ITS RECORDED STRENGTH: the FAILURE counts are identical to 2026-09-14's and
+ * only the PASS count rose, by the one arm added.** Arm 1: 35/10 -> 36/10, the same ten, arm B still 0 as
+ * declared. Arm 2: 42/3 -> 43/3, the same three. Arm 3: 41/4 -> 42/4, the same four. Baseline and every
+ * post-restore run 46/46, exit 0; `src/store.mjs` restored IDENTICAL
+ * (736ebdd3e4ebb225178b267c0a2c134ea5e60c2071e34e36377aa1c7aadb1cfc, 3,222,501 B) and `src/index.mjs`
+ * IDENTICAL (595c23dc62de1d6170989a72768fe009fa9f09b95a6a9bbdeadfda587b13a703, 802,790 B).
+ * **A RESULT WORTH STATING RATHER THAN ASSUMING:** D-506's two new livefire arms in arm B did NOT fail
+ * under arm 1 or arm 3, which is correct and is the suite's own THIRD TRUTH — `op=livefire` reads `env`
+ * directly, so neither healing selection nor healing the selftest report can quiet it. D-506's own three
+ * arms, in `src/livefire.mjs`, are recorded on `test/installer.test.mjs`'s NEGATIVE CONTROL line; under
+ * them this suite read 45/1 twice and 46/46 once, failing only the arm declared each time.
  *
  * NEGATIVE CONTROL: RUN 2026-09-14, three arms, each armed ALONE, others held
  * open, on the real source with a uniquely-named per-arm pristine copy taken
