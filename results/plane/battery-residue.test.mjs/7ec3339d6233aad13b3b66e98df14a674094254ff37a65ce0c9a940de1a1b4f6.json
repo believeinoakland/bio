@@ -1,0 +1,16 @@
+{
+ "unit": "plane:battery-residue.test.mjs",
+ "inputHash": "7ec3339d6233aad13b3b66e98df14a674094254ff37a65ce0c9a940de1a1b4f6",
+ "verdict": "PASS",
+ "run": "ead3b9a51e45f8c97f1af71cdb572d736869204c.1790268664248.6795.json",
+ "tree": "ead3b9a51e45f8c97f1af71cdb572d736869204c",
+ "head": "c6558df8b46708e798dabf8ee18635bc3b33b157",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 911,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "be473955-82f3-54c6-ade6-03ddccd50122",
+ "at": "2026-09-24T16:51:04.261Z"
+}

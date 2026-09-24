@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d280-strengthbar.test.mjs",
+ "inputHash": "33fc8b43f17f756ec7d6e19616ccef8472a2cbab351ee035d7e81ba34e03ce52",
+ "verdict": "PASS",
+ "run": "ead3b9a51e45f8c97f1af71cdb572d736869204c.1790268664248.6795.json",
+ "tree": "ead3b9a51e45f8c97f1af71cdb572d736869204c",
+ "head": "c6558df8b46708e798dabf8ee18635bc3b33b157",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 998,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "be473955-82f3-54c6-ade6-03ddccd50122",
+ "at": "2026-09-24T16:51:04.261Z"
+}
