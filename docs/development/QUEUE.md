@@ -331,7 +331,7 @@ scope: in `classify()`, before the NO-TEXT-LAYER branches, return `ENCRYPTED` wh
 accepts-when: the two named documents classify ENCRYPTED and the rollup counts them. NEGATIVE CONTROL: drop the branch and both read NO-TEXT-LAYER, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### M0-144 · queued — **THE DEC-49 GUARD CANNOT SEE A QUOTED KEY IN A SURFACE TABLE: `civicos-ui/check-refusal-codes.mjs` harvests keys with `/(?:^|[{,\s])([A-Z][A-Z0-9_]{2,})\s*:/g`, so a code table written with quoted keys escapes the TABLE_PRODUCERS pairing.** Latent: `app.html`'s four quoted SCREAMING keys (ACFR, GPF, CAFR, SSHSIG) are glossary terms, not codes. Found by D-482's worker. — owner M0 (UI reviews).
+### M0-144 · running — SPAWNED 2026-09-24 ~04:25Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-144 (CONDUCT #20), base origin/main, into UI-84's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/M0-144 and that session; never conclude queued from the absence alone.
 order: after M0-143, with the instrument rows: a guard with a blind spot, not yet bitten (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:38Z)
 milestone: M0
 interface: none.
