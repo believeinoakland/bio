@@ -43,26 +43,6 @@ scope: generalise `migrationReplayOf` to every replayed promotion; keep D-511's 
 accepts-when: a replay whose capture does not list the bundle and SHA-256 is refused by name; a verified one is admitted. NEGATIVE CONTROL: skip the verification and the unverified arm is admitted, failing by name. AND INVERT §8 arm (δ), which D-511 pinned as the gap (admin-class replay still caller-asserted; via CONDUCT #20 19:47Z).
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
 
-### D-513 · queued — **`op=knock`'s TOO_LARGE (two sites) and EMPTY STILL REACH A KNOCKER UNTRANSLATED at the door D-508 catalogued, and `d278-codeless-refusals.test.mjs`'s header calls them "coded already" (true of `reason`, false of the translation).** Found by D-508's worker. — owner RECORD.
-order: after D-510, with the product corrections: refusals a member cannot read at a public door, D-507's and D-508's class (SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:47Z)
-milestone: M2
-interface: I3 additive — three catalogued codes; the catalogue version moves; the integrator classifies.
-design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, following D-484's single-site shape.
-depends-on: D-508.
-scope: consolidate each code behind one governed helper (arm F reads them F4 multi-site), then rows in KNOCK_CHECKS; correct the d278 header clause; restate the Roles doc's D-484 F4 figure from this landing's census print (it records "102 -> 100" on its own tree; main read 102 before D-508).
-accepts-when: each of the three arrives with its translation, and arm F reads each single-site. NEGATIVE CONTROL: return one code outside the helper and arm F names it multi-site (a behavioural arm cannot see it: `dec49Decorate` translates from the catalogue alone).
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
-### D-514 · queued — **THREE MORE READER SITES MEASURE RAW LENGTH WHERE D-501 RULED GLYPHS: `index.mjs` ~4519 attributes a whitespace-only page to the `layer` part on `p.text.length` (legistar-73550 p1: 39 characters, 0 glyphs); `mergeTier2Text` (textchain ~1365) and `mergeTier3Text` (index ~4313) refuse a whitespace-only base SAYING "it already holds N decoded character(s)", which is false; `needsTier2` (index ~4086) escalates on raw `counts.chars`.** Found by D-501's worker (F5, F3, F2). — owner CONTENT-PDF.
-order: after D-513, with the extraction corrections: two of the three make the record claim what it does not hold, CLAUDE.md §2's worst class (SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:51Z)
-milestone: M2
-interface: none (`counts.chars` unchanged).
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with D-501's glyph award (M-140).
-depends-on: D-501.
-scope: count glyphs (non-whitespace code points) at all three sites through D-501's counter. F3 CHANGES BEHAVIOUR, RULED by SCHEDULER #19 as mechanical: a whitespace-only base holds no decoded text, so it takes the tier wholesale and its refusal sentence can no longer be false; BOB #33 was told.
-accepts-when: legistar-73550 p1 is not attributed to `layer`; a whitespace-only base takes tier 2 and tier 3; `needsTier2` reads glyphs. NEGATIVE CONTROL: restore raw length at the layer filter and the whitespace-page arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
 ### D-516 · queued — **INSIDE THE ONE-SECOND BAND THE OBSERVATION-LOG READERS PICK A CLASS THEY CANNOT TELL: a subject entering 1-2 s before a level's first row reads `never_looked` or `purged` depending on where the clock second fell (D-500's arm M3).** BOB #33 RULED 2026-09-24 17:58Z (drained to `BOB-INBOX-drained.md`; cite until folded): `observation_log.at` STAYS whole-second; within the band the reader states undetermined. — owner RECORD.
 order: after D-514, with the corrections to just-landed work: the record choosing between two claims it cannot tell apart (CLAUDE.md §2) (BOB #33, 17:58Z; SCHEDULER #19, 2026-09-24)
 milestone: M8
@@ -121,6 +101,16 @@ design: `docs/architecture/BIO_Content_Framework_v0_10.md` §6, with CAP-8's Dri
 depends-on: D-472.
 scope: a sweep listing Drive-address bundles whose baseline capture's handler is an HTML stack (a shell); re-acquire each through the export address, recorded as a new capture, never overwriting the old.
 accepts-when: the sweep names every shell baseline and a re-acquired one reads `unchanged` across two ticks (the measured failure it moves: a permanent `modified`). NEGATIVE CONTROL: skip the re-acquire and the two-tick arm reads `modified` by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### D-526 · queued — **WHICH REFUSAL A CALLER MEETS ON `op=promote` STILL DEPENDS ON THE ENVELOPE: the fences above bundle.md's parse (NAME_TAKEN, CITED retirement, LAWS_ACT carry-forward) read the envelope's type, and `#projectRow`'s action columns compare `fm.object_type === "action"` raw, not through `normalizeType`. Nothing wrong can land (D-510's fence refuses it).** Found by D-510's worker (F1, F3). — owner RECORD.
+order: after D-525, with the promote corrections: the answer a caller meets should not depend on a label D-510 ruled untrusted (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:25Z)
+milestone: M7
+interface: none unless a refusal's order changes on the wire (the integrator classifies).
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, with C-2.5 and D-510's derivation.
+depends-on: D-510.
+scope: parse bundle.md at the top of promote's `act` and derive the type there for every fence; route `#projectRow`'s comparison through `normalizeType`.
+accepts-when: an envelope-mislabelled action meets the same refusal as a correctly labelled one (the measured failure it moves: fences reading the envelope's type). NEGATIVE CONTROL: read the envelope's type in one fence again and that arm's refusal differs, failing by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
 ### M0-170 · queued — **THREE MORE FIXTURES KEEP HAND-KEPT TOOL COPY LISTS: `pushguard.test.mjs` scratchRepo, `pushguard-check.test.mjs` and `retirable.test.mjs` (measured correct today).** Found by M0-154's worker. — owner M0.
@@ -948,16 +938,6 @@ accepts-when: a clean status.control.mjs run leaves no `.status-harness/`. NEGAT
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:12Z; `node tools/mintid.mjs M0`).
 scope-add: 2026-09-24 by SCHEDULER #19 (via CONDUCT #20, 17:25Z and 18:17Z): control drivers writing `${file}.pristine-<arm>` beside the source, an UNDECLARED pen BOB's ruling does not stand — battery-residue, contradiction-overstrict, d249-port, d301-census, d389-fullfetch, dec65-strength-reach, m041-instrument-census, m057-authority, rec174-supplyfetch, tally-through-pipe, walkfloor, and every `nc-*.mjs` harness (D-499 fixed nc-d64). Fix: a PEN from `mkdtempSync(join(tmpdir(), "<tag>-control-"))`.
 
-### M0-182 · queued — **47 OF 80 `bio-plane/test/nc-*.mjs` HARNESSES STILL WRITE THEIR PRISTINE COPY INSIDE THE WORKTREE, AND NOTHING GRADES THE CLASS (23 more unclassified, named not scored).** BOB #32 ruled a harness's pristine copy lives outside the worktree. Found by D-492's worker (F2). — owner M0.
-order: after M0-172, which it instruments: behind the product rows, no gate-time effect (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:03Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a control breaks only the thing), with BOB #32's and BOB #33's pen rulings (M0-172).
-depends-on: none.
-scope: one helper `controlPen(item)` (`mkdtempSync(join(tmpdir(), "nc-<item>-"))`) beside `test/budget.mjs`; a sweep suite shaped like `budget-sweep.test.mjs` grading each harness IN-WORKTREE, TEMP or MEMORY with a floor; move the 47 to the helper; then drop .gitignore's in-worktree pen lines. M0-172's driver list rides the same helper.
-accepts-when: the sweep reads 0 IN-WORKTREE (the measured failure it moves: 47 of 80). NEGATIVE CONTROL: point one harness back into the worktree and the sweep names it.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
 ### M0-174 · queued — **`mintid`'s `D` NAMESPACE STILL GRADES DUPLICATES ACROSS TWO SHAPES AS ONE: since DEBT's retirement (M0-140) a `D-` is minted as a PLAN ROW, so its allocation site is the heading `### D-n ·`; the DEBT-table rows `| D-n |` are LEGACY allocations frozen at D-443. A heading and a legacy row for one id (M-57's 17 pairs) are the item and the row it closed, never a duplicate.** BOB #33 RULED, 2026-09-24 17:35Z (drained to `BOB-INBOX-drained.md`; cite until folded). — owner M0.
 order: low in the M0 group, beside M0-172: small; fold into an open M0 batch if one fits (BOB #33, 17:35Z; SCHEDULER #19)
 milestone: M0
@@ -1118,6 +1098,16 @@ scope: `coverage.mjs`'s report names each cause per suite: "no lowercase parenth
 accepts-when: each UNDETERMINED suite in the report carries its cause (the measured failure it moves: a bare null). NEGATIVE CONTROL: plant a second marker in a fixture and the report names its line.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
+### M0-190 · queued — **THE GATE-RESULTS DESCENT RECORD IS PER-CLONE, so a fresh clone cannot judge a rewrite of `origin/gate-results` that predates it.** Found by M0-179's worker, who RECOMMENDS NOT BUILDING IT: no measured need, and it is process tooling. — owner M0.
+order: after M0-189, behind the product rows and last of the group: tracked by Bob's 17:41Z rule, with its finder's advice against it recorded; build only on a measured need (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:25Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a gate record is trusted only by its descent), with TREE-SHARING §3a (the gate-results branch is append-only) and M0-179's refutation.
+depends-on: M0-179.
+scope: pin a known-good gate-results tip in the tree, which a fresh clone's gate checks its descent from; FIRST re-measure whether any clone has met a pre-clone rewrite, and if none has, close this row as not owed with that measurement.
+accepts-when: the pin is checked by a fresh clone, OR the measurement closes the row (the measured failure it moves: none yet, which is why the measurement comes first). NEGATIVE CONTROL: a fixture tip not descending from the pin is refused by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
 ### D-446 · queued — **`nc-m040.mjs` ARM 1 DECLARES FIVE FAILURES AND MEASURES ONE (derivation-bounds 71/1 on `main`), AND FIVE SUITES NAME INFORMATION FIXTURES `INF-…` WHERE `OBJECT_TYPES` HAS `INFO`.** The fixtures: `frontier-chunk` (D-390's), `d389-fullfetch`, `observation-content`, `observation-log`, `cap14-reused-from`. — owner M0.
 order: after M0-139, among the control-hygiene rows; after c17-batch7 lands (SCHEDULER #17, 2026-09-23; via CONDUCT #18 22:27Z (4), measured by SCHEDULER #17's verifier)
 milestone: M0
@@ -1267,3 +1257,13 @@ depends-on: D-50 (`integrated` on c18-batch8).
 scope: NFC normalisation in the name key at the write and in C-77; D-458's census states any post-normalisation pair.
 accepts-when: an NFD title equivalent to a taken NFC title is refused by name; existing titles read byte-unchanged. NEGATIVE CONTROL: drop the normalisation, and the NFD-lookalike arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
+
+### UI-87 · queued — **THE ANALYST-VOCABULARY GATE FIRES ON PLAIN ENGLISH: `civicos-ui/test/analyst-vocabulary.mjs`'s `BANNED` connective rule `(AND|OR)\s+(of|…|set|sets)` carries `/i`, so "reason 1 and set 2" and "two or more sets" fail as analyst jargon.** Measured with node (CONDUCT #17, re-measured by SCHEDULER #17 on c17-batch5 @ 7c4f6b5f); the file's other connective rules are case-sensitive and its own header, finding (i), says a case-insensitive `AND` fires on correct English. — owner UI.
+order: after M0-139, among the verification rows: a gate that refuses correct member copy pushes surface authors toward worse words, so it goes ahead of pure process tooling (SCHEDULER #17, 2026-09-23, CONDUCT #17's 22:00Z finding (4))
+milestone: M0
+interface: none — a test rule.
+design: `docs/development/VERIFICATION.md` (a suite asserts what it claims), with DEC-32 clause 1 as the file itself states it.
+depends-on: none.
+scope: drop the `i` flag on that one rule; keep "the OR set" and "AND of the legs" caught. Extend `civicos-ui/test/analyst-vocabulary.test.mjs` with a must-pass fixture.
+accepts-when: "reason 1 and set 2" passes and "the OR set" is still refused. NEGATIVE CONTROL: restore `/i`, and the plain-English must-pass arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs UI`).

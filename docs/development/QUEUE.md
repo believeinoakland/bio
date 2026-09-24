@@ -226,6 +226,7 @@ accepts-when: `/?store=scratch` reads scratch's slug or is refused by name. NEGA
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ### M0-179 · integrated — **`origin/gate-results` HAD ITS HISTORY REWRITTEN (`gates.mjs`: "1d02a4d9 does not descend from the remote tip 78f2412e"), though TREE-SHARING §3a makes it append-only; and `gates.mjs` still REUSES from a tip it does not descend from, failing only the write.** REC-211's worker's measurement at its hour, unverified by CONDUCT (via CONDUCT #20 18:57Z). — owner M0.
+correction: 2026-09-24 20:25Z by SCHEDULER #19 (M0-179's worker, via CONDUCT #20): THE REWRITE DID NOT HAPPEN. 78f2412e is an ancestor of the current gate-results tip (223 commits, linear, add-only); 1d02a4d9 was a local commit refused at its own hook and never pushed. The defect was the push guard's message calling every non-zero `merge-base --is-ancestor` a rewrite; the headline stays as what was reported, and this line is the record.
 order: at the backlog head, after D-519: a gate that reuses verdicts from a rewritten cache can report green on a record nobody can trace (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24)
 milestone: M0
 interface: none.
@@ -354,6 +355,36 @@ depends-on: M0-160.
 scope: anchor a table declaration at line start OR immediately after a template backtick (measured: 114 matches over 114 distinct names; a bare `^` loses 9 real declarations); fail any `table` probe matching more than once.
 accepts-when: `content` matches once, and 114 declarations still read (the measured failure it moves: a second, string match that would keep a deleted table BUILT). NEGATIVE CONTROL: delete `content`'s declaration in a fixture and the probe reads NOT BUILT by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### M0-182 · queued — **47 OF 80 `bio-plane/test/nc-*.mjs` HARNESSES STILL WRITE THEIR PRISTINE COPY INSIDE THE WORKTREE, AND NOTHING GRADES THE CLASS (23 more unclassified, named not scored).** BOB #32 ruled a harness's pristine copy lives outside the worktree. Found by D-492's worker (F2). — owner M0.
+order: after M0-188, AHEAD of the product rows (moved 2026-09-24 20:25Z by SCHEDULER #19): 7 in-worktree pens are NOT gitignored (.m0110-harness, .m0109-harness, .m037-harness, .m0100-harness, .m0107-harness, .vf1-control-pristine, .m0111-harness), so the tree is DIRTY while those controls run and a gate on it records nothing (Bob's 17:41Z rule; M0-179's sweep via CONDUCT #20)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a control breaks only the thing), with BOB #32's and BOB #33's pen rulings (M0-172).
+depends-on: none.
+scope: one helper `controlPen(item)` (`mkdtempSync(join(tmpdir(), "nc-<item>-"))`) beside `test/budget.mjs`; a sweep suite shaped like `budget-sweep.test.mjs` grading each harness IN-WORKTREE, TEMP or MEMORY with a floor; move the 47 to the helper; then drop .gitignore's in-worktree pen lines. M0-172's driver list rides the same helper. FIRST the 7 unignored pens above; M0-179's sweep counts 24 drivers still in-worktree.
+accepts-when: the sweep reads 0 IN-WORKTREE (the measured failure it moves: 47 of 80). NEGATIVE CONTROL: point one harness back into the worktree and the sweep names it.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### D-513 · queued — **`op=knock`'s TOO_LARGE (two sites) and EMPTY STILL REACH A KNOCKER UNTRANSLATED at the door D-508 catalogued, and `d278-codeless-refusals.test.mjs`'s header calls them "coded already" (true of `reason`, false of the translation).** Found by D-508's worker. — owner RECORD.
+order: after D-510, with the product corrections: refusals a member cannot read at a public door, D-507's and D-508's class (SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:47Z)
+milestone: M2
+interface: I3 additive — three catalogued codes; the catalogue version moves; the integrator classifies.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, following D-484's single-site shape.
+depends-on: D-508.
+scope: consolidate each code behind one governed helper (arm F reads them F4 multi-site), then rows in KNOCK_CHECKS; correct the d278 header clause; restate the Roles doc's D-484 F4 figure from this landing's census print (it records "102 -> 100" on its own tree; main read 102 before D-508).
+accepts-when: each of the three arrives with its translation, and arm F reads each single-site. NEGATIVE CONTROL: return one code outside the helper and arm F names it multi-site (a behavioural arm cannot see it: `dec49Decorate` translates from the catalogue alone).
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### D-514 · queued — **THREE MORE READER SITES MEASURE RAW LENGTH WHERE D-501 RULED GLYPHS: `index.mjs` ~4519 attributes a whitespace-only page to the `layer` part on `p.text.length` (legistar-73550 p1: 39 characters, 0 glyphs); `mergeTier2Text` (textchain ~1365) and `mergeTier3Text` (index ~4313) refuse a whitespace-only base SAYING "it already holds N decoded character(s)", which is false; `needsTier2` (index ~4086) escalates on raw `counts.chars`.** Found by D-501's worker (F5, F3, F2). — owner CONTENT-PDF.
+order: after D-513, with the extraction corrections: two of the three make the record claim what it does not hold, CLAUDE.md §2's worst class (SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:51Z)
+milestone: M2
+interface: none (`counts.chars` unchanged).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with D-501's glyph award (M-140).
+depends-on: D-501.
+scope: count glyphs (non-whitespace code points) at all three sites through D-501's counter. F3 CHANGES BEHAVIOUR, RULED by SCHEDULER #19 as mechanical: a whitespace-only base holds no decoded text, so it takes the tier wholesale and its refusal sentence can no longer be false; BOB #33 was told.
+accepts-when: legistar-73550 p1 is not attributed to `layer`; a whitespace-only base takes tier 2 and tier 3; `needsTier2` reads glyphs. NEGATIVE CONTROL: restore raw length at the layer filter and the whitespace-page arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
