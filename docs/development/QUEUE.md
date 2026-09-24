@@ -343,7 +343,8 @@ scope: one `queueSubjectHtml` branch naming the run and its context, read from t
 accepts-when: a bias-debt item names its run and context. NEGATIVE CONTROL: return "" for `run` again, and the named-run arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
-### D-519 · running — **THREE SUITES CARRY D-509's LATENT FALSE GREEN: `publish.test.mjs` (~734/736/737), `caseproduction.test.mjs` (~842/849) and `d280-strengthbar.test.mjs` (~467/471) drive `op=strengthbar` with NO group in the payload and read back the literal "believe-in-oakland", green only because each suite's INSTANCE_NAME happens to be that name.** Found by D-509's worker (via CONDUCT #20 18:57Z). — owner RECORD.
+### D-519 · integrated — **THREE SUITES CARRY D-509's LATENT FALSE GREEN: `publish.test.mjs` (~734/736/737), `caseproduction.test.mjs` (~842/849) and `d280-strengthbar.test.mjs` (~467/471) drive `op=strengthbar` with NO group in the payload and read back the literal "believe-in-oakland", green only because each suite's INSTANCE_NAME happens to be that name.** Found by D-509's worker (via CONDUCT #20 18:57Z). — owner RECORD.
+status: integrated — in c20-batch25 77f57924, trains 21:20Z
 order: at the backlog head, beside D-518: an assertion that passes for the wrong reason (Bob's 17:41Z rule: a false gate result goes ahead) (SCHEDULER #19, 2026-09-24)
 milestone: M0 (three suites over M7 code)
 interface: none.
