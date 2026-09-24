@@ -235,7 +235,8 @@ console.log("\n--- attest: a registered whole hash the plane never received ---"
   t("the whole hash is registered", pr.result?.ok ?? pr.ok, true);
   const r = await attest(OWN_SHA);
   t("attest refuses it CAPTURE_HELD_IN_PARTS, never NO_SUCH_CAPTURE", r.reason, "CAPTURE_HELD_IN_PARTS");
-  t("carrying its catalogue row and a member translation", [typeof r.code, typeof r.translation], ["string", "string"]);
+  t("carrying its catalogue row, C-89.1, and a member translation",
+    [r.code, r.check, typeof r.translation], ["CAPTURE_HELD_IN_PARTS", "C-89.1", "string"]);
   t("and it does not tell the member to capture the document again",
     /capture the document before/i.test(`${r.detail} ${r.translation}`), false);
   t("no timestamp was requested for it", r.attempts, undefined);

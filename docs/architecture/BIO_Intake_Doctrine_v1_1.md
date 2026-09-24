@@ -733,7 +733,7 @@ publish step copies a capture by the hash its row names, but now it names the fi
 surface's own shape registers each PART; every part is an object under its own hash, and the gate passes it. Driven
 through the ops by `bio-plane/test/d530-parted-attest.test.mjs`. WHAT STAYS OPEN: a parted capture whose whole hash the
 plane never received can be neither attested nor published by that hash, and verifying a whole hash against its parts by
-streaming them is not designed.
+streaming them is not designed (verified 2026-09-24 by D-530: no document names it; routed to BOB #34).
 
 # 9. Creation authority boundaries (added v1.1)
 
