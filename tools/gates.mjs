@@ -93,7 +93,9 @@
  * ---- M0-126 (TREE-SHARING.md §3a): THE SHARED, PER-UNIT RESULT RECORD. ----
  * Every unit the plan selects is KEYED by the hash of its inputs (§2e derives the set; `tools/gateresults.mjs` hashes
  * it with node's major and every lockfile). A unit whose key holds a PASS on the branch `gate-results` — written by ANY
- * clone — is not run and is printed REUSED, naming the record (§3b). What runs is TRACED (`tools/gatetrace.mjs`): a
+ * clone — is not run and is printed REUSED, naming the record (§3b), unless the branch's tip does not DESCEND from
+ * this clone's record of it, in which case the whole tip is refused by name and nothing is reused (M0-179). What runs
+ * is TRACED (`tools/gatetrace.mjs`): a
  * read outside the key FAILS the unit by name. Each unit that passed, traced clean, on a clean tree, gets a PASS record
  * (§4b). A unit marked `GATE: never-cache (<reason>)`, one that runs plancheck, and plancheck itself always run.
  *
@@ -1083,7 +1085,9 @@ if (cls === "FULL") {
    (<reason>)` in its source or control gets no key and always runs; plancheck is never cached. What runs is TRACED
    (`tools/gatetrace.mjs`): a file read outside the unit's input set FAILS the unit by name (condition 2). Each unit
    that passed, traced clean, on a tree clean from start to end, gets a PASS record (4b). A FULL selection runs the UI
-   harness unit by unit here, so each suite and check has a result of its own. */
+   harness unit by unit here, so each suite and check has a result of its own.
+   M0-179: the TIP is judged before any key is looked up in it — a tip this clone's record of the branch does not
+   descend from is refused whole, by name, and every unit runs. */
 const byId = new Map(UNITS.map((u) => [u.id, u]));
 const expandUnits = (ids) => [...new Set(ids.flatMap((id) =>
   id === "plane:*" ? UNITS.filter((u) => u.kind === "plane").map((u) => u.id)
@@ -1145,6 +1149,13 @@ if (GR) {
   if (KEYS.size && !NO_REUSE) {
     grFetch = GR.fetchResults({ repo: REPO });
     if (!grFetch.ok) RESULT_NOTES.push(`gate-results could not be fetched from ${GR.resultsRemote()} (${grFetch.reason}) — nothing reused`);
+    /* M0-179: THE TIP'S DESCENT IS READ BEFORE ANY KEY IS LOOKED UP THERE. `gate-results` is APPEND-ONLY
+       (TREE-SHARING.md §3a); a tip this clone's own record does not descend from is a branch that DROPPED records this
+       clone had already fetched, and a PASS read from it is a green verdict resting on a history nobody can trace. So
+       the whole tip is refused BY NAME and every unit runs — never the alternative of reusing from it and merely
+       failing the write, which is the measured behaviour this row moves (REC-211). `undetermined` is refused the same
+       way and said differently: it is not a claim that the branch was rewritten. */
+    else if (!GR.descentHolds(grFetch)) RESULT_NOTES.push(`${GR.DESCENT_REFUSED(grFetch)}; every unit RUNS`);
     else if (grFetch.absent) RESULT_NOTES.push(`${GR.resultsRemote()} holds no gate-results branch yet — nothing to reuse; this run's first PASS creates it`);
     else {
       const found = GR.lookup({ repo: REPO, tip: grFetch.tip, keys: [...KEYS].filter(([, k]) => k.hash).map(([id, k]) => [id, k.hash]) });

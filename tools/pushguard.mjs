@@ -1002,11 +1002,19 @@ export function coordOnly(stdin) {
  * says nothing about `main`'s tree, so `main`'s checks (the gate record, the corpus, the construct status, the GitHub
  * check) do not judge it. What IS judged is the branch's one law, APPEND-ONLY: the pushed commit must descend from
  * the remote's tip and, against it, only ADD files named `results/<unit>/<64 hex>.json` or `revoked/<unit>/<64
- * hex>.json`; a first push (the branch's creation) may hold nothing else. A deletion of the branch is refused: nothing
+ * hex>.json`; a first push (the branch's creation) may hold nothing else. A push that does NOT descend is refused
+ * whatever the cause, but M0-179 makes it say WHICH cause it could establish — a stale base (the ordinary race, coded
+ * `GATE_RESULTS_STALE_BASE` so the writer re-applies), an ancestry it could not read at all, or a tip that dropped
+ * this commit's base, which is the only one that reads as a rewrite. A deletion of the branch is refused: nothing
  * in the design needs one, and the cloud proxy refuses it anyway (M0-111's measurement). A push naming `gate-results`
  * beside any other ref is judged the ordinary way. */
 export const GATE_RESULTS_REF = "refs/heads/gate-results";
 const GATE_RECORD_PATH = /^(?:results|revoked)\/[\w.@+/-]+\/[0-9a-f]{64}\.json$/;
+/* M0-179: THE CODE FOR A MOVED TIP, a STRING LITERAL at its site (DEC-49's rule, one scope out). `appendRecords` in
+   `tools/gateresults.mjs` re-fetches and re-applies on it: a pre-push hook's refusal carries none of git's own words,
+   so without a code of ours the writer's retry loop cannot tell this case from a real refusal, and one ordinary
+   concurrent append reads as a failed write (REC-211, measured). Grep for it in both files before renaming it. */
+export const GATE_RESULTS_STALE_BASE = "GATE_RESULTS_STALE_BASE";
 export function gateResultsOnly(stdin) {
   const lines = String(stdin || "").split("\n").map((l) => l.trim().split(/\s+/)).filter((f) => f.length >= 3 && f[0]);
   return lines.length > 0 && lines.every((f) => f[2] === GATE_RESULTS_REF);
@@ -1019,8 +1027,44 @@ export function gateResultsCheck({ repo = REPO, stdin = "" } = {}) {
     if (/^0+$/.test(localSha)) { bad.push("a DELETION of gate-results — the branch is append-only and is never deleted"); continue; }
     const created = !remoteSha || /^0+$/.test(remoteSha);
     if (!created) {
+      /* M0-179, 2026-09-24 — THREE OUTCOMES, EACH SAID SEPARATELY. This read `if (anc.status !== 0)` and called every
+         one of them "(history rewritten)". `git merge-base --is-ancestor` exits 1 for NOT an ancestor and 128 for a
+         commit this clone does not have, so a clone that had simply not fetched the remote's newer tip was told its
+         history had been rewritten; and a commit built on a tip another worker appended past — the ordinary race this
+         branch is designed for, eight gates writing records at once — was told the same thing. THE RECEIPT: REC-211
+         reported `origin/gate-results` REWRITTEN from this message ("1d02a4d9 does not descend from the remote tip
+         78f2412e"), and M0-179 established from the branch itself that nothing had been: 78f2412e is an ancestor of the
+         tip, the history is linear, and every commit in it only ADDS. A message that cannot tell a race from a rewrite
+         put a false claim about the estate into the record, which is worse than the missing feature (CLAUDE.md §2). */
+      const have = spawnSync("git", ["cat-file", "-e", `${remoteSha}^{commit}`], { cwd: repo });
+      if (have.status !== 0) {
+        bad.push(`the remote tip ${remoteSha.slice(0, 8)} is not an object in this clone, so the descent of `
+          + `${localSha.slice(0, 8)} from it is UNDETERMINED — refused, and NOT read as a rewrite: `
+          + `${GATE_RESULTS_STALE_BASE} (fetch gate-results and re-apply the record)`);
+        continue;
+      }
       const anc = spawnSync("git", ["merge-base", "--is-ancestor", remoteSha, localSha], { cwd: repo });
-      if (anc.status !== 0) { bad.push(`${localSha.slice(0, 8)} does not descend from the remote tip ${remoteSha.slice(0, 8)} (history rewritten)`); continue; }
+      if (anc.status === 1) {
+        /* A STALE BASE, told from a rewrite by ONE question: does the remote's tip still contain the commit this one
+           was built on? If it does, nothing was dropped and this is the race. A record commit has exactly one parent
+           (`appendRecords` commits on the fetched tip), so its base is that parent. */
+        const mb = spawnSync("git", ["merge-base", remoteSha, localSha], { cwd: repo, encoding: "utf8" });
+        const pl = spawnSync("git", ["rev-list", "--parents", "-n", "1", localSha], { cwd: repo, encoding: "utf8" });
+        const parents = String(pl.stdout || "").trim().split(/\s+/).slice(1);
+        const staleBase = mb.status === 0 && pl.status === 0 && parents.length === 1 && mb.stdout.trim() === parents[0];
+        bad.push(staleBase
+          ? `${localSha.slice(0, 8)} was built on a STALE fetch of gate-results: the remote tip moved to `
+            + `${remoteSha.slice(0, 8)}, which STILL CONTAINS this commit's base ${parents[0].slice(0, 8)} — the `
+            + `ordinary concurrent-append race, NOT a rewrite: ${GATE_RESULTS_STALE_BASE} (re-fetch and re-apply)`
+          : `${localSha.slice(0, 8)} does not descend from the remote tip ${remoteSha.slice(0, 8)}, and that tip does `
+            + `NOT contain this commit's base either — the branch's history may have been REWRITTEN, which §3a forbids`);
+        continue;
+      }
+      if (anc.status !== 0) {
+        bad.push(`the descent of ${localSha.slice(0, 8)} from the remote tip ${remoteSha.slice(0, 8)} could not be `
+          + `established (git merge-base --is-ancestor exited ${anc.status}) — UNDETERMINED, refused`);
+        continue;
+      }
     }
     const d = created
       ? spawnSync("git", ["ls-tree", "-r", "--name-only", localSha], { cwd: repo, encoding: "utf8", maxBuffer: 1 << 28 })

@@ -20,6 +20,15 @@
  * pushed to create it. Nothing here ever deletes a ref or a file: the cloud proxy refuses a ref deletion (HTTP 403,
  * which git prints as "Everything up-to-date", measured by M0-111), and the design never needs one.
  *
+ * THE DESCENT OF THE TIP (M0-179, 2026-09-24). The branch is APPEND-ONLY (TREE-SHARING.md §3a), so a tip this clone
+ * fetches must DESCEND from the tip it last fetched. `fetchResults` judges that on every read and REPORTS it, and
+ * neither the reuse (`tools/gates.mjs` §3b) nor a write is made on a tip the descent does not hold for. What it is
+ * judged against is a ref only this module writes (`recordRef`), advanced ONLY forward, because the FETCH
+ * DESTINATION cannot serve: a plain `git fetch <remote>` carries the forced default refspec
+ * `+refs/heads/*:refs/remotes/<remote>/*` and rewrites `refs/remotes/<remote>/gate-results` without a word, so a
+ * record kept there is erased by any unrelated fetch. On a non-descending tip the record is LEFT WHERE IT IS, so the
+ * refusal repeats until someone resolves it instead of healing itself the moment it fires.
+ *
  * REVOCATION. A PASS that hid a real failure (a liar's record, or an honest one whose key missed an input) is REVOKED by
  * ADDING `revoked/<unit dir>/<input hash>.json` beside it — `node tools/gateresults.mjs revoke <unit> <hash> --reason
  * "<why>"` — and the reader honours it: a revoked key is never reused and its writer is named from the record. Revoking
@@ -47,6 +56,9 @@ export const resultsRemote = (env = process.env) => env.BIO_GATE_RESULTS_REMOTE 
    so it is kept under `refs/bio-gate-results/<sanitised>`. */
 export const trackingRef = (remote) => (/^[\w.-]+$/.test(remote) ? `refs/remotes/${remote}/${RESULTS_BRANCH}`
   : `refs/bio-gate-results/${remote.replace(/[^\w.-]+/g, "_")}`);
+/* M0-179: THE LOCAL RECORD of the branch's tip — a ref NOTHING ELSE WRITES (see the header: the fetch destination is
+   rewritten by any ordinary `git fetch`). It is advanced only forward, by a fetch whose descent holds. */
+export const recordRef = (remote) => `refs/bio-gate-results/record/${String(remote).replace(/[^\w.-]+/g, "_")}`;
 
 const git = (repo, args, { input, env } = {}) => spawnSync("git", args, { cwd: repo, encoding: "utf8", input,
   maxBuffer: 1 << 28, env: env ? { ...process.env, ...env } : process.env });
@@ -93,20 +105,64 @@ export function keyText({ unit, inputs, blobs, runtime }) {
 }
 export const inputHash = (args) => createHash("sha256").update(keyText(args)).digest("hex");
 
+/* ---- the descent of a fetched tip from this clone's record (M0-179) ---------------------------------------- */
+/* FOUR OUTCOMES, EACH NAMED, and the two that refuse are NEVER reported as each other:
+     "first"          this clone has no record yet (a fresh clone) — nothing to judge, and the record starts here;
+     "ok"             the tip descends from the record (or is it), which is then advanced to the tip;
+     "non-descending" it does not: the branch's history was rewritten, deleted, or the remote was replaced;
+     "undetermined"   the ancestry could not be ESTABLISHED — a missing object, a git that did not run.
+   The last two are refused alike and said differently. Conflating them is the defect M0-179 was opened for: the
+   guard's one message called a stale base "(history rewritten)", and the row it produced claimed a rewrite of
+   `origin/gate-results` that never happened. `undetermined` is first-class (CLAUDE.md §4) and is never rounded to a
+   finding about the branch. */
+export function descentOf({ repo = HERE_REPO, prior, tip }) {
+  if (!prior) return { descent: "first" };
+  if (!tip) return { descent: "non-descending",
+    why: `the remote holds no ${RESULTS_BRANCH} at all, though this clone recorded its tip as ${String(prior).slice(0, 8)}` };
+  if (prior === tip) return { descent: "ok" };
+  const anc = git(repo, ["merge-base", "--is-ancestor", prior, tip]);
+  if (anc.status === 0) return { descent: "ok" };
+  if (anc.status === 1) return { descent: "non-descending",
+    why: `the tip ${tip.slice(0, 8)} does not contain ${prior.slice(0, 8)}, which this clone recorded as the branch's tip` };
+  return { descent: "undetermined",
+    why: `git merge-base --is-ancestor exited ${anc.status} (${String(anc.stderr || "").trim().split("\n")[0] || "no message"})` };
+}
+
 /* ---- the reader -------------------------------------------------------------------------------------------- */
-/* Fetch the results branch. { ok, tip|null, absent, reason }: `absent` is a remote that holds no branch yet (the first
-   write creates it); a fetch that FAILED is not absent, and says why. */
+/* Fetch the results branch. { ok, tip|null, absent, reason, priorTip, descent, descentWhy, ref, record }: `absent` is a
+   remote that holds no branch yet (the first write creates it); a fetch that FAILED is not absent, and says why.
+   M0-179: `descent` is this tip's standing against the LOCAL RECORD (`descentOf`), and the record is advanced only when
+   it holds. A caller reuses or writes on "first" and "ok" ONLY. */
 export function fetchResults({ repo = HERE_REPO, remote = resultsRemote() } = {}) {
-  const ref = trackingRef(remote);
+  const ref = trackingRef(remote), record = recordRef(remote);
+  const p = git(repo, ["rev-parse", "--verify", "--quiet", `${record}^{commit}`]);
+  const priorTip = p.status === 0 ? p.stdout.trim() : null;
   const f = git(repo, ["fetch", "-q", "--no-tags", remote, `+refs/heads/${RESULTS_BRANCH}:${ref}`]);
   if (f.status !== 0) {
     const why = String(f.stderr || "").trim().split("\n")[0];
-    if (/couldn't find remote ref|could not find remote ref/i.test(why)) return { ok: true, tip: null, absent: true, ref };
-    return { ok: false, tip: null, absent: false, reason: why || `git fetch exited ${f.status}`, ref };
+    /* A remote that holds no branch: `absent` when this clone never saw one either, and a BREAK of append-only when it
+       did — a branch this clone has a record of cannot become absent without something having deleted it. */
+    if (/couldn't find remote ref|could not find remote ref/i.test(why)) {
+      const d = descentOf({ repo, prior: priorTip, tip: null });
+      return { ok: true, tip: null, absent: true, ref, record, priorTip, descent: d.descent, descentWhy: d.why };
+    }
+    return { ok: false, tip: null, absent: false, reason: why || `git fetch exited ${f.status}`, ref, record, priorTip,
+             descent: "undetermined", descentWhy: `the fetch itself failed (${why || `exit ${f.status}`})` };
   }
   const t = git(repo, ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`]);
-  return { ok: true, tip: t.status === 0 ? t.stdout.trim() : null, absent: t.status !== 0, ref };
+  const tip = t.status === 0 ? t.stdout.trim() : null;
+  const d = descentOf({ repo, prior: priorTip, tip });
+  if (tip && (d.descent === "ok" || d.descent === "first")) git(repo, ["update-ref", record, tip]);
+  return { ok: true, tip, absent: t.status !== 0, ref, record, priorTip, descent: d.descent, descentWhy: d.why };
 }
+/* The one sentence a refusal is written from, so the reuse arm, the writer and the CLI all name it the same way. */
+export const DESCENT_REFUSED = ({ tip, priorTip, descent, descentWhy }) =>
+  `gate-results @ ${tip ? String(tip).slice(0, 8) : "ABSENT"} ${descent === "non-descending"
+    ? "does NOT descend from this clone's record of the branch" : "could not be judged against this clone's record of the branch"}`
+  + ` (record ${priorTip ? String(priorTip).slice(0, 8) : "none"}: ${descentWhy || "no reason given"})`
+  + " — the branch is APPEND-ONLY (TREE-SHARING.md §3a), so nothing is reused from it and nothing is written onto it";
+/* Whether a caller may read or write records at this tip. */
+export const descentHolds = (fr) => !!fr && (fr.descent === "ok" || fr.descent === "first" || fr.descent === undefined);
 export function listPaths({ repo = HERE_REPO, tip }) {
   if (!tip) return new Set();
   const r = git(repo, ["ls-tree", "-r", "-z", "--name-only", tip]);
@@ -184,6 +240,9 @@ export function appendRecords({ repo = HERE_REPO, remote = resultsRemote(), file
       attempts++;
       const fr = fetchResults({ repo, remote });
       if (!fr.ok) return { status: "failed", reason: `the results branch could not be fetched (${fr.reason})`, attempts };
+      /* M0-179: a record written onto a tip the local record does not descend from ENDORSES the rewrite that produced
+         it, and its own PASS becomes part of a history nobody can trace back. Refused here, not only at the push. */
+      if (!descentHolds(fr)) return { status: "failed", reason: DESCENT_REFUSED(fr), attempts, descent: fr.descent };
       const have = listPaths({ repo, tip: fr.tip });
       const add = files.map((f, i) => [f.path, ids[i]]).filter(([p]) => !have.has(p));
       const skipped = files.length - add.length;
@@ -203,11 +262,23 @@ export function appendRecords({ repo = HERE_REPO, remote = resultsRemote(), file
         const ls = git(repo, ["ls-remote", "--heads", remote, RESULTS_BRANCH]);
         const onRemote = (String(ls.stdout || "").split(/\s/)[0] || "").trim();
         git(repo, ["update-ref", fr.ref, commit]);
+        /* M0-179: THE WRITE ADVANCES THE LOCAL RECORD TOO. Found by this item's own suite arm, which is the whole
+           reason the arm asserts the record and not just the refusal: without this the FIRST gate on a clone — the one
+           that CREATES the branch, so its fetch found no tip to record — left no record at all, and the next gate had
+           nothing to judge the tip against. A refusal whose record is only ever written by a fetch is a check that
+           cannot fail on the path that matters most. The pushed commit descends from the tip this attempt fetched, so
+           it is the branch's tip as this clone knows it. */
+        git(repo, ["update-ref", recordRef(remote), commit]);
         return { status: onRemote === commit ? "pushed" : "pushed-unverified", commit, onRemote, added: add.length, skipped,
                  attempts, created: !fr.tip };
       }
       const why = `${p.stdout || ""}${p.stderr || ""}`;
-      if (!/non-fast-forward|fetch first|rejected|stale info|cannot lock ref/i.test(why))
+      /* MEASURED 2026-09-24 (M0-179), and the whole of REC-211's "the write failed": the tip moving between this
+         fetch and this push is caught FIRST by the pre-push guard, not by the remote, and a pre-push hook's refusal
+         carries NONE of git's own words — the output is the hook's text plus `error: failed to push some refs`. So the
+         retry this loop exists for never engaged, and one ordinary concurrent append was reported as a failed write.
+         The guard names that case with the code below, at its site, so the two halves cannot drift apart. */
+      if (!/non-fast-forward|fetch first|rejected|stale info|cannot lock ref|GATE_RESULTS_STALE_BASE/i.test(why))
         return { status: "failed", reason: `the push was refused, and not for a moved tip: ${why.trim().slice(0, 300)}`, attempts };
     }
     return { status: "failed", reason: `the results branch moved under ${maxAttempts} consecutive attempts`, attempts };
@@ -241,6 +312,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   } else if (cmd === "show") {
     const fr = fetchResults({});
     if (!fr.ok) { console.log(`gate-results: could not fetch (${fr.reason})`); process.exit(1); }
+    if (!descentHolds(fr)) { console.log(DESCENT_REFUSED(fr)); process.exit(1); }
     console.log(JSON.stringify(lookup({ tip: fr.tip, keys: [[unit, hash]] }).get(unit), null, 1));
   } else {
     console.log("usage: node tools/gateresults.mjs revoke <unit> <input hash> --reason \"<why>\" | show <unit> <input hash>");
