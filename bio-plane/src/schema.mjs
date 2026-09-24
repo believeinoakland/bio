@@ -2790,7 +2790,22 @@ CREATE TABLE IF NOT EXISTS ai_credentials (
   minted_by       TEXT NOT NULL,    -- the MEMBER who minted it. D-199 (3): never a machine
   minted_at       TEXT NOT NULL,
   revoked_at      TEXT,
-  revoked_by      TEXT
+  revoked_by      TEXT,
+  -- D-463: THE NAMESPACE THIS CREDENTIAL IS CONFINED TO FOR ITS WHOLE LIFE, or NULL for
+  -- a credential that is not confined. The only value it may hold is 'scratch'. The name
+  -- bio is not a confinement but the default, and a row saying so would be a sentence in
+  -- the record that fences nothing -- D-199 (2)'s whole complaint about a settings row,
+  -- arriving one column over. The vocabulary is NOT restated here: index.mjs owns
+  -- NAMESPACES and judges the value at the mint edge (aiConfinementDeclaration), the way
+  -- scope_writes arrives already judged by aiScopeDeclaration, because a second copy
+  -- of the namespace set is the third unsynchronised answer REC-46 spent an item removing.
+  --
+  -- NULLABLE AND NEVER BACK-FILLED. A credential minted before this column existed was
+  -- minted unconfined, and NULL is that fact rather than an absence of one: the only other
+  -- value a backfill could reach for is 'scratch', which would silently narrow authorities
+  -- members already granted. What reads it is one gate at the front door
+  -- (confinedNamespaceGate), and an unconfined credential meets no gate at all.
+  confined_to     TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
 CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);

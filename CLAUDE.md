@@ -141,7 +141,7 @@ design, doctrine, anything for Bob → BOB) and continue.
   `bio` unless the call names scratch. Public ops but invitelook/enroll/instancegroup/groupidentity REFUSE `store=scratch`
   (NAMESPACE_PINNED, D-461): verifying them live touches the real record. A live verification's
   no-write guarantee is the naming plus the WITNESS — the record's counters read before and after every arm — never a
-  plane fence. RESIDUE: no credential binds to scratch for life; a sticky confinement is RECORD's and is NOT built. **A deploy verified is not a build
+  plane fence. RESIDUE CLOSED 2026-09-24 by D-463 for a MINTED credential only: `op=aicredentialmint` takes `confinedTo: "scratch"` and every call it makes lands there, a named `store=bio` refused as NAMESPACE_CONFINED (C-78.3). The four BINDING credentials still cannot be confined, so the per-call naming binds every caller holding one. **A deploy verified is not a build
   serving**: rollout is per-isolate — if a live probe contradicts the suite, establish which build answered.
 - **A fix verified only where you changed it is not verified.** Ask who else reads it — the gate's note,
   the suite's assertion, the row that cites it, the kickoff that quotes it — and check THERE. **And re-run the

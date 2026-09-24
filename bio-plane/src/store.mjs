@@ -1219,6 +1219,13 @@ export class Store extends DurableObject {
          column existed had no renders in flight at the moment it gained the column, so 0 is the
          MEASURED truth for every old row rather than a value a backfill reached for. */
       ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],
+      /* D-463: the namespace an `ai` credential is confined to for its whole life, or NULL for one that is
+         not confined. NULLABLE AND NEVER BACK-FILLED, and here the direction matters more than usual: a
+         credential minted before this column existed was minted UNCONFINED, and the only value a backfill
+         could reach for is 'scratch', which would silently narrow an authority a member already granted and
+         granted on the record. NULL reads back as not confined, which is what it is. schema.mjs says why the
+         vocabulary is not restated in this file. */
+      ["ai_credentials", "confined_to", "TEXT"],
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -41557,7 +41564,7 @@ export class Store extends DurableObject {
    *  is its own business and nobody else's. */
   aiCredentialMint({ who = null, tokenId = null, secretSha = null, principalKind = null,
                      principalMember = null, taskScope = null, writes = [], note = null,
-                     at = null } = {}) {
+                     confinedTo = null, at = null } = {}) {
     const refusal = (code, detail, extra) => {
       const row = AI_CREDENTIAL_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check,
@@ -41615,12 +41622,17 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-ai-credential-mint */
 
     const declared = (Array.isArray(writes) ? writes : []).map((w) => String(w)).sort();
+    /* D-463: `confinedTo` ARRIVES ALREADY JUDGED, by `aiConfinementDeclaration` in index.mjs, for
+       `writes`' reason one field over: the set of namespaces is index.mjs's `NAMESPACES` and a copy of it
+       here would be a second answer to "which namespaces exist" that ages separately. What this method
+       does with it is the record's business — it stores 'scratch' or it stores NULL, and nothing between. */
+    const confinement = confinedTo === null || confinedTo === undefined ? null : String(confinedTo);
     this.sql.exec(
       `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope,
-         scope_writes, scope_note, minted_by, minted_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         scope_writes, scope_note, minted_by, minted_at, confined_to)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id, String(secretSha ?? ""), kind, principal, String(taskScope ?? "investigative"),
-      JSON.stringify(declared), String(note ?? ""), String(who), now);
+      JSON.stringify(declared), String(note ?? ""), String(who), now, confinement);
     return { ok: true, minted: true, credential: this.#aiCredentialPublic(
       this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)) };
   }
@@ -41728,7 +41740,14 @@ export class Store extends DurableObject {
              taskScope: row.task_scope, writes: this.#aiCredentialWrites(row),
              note: row.scope_note || null, mintedBy: row.minted_by, mintedAt: row.minted_at,
              revokedAt: row.revoked_at || null, revokedBy: row.revoked_by || null,
-             revoked: !!row.revoked_at };
+             revoked: !!row.revoked_at,
+             /* D-463: WHICH NAMESPACE THIS CREDENTIAL CAN EVER ADDRESS. `null` is "not confined" and is
+                stated as a value rather than left off the object, because an absent key reads the same as a
+                key nobody thought about — and this is the one property of a credential a member has to be
+                able to read back to know whether an agent can touch the record at all. The gate reads the
+                same field through `aiCredentialLook`, which spreads this projection, so what a member sees
+                and what the plane enforces are one string and cannot disagree. */
+             confinedTo: row.confined_to || null };
   }
 
   /** File the links a captured document made. Replaces this capture's rows

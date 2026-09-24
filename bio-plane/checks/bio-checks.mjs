@@ -9184,6 +9184,24 @@ export const AI_CREDENTIAL_CHECKS = {
       + 'this is not one of them. The background worker\'s own jobs are outside what anybody can hand '
       + 'to an agent, so this cannot be written into a credential at all.',
   },
+  /* D-463 (C-29.10) — THE CONFINEMENT, JUDGED BEFORE IT ENTERS THE RECORD.
+     A credential may be minted confined to the scratch namespace for its whole life, and to NOTHING ELSE.
+     `bio` is refused with the rest, and that is the decision rather than an omission: `bio` is where every
+     unconfined credential already lands, so a row saying "confined to bio" would be a sentence in the record
+     that reads like a fence and constrains nothing — D-199 (2)'s complaint about a settings row, arriving as
+     a column. The value is matched EXACTLY — nothing trimmed, nothing case-folded — on D-456's rule one layer in,
+     because a Durable Object name is an exact string and folding it would be the code guessing what a member meant.
+     ABSENT (the field omitted, or null) is the ONLY silence, and it is the case every caller written before this item
+     is in; a PRESENT empty string is a value and is refused with the rest, because an empty `store=` is one of the
+     values D-456 measured addressing the real record. */
+  AI_CONFINEMENT_NOT_SCRATCH: {
+    check: 'C-29.10',
+    where: 'src/index.mjs aiConfinementDeclaration > is-ai-confinement-declaration',
+    translation: 'A credential can be confined to the scratch area and to nothing else, spelt exactly. '
+      + 'Leaving the confinement out altogether makes an ordinary credential that reaches the record itself; '
+      + 'naming the record itself is not a confinement, so it is refused rather than written down as one. '
+      + 'Nothing was created.',
+  },
 };
 
 /* TWO FAMILIES COLLIDED ON C-29 AND PL-14's WAS RENUMBERED TO C-30 AT
@@ -11148,6 +11166,20 @@ export const NAMESPACE_CHECKS = {
     translation: 'This request asked for the scratch area, but this operation only ever answers from the record '
       + 'itself and has no scratch version, so nothing was read or changed. To use it, leave the scratch area '
       + 'out of the request, knowing it then reaches the real record.',
+  },
+  /* D-463 (C-78.3): the credential itself is confined to the scratch area for its whole life, and this request
+     named a different part of the record. C-78.1 and C-78.2 are both properties of the REQUEST — a name that
+     does not exist, an operation that has no scratch version; this one is a property of the CALLER, which is
+     why it is a third row and not a widening of either. Confinement is by REFUSAL and never by silent
+     redirection when a store is NAMED (`scopeFor`'s rule for the probe class, and D-456's for everyone): a
+     caller who believes it addressed the record must be told it did not. An ABSENT `store=` is not a refusal —
+     the credential's own confinement is its default, which is the whole point of minting one. */
+  NAMESPACE_CONFINED: {
+    check: 'C-78.3',
+    where: 'src/index.mjs confinedNamespaceGate > is-confined-namespace-gate',
+    translation: 'The credential used for this request can only ever reach the scratch area kept apart for '
+      + 'testing, and this request asked for a different part of the record, so nothing was read or changed. '
+      + 'Leave the part out of the request and it reaches scratch, which is the only place this credential goes.',
   },
 };
 

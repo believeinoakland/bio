@@ -3047,6 +3047,130 @@ function pinnedNamespaceGate(url, op, spec) {
   /* END DEC-49 REGION is-pinned-namespace-gate */
 }
 
+/* D-463 (C-78.3) — A CREDENTIAL MINTED CONFINED TO `scratch` ADDRESSES `scratch` ON EVERY CALL IT MAKES.
+ *
+ * WHAT WAS WRONG, AND IT WAS NAMED IN THE RULES BEFORE IT WAS BUILT. `CLAUDE.md` §5's live-verify rule ends
+ * *"RESIDUE: no credential binds to scratch for life"*, and `BIO_Distribution_v0_1.md` §6 rung 6 carried the same
+ * sentence as a stated LIMITATION (D-325; BOB #17 ruled the per-call posture SUFFICIENT 2026-09-19, BOB #22 stated the
+ * residue 2026-09-21) — so the whole no-write guarantee of a live verification was the DISCIPLINE of naming
+ * `store=scratch` on every call, plus the witness afterwards. BOB #22 named the one condition on which a sticky
+ * confinement would be raised: *"raised only if a live verification is measured writing the real record despite the
+ * naming and the witness."* IT WAS MEASURED TWICE. D-456: `store=biosmoke-pdf` — a brief naming a namespace that has
+ * never existed — answered from `bio`. D-461: `op=knock&store=scratch` filed a knock in the REAL record's inbox and
+ * answered `ok`. Both were found by workers whose every call was disciplined; the discipline was not the thing that
+ * failed. A property that has to be re-asserted on every call is one an instrument omits once, and this is the
+ * credential property that makes a forgotten parameter unable to reach the record at all.
+ *
+ * WHY ONE GATE AT THE FRONT DOOR AND NOT A SECOND ANSWER IN `scopeFor`. `scopeFor` decides a namespace from a CLASS
+ * (the probe class's confinement lives there, by class and not by credential); this decides it from the ROW a member
+ * authored. Putting it in both places would be two answers to "which store does this call land in" ageing separately,
+ * which is REC-46's measured defect and PL-4's duplicated-predicate one at once. So the rule lives here, ONCE, ahead of
+ * everything: ahead of the unauthenticated block, ahead of `classify`, ahead of `scopeFor`'s call site — and the
+ * SUITE PINS THAT ORDER STRUCTURALLY (`d463-confined-credential.test.mjs` §5), because a gate that can be reached
+ * around is a mechanism believed on the strength of its existence.
+ *
+ * THE TWO ARMS ARE DIFFERENT ACTS AND BOTH ARE THE CONFINEMENT.
+ *   - A `store=` NAMED as anything but `scratch` is REFUSED BY NAME, 403 `NAMESPACE_CONFINED`. D-456's rule: a caller
+ *     who believes it addressed the record must be TOLD it did not, never quietly answered somewhere else. `bio` is
+ *     refused like any other, and the sentence says the credential can go nowhere else.
+ *   - A `store=` ABSENT is SET to `scratch` here, and that is a default rather than a redirection: every class already
+ *     has one (probe's is `scratch`, everybody else's `bio`), and this credential's is the row's. Setting it on the URL
+ *     rather than computing it later is what makes the confinement TOTAL for a caller that names nothing: the twenty-four
+ *     sites that address a namespace read it from `scopeFor`'s answer, the invitation ops and `op=instancegroup` /
+ *     `op=groupidentity` read `store=` themselves, and every one of them now reads `scratch`. THE ANSWER SAYS SO: the
+ *     envelope's `store` is the namespace that answered, so nothing is silent about where the call went.
+ *     A DELIBERATE CONSEQUENCE, STATED SO IT IS NOT READ AS AN OVERSIGHT: a confined credential calling one of the
+ *     PUBLIC ops D-461 pins to `bio` now meets `NAMESPACE_PINNED` — `op=knock` included, the write that item measured.
+ *     That is the right outcome and the reason the two gates are ordered this way: the confined caller cannot file a
+ *     knock in the real record's inbox, and it is told which of the two fences stopped it.
+ *
+ * WHAT THIS DOES NOT CONFINE, MEASURED RATHER THAN ASSUMED. The credential's OWN ROW is read from `bio` (the
+ * `ai_credentials` table lives in one store, and `aicredentiallook` has always been asked there): resolving who a
+ * caller is is not addressing the record's content, and a confinement that could not look itself up would be one
+ * nothing could enforce. Sessions are likewise resolved from `bio`, and a session is not a minted credential. The four
+ * BINDING classes cannot be confined at all — they are values an operator sets in the hosting dashboard, with no row to
+ * carry the property — so for ADMIN, MEMBER, DAEMON and PROBE the per-call rule and `scopeFor` are unchanged, and the
+ * live-verify obligation in `CLAUDE.md` §5 still binds every caller holding one. */
+function confinedNamespaceGate(url, cred) {
+  if (!cred || cred.confinedTo !== SCRATCH) return null;
+  if (url.searchParams.has("store") && url.searchParams.get("store") !== SCRATCH) {
+    /* DEC-49 REGION is-confined-namespace-gate */
+    return json({ ok: false, reason: "NAMESPACE_CONFINED", ...namespaceRow("NAMESPACE_CONFINED"),
+                  error: `credential '${String(cred.tokenId).slice(0, 60)}' is confined to the ${SCRATCH} `
+                       + `namespace for its whole life and cannot address `
+                       + `${JSON.stringify(String(url.searchParams.get("store")).slice(0, 80))}; nothing was read or written`,
+                  tokenId: cred.tokenId, asked: String(url.searchParams.get("store")).slice(0, 80),
+                  confinedTo: SCRATCH }, 403);
+    /* END DEC-49 REGION is-confined-namespace-gate */
+  }
+  url.searchParams.set("store", SCRATCH);
+  return null;
+}
+
+/* D-463 (C-29.10) — WHAT MAY BE WRITTEN AS A CONFINEMENT, judged once when a member AUTHORS it.
+ *
+ * `aiScopeDeclaration`'s shape and its reason (PL-4: one predicate at two points leaves one of the two codes
+ * unreachable, so the DECLARATION and the per-call GATE are different questions with different codes and both are
+ * driven). Its own named function and its own region, because a DEC-49 `where` resolves a span BY FUNCTION NAME.
+ *
+ * `scratch` IS THE ONLY CONFINEMENT THERE IS, AND `bio` IS REFUSED WITH THE UNKNOWN NAMES. That is a decision: `bio` is
+ * where every unconfined credential already lands, so a row reading "confined to bio" would look like a fence in the
+ * record and hold nothing — the sentence-that-enforces-nothing D-199 (2) moved the scope out of a settings row to
+ * avoid. Absent, null and empty are UNCONFINED and are not refusals: a member who says nothing is minting the
+ * credential this instance has always minted. */
+/* D-463 — THE PRESENTED `ai` CREDENTIAL, RESOLVED ONCE PER REQUEST AND READ IN THREE PLACES.
+ *
+ * The gate above needs the credential's ROW before anything else happens, and the admission block and `caseReader`
+ * needed it already. One resolution, passed along, for two reasons and neither is tidiness: (1) a second
+ * `aicredentiallook` would be a second Durable Object round trip on every agent call, which is the cost D-199's own
+ * comment accepts ONCE and no more; (2) two lookups can disagree — a credential revoked between them would be live at
+ * one gate and withdrawn at the next, and which fence a caller met would depend on the order they ran in.
+ *
+ * THE SHAPE IS CHECKED BEFORE THE STORE IS ASKED, so a session token (64 hex) never reaches this lookup and an agent
+ * credential never falls through into the session one: two different failures deserve two different answers. A STORE
+ * SILENCE IS NOT "THIS CREDENTIAL IS UNKNOWN" (REC-52): it is returned as a silence and the caller is told the record
+ * could not be consulted, never refused as though something were known about them. */
+async function aiCredentialPresented(url, env) {
+  const t = url.searchParams.get("token");
+  if (!t || !AI_TOKEN_SHAPE.test(t)) return { cred: null };
+  const st = env.STORE.get(env.STORE.idFromName("bio"));
+  const out = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex(t)}`));
+  if (!out.answered) return { silent: "aicredentiallook" };
+  return { cred: out.result?.found ? out.result.credential : null };
+}
+
+function aiConfinementDeclaration(confinedTo) {
+  const refusal = (code, detail, extra) => {
+    const row = AI_CREDENTIAL_CHECKS[code];
+    return { error: { reason: code, code, check: row.check, translation: row.translation,
+                      detail, ...(extra || {}) } };
+  };
+  /* THE VALUE IS JUDGED EXACTLY, AND NOTHING IS TRIMMED OR FOLDED — D-456's rule for the namespace set, one layer
+     in: a Durable Object name is an exact string, and normalising here would be this function guessing what the
+     member meant. So `Scratch`, `SCRATCH`, `"scratch\n"` and a lone space are each refused BY NAME, which is the
+     direction that cannot end in a credential believing it is fenced. ABSENT is the only silence: the field omitted,
+     `null`, or `undefined`. A PRESENT empty string is a value and is refused with the rest, because an empty
+     `store=` is exactly one of the values D-456 measured addressing the real record. */
+  if (confinedTo === null || confinedTo === undefined) return { confinedTo: null };
+  const asked = String(confinedTo);
+
+  /* DEC-49 REGION is-ai-confinement-declaration
+   *
+   * THE SPAN `AI_CONFINEMENT_NOT_SCRATCH` names. Helper `refusal`, the code a STRING LITERAL at its site so arm C of
+   * the DEC-49 guard COMPARES it rather than reading past a variable. */
+  if (asked !== SCRATCH)
+    return refusal("AI_CONFINEMENT_NOT_SCRATCH",
+      `'${asked.slice(0, 80)}' is not a confinement a credential can carry. The one namespace a credential `
+      + `may be bound to for its whole life is ${JSON.stringify(SCRATCH)}; ${JSON.stringify("bio")} is where `
+      + `every unconfined credential already lands, so recording it as a confinement would put a fence in the `
+      + `record that holds nothing (D-199 (2)). The name is matched exactly, so a capital letter or a stray space `
+      + `is a different name. Leave the field out altogether to mint an unconfined credential.`,
+      { asked: asked.slice(0, 80), confinements: [SCRATCH] });
+  /* END DEC-49 REGION is-ai-confinement-declaration */
+
+  return { confinedTo: SCRATCH };
+}
+
 /* =====================================================================
  * PL-11 / IS-5 / D-199 — THE FIFTH CLASS, AND THE FIRST ONE THAT IS NOT A
  * BINDING.
@@ -3352,7 +3476,7 @@ async function reviewAnswer(out, op) {
   return json({ ok: true, ...r }, 200);
 }
 
-async function caseReader(url, env, storeName) {
+async function caseReader(url, env, storeName, presentedAi) {
   const t = url.searchParams.get("token");
   if (!t) return { viewer: "" };
   const cls = await classify(t, env);
@@ -3363,9 +3487,15 @@ async function caseReader(url, env, storeName) {
   }
   const st = env.STORE.get(env.STORE.idFromName("bio"));
   if (AI_TOKEN_SHAPE.test(t)) {
-    const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex(t)}`));
-    if (!aOut.answered) return { silent: "aicredentiallook" };
-    const cred = aOut.result?.found ? aOut.result.credential : null;
+    /* D-463: the caller hands us the row the front door already read (`presentedAi`), so an agent calling one of these
+       four ops costs the lookup ONCE rather than twice and both fences judge the SAME row. `undefined` means nobody
+       resolved it — this function is reachable from paths that do not — and then it is looked up here as before. */
+    let cred = presentedAi === undefined ? undefined : presentedAi;
+    if (cred === undefined) {
+      const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex(t)}`));
+      if (!aOut.answered) return { silent: "aicredentiallook" };
+      cred = aOut.result?.found ? aOut.result.credential : null;
+    }
     const scoped = cred ? aiTaskScope(cred, "index", OPS.index) : null;
     return { viewer: scoped && !scoped.error ? scoped.viewer : "", cls: "ai" };
   }
@@ -5386,6 +5516,16 @@ export default {
     /* D-456: a `store=` naming no namespace is refused here, before any credential is read (`namespaceGate`). */
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return unknownNamespace;
+    /* D-463: the presented `ai` credential's ROW, read ONCE here and reused by the admission block and `caseReader`
+       below, because the confinement is a property of the row and the gate needs it before anything else runs. A
+       request presenting no credential, or one that is not an agent credential, asks the store nothing. */
+    const presentedAi = await aiCredentialPresented(url, env);
+    if (presentedAi.silent) return storeSilent(presentedAi.silent);
+    /* D-463: a credential MINTED CONFINED to `scratch` is held to it here — a named `store=` refused by name, an absent
+       one set to `scratch` — BEFORE D-461's gate, so a confined caller reaching a bio-pinned public op is told which
+       fence stopped it and files nothing in the real record (`confinedNamespaceGate`). */
+    const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
+    if (confinedNamespace) return confinedNamespace;
     /* D-461: `store=scratch` on a public op that always answers from `bio` is refused here (`pinnedNamespaceGate`). */
     const pinnedNamespace = pinnedNamespaceGate(url, op, spec);
     if (pinnedNamespace) return pinnedNamespace;
@@ -5505,7 +5645,7 @@ export default {
         const heldScope = heldCls ? scopeFor(heldCls, url) : null;
         const igStore = heldScope && !heldScope.error ? heldScope.name
           : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
-        const igReader = await caseReader(url, env, igStore);
+        const igReader = await caseReader(url, env, igStore, presentedAi.cred);
         if (igReader.silent) return storeSilent(igReader.silent);
         if (igReader.viewer) {
           const igOut = await doAnswer(env.STORE.get(env.STORE.idFromName(igStore)).fetch("http://do/instancegroup"));
@@ -5528,7 +5668,7 @@ export default {
         const heldScope = heldCls ? scopeFor(heldCls, url) : null;
         const giStore = heldScope && !heldScope.error ? heldScope.name
           : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
-        const giReader = await caseReader(url, env, giStore);
+        const giReader = await caseReader(url, env, giStore, presentedAi.cred);
         if (giReader.silent) return storeSilent(giReader.silent);
         const giOut = await doAnswer(env.STORE.get(env.STORE.idFromName(giStore))
           .fetch(giReader.viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
@@ -5597,7 +5737,7 @@ export default {
            but the two keys. The store answers an unsigned document to standing
            and answers everybody else exactly as it answers a case that does not
            exist. */
-        const reader = await caseReader(url, env, "bio");
+        const reader = await caseReader(url, env, "bio", presentedAi.cred);
         if (reader.silent) return storeSilent(reader.silent);
         /* REC-126 / IC-145: A LIVE GRANT HOLDER is the second party §6A.2's
            precondition admits to an unsigned document. The secret is HASHED HERE
@@ -5661,7 +5801,7 @@ export default {
           q.set("bySecret", "1");
           q.set("secretSha", await sha256Hex(url.searchParams.get("secret") || ""));
         } else {
-          const reader = await caseReader(url, env, "bio");
+          const reader = await caseReader(url, env, "bio", presentedAi.cred);
           if (reader.silent) return storeSilent(reader.silent);
           q.set("viewer", reader.viewer);
         }
@@ -6078,16 +6218,12 @@ export default {
        401 on a store we could not consult would be the plane converting its own
        failure into a statement about who somebody is — the exact class REC-52
        closed, and the session block below already refuses to make it. */
-    if (!cls) {
-      const t = url.searchParams.get("token");
-      if (t && AI_TOKEN_SHAPE.test(t)) {
-        const st = env.STORE.get(env.STORE.idFromName("bio"));
-        const sha = await sha256Hex(t);
-        const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${sha}`));
-        if (!aOut.answered) return storeSilent("aicredentiallook");
-        if (aOut.result?.found) { cls = "ai"; aiCred = aOut.result.credential; }
-      }
-    }
+    /* D-463: THE LOOKUP THIS BLOCK USED TO MAKE HAS MOVED TO THE FRONT DOOR and its answer arrives here as
+       `presentedAi`. Nothing about the resolution changed — the shape is still checked before the store is asked, a
+       silence is still a silence and is converted there (REC-52), and a credential the store does not know still leaves
+       `cls` null so the session block below gets its turn. What changed is that the confinement gate needs the row
+       BEFORE the unauthenticated block runs, and resolving it twice would let a revocation land between the two. */
+    if (!cls && presentedAi.cred) { cls = "ai"; aiCred = presentedAi.cred; }
     /* A browser signed in with a password holds a session token, not a
        machine credential. The write arc opens INTAKE to sessions: promote,
        lease, allocid, capture, ratify, and inbox review run through the
@@ -6284,6 +6420,14 @@ export default {
         rootOfTrust: viaSession ? !!sessRights.rootOfTrust : false,
         capabilities: viaSession ? [...sessCaps].sort() : null,
         vocabulary: Store.CAPABILITIES,
+        /* D-463: WHETHER THIS CREDENTIAL CAN EVER REACH THE RECORD, answered as a value rather than left for a
+           caller to infer from the `store` beside it. The two are different facts and an instrument needs both:
+           `store` is where THIS call landed, `confinedTo` is where every call it will ever make lands. `null` is
+           "not confined", which is the honest answer for a session (a member is not a confined credential) and
+           for the four binding classes (an operator sets them in the hosting dashboard, and there is no row to
+           carry the property — the probe class's confinement is its CLASS's, read out of `scopeFor`, and is
+           reported as `store` on every one of its answers). */
+        confinedTo: cls === "ai" && aiCred ? (aiCred.confinedTo ?? null) : null,
         detail: viaSession
           ? "capabilities are set by an administrator and gate what this account may DO, not what it may see"
           : "a machine credential has no member behind it and therefore holds no capabilities; it is bounded "
@@ -11743,13 +11887,22 @@ export default {
       try { asked = passBody ? JSON.parse(passBody) : {}; } catch { asked = {}; }
       const declared = aiScopeDeclaration(asked.writes);
       if (declared.error) return json({ ok: false, ...declared.error, op, cls }, 403);
+      /* D-463: THE CONFINEMENT IS JUDGED HERE TOO, and before anything is written, for the declaration's own
+         reason one line up (C-29.8 / C-29.9): a confinement the gate could never honour is a sentence that must
+         not enter the record at all. It is judged in THIS file because this is where `NAMESPACES` lives, exactly
+         as `writes` is judged here because this is where the OPS table lives; the store records what it is told
+         and keeps no second copy of either vocabulary. The NORMALISED value crosses to the store below — never
+         the caller's own spelling, which is the same rule `who` and `secretSha` follow in this block. */
+      const confinement = aiConfinementDeclaration(asked.confinedTo);
+      if (confinement.error) return json({ ok: false, ...confinement.error, op, cls }, 403);
       const raw = new Uint8Array(32);
       crypto.getRandomValues(raw);
       const secret = "aik-" + [...raw].map((x) => x.toString(16).padStart(2, "0")).join("");
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
       inner.searchParams.set("secretSha", await sha256Hex(secret));
       const minted = await doAnswer(stub.fetch(new Request(inner,
-        { method: req.method, body: JSON.stringify({ ...asked, writes: declared.writes }) })));
+        { method: req.method, body: JSON.stringify({ ...asked, writes: declared.writes,
+                                                     confinedTo: confinement.confinedTo }) })));
       if (!minted.answered) return storeSilent("aicredentialmint");
       if (!minted.result || minted.result.ok !== true)
         return json({ ok: false, ...(minted.result || {}), op, store: storeName, tokenClass: cls }, 403);

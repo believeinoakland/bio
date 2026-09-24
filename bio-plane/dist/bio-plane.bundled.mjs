@@ -2797,7 +2797,22 @@ CREATE TABLE IF NOT EXISTS ai_credentials (
   minted_by       TEXT NOT NULL,    -- the MEMBER who minted it. D-199 (3): never a machine
   minted_at       TEXT NOT NULL,
   revoked_at      TEXT,
-  revoked_by      TEXT
+  revoked_by      TEXT,
+  -- D-463: THE NAMESPACE THIS CREDENTIAL IS CONFINED TO FOR ITS WHOLE LIFE, or NULL for
+  -- a credential that is not confined. The only value it may hold is 'scratch'. The name
+  -- bio is not a confinement but the default, and a row saying so would be a sentence in
+  -- the record that fences nothing -- D-199 (2)'s whole complaint about a settings row,
+  -- arriving one column over. The vocabulary is NOT restated here: index.mjs owns
+  -- NAMESPACES and judges the value at the mint edge (aiConfinementDeclaration), the way
+  -- scope_writes arrives already judged by aiScopeDeclaration, because a second copy
+  -- of the namespace set is the third unsynchronised answer REC-46 spent an item removing.
+  --
+  -- NULLABLE AND NEVER BACK-FILLED. A credential minted before this column existed was
+  -- minted unconfined, and NULL is that fact rather than an absence of one: the only other
+  -- value a backfill could reach for is 'scratch', which would silently narrow authorities
+  -- members already granted. What reads it is one gate at the front door
+  -- (confinedNamespaceGate), and an unconfined credential meets no gate at all.
+  confined_to     TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
 CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
@@ -10865,6 +10880,21 @@ var AI_CREDENTIAL_CHECKS = {
     check: "C-29.9",
     where: "src/index.mjs aiScopeDeclaration > is-ai-scope-declaration",
     translation: "An agent may only be given things a member of this group could do themselves, and this is not one of them. The background worker's own jobs are outside what anybody can hand to an agent, so this cannot be written into a credential at all."
+  },
+  /* D-463 (C-29.10) — THE CONFINEMENT, JUDGED BEFORE IT ENTERS THE RECORD.
+     A credential may be minted confined to the scratch namespace for its whole life, and to NOTHING ELSE.
+     `bio` is refused with the rest, and that is the decision rather than an omission: `bio` is where every
+     unconfined credential already lands, so a row saying "confined to bio" would be a sentence in the record
+     that reads like a fence and constrains nothing — D-199 (2)'s complaint about a settings row, arriving as
+     a column. The value is matched EXACTLY — nothing trimmed, nothing case-folded — on D-456's rule one layer in,
+     because a Durable Object name is an exact string and folding it would be the code guessing what a member meant.
+     ABSENT (the field omitted, or null) is the ONLY silence, and it is the case every caller written before this item
+     is in; a PRESENT empty string is a value and is refused with the rest, because an empty `store=` is one of the
+     values D-456 measured addressing the real record. */
+  AI_CONFINEMENT_NOT_SCRATCH: {
+    check: "C-29.10",
+    where: "src/index.mjs aiConfinementDeclaration > is-ai-confinement-declaration",
+    translation: "A credential can be confined to the scratch area and to nothing else, spelt exactly. Leaving the confinement out altogether makes an ordinary credential that reaches the record itself; naming the record itself is not a confinement, so it is refused rather than written down as one. Nothing was created."
   }
 };
 var VERSION_STRENGTH_CHECKS = {
@@ -12025,6 +12055,18 @@ var NAMESPACE_CHECKS = {
     check: "C-78.2",
     where: "src/index.mjs pinnedNamespaceGate > is-pinned-namespace-gate",
     translation: "This request asked for the scratch area, but this operation only ever answers from the record itself and has no scratch version, so nothing was read or changed. To use it, leave the scratch area out of the request, knowing it then reaches the real record."
+  },
+  /* D-463 (C-78.3): the credential itself is confined to the scratch area for its whole life, and this request
+     named a different part of the record. C-78.1 and C-78.2 are both properties of the REQUEST — a name that
+     does not exist, an operation that has no scratch version; this one is a property of the CALLER, which is
+     why it is a third row and not a widening of either. Confinement is by REFUSAL and never by silent
+     redirection when a store is NAMED (`scopeFor`'s rule for the probe class, and D-456's for everyone): a
+     caller who believes it addressed the record must be told it did not. An ABSENT `store=` is not a refusal —
+     the credential's own confinement is its default, which is the whole point of minting one. */
+  NAMESPACE_CONFINED: {
+    check: "C-78.3",
+    where: "src/index.mjs confinedNamespaceGate > is-confined-namespace-gate",
+    translation: "The credential used for this request can only ever reach the scratch area kept apart for testing, and this request asked for a different part of the record, so nothing was read or changed. Leave the part out of the request and it reaches scratch, which is the only place this credential goes."
   }
 };
 var DISPATCH_CHECKS = {
@@ -30621,7 +30663,14 @@ var Store = class _Store extends DurableObject {
          DEFAULT because it is a running total and not an attribution: a store written before this
          column existed had no renders in flight at the moment it gained the column, so 0 is the
          MEASURED truth for every old row rather than a value a backfill reached for. */
-      ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"]
+      ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],
+      /* D-463: the namespace an `ai` credential is confined to for its whole life, or NULL for one that is
+         not confined. NULLABLE AND NEVER BACK-FILLED, and here the direction matters more than usual: a
+         credential minted before this column existed was minted UNCONFINED, and the only value a backfill
+         could reach for is 'scratch', which would silently narrow an authority a member already granted and
+         granted on the record. NULL reads back as not confined, which is what it is. schema.mjs says why the
+         vocabulary is not restated in this file. */
+      ["ai_credentials", "confined_to", "TEXT"]
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -67704,6 +67753,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     taskScope = null,
     writes = [],
     note = null,
+    confinedTo = null,
     at = null
   } = {}) {
     const refusal7 = (code, detail, extra) => {
@@ -67741,10 +67791,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         { tokenId: id || null }
       );
     const declared = (Array.isArray(writes) ? writes : []).map((w) => String(w)).sort();
+    const confinement = confinedTo === null || confinedTo === void 0 ? null : String(confinedTo);
     this.sql.exec(
       `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope,
-         scope_writes, scope_note, minted_by, minted_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         scope_writes, scope_note, minted_by, minted_at, confined_to)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       String(secretSha ?? ""),
       kind,
@@ -67753,7 +67804,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       JSON.stringify(declared),
       String(note ?? ""),
       String(who),
-      now
+      now,
+      confinement
     );
     return { ok: true, minted: true, credential: this.#aiCredentialPublic(
       this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)
@@ -67885,7 +67937,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       mintedAt: row.minted_at,
       revokedAt: row.revoked_at || null,
       revokedBy: row.revoked_by || null,
-      revoked: !!row.revoked_at
+      revoked: !!row.revoked_at,
+      /* D-463: WHICH NAMESPACE THIS CREDENTIAL CAN EVER ADDRESS. `null` is "not confined" and is
+         stated as a value rather than left off the object, because an absent key reads the same as a
+         key nobody thought about — and this is the one property of a credential a member has to be
+         able to read back to know whether an agent can touch the record at all. The gate reads the
+         same field through `aiCredentialLook`, which spreads this projection, so what a member sees
+         and what the plane enforces are one string and cannot disagree. */
+      confinedTo: row.confined_to || null
     };
   }
   /** File the links a captured document made. Replaces this capture's rows
@@ -78187,6 +78246,52 @@ function pinnedNamespaceGate(url, op, spec) {
     pinned: "bio"
   }, 400);
 }
+function confinedNamespaceGate(url, cred) {
+  if (!cred || cred.confinedTo !== SCRATCH) return null;
+  if (url.searchParams.has("store") && url.searchParams.get("store") !== SCRATCH) {
+    return json({
+      ok: false,
+      reason: "NAMESPACE_CONFINED",
+      ...namespaceRow("NAMESPACE_CONFINED"),
+      error: `credential '${String(cred.tokenId).slice(0, 60)}' is confined to the ${SCRATCH} namespace for its whole life and cannot address ${JSON.stringify(String(url.searchParams.get("store")).slice(0, 80))}; nothing was read or written`,
+      tokenId: cred.tokenId,
+      asked: String(url.searchParams.get("store")).slice(0, 80),
+      confinedTo: SCRATCH
+    }, 403);
+  }
+  url.searchParams.set("store", SCRATCH);
+  return null;
+}
+async function aiCredentialPresented(url, env) {
+  const t = url.searchParams.get("token");
+  if (!t || !AI_TOKEN_SHAPE.test(t)) return { cred: null };
+  const st = env.STORE.get(env.STORE.idFromName("bio"));
+  const out = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex5(t)}`));
+  if (!out.answered) return { silent: "aicredentiallook" };
+  return { cred: out.result?.found ? out.result.credential : null };
+}
+function aiConfinementDeclaration(confinedTo) {
+  const refusal7 = (code, detail, extra) => {
+    const row = AI_CREDENTIAL_CHECKS[code];
+    return { error: {
+      reason: code,
+      code,
+      check: row.check,
+      translation: row.translation,
+      detail,
+      ...extra || {}
+    } };
+  };
+  if (confinedTo === null || confinedTo === void 0) return { confinedTo: null };
+  const asked = String(confinedTo);
+  if (asked !== SCRATCH)
+    return refusal7(
+      "AI_CONFINEMENT_NOT_SCRATCH",
+      `'${asked.slice(0, 80)}' is not a confinement a credential can carry. The one namespace a credential may be bound to for its whole life is ${JSON.stringify(SCRATCH)}; ${JSON.stringify("bio")} is where every unconfined credential already lands, so recording it as a confinement would put a fence in the record that holds nothing (D-199 (2)). The name is matched exactly, so a capital letter or a stray space is a different name. Leave the field out altogether to mint an unconfined credential.`,
+      { asked: asked.slice(0, 80), confinements: [SCRATCH] }
+    );
+  return { confinedTo: SCRATCH };
+}
 var AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 function aiReachesAsMember(spec) {
   return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member") && !Array.isArray(spec.machineClasses);
@@ -78280,7 +78385,7 @@ async function reviewAnswer(out, op) {
   }
   return json({ ok: true, ...r }, 200);
 }
-async function caseReader(url, env, storeName) {
+async function caseReader(url, env, storeName, presentedAi) {
   const t = url.searchParams.get("token");
   if (!t) return { viewer: "" };
   const cls = await classify(t, env);
@@ -78291,9 +78396,12 @@ async function caseReader(url, env, storeName) {
   }
   const st = env.STORE.get(env.STORE.idFromName("bio"));
   if (AI_TOKEN_SHAPE.test(t)) {
-    const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex5(t)}`));
-    if (!aOut.answered) return { silent: "aicredentiallook" };
-    const cred = aOut.result?.found ? aOut.result.credential : null;
+    let cred = presentedAi === void 0 ? void 0 : presentedAi;
+    if (cred === void 0) {
+      const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex5(t)}`));
+      if (!aOut.answered) return { silent: "aicredentiallook" };
+      cred = aOut.result?.found ? aOut.result.credential : null;
+    }
     const scoped = cred ? aiTaskScope(cred, "index", OPS.index) : null;
     return { viewer: scoped && !scoped.error ? scoped.viewer : "", cls: "ai" };
   }
@@ -79275,6 +79383,10 @@ var index_default = {
     }, 400);
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return unknownNamespace;
+    const presentedAi = await aiCredentialPresented(url, env);
+    if (presentedAi.silent) return storeSilent(presentedAi.silent);
+    const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
+    if (confinedNamespace) return confinedNamespace;
     const pinnedNamespace = pinnedNamespaceGate(url, op, spec);
     if (pinnedNamespace) return pinnedNamespace;
     if (spec.classes === null) {
@@ -79355,7 +79467,7 @@ var index_default = {
         const heldCls = held ? await classify(held, env) : null;
         const heldScope = heldCls ? scopeFor(heldCls, url) : null;
         const igStore = heldScope && !heldScope.error ? heldScope.name : url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
-        const igReader = await caseReader(url, env, igStore);
+        const igReader = await caseReader(url, env, igStore, presentedAi.cred);
         if (igReader.silent) return storeSilent(igReader.silent);
         if (igReader.viewer) {
           const igOut = await doAnswer(env.STORE.get(env.STORE.idFromName(igStore)).fetch("http://do/instancegroup"));
@@ -79371,7 +79483,7 @@ var index_default = {
         const heldCls = held ? await classify(held, env) : null;
         const heldScope = heldCls ? scopeFor(heldCls, url) : null;
         const giStore = heldScope && !heldScope.error ? heldScope.name : url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
-        const giReader = await caseReader(url, env, giStore);
+        const giReader = await caseReader(url, env, giStore, presentedAi.cred);
         if (giReader.silent) return storeSilent(giReader.silent);
         const giOut = await doAnswer(env.STORE.get(env.STORE.idFromName(giStore)).fetch(giReader.viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
         if (!giOut.answered) return storeSilent("groupidentity");
@@ -79403,7 +79515,7 @@ var index_default = {
             reason: "MALFORMED",
             detail: "casedocument requires case=<CASE-YYYY-NNNN> and edition=<n>"
           }, 400);
-        const reader = await caseReader(url, env, "bio");
+        const reader = await caseReader(url, env, "bio", presentedAi.cred);
         if (reader.silent) return storeSilent(reader.silent);
         const docSecret = url.searchParams.has("secret") ? await sha256Hex5(url.searchParams.get("secret") || "") : "";
         const out2 = await doAnswer(stub2.fetch(
@@ -79442,7 +79554,7 @@ var index_default = {
           q.set("bySecret", "1");
           q.set("secretSha", await sha256Hex5(url.searchParams.get("secret") || ""));
         } else {
-          const reader = await caseReader(url, env, "bio");
+          const reader = await caseReader(url, env, "bio", presentedAi.cred);
           if (reader.silent) return storeSilent(reader.silent);
           q.set("viewer", reader.viewer);
         }
@@ -79773,18 +79885,9 @@ var index_default = {
     let sessMember = null, sessRights = null, sessCaps = null;
     let sessViewer = null, sessIdentity = null;
     let aiCred = null;
-    if (!cls) {
-      const t = url.searchParams.get("token");
-      if (t && AI_TOKEN_SHAPE.test(t)) {
-        const st = env.STORE.get(env.STORE.idFromName("bio"));
-        const sha = await sha256Hex5(t);
-        const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${sha}`));
-        if (!aOut.answered) return storeSilent("aicredentiallook");
-        if (aOut.result?.found) {
-          cls = "ai";
-          aiCred = aOut.result.credential;
-        }
-      }
+    if (!cls && presentedAi.cred) {
+      cls = "ai";
+      aiCred = presentedAi.cred;
     }
     if (!cls) {
       const t = url.searchParams.get("token");
@@ -79872,6 +79975,14 @@ var index_default = {
         rootOfTrust: viaSession ? !!sessRights.rootOfTrust : false,
         capabilities: viaSession ? [...sessCaps].sort() : null,
         vocabulary: Store.CAPABILITIES,
+        /* D-463: WHETHER THIS CREDENTIAL CAN EVER REACH THE RECORD, answered as a value rather than left for a
+           caller to infer from the `store` beside it. The two are different facts and an instrument needs both:
+           `store` is where THIS call landed, `confinedTo` is where every call it will ever make lands. `null` is
+           "not confined", which is the honest answer for a session (a member is not a confined credential) and
+           for the four binding classes (an operator sets them in the hosting dashboard, and there is no row to
+           carry the property — the probe class's confinement is its CLASS's, read out of `scopeFor`, and is
+           reported as `store` on every one of its answers). */
+        confinedTo: cls === "ai" && aiCred ? aiCred.confinedTo ?? null : null,
         detail: viaSession ? "capabilities are set by an administrator and gate what this account may DO, not what it may see" : "a machine credential has no member behind it and therefore holds no capabilities; it is bounded by the operation table and by namespace confinement instead"
       }, store: storeName, tokenClass: cls }, 200);
     }
@@ -83014,6 +83125,8 @@ var index_default = {
       }
       const declared = aiScopeDeclaration(asked.writes);
       if (declared.error) return json({ ok: false, ...declared.error, op, cls }, 403);
+      const confinement = aiConfinementDeclaration(asked.confinedTo);
+      if (confinement.error) return json({ ok: false, ...confinement.error, op, cls }, 403);
       const raw = new Uint8Array(32);
       crypto.getRandomValues(raw);
       const secret = "aik-" + [...raw].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -83021,7 +83134,11 @@ var index_default = {
       inner.searchParams.set("secretSha", await sha256Hex5(secret));
       const minted = await doAnswer(stub.fetch(new Request(
         inner,
-        { method: req.method, body: JSON.stringify({ ...asked, writes: declared.writes }) }
+        { method: req.method, body: JSON.stringify({
+          ...asked,
+          writes: declared.writes,
+          confinedTo: confinement.confinedTo
+        }) }
       )));
       if (!minted.answered) return storeSilent("aicredentialmint");
       if (!minted.result || minted.result.ok !== true)
