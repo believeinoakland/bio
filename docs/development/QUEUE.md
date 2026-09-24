@@ -502,7 +502,8 @@ scope: one governed helper and DEC-49 region minting NO_PUBLISHED_STORE for ONE 
 accepts-when: both public ops answer NO_PUBLISHED_STORE with its translation from one site (the measured failure it moves: an untranslated code at two sites). NEGATIVE CONTROL: restore the literal at ~5747 and check-refusal-codes names the second site.
 added: 2026-09-24 · SCHEDULER #20 (id minted by D-513's worker).
 
-### D-558 · queued — **`bio-plane/test/ratify.test.mjs` (~240) PINS THE CATALOGUE VERSION AS A LITERAL, `"plane-gate/1.0 (bio-checks 1.28.0)"`, so every catalogue bump turns it red and it has been hand-corrected at each (five CORRECTED notes above it).** Found by D-544's and M0-192's workers independently. — owner M0.
+### D-558 · running — **`bio-plane/test/ratify.test.mjs` (~240) PINS THE CATALOGUE VERSION AS A LITERAL, `"plane-gate/1.0 (bio-checks 1.28.0)"`, so every catalogue bump turns it red and it has been hand-corrected at each (five CORRECTED notes above it).** Found by D-544's and M0-192's workers independently. — owner M0.
+status: running — running — spawned 23:07Z 2026-09-24 by SCHEDULER #20 as WORKER D-558 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-558 and the session; never conclude queued from absence.
 order: after D-545, AHEAD of product: the same bump-cost class as D-544 and M0-192, a red round on every catalogue move (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
@@ -512,7 +513,8 @@ scope: build the expected string from `CATALOG_VERSION` imported from `bio-plane
 accepts-when: a catalogue bump leaves the suite green, and recording the gate's own version fails by name (the measured failure it moves: a red on every bump). NEGATIVE CONTROL: record `plane-gate/1.0` alone and the catalogue-version arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs D`).
 
-### D-521 · queued — **IC-246's STATEMENT_ACK_DOCUMENTS_OVER_BOUND (C-82.1) IS UNREACHABLE BY CONSTRUCTION: after REC-194 its read names (case_id, edition), `case_documents`' primary key, so at most one row returns and the bound can never fire.** Found by REC-194's worker (F1). — owner RECORD.
+### D-521 · running — **IC-246's STATEMENT_ACK_DOCUMENTS_OVER_BOUND (C-82.1) IS UNREACHABLE BY CONSTRUCTION: after REC-194 its read names (case_id, edition), `case_documents`' primary key, so at most one row returns and the bound can never fire.** Found by REC-194's worker (F1). — owner RECORD.
+status: running — running — spawned 23:07Z 2026-09-24 by SCHEDULER #20 as WORKER D-521 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-521 and the session; never conclude queued from absence.
 order: after REC-213, with the corrections to just-landed work: a catalogued refusal that cannot occur is a claim the record makes about itself (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
 milestone: M10
 interface: I3 — a catalogued code retired; the catalogue version moves; the integrator classifies.
@@ -522,7 +524,8 @@ scope: collapse the read to `#one`; remove the bound, C-82.1, its DEC-49 region 
 accepts-when: C-82.1 and its region are gone and the census floors read their printed figures (the measured failure it moves: a code no input can reach). NEGATIVE CONTROL: restore the region without its reachable site and check-refusal-codes names the orphan.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-524 · queued — **A MONITORED BUNDLE WITH AN ARCHIVE-SOURCED BASELINE READS "no captured baseline" FOREVER: `op=acquire` sets `body.locator = sel.replay`, so the register row names the Wayback replay URL while the capture files under the CDX original, and op=monitor's register lookup never finds it.** D-472's defect surviving on the ARCHIVE arm; found by D-472's worker (F1). — owner CAPTURE.
+### D-524 · running — **A MONITORED BUNDLE WITH AN ARCHIVE-SOURCED BASELINE READS "no captured baseline" FOREVER: `op=acquire` sets `body.locator = sel.replay`, so the register row names the Wayback replay URL while the capture files under the CDX original, and op=monitor's register lookup never finds it.** D-472's defect surviving on the ARCHIVE arm; found by D-472's worker (F1). — owner CAPTURE.
+status: running — running — spawned 23:07Z 2026-09-24 by SCHEDULER #20 as WORKER D-524 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-524 and the session; never conclude queued from absence.
 order: after D-521, with the corrections to just-landed work: a monitor that reads no baseline where one is held (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:14Z)
 milestone: M3
 interface: I5 additive — `archiveHop` gains `document_address`; the integrator classifies.
@@ -532,7 +535,8 @@ scope: give `src/cdx.mjs` `archiveHop` a `document_address` key as `driveHop` ha
 accepts-when: an archive-sourced baseline is found by op=monitor and two unchanged ticks read `unchanged` (the measured failure it moves: "no captured baseline" on every tick). NEGATIVE CONTROL: drop the hop key and the archive-baseline arm reads no baseline, failing by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-525 · queued — **A PRE-CAP-8 DRIVE BASELINE IS A CAPTURE OF GOOGLE'S SHELL, so its monitor reads `modified` on every tick permanently, and nothing lists which bundles carry one.** Found by D-472's worker (F3). — owner CAPTURE.
+### D-525 · running — **A PRE-CAP-8 DRIVE BASELINE IS A CAPTURE OF GOOGLE'S SHELL, so its monitor reads `modified` on every tick permanently, and nothing lists which bundles carry one.** Found by D-472's worker (F3). — owner CAPTURE.
+status: running — running — spawned 23:07Z 2026-09-24 by SCHEDULER #20 as WORKER D-525 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-525 and the session; never conclude queued from absence.
 order: after D-524, the same monitor path; low: the fix is a re-acquire (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:14Z)
 milestone: M3
 interface: none unless a read is added (the integrator classifies).
