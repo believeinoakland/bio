@@ -9,3 +9,5 @@ D-466	2026-09-23T23:34:36.696Z	land/worker/D-242
 D-469	2026-09-24T00:56:26.681Z	CONDUCT #19	CAP-11's acquire existed:true defect, minted D-459 in its clone (collides with case-opened coverage row D-459)
 D-472	2026-09-24T01:09:02.665Z	CONDUCT #19	D-351's finding (monitor fetches Drive app shell) minted D-467 locally; SCHEDULER's D-467 is the nc-m038 re-anchor
 D-480	2026-09-24T02:12:16.309Z	CONDUCT #19	D-66's finding (pdfstructure glyph-per-line) minted D-467 locally; SCHEDULER's D-467 stands
+D-482	2026-09-24T02:30:00.000Z	SCHEDULER #18	UI-85 finding (1): bounds REC-59 id-arm matcher over-strict
+D-483	2026-09-24T02:30:00.000Z	SCHEDULER #18	UI-85 finding (2): setup page has no risk-tier chooser
