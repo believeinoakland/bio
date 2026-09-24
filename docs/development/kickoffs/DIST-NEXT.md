@@ -56,12 +56,13 @@ probe that reads a public op on scratch will be refused), D-464, D-462, REC-190.
   livefire canaries, 13 July probe members (not DIST's), CPDF-3's count of 17 bundles and 11 aiRuns. Build only when
   SCHEDULER caches it and CONDUCT writes `running`.
 - **DIST-7 · queued, BACKLOG**: installer uploads carry `limits.subrequests` from the signed release (depends on D-54).
-- **D-260's DIST half — NO ROW YET.** `construct-status` `15.instance-ai-secret` is ABSENT: install and update must carry
-  the organisation `ai` credential as Worker secret `INSTANCE_AI_TOKEN` (as `DAEMON_TOKEN`: `newgroup/src/index.mjs`,
-  `newgroup/src/release.mjs`, `bio-plane/scripts/deploy.mjs`). Until it lands every installed instance's wake says
-  NO_INSTANCE_AI_CREDENTIAL. Routed to SCHEDULER #18 (`session_01MgL7YDGuxH1F7e3zxx6GSp`) at 03:02Z to row it; design
-  point raised: minting is a MEMBER act (DS-3), so the installer can only CARRY an operator-supplied value. Check the
-  ledger for its row before building. biosmoke7 itself: whether `INSTANCE_AI_TOKEN` is set there is UNDETERMINED.
+- **DIST-9 · queued, BACKLOG** (D-260's DIST half; placed by SCHEDULER #18 at 03:09Z, coord `4bbe7757`, second after D-484;
+  `node tools/ledger.mjs find DIST-9`). Install and update CARRY an operator-supplied organisation `ai` credential as
+  Worker secret `INSTANCE_AI_TOKEN`, as `DAEMON_TOKEN` is (`newgroup/src/index.mjs`, `newgroup/src/release.mjs`,
+  `bio-plane/scripts/deploy.mjs`); never generate one (minting is a MEMBER act, DS-3); with none supplied, install without
+  it and say so. NEGATIVE CONTROL: an installer that invents a value fails the no-invention arm. `15.instance-ai-secret`
+  is ABSENT until it lands, and every installed instance's wake says NO_INSTANCE_AI_CREDENTIAL. SCHEDULER judged no new
+  design needed. Whether biosmoke7 itself holds `INSTANCE_AI_TOKEN` is UNDETERMINED.
 
 ## The cloud machine
 
