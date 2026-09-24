@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: RUN 2026-09-23 with `node test/nc-d162.mjs [arm]` from `bio-plane/`, ELEVEN arms, every one ALONE with the others held open, each EDITING A REAL SOURCE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND cmp (bio-checks.mjs 854,596 B, store.mjs 2,923,946 B, index.mjs 735,468 B, affordances.mjs 151,127 B; all eleven restores byte-identical; never `git checkout --`). Every arm AS DECLARED: (a) `baseline` 63/0. (b) `legonly` — THE ROW'S CONTROL, C-81.1 dropped at both branches: 55/8, every BY-NAME leg arm fails (basis target, content_id, `theme:`, membership address, version leg, action basis), a bare theme still refused under the WRONG name and the `theme:` leg LANDING. Its first run ended the module at section 4c (the over-strictness promote reused the inquiry the liar had just landed, 35/9 with a throw) — the INSTRUMENT was corrected to its own id, never the arm. (c) `liar` — `theme` as an ELEVENTH ENTITY KIND: 60/3, the ENTITY_KINDS arm and the registry arm fail by name. (d) `notest` 58/5. (e) `machinedeclare` 57/6. (f) `stamp` — the declarer unstamped: 51/12. (g) `machineplace` 58/5. (h) `hunchcounts` — a proposal written as membership: 59/4. (i) `ungated` — placements read without the viewer gate: 61/2. (j) `overstrict` — C-81.1 claims anything containing "theme": 61/2. (k) `overstrictkey` — a leg refused for merely carrying a null `theme` key: 62/1.
+/* NEGATIVE CONTROL: RUN 2026-09-23 with `node test/nc-d162.mjs [arm]` from `bio-plane/`, ELEVEN arms, every one ALONE with the others held open, each EDITING A REAL SOURCE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND cmp (bio-checks.mjs 854,596 B, store.mjs 2,923,946 B, index.mjs 735,468 B, affordances.mjs 151,127 B; all eleven restores byte-identical; never `git checkout --`). Every arm AS DECLARED: (a) `baseline` 63/0. (b) `legonly` — THE ROW'S CONTROL, C-81.1 dropped at both branches: 55/8, every BY-NAME leg arm fails (basis target, content_id, `theme:`, membership address, version leg, action basis), a bare theme still refused under the WRONG name and the `theme:` leg LANDING. Its first run ended the module at section 4c (the over-strictness promote reused the inquiry the liar had just landed, 35/9 with a throw) — the INSTRUMENT was corrected to its own id, never the arm. (c) `liar` — `theme` as an ELEVENTH ENTITY KIND: 60/3, the ENTITY_KINDS arm and the registry arm fail by name. (d) `notest` 58/5. (e) `machinedeclare` 57/6. (f) `stamp` — the declarer unstamped: 51/12. (g) `machineplace` 58/5. (h) `hunchcounts` — a proposal written as membership: 59/4. (i) `ungated` — placements read without the viewer gate: 61/2. (j) `overstrict` — C-81.1 claims anything containing "theme": 61/2. (k) `overstrictkey` — a leg refused for merely carrying a null `theme` key: 62/1. RE-RUN 2026-09-24 by c19-unionfix after BOB #32's disclosure correction (handles to members; member id and cover to administrators), all THIRTEEN arms AS DECLARED, every restore byte-identical (store.mjs 3,156,871 B, index.mjs 778,962 B): baseline 68/0; the eleven above still fail by name (legonly 60/8, liar 65/3, notest 63/5, machinedeclare 61/7, stamp 53/15, machineplace 61/7, hunchcounts 62/6, ungated 66/2, overstrict 66/2, overstrictkey 67/1). (l) `handleid` — the member id restored to a reader who does not administer: 65/3, "A MEMBER'S READ CARRIES NO MEMBER ID AND NO COVER" and otto's reading arm fail by name. (m) `adminunstamped` — the control plane's theme `administer` stamp removed: 59/9, the administrator arms fail (FAIL CLOSED: the pairing is lost, not leaked) and the IMPOSTOR arm fails too, because with the plane's `set` gone a member's own `administer=1` survives the parameter copy — the stamp is what overwrites it, as D-157 measured for op=memberlist.
  *
  * D-162 / IC-241 — THE THEME (`BIO_Content_Framework_v0_10.md` §8.4, Bob's ruling of
  * 2026-09-21): a connection through an IDEA, fenced four ways — declared by a MEMBER and
@@ -212,10 +212,19 @@ t("op=themedeclare lands: a THEME- id, the idea and the TEST as written, evidenc
 t("fence 1: the declarer is SERVER-STAMPED — neither a body nor a query-string `declarer: sam` is honoured — "
   + "and the answer names ruth and her handle",
   [D1 && D1.declared_by, D1 && D1.declared_by_handle], ["ruth", "ruth-h"]);
-const R0 = await get("themeread", `id=${TID}`, SAM);
-t("op=themeread (as sam) shows WHOSE lens it is on the reading: ruth, by id and handle — and never a cover",
-  [R0 && R0.ok, R0 && R0.declared_by, R0 && R0.declared_by_handle, R0 && R0.test, JSON.stringify(R0).includes("cover for")],
-  [true, "ruth", "ruth-h", TEST, false]);
+/* CORRECTED 2026-09-24 by c19-unionfix (BOB #32: Membership v2 §3 governs). This read was taken AS SAM, an
+   ADMINISTRATOR, and asserted the member id and no cover — the first cut's provisional reading, which showed
+   EVERY reader the member id. The ruling: a reader who does not administer sees the HANDLE alone; the member id
+   and the cover go to administrators only. So the member half is read as otto (a member), the administrator
+   half as sam, and section 1c pins both across every reading. */
+const R0 = await get("themeread", `id=${TID}`, OTTO);
+t("op=themeread (as otto, a member) shows WHOSE lens it is on the reading: ruth's HANDLE — no member id, no cover",
+  [R0 && R0.ok, R0 && "declared_by" in R0, R0 && R0.declared_by_handle, R0 && R0.test, JSON.stringify(R0).includes("cover for")],
+  [true, false, "ruth-h", TEST, false]);
+const R0a = await get("themeread", `id=${TID}`, SAM);
+t("op=themeread (as sam, an administrator) shows ruth by member id, handle AND cover — the pairing §3 gives "
+  + "administrators", [R0a && R0a.declared_by, R0a && R0a.declared_by_handle, R0a && R0a.declared_by_cover],
+  ["ruth", "ruth-h", "cover for ruth"]);
 
 console.log("\n--- 1b. the declaration's refusals ---");
 const nT = await post("themedeclare", { name: "a theme with no test" }, RUTH);
@@ -307,6 +316,50 @@ t("sam CONFIRMS it: membership, grade D, placed_by sam — and the record KEEPS 
 const R3 = await get("themeread", `id=${TID}`, OTTO);
 t("after the confirmation it is a member and no longer a hunch",
   [targetsOf(R3 && R3.members).includes(DOC_C), targetsOf(R3 && R3.hunches)], [true, []]);
+
+/* ===================== 1c. WHO A READER IS SHOWN (BOB #32, 2026-09-24) ===================== */
+console.log("\n--- 1c. a member is shown HANDLES; an administrator, the member id and cover too ---");
+/* Membership v2 §3 governs, following MK-6's precedent that the member id is not published in member-facing
+   reads. Every string on a member's reading is walked: no member id (ruth, sam, otto — a handle `ruth-h` is
+   not one) and no cover, in a field or in a sentence. A machine stamp (`class:member`) is no person and is
+   shown to every reader. */
+const IDS = /\b(ruth|sam|otto)\b(?!-h)/;
+const leaks = (r) => {
+  const out = [];
+  const walk = (x, k) => {
+    if (Array.isArray(x)) { x.forEach((v) => walk(v, k)); return; }
+    if (x && typeof x === "object") { for (const [kk, v] of Object.entries(x)) walk(v, kk); return; }
+    if (typeof x === "string" && (IDS.test(x) || x.includes("cover for"))) out.push(`${k}=${x.slice(0, 80)}`);
+    if (/_cover$/.test(k || "")) out.push(`${k} present`);
+  };
+  walk(r, null);
+  return out;
+};
+const oRead = await get("themeread", `id=${TID}`, OTTO);
+const oList = await listThemes(OTTO);
+const oAct = await post("themepropose", { theme: TID, target: DOC_C }, OTTO);
+const mRead = await get("themeread", `id=${TID}`, "mem-d162");
+t("A MEMBER'S READ CARRIES NO MEMBER ID AND NO COVER — the theme, its list, a placement act's answer and the "
+  + "member token's read name the declarer, placers and proposer by HANDLE alone",
+  [oRead && oRead.ok, oList.ok, oAct && oAct.ok, mRead && mRead.ok,
+   leaks(oRead), leaks(oList), leaks(oAct), leaks(mRead)], [true, true, true, true, [], [], [], []]);
+t("and the handles ARE there: declarer ruth-h; placers ruth-h (the audit, the passage) and sam-h (the memo, the roof report); the machine's proposal still attributed "
+  + "to its stamp; otto's answer says who placed it by handle",
+  [oRead && oRead.declared_by_handle, (oRead && oRead.members || []).map((x) => x.placed_by_handle).sort(),
+   (oRead && oRead.members || []).find((x) => x.target === DOC_C)?.proposed_by, (oList.themes || [])[0]?.declared_by_handle,
+   /placed by sam-h/.test(oAct && oAct.says || "")],
+  ["ruth-h", ["ruth-h", "ruth-h", "sam-h", "sam-h"], "class:member", "ruth-h", true]);
+const aRead = await get("themeread", `id=${TID}`, SAM);
+const tRead = await get("themeread", `id=${TID}`, "adm-d162");
+const docC = (r) => (r && r.members || []).find((x) => x.target === DOC_C) || {};
+t("AN ADMINISTRATOR'S READ CARRIES THE MEMBER ID AND THE COVER beside the handle — an admin-role session and "
+  + "the admin token alike",
+  [aRead && aRead.declared_by, aRead && aRead.declared_by_cover, docC(aRead).placed_by, docC(aRead).placed_by_cover,
+   tRead && tRead.declared_by, tRead && tRead.declared_by_cover],
+  ["ruth", "cover for ruth", "sam", "cover for sam", "ruth", "cover for ruth"]);
+const imp = await get("themeread", `id=${TID}&administer=1`, OTTO);
+t("THE IMPOSTOR RULE: a member's own `administer=1` is overwritten by the plane's stamp — still handles alone",
+  leaks(imp), []);
 
 /* ===================== 4. FENCE 4: NEVER A BASIS ===================== */
 console.log("\n--- 4. a leg citing the theme ---");
@@ -410,8 +463,10 @@ const D2 = await post("themedeclare", { name: "procurement shortcuts",
   test: "The document shows a purchase made without the competitive step the rules require." }, SAM);
 t("a second theme, sam's", [D2 && D2.ok, D2 && D2.declared_by], [true, "sam"]);
 const sq = await listThemes(OTTO, "q=MAINTENANCE");
+/* CORRECTED 2026-09-24 by c19-unionfix: this asked otto's (a member's) list for `declared_by`, the member id,
+   which BOB #32 withholds from a member; the list names the declarer by handle. */
 t("the themes are SEARCHABLE: q matches the idea, case-insensitively, and finds ruth's alone",
-  (sq.themes || []).map((x) => [x.theme_id, x.declared_by]), [[TID, "ruth"]]);
+  (sq.themes || []).map((x) => [x.theme_id, x.declared_by_handle]), [[TID, "ruth-h"]]);
 t("q also searches the TEST", ((await listThemes(OTTO, "q=competitive")).themes || []).map((x) => x.theme_id),
   [D2 && D2.theme_id]);
 t("a phrase no theme carries finds none", ((await listThemes(OTTO, "q=zzzz")).themes || []).length, 0);

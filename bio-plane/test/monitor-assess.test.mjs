@@ -188,7 +188,13 @@ t("…and is logged LOOKED_ABSENT, with no assessment and the reason stated",
   [gone.observation?.state, gone.assessment, typeof gone.assessment_basis], ["LOOKED_ABSENT", null, "string"]);
 
 console.log("\n--- a document stating NO frequency takes its type's contract ---");
-serve[LOC] = BASE;
+/* CORRECTED 2026-09-24 at integration by c19-unionfix, never exempted: this served BASE again, so the second
+   bundle registered the SAME capture bytes the baseline bundle already holds — which D-179 (on main, C-53.13,
+   CAPTURE_HELD_BY_ANOTHER_BUNDLE: one capture, one home) now refuses, and the promote failed with every arm below
+   reading a bundle that was never written. The fixture was wrong under the rule, not the rule: this bundle is a
+   DIFFERENT document with the same meetings, so it gets bytes of its own (its own view state). What the section
+   tests — the cadence taken from the type's contract — does not depend on the bytes. */
+serve[LOC] = calendar("S4_" + "w".repeat(300), [M.a, M.b, M.c, M.d]);
 const C = await monitored(null);
 t("the contract bundle promoted", C.promoted, true);
 const cc = await P("monitor", { bundleId: C.id });

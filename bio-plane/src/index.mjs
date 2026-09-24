@@ -10502,6 +10502,13 @@ export default {
     if (op === "memberlist")
       inner.searchParams.set("administer",
         (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0");
+    /* BOB #32 (2026-09-24), D-162's theme readings: THE SAME STAMP, on the same rule and for the same
+       reason. Every theme act and read names a declarer, a placer or a proposer; a reader who does not
+       administer is shown the HANDLE alone, and the member id and cover go to administrators only
+       (Membership v2 §3; MK-6's precedent). The store fails closed on an absent stamp. */
+    if (op === "themedeclare" || op === "themeplace" || op === "themepropose" || op === "themeread")
+      inner.searchParams.set("administer",
+        (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0");
     /* REC-21. WHOSE attention this is, stamped by the server and never taken
        from the request — the strictest instance of the impostor rule in this
        file, because the thing being written is not a claim about the record but

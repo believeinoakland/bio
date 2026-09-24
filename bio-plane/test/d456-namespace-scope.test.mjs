@@ -183,6 +183,18 @@ for (const c of CALLERS.filter((c) => c.cls !== "none" && c.cls !== "daemon")) {
   t("no credential · op=instancegroup · store=scratch -> store scratch", [r2.status, r2.body?.store], [200, "scratch"]);
   const r3 = await call("op=instancegroup&store=bio");
   t("no credential · op=instancegroup · store=bio -> store bio", [r3.status, r3.body?.store], [200, "bio"]);
+  /* REC-164's op=groupidentity reads `store` itself, op=instancegroup's way (added by NAME at integration by
+     c19-unionfix, 2026-09-24, because §4's sweep found a reader this suite did not drive): a caller with no
+     credential names the store it asks; a credential's store is the one scopeFor grants. */
+  const g1 = await call("op=groupidentity");
+  t("no credential · op=groupidentity · store absent -> store bio", [g1.status, g1.body?.store], [200, "bio"]);
+  const g2 = await call("op=groupidentity&store=scratch");
+  t("no credential · op=groupidentity · store=scratch -> store scratch", [g2.status, g2.body?.store], [200, "scratch"]);
+  const g3 = await call("op=groupidentity&store=bio");
+  t("no credential · op=groupidentity · store=bio -> store bio", [g3.status, g3.body?.store], [200, "bio"]);
+  const g4 = await call("op=groupidentity&token=adm-d456&store=scratch");
+  t("admin · op=groupidentity · store=scratch -> store scratch (scopeFor's grant, not a second rule)",
+    [g4.status, g4.body?.store], [200, "scratch"]);
   const inv = await call(`op=invitelook&invite=${encodeURIComponent(INVITE)}&store=bio`);
   t("no credential · op=invitelook · store=bio -> answers (the invitation is in bio)", [inv.status, inv.body?.ok], [200, true]);
 }
@@ -216,8 +228,9 @@ console.log("\n--- 4 · every site in src/index.mjs that reads the `store` param
   console.log(`  ${found.length} site(s): ${found.join(", ")}`);
   /* CORRECTED 2026-09-24 by D-461: `pinnedNamespaceGate` is a fifth reader, added on purpose — it refuses
      `store=scratch` on the public ops that always answer from `bio` (C-78.2), and
-     `test/d461-pinned-namespace.test.mjs` drives it. The old set was right for its day, not wrong. */
-  const KNOWN = new Set(["scopeFor", "namespaceGate", "pinnedNamespaceGate", "unauthenticated-block", "op=instancegroup"]);
+     `test/d461-pinned-namespace.test.mjs` drives it. The old set was right for its day, not wrong.
+     `op=groupidentity` joined it on main in the same window, for the same reason. */
+  const KNOWN = new Set(["scopeFor", "namespaceGate", "pinnedNamespaceGate", "unauthenticated-block", "op=instancegroup", "op=groupidentity"]);
   t("the sweep found readers (a sweep over nothing is not a sweep)", found.length >= 4, true);
   t("every reader of `store` is one this suite drives (a new one must be added here, by name)",
     sites.map(owner).filter((o) => !KNOWN.has(o)), []);
