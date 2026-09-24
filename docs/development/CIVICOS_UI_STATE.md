@@ -101,11 +101,50 @@ renamed the catalogue family to `DISPATCH_XCHECKS`, which does not match `/_CHEC
 once: the family's name, which it meant to move, and its membership of the convention every consumer keys on, which
 makes it a row WITHDRAWN rather than renamed. The arm was wrong, not the subject.
 
-**NOT DONE, and where it lives.** The class sweep found **eight more `unknown op` mocks** elsewhere in the UI test
-estate whose fixtures carry no `translation`. Every one of them is a GAP-DETECTION fixture — `queueAbsent` and the
-`gap:true` paths read a SUBSTRING of `error`, so their subject is recognition and not rendering, and none of them
-is touched here. **Whether any of those surfaces also RENDERS the refusal to a member is NOT MEASURED**, and that
-is the honest statement of this sweep's reach: it is named as a finding for SCHEDULER with its fix, not parked.
+**NOT DONE, and where it lives.** The class sweep is stated here with its corpus, its reach and its blind spots,
+because a sweep that does not say what its matcher cannot see is a walk looking in the wrong place.
+
+**CORPUS: 108 `.mjs` files in `civicos-ui/test/`, all walked.** The matcher is a grep for an `error:` key whose
+value opens with `unknown op`, plus the eight `requiredArgument(` call sites read out of `bio-plane/src/index.mjs`.
+**It can see** a refusal fixture written as an object literal in a suite. **It cannot see** one assembled from a
+variable, one built by a helper, or a refusal a suite never constructs at all — so the figures below are a floor
+on the class, never a total.
+
+**SEVEN more `unknown op` mocks** carry no `translation`. *(This figure was written as EIGHT in this item's commit
+message and IS CORRECTED HERE: the eighth was `refusal-translation-surface.test.mjs`' own over-strictness arm,
+which this landing fixed, and counting a site this item closed as a site it left open overstates the debt it is
+handing on.)* They are `act-proposal.test.mjs` (2), `queue.test.mjs` (2), `auth-surface.test.mjs`,
+`case-frozen-pair.test.mjs` and `document-structure.test.mjs`. **Four of those seven compose a sentence the plane
+has NEVER sent** — `"unknown op " + op`, `"unknown op queue"`, `"unknown op tasks"`,
+`"unknown op captureprogressions"` — the same invention this item corrected at the preauth fallthrough. The other
+three carry `error: "unknown op"` alone, which is what the wire sent until 2026-09-23 and no longer does.
+
+**AND THE CLASS IS WIDER THAN `unknown op`.** `requiredArgument` has **EIGHT call sites** in the plane — `verify`,
+`publishedbytes`, `publishedcase`, `knock` (2), `capture`, `pdfstructure`, `monitor` — and **all eight carry
+C-61.1's canned translation.** This item scoped exactly ONE of them. The matcher finds one more UI fixture already
+narrower than that wire: **`publishedcase.test.mjs:939`**, which mocks `publishedbytes`' refusal with `error`
+alone.
+
+**WHAT IS NOT MEASURED, stated rather than left to be found.** Whether each of those surfaces RENDERS its refusal
+to a member or only GAP-DETECTS it. The distinction is real and it is the whole question: `queueAbsent` and the
+`gap:true` paths read a SUBSTRING of `error`, so for them the fixture's narrowness changes nothing — but
+`act-proposal`'s and `case-frozen-pair`'s answers reach `intentRefusalHtml` and `planeSaid`, which UI-72 and UI-73
+routed through `refusalWords`, and there a missing `translation` is the same defect this item just closed. **Each
+site needs driving before it is called safe, and none was driven here.** Named for SCHEDULER with its fix, not
+parked in prose.
+
+**TWO SMALLER FINDINGS, both measured, neither fixed here.** (1) `civicos-ui/app.html` around line 20219 justifies
+`planeSaid`'s layout by observing that *"the plane's refusals do not all end in a full stop — 'verify requires
+sha256=<64 lowercase hex>' and 'unknown op' do not"*. Both examples are now STALE: since D-278 each of those two
+renders as a canned sentence that does end in one. **The design conclusion still holds and is strictly safer**, so
+this is a stale comment and not a defect — and `app.html` is shared ground this item claimed nothing in, so it is
+reported rather than edited. (2) The DEC-49 guard's R3-FED walk **cannot see `REQUIRED_ARGUMENT_MISSING` being fed
+by this suite**, measured at the gate: it lists `preauth-vocabulary.test.mjs — FED 3 [NOT_PUBLISHED,
+SIGN_IN_REFUSED, UNKNOWN_OP]`, and the missing fourth is this item's own doing — the code reaches the fixture
+through a VARIABLE, derived from the plane's source, and the walk keys on literals. **The derivation is the right
+trade and is kept**: a literal would be the hand copy this item exists to remove, and a renamed code already fails
+loudly at the two catalogue assertions. But the walk undercounts by one because of it, and saying so is owed.
+
 Nothing is live; no deploy is this item's.
 
 v106, 2026-09-23 session, thread UI, D-126 (a WORKER of CONDUCT #18, cloud session). Landed on `land/worker/D-126` (base
