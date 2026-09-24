@@ -234,7 +234,9 @@ const ARMS = {
          entire battery green.
      An arm whose emptiness is read as a fact about writers it cannot reach is
      the unearned-absence class inside the harness built to refuse it. The three
-     are driven directly in section I of `observation-log.test.mjs`; this arm's
+     are driven directly in section L of `observation-log.test.mjs` (section I until
+     D-500 moved it, 2026-09-24: two sections wore that letter and this citation
+     named the ambiguous one); this arm's
      own job — proving the fence is a fence and not a wall — is unchanged and
      its declaration below is correct as written. */
   /* `overstrict` — RETIRED 2026-09-18 BY REC-100 (IC-130, D-366 CLOSED), and kept

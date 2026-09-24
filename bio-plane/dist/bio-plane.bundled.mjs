@@ -9408,7 +9408,9 @@ var AI_RUN_CHECKS = {
        entry's referent is. The third is `agent-worker`'s `stepLog`, another area's
        path, which composes no referent field while a model may judge `PRESENT`.
        The full reasoning and the driven evidence are at the predicate in
-       `src/airun.mjs`; section I of `test/observation-log.test.mjs` drives it.
+       `src/airun.mjs`; section L of `test/observation-log.test.mjs` drives it
+       (it was section I until D-500, 2026-09-24, which found two sections wearing
+       that letter and moved REC-100's — this citation named the ambiguous one).
   
        **CLOSED 2026-09-18 BY REC-100 (IC-130, D-366).** BOB #14 ruled the rollup
        (`OBSERVATION-LOG-DESIGN.md` §3): a rollup's PRESENT carries `result_kind =
@@ -28466,6 +28468,17 @@ function causesNotRuledOut(missingCause, { evidenceOneSided = void 0 } = {}) {
   if (missingCause !== "purged") return [...ALL_MISSING_ROW_CAUSES];
   if (evidenceOneSided === false) return ["purged", "never_looked"];
   return [...ALL_MISSING_ROW_CAUSES];
+}
+var WATERMARK_SECOND_MS = 1e3;
+var WATERMARK_HAS_FRACTION = /\.\d+Z?$/;
+function watermarkUncertaintyMs(firstAt) {
+  return WATERMARK_HAS_FRACTION.test(String(firstAt ?? "")) ? 0 : WATERMARK_SECOND_MS;
+}
+function enteredAfterFirstRow(enteredAt, firstAt) {
+  const entered = Date.parse(String(enteredAt ?? ""));
+  const first = Date.parse(String(firstAt ?? ""));
+  if (!Number.isFinite(entered) || !Number.isFinite(first)) return false;
+  return entered >= first - watermarkUncertaintyMs(firstAt);
 }
 function readerRunObservation(reading, captureSha, { readerRegistered = null } = {}) {
   if (!reading || typeof reading !== "object")
@@ -67526,8 +67539,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (!firstContentAt) return "purged";
     const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
     if (!reg) return "purged";
-    const sec = (v) => String(v).slice(0, 19);
-    return sec(reg) >= sec(firstContentAt) ? "never_looked" : "purged";
+    return enteredAfterFirstRow(reg, firstContentAt) ? "never_looked" : "purged";
   }
   #missingContentCause(captureSha, registeredAt = null) {
     if (this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha))
@@ -68449,8 +68461,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (!firstAt) return "purged";
     const entered = typeof enteredAt === "string" && enteredAt ? enteredAt : null;
     if (!entered) return "purged";
-    const sec = (v) => String(v).slice(0, 19);
-    return sec(entered) >= sec(firstAt) ? "never_looked" : "purged";
+    return enteredAfterFirstRow(entered, firstAt) ? "never_looked" : "purged";
   }
   /** REC-107 — **THE TWO FIELDS THAT PUT §5.1's UNDETERMINED SET ON THE ROW**, for
    *  every level's frontier, through the one function in `airun.mjs` that decides

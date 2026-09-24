@@ -6983,7 +6983,9 @@ export const AI_RUN_CHECKS = {
      entry's referent is. The third is `agent-worker`'s `stepLog`, another area's
      path, which composes no referent field while a model may judge `PRESENT`.
      The full reasoning and the driven evidence are at the predicate in
-     `src/airun.mjs`; section I of `test/observation-log.test.mjs` drives it.
+     `src/airun.mjs`; section L of `test/observation-log.test.mjs` drives it
+     (it was section I until D-500, 2026-09-24, which found two sections wearing
+     that letter and moved REC-100's — this citation named the ambiguous one).
 
      **CLOSED 2026-09-18 BY REC-100 (IC-130, D-366).** BOB #14 ruled the rollup
      (`OBSERVATION-LOG-DESIGN.md` §3): a rollup's PRESENT carries `result_kind =
