@@ -40,6 +40,9 @@ BOB appends a designed item, a correction or an order change here, with its inte
   - C-82.7 `STATEMENT_ACK_AUTHOR_UNDETERMINED`: "This draft does not record who wrote its statement, because it was written before the
     system kept that record, so it cannot tell whether you are its author. Ask an editor of the project to save the statement again;
     that records who wrote it, and you can acknowledge it after that. The case can be published either way."
+- **2026-09-24 16:45Z · BOB #33 · CONSTRUCT 14's DOORBELL NOW HAS A DESIGN HOME: `docs/development/DOORBELL.md`** (land/bob/doorbell-home @ 0de38ae8, handed to
+  CONDUCT to train). It folds BOB #32's 04:28Z knock-limit ruling at §4. Once it is on main, D-496's and D-508's `design:` lines cite
+  `DOORBELL.md` §4 in place of BIO_System_Design §3 construct 14. No order change.
 
 ## THE CACHE — the next rows, in order
 
