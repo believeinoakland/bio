@@ -66,7 +66,10 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
             refuses on the same fact cannot answer it differently. */
          isCaseMemberBytes,
          /* D-442: which shape a case document is (BIO_Publication_v0_1.md §3 rule 12). */
-         caseDocumentStatesMemberBlocks } from "../checks/bio-checks.mjs";
+         caseDocumentStatesMemberBlocks,
+         /* D-513: the doorbell's own family, read AS A VALUE by the three governed
+            helpers below — the rows that give an anonymous knocker a sentence. */
+         KNOCK_CHECKS } from "../checks/bio-checks.mjs";
 /* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
    below resolves a refusal code against every DEC-49 family the catalogue
    exports, and it finds those families BY THE `_CHECKS` SUFFIX — the same rule
@@ -2735,6 +2738,82 @@ KNOCK.statedPerIp =
   `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 60000} minutes, estimated by a sliding window`;
 KNOCK.statedGlobal =
   `at most ${KNOCK.global} knocks to this instance in any ${KNOCK.windowMs / 60000} minutes, estimated by a sliding window`;
+
+/* D-513 / DEC-49 (`BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 10) — THE THREE
+   REFUSALS THE DOORBELL MAKES BEFORE THE STORE IS EVER CALLED, each behind ONE
+   governed helper on D-484's shape (`actNoBasis`, `actNoCitation`) and on D-508's
+   at this same door.
+ *
+ * WHY THREE CODES WHERE THERE WERE TWO TOKENS. The oversize refusal was minted
+ * at TWO sites here and they are TWO CONDITIONS, not one. The first refuses a
+ * REQUEST BODY this door will not read at all: the bytes on the wire are past
+ * the ceiling before anything is decoded, so nobody has looked at the material
+ * and nothing about it has been judged. The second refuses a DECODED PAYLOAD
+ * larger than THIS INSTANCE can hold, which on an instance with no evidence
+ * storage is a far smaller number and has a different remedy — configure the
+ * storage, or send less. A DEC-49 row holds ONE `where` naming the smallest span
+ * in which its refusal is enforced, and its canned translation can be true of
+ * ONE condition; one code over both would be the record telling a knocker
+ * something untrue about their own material, which is the class
+ * `dec49-onecode-twoconditions.sweep.mjs` exists to find.
+ *
+ * WHY THE WIRE TOKENS MOVE, and it is the one part of this that is not additive
+ * (IC-286, PROPOSED). The old tokens are minted all over this plane — a captured
+ * subresource, a container, an enumerated selection — so a row under either name
+ * would have claimed every one of those sites as well. The oversize token is
+ * worse than unclaimed: the DEC-49 guard already reads it as TRANSLATED, because
+ * `app.html` words it for a capture PART, so a sentence about a document too
+ * large to keep was standing in the census as the doorbell's answer to a stranger
+ * who will never load that page. Each condition therefore takes a code of its own.
+ *
+ * THE CODE IS A STRING LITERAL AT ITS SITE, which is DEC-49's rule and what lets
+ * the guard's arm C compare it against the row (a code held in a variable is one
+ * the arm reads past, and one shipped an undefined translation to a member that
+ * way). Each helper THROWS on a missing row for `Store.knock`'s reason: a throw
+ * is a 500 in a test, which is loud, where a missing sentence is silent and
+ * reaches a person — and at this door that person is a stranger with no account
+ * and no other way to find out what happened. */
+
+function knockEnvelopeTooLarge() {
+  /* DEC-49 REGION is-knock-envelope-too-large — D-513 / C-85.3. The ONE site at
+     which this door refuses to READ a request at all. */
+  const row = KNOCK_CHECKS.KNOCK_ENVELOPE_TOO_LARGE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("knockEnvelopeTooLarge: KNOCK_ENVELOPE_TOO_LARGE has no KNOCK_CHECKS row with a "
+                  + "canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
+  return { ok: false, reason: "KNOCK_ENVELOPE_TOO_LARGE", code: "KNOCK_ENVELOPE_TOO_LARGE",
+           check: row.check, translation: row.translation, maxBytes: KNOCK.maxBytes };
+  /* END DEC-49 REGION is-knock-envelope-too-large */
+}
+
+function knockPayloadTooLarge(cap, r2) {
+  /* DEC-49 REGION is-knock-payload-too-large — D-513 / C-85.4. The ONE site at
+     which this door refuses material it has read and this instance cannot hold.
+     `detail` stays the SITE's own sentence and is carried only when there is no
+     evidence storage, exactly as it was before this item: the canned translation
+     is the knocker's answer in every instance, the detail is this instance's. */
+  const row = KNOCK_CHECKS.KNOCK_PAYLOAD_TOO_LARGE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("knockPayloadTooLarge: KNOCK_PAYLOAD_TOO_LARGE has no KNOCK_CHECKS row with a "
+                  + "canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
+  return { ok: false, reason: "KNOCK_PAYLOAD_TOO_LARGE", code: "KNOCK_PAYLOAD_TOO_LARGE",
+           check: row.check, translation: row.translation, maxBytes: cap,
+           detail: r2 ? undefined : "this instance stores knocks inline; large material needs its evidence storage configured" };
+  /* END DEC-49 REGION is-knock-payload-too-large */
+}
+
+function knockEmpty() {
+  /* DEC-49 REGION is-knock-empty — D-513 / C-85.5. The ONE site at which this
+     door refuses a knock that decoded to nothing: the body parsed, it named a
+     content field, and the field held zero bytes. */
+  const row = KNOCK_CHECKS.KNOCK_EMPTY;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("knockEmpty: KNOCK_EMPTY has no KNOCK_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a knocker.");
+  return { ok: false, reason: "KNOCK_EMPTY", code: "KNOCK_EMPTY",
+           check: row.check, translation: row.translation };
+  /* END DEC-49 REGION is-knock-empty */
+}
 
 const SCRATCH = "scratch";
 /* REC-22: the ONE namespace the public read path answers from. An instance has
@@ -6187,8 +6266,10 @@ export default {
       if (op === "knock") {
         if (req.method !== "POST") return json({ ok: false, error: "knock is a POST" }, 405);
         const raw = await req.arrayBuffer();
+        /* D-513: routed through the ONE governed site, so the refusal carries the
+           code, the check and the canned translation a stranger can read. */
         if (raw.byteLength > KNOCK.maxBytes + 4096)
-          return json({ ok: false, reason: "TOO_LARGE", maxBytes: KNOCK.maxBytes }, 413);
+          return json(knockEnvelopeTooLarge(), 413);
         let body; try { body = JSON.parse(new TextDecoder().decode(raw)); } catch { body = null; }
         if (!body || (typeof body.contentB64 !== "string" && typeof body.contentText !== "string"))
           return json({ ok: false, ...requiredArgument("knock", "contentB64 or contentText",
@@ -6201,12 +6282,15 @@ export default {
             : new TextEncoder().encode(body.contentText);
         } catch { return json({ ok: false, ...requiredArgument("knock", "contentB64", "<base64>",
                     "contentB64 is not valid base64") }, 400); }
-        if (bytes.length === 0) return json({ ok: false, reason: "EMPTY" }, 400);
+        /* D-513: routed through the ONE governed site (see `knockEnvelopeTooLarge`). */
+        if (bytes.length === 0) return json(knockEmpty(), 400);
         const r2 = typeof env.CAPTURES?.put === "function";
         const cap = r2 ? KNOCK.maxBytes : KNOCK.maxInline;
+        /* D-513: routed through the ONE governed site (see `knockEnvelopeTooLarge`).
+           A DIFFERENT code from the envelope refusal above, because it is a
+           different condition with a different remedy. */
         if (bytes.length > cap)
-          return json({ ok: false, reason: "TOO_LARGE", maxBytes: cap,
-                        detail: r2 ? undefined : "this instance stores knocks inline; large material needs its evidence storage configured" }, 413);
+          return json(knockPayloadTooLarge(cap, r2), 413);
         const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
           .map((x) => x.toString(16).padStart(2, "0")).join("");
         const nowMs = Date.now();

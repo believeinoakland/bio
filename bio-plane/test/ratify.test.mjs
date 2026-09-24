@@ -257,6 +257,13 @@ t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "pla
    NAMESPACE_CONFINED, C-29.10 AI_CONFINEMENT_NOT_SCRATCH), so `CATALOG_VERSION` took the MINOR bump the
    census arm demands and this assertion reads the stamp a ratification records. Right for its own tree. */
 /* CORRECTED at c20-batch27 (CONDUCT #20): 1.28.0 -> 1.29.0, D-463's rows over the union's catalogue. */
+/* CORRECTED 2026-09-24 (D-513): 1.25.0 -> 1.26.0, never exempted and never loosened to read the
+   constant — a pin derived from the thing it pins agrees for free (CLAUDE.md §5), and the whole
+   point of this assertion is that the stamp carries the CATALOGUE's version, which is only
+   meaningful while the literal has to be moved by hand whenever the catalogue moves. `op=knock`'s
+   three pre-store refusals took C-85.3, C-85.4 and C-85.5, so the census went 457 -> 460 and
+   CATALOG_VERSION 1.25.0 -> 1.26.0. Going red here is this arm working. */
+/* CORRECTED at c20-batch27 (CONDUCT #20): D-513's rows ride the union's 1.29.0 with D-463's. */
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong

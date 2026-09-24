@@ -328,6 +328,17 @@ const CATALOG_CENSUS = {
 
   /* 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27): D-463's rows over 1.28.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.29.0": { count: 0, digest: "PENDING" },
+  /* 1.26.0 (D-513, 2026-09-24, branch land/worker/D-513): `op=knock`'s three pre-store refusals take
+     rows in the EXISTING KNOCK_CHECKS family — C-85.3 KNOCK_ENVELOPE_TOO_LARGE, C-85.4
+     KNOCK_PAYLOAD_TOO_LARGE, C-85.5 KNOCK_EMPTY — so 457 -> 460. THREE ARRIVALS, NO DEPARTURES, so the
+     bump is ADDITIVE and MINOR on the precedent above. Count and digest are THIS SUITE'S OWN PRINT on
+     the item's tree over origin/main 1a7f0bcc0, never 457 + 3. Every earlier row STAYS: each is the
+     census of the catalogue that stamped it, and a ratification is not walked back. CONDUCT #20's
+     c20-batch25 moves this same constant in parallel; ONE VERSION NAMES ONE CATALOGUE (A4), so at
+     integration CONDUCT takes the next number once and records what THIS SUITE PRINTS on the merged
+     tree — the figure below is this branch's catalogue and is not the union's. */
+
+  /* D-513's rows ride 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27) beside D-463's; its branch row (1.26.0) DROPPED, comment kept. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -427,6 +438,17 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    and going red here is the arm working. */
 t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
   [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
+/* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
+   written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
+   `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under
+   the stamp moved and the stamp moved with it. The label in the first argument lags the assertion on
+   purpose — it is the sentence a reader sees when this line goes red — and both are edited by hand in
+   the same commit that moves the constant, because a pin derived from the thing it pins agrees for
+   free (CLAUDE.md §5). */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.26.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.26.0)", "1.26.0"]);
+
+  /* D-513's rows ride 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27) beside D-463's; its branch row (1.26.0) DROPPED, comment kept. */
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

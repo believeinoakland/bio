@@ -504,7 +504,19 @@ t("D-240 (d) OVER-STRICTNESS: the gate admits a declared success and a COMPUTED 
 t("D-240 (e) THE UNCLASSIFIED RESIDUAL IS NAMED AND CEILINGED, and CROSS-CHECKED: not one "
 + "unclassified json() site spreads a Durable Object `.result`, so the ceiling is a statement about "
 + "reach and not a place for this detector's subject to hide",
-  [A_CENSUS.unclassified.length <= 14, A_CENSUS.unclassifiedSpreadingResult], [true, []]);
+  /* 14 -> 17, RAISED 2026-09-24 by D-513, and a ceiling that RISES owes its reason at the site
+     exactly as a floor that falls does. The three arrivals are `index.mjs` 6047, 6061 and 6068 —
+     `op=knock`'s three pre-store refusals, each now handed to `json()` by a governed DEC-49 helper
+     (`knockEnvelopeTooLarge`, `knockEmpty`, `knockPayloadTooLarge`) rather than written as an object
+     literal at the call site. They join the residual for the reason the block above names: the
+     argument is NOT A LITERAL, which is this gate's known and stated blind spot, not a new one.
+     **THE CROSS-CHECK IS WHAT KEEPS THIS HONEST AND IT IS UNMOVED AND GATED AT ZERO:** none of the
+     three spreads a Durable Object `.result` — none of them reads the store at all, they are
+     composed in the control plane before `Store.knock` is called — so the residual still cannot be
+     hiding this detector's own subject. Verified by the printed site list, which names all 17
+     individually; a raise that could not name its arrivals would be this ceiling becoming a place
+     to hide, which is precisely what it exists to prevent. */
+  [A_CENSUS.unclassified.length <= 17, A_CENSUS.unclassifiedSpreadingResult], [true, []]);
 /* (f) AND THE DECLARED REFUSALS THAT DO SPREAD ONE — outside this detector's
    subject by construction, so they are pinned BY SITE rather than left as a
    sentence. `{ ok: false, ...rec.result }` cannot report a success, but it is
