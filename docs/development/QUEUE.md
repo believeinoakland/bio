@@ -402,7 +402,8 @@ scope: when `recipients` is non-empty, render the members the record named; keep
 accepts-when: an obligation with named recipients shows them, against a real-plane suite (the measured failure it moves: "not addressed to anybody" to a named recipient). NEGATIVE CONTROL: read `assignee` alone again and the named-recipient arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (placed; `D-528` minted by UI-93's worker).
 
-### D-530 · queued — **`op=attest` REFUSES A PARTED CAPTURE NO_SUCH_CAPTURE, a false statement that tells a member to re-capture a document the record holds: its pre-flight (index.mjs ~9194) heads only `captures/<whole sha>`.** The ratify gate's `hasCapture(sha)` may answer `{present:false}` off the same whole-key head (not yet driven). Found by D-476's worker (B, C). — owner RECORD.
+### D-530 · running — **`op=attest` REFUSES A PARTED CAPTURE NO_SUCH_CAPTURE, a false statement that tells a member to re-capture a document the record holds: its pre-flight (index.mjs ~9194) heads only `captures/<whole sha>`.** The ratify gate's `hasCapture(sha)` may answer `{present:false}` off the same whole-key head (not yet driven). Found by D-476's worker (B, C). — owner RECORD.
+status: running — running — SPAWNED 2026-09-24 ~22:29Z by SCHEDULER #20 as a SEPARATE CLOUD SESSION titled WORKER D-530 (SCHEDULER #20), base origin/main 9f8b69e6. Falsify rather than believe: a live worker holds the branch land/worker/D-530; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
 order: after D-528, with the corrections: a refusal that says a held document is absent (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:06Z)
 milestone: M2
 interface: I3 — the refusal changes, or attest succeeds; the integrator classifies.
