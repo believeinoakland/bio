@@ -22,7 +22,7 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS (Bob's ruling ~03:08Z via
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (03:52Z)
+## 4. STATE (04:18Z)
 - MAIN = 16fe1e7f (train-20260924T033115Z-658: land/bob/status-cellcap 6977d9d2 + folds-0924e 16fe1e7f; 112/112 green). Map budget
   now 49,152 B with CELL_CAP 240 — never raise it. Interfaces on main: I3 81.0.0, I5 3.5.0, I8 1.0.0.
 - land/bob/d461-claude RETURNED (conflicts vs main) → merged by c20-batch11fix instead (its CLAUDE.md §5 commit is the novel part).
@@ -56,6 +56,9 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
 - DIST owed from batch10 on landing: D-461 SAFETY (store=scratch honoured by bio-pinned ops), D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0).
 - c18-batch7fix REPORTED and DISPOSED (behind main; only .gitignore novel, riding integ1). Findings to SCHEDULER, D-150 design q to BOB.
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
+- IN FLIGHT 04:17Z: train-20260924T041650Z-598 = D-482 + D-166 + REC-185 onto main 16fe1e7f (merged clean, gating). If #20 is gone,
+  read origin/main's log for it. OWED at the next integration: IC-257 (REC-185) resolved I3 MINOR on INTERFACES.
+- REC-185 DONE @ 72757288 (343/343, IC-257, M-129; findings sent). D-484 spawned session_014Ef8JECzL8eJFPhut7GVed into its slot.
 - D-166 DONE @ 05ec142e (125/125, skip 0, M-127; premise false — nothing moved; findings sent) — WAITING FOR A TRAIN.
 - DIST-9 RUNNING, built by DIST #6 itself (not a CONDUCT slot); flipped at coord 0ab3f2a9.
 - 03:43Z flipped INTEGRATED (BOB's rule tonight: flip at the integration merge): REC-192 REC-190 UI-85 UI-83 D-64 REC-184 M0-141.
