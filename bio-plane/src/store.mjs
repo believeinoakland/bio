@@ -213,7 +213,7 @@ import { getFormat } from "./formats.mjs";
    Selecting on presence while the gate admits on liveness is what let a
    denylisted DAEMON_TOKEN be chosen every tick and refused every tick. A second
    local answer to the same question would age apart from the gate's (REC-46). */
-import { liveToken } from "./tokens.mjs";
+import { liveToken, sha256hex, instanceAiCredential, instanceClaudeToken } from "./tokens.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
    is ONE array — the REC-19 landing left a literal copy in dispose() with the
    suite pinning the two identical; REC-11's folded chore flips the direction. */
@@ -3379,6 +3379,11 @@ export class Store extends DurableObject {
          suspended run, so a run parked in a status the reaper does not see
          would be a run nothing could ever end. The delegation below the claim
          records what is missing and whose it is.
+         [D-260, 2026-09-23: the plane now RE-ENTERS a woken run the instance's
+         own organisation credential opened — `#aiRunDispatch` hands it to
+         agent-worker — and only that run. A member's run is still resumable by
+         nobody but its principal, so the no-`suspended`-status reasoning above
+         still holds for it, and the wake says it was not dispatched.]
 
          THE TWO THINGS IT DOES, AND THE FIRST ONE IS A DEFECT BEING CLOSED:
 
@@ -3428,7 +3433,9 @@ export class Store extends DurableObject {
       { name: "ai-run-wake",
         due:  (now) => this.#aiRunWakePending(now) > 0 ? now : null,
         wake: (now) => this.#aiRunWakeWake(now),
-        tick: (now) => ({ airunwake: this.#aiRunWake(now) }) },
+        /* D-260: ASYNC since the wake gained its caller — the resumption dispatch awaits `agent-worker`. `onAlarm`
+           already awaits every tick, so this is the async-consumer shape REC-1 foresaw, not a reshape. */
+        tick: async (now) => ({ airunwake: await this.#aiRunWake(now) }) },
       /* CPDF-13 / D-183 — THE CALIBRATION RE-PROBE, and ONE APPENDED ENTRY
          exactly as SCHEDULER.md instructs: *"append an entry to
          #schedConsumers… Do NOT add a second alarm or a cron; that is the
@@ -43030,8 +43037,10 @@ export class Store extends DurableObject {
    *  is an answer, and a run left waiting on a request that will never be tried
    *  again is a run waiting on nothing. */
   #aiRunWakeRuns() {
+    /* D-260: `principal_plane` joins the projection because the resumption's ONE gate compares it — the run's own
+       stamp, never a field anybody sent. It is read for that comparison and published nowhere by this path. */
     return this.#rows(
-      `SELECT r.run, r.context_id
+      `SELECT r.run, r.context_id, r.principal_plane
          FROM ai_runs r
         WHERE r.status = 'running'
           AND EXISTS (SELECT 1 FROM capture_requests cr
@@ -43070,11 +43079,13 @@ export class Store extends DurableObject {
    *  one while the daemon owes it an answer. That is a widening and it is
    *  bounded twice over — by the request's own expiry, and by the fact that
    *  nothing renews it once the request is answered. */
-  #aiRunWake(now) {
+  async #aiRunWake(now) {
     const iso = Store.#aiIso(now);
     const until = Store.#aiIso(now + Store.AI_RUN_LEASE_MS);
-    const holds = [], wakes = [];
-
+    const holds = [], wakes = [], dispatches = [];
+    /* D-260: the resumer is resolved ONCE per tick and only when a run is about to be woken, BEFORE the synchronous
+       hold-and-wake section below, so that section stays one uninterrupted read-and-write. */
+    const resumer = this.#aiRunWakeRuns().length ? await this.#aiRunResumer() : null;
     for (const r of this.#aiRunWakeHolds(iso)) {
       this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
       holds.push({ run: r.run, outstanding: r.outstanding, expires: until });
@@ -43093,6 +43104,8 @@ export class Store extends DurableObject {
       if (!done.length) continue;      // the row's own EXISTS already proved otherwise
       const captured = done.filter((q) => q.state === "captured").length;
       const refused = done.length - captured;
+      /* D-260 — THE DECISION IS MADE BEFORE THE ENTRY IS WRITTEN, so the entry can say which it was. */
+      const decision = this.#aiRunResumeDecision(r, resumer);
       const bad = this.ctx.storage.transactionSync(() => {
         /* THE ENTRY FIRST, then the lease and the stamp — `#aiRunTerminate`'s
            order and its reasoning: if anything could fail it is the append, and
@@ -43106,12 +43119,12 @@ export class Store extends DurableObject {
            NAMES it and the row stays unstamped, so a defect here is loud on
            every alarm instead of invisible on all of them. */
         /* NO ACTOR, and the NULL is stated rather than filled. The wake
-           query projects `r.run, r.context_id` and nothing else, so this path
-           does not hold the run's principal — and widening that projection to
-           carry one would move ANOTHER reader's role in `run-conditions`'s
-           table for a field this row does not need. So the reaper's own wake
-           entry says "a machine looked and the record cannot say which", which
-           is true, instead of borrowing the plane's name for it. */
+           is the PLANE noticing a completion, and no principal performed it.
+           D-260 widened the wake query to carry the run's `principal_plane`,
+           but only so the resumption gate can COMPARE it: stamping it here as
+           the actor would say the run's principal wrote an entry it never
+           wrote. So the wake entry still says "a machine looked and the record
+           cannot say which", which is true, instead of borrowing a name. */
         const refusal = this.#aiRunAppend(r.run, {
           level: "internet",
           subject: r.context_id,
@@ -43123,7 +43136,7 @@ export class Store extends DurableObject {
           detail: `the daemon answered ${done.length} capture request(s) this run was waiting on `
                 + `(${captured} captured, ${refused} refused). The run is resumable: its own log `
                 + `carries what each request established, and §14b.7's resumed run reads it and `
-                + `continues rather than restarting`,
+                + `continues rather than restarting. ${decision.says}`,
         }, iso, 0);
         if (refusal) return refusal;
         this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
@@ -43132,9 +43145,156 @@ export class Store extends DurableObject {
         return null;
       });
       wakes.push({ run: r.run, completions: done.length, captured, refused,
-                   woken: !bad, ...(bad ? { unwritable: bad } : { expires: until }) });
+                   woken: !bad, ...(bad ? { unwritable: bad } : { expires: until }),
+                   resume: decision.dispatch ? "DISPATCH" : decision.withheld });
+      if (!bad && decision.dispatch) dispatches.push({ run: r.run, context_id: r.context_id });
     }
-    return { at: iso, held: holds.length, holds, woken: wakes.length, wakes };
+
+    /* D-260 — THE DISPATCH, AFTER EVERY WAKE IS WRITTEN AND OUTSIDE ANY TRANSACTION: a network call inside
+       `transactionSync` is impossible, and a wake whose entry and stamp waited on another Worker would put the
+       delivery-exactly-once property at the mercy of that Worker's latency. */
+    for (const d of dispatches) {
+      const outcome = await this.#aiRunDispatch(d, resumer, iso);
+      const w = wakes.find((x) => x.run === d.run);
+      if (w) w.dispatch = outcome;
+    }
+    return { at: iso, held: holds.length, holds, woken: wakes.length, wakes,
+             dispatched: wakes.filter((w) => w.dispatch && w.dispatch.state === "DISPATCHED").length };
+  }
+
+  /* =====================================================================
+   * D-260 — THE WOKEN RUN'S CALLER (BOB #22, 2026-09-21; `BIO_Assistant_and_AI_Roles_v0_1.md` §6).
+   *
+   * FL-4 made a woken run a fact in the record and nothing re-entered it. This is the caller: the wake hands a
+   * woken run to `agent-worker` (I8), under the instance's ONE organisation-principal `ai` credential, and ONLY
+   * when that credential is the run's own principal. The ruling's reason is DEC-55 (4): the two principals carry
+   * different accountability, so continuing a member's attributable run under the group's key would re-attribute
+   * its later acts. A member's run therefore keeps FL-4's behaviour — woken, told, waiting for its own principal —
+   * and the wake entry SAYS it was not dispatched and why. That is a stated LIMITATION, never a silent skip.
+   *
+   * THE GATE IS ONE COMPARISON, of two stamps the PLANE made: the run's `principal_plane` (stamped at open, D-199
+   * (4), `<principal>/<tokenId>`) against the same composite built from the instance credential's own RECORD row.
+   * Nothing a caller sent is compared. REC-152 (C-22.12) would ALSO refuse the resumed run's first tick under a
+   * key that is not its principal — and that is exactly why it is not relied on here: a dispatch that leans on
+   * the refusal downstream has already handed a member's run to the group's key, and the refusal proves only
+   * that the tick failed. The arm in `test/d260-resume.test.mjs` counts calls AT THE BINDING for that reason.
+   *
+   * THE SECRET NEVER REACHES THE RECORD. The token is read from the Worker secret, used as the dispatch body's
+   * `credential`, and dropped; what the tick answers, and what the wake entry says, name the credential by its
+   * record identity (`tokenId`) and never by value. `agent-worker` retains nothing (fleet law, I8).
+   * ================================================================== */
+
+  /** The namespace this Durable Object IS, asked of the runtime rather than remembered: `index.mjs`'s
+   *  `scopeFor` routes every call to `idFromName("bio")` or `idFromName("scratch")`, and a DO's id equals the one
+   *  it was named by. Null for any other object (a suite's private instance) — the dispatch then says it could
+   *  not name the namespace, rather than guessing one: a default here would let a resumed run touch the real
+   *  record while the run lived in scratch. */
+  #ownNamespace() {
+    const ns = this.env && this.env.STORE;
+    if (!ns || typeof ns.idFromName !== "function" || !this.ctx.id || typeof this.ctx.id.equals !== "function")
+      return null;
+    for (const name of ["bio", "scratch"]) if (this.ctx.id.equals(ns.idFromName(name))) return name;
+    return null;
+  }
+
+  static AI_RUN_DISPATCH_WAIT_MS = 30_000;
+  #aiRunDispatchWaitMs() {
+    const v = Number(this.env && this.env.AI_RUN_DISPATCH_WAIT_MS);
+    return Number.isFinite(v) && v > 0 ? v : Store.AI_RUN_DISPATCH_WAIT_MS;
+  }
+
+  /** WHO MAY RESUME, resolved once per tick: `{ ready: true, stamp, tokenId, token, store, account }` or
+   *  `{ ready: false, withheld }`. `withheld` is a stated reason, never a secret. The credential is resolved the
+   *  way the control plane resolves one (`index.mjs`, `aicredentiallook` against the `bio` object, which alone
+   *  holds `ai_credentials`), so a key revoked by a member stops resuming anything the moment the row says so. */
+  async #aiRunResumer() {
+    const env = this.env || {};
+    if (!env.AGENT_WORKER || typeof env.AGENT_WORKER.fetch !== "function")
+      return { ready: false, withheld: "AGENT_WORKER_UNBOUND" };
+    const cred = await instanceAiCredential(env);
+    if (!cred.token) return { ready: false, withheld: cred.reason };
+    const store = this.#ownNamespace();
+    if (!store) return { ready: false, withheld: "NAMESPACE_UNDETERMINED" };
+    const sha = await sha256hex(cred.token);
+    let look = null;
+    if (store === "bio") look = this.aiCredentialLook({ secretSha: sha });
+    else {
+      try {
+        const res = await env.STORE.get(env.STORE.idFromName("bio"))
+          .fetch(`http://do/aicredentiallook?sha=${sha}`);
+        const out = await res.json().catch(() => null);
+        look = out && out.ok === true ? out.result : null;
+      } catch { look = null; }
+      if (!look) return { ready: false, withheld: "CREDENTIAL_RECORD_SILENT" };
+    }
+    const c = look && look.found ? look.credential : null;
+    if (!c) return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_NOT_ON_RECORD" };
+    if (c.revoked) return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_REVOKED", tokenId: c.tokenId };
+    /* ONE ORGANISATION-PRINCIPAL credential is what the ruling permits. A member-kind key configured here would
+       make every run THAT MEMBER's key opened resumable by the instance, which is the re-attribution the ruling
+       exists to prevent — so it resumes nothing, and says so. */
+    if (c.principalKind !== "organisation")
+      return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_NOT_ORGANISATION", tokenId: c.tokenId };
+    return { ready: true, stamp: `${c.principal}/${c.tokenId}`, tokenId: c.tokenId, token: cred.token, store,
+             account: await instanceClaudeToken(env) };
+  }
+
+  /** THE GATE, and the sentence the wake entry carries. `dispatch` is true ONLY on equality of the two stamps. */
+  #aiRunResumeDecision(run, resumer) {
+    const principal = String((run && run.principal_plane) || "");
+    if (resumer && resumer.ready && principal === resumer.stamp)
+      return { dispatch: true, withheld: null,
+               says: `Resumption: handed to agent-worker under the instance's organisation credential `
+                   + `'${resumer.tokenId}', which opened this run.` };
+    const member = principal.startsWith("member:");
+    const withheld = member ? "MEMBER_PRINCIPAL_RUN"
+      : (resumer && !resumer.ready) ? resumer.withheld : "NOT_THE_INSTANCE_CREDENTIALS_RUN";
+    const why = member
+      ? "a member's credential opened it, and the instance resumes only runs its own organisation credential "
+        + "opened (D-260, DEC-55 (4): continuing a member's run under the group's key would re-attribute its acts). "
+        + "It waits for its own principal"
+      : withheld === "NOT_THE_INSTANCE_CREDENTIALS_RUN"
+        ? "another principal opened it, and the instance's organisation credential resumes only the runs it opened"
+        : `the instance cannot resume anything here (${withheld})`;
+    return { dispatch: false, withheld, says: `Resumption: NOT dispatched — ${why}.` };
+  }
+
+  /** THE CALL. Bounded, and every way it can fail is a stated outcome carrying no secret. A dispatch that did not
+   *  complete appends ONE entry saying so, because the wake entry above it said the run was handed over. */
+  async #aiRunDispatch(d, resumer, iso) {
+    const body = { run_id: d.run, store: resumer.store, credential: resumer.token,
+                   claude_accounts: { instance: resumer.account
+                     ? { token: resumer.account, ref: "instance" } : {} } };
+    let outcome, timer;
+    try {
+      const res = await Promise.race([
+        this.env.AGENT_WORKER.fetch("https://agent-worker/run", {
+          method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
+        new Promise((_, no) => { timer = setTimeout(() => no(new Error("dispatch-wait-elapsed")), this.#aiRunDispatchWaitMs()); }),
+      ]);
+      const out = await res.json().catch(() => null);
+      outcome = (res.ok && out && out.ok === true)
+        ? { state: "DISPATCHED", status: res.status }
+        : { state: "REFUSED", status: res.status,
+            reason: String((out && (out.reason || out.code)) || `http ${res.status}`).slice(0, 80) };
+    } catch (e) {
+      /* D-205's rule: the plane's own words, never the exception's — a thrown error can carry a request, and this
+         request carries a credential. */
+      /* The sentinel is lowercase and compared on its own line: this outcome is a dispatch STATE, not a refusal
+         code, and a code-shaped literal inside a `reason:` expression is read into DEC-49's census as one. */
+      const elapsed = String(e && e.message) === "dispatch-wait-elapsed";
+      outcome = { state: "SILENT", status: null,
+                  reason: elapsed ? "no answer within the bound" : "the call did not complete" };
+    } finally { clearTimeout(timer); }
+    if (outcome.state !== "DISPATCHED") {
+      const refusal = this.#aiRunAppend(d.run, {
+        level: "internet", subject: d.context_id, ...this.#aiRunSearchState(d.run, false), governed: false,
+        detail: `Resumption: the dispatch to agent-worker did not complete (${outcome.state}: ${outcome.reason}). `
+              + `The run was woken and is still resumable by its own principal; nothing it established is lost`,
+      }, iso, 0);
+      if (refusal) outcome.unwritable = refusal;
+    }
+    return outcome;
   }
 
   /** op=airun — THE RUNNING-SESSION SURFACE'S READ (UI-38's rider).
