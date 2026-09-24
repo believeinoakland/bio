@@ -19516,6 +19516,19 @@ async function pageContent(doc, pageMap) {
   }
   return parts.join("\n");
 }
+var IDENTITY_MATRIX = Object.freeze([1, 0, 0, 1, 0, 0]);
+function matMul(a, b) {
+  return [
+    a[0] * b[0] + a[1] * b[2],
+    a[0] * b[1] + a[1] * b[3],
+    a[2] * b[0] + a[3] * b[2],
+    a[2] * b[1] + a[3] * b[3],
+    a[4] * b[0] + a[5] * b[2] + b[4],
+    a[4] * b[1] + a[5] * b[3] + b[5]
+  ];
+}
+var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
+var BASELINE_EPS = 1e-6;
 async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
@@ -19584,6 +19597,22 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     for (let i = stack.length - 1; i >= 0; i--) if (stack[i].t === type) return stack[i];
     return null;
   };
+  const numArgs = (n) => {
+    const out = [];
+    for (let i = stack.length - 1; i >= 0 && out.length < n; i--) {
+      if (stack[i].t === "num") out.unshift(stack[i].v);
+    }
+    return out.length === n ? out : null;
+  };
+  let ctm = IDENTITY_MATRIX.slice();
+  const ctmStack = [];
+  let tlm = IDENTITY_MATRIX.slice();
+  let leading = 0;
+  let lineY = null;
+  const breakLine = () => {
+    pieces.push("\n");
+    lineY = baselineOf(tlm, ctm);
+  };
   for (const tk of toks) {
     if (tk.t !== "op") {
       stack.push(tk);
@@ -19620,16 +19649,53 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       }
       case "'":
       case '"': {
-        pieces.push("\n");
+        tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
+        breakLine();
         const st = lastOfType("str");
         if (st) show(st.bytes);
         break;
       }
+      case "q":
+        ctmStack.push(ctm.slice());
+        break;
+      case "Q":
+        if (ctmStack.length) ctm = ctmStack.pop();
+        break;
+      case "cm": {
+        const m = numArgs(6);
+        if (m) ctm = matMul(m, ctm);
+        break;
+      }
+      case "BT":
+        tlm = IDENTITY_MATRIX.slice();
+        break;
+      case "TL": {
+        const a = numArgs(1);
+        if (a) leading = a[0];
+        break;
+      }
       case "Td":
-      case "TD":
-      case "Tm":
+      case "TD": {
+        const a = numArgs(2);
+        if (!a) break;
+        const [tx, ty] = a;
+        if (tk.v === "TD") leading = -ty;
+        tlm = matMul([1, 0, 0, 1, tx, ty], tlm);
+        if (ty !== 0) breakLine();
+        else if (lineY === null) lineY = baselineOf(tlm, ctm);
+        break;
+      }
+      case "Tm": {
+        const m = numArgs(6);
+        if (!m) break;
+        tlm = m;
+        const y = baselineOf(tlm, ctm);
+        if (lineY === null || Math.abs(y - lineY) > BASELINE_EPS) breakLine();
+        break;
+      }
       case "T*":
-        pieces.push("\n");
+        tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
+        breakLine();
         break;
       default:
         break;
