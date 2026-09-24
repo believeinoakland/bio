@@ -189,7 +189,7 @@ scope: `op=proposedispose` writes `definition_version`; a read against a later v
 accepts-when: `bio-plane/test/proposedispose.test.mjs` gains an arm: a disposition under version 1 does not apply under version 2, and the column reads back. NEGATIVE CONTROL: stop writing the version, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-128's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs REC`).
 
-### D-453 · queued — **D-74's IDENTIFIER-SPACE MEASUREMENT IS HALF TAKEN: four cross-system joins were never measured, so construct 6.identifier-spaces stays ABSENT on evidence that stops at the corpus already held.** — owner CONTENT (a measurement).
+### D-453 · running — SPAWNED 2026-09-24 ~03:12Z by CONDUCT #20 as a FRESH SEPARATE CLOUD SESSION (network FULL) titled WORKER D-453 (CONDUCT #20), base origin/main 548eb2c5, a measurement lane beside the eight; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-453 and that session; never conclude queued from the absence alone.
 order: AT THE HEAD (Bob set the environment network to FULL ~03:02Z; BOB #32 03:05Z: *place it at the head as a measurement that can finish before the 06:00Z wind-down*; SCHEDULER #18); was: after D-64, a measurement blocked on the environment; its results feed BOB's three recogniser designs (SCHEDULER #17, 2026-09-23; D-74's worker via CONDUCT #18 22:58Z)
 milestone: M0 (a measurement for M4's identifier spaces)
 interface: none — measurements.
