@@ -451,6 +451,16 @@ scope: the same NAMESPACES set and a NAMESPACE_UNKNOWN refusal in `pdf-worker/sr
 accepts-when: `store=biosmoke` is refused NAMESPACE_UNKNOWN by name by both members. NEGATIVE CONTROL: accept the token again, and the arm reads NOT_FOUND and fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
+### UI-99 · queued — **A DEFINITION REVISION'S BASIS AND A DISPOSITION'S VERSION HAVE A PLANE AND NO SURFACE: D-128's revision basis and REC-184's `definition_version` (and its `not recorded`) reach no page.** Found by REC-184's worker. — owner UI.
+order: after UI-89, with the surfaces owed to landed plane rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:17Z)
+milestone: M4
+interface: I3 consumer.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2 "The declared flow, and its revisions" (front matter: NOT BUILT, a member surface for a revision's basis).
+depends-on: REC-184.
+scope: show a revision's basis beside its version, and on a disposition the version it judged, `not recorded` stated as such.
+accepts-when: both render against a real-plane suite. NEGATIVE CONTROL: hide `not recorded` and its arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs UI`).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.

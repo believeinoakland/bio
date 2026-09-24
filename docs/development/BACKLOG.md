@@ -119,7 +119,7 @@ milestone: M0
 interface: none.
 design: `docs/development/VERIFICATION.md` (a fixture derives what it carries).
 depends-on: M0-169.
-scope: wire the three to M0-169's static-only mode; delete the hand lists.
+scope: wire the three to M0-169's static-only mode; delete the hand lists. ALSO (M0-169's F3, via CONDUCT #20 19:37Z): `bio-plane/test/instrument-deps.mjs` (D-265) calls `moduleClosure({ dynamic: false })` and maps to basenames, keeping its `outside` check (coverage-provenance, owed-controls, m051-driver-census).
 accepts-when: an import added to the subject leaves all three green. NEGATIVE CONTROL: restore one hand list, add an import, and that suite fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
@@ -163,16 +163,6 @@ depends-on: D-492, D-490.
 scope: (1) measure navigation times over the client-rendered sources already captured, recorded in `measurements/<id>.md` with date and instrument, and set the reservation's bound from the measured tail, stating the figure and its source at the site; (2) a concurrency cap from the platform's stated concurrent-browser limit, labelled the vendor's claim until measured; a render over the cap WAITS in the reconciling alarm, never dropped; a render that cannot run is recorded undetermined with its reason, never as a capture that found nothing.
 accepts-when: the bound reads from a measurement id, and a burst above the cap renders no more than the cap at once with the rest completing later (the measured failure it moves: an unmeasured 30,000 ms and an uncapped burst). NEGATIVE CONTROL: remove the cap and the burst arm counts more concurrent renders than the cap, failing by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
-### UI-99 · queued — **A DEFINITION REVISION'S BASIS AND A DISPOSITION'S VERSION HAVE A PLANE AND NO SURFACE: D-128's revision basis and REC-184's `definition_version` (and its `not recorded`) reach no page.** Found by REC-184's worker. — owner UI.
-order: after UI-89, with the surfaces owed to landed plane rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:17Z)
-milestone: M4
-interface: I3 consumer.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2 "The declared flow, and its revisions" (front matter: NOT BUILT, a member surface for a revision's basis).
-depends-on: REC-184.
-scope: show a revision's basis beside its version, and on a disposition the version it judged, `not recorded` stated as such.
-accepts-when: both render against a real-plane suite. NEGATIVE CONTROL: hide `not recorded` and its arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs UI`).
 
 ### UI-101 · queued — **THE APP OFFERS NO RISK-TIER CONTROL: `civicos-ui/app.html`'s action intake cannot state 1, 2 or 3, while D-483 gave the setup page a chooser (the BOTH-INTAKE-SURFACES convention).** Found by D-483's worker. — owner UI.
 order: after UI-99 (UI-100 is cached), with the surfaces owed to landed plane rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z)
@@ -1003,7 +993,7 @@ milestone: M0
 interface: none.
 design: `docs/development/VERIFICATION.md` (the reading budget), with `docs/archive/` as the home for finished provenance.
 depends-on: none.
-scope: move the D-263 PROVENANCE block (~2.4 KB, marked at both ends) to `docs/archive/`, and move `bio-plane/test/register-grammar.test.mjs`'s pin to the archived copy in the same landing.
+scope: move the D-263 PROVENANCE block (~2.4 KB, marked at both ends) to `docs/archive/`, and move `bio-plane/test/register-grammar.test.mjs`'s pin to the archived copy in the same landing. ALSO (M0-169's design gap, via CONDUCT #20 19:37Z): one sentence in "The battery runs every suite"'s Incomplete sections — a fixture's carry-list is DERIVED, once (`moduleclosure.mjs`, `gatedeps.mjs`).
 accepts-when: VERIFICATION.md reads ≥ 2 KB under budget and register-grammar stays green (the measured failure it moves: 7 B of headroom). NEGATIVE CONTROL: point the pin back at VERIFICATION.md and register-grammar fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
@@ -1286,3 +1276,13 @@ depends-on: D-50 (`integrated` on c18-batch8).
 scope: NFC normalisation in the name key at the write and in C-77; D-458's census states any post-normalisation pair.
 accepts-when: an NFD title equivalent to a taken NFC title is refused by name; existing titles read byte-unchanged. NEGATIVE CONTROL: drop the normalisation, and the NFD-lookalike arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
+
+### UI-87 · queued — **THE ANALYST-VOCABULARY GATE FIRES ON PLAIN ENGLISH: `civicos-ui/test/analyst-vocabulary.mjs`'s `BANNED` connective rule `(AND|OR)\s+(of|…|set|sets)` carries `/i`, so "reason 1 and set 2" and "two or more sets" fail as analyst jargon.** Measured with node (CONDUCT #17, re-measured by SCHEDULER #17 on c17-batch5 @ 7c4f6b5f); the file's other connective rules are case-sensitive and its own header, finding (i), says a case-insensitive `AND` fires on correct English. — owner UI.
+order: after M0-139, among the verification rows: a gate that refuses correct member copy pushes surface authors toward worse words, so it goes ahead of pure process tooling (SCHEDULER #17, 2026-09-23, CONDUCT #17's 22:00Z finding (4))
+milestone: M0
+interface: none — a test rule.
+design: `docs/development/VERIFICATION.md` (a suite asserts what it claims), with DEC-32 clause 1 as the file itself states it.
+depends-on: none.
+scope: drop the `i` flag on that one rule; keep "the OR set" and "AND of the legs" caught. Extend `civicos-ui/test/analyst-vocabulary.test.mjs` with a must-pass fixture.
+accepts-when: "reason 1 and set 2" passes and "the OR set" is still refused. NEGATIVE CONTROL: restore `/i`, and the plain-English must-pass arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs UI`).
