@@ -72,6 +72,5 @@ commit on main for 120+ min. INBOX → SCHEDULER: undrained BOB INBOX entries.
   finished c20-batch14 so this account's work closes out. It LANDED: main **13073707** (train-20260924T113942Z-931, the one branch
   alone, gate GREEN on the tree the worker full-gated: 351/351 suites, 19,983 assertions). Trains stay CONDUCT's act; BOB does not run
   them. OWED on the other account: SCHEDULER flips batch14's rows done and archives them (batch10/11's 14 rows, D-461 incl. CLAUDE.md §5,
-  D-64, REC-184, M0-141, D-486, batch13's); DIST's deploy items (D-461, D-464, D-462 I8 2.0.0, DIST-11); archive the batch14 worker
-  session_01Ya8PUPivB6xpvV51uhcZa9. Still WAITING and NOT to be merged (CONDUCT-NEXT's drop list): c16-batch3, c16-batch6,
+  D-64, REC-184, M0-141, D-486, batch13's); DIST's deploy items (D-461, D-464, D-462 I8 2.0.0, DIST-11). The batch14 worker session_01Ya8PUPivB6xpvV51uhcZa9 is ARCHIVED (its tip is on main). Still WAITING and NOT to be merged (CONDUCT-NEXT's drop list): c16-batch3, c16-batch6,
   folds-0924c/d, c18-batch7fix, c19-batch10, c20-integ1, c20-batch16.
