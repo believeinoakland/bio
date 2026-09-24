@@ -523,8 +523,14 @@ console.log("\n--- 6. chore (2): affordanceFacts' project arm goes through the m
       "export const LEGACY_TYPE_ALIASES = { problem: 'inquiry', focus: 'inquiry' };",
       "export const LEGACY_TYPE_ALIASES = { problem: 'inquiry', focus: 'inquiry', dossier: 'project' };");
     const storePath = join(dir, "bio-plane/src/store.mjs");
+    /* ANCHOR CORRECTED 2026-09-24 BY D-510, NEVER EXEMPTED: `promote`'s normalisation site 3 of 4 read
+       `const projectedType = normalizeType(meta.object_type);` and now reads `const projectedType =
+       promotedType;` — the type is decided once, above, from the PROMOTED DOCUMENT rather than the caller's
+       envelope. The rehearsal is unchanged in what it does (neuter the stored column's normalisation so a
+       legacy-spelled ROW exists) and unchanged in what it proves; only the marker moved, which is exactly
+       what the arm below is for and it CAUGHT IT. */
     const patchedStore = readFileSync(storePath, "utf8").replace(
-      "const projectedType = normalizeType(meta.object_type);",
+      "const projectedType = promotedType;",
       "const projectedType = meta.object_type;");
     t("the rehearsal's two patches found their sites (markers moved if this fails)",
       [patchedCat !== catSrc, patchedStore.includes("const projectedType = meta.object_type;")],

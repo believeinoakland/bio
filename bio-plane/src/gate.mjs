@@ -85,7 +85,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    NO_CITATION to ACT_SHAPE_CHECKS, so the catalogue moved 433 -> 435 checks and the stamp moves
    with it, MINOR and additive on this constant's own rule (Publication §3 rule 17). The d470
    census suite caught it on the c20-batch17 train (A3). */
-export const CATALOG_VERSION = "1.23.0";
+export const CATALOG_VERSION = "1.24.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

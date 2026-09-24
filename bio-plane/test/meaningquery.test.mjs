@@ -776,8 +776,16 @@ console.log("\n--- 11. hidden and absent answer identically ---");
      why the project half cannot be staged THROUGH THE `leg` ARM — it says
      nothing about captures, and a project bundle does carry resolutions. See the
      header's correction and `test/meaningread.test.mjs`, which stages it. */
+  /* PIN CORRECTED 2026-09-24 BY D-510, NEVER EXEMPTED: `isInquiry` read `normalizeType(meta.object_type)`
+     — the CALLER'S envelope — and now reads `promotedType`, which is the PROMOTED DOCUMENT's own type through
+     the same `normalizeType` (`BIO_Case_Making_v0_1.md` §2). The claim this arm makes is unchanged and is
+     STRONGER: legs are written only for documents that ARE inquiries, rather than for documents a caller
+     CALLED inquiries. The second half of the pin is kept so the arm still fails if the derivation goes back
+     to the envelope. */
   t("promote writes legs only for inquiries, which is WHY the project half cannot be staged THROUGH `leg:`",
-    /const isInquiry = normalizeType\(meta\.object_type\) === "inquiry"/.test(STORE_SRC), true);
+    [/const isInquiry = promotedType === "inquiry"/.test(STORE_SRC),
+     /const promotedType = documentType \?\? normalizeType\(meta\.object_type\);/.test(STORE_SRC)],
+    [true, true]);
 }
 
 console.log("\n--- 11b. the vocabulary is PUBLISHED, through the op a caller actually has ---");
