@@ -9,6 +9,16 @@ ever cut to fit. No whole-file budget; a row is held to 2 KiB, as in the backlog
 
 ## Rows
 
+### M0-129 · queued — **`civicos-ui/test/bound-sweep.test.mjs`'S METHOD-HEAD PATTERN SKIPS `async` METHODS, SO AN ASYNC OP'S BOUND IS NEVER SWEPT.** `methodBodies` matches `^ {2}(?:static\s+)?name(` (re-read on `cdfaea39`); an `async` method has no head, so its body is folded into the method above it. Found by D-85's worker (CONDUCT #15). — owner M0 with UI.
+order: with the instrument cluster, directly after D-427: a sweep blind to a class of method, M0-79's doctrine; latent, since no swept op is known to be missed today (SCHEDULER #15, 2026-09-23)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a check is evidence only where it can fail.
+depends-on: none.
+scope: admit `async\s+` (and `static async`) in the head pattern; state which ops, if any, newly enter the sweep and their verdicts.
+accepts-when: a planted `async` method with an unbounded read is found and fails by name; every existing verdict unchanged or its move attributed. NEGATIVE CONTROL: drop the `async` alternative, and the planted arm reads clean and fails by name.
+added: 2026-09-23 · SCHEDULER #15 (D-85's worker's finding via CONDUCT #15; `node tools/mintid.mjs M0`).
+
 ### M0-80 · queued — **FOUR REFUSAL CODES ARE PINNED GREEN BY ABSENCE RATHER THAN BY AGREEMENT** — the plane sends a canned `translation` for … (whole text: the cut archive)
 order: with the instrument cluster and NOT beside UI-73, though they were routed together. A fixture narrower than the wire is a check that cannot fail — M0-78's doctrine exactly — whereas UI-73 is a surface correction. CLAUDE.md §5: an equality that costs nothing to produce is not evidence (SCHEDULER #3, 2026-09-19)
 milestone: M0
