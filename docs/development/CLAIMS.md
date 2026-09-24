@@ -20225,3 +20225,42 @@ carry the same block.** The empty-list branch (`data-rvc-acks-empty`, *Nobody bu
 statement yet*) is the one that can now LIE: with a withheld row it should say that a reading exists which is not a
 second reading, in the plane's words. RECORD does not edit `civicos-ui/**`. The plane-side arms are
 `bio-plane/test/rec213-reviewcopy-writer.test.mjs` blocks 2, 3 and 5; the surface's rendering is driven nowhere yet.
+
+## DELEGATION 2026-09-24 RECORD (WORKER REC-205) -> UI — **THE QUEUE STILL CANNOT SELECT A PROJECT-SCOPED FINDING: the plane takes it in a set, `queueSetOpFor` returns null for one**
+
+**open as of 2026-09-24** — the plane half landed on `land/worker/REC-205` and is driven
+(`bio-plane/test/peritem.test.mjs` block 9, 50/0); no surface offers the selection, so a member cannot reach it.
+
+REC-205's row read *"its act names a project per item, so D-126's set has no way to carry one"*. MEASURED AT
+`1a7f0bcc0` BEFORE ANY CHANGE, THAT IS FALSE OF THE PLANE: `op=proposedispose` with
+`items: [{project, finding}, {key, definitionVersion}]` applied BOTH, each resolved against its own project —
+`#perItem` spreads each item after the shared fields, and `PER_ITEM_ACTS` has published `["project","finding"]`
+among proposedispose's identity shapes since D-126's first commit. What was missing was that NOTHING ASSERTED IT
+(`project` did not occur in D-126's suite), and under that silence two real defects sat: a project named ONCE for
+the set contaminated every other item (a progression finding beside it came back NO_FINDING), and a CONDITION in
+the selection was told to define a progression. Both are closed on the plane and driven, with three declared
+control arms recorded on the suite's `NEGATIVE CONTROL:` line.
+
+`civicos-ui/app.html`'s `queueSetOpFor` is the one site that excludes it, by its own comment: *"A finding keyed by
+(project, finding) is NOT selectable: its act needs the member to name the project it is acting for, one item at a
+time, and a set would have to choose it for them."* **The second half of that sentence is the part the plane now
+answers** — a set does not have to choose for them, because each item carries its own project — but the FIRST half
+still stands as a UI question: an item published with several `disposition.projects` needs the member to say which
+team they are acting for, and a selection spanning several teams needs that answer per item or one answer applied
+to all.
+
+**THE ACT, and its actor: UI stops returning null for `disposition.scope === "project"` in `queueSetOpFor`, and
+`queueApplySet` sends `{ project, finding }` for such an item** — `finding` is the item's `disposition.finding`
+and `project` is the team the member is acting for, which the surface must ask when `disposition.projects` holds
+more than one and may take silently when it holds exactly one. **Do not default it where there are several**: the
+plane refuses to (`NO_PROJECT_SCOPE`, D-266), because a plane choosing whose judgment the record carries is the
+single shared stance §7 rejected. RECORD does not edit `civicos-ui/**`.
+
+**THE WIRE, for UI-94's integrator, additive and named here so the two landings align**: `set_acts[]` for
+`proposedispose` is unchanged in `item_keys` (`[["key"],["progressionKey","stageKey"],["project","finding"]]`) and
+gains ONE entry in `shared_keys` — `definitionVersion`, now `["to","reason","kind","definitionVersion"]`. It was a
+shared field of the act from REC-211 and was published in neither list, so a surface holding only this table could
+not complete an instance-scoped item in a set. Nothing is removed and no existing field changes meaning. A second
+behaviour is worth knowing even though it needs no UI change: `#perItem` now NARROWS the shared body by
+`item_keys`, so a surface may hoist a project to the shared body for a single-team selection without poisoning any
+progression item beside it.
