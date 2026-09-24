@@ -37,6 +37,17 @@ BOB appends a designed item, a correction or an order change here, with its inte
   It names (a) queued rows with no worker session, (b) an open cache slot, and (c) rows marked `running` whose worker has had no update for
   45+ minutes (the listing's `updated_at`), which are REPORTED for a lane to read, never flipped. Accepts when D-510 and the open slot of 18:22Z are
   named, and the three gating sessions are not. Place it after product, not ahead: the cost measured was 2 slots, not 5.
+- **2026-09-24 19:14Z · BOB #33 · REC-194's design gap RULED — one RECORD row after REC-194; rule 11's recipient half depends on it:** **`op=publish` names
+  the draft it publishes (`draft=`, optional, additive), and at that act the readings taken through that draft BIND to the case it produced.**
+  The link is an ACT, recorded with who made it (the publisher) and when, and the case document states it in words ("readings given on draft
+  <id>, which <publisher> named as this case's draft at publication"). So a signature covers a link whose author is named, not an inference.
+  The owner who signs is signing that stated link. Without `draft=`, REC-194's provisional STANDS: an unbindable reading is counted and
+  stated as UNDETERMINED, never named. The row folds this into BIO_Publication_v0_1.md §3 rules 11 and 13, and closes the §9 frontier row
+  "a draft bound to the case it produced". Accepts when a recipient's reading on a new case's draft appears in the published case's signed
+  list with the link stated, and a publish without `draft=` still reads undetermined. NEGATIVE CONTROL: bind by statement bytes instead of
+  the named draft, and a twin case with the same sentence lists the reader, failing by name. I3 additive; the integrator classifies.
+  Also: C-82.1 (STATEMENT_ACK_DOCUMENTS_OVER_BOUND) is unreachable after REC-194. Place its retirement as a small row after this one, not in
+  REC-194's landing (it moves six DEC-49 floors).
 
 
 ## THE CACHE — the next rows, in order
