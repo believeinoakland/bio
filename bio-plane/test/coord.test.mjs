@@ -38,6 +38,21 @@
  *
  * §8 AND ITS DRIVER ARE RETIRED 2026-09-24 BY M0-140 with the DEBT construct — the run above is kept as the record of
  * what was measured. `debt-floor.control.mjs` is deleted; its two anchors in `tools/coord.mjs` no longer exist.
+ *
+ * NEGATIVE CONTROL (M0-140, RUN 2026-09-24 by the M0-140 worker on the committed tree at 95c733a07, DECLARED BEFORE
+ * ARMING, each arm ALONE): THE RETIREMENT'S OWN CONTROL — restore one reader of the live `DEBT.md` and its arm must
+ * FAIL NAMING THE MISSING FILE. (NC-0) baseline, nothing armed: `plancheck` 1 FAIL, `UNPUSHED`, declared expected
+ * because the landing is not yet on origin/main; `coord.mjs checks` 11 arm(s), 0 failing. (NC-1) `plancheck`'s
+ * `DEBT.md` read and its MISSING requirement restored -> `FAIL  MISSING — docs/development/DEBT.md does not exist.`,
+ * exit 1, plus `UNPUBLISHED` as collateral of an on-disk arm, declared. (NC-2) `coord.mjs`' LC-debt-token restored ->
+ * `FAIL  LC-debt-token` with `docs/development/DEBT.md could not be read — an unreadable ledger is not an empty one`,
+ * 12 arm(s), 1 failing, and every other arm green. (NC-3, OVER-STRICTNESS, required) nothing armed: tree clean (0
+ * dirty paths), `coord.mjs checks` 11/0, `plancheck` back to its 1 declared FAIL — so neither arm leaked. RESTORES
+ * MEASURED, never assumed: plancheck.mjs sha256 5945d7f7… 78,119 B and coord.mjs sha256 84811625… 62,212 B, each
+ * compared by sha256 AND `cmp` against its own uniquely-named pristine copy; `git checkout --` was not used.
+ * WHAT THIS SHOWS AND WHAT IT DOES NOT: it shows the file is genuinely ABSENT for `readState` — not merely unread —
+ * because a restored reader finds nothing and says so by name. It does NOT show the archive is readable; that is
+ * `ledger.test.mjs` §6's `find D-5 answers the DEBT ARCHIVE` arm, on a fixture holding no live DEBT file at all.
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";
