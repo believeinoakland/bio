@@ -1,0 +1,16 @@
+{
+ "unit": "plane:tier-pagewise.test.mjs",
+ "inputHash": "58bffdb45b6599c1f95d5a2e5627a5d3106bc43a01d76507f54e93bd887c98da",
+ "verdict": "PASS",
+ "run": "bcd7a14ba4283952f911cfe4cd1e875457cbbea8.1790280392003.27788.json",
+ "tree": "bcd7a14ba4283952f911cfe4cd1e875457cbbea8",
+ "head": "1a7f0bcc06cd2383cb58c3dc91c7528b768903ef",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 137,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d1cb1ba3-0ea1-5897-8ed8-b3bcbcc5fa4f",
+ "at": "2026-09-24T20:06:32.018Z"
+}
