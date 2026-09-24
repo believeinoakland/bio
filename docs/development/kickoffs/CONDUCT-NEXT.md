@@ -24,21 +24,20 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS until 05:45Z, 6 from 05:4
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (16:52Z) — read the tree; these are pointers. Development RESUMED 15:40Z on this account.
-- MAIN = 58293bf3 (16:50Z: D-498 + M0-153). Before: 68fecb8d (fold-m132), 5f116f33 (0.79.0 pointer). I3 87.0.0 on main.
-- TRAIN RUNNING (16:50Z, log #20 scratchpad train13.log): land/conduct/c20-batch20 @ 6a9df102 = UI-100 + D-505 + M0-154 +
-  D-503 + D-506, dist rebuilt; IC-265 (D-506) I3 88.0.0, IC-266 (D-505) I3 89.0.0. On landing archive those 5 by ancestry.
-- DONE on coord only: M0-158 (CLAIMS 6c0f0763), archived.
-- LIVE WORKERS: M0-140 session_01SwHJ5PDWaoePcKuzYBscMK · D-497 session_018qopfWkzV5cvhBz2jTv3HD · REC-195
-  session_01TXWen1KhhqKXJj5A9wnvpN · M0-155 session_016oXJSbX622XgPZybiCHhPG · M0-157 session_01V8GNcS1HJ8NwMmx5AMsYzE (told to merge
-  M0-153 and reconcile G5 IN ITS FAVOUR: its gates.mjs §2d fix beats M0-153's downgrade) · UI-92 session_01QY1UMF2hnkFRAigwRyrbZp ·
-  REC-194 session_01YL4Drx2EamtQLtaGQSL1HC · D-507 session_01PXoZMHp8BzqvtbponMk52b · D-508 session_01G8U6vc36TrANDpVtGUArFZ ·
-  REC-212 session_01HHnoha7mw6A3Dzdk5X45yy · REC-211 session_01M33XV9m3mqkNdrkz8BFWxx. Integrated-awaiting-archive: UI-100
-  session_01SpHP4tgbseccztTdjMSCij, D-505 session_014oU4xtRHymVAFfuYTPkFL4, M0-154 session_01Gh94DitRyuZFiqZDucoiy6, D-503
-  session_01Lar2mJnqfdxQ3fb6dVUuQv, D-506 session_01JnKExYq87zoNZ3mx3fCgdq.
-- VERSION COLLISIONS TO WATCH: D-507 and D-508 both move CATALOG_VERSION (reconcile at integration); REC-211 is I3 MAJOR (next
-  above 89.0.0). Flip rows with `--status <ID> running` and NO --note (a note replaces the headline; M0-164 fixes the tool).
-- Pending BOB #33: D-505's caller-asserted `replay: true` exemption (forwarded 16:48Z).
+## 4. STATE (18:00Z) — read the tree; these are pointers. Addresses: BOB #33 session_01BkXH3dLHH2wx8eUA4k5p73 · SCHEDULER #19
+session_01KJoJnoXN6d5CyZsiw8KTKa (confirm each with get_session before binding; both lanes refresh).
+- MAIN = e9b21be6 (17:58Z, batch21: D-503 D-505 D-506 M0-154 M0-155 M0-157 REC-195 UI-100 + BOB doorbell-home, replay-ruling;
+  I3 89.1.0, I5 3.9.0, CATALOG 1.23.0, census 219/115). Workers archived by ancestry.
+- CADENCE (Bob 17:30Z via BOB #33): trains leave EVERY 2 HOURS carrying everything finished; NO early small trains. Next ~19:20Z.
+  Archiving a train's workers (tip on main, nothing unpushed; D-398) is part of landing it.
+- NEXT TRAIN carries (integrated): D-507 a8ba4f98 (IC-270 I3 MINOR, CATALOG 1.24.0), D-508 dbacd55f (IC-271 I3 MINOR, CATALOG
+  1.24.0 — RECONCILE: one next version from the d470 census PRINT on the union; floors from check-refusal-codes --strict print),
+  D-497 29d8409d (IC-268 I5, +1 table: census re-read), D-501 c97b0363, D-500 63aaf1b5, M0-159 792395ca, M0-164 c29e0947 (CONTAINS
+  M0-140 d7809ed0 — one branch, not a union), land/scheduler19/cache-20 868072f6. REC-194 must merge D-507 (told).
+  FOLD at integration: Content Framework §16 (tier-2 per-page rule + read-time tier-3 BUILT; add the glyph award sentence; D-501).
+  AFTER it lands: run M0-140's coord write from branch m0140/coord-write @ ee12ecc7 (README has the command; --delete DEBT.md).
+- RUNNING: UI-92 REC-194 REC-212 REC-211 D-502 M0-160 M0-165 M0-173 D-492 D-499 D-490 D-491 D-480 D-472 (session ids: list_sessions).
+- Pending BOB: D-500's ms-watermark (I3), M0-155's scratch-pen doctrine (placed M0-172 after ruling).
 
 ## 5. CAP AND CADENCE (Bob via BOB #32 15:45Z): at most 16 live worker sessions. TRAIN at least every 2 HOURS whenever gated
 land/* branches wait (sooner when a batch is ready); BOB's stall probe alarms after 120 min without a landing while branches wait. Refresh at 75% context.
