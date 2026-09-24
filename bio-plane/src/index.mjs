@@ -1265,6 +1265,18 @@ const OPS = {
      authored dated act — `lead`'s class cut and reason. */
   leadshare:           { classes: ["admin", "member"],             mutating: true  },
   leadread:            { classes: ["admin", "member", "probe"],    mutating: false },
+  /* D-162 / IC-241 — THE THEME (BIO_Content_Framework_v0_10.md §8.4, Bob's ruling of 2026-09-21).
+     DECLARING a theme and PLACING a document in one are a PERSON's acts in their own name — a lens
+     and a judgement against its test — so both take `lead`'s class cut: `mutating: true` keeps a
+     machine credential off the session route, and the store refuses a machine stamp BY NAME again
+     (C-81.2, C-81.7). PROPOSING is the machine's half of fence 3 and takes `contentmint`'s cut
+     instead: admin, member and probe, and the `ai` class through the DEC-55 floor when its minted
+     `writes` name it — the proposal is a HUNCH, never membership, whoever proposes it. The READ is
+     open to every class that may read; placements are gated per document by the viewer stamp. */
+  themedeclare:        { classes: ["admin", "member"],             mutating: true  },
+  themeplace:          { classes: ["admin", "member"],             mutating: true  },
+  themepropose:        { classes: ["admin", "member", "probe"],    mutating: true  },
+  themeread:           { classes: ["admin", "member", "probe"],    mutating: false },
   /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
      different cut from CPDF-10's above because a different thing is at stake.
 
@@ -2044,6 +2056,10 @@ const SESSION_OPS = {
                    /* MK-4: THE LEAD and a look recorded against it — a person's word
                       in their own name, `transcribe`'s route and reason. */
                    "lead", "leadlook", "leadshare",
+                   /* D-162: THE THEME — declaring, placing and proposing, each a session
+                      op for `lead`'s reason (a person's act in their own name); the
+                      store refuses a machine declarer or placer by name. */
+                   "themedeclare", "themeplace", "themepropose",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -2081,6 +2097,10 @@ const SESSION_OPS = {
                    "transcribe", "transcriptionattest",
                    "testify",
                    "lead", "leadlook", "leadshare",
+                   /* D-162: THE THEME — declaring, placing and proposing, each a session
+                      op for `lead`'s reason (a person's act in their own name); the
+                      store refuses a machine declarer or placer by name. */
+                   "themedeclare", "themeplace", "themepropose",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -2194,7 +2214,14 @@ const NEEDS = {
   lead:                "contribute",
   leadlook:            "contribute",
   leadshare:           "contribute",
+  /* D-162: declaring a theme, placing in one and proposing a placement all write the working
+     record's lens layer, `lead`'s capability. */
+  themedeclare:        "contribute",
+  themeplace:          "contribute",
+  themepropose:        "contribute",
   leadread:            null,
+  /* D-162: the theme read takes no capability, `leadread`'s posture; its placements are gated by the viewer. */
+  themeread:           null,
   monitor:          "contribute",
   cite:             "contribute",
   sever:            "contribute",
@@ -10258,6 +10285,11 @@ export default {
            gated like every other reference to a document. Fails closed on an
            absent stamp. */
         || op === "leadlook" || op === "leadread" || op === "leadshare"
+        /* D-162: a THEME's placement acts and its read NAME A DOCUMENT (or a passage
+           of one), so a document the caller was never invited to must answer exactly
+           as one that does not exist — `contentmint`'s reason. Fails closed on an
+           absent stamp. */
+        || op === "themeplace" || op === "themepropose" || op === "themeread"
         /* REC-138 / D-426: the ROSTER acts name a project, so one the caller cannot see must
            answer exactly as one that does not exist — asked of SIGHT before any positional test
            (`Store#inSight`). `by` (below) stays the positional half; this is the visibility half.
@@ -10460,6 +10492,26 @@ export default {
       inner.searchParams.set("looker", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "leadshare")
       inner.searchParams.set("sharer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* D-162 / IC-241 — WHO DECLARED THE THEME, WHO PLACED IN IT, WHO PROPOSED, stamped on
+       `lead`'s rule one stamp up (§8.4 fence 1: declared under the member's own name, never a
+       caller's field). A machine credential stamps `class:<cls>`, which the store refuses BY NAME
+       for a declaration (C-81.2) and a placement (C-81.7) and RECORDS for a proposal — the hunch
+       is attributed to the credential that proposed it. */
+    if (op === "themedeclare")
+      inner.searchParams.set("declarer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "themeplace")
+      inner.searchParams.set("placer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* D-162: WHO PROPOSED A PLACEMENT. Any credential may propose (the result is a hunch, graded C,
+       never membership), so the only obligation here is NAMING: a session stamps its signed-in id, a
+       machine stamps `class:<cls>`, and the `ai` class stamps its tokenId beside its class —
+       `extractpropose`'s form — so a hunch stays attributable to the exact key that proposed it.
+       Never the principal a key was minted for, which would put an assistant's hunch under a
+       person's id. */
+    if (op === "themepropose")
+      inner.searchParams.set("proposer",
+        viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* SK-7 / framework Part II §14.4 (Bob's 5.7) — WHO MARKED THIS PASSAGE AS
        CITABLE, stamped by the server on the same rule as every authorship field
        in this block. The body's own `mintedBy` is not read at the store at all

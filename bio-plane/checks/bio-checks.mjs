@@ -3416,6 +3416,8 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
     /* MK-4 / C-54.1: a LEAD is refused BY NAME before the generic target grammar
        can answer "not a canonical bundle id" about it — see `leadLegFindings`. */
     if (leadLegFindings(`basis[${i}]`, leg, findings)) continue;
+    /* D-162 / C-81.1: a THEME, or membership in one, is refused BY NAME at the same door (§8.4 fence 4). */
+    if (themeLegFindings(`basis[${i}]`, leg, findings)) continue;
     const t = leg.target;
     /* Hoisted out of the else below by REC-31: the capture-axis arm at the end
        of this loop asks the SAME question (what does this leg rest on), and a
@@ -4430,6 +4432,8 @@ export function actionBasisFindings(fm, findings) {
     }
     /* MK-4 / C-54.1: an action resting on a LEAD rests on nothing found. */
     if (leadLegFindings(`action_basis[${i}]`, l, findings)) return;
+    /* D-162 / C-81.1: an action resting on a THEME rests on a member's lens, not on anything found. */
+    if (themeLegFindings(`action_basis[${i}]`, l, findings)) return;
     const target = typeof l.target === 'string' ? l.target : '';
     if (!BUNDLE_ID_RE.test(target)) {
       findings.push(f('C-2.10', 'error',
@@ -8127,6 +8131,8 @@ export function basisVersionFindings(fm, findings) {
     for (const [li, leg] of legs) {
       /* MK-4 / C-54.1: the same named refusal at the version's grain. */
       if (leadLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
+      /* D-162 / C-81.1: the theme refusal at the version's grain. */
+      if (themeLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
       const t = leg.target;
       if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
         push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical bundle id`);
@@ -13199,6 +13205,150 @@ export function leadLegFindings(label, leg, findings) {
     }
   }
   /* END DEC-49 REGION is-lead-not-evidence */
+  return false;
+}
+
+/* =====================================================================
+ * D-162 / IC-241 — THE THEME (`BIO_Content_Framework_v0_10.md` §8.4, Bob's
+ * ruling of 2026-09-21 and its four fences): a connection through an IDEA.
+ * C-81, minted with `node tools/mintid.mjs C`.
+ *
+ * ITS OWN FAMILY because its subject is its own: the ways a member's declared
+ * LENS could come to claim more than it is. Bob: *"these fuzzy ideas could
+ * become a narrative without basis"*. The four fences, and where each is held:
+ *
+ *   1. declared by a MEMBER, attributed on every reading   is-theme-declare
+ *   2. it carries its TEST, or it is not declared           is-theme-declare
+ *   3. membership is a member's act; a machine's proposal   is-theme-place,
+ *      is a HUNCH (grade C) and never membership            is-theme-propose
+ *   4. NEVER THE BASIS OF A CLAIM: no basis, version or     is-theme-not-evidence
+ *      action-basis leg rests on a theme or on membership
+ *      in one, refused BY NAME as a lead is (C-54.1)
+ *
+ * THE LIAR THIS FAMILY REFUSES is a theme as an ELEVENTH ENTITY KIND — a named,
+ * citable thing — so that two documents "about deferred maintenance" would read
+ * as connected through a subject the record holds rather than through one
+ * member's declared lens. The first fence is STRUCTURAL: a theme lives in
+ * `themes` under a `THEME-` id that no leg grammar accepts, and `ENTITY_KINDS`
+ * does not contain it. The second is C-81.1, which names the theme instead of
+ * answering "not a canonical bundle id" — a member told their theme is a
+ * malformed id would go looking for a way to make it citable.
+ * ===================================================================== */
+export const THEME_ID_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+$/;
+/* A leg can name a theme BARE, or name a MEMBERSHIP in one by the theme's id with
+   an address after it (`THEME-…#INFO-…`, `THEME-…/…`, `THEME-…:…`) — resting on
+   membership is still resting on the theme, so both are the same refusal. */
+const THEME_REF_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+(?:[#/:?].*)?$/;
+/* The leg keys that can only mean "this leg counts BECAUSE of a theme". No leg
+   grammar reads either; a leg carrying one is claiming membership as a reason. */
+const THEME_LEG_KEYS = ["theme", "themes"];
+
+export const THEME_CHECKS = {
+  THEME_NOT_EVIDENCE: {
+    check: 'C-81.1',
+    where: 'checks/bio-checks.mjs themeLegFindings > is-theme-not-evidence',
+    translation: 'That leg rests on a THEME. A theme is one member\'s declared lens — an idea they use to '
+      + 'gather material — and it is never the basis of a claim, so nothing can rest on it or on a '
+      + 'document\'s membership in it. Cite the document or the passage itself: what a finding rests on '
+      + 'is content, whatever theme led you to it.',
+  },
+  THEME_NOT_A_MEMBER: {
+    check: 'C-81.2',
+    where: 'src/store.mjs themeDeclare > is-theme-declare',
+    translation: 'A theme is declared by a person, in their own name, and every reading of it shows whose '
+      + 'lens it is. The credential that asked is an automated one, which has nobody behind it to hold '
+      + 'the idea. Sign in and declare it yourself.',
+  },
+  THEME_NO_TEST: {
+    check: 'C-81.3',
+    where: 'src/store.mjs themeDeclare > is-theme-declare',
+    translation: 'A theme needs its TEST: one sentence a document or a passage either passes or fails, so '
+      + 'any member can check a placement against it. Without one the theme is a label anything could '
+      + 'wear, and it cannot be declared.',
+  },
+  THEME_NO_NAME: {
+    check: 'C-81.4',
+    where: 'src/store.mjs themeDeclare > is-theme-declare',
+    translation: 'A theme needs its idea in a few words — what you are calling it, such as "deferred '
+      + 'maintenance" — as well as its test. Nothing was declared.',
+  },
+  THEME_TOO_LONG: {
+    check: 'C-81.5',
+    where: 'src/store.mjs themeDeclare > is-theme-declare',
+    translation: 'The theme\'s name or its test is longer than the record stores in one passage. It was '
+      + 'refused rather than cut, so nothing you wrote is silently lost. Shorten it and declare it again.',
+  },
+  THEME_NOT_FOUND: {
+    check: 'C-81.6',
+    where: 'src/store.mjs #themeFor > is-theme-source',
+    translation: 'No theme is recorded under that id. Use the id the declaration returned, or list the '
+      + 'themes to find it.',
+  },
+  THEME_PLACEMENT_NOT_A_MEMBER: {
+    check: 'C-81.7',
+    where: 'src/store.mjs themePlace > is-theme-place',
+    translation: 'Placing a document in a theme is a member\'s judgement that it passes the theme\'s test, '
+      + 'recorded in their name. An automated credential may only PROPOSE a placement, which stays a hunch '
+      + 'until a member confirms it. Sign in to place it, or propose it instead.',
+  },
+  THEME_TARGET_NOT_FOUND: {
+    check: 'C-81.8',
+    where: 'src/store.mjs #themeTarget > is-theme-target',
+    translation: 'Nothing you can see in the record answers to that document or passage id, so it cannot be '
+      + 'placed in a theme. Name a document by its id, or a passage by the content id it was minted under.',
+  },
+  THEME_REASON_TOO_LONG: {
+    check: 'C-81.9',
+    where: 'src/store.mjs #themeTarget > is-theme-target',
+    translation: 'The note on this placement is longer than the record stores in one passage. It was '
+      + 'refused rather than cut. Shorten it and try again.',
+  },
+  THEME_NO_PROPOSER: {
+    check: 'C-81.10',
+    where: 'src/store.mjs themePropose > is-theme-propose',
+    translation: 'A proposal must say who proposed it, and this one arrived carrying nobody. The record '
+      + 'stamps the proposer from the credential that asked; nothing was written.',
+  },
+};
+
+/** C-81.1 — ONE LEG, ASKED WHETHER IT RESTS ON A THEME OR ON MEMBERSHIP IN ONE.
+ *  C-54.1's shape exactly, consulted at the same three doors (`checkInquiryBasis`'
+ *  basis[], the version legs, the action basis), so fence 4 has one spelling. It
+ *  asks the two fields a leg names a referent through — the target and the REC-82
+ *  content id — and the leg keys that could only mean "counts because it is in a
+ *  theme". A leg citing a DOCUMENT that happens to be in a theme is NOT refused:
+ *  what a finding rests on stays content (§8.4 fence 4), and the document is
+ *  content. Returns true when it pushed a finding, so the caller skips its own
+ *  target complaint about the same leg rather than answering with the wrong name. */
+export function themeLegFindings(label, leg, findings) {
+  const l = leg && typeof leg === 'object' ? leg : {};
+  /* The family helper, by name: DEC-49's guard judges `refusal("CODE"` at the site. */
+  const refusal = (code, message, repairs) => f(THEME_CHECKS[code].check, 'error', message, repairs, code);
+  const REPAIRS = ['cite the document or the passage itself — the theme is how you found it, not what it shows',
+                   'or leave the theme out of the leg: membership in a theme is never a reason a leg counts'];
+  /* DEC-49 REGION is-theme-not-evidence */
+  for (const field of ['target', 'content_id']) {
+    const v = typeof l[field] === 'string' ? l[field].trim() : '';
+    if (v && THEME_REF_RE.test(v)) {
+      findings.push(refusal("THEME_NOT_EVIDENCE",
+        `${label}.${field} '${v.slice(0, 80)}' names a THEME${THEME_ID_RE.test(v) ? '' : ' membership'}, and a theme `
+        + `is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's `
+        + `declared lens, not evidence, so no leg can rest on it or on membership in it`, REPAIRS));
+      return true;
+    }
+  }
+  for (const key of THEME_LEG_KEYS) {
+    const v = l[key];
+    const named = typeof v === 'string' ? v.trim() !== '' : Array.isArray(v) ? v.length > 0 : v != null && v !== false;
+    if (named) {
+      findings.push(refusal("THEME_NOT_EVIDENCE",
+        `${label}.${key} claims the leg through a THEME, and membership in a theme is never a reason a leg `
+        + `counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing`,
+        REPAIRS));
+      return true;
+    }
+  }
+  /* END DEC-49 REGION is-theme-not-evidence */
   return false;
 }
 
