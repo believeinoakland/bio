@@ -4266,6 +4266,7 @@ __export(bio_checks_exports, {
   ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
   SEARCHED_SUBJECT_SOURCES: () => SEARCHED_SUBJECT_SOURCES,
   SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS,
+  STATEMENT_ACK_CHECKS: () => STATEMENT_ACK_CHECKS,
   STATES: () => STATES,
   STRENGTH_STATES: () => STRENGTH_STATES,
   SUBJECT_POSITIONS: () => SUBJECT_POSITIONS,
@@ -13092,6 +13093,13 @@ function leadLegFindings(label, leg, findings) {
 var THEME_ID_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+$/;
 var THEME_REF_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+(?:[#/:?].*)?$/;
 var THEME_LEG_KEYS = ["theme", "themes"];
+var STATEMENT_ACK_CHECKS = {
+  STATEMENT_ACK_DOCUMENTS_OVER_BOUND: {
+    check: "C-82.1",
+    where: "src/store.mjs acknowledgeStatement > is-statement-ack-documents-bound",
+    translation: "More unsigned case documents of this project carry this exact exclusion statement than one acknowledgement can update at once. Updating only some would leave the others listing fewer second readers than the record holds, so nothing was recorded. Sign or replace some of those documents, then acknowledge the statement again."
+  }
+};
 var THEME_CHECKS = {
   THEME_NOT_EVIDENCE: {
     check: "C-81.1",
@@ -20267,6 +20275,12 @@ var RUNG_ABSENT = {
   reviewgrant: { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
   reviewrevoke: { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
   reviewcomment: { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
+  /* D-150 (BIO_Publication §3 rule 11), classified at integration by c19-unionfix (2026-09-24): D-150 landed this
+     mutating op and gated only its own suites, so the ladder's FORWARD arm first met it on the union. Ground
+     `undetermined` on `reviewcomment`'s measurement beside it: its refusals are positional (not a participant, the
+     author's own, a signed edition, IC-246's bound), never a missing justification, and no act takes an
+     acknowledgement back — an edited statement is a different sentence with none. It gates nothing (rule 11). */
+  statementack: { ground: "undetermined", is: "a joined participant other than the statement's author, or a review-copy recipient through their grant, acknowledges a case's exclusion statement as its second reader; attributed and dated, it re-authors the unsigned case documents of that exact statement to list it, and is never required to publish" },
   leadlook: { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" },
   /* D-162 / IC-241 — THE THEME. Ground `undetermined` on `lead`'s measurement: none of the three
      acts' refusals is a missing justification (a theme with no test, C-81.3, is a missing CRITERION,
@@ -21072,6 +21086,11 @@ var MACHINE_REFUSALS = {
   inquiryground: "MACHINE_CANNOT_GROUND",
   actionmove: "MACHINE_CANNOT_MOVE_ACTION",
   actioncorrespond: "MACHINE_CANNOT_CORRESPOND",
+  /* D-149's act, added at integration by c19-unionfix (2026-09-24): the store refuses a machine BY NAME at it
+     (C-32.18, `is-machine-set-laws`), and D-149 landed it in ACTS without this entry — so a machine credential
+     was OFFERED "State governing laws" and refused at the act, the DEC-8 disagreement this map exists to
+     prevent. Found when `d311-roster-affordances.test.mjs` gained the drive its fixture guard demanded. */
+  actionlaws: "MACHINE_CANNOT_SET_LAWS",
   versionaccept: "MACHINE_CANNOT_MOVE_VERSION",
   versionreject: "MACHINE_CANNOT_MOVE_VERSION",
   versionconsider: "MACHINE_CANNOT_MOVE_VERSION",
@@ -37898,6 +37917,34 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         detail: `you wrote this statement, and its acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11). Ask a participant of this project, or hand the draft to a reader through a review grant. The case publishes without one and says so.`
       };
     const statementSha = _Store.#statementSha(text);
+    const ackMax = _Store.STATEMENT_ACK_DOCUMENTS_MAX;
+    const needle = `
+  statement_sha: ${statementSha}
+`;
+    const projectLine = `
+case_project: ${project}
+`;
+    const found = this.#rows(
+      `SELECT case_id, edition, doc_sha, text FROM case_documents
+                              WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
+                                AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
+      ident.edition,
+      ident.caseId ?? null,
+      ident.caseId ?? null,
+      needle,
+      projectLine,
+      ackMax + 1
+    );
+    const refusal7 = (code, detail, extra) => {
+      const row = STATEMENT_ACK_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra || {} };
+    };
+    if (found.length > ackMax)
+      return refusal7(
+        "STATEMENT_ACK_DOCUMENTS_OVER_BOUND",
+        `more than ${ackMax} unsigned case documents of this project carry this exact statement at this case identity. Each would have to be re-authored to list the acknowledgement, and re-authoring only some would leave the rest listing fewer second readers than the record holds. Nothing was written: sign or supersede some of them, then acknowledge.`,
+        { limit: ackMax, statement_sha: statementSha, edition: ident.edition, case_id: ident.caseId ?? null }
+      );
     const same = this.#one(
       `SELECT ack_id, at FROM statement_acknowledgements
                             WHERE project_id=? AND statement_sha=? AND case_id IS ? AND edition=?
@@ -37924,18 +37971,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         recipient,
         when
       );
-    const needle = `
-  statement_sha: ${statementSha}
-`;
-    const docs = this.#rows(
-      `SELECT case_id, edition, doc_sha, text FROM case_documents
-                             WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
-                               AND instr(text, ?) > 0 ORDER BY case_id LIMIT 8`,
-      ident.edition,
-      ident.caseId ?? null,
-      ident.caseId ?? null,
-      needle
-    ).filter((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === project);
+    const docs = found.filter((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === project);
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
     return {
       ok: true,
@@ -37955,9 +37991,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       /* Each unsigned case document of this statement, re-authored to list it: its NEW hash is
          the one the owner signs (op=caseratify refuses the old one as stale). */
       case_documents: reauthored,
+      case_documents_limit: ackMax,
+      case_documents_truncated: false,
       listed: `the completeness block of ${_Store.#caseIdentitySentence(ident.caseId ?? null, ident.edition)} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or \u2014 if that document is already authored and unsigned \u2014 now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.`
     };
   }
+  /* IC-246: the bound on the unsigned documents one acknowledgement re-authors, declared BELOW its method (REC-116).
+     The figure D-150's literal carried; over it the act is REFUSED (C-82.1), never cut. */
+  static STATEMENT_ACK_DOCUMENTS_MAX = 8;
   /* THE TWO RENDERINGS OF THE LIST, ONE SPELLING EACH — written by `#caseDocumentText` when
      `op=publish` authors a document, and spliced by `#reauthorAcknowledgements` when an
      acknowledgement lands on one authored and unsigned, so the two can never print it two ways.
@@ -47184,13 +47225,19 @@ ${words}`;
    * invited to, and a placement the reader cannot see is omitted without a
    * count. An unrecognised or absent viewer reads nothing (fail closed).
    *
-   * WHO IS SHOWN. §8.4 fence 1 says the theme is declared "under that member's
-   * COVER, which every reading of the theme shows". Membership v2 §3 rules that
-   * members and the public see HANDLES and only administrators see cover and
-   * handle together. Every reading here shows the declarer's member id and
-   * handle — the record's attribution — and never the cover, since a cover
-   * beside a handle is the pairing §3 withholds. Stated as a DESIGN GAP in
-   * IC-241 rather than resolved silently in either direction. */
+   * WHO IS SHOWN (BOB #32, 2026-09-24: Membership v2 §3 governs). Members and
+   * the public see HANDLES; only administrators see cover and handle together.
+   * So every reading that names a declarer, a placer or a proposer shows a
+   * reader who does not administer the person's HANDLE ALONE — no member id
+   * (MK-6's precedent: the member id is not published in member-facing reads)
+   * and no cover. The member id and the cover go to ADMINISTRATORS only,
+   * through the `administer` projection `memberList` already follows: the
+   * control plane stamps it from the credential (index.mjs) and anything but
+   * the affirmative stamp yields handles, so a lost stamp loses the pairing
+   * rather than leaking it. A MACHINE stamp (`class:<cls>`) is no person and no
+   * pairing, and every reader is shown it — a hunch stays attributable to the
+   * credential that proposed it. This corrects D-162's first cut, which showed
+   * every reader the member id (IC-241's DESIGN GAP, ruled). */
   static #themeRefusal(code, detail, extra) {
     const row = THEME_CHECKS[code];
     return {
@@ -47203,12 +47250,23 @@ ${words}`;
       ...extra || {}
     };
   }
-  /** The declarer as every reading shows them: the member id the act was stamped
-   *  with and the handle that member chose. Never the cover (see above). */
-  #themePerson(memberId) {
-    if (!memberId) return { id: null, handle: null };
-    const m = this.#one(`SELECT handle FROM members WHERE member_id = ?`, memberId);
-    return { id: memberId, handle: m && m.handle ? m.handle : null };
+  /** A person on a theme reading, projected for THIS reader (see WHO IS SHOWN): the fields
+   *  `<prefix>_handle` for everyone; `<prefix>` (the member id) and `<prefix>_cover` for an
+   *  administrator alone. The cover is NOT SELECTED for anyone else, `memberList`'s way. */
+  #themePerson(prefix, stamp, administer) {
+    const pairs = administer === true || administer === "1";
+    if (stamp && isMachineIdentity(stamp))
+      return { [prefix]: stamp, [`${prefix}_handle`]: null, ...pairs ? { [`${prefix}_cover`]: null } : {} };
+    const m = stamp ? this.#one(`SELECT ${pairs ? "cover, " : ""}handle FROM members WHERE member_id = ?`, stamp) : null;
+    const handle = m && m.handle ? m.handle : null;
+    if (!pairs) return { [`${prefix}_handle`]: handle };
+    return { [prefix]: stamp || null, [`${prefix}_handle`]: handle, [`${prefix}_cover`]: m && m.cover ? m.cover : null };
+  }
+  /** The same person in a sentence (`says`), under the same projection: a handle, a machine's
+   *  stamp, or — for a reader who does not administer — never the member id. */
+  #themeName(stamp, administer) {
+    const p = this.#themePerson("by", stamp, administer);
+    return p.by_handle || p.by || "a member whose handle is not recorded";
   }
   /** WHICH THEME. One answer for a theme that does not exist and for a viewer the
    *  gate does not recognise, so the act and the read cannot disagree. */
@@ -47268,7 +47326,7 @@ ${words}`;
   }
   /** op=themedeclare — THE ACT. `declarer` is the control plane's stamp and never
    *  the caller's. */
-  themeDeclare({ name = null, test = null, declarer = null } = {}) {
+  themeDeclare({ name = null, test = null, declarer = null, administer = null } = {}) {
     const refusal7 = (code, detail, extra) => _Store.#themeRefusal(code, detail, extra);
     const who = typeof declarer === "string" ? declarer.trim() : "";
     const idea = typeof name === "string" ? name : "";
@@ -47305,22 +47363,20 @@ ${words}`;
       criterion,
       at
     );
-    const by = this.#themePerson(who);
     return {
       ok: true,
       theme_id: themeId,
       name: idea,
       test: criterion,
       at,
-      declared_by: by.id,
-      declared_by_handle: by.handle,
+      ...this.#themePerson("declared_by", who, administer),
       evidence: false,
-      says: `${by.handle || by.id}'s theme is declared, with its test. It is a lens for finding and gathering material, visibly theirs, and never the basis of a claim: no leg can rest on it or on membership in it`
+      says: `${this.#themeName(who, administer)}'s theme is declared, with its test. It is a lens for finding and gathering material, visibly theirs, and never the basis of a claim: no leg can rest on it or on membership in it`
     };
   }
   /** op=themeplace — A MEMBER PLACES A DOCUMENT OR A PASSAGE, or CONFIRMS a hunch
    *  standing at the same target. `placer` is the control plane's stamp. */
-  themePlace({ theme = null, target = null, note = null, placer = null, viewer = null } = {}) {
+  themePlace({ theme = null, target = null, note = null, placer = null, viewer = null, administer = null } = {}) {
     const refusal7 = (code, detail, extra) => _Store.#themeRefusal(code, detail, extra);
     const who = typeof placer === "string" ? placer.trim() : "";
     if (!who || isMachineIdentity(who))
@@ -47370,18 +47426,18 @@ ${words}`;
     return {
       ok: true,
       theme_id: T.theme_id,
-      ...this.#placementView(row),
+      ...this.#placementView(row, administer),
       confirmed_hunch: !!before && before.state === "hunch",
       already: !!before && before.state === "member",
       evidence: false,
-      says: before && before.state === "member" ? `${tgt.target} was already a member of this theme; nothing changed` : `${tgt.target} is a member of the theme "${T.name.slice(0, 80)}" on ${who}'s judgement that it passes the test${before ? ", confirming a proposal" : ""}. Membership connects it to the theme's other members through this lens only, and is never a basis leg`
+      says: before && before.state === "member" ? `${tgt.target} was already a member of this theme; nothing changed` : `${tgt.target} is a member of the theme "${T.name.slice(0, 80)}" on ${this.#themeName(who, administer)}'s judgement that it passes the test${before ? ", confirming a proposal" : ""}. Membership connects it to the theme's other members through this lens only, and is never a basis leg`
     };
   }
   /** op=themepropose — A PROPOSED PLACEMENT, stored as a HUNCH. Any credential
    *  may propose — the machine's half of §8.4 fence 3 — and the proposer is the
    *  control plane's stamp (`class:<cls>` for a machine). A proposal at a target
    *  already standing is not written again, and never demotes a member. */
-  themePropose({ theme = null, target = null, note = null, proposer = null, viewer = null } = {}) {
+  themePropose({ theme = null, target = null, note = null, proposer = null, viewer = null, administer = null } = {}) {
     const refusal7 = (code, detail, extra) => _Store.#themeRefusal(code, detail, extra);
     const who = typeof proposer === "string" ? proposer.trim() : "";
     if (!who)
@@ -47421,15 +47477,16 @@ ${words}`;
     return {
       ok: true,
       theme_id: T.theme_id,
-      ...this.#placementView(row),
+      ...this.#placementView(row, administer),
       already: !!before,
       evidence: false,
-      says: row.state === "member" ? `${tgt.target} is already a member of this theme, placed by ${row.placed_by}; the proposal changed nothing` : `${tgt.target} is PROPOSED for the theme "${T.name.slice(0, 80)}". It is a hunch \u2014 not membership \u2014 until a member checks it against the test and places it`
+      says: row.state === "member" ? `${tgt.target} is already a member of this theme, placed by ${this.#themeName(row.placed_by, administer)}; the proposal changed nothing` : `${tgt.target} is PROPOSED for the theme "${T.name.slice(0, 80)}". It is a hunch \u2014 not membership \u2014 until a member checks it against the test and places it`
     };
   }
-  /** One placement as every reading shows it. `membership` is the only field a
-   *  reader should ask whether it counts, and it is true for `member` alone. */
-  #placementView(r) {
+  /** One placement as this reader is shown it. `membership` is the only field a
+   *  reader should ask whether it counts, and it is true for `member` alone. The
+   *  placer and the proposer go through `#themePerson`'s projection. */
+  #placementView(r, administer) {
     return {
       target: r.target,
       target_kind: r.target_kind,
@@ -47438,10 +47495,10 @@ ${words}`;
       membership: r.state === "member",
       hunch: r.state === "hunch",
       grade: r.grade,
-      placed_by: r.placed_by,
+      ...this.#themePerson("placed_by", r.placed_by, administer),
       placed_at: r.placed_at,
       note: r.placement_note,
-      proposed_by: r.proposed_by,
+      ...this.#themePerson("proposed_by", r.proposed_by, administer),
       proposed_at: r.proposed_at,
       proposal_note: r.proposal_note
     };
@@ -47449,15 +47506,12 @@ ${words}`;
   /** op=themeread — ONE THEME (`id`), with its members and its hunches APART, or
    *  THE THEMES (`q` narrows by a phrase in the name or the test). Bounded, and
    *  the cut is published. */
-  themeRead({ id = null, q = null, limit = null, viewer = null } = {}) {
+  themeRead({ id = null, q = null, limit = null, viewer = null, administer = null } = {}) {
     const cap = Math.max(1, Math.min(
       Math.floor(Number(limit) || _Store.THEME_READ_LIMIT_DEFAULT),
       _Store.THEME_READ_LIMIT_MAX
     ));
-    const person = (m) => {
-      const p = this.#themePerson(m);
-      return { declared_by: p.id, declared_by_handle: p.handle };
-    };
+    const person = (m) => this.#themePerson("declared_by", m, administer);
     if (id == null || String(id).trim() === "") {
       const g2 = viewerPredicate(viewer);
       const phrase = typeof q === "string" ? q.trim() : "";
@@ -47510,9 +47564,9 @@ ${words}`;
       ...person(T.declared_by),
       evidence: false,
       limit: cap,
-      members: members.slice(0, cap).map((r) => this.#placementView(r)),
+      members: members.slice(0, cap).map((r) => this.#placementView(r, administer)),
       members_truncated: members.length > cap,
-      hunches: hunches.slice(0, cap).map((r) => this.#placementView(r)),
+      hunches: hunches.slice(0, cap).map((r) => this.#placementView(r, administer)),
       hunches_truncated: hunches.length > cap,
       says: `a member's declared lens, and never the basis of a claim. ${n(members)} member(s) you can see, placed by a member against the test; ${n(hunches)} hunch(es) PROPOSED and not yet confirmed, which are not membership`
     };
@@ -57605,6 +57659,9 @@ ${words}`;
   /** op=groupidentity for a credentialed reader: the public projection, and the claim, its state and both histories. */
   groupIdentity() {
     const pub = this.groupIdentityPublic();
+    const max = _Store.GROUP_DOMAIN_CHECKS_MAX;
+    const checks = this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
+                                 FROM group_domain_checks ORDER BY seq DESC LIMIT ?`, max + 1);
     const dom = this.#groupIdentityCurrent("domain");
     return {
       ...pub,
@@ -57618,10 +57675,14 @@ ${words}`;
         latest: this.#groupDomainLatestCheck(dom.value)
       } : null,
       domain_history: this.#groupIdentityHistory("domain"),
-      domain_checks: this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
-                                        FROM group_domain_checks ORDER BY seq DESC LIMIT 20`).map((r) => ({ ...r }))
+      domain_checks: checks.slice(0, max).map((r) => ({ ...r })),
+      domain_checks_limit: max,
+      domain_checks_truncated: checks.length > max
     };
   }
+  /* IC-246: declared BELOW its method, on REC-116's finding (`bounds.test.mjs`'s segmenter credits a constant to the
+     method above it). The figure the old literal carried. */
+  static GROUP_DOMAIN_CHECKS_MAX = 20;
   /* REC-175: THE ONE COMPUTATION of what a promoted file's digest IS, read by `promote` before any write and by
      `digestCensus` over what is already held, so the check at the door and the census of the past cannot disagree
      about what a disagreement is. An inline file is hashed over `new TextEncoder().encode(text)` — the UTF-8 bytes
@@ -72831,27 +72892,31 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         themedeclare: () => this.themeDeclare({
           name: body ? body.name : null,
           test: body ? body.test : null,
-          declarer: url.searchParams.get("declarer")
+          declarer: url.searchParams.get("declarer"),
+          administer: url.searchParams.get("administer")
         }),
         themeplace: () => this.themePlace({
           theme: body && body.theme || url.searchParams.get("theme"),
           target: body && body.target || url.searchParams.get("target"),
           note: body ? body.note : null,
           placer: url.searchParams.get("placer"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          administer: url.searchParams.get("administer")
         }),
         themepropose: () => this.themePropose({
           theme: body && body.theme || url.searchParams.get("theme"),
           target: body && body.target || url.searchParams.get("target"),
           note: body ? body.note : null,
           proposer: url.searchParams.get("proposer"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          administer: url.searchParams.get("administer")
         }),
         themeread: () => this.themeRead({
           id: url.searchParams.get("id"),
           q: url.searchParams.get("q"),
           limit: url.searchParams.get("limit"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          administer: url.searchParams.get("administer")
         }),
         leadread: () => this.leadRead({
           id: url.searchParams.get("id"),
@@ -80482,6 +80547,11 @@ var index_default = {
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     if (op === "stats") inner.searchParams.set("capacity", cls === "admin" ? "1" : "0");
     if (op === "memberlist")
+      inner.searchParams.set(
+        "administer",
+        (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0"
+      );
+    if (op === "themedeclare" || op === "themeplace" || op === "themepropose" || op === "themeread")
       inner.searchParams.set(
         "administer",
         (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0"

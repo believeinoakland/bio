@@ -4,7 +4,7 @@
    (c) THE OVER-STRICTNESS ARM — a verification whose route CAN be shown must carry NO marker and must NOT be refused. Make `provenanceRouteAssess` mark unconditionally (finding always LOOKED_INDETERMINATE). DECLARED MUST-FAIL: the good-chain arms. DECLARED MUST-NOT-FAIL: everything in section A, which is why this arm is run alone — an item that only ever fails in one direction has not shown its subject is the thing being measured.
    (d) THE PUBLICATION ARM (REC-74's defect, one field over) — keep the marker in the table and stop publishing it: drop `route` from `listBundles`'s rows. DECLARED MUST-FAIL: every op=list arm. The point of the arm is that the store still HOLDS the marker and the record has still gone silent for anybody who was not there.
    (e) THE CLASS SWEEP'S OWN REACH, AS A DELTA — neuter `silentCatches()` so it returns an empty roster. DECLARED MUST-FAIL: the sweep's delta arms, because a walk that finds nothing reports a beautiful roster of zero over an empty corpus. The sweep is ALSO run against a source carrying a PLANTED extra silent catch and required to find it, so its reach is proved against a real defect at a real site rather than against an absolute.
-   CEILING ARM (c18-batch7fix, 2026-09-23, land/conduct/c18-batch7fix, union of c17-batch7): `const CEILING = 35;` -> `34`, anchor asserted once, restored by cp and verified by sha256 AND cmp. DECLARED: §I's ratchet arm fails and nothing else. RESULT 112/1, AS DECLARED: "swallowed reads in store.mjs are at or below the ratchet (35 of 34)".
+   CEILING ARM (c18-batch7fix, 2026-09-23, land/conduct/c18-batch7fix, union of c17-batch7): `const CEILING = 35;` -> `34`, anchor asserted once, restored by cp and verified by sha256 AND cmp. DECLARED: §I's ratchet arm fails and nothing else. RESULT 112/1, AS DECLARED: "swallowed reads in store.mjs are at or below the ratchet (35 of 34)". RE-RUN 2026-09-24 by c19-unionfix on the union c19-batch9 after the move to 38: `const CEILING = 38;` -> `37`, anchor asserted once, restored by cp and verified by sha256 AND cmp. RESULT 112/1, AS DECLARED: "swallowed reads in store.mjs are at or below the ratchet (38 of 37)"; restored, 113/0.
 */
 
 /* REC-63 / DEC-56 / D-204 — THE STANDING MARKER AT `verified`.
@@ -584,7 +584,20 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
        claims nothing about a re-check (no field says one is armed), and the next arm by any consumer reconciles the
        domain wake, since `#reconcileAlarm` weighs the whole registry. So it overclaims nothing — but a failed arm is
        silent until that next arm, which is the residue this entry states rather than hides. */
-  const CEILING = 35;
+  /* MOVED 35 -> 38 AT INTEGRATION by c19-unionfix (2026-09-24), FROM THE FIGURE THIS WALK PRINTED on the union
+     c19-batch9 (b23f5c946). Measured per tree with this walk's own regex: main 15b2a4c0 prints 29; c18-batch7fix
+     (8a342e8ce) 35; c18-batch7fix + c18-batch8 (ff7ed62eb) 36; the union 38. The new sites were found by diffing the
+     catch sites of those trees by enclosing method, and each was LOOKED AT:
+     - D-126 (c18-batch8), `#perItem`: an act that THROWS on one item of a set becomes that item's coded refusal
+       SET_ITEM_FAILED ("threw on item i rather than refusing it … Nothing about the item is claimed"), the item is
+       `retained`, and the answer's `retained` count says so. The class's remedy: a refusal, never a normal answer.
+     - D-260, `#aiRunResumer`: the cross-namespace read of the instance's `ai` credential record, when it throws,
+       becomes `look = null` and the resumer answers `withheld: "CREDENTIAL_RECORD_SILENT"` — nothing is resumed,
+       and the reason is stated.
+     - D-260, `#aiRunDispatch`: a dispatch to agent-worker that throws or passes its wait is outcome `SILENT` with
+       the plane's own reason (never the exception's, which can carry the credential), APPENDED to the run as a
+       stated entry — "did not complete … still resumable". Stated, not smoothed. */
+  const CEILING = 38;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 

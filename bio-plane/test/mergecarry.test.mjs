@@ -433,7 +433,9 @@ section("the historical register, graded in BOTH directions over the REAL corpus
   /* EXACT, because the range is fixed: git objects are content-addressed, so the merges reachable from one
      commit are the same set in every clone. Measured 2026-09-23 at e62e08e1: 752. A different figure means
      the pin moved (move this with it) or this clone cannot see the pin's history (a shallow clone). */
-  t("...and it is EXACTLY the pinned corpus, 752 merges, in every clone and on every day", h.merges, 752);
+  /* MOVED 2026-09-24 by c19-unionfix, 752 -> 889, with REGISTER_PIN (e62e08e1 -> b23f5c94, CONDUCT #19's ruling; its
+     why is at the pin). The figure is this walk's own count from the new pin, and the move surfaced no `fresh` drop. */
+  t("...and it is EXACTLY the pinned corpus, 889 merges, in every clone and on every day", h.merges, 889);
   t("no UNREGISTERED drop sits in main's history", h.fresh, []);
   t("no registered drop has quietly stopped being one", h.stale, []);
   /* CORRECTED 2026-09-14 (CONDUCT #9), 3 -> 4, never exempted: the pin exists so this list
@@ -452,8 +454,11 @@ section("the historical register, graded in BOTH directions over the REAL corpus
      (both added lines present, both removed lines absent; measured at the bytes). This file's own
      stale-register arm went red on it, which is the arm doing its job; the row came out. The pin
      stays EXACT. */
-  t("...and the register is the FOUR true drops the sweeps found, not a longer list",
-    KNOWN_HISTORICAL_DROPS.length, 4);
+  /* CORRECTED 2026-09-24 (c19-unionfix, on CONDUCT #19's ruling), 4 -> 11, never exempted: plancheck's carry audit
+     named seven undeclared drops in two pushed integration merges (ff7ed62, six paths; 8477cdb, IC-231.md). Each was
+     diffed branch tip against merge and found SUPERSEDED, and each is registered with its why; the pin moved over them. */
+  t("...and the register is the ELEVEN true drops the sweeps found, not a longer list",
+    KNOWN_HISTORICAL_DROPS.length, 11);
   /* THE FALSE-POSITIVE CLAIM, AS A NUMBER RATHER THAN A PROMISE. Three findings over the
      whole of main's history is what earns this check its place in the gate; a check that
      cried wolf on a tenth of merges would be switched off within a week. */

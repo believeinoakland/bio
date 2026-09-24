@@ -163,6 +163,27 @@ const ARMS = {
     patch: () => arm([[CHECKS, "    if (named) {\n      findings.push(refusal(\"THEME_NOT_EVIDENCE\",",
                                "    if (named || key in l) {\n      findings.push(refusal(\"THEME_NOT_EVIDENCE\","]]),
   },
+  /* BOB #32 (2026-09-24), added by c19-unionfix: WHO A READER IS SHOWN. */
+  handleid: {
+    files: [STORE],
+    why: "THE DISCLOSURE ARM: the member id is restored to a reader who does not administer — the first "
+       + "cut's shape, which BOB #32 ruled out (Membership v2 §3; MK-6's precedent)",
+    mustFail: ["A MEMBER'S READ CARRIES NO MEMBER ID AND NO COVER",
+               "op=themeread (as otto, a member) shows WHOSE lens it is"],
+    mustPass: "the administrator's arm, the impostor arm's cover half, every fence arm",
+    patch: () => arm([[STORE, "    if (!pairs) return { [`${prefix}_handle`]: handle };",
+                              "    if (!pairs) return { [prefix]: stamp || null, [`${prefix}_handle`]: handle };"]]),
+  },
+  adminunstamped: {
+    files: [INDEX],
+    why: "FAIL CLOSED: the control plane's `administer` stamp for the theme ops is gone — an administrator "
+       + "must LOSE the pairing (handles only), never a member gain it",
+    mustFail: ["AN ADMINISTRATOR'S READ CARRIES THE MEMBER ID AND THE COVER",
+               "op=themeread (as sam, an administrator) shows ruth by member id"],
+    mustPass: "A MEMBER'S READ CARRIES NO MEMBER ID AND NO COVER",
+    patch: () => arm([[INDEX, "    if (op === \"themedeclare\" || op === \"themeplace\" || op === \"themepropose\" || op === \"themeread\")\n      inner.searchParams.set(\"administer\",",
+                              "    if (false)\n      inner.searchParams.set(\"administer\","]]),
+  },
 };
 const want = process.argv[2] || null;
 const names = want ? [want] : Object.keys(ARMS);

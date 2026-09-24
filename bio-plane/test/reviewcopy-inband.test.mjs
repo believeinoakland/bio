@@ -28,7 +28,13 @@
          so the string branch is defence in depth and not load-bearing — recorded, not smoothed.
      (c) -> 19 pass, 3 fail: the three floor arms of block 2, and block 4's field-for-field floors arm GREEN,
          exactly as declared: both sides swap together, which is why block 2 pins the grade to the
-         project's own declaration. */
+         project's own declaration.
+   RE-RUN 2026-09-24 by c19-unionfix on the union c19-batch9, after the answer moved into `reviewAnswer` (index.mjs
+   778,962 bytes, every restore sha256 MATCH, content IDENTICAL): arm (a)'s needle first matched ZERO times (m025's A4
+   named it) and was re-anchored; ARMED, it gave 19/3 — block 5's one-function arm STAYED GREEN, because it sliced
+   only the handler and the planted hasher now sits in `reviewAnswer`. Block 5 was CORRECTED to read the handler
+   plus that function, and (a) then gave 18/4, the four named above, AS DECLARED. (0) 22/0, (b) 22/0, (c) 19/3
+   unchanged. */
 
 /* REC-148 / DEC-31's BOUND RULE — THE REVIEW COPY CARRIES ITS HASH, DATE, AUTHOR AND BOTH FLOORS IN-BAND.
  *
@@ -357,13 +363,23 @@ console.log("\n--- 5. ONE FUNCTION: no second hasher over a manifest or a review
      "reviewcomment")`; D-150 widened that handler to `|| op === "statementack"`, so the exact string vanished, indexOf
      answered -1 and the slice measured the wrong code. The old anchor was wrong because it pinned the handler's
      membership, not its start; anchor on the handler's opening prefix instead, which every widening keeps. */
-  const rcSite = idx.slice(idx.indexOf('if (op === "reviewcopy" || op === "reviewcomment"'),
-                           idx.indexOf('if (op === "publishedcase" || op === "publishedbytes")'));
-  t("the review copy's handler holds no SHA-256 over the answer of its own — its only digest is the secret's "
-  + "fingerprint",
-    [rcSite.length > 500, (rcSite.match(/crypto\.subtle\.digest|sha256Hex\(/g) || []).length,
-     /JSON\.stringify\(served/.test(rcSite)],
-    [true, 1, false]);
+  /* CORRECTED 2026-09-24 at integration by c19-unionfix: CONDUCT #19 moved the review copy's ANSWER out of this
+     handler into `reviewAnswer` at c19-batch9 (REC-198: one answer shape for every read of a draft), so a slice of
+     the handler alone no longer held the code this arm exists to watch — the row's control arm (a), a second
+     hasher planted beside the quartet, went GREEN here while failing elsewhere (re-run 2026-09-24). The old
+     assertion was right of the old tree and blind on this one; the site is now the handler PLUS the function it
+     returns through, and the arm asserts the function really holds the quartet call, so it cannot pass by
+     slicing the wrong code again. */
+  const rcHandler = idx.slice(idx.indexOf('if (op === "reviewcopy" || op === "reviewcomment"'),
+                              idx.indexOf('if (op === "publishedcase" || op === "publishedbytes")'));
+  const raAt = idx.indexOf("async function reviewAnswer(");
+  const rcAnswer = raAt < 0 ? "" : idx.slice(raAt, idx.indexOf("\n}\n", raAt));
+  const rcSite = rcHandler + rcAnswer;
+  t("the review copy's handler and its answer function hold no SHA-256 over the answer of their own — the only "
+  + "digest is the secret's fingerprint, and the answer function is where the quartet is called",
+    [rcHandler.length > 500, /reviewAnswer\(/.test(rcHandler), /\binbandQuartet\(/.test(rcAnswer),
+     (rcSite.match(/crypto\.subtle\.digest|sha256Hex\(/g) || []).length, /JSON\.stringify\(served/.test(rcSite)],
+    [true, true, true, 1, false]);
   const ib = codeOf(SRC("inband.mjs"), true);
   t("and inside `inband.mjs` there is ONE canonical serialisation and ONE digest",
     [(ib.match(/JSON\.stringify\(/g) || []).length, (ib.match(/crypto\.subtle\.digest\(/g) || []).length], [1, 1]);

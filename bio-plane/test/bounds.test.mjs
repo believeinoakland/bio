@@ -14,7 +14,7 @@
 /* NEGATIVE CONTROL: (run 2026-08-07, rec59-agent, IC-24/REC-59) FOUR arms, each RUN, every file restored BYTE-IDENTICALLY (sha256 compared). (1) REVERT op=projection TO THE BARE ARRAY — in src/store.mjs projection(), insert `return bundles;` above the envelope's `return {` -> 25 assertions fail across FOUR suites: bounds 6 (both PIN arms, the PIN GUARD, and three of op=projection's LIVE arms including the DELTA), gate-reads 4 (the enumeration, and all three of the viewer-gated `total` / viewer-independent `limit` arms), projection 3 (the json_extract read and both filter-total arms), projects 12. (1b) AND THE CONTROL FOUND A DEFECT IN THE INSTRUMENT RATHER THAN CONFIRMING IT: on the first run gate-reads, projection and projects all THREW on `.bundles.length` / `.find(...)` of undefined and DIED, hiding every arm behind the throw — D-93's class inside a control. Every migrated read is null-tolerant now, so the control NAMES what it broke; the failure counts above are the post-fix ones. (2) A SECOND BARE-ARRAY CAPPED OP, run in two stages because the stages fail differently and only the second is the pin: (2a) add a capped method returning a bare array plus its dispatch entry -> the walk FINDS it (`op=ncsecond -> ncSecondBareArray` prints on the roster) and 3 fail, headed by "every capped op the walk found is DRIVEN here"; (2b) additionally drive it into `answersByOp` -> **"PIN: ZERO capped ops answer with a bare array" FAILS with `got ["ncsecond"]`**, naming the offender, which is the proof it is a pin and not an exemption. (3) NEUTER THE WALKS, both of them: (3a) `cappedMethods` -> `return new Map()` -> 9 fail including all three REACH-AS-A-DELTA arms, with the corpus PRINTED as `0 carrying a cap, reaching 0 ops`; (3b) empty the consumer walk's corpus (`allFiles.length = 0`) -> 8 fail, corpus PRINTED as `0 files, 0 chars`, every REC-59 REACH arm among them — while "REC-59 REACH (THE FAILURE MODE NAMED)" deliberately STAYS GREEN, because its whole subject is that IC-24's claim still reads true over nothing. (4) OVER-STRICTNESS — inherited from REC-57 and still passing, plus this item's own PIN GUARD arm proving the array reader can still SEE an array when one is present. */
 /* NEGATIVE CONTROL: (run 2026-08-07, rec60-agent, REC-60/D-225) THIS SUITE'S SHARE of REC-60's controls, run against the three ops that JOINED its roster when they gained a bound, each restored byte-identically. (1) RESTORE EACH UNBOUNDED READ in src/store.mjs — drop `LIMIT ?`/`cap + 1` and the `limit:`/`truncated` keys — and this file fails FOUR arms per op, every one naming it: the bound-applied arm, both direction arms, and the DELTA. Run per op: resolutionsForCapture 4, documentsConcerning 4, connectionsFor 4. (2) COUNT WHAT IT SENT (`const truncated = false;` beside a real slice) -> 2 fail per op here, the cut-answer arm and the DELTA. Note that the WALK stays green under (2) — the scan is still capped, so `OPS.size` is still 14 and only the LIVE arms catch a dishonest answer. (3)/(4) are `test/meaning-bounds.test.mjs`'s, which is where REC-60's own walk and its reach deltas live. */
 /* NEGATIVE CONTROL: (run 2026-08-08, rec67-agent, REC-67) FIVE arms, each armed ALONE with every other held open, every file restored from a PRISTINE pre-arm copy and verified by sha256 AND by `cmp`. Baseline 147/0. (1) PLANT A REAL CORPUS-ARM CALL SITE — a new file `civicos-ui/nc-rec67-arm1.mjs` calling `ask("projection", "jsonPath=…")` through an ordinary local helper -> 146/1, the ONE failure being `civicos-ui reaches op=projection ONLY through the &id= arm`, and the helper roster PRINTS the planted file and its callee. **This is the arm proving the narrowing did not blind the walk.** (2) PLANT UI-46's EXACT REGRESSION — `CLASS.methods.get("projection")` in `civicos-ui/nc-rec67-arm2.mjs` -> 147/0, GREEN, the planted file absent from the roster and the site count unmoved at 40. **A green arm proves nothing on its own, so the same planted file was read by the PRE-FIX matcher in the same turn: it classified it `helper corpus-bare civicos-ui/nc-rec67-arm2.mjs:3` and took the count to 41** — which is the 106/106 -> 105/106 failure reproduced and then shown fixed. (3) NEUTER THE RESOLUTION (`if (false && TRANSPORT.test(b))`) -> 142/5, the helper roster PRINTED as `0 site(s) … NONE`, the total dropping 40 -> 38, and the two REC-67 HELPER REACH arms among the failures with both synthetic guards. (4) OVER-STRICTNESS — a real call through `zzq` -> `hop` -> `fetch`, a spelling no list ever carried, two hops deep -> 146/1, FOUND and named `via zzq()`. The old list-based matcher could not have passed this arm. (5) is `meaning-bounds.test.mjs`'s and (6) `plane-envelope.test.mjs`'s — the two sibling walks in the same class, recorded in their own headers. THE HARNESS'S OWN FAULT, RECORDED RATHER THAN SMOOTHED: its first run reported `exit 1 · null pass, null fail` for EVERY arm INCLUDING THE BASELINE, because it joined the suite path onto the repo root while running with `cwd=bio-plane`. Only the baseline row made it visible; without one, six arms failing for a reason unrelated to their subject read exactly like six arms working. */
-/* NEGATIVE CONTROL: (run 2026-09-23, c18-batch7fix, D-148's arms joined at the c17-batch7 union) ONE arm, RUN. (1) COUNT WHAT IT SENT — in src/store.mjs actionQuotes, `const truncated = rows.length > max;` -> `const truncated = false;`, anchor asserted to occur exactly once, restored by cp from a pristine copy and verified by sha256 AND cmp (419e0f54…, 3,023,229 B). DECLARED: the bite arm and the DELTA fail; the whole arm and every other arm hold. RESULT 173/5 against a 175/3 baseline, AS DECLARED: exactly "op=actionquotes: publishes the bound it APPLIED (`max`), and a cut answer SAYS SO …" and "op=actionquotes: DELTA …" were added; the three standing reds (PIN GUARD and both PIN arms, naming groupidentity/statementack and biasmanifest) were red before arming. */
+/* NEGATIVE CONTROL: (run 2026-09-23, c18-batch7fix, D-148's arms joined at the c17-batch7 union) ONE arm, RUN. (1) COUNT WHAT IT SENT — in src/store.mjs actionQuotes, `const truncated = rows.length > max;` -> `const truncated = false;`, anchor asserted to occur exactly once, restored by cp from a pristine copy and verified by sha256 AND cmp (419e0f54…, 3,023,229 B). DECLARED: the bite arm and the DELTA fail; the whole arm and every other arm hold. RESULT 173/5 against a 175/3 baseline, AS DECLARED: exactly "op=actionquotes: publishes the bound it APPLIED (`max`), and a cut answer SAYS SO …" and "op=actionquotes: DELTA …" were added; the three standing reds (PIN GUARD and both PIN arms, naming groupidentity/statementack and biasmanifest) were red before arming.  ALSO RUN 2026-09-24 by c19-unionfix (IC-246, CONDUCT #19's spec), ONE arm, alone, restored by cp from a per-arm pristine copy verified by sha256 AND cmp (store.mjs 3,160,297 B). (gi) the NAMED bound undone — op=groupidentity's `LIMIT ?` with max + 1 -> the literal `LIMIT 20`. DECLARED: the bite and the DELTA fail. RESULT 191/2 against a 193/0 baseline, AS DECLARED: exactly "op=groupidentity: THE BITE …" and "op=groupidentity: DELTA …". */
 /* REC-57 · EVERY CAPPED OP PUBLISHES THE BOUND IT APPLIED, AND WHETHER IT BIT.
  * ===================================================================== *
  * UI-39 measured this one layer up: a plane that caps and does not say so forces
@@ -1467,7 +1467,14 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      addresses with a version chain, which is `versionchain.test.mjs`'s
                                      sixty-version fixture — so the bite, the clamp, `truncated` and total
                                      paging are driven there in section 15; the envelope arm is below. */
-                                  "changedfromaudit"]);
+                                  "changedfromaudit",
+                                  /* IC-246 (c19-unionfix, 2026-09-24): neither takes a caller's `limit`.
+                                     op=groupidentity's CUT is driven above with a real bite (an enrolled
+                                     administrator's GROUP_DOMAIN_CHECKS_MAX + 1 claims); op=statementack's
+                                     bound REFUSES and its bite lives in
+                                     `test/d150-statement-acknowledgement.test.mjs`; its named-constant arm is
+                                     above and its envelope below. */
+                                  "groupidentity", "statementack"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1623,6 +1630,63 @@ t("op=actionquotes: a complete answer says the opposite — whether this is ever
   [QT_WHOLE.ok, QT_WHOLE.max, QT_WHOLE.count, QT_WHOLE.truncated], [true, QT_MAX, 1, false]);
 t("op=actionquotes: DELTA — 'this is all of them' and 'this is the first QUOTES_MAX' do NOT read alike",
   QT_BITE.truncated !== QT_WHOLE.truncated, true);
+
+/* ----------------------------------------------- IC-246's ARMS (c19-unionfix, 2026-09-24, CONDUCT #19's spec).
+   REC-164's op=groupidentity and D-150's op=statementack joined this roster at the c17-batch7 union carrying bare
+   SQL literals (`LIMIT 20`, `LIMIT 8`), and neither was DRIVEN, so the PIN named both. Each is now a NAMED bound
+   below its method; neither takes a `limit` from the caller, so both are driven HERE rather than in the loop and
+   carried in DRIVEN_ELSEWHERE.
+
+   op=groupidentity is a READ, so its bound is a CUT and the cut is PUBLISHED (`domain_checks_limit`,
+   `domain_checks_truncated`). The bite is REAL: an administrator — enrolled here, since the SET acts are an
+   administrator's own session act (C-64.4 refuses a bearer by name) — claims GROUP_DOMAIN_CHECKS_MAX + 1 domains,
+   one dated check each. This store records no producing group, so every verdict is `undetermined` ("no slug for
+   the file to name") and no fetch leaves the process. WHAT A SILENT CUT WOULD LOSE: the oldest check, read as
+   "this is the whole history of the claim". */
+const GI_MAX = Number((/static GROUP_DOMAIN_CHECKS_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
+const giAdd = await POST("op=memberadd&token=adm-r57", { memberId: "gia", cover: "cover for gia", role: "admin",
+                                                         capabilities: ["contribute"] });
+const giEn = await POST("op=enroll", { invite: giAdd?.invite, handle: "gia", password: "gia-passphrase-r57" });
+const giTok = (await POST("op=login", { role: "member:gia", password: "gia-passphrase-r57" }))?.token;
+if (!giEn?.ok || !giTok) throw new Error(`IC-246 fixture admin: ${JSON.stringify([giAdd, giEn]).slice(0, 600)}`);
+const giOne = await GET(`op=groupidentity&token=${giTok}`);
+const giSet = [];
+for (let i = 0; i < GI_MAX + 1; i++)
+  giSet.push(await POST(`op=groupdomainset&token=${giTok}`, { domain: `bounds-r57-${i}.invalid` }));
+const GI_BITE = await GET(`op=groupidentity&token=${giTok}`);
+t("FIXTURE ARMS THE TRAP: GROUP_DOMAIN_CHECKS_MAX is a number, and the fixture wrote ONE check past it — every claim "
++ "landed, every verdict `undetermined` (this store names no group, so nothing was fetched)",
+  [Number.isInteger(GI_MAX) && GI_MAX > 0, giSet.length, giSet.every((r) => r?.ok === true),
+   giSet.every((r) => r?.check?.verdict === "undetermined")], [true, GI_MAX + 1, true, true]);
+t("op=groupidentity: THE BITE — the newest GROUP_DOMAIN_CHECKS_MAX of GROUP_DOMAIN_CHECKS_MAX + 1 checks, newest "
++ "first, the bound published and the cut SAID",
+  [GI_BITE?.ok, GI_BITE?.domain_checks?.length, GI_BITE?.domain_checks_limit, GI_BITE?.domain_checks_truncated,
+   GI_BITE?.domain_checks?.[0]?.domain, GI_BITE?.domain_checks?.[GI_MAX - 1]?.domain],
+  [true, GI_MAX, GI_MAX, true, `bounds-r57-${GI_MAX}.invalid`, "bounds-r57-1.invalid"]);
+t("op=groupidentity: WHOLE — before any claim the log is empty and says it is complete",
+  [giOne?.ok, giOne?.domain_checks?.length, giOne?.domain_checks_limit, giOne?.domain_checks_truncated],
+  [true, 0, GI_MAX, false]);
+t("op=groupidentity: DELTA — 'the whole log' and 'the newest GROUP_DOMAIN_CHECKS_MAX' do NOT read alike",
+  giOne?.domain_checks_truncated !== GI_BITE?.domain_checks_truncated, true);
+const giPublic = (await GET("op=groupidentity")) || {};
+t("op=groupidentity: the PUBLIC projection is unchanged — no check log and no bound reach a stranger",
+  ["domain_checks", "domain_checks_limit", "domain_checks_truncated"].map((k) => k in giPublic),
+  [false, false, false]);
+
+/* op=statementack is an ACT, and its bound REFUSES (C-82.1, STATEMENT_ACK_DOCUMENTS_OVER_BOUND): a cut would leave a
+   document listing fewer second readers than the record holds, and its owner would sign that absence. The bite —
+   STATEMENT_ACK_DOCUMENTS_MAX + 1 unsigned documents of one statement in one project, refused with nothing
+   written, and a same-sentence document in another project untouched — needs a project, joined participants and
+   authored case documents, which live in `test/d150-statement-acknowledgement.test.mjs`, where it is driven. Here:
+   the bound is a NAMED constant the statement reads, and the op answers an envelope. */
+const SA_MAX = Number((/static STATEMENT_ACK_DOCUMENTS_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
+const saBody = SRC_STORE.slice(SRC_STORE.indexOf("  acknowledgeStatement({"),
+                               SRC_STORE.indexOf("static STATEMENT_ACK_DOCUMENTS_MAX"));
+t("op=statementack: its bound is the NAMED constant STATEMENT_ACK_DOCUMENTS_MAX, read at `LIMIT ?` with max + 1 and "
++ "no SQL literal left, and a success publishes it",
+  [Number.isInteger(SA_MAX) && SA_MAX > 0, /LIMIT \?`,[\s\S]{0,200}ackMax \+ 1\)/.test(saBody),
+   /FROM case_documents[^`]*LIMIT \d/.test(saBody), /case_documents_limit: ackMax, case_documents_truncated: false/.test(saBody)],
+  [true, true, false, true]);
 /* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
  *
  * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the
@@ -1722,6 +1786,10 @@ const answersByOp = new Map([
      totals, never an array. Admin-fenced, so the admin token. The bite is driven in `test/versionchain.test.mjs`
      section 15 (DRIVEN_ELSEWHERE). */
   ["changedfromaudit", await GET("op=changedfromaudit&token=adm-r57&limit=1")],
+  /* IC-246: groupidentity driven above with its real bite and REUSED here; statementack's envelope for a caller
+     neither door admits — the review copy's one dead answer, an object. */
+  ["groupidentity", GI_BITE],
+  ["statementack", await POST("op=statementack&token=mem-r57&draft=DRAFT-2026-0000")],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

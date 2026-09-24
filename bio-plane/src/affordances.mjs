@@ -966,6 +966,12 @@ export const RUNG_ABSENT = {
   reviewgrant:          { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
   reviewrevoke:         { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
   reviewcomment:        { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
+  /* D-150 (BIO_Publication §3 rule 11), classified at integration by c19-unionfix (2026-09-24): D-150 landed this
+     mutating op and gated only its own suites, so the ladder's FORWARD arm first met it on the union. Ground
+     `undetermined` on `reviewcomment`'s measurement beside it: its refusals are positional (not a participant, the
+     author's own, a signed edition, IC-246's bound), never a missing justification, and no act takes an
+     acknowledgement back — an edited statement is a different sentence with none. It gates nothing (rule 11). */
+  statementack:         { ground: "undetermined", is: "a joined participant other than the statement's author, or a review-copy recipient through their grant, acknowledges a case's exclusion statement as its second reader; attributed and dated, it re-authors the unsigned case documents of that exact statement to list it, and is never required to publish" },
   leadlook:             { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" },
   /* D-162 / IC-241 — THE THEME. Ground `undetermined` on `lead`'s measurement: none of the three
      acts' refusals is a missing justification (a theme with no test, C-81.3, is a missing CRITERION,
@@ -1770,6 +1776,11 @@ export const MACHINE_REFUSALS = {
   inquiryground:      "MACHINE_CANNOT_GROUND",
   actionmove:         "MACHINE_CANNOT_MOVE_ACTION",
   actioncorrespond:   "MACHINE_CANNOT_CORRESPOND",
+  /* D-149's act, added at integration by c19-unionfix (2026-09-24): the store refuses a machine BY NAME at it
+     (C-32.18, `is-machine-set-laws`), and D-149 landed it in ACTS without this entry — so a machine credential
+     was OFFERED "State governing laws" and refused at the act, the DEC-8 disagreement this map exists to
+     prevent. Found when `d311-roster-affordances.test.mjs` gained the drive its fixture guard demanded. */
+  actionlaws:         "MACHINE_CANNOT_SET_LAWS",
   versionaccept:      "MACHINE_CANNOT_MOVE_VERSION",
   versionreject:      "MACHINE_CANNOT_MOVE_VERSION",
   versionconsider:    "MACHINE_CANNOT_MOVE_VERSION",

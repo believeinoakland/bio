@@ -41,6 +41,11 @@
  *   (F) a recipient's comment labelled a member's -> 38/2, at "LABELLED" and "BOTH DOORS' COMMENTS"; the plane's
  *       own record of the comment green.
  *   (G) OVER-STRICTNESS — two headings and the grant button re-worded -> 40/0 GREEN.
+ * RE-RUN 2026-09-24 by c19-unionfix after the waits became `budget.mjs`'s checked `until` (six budget assertions):
+ * 8/8 AS DECLARED, baseline 46/0, each red arm failing only what it named; app.html IDENTICAL after every arm.
+ *   (H) THE WAIT'S OWN, run by hand: `const WAIT_MS = 8000;` -> `0` (anchor once; restored by cp, sha256 AND cmp,
+ *       32,935 B) -> 21/1, the ONE failing line the first budget assertion, its `TIMEOUT (M0-107)` marker printed,
+ *       and the suite ENDED there — nothing read off the page the expired wait never saw drawn.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: shared, for its side effect. */
 import fs from "fs";
@@ -49,6 +54,7 @@ import { createRequire } from "module";
 import { pathToFileURL } from "url";
 import { webcrypto, createHash } from "crypto";
 import { appScript } from "./extract.mjs";
+import { until, budgetAssert } from "../../bio-plane/test/budget.mjs";   /* M0-107: a wait whose expiry is NOT MEASURED */
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -194,12 +200,18 @@ function page(hash, token, me) {
   return { ctx, U, WIRE, html, run, get hash() { return HASH; } };
 }
 /* A navigation the page starts on its own (an address resolved at load, a hash router) is not awaited by
-   anybody, and the plane under miniflare answers over real I/O — so it is waited for BY ITS RESULT, bounded,
-   and a wait that runs out is reported by the assertion that reads the page, never passed. */
-const until = async (pred, ms = 8000) => {
-  const t0 = Date.now();
-  while (Date.now() - t0 < ms) { try { if (pred()) return true; } catch (_) {} await new Promise((r) => setTimeout(r, 20)); }
-  return false;
+   anybody, and the plane under miniflare answers over real I/O — so it is waited for BY ITS RESULT, bounded.
+   CORRECTED at integration by c19-unionfix, 2026-09-24 (M0-107, BOB #28): this was a hand-rolled deadline loop
+   whose expiry was read by the NEXT assertion as a finding about the page — a false RED on a loaded machine,
+   which `budget-sweep.test.mjs` names UNCHECKED. It is now `budget.mjs`'s `until`, checked on its own binding:
+   on expiry `budgetAssert` prints the NOT MEASURED marker and records ONE failing assertion, and the suite ENDS
+   there, because every later assertion reads a page this wait never saw drawn. */
+const WAIT_MS = 8000;
+const tb = (label, got, want) => ok(label, JSON.stringify(got) === JSON.stringify(want), JSON.stringify(got));
+const drawn = async (name, pred) => {
+  const w = await until(() => { try { return !!pred(); } catch (_) { return false; } }, WAIT_MS);
+  if (!budgetAssert(tb, name, w, WAIT_MS, "every later assertion of this suite, each reading a page this wait did not see drawn"))
+    await finish();
 };
 const unesc = (s) => String(s).replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 /* The handler string on the one control whose markup matches `re` — a control drawn twice, or not at all, fails. */
@@ -339,7 +351,7 @@ ok("ONCE: leaving the copy and coming back shows the secret NOWHERE", !M.html("#
    ============================================================ */
 console.log("\n--- 5. the recipient's door, holding no credential ---");
 const R = page("#reviewcopy/" + SECRET, null, null);
-await until(() => R.U.RVS && !R.U.RVS.busy);
+await drawn("the recipient's page drawing the copy", () => R.U.RVS && !R.U.RVS.busy);
 const rv1 = R.html("#pub-body");
 PAGES.push(["the recipient's copy", rv1]);
 const rt1 = strip(rv1);
@@ -391,7 +403,7 @@ ok("REVOKE: op=reviewrevoke was sent naming the grant, and the roster now shows 
    JSON.stringify(revoked && revoked.body));
 const plane5 = await GET(`op=reviewcopy&secret=${encodeURIComponent(SECRET)}`);
 ok("THE PLANE: the withdrawn secret reads nothing", plane5?.ok === false && plane5.reason === "NO_REVIEW_COPY", JSON.stringify(plane5).slice(0, 200));
-const deadPage = async (s) => { const P = page("#reviewcopy/" + s, null, null); await until(() => P.U.RVS && !P.U.RVS.busy); return P.html("#pub-body"); };
+const deadPage = async (s) => { const P = page("#reviewcopy/" + s, null, null); await drawn(`the page at #reviewcopy/${s.slice(0, 8)}… settling`, () => P.U.RVS && !P.U.RVS.busy); return P.html("#pub-body"); };
 const dRevoked = await deadPage(SECRET);
 const dNever = await deadPage("rv1_" + "A".repeat(43));
 const dMalformed = await deadPage("x");
@@ -404,7 +416,7 @@ ok("NEUTRAL: the dead page says neither 'revoked' nor 'expired', and prints no c
    !/revoked|expired/i.test(dRevoked) && shouty(strip(dRevoked)).length === 0 && strip(dRevoked).includes(flat(plane5.detail)),
    strip(dRevoked));
 const R2 = page("#reviewcopy/" + SECRET, null, null);
-await until(() => R2.U.RVS && !R2.U.RVS.busy);
+await drawn("the withdrawn link's page settling", () => R2.U.RVS && !R2.U.RVS.busy);
 const lateComment = await POST(`op=reviewcomment&secret=${encodeURIComponent(SECRET)}`, { text: "still here?" });
 ok("AND A WITHDRAWN SECRET CANNOT COMMENT", lateComment?.ok === false && !/data-rvc-comment-box/.test(R2.html("#pub-body")),
    JSON.stringify(lateComment).slice(0, 200));
@@ -413,7 +425,7 @@ ok("AND A WITHDRAWN SECRET CANNOT COMMENT", lateComment?.ok === false && !/data-
 const J = page("", JON, jonMe);
 J.ctx.location.hash = "#draft/" + draftId;
 J.U.draftRouteFromHash();
-await until(() => J.U.RVC && !J.U.RVC.busy);
+await drawn("the outsider's draft page settling", () => J.U.RVC && !J.U.RVC.busy);
 const jp = J.html("#content");
 ok("NO STANDING: a member outside the project opening the draft's address reads no copy, only the plane's sentence",
    !/data-rvc-copy/.test(jp) && strip(jp).includes(flat(plane5.detail)) && shouty(strip(jp)).length === 0, strip(jp).slice(0, 200));
