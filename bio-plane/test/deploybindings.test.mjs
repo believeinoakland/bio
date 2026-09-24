@@ -25,6 +25,10 @@
  * before the arms ran; these are the measured figures.
  * Restored byte-identically after each, 20/20 green.
  *
+ * NEGATIVE CONTROL (DIST-11): RUN 2026-09-24, declared before arming: `browser` moved back from CARRIED to the refused
+ * KNOWN_BINDING_KEYS -> 35 passed, 6 failed: the real config's four ratchet arms and DIST-11's real-config arm, each
+ * REFUSED [UNKNOWN_BINDING_CLASS] by name (as declared), PLUS the unnamed-binding arm, because the class is refused before
+ * its name is checked (one wider than declared; recorded). Restored by cp, sha256 (ac2bf66f…) and cmp; 41/41 after.
  * NEGATIVE CONTROL (DIST-9): RUN 2026-09-24, one arm, declared before arming: delete the INSTANCE_AI_TOKEN push from
  * `deriveBindings` -> 37 passed, 1 failed, exactly "DIST-9: INSTANCE_AI_TOKEN is SENT…". Restored by cp, verified by
  * sha256 (2981bdfb…) and byte compare; 38/38 after. The NO-INVENTION arm cannot fail by that arm; it is armed by
@@ -160,6 +164,20 @@ const CFG = {
     Array.isArray(b) ? serviceTargets(b, "biosmoke7").sort() : b, ["agent-worker", "ocr-worker", "pdf-worker"]);
   t("no phantom leaves the real derivation",
     Array.isArray(b) ? b.some((x) => x.service === "bio-plane") : b, false);
+}
+
+/* ---- DIST-11 (IC-252): the `browser` class is CARRIED, never refused or invented ---- */
+console.log("\n--- DIST-11: the Browser Rendering binding is carried from the config ---");
+{
+  const real = JSON.parse(stripJsonc(readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8")));
+  const br = (b) => (Array.isArray(b) ? b : []).filter((x) => x.type === "browser");
+  const rb = derive(real, { slug: "biosmoke7", version: real.vars.VERSION });
+  t("DIST-11: the REAL config derives exactly one browser binding, named BROWSER (the name render.mjs reads)",
+    Array.isArray(rb) ? br(rb).map((x) => x.name) : rb, ["BROWSER"]);
+  t("DIST-11: a config WITHOUT `browser` derives none and does not refuse (the binding is an optimisation)",
+    Array.isArray(derive(CFG, { slug: "s", version: "1" })) ? br(derive(CFG, { slug: "s", version: "1" })).length : "refused", 0);
+  t("DIST-11: `browser` declared with no binding name REFUSES by name, never a nameless binding",
+    refusal(() => deriveBindings({ ...CFG, browser: {} }, { slug: "s", version: "1" })), "BROWSER_BINDING_UNNAMED");
 }
 
 /* ---- D-54: the subrequest ceiling is declared, carried, read back -------- */
