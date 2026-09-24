@@ -8,3 +8,4 @@ M0-148	2026-09-24T04:26:49.363Z	SCHEDULER #18	R3-FED walk keys on literals
 M0-149	2026-09-24T04:49:50.949Z	SCHEDULER #18	meaning-bounds: BOUNDED roster publishes bound; UNJUDGED bucket ratchet
 M0-150	2026-09-24T04:49:50.949Z	SCHEDULER #18	meaning-bounds: BOUNDED roster publishes bound; UNJUDGED bucket ratchet
 M0-151	2026-09-24T05:02:04.011Z	SCHEDULER #18	observation-log.test two sections labelled I
+M0-152	2026-09-24T05:15:36.768Z	SCHEDULER #18	fleetbundles.control arm 5(b) reads suite whole (M0-143 finding)
