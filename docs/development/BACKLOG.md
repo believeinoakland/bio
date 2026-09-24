@@ -23,6 +23,26 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-481 · queued — **A PDF THAT PLACES EACH GLYPH WITH ITS OWN OPERATOR READS ONE GLYPH PER LINE: `pdfstructure.mjs` `extractPageText` pushes a newline on EVERY Td/TD/Tm/T\*, so Budget-Basics-FY21-23 yields 18,551 characters and fewer than 60 words — 43 of 332 plane-read documents (4.3%).** Found by D-66's worker. — owner CONTENT-PDF.
+order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-479, with the corrections: a reading that says far less than the document holds, across 4% of the corpus (SCHEDULER #17, 2026-09-24; via CONDUCT #19; renumbered from a colliding D-480)
+milestone: M2
+interface: none — the text is truer; its shape is unchanged.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (how content is extracted today).
+depends-on: none.
+scope: break only when the baseline moves — Td/TD with ty=0 and a Tm at the current line's y add nothing (a space past a word-gap advance); T\*, ', " and any y change still break. Extend the pdfstructure suite.
+accepts-when: Budget-Basics-FY21-23's bytes read at least 60 words per page. NEGATIVE CONTROL: revert the fix, and that arm reads glyph-per-line and fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-484 · queued — **`NO_BASIS` AND `NO_CITATION` HAVE NO DEC-49 TRANSLATION: neither code has a row in any `*_CHECKS` family, so a member reads the store's raw `detail`.** `NO_CITATION` is minted at 3 sites in `store.mjs` (relationdeclare, the progression revision, discharge), `NO_BASIS` at 4; `NO_CITATION` has reached two member surfaces untranslated since UI-13. Found by UI-83's worker. — owner RECORD.
+order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-481, with the corrections: a refusal a member cannot read (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:30Z)
+milestone: M2
+interface: I3 additive — two catalogued codes gain translations.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, following REC-79's single-helper shape.
+depends-on: none.
+scope: route each code's sites through ONE governed helper inside a DEC-49 REGION; a row for each in ACT_SHAPE_CHECKS (C-numbers by mintid); move the check-refusal-codes floors.
+accepts-when: each site's refusal carries its translation. NEGATIVE CONTROL: mint one site's code outside the helper and the DEC-49 guard fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
 ### D-480 · queued — **A HIDDEN PROJECT CAN CROWD A VISIBLE ONE OUT OF THE SHARED-QUESTION CANDIDATES: `#queueSharedInquiryCandidates` groups over UNGATED refs capped at 64, so past 64 shared questions a hidden project's citations take a candidate slot and flip the served `inquiries_truncated` — a count-shaped side channel, D-447's and D-464's class.** Found by D-464's worker. — owner RECORD.
 order: at the head with the disclosure rows (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
 milestone: M8
@@ -384,16 +404,6 @@ depends-on: REC-192, UI-74 (`integrated` on c17-batch5).
 scope: `acerOriginsRead` reads the version arm of the independence read; no code path fetches a strength-bearing answer before the affirmation. Extend `civicos-ui/test/accept-ceremony.test.mjs`.
 accepts-when: before the affirmation the ceremony's network log holds no strength-bearing answer. NEGATIVE CONTROL: point `acerOriginsRead` back at `op=versionstrength`, and the pre-affirmation fetch arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
-
-### D-453 · blocked — awaiting Bob: egress from this cloud to Oakland's hosts (the proxy refused CONNECT to Legistar, data.oaklandca.gov, www.oaklandca.gov, opengov, Accela, acgov.org, oaklandauditor.com on 2026-09-23), an environment setting only Bob can change — **D-74's IDENTIFIER-SPACE MEASUREMENT IS HALF TAKEN: four cross-system joins were never measured, so construct 6.identifier-spaces stays ABSENT on evidence that stops at the corpus already held.** — owner CONTENT (a measurement).
-order: after D-64, a measurement blocked on the environment; its results feed BOB's three recogniser designs (SCHEDULER #17, 2026-09-23; D-74's worker via CONDUCT #18 22:58Z)
-milestone: M0 (a measurement for M4's identifier spaces)
-interface: none — measurements.
-design: `docs/development/VERIFICATION.md` (measure; do not recall), for M-119 and `tools/m119-idspace.py`.
-depends-on: D-74 (`integrated` on c17-batch7); egress.
-scope: (a) Legistar unfiltered, looking up the C.M.S. numbers the ACFRs and budget books cite; (b) the procurement host's contract and PO numbers against Legistar awards; (c) Assessor APNs against Legistar and Accela; (d) one 100xxxx project in both a budget book and a Legistar title, and whether a C-form to new-form crosswalk exists. Re-run `tools/m119-idspace.py` over the wider corpus.
-accepts-when: each of (a)–(d) is recorded with date, instrument and counts, a refused host named as refused rather than read as absent. NEGATIVE CONTROL: feed the tool a corpus with one planted join, and it counts exactly one.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ### REC-203 · blocked — awaiting egress to Oakland's hosts (D-453; Bob's environment setting) — **OAKLAND'S THREE SHARED IDENTIFIER SPACES ARE DESIGNED AND NOT BUILT: the project number (budget line to Legistar award, the grade C→B lever), the C.M.S. number (any citing document to the Legistar matter by MatterEnactmentNumber), and the fund code (counted only when the fund NAME agrees).** — owner RECORD.
 order: behind D-453, whose measurements it rests on, as BOB #32 ruled (*Row them RECORD, blocked behind D-453's egress*) (SCHEDULER #17, 2026-09-23)
@@ -1114,16 +1124,6 @@ design: `docs/development/VERIFICATION.md`.
 depends-on: none.
 scope: `gates.mjs` (or the battery) runs the clock-advanced sweep at plus one year on the full class and prints its result line; each suite it turns red is named.
 accepts-when: the sweep runs without anyone starting it and its line is printed on a full gate. NEGATIVE CONTROL: plant a fixture dated thirty days ahead, and the sweep arm fails naming the suite.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### D-166 · queued — **THE TIER 1 COVERAGE PROBE STILL POINTS AT OAKLAND FINANCE URLS THAT NOW SERVE HTML: `bio-plane/test/tier1-coverage-probe.mjs` names `www.oaklandca.gov/files/assets/city/v/1/finance/documents`, unchanged since 2026-07-31.** Not re-measured live on 2026-09-23 (the session's proxy refused the host). — owner CONTENT-PDF.
-order: after D-300, last of this batch: a measurement's corpus, not a product path (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0 (a measurement instrument's corpus)
-interface: none
-design: `docs/development/VERIFICATION.md` (a measurement names its instrument and date), for the Tier 1 coverage entry in `docs/development/MEASUREMENTS.md`.
-depends-on: none.
-scope: find the documents' current locations, re-point the probe's Oakland half, keep the old URLs as history in the entry.
-accepts-when: every URL the probe names returns bytes beginning `%PDF`, recorded with date and instrument. NEGATIVE CONTROL: point one entry back at an HTML page, and the probe names it as not a PDF.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
 
 ### M0-135 · queued — **A LANE'S OWN `gates.mjs` ON A TREE ALREADY RECORDED GREEN TAKES §2d's TREE-KEYED SHORTCUT AND RUNS NO NEVER-CACHED UNIT (with `BIO_GATE_RESULTS=off`), SO A HISTORY- OR REF-READING CHECK IS SKIPPED ON A LANE'S PUSH.** M0-131 closed this for the TRAIN (`gates.mjs --never-cached` on a reused tree, so `main` is covered); a lane's gate is not. M0-131's worker's finding, verified in its report (CONDUCT #16); RE-READ 2026-09-23 by SCHEDULER #16 on `0e7cc03e` (M0-131 landed): NARROWED — with the per-unit record on (the default) §2d does not take the shortcut and the never-cached units run; the bare shortcut stands only with `BIO_GATE_RESULTS=off` (or no `tools/gateresults.mjs`) and no `--with-never-cached`. — owner M0.

@@ -189,6 +189,16 @@ scope: `op=proposedispose` writes `definition_version`; a read against a later v
 accepts-when: `bio-plane/test/proposedispose.test.mjs` gains an arm: a disposition under version 1 does not apply under version 2, and the column reads back. NEGATIVE CONTROL: stop writing the version, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-128's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs REC`).
 
+### D-453 · queued — **D-74's IDENTIFIER-SPACE MEASUREMENT IS HALF TAKEN: four cross-system joins were never measured, so construct 6.identifier-spaces stays ABSENT on evidence that stops at the corpus already held.** — owner CONTENT (a measurement).
+order: AT THE HEAD (Bob set the environment network to FULL ~03:02Z; BOB #32 03:05Z: *place it at the head as a measurement that can finish before the 06:00Z wind-down*; SCHEDULER #18); was: after D-64, a measurement blocked on the environment; its results feed BOB's three recogniser designs (SCHEDULER #17, 2026-09-23; D-74's worker via CONDUCT #18 22:58Z)
+milestone: M0 (a measurement for M4's identifier spaces)
+interface: none — measurements.
+design: `docs/development/VERIFICATION.md` (measure; do not recall), for M-119 and `tools/m119-idspace.py`.
+depends-on: D-74 (on `main` at 548eb2c5); egress: FULL for sessions STARTED after ~03:02Z, so the worker is a FRESH session and records any host still refused as REFUSED, never as absent.
+scope: (a) Legistar unfiltered, looking up the C.M.S. numbers the ACFRs and budget books cite; (b) the procurement host's contract and PO numbers against Legistar awards; (c) Assessor APNs against Legistar and Accela; (d) one 100xxxx project in both a budget book and a Legistar title, and whether a C-form to new-form crosswalk exists. Re-run `tools/m119-idspace.py` over the wider corpus.
+accepts-when: each of (a)–(d) is recorded with date, instrument and counts, a refused host named as refused rather than read as absent. NEGATIVE CONTROL: feed the tool a corpus with one planted join, and it counts exactly one.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
 ### D-486 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-486 (CONDUCT #20), base land/conduct/c19-batch10 @ cff0ede6 (same count readers as D-464); must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/D-486 and that session; never conclude queued from the absence alone.
 order: after D-480, the same disclosure class at the head (BOB #32, 02:30Z: *"Row it as disclosure-class, beside D-480 at the head"*; SCHEDULER #18, 2026-09-24)
 milestone: M8
@@ -198,6 +208,16 @@ depends-on: none.
 scope: one predicate excluding run rows whose context is a hidden project from every tally a caller outside its sight reads, all five readers together.
 accepts-when: a run over a hidden project leaves each reader's answer to an outsider unchanged. NEGATIVE CONTROL: drop the predicate from one reader and its arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-166 · queued — **THE TIER 1 COVERAGE PROBE STILL POINTS AT OAKLAND FINANCE URLS THAT NOW SERVE HTML: `bio-plane/test/tier1-coverage-probe.mjs` names `www.oaklandca.gov/files/assets/city/v/1/finance/documents`, unchanged since 2026-07-31.** Not re-measured live on 2026-09-23 (the session's proxy refused the host). — owner CONTENT-PDF.
+order: after D-453, the same egress unblock (BOB #32 03:05Z: *place it after D-453 if slots allow*; a FRESH session; SCHEDULER #18); was: after D-300, last of this batch: a measurement's corpus, not a product path (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
+milestone: M0 (a measurement instrument's corpus)
+interface: none
+design: `docs/development/VERIFICATION.md` (a measurement names its instrument and date), for the Tier 1 coverage entry in `docs/development/MEASUREMENTS.md`.
+depends-on: none.
+scope: find the documents' current locations, re-point the probe's Oakland half, keep the old URLs as history in the entry.
+accepts-when: every URL the probe names returns bytes beginning `%PDF`, recorded with date and instrument. NEGATIVE CONTROL: point one entry back at an HTML page, and the probe names it as not a PDF.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
 
 ### D-470 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-470 (CONDUCT #20), base origin/main 548eb2c5; must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/D-470 and that session; never conclude queued from the absence alone.
 order: after D-469, at the head: a signed record that claims more precision than it holds (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
@@ -268,26 +288,6 @@ depends-on: REC-149 (`integrated`, riding c19-batch9).
 scope: page the directory at LIMIT cap+1 with `limit` and `truncated`; the cap is a named constant declared below the method. Add a `bounds.test.mjs` drive that bites.
 accepts-when: a directory over the cap answers `truncated: true` with exactly the cap. NEGATIVE CONTROL: drop the LIMIT, and the bounds drive fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-481 · queued — **A PDF THAT PLACES EACH GLYPH WITH ITS OWN OPERATOR READS ONE GLYPH PER LINE: `pdfstructure.mjs` `extractPageText` pushes a newline on EVERY Td/TD/Tm/T\*, so Budget-Basics-FY21-23 yields 18,551 characters and fewer than 60 words — 43 of 332 plane-read documents (4.3%).** Found by D-66's worker. — owner CONTENT-PDF.
-order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-479, with the corrections: a reading that says far less than the document holds, across 4% of the corpus (SCHEDULER #17, 2026-09-24; via CONDUCT #19; renumbered from a colliding D-480)
-milestone: M2
-interface: none — the text is truer; its shape is unchanged.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (how content is extracted today).
-depends-on: none.
-scope: break only when the baseline moves — Td/TD with ty=0 and a Tm at the current line's y add nothing (a space past a word-gap advance); T\*, ', " and any y change still break. Extend the pdfstructure suite.
-accepts-when: Budget-Basics-FY21-23's bytes read at least 60 words per page. NEGATIVE CONTROL: revert the fix, and that arm reads glyph-per-line and fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-484 · queued — **`NO_BASIS` AND `NO_CITATION` HAVE NO DEC-49 TRANSLATION: neither code has a row in any `*_CHECKS` family, so a member reads the store's raw `detail`.** `NO_CITATION` is minted at 3 sites in `store.mjs` (relationdeclare, the progression revision, discharge), `NO_BASIS` at 4; `NO_CITATION` has reached two member surfaces untranslated since UI-13. Found by UI-83's worker. — owner RECORD.
-order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-481, with the corrections: a refusal a member cannot read (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:30Z)
-milestone: M2
-interface: I3 additive — two catalogued codes gain translations.
-design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, following REC-79's single-helper shape.
-depends-on: none.
-scope: route each code's sites through ONE governed helper inside a DEC-49 REGION; a row for each in ACT_SHAPE_CHECKS (C-numbers by mintid); move the check-refusal-codes floors.
-accepts-when: each site's refusal carries its translation. NEGATIVE CONTROL: mint one site's code outside the helper and the DEC-49 guard fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
