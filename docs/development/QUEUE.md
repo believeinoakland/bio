@@ -68,7 +68,7 @@ scope: in promote's action block (not on replay), refuse MACHINE_CANNOT_SET_RISK
 accepts-when: a machine credential's promote changing a tier to 2 is refused by name; a member's promote setting 2 and a machine's unchanged carry-forward are accepted. How a liar passes it: refusing every machine promote of an action, so the carry-forward arm must pass. NEGATIVE CONTROL: drop the machine-identity clause, and the "a machine credential cannot set risk_tier" arm fails by name while the member arm stays green.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
 
-### UI-85 · integrated — finished; integrated on land/conduct/c19-batch11 @ e49f66f8, waiting for its train — flipped by SCHEDULER #18
+### UI-85 · integrated — finished; integrated on land/conduct/c19-batch11 @ e49f66f8, waiting for its train — flipped by CONDUCT #20 2026-09-24 ~03:43Z
 order: directly after REC-189, so the plane's fence and the member's only path to a tier land together; D-182's surface half (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:48Z finding (2), verified at c17-batch5 @ 74fc2e25)
 milestone: M10
 interface: I3 consumer (`op=affordances`'s `vocabularies.risk_tiers`); none new.
@@ -139,7 +139,7 @@ scope: narrow `STORE_SHAPE` to `bio` or `scratch` with its own BAD_STORE refusal
 accepts-when: `store=biosmoke` is refused by the worker by name. NEGATIVE CONTROL: widen the shape again, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### REC-192 · integrated — finished; integrated on land/conduct/c19-batch11 @ 8646219d (IC-248, I3 84.0.0 MAJOR), waiting for its train — flipped by SCHEDULER #18
+### REC-192 · integrated — finished; integrated on land/conduct/c19-batch11 @ 8646219d (IC-248, I3 84.0.0 MAJOR), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~03:43Z
 order: after D-256: a correction to just-landed work (UI-74, REC-161) that moves a doctrine from a page's choice into the wire (SCHEDULER #17, 2026-09-23)
 milestone: M9
 interface: I3 additive — `partitionindependence` (REC-161) takes `version=<id>` and reads that stored version's legs through the same `#independenceOf`, returning no strength field; versionstrength's gate and viewer stamp kept. The integrator mints and classifies the IC.
@@ -149,7 +149,7 @@ scope: the version arm on the independence read. Extend `bio-plane/test/partitio
 accepts-when: the version arm's answer carries no strength key and equals versionstrength's `independence` for the same version. NEGATIVE CONTROL: add a strength field to the version-arm answer, and the "no strength key" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (UI-74's worker finding via CONDUCT #17; `node tools/mintid.mjs REC`).
 
-### REC-190 · integrated — finished; integrated on land/conduct/c19-batch11 @ c650a697 (IC-251, I3 84.1.0), waiting for its train — flipped by SCHEDULER #18
+### REC-190 · integrated — finished; integrated on land/conduct/c19-batch11 @ c650a697 (IC-251, I3 84.1.0), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~03:43Z
 order: after UI-86: the census that tells whether D-179's residue exists on a live record, before anything repairs it (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (6), verified at c17-batch4 @ 65205437)
 milestone: M2
 interface: I3 additive — one new admin/probe census op, `mutating:false`, REC-175's shape (proposed name homecensus); the integrator mints and classifies the IC.
@@ -159,7 +159,7 @@ scope: list every `files`/`history` row whose sha the register assigns to a DIFF
 accepts-when: a store seeded with one moved row lists that sha under both bundles; a clean store lists none; the record's counters read before and after the call are unchanged. How a liar passes it: listing every multi-bundle sha including legitimate shares, so the clean-store arm must read none. NEGATIVE CONTROL: remove the different-bundle predicate, and the "displaced row found" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
 
-### D-64 · running — SPAWNED 2026-09-24 ~01:45Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER D-64 (CONDUCT #19), base origin/main 15b2a4c0, IC pre-minted; gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-64 and that session; never conclude queued from the absence alone.
+### D-64 · integrated — finished; integrated on land/conduct/c20-integ1 @ d1d387e3 (IC-252; BOB's timeout ruling owed at integration), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~03:43Z
 order: with the M2 capture rows, behind its substrate (BOB #31, 22:22Z: *place the capture row behind its substrate*) (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
 milestone: M2
 interface: I3 — a render arm on capture producing the pair, and the `render` provenance block; the integrator mints and classifies the IC.
@@ -170,7 +170,7 @@ accepts-when: a rendered capture of a shell holds both artifacts and names every
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-64's DEBT row of 2026-07-30; keeps its `D-` id).
 owed-at-integration: BOB #32 ruling 2026-09-24 ~03:14Z — a render whose wait fired on its TIMEOUT keeps the capture's GRADE (grade is the chain; the method is recorded); the rendered document's COMPLETENESS is UNDETERMINED: `render.wait` records that the timeout fired and the reading states "render may be incomplete (wait timed out)"; never presented as the whole page, never refused. Actor: c20-integ1 (session_011vBzoPQBRZGhdLUxxiXzPG), paid on land/conduct/c20-integ1; BOB folds it into CLIENT-RENDERED. Sent by CONDUCT #20.
 
-### UI-83 · integrated — finished; integrated on land/conduct/c19-batch11 @ 3e3684ee, waiting for its train — flipped by SCHEDULER #18
+### UI-83 · integrated — finished; integrated on land/conduct/c19-batch11 @ 3e3684ee, waiting for its train — flipped by CONDUCT #20 2026-09-24 ~03:43Z
 order: directly after D-443, first of the D-128 follow-ons: a surface that answers a member's act with a refusal it gives them no field to meet is a correction to just-landed work, which outranks new work (SCHEDULER #16, 2026-09-23; D-128's worker via CONDUCT #17)
 milestone: M8
 interface: I3 consumer (D-128's IC).
@@ -180,7 +180,7 @@ scope: the progression form offers, when revising an existing progression, a bas
 accepts-when: `civicos-ui/test/` gains a suite arm driving a revision through the form with both fields to a landed version, and one without either reading the canned refusal; the UI harness green. NEGATIVE CONTROL: drop the citation field, and the revision arm reads `NO_CITATION` and fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-128's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs UI`).
 
-### REC-184 · running — SPAWNED 2026-09-24 ~02:12Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER REC-184 (CONDUCT #19), base origin/main 15b2a4c0, IC pre-minted; gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-184 and that session; never conclude queued from the absence alone.
+### REC-184 · integrated — finished; integrated on land/conduct/c20-integ1 @ 4dd1e7e9 (IC-255; BOB's DEFINITION_MOVED ruling owed at integration), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~03:43Z
 order: directly after UI-83, the same D-128 follow-on: a decision the record applies to a definition nobody judged is the record claiming more than it supports (CLAUDE.md §2) (SCHEDULER #16, 2026-09-23; D-128's worker via CONDUCT #17)
 milestone: M4
 interface: I5 — a `definition_version` column on `proposal_dispositions`; the integrator mints and classifies the IC.
@@ -241,7 +241,7 @@ scope: add `"` and `'` to the class in `callSites`; add an over-strictness arm r
 accepts-when: the new arm passes. NEGATIVE CONTROL: drop the quotes from the class and that arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### M0-141 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 INSIDE the integration worker WORKER c20-integ1 (CONDUCT #20), with D-64 + REC-184 + the .gitignore carry. Falsify rather than believe: read the branch land/conduct/c20-integ1 and that session; never conclude queued from the absence alone.
+### M0-141 · integrated — finished; integrated on land/conduct/c20-integ1 @ ad7afc3a, waiting for its train — flipped by CONDUCT #20 2026-09-24 ~03:43Z
 order: after D-482, with the rows that cut gate time (product before process, Bob 2026-09-22: a process row that cuts gate time may sit near the head; SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:31Z)
 milestone: M0
 interface: none — prose.
