@@ -164,6 +164,16 @@ scope: an arm counting `reason:"CODE"` / `code:"CODE"` literals across `bio-plan
 accepts-when: every governed code's literals sit inside its region. NEGATIVE CONTROL: D-484's arm 1 (a mint outside the helper) fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
+### M0-157 · queued — **`gates.control.mjs` ARM G5 FAILS ITS OWN DECLARED ISOLATION ON MAIN (85/3): with the clean-at-start check removed, "a DIRTY tree is NOT recorded" breaks, although G5 declares the end-of-run check backs it.** Pre-existing; found by M0-146's worker. — owner M0.
+order: after M0-156, with the gate instruments: a hand-run driver, not a battery arm (SCHEDULER #18, 2026-09-24; via CONDUCT #20 06:00Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a control's declared isolation is a claim to verify).
+depends-on: none.
+scope: read the armed run to find which path writes the second record (§2d reuse or early exit, or §4 fall-through); then restore the redundancy, or correct G5's declaration at its site.
+accepts-when: G5 arms as declared, or its declaration states what it actually proves. NEGATIVE CONTROL: G5 itself, re-run after the change.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
 ### D-492 · queued — **D-64's RENDER ALLOWANCE CLAIMS A BOUND THE CODE DOES NOT HOLD: `renderAdmit` admits while `spent_ms < allowance`, but `renderSpend` adds the time only AFTER the Worker's render finishes, so N concurrent renders are all admitted against one `spent_ms`. The overrun is in-flight × (wait timeout 15,000 ms + navigation), not "at most one render" as its docstring says.** Diagnosed by CONDUCT #20 at `land/worker/D-64` @ b1ffb5a0. — owner CAPTURE.
 order: after DIST-9, AHEAD of D-64's other follow-ons: a correction to D-64's own claim outranks new work, and a record that claims more than it holds is the worse defect (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:25Z)
 milestone: M2
@@ -201,7 +211,7 @@ milestone: M8
 interface: none.
 design: `docs/architecture/BIO_Distribution_v0_1.md` §5 "The installer" and §3 "The release".
 depends-on: none.
-scope: rebuild `newgroup/dist` from `release.mjs`; add an FL-9-shaped freshness guard asserting the bundle's embedded RELEASE_VERSION equals `release.mjs`'s.
+scope: NARROWED 2026-09-24 06:01Z (SCHEDULER #18): the REBUILD is done (land/dist/newgroup-dist-078 @ cfe2d0cc, on c20-batch17, 0.71.0 → 0.78.0 from newgroup/src at d536f834); what remains is an FL-9-shaped freshness guard asserting the bundle's embedded RELEASE_VERSION, and its source, equal `release.mjs`'s — DIST's caveat: after DIST-9 lands the rebuilt bundle LAGS DIST-9's installer code until rebuilt, which this guard catches.
 accepts-when: the guard passes on the rebuilt bundle. NEGATIVE CONTROL: restore the 0.71.0 bundle and the guard fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
@@ -1306,14 +1316,4 @@ design: `docs/development/VERIFICATION.md` (the DEC-49 guard's section, *what a 
 depends-on: none.
 scope: end both patterns in a lookahead for whitespace, a comment close or end of line instead of the word boundary; a sibling-region fixture.
 accepts-when: a file holding regions `x` and `x-y` passes with one opener each, and the `regionLines` floors do not move. NEGATIVE CONTROL: restore the word boundary, and the "one opener per name" arm fails naming two opening markers.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### D-300 · queued — **A SUITE THAT READS THE WALL CLOCK CAN TURN RED UNTOUCHED, AND THE SWEEP THAT WOULD SAY SO IS RUN BY NOBODY: three suites of about three hundred bind `BIO_NOW_MS`; `clockadvance.control.mjs` exists and no tool, script or gate runs it.** — owner M0.
-order: after D-357; the cheap half (run the sweep) first; threading the clock through every constructor is a later row if the sweep finds decay (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md`.
-depends-on: none.
-scope: `gates.mjs` (or the battery) runs the clock-advanced sweep at plus one year on the full class and prints its result line; each suite it turns red is named.
-accepts-when: the sweep runs without anyone starting it and its line is printed on a full gate. NEGATIVE CONTROL: plant a fixture dated thirty days ahead, and the sweep arm fails naming the suite.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
