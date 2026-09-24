@@ -49,6 +49,43 @@
  *       fail on the PREMISE assertions (section 0 and section 4), which is a
  *       different set from A1's and A2's.
  *
+ *   A5  D-514: THE LAYER FILTER BACK ON RAW `text.length` — the defect exactly
+ *       as D-514 found it, so a page of whitespace "carries text" again and
+ *       re-enters the `layer` part of the chain.                    MUST FAIL
+ *       **THE ROW'S OWN DECLARED CONTROL.** It must fail in D-514's ATTRIBUTION
+ *       set BY NAME and stray into no other set — not REC-102's, and not D-514's
+ *       own routing set, because this arm changes nothing either of those reads.
+ *
+ *   A6  OVER-STRICTNESS for D-514 — the same predicate written as a `\S` test
+ *       rather than a glyph count.                                  MUST PASS
+ *       What an author who had never seen `glyphCount` would reach for. An arm
+ *       that fails here means the suite pins a spelling, not a behaviour.
+ *
+ *   A7  D-514: THE ROUTING BACK ON RAW `counts.chars` — `needsTier2` comparing
+ *       markers against the raw character count again.              MUST FAIL
+ *       Armed SEPARATELY from A5 for the reason A1 and A2 are separate: D-514
+ *       has two halves and a landing that shipped one would pass the other's arm
+ *       completely. It must fail in the ROUTING set only.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * A1 AND A3 DID NOT ARM BETWEEN REC-102's LANDING AND 2026-09-24 — FOUND AND
+ * REPAIRED BY D-514, AND RECORDED HERE RATHER THAN QUIETLY FIXED.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Both anchors were written with TWENTY-SIX spaces of indentation, matching the
+ * read-time re-extraction copy of the partition that CPDF-19 had added at
+ * `op=pdfstructure&ocr=1`. `src/index.mjs` carries the block at FOURTEEN, and
+ * carries exactly one copy of it. `patch()` matches literally, so both anchors
+ * matched ZERO times and both arms reported `ARM DID NOT ARM` — which this
+ * driver does print as a finding rather than as a pass, and which is the only
+ * reason it was recoverable. What it means for the record: **A1, the arm that
+ * proves D-372's gap was real, and A3, its over-strictness counterpart, have
+ * not been evidence since the two copies were collapsed into one.** A2 and A4
+ * were unaffected (their anchors sit at their own depths and matched once).
+ * The repair is the anchors dedented by twelve; the arms, their declarations and
+ * their named sets are unchanged. **The general shape, which is why this note is
+ * long: an anchor is a claim about the subject's TEXT, so it goes stale exactly
+ * when the subject is refactored — the moment an arm is most worth having.**
+ *
  * A SURPRISING GREEN IS A FINDING ABOUT THE ARM. Recorded, never smoothed.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync } from "node:fs";
@@ -131,6 +168,13 @@ function restoreAndVerify(armName, s) {
 const D372  = /PARTITIONED by tier|recorded as TIER 1|NOT ALSO claimed by the tier-2 step|covered exactly once/;
 const PREMISE = /TIER-2 member was consulted|TIER-3 member was consulted, and ONLY|clear it with margin|ordered three pages/;
 const OVERSTRICT = /byte-for-byte the shape|REC-98's scoped two-part chain|did NOT escalate to tier 2|NEVER consulted/;
+/* D-514's TWO NAMED SETS, 2026-09-24, kept apart from each other and from every
+   set above for the same reason those three are kept apart: "it failed" and "it
+   failed at the thing the arm aimed at" are different findings, and the
+   ATTRIBUTION half is a different claim from the ROUTING half. A5 must land in
+   the first and A7 in the second, and neither may stray into the other. */
+const D514_LAYER = /in NO layer part|names page 0|four spaces are not text/;
+const D514_ROUTE = /CONSULTED the tier-2 member for it/;
 
 function arm({ name, declared, subject = "wire", edits, mustName, mustNotName }) {
   const s = SUBJECTS[subject];
@@ -187,14 +231,14 @@ function arm({ name, declared, subject = "wire", edits, mustName, mustNotName })
 arm({
   name: "A1", declared: "FAIL", mustName: D372, mustNotName: OVERSTRICT,
   edits: [[
-`                          const spokenFor = tier2PerPage
-                            ? [[1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
-                               [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]]
-                            : [];`,
-`                          /* NC A1: THE FIX REVERTED. With no partition every layer page is
-                             unspoken and falls to the single baseTier part below — which is
-                             the pre-item code exactly, in the same position. */
-                          const spokenFor = [];`,
+`              const spokenFor = tier2PerPage
+                ? [[1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
+                   [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]]
+                : [];`,
+`              /* NC A1: THE FIX REVERTED. With no partition every layer page is
+                 unspoken and falls to the single baseTier part below — which is
+                 the pre-item code exactly, in the same position. */
+              const spokenFor = [];`,
   ]],
 });
 
@@ -213,16 +257,16 @@ arm({
 arm({
   name: "A3", declared: "PASS",
   edits: [[
-`                          const spokenFor = tier2PerPage
-                            ? [[1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
-                               [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]]
-                            : [];`,
-`                          /* NC A3: THE SAME PARTITION, SPELLED THE OTHER WAY ROUND. */
-                          const ncTierOf = (p) =>
-                            (tier2PerPage && (tier2PerPage.tier1 || []).includes(p)) ? 1
-                          : (tier2PerPage && (tier2PerPage.tier2 || []).includes(p)) ? 2 : null;
-                          const spokenFor = [1, 2].map((tr) =>
-                            [tr, layerPages.filter((p) => layerSet.has(p) && ncTierOf(p) === tr)]);`,
+`              const spokenFor = tier2PerPage
+                ? [[1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
+                   [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]]
+                : [];`,
+`              /* NC A3: THE SAME PARTITION, SPELLED THE OTHER WAY ROUND. */
+              const ncTierOf = (p) =>
+                (tier2PerPage && (tier2PerPage.tier1 || []).includes(p)) ? 1
+              : (tier2PerPage && (tier2PerPage.tier2 || []).includes(p)) ? 2 : null;
+              const spokenFor = [1, 2].map((tr) =>
+                [tr, layerPages.filter((p) => layerSet.has(p) && ncTierOf(p) === tr)]);`,
   ]],
 });
 
@@ -232,6 +276,52 @@ arm({
   edits: [[
 `const GOOD_LINE = "Item 3.1";`,
 `const GOOD_LINE = "Item 3.1 " + "Determination Of Schedule Of Outstanding Committee Items ".repeat(6);`,
+  ]],
+});
+
+/* ── A5 · D-514: THE LAYER FILTER BACK ON RAW `text.length` ──────────────── */
+/* THE ROW'S OWN DECLARED CONTROL. Restore the defect exactly as D-514 found it:
+   a page "carries text" when its string is non-empty, whitespace included. The
+   whitespace page then re-enters the `layer` part and the record names a tier-1
+   derivation for a page that decoded no glyph. MUST FAIL, and must fail in
+   D-514's ATTRIBUTION set — not in the routing set, and not in any set that
+   belonged to REC-102, because this arm changes nothing those assertions read. */
+arm({
+  name: "A5", declared: "FAIL", mustName: D514_LAYER,
+  mustNotName: new RegExp(`${D372.source}|${OVERSTRICT.source}|${D514_ROUTE.source}`),
+  edits: [[
+`                            && typeof p.text === "string" && glyphCount(p.text) > 0)`,
+`                            && typeof p.text === "string" && p.text.length)   /* NC A5: the D-514 defect */`,
+  ]],
+});
+
+/* ── A6 · OVER-STRICTNESS: the same rule, a spelling nobody anticipated ───── */
+/* Correct work must PASS however it is written. `\S` tests for a non-whitespace
+   character rather than counting them, which is a different expression of the
+   same predicate and is what an author who had never seen `glyphCount` would
+   reach for. An arm that FAILS here means the suite is pinned to how the rule is
+   spelled rather than to what it does. */
+arm({
+  name: "A6", declared: "PASS",
+  edits: [[
+`                            && typeof p.text === "string" && glyphCount(p.text) > 0)`,
+`                            && typeof p.text === "string" && /\\S/u.test(p.text))   /* NC A6: the same rule, spelled differently */`,
+  ]],
+});
+
+/* ── A7 · D-514: THE ROUTING BACK ON RAW `counts.chars` ──────────────────── */
+/* The other half of D-514, armed SEPARATELY from A5 because a landing that
+   shipped one half would pass the other's arm completely — the same reasoning
+   that keeps A1 and A2 apart. The routing witness sits one character inside the
+   band where the two rules disagree, so restoring the raw comparison stops the
+   plane consulting the member for it. MUST FAIL, in the ROUTING set only. */
+arm({
+  name: "A7", declared: "FAIL", mustName: D514_ROUTE,
+  mustNotName: new RegExp(`${D372.source}|${OVERSTRICT.source}|${D514_LAYER.source}`),
+  edits: [[
+`  const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
+  if (!(c.undetermined > glyphs)) return false;`,
+`  if (!(c.undetermined > c.chars)) return false;   /* NC A7: the D-514 defect — whitespace routed as decoded text */`,
   ]],
 });
 

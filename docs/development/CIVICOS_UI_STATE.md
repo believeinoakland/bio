@@ -50,6 +50,174 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v116, 2026-09-24 session, thread UI, UI-99 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-99` (base `origin/main` @ `1a7f0bcc`, the c20-batch24c train), in the commit that carries this
+entry. It was written as `v113` against `origin/main` @ `e9b21be6` and RENUMBERED to `v114` when the rebase onto
+the batch-22/23/24c trains found UI-92 already holding `v113` on main; CONDUCT renumbers again at integration if
+a concurrent entry took this one. SURFACES:
+**the PROGRESSIONS screen's read pane and the QUEUE.** Design: `BIO_Content_Framework_v0_10.md` §8.2,
+"The declared flow, and its revisions" (D-128 and REC-184 on the plane; BOB #27's ruling).
+
+**THE ITEM IS ONE SHAPE OF DEFECT SEEN TWICE: THE RECORD HELD MORE THAN IT SHOWED.** The area's standing
+rules are written against the opposite error — *delete the false sentence, do not write a better one* —
+and this is its mirror. Both halves were BUILT ON THE PLANE, TESTED ON THE PLANE, and reached no page.
+
+**HALF ONE — a revision's basis.** D-128 made a progression definition APPEND-ONLY: a revision writes a
+new version with its author, date and BASIS (the member's statement of why the declared flow changes, and
+a citation for where that is published or held), every earlier version stands, and `op=progression`
+returns the whole list. UI-83 built the form that SENDS those two fields, and its receipt tells the member
+the earlier version *"stays on the record beside it"*. `progLoad` read `op=progression` for its stages and
+threw `versions[]` away, so that promise was kept by the plane and by no page: the basis a member wrote,
+the author and date the plane stamped, and the standing earlier version were nowhere. `progVersionsHtml`
+now renders them, and `progVersionBasisHtml` states an absent basis as `not recorded` IN WORDS — the
+first declaration is not required to carry one, and a definition declared before D-128 has none to carry,
+so both read the same honest sentence rather than one the screen guesses between. It renders as soon as
+the DEFINITION reads back, which also fixed a smaller thing found while building: the path where the
+subject is not in the registry used to leave a member a refusal sentence and no sight of the flow they had
+just revised.
+
+**HALF TWO — the version a decision judged.** REC-184 made `op=proposedispose` stamp the definition
+version in force, made a decision age its proposal only while that version is current, and published the
+version, its state and whether it still applies on `op=queue`'s `disposed` block. **No surface read
+`disposed` at all** (`grep` over `civicos-ui/`: one hit, `res.disposed`, inside an act's own receipt).
+The only set-aside decisions a member ever saw were the ones `notifDisposedHtml` remembered from THIS
+page's own acts — which the plane's own comment on that block names as the honest stopgap it replaces,
+and which survive neither a reload nor a second member, and which can never read `not recorded` because a
+fresh act is always stamped. `queueDisposedRecordHtml` now renders the record's own block, and
+`disposedFlowVersionHtml` says per row which version it judged, whether that version is still the one
+standing, and `not recorded` where the record holds no version — with no number put in its place.
+`notifDisposedHtml` now renders only what the record's block does not yet carry, so one decision is shown
+once: two renderings would be a second place a fact is stated (D-21/DEC-8), which is the defect
+`disposed` exists to end.
+
+**THE SUITE IS REAL-PLANE AND THE `not recorded` ROW IS MADE, NOT MOCKED.**
+`civicos-ui/test/declared-flow-surface.test.mjs` runs `app.html`'s own handlers against miniflare with a
+signed-in enrolled member (never the deploy `MEMBER_TOKEN` — REC-189: that is a machine identity), and
+reaches the pre-REC-184 shape the way `bio-plane/test/proposedispose.test.mjs` reaches it: a ProbeStore
+subclass adding ONE raw-SQL route, the column DROPPED on a live store, the store re-booted on the same
+storage so `#migrate` puts it back NULL. Five arms, 38 assertions. Every sentence assertion runs over what
+a member READS — tags stripped, entities opened, case-insensitive — so the control's over-strictness arm
+is a real arm and not a spelling test.
+
+**NEGATIVE CONTROL, the row's own: 4/4 AS DECLARED.** `not recorded` is written in two places, so it is
+hidden in each ALONE. (A) hidden on the disposition -> RED 2 of 38, both naming THE ROW'S SECOND HALF,
+with the basis arms green. (B) hidden on a version's basis -> **RED 1 of 38, and nothing else** — which is
+the receipt that the two surfaces write the same words and neither inherits the other's coverage.
+(C) over-strictness, the same words upper-cased inside `<em>` -> GREEN 38/0. Run three times in all (twice
+before the rebase onto the c20-batch24c train and once after two corrections this item's own diff review
+found), 4/4 every time. `app.html` restored by `cp`
+from a per-arm pristine copy, sha256 and `cmp` verified, identical at the end.
+
+**WHAT IS STILL UNBUILT AND IS NAMED RATHER THAN LEFT TO BE INFERRED.** `op=proposals`' own
+`prior_disposition` — the earlier decision the plane carries beside a proposal a revision REOPENED —
+reaches no page, and cannot from here: UI-14 retired `op=proposals` from every surface in favour of
+`op=queue`, and `op=queue`'s FINDING items carry `subject.definition_version` but NOT
+`prior_disposition`. So a member meeting a reopened question is not shown that somebody already decided
+it once; they are shown the decision in the set-aside block, under its own heading, which is a weaker
+join than the plane can make. That is a plane-side gap (a field on an op a surface reads), it is stated
+in §8.2's As-built paragraph and in UI-99's report to CONDUCT, and it is not fixed here.
+(Renumbered v114 -> v116 by CONDUCT #20 at c20-batch26: UI-102 took v114 and UI-101 v115.)
+
+v115, 2026-09-24 session, thread UI, UI-101 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-101` (base `origin/main` @ `1a7f0bcc`), in the commit that carries this entry. (Claimed
+`v113`, which UI-92 holds on main; renumbered here when this branch rebased onto c20-batch24c, and v114 -> v115 by CONDUCT #20 at c20-batch26 because UI-102 took v114. Only the
+number moved.) The base is the SECOND one this item measured against — see the figures below. SURFACE:
+**none, and none was owed — the row's own subject was already built.** No byte of `civicos-ui/app.html`
+moves. The entry is here because the next session reading `QUEUE.md` will meet UI-101's heading and needs
+to know, without re-deriving it, that the heading is false.
+
+**THE ROW'S PREMISE WAS FALSE WHEN IT WAS MINTED, AND THE RECORD ALREADY SAID SO.** UI-101 reads *"THE APP
+OFFERS NO RISK-TIER CONTROL: `civicos-ui/app.html`'s action intake cannot state 1, 2 or 3"*, found by D-483's
+worker and rowed by SCHEDULER #18. D-483 and UI-85 landed the same day on opposite sides of one integration:
+D-483's worker looked at an `app.html` that did not yet carry UI-85's chooser, reported the absence honestly,
+and the row outlived the fact. `BIO_Case_Making_v0_1.md` §2 carries the correction in its own words — *"D-483's
+own note that `civicos-ui/app.html` has no such control is CORRECTED HERE: UI-85 built it … and the two landings
+crossed"* — and `construct-status.json` 8.risk-tier has read BUILT, naming `addActTier` at `app.html`, since.
+
+**VERIFIED AT THE DEPENDENT BY NAME, not from the row and not from the note** (`CLAUDE.md` §5). The chooser is
+`addActionPaneHtml`'s `tierPick` over `actVocabMap("risk_tiers")`; the member's act is `addActTier`; the write is
+`riskTierLine`, which writes a key only when the published map holds it; the default is `addActReset`'s
+`tier:"undetermined"`. Every clause of the row's scope — a choice over `vocabularies.risk_tiers`, in the action
+intake, unset by default, unset writing undetermined, words taken from the plane — is at the code.
+
+**AND MEASURED, because a claim about the state of the system is a claim about the moment it was verified.** The
+row's accepts-when is *"a chosen tier is written and none chosen writes undetermined, against a real-plane suite"*.
+`add-surface.test.mjs` drives the app's own `addGo` through miniflare as a SIGNED-IN MEMBER SESSION and reads back
+`op=projection`: untouched → `undetermined`, *"not assessed: no member has stated a risk tier for this action"*;
+picked 2 → `2`, *"file with caution"*. 190 assertions, all green; `node civicos-ui/test/run.mjs` exit 0, all
+harnesses green. The row's named NEGATIVE CONTROL — *"default the choice to 1 and the unset arm fails by name"* —
+is arm (5) of `add-surface.control.mjs` and UI-85 built it too: re-run here, 8 arms, 8 AS DECLARED, (5) RED first
+and by name at *"UI-85 UNTOUCHED"*, both watched files restored byte-identical. The only figure that moved is
+`app.html`'s size, 1,478,680 → 1,578,244 bytes since UI-85's run — 99,564 bytes of other UI landings under a
+control whose patches anchor by text, every anchor still matching exactly once. That is the one thing this
+re-run establishes that UI-85's did not, and it is recorded on both files' own headers rather than here.
+
+**MEASURED ON TWO BASES, because the first gate caught the record and not the code.** The item ran green on
+`origin/main` @ `e9b21be66` and then went RED at `plancheck`, on `docs/development/DEBT.md` missing — M0-140's
+retirement had landed on `coord` while `main` still carried the pointer stub that sends a reader there. Not this
+item's diff and not fixable inside it: the fix was already written, in the c20-batch24c train
+(`ec17d236`), which landed on `main` as `1a7f0bcc` while this item was measuring. Rebased onto it, and since that
+train also moves `app.html`, every figure above was re-taken rather than carried: the suite, the two projections
+and all eight arms read the same on both bases, and only `app.html`'s size differs. The control has now run three
+times on three different `app.html`s, 8 of 8 AS DECLARED each time — which is a stronger statement about those
+anchors than the single run this item set out to make.
+
+**WHAT THIS ITEM FOUND THAT ITS ROW DID NOT ASK FOR, routed and not parked.** (1) **No member may state a tier on
+an action that already exists.** `risk_tier` reaches the record only through a document's front matter at
+`op=promote`; there is no member act for it, where the neighbouring ruling D-149 got `op=actionlaws` and UI-90's
+surface. So D-182's *"only a member's authored act sets a tier"* is available at CREATION ONLY, and an action
+written before anyone assessed it reads "not assessed" for good — while §2's own sentence, *"a machine may PROPOSE
+that a tier be reconsidered"*, describes a reconsideration nothing can carry out. `node tools/decided.mjs` finds no
+ruling and `QUEUE.md` no row. (2) **The two intake surfaces disagree in shape**: the app preselects `undetermined`
+and offers it as a choice; D-483's setup page derives its settable keys through `riskTierState` so `undetermined`
+is not offered and nothing is preselected. Neither overclaims and §2 rules on neither. Both are in the report,
+(1) diagnosed to a named fix and routed to BOB for the design half before SCHEDULER places it.
+
+v114, 2026-09-24 session, thread UI, UI-102 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-102` (base `origin/main` @ `1a7f0bcc`, carrying c20-batch24c), in the commit that carries this
+entry; **the version number is PROVISIONAL** — other UI workers are live and CONDUCT renumbers at integration, as it
+did v112 -> v113. SURFACE: **the action page now renders each PROPOSAL of the laws governing the ask, beside the
+member's list — and offers no way to turn one into the list.**
+
+**WHAT IT CLOSES.** REC-195 built the plane half D-149 had left unbuilt — `op=actionlawspropose`, the
+`action_law_proposals` table, and `governing_laws_proposals` on `op=projection`'s action block — and MEASURED its own
+gap: `grep -c governing_laws_proposals civicos-ui/app.html` = 0. The owed act was named in IC-267's
+consumer-impact section and in `construct-status.json` 8.governing-laws' NOT BUILT tail. **It was named in NEITHER a
+`CLAIMS.md` DELEGATION nor a QUEUE row of its own** — measured, not assumed: `CLAIMS.md` on `coord` is 20,145 lines
+and contains no occurrence of `REC-195`, `actionlawspropose`, `governing_laws_proposals` or `UI-102`. SCHEDULER #18
+rowed it anyway off the construct-status tail, which is the mechanism working; recorded because the ledger CLAUDE.md
+names for an owed act was not the one that carried this one.
+
+**WHAT LANDED**, all of it in `app.html`: `actionLawsProposalsHtml`, called once from the action page immediately
+after `actionLawsHtml` inside the SAME `<h2>The laws this ask is made under</h2>` section, plus one `subj-note` and
+one CSS rule. Each proposal renders the credential the plane stamped, the date, its citations each at its level, and
+the plane's own label sentence; the block's own `says` closes it. Three answers are kept apart exactly as the list
+above it keeps them: a set of proposals, an EMPTY set said in the plane's own words, and an ABSENT key said as an
+absence. **The page holds no sentence of its own about any of it** — proved structurally, not asserted: the suite
+checks `app.html` contains no copy of any of the plane's five sentences.
+
+**THE ITEM IS AN ABSENCE, AND THAT IS WHY IT NEEDED DRIVING.** The row's scope is *never offer a proposal as a way to
+set the list*, so what had to be built was a read with NO control on it. A "use this" button is the obvious
+convenience and it is the defect: there is no act that ADOPTS a proposal — `op=actionlaws` is a member's authored
+statement, not an acceptance of anybody's suggestion — so such a control could only prefill a member's authored
+legal claim with a machine's citations. Three arms hold it: the rendered block carries no button, link, field or
+handler in any of its three shapes; it names no function a control could call; and the act's form is DRIVEN open
+with two proposals standing and its one row read back empty. A markup sweep is the honest instrument here and its
+limit is stated in the suite — a control added by script after render would be invisible to it, which is what the
+behavioural arm covers.
+
+**A STALE COMMENT CORRECTED, not left to the reader.** `openActionLaws`' comment block said *"no proposal is built in
+the plane and none is invented here."* The first clause was true when written and REC-195 made it false. Corrected in
+place with its date and reason — and the second clause, which is the load-bearing one, is unchanged and now carries
+more weight than it did: this form still opens on an empty row whatever the record holds.
+
+Suites: NEW `civicos-ui/test/ui102-laws-proposals.test.mjs`, 38/0, against a REAL PLANE under miniflare — two
+proposals written through `op=actionlawspropose` (one by a machine credential, one by a signed-in member), the list
+by `op=actionlaws`, three actions covering stated-with-proposals, nothing-proposed and proposed-but-undetermined, and
+every rendered sentence compared VERBATIM against `op=projection`'s own answer in the same run. No existing suite's
+count moved and no floor moved. Control: `ui102-laws-proposals.control.mjs`, five arms, every one as declared,
+including the row's own — a "use this" control fails the no-setter arms by name.
+
 v113, 2026-09-24 session, thread UI, UI-92 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-92` (base `origin/main` @ `68fecb8d`), in the commit that carries this entry; the version number
 was provisional; CONDUCT #20 renumbered it v112 -> v113 at c20-batch22 because UI-100 took v112 on main. SURFACE: **the PROJECT

@@ -24762,12 +24762,13 @@ function readingPositionInExtent(position, extentKind, extent) {
 }
 var undeterminedChars = (page) => page && Array.isArray(page.undetermined) ? page.undetermined.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0) : 0;
 var WHITESPACE = /\s/u;
-var decodedChars = (page) => {
-  if (!page || typeof page.text !== "string") return 0;
+function glyphCount(s) {
+  if (typeof s !== "string") return 0;
   let n = 0;
-  for (const ch of page.text) if (!WHITESPACE.test(ch)) n++;
+  for (const ch of s) if (!WHITESPACE.test(ch)) n++;
   return n;
-};
+}
+var decodedChars = (page) => page && typeof page.text === "string" ? glyphCount(page.text) : 0;
 function perPageTierWinner(p1, p2) {
   if (!p2) return "tier1";
   if (!p1) return "tier2";
@@ -24780,14 +24781,16 @@ function mergeTier2Text(base, t2) {
   const usable = basePages.filter((p) => p && Number.isInteger(p.page));
   const t2Pages = t2 && Array.isArray(t2.pages) ? t2.pages : [];
   if (!usable.length) {
-    const baseChars = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : typeof (base && base.document) === "string" ? base.document.length : 0;
-    if (baseChars > 0)
+    const baseText = typeof (base && base.document) === "string" ? base.document : null;
+    const baseGlyphs = baseText === null ? null : glyphCount(baseText);
+    const reported = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : 0;
+    if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
       return {
         ok: false,
         replaced: [],
         kept: [],
         perPageTier: null,
-        why: `this document's tier-1 reading has no per-page grain and already holds ${baseChars} decoded character(s), so a tier-2 decode was refused rather than allowed to replace text page by page it cannot be compared against`
+        why: `this document's tier-1 reading has no per-page grain and already holds ${baseGlyphs === null ? `${reported} character(s) its producer counted and no text this merge can read` : `${baseGlyphs} decoded glyph(s)`}, so a tier-2 decode was refused rather than allowed to replace text page by page it cannot be compared against`
       };
     return {
       ok: true,
@@ -39260,6 +39263,75 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     );
     return { ok: true, existed: false, grantId: g.grant_id, revokedBy: a.who, revokedAt: when };
   }
+  /* REC-200 / BOB #32's ruling of 2026-09-23 23:08Z on `BIO_Publication_v0_1.md` §6A.3 point 1 — THE COPY
+       CARRIES THE DATE OF ITS LAST CHANGE, AND A COMMENT THAT MOVES THE HASH MOVES THE DATE.
+  
+       WHAT WAS WRONG. REC-148 took DEC-31's in-band date from the draft's `updated_at`, which is the date of
+       the last EDIT and not of the last CHANGE: a comment is carried in these bytes, so it moves the hash,
+       and the copy went on stating the older date. A rendering that leaves the instance would then carry a
+       hash of one moment under the date of another — the record claiming more than it can support, which is
+       the defect this construct exists to refuse.
+  
+       WHAT THE DATE IS. The newest DATED ACT these bytes carry, and only those they carry: this draft's own
+       last edit, a comment served in `comments`, a grant served in `grants` (or the recipient's own grant)
+       with its issue and its revocation, and an acknowledgement served in `statement_acknowledgements`. It is
+       computed over the rows SERVED, not over the rows that exist, so the invariant is exact in both
+       directions: an act beyond the list cap moves neither the hash nor this date.
+  
+       WHAT IT CANNOT SEE, STATED HERE AND IN THE ANSWER'S OWN WORDS RATHER THAN LEFT TO BE FOUND. A review
+       copy also draws material this record dates NOWHERE in these bytes: each finding's text, read live from
+       the bundle; the publish gates' verdict, recomputed at every read; and the project's declared floors.
+       Any of the three can move the hash without moving this date. Naming them is the honest scope of the
+       rule, and closing them would take a dated fact the answer does not hold.
+  
+       TIES AND SHAPES, AND WHY THIS IS NOT A STRING COMPARE. The record holds TWO SPELLINGS of an instant:
+       a draft edit, a comment and a grant are stamped `new Date().toISOString()` (with milliseconds), and an
+       acknowledgement is stamped with the milliseconds cut off (`acknowledgeStatement`). Sorted as STRINGS
+       those two spellings rank WRONG inside one second — `…:00Z` sorts after `…:00.123Z`, because `Z` is
+       above `.` — so candidates are ranked by `Date.parse`, and anything unparseable is not ranked at all
+       rather than sorted as zero. Equal instants keep the FIRST candidate in the order above (edit, comment,
+       grant, acknowledgement), which is the order the answer itself presents them in.
+  
+       THE AUTHOR DOES NOT MOVE WITH IT, and that is a decision rather than an oversight: BOB #32 ruled on the
+       DATE. The quartet's `author` stays the draft's `updated_by` — a recipient who comments on a copy has
+       not authored it — and `by` here says who made the last change, so the two facts are told apart instead
+       of one name standing for both. */
+  static #reviewLastChange({ draft, comments, grants, acknowledgements }) {
+    const cand = [];
+    const add = (at, by, byKind, kind) => {
+      if (typeof at === "string" && at && !Number.isNaN(Date.parse(at)))
+        cand.push({ at, by: by ?? null, by_kind: byKind, kind });
+    };
+    add(draft.updated_at, draft.updated_by, "member", "edit");
+    for (const c of comments)
+      add(
+        c.at,
+        c.author_kind === "recipient" ? c.recipient : c.author,
+        c.author_kind === "recipient" ? "recipient" : "member",
+        "comment"
+      );
+    for (const g of grants) {
+      add(g.issued_at, g.issued_by, "member", "grant");
+      add(g.revoked_at, g.revoked_by, "member", "revocation");
+    }
+    for (const a of acknowledgements)
+      add(
+        a.at,
+        a.kind === "recipient" ? a.recipient : a.by,
+        a.kind === "recipient" ? "recipient" : "member",
+        "statement acknowledgement"
+      );
+    let last = null;
+    for (const c of cand) if (!last || Date.parse(c.at) > Date.parse(last.at)) last = c;
+    const act = !last ? "UNDETERMINED: these bytes carry no dated act at all" : `the newest dated act these bytes carry is ${last.kind === "edit" ? "an edit of the draft" : `a ${last.kind}`} by ${last.by ?? "somebody this record does not name"}`;
+    return {
+      at: last ? last.at : null,
+      by: last ? last.by : null,
+      by_kind: last ? last.by_kind : null,
+      kind: last ? last.kind : null,
+      stated: `${act}. THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md \xA76A.3 point 1, as BOB #32 ruled it on 2026-09-23): the copy's LAST CHANGE, so a comment, a grant, an acknowledgement or an edit moves both the hash and this date. IT DOES NOT SEE what this copy draws live and dates nowhere \u2014 each finding's text, the publish gates' verdict, and the project's declared floors \u2014 any of which can move the hash without moving this date.`
+    };
+  }
   /* THE READ. Two doors and one answer for everyone else: a RECIPIENT through a live
      grant's secret (and only the draft that grant names), or a MEMBER with standing
      in the producing project — D-15's predicate, as `#hasCaseStanding` asks it.
@@ -39335,6 +39407,27 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       }));
       grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
+    const acks = this.#statementAcknowledgements(
+      d.project_id,
+      ident.caseId,
+      ident.edition,
+      params.statement ?? "",
+      null,
+      null,
+      d.draft_id
+    );
+    const statementAcks = {
+      statement_sha: acks.statementSha,
+      acknowledgements: acks.rows,
+      truncated: acks.truncated,
+      act: "op=statementack&draft=" + d.draft_id
+    };
+    const lastChange = _Store.#reviewLastChange({
+      draft: d,
+      comments,
+      acknowledgements: statementAcks.acknowledgements,
+      grants: grantPart.grants ?? (grantPart.grant ? [grantPart.grant] : [])
+    });
     return {
       ok: true,
       kind: "review-copy",
@@ -39344,10 +39437,27 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       draft: d.draft_id,
       project: d.project_id,
       reader,
+      /* REC-199 / BOB #32 (2026-09-23 23:08Z), BIO_Publication_v0_1.md 6A.4: `newCase` IS SAID BACK,
+         BECAUSE A READ THAT DROPS A FIELD AN EDIT WRITES BACK LOSES IT. It was the ONE member of
+         `REVIEW_DRAFT_FIELDS` this answer never carried: `targets`/`target` and `roles` come back as
+         `findings`, `caseId` as `case.case_id`, and the six authored sentences as `authored` — so an
+         editor who read a draft and wrote the copy back turned a draft that had asked for a NEW case
+         (D-309's third route, the one a caller can only ever STATE) into one whose case is DERIVED
+         from what its findings already serve, silently and in the direction D-309 exists to refuse.
+         IT SITS IN `case` AND NOT IN `authored` because it is the other half of ONE choice — name a
+         case, or ask for a new one, which `publishCase` refuses TOGETHER as CASE_IDENTITY_AMBIGUOUS —
+         and the two halves of one choice do not live in two blocks.
+         ANSWERED AS THE GATES READ IT, a boolean: `publishCase` consults `newCase` for truthiness
+         alone, so `!!` is exactly route-preserving for every spelling a caller may have stored
+         (`"false"` is truthy here as it is there, and an absent field is the derivation, not an
+         UNDETERMINED). WHAT IT DOES NOT SAY is the identity SENTENCE beside it: with no case named,
+         that sentence reads *a new case* whether or not this field is set, which is REC-199's
+         reported finding and is `#caseIdentitySentence`'s to fix, in the three answers that print it. */
       case: {
         case_id: ident.caseId,
         edition: ident.edition,
-        identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition)
+        identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition),
+        newCase: !!params.newCase
       },
       authored: {
         scope: params.scope ?? null,
@@ -39364,28 +39474,13 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       comments,
       comments_truncated: commentsTruncated,
       list_limit: cap,
-      /* D-150 / §3 rule 11: who has acknowledged the statement AS IT STANDS NOW — the same read
-         `op=publish` lists in the case document, so a reviewer sees the list the document would print
-         (less the publisher's own, which the act leaves out). An edited statement starts empty. */
-      statement_acknowledgements: (() => {
-        const a = this.#statementAcknowledgements(
-          d.project_id,
-          ident.caseId,
-          ident.edition,
-          params.statement ?? "",
-          null,
-          null,
-          d.draft_id
-        );
-        return {
-          statement_sha: a.statementSha,
-          acknowledgements: a.rows,
-          truncated: a.truncated,
-          act: "op=statementack&draft=" + d.draft_id
-        };
-      })(),
+      statement_acknowledgements: statementAcks,
       updated_by: d.updated_by,
       updated_at: d.updated_at,
+      /* REC-200 / §6A.3 point 1 as BOB #32 ruled it: WHEN THIS COPY LAST CHANGED, and who changed it —
+         the quantity the control plane puts in the in-band quartet's `date`. `updated_at` above stays what
+         it always was, the draft's last EDIT, because they are two facts. */
+      last_change: lastChange,
       /* REC-193 / §3 rule 13: WHO WROTE THE STATEMENT THAT STANDS, beside the editor of everything else,
          because they are two facts and one column said both. `null` is the honest answer for a draft
          written before the stamp existed, and the sentence beside it says which. */
@@ -78921,7 +79016,12 @@ async function reviewAnswer(out, op) {
     const { quartet } = await inbandQuartet({
       subject: served,
       over: "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
-      date: r.updated_at ?? null,
+      /* REC-200 / BOB #32, 2026-09-23 23:08Z: THE DATE IS THE COPY'S LAST CHANGE, not the draft's last
+         EDIT — a comment moves these bytes, so it moves the hash, and it must move the date with it. The
+         store computes it over the rows it SERVES and says in `last_change.stated` what it cannot see.
+         THE AUTHOR DOES NOT MOVE: the ruling is about the date, and a recipient who comments on a copy
+         has not authored it; `last_change.by` is who made that change, beside it. */
+      date: r.last_change?.at ?? null,
       author: r.updated_by ?? null,
       bar: bar ?? null
     });
@@ -79256,7 +79356,8 @@ async function migrationReplayOf(env, storeName, b) {
 function needsTier2(text) {
   const c = text && text.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
-  if (!(c.undetermined > c.chars)) return false;
+  const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
+  if (!(c.undetermined > glyphs)) return false;
   const marks = Array.isArray(text.undetermined) ? text.undetermined : [];
   if (marks.length && marks.every((m) => m && m.reason === "no_text_layer")) return false;
   return true;
@@ -79309,14 +79410,16 @@ function mergeTier3Text(base, ocr, eligible) {
   const ocrPages = ocr && Array.isArray(ocr.pages) ? ocr.pages : [];
   const wanted = new Set(eligible);
   if (!usable.length) {
-    const baseChars = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : typeof (base && base.document) === "string" ? base.document.length : 0;
-    if (baseChars > 0)
+    const baseText = typeof (base && base.document) === "string" ? base.document : null;
+    const baseGlyphs = baseText === null ? null : glyphCount(baseText);
+    const reported = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : 0;
+    if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
       return {
         ok: false,
         filled: [],
         refused: [],
         unanswered: [],
-        why: `this document's text could not be merged page by page (the tier that read it reported no per-page text), and it already holds ${baseChars} decoded character(s), so an OCR pass was refused rather than allowed to replace text that may be better than it`
+        why: `this document's text could not be merged page by page (the tier that read it reported no per-page text), and it already holds ${baseGlyphs === null ? `${reported} character(s) its producer counted and no text this merge can read` : `${baseGlyphs} decoded glyph(s)`}, so an OCR pass was refused rather than allowed to replace text that may be better than it`
       };
     return {
       ok: true,
@@ -79332,7 +79435,7 @@ function mergeTier3Text(base, ocr, eligible) {
   for (const p of ocrPages) {
     if (!p || !Number.isInteger(p.page)) continue;
     const target = usable.find((b) => b.page === p.page);
-    const empty = target && !(typeof target.text === "string" && target.text.length);
+    const empty = target && !(typeof target.text === "string" && glyphCount(target.text) > 0);
     if (!target || !wanted.has(p.page) || !empty) {
       refused.push(p.page);
       continue;
@@ -79417,7 +79520,7 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
             if (!m.ok) ocrNote = m.why;
             else {
               i2text = m.text;
-              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page) && typeof p.text === "string" && p.text.length).map((p) => p.page);
+              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page) && typeof p.text === "string" && glyphCount(p.text) > 0).map((p) => p.page);
               const parts = [];
               const layerSet = new Set(layerPages);
               const spokenFor = tier2PerPage ? [

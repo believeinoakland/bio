@@ -136,7 +136,7 @@ import { layerChain, appendStep, describeChain, checkChain, checkAnchor,
             imported these three names and esbuild shook them out. THIS LINE is
             what makes the rule reach the plane; the two call sites below are the
             wire CPDF-20's DELEGATION (CLAIMS.md 2026-09-14) names exactly. */
-         mergeTier2Text, tier2Note } from "./textchain.mjs";
+         mergeTier2Text, tier2Note, glyphCount } from "./textchain.mjs";
 import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./cdx.mjs";
 /* docprofile is READ here, never copied. This is the FIRST plane consumer of it
    (CONSTRUCTS Step 1 / FW-3): op=acquire calls identify() and doctypeFor() to
@@ -3346,7 +3346,12 @@ async function reviewAnswer(out, op) {
       subject: served,
       over: "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and "
           + "hash JSON.stringify(rest, null, 1) as UTF-8",
-      date: r.updated_at ?? null, author: r.updated_by ?? null, bar: bar ?? null });
+      /* REC-200 / BOB #32, 2026-09-23 23:08Z: THE DATE IS THE COPY'S LAST CHANGE, not the draft's last
+         EDIT — a comment moves these bytes, so it moves the hash, and it must move the date with it. The
+         store computes it over the rows it SERVES and says in `last_change.stated` what it cannot see.
+         THE AUTHOR DOES NOT MOVE: the ruling is about the date, and a recipient who comments on a copy
+         has not authored it; `last_change.by` is who made that change, beside it. */
+      date: r.last_change?.at ?? null, author: r.updated_by ?? null, bar: bar ?? null });
     return json({ ...served, inband: quartet }, 200);
   }
   return json({ ok: true, ...r }, 200);
@@ -4106,7 +4111,22 @@ async function migrationReplayOf(env, storeName, b) {
 function needsTier2(text) {
   const c = text && text.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
-  if (!(c.undetermined > c.chars)) return false;
+  /* D-514 — THE ROUTING COUNTS GLYPHS TOO. This compared the marker count against
+     `counts.chars`, the RAW character count, which D-501 had already ruled is not
+     a count of decoded text: a page of whitespace reports characters and holds no
+     glyph, so a document whose text is whitespace read as though tier 1 had
+     recovered something and was not sent to the member that could read it. The
+     comparison now reads the TEXT IN HAND. `counts.chars` is still required to be
+     present and numeric above — its absence is what says "this is not an I2 text
+     shape" — and is deliberately still the fall-back when there is no document
+     string to count, which is this predicate's behaviour before this change,
+     unchanged, for the one input that has no text to read.
+     THE DIRECTION OF THE CHANGE IS TOWARDS ESCALATING, never away: glyphs are
+     never more than characters. An extra escalation costs one fleet hop and can
+     lose nothing, because `perPageTierWinner` still awards a page to tier 2 only
+     when tier 2 admits fewer undetermined characters AND decodes more glyphs. */
+  const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
+  if (!(c.undetermined > glyphs)) return false;
   /* CPDF-10 — AND A SCAN DOES NOT ESCALATE TO TIER 2, because Tier 2 has
      nothing to tell it. `no_text_layer` means the page declares no font and
      draws an image: pdf.js would walk the same file and reach the same answer,
@@ -4331,14 +4351,23 @@ function mergeTier3Text(base, ocr, eligible) {
   const wanted = new Set(eligible);
 
   if (!usable.length) {
-    const baseChars = (base && base.counts && Number.isFinite(base.counts.chars))
-      ? base.counts.chars
-      : (typeof (base && base.document) === "string" ? base.document.length : 0);
-    if (baseChars > 0)
+    /* D-514 — GLYPHS, AND OFF THE TEXT IN HAND. The twin of `mergeTier2Text`'s
+       own base judgment and corrected for the same reason, in the same order: the
+       document string is the fact, `counts.chars` the producer's claim about it,
+       and the two differ by exactly the whitespace. A whitespace-only base holds
+       no decoded text, so it has nothing to lose and the OCR answer is taken
+       wholesale — and the refusal sentence, when it does fire, can no longer say a
+       document "already holds" text that is not there. */
+    const baseText = (typeof (base && base.document) === "string") ? base.document : null;
+    const baseGlyphs = baseText === null ? null : glyphCount(baseText);
+    const reported = (base && base.counts && Number.isFinite(base.counts.chars)) ? base.counts.chars : 0;
+    if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
       return { ok: false, filled: [], refused: [], unanswered: [],
                why: `this document's text could not be merged page by page (the tier that read it `
-                  + `reported no per-page text), and it already holds ${baseChars} decoded `
-                  + `character(s), so an OCR pass was refused rather than allowed to replace text `
+                  + `reported no per-page text), and it already holds ${baseGlyphs === null
+                        ? `${reported} character(s) its producer counted and no text this merge can read`
+                        : `${baseGlyphs} decoded glyph(s)`}`
+                  + `, so an OCR pass was refused rather than allowed to replace text `
                   + `that may be better than it` };
     /* Nothing to lose: the wholly-unread document. This is the path every
        Tier-3 document has taken to date and it is unchanged. */
@@ -4351,7 +4380,22 @@ function mergeTier3Text(base, ocr, eligible) {
   for (const p of ocrPages) {
     if (!p || !Number.isInteger(p.page)) continue;
     const target = usable.find((b) => b.page === p.page);
-    const empty = target && !(typeof target.text === "string" && target.text.length);
+    /* D-514 — "NOTHING TO LOSE" IS A GLYPH QUESTION. `target.text.length` counted a
+       page of whitespace as text worth protecting, so the guarantee this function
+       states — that it cannot degrade a page that carries text — was written in a
+       unit that does not measure carrying text. It is the same correction as the
+       two base judgments and it keeps the guarantee exactly: a page holding no
+       glyph has nothing a transcription can degrade.
+       STATED PLAINLY: THIS IS DEFENCE IN DEPTH AND IS NOT FALSIFIABLE THROUGH THE
+       OP TODAY. A whitespace-only page is never in `wanted`, because tier 1 emits
+       `no_text_layer` only for a page with NO text at all and no font (see
+       `pdfstructure.mjs`), so the `!wanted.has` clause refuses that page one test
+       earlier and this clause is never reached for it. `nc-cpdf10` already records
+       the same relationship for conditions 1 and 2 and arms them together for it.
+       The clause is corrected anyway because condition 2 exists precisely to
+       survive a future tier's marker vocabulary, and a condition kept for that
+       reason has to be right in the unit the question is asked in. */
+    const empty = target && !(typeof target.text === "string" && glyphCount(target.text) > 0);
     if (!target || !wanted.has(p.page) || !empty) { refused.push(p.page); continue; }
     byPage.set(p.page, p);
   }
@@ -4535,9 +4579,24 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
                  transcribed carries no text and therefore belongs to
                  neither part — it has no provenance to record,
                  because nothing produced anything for it. */
+              /* D-514 — A PAGE CARRIES TEXT WHEN IT CARRIES A GLYPH.
+                 This filtered on `p.text.length`, so a page whose
+                 tier-1 reading is whitespace and nothing else went
+                 into the `layer` part and the record named a tier-1
+                 derivation for a page from which nothing was
+                 derived. `legistar-73550` p1 is the real witness —
+                 39 characters, ZERO glyphs (M-140) — and the
+                 sentence this filter's own comment above is written
+                 to honour ("a page nobody transcribed carries no
+                 text and therefore belongs to neither part") was
+                 being broken by the filter meant to enforce it. A
+                 page with no glyph now belongs to neither part, for
+                 the reason already stated there: it has no
+                 provenance to record, because nothing produced
+                 anything for it. */
               const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : [])
                 .filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page)
-                            && typeof p.text === "string" && p.text.length)
+                            && typeof p.text === "string" && glyphCount(p.text) > 0)
                 .map((p) => p.page);
               const parts = [];
               /*__REC102_TIER3_LAYER_PARTS_START__*/

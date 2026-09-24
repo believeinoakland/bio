@@ -79,10 +79,25 @@ const ARMS = [
   /* ---- D-252's arms. Each one drives THE REPLACEMENT IT PREVENTS: a mixed
      document whose good page comes back with its text degraded. ---- */
 
+  /* THIS ARM DID NOT ARM BETWEEN CPDF-19 AND 2026-09-24 — FOUND AND REPAIRED BY
+     D-514, RECORDED HERE RATHER THAN QUIETLY FIXED. The anchor carried TWENTY-FOUR
+     spaces of indentation, matching the read-time re-extraction copy of the call
+     that CPDF-19 had added at `op=pdfstructure&ocr=1`; `src/index.mjs` carries the
+     call at TWELVE and carries exactly ONE copy of it. The match is literal, so
+     the anchor matched zero times and this — **the headline arm, the one that
+     proves D-252's page-wise merge is load-bearing rather than decorative** — has
+     not been evidence since the two copies were collapsed into one. The driver
+     did print `DID NOT ARM` each time, which is the only reason it was
+     recoverable, but it did NOT fail the run: see the exit status at the foot of
+     this file, corrected in the same landing. The repair is the anchor dedented by
+     twelve; the arm, its declaration and its named sets are unchanged. The general
+     shape: an anchor is a claim about the subject's TEXT, so it goes stale exactly
+     when the subject is refactored — the moment an arm is most worth having. The
+     same class was found in `nc-rec102.mjs` (A1 and A3) in the same sweep. */
   { name: "g. D-252: the merge goes back to WHOLESALE (`i2text = built.text`, the defect)",
     file: "src/index.mjs",
-    from: `                        const m = mergeTier3Text(baseText, built.text, wantPages);`,
-    to:   `                        const m = { ok: true, text: built.text, filled: wantPages, refused: [], unanswered: [], wholesale: true };`,
+    from: `            const m = mergeTier3Text(baseText, built.text, wantPages);`,
+    to:   `            const m = { ok: true, text: built.text, filled: wantPages, refused: [], unanswered: [], wholesale: true };`,
     mustFail: "the D-252 merge arms — the text-layer page's own references are GONE, replaced by an OCR pass at cap C, which is the defect this item closes",
     mustNotFail: "every arm about a document with ONE provenance: the wholly-scanned document, the text-layer document, the refusal arms, the attestation arms" },
 
@@ -171,3 +186,13 @@ for (const arm of ARMS) {
   }
 }
 console.log(`\nsurprises: ${surprises}`);
+/* AND THE RUN EXITS ON THEM — added at D-514, 2026-09-24, because until then it
+   did not. This driver counted every surprise correctly, printed each one, and
+   then exited 0 regardless, so a caller reading the exit status — which is how a
+   gate, a script or a worker in a hurry reads any instrument — was told the
+   control was clean while the log said otherwise. It is the shape this estate
+   names as its worst: a check that cannot fail is worse than no check. Arm (g)
+   sat DID-NOT-ARM behind that 0 for as long as its anchor was stale.
+   THE COUNT IS PRINTED FIRST AND THE EXIT AGREES WITH IT, so the log and the
+   status can never say different things. */
+process.exit(surprises ? 1 : 0);

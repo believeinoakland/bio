@@ -34,7 +34,49 @@
    named it) and was re-anchored; ARMED, it gave 19/3 — block 5's one-function arm STAYED GREEN, because it sliced
    only the handler and the planted hasher now sits in `reviewAnswer`. Block 5 was CORRECTED to read the handler
    plus that function, and (a) then gave 18/4, the four named above, AS DECLARED. (0) 22/0, (b) 22/0, (c) 19/3
-   unchanged. */
+   unchanged.
+
+   REC-200's THREE ARMS, DECLARED 2026-09-24 BEFORE ARMING, on the DATE (BOB #32, 2026-09-23 23:08Z: the copy
+   carries the date of its LAST CHANGE):
+
+   (d) THE ROW'S CONTROL — KEEP THE OLD DATE: the quartet's date read from the draft's `updated_at` again.
+   Declared: MUST FAIL every arm that asserts an act MOVES the date — 6b's comment arm and block 7's member
+   comment, grant, recipient comment and acknowledgement. MUST NOT fail block 1 (on a fresh draft the last
+   change IS the last edit, which is why that arm alone cannot catch this), any hash or re-hash arm, 6a's
+   stability, the floors, the one-function arm or the whole container side.
+
+   (e) OVER-STRICTNESS — the newest act picked by SORTING the candidates instead of by the reducer loop, a
+   correct spelling the suite did not anticipate. Declared: everything GREEN.
+
+   (f) THE LIAR — the date is the MOMENT OF THE READ. It moves whenever anything happens, so it would satisfy
+   a naive "the date moved" arm while meaning nothing. Declared: MUST FAIL 6a's stability arm, block 7's
+   "AND NOTHING HAPPENED" arm, and every arm pinning the date to a NAMED instant (block 1, 6b's comment, and
+   block 7's four acts).
+
+   RUN 2026-09-24 by the REC-200 worker (branch land/worker/REC-200), all six anchors LIVE at preflight, every
+   restore sha256 MATCH and content IDENTICAL (index.mjs 809,945 bytes; inband.mjs 3,815; store.mjs 3,291,748),
+   the pen OUTSIDE the worktree (BOB #32, 2026-09-24):
+     (0) baseline -> 31 pass, 0 fail.
+     (a) -> 22/9, where the 2026-09-24 re-run gave 18/4: the four declared then, plus block 7's five arms,
+         each of which re-hashes the served answer as well as reading the date. MORE than declared, in the
+         same direction, and it is a fact about the ADDED arms rather than about the subject.
+     (b) -> 31/0 GREEN, as in the REC-148 run: the frozen bar's `declared` still reaches `floorsOf` as a
+         boolean on this plane, so the string branch stays defence in depth. Recorded, not smoothed.
+     (c) -> 28/3: the three floor arms of block 2, block 4's field-for-field floors arm GREEN. As declared.
+     (d) -> 26/5: the five date arms failing BY NAME and NOTHING else — block 1, the hashes, 6a, the floors,
+         the one-function arm and the container side all green, exactly as declared. THIS IS THE ROW'S OWN
+         CONTROL: keep the old date and only the arms about the rule fail.
+     (e) -> 31/0 GREEN, as declared.
+     (f) -> 22/9: 6a, "AND NOTHING HAPPENED", block 1's date arm, 6b's comment arm and block 7's five arms.
+         As declared, and it is what makes (d)'s greens meaningful — a date that merely MOVES does not pass.
+
+   RE-RUN 2026-09-24, WHOLE, after the gate found block 7's wait UNCHECKED (`budget-sweep.test.mjs`: a
+   hand-rolled wall-clock deadline is UNCHECKABLE by construction, M0-107) and it was rebuilt on `until` +
+   `budgetAssert`, with the stability arm moved ahead of the acknowledgement so an expired budget skips only
+   what it did not measure: EVERY ARM UNCHANGED — baseline 31/0, (a) 22/9, (b) 31/0, (c) 28/3, (d) 26/5 with
+   the same five arms named, (e) 31/0, (f) 22/9. The subject's control is re-run because the subject moved,
+   not because anything was expected to differ.
+ */
 
 /* REC-148 / DEC-31's BOUND RULE — THE REVIEW COPY CARRIES ITS HASH, DATE, AUTHOR AND BOTH FLOORS IN-BAND.
  *
@@ -72,6 +114,9 @@ import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs";
+/* REC-200: M0-107's budget helper — a hand-rolled wall-clock deadline is UNCHECKABLE by construction
+   (`scripts/budgetsweep.mjs`), and an expired budget must read NOT MEASURED rather than as a finding. */
+import { until, budgetAssert } from "./budget.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- reviewcopy-inband ---");
@@ -241,10 +286,17 @@ t("HASH: a SHA-256, named as such, over a stated subject with its byte count",
   [q1.hash?.algorithm, /^[0-9a-f]{64}$/.test(q1.hash?.sha256 ?? ""), typeof q1.hash?.over,
    Number.isInteger(q1.hash?.bytes) && q1.hash.bytes > 100],
   ["sha256", true, "string", true]);
-t("DATE and AUTHOR are the draft's own `updated_at` and `updated_by` — the quantities §6A.3 names — never "
-+ "the moment of the read or the reader",
-  [q1.date, q1.author, q1.date === rc1.updated_at, q1.author === rc1.updated_by],
-  [rc1.updated_at, "iris", true, true]);
+/* CORRECTED 2026-09-24 (REC-200), NOT EXEMPTED: the old assertion read the in-band date as the draft's
+   `updated_at` — the last EDIT — and BOB #32 ruled at 23:08Z on 2026-09-23 that the copy carries the date
+   of its LAST CHANGE (§6A.3 point 1). On a draft nobody has commented on, granted or acknowledged the two
+   are the SAME instant, which is exactly why the old assertion passed and why it could not tell them
+   apart; block 7 drives them apart. Pinned here to the quantity (`last_change.at`) as well as to the
+   value. */
+t("DATE is the copy's LAST CHANGE and AUTHOR is the draft's own editor — never the moment of the read or "
++ "the reader; on a draft nothing has happened to, its last change IS its last edit and the two agree",
+  [q1.date, q1.author, q1.date === rc1.last_change?.at, q1.date === rc1.updated_at,
+   q1.author === rc1.updated_by],
+  [rc1.updated_at, "iris", true, true, true]);
 t("the store's `required_strength` is read INTO the floors and is not served a second time beside them",
   "required_strength" in rc1, false);
 
@@ -293,11 +345,18 @@ const cm = rP(await POST(`op=reviewcomment&draft=${DRAFT}&token=${IRIS}`, { text
 if (!cm?.ok) await bail("reviewcomment", cm);
 const read3 = await rawGet(`op=reviewcopy&draft=${DRAFT}&token=${IRIS}`);
 const rc3 = JSON.parse(read3.bytes.toString("utf8"));
-t("A ONE-CHARACTER COMMENT, which moves the answer but not the draft: the hash moves; the DATE does not, "
-+ "because the date is the draft's own last edit",
+/* CORRECTED 2026-09-24 (REC-200): this assertion described THE PLANE correctly and THE RULE wrongly. It
+   pinned the date to the draft's last edit and therefore asserted that a comment moves the hash and NOT
+   the date — which is the defect BOB #32 ruled on at 23:08Z on 2026-09-23: a rendering that leaves the
+   instance would carry THIS moment's hash under an OLDER date, the record claiming more than it holds.
+   Both move now, and the date is the comment's own `at`. */
+t("A ONE-CHARACTER COMMENT, which moves the answer but not the draft's own edit stamp: the hash moves AND "
++ "the date moves with it, to the comment's own instant, while `updated_at` stays where it was and the "
++ "copy names the change",
   [rc3.inband?.hash?.sha256 !== rc2.inband?.hash?.sha256, rehashServed(read3.bytes) === rc3.inband?.hash?.sha256,
-   rc3.inband?.date === rc2.inband?.date],
-  [true, true, true]);
+   rc3.inband?.date !== rc2.inband?.date, rc3.inband?.date === cm.comment?.at,
+   rc3.updated_at === rc2.updated_at, rc3.last_change?.kind, rc3.last_change?.by, rc3.last_change?.by_kind],
+  [true, true, true, true, true, "comment", "iris", "member"]);
 /* Restore the authored statement, so the published edition is the draft's arguments exactly. */
 {
   const back = rP(await POST(`op=casedraft&token=${IRIS}`, { draft: DRAFT, ...ARGS }));
@@ -345,9 +404,37 @@ t("FIELD FOR FIELD: the review copy's quartet and the container's carry the SAME
 t("FLOORS AGREE: the draft's floors (the project's bar read now) and the container's (the bar frozen into "
 + "the signed case document) are ONE quantity, word for word",
   qF.floors, cq.floors);
-t("AUTHOR AND DATE on the container are the case document's signer and its ratification instant — the "
-+ "same KINDS of fact the review copy states for the draft",
-  [cq.author, typeof cq.date === "string" && !Number.isNaN(Date.parse(cq.date))], ["iris", true]);
+/* REC-200 pins the CONTAINER SIDE to the RECORD, not to a literal and not to the variable the quartet was
+   built from: BOB #32 ruled at 23:08Z on 2026-09-23 that the container side is stamped by the ATTESTOR and
+   the RATIFICATION DATE, and both are read back here from `op=casedocument` for this published edition.
+   It was ALREADY so on the plane (REC-148) — this arm is what would catch it drifting to the draft's
+   stamps, to the publisher, or to the moment of assembly. */
+{
+  /* THE PUBLISHED READ IS ASKED BY A FINDING OF THE CASE (`id=`), with the case named to resolve a finding
+     several cases could pin, and the edition — the op takes no bare case id. */
+  const pc = rP(await GET(`op=publishedcase&id=${encodeURIComponent(LEAD)}`
+    + `&caseId=${encodeURIComponent(pub.caseDocument.case_id)}&edition=${pub.caseDocument.edition}`));
+  const doc = rP(await GET(`op=casedocument&token=${IRIS}`
+    + `&case=${encodeURIComponent(pub.caseDocument.case_id)}&edition=${pub.caseDocument.edition}`));
+  t("AUTHOR AND DATE on the container are the ATTESTOR and the EDITION'S RATIFICATION INSTANT, read back "
+  + "from the record itself — the signer from op=casedocument, the instant from op=publishedcase — which is "
+  + "the stamp BOB #32 ruled the container side carries, and the same KINDS of fact the review copy states "
+  + "for the draft",
+    [cq.author, typeof cq.date === "string" && !Number.isNaN(Date.parse(cq.date)),
+     pc?.ok !== false, doc?.ok === true, cq.author === doc?.attestor_member, cq.date === pc?.ratified_at],
+    ["iris", true, true, true, true, true]);
+  /* MEASURED HERE, 2026-09-24 (REC-200), because the plane holds TWO ratification instants and a reader
+     who assumes one would be wrong about the artifact that travels: `published_cases.ratified_at` is the
+     instant the LAST MEMBER's signature landed — the edition's completion, which is what the container
+     carries — and `case_documents.ratified_at` is the instant the CASE SIGNATURE was delivered. This arm
+     asserts they are told apart rather than assumed equal; it is not a defect, and if the two ever
+     coincide the arm says so rather than failing. */
+  t("and the case DOCUMENT's own ratification instant is a SECOND fact, told apart from the edition's: the "
+  + "container carries the edition's",
+    [doc?.ratified, typeof doc?.ratified_at === "string",
+     doc?.ratified_at === cq.date ? "the same instant in this run" : "a different instant, as the record holds them"],
+    [true, true, "a different instant, as the record holds them"]);
+}
 
 /* ======================================================================= 5. one function */
 console.log("\n--- 5. ONE FUNCTION: no second hasher over a manifest or a review copy ---");
@@ -383,6 +470,112 @@ console.log("\n--- 5. ONE FUNCTION: no second hasher over a manifest or a review
   const ib = codeOf(SRC("inband.mjs"), true);
   t("and inside `inband.mjs` there is ONE canonical serialisation and ONE digest",
     [(ib.match(/JSON\.stringify\(/g) || []).length, (ib.match(/crypto\.subtle\.digest\(/g) || []).length], [1, 1]);
+}
+
+/* ======================================================================= 7. the date is the LAST CHANGE */
+/* REC-200 / BOB #32, 2026-09-23 23:08Z (`BIO_Publication_v0_1.md` §6A.3 point 1): *the copy carries the date
+   of its LAST CHANGE, so a comment that moves the hash moves the date*. Block 6b drives the ruling's own
+   example on the member door; this block sweeps the CLASS — every DATED ACT these bytes carry — and drives
+   each one THROUGH ITS OP: an edit, a comment (member), a grant, a comment (recipient) and an
+   acknowledgement, on both doors. What the date CANNOT see is stated by the copy itself and asserted here,
+   because a scope nobody can read is not a scope. */
+console.log("\n--- 7. REC-200: the date is the copy's LAST CHANGE, act by act, on both doors ---");
+{
+  /* A FRESH DRAFT, so nothing here disturbs the edition published above. */
+  const d7 = rP(await POST(`op=casedraft&token=${IRIS}`, ARGS));
+  if (!d7?.ok) await bail("casedraft (block 7)", d7);
+  const D7 = d7.draftId;
+  const readAs = async (q) => {
+    const r = await rawGet(q);
+    const o = JSON.parse(r.bytes.toString("utf8"));
+    return { o, status: r.status, sha: o.inband?.hash?.sha256, date: o.inband?.date,
+             lc: o.last_change, rehash: rehashServed(r.bytes) };
+  };
+  const member = () => readAs(`op=reviewcopy&draft=${D7}&token=${IRIS}`);
+
+  const r0 = await member();
+  t("A FRESH DRAFT: the date is its own edit, the copy NAMES the change, and it STATES what the date cannot "
+  + "see — the finding's text, the gates' verdict and the project's floors, each able to move the hash alone",
+    [r0.status, r0.date === r0.o.updated_at, r0.lc?.kind, r0.lc?.by, r0.lc?.by_kind, r0.rehash === r0.sha,
+     /LAST CHANGE/.test(r0.lc?.stated || ""), /DOES NOT SEE/.test(r0.lc?.stated || ""),
+     /gates' verdict/.test(r0.lc?.stated || "")],
+    [200, true, "edit", "iris", "member", true, true, true, true]);
+
+  /* THE DATE IS INSIDE THE HASHED BYTES, which is what binds the two: `last_change` is part of the answer
+     the hash is taken over, so nobody can be handed these bytes under a different date. Proved by moving
+     the date HERE and re-hashing, not by reading the code. */
+  {
+    const { inband: _drop, ...rest } = JSON.parse(JSON.stringify(r0.o));
+    rest.last_change.at = "2026-01-01T00:00:00.000Z";
+    t("THE DATE IS COVERED BY THE HASH: move `last_change` in the served bytes and the hash no longer "
+    + "matches — so the date cannot be restated under the same hash",
+      sha(Buffer.from(JSON.stringify(rest, null, 1), "utf8")) !== r0.sha, true);
+  }
+
+  const c7 = rP(await POST(`op=reviewcomment&draft=${D7}&token=${IRIS}`, { text: "a member's note" }));
+  if (!c7?.ok) await bail("reviewcomment (block 7, member)", c7);
+  const r1 = await member();
+  t("A MEMBER'S COMMENT: the hash moves and the date moves WITH it, to the comment's own instant, while the "
+  + "draft's `updated_at` stays where it was",
+    [r1.sha !== r0.sha, r1.rehash === r1.sha, r1.date === c7.comment?.at, r1.date !== r0.date,
+     r1.o.updated_at === r0.o.updated_at, r1.lc?.kind],
+    [true, true, true, true, true, "comment"]);
+
+  const g7 = rP(await POST(`op=reviewgrant&token=${IRIS}`,
+    { draft: D7, recipient: "Dana Ruiz, City Auditor's office" }));
+  if (!g7?.ok || !g7.secret) await bail("reviewgrant (block 7)", g7);
+  const r2 = await member();
+  t("A GRANT ISSUED — a dated act on the copy that is neither an edit nor a comment: the date moves to the "
+  + "issue instant and names the act and its issuer",
+    [r2.sha !== r1.sha, r2.rehash === r2.sha, r2.date === g7.issuedAt, r2.lc?.kind, r2.lc?.by],
+    [true, true, true, "grant", "iris"]);
+
+  const SEC = encodeURIComponent(g7.secret);
+  const c8 = rP(await POST(`op=reviewcomment&secret=${SEC}`, { text: "the addressee's note" }));
+  if (!c8?.ok) await bail("reviewcomment (block 7, recipient)", c8);
+  const r3 = await member();
+  const rr3 = await readAs(`op=reviewcopy&secret=${SEC}`);
+  t("A RECIPIENT'S COMMENT, through the grant and holding no credential: BOTH DOORS move to that instant, "
+  + "and the copy names the ADDRESSEE the grant was issued to rather than the grant id",
+    [r3.date === c8.comment?.at, rr3.date === c8.comment?.at, rr3.status, rr3.rehash === rr3.sha,
+     r3.lc?.by, r3.lc?.by_kind, rr3.lc?.by],
+    [true, true, 200, true, "Dana Ruiz, City Auditor's office", "recipient",
+     "Dana Ruiz, City Auditor's office"]);
+
+  const r3b = await member();
+  t("AND NOTHING HAPPENED: two reads with no act between them answer the SAME hash and the SAME date — the "
+  + "date is the copy's last change, never the moment of the read",
+    [r3b.sha === r3.sha, r3b.date === r3.date], [true, true]);
+
+  /* AN ACKNOWLEDGEMENT'S STAMP IS CUT TO THE SECOND (`acknowledgeStatement`), and every other act here is
+     stamped with milliseconds. So an acknowledgement made in the SAME SECOND as the act before it is DATED
+     EARLIER than it, and the copy's last change is honestly still that earlier act — a fact about the
+     record's two spellings, not a flake to paper over. The wait for the clock to cross into the next second
+     is M0-107's `until` with its result read by `budgetAssert`, never a hand-rolled deadline: an expiry
+     measured nothing, so it reads NOT MEASURED and the acknowledgement arms below are SKIPPED rather than
+     failing as though the plane were wrong. */
+  const secFloor = Math.floor(Date.parse(c8.comment?.at ?? new Date().toISOString()) / 1000);
+  const crossed = await until(() => Math.floor(Date.now() / 1000) > secFloor, 5000, { stepMs: 25 });
+  const clockOk = budgetAssert(t, "reviewcopy-inband block 7: the clock crossing into the second after the "
+    + "recipient's comment", crossed, 5000,
+    "the acknowledgement arms — a second-precision stamp cannot be ranked inside the second it was cut from");
+  if (clockOk) {
+    const a7 = rP(await POST(`op=statementack&draft=${D7}&secret=${SEC}`, {}));
+    if (!a7?.ok) await bail("statementack (block 7, recipient)", a7);
+    const r4 = await member();
+    const rr4 = await readAs(`op=reviewcopy&secret=${SEC}`);
+    t("AN ACKNOWLEDGEMENT OF THE STATEMENT — the fourth dated act the copy carries: the date moves to it on "
+    + "both doors, named as an acknowledgement and attributed to the addressee",
+      [r4.date === a7.acknowledgement?.at, rr4.date === a7.acknowledgement?.at, r4.sha !== r3.sha,
+       r4.rehash === r4.sha, r4.lc?.kind, r4.lc?.by],
+      [true, true, true, true, "statement acknowledgement", "Dana Ruiz, City Auditor's office"]);
+  }
+
+  /* WHAT THIS BLOCK CANNOT SEE, SAID PLAINLY: it drives the four dated acts the answer carries. It does NOT
+     drive a grant's REVOCATION (a revoked grant is not served on the recipient door at all, and the member
+     door's roster row is), and the three undated sources the copy names in `stated` — a finding's text, the
+     gates' verdict, the project's floors — are outside the date by construction, which is why the copy says
+     so rather than this suite asserting they move it. */
 }
 
 /* The suite ends on its own explicit exit (hygiene's rule), after the tally it printed. */

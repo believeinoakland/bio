@@ -25,7 +25,9 @@
  *   - a UI call helper the `uinone` probe does not know, which would make every
  *     "the UI does not call X" claim silently blind;
  *   - a `hit` that matches MANY sites, which reads exactly like one that matches the right site
- *     and stays green when the right site is deleted (M0-160).
+ *     and stays green when the right site is deleted (M0-160);
+ *   - a `table` satisfied by its name inside a STRING, or by the second of two declarations, which
+ *     keeps a deleted table reading BUILT (M0-181 — the same hole, one probe kind out).
  *
  * NEGATIVE CONTROL: `node bio-plane/test/status.control.mjs` from the repo root — each arm
  * breaks one property of the tool and must turn a NAMED assertion here red.
@@ -67,6 +69,29 @@
  *     made the armed probe AMBIGUOUS instead of satisfied and it still read `ok: false`. The arm was passing
  *     armed and unarmed: a control that cannot fail. CORRECTED at the assertion (anchored at the opening
  *     marker's `/*`, one raw site and zero blanked), never exempted, and this figure is the run AFTER that.
+ *   RE-RUN 2026-09-24 by M0-181 with A15 and A16 added (a declaration recognised MID-LINE again, so a
+ *     STRING naming a table declares it; and a `table` satisfied by the FIRST of two declarations):
+ *     SIXTEEN arms, 89 pass / 0 fail, exit 0; baseline and closing baseline both 102 pass / 0 fail, so
+ *     no arm leaked. A15 FAILED at "A TABLE NAMED ONLY BY A STRING IS NOT DECLARED" and at the estate
+ *     arm "ON THE REAL TREE EVERY DECLARATION IS THE ONLY ONE OF ITS NAME"; A16 at "A TABLE DECLARED
+ *     TWICE IS NOT ok" and "A CLAIM WHOSE `table` PROBE IS AMBIGUOUS DRIFTS"; neither collateral;
+ *     tools/status.mjs restored by sha256 (3920a8b3…) AND cmp, 33690 bytes, byte-identical after every
+ *     arm. DECLARED BEFORE ARMING and held: those four must fail, and the over-strictness arms must PASS
+ *     armed and unarmed — the declaration found with that same string beside it, the two written as an
+ *     indented backtick (the NINE a bare `^` loses), and the miss ("A TABLE DECLARED NOWHERE still says
+ *     so") — because an anchor that lost real declarations, or a count that failed every `table`, would
+ *     be a worse defect than the one being closed.
+ *     AND THE FIRST RUN FOUND ITS DEFECTS IN NEIGHBOURING ARMS RATHER THAN IN ITS OWN SUBJECT, reported
+ *     rather than smoothed, both of them shapes this file already warns about. (1) A13 STOPPED
+ *     DISCRIMINATING: its phantom is written inside an SQL `--` comment, and the new anchor refuses that
+ *     line by POSITION before the declaration SHAPE is ever consulted — so A13 passed armed AND unarmed,
+ *     a control that cannot fail. CORRECTED AT THE FIXTURE, never exempted: the prose sentence the shape
+ *     is asserted on now begins its own line, where only the shape can refuse it, and the `--` one stays
+ *     beside it under its own name with an assertion of its own. (2) A14 WOULD NOT HAVE ARMED: its patch
+ *     was anchored on the PREFIX `if (sites.length === 1) return { ok: true, evidence:`, and the `table`
+ *     probe's new count gave that prefix a second match — `armPatch` writes nothing at two hits, and the
+ *     driver's own "matched exactly once" assertion is what would have said so. Spelled whole, it names
+ *     the `hit` branch alone. The figures above are the run AFTER both corrections.
  * AND A SECOND BY-HAND ARM ON THE PUSH GUARD (2026-09-18): `corpusCheck` made to accept any completion
  *   line regardless of its fail count -> section 8's "A STALE STATUS DATE REFUSES THE PUSH" FAILS (51/1);
  *   `tools/pushguard.mjs` restored by `cp`, verified byte-identical (sha256 7d978c73…).
@@ -90,7 +115,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "nod
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { evalProbe, judge, renderCell, renderMap, lookup, bumpAsOf, firstSentence, CELL_CAP, CODE_EXT, UI_HELPERS, ROOT, STATES }
+import { evalProbe, judge, renderCell, renderMap, lookup, bumpAsOf, firstSentence, tableSites, CELL_CAP, CODE_EXT, UI_HELPERS, ROOT, STATES }
   from "../../tools/status.mjs";
 import { BUDGET, MAP as BUDGET_MAP } from "../../tools/readbudget.mjs";
 import { statusCheck, corpusCheck, markerCheck } from "../../tools/pushguard.mjs";
@@ -102,7 +127,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 12;
+const SECTIONS = 13;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -126,9 +151,19 @@ put("docs/notes.md", "prose with // notCode in it\n");
    inside an SQL `--` comment in a TEMPLATE LITERAL, which is string content to a JS lexer and
    survives comment-blanking — exactly schema.mjs's shape. It is closed by the DECLARATION SHAPE
    (a column list or `USING`) and not by the blanking, which is why the fixture carries both. */
+/* CORRECTED BY M0-181, NEVER EXEMPTED, and found by re-running A13 after changing the tool — the
+   "a fix verified only where you changed it is not verified" rule paying for itself a second time.
+   M0-155 wrote ONE phantom here, inside an SQL `--` comment, and A13 (the declaration shape
+   loosened) turned the assertions below red. M0-181's ANCHOR then closed that same sentence for a
+   DIFFERENT reason — its line begins `--`, so it is no longer a declaration by POSITION, whatever
+   the shape says — and A13 began passing armed and unarmed: a control that cannot fail. So the
+   prose sentence the SHAPE is asserted on now starts its own LINE, where only the shape can refuse
+   it, and the SQL-comment one stays beside it under its own name as the ANCHOR's fixture. Two
+   phantoms, one per closure, which is what the estate carried too. */
 put("bio-plane/src/schema.mjs", "export const SCHEMA = `\n"
   + "CREATE TABLE IF NOT EXISTS content (\n  id TEXT\n);\n"
-  + "-- CREATE TABLE IF NOT EXISTS phantomtable would rebuild it, so we do not\n"
+  + "CREATE TABLE IF NOT EXISTS phantomtable would rebuild it, so we do not\n"
+  + "-- CREATE TABLE IF NOT EXISTS phantomincomment would rebuild it either, and starts no line\n"
   + "`;\n");
 put("civicos-ui/app.html", "<script>recR(\"frontier\"); actAsk(\"conclude\", {});</script>");
 /* M0-160's subjects. `pinnedOnce` is written TWICE in this file and only once in CODE — the second
@@ -431,6 +466,12 @@ section("11 — A PROBE READS CODE, NOT COMMENTARY: a claim whose only match is 
      its `USING`, which is the shape `test/hygiene.test.mjs:685` has harvested by all along. */
   t("A `CREATE TABLE` IN A PROSE SENTENCE IS NOT A TABLE, even where comment-blanking cannot reach it",
     P({ table: "phantomtable" }).ok, false);
+  /* AND THE SAME SENTENCE WRITTEN MID-LINE, after an SQL `--`, is refused a second way (M0-181): a
+     declaration begins a line or follows a template backtick, and this one does neither. Both
+     closures are asserted because each stands alone — the shape catches a prose tail at a line
+     start, the anchor catches a real column list somewhere no declaration may begin. */
+  t("...AND ONE THAT BEGINS NO LINE IS NOT A TABLE EITHER — the anchor, independently of the shape",
+    P({ table: "phantomincomment" }).ok, false);
   t("...so the census does not count it either — 2 declarations, not 3",
     [P({ count: "tables", equals: 2 }).ok, P({ count: "tables", equals: 3 }).ok], [true, false]);
   t("OVER-STRICTNESS: a declaration with its column list, and a VIRTUAL one with USING, BOTH still count",
@@ -536,6 +577,111 @@ section("12 — A `hit` PINS EXACTLY ONE SITE, OR IT PINS NOTHING (M0-160)");
     /, 1 ambiguous/.test(mk("twoSites")), true);
   t("...and a uniquely pinned one reads `0 ambiguous`, so the figure is READ and not inferred from silence",
     /, 0 ambiguous/.test(mk("export const second = twoSites")), true);
+}
+
+/* ========================================================================== */
+section("13 — A `table` PINS EXACTLY ONE DECLARATION, AND A STRING NAMING ONE IS NOT ONE (M0-181)");
+{
+  /* THE DEFECT, MEASURED ON THIS ESTATE rather than supposed, and found by M0-160's worker (F2) as
+     the hole its own item had just closed for `hit`: `content` matched TWICE — its declaration at
+     schema.mjs:3273, and a STRING ARGUMENT at store.mjs:1254,
+     `.find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("))` — and the probe answered
+     from whichever came first. DELETE THE DECLARATION AND THE CLAIM WOULD HAVE READ BUILT OFF THAT
+     STRING: a table nothing creates, in the record of what is built. Closed in the SHAPE and not by a
+     list of spellings: a declaration BEGINS A LINE or follows a template backtick, and two of them
+     pin nothing, exactly as two `hit` sites do. Measured the day this landed: 117 matches over 116
+     names before, 116 over 116 after — nothing dropped, nothing added, the census unmoved at 116. */
+  const mkrepo = (schemaBody, storeBody) => {
+    const r = mkdtempSync(join(tmpdir(), "status-table-"));
+    const w = (rel, text) => { mkdirSync(join(r, rel, ".."), { recursive: true }); writeFileSync(join(r, rel), text); };
+    w("bio-plane/src/schema.mjs", schemaBody);
+    w("bio-plane/src/store.mjs", storeBody);
+    return r;
+  };
+  /* THE REAL store.mjs SHAPE, copied for its LEXICAL HOME and not for its words: the name lives
+     inside a string argument, mid-line, where neither comment-blanking (it is not a comment) nor the
+     declaration shape (it carries a real `(`) can reach it. */
+  const STRING_NAMING_IT = '      const found = stmts.find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("));\n';
+  const DECLARES_CONTENT = "export const SCHEMA = `\nCREATE TABLE IF NOT EXISTS content (\n  id TEXT\n);\n`;\n";
+  const NO_CONTENT = "export const SCHEMA = `\nCREATE TABLE IF NOT EXISTS other (\n  id TEXT\n);\n`;\n";
+  /* The nine declarations a bare `^` would lose, in their real spelling: an indented backtick opening
+     a template, the name on that same line. Both flavours, plain and VIRTUAL … USING. */
+  const BACKTICKS = "      `CREATE VIRTUAL TABLE IF NOT EXISTS backtick_fts USING fts5(\n        body\n      )`;\n"
+    + "      `CREATE TABLE IF NOT EXISTS backtick_plain (\n        id TEXT\n      )`;\n";
+  const both = mkrepo(DECLARES_CONTENT, STRING_NAMING_IT + BACKTICKS);
+  const stringOnly = mkrepo(NO_CONTENT, STRING_NAMING_IT + BACKTICKS);
+  /* The same name declared FOR REAL in both files, with a singly declared `other` beside it so the
+     judgement arm below DISCRIMINATES instead of condemning every claim in the fixture. */
+  const twice = mkrepo("export const SCHEMA = `\nCREATE TABLE IF NOT EXISTS content (\n  id TEXT\n);\n"
+    + "CREATE TABLE IF NOT EXISTS other (\n  id TEXT\n);\n`;\n",
+    STRING_NAMING_IT + "CREATE TABLE IF NOT EXISTS content (\n  id TEXT\n);\n");
+  try {
+    const P = (repo) => (p) => evalProbe(p, { repo });
+    const B = P(both), S = P(stringOnly), T = P(twice);
+
+    /* THE ROW'S OWN NEGATIVE CONTROL, as an assertion rather than a one-off run: take the
+       declaration away and leave the string, which is the tree the defect would have lied about. */
+    const gone = S({ table: "content" });
+    t("A TABLE NAMED ONLY BY A STRING IS NOT DECLARED — delete the declaration and the probe says so BY NAME",
+      [gone.ok, /table content is declared in neither schema\.mjs nor store\.mjs/.test(gone.evidence)], [false, true]);
+    /* OVER-STRICTNESS, the direction that would make this guard a new defect: with the declaration
+       back, the same string beside it must not make the probe ambiguous — and the evidence must name
+       the DECLARATION's file, because a probe that pinned the string would read identically here. */
+    const kept = B({ table: "content" });
+    t("OVER-STRICTNESS: the declaration is found with that same string standing beside it",
+      [kept.ok, !!kept.ambiguous], [true, false]);
+    t("...and the evidence names the DECLARATION's own file and line, not the string's",
+      [/schema\.mjs:2\)$/.test(kept.evidence), /store\.mjs/.test(kept.evidence)], [true, false]);
+    /* OVER-STRICTNESS, and the reason a BARE `^` WAS MEASURED AND REJECTED: nine real declarations in
+       store.mjs are written as an indented backtick opening a template, so `^` alone loses
+       bundles_fts, capture_text_fts, project_participants, member_expertise, export_log,
+       project_owner_votes, admin_votes, selections and selection_items — a guard that read nine built
+       tables as absent. Both flavours are asserted, plain and VIRTUAL … USING. */
+    t("OVER-STRICTNESS: A DECLARATION OPENING AN INDENTED TEMPLATE STILL COUNTS — the nine a bare `^` loses",
+      [B({ table: "backtick_plain" }).ok, B({ table: "backtick_fts" }).ok], [true, true]);
+
+    /* AMBIGUITY, the M0-160 rule arriving here: two real declarations of one name pin neither, so
+       deleting the one a claim is about leaves it green on the other. */
+    const two = T({ table: "content" });
+    t("A TABLE DECLARED TWICE IS NOT ok — it pins neither declaration",
+      [two.ok, two.ambiguous], [false, true]);
+    t("...and the evidence says AMBIGUOUS and NAMES both sites, so it can be settled without a search",
+      [/AMBIGUOUS/.test(two.evidence), /schema\.mjs:2/.test(two.evidence), /store\.mjs:2/.test(two.evidence)],
+      [true, true, true]);
+    /* DISCRIMINATION: a miss must stay a miss and must not be dressed as ambiguity — a guard that
+       failed every `table` probe would satisfy the arms above while blinding 58 claims. */
+    const nowhere = B({ table: "leads" });
+    t("A TABLE DECLARED NOWHERE still says so, and is NOT called ambiguous",
+      [nowhere.ok, !!nowhere.ambiguous, /declared in neither/.test(nowhere.evidence)], [false, false, true]);
+
+    /* JUDGEMENT: an ambiguous `table` is a DRIFTED claim, which is what makes the push refuse it —
+       the same treatment an ambiguous `hit` gets, and the whole point of counting. */
+    const j = judge({ repo: twice, data: { sets: {}, constructs: [{ n: 1, name: "X", claims: [
+      { id: "1.pinned", state: "BUILT", text: "a", probes: [{ table: "other" }] },
+      { id: "1.ambiguous", state: "BUILT", text: "b", probes: [{ table: "content" }] },
+    ] }] } });
+    t("A CLAIM WHOSE `table` PROBE IS AMBIGUOUS DRIFTS, and the singly declared one beside it does not",
+      j.claims.filter((c) => c.problems.length).map((c) => c.id), ["1.ambiguous"]);
+  } finally {
+    for (const r of [both, stringOnly, twice]) rmSync(r, { recursive: true, force: true });
+  }
+
+  /* THE ESTATE ITSELF, because a fixture cannot stand in for it and the row is accepted on the real
+     corpus. ONE SITE PER NAME is the property, read off the tool's own walk rather than re-derived
+     here — a hand copy of the regex would agree for free. */
+  const { sites, unreadable } = tableSites({});
+  const names = new Set(sites.map((x) => x.name));
+  t("ON THE REAL TREE EVERY DECLARATION IS THE ONLY ONE OF ITS NAME — 116 sites over 116 names, measured 2026-09-24",
+    [unreadable, sites.length === names.size, sites.length > 100], [[], true, true]);
+  const live = judge();
+  const tp = live.claims.flatMap((c) => c.results.filter((r) => r.p && r.p.table).map((r) => ({ id: c.id, ...r })));
+  t("...so every `table` probe in the source of truth resolves, and none is ambiguous",
+    [tp.filter((r) => !r.ok).map((r) => r.id), tp.filter((r) => r.ambiguous).length], [[], 0]);
+  t("...over a real population of `table` probes, so the two arms above are not an empty walk", tp.length > 40, true);
+  const contentLive = evalProbe({ table: "content" });
+  t("AND `content` — THE ONE THAT MATCHED TWICE — now pins its declaration in schema.mjs alone",
+    [contentLive.ok, /schema\.mjs:/.test(contentLive.evidence), /store\.mjs/.test(contentLive.evidence)],
+    [true, true, false]);
 }
 
 } finally {
