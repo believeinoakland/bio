@@ -394,15 +394,15 @@ scope: (1) the review copy leads with the exclusion statement and its acknowledg
 accepts-when: the three surfaces render against a live answer, and the empty and null cases read different sentences. NEGATIVE CONTROL: render `null` as `[]`, and the "null is not nobody" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (the D-150 delegation; `node tools/mintid.mjs UI`).
 
-### REC-194 · queued — **AN ACKNOWLEDGEMENT MAY MATCH ANOTHER CASE WHOSE STATEMENT IS BYTE-IDENTICAL: D-150 binds it to the statement's bytes, not to ONE case identity.** Publication §3 rule 13 (folded): *an acknowledgement binds to ONE case identity; it never matches another case whose statement is byte-identical.* — owner RECORD.
-order: directly after REC-193, the same block (SCHEDULER #17, 2026-09-23)
+### UI-90 · queued — **NO SURFACE STATES THE LAWS THAT GOVERN A RECORDS REQUEST: D-149's act (`actionlaws`, registered in `ACTS_AWAITING_SURFACE`, owed to UI) has no page.** — owner UI.
+order: after UI-89, the member half of D-149 (SCHEDULER #17, 2026-09-23; D-149's worker via CONDUCT #18)
 milestone: M10
-interface: I3 — the `statementack` op's binding narrows to one case; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 (BOB #32's ruling, folded).
-depends-on: D-150 (on `main`); REC-193 (it edits the same statementack code; CONDUCT #20 held it at 05:08Z).
-scope: an acknowledgement records and is matched by the case identity it was given for; a second case in the project with byte-identical statement text lists none of the first's.; and the DRAFT DOOR matches only the draft's own document/case, never an unsigned edition-1 document of another case with the same statement text (widened by SCHEDULER #18 2026-09-24 on BOB #32's 03:40Z instruction via CONDUCT #20; c18-batch7fix's finding). Extend D-150's suite.
-accepts-when: two cases with identical statements, one acknowledged: the other's completeness block lists nobody; and two cases' unsigned edition-1 documents with identical statements: the draft door of one finds none of the other's. NEGATIVE CONTROL: match by statement hash alone, and the "the twin case lists nobody" arm fails by name; match the draft door by statement text across the project, and the draft-door arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (BOB #32's G3; `node tools/mintid.mjs REC`).
+interface: I3 consumer (IC-230).
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*, Bob's ruling of 2026-09-22).
+depends-on: D-149 (`integrated` on c17-batch7; verify the op on `main` first).
+scope: the action page lists the governing laws, each with the level the plane publishes (`law_levels`), offers the member's act to set them with no default level, and shows the plane's undetermined sentence for an empty list; the act is struck from `ACTS_AWAITING_SURFACE`. Extend `civicos-ui/test/surface-registry.test.mjs` and the action page's suite.
+accepts-when: an empty list reads the plane's undetermined sentence, and a member's list round-trips with its levels. NEGATIVE CONTROL: preselect a level, and the "no default level" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
