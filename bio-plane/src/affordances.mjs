@@ -858,6 +858,14 @@ export const RUNG_ABSENT = {
   inboxresolve:         { ground: "undetermined", is: "a disposition of a knock, keyed by knock id" },
   taskforward:          { ground: "undetermined", is: "moves a task to another member; assignee-fenced by the store" },
   taskresolve:          { ground: "undetermined", is: "records how a task ended" },
+  /* REC-207 (BOB #32, 2026-09-23 23:42Z). BESIDE `taskresolve` AND FOR ITS REASON, which is this block's
+     shape word for word: a member performs it ONCE, the record keeps it attributed and dated, and it is
+     APPEND-ONLY by construction — `bias_debt_settlements` is never updated and never deleted, so there is
+     no way back and nothing to move forward either. `reversible` would promise a way back that does not
+     exist; `attested` would claim a signature that does not exist. Undetermined, STATED, and the ladder's
+     gap is named rather than papered over. If the lens moves ONWARDS the obligation is raised again as
+     NEW debt — which is a new fact about the lens and not this act being undone. */
+  biasdebtresolve:      { ground: "undetermined", is: "a member's authored settlement of the bias debt a lens change left on a run, with a REQUIRED stated reason; append-only, never cleared (BOB #32, 2026-09-23)" },
   actioncorrespond:     { ground: "undetermined", is: "records what came back from outside the system — REC-23's counterparty, named or honestly undetermined" },
   actionlaws:           { ground: "undetermined", is: "a member's attributed statement of the laws governing an action's request (D-149); restated by a further act, never cleared, and the Session Log keeps what each statement replaced" },
   actionlawspropose:    { ground: "undetermined", is: "a machine's or a member's PROPOSAL of the laws governing an action's request (D-149/REC-195), stored apart from the member's list and labelled machine work; restated by a further proposal from the same proposer, never cleared, and it never sets the list" },
@@ -2051,6 +2059,14 @@ export const NON_ACTS = {
      (NOT_YOURS), published with the task itself via op=tasks. */
   taskforward: "task act, assignee-fenced; travels with the task via op=tasks",
   taskresolve: "task act, assignee-fenced; travels with the task via op=tasks",
+  /* REC-207 (BOB #32, 2026-09-23 23:42Z). The bias-debt pair, NON-ACTS for the RUN verbs' reason one
+     table down rather than the task acts' above: a bias debt is keyed by the RUN whose lens moved, and
+     settling it changes nothing about the inquiry or project that run's context names. The surface for
+     both is the QUEUE ITEM — `#obligationsBiasDebt` publishes the obligation and `#dispositionOf`
+     publishes the act it takes (`instead: "biasdebtresolve"`), so the act travels with the item exactly
+     as a task act travels with its task, and no surface renders either beside a bundle. */
+  biasdebtresolve: "bias-debt act, keyed by the RUN whose lens moved and gated by that run's read; travels with the queue item via op=queue, never beside a bundle",
+  biasdebt: "read: one run's bias debt and what settled it, keyed by run id — the record behind the queue item, never an act on an object",
   /* REC-20. A READ, and one whose subject is a MEMBER rather than an object:
      op=queue answers "what has this record put in front of me", keyed by the
      member the control plane stamps. It is not an act on a bundle and no

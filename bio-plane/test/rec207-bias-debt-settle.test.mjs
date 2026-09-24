@@ -404,6 +404,46 @@ console.log("\n--- ARM G · THE LINK IS JUDGED AT THE DOOR (C-33.44 to C-33.46) 
     [false, "AI_RUN_RERUN_OTHER_CONTEXT", false, "AI_RUN_RERUN_UNKNOWN"]);
 }
 
+console.log("\n--- ARM C · THE CATALOGUE: every code this item mints has a row, a C-number and a translation ---");
+{
+  /* READ FROM THE CATALOGUE THE ARMED COPY CARRIES, not from the repository's, so the control driver's
+     patched trees are graded on their own catalogue and this arm cannot be satisfied by a file the run
+     never used. */
+  const CAT = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
+  const rows = [
+    ["BIAS_DEBT_NO_RUN", "C-26.12", CAT.BIAS_CHECKS], ["BIAS_DEBT_NO_ACTOR", "C-26.13", CAT.BIAS_CHECKS],
+    ["BIAS_DEBT_MACHINE_CANNOT_RESOLVE", "C-26.14", CAT.BIAS_CHECKS],
+    ["BIAS_DEBT_NO_REASON", "C-26.15", CAT.BIAS_CHECKS],
+    ["BIAS_DEBT_REASON_TOO_LONG", "C-26.16", CAT.BIAS_CHECKS],
+    ["BIAS_DEBT_NO_SUCH_DEBT", "C-26.17", CAT.BIAS_CHECKS],
+    ["BIAS_DEBT_ALREADY_SETTLED", "C-26.18", CAT.BIAS_CHECKS],
+    ["AI_RUN_RERUN_SELF", "C-33.44", CAT.ACT_SHAPE_CHECKS],
+    ["AI_RUN_RERUN_UNKNOWN", "C-33.45", CAT.ACT_SHAPE_CHECKS],
+    ["AI_RUN_RERUN_OTHER_CONTEXT", "C-33.46", CAT.ACT_SHAPE_CHECKS],
+  ];
+  t("ARM C1 (TEN CODES, TEN ROWS): every refusal this item mints carries its declared C-number, a `where` "
+    + "naming where it fires, and a canned translation a surface can render instead of the machine word",
+    rows.map(([code, num, fam]) => [code, fam[code]?.check === num, !!fam[code]?.where,
+                                    (fam[code]?.translation ?? "").length > 60]),
+    rows.map(([code]) => [code, true, true, true]));
+  t("ARM C2 (NO TRANSLATION IS A COPY OF ANOTHER'S): ten distinct sentences, because a translation shared "
+    + "between two codes tells a member the same thing about two different conditions",
+    new Set(rows.map(([code, , fam]) => fam[code]?.translation)).size, 10);
+  /* WHAT IS DRIVEN AND WHAT IS NOT, STATED. Nine of the ten are refused through the op somewhere above.
+     "BIAS_DEBT_NO_ACTOR" is NOT, and cannot be from outside: `index.mjs` stamps `actor` onto the body of
+     every `op=biasdebtresolve` — a member's id from the session, `token:<class>` otherwise — so no caller
+     can present the store with an act naming nobody. It is the STORE's own fence for a caller that reaches
+     `biasDebtResolve` by another road, it is pinned here by name, and calling it driven would be the claim
+     this record must not make. */
+  t("ARM C3 (THE UNDRIVEN ONE, NAMED): BIAS_DEBT_NO_ACTOR is unreachable through the control plane, and the "
+    + "evidence is that a member's call reaches the SUBJECT refusals instead — it got past the actor checks, "
+    + "so an actor was stamped. The code is pinned here by name and STATED rather than counted as driven",
+    [CAT.BIAS_CHECKS.BIAS_DEBT_NO_ACTOR.check,
+     (await resolve(ALICE, { run: RES.run, reason: "a member on this call always has a name" }))?.code,
+     (await readDebt(RES.run))?.settlements?.length],
+    ["C-26.13", "BIAS_DEBT_ALREADY_SETTLED", 1]);
+}
+
 console.log("\n--- ARM L · THE LENS MOVING BACK IS STILL A DISCHARGE, AND NOW IT IS RECORDED ---");
 {
   const w6 = await writeBias("adopted", TEXT1);

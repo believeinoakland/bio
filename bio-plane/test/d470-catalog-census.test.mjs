@@ -285,6 +285,12 @@ const CATALOG_CENSUS = {
      number, MINOR (two arrivals, no departures), and its count and digest are THIS SUITE'S OWN PRINT on the merged
      tree. REC-211's branch row is DROPPED (its comment kept as history). */
   "1.25.0": { count: 457, digest: "b333cf2716ad870d295d9373e081076a15e1a7543e1beda28ab312fad77ca3c5" },
+  /* 1.26.0 (REC-207, 2026-09-24, branch land/worker/REC-207): ten arrivals, no departures — C-26.12 to
+     C-26.18 (the member's resolve of a bias debt) and C-33.44 to C-33.46 (the re-run link's three
+     refusals at op=airunopen). MINOR on the rule above. The count and the digest below are THIS SUITE'S
+     OWN PRINT on this tree and never 457 + 10: the figure is a measurement of the catalogue that is
+     here, and the arithmetic would agree with it for free. */
+  "1.26.0": { count: 467, digest: "8f7830ab3aefec24dcd065c70d8e2d04361796a9a8cb44b1cc673cb9003cc07e" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -383,7 +389,7 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
 t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.24.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.25.0)", "1.25.0"]);
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.26.0)", "1.26.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
