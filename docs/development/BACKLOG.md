@@ -43,6 +43,16 @@ scope: route each code's sites through ONE governed helper inside a DEC-49 REGIO
 accepts-when: each site's refusal carries its translation. NEGATIVE CONTROL: mint one site's code outside the helper and the DEC-49 guard fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
+### DIST-9 · queued — **D-260's DIST HALF HAS NO ROW: install and update do not carry the instance's organisation `ai` credential as the Worker secret `INSTANCE_AI_TOKEN`, as they carry DAEMON_TOKEN, so on every installed instance each wake says NO_INSTANCE_AI_CREDENTIAL** (`15.instance-ai-secret` ABSENT at 548eb2c5; I8 1.0.0 STABLE since IC-242). Found by DIST #6. — owner DIST.
+order: after D-484: the dependent half of a landed ruling, whose plane half (D-260) reads a secret nothing places; DIST builds it, no release until Bob asks (SCHEDULER #18, 2026-09-24; DIST #6 03:06Z)
+milestone: M8
+interface: I8 additive — the installer takes an optional operator-supplied value; the integrator classifies.
+design: `docs/architecture/BIO_Distribution_v0_1.md` §6 with `BIO_Assistant_and_AI_Roles_v0_1.md` §6 (D-260, BOB #22: *carrying that secret through install and update, as DAEMON_TOKEN is*).
+depends-on: D-260 (on `main`).
+scope: `newgroup/src/index.mjs`, `release.mjs` and `bio-plane/scripts/deploy.mjs` CARRY a value the operator supplies; never generate one (minting is a MEMBER act, DS-3); none supplied installs without it, and says so.
+accepts-when: `15.instance-ai-secret` BUILT by its probe. NEGATIVE CONTROL: have the installer generate a value when none is supplied, and the no-invention arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
+
 ### D-480 · queued — **A HIDDEN PROJECT CAN CROWD A VISIBLE ONE OUT OF THE SHARED-QUESTION CANDIDATES: `#queueSharedInquiryCandidates` groups over UNGATED refs capped at 64, so past 64 shared questions a hidden project's citations take a candidate slot and flip the served `inquiries_truncated` — a count-shaped side channel, D-447's and D-464's class.** Found by D-464's worker. — owner RECORD.
 order: at the head with the disclosure rows (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
 milestone: M8
@@ -1245,13 +1255,3 @@ depends-on: none — M0-119 is on `main`.
 scope: `write()` adds its automatic rebalance only when an intent changes a plan file's membership or size: `insert`, `row`, `refill`, `archive`, or an `append`, `line` or `replace` whose file is `QUEUE.md`, `BACKLOG.md` or `BACKLOG-LATER.md`; a `status` word, a claim, a handoff or a DELEGATION does not. The explicit `rebalance` intent is unchanged; `coord.test.mjs` gains the arms.
 accepts-when: a write of only a `CLAIMS.md` append or a `-NEXT.md` replace leaves both plan files byte-identical even when the backlog is over budget; an `insert` over budget still moves the tail. NEGATIVE CONTROL: rebalance on every write again, and the claim-only arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (BOB #29's ruling in WORK-PIPELINE §2; `node tools/mintid.mjs M0`).
-
-### LED-8 · queued — **SIX REGISTERED ID COLLISIONS: `ledger.mjs find` ANSWERS TWO DIFFERENT ROWS FOR ONE ID.** D-121 and D-124 each name two … (whole text: the cut archive)
-order: behind the product rows, first of the ledger tooling (Bob, 2026-09-22: *process is overhead*; SCHEDULER #12): AMBIGUITY STATED, not the record over-claiming — the tools REFUSE loudly rather than corrupt (`archive D-121 --dry-run` prints both dispositions and stops), and LED-7 folds around the two rows (SCHEDULER #2 + BOB #17, 2026-09-19)
-milestone: M0
-interface: none
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7, the bullet "The legacy residue" … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `find` returns BOTH rows for a collided id and SAYS it collided; `mintid --audit` still reads 0 breaks; every existing citation of the four still resolves. How a liar passes … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER #2 (batch 4; found by CONDUCT #7; no-renumber ruling by BOB #17).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «LED-8» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
