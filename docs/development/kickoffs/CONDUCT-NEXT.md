@@ -79,7 +79,9 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
 - DIST owed from batch10 on landing: D-461 SAFETY (store=scratch honoured by bio-pinned ops), D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0).
 - c18-batch7fix REPORTED and DISPOSED (behind main; only .gitignore novel, riding integ1). Findings to SCHEDULER, D-150 design q to BOB.
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
-- TRAIN RUNNING 05:15Z: land/conduct/c20-batch15 @ 83b83f00 (worktree /home/user/w12; log train4.log) = main d536f834 + D-493 M0-144
+- batch15's first train (05:15Z) RETURNED RED at statepaths (48/417 > ceiling 47): the arrival was ui:preauth-vocabulary's PRINTED
+  path 'docs/development/measurements/M-130.md' (a string, not a read) — reworded at da2cd952 (my wrong first guess c5445764 reverted
+  at e729ee8e). RE-TRAINING 05:42Z: land/conduct/c20-batch15 @ e729ee8e (log train5.log). Was: 83b83f00 (worktree /home/user/w12; log train4.log) = main d536f834 + D-493 M0-144
   M0-143 D-453 DIST-9 (flipped integrated), IC-261 I4 MINOR 2.2.0 (row said I8 — wrong interface, stated). ON LANDING: archive their
   workers (D-493 session_01XknYRN5Zzyw2fU3nRqF8F9, M0-144 session_01ERbJKhXFUofstFpHerqrEx, M0-143 session_01M7BzVNbCiY4Q4dqVLxDvUw,
   D-453 session_017L57JtEbWmyk63Ep8SRZoj) after ancestry check; DIST-9 is DIST's own session (not archived).
