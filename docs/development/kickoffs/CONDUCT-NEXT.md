@@ -22,7 +22,7 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS (Bob's ruling ~03:08Z via
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (04:55Z)
+## 4. STATE (05:00Z)
 - MAIN = 0fdef669 (train-20260924T041650Z-598: D-482 61b5ceca, D-166 958ad9ac, REC-185 0fdef669 — reported). Before it 16fe1e7f (train-20260924T033115Z-658: land/bob/status-cellcap 6977d9d2 + folds-0924e 16fe1e7f; 112/112 green). Map budget
   now 49,152 B with CELL_CAP 240 — never raise it. Interfaces on main: I3 81.0.0, I5 3.5.0, I8 1.0.0.
 - land/bob/d461-claude RETURNED (conflicts vs main) → merged by c20-batch11fix instead (its CLAUDE.md §5 commit is the novel part).
@@ -41,6 +41,10 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   moves its content onto batch11fix (IC-252 → I3 86.0.0 MAJOR, IC-255 → 86.1.0), merges batch13 when pushed, adds the
   renderAdmit docstring fix; push by 06:15Z. FINAL TRAIN = land/conduct/c20-batch14 if it carries batch13, else batch13 then 14.
   BOB's two owed rulings (D-64 timeout, REC-184 DEFINITION_MOVED) were NOT paid → sent to SCHEDULER 04:56Z to row.
+- D-486 DONE @ 9fcf876e (base batch10; IC-258 → resolve I3 86.2.0 MINOR on batch14; C-84 minted UNUSED): told c20-batch14 to merge it.
+  Its watermark design question is with BOB (05:01Z). DIST-12 flipped running, DIST #6 builds it (push by 05:50Z).
+- ARCHIVE RULE (Bob via BOB 04:58Z): the moment a train lands, archive every worker whose land/worker tip is an ancestor of the new main
+  (`git merge-base --is-ancestor`, never by title), same turn. A worker whose work did not land stays open and is named here.
 - DIST-9 DONE: land/dist/DIST-9 @ 41c195d5 (326/326; 15.instance-ai-secret BUILT; I8 additive — classify at its train, mint an IC).
   Train it with D-493 right after batch12 lands.
 - LIVE WORKERS spawned by #20 at ~03:07Z, all briefed to PUSH BY 05:45Z and report by one-shot trigger to CONDUCT #20:
