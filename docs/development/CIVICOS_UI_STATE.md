@@ -50,6 +50,61 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v115, 2026-09-24 session, thread UI, UI-101 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-101` (base `origin/main` @ `1a7f0bcc`), in the commit that carries this entry. (Claimed
+`v113`, which UI-92 holds on main; renumbered here when this branch rebased onto c20-batch24c, and v114 -> v115 by CONDUCT #20 at c20-batch26 because UI-102 took v114. Only the
+number moved.) The base is the SECOND one this item measured against — see the figures below. SURFACE:
+**none, and none was owed — the row's own subject was already built.** No byte of `civicos-ui/app.html`
+moves. The entry is here because the next session reading `QUEUE.md` will meet UI-101's heading and needs
+to know, without re-deriving it, that the heading is false.
+
+**THE ROW'S PREMISE WAS FALSE WHEN IT WAS MINTED, AND THE RECORD ALREADY SAID SO.** UI-101 reads *"THE APP
+OFFERS NO RISK-TIER CONTROL: `civicos-ui/app.html`'s action intake cannot state 1, 2 or 3"*, found by D-483's
+worker and rowed by SCHEDULER #18. D-483 and UI-85 landed the same day on opposite sides of one integration:
+D-483's worker looked at an `app.html` that did not yet carry UI-85's chooser, reported the absence honestly,
+and the row outlived the fact. `BIO_Case_Making_v0_1.md` §2 carries the correction in its own words — *"D-483's
+own note that `civicos-ui/app.html` has no such control is CORRECTED HERE: UI-85 built it … and the two landings
+crossed"* — and `construct-status.json` 8.risk-tier has read BUILT, naming `addActTier` at `app.html`, since.
+
+**VERIFIED AT THE DEPENDENT BY NAME, not from the row and not from the note** (`CLAUDE.md` §5). The chooser is
+`addActionPaneHtml`'s `tierPick` over `actVocabMap("risk_tiers")`; the member's act is `addActTier`; the write is
+`riskTierLine`, which writes a key only when the published map holds it; the default is `addActReset`'s
+`tier:"undetermined"`. Every clause of the row's scope — a choice over `vocabularies.risk_tiers`, in the action
+intake, unset by default, unset writing undetermined, words taken from the plane — is at the code.
+
+**AND MEASURED, because a claim about the state of the system is a claim about the moment it was verified.** The
+row's accepts-when is *"a chosen tier is written and none chosen writes undetermined, against a real-plane suite"*.
+`add-surface.test.mjs` drives the app's own `addGo` through miniflare as a SIGNED-IN MEMBER SESSION and reads back
+`op=projection`: untouched → `undetermined`, *"not assessed: no member has stated a risk tier for this action"*;
+picked 2 → `2`, *"file with caution"*. 190 assertions, all green; `node civicos-ui/test/run.mjs` exit 0, all
+harnesses green. The row's named NEGATIVE CONTROL — *"default the choice to 1 and the unset arm fails by name"* —
+is arm (5) of `add-surface.control.mjs` and UI-85 built it too: re-run here, 8 arms, 8 AS DECLARED, (5) RED first
+and by name at *"UI-85 UNTOUCHED"*, both watched files restored byte-identical. The only figure that moved is
+`app.html`'s size, 1,478,680 → 1,578,244 bytes since UI-85's run — 99,564 bytes of other UI landings under a
+control whose patches anchor by text, every anchor still matching exactly once. That is the one thing this
+re-run establishes that UI-85's did not, and it is recorded on both files' own headers rather than here.
+
+**MEASURED ON TWO BASES, because the first gate caught the record and not the code.** The item ran green on
+`origin/main` @ `e9b21be66` and then went RED at `plancheck`, on `docs/development/DEBT.md` missing — M0-140's
+retirement had landed on `coord` while `main` still carried the pointer stub that sends a reader there. Not this
+item's diff and not fixable inside it: the fix was already written, in the c20-batch24c train
+(`ec17d236`), which landed on `main` as `1a7f0bcc` while this item was measuring. Rebased onto it, and since that
+train also moves `app.html`, every figure above was re-taken rather than carried: the suite, the two projections
+and all eight arms read the same on both bases, and only `app.html`'s size differs. The control has now run three
+times on three different `app.html`s, 8 of 8 AS DECLARED each time — which is a stronger statement about those
+anchors than the single run this item set out to make.
+
+**WHAT THIS ITEM FOUND THAT ITS ROW DID NOT ASK FOR, routed and not parked.** (1) **No member may state a tier on
+an action that already exists.** `risk_tier` reaches the record only through a document's front matter at
+`op=promote`; there is no member act for it, where the neighbouring ruling D-149 got `op=actionlaws` and UI-90's
+surface. So D-182's *"only a member's authored act sets a tier"* is available at CREATION ONLY, and an action
+written before anyone assessed it reads "not assessed" for good — while §2's own sentence, *"a machine may PROPOSE
+that a tier be reconsidered"*, describes a reconsideration nothing can carry out. `node tools/decided.mjs` finds no
+ruling and `QUEUE.md` no row. (2) **The two intake surfaces disagree in shape**: the app preselects `undetermined`
+and offers it as a choice; D-483's setup page derives its settable keys through `riskTierState` so `undetermined`
+is not offered and nothing is preselected. Neither overclaims and §2 rules on neither. Both are in the report,
+(1) diagnosed to a named fix and routed to BOB for the design half before SCHEDULER places it.
+
 v114, 2026-09-24 session, thread UI, UI-102 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-102` (base `origin/main` @ `1a7f0bcc`, carrying c20-batch24c), in the commit that carries this
 entry; **the version number is PROVISIONAL** — other UI workers are live and CONDUCT renumbers at integration, as it
