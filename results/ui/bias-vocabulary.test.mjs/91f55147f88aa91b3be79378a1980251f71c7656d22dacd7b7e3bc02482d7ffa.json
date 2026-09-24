@@ -1,0 +1,16 @@
+{
+ "unit": "ui:bias-vocabulary.test.mjs",
+ "inputHash": "91f55147f88aa91b3be79378a1980251f71c7656d22dacd7b7e3bc02482d7ffa",
+ "verdict": "PASS",
+ "run": "01d0a9aae256b3e6dd0ff20c6faa2b22eb185977.1790290366654.7905.json",
+ "tree": "01d0a9aae256b3e6dd0ff20c6faa2b22eb185977",
+ "head": "85eb32dceaf5359e2fd9bbfebc94cbd68bd0e043",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 23,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "8567487e-4455-5159-ab08-1e05a700c07f",
+ "at": "2026-09-24T22:52:46.667Z"
+}
