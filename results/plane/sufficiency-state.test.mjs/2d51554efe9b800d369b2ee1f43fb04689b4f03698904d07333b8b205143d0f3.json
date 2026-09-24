@@ -1,0 +1,16 @@
+{
+ "unit": "plane:sufficiency-state.test.mjs",
+ "inputHash": "2d51554efe9b800d369b2ee1f43fb04689b4f03698904d07333b8b205143d0f3",
+ "verdict": "PASS",
+ "run": "b07293e78acd1b0adb9c24619d9d560f3b277edf.1790228700439.3334.json",
+ "tree": "b07293e78acd1b0adb9c24619d9d560f3b277edf",
+ "head": "4204631cc8287c54df2e3d88a20a1d7ac85cb9b6",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 144,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "f10bcd14-20b8-558c-82f4-c8baf6d20158",
+ "at": "2026-09-24T05:45:00.453Z"
+}
