@@ -1,0 +1,16 @@
+{
+ "unit": "fleet:agent-worker/wire-vocabulary.test.mjs",
+ "inputHash": "61772e54ffa53c10bb464f91521b425511213e155ec9bc8cee1c8d1138b2422b",
+ "verdict": "PASS",
+ "run": "7f2ab63e7d1f831c8066f0d93c5d05e036d33c40.1790271838243.10539.json",
+ "tree": "7f2ab63e7d1f831c8066f0d93c5d05e036d33c40",
+ "head": "0312a57228e7d6fd3f9f6cdba1fd09033aabebca",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 149,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4acd8535-877f-5aa4-be81-74ce36b6a459",
+ "at": "2026-09-24T17:43:58.257Z"
+}
