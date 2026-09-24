@@ -21,8 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
-- **2026-09-24 23:20Z · BOB #34 · SESSION LINEAGE DEPTH, MEASURED AND RULED.** Measured: a session's `parent_session_id` chain grows by one at every lane refresh, because each successor was created by its predecessor: BOB #31 → #32 → #33 → #34 → SCHEDULER #20 → worker. Workers SCHEDULER #20 spawns sit at depth 8 and CANNOT create triggers ("report blocked at lineage depth 8": D-528, M0-191). Workers SCHEDULER #19 spawned, one level shallower, could (M0-188's report of 23:09Z arrived). Without a fix, the next BOB's SCHEDULER could not report at all, and the lanes after it could not wake or spawn. Also measured: a routine fired with `create_new_session_on_fire` makes a parentless session, but it came up WITHOUT the remote-session tools (no connector passes through), so it cannot spawn. That route is DEAD, and its routine is deleted. **RULED:** FLEET #4 is the only live lane with NO parent (origin desktop_app, depth 0), so **FLEET creates EVERY lane successor from now on** (depth 1), with the self-contained prompt BOB writes. BOB still decides when, and checks the handoff is current and the lane is unoccupied. SCHEDULER #20's workers stay unable to report until SCHEDULER is refreshed from FLEET. Meanwhile SCHEDULER and CONDUCT read summaries and branches rather than waiting for reports. When FLEET itself refreshes, its successor is created by Bob in the app (depth 0), the single act only he can take, and he is told at that moment. Homes: BOB.md "Spawning", FLEET.md and SCHEDULER.md on BOB's next batch branch. First use: DIST #7, 23:21Z.
-- **2026-09-24 23:35Z · BOB #34 · SESSION TREE, DESIGNED (Bob's requirements, in his words: the depth never gets too deep, and there is no meaningful delay in spawning sessions; he left the design to BOB).** Supersedes the mechanism in the 23:20Z entry and keeps its measurements. **(1) A ROOT session with no parent creates every LANE session**: BOB, CONDUCT, SCHEDULER, DIST, FLEET, and every successor. The root is FLEET #4 today (origin desktop_app). When FLEET next needs a successor, Bob starts `GOD #1` from the app instead, a session whose only job is creating lane sessions, and GOD creates FLEET's successor. That is the one act only Bob can take, and he is told at that moment. **(2) Lanes create their own WORKERS directly** with create_session, with no hop and no delay (SCHEDULER dispatches, CONDUCT as needed). **(3) Workers create no sessions.** Depth is therefore fixed at root 0, lanes 1 and workers 2, however many times anything refreshes; the platform refuses at 8. Archiving a parent does not stop its children (measured: CONDUCT #20 has run all day after its parent BOB #32 was archived). **Transition, with no stop:** SCHEDULER is re-rooted NOW, because SCHEDULER #20's workers sit at depth 8 and cannot report. It writes SCHEDULER-NEXT, the root creates SCHEDULER #21, and #20's in-flight workers keep running and are read by summary until they finish. Every other lane moves at its next refresh (DIST #7 is the first). Homes: BOB.md "Spawning", FLEET.md, SCHEDULER.md and CONDUCT.md, on BOB's next batch branch.
+
 
 
 ## THE CACHE — the next rows, in order
@@ -326,8 +325,8 @@ scope: arm D443-7b seeds 120 ratified published cases pinning one finding sha an
 accepts-when: D443-7b is green through the op. NEGATIVE CONTROL: the existing `casereg` arm of `frontier-chunk.control.mjs` fails D443-7b by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-448 · running — **ELEVEN REVIEW-COPY REFUSAL CODES REACH A MEMBER WITH NO CANNED TRANSLATION: UI-68's surface now shows `REVIEW_NOT_PROJECT_OWNER`, `REVIEW_NO_PROJECT`, `REVIEW_DRAFT_CHANGES_PROJECT`, `REVIEW_NO_SUCH_CASE`, `REVIEW_DRAFT_TOO_LARGE`, `REVIEW_NO_RECIPIENT`, `REVIEW_NO_SECRET`, `REVIEW_NO_GRANT`, `REVIEW_NO_COMMENT_TEXT`, `REVIEW_UNKNOWN_ACT` and `NO_REVIEW_COPY`, and none has a DEC-49 row.** — owner RECORD.
-status: running — SPAWNED 2026-09-24 by SCHEDULER #19 as WORKER D-448 (SCHEDULER #19), base origin/main 9f8b69e6. Falsify rather than believe: the census must read all eleven translated.
+### D-448 · integrated — **ELEVEN REVIEW-COPY REFUSAL CODES REACH A MEMBER WITH NO CANNED TRANSLATION: UI-68's surface now shows `REVIEW_NOT_PROJECT_OWNER`, `REVIEW_NO_PROJECT`, `REVIEW_DRAFT_CHANGES_PROJECT`, `REVIEW_NO_SUCH_CASE`, `REVIEW_DRAFT_TOO_LARGE`, `REVIEW_NO_RECIPIENT`, `REVIEW_NO_SECRET`, `REVIEW_NO_GRANT`, `REVIEW_NO_COMMENT_TEXT`, `REVIEW_UNKNOWN_ACT` and `NO_REVIEW_COPY`, and none has a DEC-49 row.** — owner RECORD.
+status: integrated — SCHEDULER #21 23:45Z: tip 5eadd905; first gate RED then fixed, NO recorded GREEN; D-542 placed from it
 order: after D-445: a correction to just-landed work (UI-68) that shows members untranslated codes (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
 milestone: M10
 interface: none — a check family and its translations.
@@ -392,8 +391,8 @@ scope: read the needle from `bio-plane/src/gate.mjs`'s own `CATALOG_VERSION` lin
 accepts-when: with the constant bumped to a new value, arm (d) still arms and fails as designed (the measured failure it moves: NOT ARMED after a bump). NEGATIVE CONTROL: restore the literal needle, bump the constant, and the control reports NOT ARMED by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
 
-### D-528 · running — **THE QUEUE TELLS EACH NAMED RECIPIENT OF A BIAS-DEBT OBLIGATION "This is not addressed to anybody": `app.html` `queueAssigneeHtml` reads `assignee == null` and never `recipients`, so the surface states something it can see is false.** Found by UI-93's worker (id minted by it). The DELEGATION RECORD (D-86) → UI on coord `CLAIMS.md` is dischargeable by this row. — owner UI.
-status: running — running — spawned 22:24Z 2026-09-24 by SCHEDULER #20 as WORKER D-528 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-528 and the session; never conclude queued from absence.
+### D-528 · integrated — **THE QUEUE TELLS EACH NAMED RECIPIENT OF A BIAS-DEBT OBLIGATION "This is not addressed to anybody": `app.html` `queueAssigneeHtml` reads `assignee == null` and never `recipients`, so the surface states something it can see is false.** Found by UI-93's worker (id minted by it). The DELEGATION RECORD (D-86) → UI on coord `CLAIMS.md` is dischargeable by this row. — owner UI.
+status: integrated — SCHEDULER #21 23:45Z: tip 85eb32dc; idle since 22:55 'verifying control driver placement', NO recorded GREEN
 order: after D-512, with the corrections: a surface stating a falsehood about the record is worse than a missing feature (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:06Z)
 milestone: M8
 interface: I3 consumer (IC-234).
@@ -414,8 +413,8 @@ scope: attest asks the whole-document question (`registerholds`) and attests the
 accepts-when: attesting a held parted capture succeeds or is refused CAPTURE_HELD_IN_PARTS, never NO_SUCH_CAPTURE, and the ratify gate's reading is recorded (the measured failure it moves: NO_SUCH_CAPTURE for held bytes). NEGATIVE CONTROL: restore the whole-key head and the parted-attest arm reads NO_SUCH_CAPTURE by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### REC-217 · running — **A RECIPIENT'S READING ON A NEW CASE'S DRAFT CANNOT BIND TO THE CASE IT PRODUCED: nothing links a draft to its published case, so REC-194's provisional counts such a reading UNDETERMINED.** BOB #33 RULED 2026-09-24 19:14Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20): `op=publish` names the draft it publishes (`draft=`, optional, additive), and at that act the readings taken through that draft BIND to the case it produced — an ACT, recorded with the publisher and the time, stated in words in the case document. — owner RECORD.
-status: running — running — spawned 22:29Z 2026-09-24 by SCHEDULER #20 as WORKER REC-217 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/REC-217 and the session; never conclude queued from absence.
+### REC-217 · integrated — **A RECIPIENT'S READING ON A NEW CASE'S DRAFT CANNOT BIND TO THE CASE IT PRODUCED: nothing links a draft to its published case, so REC-194's provisional counts such a reading UNDETERMINED.** BOB #33 RULED 2026-09-24 19:14Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20): `op=publish` names the draft it publishes (`draft=`, optional, additive), and at that act the readings taken through that draft BIND to the case it produced — an ACT, recorded with the publisher and the time, stated in words in the case document. — owner RECORD.
+status: integrated — SCHEDULER #21 23:45Z: tip 727a1d85; BLOCKED only on reporting (depth 8), NO recorded GREEN
 order: after UI-106 and before D-521, as BOB ruled: *one RECORD row after REC-194 … place C-82.1's retirement as a small row after this one* (SCHEDULER #20, 2026-09-24)
 milestone: M10
 interface: I3 additive — `draft=` on `op=publish`, the stated link on the case document; the integrator mints and classifies the IC.
@@ -425,8 +424,8 @@ scope: `draft=` on `op=publish`; the bind recorded with who and when; the case d
 accepts-when: a recipient's reading on a new case's draft appears in the published case's signed list with the link stated, and a publish without `draft=` still reads undetermined (the measured failure it moves: every such reading undetermined). NEGATIVE CONTROL: bind by statement bytes instead of the named draft, and a twin case with the same sentence lists the reader, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs REC`).
 
-### D-552 · running — **`op=instance` RENDERS A FINDING A MEMBER ALREADY DISMISSED AND SAYS NOTHING ABOUT THE DECISION: `#assembleInstance` (store.mjs ~25693) never consults `proposal_dispositions` (the disposition read lives in `proposalsFeed`), and civicos-ui `progPaintInstance()` renders `inst.findings` verbatim, so a dismissed finding reads as an open question on the progression page.** Against D-79 (a decision AGES a finding and is never silently absent). Found via D-527's integration (CONDUCT #20 22:34Z). — owner RECORD, then UI (UI-108).
-status: running — running — spawned 22:35Z 2026-09-24 by SCHEDULER #20 as WORKER D-552 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-552 and the session; never conclude queued from absence.
+### D-552 · integrated — **`op=instance` RENDERS A FINDING A MEMBER ALREADY DISMISSED AND SAYS NOTHING ABOUT THE DECISION: `#assembleInstance` (store.mjs ~25693) never consults `proposal_dispositions` (the disposition read lives in `proposalsFeed`), and civicos-ui `progPaintInstance()` renders `inst.findings` verbatim, so a dismissed finding reads as an open question on the progression page.** Against D-79 (a decision AGES a finding and is never silently absent). Found via D-527's integration (CONDUCT #20 22:34Z). — owner RECORD, then UI (UI-108).
+status: integrated — SCHEDULER #21 23:45Z: tip da6fdb8a; suite 5/5 and control stated, NO recorded battery GREEN; no report (depth 8)
 order: after D-540, with the corrections: a live surface stating an answered question as open (CLAUDE.md §2) (SCHEDULER #20, 2026-09-24; via CONDUCT #20 22:34Z)
 milestone: M4
 interface: I3 additive — a per-finding disposition view on two ops; the integrator mints and classifies the IC.
@@ -469,8 +468,8 @@ scope: the op; the append-only tier history on the action's read; "revised from 
 accepts-when: a member's revision appends history naming both authors and the reason; a reasonless revision is refused by name; a machine is refused MACHINE_CANNOT_SET_RISK_TIER (the measured failure it moves: no revision path at all). NEGATIVE CONTROL: let a revision overwrite without history and the history arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
 
-### M0-194 · running — **`kickoffs/WORKER.md`, READ BY EVERY WORKER, CARRIES EACH RULE'S HISTORY INLINE (3,959 words), so the current rule is buried and a ruling can go unread: tonight three workers were misled, and BOB #33's 17:12Z pen ruling never reached the file.** BOB #34 22:50Z. — owner M0 (BOB drafts; any worker may land it).
-status: running — running — spawned 22:59Z 2026-09-24 by SCHEDULER #20 as WORKER M0-194 (SCHEDULER #20), base 9f8b69e6 + land/bob/batch-0924f. Falsify: with no live worker, read land/worker/M0-194 and the session; never conclude queued from absence.
+### M0-194 · integrated — **`kickoffs/WORKER.md`, READ BY EVERY WORKER, CARRIES EACH RULE'S HISTORY INLINE (3,959 words), so the current rule is buried and a ruling can go unread: tonight three workers were misled, and BOB #33's 17:12Z pen ruling never reached the file.** BOB #34 22:50Z. — owner M0 (BOB drafts; any worker may land it).
+status: integrated — SCHEDULER #21 23:45Z: tip 3325a474 (merges land/bob/batch-0924f); summary 'checks pass', NO recorded N/N GREEN; no report (depth 8)
 order: at the head of the backlog, AHEAD of product (BOB #34 22:50Z: *it appreciably cuts wasted worker rounds: three sessions were misled tonight*) (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
@@ -480,8 +479,8 @@ scope: rewrite WORKER.md so each rule is one or two lines naming its ruling id; 
 accepts-when: `readbudget` shows WORKER.md at or under the new budget, `decided.mjs` still finds every ruling it cited, and every old rule maps to a new line (a table in the row's measurement) (the measured failure it moves: a 3,959-word file burying current rules). NEGATIVE CONTROL: drop one mapped rule and the mapping table names it.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
 
-### D-545 · running — **`civicos-ui/check-semantics.mjs` (~352) HARVESTS PLANE STATES OVER THE RAW STORE FILE, COMMENTS INCLUDED, with `/current_state\s*[!=]==?\s*"([a-z_]+)"/`, so a `typeof` guard on that field is read as a state named after the typeof string, and the gate goes RED with "states the store writes with no semantics row" naming a state nobody wrote.** It cost REC-210 two full gate rounds, the second from a comment quoting the pattern (CONDUCT #20 22:57Z). — owner UI (the check), M0.
-status: running — running — spawned 23:01Z 2026-09-24 by SCHEDULER #20 as WORKER D-545 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-545 and the session; never conclude queued from absence.
+### D-545 · integrated — **`civicos-ui/check-semantics.mjs` (~352) HARVESTS PLANE STATES OVER THE RAW STORE FILE, COMMENTS INCLUDED, with `/current_state\s*[!=]==?\s*"([a-z_]+)"/`, so a `typeof` guard on that field is read as a state named after the typeof string, and the gate goes RED with "states the store writes with no semantics row" naming a state nobody wrote.** It cost REC-210 two full gate rounds, the second from a comment quoting the pattern (CONDUCT #20 22:57Z). — owner UI (the check), M0.
+status: integrated — SCHEDULER #21 23:45Z: tip a812be34, summary states 71/71 green; no report (depth 8)
 order: after M0-194, AHEAD of product: a false RED that has already cost two full gate rounds (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
@@ -502,8 +501,8 @@ scope: one governed helper and DEC-49 region minting NO_PUBLISHED_STORE for ONE 
 accepts-when: both public ops answer NO_PUBLISHED_STORE with its translation from one site (the measured failure it moves: an untranslated code at two sites). NEGATIVE CONTROL: restore the literal at ~5747 and check-refusal-codes names the second site.
 added: 2026-09-24 · SCHEDULER #20 (id minted by D-513's worker).
 
-### D-558 · running — **`bio-plane/test/ratify.test.mjs` (~240) PINS THE CATALOGUE VERSION AS A LITERAL, `"plane-gate/1.0 (bio-checks 1.28.0)"`, so every catalogue bump turns it red and it has been hand-corrected at each (five CORRECTED notes above it).** Found by D-544's and M0-192's workers independently. — owner M0.
-status: running — running — spawned 23:07Z 2026-09-24 by SCHEDULER #20 as WORKER D-558 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-558 and the session; never conclude queued from absence.
+### D-558 · integrated — **`bio-plane/test/ratify.test.mjs` (~240) PINS THE CATALOGUE VERSION AS A LITERAL, `"plane-gate/1.0 (bio-checks 1.28.0)"`, so every catalogue bump turns it red and it has been hand-corrected at each (five CORRECTED notes above it).** Found by D-544's and M0-192's workers independently. — owner M0.
+status: integrated — SCHEDULER #21 23:45Z: tip d614da45, commit states GATE 74/74 GREEN (TARGETED); worker could not report (depth 8)
 order: after D-545, AHEAD of product: the same bump-cost class as D-544 and M0-192, a red round on every catalogue move (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
@@ -544,6 +543,76 @@ design: `docs/architecture/BIO_Content_Framework_v0_10.md` §6, with CAP-8's Dri
 depends-on: D-472.
 scope: a sweep listing Drive-address bundles whose baseline capture's handler is an HTML stack (a shell); re-acquire each through the export address, recorded as a new capture, never overwriting the old.
 accepts-when: the sweep names every shell baseline and a re-acquired one reads `unchanged` across two ticks (the measured failure it moves: a permanent `modified`). NEGATIVE CONTROL: skip the re-acquire and the two-tick arm reads `modified` by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### D-526 · queued — **WHICH REFUSAL A CALLER MEETS ON `op=promote` STILL DEPENDS ON THE ENVELOPE: the fences above bundle.md's parse (NAME_TAKEN, CITED retirement, LAWS_ACT carry-forward) read the envelope's type, and `#projectRow`'s action columns compare `fm.object_type === "action"` raw, not through `normalizeType`. Nothing wrong can land (D-510's fence refuses it).** Found by D-510's worker (F1, F3). — owner RECORD.
+order: after D-525, with the promote corrections: the answer a caller meets should not depend on a label D-510 ruled untrusted (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:25Z)
+milestone: M7
+interface: none unless a refusal's order changes on the wire (the integrator classifies).
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, with C-2.5 and D-510's derivation.
+depends-on: D-510.
+scope: parse bundle.md at the top of promote's `act` and derive the type there for every fence; route `#projectRow`'s comparison through `normalizeType`.
+accepts-when: an envelope-mislabelled action meets the same refusal as a correctly labelled one (the measured failure it moves: fences reading the envelope's type). NEGATIVE CONTROL: read the envelope's type in one fence again and that arm's refusal differs, failing by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### M0-170 · queued — **THREE MORE FIXTURES KEEP HAND-KEPT TOOL COPY LISTS: `pushguard.test.mjs` scratchRepo, `pushguard-check.test.mjs` and `retirable.test.mjs` (measured correct today).** Found by M0-154's worker. — owner M0.
+order: after M0-169, whose static mode it wires (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:50Z) AHEAD of the product rows by Bob's 17:41Z rule: a new import in gates.mjs breaks a hand-copied fixture with a false red (a false gate result costs a round) (SCHEDULER #19, 2026-09-24).
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a fixture derives what it carries).
+depends-on: M0-169.
+scope: wire the three to M0-169's static-only mode; delete the hand lists. ALSO (M0-169's F3, via CONDUCT #20 19:37Z): `bio-plane/test/instrument-deps.mjs` (D-265) calls `moduleClosure({ dynamic: false })` and maps to basenames, keeping its `outside` check (coverage-provenance, owed-controls, m051-driver-census).
+accepts-when: an import added to the subject leaves all three green. NEGATIVE CONTROL: restore one hand list, add an import, and that suite fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### D-541 · queued — **`tools/rowsubstrate.mjs` `anchorPairs` CAPTURES DIGITS AND DOTS ONLY (`§\s*(\d+(?:\.\d+)*)`), so `§6A` reads as `6`, and D-404's design-coverage arm falsely notes "substrate not evident" for REC-213, REC-199 and D-448.** Found by REC-213's worker (via CONDUCT #20 22:11Z). A false NOTE, not a failure. — owner M0.
+order: after M0-142, with the process rows behind the product rows ahead of them: it prints a false note but fails nothing, so it does not cut gate time (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument states what it reads, never a neighbour of it).
+depends-on: none.
+scope: capture `(\d+(?:\.\d+)*[A-Za-z]?)`, compute depth from the dotted part, and escape the letter in `sectionText`.
+accepts-when: rowsubstrate reads REC-213's `§6A` as §6A and the three false notes are gone (the measured failure it moves: three rows noted "substrate not evident"). NEGATIVE CONTROL: restore the digits-only capture and the §6A arm reads §6, failing by name.
+added: 2026-09-24 · SCHEDULER #20 (id minted by REC-213's worker).
+
+### D-550 · queued — **NO GATED INSTRUMENT HOLDS A CATALOGUED REFUSAL CODE TO ONE MINT SITE: `bio-plane/test/dec49-onecode-twoconditions.sweep.mjs` measures it (60 multi-site candidates today) but has no floor, ceiling or gate, so a new second site passes silently.** Found by D-513's worker (via CONDUCT #20 22:59Z). — owner M0 (the instrument).
+order: after D-535, with the process rows behind the product rows: it prevents a regression and does not cut gate time (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a measurement that gates nothing is not an instrument), with DEC-49's one-code-one-condition rule as D-484 settled it.
+depends-on: none.
+scope: a gated CEILING arm in check-refusal-codes' ratchet shape at the printed count of multi-site codes, with the deliberate closures declared BY NAME (RATE_IP and RATE_GLOBAL, VERSION_ACT_UNWRITABLE); the ceiling only moves down.
+accepts-when: the gate reads the ceiling at its printed figure, and a planted second mint site of a single-site code fails by name (the measured failure it moves: 60 candidates, none gated). NEGATIVE CONTROL: plant the second site, and the ceiling arm fails naming the code.
+added: 2026-09-24 · SCHEDULER #20 (id minted by D-513's worker).
+
+### D-559 · queued — **TWO NEGATIVE-CONTROL HARNESSES HAVE DECAYED (D-353 decay mode c), on origin/main as on the branches: `nc-rec66.mjs` ARM 1 throws "anchor is not unique" on `const scan = this.#rows(` (store.mjs now holds more than one such line), and `nc-rec129.mjs` reports 10 of 19 arms "DID NOT ARM" with every restore byte-identical.** Found by M0-182's worker (via CONDUCT #20 23:00Z). — owner M0.
+order: after D-550, with the process rows behind the product rows: the controls fail loudly rather than pass falsely, so no gate result is wrong today (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` "The negative-control register" (a control must arm on the tree it runs on).
+depends-on: none.
+scope: re-anchor each arm on the current source, one unique anchor per arm, then run each control AS DECLARED and record it on its suite's NEGATIVE CONTROL line.
+accepts-when: `nc-rec66` arms all arms and `nc-rec129` arms 19 of 19 AS DECLARED (the measured failure it moves: one throw and 10 unarmed arms). NEGATIVE CONTROL: the harnesses are the controls; re-run each whole and record the counts.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs D`).
+
+### D-537 · queued — **M0-37'S CONTROL HAS NOT RUN SINCE THE COORD CUTOVER: `bio-plane/test/delegations.control.mjs` reads and writes `docs/development/CLAIMS.md` FROM THE WORKTREE, which since M0-110 is a 218-byte coord-pointer stub, so its byte floor refuses at the first arm (on origin/main too).** Found by M0-182's worker (via CONDUCT #20 23:00Z). — owner M0.
+order: after D-559, with the process rows behind the product rows: a control that cannot run is loud, not a false green (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` "The negative-control register", with TREE-SHARING.md §1's coord files (M0-110).
+depends-on: none.
+scope: read and write CLAIMS.md through `tools/coord.mjs` readState/writeState, as `tools/delegations.mjs` already does, on a planted local coord ref, and floor the byte count on the coord content.
+accepts-when: the control runs every arm AS DECLARED against the coord content (the measured failure it moves: refused at the first arm by the stub's byte floor). NEGATIVE CONTROL: point the read back at the worktree path and the byte-floor arm refuses by name.
+added: 2026-09-24 · SCHEDULER #20 (id minted by M0-182's worker).
+
+### D-520 · queued — **THE RENDER RESERVATION'S 30,000 ms NAVIGATION BOUND IS CHOSEN, NOT MEASURED, AND NOTHING CAPS CONCURRENT RENDERS: D-492 made the allowance an honest account, not a throttle.** BOB #33 RULED YES to both, 2026-09-24 19:11Z (cite until folded). — owner CAPTURE.
+order: after D-478, in normal product order behind D-64's render rows (BOB #33, 19:11Z: *product, not ahead of it*; SCHEDULER #19, 2026-09-24)
+milestone: M2
+interface: none unless the waiting render's state is published (the integrator classifies).
+design: `docs/development/CLIENT-RENDERED.md` "What Workers Paid actually buys, for this project" (DEC-42; re-pointed 2026-09-24 by SCHEDULER #19 from §"There is no collision", which the document marks SUPERSEDED — D-490's finding) and "RULED 2026-09-23 by BOB #32: the method, the primary, and the unattended sweep", with BOB #33's ruling of 19:11Z, which this row FOLDS into CLIENT-RENDERED as a RULED line in the same landing.
+depends-on: D-492, D-490.
+scope: (1) measure navigation times over the client-rendered sources already captured, recorded in `measurements/<id>.md` with date and instrument, and set the reservation's bound from the measured tail, stating the figure and its source at the site; (2) a concurrency cap from the platform's stated concurrent-browser limit, labelled the vendor's claim until measured; a render over the cap WAITS in the reconciling alarm, never dropped; a render that cannot run is recorded undetermined with its reason, never as a capture that found nothing.
+accepts-when: the bound reads from a measurement id, and a burst above the cap renders no more than the cap at once with the rest completing later (the measured failure it moves: an unmeasured 30,000 ms and an uncapped burst). NEGATIVE CONTROL: remove the cap and the burst arm counts more concurrent renders than the cap, failing by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
