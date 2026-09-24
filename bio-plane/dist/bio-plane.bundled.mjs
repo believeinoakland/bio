@@ -38755,16 +38755,24 @@ case_project: ${project}
         stated: `UNDETERMINED: ${project} holds more drafts than one bounded read of them lists (${cap}), so which draft this sentence was written in \u2014 and therefore who wrote it \u2014 cannot be established here. ${notFromAuthor}`
       };
     const here = (d) => (d.case_id ?? null) === (caseId ?? null) || (d.case_id ?? null) === null && Number(edition) === 1;
+    const unreadable = [];
     const matches = rows.filter((d) => {
       if (!here(d)) return false;
       let p = null;
       try {
         p = JSON.parse(d.params);
       } catch {
+        unreadable.push(d.draft_id);
         return false;
       }
       return _Store.#fmSafe(p && p.statement) === want;
     });
+    if (unreadable.length)
+      return {
+        by: null,
+        from: "draft_unreadable",
+        stated: `UNDETERMINED: ${unreadable.length} draft(s) of ${project} at this case identity (${unreadable.join(", ")}) hold arguments this plane cannot read, so whether this sentence was written in one of them, and by whom, cannot be established. ${notFromAuthor}`
+      };
     if (!matches.length)
       return {
         by: publisher,

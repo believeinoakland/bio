@@ -4,7 +4,7 @@
    (c) THE OVER-STRICTNESS ARM — a verification whose route CAN be shown must carry NO marker and must NOT be refused. Make `provenanceRouteAssess` mark unconditionally (finding always LOOKED_INDETERMINATE). DECLARED MUST-FAIL: the good-chain arms. DECLARED MUST-NOT-FAIL: everything in section A, which is why this arm is run alone — an item that only ever fails in one direction has not shown its subject is the thing being measured.
    (d) THE PUBLICATION ARM (REC-74's defect, one field over) — keep the marker in the table and stop publishing it: drop `route` from `listBundles`'s rows. DECLARED MUST-FAIL: every op=list arm. The point of the arm is that the store still HOLDS the marker and the record has still gone silent for anybody who was not there.
    (e) THE CLASS SWEEP'S OWN REACH, AS A DELTA — neuter `silentCatches()` so it returns an empty roster. DECLARED MUST-FAIL: the sweep's delta arms, because a walk that finds nothing reports a beautiful roster of zero over an empty corpus. The sweep is ALSO run against a source carrying a PLANTED extra silent catch and required to find it, so its reach is proved against a real defect at a real site rather than against an absolute.
-   CEILING ARM (c18-batch7fix, 2026-09-23, land/conduct/c18-batch7fix, union of c17-batch7): `const CEILING = 35;` -> `34`, anchor asserted once, restored by cp and verified by sha256 AND cmp. DECLARED: §I's ratchet arm fails and nothing else. RESULT 112/1, AS DECLARED: "swallowed reads in store.mjs are at or below the ratchet (35 of 34)". RE-RUN 2026-09-24 by c19-unionfix on the union c19-batch9 after the move to 38: `const CEILING = 38;` -> `37`, anchor asserted once, restored by cp and verified by sha256 AND cmp. RESULT 112/1, AS DECLARED: "swallowed reads in store.mjs are at or below the ratchet (38 of 37)"; restored, 113/0.
+   CEILING ARM (c18-batch7fix, 2026-09-23, land/conduct/c18-batch7fix, union of c17-batch7): `const CEILING = 35;` -> `34`, anchor asserted once, restored by cp and verified by sha256 AND cmp. DECLARED: §I's ratchet arm fails and nothing else. RESULT 112/1, AS DECLARED: "swallowed reads in store.mjs are at or below the ratchet (35 of 34)". RE-RUN 2026-09-24 by c19-unionfix on the union c19-batch9 after the move to 38: `const CEILING = 38;` -> `37`, anchor asserted once, restored by cp and verified by sha256 AND cmp. RESULT 112/1, AS DECLARED: "swallowed reads in store.mjs are at or below the ratchet (38 of 37)"; restored, 113/0. RE-RUN 2026-09-24 by REC-212 after the move to 39, in /home/user/bio on land/worker/REC-212: `const CEILING = 39;` -> `38`, the anchor asserted to occur once, restored by `cp` from a uniquely-named pristine copy in the session scratchpad and verified by sha256 (`sha256sum -c` OK, bf484e70…960b98) AND `cmp` (content identical, 47,616 bytes) — never `git checkout --`. DECLARED: §I's ratchet arm fails and nothing else. RESULT 112/1, AS DECLARED; restored, 113/0.
 */
 
 /* REC-63 / DEC-56 / D-204 — THE STANDING MARKER AT `verified`.
@@ -597,7 +597,25 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
      - D-260, `#aiRunDispatch`: a dispatch to agent-worker that throws or passes its wait is outcome `SILENT` with
        the plane's own reason (never the exception's, which can carry the credential), APPENDED to the run as a
        stated entry — "did not complete … still resumable". Stated, not smoothed. */
-  const CEILING = 38;
+  /* MOVED 38 -> 39 by REC-212 (2026-09-24, land/worker/REC-212), FROM THE FIGURE THIS WALK PRINTED on this
+     item's own tree: `origin/main` @ 68fecb8d prints 38, this branch prints 39. THE ONE NEW SITE IS THIS
+     ITEM'S OWN AND WAS LOOKED AT, which is what this ratchet asks for:
+     - REC-212, `#statementWriter`: the method reads the PROJECT'S SET of drafts to find which one holds the
+       exclusion statement being published, so it parses `case_drafts.params` once per draft at the case
+       identity. A draft whose arguments will not parse is RECORDED and the answer is the stated UNDETERMINED
+       `draft_unreadable` — "hold arguments this plane cannot read, so whether this sentence was written in one
+       of them, and by whom, cannot be established" — asked BEFORE the no-draft branch, so an unreadable
+       draft can never be absorbed into "the publisher wrote these bytes at this act". The class's remedy
+       shape: a stated undetermined, never a normal-looking answer.
+       WHY IT IS A SWALLOW AND NOT A THROW, since every other reader of `case_drafts.params` in `store.mjs`
+       parses bare: those read ONE draft, named by the caller, where this reads the project's set on the way
+       to a publication — so a throw would take a publication down over a row that may hold no part of the
+       sentence. The blast radius is narrowed instead: only drafts at THIS case identity are parsed at all.
+       THIS RATCHET CAUGHT A REAL DEFECT IN THAT SITE, recorded because the catch is the evidence it works:
+       the method's FIRST cut returned `false` for an unreadable draft, which is the smoothed non-match this
+       class is about, and would have credited the publisher with a sentence an editor may have written. The
+       stated answer above is the correction, and it exists because the gate went RED on this arm. */
+  const CEILING = 39;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 

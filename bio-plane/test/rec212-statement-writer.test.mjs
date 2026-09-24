@@ -31,6 +31,15 @@
    participants. Correct work in a spelling the rule allows must PASS, and this arm makes it fail. Declared:
    MUST FAIL block 3's recipient-admitted row; MUST NOT fail the writer or publisher rows, blocks 1-2, or
    d150. Result: rec212 40 pass, 1 FAIL — exactly that row. d150 49/0.
+   (d) THE SUBJECT CHANGED AFTER (a)-(c), SO (b) WAS RE-RUN AGAINST IT, which is `CLAUDE.md` §5's rule rather than
+   diligence: the full gate went RED on `provenance-marker.test.mjs` §I's swallowed-read CEILING (39 of 38), and the
+   site it named was this item's own `#statementWriter`, whose first cut returned `false` for a draft whose arguments
+   would not parse — the smoothed non-match that class exists to refuse, which would have credited the publisher
+   with a sentence an editor may have written. The correction is a stated UNDETERMINED (`draft_unreadable`), asked
+   BEFORE the no-draft branch. Arm (b) was then re-armed ALONE on the corrected `src/store.mjs` (restored by `cp`,
+   sha256 `sha256sum -c` OK fa247397…c730f9, `cmp` identical, 3,244,593 bytes): 33 pass, 8 FAIL, the same eight rows
+   — the control still bites on the changed subject. `provenance-marker.test.mjs`'s OWN ceiling arm was re-run for
+   the move to 39 and is recorded on that suite's header, not here.
    NOT DRIVEN, AND SAID RATHER THAN SCORED: no arm reaches `#statementWriter`'s `drafts_unbounded` answer
    (it needs more than REVIEW_LIST_MAX drafts of one project), and none produces a draft holding a statement
    with no `statement_by` — REC-193 measured that state unreachable through any act on a store this code
@@ -560,7 +569,9 @@ console.log("\n--- 7. TOTALITY over a printed corpus: every case document this s
      drafts DISAGREEING, which is reachable, and through the gate directly on bytes. (2) The
      `drafts_unbounded` answer: it needs more than REVIEW_LIST_MAX drafts of one project, which this
      suite does not build — the branch is asserted by reading, not by driving, and is named here so a
-     reader can tell an unexercised path from a passing one. (3) A publisher who RETYPES a sentence an
+     reader can tell an unexercised path from a passing one. Nor the `draft_unreadable` answer: every
+     `case_drafts.params` this plane writes is `JSON.stringify`'d, so no act can produce a draft whose
+     arguments will not parse, and that branch exists for a row no act of this code wrote. (3) A publisher who RETYPES a sentence an
      editor wrote in a draft that has since been EDITED is credited with it by block 4's rule: the
      record keeps no history of a draft's statement text, and this is the residue the document prints
      its provenance sentence FOR. */

@@ -10538,12 +10538,29 @@ export class Store extends DurableObject {
                      + `cannot be established here. ${notFromAuthor}` };
     const here = (d) => (d.case_id ?? null) === (caseId ?? null)
                       || ((d.case_id ?? null) === null && Number(edition) === 1);
+    /* A DRAFT AT THIS IDENTITY WHOSE ARGUMENTS WILL NOT PARSE IS UNDETERMINED, NOT A NON-MATCH, and this is
+       the arm `provenance-marker.test.mjs` §I's ceiling caught in this method's first cut. That cut returned
+       `false` for such a draft, which turned a read the plane COULD NOT MAKE into the normal-looking answer
+       "this draft does not hold the sentence" — and if it DID hold it, the writer was then credited to the
+       publisher by the no-draft branch below. That is precisely the smoothing the swallowed-read class exists
+       to refuse. So the catch RECORDS the draft and the answer is a stated UNDETERMINED with its reason, and
+       it is asked BEFORE the no-draft branch so it can never be absorbed by it. It is scoped to drafts at THIS
+       case identity (`here`, which needs no parse), so one corrupt row elsewhere in the project cannot reach a
+       publication it has nothing to do with; and it is a swallow rather than a throw because every other
+       reader of `case_drafts.params` in this file parses ONE draft, where this reads the project's set, and a
+       throw here would take down a publication over a row that may not even hold the sentence. */
+    const unreadable = [];
     const matches = rows.filter((d) => {
       if (!here(d)) return false;
       let p = null;
-      try { p = JSON.parse(d.params); } catch { return false; }
+      try { p = JSON.parse(d.params); } catch { unreadable.push(d.draft_id); return false; }
       return Store.#fmSafe(p && p.statement) === want;
     });
+    if (unreadable.length)
+      return { by: null, from: "draft_unreadable",
+               stated: `UNDETERMINED: ${unreadable.length} draft(s) of ${project} at this case identity `
+                     + `(${unreadable.join(", ")}) hold arguments this plane cannot read, so whether this `
+                     + `sentence was written in one of them, and by whom, cannot be established. ${notFromAuthor}` };
     if (!matches.length)
       return { by: publisher, from: "this_act",
                stated: `${publisher} wrote this exclusion statement in the act that published this case, and `
