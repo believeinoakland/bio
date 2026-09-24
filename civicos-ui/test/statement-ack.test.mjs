@@ -31,9 +31,13 @@
  * NEGATIVE CONTROL: `node civicos-ui/test/statement-ack.control.mjs` from the repo root — every arm ALONE,
  * each anchor matched EXACTLY ONCE, restored by cp from a per-arm pristine copy and verified by sha256 AND cmp.
  * RUN 2026-09-24 by the UI-89 worker against app.html d25253ad731ff711… (1,538,717 B), IDENTICAL after every arm.
+ * RUN 2: 8/8 AS DECLARED, baseline 28/0 GREEN — (A) the row's own control, `null` rendered as `[]` at the
+ * source, comes back RED 26/2 failing BY NAME at "NULL IS NOT NOBODY" and "THE TWO SENTENCES DIFFER" while
+ * sparing both live doors and the `[]` arm, which is the delegation's own acceptance. (B) RED 26/2, (C) RED 2/4,
+ * (D) RED 5/1, (E) RED 27/1, (F) RED 26/2, (G) OVER-STRICTNESS 28/0 GREEN.
  * FIRST RUN: 6/8 AS DECLARED, baseline 28/0 GREEN. Two arms came back NOT AS DECLARED and BOTH were findings
  * about the ARM rather than about the subject; both are corrected at the arm, with the measurement, and the
- * corrected pair is re-run (see the control's own foot line for the run that judged this landing):
+ * corrected pair was re-run and is RUN 2 above:
  *   (A) THE ROW'S OWN — `null` rendered as `[]` -> RED but tally -1: the first spelling disabled the null
  *       BRANCH, so `a.length` then threw on null and the suite ended with NO tally and named nothing. That arm
  *       moved a second variable and refutes nothing. Re-armed at the SOURCE (`acknowledgements || []`), which
