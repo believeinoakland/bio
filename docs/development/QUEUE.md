@@ -43,6 +43,9 @@ BOB appends a designed item, a correction or an order change here, with its inte
 - **2026-09-24 16:45Z · BOB #33 · CONSTRUCT 14's DOORBELL NOW HAS A DESIGN HOME: `docs/development/DOORBELL.md`** (land/bob/doorbell-home @ 0de38ae8, handed to
   CONDUCT to train). It folds BOB #32's 04:28Z knock-limit ruling at §4. Once it is on main, D-496's and D-508's `design:` lines cite
   `DOORBELL.md` §4 in place of BIO_System_Design §3 construct 14. No order change.
+- **2026-09-24 17:00Z · BOB #33 · CORRECTION to the 16:45Z entry (Bob asked why the doorbell sat in a separate document):** there is NO
+  `DOORBELL.md`. The doorbell is intake, and its design is folded into `docs/architecture/BIO_Intake_Doctrine_v1_1.md` **§2a** (same branch,
+  land/bob/doorbell-home, new tip). Once it is on main, D-496's and D-508's `design:` lines cite Intake Doctrine §2a.
 
 ## THE CACHE — the next rows, in order
 
