@@ -323,6 +323,7 @@ accepts-when: a read-then-write round trip keeps `newCase`. NEGATIVE CONTROL: dr
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
 ### REC-200 · integrated — **A REVIEW COPY'S DATE DOES NOT MOVE WHEN A COMMENT MOVES ITS HASH, AND ITS CONTAINER-SIDE STAMP IS UNRULED.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *the container side is stamped by `attestor.member` and `ratified_at`; the copy carries the date of its LAST change, so a comment that moves the hash moves the date.* — owner RECORD.
+status: integrated — flipped 21:12Z by SCHEDULER #19 on a pushed branch BEFORE its gate reported (BOB #33 21:17Z corrected the rule: flip only on a reported finish or a recorded GREEN); its gate bw0yww7ft was still running at 21:15Z; CONDUCT merges only on its green.
 order: after REC-199 (SCHEDULER #17, 2026-09-23; REC-148's worker)
 milestone: M10
 interface: I3 — the copy's date; the integrator mints and classifies the IC.
@@ -452,6 +453,16 @@ depends-on: UI-86.
 scope: in `queueMuteReportHtml`, a per-muted-item "Let this reach me again" sending `{item, unmute:true}`, and a per-case "Unmute" sending `{case, kinds, unmute:true}`; register the repeated control in `member-respect` SETS. Extend `civicos-ui/test/notifications.test.mjs`.
 accepts-when: a muted item unmuted from the report reaches the member again. NEGATIVE CONTROL: omit `unmute:true`, and the round-trip arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
+
+### REC-207 · queued — **NOTHING SETTLES A BIAS-DEBT OBLIGATION BUT THE LENS MOVING BACK: a re-run under the current lens is not recognised, and `op=taskresolve` addresses tasks, not runs.** BOB #32's ruling of 2026-09-23 23:42Z (cite until folded into Declared Bias "Bias debt, and HUNCH DEBT" and NOTIFICATIONS): *BOTH acts settle it, each RECORDED, never cleared silently — (1) a re-run under the CURRENT lens discharges the debt of the run it re-runs, closed with the discharging run's id and lens pins (any other lens discharges nothing); (2) a member's resolve with a REQUIRED stated reason, authored, attributed, dated, append-only, riding the task-resolve path or its equivalent.* — owner RECORD.
+order: behind D-86's train, as ruled; with the M4 bias rows (SCHEDULER #17, 2026-09-23)
+milestone: M4
+interface: I3 — the discharge on the obligation and the resolve act; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Declared_Bias_v0_1.md` (bias debt), with BOB #32's ruling of 2026-09-23 23:42Z (cite until folded into Declared Bias "Bias debt, and HUNCH DEBT" and NOTIFICATIONS); DEC-24 (derived informs, authored binds) and DEC-69 (a member is never forced).
+depends-on: D-86 (`integrated` on c17-batch7).
+scope: the re-run discharge recording the discharging run's id and lens pins; the member's resolve with a required reason; the lens moving back stays a third discharge.
+accepts-when: a re-run under the current lens closes the obligation naming that run; one under another lens leaves it open; a resolve without a reason is refused by name. NEGATIVE CONTROL: discharge on any re-run, and the other-lens arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

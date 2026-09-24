@@ -63,6 +63,16 @@ scope: attest asks the whole-document question (`registerholds`) and attests the
 accepts-when: attesting a held parted capture succeeds or is refused CAPTURE_HELD_IN_PARTS, never NO_SUCH_CAPTURE, and the ratify gate's reading is recorded (the measured failure it moves: NO_SUCH_CAPTURE for held bytes). NEGATIVE CONTROL: restore the whole-key head and the parted-attest arm reads NO_SUCH_CAPTURE by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
+### D-533 · queued — **`op=registeraudit` CALLS A PARTED CAPTURE'S BYTES MISSING AND THE RECORD UNSOUND: it heads only `captures/<whole sha>` (measured `unbacked: 1, sound: false`).** Found by D-476's worker (A). BOB #33 RULED 2026-09-24 21:17Z (cite until folded): YES — `sound` reads true for a row held IN PARTS when every part the record names is present, each part's digest verified; a fourth state "held in parts, all present"; a missing part is named; a row resolving neither way reads UNDETERMINED, counted OUTSIDE `sound`, never inside it. — owner RECORD.
+order: after D-530, with the corrections: an audit calling held bytes missing (CLAUDE.md §2) (BOB #33, 21:17Z; SCHEDULER #19, 2026-09-24)
+milestone: M2
+interface: I3 — a fourth audit state; the integrator classifies.
+design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (one capture, one home), with BOB #33's ruling of 21:17Z, which this row FOLDS into §8 in the same landing.
+depends-on: D-476.
+scope: head each part the record names and verify each part's digest; the fourth state; a missing part named; unresolvable rows UNDETERMINED outside `sound`.
+accepts-when: a fully held parted capture audits "held in parts, all present" with `sound: true`, one missing part is named and makes `sound` false, and an unresolvable row is counted outside `sound` (the measured failure it moves: `unbacked: 1, sound: false` for held bytes). NEGATIVE CONTROL: head the whole key only and the parted arm reads unbacked, failing by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
 ### D-521 · queued — **IC-246's STATEMENT_ACK_DOCUMENTS_OVER_BOUND (C-82.1) IS UNREACHABLE BY CONSTRUCTION: after REC-194 its read names (case_id, edition), `case_documents`' primary key, so at most one row returns and the bound can never fire.** Found by REC-194's worker (F1). — owner RECORD.
 order: after REC-213, with the corrections to just-landed work: a catalogued refusal that cannot occur is a claim the record makes about itself (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
 milestone: M10
@@ -173,16 +183,6 @@ depends-on: D-490.
 scope: each recorded subresource carries its SHA-256; one the render loaded whose bytes were not kept reads digest UNDETERMINED with its reason.
 accepts-when: a rendered capture's subresources each verify by digest, and an unkept one reads undetermined with its reason (the measured failure it moves: subresources recorded with no digest). NEGATIVE CONTROL: drop the digest and the verify arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
-### REC-207 · queued — **NOTHING SETTLES A BIAS-DEBT OBLIGATION BUT THE LENS MOVING BACK: a re-run under the current lens is not recognised, and `op=taskresolve` addresses tasks, not runs.** BOB #32's ruling of 2026-09-23 23:42Z (cite until folded into Declared Bias "Bias debt, and HUNCH DEBT" and NOTIFICATIONS): *BOTH acts settle it, each RECORDED, never cleared silently — (1) a re-run under the CURRENT lens discharges the debt of the run it re-runs, closed with the discharging run's id and lens pins (any other lens discharges nothing); (2) a member's resolve with a REQUIRED stated reason, authored, attributed, dated, append-only, riding the task-resolve path or its equivalent.* — owner RECORD.
-order: behind D-86's train, as ruled; with the M4 bias rows (SCHEDULER #17, 2026-09-23)
-milestone: M4
-interface: I3 — the discharge on the obligation and the resolve act; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Declared_Bias_v0_1.md` (bias debt), with BOB #32's ruling of 2026-09-23 23:42Z (cite until folded into Declared Bias "Bias debt, and HUNCH DEBT" and NOTIFICATIONS); DEC-24 (derived informs, authored binds) and DEC-69 (a member is never forced).
-depends-on: D-86 (`integrated` on c17-batch7).
-scope: the re-run discharge recording the discharging run's id and lens pins; the member's resolve with a required reason; the lens moving back stays a third discharge.
-accepts-when: a re-run under the current lens closes the obligation naming that run; one under another lens leaves it open; a resolve without a reason is refused by name. NEGATIVE CONTROL: discharge on any re-run, and the other-lens arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
 ### D-468 · queued — **A BIAS SET ACCEPTS `adopted` → `proposed`: promote does not enforce the STATES edges against the head, so a revision can move backwards.** Found by REC-187's worker (F4). — owner RECORD.
 order: after REC-207, with the bias rows: a correction to a built state machine (SCHEDULER #17, 2026-09-24; REC-187's worker via CONDUCT #19)
