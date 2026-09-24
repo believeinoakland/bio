@@ -1,0 +1,16 @@
+{
+ "unit": "plane:pdfstructure.test.mjs",
+ "inputHash": "4c6ed9f1988ddba6c148be5a4c497c64dcd1e57e014e3f5bf6fe746a5ae913e0",
+ "verdict": "PASS",
+ "run": "ef22c65e58eff79405d459bc0359350c913f268f.1790275134074.8210.json",
+ "tree": "ef22c65e58eff79405d459bc0359350c913f268f",
+ "head": "f5a1da21e2b11af080cbef68a011f5262fc95e47",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 133,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "927c7eb4-6c92-517b-a2e1-33f8b14dcfee",
+ "at": "2026-09-24T18:38:54.087Z"
+}
