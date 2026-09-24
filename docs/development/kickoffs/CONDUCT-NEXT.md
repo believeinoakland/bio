@@ -15,7 +15,7 @@ untouched). Build the args from `train.mjs list` (grep WAITING, awk $3), and con
 Ids: always `node tools/mintid.mjs <NS>`; check new ids at each merge (`mintid.mjs --audit --base origin/main`).
 
 ## 2. LANE ADDRESSES (one-shot `create_trigger`, persistent_session_id, run_once_at ~1 min ahead; NEVER fire_trigger)
-BOB #34 `session_015xYmWbudjCX7rFPF1bDJd3` (since 22:02Z; BOB #33 `session_01BkXH3dLHH2wx8eUA4k5p73` finishing batch-0924e) · SCHEDULER #19 `session_01KJoJnoXN6d5CyZsiw8KTKa` (#18 archived) · DIST #6
+BOB #34 `session_015xYmWbudjCX7rFPF1bDJd3` (since 22:02Z; BOB #33 `session_01BkXH3dLHH2wx8eUA4k5p73` finishing batch-0924e) · SCHEDULER #20 `session_01RxoRvCfY35n2aXnn2unRJp` (since 22:05Z; #19 refreshed) · DIST #6
 `session_01Vi1XTVwxcBBMStifuBasLZ` · CONDUCT #20 `session_011PzZW1FSobMne4cYeAYWfU`.
 If the account switched, these sessions may be unreachable from the new account: route through the record (coord) and Bob.
 
