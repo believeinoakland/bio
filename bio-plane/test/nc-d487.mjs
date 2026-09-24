@@ -35,14 +35,27 @@
  * one, and 1 ms after — correct work in the three spellings that used to be
  * fatal — and all three must be FULLY GREEN. A guard that only holds in the
  * middle of a window is the same bet with a smaller stake. */
-import { readFileSync, writeFileSync, copyFileSync, statSync, unlinkSync } from "node:fs";
+import { readFileSync, writeFileSync, copyFileSync, statSync, unlinkSync, mkdirSync, rmdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const SUITE = fileURLToPath(new URL("./doorbell.test.mjs", import.meta.url));
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
-const DIR = fileURLToPath(new URL("./", import.meta.url));
+/* THE PEN, and it is a DIRECTORY with a .gitignore line for the reason the
+   standing rule at `.rec84-control-pristine/` gives and that every pen in that
+   file repeats: this driver's `limiter-off` arm copies a 3.1 MB `src/store.mjs`
+   aside, INTO `bio-plane/test/` — the one directory both `coverage.mjs`'s
+   register and the battery's discovery read by walking rather than from a list.
+   An interrupted run leaving that copy loose is a SECOND plane source for the
+   next walk to enrol, and that is not hypothetical: a leftover pristine copy has
+   already been read as a second producer of a retired check.
+   Each copy is removed as its restore verifies; the pen itself is removed on
+   exit ONLY IF EMPTY, so a run that left something behind leaves the evidence
+   with it (LED-2's rule) and the ignore line covers the rest. */
+const DIR = fileURLToPath(new URL("./.nc-d487-pen/", import.meta.url));
+mkdirSync(DIR, { recursive: true });
+process.on("exit", () => { try { rmdirSync(DIR); } catch { /* not empty: evidence stays */ } });
 const MIN_BYTES = 6000;                       /* the suite is ~9KB; a restore smaller than this is a bug */
 const sha = (f) => createHash("sha256").update(readFileSync(f)).digest("hex");
 /* BYTE-EXACT text IO. `src/store.mjs` carries a stray byte (CLAUDE.md §7), and a
