@@ -37,6 +37,10 @@ REFUSES `store=scratch` (NAMESPACE_PINNED) — probes of public ops must name `s
 ## What waits for the release Bob asks for (origin/main @ `548eb2c5`; re-read `git log 38b49c50..origin/main` at the cut — never this list)
 **Live check owed at the next deploy (D-475, c20-batch25, SCHEDULER #19 20:46Z) — both read-only and public:** `GET /?store=scratch`
 shows scratch's slug or the "no group recorded" words; `GET /?store=nonsense` returns 400 NAMESPACE_UNKNOWN.
+**Second live check owed at the next deploy (D-490, c20-batch25, SCHEDULER #19 21:02Z):** deploy WITH the BROWSER binding
+(DIST-11 must be in the release), then run ONE live render (`op=acquire` with `render: true`) in `store=scratch`, the `bio`
+counters witnessed before and after. No live render has ever run. D-490 sends `cf-brapi-client: bio-plane`; whether the
+service validates it is UNDETERMINED — if it does, the render answers RENDER_FAILED naming the status. Report either outcome.
 **UPDATE 12:25Z (BOB #32, verified at the code by DIST #6): main = `13073707`** (c20-batch14 landed 11:39Z; gate GREEN
 351/351 · 19,983 per BOB). Now ALSO owed at the next release: **D-461** (SAFETY: `store=scratch` on a public op pinned to
 `bio` is refused by name, C-78.2; CLAUDE.md §5 updated — a probe of a public op on scratch is REFUSED), **D-464**
