@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (run 2026-09-24, D-479, driver `test/d479-bounds.control.mjs` — COMMITTED, so it re-runs in one step) FIVE ARMS PLUS A BASELINE, each armed ALONE with every other defence held open, every restore verified by sha256 AND by `cmp` against a UNIQUELY-NAMED per-arm pristine copy with the byte count printed and floored at 3,000,000 B (store.mjs 3,164,607 B, 213ad1fa…). BASELINE ROW FIRST: bounds 200/0 · derivation-bounds 72/0 · meaning-bounds 92/0. (1) DROP THE LIMIT — the row's own arm: `ORDER BY bundle_id LIMIT ?`, after, cap + 1` -> `ORDER BY bundle_id`, after` in projectDirectory. DECLARED: derivation-bounds fails at CENSUS IS A CEILING (census back at 118) and bounds STAYS GREEN. RESULT derivation-bounds 69/3 — the census ceiling AND BOTH `SET 2` arms, which were not predicted: with the LIMIT gone the method publishes a bound and scans unbounded, so it joins the set the census count is blind to BY CONSTRUCTION, which is pinned by name. bounds 200/0 and meaning-bounds 92/0 as declared. THE ARM'S OWN LESSON, recorded rather than smoothed: THE SQL BOUND IS NOT WHAT MAKES `truncated` HONEST — the walk's stop at cap + 1 VISIBLE projects is — so the two properties are held by two instruments and neither covers the other. (2) COUNT WHAT IT SENT — `const truncated = projects.length > cap;` -> `= false`. DECLARED: THE BITE and the DELTA. RESULT bounds 197/3 — those two plus the SAME-ORDER arm, because the whole list's first two are not the page. (3) DROP THE PUBLISHED BOUND — `limit: cap, truncated,` removed (ANCHORED WITH ITS NEXT LINE, and the FIRST RUN OF THIS ARM DID NOT ARM: the bare fragment occurs THREE times in store.mjs and the driver reported `anchor occurrences: 3` and refused — an arm that did not arm is a finding). RESULT bounds 197/3 AS DECLARED (THE BITE, WHOLE, the OVER-ASK, each by name). **meaning-bounds CAME BACK GREEN AT 92/0 AGAINST MY DECLARATION, AND IT IS A FINDING ABOUT THE ARM:** that walk grades an op BARE by whether its collection comes off an UNBOUNDED row source, and this arm left the `LIMIT ?` in place, so the BARE roster cannot move. The published `limit` is guarded HERE and nowhere else; the second instrument I had assumed does not cover it. (4) PAGE THE CANDIDATES INSTEAD OF THE VISIBLE SET — the naive fix armed as a control: the inner and outer `if (projects.length > cap) break;` replaced by an unconditional `break` after the first candidate page. DECLARED: bounds fails at THE BITE, because a hidden project in the window makes the answer short of the cap. RESULT bounds 197/3 AS DECLARED — so the page is over the VISIBLE set and not over the candidates, measured rather than argued. (5) OVER-STRICTNESS — the cut written INLINE in the returned object instead of through the local `page`: bounds 200/0, derivation-bounds 72/0, meaning-bounds 92/0, all three at baseline. */
 /* NEGATIVE CONTROL: RAN 2026-09-19 by the M0-78/D-414/D-433 worker, driver `test/nc-instr-cluster.mjs`, SEVEN ARMS PLUS A BASELINE, each armed ALONE with every other defence held open, every restore verified by sha256 AND by `cmp` against a uniquely-named per-arm pristine copy with byte counts printed and floored. ALL SEVEN AS DECLARED. BASELINE ROW FIRST (arm 7): derivation-bounds 72/0 · bounds 173/0 · witness 26/0 · DEC-49 guard exit 0 (reach 338, R3 fed 70, observed-only 4). (1) D-414 reverted in ONE walk only (derivation-bounds) so the five copies disagree: derivation-bounds 71/1 failing at CENSUS IS A CEILING with the figure back at 109, and bounds 172/1 failing at D-414 PARITY — the parity arm is what catches a liar who fixes one copy of five. (2) the SHORTER spelling `\*?\s*` in one walk, which also lets `\s*` eat a third space of indent and match at any depth: derivation-bounds 48/24, the widening measured rather than argued. (3) M0-78 reverted so a ratify-stage refusal THROWS again: the census reports FIXTURE-THREW and exits 1, where the pre-M0-78 census over the same tree printed UNCLASSIFIED, `8 anchor(s), 0 NOT LIVE`, and EXITED 0 — measured with both files reverted to HEAD, not inferred. (4) arm (H)'s registration deleted from the driver, which is how a liar passes M0-78: witness 25/1 failing at A8 by name. (5) a planted UI suite that only ASSERTS a code: reach 338 unmoved and R3 fed 70 unmoved, the code printed in the OBSERVED half. (6) the same code HANDED by a mock in the same planted suite: reach 338 -> 339 and R3 fed 70 -> 71, the over-strictness direction. */
 /* NEGATIVE CONTROL (M0-18, run 2026-08-09, worktree agent-a62aec7acd493144e): the
    provenance floor added to this file is armed by `test/provenance-floor.control.mjs`
@@ -15,6 +16,7 @@
 /* NEGATIVE CONTROL: (run 2026-08-07, rec60-agent, REC-60/D-225) THIS SUITE'S SHARE of REC-60's controls, run against the three ops that JOINED its roster when they gained a bound, each restored byte-identically. (1) RESTORE EACH UNBOUNDED READ in src/store.mjs — drop `LIMIT ?`/`cap + 1` and the `limit:`/`truncated` keys — and this file fails FOUR arms per op, every one naming it: the bound-applied arm, both direction arms, and the DELTA. Run per op: resolutionsForCapture 4, documentsConcerning 4, connectionsFor 4. (2) COUNT WHAT IT SENT (`const truncated = false;` beside a real slice) -> 2 fail per op here, the cut-answer arm and the DELTA. Note that the WALK stays green under (2) — the scan is still capped, so `OPS.size` is still 14 and only the LIVE arms catch a dishonest answer. (3)/(4) are `test/meaning-bounds.test.mjs`'s, which is where REC-60's own walk and its reach deltas live. */
 /* NEGATIVE CONTROL: (run 2026-08-08, rec67-agent, REC-67) FIVE arms, each armed ALONE with every other held open, every file restored from a PRISTINE pre-arm copy and verified by sha256 AND by `cmp`. Baseline 147/0. (1) PLANT A REAL CORPUS-ARM CALL SITE — a new file `civicos-ui/nc-rec67-arm1.mjs` calling `ask("projection", "jsonPath=…")` through an ordinary local helper -> 146/1, the ONE failure being `civicos-ui reaches op=projection ONLY through the &id= arm`, and the helper roster PRINTS the planted file and its callee. **This is the arm proving the narrowing did not blind the walk.** (2) PLANT UI-46's EXACT REGRESSION — `CLASS.methods.get("projection")` in `civicos-ui/nc-rec67-arm2.mjs` -> 147/0, GREEN, the planted file absent from the roster and the site count unmoved at 40. **A green arm proves nothing on its own, so the same planted file was read by the PRE-FIX matcher in the same turn: it classified it `helper corpus-bare civicos-ui/nc-rec67-arm2.mjs:3` and took the count to 41** — which is the 106/106 -> 105/106 failure reproduced and then shown fixed. (3) NEUTER THE RESOLUTION (`if (false && TRANSPORT.test(b))`) -> 142/5, the helper roster PRINTED as `0 site(s) … NONE`, the total dropping 40 -> 38, and the two REC-67 HELPER REACH arms among the failures with both synthetic guards. (4) OVER-STRICTNESS — a real call through `zzq` -> `hop` -> `fetch`, a spelling no list ever carried, two hops deep -> 146/1, FOUND and named `via zzq()`. The old list-based matcher could not have passed this arm. (5) is `meaning-bounds.test.mjs`'s and (6) `plane-envelope.test.mjs`'s — the two sibling walks in the same class, recorded in their own headers. THE HARNESS'S OWN FAULT, RECORDED RATHER THAN SMOOTHED: its first run reported `exit 1 · null pass, null fail` for EVERY arm INCLUDING THE BASELINE, because it joined the suite path onto the repo root while running with `cwd=bio-plane`. Only the baseline row made it visible; without one, six arms failing for a reason unrelated to their subject read exactly like six arms working. */
 /* NEGATIVE CONTROL: (run 2026-09-23, c18-batch7fix, D-148's arms joined at the c17-batch7 union) ONE arm, RUN. (1) COUNT WHAT IT SENT — in src/store.mjs actionQuotes, `const truncated = rows.length > max;` -> `const truncated = false;`, anchor asserted to occur exactly once, restored by cp from a pristine copy and verified by sha256 AND cmp (419e0f54…, 3,023,229 B). DECLARED: the bite arm and the DELTA fail; the whole arm and every other arm hold. RESULT 173/5 against a 175/3 baseline, AS DECLARED: exactly "op=actionquotes: publishes the bound it APPLIED (`max`), and a cut answer SAYS SO …" and "op=actionquotes: DELTA …" were added; the three standing reds (PIN GUARD and both PIN arms, naming groupidentity/statementack and biasmanifest) were red before arming.  ALSO RUN 2026-09-24 by c19-unionfix (IC-246, CONDUCT #19's spec), ONE arm, alone, restored by cp from a per-arm pristine copy verified by sha256 AND cmp (store.mjs 3,160,297 B). (gi) the NAMED bound undone — op=groupidentity's `LIMIT ?` with max + 1 -> the literal `LIMIT 20`. DECLARED: the bite and the DELTA fail. RESULT 191/2 against a 193/0 baseline, AS DECLARED: exactly "op=groupidentity: THE BITE …" and "op=groupidentity: DELTA …". */
+/* NEGATIVE CONTROL: (run 2026-09-24, WORKER D-482, driver `.nc-D482-driver.sh` from the repo root) FOUR ARMS PLUS A BASELINE, each armed ALONE with every other defence held open, the anchor asserted to occur EXACTLY ONCE so an arm that does not arm says so — the driver's first draft armed NONE of the four through a `perl -0p` \Q…\E pattern that never matched, and reported four clean 195/0 runs, which is an arm that did not arm wearing a green result; every restore is by `cp` from a UNIQUELY-NAMED per-arm pristine copy verified by sha256 AND by `cmp` with the byte count printed and floored at 170,000 B. THE ARMED SUBJECT IS THIS FILE AS COMMITTED, declaration included: the arms were re-run after this record was written, because a control re-read after the subject changes is the rule and a declaration is part of the subject's bytes; the per-arm digests are in D-482's report rather than here, since a file cannot pin its own sha without moving it. BASELINE ROW FIRST (arm 0): bounds 195/0, call sites `64 total — id-arm 49, corpus-bare 12, corpus-filter 3`. (1) THE ROW'S DECLARED CONTROL — drop BOTH quotes from the class in `callSites`, `[?&,{\s"']` -> `[?&,{\s]` -> 195/0 -> 194/1, the one failure being `D-482 OVER-STRICTNESS: A QUOTED `id=` IS STILL THE `&id=` ARM` by name. (2) drop ONLY the double quote -> 194/1, the SAME arm. (3) drop ONLY the single quote -> 194/1, the SAME arm — (2) and (3) are what say each character is load-bearing rather than one carrying the other. (4) THE LIAR'S DIRECTION, because a matcher passes an over-strictness arm for free by widening until nothing fails: `(?:^|[?&,{\s"'])` -> `(?:^|.)`, any character a boundary -> 194/1, and the failure is the OTHER arm, `D-482 REFUSES THE LOOSENING…`, with the over-strictness arm still green — so the pair fails in both directions and neither can be satisfied alone. AND THE FINDING THE ARMS PRINTED RATHER THAN THE ARMS THEMSELVES: the call-site line read `64 total — id-arm 49, corpus-bare 12, corpus-filter 3` UNMOVED in the baseline and in all four arms, and unmoved before and after the fix (measured with a per-site probe printing `f`/`arm`/`via`, diff empty). NO CONSUMER IN THIS TREE SPELLS IT WITH A QUOTE TODAY, so the widening reclassifies nothing live and the synthetic arm is its ONLY witness — which is the reason it is synthetic and permanent rather than a control somebody has to remember to re-run. */
 /* REC-57 · EVERY CAPPED OP PUBLISHES THE BOUND IT APPLIED, AND WHETHER IT BIT.
  * ===================================================================== *
  * UI-39 measured this one layer up: a plane that caps and does not say so forces
@@ -605,7 +607,13 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      THEME_READ_LIMIT_DEFAULT/MAX declared BELOW the method (REC-116's finding). Its bite is driven in
      `test/theme.test.mjs` section 6 (DRIVEN_ELSEWHERE) and its envelope in the map below. */
   /* CONDUCT #19 at D-162's merge onto c19-batch9 (2026-09-24): the figure below is THIS ARM'S OWN OUTPUT on the merged tree. */
-  OPS.size, 44);
+  /* MOVED 44 -> 45 on 2026-09-24 by D-479, from THIS ARM'S OWN FAILURE OUTPUT (`want 44 / got 45`), never by adding
+     one: op=projectdirectory, the discoverable projects a member is outside (Membership v2 §7.14). It arrived on
+     2026-09-23 with REC-149 carrying NO bound at all — `derivation-bounds` and `meaning-bounds` each counted it as
+     the one arrival whose answer grows with the record and each NAMED this fix rather than taking it. Its cap is
+     PROJECT_DIRECTORY_LIMIT beside `LIMIT ?`, declared BELOW the method (REC-116's finding), with `limit` and
+     `truncated` published; DRIVEN below with a real bite, and carried in DRIVEN_ELSEWHERE for the reason there. */
+  OPS.size, 45);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1455,6 +1463,20 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      versionstrength's reason: a caller has no business asking for HALF a
                                      partition. Its bound REFUSES (C-71.7) and is driven below. */
                                   "partitionindependence",
+                                  /* D-479: op=projectdirectory takes a `limit` and COULD sit in the loop; what
+                                     keeps it out is the ORDER its fixture has to be built in. The directory
+                                     refuses a machine credential by name (C-70.4) and this loop drives machine
+                                     tokens, so it needs an ordinary member's SESSION — and §4's
+                                     two-administrator floor refuses an ordinary member until two administrators
+                                     exist (`ADMINS_FIRST`), while IC-246's own arms enrol the FIRST of them
+                                     further down this file. Enrolling two administrators ahead of that arm makes
+                                     gia the third, which `CONSENSUS_REQUIRED` then refuses — measured, not
+                                     assumed: that is exactly how this fixture failed on its first run. So the
+                                     directory is driven AFTER IC-246's administrator, in this loop's own shape
+                                     (a bite of two against three discoverable projects, `limit` read back as the
+                                     CLAMPED cap, `truncated` true on the bite and FALSE at the ceiling, an
+                                     over-ask answered AT the ceiling, and the DELTA). */
+                                  "projectdirectory",
                                   /* D-148, joined at integration by c18-batch7fix (2026-09-23): op=actionquotes
                                      takes NO `limit` from the caller — its bound is `QUOTES_MAX`, published as
                                      `max` beside `truncated`, so the loop's descriptor (ask for a bite of one,
@@ -1691,6 +1713,82 @@ t("op=statementack: its bound is the NAMED constant STATEMENT_ACK_DOCUMENTS_MAX,
   [Number.isInteger(SA_MAX) && SA_MAX > 0, /LIMIT \?`,[\s\S]{0,200}ackMax \+ 1\)/.test(saBody),
    /FROM case_documents[^`]*LIMIT \d/.test(saBody), /case_documents_limit: ackMax, case_documents_truncated: false/.test(saBody)],
   [true, true, false, true]);
+/* ------------------------------------------------------ D-479's ARMS (SCHEDULER #17's finding on REC-149).
+   op=projectdirectory, the DISCOVERABLE projects a member is outside (Membership v2 §7.14, "The directory").
+   REC-149 built it listing EVERY such project, unpaged, publishing no bound; both bounds ratchets counted it and
+   named this fix. Its cap is PROJECT_DIRECTORY_LIMIT, declared below the method, and the caller may LOWER it.
+
+   THE FIXTURE, and every part of it is forced rather than chosen. The read needs an ordinary member's SESSION
+   (C-70.4 refuses a credential with no member behind it, machine tokens included), so the caller is enrolled.
+   It must be an ORDINARY member and not an administrator: an administrator sees every project FULLY (§7.3), so
+   its directory is EMPTY however many projects are discoverable, and a bite taken on one would measure nothing.
+   §4's two-administrator floor then refuses an ordinary member until two administrators exist, and IC-246's arm
+   above enrolled the first — so exactly ONE more administrator is paid for here, because a third would be
+   refused CONSENSUS_REQUIRED. Each project is set DISCOVERABLE by its OWNER's session, since C-70.2 refuses
+   every other caller including a machine, and ownership is taken through `projectclaimowner` because a
+   machine-promoted project has no owner row at all (§7.1).
+
+   THE BITE IS TAKEN AT THE CALLER'S OWN `limit`, NOT AT THE CEILING, and that is what the cap being the
+   caller's to lower is FOR: measuring the same property at the ceiling would need 201 projects and 201 owner
+   acts, and a bound only its author can reach is a bound nothing drives. The ceiling is measured separately, by
+   an over-ask answered AT it. WHAT A SILENT CUT WOULD COST here is specific: the directory is the ONE read
+   through which a discoverable project's existence reaches somebody outside it ("Record reads do not widen"),
+   so a project past the cut is, to that member, a project that does not exist — which is the answer §7.14
+   reserves for a project its owner chose to HIDE. */
+const d479Enrol = async (memberId, role) => {
+  const add = await POST(`op=memberadd&token=adm-r57`, { memberId, cover: `cover for ${memberId}`, role,
+                                                         capabilities: ["contribute", "publish", "create_projects"] });
+  const en = await POST("op=enroll", { invite: add?.invite, handle: memberId, password: `${memberId}-pass-r57` });
+  const lg = await POST("op=login", { role: `member:${memberId}`, password: `${memberId}-pass-r57` });
+  if (en?.ok !== true || !lg?.token) throw new Error(`D-479 fixture ${memberId}: ${JSON.stringify([add, en, lg]).slice(0, 700)}`);
+  return lg.token;
+};
+await d479Enrol("d479adm", "admin");                              /* the floor's second administrator */
+const D479_OWNER_TOK = await d479Enrol("d479own", "member");       /* the three projects' owner */
+const D479_TOK = await d479Enrol("d479out", "member");            /* the caller: outside all three, never invited */
+const D479_PROJECTS = [];
+for (const n of [1, 2, 3]) {
+  const id = await makePublishingProject({
+    post: POST, mf, sha, machineToken: "adm-r57", owner: "d479own",
+    name: `bounds-d479-${n}`, created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+  const set = await POST(`op=projectvisibilityset&token=${D479_OWNER_TOK}`
+                         + `&projectId=${encodeURIComponent(id)}&setting=discoverable`);
+  if (set?.ok !== true) throw new Error(`D-479 fixture discoverable ${id}: ${JSON.stringify(set).slice(0, 400)}`);
+  D479_PROJECTS.push(id);
+}
+const D479_CEIL = Number((/static PROJECT_DIRECTORY_LIMIT = (\d+);/.exec(SRC_STORE) || [])[1]);
+const D479_DIR = (n) => GET(`op=projectdirectory&token=${D479_TOK}${n === null ? "" : `&limit=${n}`}`);
+const D479_BITE = await D479_DIR(2);
+const D479_WHOLE = await D479_DIR(null);
+const D479_OVER = await D479_DIR(D479_CEIL + 5000);
+t("FIXTURE ARMS THE TRAP (D-479): PROJECT_DIRECTORY_LIMIT is a number declared below the method, three DISTINCT "
++ "projects are DISCOVERABLE, and the caller is an ordinary member outside every one of them — so a page of two "
++ "has something to cut",
+  [Number.isInteger(D479_CEIL) && D479_CEIL > 0, D479_PROJECTS.length, new Set(D479_PROJECTS).size,
+   D479_WHOLE?.ok, D479_WHOLE?.projects?.length],
+  [true, 3, 3, true, 3]);
+t("op=projectdirectory: THE BITE — a page of two over three discoverable projects answers EXACTLY the cap, "
++ "publishes the bound it APPLIED, and SAYS it was cut",
+  [D479_BITE?.ok, D479_BITE?.projects?.length, D479_BITE?.count, D479_BITE?.limit, D479_BITE?.truncated],
+  [true, 2, 2, 2, true]);
+t("op=projectdirectory: WHOLE — at the default bound all three are listed and the answer says it is COMPLETE",
+  [D479_WHOLE?.count, D479_WHOLE?.limit, D479_WHOLE?.truncated], [3, D479_CEIL, false]);
+t("op=projectdirectory: DELTA — 'these are all the discoverable projects you are outside' and 'these are the "
++ "first two' do NOT read alike",
+  D479_BITE?.truncated !== D479_WHOLE?.truncated, true);
+t("op=projectdirectory: AN OVER-ASK IS ANSWERED AT THE CEILING, and the CEILING is what is published — a caller "
++ "who asked for thousands is never told it got them",
+  [D479_OVER?.ok, D479_OVER?.limit, D479_OVER?.truncated, D479_OVER?.count], [true, D479_CEIL, false, 3]);
+t("op=projectdirectory: the CUT PAGE is the FIRST two in the SAME order the whole answer lists them — a page "
++ "means the same thing twice, which is what makes a lowered `limit` usable rather than a lottery",
+  D479_BITE?.projects?.map((p) => p.id), D479_WHOLE?.projects?.slice(0, 2).map((p) => p.id));
+t("op=projectdirectory: and the cut page still says only what §7.14 lets it — an id, a name, and a `request` "
++ "that is null because the request to join is NOT BUILT",
+  [D479_BITE?.projects?.every((p) => JSON.stringify(Object.keys(p).sort()) === '["id","name","request"]'),
+   D479_BITE?.projects?.every((p) => p.request === null),
+   typeof D479_BITE?.requests === "string" && D479_BITE.requests.startsWith("NOT_BUILT:")],
+  [true, true, true]);
+
 /* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
  *
  * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the
@@ -1790,6 +1888,9 @@ const answersByOp = new Map([
      totals, never an array. Admin-fenced, so the admin token. The bite is driven in `test/versionchain.test.mjs`
      section 15 (DRIVEN_ELSEWHERE). */
   ["changedfromaudit", await GET("op=changedfromaudit&token=adm-r57&limit=1")],
+  /* D-479: driven above with its real bite and REUSED here rather than re-driven — the read is idempotent, and
+     it is carried the same way as its neighbours so the roster reads as one list rather than two conventions. */
+  ["projectdirectory", D479_WHOLE],
   /* IC-246: groupidentity driven above with its real bite and REUSED here; statementack's envelope for a caller
      neither door admits — the review copy's one dead answer, an object. */
   ["groupidentity", GI_BITE],
@@ -2146,7 +2247,15 @@ const callSites = (files, resolve = requestFormingHelpers) => {
          expected-answer map by `"op=projection"`, derived from a request made on
          another line — counting it would be counting one call twice. */
       if (/^\s*:/.test(c.code.slice(L.end + 1))) continue;
-      out.push({ f: c.f, via, arm: /(?:^|[?&,{\s])id[=:}]|`id=/.test(params) ? "id"
+      /* THE QUOTE IS A SEPARATOR (D-482). A consumer that builds its query by
+         concatenation hands the helper `"id=" + x`, so the character immediately
+         before `id` is the QUOTE and not `?`, `&` or a space. Until D-482 the
+         class refused it and a correct call read `corpus-bare` — an instrument
+         failing honest work, which costs every lane gate time. The BOUNDARY is
+         still required: `"gid="` is not the id arm, and the synthetic below
+         pins that, because the way a matcher passes an over-strictness arm for
+         free is by widening until nothing fails. */
+      out.push({ f: c.f, via, arm: /(?:^|[?&,{\s"'])id[=:}]|`id=/.test(params) ? "id"
                             : /jsonPath|jsonEquals/.test(params) ? "corpus-filter" : "corpus-bare" });
     }
   }
@@ -2280,6 +2389,22 @@ const SYNTH = {
     'async function ask(op, params) { const j = await wire(op, params); return j.result; }',
     'const answer = await ask("projection", { id: "INFO-1" });',
   ].join("\n") },
+  /* (5) and (6) are D-482's over-strictness half: the CONCATENATED query, in
+     both quote spellings, because adding one character to the class and not its
+     twin is the same defect wearing the fix's clothes. (7) is the refusal that
+     makes (5)/(6) worth anything. */
+  quotedId: { f: "synthetic/quoted-id.mjs", code: [
+    'const zap = async (op, qs) => (await fetch("/api/?op=" + op + "&" + qs)).json();',
+    'const answer = await zap("projection", "id=" + infoId);',
+  ].join("\n") },
+  quotedIdSingle: { f: "synthetic/quoted-id-single.mjs", code: [
+    "const zap = async (op, qs) => (await fetch('/api/?op=' + op + '&' + qs)).json();",
+    "const answer = await zap('projection', 'id=' + infoId);",
+  ].join("\n") },
+  quotedNotId: { f: "synthetic/quoted-not-id.mjs", code: [
+    'const zap = async (op, qs) => (await fetch("/api/?op=" + op + "&" + qs)).json();',
+    'const answer = await zap("projection", "gid=" + groupId);',
+  ].join("\n") },
 };
 t("REC-67 REFUSES A METHOD NAME: `CLASS.methods.get(\"projection\")` — a Map read of a METHOD BODY, a "
 + "request to nothing — is NOT a call site. This is the exact line that turned `civicos-ui`'s suite red "
@@ -2296,6 +2421,18 @@ t("REC-67 FOLLOWS THE DELEGATION: a helper that carries no transport itself and 
 + "still a call to the plane — which is not hypothetical, it is exactly how `civicos-ui`'s `recR` reaches "
 + "`rec`, so a one-level check would have lost the UI consumer entirely",
   [callSites([SYNTH.twoHops]).length, callSites([SYNTH.twoHops])[0]?.arm], [1, "id"]);
+t("D-482 OVER-STRICTNESS: A QUOTED `id=` IS STILL THE `&id=` ARM. A consumer that concatenates its "
++ "query hands the helper `\"id=\" + x`, so the character before `id` is the QUOTE — and until D-482 the "
++ "class refused it and read an honest id call as `corpus-bare`. BOTH quote spellings are driven, and the "
++ "site count is asserted too, so a fixture that armed nothing cannot pass this by returning no sites",
+  [callSites([SYNTH.quotedId]).length, callSites([SYNTH.quotedId])[0]?.arm,
+   callSites([SYNTH.quotedIdSingle]).length, callSites([SYNTH.quotedIdSingle])[0]?.arm],
+  [1, "id", 1, "id"]);
+t("D-482 REFUSES THE LOOSENING THAT WOULD PASS THE ARM ABOVE FOR FREE: the way a liar green-lights an "
++ "over-strictness arm is to widen the class until nothing fails, so a quoted param whose name merely "
++ "ENDS in `id` — `\"gid=\" + x`, a group id and not the `&id=` arm — must STILL read `corpus-bare`. The "
++ "boundary before `id` is what the widened class keeps, and this is the assertion that says so",
+  [callSites([SYNTH.quotedNotId]).length, callSites([SYNTH.quotedNotId])[0]?.arm], [1, "corpus-bare"]);
 
 /* =================================================================== * OVER-STRICTNESS. A pin that only accepts the phrasing its author wrote is
  * measuring its author. These are answers that are GENUINELY HONEST and look

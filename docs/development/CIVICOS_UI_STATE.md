@@ -50,6 +50,105 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v111, 2026-09-24 session, thread UI, UI-84 (a WORKER of CONDUCT #20, cloud session). Landed on `land/worker/UI-84`
+(base `origin/main` @ `548eb2c5`), in the commit that carries this entry; the version number is provisional and
+CONDUCT renumbers it at integration if a concurrent entry took it. (It did, and in bulk: the other side of this
+integration carries UI-86 at `v107`, D-291 `v108`, UI-85 `v109` and UI-83 `v110`, so CONDUCT #20 renumbered this
+entry `v111` at c20-batch13. Only the number moved; both sides' entries are kept in full and in version order.) SURFACE: **none — instrument only.** No byte of
+`civicos-ui/app.html` is touched. What moved is what two SUITES believe a member reads, and the entry is here
+because that belief was wrong for one day and nothing said so.
+
+**THE DEFECT.** D-278 landed on 2026-09-23 and gave two pre-authentication refusals a code and DEC-49's canned
+translation: `op=verify`'s malformed-hash arm (C-61.1, minted through `requiredArgument`) and the dispatch miss
+(C-69.1, through `dispatchRow`). `refusalWords` — UI-73's own helper, landed the same day — renders a translation
+FIRST. So from that landing a stranger at the published case page read the CANNED sentence, while
+`preauth-vocabulary.test.mjs` went on pinning the sentence written for a CALLER of the op, **and every assertion in
+it stayed green.** A suite that pins what a member reads against a mock narrower than the wire passes while the
+member reads something else. UI-73 had written that failure mode down at `DEC49_SUBJECT` the day before, in a note
+whose own words — *"`op=verify`'s refusal is the control plane's bare `error` with no code at all"* — stopped being
+true within twenty-four hours. That clause is **corrected in place and left standing as the receipt**, not deleted.
+
+**WHAT LANDED.** Five mock sites in `preauth-vocabulary.test.mjs` and one arm in
+`refusal-translation-surface.test.mjs`, plus a new control file. The fixtures are now DERIVED, never typed: the CODE
+is read out of `bio-plane/src/index.mjs` AT THE SITE THAT MINTS IT, the SENTENCE out of
+`bio-plane/checks/bio-checks.mjs` under that code by a lookup that DISCOVERS the family rather than naming one, and
+`requiredArgument`'s own two-chunk `detail` template out of its body. A hand copy agrees with its source at zero
+cost; nothing here can be made green by one. **Both directions are pinned**, which is what this adds over UI-73's
+login guard: narrow (a fixture missing a sentence the wire sends) by the REACH arms, and WIDE (a fixture carrying
+one the wire does not) by two SITE assertions that read the plane's decoration structurally.
+
+**Four superseded assertions CORRECTED AT THEIR SITES, never exempted**, each with a dated reason — the `#v-refused`
+pin, the `#v-unknownop` pin, the published INDEX and the case ADDRESS — and the true-negative half of the
+index pair tightened with them, so the pair's discriminator moves together. One arm's MESSAGE was corrected as well
+as its assertion: it explained itself by a wire that had moved, and a true pin under a false account of the wire
+misleads the next reader more than either alone. In `refusal-translation-surface.test.mjs` the over-strictness arm
+kept its subject (a refusal carrying `error` alone must still reach the member) but stopped using `unknown op` as
+its specimen — since D-278 no real `unknown op` answer has that shape — and the REAL one is asserted beside it.
+
+**THE MEASUREMENT** is `docs/development/measurements/M-130.md`, every figure PRINTED by the instrument on its own
+tree and none of them subtracted. **DEC-49's subject SHRANK, and this is the first time a plane-sourced row has left
+that table by being ANSWERED rather than by a surface editing it:** plane vocabulary reaching an unauthenticated
+reader fell from **11 of 21 surfaces to 10**, and from **77 occurrences (67 visible) to 76 (66)**; `"sha256"` went
+x35(31) -> x34(30), losing its `#v-refused` source. The whole delta is one source on one term, every other report
+line character-identical by a line-by-line diff. The +671 characters are the canned sentences being LONGER; the -1
+occurrence is plane vocabulary being DISPLACED by them. **DEC-49 remains OPEN and `REPORT_ONLY` is unchanged** —
+two of the plane's 592 codes gaining a sentence is not a ruling answered, and eleven plane-sourced rows still stand
+on these surfaces.
+
+**NEGATIVE CONTROL:** `node civicos-ui/test/ui84-mock-wire.control.mjs`, a baseline row plus four arms, each armed
+ALONE with its patch required to match exactly once, every file restored from a uniquely-named per-arm pristine and
+verified by sha256 AND `cmp` with a floored byte count. **4 of 4 as declared** against the final file. **Arm (C)
+came back RED against a GREEN declaration on its first spelling and that is recorded rather than smoothed** — it
+renamed the catalogue family to `DISPATCH_XCHECKS`, which does not match `/_CHECKS$/`, so it moved two variables at
+once: the family's name, which it meant to move, and its membership of the convention every consumer keys on, which
+makes it a row WITHDRAWN rather than renamed. The arm was wrong, not the subject.
+
+**NOT DONE, and where it lives.** The class sweep is stated here with its corpus, its reach and its blind spots,
+because a sweep that does not say what its matcher cannot see is a walk looking in the wrong place.
+
+**CORPUS: 108 `.mjs` files in `civicos-ui/test/`, all walked.** The matcher is a grep for an `error:` key whose
+value opens with `unknown op`, plus the eight `requiredArgument(` call sites read out of `bio-plane/src/index.mjs`.
+**It can see** a refusal fixture written as an object literal in a suite. **It cannot see** one assembled from a
+variable, one built by a helper, or a refusal a suite never constructs at all — so the figures below are a floor
+on the class, never a total.
+
+**SEVEN more `unknown op` mocks** carry no `translation`. *(This figure was written as EIGHT in this item's commit
+message and IS CORRECTED HERE: the eighth was `refusal-translation-surface.test.mjs`' own over-strictness arm,
+which this landing fixed, and counting a site this item closed as a site it left open overstates the debt it is
+handing on.)* They are `act-proposal.test.mjs` (2), `queue.test.mjs` (2), `auth-surface.test.mjs`,
+`case-frozen-pair.test.mjs` and `document-structure.test.mjs`. **Four of those seven compose a sentence the plane
+has NEVER sent** — `"unknown op " + op`, `"unknown op queue"`, `"unknown op tasks"`,
+`"unknown op captureprogressions"` — the same invention this item corrected at the preauth fallthrough. The other
+three carry `error: "unknown op"` alone, which is what the wire sent until 2026-09-23 and no longer does.
+
+**AND THE CLASS IS WIDER THAN `unknown op`.** `requiredArgument` has **EIGHT call sites** in the plane — `verify`,
+`publishedbytes`, `publishedcase`, `knock` (2), `capture`, `pdfstructure`, `monitor` — and **all eight carry
+C-61.1's canned translation.** This item scoped exactly ONE of them. The matcher finds one more UI fixture already
+narrower than that wire: **`publishedcase.test.mjs:939`**, which mocks `publishedbytes`' refusal with `error`
+alone.
+
+**WHAT IS NOT MEASURED, stated rather than left to be found.** Whether each of those surfaces RENDERS its refusal
+to a member or only GAP-DETECTS it. The distinction is real and it is the whole question: `queueAbsent` and the
+`gap:true` paths read a SUBSTRING of `error`, so for them the fixture's narrowness changes nothing — but
+`act-proposal`'s and `case-frozen-pair`'s answers reach `intentRefusalHtml` and `planeSaid`, which UI-72 and UI-73
+routed through `refusalWords`, and there a missing `translation` is the same defect this item just closed. **Each
+site needs driving before it is called safe, and none was driven here.** Named for SCHEDULER with its fix, not
+parked in prose.
+
+**TWO SMALLER FINDINGS, both measured, neither fixed here.** (1) `civicos-ui/app.html` around line 20219 justifies
+`planeSaid`'s layout by observing that *"the plane's refusals do not all end in a full stop — 'verify requires
+sha256=<64 lowercase hex>' and 'unknown op' do not"*. Both examples are now STALE: since D-278 each of those two
+renders as a canned sentence that does end in one. **The design conclusion still holds and is strictly safer**, so
+this is a stale comment and not a defect — and `app.html` is shared ground this item claimed nothing in, so it is
+reported rather than edited. (2) The DEC-49 guard's R3-FED walk **cannot see `REQUIRED_ARGUMENT_MISSING` being fed
+by this suite**, measured at the gate: it lists `preauth-vocabulary.test.mjs — FED 3 [NOT_PUBLISHED,
+SIGN_IN_REFUSED, UNKNOWN_OP]`, and the missing fourth is this item's own doing — the code reaches the fixture
+through a VARIABLE, derived from the plane's source, and the walk keys on literals. **The derivation is the right
+trade and is kept**: a literal would be the hand copy this item exists to remove, and a renamed code already fails
+loudly at the two catalogue assertions. But the walk undercounts by one because of it, and saying so is owed.
+
+Nothing is live; no deploy is this item's.
+
 v110, 2026-09-24 session, thread UI, UI-83 (a WORKER of CONDUCT #19, cloud session). Landed on `land/worker/UI-83` (base
 `origin/main` @ `15b2a4c0`), in the commit that carries this entry. (Claimed `v105`, which UI-68 holds on the batch
 (D-126 `v106`, UI-86 `v107`, D-291 `v108`, UI-85 `v109`); renumbered `v110` at c19-batch11.) SURFACE: the Progressions screen's "Declare how something is supposed to go" form.

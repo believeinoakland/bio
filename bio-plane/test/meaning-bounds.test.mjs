@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL (D-479's share, run 2026-09-24, driver `test/d479-bounds.control.mjs`): THIS SUITE'S FIGURE is the BARE roster's ceiling and floor 43 -> 42, op=projectdirectory leaving for the BOUNDED roster. Arm (1) DROP THE LIMIT -> 92/0, GREEN as declared (the op still publishes `limit`, so this walk's classification does not move on the SQL alone). **Arm (3) DROP THE PUBLISHED BOUND -> 92/0, GREEN AGAINST THE DECLARATION, and it is recorded rather than smoothed: this walk grades BARE by an UNBOUNDED ROW SOURCE, and that arm left the `LIMIT ?` in place, so the roster cannot move and the published `limit` is guarded by `bounds.test.mjs` ALONE.** Arm (5) OVER-STRICTNESS -> 92/0, at baseline. The full declaration is on `bounds.test.mjs`'s line. */
 /* NEGATIVE CONTROL: (run 2026-09-21, D-254 worker, worktree agent-aba246a225e641de7, D-254) the D-240 arm (a) is
    an IMPORT PIN now — REC-76's reader has ONE home, `test/verdict-reader.mjs`, and the DEC-49 guard imports it — and
    `test/verdict-excluder.control.mjs` runs its arms with D-240's: THIRTEEN in all, each armed ALONE, every restore
@@ -1253,8 +1254,14 @@ console.log(`  RATCHET: ${BARE_ROSTER_MEASURED_2026_08_07} bare-collection read 
 t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publishes a collection "
 + "off an unbounded row source pushes this over the figure RE-MEASURED on 2026-08-08 over the "
 + "CORRECTED corpus (REC-70: 27 was measured over 55 of 156 dispatched ops; REC-67 removed one "
-+ "phantom; REC-66 FIXED one member), MOVED 39 -> 40 by D-309, 40 -> 43 at c19-unionfix and 43 -> 44 at c20-batch11fix with the reasons above, and fails here",
-  BARE_OPS.length <= 44, true);
++ "phantom; REC-66 FIXED one member), MOVED 39 -> 40 by D-309, 40 -> 43 at c19-unionfix, and RE-READ AT 43 at "
++ "c20-batch13 — the UNION of two moves that crossed at this integration, each measured on its OWN base, and the "
++ "figure HOLDS while the MEMBERSHIP moved both ways: c20-batch11fix's return-delegate rule put `op=resolve` and "
++ "`op=caseratify` back ON the bare roster (43 -> 44 there), and D-479 took `op=projectdirectory` OFF it to the "
++ "BOUNDED roster (43 -> 42 there). 43 here is what THIS WALK PRINTED on the merged tree — it is not 44 - 1 and "
++ "not 42 + 2, and an unchanged figure is NOT an unchanged roster: both reasons are recorded above and neither "
++ "was rounded off. Fails here",
+  BARE_OPS.length <= 43, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
    which is precisely how this walk spent two days reporting 27. A DROP is not a
@@ -1271,11 +1278,24 @@ t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this
      the OPPOSITE reason to REC-67's: this time a read WAS fixed. The arm did its
      job on a clean tree — it failed the moment `op=connect` came off the roster,
      which is the only reason this figure is being written by hand rather than
-     drifting down unremarked. */
-  /* MOVED 43 -> 44, 2026-09-24 (c20-batch11fix), IN THE SAME EDIT AS THE CEILING, and this arm is
+     drifting down unremarked.
+     MOVED 43 -> 42, 2026-09-24 (D-479), CEILING AND FLOOR IN ONE EDIT, from the roster that walk PRINTED
+     (42) diffed by name against the 43 the c19-unionfix note above recorded. ONE DEPARTURE, NO ARRIVAL, AND
+     IT IS REC-66'S REASON RATHER THAN REC-67'S: a read WAS FIXED. `op=projectdirectory` is the member that
+     note admitted as "the one arrival whose answer grows with the record", whose fix it NAMED and did not
+     take; SCHEDULER #17 rowed it as D-479 and this is that landing — the directory pages its candidates at
+     `PROJECT_DIRECTORY_LIMIT + 1` and publishes `limit` beside `truncated`, which is what this walk reads,
+     so it leaves the BARE roster for the BOUNDED one. A DEPARTURE WITH NO ARRIVAL IS WHAT THIS ARM EXISTS
+     TO MAKE SOMEBODY EXPLAIN, and the check that it is not the reader going blind is that the op is still
+     accounted for EXACTLY ONCE two arms down — it moved between rosters, it did not vanish from them. */
+  /* MOVED 43 -> 44, 2026-09-24 (c20-batch11fix), IN THE SAME EDIT AS ITS CEILING, and that arm is
      why the move happened at all: it went RED at a measured 42 and refused to let `op=resolve`'s
-     disappearance into a private delegate read as progress. The reason is above the ceiling. */
-  BARE_OPS.length >= 44, true);
+     disappearance into a private delegate read as progress. That reason is above the ceiling too. */
+  /* MOVED TO 43, 2026-09-24 (c20-batch13), CEILING AND FLOOR IN ONE EDIT. The two moves directly above
+     were made on DIFFERENT BASES and met here for the first time; this figure is neither of theirs and was
+     not arithmetic on them. It is what THIS walk PRINTED on the merged tree, and BOTH reasons stand: two
+     restored by the return-delegate rule, one departed to the bounded roster. Nothing arrived unbounded. */
+  BARE_OPS.length >= 43, true);
 
 /* ==========================================================================
  * REC-70 · REACH — WHAT THIS WALK REACHES, ASSERTED RATHER THAN ASSUMED.
