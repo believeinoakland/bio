@@ -38,6 +38,10 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   | REC-185 | session_01CRZ6yfoarqeuJ8F2iGcnHS | main | land/worker/REC-185 |
   | c20-integ1 (D-64, REC-184, M0-141, .gitignore carry) | session_011vBzoPQBRZGhdLUxxiXzPG | batch11 if pushed, else batch10+main | land/conduct/c20-integ1 |
   c20-integ1 renumbers D-64's clone-minted C-82 family (collides with main's C-82) via mintid C; IC-252 (D-64, I3 MAJOR), IC-255 (REC-184).
+- OWED AT INTEGRATION (BOB #32 rulings ~03:14Z, on the D-64/REC-184 rows at coord a04264b8, sent to c20-integ1 03:17Z): D-64 timeout →
+  grade unchanged, completeness UNDETERMINED (`render.wait` records the timeout; reading says "render may be incomplete");
+  REC-184 → act carries definitionVersion, refuse DEFINITION_MOVED. If integ1 reports either UNPAID, tell SCHEDULER to row it.
+  D-64/REC-184 findings SENT to SCHEDULER 03:17Z, incl. the DIST `browser` binding-class row (for the other account).
 - Owed on D-64's landing to DIST: teach deploy derivation the `browser` binding class, then add BROWSER binding to
   bio-plane/wrangler.jsonc and newgroup. D-64 findings (a)–(d) and REC-184 findings (1)–(3) are in #19's handoff on coord history
   (coord ae79e9d6) — send to SCHEDULER when integ1 reports if not yet sent.
