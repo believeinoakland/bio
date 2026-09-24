@@ -694,6 +694,11 @@ const OPS = {
      machine class REACHES it and is refused BY THE STORE (MACHINE_CANNOT_SET_LAWS), so the refusal says what
      is wrong. One `target`; the list arrives in the POST body. */
   actionlaws:      { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-195: the PROPOSAL of that list — D-149's remaining half. `themepropose`'s class cut, for its reason:
+     proposing is the MACHINE's half of the ruling, so the `ai` class reaches it through the DEC-55 floor when
+     its minted `writes` name it, and the store refuses NOBODY by class here. The fence that matters is one op
+     up: a machine is refused at `actionlaws` BY NAME (C-32.18), and this op writes no list at all. */
+  actionlawspropose:{ classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -2073,6 +2078,10 @@ const SESSION_OPS = {
                       op for `lead`'s reason (a person's act in their own name); the
                       store refuses a machine declarer or placer by name. */
                    "themedeclare", "themeplace", "themepropose",
+                   /* REC-195: the governing-law PROPOSAL, a session op for `themepropose`'s reason — the
+                      proposer is stamped from the credential that asked, and the session route is the one
+                      that produces a member's own name for a member's proposal. */
+                   "actionlawspropose",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -2114,6 +2123,10 @@ const SESSION_OPS = {
                       op for `lead`'s reason (a person's act in their own name); the
                       store refuses a machine declarer or placer by name. */
                    "themedeclare", "themeplace", "themepropose",
+                   /* REC-195: the governing-law PROPOSAL, a session op for `themepropose`'s reason — the
+                      proposer is stamped from the credential that asked, and the session route is the one
+                      that produces a member's own name for a member's proposal. */
+                   "actionlawspropose",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -2346,6 +2359,9 @@ const NEEDS = {
   actionmove:       "contribute",
   actioncorrespond: "contribute",
   actionlaws:       "contribute",
+  /* REC-195: proposing takes `contribute` beside the act it proposes to, and the capability is the only gate
+     it has — who proposed is RECORDED and labelled rather than fenced (D-149: the machine may propose). */
+  actionlawspropose: "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
@@ -10605,6 +10621,10 @@ export default {
            as one that does not exist — `contentmint`'s reason. Fails closed on an
            absent stamp. */
         || op === "themeplace" || op === "themepropose" || op === "themeread"
+        /* REC-195: the governing-law proposal NAMES AN ACTION and reads it behind the fail-closed gate before
+           it writes anything, so an action the caller may not see refuses NO_SUCH_BUNDLE identically to an
+           absent one — `ACTION_ACTIONS`' own reason, arriving at an op that is not one of them. */
+        || op === "actionlawspropose"
         /* D-464: the COUNTS. Every counter `op=stats` serves names rows, and a row naming a project the caller
            cannot see is that project's existence (§7.9) — so the counts are taken through the caller's own
            sight, and fail closed on an absent stamp. `op=selftest` relays the same answer and stamps the same
@@ -10837,6 +10857,23 @@ export default {
        Never the principal a key was minted for, which would put an assistant's hunch under a
        person's id. */
     if (op === "themepropose")
+      inner.searchParams.set("proposer",
+        viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* REC-195 / D-149: WHO PROPOSED AN ACTION'S GOVERNING LAWS, stamped on the line above for its reason
+       exactly. Any credential may propose — the plane LABELS a proposal rather than fencing it — so the only
+       obligation here is NAMING: a session stamps its signed-in id, a machine stamps `class:<cls>`, and the
+       `ai` class stamps its tokenId beside its class, so a proposal stays attributable to the exact key that
+       proposed it. Never the principal a key was minted for, which would put a machine's citations under
+       somebody else's id. A caller-supplied `proposer` is overwritten rather than honoured: the label is the
+       whole product and a label a caller can write is not one.
+       THE PROSE HERE DELIBERATELY CLAIMS NO PERSON-ONLY CONSTRAINT, and that is not style:
+       `identity-claims.mjs` reads a stamp site's own comment for a claim that only a signed-in person may
+       write the field, and grades it a DEFECT where nothing refuses a machine identity. Nothing refuses one
+       here BY DESIGN — D-149 says the machine MAY propose — so a comment claiming otherwise would be the
+       instrument reading this site correctly. The fence is one op up, at the act that SETS the list. */
+    if (op === "actionlawspropose")
       inner.searchParams.set("proposer",
         viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
