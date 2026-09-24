@@ -10494,6 +10494,16 @@ export const NAMESPACE_CHECKS = {
       + 'read or changed. A copy has two: the record itself, and a scratch area kept apart for testing. The '
       + 'name must match one of them exactly; the names are listed beside this message.',
   },
+  /* D-461 (C-78.2): the scratch area named on a public operation that only ever answers from the record itself.
+     Twelve such operations used to answer from the record while the caller believed it was in scratch — one of
+     them, a knock, WROTE there. The sentence says nothing happened first and names no remedy but the true one. */
+  NAMESPACE_PINNED: {
+    check: 'C-78.2',
+    where: 'src/index.mjs pinnedNamespaceGate > is-pinned-namespace-gate',
+    translation: 'This request asked for the scratch area, but this operation only ever answers from the record '
+      + 'itself and has no scratch version, so nothing was read or changed. To use it, leave the scratch area '
+      + 'out of the request, knowing it then reaches the real record.',
+  },
 };
 
 /* ===========================================================================
