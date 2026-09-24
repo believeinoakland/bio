@@ -451,7 +451,7 @@ scope: the same NAMESPACES set and a NAMESPACE_UNKNOWN refusal in `pdf-worker/sr
 accepts-when: `store=biosmoke` is refused NAMESPACE_UNKNOWN by name by both members. NEGATIVE CONTROL: accept the token again, and the arm reads NOT_FOUND and fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### UI-99 · queued — **A DEFINITION REVISION'S BASIS AND A DISPOSITION'S VERSION HAVE A PLANE AND NO SURFACE: D-128's revision basis and REC-184's `definition_version` (and its `not recorded`) reach no page.** Found by REC-184's worker. — owner UI.
+### UI-99 · running — **A DEFINITION REVISION'S BASIS AND A DISPOSITION'S VERSION HAVE A PLANE AND NO SURFACE: D-128's revision basis and REC-184's `definition_version` (and its `not recorded`) reach no page.** Found by REC-184's worker. — owner UI.
 order: after UI-89, with the surfaces owed to landed plane rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:17Z)
 milestone: M4
 interface: I3 consumer.
