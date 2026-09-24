@@ -32297,6 +32297,58 @@ export class Store extends DurableObject {
       + "recorded and is not guessed.";
     return out;
   }
+  /* REC-190: THE CENSUS OF DISPLACED HOMES (`BIO_Intake_Doctrine_v1_1.md` §8, ONE CAPTURE, ONE HOME — the ORIGINAL's;
+     D-179's residue). Before D-179's fence `op=promote` UPSERTed `register.bundle_id` on the `capture_sha` key, so a
+     second bundle registering bytes the record already held MOVED the first bundle's register row to itself, and the
+     first bundle's own `files` / `history` rows kept carrying bytes the register now says live elsewhere. This lists
+     every such row: a `files` or `history` row whose sha256 the register assigns to a DIFFERENT bundle that STILL
+     EXISTS, with both bundles named, grouped by the sha. READ-ONLY and never a repair (BOB #31, 2026-09-23 22:03Z: the
+     census's report STANDS ALONE): WHICH BUNDLE HELD THE CAPTURE FIRST IS UNDETERMINED — the register keeps one holder
+     and no prior one, and a row a bundle carried without ever registering it reads the same — so the answer names the
+     register's CURRENT holder as that and nothing more, and says so. A sha shared by several bundles that the register
+     does not assign elsewhere (an identical ordinary file, or the holder's own revisions) is NOT a displaced home and
+     is not listed: only the register decides a home. A register row whose bundle no longer exists names no home and
+     is counted apart (`home_absent`), never listed. The digest-level duplicate (the same content in different bytes)
+     is out of reach: this compares the bytes' digest and nothing about their meaning. Shas are compared lower-cased on
+     both sides, so a spelling difference is not a second identity. Bounded by `limit` shas listed (the counts are
+     always whole). */
+  homeCensus({ limit } = {}) {
+    const asked = limit === undefined || limit === null || limit === "" ? NaN : Number(limit);
+    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
+    const homes = new Map();
+    const reg = { rows: 0, home_absent: 0 };
+    for (const r of this.sql.exec(`SELECT r.capture_sha, r.bundle_id, r.path, b.bundle_id AS present
+                                     FROM register r LEFT JOIN bundles b ON b.bundle_id = r.bundle_id`)) {
+      reg.rows++;
+      if (r.present === null) { reg.home_absent++; continue; }
+      homes.set(String(r.capture_sha).toLowerCase(), { bundle_id: r.bundle_id, path: r.path });
+    }
+    const bySha = new Map();
+    const walk = (table) => {
+      const out = { rows: 0, displaced: 0 };
+      for (const r of this.sql.exec(table === "files"
+          ? `SELECT bundle_id, NULL AS snap_key, path, sha256 FROM files`
+          : `SELECT bundle_id, snap_key, path, sha256 FROM history`)) {
+        out.rows++;
+        const s = String(r.sha256 ?? "").toLowerCase();
+        const home = homes.get(s);
+        if (!home) continue;
+        if (home.bundle_id === r.bundle_id) continue;                     /* the different-bundle predicate */
+        out.displaced++;
+        if (!bySha.has(s)) bySha.set(s, { capture_sha: s, home: { ...home }, held_by: [] });
+        bySha.get(s).held_by.push({ table, bundle_id: r.bundle_id, path: r.path,
+                                    ...(r.snap_key ? { snap_key: r.snap_key } : {}) });
+      }
+      return out;
+    };
+    const files = walk("files"), history = walk("history");
+    return { ok: true, register: reg, files, history, shas: bySha.size, listed: [...bySha.values()].slice(0, cap),
+             first_holder: "UNDETERMINED", rewritten: 0,
+             note: "read-only: each listed sha is registered to `home` and ALSO carried by every `held_by` row, a "
+                 + "different bundle that still exists. Nothing is rewritten or repaired. `home` is the register's "
+                 + "current holder, never a finding about which bundle held the capture first — that is undetermined. "
+                 + "The same content in different bytes is not reached." };
+  }
   static #promoteAbsent() {
     return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
   }
@@ -47092,6 +47144,8 @@ export class Store extends DurableObject {
            (see `changedFromAudit`). */
         changedfromaudit: () => this.changedFromAudit({
           limit: url.searchParams.get("limit"), offset: url.searchParams.get("offset") }),
+        /* REC-190: the census of displaced homes, read-only (see `homeCensus`). */
+        homecensus: () => this.homeCensus({ limit: url.searchParams.get("limit") }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,
