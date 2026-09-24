@@ -3834,6 +3834,33 @@ CREATE TABLE IF NOT EXISTS project_visibility (
   at         TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility(project_id, seq);
+
+-- D-497 (Membership Architecture v2 section 7, item 7.14, "The directory"; SCHEDULER #17's finding carried
+-- forward from D-479): THE SIGHT INDEX. One row per PROJECT, holding the setting that project_visibility's
+-- acts DERIVE -- the latest act, and HIDDEN where the owners have never acted. It is not a second place the
+-- rule is stated: Store#reindexProjectSight is the one statement that computes a row here, and Store#sight
+-- READS this table through #visibilityOf rather than reading the act log. That is what lets the directory's
+-- candidate query bound IN SQL: before this table, sight was a JS predicate the directory had to ask about
+-- every project in the group one at a time, so the number of statements grew with the record even though
+-- each was bounded, and REC-149's first attempt to put the rule in the directory's own SQL instead put
+-- "no act = hidden" in a SECOND place -- caught by its own default-discoverable control arm, which flipped
+-- the default while the directory did not move.
+--
+-- DERIVED, AND IT SAYS SO: every row is recomputed from project_visibility and bundles at every boot
+-- (Store#seedProjectSight, the #seedMintLedger precedent), at every promotion of a bundle, and at every
+-- owner's act. Nothing here is authored, so drift cannot survive a restart, and the act log stays the
+-- record. Keyed on project_id, a bundle id, so both purge arms clear it with the project (the
+-- project_participants precedent).
+-- THE ROW IS THE PROJECT AND ITS SETTING AND NOTHING ELSE. No date: a projection needs none, the act log
+-- above carries every date there is, and a column that moved on each recompute would make an UNCHANGED boot
+-- rewrite every row with different bytes -- which is a RESTART PLUS A PURE READ MOVING A TABLE, and is what
+-- versionnotice.test.mjs's no-write WITNESS refuses. That witness is the guarantee a live verification's
+-- no-write claim rests on, so the derivation is idempotent at the byte instead.
+CREATE TABLE IF NOT EXISTS project_sight (
+  project_id TEXT PRIMARY KEY,
+  setting    TEXT NOT NULL CHECK (setting IN ('discoverable','hidden'))
+);
+CREATE INDEX IF NOT EXISTS project_sight_setting ON project_sight(setting, project_id);
 -- =========================================================================
 
 -- D-86 (NOTIFICATIONS.md, The catalogue: a re-run owed after a lens change, an OBLIGATION, DISCLOSED and never
@@ -30297,6 +30324,7 @@ var Store = class _Store extends DurableObject {
     ))
       this.#writeSupersededBy(r.target_id);
     this.#seedMintLedger();
+    this.#reindexProjectSight();
   }
   /* The projection derived from a bundle.md, using the CATALOG'S OWN parser so
      the store's view and the checker's view cannot disagree about what the
@@ -44639,6 +44667,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         newSha,
         bundleId
       );
+      this.#reindexProjectSight(bundleId);
       const supersededBefore = [...this.sql.exec(
         `SELECT target_id FROM refs WHERE bundle_id=? AND kind='supersedes'`,
         bundleId
@@ -57685,6 +57714,7 @@ ${words}`;
         this.sql.exec(`DELETE FROM project_participants WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM project_visibility WHERE project_id=?`, bundleId);
+        this.sql.exec(`DELETE FROM project_sight WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM bias_adoptions WHERE scope_id=?`, bundleId);
         this.sql.exec(`DELETE FROM queue_state WHERE case_id=?`, bundleId);
         this.sql.exec(`DELETE FROM published_edges WHERE from_bundle=? OR to_bundle=?`, bundleId, bundleId);
@@ -57704,6 +57734,7 @@ ${words}`;
         this.sql.exec(`DELETE FROM project_participants`);
         this.sql.exec(`DELETE FROM project_owner_votes`);
         this.sql.exec(`DELETE FROM project_visibility`);
+        this.sql.exec(`DELETE FROM project_sight`);
         this.sql.exec(`DELETE FROM case_documents WHERE ratified_at IS NULL`);
         this.sql.exec(`DELETE FROM case_exclusions WHERE NOT EXISTS (SELECT 1 FROM case_documents d
                          WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)`);
@@ -59000,15 +59031,80 @@ ${words}`;
     if (!b || b.object_type !== "project") return _Store.SIGHT_NONE;
     return this.#visibilityOf(bundleId) === "discoverable" ? _Store.SIGHT_EXISTENCE : _Store.SIGHT_NONE;
   }
-  /* The CURRENT setting: the latest owner's act, and HIDDEN when there is none. No row is the state of every
-     project that existed before REC-149 (each was created under §7.9's promise, and no migration writes one),
-     of a creation that carried no setting, and of anything a machine created — fail closed, disclosing nothing. */
+  /* The CURRENT setting, READ FROM THE SIGHT INDEX (D-497) rather than recomputed from the act log here.
+     `project_sight` holds one row per project carrying exactly what `#reindexProjectSight` derived, so this
+     predicate and the directory's SQL read THE SAME ROWS instead of two copies of one rule — which is the
+     whole of D-497 and the reason the directory can bound its candidates in SQL at all.
+     THE `hidden` BELOW IS NOT THE DEFAULT FOR AN OWNER WHO HAS NOT ACTED. That default is in the derivation's
+     own CASE, one method down, and every project carries a row for it: the index is recomputed at every boot,
+     at every promotion, and at every owner's act. This branch is reached only by an id the index does not hold
+     — a bundle that is not a project, or one purged between the two reads — and it fails closed. */
   #visibilityOf(projectId) {
-    const r = this.#one(
-      `SELECT setting FROM project_visibility WHERE project_id=? ORDER BY seq DESC LIMIT 1`,
+    const r = this.#one(`SELECT setting FROM project_sight WHERE project_id=?`, projectId);
+    return r ? r.setting : "hidden";
+  }
+  /* ===== D-497 — THE DERIVATION, AND IT IS THE ONLY PLACE THE RULE IS STATED (Membership v2 §7, item 7.14).
+   *
+   * WHAT THIS EXISTS FOR. `#sight` was a JS predicate with no row source, so `projectDirectory` established
+   * "this caller sees none of them" by asking it about every project in the group one at a time: each statement
+   * bounded, the NUMBER of statements growing with the record. D-479 bounded what the directory PUBLISHES and
+   * reported this half as a row of its own, in these words — *"bounding that needs a row source the sight
+   * predicate itself READS, not a second copy of its rule"*. This is that row source.
+   *
+   * THE RULE, STATED ONCE: a project's setting is its OWNERS' LATEST ACT, and HIDDEN where they have never
+   * acted — every project that existed before REC-149 (each created under §7.9's promise that the uninvited see
+   * not its existence), every creation that carried no setting, and everything a machine created. It is the
+   * CASE below and nowhere else. `#visibilityOf` reads the answer; the directory joins the same table; nobody
+   * restates the default. REC-149's first build DID restate it — its directory took candidates from the
+   * visibility table — and its own `default-discoverable` control arm caught that by flipping the default and
+   * watching the directory not move. That arm now flips THIS CASE, and both must move together.
+   *
+   * DERIVED, NEVER AUTHORED. `project_visibility` stays the record: append-only, one row per owner's act. This
+   * table is a projection of it that a statement can join, recomputed WHOLE at every boot (the `#seedMintLedger`
+   * precedent) and per project wherever a project or an act changes — so a row that disagreed with the log,
+   * for any reason including a landing that moved the rule, does not survive a restart.
+   *
+   * THE ROW IS project_id AND setting AND NOTHING ELSE, AND THAT IS THE FIX TO A DEFECT THIS LANDING'S OWN
+   * FIRST DRAFT HAD. It carried a third column, `at`, a fresh timestamp written on every recompute — so an
+   * UNCHANGED boot rewrote every row with different bytes, and A RESTART PLUS A PURE READ THEN MOVED A TABLE.
+   * `versionnotice.test.mjs`'s no-write WITNESS caught it by name on the first full battery (`WITNESS QUIET`
+   * and `NOTHING WRITTEN (the whole store)`, both naming `project_sight`), which is what that witness is FOR:
+   * CLAUDE.md §5 rests every live verification's no-write guarantee on the record's tables reading the same
+   * before and after, so a derivation that writes on every boot does not cost a test, it costs the instrument.
+   * Two narrower fixes were tried at the STATEMENT and BOTH ARE REFUSED BY WORKERD with
+   * `Error: incomplete input: SQLITE_ERROR` — a `WHERE` on the conflict action, and the same guard moved into
+   * a LEFT JOIN against the index — while `node:sqlite` prepares each of them without complaint, which is the
+   * receipt for driving the plane's own engine rather than a local one. So the column went instead: a
+   * projection needs no date of its own, the act log carries every date there is, and an unchanged recompute
+   * now writes rows BYTE-IDENTICAL to the ones it found. That is idempotence at the only level the witness
+   * reads, and it costs nothing.
+   *
+   * COST, STATED. Two statements. Given a projectId both address ONE row through a primary key and an indexed
+   * lookup; given none, both run once over the projects in `bundles` — inside SQLite, nothing per row in JS,
+   * at boot only, reached by no op. `derivation-bounds.test.mjs` grades JS loops over an unbounded `#rows(` and
+   * by its own statement cannot see work inside SQL; this is stated rather than left for that reader to miss. */
+  #reindexProjectSight(projectId = null) {
+    this.sql.exec(
+      `DELETE FROM project_sight
+        WHERE (? IS NULL OR project_id = ?)
+          AND NOT EXISTS (SELECT 1 FROM bundles b
+                           WHERE b.bundle_id = project_sight.project_id AND b.object_type = 'project')`,
+      projectId,
       projectId
     );
-    return r && r.setting === "discoverable" ? "discoverable" : "hidden";
+    this.sql.exec(
+      `INSERT INTO project_sight (project_id, setting)
+       SELECT b.bundle_id,
+              CASE WHEN (SELECT pv.setting FROM project_visibility pv
+                          WHERE pv.project_id = b.bundle_id
+                          ORDER BY pv.seq DESC LIMIT 1) = 'discoverable'
+                   THEN 'discoverable' ELSE 'hidden' END
+         FROM bundles b
+        WHERE b.object_type = 'project' AND (? IS NULL OR b.bundle_id = ?)
+       ON CONFLICT(project_id) DO UPDATE SET setting = excluded.setting`,
+      projectId,
+      projectId
+    );
   }
   /* THE ANSWER AN ACT GIVES AT EXISTENCE, asked in ONE place so no act can say a second thing: C-70.1 when the
      caller's sight of this id is EXISTENCE, else null — and then the act's own REC-138 line runs unchanged, so
@@ -59086,6 +59182,7 @@ ${words}`;
       why,
       at
     );
+    this.#reindexProjectSight(projectId);
     return { ok: true, projectId, setting: want, set_by: by, reason: why, at };
   }
   /** REC-149 — THE SETTING AND ITS HISTORY, for a caller with FULL sight (a participant, an administrator, the
@@ -59117,7 +59214,8 @@ ${words}`;
    *  `request` is null on every row and the answer says why rather than letting null read as a fact about the
    *  caller. A viewer that names no member has no directory: it is refused by name, never answered empty. */
   projectDirectory({ viewer = null, limit = null } = {}) {
-    const member = viewerPredicate(viewer).member;
+    const gate = viewerPredicate(viewer);
+    const member = gate.member;
     const refusal7 = (code, detail) => {
       const row = PROJECT_VISIBILITY_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
@@ -59128,26 +59226,15 @@ ${words}`;
         "the project directory lists the discoverable projects a MEMBER is not in, so it is asked by a signed-in member. A credential with no member behind it is outside no project, and an empty list would say something untrue about the record."
       );
     const cap = Math.max(1, Math.min(Number(limit) || _Store.PROJECT_DIRECTORY_LIMIT, _Store.PROJECT_DIRECTORY_LIMIT));
-    const projects = [];
-    let after = "";
-    for (; ; ) {
-      const page2 = this.#rows(
-        `SELECT bundle_id AS id, title FROM bundles
-          WHERE object_type = 'project' AND bundle_id > ?
-          ORDER BY bundle_id
-          LIMIT ?`,
-        after,
-        cap + 1
-      );
-      if (!page2.length) break;
-      after = page2[page2.length - 1].id;
-      for (const r of page2) {
-        if (this.#sight(r.id, viewer) !== _Store.SIGHT_EXISTENCE) continue;
-        projects.push({ id: r.id, name: r.title ?? null, request: null });
-        if (projects.length > cap) break;
-      }
-      if (projects.length > cap) break;
-    }
+    const projects = this.#rows(
+      `SELECT b.bundle_id AS id, b.title
+         FROM bundles b JOIN project_sight s ON s.project_id = b.bundle_id
+        WHERE b.object_type = 'project' AND s.setting = 'discoverable' AND NOT (${gate.sql})
+        ORDER BY b.bundle_id
+        LIMIT ?`,
+      ...gate.args,
+      cap + 1
+    ).map((r) => ({ id: r.id, name: r.title ?? null, request: null }));
     const truncated = projects.length > cap;
     const page = truncated ? projects.slice(0, cap) : projects;
     return {

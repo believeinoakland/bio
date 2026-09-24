@@ -58,8 +58,19 @@ const ARMS = {
   /* THE DEFAULT FLIPPED — a project with no record reads DISCOVERABLE. The predecessor's projects then show
      themselves to a member who was promised they would not: §1's and §2's arms MUST fail. */
   "default-discoverable": {
-    patches: [["store.mjs", "    return r && r.setting === \"discoverable\" ? \"discoverable\" : \"hidden\";",
-               "    return r && r.setting === \"hidden\" ? \"hidden\" : \"discoverable\";"]],
+    /* ANCHOR MOVED 2026-09-24 by D-497, AND THE MOVE IS THIS ARM'S WHOLE POINT RESTATED. The default used to
+       live in `#visibilityOf`; it now lives in the ONE statement that derives `project_sight`, which
+       `#visibilityOf` reads and the directory JOINS. So flipping it here must move BOTH — the per-project acts
+       AND the directory — and the run below is what says it does. That is the property this arm caught
+       missing on 2026-09-23 (see the note under `mustFail`), and it is the property D-497 had to keep while
+       putting the directory's candidates into SQL. The patch reproduces the old arm's semantics exactly: no
+       act reads DISCOVERABLE, an explicit `hidden` act is still honoured. */
+    patches: [["store.mjs", "                   THEN 'discoverable' ELSE 'hidden' END,",
+               "                   THEN 'discoverable'\n"
+               + "                   WHEN (SELECT pv.setting FROM project_visibility pv\n"
+               + "                          WHERE pv.project_id = b.bundle_id\n"
+               + "                          ORDER BY pv.seq DESC LIMIT 1) = 'hidden' THEN 'hidden'\n"
+               + "                   ELSE 'discoverable' END,"]],
     /* FIRST RUN (2026-09-23) NOT AS DECLARED, and it was the SUBJECT that was wrong: 1e and 2e PASSED — the
        directory took its candidates from the visibility table, a second copy of "no record = hidden", so the flipped
        default never reached it. The directory now asks `#sight` over every project; re-run, as declared. */
@@ -83,9 +94,36 @@ const ARMS = {
   /* OVER-STRICTNESS: the latest setting read by a different, correct spelling (the row holding the project's
      highest seq). Correct work in a form the suite did not anticipate — nothing may fail. */
   "latest-by-max-seq": {
-    patches: [["store.mjs", "    const r = this.#one(`SELECT setting FROM project_visibility WHERE project_id=? ORDER BY seq DESC LIMIT 1`,\n      projectId);",
-               "    const r = this.#one(`SELECT setting FROM project_visibility WHERE seq = (SELECT MAX(seq) FROM project_visibility WHERE project_id=?)`,\n      projectId);"]],
+    /* ANCHOR MOVED 2026-09-24 by D-497, to the same rule's new home: the derivation's correlated subquery
+       rather than `#visibilityOf`'s read, which no longer touches the act log at all. The spelling is the
+       same one this arm always used — the row holding the project's highest seq. */
+    patches: [["store.mjs", "              CASE WHEN (SELECT pv.setting FROM project_visibility pv\n                          WHERE pv.project_id = b.bundle_id\n                          ORDER BY pv.seq DESC LIMIT 1) = 'discoverable'",
+               "              CASE WHEN (SELECT pv.setting FROM project_visibility pv\n                          WHERE pv.seq = (SELECT MAX(p2.seq) FROM project_visibility p2\n                                           WHERE p2.project_id = b.bundle_id)) = 'discoverable'"]],
     mustFail: [], mayFail: [],
+  },
+
+  /* D-497 — THE INDEX IS A DERIVATION AND NOT A SECOND RECORD, and this arm is what makes that a measurement
+     rather than a comment. The owner's act still writes `project_visibility`; only the re-derivation that
+     follows it is removed, so the act log and the index disagree from that moment until the next boot. The
+     whole of §6 and the EXISTENCE sections rest on an act TAKING EFFECT, so they must fail by name. A green
+     here would mean something else is reading the log behind the index's back — which is the second copy
+     D-497 exists to remove. */
+  "act-not-reindexed": {
+    patches: [["store.mjs", "    this.#reindexProjectSight(projectId);\n    return { ok: true, projectId, setting: want, set_by: by, reason: why, at };",
+               "    return { ok: true, projectId, setting: want, set_by: by, reason: why, at };"]],
+    /* RUN 2026-09-24: 112/44, and the FIRST declaration was WRONG in both directions — recorded rather than
+       smoothed, because what it got wrong is the useful part. I declared `3a:` and `6f:`, and BOTH PASSED:
+       §3a is P's own owner reading P, which needs no sight of an index, and §6f is a refusal vera gets either
+       way. What actually fails is §3b (vera's DIRECTORY does not list P, because the owner's act never
+       reached the rows the directory joins) and every §3h/§3i act at P (each answers as for a project that
+       does not exist instead of C-70.1). That is the arm landing exactly where D-497 moved the reading — on
+       the directory and on EXISTENCE — and not on the owner's own view, which never consults the index.
+       AND ONE CONSEQUENCE ON THE FIXTURE, declared here rather than left to be discovered: §1a0 fails because
+       it COUNTS the calls into the derivation (3, the number D-497 landed) before neutering them for the
+       predecessor tree, and this arm removes one of the three. The fixture's guard firing on a deliberate
+       removal is the guard working; it is the same line that would catch a call left standing. */
+    mustFail: ["3b:", "3h:", "3i:"],
+    mayFail: ["1a0:", "3b:", "3h:", "3i:", "6j:", "6k:"],
   },
 };
 

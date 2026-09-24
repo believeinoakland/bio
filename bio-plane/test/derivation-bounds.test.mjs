@@ -1524,9 +1524,19 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
      no single row source carries it. Same disposition as the other ten: D-369's, not this suite's, and named
      here so it cannot arrive ungraded and invisible. It is CUT GRADED at the published cap by the arm below,
      with ZERO violations — the direction that says the cut and the claim agree. */
+  /* A DEPARTURE DECLARED 2026-09-24 by D-479's OWN SUCCESSOR, D-497, READ FROM THIS ARM'S FAILURE OUTPUT
+     (want 11, got 10, the name printed in the diff). `projectDirectory:projects` LEAVES, and it leaves in the
+     one direction a name may leave this roster: the read it names was FIXED, not stopped being read. The
+     paragraph above says what would make it gradeable — *a row source the sight predicate itself READS rather
+     than a second copy of its rule* — and `project_sight` is that source: `#visibilityOf` reads it, the
+     directory JOINS it, and the not-full half of sight is `viewerPredicate`'s own compiled predicate NEGATED
+     rather than restated. So there is no walk and no JS filter left, `projects` comes off ONE `#rows(` under a
+     SQL `LIMIT ?` at `PROJECT_DIRECTORY_LIMIT + 1`, and this grader can attribute the figure to it. THE
+     ARRIVAL IS IN THE SAME RUN, one assertion up: `TRUNCATION SOURCES` printed 36 graded where it printed 35,
+     with `projectDirectory:projects` in the GRADED list and zero violations. */
   ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
    "#frontierMeaning:never", "#frontierPage:gated", "biasInhale:bars",
-   "documentsNamingEntity:merged", "frontier:never", "projectDirectory:projects",
+   "documentsNamingEntity:merged", "frontier:never",
    "queueFeed:dispAll", "queueFeed:items"]);
 const noRowSources = CODE.replace(/#rows\(/g, "#norows(");
 t("REACH IS A DELTA (the truncation grader): over a copy of store.mjs with no `#rows(` in it, "
@@ -1713,14 +1723,23 @@ t("IN-MEMORY TRUNCATION: and the SOURCE BOUND is reported as TWO rosters, never 
 + "An instrument that cannot reach something must SAY SO by name rather than pass silently over "
 + "it, which is this block's entire content",
   [INMEM.source.graded.length + INMEM.source.outOfReach.length, INMEM.source.graded.length > 0],
-  [11, true]);  /* REC-92: 8 -> 9, `#contentAxisTally:raw`. Moved from the figure the
+  [10, true]);  /* REC-92: 8 -> 9, `#contentAxisTally:raw`. Moved from the figure the
                    instrument PRINTED, never by incrementing the number in this file.
                    D-389, 2026-09-23: 9 -> 10, from the printed `10 cut-graded` / `1 graded, 9 OUT OF
                    REACH` — the roster above, one for one.
                    D-479, 2026-09-24: 10 -> 11, from the printed `11 cut-graded` / `1 graded, 10 OUT OF
                    REACH` — `projectDirectory:projects`, the roster below, one for one. Source-graded is
                    UNMOVED at 1: the arrival is OUT OF REACH, so this movement is a gain in what the walk
-                   SEES and not in what it can bound. */
+                   SEES and not in what it can bound.
+                   D-497, 2026-09-24: 11 -> 10, from the printed `10 cut-graded` / `1 graded, 9 OUT OF REACH`,
+                   diffed by NAME against the eleven above. ONE DEPARTURE, NO ARRIVAL, AND IT LEFT THIS BLOCK
+                   BY BEING FIXED: `projectDirectory:projects` is no longer assembled across pages at all. The
+                   directory's candidates were a JS-filtered walk because sight had no row source; D-497 gave
+                   it one (`project_sight`, which `#visibilityOf` itself reads), so the whole read is ONE
+                   bounded statement and `projects` is the declaration of it. IT ARRIVES IN REC-99'S GRADED
+                   ROSTER IN THE SAME EDIT — `TRUNCATION SOURCES` printed 36 graded where it printed 35, with
+                   `projectDirectory:projects` named in the list. A fall here with no such arrival anywhere
+                   would be the shrunken measurement this pair of arms exists to refuse. */
 
 /* THE OUT-OF-REACH ROSTER, PINNED BY NAME. Same discipline as REC-99's ungraded pin: an EIGHTH
    in-memory figure, or one MIGRATING between the two rosters, must be declared here before it can
@@ -1763,9 +1782,16 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
      rather than scoring it zero. Source-graded is UNMOVED at 1. WHAT WOULD MAKE IT REACHABLE is a row source
      the sight predicate itself READS rather than a second copy of its rule — reported to SCHEDULER by D-479 as
      a row of its own, not taken here, since it is a change to how sight is stored and not to this read. */
+  /* D-497, 2026-09-24, from the printed roster and this arm's own failure output: `projectDirectory:projects`
+     LEAVES the ASSEMBLED members, and the note above says why its successor is a departure rather than a loss
+     of reach. The limit that note names — a one-method walk cannot attribute a figure assembled by `push`
+     across several reads — is untouched and still holds for the four that remain; what changed is the SUBJECT,
+     which no longer assembles anything. `projects` is now the `.map()` of a single bounded `#rows(`, so REC-99's
+     inversion grades it BY NAME one block up and this walk has nothing left to report about it. Source-graded
+     is UNMOVED at 1: the departure was never source-graded here, so nothing this walk could bound was lost. */
   ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
    "#frontierMeaning:never", "#frontierPage:gated", "biasInhale:bars",
-   "documentsNamingEntity:merged", "projectDirectory:projects", "queueFeed:dispAll", "queueFeed:items"]);
+   "documentsNamingEntity:merged", "queueFeed:dispAll", "queueFeed:items"]);
 
 /* ---- SET 2. THE METHODS THE CENSUS COUNT CANNOT GRADE BY CONSTRUCTION.
    DERIVED BY INVERSION, NEVER LISTED — AND THE INVERSION FOUND ONE MORE THAN THE LEDGER'S HAND
