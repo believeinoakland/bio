@@ -371,6 +371,7 @@ design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9, *AND ADMINI
 depends-on: REC-159 (sequence: the same `SESSION_OPS` sets and ROLE literal; made a dependency 2026-09-23 by SCHEDULER #16 so no refill takes this row ahead of it).
 accepts-when: an enrolled administrator and a member, each refused `governorconfig`, read the founder's-session sentence; the founder's session and the ADMIN_TOKEN bearer still set an … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+scope-add: 2026-09-24 by SCHEDULER #17, BOB #32's ruling (00:00Z): correct `AI_SCOPE_BEYOND_MEMBER_REACH`'s detail ("not reachable by a member"), now loosely false for REC-159's four custodial acts, in the same `SESSION_OPS` sets this row touches; no new row. The founder's NOT_AN_ADMIN on an unclaimed store (scratch) STANDS: a live verification claims an administrator in scratch first.
 
 ### REC-155 · queued — **SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS WERE REACHABLE BY NO SESSION, AND NOBODY HAD RULED WHY — NOW RULED** … (whole text: the cut archive)
 order: where it stood, now with its design (BOB #20's entry): the plane is honest here — a determination was owed, not a defect shipping — and this landing refuses nobody (SCHEDULER #5, 2026-09-21; placed by SCHEDULER #3, 2026-09-19)
@@ -1222,13 +1223,3 @@ depends-on: none.
 accepts-when: the control reads every arm AS DECLARED on `main` with the two-line block in place, and leaves the tree byte-identical. How a liar passes it: deleting the older line, so the … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (`node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-93» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-123 · queued — **`pipeline-readers.control.mjs`'S PLANT ARMS WRITE INTO A POINTER, SO THEIR PLANTED ROWS ARE INVISIBLE AND THE CONTROL MEASURES NOTHING.** Since M0-110 `docs/development/BACKLOG.md` on `main` is a 219 B `COORD-POINTER:` line; the control appends ZZ-41..ZZ-45 to it (its 200 B floor passes), and `readState` follows any file that BEGINS with the tag (`isPointer`, `tools/coord.mjs`) to `origin/coord`, so no reader sees a plant (verified at the code on `c5c83dc4`; M0-119's worker's finding). — owner M0.
-order: with the instrument cluster, directly after M0-93: a control that cannot fail, D-438's class; behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a control is evidence only when it fails at a named assertion; with `TREE-SHARING.md` §1's reading layer (`BIO_COORD_REF` names a planted ref).
-depends-on: none — M0-110 is done.
-scope: the control plants through a local ref named by `BIO_COORD_REF` (as `coord.test.mjs` does), never the working tree's pointer, and asserts before arming that the file it plants into is not a pointer.
-accepts-when: every PLANT arm reads AS DECLARED, each failing by name with its plant in place, and the tree is byte-identical after. NEGATIVE CONTROL: plant into the pointer again, and the new not-a-pointer assertion fails by name.
-added: 2026-09-23 · SCHEDULER #14 (M0-119's worker's finding via CONDUCT #14, verified at the code; `node tools/mintid.mjs M0`).
