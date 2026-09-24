@@ -23,15 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-188 · queued — **THE GATE'S OWN REMEDY NAMES THE ONE-BUNDLE COMMAND: `verifyStatic` in `bio-plane/scripts/fleet-bundle.mjs` ends its staleness findings with "Run `npm run build` in <dir>/." at nine sites, so a worker following it rebuilds one bundle and meets the next stale one in the next gate.** Found by M0-178's worker (F1; with F2 and A6). — owner FLEET (the path), M0.
-order: at the backlog head before D-512, AHEAD of the product rows: a wrong remedy in a gate message costs a red round per stale member (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:02Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a gate's message names the act that fixes it), with M0-178's `tools/bundles.mjs`.
-depends-on: M0-178.
-scope: replace the nine sentences with "Run `node tools/bundles.mjs`, which rebuilds every bundle this change staled."; re-read `fleetbundles.test.mjs`'s quoted assertions; point FRAMEWORK.md's docprofile line at the same command (F2); add `tools/bundles.mjs` to `m041-instrument-census.mjs`'s INSTRUMENTS (A6).
-accepts-when: no staleness finding names `npm run build` (the measured failure it moves: nine sites naming the one-bundle command). NEGATIVE CONTROL: restore one site's old sentence and the fleetbundles quoted-remedy arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+### REC-216 · blocked — **NO MEMBER CAN MAKE A GOVERNING-LAWS PROPOSAL FROM ANY SURFACE: `actionlawspropose` is absent from the member-facing ACTS catalogue in `bio-plane/src/affordances.mjs`, so no page is ever offered it.** UI-102's worker (finding 3, via CONDUCT #20 21:26Z): unbuilt capability, not a defect. — owner RECORD.
+status: blocked — 2026-09-24 ~21:52Z: WORKER REC-216 (session_01SEDjKvQBwe6or5jSfaWFYo, now archived) built nothing and reported 4 design gaps: F1 the member-propose capability does not match the row; F2-F3 claims in the brief are false; F4 no ruling is cited. It recommends REWRITING the rows (REC-216 and its neighbours), not moving them, and routed this to BOB #33 and CONDUCT #20. No land/worker/REC-216 branch exists. UNBLOCKS WHEN: BOB rules the rewrite.
+order: after REC-215, in product order: the plane half of REC-195's proposal becoming reachable (SCHEDULER #19, 2026-09-24)
+milestone: M10
+interface: I3 additive — one ACTS entry; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*: a machine proposal, if built, is labelled machine work), with REC-195's op.
+depends-on: REC-195.
+scope: publish `actionlawspropose` in ACTS with its label, weight and prompt, after which the UI's surface registry lists it in ACTS_AWAITING_SURFACE until UI-105 hosts it.
+accepts-when: `op=affordances` offers the act on an action where it applies (the measured failure it moves: the act absent from ACTS). NEGATIVE CONTROL: drop the ACTS entry and the offered-act arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
 
 ### D-512 · queued — **`replay` IS HONOURED WITHOUT SERVER VERIFICATION: the end state BOB #33 ruled is that a replayed promotion of any type or revision names its drive-provenance capture, whose held bytes' preserved promotion record lists this bundle and this revision's `bundle.md` SHA-256.** — owner RECORD.
 order: after D-511, which it builds on (BOB #33, 17:05Z: *the end state, a build that depends on (1)*; SCHEDULER #18)
@@ -1246,14 +1247,4 @@ design: `docs/development/VERIFICATION.md` (a census states what it reads).
 depends-on: none.
 scope: add both to `UI_HELPERS` in `tools/status.mjs`.
 accepts-when: the census names both. NEGATIVE CONTROL: remove one, and the §6 arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-474 · queued — **`machine-fences.control.mjs` STILL DECLARES FIGURES FOR 12 OR 13 FENCES, AND THERE ARE NOW 14 (REC-189 added MACHINE_CANNOT_SET_RISK_TIER); the driver is REC-73's and is not in the battery.** — owner RECORD.
-order: with the M0 control rows, after D-471 (SCHEDULER #17, 2026-09-24; REC-189's worker F3 via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a control declares what it measures).
-depends-on: REC-189 (finished; rides the train after c19-batch9).
-scope: re-run the driver and move its declared figures to 14 fences.
-accepts-when: `node bio-plane/test/machine-fences.control.mjs` reports every arm as declared at 14. NEGATIVE CONTROL: the driver's own arms, recorded on its `NEGATIVE CONTROL:` line.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).

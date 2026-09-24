@@ -317,17 +317,6 @@ scope: a bulk forward over the queue's selection, sent as the set.
 accepts-when: a selection of three forwards in one act. NEGATIVE CONTROL: loop per item, and the one-act arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
-### REC-216 · running — **NO MEMBER CAN MAKE A GOVERNING-LAWS PROPOSAL FROM ANY SURFACE: `actionlawspropose` is absent from the member-facing ACTS catalogue in `bio-plane/src/affordances.mjs`, so no page is ever offered it.** UI-102's worker (finding 3, via CONDUCT #20 21:26Z): unbuilt capability, not a defect. — owner RECORD.
-status: running — SPAWNED 2026-09-24 ~21:48Z by SCHEDULER #19 (dispatch) as a SEPARATE CLOUD SESSION titled WORKER REC-216 (SCHEDULER #19), base origin/main 1a7f0bcc0. Falsify rather than believe: a live worker holds the branch land/worker/REC-216; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
-order: after REC-215, in product order: the plane half of REC-195's proposal becoming reachable (SCHEDULER #19, 2026-09-24)
-milestone: M10
-interface: I3 additive — one ACTS entry; the integrator classifies.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*: a machine proposal, if built, is labelled machine work), with REC-195's op.
-depends-on: REC-195.
-scope: publish `actionlawspropose` in ACTS with its label, weight and prompt, after which the UI's surface registry lists it in ACTS_AWAITING_SURFACE until UI-105 hosts it.
-accepts-when: `op=affordances` offers the act on an action where it applies (the measured failure it moves: the act absent from ACTS). NEGATIVE CONTROL: drop the ACTS entry and the offered-act arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
-
 ### REC-205 · running — **A PROJECT-SCOPED FINDING CANNOT JOIN A QUEUE SELECTION: its act names a project per item, so D-126's set has no way to carry one.** — owner RECORD, then UI.
 status: running — SPAWNED 2026-09-24 ~21:48Z by SCHEDULER #19 (dispatch) as a SEPARATE CLOUD SESSION titled WORKER REC-205 (SCHEDULER #19), base origin/main 1a7f0bcc0. Falsify rather than believe: a live worker holds the branch land/worker/REC-205; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
 order: after UI-94 (SCHEDULER #17, 2026-09-23; D-126's worker)
@@ -382,6 +371,16 @@ depends-on: UI-68 (`integrated` on c17-batch7).
 scope: a review-copy `*_CHECKS` family in `bio-checks.mjs` with DEC-49 regions and one canned sentence per code. Separately worth weighing: `check-refusal-codes.mjs` learning reach-by-op, since its R2 cannot see a code no surface names.
 accepts-when: the refusal-code census reads every one of the eleven as translated. NEGATIVE CONTROL: drop one code's region, and the census arm names it.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### M0-188 · queued — **THE GATE'S OWN REMEDY NAMES THE ONE-BUNDLE COMMAND: `verifyStatic` in `bio-plane/scripts/fleet-bundle.mjs` ends its staleness findings with "Run `npm run build` in <dir>/." at nine sites, so a worker following it rebuilds one bundle and meets the next stale one in the next gate.** Found by M0-178's worker (F1; with F2 and A6). — owner FLEET (the path), M0.
+order: at the backlog head before D-512, AHEAD of the product rows: a wrong remedy in a gate message costs a red round per stale member (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:02Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a gate's message names the act that fixes it), with M0-178's `tools/bundles.mjs`.
+depends-on: M0-178.
+scope: replace the nine sentences with "Run `node tools/bundles.mjs`, which rebuilds every bundle this change staled."; re-read `fleetbundles.test.mjs`'s quoted assertions; point FRAMEWORK.md's docprofile line at the same command (F2); add `tools/bundles.mjs` to `m041-instrument-census.mjs`'s INSTRUMENTS (A6).
+accepts-when: no staleness finding names `npm run build` (the measured failure it moves: nine sites naming the one-bundle command). NEGATIVE CONTROL: restore one site's old sentence and the fleetbundles quoted-remedy arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
