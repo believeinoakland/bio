@@ -2,3 +2,4 @@ M0-142	2026-09-24T03:37:24.568Z	SCHEDULER #18	meaning-bounds BOUND_KEY lacks max
 M0-143	2026-09-24T03:37:24.568Z	SCHEDULER #18	meaning-bounds BOUND_KEY lacks max; gates docFacing reads comments
 M0-144	2026-09-24T03:39:06.696Z	SCHEDULER #18	D-482 findings: quoted keys in check-refusal-codes; quoted identifiers in run-conditions
 M0-145	2026-09-24T03:39:06.696Z	SCHEDULER #18	D-482 findings: quoted keys in check-refusal-codes; quoted identifiers in run-conditions
+M0-146	2026-09-24T04:21:25.262Z	SCHEDULER #18	WORKER.md scratch path vs gates §2e
