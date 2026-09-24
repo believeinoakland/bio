@@ -25,9 +25,11 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
 ## 4. STATE (06:00Z) — read the tree; these are pointers
 - MAIN = 135abf3b (c20-batch15 landed: D-493 M0-144 M0-143 D-453 DIST-9; IC-261 I4 2.2.0). Before: d536f834 (batch12: D-470 D-487
   UI-84 D-479; I3 81.3.0), 0fdef669, 16fe1e7f. Landed workers archived by ancestry (Bob's rule).
-- TRAIN RUNNING (05:58Z): land/conduct/c20-batch17 @ aa8c0721 = main 135abf3b + D-481 D-494 DIST-12 D-483 D-484 M0-146 D-495 +
-  land/dist/newgroup-dist-078; IC-263 (D-484) I3 81.4.0; D-481 §16 limit folded. Log: #20 scratchpad train6.log. On landing archive
-  D-481 D-494 D-483 D-484 M0-146 D-495 workers by ancestry. NEVER train c20-batch16 (no trailers); 16b is inside 17.
+- c20-batch17's train (05:58Z) RETURNED RED at d470-catalog-census A3 (D-484's two catalogue rows moved the catalogue 433→435 with
+  the stamp at 1.21.0). FIXED on c20-batch18: CATALOG_VERSION 1.22.0 = {435, a388b642…}, pins corrected, control 5/5.
+- TRAIN RUNNING (06:34Z): land/conduct/c20-batch18 @ 950a3e67 = main 135abf3b + (batch17: D-481 D-494 DIST-12 D-483 D-484 M0-146
+  D-495 + newgroup-dist-078; IC-263 I3 81.4.0; §16 limit) + REC-193 (IC-264, I5 3.6.0) + UI-90. Log train7.log. On landing: archive
+  those workers by ancestry; tell SCHEDULER the rows. NEVER train c20-batch16 or c20-batch17 alone (inside 18).
 - c20-batch13 GREEN @ 41db70e1 (batch11fix + batch12; I3 85.3.0; CATALOG_VERSION 1.22.0, census 438): NOT trained alone — batch14
   carries it.
 - INTEGRATION WORKERS: c20-batch13 session_01KXuCWoxFB4aA2GaADwB9E8 (batch11fix + batch12, I3 85.x; due 05:40Z, NOT yet reported)
@@ -37,7 +39,7 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   main's 81.x chain and batch11fix's 85.0.0 must become ONE linear sequence. DROP c19-batch10, c19-batch11, c20-integ1 (broken
   trailers), c20-batch11fix, c20-batch12, c20-batch16 from trains; they are inside the batches. On landing: DIST owed D-461 SAFETY,
   D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0), DIST-11 browser class.
-- REC-193 DONE @ e6716189 (IC to mint: I5 ADDITIVE) — NEXT BATCH (c20-batch18) after batch17. REC-194 unblocked, NOT spawned (wind-down).
+- REC-194 NOT spawned (wind-down); it branches from a main carrying REC-193. REC-194 unblocked, NOT spawned (wind-down).
 - ROW WORKERS LIVE (push by 06:30-06:40Z): UI-89 session_01WVb7DA8n2nySoZyKzqKR3C · UI-90 session_017i3ve8jwjhLq19sBHCcrWe · D-496 session_011bP9kqUTyWrRzBL7A7jTv8.
   REC-194 HELD (shares statementack code with REC-193).
 - Unpaid BOB rulings are ROWS now: REC-211 (DEFINITION_MOVED, write half), D-499 (render wait.fired), D-500 (watermark precision).
