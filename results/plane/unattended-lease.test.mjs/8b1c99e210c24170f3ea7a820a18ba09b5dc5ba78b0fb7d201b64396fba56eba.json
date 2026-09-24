@@ -1,0 +1,16 @@
+{
+ "unit": "plane:unattended-lease.test.mjs",
+ "inputHash": "8b1c99e210c24170f3ea7a820a18ba09b5dc5ba78b0fb7d201b64396fba56eba",
+ "verdict": "PASS",
+ "run": "c1101d1e24da5dce7bd2ff5bb002e2080dcef800.1790291658474.1785.json",
+ "tree": "c1101d1e24da5dce7bd2ff5bb002e2080dcef800",
+ "head": "f1adfbc9b867859433691664be8bb4c6355b005c",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 153,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "65799eea-7ca8-5149-918e-d581480a435c",
+ "at": "2026-09-24T23:14:18.490Z"
+}
