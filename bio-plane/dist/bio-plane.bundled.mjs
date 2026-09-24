@@ -21553,13 +21553,20 @@ var MACHINE_REFUSALS = {
 };
 var PER_ITEM_MAX = 100;
 var PER_ITEM_ACTS = [
+  /* REC-205: `item_keys` is the act's three IDENTITY SHAPES and is now ENFORCED as well as published —
+     `store.mjs #perItem` reads this very array and refuses to let a shared value of ONE shape reach an
+     item that named another, which is what lets a project-scoped finding and a progression finding be
+     handled in the same call. `definitionVersion` JOINS `shared_keys` (REC-211/IC-273): the act has
+     taken it as a shared field since REC-211 — a set over one progression names the version once — and
+     it was published in neither list, so a surface holding only this table could not complete an
+     instance-scoped item in a set. It is an identity of nothing, so it is shared and never narrowed. */
   {
     id: "proposedispose",
     label: "Defer or dismiss the selected findings",
     weight: "per-item",
     set_key: "items",
     item_keys: [["key"], ["progressionKey", "stageKey"], ["project", "finding"]],
-    shared_keys: ["to", "reason", "kind"]
+    shared_keys: ["to", "reason", "kind", "definitionVersion"]
   },
   {
     id: "taskresolve",
@@ -56578,14 +56585,27 @@ ${words}`;
       finding: find,
       detail: "a finding that carries no progression stage is dispositioned at the JUDGMENT LAYER, and that act is scoped to ONE project's feed (D-266: a stance is expressly one project's own property, \xA77/D-216, and R5 makes forks at the judgment layer legitimate). Name the project you are acting for \u2014 op=queue publishes the candidates as disposition.projects. It is not defaulted even when there is only one, because a plane choosing whose judgment the record carries is the single shared stance \xA77 rejected, arriving through a defaulted parameter."
     };
-    if (!scoped && pk && classOfKind(pk) === "FINDING")
+    const keyed = typeof key === "string" ? key.trim() : "";
+    const byId = !scoped && keyed ? itemClassOf(keyed) : null;
+    const keyClass = byId || (!scoped ? classOfKind(pk) : null);
+    const keyKind = byId ? keyed.split("::")[1] || null : keyClass ? pk : null;
+    if (keyClass === "CONDITION" || keyClass === "OBLIGATION")
+      return {
+        ok: false,
+        reason: "CLASS_NOT_DISPOSED",
+        class: keyClass,
+        kind: keyKind,
+        instead: keyClass === "CONDITION" ? "queuemute" : "taskresolve",
+        detail: `this names ${keyClass === "CONDITION" ? "a CONDITION" : "an OBLIGATION"} and ${keyClass === "CONDITION" ? "a" : "an"} ${keyClass} is not DISPOSED: a disposition is an authored record act on a FINDING, and op=queue publishes the act that does reach this item as its \`disposition.instead\`. Nothing was written. The rest of a selection is unaffected \u2014 under the per-item weight this item alone is kept, carrying this reason.`
+      };
+    if (keyClass === "FINDING")
       return {
         ok: false,
         reason: "NO_PROJECT_SCOPE",
-        finding: `FINDING::${pk}::${sk}`,
-        kind: pk,
+        finding: byId ? keyed : `FINDING::${pk}::${sk}`,
+        kind: keyKind,
         requires: ["project", "finding"],
-        detail: `'${pk}' is a FINDING kind rather than a progression, so this is the project-scoped disposition and it needs the project you are acting for. Send \`project\` (one of op=queue's disposition.projects for this item) and \`finding\` (its disposition.finding) instead of \`key\`. Nothing was written and no team's feed moved.`
+        detail: "this names a FINDING that carries no progression stage, so this is the project-scoped disposition and it needs the project you are acting for. Send `project` (one of op=queue's disposition.projects for this item) and `finding` (its disposition.finding) instead of `key`. Nothing was written and no team's feed moved."
       };
     if (!scoped && !pk) return {
       ok: false,
@@ -72880,6 +72900,24 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    * actor is overwritten exactly as a single-key body is. The rest of the body is SHARED — a common
    * `reason`, `to` or disposition — and an item may override it for itself.
    *
+   * REC-205 — A SHARED IDENTITY OF ONE SHAPE MUST NOT REACH AN ITEM OF ANOTHER, and this is what lets a
+   * MIXED selection be one act. `op=proposedispose` has three identity shapes (`key`;
+   * `progressionKey`+`stageKey`; `project`+`finding`) and it decides WHICH ACT IT IS by what the caller
+   * SENT. In a set, "what the caller sent" for an item is the shared body plus the item — so a caller
+   * that names the project ONCE for a selection all in one team (a legitimate shape: the item then
+   * carries only its `finding`) was silently making every OTHER item in that set project-scoped too. A
+   * progression finding beside it, naming a perfectly good `key`, came back NO_FINDING: *"a project with
+   * no finding names a team and no decision"* — true of the body the helper built and false of the act
+   * the member asked for. MEASURED at 1a7f0bcc0 before the fix, not inferred.
+   *
+   * SO THE NARROWING IS BY THE PUBLISHED SHAPES AND NOT BY A LIST HERE. `item_keys` already declares each
+   * act's identity groups and `op=affordances` already publishes them; an item that NAMES a key from one
+   * or more groups keeps the shared values of THOSE groups' keys and of `shared_keys`, and the shared
+   * values of the other groups' identity keys are dropped for that item alone. An item naming no identity
+   * at all is unchanged, so the wholly-shared subject still reaches the act to be refused in its own
+   * words. This is a no-op for the three acts with ONE identity group (`taskresolve`, `taskforward`) or
+   * whose second group's extra key is shared anyway (`resolve`'s `ref`) — measured, not assumed.
+   *
    * ITEMS ARE NOT IN ONE TRANSACTION, deliberately: independence is the weight. Each single act writes
    * at most once, after all of its own refusals, so an item that is refused has written nothing. */
   static PER_ITEM_MAX = PER_ITEM_MAX;
@@ -72919,6 +72957,21 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       }
       return o;
     };
+    const published = PER_ITEM_ACTS.find((a) => a.id === act) || null;
+    const groups = published && Array.isArray(published.item_keys) ? published.item_keys : [];
+    const shareable = new Set(published && Array.isArray(published.shared_keys) ? published.shared_keys : []);
+    const identity = new Set(groups.flat().filter((k) => !shareable.has(k)));
+    const namesIt = (o, k) => o && typeof o[k] === "string" && o[k].trim() !== "";
+    const sharedFor = (it) => {
+      if (identity.size === 0) return shared;
+      const named = [...identity].filter((k) => namesIt(it, k));
+      if (named.length === 0) return shared;
+      const reach = /* @__PURE__ */ new Set();
+      for (const g of groups) if (g.some((k) => named.includes(k))) for (const k of g) reach.add(k);
+      const narrowed = { ...shared };
+      for (const k of identity) if (!reach.has(k)) delete narrowed[k];
+      return narrowed;
+    };
     const outcomes = [];
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
@@ -72933,7 +72986,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       }
       let r;
       try {
-        r = one({ ...shared, ...it, ...stamped, items: void 0 });
+        r = one({ ...sharedFor(it), ...it, ...stamped, items: void 0 });
       } catch (e) {
         r = refusal7("SET_ITEM_FAILED", `op=${act} threw on item ${i} rather than refusing it: ` + String(e && e.message || e).slice(0, 200) + `. Nothing about the item is claimed.`);
       }
