@@ -68,7 +68,8 @@ incident's own shape inverted:
   files. That is how one worker's untracked suite was materialised into another's tree and
   **counted into its baseline**. Need a clean tree? `git worktree add` a scratch checkout.
 - **KEEP EVERY SCRATCH FILE OUT OF YOUR WORKTREE — in the SESSION SCRATCHPAD your harness names:**
-  logs, baseline captures, control-pen copies, and above all a scratch COPY OR CLONE OF THE REPO.
+  logs, baseline captures, copies YOU make of files, and above all a scratch COPY OR CLONE OF THE REPO.
+  A driver's or tool's own pen, GITIGNORED and ITEM-NAMED, stays in the worktree (BOB #33, 2026-09-24).
   **RULED by BOB #32, 2026-09-24**, superseding "inside your own worktree": a file in the worktree
   is not inert. Repository-walking suites WALK IT, it trips
   `gates.mjs` §2e's under-inclusion check, and it makes the tree DIRTY, so D-293 refuses to RECORD a
