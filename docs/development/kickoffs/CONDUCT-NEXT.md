@@ -31,11 +31,14 @@ wind-down OVER; cap 10 live workers). Read the tree; these are pointers.
 - land/* already on main are deleted by .github/workflows/prune-landed.yml; train.mjs's ref deletion is redundant. Trains:
   ONE `--drop` PER BRANCH (M0-159 is the fix row). NEVER-MERGE refs: c16-batch3, c16-batch6, land/bob/folds-0924c,
   land/bob/folds-0924d, c18-batch7fix, c19-batch10, c20-integ1, c20-batch16.
-- LIVE WORKERS (10, spawned 15:46-15:48Z, base 68fecb8d, rows flipped running at coord f8fd4a77; report by one-shot trigger):
+- LIVE WORKERS (first 10, spawned 15:46-15:48Z, base 68fecb8d, rows flipped running at coord f8fd4a77; report by one-shot trigger):
   M0-140 session_01SwHJ5PDWaoePcKuzYBscMK (retire the DEBT construct; CLAUDE.md wording goes to BOB first) · D-498
   session_01N5aDuN1MfnKxsNJ5n7cPkU · D-497 session_018qopfWkzV5cvhBz2jTv3HD · UI-100 session_01SpHP4tgbseccztTdjMSCij ·
   REC-195 session_01TXWen1KhhqKXJj5A9wnvpN · M0-153 session_01CA8h4ZpGNcoCbb18TUQc8U · M0-154 session_01Gh94DitRyuZFiqZDucoiy6 ·
   M0-155 session_016oXJSbX622XgPZybiCHhPG · M0-157 session_01V8GNcS1HJ8NwMmx5AMsYzE · M0-158 session_01UNuTyy3HyKaA6NTmjLuGqT.
-- NEXT RUNNABLE (QUEUE.md is the source): UI-92, D-505, D-503, D-506, REC-194 (DIST-13 is DIST's). Fill a freed slot same turn.
+  PLUS 5 (15:49-15:50Z, coord 0cf9783c; 15 live): UI-92 session_01QY1UMF2hnkFRAigwRyrbZp · D-505 session_014oU4xtRHymVAFfuYTPkFL4 ·
+  D-503 session_01Lar2mJnqfdxQ3fb6dVUuQv · D-506 session_01JnKExYq87zoNZ3mx3fCgdq · REC-194 session_01YL4Drx2EamtQLtaGQSL1HC.
+- NEXT RUNNABLE: the cache is DRAINED (only DIST-13, DIST's); SCHEDULER asked to refill 15:52Z. Fill a freed slot same turn.
 
-## 5. CAP (Bob via BOB #32 15:40Z): at most 10 live worker sessions. Refresh at 75% context.
+## 5. CAP AND CADENCE (Bob via BOB #32 15:45Z): at most 16 live worker sessions. TRAIN at least every 2 HOURS whenever gated
+land/* branches wait (sooner when a batch is ready); BOB's stall probe alarms after 120 min without a landing while branches wait. Refresh at 75% context.
