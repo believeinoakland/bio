@@ -25205,6 +25205,57 @@ export class Store extends DurableObject {
              current_definition_version: current, applies, applies_because: because };
   }
 
+  /* D-552: THE DECISION RIDES ON THE FINDING IT JUDGED, on every read that publishes the finding.
+     `proposalsFeed` was the only reader of `proposal_dispositions`, so op=instance (and the
+     op=thread/op=discharge echoes, and op=captureprogressions) listed a finding a member had
+     already dismissed or deferred as a bare open question: the record holding a decision and the
+     read saying nothing about it. D-79 is that a decision AGES a finding and never makes it
+     vanish, so this PUBLISHES and never filters: every finding stays listed, and carries the
+     decision about its (progression, stage) -- or null where nobody has decided -- with the
+     version view `#dispositionVersionView` computes. `applies: true` means the decision governs
+     the definition in force (the finding is aged, not open); `applies: false` means it judged an
+     earlier definition (the finding is open again, and the decision is its history). The object
+     is the one `proposalsFeed` publishes as `prior_disposition` (and D-527 on op=queue), with the
+     same keys; it is named `disposition` here because, unlike there, it may still govern.
+     Keyed per progression, instance-wide, exactly as the act writes it (DEC-16, D-266): a
+     disposition is about the shared record, not a project's thinking, so the viewer scoping
+     (Membership 7.9, project bundles only) withholds nothing in it and `decided_by` reads as
+     op=proposals and op=queue publish it to the same classes -- a member id, or `class:<cls>`
+     for a machine credential, never a person's name the record did not already hold. */
+  static #dispositionOnFinding(d, cur) {
+    const v = Store.#dispositionVersionView(d, cur);
+    return { state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
+             definition_version: v.definition_version, definition_version_state: v.definition_version_state,
+             applies: v.applies, applies_because: v.applies_because };
+  }
+
+  /* D-552: stage_key -> the published decision, for ONE progression, read once per instance. */
+  #dispositionsByStage(progressionKey) {
+    const cur = this.#definitionVersionOf(progressionKey);
+    const byStage = new Map();
+    for (const d of this.#rows(
+      `SELECT stage_key, state, reason, decided_by, at, definition_version
+         FROM proposal_dispositions WHERE progression_key=?`, progressionKey))
+      byStage.set(d.stage_key, Store.#dispositionOnFinding(d, cur));
+    return byStage;
+  }
+
+  /* D-552: an assembled instance with each finding carrying its decision, and the count of the
+     findings no decision governs. `finding_count` still counts EVERY finding: nothing is hidden. */
+  #withDispositions(inst) {
+    if (!inst || inst.ok !== true || !Array.isArray(inst.findings)) return inst;
+    const byStage = this.#dispositionsByStage(inst.progression_key);
+    const findings = inst.findings.map((f) => ({ ...f, disposition: byStage.get(f.stage_key) ?? null }));
+    return { ...inst, findings,
+             open_finding_count: findings.filter((f) => !(f.disposition && f.disposition.applies)).length };
+  }
+
+  /* D-552: the ONE answer op=instance returns, and the op=thread / op=discharge echoes with it
+     (REC-30: a write's receipt is a read and takes the read's projection). */
+  #instanceAnswer(progressionKey, entityId, viewer) {
+    return this.#redactInstance(this.#withDispositions(this.#assembleInstance(progressionKey, entityId)), viewer);
+  }
+
   /* D-128: the CURRENT version of a definition -- the one every instance and finding is derived
      against -- with its number. A definition with no version rows was declared before D-128 and
      reads as version 1, its basis not recorded (version_recorded:false). null if never declared. */
@@ -25884,7 +25935,7 @@ export class Store extends DurableObject {
     /* REC-30: the echo a write returns is a READ, and it goes through the same
        projection op=instance does — a caller must not learn from a write's
        receipt what the read would withhold. */
-    const inst = this.#redactInstance(this.#assembleInstance(key, eid), viewer);
+    const inst = this.#instanceAnswer(key, eid, viewer);
     /* REC-8: a newly threaded instance may create a FUTURE overdue deadline (a placed, dated
        predecessor with a required successor still absent). ARM the reconciling alarm so the
        overdue-scan consumer wakes at that deadline — the producer/consumer split REC-5 established
@@ -25938,7 +25989,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "NO_KEY", detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" };
     if (typeof entityId !== "string" || !entityId.trim())
       return { ok: false, reason: "NO_ENTITY", detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" };
-    return this.#redactInstance(this.#assembleInstance(progressionKey.trim(), entityId.trim()), viewer);
+    return this.#instanceAnswer(progressionKey.trim(), entityId.trim(), viewer);
   }
 
   /* op=discharge (FW-10): record an EXCEPTION DOCUMENT that discharges a lawful SKIP -- a real
@@ -26005,7 +26056,7 @@ export class Store extends DurableObject {
        the stage moves from a missing-predecessor finding to a discharged state (when it was in
        fact missing-and-required). */
     /* REC-30: the write's echo is a read and takes op=instance's projection. */
-    const inst = this.#redactInstance(this.#assembleInstance(key, eid), viewer);
+    const inst = this.#instanceAnswer(key, eid, viewer);
     return { ...inst, discharged_stage: sk, exception_document: cs, reason: rsn.slice(0, 4000),
              citation: cite.slice(0, 2000), declared_by: by, at };
   }
@@ -26399,14 +26450,17 @@ export class Store extends DurableObject {
       let a = assembled.get(ck);
       if (!a) {
         const inst = this.#assembleInstance(r.progression_key, r.entity_id);
-        a = { inst, overdue: (inst && inst.found) ? this.#overdueFindings(inst, now) : [] };
+        a = { inst, overdue: (inst && inst.found) ? this.#overdueFindings(inst, now) : [],
+              /* D-552: each finding carries the decision about its stage, as op=instance's do */
+              decided: (inst && inst.found) ? this.#dispositionsByStage(inst.progression_key) : new Map() };
         assembled.set(ck, a);
       }
       const inst = a.inst;
       if (!inst || !inst.found) continue;   // definition gone, or nothing threaded -> not a membership
       const stage = (inst.stages || []).find((s) => s.stage_key === r.stage_key);
       const missing = (inst.findings || []).filter((f) => f.kind === "missing_predecessor");
-      const findings = [...missing, ...a.overdue].map(project);
+      const findings = [...missing, ...a.overdue].map(project)
+        .map((f) => ({ ...f, disposition: a.decided.get(f.stage_key) ?? null }));
       instances.push({
         progression_key: inst.progression_key, progression_label: inst.label,
         definition_version: inst.definition_version,

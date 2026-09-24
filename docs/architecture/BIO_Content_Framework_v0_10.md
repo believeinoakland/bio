@@ -24,6 +24,7 @@
 - §12.1 — CONTACT between aspirations is NAMED (the same entities, the same progressions, the same queue ordered differently) and NOT SPECIFIED, DEFERRED rather than forgotten (D-80; re-disposed by BOB #19, stated here by BOB #22, 2026-09-21). An aspiration is not an object in the plane (`node tools/status.mjs 8.goals` reads ABSENT), so specifying how two of them come into contact would design a dependent ahead of its substrate; the specification is a required clause of the design act that makes an aspiration an object. Bob's ruling stands and is not reopened: no arbiter, and a contradiction is found, never prevented.
 - §8.2 — the declared flow's REVISIONS are BUILT (D-128, 2026-09-23: append-only versions with basis, and the version named on every instance and finding); the member surface for a revision's basis BUILT by UI-83 (2026-09-24: the progression form offers the statement and citation on a held key and sends both; the refusal a member meets without them carries no canned translation, a DEC-49 row owed on the plane); a proposal disposition names the version it was decided against and governs no later one (REC-184, 2026-09-24). NOT BUILT: the deferred third shape (a stage out of order) with institution scoping, which waits on §8.2's stated trigger.
 - §8.1 — grade D's label CORRECTED 2026-09-23 by BOB #30 (D-219); the stored method string and `schema.mjs`'s two comments still read the old wording (NOT BUILT, a row).
+- §8.2, §12 — **a decided finding CARRIES its decision on the progression reads and is never hidden by it (D-552, 2026-09-24, IC-290)**: `op=instance` (with its `op=thread` / `op=discharge` echoes) and `op=captureprogressions` publish, on every finding, the decision about its (progression, stage) — state, reason, decider, instant, the version it judged, whether it governs — or `null`, and `op=instance` counts `open_finding_count` beside `finding_count`. NOT BUILT: the member surface that paints it (UI-108, civicos-ui `progPaintInstance`), so a member on the progression page still reads a dismissed finding as open until that lands.
 
 **Contents**
   - [1. Why this document exists, and what it is FOR](#1-why-this-document-exists-and-what-it-is-for)
@@ -938,6 +939,22 @@ re-reads and acts again. Both are asked after `NO_SUCH_PROGRESSION` and `BAD_STA
 records no disposition and moves no proposal. `op=queue` publishes the version beside the key it advertises, and the
 member surface sends it from that block. The judgment-layer shape (`{project, finding}`) is untouched: no declared flow
 governs it and there is no version to name.
+
+**A DECIDED FINDING CARRIES ITS DECISION WHEREVER IT IS READ (D-552, 2026-09-24, IC-290).** Until this landed,
+`proposalsFeed` was the only reader of `proposal_dispositions`, so `op=instance` — the progression page's read — and
+`op=captureprogressions` — the document page's — listed a finding a member had dismissed as a bare open question: the
+record holding a decision and the read saying nothing about it, which §12's *age rather than vanish* forbids from the
+other side. Each finding on both ops (and on the `op=thread` / `op=discharge` echoes, which are `op=instance`'s read)
+now carries `disposition`: `null` where nobody has decided, else the decision about its (progression, stage) — `state`,
+`reason`, `decided_by`, `at`, the `definition_version` it judged with its `definition_version_state`, and `applies` /
+`applies_because` from the same version rule `op=proposals` uses. It is PUBLISHED and never used to hide a finding: a
+dismissed finding stays listed, `finding_count` still counts it, and `op=instance` adds `open_finding_count`, the
+findings no decision governs. The object is the one `op=proposals` publishes as `prior_disposition` (and `op=queue`'s
+finding item with it), key for key; it is named `disposition` here because on these reads it may still govern, where
+`prior_disposition` is by construction a decision that no longer does. The decision is instance-wide (DEC-16), a fact
+about the shared record and not a project's thinking, so the viewer scoping that withholds a project's bundle ids
+(REC-30) withholds nothing in it, and every viewer these reads admit reads `decided_by` as `op=proposals` publishes it
+— a member id, or `class:<cls>` for a machine credential.
 
 ## 8.3 Identifier spaces, and where grade collapses
 
