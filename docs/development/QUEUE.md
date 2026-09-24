@@ -304,7 +304,7 @@ scope: add `group: GROUP` to block (ix)'s strengthbar body; re-measure the publi
 accepts-when: `node test/machine-fences.control.mjs` exits 0 with every arm as declared. NEGATIVE CONTROL: arm (2) itself — neuter the predicate and it now fails by name.
 added: 2026-09-24 · SCHEDULER #18 (placed; `D-509` minted by land/worker/D-503).
 
-### D-510 · queued — **`promote` TRUSTS THE ENVELOPE'S TYPE OVER THE DOCUMENT'S: `bundles.object_type` and the action_basis/correspondence projection are gated on the caller's `meta.object_type`, while `#projectRow`'s action columns come from the document's own front matter — so a member can promote an ACTION under an envelope saying information: it lands typed information with `action_risk_tier` set and its basis and correspondence never projected.** Found by D-505's worker (finding 3). — owner RECORD.
+### D-510 · running — **`promote` TRUSTS THE ENVELOPE'S TYPE OVER THE DOCUMENT'S: `bundles.object_type` and the action_basis/correspondence projection are gated on the caller's `meta.object_type`, while `#projectRow`'s action columns come from the document's own front matter — so a member can promote an ACTION under an envelope saying information: it lands typed information with `action_risk_tier` set and its basis and correspondence never projected.** Found by D-505's worker (finding 3). — owner RECORD.
 order: at the backlog head: the record holding an action it does not index as one (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:48Z)
 milestone: M7
 interface: I3 — a disagreeing envelope refused (or normalised); the integrator classifies.
