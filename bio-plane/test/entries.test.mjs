@@ -32,6 +32,28 @@
  *   one more red than it declared: "an entry file's heading is an ALLOCATION SITE" fails with it too — the allocation
  *   read and the floor read share the corpus the arm re-pointed, so a reader of the old file alone loses both.
  */
+/* NEGATIVE CONTROL: RAN 2026-09-24 by the M0-154 worker, by hand, over the DERIVED fixture copy list
+ * (`test/gatedeps.mjs`). Declared before arming; each arm ALONE, the other three suites held open; every
+ * restore by `cp` from a uniquely-named pristine copy, verified by sha256 AND `cmp` AND a byte count.
+ *   BASELINE (this tree, before the arms): entries.test.mjs 58 pass / 0 fail before this item's added assertion, 59 after.
+ *   (A1) ACCEPTS-WHEN — `tools/m0154probe.mjs` added and imported by `tools/gates.mjs`. MUST NOT fail:
+ *        all four suites GREEN, each fixture's printed `gatedeps:` list one file longer. ACTUAL: green
+ *        (gates 96/0, gateresults 52/0, entries 59/0, train 53/0), every list carrying `tools/m0154probe.mjs`.
+ *   (A2) THE CONTROL THE ROW NAMES — A1 still armed, and `gates.test.mjs`'s HAND copy list restored verbatim.
+ *        MUST fail, BY NAME, at "the fixture carries the REAL … (DERIVED)". ACTUAL (in `gates.test.mjs`,
+ *        the suite armed): 24 pass / 72 fail, that assertion first and naming the file —
+ *        `want [true,true,true,[]] got [true,true,true,["tools/m0154probe.mjs"]]`.
+ *   (A2') A FINDING ABOUT THE ARM, not smoothed: A2's FIRST run threw `ENOENT` out of the assertion and
+ *        ended the module with NO TALLY AT ALL — a control that dies proves nothing (`kickoffs/WORKER.md`).
+ *        `missingFrom` below is that correction; A2 as recorded is the re-run against it.
+ *   (A3) OVER-STRICTNESS — the same import written three ways the derivation was not written against:
+ *        `await import("./m0154probe.mjs")`, `export { … } from "./m0154reexport.mjs"`, and an
+ *        `import … from "./m0154absent.mjs"` inside a COMMENT whose target EXISTS on disk. MUST pass, and
+ *        MUST copy the first two and NOT the third. ACTUAL: exactly that; gates 96/0, entries 59/0.
+ *   (A4) THE HELPER'S OWN REFUSALS, driven directly: a `without` naming a file outside the closure THROWS
+ *        (a stale exclusion cannot outlive its import); a missing root THROWS; `const IMPORT_RE` renamed in
+ *        a scratch copy of `tools/gates.mjs` THROWS naming the line. All three as declared.
+ */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync } from "node:fs";
@@ -42,9 +64,30 @@ import { spawnSync } from "node:child_process";
 import * as E from "../../tools/entries.mjs";
 import { corpusFloor, allocations } from "../../tools/mintid.mjs";
 import { install } from "../../tools/pushguard.mjs";
+import { gateDeps } from "./gatedeps.mjs";     /* M0-154: the fixture's copy list is DERIVED, never kept by hand */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "../..");
+/* M0-154 · WHAT THE FIXTURE CARRIES, DERIVED FROM `tools/gates.mjs`'s OWN IMPORTS, transitively, by the
+   ONE shared helper — never a hand list here, which is the D-93 defect and cannot fail when it falls
+   behind (`gates.mjs` loads each of these under a `try` and DEGRADES rather than crashing, so a missing
+   copy silently weakens every assertion below). ONE derived dependency is deliberately NOT carried,
+   `tools/gateresults.mjs`, and `without` is checked against the closure so the exclusion cannot outlive
+   the import it names. Both reasons MEASURED 2026-09-24: (1) its mere PRESENCE turns the per-unit record
+   on — `PER_UNIT_ON` in `gates.mjs` is `isFile(tools/gateresults.mjs)` — armed, this suite stayed green, so the exclusion rests on (2) alone. (2) this suite hands the
+   fixture's gate `process.env` whole, so under a real outer gate the fixture would inherit
+   `BIO_GATE_RESULTS_REMOTE` and write its own PASS records to the OUTER gate's results remote: the
+   incident `gateresults.test.mjs` records against itself, which only its `CLEAN_ENV` prevents. */
+const GATE_DEPS = gateDeps({ repo: REPO, roots: ["tools/gates.mjs", "tools/train.mjs"], without: ["tools/gateresults.mjs"] });
+console.log(`gatedeps: entries.test.mjs fixture carries ${GATE_DEPS.length} derived file(s) — ${GATE_DEPS.join(", ")}`);
+/* A FILE THE FIXTURE LACKS MUST FAIL AN ASSERTION, NEVER THROW PAST ONE. Found by this item's own control
+   arm (M0-154, 2026-09-24): the first draft compared with a bare `readFileSync` on both sides, so a fixture
+   missing a derived file ended the module with an ENOENT and NO TALLY AT ALL — a control that "fails" by
+   dying proves nothing about the assertion, and `kickoffs/WORKER.md` records the same shape as a suite whose
+   count reads clean. It reports the offending paths BY NAME instead. */
+const missingFrom = (dir) => GATE_DEPS.filter((p) => {
+  try { return !readFileSync(join(dir, p)).equals(readFileSync(join(REPO, p))); } catch { return true; }
+});
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -226,9 +269,7 @@ const ident = (root) => {
 const stub = () => "process.exit(0);\n";
 function fixture(name, extra = {}) {
   const seed = join(SANDBOX, `${name}-seed`);
-  for (const f of ["gates.mjs", "pushguard.mjs", "train.mjs"]) put(seed, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
-  for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"])
-    put(seed, `bio-plane/scripts/${f}`, readFileSync(join(REPO, "bio-plane/scripts", f)));
+  for (const p of GATE_DEPS) put(seed, p, readFileSync(join(REPO, p)));
   const files = {
     "tools/plancheck.mjs": stub(),
     "bio-plane/package.json": `${JSON.stringify({ name: "fixture-plane", private: true, type: "module", scripts: { "test:battery": "node scripts/battery.mjs" } })}\n`,
@@ -279,6 +320,14 @@ const blob = (remote, ref, rel) => git(["show", `${ref}:${rel}`], remote).stdout
 section("THE TRAIN — two land/* branches each adding a measurement land in ONE train with NO conflict");
 {
   const F = fixture("fx");
+  /* ADDED 2026-09-24 (M0-154). This suite drives the real train through the real gate, so its fixture has always
+     had to carry the gate's whole import closure — and had no assertion that it did, which is why the hand list
+     it carried could have fallen behind `gates.mjs` without this suite ever going red. The list is DERIVED and
+     floored, since a totality assertion over an empty corpus passes (`kickoffs/WORKER.md`). */
+  t("the fixture carries the REAL train.mjs, gates.mjs and everything they import, byte for byte (DERIVED)",
+    [GATE_DEPS.length >= 6, ["tools/train.mjs", "tools/gates.mjs", "tools/pushguard.mjs"].every((p) => GATE_DEPS.includes(p)),
+     missingFrom(F.C)],
+    [true, true, []]);
   const baseM = blob(F.remote, "main", M.frozen), baseIC = blob(F.remote, "main", IC.frozen);
   const bodyA = "## M-20 · 2026-09-23 · lane alpha's measurement\n\nalpha measured this\n";
   const bodyB = "## M-21 · 2026-09-23 · lane beta's measurement\n\nbeta measured that\n";
