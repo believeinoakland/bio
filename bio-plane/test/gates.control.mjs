@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 17 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116) — over `tools/gates.mjs` and
+/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 19 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116; G18, G19 by M0-143) — over `tools/gates.mjs` and
  * `tools/pushguard.mjs`, each driven through `bio-plane/test/gates.test.mjs`.
  *
  *   node bio-plane/test/gates.control.mjs          (from the repo root; one arm: add its id, e.g. G1)
@@ -63,8 +63,19 @@
  *       comments again (M0-116, BOB #27's control:  the file is NOT selected" FAILS. MUST NOT: the
  *       break the fix, the count returns)             string-path reader is still selected.
  *   G17 STRINGS blanked with the comments — the    -> "a suite that READS the file through a STRING
- *       liar: selecting nothing reads as "fewer       path is selected" FAILS. MUST NOT: the
- *       units" (M0-116)                               comment-only suite is still NOT selected.
+ *       liar: selecting nothing reads as "fewer       path is selected" FAILS, and so does the
+ *       units" (M0-116)                               doc-facing set's own string reader (M0-143 put
+ *                                                     the SAME `codeOf` under §2). MUST NOT: the
+ *                                                     comment-only suite is still NOT selected.
+ *   G18 the DOC-FACING selector reading a suite's  -> "...and a suite whose ONLY `docs/` mention is
+ *       own files WHOLE again — break M0-143's        in a COMMENT is NOT doc-facing" FAILS. MUST
+ *       fix at its first site, `docFacing`           NOT: the suite that READS `docs/` through a
+ *                                                     STRING is still doc-facing.
+ *   G19 the SECOND site, `toolReachesDocs`,        -> "a TOOL whose own `docs/` mention is only in
+ *       reading a tool WHOLE again (the half-         ITS comment reaches no prose…" FAILS. MUST
+ *       fix: one site patched, one left)              NOT: the tool that READS prose still makes its
+ *                                                     namer doc-facing; the comment-only suite is
+ *                                                     still NOT doc-facing.
  *
  * Every arm asserts its DOWNSTREAM failure, never merely its patch count: `hits === 1` proves a
  * patch applied, and only the named assertion proves it had an effect (M-60 Q9).
@@ -283,7 +294,36 @@ const ARMS = [
       from: "try { c = s === null ? null : stripComments(s); } catch { /* read whole */ }",
       to: "try { c = s === null ? null : stripComments(s).replace(/\"[^\"\\n]*\"/g, \"\\\"\\\"\"); } catch { /* read whole */ }" }],
     mustBreak: "a suite that READS the file through a STRING path is selected",
-    mustNotBreak: ["a suite whose OWN COMMENT is its only mention of the file is NOT selected"] },
+    /* M0-143 put the doc-facing selector under this same `codeOf`, so blanking strings takes its string
+       readers with it — declared here rather than discovered, and it is why that arm reads MUST-BREAK. */
+    alsoBreak: ["a suite that READS `docs/` through a STRING is doc-facing",
+                "the doc-facing battery set is EXACTLY this"],
+    mustNotBreak: ["a suite whose OWN COMMENT is its only mention of the file is NOT selected",
+                   "...and a suite whose ONLY `docs/` mention is in a COMMENT is NOT doc-facing"] },
+
+  { id: "G18", title: "the DOC-FACING selector reading a suite's own files WHOLE again — break M0-143's fix at `docFacing`",
+    patches: [
+      { file: GATES,
+        from: "    const src = codeOf(join(REPO, dir, f)) ?? \"\";",
+        to: "    const src = textOf(join(REPO, dir, f)) ?? \"\";" },
+      { file: GATES,
+        from: "    const ctrlSrc = (existsSync(ctrl) ? codeOf(ctrl) : \"\") ?? \"\";",
+        to: "    const ctrlSrc = (existsSync(ctrl) ? textOf(ctrl) : \"\") ?? \"\";" }],
+    mustBreak: "...and a suite whose ONLY `docs/` mention is in a COMMENT is NOT doc-facing",
+    alsoBreak: ["...and a suite that names that same tool only in a COMMENT is NOT",
+                "the doc-facing battery set is EXACTLY this"],
+    mustNotBreak: ["a suite that READS `docs/` through a STRING is doc-facing",
+                   "a suite that names a doc-READING tool in CODE is doc-facing"] },
+
+  { id: "G19", title: "the SECOND site, `toolReachesDocs`, reading a tool WHOLE again — the half-fix",
+    patches: [{ file: GATES,
+      from: "    const src = codeOf(join(REPO, \"tools\", name));\n    if (src === null) { memo.set(name, false); return false; }",
+      to: "    let src = \"\";\n    try { src = readFileSync(join(REPO, \"tools\", name), \"utf-8\"); } catch { memo.set(name, false); return false; }" }],
+    mustBreak: "a TOOL whose own `docs/` mention is only in ITS comment reaches no prose",
+    alsoBreak: ["the doc-facing battery set is EXACTLY this"],
+    mustNotBreak: ["a suite that names a doc-READING tool in CODE is doc-facing",
+                   "...and a suite whose ONLY `docs/` mention is in a COMMENT is NOT doc-facing",
+                   "a suite that READS `docs/` through a STRING is doc-facing"] },
 ];
 
 /* ---------------------------------------------------------------- D-331: every anchor, before anything arms */
