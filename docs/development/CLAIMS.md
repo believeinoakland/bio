@@ -20159,3 +20159,34 @@ is shared ground and several UI workers may be live in it (`kickoffs/UI.md`).
   `vera (completeness, for the case)`.
 
 Discharges **DELEGATION 2026-09-24 RECORD (REC-212) -> UI** (above): its own block carries the discharge.
+
+## CLAIM 2026-09-24 UI (UI-97 — a member can UNDO a mute from the app: the queue's own mute report carries the two unmute controls `op=queuemute` already takes)
+
+session: WORKER UI-97 spawned 2026-09-24 ~21:15Z by SCHEDULER #19 under BOB #33's 21:10Z dispatch (cloud session),
+worktree `/home/user/bio`, branch `land/worker/UI-97`, from `origin/main` @ `1a7f0bcc0`.
+authority: `QUEUE.md` `### UI-97 · running`; design `docs/development/NOTIFICATIONS.md`
+§"MARKED AS HANDLED — and handling has a SCOPE, which differs by class" (DEC-10's (b) and (c); D-125; D-170).
+I3 CONSUMER only — no op changes, no interface change: `op=queuemute` has taken `unmute: true` in BOTH forms
+since D-125 and no client sent it.
+
+paths, BY SITE — `civicos-ui/app.html` is shared ground and several UI workers may be live in it (`kickoffs/UI.md`):
+  - `civicos-ui/app.html`, the QUEUE screen, FOUR SITES ONLY: the body of `queueMuteReportHtml`; the NEW
+    functions `queueUnmuteItem` and `queueUnmuteCase` directly below it; and the `queueWire` bindings for
+    `data-unmuteitem` / `data-unmutecase`.
+    **NOT TOUCHED:** `queueMuteHtml`, `queueMuteCase`, `queueItemMuteHtml`, `queueMuteItem`,
+    `queueMutableItem` / `queueMutableKinds` (UI-86's class predicate — one predicate decides both forms),
+    `queueGroupHtml`, `queueItemHtml`, `queueEntryControlsHtml`, `queueSelBarHtml`, `queueNotices`,
+    `queueFeedHtml`, every `SURFACES` key, every router, every `DEC-49 REGION` marker, every act dialog.
+  - `civicos-ui/test/notifications.test.mjs` — §2 EXTENDED with the unmute arms, and the mock plane's
+    `op=queuemute` branch taught D-125's `unmute` (it mirrored the mute half only).
+  - `civicos-ui/test/member-respect.test.mjs` — ONE new `SETS` row, `queueMuteReportHtml` (the report's
+    controls become a repeated control the day they are drawn; ARM 4b fails on an unclassified site).
+  - NEW `civicos-ui/test/queue-unmute.test.mjs` and `civicos-ui/test/queue-unmute.control.mjs` — the
+    accepts-when is "against the real plane", and `notifications.test.mjs`'s own fixture rule is that nothing
+    is drawn at runtime, so the miniflare round trip is its own suite rather than a contradiction inside that one.
+  - `docs/development/NOTIFICATIONS.md` — front matter Status and the §"MARKED AS HANDLED" Incomplete entry,
+    whose own words are that UNMUTE "has NO surface".
+  - `docs/architecture/construct-status.json` — construct 12, a new `12.unmute` claim.
+  - `docs/development/CIVICOS_UI_STATE.md` (prepend one entry).
+
+**open as of 2026-09-24** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.
