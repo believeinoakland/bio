@@ -10183,6 +10183,72 @@ export class Store extends DurableObject {
     return { ok: true, existed: false, grantId: g.grant_id, revokedBy: a.who, revokedAt: when };
   }
 
+  /* REC-200 / BOB #32's ruling of 2026-09-23 23:08Z on `BIO_Publication_v0_1.md` §6A.3 point 1 — THE COPY
+     CARRIES THE DATE OF ITS LAST CHANGE, AND A COMMENT THAT MOVES THE HASH MOVES THE DATE.
+
+     WHAT WAS WRONG. REC-148 took DEC-31's in-band date from the draft's `updated_at`, which is the date of
+     the last EDIT and not of the last CHANGE: a comment is carried in these bytes, so it moves the hash,
+     and the copy went on stating the older date. A rendering that leaves the instance would then carry a
+     hash of one moment under the date of another — the record claiming more than it can support, which is
+     the defect this construct exists to refuse.
+
+     WHAT THE DATE IS. The newest DATED ACT these bytes carry, and only those they carry: this draft's own
+     last edit, a comment served in `comments`, a grant served in `grants` (or the recipient's own grant)
+     with its issue and its revocation, and an acknowledgement served in `statement_acknowledgements`. It is
+     computed over the rows SERVED, not over the rows that exist, so the invariant is exact in both
+     directions: an act beyond the list cap moves neither the hash nor this date.
+
+     WHAT IT CANNOT SEE, STATED HERE AND IN THE ANSWER'S OWN WORDS RATHER THAN LEFT TO BE FOUND. A review
+     copy also draws material this record dates NOWHERE in these bytes: each finding's text, read live from
+     the bundle; the publish gates' verdict, recomputed at every read; and the project's declared floors.
+     Any of the three can move the hash without moving this date. Naming them is the honest scope of the
+     rule, and closing them would take a dated fact the answer does not hold.
+
+     TIES AND SHAPES, AND WHY THIS IS NOT A STRING COMPARE. The record holds TWO SPELLINGS of an instant:
+     a draft edit, a comment and a grant are stamped `new Date().toISOString()` (with milliseconds), and an
+     acknowledgement is stamped with the milliseconds cut off (`acknowledgeStatement`). Sorted as STRINGS
+     those two spellings rank WRONG inside one second — `…:00Z` sorts after `…:00.123Z`, because `Z` is
+     above `.` — so candidates are ranked by `Date.parse`, and anything unparseable is not ranked at all
+     rather than sorted as zero. Equal instants keep the FIRST candidate in the order above (edit, comment,
+     grant, acknowledgement), which is the order the answer itself presents them in.
+
+     THE AUTHOR DOES NOT MOVE WITH IT, and that is a decision rather than an oversight: BOB #32 ruled on the
+     DATE. The quartet's `author` stays the draft's `updated_by` — a recipient who comments on a copy has
+     not authored it — and `by` here says who made the last change, so the two facts are told apart instead
+     of one name standing for both. */
+  static #reviewLastChange({ draft, comments, grants, acknowledgements }) {
+    const cand = [];
+    const add = (at, by, byKind, kind) => {
+      if (typeof at === "string" && at && !Number.isNaN(Date.parse(at)))
+        cand.push({ at, by: by ?? null, by_kind: byKind, kind });
+    };
+    add(draft.updated_at, draft.updated_by, "member", "edit");
+    for (const c of comments)
+      add(c.at, c.author_kind === "recipient" ? c.recipient : c.author,
+          c.author_kind === "recipient" ? "recipient" : "member", "comment");
+    for (const g of grants) {
+      add(g.issued_at, g.issued_by, "member", "grant");
+      add(g.revoked_at, g.revoked_by, "member", "revocation");
+    }
+    for (const a of acknowledgements)
+      add(a.at, a.kind === "recipient" ? a.recipient : a.by,
+          a.kind === "recipient" ? "recipient" : "member", "statement acknowledgement");
+    let last = null;
+    for (const c of cand) if (!last || Date.parse(c.at) > Date.parse(last.at)) last = c;
+    const act = !last ? "UNDETERMINED: these bytes carry no dated act at all"
+      : `the newest dated act these bytes carry is ${last.kind === "edit" ? "an edit of the draft"
+          : `a ${last.kind}`} by ${last.by ?? "somebody this record does not name"}`;
+    return {
+      at: last ? last.at : null, by: last ? last.by : null,
+      by_kind: last ? last.by_kind : null, kind: last ? last.kind : null,
+      stated: `${act}. THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md §6A.3 point 1, as `
+            + `BOB #32 ruled it on 2026-09-23): the copy's LAST CHANGE, so a comment, a grant, an `
+            + `acknowledgement or an edit moves both the hash and this date. IT DOES NOT SEE what this copy `
+            + `draws live and dates nowhere — each finding's text, the publish gates' verdict, and the `
+            + `project's declared floors — any of which can move the hash without moving this date.`,
+    };
+  }
+
   /* THE READ. Two doors and one answer for everyone else: a RECIPIENT through a live
      grant's secret (and only the draft that grant names), or a MEMBER with standing
      in the producing project — D-15's predicate, as `#hasCaseStanding` asks it.
@@ -10251,6 +10317,31 @@ export class Store extends DurableObject {
         live: !g.revoked_at && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition }));
       grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
+    /* D-150 / §3 rule 11: who has acknowledged the statement AS IT STANDS NOW — the same read
+       `op=publish` lists in the case document, so a reviewer sees the list the document would print
+       (less the publisher's own, which the act leaves out). An edited statement starts empty. READ HERE
+       rather than inside the answer (REC-200) because the last-change date is taken from the rows this
+       answer SERVES, this list among them; the served value is unchanged. */
+    /* REC-194 / §3 rule 13: THE DRAFT IS PASSED, because for a draft naming no case the draft IS the
+       identity the reading was given for. Without it this read matched every same-sentence reading in
+       the project at edition 1 — another draft's included.
+       AND THE SIXTH ARGUMENT IS `writer`, NOT the draft — the union of REC-194 and REC-212 put a
+       parameter between them, and passing six positionals here would have bound `d.draft_id` to
+       `writer`, which is a member handle: every participant row would have been withheld as the
+       writer's own and the review copy would have shown an EMPTY list to a reader whose whole
+       purpose is seeing who has read the statement. `writer` is NULL here on purpose (REC-212: not
+       asked) — the review copy is the LIVE list, shown before any act decides what a document may
+       print. (Composed at c20-batch26 by CONDUCT #20: REC-200 hoisted this read out of the return
+       with the pre-REC-194 four arguments; the hoisted read carries REC-194's.) */
+    const acks = this.#statementAcknowledgements(d.project_id, ident.caseId, ident.edition,
+                                                 params.statement ?? "", null, null, d.draft_id);
+    const statementAcks = { statement_sha: acks.statementSha, acknowledgements: acks.rows,
+                            truncated: acks.truncated, act: "op=statementack&draft=" + d.draft_id };
+    /* REC-200: the copy's LAST CHANGE, over the rows this answer carries — the recipient's own grant where
+       that is all it carries, the roster where it carries one. */
+    const lastChange = Store.#reviewLastChange({
+      draft: d, comments, acknowledgements: statementAcks.acknowledgements,
+      grants: grantPart.grants ?? (grantPart.grant ? [grantPart.grant] : []) });
     return {
       ok: true, kind: "review-copy", marking: Store.REVIEW_MARKING, published: false,
       signature: { signed: false, detail: "a review copy is never signed. A signature is given only over a case "
@@ -10281,26 +10372,12 @@ export class Store extends DurableObject {
                   biasAcknowledgement: params.biasAcknowledgement ?? null },
       findings, gates: gates.gates, missing: gates.missing, evaluated: gates.evaluated,
       comments, comments_truncated: commentsTruncated, list_limit: cap,
-      /* D-150 / §3 rule 11: who has acknowledged the statement AS IT STANDS NOW — the same read
-         `op=publish` lists in the case document, so a reviewer sees the list the document would print
-         (less the publisher's own, which the act leaves out). An edited statement starts empty. */
-      statement_acknowledgements: (() => {
-        /* REC-194 / §3 rule 13: THE DRAFT IS PASSED, because for a draft naming no case the draft IS the
-           identity the reading was given for. Without it this read matched every same-sentence reading in
-           the project at edition 1 — another draft's included.
-           AND THE SIXTH ARGUMENT IS `writer`, NOT the draft — the union of REC-194 and REC-212 put a
-           parameter between them, and passing six positionals here would have bound `d.draft_id` to
-           `writer`, which is a member handle: every participant row would have been withheld as the
-           writer's own and the review copy would have shown an EMPTY list to a reader whose whole
-           purpose is seeing who has read the statement. `writer` is NULL here on purpose (REC-212: not
-           asked) — the review copy is the LIVE list, shown before any act decides what a document may
-           print. */
-        const a = this.#statementAcknowledgements(d.project_id, ident.caseId, ident.edition,
-                                                  params.statement ?? "", null, null, d.draft_id);
-        return { statement_sha: a.statementSha, acknowledgements: a.rows, truncated: a.truncated,
-                 act: "op=statementack&draft=" + d.draft_id };
-      })(),
+      statement_acknowledgements: statementAcks,
       updated_by: d.updated_by, updated_at: d.updated_at,
+      /* REC-200 / §6A.3 point 1 as BOB #32 ruled it: WHEN THIS COPY LAST CHANGED, and who changed it —
+         the quantity the control plane puts in the in-band quartet's `date`. `updated_at` above stays what
+         it always was, the draft's last EDIT, because they are two facts. */
+      last_change: lastChange,
       /* REC-193 / §3 rule 13: WHO WROTE THE STATEMENT THAT STANDS, beside the editor of everything else,
          because they are two facts and one column said both. `null` is the honest answer for a draft
          written before the stamp existed, and the sentence beside it says which. */
