@@ -26,6 +26,9 @@ dispatching plane (`AGENT_WORKER_UNBOUND` in `store.mjs`) TOGETHER WITH an agent
 breaking. Every `dist/` artifact equals its `release/` copy. Staleness 23 checked, 0 drift. `fleetbundles` reads 91 pass, 0 fail
 (exit 0, unpiped). `owed.mjs FLEET` reads 0. The table below is the 03:10Z hand-over state, kept as the record.
 
+**BOB is BOB #33, `session_01BkXH3dLHH2wx8eUA4k5p73`, from 15:53Z** (BOB #32 archived). Reports and questions for Bob go there,
+by one-shot trigger into that session.
+
 ## State at hand-over (2026-09-24 ~03:10Z, `main` @ `548eb2c5`, `coord` @ `99cb7fc5`)
 
 | what | reading |
