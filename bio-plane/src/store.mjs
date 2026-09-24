@@ -23157,7 +23157,37 @@ export class Store extends DurableObject {
      resolutions. With a `ref`, resolve just that reference; without one, resolve every
      reference the document's reading carries. A reference matching no entity is returned
      UNRESOLVED and honestly so -- there is no row, no force-match. */
-  async resolveReferences({ captureSha, ref = null, resolvedBy = null } = {}) {
+  async resolveReferences({ captureSha, ref = null, resolvedBy = null, items } = {}) {
+    /* D-291 (BIO_Interaction_Constructs §S, named by BOB #32's ruling of 2026-09-23 23:30Z): WITH `items`,
+       the act takes a SET of documents under D-126's PER-ITEM weight — ONE motion over a member's
+       selection, never a surface looping N calls. Every item is resolved by `#resolveOne`, the SAME code
+       the single form runs, so a document is accepted and refused by exactly the rules one sha is and a
+       retained document carries that act's own reason. `resolvedBy` (the control plane's stamp) is forced
+       onto every item; a shared `ref` is overridable per item.
+       THE CONNECTION SWEEP IS ARMED ONCE FOR THE SET, and only when an APPLIED item inserted or raised a
+       resolution — the single form's own rule (REC-5 / D-122), asked of the set rather than N times.
+       A CAPTURE IS CONTENT-ADDRESSED, so the set cannot DRIFT under the member the way a bundle
+       selection can (§S's `refuse` weight exists for that): what the member saw is what each sha names.
+       What CAN change between the sight and the act is whether a sha names a document with a reading,
+       and that is exactly what an item's own refusal (NO_SUCH_REFERENCE) reports, per item. */
+    if (items !== undefined) {
+      const set = this.#perItem("resolve", { items, ref }, { resolvedBy }, (b) => this.#resolveOne(b));
+      if ((set.items || []).some((o) => o.outcome === "applied" && (o.resolved || []).some((m) => !m.kept)))
+        await this.#armConnectionDerive();
+      return set;
+    }
+    const one = this.#resolveOne({ captureSha, ref, resolvedBy });
+    /* REC-5 / D-122: #recognise stamped every entity whose resolution was inserted
+       or raised (never a kept one). If anything was dirtied, ARM the scheduled
+       connection-derive sweep so the entity axis self-populates without a manual
+       op=connect. Producer-side only: it SCHEDULES, it never derives here. */
+    if (one.ok && one.resolved.some((m) => !m.kept)) await this.#armConnectionDerive();
+    return one;
+  }
+
+  /* D-291: op=resolve's ONE-DOCUMENT act, synchronous, shared by the single form and every item of the set
+     form. Moved out of `resolveReferences` unchanged but for the sweep, which its caller arms. */
+  #resolveOne({ captureSha, ref = null, resolvedBy = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return { ok: false, reason: "NO_SHA", detail: "a resolution is over a captured document, named by its capture sha256" };
     let refs;
@@ -23204,11 +23234,6 @@ export class Store extends DurableObject {
         for (const m of matches) resolved.push(m);
       }
     });
-    /* REC-5 / D-122: #recognise stamped every entity whose resolution was inserted
-       or raised (never a kept one). If anything was dirtied, ARM the scheduled
-       connection-derive sweep so the entity axis self-populates without a manual
-       op=connect. Producer-side only: it SCHEDULES, it never derives here. */
-    if (resolved.some((m) => !m.kept)) await this.#armConnectionDerive();
     return { ok: true, capture_sha: captureSha, references: refs.length,
              resolved_count: resolved.length, unresolved_count: unresolved.length, resolved, unresolved };
   }

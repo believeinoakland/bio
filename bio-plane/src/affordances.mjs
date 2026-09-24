@@ -2144,11 +2144,12 @@ export const NON_ACTS = {
  * what moved; `single` has no set. `per-item` is none of them: every item is tried on its own, the ones
  * the act accepts are applied, and each one it refuses is kept, carrying that act's own refusal as its
  * reason. The mechanism is `store.mjs #perItem`, and these three ops reach it when the body carries
- * `items` (a caller who sends no `items` gets the single act, unchanged).
+ * `items` (a caller who sends no `items` gets the single act, unchanged). D-291 added a FOURTH, `op=resolve`,
+ * whose items are captured documents rather than queue items (BIO_Interaction_Constructs §S).
  *
- * WHY A TABLE OF ITS OWN AND NOT ROWS IN `ACTS`: all three are NON_ACTS below for reasons that still hold
- * — a proposal disposition is keyed on a derived proposal and a task act on a task, never on a bundle's
- * state — so an `applies()` over `affordanceFacts` would have nothing to read. What a surface needs from
+ * WHY A TABLE OF ITS OWN AND NOT ROWS IN `ACTS`: all four are NON_ACTS below for reasons that still hold
+ * — a proposal disposition is keyed on a derived proposal, a task act on a task and a resolution on a
+ * capture sha, never on a bundle's state — so an `applies()` over `affordanceFacts` would have nothing to read. What a surface needs from
  * the plane is the WEIGHT (so it knows a selection is one call, not N) and the SET KEY; both are published
  * here, and `op=affordances` serves this table as `set_acts`. The bound, `PER_ITEM_MAX`, is defined HERE and
  * imported by the store (`Store.PER_ITEM_MAX`) and by the control plane, so the number a surface reads
@@ -2162,6 +2163,11 @@ export const PER_ITEM_ACTS = [
     set_key: "items", item_keys: [["id"]], shared_keys: [] },
   { id: "taskforward", label: "Forward the selected obligations", weight: "per-item",
     set_key: "items", item_keys: [["id"]], shared_keys: ["to"] },
+  /* D-291 (BIO_Interaction_Constructs §S, BOB #32 2026-09-23 23:30Z): a member's selection of captured
+     documents resolved in ONE call — each document's references run through the recogniser exactly as the
+     single act runs them, each document applied or retained with that act's own reason. */
+  { id: "resolve", label: "Resolve the selected documents' references", weight: "per-item",
+    set_key: "items", item_keys: [["captureSha"], ["captureSha", "ref"]], shared_keys: ["ref"] },
 ];
 
 export const ACT_IDS = new Set(ACTS.map((a) => a.id));

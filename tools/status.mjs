@@ -49,8 +49,11 @@ export const STATES = ["BUILT", "PARTIAL", "ABSENT", "DEFERRED", "UNDETERMINED"]
 /* The member UI's call helpers, DERIVED 2026-09-18 by matching every OPS name against
    `helper("op"` in app.html — not recalled. A new helper is a probe blind spot; the suite
    re-derives this list and fails if a helper calling an op is missing from it. */
+/* + `queueApplySet`, `queueSelFor` (D-291, 2026-09-24, from the suite's own derivation): D-126's queue selection
+   (`queueApplySet(op, …)` → `recPostR(op, …)`; `queueSelFor("taskresolve")` names an op) arrived on a base older than
+   this list's check, so the union reported them missing; added here rather than exempted. */
 export const UI_HELPERS = ["recR", "recPostR", "actAsk", "intentAsk", "intentPreflight",
-  "captureAct", "apiQ", "apiR", "api"];
+  "captureAct", "apiQ", "apiR", "api", "queueApplySet", "queueSelFor"];
 
 const cache = new Map();
 function read(repo, rel) {

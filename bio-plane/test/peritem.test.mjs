@@ -235,8 +235,12 @@ try {
   console.log("\n--- 8 · op=affordances publishes the weight ---");
   const aff = R(await GET(`op=affordances&token=t-member`));
   const sets = (aff?.set_acts || []).map((a) => [a.id, a.weight, a.set_key, a.max_items]).sort();
-  t("set_acts publishes the three ops under per-item with the store's bound", sets, [
-    ["proposedispose", "per-item", "items", 100], ["taskforward", "per-item", "items", 100], ["taskresolve", "per-item", "items", 100]]);
+  /* CORRECTED 2026-09-24 by D-291, not exempted: this read "the three ops" and listed exactly three. D-291 gave
+     `op=resolve` a set form on the SAME weight (BIO_Interaction_Constructs §S; `resolveset.test.mjs` drives it),
+     so a fourth row is correct and the old exact list would have failed a right landing. */
+  t("set_acts publishes the four ops under per-item with the store's bound", sets, [
+    ["proposedispose", "per-item", "items", 100], ["resolve", "per-item", "items", 100],
+    ["taskforward", "per-item", "items", 100], ["taskresolve", "per-item", "items", 100]]);
   const store = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
   t("STRUCTURAL: a throwing item is caught and retained under C-75.4 (not driven — see header)",
     /catch \(e\) \{\s*\/\* DEC-49 REGION is-per-item-failed \*\/\s*r = refusal\("SET_ITEM_FAILED"/.test(store), true);
