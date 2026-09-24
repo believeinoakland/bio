@@ -133,16 +133,6 @@ scope: (b) call `#retiredNotCitable` at `op=cite`, moving the `is-cite-retired` 
 accepts-when: `affordances.test.mjs` §0's spelling count moves from TWO to ONE and (b) refuses exactly as before (the measured failure it moves: two copies that can diverge silently). NEGATIVE CONTROL: restore (b)'s inline copy and §0 names it.
 added: 2026-09-24 · SCHEDULER #20 (id minted by D-444's worker).
 
-### D-536 · queued — **A READING DOES NOT CARRY ITS OWN PROVENANCE, so a re-read that returns different text is silent: nothing records the tier, the member that produced it, the pages transcribed, or a digest of the exact text classified.** FW-22's worker (finding 2, via CONDUCT #20). BOB #33 RULED YES 2026-09-24 21:25Z (cite until folded): a reading carries tier, producing member, pages transcribed and a SHA-256 of the exact text it classified; a re-read is compared to the earlier one and a disagreement is ATTRIBUTED ("tier 2 on ocr-worker returned different text for pages 3-4"); both readings are kept, neither overwrites; a reading from before this lands reads provenance UNDETERMINED, never inferred. Until it lands, M-143's rule stands (compare census runs only on tier 1 or on named documents). — owner CONTENT-PDF, then RECORD.
-order: after D-533, in product order (BOB #33, 21:25Z: *after D-533*); the record's readings becoming attributable ahead of the risk-tier feature trio (SCHEDULER #19, 2026-09-24)
-milestone: M2
-interface: I5 — the reading's provenance columns; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with BOB #33's ruling of 21:25Z, which this row FOLDS into §16 in the same landing.
-depends-on: FW-22.
-scope: record tier, producing member, pages transcribed and the text's SHA-256 on each reading; compare a re-read and attribute any disagreement; keep both; legacy readings read provenance undetermined.
-accepts-when: a re-walk of D-66's sample reports, for each document whose class moved, which tier's text changed (the measured failure it moves: a silent re-read). NEGATIVE CONTROL: drop the text digest and the attribution arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
 ### REC-218 · queued — **A CSV READING'S DIALECT IS NOT PERSISTED: FW-23 finds the delimiter and encoding by signature, and nothing keeps them on the record, so a re-read cannot say which dialect it read.** BOB #33 RULED 2026-09-24 21:55Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20): option (b), a `reading.dialect` key of its own (delimiter, encoding), persisted on the acquire document — not `container_extent`; it suits other text formats with a decoding choice. — owner RECORD.
 order: after D-536, beside the other reading-provenance row: the record stating how it read what it holds (SCHEDULER #20, 2026-09-24)
 milestone: M2
@@ -1208,3 +1198,23 @@ depends-on: none.
 scope: a live driven arm per shape. In `bio-plane/test/derivation-bounds.test.mjs`.
 accepts-when: each shape is driven past its ceiling and states `truncated`. NEGATIVE CONTROL: drop a paging LIMIT in `queueFeed`, and its live arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-441 · queued — **`tools/decided.mjs` CANNOT SEE A RULING WHOSE MARKER OPENS A LINE IN TITLE CASE: `MARKER` is uppercase only, so `decided.mjs "severance"` misses Case Making's ruling and two Bob rulings read "No RULING".** — owner M0.
+order: with the M0 instrument rows; M0-97, M0-99 and D-341, which it waited on, are done (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` §"WHAT COMPOSES THE INSTRUMENTS".
+depends-on: none.
+scope: the marker admits a title-case label arm; `**Settled by:**` stays unfiled. Extend `tools/decided.test.mjs`.
+accepts-when: the three missed rulings are found. NEGATIVE CONTROL: remove the label arm, and those rulings go unfiled by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-304 · queued — **`walkfloor.mjs`'s HEADER STATES HALF ITS LEXICAL-SCOPE BLIND SPOT: it names same-named locals in different blocks, and omits a `let` reassigned in a branch and a site reading GUARDED off a neighbour's `*Repro` key.** — owner M0 (walkfloor's owner).
+order: with the M0 instrument rows (SCHEDULER #17, 2026-09-23, LED-7 S17-4)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (an instrument states its limits), with BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *the missing statements belong in walkfloor.mjs's own HEADER; VERIFICATION.md gets no line (no budget).*
+depends-on: none.
+scope: add the two items to the header's CANNOT SEE list.
+accepts-when: the header names both. NEGATIVE CONTROL: a grep arm over the header fails by name if either is missing.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
