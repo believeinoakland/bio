@@ -23,35 +23,15 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-493 · queued — **THE TIER 1 PROBE LABELS A PERMISSION-ENCRYPTED PDF "NO-TEXT-LAYER", the scanned-page label whose comment says only OCR helps: measured false for acfr-2025 and legistar-staffrep-15579526 (unpdf decoded the latter to 13,012 chars, CPDF-5, 2026-07-31). It understates Tier 2 and overstates the OCR need in the 07-31 sizing.** Found by D-166's worker (M-127). — owner CONTENT-PDF.
-order: at the backlog head: a published figure's bucket is wrong in the direction of overclaiming a need, and the fix is small enough for tonight's window (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:41Z)
-milestone: M0 (a measurement instrument)
-interface: none.
-design: `docs/development/VERIFICATION.md` (measure; do not recall), for the Tier 1 coverage entry in `docs/development/MEASUREMENTS.md`.
-depends-on: none (D-166's probe changes ride its train; branch from `land/worker/D-166` if they are needed).
-scope: in `classify()`, before the NO-TEXT-LAYER branches, return `ENCRYPTED` when `r.byReason` has `encrypted`; an ENCRYPTED rollup line; re-state the 07-31 sizing entry's buckets with date and instrument.
-accepts-when: the two named documents classify ENCRYPTED and the rollup counts them. NEGATIVE CONTROL: drop the branch and both read NO-TEXT-LAYER, failing by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
-### M0-144 · queued — **THE DEC-49 GUARD CANNOT SEE A QUOTED KEY IN A SURFACE TABLE: `civicos-ui/check-refusal-codes.mjs` harvests keys with `/(?:^|[{,\s])([A-Z][A-Z0-9_]{2,})\s*:/g`, so a code table written with quoted keys escapes the TABLE_PRODUCERS pairing.** Latent: `app.html`'s four quoted SCREAMING keys (ACFR, GPF, CAFR, SSHSIG) are glossary terms, not codes. Found by D-482's worker. — owner M0 (UI reviews).
-order: after M0-143, with the instrument rows: a guard with a blind spot, not yet bitten (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:38Z)
+### M0-142 · queued — **`meaning-bounds.test.mjs`'s BOUND_KEY HAS NO `max`: `/^(?:limit|cap|bound|page_size|[a-z_]*_limit)$/` (line 382), so a read bounded by a `max`/`*_max` key (bounded actionquotes) is counted BARE and correct work reads unbounded.** Found by c18-batch7fix's worker; verified at 548eb2c5 by CONDUCT #20 and SCHEDULER #18. — owner M0.
+order: (held behind c20-batch11fix, SCHEDULER #18 03:47Z) after D-484, with the rows that cut gate time: an over-strict instrument fails correct work (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:37Z)
 milestone: M0
 interface: none.
-design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
-depends-on: none.
-scope: `/(?:^|[{,\s])(["']?)([A-Z][A-Z0-9_]{2,})\1\s*:/g` with `.map(x => x[2])`; over-strictness and refusal arms in `civicos-ui/test/refusal-codes.test.mjs`; glossary keys stay out of the pairing.
-accepts-when: a 3-key fixture with quoted keys returns all three. NEGATIVE CONTROL: restore the old pattern and the quoted-key arm fails by name.
+design: `docs/development/VERIFICATION.md` "The negative-control register".
+depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds.test.mjs's segmenter; CONDUCT #20 03:46Z).
+scope: add `max|[a-z_]*_max` to BOUND_KEY.
+accepts-when: actionquotes' `max` counts as a bound. NEGATIVE CONTROL: remove actionquotes' published max, and the arm names it bare.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### DIST-9 · queued — **D-260's DIST HALF HAS NO ROW: install and update do not carry the instance's organisation `ai` credential as the Worker secret `INSTANCE_AI_TOKEN`, as they carry DAEMON_TOKEN, so on every installed instance each wake says NO_INSTANCE_AI_CREDENTIAL** (`15.instance-ai-secret` ABSENT at 548eb2c5; I8 1.0.0 STABLE since IC-242). Found by DIST #6. — owner DIST.
-order: after D-484: the dependent half of a landed ruling, whose plane half (D-260) reads a secret nothing places; DIST builds it, no release until Bob asks (SCHEDULER #18, 2026-09-24; DIST #6 03:06Z)
-milestone: M8
-interface: I8 additive — the installer takes an optional operator-supplied value; the integrator classifies.
-design: `docs/architecture/BIO_Distribution_v0_1.md` §6 with `BIO_Assistant_and_AI_Roles_v0_1.md` §6 (D-260, BOB #22: *carrying that secret through install and update, as DAEMON_TOKEN is*).
-depends-on: D-260 (on `main`).
-scope: `newgroup/src/index.mjs`, `release.mjs` and `bio-plane/scripts/deploy.mjs` CARRY a value the operator supplies; never generate one (minting is a MEMBER act, DS-3); none supplied installs without it, and says so.
-accepts-when: `15.instance-ai-secret` BUILT by its probe. NEGATIVE CONTROL: have the installer generate a value when none is supplied, and the no-invention arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
 ### D-492 · queued — **D-64's RENDER ALLOWANCE CLAIMS A BOUND THE CODE DOES NOT HOLD: `renderAdmit` admits while `spent_ms < allowance`, but `renderSpend` adds the time only AFTER the Worker's render finishes, so N concurrent renders are all admitted against one `spent_ms`. The overrun is in-flight × (wait timeout 15,000 ms + navigation), not "at most one render" as its docstring says.** Diagnosed by CONDUCT #20 at `land/worker/D-64` @ b1ffb5a0. — owner CAPTURE.
 order: after DIST-9, AHEAD of D-64's other follow-ons: a correction to D-64's own claim outranks new work, and a record that claims more than it holds is the worse defect (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:25Z)
@@ -193,16 +173,6 @@ depends-on: D-462 (finished; rides the train after c19-batch9).
 scope: the same NAMESPACES set and a NAMESPACE_UNKNOWN refusal in `pdf-worker/src` and `ocr-worker/src`.
 accepts-when: `store=biosmoke` is refused NAMESPACE_UNKNOWN by name by both members. NEGATIVE CONTROL: accept the token again, and the arm reads NOT_FOUND and fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-483 · queued — **THE PLANE'S SETUP PAGE OFFERS NO RISK-TIER CHOOSER, so every action it files is `risk_tier: undetermined` (`setup.mjs`, D-182) and a member there cannot state 1, 2 or 3.** Found by UI-85's worker, optional residue. — owner RECORD (DIST reviews the installer page).
-order: after D-478, low: truthful today (it writes undetermined, never an invented tier); a missing affordance, not an overclaim (SCHEDULER #18, 2026-09-24)
-milestone: M2
-interface: none — consumes `vocabularies.risk_tiers` as published.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`risk_tier`, RULED by BOB #21: only a member's authored act sets 1, 2 or 3).
-depends-on: none.
-scope: a radio group over `vocabularies.risk_tiers` in SETUP_HTML's action arm, unset by default; unset still writes undetermined.
-accepts-when: a chosen tier is written; none chosen writes undetermined. NEGATIVE CONTROL: default the group to 1 and the unset arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### REC-193 · queued — **C-41.10's AUTHOR EXCLUSION READS THE DRAFT'S LAST EDITOR, NOT THE STATEMENT'S AUTHOR: D-150's worker used the last editor PROVISIONALLY, so a participant who edited another section could be refused acknowledging a statement they did not write, and its writer admitted.** Publication §3 rule 13 (BOB #32's ruling, folded): *the statement's author is the member who wrote the statement's CURRENT BYTES.* — owner RECORD.
 order: after REC-188, the same completeness block: a correction to just-landed work (D-150) on who may attest (SCHEDULER #17, 2026-09-23)
@@ -1265,3 +1235,43 @@ depends-on: Bob's approval of the definition edit (BOB #19 took it to him, 2026-
 accepts-when: a heartbeat run's `queued`/`running` counts equal those of `git show origin/main:docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### D-412 · queued — **THE ESTATE AUDITS EXPOSURE AND NOBODY AUDITS RESIDUE: a worktree that is registered, clean, merged and owned by no live session** … (whole text: the cut archive)
+order: with the session-hygiene instruments, after M0-84: disk is CONDUCT's binding constraint (M-80 and M-81 each measure ~286 MiB per retired tree) and this names the residue nothing reclaims; below M0-81 and M0-84, which prevent and detect a lane fault rather than a cost (SCHEDULER #5, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-398's three conditions asked of a TREE rather than a session.
+depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the repo where a suite drives it, the ACT in the harness.
+accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own … (whole text: the cut archive)
+order: behind the product rows, first of the reading-budget rows (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: an over-budget kickoff costs every RECORD spawn context, not gate time, and blocks no product; SCHEDULER #12); not a defect in the product, cheap and mechanical (SCHEDULER #2, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` with CLAUDE.md §1's reading budget — *a file is either READ WHOLE … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### CPDF-21 · queued — **`kickoffs/CONTENT-PDF.md` IS 25,863 B AGAINST THE 24,576 B READING BUDGET**, so the lane cannot read its own instructions … (whole text: the cut archive)
+order: directly after REC-154, its class and its precedent: it breaks CLAUDE.md §1's reading budget for a build lane, every CONTENT-PDF worker pays it on every spawn, and it is cheap and mechanical (SCHEDULER #6, 2026-09-21; SCHEDULER #5's handoff)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a … (whole text: the cut archive)
+depends-on: none. **Same line as REC-154** (`CUT` in `tools/readbudget.mjs`): whichever lands second re-reads the first.
+accepts-when: `node tools/readbudget.mjs` no longer warns on CONTENT-PDF.md and lists it in `CUT`; the archived text is byte-identical to what left the live file. How a liar passes it … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CPDF`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CPDF-21» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### M0-82 · queued — **NARROWED TWICE ON 2026-09-21: WHAT IS LEFT IS THE OCCUPANCY RULE AT THE INTEGRATOR'S NO-BOB FALLBACK START.** The … (whole text: the cut archive)
+order: beside REC-154, the reading-budget class, and after M0-81, which builds the occupancy judgement this rule points at (SCHEDULER #4, 2026-09-21, re-measured; placed by SCHEDULER #3, 2026-09-20)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget … (whole text: the cut archive)
+depends-on: none. Sequence after M0-81.
+accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; the kickoff states the check at the fallback start and cites BOB.md; anything cut is byte-identical in the archive.
+added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry); narrowed 2026-09-21 by BOB #19 and SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-82» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

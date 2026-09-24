@@ -311,16 +311,6 @@ scope: route each code's sites through ONE governed helper inside a DEC-49 REGIO
 accepts-when: each site's refusal carries its translation. NEGATIVE CONTROL: mint one site's code outside the helper and the DEC-49 guard fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### M0-142 · queued — **`meaning-bounds.test.mjs`'s BOUND_KEY HAS NO `max`: `/^(?:limit|cap|bound|page_size|[a-z_]*_limit)$/` (line 382), so a read bounded by a `max`/`*_max` key (bounded actionquotes) is counted BARE and correct work reads unbounded.** Found by c18-batch7fix's worker; verified at 548eb2c5 by CONDUCT #20 and SCHEDULER #18. — owner M0.
-order: after D-484, with the rows that cut gate time: an over-strict instrument fails correct work (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:37Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` "The negative-control register".
-depends-on: none.
-scope: add `max|[a-z_]*_max` to BOUND_KEY.
-accepts-when: actionquotes' `max` counts as a bound. NEGATIVE CONTROL: remove actionquotes' published max, and the arm names it bare.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
 ### M0-143 · queued — **`tools/gates.mjs` `docFacing()` MATCHES `docs/` AND `tools/<x>.mjs` AGAINST A SUITE'S RAW SOURCE, COMMENTS INCLUDED, so a comment naming a tool makes the suite doc-facing: it fails safe but over-runs suites on every prose landing.** Found by c18-batch7fix's worker; verified at 548eb2c5. — owner M0.
 order: after M0-142, the same class: gate time on every doc landing (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:37Z)
 milestone: M0
@@ -330,6 +320,46 @@ depends-on: none.
 scope: strip `//` and `/* */` comments from `src` and `ctrlSrc` before matching; strings stay.
 accepts-when: `gates.mjs --explain` on a prose diff lists fewer suites. NEGATIVE CONTROL: a suite whose only `tools/x.mjs` mention is in a comment is doc-facing before the fix and not after, named by the arm.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### D-493 · queued — **THE TIER 1 PROBE LABELS A PERMISSION-ENCRYPTED PDF "NO-TEXT-LAYER", the scanned-page label whose comment says only OCR helps: measured false for acfr-2025 and legistar-staffrep-15579526 (unpdf decoded the latter to 13,012 chars, CPDF-5, 2026-07-31). It understates Tier 2 and overstates the OCR need in the 07-31 sizing.** Found by D-166's worker (M-127). — owner CONTENT-PDF.
+order: at the backlog head: a published figure's bucket is wrong in the direction of overclaiming a need, and the fix is small enough for tonight's window (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:41Z)
+milestone: M0 (a measurement instrument)
+interface: none.
+design: `docs/development/VERIFICATION.md` (measure; do not recall), for the Tier 1 coverage entry in `docs/development/MEASUREMENTS.md`.
+depends-on: none (D-166's probe changes ride its train; branch from `land/worker/D-166` if they are needed).
+scope: in `classify()`, before the NO-TEXT-LAYER branches, return `ENCRYPTED` when `r.byReason` has `encrypted`; an ENCRYPTED rollup line; re-state the 07-31 sizing entry's buckets with date and instrument.
+accepts-when: the two named documents classify ENCRYPTED and the rollup counts them. NEGATIVE CONTROL: drop the branch and both read NO-TEXT-LAYER, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### M0-144 · queued — **THE DEC-49 GUARD CANNOT SEE A QUOTED KEY IN A SURFACE TABLE: `civicos-ui/check-refusal-codes.mjs` harvests keys with `/(?:^|[{,\s])([A-Z][A-Z0-9_]{2,})\s*:/g`, so a code table written with quoted keys escapes the TABLE_PRODUCERS pairing.** Latent: `app.html`'s four quoted SCREAMING keys (ACFR, GPF, CAFR, SSHSIG) are glossary terms, not codes. Found by D-482's worker. — owner M0 (UI reviews).
+order: after M0-143, with the instrument rows: a guard with a blind spot, not yet bitten (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:38Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
+depends-on: none.
+scope: `/(?:^|[{,\s])(["']?)([A-Z][A-Z0-9_]{2,})\1\s*:/g` with `.map(x => x[2])`; over-strictness and refusal arms in `civicos-ui/test/refusal-codes.test.mjs`; glossary keys stay out of the pairing.
+accepts-when: a 3-key fixture with quoted keys returns all three. NEGATIVE CONTROL: restore the old pattern and the quoted-key arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### DIST-9 · queued — **D-260's DIST HALF HAS NO ROW: install and update do not carry the instance's organisation `ai` credential as the Worker secret `INSTANCE_AI_TOKEN`, as they carry DAEMON_TOKEN, so on every installed instance each wake says NO_INSTANCE_AI_CREDENTIAL** (`15.instance-ai-secret` ABSENT at 548eb2c5; I8 1.0.0 STABLE since IC-242). Found by DIST #6. — owner DIST.
+order: after D-484: the dependent half of a landed ruling, whose plane half (D-260) reads a secret nothing places; DIST builds it, no release until Bob asks (SCHEDULER #18, 2026-09-24; DIST #6 03:06Z)
+milestone: M8
+interface: I8 additive — the installer takes an optional operator-supplied value; the integrator classifies.
+design: `docs/architecture/BIO_Distribution_v0_1.md` §6 with `BIO_Assistant_and_AI_Roles_v0_1.md` §6 (D-260, BOB #22: *carrying that secret through install and update, as DAEMON_TOKEN is*).
+depends-on: D-260 (on `main`).
+scope: `newgroup/src/index.mjs`, `release.mjs` and `bio-plane/scripts/deploy.mjs` CARRY a value the operator supplies; never generate one (minting is a MEMBER act, DS-3); none supplied installs without it, and says so.
+accepts-when: `15.instance-ai-secret` BUILT by its probe. NEGATIVE CONTROL: have the installer generate a value when none is supplied, and the no-invention arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
+
+### D-483 · queued — **THE PLANE'S SETUP PAGE OFFERS NO RISK-TIER CHOOSER, so every action it files is `risk_tier: undetermined` (`setup.mjs`, D-182) and a member there cannot state 1, 2 or 3.** Found by UI-85's worker, optional residue. — owner RECORD (DIST reviews the installer page).
+order: after D-478, low: truthful today (it writes undetermined, never an invented tier); a missing affordance, not an overclaim (SCHEDULER #18, 2026-09-24)
+milestone: M2
+interface: none — consumes `vocabularies.risk_tiers` as published.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`risk_tier`, RULED by BOB #21: only a member's authored act sets 1, 2 or 3).
+depends-on: none.
+scope: a radio group over `vocabularies.risk_tiers` in SETUP_HTML's action arm, unset by default; unset still writes undetermined.
+accepts-when: a chosen tier is written; none chosen writes undetermined. NEGATIVE CONTROL: default the group to 1 and the unset arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
