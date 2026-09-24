@@ -2,6 +2,7 @@
    RESULTS, RUN 2026-09-18 in worktree agent-a93cdfa0fe0f8d435 on base dd52609b (real src/index.mjs 658,971 B sha256 176cbfa2cb58…, src/store.mjs 2,604,600 B sha256 5ba1bb4b00b1…, untouched: YES): (a) baseline 92/0 · (b) cite-distinguishing 90/2 — only cite's byte-identity and never-positional arms · (c) position-first 88/4 — the positional check asked before the sight gate at `#edgeTransition`: sever's and reinstate's byte-identity AND never-positional (C-56-discloses) arms · (d) not-found-to-everyone 72/20 — every byte-identity arm stays GREEN (the lie) and the SEES-NO-ROLE and JOINED arms catch it · (e) roster-stamp-dropped 80/12 — without the control plane's viewer stamp the five roster acts disclose again (and a forged `viewer=` is believed): exactly their §1 and §2 arms · (f) promote-stamp-dropped 88/4 — fails closed, machine credentials included · (g) sight-via-redactor 92/0, the over-strictness arm. RECORDED, NOT SMOOTHED: (d) came back NOT AS DECLARED on the first run because its METHOD perturbed the fixture, and was corrected; (e) came back NOT AS DECLARED because its declaration was one row short (the stamp is also what overwrites a forged viewer), and was then REWRITTEN when the store's absent-viewer rule for the roster acts changed from fail-closed to not-asked (`Store#rosterInSight`) after the first full battery showed fail-closed breaking every suite that drives the roster straight at the store. Reasons at each arm in the driver; re-run, every arm AS DECLARED.
    RE-RUN 2026-09-18 by REC-141 in worktree agent-a12cdccbace704eb6 AFTER correcting this suite (P predicted from the plane's PROJ sequence and asserted at the mint; the fork rows send no newId; §6 CORRECTED from the KNOWN `EXISTS` to the refusal, byte-identical to a never-minted id), real src/index.mjs 660,878 B sha256 98368d9756c0…, src/store.mjs 2,636,157 B sha256 9c6222a402cc…, untouched: YES — every arm AS DECLARED: baseline 94/0 · cite-distinguishing 92/2 · position-first 90/4 · not-found-to-everyone 74/20 · roster-stamp-dropped 82/12 · promote-stamp-dropped 90/4 · sight-via-redactor 94/0 (each +2 passes: the mint-equals-prediction arm and §6's second arm).
    RE-RUN 2026-09-19 by REC-141 after BOB #16's opaque-suffix ruling (P can no longer be predicted: the never-minted reads are taken at NEVER, and §1 normalises each read's OWN id to one placeholder), real src/index.mjs 663,811 B sha256 3f4f83fdb5d6…, src/store.mjs 2,648,430 B sha256 d037f85ce689…, untouched: YES — every arm AS DECLARED: baseline 94/0 · cite-distinguishing 92/2 · position-first 90/4 · not-found-to-everyone 74/20 · roster-stamp-dropped 82/12 · promote-stamp-dropped 90/4 · sight-via-redactor 94/0. RECORDED: the first 2026-09-19 run had cite-distinguishing and roster-stamp-dropped NOT AS DECLARED only because §1's label was reworded and the driver matches it by fragment; the label was restored, and the arms then came back as declared.
+   RE-RUN 2026-09-23 by D-447 in worktree /home/user/bio (cloud) on base 02603e88 AFTER adding §7 (the ranked read) and three arms, real src/index.mjs 731,481 B sha256 c7d77e7eee13…, src/store.mjs 2,902,978 B sha256 893a1cc99c3b…, src/query.mjs 166,525 B sha256 bdeb4e9c8285… (now hashed too), untouched: YES — baseline 110/0 · cite-distinguishing 108/2 · position-first 106/4 · not-found-to-everyone 88/22 · roster-stamp-dropped 98/12 · publish-raw-bm25 103/7 (THE BRIEF'S CONTROL: the index-wide bm25() published again as `score` — the six hit-bearing digests and NO SCORE IS PUBLISHED fail BY NAME, select-all `ids` and the selection order do NOT) · order-by-index-bm25 105/5 (no score, the ORDER from the index-wide bm25() again — exactly the five orders the hidden revision flips) · tf-over-vis 110/0 (over-strictness) · sight-via-redactor 110/0: AS DECLARED. RECORDED, NOT SMOOTHED: (1) not-found-to-everyone came back NOT AS DECLARED on the first run because §7's hidden revision was iris's session, which that arm lies to — a second variable; §7 now revises by the ADMIN token and the arm is AS DECLARED. (2) promote-stamp-dropped is NOT AS DECLARED (0/1: the suite throws in its fixture, SURFACE_NO_RUN) and it is PRE-EXISTING — the same result on a clean checkout of 02603e88 with §7 absent: the arm drops the promote stamp, which REC-171's surfacing-run fixture (`surfacing-run.mjs`) needs to open its run. Routed with its fix named (create the fixture's inquiry through the store's internal door, the bias set's precedent, or open the run before arming); not changed here.
  * =========================================================================
  * REC-138 / D-426 / IC-155 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT.
  * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project, *"Not its
@@ -369,6 +370,73 @@ console.log("\n--- 6. CLOSED BY REC-141 (D-428's creation half): a CREATION nami
   t("REC-141: vera's CREATION at the hidden project's id is refused PROJECT_ID_SUPPLIED, not EXISTS", codeOf(parse(r)), "PROJECT_ID_SUPPLIED");
   t("REC-141: and it is BYTE-IDENTICAL to her creation at a never-minted id",
     { status: r.status, type: r.type, sha: sha(r.body) }, { status: f.status, type: f.type, sha: sha(f.body) });
+}
+
+/* ======================================================== 7. THE RANKED READ (D-447) */
+console.log("\n--- 7. D-447: revising a project vera cannot see moves NOTHING in vera's search answer ---");
+{
+  /* WHAT WAS WRONG, measured at the op on the unedited tree (`02603e88`, this section run before any source changed):
+     the page's `hits[].score` was `bm25(bundles_fts)`, whose IDF and average row length are statistics of the WHOLE
+     index — hidden projects included. Revising P (which vera cannot see) moved the score of EVERY one of vera's visible
+     hits for every text query, and moved the ORDER of `culvert OR levy` (and of its select-all `ids`), so a member
+     could watch a project they are not invited to change by watching their own results. The fix ranks over what the
+     viewer can see (`visibleBm25` in query.mjs) and publishes the ORDER only.
+     THE FIXTURE IS BUILT TO MOVE AN ORDER, not just a number: SHORT says `culvert` once in a short body, LONG three
+     times in a long one, OTHER says `levy` twice. Under a corpus-wide statistic the revision below (a long body full of
+     both words) re-weights the two terms and re-balances length, which is what flipped OTHER and LONG when measured. */
+  const filler = (n) => Array.from({ length: n }, (_, i) => `word${i % 97}`).join(" ");
+  const infoWith = (id, body) => infoMd(id).replace("A captured document.", body);
+  const SHORT = "INFO-2026-9447-short", LONG = "INFO-2026-9447-long", OTHER = "INFO-2026-9447-other";
+  must("SHORT", await promoteAs(ADM, SHORT, infoWith(SHORT, "culvert levy noted."), "information", "collected"));
+  must("LONG", await promoteAs(ADM, LONG, infoWith(LONG, `culvert culvert culvert ${filler(120)}`), "information", "collected"));
+  must("OTHER", await promoteAs(ADM, OTHER, infoWith(OTHER, `levy levy of funds ${filler(30)}`), "information", "collected"));
+  const QS = ["q=culvert", "q=levy", `q=${E("culvert OR levy")}`, `q=${E("culvert levy")}`,
+              `q=${E("culvert OR levy")}&mode=ids`, `q=${E("culvert OR levy")}&sort=relevance&dir=desc`,
+              `q=${E("culvert OR levy")}&limit=1&offset=1`];
+  const readAll = async (tok) => { const o = []; for (const q of QS) o.push(await RAW(`op=search&token=${tok}&${q}`)); return o; };
+  const selOrder = async () => {
+    const h = must("vera's query selection", await POST(`op=select&token=${VERA}&kind=query&q=${E("culvert OR levy")}`, {})).handle;
+    const r = parse(await RAW(`op=selection&token=${VERA}&handle=${h}`));
+    return (r?.members || r?.items || r?.ids || []).map((m) => (typeof m === "string" ? m : m.bundle_id));
+  };
+  const vBefore = await readAll(VERA), aBefore = await readAll(ADM), sBefore = await selOrder();
+  const hits0 = parse(vBefore[2])?.hits || [];
+  console.log(`  corpus: ${QS.length} searches by vera; 'culvert OR levy' answers ${hits0.length} hits: ${hits0.map((h) => h.bundle_id).join(", ")}`);
+  t("the fixture is live: vera's 'culvert OR levy' finds all three visible documents and not the project",
+    hits0.map((h) => h.bundle_id).sort(), [LONG, OTHER, SHORT].sort());
+  t("the query selection is live (floor: three members)", sBefore.length, 3);
+
+  const base = await shaOf(P);
+  /* By the ADMIN token, not iris's session: WHO revises is not the variable here, and the `not-found-to-everyone`
+     control arm lies to every member's session — a member's revision there made this fixture throw (measured). */
+  must("the hidden project is revised, heavy in both words",
+    await promoteAs(ADM, P, projectMd(P, [LEDGER, MINUTES], `culvert levy ${filler(2000)} levy levy levy culvert`), "project", "forming", base));
+  t("the hidden revision LANDED (P's sha moved)", (await shaOf(P)) !== base, true);
+  const vAfter = await readAll(VERA), aAfter = await readAll(ADM), sAfter = await selOrder();
+  /* THE WITNESS: the same searches by a credential that CAN see P do move — so the index took the revision, and the
+     byte-identity below is not an equality that cost nothing (two reads of an index nothing changed). */
+  t("the index SAW the revision: the ADMIN token's 'culvert OR levy' answer moved (it can see P)",
+    sha(aAfter[2].body) !== sha(aBefore[2].body), true);
+  QS.forEach((q, i) => {
+    t(`A HIDDEN REVISION MOVES NOTHING: op=search&${decodeURIComponent(q)} (status, content type, body, by digest)`,
+      { status: vAfter[i].status, type: vAfter[i].type, sha: sha(vAfter[i].body) },
+      { status: vBefore[i].status, type: vBefore[i].type, sha: sha(vBefore[i].body) });
+  });
+  t("A HIDDEN REVISION MOVES NOTHING: the order of a query selection's members", sAfter, sBefore);
+
+  /* THE ANSWER PUBLISHES AN ORDER AND NO SCORE (IC for D-447): a number carried on a hit is either the corpus's
+     statistic (the leak) or a derivation a reader would compare across answers. */
+  const every = [...vBefore, ...vAfter].flatMap((r) => parse(r)?.hits || []);
+  t(`NO SCORE IS PUBLISHED: none of the ${every.length} hits vera was served carries a 'score' key (floor: 20 hits)`,
+    [every.length >= 20, every.filter((h) => "score" in h).length], [true, 0]);
+  /* OVER-STRICTNESS: an order computed over the visible set is still RELEVANCE, and it is still LIVE. */
+  t("STILL RELEVANCE: the document saying 'culvert' three times ranks above the one saying it once",
+    (parse(vAfter[0])?.hits || []).map((h) => h.bundle_id), [LONG, SHORT]);
+  t("STILL RELEVANCE: descending relevance is the exact reverse of ascending",
+    (parse(vAfter[5])?.hits || []).map((h) => h.bundle_id), (parse(vAfter[2])?.hits || []).map((h) => h.bundle_id).reverse());
+  must("a VISIBLE revision", await promoteAs(ADM, SHORT, infoWith(SHORT, "culvert culvert culvert culvert culvert levy noted."), "information", "collected", await shaOf(SHORT)));
+  t("STILL LIVE: a revision vera CAN see does move vera's order (SHORT now says 'culvert' most and ranks first)",
+    (parse(await RAW(`op=search&token=${VERA}&q=culvert`))?.hits || []).map((h) => h.bundle_id), [SHORT, LONG]);
 }
 
 } catch (e) {

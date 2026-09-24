@@ -164,8 +164,13 @@ dormant. Do NOT invent I2 up front; build the extractor, then propose I2 from wh
 it actually emits, exactly as I1 was written from the code as it stands. Settle
 registration with ARCH (ARCH answers for the dormant consumer, in writing).
 
-**(5) Live-verify only once the op is wired**, in a `biosmoke-pdf` scratch
-namespace — never the real record — and sweep after. A deploy verified is not a
+**(5) Live-verify only once the op is wired**, in the instance's `scratch`
+namespace — never the real record — naming `store=scratch` on EVERY call (`CLAUDE.md`
+§5, D-325), with the record's counters read before and after as the witness, and
+sweep after. CORRECTED 2026-09-23 by D-456: this step named a `biosmoke-pdf` scratch
+namespace, which has never existed — an instance has exactly two namespaces, `bio`
+and `scratch` — and until D-456 the plane answered that name from the REAL record.
+It is now refused by name (`NAMESPACE_UNKNOWN`, C-78.1). A deploy verified is not a
 build serving: confirm which build answered before believing a probe (D-108).
 
 **(6) Close out.** Land green via `land/<lane>/<topic>`; hand any plane release to

@@ -261,11 +261,16 @@ prepend.
 
 New, and each addresses a specific way parallel sessions break:
 
-- **One instance per area.** `biosmoke-capture`, `biosmoke-pdf`, and so on. Two
-  sessions sharing `scratch` destroy each other's probes: this session purged
-  `scratch` three times on 2026-07-31 and a concurrent session would have lost
-  its verification mid-flight. The installer already makes sovereign instances
-  trivially, so this costs almost nothing and dogfoods the distribution model.
+- **One instance per area — PROPOSED, NEVER BUILT.** `biosmoke-capture`, `biosmoke-pdf`, and so on were
+  meant to be separate INSTALLED INSTANCES (Workers), not namespaces. Two sessions sharing `scratch`
+  destroy each other's probes: this session purged `scratch` three times on 2026-07-31 and a concurrent
+  session would have lost its verification mid-flight. CORRECTED 2026-09-23 by D-456: no such instance
+  exists — the account's Workers, read that day through the Cloudflare API, are `agent-worker`,
+  `biosmoke7`, `civicos`, `newgroup`, `ocr-worker` and `pdf-worker` — and the names were read as
+  `store=` NAMESPACES, which the plane answered from the REAL record. An instance has exactly two
+  namespaces, `bio` and `scratch`; any other `store=` is now refused by name (`NAMESPACE_UNKNOWN`,
+  C-78.1). Until an area instance is actually installed, verify in `biosmoke7`'s `scratch`, naming
+  `store=scratch` on every call.
 - **Per-area debt IDs.** `D-CAP-14`, `D-PDF-3`. Numeric ranges run out and get
   confusing; a shared counter collides constantly at four sessions. Existing
   `D-nnn` numbers stay as they are and are not renumbered.
