@@ -1,6 +1,6 @@
 # CONDUCT-NEXT — the resume prompt for CONDUCT #21, in cloud Claude Code
 
-> Written by CONDUCT #20 (session_011PzZW1FSobMne4cYeAYWfU) 2026-09-24; rewritten 18:58Z at the 75% refresh line, before the 19:20Z train.
+> Written by CONDUCT #20 (session_011PzZW1FSobMne4cYeAYWfU) 2026-09-24; kept current at every train; last 18:58Z, before the 19:20Z train.
 > Everything below is on `origin` (main, coord, land/*). Where the tree disagrees with a line here, the tree is right.
 
 ## 1. RE-MEASURE BEFORE ACTING
@@ -24,26 +24,23 @@ No timers; act on messages. CAP (Bob via BOB #33 18:24Z): 14 live workers + DIST
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (18:58Z, measured) — read the tree; these are pointers. Addresses: BOB #33 session_01BkXH3dLHH2wx8eUA4k5p73 · SCHEDULER #19
+## 4. STATE (19:13Z, measured) — read the tree; these are pointers. Addresses: BOB #33 session_01BkXH3dLHH2wx8eUA4k5p73 · SCHEDULER #19
 session_01KJoJnoXN6d5CyZsiw8KTKa (confirm each with get_session before binding; both lanes refresh).
-- #20 CROSSED 75% CONTEXT at 18:55Z (753,618 / 1M). No new work taken; successor asked of BOB. #20 sees the in-flight train through.
-- MAIN = e9b21be6 (batch21). IN FLIGHT: land/conduct/c20-batch23 @ b0443650, trained ~19:20Z by #20's background launcher
-  (log: #20's scratchpad train23.log). It CONTAINS c20-batch22 @ bece63ad. Together they carry: D-497 D-499 D-500 D-501 D-502 D-507
-  D-508 D-509 M0-159 M0-164 (+M0-140) M0-165 REC-211 REC-212 UI-92 and land/scheduler19/cache-20-on-m0140 @ e50104ef (CACHE_ROWS 20).
-  Resolved on it: I3 91.0.0 (IC-270 89.2, IC-271 89.3, IC-272 MAJOR 90, IC-273 MAJOR 91), I5 3.10.0 (IC-268), I1 1.11.0 (IC-275),
-  CATALOG 1.25.0 = 457 checks (d470 row from the suite's print), census 219 ops/116 tables. C-82.6/C-82.7 translations generalised
-  at the union (REC-212 made D-507's words false) — words with BOB #33 to confirm.
-- IF THE TRAIN LANDED (`git merge-base --is-ancestor b0443650 origin/main`): archive, under D-398 (tip an ancestor of main,
-  nothing unpushed), the workers of D-497 D-499 D-500 D-501 D-502 D-507 D-508 D-509 M0-159 M0-164 M0-140 M0-165 REC-211 REC-212
-  UI-92 (session ids: list_sessions, title "WORKER <ID> (CONDUCT #20)"); then run M0-140's coord write from m0140/coord-write @
-  ee12ecc7 (its README has the command; --delete DEBT.md); report rows + sha to SCHEDULER #19 and BOB #33.
-  IF IT WAS REFUSED: read the log's named assertion, fix on c20-batch23 (never force-push), re-run.
-- RUNNING (worker rows): REC-194 (must merge D-507), M0-160, M0-173, D-492 (render.mjs; D-499 also edits it — keep both), D-490,
-  D-491, D-480, D-472, D-511, D-510, M0-169 · DIST-11/DIST-13 (DIST's own). Reports waiting: none at 18:58Z. Queued: none.
-- Finished but NOT integrated: none at 18:58Z.
-- Pending BOB: D-500's ms-watermark (I3), M0-155's scratch-pen doctrine (M0-172), C-82.6/7 words, REC-211's §8.2 fold.
-- Merge helpers #20 used (scratchpad, not in the tree): csmerge.py (construct-status by claim OBJECT), hmerge.py (diff3 prose hunks by
-  words). A side that pretty-prints construct-status must be merged by object, never by line.
+- #20 is LIVE (live context ~24%). CAUTION: get_session's context_usage.used_tokens COUNTS PAST THE COMPACTION BOUNDARY (read
+  753,618 = 75.4% while the live window was ~24%) — never refresh on that figure alone.
+- MAIN = e9b21be6 (batch21). TRAIN ~19:20Z (#20's background launcher; log: #20's scratchpad train23.log) carries
+  land/conduct/c20-batch24b @ 1ab3c839 (contains c20-batch23 @ 5ff1b9b2 and c20-batch22 @ bece63ad) + land/bob/batch-0924c @ 1b323110.
+  c20-batch24 @ 3d0d0529 is SUPERSEDED by 24b (same trees; 24b adds Dropped-from-branch trailers mergecarry needed) — never train it.
+  Rows carried: D-480 D-492 D-497 D-499 D-500 D-501 D-502 D-507 D-508 D-509 M0-159 M0-160 M0-164 (+M0-140) M0-165 REC-211 REC-212
+  UI-92 + cache-20-on-m0140. I3 91.1.0, I5 3.11.0, I1 1.11.0, CATALOG 1.25.0 (457), census 219/116.
+- IF IT LANDED (`git merge-base --is-ancestor 1ab3c839 origin/main`): archive under D-398 the workers of those rows; run M0-140's
+  coord write from m0140/coord-write @ ee12ecc7 (README; --delete DEBT.md); report rows + sha to SCHEDULER #19 and BOB #33.
+  IF REFUSED: read the named assertion, fix on a NEW branch (never force-push), re-run.
+- WORKING (15): REC-194 M0-173 D-490 D-491 D-472 D-511 D-510 M0-169 D-518 M0-178 D-476 FW-22 FW-23 D-463 D-475. DIST-11/13 are DIST's.
+  Bob 18:50Z via BOB: 16 WORKING is the target; at EVERY wake spawn first when rows are queued. None queued at 19:13Z (SCHEDULER asked).
+- Pending BOB: D-500 ms-watermark (I3), M0-155 pen doctrine (M0-172), C-82.6/7 generalised words, REC-211's §8.2 fold.
+- Coord writes from a main-based worktree are REFUSED (LC-ledger P3: cache 20 > 16) until CACHE_ROWS 20 lands; write from a
+  batch23+ worktree meanwhile.
 
 ## 5. CAP AND CADENCE (Bob via BOB #32 15:45Z): at most 16 live worker sessions. TRAIN at least every 2 HOURS whenever gated
 land/* branches wait (sooner when a batch is ready); BOB's stall probe alarms after 120 min without a landing while branches wait. Refresh at 75% context.
