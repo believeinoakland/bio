@@ -1,0 +1,16 @@
+{
+ "unit": "ui:agent-surfaced-inquiry.test.mjs",
+ "inputHash": "3a57bbcd5ea9ebce81b85650bcf76168153f2ffde2846ba90ef66db912ec2ffd",
+ "verdict": "PASS",
+ "run": "6c4a52ac93471defa158a5999caa5e575a686822.1790216376740.20490.json",
+ "tree": "6c4a52ac93471defa158a5999caa5e575a686822",
+ "head": "50425724685a6e063ff49d5a186a934b4070e635",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "DOCS",
+ "inputs": 272,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "5684be10-4191-5653-aa3c-40b54f969bb3",
+ "at": "2026-09-24T02:19:36.752Z"
+}
