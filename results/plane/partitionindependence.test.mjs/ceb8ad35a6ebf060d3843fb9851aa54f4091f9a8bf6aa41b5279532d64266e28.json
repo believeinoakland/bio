@@ -1,0 +1,16 @@
+{
+ "unit": "plane:partitionindependence.test.mjs",
+ "inputHash": "ceb8ad35a6ebf060d3843fb9851aa54f4091f9a8bf6aa41b5279532d64266e28",
+ "verdict": "PASS",
+ "run": "bb78932658e448cbc129d1d419823285f8d1069d.1790288721267.1448.json",
+ "tree": "bb78932658e448cbc129d1d419823285f8d1069d",
+ "head": "d72e0a2b597fdfb0cb332f04d01ff7989ed78747",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 134,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "fb6b6a9f-7051-5363-9afe-7fea105b8632",
+ "at": "2026-09-24T22:25:21.279Z"
+}
