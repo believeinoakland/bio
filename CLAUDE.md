@@ -137,9 +137,9 @@ design, doctrine, anything for Bob → BOB) and continue.
 - **Correct superseded tests, never exempt them**, with a comment saying why the old assertion was wrong.
 - **Test through the op, and verify live** in your own instance's scratch namespace, swept after; a
   store-level test is not evidence a caller can reach the feature. **NAME `store=scratch` ON EVERY CALL — the namespace is
-  not fenced for you** (D-325, 2026-09-19, at `index.mjs scopeFor`): only PROBE is confined; every other class, ADMIN
-  included, lands in `bio` when it asks and when it says nothing. `scopeFor` honours `store=scratch` from ANY class,
-  so the binding exists per CALL and an instrument omitting it addresses the REAL record. A live verification's
+  not fenced for you** (D-325, `scopeFor`): PROBE alone is confined, and not on public ops; any other class lands in
+  `bio` unless the call names scratch. Public ops but invitelook/enroll/instancegroup REFUSE `store=scratch`
+  (NAMESPACE_PINNED, D-461): verifying them live touches the real record. A live verification's
   no-write guarantee is the naming plus the WITNESS — the record's counters read before and after every arm — never a
   plane fence. RESIDUE: no credential binds to scratch for life; a sticky confinement is RECORD's and is NOT built. **A deploy verified is not a build
   serving**: rollout is per-isolate — if a live probe contradicts the suite, establish which build answered.
