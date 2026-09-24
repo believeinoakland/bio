@@ -1,0 +1,16 @@
+{
+ "unit": "plane:meaning-bounds.test.mjs",
+ "inputHash": "7f1968838db7c873970f8d3949e9d1dffc7cb5c8e1c205b7e0a98cc5a93dce9c",
+ "verdict": "PASS",
+ "run": "12ae71a64ac64159282b4809bed5165dccfb40b8.1790289104000.1035.json",
+ "tree": "12ae71a64ac64159282b4809bed5165dccfb40b8",
+ "head": "e5aa15f300f23dad77ce3b2b1caae3c645e3c0af",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 989,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "0a30440d-8820-5562-8b42-cd69fd445133",
+ "at": "2026-09-24T22:31:44.011Z"
+}
