@@ -478,7 +478,11 @@ const SHARED_FINDING = `FINDING::${PKEY}::filed`;
   + "guard that makes the next arm a measurement rather than a coincidence",
     [before !== null, homesOf(before).includes(A), homesOf(before).includes(B)],
     [true, true, true]);
-  const act = await dispose({ key: `${PKEY}::filed`, to: "dismissed",
+/* CORRECTED 2026-09-24 (REC-211): the act now binds the definition version the member READ and
+   refuses one that names none (NO_DEFINITION_VERSION) — so this call names the version standing for
+   its fixture. The assertion's subject is unchanged; what was wrong in the old call is that it was
+   admitted at all (BOB #32, framework 8.2). */
+  const act = await dispose({ key: `${PKEY}::filed`, to: "dismissed", definitionVersion: 1,
     reason: "the filing predates the record and is not obtainable" });
   t("the FIRST key shape is unchanged and still accepted, keyed on the pair and naming no "
   + "project at all",

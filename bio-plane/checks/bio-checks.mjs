@@ -10378,6 +10378,65 @@ export const ACT_SHAPE_CHECKS = {
       + 'public, say who holds it and how it was seen, which is still an address and is still '
       + 'checkable.',
   },
+  /* -------------------------------------------------------------------------
+     REC-211 / IC-273 — A DISPOSITION BINDS THE DEFINITION VERSION THE MEMBER
+     SAW, AND THESE ARE THE TWO REFUSALS THAT MAKE THAT ENFORCEABLE.
+
+     BOB #32 ruled it on 2026-09-24 (~03:14Z), on REC-184's own worker's finding:
+     *"a disposition binds the definition version the member SAW: the act carries
+     definitionVersion; if the definition has moved since, it is refused
+     DEFINITION_MOVED by name, and the member re-reads and acts again. Authored
+     acts bind what was authored."* Home: `BIO_Content_Framework_v0_10.md` §8.2,
+     "The declared flow, and its revisions".
+
+     WHY REC-184 DID NOT ALREADY CLOSE IT, and this is the part worth reading
+     before touching either row. REC-184 stamps `proposal_dispositions.definition_version`
+     from the STORE at the moment the write arrives, never from the caller — which
+     is right for authorship and is exactly what makes the remaining hole
+     invisible. A member reads the question at version 3, a revision lands, the
+     member decides: the row is stamped 3+1, the read half compares the stamp
+     against the current version, finds them equal, and publishes `applies: true`.
+     The record then says a member judged a declared flow they never read, and
+     says it with no mark of doubt anywhere. That is the record claiming more than
+     it can support (CLAUDE.md §2), and no read-side rule can recover it, because
+     the two numbers it has to compare are the same number.
+
+     SO THE ACT CARRIES WHAT THE MEMBER SAW, AND THE STORE COMPARES. Two
+     conditions, and they are two rows rather than one because they are two
+     different facts about the request and DEC-49 gives one code one sentence:
+     C-33.42 is *this act does not say which version it judged*; C-33.43 is *it
+     says one, and it is not the version standing now*.
+
+     C-33.43's TRANSLATION DOES NOT SAY "REVISED SINCE YOU READ IT" although that
+     is the case it exists for. The plane knows only that the named version is not
+     the current one; a caller naming a version that never stood reaches the same
+     line, and a sentence asserting a revision would be the plane inventing the
+     reason. It says what is true of every route in — the version named is not the
+     one standing — and the refusal carries both numbers beside it.
+
+     NEITHER ROW REACHES THE JUDGMENT-LAYER ARM. `op=proposedispose`'s second key
+     shape ({project, finding}) ages a finding in one team's feed and no declared
+     flow governs it, so there is no version to name and nothing here to ask.
+     ------------------------------------------------------------------------- */
+  NO_DEFINITION_VERSION: {
+    check: 'C-33.42',
+    where: 'src/store.mjs proposeDispose > is-dispose-version-named',
+    translation: 'Setting aside one of the record\'s own questions is a decision about the way a '
+      + 'body is said to work — and that description is written down, dated, and rewritten when the '
+      + 'group learns better. This request does not say which of those versions you were reading '
+      + 'when you decided, so the record cannot say what you actually judged. Open the question '
+      + 'again and send the version shown beside it. Nothing was recorded.',
+  },
+  DEFINITION_MOVED: {
+    check: 'C-33.43',
+    where: 'src/store.mjs proposeDispose > is-dispose-version-current',
+    translation: 'The version of the declared flow this decision names is not the one standing now. '
+      + 'Rather than file your decision against a description you did not read, the record keeps it '
+      + 'out and asks you to look again: read the question against the version in force and decide '
+      + 'again. The answer may well be the same one, and it will then be yours. Both versions are '
+      + 'named beside this message, the earlier one still reads back in full, and nothing was '
+      + 'recorded.',
+  },
 };
 
 /* =========================================================================
@@ -13724,17 +13783,25 @@ export const STATEMENT_ACK_CHECKS = {
   STATEMENT_ACK_BY_ITS_AUTHOR: {
     check: 'C-82.6',
     where: 'src/store.mjs acknowledgeStatement > is-statement-ack-by-its-author',
-    translation: 'You wrote this statement. An acknowledgement means a second person has read what the case '
-      + 'leaves out, so it has to come from someone else: another participant in the project, or a reader '
-      + 'given a review copy. The case can be published without one, and will say so.',
+    /* CONDUCT #20 at c20-batch23: REC-212 sends a SECOND person through this code — the member who PUBLISHED the
+       case, who did not write its statement (§3 rule 13) — and the D-507 sentence told them "You wrote this
+       statement", which is false of them. Generalised at the union to be true of both; the words go to BOB #33,
+       who approved the originals, to confirm or replace. */
+    translation: 'You wrote this statement or published this case, so you have already read it. An acknowledgement '
+      + 'means a second person has read what the case leaves out, so it has to come from someone else: another '
+      + 'participant in the project, or a reader given a review copy. The case can be published without one, '
+      + 'and will say so.',
   },
   STATEMENT_ACK_AUTHOR_UNDETERMINED: {
     check: 'C-82.7',
     where: 'src/store.mjs acknowledgeStatement > is-statement-ack-author-undetermined',
-    translation: 'This draft does not record who wrote its statement, because it was written before the '
-      + 'system kept that record, so it cannot tell whether you are its author. Ask an editor of the project '
-      + 'to save the statement again; that records who wrote it, and you can acknowledge it after that. The '
-      + 'case can be published either way.',
+    /* CONDUCT #20 at c20-batch23: REC-212 reaches this code from a CASE DOCUMENT that states its writer could not
+       be established, where "this draft" and "ask an editor to save it again" are both false. Generalised at the
+       union to name both routes; to BOB #33 with the other. */
+    translation: 'The record does not say who wrote this statement, so it cannot tell whether you are its author. '
+      + 'For a draft, ask an editor of the project to save the statement again; for a published case, it can be '
+      + 'published again from a draft that records who wrote it. You can acknowledge it after that. The case can '
+      + 'be published either way.',
   },
 };
 

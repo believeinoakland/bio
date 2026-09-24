@@ -78,14 +78,24 @@ const edit = (file, needle, replacement) => {
 
 /* ---- the needles, each quoted from the tree; an arm whose needle has gone stale THROWS rather than
    silently arming nothing, which this project calls a finding in its own right. ---- */
+/* RE-QUOTED at c20-batch23 (CONDUCT #20): REC-212 widened this site's condition (the publisher's second
+   exclusion) and its sentence inside the same region; the needle is the union's code, the arm unchanged. */
 const AUTHOR_BLOCK = `    /* DEC-49 REGION is-statement-ack-by-its-author */
-    if (kind === "participant" && statementAuthor && by === statementAuthor)
+    if (kind === "participant" && ((statementAuthor && by === statementAuthor)
+                                   || (blockAuthor && by === blockAuthor)))
       return refusal("STATEMENT_ACK_BY_ITS_AUTHOR",
-               \`you wrote this statement, and its acknowledgement is a SECOND person's reading of what \`
-                     + \`the case leaves out (BIO_Publication §3 rule 11). Ask a participant of this project, or \`
+               (statementAuthor && by === statementAuthor
+                 ? \`you wrote this statement, and its acknowledgement is a SECOND person's reading of what \`
+                 + \`the case leaves out (BIO_Publication §3 rule 11). \`
+                 /* REC-212: the other name, and a different sentence because it is a different act. */
+                 : \`you prepared and published this case and authored its completeness block at that act, so \`
+                 + \`you are its FIRST reader; an acknowledgement is a SECOND person's reading of what the \`
+                 + \`case leaves out (BIO_Publication §3 rule 11). Who WROTE the statement is a separate \`
+                 + \`fact, stated separately in these bytes (§3 rule 13). \`)
+                     + \`Ask a participant of this project, or \`
                      + \`hand the draft to a reader through a review grant. The case publishes without one and \`
                      + \`says so.\`,
-               { author: statementAuthor });
+               { author: statementAuthor && by === statementAuthor ? statementAuthor : blockAuthor });
     /* END DEC-49 REGION is-statement-ack-by-its-author */`;
 /* The SAME refusal, built the way it was built before D-507 — a bare object literal, ABOVE the region,
    so the helper is not called and the marker pair stands over a span that refuses nothing. The region is

@@ -230,7 +230,14 @@ t("attested by the key's member", rat.attestor, "sparky");
    written on and is WRONG here — it names a catalogue that no longer exists — which is why it is corrected at
    its site and never exempted. D-507 moves the same constant in parallel; CONDUCT re-reads this line at the
    union, where neither branch's number is the union's. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.24.0)");
+/* CORRECTED 2026-09-24 (REC-211): 1.23.0 -> 1.24.0. The assertion's SUBJECT is unchanged and is why
+   it is corrected rather than loosened — the stamp must carry the CATALOGUE's version and not the
+   gate's own, and that is only meaningful while the literal moves whenever the catalogue does. IC-273
+   added C-33.42 and C-33.43, so the census went 447 -> 449 and CATALOG_VERSION 1.23.0 -> 1.24.0. */
+/* CORRECTED at c20-batch23 (CONDUCT #20): 1.24.0 -> 1.25.0. REC-211's two rows (C-33.42, C-33.43) land on a
+   main whose 1.24.0 already names the D-507 + D-508 catalogue, so the union's catalogue is 1.25.0; the literal
+   names the catalogue that actually runs. */
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.25.0)");
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong

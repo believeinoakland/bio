@@ -275,6 +275,16 @@ const CATALOG_CENSUS = {
      1.24.0 once, and its count and digest are THIS SUITE'S OWN PRINT on the merged tree. Both branch rows
      above are DROPPED (their comments kept as history). */
   "1.24.0": { count: 455, digest: "df931d73139465e12a67becf836b16e892f8e809350a2ab104c482a4b8f6be91" },
+  /* 1.24.0 (REC-211, 2026-09-24): IC-273's two arrivals — C-33.42 NO_DEFINITION_VERSION and C-33.43
+     DEFINITION_MOVED, `op=proposedispose` binding the definition version the member SAW. 449, FROM
+     THIS SUITE'S OWN PRINT on this tree and never 447 + 2: the figure is a measurement of the
+     catalogue that is here, and the arithmetic would agree with it for free. TWO ARRIVALS, NO
+     DEPARTURES, so the bump is MINOR on the rule above. */
+  /* 1.25.0 AT THE SECOND UNION (CONDUCT #20, c20-batch23): REC-211's 449 was ITS branch's 1.24.0 and main's 1.24.0
+     is already the D-507 + D-508 catalogue (455). ONE VERSION NAMES ONE CATALOGUE (A4), so the union takes the NEXT
+     number, MINOR (two arrivals, no departures), and its count and digest are THIS SUITE'S OWN PRINT on the merged
+     tree. REC-211's branch row is DROPPED (its comment kept as history). */
+  "1.25.0": { count: 457, digest: "b333cf2716ad870d295d9373e081076a15e1a7543e1beda28ab312fad77ca3c5" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -373,7 +383,7 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
 t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.24.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.24.0)", "1.24.0"]);
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.25.0)", "1.25.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

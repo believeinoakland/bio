@@ -27934,6 +27934,13 @@ export class Store extends DurableObject {
                             && o[k].trim() ? o[k].trim() : null);
     const pk = pick(item.subject, "progression_key") || pick(item.basis, "progression_key");
     const sk = pick(item.subject, "stage_key") || pick(item.basis, "stage_key");
+    /* REC-211: the version the act now REQUIRES, taken off the item the producer already stamped
+       (`proposalsFeed` writes it onto the subject) and never re-queried here — a second read would be
+       a second answer to "which version is current", which is the one thing REC-184 consolidated. A
+       number here, so a producer that carried none publishes null rather than a guess. */
+    const dv = item.subject && typeof item.subject === "object"
+               && Number.isInteger(item.subject.definition_version)
+      ? item.subject.definition_version : null;
     if (item.class === "OBLIGATION")
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "an_obligation_is_resolved_not_disposed",
@@ -27951,8 +27958,21 @@ export class Store extends DurableObject {
     if (pk && sk)
       return { available: true, op: "proposedispose", scope: "instance", keyed_on: KEYED_ON,
                key: `${pk}::${sk}`, progression_key: pk, stage_key: sk,
+               /* REC-211 / IC-273: THE ACT ALSO REQUIRES THE VERSION THIS FINDING WAS DERIVED
+                  AGAINST, so it is published beside the key rather than left for a surface to go and
+                  find. It is NOT part of `keyed_on`: the identity is still the pair, and a decision
+                  is one row per pair whatever version it was taken against. Publishing it here is
+                  what keeps the sentence below true — an act a member "can actually complete" is one
+                  a surface holding this block has every argument for. */
+               definition_version: dv,
+               requires: ["definitionVersion"],
                detail: "this finding carries the identity the disposition act is keyed on, so Adopt, "
-                     + "Defer and Dismiss are acts a member can actually complete. The act still "
+                     + "Defer and Dismiss are acts a member can actually complete. Send "
+                     + "`definitionVersion` with the act — the version published here, which is the "
+                     + "one this finding was derived against: a decision binds the declared flow the "
+                     + "member READ, and one naming a version that has since been revised is refused "
+                     + "DEFINITION_MOVED so the member can look again (framework §8.2, REC-211). The "
+                     + "act still "
                      + "checks the pair against the definition tables (NO_SUCH_PROGRESSION, "
                      + "BAD_STAGE) — this says the item has an identity, not that the identity is "
                      + "valid, and those are different claims. THE SCOPE IS `instance` AND THAT IS "
@@ -28977,13 +28997,19 @@ export class Store extends DurableObject {
      IS checked is that the project is a real project bundle THIS VIEWER CAN SEE, so a caller
      cannot write a decision under a team it was never invited to. */
   proposeDispose({ progressionKey, stageKey, key, project, finding, kind,
-                   to, state, reason, decidedBy = null, viewer = null, identity = null, items } = {}) {
+                   to, state, reason, definitionVersion = null,
+                   decidedBy = null, viewer = null, identity = null, items } = {}) {
     /* D-126: WITH `items`, the act takes a SET under the PER-ITEM weight (`#perItem`), each item decided by
        THIS method's single-key path. The decider (the control plane's stamp) and the viewer and identity
        (the URL's, spread after the body at the dispatch) are forced onto every item. */
     if (items !== undefined)
       return this.#perItem("proposedispose",
-        { items, progressionKey, stageKey, key, project, finding, kind, to, state, reason },
+        /* REC-211: `definitionVersion` is SHARED so a set over ONE progression names the version
+           once; `#perItem` spreads each item AFTER the shared fields, so a set spanning several
+           progressions still gives each item its own. It is not stamped like the decider, because
+           the decider is a fact about the actor and this is a fact about what the actor READ. */
+        { items, progressionKey, stageKey, key, project, finding, kind, to, state, reason,
+          definitionVersion },
         { decidedBy, viewer, identity }, (b) => this.proposeDispose(b));
     const proj = typeof project === "string" ? project.trim() : "";
     const find = typeof finding === "string" ? finding.trim() : "";
@@ -29121,12 +29147,89 @@ export class Store extends DurableObject {
       `SELECT stage_key FROM progression_stages WHERE progression_key=? AND stage_key=?`, pk, sk);
     if (!stageRow) return { ok: false, reason: "BAD_STAGE", progression_key: pk, stage_key: sk,
       detail: `'${sk}' is not a stage of progression '${pk}' — a disposition must name a real stage` };
+    /* ============================ REC-211 / IC-273 · THE ACT BINDS WHAT THE MEMBER SAW
+       BOB #32, 2026-09-24 ~03:14Z, on REC-184's own worker's finding (framework §8.2, "The declared
+       flow, and its revisions"): *"a disposition binds the definition version the member SAW: the act
+       carries definitionVersion; if the definition has moved since, it is refused DEFINITION_MOVED by
+       name, and the member re-reads and acts again. Authored acts bind what was authored."*
+
+       WHAT REC-184 BUILT AND WHY IT COULD NOT SEE THIS. It stamps the version IN FORCE AT THE ACT,
+       from the store and never from the caller — right for authorship, and precisely what hides the
+       remaining window. A member reads the question at version 3, a revision lands, the member
+       decides: the row is stamped 4, `op=proposals` compares the stamp with the current version,
+       finds them EQUAL, and publishes `applies: true`. The record then says a member judged a
+       declared flow they never read, with no mark of doubt anywhere, and NO read-side rule can
+       recover it, because the two numbers it has to compare are the same number. Only the act can
+       carry the missing fact.
+
+       SO IT IS ASKED HERE AND NOT STAMPED. The decider is stamped because it is a fact about the
+       ACTOR, which the session knows better than the request does; the version SEEN is a fact about
+       what the actor READ, which only the request can carry. Stamping it is what was wrong.
+
+       ASKED AFTER THE IDENTITY IS KNOWN TO BE REAL (NO_SUCH_PROGRESSION, BAD_STAGE) on D-128's own
+       precedent one op over — its basis and citation are "judged after every stage, so a bad stage is
+       still heard first". A member who named a stage that does not exist learns that, rather than
+       learning about versions of a flow they were never going to act on.
+
+       THE JUDGMENT-LAYER ARM ABOVE NEVER REACHES THIS. A {project, finding} disposition ages a
+       finding in one team's feed; no declared flow governs it, there is no version to name, and this
+       is deliberately not a second place that asks. */
+    const currentDefinition = this.#definitionVersionOf(pk);
+    const currentVersion = currentDefinition ? currentDefinition.version : null;
+    /* A number, or a string holding one. A boolean, an object or an array is NOT read as a version:
+       `Number(true)` is 1, and a caller that sent `true` said nothing about what it read. */
+    const seenVersion = (typeof definitionVersion === "number"
+                         || (typeof definitionVersion === "string" && definitionVersion.trim() !== ""))
+      ? Number(definitionVersion) : NaN;
+    /* DEC-49 REGION is-dispose-version-named — REC-211/C-33.42. */
+    if (!Number.isInteger(seenVersion) || seenVersion < 1) {
+      const row = ACT_SHAPE_CHECKS.NO_DEFINITION_VERSION;
+      return { ok: false, reason: "NO_DEFINITION_VERSION", code: "NO_DEFINITION_VERSION",
+               check: row.check, translation: row.translation,
+               progression_key: pk, stage_key: sk, definition_version: null,
+               current_definition_version: currentVersion, requires: ["definitionVersion"],
+               detail: "a disposition is a judgment of ONE version of the declared flow — the one the "
+                     + "member was reading when they decided (framework §8.2). Send `definitionVersion` "
+                     + "as the version op=proposals published beside this proposal"
+                     + (currentVersion == null ? "" : ` (it is standing at ${currentVersion})`)
+                     + ". Nothing was recorded." };
+    }
+    /* END DEC-49 REGION is-dispose-version-named */
+    /* DEC-49 REGION is-dispose-version-current — REC-211/C-33.43. THE WHOLE OF THE FIX IS THIS
+       COMPARISON: what the act says it judged against what is standing now. It refuses in BOTH
+       directions — an earlier version (the revision landed in the window) and a version that never
+       stood (a caller inventing one) — because each is a decision about something other than the
+       record's current question, and the plane cannot tell which from the number alone.
+       MEASURED, NOT ASSUMED — REC-211's control arm (B) removed the check ABOVE and this suite
+       still refused and still wrote nothing: an act naming no version arrives here with
+       `seenVersion` = NaN, and `NaN !== 4`. **THIS LINE CARRIES THE SAFETY; THE ONE ABOVE CARRIES
+       THE HONESTY.** Delete the named check and a member who named nothing is told the declared
+       flow was revised — which this plane does not know, and which is the invented-reason defect
+       one refusal over. Neither is redundant and neither substitutes for the other. */
+    if (seenVersion !== currentVersion) {
+      const row = ACT_SHAPE_CHECKS.DEFINITION_MOVED;
+      return { ok: false, reason: "DEFINITION_MOVED", code: "DEFINITION_MOVED",
+               check: row.check, translation: row.translation,
+               progression_key: pk, stage_key: sk,
+               definition_version: seenVersion, current_definition_version: currentVersion,
+               detail: `this decision names version ${seenVersion} of '${pk}' and version `
+                     + `${currentVersion == null ? "none" : currentVersion} is standing. Read the `
+                     + `proposal again (op=proposals) and decide against the version in force; the `
+                     + `earlier version still reads back in full (op=progression&version=${seenVersion}). `
+                     + `Nothing was recorded — no disposition was written and no proposal moved.` };
+    }
+    /* END DEC-49 REGION is-dispose-version-current */
     const at = new Date().toISOString();
     /* REC-184 (framework §8.2): the decision is taken against the definition IN FORCE, and the row
-       says which — stamped here from the store's one reader, never the caller's word, exactly as
-       the decider is. op=proposals then applies it to that version and no later one. A re-decision
-       re-stamps it: re-triaging a reopened proposal is a judgment of the definition standing now. */
-    const definitionVersion = this.#definitionVersionOf(pk).version;
+       says which — read here from the store's one reader, never taken from the caller's word.
+       op=proposals then applies it to that version and no later one. A re-decision re-stamps it:
+       re-triaging a reopened proposal is a judgment of the definition standing now.
+       REC-211 CORRECTED WHAT THIS PARAGRAPH USED TO CLAIM. It read "stamped here … exactly as the
+       decider is", and that equivalence was the defect: the caller's word is now REQUIRED and
+       CHECKED above, and this line writes the store's number only because the act has already
+       proved it is the same number. The row is unchanged; what changed is that it can no longer be
+       the version the member did not see. */
+    const definitionVersionWritten = currentVersion;
     /* UPSERT on the identity: a proposal re-decided (deferred→dismissed, or a corrected reason)
        keeps ONE row, re-triageable, never a second. No bundle is written, no history, no manifest —
        declining is not authoring, so the disposition row is the whole of the act. */
@@ -29136,10 +29239,10 @@ export class Store extends DurableObject {
        ON CONFLICT(progression_key,stage_key) DO UPDATE SET
          state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at,
          definition_version=excluded.definition_version`,
-      pk, sk, st, why.slice(0, Store.EDGE_REASON_MAX), by.slice(0, 200), at, definitionVersion);
+      pk, sk, st, why.slice(0, Store.EDGE_REASON_MAX), by.slice(0, 200), at, definitionVersionWritten);
     return { ok: true, key: pk + "::" + sk, progression_key: pk, stage_key: sk,
              to: st, state: st, reason: why, decided_by: by, at, bundle: null,
-             definition_version: definitionVersion };
+             definition_version: definitionVersionWritten };
   }
 
   /* ---- coordination: what LockService and the nextSeq race did ---- */

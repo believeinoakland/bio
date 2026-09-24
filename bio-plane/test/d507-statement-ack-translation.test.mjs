@@ -194,7 +194,11 @@ for (const [code, , region] of SIX) {
      in for it — and the body is floored, because a slice that missed would make every test below
      vacuous. */
   const from = store.indexOf("  acknowledgeStatement({ draft = null");
-  const body = from < 0 ? "" : store.slice(from, from + 12000);
+  /* CORRECTED at c20-batch23 (CONDUCT #20), not exempted: 12000 -> 24000. REC-212 grew this body (the case
+     document's stated-UNDETERMINED writer and the publisher's second exclusion, both inside the same regions), so
+     the seventh refusal now sits past the old window and the floor below failed on a slice that missed, not on the
+     subject. The window only has to CONTAIN the body; the floor and the seven-refusal check still say it does. */
+  const body = from < 0 ? "" : store.slice(from, from + 24000);
   t("acknowledgeStatement's body was found and is long enough to hold all seven refusals",
     body.length > 6000 && body.includes("STATEMENT_ACK_DOCUMENTS_OVER_BOUND"), true);
   const helperAt = body.indexOf("const refusal = (code, detail, extra)");
