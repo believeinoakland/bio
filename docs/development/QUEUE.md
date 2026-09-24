@@ -46,6 +46,15 @@ BOB appends a designed item, a correction or an order change here, with its inte
 - **2026-09-24 17:00Z · BOB #33 · CORRECTION to the 16:45Z entry (Bob asked why the doorbell sat in a separate document):** there is NO
   `DOORBELL.md`. The doorbell is intake, and its design is folded into `docs/architecture/BIO_Intake_Doctrine_v1_1.md` **§2a** (same branch,
   land/bob/doorbell-home, new tip). Once it is on main, D-496's and D-508's `design:` lines cite Intake Doctrine §2a.
+- **2026-09-24 17:05Z · BOB #33 · D-505's `replay` QUESTION RULED — two rows for RECORD, in this order** (design: INVESTIGATIVE-SESSION.md §11 item 5,
+  "`replay` IS THE SERVER'S WORD", on land/bob/replay-ruling @ 8474837c, going out in CONDUCT's next train):
+  (1) **A FENCE, small, placed high because it is a live hole in a landed fence:** in `op=promote`'s admission, delete a caller's `replay` unless
+  the call is ADMIN class with no session (the class `migrate.mjs` uses since REC-173). Every other caller's promotion meets every fence. INVERT
+  (do not delete) D-505's `risk-tier.test.mjs` §7 arm (ix). Accepts when a machine or session sending `replay: true` is refused C-32.19 by name
+  and the migration suite migrates clean. NEGATIVE CONTROL: drop the class test, and arm (ix) fails by name. I3, FULL gate.
+  (2) **The end state, a build that depends on (1):** honour `replay` only where the server verifies it: every replayed promotion, of any type
+  and revision, names its drive-provenance capture, whose held bytes' preserved promotion record lists this bundle and this revision's `bundle.md`
+  SHA-256 (REC-173's `migrationReplayOf`, generalised). Keep (1)'s class test as a second condition.
 
 ## THE CACHE — the next rows, in order
 
