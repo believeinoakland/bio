@@ -21519,30 +21519,16 @@ var ACTS = [
     applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && f2.cites_out.confirmed > 0 && f2.project_participant !== false
   },
   /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
-       refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
-       is not.
-  
-       D-444 NARROWS THE PROJECT ARM, which REC-183 left as a stated residue. The two arms ask the
-       same question from the two ends of the edge. From the TARGET's end `current_state` answers it
-       outright. From the PROJECT's end it cannot be answered by `cites_out.severed` at all: that is a
-       count of the project's own severed edges and says nothing about what their targets have BECOME,
-       so a project whose only severed edges point at retired items was offered an act the store then
-       refused — a pre-flight disagreeing with the refusal it fronts. The store now states
-       `severed_reinstatable`, counted through `#retiredNotCitable`, the predicate `#edgeTransition`
-       itself runs; the arm keys on it and the offer cannot drift from the refusal.
-  
-       IT IS NARROWED AND NOT DROPPED, which is the whole of the accepts-when: a project holding a
-       severed edge onto a LIVE target must still be offered `reinstate`, and the store must still
-       accept it. Withholding the act from every project would satisfy "never offer what is refused"
-       and cost a case the one recorded way to take a citation back up. `?? 0` for the posture every
-       fact added since REC-16 takes: absent reads as ZERO, the safe direction, because `deriveActs`
-       is exported and two suites call it with hand-built facts. */
+     refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
+     is not. The PROJECT arm is not narrowed: `cites_out.severed` is a count and does not say whether
+     every severed target is retired, so a project whose only severed edges point at retired items is
+     still offered an act the store refuses — a stated residue, not a rule. */
   {
     id: "reinstate",
     label: "Reinstate a severed citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f2.current_state === "retired") || ty === "project" && (f2.cites_out.severed_reinstatable ?? 0) > 0 && f2.project_participant !== false
+    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f2.current_state === "retired") || ty === "project" && f2.cites_out.severed > 0 && f2.project_participant !== false
   },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
@@ -23462,7 +23448,6 @@ function matMul(a, b) {
 var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
 var BASELINE_EPS = 1e-6;
 var WORD_GAP_EM = 0.25;
-var TJ_WORD_GAP_EM = 0.1;
 async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
@@ -23668,7 +23653,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           if (!inArr) continue;
           if (it.t === "str") show(it.bytes);
           else if (it.t === "num") {
-            if (-it.v / 1e3 > TJ_WORD_GAP_EM) softSpace();
+            if (it.v < -100) pieces.push(" ");
             advanceBy(it.v);
           }
         }
@@ -24099,400 +24084,6 @@ function collectNameTreePairs(doc, node, depth = 0, acc = []) {
   return acc;
 }
 
-// src/csv.mjs
-var CSV_CONTENT_TYPE = "text/csv";
-var CSV_CONTENT_TYPE_SYNONYMS = ["application/csv", "text/comma-separated-values"];
-var CSV_SHEET_NAME = "csv";
-var MEASURED_CSV_TEXT_BOUND_BYTES = MEASURED_OOXML_TEXT_BOUND_BYTES;
-var SIGNATURE_WINDOW_BYTES = 1 << 20;
-var SIGNATURE_LINES = 50;
-var DELIMITERS = [
-  { ch: ",", name: "comma" },
-  { ch: ";", name: "semicolon" },
-  { ch: "	", name: "tab" },
-  { ch: "|", name: "pipe" }
-];
-function readBom(b) {
-  if (b.length >= 3 && b[0] === 239 && b[1] === 187 && b[2] === 191)
-    return { encoding: "utf-8", bomBytes: 3, signal: "BOM: EF BB BF" };
-  if (b.length >= 4 && b[0] === 255 && b[1] === 254 && b[2] === 0 && b[3] === 0)
-    return null;
-  if (b.length >= 2 && b[0] === 255 && b[1] === 254)
-    return { encoding: "utf-16le", bomBytes: 2, signal: "BOM: FF FE" };
-  if (b.length >= 2 && b[0] === 254 && b[1] === 255)
-    return { encoding: "utf-16be", bomBytes: 2, signal: "BOM: FE FF" };
-  return null;
-}
-function hasHighBytes(b) {
-  for (let i = 0; i < b.length; i++) if (b[i] >= 128) return true;
-  return false;
-}
-function isValidUtf8(b) {
-  try {
-    new TextDecoder("utf-8", { fatal: true }).decode(b);
-    return true;
-  } catch {
-    return false;
-  }
-}
-function encodingSignature(bytes) {
-  const bom = readBom(bytes);
-  if (bom) {
-    return {
-      encoding: bom.encoding,
-      confidence: "certain",
-      bomBytes: bom.bomBytes,
-      signals: [bom.signal, "declared by the producer in the bytes"],
-      undetermined: null
-    };
-  }
-  const window = bytes.subarray(0, SIGNATURE_WINDOW_BYTES);
-  if (!hasHighBytes(window)) {
-    return {
-      encoding: "us-ascii",
-      confidence: "certain",
-      bomBytes: 0,
-      signals: [
-        `no byte >= 0x80 in the first ${window.length} bytes`,
-        "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
-      ],
-      undetermined: null
-    };
-  }
-  if (isValidUtf8(window)) {
-    return {
-      encoding: "utf-8",
-      confidence: "likely",
-      bomBytes: 0,
-      signals: [
-        "no BOM",
-        "every multi-byte sequence in the signature window is valid utf-8",
-        "likely, not certain: validity is evidence, not the producer's declaration"
-      ],
-      undetermined: null
-    };
-  }
-  return {
-    encoding: null,
-    confidence: "none",
-    bomBytes: 0,
-    signals: ["no BOM", "a byte >= 0x80 that is not part of a valid utf-8 sequence"],
-    undetermined: "encoding_undetermined"
-  };
-}
-function countOutsideQuotes(line, ch) {
-  let n = 0, inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') inQuotes = !inQuotes;
-    else if (!inQuotes && c === ch) n++;
-  }
-  return n;
-}
-function delimiterSignature(text) {
-  const raw = text.split("\n");
-  const complete = raw.slice(0, -1).map((l) => l.endsWith("\r") ? l.slice(0, -1) : l);
-  const lines = complete.filter((l) => l !== "").slice(0, SIGNATURE_LINES);
-  if (lines.length < 2) {
-    return {
-      delimiter: null,
-      name: null,
-      confidence: "none",
-      lines: lines.length,
-      signals: [`${lines.length} complete line(s) in the signature window; a delimiter needs at least 2 to be consistent with anything`],
-      undetermined: "delimiter_undetermined_too_few_lines",
-      tied: []
-    };
-  }
-  const consistent = [];
-  const counted = {};
-  for (const d of DELIMITERS) {
-    const per = lines.map((l) => countOutsideQuotes(l, d.ch));
-    counted[d.name] = per[0];
-    if (per[0] >= 1 && per.every((n) => n === per[0])) consistent.push(d);
-  }
-  if (consistent.length === 1) {
-    const d = consistent[0];
-    return {
-      delimiter: d.ch,
-      name: d.name,
-      confidence: "certain",
-      lines: lines.length,
-      signals: [`${d.name} occurs ${counted[d.name]} time(s) outside quotes on every one of the first ${lines.length} complete lines`],
-      undetermined: null,
-      tied: []
-    };
-  }
-  if (consistent.length > 1) {
-    return {
-      delimiter: null,
-      name: null,
-      confidence: "none",
-      lines: lines.length,
-      signals: [`${consistent.length} candidates are equally consistent over ${lines.length} lines: ` + consistent.map((d) => `${d.name} (${counted[d.name]}/line)`).join(", ")],
-      undetermined: "delimiter_undetermined_tied",
-      tied: consistent.map((d) => d.name)
-    };
-  }
-  return {
-    delimiter: null,
-    name: null,
-    confidence: "none",
-    lines: lines.length,
-    signals: [`no candidate (${DELIMITERS.map((d) => d.name).join(", ")}) occurs a consistent, non-zero number of times over ${lines.length} lines`],
-    undetermined: "delimiter_undetermined_none_consistent",
-    tied: []
-  };
-}
-function walkRecords(text, delimiter) {
-  const records = [];
-  let row = [], field = "", inQuotes = false, started = false;
-  const endField = () => {
-    row.push(field);
-    field = "";
-  };
-  const endRecord = () => {
-    endField();
-    records.push(row);
-    row = [];
-    started = false;
-  };
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    started = true;
-    if (inQuotes) {
-      if (c === '"') {
-        if (text[i + 1] === '"') {
-          field += '"';
-          i++;
-        } else inQuotes = false;
-      } else field += c;
-      continue;
-    }
-    if (c === '"') {
-      inQuotes = true;
-      continue;
-    }
-    if (delimiter && c === delimiter) {
-      endField();
-      continue;
-    }
-    if (c === "\r") {
-      if (text[i + 1] === "\n") i++;
-      endRecord();
-      continue;
-    }
-    if (c === "\n") {
-      endRecord();
-      continue;
-    }
-    field += c;
-  }
-  if (started || field !== "" || row.length) endRecord();
-  return records;
-}
-var BYTE_TRANSPORT = new TextDecoder("latin1");
-async function csvParts(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  if (!b.length) {
-    return { ok: false, why: "empty_body" };
-  }
-  const enc2 = encodingSignature(b);
-  const body = b.subarray(enc2.bomBytes);
-  const head = body.subarray(0, SIGNATURE_WINDOW_BYTES);
-  let headText;
-  try {
-    headText = enc2.encoding ? new TextDecoder(enc2.encoding, { fatal: false }).decode(head) : BYTE_TRANSPORT.decode(head);
-  } catch {
-    return { ok: false, why: `decoder_unavailable:${enc2.encoding}`, encoding: enc2 };
-  }
-  const delim = delimiterSignature(headText);
-  const guard = body.length > MEASURED_CSV_TEXT_BOUND_BYTES ? {
-    ok: false,
-    text: "undetermined",
-    why: "over_size_bound",
-    size: body.length,
-    bound: MEASURED_CSV_TEXT_BOUND_BYTES,
-    boundName: "MEASURED_CSV_TEXT_BOUND_BYTES",
-    metric: "body_bytes"
-  } : null;
-  let records = null;
-  if (!guard) {
-    const text = enc2.encoding ? new TextDecoder(enc2.encoding, { fatal: false }).decode(body) : BYTE_TRANSPORT.decode(body);
-    records = walkRecords(text, delim.delimiter);
-  }
-  return {
-    ok: true,
-    format: "csv",
-    bytes: b,
-    bodyBytes: body.length,
-    encoding: enc2,
-    delimiter: delim,
-    guard,
-    records
-  };
-}
-function dialectOf(parts) {
-  return {
-    encoding: parts.encoding.encoding,
-    encodingConfidence: parts.encoding.confidence,
-    encodingSignals: parts.encoding.signals,
-    delimiter: parts.delimiter.name,
-    delimiterConfidence: parts.delimiter.confidence,
-    delimiterSignals: parts.delimiter.signals,
-    undetermined: [parts.encoding.undetermined, parts.delimiter.undetermined].filter(Boolean)
-  };
-}
-function csvStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "csv", reason: parts ? parts.why : "PARTS_ABSENT" };
-  }
-  const dialect = dialectOf(parts);
-  const notes = [
-    "the csv format declares no relationships, so the zero link counts are the format's and not a walk's",
-    "a url in a cell is text, not a declared link: reading it as one would be this entry deciding what a string means"
-  ];
-  if (parts.guard) notes.push("text_body_over_bound");
-  return {
-    ok: true,
-    container: "csv",
-    sheets: [{ sheet: 0, name: CSV_SHEET_NAME, sheetId: null, state: "visible", hidden: false }],
-    links: [],
-    counts: { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 },
-    /* The IC-2 envelope in the shape the office entries accepted. A CSV
-       carries none of DEC-5's extras — no formula beside a value, no tracked
-       change, no comment, no hidden row, no core properties — because the
-       format has no place for any of them. `kinds: []` is exhaustive by the
-       FORMAT's definition, which the note records. */
-    evidentiary: {
-      container: "csv",
-      kinds: [],
-      items: [],
-      undetermined: parts.guard ? [{ part: "(body)", why: "over_size_bound", guard: parts.guard }] : [],
-      counts: {}
-    },
-    dialect,
-    notes
-  };
-}
-function asciiClean(s) {
-  for (let i = 0; i < s.length; i++) if (s.charCodeAt(i) >= 128) return false;
-  return true;
-}
-function csvText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "csv", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  const dialect = dialectOf(parts);
-  const base = {
-    ok: true,
-    container: "csv",
-    /* Exhaustive and EMPTY, not null: the format has no media container to
-       have looked in, so this is a zero of the format and not of a walk. */
-    images: [],
-    dialect
-  };
-  if (parts.guard) {
-    return {
-      ...base,
-      document: null,
-      sheets: [],
-      undetermined: [parts.guard],
-      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
-    };
-  }
-  const undetermined = [];
-  const lines = [];
-  let cellCount = 0, usedRows = 0, usedCols = 0;
-  const encodingUndetermined = parts.encoding.encoding == null;
-  parts.records.forEach((record, r0) => {
-    const row = r0 + 1;
-    const vals = [];
-    record.forEach((field, c0) => {
-      const col = c0 + 1;
-      if (encodingUndetermined && !asciiClean(field)) {
-        undetermined.push({
-          sheet: 0,
-          cell: `${columnLetters(col)}${row}`,
-          reason: "encoding_undetermined"
-        });
-        if (row > usedRows) usedRows = row;
-        if (col > usedCols) usedCols = col;
-        return;
-      }
-      if (field === "") return;
-      cellCount++;
-      if (row > usedRows) usedRows = row;
-      if (col > usedCols) usedCols = col;
-      vals.push(field);
-    });
-    if (vals.length) lines.push(vals.join("	"));
-  });
-  const text = lines.join("\n");
-  const sheet = {
-    sheet: 0,
-    name: CSV_SHEET_NAME,
-    hidden: false,
-    /* THE BOUND IS NULL — `.ods`'s reason exactly: RFC 4180 fixes no maximum
-       number of rows or columns, so a CSV has no capacity to state, and
-       borrowing OOXML's grid would be this reader inventing a bound the
-       format never fixed. The USED range is measured and emitted beside it. */
-    rows: null,
-    cols: null,
-    usedRows,
-    usedCols,
-    range: usedSheetRange(CSV_SHEET_NAME, usedRows, usedCols),
-    text,
-    undetermined
-  };
-  return {
-    ...base,
-    document: text,
-    sheets: [sheet],
-    undetermined,
-    counts: {
-      chars: text.length,
-      cells: cellCount,
-      formulas: 0,
-      undetermined: undetermined.length
-    }
-  };
-}
-var csvEntry = {
-  format: "csv",
-  detect(bytes, contentType) {
-    if (bytes) return null;
-    if (typeof contentType !== "string") return null;
-    const ct = contentType.trim().toLowerCase();
-    if (ct === CSV_CONTENT_TYPE) {
-      return { format: "csv", confidence: "likely", signals: [
-        `content type "${contentType}"`,
-        "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against",
-        "measured: 166 of 166 .csv keys in s3://cao-94612 were served this type exactly (M-144)"
-      ] };
-    }
-    if (CSV_CONTENT_TYPE_SYNONYMS.includes(ct)) {
-      return { format: "csv", confidence: "likely", signals: [
-        `content type "${contentType}"`,
-        `an older spelling of ${CSV_CONTENT_TYPE}; UNMEASURED in s3://cao-94612, where all 166 keys declared ${CSV_CONTENT_TYPE}`
-      ] };
-    }
-    return null;
-  },
-  parts: (bytes) => csvParts(bytes),
-  /* Accept either parts() output or raw bytes, exactly as the office entries
-     do, so detect->structure works uniformly at the registry seam while a
-     caller that already paid for parts() does not pay twice. */
-  structure: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await csvParts(partsOrBytes) : partsOrBytes;
-    return csvStructure(parts);
-  },
-  text: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await csvParts(partsOrBytes) : partsOrBytes;
-    return csvText(parts);
-  }
-};
-
 // src/formats.mjs
 var REGISTRY = /* @__PURE__ */ new Map();
 function registerFormat(entry) {
@@ -24605,7 +24196,6 @@ registerFormat(pptxEntry);
 registerFormat(odtEntry);
 registerFormat(odsEntry);
 registerFormat(odpEntry);
-registerFormat(csvEntry);
 
 // src/textchain.mjs
 var STEP_KINDS = {
@@ -25172,13 +24762,12 @@ function readingPositionInExtent(position, extentKind, extent) {
 }
 var undeterminedChars = (page) => page && Array.isArray(page.undetermined) ? page.undetermined.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0) : 0;
 var WHITESPACE = /\s/u;
-function glyphCount(s) {
-  if (typeof s !== "string") return 0;
+var decodedChars = (page) => {
+  if (!page || typeof page.text !== "string") return 0;
   let n = 0;
-  for (const ch of s) if (!WHITESPACE.test(ch)) n++;
+  for (const ch of page.text) if (!WHITESPACE.test(ch)) n++;
   return n;
-}
-var decodedChars = (page) => page && typeof page.text === "string" ? glyphCount(page.text) : 0;
+};
 function perPageTierWinner(p1, p2) {
   if (!p2) return "tier1";
   if (!p1) return "tier2";
@@ -25191,16 +24780,14 @@ function mergeTier2Text(base, t2) {
   const usable = basePages.filter((p) => p && Number.isInteger(p.page));
   const t2Pages = t2 && Array.isArray(t2.pages) ? t2.pages : [];
   if (!usable.length) {
-    const baseText = typeof (base && base.document) === "string" ? base.document : null;
-    const baseGlyphs = baseText === null ? null : glyphCount(baseText);
-    const reported = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : 0;
-    if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
+    const baseChars = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : typeof (base && base.document) === "string" ? base.document.length : 0;
+    if (baseChars > 0)
       return {
         ok: false,
         replaced: [],
         kept: [],
         perPageTier: null,
-        why: `this document's tier-1 reading has no per-page grain and already holds ${baseGlyphs === null ? `${reported} character(s) its producer counted and no text this merge can read` : `${baseGlyphs} decoded glyph(s)`}, so a tier-2 decode was refused rather than allowed to replace text page by page it cannot be compared against`
+        why: `this document's tier-1 reading has no per-page grain and already holds ${baseChars} decoded character(s), so a tier-2 decode was refused rather than allowed to replace text page by page it cannot be compared against`
       };
     return {
       ok: true,
@@ -32759,21 +32346,14 @@ var Store = class _Store extends DurableObject {
         const c = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
         if (c && normalizeType(c.object_type) === "project") citedByCase[key]++;
       }
-    const citesOut = { confirmed: 0, severed: 0, severed_reinstatable: 0 };
+    const citesOut = { confirmed: 0, severed: 0 };
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     const docFm = md && md.content !== null ? parseFrontmatter(md.content).data || {} : {};
     if (normalizeType(b.object_type) === "project") {
       const refs = docFm.references;
       for (const r of Array.isArray(refs) ? refs : [])
-        if (r && typeof r === "object" && r.rel === "cites") {
-          if (r.status !== "severed") {
-            citesOut.confirmed++;
-            continue;
-          }
-          citesOut.severed++;
-          if (typeof r.target === "string" && !this.#retiredNotCitable(r.target))
-            citesOut.severed_reinstatable++;
-        }
+        if (r && typeof r === "object" && r.rel === "cites")
+          citesOut[r.status === "severed" ? "severed" : "confirmed"]++;
     }
     const rested = normalizeType(b.object_type) === "inquiry" ? this.#restsOnLive(target) : { confirmed: [], frozen: [], severed: [] };
     return {
@@ -34139,7 +33719,10 @@ var Store = class _Store extends DurableObject {
       };
     if (to === "confirmed") {
       const retiredMembers = [];
-      for (const id of sel.members) if (this.#retiredNotCitable(id)) retiredMembers.push(id);
+      for (const id of sel.members) {
+        const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+        if (b && normalizeType(b.object_type) === "information" && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
+      }
       if (retiredMembers.length)
         return {
           ok: false,
@@ -34970,30 +34553,6 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
   static RETIRE_CITED_DETAIL = "these are still cited by live edges. Retiring them would leave those Projects pointing at retired material, which C-6.2 treats as an error whose remedy is to sever the edge with a reason. Sever first, then retire.";
   #retirementCitedBy(id) {
     return this.#citesInto(id).confirmed;
-  }
-  /* D-444: REINSTATEMENT'S ONE RETIRED-TARGET PREDICATE, shared by
-   * `#edgeTransition`'s RETIRED_NOT_CITABLE refusal (REC-183) and by
-   * `affordanceFacts`' `cites_out.severed_reinstatable`. §4.1 of State Rules
-   * v1.5 (BOB #30): a retired item is not citable, and moving an edge INTO
-   * `confirmed` is a citation made now.
-   *
-   * IT IS EXTRACTED FOR THE REASON `#citesInto` AND `#retirementCitedBy` WERE:
-   * the pre-flight publishes `reinstate` over a COUNT of severed edges, and a
-   * count cannot say whether every one of those targets has since been retired
-   * — so a project whose only severed edges point at retired items was offered
-   * an act this very predicate then refused, which is the drift DEC-8 forbids.
-   * The fact now asks THIS, so the offer and the refusal cannot answer
-   * differently. A SECOND COPY WOULD HAVE BEEN THE DEFECT ITSELF, one layer on.
-   *
-   * `source_status` is not read, as at cite and at reinstate: a removed or
-   * modified source stays citable, and `retired` is the other axis. Only
-   * Information has the state — an inquiry target answers false, exactly as
-   * `#edgeTransition` leaves it un-refused — and an id with no row answers
-   * false too, because an absent target is refused by another door and this
-   * one claims nothing about it. */
-  #retiredNotCitable(id) {
-    const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-    return !!b && normalizeType(b.object_type) === "information" && String(b.current_state ?? "").trim() === "retired";
   }
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
    *
@@ -39701,75 +39260,6 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     );
     return { ok: true, existed: false, grantId: g.grant_id, revokedBy: a.who, revokedAt: when };
   }
-  /* REC-200 / BOB #32's ruling of 2026-09-23 23:08Z on `BIO_Publication_v0_1.md` §6A.3 point 1 — THE COPY
-       CARRIES THE DATE OF ITS LAST CHANGE, AND A COMMENT THAT MOVES THE HASH MOVES THE DATE.
-  
-       WHAT WAS WRONG. REC-148 took DEC-31's in-band date from the draft's `updated_at`, which is the date of
-       the last EDIT and not of the last CHANGE: a comment is carried in these bytes, so it moves the hash,
-       and the copy went on stating the older date. A rendering that leaves the instance would then carry a
-       hash of one moment under the date of another — the record claiming more than it can support, which is
-       the defect this construct exists to refuse.
-  
-       WHAT THE DATE IS. The newest DATED ACT these bytes carry, and only those they carry: this draft's own
-       last edit, a comment served in `comments`, a grant served in `grants` (or the recipient's own grant)
-       with its issue and its revocation, and an acknowledgement served in `statement_acknowledgements`. It is
-       computed over the rows SERVED, not over the rows that exist, so the invariant is exact in both
-       directions: an act beyond the list cap moves neither the hash nor this date.
-  
-       WHAT IT CANNOT SEE, STATED HERE AND IN THE ANSWER'S OWN WORDS RATHER THAN LEFT TO BE FOUND. A review
-       copy also draws material this record dates NOWHERE in these bytes: each finding's text, read live from
-       the bundle; the publish gates' verdict, recomputed at every read; and the project's declared floors.
-       Any of the three can move the hash without moving this date. Naming them is the honest scope of the
-       rule, and closing them would take a dated fact the answer does not hold.
-  
-       TIES AND SHAPES, AND WHY THIS IS NOT A STRING COMPARE. The record holds TWO SPELLINGS of an instant:
-       a draft edit, a comment and a grant are stamped `new Date().toISOString()` (with milliseconds), and an
-       acknowledgement is stamped with the milliseconds cut off (`acknowledgeStatement`). Sorted as STRINGS
-       those two spellings rank WRONG inside one second — `…:00Z` sorts after `…:00.123Z`, because `Z` is
-       above `.` — so candidates are ranked by `Date.parse`, and anything unparseable is not ranked at all
-       rather than sorted as zero. Equal instants keep the FIRST candidate in the order above (edit, comment,
-       grant, acknowledgement), which is the order the answer itself presents them in.
-  
-       THE AUTHOR DOES NOT MOVE WITH IT, and that is a decision rather than an oversight: BOB #32 ruled on the
-       DATE. The quartet's `author` stays the draft's `updated_by` — a recipient who comments on a copy has
-       not authored it — and `by` here says who made the last change, so the two facts are told apart instead
-       of one name standing for both. */
-  static #reviewLastChange({ draft, comments, grants, acknowledgements }) {
-    const cand = [];
-    const add = (at, by, byKind, kind) => {
-      if (typeof at === "string" && at && !Number.isNaN(Date.parse(at)))
-        cand.push({ at, by: by ?? null, by_kind: byKind, kind });
-    };
-    add(draft.updated_at, draft.updated_by, "member", "edit");
-    for (const c of comments)
-      add(
-        c.at,
-        c.author_kind === "recipient" ? c.recipient : c.author,
-        c.author_kind === "recipient" ? "recipient" : "member",
-        "comment"
-      );
-    for (const g of grants) {
-      add(g.issued_at, g.issued_by, "member", "grant");
-      add(g.revoked_at, g.revoked_by, "member", "revocation");
-    }
-    for (const a of acknowledgements)
-      add(
-        a.at,
-        a.kind === "recipient" ? a.recipient : a.by,
-        a.kind === "recipient" ? "recipient" : "member",
-        "statement acknowledgement"
-      );
-    let last = null;
-    for (const c of cand) if (!last || Date.parse(c.at) > Date.parse(last.at)) last = c;
-    const act = !last ? "UNDETERMINED: these bytes carry no dated act at all" : `the newest dated act these bytes carry is ${last.kind === "edit" ? "an edit of the draft" : `a ${last.kind}`} by ${last.by ?? "somebody this record does not name"}`;
-    return {
-      at: last ? last.at : null,
-      by: last ? last.by : null,
-      by_kind: last ? last.by_kind : null,
-      kind: last ? last.kind : null,
-      stated: `${act}. THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md \xA76A.3 point 1, as BOB #32 ruled it on 2026-09-23): the copy's LAST CHANGE, so a comment, a grant, an acknowledgement or an edit moves both the hash and this date. IT DOES NOT SEE what this copy draws live and dates nowhere \u2014 each finding's text, the publish gates' verdict, and the project's declared floors \u2014 any of which can move the hash without moving this date.`
-    };
-  }
   /* THE READ. Two doors and one answer for everyone else: a RECIPIENT through a live
      grant's secret (and only the draft that grant names), or a MEMBER with standing
      in the producing project — D-15's predicate, as `#hasCaseStanding` asks it.
@@ -39845,27 +39335,6 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       }));
       grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
-    const acks = this.#statementAcknowledgements(
-      d.project_id,
-      ident.caseId,
-      ident.edition,
-      params.statement ?? "",
-      null,
-      null,
-      d.draft_id
-    );
-    const statementAcks = {
-      statement_sha: acks.statementSha,
-      acknowledgements: acks.rows,
-      truncated: acks.truncated,
-      act: "op=statementack&draft=" + d.draft_id
-    };
-    const lastChange = _Store.#reviewLastChange({
-      draft: d,
-      comments,
-      acknowledgements: statementAcks.acknowledgements,
-      grants: grantPart.grants ?? (grantPart.grant ? [grantPart.grant] : [])
-    });
     return {
       ok: true,
       kind: "review-copy",
@@ -39875,27 +39344,10 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       draft: d.draft_id,
       project: d.project_id,
       reader,
-      /* REC-199 / BOB #32 (2026-09-23 23:08Z), BIO_Publication_v0_1.md 6A.4: `newCase` IS SAID BACK,
-         BECAUSE A READ THAT DROPS A FIELD AN EDIT WRITES BACK LOSES IT. It was the ONE member of
-         `REVIEW_DRAFT_FIELDS` this answer never carried: `targets`/`target` and `roles` come back as
-         `findings`, `caseId` as `case.case_id`, and the six authored sentences as `authored` — so an
-         editor who read a draft and wrote the copy back turned a draft that had asked for a NEW case
-         (D-309's third route, the one a caller can only ever STATE) into one whose case is DERIVED
-         from what its findings already serve, silently and in the direction D-309 exists to refuse.
-         IT SITS IN `case` AND NOT IN `authored` because it is the other half of ONE choice — name a
-         case, or ask for a new one, which `publishCase` refuses TOGETHER as CASE_IDENTITY_AMBIGUOUS —
-         and the two halves of one choice do not live in two blocks.
-         ANSWERED AS THE GATES READ IT, a boolean: `publishCase` consults `newCase` for truthiness
-         alone, so `!!` is exactly route-preserving for every spelling a caller may have stored
-         (`"false"` is truthy here as it is there, and an absent field is the derivation, not an
-         UNDETERMINED). WHAT IT DOES NOT SAY is the identity SENTENCE beside it: with no case named,
-         that sentence reads *a new case* whether or not this field is set, which is REC-199's
-         reported finding and is `#caseIdentitySentence`'s to fix, in the three answers that print it. */
       case: {
         case_id: ident.caseId,
         edition: ident.edition,
-        identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition),
-        newCase: !!params.newCase
+        identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition)
       },
       authored: {
         scope: params.scope ?? null,
@@ -39912,13 +39364,38 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       comments,
       comments_truncated: commentsTruncated,
       list_limit: cap,
-      statement_acknowledgements: statementAcks,
+      /* D-150 / §3 rule 11: who has acknowledged the statement AS IT STANDS NOW — the same read
+         `op=publish` lists in the case document, so a reviewer sees the list the document would print
+         (less the publisher's own, which the act leaves out). An edited statement starts empty. */
+      statement_acknowledgements: (() => {
+        const writer = { by: d.statement_by ?? null };
+        const a = this.#statementAcknowledgements(
+          d.project_id,
+          ident.caseId,
+          ident.edition,
+          params.statement ?? "",
+          null,
+          writer,
+          d.draft_id
+        );
+        const withheld = a.byWriter + a.withheldWriterUndetermined;
+        return {
+          statement_sha: a.statementSha,
+          acknowledgements: a.rows,
+          truncated: a.truncated,
+          /* THE COUNT IS ALWAYS A NUMBER AND THE REASON IS ALWAYS A SENTENCE, zero included —
+             `acknowledged: 0` is D-150's own precedent that a zero is a STATEMENT and never a
+             blank. The two keys below are the publish answer's spellings, reused rather than
+             re-invented, so one fact is not named two ways across two doors. */
+          withheld,
+          ...a.byWriter ? { acknowledgements_by_statement_writer_not_listed: a.byWriter } : {},
+          ...a.withheldWriterUndetermined ? { acknowledgements_withheld_writer_undetermined: a.withheldWriterUndetermined } : {},
+          withheld_stated: _Store.#withheldWriterStated(withheld, writer.by),
+          act: "op=statementack&draft=" + d.draft_id
+        };
+      })(),
       updated_by: d.updated_by,
       updated_at: d.updated_at,
-      /* REC-200 / §6A.3 point 1 as BOB #32 ruled it: WHEN THIS COPY LAST CHANGED, and who changed it —
-         the quantity the control plane puts in the in-band quartet's `date`. `updated_at` above stays what
-         it always was, the draft's last EDIT, because they are two facts. */
-      last_change: lastChange,
       /* REC-193 / §3 rule 13: WHO WROTE THE STATEMENT THAT STANDS, beside the editor of everything else,
          because they are two facts and one column said both. `null` is the honest answer for a draft
          written before the stamp existed, and the sentence beside it says which. */
@@ -40237,6 +39714,26 @@ case_project: ${project}
       ...acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this document lists)"] : []
     ] : acks.unbound ? [`${_Store.ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`] : [`${_Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`];
   }
+  /* REC-213 / §6A + §3 rule 11 (BOB #33, 2026-09-24) — WHAT THE REVIEW COPY'S LIST LEFT OUT, IN ONE
+     SENTENCE A READER READS RATHER THAN A KEY THEY DECODE. `#ackBodyLines` is the case document's
+     spelling of the same obligation and this is the review copy's; they are two renderings because a
+     case document is signed prose and a review copy is an answer, and they must never disagree about
+     the FACT. Four states, each named and none a fallback:
+       - nothing withheld, a writer known — the plain case, said so a reader never infers it;
+       - nothing withheld, the writer UNDETERMINED — said too, because a short list with no participant
+         row in it looks identical whether the withholding bit or there was nothing to withhold;
+       - rows withheld by a NAMED writer — the row's own reason, in §3 rule 11's words;
+       - rows withheld because the writer is UNDETERMINED — stated as undetermined and NEVER as
+         *by the writer*, which would name a reading this record cannot attribute.
+     A RECIPIENT's row is never withheld by either arm (a grant's holder is never the writer), so this
+     sentence speaks only of participants and says so. */
+  static #withheldWriterStated(withheld, writerBy) {
+    const n = Number(withheld) || 0;
+    const rows = `${n} acknowledgement${n === 1 ? "" : "s"}`;
+    if (!n)
+      return writerBy ? `Nothing is withheld from this list: this record holds no acknowledgement of this statement by ${writerBy}, who wrote it.` : `Nothing is withheld from this list: this record holds no participant's acknowledgement of this statement at this production, so there is none that might be its writer's own.`;
+    return writerBy ? `${rows} of this statement ${n === 1 ? "is" : "are"} recorded and NOT listed above, by the statement's writer, ${writerBy}: a reading by its own writer is not a SECOND reading of it (BIO_Publication \xA73 rule 11). It is counted here rather than hidden \u2014 everything recorded is shown or stated (\xA76A).` : `${rows} of this statement ${n === 1 ? "is" : "are"} recorded and NOT listed above, and the reason is UNDETERMINED rather than the writer's own: this draft predates the recording of the statement's author, so any participant's acknowledgement of it may be the writer's and this list cannot rule that out (BIO_Publication \xA73 rule 11). They are counted here rather than hidden \u2014 everything recorded is shown or stated (\xA76A).`;
+  }
   /* AN ACKNOWLEDGEMENT THAT LANDS WHILE ITS CASE DOCUMENT IS AUTHORED AND UNSIGNED RE-AUTHORS THAT
      DOCUMENT, because the list must be inside the signature and `op=publish` cannot run twice over
      one prepared edition (ALREADY_A_CASE_MEMBER). Only the list's two runs change; the document's
@@ -40299,8 +39796,13 @@ case_project: ${project}
      act, so their own acknowledgement of it is not a second reading, and `op=publish` has left it out
      since D-150. `writer` is the member who wrote the SENTENCE (`#statementWriter`), which rule 11's
      exclusion is actually about and which nothing here could see until rule 13 gave it a name.
-       - `writer === null` means NOT ASKED, and is the review copy's live list: it shows a reader every
-         acknowledgement recorded, ahead of any act that decides what a document may print.
+       - `writer === null` means NOT ASKED. CORRECTED BY REC-213 (BOB #33, 2026-09-24), never exempted,
+         because the old sentence here named the wrong caller: it read *and is the review copy's live
+         list*, and that is no longer true and was never right. The review copy ASKS — a row by the
+         sentence's own writer is not a second reading at any moment, so showing it overclaims whether
+         or not a document has been authored yet. The one caller left that does not ask is
+         `#reauthorAcknowledgements` over a case document carrying NO `statement_by` KEY, which
+         predates rule 13 and is read in its own shape.
        - `{ by: '<member>' }` withholds that member's own.
        - `{ by: null }` is UNDETERMINED, and withholds EVERY participant row, because any one of them
          may BE the writer's own and a list that cannot rule that out is the record claiming a second
@@ -56890,23 +56392,6 @@ ${words}`;
           definition_version: p.definition_version,
           bundles: subjects.slice(0, _Store.QUEUE_OPTION_SUBJECTS_MAX)
         },
-        /* D-527: THE EARLIER DECISION TRAVELS WITH THE REOPENED QUESTION.
-           `proposalsFeed` already builds this object for a proposal a revision put
-           back in the open feed (REC-184, framework §8.2) and it is published here
-           UNCHANGED — the same object, no second derivation, `null` where nobody
-           has ever decided. It rode only on `op=proposals`, which NO surface reads
-           (UI-14 retired it for this op), so the one feed a member opens by habit
-           carried the reopened question and said nothing about the answer somebody
-           had already given it — a member meeting it is shown a question nobody
-           has answered when the record holds a decision, which is the record
-           claiming less than it holds. The `disposed` block below does carry the
-           row, and that is not the same fact reaching the reader: it is a JOIN on
-           a list bounded by QUEUE_DISPOSED_MAX, so a member with sixty-four
-           standing decisions meets the reopened item with its prior decision cut
-           off the end of the answer. `applies` is false wherever this is non-null
-           by construction and not by assertion — a decision that still governed
-           would have aged this finding out of the feed before it reached here. */
-        prior_disposition: p.prior_disposition,
         summary: `${p.progression_label}: the '${p.stage_label}' stage is ${p.required} required and absent`,
         detail: `${p.n} instance${p.n === 1 ? "" : "s"} of this progression reach${p.n === 1 ? "es" : ""} '${p.stage_label}' without it` + (p.overdue ? `, ${p.overdue_count} past a declared deadline` : ""),
         basis: {
@@ -79471,12 +78956,7 @@ async function reviewAnswer(out, op) {
     const { quartet } = await inbandQuartet({
       subject: served,
       over: "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
-      /* REC-200 / BOB #32, 2026-09-23 23:08Z: THE DATE IS THE COPY'S LAST CHANGE, not the draft's last
-         EDIT — a comment moves these bytes, so it moves the hash, and it must move the date with it. The
-         store computes it over the rows it SERVES and says in `last_change.stated` what it cannot see.
-         THE AUTHOR DOES NOT MOVE: the ruling is about the date, and a recipient who comments on a copy
-         has not authored it; `last_change.by` is who made that change, beside it. */
-      date: r.last_change?.at ?? null,
+      date: r.updated_at ?? null,
       author: r.updated_by ?? null,
       bar: bar ?? null
     });
@@ -79811,8 +79291,7 @@ async function migrationReplayOf(env, storeName, b) {
 function needsTier2(text) {
   const c = text && text.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
-  const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
-  if (!(c.undetermined > glyphs)) return false;
+  if (!(c.undetermined > c.chars)) return false;
   const marks = Array.isArray(text.undetermined) ? text.undetermined : [];
   if (marks.length && marks.every((m) => m && m.reason === "no_text_layer")) return false;
   return true;
@@ -79865,16 +79344,14 @@ function mergeTier3Text(base, ocr, eligible) {
   const ocrPages = ocr && Array.isArray(ocr.pages) ? ocr.pages : [];
   const wanted = new Set(eligible);
   if (!usable.length) {
-    const baseText = typeof (base && base.document) === "string" ? base.document : null;
-    const baseGlyphs = baseText === null ? null : glyphCount(baseText);
-    const reported = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : 0;
-    if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
+    const baseChars = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : typeof (base && base.document) === "string" ? base.document.length : 0;
+    if (baseChars > 0)
       return {
         ok: false,
         filled: [],
         refused: [],
         unanswered: [],
-        why: `this document's text could not be merged page by page (the tier that read it reported no per-page text), and it already holds ${baseGlyphs === null ? `${reported} character(s) its producer counted and no text this merge can read` : `${baseGlyphs} decoded glyph(s)`}, so an OCR pass was refused rather than allowed to replace text that may be better than it`
+        why: `this document's text could not be merged page by page (the tier that read it reported no per-page text), and it already holds ${baseChars} decoded character(s), so an OCR pass was refused rather than allowed to replace text that may be better than it`
       };
     return {
       ok: true,
@@ -79890,7 +79367,7 @@ function mergeTier3Text(base, ocr, eligible) {
   for (const p of ocrPages) {
     if (!p || !Number.isInteger(p.page)) continue;
     const target = usable.find((b) => b.page === p.page);
-    const empty = target && !(typeof target.text === "string" && glyphCount(target.text) > 0);
+    const empty = target && !(typeof target.text === "string" && target.text.length);
     if (!target || !wanted.has(p.page) || !empty) {
       refused.push(p.page);
       continue;
@@ -79975,7 +79452,7 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
             if (!m.ok) ocrNote = m.why;
             else {
               i2text = m.text;
-              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page) && typeof p.text === "string" && glyphCount(p.text) > 0).map((p) => p.page);
+              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page) && typeof p.text === "string" && p.text.length).map((p) => p.page);
               const parts = [];
               const layerSet = new Set(layerPages);
               const spokenFor = tier2PerPage ? [
