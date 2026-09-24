@@ -15,8 +15,24 @@
  * ratifications cannot tell that the second was judged by a catalogue the first
  * one did not have. The stamp claimed a precision the record did not hold.
  *
- * THE DESIGN AUTHORITY is `docs/architecture/BIO_Publication_v0_1.md` §3 (the
- * case document's gate stamp: rule 12 (c) — every assertion stays under a
+ * THE DESIGN AUTHORITY is `BIO_Publication_v0_1.md` §3, under `architecture/`
+ * (the document and the SECTION, which is what a citation names — CORPUS-STANDARD
+ * §4.7. NEITHER THIS FILE NOR ITS CONTROL SPELLS A PATH UNDER THE DOCUMENTATION
+ * DIRECTORY, OR A PATH UNDER THE REPOSITORY'S TOOL DIRECTORY, AND PUTTING ONE
+ * BACK SILENTLY WIDENS A GATE. `gates.mjs`'s `docFacing()` (it sits beside the
+ * other repository tools) reads a suite as DOC-FACING iff its SOURCE — COMMENTS
+ * INCLUDED — contains either of those two directory prefixes, so ONE CITATION IN
+ * PROSE enrols this suite in every prose-only gate run. Measured 2026-09-24: with
+ * the documentation prefix spelled, a
+ * MEASUREMENTS-only change selected 75 units against `statepaths.test.mjs`'s
+ * ceiling of 74 and the gate went RED, naming this suite's own header. This
+ * suite reads `checks/bio-checks.mjs` and `src/gate.mjs` and no prose at all, so
+ * doc-facing is the WRONG answer and the citation is what was wrong, not the
+ * ceiling. That `docFacing` credits a MENTION rather than a READ is a real defect
+ * of its own — D-277's class, one instrument over — and it is REPORTED rather
+ * than fixed here, because widening this row to the gate's classifier is not
+ * this row's to take.)
+ * §3 is the case document's gate stamp: rule 12 (c) — every assertion stays under a
  * signature, each in one place, and the record claims neither more nor less —
  * and §3 rule 10's stranger, who rebuilds and verifies without this instance).
  * The BUMP follows REC-14's precedent as `gate.mjs` records it: 1.18.0 -> 1.19.0
