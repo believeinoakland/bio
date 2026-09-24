@@ -135,7 +135,9 @@ const ARMS = {
    rule 7 — purge's `observations` keeps the whole log), and `dbBytes` is the admin class's only, under a
    server-set `capacity` stamp — so the anchors below moved, and five arms were added for the two rulings. */
 const STATS_NONLEAD = "        : { observationsNonLead: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c }),";
-const STATS_ROUTE = '        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),';
+/* CORRECTED 2026-09-24 BY D-464: the route passes the VIEWER stamp too (counts are taken through the caller's sight),
+   so the anchor is the new line; the armed replacements below carry it, so each arm still moves only its own subject. */
+const STATS_ROUTE = '        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1", viewer: url.searchParams.get("viewer") }),';
 const STATS_STAMP = '    if (op === "stats") inner.searchParams.set("capacity", cls === "admin" ? "1" : "0");\n';
 const DB_GATE = "      ...((proof || capacity) ? { dbBytes: this.ctx.storage.sql.databaseSize } : {}),";
 Object.assign(ARMS, {
@@ -161,7 +163,7 @@ Object.assign(ARMS, {
     mustFail: ["FIXTURE:", "A1: the admin TOKEN's WHOLE", "B1: the admin TOKEN receives"],
     mustPass: "every member, session and probe arm — they never receive the key under this arm",
     patch: () => arm([[STORE, STATS_ROUTE,
-      '        stats: () => url.searchParams.get("capacity") === "1" ? { ...this.stats({ capacity: true }), leads: this.#counts({ proof: true }).leads } : this.stats(),']]),
+      '        stats: () => url.searchParams.get("capacity") === "1" ? { ...this.stats({ capacity: true, viewer: url.searchParams.get("viewer") }), leads: this.#counts({ proof: true }).leads } : this.stats({ viewer: url.searchParams.get("viewer") }),']]),
   },
   statsdropall: {
     suite: "stats-disclosure", files: [STORE],

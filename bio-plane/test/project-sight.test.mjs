@@ -3,6 +3,7 @@
    RE-RUN 2026-09-18 by REC-141 in worktree agent-a12cdccbace704eb6 AFTER correcting this suite (P predicted from the plane's PROJ sequence and asserted at the mint; the fork rows send no newId; §6 CORRECTED from the KNOWN `EXISTS` to the refusal, byte-identical to a never-minted id), real src/index.mjs 660,878 B sha256 98368d9756c0…, src/store.mjs 2,636,157 B sha256 9c6222a402cc…, untouched: YES — every arm AS DECLARED: baseline 94/0 · cite-distinguishing 92/2 · position-first 90/4 · not-found-to-everyone 74/20 · roster-stamp-dropped 82/12 · promote-stamp-dropped 90/4 · sight-via-redactor 94/0 (each +2 passes: the mint-equals-prediction arm and §6's second arm).
    RE-RUN 2026-09-19 by REC-141 after BOB #16's opaque-suffix ruling (P can no longer be predicted: the never-minted reads are taken at NEVER, and §1 normalises each read's OWN id to one placeholder), real src/index.mjs 663,811 B sha256 3f4f83fdb5d6…, src/store.mjs 2,648,430 B sha256 d037f85ce689…, untouched: YES — every arm AS DECLARED: baseline 94/0 · cite-distinguishing 92/2 · position-first 90/4 · not-found-to-everyone 74/20 · roster-stamp-dropped 82/12 · promote-stamp-dropped 90/4 · sight-via-redactor 94/0. RECORDED: the first 2026-09-19 run had cite-distinguishing and roster-stamp-dropped NOT AS DECLARED only because §1's label was reworded and the driver matches it by fragment; the label was restored, and the arms then came back as declared.
    RE-RUN 2026-09-23 by D-447 in worktree /home/user/bio (cloud) on base 02603e88 AFTER adding §7 (the ranked read) and three arms, real src/index.mjs 731,481 B sha256 c7d77e7eee13…, src/store.mjs 2,902,978 B sha256 893a1cc99c3b…, src/query.mjs 166,525 B sha256 bdeb4e9c8285… (now hashed too), untouched: YES — baseline 110/0 · cite-distinguishing 108/2 · position-first 106/4 · not-found-to-everyone 88/22 · roster-stamp-dropped 98/12 · publish-raw-bm25 103/7 (THE BRIEF'S CONTROL: the index-wide bm25() published again as `score` — the six hit-bearing digests and NO SCORE IS PUBLISHED fail BY NAME, select-all `ids` and the selection order do NOT) · order-by-index-bm25 105/5 (no score, the ORDER from the index-wide bm25() again — exactly the five orders the hidden revision flips) · tf-over-vis 110/0 (over-strictness) · sight-via-redactor 110/0: AS DECLARED. RECORDED, NOT SMOOTHED: (1) not-found-to-everyone came back NOT AS DECLARED on the first run because §7's hidden revision was iris's session, which that arm lies to — a second variable; §7 now revises by the ADMIN token and the arm is AS DECLARED. (2) promote-stamp-dropped is NOT AS DECLARED (0/1: the suite throws in its fixture, SURFACE_NO_RUN) and it is PRE-EXISTING — the same result on a clean checkout of 02603e88 with §7 absent: the arm drops the promote stamp, which REC-171's surfacing-run fixture (`surfacing-run.mjs`) needs to open its run. Routed with its fix named (create the fixture's inquiry through the store's internal door, the bias set's precedent, or open the run before arming); not changed here.
+   RE-RUN 2026-09-24 by D-464 in worktree /home/user/bio (cloud) on base 15b2a4c0 AFTER adding §8 (the counts) and five arms, real src/index.mjs 742,733 B sha256 450e60c61109…, src/store.mjs 2,958,609 B sha256 9a5b205f5a3b…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 125/0 · cite-distinguishing 123/2 · position-first 121/4 · not-found-to-everyone 103/22 · roster-stamp-dropped 113/12 · publish-raw-bm25 118/7 · order-by-index-bm25 120/5 · tf-over-vis 125/0 · stats-whole-store 122/3 (THE BRIEF'S CONTROL: `op=stats` counts the whole store again — the hidden-creation arm fails BY NAME, `A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats`, with the digest and EXACT arms; searchindexcheck and selectionlist stay green) · indexcheck-whole-index 122/3 · selectionbytes-whole 124/1 · stats-stamp-dropped 122/3 · subtract-for-everyone 125/0 (over-strictness) · sight-via-redactor 125/0: AS DECLARED. BEFORE the fix §8 read 115/7 on the unedited sources (vera's stats moved `bundles, files, history, refs, indexed, projectParticipants`). RECORDED, NOT SMOOTHED: (1) stats-stamp-dropped came back NOT AS DECLARED on its first run (then 121/4, against a store reading an ABSENT stamp as DENY: the ADMIN witness failed and three zeros agreed); that reading was corrected before landing because it zeroed the counters four store-level suites read off the DO route (a never-sent viewer is now an internal call, WHOLE), and the arm was re-declared: dropping the stamp now fails the headline by name. Reason at the arm. (2) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2) above, unchanged by D-464.
  * =========================================================================
  * REC-138 / D-426 / IC-155 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT.
  * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project, *"Not its
@@ -437,6 +438,87 @@ console.log("\n--- 7. D-447: revising a project vera cannot see moves NOTHING in
   must("a VISIBLE revision", await promoteAs(ADM, SHORT, infoWith(SHORT, "culvert culvert culvert culvert culvert levy noted."), "information", "collected", await shaOf(SHORT)));
   t("STILL LIVE: a revision vera CAN see does move vera's order (SHORT now says 'culvert' most and ranks first)",
     (parse(await RAW(`op=search&token=${VERA}&q=culvert`))?.hits || []).map((h) => h.bundle_id), [SHORT, LONG]);
+}
+
+/* ======================================================== 8. THE COUNTS (D-464) */
+console.log("\n--- 8. D-464: creating and revising a project vera cannot see moves NOTHING in vera's counts ---");
+{
+  /* WHAT WAS WRONG, measured at the op on the unedited tree (`15b2a4c0`, this section run before any source changed;
+     MEASUREMENTS M-122 first saw it): `op=stats` counted every table over the WHOLE store and `op=searchindexcheck`'s
+     `counts.indexed` counted the whole text index, so a member diffing their own counts across a colleague's work
+     learned that a project they were never invited to had been CREATED (`bundles`, `files`, `history`, `refs`,
+     `indexed`, `projectParticipants`) and REVISED (`history`, `files`, `refs`) — §7.9's *"Not its existence"*,
+     arriving by an aggregate. The fix counts through the caller's own `viewerPredicate` (`Store#viewerCounts`), the
+     one sight rule, so every class but a filtered member session gets the count it always got.
+     THE ACTS are the ones that write a project's rows: the creation (by the ADMIN token), an owner claimed, a member
+     invited, and a revision that cites a second document. None of them is vera's, and she is never invited. */
+  const READS = ["op=stats", "op=searchindexcheck", "op=searchindexcheck&limit=1", "op=selectionlist"];
+  const readAll = async (tok) => { const o = []; for (const q of READS) o.push(await RAW(`${q}&token=${tok}`)); return o; };
+  const vBefore = await readAll(VERA), aBefore = await readAll(ADM);
+  const s0 = parse(vBefore[0]) || {};
+  const keys = Object.keys(s0);
+  console.log(`  corpus: ${READS.length} count reads by vera; op=stats answers ${keys.length} keys (bundles ${s0.bundles}, indexed ${s0.indexed})`);
+  t("the counts are live: vera's op=stats is an answer of counts (floor: 40 keys, and she already sees documents)",
+    [keys.length >= 40, s0.bundles > 0, s0.indexed > 0], [true, true, true]);
+  const { bundleId: _none, ...create } = pkg(NEVER, projectMd(null, [LEDGER]), "project", "forming", null, `d464-${++seq}`);
+  const q = must("a second hidden project is minted", await POST(`op=promote&token=${ADM}`,
+    { ...create, meta: { ...create.meta, title: "Hidden project 9464" } })).bundleId;
+  must("iris owns it", await DO("projectclaimowner", { projectId: q, memberId: "iris" }));
+  must("iris invites olga", await DO(`projectinvite?projectId=${q}&handle=olga&by=iris&viewer=admin`, {}));
+  const qBase = await shaOf(q);
+  must("and it is revised, citing a second document",
+    await promoteAs(ADM, q, projectMd(q, [LEDGER, MINUTES], "A revision."), "project", "forming", qBase));
+  t("the hidden revision LANDED (its sha moved)", (await shaOf(q)) !== qBase, true);
+  /* And iris, who owns it, SELECTS it: `op=selectionlist`'s `bytes` summed every owner's selection rows. */
+  must("iris selects the hidden project", await POST(`op=select&token=${IRIS}&kind=enumerated`, { ids: [q] }));
+  const vAfter = await readAll(VERA), aAfter = await readAll(ADM);
+  /* THE WITNESS: the ADMIN token, which sees every project, counts them — so the rows were written, and the identity
+     below is not two reads of a store nothing changed. */
+  const a0 = parse(aBefore[0]) || {}, a1 = parse(aAfter[0]) || {};
+  t("the store SAW the acts: the ADMIN token's bundles, history, refs, indexed and projectParticipants all moved",
+    ["bundles", "history", "refs", "indexed", "projectParticipants"].filter((k) => a1[k] === a0[k]), []);
+  t("the store SAW the acts: the ADMIN token's searchindexcheck counts.indexed moved",
+    parse(aAfter[1])?.counts?.indexed > parse(aBefore[1])?.counts?.indexed, true);
+  t("the store SAW the acts: the ADMIN token's selectionlist bytes moved (iris's selection of it)",
+    parse(aAfter[3])?.bytes > parse(aBefore[3])?.bytes, true);
+  const s1 = parse(vAfter[0]) || {};
+  t("A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats (the keys that moved, by name)",
+    keys.filter((k) => JSON.stringify(s1[k]) !== JSON.stringify(s0[k])), []);
+  READS.forEach((r, i) => {
+    t(`A HIDDEN CREATION AND REVISION MOVE NOTHING: ${r} (status, content type, body, by digest)`,
+      { status: vAfter[i].status, type: vAfter[i].type, sha: sha(vAfter[i].body) },
+      { status: vBefore[i].status, type: vBefore[i].type, sha: sha(vBefore[i].body) });
+  });
+  /* PARITY STILL MEANS PARITY for the reader: her `indexed` is her `keyed` (no orphan, no hidden row). */
+  const c1 = parse(vAfter[1])?.counts || {};
+  t("vera's searchindexcheck is still a parity check over what she can see: indexed = keyed, and ok",
+    [c1.indexed === c1.keyed, parse(vAfter[1])?.ok], [true, true]);
+  /* OVER-STRICTNESS: a count through the viewer is still a COUNT, and still LIVE — a document vera CAN see moves it. */
+  const VIS = "INFO-2026-9464-visible";
+  must("a VISIBLE document", await promoteAs(ADM, VIS, infoMd(VIS), "information", "collected"));
+  const s2 = parse(await RAW(`op=stats&token=${VERA}`)) || {}, c2 = parse(await RAW(`op=searchindexcheck&token=${VERA}`))?.counts || {};
+  /* `history` is not in this list: a CREATION writes no prior version (measured — it moved 0 here before the fix too). */
+  t("STILL LIVE: a document vera CAN see moves her bundles, files, register and indexed by exactly one each",
+    ["bundles", "files", "register", "indexed"].map((k) => s2[k] - s1[k]), [1, 1, 1, 1]);
+  t("STILL LIVE: and her searchindexcheck counts.indexed and keyed by one each",
+    [c2.indexed - c1.indexed, c2.keyed - c1.keyed], [1, 1]);
+  /* OVER-STRICTNESS: a credential the gate does not filter keeps the WHOLE count — the MEMBER token is instance-level
+     and the ADMIN token the operator (viewerPredicate's machine arm), and an enrolled ADMINISTRATOR sees every
+     project (§7.9). Each must equal the ADMIN token's own figure, hidden project included. */
+  const whole = parse(await RAW(`op=stats&token=${ADM}`)) || {};
+  const mem = parse(await RAW(`op=stats&token=${MEM}`)) || {}, ruth = parse(await RAW(`op=stats&token=${RUTH}`)) || {};
+  /* And the difference between the whole count and vera's is EXACTLY the bundles her own list does not show — the
+     count is the list's size, not a looser or a tighter number (the hidden set is read, not assumed). */
+  const ids = async (tok) => new Set(((parse(await RAW(`op=list&token=${tok}&limit=1000`)) || {}).bundles || []).map((b) => b.bundle_id));
+  const allIds = await ids(ADM), veraIds = await ids(VERA);
+  const unseen = [...allIds].filter((i) => !veraIds.has(i));
+  console.log(`  bundles vera's list does not show: ${unseen.length} (${unseen.join(", ")})`);
+  t("WHOLE FOR THE UNFILTERED: the MEMBER token and ruth (an administrator) count what the ADMIN token counts",
+    ["bundles", "history", "refs", "indexed", "projectParticipants"].map((k) => mem[k] === whole[k] && ruth[k] === whole[k]),
+    [true, true, true, true, true]);
+  t("EXACT: the ADMIN token's bundles less vera's is the number of bundles her list does not show, and it includes both hidden projects (floor: 2)",
+    [whole.bundles - s2.bundles, unseen.length >= 2, unseen.includes(P) && unseen.includes(q), allIds.size === whole.bundles],
+    [unseen.length, true, true, true]);
 }
 
 } catch (e) {

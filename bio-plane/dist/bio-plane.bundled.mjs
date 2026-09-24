@@ -3989,7 +3989,7 @@ var sha256 = async (s) => {
   const b = await crypto.subtle.digest("SHA-256", typeof s === "string" ? new TextEncoder().encode(s) : s);
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 };
-async function livefire(env, storeName, { capacity = false } = {}) {
+async function livefire(env, storeName, { capacity = false, viewer = null } = {}) {
   const t0 = Date.now();
   const stub = env.STORE.get(env.STORE.idFromName(storeName));
   const post = async (op, body) => {
@@ -4145,7 +4145,7 @@ rev ${rev}
     assert("R2 exercised without error", false, true);
   }
   const tw = Date.now();
-  const stats = await get(`stats?capacity=${capacity ? "1" : "0"}`);
+  const stats = await get(`stats?capacity=${capacity ? "1" : "0"}&viewer=${encodeURIComponent(viewer ?? "")}`);
   const dang = await get("dangling");
   const wholeMs = Date.now() - tw;
   const passed = A.filter((a) => a.ok).length;
@@ -30756,10 +30756,20 @@ var Store = class _Store extends DurableObject {
          gated with it (REC-25: a total bigger than the pages says something is
          hidden). `indexed` counts INDEX rows, which is the substrate side of the
          parity this op exists to check and the number the orphan finding is read
-         against — a count that names nothing is not identity. */
+         against — a count that names nothing is not identity.
+         CORRECTED 2026-09-24 BY D-464, and the old sentence was half right: an ORPHAN names nothing, but a row a
+         bundle CLAIMS is that bundle's, and `indexed` over the whole index moved when a project the caller cannot
+         see was created (MEASUREMENTS M-122). So `indexed` drops the rows a bundle the gate does NOT pass claims —
+         the complement of the same gate, interpolated — and keeps every orphan: parity is still `indexed` against
+         `keyed` plus the orphans, now over what the caller can see. An unfiltered credential's answer is unchanged. */
       counts: {
         bundles: this.#one(`SELECT count(*) c FROM bundles b WHERE (${gate.sql})`, ...gate.args).c,
-        indexed: this.#one(`SELECT count(*) c FROM bundles_fts`).c,
+        indexed: this.#one(
+          `SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
+                                      (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN
+                                        (SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql})))`,
+          ...gate.args
+        ).c,
         keyed: this.#one(
           `SELECT count(*) c FROM bundles b WHERE b.fts_id IS NOT NULL AND (${gate.sql})`,
           ...gate.args
@@ -31983,7 +31993,7 @@ var Store = class _Store extends DurableObject {
       gate: { applied: tally.applied }
     };
   }
-  selectionList({ owner = null } = {}) {
+  selectionList({ owner = null, viewer } = {}) {
     this.#sweepSelections();
     if (!owner) return { ok: false, reason: "NO_OWNER" };
     return {
@@ -31994,7 +32004,19 @@ var Store = class _Store extends DurableObject {
         owner
       ),
       caps: { maxItems: _Store.SELECTION_MAX_ITEMS, maxPerOwner: _Store.SELECTION_MAX_PER_OWNER },
-      bytes: this.#one(`SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items`).b
+      /* D-464: the instance's selection bytes, and a row naming a bundle the caller cannot see is not in them —
+         another member's selection of a project this caller was never invited to moved this figure by that id's
+         length (§7.9). The complement of the one gate, as `#counts` takes it; `viewer === undefined` is a direct
+         internal call and stays whole. The rest stays instance-wide: other members' selections of what this caller
+         CAN see are not ruled private. */
+      bytes: (() => {
+        const g = viewer === void 0 ? null : viewerPredicate(viewer);
+        const hide = g && g.scope !== "member";
+        return this.#one(
+          `SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items` + (hide ? ` WHERE bundle_id NOT IN (SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${g.sql}))` : ""),
+          ...hide ? g.args : []
+        ).b;
+      })()
     };
   }
   selectionRelease({ handle = null, owner = null } = {}) {
@@ -55287,23 +55309,45 @@ ${words}`;
    *  `capacity=` is overwritten, never honoured. An absent stamp is `false` — a door that forgets
    *  to stamp loses `dbBytes` rather than leaking it. It is a stamp and not a second method
    *  because it must ride the one DO route every door already fetches. */
-  stats({ capacity = false } = {}) {
-    return this.#counts({ proof: false, capacity: capacity === true });
+  stats({ capacity = false, viewer } = {}) {
+    return this.#counts({ proof: false, capacity: capacity === true, viewer });
   }
   /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
    *  on any key but the ones the ruling names. `proof` is PRIVATE: only `purge` passes it, because
    *  its before/after ARE D-113's proof that it took what it says it took, and that proof stays
    *  WHOLE (§5: *the purge proof's own count stays whole*) — `observations` over the whole log,
    *  `leads`, and `dbBytes`, exactly as `op=purge` has always answered. No route reaches it. */
-  #counts({ proof, capacity = false }) {
-    const n = (t) => this.#one(`SELECT count(*) c FROM ${t}`).c;
+  #counts({ proof, capacity = false, viewer }) {
+    const gate = viewer === void 0 ? null : viewerPredicate(viewer);
+    const hid = gate && gate.scope !== "member" ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args } : null;
+    const hidRuns = hid && {
+      sql: `(SELECT run FROM ai_runs WHERE context_type = 'project' AND context_id IN ${hid.sql})`,
+      args: hid.args
+    };
+    const nx = (t, where, keys = [], runKeys = [], whereArgs = []) => {
+      const conds = where ? [where] : [], args = [...whereArgs];
+      if (hid) {
+        for (const k of keys) {
+          conds.push(`COALESCE(${k}, '') NOT IN ${hid.sql}`);
+          args.push(...hid.args);
+        }
+        for (const k of runKeys) {
+          conds.push(`COALESCE(${k}, '') NOT IN ${hidRuns.sql}`);
+          args.push(...hidRuns.args);
+        }
+      }
+      return this.#one(`SELECT count(*) c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`, ...args).c;
+    };
+    const n = (t, ...keys) => nx(t, null, keys);
+    const indexed = hid ? this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
+                     (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN ${hid.sql})`, ...hid.args).c : n("bundles_fts");
     return {
-      bundles: n("bundles"),
-      files: n("files"),
-      history: n("history"),
-      refs: n("refs"),
-      register: n("register"),
-      indexed: n("bundles_fts"),
+      bundles: n("bundles", "bundle_id"),
+      files: n("files", "bundle_id"),
+      history: n("history", "bundle_id"),
+      refs: n("refs", "bundle_id", "target_id"),
+      register: n("register", "bundle_id"),
+      indexed,
       /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX, reported for exactly the
          reason every other row on this list is -- so a purge can PROVE it took
          the rows rather than assert it.
@@ -55328,7 +55372,7 @@ ${words}`;
          * and measured to catch the same orphan plain `integrity-check` (rank 0)
          * passes over. It costs a walk of the index, which is why it belongs on
          * an admin read taken deliberately and not on a member path. */
-      textUnits: n("capture_text"),
+      textUnits: n("capture_text", "bundle_id"),
       textIndexOk: (() => {
         try {
           this.sql.exec(`INSERT INTO capture_text_fts(capture_text_fts, rank) VALUES('integrity-check', 1)`);
@@ -55337,11 +55381,19 @@ ${words}`;
           return false;
         }
       })(),
-      selections: n("selections"),
-      selectionItems: n("selection_items"),
+      /* A selection holding a bundle the caller cannot see is a count over a row they cannot read (BOB #15), so the
+         whole handle leaves `selections`; `selectionItems` drops only the hidden rows, which name the bundle. */
+      selections: hid ? nx(
+        "selections",
+        `handle NOT IN (SELECT handle FROM selection_items WHERE bundle_id IN ${hid.sql})`,
+        [],
+        [],
+        hid.args
+      ) : n("selections"),
+      selectionItems: n("selection_items", "bundle_id"),
       /* Reported so a purge can prove it took them, and so an operator can see
          inbox and reachability depth without a second call. */
-      tasks: n("tasks"),
+      tasks: n("tasks", "refers_to"),
       taskQueue: n("task_queue"),
       sourceReachability: n("source_reachability"),
       /* REC-26: the monitoring consumers' idempotence state, reported so a purge
@@ -55356,26 +55408,28 @@ ${words}`;
       entityAliases: n("entity_aliases"),
       entityRelations: n("entity_relations"),
       /* FW-7: the recogniser's resolutions, reported so a purge can PROVE it took them. */
-      resolutions: n("resolutions"),
+      resolutions: n("resolutions", "bundle_id"),
       /* REC-24: the action loop's two projections, reported so a purge can PROVE
          it cleared them (D-113) rather than assert it. */
-      actionBasis: n("action_basis"),
-      correspondence: n("correspondence"),
-      /* D-148: the fee-quote projection, counted so a purge can PROVE it took it. */
-      actionQuotes: n("action_quotes"),
+      actionBasis: n("action_basis", "bundle_id", "target_id"),
+      correspondence: n("correspondence", "bundle_id", "artifact_bundle_id"),
+      /* D-148: the fee-quote projection, counted so a purge can PROVE it took it. Its rows name the action
+         (`bundle_id`), so D-464's subtraction takes it (keyed at c19-batch10's merge of D-464). */
+      actionQuotes: n("action_quotes", "bundle_id"),
       /* FW-8: the derived connections and the member-declared progression definitions,
          reported so a whole-store purge can PROVE it cleared them (D-113). */
-      connections: n("connections"),
+      connections: n("connections", "a_bundle_id", "b_bundle_id"),
       progressionDefs: n("progression_defs"),
-      /* REC-122: the member on-point choices, so a purge can PROVE it took them (D-113). */
-      connectionPairChoices: n("connection_pair_choices"),
+      /* REC-122: the member on-point choices, so a purge can PROVE it took them (D-113). Keyed by both ends'
+         bundles, as `connections` is (D-464's subtraction, keyed at c19-batch10's merge of D-464). */
+      connectionPairChoices: n("connection_pair_choices", "a_bundle_id", "b_bundle_id"),
       progressionStages: n("progression_stages"),
       /* FW-9: the threaded progression instances, reported so a purge can PROVE it cleared
          them (D-113). */
-      progressionInstances: n("progression_instances"),
+      progressionInstances: n("progression_instances", "bundle_id"),
       /* FW-10: the exception documents that discharge a lawful skip, reported so a purge can
          PROVE it cleared them (D-113). */
-      progressionExceptions: n("progression_exceptions"),
+      progressionExceptions: n("progression_exceptions", "bundle_id"),
       /* REC-5 / D-122: the connection-derive dirty-set's depth, reported so a whole-store
          purge can PROVE it cleared the pending work-queue (D-113) and so an operator can
          see how many entities are awaiting a sweep. */
@@ -55389,32 +55443,32 @@ ${words}`;
          a single quantity while the two govern different sets of feeds — and it is precisely the
          distinction this item exists to draw, so the count that proves the purge took them must
          not be the one place it is lost. */
-      findingDispositions: n("finding_dispositions"),
+      findingDispositions: n("finding_dispositions", "project_id"),
       /* REC-27 / D-137: the participation graph and the pending owner-governance
          votes, reported so a purge can PROVE it took them (both are keyed on
          project_id, a bundle id, and were the silent-leftover the D-113 check
          could not see). */
-      projectParticipants: n("project_participants"),
-      projectOwnerVotes: n("project_owner_votes"),
+      projectParticipants: n("project_participants", "project_id"),
+      projectOwnerVotes: n("project_owner_votes", "project_id"),
       /* REC-21: members' personal queue state, reported so a purge can PROVE it
          cleared the mutes and snoozes it took (D-113). A COUNT OF ROWS AND
          NOTHING ELSE — stats is an operator surface and whose attention is muted
          on what is not an operator's business. */
-      queueState: n("queue_state"),
+      queueState: n("queue_state", "case_id"),
       /* D-125: the item mutes, a COUNT for queueState's reason. */
       queueItemMutes: n("queue_item_mutes"),
       /* REC-82 / IC-83: the content rows — the parts of documents this record's
          edges point at — reported so a purge can PROVE it took them (D-113)
          rather than assert it, and so an operator can see the content axis's
          depth beside the document count it has always been able to see. */
-      content: n("content"),
+      content: n("content", "bundle_id"),
       /* REC-82: and how many of them were minted against a transcription that
          has since MOVED. Counted apart from the total and never folded into it:
          a re-extraction marks rows stale and DELETES NONE, so the total alone
          cannot distinguish "nothing was re-read" from "everything was" — which
          is the one fact an operator needs before believing a content-grain
          answer, and the one this count exists to make visible. */
-      contentStale: this.#one(`SELECT count(*) c FROM content WHERE stale=1`).c,
+      contentStale: nx("content", "stale=1", ["bundle_id"]),
       /* SK-8: the EXTRACT role's proposed readings, reported so a purge can
          PROVE it took them (D-113) and — the part that is not housekeeping — so
          an operator can see the assistant's production volume beside the content
@@ -55424,20 +55478,20 @@ ${words}`;
          here and is deliberately not: it is scoped to a run or a document
          (`op=extractproposals`), and an instance-wide fraction would average
          across projects that have nothing to do with each other. */
-      proposedReadings: n("proposed_readings"),
+      proposedReadings: n("proposed_readings", "bundle_id"),
       /* IS-6: the investigative runs, their budgets and their observation logs,
          reported so a whole-store purge can PROVE it took them (D-113) and so an
          operator can see how many runs are in flight without opening one. A
          COUNT AND NOTHING ELSE — what a run is looking into is not an operator
          surface, the same line queueState draws one row up. */
-      aiRuns: n("ai_runs"),
-      aiRunBounds: n("ai_run_bounds"),
+      aiRuns: n("ai_runs", "context_id"),
+      aiRunBounds: nx("ai_run_bounds", null, [], ["run"]),
       /* D-85: the links from an assistant's questions to their runs, counted for IS-6's reason one line up — so a
          purge can PROVE it took them (D-113). A COUNT AND NOTHING ELSE: which run opened which question is read
          per question, under that question's gate (`op=projection`'s `surfaced_in`). */
-      inquiryRunSurfacings: n("inquiry_run_surfacings"),
+      inquiryRunSurfacings: n("inquiry_run_surfacings", "bundle_id"),
       /* REC-173: the questions whose creation was a verified migration replay, counted for D-85's reason one line up. */
-      inquiryMigrationReplays: n("inquiry_migration_replays"),
+      inquiryMigrationReplays: n("inquiry_migration_replays", "bundle_id"),
       /* REC-93 / IC-92: `aiRunLog` was a count of `ai_run_log`, which no longer
          exists — `OBSERVATION-LOG-DESIGN.md` §4.4 folded it into `observations`
          and `#migrate` drops it. The key is KEPT AND RE-AIMED at the folded rows
@@ -55477,31 +55531,31 @@ ${words}`;
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
          readings of the evidence exist is an operator fact, and what they say is
          not an operator surface. */
-      basisVersions: n("inquiry_basis_versions"),
-      basisVersionLegs: n("inquiry_basis_version_legs"),
+      basisVersions: n("inquiry_basis_versions", "bundle_id"),
+      basisVersionLegs: n("inquiry_basis_version_legs", "bundle_id", "target_id"),
       /* PL-3 / IS-4: F10's stored refusals, reported so a purge can PROVE it
          took them (D-113) and so an operator can see that a run is looping
          against a refusal without opening one. A COUNT AND NOTHING ELSE — the
          same line queueState, aiRuns and basisVersions draw. */
-      suggestRefusals: n("suggest_refusals"),
+      suggestRefusals: n("suggest_refusals", "target"),
       /* PL-4 / IS-4: the outbound work list, reported for the same reason and
          with one more of its own — this is the only counter in the store that
          says how much traffic this instance is about to send to somebody else's
          server, and a purge that reported scope ALL while it stood would leave a
          leftover visible from OUTSIDE the instance. */
-      captureRequests: n("capture_requests"),
+      captureRequests: n("capture_requests", "lead_inquiry"),
       /* PL-12 / D-84: the declared-bias statements and the adoptions that put
          them in force, reported so a whole-store purge can PROVE it took them
          (D-113) and so an operator can see that a lens IS in force without
          opening one. A COUNT AND NOTHING ELSE — what a group's declared bias
          SAYS is the group's business and travels with their published work,
          not an operator surface, the same line queueState and aiRuns draw. */
-      biasStatements: n("bias_statements"),
-      biasAdoptions: n("bias_adoptions"),
+      biasStatements: n("bias_statements", "bundle_id"),
+      biasAdoptions: n("bias_adoptions", "bundle_id", "scope_id"),
       /* REC-63 / DEC-56: the standing route markers, reported so a whole-store
          purge can PROVE it took them (D-113) and so an operator can see that the
          record is carrying doubts at all without having to sweep for them. */
-      routeMarks: n("provenance_route_marks"),
+      routeMarks: n("provenance_route_marks", "bundle_id"),
       /* REC-131 / IC-148: the ADMIN class's and purge's only — see `stats()`. THE RESIDUE, STATED
          RATHER THAN HIDDEN (BOB #15): the admin class still receives a figure that moves in whole
          pages on every write, a large lead's included, so the operator can detect that SOMETHING
@@ -73054,7 +73108,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           identity: url.searchParams.get("identity")
           /* REC-134 */
         }),
-        selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner") }),
+        selectionlist: () => this.selectionList({
+          owner: url.searchParams.get("owner"),
+          viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : void 0
+        }),
         selectionrelease: () => this.selectionRelease({
           handle: url.searchParams.get("handle"),
           owner: url.searchParams.get("owner")
@@ -73068,7 +73125,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
-        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
+        stats: () => this.stats({
+          capacity: url.searchParams.get("capacity") === "1",
+          viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : void 0
+        }),
         /* D-116: THE DO'S OWN BUILD, under a field that is NEVER `version`. `op=bootstrap`'s `version` is the ROUTING
            isolate's env.VERSION, and this answer is spread AFTER it, so a `version` here would REPLACE that reading
            rather than stand beside it. `this.env` is the env of the worker version THIS OBJECT is running, which rolls
@@ -77766,7 +77826,9 @@ var index_default = {
         out.r2 = "MISCONFIGURED: one bucket bound without the other; the fence requires both or neither";
       }
       try {
-        const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}`));
+        const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}&viewer=${encodeURIComponent(
+          viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+        )}`));
         if (!sOut.answered) {
           out.ok = false;
           out.store = "ERR the store did not answer /stats";
@@ -77806,7 +77868,10 @@ var index_default = {
         }, 400);
     }
     if (op === "livefire") {
-      const out = await livefire(env, storeName, { capacity: cls === "admin" });
+      const out = await livefire(env, storeName, {
+        capacity: cls === "admin",
+        viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`
+      });
       return json(out, out.ok ? 200 : 500);
     }
     if (op === "runtime") {
@@ -80301,7 +80366,7 @@ var index_default = {
       "projectvisibility",
       "projectdirectory"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "themeplace" || op === "themepropose" || op === "themeread" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "stats" || op === "selectionlist" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`

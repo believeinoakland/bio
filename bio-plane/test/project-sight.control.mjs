@@ -134,6 +134,44 @@ const ARMS = {
     mustFail: [],
   },
 
+  /* D-464 — THE BRIEF'S CONTROL: `op=stats` counts over the WHOLE store again (no bundle is subtracted for anyone).
+     The hidden creation and revision then move vera's stats by name, and the EXACT arm reads a zero difference. The
+     searchindexcheck and selectionlist arms must NOT fail — they are the next two arms' subjects. */
+  "stats-whole-store": {
+    patches: [["store.mjs", `    const hid = gate && gate.scope !== "member"\n`, `    const hid = null && gate && gate.scope !== "member"\n`]],
+    mustFail: ["A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats", "MOVE NOTHING: op=stats (status",
+               "EXACT: the ADMIN token's bundles less vera's"],
+  },
+  /* D-464: `op=searchindexcheck`'s `indexed` over the whole text index again (M-122's second leak). */
+  "indexcheck-whole-index": {
+    patches: [["store.mjs", "indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN\n",
+               "indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE 1=1 OR rowid NOT IN\n"]],
+    mustFail: ["MOVE NOTHING: op=searchindexcheck (status", "MOVE NOTHING: op=searchindexcheck&limit=1 (status",
+               "still a parity check over what she can see"],
+  },
+  /* D-464: `op=selectionlist`'s `bytes` over every selection row again — iris's selection of the hidden project moves it. */
+  "selectionbytes-whole": {
+    patches: [["store.mjs", `        const hide = g && g.scope !== "member";`, `        const hide = false && g;`]],
+    mustFail: ["MOVE NOTHING: op=selectionlist (status"],
+  },
+  /* D-464: the control plane's viewer stamp on op=stats dropped. A viewer NEVER SENT is the store's direct-internal
+     call and counts WHOLE, so the stamp is load-bearing: vera's stats move again, by name, exactly as the brief's arm.
+     RECORDED, NOT SMOOTHED: this arm was first declared (and first run) against a store that read an ABSENT stamp as
+     DENY — there it failed LIVE, the witness and EXACT and passed the headline (three zeros agree). That reading was
+     then corrected because it zeroed the counters four store-level suites read off the DO route directly; the arm
+     was re-declared for the store as landed. */
+  "stats-stamp-dropped": {
+    patches: [["index.mjs", `        || op === "stats"\n`, ``]],
+    mustFail: ["A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats", "MOVE NOTHING: op=stats (status",
+               "EXACT: the ADMIN token's bundles less vera's"],
+  },
+  /* D-464 OVER-STRICTNESS: the subtraction taken for EVERY sent viewer, unfiltered ones included — correct work in a
+     spelling the suite did not anticipate (an unfiltered gate's complement is empty). Nothing may fail. */
+  "subtract-for-everyone": {
+    patches: [["store.mjs", `    const hid = gate && gate.scope !== "member"\n`, `    const hid = gate\n`]],
+    mustFail: [],
+  },
+
   /* OVER-STRICTNESS: the same sight question asked through the store's OTHER spelling of it,
      `#bundleRedactor` — correct work in a form the suite did not anticipate. Nothing may fail. */
   "sight-via-redactor": {
