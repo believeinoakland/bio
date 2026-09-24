@@ -34,12 +34,21 @@
 
    NEGATIVE CONTROL: RUN 2026-09-24 by the REC-194 worker on blocks 3, 6, 8, 10 and 11 (rule 13, the ONE-CASE-IDENTITY
    NARROWING), in /home/user/bio on land/worker/REC-194, each arm ALONE on `src/store.mjs`, DECLARED BEFORE ARMING,
-   restored by `cp` from a UNIQUELY NAMED per-arm pristine copy verified by sha256 (`8f6982e4...b57b1d`, both arms) AND
-   by `cmp` (content identical, 3,231,780 B, floored at 3,000,000) — never `git checkout --`. The suite runs
-   `src/index.mjs` directly, so no bundle is in the loop.
-   (0) BASELINE, nothing armed -> 64 pass, 0 fail (and 64/0 again after the second restore, re-run to prove it).
+   restored by `cp` from a UNIQUELY NAMED per-arm pristine copy verified by sha256 AND by `cmp` (content identical,
+   floored at 3,000,000 B) — never `git checkout --`. The suite runs `src/index.mjs` directly, so no bundle is in
+   the loop. **RUN TWICE, AND THE SECOND RUN IS THE ONE THAT COUNTS.** The first pass was taken at
+   `8f6982e4...b57b1d` (3,231,780 B); the gate then found two real defects in the landing (a ternary around the
+   listing read had moved it out of `derivation-bounds`' GRADED truncation roster, and block 8's rewrite had left
+   C-82.1 named by no assertion anywhere in the battery, 449/449 -> 448/449 in `coverage.mjs`), and BOTH fixes
+   CHANGED THE SUBJECT — arm (a)'s patch text no longer existed, so re-running was necessity and not diligence:
+   an arm that does not arm is a finding, and a suite coupled to behaviour survives a shape change that disarms a
+   control coupled to shape (`CLAUDE.md` §5). Both arms were re-armed against the FINAL source at
+   `b87385ea...a734c5` (3,232,909 B) and returned the SAME figures as the first pass, recorded because agreement
+   measured twice is worth more than agreement assumed once.
+   (0) BASELINE, nothing armed -> 64 pass, 0 fail on the final source, and 64/0 AGAIN after EACH of the two
+   restores, re-run to prove the restore rather than trusting `cp`.
    (a) MATCH BY THE STATEMENT'S HASH ALONE — the row's first named control: `#statementAcknowledgements`' two
-   identity predicates made inert (`case_id IS ? OR 1=1`, `? IS NULL OR draft_id=? OR 1=1`), so the read matches
+   identity predicates made inert (`case_id IS ? OR 1=1`, `? = '*' OR draft_id = ? OR 1=1`), so the read matches
    project + statement_sha + edition and nothing else, which is D-150's defect at its widest. DECLARED: MUST FAIL
    block 10's "ACCEPTS-WHEN (first clause) ... TWIN-B ... lists NOBODY" BY NAME and block 3's REC-194 arms; MUST NOT
    FAIL block 9 (REC-193's stamp, untouched), block 4's one-member arms (the SOLO project holds no other reading of
@@ -54,7 +63,8 @@
    draft naming no case reaches every same-sentence unsigned edition-1 document of the project. DECLARED: MUST FAIL
    block 8's and block 10's "ACCEPTS-WHEN (second clause)" arms BY NAME; MUST NOT FAIL block 10's first-clause listing
    arms, whose read this arm does not touch -> 58 pass, 6 fail: both named arms, block 8's three neighbouring
-   measurements (the re-run act, the byte-identity of every document, the unreachability measurement) and its RESIDUE
+   measurements (the re-run act, the byte-identity of every document, and the C-82.1 arm, whose unreachability half
+   is exactly what (b) re-reaches) and its RESIDUE
    arm. EVERY LISTING ARM STAYED GREEN, which is the point of running the two arms separately: the listing read and
    the document read are two mechanisms, each with its own arm, and neither control can pass for the other's reason.
    ONE SURPRISE, RECORDED RATHER THAN SMOOTHED: block 8's "and NOTHING WAS WRITTEN" arm stayed GREEN under (b). That
@@ -102,7 +112,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
-import { checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { checkCaseDocument, parseFrontmatter, STATEMENT_ACK_CHECKS } from "../checks/bio-checks.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- d150-statement-acknowledgement ---");
@@ -628,11 +638,23 @@ console.log("\n--- 8. REC-194: the draft door of a NEW case re-authors NO other 
     [at?.ok, at?.existed, (at?.case_documents || []).length, at?.case_documents_limit, at?.case_documents_truncated],
     [true, true, 0, SA_MAX, false]);
   t("every document is byte-identical to before the two acts, the OTHER project's included", after, before);
-  t("MEASURED, not assumed: the bound's refusal is unreachable through this door — over MAX + 1 same-sentence "
-  + "documents the act neither refuses nor re-authors, and the count it could reach is 0",
-    [over?.reason ?? null, at?.reason ?? null, (over?.case_documents || []).length <= 1,
+  /* THE ORPHANED GUARD IS NAMED HERE RATHER THAN LEFT TO GO QUIET, and this arm is the reason the landing is
+     honest about it: `coverage.mjs` counts a catalogue check as covered when a suite NAMES it, and block 8's old
+     arms were C-82.1's only naming anywhere in the battery. Deleting them and saying nothing would have dropped
+     the catalogue from 449/449 to 448/449 — measured, and it is what first told REC-194 the guard had been
+     orphaned. So the row is asserted to STILL STAND with its canned translation, and its condition is asserted
+     UNREACHABLE through this door by measurement rather than by reasoning about the primary key. The retention
+     is deliberate: removing the refusal drops a DEC-49 catalogue row and moves the family, row, census, reach,
+     region and codesChecked floors, which is a landing of its own and is ROUTED by REC-194, not taken here. */
+  t("MEASURED, not assumed: C-82.1's row still stands with its canned translation, and the condition it guards is "
+  + "UNREACHABLE through this door — over MAX + 1 same-sentence documents the act neither refuses nor re-authors, "
+  + "and the most documents either act could reach is one",
+    [STATEMENT_ACK_CHECKS.STATEMENT_ACK_DOCUMENTS_OVER_BOUND?.check,
+     typeof STATEMENT_ACK_CHECKS.STATEMENT_ACK_DOCUMENTS_OVER_BOUND?.translation === "string"
+       && STATEMENT_ACK_CHECKS.STATEMENT_ACK_DOCUMENTS_OVER_BOUND.translation.trim().length > 20,
+     over?.reason ?? null, at?.reason ?? null, (over?.case_documents || []).length <= 1,
      (at?.case_documents || []).length <= 1],
-    [null, null, true, true]);
+    ["C-82.1", true, null, null, true, true]);
   /* THE RESIDUE, MEASURED AND STATED RATHER THAN SCORED AWAY (REC-194). These MAX + 1 documents were authored
      BEFORE any reading of this sentence existed, so each carries the flat "Nobody but its author acknowledged it"
      sentence — and nothing re-authors them now, because re-authoring them is precisely the cross-case reach this

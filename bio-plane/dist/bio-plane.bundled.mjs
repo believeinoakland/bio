@@ -38646,17 +38646,18 @@ case_project: ${project}
   #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null, draftId = null) {
     const sha = _Store.#statementSha(statement);
     const unallocated = caseId == null;
-    const rows = unallocated && !draftId ? [] : this.#rows(
+    const draftMatch = unallocated ? String(draftId ?? "") : "*";
+    const rows = this.#rows(
       `SELECT acknowledger_kind, acknowledger, recipient, at FROM statement_acknowledgements
                              WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS ?
-                               AND (? IS NULL OR draft_id=?)
+                               AND (? = '*' OR draft_id = ?)
                              ORDER BY at, ack_id LIMIT ?`,
       project,
       sha,
       edition,
       caseId ?? null,
-      unallocated ? draftId : null,
-      unallocated ? draftId : null,
+      draftMatch,
+      draftMatch,
       _Store.STATEMENT_ACK_MAX + 1
     );
     const truncated = rows.length > _Store.STATEMENT_ACK_MAX;

@@ -10442,13 +10442,23 @@ export class Store extends DurableObject {
   #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null, draftId = null) {
     const sha = Store.#statementSha(statement);
     const unallocated = caseId == null;
-    const rows = unallocated && !draftId ? [] : this.#rows(
+    /* THE DRAFT FILTER IS IN THE SQL RATHER THAN IN A TERNARY AROUND THE CALL, and that is a MEASURED
+       requirement rather than a style: `derivation-bounds.test.mjs`' truncation grader pairs a `truncated`
+       claim with the `rows = this.#rows(` assignment that produced it, so wrapping the call in a ternary
+       moved this read out of its GRADED roster and into its UNGRADEABLE one — the read is still bounded
+       and the grader could no longer see that it is. Its own rule at the site is *fix what is wrong, then
+       declare what is out of reach — in that order*, so it is fixed. `draftMatch` is the draft whose
+       readings are wanted, or the sentinel `*` meaning every row at this case identity: a draft id is
+       `DRAFT-YYYY-NNNN` (`#caseDraft`), so no draft can be spelled `*`, and an unallocated identity with no
+       draft named asks for `draft_id = ''`, which no row carries — zero rows by the predicate rather than
+       by a branch around it. */
+    const draftMatch = unallocated ? String(draftId ?? "") : "*";
+    const rows = this.#rows(
                            `SELECT acknowledger_kind, acknowledger, recipient, at FROM statement_acknowledgements
                              WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS ?
-                               AND (? IS NULL OR draft_id=?)
+                               AND (? = '*' OR draft_id = ?)
                              ORDER BY at, ack_id LIMIT ?`,
-                            project, sha, edition, caseId ?? null,
-                            unallocated ? draftId : null, unallocated ? draftId : null,
+                            project, sha, edition, caseId ?? null, draftMatch, draftMatch,
                             Store.STATEMENT_ACK_MAX + 1);
     const truncated = rows.length > Store.STATEMENT_ACK_MAX;
     const all = rows.slice(0, Store.STATEMENT_ACK_MAX);
