@@ -72,7 +72,18 @@ const src = readFileSync(SRC("index.mjs"), "utf8");
 const opsStart = src.indexOf("const OPS = {");
 const PUBLIC = [...src.slice(opsStart).matchAll(/^\s+(\w+):\s*\{\s*classes:\s*null\b[^}]*mutating:\s*(true|false)/gm)]
   .map((m) => ({ op: m[1], mutating: m[2] === "true" }));
-const EXEMPT = ["invitelook", "enroll", "instancegroup"];
+/* CORRECTED 2026-09-24 at integration (CONDUCT #20, c20-integ1), never exempted: `groupidentity` joins the list.
+   THE OLD ASSERTION WAS WRONG ABOUT THE MERGED TREE, and measurably so — `op=groupidentity` DID NOT EXIST at this
+   item's base (`origin/main` @ 15b2a4c0 holds no `op === "groupidentity"` block), so D-461 never judged it and
+   never pinned it deliberately. REC-164 landed it on `main` in the same window, and because this suite derives
+   PUBLIC from the OPS table and subtracts a LITERAL, the op was swept into the pinned corpus by arithmetic rather
+   than by a decision. It does not belong there: its handler reads `store=` itself and opens the scratch Durable
+   Object, which is exactly the criterion `SCRATCH_ADDRESSING_PUBLIC_OPS` states, and `group-identity.test.mjs`
+   and `d456-namespace-scope.test.mjs` both drive it in scratch. The plane's list gained it in the same commit;
+   this literal mirrors that list and the arm at the foot still PINS the two against each other, so this is a
+   correction of the fixture, not a loosening of the check — the twelve genuinely bio-pinned ops, `knock`, `claim`
+   and `reviewcomment` among them, are still each driven and still each refused. */
+const EXEMPT = ["invitelook", "enroll", "instancegroup", "groupidentity"];
 const PINNED = PUBLIC.filter((p) => !EXEMPT.includes(p.op));
 console.log(`  classes:null ops read from the OPS table: ${PUBLIC.length} — ${PUBLIC.map((p) => p.op + (p.mutating ? "*" : "")).join(", ")}`);
 console.log(`  pinned (every one but ${EXEMPT.join(", ")}): ${PINNED.length}`);
@@ -185,7 +196,7 @@ console.log("\n--- 5 · the gate's place ---");
     [g > src.indexOf("const unknownNamespace = namespaceGate(url);"), g < src.indexOf("if (spec.classes === null) {"),
      g < src.indexOf("let cls = await classify(")], [true, true, true]);
   const ex = src.match(/const SCRATCH_ADDRESSING_PUBLIC_OPS = Object\.freeze\((\[[^\]]*\])\)/);
-  t("the plane's exemption list is exactly the three this suite proved address scratch",
+  t("the plane's exemption list is exactly the ops this suite proved address scratch — FOUR since c20-integ1 listed `groupidentity` (see EXEMPT above); the pin is on the SET, so the number is read from it rather than written into this sentence",
     ex ? JSON.parse(ex[1]).sort() : null, [...EXEMPT].sort());
 }
 
