@@ -1,0 +1,16 @@
+{
+ "unit": "ui:analyst-vocabulary.test.mjs",
+ "inputHash": "2ec87f51e39bd371d21bd50a08a81f0642dfe6e6b90a9d5d84a5f7f75303c2d1",
+ "verdict": "PASS",
+ "run": "c40a7443340d1be9e378197eb7a3c53c129153fa.1790292684965.16339.json",
+ "tree": "c40a7443340d1be9e378197eb7a3c53c129153fa",
+ "head": "a812be3415b464c8ef9652ffc545b42d512605b6",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 405,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "18f16a08-8005-5297-b92f-60edd0dae1db",
+ "at": "2026-09-24T23:31:24.976Z"
+}
