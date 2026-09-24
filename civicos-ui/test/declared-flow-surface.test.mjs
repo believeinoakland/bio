@@ -49,25 +49,28 @@
  * UI-99's report, not fixed here).
  *
  * NEGATIVE CONTROL: RUN 2026-09-24 by UI-99 against `civicos-ui/app.html`
- * `415fd2b0e785917755f7642ea8d670a7408dc5565c5004cd66d94e7e883ae0db` (1,590,012 bytes), four arms, each
+ * `2f62b15f48064f84875ec0c4434781d5e41787daee62ad8a31151de68fc85c72` (1,590,490 bytes), four arms, each
  * armed ALONE by ONE anchored replacement asserted to match exactly once, each restored by `cp` from a
  * PER-ARM pristine copy with sha256 AND `cmp` verified and the byte count guarded, the file IDENTICAL to
- * pristine at the end — **4/4 AS DECLARED**. BASELINE GREEN 37 asserted / 0 failed.
+ * pristine at the end — **4/4 AS DECLARED**. BASELINE GREEN 38 asserted / 0 failed.
  *   (A) HIDE `not recorded` ON THE DISPOSITION — `disposedFlowVersionHtml`'s not-recorded sentence
  *       replaced by the empty string. DECLARED: arm 5 fails by name; arms 1, 3 and 4 stay green.
- *       -> RED, 2 of 37 — "THE ROW'S SECOND HALF: which version it judged reads `not recorded`, IN WORDS"
+ *       -> RED, 2 of 38 — "THE ROW'S SECOND HALF: which version it judged reads `not recorded`, IN WORDS"
  *       and "and the words are the sentence a member reads, not a bare token". Arms 1-4 green.
  *   (B) HIDE `not recorded` ON A VERSION'S BASIS — `progVersionBasisHtml`'s both-absent sentence replaced
  *       by the empty string. DECLARED: arm 1's version-1 assertion fails by name; arms 3, 4 and 5 stay
- *       green. -> RED, 1 of 37 — "version 1's absent basis is stated as `not recorded` IN WORDS, never
+ *       green. -> RED, 1 of 38 — "version 1's absent basis is stated as `not recorded` IN WORDS, never
  *       left blank", and nothing else. THAT ONE-LINE RESULT IS THE POINT OF ARMING THE TWO PLACES APART:
  *       the two surfaces write the same words and neither inherits the other's coverage.
- *   RE-RUN 2026-09-24 after the rebase onto `origin/main` @ `1a7f0bcc` (the c20-batch24c train, carrying
- *       REC-211): 4/4 AGAIN, the same figures, against the sha above. The first run was against app.html
- *       `cc76798ea5c9644f8eab7851cac32d3051394858fbf40a4f882009cb34eb3b42` (1,582,075 bytes) and is kept here
- *       because a control's value is the arms it ran, and both runs ran them.
+ *   RUN THREE TIMES, 4/4 EACH TIME, and all three are kept because a control's value is the arms it ran:
+ *       against app.html `cc76798ea5c9…` (1,582,075 B, base `e9b21be6`, 37 assertions), against
+ *       `415fd2b0e785…` (1,590,012 B, after the rebase onto `origin/main` @ `1a7f0bcc`, the c20-batch24c
+ *       train carrying REC-211, 37 assertions), and against the sha above (38 assertions, after two
+ *       corrections found by re-reading the diff adversarially: the row's `whose` sentence said what the
+ *       decision DID to the list, which contradicts a row whose `applies` is false, and the empty-block
+ *       case was a paragraph where one line says the fact). The figures above are the third run's.
  *   (C) OVER-STRICTNESS — both sentences rewritten in a spelling this suite was not written against: the
- *       words upper-cased and marked up with `<em>` instead of `<b>`. DECLARED GREEN -> GREEN 37 / 0,
+ *       words upper-cased and marked up with `<em>` instead of `<b>`. DECLARED GREEN -> GREEN 38 / 0,
  *       because every sentence assertion here runs over what a member READS (tags stripped, entities
  *       opened, case-insensitive) and never over the markup.
  * The driver is re-runnable in one step and prints these figures again: `node
@@ -357,6 +360,9 @@ ok("the queue is painted and the record holds exactly the one decision this fixt
    q1.length > 500 && ((qFeed.disposed||{}).findings||[]).length === 1 && (qFeed.disposed||{}).recorded === 1);
 ok("the record's own set-aside block is on the queue at all — `op=queue`'s `disposed`, which no surface read",
    says(q1, /what the record itself holds as set aside/i));
+ok("and says whose decision it is rather than what it did to the list — a row that no longer answers the "
+ + "question did not take anything off anybody's list, so the two sentences cannot contradict",
+   says(q1, /it is a decision about the shared record, not one team's/i));
 ok("naming the finding it took off the list, in the flow's and the stage's own words",
    /data-flowdisposed="grant::application"/.test(q1)
    && says(q1, /Grant, the Application stage \u2014 set aside/i));

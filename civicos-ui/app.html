@@ -23450,8 +23450,9 @@ function queueDisposedRecordHtml(){
     + `and with the version of the declared flow it judged, because a decision about a flow that has been `
     + `revised since is not a decision about the flow standing now.</div>`;
   if(!rows.length)
-    return lede + `<div class="q-gap">The record looked and holds no such decision. That is an answer, not an `
-      + `empty screen: nobody has set a finding aside on this record.</div>`;
+    return `<div class="q-gap"><b>Nothing has been set aside.</b> The record looked and holds no authored `
+      + `decision taking a finding off this list &mdash; which is a different fact from a list nobody has `
+      + `asked yet, and is why it is said rather than left to a quiet screen.</div>`;
   const bound = (blk.truncated === true)
     ? `<div class="q-gap">The record held some back: it is showing ${esc(String(blk.count))} of `
       + `${esc(String(blk.recorded))} it holds, bounded at ${esc(String(blk.bound))}. What is not shown is `
@@ -23475,10 +23476,13 @@ function queueDisposedRecordHtml(){
       ? `${esc(humanKind(pk))}${sk ? `, the ${esc(humanKind(sk))} stage` : ""}`
       : esc(String((r && r.id) || "a finding the record did not name here"));
     /* WHOSE LIST EACH DECISION GOVERNS IS ON THE ROW (D-266/IC-60), so it is said on the row. */
+    /* WHOSE decision it is, never what it DID to the list: a row whose `applies` is false no longer
+       takes anything off anybody's list, and a sentence saying it did would contradict the version
+       sentence directly below it. `scope` is what the plane publishes and it stays true either way. */
     const whose = scope === "project"
-      ? (proj ? ` It governs the case ${esc(proj)} and no other.` : ` It governs one case and no other; which one is not recorded.`)
-      : scope === "instance" ? ` It took the finding off everybody&rsquo;s list, not only yours.`
-      : ` Whose list it governs is <b>not recorded</b>.`;
+      ? (proj ? ` It is the case ${esc(proj)}&rsquo;s own decision and governs no other case.` : ` It is one case&rsquo;s own decision and governs no other; which case is <b>not recorded</b>.`)
+      : scope === "instance" ? ` It is a decision about the shared record, not one team&rsquo;s.`
+      : ` Whose decision it is, is <b>not recorded</b>.`;
     return `<div class="q-notice" data-flowdisposed="${esc(String((r && r.key) || ""))}">`
       + `<b>${subject} &mdash; set aside${state ? " as " + esc(state) : ""}`
       + `${who ? " by " + esc(who) : ""}${at ? " on " + esc(at) : ""}.</b>${whose}`

@@ -95,15 +95,17 @@ once: two renderings would be a second place a fact is stated (D-21/DEC-8), whic
 signed-in enrolled member (never the deploy `MEMBER_TOKEN` — REC-189: that is a machine identity), and
 reaches the pre-REC-184 shape the way `bio-plane/test/proposedispose.test.mjs` reaches it: a ProbeStore
 subclass adding ONE raw-SQL route, the column DROPPED on a live store, the store re-booted on the same
-storage so `#migrate` puts it back NULL. Five arms, 37 assertions. Every sentence assertion runs over what
+storage so `#migrate` puts it back NULL. Five arms, 38 assertions. Every sentence assertion runs over what
 a member READS — tags stripped, entities opened, case-insensitive — so the control's over-strictness arm
 is a real arm and not a spelling test.
 
 **NEGATIVE CONTROL, the row's own: 4/4 AS DECLARED.** `not recorded` is written in two places, so it is
-hidden in each ALONE. (A) hidden on the disposition -> RED 2 of 37, both naming THE ROW'S SECOND HALF,
-with the basis arms green. (B) hidden on a version's basis -> **RED 1 of 37, and nothing else** — which is
+hidden in each ALONE. (A) hidden on the disposition -> RED 2 of 38, both naming THE ROW'S SECOND HALF,
+with the basis arms green. (B) hidden on a version's basis -> **RED 1 of 38, and nothing else** — which is
 the receipt that the two surfaces write the same words and neither inherits the other's coverage.
-(C) over-strictness, the same words upper-cased inside `<em>` -> GREEN 37/0. `app.html` restored by `cp`
+(C) over-strictness, the same words upper-cased inside `<em>` -> GREEN 38/0. Run three times in all (twice
+before the rebase onto the c20-batch24c train and once after two corrections this item's own diff review
+found), 4/4 every time. `app.html` restored by `cp`
 from a per-arm pristine copy, sha256 and `cmp` verified, identical at the end.
 
 **WHAT IS STILL UNBUILT AND IS NAMED RATHER THAN LEFT TO BE INFERRED.** `op=proposals`' own
