@@ -205,7 +205,7 @@ scope: an acknowledgement records and is matched by the case identity it was giv
 accepts-when: two cases with identical statements, one acknowledged: the other's completeness block lists nobody; and two cases' unsigned edition-1 documents with identical statements: the draft door of one finds none of the other's. NEGATIVE CONTROL: match by statement hash alone, and the "the twin case lists nobody" arm fails by name; match the draft door by statement text across the project, and the draft-door arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (BOB #32's G3; `node tools/mintid.mjs REC`).
 
-### D-507 · queued — **SIX STATEMENT_ACK_* REFUSALS REACH A MEMBER UNTRANSLATED: NO_SUBJECT, ALREADY_SIGNED, NOT_A_PARTICIPANT, NO_STATEMENT, BY_ITS_AUTHOR and REC-193's AUTHOR_UNDETERMINED have no row in any `*_CHECKS` family (only DOCUMENTS_OVER_BOUND, C-82.1, does), so the member reads the plane's authored `detail` with no DEC-49 translation.** Found by UI-89's worker. — owner RECORD (BOB sees the six sentences' wording).
+### D-507 · running — **SIX STATEMENT_ACK_* REFUSALS REACH A MEMBER UNTRANSLATED: NO_SUBJECT, ALREADY_SIGNED, NOT_A_PARTICIPANT, NO_STATEMENT, BY_ITS_AUTHOR and REC-193's AUTHOR_UNDETERMINED have no row in any `*_CHECKS` family (only DOCUMENTS_OVER_BOUND, C-82.1, does), so the member reads the plane's authored `detail` with no DEC-49 translation.** Found by UI-89's worker. — owner RECORD (BOB sees the six sentences' wording).
 order: at the backlog head: refusals a member cannot read, on a landed surface (SCHEDULER #18, 2026-09-24; via CONDUCT #20 07:19Z)
 milestone: M10
 interface: I3 additive — six catalogued codes; the catalogue version moves; FULL gate.
