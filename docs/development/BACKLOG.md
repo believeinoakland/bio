@@ -93,16 +93,6 @@ scope: a doc-facing unit takes only the `docs/` paths it, or a tool it runs, nam
 accepts-when: a MEASUREMENTS-only diff no longer selects calibration, and a kickoff diff still does. NEGATIVE CONTROL: restore the whole-`docs/` door and calibration is selected again, by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### M0-178 · queued — **A `bio-plane/src` CHANGE CAN MAKE THREE BUNDLES STALE (plane, pdf-worker, ocr-worker, per `fleetbundles.test.mjs`), and `kickoffs/WORKER.md` names only the plane's `dist/bio-plane.bundled.mjs`, so a worker following it ships stale member bundles into a red gate.** Found by D-502's worker. — owner M0 (BOB reviews the WORKER.md line).
-order: after M0-176, AHEAD of the product rows by Bob's 17:41Z rule: a stale bundle costs a red gate round (SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:04Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a fixture derives what it carries), with FL-10's freshness guard.
-depends-on: none.
-scope: one `tools/` command that rebuilds every bundle whose manifest names a touched file, derived from `fleetbundles.test.mjs`'s own map; WORKER.md's bundle step names that command instead of the plane's bundle alone.
-accepts-when: a `bio-plane/src` edit read by pdf-worker, then the command, leaves `fleetbundles.test.mjs` green (the measured failure it moves: three stale bundles after one src edit). NEGATIVE CONTROL: rebuild only the plane's bundle and fleetbundles names the stale member.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
 ### M0-142 · queued — **`meaning-bounds.test.mjs`'s BOUND_KEY HAS NO `max`: `/^(?:limit|cap|bound|page_size|[a-z_]*_limit)$/` (line 382), so a read bounded by a `max`/`*_max` key (bounded actionquotes) is counted BARE and correct work reads unbounded.** Found by c18-batch7fix's worker; verified at 548eb2c5 by CONDUCT #20 and SCHEDULER #18. — owner M0.
 order: (held behind c20-batch11fix, SCHEDULER #18 03:47Z) after D-484, with the rows that cut gate time: an over-strict instrument fails correct work (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:37Z)
 milestone: M0
@@ -112,16 +102,6 @@ depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds.te
 scope: add `max|[a-z_]*_max` to BOUND_KEY.
 accepts-when: actionquotes' `max` counts as a bound. NEGATIVE CONTROL: remove actionquotes' published max, and the arm names it bare.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### D-476 · queued — **A MULTI-PART CAPTURE ALWAYS ANSWERS `existed: false`, EVEN ON A RE-FETCH OF BYTES THE RECORD HOLDS: the per-part write guard cannot see the whole document.** It under-claims (never over-claims), so it follows D-469. — owner CAPTURE.
-order: after D-472, with the acquire corrections (SCHEDULER #17, 2026-09-24; D-469's worker via CONDUCT #19)
-milestone: M2
-interface: I3 — `existed` becomes `null` (stated undetermined) or a whole-document lookup; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (one capture, one home).
-depends-on: D-469 (finished; rides the train after c19-batch9).
-scope: report `existed: null` with its sentence for a multi-part capture, or compute it by a whole-document register lookup by sha before any write (prefer the lookup where it costs one read).
-accepts-when: a re-fetched multi-part capture reads true or null-with-reason, never a false that claims the bytes are new. NEGATIVE CONTROL: restore the per-part answer, and the re-fetch arm reads false and fails by name. Extend `bio-plane/test/acquire.test.mjs`.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ### FW-22 · queued — **AUDITED FINANCIAL STATEMENTS ARE NOT BUDGETS: BOB #32 ruled (2026-09-24 02:30Z) that an ACFR/CAFR or an agency's audited statements are a separate type, FINANCIAL REPORT, counted apart. D-66's budget sample is recounted with them excluded, and the new class is counted.** — owner FRAMEWORK.
 order: directly after D-66: §2's rule that a count comes before any reader; the financial-report reader follows the budget reader and is its own row once these counts justify it (SCHEDULER #18, 2026-09-24)
@@ -1295,4 +1275,24 @@ design: `docs/development/VERIFICATION.md` §"The negative-control register".
 depends-on: none.
 scope: `markerPositions` admits one parenthesised or comma qualifier before a separator on the same line; a bare phrase with no separator still does not count; C5e corrected in the same change.
 accepts-when: `corpuscheck.test.mjs` reads five declarations and C5e's workaround falls, in `register-grammar.test.mjs`. NEGATIVE CONTROL: restore the strict separator check, and the "a qualified marker is a declaration" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
+
+### D-357 · queued — **THE DEC-49 GUARD'S REGION MATCHER ENDS IN A WORD BOUNDARY, SO A REGION NAMED `x-y` OPENS REGION `x` TOO: `civicos-ui/check-refusal-codes.mjs` `REGION_START`/`REGION_END`.** A live latent pair exists (`is-capture-request` in `store.mjs`, `is-capture-request-arm` in `index.mjs`), harmless only while they sit in different files. — owner UI.
+order: after D-344 (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (the DEC-49 guard's section, *what a refusal is in principle*).
+depends-on: none.
+scope: end both patterns in a lookahead for whitespace, a comment close or end of line instead of the word boundary; a sibling-region fixture.
+accepts-when: a file holding regions `x` and `x-y` passes with one opener each, and the `regionLines` floors do not move. NEGATIVE CONTROL: restore the word boundary, and the "one opener per name" arm fails naming two opening markers.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
+
+### D-300 · queued — **A SUITE THAT READS THE WALL CLOCK CAN TURN RED UNTOUCHED, AND THE SWEEP THAT WOULD SAY SO IS RUN BY NOBODY: three suites of about three hundred bind `BIO_NOW_MS`; `clockadvance.control.mjs` exists and no tool, script or gate runs it.** — owner M0.
+order: after D-357; the cheap half (run the sweep) first; threading the clock through every constructor is a later row if the sweep finds decay (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md`.
+depends-on: none.
+scope: `gates.mjs` (or the battery) runs the clock-advanced sweep at plus one year on the full class and prints its result line; each suite it turns red is named.
+accepts-when: the sweep runs without anyone starting it and its line is printed on a full gate. NEGATIVE CONTROL: plant a fixture dated thirty days ahead, and the sweep arm fails naming the suite.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).

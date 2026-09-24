@@ -330,6 +330,36 @@ scope: one helper with a `dynamic: true|false` mode; refusal-codes reads it.
 accepts-when: both callers use the one helper and stay green. NEGATIVE CONTROL: add an import the static mode cannot see and the dynamic-mode arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
+### D-518 · queued — **`monitor-cadence.test.mjs` FAILS UNDER LOAD: 57/2 in a gate on tree 64bc5e3e while a second full gate ran in the same container, 59/0 alone on the identical tree. Both failures are the third tick ("the key is idempotence, not amnesia": `later.fired` expected [A]; observations 2). `Store#monitorTick` takes the injected now (T1 + 3600000 + 1); the fire goes through `op=acquire` over SELF, and something below it reads the real clock or a wall-clock budget (the host governor's window, or a fetch timeout to the fake Archive), so under load the fire does not land.** Found by DIST #6 (18:52Z). — owner RECORD (the suite with M0).
+order: at the backlog head, beside M0-173: a gate whose verdict depends on machine load costs every FULL gate a red round (Bob's 17:41Z rule: a false or flaky gate result goes ahead) (SCHEDULER #19, 2026-09-24)
+milestone: M0 (a diagnosis, then its fix)
+interface: none unless the fix threads `now` through `op=acquire` (the integrator classifies).
+design: `docs/development/VERIFICATION.md` (a suite's verdict must not depend on the instant it starts or the load it runs under), with `docs/architecture/BIO_Content_Framework_v0_10.md` §6 (the monitoring contract).
+depends-on: none.
+scope: pin the load-sensitive step by driving the third tick with a stalled fake Archive and with the governor's clock frozen, one at a time; then EITHER the fire path takes the tick's injected now (or its budget), OR the suite's fake Archive loses its wall-clock dependence, whichever the pin names; state which.
+accepts-when: the suite reads 59/0 with a concurrent full gate running, on three runs (the measured failure it moves: 57/2 under load on 64bc5e3e). NEGATIVE CONTROL: restore the real-clock read the pin names, add an artificial delay, and the third-tick arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (DIST #6's finding; `node tools/mintid.mjs D`).
+
+### M0-178 · queued — **A `bio-plane/src` CHANGE CAN MAKE THREE BUNDLES STALE (plane, pdf-worker, ocr-worker, per `fleetbundles.test.mjs`), and `kickoffs/WORKER.md` names only the plane's `dist/bio-plane.bundled.mjs`, so a worker following it ships stale member bundles into a red gate.** Found by D-502's worker. — owner M0 (BOB reviews the WORKER.md line).
+order: after M0-176, AHEAD of the product rows by Bob's 17:41Z rule: a stale bundle costs a red gate round (SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:04Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a fixture derives what it carries), with FL-10's freshness guard.
+depends-on: none.
+scope: one `tools/` command that rebuilds every bundle whose manifest names a touched file, derived from `fleetbundles.test.mjs`'s own map; WORKER.md's bundle step names that command instead of the plane's bundle alone.
+accepts-when: a `bio-plane/src` edit read by pdf-worker, then the command, leaves `fleetbundles.test.mjs` green (the measured failure it moves: three stale bundles after one src edit). NEGATIVE CONTROL: rebuild only the plane's bundle and fleetbundles names the stale member.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### D-476 · queued — **A MULTI-PART CAPTURE ALWAYS ANSWERS `existed: false`, EVEN ON A RE-FETCH OF BYTES THE RECORD HOLDS: the per-part write guard cannot see the whole document.** It under-claims (never over-claims), so it follows D-469. — owner CAPTURE.
+order: after D-472, with the acquire corrections (SCHEDULER #17, 2026-09-24; D-469's worker via CONDUCT #19)
+milestone: M2
+interface: I3 — `existed` becomes `null` (stated undetermined) or a whole-document lookup; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (one capture, one home).
+depends-on: D-469 (finished; rides the train after c19-batch9).
+scope: report `existed: null` with its sentence for a multi-part capture, or compute it by a whole-document register lookup by sha before any write (prefer the lookup where it costs one read).
+accepts-when: a re-fetched multi-part capture reads true or null-with-reason, never a false that claims the bytes are new. NEGATIVE CONTROL: restore the per-part answer, and the re-fetch arm reads false and fails by name. Extend `bio-plane/test/acquire.test.mjs`.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
