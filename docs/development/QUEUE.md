@@ -292,7 +292,8 @@ scope: make the fixture project's title unique per (token, store), and let the w
 accepts-when: two deploy tokens in one store each get a surfacing run (the measured failure it moves: NAME_TAKEN read as SURFACE_NO_RUN). NEGATIVE CONTROL: restore the shared title and the second-token arm fails naming NAME_TAKEN.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### UI-101 · running — **THE APP OFFERS NO RISK-TIER CONTROL: `civicos-ui/app.html`'s action intake cannot state 1, 2 or 3, while D-483 gave the setup page a chooser (the BOTH-INTAKE-SURFACES convention).** Found by D-483's worker. — owner UI.
+### UI-101 · integrated — **THE APP OFFERS NO RISK-TIER CONTROL: `civicos-ui/app.html`'s action intake cannot state 1, 2 or 3, while D-483 gave the setup page a chooser (the BOTH-INTAKE-SURFACES convention).** Found by D-483's worker. — owner UI.
+status: integrated — worker session COMPLETED, land/worker/UI-101 @ 61532670 pushed; CONDUCT integrates into c20-batch26 (SCHEDULER #19 dispatch 21:30Z).
 order: after UI-99 (UI-100 is cached), with the surfaces owed to landed plane rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z)
 milestone: M4
 interface: I3 consumer (`vocabularies.risk_tiers`).
@@ -302,7 +303,8 @@ scope: a choice over `vocabularies.risk_tiers` in the app's action intake, unset
 accepts-when: a chosen tier is written and none chosen writes undetermined, against a real-plane suite. NEGATIVE CONTROL: default the choice to 1 and the unset arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs UI`).
 
-### UI-102 · running — **A GOVERNING-LAWS PROPOSAL HAS A PLANE AND NO SURFACE: REC-195's the `actionlawspropose` op (not yet on main) and `action.governing_laws_proposals` reach no page (`8.governing-laws`: NOT BUILT, a MEMBER SURFACE for the proposal).** — owner UI.
+### UI-102 · integrated — **A GOVERNING-LAWS PROPOSAL HAS A PLANE AND NO SURFACE: REC-195's the `actionlawspropose` op (not yet on main) and `action.governing_laws_proposals` reach no page (`8.governing-laws`: NOT BUILT, a MEMBER SURFACE for the proposal).** — owner UI.
+status: integrated — worker session COMPLETED, land/worker/UI-102 @ a2d974aa pushed; CONDUCT integrates into c20-batch26 (SCHEDULER #19 dispatch 21:30Z).
 order: after UI-101, with the surfaces owed to landed plane rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 17:11Z)
 milestone: M4
 interface: I3 consumer (IC-267).
@@ -476,6 +478,26 @@ depends-on: REC-187 (`integrated` on c19-batch9).
 scope: promote checks each bias-set transition against the declared STATES edges from the current head and refuses any other by name.
 accepts-when: `adopted` → `proposed` is refused by name; every declared edge still passes. NEGATIVE CONTROL: drop the edge check, and the backwards arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### REC-210 · queued — **ADOPTING A PROPOSED BIAS REVISION DOES NOT SAY SO: REC-187 re-pins the adoption to the adopted sha, but an adoption that pins a proposed, not-yet-accepted revision reads like any other.** BOB #32's ruling of 2026-09-24 00:42Z (relayed by CONDUCT #19; cite until folded into Declared Bias): *adopting a PROPOSED revision is a REPLACEMENT; the adoption must SAY it pins a proposed revision, and `op=biasadopt`'s answer and the adoption's read state that marker.* — owner RECORD.
+order: after D-468, with the bias rows (SCHEDULER #17, 2026-09-24; REC-187's worker F1)
+milestone: M4
+interface: I3 additive — a marker on the adoption's answer and read; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption", with BOB #32's ruling of 2026-09-24 00:42Z (relayed by CONDUCT #19; cite until folded into Declared Bias).
+depends-on: REC-187 (`integrated` on c19-batch9).
+scope: record and publish the marker when the adopted revision is still proposed; the re-pin itself is built.
+accepts-when: adopting a proposed revision answers and reads the marker; adopting an accepted one does not. NEGATIVE CONTROL: drop the marker, and the proposed-adoption arm fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
+
+### UI-94 · queued — **THE QUEUE CANNOT FORWARD A SELECTION: D-126 lets the plane take the set, and the member picker is per item.** — owner UI.
+order: after D-176 (SCHEDULER #17, 2026-09-23; D-126's worker via CONDUCT #18 23:47Z)
+milestone: M8
+interface: I3 consumer (IC-235).
+design: `docs/development/NOTIFICATIONS.md` (its Incomplete section names it), with D-126's per-item weight.
+depends-on: D-126 (`integrated` on c17-batch7).
+scope: a bulk forward over the queue's selection, sent as the set.
+accepts-when: a selection of three forwards in one act. NEGATIVE CONTROL: loop per item, and the one-act arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
