@@ -1,0 +1,16 @@
+{
+ "unit": "ui:auth-surface.test.mjs",
+ "inputHash": "f224267740f46ae0a6f9d421a601078c11b745ff29bad97a1a3f16b3c7e81edd",
+ "verdict": "PASS",
+ "run": "00acb9e1c8c7ef59d7a6e1920ee83a7479df7b0b.1790289866619.15197.json",
+ "tree": "00acb9e1c8c7ef59d7a6e1920ee83a7479df7b0b",
+ "head": "ff3c7b9c7e742ccdae78e25c3265ebed69cfcbec",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 1356,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "563f01a5-d162-57e3-83b9-25f016c76cec",
+ "at": "2026-09-24T22:44:26.630Z"
+}
