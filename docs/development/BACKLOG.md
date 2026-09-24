@@ -23,27 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-216 · blocked — **NO MEMBER CAN MAKE A GOVERNING-LAWS PROPOSAL FROM ANY SURFACE: `actionlawspropose` is absent from the member-facing ACTS catalogue in `bio-plane/src/affordances.mjs`, so no page is ever offered it.** UI-102's worker (finding 3, via CONDUCT #20 21:26Z): unbuilt capability, not a defect. — owner RECORD.
-status: blocked — 2026-09-24 ~21:52Z: WORKER REC-216 (session_01SEDjKvQBwe6or5jSfaWFYo, now archived) built nothing and reported 4 design gaps: F1 the member-propose capability does not match the row; F2-F3 claims in the brief are false; F4 no ruling is cited. It recommends REWRITING the rows (REC-216 and its neighbours), not moving them, and routed this to BOB #33 and CONDUCT #20. No land/worker/REC-216 branch exists. UNBLOCKS WHEN: BOB rules the rewrite.
-order: after REC-215, in product order: the plane half of REC-195's proposal becoming reachable (SCHEDULER #19, 2026-09-24)
-milestone: M10
-interface: I3 additive — one ACTS entry; the integrator classifies.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*: a machine proposal, if built, is labelled machine work), with REC-195's op.
-depends-on: REC-195.
-scope: publish `actionlawspropose` in ACTS with its label, weight and prompt, after which the UI's surface registry lists it in ACTS_AWAITING_SURFACE until UI-105 hosts it.
-accepts-when: `op=affordances` offers the act on an action where it applies (the measured failure it moves: the act absent from ACTS). NEGATIVE CONTROL: drop the ACTS entry and the offered-act arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
-
-### D-512 · queued — **`replay` IS HONOURED WITHOUT SERVER VERIFICATION: the end state BOB #33 ruled is that a replayed promotion of any type or revision names its drive-provenance capture, whose held bytes' preserved promotion record lists this bundle and this revision's `bundle.md` SHA-256.** — owner RECORD.
-order: after D-511, which it builds on (BOB #33, 17:05Z: *the end state, a build that depends on (1)*; SCHEDULER #18)
-milestone: M7
-interface: I3 — the integrator classifies.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §11 "The RUN is an object", item 5 as BOB #33's ruling states it (folded on main e9b21be6), with REC-173's `migrationReplayOf`.
-depends-on: D-511.
-scope: generalise `migrationReplayOf` to every replayed promotion; keep D-511's class test as a second condition.
-accepts-when: a replay whose capture does not list the bundle and SHA-256 is refused by name; a verified one is admitted. NEGATIVE CONTROL: skip the verification and the unverified arm is admitted, failing by name. AND INVERT §8 arm (δ), which D-511 pinned as the gap (admin-class replay still caller-asserted; via CONDUCT #20 19:47Z).
-added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
-
 ### D-528 · queued — **THE QUEUE TELLS EACH NAMED RECIPIENT OF A BIAS-DEBT OBLIGATION "This is not addressed to anybody": `app.html` `queueAssigneeHtml` reads `assignee == null` and never `recipients`, so the surface states something it can see is false.** Found by UI-93's worker (id minted by it). The DELEGATION RECORD (D-86) → UI on coord `CLAIMS.md` is dischargeable by this row. — owner UI.
 order: after D-512, with the corrections: a surface stating a falsehood about the record is worse than a missing feature (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:06Z)
 milestone: M8
@@ -84,6 +63,16 @@ scope: carry `role` on the absent-target branch.
 accepts-when: a round trip of a copy whose load-bearing finding's target is absent keeps its role (the measured failure it moves: the role dropped). NEGATIVE CONTROL: drop `role` again and the round-trip arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
+### D-543 · queued — **THE RECORD STAMPS `at` AT TWO PRECISIONS, so a STRING compare across act kinds misorders: `…:00Z` sorts after `…:00.123Z`.** Found by REC-200's worker (F3, via CONDUCT #20 21:57Z), who measured `acknowledgeStatement` stamping without milliseconds while the review copy's other acts carry them. SCHEDULER #20 measured the store on main 9f8b69e6: 26 sites strip milliseconds (`toISOString().replace(/\.\d+Z$/, "Z")`) and the rest keep them, so the report's "every other act carries them" is false and the defect is the MIX. — owner RECORD.
+order: after D-539, with the corrections to just-landed work: REC-200 orders a review copy's last change across kinds (SCHEDULER #20, 2026-09-24)
+milestone: M10
+interface: I3 — possibly a precision change on some `at` fields; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.3 (the copy carries the date of its LAST change), with D-516's ruling that `observation_log.at` STAYS whole-second (a named exception, not a site to change).
+depends-on: REC-200.
+scope: (1) SWEEP every site that orders or compares `at` values of different act kinds by string, and make each compare instants, not strings; (2) ONE stamping helper names the precision, used by every act that stamps, `observation_log` excepted by D-516's ruling; (3) state in the row's landing what the sweep's matcher cannot see.
+accepts-when: an acknowledgement stamped `…:00Z` and a comment stamped `…:00.123Z` in one copy order by instant, and REC-200's last-change date names the later one (the measured failure it moves: the whole-second stamp sorting last). NEGATIVE CONTROL: restore the string compare, and the mixed-precision arm fails by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs D`).
+
 ### UI-106 · queued — **THE REVIEW-COPY SURFACE LOSES `newCase` AND WILL SHOW THE CORRECTED IDENTITY SENTENCE UNREAD: `app.html`'s `rvcFormFromCopy` does not read `case.newCase` (DELEGATION RECORD (WORKER REC-199) -> UI on coord CLAIMS.md), and UI-92's draft list draws `#caseIdentitySentence`, which D-538 changes.** — owner UI.
 order: after D-539, the surface half of the review-copy corrections (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:43Z)
 milestone: M10
@@ -93,6 +82,16 @@ depends-on: D-538, UI-92.
 scope: `rvcFormFromCopy` reads `case.newCase` so a read-then-write keeps it; the draft list re-reads the plane's identity sentence as stated; discharge REC-199's DELEGATION block.
 accepts-when: against a real-plane suite a round trip through the form keeps `newCase`, and draft DD shows the derivation sentence (the measured failure it moves: `newCase` lost at the surface). NEGATIVE CONTROL: drop the read and the round-trip arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
+
+### REC-217 · queued — **A RECIPIENT'S READING ON A NEW CASE'S DRAFT CANNOT BIND TO THE CASE IT PRODUCED: nothing links a draft to its published case, so REC-194's provisional counts such a reading UNDETERMINED.** BOB #33 RULED 2026-09-24 19:14Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20): `op=publish` names the draft it publishes (`draft=`, optional, additive), and at that act the readings taken through that draft BIND to the case it produced — an ACT, recorded with the publisher and the time, stated in words in the case document. — owner RECORD.
+order: after UI-106 and before D-521, as BOB ruled: *one RECORD row after REC-194 … place C-82.1's retirement as a small row after this one* (SCHEDULER #20, 2026-09-24)
+milestone: M10
+interface: I3 additive — `draft=` on `op=publish`, the stated link on the case document; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rules 11 and 13 and the §9 frontier row "a draft bound to the case it produced", with BOB #33's ruling of 19:14Z, which this row FOLDS into §3 and closes in §9 in the same landing.
+depends-on: REC-194.
+scope: `draft=` on `op=publish`; the bind recorded with who and when; the case document states "readings given on draft <id>, which <publisher> named as this case's draft at publication"; the signed list carries those readings; without `draft=` REC-194's undetermined count stands.
+accepts-when: a recipient's reading on a new case's draft appears in the published case's signed list with the link stated, and a publish without `draft=` still reads undetermined (the measured failure it moves: every such reading undetermined). NEGATIVE CONTROL: bind by statement bytes instead of the named draft, and a twin case with the same sentence lists the reader, failing by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs REC`).
 
 ### D-531 · queued — **A WHITESPACE-ONLY CONTENT UNIT IS STILL EMITTED AND INDEXED AS CONTENT at two emission sites: `index.mjs`'s `arm` helper and `store.mjs`'s `capture_text` ordering filter on `u.text.length`, though §16's comment at that site says a unit with no text is not emitted.** D-514's class surviving at emission; found by D-514's worker (id minted by it). — owner CONTENT-PDF, then RECORD.
 order: after UI-106, with the corrections: the record indexing blank units as content (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:46Z)
@@ -144,45 +143,46 @@ scope: record tier, producing member, pages transcribed and the text's SHA-256 o
 accepts-when: a re-walk of D-66's sample reports, for each document whose class moved, which tier's text changed (the measured failure it moves: a silent re-read). NEGATIVE CONTROL: drop the text digest and the attribution arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### REC-214 · queued — **NO MEMBER CAN SET OR REVISE AN ACTION'S RISK TIER AFTER INTAKE, AND A REVISION WOULD LEAVE NO TRACE.** BOB #33 RULED 2026-09-24 21:21Z (UI-101's design gap; cite until folded): the `actionrisktier` op, not yet on main (member class, `contribute`), writing through the one front-matter path every reader derives the tier from; a machine credential is refused with the existing MACHINE_CANNOT_SET_RISK_TIER; a member MAY revise any tier, up or down, as an AUTHORED act recording who, when and a REQUIRED reason; APPEND-ONLY — the prior tier, its author and reason stay readable in the action's tier history; never a silent overwrite. — owner RECORD.
+### REC-218 · queued — **A CSV READING'S DIALECT IS NOT PERSISTED: FW-23 finds the delimiter and encoding by signature, and nothing keeps them on the record, so a re-read cannot say which dialect it read.** BOB #33 RULED 2026-09-24 21:55Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20): option (b), a `reading.dialect` key of its own (delimiter, encoding), persisted on the acquire document — not `container_extent`; it suits other text formats with a decoding choice. — owner RECORD.
+order: after D-536, beside the other reading-provenance row: the record stating how it read what it holds (SCHEDULER #20, 2026-09-24)
+milestone: M2
+interface: I1 additive — a `reading.dialect` key on the acquire document; the integrator mints and classifies the IC.
+design: `docs/development/OFFICE-FORMATS.md` "CSV — DESIGNED 2026-09-24 by BOB #32" (delimiter and encoding RECORDED on the reading, undetermined when they cannot be told), with BOB #33's ruling of 21:55Z, which this row FOLDS into that section in the same landing.
+depends-on: FW-23.
+scope: persist `reading.dialect {delimiter, encoding}` on the acquire document at FW-23's reader; `undetermined` with its reason when the signature cannot tell; readable on the capture's read.
+accepts-when: a semicolon-delimited latin-1 CSV's acquire document reads `reading.dialect` with both, and an ambiguous one reads undetermined (the measured failure it moves: the dialect found and discarded). NEGATIVE CONTROL: drop the persistence, and the read-back arm fails by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs REC`).
+
+### REC-214 · queued — **NO MEMBER CAN SET OR REVISE AN ACTION'S RISK TIER AFTER INTAKE, AND A REVISION WOULD LEAVE NO TRACE.** BOB #33 RULED 2026-09-24 (sent 21:18Z; recorded in the inbox entry of 21:55Z) (UI-101's design gap; cite until folded): the `actionrisktier` op, not yet on main (member class, `contribute`), writing through the one front-matter path every reader derives the tier from; a machine credential is refused with the existing MACHINE_CANNOT_SET_RISK_TIER; a member MAY revise any tier, up or down, as an AUTHORED act recording who, when and a REQUIRED reason; APPEND-ONLY — the prior tier, its author and reason stay readable in the action's tier history; never a silent overwrite. — owner RECORD.
 order: after D-533, first of the risk-tier trio in product order (plane, then UI-104, then REC-215), as BOB ruled; the field carries legal exposure, so the record must show a "do not file without counsel" was changed and by whom (SCHEDULER #19, 2026-09-24)
 milestone: M7
 interface: I3 additive — a new op and a tier history; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`action` is the impact substrate; `risk_tier`), with BOB #33's ruling of 21:21Z, which this row FOLDS into §2 in the same landing.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`action` is the impact substrate; `risk_tier`), with BOB #33's risk-tier ruling (sent by message 21:18Z, cited elsewhere as "21:21Z"; RECORDED in the BOB INBOX entry of 21:55Z, drained to `BOB-INBOX-drained.md` by SCHEDULER #20), which this row FOLDS into §2 in the same landing.
 depends-on: D-510.
 scope: the op; the append-only tier history on the action's read; "revised from 3 (by X) to 1 (by Y): <reason>" readable; a revision with no reason refused by name (catalogued, DEC-49).
 accepts-when: a member's revision appends history naming both authors and the reason; a reasonless revision is refused by name; a machine is refused MACHINE_CANNOT_SET_RISK_TIER (the measured failure it moves: no revision path at all). NEGATIVE CONTROL: let a revision overwrite without history and the history arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
 
-### UI-104 · queued — **THE ACTION PAGE OFFERS NO RISK-TIER REVISION AND SHOWS NO TIER HISTORY.** BOB #33's 21:21Z ruling, the surface half of REC-214. — owner UI.
+### UI-104 · queued — **THE ACTION PAGE OFFERS NO RISK-TIER REVISION AND SHOWS NO TIER HISTORY.** BOB #33's risk-tier ruling (21:18Z; recorded in the inbox entry of 21:55Z), the surface half of REC-214. — owner UI.
 order: directly after REC-214, which it consumes (BOB #33: plane, then UI) (SCHEDULER #19, 2026-09-24)
 milestone: M7
 interface: I3 consumer (REC-214's IC).
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`risk_tier`), with BOB #33's ruling of 21:21Z (folded by REC-214).
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`risk_tier`), with BOB #33's risk-tier ruling (sent by message 21:18Z, cited elsewhere as "21:21Z"; RECORDED in the BOB INBOX entry of 21:55Z, drained to `BOB-INBOX-drained.md` by SCHEDULER #20) (folded by REC-214).
 depends-on: REC-214.
 scope: on the action page, beside UI-90's governing-laws list, the revise act (tier plus a required reason, words from the plane's vocabulary) and the tier history as the plane states it.
 accepts-when: against a real-plane suite a member revises a tier with a reason and the history renders "revised from … to …: <reason>"; the act cannot submit without a reason (the measured failure it moves: no surface for the act). NEGATIVE CONTROL: submit without a reason and the required-reason arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
 
-### REC-215 · queued — **NO MACHINE PROPOSAL OF A RISK TIER EXISTS, LABELLED AND APART FROM THE MEMBER'S VALUE.** BOB #33's 21:21Z ruling, item 3: `actionriskpropose` (not yet an op), REC-195's shape. — owner RECORD.
+### REC-215 · queued — **NO MACHINE PROPOSAL OF A RISK TIER EXISTS, LABELLED AND APART FROM THE MEMBER'S VALUE.** BOB #33's risk-tier ruling (21:18Z; recorded in the inbox entry of 21:55Z), item 3: `actionriskpropose` (not yet an op), REC-195's shape. — owner RECORD.
 order: after UI-104 (BOB #33: after (1), the proposal half last) (SCHEDULER #19, 2026-09-24)
 milestone: M7
 interface: I3 additive — a proposal read labelled machine work; the integrator classifies.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (only a member's authored act sets a tier), with REC-195's labelled-proposal shape and BOB #33's ruling of 21:21Z.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (only a member's authored act sets a tier), with REC-195's labelled-proposal shape and BOB #33's risk-tier ruling (sent by message 21:18Z, cited elsewhere as "21:21Z"; RECORDED in the BOB INBOX entry of 21:55Z, drained to `BOB-INBOX-drained.md` by SCHEDULER #20).
 depends-on: REC-214.
 scope: a proposal of a tier with its basis, stored apart from the member's value and labelled machine work; it never sets the tier.
 accepts-when: a proposal reads labelled machine work and the tier is unchanged until a member acts (the measured failure it moves: no proposal read). NEGATIVE CONTROL: let the proposal write the tier and the "the tier is the member's" arm fails by name.
+context: REC-216's audit (F1-F4, SCHEDULER #19's worker) and BOB #33's 21:55Z ruling: every `*propose` op is NON_ACTS in `bio-plane/src/affordances.mjs` (REC-195's reasoning) and a member states the value with their own act; so this proposal is a machine READ, never a member act in ACTS, and its surface SHOWS it beside the member's tier with no adopt control, as UI-102 (a2d974aa) does for the governing-laws proposal.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
-
-### UI-105 · queued — **THE ACTION PAGE CANNOT HOST A GOVERNING-LAWS PROPOSAL ACT.** The surface half of REC-216 (UI-102's worker, finding 3). — owner UI.
-order: directly after REC-216, which it consumes (SCHEDULER #19, 2026-09-24)
-milestone: M10
-interface: I3 consumer (REC-216's IC).
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (the member's list is set only by the member's act; a proposal is labelled machine work).
-depends-on: REC-216, UI-102.
-scope: host the act on the action page, labelled as a proposal and kept structurally separate from the governing-laws act; move it out of ACTS_AWAITING_SURFACE in `civicos-ui/test/surface-registry.test.mjs`.
-accepts-when: against a real-plane suite a member makes a proposal and the list is unchanged until the member's own act (the measured failure it moves: no surface for the act). NEGATIVE CONTROL: let the proposal control set the list and the separation arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
 
 ### D-521 · queued — **IC-246's STATEMENT_ACK_DOCUMENTS_OVER_BOUND (C-82.1) IS UNREACHABLE BY CONSTRUCTION: after REC-194 its read names (case_id, edition), `case_documents`' primary key, so at most one row returns and the bound can never fire.** Found by REC-194's worker (F1). — owner RECORD.
 order: after REC-213, with the corrections to just-landed work: a catalogued refusal that cannot occur is a claim the record makes about itself (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
@@ -1218,33 +1218,3 @@ depends-on: none.
 scope: classify the suite in `coverage.mjs`'s register, with its control or its stated reason for none.
 accepts-when: `coverage --strict` names no unclassified suite. NEGATIVE CONTROL: remove the classification, and `--strict` names the suite.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-466 · queued — **D-394's OFFICE EXTENT ARMS ARE UNDRIVEN BY ITS SUITE: the worker states it — the cross-version notice's office-format arms have no fixture reaching them.** — owner RECORD.
-order: with the M0 control rows, after D-459 (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (test through the op).
-depends-on: D-394 (`integrated` on c18-batch8).
-scope: office fixtures (docx, xlsx) driving each office extent arm of the notice.
-accepts-when: each office arm is driven and asserted. NEGATIVE CONTROL: break one office arm's extent match, and its fixture arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-467 · queued — **`nc-m038.mjs` ARM (15) DOES NOT ARM ON `main`: its anchor no longer occurs, so the arm cannot fail.** Found by REC-187's worker (F2). — owner M0.
-order: with the M0 control rows, after D-466 (SCHEDULER #17, 2026-09-24; REC-187's worker via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a control that cannot fail refutes nothing).
-depends-on: none.
-scope: re-anchor arm (15) on frontier's `(n) => this.#frontierLatest(level, …)` closure.
-accepts-when: `node bio-plane/test/nc-m038.mjs` reports arm (15) run and failing as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-471 · queued — **`status.test` §6's UI_HELPERS CENSUS MISSES `queueApplySet` AND `queueSelFor`.** — owner M0 (`tools/status.mjs`).
-order: with the M0 instrument rows, after D-467 (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a census states what it reads).
-depends-on: none.
-scope: add both to `UI_HELPERS` in `tools/status.mjs`.
-accepts-when: the census names both. NEGATIVE CONTROL: remove one, and the §6 arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).

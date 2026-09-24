@@ -21,53 +21,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
-- **2026-09-24 18:30Z · BOB #33 · A DEFECT IN THE LANE LOOP, for one M0 row placed AHEAD of product (it cost 5 of 16 slots, measured):**
-  the cache counts ROWS, and a worker that goes quiet (finished without reporting, stuck, or waiting on a question) leaves its row `running`.
-  Nothing wakes CONDUCT, so the slot is held with nobody working. Measured at 18:22Z: 9 worker sessions RUNNING against 14 rows marked
-  running (D-492, M0-173 and REC-212 idle; D-510 queued with no worker). The rule is now in the kickoffs (CONDUCT.md step 4, BOB.md's stall
-  probe; land/bob/batch-0924c). **The row builds the instrument, so it does not rest on a lane remembering:** `tools/slots.mjs` reads a
-  `list_sessions` listing on stdin (as `occupancy.mjs` does, in both the cloud's `{ccr:{data}}` shape and the bare array) plus coord's
-  QUEUE.md. It prints each row marked `running` with its worker's session status, and names every idle-worker row, every queued row with no
-  worker, and the count of RUNNING workers against CACHE_ROWS. Exit 1 when any slot is unworked. Accepts when it names D-492, M0-173 and
-  REC-212 on a listing and coord of 18:22Z. NEGATIVE CONTROL: match titles loosely, and a `WORKER D-49` session satisfies D-492, failing
-  by name.
-- **2026-09-24 18:33Z · BOB #33 · CORRECTION to the 18:30Z idle-slot entry, before it is rowed:** CONDUCT #20 read the three sessions that entry
-  names (D-492, M0-173, REC-212). None was stalled: each was waiting on its own background gate, which `list_sessions` reports as IDLE. The
-  measured gaps were only D-510 (queued, no worker) and one cache slot unfilled. So `tools/slots.mjs` must NOT treat an IDLE status as a stall.
-  It names (a) queued rows with no worker session, (b) an open cache slot, and (c) rows marked `running` whose worker has had no update for
-  45+ minutes (the listing's `updated_at`), which are REPORTED for a lane to read, never flipped. Accepts when D-510 and the open slot of 18:22Z are
-  named, and the three gating sessions are not. Place it after product, not ahead: the cost measured was 2 slots, not 5.
-- **2026-09-24 19:14Z · BOB #33 · REC-194's design gap RULED — one RECORD row after REC-194; rule 11's recipient half depends on it:** **`op=publish` names
-  the draft it publishes (`draft=`, optional, additive), and at that act the readings taken through that draft BIND to the case it produced.**
-  The link is an ACT, recorded with who made it (the publisher) and when, and the case document states it in words ("readings given on draft
-  <id>, which <publisher> named as this case's draft at publication"). So a signature covers a link whose author is named, not an inference.
-  The owner who signs is signing that stated link. Without `draft=`, REC-194's provisional STANDS: an unbindable reading is counted and
-  stated as UNDETERMINED, never named. The row folds this into BIO_Publication_v0_1.md §3 rules 11 and 13, and closes the §9 frontier row
-  "a draft bound to the case it produced". Accepts when a recipient's reading on a new case's draft appears in the published case's signed
-  list with the link stated, and a publish without `draft=` still reads undetermined. NEGATIVE CONTROL: bind by statement bytes instead of
-  the named draft, and a twin case with the same sentence lists the reader, failing by name. I3 additive; the integrator classifies.
-  Also: C-82.1 (STATEMENT_ACK_DOCUMENTS_OVER_BOUND) is unreachable after REC-194. Place its retirement as a small row after this one, not in
-  REC-194's landing (it moves six DEC-49 floors).
-- **2026-09-24 21:05Z · BOB #33 · SUPERSEDES the 18:30Z and 18:33Z idle-slot entries (M0 row `tools/slots.mjs`, now placed AHEAD of product: it cost 7+ of 16 workers at 21:03Z):**
-  the signal is `list_sessions`' **status_bucket**, not session status. A row marked `running` whose worker reads COMPLETED or REVIEW_READY is
-  FINISHED, so it is FLIPPED. BLOCKED means the worker needs an answer. A row with no live session is read and then flipped or respawned. A queued
-  row with no worker is SPAWNED. The tool reads a saved listing (the cloud's `{ccr:{data}}` shape) plus coord's cache, prints those lists and the
-  WORKING count, and exits 1 when anything is owed. BOB's prototype is `slots.py` (in the plan-page artifact's files, builder/slots.py.txt);
-  port it to node. Accepts when, on the 21:03Z listing, it names D-476, D-518, UI-93, REC-199, REC-200, UI-102 and D-519 as FLIP, UI-99 as ANSWER, and
-  D-516 as SPAWN. NEGATIVE CONTROL: read session status in place of the bucket, and the seven FLIPs vanish, failing by name.
-- **2026-09-24 21:55Z · BOB #33 · THE RECORD OF RULINGS SENT ONLY BY MESSAGE TODAY, so `decided.mjs` finds them (REC-216's worker caught that two rows cite a ruling of 21:21Z that nobody can look up). Each row folds its ruling into the named home document when it lands:**
-  - **REC-212 determinations (18:44Z):** no-draft publish credits the publisher as writer, and the document says so; with the writer undetermined, participant acks are withheld and COUNTED; C-41.10 keeps both exclusions → Publication §3 rule 13 (folded by REC-212).
-  - **C-82.6/C-82.7 words (19:04Z):** CONDUCT's generalised sentences accepted; one code each.
-  - **Review copy (19:06Z):** the writer's own ack is withheld from the second-reader list AND counted beside it → Publication §6A (REC-213).
-  - **Render throttle (19:10Z):** measure the navigation bound; a concurrency cap from the vendor's stated limit, labelled; over-cap renders wait → CLIENT-RENDERED (D-520).
-  - **D-491 (19:54Z):** a held render expires to UNDETERMINED with its reason; op=queue shows a waiting render → CLIENT-RENDERED (D-523).
-  - **D-490 (21:05Z):** a per-subresource SHA-256 on rendered captures, undetermined where the bytes were not kept; no puppeteer → CLIENT-RENDERED (D-529).
-  - **registeraudit (21:17Z):** `sound` is true for a row held in parts with every named part present and verified; fourth state "held in parts, all present"; unresolvable rows are UNDETERMINED, outside `sound` → Intake Doctrine §8 (D-533). D-518's mixed-tick epoch is confirmed.
-  - **Risk-tier revision (the "21:21Z" ruling, sent 21:18Z):** a new member-class act `actionrisktier` (NOT BUILT); a revision is an authored, append-only act with a REQUIRED reason, the prior tier and author stay readable, and machines are refused → Case Making §2 (REC-214, UI-104); a labelled machine proposal (REC-215).
-  - **Reading provenance (21:25Z):** a reading carries tier, member, pages and a text SHA-256; re-read disagreements are attributed; both readings are kept → Framework §16 (D-536).
-  - **REC-216 (21:55Z): DO NOT publish `actionlawspropose` in ACTS.** REC-195's NON_ACTS reasoning stands: every `*propose` op is NON_ACTS, and a member states the list with `actionlaws`. What D-149 owes is a surface that SHOWS the machine proposal beside the member's list. REC-216 is SUPERSEDED (close it with this reason). UI-105 is rewritten to SHOW the proposal, with no member "propose" act.
-  - **FW-23 dialect (21:55Z): (b), a `reading.dialect` key of its own** (delimiter, encoding), persisted on the acquire document; not `container_extent`. It suits other text formats with a decoding choice. One RECORD I1 row.
-  - **FROM NOW ON, BOB writes each ruling to this INBOX in the same act as its message**, so no row cites a ruling the record cannot find.
 
 
 ## THE CACHE — the next rows, in order
@@ -234,7 +187,7 @@ accepts-when: the TJ threshold is the measured one, and M-133's agenda glue stay
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
 ### REC-213 · integrated — **`op=reviewcopy`'s LIVE STATEMENT LIST CAN SHOW THE WRITER'S OWN ACKNOWLEDGEMENT AMONG THE SECOND READERS, while the case document now withholds it: a row by its own writer is not a second reading (rule 11), so listing it overclaims.** REC-212's worker (F2). BOB #33 RULED YES, 2026-09-24 19:06Z (cite until folded): withheld AND COUNTED, with the count and its reason ("by the statement's writer") stated beside the list, as the case document does; §6A's "show everything recorded" holds, since nothing recorded is hidden. — owner RECORD.
-status: integrated — VERIFIED by CONDUCT #20 22:11Z: 3e7ac340, full 361/361 · 20690, control 3 arms AS DECLARED; rides c20-batch27 (IC-289).
+status: integrated — integrated — flipped 2026-09-24 ~22:20Z by SCHEDULER #20: WORKER REC-213 (session_01JJwYaKs8chrSDYbEwxuZ3W) COMPLETED and reported to CONDUCT #20 (D-540, D-541 minted and routed); land/worker/REC-213 @ 3e7ac340 pushed. CONDUCT merges only on its green; its floors are the branch's, re-read on the union.
 order: after D-517, with the corrections to just-landed work: a review copy claiming a second reading that is not one (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:57Z and BOB #33 19:06Z)
 milestone: M10
 interface: I3 — the review copy's list narrows and gains the count; the integrator classifies.
@@ -308,8 +261,8 @@ scope: record and publish the marker when the adopted revision is still proposed
 accepts-when: adopting a proposed revision answers and reads the marker; adopting an accepted one does not. NEGATIVE CONTROL: drop the marker, and the proposed-adoption arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### UI-94 · running — **THE QUEUE CANNOT FORWARD A SELECTION: D-126 lets the plane take the set, and the member picker is per item.** — owner UI.
-status: running — SPAWNED 2026-09-24 ~21:32Z by SCHEDULER #19 (dispatch, BOB #33 21:10Z) as a SEPARATE CLOUD SESSION titled WORKER UI-94 (SCHEDULER #19), base origin/main 1a7f0bcc0. Falsify rather than believe: a live worker holds the branch land/worker/UI-94; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### UI-94 · integrated — **THE QUEUE CANNOT FORWARD A SELECTION: D-126 lets the plane take the set, and the member picker is per item.** — owner UI.
+status: integrated — integrated — flipped 2026-09-24 ~22:20Z by SCHEDULER #20: WORKER UI-94 (session_0112MpTkDhs8e6RixvACKbTy) reported COMPLETE (queueSetOpsFor, 7 arms verified, 3 flags to CONDUCT #20); land/worker/UI-94 @ a3b8509c pushed. CONDUCT merges only on its green.
 order: after D-176 (SCHEDULER #17, 2026-09-23; D-126's worker via CONDUCT #18 23:47Z)
 milestone: M8
 interface: I3 consumer (IC-235).
@@ -384,6 +337,36 @@ depends-on: M0-178.
 scope: replace the nine sentences with "Run `node tools/bundles.mjs`, which rebuilds every bundle this change staled."; re-read `fleetbundles.test.mjs`'s quoted assertions; point FRAMEWORK.md's docprofile line at the same command (F2); add `tools/bundles.mjs` to `m041-instrument-census.mjs`'s INSTRUMENTS (A6).
 accepts-when: no staleness finding names `npm run build` (the measured failure it moves: nine sites naming the one-bundle command). NEGATIVE CONTROL: restore one site's old sentence and the fleetbundles quoted-remedy arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### M0-191 · queued — **NOTHING READS THE SLOTS: a `running` row whose worker FINISHED, went BLOCKED or has no session holds a slot until a lane happens to look, and a `queued` row waits with nobody spawning it.** BOB #33 21:05Z (supersedes his 18:30Z and 18:33Z entries): measured 7+ of 16 workers idle at 21:03Z. — owner M0.
+order: at the head of the backlog, AHEAD of product (BOB #33 21:05Z: *now placed AHEAD of product: it cost 7+ of 16 workers*); SCHEDULER #20 dispatches by a scratch script until it lands (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none (a lane tool).
+design: `docs/development/VERIFICATION.md` (an instrument states what it reads, never infers it), with `docs/development/WORK-PIPELINE.md` §1's cache states beside it, and BOB #33's ruling of 21:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20).
+depends-on: none.
+scope: `tools/slots.mjs` reads a saved `list_sessions` listing on stdin (the cloud's `{ccr:{data}}` shape and the bare array) plus coord's QUEUE.md; matches `WORKER <ID> (` titles EXACTLY; prints FLIP (bucket COMPLETED with a pushed `land/worker/<ID>`), ANSWER (BLOCKED), RESPAWN-OR-READ (no session), SPAWN (queued, no worker) and the WORKING count (WORKING + REVIEW_READY, since gating reads REVIEW_READY); exit 1 when anything is owed. Port of BOB's `builder/slots.py`. Correction since the ruling (BOB #33 21:17Z): REVIEW_READY is NOT finished, and COMPLETED is a candidate the lane confirms by the worker's report, never a flip by itself.
+accepts-when: on the 21:03Z listing it names D-476, D-518, UI-93, REC-199, REC-200, UI-102 and D-519 as FLIP candidates, UI-99 as ANSWER and D-516 as SPAWN (the measured failure it moves: 7+ idle slots nobody named). NEGATIVE CONTROL: match titles loosely and a `WORKER D-49` session satisfies D-492, failing by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
+
+### D-544 · queued — **`13.statement-ack` PINS `CATALOG_VERSION`, so EVERY catalogue bump turns four gate checks red for a claim that says nothing about the version: construct-status's probe `export const CATALOG_VERSION = "1.28.0"` in `bio-plane/src/gate.mjs` (measured on main 9f8b69e6).** Found by D-463's worker: its bump made the probe MISS, and `status.mjs --check`, `status.test.mjs`'s zero-drift arm, plancheck's CONSTRUCT STATUS arm and `strandedwork`'s two plancheck-exit arms all followed — one cause, four failures. — owner M0.
+order: after M0-191, AHEAD of product: it costs a diagnosis round in the gate of every row that moves the catalogue (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24; D-463's worker)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a probe pins what its claim asserts), with `docs/architecture/CORPUS-STANDARD.md` (construct-status is checked against the code at every push).
+depends-on: none.
+scope: drop the `CATALOG_VERSION` probe from `13.statement-ack`; its C-82.6 and C-82.7 probes already pin what it asserts. Sweep construct-status for any other claim probing a version constant and state each.
+accepts-when: a catalogue bump leaves `status.mjs --check` at 0 drift (the measured failure it moves: 1 drift and four red checks on D-463's bump). NEGATIVE CONTROL: restore the version probe, bump the constant, and the zero-drift arm fails by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs D`).
+
+### D-512 · queued — **`replay` IS HONOURED WITHOUT SERVER VERIFICATION: the end state BOB #33 ruled is that a replayed promotion of any type or revision names its drive-provenance capture, whose held bytes' preserved promotion record lists this bundle and this revision's `bundle.md` SHA-256.** — owner RECORD.
+order: after D-511, which it builds on (BOB #33, 17:05Z: *the end state, a build that depends on (1)*; SCHEDULER #18)
+milestone: M7
+interface: I3 — the integrator classifies.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 "The RUN is an object", item 5 as BOB #33's ruling states it (folded on main e9b21be6), with REC-173's `migrationReplayOf`.
+depends-on: D-511.
+scope: generalise `migrationReplayOf` to every replayed promotion; keep D-511's class test as a second condition.
+accepts-when: a replay whose capture does not list the bundle and SHA-256 is refused by name; a verified one is admitted. NEGATIVE CONTROL: skip the verification and the unverified arm is admitted, failing by name. AND INVERT §8 arm (δ), which D-511 pinned as the gap (admin-class replay still caller-asserted; via CONDUCT #20 19:47Z).
+added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

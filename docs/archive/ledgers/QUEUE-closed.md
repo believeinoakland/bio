@@ -5067,3 +5067,25 @@ depends-on: D-509.
 scope: name the group in the three payloads (or assert the INSTANCE_NAME binding beside each read); re-run `d280-strengthbar.control.mjs` and `caseproduction.control.mjs`.
 accepts-when: each suite's strengthbar read names the group it wrote (the measured failure it moves: a read that stays green under a renamed INSTANCE_NAME). NEGATIVE CONTROL: rename one suite's INSTANCE_NAME and its read fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### REC-216 · superseded — **NO MEMBER CAN MAKE A GOVERNING-LAWS PROPOSAL FROM ANY SURFACE: `actionlawspropose` is absent from the member-facing ACTS catalogue in `bio-plane/src/affordances.mjs`, so no page is ever offered it.** UI-102's worker (finding 3, via CONDUCT #20 21:26Z): unbuilt capability, not a defect. — owner RECORD.
+status: superseded — superseded — BOB #33 RULED 2026-09-24 21:55Z (BOB INBOX, drained by SCHEDULER #20): DO NOT publish `actionlawspropose` in ACTS; REC-195's NON_ACTS reasoning stands (every `*propose` op is NON_ACTS, a member states the list with `actionlaws`). What D-149 owes is a surface that SHOWS the machine proposal beside the member's list, which UI-102 built (a2d974aa). Its worker built nothing (audit F1-F4); no branch. Closed not-to-be-built.
+order: after REC-215, in product order: the plane half of REC-195's proposal becoming reachable (SCHEDULER #19, 2026-09-24)
+milestone: M10
+interface: I3 additive — one ACTS entry; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*: a machine proposal, if built, is labelled machine work), with REC-195's op.
+depends-on: REC-195.
+scope: publish `actionlawspropose` in ACTS with its label, weight and prompt, after which the UI's surface registry lists it in ACTS_AWAITING_SURFACE until UI-105 hosts it.
+accepts-when: `op=affordances` offers the act on an action where it applies (the measured failure it moves: the act absent from ACTS). NEGATIVE CONTROL: drop the ACTS entry and the offered-act arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
+
+### UI-105 · superseded — **THE ACTION PAGE CANNOT HOST A GOVERNING-LAWS PROPOSAL ACT.** The surface half of REC-216 (UI-102's worker, finding 3). — owner UI.
+status: superseded — superseded — BOB #33 21:55Z rewrote UI-105 to SHOW the machine proposal beside the member's list with no member propose act; that is exactly UI-102's built act (land/worker/UI-102 @ a2d974aa, integrated for batch26: actionLawsProposalsHtml inside the same section as actionLawsHtml, no control of any kind). SCHEDULER #20 read the branch; if UI-102 does not land, UI-102's row carries this. REC-216's F1-F4 folded into REC-215's context line.
+order: directly after REC-216, which it consumes (SCHEDULER #19, 2026-09-24)
+milestone: M10
+interface: I3 consumer (REC-216's IC).
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (the member's list is set only by the member's act; a proposal is labelled machine work).
+depends-on: REC-216, UI-102.
+scope: host the act on the action page, labelled as a proposal and kept structurally separate from the governing-laws act; move it out of ACTS_AWAITING_SURFACE in `civicos-ui/test/surface-registry.test.mjs`.
+accepts-when: against a real-plane suite a member makes a proposal and the list is unchanged until the member's own act (the measured failure it moves: no surface for the act). NEGATIVE CONTROL: let the proposal control set the list and the separation arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).

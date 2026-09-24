@@ -9,6 +9,36 @@ ever cut to fit. No whole-file budget; a row is held to 2 KiB, as in the backlog
 
 ## Rows
 
+### D-466 · queued — **D-394's OFFICE EXTENT ARMS ARE UNDRIVEN BY ITS SUITE: the worker states it — the cross-version notice's office-format arms have no fixture reaching them.** — owner RECORD.
+order: with the M0 control rows, after D-459 (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (test through the op).
+depends-on: D-394 (`integrated` on c18-batch8).
+scope: office fixtures (docx, xlsx) driving each office extent arm of the notice.
+accepts-when: each office arm is driven and asserted. NEGATIVE CONTROL: break one office arm's extent match, and its fixture arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-467 · queued — **`nc-m038.mjs` ARM (15) DOES NOT ARM ON `main`: its anchor no longer occurs, so the arm cannot fail.** Found by REC-187's worker (F2). — owner M0.
+order: with the M0 control rows, after D-466 (SCHEDULER #17, 2026-09-24; REC-187's worker via CONDUCT #19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (a control that cannot fail refutes nothing).
+depends-on: none.
+scope: re-anchor arm (15) on frontier's `(n) => this.#frontierLatest(level, …)` closure.
+accepts-when: `node bio-plane/test/nc-m038.mjs` reports arm (15) run and failing as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-471 · queued — **`status.test` §6's UI_HELPERS CENSUS MISSES `queueApplySet` AND `queueSelFor`.** — owner M0 (`tools/status.mjs`).
+order: with the M0 instrument rows, after D-467 (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (a census states what it reads).
+depends-on: none.
+scope: add both to `UI_HELPERS` in `tools/status.mjs`.
+accepts-when: the census names both. NEGATIVE CONTROL: remove one, and the §6 arm fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
 ### D-474 · queued — **`machine-fences.control.mjs` STILL DECLARES FIGURES FOR 12 OR 13 FENCES, AND THERE ARE NOW 14 (REC-189 added MACHINE_CANNOT_SET_RISK_TIER); the driver is REC-73's and is not in the battery.** — owner RECORD.
 order: with the M0 control rows, after D-471 (SCHEDULER #17, 2026-09-24; REC-189's worker F3 via CONDUCT #19)
 milestone: M0

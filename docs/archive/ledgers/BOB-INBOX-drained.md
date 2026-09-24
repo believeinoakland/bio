@@ -1903,3 +1903,54 @@ Each ruling is in its home document, verified at the code; each row keeps its `D
 >   failure it moves, in `accepts-when`. D-500's scope ("compare at ONE precision, milliseconds") was measured to be a NO-OP over the whole
 >   corpus. A worker who followed it literally would have shipped a diff that reads like the fix and moves nothing. D-500 planted a `noop`
 >   control arm for it.
+
+### Drained 2026-09-24 by SCHEDULER #20 — BOB #33's 18:30Z/18:33Z/21:05Z idle-slot entries (placed as M0-191), 19:14Z draft binding (placed as REC-217; C-82.1's retirement was already D-521), and 21:55Z record of message-only rulings (REC-216 and UI-105 closed SUPERSEDED; FW-23's dialect placed as REC-218; REC-214/UI-104/REC-215 repointed here)
+
+> - **2026-09-24 18:30Z · BOB #33 · A DEFECT IN THE LANE LOOP, for one M0 row placed AHEAD of product (it cost 5 of 16 slots, measured):**
+>   the cache counts ROWS, and a worker that goes quiet (finished without reporting, stuck, or waiting on a question) leaves its row `running`.
+>   Nothing wakes CONDUCT, so the slot is held with nobody working. Measured at 18:22Z: 9 worker sessions RUNNING against 14 rows marked
+>   running (D-492, M0-173 and REC-212 idle; D-510 queued with no worker). The rule is now in the kickoffs (CONDUCT.md step 4, BOB.md's stall
+>   probe; land/bob/batch-0924c). **The row builds the instrument, so it does not rest on a lane remembering:** `tools/slots.mjs` reads a
+>   `list_sessions` listing on stdin (as `occupancy.mjs` does, in both the cloud's `{ccr:{data}}` shape and the bare array) plus coord's
+>   QUEUE.md. It prints each row marked `running` with its worker's session status, and names every idle-worker row, every queued row with no
+>   worker, and the count of RUNNING workers against CACHE_ROWS. Exit 1 when any slot is unworked. Accepts when it names D-492, M0-173 and
+>   REC-212 on a listing and coord of 18:22Z. NEGATIVE CONTROL: match titles loosely, and a `WORKER D-49` session satisfies D-492, failing
+>   by name.
+> - **2026-09-24 18:33Z · BOB #33 · CORRECTION to the 18:30Z idle-slot entry, before it is rowed:** CONDUCT #20 read the three sessions that entry
+>   names (D-492, M0-173, REC-212). None was stalled: each was waiting on its own background gate, which `list_sessions` reports as IDLE. The
+>   measured gaps were only D-510 (queued, no worker) and one cache slot unfilled. So `tools/slots.mjs` must NOT treat an IDLE status as a stall.
+>   It names (a) queued rows with no worker session, (b) an open cache slot, and (c) rows marked `running` whose worker has had no update for
+>   45+ minutes (the listing's `updated_at`), which are REPORTED for a lane to read, never flipped. Accepts when D-510 and the open slot of 18:22Z are
+>   named, and the three gating sessions are not. Place it after product, not ahead: the cost measured was 2 slots, not 5.
+> - **2026-09-24 19:14Z · BOB #33 · REC-194's design gap RULED — one RECORD row after REC-194; rule 11's recipient half depends on it:** **`op=publish` names
+>   the draft it publishes (`draft=`, optional, additive), and at that act the readings taken through that draft BIND to the case it produced.**
+>   The link is an ACT, recorded with who made it (the publisher) and when, and the case document states it in words ("readings given on draft
+>   <id>, which <publisher> named as this case's draft at publication"). So a signature covers a link whose author is named, not an inference.
+>   The owner who signs is signing that stated link. Without `draft=`, REC-194's provisional STANDS: an unbindable reading is counted and
+>   stated as UNDETERMINED, never named. The row folds this into BIO_Publication_v0_1.md §3 rules 11 and 13, and closes the §9 frontier row
+>   "a draft bound to the case it produced". Accepts when a recipient's reading on a new case's draft appears in the published case's signed
+>   list with the link stated, and a publish without `draft=` still reads undetermined. NEGATIVE CONTROL: bind by statement bytes instead of
+>   the named draft, and a twin case with the same sentence lists the reader, failing by name. I3 additive; the integrator classifies.
+>   Also: C-82.1 (STATEMENT_ACK_DOCUMENTS_OVER_BOUND) is unreachable after REC-194. Place its retirement as a small row after this one, not in
+>   REC-194's landing (it moves six DEC-49 floors).
+> - **2026-09-24 21:05Z · BOB #33 · SUPERSEDES the 18:30Z and 18:33Z idle-slot entries (M0 row `tools/slots.mjs`, now placed AHEAD of product: it cost 7+ of 16 workers at 21:03Z):**
+>   the signal is `list_sessions`' **status_bucket**, not session status. A row marked `running` whose worker reads COMPLETED or REVIEW_READY is
+>   FINISHED, so it is FLIPPED. BLOCKED means the worker needs an answer. A row with no live session is read and then flipped or respawned. A queued
+>   row with no worker is SPAWNED. The tool reads a saved listing (the cloud's `{ccr:{data}}` shape) plus coord's cache, prints those lists and the
+>   WORKING count, and exits 1 when anything is owed. BOB's prototype is `slots.py` (in the plan-page artifact's files, builder/slots.py.txt);
+>   port it to node. Accepts when, on the 21:03Z listing, it names D-476, D-518, UI-93, REC-199, REC-200, UI-102 and D-519 as FLIP, UI-99 as ANSWER, and
+>   D-516 as SPAWN. NEGATIVE CONTROL: read session status in place of the bucket, and the seven FLIPs vanish, failing by name.
+> - **2026-09-24 21:55Z · BOB #33 · THE RECORD OF RULINGS SENT ONLY BY MESSAGE TODAY, so `decided.mjs` finds them (REC-216's worker caught that two rows cite a ruling of 21:21Z that nobody can look up). Each row folds its ruling into the named home document when it lands:**
+>   - **REC-212 determinations (18:44Z):** no-draft publish credits the publisher as writer, and the document says so; with the writer undetermined, participant acks are withheld and COUNTED; C-41.10 keeps both exclusions → Publication §3 rule 13 (folded by REC-212).
+>   - **C-82.6/C-82.7 words (19:04Z):** CONDUCT's generalised sentences accepted; one code each.
+>   - **Review copy (19:06Z):** the writer's own ack is withheld from the second-reader list AND counted beside it → Publication §6A (REC-213).
+>   - **Render throttle (19:10Z):** measure the navigation bound; a concurrency cap from the vendor's stated limit, labelled; over-cap renders wait → CLIENT-RENDERED (D-520).
+>   - **D-491 (19:54Z):** a held render expires to UNDETERMINED with its reason; op=queue shows a waiting render → CLIENT-RENDERED (D-523).
+>   - **D-490 (21:05Z):** a per-subresource SHA-256 on rendered captures, undetermined where the bytes were not kept; no puppeteer → CLIENT-RENDERED (D-529).
+>   - **registeraudit (21:17Z):** `sound` is true for a row held in parts with every named part present and verified; fourth state "held in parts, all present"; unresolvable rows are UNDETERMINED, outside `sound` → Intake Doctrine §8 (D-533). D-518's mixed-tick epoch is confirmed.
+>   - **Risk-tier revision (the "21:21Z" ruling, sent 21:18Z):** a new member-class act `actionrisktier` (NOT BUILT); a revision is an authored, append-only act with a REQUIRED reason, the prior tier and author stay readable, and machines are refused → Case Making §2 (REC-214, UI-104); a labelled machine proposal (REC-215).
+>   - **Reading provenance (21:25Z):** a reading carries tier, member, pages and a text SHA-256; re-read disagreements are attributed; both readings are kept → Framework §16 (D-536).
+>   - **REC-216 (21:55Z): DO NOT publish `actionlawspropose` in ACTS.** REC-195's NON_ACTS reasoning stands: every `*propose` op is NON_ACTS, and a member states the list with `actionlaws`. What D-149 owes is a surface that SHOWS the machine proposal beside the member's list. REC-216 is SUPERSEDED (close it with this reason). UI-105 is rewritten to SHOW the proposal, with no member "propose" act.
+>   - **FW-23 dialect (21:55Z): (b), a `reading.dialect` key of its own** (delimiter, encoding), persisted on the acquire document; not `container_extent`. It suits other text formats with a decoding choice. One RECORD I1 row.
+>   - **FROM NOW ON, BOB writes each ruling to this INBOX in the same act as its message**, so no row cites a ruling the record cannot find.
+>
