@@ -16191,6 +16191,12 @@ var RUNG_ABSENT = {
   reviewgrant: { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
   reviewrevoke: { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
   reviewcomment: { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
+  /* D-150, classified at the c17-batch7 union by c18-batch7fix (2026-09-24): `reviewcomment`'s two doors and its
+     ground. A second reader acknowledges a case's exclusion statement and is LISTED in the case document the owner
+     signs; `undetermined` on `transcribe`'s measurement — none of its refusals is a missing justification — and not
+     `reversible`, because no act withdraws an acknowledgement (a statement edited afterwards is a new sentence, and
+     the acknowledgement is simply not listed under it). */
+  statementack: { ground: "undetermined", is: "a joined participant of the producing project, or a review copy's recipient through a live grant, acknowledges the case's exclusion statement as a second reader; attributed, and listed in the unsigned case document the owner signs" },
   leadlook: { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" }
 };
 var CAPTURE_ACTS = [
@@ -37127,15 +37133,18 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     const needle = `
   statement_sha: ${statementSha}
 `;
-    const docs = this.#rows(
+    const docsMax = _Store.STATEMENT_ACK_DOCS_MAX;
+    const candidates = this.#rows(
       `SELECT case_id, edition, doc_sha, text FROM case_documents
                              WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
-                               AND instr(text, ?) > 0 ORDER BY case_id LIMIT 8`,
+                               AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
       ident.edition,
       ident.caseId ?? null,
       ident.caseId ?? null,
-      needle
-    ).filter((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === project);
+      needle,
+      docsMax + 1
+    );
+    const docs = candidates.slice(0, docsMax).filter((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === project);
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
     return {
       ok: true,
@@ -37155,9 +37164,12 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       /* Each unsigned case document of this statement, re-authored to list it: its NEW hash is
          the one the owner signs (op=caseratify refuses the old one as stale). */
       case_documents: reauthored,
+      case_documents_limit: docsMax,
+      case_documents_truncated: candidates.length > docsMax,
       listed: `the completeness block of ${_Store.#caseIdentitySentence(ident.caseId ?? null, ident.edition)} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or \u2014 if that document is already authored and unsigned \u2014 now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.`
     };
   }
+  static STATEMENT_ACK_DOCS_MAX = 8;
   /* THE TWO RENDERINGS OF THE LIST, ONE SPELLING EACH — written by `#caseDocumentText` when
      `op=publish` authors a document, and spliced by `#reauthorAcknowledgements` when an
      acknowledgement lands on one authored and unsigned, so the two can never print it two ways.
@@ -56291,6 +56303,9 @@ ${words}`;
   groupIdentity() {
     const pub = this.groupIdentityPublic();
     const dom = this.#groupIdentityCurrent("domain");
+    const max = _Store.GROUP_DOMAIN_CHECKS_MAX;
+    const checks = this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
+                               FROM group_domain_checks ORDER BY seq DESC LIMIT ?`, max + 1);
     return {
       ...pub,
       display_name_recorded: this.#groupIdentityCurrent("display_name")?.value ?? null,
@@ -56303,10 +56318,12 @@ ${words}`;
         latest: this.#groupDomainLatestCheck(dom.value)
       } : null,
       domain_history: this.#groupIdentityHistory("domain"),
-      domain_checks: this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
-                                        FROM group_domain_checks ORDER BY seq DESC LIMIT 20`).map((r) => ({ ...r }))
+      domain_checks: checks.slice(0, max).map((r) => ({ ...r })),
+      domain_checks_limit: max,
+      domain_checks_truncated: checks.length > max
     };
   }
+  static GROUP_DOMAIN_CHECKS_MAX = 20;
   /* REC-175: THE ONE COMPUTATION of what a promoted file's digest IS, read by `promote` before any write and by
      `digestCensus` over what is already held, so the check at the door and the census of the past cannot disagree
      about what a disagreement is. An inline file is hashed over `new TextEncoder().encode(text)` — the UTF-8 bytes

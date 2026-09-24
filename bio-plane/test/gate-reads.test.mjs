@@ -1264,6 +1264,13 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "no row a viewer predicate could filter, and nothing a hidden project could leak through. AND PUBLIC since "
       + "REC-163 (Publication §7 point 1): a caller with no credential is answered the slug alone, which every "
       + "published bundle's signed `group` already carries, and never the row's provenance.",
+    /* REC-164, classified at the c17-batch7 union by c18-batch7fix (2026-09-24): op=instancegroup's rule for WHO and
+       WHICH STORE, unchanged (index.mjs routes both through `caseReader`), so it is classified beside it. */
+    groupidentity: "HOLDS NO CORPUS MATERIAL: the producing group's display name and its claimed domain with that "
+      + "claim's dated verification checks (BIO_Publication_v0_1.md §7 points 2 and 3). No bundle id and no row a "
+      + "viewer predicate could filter. PUBLIC by design, and the projection is the gate: a caller with no credential "
+      + "is answered the slug, the display name only beside a slug, and the domain only while its latest verdict is "
+      + "`verified`; the claim, its histories and the checks go only to a caller the admission gate admits.",
     progression: "a progression DEFINITION: a member's constitutive claim about how an institution "
       + "ought to behave. It names stages, not documents.",
     proposals: "the DERIVED findings feed. Aggregated per (progression, stage) over entities and "

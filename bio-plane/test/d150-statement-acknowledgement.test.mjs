@@ -30,7 +30,8 @@
    never written, passes the act arms and fails block 3's signed-bytes arms (arm (c)); an
    author-acknowledges-self path passes the listing arms and fails block 1's refusal (arm (b)).
    EXPECTATIONS ARE NOT DERIVED FROM THE THING UNDER TEST: every statement is the string this suite
-   passed in, and every fingerprint is computed here with node:crypto, sharing no code with `src/`. */
+   passed in, and every fingerprint is computed here with node:crypto, sharing no code with `src/`.
+    (8) ADDED 2026-09-24 by c18-batch7fix at the c17-batch7 union, section 8's arm — in src/store.mjs acknowledgeStatement, `case_documents_truncated: candidates.length > docsMax` -> `case_documents_truncated: false`, anchor asserted once, restored by cp from a per-arm pristine copy verified by sha256 (cc402dc4…) AND cmp (3,064,416 B). DECLARED: section 8's BITE and DELTA fail, nothing else. -> 36 pass, 2 fail, exactly those. AS DECLARED. */
 
 import { withSurfacingRun } from "./surfacing-run.mjs";
 import "./stdio.mjs";
@@ -430,6 +431,48 @@ console.log("\n--- 7. the gate: bytes listing the author as their own second rea
   delete legacy.completeness_acknowledgements;
   t("a document with NO list (authored before acknowledgements were recorded) is not refused — what already crossed "
   + "stays crossed", errs(legacy), []);
+}
+
+/* =========================================================================== 8 */
+/* c18-batch7fix at the c17-batch7 union (2026-09-24). The re-authoring read was cut at a literal 8 and said nothing,
+   so bounds.test.mjs's sweep found an op it could not drive; the cut also falls BEFORE the project filter. It now
+   publishes `case_documents_limit` and a MEASURED `case_documents_truncated`. The bite needs more unsigned case
+   documents carrying one statement than the bound — authored only by `op=publish`, which needs this suite's
+   publishing project, signers and concluded questions — so bounds.test.mjs carries the op in DRIVEN_ELSEWHERE and
+   the bite is taken here. WHAT A SILENT CUT LOSES: an acknowledgement given, and missing from a document the owner
+   then signs as listing everyone who read the statement. */
+console.log("\n--- 8. the documents an acknowledgement re-authors are bounded, and the answer says when it is cut ---");
+{
+  const crowd = (i) => `INQ-2026-1500-crowd-${String(i).padStart(2, "0")}`;
+  const publishCrowd = async (i) => {
+    const id = crowd(i);
+    const r = await promote(id, withAdoptableReading(inquiryMd(id, `Crowded question ${i}?`, INFO)), "inquiry", "open");
+    if (r.ok === false) bail(`promote ${id}`, r);
+    const c = rP(await GET(`op=conclude&token=${IRIS}&target=${encodeURIComponent(id)}`
+      + `&conclusion=${encodeURIComponent(`The answer to ${id} is on the memo.`)}`
+      + `&falsifier=${encodeURIComponent(`An adopted resolution would overturn ${id}.`)}` + adoptedVersionParam()));
+    if (!c.ok) bail(`conclude ${id}`, c);
+    const p = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...args(PROJ, "crowd"), targets: [id] })));
+    if (p?.ok === false) bail(`publish ${id}`, p);
+  };
+  const Dc = rP(await POST(`op=casedraft&token=${IRIS}`, withRoles({ ...args(PROJ, "crowd"), targets: [crowd(0)] })));
+  if (!Dc?.ok) bail("casedraft crowd", Dc);
+  const probe = await ack(`draft=${Dc.draftId}&token=${ELLA}`);
+  const CMAX = probe?.case_documents_limit;
+  t("the bound is PUBLISHED on the answer, a whole number, and nothing is cut when nothing is authored yet",
+    [Number.isInteger(CMAX) && CMAX > 0, probe?.case_documents?.length, probe?.case_documents_truncated],
+    [true, 0, false]);
+  for (let i = 1; i <= CMAX; i++) await publishCrowd(i);
+  const whole = await ack(`draft=${Dc.draftId}&token=${ELLA}`);
+  t("WHOLE — exactly CMAX unsigned documents carry the statement: every one is re-authored and `truncated` is false",
+    [whole?.ok, whole?.case_documents?.length, whole?.case_documents_truncated], [true, CMAX, false]);
+  await publishCrowd(CMAX + 1);
+  const bitten = await ack(`draft=${Dc.draftId}&token=${ELLA}`);
+  t("BITE — one past the bound, CMAX are re-authored and the answer SAYS more exist than were examined",
+    [bitten?.ok, bitten?.case_documents?.length, bitten?.case_documents_limit, bitten?.case_documents_truncated],
+    [true, CMAX, CMAX, true]);
+  t("DELTA — 'every document carrying it was re-authored' and 'the first CMAX were' do NOT read alike",
+    whole?.case_documents_truncated !== bitten?.case_documents_truncated, true);
 }
 
 console.log(`\nd150-statement-acknowledgement: ${pass} pass, ${fail} fail`);

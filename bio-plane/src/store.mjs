@@ -10003,10 +10003,18 @@ export class Store extends DurableObject {
        case door's own document, or (through a draft) the edition `op=publish` authored from it.
        Found by the hash the document prints beside its statement, bounded, and re-read whole. */
     const needle = `\n  statement_sha: ${statementSha}\n`;
-    const docs = this.#rows(`SELECT case_id, edition, doc_sha, text FROM case_documents
+    /* THE BOUND IS PUBLISHED (c18-batch7fix at the c17-batch7 union, 2026-09-24). This read was cut at a literal 8
+       and said nothing — and the cut falls BEFORE the project filter, because a document's project lives in its
+       text, so eight unsigned documents carrying the same sentence anywhere in the store could crowd this project's
+       own out of the re-authoring and leave it to be signed without this acknowledgement. One row past the bound is
+       read, so `case_documents_truncated` is MEASURED: true means more candidates existed than were examined, and
+       the answer says so instead of reading as complete. Its constant sits BELOW this method, on REC-116's finding. */
+    const docsMax = Store.STATEMENT_ACK_DOCS_MAX;
+    const candidates = this.#rows(`SELECT case_id, edition, doc_sha, text FROM case_documents
                              WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
-                               AND instr(text, ?) > 0 ORDER BY case_id LIMIT 8`,
-                            ident.edition, ident.caseId ?? null, ident.caseId ?? null, needle)
+                               AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
+                            ident.edition, ident.caseId ?? null, ident.caseId ?? null, needle, docsMax + 1);
+    const docs = candidates.slice(0, docsMax)
       .filter((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === project);
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
     return { ok: true, existed: !!same,
@@ -10016,12 +10024,14 @@ export class Store extends DurableObject {
              /* Each unsigned case document of this statement, re-authored to list it: its NEW hash is
                 the one the owner signs (op=caseratify refuses the old one as stale). */
              case_documents: reauthored,
+             case_documents_limit: docsMax, case_documents_truncated: candidates.length > docsMax,
              listed: `the completeness block of ${Store.#caseIdentitySentence(ident.caseId ?? null, ident.edition)} `
                    + `lists this acknowledgement when its case document is authored with this exact statement `
                    + `(op=publish), or — if that document is already authored and unsigned — now, re-authored `
                    + `(case_documents). A statement edited afterwards is a different sentence, and this `
                    + `acknowledgement is not listed under it.` };
   }
+  static STATEMENT_ACK_DOCS_MAX = 8;
 
   /* THE TWO RENDERINGS OF THE LIST, ONE SPELLING EACH — written by `#caseDocumentText` when
      `op=publish` authors a document, and spliced by `#reauthorAcknowledgements` when an
@@ -30768,6 +30778,14 @@ export class Store extends DurableObject {
   groupIdentity() {
     const pub = this.groupIdentityPublic();
     const dom = this.#groupIdentityCurrent("domain");
+    /* The dated checks, newest first, under a PUBLISHED bound (c18-batch7fix at the c17-batch7 union, 2026-09-24):
+       this read cut the table at a literal 20 and said nothing, so a claim the alarm had re-checked past its
+       twentieth verdict read as if its history began twenty checks ago. One row past the bound is read, so
+       `domain_checks_truncated` is MEASURED rather than inferred from a full page. The constant sits BELOW this
+       method, on REC-116's finding, so the bounds walk reads it as this op's cap. */
+    const max = Store.GROUP_DOMAIN_CHECKS_MAX;
+    const checks = this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
+                               FROM group_domain_checks ORDER BY seq DESC LIMIT ?`, max + 1);
     return { ...pub,
              display_name_recorded: this.#groupIdentityCurrent("display_name")?.value ?? null,
              display_name_history: this.#groupIdentityHistory("display_name"),
@@ -30775,9 +30793,10 @@ export class Store extends DurableObject {
                                    instance_address: dom.instance_address ?? null,
                                    latest: this.#groupDomainLatestCheck(dom.value) } : null,
              domain_history: this.#groupIdentityHistory("domain"),
-             domain_checks: this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
-                                        FROM group_domain_checks ORDER BY seq DESC LIMIT 20`).map((r) => ({ ...r })) };
+             domain_checks: checks.slice(0, max).map((r) => ({ ...r })),
+             domain_checks_limit: max, domain_checks_truncated: checks.length > max };
   }
+  static GROUP_DOMAIN_CHECKS_MAX = 20;
 
   /* REC-175: THE ONE COMPUTATION of what a promoted file's digest IS, read by `promote` before any write and by
      `digestCensus` over what is already held, so the check at the door and the census of the past cannot disagree

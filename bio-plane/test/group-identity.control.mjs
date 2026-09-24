@@ -86,6 +86,14 @@ const ARMS = {
     mustFail: ["D5:", "L1:", "L4:", "O1:"],
   },
 
+  /* THE CHECKS LIST CUT AND SAYING NOTHING (c18-batch7fix at the c17-batch7 union, 2026-09-24): the bound still
+     applied, the flag hard-wired false — the literal-20 read this list was before it published its bound. K2 and K3
+     alone fail; K1, the whole answer, cannot tell. */
+  "checks-cut-silently": {
+    patches: [["store.mjs", "domain_checks_truncated: checks.length > max", "domain_checks_truncated: false"]],
+    mustFail: ["K2:", "K3:"],
+  },
+
   /* OVER-STRICTNESS OF THE SUITE: the same gate in a spelling it did not anticipate. Nothing may fail. */
   "gate-respelled": {
     patches: [["store.mjs", GATE, "    const verified = Boolean(slug) && Boolean(dom) && [\"verified\"].includes(last?.verdict);"]],

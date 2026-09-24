@@ -585,7 +585,17 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      same union: `op=biasmanifest` still dispatches to `biasManifest`, which now only delegates to the private
      `#biasManifestNow` where the cap lives, so the dispatched segment carries no cap and c17-batch5 alone prints
      36 (that departure, and the "driven but not found" arm it causes, are c17-unionfix's). Neither side's figure is the other's plus three: 39 is what this walk printed. */
-  OPS.size, 40);
+  /* MOVED 40 -> 41 by c18-batch7fix (2026-09-24), from THIS ARM'S OWN FAILURE OUTPUT (`want 40 / got 41`) on the
+     merge of CONDUCT #19's main merge (main @ 3f4b8f8c, carrying c17-unionfix), and the arrival is a RETURN:
+     `op=biasmanifest`. c17-unionfix folded `#biasManifestNow` back into the one public `biasManifest` body, so the
+     dispatched segment carries its cap again. 40 was D-256's `changedfromaudit` plus this branch's three over a
+     roster that had lost biasmanifest; neither side's figure plus one is how 41 was reached.
+     A walk rule that followed a pure delegation was drafted here to restore it and was REMOVED on its own negative
+     control: disabled, the roster still read 41, because on this tree nothing delegates — a rule that reaches
+     nothing is a claim the walk cannot make. The two SQL-literal arrivals named above are literals no longer:
+     `groupIdentity` and `acknowledgeStatement` now read under `GROUP_DOMAIN_CHECKS_MAX` and
+     `STATEMENT_ACK_DOCS_MAX` and publish them, so each is on the roster by `named-cap` and says when it was cut. */
+  OPS.size, 41);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1379,7 +1389,20 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      `max` beside `truncated`, so the loop's descriptor (ask for a bite of one,
                                      read the bound back) has nothing to ask for. It is DRIVEN below, in this file,
                                      with a real bite: one action carrying QUOTES_MAX + 1 quotes. */
-                                  "actionquotes"]);
+                                  "actionquotes",
+                                  /* REC-164, joined at the c17-batch7 union and BOUNDED there (c18-batch7fix,
+                                     2026-09-24): op=groupidentity's dated checks list was a SQL literal `LIMIT 20`
+                                     that said nothing; it now publishes `domain_checks_limit` and a measured
+                                     `domain_checks_truncated`, takes no caller `limit`, and its bite needs more dated
+                                     checks than the bound, which only an administrator's session against a scripted
+                                     web can write — driven in `test/group-identity.test.mjs` section K. */
+                                  "groupidentity",
+                                  /* D-150, joined and bounded likewise: op=statementack re-authors the unsigned case
+                                     documents carrying a statement under `STATEMENT_ACK_DOCS_MAX` (was a silent
+                                     literal 8, applied BEFORE the project filter). Its bite needs more such documents
+                                     than the bound, authored only by `op=publish` in a signing project — driven in
+                                     `test/d150-statement-acknowledgement.test.mjs` section 8. */
+                                  "statementack"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1533,6 +1556,14 @@ t("op=actionquotes: publishes the bound it APPLIED (`max`), and a cut answer SAY
 t("op=actionquotes: a complete answer says the opposite — whether this is every quote the body sent back is "
 + "READABLE, not inferred",
   [QT_WHOLE.ok, QT_WHOLE.max, QT_WHOLE.count, QT_WHOLE.truncated], [true, QT_MAX, 1, false]);
+/* REC-164's WHOLE arm, here because it costs nothing: the credentialed read publishes its bound over an empty list
+   and says it is not cut. The bite is group-identity.test.mjs section K's (DRIVEN_ELSEWHERE). */
+const GI_WHOLE = await GET("op=groupidentity&token=mem-r57");
+t("op=groupidentity: the dated checks list PUBLISHES its bound, the named constant this walk reads, and an empty "
++ "list says it is not cut",
+  [GI_WHOLE.ok, GI_WHOLE.domain_checks_limit,
+   Number((/static GROUP_DOMAIN_CHECKS_MAX = (\d+);/.exec(SRC_STORE) || [])[1]), GI_WHOLE.domain_checks_truncated],
+  [true, Number((/static GROUP_DOMAIN_CHECKS_MAX = (\d+);/.exec(SRC_STORE) || [])[1]), 20, false]);
 t("op=actionquotes: DELTA — 'this is all of them' and 'this is the first QUOTES_MAX' do NOT read alike",
   QT_BITE.truncated !== QT_WHOLE.truncated, true);
 /* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
@@ -1578,6 +1609,12 @@ const answersByOp = new Map([
   ["partitionindependence", PI_OVER],
   /* D-148: driven above with its real bite and REUSED here — the envelope is an object either way. */
   ["actionquotes", QT_WHOLE],
+  /* REC-164: the credentialed read over this suite's store, which claims no domain: the envelope is an object, and
+     the bound is published even over an empty list. The bite is in group-identity.test.mjs (DRIVEN_ELSEWHERE). */
+  ["groupidentity", GI_WHOLE],
+  /* D-150: a machine credential is answered the review copy's one dead answer — an object, never an array. The
+     bite, which needs a signing project, is in d150-statement-acknowledgement.test.mjs (DRIVEN_ELSEWHERE). */
+  ["statementack", await POST("op=statementack&token=mem-r57&draft=DRAFT-2026-0000", {})],
   /* CPDF-10: driven HERE, plainly, for exactly the one thing this map is for —
      the ENVELOPE SHAPE. The bite/`truncated` arms need a corpus of transcribed
      documents and attestations, which lives in `test/textchain.test.mjs`; the

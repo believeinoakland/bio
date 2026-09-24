@@ -20,7 +20,7 @@
  * do not show either value yet (UI's row, next); the alarm as workerd fires it on its own clock (onAlarm is driven
  * with a virtual `now`, `scheduler.test.mjs`'s method); and an instance reached at two addresses (the address a claim
  * binds is the one the administrator's session reached, stamped at the set act).
- * ========================================================================= */
+ * ========================================================================= · ADDED 2026-09-24 by c18-batch7fix at the c17-batch7 union: (i) checks-cut-silently, section K's arm — `domain_checks_truncated` hard-wired false with the bound still applied: 34/2, K2 and K3 alone, AS DECLARED (real sources untouched: YES). */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -260,6 +260,26 @@ try {
   const o1 = await POST(`op=groupdomainset&${RUTH}${S}`, { domain: "spelled.example" });
   t("O1: an upper-case origin with a trailing slash, extra keys and another key order verify, and the domain is shown",
     [o1?.check?.verdict, (await pub())?.result?.domain], ["verified", "spelled.example"]);
+
+  /* c18-batch7fix at the c17-batch7 union (2026-09-24): the credentialed read's CHECKS LIST was cut at a literal 20
+     and said nothing, so bounds.test.mjs's sweep found an op it could not drive. The list now publishes its bound
+     and a MEASURED `domain_checks_truncated`; the bite needs more dated checks than the bound, and only this
+     suite writes them (an administrator's session and the scripted web), so bounds.test.mjs carries the op in
+     DRIVEN_ELSEWHERE and this is where its bite is taken. WHAT A SILENT CUT LOSES: the claim's earliest verdicts —
+     a domain that read `mismatched` before it read `verified` looks as if it had always verified. */
+  console.log("\n--- K. the dated checks list is bounded, and says when it is cut ---");
+  const k0 = await full();
+  const KMAX = k0?.domain_checks_limit;
+  t("K1: WHOLE — the checks written so far are all listed, the bound is published and `truncated` is false",
+    [Number.isInteger(KMAX) && KMAX > 0, k0?.domain_checks?.length < KMAX, k0?.domain_checks_truncated],
+    [true, true, false]);
+  const have = k0?.domain_checks?.length ?? 0;
+  for (let i = 0; i <= (KMAX ?? 0) - have; i++) await scratch.onAlarm(Date.now() + (6 + 2 * i) * DAY);
+  const k1 = await full();
+  t("K2: BITE — one check past the bound, the list is the newest KMAX and SAYS it is cut",
+    [k1?.domain_checks?.length, k1?.domain_checks_limit, k1?.domain_checks_truncated], [KMAX, KMAX, true]);
+  t("K3: DELTA — 'these are all the checks' and 'these are the newest KMAX' do NOT read alike",
+    k0?.domain_checks_truncated !== k1?.domain_checks_truncated, true);
 } catch (e) {
   console.log(`  FAIL  the suite reached no foot: ${e && e.stack || e}`);
   fail++;

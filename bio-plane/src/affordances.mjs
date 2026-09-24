@@ -966,6 +966,12 @@ export const RUNG_ABSENT = {
   reviewgrant:          { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
   reviewrevoke:         { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
   reviewcomment:        { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
+  /* D-150, classified at the c17-batch7 union by c18-batch7fix (2026-09-24): `reviewcomment`'s two doors and its
+     ground. A second reader acknowledges a case's exclusion statement and is LISTED in the case document the owner
+     signs; `undetermined` on `transcribe`'s measurement — none of its refusals is a missing justification — and not
+     `reversible`, because no act withdraws an acknowledgement (a statement edited afterwards is a new sentence, and
+     the acknowledgement is simply not listed under it). */
+  statementack:         { ground: "undetermined", is: "a joined participant of the producing project, or a review copy's recipient through a live grant, acknowledges the case's exclusion statement as a second reader; attributed, and listed in the unsigned case document the owner signs" },
   leadlook:             { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" },
 };
 
