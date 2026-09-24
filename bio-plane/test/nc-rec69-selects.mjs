@@ -36,6 +36,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -65,12 +66,13 @@ const airuns     = () => runSuite("test/airuns.test.mjs",         /airuns: (\d+)
 const failedArms = (out) => (out.match(/^ {2}FAIL {2}(.+)$/gm) || [])
   .map((s) => s.replace(/^ {2}FAIL {2}/, "").slice(0, 110));
 
+const PEN = controlPen("rec69-selects");
 let armNo = 0, wrong = 0;
 const arm = ({ name, file, from, to, mustFail, mustNotFail, run }) => {
   armNo++;
   const tag = `arm${armNo}`;
   const path = P[file];
-  const snap = join(PLANE, `.nc-rec69-${tag}-${file}.pristine`);
+  const snap = join(PEN, `nc-rec69-${tag}-${file}.pristine`);
   console.log(`\n=== ARM ${armNo}: ${name}`);
   console.log(`    DECLARED MUST FAIL     : ${mustFail}`);
   console.log(`    DECLARED MUST NOT FAIL : ${mustNotFail}`);

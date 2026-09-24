@@ -62,12 +62,13 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SUBJECT = join(HERE, "..", "src", "textchain.mjs");
 const SUITE = join(HERE, "tier-pagewise.test.mjs");
 const FIX = join(HERE, "fixtures", "cpdf20");
-const PEN = join(HERE, ".nc-cpdf20-pristine");
+const PEN = controlPen("cpdf20");
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 

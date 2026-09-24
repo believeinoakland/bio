@@ -26,11 +26,12 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "no
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
+import { controlPen } from "./pen.mjs";
 
 const ARM = (process.argv[2] || "none").toLowerCase();
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./inquirystrength.test.mjs", import.meta.url));
-const PEN = fileURLToPath(new URL("../../.rec105-control-pristine/", import.meta.url));
+const PEN = `${controlPen("rec105")}/`;
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
 /* THE ARMS. `find` must occur EXACTLY ONCE in the pristine source — an anchor

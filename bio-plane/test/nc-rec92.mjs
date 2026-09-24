@@ -1,8 +1,10 @@
 /* REC-92's NEGATIVE CONTROL DRIVER — `node test/nc-rec92.mjs [arm|all]`.
  *
- * INSIDE THIS WORKER'S OWN WORKTREE, never a shared scratchpad: two workers have
- * reported the shared one is not isolated between sessions, and a log under
- * `/tmp` with a generic name is not yours.
+ * THE DRIVER is committed INSIDE THIS WORKTREE; its PEN is not — since M0-182 the
+ * pristine copies go to `controlPen("rec92")`, never a shared scratchpad: two workers
+ * have reported the shared one is not isolated between sessions, and a log under
+ * `/tmp` with a GENERIC name is not yours — which is exactly why the pen is a fresh
+ * `mkdtemp` named for its item rather than a fixed path.
  *
  * EACH ARM ALONE, every other defence held open. Each mutation passes an
  * anchor-occurs-EXACTLY-ONCE guard and a bytes-really-changed guard. Every
@@ -34,6 +36,11 @@ import { readFileSync, writeFileSync, copyFileSync, statSync, unlinkSync } from 
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
+
+const PEN = controlPen("rec92");
+/* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
+const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 const QUERY = fileURLToPath(new URL("../src/query.mjs", import.meta.url));
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -180,7 +187,7 @@ report("BASELINE", run());
 
 for (const [name, [file, anchor, repl, declared]] of Object.entries(ARMS)) {
   if (want !== "all" && want !== name) continue;
-  const pristine = `${file}.pristine-rec92-${name}`;
+  const pristine = penPath(file, `pristine-rec92-${name}`);
   copyFileSync(file, pristine);
   const before = readFileSync(file, "utf8");
   const beforeSha = sha(file);

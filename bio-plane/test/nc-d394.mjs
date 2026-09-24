@@ -13,8 +13,8 @@
  * THE RULES IT OBEYS (WORKER.md): one arm at a time with every other defence
  * held open; the patch's anchor must match EXACTLY ONCE or the arm reports it
  * did not arm; every edited file is copied first to a uniquely-named per-arm
- * pristine copy INSIDE this worktree (`.d394-control-pristine/`, named on its
- * own line in `.gitignore`), and restored from it and verified by sha256 AND by
+ * pristine copy in a pen OUTSIDE this worktree (`controlPen("d394")` from
+ * `test/pen.mjs`; M0-182, BOB #32), and restored from it and verified by sha256 AND by
  * byte comparison, with the byte count printed and a minimum guarded. Never
  * `git checkout --`. A missing tally is -1, never 0.
  */
@@ -23,11 +23,12 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
-const SAFE = join(REPO, ".d394-control-pristine");
+const SAFE = controlPen("d394");
 mkdirSync(SAFE, { recursive: true });
 
 const STORE = join(PLANE, "src/store.mjs");

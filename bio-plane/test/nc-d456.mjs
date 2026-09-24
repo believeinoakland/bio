@@ -13,10 +13,12 @@ import { readFileSync, writeFileSync, copyFileSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./d456-namespace-scope.test.mjs", import.meta.url));
 const hash = (b) => createHash("sha256").update(b).digest("hex");
+const PEN = controlPen("d456");
 const PRISTINE = readFileSync(SRC);
 if (PRISTINE.length < 100000) throw new Error(`pristine index.mjs is ${PRISTINE.length} bytes — refusing to arm`);
 const H0 = hash(PRISTINE);
@@ -38,7 +40,7 @@ const ARMS = [
 
 const rows = [];
 for (const arm of ARMS) {
-  const aside = `${SRC}.nc-d456-${arm.id}.pristine`;
+  const aside = `${PEN}/index.mjs.nc-d456-${arm.id}.pristine`;
   copyFileSync(SRC, aside);
   let text = PRISTINE.toString("utf8"), armed = true;
   for (const [from, to] of arm.patch) {

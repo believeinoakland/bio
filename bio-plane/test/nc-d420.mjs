@@ -30,8 +30,8 @@
  *   The withdrawn key is spelled by construction here, never as a literal:
  *   CPDF-22's acceptance is that `git grep` for it over bio-plane finds nothing.
  *
- * Pristine copies live in `.d420-control-pristine/` at the worktree root (named,
- * not globbed, in `.gitignore`), UNIQUELY NAMED per arm; every restore is
+ * Pristine copies live in a pen OUTSIDE the worktree — `controlPen("d420")` from
+ * `test/pen.mjs` (M0-182, BOB #32) — UNIQUELY NAMED per arm; every restore is
  * verified by sha256 AND by content with a byte count printed and a minimum
  * guarded — never `git checkout --`.
  */
@@ -40,11 +40,12 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
-const SAFE = join(REPO, ".d420-control-pristine");
+const SAFE = controlPen("d420");
 mkdirSync(SAFE, { recursive: true });
 
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");

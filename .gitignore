@@ -23,6 +23,30 @@
 # to M0 about `bio-plane/test/op-claims.test.mjs`). Ignored so an interrupted
 # control cannot become somebody else's corpus.
 .ui*-harness/
+
+# ---- THE PEN RULE (M0-182, 2026-09-24) — READ THIS BEFORE ADDING A PEN LINE BELOW ----
+# A control driver's PRISTINE COPY NOW LIVES OUTSIDE THE WORKTREE. `bio-plane/test/pen.mjs`'s
+# `controlPen(item)` is the one spelling — `mkdtempSync(join(tmpdir(), "nc-<item>-"))` — and
+# `bio-plane/scripts/pensweep.mjs` grades every `nc-*.mjs` and `*.control.mjs` driver TEMP, MEMORY or
+# IN-WORKTREE, with `test/pen-sweep.test.mjs` flooring the class at ZERO in-worktree pens. Why the move:
+# since D-293 a gate on a dirty tree RECORDS NOTHING, so a control running beside a gate costs the gate;
+# repository-walking suites WALK the pen (REC-185's `.rec185/` moved the battery's assertion total 19513 ->
+# 19512 with no source change); and `gates.mjs` §2e reads the extra files as under-inclusion. BOB #32 ruled
+# it (2026-09-24, `kickoffs/WORKER.md`), superseding "inside your own worktree".
+#
+# THE LINES BELOW STAND, and they are not leftovers. BOB #33 ruled (2026-09-24 17:12Z, M0-172) that an
+# in-worktree pen which is DECLARED — gitignored and named for its item — is a driver's own mechanism; what
+# BOB's ruling does not cover is an UNDECLARED one, a pen no line here names or one written beside its
+# source as `${file}.pristine-<arm>`. M0-182 moved the `nc-*.mjs` class and the seven pens NO LINE HERE
+# COVERED (`.m0110-harness`, `.m0109-harness`, `.m037-harness`, `.m0100-harness`, `.m0107-harness`,
+# `.vf1-control-pristine`, `.m0111-harness`) and DELETED the 37 lines that then described nothing. Their
+# per-pen reasons are in this file's history, at the commit that removed them.
+#
+# THE STANDING RULE ON SPELLING, kept here because M0-182 deleted the line that used to hold it
+# (`.rec84-control-pristine/`) and thirteen notes below cited it: A PEN GETS ITS OWN LINE, NAMED FOR ITS
+# ITEM, NEVER A GLOB. A wildcard over `.*-control-pristine/` or `.nc-*` would silently cover a pen nobody
+# declared, which is the whole difference between a register that is re-affirmed and one that accumulates.
+# ---- END THE PEN RULE ----
 # PL-13's pen, same rule and named for its item rather than squeezed into the
 # `.ui*` pattern: a plane-side control driver needs a pen too, and naming it
 # `.ui…` so an existing line would cover it is the kind of small dishonesty that
@@ -32,50 +56,8 @@
 # interrupted control run must not leave a copy of `pdfstructure.mjs` sitting
 # untracked where the next walk can enrol it as a source file.
 .d251-control-pristine/
-# REC-82's pen (`test/nc-rec82.mjs`), same rule and its own line for the same
-# reason: the harness arms `checks/bio-checks.mjs` and `src/store.mjs`, and an
-# interrupted run must not leave a copy of either sitting untracked where the
-# next walk — `coverage.mjs`'s fleet walk, or the battery's discovery — can
-# enrol it as a source file.
-.rec82-control-pristine/
-# REC-83's pen (`test/nc-rec83.mjs`), its own line for exactly REC-82's reason
-# one item later: the harness arms `src/store.mjs`, and a copy of a
-# million-byte source left untracked is a second `store.mjs` for the next walk
-# to enrol — which is not hypothetical here, since `coverage.mjs`'s fleet walk
-# and the battery's discovery both read directories rather than a list.
-.rec83-control-pristine/
-# REC-121's pen (`test/nc-rec121.mjs`), for the same reason as the line above.
-.rec121-control-pristine/
-# REC-90's and REC-104's pens were NEVER listed: REC-121 re-ran `nc-rec90.mjs pred`
-# and `nc-rec104.mjs parseback` and `git add -A` staged both directories. Added here.
-.rec90-control-pristine/
-.rec104-control-pristine/
-# REC-84's pen (`test/nc-rec84.mjs`), on exactly the two lines above and for
-# exactly their reason: the same two sources are armed, and an interrupted run
-# must not leave a copy of either sitting untracked where the next walk can
-# enrol it as a source file. Its own line rather than a glob, because a glob
-# over `.rec*-control-pristine/` would silently cover a pen nobody declared.
-# KEEP-BOTH at the REC-83 x REC-84 merge, 2026-09-14: two items each added their
-# own pen to the same anchor and the two are independent, so both lines stand.
-.rec84-control-pristine/
 # M0-134's pen (`bio-plane/test/finallyexit.control.mjs`), for the same reason: it arms six real suites.
 .m0134-control-pristine/
-# FW-17's pen (`test/nc-fw17.mjs`), its own line for the reason every line above
-# has one: the harness arms `src/store.mjs` and `src/textchain.mjs`, and an
-# interrupted run must not leave a copy of either sitting untracked where the
-# next walk can enrol it as a source file. Widening REC-82's line to `.rec*` or
-# `.fw*` would cover it and would also be the small dishonesty this file's own
-# head warns about.
-.fw17-control-pristine/
-# REC-85's pen (`test/nc-rec85.mjs`), its own line for the same reason two items
-# on: the harness arms `checks/bio-checks.mjs`, and a copy of a 631 KB source
-# left untracked by an interrupted run is a SECOND `bio-checks.mjs` for the next
-# walk to enrol — and that is not hypothetical, since `check-firing.test.mjs`'s
-# producer sweep once read a leftover pristine copy as a second producer of a
-# retired check. Added to this item's CLAIMS block at the close rather than
-# taken silently: it was not foreseen when the claim was written, and it is the
-# mechanism doing its job.
-.rec85-control-pristine/
 # D-271's pen. Named for the item rather than the area because the item is a
 # plane item; the `.ui*` spelling above is an accident of which area needed a
 # pen first, not a rule about who may have one.
@@ -143,19 +125,13 @@
 # that runs every driver makes that a certainty rather than a risk.
 _m025/
 .m025-anchor-harness/
-# D-355's pens, each on its OWN line for the reason the note at `.rec84-control-pristine/` gives.
+# D-355's pens, each on its OWN line for the reason THE PEN RULE at the head of this section gives.
 # REC-79's driver (`civicos-ui/test/refusal-partition.control.mjs`) wrote `.rec79-control-pristine/` on
 # EVERY run from 2026-08-09 and never removed it, clean exit or red, and the pen was never listed here —
 # it is the pen in the `check-firing` incident this block's note records. Since D-355 the driver removes
 # each copy by name as its restore verifies and an exit hook removes the rest on every exit; SIGKILL
 # cannot be caught, which is what this line is for. `.nc-d355-pen/` is `bio-plane/test/nc-d355.mjs`'s own.
 .rec79-control-pristine/
-.nc-d355-pen/
-# FOUND BY D-355's CLASS SWEEP, 2026-09-21, and listed here as a MITIGATION ONLY, on REC-121's precedent
-# for REC-90's and REC-104's pens: `bio-plane/test/nc-rec95.mjs` and `bio-plane/test/nc-rec129.mjs` each
-# create a pen, never remove it, and had no line here. Removing them on exit is their owners' fix.
-.rec95-control-pristine/
-.rec129-harness/
 
 # CAP-7's pen, named for its item for the same reason every one above it is. The
 # Drive-link count streams ~1.4 GB of Oakland assets through this directory and
@@ -170,47 +146,16 @@ _m025/
 # evidence; an interrupted run must not leave an untracked copy of a planning file where
 # the next walk can enrol it as a second authority.
 .m030-harness/
-# CAP-9's pen, named for its item because every one above it is and because a glob
-# over `.*-control-pristine/` would silently cover a pen nobody declared (the note
-# at `.rec84-control-pristine/`). `bio-plane/test/nc-cap9.mjs` keeps per-arm pristine
-# copies of `src/index.mjs` and `src/store.mjs` here while it arms them; an
-# interrupted run leaves a copy behind, and an untracked copy of a plane source is
-# exactly what another item's producer sweep has already enrolled as a second author.
-.cap9-control-pristine/
-# SK-7's pen (`bio-plane/test/nc-sk7.mjs`), its own line for exactly REC-82's and
-# REC-83's reason two items later: the harness arms `src/store.mjs`, `src/index.mjs`
-# and `checks/bio-checks.mjs`, and a copy of any of the three left untracked by an
-# interrupted run is a second source file for the next walk to enrol — which is not
-# hypothetical, since `coverage.mjs`'s fleet walk and the battery's discovery both read
-# directories rather than a list.
-.sk7-control-pristine/
 
 # CAP-12's control pen and its BASELINE checkout, each on its own line rather
-# than under a glob — the note at `.rec84-control-pristine/` rules that a glob
+# than under a glob — THE PEN RULE at the head of this section rules that a glob
 # over `.*-control-pristine/` would silently cover a pen nobody declared, and the
 # same argument covers a baseline worktree. The driver keeps per-arm pristine
 # copies of `src/index.mjs` and `src/store.mjs` in the pen while it arms them; the
 # baseline checkout is a pristine `origin/main` worktree this item measures its
 # own baseline in, kept INSIDE this worktree because the shared scratchpad is not
 # isolated between sessions (WORKER.md) and `git stash` is repository-wide.
-.cap12-control-pristine/
 .cap12-baseline/
-# REC-97's pen, named for its item on the rule at `.rec84-control-pristine/`: a glob
-# over `.*-control-pristine/` would silently cover a pen nobody declared.
-# `bio-plane/test/nc-rec97.mjs` keeps per-arm pristine copies of `src/store.mjs` and
-# `checks/bio-checks.mjs` here while it arms them; an interrupted run leaves a copy
-# behind, and an untracked copy of a plane source is exactly what another item's
-# producer sweep has already enrolled as a second author.
-.rec97-control-pristine/
-.rec93-control-pristine/
-# SK-8's pen (`bio-plane/test/nc-sk8.mjs`), its own line on the standing rule at
-# `.rec84-control-pristine/` above — a wildcard over `.*-control-pristine/` would
-# silently cover a pen nobody declared, so each one is named. The harness arms
-# `src/store.mjs` and `src/extractrun.mjs`, and a copy of either left untracked by an
-# interrupted run is a second source file for the next walk to enrol, which
-# `coverage.mjs`'s fleet walk and the battery's discovery both invite by reading
-# directories rather than a list.
-.sk8-control-pristine/
 
 # M0-31's pen, named for its item for the same reason every one above it is. The
 # SEARCH §5 measurement streams the Oakland corpus through this directory — each
@@ -220,13 +165,6 @@ _m025/
 # where the next walk can enrol it (M0-15: `git stash -u` is repository-wide,
 # not per-worktree).
 .m031-pen/
-# COFF-11's pen (`bio-plane/test/nc-coff11.mjs`), named for its item on the rule stated at
-# `.rec84-control-pristine/`: a glob over `.*-control-pristine/` would silently cover a pen
-# nobody declared. The harness arms the three office PRODUCERS — `src/formats-xlsx.mjs`,
-# `src/pptx.mjs` and `src/odf.mjs` — and keeps per-arm pristine copies here while it does.
-# An interrupted run leaves a copy behind, and an untracked copy of a plane source is exactly
-# what another item's producer sweep has already enrolled as a second author.
-.coff11-control-pristine/
 # COFF-11's own working files: the LibreOffice grid probe that turned a vendor's figure into
 # a measurement, its scratch workbooks, the logs its baseline and control runs were read
 # from, and the scratch `git worktree` the pristine baseline was measured in. None of them
@@ -254,16 +192,15 @@ bio-plane/.coff11-arm-test-pristine.mjs
 .fw18-pen/
 
 # REC-94's pen (`bio-plane/test/nc-rec94.mjs`) and its pristine baseline worktree,
-# each on its OWN line for the reason the note at `.rec84-control-pristine/` gives:
+# each on its OWN line for the reason THE PEN RULE at the head of this section gives:
 # a glob over `.*-control-pristine/` would silently cover a pen nobody declared.
 # `.rec94-baseline/` is a `git worktree add` of the spawn commit, kept INSIDE this
 # worktree because the shared scratchpad is not isolated between sessions
 # (WORKER.md) and because `git stash` is repository-wide across every checkout.
-.rec94-control-pristine/
 .rec94-baseline/
 
 # REC-88's control pen and its PRISTINE baseline checkout, each on its own line
-# rather than under a glob - the standing rule at `.rec84-control-pristine/` is
+# rather than under a glob - THE PEN RULE at the head of this section is
 # that a wildcard over `.*-control-pristine/` would silently cover a pen nobody
 # declared, and CAP-12's note extends that argument to a baseline worktree.
 # `bio-plane/test/nc-rec88.mjs` keeps per-arm pristine copies of `src/store.mjs`,
@@ -275,49 +212,14 @@ bio-plane/.coff11-arm-test-pristine.mjs
 # sessions (WORKER.md) and stashing is repository-wide. An untracked copy of a
 # plane source left behind by an interrupted arm is exactly what another item's
 # producer sweep has already enrolled as a second author.
-.rec88-control-pristine/
 .pristine-rec88/
 
-# COFF-12's control pen, on its OWN line and never under a glob — the standing rule
-# at `.rec84-control-pristine/` is that a wildcard over `.*-control-pristine/` would
-# silently cover a pen nobody declared. `bio-plane/test/nc-coff12.mjs` writes its
-# per-arm pristine copies of `src/index.mjs` here.
-.coff12-control-pristine/
 
 # REC-105's control pen and its pristine origin/main baseline checkout, each named
-# rather than globbed (the standing rule at `.rec84-control-pristine/`). Both are
+# rather than globbed (THE PEN RULE at the head of this section). Both are
 # scratch and neither carries a decision.
-.rec105-control-pristine/
 .pristine-rec105/
 _work-ab0036/
-# REC-91's control pen (`bio-plane/test/nc-rec91.mjs`), on its own line for the
-# reason the note at `.rec84-control-pristine/` gives and that every pen above it
-# repeats: a glob over `.*-control-pristine/` would silently cover a pen nobody
-# declared. The harness keeps per-arm pristine copies of `src/store.mjs` and
-# `src/index.mjs` here while it arms them, and an untracked copy of either left
-# behind by an interrupted run is a SECOND plane source for the next walk to
-# enrol — which is not hypothetical, since `coverage.mjs`'s fleet walk and the
-# battery's discovery both read directories rather than a list. Added to this
-# item's CLAIMS block at the close rather than taken silently.
-.rec91-control-pristine/
-# REC-102's control pen (`bio-plane/test/nc-rec102.mjs`), on its own line for the
-# reason the note at `.rec84-control-pristine/` gives and that every pen above it
-# repeats: a glob over `.*-pristine/` would silently cover a pen nobody declared.
-# It sits INSIDE `bio-plane/test/`, so an untracked copy of `src/index.mjs` or of
-# the suite itself left behind by an interrupted run is a second file for the next
-# walk to enrol — and both `coverage.mjs`'s register and the battery's discovery
-# read that directory rather than a list, which is why the leading dot is not
-# enough on its own. Added to this item's CLAIMS block at the close rather than
-# taken silently.
-bio-plane/test/.nc-rec102-pristine/
-# REC-111's control pen (`bio-plane/test/nc-rec111.mjs`), on its own line for the
-# reason the note at `.rec84-control-pristine/` gives and that every pen above it
-# repeats: a glob over `.*-control-pristine/` would silently cover a pen nobody
-# declared. The harness keeps per-arm pristine copies of `src/store.mjs` and
-# `src/index.mjs` here while it arms them, and an untracked copy of either left
-# behind by an interrupted run is a SECOND plane source for the next walk to
-# enrol. Added to this item's CLAIMS block at the close rather than taken silently.
-.rec111-control-pristine/
 
 # M0-35 worker scratch: the CPU-currency probes generate a worker script here.
 bio-plane/.m035-pen/
@@ -339,12 +241,11 @@ m035-census.txt
 .m048-runs-*
 
 # REC-107's negative-control pen, on its OWN line rather than under a glob, for the
-# reason the note at `.rec84-control-pristine/` gives and that every pen above it
+# reason THE PEN RULE at the head of this section gives and that every pen above it
 # repeats: a glob over `.*-control-pristine/` would silently cover a pen nobody
 # declared. `bio-plane/test/nc-rec107.mjs` keeps a per-arm pristine copy of
 # `src/airun.mjs` and `src/store.mjs` here and restores from it, verifying the
 # restore by sha256 AND by content before the next arm measures the tree.
-.rec107-control-pristine/
 .d402-harness/
 .d404-harness/
 .d409-harness/
@@ -352,45 +253,14 @@ m035-census.txt
 .status-harness/
 .d408-harness/
 
-# REC-118's negative-control pen, on its OWN line rather than under a glob, for the
-# reason the note at `.rec84-control-pristine/` gives and that every pen above it
-# repeats: a glob over `.*-control-pristine/` would silently cover a pen nobody
-# declared. `bio-plane/test/nc-rec118.mjs` keeps a per-arm pristine copy of
-# `src/store.mjs` here and restores from it, verifying the restore by sha256 AND by
-# `cmp` AND by size against a floor before the next arm measures the tree.
-.rec118-control-pristine/
-# FW-19's control pen, named rather than globbed for the reason the note at
-# `.rec84-control-pristine/` gives. `bio-plane/test/nc-fw19.mjs` keeps per-arm pristine
-# copies of `checks/bio-checks.mjs` here and verifies every restore by sha256 AND content.
-.fw19-control-pristine/
-.cpdf18-control-pristine/
-# D-420's pen, named for its item on the rule at `.rec84-control-pristine/`: a glob over
-# `.*-control-pristine/` would silently cover a pen nobody declared. `bio-plane/test/nc-d420.mjs`
-# keeps per-arm pristine copies here.
-.d420-control-pristine/
 
-# REC-86's negative-control pen, on its OWN line rather than under a glob, for the
-# reason the note at `.rec84-control-pristine/` gives: a glob over
-# `.*-control-pristine/` would silently cover a pen nobody declared.
-# `bio-plane/test/nc-rec86.mjs` keeps a per-arm pristine copy of `src/store.mjs` and
-# `checks/bio-checks.mjs` here and restores from it, verified by sha256 AND by content.
-.rec86-control-pristine/
-# REC-100's pen, named for its item on the rule at `.rec84-control-pristine/`: a glob over
-# `.*-control-pristine/` would silently cover a pen nobody declared.
-# `bio-plane/test/nc-rec100.mjs` keeps per-arm pristine copies of `src/airun.mjs` and
-# `src/store.mjs` here while an arm is armed.
-.rec100-control-pristine/
 # LED-2's negative control pen (bio-plane/test/ledger.control.mjs), 2026-09-18: pristine copies of
 # tools/ledger.mjs, tools/owed.mjs and tools/mintid.mjs. Removed on a clean run, KEPT on a red one.
 .led2-harness/
-# REC-127's pen, named for its item on the rule at `.rec84-control-pristine/`: a glob over
-# `.*-control-pristine/` would silently cover a pen nobody declared. `bio-plane/test/nc-rec127.mjs`
-# keeps its per-arm pristine copies here.
-.rec127-control-pristine/
 # REC-143's pen (`bio-plane/test/migrate-released.control.mjs`), its own line on the standing rule above:
 # per-arm pristine copies of `src/store.mjs` and the suite's run log, removed at the end of a run.
 bio-plane/.nc-migrate-released/
-# D-293 / M0-98's pen, named for its item on the rule at `.rec84-control-pristine/`: `bio-plane/test/gates.control.mjs`
+# D-293 / M0-98's pen, named for its item on THE PEN RULE at the head of this section: `bio-plane/test/gates.control.mjs`
 # keeps per-arm pristine copies of `tools/gates.mjs` and `tools/pushguard.mjs` here while it arms them, and the
 # worker kept its scratch measurements here. An untracked copy of an instrument left behind by an interrupted run
 # is a second copy for the next walk to enrol.
@@ -400,22 +270,22 @@ bio-plane/.nc-migrate-released/
 .m0126-harness/
 
 # M0-97's pen (`bio-plane/test/decided.control.mjs`), its own line on the standing rule at
-# `.rec84-control-pristine/`: the driver keeps a per-arm pristine copy of `tools/decided.mjs` here while an arm
+# THE PEN RULE at the head of this section: the driver keeps a per-arm pristine copy of `tools/decided.mjs` here while an arm
 # is armed, removes each copy as its restore verifies, and removes the pen on every exit. `.m097-runs/` holds the
 # worker's own run logs, kept INSIDE the worktree for the reason `.d310-runs/` gives.
 .m097-harness/
 .m097-runs/
 
-# M0-81's pen, named for its item on the rule at `.rec84-control-pristine/`: `bio-plane/test/occupancy.control.mjs` keeps
+# M0-81's pen, named for its item on THE PEN RULE at the head of this section: `bio-plane/test/occupancy.control.mjs` keeps
 # per-arm pristine copies of `tools/occupancy.mjs` here while it arms them, and the worker kept its run logs here, inside
 # its own worktree. An untracked copy of an instrument left by an interrupted run is a second copy for the next walk to enrol.
 .m081-harness/
 
-# REC-163's run logs, named for its item on the rule at `.rec84-control-pristine/`, kept INSIDE the worktree for the
+# REC-163's run logs, named for its item on THE PEN RULE at the head of this section, kept INSIDE the worktree for the
 # reason `.d310-runs/` gives: a baseline written to a shared temp root is somebody else's corpus.
 .rec163-runs/
 
-# M0-99's pens, each on its own line on the standing rule at `.rec84-control-pristine/`: `.m099-runs/` holds the worker's
+# M0-99's pens, each on its own line on THE PEN RULE at the head of this section: `.m099-runs/` holds the worker's
 # run logs, kept INSIDE the worktree for the reason `.d310-runs/` gives; `.m099-harness/` is where
 # `bio-plane/test/pushguard.control.mjs` keeps its per-arm pristine copies of `tools/pushguard.mjs`. (The baseline checkout
 # lives OUTSIDE the worktree, as a sibling: a checkout nested inside one is a phantom tree for every walker that reads it.)
@@ -431,7 +301,7 @@ docs/DECIDED.md
 # REC-166 (2026-09-22): `bio-plane/test/current-shared-question.control.mjs`'s pen — it edits src/ and keeps per-arm
 # pristine copies here; an interrupted driver must not leave them as somebody else's corpus.
 bio-plane/.nc-rec166/
-# REC-165's pen, on the standing rule at `.rec84-control-pristine/`: `.rec165-runs/` holds the worker's run logs and
+# REC-165's pen, on THE PEN RULE at the head of this section: `.rec165-runs/` holds the worker's run logs and
 # runner scripts, kept INSIDE the worktree for the reason `.d310-runs/` gives. CORRECTED 2026-09-22 by the resuming
 # worker: the stood-down worker's line here named a `.rec165-control-pristine/` pen for a driver `nc-rec165.mjs`; the
 # driver was written as `bio-plane/test/rec165-production-principal.control.mjs`, which patches COPIES in a temporary
@@ -445,14 +315,8 @@ bio-plane/.nc-caseratify-conclusion/
 # D-442 (2026-09-23): `bio-plane/test/d442-publish-writes-nothing.control.mjs`'s pen — it edits src/ and checks/ and
 # keeps per-arm pristine copies here; an interrupted driver must not leave them as somebody else's corpus.
 bio-plane/.nc-d442/
-# COFF-13's pen, named for its item on the rule at `.rec84-control-pristine/`: a glob over
-# `.*-control-pristine/` would silently cover a pen nobody declared. `bio-plane/test/nc-coff13.mjs`
-# keeps per-arm pristine copies of `src/pptx.mjs` and `src/index.mjs` here while it arms them.
-.coff13-control-pristine/
 # FW-20's pen (`civicos-ui/test/nc-fw20.mjs`), same rule as the pens above.
 .fw20-pen/
-# D-394's pen, on the standing rule at `.rec84-control-pristine/`: `test/nc-d394.mjs` keeps its per-arm pristine copies here.
-.d394-control-pristine/
 
 # D-470's pen (`bio-plane/test/d470-catalog-census.control.mjs`), its own line for
 # the reason every line above has one: the driver removes the pen on success, and
@@ -460,25 +324,9 @@ bio-plane/.nc-d442/
 # are deliberately left behind. `git add -A` would stage them.
 bio-plane/.nc-d470/
 
-# D-487's control pen (`bio-plane/test/nc-d487.mjs`), on its own line and never under a glob, on the
-# standing rule stated at `.rec84-control-pristine/` above: a wildcard would silently cover a pen nobody
-# declared. It sits INSIDE `bio-plane/test/` — the directory `coverage.mjs`'s register and the battery's
-# discovery both read by WALKING rather than from a list — and the `limiter-off` arm copies a 3.1 MB
-# `src/store.mjs` into it, so a leading dot alone is not enough (the note at
-# `bio-plane/test/.nc-rec102-pristine/` makes that point for the same directory). The driver removes each
-# copy as its restore verifies and removes the pen on exit IF EMPTY; this line is for the run that is
-# killed between the two.
-bio-plane/test/.nc-d487-pen/
 
 # D-507's control pen (`bio-plane/test/d507-statement-ack-translation.control.mjs`), on its own line and
-# never under a glob, on the standing rule stated at `.rec84-control-pristine/`: a blanket `.nc-*` rule
+# never under a glob, on THE PEN RULE stated at the head of this section: a blanket `.nc-*` rule
 # would silently cover a pen nobody declared. The driver removes it on a clean run; this line is what
 # keeps a FAILED restore's pristine copies of `src/store.mjs` and `checks/bio-checks.mjs` out of a commit.
 bio-plane/.nc-d507/
-# D-508's control pen, on the same reasoning as `bio-plane/test/.nc-d487-pen/` directly above and
-# declared for the same reason: it sits INSIDE `bio-plane/test/`, which `coverage.mjs`'s register and
-# the battery's discovery both read by WALKING, and three of its four arms copy a 3 MB `src/store.mjs`
-# or a 900 KB `checks/bio-checks.mjs` into it. A leftover copy is a SECOND plane source for the next
-# walk to enrol, which has already been measured happening. The driver removes each copy as its
-# restore verifies and removes the pen on exit IF EMPTY; this line is for the run killed between the two.
-bio-plane/test/.nc-d508-pen/

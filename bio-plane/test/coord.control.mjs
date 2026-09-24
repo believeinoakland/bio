@@ -25,8 +25,10 @@
  *
  * THE RULES, which are this estate's: every anchor is counted before anything arms (`preflight`, D-331); each arm
  * patches from the pristine file and is restored before the next arms, verified by sha256 AND `cmp` against that arm's
- * own uniquely-named copy, byte count printed and floored; an `exit` hook restores from memory on EVERY exit. THE PEN,
- * `.m0110-harness/`, ignores itself (a `.gitignore` of `*` inside it), so an interrupted run leaves no untracked file.
+ * own uniquely-named copy, byte count printed and floored; an `exit` hook restores from memory on EVERY exit. THE PEN is
+ * `controlPen("m0110")`, OUTSIDE the worktree (M0-182: it was `.m0110-harness/`, which no `.gitignore` line covered
+ * and which ignored ITSELF from inside — a window between the mkdir and the write), so an interrupted run leaves
+ * nothing untracked in the tree at all.
  * THE LIMIT, STATED FIRST: nothing here proves a control RAN; the run of record is written, dated and with its
  * figures, onto `coord.test.mjs`' `NEGATIVE CONTROL RESULT:` line.
  */
@@ -37,12 +39,13 @@ import { createHash } from "node:crypto";
 import { spawn, execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
+import { controlPen } from "./pen.mjs";
 
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const SUITE = path.join(REPO, "bio-plane", "test", "coord.test.mjs");
 const COORD = path.join(REPO, "tools", "coord.mjs");
 const LEDGER = path.join(REPO, "tools", "ledger.mjs");
-const PEN = path.join(REPO, ".m0110-harness");
+const PEN = controlPen("m0110");
 const PEN_IGNORE = path.join(PEN, ".gitignore");
 const ONLY = process.argv.slice(2);
 const DECLARED_ARMS = 4;

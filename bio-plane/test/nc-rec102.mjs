@@ -56,10 +56,11 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SUITE = join(HERE, "tier3-layer-parts.test.mjs");
-const PEN = join(HERE, ".nc-rec102-pristine");
+const PEN = controlPen("rec102");
 
 /* TWO SUBJECTS, because two different things can make this suite lie. The WIRE
    is `index.mjs`'s and A1-A3 aim there. A4 aims at the SUITE ITSELF, because the

@@ -16,6 +16,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, copyFileSync, rmSync, statSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { controlPen } from "./pen.mjs";
 
 const STORE = new URL("../src/store.mjs", import.meta.url).pathname;
 const SUITE = new URL("./derivation-bounds.test.mjs", import.meta.url).pathname;
@@ -104,10 +105,14 @@ const ARMS = [
             + "the arm that proves D-384 cannot be closed silently in either direction" },
 ];
 
+const PEN = controlPen("m040");
+/* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
+const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
+
 console.log("=== M0-40 / D-384 · NEGATIVE CONTROLS ===");
 const pristine = {};
 for (const f of [STORE, SUITE]) {
-  pristine[f] = `${f}.nc-m040.pristine`;
+  pristine[f] = penPath(f, "nc-m040.pristine");
   copyFileSync(f, pristine[f]);
   console.log(`  pristine ${f.split("/").pop()}: ${statSync(f).size} bytes, ${sha(f).slice(0, 12)}`);
   if (statSync(f).size < BYTES_FLOOR[f]) throw new Error(`FLOOR: ${f} is implausibly small`);
@@ -116,7 +121,7 @@ const opening = measure("BASELINE");
 
 for (const arm of ARMS) {
   console.log(`\n  --- ARM (${arm.n}) ${arm.what}\n      DECLARED: ${arm.declared}`);
-  const copy = `${arm.file}.nc-m040.arm${arm.n}`;
+  const copy = penPath(arm.file, `nc-m040.arm${arm.n}`);
   copyFileSync(arm.file, copy);
   let text = readFileSync(arm.file, "utf8");
   for (const [find, repl] of arm.parts) {
@@ -145,7 +150,7 @@ for (const f of [STORE, SUITE]) {
   if (!equal) throw new Error(`${f} was left moved`);
   rmSync(pristine[f]);
 }
-const leftovers = [STORE, SUITE].flatMap((f) => [`${f}.nc-m040.pristine`, ...ARMS.map((a) => `${f}.nc-m040.arm${a.n}`)])
+const leftovers = [STORE, SUITE].flatMap((f) => [penPath(f, "nc-m040.pristine"), ...ARMS.map((a) => penPath(f, `nc-m040.arm${a.n}`))])
   .filter((p) => existsSync(p));
 console.log(`  copies left behind: ${leftovers.length}`);
 console.log(`  CLOSING baseline equals OPENING: `
