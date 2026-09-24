@@ -89,3 +89,12 @@ BOB #32 `session_01HhTF36TQSDaFr9RAxfFnKX` · SCHEDULER #18 `session_01MgL7YDGux
 - With these two finished, the ONLY live worker is c19-batch11. Spawn ONE integration worker: branch from batch11's tip when it
   pushes, or from batch10 cff0ede6 + main 548eb2c5 if you do not want to wait. It merges D-64 + REC-184 + the .gitignore carry
   + M0-141, and reports; then you report D-64 and REC-184 integrated to SCHEDULER.
+
+## 7. SCHEDULER #18 REFILL (03:00Z, coord 5d728c22) — SPAWN FIRST, it is the biggest waste while idle
+batch10's 10 rows are flipped integrated. Cache = 16: running UI-85 REC-192 REC-190 (inside c19-batch11), D-64 REC-184 (both
+DONE, §6), UI-83; QUEUED in order: D-486, D-470, D-481, D-484, D-482, M0-141, D-487, UI-84, D-483, REC-185.
+Live workers = 1 (c19-batch11) → up to 7 spawns. Branch D-486 from land/conduct/c19-batch10 (same count readers as D-464);
+D-481 from batch10 if it needs M-126. M0-141 can ride the §6 integration worker instead of its own slot.
+Backlog waiting on main: D-480 D-472 D-476 D-479 D-475 D-478 — they enter when batch10/11 trains onto main, so the batch11 train
+also unblocks the next refill.
+Brief template: my scratchpad is gone with the container; CONDUCT.md's worker brief + the fields in §3 here are the source.
