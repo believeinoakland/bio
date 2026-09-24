@@ -9565,15 +9565,17 @@ export const MACHINE_FENCE_CHECKS = {
       + 'move it. Sign in to move it yourself.',
   },
   /* REC-189 — D-182's ruling on the write side (BOB #21: *"Only a member's authored act sets 1, 2 or 3"*).
-     Refuses a CHANGE of tier by a machine, never a presence: carrying a member's tier forward unchanged,
-     or stating none (undetermined), is not refused. Inside `promote`'s action block, not an act. */
+     Refuses a CHANGE of tier by a machine, never a presence: carrying a member's tier forward unchanged is
+     not refused, nor is leaving undetermined a tier no member ever set. BOB #32 (2026-09-24 01:44Z): dropping a
+     member's tier to undetermined IS a change and is refused. Inside `promote`'s action block, not an act. */
   MACHINE_CANNOT_SET_RISK_TIER: {
     check: 'C-32.19',
     where: 'src/store.mjs promote > is-machine-set-risk-tier',
     translation: 'A risk tier tells whoever reads this action whether it is safe to file, needs caution, or '
       + 'must not be filed without a lawyer, and somebody has to be answerable for that judgement. The '
-      + 'credential that asked here is an automated one: it can carry forward the tier a member set, or '
-      + 'leave the tier unstated, and it cannot set or change one. Sign in to state the tier yourself.',
+      + 'credential that asked here is an automated one: it can carry forward the tier a member set, and '
+      + 'where no member has set one it can leave the tier unstated, but it cannot set, change or remove '
+      + 'one. Sign in to state the tier yourself.',
   },
   MACHINE_CANNOT_CORRESPOND: {
     check: 'C-32.4',

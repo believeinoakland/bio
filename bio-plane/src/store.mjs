@@ -16329,7 +16329,7 @@ export class Store extends DurableObject {
            WHAT IT ASKS IS A CHANGE, NEVER A PRESENCE: the tier this revision states against the tier the
            version it replaces states (a creation replaces nothing, so any stated tier is a change). A machine
            revising an action a member assessed carries the member's tier forward unchanged and lands; one that
-           states no tier lands (it reads UNDETERMINED, which claims nothing). Both sides read through
+           states no tier lands only where no member has set one (BOB #32, below: removing a member's tier is a change). Both sides read through
            `riskTierState`, so a respelling of the same value is not a change. A value outside the vocabulary
            is not this fence's — the catalogue refuses it by name. Before any write. Replay is exempt with the
            block: a replayed promotion is the record re-stating its own past. */
@@ -16338,8 +16338,14 @@ export class Store extends DurableObject {
         const heldTierFm = heldTierMd && typeof heldTierMd.content === "string" ? parseFrontmatter(heldTierMd.content).data : null;
         const heldTier = riskTierState(heldTierFm && typeof heldTierFm === "object" ? heldTierFm.risk_tier : undefined);
         const tierWho = String(author ?? "").trim();
+        /* BOB #32, 2026-09-24 01:44Z, paid at c19-batch10: once a MEMBER has set a tier, a machine may not write it
+           AT ALL — dropping a member's 1, 2 or 3 to `undetermined` is a change too, and is refused by the same name.
+           Where no member ever set one (the held tier is undetermined) the machine may leave it undetermined. A held
+           1, 2 or 3 is read as a member's: since this fence, no other writer can put one there. */
+        const heldTierSet = heldTier === 1 || heldTier === 2 || heldTier === 3;
         /* DEC-49 REGION is-machine-set-risk-tier */
-        if ((!tierWho || isMachineIdentity(tierWho)) && (nextTier === 1 || nextTier === 2 || nextTier === 3)
+        if ((!tierWho || isMachineIdentity(tierWho))
+            && ((nextTier === 1 || nextTier === 2 || nextTier === 3) || heldTierSet)
             && nextTier !== heldTier)
           return { ok: false, reason: "MACHINE_CANNOT_SET_RISK_TIER", risk_tier: nextTier,
                    held: cur ? heldTier : null,
@@ -16348,7 +16354,8 @@ export class Store extends DurableObject {
                                 : `this creation states risk_tier ${nextTier}.`)
                          + ` A risk tier is a member's assessment of the legal exposure of filing `
                          + `this action, and only a member's authored act sets 1, 2 or 3. A machine credential `
-                         + `may carry a member's tier forward unchanged, or leave it unstated (undetermined). `
+                         + `may carry a member's tier forward unchanged, and may leave the tier unstated `
+                         + `(undetermined) only where no member has set one; it may not remove a member's tier. `
                          + `Nothing was written.` };
         /* END DEC-49 REGION is-machine-set-risk-tier */
         const af = [];

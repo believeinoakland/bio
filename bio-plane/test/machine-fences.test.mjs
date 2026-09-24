@@ -27,6 +27,16 @@
    tier changed -> the suite DIES before its foot (tally -1): block (v)'s fixture, a signed-in MEMBER creating an action
    at tier 1, is refused and `mustPromote` throws. Declared as "the member path fails"; it failed at a fixture rather
    than at a named assertion, recorded as found. */
+/* NEGATIVE CONTROL (BOB #32's ruling of 2026-09-24 01:44Z, paid by CONDUCT #19's c19-batch10 worker in the block now
+   numbered xv, RUN 2026-09-24 on the merged tree, ONE arm ALONE on src/store.mjs's `is-machine-set-risk-tier` region,
+   restored by cp from the uniquely-named pristine copy `store.pristine.nc-bob32.mjs` and verified by sha256
+   (3b46f02f4c65…, 3,166,440 B) AND cmp: IDENTICAL, HASH-MATCH). Baseline 59 pass / 0 fail. Declared before arming: the
+   drop arm MUST fail by name; the carry-forward, the never-set "leaves it undetermined" and "cannot state 1" arms, the
+   pin and the member arm MUST NOT. (D) RE-ADMIT THE DROP — the `|| heldTierSet` disjunct removed, so a machine may again
+   state `undetermined` over a member's tier -> 58 pass, 1 FAIL, AS DECLARED: "a machine credential's revision DROPPING
+   A MEMBER'S TIER TO UNDETERMINED is refused by name, and the member's tier stands". Arms (A)–(C) above were run on the
+   branch before the ruling; (B)'s second named arm ("…stating the tier UNDETERMINED lands") is the assertion the ruling
+   CORRECTED, and "…from undetermined the machine still cannot state 1" now stands on a never-set tier. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/machine-fences.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (PL-3's, PL-4's and PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, and every restore is verified BY sha256 AND BY CONTENT.
    ALL FIVE ARMS RUN 2026-08-08 IN WORKTREE agent-a75c0395e77e7eaed, every one behaving as declared, baseline 45/0 before each. Figures below are MEASURED.
    (1) NEUTER THE PREDICATE — `isMachineStamp` returns false in checks/bio-checks.mjs — and ALL TWELVE complete-payload arms FAIL NAMING THE MACHINE REFUSAL, not a payload complaint -> 15 pass, 30 FAIL. **AND HERE IS WHAT THE COMPLETE PAYLOAD BOUGHT, WHICH IS MORE THAN THE ITEM PREDICTED: TEN OF THE TWELVE ACTS THEN WENT ALL THE WAY THROUGH.** The machine RELEASED a collected document to `verified`, CONCLUDED a question, REOPENED one, PUBLISHED a case at edition 1, MOVED an action, wrote a CORRESPONDENCE entry at ord 0, DIVIDED a question into two children, GROUPED a basis, SET THE GROUP'S REQUIRED EVIDENTIARY STRENGTH (`author: token:ai` in the row, read back), and ACCEPTED a reading. Under PL-11's payloads the same edit produced ONE success and eleven payload complaints; under these it produces ten. **THE TWO THAT DID NOT: `taskforward` and `taskresolve`, both answering `NOT_YOURS` — REC-4's assignee fence catching what the machine fence let past.** Those two verbs are the only pair in the family with a SECOND independent fence behind the first, and nobody knew that until the arm was run with a payload good enough to reach it.
@@ -763,14 +773,43 @@ const fence = (code, payload, machineAnswer) => {
   t("a machine credential's revision that CARRIES THE MEMBER'S TIER FORWARD UNCHANGED lands — the fence "
   + "refuses a change of tier, never a machine promote of an action",
     [carry.ok, (await view()).tier], [true, 1]);
-  /* OVER-STRICTNESS, a spelling the fence did not write: stating the tier undetermined claims nothing. */
-  const unstated = await revise(AI, "risk_tier: undetermined", "Ask for the transfer ledger and the FY2023 memo.");
-  t("a machine credential's revision stating the tier UNDETERMINED lands, and reads undetermined",
-    [unstated.ok, (await view()).tier], [true, "undetermined"]);
-  const reset = await revise(AI, "risk_tier: 1");
-  t("…and from undetermined the machine still cannot state 1 — the change is asked of the version it "
-  + "replaces, so a tier dropped by a machine cannot be restored by one",
-    codeOf(reset), "MACHINE_CANNOT_SET_RISK_TIER");
+  /* BOB #32 (2026-09-24 01:44Z), paid at c19-batch10 — CORRECTED, never exempted: this arm used to assert that a
+     machine's revision stating the tier UNDETERMINED lands over the member's 1. The ruling reads that as the machine
+     REMOVING a member's judgement, which is writing the tier: once a member has set one, a machine may not drop it
+     to undetermined. The old assertion described the defect the ruling closes. */
+  const dropped = await revise(AI, "risk_tier: undetermined", "Ask for the transfer ledger and the FY2023 memo.");
+  t("a machine credential's revision DROPPING A MEMBER'S TIER TO UNDETERMINED is refused by name, and the "
+  + "member's tier stands (BOB #32: once a member set it, the machine may not write it at all)",
+    [codeOf(dropped), (await view()).tier], ["MACHINE_CANNOT_SET_RISK_TIER", 1]);
+  /* OVER-STRICTNESS, the half of the ruling that must still pass: where NO MEMBER EVER SET a tier, the machine may
+     leave it undetermined. A second action, created by a member with the tier unstated, revised by the machine. */
+  const ACT2 = "ACTN-2026-7301-risk-tier-unset";
+  const unsetMd = actionMd(ACT2).replace("risk_tier: 1", "risk_tier: undetermined");
+  await mustPromote(ACT2, unsetMd, "action", RUTH, { current_state: "planned" });
+  const view2 = async () => {
+    const p = rP(await (await mf.dispatchFetch(`http://x/api/?op=projection&token=${RUTH}&id=${ACT2}`)).json());
+    return { sha: p?.bundle_sha ?? null, tier: p?.action?.risk_tier ?? null };
+  };
+  const { sha: base2 } = await view2();
+  const leftText = unsetMd.replace("Ask for the transfer ledger.", "Ask for the transfer ledger and the FY2023 memo.");
+  const left = await POST(`op=promote&token=${AI}`, {
+    bundleId: ACT2, base: base2, snapKey: `${ACT2}-${String(++snapKeySeq).padStart(6, "0")}`,
+    files: [{ path: "bundle.md", text: leftText, bytes: leftText.length, sha256: sha(leftText) }], register: [],
+    meta: { object_type: "action", group: GROUP, title: `Bundle ${ACT2}`, current_state: "planned",
+            created: NOW, last_updated: LATER } });
+  t("a machine credential's revision LEAVING UNDETERMINED A TIER NO MEMBER EVER SET lands, and reads undetermined",
+    [left.ok, (await view2()).tier], [true, "undetermined"]);
+  /* …and on that same never-set tier the machine still cannot STATE one: the change is asked of the version it
+     replaces (this arm stood before the ruling as "from undetermined the machine still cannot state 1"). */
+  const { sha: base3 } = await view2();
+  const setText = leftText.replace("risk_tier: undetermined", "risk_tier: 1");
+  const set1 = await POST(`op=promote&token=${AI}`, {
+    bundleId: ACT2, base: base3, snapKey: `${ACT2}-${String(++snapKeySeq).padStart(6, "0")}`,
+    files: [{ path: "bundle.md", text: setText, bytes: setText.length, sha256: sha(setText) }], register: [],
+    meta: { object_type: "action", group: GROUP, title: `Bundle ${ACT2}`, current_state: "planned",
+            created: NOW, last_updated: LATER } });
+  t("…and on a never-set tier the machine still cannot state 1 — refused by the same name",
+    [codeOf(set1), (await view2()).tier], ["MACHINE_CANNOT_SET_RISK_TIER", "undetermined"]);
 
   const r = await revise(RUTH, "risk_tier: 2");
   t("  and the SAME payload (risk_tier 2, on the version it replaces) lands for a signed-in member, read "
