@@ -267,6 +267,8 @@ import { webcrypto } from "crypto";
 import { execFileSync } from "child_process";
 import { fileURLToPath } from "url";
 import { appScript } from "./extract.mjs";
+import { unknownOpWire } from "./plane-refusal-wire.mjs";   /* UI-100: the dispatch miss is DERIVED from index.mjs and the DEC-49
+      catalogue, never typed — see that module's header. */
 /* UI-32: the act catalogue this suite hands the surface is the RECORD'S, read
    off the same array `op=affordances` maps over. `affordances.mjs` reaches no
    `cloudflare:workers` binding, so a node harness can import it — UI-28's
@@ -662,7 +664,14 @@ function makePlane(mode){
     /* A control-plane refusal IS flat, legitimately, and is how an op this
        suite does not model announces itself rather than being answered with a
        fabricated success. */
-    return { ok:false, json:async()=>({ ok:false, error:"unknown op "+op }) };
+    /* CORRECTED 2026-09-24 (UI-100), never exempted, and it was wrong on the same
+       TWO counts as `preauth-vocabulary`'s fallthrough that UI-84 corrected: it
+       composed `"unknown op " + op`, a sentence the plane has NEVER sent (`error` is
+       "unknown op" byte-identical and the op travels in its own key), and it carried
+       none of D-278's decoration. The point of the arm is unchanged — an op this
+       suite does not model announces itself rather than being answered with a
+       fabricated success — and it is now the announcement the wire makes. */
+    return { ok:false, json:async()=>unknownOpWire(op) };
   }
   return { CALLS, fetch };
 }

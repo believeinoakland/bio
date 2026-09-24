@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: (RUN 2026-09-23 by the D-182 worker; each arm ALONE, restored from a per-arm pristine copy and verified by sha256 AND cmp; baseline 31 pass / 0 fail before and after) (A) THE ROW'S CONTROL, restore the default of 1 - in checks/bio-checks.mjs riskTierState return 1 instead of 'undetermined' for an absent/undetermined tier -> 5 FAIL, declared and actual: the no-tier arms fail BY NAME ("a stated undetermined READS UNDETERMINED through op=projection", "an action whose bytes carry no tier READS UNDETERMINED through op=projection", both words arms, and the riskTierState unit arm); the member's-2 and over-strictness arms stayed green, as declared. (B) THE WRITER'S DEFAULT - in src/setup.mjs write "risk_tier: 1" again -> 3 FAIL: the source arm and both driven-writer arms. (C) THE LIAR the row names, a read rendering UNDETERMINED whatever is stored - in src/store.mjs #actionDerived set risk_tier to the constant "undetermined" -> 1 FAIL, "a member's act sets 2, and op=projection reads 2"; every no-tier arm stays GREEN over the constant, which is declared and is why sections 2 and 3 also read the STORED column and bytes. Also found while writing, not by an arm: the first draft's risk:1 search arm was VACUOUS (it read a result key the answer does not carry, so it passed over an empty list); the risk:2 positive beside it caught that and the key was corrected. */
 /* NEGATIVE CONTROL, D-483's section 6: (RUN 2026-09-24 by the D-483 worker; each arm ALONE in src/setup.mjs, restored from a per-arm pristine copy and verified by sha256 AND cmp at 96708072...; baseline 58 pass / 0 fail before and after every arm) (A) THE ROW'S CONTROL, default the group to 1 - render ' checked' on SETTABLE_TIERS[0] -> 1 FAIL, declared and actual: "THE DEFAULT IS UNSET: no rendered radio carries a checked attribute". The write arms stayed GREEN, AS DECLARED and not as slack: the driver supplies :checked itself, so markup cannot reach them - which is why arm B exists. (B) THE SAME LIE IN THE WRITER, chosenRiskTier() returning 1 when nothing is checked -> 5 FAIL by name: "reports NO CHOICE" and all four unset arms through the op; the three CHOSEN-tier arms stayed green, the over-strictness direction. (C) HARD-CODED LABELS, the row's second liar - render a literal 'file freely'/'file with caution'/'do not file without counsel' instead of RISK_TIERS[k] -> 2 FAIL: the literal arm and the mechanism arm. THE FINDING WORTH KEEPING, a surprising green: the BEHAVIOURAL label arm ("each label is the PLANE's sentence") stayed GREEN under C, because a hand copy agrees with the vocabulary for free (WORKER.md: an equality that costs nothing is not evidence). A suite holding only that arm would have gone green over a page that had stopped reading the vocabulary at all, which is the drift this row exists to prevent - so the textual and mechanism arms are the load-bearing ones and the behavioural arm is the one that proves they are about a control a member actually sees. */
+/* NEGATIVE CONTROL, D-505's section 7: (RUN 2026-09-24 by the D-505 worker; each arm ALONE on the ONE predicate the item changed - `isAction`, the guard of promote's action block in src/store.mjs - restored after every arm from a uniquely-named pristine copy (d505-pristine-store.mjs, in the session scratchpad and never in the worktree) and verified BY sha256 dd606e24... AND BY cmp at 3,224,435 B; baseline 77 pass / 0 fail before and after every arm) (A) THE ROW'S CONTROL, drop the fence's reach - restore the predicate to `normalizeType(meta.object_type) === "action"` alone, which is what REC-189 left. DECLARED: the EIGHT section-7 arms about the divergent envelope FAIL BY NAME, and nothing else moves - in particular the over-strictness arms (iv), (iv-b), (v), (vi), (vii) and the residue arm (ix) must stay GREEN. ACTUAL: AS DECLARED, 69 pass / 8 fail, every failure in section 7 and named, sections 1-6 untouched. (B) OVER-STRICTNESS, a spelling the item did not anticipate - the same union written as `[meta.object_type, docFmW?.object_type].some(tt => normalizeType(tt) === "action")`. DECLARED: all green, the suite being coupled to behaviour and not to an expression. ACTUAL: AS DECLARED, 77 pass / 0 fail. (C) THE HALF-UNION, AND IT IS THE ARM THAT CHANGED THE SUITE - the meta half dropped, a document-only predicate. FIRST RUN: 76 pass / 0 FAIL, ALL GREEN - a surprising green, and a finding about the ARMS rather than the subject: every arm written to that point handed the plane a document whose bytes said action, so the suite could not tell the union from half of it and a later 'simplification' would have silently given back REC-189's reach. Arm (iv-b), the mirror shape, was written for it; the control re-run then read 1 FAIL by name and is recorded above as the second measurement, not as the first. TWO FURTHER DEFECTS IN THE ARMS THEMSELVES were found by arm (A) and corrected before landing, both recorded at their sites: an 'and NOTHING landed' arm that compared `gone?.ok === true` against false over an answer carrying no `ok` key at all - VACUOUS IN BOTH DIRECTIONS, and it PASSED under the armed control - and a pair of revision arms sharing one bundle and one base, where with the fence removed the first landed, the second came back CAS_STALE (failing for the wrong reason) and the read-back died on a TypeError that goes through NO assertion at all. */
 /* D-182 (BIO_Case_Making_v0_1.md §2, "`risk_tier`, RULED 2026-09-21 by BOB #21"): an action's risk tier gains
  * UNDETERMINED, and the plane publishes the three words.
  *
@@ -456,6 +457,194 @@ console.log("\n--- 6. D-483: the tier chooser, unset by default, over the publis
 
   const audit = (await get("op=audit&limit=1000")).result;
   t("op=audit: none of the four actions this page wrote draws C-2.10", audit.tally?.["C-2.10"] ?? 0, 0);
+
+  await mf.dispose();
+}
+
+/* ------------------------------------------------- 7. D-505: the fence asks the DOCUMENT, not the envelope */
+/* D-505 (`BIO_Case_Making_v0_1.md` §2, `risk_tier`, with BOB #32's 2026-09-24 rule; row order SCHEDULER #18).
+ *
+ * WHAT REC-189 LEFT OPEN, and it was not visible from the row. REC-189 put C-32.19 inside `promote`'s action
+ * block, and that block opens on `normalizeType(meta.object_type) === "action"` — the CALLER'S envelope. But
+ * nothing downstream of the write reads the envelope for this: `#projectRow` writes
+ * `action_risk_tier: fm.object_type === "action" ? num(fm.risk_tier) : null` off the promoted BYTES, and
+ * `query.mjs` maps the `risk:` search onto that column. MEASURED 2026-09-24 through op=promote before the fix:
+ * a machine credential promoting a document whose bytes say `object_type: action` and `risk_tier: 1`, under
+ * `meta: { object_type: "information" }`, LANDED — the stored bundle.md carried tier 1, `action_risk_tier` read
+ * 1, and `op=search q=risk:1` returned the bundle. The fence was on one spelling of "this is an action" and the
+ * record was on another, so the one field carrying legal exposure was machine-settable by renaming the envelope.
+ *
+ * THE FIX IS A UNION, so this section's load-bearing arms are the OVER-STRICTNESS ones: the old shape must
+ * still refuse (the predicate was added to, not swapped), a divergent envelope with NO tier must still land,
+ * and a MEMBER's divergent promote must still land and read its tier — the fence is about WHO writes, and
+ * widening what counts as an action must not have widened who is refused.
+ *
+ * WHAT THIS SECTION CANNOT SEE, stated rather than left to be discovered: the `!pkg.replay` exemption. A
+ * machine credential that puts `replay: true` in the promote body still lands a stated tier, and arm (ix)
+ * PINS that as the behaviour on this tree rather than smoothing it. It is a DELIBERATE closure at the site
+ * (the record's own history must be holdable verbatim) whose exemption is nevertheless CALLER-ASSERTED, and
+ * that is D-505's reported finding, routed rather than fixed here: the fix spans every replay-exempt arm in
+ * `promote`, not this one, and REC-173's server-verified migration replay is its precedent.
+ */
+console.log("\n--- 7. D-505: a divergent envelope does not disarm C-32.19 ---");
+{
+  const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+  const mf = new Miniflare({
+    modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
+    compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+    durableObjects: { STORE: { className: "Store", useSQLite: true } },
+    bindings: { ADMIN_TOKEN: "adm-d505", MEMBER_TOKEN: "mem-d505", PROBE_TOKEN: "prb-d505", VERSION: "test" },
+  });
+  const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
+  const get = async (qs) => rP(await (await mf.dispatchFetch("http://x/api/?token=mem-d505&" + qs)).json());
+  const post = async (op, body, token = "mem-d505") =>
+    rP(await (await mf.dispatchFetch("http://x/api/?op=" + op + "&token=" + token,
+      { method: "POST", body: JSON.stringify(body) })).json());
+
+  /* MACHINE is the MEMBER_TOKEN deploy credential, which the control plane stamps `token:member` — a MACHINE
+     identity by REC-46's one predicate, and the identity REC-189's fence is about. MEMBER is a signed-in
+     session, the only caller the fence lets author a tier. Section 3's note has the receipts for the pair. */
+  const MEMBER = await (async () => {
+    const add = await post("memberadd", { memberId: "ruth", cover: "cover for ruth", role: "admin",
+                                          capabilities: ["contribute"] }, "adm-d505");
+    const en = rP(await (await mf.dispatchFetch("http://x/api/?op=enroll",
+      { method: "POST", body: JSON.stringify({ invite: add.invite, handle: "ruth", password: "ruth-passphrase-1" }) })).json());
+    if (!en?.ok) throw new Error(`enroll ruth: ${JSON.stringify(en)}`);
+    const lg = rP(await (await mf.dispatchFetch("http://x/api/?op=login",
+      { method: "POST", body: JSON.stringify({ role: "member:ruth", password: "ruth-passphrase-1" }) })).json());
+    if (!lg?.token) throw new Error(`login ruth: ${JSON.stringify(lg)}`);
+    return lg.token;
+  })();
+
+  let seq = 0;
+  /* ONE driver for every arm, so the ONLY thing an arm varies is what it names: the envelope's type, the
+     credential, the tier lines, and whether it asserts `replay`. It RETURNS the answer rather than throwing,
+     because half these arms are about a refusal. */
+  const promote = async (id, tierLines, { metaType = "action", token = "mem-d505", base = null, extra = {} } = {}) => {
+    const text = actionMd(id, tierLines);
+    return post("promote", {
+      bundleId: id, base, snapKey: `20260724T030000Z_d505${String(++seq).padStart(4, "0")}`,
+      author: "member-ruth",
+      meta: { object_type: metaType, group: "believe-in-oakland", title: "Records request",
+              current_state: "planned", created: NOW, last_updated: NOW },
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [], ...extra,
+    }, token);
+  };
+
+  /* (i) THE ROW'S ARM. The envelope says information; the bytes say action and state tier 1. */
+  const DIVERGENT = "ACTN-2026-0021-divergent-envelope";
+  const refused = await promote(DIVERGENT, TIER.one, { metaType: "information" });
+  t("a MACHINE promote calling its action `information` in the envelope is refused BY NAME",
+    [refused?.ok, refused?.reason], [false, "MACHINE_CANNOT_SET_RISK_TIER"]);
+  t("…and the refusal names the check the catalogue holds", refused?.check, "C-32.19");
+  t("…and says what it is about: a member's assessment, and that nothing was written",
+    /only a member's authored act sets 1, 2 or 3/.test(refused?.detail ?? "")
+      && /Nothing was written\./.test(refused?.detail ?? ""), true);
+
+  /* (ii) NOTHING LANDED. The refusal is worth nothing if the bytes arrived anyway — and this is the arm that
+     would have caught the defect from the READ side, which is where a reader meets it. */
+  /* CORRECTED BEFORE LANDING, by this section's OWN control arm A (below): this read `gone?.ok === true`
+     against `false`, and it PASSED WITH THE FENCE REMOVED — op=projection's answer carries no `ok` key at
+     all, so the arm compared `undefined === true` and was VACUOUS in both directions. It now asks for the
+     one field a landed bundle certainly has. WORKER.md's shape: a headline totality assertion that passes
+     over nothing, found by the control rather than by reading. */
+  const gone = await get(`op=projection&id=${encodeURIComponent(DIVERGENT)}`);
+  t("…and NOTHING landed: no bundle of that id exists to project", gone?.bundle_id ?? null, null);
+  const at1 = await get(`op=search&q=${encodeURIComponent("risk:1")}`);
+  t("…and no search at risk:1 finds it (the column the defect reached is empty)",
+    (at1?.hits ?? []).map((h) => h.bundle_id).includes(DIVERGENT), false);
+
+  /* (iii) THE SAME DIVERGENCE ON A REVISION, which is BOB #32's clause reached through the envelope: once a
+     member has set a tier the machine may not write it AT ALL, dropping it included. */
+  /* TWO SEPARATE HELD ACTIONS, ONE PER ARM, AND THAT IS A CORRECTION THIS SECTION'S OWN CONTROL FORCED: the
+     first draft revised ONE bundle twice off ONE base, so with the fence removed the DROP landed, the base
+     went stale, and the CHANGE arm came back `CAS_STALE` — failing for the wrong reason — after which the
+     read-back died on `still.action` with a TypeError, which goes through NO assertion at all (WORKER.md).
+     An arm that cannot fail for its own reason proves nothing about the fence. */
+  const heldTwo = async (id) => {
+    const made = await promote(id, TIER.two, { token: MEMBER });
+    if (made?.ok !== true) throw new Error(`member promote ${id}: ${JSON.stringify(made)}`);
+    return get(`op=projection&id=${encodeURIComponent(id)}`);
+  };
+  const tierOf = async (id) => (await get(`op=projection&id=${encodeURIComponent(id)}`))?.action?.risk_tier ?? null;
+  const DROP = "ACTN-2026-0022-member-set-two-drop";
+  const CHANGE = "ACTN-2026-0027-member-set-two-change";
+  const pDrop = await heldTwo(DROP);
+  const pChange = await heldTwo(CHANGE);
+  t("a member's 2 lands and reads 2 (the held tier these arms are about)",
+    [pDrop.action.risk_tier, pChange.action.risk_tier], [2, 2]);
+  const dropped = await promote(DROP, TIER.absent, { metaType: "information", base: pDrop.bundle_sha });
+  t("a MACHINE revision under a divergent envelope may not DROP the member's 2 either",
+    [dropped?.ok, dropped?.reason], [false, "MACHINE_CANNOT_SET_RISK_TIER"]);
+  const changed = await promote(CHANGE, TIER.three, { metaType: "information", base: pChange.bundle_sha });
+  t("…nor CHANGE it to 3 under one", [changed?.ok, changed?.reason], [false, "MACHINE_CANNOT_SET_RISK_TIER"]);
+  t("…and each member's tier is untouched after its refusal",
+    [await tierOf(DROP), await tierOf(CHANGE)], [2, 2]);
+
+  /* (iv) OVER-STRICTNESS: the predicate was ADDED TO, not swapped. The shape REC-189 refuses is refused still. */
+  const plain = await promote("ACTN-2026-0023-plain-envelope", TIER.one);
+  t("OVER-STRICTNESS: the envelope-says-action shape REC-189 built is refused exactly as before",
+    [plain?.ok, plain?.reason], [false, "MACHINE_CANNOT_SET_RISK_TIER"]);
+
+  /* (iv-b) AND THE OTHER HALF OF THE UNION, PINNED — added because THIS SECTION'S OWN CONTROL ARM C found it
+     unpinned. Every arm above hands the plane a document whose bytes say `object_type: action`, so a swap of
+     the union for a DOCUMENT-ONLY predicate left all 76 assertions green: the suite could not tell the union
+     from half of it, and a later "simplification" would have silently given back REC-189's reach. The
+     discriminating shape is the mirror of the row's: the ENVELOPE says action and the document carries no
+     `object_type` at all. REC-189 refuses it; the union must keep refusing it; a document-only predicate does
+     not (measured: it LANDS). The arm asserts the REASON, so a refusal under some other name does not pass it. */
+  const noType = actionMd("ACTN-2026-0028-envelope-only", TIER.one)
+    .replace(/^object_type: action\n/m, "");
+  const envelopeOnly = await post("promote", {
+    bundleId: "ACTN-2026-0028-envelope-only", base: null, snapKey: "20260724T030000Z_d505env0",
+    author: "member-ruth",
+    meta: { object_type: "action", group: "believe-in-oakland", title: "Records request",
+            current_state: "planned", created: NOW, last_updated: NOW },
+    files: [{ path: "bundle.md", text: noType, bytes: noType.length, sha256: sha(noType) }], register: [],
+  });
+  t("OVER-STRICTNESS, the mirror: the ENVELOPE alone saying action still reaches the fence",
+    [envelopeOnly?.ok, envelopeOnly?.reason], [false, "MACHINE_CANNOT_SET_RISK_TIER"]);
+
+  /* (v) OVER-STRICTNESS: the union costs a machine nothing where no tier is at stake. A divergent envelope is
+     not itself the offence — stating a tier is. */
+  const NOTIER = "ACTN-2026-0024-divergent-no-tier";
+  const landed = await promote(NOTIER, TIER.undetermined, { metaType: "information" });
+  t("OVER-STRICTNESS: a machine's divergent-envelope promote stating NO tier still LANDS", landed?.ok, true);
+  t("…and reads undetermined, with no tier in the stored column",
+    [(await get(`op=projection&id=${encodeURIComponent(NOTIER)}`)).action_risk_tier], [null]);
+
+  /* (vi) OVER-STRICTNESS, the direction that matters most: the fence is about WHO WRITES. Widening what counts
+     as an action must not have widened who is refused, so a MEMBER's divergent promote still authors a tier. */
+  const MDIV = "ACTN-2026-0025-member-divergent";
+  const mlanded = await promote(MDIV, TIER.three, { metaType: "information", token: MEMBER });
+  t("OVER-STRICTNESS: a MEMBER's promote under the same divergent envelope LANDS", mlanded?.ok, true);
+  const mp = await get(`op=projection&id=${encodeURIComponent(MDIV)}`);
+  /* (vii) AND THIS IS THE MEASURED FACT THE FIX RESTS ON, driven rather than asserted from the source: the
+     stored tier is derived from the DOCUMENT'S object_type while the bundle's own type came from the
+     ENVELOPE. The two disagree here, which is exactly why the fence may not read the envelope. Without this
+     arm every arm above could pass over a store that had simply stopped projecting tiers at all. */
+  t("the stored tier column is derived from the DOCUMENT's object_type…", mp.action_risk_tier, 3);
+  t("…while the bundle's own type came from the ENVELOPE — the disagreement the fence must not trust",
+    mp.object_type, "information");
+
+  /* (viii) THE MATCHER'S REACH, stated: `promote` is the ONE writer of `bundle.md` in `src/store.mjs`, so a
+     fence there is a fence on the write. Pinned structurally, because the sentence above is load-bearing and
+     a second writer added later would silently make it false. */
+  const storeSrc = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+  const inserts = storeSrc.match(/INSERT INTO files \(bundle_id,path,content,blob_sha,bytes,sha256\)/g) ?? [];
+  t("…and `promote` is still the ONE writer of a bundle's files in src/store.mjs", inserts.length, 1);
+
+  /* (ix) THE RESIDUE, PINNED AND NOT SMOOTHED. This arm asserts a HOLE, deliberately: a machine credential
+     asserting `replay` in the body still lands a stated tier. It is exempt at the site on purpose — a
+     replayed promotion is the record re-stating its own past, and the record contains actions written before
+     these rules — but the exemption is CALLER-ASSERTED, which no reasoning at the site addresses. D-505
+     reports it rather than fixing it here (the fix spans every replay-exempt arm in `promote`). WHEN THAT IS
+     FIXED THIS ARM GOES RED, which is the point: it should not be quietly deleted, it should be inverted. */
+  const REPLAYED = "ACTN-2026-0026-machine-asserted-replay";
+  const replayed = await promote(REPLAYED, TIER.one, { extra: { replay: true } });
+  t("RESIDUE (reported, not fixed): a machine asserting `replay` still lands a stated tier 1", replayed?.ok, true);
+  t("…and the record publishes it as 1 — the reported finding, driven",
+    (await get(`op=projection&id=${encodeURIComponent(REPLAYED)}`)).action.risk_tier, 1);
 
   await mf.dispose();
 }

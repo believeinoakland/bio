@@ -24,7 +24,9 @@ const j = async (p) => (await (await mf.dispatchFetch("http://x" + p)).json());
 const st = await j("/?op=selftest&token=probe-local-battery");
 console.log("selftest ok:", st.ok, "bindings:", JSON.stringify(st.bindings), "captures:", st.captures);
 const lf = await j("/?op=livefire&token=probe-local-battery");
-console.log("\nlivefire:", lf.summary, "| store:", lf.store, "| ok:", lf.ok);
+/* D-506 (IC-265): `ok` is the op ANSWERING; the canary's answer is `verdict`, named by `failing`. */
+console.log("\nlivefire:", lf.summary, "| store:", lf.store, "| answered:", lf.ok,
+            "| verdict:", lf.verdict, lf.failing?.length ? "| failing: " + lf.failing.join(" · ") : "");
 for (const a of lf.assertions) console.log(`  ${a.ok ? "PASS" : "FAIL"}  ${a.name}${a.ok ? "" : "  want " + JSON.stringify(a.want) + " got " + JSON.stringify(a.got)}`);
 console.log("\nR2:", JSON.stringify(lf.r2, null, 1));
 console.log("store:", JSON.stringify(lf.storeState));
@@ -39,4 +41,7 @@ await mf.dispose();
 /* M0-67 / D-425's sweep: the confinement probe above PRINTED `ALLOWED (DEFECT)` and
    the exit ignored it, so a probe reaching the live store read green in the battery.
    A defect this suite prints is a defect this suite exits on. */
-process.exit(lf.ok && d1.error ? 0 : 1);
+/* D-506: the exit reads the VERDICT, not `ok` — `ok` is now true whenever the op answered, so an exit
+   keyed to it would read 0 over a canary that found a defect, which is exactly the silence this item
+   closed. `verdict` must be the string "pass": an undefined key must not pass as truthy either. */
+process.exit(lf.verdict === "pass" && d1.error ? 0 : 1);

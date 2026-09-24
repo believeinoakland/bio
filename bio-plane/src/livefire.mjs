@@ -173,7 +173,16 @@ export async function livefire(env, storeName, { capacity = false, viewer = null
       const tp = Date.now(); await env.CAPTURES.put(k, buf); const putMs = Date.now() - tp;
       const tg = Date.now(); const g = await env.CAPTURES.get(k); const bytes = (await g.arrayBuffer()).byteLength; const getMs = Date.now() - tg;
       await env.CAPTURES.delete(k);
-      if (bytes !== buf.length) { r2.sizes.push({ sizeMB: mb, error: "length mismatch, NO NUMBER REPORTED" }); r2.ok = false; continue; }
+      /* D-506: the mismatch records an ASSERTION as well as flipping `r2.ok`. Before this item it flipped
+         `r2.ok` alone, and `r2.ok` alone flipped the answer's `ok` — so the one arm here that can find a
+         real R2 defect was the one arm whose failure NOTHING NAMED. It is the item's own subject, found
+         in its own subject: the record staying silent where it must speak. The assert fires only on the
+         failing branch, so a green run's assertion count is unmoved. */
+      if (bytes !== buf.length) {
+        r2.sizes.push({ sizeMB: mb, error: "length mismatch, NO NUMBER REPORTED" }); r2.ok = false;
+        assert(`R2 ${mb}MB round trip read back its own length`, bytes, buf.length);
+        continue;
+      }
       r2.sizes.push({ sizeMB: mb, putMs, getMs, putMBps: +(mb / (putMs / 1000)).toFixed(1), getMBps: +(mb / (getMs / 1000)).toFixed(1) });
     }
     assert("R2 capture round trip through binding", r2.roundTrip, true);
@@ -190,8 +199,42 @@ export async function livefire(env, storeName, { capacity = false, viewer = null
   const wholeMs = Date.now() - tw;
 
   const passed = A.filter((a) => a.ok).length;
+  /* ---- the verdict, and what `ok` means (D-506, IC-265) ----
+     RULED by BOB #32 on 2026-09-24 at 06:07Z, on the finding D-495 raised and did not settle:
+     **`ok` says THE OP ANSWERED; the canary's result is `verdict`, and `failing` NAMES it.**
+
+     Until this item `ok` was `A.every((a) => a.ok) && r2.ok` — a VERDICT over the canary's own
+     assertions — and `index.mjs` dispatched it as `json(out, out.ok ? 200 : 500)`. So a canary that
+     found a real defect answered `ok:false` with no `reason`, no `code` and no `error` sentence of any
+     kind: one layer further out than D-270's bare-sentence residue, which at least carried words.
+     Every consumer that reads `ok:false` as a refusal — `refusal-wire.test.mjs` §6c, which pinned it
+     by name, and the agent worker, which deliberately holds no catalogue and passes a plane refusal
+     through UNCHANGED — received from this op something it could neither translate nor name.
+
+     `ok:false` is now reserved for a CATALOGUED REFUSAL, and this op's refusals are all raised before
+     this function is reached (the class gate, `SESSION_ROUTE_NOT_RECORDED`, the namespace gate). So
+     REACHING HERE IS THE OP ANSWERING, and `ok` is true — never a verdict.
+
+     The HTTP STATUS is deliberately NOT moved: `index.mjs` keys it to `verdict` and every outcome
+     answers the status it answered before, so a caller reading the status alone is not silenced by
+     this change. See that site's comment. */
+  const failing = A.filter((a) => !a.ok).map((a) => a.name);
+  /* Every way `r2.ok` goes false records an assertion above — the catch arm and the length-mismatch
+     arm each do — so `failing` names every reason the verdict is `fail`. This line is the guard for a
+     future arm that forgets: a `fail` naming nothing is the silence this item closed, so it says so
+     rather than answering an unexplained verdict. */
+  if (!r2.ok && failing.length === 0) failing.push("R2 measurement failed, naming no assertion");
+  /* DERIVED FROM `A` AND `r2.ok` DIRECTLY — the same expression `ok` carried before this item — and
+     NOT from `failing.length`, deliberately. The two agree by construction, but they are computed from
+     the source independently so that THE ROW'S NEGATIVE CONTROL MOVES ONE VARIABLE: drop a failing
+     assertion's name from `failing` and the verdict still reads `fail`, so the arm that fails is the
+     one asserting `failing` NAMES it, and no second variable moves to confuse the reading. A verdict
+     chained off `failing.length` would flip to `pass` under that arm and refute nothing. */
+  const verdict = A.every((a) => a.ok) && r2.ok ? "pass" : "fail";
   return {
-    ok: A.every((a) => a.ok) && r2.ok,
+    ok: true,
+    verdict,
+    failing,
     ranAt: new Date().toISOString(),
     store: storeName, nonce: NONCE, totalMs: Date.now() - t0,
     summary: `${passed}/${A.length} assertions passed`,

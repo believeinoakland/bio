@@ -35,6 +35,8 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
    import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+import { unknownOpWire } from "./plane-refusal-wire.mjs";   /* UI-100: the dispatch miss is DERIVED from index.mjs and the DEC-49
+      catalogue, never typed — see that module's header. */
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -252,7 +254,14 @@ async function renderNoProg(bundleId){
       if(op==="resolutions") return wrap(RESOLUTIONS[q.get("sha256")]||{ok:true,resolutions:[]});
       if(op==="connections") return wrap(CONNECTIONS[q.get("sha256")]||{ok:true,connections:[]});
       if(op==="entity") return wrap(ENTITY[q.get("id")]||{ok:true,found:false,entity:null});
-      if(op==="captureprogressions") return { ok:true, json:async()=>({ ok:false, error:"unknown op captureprogressions" }) };
+      /* CORRECTED 2026-09-24 (UI-100), never exempted: this composed
+         "unknown op captureprogressions", which the plane has never sent, and it
+         carried none of D-278's decoration. `docProgressions` only GAP-DETECTS
+         (it matches `error` as a substring and then renders `docProgGapHtml()`,
+         this surface's own sentence), so the correction changes no assertion
+         below — and that is the point of making it: the arm now proves the gap
+         detector still fires against the wire D-278 actually sends. */
+      if(op==="captureprogressions") return { ok:true, json:async()=>unknownOpWire("captureprogressions") };
       return reply({ok:true,result:{}}); } };
   ctx.globalThis = ctx; vm.createContext(ctx);
   vm.runInContext(SRC_NOOP + ";globalThis.__open=openBundle;", ctx);
