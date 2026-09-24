@@ -206,7 +206,7 @@ scope: an arm in `civicos-ui/test/artifact-fetch.test.mjs` asserting the capture
 accepts-when: the arm reads the frame's attribute from the page and is green. NEGATIVE CONTROL: change it to `sandbox="allow-scripts"`, and the new arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; D-192's DEBT row of 2026-08-04, verified at the code; keeps its `D-` id).
 
-### D-260 · running — SPAWNED 2026-09-24 ~00:05Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-260 (CONDUCT #18), BRANCHED FROM land/conduct/c18-batch8 (which carries FL-11/12); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-260 and that session; never conclude queued from the absence alone.
+### D-260 · integrated — finished; integrated on land/conduct/c19-batch9 @ 1f1dcb52 (IC-237 renumbered IC-242; I8 1.0.0 STABLE), waiting for its train — flipped by SCHEDULER #17
 order: a feature after the rows Bob's priorities ordered (UI-71), above D-126: FL-4's wake and DS-3's and FL-6's halves are BUILT and inert until this caller exists, and I8 leaves PROVISIONAL when it lands (SCHEDULER #7, 2026-09-21)
 milestone: M9
 interface: I8 (leaves PROVISIONAL); the integrator mints and classifies the IC.
@@ -270,7 +270,7 @@ accepts-when: adopting a new revision after a run opened raises one item naming 
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-86's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
 uncut: restored whole from «D-86» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-162 · running — SPAWNED 2026-09-23 ~22:45Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-162 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-162 and that session; never conclude queued from the absence alone.
+### D-162 · integrated — finished; integrated on land/conduct/c19-batch9 @ 1f1dcb52 (IC-231 renumbered IC-241, I3 81.0.0 MAJOR, I5 3.5.0; C-74 renumbered C-81), waiting for its train — flipped by SCHEDULER #17
 order: with the meaning-layer features (M4), where BOB #23 placed it (after the instrument cluster, which Bob's ruling of 2026-09-22 moved behind the product rows — SCHEDULER #12); after D-394, since a NEW construct follows the rows completing built ones (REC-122 finishes D-161; D-394 reads the built chain) (SCHEDULER #9, 2026-09-21)
 milestone: M4
 interface: I3 additive, and I5 for the theme's tables; the integrator mints and classifies the IC.
@@ -281,7 +281,7 @@ accepts-when: a member declares a theme with a test and places two documents sha
 added: 2026-09-21 · SCHEDULER #9 (BOB #23's inbox entry, drained this commit; keeps its `D-` id).
 uncut: restored whole from «D-162» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### CAP-11 · running — SPAWNED 2026-09-23 ~22:45Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER CAP-11 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/CAP-11 and that session; never conclude queued from the absence alone.
+### CAP-11 · integrated — finished; integrated on land/conduct/c19-batch9 @ 1f1dcb52 (M-121 renumbered M-123), waiting for its train — flipped by SCHEDULER #17
 order: runnable since CAP-10 landed (M2 measurement); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) (SCHEDULER, first order audit, 2026-09-18)
 milestone: M2 — a measurement before a letter (CLAUDE.md: measure, do not assume)
 interface: none — a measurement; if the calibration record needs a home in the chain, that is CPDF-13's calibration shape, reused
@@ -355,7 +355,7 @@ accepts-when: a fixture corpus with two projects differing only in case and spac
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-50's DEBT row of 2026-07-26; keeps its `D-` id).
 uncut: restored whole from «D-50» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-452 · running — SPAWNED 2026-09-24 ~00:12Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-452 (CONDUCT #18), BRANCHED FROM land/conduct/c18-batch8 (which carries FL-11/12); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-452 and that session; never conclude queued from the absence alone.
+### D-452 · integrated — finished; integrated on land/conduct/c19-batch9 @ 1f1dcb52, waiting for its train — flipped by SCHEDULER #17
 order: after D-451, the same run's output (SCHEDULER #17, 2026-09-23; FL-11/12's worker via CONDUCT #18 22:51Z)
 milestone: M9
 interface: none
@@ -375,7 +375,7 @@ scope: the entity arm reads the latest derivation observation for that entity an
 accepts-when: op=connect over more than 32 documents, then op=connections, says the derivation was cut. NEGATIVE CONTROL: remove the observation read, and that arm fails by name. New suite `bio-plane/test/d241-derivation-stated.test.mjs`.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-241's DEBT row of 2026-08-08, verified at the code on `02603e88`; keeps its `D-` id).
 
-### REC-198 · running — SPAWNED 2026-09-23 ~23:30Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER REC-198 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-198 and that session; never conclude queued from the absence alone.
+### REC-198 · integrated — finished; integrated on land/conduct/c19-batch9 @ 1f1dcb52 (IC-237 renumbered IC-243, I3 80.1.0), waiting for its train — flipped by SCHEDULER #17
 order: after REC-195, the review-copy block (SCHEDULER #17, 2026-09-23; UI-68's worker)
 milestone: M10
 interface: I3 additive — one read; the integrator mints and classifies the IC.
@@ -385,7 +385,7 @@ scope: the list read, joined participants only. Extend the review-copy suite (`b
 accepts-when: a joined participant lists every draft of the project; an uninvited caller reads the fence's answer. NEGATIVE CONTROL: drop the fence, and the uninvited arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### D-242 · running — SPAWNED 2026-09-23 ~23:30Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-242 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-242 and that session; never conclude queued from the absence alone.
+### D-242 · integrated — finished; integrated on land/conduct/c19-batch9 @ 1f1dcb52 (no IC), waiting for its train — flipped by SCHEDULER #17
 order: MOVED UP 2026-09-23 by SCHEDULER #17 to follow the corrections at the head: it now costs product cycles (3 IC-222s, IC-228, IC-224, C-68, 2 M-117s burned in one day across cloud workers), so it cuts integration time; M0-120, its audit half, follows later (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
 milestone: M0
 interface: none
@@ -396,7 +396,7 @@ accepts-when: two clones minting one namespace at once receive distinct ids. NEG
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
 note: 2026-09-23 by SCHEDULER #17 (D-148's and D-149's workers via CONDUCT #18): measured harm — the C floor reads `origin/main` only, so mintid handed out C-68..C-72 while live on `land/*` branches and both workers burned several. The single writer closes it; until then the C floor also reads every `land/*` tip.
 
-### REC-187 · running — SPAWNED 2026-09-24 ~00:10Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER REC-187 (CONDUCT #18), base origin/main 3f4b8f8c (D-84 and message-driven are on main); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-187 and that session; never conclude queued from the absence alone.
+### REC-187 · integrated — finished; integrated on land/conduct/c19-batch9 @ 1f1dcb52 (IC-240, I3 80.0.0 MAJOR), waiting for its train — flipped by SCHEDULER #17
 order: FIRST in the backlog, by BOB #31's ruling of 2026-09-23 (*"Place ONE row FIRST in the backlog"*): a correction to just-landed work (D-84's stamp) outranks new work; it waits only on D-84's train (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I3 — the stamped sha and `op=biasmanifest`'s statements hash change meaning together; ONE IC, minted and classified by the integrator.
@@ -426,7 +426,7 @@ scope: in promote's action block (not on replay), refuse MACHINE_CANNOT_SET_RISK
 accepts-when: a machine credential's promote changing a tier to 2 is refused by name; a member's promote setting 2 and a machine's unchanged carry-forward are accepted. How a liar passes it: refusing every machine promote of an action, so the carry-forward arm must pass. NEGATIVE CONTROL: drop the machine-identity clause, and the "a machine credential cannot set risk_tier" arm fails by name while the member arm stays green.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
 
-### REC-159 · running — SPAWNED 2026-09-23 ~23:20Z by BOB #32 on Bob's ruling (session_01Kmhpfj3yoHZCRgNHbBXaTf, WORKER REC-159, reports to CONDUCT #18); written running by CONDUCT #18. Falsify rather than believe: read the branch land/worker/REC-159 and that session; never conclude queued from the absence alone.
+### REC-159 · integrated — finished; integrated on land/conduct/c19-batch9 @ 1f1dcb52 (IC-244: I3 79.0.0 MAJOR, I5 3.4.0), waiting for its train — flipped by SCHEDULER #17
 order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
 milestone: M8
 interface: I3 — four ops gain session reach and three a stamped `by`; the integrator mints and classifies the IC.
@@ -476,6 +476,87 @@ depends-on: none.
 scope: the plane's selection path for both acts under §S; the surfaces use it; strike the carry in ARM 4d.
 accepts-when: bulk and single both reach the op in one motion, and ARM 4d's carry is struck. NEGATIVE CONTROL: a client-side loop, and the one-motion arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
+
+### D-461 · queued — **A VALID `store=scratch` IS SILENTLY IGNORED BY THE PUBLIC OPS PINNED TO `bio` (`claim`, `login`, `knock`, `bootstrap`, `verify`, `publishedmanifest` …), SO `op=knock&store=scratch` WRITES THE REAL RECORD WHILE THE CALLER BELIEVES IT IS IN SCRATCH.** D-456 refused unknown names; this is the second half of the same trap. — owner RECORD.
+order: FIRST in the backlog, as D-456 was: a live verification that names scratch and writes the real record is a safety defect on the record itself (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
+milestone: M0 (a guard at the plane's front door)
+interface: I3 — a second refusal on the pinned ops; the integrator mints and classifies the IC.
+design: `docs/development/VERIFICATION.md` (CLAUDE.md §5: NAME `store=scratch` ON EVERY CALL; D-325).
+depends-on: D-456 (`integrated` on c18-d456).
+scope: every op pinned to `bio` refuses `store=scratch` by name (preferred), or answers `store:"bio"` on every reply; enumerate the pinned ops from the OPS table.
+accepts-when: `op=knock&store=scratch` is refused by name and `bio`'s counters are unchanged. NEGATIVE CONTROL: accept and ignore the parameter again, and the pinned-op arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+note: 2026-09-24 by SCHEDULER #17 (BOB #32, 00:02Z): the rule of record is CLAUDE.md §5 "NAME `store=scratch` ON EVERY CALL" (D-325, at `scopeFor`); `VERIFICATION.md` stays the cited governed path only because the design check admits it (it has no budget for the rule). On landing, the worker checks §5's wording against the new behaviour and tells BOB if it needs correcting.
+
+### D-464 · queued — **A MEMBER'S `op=stats` MOVES WHEN A PROJECT THEY CANNOT SEE IS CREATED OR REVISED, AND `op=searchindexcheck`'s `counts.indexed` MOVES ON A HIDDEN CREATION: D-447's sibling class, not fixed.** Stated in Membership v2's Incomplete sections. — owner RECORD.
+order: directly after D-461: a disclosure defect, D-447's class, outranks every correction and feature (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
+milestone: M8
+interface: I3 — counts computed through the viewer; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.9: a project the caller cannot see answers exactly as one that does not exist).
+depends-on: D-447 (`integrated` on c18-d456).
+scope: every count served to a class other than the operator's is computed through the caller's `viewerPredicate`. Extend `bio-plane/test/project-sight.test.mjs`.
+accepts-when: creating and revising a hidden project leaves a member's `op=stats` and `op=searchindexcheck` answers byte-identical. NEGATIVE CONTROL: count over the whole store again, and the hidden-creation arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-462 · queued — **`agent-worker`'s `STORE_SHAPE` ACCEPTS ANY TOKEN, SO A FLEET RUN CAN NAME A NAMESPACE THE PLANE NOW REFUSES (D-456) AND ONLY LEARN AT THE PLANE.** — owner FLEET.
+order: after D-464 (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
+milestone: M0 (the fleet's side of the same guard)
+interface: none — a fleet-side refusal.
+design: `docs/development/VERIFICATION.md` (CLAUDE.md §5; D-325).
+depends-on: D-456 (`integrated` on c18-d456).
+scope: narrow `STORE_SHAPE` to `bio` or `scratch` with its own BAD_STORE refusal; correct the over-strictness arm.
+accepts-when: `store=biosmoke` is refused by the worker by name. NEGATIVE CONTROL: widen the shape again, and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### REC-192 · queued — **A STORED VERSION'S INDEPENDENCE CAN ONLY BE READ BESIDE ITS STRENGTH PAIR: `op=versionstrength` is the one read of it, so DEC-32 clause 5 (*the structure is authored before the strength is shown*) holds only because UI-74's page drops the pair it fetched.** BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *a read returns `independence` on its own, so clause 5's separation is structural at the wire.* — owner RECORD.
+order: after D-256: a correction to just-landed work (UI-74, REC-161) that moves a doctrine from a page's choice into the wire (SCHEDULER #17, 2026-09-23)
+milestone: M9
+interface: I3 additive — `partitionindependence` (REC-161) takes `version=<id>` and reads that stored version's legs through the same `#independenceOf`, returning no strength field; versionstrength's gate and viewer stamp kept. The integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §12 (Strength, clauses (a)–(c)) with DEC-32 clause 5, and BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded).
+depends-on: REC-161 (`integrated` on c17-batch5).
+scope: the version arm on the independence read. Extend `bio-plane/test/partitionindependence.test.mjs`.
+accepts-when: the version arm's answer carries no strength key and equals versionstrength's `independence` for the same version. NEGATIVE CONTROL: add a strength field to the version-arm answer, and the "no strength key" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (UI-74's worker finding via CONDUCT #17; `node tools/mintid.mjs REC`).
+
+### REC-190 · queued — **NOTHING CAN FIND A CAPTURE MOVED BETWEEN BUNDLES BEFORE D-179's FENCE: the old UPSERT moved the register row (`capture_sha` is its primary key) to the newcomer, leaving the original bundle's `files`/`history` rows naming a sha the register gives to another bundle, and `registerAudit` reads the moved row as live.** — owner RECORD; DIST runs it live.
+order: after UI-86: the census that tells whether D-179's residue exists on a live record, before anything repairs it (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (6), verified at c17-batch4 @ 65205437)
+milestone: M2
+interface: I3 additive — one new admin/probe census op, `mutating:false`, REC-175's shape (proposed name homecensus); the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (*"ONE CAPTURE, ONE HOME — the ORIGINAL's"*). REPAIR of what it finds, and the digest-level duplicate (the same content in different bytes, §8's Incomplete note), are NOT in scope, by BOB #31's ruling of 2026-09-23 22:03Z (cite it until folded): *the census's report STANDS ALONE*; which bundle held a capture first is UNDETERMINED and the report says so; the digest-level duplicate is named as out of reach.
+depends-on: D-179 (the fence; `integrated` on c17-batch4).
+scope: list every `files`/`history` row whose sha the register assigns to a DIFFERENT, still-existing bundle, with both bundles named; never write. New suite `bio-plane/test/homecensus.test.mjs`, seeding a moved row at the store.
+accepts-when: a store seeded with one moved row lists that sha under both bundles; a clean store lists none; the record's counters read before and after the call are unchanged. How a liar passes it: listing every multi-bundle sha including legitimate shares, so the clean-store arm must read none. NEGATIVE CONTROL: remove the different-bundle predicate, and the "displaced row found" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
+
+### D-64 · queued — **A CLIENT-RENDERED PAGE IS RECOGNISED AS A SHELL AND STILL CANNOT BE CAPTURED AS EVIDENCE: only detection is built (`docprofile/handlers/client-rendered.mjs`; `airun.mjs` holds a shell at LOOKED_INDETERMINATE, never PRESENT); there is no Browser Rendering binding and no rendered capture.** — owner RECORD (the binding through DIST).
+order: with the M2 capture rows, behind its substrate (BOB #31, 22:22Z: *place the capture row behind its substrate*) (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
+milestone: M2
+interface: I3 — a render arm on capture producing the pair, and the `render` provenance block; the integrator mints and classifies the IC.
+design: `docs/development/CLIENT-RENDERED.md` §"What must be recorded on a rendered capture"; scripts ALLOWED AND RECORDED (BOB #31, 22:22Z); and BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *method `rendered`; one capture holds BOTH artifacts with the RENDERED document PRIMARY and the shell beside it under its own digest; an unattended sweep MAY render within the daily render allowance and through the governor, recording DEFERRED (undetermined) when spent — never the shell as content.*
+depends-on: 2.capture (BUILT); the Browser Rendering binding is NOT built and is this row's first act.
+scope: the render arm writes one capture: the rendered document (method `rendered`, primary) and the shell (its method and digest), joined by `render.of`, with the `render.*` fields and `third_party_executed`; the sweep's deferral. New suite `bio-plane/test/rendered-capture.test.mjs`.
+accepts-when: a rendered capture of a shell holds both artifacts and names every script origin executed, or says undetermined. NEGATIVE CONTROL: force `determined` on a page drawing data from a second origin, and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-64's DEBT row of 2026-07-30; keeps its `D-` id).
+
+### UI-83 · queued — **A MEMBER CANNOT REVISE A PROGRESSION FROM THE UI: D-128 made a revision require a basis statement and a citation (`NO_BASIS`, `NO_CITATION`), and `civicos-ui/app.html`'s progression form (`progDefineDraft` / `progDefineGo`) has neither field.** Declaring a new progression still works. Re-read on `land/conduct/c17-batch3` @ `419272eb`. — owner UI.
+order: directly after D-443, first of the D-128 follow-ons: a surface that answers a member's act with a refusal it gives them no field to meet is a correction to just-landed work, which outranks new work (SCHEDULER #16, 2026-09-23; D-128's worker via CONDUCT #17)
+milestone: M8
+interface: I3 consumer (D-128's IC).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2, "The declared flow, and its revisions" (BOB #27, 2026-09-22), the ruling D-128 built.
+depends-on: D-128 (on `land/conduct/c17-batch3`).
+scope: the progression form offers, when revising an existing progression, a basis-statement field and a citation field, and sends both; a refusal still reads through `refusalWords(r)`.
+accepts-when: `civicos-ui/test/` gains a suite arm driving a revision through the form with both fields to a landed version, and one without either reading the canned refusal; the UI harness green. NEGATIVE CONTROL: drop the citation field, and the revision arm reads `NO_CITATION` and fails by name.
+added: 2026-09-23 · SCHEDULER #16 (D-128's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs UI`).
+
+### REC-184 · queued — **A PROPOSAL DISPOSITION DOES NOT RECORD THE DEFINITION VERSION IT WAS DECIDED AGAINST, SO ONE MADE UNDER VERSION 1 SILENTLY APPLIES UNDER VERSION 2.** `proposal_dispositions` is keyed `(progression_key, stage_key)` with no version (re-read on `land/conduct/c17-batch3` @ `419272eb`). Also, the stats counters beside `progressionDefs` / `progressionStages` (`store.mjs` ~26650) do not count D-128's version tables. — owner RECORD.
+order: directly after UI-83, the same D-128 follow-on: a decision the record applies to a definition nobody judged is the record claiming more than it supports (CLAUDE.md §2) (SCHEDULER #16, 2026-09-23; D-128's worker via CONDUCT #17)
+milestone: M4
+interface: I5 — a `definition_version` column on `proposal_dispositions`; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2, "The declared flow, and its revisions" (BOB #27), the ruling D-128 built.
+depends-on: D-128 (on `land/conduct/c17-batch3`).
+scope: `op=proposedispose` writes `definition_version`; a read against a later version does not treat an earlier-version disposition as current, stated; rows written before read `not recorded`; the stats counters count the version tables.
+accepts-when: `bio-plane/test/proposedispose.test.mjs` gains an arm: a disposition under version 1 does not apply under version 2, and the column reads back. NEGATIVE CONTROL: stop writing the version, and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (D-128's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
