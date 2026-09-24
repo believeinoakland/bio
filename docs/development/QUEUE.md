@@ -307,8 +307,8 @@ scope: `op=queue`'s FINDING item publishes the proposal's `prior_disposition` (t
 accepts-when: a revision-reopened finding on `op=queue` carries its prior disposition with state, reason, author, instant and `definition_version` (the measured failure it moves: the field absent from every surface-read op). NEGATIVE CONTROL: drop the field from the queue item and the reopened-item arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (placed; `D-527` minted by UI-99's worker).
 
-### D-444 · running — **THE PROJECT OFFERS `reinstate` THAT THE STORE WILL REFUSE: the reinstate affordance's PROJECT arm keys on the count `cites_out.severed`, so a project whose only severed edges point at RETIRED items is offered the act, and REC-183's `#edgeTransition` refuses it RETIRED_NOT_CITABLE.** The worker states it at `affordances.mjs` beside the rule (*"The PROJECT arm is not narrowed"*). — owner RECORD.
-status: running — SPAWNED 2026-09-24 ~21:55Z by SCHEDULER #19 (dispatch) as a SEPARATE CLOUD SESSION titled WORKER D-444 (SCHEDULER #19), base origin/main 1a7f0bcc0. Falsify rather than believe: a live worker holds the branch land/worker/D-444; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### D-444 · integrated — **THE PROJECT OFFERS `reinstate` THAT THE STORE WILL REFUSE: the reinstate affordance's PROJECT arm keys on the count `cites_out.severed`, so a project whose only severed edges point at RETIRED items is offered the act, and REC-183's `#edgeTransition` refuses it RETIRED_NOT_CITABLE.** The worker states it at `affordances.mjs` beside the rule (*"The PROJECT arm is not narrowed"*). — owner RECORD.
+status: integrated — integrated — flipped 2026-09-24 ~22:40Z by SCHEDULER #20 on WORKER D-444's own report (22:34Z): land/worker/D-444 @ 92ac43b5 (verified by ls-remote), gate GREEN 354/354 · 20393; affordances.test.mjs §0 pins the retired-target spelling count at two. Its finding D-553 is placed after UI-107. CONDUCT merges only on its own verification.
 order: after UI-86: a correction to just-landed work (REC-183), an affordance that promises an act the record refuses; directly ahead of the census rows (SCHEDULER #17, 2026-09-23, REC-183's worker via CONDUCT #17, 22:09Z; verified at land/worker/REC-183 @ 27905f5d)
 milestone: M8
 interface: I3 additive — one new fact in `affordanceFacts`; the integrator mints and classifies the IC.
@@ -438,6 +438,16 @@ depends-on: REC-184.
 scope: `op=instance` and `op=captureprogressions` publish, per finding, the view `#dispositionVersionView` already computes (state, reason, author, instant, definition_version, applies). It is PUBLISHED, never used to hide a finding.
 accepts-when: a dismissed finding on `op=instance` carries its disposition view with author and reason, and is still listed (the measured failure it moves: the decision absent from the instance read). NEGATIVE CONTROL: drop the view from `#assembleInstance` and the dismissed-finding arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by CONDUCT #20).
+
+### D-533 · queued — **`op=registeraudit` CALLS A PARTED CAPTURE'S BYTES MISSING AND THE RECORD UNSOUND: it heads only `captures/<whole sha>` (measured `unbacked: 1, sound: false`).** Found by D-476's worker (A). BOB #33 RULED 2026-09-24 21:17Z (cite until folded): YES — `sound` reads true for a row held IN PARTS when every part the record names is present, each part's digest verified; a fourth state "held in parts, all present"; a missing part is named; a row resolving neither way reads UNDETERMINED, counted OUTSIDE `sound`, never inside it. — owner RECORD.
+order: after D-530, with the corrections: an audit calling held bytes missing (CLAUDE.md §2) (BOB #33, 21:17Z; SCHEDULER #19, 2026-09-24)
+milestone: M2
+interface: I3 — a fourth audit state; the integrator classifies.
+design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (one capture, one home), with BOB #33's ruling of 21:17Z, which this row FOLDS into §8 in the same landing.
+depends-on: D-476.
+scope: head each part the record names and verify each part's digest; the fourth state; a missing part named; unresolvable rows UNDETERMINED outside `sound`.
+accepts-when: a fully held parted capture audits "held in parts, all present" with `sound: true`, one missing part is named and makes `sound` false, and an unresolvable row is counted outside `sound` (the measured failure it moves: `unbacked: 1, sound: false` for held bytes). NEGATIVE CONTROL: head the whole key only and the parted arm reads unbacked, failing by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

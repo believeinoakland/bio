@@ -123,15 +123,15 @@ scope: `queueMuteReportHtml`'s per-case undo names every kind the member muted f
 accepts-when: against a real plane a member undoes a case mute whose kind holds nothing back today (the measured failure it moves: no control drawn). NEGATIVE CONTROL: read `suppressed[]` alone again and the quiet-kind arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
 
-### D-533 · queued — **`op=registeraudit` CALLS A PARTED CAPTURE'S BYTES MISSING AND THE RECORD UNSOUND: it heads only `captures/<whole sha>` (measured `unbacked: 1, sound: false`).** Found by D-476's worker (A). BOB #33 RULED 2026-09-24 21:17Z (cite until folded): YES — `sound` reads true for a row held IN PARTS when every part the record names is present, each part's digest verified; a fourth state "held in parts, all present"; a missing part is named; a row resolving neither way reads UNDETERMINED, counted OUTSIDE `sound`, never inside it. — owner RECORD.
-order: after D-530, with the corrections: an audit calling held bytes missing (CLAUDE.md §2) (BOB #33, 21:17Z; SCHEDULER #19, 2026-09-24)
-milestone: M2
-interface: I3 — a fourth audit state; the integrator classifies.
-design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (one capture, one home), with BOB #33's ruling of 21:17Z, which this row FOLDS into §8 in the same landing.
-depends-on: D-476.
-scope: head each part the record names and verify each part's digest; the fourth state; a missing part named; unresolvable rows UNDETERMINED outside `sound`.
-accepts-when: a fully held parted capture audits "held in parts, all present" with `sound: true`, one missing part is named and makes `sound` false, and an unresolvable row is counted outside `sound` (the measured failure it moves: `unbacked: 1, sound: false` for held bytes). NEGATIVE CONTROL: head the whole key only and the parted arm reads unbacked, failing by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+### D-553 · queued — **THE RETIRED-TARGET QUESTION IS SPELLED THREE WAYS IN THE STORE, AND ONLY TWO AGREE: (a) D-444's `#retiredNotCitable(id)` (store.mjs ~5185, Information-typed, not viewer-gated); (b) D-168's textually identical copy inside the DEC-49 region `is-cite-retired` at `op=cite` (~12806); (c) the suggest path's `SUGGEST_LEG_UNREACHABLE` (~40290), VIEWER-GATED and TYPE-BLIND, refusing any `retired` target with no `object_type === "information"` test.** store.mjs's comment at (b) says the suggest path "asks the same question of the same column"; the code does not. Found by D-444's worker (22:34Z). — owner RECORD.
+order: after UI-107, in product order: a consistency defect, probably a no-op today, since no state machine but Information's carries `retired` (not measured) (SCHEDULER #20, 2026-09-24)
+milestone: M8
+interface: I3 for half (b) (a governed region contracts); half (c)'s interface waits on BOB's determination.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.1 ("A RETIRED ITEM IS NOT CITABLE", BOB #30), whose Incomplete-sections bullet D-444 updated to name this.
+depends-on: D-444.
+scope: (b) call `#retiredNotCitable` at `op=cite`, moving the `is-cite-retired` `regionLines` floor to the figure printed on the MERGED source; correct the false comment at (b); MEASURE whether any corpus holds a non-Information bundle in `retired` and state the count. (c) is a DETERMINATION routed to BOB #34 by SCHEDULER #20, 2026-09-24: should a basis leg pointing at a RETIRED non-Information target be unreachable? Build (c) only to BOB's answer; until then, state the divergence at (c) in words.
+accepts-when: `affordances.test.mjs` §0's spelling count moves from TWO to ONE and (b) refuses exactly as before (the measured failure it moves: two copies that can diverge silently). NEGATIVE CONTROL: restore (b)'s inline copy and §0 names it.
+added: 2026-09-24 · SCHEDULER #20 (id minted by D-444's worker).
 
 ### D-536 · queued — **A READING DOES NOT CARRY ITS OWN PROVENANCE, so a re-read that returns different text is silent: nothing records the tier, the member that produced it, the pages transcribed, or a digest of the exact text classified.** FW-22's worker (finding 2, via CONDUCT #20). BOB #33 RULED YES 2026-09-24 21:25Z (cite until folded): a reading carries tier, producing member, pages transcribed and a SHA-256 of the exact text it classified; a re-read is compared to the earlier one and a disagreement is ATTRIBUTED ("tier 2 on ocr-worker returned different text for pages 3-4"); both readings are kept, neither overwrites; a reading from before this lands reads provenance UNDETERMINED, never inferred. Until it lands, M-143's rule stands (compare census runs only on tier 1 or on named documents). — owner CONTENT-PDF, then RECORD.
 order: after D-533, in product order (BOB #33, 21:25Z: *after D-533*); the record's readings becoming attributable ahead of the risk-tier feature trio (SCHEDULER #19, 2026-09-24)
