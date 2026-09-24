@@ -28222,6 +28222,23 @@ export class Store extends DurableObject {
                    progression_key: p.progression_key, stage_key: p.stage_key,
                    definition_version: p.definition_version,
                    bundles: subjects.slice(0, Store.QUEUE_OPTION_SUBJECTS_MAX) },
+        /* D-527: THE EARLIER DECISION TRAVELS WITH THE REOPENED QUESTION.
+           `proposalsFeed` already builds this object for a proposal a revision put
+           back in the open feed (REC-184, framework §8.2) and it is published here
+           UNCHANGED — the same object, no second derivation, `null` where nobody
+           has ever decided. It rode only on `op=proposals`, which NO surface reads
+           (UI-14 retired it for this op), so the one feed a member opens by habit
+           carried the reopened question and said nothing about the answer somebody
+           had already given it — a member meeting it is shown a question nobody
+           has answered when the record holds a decision, which is the record
+           claiming less than it holds. The `disposed` block below does carry the
+           row, and that is not the same fact reaching the reader: it is a JOIN on
+           a list bounded by QUEUE_DISPOSED_MAX, so a member with sixty-four
+           standing decisions meets the reopened item with its prior decision cut
+           off the end of the answer. `applies` is false wherever this is non-null
+           by construction and not by assertion — a decision that still governed
+           would have aged this finding out of the feed before it reached here. */
+        prior_disposition: p.prior_disposition,
         summary: `${p.progression_label}: the '${p.stage_label}' stage is ${p.required} required and absent`,
         detail: `${p.n} instance${p.n === 1 ? "" : "s"} of this progression reach${p.n === 1 ? "es" : ""} `
               + `'${p.stage_label}' without it` + (p.overdue ? `, ${p.overdue_count} past a declared deadline` : ""),
