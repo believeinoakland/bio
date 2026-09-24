@@ -352,7 +352,7 @@ scope: `newgroup/src/index.mjs`, `release.mjs` and `bio-plane/scripts/deploy.mjs
 accepts-when: `15.instance-ai-secret` BUILT by its probe. NEGATIVE CONTROL: have the installer generate a value when none is supplied, and the no-invention arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
-### M0-146 · queued — **WORKER.md AND `gates.mjs` §2e CONTRADICT: WORKER.md says keep scratch inside the worktree, and §2e's under-inclusion derivation reads a worker's root dot-directory (REC-185's `.rec185/` moved an assertion count 19513→19512 with no source change), and a gate LOG kept there makes the clean-tree rule refuse to record a green run, a ~14-minute re-run each time (D-487's worker; two workers hit it on 2026-09-24).** Found by REC-185's worker. — owner M0.
+### M0-146 · running — SPAWNED 2026-09-24 ~04:44Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-146 (CONDUCT #20), base origin/main, into D-479's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/M0-146 and that session; never conclude queued from the absence alone.
 order: AT THE BACKLOG HEAD: two workers lost a full-gate round to it in one night (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z and 04:25Z)
 milestone: M0
 interface: none.
