@@ -55,6 +55,11 @@ probe that reads a public op on scratch will be refused), D-464, D-462, REC-190.
   and runs `RUN-2026-0923-dist5-*` (all closed), DIST #4's `INFO-2026-9436-dist4-muc6a1x0`, member `dist3-rec156-muboxe9j`,
   livefire canaries, 13 July probe members (not DIST's), CPDF-3's count of 17 bundles and 11 aiRuns. Build only when
   SCHEDULER caches it and CONDUCT writes `running`.
+- **DIST-12 · BUILT, on `land/dist/DIST-12` @ `1a0fc88f`, waiting for CONDUCT's train** (flipped `running` 04:57Z). Gate GREEN
+  TARGETED on tree `370160a8`: 127/127 · 8288. `tools/urlpreflight-entry.mjs` runs D-166's `tier1-coverage-probe.mjs --urls`
+  and writes one dated line per URL (DIST.md gate step 7a); REFUSED = this hour, never rotted; NOT_FOUND → a SCHEDULER
+  row naming its fixture. First reading M-136: 14/14 LIVE (05:01Z). Accepts-when: the NEXT release's verification
+  writes its own entry (`--release X.Y.Z --id <M-id> --out docs/development/measurements/<M-id>.md`).
 - **DIST-7 · queued, BACKLOG**: installer uploads carry `limits.subrequests` from the signed release (depends on D-54).
 - **DIST-9 · BUILT, on `land/dist/DIST-9` @ `41c195d5`, waiting for CONDUCT #20's train** (flipped `running` 03:52Z; base
   `16fe1e7f`; merges cleanly onto `0fdef669`). Gate GREEN on tree `4d107829`: 326/326 · 18418 (FULLREUSE, not a backstop).
