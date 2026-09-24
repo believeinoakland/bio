@@ -6,3 +6,4 @@ D-463	2026-09-23T23:34:28.672Z	land/worker/D-242
 D-464	2026-09-23T23:34:31.342Z	land/worker/D-242	
 D-465	2026-09-23T23:34:33.751Z	land/worker/D-242	
 D-466	2026-09-23T23:34:36.696Z	land/worker/D-242	
+D-469	2026-09-24T00:56:26.681Z	CONDUCT #19	CAP-11's acquire existed:true defect, minted D-459 in its clone (collides with case-opened coverage row D-459)
