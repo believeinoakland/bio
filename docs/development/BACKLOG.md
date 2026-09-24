@@ -43,6 +43,26 @@ scope: generalise `migrationReplayOf` to every replayed promotion; keep D-511's 
 accepts-when: a replay whose capture does not list the bundle and SHA-256 is refused by name; a verified one is admitted. NEGATIVE CONTROL: skip the verification and the unverified arm is admitted, failing by name. AND INVERT §8 arm (δ), which D-511 pinned as the gap (admin-class replay still caller-asserted; via CONDUCT #20 19:47Z).
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
 
+### D-528 · queued — **THE QUEUE TELLS EACH NAMED RECIPIENT OF A BIAS-DEBT OBLIGATION "This is not addressed to anybody": `app.html` `queueAssigneeHtml` reads `assignee == null` and never `recipients`, so the surface states something it can see is false.** Found by UI-93's worker (id minted by it). The DELEGATION RECORD (D-86) → UI on coord `CLAIMS.md` is dischargeable by this row. — owner UI.
+order: after D-512, with the corrections: a surface stating a falsehood about the record is worse than a missing feature (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:06Z)
+milestone: M8
+interface: I3 consumer (IC-234).
+design: `docs/development/NOTIFICATIONS.md` §"MARKED AS HANDLED — and handling has a SCOPE, which differs by class", with `docs/architecture/BIO_Declared_Bias_v0_1.md` (bias debt).
+depends-on: UI-93.
+scope: when `recipients` is non-empty, render the members the record named; keep "not addressed to anybody" only when both are empty; discharge the D-86 → UI delegation.
+accepts-when: an obligation with named recipients shows them, against a real-plane suite (the measured failure it moves: "not addressed to anybody" to a named recipient). NEGATIVE CONTROL: read `assignee` alone again and the named-recipient arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (placed; `D-528` minted by UI-93's worker).
+
+### D-530 · queued — **`op=attest` REFUSES A PARTED CAPTURE NO_SUCH_CAPTURE, a false statement that tells a member to re-capture a document the record holds: its pre-flight (index.mjs ~9194) heads only `captures/<whole sha>`.** The ratify gate's `hasCapture(sha)` may answer `{present:false}` off the same whole-key head (not yet driven). Found by D-476's worker (B, C). — owner RECORD.
+order: after D-528, with the corrections: a refusal that says a held document is absent (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:06Z)
+milestone: M2
+interface: I3 — the refusal changes, or attest succeeds; the integrator classifies.
+design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (one capture, one home), with D-476's whole-document lookup (`registerholds`).
+depends-on: D-476.
+scope: attest asks the whole-document question (`registerholds`) and attests the hash, or refuses by a code that says why (CAPTURE_HELD_IN_PARTS); FIRST drive the ratify gate's `hasCapture` on a parted capture and fix it the same way if it reads absent, stating the result either way.
+accepts-when: attesting a held parted capture succeeds or is refused CAPTURE_HELD_IN_PARTS, never NO_SUCH_CAPTURE, and the ratify gate's reading is recorded (the measured failure it moves: NO_SUCH_CAPTURE for held bytes). NEGATIVE CONTROL: restore the whole-key head and the parted-attest arm reads NO_SUCH_CAPTURE by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
 ### D-521 · queued — **IC-246's STATEMENT_ACK_DOCUMENTS_OVER_BOUND (C-82.1) IS UNREACHABLE BY CONSTRUCTION: after REC-194 its read names (case_id, edition), `case_documents`' primary key, so at most one row returns and the bound can never fire.** Found by REC-194's worker (F1). — owner RECORD.
 order: after REC-213, with the corrections to just-landed work: a catalogued refusal that cannot occur is a claim the record makes about itself (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
 milestone: M10
@@ -1247,33 +1267,3 @@ depends-on: none.
 scope: consolidate each multi-site code behind one helper, one code per slice, starting with `NO_SUCH_BUNDLE` (15 sites); re-read the partition each slice.
 accepts-when: the sliced code reads single-site and the F4 count falls by one. NEGATIVE CONTROL: restore one inline literal, and arm F fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
-### D-344 · queued — **THE CONTROL REGISTER CANNOT SEE A QUALIFIED `NEGATIVE CONTROL` DECLARATION: `control-register.mjs` `markerPositions` counts the phrase only when a separator follows it directly, so `NEGATIVE CONTROL (…)` (over sixty suites) and `NEGATIVE CONTROL, …` (three in `corpuscheck.test.mjs`) are invisible, and `register-grammar.test.mjs` C5e works around the blind spot rather than fixing it.** — owner M0 (VERIFICATION).
-order: after D-272: the register every suite's control is counted by under-reads, so coverage is claimed on less than it reads (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` §"The negative-control register".
-depends-on: none.
-scope: `markerPositions` admits one parenthesised or comma qualifier before a separator on the same line; a bare phrase with no separator still does not count; C5e corrected in the same change.
-accepts-when: `corpuscheck.test.mjs` reads five declarations and C5e's workaround falls, in `register-grammar.test.mjs`. NEGATIVE CONTROL: restore the strict separator check, and the "a qualified marker is a declaration" arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### D-357 · queued — **THE DEC-49 GUARD'S REGION MATCHER ENDS IN A WORD BOUNDARY, SO A REGION NAMED `x-y` OPENS REGION `x` TOO: `civicos-ui/check-refusal-codes.mjs` `REGION_START`/`REGION_END`.** A live latent pair exists (`is-capture-request` in `store.mjs`, `is-capture-request-arm` in `index.mjs`), harmless only while they sit in different files. — owner UI.
-order: after D-344 (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (the DEC-49 guard's section, *what a refusal is in principle*).
-depends-on: none.
-scope: end both patterns in a lookahead for whitespace, a comment close or end of line instead of the word boundary; a sibling-region fixture.
-accepts-when: a file holding regions `x` and `x-y` passes with one opener each, and the `regionLines` floors do not move. NEGATIVE CONTROL: restore the word boundary, and the "one opener per name" arm fails naming two opening markers.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### D-300 · queued — **A SUITE THAT READS THE WALL CLOCK CAN TURN RED UNTOUCHED, AND THE SWEEP THAT WOULD SAY SO IS RUN BY NOBODY: three suites of about three hundred bind `BIO_NOW_MS`; `clockadvance.control.mjs` exists and no tool, script or gate runs it.** — owner M0.
-order: after D-357; the cheap half (run the sweep) first; threading the clock through every constructor is a later row if the sweep finds decay (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md`.
-depends-on: none.
-scope: `gates.mjs` (or the battery) runs the clock-advanced sweep at plus one year on the full class and prints its result line; each suite it turns red is named.
-accepts-when: the sweep runs without anyone starting it and its line is printed on a full gate. NEGATIVE CONTROL: plant a fixture dated thirty days ahead, and the sweep arm fails naming the suite.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
