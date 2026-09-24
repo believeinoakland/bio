@@ -24,18 +24,15 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS until 05:45Z, 6 from 05:4
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (07:15Z, #20's wind-down) — read the tree; these are pointers
-- MAIN = 454a02bc (c20-batch18 LANDED 07:05Z, 346/346 green · 19649 assertions: D-481 D-494 DIST-12 D-483 D-484 M0-146 D-495
+## 4. STATE (07:42Z, #20's wind-down) — read the tree; these are pointers
+- BEFORE THAT: 454a02bc (c20-batch18 LANDED 07:05Z, 346/346 green · 19649 assertions: D-481 D-494 DIST-12 D-483 D-484 M0-146 D-495
   REC-193 UI-90 + newgroup-dist-078; IC-263 I3 81.4.0, IC-264 I5 3.6.0, CATALOG_VERSION 1.22.0 = 435 checks). Its eight workers
   ARCHIVED by ancestry. Before: 135abf3b (batch15), d536f834 (batch12).
-- TRAIN RUNNING at #20's stop (07:09Z): land/conduct/c20-batch19 @ 2cc51798 = main 454a02bc + UI-89 @ af8e080d + D-496 @ 2eea1e0b;
-  IC-262 ACCEPTED as I3 82.0.0 (MAJOR, knock limit a BOUND). Log: #20's scratchpad train9.log. CHECK `git log origin/main`: if it
-  landed, archive UI-89 session_01WVb7DA8n2nySoZyKzqKR3C and D-496 session_011bP9kqUTyWrRzBL7A7jTv8 by ancestry; if RED/not landed,
-  fix on a new branch from 2cc51798 and train it alone. Rows UI-89, D-496 are flipped `integrated` on c20-batch19.
-- c20-batch14 (session_01Ya8PUPivB6xpvV51uhcZa9, LIVE at #20's stop, tip 8db490cb 06:48Z) is THE ONE BIG PENDING LANDING: it
+- MAIN = 6761e903 (c20-batch19 LANDED 07:40Z, 346/346 green · 19659 assertions: UI-89 + D-496; IC-262 ACCEPTED, I3 82.0.0 MAJOR).
+  UI-89 and D-496 ARCHIVED by ancestry. D-150 -> UI delegation NARROWED on coord CLAIMS (residue: six STATEMENT_ACK DEC-49 rows).
+- c20-batch14 (session_01Ya8PUPivB6xpvV51uhcZa9, LIVE at #20's stop; was FULL-GATE GREEN at ece0bdfc 06:39Z on its OWN base, since moved; told 07:14Z to merge current main and put its report in its LAST COMMIT MESSAGE) is THE ONE BIG PENDING LANDING: it
   carries batch10/11's 14 rows + d461-claude + integ1b (D-64 REC-184) + batch11fix + batch13 (batch12) + D-486. Told to merge main,
-  renumber its I3 chain as ONE linear sequence above main (main is 81.4.0, 82.0.0 if batch19 lands → batch14's entries go ABOVE
-  that), I5 IC-252 3.7.0 / IC-255 3.8.0, catalogue 1.23.0 re-censused. It must merge the main CURRENT when it finishes, then be
+  renumber its I3 chain as ONE linear sequence above main (main is NOW I3 82.0.0 → batch14's 85.x/86.x entries renumber ABOVE 82.0.0 as one line), I5 IC-252 3.7.0 / IC-255 3.8.0, catalogue 1.23.0 re-censused. It must merge the main CURRENT when it finishes, then be
   trained ALONE. Its gate verdict is the proof, not its message. DROP from every train: c19-batch10, c19-batch11, c20-integ1
   (broken trailers), c20-integ1b, c20-batch11fix, c20-batch12, c20-batch13, c20-batch16, c20-batch17 (all inside batch14 or on
   main). On batch14 landing: DIST owed D-461 SAFETY, D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0), DIST-11 browser class.
