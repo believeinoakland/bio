@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d322-floor-gate-witness.test.mjs",
+ "inputHash": "3a2d4405032e39ae9db103ef38173c9d1fe73e08ec034c5bf070a3d78c1d9dee",
+ "verdict": "PASS",
+ "run": "2b3e87adcef326c05b054da2d21439bda3d518cc.1790267392822.4248.json",
+ "tree": "2b3e87adcef326c05b054da2d21439bda3d518cc",
+ "head": "6bd36ad568351ba488a32bce75712460f19bc231",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 910,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "471d5d4b-6c97-5258-b8bb-251db89aa827",
+ "at": "2026-09-24T16:29:52.833Z"
+}
