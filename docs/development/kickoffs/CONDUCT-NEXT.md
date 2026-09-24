@@ -43,14 +43,16 @@ session_01KJoJnoXN6d5CyZsiw8KTKa (confirm each with get_session before binding; 
   words), catmerge.py (the CATALOG_VERSION union pattern: gate.mjs/ratify/d470 + floor history notes). A virtual merge base
   (criss-cross) breaks stage 1: use the shared tip as base. Status probes must match EXACTLY ONCE in CODE (M0-160 guard).
 
-## 4b. THE SLOT CHECK, AT EVERY WAKE, BEFORE ANYTHING ELSE (Bob via BOB #33, 21:09Z)
-`list_sessions` (limit 50; the result spills to a file — parse it with #20's scratchpad `slots.py <file>`, or BOB's prototype
-`builder/slots.py.txt` in the plan-page artifact M5hUaNBgeM292h4D6odXbX) against coord's cache: a QUEUED row with no worker ->
-spawn; BLOCKED -> answer; a RUNNING row with NO live session -> read its branch, flip or respawn; COMPLETED/REVIEW_READY ->
-check the branch IS PUSHED with a finished gate, then integrate and flip (REVIEW_READY is often a worker idling while its gate
-runs in the background — measured 21:07Z: REC-199 read REVIEW_READY with NO branch pushed; never flip on the bucket alone);
-an open slot -> ask SCHEDULER. Flips, answers and spawns come BEFORE train work; a report is acted on at once, never batched.
-State at 21:14Z: batch25 @ e308f992 carries 19 rows (+FW-22, whose report never reached #20 — found by this check); 20 working.
+## 4b. THE SPLIT (Bob via BOB #33, 21:10Z): DISPATCH IS SCHEDULER'S
+SCHEDULER #19 marks finished rows integrated, refills, and SPAWNS. It got #20's brief form (scratchpad `brief2.tpl`, sent in
+full 21:21Z) — workers still REPORT TO CONDUCT. CONDUCT keeps: verifying worker results, integrating into batches, trains, merges,
+archiving under D-398, and answering workers. CONDUCT MAY still flip a row whose report says it is finished (as #20 did D-519).
+At every wake, still read the slots first (`list_sessions` limit 50, parse with #20's `slots.py <file>`) — but for what CONDUCT
+owns: a finished/pushed branch -> verify its gate, integrate, flip; a BLOCKED worker -> answer; a RUNNING row with no live
+session -> tell SCHEDULER. REVIEW_READY is often a worker idling while its gate runs (REC-199, 21:07Z): never integrate on the
+bucket alone — the branch must be pushed with a finished gate line. An open slot or a queued row with no worker is SCHEDULER's.
+State at 21:20Z: batch25 @ 77f57924 (19 rows + DIST-11/13, D-519 last) pushed 21:18Z and on the 21:20Z train (launcher
+scratchpad `train25.sh`). After it lands: verify ancestry, archive its workers, tell SCHEDULER the new main sha (its brief's step 4).
 
 ## 5. CAP AND CADENCE (Bob via BOB #32 15:45Z): at most 16 live worker sessions. TRAIN at least every 2 HOURS whenever gated
 land/* branches wait (sooner when a batch is ready); BOB's stall probe alarms after 120 min without a landing while branches wait. Refresh at 75% context.
