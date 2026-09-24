@@ -5,6 +5,22 @@ other account. This file is STATE, measured 03:05Z. The process is `kickoffs/DIS
 pointer, the gate, the LESSONS) — read it whole. A sentence here is a pointer: re-measure before acting. State lives on
 `coord`: `node tools/coord.mjs read <path>`; write with `node tools/coord.mjs write --replace <path> <file> -m "<what>"`.
 
+## RELEASE 0.79.0 IS ASKED — NOT STARTED (12:45Z 2026-09-24)
+
+Bob asked for a release through BOB #32 at 12:40Z, from green main `13073707`: everything since 0.78.0, including D-461
+(SAFETY), D-464 (DISCLOSURE, named in the landing report), D-462 (I8 2.0.0 MAJOR: agent-worker first or with the plane),
+DIST-12, and the newgroup/dist rebuild carrying DIST-9. Bob's condition: never leave the estate half-deployed; confirm
+all six workers plus read-back can finish in one sitting before the first deploy, else stop before deploying, push the
+cut, and record where to resume; a partial deploy rolls back to the 0.78.0 ids below. **DIST #6 did NOT start it:** its
+environment's permission classifier refused the cut's FIRST act (the version bump) as a production deploy, because the ask
+reached it only as another session's message. Nothing was changed or pushed; the tree is clean. **Resume: the whole cut
+from step 1** (DIST.md, the gate): bump the 8 version sites 0.78.0 → 0.79.0; RELEASES row
+`["0.78.0", "dfe9858c89810a49422ee071c4f0bf92c0c2f297"]`; build the plane and members; `release-assemble --version 0.79.0
+--sign`; the signature controls; `npm run embed` + `npm run build` in newgroup; `gates.mjs --full --no-reuse`. civicos
+MOVES (app.html changed since 0.78.0: UI-83, UI-85, UI-86, UI-89, UI-90). Deploy order: agent-worker first, then pdf,
+ocr, the plane, civicos, newgroup. After the deploy, the owed reads: REC-175 digestcensus, D-256 changedfromaudit,
+REC-190 homecensus (all on store=bio), the DIST-12 preflight entry, and the D-178 audit if it is on main.
+
 ## Standing rulings (verify with `node tools/decided.mjs`)
 
 - **NO RELEASE UNTIL BOB ASKS** (Bob, ~17:00Z 2026-09-23): cut nothing, deploy nothing, until Bob asks through BOB.
