@@ -33,6 +33,16 @@ scope: count DISTINCT VISIBLE citers in the HAVING clause (a gate join), or appl
 accepts-when: with more than 64 shared questions, adding hidden-project citations changes neither the candidates nor `inquiries_truncated`. NEGATIVE CONTROL: group over ungated refs again, and the hidden-crowding arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
+### D-486 · queued — **A HIDDEN PROJECT'S RUNS MOVE COUNTS SERVED OUTSIDE ITS SIGHT: `#counts`, the frontier readers, and the run side of proposedReadings, inquiryRunSurfacings and captureRequests tally rows whose `authority_kind='run'` came from a run over a hidden project, so the tally discloses that the project exists.** Found by D-464's worker (finding 1). — owner RECORD.
+order: after D-480, the same disclosure class at the head (BOB #32, 02:30Z: *"Row it as disclosure-class, beside D-480 at the head"*; SCHEDULER #18, 2026-09-24)
+milestone: M8
+interface: I3 — the served counts subtract; shapes unchanged.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.9), with BOB #32's ruling of 2026-09-24 02:30Z (cite until folded): a hidden project's run output is the PROJECT'S THINKING until something outside uses it; the bytes stay shared, only the run's attribution is withheld. `OBSERVATION-LOG-DESIGN.md` §6 ties the readers.
+depends-on: none.
+scope: one predicate excluding run rows whose context is a hidden project from every tally a caller outside its sight reads, all five readers together.
+accepts-when: a run over a hidden project leaves each reader's answer to an outsider unchanged. NEGATIVE CONTROL: drop the predicate from one reader and its arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
 ### D-470 · queued — **THE RATIFICATION STAMP CANNOT TELL WHICH CATALOG JUDGED A CASE: `gate.mjs` `CATALOG_VERSION` still reads "1.20.0" after dozens of added checks, so `plane-gate/1.0 (bio-checks 1.20.0)` names the same catalog for documents judged by different rules.** Read at the code on `main`. — owner RECORD.
 order: after D-469, at the head: a signed record that claims more precision than it holds (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
 milestone: M10
@@ -83,6 +93,16 @@ scope: break only when the baseline moves — Td/TD with ty=0 and a Tm at the cu
 accepts-when: Budget-Basics-FY21-23's bytes read at least 60 words per page. NEGATIVE CONTROL: revert the fix, and that arm reads glyph-per-line and fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
+### D-484 · queued — **`NO_BASIS` AND `NO_CITATION` HAVE NO DEC-49 TRANSLATION: neither code has a row in any `*_CHECKS` family, so a member reads the store's raw `detail`.** `NO_CITATION` is minted at 3 sites in `store.mjs` (relationdeclare, the progression revision, discharge), `NO_BASIS` at 4; `NO_CITATION` has reached two member surfaces untranslated since UI-13. Found by UI-83's worker. — owner RECORD.
+order: after D-481, with the corrections: a refusal a member cannot read (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:30Z)
+milestone: M2
+interface: I3 additive — two catalogued codes gain translations.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, following REC-79's single-helper shape.
+depends-on: none.
+scope: route each code's sites through ONE governed helper inside a DEC-49 REGION; a row for each in ACT_SHAPE_CHECKS (C-numbers by mintid); move the check-refusal-codes floors.
+accepts-when: each site's refusal carries its translation. NEGATIVE CONTROL: mint one site's code outside the helper and the DEC-49 guard fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
 ### D-482 · queued — **REC-59's HELPER-ARM MATCHER IN `bounds.test.mjs` IS OVER-STRICT: `callSites`' id pattern `(?:^|[?&,{\s])id[=:}]` does not see an id arm spelled `"id=" + x`, so correct work reads RED.** Found by UI-85's worker. — owner M0.
 order: after D-481: an instrument that fails correct work costs every lane gate time (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:24Z)
 milestone: M0
@@ -92,6 +112,26 @@ depends-on: none.
 scope: add `"` and `'` to the class in `callSites`; add an over-strictness arm reading a quoted `"id=" + x` site as `id`.
 accepts-when: the new arm passes. NEGATIVE CONTROL: drop the quotes from the class and that arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### FW-22 · queued — **AUDITED FINANCIAL STATEMENTS ARE NOT BUDGETS: BOB #32 ruled (2026-09-24 02:30Z) that an ACFR/CAFR or an agency's audited statements are a separate type, FINANCIAL REPORT, counted apart. D-66's budget sample is recounted with them excluded, and the new class is counted.** — owner FRAMEWORK.
+order: directly after D-66: §2's rule that a count comes before any reader; the financial-report reader follows the budget reader and is its own row once these counts justify it (SCHEDULER #18, 2026-09-24)
+milestone: M2
+interface: none — a census class and a recount.
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §2, row 5, with BOB #32's ruling of 2026-09-24 02:30Z (cite until folded).
+depends-on: D-66.
+scope: the census instrument gains FINANCIAL REPORT, judged from bodies; D-66's class and read sample are re-run excluding it, stating stratum and seed.
+accepts-when: `MEASUREMENTS.md` carries both counts with intervals, dated with the instrument. NEGATIVE CONTROL: fold the class back into budget and the recount arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs FW`).
+
+### FW-23 · queued — **CSV HAS NO FORMAT-REGISTRY ENTRY, so the corpus's CSV files are held and never read.** BOB #32 DESIGNED it (2026-09-24 02:30Z): delimiter and encoding found by signature and RECORDED on the reading, undetermined when they cannot be told; one sheet; row 1 is row 1, a header being a reading, never assumed; cells addressed sheet-cell/sheet-range, 1-based; the capture's grade. Legacy `.xls` (50 keys) stays waiting under OFFICE-FORMATS's legacy ruling. — owner FRAMEWORK.
+order: behind D-66, per BOB #32's ruling (SCHEDULER #18, 2026-09-24)
+milestone: M2
+interface: I2 additive — a `csv` format entry.
+design: `docs/development/OFFICE-FORMATS.md` "The architectural answer: a FORMAT axis", with BOB #32's CSV design of 2026-09-24 02:30Z (cite until folded).
+depends-on: D-66.
+scope: the `csv` entry and its reader on the format axis; extend the office-format suites.
+accepts-when: a CSV reads as addressed cells with delimiter and encoding recorded. NEGATIVE CONTROL: guess a delimiter where none is determined and the undetermined arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs FW`).
 
 ### UI-84 · queued — **THE UI's MOCK REFUSALS FOR `verify` AND `unknown op` CARRY NO `translation`, WHILE THE LIVE WIRE NOW DOES (C-61.1, C-69.1, D-278), AND `refusalWords` RENDERS THE TRANSLATION FIRST — SO THE MOCKS ARE NARROWER THAN THE WIRE (the M-72 class).** Found in `civicos-ui/test/preauth-vocabulary.test.mjs` and sibling mocks; re-read on `land/conduct/c17-batch3` @ `d93d29c4`. — owner UI.
 order: after REC-184, with the D-278 follow-ons: a suite that pins what a member reads against a mock narrower than the wire can pass while the member reads something else, a correction to just-landed work (SCHEDULER #16, 2026-09-23; D-278's worker via CONDUCT #17)
@@ -534,6 +574,16 @@ scope: archive DEBT.md whole into `docs/archive/ledgers/`; remove or re-point ev
 accepts-when: `node tools/plancheck.mjs` and the coord ledger checks pass with no DEBT.md, and no live tool reads it. NEGATIVE CONTROL: restore one reader, and its arm fails naming the missing file.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs M0`).
 note: 2026-09-24 — CONDUCT #19 (02:14Z): the folds carrier landing now is fb24040e WITHOUT §6's classification; the §6 change rides WITH this row, so this row's first act is to retire `LC-undecided-route`'s D-388 clause and correct `corpuscheck.test.mjs` §5's pin together with BOB's §6 fold (prove `node tools/coord.mjs checks` passes on that tree). D-388 closes then.
+
+### D-485 · queued — **THE DEC-49 GUARD CANNOT SEE REACH THROUGH THE REAL PLANE: under D-433 its R3 counts only codes a MOCK feeds a surface, so "every code a surface can receive carries a canned translation" was false of `NO_CITATION` for months.** Found by UI-83's worker. D-484 closes the instance; this closes the class. — owner the plane estate.
+order: after M0-140, with the M0 instruments: it catches a class of defects that reach members (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:30Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
+depends-on: D-484 (else the new arm reads RED on its first run).
+scope: a real-plane reach arm in `civicos-ui/check-refusal-codes.mjs`: a code a real-plane UI suite observes in a surface pane counts toward reach.
+accepts-when: the arm lists reached codes and all carry translations. NEGATIVE CONTROL: strip `NO_CITATION`'s translation and the arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
@@ -1216,43 +1266,3 @@ depends-on: Bob's approval of the definition edit (BOB #19 took it to him, 2026-
 accepts-when: a heartbeat run's `queued`/`running` counts equal those of `git show origin/main:docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-412 · queued — **THE ESTATE AUDITS EXPOSURE AND NOBODY AUDITS RESIDUE: a worktree that is registered, clean, merged and owned by no live session** … (whole text: the cut archive)
-order: with the session-hygiene instruments, after M0-84: disk is CONDUCT's binding constraint (M-80 and M-81 each measure ~286 MiB per retired tree) and this names the residue nothing reclaims; below M0-81 and M0-84, which prevent and detect a lane fault rather than a cost (SCHEDULER #5, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-398's three conditions asked of a TREE rather than a session.
-depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the repo where a suite drives it, the ACT in the harness.
-accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own … (whole text: the cut archive)
-order: behind the product rows, first of the reading-budget rows (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: an over-budget kickoff costs every RECORD spawn context, not gate time, and blocks no product; SCHEDULER #12); not a defect in the product, cheap and mechanical (SCHEDULER #2, 2026-09-19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` with CLAUDE.md §1's reading budget — *a file is either READ WHOLE … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### CPDF-21 · queued — **`kickoffs/CONTENT-PDF.md` IS 25,863 B AGAINST THE 24,576 B READING BUDGET**, so the lane cannot read its own instructions … (whole text: the cut archive)
-order: directly after REC-154, its class and its precedent: it breaks CLAUDE.md §1's reading budget for a build lane, every CONTENT-PDF worker pays it on every spawn, and it is cheap and mechanical (SCHEDULER #6, 2026-09-21; SCHEDULER #5's handoff)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a … (whole text: the cut archive)
-depends-on: none. **Same line as REC-154** (`CUT` in `tools/readbudget.mjs`): whichever lands second re-reads the first.
-accepts-when: `node tools/readbudget.mjs` no longer warns on CONTENT-PDF.md and lists it in `CUT`; the archived text is byte-identical to what left the live file. How a liar passes it … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CPDF`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CPDF-21» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-82 · queued — **NARROWED TWICE ON 2026-09-21: WHAT IS LEFT IS THE OCCUPANCY RULE AT THE INTEGRATOR'S NO-BOB FALLBACK START.** The … (whole text: the cut archive)
-order: beside REC-154, the reading-budget class, and after M0-81, which builds the occupancy judgement this rule points at (SCHEDULER #4, 2026-09-21, re-measured; placed by SCHEDULER #3, 2026-09-20)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget … (whole text: the cut archive)
-depends-on: none. Sequence after M0-81.
-accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; the kickoff states the check at the fallback start and cites BOB.md; anything cut is byte-identical in the archive.
-added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry); narrowed 2026-09-21 by BOB #19 and SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-82» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
