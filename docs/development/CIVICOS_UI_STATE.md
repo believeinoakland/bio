@@ -50,6 +50,51 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v114, 2026-09-24 session, thread UI, UI-102 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-102` (base `origin/main` @ `1a7f0bcc`, carrying c20-batch24c), in the commit that carries this
+entry; **the version number is PROVISIONAL** — other UI workers are live and CONDUCT renumbers at integration, as it
+did v112 -> v113. SURFACE: **the action page now renders each PROPOSAL of the laws governing the ask, beside the
+member's list — and offers no way to turn one into the list.**
+
+**WHAT IT CLOSES.** REC-195 built the plane half D-149 had left unbuilt — `op=actionlawspropose`, the
+`action_law_proposals` table, and `governing_laws_proposals` on `op=projection`'s action block — and MEASURED its own
+gap: `grep -c governing_laws_proposals civicos-ui/app.html` = 0. The owed act was named in IC-267's
+consumer-impact section and in `construct-status.json` 8.governing-laws' NOT BUILT tail. **It was named in NEITHER a
+`CLAIMS.md` DELEGATION nor a QUEUE row of its own** — measured, not assumed: `CLAIMS.md` on `coord` is 20,145 lines
+and contains no occurrence of `REC-195`, `actionlawspropose`, `governing_laws_proposals` or `UI-102`. SCHEDULER #18
+rowed it anyway off the construct-status tail, which is the mechanism working; recorded because the ledger CLAUDE.md
+names for an owed act was not the one that carried this one.
+
+**WHAT LANDED**, all of it in `app.html`: `actionLawsProposalsHtml`, called once from the action page immediately
+after `actionLawsHtml` inside the SAME `<h2>The laws this ask is made under</h2>` section, plus one `subj-note` and
+one CSS rule. Each proposal renders the credential the plane stamped, the date, its citations each at its level, and
+the plane's own label sentence; the block's own `says` closes it. Three answers are kept apart exactly as the list
+above it keeps them: a set of proposals, an EMPTY set said in the plane's own words, and an ABSENT key said as an
+absence. **The page holds no sentence of its own about any of it** — proved structurally, not asserted: the suite
+checks `app.html` contains no copy of any of the plane's five sentences.
+
+**THE ITEM IS AN ABSENCE, AND THAT IS WHY IT NEEDED DRIVING.** The row's scope is *never offer a proposal as a way to
+set the list*, so what had to be built was a read with NO control on it. A "use this" button is the obvious
+convenience and it is the defect: there is no act that ADOPTS a proposal — `op=actionlaws` is a member's authored
+statement, not an acceptance of anybody's suggestion — so such a control could only prefill a member's authored
+legal claim with a machine's citations. Three arms hold it: the rendered block carries no button, link, field or
+handler in any of its three shapes; it names no function a control could call; and the act's form is DRIVEN open
+with two proposals standing and its one row read back empty. A markup sweep is the honest instrument here and its
+limit is stated in the suite — a control added by script after render would be invisible to it, which is what the
+behavioural arm covers.
+
+**A STALE COMMENT CORRECTED, not left to the reader.** `openActionLaws`' comment block said *"no proposal is built in
+the plane and none is invented here."* The first clause was true when written and REC-195 made it false. Corrected in
+place with its date and reason — and the second clause, which is the load-bearing one, is unchanged and now carries
+more weight than it did: this form still opens on an empty row whatever the record holds.
+
+Suites: NEW `civicos-ui/test/ui102-laws-proposals.test.mjs`, 38/0, against a REAL PLANE under miniflare — two
+proposals written through `op=actionlawspropose` (one by a machine credential, one by a signed-in member), the list
+by `op=actionlaws`, three actions covering stated-with-proposals, nothing-proposed and proposed-but-undetermined, and
+every rendered sentence compared VERBATIM against `op=projection`'s own answer in the same run. No existing suite's
+count moved and no floor moved. Control: `ui102-laws-proposals.control.mjs`, five arms, every one as declared,
+including the row's own — a "use this" control fails the no-setter arms by name.
+
 v113, 2026-09-24 session, thread UI, UI-92 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-92` (base `origin/main` @ `68fecb8d`), in the commit that carries this entry; the version number
 was provisional; CONDUCT #20 renumbered it v112 -> v113 at c20-batch22 because UI-100 took v112 on main. SURFACE: **the PROJECT
