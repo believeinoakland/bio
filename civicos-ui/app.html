@@ -368,6 +368,7 @@ h2.sec{font-family:var(--font-record);font-size:17px;font-weight:600;margin:26px
 .q-counts{font-size:12.5px;color:var(--muted);margin:0 0 6px}
 .q-bound{font-size:13px;background:var(--paper-2);border-left:3px solid var(--verdigris-dk);padding:8px 10px;margin:0 0 10px}
 .q-incomplete{font-size:12.5px;color:var(--muted);background:var(--tint-muted);border-radius:var(--r-2);padding:7px 10px;margin:0 0 8px;line-height:1.45}
+.q-recip{flex-basis:100%;font-size:12.5px;color:var(--muted);margin:2px 0 0;line-height:1.45}
 .q-gap{font-size:12.5px;color:var(--muted);margin:0 0 8px;line-height:1.45}
 .q-basis{font-size:12.5px;color:var(--muted);margin:0 0 8px}
 .q-basis summary{cursor:pointer}
@@ -14672,6 +14673,49 @@ function queueSubjectHtml(it){
     return `<span class="q-on">on the <span class="mono">${esc(s.stage_key||"")}</span> stage of <span class="mono">${esc(s.progression_key||"")}</span>`
          + ((s.bundles && s.bundles.length) ? ` &middot; ${s.bundles.map(b=>`<span class="mono">${esc(b)}</span>`).join(", ")}` : "")
          + `</span>`;
+  /* UI-93 · D-86's BIAS-DEBT OBLIGATION IS ABOUT A RUN, AND THIS BRANCH IS WHY THE
+     ITEM NOW SAYS WHICH ONE. Before it, this function had no `run` case at all and
+     fell through to `return ""`, so an item whose summary reads *the lens this
+     assistant's run was formed under has changed* named NO RUN — the member was told
+     a re-run was owed and not which run owes it. That is the record saying less than
+     it holds, on a surface whose product is the record's trustworthiness.
+
+     THE RUN AND ITS CONTEXT ARE THE PRODUCER'S, VERBATIM (`store.mjs`
+     `#obligationsBiasDebt`: `subject: { kind:"run", id, context:{ type, id } }`).
+     THE CONTEXT'S TYPE IS RENDERED AS THE RECORD SPELLS IT and is not translated to
+     a member-facing word: `aiRunOpen` stores `String(contextType)` VERBATIM and
+     fences nothing, so a run opened as `Inquiry` is in the record beside one opened
+     as `project` (`store.mjs`, op=airuns' own `lower(r.context_type)` and its note).
+     A table mapping those spellings to nicer words here would be a second answer to
+     a question the plane already answers, and it would go blank on the fourth
+     spelling somebody writes.
+
+     AND IT POINTS AT NOTHING, on purpose. `SURFACES["ai-session"]` is an INDICATOR
+     on a context that is already open, reached through `ctx.session` — no address in
+     this application opens a run by its id — so a control drawn here could not work.
+     That is the rule this function's bundle branch keeps from the other side and the
+     one `queueOptionsHtml` states for a subject that is not a document: a subject
+     with nowhere to point is STATED, never drawn. */
+  if(s.kind === "run"){
+    const ctx = s.context || {};
+    /* THE CONTEXT IS RENDERED ONLY IF THE ITEM CARRIES ONE, and each half only if
+       the item carries that half: `on the run X - in the project Y` when both are
+       there, and silence rather than `in the  Y` when the record holds no kind.
+       Nothing here supplies a missing half from the other. */
+    const where = (ctx.type || ctx.id)
+      ? ` &middot; in ${ctx.type ? `the <span class="mono">${esc(ctx.type)}</span> ` : ""}`
+        + `<span class="mono">${esc(ctx.id||"")}</span>`
+      : "";
+    /* THE RECIPIENTS NOTE IS THE PLANE'S OWN SENTENCE, RENDERED WHERE IT EXISTS AND
+       COMPOSED NOWHERE. The producer publishes `recipients_stated` ONLY when it could
+       name nobody inside the run's read gate, and that sentence says what the item's
+       reach then is. This surface writes no sentence of its own for the case where
+       recipients WERE named: it has none to render, and authoring one would be the
+       DEC-8 drift the rest of this queue is built to refuse. */
+    const note = (it && typeof it.recipients_stated === "string" && it.recipients_stated)
+      ? `<div class="q-recip">${esc(it.recipients_stated)}</div>` : "";
+    return `<span class="q-on">on the run <span class="mono">${esc(s.id||"")}</span>${where}</span>` + note;
+  }
   if(s.kind === "host")    return `<span class="q-on">on the host <span class="mono">${esc(s.host||"")}</span></span>`;
   if(s.kind === "capture") return `<span class="q-on">on a capture of <span class="mono">${esc(s.locator||s.capture_sha||"")}</span></span>`;
   return "";
