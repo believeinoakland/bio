@@ -6057,7 +6057,8 @@ export default {
         /* REC-131 / IC-148: selftest RELAYS the store's stats — the same answer through a second
            door, under op=stats' one stamp: `dbBytes` for the admin class only (see op=stats). */
         const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
-          .fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}`));
+          .fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}&viewer=${encodeURIComponent(
+            viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
         if (!sOut.answered) { out.ok = false; out.store = "ERR the store did not answer /stats"; }
         else out.store = sOut.result;
       } catch (e) { out.ok = false; out.store = "ERR " + String(e && e.message || e); }
@@ -6093,7 +6094,8 @@ export default {
     }
 
     if (op === "livefire") {
-      const out = await livefire(env, storeName, { capacity: cls === "admin" });
+      const out = await livefire(env, storeName, { capacity: cls === "admin",
+        viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
       return json(out, out.ok ? 200 : 500);
     }
 
@@ -9886,6 +9888,13 @@ export default {
            gated like every other reference to a document. Fails closed on an
            absent stamp. */
         || op === "leadlook" || op === "leadread" || op === "leadshare"
+        /* D-464: the COUNTS. Every counter `op=stats` serves names rows, and a row naming a project the caller
+           cannot see is that project's existence (§7.9) — so the counts are taken through the caller's own
+           sight, and fail closed on an absent stamp. `op=selftest` relays the same answer and stamps the same
+           viewer at its own fetch. */
+        || op === "stats"
+        /* D-464: `op=selectionlist`'s `bytes` sums every owner's selection rows, so it takes the same stamp. */
+        || op === "selectionlist"
         /* REC-138 / D-426: the ROSTER acts name a project, so one the caller cannot see must
            answer exactly as one that does not exist — asked of SIGHT before any positional test
            (`Store#inSight`). `by` (below) stays the positional half; this is the visibility half.

@@ -134,6 +134,45 @@ const ARMS = {
     mustFail: [],
   },
 
+  /* D-464 — THE BRIEF'S CONTROL: `op=stats` counts over the WHOLE store again (no bundle is subtracted for anyone).
+     The hidden creation and revision then move vera's stats by name, and the EXACT arm reads a zero difference. The
+     searchindexcheck and selectionlist arms must NOT fail — they are the next two arms' subjects. */
+  "stats-whole-store": {
+    patches: [["store.mjs", `    const hid = gate && gate.scope !== "member"\n`, `    const hid = null && gate && gate.scope !== "member"\n`]],
+    mustFail: ["A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats", "MOVE NOTHING: op=stats (status",
+               "EXACT: the ADMIN token's bundles less vera's"],
+  },
+  /* D-464: `op=searchindexcheck`'s `indexed` over the whole text index again (M-122's second leak). */
+  "indexcheck-whole-index": {
+    patches: [["store.mjs", "indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN\n",
+               "indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE 1=1 OR rowid NOT IN\n"]],
+    mustFail: ["MOVE NOTHING: op=searchindexcheck (status", "MOVE NOTHING: op=searchindexcheck&limit=1 (status",
+               "still a parity check over what she can see"],
+  },
+  /* D-464: `op=selectionlist`'s `bytes` over every selection row again — iris's selection of the hidden project moves it. */
+  "selectionbytes-whole": {
+    patches: [["store.mjs", `        const hide = g && g.scope !== "member";`, `        const hide = false && g;`]],
+    mustFail: ["MOVE NOTHING: op=selectionlist (status"],
+  },
+  /* D-464: the control plane's viewer stamp on op=stats dropped. The store FAILS CLOSED (an absent stamp is DENY, so
+     every bundle is subtracted): vera's answer is then byte-identical too — the liar passes the headline — and only
+     the LIVE, WITNESS and EXACT arms can tell it from the fix. RECORDED, NOT SMOOTHED: first declared with WHOLE
+     among the failures and the witness absent, and it came back NOT AS DECLARED — the stamp is dropped for EVERY
+     class, so the ADMIN token's own counts read zero too (the witness fails) and three zeros agree with each other
+     (WHOLE passes: it asks equality among the unfiltered, which an all-DENY store also satisfies). The arm was right
+     and the declaration was wrong; EXACT is the assertion that pins the number itself. */
+  "stats-stamp-dropped": {
+    patches: [["index.mjs", `        || op === "stats"\n`, ``]],
+    mustFail: ["the counts are live", "the store SAW the acts: the ADMIN token's bundles",
+               "STILL LIVE: a document vera CAN see moves her bundles", "EXACT: the ADMIN token's bundles less vera's"],
+  },
+  /* D-464 OVER-STRICTNESS: the subtraction taken for EVERY sent viewer, unfiltered ones included — correct work in a
+     spelling the suite did not anticipate (an unfiltered gate's complement is empty). Nothing may fail. */
+  "subtract-for-everyone": {
+    patches: [["store.mjs", `    const hid = gate && gate.scope !== "member"\n`, `    const hid = gate\n`]],
+    mustFail: [],
+  },
+
   /* OVER-STRICTNESS: the same sight question asked through the store's OTHER spelling of it,
      `#bundleRedactor` — correct work in a form the suite did not anticipate. Nothing may fail. */
   "sight-via-redactor": {
