@@ -17,14 +17,12 @@
 # NEGATIVE-CONTROL PENS. A control driver copies pristine sources into a pen
 # inside its own worktree (WORKER.md: never a shared scratchpad) and restores
 # from them;
-# SUPERSEDED IN PART, 2026-09-24 (BOB #32, recorded in `kickoffs/WORKER.md`): a pen
-# belongs OUTSIDE the worktree after all — a file in the tree is walked by
-# repository-walking suites, counted by `gates.mjs` §2e and makes the tree DIRTY, and
-# "never a shared scratchpad" is answered properly by a per-run `mkdtempSync` name
-# rather than by moving into the tree. `bio-plane/test/frontier-chunk.control.mjs`
-# pens that way since D-445 and has no line here. EVERY LINE BELOW STILL STANDS: its
-# driver still pens in-tree, and moving them is each driver's own act, not a rule
-# change made by deleting the lines that describe what the code does today.
+# RULED 2026-09-24 (BOB #33, 17:12Z, M0-172; THE PEN RULE block below states it in full): a driver's
+# pen is the TOOL's own mechanism, not session scratch, so an in-worktree pen that is GITIGNORED and
+# ITEM-NAMED stands; BOB #32's out-of-tree rule governs files a SESSION makes by hand. A per-run
+# `mkdtempSync` pen outside the tree is the OTHER accepted shape — `bio-plane/test/frontier-chunk.control.mjs`
+# pens that way since D-445 and so has no line here. (Restated at c20-batch27 by CONDUCT #20: D-445's
+# first wording called the in-tree pen superseded, which BOB #33's ruling does not say.)
 # UI-50's `.ui50-harness/` and UI-42's `.ui42-harness/` are the
 # pattern. The drivers remove their pen on a clean run, but a driver INTERRUPTED
 # mid-arm leaves one behind — and an untracked scratch file left in a worktree
