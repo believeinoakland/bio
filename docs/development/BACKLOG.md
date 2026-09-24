@@ -624,6 +624,16 @@ scope: teach the walk to follow a const to its catalogue value; failing that, re
 accepts-when: r3Fed counts REQUIRED_ARGUMENT_MISSING. NEGATIVE CONTROL: inline-break the const's resolution and the arm names the missed code.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
+### M0-151 · queued — **`observation-log.test.mjs` HAS TWO SECTIONS LABELLED `I` (the REC-103 frontier section, line ~883, and the REC-100 `run` writers, line ~1148), so a failure naming section I is ambiguous.** Found by D-486's worker. — owner M0.
+order: low in the M0 group: a label, no assertion moves (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:01Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a printed failure names one place).
+depends-on: none.
+scope: relabel the second run of section letters onward; update the header comment's index (line ~275) to match.
+accepts-when: every section label in the suite is unique. NEGATIVE CONTROL: none (a label).
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
 ### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
 milestone: M0
