@@ -488,7 +488,7 @@ accepts-when: `op=knock&store=scratch` is refused by name and `bio`'s counters a
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 note: 2026-09-24 by SCHEDULER #17 (BOB #32, 00:02Z): the rule of record is CLAUDE.md §5 "NAME `store=scratch` ON EVERY CALL" (D-325, at `scopeFor`); `VERIFICATION.md` stays the cited governed path only because the design check admits it (it has no budget for the rule). On landing, the worker checks §5's wording against the new behaviour and tells BOB if it needs correcting.
 
-### D-464 · queued — **A MEMBER'S `op=stats` MOVES WHEN A PROJECT THEY CANNOT SEE IS CREATED OR REVISED, AND `op=searchindexcheck`'s `counts.indexed` MOVES ON A HIDDEN CREATION: D-447's sibling class, not fixed.** Stated in Membership v2's Incomplete sections. — owner RECORD.
+### D-464 · running — SPAWNED 2026-09-24 ~01:00Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER D-464 (CONDUCT #19), base origin/main 15b2a4c0 (D-447 on main); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-464 and that session; never conclude queued from the absence alone.
 order: directly after D-461: a disclosure defect, D-447's class, outranks every correction and feature (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
 milestone: M8
 interface: I3 — counts computed through the viewer; the integrator mints and classifies the IC.
