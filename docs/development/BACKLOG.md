@@ -260,9 +260,20 @@ milestone: M0
 interface: I3 — one DEC-49 translation's words change; the integrator classifies.
 design: `docs/development/VERIFICATION.md` (a gate selects by what a suite reads), with DEC-49 as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it for the translation.
 depends-on: M0-176.
-scope: rewrite the four citations as prose ("the MEASUREMENTS ledger"), the correction M0-165 made to calibration.test.mjs's `measured_by` labels one level down. CAUTION: one is a DEC-49 refusal translation, so check its governed region, `regionLines`, and every refusal-wire pin that quotes the sentence.
+scope: rewrite the four citations as prose ("the MEASUREMENTS ledger"), the correction M0-165 made to calibration.test.mjs's `measured_by` labels one level down. Extend `statepaths.test.mjs`'s pin of this property from the TEST side to `bio-plane/src/` and `bio-plane/checks/`, so a by-name citation there cannot return (M0-176's worker). CAUTION: one is a DEC-49 refusal translation, so check its governed region, `regionLines`, and every refusal-wire pin that quotes the sentence.
 accepts-when: a MEASUREMENTS-only diff no longer selects `calibration.test.mjs` and selects 37 units (the measured failure it moves: 39, M0-176's unmet accepts-when). NEGATIVE CONTROL: restore one citation by name and the selection re-admits the importing suites, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by M0-176's worker).
+
+## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
+
+`docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
+
+| who | row | what | blocked on |
+| --- | --- | --- | --- |
+| RECORD | PL-16 | the published case (IS-8, M10) — **RESHAPED BY DEC-72, not merely blocked.** Its finding-side stamping and its NO-case-level-bar assumption are both overtaken; `CASE-AS-PRODUCTION.md` and the CASE-1..CASE-6 rows are the live decomposition | **Bob** (DEC-33's ceremony deferral) **AND now DEC-72's redesign.** Read the design doc before touching it — supersession is never silent, so the row keeps its id and names what overtook it |
+| **DIST** | DS-1 | D-115 — the installer installs the FLEET | **DONE 2026-09-19 — THIS TABLE WAS THE RECORD THAT WAS WRONG, corrected here with the reason (DIST-5's own act).** Landed at `8decf468` ("D-297: the installer installs the FLEET — verified, templated, degrading per member, on install AND update"). DIST #2 confirmed at its touch; VERIFIED INDEPENDENTLY BY SCHEDULER #2 AT THE CODE, not from either row: `8decf468` is an ancestor of `origin/main`, and `newgroup/src/index.mjs` carries a section headed "the fleet (IC-82/D-297)" and names `fleet` **27 times** — D-297's own opening measurement was that this file mentioned it **zero** times, which is the evidence from D-297 itself that DIST-5's accepts-when demanded |
+| **DIST** | DS-2 | D-116 — version authority spans the fleet | **DONE 2026-09-19**, landed at `da3d4f17` ("DS-2: the version authority spans the fleet — and five of six sites disagreed with it"). VERIFIED BY SCHEDULER #2 AT THE CODE: ancestor of `origin/main`; `bio-plane/scripts/resolve-version.mjs` CONSUMES FLEET's own `discoverMembers` rather than re-implementing it, so the set checked cannot drift from the set built, and takes `bio-plane/package.json` as THE authority; `tools/release-assemble.mjs` refuses `VERSION_SKEW` and `VERSION_DISAGREES`; `resolveversion.test.mjs` arms BEHIND (ARM 2) and AHEAD (ARM 3) — the direction a one-sided check misses |
+| **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | **D-260, PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling (its item 2 is DIST's deploy half).** Before that: **D-260 — NARROWED, and no longer blocked on DS-1 or unread** (DIST #3, then FLEET #3, 2026-09-21; verified at the code by SCHEDULER #4): its CONFIG half LANDED at `2de6f25f` (2026-09-12 — `instanceClaudeStatus`/`instanceClaudeToken` in `tokens.mjs`, the deploy sending and keeping the secret, the denylist's revocation-by-publication). Its acceptance — a configured instance token resolving at FL-6's third level — cannot be met by ANY configuration until the plane's calling side exists: `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`, and `instanceClaudeToken` has no non-test caller. The dispatch fix is named on D-260. The member and project token surfaces are ABSENT, a design question DIST #3 sent to BOB |
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
@@ -1178,43 +1189,3 @@ depends-on: D-443 (`integrated`; its branch moved ARM 1's anchor).
 scope: rewrite ARM 1's declaration to the measured outcome with a comment saying why the old one was wrong; rename every `INF-` fixture id to `INFO-`.
 accepts-when: `node bio-plane/test/nc-m040.mjs` reports every arm as declared, and no suite names an `INF-` id. NEGATIVE CONTROL: restore the five-failure declaration, and ARM 1 reads NOT as declared by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-449 · queued — **`project-sight.control.mjs`'s `promote-stamp-dropped` ARM CANNOT RUN: it throws SURFACE_NO_RUN (0/1), identically on `main` `02603e88`, because since REC-171 removing the stamp also breaks the harness's surfacing-run creation.** — owner M0.
-order: after D-446, among the control-hygiene rows (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (break only the thing: a control that moves a second variable refutes nothing).
-depends-on: none.
-scope: narrow the arm's patch to revisions, keeping the stamp when the base is null.
-accepts-when: the arm runs and fails as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-369 · queued — **FIVE IN-MEMORY `truncated` SHAPES ARE NEVER DRIVEN PAST THEIR CEILING: only `op=connect` has a live over-the-ceiling arm in `derivation-bounds.test.mjs`; `queueFeed`, `biasInhale`, `documentsNamingEntity` and `#backfillLegContent` are pinned by roster alone (now 10 names).** — owner RECORD.
-order: with the M0 control rows: a verification instrument (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (test through the op), with `INVESTIGATIVE-SESSION.md` §14c.
-depends-on: none.
-scope: a live driven arm per shape. In `bio-plane/test/derivation-bounds.test.mjs`.
-accepts-when: each shape is driven past its ceiling and states `truncated`. NEGATIVE CONTROL: drop a paging LIMIT in `queueFeed`, and its live arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
-### D-441 · queued — **`tools/decided.mjs` CANNOT SEE A RULING WHOSE MARKER OPENS A LINE IN TITLE CASE: `MARKER` is uppercase only, so `decided.mjs "severance"` misses Case Making's ruling and two Bob rulings read "No RULING".** — owner M0.
-order: with the M0 instrument rows; M0-97, M0-99 and D-341, which it waited on, are done (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` §"WHAT COMPOSES THE INSTRUMENTS".
-depends-on: none.
-scope: the marker admits a title-case label arm; `**Settled by:**` stays unfiled. Extend `tools/decided.test.mjs`.
-accepts-when: the three missed rulings are found. NEGATIVE CONTROL: remove the label arm, and those rulings go unfiled by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
-### D-304 · queued — **`walkfloor.mjs`'s HEADER STATES HALF ITS LEXICAL-SCOPE BLIND SPOT: it names same-named locals in different blocks, and omits a `let` reassigned in a branch and a site reading GUARDED off a neighbour's `*Repro` key.** — owner M0 (walkfloor's owner).
-order: with the M0 instrument rows (SCHEDULER #17, 2026-09-23, LED-7 S17-4)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (an instrument states its limits), with BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *the missing statements belong in walkfloor.mjs's own HEADER; VERIFICATION.md gets no line (no budget).*
-depends-on: none.
-scope: add the two items to the header's CANNOT SEE list.
-accepts-when: the header names both. NEGATIVE CONTROL: a grep arm over the header fails by name if either is missing.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
