@@ -569,7 +569,7 @@ change to this interface: `civicos-ui` and the served pages match on these strin
 
 - **ID:** I4
 - **Owner:** `DIST`
-- **Version:** 2.1.0 (**2.1.0 2026-09-23, IC-212 ACCEPTED — MINOR, ADDITIVE: deploy metadata carries `limits.subrequests` with a settings read-back (D-54). Resolved by CONDUCT #17 at c17-batch3.** first written 2026-07-31; half-formalised by D-106's version
+- **Version:** 2.2.0 (**2.2.0 2026-09-24, IC-261 ACCEPTED — MINOR, ADDITIVE: install and update carry an operator-supplied INSTANCE_AI_TOKEN, never generated (DIST-9). Resolved by CONDUCT #20 at c20-batch15.** **2.1.0 2026-09-23, IC-212 ACCEPTED — MINOR, ADDITIVE: deploy metadata carries `limits.subrequests` with a settings read-back (D-54). Resolved by CONDUCT #17 at c17-batch3.** first written 2026-07-31; half-formalised by D-106's version
   authority rule; 1.1.0 2026-09-10, IC-70 (FL-10's integration) — ADDITIVE:
   `dist/bio-plane.bundle.json` lands BESIDE the artifact (sha256, byte length,
   exact recipe, per-input sha256s) and the FL-9 gate asserts the committed module

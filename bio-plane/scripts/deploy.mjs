@@ -100,6 +100,14 @@ if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
     : "cascade: INSTANCE_CLAUDE_TOKEN not in this environment — NOT sent. Any value already"
       + " on the instance is KEPT (keep_bindings: secret_text), so this deploy neither sets"
       + " nor clears the instance Claude account.");
+  /* DIST-9 (D-260's deploy half): the organisation `ai` credential rides the same way, and is never generated —
+     a member mints it on the instance (DS-3). */
+  const hasAi = typeof process.env.INSTANCE_AI_TOKEN === "string" && process.env.INSTANCE_AI_TOKEN.length > 0;
+  console.log(hasAi
+    ? "instance ai: INSTANCE_AI_TOKEN present in this environment — it will be SENT and will replace whatever"
+      + " the instance holds (value not printed; confirmed by the wake entry, not by this line)"
+    : "instance ai: INSTANCE_AI_TOKEN not in this environment — NOT sent. Any value already on the instance is"
+      + " KEPT (keep_bindings: secret_text); without one, every wake says NO_INSTANCE_AI_CREDENTIAL.");
 }
 
 const BATON_URL = "https://raw.githubusercontent.com/believeinoakland/bio/main/docs/development/kickoffs/BATON.md";
@@ -301,6 +309,7 @@ const meta = {
   bindings: deriveBindings(wranglerCfg, {
     slug, version,
     instanceClaudeToken: process.env.INSTANCE_CLAUDE_TOKEN || undefined,
+    instanceAiToken: process.env.INSTANCE_AI_TOKEN || undefined,
   }),
   keep_bindings: ["secret_text", "durable_object_namespace", "service"],
   /* D-54: the subrequest ceiling the config states with its reason, never the

@@ -2244,7 +2244,19 @@ function armD() {
     let depth = 0, i = open;
     for (; i < app.length; i++) { if (app[i] === "{") depth++; else if (app[i] === "}") { depth--; if (!depth) break; } }
     const bodyText = app.slice(open, i + 1);
-    const keys = [...bodyText.matchAll(/(?:^|[{,\s])([A-Z][A-Z0-9_]{2,})\s*:/g)].map(x => x[1]);
+    /* M0-144: the key harvest reads a QUOTED key too, on `surface-registry.test.mjs`'s
+       precedent — `(["']?)…\1` requires the SAME delimiter on both sides, so `"ABC':`
+       is not a key and a mismatched quote cannot smuggle one past. The old pattern saw
+       bare keys ONLY, which is a blind spot rather than a policy: `{ "PART_TOO_LARGE":
+       "…" }` is the same table in a spelling nobody had written yet, and a table
+       re-quoted by a formatter would have LOST keys here — silently turning real holes
+       into "no wording found" or dropping the table out of the walk altogether.
+       MEASURED on the real `app.html` (2026-09-24): 36 keys harvested before, 40 after;
+       the four gained are GLOSSARY's `ACFR`, `GPF`, `CAFR`, `SSHSIG` — glossary terms,
+       not codes, so `minted` stays 0 there and GLOSSARY does NOT enter the pairing. The
+       threshold below is what keeps it out: it is membership in the plane census, never
+       the spelling of the key. */
+    const keys = [...bodyText.matchAll(/(?:^|[{,\s])(["']?)([A-Z][A-Z0-9_]{2,})\1\s*:/g)].map(x => x[2]);
     const minted = keys.filter(k => census.union.has(k));
     if (minted.length >= 2) found.push({ name: m[1], keys: new Set(keys), minted: new Set(minted) });
   }
