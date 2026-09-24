@@ -90,6 +90,12 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    a8f6094a (`68 unit(s) of 391 selected · 33 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`): the one new unit
    and the one new reader (32 -> 33) is D-242's new suite `mintid-take.test.mjs`, which imports `tools/mintid.mjs` to
    drive `take` — the edge `mintid.test` and `exportnotice.test` already have; nothing new reaches through `coord.mjs`. */
+/* MOVED AGAIN 2026-09-24 by the D-176 worker (67 -> 68), from the figure this suite PRINTED on its branch
+   (`68 unit(s) of 391 selected · 32 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`); origin/main @ 3f4b8f8c prints
+   67 of 390. The one new unit, confirmed by name in `gates --explain` over a clone with MEASUREMENTS.md planted: D-176's
+   NEW suite `ui:queue-allclear-limit.test.mjs`, which reads `docs/development/CIVICOS_UI_STATE.md` and so is doc-facing
+   and selected as "doc-facing, and docs/development/MEASUREMENTS.md changed" — the same case as D-82's move above. Not
+   a reader of the ledger (32 on both trees) and not reach through `coord.mjs`. */
 const UNITS_CEILING = 68;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
