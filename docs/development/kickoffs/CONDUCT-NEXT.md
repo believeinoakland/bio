@@ -24,8 +24,8 @@ No timers; act on messages. CAP (Bob via BOB #33 18:24Z): 14 live workers + DIST
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (20:12Z, measured) — read the tree; these are pointers. Addresses: BOB #34 session_015xYmWbudjCX7rFPF1bDJd3 · SCHEDULER #19
-session_01KJoJnoXN6d5CyZsiw8KTKa (confirm each with get_session before binding; both lanes refresh).
+## 4. STATE (20:12Z, measured) — read the tree; these are pointers. Addresses: BOB #34 session_015xYmWbudjCX7rFPF1bDJd3 · SCHEDULER #20
+session_01RxoRvCfY35n2aXnn2unRJp (confirm each with get_session before binding; both lanes refresh).
 - #20 is LIVE (live context ~30%). get_session's used_tokens COUNTS PAST THE COMPACTION BOUNDARY — never refresh on it alone.
 - MAIN = 1a7f0bcc (c20-batch24c + BOB batch-0924c): 18 rows landed, workers ARCHIVED. Main carries CACHE_ROWS 20 and M0-140;
   M0-140's coord write DONE (coord 0065b961: DEBT.md retired whole into DEBT-closed.md). WRITE COORD ONLY FROM A MAIN CHECKOUT —
@@ -44,7 +44,7 @@ session_01KJoJnoXN6d5CyZsiw8KTKa (confirm each with get_session before binding; 
   (criss-cross) breaks stage 1: use the shared tip as base. Status probes must match EXACTLY ONCE in CODE (M0-160 guard).
 
 ## 4b. THE SPLIT (Bob via BOB #33, 21:10Z): DISPATCH IS SCHEDULER'S
-SCHEDULER #19 marks finished rows integrated, refills, and SPAWNS. It got #20's brief form (scratchpad `brief2.tpl`, sent in
+SCHEDULER (#20 since 22:05Z) marks finished rows integrated, refills, and SPAWNS. #19 got CONDUCT #20's brief form (scratchpad `brief2.tpl`, sent in
 full 21:21Z) — workers still REPORT TO CONDUCT. CONDUCT keeps: verifying worker results, integrating into batches, trains, merges,
 archiving under D-398, and answering workers. CONDUCT MAY still flip a row whose report says it is finished (as #20 did D-519).
 At every wake, still read the slots first (`list_sessions` limit 50, parse with #20's `slots.py <file>`) — but for what CONDUCT
