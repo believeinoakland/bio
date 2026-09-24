@@ -50,6 +50,55 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v114, 2026-09-24 session, thread UI, UI-94 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-94` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number is
+PROVISIONAL — UI-97 was running beside me and may have taken v114, so CONDUCT renumbers if it collided. SURFACE:
+**the queue FORWARDS A SELECTION of obligations to one member in ONE act.**
+
+**WHAT IT CLOSES.** D-126 (IC-235) gave `op=taskforward` a set form on the plane and left this surface's forward
+picker PER ITEM, and said so in four places rather than leaving it to be found: `NOTIFICATIONS.md`'s Incomplete
+section, `construct-status.json`'s `12.per-item` note, `member-respect.test.mjs`'s `queueEntryControlsHtml` row,
+and `queue-peritem.test.mjs`'s own "what this suite cannot see". A member holding ten obligations for one
+colleague had ten pickers and ten calls — the forty-dialogs shape (DEC-52) whichever button starts it. **All four
+statements are CORRECTED IN PLACE in this landing, each with why, and none exempted.**
+
+**WHAT LANDED**, all of it in `app.html`'s queue block and none of it on the plane (I3 consumer only):
+`queueSetOpFor` became **`queueSetOpsFor`**, answering the SET of published set acts an item can be handed to
+rather than one op — that singular return is the whole reason the bulk forward could not exist, since an
+OBLIGATION had to choose between `taskresolve` and `taskforward` and always answered the first. Beside it:
+`queueForwardOpen` / `queueForwardTo` / `queueForwardSet` / `queueForwardCancel`, `queueForwardCandidates`, one
+`QUEUE_FWD` state cell, the bar's branch and four wiring attributes of its own. The act is ONE `op=taskforward`
+carrying `items[]` with the chosen member as the shared key; every retained item keeps the record's own refusal
+(`NOT_YOURS` and who holds it now, `ALREADY_THEIRS`) through the path D-126 already built.
+
+**TWO DECISIONS THAT WERE MINE.**
+
+**(1) The picker withholds a member the WHOLE selection already belongs to, and nobody else.** The alternative was
+to withhold nobody and let the record refuse per item, which is the per-item weight's own posture — but naming
+someone who provably cannot receive ANY of it is *a control the record cannot honour*, which this area has a
+standing rule against (`v83`). The rule is keyed on the SELECTED ITEMS' assignees rather than on who is asking,
+which is the only spelling that stays right when the selection is not all one person's.
+
+**(2) The picker's state lives in `QUEUE_FWD`, not in the DOM.** The queue repaints whole, so a `<select>`'s value
+would not survive the repaint its own `onchange` triggers.
+
+**WHAT THE WORK FOUND, and both are about the fixture rather than the subject.** (a) A first draft of the
+spanning-selection arm claimed to drive a selection spanning assignees and **did not** — `queueFeed` carries a
+member her OWN tasks plus honestly `unassigned` ones, so every task selectable here is already hers, and
+`#routeTask` returns `unassigned` only when there is no active administrator, which `memberSet` will not produce
+without a section 4.7 vote (`ADMIN_REQUIRES_VOTE`). The arm is now driven as a UNIT with that stated at the site,
+rather than left as a green section measuring something else. (b) A retained item that DRIFTED away is **not**
+still selected — `queuePaint` drops from the selection every id the feed no longer carries — so the assertion
+says that, instead of the tidier sentence I first wrote.
+
+**NUMBERS.** `queue-peritem.test.mjs` 16 -> **36 pass / 0 fail**; `member-respect.test.mjs` 495/0 after its row's
+correction; the UI harness and the full battery green (the gate line is on the landing commit). The negative
+control is **7 arms, every one as declared**, recorded on the suite's `NEGATIVE CONTROL:` lines: UI-94's own
+`fwdloop` (the row's control — loop per item, and the one-act arms fail BY NAME), `fwdofferall` (the candidate
+rule), `fwdspelling` (OVER-STRICTNESS, green), plus D-126's `baseline`, `allornone`, `silentdrop`, `ncalls`
+re-run. **Two of D-126's three moved**, because the bulk forward goes through the same `queueApplySet`, and their
+declarations were amended FROM THE PRINTED FIGURES rather than the figures smoothed.
+
 v113, 2026-09-24 session, thread UI, UI-92 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-92` (base `origin/main` @ `68fecb8d`), in the commit that carries this entry; the version number
 was provisional; CONDUCT #20 renumbered it v112 -> v113 at c20-batch22 because UI-100 took v112 on main. SURFACE: **the PROJECT

@@ -14322,25 +14322,37 @@ let QUEUE_SET_ACTS = new Map();   // op -> the plane's published set act (weight
 let QUEUE_SEL = new Set();        // ids of items the member has selected
 let QUEUE_RETAINED = new Map();   // id -> { why, summary } from the last set act's retained outcomes
 let QUEUE_SET_ERR = "";           // a refusal of the SET itself (it had no items to judge)
+/* UI-94: the BULK FORWARD's picker, held in state rather than in the DOM, because the queue repaints
+   whole and a `<select>`'s value would not survive it. `null` is "not open"; `to` is the member the
+   forward would name, and it is read back out of here by the act, never off the element. */
+let QUEUE_FWD = null;             // null, or { members:[…the roster as op=memberlist gave it…], to }
 /* Read off the act source boot already loaded (`loadActSource`, one `op=affordances` read for the whole
    surface), never a second call — and never awaited ahead of the feeds, so the queue is not held back by it. */
 function queueSetActsFrom(src){
   const acts = (src && Array.isArray(src.setActs)) ? src.setActs : [];
   QUEUE_SET_ACTS = new Map(acts.filter(a => a && a.weight === "per-item" && a.id).map(a => [a.id, a]));
 }
-/* WHICH op a selected item's set act is, from the item's own class and the record's own disposition
-   publication. A finding keyed by (project, finding) is NOT selectable: its act needs the member to name
-   the project it is acting for, one item at a time, and a set would have to choose it for them. */
-function queueSetOpFor(it){
-  if(!it) return null;
-  if(it.class === "OBLIGATION") return canContribute() && QUEUE_SET_ACTS.has("taskresolve") ? "taskresolve" : null;
+/* WHICH set acts a selected item can be handed to, from the item's own class and the record's own
+   disposition publication. A finding keyed by (project, finding) is NOT selectable: its act needs the
+   member to name the project it is acting for, one item at a time, and a set would have to choose it
+   for them.
+
+   UI-94 WIDENED THIS FROM ONE OP TO THE SET OF THEM, and that is the whole shape of the change: an
+   OBLIGATION takes BOTH of the acts the plane publishes over it — resolve the selection, or forward the
+   selection to one member — and a function that could answer only one of them is why the queue had no
+   bulk forward. Each op is offered only where `set_acts` carries it, so a plane that cannot take a set
+   is still never handed one. */
+function queueSetOpsFor(it){
+  if(!it) return [];
+  if(it.class === "OBLIGATION")
+    return canContribute() ? ["taskresolve", "taskforward"].filter(op => QUEUE_SET_ACTS.has(op)) : [];
   if(it.class === "FINDING"){
     const d = it.disposition || null;
-    if(d && d.available === true && d.scope === "project") return null;
-    if(!notifDispositionKeyed(it) || !queueFindingKey(it) || !canProposalAct()) return null;
-    return QUEUE_SET_ACTS.has("proposedispose") ? "proposedispose" : null;
+    if(d && d.available === true && d.scope === "project") return [];
+    if(!notifDispositionKeyed(it) || !queueFindingKey(it) || !canProposalAct()) return [];
+    return QUEUE_SET_ACTS.has("proposedispose") ? ["proposedispose"] : [];
   }
-  return null;
+  return [];
 }
 function queueSelectionToggle(id, on){
   id = String(id);
@@ -14348,11 +14360,11 @@ function queueSelectionToggle(id, on){
   if(on) QUEUE_SEL.add(id); else QUEUE_SEL.delete(id);
   queuePaint();
 }
-function queueSelClear(){ QUEUE_SEL.clear(); QUEUE_SET_ERR = ""; queuePaint(); }
+function queueSelClear(){ QUEUE_SEL.clear(); QUEUE_SET_ERR = ""; QUEUE_FWD = null; queuePaint(); }
 function queueRetainedClear(id){ QUEUE_RETAINED.delete(String(id)); queuePaint(); }
 /* The selected ids a set op would take, in the order the member sees them. */
 function queueSelFor(op){
-  return [...QUEUE_SEL].filter(id => { const it = QUEUE_ITEMS.get(id); return it && queueSetOpFor(it) === op; });
+  return [...QUEUE_SEL].filter(id => { const it = QUEUE_ITEMS.get(id); return it && queueSetOpsFor(it).includes(op); });
 }
 /* ONE call for the whole selection. `shared` is what every item shares (a disposition, a reason); each
    item carries only its own identity. The actor and the decider are the plane's stamps and are never sent. */
@@ -14393,7 +14405,7 @@ async function queueApplySet(op, shared){
 }
 /* The per-item tick, drawn only where a published set act can take this item. */
 function queueSelTickHtml(it){
-  if(!queueSetOpFor(it)) return "";
+  if(!queueSetOpsFor(it).length) return "";
   const id = String(it.id);
   /* The tick FEEDS THE SET the act sends (member-respect ARM 1d's item selector): its value is the
      item's membership of `items[]`, nothing else. */
@@ -14416,14 +14428,84 @@ function queueRetainedGoneHtml(){
     ${gone.map(([id, r]) => `<div class="q-item" data-id="${esc(id)}"><div class="q-summary">${esc(r.summary||"")}</div>${queueRetainedHtml(id)}</div>`).join("")}
   </section>`;
 }
+/* ---- UI-94: THE BULK FORWARD (NOTIFICATIONS.md §Applying a handler to a selection) ----
+   D-126 gave `op=taskforward` a set form on the plane and left the surface's forward picker PER ITEM, so a
+   member holding ten obligations for one colleague had ten pickers and ten calls. That client-side loop is
+   the forty-dialogs shape (DEC-52) whichever button starts it, and the plane already takes the set. So the
+   selection names ONE member ONCE and goes as ONE `op=taskforward` carrying `items[]` under the `per-item`
+   weight: each obligation forwarded, or kept in the list with that act's own refusal — ALREADY_THEIRS,
+   NOT_YOURS and who holds it now — exactly as `taskresolve` already is. The per-item picker is untouched.
+
+   The forward is still a HUMAN judgement the plane fences (`MACHINE_CANNOT_FORWARD`), and this changes
+   nothing about that: the member chooses the person, and the actor is the plane's stamp, never sent. */
+function queueFwdMemberId(m){ return (m && (m.member_id || m.member || m.id || m.handle)) || null; }
+/* Who a bulk forward may name. A forward of an item the target ALREADY HOLDS is refused by the record
+   (ALREADY_THEIRS), so a member the WHOLE selection already belongs to is left out — naming them could
+   move nothing at all, and a control the record cannot honour is worse than none. Where the selection
+   SPANS assignees they are offered, and the record refuses the items that are already theirs in its own
+   words while the rest go through; that is what the per-item weight is for, and the bar says so. */
+function queueForwardCandidates(){
+  const ids = queueSelFor("taskforward");
+  const held = ids.map(id => (QUEUE_ITEMS.get(id) || {}).assignee);
+  return ((QUEUE_FWD && QUEUE_FWD.members) || []).filter(m => {
+    const mid = queueFwdMemberId(m);
+    if(!mid) return false;
+    if(m.status && m.status !== "active") return false;
+    return !(held.length && held.every(a => a === mid));
+  });
+}
+/* The picker reads the roster through op=memberlist, the same op the per-item picker reads. If this
+   credential cannot read it, the bar says so rather than offering a control that cannot work. */
+async function queueForwardOpen(){
+  if(QUEUE_BUSY) return;
+  QUEUE_SET_ERR = "";
+  try{
+    const r = await recR("memberlist");
+    QUEUE_FWD = { members: (r && (r.members || r)) || [], to: "" };
+  }catch(e){
+    QUEUE_FWD = null;
+    QUEUE_SET_ERR = "This account cannot read the member roster, so it cannot choose who to forward to.";
+  }
+  queuePaint();
+}
+function queueForwardTo(to){ if(QUEUE_FWD){ QUEUE_FWD.to = String(to || ""); queuePaint(); } }
+function queueForwardCancel(){ QUEUE_FWD = null; queuePaint(); }
+/* ONE call for the whole selection, with the chosen member as the act's SHARED key. */
+async function queueForwardSet(){
+  const to = QUEUE_FWD && QUEUE_FWD.to;
+  if(!to) return;
+  await queueApplySet("taskforward", { to });
+  QUEUE_FWD = null;
+  queuePaint();
+}
+
 /* The selection bar: what is selected, and the published set acts over it. */
 function queueSelBarHtml(){
   const ids = [...QUEUE_SEL].filter(id => QUEUE_ITEMS.has(id));
   if(!ids.length && !QUEUE_SET_ERR) return "";
   const tasks = queueSelFor("taskresolve"), finds = queueSelFor("proposedispose");
+  const fwds = queueSelFor("taskforward");
   const res = QUEUE_SET_ACTS.get("taskresolve"), disp = QUEUE_SET_ACTS.get("proposedispose");
+  const fwd = QUEUE_SET_ACTS.get("taskforward");
   const bits = [];
   if(tasks.length && res) bits.push(`<button class="btn" data-qset="taskresolve">${esc(res.label)} (${tasks.length})</button>`);
+  /* UI-94: the bulk forward. Closed, it is one button carrying the PLANE's published label; open, it is
+     the roster and ONE act over the whole selection. Its attributes are its own, for the reason the
+     per-kind mute's are: a selection-wide control must never be picked up by the per-item forward. */
+  if(fwds.length && fwd){
+    if(!QUEUE_FWD) bits.push(`<button class="btn ghost" data-qsetfwdopen>${esc(fwd.label)} (${fwds.length})</button>`);
+    else {
+      const cands = queueForwardCandidates();
+      const opts = cands.map(m => { const mid = queueFwdMemberId(m); const label = m.handle || m.cover || mid;
+        return `<option value="${esc(mid)}"${QUEUE_FWD.to === mid ? " selected" : ""}>${esc(label)}</option>`; }).join("");
+      bits.push(opts
+        ? `<span class="q-setfwd"><select data-qsetfwdpick><option value="">Choose a member&hellip;</option>${opts}</select> `
+          + `<button class="btn" data-qsetfwdgo>${esc(fwd.label)} (${fwds.length})</button> `
+          + `<button class="tbtn" data-qsetfwdcancel>Cancel</button></span>`
+        : `<span class="q-setfwd">There is no other active member to forward these to. `
+          + `<button class="tbtn" data-qsetfwdcancel>Cancel</button></span>`);
+    }
+  }
   if(finds.length && disp) bits.push(`<span class="q-setdisp">${esc(disp.label)} (${finds.length}): `
     + `<input class="q-setreason" data-qsetreason placeholder="Your reason, in your own words"> `
     + `<button class="btn ghost" data-qsetdisp="deferred">Defer</button> <button class="btn ghost" data-qsetdisp="dismissed">Dismiss</button></span>`);
@@ -14445,6 +14527,7 @@ async function renderQueue(){
   /* D-126: whether the plane takes a selection. From the loaded act source; if boot has not loaded it
      yet, it loads beside the feeds and the screen repaints when it lands. */
   queueSetActsFrom(ACT_SOURCE);
+  QUEUE_FWD = null;   /* UI-94: the bulk picker is transient — a fresh paint of the screen closes it. */
   if(!ACT_SOURCE.loaded) loadActSource().then(src => { queueSetActsFrom(src); queuePaint(); });
   await queueRun(QUEUE_FEEDS.map(f=>f.id));
 }
@@ -15213,6 +15296,13 @@ function queueWire(){
     const r = document.querySelector("#q [data-qsetreason]");
     queueApplySet("proposedispose", { to: b.dataset.qsetdisp, reason: (r && r.value) || "" });
   });
+  /* UI-94: the BULK forward, on four attributes of its own — `data-fwd` above is the PER-ITEM picker and
+     the two must never select each other. The chosen member is held in state (`QUEUE_FWD.to`), so the
+     repaint the pick triggers cannot lose it. */
+  document.querySelectorAll("#q [data-qsetfwdopen]").forEach(b=>b.onclick=()=>queueForwardOpen());
+  document.querySelectorAll("#q [data-qsetfwdpick]").forEach(sel=>sel.onchange=()=>queueForwardTo(sel.value));
+  document.querySelectorAll("#q [data-qsetfwdgo]").forEach(b=>b.onclick=()=>queueForwardSet());
+  document.querySelectorAll("#q [data-qsetfwdcancel]").forEach(b=>b.onclick=()=>queueForwardCancel());
   /* UI-86: the ITEM form, on its own attribute for the same reason — a per-item
      button must never be read as a case or a kind. */
   document.querySelectorAll("#q [data-muteitem]").forEach(b=>b.onclick=()=>queueMuteItem(b.dataset.muteitem));
