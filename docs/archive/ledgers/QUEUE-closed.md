@@ -4164,3 +4164,44 @@ depends-on: D-278 (on `land/conduct/c17-batch3`).
 scope: the refusal is `requiredArgument("purge", "confirm", "<store name>", …)`; the sweep's two blind spots (spread-forwarded codes, refusals built without `json()`) are measured and each listed or coded.
 accepts-when: `bio-plane/test/refusal-wire.test.mjs` gains an arm: `op=purge` without `confirm` answers the coded refusal with its canned translation, through the op. NEGATIVE CONTROL: restore the bare sentence, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-278's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs REC`).
+
+### D-470 · done — on main at d536f834 (train-20260924T044500Z-4275) — SCHEDULER #18
+order: after D-469, at the head: a signed record that claims more precision than it holds (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
+milestone: M10
+interface: I3 — the stamp's version moves; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 (the case document's gate stamp), following REC-14's version-bump precedent.
+depends-on: none.
+scope: bump `CATALOG_VERSION` MINOR now; add a suite pinning the version to the catalog's check census, so an added check fails until the version moves.
+accepts-when: the stamp reads the new version, and adding one check without a bump fails the pin by name. NEGATIVE CONTROL: add a check without moving the version, and the census-pin arm fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+owed-at-integration: BOB #32 (2026-09-24 ~04:25Z) STATED the rule; fold it VERBATIM into BIO_Publication_v0_1.md §3 in place of an Incomplete note (the words are BOB's, the fold licensed to CONDUCT): "**THE GATE STAMP'S CATALOGUE VERSION MOVES WHENEVER THE CATALOGUE DOES** (BOB #32, 2026-09-24, D-470). A case document's gate stamp names the check-catalogue version it was judged against, so one version names exactly one catalogue: any added, removed or changed check moves the version in the same landing. The per-version census pin enforces it and fails by name. A stamp whose version is ambiguous proves nothing about what judged it." Also owed: mint D-470's IC, I3 MINOR (gateVersion string 1.20.0 → 1.21.0). Actor: whoever integrates land/worker/D-470 @ 8344367c. Recorded by CONDUCT #20.
+
+### D-487 · done — on main at d536f834 (train-20260924T044500Z-4275) — SCHEDULER #18
+order: after M0-141, with the rows that cut gate time: a suite that fails correct work by the clock costs a full-gate round (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:42Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a printed failure is a failure; a suite's verdict must not depend on the wall clock).
+depends-on: none.
+scope: the suite waits past a bucket edge before its run, or the window reads an injectable clock under test; the limiter itself is unchanged. Whether it should be a sliding window is a separate design question, not this row.
+accepts-when: the suite passes with its run started seconds before a bucket edge. NEGATIVE CONTROL: remove the edge guard, start the run just before a rollover, and the twelve-knock arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### UI-84 · done — on main at d536f834 (train-20260924T044500Z-4275) — SCHEDULER #18
+order: after REC-184, with the D-278 follow-ons: a suite that pins what a member reads against a mock narrower than the wire can pass while the member reads something else, a correction to just-landed work (SCHEDULER #16, 2026-09-23; D-278's worker via CONDUCT #17)
+milestone: M8
+interface: none (test mocks); the integrator classifies.
+design: DEC-49 (`node tools/decided.mjs "DEC-49"`) as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it: every condition has a named code and a canned translation.
+depends-on: D-278 (on `land/conduct/c17-batch3`).
+scope: every mock refusal for `verify` and `unknown op` carries `translation`, imported from `bio-checks.mjs` (never retyped); DEC-49's SUBJECT arm in `preauth-vocabulary.test.mjs` re-pinned with the movement stated (old and new figures and why).
+accepts-when: `civicos-ui/test/preauth-vocabulary.test.mjs` and `refusal-translation-surface.test.mjs` green with the imported translations; the UI harness green. NEGATIVE CONTROL: drop `translation` from one mock, and the SUBJECT arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (D-278's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs UI`).
+
+### D-479 · done — on main at d536f834 (train-20260924T044500Z-4275) — SCHEDULER #18
+order: after D-476, with the corrections to just-landed work: an unbounded read on a member-facing list (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
+milestone: M8
+interface: I3 additive — `limit` and `truncated` on the directory; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.14, the directory), with D-36's bound rule.
+depends-on: REC-149 (`integrated`, riding c19-batch9).
+scope: page the directory at LIMIT cap+1 with `limit` and `truncated`; the cap is a named constant declared below the method. Add a `bounds.test.mjs` drive that bites.
+accepts-when: a directory over the cap answers `truncated: true` with exactly the cap. NEGATIVE CONTROL: drop the LIMIT, and the bounds drive fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).

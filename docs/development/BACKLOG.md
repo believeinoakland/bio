@@ -33,26 +33,6 @@ scope: an acknowledgement records and is matched by the case identity it was giv
 accepts-when: two cases with identical statements, one acknowledged: the other's completeness block lists nobody; and two cases' unsigned edition-1 documents with identical statements: the draft door of one finds none of the other's. NEGATIVE CONTROL: match by statement hash alone, and the "the twin case lists nobody" arm fails by name; match the draft door by statement text across the project, and the draft-door arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (BOB #32's G3; `node tools/mintid.mjs REC`).
 
-### D-498 · queued — **CONSTRUCT CLAIM `1.discoverable` SAYS THE DIRECTORY "LISTS A MEMBER'S DISCOVERABLE PROJECTS", but since D-479 it lists AT MOST `PROJECT_DIRECTORY_LIMIT` and says `truncated`.** Found by D-479's worker. — owner RECORD.
-order: at the backlog head: the record claiming more than the plane does, one line (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
-milestone: M8
-interface: none.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.14).
-depends-on: D-479 (its train).
-scope: amend the claim to "at most the cap, stated as truncated"; add a probe pinning `PROJECT_DIRECTORY_LIMIT`.
-accepts-when: `node tools/status.mjs discoverable` reads the capped claim and its probe passes. NEGATIVE CONTROL: rename the constant and the probe fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
-### D-496 · queued — **THE KNOCK LIMITER DOES NOT KEEP ITS PUBLISHED BOUND: a FIXED 10-minute bucket (`index.mjs` `win = Math.floor(Date.now() / KNOCK.windowMs)`) lets a source bursting across a bucket edge knock 24 times where the bound says 12, and the instance-wide 300 (the cap on hostile evidence-storage writes) doubles the same way.** BOB #32 RULED (2026-09-24 04:28Z, cite until folded): *a published limit is a BOUND; the record must not claim a limit it does not keep.* — owner RECORD (the plane estate).
-order: at the backlog head (M0-146 is cached): a record claiming a bound it does not hold (CLAUDE.md §2), small enough for tonight (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:31Z)
-milestone: M2
-interface: I3 behaviour — a refusal where an answer stood at the edge; MAJOR by IC-25's test; the integrator classifies.
-design: `docs/architecture/BIO_System_Design.md` §3 construct 14 (the inbox), with BOB #32's ruling of 2026-09-24 04:28Z (cite until folded).
-depends-on: D-487 (its pinned-clock Miniflare instance; branch from `land/worker/D-487` until it lands).
-scope: a two-bucket weighted sliding window in `Store.knock` (est = prev × (1 − elapsed/W) + cur; refuse at est ≥ limit), `index.mjs` passing the previous bucket and elapsed fraction; the same for the instance-wide 300; the prune keeps win and win−1; no schema change. If the estimate is approximate, the published text says so.
-accepts-when: a burst straddling the edge is refused at the stated limit, per source and instance-wide, in `doorbell.test.mjs`. NEGATIVE CONTROL: restore the fixed bucket and the straddling burst is re-admitted, failing by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
 ### REC-211 · queued — **A DISPOSITION BINDS WHATEVER DEFINITION IS CURRENT AT THE ACT, NOT THE ONE THE MEMBER SAW: REC-184 stamps the version at the act, so a definition revised in between is disposed of unseen.** BOB #32's DEFINITION_MOVED ruling owed at REC-184's integration and not paid there (CONDUCT #20 04:56Z). — owner RECORD.
 order: after D-496 at the backlog head: a correction to just-landed work, where an authored act binds what was not authored (SCHEDULER #18, 2026-09-24)
 milestone: M4
@@ -71,16 +51,6 @@ design: `docs/development/OBSERVATION-LOG-DESIGN.md` §6 "The readers", with BOB
 depends-on: D-486.
 scope: compare at ONE precision (milliseconds) in both readers; fold the rule into §6; also relabel `observation-log.test.mjs`'s second section `I` (absorbs M0-151, withdrawn).
 accepts-when: a same-second pair classifies identically on every run, pinned by an arm; §6 states the rule. NEGATIVE CONTROL: restore the mixed precision and the same-second arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
-### D-497 · queued — **THE PROJECT DIRECTORY'S CANDIDATE SCAN IS STILL LINEAR IN THE GROUP'S PROJECTS: `#sight` is a JS predicate, so D-479's page bounds the ANSWER but not the rows read.** Found by D-479's worker. — owner RECORD.
-order: after D-495: a bound on work, not on disclosure; the answer is already capped (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
-milestone: M8
-interface: none (I5 additive if an index table is added; the integrator classifies).
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (items 7.9, 7.14): one sight rule, never a second copy.
-depends-on: D-479 (its train).
-scope: give sight a row source it reads (an owner-set-derived index) so the candidate query bounds in SQL, with the sight rule stated once.
-accepts-when: `bounds.test.mjs` shows the candidate read bounded. NEGATIVE CONTROL: restore the JS filter over the unbounded scan and the bounds arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### M0-142 · queued — **`meaning-bounds.test.mjs`'s BOUND_KEY HAS NO `max`: `/^(?:limit|cap|bound|page_size|[a-z_]*_limit)$/` (line 382), so a read bounded by a `max`/`*_max` key (bounded actionquotes) is counted BARE and correct work reads unbounded.** Found by c18-batch7fix's worker; verified at 548eb2c5 by CONDUCT #20 and SCHEDULER #18. — owner M0.
@@ -263,26 +233,6 @@ depends-on: REC-184.
 scope: show a revision's basis beside its version, and on a disposition the version it judged, `not recorded` stated as such.
 accepts-when: both render against a real-plane suite. NEGATIVE CONTROL: hide `not recorded` and its arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs UI`).
-
-### UI-100 · queued — **UI MOCKS OF THE PLANE'S REFUSALS ARE NARROWER THAN THE WIRE, ACROSS TWO FAMILIES: seven `unknown op` mocks carry no `translation` (act-proposal ×2, queue ×2, auth-surface, case-frozen-pair, document-structure; four compose "unknown op " + op, a sentence the plane never sent), and `requiredArgument`'s eight plane sites all carry C-61.1's translation while `publishedcase.test.mjs` mocks publishedbytes with `error` alone.** UI-84's class, found by its worker. — owner UI.
-order: after UI-99, with the UI corrections to landed wire shapes (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:26Z)
-milestone: M4
-interface: none (test mocks).
-design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, with UI-84's derivation as the precedent.
-depends-on: UI-84 (its train).
-scope: build every such mock from `DISPATCH_CHECKS.UNKNOWN_OP` / the requiredArgument catalogue as UI-84 does, correcting the composed forms to the wire's shape; drive each surface and state whether it RENDERS the refusal or only gap-detects it; also correct `planeSaid`'s stale comment in `app.html` (it cites two sentences D-278 replaced).
-accepts-when: no mock in the two families types a refusal by hand. NEGATIVE CONTROL: retype one mock's `error` without `translation` and the derivation arm names it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs UI`).
-
-### REC-195 · queued — **THE GOVERNING-LAWS LIST HAS NO MACHINE PROPOSAL: D-149 built the member's act and the machine refusal; the design's labelled machine proposal (*if built*) is not.** — owner RECORD.
-order: after UI-90, a feature below the corrections: the list is complete without it (SCHEDULER #17, 2026-09-23; D-149's worker via CONDUCT #18)
-milestone: M10
-interface: I3 additive — a proposal read labelled machine work; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*): *a machine PROPOSAL, if built, is labelled machine work*.
-depends-on: D-149 (`integrated` on c17-batch7).
-scope: a proposal of citations and levels for an action, stored apart from the member's list and labelled machine work; it never sets the list, which only the member's act does.
-accepts-when: a proposal is read labelled machine work, and the action's list is unchanged until the member acts. NEGATIVE CONTROL: let the proposal write the list, and the "the list is the member's" arm fails by name. New suite `bio-plane/test/rec195-laws-proposal.test.mjs`.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
 ### UI-92 · queued — **THE WORKSPACE CANNOT SHOW A PROJECT'S DRAFTS.** REC-198's list, rendered. — owner UI.
 order: directly after REC-198 (SCHEDULER #17, 2026-09-23)
@@ -1285,3 +1235,53 @@ depends-on: none — D-293 is on `main`.
 accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-104» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### M0-105 · queued — **`docs/development/VERIFICATION.md` STANDS AT 24,572 OF ITS 24,576 B, SO A RULING ABOUT VERIFICATION CANNOT BE FOLDED INTO IT** … (whole text: the cut archive)
+order: directly after M0-104, whose line it folds, behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; SCHEDULER #11 on BOB #25's word); RETURNED here by SCHEDULER #14 after M0-107 folded its ruling within budget (`VERIFICATION.md` 24,319 B at `14f1b75e`)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §1's reading budget and … (whole text: the cut archive)
+depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds (BOB #25, 2026-09-22).
+accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar … (whole text: the cut archive)
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-105» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### M0-84 · queued — **NOTHING NOTICES WHEN A RETIRED INSTANCE OF A LANE LANDS AFTER ITS SUCCESSOR.** BOB #17 landed `aa5cc98d` (00:48) after BOB #18 … (whole text: the cut archive)
+order: behind the product rows, first of the session-hygiene instruments (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: a detector neither cuts gate time nor unblocks product; SCHEDULER #12); after M0-81, which PREVENTS what this DETECTS (BOB #19, 2026-09-21): pure git, about a second (SCHEDULER #4, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), enacting `kickoffs/BOB.md` rules 4 and 12.
+depends-on: none.
+accepts-when: a fixture log with an older instance landing after a newer one WARNs naming both; the same log whose late commit touches only the `-NEXT` file does not. How a liar passes it … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-84» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### M0-85 · blocked — **THE HEARTBEAT MEASURES A STALE TREE.** `conduct-heartbeat` STEP 3 greps `QUEUE.md` in the MAIN CHECKOUT's working tree and … (whole text: the cut archive)
+order: behind the product rows with the session-hygiene instruments (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*; SCHEDULER #12), M0-81's class (BOB #19, 2026-09-21); `blocked` because no worker can take it — the definition is Bob's to approve and is never changed from here (SCHEDULER #4, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the heartbeat's own STEP 3 warning … (whole text: the cut archive)
+depends-on: Bob's approval of the definition edit (BOB #19 took it to him, 2026-09-21).
+accepts-when: a heartbeat run's `queued`/`running` counts equal those of `git show origin/main:docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
+added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### D-412 · queued — **THE ESTATE AUDITS EXPOSURE AND NOBODY AUDITS RESIDUE: a worktree that is registered, clean, merged and owned by no live session** … (whole text: the cut archive)
+order: with the session-hygiene instruments, after M0-84: disk is CONDUCT's binding constraint (M-80 and M-81 each measure ~286 MiB per retired tree) and this names the residue nothing reclaims; below M0-81 and M0-84, which prevent and detect a lane fault rather than a cost (SCHEDULER #5, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-398's three conditions asked of a TREE rather than a session.
+depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the repo where a suite drives it, the ACT in the harness.
+accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own … (whole text: the cut archive)
+order: behind the product rows, first of the reading-budget rows (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: an over-budget kickoff costs every RECORD spawn context, not gate time, and blocks no product; SCHEDULER #12); not a defect in the product, cheap and mechanical (SCHEDULER #2, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` with CLAUDE.md §1's reading budget — *a file is either READ WHOLE … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

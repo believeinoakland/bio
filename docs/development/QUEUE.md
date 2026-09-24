@@ -211,17 +211,6 @@ scope: one predicate excluding run rows whose context is a hidden project from e
 accepts-when: a run over a hidden project leaves each reader's answer to an outsider unchanged. NEGATIVE CONTROL: drop the predicate from one reader and its arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-470 · integrated — finished; integrated on land/conduct/c20-batch12 @ d6bcab616 (IC-259 I3 MINOR 81.1.0; BOB's rule folded as Publication §3 rule 17 — owed acts PAID), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~04:40Z
-order: after D-469, at the head: a signed record that claims more precision than it holds (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
-milestone: M10
-interface: I3 — the stamp's version moves; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 (the case document's gate stamp), following REC-14's version-bump precedent.
-depends-on: none.
-scope: bump `CATALOG_VERSION` MINOR now; add a suite pinning the version to the catalog's check census, so an added check fails until the version moves.
-accepts-when: the stamp reads the new version, and adding one check without a bump fails the pin by name. NEGATIVE CONTROL: add a check without moving the version, and the census-pin arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-owed-at-integration: BOB #32 (2026-09-24 ~04:25Z) STATED the rule; fold it VERBATIM into BIO_Publication_v0_1.md §3 in place of an Incomplete note (the words are BOB's, the fold licensed to CONDUCT): "**THE GATE STAMP'S CATALOGUE VERSION MOVES WHENEVER THE CATALOGUE DOES** (BOB #32, 2026-09-24, D-470). A case document's gate stamp names the check-catalogue version it was judged against, so one version names exactly one catalogue: any added, removed or changed check moves the version in the same landing. The per-version census pin enforces it and fails by name. A stamp whose version is ambiguous proves nothing about what judged it." Also owed: mint D-470's IC, I3 MINOR (gateVersion string 1.20.0 → 1.21.0). Actor: whoever integrates land/worker/D-470 @ 8344367c. Recorded by CONDUCT #20.
-
 ### M0-141 · integrated — finished; integrated on land/conduct/c20-integ1 @ ad7afc3a, waiting for its train — flipped by CONDUCT #20 2026-09-24 ~03:43Z
 order: after D-482, with the rows that cut gate time (product before process, Bob 2026-09-22: a process row that cuts gate time may sit near the head; SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:31Z)
 milestone: M0
@@ -231,36 +220,6 @@ depends-on: none.
 scope: one line in `docs/development/kickoffs/WORKER.md` "Before you finish": edited a governed design document (`docs/architecture/*`, or `docs/development/*` with front matter)? Move its Status `as of` to today and run `node tools/corpuscheck.mjs` to 0 fail BEFORE the gate.
 accepts-when: the line is on `main`; the next worker's first gate is not RED on corpuscheck. NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### D-487 · integrated — finished; integrated on land/conduct/c20-batch12 @ aa8988644 (M-128), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~04:40Z
-order: after M0-141, with the rows that cut gate time: a suite that fails correct work by the clock costs a full-gate round (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:42Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a printed failure is a failure; a suite's verdict must not depend on the wall clock).
-depends-on: none.
-scope: the suite waits past a bucket edge before its run, or the window reads an injectable clock under test; the limiter itself is unchanged. Whether it should be a sliding window is a separate design question, not this row.
-accepts-when: the suite passes with its run started seconds before a bucket edge. NEGATIVE CONTROL: remove the edge guard, start the run just before a rollover, and the twelve-knock arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
-### UI-84 · integrated — finished; integrated on land/conduct/c20-batch12 @ 246e38aab (M-130), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~04:40Z
-order: after REC-184, with the D-278 follow-ons: a suite that pins what a member reads against a mock narrower than the wire can pass while the member reads something else, a correction to just-landed work (SCHEDULER #16, 2026-09-23; D-278's worker via CONDUCT #17)
-milestone: M8
-interface: none (test mocks); the integrator classifies.
-design: DEC-49 (`node tools/decided.mjs "DEC-49"`) as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it: every condition has a named code and a canned translation.
-depends-on: D-278 (on `land/conduct/c17-batch3`).
-scope: every mock refusal for `verify` and `unknown op` carries `translation`, imported from `bio-checks.mjs` (never retyped); DEC-49's SUBJECT arm in `preauth-vocabulary.test.mjs` re-pinned with the movement stated (old and new figures and why).
-accepts-when: `civicos-ui/test/preauth-vocabulary.test.mjs` and `refusal-translation-surface.test.mjs` green with the imported translations; the UI harness green. NEGATIVE CONTROL: drop `translation` from one mock, and the SUBJECT arm fails by name.
-added: 2026-09-23 · SCHEDULER #16 (D-278's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs UI`).
-
-### D-479 · integrated — finished; integrated on land/conduct/c20-batch12 @ 7127d3adc (IC-260 I3 MINOR 81.2.0), waiting for its train — flipped by CONDUCT #20 2026-09-24 ~04:50Z
-order: after D-476, with the corrections to just-landed work: an unbounded read on a member-facing list (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
-milestone: M8
-interface: I3 additive — `limit` and `truncated` on the directory; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.14, the directory), with D-36's bound rule.
-depends-on: REC-149 (`integrated`, riding c19-batch9).
-scope: page the directory at LIMIT cap+1 with `limit` and `truncated`; the cap is a named constant declared below the method. Add a `bounds.test.mjs` drive that bites.
-accepts-when: a directory over the cap answers `truncated: true` with exactly the cap. NEGATIVE CONTROL: drop the LIMIT, and the bounds drive fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ### D-481 · running — SPAWNED 2026-09-24 ~03:45Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-481 (CONDUCT #20), base origin/main; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-481 and that session; never conclude queued from the absence alone.
 order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-479, with the corrections: a reading that says far less than the document holds, across 4% of the corpus (SCHEDULER #17, 2026-09-24; via CONDUCT #19; renumbered from a colliding D-480)
@@ -403,6 +362,56 @@ depends-on: D-149 (`integrated` on c17-batch7; verify the op on `main` first).
 scope: the action page lists the governing laws, each with the level the plane publishes (`law_levels`), offers the member's act to set them with no default level, and shows the plane's undetermined sentence for an empty list; the act is struck from `ACTS_AWAITING_SURFACE`. Extend `civicos-ui/test/surface-registry.test.mjs` and the action page's suite.
 accepts-when: an empty list reads the plane's undetermined sentence, and a member's list round-trips with its levels. NEGATIVE CONTROL: preselect a level, and the "no default level" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
+
+### D-498 · queued — **CONSTRUCT CLAIM `1.discoverable` SAYS THE DIRECTORY "LISTS A MEMBER'S DISCOVERABLE PROJECTS", but since D-479 it lists AT MOST `PROJECT_DIRECTORY_LIMIT` and says `truncated`.** Found by D-479's worker. — owner RECORD.
+order: at the backlog head: the record claiming more than the plane does, one line (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
+milestone: M8
+interface: none.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.14).
+depends-on: D-479 (its train).
+scope: amend the claim to "at most the cap, stated as truncated"; add a probe pinning `PROJECT_DIRECTORY_LIMIT`.
+accepts-when: `node tools/status.mjs discoverable` reads the capped claim and its probe passes. NEGATIVE CONTROL: rename the constant and the probe fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-496 · queued — **THE KNOCK LIMITER DOES NOT KEEP ITS PUBLISHED BOUND: a FIXED 10-minute bucket (`index.mjs` `win = Math.floor(Date.now() / KNOCK.windowMs)`) lets a source bursting across a bucket edge knock 24 times where the bound says 12, and the instance-wide 300 (the cap on hostile evidence-storage writes) doubles the same way.** BOB #32 RULED (2026-09-24 04:28Z, cite until folded): *a published limit is a BOUND; the record must not claim a limit it does not keep.* — owner RECORD (the plane estate).
+order: at the backlog head (M0-146 is cached): a record claiming a bound it does not hold (CLAUDE.md §2), small enough for tonight (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:31Z)
+milestone: M2
+interface: I3 behaviour — a refusal where an answer stood at the edge; MAJOR by IC-25's test; the integrator classifies.
+design: `docs/architecture/BIO_System_Design.md` §3 construct 14 (the inbox), with BOB #32's ruling of 2026-09-24 04:28Z (cite until folded).
+depends-on: D-487 (its pinned-clock Miniflare instance; branch from `land/worker/D-487` until it lands).
+scope: a two-bucket weighted sliding window in `Store.knock` (est = prev × (1 − elapsed/W) + cur; refuse at est ≥ limit), `index.mjs` passing the previous bucket and elapsed fraction; the same for the instance-wide 300; the prune keeps win and win−1; no schema change. If the estimate is approximate, the published text says so.
+accepts-when: a burst straddling the edge is refused at the stated limit, per source and instance-wide, in `doorbell.test.mjs`. NEGATIVE CONTROL: restore the fixed bucket and the straddling burst is re-admitted, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-497 · queued — **THE PROJECT DIRECTORY'S CANDIDATE SCAN IS STILL LINEAR IN THE GROUP'S PROJECTS: `#sight` is a JS predicate, so D-479's page bounds the ANSWER but not the rows read.** Found by D-479's worker. — owner RECORD.
+order: after D-495: a bound on work, not on disclosure; the answer is already capped (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
+milestone: M8
+interface: none (I5 additive if an index table is added; the integrator classifies).
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (items 7.9, 7.14): one sight rule, never a second copy.
+depends-on: D-479 (its train).
+scope: give sight a row source it reads (an owner-set-derived index) so the candidate query bounds in SQL, with the sight rule stated once.
+accepts-when: `bounds.test.mjs` shows the candidate read bounded. NEGATIVE CONTROL: restore the JS filter over the unbounded scan and the bounds arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### UI-100 · queued — **UI MOCKS OF THE PLANE'S REFUSALS ARE NARROWER THAN THE WIRE, ACROSS TWO FAMILIES: seven `unknown op` mocks carry no `translation` (act-proposal ×2, queue ×2, auth-surface, case-frozen-pair, document-structure; four compose "unknown op " + op, a sentence the plane never sent), and `requiredArgument`'s eight plane sites all carry C-61.1's translation while `publishedcase.test.mjs` mocks publishedbytes with `error` alone.** UI-84's class, found by its worker. — owner UI.
+order: after UI-99, with the UI corrections to landed wire shapes (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:26Z)
+milestone: M4
+interface: none (test mocks).
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, with UI-84's derivation as the precedent.
+depends-on: UI-84 (its train).
+scope: build every such mock from `DISPATCH_CHECKS.UNKNOWN_OP` / the requiredArgument catalogue as UI-84 does, correcting the composed forms to the wire's shape; drive each surface and state whether it RENDERS the refusal or only gap-detects it; also correct `planeSaid`'s stale comment in `app.html` (it cites two sentences D-278 replaced).
+accepts-when: no mock in the two families types a refusal by hand. NEGATIVE CONTROL: retype one mock's `error` without `translation` and the derivation arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs UI`).
+
+### REC-195 · queued — **THE GOVERNING-LAWS LIST HAS NO MACHINE PROPOSAL: D-149 built the member's act and the machine refusal; the design's labelled machine proposal (*if built*) is not.** — owner RECORD.
+order: after UI-90, a feature below the corrections: the list is complete without it (SCHEDULER #17, 2026-09-23; D-149's worker via CONDUCT #18)
+milestone: M10
+interface: I3 additive — a proposal read labelled machine work; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*): *a machine PROPOSAL, if built, is labelled machine work*.
+depends-on: D-149 (`integrated` on c17-batch7).
+scope: a proposal of citations and levels for an action, stored apart from the member's list and labelled machine work; it never sets the list, which only the member's act does.
+accepts-when: a proposal is read labelled machine work, and the action's list is unchanged until the member acts. NEGATIVE CONTROL: let the proposal write the list, and the "the list is the member's" arm fails by name. New suite `bio-plane/test/rec195-laws-proposal.test.mjs`.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
