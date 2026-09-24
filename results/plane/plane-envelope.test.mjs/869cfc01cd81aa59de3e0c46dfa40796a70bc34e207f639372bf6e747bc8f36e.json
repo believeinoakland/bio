@@ -1,0 +1,16 @@
+{
+ "unit": "plane:plane-envelope.test.mjs",
+ "inputHash": "869cfc01cd81aa59de3e0c46dfa40796a70bc34e207f639372bf6e747bc8f36e",
+ "verdict": "PASS",
+ "run": "54bb495a981c27fee91675a599fdc0c45ff92841.1790289773946.683.json",
+ "tree": "54bb495a981c27fee91675a599fdc0c45ff92841",
+ "head": "5dbb75f3325152b27b01c3805dd2338e66501ab3",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 983,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d1cb1ba3-0ea1-5897-8ed8-b3bcbcc5fa4f",
+ "at": "2026-09-24T22:42:53.959Z"
+}
