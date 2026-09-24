@@ -360,6 +360,46 @@ scope: report `existed: null` with its sentence for a multi-part capture, or com
 accepts-when: a re-fetched multi-part capture reads true or null-with-reason, never a false that claims the bytes are new. NEGATIVE CONTROL: restore the per-part answer, and the re-fetch arm reads false and fails by name. Extend `bio-plane/test/acquire.test.mjs`.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
+### FW-22 · queued — **AUDITED FINANCIAL STATEMENTS ARE NOT BUDGETS: BOB #32 ruled (2026-09-24 02:30Z) that an ACFR/CAFR or an agency's audited statements are a separate type, FINANCIAL REPORT, counted apart. D-66's budget sample is recounted with them excluded, and the new class is counted.** — owner FRAMEWORK.
+order: directly after D-66: §2's rule that a count comes before any reader; the financial-report reader follows the budget reader and is its own row once these counts justify it (SCHEDULER #18, 2026-09-24)
+milestone: M2
+interface: none — a census class and a recount.
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §2, row 5 (BOB #32's FINANCIAL REPORT ruling, folded at 16fe1e7f).
+depends-on: D-66.
+scope: the census instrument gains FINANCIAL REPORT, judged from bodies; D-66's class and read sample are re-run excluding it, stating stratum and seed.
+accepts-when: `MEASUREMENTS.md` carries both counts with intervals, dated with the instrument. NEGATIVE CONTROL: fold the class back into budget and the recount arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs FW`).
+
+### FW-23 · queued — **CSV HAS NO FORMAT-REGISTRY ENTRY, so the corpus's CSV files are held and never read.** BOB #32 DESIGNED it (2026-09-24 02:30Z): delimiter and encoding found by signature and RECORDED on the reading, undetermined when they cannot be told; one sheet; row 1 is row 1, a header being a reading, never assumed; cells addressed sheet-cell/sheet-range, 1-based; the capture's grade. Legacy `.xls` (50 keys) stays waiting under OFFICE-FORMATS's legacy ruling. — owner FRAMEWORK.
+order: behind D-66, per BOB #32's ruling (SCHEDULER #18, 2026-09-24)
+milestone: M2
+interface: I2 additive — a `csv` format entry.
+design: `docs/development/OFFICE-FORMATS.md` "CSV — DESIGNED 2026-09-24 by BOB #32" (folded at 16fe1e7f), on "The architectural answer: a FORMAT axis".
+depends-on: D-66.
+scope: the `csv` entry and its reader on the format axis; extend the office-format suites.
+accepts-when: a CSV reads as addressed cells with delimiter and encoding recorded. NEGATIVE CONTROL: guess a delimiter where none is determined and the undetermined arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs FW`).
+
+### D-463 · queued — **NO CREDENTIAL IS CONFINED TO SCRATCH FOR LIFE: the namespace binds per CALL, so an instrument that omits `store=scratch` addresses the real record (CLAUDE.md §5's stated residue: *a sticky confinement is RECORD's and is NOT built*).** — owner RECORD.
+order: after D-462, the last of the namespace guards (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
+milestone: M0 (a guard)
+interface: I3/I5 — a per-credential confinement; the integrator mints and classifies the IC.
+design: `docs/development/VERIFICATION.md` (CLAUDE.md §5, D-325's residue).
+depends-on: D-456, D-461.
+scope: a credential may be minted confined to `scratch`; every call it makes resolves to scratch whatever it names, and a `store=bio` from it is refused by name.
+accepts-when: a confined credential writing without `store=` lands in scratch, and `bio`'s counters are unchanged. NEGATIVE CONTROL: drop the confinement, and that arm moves `bio` and fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-475 · queued — **THE `/` SETUP PAGE READS `bio`'s GROUP SLUG WHATEVER `store=` SAYS: it is an HTML route, not an op, so D-461's refusal on the bio-pinned ops does not reach it.** Read-only and public, so low priority. Found by D-461's worker. — owner RECORD.
+order: behind the namespace guards (D-462, D-463), low: read-only, public, and names no member (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
+milestone: M0 (the namespace guard's last door)
+interface: none — the page's read.
+design: `docs/development/VERIFICATION.md` (CLAUDE.md §5, D-325).
+depends-on: D-461 (finished; rides the train after c19-batch9).
+scope: pass the store through `publicInstanceGroup`, or refuse `store=scratch` on `/` by name.
+accepts-when: `/?store=scratch` reads scratch's slug or is refused by name. NEGATIVE CONTROL: ignore the parameter again, and that arm reads `bio`'s slug and fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
