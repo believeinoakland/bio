@@ -375,7 +375,7 @@ scope: amend the claim to "at most the cap, stated as truncated"; add a probe pi
 accepts-when: `node tools/status.mjs discoverable` reads the capped claim and its probe passes. NEGATIVE CONTROL: rename the constant and the probe fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-496 · queued — **THE KNOCK LIMITER DOES NOT KEEP ITS PUBLISHED BOUND: a FIXED 10-minute bucket (`index.mjs` `win = Math.floor(Date.now() / KNOCK.windowMs)`) lets a source bursting across a bucket edge knock 24 times where the bound says 12, and the instance-wide 300 (the cap on hostile evidence-storage writes) doubles the same way.** BOB #32 RULED (2026-09-24 04:28Z, cite until folded): *a published limit is a BOUND; the record must not claim a limit it does not keep.* — owner RECORD (the plane estate).
+### D-496 · running — SPAWNED 2026-09-24 ~05:31Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-496 (CONDUCT #20), base origin/main (D-487 on main), into D-494's slot, before the 05:45Z cap; push by 06:40Z. Falsify rather than believe: read the branch land/worker/D-496 and that session; never conclude queued from the absence alone.
 order: at the backlog head (M0-146 is cached): a record claiming a bound it does not hold (CLAUDE.md §2), small enough for tonight (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:31Z)
 milestone: M2
 interface: I3 behaviour — a refusal where an answer stood at the edge; MAJOR by IC-25's test; the integrator classifies.
