@@ -445,6 +445,13 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        they landed, which is this pair of arms doing its job. */
     ["C-33.40", "NO_BASIS"],
     ["C-33.41", "NO_CITATION"],
+    /* REC-211 / IC-273, 2026-09-24: `op=proposedispose`'s instance-keyed shape binds the definition
+       version the MEMBER SAW (framework §8.2, BOB #32). Two rows because they are two facts about the
+       request and DEC-49 gives one code one sentence — the act names no version the record can read,
+       and the act names one that is not the version standing. D-PIN-B failed naming exactly these two
+       when they landed, which is this pair of arms doing its job. */
+    ["C-33.42", "NO_DEFINITION_VERSION"],
+    ["C-33.43", "DEFINITION_MOVED"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -552,7 +559,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        origin/main 16fe1e7f and not by adding to the number in the file: C-33.40 NO_BASIS and C-33.41 NO_CITATION. */
     /* RE-READ AT THIS UNION (c20-batch14, 2026-09-24): both moves above are in this tree and neither figure is
        the union's. The number below is what this instrument PRINTED here, never 59 + 2 and never 60 + 1. */
-    rowsSeen, 61);
+    /* MOVED 61 -> 63 on 2026-09-24 (REC-211), FROM THE FIGURE THIS INSTRUMENT PRINTED ("got 63") on the
+       item's tree over origin/main 58293bf31, and never 61 + 2: C-33.42 NO_DEFINITION_VERSION and
+       C-33.43 DEFINITION_MOVED. */
+    rowsSeen, 63);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`
