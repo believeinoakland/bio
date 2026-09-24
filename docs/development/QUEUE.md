@@ -117,7 +117,7 @@ scope: `status.mjs` probes match code with comments blanked (walkfloor's `stripC
 accepts-when: `node tools/status.mjs --check` reads 0 drift with comments blanked. NEGATIVE CONTROL: a probe whose only match is a comment reads NOT BUILT, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### M0-157 · running — **`gates.control.mjs` ARM G5 FAILS ITS OWN DECLARED ISOLATION ON MAIN (85/3): with the clean-at-start check removed, "a DIRTY tree is NOT recorded" breaks, although G5 declares the end-of-run check backs it.** Pre-existing; found by M0-146's worker. — owner M0.
+### M0-157 · integrated — **`gates.control.mjs` ARM G5 FAILS ITS OWN DECLARED ISOLATION ON MAIN (85/3): with the clean-at-start check removed, "a DIRTY tree is NOT recorded" breaks, although G5 declares the end-of-run check backs it.** Pre-existing; found by M0-146's worker. — owner M0.
 status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-157 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-157; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: after M0-156, with the gate instruments: a hand-run driver, not a battery arm (SCHEDULER #18, 2026-09-24; via CONDUCT #20 06:00Z)
 milestone: M0
