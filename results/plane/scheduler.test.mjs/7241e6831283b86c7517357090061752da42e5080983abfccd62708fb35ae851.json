@@ -1,0 +1,16 @@
+{
+ "unit": "plane:scheduler.test.mjs",
+ "inputHash": "7241e6831283b86c7517357090061752da42e5080983abfccd62708fb35ae851",
+ "verdict": "PASS",
+ "run": "4d107829fe018bde4d8f6203a88359ded3cf8970.1790225013760.1643.json",
+ "tree": "4d107829fe018bde4d8f6203a88359ded3cf8970",
+ "head": "41c195d5ceecb6ddc6e9996a08be99ad4c3a6514",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 367,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "5681ba5f-7f41-5042-972d-e173019e22a7",
+ "at": "2026-09-24T04:43:33.775Z"
+}
