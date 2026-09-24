@@ -24,21 +24,18 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS until 05:45Z, 6 from 05:4
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (14:37Z, updated on BOB #32's instruction) — read the tree; these are pointers
-- MAIN = 5f116f33 (14:36Z: land/dist/cut-0.79.0 @ d2ca15b0 trained ALONE by #20 on Bob's ask via BOB #32 — release/ now reads
-  0.79.0, deployed and live-verified by DIST #6 on all six workers; gate GREEN; merged onto 0a00c9c6 = Bob's prune-landed.yml:
-  land/* refs already on main are now deleted by .github/workflows/prune-landed.yml on every push, so train.mjs's ref deletion is
-  redundant). Before: 13073707 (c20-batch14 @ bf73ee6d LANDED 11:39Z, trained ALONE by BOB #32 as Bob's ONE-TIME close-out exception — trains
-  stay CONDUCT's act; gate GREEN 351/351 · 19,983). Versions on main: I1 1.10.0 · I3 87.0.0 · I4 2.2.0 · I5 3.8.0. Before it:
-  6761e903 (batch19: UI-89 D-496), 454a02bc (batch18). D-150 -> UI delegation NARROWED on coord CLAIMS (six STATEMENT_ACK DEC-49 rows).
-- NO TRAIN IS OWED, and nothing is in flight. The archive list is DONE: BOB #32 archived all 23 idle workers on the first account
-  (20 by ancestry on main; c20-integ1, c19-batch10, c18-batch7fix as never-merge). SCHEDULER #18 closes the 20 rows.
-- EVERY REMAINING WAITING REF IS NEVER-MERGE: c16-batch3, c16-batch6, land/bob/folds-0924c, land/bob/folds-0924d, c18-batch7fix,
-  c19-batch10, c20-integ1, c20-batch16. Drop them all from every train (one `--drop` per branch).
-- DIST owed on batch14's landing: D-461 SAFETY, D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0), DIST-11 browser class.
-- NEXT RUNNABLE (QUEUE.md is the source): REC-194 (unblocked by REC-193 on main), REC-211, D-499, D-500, REC-212, D-506, M0-153..158,
-  DIST-13. No worker of #20's needs Bob.
+## 4. STATE (15:50Z) — DEVELOPMENT RESUMED ON THIS ACCOUNT (Bob via BOB #32 15:40Z: quota reset, account switch CANCELLED,
+wind-down OVER; cap 10 live workers). Read the tree; these are pointers.
+- MAIN = 68fecb8d (BOB's train landed land/bob/fold-m132). Before: 5f116f33 (0.79.0 release pointer, DEPLOYED by DIST #6),
+  13073707 (c20-batch14), 6761e903 (batch19), 454a02bc (batch18). Versions: I1 1.10.0 · I3 87.0.0 · I4 2.2.0 · I5 3.8.0.
+- land/* already on main are deleted by .github/workflows/prune-landed.yml; train.mjs's ref deletion is redundant. Trains:
+  ONE `--drop` PER BRANCH (M0-159 is the fix row). NEVER-MERGE refs: c16-batch3, c16-batch6, land/bob/folds-0924c,
+  land/bob/folds-0924d, c18-batch7fix, c19-batch10, c20-integ1, c20-batch16.
+- LIVE WORKERS (10, spawned 15:46-15:48Z, base 68fecb8d, rows flipped running at coord f8fd4a77; report by one-shot trigger):
+  M0-140 session_01SwHJ5PDWaoePcKuzYBscMK (retire the DEBT construct; CLAUDE.md wording goes to BOB first) · D-498
+  session_01N5aDuN1MfnKxsNJ5n7cPkU · D-497 session_018qopfWkzV5cvhBz2jTv3HD · UI-100 session_01SpHP4tgbseccztTdjMSCij ·
+  REC-195 session_01TXWen1KhhqKXJj5A9wnvpN · M0-153 session_01CA8h4ZpGNcoCbb18TUQc8U · M0-154 session_01Gh94DitRyuZFiqZDucoiy6 ·
+  M0-155 session_016oXJSbX622XgPZybiCHhPG · M0-157 session_01V8GNcS1HJ8NwMmx5AMsYzE · M0-158 session_01UNuTyy3HyKaA6NTmjLuGqT.
+- NEXT RUNNABLE (QUEUE.md is the source): UI-92, D-505, D-503, D-506, REC-194 (DIST-13 is DIST's). Fill a freed slot same turn.
 
-## 5. QUOTA PLAN (Bob via BOB #32, 03:00Z)
-Until 05:45Z ≤10 live; 05:45Z ≤6 live; 06:45Z spawn NOTHING — finish, push, integrate, train; list to BOB every worker that needs
-Bob (exact question + session id), leave them open; write this file for the other account's CONDUCT, verify on the remote, stop.
+## 5. CAP (Bob via BOB #32 15:40Z): at most 10 live worker sessions. Refresh at 75% context.
