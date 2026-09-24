@@ -3346,7 +3346,12 @@ async function reviewAnswer(out, op) {
       subject: served,
       over: "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and "
           + "hash JSON.stringify(rest, null, 1) as UTF-8",
-      date: r.updated_at ?? null, author: r.updated_by ?? null, bar: bar ?? null });
+      /* REC-200 / BOB #32, 2026-09-23 23:08Z: THE DATE IS THE COPY'S LAST CHANGE, not the draft's last
+         EDIT — a comment moves these bytes, so it moves the hash, and it must move the date with it. The
+         store computes it over the rows it SERVES and says in `last_change.stated` what it cannot see.
+         THE AUTHOR DOES NOT MOVE: the ruling is about the date, and a recipient who comments on a copy
+         has not authored it; `last_change.by` is who made that change, beside it. */
+      date: r.last_change?.at ?? null, author: r.updated_by ?? null, bar: bar ?? null });
     return json({ ...served, inband: quartet }, 200);
   }
   return json({ ok: true, ...r }, 200);
