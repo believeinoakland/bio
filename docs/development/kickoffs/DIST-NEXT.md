@@ -1,4 +1,4 @@
-# DIST — resume here. Written 2026-09-24 by DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, cloud), last updated 06:48Z at the quota line, for the DIST on Bob's OTHER account.
+# DIST — resume here. Written 2026-09-24 by DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, cloud), last updated 12:25Z (BOB #32's batch14 relay), for the DIST on Bob's OTHER account.
 
 Why now: this account's weekly quota ends ~07:00Z 2026-09-24 (Bob, relayed by BOB #32 at 03:00Z); work continues on the
 other account. This file is STATE, measured 03:05Z. The process is `kickoffs/DIST.md` (WHEN DIST CUTS, the `latest`
@@ -28,6 +28,13 @@ live) any `store=` other than exactly `bio`/`scratch` is refused NAMESPACE_UNKNO
 against `bio` — name `store=scratch` on every probe call.
 
 ## What waits for the release Bob asks for (origin/main @ `548eb2c5`; re-read `git log 38b49c50..origin/main` at the cut — never this list)
+**UPDATE 12:25Z (BOB #32, verified at the code by DIST #6): main = `13073707`** (c20-batch14 landed 11:39Z; gate GREEN
+351/351 · 19,983 per BOB). Now ALSO owed at the next release: **D-461** (SAFETY: `store=scratch` on a public op pinned to
+`bio` is refused by name, C-78.2; CLAUDE.md §5 updated — a probe of a public op on scratch is REFUSED), **D-464**
+(DISCLOSURE: every count a member session is served goes through its own sight — name it in the landing report),
+**D-462** (agent-worker names its namespace exactly; **I8 2.0.0 MAJOR** — agent-worker ships FIRST or with the plane,
+member bytes move). **DIST-11** (the `browser` binding class, before any BROWSER binding) is a BACKLOG row, not built
+(`ledger.mjs find DIST-11`: queued, after D-64).
 
 **Name in the landing report (security / disclosure):** D-456 (IC-237: unknown `store=` refused), D-447 (IC-238: ranked
 search drops `score`, ranks over visible rows only), MK-6 (member id no longer published in observations; IC-226), D-162's
@@ -55,17 +62,15 @@ probe that reads a public op on scratch will be refused), D-464, D-462, REC-190.
   and runs `RUN-2026-0923-dist5-*` (all closed), DIST #4's `INFO-2026-9436-dist4-muc6a1x0`, member `dist3-rec156-muboxe9j`,
   livefire canaries, 13 July probe members (not DIST's), CPDF-3's count of 17 bundles and 11 aiRuns. Build only when
   SCHEDULER caches it and CONDUCT writes `running`.
-- **DIST-12 · BUILT, on `land/dist/DIST-12` @ `1a0fc88f`, waiting for CONDUCT's train** (flipped `running` 04:57Z). Gate GREEN
-  TARGETED on tree `370160a8`: 127/127 · 8288. `tools/urlpreflight-entry.mjs` runs D-166's `tier1-coverage-probe.mjs --urls`
-  and writes one dated line per URL (DIST.md gate step 7a); REFUSED = this hour, never rotted; NOT_FOUND → a SCHEDULER
-  row naming its fixture. First reading M-136: 14/14 LIVE (05:01Z). Accepts-when: the NEXT release's verification
-  writes its own entry (`--release X.Y.Z --id <M-id> --out docs/development/measurements/<M-id>.md`).
-- **newgroup/dist: `land/dist/newgroup-dist-078` @ `cfe2d0cc` is SUPERSEDED — do not train it as is.** main's committed
-  `newgroup/dist/newgroup.bundled.mjs` still embeds 0.71.0 (06:47Z). That branch was built BEFORE DIST-9 landed, so its
-  bundle lacks DIST-9's installer code. OWED, first act: from origin/main run `cd newgroup && npm run build`; check the
-  bundle's RELEASE_VERSION is 0.78.0 and its evaluated RELEASE_SOURCE hashes to `9dac9e46…` (= RELEASE.json); build twice
-  for byte-identity; gate; push a NEW land/dist branch; tell CONDUCT to drop `newgroup-dist-078`. Rebuild at EVERY cut
-  and after any `newgroup/src` change lands. Freshness guard: routed to SCHEDULER by CONDUCT #20.
+- **DIST-12 · LANDED on main** (`1a0fc88f` an ancestor of `13073707`). Release gate step 7a runs
+  `node tools/urlpreflight-entry.mjs --release X.Y.Z --id <M-id> --out docs/development/measurements/<M-id>.md` at the
+  next release; first reading M-136 14/14 LIVE. Its accepts-when is that release's entry.
+- **newgroup/dist REBUILD OWED, first act.** `newgroup-dist-078` (`cfe2d0cc`) LANDED anyway (train c20-batch17): main's
+  bundle reads RELEASE_VERSION 0.78.0 but was built BEFORE DIST-9, so it lacks DIST-9's installer code (measured on
+  `13073707`: `instanceAiBinding` 0 times in `newgroup/dist/newgroup.bundled.mjs`, 4 in `newgroup/src/index.mjs`). From
+  origin/main: `cd newgroup && npm run build`; check RELEASE_VERSION 0.78.0, evaluated RELEASE_SOURCE sha256 `9dac9e46…`,
+  `instanceAiBinding` present; build twice for byte-identity; gate; push a land/dist branch. Rebuild at EVERY cut and
+  after any `newgroup/src` change. Freshness guard routed to SCHEDULER by CONDUCT #20.
 - **DIST-7 · queued, BACKLOG**: installer uploads carry `limits.subrequests` from the signed release (depends on D-54).
 - **DIST-9 · LANDED on main** (in train `135abf3b`, c20-batch15, with IC-261; verified 06:47Z: `41c195d5` is an
   ancestor of origin/main). Install/update CARRY an operator-supplied `INSTANCE_AI_TOKEN`, never generate one;
