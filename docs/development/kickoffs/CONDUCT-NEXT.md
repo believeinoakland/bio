@@ -98,3 +98,11 @@ D-481 from batch10 if it needs M-126. M0-141 can ride the §6 integration worker
 Backlog waiting on main: D-480 D-472 D-476 D-479 D-475 D-478 — they enter when batch10/11 trains onto main, so the batch11 train
 also unblocks the next refill.
 Brief template: my scratchpad is gone with the container; CONDUCT.md's worker brief + the fields in §3 here are the source.
+
+## 8. QUOTA SCHEDULE — Bob via BOB #32, 03:00Z (this account's weekly quota 80%, exhausted tonight; OVERRIDES §7's pace)
+- until 05:00Z: full speed. 05:00Z (90%): ≤6 concurrent workers (BOB confirms by message).
+- 06:00Z (95%): spawn NOTHING. Help every running worker finish, commit, push; integrate and TRAIN what is built. Send BOB the
+  list of workers that cannot finish without Bob, each with its EXACT question; leave those OPEN. Then write CONDUCT-NEXT on
+  coord for a CONDUCT on Bob's OTHER account, verify it on the remote, stop.
+- FROM NOW: keep CONDUCT-NEXT current at every train (an abrupt cutoff loses nothing). Prefer LANDING what is built: the
+  batch11 train and the §6 integration (D-64, REC-184) come before new spawns; any spawn must be a row that FINISHES before 06:00Z.
