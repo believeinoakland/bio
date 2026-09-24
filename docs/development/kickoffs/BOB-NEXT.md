@@ -1,4 +1,4 @@
-# BOB — resume here. Written by BOB #32 (session_01HhTF36TQSDaFr9RAxfFnKX), 2026-09-24 ~03:05Z, interim (refreshed again at wind-down); successor: **BOB #33, on Bob's OTHER account**
+# BOB — resume here. Written by BOB #32 (session_01HhTF36TQSDaFr9RAxfFnKX), 2026-09-24 ~03:25Z, interim (BOB #32 at 71% context) (refreshed again at wind-down); successor: **BOB #33, on Bob's OTHER account**
 
 Read `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` whole, then this. Every line is a POINTER, measured ~03:05Z.
 
@@ -16,22 +16,20 @@ the other one; read their state from `coord` and `origin`.
 - **Bob asks for plain words** when you explain; the plain-words plan page is https://claude.ai/artifact/M5hUaNBgeM292h4D6odXbX
   (republished 23:27Z; its builder is `extract.mjs` + `build.mjs`, rebuild them: rows from coord QUEUE+BACKLOG, prose drafted by 4 subagents).
 
-## 1. ESTATE (~03:05Z, this account)
-CONDUCT #19 `session_01Kqy1X9xDKa4PAWtmqTaiRx`; SCHEDULER #18 `session_01MgL7YDGuxH1F7e3zxx6GSp`; DIST #6 `session_01Vi1XTVwxcBBMStifuBasLZ`
-(idle, no release until Bob asks); FLEET #4 `session_01YB9VgJtjiXwQ5vtx4fLvRB`. Archived tonight: BOB #31, CONDUCT #18, SCHEDULER #17
-(by #18), DIST #5, workers c17-unionfix. main `548eb2c5` (02:43Z train: c19-batch9 + my folds fb24040e/bde7644d + the map-budget stopgap).
+## 1. ESTATE (~03:25Z, this account)
+CONDUCT #20 `session_011PzZW1FSobMne4cYeAYWfU`; SCHEDULER #18 `session_01MgL7YDGuxH1F7e3zxx6GSp`; DIST #6 `session_01Vi1XTVwxcBBMStifuBasLZ`
+(DIST-NEXT current @ 6014a2d2, idle); FLEET #4 `session_01YB9VgJtjiXwQ5vtx4fLvRB` (FLEET-NEXT current @ a1d2b1ba, idle, no timers).
+Archived tonight: BOB #31, CONDUCT #18, #19, SCHEDULER #17, DIST #5, c17-unionfix. main `548eb2c5`. Worker cap 10 (Bob ~03:08Z), 6 at 05:00Z,
+0 new at 06:00Z; lane one-shots for 05:00Z/06:00Z are PRE-ARMED into CONDUCT #20, SCHEDULER #18, DIST #6, FLEET #4. Bob opened the BIO
+environment's network to FULL (~03:02Z; fresh sessions only): D-453 unblocked.
 
-## 2. OWED BY BOB (open at 03:05Z)
-1. **land/bob/status-cellcap** (worktree /home/user/wt-bob2 on this account; rebuild if lost): `tools/status.mjs` caps a map cell's first
-   sentence at CELL_CAP=240 chars at a word boundary outside backticks, marked ` …`; status.test +2 arms, status.control A11 (59/0). Map
-   44,934 → 41,335 B on main. THEN lower the map budget back from the 51,200 B stopgap to 49,152 B (readbudget.mjs, status.test, plancheck).
-2. **land/bob/folds-0924e** (NOT built yet): rebuild onto current main the content of folds-0924d MINUS its CORPUS-STANDARD revert —
-   MEMBER-KNOWLEDGE §5 (hidden project undisclosed, D-464/D-486), EXTRACTION-BREADTH §2 row 5 (FINANCIAL REPORT type, FW-22), OFFICE-FORMATS
-   "CSV" (FW-23) — plus Intake Doctrine §8 (REC-190: a home is fixed by the first REGISTRATION; only rows PROVEN moved are repaired).
-   **Do NOT merge folds-0924c/0924d**: each reverts CORPUS-STANDARD §6, which main now carries.
-3. **land/bob/d461-claude @ f1787108**: D-461 + CLAUDE.md §5's scratch rule corrected (full gate 195/195). CONDUCT integrates it in place
-   of land/worker/D-461.
-4. DEBT.md: 3 → 0 as main now carries D-313/D-391 folds and D-388; M0-140 removes DEBT.md from the process (SCHEDULER placed it).
+## 2. OWED BY BOB (03:25Z)
+All three branches are pushed and handed to CONDUCT #20 for the next train: land/bob/d461-claude @ f1787108 (D-461 + CLAUDE.md §5),
+land/bob/folds-0924e @ e5ed7752 (MK §5, EXTRACTION-BREADTH row 5, OFFICE-FORMATS CSV, Intake §8), land/bob/status-cellcap @ e4be1308
+(CELL_CAP 240; map budget back to 48 KiB). **Do NOT merge folds-0924c/0924d.** Still to FOLD (ruled by message, not yet in docs):
+CLIENT-RENDERED (a render wait that timed out: grade unchanged, completeness undetermined); Framework §8.2 (a disposition binds the
+definition version the member SAW; DEFINITION_MOVED); Case Making §2 is done; REC-190 is done.
+DEBT.md is 0 in fact; M0-140 records the closings and removes DEBT from the process.
 
 ## 3. RULED TONIGHT (folded or rowed; `node tools/decided.mjs` finds the folded ones)
 §18.1 (Bob: option D — a published case's OWNERS alone are told once); D-388 (MILESTONES/CIVICOS_UI_STATE ledgers, SESSION-KICKOFF-UI a
