@@ -23,20 +23,23 @@
  * with every other defence held open, each DECLARED before it ran, every restore verified by sha256 AND `cmp`
  * AND a floored byte count; BASELINE 31 pass / 0 fail, CLOSING BASELINE 31 pass / 0 fail, 5 AS DECLARED, 0 not.
  *   (p1) `nc-rec82.mjs`'s pen pointed BACK into the worktree (`controlPen("rec82")` -> `join(REPO,
- *        ".rec82-control-pristine")`) -> 28/3: THE ROW'S ACCEPTS-WHEN FAILS naming nc-rec82, with the CLI
- *        verdict and the estate ceiling beside it.
- *   (p2) the ignore probe asked of the path BARE only, without the trailing slash -> 26/5: the declared-pen
+ *        ".rec82-control-pristine")`) -> 31/4: THE ROW'S ACCEPTS-WHEN FAILS naming nc-rec82, with the CLI
+ *        verdict, the estate ceiling and BOB #33's class-(a) arm beside it.
+ *   (p2) the ignore probe asked of the path BARE only, without the trailing slash -> 29/6: the declared-pen
  *        arm (p3) fails, and so does the floored class. THIS ARM'S FIRST RUN IS WHERE THE SWEEP'S OWN DEFECT
  *        CAME FROM: `git check-ignore` will not match a `dir/` pattern against a path that does not exist, and
  *        on a clean tree NO pen exists, so before the fix every DECLARED pen in the estate read DIRTY —
  *        9 IN-WORKTREE/declared where the truth is 50. The arm was ALSO declared wrong (it named the
  *        floored-class assertion as held-open) and the driver's header records that correction.
- *   (p3) `stripComments` swapped for the raw source -> 25/6: (p5) fails, a pen path spelled in a driver's
+ *   (p3) `stripComments` swapped for the raw source -> 28/7: (p5) fails, a pen path spelled in a driver's
  *        PROSE is read as named, and the ledger drifts because the walk now sees expressions in comments.
- *   (p4) one `UNIGNORED_PENS` name re-introduced into a driver -> 27/4: the pinned-BY-NAME arm FAILS naming
+ *   (p4) one `UNIGNORED_PENS` name re-introduced into a driver -> 30/5: the pinned-BY-NAME arm FAILS naming
  *        `.m0107-harness`, which a count of dirty paths would not have distinguished.
  *   (p5) OVER-STRICTNESS — a correct pen in a spelling this item did not introduce
- *        (`mkdtempSync(join(tmpdir(), "nc-rec82-"))`) -> 31/0, nothing fails, as declared.
+ *        (`mkdtempSync(join(tmpdir(), "nc-rec82-"))`) -> 35/0, nothing fails, as declared. THIS ARM IS WHAT
+ *        SAYS THE SWEEP ENFORCES A PROPERTY AND NOT A HABIT, and CONDUCT #20's correction of 22:25Z makes it
+ *        load-bearing: a per-run `mkdtemp` is ONE acceptable shape, a gitignored item-named in-tree pen is
+ *        ANOTHER, and neither may be gated as though it were the only one.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -91,6 +94,26 @@ t("every ledgered path carries a WHY (a judgement with no reason is a name on a 
   Object.values(PEN_LEDGER).flat().filter((e) => !e.why || e.why.length < 40).map((e) => e.expr), []);
 t("the helper the class rides is a real module the drivers import (>= 70 of the 74 measured call it)",
   real.drivers.filter((d) => d.floored && d.paths.some((p) => p.expr === "controlPen(…)")).length >= 70, true);
+
+/* BOB #33's THREE DEFECT CLASSES, after CONDUCT #20's correction of 2026-09-24 22:25Z. An in-worktree pen
+   that is gitignored AND item-named STANDS — it is a driver's own mechanism, not a session's scratch — so
+   what is gated here is (a) a pen no `.gitignore` line covers and (b) a pen two drivers name. (c), a driver
+   that leaves its pen behind on a CLEAN RUN, is a property of a run and not of the source: M0-172 owns it,
+   and the sweep says so rather than scoring it zero. */
+t("(a) is what the floored class is gated on — a pen no .gitignore line covers, never the in-tree pen itself",
+  floored.filter((d) => d.grade === "IN-WORKTREE/DIRTY").length, 0);
+t("(a) ...and a DECLARED in-worktree pen PASSES in the floored class, because BOB #33 let it stand",
+  floored.filter((d) => d.grade === "IN-WORKTREE/declared").length >= 1, true);
+/* (b) PINNED BY NAME, not by a count, so a NEW shared pen fails here naming itself. The four measured
+   2026-09-24, each judged: `.d266-harness` and `app.html.pristine-*` are the real finding — two drivers
+   naming ONE pen, which is what "item-named" exists to prevent; `.rec79-control-pristine` is nc-d355
+   READING refusal-partition's pen to assert it is absent, not sharing it; `pdf-worker/node_modules` is not
+   a pen at all, and this walk cannot tell a pen from any other untracked path, which the REACH line says. */
+t("(b) the in-worktree pen paths named by more than one driver are the four measured, by NAME",
+  real.shared.map((x) => x.pen).sort(),
+  [".d266-harness", "civicos-ui/app.html.pristine-*", "civicos-ui/test/.rec79-control-pristine", "pdf-worker/node_modules"]);
+t("(b) ...and no driver in the FLOORED class shares a pen with another driver as its own writing space",
+  real.shared.filter((x) => x.drivers.filter((f) => FLOORED(f)).length > 1).map((x) => x.pen), []);
 
 /* ============== 2. WHAT THE CLASSIFIER IS ============== */
 console.log("\n--- 2. the classifier, asked directly ---");

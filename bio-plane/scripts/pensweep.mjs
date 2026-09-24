@@ -29,8 +29,14 @@
  * git IGNORES is a DECLARED pen, which BOB #33 let stand. What is left — untracked and unignored, inside
  * the tree — is the pen this row moves, and it is named per path, never counted in aggregate.
  *
- *   TEMP                  the driver names a pen OUTSIDE the worktree (`controlPen(`, `tmpdir()`, an
- *                         absolute path under /tmp or /var/folders) and no dirty path. The end state.
+ *   TEMP                  every path the driver names is OUTSIDE the worktree (`controlPen(`, `tmpdir()`,
+ *                         an absolute path under /tmp or /var/folders) and none is dirty. The end state.
+ *                         THE GRADE IS ABOUT THE PATHS NAMED, NEVER ABOUT A PEN IDENTIFIED: a driver whose
+ *                         temp path is a scratch ESTATE while its pen is built at runtime reads TEMP too.
+ *                         MEASURED, and this is why the wording matters: 55 driver files on this estate
+ *                         spell `mkdtempSync(join(tmpdir(), …))` and only 7 spell it for a PEN (D-478's
+ *                         census, 2026-09-24). What TEMP supports is "names nothing inside the tree" —
+ *                         the property that costs us something — and not "its pen is outside".
  *   MEMORY                the driver names NO pen at all: it holds its pristine text in a variable and
  *                         restores from that. Also honest, and the cheapest pen there is.
  *   IN-WORKTREE/declared  its only in-worktree pen paths are ones a `.gitignore` line covers (BOB #33).
@@ -596,15 +602,47 @@ export function sweepPens({ repo = REPO } = {}) {
     if (dirty.length) { grade = "IN-WORKTREE/DIRTY"; why = `${dirty.length} path(s) git neither tracks nor ignores`; }
     else if (unknown.length) { grade = "UNCLASSIFIED"; why = `${unknown.length} path expression(s) this walk cannot resolve`; }
     else if (pens.length) { grade = "IN-WORKTREE/declared"; why = `gitignored: ${[...new Set(pens.map((p) => p.path))].join(", ")}`; }
-    else if (temp.length) { grade = "TEMP"; why = `${temp.length} pen path(s), every root outside the worktree`; }
+    else if (temp.length) { grade = "TEMP"; why = `${temp.length} path(s) named, every root outside the worktree (not a claim that a PEN was identified — see REACH)`; }
     else { grade = "MEMORY"; why = "names no pen — its pristine copy is held in a variable, or built at runtime (see REACH)"; }
     graded.push({ file: f, grade, why, floored: FLOORED(f), paths, dirty, unknown });
   }
+  /* BOB #33's SECOND DEFECT CLASS (CONDUCT #20's correction, 2026-09-24 22:25Z): a pen that is NOT
+     ITEM-NAMED, so two drivers could share it. Asked of the estate rather than of a name: one in-worktree
+     pen path named by TWO OR MORE drivers is a pen they share, whatever it is called, and that is the
+     property the "item-named" rule exists to produce. A driver READING another driver's pen (nc-d355 asserts
+     refusal-partition's pen is absent) is not sharing it, so a path only one driver WRITES under is not a
+     finding here — this walk cannot tell a read from a write, so a shared path is reported as SHARED and
+     named for a reader to judge, never scored as a defect on its own. */
+  /* A PEN'S IDENTITY is the path up to and including the FIRST segment git does not already track as a
+     directory — where the driver's own space begins. Truncating to two segments instead reported
+     `bio-plane/test` as one pen shared by thirteen drivers, which is a directory they all write INTO, not a
+     pen they share (measured on the first run of this arm). */
+  const penIdentity = (path) => {
+    const segs = String(path).split("/");
+    for (let i = 0; i < segs.length; i++) {
+      const upto = segs.slice(0, i + 1).join("/");
+      if (!dirSet.has(upto)) return upto;
+    }
+    return null;                                   /* every segment is a tracked directory: not a pen */
+  };
+  const penOwners = new Map();
+  for (const d of graded)
+    for (const p of d.paths)
+      if (p.grade === "IGNORED" || p.grade === "DIRTY") {
+        const root = penIdentity(p.path);
+        if (!root) continue;
+        if (!penOwners.has(root)) penOwners.set(root, new Set());
+        penOwners.get(root).add(d.file);
+      }
+  const shared = [...penOwners].filter(([, owners]) => owners.size > 1)
+    .map(([root, owners]) => ({ pen: root, drivers: [...owners].sort() }))
+    .sort((a, b) => b.drivers.length - a.drivers.length);
+
   /* The seven the row names, asked of the DRIVERS: is one named again? */
   const unignoredBack = UNIGNORED_PENS
     .map((p) => ({ pen: p, by: graded.filter((d) => d.paths.some((x) => String(x.expr).includes(p))).map((d) => d.file) }))
     .filter((x) => x.by.length);
-  return { walkFailed: false, corpus: files.length, drivers: graded, unignoredBack, ledgerDrift };
+  return { walkFailed: false, corpus: files.length, drivers: graded, unignoredBack, ledgerDrift, shared };
 }
 
 export function report(res, log = console.log) {
@@ -622,6 +660,13 @@ export function report(res, log = console.log) {
     for (const p of d.paths.filter((x) => x.grade === "LEDGERED")) log(`      LEDGERED :${String(p.line).padEnd(5)} ${p.why}\n           from  ${p.expr}`);
     for (const p of [...d.dirty, ...d.unknown]) log(`      ${(p.grade === "DIRTY" ? "DIRTY" : "UNKNOWN").padEnd(8)} :${String(p.line).padEnd(5)} ${p.grade === "DIRTY" ? p.path : p.why}\n           from  ${p.expr}`);
   }
+  log(`  BOB #33's DEFECT CLASSES (CONDUCT #20, 2026-09-24 22:25Z — an in-worktree pen that is gitignored and`
+    + ` item-named STANDS; it is not a defect to sweep away):`);
+  log(`    (a) a pen NO .gitignore line covers: ${res.drivers.filter((d) => d.grade === "IN-WORKTREE/DIRTY").length} driver(s), named above`);
+  log(`    (b) a pen TWO OR MORE drivers name, so it is not item-private: ${res.shared.length} path(s)`);
+  for (const s of res.shared) log(`        ${s.pen}  <- ${s.drivers.join(", ")}`);
+  log(`    (c) a driver that LEAVES its pen behind on a clean run: NOT CHECKABLE HERE — it is a property of a RUN,`
+    + ` not of the source. M0-172 owns it (status.control.mjs), and this walk says so rather than scoring it 0.`);
   for (const d of res.ledgerDrift) log(`  LEDGER DRIFT  ${d}`);
   for (const u of res.unignoredBack) log(`  UNIGNORED PEN NAMED AGAIN: ${u.pen} by ${u.by.join(", ")}`);
   log("  REACH: the paths a driver NAMES from its own constants (a join/resolve/new URL/literal/template), over"
