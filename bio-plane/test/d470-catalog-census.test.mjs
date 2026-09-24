@@ -248,6 +248,17 @@ const CATALOG_CENSUS = {
      published a different catalogue under it. ONE VERSION NAMES ONE CATALOGUE, which is this table's whole
      rule, so the landed row stands and this union takes the next number. */
   "1.23.0": { count: 447, digest: "3309735d2983f422ff63ba8491b6fcd3e350e1642de29716bb578dc8077ab9da" },
+  /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): ONE arrival, no departures —
+     C-28.16 CAPTURE_REQUEST_RENDER_MALFORMED in CAPTURE_REQUEST_CHECKS, the door's refusal
+     of a `render` flag that is neither true nor absent (IC-276). 448 and the digest below
+     are THIS SUITE'S OWN PRINT on the item's committed tree, never 447 + 1: the count and
+     the digest are two facts and only one of them is arithmetic. ADDITIVE, so the bump stays
+     MINOR. 1.23.0's row STAYS — it is what the catalogue held at that version, and A4 needs
+     both rows to mean anything. IF A CONCURRENT ITEM ALSO TOOK 1.24.0 (D-490, D-492 and
+     D-499 were in render and capture code the same night), the integrator re-reads this
+     suite's print on the union and this row takes the next number: ONE VERSION NAMES ONE
+     CATALOGUE is this table's whole rule. */
+  "1.24.0": { count: 448, digest: "a8daf19dde63af77ebfcb8f7d035849d1e523233c3f51a17012dc37ad61e8c46" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -337,8 +348,13 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 /* CORRECTED at c20-batch13, never exempted: the catalogue moved under this pin
    at the union (five arrivals from c20-batch11fix's side), so 1.21.0 had stopped
    naming one catalogue — the exact defect the header describes. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.23.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.23.0)", "1.23.0"]);
+/* CORRECTED at D-491 (2026-09-24), never exempted: C-28.16 entered the catalogue, so
+   1.23.0 had stopped naming one catalogue — A3 named it and this pin is the second half
+   of the same move. The version is a LITERAL here on purpose: read off CATALOG_VERSION
+   it would agree with whatever the constant says, which is the one thing it exists to
+   refuse. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.24.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.24.0)", "1.24.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
