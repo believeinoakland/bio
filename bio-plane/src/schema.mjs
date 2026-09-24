@@ -2027,8 +2027,16 @@ CREATE INDEX IF NOT EXISTS monitor_fired_epoch ON monitor_fired(consumer, epoch)
 -- across an alarm retry. A retry arrives with a NEW Date.now(), so now cannot
 -- identify the tick; the epoch has to be remembered. A row here means "a tick
 -- started and did not finish cleanly", so the next tick REUSES its epoch and is
--- that tick's retry rather than a fresh one. It is deleted when a tick completes
--- with nothing failed, which is what lets the NEXT cadence really re-check.
+-- that tick's retry rather than a fresh one. It is deleted when a tick ACCOUNTS
+-- FOR EVERY ELIGIBLE SUBJECT ITSELF -- nothing failed AND nothing was skipped --
+-- which is what lets the NEXT cadence really re-check.
+-- D-518, 2026-09-24: the second half of that condition is a CORRECTION. This line
+-- read "when a tick completes with nothing failed", and so did the code, which
+-- deleted the row on a tick that fired nothing and only SKIPPED subjects an
+-- earlier unfinished tick had claimed. That tick learned nothing, and dropping the
+-- row let the next wake mint a fresh epoch and re-fire an address that already
+-- succeeded, inflating captured_locators.observations -- corroboration nobody
+-- produced. The release is now the spent-epoch rule alone, one whole cadence on.
 CREATE TABLE IF NOT EXISTS monitor_tick_epoch (
   consumer   TEXT PRIMARY KEY,
   epoch      INTEGER NOT NULL,
