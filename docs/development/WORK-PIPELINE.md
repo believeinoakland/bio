@@ -17,7 +17,7 @@ narrative. `DEBT.md` 504 KB holding 222 open rows averaging 2.3 KB. No session c
 
 | file | holds | size | read |
 | --- | --- | --- | --- |
-| `docs/development/QUEUE.md` — **the cache** | the BOB INBOX's UNDRAINED entries; then at most **16** rows not `integrated` (`CACHE_ROWS`): those `running`, then the next `queued` rows whose `depends-on` is met, in order | ≤ 48 KiB (rows not `integrated`); a row ≤ 3 KB | **WHOLE, by every session** |
+| `docs/development/QUEUE.md` — **the cache** | the BOB INBOX's UNDRAINED entries; then at most **20** rows not `integrated` (`CACHE_ROWS`): those `running`, then the next `queued` rows whose `depends-on` is met, in order | ≤ 48 KiB (rows not `integrated`); a row ≤ 3 KB | **WHOLE, by every session** |
 | `docs/development/BACKLOG.md` — **everything still to do** | every open item NOT in the cache, in the order it will be processed (top = next), `blocked` rows included with what unblocks them | ≤ 150 KB; a row ≤ 2 KB | **WHOLE, by SCHEDULER at every replenish and when ordering** (corrected 2026-09-19 by BOB #16: it read CONDUCT, before SCHEDULER existed); by id otherwise |
 | `docs/development/BACKLOG-LATER.md` — **the backlog's tail** (M0-119) | the SAME order, continued: its first row comes directly after `BACKLOG.md`'s last (§2) | unbounded; a row ≤ 2 KiB | **LOOKED UP** (`node tools/ledger.mjs find <ID>`) |
 | `docs/archive/ledgers/QUEUE-closed*.md` — **what has been done** | every `done` / `superseded` row, verbatim, as it stood when it closed | unbounded | **LOOKED UP** (`node tools/ledger.mjs find <ID>`) |
@@ -39,7 +39,7 @@ first written. SCHEDULER **replenishes** the cache; CONDUCT **fills slots**.
 
 1. **An item completes →** its row leaves the cache for the archive in the SAME write as its `done` flip
    (`node tools/ledger.mjs archive <ID>` — LED-5; `coord.mjs write --status <ID> done --archive <ID>`).
-2. **Refill, same write →** the next runnable rows move from the top of `BACKLOG.md` into the cache until it holds 16
+2. **Refill, same write →** the next runnable rows move from the top of `BACKLOG.md` into the cache until it holds 20
    (or the backlog has nothing runnable), and are DELETED from the backlog as they move (`node tools/ledger.mjs refill`).
    A `blocked` row is skipped, never moved; it stays where the order put it.
 3. **New work arrives →** BOB writes it into the BOB INBOX with its place in the order; SCHEDULER gates it (the design is
@@ -52,10 +52,12 @@ first written. SCHEDULER **replenishes** the cache; CONDUCT **fills slots**.
 
 **16 AT 48 KiB — RULED 2026-09-23 21:03Z by BOB #31** (Bob: *"12 active plus at least 4 queued"*, so a worker's done report is a spawn in the same turn): `CACHE_ROWS` 16 and the cache budget 48 KiB, superseding the 12 at 40 KiB below.
 
+**20 AT 48 KiB — 2026-09-24 ~17:25Z, SCHEDULER #19 on Bob's standing direction of 17:10Z** (*"keep 16 workers ACTIVELY working. Keep the cache full enough that CONDUCT never waits for a runnable row, with spares behind the live 16"*): `CACHE_ROWS` 20, 16 live plus at least 4 queued, the shape of the 21:03Z ruling at CONDUCT's new capacity. The byte budget does not move: it reads only rows not `integrated`.
+
 **A FINISHED ROW WAITING ON ITS TRAIN HOLDS NO SLOT — `integrated`, 2026-09-23 (SCHEDULER #16, under the ruling above).** At 19:58Z all 12 cache rows were finished and unlanded (7 on one train, 5 on the next) and CONDUCT had nothing to spawn. So CONDUCT writes a second word: a row whose branch it has integrated on a PUSHED batch goes `running` → `integrated`. The row stays OPEN and in the cache (it is `done` only when SCHEDULER finds its sha on `origin/main`), but P3's count, the refill's room and the cache's byte budget read only the rows not `integrated` (`HELD_QUEUE_STATES` in `tools/ledger.mjs`).
 
 **The invariants, each a `plancheck` arm and a coord write's ledger check (FAIL):** every open id is in EXACTLY ONE of the cache and the backlog; no
-closed id is in either; the cache holds ≤ 16 rows not `integrated` and no `blocked` row; every cache row's `depends-on` is met; both files
+closed id is in either; the cache holds ≤ 20 rows not `integrated` and no `blocked` row; every cache row's `depends-on` is met; both files
 are within budget.
 
 **WHEN `BACKLOG.md` IS OVER ITS BUDGET, THE TAIL MOVES, NOT THE HEAD — RULED 2026-09-22 by BOB #28 on SCHEDULER #14's

@@ -52,9 +52,9 @@ names.
    to whoever found it; one whose fix needs design goes to BOB, and returns as designed tasks. There is no other list.
 5. **When CONDUCT reports a task complete** (by `SendMessage`, naming the task and its integration sha): verify the sha is
    on `origin/main` and the row's work is there, then in ONE coord write mark it `done`, archive it, and replenish — the next
-   runnable tasks from the top of the backlog into the cache until it holds 16 (`CACHE_ROWS`), deleted from the backlog as they move. A
+   runnable tasks from the top of the backlog into the cache until it holds 20 (`CACHE_ROWS`), deleted from the backlog as they move. A
    `blocked` task is never moved into the cache. (`ledger.mjs` REFUSES any move that does not conserve the id multiset of cache, backlog and archive — read its refusal, never work around it.) The write pushes and reads back from the remote; tell CONDUCT what entered the cache.
-6. **Keep the cache ahead of CONDUCT.** It holds 16 (`CACHE_ROWS`, sized to CONDUCT's capacity plus spare — Bob, 2026-09-23, `WORK-PIPELINE.md`); CONDUCT spawns continuously. If the cache holds fewer than 4
+6. **Keep the cache ahead of CONDUCT.** It holds 20 (`CACHE_ROWS`, sized to CONDUCT's capacity plus spare — Bob, 2026-09-23 and 2026-09-24, `WORK-PIPELINE.md`); CONDUCT spawns continuously. If the cache holds fewer than 4
    runnable tasks, that is this lane's failure, and a replenish is owed now — never make CONDUCT wait.
 7. **Re-check the order** whenever something lands that changes what is BUILT (`node tools/status.mjs --check`, and each
    landed row's construct): a task whose dependency just landed may move up; a task whose design was superseded goes to

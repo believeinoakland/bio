@@ -185,7 +185,10 @@ const readPipe = (repo, l) => { const t = readRel(repo, l.live); return t === nu
    so 12 rows sit near 34 KB. More rows means raising that budget, which every session reads whole. Was 8. */
 /* 16 at 48 KiB since 2026-09-23 21:03Z (BOB #31, on Bob's ruling: "12 active plus at least 4 queued", so a worker's done
    report is a spawn in the same turn; workers finish in about ten minutes). Was 12 at 40 KiB. */
-export const CACHE_ROWS = 16;
+/* 20 at 48 KiB since 2026-09-24 ~17:25Z (SCHEDULER #19, on Bob's standing direction of 17:10Z: "keep 16 workers ACTIVELY
+   working ... with spares behind the live 16"): 16 live plus at least 4 queued, the 21:03Z ruling's shape at the new
+   capacity. The byte budget reads only rows not `integrated`, so it does not move. Was 16. */
+export const CACHE_ROWS = 20;
 
 export const CLOSED_QUEUE_STATES = new Set(["done", "superseded"]);
 export const OPEN_QUEUE_STATES = new Set(["queued", "running", "blocked", "integrated"]);
@@ -716,7 +719,7 @@ export function pipelineInvariants(cache, backlog, { repo = ROOT, claims = null,
   const P2 = [...c.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "cache", line: r.line })),
               ...b.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "backlog", line: r.line })),
               ...lt.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "tail", line: r.line }))];
-  /* P3 — ≤ CACHE_ROWS (12) rows in the cache (every row the grammar reads but an `integrated` one), none blocked. */
+  /* P3 — ≤ CACHE_ROWS (20) rows in the cache (every row the grammar reads but an `integrated` one), none blocked. */
   const P3 = [];
   const working = c.filter((r) => !HELD_QUEUE_STATES.has(r.state));   /* an `integrated` row holds no slot */
   if (working.length > CACHE_ROWS) P3.push({ what: "rows", rows: working.length, max: CACHE_ROWS });
