@@ -293,8 +293,21 @@ const run = async () => {
   const walkStrings = (v) => {
     if (typeof v === "string") { terms.add(v); return; }
     if (Array.isArray(v)) { v.forEach(walkStrings); return; }
-    if (v && typeof v === "object") for (const [k, val] of Object.entries(v)) { terms.add(k); walkStrings(val); }
+    if (v && typeof v === "object") for (const [k, val] of Object.entries(v)) {
+      if (!/^\d+$/.test(k)) terms.add(k);
+      walkStrings(val);
+    }
   };
+  /* CORRECTED 2026-09-23 (c17-unionfix), not exempted: D-182 published `vocabularies.risk_tiers`, the first
+     vocabulary KEYED BY NUMERALS (1, 2, 3 -> their words). The walk added the keys as terms, so the corpus held
+     "1" and ARM B2a failed on `DOCTRINE_EDITION = "1"` — the pack's AUTHORED edition, which no vocabulary
+     supplies. A digit-only key is an ordinal, not a word a pack could copy. The WORDS it maps to are still in
+     the corpus (ARM B1d asserts it over the published map), so a copied tier map still fails B2a on its words. */
+  walkStrings({ probe: { 1: "ORDINAL_PROBE_WORD" } });
+  t("ARM B1c: a digit-only vocabulary KEY is not a term, and the word it maps to IS — "
+    + "the one arm the risk_tiers correction depends on",
+    [terms.has("1"), terms.has("ORDINAL_PROBE_WORD")], [false, true]);
+  terms.clear();
   walkStrings(published.vocabularies);
   for (const a of pubActs) { terms.add(a.id); if (a.label) terms.add(a.label); }
   for (const k of Object.keys(OBSERVATION_STATES)) terms.add(k);
@@ -303,6 +316,9 @@ const run = async () => {
   for (const k of Object.keys(RUN_ENDINGS)) terms.add(k);
   for (const f of fences) terms.add(f.code);
   const CORPUS = [...terms];
+  const tierWords = Object.values(published?.vocabularies?.risk_tiers || {});
+  t("ARM B1d: and the published risk_tiers WORDS are in the corpus (numeral keys out, words in)",
+    [tierWords.length >= 4, tierWords.every((w) => terms.has(w))], [true, true]);
   /* CORRECTED 2026-09-23 (D-149), never exempted: D-149 published `law_levels` (federal, state, local), and the
      word `state` then became a sourced term — so this arm read the pack's ABSENCE_ANSWER_SHAPE, which names the
      FIELD `state` that §11's log requires, as a copied vocabulary. It is a homonym, not a copy, and this scanner
@@ -313,15 +329,11 @@ const run = async () => {
   const SHAPE_DECL = /export const ABSENCE_ANSWER_SHAPE = \[[^\]\n]*\];/g;
   t("ARM B2-shape: the one field-name declaration blanked before the scan is found exactly once",
     (PACK_SRC.match(SHAPE_DECL) || []).length, 1);
-  /* CORRECTED 2026-09-23 (CONDUCT #18 at c17-batch7, for D-182), never exempted: D-182 published `risk_tiers`, a
-     code->text map whose keys are 1, 2, 3 and `undetermined`, so the word "1" became a sourced term — and this arm
-     read the pack's DOCTRINE_EDITION = "1", the edition NUMBER of the pack's own doctrine, as a copied vocabulary.
-     A homonym again, for D-149's reason above. So exactly that ONE declaration — a version string, not any
-     vocabulary's value — is blanked too, and asserted to have ARMED (found once), so it cannot silently widen. */
-  const EDITION_DECL = /export const DOCTRINE_EDITION = "[^"\n]*";/g;
-  t("ARM B2-edition: the one version declaration blanked before the scan is found exactly once",
-    (PACK_SRC.match(EDITION_DECL) || []).length, 1);
-  const found = quotedIn(PACK_SRC.replace(SHAPE_DECL, "").replace(EDITION_DECL, ""), CORPUS);
+  /* SUPERSEDED AT INTEGRATION (CONDUCT #19, 2026-09-24, merging main into c18-batch7fix): c18-batch7fix blanked
+     DOCTRINE_EDITION = "1" because D-182's risk_tiers KEY "1" had become a sourced term. main fixed the same collision
+     at its cause — ARM B1c: a digit-only vocabulary KEY is not a term, the word it maps to is — so "1" is no longer
+     in the corpus and that second blanking would hide nothing true. It is removed rather than kept as a dead fence. */
+  const found = quotedIn(PACK_SRC.replace(SHAPE_DECL, ""), CORPUS);
   console.log(`  corpus: ${CORPUS.length} sourced terms, scanned against ${found.literals} string `
             + `literals in src/skillpack.mjs (comments removed)`);
   console.log(`  what this instrument CANNOT see: a term reproduced in a comment (deliberately — the `

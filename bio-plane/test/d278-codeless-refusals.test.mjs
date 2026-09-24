@@ -206,8 +206,12 @@ const claim = {
   published: await call(pub, "op=claim", { ...CLAIM, bootstrapToken: PUBLISHED }),
   mismatch:  await call(bound, "op=claim", CLAIM),
 };
-t("each of claim's three answers its own C-68 row with its pre-D-278 `error` byte-identical and its status "
-+ "unchanged — pinned BY NAME",
+/* CORRECTED 2026-09-23 (c17-unionfix), not exempted: the title said "its own C-68 row", and the section header's
+   range "C-68.2–.4" spells only C-68.2 literally, so `coverage.mjs --strict` read C-68.3 and C-68.4 as NEVER NAMED
+   and exited 1 on the train's union (and on c17-batch5 alone). This assertion always proved all three fire —
+   `facts()` compares the live answer's `check` to each row's — so the ids are now in the title, literally. */
+t("each of claim's three answers its own C-68 row (C-68.2 unset, C-68.3 published, C-68.4 mismatch) with its "
++ "pre-D-278 `error` byte-identical and its status unchanged — pinned BY NAME",
   Object.fromEntries(Object.keys(claim).map((k) => [k, facts(claim[k])])),
   { unset: rowFacts(INSTALLATION_CHECKS, "BOOTSTRAP_CREDENTIAL_UNSET", 409, "instance has no bootstrap credential set"),
     published: rowFacts(INSTALLATION_CHECKS, "BOOTSTRAP_CREDENTIAL_PUBLISHED", 409,

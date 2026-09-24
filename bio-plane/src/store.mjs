@@ -8459,7 +8459,7 @@ export class Store extends DurableObject {
        project while true about the reader. The publisher is this project's owner and sees it anyway;
        the stamp does not rest on that. `limit: 1` because the stamp needs the pairs and the hash,
        which covers the whole set before any bound (op=biasmanifest's own rule). */
-    const lens = this.#biasManifestNow({ scope: "project", scopeId: proj, viewer: "admin", limit: 1 });
+    const lens = this.biasManifest({ scope: "project", scopeId: proj, viewer: "admin", limit: 1 });
     const manifest = {
       in_force: lens.in_force === true,
       scope: "project", scope_id: proj,
@@ -45126,10 +45126,6 @@ export class Store extends DurableObject {
    *  does not exist; the bias bundles themselves go through `#bundleGate`, the
    *  same predicate every read in this file compiles. Nothing publishes how many
    *  rows the gate removed, because that count is the leak (REC-36). */
-  async biasManifest(args = {}) {
-    return this.#biasManifestNow(args);
-  }
-
   /* D-84 — THE SAME ANSWER, SYNCHRONOUSLY, AND THERE IS ONE BODY FOR BOTH. `op=publish` stamps the
      manifest in force into the case document it authors, and `publishCase()` is synchronous on purpose:
      REC-126's review copy runs it inside `transactionSync` and rolls it back, and a transaction body
@@ -45137,8 +45133,14 @@ export class Store extends DurableObject {
      `op=publish` already takes the case document's own sha with — is the same SHA-256 over the same
      bytes (measured equal to `crypto.subtle`'s over a non-ASCII input before this landed; the suite
      asserts the stamped hash equals op=biasmanifest's). A second computation of the effective set for
-     the stamp would be two spellings of the one sentence this method IS. */
-  #biasManifestNow({ scope = "instance", scopeId = "", viewer = null, limit = null, offset = 0 } = {}) {
+     the stamp would be two spellings of the one sentence this method IS.
+     CORRECTED 2026-09-23 (c17-unionfix), not exempted: D-84 first kept an `async biasManifest()` that
+     only returned `#biasManifestNow()`. That moved the capped body off the name `op=biasmanifest`
+     dispatches to, so bounds.test.mjs's walk lost the op (roster 37 -> 36 once REC-161 arrived) and
+     derivation-bounds.test.mjs's by-name pins read `#biasManifestNow`. The one body now carries the
+     public name and is synchronous; every caller awaits it and `await` of a plain value is that
+     value, so nothing about the answer moved. */
+  biasManifest({ scope = "instance", scopeId = "", viewer = null, limit = null, offset = 0 } = {}) {
     const st = String(scope) === "project" ? "project" : "instance";
     const sid = st === "project" ? String(scopeId || "").trim() : "";
     if (st === "project" && (!sid || !this.#viewerSees(sid, viewer)))
