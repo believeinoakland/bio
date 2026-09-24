@@ -1,0 +1,16 @@
+{
+ "unit": "plane:pushguard-check.test.mjs",
+ "inputHash": "b97166483abdf6a6a47cb01cc3da05c61317902e6cd3b5be413da052ce9e746c",
+ "verdict": "PASS",
+ "run": "fceaffc7d8582ed136549d511d416ebc23414dbf.1790268507421.1238.json",
+ "tree": "fceaffc7d8582ed136549d511d416ebc23414dbf",
+ "head": "58293bf31df1a603ff0a3aa16a6c12b47aca1063",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 1304,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d1cb1ba3-0ea1-5897-8ed8-b3bcbcc5fa4f",
+ "at": "2026-09-24T16:48:27.433Z"
+}
