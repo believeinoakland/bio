@@ -369,8 +369,8 @@ scope: drop the `CATALOG_VERSION` probe from `13.statement-ack`; its C-82.6 and 
 accepts-when: a catalogue bump leaves `status.mjs --check` at 0 drift (the measured failure it moves: 1 drift and four red checks on D-463's bump). NEGATIVE CONTROL: restore the version probe, bump the constant, and the zero-drift arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs D`).
 
-### D-512 · running — **`replay` IS HONOURED WITHOUT SERVER VERIFICATION: the end state BOB #33 ruled is that a replayed promotion of any type or revision names its drive-provenance capture, whose held bytes' preserved promotion record lists this bundle and this revision's `bundle.md` SHA-256.** — owner RECORD.
-status: running — running — spawned 22:14Z 2026-09-24 by SCHEDULER #20 as WORKER D-512 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-512 and the session; never conclude queued from absence.
+### D-512 · integrated — **`replay` IS HONOURED WITHOUT SERVER VERIFICATION: the end state BOB #33 ruled is that a replayed promotion of any type or revision names its drive-provenance capture, whose held bytes' preserved promotion record lists this bundle and this revision's `bundle.md` SHA-256.** — owner RECORD.
+status: integrated — SCHEDULER #21 23:52Z: tip c8246cb1, idle since 23:23; NO recorded N/N GREEN
 order: after D-511, which it builds on (BOB #33, 17:05Z: *the end state, a build that depends on (1)*; SCHEDULER #18)
 milestone: M7
 interface: I3 — the integrator classifies.
@@ -402,8 +402,8 @@ scope: when `recipients` is non-empty, render the members the record named; keep
 accepts-when: an obligation with named recipients shows them, against a real-plane suite (the measured failure it moves: "not addressed to anybody" to a named recipient). NEGATIVE CONTROL: read `assignee` alone again and the named-recipient arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (placed; `D-528` minted by UI-93's worker).
 
-### D-530 · running — **`op=attest` REFUSES A PARTED CAPTURE NO_SUCH_CAPTURE, a false statement that tells a member to re-capture a document the record holds: its pre-flight (index.mjs ~9194) heads only `captures/<whole sha>`.** The ratify gate's `hasCapture(sha)` may answer `{present:false}` off the same whole-key head (not yet driven). Found by D-476's worker (B, C). — owner RECORD.
-status: running — running — spawned 22:27Z 2026-09-24 by SCHEDULER #20 as WORKER D-530 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-530 and the session; never conclude queued from absence.
+### D-530 · integrated — **`op=attest` REFUSES A PARTED CAPTURE NO_SUCH_CAPTURE, a false statement that tells a member to re-capture a document the record holds: its pre-flight (index.mjs ~9194) heads only `captures/<whole sha>`.** The ratify gate's `hasCapture(sha)` may answer `{present:false}` off the same whole-key head (not yet driven). Found by D-476's worker (B, C). — owner RECORD.
+status: integrated — SCHEDULER #21 23:52Z: tip 16b72652; NO recorded N/N GREEN; CATALOG 1.29.0 unions with D-448/D-512/D-521; design recommendation sent to BOB #34
 order: after D-528, with the corrections: a refusal that says a held document is absent (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:06Z)
 milestone: M2
 interface: I3 — the refusal changes, or attest succeeds; the integrator classifies.
@@ -435,8 +435,8 @@ scope: `op=instance` and `op=captureprogressions` publish, per finding, the view
 accepts-when: a dismissed finding on `op=instance` carries its disposition view with author and reason, and is still listed (the measured failure it moves: the decision absent from the instance read). NEGATIVE CONTROL: drop the view from `#assembleInstance` and the dismissed-finding arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by CONDUCT #20).
 
-### D-533 · running — **`op=registeraudit` CALLS A PARTED CAPTURE'S BYTES MISSING AND THE RECORD UNSOUND: it heads only `captures/<whole sha>` (measured `unbacked: 1, sound: false`).** Found by D-476's worker (A). BOB #33 RULED 2026-09-24 21:17Z (cite until folded): YES — `sound` reads true for a row held IN PARTS when every part the record names is present, each part's digest verified; a fourth state "held in parts, all present"; a missing part is named; a row resolving neither way reads UNDETERMINED, counted OUTSIDE `sound`, never inside it. — owner RECORD.
-status: running — running — spawned 22:37Z 2026-09-24 by SCHEDULER #20 as WORKER D-533 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-533 and the session; never conclude queued from absence.
+### D-533 · integrated — **`op=registeraudit` CALLS A PARTED CAPTURE'S BYTES MISSING AND THE RECORD UNSOUND: it heads only `captures/<whole sha>` (measured `unbacked: 1, sound: false`).** Found by D-476's worker (A). BOB #33 RULED 2026-09-24 21:17Z (cite until folded): YES — `sound` reads true for a row held IN PARTS when every part the record names is present, each part's digest verified; a fourth state "held in parts, all present"; a missing part is named; a row resolving neither way reads UNDETERMINED, counted OUTSIDE `sound`, never inside it. — owner RECORD.
+status: integrated — SCHEDULER #21 23:52Z: M-150 on branch states GATE 78/78 GREEN at 74f514dd; tip d7f8a372 adds only M-150 (the report); D-556 minted, routed to BOB (conflicts with D-530's gate ruling)
 order: after D-530, with the corrections: an audit calling held bytes missing (CLAUDE.md §2) (BOB #33, 21:17Z; SCHEDULER #19, 2026-09-24)
 milestone: M2
 interface: I3 — a fourth audit state; the integrator classifies.
@@ -600,7 +600,8 @@ scope: re-anchor each arm on the current source, one unique anchor per arm, then
 accepts-when: `nc-rec66` arms all arms and `nc-rec129` arms 19 of 19 AS DECLARED (the measured failure it moves: one throw and 10 unarmed arms). NEGATIVE CONTROL: the harnesses are the controls; re-run each whole and record the counts.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs D`).
 
-### D-537 · queued — **M0-37'S CONTROL HAS NOT RUN SINCE THE COORD CUTOVER: `bio-plane/test/delegations.control.mjs` reads and writes `docs/development/CLAIMS.md` FROM THE WORKTREE, which since M0-110 is a 218-byte coord-pointer stub, so its byte floor refuses at the first arm (on origin/main too).** Found by M0-182's worker (via CONDUCT #20 23:00Z). — owner M0.
+### D-537 · running — **M0-37'S CONTROL HAS NOT RUN SINCE THE COORD CUTOVER: `bio-plane/test/delegations.control.mjs` reads and writes `docs/development/CLAIMS.md` FROM THE WORKTREE, which since M0-110 is a 218-byte coord-pointer stub, so its byte floor refuses at the first arm (on origin/main too).** Found by M0-182's worker (via CONDUCT #20 23:00Z). — owner M0.
+status: running — SCHEDULER #21 23:52Z spawns WORKER D-537 (depth 2)
 order: after D-559, with the process rows behind the product rows: a control that cannot run is loud, not a false green (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
@@ -622,6 +623,7 @@ accepts-when: the bound reads from a measurement id, and a burst above the cap r
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
 ### D-547 · queued — **A PROMOTE REVISION CAN RETYPE A BUNDLE IN PLACE: `#projectRow`'s write (store.mjs ~17747, `const projectedType = promotedType`) never compares the new type with `cur.object_type`, so after a retyping revision every type-scoped fence asks the wrong machine.** Found by D-468's worker (via CONDUCT #20 23:45Z). — owner RECORD.
+status: queued — SCHEDULER #21: HELD until D-526 is integrated; both edit op=promote's act
 order: before D-538, at the head of the backlog with the promote corrections: a record whose type silently changes under its own fences claims more than it can support (CLAUDE.md §2), and it outranks new features (SCHEDULER #21, 2026-09-24)
 milestone: M7
 interface: I3 — a new refusal code on op=promote; the integrator classifies.
@@ -631,7 +633,8 @@ scope: FIRST read the corpus (bio and scratch registers) for revisions that alre
 accepts-when: a revision that retypes an existing bundle is refused by its named code and the bundle's type is unchanged (the measured failure it moves: projectedType written with no comparison). NEGATIVE CONTROL: drop the comparison and the retype arm lands the new type, failing by name.
 added: 2026-09-24 · SCHEDULER #21 (id minted by D-468's worker).
 
-### D-548 · queued — **`bio-plane/test/d84-case-manifest.test.mjs` HAS NO `block()` RECORDER, so one fixture failure ends the run and every later section goes unmeasured.** Found by D-468's worker (via CONDUCT #20 23:45Z). — owner RECORD (the suite).
+### D-548 · running — **`bio-plane/test/d84-case-manifest.test.mjs` HAS NO `block()` RECORDER, so one fixture failure ends the run and every later section goes unmeasured.** Found by D-468's worker (via CONDUCT #20 23:45Z). — owner RECORD (the suite).
+status: running — SCHEDULER #21 23:52Z spawns WORKER D-548 (depth 2)
 order: after D-542, with the process rows behind the product rows: a suite that stops at its first failure hides later ones for a round, but no gate result is false (SCHEDULER #21, 2026-09-24)
 milestone: M0
 interface: none.
@@ -641,7 +644,8 @@ scope: adopt `bias.test.mjs`'s `block()` (one call per section) and report a mis
 accepts-when: with one section's fixture broken, every other section still reports its tally (the measured failure it moves: the run ends at the first failure). NEGATIVE CONTROL: break one section's fixture and the run names that section failed while the others report.
 added: 2026-09-24 · SCHEDULER #21 (id minted by D-468's worker).
 
-### D-522 · queued — **AN UNATTENDED RENDER THAT SUCCEEDS IS DRIVEN NOWHERE, AND THE MONITORING SWEEP (CAP-3) CANNOT SET THE RENDER FLAG, though BOB #32 ruled *an unattended sweep MAY render* within the allowance and through the governor.** D-491's residue (via CONDUCT #20 19:47Z). — owner CAPTURE.
+### D-522 · running — **AN UNATTENDED RENDER THAT SUCCEEDS IS DRIVEN NOWHERE, AND THE MONITORING SWEEP (CAP-3) CANNOT SET THE RENDER FLAG, though BOB #32 ruled *an unattended sweep MAY render* within the allowance and through the governor.** D-491's residue (via CONDUCT #20 19:47Z). — owner CAPTURE.
+status: running — SCHEDULER #21 23:52Z spawns WORKER D-522 (depth 2); D-520 runs beside it on the render path
 order: after D-520, with D-64's render rows: it waits on a renderer that can answer (SCHEDULER #19, 2026-09-24)
 milestone: M3
 interface: I3/I5 — the sweep's render request; the integrator classifies.
