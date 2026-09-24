@@ -220,7 +220,7 @@ scope: drop `.md` from those provenance labels; textchain's own /MEASUREMENTS/ a
 accepts-when: a MEASUREMENTS-only diff no longer selects the four. NEGATIVE CONTROL: restore one `.md` label and that suite is selected again, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### M0-173 · running — **A GATE'S VERDICT DEPENDS ON OTHER LANES' TIMING: every unit that runs plancheck reads the MOVING `origin/coord` (`gates.mjs` §3a: *"it reads what plancheck reads, the whole tree and `origin/coord`"*), so a coord write mid-gate can flip it. CONDUCT #20 measured `planning-hygiene.test.mjs` failing once mid-gate at ~17:1xZ and passing 76/0 on a re-run of the identical tree.** — owner M0.
+### M0-173 · integrated — **A GATE'S VERDICT DEPENDS ON OTHER LANES' TIMING: every unit that runs plancheck reads the MOVING `origin/coord` (`gates.mjs` §3a: *"it reads what plancheck reads, the whole tree and `origin/coord`"*), so a coord write mid-gate can flip it. CONDUCT #20 measured `planning-hygiene.test.mjs` failing once mid-gate at ~17:1xZ and passing 76/0 on a re-run of the identical tree.** — owner M0.
 order: at the backlog head: a gate whose verdict depends on timing undermines every train's gate and costs a red round (it cuts gate time, so the lane's law admits it at the head); D-511..D-510 above it wait on the running train, so no security row is delayed (BOB #33, 17:26Z; SCHEDULER #19, 2026-09-24)
 milestone: M0
 interface: none.
