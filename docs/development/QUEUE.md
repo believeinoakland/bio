@@ -274,7 +274,7 @@ scope: in `op=monitor`, route the locator through `readDriveAddress`, fetch `exp
 accepts-when: an unchanged Drive document reads `unchanged` across two ticks. NEGATIVE CONTROL: fetch the raw locator again, and the two-tick arm reads `modified` and fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`, the id CONDUCT #19 named).
 
-### D-511 · queued — **A LIVE HOLE IN A LANDED FENCE: `op=promote` honours a caller's `replay: true`, so any machine or session can exempt its promotion from the fences D-505 built.** BOB #33 RULED (2026-09-24 17:05Z): *`replay` IS THE SERVER'S WORD* (INVESTIGATIVE-SESSION.md §11 item 5, folded on main e9b21be6). — owner RECORD.
+### D-511 · running — **A LIVE HOLE IN A LANDED FENCE: `op=promote` honours a caller's `replay: true`, so any machine or session can exempt its promotion from the fences D-505 built.** BOB #33 RULED (2026-09-24 17:05Z): *`replay` IS THE SERVER'S WORD* (INVESTIGATIVE-SESSION.md §11 item 5, folded on main e9b21be6). — owner RECORD.
 order: at the backlog head: a live hole in a landed fence (BOB #33, 17:05Z: *placed high*; SCHEDULER #18)
 milestone: M7
 interface: I3 — a refusal where an answer stood; FULL gate.
@@ -284,7 +284,7 @@ scope: in promote's admission, delete a caller's `replay` unless the call is ADM
 accepts-when: a machine or session sending `replay: true` is refused C-32.19 by name, and the migration suite migrates clean. NEGATIVE CONTROL: drop the class test and arm (ix) fails by name.
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
 
-### D-509 · queued — **A FALSE GREEN ON THE MACHINE-FENCE SENTINEL: `machine-fences.control.mjs` arm (2) stays green when it must fail. Driven, not read: with the identity predicate neutered, a machine's `op=strengthbar` DOES set the group's required evidentiary strength, but block (ix) reads back group=believe-in-oakland while the act writes to the store's PRODUCING group (D-436 moved the write, not the read).** Found by D-503's worker (id minted by it). — owner RECORD.
+### D-509 · running — **A FALSE GREEN ON THE MACHINE-FENCE SENTINEL: `machine-fences.control.mjs` arm (2) stays green when it must fail. Driven, not read: with the identity predicate neutered, a machine's `op=strengthbar` DOES set the group's required evidentiary strength, but block (ix) reads back group=believe-in-oakland while the act writes to the store's PRODUCING group (D-436 moved the write, not the read).** Found by D-503's worker (id minted by it). — owner RECORD.
 order: at the backlog head: a control that cannot fail on the authority boundary no machine may cross (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:52Z)
 milestone: M7
 interface: none.
