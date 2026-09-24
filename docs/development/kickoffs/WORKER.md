@@ -205,7 +205,10 @@ thing the matcher does not understand must be NAMED, never silently scored zero.
 **Take every new id with `node tools/mintid.mjs <NS>`** (C, D, DEC, IC, REC, UI, CPDF, FL,
 PL, SK, M0, …). **Seven items collided on an id in one day, every one having measured the
 number free and every one right when it looked** — the convention was the defect, and the
-vigilance fix was already tried. **Never write a worked example naming "the next free
+vigilance fix was already tried. **Since D-242 (2026-09-24) a take is a compare-and-swap push of `ids/<NS>.tsv` to
+`origin/coord`**, because every worker is its own cloud clone and a clone-local lock was exclusive against nothing
+(IC-222 and IC-231 were each minted three times on 2026-09-23). So a take NEEDS the network: when it cannot push it
+REFUSES and hands out nothing — report that, never fall back to reading the file and adding one. **Never write a worked example naming "the next free
 number" into a corpus file**; the tool caught its own debt row poisoning its own floor.
 
 ## Boundaries

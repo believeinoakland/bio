@@ -20,6 +20,15 @@
  *   absentrefuses — THE OVER-STRICTNESS DIRECTION: read an absent list as an
  *     empty one. The pre-D-420 PDF and the unfinished walk are then refused —
  *     a bound nobody measured — and both admitted arms MUST fail.
+ *   restorekey — CPDF-22'S DECLARED CONTROL (BOB #31): put D-420's withdrawn
+ *     image-bound key back on both mint answers, beside `undetermined`. The two
+ *     one-shape arms fail BY NAME; the statement itself (level, why) holds.
+ *   silent — CPDF-22: the page form's statement is dropped, so an admission
+ *     without the bound says nothing. The stated arms fail; admission holds.
+ *   overstate — CPDF-22, over-strictness: the page form states `undetermined`
+ *     even when the list was HELD and passed. The held-and-passed arm fails.
+ *   The withdrawn key is spelled by construction here, never as a literal:
+ *   CPDF-22's acceptance is that `git grep` for it over bio-plane finds nothing.
  *
  * Pristine copies live in `.d420-control-pristine/` at the worktree root (named,
  * not globbed, in `.gitignore`), UNIQUELY NAMED per arm; every restore is
@@ -40,6 +49,7 @@ mkdirSync(SAFE, { recursive: true });
 
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
 const INDEX = join(PLANE, "src/index.mjs");
+const STORE = join(PLANE, "src/store.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 500000;   // both sources are > 700 KB; a restore over a stub must fail loudly.
 
@@ -71,6 +81,20 @@ const BEFORE = "the far rect on a PDF acquired BEFORE D-420 is ADMITTED";
 const STATED = "and the admission STATES what it was not checked against";
 const UNFINISHED = "a PDF whose walk did NOT finish admits the rect";
 const AGREE = "the rect the mint refuses, the crop refuses";
+const NOSTMT = "and carries NO undetermined statement: the bound was held and it passed";
+const ONESHAPE = "in ONE shape: the withdrawn image-bound key is absent";
+const ACTSAME = "and op=contentmint states it the same way, in the same one shape";
+
+/* D-420's withdrawn shape, rebuilt from `undetermined` for the restorekey arm. */
+const OLDKEY = `["image" + "_bound"]`;
+const oldShape = (v) => `...(${v} && ${v}.level === "page_images" ? { ${OLDKEY}: { determined: false, `
+  + `empty_level: "the images this capture's pages paint", why: ${v}.why } } : {})`;
+function armAll(file, pairs) {
+  const results = pairs.map(([f]) => readFileSync(file, "utf8").split(f).length - 1);
+  if (results.some((n) => n !== 1)) return { armed: false, matches: results.join("+") };
+  for (const [f, r] of pairs) writeFileSync(file, readFileSync(file, "utf8").replace(f, r));
+  return { armed: true, matches: results.join("+") };
+}
 
 const ARMS = {
   baseline: {
@@ -110,6 +134,35 @@ const ARMS = {
     patch: () => arm(CHECKS,
       "  if (!container || container.container_name !== 'pdf' || !Array.isArray(container.images)) return null;\n  const all = container.images;",
       "  if (!container) return null;\n  const all = Array.isArray(container.images) ? container.images : [];"),
+  },
+  restorekey: {
+    files: [STORE], suites: ["d420"],
+    why: "CPDF-22's row control: D-420's withdrawn key restored beside `undetermined` — two shapes again",
+    mustFail: [ONESHAPE, ACTSAME],
+    mustNotFail: [WIRE, EQUAL, FAR, BEFORE, STATED, UNFINISHED, NOSTMT, AGREE],
+    patch: () => armAll(STORE, [
+      ["                ...(legUndetermined ? { undetermined: legUndetermined } : {}) });",
+       `                ...(legUndetermined ? { undetermined: legUndetermined } : {}), ${oldShape("legUndetermined")} });`],
+      ["             ...(out.undetermined ? { undetermined: out.undetermined } : {}) };",
+       `             ...(out.undetermined ? { undetermined: out.undetermined } : {}), ${oldShape("out.undetermined")} };`]]),
+  },
+  silent: {
+    files: [CHECKS], suites: ["d420"],
+    why: "the page form's statement dropped: an admission without the bound says nothing",
+    mustFail: [STATED, UNFINISHED, ACTSAME],
+    mustNotFail: [WIRE, EQUAL, FAR, BEFORE, ONESHAPE, NOSTMT, AGREE],
+    patch: () => arm(CHECKS,
+      "  return { level: 'page_images', why: c.page_images_why };",
+      "  return null;"),
+  },
+  overstate: {
+    files: [CHECKS], suites: ["d420"],
+    why: "over-strictness: the page form states `undetermined` even when the list was held and passed",
+    mustFail: [NOSTMT],
+    mustNotFail: [WIRE, EQUAL, FAR, BEFORE, STATED, UNFINISHED, ONESHAPE, AGREE],
+    patch: () => arm(CHECKS,
+      "  if (!c || typeof c.page_images_why !== 'string' || !c.page_images_why) return null;\n  return { level: 'page_images', why: c.page_images_why };",
+      "  return { level: 'page_images', why: (c && c.page_images_why) || 'held' };"),
   },
 };
 

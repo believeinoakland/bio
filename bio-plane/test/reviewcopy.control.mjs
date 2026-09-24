@@ -1,5 +1,5 @@
-/* REC-126's NEGATIVE CONTROL DRIVER — eight arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
- * REC-133's, §6A.2's authority), re-runnable in one step:
+/* REC-126's NEGATIVE CONTROL DRIVER — eleven arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
+ * REC-133's, §6A.2's authority, (i)-(k) REC-198's, the list of a project's drafts), re-runnable in one step:
  *
  *     node test/reviewcopy.control.mjs            # every arm, in order
  *     node test/reviewcopy.control.mjs a          # one arm
@@ -108,6 +108,38 @@ const ARMS = {
        apply: () => edit(STORE,
          "        const by = this.#draftPublisher(row);",
          "        const by = row.updated_by;") },
+
+  /* REC-198 — the list of a project's drafts (BOB #32: fenced exactly like reading one). Declarations in the
+     suite's header, made before arming. */
+  i: { files: [STORE],
+       label: "(i) THE FENCE DROPPED: the list answers any caller the op table admits, for any project that exists",
+       apply: () => edit(STORE,
+         "\n        || !this.#seesProjectDrafts(pid, viewer)) return Store.#noReviewCopy();",
+         ") return Store.#noReviewCopy();") },
+
+  j: { files: [STORE],
+       label: "(j) THE LIAR'S SECOND FENCE: the list asks a COPY that agrees today on owner, editor and uninvited "
+            + "member — joined participants only, as the ruling's parenthesis reads — instead of calling the fence",
+       apply: () => edit(STORE,
+         "\n        || !this.#seesProjectDrafts(pid, viewer)) return Store.#noReviewCopy();",
+         "\n        || !this.#isProjectEditor(pid, String(viewer ?? \"\").replace(/^member:/, \"\"))) "
+       + "return Store.#noReviewCopy();") },
+
+  k: { files: [STORE],
+       label: "(k) OVER-STRICTNESS: correct work in a spelling the suite did not write — the list's local `pid` "
+            + "renamed `projectId` throughout — must PASS",
+       apply: () => {
+         const src = readFileSync(STORE, "utf8");
+         const a = src.indexOf("  caseDraftList({ project = null");
+         const b = src.indexOf("  /* ===== END REC-126", a);
+         if (a < 0 || b < 0) throw new Error("ARM k: caseDraftList's span not found");
+         const span = src.slice(a, b);
+         const renamed = span.replace(/\bpid\b/g, "projectId");
+         if (renamed === span || (span.match(/\bpid\b/g) || []).length < 4)
+           throw new Error("ARM k: the rename matched too little to be an arm");
+         if (DRY) { DRY.push({ file: STORE, needle: "  caseDraftList({ project = null" }); return; }
+         writeFileSync(STORE, src.slice(0, a) + renamed + src.slice(b));
+       } },
 };
 
 const want = process.argv[2];
@@ -196,4 +228,22 @@ console.log(`\npen removed: ${PEN}`);
                                              owner-revokes arm after it (revokedBy reads omar) — one more than declared
      f         reviewcopy: 62 pass, 1 fail   as declared (issue widened to editors)
      g         reviewcopy: 59 pass, 4 fail   as declared (authoring widened to any member)
-     h         reviewcopy: 62 pass, 1 fail   as declared (dry run as the editor) */
+     h         reviewcopy: 62 pass, 1 fail   as declared (dry run as the editor)
+
+   RE-MEASURED 2026-09-23 by WORKER REC-198 (BOB #32's list of a project's drafts), ALL TWELVE rows in one driver run,
+   every restore sha256 MATCH / content IDENTICAL / size ok (11 of 11):
+     baseline  reviewcopy: 77 pass, 0 fail
+     a         reviewcopy: 72 pass, 5 fail   unchanged count
+     b         reviewcopy: 76 pass, 1 fail
+     c         reviewcopy: 75 pass, 2 fail
+     d         reviewcopy: 75 pass, 2 fail
+     e         reviewcopy: 75 pass, 2 fail
+     f         reviewcopy: 76 pass, 1 fail
+     g         reviewcopy: 69 pass, 8 fail   +4 over REC-133's figure, all block 9's: authoring widened to any member lets
+                                             vic, omar and pat write drafts into PROJ, so the owner's and the editor's
+                                             lists, the rows-open count and the bite's total read more than the seven
+                                             authorised — the list SEEING the widening, in the declared direction
+     h         reviewcopy: 76 pass, 1 fail
+     i         reviewcopy: 71 pass, 6 fail   as declared (the fence dropped; the uninvited arm fails by name)
+     j         reviewcopy: 74 pass, 3 fail   as declared (a second, joined-only fence: the admission table and structure)
+     k         reviewcopy: 77 pass, 0 fail   as declared (over-strictness: a renamed local passes) */

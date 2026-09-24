@@ -360,6 +360,9 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        here, and D0 read 54 against a pinned 53 — the pair of arms doing its job
        on the first battery of the item that added it. */
     ["C-32.17", "OPERATOR_TOKEN_CANNOT_GOVERN"],
+    /* D-149, 2026-09-23 — a machine credential may not state the laws that govern an action's request
+       (BIO_Case_Making_v0_1.md §2). D-PIN-B failed naming exactly this row until it was written here. */
+    ["C-32.18", "MACHINE_CANNOT_SET_LAWS"],
     /* ACT_SHAPE_CHECKS — the single-homed tail, plus §14a's capability sentence */
     ["C-33.1", "NO_CONCLUSION"],
     ["C-33.2", "NO_FALSIFIER"],
@@ -524,14 +527,16 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
   /* MOVED 54 -> 55 on 2026-09-23 (REC-175), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 55 rows across 2 families" on the item's tree
      over origin/main 14faa089) and not by adding to the number in the file: C-33.38 FILE_DIGEST_MISMATCH. */
   t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two, REC-125's two, "
-    + "REC-126's one, REC-124's three, REC-136's one, D-136's one, REC-175's one, REC-176's one and D-168's one — a walk that lost a family "
-    + "would run fewer arms and every one of them would still pass",
+    + "REC-126's one, REC-124's three, REC-136's one, D-136's one, REC-175's one, REC-176's one, D-168's one and D-149's one — a walk that lost a "
+    + "family would run fewer arms and every one of them would still pass",
     /* MOVED 54 -> 55 on 2026-09-23 (REC-176), FROM THE FIGURE THIS INSTRUMENT PRINTED on the item's tree over
        origin/main 0e7cc03e and not by adding to the number in the file: C-67.1 SNAP_KEY_TAKEN. */
     /* MOVED 55 -> 56 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 54 -> 55 from the same base): the figure this
        instrument PRINTED on the merged tree — C-33.38 FILE_DIGEST_MISMATCH and C-67.1 SNAP_KEY_TAKEN together. */
     /* MOVED 56 -> 57 by CONDUCT #16 at D-168's merge (D-168 moved 54 -> 55 on its own base: C-33.39 RETIRED_NOT_CITABLE); the figure below is the one PRINTED on the merged tree. */
-    rowsSeen, 57);
+    /* MOVED 57 -> 58 on 2026-09-23 (D-149), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 58 rows across 2 families")
+       on the item's tree over origin/main 02603e88: C-32.18 MACHINE_CANNOT_SET_LAWS. */
+    rowsSeen, 58);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

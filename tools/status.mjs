@@ -50,7 +50,10 @@ export const STATES = ["BUILT", "PARTIAL", "ABSENT", "DEFERRED", "UNDETERMINED"]
    `helper("op"` in app.html — not recalled. A new helper is a probe blind spot; the suite
    re-derives this list and fails if a helper calling an op is missing from it. */
 export const UI_HELPERS = ["recR", "recPostR", "actAsk", "intentAsk", "intentPreflight",
-  "captureAct", "apiQ", "apiR", "api"];
+  "captureAct", "apiQ", "apiR", "api",
+  /* D-126's queue set-apply (`recPostR(op, …)` over a selection), added at integration by c19-unionfix, 2026-09-24,
+     when the suite's re-derivation named it. */
+  "queueApplySet"];
 
 const cache = new Map();
 function read(repo, rel) {

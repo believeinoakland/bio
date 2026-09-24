@@ -870,6 +870,12 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     projectownerarith: "REC-30: an owner count is existence",
     projectparticipants: "7.8, gated by PARTICIPATION on the server-stamped `by`: a non-participant "
       + "is told what a nonexistent project would tell them",
+    /* REC-149 (Membership v2 §7.14), classified at birth. */
+    projectvisibility: "REC-149: the setting and its history are answered only through `#inSight` (FULL sight, "
+      + "the D-15 predicate); a caller without it is told what a nonexistent project would tell them",
+    projectdirectory: "REC-149: every row is asked through `Store#sight` and listed only at EXISTENCE — a "
+      + "DISCOVERABLE project the caller is outside; it names the id and name and nothing else, and a hidden "
+      + "project is never in it (driven in project-discoverable.test.mjs §2-§3)",
     /* REC-14's reads, classified at the merge (2026-08-04, rec30-agent). The
        classifications are security judgments and they are this item's to make. */
     excludedby: "REC-14 gated it at birth, correctly and through the same one compilation point. It is "
@@ -952,13 +958,35 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "the read compared NOTHING and that this is an outage and not a statement about the record. "
       + "NO COUNT OF THE WITHHELD IS REPORTED (op=backlinks' rule): a count of pairs a caller may not see "
       + "would say that somebody's project holds material about a subject they were never invited to.",
+    actionquotes: "D-148: the FEE QUOTES the record holds, set side by side by counterparty or by request. "
+      + "GATED: it ENUMERATES across actions when read by counterparty, so it takes the fail-closed viewer "
+      + "stamp beside op=contradictionpairs in index.mjs and joins every quote to its action through "
+      + "viewerPredicate — an action the caller may not see contributes no row, and read by request it "
+      + "answers NO_SUCH_BUNDLE exactly as an absent one. No count of withheld quotes is reported.",
+    casedrafts: "REC-198: the LIST of a project's review-copy DRAFTS — each draft's id, its case identity, who "
+      + "made and last edited it, and the read that opens it. GATED, and fenced EXACTLY like reading one draft "
+      + "(BOB #32, 2026-09-23 23:08Z): the store's Store#caseDraftList CALLS #seesProjectDrafts, the very "
+      + "predicate op=reviewcopy's member door calls, fed the fail-closed viewer stamp beside "
+      + "op=contradictionpairs in index.mjs — D-15's predicate over the producing project, so a draft is its "
+      + "project's working material and a member without standing there reads nothing of it. Every caller the "
+      + "fence refuses, and every project that does not exist, reads the single read's own dead answer "
+      + "(NO_REVIEW_COPY), byte for byte, so the list is no oracle for which projects exist or hold drafts. It "
+      + "has no RECIPIENT door: a grant reads the one draft it names and cannot list.",
     narrowcandidates: "REC-86: the machine's proposals for making ONE leg of ONE reading more specific. "
       + "GATED: it names a QUESTION and answers about the document its leg rests on, so it takes the "
       + "fail-closed viewer stamp beside op=narrow in index.mjs and answers a question the caller may not "
       + "see exactly as an absent one (NARROW_NO_INQUIRY), before any leg or candidate is read. The "
       + "candidates are drawn only from the capture that one leg already rests on, so a caller who can "
       + "see the question can already read that leg's document; nothing wider is reached.",
-    transcription: "REC-87: one member's TYPING of a portion of a document, by content id — its text, who "
+    versionnotice: "D-394: whether the document a citation rests on has a NEWER version at its address, and "
+      + "whether a passage at the same extent is in it (framework section 18.1). GATED TWICE: the subject — a "
+      + "question or a passage — through Store#viewerSees, refused byte-identically to an absent one "
+      + "(VERSION_NOTICE_NO_INQUIRY, VERSION_NOTICE_NO_CONTENT); and the chain through op=versionchain's own "
+      + "#bundleGate, by CALLING that method rather than copying its join, so a newer version filed in a "
+      + "project the caller was never invited to is not in the chain this caller reads. It takes the "
+      + "fail-closed viewer stamp beside op=versionchain in index.mjs. The answer names a newer capture's "
+      + "bundle only when versionChain would have named it to this caller. It writes nothing.",
+    transcription:"REC-87: one member's TYPING of a portion of a document, by content id — its text, who "
       + "typed it and who attested it. GATED: the typing is filed in a DOCUMENT, so it takes the fail-closed "
       + "viewer stamp beside op=transcribe and op=transcriptionattest in index.mjs and answers a typing in a "
       + "document the caller may not see exactly as an absent one (TRANSCRIPTION_NOT_FOUND). The id is a hash "
@@ -972,6 +1000,13 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "caller may not read answers exactly as an absent one (LEAD_NOT_FOUND), and a look's referent the "
       + "caller can no longer see is not published — the lead discloses what a member was told and where they "
       + "went looking, which is a line of inquiry.",
+    themeread: "D-162: one THEME by id — a member's declared idea, its test, its declarer, and the documents "
+      + "and passages placed in it (members) or proposed for it (hunches) — or the list of themes, searchable. "
+      + "GATED PER PLACEMENT: a theme itself is not existence-private (framework §8.4: it may be searched, shown "
+      + "and followed), but every placement names a DOCUMENT, so the read takes the fail-closed viewer stamp beside "
+      + "op=themeplace in index.mjs and asks viewerPredicate of the placed document INSIDE the statement; a "
+      + "placement the caller cannot see is omitted with no count and no label, so the theme is no oracle for a "
+      + "document in a project the caller was never invited to. An unrecognised viewer reads no theme at all.",
     provenanceroutes: "REC-116: which documents in this instance carry a STANDING LOOKED_INDETERMINATE "
       + "marker — the roster REC-69's 2026-08-09 delegation asked for and nobody built. GATED, and the "
       + "disclosure is worth naming precisely: each row names a DOCUMENT the group holds and says the "
@@ -1253,6 +1288,14 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "no row a viewer predicate could filter, and nothing a hidden project could leak through. AND PUBLIC since "
       + "REC-163 (Publication §7 point 1): a caller with no credential is answered the slug alone, which every "
       + "published bundle's signed `group` already carries, and never the row's provenance.",
+    /* CLASSIFIED at integration by c19-unionfix, 2026-09-24: REC-164's op arrived unclassified because its
+       worker gated only its own suites, and this sweep reads the whole OPS table. */
+    groupidentity: "HOLDS NO CORPUS MATERIAL: REC-164's group identity (Publication §7 points 2 and 3) — the "
+      + "slug, the group's display name and its claimed domain, with the domain's dated check verdicts. No bundle "
+      + "id and no row a viewer predicate could filter. PUBLIC on point 1's reasoning and split by the ADMISSION "
+      + "gate exactly as op=instancegroup: a caller with no credential is answered the slug, the display name only "
+      + "beside it, and the domain only while its latest verdict is `verified` (what the group asserts to the world); "
+      + "only a credential the gate admits is answered the claim, its state and both dated histories.",
     progression: "a progression DEFINITION: a member's constitutive claim about how an institution "
       + "ought to behave. It names stages, not documents.",
     proposals: "the DERIVED findings feed. Aggregated per (progression, stage) over entities and "
@@ -1274,6 +1317,11 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     snapkeycensus: "CLASS-FENCED to admin and probe (no member class), so no member session reaches it — "
       + "registeraudit's fence, and for its reason: it is an audit of the working corpus that lists bundle ids whose "
       + "manifest lost a row to a repeated snap key; probe is confined by scopeFor to the scratch namespace, a "
+      + "different Durable Object. It writes nothing.",
+    /* D-256, 2026-09-23. Classified by the item that adds it. */
+    changedfromaudit: "CLASS-FENCED to admin and probe (no member class), so no member session reaches it — "
+      + "registeraudit's fence, and for its reason: it is an audit of the working corpus that lists bundle ids whose "
+      + "body carries addGo's changed-from sentence; probe is confined by scopeFor to the scratch namespace, a "
       + "different Durable Object. It writes nothing.",
     /* PL-4 / IS-4, 2026-08-08. Classified by the item that adds it. */
     capturerequestdraining: "CLASS-FENCED to admin, probe and daemon (NO MEMBER CLASS), so no member "

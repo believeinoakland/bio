@@ -316,10 +316,23 @@ const run = async () => {
   for (const k of Object.keys(RUN_ENDINGS)) terms.add(k);
   for (const f of fences) terms.add(f.code);
   const CORPUS = [...terms];
+  /* CORRECTED 2026-09-23 (D-149), never exempted: D-149 published `law_levels` (federal, state, local), and the
+     word `state` then became a sourced term — so this arm read the pack's ABSENCE_ANSWER_SHAPE, which names the
+     FIELD `state` that §11's log requires, as a copied vocabulary. It is a homonym, not a copy, and this scanner
+     compares spellings and cannot tell the two apart. So exactly that ONE declaration — a list of FIELD NAMES,
+     not of any vocabulary's values — is blanked before the scan, and the blanking is asserted to have ARMED (the
+     declaration found once) so it cannot silently widen. Every other literal in the file, `"state"` included,
+     is still scanned. */
+  const SHAPE_DECL = /export const ABSENCE_ANSWER_SHAPE = \[[^\]\n]*\];/g;
+  t("ARM B2-shape: the one field-name declaration blanked before the scan is found exactly once",
+    (PACK_SRC.match(SHAPE_DECL) || []).length, 1);
   const tierWords = Object.values(published?.vocabularies?.risk_tiers || {});
   t("ARM B1d: and the published risk_tiers WORDS are in the corpus (numeral keys out, words in)",
     [tierWords.length >= 4, tierWords.every((w) => terms.has(w))], [true, true]);
-  const found = quotedIn(PACK_SRC, CORPUS);
+  /* CONDUCT #18 at main's merge into c17-batch7 (2026-09-23): D-182's "1" homonym is handled by c17-unionfix's
+     digit-key rule (numeral KEYS out of the corpus, their WORDS in, arms B1c/B1d), which supersedes the
+     DOCTRINE_EDITION blanking this branch carried; D-149's field-name blanking stays, since `state` is a word. */
+  const found = quotedIn(PACK_SRC.replace(SHAPE_DECL, ""), CORPUS);
   console.log(`  corpus: ${CORPUS.length} sourced terms, scanned against ${found.literals} string `
             + `literals in src/skillpack.mjs (comments removed)`);
   console.log(`  what this instrument CANNOT see: a term reproduced in a comment (deliberately — the `

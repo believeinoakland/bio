@@ -604,12 +604,14 @@ const cat = await affordances(null);
    item 7 rules APPENDS to the relationship's history. Corrected, not loosened,
    for every note above's reason; it moved by exactly the one object-directed
    op REC-136 added. */
-/* CORRECTED 2026-09-23 (D-311): TWENTY-SEVEN, with the seven roster acts folded in on the per-pair
-   fact. Corrected, not loosened, for every note above's reason; it moved by exactly the seven. */
-t("no target -> the whole catalogue: twenty-seven acts, each with id/label/weight/needs/mode/rung/prompt",
+/* CORRECTED 2026-09-23 (CONDUCT #18 at REC-149's merge onto c17-batch7): TWENTY-NINE — D-311's twenty-seven,
+   D-149's `actionlaws` and REC-149's `projectvisibilityset`. Each side's count was right on its own base; the union
+   carries all three. */
+t("no target -> the whole catalogue: twenty-nine acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 27, true]);
+  [true, 29, true]);
+
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
    null for every act no ruling attaches one to, and where a ruling does attach
    one it is the PUBLISHED constant — so a surface that has the control
@@ -853,9 +855,13 @@ t("the four resolutions reach a caller OVER THE WIRE, exactly as the catalogue h
    enforces the position), so a roster act publishes `needs: null`. Still composed per act, never
    hand-listed: the roster set is read off `roster`-reading predicates, not typed out here. */
 const ROSTER_IDS = new Set(ACTS.filter((a) => /\broster\b/.test(String(a.applies))).map((a) => a.id));
-t("every act is session-reachable, and each carries the capability its own NEEDS entry names — publish rides the publication surface, not the contribute one, and a roster act names none",
+/* CORRECTED AGAIN 2026-09-23 (CONDUCT #18 at REC-149's merge): D-311's roster acts and REC-149's
+   `projectvisibilityset` each carry NO capability, for the same reason (Membership §7 governs them, and the store
+   enforces the position); each side's composition held one exception set, and the union holds both. */
+t("every act is session-reachable, and each carries the capability its own NEEDS entry names — publish rides the publication surface, not the contribute one, and a roster act and the visibility setting name none",
   cat.result.catalog.map((a) => [a.needs, a.mode]),
-  cat.result.catalog.map((a) => [a.id === "publish" ? "publish" : ROSTER_IDS.has(a.id) ? null : "contribute", "session"]));
+  cat.result.catalog.map((a) => [a.id === "publish" ? "publish" : (ROSTER_IDS.has(a.id) || a.id === "projectvisibilityset") ? null : "contribute", "session"]));
+
 /* CORRECTED BY FW-14, never exempted, and this is the pin the item MOVED rather
    than merely reworded. It read "rung is DECLARED: cite is null (no document
    assigns one — FW-14's, not ours), retire is terminal" and pinned cite's rung
@@ -984,8 +990,17 @@ const affB2 = await affordances(B);
    State Rules §4.1 ("A RETIRED ITEM IS NOT CITABLE", BOB #30) made the store refuse it
    (RETIRED_NOT_CITABLE, C-33.39), so publishing `cite` here would be the pre-flight disagreeing with the
    refusal it fronts (DEC-8). The old expectation was right about the old store and is wrong about this one. */
-t("retired is terminal: only reinstate remains (a retired item is not citable — D-168, the store refuses it)",
-  actIds(affB2), ["reinstate"]);
+/* CORRECTED AGAIN 2026-09-23 by REC-183, never exempted: this then expected `reinstate` to remain, because
+   `op=reinstate` moved a severed edge back to `confirmed` without asking what its target had become — the
+   third door onto a retired item. The store now refuses it RETIRED_NOT_CITABLE (C-33.39, State Rules §4.1),
+   so publishing `reinstate` here would be the pre-flight disagreeing with the refusal (DEC-8). The op is
+   driven below so the empty list is checked against the refusal it fronts, not against itself. */
+t("retired is terminal: nothing remains (a retired item is not citable, and so not reinstatable — D-168, REC-183)",
+  actIds(affB2), []);
+const hB5 = await selectIds([B]);
+const reB = rP(await GET(`op=reinstate&token=mem-rec19&project=${P}&handle=${hB5}&reason=wanted+back`));
+t("... and op=reinstate onto the retired item is refused RETIRED_NOT_CITABLE, as the empty list says",
+  [reB.ok, reB.code], [false, "RETIRED_NOT_CITABLE"]);
 
 /* --------------------------------------------------------------- focus */
 console.log("\n--- a focus: dispose while an edge exists, EMPTY when elevated — and the empty list is honest ---");
@@ -1042,8 +1057,10 @@ await promote(ACTN, actnMd(ACTN), "action", "planned");
 /* CORRECTED 2026-09-23 (D-311): asked as RUTH, a member — the assertion two below drives the act
    with the machine credential and it is refused BY NAME, which is the disagreement D-311 closes. */
 const affActn = await affordances(ACTN, RUTH);
-t("an action publishes the two acts that operate it (REC-24)",
-  [affActn.ok, actIds(affActn)], [true, ["actioncorrespond", "actionmove"]]);
+/* CORRECTED 2026-09-23 (D-149): THREE, with `actionlaws`. The old assertion was right for REC-24's two and
+   is corrected rather than loosened, so a published act on an action still cannot appear unannounced. */
+t("an action publishes the three acts that operate it (REC-24's two, D-149's governing laws)",
+  [affActn.ok, actIds(affActn)], [true, ["actioncorrespond", "actionlaws", "actionmove"]]);
 /* DEC-8 both ways, in the same run and on the same object: what is published is
    what the store accepts, and what the store refuses is refused for a reason a
    surface renders rather than computes. A machine credential REACHES both and

@@ -65,8 +65,10 @@ const AT_EARNED = "  earnedBasisRegistry(subjectEntity, targetIds = [], contentI
 const HOIST = [
   ["    for (const r of this.#rows(\n      `SELECT u.bundle_id AS bundle_id",
    "    const ncHoisted = this.#rows(\n      `SELECT u.bundle_id AS bundle_id"],
-  ["       ) u LEFT JOIN reading_text_source ts ON ts.capture_sha = u.capture_sha`, ...ids, ...ids)) {",
-   "       ) u LEFT JOIN reading_text_source ts ON ts.capture_sha = u.capture_sha`, ...ids, ...ids);\n    for (const r of ncHoisted) {"],
+  /* CORRECTED 2026-09-23 by D-443: the statement's arguments are now ONE json_each value bound twice, on a
+     line of their own, so the anchor moved with them. The hoist it reconstructs is unchanged. */
+  ["      JSON.stringify(ids), JSON.stringify(ids))) {",
+   "      JSON.stringify(ids), JSON.stringify(ids));\n    for (const r of ncHoisted) {"],
 ];
 
 const ARMS = [

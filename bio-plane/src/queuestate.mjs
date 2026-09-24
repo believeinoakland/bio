@@ -110,8 +110,11 @@ export const QUEUE_OBLIGATION_KINDS = {
      too, so nothing about this kind blocks anything. The producer is unbuilt
      (D-86's remaining half), which is why this is free to correct now — and
      exactly why it had to be, since the producer would have been built to the
-     sentence. The identical wording in NOTIFICATIONS.md is corrected with it. */
-  "bias-debt":                   "a re-run is owed after a lens change (D-86) — DISCLOSED, never blocking (DEC-20)",
+     sentence. The identical wording in NOTIFICATIONS.md is corrected with it.
+     LIVE from 2026-09-23 (D-86): the `bias-debt` consumer on the one alarm raises one item per run whose lens
+     `moved`, read from aiRunRead and never compared again; store.mjs #obligationsBiasDebt serves it on op=queue. */
+  "bias-debt":                   "a re-run is owed after a lens change (D-86) — DISCLOSED, never blocking (DEC-20) "
+                              + "— LIVE: store.mjs #biasDebtSweep",
   "endorsement-owed":            "an endorsement is owed on a pending administrator or owner vote",
   "expertise-confirmation-owed": "an expertise declaration awaits an administrator's confirmation",
   "membership-request":          "a membership request is at the doorbell",

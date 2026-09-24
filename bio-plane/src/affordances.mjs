@@ -68,7 +68,7 @@
  */
 
 import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KINDS,
-         CORRESPONDENCE_DIRECTIONS, RESOLUTIONS, RISK_TIERS,
+         CORRESPONDENCE_DIRECTIONS, RESOLUTIONS, RISK_TIERS, LAW_LEVELS,
          /* REC-43 / DEC-39. The two letters the co-attestation fence states are
             the RULE's own, imported from where the refusal that enforces it is
             computed, so the sentence a member reads and the grade the gate will
@@ -539,6 +539,9 @@ export const RUNG_ABSENCE_GROUNDS = {
  * catalogue's own C-2.10 suite, imported from the module that enforces it. */
 export const VOCABULARIES = {
   action_kind: ACTION_KINDS,
+  /* D-149. The three levels a records request's governing law is stated at, published so the surface that
+     offers `op=actionlaws` keeps no copy — the catalog's array, which C-2.10 and the act's refusal also read. */
+  law_levels: LAW_LEVELS,
   dispositions: DISPOSITIONS,
   /* REC-14 / DEC-13. Published so a ceremony surface never keeps its own copy
      of the three positions. WHICH position a group takes gates NOTHING —
@@ -783,6 +786,9 @@ export const RUNG_ABSENT = {
      holds, so there is no act on the record for a rung to price. It cannot be undone either: that is WRITTEN ONCE,
      refused a second time by name (C-64.3), and stated there rather than as a rung here. */
   instancegroupseed:    { ground: "substrate", is: "records, once, the producing group every later creation is stamped with" },
+  /* REC-164: the group's display name and its domain claim — presentation of WHO publishes, never what the record says. */
+  groupnameset:         { ground: "substrate", is: "records the group's own words for itself, a presentation value in no signed bytes" },
+  groupdomainset:       { ground: "substrate", is: "records a domain CLAIM and its verdict; it moves no document, claim or grade" },
   connect:              { ground: "substrate", is: "DERIVES connections from documents already held; re-running re-derives" },
   provenancechain:      { ground: "substrate", is: "rebuilds the provenance register from what is already recorded" },
   provenanceroute:      { ground: "substrate", is: "assesses a route already captured" },
@@ -853,7 +859,9 @@ export const RUNG_ABSENT = {
   taskforward:          { ground: "undetermined", is: "moves a task to another member; assignee-fenced by the store" },
   taskresolve:          { ground: "undetermined", is: "records how a task ended" },
   actioncorrespond:     { ground: "undetermined", is: "records what came back from outside the system — REC-23's counterparty, named or honestly undetermined" },
+  actionlaws:           { ground: "undetermined", is: "a member's attributed statement of the laws governing an action's request (D-149); restated by a further act, never cleared, and the Session Log keeps what each statement replaced" },
   projectfork:          { ground: "undetermined", is: "creates a NEW project; the source object is unchanged, and nothing folds a fork back" },
+  projectvisibilityset: { ground: "undetermined", is: "an owner's recorded, append-only choice of whether a project is DISCOVERABLE or HIDDEN (Membership v2 §7.14, REC-149); it sets no state on the project's document" },
   biasadopt:            { ground: "undetermined", is: "the authored, attributed adoption putting a declared-bias set in force for a scope (DEC-54 c/d)" },
   strengthbar:          { ground: "undetermined", is: "the GROUP's declared default required strength (DEC-17)" },
   entitycreate:         { ground: "undetermined", is: "a registry write introducing a SUBJECT (safeguard 4)" },
@@ -921,6 +929,12 @@ export const RUNG_ABSENT = {
      rather than undoing the first. The act writes a NEW reading, born `suggested`,
      and moves nothing existing — so it is corrected forward and never signed. */
   narrow:               { ground: "undetermined", is: "a member writes a NEW reading of a question's evidence with one citation pointing at LESS of its document; the old reading and its citation are untouched, and the new one is born suggested (Bob's 5.3)" },
+  /* REC-122 / IC-232 — CHOOSING A CONNECTION'S ON-POINT MENTION, ground `undetermined` on
+     `narrow`'s measurement one row up: none of its refusals (C-74) is in
+     `JUSTIFICATION_REFUSALS`, and widening that class would be this item re-grading the ladder
+     to suit itself. NOT `reversible`: nothing takes a choice back; a re-choice SUPERSEDES it and
+     the old row is retained, which is corrected forward. Never signed, and never the machine's. */
+  connectionchoose:     { ground: "undetermined", is: "a member records WHICH mention of a subject, on one end of one connection, is the one on point; the machine's strongest-graded pair is kept beside it, and a re-choice supersedes and retains the old (Bob's 5.4 second pass)" },
   /* REC-87 / IC-128 — TRANSCRIBE and the attestation of a typing. Ground
      `undetermined` on `attesttext`'s and `narrow`'s measurement: neither act's
      refusals are in `JUSTIFICATION_REFUSALS` (an empty typing, C-52.6, is not a
@@ -952,7 +966,20 @@ export const RUNG_ABSENT = {
   reviewgrant:          { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
   reviewrevoke:         { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
   reviewcomment:        { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
+  /* D-150 (BIO_Publication §3 rule 11), classified at integration by c19-unionfix (2026-09-24): D-150 landed this
+     mutating op and gated only its own suites, so the ladder's FORWARD arm first met it on the union. Ground
+     `undetermined` on `reviewcomment`'s measurement beside it: its refusals are positional (not a participant, the
+     author's own, a signed edition, IC-246's bound), never a missing justification, and no act takes an
+     acknowledgement back — an edited statement is a different sentence with none. It gates nothing (rule 11). */
+  statementack:         { ground: "undetermined", is: "a joined participant other than the statement's author, or a review-copy recipient through their grant, acknowledges a case's exclusion statement as its second reader; attributed and dated, it re-authors the unsigned case documents of that exact statement to list it, and is never required to publish" },
   leadlook:             { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" },
+  /* D-162 / IC-241 — THE THEME. Ground `undetermined` on `lead`'s measurement: none of the three
+     acts' refusals is a missing justification (a theme with no test, C-81.3, is a missing CRITERION,
+     refused before anything is written). NOT `reversible`: nothing takes a theme or a placement back
+     — a changed idea is a new theme, because every placement was judged against the old test. */
+  themedeclare:         { ground: "undetermined", is: "a member declares a THEME in their own name — an idea and the TEST a document or a passage passes or fails; a lens for gathering material, visibly theirs, and never the basis of a claim (C-81.1)" },
+  themeplace:           { ground: "undetermined", is: "a member places a document or a passage in a theme, or confirms a proposal standing there, on their judgement that it passes the test: membership, graded D" },
+  themepropose:         { ground: "undetermined", is: "a member or a machine PROPOSES a placement in a theme: a hunch, graded C, which is never membership until a member confirms it" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -1512,6 +1539,10 @@ export const ACTS = [
      for actionmove's reason. */
   { id: "actioncorrespond", label: "Record correspondence", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" },
+  /* D-149. Stating which laws govern the request, on an action in ANY state, for actioncorrespond's reason:
+     the store's own guard is the object's TYPE and nothing else. Weight `single`: one list, one act. */
+  { id: "actionlaws", label: "State governing laws", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" },
   /* PL-2 / IS-2 — THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE.
    *
    * WHY THEY ARE `ACTS` AND NOT `NON_ACTS`, decided rather than assumed, and the
@@ -1658,9 +1689,15 @@ export const ACTS = [
     types: ["information", "inquiry", "project"],
     applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.confirmed ?? 0) > 0)
                      || (ty === "project" && f.cites_out.confirmed > 0 && f.project_participant !== false) },
+  /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
+     refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
+     is not. The PROJECT arm is not narrowed: `cites_out.severed` is a count and does not say whether
+     every severed target is retired, so a project whose only severed edges point at retired items is
+     still offered an act the store refuses — a stated residue, not a rule. */
   { id: "reinstate", label: "Reinstate a severed citation", weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.severed ?? 0) > 0)
+    applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.severed ?? 0) > 0
+                         && !(ty === "information" && f.current_state === "retired"))
                      || (ty === "project" && f.cites_out.severed > 0 && f.project_participant !== false) },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
@@ -1706,6 +1743,16 @@ export const ACTS = [
   { id: "projectownerrescue", label: "Add an owner to a project whose owners are all inactive (with a reason)",
     weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.rescue_open === true },
+  /* REC-149 (Membership v2 §7.14): WHETHER THIS PROJECT CAN BE FOUND — an OWNER's recorded act on the project
+     that is the TARGET. It asks the PAIR fact `project_target_owner` (`#isProjectOwner(target, caller)`, the one
+     owner predicate `projectVisibilitySet` refuses on), never D-310's `project_owner` (owner of SOME project),
+     which would offer it on every project to anyone owning any — D-311's argument (2) for the roster acts. It is
+     offered on `=== true` ONLY: the store refuses every other caller, a machine credential included (C-70.2),
+     so a null (no roster position) must not publish it — this is a NEW act, so no existing act set moves.
+     Weight `single`: one project, one setting. */
+  { id: "projectvisibilityset", label: "Choose whether this project can be found", weight: "single",
+    types: ["project"],
+    applies: (f, ty) => ty === "project" && f.project_target_owner === true },
 ];
 
 /* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
@@ -1729,6 +1776,11 @@ export const MACHINE_REFUSALS = {
   inquiryground:      "MACHINE_CANNOT_GROUND",
   actionmove:         "MACHINE_CANNOT_MOVE_ACTION",
   actioncorrespond:   "MACHINE_CANNOT_CORRESPOND",
+  /* D-149's act, added at integration by c19-unionfix (2026-09-24): the store refuses a machine BY NAME at it
+     (C-32.18, `is-machine-set-laws`), and D-149 landed it in ACTS without this entry — so a machine credential
+     was OFFERED "State governing laws" and refused at the act, the DEC-8 disagreement this map exists to
+     prevent. Found when `d311-roster-affordances.test.mjs` gained the drive its fixture guard demanded. */
+  actionlaws:         "MACHINE_CANNOT_SET_LAWS",
   versionaccept:      "MACHINE_CANNOT_MOVE_VERSION",
   versionreject:      "MACHINE_CANNOT_MOVE_VERSION",
   versionconsider:    "MACHINE_CANNOT_MOVE_VERSION",
@@ -1783,6 +1835,11 @@ export const NON_ACTS = {
   narrow: "leg-directed: makes ONE leg of ONE reading point at less of its document, keyed by (inquiry, reading, ordinal); writes a new reading and moves nothing existing",
   /* REC-86: the candidate list is a READ, on `extractproposals`' reasoning below. */
   narrowcandidates: "read: the machine's proposals for making one leg more specific, keyed by (inquiry, reading, ordinal); labelled machine work and writes nothing",
+  /* REC-122 / IC-232. NOT an object-directed act, for `narrow`'s reason: its subject is ONE END
+     of ONE CONNECTION — (capture, other capture, entity) — and `affordanceFacts` carries no
+     connections, so an applies() over those facts would offer it on every document. The surface
+     that offers it is the connection display (UI's, DELEGATED), where the connection is in hand. */
+  connectionchoose: "connection-directed: records which mention is on point on ONE end of ONE connection, keyed by (capture, other capture, entity); writes a choice row beside the machine's pair and moves nothing existing",
   /* REC-146: the CONTRADICTION pairing read is a NON_ACT for a reason one step
      stronger than `narrowcandidates`' above, and it is worth stating because the
      surfacing item (PRESENT) will be tempted to make it one. It is not
@@ -1793,6 +1850,10 @@ export const NON_ACTS = {
      on a pair until a member has judged it. An affordance rendered beside a bundle
      would offer the act before the judgement that licenses it exists. */
   contradictionpairs: "read: which of the record's own assertions are worth comparing, by the four named keys; forms candidate pairs, judges none of them and writes nothing",
+  /* D-148. Not object-directed on `contradictionpairs`' reasoning: it reads ACROSS
+     actions by counterparty, and what it returns is something to LOOK AT. */
+  actionquotes: "read: the fee quotes the record holds, by counterparty or by request, side by side; judges none of them and writes nothing",
+  versionnotice: "read: whether the document a citation rests on has a newer version at its address, and whether a passage at the same extent is in it — a candidate or UNDETERMINED; moves nothing and writes nothing (D-394)",
   /* REC-87 / IC-128. TRANSCRIBE is NOT an object-directed act, on `contentmint`'s
      reason: its subject is a PORTION of a document — (document, extent) — and
      `affordanceFacts` carries no page and no region, so an applies() over those
@@ -1815,6 +1876,13 @@ export const NON_ACTS = {
   leadlook: "lead-directed: a member records following a lead, keyed by lead id; writes one observation_log row under authority_kind lead",
   leadshare: "lead-directed: the lead's author shares it to one project they have joined, keyed by (lead id, project); writes a `lead_shares` row and no edge",
   leadread: "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope",
+  /* D-162 / IC-241. THE THEME is NOT an object-directed act: its subject is a member's IDEA, which
+     no object's facts could say when to offer, and a placement names a document without acting on
+     it — no state moves, no edge is written, nothing the document says changes. */
+  themedeclare: "member-directed: a member declares a theme (an idea and its test) keyed by nothing the record holds; writes a `themes` row, no edge and no entity, and is never evidence",
+  themeplace: "theme-directed: a member places a document or a passage in a theme, keyed by (theme id, target); writes a `theme_placements` row as membership and no edge",
+  themepropose: "theme-directed: a member or a machine proposes a placement, keyed by (theme id, target); writes a `theme_placements` row as a hunch that is never membership",
+  themeread: "read: one theme by id — its idea, its test, its declarer, its members and its hunches apart, each placement gated by the viewer's sight of the document — or the themes, searchable by a phrase",
   /* SK-8 — THE EXTRACT RUN'S TWO OPS, and the reason they are NON_ACTS is a
      stronger version of `contentmint`'s directly above rather than a weaker one.
      `extractpropose` is keyed by (RUN, document): its subject is a run's
@@ -1861,6 +1929,9 @@ export const NON_ACTS = {
   casedraft: "review copy: its subject is a DRAFT CASE keyed draft_id, beside publish and never a bundle in a state — the answer names op=reviewcopy",
   reviewgrant: "review copy: its subject is a DRAFT CASE keyed draft_id and its product is a grant keyed grant_id, not a move of any bundle",
   reviewrevoke: "review copy: its subject is a GRANT keyed grant_id, not a bundle in a state",
+  /* REC-198: a READ, and its subject is a PROJECT's set of drafts — it moves nothing and offers nothing beside a
+     bundle; each row it answers names the read that opens that draft. */
+  casedrafts: "read: the drafts of one project (BIO_Publication §6A.4), fenced exactly like reading one draft (BOB #32); each row names op=reviewcopy for its draft, and nothing is written",
   /* REC-14 / DEC-17. Its subject is the GROUP's own declaration about the
      standard its work is held to — authored before the work, about their own
      intentions — so there is no object in any state for it to appear beside. A
@@ -1944,8 +2015,8 @@ export const NON_ACTS = {
   /* Identity, roster and operator surface. */
   expertisedeclare: "a member's own declaration, not a corpus act",
   expertiseconfirm: "administrator act on a declaration, class-gated",
-  memberadd: "roster governance, bounded by SESSION_OPS.admin",
-  memberset: "roster governance, bounded by SESSION_OPS.admin",
+  memberadd: "roster governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
+  memberset: "roster governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   /* D-136. THE THREE ARRIVE HERE BECAUSE THEY ARRIVED IN `NEEDS`, and that is
      the totality guard doing its job rather than a formality: giving them
      session reach put them in the capability table, and every key there is an
@@ -1961,8 +2032,12 @@ export const NON_ACTS = {
   membercaps: "roster governance — the subject is a member's capabilities, not a bundle (4.9)",
   adminendorse: "section 4.7 governance — the subject is a proposed administrator, not a bundle",
   adminremove: "section 4.7 governance — the subject is an administrator's standing, not a bundle",
-  signeradd: "signer governance, bounded by SESSION_OPS.admin",
-  signerset: "signer governance, bounded by SESSION_OPS.admin",
+  /* REC-164: session-reachable through `IDENTITY_ACTIONS`, so in `NEEDS`, so named here: the subject is the group's
+     public identity (Publication §7 points 2 and 3), never a bundle. */
+  groupnameset: "the group's public display name — the subject is the instance's identity, not a bundle",
+  groupdomainset: "the group's claimed domain — the subject is the instance's identity, not a bundle",
+  signeradd: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
+  signerset: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   governorconfig: "operator tuning of the per-host governor",
   /* Task acts: their subject is a TASK row, assignee-fenced by the store
      (NOT_YOURS), published with the task itself via op=tasks. */
@@ -2072,6 +2147,33 @@ export const NON_ACTS = {
   aicredentialmint: "creating an agent credential with a declared task scope (D-199): instance-level governance, authored and dated by a member, keyed by nothing in the corpus. Not object-directed — it is the roster ops' territory, not a bundle's",
   aicredentialrevoke: "withdrawing an agent credential (D-199): the narrowing half of the same governance act, recorded against the member who withdrew it. Not object-directed, for the reason its counterpart is not",
 };
+
+/* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
+ *
+ * NOTIFICATIONS.md §Applying a handler to a selection: *"each item independently succeeds or is RETAINED
+ * WITH A REASON."* `refuse` stops the whole set on drift and hands over nothing; `report` proceeds and says
+ * what moved; `single` has no set. `per-item` is none of them: every item is tried on its own, the ones
+ * the act accepts are applied, and each one it refuses is kept, carrying that act's own refusal as its
+ * reason. The mechanism is `store.mjs #perItem`, and these three ops reach it when the body carries
+ * `items` (a caller who sends no `items` gets the single act, unchanged).
+ *
+ * WHY A TABLE OF ITS OWN AND NOT ROWS IN `ACTS`: all three are NON_ACTS below for reasons that still hold
+ * — a proposal disposition is keyed on a derived proposal and a task act on a task, never on a bundle's
+ * state — so an `applies()` over `affordanceFacts` would have nothing to read. What a surface needs from
+ * the plane is the WEIGHT (so it knows a selection is one call, not N) and the SET KEY; both are published
+ * here, and `op=affordances` serves this table as `set_acts`. The bound, `PER_ITEM_MAX`, is defined HERE and
+ * imported by the store (`Store.PER_ITEM_MAX`) and by the control plane, so the number a surface reads
+ * is the one the act enforces. */
+export const PER_ITEM_MAX = 100;
+export const PER_ITEM_ACTS = [
+  { id: "proposedispose", label: "Defer or dismiss the selected findings", weight: "per-item",
+    set_key: "items", item_keys: [["key"], ["progressionKey", "stageKey"], ["project", "finding"]],
+    shared_keys: ["to", "reason", "kind"] },
+  { id: "taskresolve", label: "Resolve the selected obligations", weight: "per-item",
+    set_key: "items", item_keys: [["id"]], shared_keys: [] },
+  { id: "taskforward", label: "Forward the selected obligations", weight: "per-item",
+    set_key: "items", item_keys: [["id"]], shared_keys: ["to"] },
+];
 
 export const ACT_IDS = new Set(ACTS.map((a) => a.id));
 

@@ -102,6 +102,10 @@
  *     id.  Today every worker runs in a worktree of one clone; the day that
  *     stops being true this mechanism stops covering it, and the fallback is the
  *     corpus floor again.  Named in DEBT.md rather than left to be discovered.
+     THAT DAY CAME, AND THIS LINE IS WHERE IT WAS PREDICTED (D-242, 2026-09-23): every worker became its own cloud
+     clone, and the corpus floor alone re-issued ids held on `land/*` branches. The TAKE therefore moved to ONE
+     writer — a compare-and-swap push to `origin/coord` (`take`, below the ledger section) — and this ledger is now
+     each clone's RECORD of its takes.
  *   - A NETWORK FILESYSTEM without atomic O_EXCL could double-issue.  APFS and
  *     ext4 are atomic here; NFSv2 was not.  Named for the same reason.
  *   - A WORKER THAT DOES NOT RUN THIS TOOL collides exactly as before.  That is
@@ -128,8 +132,8 @@
  */
 
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, rmSync, statSync } from "node:fs";
-import { hostname } from "node:os";
-import { execFileSync } from "node:child_process";
+import { hostname, tmpdir } from "node:os";
+import { execFileSync, spawnSync } from "node:child_process";
 import { dirname, join, resolve, isAbsolute, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ARCHIVE_TARGETS, LEDGERS } from "./ledger.mjs";
@@ -933,6 +937,268 @@ export function held(ns, { repo = REPO_ROOT, env = process.env } = {}) {
   return readdirSync(join(root, ns)).map(Number).filter((x) => Number.isInteger(x)).sort((a, b) => a - b);
 }
 
+/* ------------------------------------------------- THE TAKE: ONE WRITER (D-242, 2026-09-23)
+ *
+ * WHY THE LEDGER ABOVE STOPPED BEING THE ALLOCATOR, AND IT IS A MEASUREMENT. Everything above
+ * makes a take exclusive against every process sharing ONE `.git` — and on 2026-09-23 no two
+ * workers shared one: every worker is its own cloud clone, so every clone had its own empty
+ * ledger and the exclusive create was exclusive against nothing. That day alone clones minted
+ * IC-222 three times, IC-224, IC-228, IC-231 three times, C-68..C-72 and M-117 twice, each
+ * already held on an in-flight `land/*` branch. And the floor could not save them: the C floor
+ * read `bio-checks.mjs` in the minting tree only, and an id a sibling had written on its landing
+ * ref is on no tree but that ref.
+ *
+ * THE MECHANISM: A COMPARE-AND-SWAP PUSH TO `<remote>/coord`. A take reads coord's tip, writes
+ * the ids it takes into `ids/<NS>.tsv` in a commit whose ONLY parent is that tip, and pushes it
+ * WITHOUT force. A remote ref refuses a non-fast-forward, so of two takes built on one tip exactly
+ * one lands; the loser's push is REJECTED, and it re-reads the new tip — which now holds the
+ * winner's id — and takes above it. The remote's ref update is the one atomic act, and every
+ * clone on every machine that can push to the remote passes through it.
+ *
+ * WHY THIS AND NOT THE PLANE'S `Store.allocId`, which the row offered as the alternative. Both
+ * are one writer. The CAS push needs nothing that does not already exist: every worker already
+ * pushes `coord` (`tools/coord.mjs write` is how a claim is made, and it is itself a CAS loop
+ * over the same ref), so a worker that can claim can take, and a worker that cannot reach coord
+ * cannot claim either. `allocId` would need a new plane op, an IC, a deploy (DIST's), a
+ * credential in every worker, and it would make id allocation — a development act — depend on
+ * the production plane being up and on the development namespace living in the record. Measured
+ * from this cloud container, 2026-09-23: `git push --dry-run origin <ff-child>:refs/heads/coord`
+ * was accepted by the receive-pack (and, one fetch earlier, REFUSED `[rejected] (fetch first)`
+ * because coord had moved — the CAS refusal itself, on the real remote); and coord's own log
+ * carries cloud sessions' pushes minutes apart.
+ *
+ * THE FLOOR THE TAKE READS COVERS EVERY ID VISIBLE ANYWHERE, IN EVERY NAMESPACE: the highest of
+ *   - this tree's corpus floor (`corpusFloor`, unchanged — it reads the working tree and coord);
+ *   - the same namespace corpus read at the REMOTE's `main`, `coord` and EVERY `land/*` tip, as
+ *     `git ls-remote` listed them at the take (the C floor reading only main is the measured harm);
+ *   - every id `ids/<NS>.tsv` on coord already holds (the take's own ledger);
+ *   - every id this clone's pre-D-242 local ledger holds (an id minted there and not yet written
+ *     anywhere is still not handed out again).
+ *
+ * WHEN THE PUSH FAILS FOR ANY REASON BUT A RACE — the network, a 403, a hook declining, coord
+ * absent, a fetch refused — THE TAKE REFUSES AND HANDS OUT NOTHING. There is no fallback to the
+ * local ledger or the corpus floor: a local guess is exactly the convention that collided, and
+ * handing one out under this tool's name would carry the confidence of a mechanism (the D-242
+ * sentence above). Only a push rejected as a non-fast-forward (`[rejected] (non-fast-forward)`,
+ * `(fetch first)`, `(stale info)`, or the remote's `cannot lock ref`) is a lost race, and it is
+ * retried, bounded.
+ *
+ * WHAT IT DOES NOT COVER, stated: an id written by hand without this tool (the audit's 2b
+ * question still asks); an id a worker minted and has not yet pushed ANYWHERE by an allocator
+ * other than this one (the pre-D-242 local ledger of another clone); a namespace corpus read at a
+ * `land/*` tip covers the corpus files only, not a mention elsewhere on that branch.
+ *
+ * THE TEST NEVER TOUCHES THE REAL COORD: `BIO_IDTAKE_REMOTE` names the remote (default `origin`),
+ * and a caller that planted a scratch ledger (`BIO_IDALLOC_DIR`) without naming the remote is
+ * REFUSED (TAKE_REMOTE_UNNAMED), because that is a suite aimed at the real record. */
+export const TAKE_BRANCH = "coord";
+export const TAKE_DIR = "ids";
+export const takeFile = (ns) => `${TAKE_DIR}/${ns}.tsv`;
+export const takeRemote = (env = process.env) => env.BIO_IDTAKE_REMOTE || "origin";
+
+function tgit(repo, args, { input = null, env = null } = {}) {
+  const r = spawnSync("git", ["-c", "gc.auto=0", "-c", "maintenance.auto=false", ...args], {
+    cwd: repo, input: input ?? undefined, encoding: "utf8", maxBuffer: 1 << 30,
+    env: env ? { ...process.env, ...env } : process.env,
+  });
+  return { status: r.status, stdout: r.stdout || "", stderr: r.stderr || "" };
+}
+
+/** The ids `ids/<NS>.tsv` holds: one line per id taken, `<NS>-<n>\t<iso>\t<who>\t<why>`. */
+export function takenIn(text, ns) {
+  const out = [];
+  for (const m of String(text || "").matchAll(new RegExp(`^${ns}-(\\d+)\\t`, "gm"))) out.push(Number(m[1]));
+  return out;
+}
+
+/** The namespace's corpus read at each named REF (the remote's main, coord and every land/* tip),
+ *  by the same generous pattern and ceiling as `corpusFloor`. Throws when git cannot read them:
+ *  a floor that could not be read is not a floor of zero. */
+export function refsFloor(ns, { repo = REPO_ROOT, refs = [] } = {}) {
+  const spec = NAMESPACES[ns];
+  if (!spec) throw new Error(`unknown namespace ${ns}`);
+  const specs = spec.corpus.filter((rel) => !isAbsolute(rel))
+    .map((rel) => (rel.endsWith("/") ? `:(glob)${rel}**/*.md` : rel));
+  if (!refs.length || !specs.length) return { floor: 0, from: null, seen: 0, refs: refs.length };
+  const re = spec.pattern ? spec.pattern(ns) : new RegExp(`\\b${ns}-(\\d+)`, "g");
+  const r = tgit(repo, ["grep", "-I", "-E", "-e", `${ns}-?[0-9]`, ...refs, "--", ...specs]);
+  if (r.status !== 0 && r.status !== 1)
+    throw new Error(`git grep over ${refs.length} ref(s) failed (exit ${r.status}): ${r.stderr.trim().slice(0, 200)}`);
+  let floor = 0, from = null, seen = 0;
+  for (const line of r.stdout.split("\n")) {
+    const a = line.indexOf(":"), b = line.indexOf(":", a + 1);
+    if (a < 0 || b < 0) continue;
+    const text = line.slice(b + 1);
+    const g = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
+    for (const m of text.matchAll(g)) {
+      seen++;
+      const n = Number(m[1]);
+      if (!Number.isInteger(n) || n > spec.ceiling) continue;
+      if (n > floor) { floor = n; from = line.slice(0, b); }
+    }
+  }
+  return { floor, from, seen, refs: refs.length };
+}
+
+const RACE_RE = /\[rejected\][^\n]*\((?:non-fast-forward|fetch first|stale info)\)|cannot lock ref|failed to update ref/i;
+const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
+/** TAKE `count` ids in `ns` through the ONE writer. Returns `{ok:false, reason, detail}` and NO
+ *  ids on every failure that is not a lost race — never a local guess. */
+export function take(ns, { count = 1, who = "unknown", why = "", repo = REPO_ROOT, env = process.env,
+                           maxAttempts = 24, beforePush = null } = {}) {
+  if (!NAMESPACES[ns]) throw new Error(`unknown namespace ${ns}`);
+  if (!Number.isInteger(count) || count < 1) throw new Error(`--count must be a positive integer`);
+  const no = (reason, detail) => ({ ok: false, reason, detail: `${detail} NOTHING WAS TAKEN — no id is handed out without the one writer (D-242).` });
+  if (env.BIO_IDALLOC_DIR && !env.BIO_IDTAKE_REMOTE)
+    return no("TAKE_REMOTE_UNNAMED", "BIO_IDALLOC_DIR plants a scratch ledger but BIO_IDTAKE_REMOTE names no remote, so this take "
+      + "would push to the REAL coord. Name the remote (BIO_IDTAKE_REMOTE=origin for the real one).");
+  const remote = takeRemote(env);
+  /* THE FENCE IS ON WHERE THE REMOTE RESOLVES, NOT ON WHETHER ONE IS NAMED — and that is a receipt, this item's own.
+     Its first suite named `BIO_IDTAKE_REMOTE=origin` meaning the scratch CLONE's origin, while a child process whose
+     argv[1] was this file ran the CLI, whose repo is THIS checkout: `origin` resolved to the real remote and eight
+     takes (D-459..D-466) landed on the REAL coord. A remote NAME means whatever the repo it is resolved in says. So a
+     take with a planted ledger must resolve to a LOCAL path (a scratch remote); a network remote is refused. */
+  if (env.BIO_IDALLOC_DIR) {
+    const isPath = /^(?:\/|\.{1,2}\/|file:\/\/)/.test(remote);
+    const url = isPath ? remote : tgit(repo, ["remote", "get-url", remote]).stdout.trim();
+    if (!/^(?:\/|\.{1,2}\/|file:\/\/)/.test(url))
+      return no("TAKE_REMOTE_NOT_SCRATCH", `BIO_IDALLOC_DIR plants a scratch ledger but the take remote \`${remote}\` resolves in ${repo} to `
+        + `${url ? `\`${url}\`` : "nothing"}, which is not a local scratch repository. A planted ledger never takes from a network remote.`);
+  }
+  /* EVERY GIT ACT BELOW NAMES THE URL, NEVER THE REMOTE NAME, and that is measured: a fetch naming the remote also
+     updates `refs/remotes/<remote>/coord` opportunistically, so concurrent takes in ONE clone failed on that ref's
+     lock ("cannot lock ref … but expected …") and refused — safe, and a refusal nobody needed. By URL, a take writes
+     only its own private read refs. */
+  const isPathSpec = /^(?:\/|\.{1,2}\/|file:\/\/)/.test(remote) || /^[a-z]+:\/\//i.test(remote) || remote.includes("@");
+  const where = isPathSpec ? remote : tgit(repo, ["remote", "get-url", remote]).stdout.trim();
+  if (!where) return no("REMOTE_UNREACHABLE", `the take remote \`${remote}\` names no remote in ${repo}.`);
+  const base = `refs/bio-idtake/${process.pid}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const drop = () => {
+    const l = tgit(repo, ["for-each-ref", "--format=%(refname)", `${base}/`]);
+    const refs = l.stdout.split("\n").filter(Boolean);
+    if (refs.length) tgit(repo, ["update-ref", "--stdin"], { input: refs.map((r) => `delete ${r}\n`).join("") });
+  };
+  try {
+    /* 1. WHAT THE REMOTE HOLDS, AT ONE MOMENT: coord (the writer), main, and every landing ref. */
+    const ls = tgit(repo, ["ls-remote", where, `refs/heads/${TAKE_BRANCH}`, "refs/heads/main", "refs/heads/land/*"]);
+    if (ls.status !== 0)
+      return no("REMOTE_UNREACHABLE", `\`git ls-remote ${remote}\` failed (exit ${ls.status}): ${ls.stderr.trim().split("\n").slice(-2).join(" ").slice(0, 300)}.`);
+    const heads = ls.stdout.split("\n").filter(Boolean).map((l) => l.split("\t")[1]).filter(Boolean);
+    if (!heads.includes(`refs/heads/${TAKE_BRANCH}`))
+      return no("NO_WRITER", `${remote} has no \`${TAKE_BRANCH}\` branch, so there is no one writer to take through.`);
+    const f = tgit(repo, ["fetch", "-q", "--no-tags", "--no-write-fetch-head", "--refmap=", where,
+      ...heads.map((h) => `+${h}:${base}/${h.slice("refs/heads/".length)}`)]);
+    if (f.status !== 0)
+      return no("REMOTE_UNREACHABLE", `the fetch of ${heads.length} ref(s) from ${remote} failed (exit ${f.status}): ${f.stderr.trim().slice(0, 300)}.`);
+
+    /* 2. THE FLOOR: every id visible anywhere. */
+    const tree = corpusFloor(ns, { repo });
+    let refs;
+    try { refs = refsFloor(ns, { repo, refs: heads.map((h) => `${base}/${h.slice("refs/heads/".length)}`) }); }
+    catch (e) { return no("FLOOR_UNREADABLE", `the namespace's corpus could not be read at the remote's refs: ${e.message}.`); }
+    const localHeld = held(ns, { repo, env });
+    const localTop = localHeld.length ? localHeld[localHeld.length - 1] : 0;
+    const land = heads.filter((h) => h.startsWith("refs/heads/land/")).length;
+
+    let lost = 0;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (attempt > 1) {
+        const rf = tgit(repo, ["fetch", "-q", "--no-tags", "--no-write-fetch-head", "--refmap=", where, `+refs/heads/${TAKE_BRANCH}:${base}/${TAKE_BRANCH}`]);
+        if (rf.status !== 0) return no("REMOTE_UNREACHABLE", `re-reading ${remote}/${TAKE_BRANCH} after a lost race failed: ${rf.stderr.trim().slice(0, 300)}.`);
+      }
+      const tipR = tgit(repo, ["rev-parse", "--verify", "--quiet", `${base}/${TAKE_BRANCH}^{commit}`]);
+      if (tipR.status !== 0) return no("NO_WRITER", `${remote}/${TAKE_BRANCH} was listed but could not be read.`);
+      const tip = tipR.stdout.trim();
+      const cur = tgit(repo, ["cat-file", "blob", `${tip}:${takeFile(ns)}`]);
+      const text = cur.status === 0 ? cur.stdout : "";
+      const onCoord = takenIn(text, ns);
+      const coordTop = onCoord.length ? Math.max(...onCoord) : 0;
+      const floor = Math.max(tree.floor, refs.floor, coordTop, localTop);
+      const at = new Date().toISOString();
+      const ids = [], lines = [];
+      for (let n = floor + 1; ids.length < count; n++) {
+        ids.push(`${ns}-${n}`);
+        lines.push(`${ns}-${n}\t${at}\t${String(who).replace(/[\t\n]/g, " ")}\t${String(why).replace(/[\t\n]/g, " ")}\n`);
+      }
+      const body = (text && !text.endsWith("\n") ? text + "\n" : text) + lines.join("");
+      const blob = tgit(repo, ["hash-object", "-w", "--stdin"], { input: body });
+      const idx = join(tmpdir(), `bio-idtake-${process.pid}-${Math.random().toString(36).slice(2, 8)}.index`);
+      const ienv = { GIT_INDEX_FILE: idx };
+      const ident = tgit(repo, ["config", "user.email"]).stdout.trim() ? {}
+        : { GIT_AUTHOR_NAME: "mintid", GIT_AUTHOR_EMAIL: "mintid@bio.invalid", GIT_COMMITTER_NAME: "mintid", GIT_COMMITTER_EMAIL: "mintid@bio.invalid" };
+      let commit = null;
+      try {
+        const steps = [
+          tgit(repo, ["read-tree", tip], { env: ienv }),
+          tgit(repo, ["update-index", "--add", "--cacheinfo", `100644,${blob.stdout.trim()},${takeFile(ns)}`], { env: ienv }),
+        ];
+        const wt = tgit(repo, ["write-tree"], { env: ienv });
+        const bad = [blob, ...steps, wt].find((s) => s.status !== 0);
+        if (bad) return no("COMMIT_FAILED", `the take's commit could not be built: ${bad.stderr.trim().slice(0, 300)}.`);
+        const ct = tgit(repo, ["commit-tree", wt.stdout.trim(), "-p", tip, "-F", "-"], { env: ident,
+          input: `mintid: ${ids.join(" ")} taken by ${who}${why ? ` — ${why}` : ""}\n\nD-242: one writer, a compare-and-swap push to ${TAKE_BRANCH}.\n` });
+        if (ct.status !== 0) return no("COMMIT_FAILED", `the take's commit could not be built: ${ct.stderr.trim().slice(0, 300)}.`);
+        commit = ct.stdout.trim();
+      } finally { rmSync(idx, { force: true }); }
+
+      if (beforePush) beforePush({ attempt, tip, commit, ids });
+      const p = tgit(repo, ["push", "--porcelain", where, `${commit}:refs/heads/${TAKE_BRANCH}`]);
+      if (p.status === 0) {
+        /* THE REMOTE SAID YES; read it back rather than believe it. A later take may already sit on top. */
+        const back = tgit(repo, ["ls-remote", where, `refs/heads/${TAKE_BRANCH}`]);
+        const onRemote = (back.stdout.split(/\s/)[0] || "").trim();
+        let verified = onRemote === commit ? "the remote's tip is this commit" : null;
+        if (!verified && back.status === 0) {
+          const vf = tgit(repo, ["fetch", "-q", "--no-tags", "--no-write-fetch-head", "--refmap=", where, `+refs/heads/${TAKE_BRANCH}:${base}/${TAKE_BRANCH}`]);
+          if (vf.status === 0 && tgit(repo, ["merge-base", "--is-ancestor", commit, `${base}/${TAKE_BRANCH}`]).status === 0)
+            verified = `the remote's tip ${onRemote.slice(0, 8)} descends from this commit`;
+          else if (vf.status === 0)
+            return no("TAKE_NOT_ON_REMOTE", `the push of ${commit.slice(0, 8)} was acknowledged but ${remote}/${TAKE_BRANCH} (${onRemote.slice(0, 8)}) does not contain it.`);
+        }
+        /* The local ledger becomes a RECORD of this clone's takes (the audit reads it), never the allocator. */
+        const root = ledgerRoot({ repo, env });
+        let recorded = 0;
+        if (root) {
+          try {
+            mkdirSync(join(root, ns), { recursive: true });
+            for (const id of ids) {
+              const n = Number(id.slice(ns.length + 1));
+              try { writeFileSync(claimPath(root, ns, n), JSON.stringify({ ns, n, who, why, at, tree: repo, writer: `${remote}/${TAKE_BRANCH}@${commit}` }) + "\n", { flag: "wx" }); recorded++; }
+              catch { /* a record, not the allocator: the take above is what made it exclusive */ }
+            }
+          } catch { /* same */ }
+        }
+        return { ok: true, ns, ids, floor, floorFrom: floor === coordTop && coordTop ? `${remote}/${TAKE_BRANCH}:${takeFile(ns)}`
+                   : floor === refs.floor && refs.floor ? refs.from : floor === localTop && localTop ? "this clone's local ledger" : tree.from,
+                 floors: { tree: tree.floor, refs: refs.floor, coordLedger: coordTop, localLedger: localTop },
+                 reach: { remote, coord: tip, main: heads.includes("refs/heads/main"), land, refsRead: refs.refs },
+                 lost, attempts: attempt, collided: [], ledger: root, recorded,
+                 writer: { remote, branch: TAKE_BRANCH, commit, verified: verified || `push acknowledged; read-back failed (${back.stderr.trim().slice(0, 120)})` },
+                 discarded: tree.discarded, missing: tree.missing };
+      }
+      const out = `${p.stdout}${p.stderr}`;
+      if (!RACE_RE.test(out))
+        return no("PUSH_FAILED", `the push to ${remote}/${TAKE_BRANCH} was refused, and not as a lost race: ${out.trim().split("\n").slice(-3).join(" ").slice(0, 400)}.`);
+      lost++;
+      pause(Math.floor(Math.random() * 60 * Math.min(attempt, 8)) + 10);
+    }
+    return no("RETRIES_EXHAUSTED", `${remote}/${TAKE_BRANCH} moved under ${maxAttempts} consecutive attempts.`);
+  } finally { drop(); }
+}
+
+/** The sentence a take prints: what the id is exclusive against, and what it is not. */
+export function takeScopeLines(r) {
+  const s = r || {};
+  const w = s.writer || {}, reach = s.reach || {};
+  return [
+    `SCOPE exclusive against EVERY allocator that takes through ${w.remote || "(no remote)"}/${w.branch || TAKE_BRANCH} — every clone, every machine:`,
+    `      the take is a compare-and-swap push (${String(w.commit || "").slice(0, 8) || "no commit"}; ${w.verified || "unverified"}), so two takes on one tip cannot both land.`,
+    `      The floor read ${reach.main ? "main" : "NO main"}, coord and ${reach.land ?? "?"} land/* tip(s) on ${reach.remote || "?"}, this tree, and this clone's local ledger.`,
+    `      NOT exclusive against an id written by HAND, or one another tool allocated and put on no branch yet (D-242).`,
+  ];
+}
+
 /* --------------------------------------------------------------------- the CLI */
 
 function currentBranch(repo) {
@@ -998,6 +1264,8 @@ export function unknownFlags(argv) {
 
 function usage() {
   console.log("usage: node tools/mintid.mjs <NAMESPACE> [--count N] [--who <id>] [--why <text>] [--json]");
+  console.log("       (the take is a compare-and-swap push to <remote>/coord, remote BIO_IDTAKE_REMOTE or origin — D-242;");
+  console.log("        if the push fails for any reason but a lost race, NOTHING is taken: retry, never number by hand)");
   console.log("       node tools/mintid.mjs --list [<NAMESPACE>]");
   console.log("       node tools/mintid.mjs <NAMESPACE> --floor-only");
   console.log("       node tools/mintid.mjs --audit [--base <ref>]   the integration-side check (D-243)");
@@ -1265,7 +1533,9 @@ function main(argv) {
 
   const count = Number(val("--count", "1"));
   const who = val("--who", currentBranch(REPO_ROOT));
-  const r = mint(ns, { count, who, why: val("--why", "") });
+  /* D-242: THE CLI TAKES THROUGH THE ONE WRITER. `mint` above is this clone's local ledger and is kept as that
+     layer (its suite drives it); it is exclusive against nothing once every worker is its own clone. */
+  const r = take(ns, { count, who, why: val("--why", "") });
 
   if (!r.ok) {
     console.error(`REFUSED ${r.reason}: ${r.detail}`);
@@ -1275,16 +1545,16 @@ function main(argv) {
 
   for (const id of r.ids) console.log(`MINTED ${id}`);
   console.log(`  floor ${ns}-${r.floor} (from ${r.floorFrom ?? "nothing found"})`
-    + ` · ledger ${r.ledger}`
+    + ` · this tree ${r.floors.tree} · remote refs ${r.floors.refs} · coord ledger ${r.floors.coordLedger} · local ledger ${r.floors.localLedger}`
     + ` · taken by ${who}`
-    + (r.collided.length ? ` · ${r.collided.length} id(s) ALREADY HELD and stepped over: ${r.collided.join(", ")}` : ""));
+    + (r.lost ? ` · LOST ${r.lost} race(s) to another take and re-took above it` : ""));
   if (r.discarded.length)
     console.log(`  NOTE ${r.discarded.length} match(es) above the ceiling ignored as noise (${r.discarded[0]})`);
-  console.log(`  the ledger is NOT committed. If it is lost this falls back to the corpus floor —`
-    + ` today's convention, no worse. Gaps are expected and cost nothing.`);
+  console.log(`  held on ${r.writer.remote}/${r.writer.branch}:${takeFile(ns)} at ${r.writer.commit.slice(0, 8)};`
+    + ` recorded in this clone's ledger ${r.ledger || "(none)"} (${r.recorded}). Gaps are expected and cost nothing.`);
   /* D-242. The happy path is where a false belief is formed, so the happy path is
      where the sentence has to be — not only in a comment and a debt row. */
-  for (const l of scopeLines(r.scope)) console.log(l);
+  for (const l of takeScopeLines(r)) console.log(l);
 
   /* ------------------------------------------------------------- M0-52, DOOR TWO
    *

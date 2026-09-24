@@ -272,12 +272,23 @@ t("session cannot purge, under the code that carries that recorded decision",
   (await GET(`op=purge&confirm=bio&${S}`)).reason, "MACHINE_CREDENTIAL_REQUIRED");
 t("session cannot livefire — still refused, but the plane no longer invents a reason it has not "
 + "recorded", (await GET(`op=livefire&${S}`)).reason, "SESSION_ROUTE_NOT_RECORDED");
-t("member session cannot manage the roster — and is told the TRUE reason, that this is an "
-+ "administrator's act and not a machine's (the old assertion pinned the false one)",
-  (await POST(`op=memberadd&${S}`, { memberId: "x", name: "x" })).reason, "SESSION_ROLE_CANNOT_REACH_OP");
-t("member session cannot register keys — same correction, same reason",
-  (await POST(`op=signeradd&${S}`, { keyB64: "AAAAtest", memberId: "ruth" })).reason,
-  "SESSION_ROLE_CANNOT_REACH_OP");
+/* CORRECTED 2026-09-23 (REC-159), NEVER EXEMPTED. These two pinned SESSION_ROLE_CANNOT_REACH_OP for
+   ruth's session, and that answer was itself false of her: ruth is an ENROLLED ADMINISTRATOR (her
+   invitation above is `role: "admin"`), and Membership v2 §4.9 gives adding a member and registering a
+   key to EVERY administrator. REC-159 moved the four custodial ops into both session sets, so her
+   session now reaches the op and the STORE answers: `memberadd` by 4.2/4.3's floor (she is the only
+   administrator of this unclaimed store, and an ordinary member cannot come first), and `signeradd`
+   by registering the key AS HER — the server's stamp, not anything she sent. A non-administrator's
+   refusal, NOT_AN_ADMIN, is graded in `adminvote.test.mjs` §9. */
+t("an enrolled administrator's session REACHES memberadd, and the store answers by the roster's own "
++ "rule (4.2/4.3) rather than the gate calling the op somebody else's",
+  (await POST(`op=memberadd&${S}`, { memberId: "xo", cover: "xo" })).result?.reason, "ADMINS_FIRST");
+{
+  const k = await POST(`op=signeradd&${S}&by=nobody`, { keyB64: "AAAAtest", memberId: "ruth", by: "nobody" });
+  t("an enrolled administrator's session registers a key, attributed to HER by the server's stamp "
+  + "and not to the `by` she sent",
+    [k.result?.ok, k.result?.by], [true, "ruth"]);
+}
 
 /* op=signerlist is the READ over the signer roster and, before this, no suite
    reached it through the control plane — a real caller's only route (D-43). The

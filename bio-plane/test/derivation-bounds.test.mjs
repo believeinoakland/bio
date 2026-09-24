@@ -934,7 +934,13 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    That is the class's shape and it is taken deliberately: `op=publishedmanifest` is the WHOLE published
    record by design (a stranger's reconstruction index), so its per-case pairs cannot be paged away, and a
    sha pinned by ONE edition is skipped without a read. The figure is this arm's own output (`25 methods`). */
-const CLASS_MEASURED_2026_08_08 = 25;
+/* MOVED 25 -> 26 at integration by c19-unionfix, 2026-09-24: D-256 (via c18-batch8) — an ARRIVAL, and a real one:
+   `changedFromAudit` (op=changedfromaudit) reads every live `bundle.md` carrying the old CHANGED_FROM sentence
+   UNBOUNDED and, per bundle, its register pairs and one `versionChain` read. The class's shape, taken
+   deliberately and stated at the method: its three verdict totals are counted over EVERY affected bundle,
+   because a total cut at N is the partial count the op exists to replace; only the LISTING is paged
+   (CHANGED_FROM_AUDIT_LIMIT 200/1000). Admin and probe only. The figure is this arm's own output (`26 methods`). */
+const CLASS_MEASURED_2026_08_08 = 26;
 console.log(`  RATCHET: ${CLASS_ALL.size} methods derive over an unbounded scan (${CLASS.size} seen by the walk, ${ADMITTED.size} admitted by name), `
           + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work. MOVED 37 -> 24 on 2026-09-18 by M0-63 (D-384 enacted: the for-header credit left perRowScan; 14 seen by the walk + 10 admitted BY NAME with their helper-hidden per-row reads; 13 left, each named with its reason in D384_LEAVES)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
@@ -954,7 +960,8 @@ t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a 
      `queue->queueFeed` STAYS as an ADMITTED member: the walk no longer sees its amplification,
      and `D384_STAYS` names it. This pin reads the union, because what a caller can reach is the
      half that matters whichever instrument saw it. */
-  CLASS_OPS, ["biasmanifest->biasManifest", "export->exportManifest",
+  /* c19-unionfix, 2026-09-24: `changedfromaudit->changedFromAudit` (D-256) is dispatched — the arrival above. */
+  CLASS_OPS, ["biasmanifest->biasManifest", "changedfromaudit->changedFromAudit", "export->exportManifest",
               "proposals->proposalsFeed",
               "publishedcase->publishedCase", "queue->queueFeed", "readingname->documentsNamingEntity",
               "reevaluations->reevaluations", "select->selectionCreate", "selection->selectionResolve",
@@ -1153,7 +1160,9 @@ t("M0-40 -> M0-63: `earnedBasisRegistry` is the WORKED EXAMPLE and is pinned on 
    figure the ceiling grades. */
 const CLASS_ROSTER_2026_09_18 = [
   "#assembleInstance", "#flagCasesOnRevision", "#frozenPairsByCase", "#overdueScan", "#sweepSelections",
-  "biasManifest", "documentsNamingEntity", "exportManifest", "proposalsFeed",
+  "biasManifest",
+  /* c19-unionfix, 2026-09-24: D-256's `changedFromAudit`, the arrival the CLASS ratchet above names. */
+  "changedFromAudit", "documentsNamingEntity", "exportManifest", "proposalsFeed",
   "publishedCase", "publishedRegistryFor", "reevaluations", "selectionCreate", "selectionRelease",
   "selectionResolve",
 ];
@@ -1344,7 +1353,20 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    progression definition, split out of readProgression so every version reads the same way) and
    `#queueItemMutes` (D-125 — ONE member's item mutes, the twin of `#queueMutes`, already counted).
    Neither is in the amplification CLASS; the class roster pinned by name above is unmoved. */
-const SCANNING_MEASURED_2026_09_15 = 113;
+/* 113 -> 118 at integration by c19-unionfix, 2026-09-24, MEASURED by running this walk on the union c19-batch9
+   (b23f5c946) and diffing the CENSUS ROSTER it printed by name against origin/main 15b2a4c0's 113. Five
+   arrivals, no departure, and none a lost LIMIT on a read that had one:
+   - `#groupIdentityHistory` (REC-164) — the history of ONE identity field, `WHERE field=?`, a per-key read;
+   - `projectVisibility` (REC-149) — the setting history of ONE project, `WHERE project_id=?`, per-key;
+   - `projectDirectory` (REC-149) — EVERY project, each asked of `#sight` and its title read, UNPAGED and with
+     no `truncated`. Its set is the group's projects (a roster, the `#ratifiedFindingsRestingOn` argument), but
+     it is the one arrival whose answer grows with the record and publishes no bound: REPORTED to SCHEDULER by
+     c19-unionfix with the fix named (a `LIMIT cap + 1` page with `truncated` published, `bounds.test`'s loop),
+     not taken here, since it changes op=projectdirectory's shape (an IC);
+   - `actionQuotes` (D-148) — its page is `LIMIT max + 1`; the unbounded half is the per-request COUNT of
+     correspondence behind an EMPTY answer (which level was empty);
+   - `changedFromAudit` (D-256) — the CLASS arrival above. */
+const SCANNING_MEASURED_2026_09_15 = 118;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -1746,7 +1768,11 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
    /* REC-129, 2026-09-18 — the arrival, and like `provenanceRoutesMarked` it joins the DEFENDED
       half: its page is graded by name (`#frontierInternet:page`), so the PARTITIONED arm below
       does not move. Its unbounded half is the viewer-scoped tally GROUP BY. */
-   "#frontierInternet", "#frontierMeaning", "biasManifest",
+   "#frontierInternet", "#frontierMeaning",
+   /* c19-unionfix, 2026-09-24 — two arrivals, each measured on the union. `actionQuotes` (D-148) joins the
+      DEFENDED half: its page is graded by name by REC-99's inversion, so PARTITIONED below does not gain it.
+      `changedFromAudit` (D-256) is blind to BOTH halves — see PARTITIONED. */
+   "actionQuotes", "biasManifest", "changedFromAudit",
    "documentsNamingEntity", "frontier",
    /* REC-116, 2026-09-17 — the arrival, and it joins the DEFENDED half rather
       than D-369's set 2: `provenanceRoutesMarked` publishes a bound AND scans
@@ -1763,7 +1789,12 @@ t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blin
 + "that IS defended into a roster of methods that are not, which is the conflation this row was "
 + "written to undo",
   DOUBLY_BLIND,
-  ["#frontierContent", "#frontierMeaning", "biasManifest", "documentsNamingEntity",
+  ["#frontierContent", "#frontierMeaning", "biasManifest",
+   /* c19-unionfix, 2026-09-24 — D-256's `changedFromAudit`, blind to BOTH halves and legitimately: its bound is
+      an in-memory cut of the LISTING (`from + listed.length < all.length`, `biasManifest`'s OFFSET form, which
+      the grader's spelling cannot read — declared in the UNREAD roster below), while its verdict totals are
+      counted over every affected bundle by design. */
+   "changedFromAudit", "documentsNamingEntity",
    "frontier", "queueFeed"]);
 
 /* ---- AND THE CLAIMS THE GRADER'S OWN SPELLING CANNOT READ AT ALL.
@@ -1854,6 +1885,18 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
    "#contradictionK3: same.truncated || doc.truncated",
    "basisVersions: from + versions.length < total",
    "biasManifest: from + page.length < all.length",
+   /* REC-198, 2026-09-23 — DECLARED HERE BECAUSE THIS SUITE SAYS A NEW ONE MUST BE, on REC-146's reasoning above
+      and not reworded to vanish from every roster. `caseDraftList` (op=casedrafts, the list of a project's drafts)
+      publishes `total` — a `COUNT(*)` over `case_drafts WHERE project_id=?`, the same predicate as its page — and
+      says `truncated` as that total exceeding the rows it sent. So the claim is a comparison of two MEASURED
+      figures, the count and the page, and not an unmeasured assertion; it reads `total > drafts.length` where the
+      grader reads only `X.length > Y`. Its page is bounded by `LIMIT ?` at REVIEW_LIST_MAX and driven in
+      `bounds.test.mjs`'s loop with a bite of 1 over two drafts. */
+   "caseDraftList: total > drafts.length",
+   /* c19-unionfix, 2026-09-24 — D-256's `changedFromAudit`, DECLARED HERE because this suite says a new one must
+      be. `biasManifest`'s OFFSET form exactly: `all` is every affected bundle, measured; `listed` is the page cut
+      from it at CHANGED_FROM_AUDIT_LIMIT. A comparison of two measured figures, not an unmeasured claim. */
+   "changedFromAudit: from + listed.length < all.length",
    "deriveConnections: rowsCut || distinct.length > endsCap",
    "extractProposals: listed.length >= n",
    "search: ids.length >= IDS_MAX",

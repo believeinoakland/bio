@@ -86,7 +86,31 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    `mintid.test` already has; the one new reader, 31 -> 32), and two doc-facing suites selected as "doc-facing, and
    docs/development/MEASUREMENTS.md changed": D-125's `plane:d125-findingmute.test.mjs` and D-278's
    `plane:d278-codeless-refusals.test.mjs`. */
-const UNITS_CEILING = 67;
+/* MOVED AGAIN 2026-09-23 by D-242 (67 -> 68), from the figure this suite PRINTED on D-242's tree over origin/main
+   a8f6094a (`68 unit(s) of 391 selected · 33 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`): the one new unit
+   and the one new reader (32 -> 33) is D-242's new suite `mintid-take.test.mjs`, which imports `tools/mintid.mjs` to
+   drive `take` — the edge `mintid.test` and `exportnotice.test` already have; nothing new reaches through `coord.mjs`. */
+/* MOVED AGAIN 2026-09-24 by the D-176 worker (67 -> 68), from the figure this suite PRINTED on its branch
+   (`68 unit(s) of 391 selected · 32 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`); origin/main @ 3f4b8f8c prints
+   67 of 390. The one new unit, confirmed by name in `gates --explain` over a clone with MEASUREMENTS.md planted: D-176's
+   NEW suite `ui:queue-allclear-limit.test.mjs`, which reads `docs/development/CIVICOS_UI_STATE.md` and so is doc-facing
+   and selected as "doc-facing, and docs/development/MEASUREMENTS.md changed" — the same case as D-82's move above. Not
+   a reader of the ledger (32 on both trees) and not reach through `coord.mjs`. */
+/* MOVED AGAIN 2026-09-24 at integration by c19-unionfix (68 -> 74), from the figure this suite PRINTED on the union
+   c19-batch9 (b23f5c946: `74 unit(s) of 416 selected · 33 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`);
+   origin/main @ 15b2a4c0 prints 67 of 391 by the same method. Found by DIFFING THE SELECTED LISTS of the two trees
+   (a MEASUREMENTS.md plant, `gates --explain` in a clone of each): SEVEN units are new on the union. One of them is
+   already counted by the 68 above — D-242's `mintid-take.test.mjs` and D-176's `ui:queue-allclear-limit.test.mjs`
+   each moved this figure 67 -> 68 on its own branch, so the union holds both. The six beyond 68, each a NEW suite:
+   - D-242 / D-176, whichever of the pair the 68 did not count (both named above);
+   - M0-71's `plane:contradiction-overstrict.test.mjs`, doc-facing ("doc-facing, and MEASUREMENTS.md changed");
+   - D-149's `plane:d149-governing-laws.test.mjs`, doc-facing;
+   - MK-6's `plane:mk6-bundle-names-no-author.test.mjs`, doc-facing;
+   - REC-182's `plane:rec-182-created-tie.test.mjs`, doc-facing;
+   - UI-68's `ui:review-copy.test.mjs`, doc-facing.
+   The one new READER of the ledger (32 -> 33) is `mintid-take.test.mjs` (names MEASUREMENTS.md in tools/entries.mjs,
+   as recorded at D-242's own move); none of the seven reaches through `coord.mjs` (4 on both trees). */
+const UNITS_CEILING = 74;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 

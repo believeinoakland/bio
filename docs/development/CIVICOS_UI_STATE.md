@@ -50,6 +50,69 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v106, 2026-09-23 session, thread UI, D-126 (a WORKER of CONDUCT #18, cloud session). Landed on `land/worker/D-126` (base
+`origin/main` @ `02603e88`), in the commit that carries this entry; the version number is provisional and CONDUCT
+renumbers it at integration if a concurrent entry took it. (It did: UI-74 holds `v104` and UI-68 `v105`, so CONDUCT #18
+renumbered this entry `v106` at c17-batch7.) SURFACE: the queue.
+
+**What was missing.** Bob's requirement for the queue (NOTIFICATIONS.md §Applying a handler to a selection): *"select some
+(or all) to apply the action to … If that action didn't work for one or more, they'd stay in the list so that the user can
+take a different action."* The queue offered one item at a time only, because the plane's three acts each took one key
+(UI-56's carry, watched by member-respect ARM 4d).
+
+**What it does now.** Where the plane publishes the act under the `per-item` weight (`op=affordances`' `set_acts`, read off
+the act source boot already loads), every obligation and every instance-keyed finding carries a Select tick. The selection
+bar names the plane's own label and sends ONE `op=taskresolve` or ONE `op=proposedispose` carrying `items[]`. Items the record
+applied leave the list. Each item it RETAINED stays listed with the record's reason, rendered by `queueReason` (the code and its
+canned translation or detail), and stays selected so the member can act again. A retained item the feed no longer carries
+(an obligation that moved to somebody else between the paint and the click) is kept under "Kept from your last action"
+rather than vanishing. A project-scoped finding takes no tick (its act needs a project named per item); `op=taskforward`
+takes a set on the plane but has no bulk control here yet (the picker is per item). The single controls are unchanged.
+
+**Driven against the real plane**, `civicos-ui/test/queue-peritem.test.mjs` (16): three of mona's obligations selected, one
+forwarded to nate by an administrator after the paint; ONE call carrying three items; the two applied leave the list; the
+drifted one is kept with `NOT_YOURS` and "it is with nate"; two findings dismissed with no reason stay in the list with
+`NO_REASON`, still selected, and leave it when given one; a plane answer without `set_acts` draws no tick. Control
+`queue-peritem.control.mjs`, every arm as declared: all-or-nothing RED 13/3, silent drop RED 14/2, N calls RED 14/2, baseline
+16/0. The harness caught one defect of this item's own before landing: the selection was pruned against a PENDING feed and
+silently emptied on every repaint; pruning now waits for an answered feed.
+A second finding, from the full harness: giving `NOT_YOURS` its canned translation (C-76.1, owed once a member can meet it)
+made the retained note show the translation and drop the plane's detail naming who holds the task. The note now shows the
+detail beside the translation, verbatim, wherever the record sent both.
+
+v105, 2026-09-23 session, thread UI, UI-68 (a WORKER of CONDUCT #17, cloud session). Landed on `land/worker/UI-68`
+(base `origin/main` @ `02603e88`), in the commit that carries this entry. `v104` is taken on the `land/conduct/c17-*`
+branches, so this is `v105`. SURFACES: a question's page (a new entry beside the publication statement), and a new
+surface, the review copy, with two doors — `#draft/new` and `#draft/<id>` for members, `#reviewcopy/<secret>` for a
+recipient holding nothing.
+
+**What was missing.** REC-126 built the review copy's plane half on 2026-09-18 (BIO_Publication §6A; IC-145/IC-146,
+REC-133's IC-151) and delegated the four surfaces to UI. Nothing in `civicos-ui/` called any of the five ops, so no member
+could draft, give access, read or comment, and a recipient had no way in.
+
+**What it does now.** DRAFT: a member session holding `contribute` is offered "Draft a review copy"; the form prefills
+nothing and requires only the project, and editing starts from the draft's own answer. READ: the plane's marking leads,
+the exclusion statement comes first, and the missing-list is the publish gates' own words with the plane's note that it is
+the first refusal only. GRANT AND REVOKE: the secret is shown once, as a link whose secret sits in the address fragment,
+beside the plane's own shown-once sentence; each grant is listed live, withdrawn, or bound to an edition the draft has
+left. The grant box says, at the act, that withdrawing ends access and cannot recall anything copied out by hand
+(§6A.3 point 2). RECIPIENT: the link opens at load with no session; a withdrawn, never-issued or malformed link draws one
+byte-identical page carrying the plane's one sentence. COMMENT: both doors, and a recipient's comment is labelled as the
+recipient's. NO EXPORT: no download, file, blob or data link, print hook or print rule, because `op=reviewcopy` does not
+yet carry DEC-31's in-band quartet (§6A.3 point 1). `apiQ` gained an optional POST body for the recipient's comment.
+
+**Driven against the real plane**, `civicos-ui/test/review-copy.test.mjs` (40 assertions): the form's own controls draft,
+edit, grant, revoke and comment; the recipient's page is loaded from the address alone and its wire carries no token; the
+dead pages are compared byte for byte; the no-export arm reads the block's code and every page walked. NEGATIVE CONTROL
+`review-copy.control.mjs`, 8/8 AS DECLARED: a download link RED at NO EXPORT; a print hook RED at NO EXPORT; a dead page
+that says "revoked" RED at NEUTRAL (ONE ANSWER stays green, since every cause still draws the same bytes); the marking
+dropped RED; the form prefilled RED; a recipient labelled a member RED; over-strictness GREEN. Suites corrected, each with
+its reason at the site: `auth-surface` (its control's `apiQ` anchor), `preauth-vocabulary` (a third published address, an
+eighth router, `apiQ`'s callers and signature, +1 source on two plane-sourced rows), `member-respect` (two repeated
+controls classified, the grant row CARRIED). NOT BUILT: export; any way back to a draft but its address (no op lists a
+project's drafts); canned translations for the review refusal codes (none has a DEC-49 row, so the surface renders the
+plane's detail).
+
 v104, 2026-09-23 session, thread UI, UI-74 (a WORKER of CONDUCT #17, cloud session). Landed on `land/worker/UI-74` (base
 `origin/main` @ `02603e88`), in the commit that carries this entry. (If a concurrent batch has taken `v104`, renumber this
 entry at integration.) SURFACES: a new place, the ACCEPT CEREMONY at `#accept/<INQ-…>/<name>`, reached by "Act on this
@@ -1143,6 +1206,35 @@ the queue FIRST, and this is it. The mute control reads *"Mute conditions on thi
 reaches the act; the receipt, the stated rule and **the honest all-clear** are the three
 pieces — an all-clear that cannot distinguish *nothing happened* from *we did not look* is the
 defect UI-45 later closed per-class.
+
+> **D-176 · THE LIMIT OF v46's ALL-CLEAR, STATED BESIDE IT — 2026-09-24, thread UI, a WORKER of CONDUCT #19
+> (BOB #32, 2026-09-23: *CIVICOS_UI_STATE.md is UI's file — state the limit beside v46's UI-14 entry*). This is an
+> ADDENDUM, not an edit: the v46 entry above is untouched, and this block sits beside it so a reader of v46 meets
+> its limit where the claim is made.** Verified against `civicos-ui/app.html` on the landing tree, not taken from
+> the 2026-08-04 debt row.
+>
+> 1. **The all-clear rests on an INTERPRETED feed-emptiness, not a literal one.** `queueAllClearHtml` shows
+>    *"Nothing needs anybody right now"* only when every feed answered and every feed's `queueFeedYield` is zero.
+>    For the queue feed that is its item count; for the resolutions feed it is **NOT the feed's rows** but
+>    `queueNotices().length` — the receipts this screen would paint, i.e. resolved obligations that THIS PAGE
+>    showed the member and that have since left. The interpretation is deliberate (a literal reading would let one
+>    historical resolved task forbid the all-clear for ever), and it is the one doing the work: *"every one of
+>    them was empty"* means empty **of what this screen would show**, not empty of rows.
+> 2. **So the all-clear is relative to this page's memory, which the record does not hold.** `QUEUE_SEEN` is
+>    page state, empty at every load of `app.html`. An obligation resolved before this load's queue screen ever
+>    painted it was never in `QUEUE_SEEN`, yields no receipt, and does not withhold the all-clear; one this load
+>    DID paint keeps its receipt once resolved — and so keeps the all-clear withheld — until the page is reloaded
+>    or the resolutions feed stops returning it. Two members, or one member in two tabs, looking at the same
+>    record can see different answers.
+> 3. **`QUEUE_SEEN` is unbounded for the life of the page.** `queueRemember` only ever `set`s it; nothing deletes
+>    from it or clears it, and `renderQueue` does not reset it. It grows with every item ever painted until reload.
+>
+> **What would remove the limit, and why it is not built.** A narrow plane read — *what left this member's
+> queue since they last looked* — would make the rule literal (the record, not the page, would say what the
+> member has not yet been told) and bound the map. It is RECORD's to build, and waits on the map's growth
+> mattering or the interpretation biting (D-176's prior disposition: M8 · WATCH). **Pinned** by
+> `civicos-ui/test/queue-allclear-limit.test.mjs`, which fails by name if this statement goes missing or if the
+> code stops carrying the limit it describes — in which case this block is what must be corrected.
 
 v45, 2026-08-04 session, thread UI, UI-13. Landed `9b0b357` (merged `7dfe631`). SURFACE:
 `app.html`. A WRITE SURFACE FOR THE INTENT LAYER — **NINE OPS, ZERO CALLERS**, and now nine

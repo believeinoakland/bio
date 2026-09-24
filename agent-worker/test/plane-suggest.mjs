@@ -51,8 +51,22 @@
  * because that is where the real refusal is raised and what shape it arrives in)
  * and the description floor (C-25.1, same place).
  *
+ * FL-11 (2026-09-23) — AND IT NOW HOLDS THE RUN, BECAUSE A MOCK THAT ACCEPTS A SUGGESTION FROM ANY RUN
+ * ONTO ANY QUESTION IS THE LIAR THIS FILE EXISTS TO PREVENT. REC-165 (IC-176, §11 item 5 rule 1 and BOB
+ * #28's target) made the plane ask, in this order and before anything else about the reading: a TARGET at
+ * all (C-27.1) and one that is an INQUIRY (C-27.2 — a project id is refused here, never "inside" its own
+ * run); the run NAMED (C-27.4); its PRINCIPAL the caller (`runPrincipalGate`, C-22.12, relayed field by
+ * field); the run RUNNING (C-27.18); and the target INSIDE the run's context — the context question itself,
+ * or, for a run over a project, a question that project confirmed-cites (C-27.19,
+ * `SUGGEST_OUTSIDE_RUN_CONTEXT`). This member's mocks answered `wrote: true` to all of it, so FL-11's defect
+ * (the member never set a target) was invisible to every fleet suite. `suggestBranch` now REQUIRES the
+ * mock's run — its context, the project's cites, its principal and its status, as expressions over the
+ * mock's own state — and refuses by the plane's code, C-number and translation, read from the catalog.
+ * The principal comparison is by TOKEN (the mock has no credential table): the caller is the request's
+ * `token`, the principal the one the mock says opened the run.
+ *
  * IT DOES NOT HOLD, and a suite must not read a green here as evidence of any of
- * them: the viewer gate, the run's existence (C-27.4), name uniqueness against a
+ * them: the viewer gate (a run the caller cannot SEE answering as absent is not modelled), name uniqueness against a
  * real document (C-27.5), the leg-reachability walk (C-27.8), the strength pair
  * and partition arithmetic (C-27.9), the independence trace (C-27.10), the
  * substance comparison against existing versions (C-27.7), the single-part
@@ -69,8 +83,9 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
   VERSION_NAME_RE, SUGGEST_KINDS, SUGGEST_LEVELS, SUGGEST_CHECKS,
-  BASIS_VERSION_CHECKS, BOILERPLATE_FORMS, isBoilerplate,
+  BASIS_VERSION_CHECKS, BOILERPLATE_FORMS, isBoilerplate, OBJECT_TYPES,
 } from "../../bio-plane/checks/bio-checks.mjs";
+import { runPrincipalGate } from "../../bio-plane/src/airun.mjs";
 
 /** The wire's real vocabulary, read out of the plane's catalog. Exported so a
  *  suite asserts against the PLANE rather than against this file's opinion. */
@@ -105,7 +120,22 @@ export const WIRE_CHECKS = {
   SUGGEST_UNWRITABLE_STATE: SUGGEST_CHECKS.SUGGEST_UNWRITABLE_STATE,
   VERSION_NAME_NOT_UNIQUE: BASIS_VERSION_CHECKS.VERSION_NAME_NOT_UNIQUE,
   VERSION_NO_DESCRIPTION: BASIS_VERSION_CHECKS.VERSION_NO_DESCRIPTION,
+  /* FL-11: the run's rows, REC-165's order. */
+  SUGGEST_NO_TARGET: SUGGEST_CHECKS.SUGGEST_NO_TARGET,
+  SUGGEST_NOT_AN_INQUIRY: SUGGEST_CHECKS.SUGGEST_NOT_AN_INQUIRY,
+  SUGGEST_NO_RUN: SUGGEST_CHECKS.SUGGEST_NO_RUN,
+  SUGGEST_RUN_NOT_RUNNING: SUGGEST_CHECKS.SUGGEST_RUN_NOT_RUNNING,
+  SUGGEST_OUTSIDE_RUN_CONTEXT: SUGGEST_CHECKS.SUGGEST_OUTSIDE_RUN_CONTEXT,
 };
+
+/** FL-11: the id prefixes the plane reads as an INQUIRY (`OBJECT_TYPES`), so a project id is refused
+ *  C-27.2 here as it is there. Derived, never typed. */
+export const INQUIRY_PREFIXES = Object.keys(OBJECT_TYPES).filter((p) => OBJECT_TYPES[p] === "inquiry");
+
+/** FL-11: REC-152's refusal for another principal's run, as the PLANE builds it for `op=suggest` —
+ *  `runPrincipalGate` itself, called with two different principals and the site's own act. */
+export const NOT_PRINCIPAL = runPrincipalGate({ caller: "fl11-caller", principal: "fl11-owner",
+                                                act: "suggesting a reading under a run" });
 
 const row = (code) => ({ code, reason: code, check: WIRE_CHECKS[code].check,
                          translation: WIRE_CHECKS[code].translation });
@@ -125,7 +155,13 @@ const row = (code) => ({ code, reason: code, check: WIRE_CHECKS[code].check,
  *  that fire before a submission can be keyed are NOT stored (the real endpoint
  *  returns them without `remember`), then the F10 replay, then the checks that
  *  are stored, then `promote`'s document gate last. */
-export const suggestBranch = ({ f10 = false } = {}) => `
+export const suggestBranch = ({ f10 = false, run } = {}) => {
+  /* FL-11: THE RUN IS REQUIRED. A mock with no run model is the mock that answered yes to every run and
+     every target, which is how FL-11's defect stayed invisible; there is no default that restores it. */
+  if (!run || !run.context || !run.cites || !run.principal || !run.status)
+    throw new Error("plane-suggest.mjs: suggestBranch needs { run: { context, cites, principal, status } } — "
+      + "expressions over the mock's own state. A suggest mock with no run answers a question the plane refuses.");
+  return `
     /* D-323/D-324: DERIVED FROM THE PLANE'S OWN CATALOG by test/plane-suggest.mjs.
        This branch answers the WIRE'S vocabulary — the closed kind set, the
        level spelling, the placeholder predicate and the version-name grammar —
@@ -150,12 +186,42 @@ export const suggestBranch = ({ f10 = false } = {}) => `
       const nm = String((body && body.name) != null ? body.name : "").trim();
       const kd = String((body && body.kind) != null ? body.kind : "").trim();
 
+      /* FL-11 — REC-165's ORDER, the plane's: target, inquiry, kind, then the run (named, principal,
+         running), then the context. None of these is stored for F10: they all fire before the memo. */
+      const tg = String((body && body.target) != null ? body.target : "").trim();
+      if (!tg)
+        return refused(${JSON.stringify(row("SUGGEST_NO_TARGET"))},
+          { detail: "a suggestion is a reading of ONE question's evidence: pass target=<INQ-…>." });
+      if (!${JSON.stringify(INQUIRY_PREFIXES)}.includes(tg.split("-")[0]))
+        return refused(${JSON.stringify(row("SUGGEST_NOT_AN_INQUIRY"))},
+          { detail: tg.slice(0, 60) + " is not an inquiry, so there is nothing under it for a version to be a version of.",
+            target: tg });
       /* is-suggest-shape, and NOT stored: the real endpoint returns these two
          before a submission can be keyed to a target. */
       if (!WIRE_KINDS.includes(kd))
         return refused(${JSON.stringify(row("SUGGEST_UNKNOWN_KIND"))},
           { detail: "'" + (kd || "(none)") + "' is not one of \\u00a79's kinds: " + WIRE_KINDS.join(", ") + ".",
             kinds: WIRE_KINDS });
+
+      const RUN_CTX = ${run.context};
+      const RUN_CITES = ${run.cites};
+      const runId = String((body && body.run) != null ? body.run : "").trim();
+      if (!runId)
+        return refused(${JSON.stringify(row("SUGGEST_NO_RUN"))},
+          { detail: "pass run=<the run that composed this>.", target: tg, run: null });
+      if (url.searchParams.get("token") !== (${run.principal}))
+        return Response.json({ ok: true, result: { ok: false, wrote: false, evaluated: true, repeated: false,
+          reason: ${JSON.stringify(NOT_PRINCIPAL.code)}, code: ${JSON.stringify(NOT_PRINCIPAL.code)},
+          check: ${JSON.stringify(NOT_PRINCIPAL.check)}, translation: ${JSON.stringify(NOT_PRINCIPAL.translation)},
+          detail: ${JSON.stringify(NOT_PRINCIPAL.detail)}, target: tg, run: runId,
+          note: "a suggestion names a run its caller holds. Nothing was composed or written" } });
+      if ((${run.status}) !== "running")
+        return refused(${JSON.stringify(row("SUGGEST_RUN_NOT_RUNNING"))},
+          { detail: "the run '" + runId + "' has ended.", target: tg, run: runId });
+      if (!(tg === String(RUN_CTX.id) || (RUN_CTX.type === "project" && RUN_CITES.includes(tg))))
+        return refused(${JSON.stringify(row("SUGGEST_OUTSIDE_RUN_CONTEXT"))},
+          { detail: tg + " is outside the context of the run '" + runId + "'.", target: tg, run: runId });
+
       if (kd === "level-empty" && !(WIRE_LEVELS.includes(String((body && body.level) || ""))
                                    && String((body && body.observed_at) || "").trim() !== ""))
         return refused(${JSON.stringify(row("SUGGEST_EMPTY_LEVEL_UNSTATED"))},
@@ -232,7 +298,8 @@ ${f10 ? `
               + "op=promote runs at the write, so nothing was written." });
       }
 
-      S.suggested.push({ name: nm || null, kind: kd || null${f10 ? ", canon: sub" : ""} });
+      S.suggested.push({ name: nm || null, kind: kd || null, target: tg${f10 ? ", canon: sub" : ""} });
       return Response.json({ ok: true, result: { wrote: true, version: nm || null } });
     }
 `;
+};

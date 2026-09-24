@@ -674,6 +674,10 @@ const CHOOSERS = {
      keystone exists to stop, and the plane refuses an incomplete affirmation
      by name (VERSION_AFFIRMATION_INCOMPLETE). */
   "acerAffirmHtml":        "per-set affirmations composing ONE accept of one reading; each must be said, so a bulk 'say it for all' is the keystone's own forbidden shape",
+  "rvcFormHtml":           "UI-68: draft-list editing of a review copy's exclusion rows before ONE op=casedraft; nothing is decided until the one save",
+  /* D-126, 2026-09-23. */
+  "queueSelBarHtml":       "the acts the record publishes (`set_acts`, weight per-item) over ONE held selection — `finderPaintSelection`'s shape on the queue; the per-item ticks that build the selection are `queueEntryControlsHtml`'s",
+  "queueRetainedHtml":     "clears ONE retained item's note from this screen; it touches the record not at all (the item's own acts are still `queueEntryControlsHtml`'s)",
 };
 /* SETS OF DECISIONS — a list where each item is decided independently, so both
    modes are owed. Every row states which modes exist TODAY and, where a mode is
@@ -681,8 +685,13 @@ const CHOOSERS = {
 const SETS = {
   "loadResolveCandidates": { single: true, bulk: false, op: "resolve",
     why: "UI-56 (carried): `op=resolve` takes ONE `captureSha`. A bulk path is the PLANE accepting a set, not this surface looping — N calls over N documents is the forty-dialogs shape wearing a bulk control's clothes (DEC-52, and `aiConnectionsReviewMotion`'s own note)." },
-  "queueEntryControlsHtml": { single: true, bulk: false, op: "proposedispose",
-    why: "UI-56 (carried): `op=proposedispose` is keyed on ONE (progression_key, stage_key) and `op=taskresolve`/`op=taskforward` each take ONE `id`. The queue's own header already names selection scoping as an unbuilt follow-on and refuses to stub a control for it." },
+  /* CORRECTED 2026-09-23 by D-126, not exempted: this row read `bulk: false` and "UI-56 (carried):
+     `op=proposedispose` is keyed on ONE (progression_key, stage_key) and `op=taskresolve`/`op=taskforward`
+     each take ONE `id`". That was TRUE and ARM 4d measured it every run. D-126 gave all three a SET form
+     under the `per-item` weight (`store.mjs #perItem`) and built the bulk path here, so the carry's own
+     premise is gone and the row now states both modes as built. */
+  "queueEntryControlsHtml": { single: true, bulk: true, op: "proposedispose",
+    why: "CLEAN since D-126: a per-item tick on every obligation and every instance-keyed finding feeds ONE held selection, and `queueSelBarHtml` sends it as ONE `op=taskresolve` or ONE `op=proposedispose` carrying `items[]` under the plane's `per-item` weight — each item applied or kept in the list with the record's own reason, none stopping the others. The single controls (Forward, Mark resolved, Adopt, Defer, Dismiss) are untouched. A project-scoped finding takes no tick: its act needs the member to name the project it acts for, per item. `op=taskforward` takes a set on the plane and has NO bulk control here yet — forwarding needs a chosen member, and that picker is per item today." },
   "paintReview": { single: true, bulk: true, op: "release",
     why: "CLEAN, and it is the shape the other two are measured against: a per-row tick with a select-all, ONE `op=select` lease carrying the whole array into ONE `op=release` — and a single document released from its own page, which the empty-state line names ('or open one and release it from its page'). Crucial material carries a seal instead of a tick, so it is structurally unbulkable, and the page-bound note says select-all does not reach rows the record held back." },
   "finderRowsHtml": { single: true, bulk: true, op: "select",
@@ -693,6 +702,8 @@ const SETS = {
     why: "CLEAN, and it is the amendment's shape reached the other way round. Selection is PER CARD and `aiConnectionsReviewMotion` composes ONE motion over whatever is picked — one connection or forty — so neither mode is forced. UI-44's anti-gate arm already holds the harder half: reviewing changes a connection's standing not at all, so this is visibility and bulk review rather than an approval gate (DEC-52 final)." },
   "passageRowHtml": { single: true, bulk: false, op: "cite",
     why: "UI-62 (carried): `op=cite` REFUSES an extent over more than one leg BY NAME — `EXTENT_ON_MANY`, whose own words are that writing the same passage onto several documents *would put claims in the record that nobody made*. So a bulk passage cite is not a control this surface is declining to build; it is a shape the plane refuses, and correctly. Looping N calls over N passages is the forty-dialogs shape wearing a bulk control's clothes (DEC-52, `loadResolveCandidates`' own note). NOR DO PASSAGES CARRY A TICK into the finder's selection lease, and that is deliberate rather than an omission: the lease is over BUNDLES and a passage is a part of one, so ticking passages into it would hand a member a set they would then cite as documents — the grain confusion this whole surface reports three counts to avoid. The single-item path is the whole of what is coherent here." },
+  "rvcGrantsHtml": { single: true, bulk: false, op: "reviewrevoke",
+    why: "UI-68 (carried): one Withdraw per live grant on a review copy. `op=reviewrevoke` takes ONE `grant`, and each withdrawal is its own attributed act on the record (BIO_Publication §6A.2: the grant names who issued it, to whom and when; the withdrawal names who withdrew it). A bulk path is the PLANE accepting a set, not this surface looping — N calls over N grants is the forty-dialogs shape wearing a bulk control's clothes (DEC-52, `loadResolveCandidates`' own note)." },
   "queueMuteHtml": { single: true, bulk: true, op: "queuemute",
     why: "CORRECTED IN PLACE by UI-55. This was the amendment's BULK-ONLY half: one control muted every condition kind on the case and the member could not say 'just this one'. `op=queuemute` already took an arbitrary subset, so the single-kind path was one parameter away and no plane change was owed." },
 };
@@ -729,10 +740,20 @@ for(const [host, s] of Object.entries(SETS)){
    inherited. */
 {
   const store = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url).pathname, "utf8");
+  /* CORRECTED 2026-09-23 by D-126, not exempted: `proposedispose` stood in this list, carried on its
+     single-key signature. The arm did its job — D-126 made the op take a set and struck the carry in the
+     same commit that built the bulk path. The signature was never the right instrument for that claim (a
+     wrapper can take a set without the method's signature moving), so the set form is measured below as
+     the FIRST STATEMENT of each act's own method, where a set reaches the act, for all three acts the queue uses. */
   const stillScalar = [
     { op: "resolve",        sig: /async resolveReferences\(\{\s*captureSha/ },
     { op: "proposedispose", sig: /proposeDispose\(\{\s*progressionKey/ },
+    /* UI-68: `op=reviewrevoke` withdraws ONE grant, named by id. */
+    { op: "reviewrevoke",   sig: /#reviewRevoke\(who, \{\s*grant = null\s*\}/ },
   ];
+  for(const [op, method] of [["proposedispose","proposeDispose"], ["taskresolve","taskResolve"], ["taskforward","taskForward"]])
+    ok(new RegExp(`\\n  ${method}\\(\\{[^}]*\\bitems \\} = \\{\\}\\) \\{\\s*(?:/\\*[\\s\\S]*?\\*/\\s*)?if \\(items !== undefined\\)\\s*return this\\.#perItem\\("${op}"`).test(store),
+       `ARM 4d: \`op=${op}\` (\`${method}\`) no longer opens with the set branch into the per-item weight (\`#perItem\`) — the bulk path in \`queueSelBarHtml\` would be sending a selection the plane cannot take. Re-measure the act.`);
   for(const c of stillScalar)
     ok(c.sig.test(store),
        `ARM 4d: the carried row for '${c.op}' claims the plane takes ONE key, and the plane's own signature no longer matches that claim. Re-measure it: if the op now accepts a set, the bulk path is buildable here and the carry must be STRUCK in the same commit that builds it.`);
@@ -761,6 +782,6 @@ console.log(
   no vocabulary to derive a closure from — a novel phrasing is not caught and that is
   said rather than implied. ARM 4 partitions by REGISTER because whether a repeated
   control is a set of decisions or a chooser is not a fact a static walk can read;
-  what the walk DOES enforce is that nothing arrives unclassified. Two sets of
+  what the walk DOES enforce is that nothing arrives unclassified. Four sets of
   decisions are CARRIED, not clean: see ARM 4c.`);
 process.exit(fails.length ? 1 : 0);

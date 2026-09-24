@@ -37,6 +37,8 @@ export const BUDGET = {
   next: 12 * 1024,
   /* The construct map (BOB #16, 2026-09-19): read whole by BOB, SCHEDULER and CONDUCT. Denser than a kickoff, so its
      own budget, set above its 45 KB size with room for a row per construct, and armed from the day it is set. */
+  /* 48 KiB -> 50 KiB (c19-unionfix stopgap, BOB #32 ruling (a), 2026-09-24 02:10Z) -> BACK TO 48 KiB with (b): status.mjs caps
+     each cell's first sentence at CELL_CAP (240) at a word boundary, so the map read 44,617 B at 130 claims on 548eb2c5. */
   map: 48 * 1024,
 };
 

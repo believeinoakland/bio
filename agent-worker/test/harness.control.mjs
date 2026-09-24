@@ -7,7 +7,10 @@
  * THE FAMILIES, so a reader can hold the count against the run without reading
  * to the foot: **H1-H10** are FL-3's own arms (H10 is the over-strictness arm);
  * **F1-F4** are FL-8's, on the launch gate's vocabulary; **G1-G5** are D-323 and
- * D-324's, on a gate-refused run's STATUS. 19 announcements, driven.
+ * D-324's, on a gate-refused run's STATUS; **T1-T2** are FL-11's and FL-12's (2026-09-23), on the run's
+ * target and the capture request's `address`; **D1-D2** are D-452's (2026-09-24), on a dropped candidate
+ * dropping ONE candidate and not the pass. 25 announcements, driven — MEASURED 2026-09-24 (the 21 this
+ * line carried before D-452 did not count SK-8's E1/E2).
  *
  * TALLY DECLARED HERE 2026-09-14 (M0-29, D-343), AND THE OLD SENTENCE IS KEPT
  * RATHER THAN CORRECTED, BECAUSE IT WAS NEVER WRONG. The only arm count this
@@ -400,7 +403,7 @@ arm({
   id: "H3", subject: "F10's PRECONDITION — an unadjusted submission is DROPPED",
   what: "`adjust` returns to `submit` whether or not the submission actually changed",
   mustFail: "the unadjusted-drops-the-candidate arm AND the through-the-op arm that the same bytes were never sent twice",
-  mustNot: "the dedup arms, the gate, the four-level fan-out, or the empty-run arm",
+  mustNot: "the dedup arms, the gate, the four-level fan-out, the empty-run arm, or B5b's D-452 arms (a drop with a queue behind it goes to `submit` under this arm as under the fix)",
   file: HARNESS,
   find: `      if (!s.adjusted)
         return { step: "next-pass",`,
@@ -408,11 +411,16 @@ arm({
         return { step: "next-pass",`,
   run: () => {
     const r = runHarness();
-    const dropArm = anyFailed(r, /UNADJUSTED one drops the candidate|DROPPED the candidate|called ONCE|repeats. counter never moved|nothing was adjusted|nothing was resent/);
+    /* D-452 (2026-09-24) RENAMED the A3 assertion this arm fails by: "an UNADJUSTED one drops the candidate
+       instead" asserted `next-pass` over a non-empty queue, which was the defect. Its successor with NOTHING
+       behind it is what this arm now fails; B5b's D-452 arms (a drop WITH a queue behind it) must HOLD,
+       because this arm sends that case to `submit` exactly as the fix does. */
+    const dropArm = anyFailed(r, /UNADJUSTED one with NOTHING behind it|DROPPED the candidate|called ONCE|repeats. counter never moved|nothing was adjusted|nothing was resent/);
     const fanoutHeld = !anyFailed(r, /LEVELS is exactly the plane's set|four spawn payloads/);
+    const d452Held = !anyFailed(r, /^D-452:|^B5b:/);
     return {
-      observed: `${r.pass} pass, ${r.fail} FAIL · drop/resend arms ${dropArm ? "FAILED" : "did NOT fail"} · fan-out ${fanoutHeld ? "held" : "also failed"}`,
-      asDeclared: r.ran && dropArm && fanoutHeld,
+      observed: `${r.pass} pass, ${r.fail} FAIL · drop/resend arms ${dropArm ? "FAILED" : "did NOT fail"} · fan-out ${fanoutHeld ? "held" : "also failed"} · D-452 arms ${d452Held ? "held" : "also failed"}`,
+      asDeclared: r.ran && dropArm && fanoutHeld && d452Held,
     };
   },
 });
@@ -423,8 +431,8 @@ arm({
   mustFail: "the per-field overreach arm for `maxPasses`, by name, AND the through-the-op JUDGEMENT_OVERREACH arm",
   mustNot: "the budget arms — the two are different mechanisms and this is what shows it",
   file: HARNESS,
-  find: `export const NOT_JUDGEABLE = ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store"];`,
-  replace: `export const NOT_JUDGEABLE = ["pass", "step", "budget", "mode", "bound", "run", "store"];`,
+  find: `export const NOT_JUDGEABLE = ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store", "target"];`,
+  replace: `export const NOT_JUDGEABLE = ["pass", "step", "budget", "mode", "bound", "run", "store", "target"];`,
   run: () => {
     const r = runHarness();
     const named = anyFailed(r, /judgement setting `maxPasses` is REFUSED|JUDGEMENT_OVERREACH|the field is named/);
@@ -841,6 +849,133 @@ arm({
       observed: `harness ${rh.pass}/${rh.fail} FAIL · airun ${air.pass}/${air.fail} FAIL`
         + ` · the mock's own arms objected: ${objected} · the table arm and the plane held: ${held}`,
       asDeclared: rh.ran && objected && held,
+    };
+  },
+});
+
+/* ============================================================================
+ * SECTION T — FL-11 AND FL-12: THE RUN'S TARGET AND THE REQUEST'S ADDRESS (2026-09-23).
+ * Each arm breaks ONE line of `src/index.mjs` and nothing else; the mocks are untouched, and they are what
+ * refuses — derived from the plane, so a green under an arm would be a mock saying yes.
+ * ========================================================================== */
+const runFanout = () => runNamed("fanout.test.mjs", "fanout");
+
+arm({
+  id: "T1", subject: "FL-11 — THE SEEDING DROPPED: the run never takes its context as its target",
+  what: "`state.target` is no longer seeded from `runContextTarget(session)` at the open — the member as it was "
+    + "before FL-11, where nothing set it",
+  mustFail: "harness FT1 (the published target), FT1b (dedup's read under the run's target), FT1c (the level-empty "
+    + "and untargeted readings land), FT3 (a target-less suggestion is refused C-27.1 BEFORE the principal gate is "
+    + "reached, the plane's order), FT4 and fanout FL-12b (a request's target defaults to the run's), and B6's four "
+    + "level-empty suggestions — each BY NAME, refused by the mock's SUGGEST_NO_TARGET / CAPTURE_REQUEST_NOT_AN_INQUIRY. "
+    + "Every older arm that asserts a suggestion LANDS fails with them (B4, B8, B9, fanout's parent-writes arms): the "
+    + "strict mock now sees the pre-FL-11 member everywhere it suggests, which is the point",
+  mustNot: "FT0 (the mock refuses on its own, driven directly), FT1d/FT1e (a reading aimed outside is still refused "
+    + "and still not compared), FT2 (a project run never had a target) and the fanout suite's FL-12a (the mock alone)",
+  file: DRIVER,
+  find: `    target: seeded.target, targetBasis: seeded.basis,`,
+  replace: `    targetBasis: seeded.basis,`,
+  run() {
+    const rh = runHarness();
+    const rf = runFanout();
+    const failedAsDeclared = [/^FT1 \(FL-11\)/, /^FT1b /, /^FT1c /, /^FT3 /, /^FT4 \(FL-12/, /FOUR level-empty suggestions/]
+      .every((re) => anyFailed(rh, re)) && anyFailed(rf, /^FL-12b /);
+    const held = !anyFailed(rh, /^FT0|^FT1d |^FT1e |^FT2/) && !anyFailed(rf, /^FL-12a/);
+    return {
+      observed: `harness ${rh.pass}/${rh.fail} FAIL · fanout ${rf.pass}/${rf.fail} FAIL · the declared arms failed by `
+        + `name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
+      asDeclared: rh.ran && rf.ran && failedAsDeclared && held,
+    };
+  },
+});
+
+arm({
+  id: "T2", subject: "FL-12 — THE LOCATOR SENT AS `url` AGAIN, the field the plane never reads",
+  what: "`op=capturerequest`'s body names the locator `url` instead of `address` — the member as it was before FL-12",
+  mustFail: "harness FT4 (the ADDRESS arm: the public locator is queued by `address`), FT4b (no body carries `url`), "
+    + "FT4c (exactly ONE refusal — with `url` the public locator is refused too) and fanout FL-12b (the fan-out's "
+    + "ADDRESS arm) — each BY NAME, the mock answering CAPTURE_REQUEST_NOT_PUBLIC",
+  mustNot: "FT0d/FT0e and fanout FL-12a (the mock refuses `url` and queues `address` when driven directly), and every "
+    + "FL-11 arm (FT1*, FT2*, FT3) — the suggestion path shares no field with the request",
+  file: DRIVER,
+  find: `{ run: runId, target: t.target ?? state.target ?? null, address: t.url ?? null }), "capturerequest");`,
+  replace: `{ run: runId, target: t.target ?? state.target ?? null, url: t.url ?? null }), "capturerequest");`,
+  run() {
+    const rh = runHarness();
+    const rf = runFanout();
+    const failedAsDeclared = [/^FT4 \(FL-12/, /^FT4b /, /^FT4c /].every((re) => anyFailed(rh, re))
+      && anyFailed(rf, /^FL-12b /);
+    const held = !anyFailed(rh, /^FT0|^FT1|^FT2|^FT3 /) && !anyFailed(rf, /^FL-12a/);
+    return {
+      observed: `harness ${rh.pass}/${rh.fail} FAIL · fanout ${rf.pass}/${rf.fail} FAIL · the declared arms failed by `
+        + `name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
+      asDeclared: rh.ran && rf.ran && failedAsDeclared && held,
+    };
+  },
+});
+
+/* ============================================================================
+ * SECTION D — D-452 (2026-09-24). A DROPPED CANDIDATE DROPS ONE CANDIDATE, NOT THE PASS.
+ * ========================================================================== */
+
+arm({
+  id: "D1", subject: "D-452 — THE DEFECT RESTORED: a drop at `adjust` ends the pass",
+  what: "`adjust` with nothing adjusted and a non-empty queue routes back to `next-pass`, as before D-452",
+  mustFail: "harness `D-452: the rest of the pass is written` BY NAME, with the sent-exactly-once, drop-went-to-submit "
+    + "and counts-what-it-wrote D-452 arms and A3's `with candidates queued behind it goes on to submit the REST`; "
+    + "and fanout B6b's `while the legal candidate ahead of it … LANDED` (its level-empty candidate sits behind a drop)",
+  mustNot: "`D-452: the DROPPED candidate was sent ONCE and never landed` and `D-452: nothing was resent verbatim` "
+    + "(the defect loses candidates, it resends none), B5's single-candidate drop, B4's adjust, A3's NOTHING-behind-it "
+    + "arm, B6's empty run and every FT arm",
+  file: HARNESS,
+  find: `      if (!s.adjusted && queue.length)
+        return { step: "submit",`,
+  replace: `      if (!s.adjusted && queue.length)
+        return { step: "next-pass",`,
+  run() {
+    const r = runHarness();
+    const rf = runFanout();
+    const failedAsDeclared = [/^D-452: the rest of the pass is written/, /^D-452: …and each was SENT exactly once/,
+      /^D-452: the drop went on to `submit`/, /^D-452: the run counts what it wrote/,
+      /with candidates queued behind it goes on to `submit` the REST/].every((re) => anyFailed(r, re))
+      && anyFailed(rf, /^while the legal candidate ahead of it in the queue LANDED/);
+    const held = !anyFailed(r, /^D-452: the DROPPED candidate|^D-452: nothing was resent|DROPPED the candidate rather|called ONCE|NOTHING behind it|adjusted version LANDED|^FT|FOUR level-empty/)
+      && !anyFailed(rf, /the illegal candidate did NOT land|^FL-12/);
+    return {
+      observed: `harness ${r.pass}/${r.fail} FAIL · fanout ${rf.pass}/${rf.fail} FAIL · the declared arms failed by name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
+      asDeclared: r.ran && rf.ran && failedAsDeclared && held,
+    };
+  },
+});
+
+/* D2 CAME BACK NOT AS DECLARED ON ITS FIRST RUN (2026-09-24), AND IT WAS THE ARM. It re-queued the
+   refused bytes at the queue's HEAD (`unshift`), which is not the liar the row names: the resent `v1` is
+   refused again and put back in front, a verbatim-retry loop that starves everything behind it — so
+   `the rest of the pass is written` FAILED too (harness 243/12). The liar that writes the rest AND
+   resends the dropped one puts it at the TAIL; that is the arm below. FT1d, FT2d and FT3 are COUPLED to
+   it and declared so: each drives a refusal, and a re-queued refusal is a verbatim retry wherever one
+   occurs. */
+arm({
+  id: "D2", subject: "D-452 — THE LIAR'S FIX: the dropped candidate is RE-QUEUED behind the rest instead of dropped",
+  what: "`adjust` puts the refused submission at the END of the queue whether or not it changed — so the rest of "
+    + "the pass is written, AND the dropped bytes are sent again",
+  mustFail: "harness `D-452: the DROPPED candidate was sent ONCE and never landed` and `D-452: nothing was resent "
+    + "verbatim` BY NAME (PL-3's `repeats` climbs), with B5's called-ONCE arm; COUPLED, and declared: FT1d, FT2d "
+    + "and FT3, each of which drives a refusal",
+  mustNot: "`D-452: the rest of the pass is written` — which is exactly why that arm alone could not tell the fix from "
+    + "the liar, and the sent-once/never-landed arm exists — and B4's adjusted landing, B6's four level-empty "
+    + "suggestions, FT0*, FT1/FT1b/FT1c",
+  file: DRIVER,
+  find: `      if (changed) queue.unshift(state.submission);`,
+  replace: `      if (changed) queue.unshift(state.submission); else queue.push(state.refusedSubmission);`,
+  run() {
+    const r = runHarness();
+    const failedAsDeclared = [/^D-452: the DROPPED candidate was sent ONCE/, /^D-452: nothing was resent verbatim/,
+      /called ONCE/].every((re) => anyFailed(r, re));
+    const held = !anyFailed(r, /^D-452: the rest of the pass is written|adjusted version LANDED|FOUR level-empty|^FT0|^FT1 |^FT1b |^FT1c /);
+    return {
+      observed: `harness ${r.pass}/${r.fail} FAIL · the declared arms failed by name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
+      asDeclared: r.ran && failedAsDeclared && held,
     };
   },
 });

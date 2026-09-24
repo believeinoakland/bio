@@ -1,6 +1,6 @@
 # BIO interaction constructs — v0.2 (v0.1 derivation retained below)
 
-**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. as of 2026-09-23.
+**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. as of 2026-09-24.
 
 **Place in the system** · Owns construct 12 of `BIO_System_Design.md` §3 (member surfaces): it governs M8 (`docs/development/MILESTONES.md`; the UI area's governing design per `QUEUE.md`), hands queue content to `docs/development/NOTIFICATIONS.md`, and its pre-flight rule (DEC-8) is what the assistant construct and every act surface rest on. Distinct from `CONSTRUCTS.md`, the content inventory — the name collision is stated in the document.
 
@@ -490,6 +490,14 @@ actions proceed on drift and say what moved; `refuse`-weight actions stop and ha
 nothing, so they cannot half-run. A member must be able to tell, before acting, which
 kind they are about to perform — and the surface should show what the action will
 REFUSE and why before it runs, not after.
+
+**The second shape: an ENUMERATED SET, for items that do not drift** (BOB #32, 2026-09-24, folding D-291's built shape
+and D-126's precedent). The lease above is for BUNDLES, which can move under a member between selecting and acting. An
+item addressed by an identity that cannot drift (a queue item, a capture, a document a member resolves) takes the
+simpler shape. The member's chosen items are ENUMERATED in ONE call, and the plane answers PER ITEM: each item landed,
+or it was refused with its own named reason. There is no lease and nothing to expire. The same rules bind both shapes:
+the member chooses, and nothing is preselected (DEC-69); a refused item never silently drops out of the answer; and
+nothing in the set half-runs without saying so. Built: D-126's `#perItem` and `op=resolve`'s `items` (D-291).
 
 **Accountability rule:** an action lands on the set the operator saw. Auto-updating a
 selection is rejected doctrine (D-35): a selection records INTENT, and an action landing
