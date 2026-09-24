@@ -3,3 +3,4 @@ C-82	2026-09-24T01:10:02.041Z	c19-unionfix	STATEMENT_ACK_CHECKS: op=statementack
 C-83	2026-09-24T03:12:44.595Z	land/conduct/c20-integ1	
 C-84	2026-09-24T03:27:33.255Z	land/worker/D-486	
 C-85	2026-09-24T16:28:08.460Z	land/worker/D-508	
+C-86	2026-09-24T18:32:19.607Z	D-510	promote refuses an envelope object_type that disagrees with the promoted document
