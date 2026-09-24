@@ -73,7 +73,7 @@ const TEXT_PIN_SYNTH = "11304705928975fe3dfefe4fbbd1d91d8ffb41067a9864407eba87af
    the SYNTHETIC fixture's pin did NOT move (it positions no glyph on a shared
    baseline, so D-481 cannot touch it), and the new agenda digest reproduced on
    two consecutive runs. Taken from the figure the suite PRINTED, never computed
-   by hand. Figures: docs/development/measurements/M-133.md. */
+   by hand. */
 const TEXT_PIN_AGENDA = "aa1703bafc6165324b52dd832d6a15401920f968650ab7ac8b33393e4bb80949";
 
 /* ---- a tiny PDF assembler (capture-pagecount's) ---- */

@@ -60,7 +60,7 @@
    floor. RUN: exactly 7 of 107 failed — T*, Td ty!=0, TD ty!=0, Tm at a different baseline, the ' and " arm, the
    two-cm arm, and the three-Td-lines over-strictness arm. The per-glyph arms and the floor PASSED, which IS the
    point: this suite refuses the liar. All 91 pre-existing assertions PASSED.
-   Restored after each arm -> 107 pass, 0 fail. Figures: docs/development/measurements/M-133.md. */
+   Restored after each arm -> 107 pass, 0 fail. */
 /* NEGATIVE CONTROL: in loadFont skip the /ToUnicode lookup (`const tu = false && doc.resolve(map.ToUnicode)`) so no CMap ever loads -> the decoded-text assertions fail. RUN 2026-07-31: 14 of 75 failed (every "decodes to"/document/per-page text assertion + the unmapped_code region — all runs collapse to no_tounicode); the CMap-independent doctrine assertions (CID-no-ToUnicode acceptance, no_current_font, empty-text shape) still passed; restored -> 75 pass 0 fail. */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { extractPdfStructure, PDF_LINK_TYPES } from "../src/pdfstructure.mjs";
