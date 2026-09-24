@@ -32,6 +32,7 @@ depends-on: D-456 (`integrated` on c18-d456).
 scope: every op pinned to `bio` refuses `store=scratch` by name (preferred), or answers `store:"bio"` on every reply; enumerate the pinned ops from the OPS table.
 accepts-when: `op=knock&store=scratch` is refused by name and `bio`'s counters are unchanged. NEGATIVE CONTROL: accept and ignore the parameter again, and the pinned-op arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+note: 2026-09-24 by SCHEDULER #17 (BOB #32, 00:02Z): the rule of record is CLAUDE.md §5 "NAME `store=scratch` ON EVERY CALL" (D-325, at `scopeFor`); `VERIFICATION.md` stays the cited governed path only because the design check admits it (it has no budget for the rule). On landing, the worker checks §5's wording against the new behaviour and tells BOB if it needs correcting.
 
 ### D-464 · queued — **A MEMBER'S `op=stats` MOVES WHEN A PROJECT THEY CANNOT SEE IS CREATED OR REVISED, AND `op=searchindexcheck`'s `counts.indexed` MOVES ON A HIDDEN CREATION: D-447's sibling class, not fixed.** Stated in Membership v2's Incomplete sections. — owner RECORD.
 order: directly after D-461: a disclosure defect, D-447's class, outranks every correction and feature (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
