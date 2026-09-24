@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d278-codeless-refusals.test.mjs",
+ "inputHash": "43246826e8b67c2512775fd0d29ce9e52b5e3fe8e09a4181ab083b5a9809ff57",
+ "verdict": "PASS",
+ "run": "a18983a26a6effc89cb8b4e383dc579b474df56b.1790274624140.32076.json",
+ "tree": "a18983a26a6effc89cb8b4e383dc579b474df56b",
+ "head": "2c5673b024c6e683e4aa2b3207e511c5ca201852",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 143,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "dfdc88e3-e6fb-52f1-a9af-dbef113c70c8",
+ "at": "2026-09-24T18:30:24.159Z"
+}
