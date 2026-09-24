@@ -31,3 +31,4 @@ D-502	2026-09-24T05:22:42.391Z	SCHEDULER #18	D-481 findings: tier-2 award on raw
 D-503	2026-09-24T05:33:58.651Z	SCHEDULER #18	index.mjs machine/operator fences not driven (D-494 finding)
 D-504	2026-09-24T05:42:15.442Z	SCHEDULER #18	D-453's open measurements (M-132)
 D-505	2026-09-24T05:53:51.155Z	SCHEDULER #18	no fence refuses a machine changing a member-set tier
+D-506	2026-09-24T06:10:46.273Z	SCHEDULER #18	op=livefire verdict under ok:false (BOB #32 ruled b)
