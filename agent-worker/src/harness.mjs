@@ -43,8 +43,9 @@
  *                                           the log is written whether or not
  *                                           the run succeeds
  *   denied-means-adjust (F10) ............. `submit --refused--> adjust`, and
- *                                           `adjust` may only return to `submit`
- *                                           with a CHANGED submission. See the
+ *                                           `adjust` may only RESEND a CHANGED
+ *                                           submission; a drop goes on to the
+ *                                           rest of the queue (D-452). See the
  *                                           F10 block below — this is the row
  *                                           the item is named for
  *   query-never-load ...................... PLANE_OPS. The meaning-grain read is
@@ -697,7 +698,18 @@ export function nextStep(state) {
     }
 
     case "adjust": {
-      /* F10's PRECONDITION, enforced rather than trusted. */
+      /* F10's PRECONDITION, enforced rather than trusted. A DROP DROPS ONE CANDIDATE, NOT THE PASS
+         (D-452, 2026-09-24). This branch went to `next-pass` whatever was queued behind the dropped
+         candidate, so one unanswerable refusal swallowed every candidate after it — the table-made
+         level-empty ones included, which is §9's instrument silently not written. The dropped
+         candidate is already off the queue (`submit` shifted it and `adjust` re-queues only a CHANGED
+         submission), so going to `submit` here writes the REST and cannot resend it. */
+      const queue = s.queue || [];
+      if (!s.adjusted && queue.length)
+        return { step: "submit",
+                 why: "the refusal could not be answered by changing the submission, so the candidate is DROPPED "
+                    + `and never resent (that would climb PL-3's \`repeats\` counter); ${queue.length} candidate(s) `
+                    + "behind it in this pass are still written, one at a time" };
       if (!s.adjusted)
         return { step: "next-pass",
                  why: "the refusal could not be answered by changing the submission, so the candidate is DROPPED. "
