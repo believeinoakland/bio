@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rung-ladder.test.mjs",
+ "inputHash": "c4050f3730b1a7c65045010266335b18ef0a9b2da24cf74a66ac9dbe5ea71742",
+ "verdict": "PASS",
+ "run": "8e1ddb25cdef26fdefaba7b25058753648c2758b.1790278212743.11182.json",
+ "tree": "8e1ddb25cdef26fdefaba7b25058753648c2758b",
+ "head": "e1efc74ae27a94ec8eb4822e69e24c1f4c8c758e",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 157,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4d334d7e-3f8a-5b8e-8e48-1c915a1033e1",
+ "at": "2026-09-24T19:30:12.758Z"
+}
