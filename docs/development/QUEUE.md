@@ -147,7 +147,8 @@ scope: the three defects the ruling leaves, and only those: (1) a pen NOT listed
 accepts-when: the sweep names 0 unignored and 0 un-item-named pens (the measured failure it moves: 7 unignored pens dirtying the tree during a control). NEGATIVE CONTROL: remove one pen's `.gitignore` line and the sweep names it.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`); restated by SCHEDULER #20.
 
-### D-513 · running — **`op=knock`'s TOO_LARGE (two sites) and EMPTY STILL REACH A KNOCKER UNTRANSLATED at the door D-508 catalogued, and `d278-codeless-refusals.test.mjs`'s header calls them "coded already" (true of `reason`, false of the translation).** Found by D-508's worker. — owner RECORD.
+### D-513 · integrated — **`op=knock`'s TOO_LARGE (two sites) and EMPTY STILL REACH A KNOCKER UNTRANSLATED at the door D-508 catalogued, and `d278-codeless-refusals.test.mjs`'s header calls them "coded already" (true of `reason`, false of the translation).** Found by D-508's worker. — owner RECORD.
+status: integrated — integrated — flipped ~23:03Z by SCHEDULER #20 on CONDUCT #20's verification (22:59Z): fe786466, whole battery unreused 354/354 · 20400; nc-d513 4/4 AS DECLARED (one declaration corrected from its first run); rides c20-batch27; CONDUCT classifies IC-286 MAJOR (the reason token moves on the PUBLIC op=knock). Findings placed as D-549 and D-550.
 order: after D-510, with the product corrections: refusals a member cannot read at a public door, D-507's and D-508's class (SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:47Z)
 milestone: M2
 interface: I3 additive — three catalogued codes; the catalogue version moves; the integrator classifies.
@@ -486,6 +487,16 @@ depends-on: none.
 scope: blank comments before harvesting; refuse a match preceded by `typeof` or whose right-hand side is not a catalogue state, and report it as an UNRECOGNISED MATCH, never as a state. Apply the same two guards to the `#setScalar` harvest beside it.
 accepts-when: a planted `typeof x.current_state === "string"` guard and a commented-out quote of the pattern leave the state set unchanged and are reported as unrecognised matches (the measured failure it moves: a RED naming a state nobody wrote). NEGATIVE CONTROL: harvest the raw file again and the planted guard is read as a state, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by CONDUCT #20).
+
+### D-549 · queued — **NO_PUBLISHED_STORE ON THE PUBLIC `op=publishedbytes` AND `op=publishedcase` REACHES AN ANONYMOUS CALLER UNTRANSLATED: it is minted at two sites (`index.mjs` ~5747 a literal, ~5900 a ternary shared with OBJECT_MISSING; main 9f8b69e6), has no DEC-49 translation, and `app.html` names it 0 times, so the public reads a machine token.** Found by D-513's worker (via CONDUCT #20 22:59Z). — owner RECORD.
+order: after D-540, with the corrections: a public door answering in machine vocabulary (D-484's settled shape; CLAUDE.md §2) (SCHEDULER #20, 2026-09-24)
+milestone: M10
+interface: I3 — a translation added and a mint site consolidated; the integrator classifies.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, in D-484's settled shape (one governed helper, one region, one condition).
+depends-on: none.
+scope: one governed helper and DEC-49 region minting NO_PUBLISHED_STORE for ONE condition, with its canned translation; the ~5900 ternary says which code it mints under which condition. Move each refusal-code floor to its printed figure.
+accepts-when: both public ops answer NO_PUBLISHED_STORE with its translation from one site (the measured failure it moves: an untranslated code at two sites). NEGATIVE CONTROL: restore the literal at ~5747 and check-refusal-codes names the second site.
+added: 2026-09-24 · SCHEDULER #20 (id minted by D-513's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
