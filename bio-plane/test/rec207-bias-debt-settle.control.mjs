@@ -100,11 +100,13 @@ const ARMS = {
   /* RECORDED, BUT NOT REALLY: the settlement row is not appended, while `bias_debts` is still stamped. THE
      ANSWER STILL CLAIMS IT — ARM S4 reads the object the act returned and stays GREEN — and every arm that
      goes to the RECORD fails. That pair is the whole reason this suite reads `op=biasdebt` rather than
-     trusting the act's own answer: a claim and a record are two different facts. */
+     trusting the act's own answer: a claim and a record are two different facts. ARM C3 fails with them
+     and for the same reason — it reads the settlement COUNT beside the refusal it names — while C1 and C2,
+     which read the CATALOGUE, stay green. Declared after the arm printed it, not smoothed. */
   "settlement-not-appended": {
     patches: [["store.mjs", APPEND, APPEND_OFF, 1]],
-    mustFail: ["ARM S5 ", "ARM S7 ", "ARM R4 ", "ARM L1 ", "ARM L2 ", "ARM N1 "],
-    mustPass: ["ARM S4 ", "ARM S6 ", "ARM R3 ", "ARM O1 "],
+    mustFail: ["ARM S5 ", "ARM S7 ", "ARM C3 ", "ARM R4 ", "ARM L1 ", "ARM L2 ", "ARM N1 "],
+    mustPass: ["ARM S4 ", "ARM S6 ", "ARM C1 ", "ARM C2 ", "ARM R3 ", "ARM O1 "],
   },
 
   /* THE HOLD REMOVED: the next sweep over an unmoved lens delta re-raises what a member already answered.
@@ -113,11 +115,13 @@ const ARMS = {
      mechanism rather than the suite. Re-raising the settled debt CLEARS its `settled_kind` (that is what
      restating is), so by ARM L the resolve no longer names itself as what settled the obligation and by
      ARM N the debt this arm re-raised is already open. The two are the same defect seen later, and their
-     failing is the hold being load-bearing beyond the tick that drops it. */
+     failing is the hold being load-bearing beyond the tick that drops it. ARM C3 joins them for the same
+     cause: it reads the settled debt's settlement COUNT, and a re-raised debt no longer reads as settled.
+     Declared after the arm printed it, and recorded rather than smoothed. */
   "held-dropped": {
     patches: [["store.mjs", HELD, HELD_OFF, 1]],
-    mustFail: ["ARM H1 ", "ARM L2 ", "ARM N1 "],
-    mustPass: ["ARM S4 ", "ARM S5 ", "ARM R3 ", "ARM O1 "],
+    mustFail: ["ARM H1 ", "ARM C3 ", "ARM L2 ", "ARM N1 "],
+    mustPass: ["ARM S4 ", "ARM S5 ", "ARM C1 ", "ARM C2 ", "ARM R3 ", "ARM O1 "],
   },
 
   /* THE MACHINE FENCE REMOVED: an admin CREDENTIAL settles a member's obligation. ARM S3 by name.
