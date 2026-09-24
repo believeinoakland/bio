@@ -248,8 +248,8 @@ scope: the re-run discharge recording the discharging run's id and lens pins; th
 accepts-when: a re-run under the current lens closes the obligation naming that run; one under another lens leaves it open; a resolve without a reason is refused by name. NEGATIVE CONTROL: discharge on any re-run, and the other-lens arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### D-468 · running — **A BIAS SET ACCEPTS `adopted` → `proposed`: promote does not enforce the STATES edges against the head, so a revision can move backwards.** Found by REC-187's worker (F4). — owner RECORD.
-status: running — SPAWNED 2026-09-24 ~21:30Z by SCHEDULER #19 (dispatch, BOB #33 21:10Z) as a SEPARATE CLOUD SESSION titled WORKER D-468 (SCHEDULER #19), base origin/main 1a7f0bcc0. Falsify rather than believe: a live worker holds the branch land/worker/D-468; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### D-468 · integrated — **A BIAS SET ACCEPTS `adopted` → `proposed`: promote does not enforce the STATES edges against the head, so a revision can move backwards.** Found by REC-187's worker (F4). — owner RECORD.
+status: integrated — CONDUCT #20 verified 23:45Z, tip 9045c3e4, for c20-batch28
 order: after REC-207, with the bias rows: a correction to a built state machine (SCHEDULER #17, 2026-09-24; REC-187's worker via CONDUCT #19)
 milestone: M4
 interface: I3 — one refusal; the integrator mints and classifies the IC.
@@ -281,8 +281,8 @@ scope: a bulk forward over the queue's selection, sent as the set.
 accepts-when: a selection of three forwards in one act. NEGATIVE CONTROL: loop per item, and the one-act arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
-### REC-205 · running — **A PROJECT-SCOPED FINDING CANNOT JOIN A QUEUE SELECTION: its act names a project per item, so D-126's set has no way to carry one.** — owner RECORD, then UI.
-status: running — SPAWNED 2026-09-24 ~21:48Z by SCHEDULER #19 (dispatch) as a SEPARATE CLOUD SESSION titled WORKER REC-205 (SCHEDULER #19), base origin/main 1a7f0bcc0. Falsify rather than believe: a live worker holds the branch land/worker/REC-205; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### REC-205 · integrated — **A PROJECT-SCOPED FINDING CANNOT JOIN A QUEUE SELECTION: its act names a project per item, so D-126's set has no way to carry one.** — owner RECORD, then UI.
+status: integrated — CONDUCT #20 verified 23:45Z, tip 535294c7, for c20-batch28; UI half is UI-110
 order: after UI-94 (SCHEDULER #17, 2026-09-23; D-126's worker)
 milestone: M8
 interface: I3 — the set act carries each item's project; the integrator mints and classifies the IC.
@@ -336,8 +336,8 @@ scope: a review-copy `*_CHECKS` family in `bio-checks.mjs` with DEC-49 regions a
 accepts-when: the refusal-code census reads every one of the eleven as translated. NEGATIVE CONTROL: drop one code's region, and the census arm names it.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### M0-188 · running — **THE GATE'S OWN REMEDY NAMES THE ONE-BUNDLE COMMAND: `verifyStatic` in `bio-plane/scripts/fleet-bundle.mjs` ends its staleness findings with "Run `npm run build` in <dir>/." at nine sites, so a worker following it rebuilds one bundle and meets the next stale one in the next gate.** Found by M0-178's worker (F1; with F2 and A6). — owner FLEET (the path), M0.
-status: running — SPAWNED 2026-09-24 ~22:05Z by SCHEDULER #19 (dispatch) as WORKER M0-188 (SCHEDULER #19), base origin/main 9f8b69e6. Falsify rather than believe: a gate must actually PRINT the new remedy for a staled bundle, not merely lose the old string.
+### M0-188 · integrated — **THE GATE'S OWN REMEDY NAMES THE ONE-BUNDLE COMMAND: `verifyStatic` in `bio-plane/scripts/fleet-bundle.mjs` ends its staleness findings with "Run `npm run build` in <dir>/." at nine sites, so a worker following it rebuilds one bundle and meets the next stale one in the next gate.** Found by M0-178's worker (F1; with F2 and A6). — owner FLEET (the path), M0.
+status: integrated — CONDUCT #20 verified 23:45Z, tip 71b663a7, for c20-batch28
 order: at the backlog head before D-512, AHEAD of the product rows: a wrong remedy in a gate message costs a red round per stale member (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:02Z)
 milestone: M0
 interface: none.
@@ -619,6 +619,36 @@ design: `docs/development/CLIENT-RENDERED.md` "What Workers Paid actually buys, 
 depends-on: D-492, D-490.
 scope: (1) measure navigation times over the client-rendered sources already captured, recorded in `measurements/<id>.md` with date and instrument, and set the reservation's bound from the measured tail, stating the figure and its source at the site; (2) a concurrency cap from the platform's stated concurrent-browser limit, labelled the vendor's claim until measured; a render over the cap WAITS in the reconciling alarm, never dropped; a render that cannot run is recorded undetermined with its reason, never as a capture that found nothing.
 accepts-when: the bound reads from a measurement id, and a burst above the cap renders no more than the cap at once with the rest completing later (the measured failure it moves: an unmeasured 30,000 ms and an uncapped burst). NEGATIVE CONTROL: remove the cap and the burst arm counts more concurrent renders than the cap, failing by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### D-547 · queued — **A PROMOTE REVISION CAN RETYPE A BUNDLE IN PLACE: `#projectRow`'s write (store.mjs ~17747, `const projectedType = promotedType`) never compares the new type with `cur.object_type`, so after a retyping revision every type-scoped fence asks the wrong machine.** Found by D-468's worker (via CONDUCT #20 23:45Z). — owner RECORD.
+order: before D-538, at the head of the backlog with the promote corrections: a record whose type silently changes under its own fences claims more than it can support (CLAUDE.md §2), and it outranks new features (SCHEDULER #21, 2026-09-24)
+milestone: M7
+interface: I3 — a new refusal code on op=promote; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, with C-2.5 and D-510's derivation, and DEC-49 for the refusal's canned translation.
+depends-on: D-510.
+scope: FIRST read the corpus (bio and scratch registers) for revisions that already retyped a bundle and state the count in `measurements/<id>.md`; then refuse a revision whose derived type differs from the head's by name, with a DEC-49 catalogue row; a bundle already retyped is reported, never rewritten.
+accepts-when: a revision that retypes an existing bundle is refused by its named code and the bundle's type is unchanged (the measured failure it moves: projectedType written with no comparison). NEGATIVE CONTROL: drop the comparison and the retype arm lands the new type, failing by name.
+added: 2026-09-24 · SCHEDULER #21 (id minted by D-468's worker).
+
+### D-548 · queued — **`bio-plane/test/d84-case-manifest.test.mjs` HAS NO `block()` RECORDER, so one fixture failure ends the run and every later section goes unmeasured.** Found by D-468's worker (via CONDUCT #20 23:45Z). — owner RECORD (the suite).
+order: after D-542, with the process rows behind the product rows: a suite that stops at its first failure hides later ones for a round, but no gate result is false (SCHEDULER #21, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a suite measures every arm it declares).
+depends-on: none.
+scope: adopt `bias.test.mjs`'s `block()` (one call per section) and report a missing tally as -1.
+accepts-when: with one section's fixture broken, every other section still reports its tally (the measured failure it moves: the run ends at the first failure). NEGATIVE CONTROL: break one section's fixture and the run names that section failed while the others report.
+added: 2026-09-24 · SCHEDULER #21 (id minted by D-468's worker).
+
+### D-522 · queued — **AN UNATTENDED RENDER THAT SUCCEEDS IS DRIVEN NOWHERE, AND THE MONITORING SWEEP (CAP-3) CANNOT SET THE RENDER FLAG, though BOB #32 ruled *an unattended sweep MAY render* within the allowance and through the governor.** D-491's residue (via CONDUCT #20 19:47Z). — owner CAPTURE.
+order: after D-520, with D-64's render rows: it waits on a renderer that can answer (SCHEDULER #19, 2026-09-24)
+milestone: M3
+interface: I3/I5 — the sweep's render request; the integrator classifies.
+design: `docs/development/CLIENT-RENDERED.md` "RULED 2026-09-23 by BOB #32: the method, the primary, and the unattended sweep" (item 3).
+depends-on: D-490, D-491, DIST-11.
+scope: the CAP-3 sweep sets `render` on a capture request for a source profiled client-rendered; drive an unattended render to SUCCESS through the drain with a stub renderer.
+accepts-when: an unattended request for a client-rendered source completes as a rendered capture within the allowance (the measured failure it moves: a success path no suite drives). NEGATIVE CONTROL: drop the sweep's render flag and the success arm reads the shell, failing by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
