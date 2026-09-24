@@ -1,4 +1,18 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) disable the per-IP knock rate limit in the store (guard `cnt(ipBucket) >= perIpLimit` with `false`) so one source is never throttled -> 3 assertions fail (the 13th knock refused RATE_IP, and the 429 status); restored, 36 pass. */
+/* NEGATIVE CONTROL: (re-run whole 2026-09-24, D-487) `node test/nc-d487.mjs` — five arms, each ALONE, no
+   sleep and no bet on the hour; both baselines 38 pass, 0 fail; every restore verified by sha256 AND
+   byte-for-byte against a per-arm pristine copy.
+     limiter-off  (subject src/store.mjs) THE 2026-07-31 CONTROL, RE-RUN because this suite changed around
+                  it: guard `cnt(ipBucket) >= perIpLimit` with `false` so one source is never throttled ->
+                  35 pass, 3 fail. It takes down THREE arms and the 2026-07-31 line named two of them; the
+                  third is "one source gets twelve and no more".
+     straddle     (D-487's SUBJECT) remove the edge guard, `EDGE_GUARD = false`, so the pinned clock steps
+                  a bucket MID-FLOOD — the straddle the wall clock used to hand this suite at random -> 35
+                  pass, 3 fail: "one source gets twelve and no more", "the thirteenth is refused by name",
+                  "refusal is a 429, not a 500", and the other three rate arms stand.
+     edge-minus-1 / edge-exact / edge-plus-1  OVER-STRICTNESS: pin the run 1 ms BEFORE a bucket edge,
+                  exactly ON one, and 1 ms after -> 38 pass, 0 fail in all three. That is the row's
+                  accepts-when, and a guard holding only mid-window would be the same bet at a shorter
+                  price. */
 /* The doorbell: the one door open to the public.
  *
  * Two halves. verify answers a hash question from the published
@@ -8,7 +22,9 @@
  * it, must not be able to read anything back, and must not be able to
  * fill the store faster than the rate limits allow.
  *
- * Negative-control detail: disable the per-IP knock rate limit in the store (guard `cnt(ipBucket) >= perIpLimit` with `false`) so one source is never throttled -> 3 assertions fail (the 13th knock refused RATE_IP, and the 429 status); restored, 36 pass.
+ * Negative-control detail: every arm, what it must take down and what it must leave standing, is DECLARED
+ * in `test/nc-d487.mjs` and the driver prints the actual set beside the declared one, so the two can be
+ * compared without anyone remembering. The figures are on the NEGATIVE CONTROL line above.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -17,9 +33,10 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+const SRC_TEXT = readFileSync(SRC, "utf8");
 
 const withR2 = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
+  modules: true, modulesRoot: "/", scriptPath: SRC, script: SRC_TEXT,
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
@@ -27,7 +44,7 @@ const withR2 = new Miniflare({
 });
 /* An instance with no card on file: same doorbell, smaller cap. */
 const noR2 = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
+  modules: true, modulesRoot: "/", scriptPath: SRC, script: SRC_TEXT,
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   bindings: { ADMIN_TOKEN: "adm-door", MEMBER_TOKEN: "mem-door", PROBE_TOKEN: "prb-door", VERSION: "test" },
@@ -53,6 +70,50 @@ const call = (mfi) => ({
   }),
 });
 const A = call(withR2), B = call(noR2);
+
+/* ---- D-487: THE RATE ARMS RUN ON A PINNED CLOCK ---------------------------
+ *
+ * The plane bins knocks into fixed ten-minute buckets — `win = floor(Date.now()
+ * / KNOCK.windowMs)` in `src/index.mjs`, and the per-source count is a row
+ * NAMED for that bucket. So a flood of fourteen that STRADDLES a bucket edge is
+ * counted twice from zero, every knock is accepted, and the limiter is behaving
+ * correctly while this suite goes red. Before this the arms below were a bet on
+ * the wall clock, and the stake is a full gate round.
+ *
+ * THE FIX IS NOT A WIDER TOLERANCE. A suite that accepts twelve OR fourteen has
+ * stopped measuring the limiter, and widening the limit is the first thing a
+ * false green would do. The fix is that the window CANNOT ROLL: these arms run
+ * against an isolate whose `Date.now()` is PINNED, so the whole flood lands in
+ * one bucket by construction, at every hour of the day. That is the store's own
+ * `nowMs = Date.now()` injection idiom applied one layer out, because the
+ * doorbell's window is computed in the worker with no seam to inject and this
+ * row does not change the limiter.
+ *
+ * WHAT THE PIN CAN AND CANNOT SEE, measured rather than assumed. It replaces
+ * `Date.now`, which is what `win` reads. It does NOT move `new Date()` — V8
+ * takes the host clock there — so this instance's knock ids and `received`
+ * stamps are the real ones and nothing that parses them is skewed. The pin sits
+ * in the middle of the CURRENT real window, so any code comparing a pinned
+ * `Date.now()` against a real timestamp is at most five minutes out, never
+ * months; a fixed epoch would have been more deterministic and less honest.
+ *
+ * ONE ISOLATE, so every arm still drives the op end to end. The clock moves by
+ * `setOptions`, which reloads the worker and KEEPS the Durable Object's state
+ * (measured on this suite: the inbox still held all fourteen rows after a
+ * reload). Nothing under `src/` is edited and no test-only knob is added to the
+ * plane — the injection is one line PREPENDED to the script this suite already
+ * hands Miniflare. */
+const KNOCK_WINDOW_MS = 10 * 60 * 1000;
+const PIN = Math.floor(Date.now() / KNOCK_WINDOW_MS) * KNOCK_WINDOW_MS + KNOCK_WINDOW_MS / 2;
+const pinnedOpts = (at) => ({
+  modules: true, modulesRoot: "/", scriptPath: SRC, script: `Date.now = () => ${at};\n` + SRC_TEXT,
+  compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+  durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  r2Buckets: ["CAPTURES", "PUBLISHED"],
+  bindings: { ADMIN_TOKEN: "adm-door", MEMBER_TOKEN: "mem-door", PROBE_TOKEN: "prb-door", VERSION: "test" },
+});
+const pinnedMf = new Miniflare(pinnedOpts(PIN));
+const C = call(pinnedMf);
 
 console.log("\n--- the doorbell needs no credential ---");
 const tip = { contentText: "The sewer fund transfers continued into FY24.", note: "council packet page 61", contact: "anon@proton.me" };
@@ -81,13 +142,42 @@ t("oversize body is rejected before it is parsed",
   (await A.RAW("op=knock", "x".repeat(8 * 1024 * 1024 + 8192), "203.0.113.13")).status, 413);
 
 console.log("\n--- rate limits bound the damage ---");
+/* D-487: the window read off the PLANE's own source, so raising KNOCK.windowMs
+   cannot leave this suite pinning a bucket the plane no longer bins into. It
+   fails here, by name, instead of passing over a pin that means nothing. The
+   per-source LIMIT is deliberately NOT read that way and stays the literal 12
+   below: a limit taken from the subject is a limit the subject can widen. */
+const winLit = /windowMs:\s*([0-9*\s]+?),/.exec(SRC_TEXT);
+t("the pin uses the plane's own knock window",
+  winLit ? winLit[1].split("*").map(Number).reduce((a, b) => a * b, 1) : null, KNOCK_WINDOW_MS);
+
+/* D-487's EDGE GUARD. It is one flag because the negative control has to be
+   able to take it away DETERMINISTICALLY: with the guard the whole flood runs
+   at one pinned instant; without it the clock steps to the next bucket
+   mid-flood, which is precisely the straddle the wall clock used to hand this
+   suite at random. `node test/nc-d487.mjs` flips it and names what must fail. */
+const EDGE_GUARD = true;
+const pinFor = (i) => (EDGE_GUARD ? PIN : PIN + (i < 6 ? 0 : KNOCK_WINDOW_MS));
 const flood = [];
-for (let i = 0; i < 14; i++) flood.push(await A.POST("op=knock", { contentText: "flood " + i }, "198.51.100.7"));
+let clockAt = PIN;
+for (let i = 0; i < 14; i++) {
+  if (pinFor(i) !== clockAt) { clockAt = pinFor(i); await pinnedMf.setOptions(pinnedOpts(clockAt)); }
+  flood.push(await C.POST("op=knock", { contentText: "flood " + i }, "198.51.100.7"));
+}
 const accepted = flood.filter((r) => r.ok).length;
 t("one source gets twelve and no more", accepted, 12);
 t("the thirteenth is refused by name", flood[12].reason, "RATE_IP");
-t("a different source is unaffected", (await A.POST("op=knock", { contentText: "unrelated" }, "198.51.100.8")).ok, true);
-t("refusal is a 429, not a 500", (await A.RAW("op=knock", { contentText: "one more" }, "198.51.100.7")).status, 429);
+t("a different source is unaffected", (await C.POST("op=knock", { contentText: "unrelated" }, "198.51.100.8")).ok, true);
+t("refusal is a 429, not a 500", (await C.RAW("op=knock", { contentText: "one more" }, "198.51.100.7")).status, 429);
+/* THE ARM THAT PROVES THE PIN ARMED, and an arm that did not arm is a finding:
+   a frozen clock nothing read would leave every assertion above green for the
+   ordinary reason, and this suite would be back to betting on the hour without
+   anyone able to tell. Step the pinned clock one bucket on and the source
+   refused a line ago is served — the count is bound to the WINDOW, which is the
+   whole reason the flood above is held inside one. */
+await pinnedMf.setOptions(pinnedOpts(PIN + KNOCK_WINDOW_MS));
+t("a new window starts a new count for the same source",
+  (await C.POST("op=knock", { contentText: "next window" }, "198.51.100.7")).ok, true);
 
 console.log("\n--- nothing comes back out without a member ---");
 t("inbox is not public", (await A.GET("op=inbox")).error, "unauthenticated");
@@ -120,6 +210,6 @@ t("verify refuses a malformed hash", (await A.GET("op=verify&sha256=NOTAHASH")).
 t("verify on an unknown hash is a clean no", (await A.GET(`op=verify&sha256=${"a".repeat(64)}`)).published, false);
 t("the published list is not a public read", (await A.GET("op=publishedlist")).error, "unauthenticated");
 
-await withR2.dispose(); await noR2.dispose();
+await withR2.dispose(); await noR2.dispose(); await pinnedMf.dispose();
 console.log(`\ndoorbell: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

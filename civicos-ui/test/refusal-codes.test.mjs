@@ -679,6 +679,97 @@ withTree({
 });
 
 /* ============================================================
+   ARM 4c — A QUOTED KEY IS A KEY (M0-144). The harvest read BARE keys only, so
+   `{ "PART_TOO_LARGE": "…" }` — the same table in a spelling nobody in this
+   repository had yet written — read as a table with a HOLE, or, below the
+   two-minted threshold, as no table at all. Neither is a finding about the
+   surface; both are the instrument not seeing. The fixture writes one bare key,
+   one double-quoted and one single-quoted, over a producer that mints exactly
+   those three: all three must be harvested, so the table is TOTAL and the run
+   is GREEN.
+   ============================================================ */
+const QUOTED_PARTS = `
+export function record(platform, url) {
+  if (!url) return { ok: false, reason: "NO_ADDRESS_GIVEN" };
+  if (url.length > 99) return { ok: false, reason: "PART_TOO_LARGE" };
+  if (platform) return { ok: false, reason: "PART_PLATFORM_LIMIT" };
+  return null;
+}
+`;
+/* Three keys, three quoting styles, and the FLOORS are the fixture's own
+   measured figures for a SIX-code plane (three in `fixture.mjs`, three here) —
+   moved from the default seven because this arm's producer mints one code
+   fewer, never by adding to a number. */
+const QUOTED_TREE = {
+  partsSrc: QUOTED_PARTS,
+  app: `<html><script>
+const PART_REASON = {
+  NO_ADDRESS_GIVEN: "the page never said where it was",
+  "PART_TOO_LARGE": "too large to keep",
+  'PART_PLATFORM_LIMIT': "no more requests could be made on this pass",
+};
+</script></html>
+`,
+  floor: { families: 1, rows: 3, census: 6, reach: 6, governedSites: 2, surfaceTables: 1, bodyLines: 6 },
+};
+console.log("\n--- ARM 4c · a table keyed BARE, \"double-quoted\" and 'single-quoted' is harvested WHOLE ---");
+withTree(QUOTED_TREE, tree => {
+  const r = runGuard(tree);
+  t("ARM 4c: exits 0 — a quoted key is a key, so the table is total and nothing is a hole", r.exit, 0);
+  t("ARM 4c: and the arm D line says all THREE were translated, with no hole",
+    /`PART_REASON` is TOTAL over src\/parts\.mjs — 3 codes minted, 3 translated, 0 hole\(s\)/.test(r.out), true);
+});
+
+/* THE NEGATIVE CONTROL FOR 4c, STANDING RATHER THAN RUN ONCE BY HAND. Put the
+   old bare-keys-only pattern back into the fixture's copy of the guard and the
+   arm above must go RED — with only ONE of its three keys harvested the table
+   falls below the two-minted threshold and is not FOUND AT ALL, which is the
+   floor's subject. `mutated()` throws if this replace matches nothing, so a
+   control that stopped arming cannot pass as a control that armed. */
+console.log("\n--- ARM 4c-control · restore the bare-keys-only harvest and 4c's tree FAILS by name ---");
+withTree(Object.assign({}, QUOTED_TREE, {
+  mutateGuard: g => g.replace(
+    String.raw`(["']?)([A-Z][A-Z0-9_]{2,})\1\s*:/g)].map(x => x[2])`,
+    String.raw`([A-Z][A-Z0-9_]{2,})\s*:/g)].map(x => x[1])`),
+}), tree => {
+  const r = runGuard(tree);
+  t("ARM 4c-control: exits 1", r.exit, 1);
+  t("ARM 4c-control: on the surfaceTables FLOOR — the table lost two of three keys and stopped being FOUND",
+    /0 surface translation table\(s\) proved total, floor is 1/.test(r.out), true);
+});
+
+/* ============================================================
+   ARM 4d — OVER-STRICTNESS IN THE REFUSING DIRECTION (M0-144). Widening a
+   matcher is where a matcher starts accepting things that are not its subject,
+   and a key harvested that is NOT a key would translate a code the table does
+   not actually carry — a hole hidden rather than found, which is the direction
+   that reaches a member. Two malformations, both of which MUST be refused:
+   a MISMATCHED quote (`"PART_TOO_LARGE':`, which `\1` cannot close) and a
+   lowercase key. The table still holds two properly-spelled minted keys, so it
+   is FOUND and PAIRED — the failure is therefore about the harvest and not
+   about the threshold, and it names both codes as holes.
+   ============================================================ */
+console.log("\n--- ARM 4d · a mismatched quote and a lowercase key are NOT harvested (over-strictness) ---");
+withTree({
+  app: `<html><script>
+const PART_REASON = {
+  NO_ADDRESS_GIVEN: "the page never said where it was",
+  "PART_PLATFORM_LIMIT": "no more requests could be made on this pass",
+  "PART_TOO_LARGE': "too large to keep",
+  part_fetch_failed: "the site could not be reached",
+};
+</script></html>
+`,
+}, tree => {
+  const r = runGuard(tree);
+  t("ARM 4d: exits 1", r.exit, 1);
+  t("ARM 4d: naming BOTH refused spellings as holes — the mismatched quote and the lowercase key",
+    /`PART_REASON` has NO WORDING for 2 code\(s\) its producer src\/parts\.mjs can mint: PART_FETCH_FAILED, PART_TOO_LARGE/.test(r.out), true);
+  t("ARM 4d: and the table was still FOUND and PAIRED, so this is the HARVEST refusing rather than the threshold",
+    /TABLE_PRODUCERS does not pair with a producer/.test(r.out), false);
+});
+
+/* ============================================================
    ARM 5 — THE WALK NEUTERED. A CEILING IS NOT A RATCHET: the floor is what
    catches an instrument that has LOST sight, and REC-70 measured a walk sitting
    green at 0 of 40 because it had only ever had a ceiling.
@@ -1407,7 +1498,11 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `code fails naming it (arm 2), a translation that restates the machine code fails (arm 2b), a CODELESS `
   + `refusal at a governed site fails naming file/line/function (arm 3 — VF-2's acceptance) as does a code `
   + `with no row (arm 3b), a hole in a surface table fails (arm 4) and an unpaired table fails rather than `
-  + `being skipped (arm 4b), a NEUTERED walk fails on its FLOOR with the corpus size printed (arm 5 — a `
+  + `being skipped (arm 4b); SINCE M0-144 the key harvest reads a QUOTED key too — a table keyed bare, `
+  + `double-quoted and single-quoted is harvested WHOLE (4c) where the old bare-keys-only pattern loses two `
+  + `of its three keys and the table stops being FOUND AT ALL (4c-control), and the widening REFUSES what is `
+  + `not a key: a mismatched quote and a lowercase spelling are left as HOLES rather than credited as `
+  + `wording (4d). A NEUTERED walk fails on its FLOOR with the corpus size printed (arm 5 — a `
   + `ceiling is not a ratchet), a new receivable untranslated code trips the CEILING (arm 6), a `
   + `correctly coded refusal phrased in an unfamiliar voice and another language PASSES (arm 7), and the `
   + `PLANE'S OWN VOCABULARY TEXTS are covered too (DEC-49's UI-47 input) — an untexted term fails (7b), a `

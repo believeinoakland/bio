@@ -435,6 +435,12 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        D-PIN-B failed naming exactly this row when it landed — the arm doing its job. C-33.38 was
        REC-175's (FILE_DIGEST_MISMATCH), on its own branch when this was written; both are pinned since CONDUCT #16's merge. */
     ["C-33.39", "RETIRED_NOT_CITABLE"],
+    /* D-484, 2026-09-24: the first two rows ACT_SHAPE_CHECKS's own header said it could not hold —
+       `NO_BASIS` (four sites) and `NO_CITATION` (three) each consolidated behind one governed
+       helper, so each `where` names one real span. D-PIN-B failed naming exactly these two when
+       they landed, which is this pair of arms doing its job. */
+    ["C-33.40", "NO_BASIS"],
+    ["C-33.41", "NO_CITATION"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -536,7 +542,9 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* MOVED 56 -> 57 by CONDUCT #16 at D-168's merge (D-168 moved 54 -> 55 on its own base: C-33.39 RETIRED_NOT_CITABLE); the figure below is the one PRINTED on the merged tree. */
     /* MOVED 57 -> 58 on 2026-09-23 (D-149), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 58 rows across 2 families")
        on the item's tree over origin/main 02603e88: C-32.18 MACHINE_CANNOT_SET_LAWS. */
-    rowsSeen, 58);
+    /* MOVED 58 -> 60 on 2026-09-24 (D-484), FROM THE FIGURE THIS INSTRUMENT PRINTED on the item's tree over
+       origin/main 16fe1e7f and not by adding to the number in the file: C-33.40 NO_BASIS and C-33.41 NO_CITATION. */
+    rowsSeen, 60);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

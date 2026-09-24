@@ -60,6 +60,18 @@
  * All seventeen as declared, driver 123 pass / 0 fail, baseline and closing 78 / 0. On the REAL estate the same break
  * (16) takes a MEASUREMENTS-only TARGETED plant from 85 selected units back to 109 (`MEASUREMENTS.md` M-106).
  *
+ * NEGATIVE CONTROL: RAN 2026-09-24 by the M0-143 worker, same driver, arms G17-G19 each ALONE, baseline and closing
+ * 96 pass / 0 fail, driver 30 pass / 0 fail, both subjects restored sha256- and cmp-identical at 86,802 and 94,212
+ * bytes after every arm:
+ *   (18) the DOC-FACING selector reading a suite's own files WHOLE again -> "...and a suite whose ONLY `docs/`
+ *       mention is in a COMMENT is NOT doc-facing" FAILS by name, with the tool-comment arm and the whole-set pin;
+ *       the STRING reader and the tool-named-in-CODE reader both still doc-facing (3 fail of 96);
+ *   (19) the SECOND site, `toolReachesDocs`, reading a tool WHOLE again — the HALF-FIX, which is the shape this
+ *       row's own defect would take if only `docFacing` were patched -> "a TOOL whose own `docs/` mention is only in
+ *       ITS comment reaches no prose…" FAILS by name, with the whole-set pin, and NOTHING else (2 fail of 96);
+ *   (17) re-read: blanking strings now also fails the doc-facing STRING reader and the whole-set pin, because M0-143
+ *       put §2 under the SAME `codeOf`. Declared in the arm rather than discovered — 11 fail of 96.
+ *
  * WHY THIS SUITE DRIVES A FIXTURE AND NEVER THIS REPOSITORY. `gates.mjs` is every lane's gate and
  * `pushguard.mjs` runs on every lane's push; a refusal arranged against this repository's remote
  * would be a real refusal of a real push. So every arm builds a REAL repository under the battery's
@@ -100,7 +112,7 @@ const t = (label, got, want) => {
 };
 /* The FOOT sentinel (`mintid.test.mjs`'s): a TypeError inside an assertion ends the module while the
    tally still reads clean, so every section bumps this and the last assertion requires all of them. */
-const SECTIONS = 9;   /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1 */
+const SECTIONS = 10;  /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1; M0-143: +1 */
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -174,6 +186,19 @@ const FILES = {
      whole for until M0-116; they are now read as code, so a comment cites nothing and the arm below would pass over
      a cap that did nothing (G13 stopped breaking it). A string label is the citation MENTION still sees. */
   "bio-plane/test/cites.test.mjs": `console.log("the a.md note explains this suite's shape; the suite reads nothing");\nprocess.exit(0);\n`,
+  /* M0-143: the DOC-FACING selector, read as code. `prosetool.mjs` READS a note (a string path); `commenttool.mjs`
+     only names one in its prose. Their note is `c.md`, never `a.md`, so these fixtures cannot widen the `--since`
+     arms below, whose other side moves `a.md` and `b.md`. */
+  "docs/notes/c.md": "# c\n",
+  "tools/prosetool.mjs": `export const NOTE = "docs/notes/c.md";\nexport const read = () => NOTE;\n`,
+  "tools/commenttool.mjs": `/* the note this tool was written against is docs/notes/c.md; it reads nothing */\nexport const nothing = () => 0;\n`,
+  /* a suite whose ONLY `docs/` mention is in a COMMENT — it reads no prose */
+  "bio-plane/test/doccomment.test.mjs": `/* tuned against docs/notes/c.md, which this suite does not read */\nprocess.exit(0);\n`,
+  /* a suite that names a doc-READING tool in CODE, and one that names the same tool only in a COMMENT */
+  "bio-plane/test/toolstring.test.mjs": `const TOOL = "tools/prosetool.mjs";\nprocess.exit(TOOL ? 0 : 1);\n`,
+  "bio-plane/test/toolcomment.test.mjs": `/* the prose behind this suite is what tools/prosetool.mjs reads */\nprocess.exit(0);\n`,
+  /* a suite that names, in CODE, a tool whose own `docs/` mention is only in ITS comment — the tool reaches no prose */
+  "bio-plane/test/toolproseonly.test.mjs": `const TOOL = "tools/commenttool.mjs";\nprocess.exit(TOOL ? 0 : 1);\n`,
   /* M0-116: a data file two suites mention — one READS it through a string path, one only cites it in a comment */
   "data/figures.txt": "M-1 42\n",
   "bio-plane/test/figstring.test.mjs": [
@@ -302,7 +327,11 @@ section("D-293 · THE RECORD — keyed by the TREE, written only for a CLEAN tre
   appendFileSync(join(F.root, "tools/lonely.mjs"), "// uncommitted\n");
   const dirty = gates(F.root);
   t("a DIRTY tree is NOT recorded", runsFor(F.root, tree).length, 1);
-  t("...and the gate says why", dirty.out.includes("NOT RECORDED — the tree was not clean"), true);
+  /* M0-146: AND NAMES THE PATH. "not clean" alone cost D-487 fourteen minutes against a gate log it had written
+     itself, so the refusal names the dirty paths and where a worker's scratch belongs instead. */
+  t("...and the gate says why, and NAMES the path that made the tree dirty",
+    [dirty.out.includes("NOT RECORDED — the tree was not clean"), dirty.out.includes("tools/lonely.mjs"),
+     dirty.out.includes("SESSION")], [true, true, true]);
   git(["checkout", "-q", "--", "."], F.root);
 
   /* --full, so the battery step that dirties the tree RUNS whatever the selection rule says: this arm
@@ -449,6 +478,33 @@ section("M0-116 · A UNIT'S OWN FILES ARE READ AS CODE — a comment reads nothi
     figs.units.includes("plane:figcomment.test.mjs"), false);
   t("...and the plan says a unit's own files are read as code",
     figs.out.includes("a unit's source and control, the tools/scripts it names and their relative imports, all read as code, comments blanked"), true);
+}
+
+/* ========================================================================== */
+section("M0-143 · THE DOC-FACING SET IS READ AS CODE — a comment names `docs/` but reads nothing");
+{
+  /* HOW A LIAR PASSES THIS, stated first: drop the `docs/` test altogether and every count falls, which reads as a
+     win. So the comment-only arms are asserted BESIDE the readers that must stay, and the set is pinned WHOLE —
+     a filter that selects nothing fails the pin. Measured on the estate at 16fe1e7f: 72 doc-facing suites before
+     (plane 60 · ui 12), 41 after (plane 37 · ui 4) — 23 plane and 8 ui qualified by a comment mention ALONE, and
+     none was added (`measurements/M-134.md`). */
+  branch(F.root, "docfacing");
+  const d = withEdits(F.root, ["docs/notes/a.md"], () => gates(F.root, ["--explain"]));
+  t("a docs-only diff reads DOCS", d.cls, "DOCS");
+  t("a suite that READS `docs/` through a STRING is doc-facing — dropping the `docs/` test is not the fix",
+    batteryOf(d).includes("prose.test.mjs"), true);
+  t("...and a suite whose ONLY `docs/` mention is in a COMMENT is NOT doc-facing",
+    batteryOf(d).includes("doccomment.test.mjs"), false);
+  t("a suite that names a doc-READING tool in CODE is doc-facing — the tool's own string path still reads",
+    batteryOf(d).includes("toolstring.test.mjs"), true);
+  t("...and a suite that names that same tool only in a COMMENT is NOT",
+    batteryOf(d).includes("toolcomment.test.mjs"), false);
+  t("a TOOL whose own `docs/` mention is only in ITS comment reaches no prose, so a suite naming it in CODE is NOT",
+    batteryOf(d).includes("toolproseonly.test.mjs"), false);
+  t("the doc-facing battery set is EXACTLY this, and it is NOT EMPTY — a selector that selects nothing fails here",
+    [batteryOf(d), batteryOf(d).length > 0], [["prose.test.mjs", "toolstring.test.mjs"], true]);
+  t("...and the plan SAYS the set was read as code, so the selection stays auditable",
+    d.out.includes("doc-facing suites derived fresh, read as code, comments blanked (strings kept)"), true);
 }
 
 /* ========================================================================== */

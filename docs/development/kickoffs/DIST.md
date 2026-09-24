@@ -168,6 +168,9 @@ In order, and all of it on the merged `main`:
    CONFIRMED, do not verify behaviour yet.
 7. **Live-verify** the release's headline change through the op a real caller
    uses, in a scratch namespace, then sweep it.
+7a. **The corpus URL preflight (DIST-12):** `node tools/urlpreflight-entry.mjs --release X.Y.Z --id <M-id> --out
+   docs/development/measurements/<M-id>.md` — one dated line per URL; REFUSED is this hour's, never rotted; each
+   NOT_FOUND goes to SCHEDULER as a row naming its fixture. First reading: M-136.
 8. **`op=audit` clean.**
 9. **Re-cut the installer** on the new plane and deploy it, then read the script
    back from the account and confirm the embedded version AND that

@@ -198,8 +198,18 @@ t("attested by the key's member", rat.attestor, "sparky");
    ratification records WHICH catalog judged it, so a test that stopped
    pinning the exact version would stop testing the thing it exists for.
    1.20.0: C-2.10's three-valued counterparty (REC-23/D-130) — same correction,
-   same reason. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.20.0)");
+   same reason.
+   1.21.0 (D-470, 2026-09-24): CORRECTED, and the OLD ASSERTION WAS WRONG rather
+   than merely stale — 1.20.0 went on stamping ratifications while the catalog
+   took new checks, so this line was pinning a number that had stopped naming one
+   catalog. The bump is MINOR and no check moves with it; what moves is that the
+   number is now HELD to the catalog by `test/d470-catalog-census.test.mjs`, so
+   the next check that lands turns that suite red until this string and that one
+   move together. Still the exact version and still not a pattern, for the reason
+   above. */
+/* 1.22.0 (CONDUCT #20, c20-batch18): CORRECTED, not exempted — the catalogue gained D-484's two rows, so the
+   stamp moved; the old pin named a catalogue that no longer exists. */
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.22.0)");
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong

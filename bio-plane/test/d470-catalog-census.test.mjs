@@ -1,0 +1,334 @@
+/* D-470 — THE CATALOG'S VERSION IS PINNED TO THE CATALOG'S CHECK CENSUS.
+ *
+ * THE DEFECT, and it is a defect in the RECORD rather than in a feature
+ * (SCHEDULER #17, 2026-09-24, on REC-188's worker's finding via CONDUCT #19): a
+ * signed record that claims more precision than it holds. Every ratification
+ * stamps `GATE_VERSION` — `plane-gate/1.0 (bio-checks <CATALOG_VERSION>)` — and
+ * `src/gate.mjs` says in its own words why: *"the catalogue's own version records
+ * what judged a bundle, and every ratification stamps it, so an action refused
+ * here is distinguishable from one refused by 1.19.0 without reading this file."*
+ * That sentence is only true while the version MOVES when the catalogue does.
+ * `CATALOG_VERSION` sat at 1.20.0 (REC-23/D-130, 2026-09-18) while the catalogue
+ * took C-41.10's acknowledgement arms (D-150), C-44.2 (`CASE_DERIVATION_CHECKS`,
+ * IC-185), C-73.1 (`GOVERNING_LAW_CHECKS`, D-149) and others — so two different
+ * catalogues stamped the same number, and a stranger reading `1.20.0` on two
+ * ratifications cannot tell that the second was judged by a catalogue the first
+ * one did not have. The stamp claimed a precision the record did not hold.
+ *
+ * THE DESIGN AUTHORITY is `BIO_Publication_v0_1.md` §3, under `architecture/`
+ * (the document and the SECTION, which is what a citation names — CORPUS-STANDARD
+ * §4.7. NEITHER THIS FILE NOR ITS CONTROL SPELLS A PATH UNDER THE DOCUMENTATION
+ * DIRECTORY, OR A PATH UNDER THE REPOSITORY'S TOOL DIRECTORY, AND PUTTING ONE
+ * BACK SILENTLY WIDENS A GATE. `gates.mjs`'s `docFacing()` (it sits beside the
+ * other repository tools) reads a suite as DOC-FACING iff its SOURCE — COMMENTS
+ * INCLUDED — contains either of those two directory prefixes, so ONE CITATION IN
+ * PROSE enrols this suite in every prose-only gate run. Measured 2026-09-24: with
+ * the documentation prefix spelled, a
+ * MEASUREMENTS-only change selected 75 units against `statepaths.test.mjs`'s
+ * ceiling of 74 and the gate went RED, naming this suite's own header. This
+ * suite reads `checks/bio-checks.mjs` and `src/gate.mjs` and no prose at all, so
+ * doc-facing is the WRONG answer and the citation is what was wrong, not the
+ * ceiling. That `docFacing` credits a MENTION rather than a READ is a real defect
+ * of its own — D-277's class, one instrument over — and it is REPORTED rather
+ * than fixed here, because widening this row to the gate's classifier is not
+ * this row's to take.)
+ * §3 is the case document's gate stamp: rule 12 (c) — every assertion stays under a
+ * signature, each in one place, and the record claims neither more nor less —
+ * and §3 rule 10's stranger, who rebuilds and verifies without this instance).
+ * The BUMP follows REC-14's precedent as `gate.mjs` records it: 1.18.0 -> 1.19.0
+ * was MINOR, and so was 1.19.0 -> 1.20.0, for a change that made the catalogue
+ * refuse documents that used to pass. This is the same class, and the bump is
+ * MINOR: 1.20.0 -> 1.21.0.
+ *
+ * WHAT THE CENSUS IS. The set of C-numbers THIS CATALOGUE HOLDS, taken from
+ * `checks/bio-checks.mjs` by two sources that are unioned and never subtracted:
+ *
+ *   (S1) THE DECLARED TABLES, read at RUNTIME from the module's own exports —
+ *        every exported object whose values carry a `check` string shaped like a
+ *        C-number. That is `CASE_DOCUMENT_FAMILY` and all 51 `*_CHECKS` families.
+ *        It is read from the LIVE MODULE rather than from the source text, so a
+ *        family written in any spelling at all is counted.
+ *   (S2) THE LITERAL EMISSION SITES — every `f('C-n.m', …)` in the catalogue's
+ *        CODE, the source with its comments removed. `f` is the catalogue's one
+ *        finding constructor, so this is where a check that belongs to no family
+ *        table (C-1.1 … C-26.7, the bundle catalogue's own) is declared.
+ *
+ * WHAT THE MATCHER CAN AND CANNOT SEE, stated plainly because a census that does
+ * not say this cannot be told from a walk looking in the wrong place:
+ *   - IT SEES a check declared in any exported table, under any name, and a
+ *     check emitted at a literal `f(` site in any whitespace spelling (A6).
+ *   - IT DOES NOT SEE a C-number that appears only in PROSE — and must not (A7).
+ *   - IT DOES NOT RESOLVE a `f(` site whose first argument is computed. Those are
+ *     not guessed at: every such SPELLING is enumerated below with the table it
+ *     relays, and a spelling this suite has not accounted for FAILS A2 rather
+ *     than being silently scored zero. All four today relay a declared table:
+ *     `C41.*` is `CASE_DOCUMENT_FAMILY`, `row.check` is `BASIS_VERSION_CHECKS`
+ *     and `SUGGEST_CHECKS`, and `checkId` is `checkLegExtentGrammar`'s parameter
+ *     — whose callers pass 'C-2.8' and, FROM `src/store.mjs`, 'C-25.10', which is
+ *     declared as `BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE`. So every
+ *     computed site's id is already in S1, and the census loses nothing.
+ *   - IT CANNOT SEE a check the plane emits from OUTSIDE the catalogue file. The
+ *     census is a census OF THE CATALOGUE, which is what `CATALOG_VERSION` names.
+ *
+ * HOW A LIAR WOULD MAKE EACH ARM GREEN, and what refuses it:
+ *   - Add a check and say nothing -> A3 goes RED and names the ids added. To get
+ *     green the liar must record a census entry, and an entry is keyed on
+ *     `CATALOG_VERSION`, so recording one under the SAME version collides with
+ *     that version's existing entry (A3 compares against it) — the only quiet
+ *     path is to MOVE the version, which is the act this row exists to force.
+ *   - Add a check in a spelling the matcher cannot resolve -> A2 goes RED naming
+ *     the spelling. The census never scores an unreadable site as zero.
+ *   - Rewrite a PAST version's recorded entry to launder the present one -> A4
+ *     goes RED: two recorded versions may not carry the same census, which is
+ *     THIS ROW'S DEFECT INVERTED.
+ *   - Move the version and leave the table alone -> A3 goes RED: no entry.
+ *   THE LIMIT, and it is not hidden: an actor who edits BOTH `gate.mjs` and this
+ *   table in one turn is not refused by any arm here, because the pin is a record
+ *   of intent, not a proof of it. What the pin removes is the SILENT path — a
+ *   check landing with the stamp unmoved and nothing turning red — which is how
+ *   1.20.0 came to stamp two catalogues.
+ *
+ * NEGATIVE CONTROL: the five arms live in `test/d470-catalog-census.control.mjs`
+ * and are re-run in one step with `node test/d470-catalog-census.control.mjs [arm]`
+ * from `bio-plane/`. Each arm EDITS A REAL SOURCE, is armed ALONE with the others
+ * held open, and is restored from a UNIQUELY-NAMED per-arm pristine copy verified
+ * by sha256, by content AND by `cmp`, with the byte count printed and a minimum
+ * guarded. A missing tally is -1, never 0. Declared before the first run:
+ * (a) BASELINE — nothing armed; every arm GREEN, which is what distinguishes
+ * five-arms-working from five-arms-broken. (b) ADD A CHECK WITHOUT MOVING THE
+ * VERSION — THE ROW'S OWN NAMED CONTROL: one new row in `GOVERNING_LAW_CHECKS`;
+ * A3 MUST FAIL BY NAME and nothing else may move. (c) ADD A CHECK AT AN
+ * UNRESOLVABLE EMISSION SITE — `f(NEW_FAMILY.THING, …)` in `checkBundle`; A2 MUST
+ * FAIL BY NAME, and A3 MUST NOT, because the id is unreadable rather than
+ * missing and the two facts are different. (d) MOVE THE VERSION AND LEAVE THE
+ * TABLE — `CATALOG_VERSION` to 1.99.0; A3 and A5 MUST FAIL BY NAME. (e)
+ * OVER-STRICTNESS — correct work in a spelling this suite did not anticipate: an
+ * existing literal emission site rewritten with its arguments across lines; every
+ * arm MUST STAY GREEN. ALL FIVE ARMS RUN 2026-09-24 by the D-470 worker; 5 of 5
+ * AS DECLARED (baseline 9 pass 0 fail; (b) 8/1, A3 alone; (c) 8/1, A2 alone, A3
+ * green; (d) 7/2, A3 and A5; (e) 9/0, green). The per-arm figures and the restore
+ * digests are at the foot of the driver.
+ */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const DIR = dirname(fileURLToPath(import.meta.url));
+const CATALOG = join(DIR, "..", "checks", "bio-checks.mjs");
+
+/* Everything this suite prints is TEED into `printed`, so A8 measures the OUTPUT
+   rather than comparing a literal with itself — an equality that costs nothing to
+   produce is not evidence (CLAUDE.md §5). Delete the limit's console.log and A8
+   goes red. */
+const printed = [];
+const say = (...xs) => { printed.push(xs.join(" ")); console.log(...xs); };
+
+let pass = 0, fail = 0;
+const t = (name, got, want) => {
+  const ok = JSON.stringify(got) === JSON.stringify(want);
+  ok ? pass++ : fail++;
+  console.log(`  ${ok ? "ok  " : "FAIL"}  ${name}`);
+  if (!ok) console.log(`          got:  ${JSON.stringify(got)}\n          want: ${JSON.stringify(want)}`);
+};
+
+const C_NUMBER = /^C-\d+\.\d+[a-zA-Z]*$/;
+
+/* Comments stripped OUTSIDE string and template literals, so a C-number written
+   in prose is not counted as a check (A7). A regex literal is not tokenised:
+   the only way it could confuse this scanner is by opening with `//` or `/*`,
+   neither of which is a legal way to start one. */
+export function codeOnly(src) {
+  let out = "", i = 0; const n = src.length;
+  while (i < n) {
+    const c = src[i];
+    if (c === "'" || c === '"' || c === "`") {
+      const q = c; out += c; i++;
+      while (i < n) {
+        if (src[i] === "\\") { out += src[i] + (src[i + 1] ?? ""); i += 2; continue; }
+        out += src[i];
+        if (src[i] === q) { i++; break; }
+        i++;
+      }
+      continue;
+    }
+    if (c === "/" && src[i + 1] === "/") { while (i < n && src[i] !== "\n") i++; continue; }
+    if (c === "/" && src[i + 1] === "*") { i += 2; while (i < n && !(src[i] === "*" && src[i + 1] === "/")) i++; i += 2; out += " "; continue; }
+    out += c; i++;
+  }
+  return out;
+}
+
+/* Every call of the catalogue's one finding constructor. `\s*` after `f(` is what
+   makes the arguments' LAYOUT irrelevant (A6); the lookbehinds keep `f`'s own
+   declaration and any `.f(`/`xf(` out. */
+const EMIT = /(?<![A-Za-z0-9_$.])(?<!function )f\(\s*('C-\d+\.\d+[a-zA-Z]*'|[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*)\s*,/g;
+
+export function emissionSites(src) {
+  const literal = new Set(), computed = new Map();
+  for (const m of codeOnly(src).matchAll(EMIT)) {
+    const a = m[1];
+    if (a.startsWith("'C-")) literal.add(a.slice(1, -1));
+    else computed.set(a, (computed.get(a) || 0) + 1);
+  }
+  return { literal, computed };
+}
+
+export function declaredTables(mod) {
+  const tables = new Map();
+  for (const [name, v] of Object.entries(mod)) {
+    if (!v || typeof v !== "object" || Array.isArray(v)) continue;
+    const ids = Object.values(v)
+      .filter((r) => r && typeof r === "object" && typeof r.check === "string" && C_NUMBER.test(r.check))
+      .map((r) => r.check);
+    if (ids.length) tables.set(name, ids);
+  }
+  return tables;
+}
+
+const digestOf = (ids) => createHash("sha256").update([...ids].sort().join("\n")).digest("hex");
+
+/* ------------------------------------------------------------------------ *
+ * THE PIN. One entry per version of the catalogue, keyed on the version the
+ * stamp carries. AN ENTRY IS NEVER REWRITTEN: it records what a ratification
+ * stamped with that number was judged by, and a ratification is not walked back
+ * (BIO_Publication_v0_1.md §3 rule 1). A new check moves `count` and `digest`,
+ * A3 goes red, and the only quiet way to green is a MINOR bump here and in
+ * `src/gate.mjs`.
+ *
+ * 1.21.0 (D-470, 2026-09-24): the first census taken. It is NOT a claim that the
+ * catalogue changed at this bump — it is the bump that makes the number mean
+ * something from here on, and 1.20.0 is deliberately absent because nobody
+ * measured the catalogue it stamped and inventing that figure now would be the
+ * defect this row is closing, wearing the other face.
+ * ------------------------------------------------------------------------ */
+const CATALOG_CENSUS = {
+  "1.21.0": { count: 433, digest: "7e1c85cd94bffdf2140d52e6269b6a1178d3dbc76c40f8ec1b870b5626293e02" },
+  /* 1.22.0 (CONDUCT #20, c20-batch18): D-484's C-33.40/C-33.41, from this suite's own print. */
+  "1.22.0": { count: 435, digest: "a388b6427a3c28ee399c62b7f709e38ae95a65d1119f1dbb32fd7ea25f77bb35" },
+};
+
+/* The computed emission spellings this suite accounts for, each with the
+   declared table it relays. A spelling absent from here fails A2. */
+const RELAYS = {
+  "C41.FORMAT": "CASE_DOCUMENT_FAMILY", "C41.IDENTITY": "CASE_DOCUMENT_FAMILY",
+  "C41.EDITION": "CASE_DOCUMENT_FAMILY", "C41.PROJECT": "CASE_DOCUMENT_FAMILY",
+  "C41.SCOPE": "CASE_DOCUMENT_FAMILY", "C41.BIAS": "CASE_DOCUMENT_FAMILY",
+  "C41.ROSTER": "CASE_DOCUMENT_FAMILY", "C41.ROLES": "CASE_DOCUMENT_FAMILY",
+  "C41.PINS": "CASE_DOCUMENT_FAMILY", "C41.COMPLETENESS": "CASE_DOCUMENT_FAMILY",
+  "C41.EXCLUDED": "CASE_DOCUMENT_FAMILY", "C41.BAR": "CASE_DOCUMENT_FAMILY",
+  "row.check": "BASIS_VERSION_CHECKS and SUGGEST_CHECKS (basisVersionFindings' two push helpers)",
+  "checkId": "checkLegExtentGrammar's parameter — 'C-2.8' here, 'C-25.10' from src/store.mjs "
+           + "(BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE)",
+};
+
+const mod = await import("../checks/bio-checks.mjs");
+const src = readFileSync(CATALOG, "utf8");
+const tables = declaredTables(mod);
+const { literal, computed } = emissionSites(src);
+
+const tableIds = new Set([...tables.values()].flat());
+const census = new Set([...tableIds, ...literal]);
+const count = census.size, digest = digestOf(census);
+
+say(`\nD-470 — the catalogue's check census, taken from ${CATALOG.split("/").slice(-2).join("/")}`);
+say(`  S1  declared tables:        ${tables.size} tables, ${tableIds.size} distinct C-numbers`);
+say(`  S2  literal emission sites: ${literal.size} distinct C-numbers`);
+say(`  computed emission sites:    ${computed.size} spelling(s) — ${[...computed.keys()].sort().join(", ")}`);
+say(`  CENSUS: ${count} checks · sha256 ${digest}`);
+say(`  THE LIMIT: this census is a census OF THE CATALOGUE FILE. It establishes what the`);
+say(`  catalogue HOLDS, and it does not establish that any check RAN, nor that a version`);
+say(`  recorded below was the version actually stamped on any past ratification.`);
+
+const { CATALOG_VERSION, GATE_VERSION } = await import("../src/gate.mjs");
+say(`  the stamp: ${GATE_VERSION}`);
+
+/* (A1) THE CORPUS IS NON-EMPTY AND FLOORED. A headline totality assertion over an
+   empty corpus has passed three times in this estate (kickoffs/WORKER.md). */
+t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
+  [count >= 400, tables.size >= 40, literal.size >= 50], [true, true, true]);
+
+/* (A2) EVERY EMISSION SITE RESOLVES. A computed site is not scored zero: it is
+   named here or it fails. */
+{
+  const unaccounted = [...computed.keys()].filter((k) => !(k in RELAYS)).sort();
+  for (const k of unaccounted) console.log(`          UNACCOUNTED EMISSION SPELLING: ${k}`);
+  t("(A2) EVERY EMISSION SITE RESOLVES — no computed spelling this suite cannot name",
+    unaccounted, []);
+}
+
+/* (A3) THE CENSUS PIN — the arm the row is for. */
+{
+  const recorded = CATALOG_CENSUS[CATALOG_VERSION] || null;
+  if (!recorded) {
+    console.log(`          CATALOG_VERSION ${CATALOG_VERSION} has NO recorded census. Record one:`);
+    console.log(`            "${CATALOG_VERSION}": { count: ${count}, digest: "${digest}" },`);
+  } else if (recorded.digest !== digest) {
+    console.log(`          THE CATALOGUE MOVED AND THE STAMP DID NOT. Recorded for ${CATALOG_VERSION}: `
+              + `${recorded.count} checks, sha256 ${recorded.digest}. Measured now: ${count} checks, sha256 ${digest}.`);
+    console.log(`          MOVE CATALOG_VERSION (MINOR) in src/gate.mjs and record the new census here:`);
+    console.log(`            "<new version>": { count: ${count}, digest: "${digest}" },`);
+  }
+  t("(A3) THE CENSUS PIN: the catalogue's census is the one recorded for CATALOG_VERSION",
+    recorded ? { count: recorded.count, digest: recorded.digest } : null, { count, digest });
+}
+
+/* (A4) ONE VERSION, ONE CATALOGUE — this row's defect inverted. */
+{
+  const seen = new Map();
+  const collisions = [];
+  for (const [v, e] of Object.entries(CATALOG_CENSUS)) {
+    if (seen.has(e.digest)) collisions.push(`${seen.get(e.digest)} and ${v} record the same census`);
+    else seen.set(e.digest, v);
+  }
+  for (const c of collisions) console.log(`          ${c}`);
+  t("(A4) ONE VERSION, ONE CATALOGUE — no two recorded versions carry the same census", collisions, []);
+}
+
+/* (A5) THE STAMP READS THE CATALOGUE'S VERSION, and reads the bumped one. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.22.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.22.0)", "1.22.0"]);
+
+/* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
+   must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
+   than a `findings.push(f(`, and a family table carrying keys beside `check`. */
+{
+  const fixture = [
+    "function f(check, severity, message) { return { check, severity, message }; }",
+    "findings.push(f(  'C-901.1'  , 'error', 'spaces'));",
+    "findings.push(f(\n      'C-901.2',\n      'error',\n      'across lines'));",
+    "const g = () => f('C-901.3', 'error', 'returned rather than pushed');",
+    "push(f('C-901.4','error','no space at all'));",
+  ].join("\n");
+  const got = [...emissionSites(fixture).literal].sort();
+  t("(A6) OVER-STRICTNESS: a check emitted in a spelling this suite did not anticipate is SEEN",
+    got, ["C-901.1", "C-901.2", "C-901.3", "C-901.4"]);
+  const famMod = { NEW_FAMILY: { THING: { check: "C-902.1", code: "X", what: "a family with keys beside check" },
+                                 NOT_A_CHECK: { what: "no check key" } } };
+  t("(A6) OVER-STRICTNESS: a family table under a name nobody anticipated is READ",
+    [...declaredTables(famMod).get("NEW_FAMILY") || []], ["C-902.1"]);
+}
+
+/* (A7) THE MATCHER READS CODE, NOT PROSE — the other direction of A6, and the
+   defect D-277 pointed at drivers, arriving at the catalogue. */
+{
+  const prose = "/* C-903.1 is discussed at length here, and f('C-903.2', 'error', 'x') is quoted too. */\n"
+              + "// f('C-903.3', 'error', 'a line comment')\n"
+              + "findings.push(f('C-903.4', 'error', 'the only real one'));";
+  t("(A7) THE MATCHER READS CODE, NOT PROSE — a C-number in a comment is not a check",
+    [...emissionSites(prose).literal].sort(), ["C-903.4"]);
+}
+
+/* (A8) THE LIMIT IS PRINTED. An instrument that drops its own caveat keeps
+   printing the figure while the reader stops being told what it is worth. */
+{
+  const out = printed.join("\n");
+  t("(A8) THE LIMIT IS PRINTED — the census says what it does not establish",
+    [/THE LIMIT: this census is a census OF THE CATALOGUE FILE/.test(out),
+     /does not establish that any check RAN/.test(out),
+     /CENSUS: \d+ checks/.test(out)], [true, true, true]);
+}
+
+console.log(`\nd470-catalog-census.test.mjs: ${pass} pass, ${fail} fail`);
+process.exit(fail ? 1 : 0);

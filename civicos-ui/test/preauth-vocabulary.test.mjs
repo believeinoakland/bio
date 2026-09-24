@@ -759,6 +759,125 @@ ok("the plane's own refusal for an op it does not have is readable from here too
    + JSON.stringify(UNKNOWN_OP_REFUSAL) + " — which is what a surface deployed ahead of its plane gets, "
    + "and civicos-ui's deploy is not gated on a plane release",
    UNKNOWN_OP_REFUSAL.length > 5 && /op/.test(UNKNOWN_OP_REFUSAL));
+/* ============================================================
+   UI-84 (2026-09-24) — `op=verify`'S AND `unknown op`'S MOCK REFUSALS ARE BUILT
+   FROM THE PLANE'S OWN SOURCE AND ITS OWN CATALOGUE, NEVER TYPED HERE
+   ============================================================
+   THE DEFECT THIS CLOSES is the class D-278's worker named: **a suite that pins
+   what a member reads against a MOCK NARROWER THAN THE WIRE passes while the
+   member reads something else.** Until D-278 both of these refusals left the
+   plane carrying `error` and nothing else, so the two `error`-only fixtures
+   below were true to the wire — and UI-73 wrote that down as a reason, at
+   DEC49_SUBJECT: *"`op=verify`'s refusal is the control plane's bare `error`
+   with no code at all"*. **That sentence stopped being true on 2026-09-23 and
+   every assertion in this file stayed green**, which is the finding rather than
+   the repair: D-278 decorated both sites — `op=verify`'s malformed-hash arm is
+   minted through `requiredArgument(…)` (C-61.1) and the dispatch miss spreads
+   `dispatchRow("UNKNOWN_OP")` (C-69.1) — and each now carries DEC-49's CANNED
+   TRANSLATION. `refusalWords` renders a translation FIRST (UI-73), so from
+   D-278 the stranger at `#v-refused` reads the canned sentence and NOT the
+   caller's sentence this file pinned.
+
+   NOTHING BELOW IS A HAND COPY, and that is the point rather than the style.
+   The CODE is read out of `index.mjs` AT THE SITE THAT MINTS IT, the SENTENCE
+   out of `bio-checks.mjs` under that code, and the `detail` out of
+   `requiredArgument`'s own template — the same technique, and for UI-30's
+   reason, as the two sentence reads above. **THE LIAR THIS BEATS:** typing the
+   canned sentence into the fixture, which agrees with the catalogue at zero
+   cost and goes on agreeing after the row is reworded or withdrawn.
+
+   AND THE TWO SITE ASSERTIONS ARE THE OTHER HALF, because a fixture may not be
+   WIDER than the wire either: the plane's decoration is read STRUCTURALLY out
+   of `index.mjs`, so a plane that stopped decorating turns these RED instead of
+   leaving a fixture carrying a sentence no member would ever be sent. Narrow
+   and wide are both pinned here. UI-73's login guard above pins only narrow,
+   and correctly — `SIGN_IN_REFUSED` is in no family at all, so the only way
+   that one can move is by gaining a row. */
+const CATALOGUE = await import("../../bio-plane/checks/bio-checks.mjs");
+/* The CODE, read at the site that mints it. GUARDED for the reason every read in
+   this file is: an extraction that silently yielded "" would find no catalogue
+   row, and an assertion that a fixture matches nothing passes for free. */
+const planeCodeAt = (re) => { const m = re.exec(INDEX_SRC); return m ? m[1] : ""; };
+const UNKNOWN_OP_CODE = planeCodeAt(
+  /if \(!spec\) return json\(\{[\s\S]{0,240}?\.\.\.dispatchRow\("([A-Z_0-9]+)"\)/);
+const VERIFY_ARG_CODE = planeCodeAt(
+  /function requiredArgument\([\s\S]{0,900}?\.\.\.requiredArgumentRow\("([A-Z_0-9]+)"\)/);
+/* The SENTENCE, from whichever `*_CHECKS` family holds that code — the family is
+   DISCOVERED rather than named here, so a row moved between families by a
+   renumbering (D-126 moved two on 2026-09-23) does not silently empty a fixture. */
+function cannedFor(code){
+  if(!code) return null;
+  for(const k of Object.keys(CATALOGUE)){
+    const fam = CATALOGUE[k];
+    if(!/_CHECKS$/.test(k) || !fam || typeof fam !== "object") continue;
+    const row = fam[code];
+    if(row && typeof row.translation === "string" && row.translation)
+      return { family:k, check:row.check, translation:row.translation };
+  }
+  return null;
+}
+const UNKNOWN_OP_CANNED = cannedFor(UNKNOWN_OP_CODE);
+const VERIFY_ARG_CANNED = cannedFor(VERIFY_ARG_CODE);
+ok("D-278's code for the dispatch miss is read at its own site in index.mjs and the catalogue holds a "
+   + "canned translation under it — " + JSON.stringify(UNKNOWN_OP_CODE) + " in "
+   + (UNKNOWN_OP_CANNED ? UNKNOWN_OP_CANNED.family + " (" + UNKNOWN_OP_CANNED.check + ")" : "NO FAMILY"),
+   !!UNKNOWN_OP_CODE && !!UNKNOWN_OP_CANNED && UNKNOWN_OP_CANNED.translation.length > 40);
+ok("and D-278's code for op=verify's missing-argument refusal, read inside `requiredArgument` itself — "
+   + JSON.stringify(VERIFY_ARG_CODE) + " in "
+   + (VERIFY_ARG_CANNED ? VERIFY_ARG_CANNED.family + " (" + VERIFY_ARG_CANNED.check + ")" : "NO FAMILY"),
+   !!VERIFY_ARG_CODE && !!VERIFY_ARG_CANNED && VERIFY_ARG_CANNED.translation.length > 40);
+/* THE WIRE ACTUALLY SENDS THEM. Read structurally, at the line, the way
+   SEVENA_GUARDED below reads section 7a — and `error` is required to still be
+   the FIRST key after `ok` at the dispatch miss, because civicos-ui's
+   `queueAbsent` reads that sentence to tell an older plane from a refusal (I3)
+   and D-278's own region comment at that line says so. */
+const UNKNOWN_OP_DECORATED =
+  /if \(!spec\) return json\(\{ ok: false, error: "unknown op", reason: "UNKNOWN_OP", \.\.\.dispatchRow\("UNKNOWN_OP"\),\s*\n\s*op \}, 400\);/
+    .test(INDEX_SRC);
+const VERIFY_DECORATED =
+  /if \(op === "verify"\)[\s\S]{0,900}?return json\(\{ ok: false, \.\.\.requiredArgument\("verify", "sha256", "<64 lowercase hex>"\),/
+    .test(INDEX_SRC);
+ok("MEASURED IN THE PLANE'S SOURCE: the dispatch miss leaves `fetch` DECORATED — its `error` byte-identical "
+   + "and still first, its code and its canned translation beside it — so the mock below carries what the "
+   + "wire carries, and a plane that stopped decorating fails HERE rather than leaving a fixture wider than it",
+   UNKNOWN_OP_DECORATED);
+ok("MEASURED IN THE PLANE'S SOURCE: op=verify's malformed-hash refusal is minted through `requiredArgument`, "
+   + "so it too reaches a stranger with DEC-49's canned sentence standing in front of the caller's one",
+   VERIFY_DECORATED);
+/* `requiredArgument`'s own `detail` template, so the fixture's caller-facing
+   sentence is not a hand copy either. The helper builds it from two backtick
+   chunks; both are collected and the substitutions are the plane's own. */
+function planeRequiredArgumentDetail(op, argument, shape){
+  const body = /function requiredArgument\([\s\S]*?\n\}/.exec(INDEX_SRC);
+  if(!body) return "";
+  const d = /detail: ([\s\S]*?)\};/.exec(body[0]);
+  if(!d) return "";
+  return [...d[1].matchAll(/`([^`]*)`/g)].map(x => x[1]).join("")
+    .replace(/\$\{op\}/g, op).replace(/\$\{argument\}/g, argument).replace(/\$\{shape\}/g, shape);
+}
+const VERIFY_ARG_DETAIL = planeRequiredArgumentDetail("verify", "sha256", "<64 lowercase hex>");
+ok("and `requiredArgument`'s own detail template is readable from here WHOLE — both chunks, not the first — "
+   + JSON.stringify(VERIFY_ARG_DETAIL),
+   /^op=verify needs 'sha256' in the shape <64 lowercase hex>,/.test(VERIFY_ARG_DETAIL)
+   && /Nothing was changed\.$/.test(VERIFY_ARG_DETAIL));
+/* THE TWO FIXTURES, in the wire's own key order and with every value derived above. */
+const VERIFY_REFUSAL_WIRE = {
+  ok:false, reason:VERIFY_ARG_CODE, code:VERIFY_ARG_CODE,
+  check:VERIFY_ARG_CANNED && VERIFY_ARG_CANNED.check,
+  translation:VERIFY_ARG_CANNED && VERIFY_ARG_CANNED.translation,
+  error:VERIFY_REFUSAL, op:"verify", argument:"sha256", shape:"<64 lowercase hex>", detail:VERIFY_ARG_DETAIL };
+const unknownOpWire = (op) => ({
+  ok:false, error:UNKNOWN_OP_REFUSAL, reason:UNKNOWN_OP_CODE, code:UNKNOWN_OP_CODE,
+  check:UNKNOWN_OP_CANNED && UNKNOWN_OP_CANNED.check,
+  translation:UNKNOWN_OP_CANNED && UNKNOWN_OP_CANNED.translation, op });
+/* The two sentences a STRANGER now reads, named once so every arm below pins the
+   same derived value rather than re-deriving it, and FLOORED — an arm asserting a
+   pane contains "" passes for free, which is the shape every read in this file is
+   guarded against. */
+const VERIFY_CANNED_SENTENCE = (VERIFY_ARG_CANNED && VERIFY_ARG_CANNED.translation) || "";
+const UNKNOWN_OP_CANNED_SENTENCE = (UNKNOWN_OP_CANNED && UNKNOWN_OP_CANNED.translation) || "";
+ok("both canned sentences are non-empty before any arm asserts a pane contains one",
+   VERIFY_CANNED_SENTENCE.length > 40 && UNKNOWN_OP_CANNED_SENTENCE.length > 40);
 /* THE NON-ANSWER'S MECHANISM, PINNED IN THE PLANE'S OWN SOURCE.
  *
  * CORRECTED 2026-08-05 (REC-52) AND NEVER EXEMPTED, exactly as UI-37 wrote it
@@ -1064,7 +1183,7 @@ function makePlane(mode){
         : { ok:false, status:404, json:async()=>say({ ok:false, reason:"NO_REVIEW_COPY", detail:"no review copy answers to this request." }) };
     if(op === "publishedmanifest"){
       if(opts.manifestArm === "unknownop")
-        return { ok:false, status:400, json:async()=>say({ ok:false, error:UNKNOWN_OP_REFUSAL, op }) };
+        return { ok:false, status:400, json:async()=>say(unknownOpWire(op)) };
       if(opts.manifestArm === "nonanswer")
         return { ok:true, status:200, json:async()=>({ ok:true, result:undefined }) };
       if(opts.manifestArm === "empty")
@@ -1073,7 +1192,7 @@ function makePlane(mode){
     }
     if(op === "publishedcase"){
       if(opts.caseArm === "unknownop")
-        return { ok:false, status:400, json:async()=>say({ ok:false, error:UNKNOWN_OP_REFUSAL, op }) };
+        return { ok:false, status:400, json:async()=>say(unknownOpWire(op)) };
       if(opts.caseArm === "notpublished")
         return { ok:false, status:404, json:async()=>say({ ok:false, ...CASE_NOT_PUBLISHED }) };
       return R(say(CASE_ANSWER));
@@ -1095,7 +1214,7 @@ function makePlane(mode){
       if(opts.verifyUnreachable) throw new TypeError("Failed to fetch");
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if(!/^[0-9a-f]{64}$/.test(sha)){
-        const refused = say({ ok:false, error:VERIFY_REFUSAL });
+        const refused = say(VERIFY_REFUSAL_WIRE);
         return { ok:false, status:400, json:async()=>refused };
       }
       /* THE OTHER TWO REFUSALS UI-37's SWEEP FOUND, keyed by SENTINEL HASHES so
@@ -1108,13 +1227,22 @@ function makePlane(mode){
            NOANS — the Durable Object threw and section 7a's `{ok:true,
              ...out.result}` spread handed the caller an empty success (200). No
              `ok:false`, so no transport seam could throw on it. */
-      if(sha === NONE) return { ok:false, status:400,
-        json:async()=>say({ ok:false, error:UNKNOWN_OP_REFUSAL, op }) };
+      if(sha === NONE) return { ok:false, status:400, json:async()=>say(unknownOpWire(op)) };
       if(sha === NOANS) return { ok:true, status:200, json:async()=>({ ok:true }) };
       const m = VERIFY_MATCHES.get(sha);
       return R(say({ ok:true, published:!!m, sha256:sha, matches:m ? [{ ...m }] : [] }));
     }
-    return { ok:false, json:async()=>({ ok:false, error:"unknown op " + op }) };
+    /* THE FALLTHROUGH, CORRECTED BY UI-84 AND NOT EXEMPTED, on two counts the old
+       line got wrong. (1) It composed `"unknown op " + op`; the plane has never sent
+       that — `error` is "unknown op" BYTE-IDENTICAL and the op travels in its own
+       `op` key, which D-278's region comment at that line now states outright. A
+       fixture inventing a sentence the wire cannot produce is the same defect as one
+       omitting a sentence the wire does send, one direction over. (2) It did not go
+       through `say`, so anything it rendered would have been attributed to THIS
+       SURFACE rather than to the plane — and with D-278's canned sentence now on it,
+       that misattribution would have landed in the report as a surface-authored
+       phrase. Both corrected here; it stays the answer for an op no arm above claims. */
+    return { ok:false, json:async()=>say(unknownOpWire(op)) };
   }
   return { CALLS, SAID, fetch };
 }
@@ -1815,12 +1943,28 @@ if(S("case-address-at-load") && !HID("case-verify")){
      container row still fills its hash from `bundle_sha || ""`, and that is
      pinned separately from app.html's source directly below. */
   const refusedPane = textOf("case-address-at-load", "#v-refused");
-  ok("CORRECTED 2026-08-04 (UI-37, D-195) FROM THE ASSERTION THAT PINNED THE DEFECT: the plane REFUSED "
-     + "the question in its own words (" + JSON.stringify(VERIFY_REFUSAL) + ") and the reader is now told "
-     + "the QUESTION was not answered, in the plane's own sentence rendered WHOLE — not that the RECORD "
-     + "has no such hash. A declined question and a genuine absence are two sentences here",
+  /* CORRECTED AGAIN 2026-09-24 (UI-84), AND THE OLD ASSERTION WAS RIGHT WHEN IT WAS WRITTEN.
+     Until D-278 (2026-09-23) `op=verify`'s malformed-hash refusal left the control plane
+     carrying `error` and nothing else, so "the plane's own sentence rendered WHOLE" and
+     `VERIFY_REFUSAL` were the SAME STRING and pinning the second pinned the first. D-278
+     mints that refusal through `requiredArgument` and DEC-49's CANNED translation now
+     travels with it; `refusalWords` (UI-73) renders a translation FIRST, so the sentence a
+     stranger reads at this pane is the MEMBER-FACING one and the caller's sentence is no
+     longer on the page at all. **That is the fix working rather than a regression** —
+     showing a member a sentence addressed to a CALLER OF THE OP is the exact defect UI-72
+     closed at the act surfaces, and this is that defect ending on the one page a stranger
+     arrives at. So the pin MOVES to the sentence the member actually reads, and is now
+     TWO-SIDED: the canned sentence PRESENT and the caller's ABSENT, which is what makes it
+     a pin of the PREFERENCE rather than of mere presence. The arm's subject has not moved
+     one inch: a declined question must never be rendered as an absence. */
+  ok("CORRECTED 2026-09-24 (UI-84, after D-278) FROM PINNING THE CALLER'S SENTENCE: the plane REFUSED "
+     + "the question and the reader is told the QUESTION was not answered, in DEC-49's CANNED sentence "
+     + "(" + JSON.stringify(VERIFY_CANNED_SENTENCE.slice(0, 60) + "…") + ") — while the sentence written "
+     + "for a CALLER of the op (" + JSON.stringify(VERIFY_REFUSAL) + ") is no longer on a stranger's "
+     + "screen at all. And still never that the RECORD has no such hash",
      /NOT ANSWERED\./.test(refusedPane)
-     && refusedPane.includes(esc(VERIFY_REFUSAL))
+     && refusedPane.includes(esc(VERIFY_CANNED_SENTENCE))
+     && !refusedPane.includes(esc(VERIFY_REFUSAL))
      && !/NOT PUBLISHED\./.test(refusedPane)
      && !/No published part answers to that hash/.test(refusedPane));
   /* And the call that produces it is one the page COMPOSES, read out of
@@ -1853,10 +1997,21 @@ if(S("case-address-at-load") && !HID("case-verify")){
      wording here is terse and it is still the plane's; the surface renders it
      and adds nothing about the record. */
   const unknownPane = textOf("case-address-at-load", "#v-unknownop");
-  ok("REACH: the SECOND refusal — a plane that does not have the op at all (" + JSON.stringify(UNKNOWN_OP_REFUSAL)
-     + "), which is what a surface deployed ahead of its plane receives — reads as NOT ANSWERED carrying "
-     + "the plane's own word, and never as a statement about the record",
-     /NOT ANSWERED\./.test(unknownPane) && unknownPane.includes(esc(UNKNOWN_OP_REFUSAL))
+  /* CORRECTED 2026-09-24 (UI-84, after D-278), for the same reason and never exempted. The
+     old arm pinned `UNKNOWN_OP_REFUSAL` — the terse "unknown op" the dispatch miss has
+     always carried and, until D-278, the only thing it carried. C-69.1 put a code and a
+     canned translation beside that `error` (the `error` itself byte-identical and still the
+     first key, because civicos-ui's `queueAbsent` reads that sentence to tell an older
+     plane from a refusal), so what a stranger reads here is now the sentence written for
+     them. Two-sided, as above: the terse wire word is asserted ABSENT from the pane. */
+  ok("CORRECTED 2026-09-24 (UI-84, after D-278) — REACH: the SECOND refusal, a plane that does not have "
+     + "the op at all, which is what a surface deployed ahead of its plane receives. It reads as NOT "
+     + "ANSWERED carrying DEC-49's canned sentence, and the terse wire word "
+     + "(" + JSON.stringify(UNKNOWN_OP_REFUSAL) + ") no longer stands alone in front of a stranger. "
+     + "Never a statement about the record",
+     /NOT ANSWERED\./.test(unknownPane)
+     && unknownPane.includes(esc(UNKNOWN_OP_CANNED_SENTENCE))
+     && !unknownPane.includes(esc(UNKNOWN_OP_REFUSAL))
      && !/NOT PUBLISHED\./.test(unknownPane)
      && !/No published part answers to that hash/.test(unknownPane));
   /* (6) THE THIRD, AND IT IS THE ARM THAT DECIDED THE DESIGN. Section 7a spreads
@@ -1967,7 +2122,11 @@ if(S("published-index-refused")){
      + "tells a stranger that this group has published nothing — a claim about the ENTIRE record made out "
      + "of an answer that was never given. It renders the plane's own word (" + JSON.stringify(UNKNOWN_OP_REFUSAL)
      + ") and says what it cannot say",
-     pane.includes(esc(UNKNOWN_OP_REFUSAL))
+     /* CORRECTED 2026-09-24 (UI-84, after D-278): the word this pane renders is now
+        DEC-49's canned sentence, `refusalWords` preferring it to the terse `error` the arm
+        was written against. The claim the arm exists to forbid — a statement about the
+        ENTIRE record built out of an answer nobody gave — is unchanged and still pinned. */
+     pane.includes(esc(UNKNOWN_OP_CANNED_SENTENCE))
      && !/has not published any case files yet/.test(pane)
      && /cannot say what this group has published/.test(pane)
      && S("published-index-refused").calls.every(c => c.token === null));
@@ -1977,18 +2136,30 @@ if(S("published-index-empty")){
   ok("REACH: and a group that genuinely HAS published nothing still reads as exactly that — the plane "
      + "answered, the answer was an empty list, and the empty state is the truth about it. The two must "
      + "not collapse in this direction either",
+     /* UI-84: the pair's discriminator moves WITH its sibling. The true negative must carry
+        NEITHER the wire word NOR the canned sentence, or the two answers collapse again in
+        the direction this half exists to hold open. Both are asserted absent. */
      /has not published any case files yet/.test(pane)
      && !pane.includes(esc(UNKNOWN_OP_REFUSAL))
+     && !pane.includes(esc(UNKNOWN_OP_CANNED_SENTENCE))
      && !/cannot say what this group has published/.test(pane)
      && /verify it against its published hash/.test(pane));
 }
 if(S("case-address-refused")){
   const pane = textOf("case-address-refused", "#pub-body");
-  ok("REACH: a published case ADDRESS opened against a plane that refuses no longer gets the heading "
-     + "\"Not published\" — the plane declined the question and the page says so, carrying the refusal's "
-     + "own words, which the old branch dropped entirely because it read only `detail` and this arm "
-     + "carries `error`",
-     /Not answered/.test(pane) && pane.includes(esc(UNKNOWN_OP_REFUSAL))
+  /* CORRECTED 2026-09-24 (UI-84, after D-278) — THE MESSAGE AS WELL AS THE ASSERTION, and
+     the message is the reason this correction is written out. Its closing clause said the
+     old branch "dropped [the refusal's words] entirely because it read only `detail` and
+     this arm carries `error`". Since D-278 this refusal carries a member-facing sentence in
+     a `translation`, and `refusalWords` is what chooses; leaving the explanation standing
+     over a corrected assertion would hand the next reader a true pin under a false account
+     of the wire, which is worse than either alone. */
+  ok("REACH (message CORRECTED 2026-09-24, UI-84): a published case ADDRESS opened against a plane that "
+     + "refuses no longer gets the heading \"Not published\" — the plane declined the question and the "
+     + "page says so, carrying the refusal's own words. Since D-278 those words are DEC-49's canned "
+     + "sentence rather than the terse `error` UI-37 pinned, and `refusalWords` chooses between them; "
+     + "the old branch dropped both, because it read only `detail`",
+     /Not answered/.test(pane) && pane.includes(esc(UNKNOWN_OP_CANNED_SENTENCE))
      && !/<h1>Not published<\/h1>/.test(pane)
      && !/No published edition answers to that\./.test(pane)
      && S("case-address-refused").calls.every(c => c.token === null));
@@ -2378,7 +2549,16 @@ for(const [term, e] of ordered){
    very `detail` / `error` the old code read. `SIGN_IN_REFUSED` is in none of the
    38 `*_CHECKS` families (asserted above, and on the REAL wire by
    `refusal-translation-surface.test.mjs` ARM 6's signIn drive); `op=verify`'s
-   refusal is the control plane's bare `error` with no code at all; and the
+   refusal is the control plane's bare `error` with no code at all
+   — **CORRECTED 2026-09-24 BY UI-84 AND LEFT STANDING RATHER THAN DELETED,
+   because this clause is the receipt for the defect the next paragraph records:
+   it was TRUE when UI-73 wrote it on 2026-09-23 and FALSE the same day, when
+   D-278 minted that refusal through `requiredArgument` (C-61.1) and the dispatch
+   miss through `dispatchRow` (C-69.1). Both now carry a canned translation, both
+   reach these surfaces, and EVERY ASSERTION IN THIS FILE STAYED GREEN across the
+   change — which is precisely UI-73's own predicted failure mode arriving: a mock
+   going quietly narrower than the wire. UI-84 rebuilt both fixtures from the
+   plane's source and catalogue and re-pinned the subject above.** And the
    `#pub-body` rows are the published answer's own prose, not a refusal.
    WHAT WOULD MOVE THEM, and this arm then FAILS rather than absorbing it: a
    canned translation for `SIGN_IN_REFUSED`. Measured by UI-73 as a control,
@@ -2391,11 +2571,48 @@ for(const [term, e] of ordered){
    #pub-body}; (P2) the same mock with `teach` and `signIn`'s refusal line
    reverted to their pre-UI-73 text: GREEN 71/71, which is what makes P1's
    movement `teach`'s and not the mock's. */
+/* ============================================================
+   RE-PINNED BY UI-84, 2026-09-24 — AND DEC-49'S SUBJECT **SHRANK**, WHICH IS THE
+   FIRST TIME A PLANE-SOURCED ROW HAS LEFT THIS TABLE BY BEING ANSWERED RATHER
+   THAN BY A SURFACE EDITING IT.
+   ============================================================
+   WHAT MOVED, in the figures the instrument PRINTED on the final tree rather than
+   by subtraction — each run of this file alone, on a quiet tree:
+     OLD (548eb2c5, this item's base): 78 assertions green · 16 scenarios ·
+       21 surfaces walked · 50,669 characters · 74 inherited terms · 15 plane-
+       vocabulary terms reaching **11** of 21 surfaces · 77 occurrences
+       (67 visible) · "sha256" x35 (31 visible), plane sources
+       {#pub-body, #v-refused} · 12 plane-sourced rows below.
+     NEW (UI-84): 84 assertions green · 16 scenarios · 21 surfaces walked ·
+       51,340 characters · 74 inherited terms · 15 plane-vocabulary terms reaching
+       **10** of 21 surfaces · 76 occurrences (66 visible) · "sha256" x34
+       (30 visible), plane source {#pub-body} ALONE · 12 plane-sourced rows below.
+   THE WHOLE DELTA IS ONE SOURCE ON ONE TERM. Diffed line by line: every other row
+   of the report is CHARACTER-IDENTICAL, no term VANISHED from the table, and
+   **nothing ARRIVED** — the count of terms is 15 before and after.
+
+   WHY, and it is the point rather than the bookkeeping. `op=verify`'s refusal
+   said "verify requires sha256=<64 lowercase hex>" — a sentence addressed to a
+   CALLER OF THE OP, and the word `sha256` in it is why this table carried
+   `#v-refused` at all since UI-37. D-278 gave that refusal DEC-49's canned
+   translation, `refusalWords` prefers it, and the canned sentence is addressed to
+   a PERSON: it names no wire argument, so the plane vocabulary at that pane went
+   to zero. **The +671 characters are the canned sentences being LONGER, and the
+   −1 occurrence is plane vocabulary being DISPLACED by them.** This is what
+   DEC-49 being answered looks like arriving one refusal at a time, which is the
+   ruling's own branch (a): the plane learns member-facing wording, so the
+   plane-sourced rows disappear AT THEIR SOURCE. It is recorded as a shrink and
+   NOT smoothed, because a table that only ever grows cannot show a ruling working.
+
+   WHAT IS NOT CLAIMED HERE: DEC-49 is still OPEN and `REPORT_ONLY` is unchanged.
+   Two of the 592 codes gaining a sentence is not the ruling being answered, and
+   eleven plane-sourced rows still stand on these surfaces. */
 const DEC49_SUBJECT = {
-  "sha256":              ["case-address-at-load #pub-body",
-                          /* NEW SOURCE 2026-08-04, UI-37 — op=verify's own refusal,
-                             rendered instead of swallowed (D-195) */
-                          "case-address-at-load #v-refused"],
+  /* SOURCE REMOVED 2026-09-24, UI-84 — `#v-refused` no longer carries this term,
+     because D-278's canned translation displaced the caller's sentence that held
+     it. The row is KEPT with its remaining source rather than deleted: `#pub-body`
+     still renders `sha256` from the published answer's own prose. */
+  "sha256":              ["case-address-at-load #pub-body"],
   /* UI-68 (2026-09-23): +1 SOURCE on each of these two existing terms, NO new term. The review copy's recipient
      reads the plane's own `signature.detail` ("… at publication (op=caseratify)") and its `marking` ("… shown
      inside this instance …"), both read out of store.mjs by this file and rendered verbatim, as DEC-8 requires.
@@ -2483,4 +2700,4 @@ const REPORT_ONLY = !process.env.UI31_ENFORCE;
 }
 
 if(fails.length){ console.error(`preauth-vocabulary: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`preauth-vocabulary: ${n} assertions, all green — every surface a member can see BEFORE authenticating is walked (the gate as served, its token panel, its address field, a refused sign-in, an unreachable plane, an empty token, the public record, the design preview, the VERIFY PANE opened from the published rail, and both published addresses resolved at load by app.html's own top-level code); the walk's own reach asserted by name and by count against the gate's markup, THE PUBLISHED MASTHEAD'S OWN CONTROLS, the load-time router's address shapes and the sibling suites' own sweeps; the plane's own sentences pinned VERBATIM at the gate AND on the case page (DEC-8, and UI-33's arm (g) is why the second one exists); DEC-49'S SUBJECT — the ELEVEN plane-sourced rows, eight until UI-36 drove op=verify — PINNED BY TERM AND BY SOURCE, so any movement in them FAILS rather than being reported (UI-34: the hard constraint every item on these surfaces inherits was checked by hand until now); and the plane vocabulary standing on those surfaces REPORTED with its exact terms, each occurrence attributed to the plane or to this surface — reported and not failed, because DEC-49 is open and a guard that failed would force a surface to invent a translation DEC-8 forbids. UI-33 (2026-08-04) closed the SURFACE-AUTHORED half: 13 terms -> 9, all EIGHT plane-sourced rows unchanged. UI-34 (2026-08-04) ENLARGED THE BASIS BY ONE SCENARIO, deliberately and alone: 10 scenarios -> 11, 33,535 -> 34,375 characters, 55 -> 57 occurrences and 45 -> 47 visible, the whole delta being 'sha256' x30(26) -> x32(28) on its SURFACE half from the verify pane's own prose, with EVERY PLANE-SOURCED ROW UNCHANGED IN NUMBER AND IN SOURCE. UI-36 (2026-08-04) DROVE op=verify, THE PUBLIC OP NOBODY HAD ASKED: 12 surfaces -> 19, 34,375 -> 35,835 characters, 9 terms -> 13, 57 -> 67 occurrences and 47 -> 57 visible, scenarios UNCHANGED at 11 — and DEC-49'S SUBJECT GREW 8 ROWS -> 11, every movement named at DEC49_SUBJECT ('manifest' NEW, the plane's kind VALUE as a word; 'CASE' NEW, the acronym rule on the plane's real minted id prefix; 'FIND' NEW, the same rule on the fixture's own id spelling and labelled as such; 'bundle.md' +3 SOURCES as op=verify echoes the part path). The instrument itself is UNCHANGED, proved by running this file with the new drive hidden and diffing UI-34's report to CHARACTER-IDENTICAL; NEGATIVE CONTROL: RUN, thirteen arms, all re-run against the FINAL file — (a) UI31_HIDE=<scenario> hides a member-facing surface and the harness fails NAMING what it stopped covering (three hidings: public-record 4/46, design-preview 3/47, case-address-at-load 8/40 which ALSO takes walk 1c's whole subject away — 0 call sites discovered, so a walk that covers nothing FAILS here instead of passing everything — and trips the subject arm) (b) UI31_EMPTY_TERMS=1 neuters the term harvest, 5/48 (c) UI31_NO_PLANE_RANGES=1 breaks the attribution so the plane's own sentence would be blamed on this surface, 2/48 (d) UI31_ENFORCE=1 runs the reporting arm AS the failing arm DEC-49's answer will make it, 1/48 naming all thirteen (e) ON DISK, app.html's gate hint gains "capture_sha" and the report grows 13 terms to 14 naming the gate as the author, 48/48 green (f) THE HARD CONSTRAINT'S OWN ARM — signIn() translates the plane's refusal ("a salted derivation" -> "a scrambled copy"), 3/48 FAIL: the REACH arm names the act, the ATTRIBUTION arm names the consequence, and the DEC-49 SUBJECT arm names all four terms that VANISHED (g) the same overstep on the case page, verification.detail through .replace("this instance","this group") — 2/48 FAIL, the subject arm reporting 'this instance' now ARRIVING only from refused-signin #g-err (h) UI-34'S OWN — UI31_HIDE=published-verify-panel, 2/47 naming the scenario and pubVerifyPanel as an uncredentialed control nobody drives (i) a THIRD link planted on the published rail, 2/48 naming pubExpandForPrint in walk 1b and as undriven (j) UI-36'S OWN — UI31_HIDE=case-verify hides the verify DRIVE and 3/42 FAIL, naming pubVerify and pubBytes as controls on an uncredentialed page that NO scenario drives, the seven verify surfaces that stopped being covered, and the subject collapsing back to its pre-item state (manifest, CASE, FIND VANISHED and bundle.md losing three sources) — which is exactly the state this file was in before this item (k) UI-36'S DEC-8 ARM — pubVerify's SUCCESS branch translates the plane's own matches[0].path ("bundle.md" -> "the finding's own write-up"), 2/48 FAIL: the REACH arm names the act and the SUBJECT arm names the consequence generically, without anybody having anticipated the field (l) **THE ARM THAT MOVED NOTHING, AND IT IS A FINDING RATHER THAN A GAP** — pubVerify's ERROR branch translates its "e.error || e.reason" expression, the same DEC-8 overstep one branch over: 48/48 GREEN and the report CHARACTER-IDENTICAL, because that expression can never hold a plane string (apiQ rejects only with a transport error), which is why the refusal assertion above pins a defect instead (m) a SIXTH control planted on the case page, 2/48 naming pubShout in walk 1c and as undriven, so a new control on the page a stranger arrives on cannot arrive unmeasured — app.html restored byte-identically after every on-disk arm, sha256 333b4d7f… before and after. UI-37 (2026-08-04) FIXED THE DEFECT UI-36 PINNED (D-195) AND CORRECTED THE PIN: 11 scenarios -> 15, 19 surfaces -> 22, 35,835 -> 38,637 characters, 13 terms -> 13, 67 -> 68 occurrences, 57 -> 58 visible, and DEC-49'S SUBJECT 11 ROWS -> 11 with ONE NEW SOURCE on one existing term ('sha256' at case-address-at-load #v-refused, op=verify's own refusal rendered instead of swallowed) - no new term enters the subject, and the plane wording this item added that the instrument CANNOT pin ('unknown op' on three surfaces, the store's NOT_PUBLISHED sentence) is itemised at DEC49_SUBJECT rather than left to be found. THE SWEEP FOUND THREE REFUSALS WHERE THE ITEM NAMED ONE and THREE SITES WHERE IT NAMED ONE; the third refusal - section 7a's {ok:true, ...out.result} spread over an absent result, HTTP 200 with no ok:false - is why apiQ is UNCHANGED and the fix is a positive shape test at each site, since a seam throwing on ok:false could never have caught it. THE FOUR NEW SCENARIOS MOVE NO NUMBER IN THE REPORT, MEASURED: this file against the FINAL app.html with all four hidden gives 54/54 green, 11 scenarios, 22 surfaces, 36,527 characters, 13 terms, 68 occurrences, 58 visible - the same 68/58 as the full run - and the subject arm PASSES, so the four add 2,110 characters and four assertions and nothing else. NEGATIVE CONTROL: RUN, six more arms, every one on disk against the FINAL file with app.html restored BYTE-IDENTICALLY (sha256 74cc1646… before and after each) - (n) THE ITEM'S OWN, D-195 restored exactly as it shipped (the truthy test back, the third branch deleted) -> 4 of 58 FAIL, naming ALL THREE refusals rendered as a substantive negative AND the DEC-49 subject arm noticing the plane's sentence VANISHED from #v-refused; the true-negative arm stays green, which is what makes the four failures specific (q) THE OTHER DIRECTION, one character - the published:false branch made unreachable so a GENUINE absence is reported as a question nobody answered -> 1 of 58 here AND publishedcase.test.mjs fails too, a second suite catching it independently (o) the published INDEX's collapse restored -> 2 fails in two suites: this file naming the refusal, and auth-surface's own NEG-CONTROL (a) - which is the finding that D-173's 'honest-looking blank screen' WAS this exact sentence (p) the case ADDRESS's collapse restored (one heading over every refusal, only 'detail' read) -> 1 of 58 (s) THE DEC-8 OVERSTEP one branch over from UI-36's arm (k) - the surface TRANSLATES the refusal it now renders ('64 lowercase hex' -> 'a proper fingerprint') -> 2 of 58: the refusal arm names the act and the SUBJECT arm names the consequence (r) THE INSTRUMENT'S OWN - app.html reverted to the PRE-ITEM COMMIT 1cbc70f (the defect back) with the four new scenarios hidden -> 4 of 54, the walk returns to 11 scenarios and the report to 70 occurrences / 60 visible, so the new arms are answering the surface and not themselves. **AND THIS ARM HAD TO BE CORRECTED MID-RUN, REPORTED RATHER THAN SMOOTHED:** it first reverted to HEAD, which stopped being the pre-item state the moment this item's own commit landed, and it quietly fell from 4 of 54 to 1 of 54 - a control that reverts to a moving target measures nothing, and the only reason it was caught is that the arm was re-run after a later edit instead of being trusted from its first result. BATTERY UNMOVED and it is measured, not assumed: 98/98 at 5,544 assertions with UI-37 applied, and 98/98 at 5,544 with the whole change stashed - no bio-plane file is touched by this item. M0-23 (2026-09-10, UI-56's delegation) CORRECTED THE 'caseMembers' FIXTURE TO THE WIRE SHAPE AND ENLARGED THE BASIS DELIBERATELY, in that order and measured separately because they are two different acts. THE CORRECTION ALONE MOVED NOTHING: 'version_sha' and 'role' added to the one existing roster row, 68/68 green and the report CHARACTER-IDENTICAL - which is the honest statement of the gap, since the single member was undiverged and 'pubMemberKey''s 'bundle_id@edition' fallback answers the same row the pin does. A mock-shape gap of D-173's class, not a live defect, and it is corrected anyway because a fixture that cannot REPRESENT the wire shape cannot ASSERT against it. THE ENLARGEMENT then added the state the corrected shape makes representable - a case at edition 2 whose only member is at its OWN edition 1, joined through the pin - and it is UI-34's kind of movement, on the SURFACE half only: 15 scenarios -> 15, 22 surfaces -> 22, 14 terms -> 14, 40,380 -> 42,718 characters, 69 -> 71 occurrences and 59 -> 61 visible, THE WHOLE DELTA BEING 'sha256' x33(29) -> x35(31) from the second case's own rows on the index, with EVERY PLANE-SOURCED ROW UNCHANGED IN NUMBER AND IN SOURCE and the DEC-49 SUBJECT arm passing. 'role' IS CARRIED AND NOTHING READS IT - measured: no surface in app.html reads 'caseMembers[].role' ('memberRole()' is the PROJECT roster's, a different table) - and that asymmetry is NAMED by the census arm in check-mock-envelope.mjs rather than failed, because a fixture narrower than the wire on a column no surface reads is a judgement to state, not a defect to fail. AND THE ASSERTION COUNT MOVED 68 -> 70 FOR A REASON THAT IS THIS ITEM'S REAL FINDING, recorded here rather than smoothed: THE ITEM'S OWN NEGATIVE CONTROL CAME BACK GREEN THE FIRST TIME IT WAS ARMED. With the fixture corrected and the diverged member added, deleting 'version_sha' again ran 68/68 GREEN - the index rendered the defect (the report moved 42,718 -> 43,366 characters and 71 -> 75 occurrences, so the wrong words were ON THE PAGE) and not one assertion in this file read them. A fixture that cannot represent the wire shape cannot assert against it; a fixture that CAN represent it still asserts nothing until somebody writes the assertion, and by the item's own criterion the correction was decoration until that was done. The two assertions in the 'public-record' REACH block are that second half. NEGATIVE CONTROL: RUN, a BASELINE ROW plus two arms, each armed ALONE against the FINAL file with the anchor required to match EXACTLY ONCE and the file restored by sha256 AND byte-for-byte comparison against a per-arm pristine (162,871 B, floored) - baseline, nothing armed: 70/70, 0 failed, 42,718 characters, 71 occurrences (61 visible) - (t) THE ITEM'S OWN: 'version_sha' dropped from BOTH roster rows -> exit 1, 1 of 70 FAILED, the failure NAMING the diverged member, and the report moving to 43,366 characters / 75 occurrences (65 visible) because the finding is now rendered TWICE. IC-66's defect reproduced through the FIXTURE rather than through the surface: CASE-2026-0002's finished edition 2 reads as declared-and-not-yet-ratified and FIND-2026-0002 is also listed as belonging to no case. THE OVER-STRICTNESS ASSERTION BESIDE IT STAYS GREEN, which is what makes the one failure specific - the undiverged member does not move, and could not. Against the pre-M0-23 one-member fixture the same deletion is INVISIBLE (68/68 green, report character-identical), so the arm measures the ENLARGEMENT as much as the column (u) OVER-STRICTNESS: 'role' dropped from both roster rows -> 70/70 GREEN and the report CHARACTER-IDENTICAL, DECLARED GREEN IN ADVANCE and not a hole - no surface reads that column, so a fixture narrower on it is legitimately narrower than the wire, and the census arm in check-mock-envelope.mjs NAMES that rather than failing anybody for it`);
+console.log(`preauth-vocabulary: ${n} assertions, all green — every surface a member can see BEFORE authenticating is walked (the gate as served, its token panel, its address field, a refused sign-in, an unreachable plane, an empty token, the public record, the design preview, the VERIFY PANE opened from the published rail, and both published addresses resolved at load by app.html's own top-level code); the walk's own reach asserted by name and by count against the gate's markup, THE PUBLISHED MASTHEAD'S OWN CONTROLS, the load-time router's address shapes and the sibling suites' own sweeps; the plane's own sentences pinned VERBATIM at the gate AND on the case page (DEC-8, and UI-33's arm (g) is why the second one exists); DEC-49'S SUBJECT — the ELEVEN plane-sourced rows, eight until UI-36 drove op=verify — PINNED BY TERM AND BY SOURCE, so any movement in them FAILS rather than being reported (UI-34: the hard constraint every item on these surfaces inherits was checked by hand until now); and the plane vocabulary standing on those surfaces REPORTED with its exact terms, each occurrence attributed to the plane or to this surface — reported and not failed, because DEC-49 is open and a guard that failed would force a surface to invent a translation DEC-8 forbids. UI-33 (2026-08-04) closed the SURFACE-AUTHORED half: 13 terms -> 9, all EIGHT plane-sourced rows unchanged. UI-34 (2026-08-04) ENLARGED THE BASIS BY ONE SCENARIO, deliberately and alone: 10 scenarios -> 11, 33,535 -> 34,375 characters, 55 -> 57 occurrences and 45 -> 47 visible, the whole delta being 'sha256' x30(26) -> x32(28) on its SURFACE half from the verify pane's own prose, with EVERY PLANE-SOURCED ROW UNCHANGED IN NUMBER AND IN SOURCE. UI-36 (2026-08-04) DROVE op=verify, THE PUBLIC OP NOBODY HAD ASKED: 12 surfaces -> 19, 34,375 -> 35,835 characters, 9 terms -> 13, 57 -> 67 occurrences and 47 -> 57 visible, scenarios UNCHANGED at 11 — and DEC-49'S SUBJECT GREW 8 ROWS -> 11, every movement named at DEC49_SUBJECT ('manifest' NEW, the plane's kind VALUE as a word; 'CASE' NEW, the acronym rule on the plane's real minted id prefix; 'FIND' NEW, the same rule on the fixture's own id spelling and labelled as such; 'bundle.md' +3 SOURCES as op=verify echoes the part path). The instrument itself is UNCHANGED, proved by running this file with the new drive hidden and diffing UI-34's report to CHARACTER-IDENTICAL; NEGATIVE CONTROL: RUN, thirteen arms, all re-run against the FINAL file — (a) UI31_HIDE=<scenario> hides a member-facing surface and the harness fails NAMING what it stopped covering (three hidings: public-record 4/46, design-preview 3/47, case-address-at-load 8/40 which ALSO takes walk 1c's whole subject away — 0 call sites discovered, so a walk that covers nothing FAILS here instead of passing everything — and trips the subject arm) (b) UI31_EMPTY_TERMS=1 neuters the term harvest, 5/48 (c) UI31_NO_PLANE_RANGES=1 breaks the attribution so the plane's own sentence would be blamed on this surface, 2/48 (d) UI31_ENFORCE=1 runs the reporting arm AS the failing arm DEC-49's answer will make it, 1/48 naming all thirteen (e) ON DISK, app.html's gate hint gains "capture_sha" and the report grows 13 terms to 14 naming the gate as the author, 48/48 green (f) THE HARD CONSTRAINT'S OWN ARM — signIn() translates the plane's refusal ("a salted derivation" -> "a scrambled copy"), 3/48 FAIL: the REACH arm names the act, the ATTRIBUTION arm names the consequence, and the DEC-49 SUBJECT arm names all four terms that VANISHED (g) the same overstep on the case page, verification.detail through .replace("this instance","this group") — 2/48 FAIL, the subject arm reporting 'this instance' now ARRIVING only from refused-signin #g-err (h) UI-34'S OWN — UI31_HIDE=published-verify-panel, 2/47 naming the scenario and pubVerifyPanel as an uncredentialed control nobody drives (i) a THIRD link planted on the published rail, 2/48 naming pubExpandForPrint in walk 1b and as undriven (j) UI-36'S OWN — UI31_HIDE=case-verify hides the verify DRIVE and 3/42 FAIL, naming pubVerify and pubBytes as controls on an uncredentialed page that NO scenario drives, the seven verify surfaces that stopped being covered, and the subject collapsing back to its pre-item state (manifest, CASE, FIND VANISHED and bundle.md losing three sources) — which is exactly the state this file was in before this item (k) UI-36'S DEC-8 ARM — pubVerify's SUCCESS branch translates the plane's own matches[0].path ("bundle.md" -> "the finding's own write-up"), 2/48 FAIL: the REACH arm names the act and the SUBJECT arm names the consequence generically, without anybody having anticipated the field (l) **THE ARM THAT MOVED NOTHING, AND IT IS A FINDING RATHER THAN A GAP** — pubVerify's ERROR branch translates its "e.error || e.reason" expression, the same DEC-8 overstep one branch over: 48/48 GREEN and the report CHARACTER-IDENTICAL, because that expression can never hold a plane string (apiQ rejects only with a transport error), which is why the refusal assertion above pins a defect instead (m) a SIXTH control planted on the case page, 2/48 naming pubShout in walk 1c and as undriven, so a new control on the page a stranger arrives on cannot arrive unmeasured — app.html restored byte-identically after every on-disk arm, sha256 333b4d7f… before and after. UI-37 (2026-08-04) FIXED THE DEFECT UI-36 PINNED (D-195) AND CORRECTED THE PIN: 11 scenarios -> 15, 19 surfaces -> 22, 35,835 -> 38,637 characters, 13 terms -> 13, 67 -> 68 occurrences, 57 -> 58 visible, and DEC-49'S SUBJECT 11 ROWS -> 11 with ONE NEW SOURCE on one existing term ('sha256' at case-address-at-load #v-refused, op=verify's own refusal rendered instead of swallowed) - no new term enters the subject, and the plane wording this item added that the instrument CANNOT pin ('unknown op' on three surfaces, the store's NOT_PUBLISHED sentence) is itemised at DEC49_SUBJECT rather than left to be found. THE SWEEP FOUND THREE REFUSALS WHERE THE ITEM NAMED ONE and THREE SITES WHERE IT NAMED ONE; the third refusal - section 7a's {ok:true, ...out.result} spread over an absent result, HTTP 200 with no ok:false - is why apiQ is UNCHANGED and the fix is a positive shape test at each site, since a seam throwing on ok:false could never have caught it. THE FOUR NEW SCENARIOS MOVE NO NUMBER IN THE REPORT, MEASURED: this file against the FINAL app.html with all four hidden gives 54/54 green, 11 scenarios, 22 surfaces, 36,527 characters, 13 terms, 68 occurrences, 58 visible - the same 68/58 as the full run - and the subject arm PASSES, so the four add 2,110 characters and four assertions and nothing else. NEGATIVE CONTROL: RUN, six more arms, every one on disk against the FINAL file with app.html restored BYTE-IDENTICALLY (sha256 74cc1646… before and after each) - (n) THE ITEM'S OWN, D-195 restored exactly as it shipped (the truthy test back, the third branch deleted) -> 4 of 58 FAIL, naming ALL THREE refusals rendered as a substantive negative AND the DEC-49 subject arm noticing the plane's sentence VANISHED from #v-refused; the true-negative arm stays green, which is what makes the four failures specific (q) THE OTHER DIRECTION, one character - the published:false branch made unreachable so a GENUINE absence is reported as a question nobody answered -> 1 of 58 here AND publishedcase.test.mjs fails too, a second suite catching it independently (o) the published INDEX's collapse restored -> 2 fails in two suites: this file naming the refusal, and auth-surface's own NEG-CONTROL (a) - which is the finding that D-173's 'honest-looking blank screen' WAS this exact sentence (p) the case ADDRESS's collapse restored (one heading over every refusal, only 'detail' read) -> 1 of 58 (s) THE DEC-8 OVERSTEP one branch over from UI-36's arm (k) - the surface TRANSLATES the refusal it now renders ('64 lowercase hex' -> 'a proper fingerprint') -> 2 of 58: the refusal arm names the act and the SUBJECT arm names the consequence (r) THE INSTRUMENT'S OWN - app.html reverted to the PRE-ITEM COMMIT 1cbc70f (the defect back) with the four new scenarios hidden -> 4 of 54, the walk returns to 11 scenarios and the report to 70 occurrences / 60 visible, so the new arms are answering the surface and not themselves. **AND THIS ARM HAD TO BE CORRECTED MID-RUN, REPORTED RATHER THAN SMOOTHED:** it first reverted to HEAD, which stopped being the pre-item state the moment this item's own commit landed, and it quietly fell from 4 of 54 to 1 of 54 - a control that reverts to a moving target measures nothing, and the only reason it was caught is that the arm was re-run after a later edit instead of being trusted from its first result. BATTERY UNMOVED and it is measured, not assumed: 98/98 at 5,544 assertions with UI-37 applied, and 98/98 at 5,544 with the whole change stashed - no bio-plane file is touched by this item. M0-23 (2026-09-10, UI-56's delegation) CORRECTED THE 'caseMembers' FIXTURE TO THE WIRE SHAPE AND ENLARGED THE BASIS DELIBERATELY, in that order and measured separately because they are two different acts. THE CORRECTION ALONE MOVED NOTHING: 'version_sha' and 'role' added to the one existing roster row, 68/68 green and the report CHARACTER-IDENTICAL - which is the honest statement of the gap, since the single member was undiverged and 'pubMemberKey''s 'bundle_id@edition' fallback answers the same row the pin does. A mock-shape gap of D-173's class, not a live defect, and it is corrected anyway because a fixture that cannot REPRESENT the wire shape cannot ASSERT against it. THE ENLARGEMENT then added the state the corrected shape makes representable - a case at edition 2 whose only member is at its OWN edition 1, joined through the pin - and it is UI-34's kind of movement, on the SURFACE half only: 15 scenarios -> 15, 22 surfaces -> 22, 14 terms -> 14, 40,380 -> 42,718 characters, 69 -> 71 occurrences and 59 -> 61 visible, THE WHOLE DELTA BEING 'sha256' x33(29) -> x35(31) from the second case's own rows on the index, with EVERY PLANE-SOURCED ROW UNCHANGED IN NUMBER AND IN SOURCE and the DEC-49 SUBJECT arm passing. 'role' IS CARRIED AND NOTHING READS IT - measured: no surface in app.html reads 'caseMembers[].role' ('memberRole()' is the PROJECT roster's, a different table) - and that asymmetry is NAMED by the census arm in check-mock-envelope.mjs rather than failed, because a fixture narrower than the wire on a column no surface reads is a judgement to state, not a defect to fail. AND THE ASSERTION COUNT MOVED 68 -> 70 FOR A REASON THAT IS THIS ITEM'S REAL FINDING, recorded here rather than smoothed: THE ITEM'S OWN NEGATIVE CONTROL CAME BACK GREEN THE FIRST TIME IT WAS ARMED. With the fixture corrected and the diverged member added, deleting 'version_sha' again ran 68/68 GREEN - the index rendered the defect (the report moved 42,718 -> 43,366 characters and 71 -> 75 occurrences, so the wrong words were ON THE PAGE) and not one assertion in this file read them. A fixture that cannot represent the wire shape cannot assert against it; a fixture that CAN represent it still asserts nothing until somebody writes the assertion, and by the item's own criterion the correction was decoration until that was done. The two assertions in the 'public-record' REACH block are that second half. NEGATIVE CONTROL: RUN, a BASELINE ROW plus two arms, each armed ALONE against the FINAL file with the anchor required to match EXACTLY ONCE and the file restored by sha256 AND byte-for-byte comparison against a per-arm pristine (162,871 B, floored) - baseline, nothing armed: 70/70, 0 failed, 42,718 characters, 71 occurrences (61 visible) - (t) THE ITEM'S OWN: 'version_sha' dropped from BOTH roster rows -> exit 1, 1 of 70 FAILED, the failure NAMING the diverged member, and the report moving to 43,366 characters / 75 occurrences (65 visible) because the finding is now rendered TWICE. IC-66's defect reproduced through the FIXTURE rather than through the surface: CASE-2026-0002's finished edition 2 reads as declared-and-not-yet-ratified and FIND-2026-0002 is also listed as belonging to no case. THE OVER-STRICTNESS ASSERTION BESIDE IT STAYS GREEN, which is what makes the one failure specific - the undiverged member does not move, and could not. Against the pre-M0-23 one-member fixture the same deletion is INVISIBLE (68/68 green, report character-identical), so the arm measures the ENLARGEMENT as much as the column (u) OVER-STRICTNESS: 'role' dropped from both roster rows -> 70/70 GREEN and the report CHARACTER-IDENTICAL, DECLARED GREEN IN ADVANCE and not a hole - no surface reads that column, so a fixture narrower on it is legitimately narrower than the wire, and the census arm in check-mock-envelope.mjs NAMES that rather than failing anybody for it. UI-84 (2026-09-24) REBUILT THE TWO MOCK REFUSALS FROM THE PLANE'S OWN SOURCE AND CATALOGUE AND RE-PINNED DEC-49'S SUBJECT, WHICH **SHRANK** — the first time a plane-sourced row has left that table by being ANSWERED rather than by a surface editing it. D-278 (2026-09-23) gave 'op=verify''s malformed-hash refusal (C-61.1, through 'requiredArgument') and the dispatch miss (C-69.1, through 'dispatchRow') a code and a CANNED TRANSLATION, and 'refusalWords' renders a translation FIRST — so from that day a stranger read the canned sentence while this file went on pinning the caller's one, AND EVERY ASSERTION HERE STAYED GREEN. That is UI-73's own predicted failure mode arriving the day after it was written down: its note at DEC49_SUBJECT said in terms that 'op=verify''s refusal is *"the control plane's bare 'error' with no code at all"*, and that clause is CORRECTED IN PLACE AND LEFT STANDING as the receipt rather than deleted. The fixtures are now DERIVED and not typed: the CODE is read out of index.mjs AT THE SITE THAT MINTS IT ('dispatchRow("…")' at the '!spec' line, 'requiredArgumentRow("…")' inside 'requiredArgument'), the SENTENCE out of bio-checks.mjs under that code by a lookup that DISCOVERS the family rather than naming one, and 'requiredArgument''s own two-chunk 'detail' template out of its body — so a hand copy, which agrees with its source at zero cost, cannot make any arm here green. BOTH DIRECTIONS ARE PINNED, which is what this item adds over UI-73's login guard: narrow (a fixture missing a sentence the wire sends) by the REACH arms, and WIDE (a fixture carrying one the wire does not) by two SITE assertions reading the plane's decoration structurally. THE FIGURES, each PRINTED by this instrument on its own tree and none of them subtracted (UI-84's measurement entry): 78 assertions -> 84, 16 scenarios -> 16, 21 surfaces walked -> 21, 50,669 -> 51,340 characters, 74 inherited terms -> 74, 15 plane-vocabulary terms -> 15, reaching **11 of 21 surfaces -> 10**, 77 occurrences (67 visible) -> 76 (66), and '"sha256"' x35(31) -> x34(30) LOSING ITS '#v-refused' SOURCE — the whole delta, with every other report line CHARACTER-IDENTICAL by a line-by-line diff. The +671 characters are the canned sentences being LONGER; the -1 occurrence is plane vocabulary being DISPLACED by them; DEC-49 remains OPEN and REPORT_ONLY is unchanged, because two of 592 codes gaining a sentence is not a ruling answered and eleven plane-sourced rows still stand here. FOUR SITES REWRITTEN AND A FIFTH CORRECTED: the three 'unknown op' mocks ('manifestArm', 'caseArm', the verify 'NONE' sentinel) and 'op=verify''s own refusal now carry the wire's shape; the FALLTHROUGH was wrong on two counts and is corrected rather than exempted — it composed '"unknown op " + op', a sentence the plane has NEVER sent ('error' is byte-identical "unknown op" and the op travels in its own key), and it did not go through 'say', so anything it rendered would have been attributed to THIS SURFACE rather than to the plane. NEGATIVE CONTROL: 'node civicos-ui/test/ui84-mock-wire.control.mjs' — a BASELINE ROW plus four arms, each armed ALONE on disk with its patch required to match EXACTLY ONCE, every file restored from a uniquely-named per-arm pristine and the restore verified BY sha256 AND BY 'cmp' with a byte count floored. RUN 2026-09-24, **4 of 4 AS DECLARED** — BASELINE 84/84 green exit 0 · (A) THE ROW'S OWN, 'translation' dropped from the 'op=verify' fixture: RED 2 of 84, the DEC-49 SUBJECT arm naming 'sha256' ARRIVING FROM SOMEWHERE ELSE and the '#v-refused' arm whose pin is two-sided, with all three 'unknown op' arms GREEN · (B) the same drop on 'unknownOpWire' ALONE: RED 3 of 84, the three 'unknown op' REACH arms and NOT the subject arm — declared green in advance, because the terse wire word carries none of the 74 inherited terms and no structural acronym, which is what makes (A)'s subject failure specific to 'op=verify' rather than a second reading of one fact · (C) OVER-STRICTNESS, the catalogue family RENAMED inside the '_CHECKS' convention so the same row is reachable only by a lookup that discovers it: GREEN 84/84 · (D) THE WIDE DIRECTION, the plane's '...dispatchRow("UNKNOWN_OP")' deleted from index.mjs: RED 5 of 84 with the SITE assertion named, and the four others falling out of the same cause carry the item's best property — the code being read at the plane's own site means a plane that stops decorating leaves the fixture NARROW rather than WIDE, so a fixture built this way CANNOT end up asserting a sentence the wire does not send. **AND ARM (C) CAME BACK RED AGAINST A GREEN DECLARATION ON ITS FIRST SPELLING, WHICH IS A FINDING ABOUT THE ARM AND IS RECORDED RATHER THAN SMOOTHED:** it renamed the family to 'DISPATCH_XCHECKS', which does not match '/_CHECKS$/', so it moved TWO variables — the family's NAME, which it meant to move, and its MEMBERSHIP OF THE CONVENTION every consumer keys on, which makes it a row WITHDRAWN rather than renamed. RED 4 of 84, correctly. Re-spelled inside the convention it is green, and the control's header carries the whole account`);

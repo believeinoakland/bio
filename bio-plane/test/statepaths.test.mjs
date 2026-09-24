@@ -110,19 +110,24 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    - UI-68's `ui:review-copy.test.mjs`, doc-facing.
    The one new READER of the ledger (32 -> 33) is `mintid-take.test.mjs` (names MEASUREMENTS.md in tools/entries.mjs,
    as recorded at D-242's own move); none of the seven reaches through `coord.mjs` (4 on both trees). */
-/* MOVED 2026-09-24 by UI-89 (74 -> 75), from the figures THIS SUITE PRINTED on its branch, and attributed by a
-   measured DELTA rather than by subtraction: with UI-89's two new files in the tree it prints
-   `75 unit(s) of 417 selected · 33 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`; with the same two files
-   moved aside and moved back (restored and verified by sha256) it prints `74 unit(s) of 416`, 20 pass / 0 fail.
-   So the one new unit is UI-89's NEW suite `ui:statement-ack.test.mjs` — the corpus grew by exactly one, the
-   control file is not a unit, and the two figures differ by exactly one in each column. It is the same case as
-   `ui:review-copy.test.mjs` and `ui:queue-allclear-limit.test.mjs` above: a new UI suite whose header names the
-   design documents it is evidence for, so it is DOC-FACING and is selected as "doc-facing, and
-   docs/development/MEASUREMENTS.md changed". Not a reader of the ledger (33 on both readings) and no new reach
-   through `coord.mjs` (4 on both). THE SHAPE THIS CEILING KEEPS CATCHING IS WORTH SAYING ONCE: it rises by one
-   for every new doc-facing suite, so a move here is evidence of a suite added, and only a move it CANNOT account
-   for by name is evidence of the selector widening. */
-const UNITS_CEILING = 75;
+/* MOVED 74 -> 47 by M0-143 (2026-09-24), from the figure THIS suite PRINTED on its own clone of the M0-143 tree
+   (`47 unit(s) of 416 selected · 33 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`), never by subtracting from
+   the old number. THE REASON, and it is a narrowing rather than slack: `gates.mjs` §2 now reads a suite's own source,
+   its control and the tools it names AS CODE, comments blanked — so a suite whose only `docs/` mention is in its
+   prose is no longer doc-facing, and a MEASUREMENTS plant no longer sweeps it in. Estate-wide the doc-facing set
+   went 72 -> 41 (plane 60 -> 37, ui 12 -> 4); `measurements/M-134.md` has the dropped list. A CEILING IS NOT A
+   RATCHET: this one is left at the printed figure, with no slack bought for a future landing. */
+/* RE-MEASURED AT UI-89's MERGE WITH c20-batch18 (2026-09-24) AND LEFT AT 47 — a delta on 47, and the whole of it is
+   that M0-143's narrowing SUPERSEDED a move made hours earlier the same day. UI-89 had moved this 74 -> 75 on its
+   own branch, correctly for the selector as it then was: its new suite `ui:statement-ack.test.mjs` mentions
+   `docs/` only in its header PROSE, which made it doc-facing and swept it into a MEASUREMENTS plant. M0-143 now
+   reads a suite's source AS CODE with comments blanked, so that suite is no longer doc-facing and the 75 became
+   wrong rather than merely stale. The MERGED tree prints `47 unit(s) of 420 selected · 33 MEASUREMENTS reader(s) ·
+   4 through tools/coord.mjs`, 20 pass / 0 fail — the corpus carries UI-89's new unit (417 -> 420 across the batch)
+   and the selected set does NOT. So the figure is unchanged and no slack is bought; the superseded move is recorded
+   here rather than silently dropped, because a constant that moved twice in one day and came back is exactly the
+   history a later reader needs. */
+const UNITS_CEILING = 47;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 

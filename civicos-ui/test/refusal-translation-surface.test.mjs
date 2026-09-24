@@ -99,7 +99,7 @@ import { webcrypto } from "crypto";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { appScript } from "./extract.mjs";
-import { BASIS_VERSION_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
+import { BASIS_VERSION_CHECKS, DISPATCH_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond, extra){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg, extra == null ? "" : extra); }
@@ -320,8 +320,40 @@ console.log("\n--- 5. the over-strictness arm: 297 of the plane's codes have no 
   const h = U.actRefusalHtml({ ok:false, reason:"VERSION_CHAIN_NO_ADDRESS", detail:D });
   ok("a refusal the plane did NOT translate is rendered in its `detail`, exactly as before",
      h.includes(`<div class="intent-ref-why">${U.esc(D)}</div>`), strip(h));
-  ok("an `error`-only refusal still reaches the member too",
-     U.actRefusalHtml({ ok:false, error:"unknown op" }).includes(U.esc("unknown op")));
+  /* CORRECTED 2026-09-24 (UI-84), AND THE CORRECTION IS ABOUT WHAT THE EXAMPLE CLAIMED
+     RATHER THAN ABOUT WHAT THE ARM TESTED. This arm's subject is the SHAPE — a refusal
+     carrying `error` and nothing else must still reach the member — and that subject is
+     unchanged and still correct. But it used `{ error: "unknown op" }` as its specimen,
+     and since D-278 (2026-09-23) `unknown op` is NOT an `error`-only refusal: the dispatch
+     miss spreads `dispatchRow("UNKNOWN_OP")` and carries C-69.1's canned translation. So a
+     green assertion sat here asserting a shape while EXHIBITING a wire answer that no
+     longer has it — a reader taking the specimen for the wire would conclude the opposite
+     of the truth, which is the `translation`-blind class D-278's worker named. The
+     specimen is therefore made obviously synthetic and the REAL `unknown op` answer is
+     asserted beside it, in its own arm, against the catalogue row the plane itself reads. */
+  ok("an `error`-only refusal still reaches the member too (a SYNTHETIC specimen: this arm's subject is "
+     + "the shape, and since D-278 no real `unknown op` answer has this shape)",
+     U.actRefusalHtml({ ok:false, error:"an older copy said only this" })
+       .includes(U.esc("an older copy said only this")));
+  /* AND THE REAL ONE, which is the arm the correction above exists to make room for. The
+     sentence is the CATALOGUE's, imported, never retyped: a hand copy agrees with its
+     source at zero cost and goes on agreeing after the row is reworded. THE LIAR THIS
+     BEATS is exactly that hand copy — and the plane-side half, that the wire really does
+     send this row, is driven through the op by `bio-plane/test/d278-codeless-refusals.test.mjs`
+     section 3, so this suite asserts the RENDERING and does not also assert the wire it
+     cannot see from here. */
+  {
+    const D = DISPATCH_CHECKS.UNKNOWN_OP;
+    ok("the catalogue row for the dispatch miss is present and carries a canned sentence, so the arm "
+       + "below is not asserting a pane contains \"\"",
+       !!D && typeof D.translation === "string" && D.translation.length > 40 && D.check === "C-69.1");
+    const h = U.actRefusalHtml({ ok:false, error:"unknown op", reason:"UNKNOWN_OP", code:"UNKNOWN_OP",
+                                 check:D && D.check, translation:D && D.translation, op:"nosuchop" });
+    ok("A REAL `unknown op` ANSWER AS D-278 SENDS IT reaches the member in DEC-49's CANNED sentence, and "
+       + "the terse wire word does not stand alone in front of them — the shape a surface deployed ahead "
+       + "of its plane actually meets, and the one this file previously exhibited as untranslated",
+       h.includes(U.esc(D.translation)) && !h.includes(U.esc("unknown op")), strip(h));
+  }
   ok("and a refusal with nothing at all still says so rather than rendering blank",
      strip(U.actRefusalHtml({ ok:false, reason:"X" })).includes("The record refused this and said nothing further"));
 }
