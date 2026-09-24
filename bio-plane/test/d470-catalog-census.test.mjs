@@ -419,8 +419,13 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.28.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.28.0)", "1.28.0"]);
+/* CORRECTED 2026-09-24 by D-448, never exempted: 1.28.0 -> 1.29.0, because C-87's eleven rows moved the
+   census 461 -> 472 and this arm's whole point is that the literal moves whenever the catalogue does.
+   FOUND BY THE GATE, not by reading: D-448 corrected `ratify.test.mjs`'s stamp pin and MISSED THIS ONE,
+   which is the second reader of the same constant inside this suite's own file — the rule that a fix
+   verified only where you changed it is not verified (CLAUDE.md §5), paid for once more here. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

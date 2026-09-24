@@ -53,9 +53,32 @@
  *     NOT see a site whose `detail` was changed, and it is evidence about NO refusal outside this op.
  *   - It says nothing about a LIVE plane. A green harness is not a serving build (D-108).
  *
- * NEGATIVE CONTROL: run by `test/d448-review-copy-translation.control.mjs` — `node
- * test/d448-review-copy-translation.control.mjs [arm]` from `bio-plane/`. RESULTS ARE RECORDED ON THE
- * `NEGATIVE CONTROL:` line in that file, from the driver's own print.
+ * NEGATIVE CONTROL: SIX ARMS, run by `test/d448-review-copy-translation.control.mjs` — `node
+ * test/d448-review-copy-translation.control.mjs [arm]` from `bio-plane/`. Each is armed ALONE with every
+ * other defence held open, against a REAL source, restored from a uniquely-named per-arm pristine copy
+ * verified by sha256, by content AND by `cmp` with the byte count printed and floored; the pen lives
+ * OUTSIDE the worktree (BOB #32, 2026-09-24). Declared before the first run:
+ *   (0) BASELINE — nothing armed: this suite GREEN and the DEC-49 guard exit 0. The row that tells
+ *       five-arms-working from five-arms-broken, and the one nobody runs.
+ *   (a) THE ROW'S OWN NAMED CONTROL, the one D-448's `accepts-when` declares — DROP ONE CODE'S REGION
+ *       (`is-review-recipient`) and the census arm names it. MUST FAIL: the guard, naming that region,
+ *       and this suite's region-exists arm. MUST NOT FAIL: that code's WIRE arm, because `dec49Decorate`
+ *       puts the sentence on the wire from the row alone.
+ *   (b) A TRANSLATION BLANKED — C-87.10's sentence emptied: the guard MUST name the row, and this
+ *       suite's catalogue and wire arms for that code MUST fail.
+ *   (c) A CODE RETURNED OUTSIDE THE HELPER — `REVIEW_NO_COMMENT_TEXT` back to its pre-D-448 bare object
+ *       literal, above its region: the guard MUST name `is-review-comment-text` and the three structural
+ *       arms MUST fail, while that code's wire arm stays green.
+ *   (d) OVER-STRICTNESS — `is-review-secret`'s markers re-spelled in a way the guard accepts: EVERY arm
+ *       MUST STAY GREEN.
+ *   (e) THE RESOLVER WIDENING REVERTED in `check-refusal-codes.mjs`: the guard MUST fail naming
+ *       `#noReviewCopy`, and this suite MUST stay green.
+ * ALL SIX ARMS RUN 2026-09-24 by the D-448 worker, driver exit 0, every one AS DECLARED: baseline 129/0
+ * guard 0 · (a) 125/1 guard 1 · (b) 127/2 guard 1 · (c) 126/3 guard 1 · (d) 129/0 guard 0 · (e) 129/0
+ * guard 1. Every restore verified sha256 MATCH, content IDENTICAL, cmp SAME. TWO ARMS CAME BACK WRONG ON
+ * THE FIRST RUN and both were findings recorded at that file's `NEGATIVE CONTROL:` line rather than
+ * smoothed — (b) proved this suite's wire assertion compared "" with "" and agreed for free, and (d),
+ * the over-strictness arm, proved this suite STRICTER THAN ITS RULE on how a region marker is spelled.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -115,8 +138,24 @@ t("the family is the ELEVEN codes UI-68's surface can show, and no fewer", CODES
  * a restatement of the machine code.
  * ======================================================================== */
 console.log("\n--- 1. the catalogue rows ---");
+/* EACH C-NUMBER AS A LITERAL, and that is a requirement rather than a style. `scripts/coverage.mjs`
+   derives the catalogue by reading C-numbers out of bio-checks.mjs and then demands that an ASSERTION
+   NAME each one — "never NAMED means no assertion proves the check FIRES on a violation, so it is
+   exercised only in the direction that passes", the C-20.1 defect class. A regex (`/^C-87\.\d+$/`) is
+   what this suite asserted first and it satisfied NOTHING: it names no id, so all eleven read as never
+   named and `--strict` exited 1 on a complete family. FOUND BY THE GATE, not by reading. The literal
+   table is also the stronger assertion — it pins WHICH number each code holds, so a renumbering at
+   integration (C-82 -> C-83 has happened) is visible here rather than silently absorbed. */
+const NUMBERED = {
+  NO_REVIEW_COPY: "C-87.1", REVIEW_UNKNOWN_ACT: "C-87.2", REVIEW_NOT_PROJECT_OWNER: "C-87.3",
+  REVIEW_NO_PROJECT: "C-87.4", REVIEW_DRAFT_CHANGES_PROJECT: "C-87.5", REVIEW_NO_SUCH_CASE: "C-87.6",
+  REVIEW_DRAFT_TOO_LARGE: "C-87.7", REVIEW_NO_RECIPIENT: "C-87.8", REVIEW_NO_SECRET: "C-87.9",
+  REVIEW_NO_GRANT: "C-87.10", REVIEW_NO_COMMENT_TEXT: "C-87.11",
+};
+t("the pinned numbering covers every code in the family, and no more",
+  Object.keys(NUMBERED).sort().join(","), CODES.slice().sort().join(","));
 for (const [code, row] of Object.entries(REVIEW_COPY_CHECKS)) {
-  t(`${code} holds a C-87 row`, /^C-87\.\d+$/.test(row.check || ""), true);
+  t(`${code} holds its own catalogue row, ${NUMBERED[code]}`, row.check, NUMBERED[code]);
   t(`${code}'s \`where\` names a REGION, not a whole function`,
     /^src\/store\.mjs \S+ > is-[a-z0-9-]+$/.test(row.where || ""), true);
   /* A translation that merely re-spells the code is the non-translation DEC-49 ended. */
