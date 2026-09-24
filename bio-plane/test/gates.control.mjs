@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 18 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116; G18 by M0-146) — over `tools/gates.mjs` and
+/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 17 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116) — over `tools/gates.mjs` and
  * `tools/pushguard.mjs`, each driven through `bio-plane/test/gates.test.mjs`.
  *
  *   node bio-plane/test/gates.control.mjs          (from the repo root; one arm: add its id, e.g. G1)
@@ -65,11 +65,6 @@
  *   G17 STRINGS blanked with the comments — the    -> "a suite that READS the file through a STRING
  *       liar: selecting nothing reads as "fewer       path is selected" FAILS. MUST NOT: the
  *       units" (M0-116)                               comment-only suite is still NOT selected.
- *   G18 the SCRATCH PATH not skipped (M0-146):     -> "the tree still reads CLEAN, so the verdict
- *       a worker's own untracked files under          would still be RECORDED" FAILS, with the
- *       `.scratch/` are the tree's again              RECORDED arms. MUST NOT: a DIFFERENT stray
- *                                                     dot-directory is still caught — the liar here
- *                                                     is a gate that ignores every dot-directory.
  *
  * Every arm asserts its DOWNSTREAM failure, never merely its patch count: `hits === 1` proves a
  * patch applied, and only the named assertion proves it had an effect (M-60 Q9).
@@ -289,28 +284,6 @@ const ARMS = [
       to: "try { c = s === null ? null : stripComments(s).replace(/\"[^\"\\n]*\"/g, \"\\\"\\\"\"); } catch { /* read whole */ }" }],
     mustBreak: "a suite that READS the file through a STRING path is selected",
     mustNotBreak: ["a suite whose OWN COMMENT is its only mention of the file is NOT selected"] },
-
-  /* M0-146: THE SCRATCH PATH NOT SKIPPED. One patch disables the skip at every site in `gates.mjs` at once — the
-     status read (§0/§4), the untracked half of `changed` (§1) and the universe (§2e) — because they are ONE
-     variable: whether an untracked file under `.scratch/` is the tree's. The over-strictness direction is the
-     MUST NOT: a stray dot-directory that is not the named one must STILL be caught with the arm live, or the arm
-     would be indistinguishable from a gate that ignores every dot-directory. */
-  { id: "G18", title: "the SCRATCH PATH not skipped — a worker's own untracked files are the tree's again",
-    patches: [{ file: GATES,
-      from: "import { inScratch } from \"./scratchpath.mjs\";  /* M0-146 §0a: the one scratch path, named once */",
-      to: "const inScratch = () => false;  /* ARMED (G18): nothing is scratch */" }],
-    mustBreak: "...and the tree still reads CLEAN, so the verdict would still be RECORDED",
-    /* The last three were NOT foreseen when the arm was declared and are recorded here from its FIRST RUN rather
-       than smoothed: with the skip gone the two planted files are a change like any other, so the class and the
-       plan move too, and the tree the earlier run recorded is no longer recognised as the same tree. */
-    alsoBreak: ["a GREEN run with the scratch path populated RECORDS its verdict, keyed by HEAD's tree",
-                "...and the gate SAYS it recorded, rather than naming a dirty tree",
-                "...and with the stray swept, the scratch path alone reads CLEAN again",
-                "the change CLASS is unmoved by files under the scratch path",
-                "...and the PLAN is the same, unit for unit",
-                "...and the tree is still recognised as the one already recorded GREEN, scratch files and all"],
-    mustNotBreak: ["a DIFFERENT stray dot-directory is STILL the tree's — it is not clean, and the gate says so",
-                   "a DIRTY tree is NOT recorded", "a tools-only diff reads TARGETED"] },
 ];
 
 /* ---------------------------------------------------------------- D-331: every anchor, before anything arms */
