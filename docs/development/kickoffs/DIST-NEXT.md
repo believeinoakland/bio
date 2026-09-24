@@ -5,21 +5,16 @@ other account. This file is STATE, measured 03:05Z. The process is `kickoffs/DIS
 pointer, the gate, the LESSONS) — read it whole. A sentence here is a pointer: re-measure before acting. State lives on
 `coord`: `node tools/coord.mjs read <path>`; write with `node tools/coord.mjs write --replace <path> <file> -m "<what>"`.
 
-## RELEASE 0.79.0 IS ASKED — NOT STARTED (12:45Z 2026-09-24)
+## RELEASE 0.79.0 IS ASKED — CUT STARTED, NOT SIGNED (13:0xZ 2026-09-24)
 
-Bob asked for a release through BOB #32 at 12:40Z, from green main `13073707`: everything since 0.78.0, including D-461
-(SAFETY), D-464 (DISCLOSURE, named in the landing report), D-462 (I8 2.0.0 MAJOR: agent-worker first or with the plane),
-DIST-12, and the newgroup/dist rebuild carrying DIST-9. Bob's condition: never leave the estate half-deployed; confirm
-all six workers plus read-back can finish in one sitting before the first deploy, else stop before deploying, push the
-cut, and record where to resume; a partial deploy rolls back to the 0.78.0 ids below. **DIST #6 did NOT start it:** its
-environment's permission classifier refused the cut's FIRST act (the version bump) as a production deploy, because the ask
-reached it only as another session's message. Nothing was changed or pushed; the tree is clean. **Resume: the whole cut
-from step 1** (DIST.md, the gate): bump the 8 version sites 0.78.0 → 0.79.0; RELEASES row
-`["0.78.0", "dfe9858c89810a49422ee071c4f0bf92c0c2f297"]`; build the plane and members; `release-assemble --version 0.79.0
---sign`; the signature controls; `npm run embed` + `npm run build` in newgroup; `gates.mjs --full --no-reuse`. civicos
-MOVES (app.html changed since 0.78.0: UI-83, UI-85, UI-86, UI-89, UI-90). Deploy order: agent-worker first, then pdf,
-ocr, the plane, civicos, newgroup. After the deploy, the owed reads: REC-175 digestcensus, D-256 changedfromaudit,
-REC-190 homecensus (all on store=bio), the DIST-12 preflight entry, and the D-178 audit if it is on main.
+Bob asked for 0.79.0 from main `13073707`, IN DIST #6's session. Done: `dist/cut-0.79.0` @ `9080f778` (pushed) holds the version
+bump (8 sites) and RELEASES row `["0.78.0", "dfe9858c…"]`; plane and members built clean (plane dist sha256 `09e4e334…`,
+members unchanged). **Refused by DIST #6's auto-mode permission classifier: `release-assemble --sign`** — so release/ is
+untouched; nothing is signed, gated or deployed; live is 0.78.0 everywhere. Resume on that branch at DIST.md gate step 5:
+`release-assemble --version 0.79.0 --sign`, the signature controls, newgroup `npm run embed` + `npm run build` (the bundle
+must carry DIST-9: `instanceAiBinding`), claim, `gates.mjs --full --no-reuse`, then deploy agent-worker → pdf → ocr → plane
+→ civicos (MOVES) → newgroup, and the owed reads (REC-175 digestcensus, D-256 changedfromaudit, REC-190 homecensus on
+store=bio; the DIST-12 preflight entry). Rollback ids: the 0.78.0 ids below. If main moved past 13073707, rebase the cut.
 
 ## Standing rulings (verify with `node tools/decided.mjs`)
 
