@@ -46,6 +46,11 @@
    (D3) **THE WORLD AS IT SHIPPED, and it is the arm worth reading.** Wrong arm AND a fixture that cannot refuse, two defences down deliberately -> **agent-worker 107/6 · fanout 174/1 · harness 198/1**. **EVERY BEHAVIOURAL ARM in fanout and harness went GREEN over a call that cannot succeed** — D-276's condition, reproduced — and the only things that saw it were the arms that ask the PLANE rather than the fixture. **DECLARED WRONG FIRST AND CORRECTED INTO SOMETHING STRONGER RATHER THAN SMOOTHED:** it was declared as "fanout and harness go GREEN" and they came back 1 FAIL each — this item's own structural arms, which do not go through the mock. The declaration now names the EXACT label permitted to fail in each, so RED alone will not satisfy it.
    (D4) **"CHECK `ok`" IS NOT ENOUGH, AND THIS ARM MEASURED A SECOND DEFENCE NOBODY DECLARED.** Wrong arm AND `planeAnswer` stops looking inside `result`, checking only the ENVELOPE's `ok` — which the plane sets to TRUE on a refused arm (measured: HTTP 200, `ok:true`, the refusal nested one level in) -> **agent-worker 109/4 · harness 197/2**. **DECLARED WRONG FIRST:** the false zero `0 meaning-grain row(s) queried` was declared to come back, and it did NOT. It needed BOTH the missing check AND the old `Array.isArray(got.rows) ? got.rows.length : 0`; the rewrite's third branch fires instead and the entry reads *"is UNDETERMINED — the plane answered without a rows collection"*. The arm now asserts the false zero is ABSENT, which is the stronger statement.
    (D5) OVER-STRICTNESS FOR D-276. `MEANING_ARM` spelled `"LEG"` — the plane NORMALISES `rows` (`String(input.rows).trim().toLowerCase()`), so this is CORRECT WORK in a spelling the suite did not anticipate and an arm that failed it would be a fence tighter than its rule -> **agent-worker 113/0 · fanout 175/0 · harness 199/0**, all three unchanged.
+   **RE-MEASURED 2026-09-24 BY D-462 (cloud worker, base `15b2a4c0`), because D-462 changed this suite and every figure above went stale the moment it did — corrected, never left standing.** New baselines **agent-worker 133/0 · fanout 182/0 · harness 227/0**; `node test/agent-worker.control.mjs` ran **19 arms, 19 AS DECLARED, 0 findings about the arms**: A1 126/7 · A2 130/3 · A3 96/37 · A4 129/4 · A5 126/7 · A6 130/3 · V1-V5 exit 1 each as before · D1 127/6·175/7·220/7 · D2 131/2·182/0·227/0 · D3 127/6·181/1·226/1 · D4 129/4·181/1·225/2 · D5 133/0·182/0·227/0 · O1 133/0 with coverage --strict exit 0. Every restore verified by sha256 AND cmp; `src/index.mjs` read `2140d492…` before and after the run.
+   **SECTION N — D-462: THE NAMESPACE A RUN NAMES IS EXACTLY `bio` OR `scratch`.**
+   (N1) **D-462'S NAMED CONTROL — WIDEN THE SHAPE AGAIN.** The member's namespace test goes back to `/^[a-z0-9_-]+$/i`, the constant left intact -> **118 pass, 15 FAIL**: `store=biosmoke -> 400 NAMESPACE_UNKNOWN` fails BY NAME, with the hyphenated, `Scratch` and `BIO` arms, and the record-still-empty arm (the widened member WORKED a run through the plane under a name no instance holds). Held as declared: the set-equals-the-plane's pin, both BAD_STORE arms, the empty-name and `a b` arms (the old shape refused those too), and section 7.
+   (N2) THE COPY AGES. The member's NAMESPACES gains `biosmoke` -> **126 pass, 7 FAIL**: the set-EQUALS-the-plane's pin and the refusal-lists-that-set arm fail, and so do the `biosmoke` refusal arms; the plane-set-was-read arm, BAD_STORE, the case variants and section 7 HELD. The shape and the set are separately visible.
+   (O1, corrected in place) section 7's three rows that required `biosmoke-fleet`, `bio_smoke` and `BioSmoke` to be ACCEPTED asserted the defect and are replaced by `store: "bio"` named explicitly; `harness.test.mjs` B12's `BioSmoke-fleet` row likewise. Each carries a comment saying why the old assertion was wrong.
  * ========================================================================= */
 
 /* D-186: owns $TMPDIR for this process and removes it on exit. Miniflare's
@@ -357,7 +362,16 @@ console.log("\n--- 3 · every refusable condition is STATED, with a code, and ne
     ["a credential of the wrong shape", { run_id: "r", store: "scratch", credential: "hunter2" },      400, "BAD_CREDENTIAL_SHAPE"],
     ["no run identity",           { store: "scratch", credential: AIK },                              400, "BAD_RUN_ID"],
     ["no namespace",              { run_id: "r", credential: AIK },                                   400, "BAD_STORE"],
-    ["a namespace that is not a token", { run_id: "r", store: "a b", credential: AIK },                400, "BAD_STORE"],
+    ["a namespace that is not a string", { run_id: "r", store: 7, credential: AIK },                   400, "BAD_STORE"],
+    /* D-462: a NAMED namespace that is not exactly `bio` or `scratch` is refused by the plane's own code
+       (NAMESPACE_UNKNOWN, C-78.1), here, before any plane call. `a b` read BAD_STORE while this member accepted
+       any `/^[a-z0-9_-]+$/i` token; it is now one of the names no instance holds, like the rest. */
+    ["a namespace that is not a token", { run_id: "r", store: "a b", credential: AIK },                400, "NAMESPACE_UNKNOWN"],
+    ["a namespace no instance holds (store=biosmoke)", { run_id: "r", store: "biosmoke", credential: AIK }, 400, "NAMESPACE_UNKNOWN"],
+    ["a hyphenated one (biosmoke-fleet)", { run_id: "r", store: "biosmoke-fleet", credential: AIK },   400, "NAMESPACE_UNKNOWN"],
+    ["a case variant (Scratch)",   { run_id: "r", store: "Scratch", credential: AIK },                 400, "NAMESPACE_UNKNOWN"],
+    ["a case variant (BIO)",       { run_id: "r", store: "BIO", credential: AIK },                     400, "NAMESPACE_UNKNOWN"],
+    ["a namespace named empty",    { run_id: "r", store: "", credential: AIK },                        400, "NAMESPACE_UNKNOWN"],
     ["turns that are not a count", { run_id: "r", store: "scratch", credential: AIK, turns: 0 },       400, "BAD_TURNS"],
   ];
   for (const [label, body, status, reason] of cases) {
@@ -366,6 +380,23 @@ console.log("\n--- 3 · every refusable condition is STATED, with a code, and ne
     t(`${label} -> ${status} ${reason}`, [res.status, out.reason, out.code], [status, reason, reason]);
     t(`  ${label}: the code is on the wire as \`code\` as well as \`reason\``, out.code, reason);
     t(`  ${label}: a detail a reader can act on`, (out.detail ?? "").length > 40, true);
+  }
+  console.log("\n  -- D-462: the unknown namespace is refused BY NAME, and this member's set IS the plane's --");
+  {
+    const res = await run(mf, { run_id: "r", store: "biosmoke", credential: AIK });
+    const out = await res.json();
+    t("store=biosmoke -> 400 NAMESPACE_UNKNOWN, naming what was asked and what exists",
+      [res.status, out.reason, out.asked, out.namespaces], [400, "NAMESPACE_UNKNOWN", "biosmoke", ["bio", "scratch"]]);
+    /* The copy in this member is pinned to the plane's declaration, read from the plane's source rather than
+       retyped here: a suite asserting about its own copy of the value is the failure this file's A2 note is about. */
+    const scratchName = (PLANE_INDEX.match(/^const SCRATCH = "([^"]+)";$/m) || [])[1];
+    const planeSet = ((PLANE_INDEX.match(/^const NAMESPACES = Object\.freeze\(\[([^\]]*)\]\);$/m) || [])[1] || "")
+      .split(",").map((x) => x.trim()).filter(Boolean)
+      .map((x) => (x === "SCRATCH" ? scratchName : JSON.parse(x)));
+    const memberSet = JSON.parse(((CODE.match(/const NAMESPACES = Object\.freeze\((\[[^\]]*\])\);/) || [])[1]) || "null");
+    t("the plane's namespace set was READ from its source (not an empty corpus)", planeSet.length >= 2, true);
+    t("this member's namespace set EQUALS the plane's `namespaceGate` set", memberSet, planeSet);
+    t("and the refusal lists exactly that set", out.namespaces, planeSet);
   }
   const bad = await mf.dispatchFetch("http://agent-worker/run", { method: "POST", body: "{{{" });
   t("an unreadable body -> 400 BAD_BODY", (await bad.json()).reason, "BAD_BODY");
@@ -376,7 +407,7 @@ console.log("\n--- 3 · every refusable condition is STATED, with a code, and ne
 
   console.log("\n  -- a refusal writes nothing either --");
   const st = await mockState(mf);
-  t("the plane's record is still empty after six refusals", st.record, { rows: [] });
+  t("the plane's record is still empty after every refusal above", st.record, { rows: [] });
   await mf.dispose();
 }
 
@@ -532,9 +563,13 @@ console.log("\n--- 7 · OVER-STRICTNESS: correct work in a spelling the guard di
   const okCases = [
     ["exactly at the bound",            { run_id: "r", store: "scratch", credential: AIK, turns: 120 }],
     ["turns omitted entirely",          { run_id: "r", store: "scratch", credential: AIK }],
-    ["a namespace with a hyphen",       { run_id: "r", store: "biosmoke-fleet", credential: AIK }],
-    ["a namespace with an underscore",  { run_id: "r", store: "bio_smoke", credential: AIK }],
-    ["a namespace with capitals",       { run_id: "r", store: "BioSmoke", credential: AIK }],
+    /* CORRECTED BY D-462, NEVER EXEMPTED. These three rows required `biosmoke-fleet`, `bio_smoke` and `BioSmoke`
+       to be ACCEPTED, and that was an over-strictness arm asserting the defect: none of them is a namespace on any
+       instance, so "correct work" naming one was never correct — before D-456 the plane answered it from `bio`, the
+       real record, and since D-456 the plane refuses it at the first call. The only two correct spellings are the
+       two namespaces, so those are what must pass: the real record named explicitly, beside scratch (named by
+       every other row here). */
+    ["the real record, named explicitly", { run_id: "r", store: "bio", credential: AIK }],
     ["a run id carrying punctuation",   { run_id: "run:2026-08-08/seg-3", store: "scratch", credential: AIK }],
     ["a second credential, used alone", { run_id: "r", store: "scratch", credential: AIK2 }],
   ];

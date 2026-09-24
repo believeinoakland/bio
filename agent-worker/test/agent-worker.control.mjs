@@ -336,6 +336,55 @@ arm({
  * old figure (wrong-in-the-generous-direction is the named failure mode)."
  * ========================================================================== */
 
+/* D-462's named control: "widen the shape again, and that arm fails by name". The member's namespace test goes
+   back to the token shape it held before D-462 (`/^[a-z0-9_-]+$/i`), and nothing else moves — the NAMESPACES
+   declaration is left intact, so the arm pinning it to the plane's set is the one that MUST HOLD: it proves the
+   shape and the set are separately visible, and that the by-name arm is watching the GATE, not the constant. */
+arm({
+  id: "N1", subject: "D-462 — THE NAMESPACE SHAPE WIDENED AGAIN",
+  what: "the member's namespace test goes back to `/^[a-z0-9_-]+$/i`, so `biosmoke`, `biosmoke-fleet`, `Scratch` and `BIO` pass it",
+  mustFail: "the `store=biosmoke -> 400 NAMESPACE_UNKNOWN` arm BY NAME, the hyphenated and both case-variant arms, and the record-still-empty arm (the widened member WORKS a run through the plane under a name no instance holds)",
+  mustNot: "the set-equals-the-plane's pin (the constant is untouched), the BAD_STORE arms (absent / non-string), the empty-name and `a b` arms (the old shape refused both too), and section 7's over-strictness arms",
+  file: SRC,
+  find: `  if (!NAMESPACES.includes(store))`,
+  replace: `  if (!/^[a-z0-9_-]+$/i.test(store))`,
+  run: () => {
+    const r = runSuite();
+    const f = (re) => r.failed.some((l) => re.test(l));
+    const byName = f(/^store=biosmoke -> 400 NAMESPACE_UNKNOWN/);
+    const variants = f(/biosmoke-fleet\) -> 400/) && f(/\(Scratch\) -> 400/) && f(/\(BIO\) -> 400/);
+    const wrote = f(/record is still empty after every refusal/);
+    const held = !f(/EQUALS the plane's `namespaceGate` set/) && !f(/-> 400 BAD_STORE/)
+      && !f(/named empty -> 400/) && !f(/not a token -> 400/) && !f(/-> accepted$/);
+    return {
+      observed: `${r.pass} pass, ${r.fail} FAIL · by-name arm ${byName ? "FAILED" : "held"} · variants ${variants ? "FAILED" : "held"} · record-empty ${wrote ? "FAILED" : "held"} · pin/BAD_STORE/old-shape/over-strictness ${held ? "held" : "ALSO FAILED"}`,
+      asDeclared: r.ran && byName && variants && wrote && held,
+    };
+  },
+});
+
+/* The copy ages: this member's NAMESPACES is a copy of the plane's, so the pin is what notices the day they part. */
+arm({
+  id: "N2", subject: "D-462 — THE MEMBER'S NAMESPACE SET PARTS FROM THE PLANE'S",
+  what: "the member's NAMESPACES gains `biosmoke`, a name the plane's `namespaceGate` does not hold",
+  mustFail: "the set-EQUALS-the-plane's pin, the refusal-lists-that-set arm, and the `store=biosmoke` refusal arms (the member now accepts it)",
+  mustNot: "the plane-set-was-read arm (the plane's source is untouched), the BAD_STORE arms, the Scratch/BIO/hyphenated arms, and section 7's over-strictness arms",
+  file: SRC,
+  find: `const NAMESPACES = Object.freeze(["bio", "scratch"]);`,
+  replace: `const NAMESPACES = Object.freeze(["bio", "scratch", "biosmoke"]);`,
+  run: () => {
+    const r = runSuite();
+    const f = (re) => r.failed.some((l) => re.test(l));
+    const pin = f(/EQUALS the plane's `namespaceGate` set/) && f(/lists exactly that set/);
+    const held = !f(/was READ from its source/) && !f(/-> 400 BAD_STORE/) && !f(/\(Scratch\) -> 400/)
+      && !f(/\(BIO\) -> 400/) && !f(/biosmoke-fleet\) -> 400/) && !f(/-> accepted$/);
+    return {
+      observed: `${r.pass} pass, ${r.fail} FAIL · pin ${pin ? "FAILED" : "held"} · read/BAD_STORE/variants/over-strictness ${held ? "held" : "ALSO FAILED"}`,
+      asDeclared: r.ran && pin && held,
+    };
+  },
+});
+
 arm({
   id: "V1", subject: "VF-3'S NAMED CONTROL — HIDE THE FLEET MANIFEST",
   what: "agent-worker/fleet-member.json is renamed away, so the discovery walk cannot see the member",
@@ -646,8 +695,10 @@ if (!only.length || only.includes("D5")) {
 if (!only.length || only.includes("O1")) {
   armsRun++;
   console.log(`\n=== ARM O1 · OVER-STRICTNESS (nothing is broken)`);
-  console.log(`    MUST PASS      : a request exactly at the bound; \`turns\` omitted; namespaces with`);
-  console.log(`                     hyphens, underscores and capitals; a run id carrying punctuation;`);
+  /* D-462: "namespaces with hyphens, underscores and capitals" were never correct work — no instance holds them —
+     and the suite's rows asserting they were accepted are corrected in place; the correct spellings are the two. */
+  console.log(`    MUST PASS      : a request exactly at the bound; \`turns\` omitted; each namespace named`);
+  console.log(`                     explicitly (\`bio\`, \`scratch\`); a run id carrying punctuation;`);
   console.log(`                     a DIFFERENT well-formed credential used alone. And --strict exit 0.`);
   const r = runSuite();
   const cov = runCoverageStrict();

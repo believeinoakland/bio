@@ -1222,7 +1222,10 @@ console.log("\n--- B12 · OVER-STRICTNESS: correct work in a spelling the guard 
     ["a judgement naming only judgeable fields", { judgements: [{ targets: [{ level: "meaning", target: "X" }] }] }],
     ["an explicit max_steps well inside the ceiling", { max_steps: 60 }],
     ["a run id carrying punctuation", { run_id: "run:2026-08-08/seg-3" }],
-    ["a namespace with capitals and a hyphen", { store: "BioSmoke-fleet" }],
+    /* CORRECTED BY D-462, NEVER EXEMPTED: this row required `BioSmoke-fleet` to be ACCEPTED, which asserted the
+       defect — no instance holds that namespace, and the member now refuses it NAMESPACE_UNKNOWN (agent-worker.test
+       §3). The correct spelling this row was reaching for is the other namespace, named explicitly. */
+    ["the real record's namespace, named explicitly", { store: "bio" }],
     ["turns exactly at the bound", { turns: 120 }],
   ];
   for (const [label, extra] of cases) {

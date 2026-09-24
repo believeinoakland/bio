@@ -681,7 +681,7 @@ var PLANE_ORIGIN = "http://plane";
 var DEFAULT_MAX_TURNS_PER_SEGMENT = 120;
 var BOUND_SOURCE = "FL-1 2026-08-08 memory curve (120.4 MB P99 of 128 MB at 200 turns), not the CPU curve";
 var AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
-var STORE_SHAPE = /^[a-z0-9_-]+$/i;
+var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var json = (obj, status = 200) => new Response(JSON.stringify(obj), {
   status,
   headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
@@ -1157,11 +1157,18 @@ async function handleRun(req, env) {
       "a run is identified by the plane and this member mints no identity of its own; the caller must say which run this segment belongs to.",
       400
     );
-  if (!store || !STORE_SHAPE.test(store))
+  if (typeof body.store !== "string")
     return refusal2(
       "BAD_STORE",
       "a run happens inside one namespace and this member guesses none: the caller must say which. A default namespace here would let a run touch the real record while its caller believed it was working in a scratch one.",
       400
+    );
+  if (!NAMESPACES.includes(store))
+    return refusal2(
+      "NAMESPACE_UNKNOWN",
+      "a run names the namespace it works in, and no namespace by that name exists on any instance this member can be bound to, so nothing was read or changed. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message.",
+      400,
+      { asked: store.slice(0, 80), namespaces: [...NAMESPACES] }
     );
   if (!credential)
     return refusal2(

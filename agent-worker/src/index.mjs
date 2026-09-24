@@ -173,8 +173,25 @@ const BOUND_SOURCE = "FL-1 2026-08-08 memory curve (120.4 MB P99 of 128 MB at 20
    from the record, and it is never duplicated here. */
 const AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 
-/* A namespace token, the same shape `pdf-worker` accepts. */
-const STORE_SHAPE = /^[a-z0-9_-]+$/i;
+/* D-462 — THE NAMESPACES THIS MEMBER WILL NAME TO THE PLANE: EXACTLY `bio` OR `scratch`, AND NOTHING ELSE.
+ *
+ * WHAT WAS WRONG. This read `/^[a-z0-9_-]+$/i` — "a namespace token, the same shape `pdf-worker` accepts" — so
+ * `biosmoke-fleet`, `Scratch` and any other well-shaped name passed here and was handed to the plane as `store=`.
+ * Until D-456 the plane answered `bio` for every name it did not know, so a run whose caller believed it was working
+ * in some other namespace worked THE REAL RECORD (CLAUDE.md §5, D-325). D-456 closed that at the plane's front door
+ * (`namespaceGate`, NAMESPACE_UNKNOWN, C-78.1); this member now refuses the same names itself, BEFORE the cascade and
+ * before any plane call is spent, instead of relaying the plane's refusal from its first `whoami`.
+ *
+ * WHY THE PLANE'S SPELLING IS HONEST HERE. The plane's set is not per instance: `namespaceGate` holds
+ * `Object.freeze(["bio", SCRATCH])` in code, so the fact this member states — "no such namespace exists" — is the
+ * same fact on every instance it can be bound to. It is kept here as a COPY because a fleet member cannot import the
+ * plane's `index.mjs`, and a copy ages; `test/agent-worker.test.mjs` §3 reads the plane's `NAMESPACES` from its
+ * source and requires this set to equal it, so the day the plane gains a namespace this member's suite goes red.
+ * The set is exact and case-sensitive for the plane's reason: a Durable Object name is an exact string.
+ *
+ * NOT NAMING ONE IS A DIFFERENT CONDITION and keeps its old code, BAD_STORE: the plane defaults an ABSENT `store=`,
+ * and this member deliberately does not (see the refusal below). */
+const NAMESPACES = Object.freeze(["bio", "scratch"]);
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
@@ -978,11 +995,19 @@ async function handleRun(req, env) {
       "a run is identified by the plane and this member mints no identity of its own; the caller must say "
       + "which run this segment belongs to.", 400);
 
-  if (!store || !STORE_SHAPE.test(store))
+  if (typeof body.store !== "string")
     return refusal("BAD_STORE",
       "a run happens inside one namespace and this member guesses none: the caller must say which. "
       + "A default namespace here would let a run touch the real record while its caller believed it "
       + "was working in a scratch one.", 400);
+  /* D-462: a NAMED namespace that is not exactly one of NAMESPACES — `biosmoke`, `Scratch`, an empty string — is
+     refused by the plane's own code, with the plane's `asked`/`namespaces` beside it, and nothing was called. */
+  if (!NAMESPACES.includes(store))
+    return refusal("NAMESPACE_UNKNOWN",
+      "a run names the namespace it works in, and no namespace by that name exists on any instance this member "
+      + "can be bound to, so nothing was read or changed. There are two: the record itself and a scratch area kept "
+      + "apart for testing, and the name must match one of them exactly; they are listed beside this message.", 400,
+      { asked: store.slice(0, 80), namespaces: [...NAMESPACES] });
 
   /* A SHAPE test, never an authorisation test — see AI_TOKEN_SHAPE above. */
   if (!credential)
