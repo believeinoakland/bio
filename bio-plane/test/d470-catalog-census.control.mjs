@@ -64,7 +64,8 @@ const edit = (file, needle, replacement) => {
 
 const FAMILY_HEAD = "export const GOVERNING_LAW_CHECKS = {\n";
 const EMIT_C151 = "    findings.push(f('C-15.1', 'error', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));";
-const VERSION = 'export const CATALOG_VERSION = "1.24.0";'; /* moved with the constant at D-507 (C-82.2..C-82.7), and at c20-batch14 (CONDUCT #20) before it — the needle must MATCH the tree or the arm never arms, which this file's own header calls a finding. 1.22.0 is now origin/main's row (D-484's two checks) and 1.23.0 is this union's. */
+const VERSION = 'export const CATALOG_VERSION = "1.26.0";'; /* moved with the constant at D-507 (C-82.2..C-82.7), at c20-batch14 (CONDUCT #20) before it, and at D-463 (2026-09-24, on a rebase onto main @ 1a7f0bcc) — the needle must MATCH the tree or the arm never arms, which this file's own header calls a finding.
+   **AND IT WAS NOT MATCHING, MEASURED ON `origin/main` @ 1a7f0bcc0 BEFORE THIS ITEM TOUCHED IT:** this needle read "1.24.0" while `src/gate.mjs` read "1.25.0" — c20-batch23's union moved the constant to 1.25.0 and left the needle behind, so the VERSION arm of this control had stopped arming on main and would have reported whatever the suite did anyway. That is the finding this line's own sentence predicts, arriving against itself. Corrected here to the constant this tree carries. */
 
 const A1 = "(A1) THE CENSUS IS NON-EMPTY AND FLOORED";
 const A2 = "(A2) EVERY EMISSION SITE RESOLVES";
