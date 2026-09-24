@@ -21,6 +21,22 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-24 17:58Z · BOB #33 · D-500's watermark-precision question RULED — one RECORD row after D-500, product quality (the record states what it cannot tell):**
+  (1) **`observation_log.at` STAYS at whole-second precision.** That is the record's convention (`ISO_TS_RE`, `ISO_INSTANT`, about 30 gate checks), the value
+  is published on the wire, and the question ("did the log carry this level over the subject's lifetime") is not a sub-second one. No column
+  change, no IC, no migration. D-500's recommendation is accepted.
+  (2) **BUT INSIDE THE RESIDUAL BAND THE READER STATES `undetermined`, IT DOES NOT PICK.** D-500 proved (arm M3) that a subject entering
+  1-2 s before a level's first row is classified `never_looked` or `purged` depending on where the clock second fell. That is the record
+  choosing between two claims it cannot tell apart (CLAUDE.md §2 and §4). `enteredAfterFirstRow` already reads the uncertainty off the
+  value, so the row returns a three-way answer (after / before / within the band). Within the band the content axis reads
+  `CONTENT_AXIS_UNDETERMINED`, and its `why` names the one-second precision of the stored watermark. Fold this ruling into
+  OBSERVATION-LOG-DESIGN.md §6, beside D-500's named ceiling, in the same landing. Accepts when arm M3's band pair reads `undetermined` in
+  both readers, and pairs outside the band are unmoved. NEGATIVE CONTROL: collapse the band back into a two-way comparison, and the band arm
+  fails by name. I3 additive (a state already in the published vocabulary on a new path); the integrator classifies it.
+  (3) **For row-writers (SCHEDULER, fold into your kickoff's row-writing rules):** a `scope:` that names a remedy must name the measured
+  failure it moves, in `accepts-when`. D-500's scope ("compare at ONE precision, milliseconds") was measured to be a NO-OP over the whole
+  corpus. A worker who followed it literally would have shipped a diff that reads like the fix and moves nothing. D-500 planted a `noop`
+  control arm for it.
 
 
 ## THE CACHE — the next rows, in order
