@@ -59,6 +59,17 @@
  *       suite is still not selected. G12 now also fails the own-comment arm (it reads every file whole), as it should.
  * All seventeen as declared, driver 123 pass / 0 fail, baseline and closing 78 / 0. On the REAL estate the same break
  * (16) takes a MEASUREMENTS-only TARGETED plant from 85 selected units back to 109 (`MEASUREMENTS.md` M-106).
+ * RE-RUN 2026-09-24 by the M0-146 worker with ONE arm added, G18 (the scratch path not skipped), run ALONE:
+ *   (18) `inScratch` made constantly false, which disables the skip at all three sites in `gates.mjs` at once
+ *       (§0/§4's status read, §1's untracked half, §2e's universe) -> "...and the tree still reads CLEAN, so the
+ *       verdict would still be RECORDED" FAILS, with the two RECORDED arms and the swept arm. THREE MORE FAILED THAN
+ *       WERE DECLARED and they are recorded rather than smoothed: the CLASS arm, the PLAN arm and "the tree is still
+ *       recognised as the one already recorded GREEN" — with the skip gone the two planted files are an ordinary
+ *       change, so the class, the plan and the tree's own recognition all move. The over-strictness direction held:
+ *       the STRAY dot-directory arm still PASSES with the arm live, so this is a gate that skips ONE NAMED path and
+ *       not a gate that ignores dot-directories.
+ *   Armed alone: baseline and closing 96 / 0, armed 89 / 7, driver 17 pass / 0 fail, `tools/gates.mjs` restored
+ *   byte-identical (86,995 B, sha256 71436474…, `cmp` identical).
  *
  * WHY THIS SUITE DRIVES A FIXTURE AND NEVER THIS REPOSITORY. `gates.mjs` is every lane's gate and
  * `pushguard.mjs` runs on every lane's push; a refusal arranged against this repository's remote
@@ -82,7 +93,7 @@
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, existsSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -100,7 +111,7 @@ const t = (label, got, want) => {
 };
 /* The FOOT sentinel (`mintid.test.mjs`'s): a TypeError inside an assertion ends the module while the
    tally still reads clean, so every section bumps this and the last assertion requires all of them. */
-const SECTIONS = 9;   /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1 */
+const SECTIONS = 10;  /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1; M0-146 (the scratch path): +1 */
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -216,7 +227,9 @@ const landMain = (root) => git(["push", "-q", "--no-verify", "origin", "main"], 
 
 function fixture(name) {
   const root = join(SANDBOX, name);
-  for (const f of ["gates.mjs", "pushguard.mjs"]) put(root, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
+  /* M0-146: `scratchpath.mjs` too — `gates.mjs` imports the scratch path's ONE constant from it, and a fixture
+     missing it is a fixture whose gate cannot start. */
+  for (const f of ["gates.mjs", "pushguard.mjs", "scratchpath.mjs"]) put(root, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
   /* the estate's ONE lexer, which the gate reads imported files through, and what it imports */
   for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"])
     put(root, `bio-plane/scripts/${f}`, readFileSync(join(REPO, "bio-plane/scripts", f)));
@@ -638,6 +651,59 @@ section("THE VERDICT RULE, driven over the module the guard imports");
   const eff = effectiveVerdict(runsFor(F.root, tree));
   t("the GREEN tree's record reads GREEN through the guard's own verdict rule", eff.verdict, "GREEN");
   t("a tree with no run reads NO verdict — not GREEN", effectiveVerdict(runsFor(F.root, "0".repeat(40))).verdict, null);
+}
+
+/* ========================================================================== */
+section("M0-146 · THE SCRATCH PATH — a worktree with `.scratch/` in it gates IDENTICALLY to one without");
+{
+  /* A WORKER'S OWN UNTRACKED FILES ARE NOT THE TREE'S. Two workers lost a full gate round to this in one night
+     (2026-09-24): `.rec185/` entered §2e's universe and moved the battery's assertion total with no source change,
+     and `bio-plane/.d487-gate.log` made the tree dirty, so a fully GREEN run refused to RECORD its verdict.
+     THE FIXTURE'S `.gitignore` IS `node_modules/` AND NOTHING ELSE, ON PURPOSE: the planted files here are
+     untracked AND unignored, so these arms measure `tools/gates.mjs`'s own skip (§0a, the constant in
+     `tools/scratchpath.mjs`) and never git's ignore rules. The repository's own `.gitignore` carries the same one
+     path for every OTHER reader of the tree; that is a second mechanism, not this one.
+     THE LIAR IS A GATE THAT IGNORES EVERY DOT-DIRECTORY, so the last arm plants a DIFFERENT one and requires that
+     the gate still sees it. */
+  const S = fixture("scratch-fx");
+  branch(S.root, "m0146");
+  appendFileSync(join(S.root, "tools/lonely.mjs"), "// a committed change\n");
+  commitAll(S.root, "m0146: a tools change");
+  const tree = treeAt(S.root);
+  const before = gates(S.root, ["--explain"]);
+
+  /* A gate log and a control pen's copy of a plane source — the two shapes a worker actually leaves behind. */
+  put(S.root, ".scratch/gate.log", "a worker's own run log\n");
+  put(S.root, ".scratch/pen/store.mjs", "export const store = 1;\n");
+  const after = gates(S.root, ["--explain"]);
+  t("the change CLASS is unmoved by files under the scratch path", after.cls, before.cls);
+  t("...and the PLAN is the same, unit for unit", [after.plan, after.units], [before.plan, before.units]);
+  t("...and the tree still reads CLEAN, so the verdict would still be RECORDED",
+    [/^gates: record — the tree \S+ is CLEAN/m.test(after.out), /is NOT clean/.test(after.out)], [true, false]);
+
+  const run = gates(S.root, []);
+  const runs = runsFor(S.root, tree);
+  t("a GREEN run with the scratch path populated RECORDS its verdict, keyed by HEAD's tree",
+    [run.status, runs.length, runs[0] && runs[0].verdict, runs[0] && runs[0].tree], [0, 1, "GREEN", tree]);
+  t("...and the gate SAYS it recorded, rather than naming a dirty tree",
+    [run.out.includes(`RECORDED GREEN for tree ${tree.slice(0, 8)}`), run.out.includes("NOT RECORDED")], [true, false]);
+
+  /* THE OVER-STRICTNESS DIRECTION, and the liar: one NAMED path, never a glob over dot-directories. */
+  put(S.root, ".stray146/gate.log", "a stray dot-directory nobody declared\n");
+  const stray = gates(S.root, ["--explain"]);
+  t("a DIFFERENT stray dot-directory is STILL the tree's — it is not clean, and the gate says so",
+    [/is NOT clean/.test(stray.out), /^gates: record — the tree \S+ is CLEAN/m.test(stray.out)], [true, false]);
+  rmSync(join(S.root, ".stray146"), { recursive: true, force: true });
+  /* `--full` because the run above RECORDED this tree GREEN, and a plain run of a recorded tree re-runs nothing and
+     prints no record line at all (§2d). THAT ITSELF IS EVIDENCE and it is the first arm here: the gate recognises the
+     tree ACROSS the scratch files, so they are not part of its identity — found by this arm's first run, which read
+     "already recorded GREEN" where it expected the record line. */
+  const swept = gates(S.root, []);
+  t("...and the tree is still recognised as the one already recorded GREEN, scratch files and all",
+    swept.out.includes("is already recorded GREEN"), true);
+  const afterSweep = gates(S.root, ["--full", "--explain"]);
+  t("...and with the stray swept, the scratch path alone reads CLEAN again",
+    [/^gates: record — the tree \S+ is CLEAN/m.test(afterSweep.out), /is NOT clean/.test(afterSweep.out)], [true, false]);
 }
 
 /* ========================================================================== */

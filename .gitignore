@@ -1,6 +1,18 @@
 # Claude Code worktrees: isolated checkouts, never part of the tree
 .claude/worktrees/
 
+# M0-146 (2026-09-24): THE ONE SCRATCH PATH FOR A WORKER'S OWN FILES. Put your
+# run logs, gate logs, baseline captures and working scratch in `.scratch/` at
+# the root of your worktree, and nowhere else (`kickoffs/WORKER.md`). The name is
+# defined ONCE, in `tools/scratchpath.mjs`, which states why the root and why one
+# name; `tools/gates.mjs` (§2e's universe, §0/§4's tree state) and
+# `tools/gatetrace.mjs` read that constant, so a worktree with files here gates
+# IDENTICALLY to one without. It is ONE path and never a glob over dot-directories:
+# on the standing rule at `.rec84-control-pristine/` below, a wildcard would
+# silently cover a pen nobody declared — and here it would also hide the NEXT
+# stray dot-directory, which is exactly what those readings exist to catch.
+/.scratch/
+
 # Credentials. Carried into worktrees by .worktreeinclude, never committed.
 .env
 .env.local

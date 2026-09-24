@@ -137,6 +137,7 @@ import { tmpdir, hostname } from "node:os";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { appendRun, readRuns, effectiveVerdict } from "./pushguard.mjs";
+import { inScratch } from "./scratchpath.mjs";  /* M0-146 §0a: the one scratch path, named once */
 import { stepCauses, causesLine, tokenSafe } from "./pushguard.mjs"; /* M0-127: a RED names every cause */
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -160,8 +161,23 @@ const SINCE = SINCE_AT < 0 ? null
   : (ARGV[SINCE_AT + 1] && !ARGV[SINCE_AT + 1].startsWith("--") ? ARGV[SINCE_AT + 1] : "ORIG_HEAD");
 const short = (x) => String(x || "").slice(0, 8);
 
+/* ---- 0a · M0-146: THE ONE SCRATCH PATH — its name is `tools/scratchpath.mjs`'s, and is not spelled again here ---
+   A worker's own untracked files (a control pen, a gate log, a baseline capture) live inside its worktree, and under
+   `.scratch/` they are not the TREE's: §2e's universe does not enrol them, and §0/§4's tree state does not count them
+   dirty. That module states the two incidents this closes (REC-185's `.rec185/` moving an assertion count, D-487's
+   `bio-plane/.d487-gate.log` refusing a GREEN run's record), why the root, why ONE name and never a glob over
+   dot-directories, and why only UNTRACKED paths are skipped. `tools/gatetrace.mjs` reads the same constant. */
+const unquote = (p) => (p.startsWith('"') && p.endsWith('"') ? p.slice(1, -1) : p);
+
 /* ---- 0 · the tree this run measures (D-293) ---------------------------- */
-const statusNow = () => tryGit(["status", "--porcelain", "--untracked-files=normal"]);
+/* `?? <path>` under SCRATCH is dropped: an untracked scratch entry is not a change to the tree, so it neither
+   makes the tree dirty at the start nor counts as a change made while the gate ran (§4). */
+const statusNow = () => {
+  const out = tryGit(["status", "--porcelain", "--untracked-files=normal"]);
+  if (out === null) return null;
+  return out.split("\n").filter(Boolean)
+    .filter((l) => !(l.startsWith("?? ") && inScratch(unquote(l.slice(3))))).join("\n");
+};
 const treeNow = () => tryGit(["rev-parse", "--verify", "--quiet", "HEAD^{tree}"]);
 const START = { head: tryGit(["rev-parse", "--verify", "--quiet", "HEAD"]), tree: treeNow(), status: statusNow() };
 const CLEAN_AT_START = START.status === "" && !!START.tree;
@@ -173,7 +189,7 @@ const listDiff = (args) => {
 };
 const untrackedNow = () => {
   const out = tryGit(["ls-files", "--others", "--exclude-standard"]);
-  return out === null ? null : out.split("\n").filter(Boolean);
+  return out === null ? null : out.split("\n").filter(Boolean).filter((p) => !inScratch(p));   /* §0a */
 };
 const base = tryGit(["merge-base", "HEAD", "origin/main"]);
 let changed = null;
@@ -555,14 +571,16 @@ function targetedSelection(paths) {
        are assembled at run time;
      - a plane or fleet unit takes the whole FULL-class runtime set (§3a): the plane's roots and shipped build, the
        code it imports from outside `bio-plane/`, every fleet member, and `bio-plane/`'s own package/config files.
-   The universe is every TRACKED file present on disk plus every untracked, unignored one. What a unit reads that
+   The universe is every TRACKED file present on disk plus every untracked, unignored one — EXCEPT what is untracked
+   under the scratch path (§0a), which is a worker's own and not the tree's. What a unit reads that
    this set misses is found at run time by the trace (condition 2) and FAILS the unit by name. */
 const I_MEMO = new Map();
 let UNIVERSE = null;
 function universe() {
   if (UNIVERSE) return UNIVERSE;
   const tracked = (tryGit(["ls-files", "-z"]) ?? "").split("\0").filter(Boolean);
-  const untracked = (tryGit(["ls-files", "-z", "--others", "--exclude-standard"]) ?? "").split("\0").filter(Boolean);
+  const untracked = (tryGit(["ls-files", "-z", "--others", "--exclude-standard"]) ?? "").split("\0")
+    .filter(Boolean).filter((p) => !inScratch(p));                                              /* §0a */
   const paths = [...new Set([...tracked, ...untracked])].filter((p) => isFile(join(REPO, p))).sort();
   const byBase = new Map(), byStem = new Map(), under = new Map(), inDir = new Map();
   const push = (m, k, v) => { if (!m.has(k)) m.set(k, []); m.get(k).push(v); };

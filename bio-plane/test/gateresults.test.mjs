@@ -145,7 +145,9 @@ const commitAll = (root, msg) => { git(["add", "-A"], root); return git([...ID, 
 
 function origin(name, extra = {}) {
   const seed = join(SANDBOX, `${name}-seed`);
-  for (const f of ["gates.mjs", "pushguard.mjs", "gateresults.mjs", "gatetrace.mjs"]) put(seed, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
+  /* M0-146: `scratchpath.mjs` too — `gates.mjs` imports the scratch path's ONE constant from it, and a fixture
+     built from a HAND-KEPT LIST of tools has a gate that cannot start the moment `gates.mjs` gains an import. */
+  for (const f of ["gates.mjs", "pushguard.mjs", "gateresults.mjs", "gatetrace.mjs", "scratchpath.mjs"]) put(seed, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
   for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"]) put(seed, `bio-plane/scripts/${f}`, readFileSync(join(REPO, "bio-plane/scripts", f)));
   for (const [rel, body] of Object.entries({ ...FILES, ...extra })) put(seed, rel, body);
   git(["init", "-q", "-b", "main"], seed);
@@ -208,9 +210,9 @@ function gateResultsCheckFor(root, tip) {
 section("the fixture");
 const O = origin("o");
 const A = clone(O, "machine-a");
-t("the fixture carries the REAL gates, results, trace and guard tools",
-  ["gates.mjs", "gateresults.mjs", "gatetrace.mjs", "pushguard.mjs"].map((f) => readFileSync(join(A, "tools", f), "utf8") === readFileSync(join(REPO, "tools", f), "utf8")),
-  [true, true, true, true]);
+t("the fixture carries the REAL gates, results, trace, guard and scratch-path tools",
+  ["gates.mjs", "gateresults.mjs", "gatetrace.mjs", "pushguard.mjs", "scratchpath.mjs"].map((f) => readFileSync(join(A, "tools", f), "utf8") === readFileSync(join(REPO, "tools", f), "utf8")),
+  [true, true, true, true, true]);
 t("origin holds NO gate-results branch before the first gate", out1(["ls-remote", "--heads", O, "gate-results"], A), "");
 
 /* ================================================================== */

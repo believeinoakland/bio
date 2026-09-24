@@ -226,7 +226,9 @@ const ident = (root) => {
 const stub = () => "process.exit(0);\n";
 function fixture(name, extra = {}) {
   const seed = join(SANDBOX, `${name}-seed`);
-  for (const f of ["gates.mjs", "pushguard.mjs", "train.mjs"]) put(seed, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
+  /* M0-146: `scratchpath.mjs` too — `gates.mjs` imports the scratch path's ONE constant from it, and a fixture
+     built from a HAND-KEPT LIST of tools has a gate that cannot start the moment `gates.mjs` gains an import. */
+  for (const f of ["gates.mjs", "pushguard.mjs", "train.mjs", "scratchpath.mjs"]) put(seed, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
   for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"])
     put(seed, `bio-plane/scripts/${f}`, readFileSync(join(REPO, "bio-plane/scripts", f)));
   const files = {

@@ -24,6 +24,7 @@ import fs from "node:fs";
 import { resolve, sep, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as mod from "node:module";
+import { inScratch } from "./scratchpath.mjs";  /* M0-146: the one scratch path, named once, there */
 
 const DIR = process.env.BIO_GATE_TRACE_DIR;
 const REPO = process.env.BIO_GATE_TRACE_REPO;
@@ -48,7 +49,11 @@ if (DIR && REPO && unit) {
       const abs = resolve(s);
       if (!abs.startsWith(root)) return null;
       const r = abs.slice(root.length).split(sep).join("/");
-      if (!r || r.startsWith(".git/") || r === ".git" || r.includes("node_modules/")) return null;
+      /* M0-146: `.scratch/` is a worker's own untracked scratch, not a file of the tree — `tools/gates.mjs` §2e does
+         not enrol it in the universe, so a unit that WALKS THE ROOT (`budget-sweep`, `bounds`, `case-opened`) would
+         otherwise read one and be FAILED BY NAME for reading outside its key. The three readings skip the one path
+         together or the worker is punished by whichever still sees it. */
+      if (!r || r.startsWith(".git/") || r === ".git" || r.includes("node_modules/") || inScratch(r)) return null;
       return r;
     } catch { return null; }
   };

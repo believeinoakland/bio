@@ -85,8 +85,16 @@ incident's own shape inverted:
   so `stash@{0}` means *what any of the sixty pushed last*, and `push -u` carries untracked
   files. That is how one worker's untracked suite was materialised into another's tree and
   **counted into its baseline**. Need a clean tree? `git worktree add` a scratch checkout.
-- **The shared scratchpad is NOT isolated between sessions** — two workers reported it
-  independently. Keep every harness and scratch file **inside your own worktree**.
+- **The shared scratchpad is NOT isolated between sessions** (two workers reported it), so every
+  harness, scratch file and run log goes **inside your own worktree, under `.scratch/`** — the ONE
+  ignored scratch path (M0-146; `tools/scratchpath.mjs` names it, and says why it is ONE path and
+  never a glob). The gate's universe (§2e), its tree state (§0/§4) and its read trace all skip what
+  is untracked there, so **a worktree with files in it gates IDENTICALLY to one without — and
+  ANYWHERE ELSE IT PUNISHES YOU, which cost two workers a full round in one night (2026-09-24):**
+  REC-185's `.rec185/` entered the universe as an untracked, unignored path and moved the battery's
+  assertion total 19513 -> 19512 with no source change; D-487's `bio-plane/.d487-gate.log` made the
+  tree dirty, so a fully GREEN run refused to RECORD its verdict and cost a 14-minute re-run. A
+  dot-directory that is NOT `.scratch/` is still the tree's, on purpose.
 - **PUSH YOUR OWN BRANCH. Do not merge, and never push to `main`.** CONDUCT integrates; you make
   your work SURVIVE. CORRECTED 2026-09-16 (D-288, ruled by BOB #12) — this line read *do not push*
   for five weeks and that is the instruction that strands the work: `CLAUDE.md`'s rule is that a
@@ -286,29 +294,20 @@ than a complete one reported loosely, and a narrowed unknown is a legitimate res
 
 ## A LOG FILE UNDER `/tmp` WITH A GENERIC NAME IS NOT YOURS, AND ITS `provenance:` LINE IS THE ONLY THING THAT SAYS SO.
 
-**Measured 2026-09-15 by the REC-98 worker, and it is recorded here because it cost real time
-and would have cost a false bug report.** A battery redirected to `/tmp/final-battery.log` came
-back **198/202 with four suites FAILED — all four of which pass alone at exit 0.**
+**Measured 2026-09-15 by the REC-98 worker.** A battery redirected to `/tmp/final-battery.log` came
+back **198/202 with four suites FAILED — all four of which pass alone at exit 0. It was another
+session's run:** `/tmp` is shared across every worktree and session, a generic name collides, the
+second writer wins, and its `provenance:` line named a DIFFERENT HEAD and a suite that has never
+existed in that worktree. **It looked exactly like damage the worker had done** — all four are
+repository readers, and a worker that has just edited prose has every reason to believe it broke
+them — so the obvious next move, bisecting your own change, is wasted work on a subject never yours.
 
-**It was another session's run.** `/tmp` is shared across every worktree and every session on
-this machine, a generic filename collides, and the second writer wins. The log that came back
-was a real battery, honestly reported, of a tree that was not this worker's: its `provenance:`
-line named a DIFFERENT HEAD and listed a suite that has never existed in that worktree.
-
-**What makes this dangerous rather than merely annoying is that it looked exactly like damage
-the worker had done.** All four named suites are repository readers, and a worker that has just
-edited repository prose has every reason to believe it broke them. The obvious next move — start
-bisecting your own change — is wasted work against a subject that was never yours.
-
-**The practice, and it is two lines.** Write run logs into YOUR OWN WORKTREE or into a path
-carrying your worktree's name, never a bare `/tmp/<generic>.log`. And **before you believe any
-figure you did not watch print, read the log's `provenance:` line and check the HEAD against
-your own** — the line exists for exactly this, and it is the only discriminator, because the
-contents of a foreign battery are indistinguishable from the contents of yours.
-
-**The general form, which is this project's oldest shape wearing new clothes:** a shared,
-unqualified name is an identity nobody owns, so two different facts arrive under it and nothing
-fails loudly. Ask what the figure is a figure OF before you ask what it means.
+**The practice, and it is two lines.** Write run logs into `.scratch/` in your own worktree (above),
+never a bare `/tmp/<generic>.log`. And **before you believe any figure you did not watch print, read
+the log's `provenance:` line and check the HEAD against your own** — it is the only discriminator,
+because the contents of a foreign battery are indistinguishable from the contents of yours. **The
+general form:** a shared, unqualified name is an identity nobody owns, so two different facts arrive
+under it and nothing fails loudly. Ask what a figure is a figure OF before you ask what it means.
 
 
 ## KILL BY PID OR BY THE PROCESS GROUP YOU STARTED. NEVER BY A MACHINE-WIDE PATTERN ON A SHARED MACHINE.
