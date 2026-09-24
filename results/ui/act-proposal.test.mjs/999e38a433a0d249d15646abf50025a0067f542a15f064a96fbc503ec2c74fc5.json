@@ -1,0 +1,16 @@
+{
+ "unit": "ui:act-proposal.test.mjs",
+ "inputHash": "999e38a433a0d249d15646abf50025a0067f542a15f064a96fbc503ec2c74fc5",
+ "verdict": "PASS",
+ "run": "2c061e446c537040b573ef471930a1897d2b02a6.1790289958707.27086.json",
+ "tree": "2c061e446c537040b573ef471930a1897d2b02a6",
+ "head": "5cd28164aeaf546758fff1690695fe6dcd2504a2",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 28,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "44573668-35a3-5251-8c2e-88bf54a951fa",
+ "at": "2026-09-24T22:45:58.722Z"
+}
