@@ -43,6 +43,29 @@
  * with classifyUri forced to always return "deferred", the mailto assertion
  * FAILS (refused expected, deferred got).
  */
+/* NEGATIVE CONTROL (D-502, 2026-09-24, TWO ARMS, each armed ALONE, each restored from a uniquely-named per-arm
+   pristine copy of bio-plane/src/pdfstructure.mjs verified by sha256 AND `cmp` — 100,379 B, sha256
+   59016ab93d9685a68a99046c3f79557f7ad291feb02e08f5406179a5eeb7e47f. BASELINE, nothing armed: 142 pass, 0 fail.
+   ARM 1 — THE ROW'S DECLARED CONTROL, IGNORE THE WIDTHS: `fontWidths` returns `{ widths: null }` for every font
+   (1 site), so no pen is ever tracked. DECLARED must fail: every arm that asserts a SPLIT, and the real-agenda glue
+   arms. DECLARED must pass: every continuation arm, the no-widths arm, and all of D-481's. RUN: exactly 13 of 142
+   failed and they are that list — the 175 pt jump, the 0.30 em forward and backward jumps, the second text object
+   200 pt away, all five `...and 1 pt further is a word gap` companions, the Tw companion, AND THE GLUE ARM BY NAME:
+   "`OaklandPrinted` — the token M-133 named — does not occur", "...and the two runs it was made of are both there,
+   separated", and "the lower->upper glue count fell 43 -> 11". Nothing else moved, so the split comes from a width
+   read out of the file. ONE FINDING ABOUT THE ARMS THEMSELVES, recorded rather than smoothed: on the first run
+   (before the companions existed) the /MissingWidth, /FontMatrix, /DW and Tc arms PASSED under this control — each
+   asserts a CONTINUATION, and a reader with no widths continues too. An arm that passes when the subject is removed
+   is not evidence for it; the five `1 pt further` companions were written for that and are what fails here.
+   ARM 2 — THE LIAR, THE THRESHOLD AT ZERO: `WORD_GAP_EM = 0` (1 site) — the reading that splits on any jump at all,
+   whose token count rises everywhere while words fragment. DECLARED must fail: every continuation arm. DECLARED must
+   pass: every split arm, the per-glyph arm and the real-agenda arms. RUN: exactly 8 of 142 failed, all continuations,
+   and every split arm held — which IS the point: this suite refuses the liar in both directions. A SECOND FINDING:
+   the per-glyph arm and the real-agenda arms PASS under ARM 2, because their continuation gaps are EXACTLY zero and
+   `> 0` does not fire on them; only real float noise does. The suite could not see that direction at all until the
+   `0.01 em` arm was added for it, and the corpus figure behind it (threshold 0 reads the seven documents as 17,292
+   tokens, 4,578 of them one character long, against 14,039 and 638) is in M-141, not here.
+   Restored after each arm, verified by sha256 AND cmp -> 142 pass, 0 fail. */
 /* NEGATIVE CONTROL (D-481, 2026-09-24, TWO ARMS, each armed ALONE, each restored by sha256 AND cmp against a per-arm
    pristine copy of bio-plane/src/pdfstructure.mjs — 83,282 B, sha256 be8ee479fb248212dff2c7a4dfc24ac248334b6e81dacd98a42a100826f972d4):
    ARM 1 — REVERT THE SUBJECT: make Td/TD and Tm break unconditionally again (2 sites). DECLARED must fail: the two
@@ -66,6 +89,7 @@ import "./stdio.mjs";                 /* D-282: a suite's own exit must not disc
 import { extractPdfStructure, PDF_LINK_TYPES } from "../src/pdfstructure.mjs";
 import { LINK_TYPES, linkWrapper } from "../src/subresources.mjs";
 import { deflateSync } from "node:zlib";
+import { readFileSync } from "node:fs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -705,6 +729,225 @@ console.log("\n--- D-481 OVER-STRICTNESS: conventionally written text is unchang
     fontBody: SIMPLE_FONT, cmapBody: GLYPHS,
   });
   t("the TJ word-gap rule is untouched", (await extractPdfStructure(tj)).text.document, "H e");
+}
+
+
+/* ------------------------------------------------------------------ *
+ * D-502 — THE PEN HAS A POSITION, SO A HORIZONTAL JUMP CAN BE JUDGED
+ * ------------------------------------------------------------------ *
+ * D-481 made a line break on a BASELINE move and stated what it cost: two runs
+ * on ONE baseline separated only by a horizontal jump were CONCATENATED, with
+ * nothing here able to tell that jump from a continuation, because no font's
+ * advance widths were read. Measured on the Legistar agenda as `OaklandPrinted`
+ * (M-133; 0.32% of that document's tokens).
+ *
+ * THE ARMS BELOW ARE THREE HALVES OF ONE CLAIM, and no one of them is it:
+ *   (1) a real jump SPLITS — the row's subject;
+ *   (2) a run that CONTINUES at the width-derived pen does NOT split — D-481's
+ *       own per-glyph class, which a fix that split on any positioning operator
+ *       would destroy while making (1) green;
+ *   (3) the same fixture with a font that declares NO widths reads EXACTLY as
+ *       D-481 left it — which is what says the split came from a width read out
+ *       of the file and not from a threshold applied to a guess.
+ * Every pen position below is derivable by hand: each glyph is 500/1000 em and
+ * every fixture sets 10 pt, so one glyph is 5 pt and nothing here is a figure
+ * taken on trust.
+ */
+
+/* Codes 01..08 are GLYPHS above (H e l o SPACE w r d). This font DECLARES their
+   widths; SIMPLE_FONT, the same font without /Widths, is the control. */
+const WIDTH_FONT = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /FirstChar 1 /LastChar 8 " +
+                   "/Widths [500 500 500 500 500 500 500 500] /ToUnicode 6 0 R >>";
+const HELLO = "<0102030304>";   // H e l l o   — 5 glyphs, 25 pt at 10 pt
+const WORLD = "<0604070308>";   // w o r l d
+
+const textOf = async (content, fontBody = WIDTH_FONT, cmapBody = GLYPHS) =>
+  (await extractPdfStructure(textPdf({ content, fontBody, cmapBody }))).text.document;
+
+console.log("\n--- D-502: two runs on ONE baseline, separated by a horizontal jump, are SPLIT ---");
+{
+  /* The pen ends at 72 + 5x5 = 97; the jump puts the next run at 272. That is
+     175 pt at a 10 pt em — 17.5 ems — and no font has a 17-em space. */
+  t("a 175 pt jump on a live baseline separates the two runs",
+    await textOf("BT /F1 10 Tf 72 700 Td " + HELLO + " Tj 200 0 Td " + WORLD + " Tj ET"),
+    "Hello world");
+  t("...and it is still ONE line: the baseline never moved",
+    (await textOf("BT /F1 10 Tf 72 700 Td " + HELLO + " Tj 200 0 Td " + WORLD + " Tj ET")).split("\n").length, 1);
+  /* THE HALF THAT MAKES IT A FINDING ABOUT WIDTHS. Same content, same jump, a
+     font that declares no /Widths: the pen is UNKNOWN, nothing is judged, and
+     the reading is D-481's to the byte. A reader that split here would be
+     splitting on a threshold over a width nobody read. */
+  t("the SAME jump with a font that declares NO widths reads exactly as D-481 left it",
+    await textOf("BT /F1 10 Tf 72 700 Td " + HELLO + " Tj 200 0 Td " + WORLD + " Tj ET", SIMPLE_FONT),
+    "Helloworld");
+}
+
+console.log("\n--- D-502 THE LIAR ARM: a run that CONTINUES at the pen is NOT split ---");
+{
+  /* D-481's own subject, now with widths: ONE Td per glyph, each of exactly the
+     glyph's 5 pt advance — Oakland's Budget-Basics shape. A reading that split
+     on any positioning operator would score well on the arm above and turn this
+     document back into a column of characters. The document's OWN space (code
+     05) is the only separator, and the string is 11 characters. */
+  const perGlyph = "<01> Tj 5 0 Td <02> Tj 5 0 Td <03> Tj 5 0 Td <03> Tj 5 0 Td <04> Tj 5 0 Td " +
+                   "<05> Tj 5 0 Td <06> Tj 5 0 Td <04> Tj 5 0 Td <07> Tj 5 0 Td <03> Tj 5 0 Td <08> Tj";
+  const got = await textOf("BT /F1 10 Tf 72 700 Td " + perGlyph + " ET");
+  t("eleven glyphs each placed AT the pen read as one line and two words", got, "Hello world");
+  t("the fixture is non-empty: ten non-space glyphs really did decode", got.replace(/\s/g, "").length, 10);
+}
+
+console.log("\n--- D-502: the threshold's own valley, measured at 0.25 em (M-141) ---");
+{
+  /* The pen is at 77 after one 5 pt glyph. 2 pt is 0.20 em and 3 pt is 0.30 em,
+     which straddle the constant. The corpus measurement (M-141) puts 9 of 5,960
+     jumps in (0.25, 0.45] and NONE in (0.375, 0.450], so the constant sits in a
+     valley rather than at a preference — and the sweep says the reading moves
+     by two tokens in 14,039 across a factor of thirty in this value, so these
+     arms pin the RULE at its stated constant, never the constant as a finding. */
+  t("a 0.20 em jump is a continuation", await textOf("BT /F1 10 Tf 72 700 Td <01> Tj 7 0 Td <02> Tj ET"), "He");
+  /* AND THE FLOOR THE SWEEP FOUND, which is the only part of this constant that
+     IS load-bearing: a tenth of a point — 0.01 em — is not a word gap. Measured
+     on the corpus, a threshold of 0 reads it and every float-noise jump as one,
+     and the same seven documents come back as 17,292 tokens with 4,578 of them
+     a single character long. The synthetic arms above are written in exact
+     arithmetic and cannot feel that; this one states the claim at a scale a
+     fixture can hold exactly. */
+  t("a 0.01 em jump is a continuation: float-scale noise is not a word gap",
+    await textOf("BT /F1 10 Tf 72 700 Td <01> Tj 5.1 0 Td <02> Tj ET"), "He");
+  t("a 0.30 em jump is a word gap", await textOf("BT /F1 10 Tf 72 700 Td <01> Tj 8 0 Td <02> Tj ET"), "H e");
+  /* BACKWARDS is the same question: did the next run start where this one
+     ended? Measured: of 185 backward jumps, 181 are ≤ 0.21 em and four ≥ 2.68. */
+  t("a 0.20 em BACKWARD jump is a continuation (kerning, overprint)",
+    await textOf("BT /F1 10 Tf 72 700 Td " + HELLO + " Tj 23 0 Td " + WORLD + " Tj ET"), "Helloworld");
+  t("a 0.30 em BACKWARD jump is a new run",
+    await textOf("BT /F1 10 Tf 72 700 Td " + HELLO + " Tj 22 0 Td " + WORLD + " Tj ET"), "Hello world");
+}
+
+console.log("\n--- D-502: the pen survives BT, ET, Q and cm — the Legistar shape ---");
+{
+  /* `legistar-73450` writes ONE `BT … ET` PER RUN, each under its own `cm`:
+     `… cm BT 46 0 0 46 1053.309 94 Tm /TT4 1 Tf […] TJ ET Q q … cm BT 46 0 0 46
+     1404.691 94 Tm …`. `BT` RESETS the text matrix, so a pen read off that
+     matrix at the second `Tm` reads the text-space ORIGIN — measured on that
+     document as gaps of ~1,200 ems before the pen was held in DEVICE space. */
+  const twoBlocks = (tmX) =>
+    "q 1 0 0 1 72 700 cm BT /F1 10 Tf 1 0 0 1 0 0 Tm " + HELLO + " Tj ET Q " +
+    "q 1 0 0 1 72 700 cm BT /F1 10 Tf 1 0 0 1 " + tmX + " 0 Tm " + WORLD + " Tj ET Q";
+  t("a second text object starting AT the pen continues the run", await textOf(twoBlocks("25")), "Helloworld");
+  t("a second text object 200 pt away is a new run", await textOf(twoBlocks("200")), "Hello world");
+}
+
+console.log("\n--- D-502: where each width comes from, one arm per source ---");
+{
+  /* /FirstChar OFFSET AND /MissingWidth. Code 01 is BELOW /FirstChar 2, so its
+     advance is the descriptor's /MissingWidth 1000 — 10 pt. The pen lands at
+     82 and the jump to 84 is 0.20 em, a continuation. Read as /Widths[0] the
+     pen would be at 77 and the same jump would be 0.70 em — a split. So this
+     arm's PASS is the evidence that both were read. */
+  const missing = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /FirstChar 2 /LastChar 3 " +
+                  "/Widths [500 500] /FontDescriptor << /Type /FontDescriptor /MissingWidth 1000 >> " +
+                  "/ToUnicode 6 0 R >>";
+  t("a code below /FirstChar advances by the descriptor's /MissingWidth",
+    await textOf("BT /F1 10 Tf 72 700 Td <01> Tj 12 0 Td <02> Tj ET", missing), "He");
+  /* THE PAIR IS THE EVIDENCE, NOT EITHER ARM. The arm above asserts a
+     CONTINUATION, and a reader with no widths at all continues too — measured:
+     it PASSES under the control that ignores every width. Its companion, one
+     point further, pins the pen from the other side, and 0.25 em at 10 pt is
+     2.5 pt, so the two together place the pen within 2.5 pt of 82. */
+  t("...and 1 pt further is a word gap, so the pen really is at /MissingWidth's 82",
+    await textOf("BT /F1 10 Tf 72 700 Td <01> Tj 13 0 Td <02> Tj ET", missing), "H e");
+
+  /* A TYPE3 FONT'S GLYPH SPACE IS ITS OWN. /FontMatrix [0.01 …] makes a width
+     of 50 half a text-space unit — the same 5 pt — so the jump to 79 is 0.20 em.
+     Read at the 1/1000 every other font uses it would be 0.05 units, the pen
+     would be at 72.5, and the jump would be 0.65 em — a split. */
+  const type3 = "<< /Type /Font /Subtype /Type3 /FontMatrix [0.01 0 0 0.01 0 0] /FontBBox [0 0 100 100] " +
+                "/CharProcs << >> /Encoding << >> /FirstChar 1 /LastChar 2 /Widths [50 50] /ToUnicode 6 0 R >>";
+  t("a Type3 font's widths are scaled by its own /FontMatrix, not by 1/1000",
+    await textOf("BT /F1 10 Tf 72 700 Td <01> Tj 7 0 Td <02> Tj ET", type3), "He");
+  t("...and 1 pt further is a word gap, so the pen really is at the /FontMatrix's 77",
+    await textOf("BT /F1 10 Tf 72 700 Td <01> Tj 8 0 Td <02> Tj ET", type3), "H e");
+
+  /* A COMPOSITE FONT: /W in both of its shapes, and /DW for a CID outside them.
+     CIDs 1 and 2 are 500 from `1 [500 500]`; CIDs 3..4 are 500 from the range
+     form; CID 5 is in neither, so it takes /DW 1000. */
+  const cidFont = "<< /Type /Font /Subtype /Type0 /BaseFont /Test /Encoding /Identity-H /ToUnicode 6 0 R " +
+    "/DescendantFonts [<< /Type /Font /Subtype /CIDFontType2 /BaseFont /Test " +
+    "/CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> " +
+    "/DW 1000 /W [1 [500 500] 3 4 500] >>] >>";
+  const cidMap = cmap2("3 beginbfchar\n<0001> <0048>\n<0002> <0065>\n<0005> <006F>\nendbfchar");
+  t("a /W entry in the `c [w …]` form advances the pen",
+    await textOf("BT /F1 10 Tf 72 700 Td <0001> Tj 7 0 Td <0002> Tj ET", cidFont, cidMap), "He");
+  t("...and 1 pt further is a word gap, so the arm above is not passing on a stuck pen",
+    await textOf("BT /F1 10 Tf 72 700 Td <0001> Tj 8 0 Td <0002> Tj ET", cidFont, cidMap), "H e");
+  t("a CID outside /W advances by /DW",
+    await textOf("BT /F1 10 Tf 72 700 Td <0005> Tj 12 0 Td <0002> Tj ET", cidFont, cidMap), "oe");
+  t("...and 1 pt further is a word gap, so the pen really is at /DW's 82",
+    await textOf("BT /F1 10 Tf 72 700 Td <0005> Tj 13 0 Td <0002> Tj ET", cidFont, cidMap), "o e");
+  /* A composite font whose /Encoding is NOT Identity has no code->CID mapping
+     here, so it has NO widths and nothing is judged — the honest branch, and
+     the reading is D-481's. */
+  const cidOther = cidFont.replace("/Encoding /Identity-H", "/Encoding /UniJIS-UCS2-H");
+  t("a composite font with a non-Identity /Encoding yields no widths, and no split",
+    await textOf("BT /F1 10 Tf 72 700 Td <0001> Tj 200 0 Td <0002> Tj ET", cidOther, cidMap), "He");
+}
+
+console.log("\n--- D-502: the text-state parameters that move the pen ---");
+{
+  /* Tc adds to EVERY glyph's advance. With 2 pt of it the pen is at 79 and the
+     jump to 81 is 0.20 em; without it the pen would be at 77 and the same jump
+     0.40 em — a split. */
+  t("Tc character spacing moves the pen",
+    await textOf("BT /F1 10 Tf 2 Tc 72 700 Td <01> Tj 9 0 Td <02> Tj ET"), "He");
+  t("...and 1 pt further is a word gap, so the pen really is at Tc's 79",
+    await textOf("BT /F1 10 Tf 2 Tc 72 700 Td <01> Tj 10 0 Td <02> Tj ET"), "H e");
+  /* Tw adds to the single-byte code 32 alone. This font starts at /FirstChar 32
+     so code 32 is a real glyph in it: with 5 pt of word spacing the pen is at
+     87 and the next run starts exactly there. */
+  const spaceFont = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /FirstChar 32 /LastChar 34 " +
+                    "/Widths [500 500 500] /ToUnicode 6 0 R >>";
+  const spaceMap = cmap1("3 beginbfchar\n<20> <0020>\n<21> <0048>\n<22> <0065>\nendbfchar");
+  t("Tw word spacing moves the pen over code 32",
+    await textOf("BT /F1 10 Tf 5 Tw 72 700 Td <2021> Tj 15 0 Td <22> Tj ET", spaceFont, spaceMap), " He");
+  t("...and without the Tw the same jump is a word gap, so the arm above is real",
+    await textOf("BT /F1 10 Tf 72 700 Td <2021> Tj 15 0 Td <22> Tj ET", spaceFont, spaceMap), " H e");
+}
+
+console.log("\n--- D-502 OVER-STRICTNESS: D-481's own arms, re-run with widths declared ---");
+{
+  /* Every shape D-481 pinned, with a font that DOES declare its widths, so the
+     gap rule is live on all of them. A break policy that fired on a positioning
+     operator rather than on a distance would show here. */
+  const twice = (mover) => "BT /F1 10 Tf 14 TL 72 700 Td " + HELLO + " Tj " + mover + " " + HELLO + " Tj ET";
+  t("T* still breaks the line", await textOf(twice("T*")), "Hello\nHello");
+  t("a Td with ty != 0 still breaks the line", await textOf(twice("0 -14 Td")), "Hello\nHello");
+  t("a Tm at a DIFFERENT baseline still breaks the line", await textOf(twice("1 0 0 1 72 686 Tm")), "Hello\nHello");
+  t("three Td-separated lines stay three lines",
+    await textOf("BT /F1 10 Tf 72 700 Td <010203> Tj 0 -14 Td <040506> Tj 0 -14 Td <070801> Tj ET"),
+    "Hel\no w\nrdH");
+  t("the TJ word-gap rule is untouched",
+    await textOf("BT /F1 10 Tf 72 700 Td [(\\001)-250(\\002)] TJ ET"), "H e");
+}
+
+console.log("\n--- D-502 ON THE REAL AGENDA: the token M-133 named is gone, and nothing else moved ---");
+{
+  /* The committed Legistar agenda writes its footer
+     `(City of Oakland) Tj 391.1 0 Td (Printed on 7/15/2026   5:26:26PM) Tj` —
+     one baseline, a 391.1 pt jump, and the glue M-133 counted. Measured on this
+     file, D-481 -> D-502: lower->upper glue tokens 43 -> 11, words 8,489 ->
+     8,538, LINES 1,495 -> 1,495 and non-whitespace characters 51,060 -> 51,060.
+     Nothing was decoded that was not decoded before; runs were separated. */
+  const agenda = await extractPdfStructure(
+    new Uint8Array(readFileSync(new URL("./fixtures/legistar-agenda-1425405.pdf", import.meta.url))));
+  const doc = agenda.text.document;
+  t("the fixture really is the agenda: 33 pages and 51,060 non-whitespace characters",
+    [agenda.pages, doc.replace(/\s/g, "").length], [33, 51060]);
+  t("`OaklandPrinted` — the token M-133 named — does not occur", /OaklandPrinted/.test(doc), false);
+  t("...and the two runs it was made of are both there, separated",
+    /City of Oakland Printed on /.test(doc), true);
+  t("no line was gained or lost: 1,495, exactly as D-481 left it", doc.split("\n").length, 1495);
+  t("the lower->upper glue count fell 43 -> 11, and the 11 are the document's own words",
+    (doc.match(/[^\s]+/g) || []).filter((w) => /[a-z][A-Z]/.test(w)).length, 11);
 }
 
 console.log(`\npdfstructure: ${pass} passed, ${fail} failed`);

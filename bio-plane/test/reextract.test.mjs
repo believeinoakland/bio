@@ -126,9 +126,15 @@ const OCR_REF = "legislation:26-8801";
 /* ---- the stub OCR member: CPDF-12's declared contract and nothing more ------ */
 const region = (text, page, i) => ({ text, confidence: { value: 0.97, basis: "engine" },
   source: { kind: "pdf-page", ref: `p${page}`, page, rect: [72, 700 - i * 12, 540, 712 - i * 12] } });
+/* THE `.md` IS OFF THESE PROVENANCE LABELS ON PURPOSE (M0-165, 2026-09-24). `measured_by` is a FREE STRING
+   (index.mjs' chain contract) naming WHERE a fidelity grade was measured; it is not a path and nothing opens
+   it. But `tools/gates.mjs` reads a unit's code with the estate's one lexer, which KEEPS strings on purpose
+   (D-301: a path is a string), so its basename probe read `"MEASUREMENTS.md …"` here as a read of the ledger
+   and made this suite a MEASUREMENTS reader — selected, and run, for every measurement anyone appends.
+   Do not put it back: `bio-plane/test/statepaths.test.mjs` pins the property and names the file that breaks it. */
 const goodAnswer = (page = 0) => ({
   ok: true, engine: "tesseract", version: "5.3.4-fast", cap: "C",
-  measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)", confidence_floor: 0.6,
+  measured_by: "MEASUREMENTS 2026-08-03 (CPDF-9)", confidence_floor: 0.6,
   pages: [{ page, regions: OCR_LINES.map((l, i) => region(l, page, i)) }],
 });
 let SCRIPT = "http-500";

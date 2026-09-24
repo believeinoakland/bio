@@ -83,7 +83,11 @@ import { readState, isSwitched, freshen } from "./coord.mjs";
 export const ROOT = join(new URL("..", import.meta.url).pathname);
 
 export const SOURCES = {
-  debt: "docs/development/DEBT.md",
+  /* `debt: "docs/development/DEBT.md"` WAS HERE. RETIRED with the construct (M0-140, 2026-09-24; WORK-PIPELINE §3).
+     It is NOT re-pointed at the backlog: a lane's plan work is answered by `node tools/coord.mjs read QUEUE.md` and
+     the blocked-row walk below, which already reads the whole pipeline. A second reader of the same rows, keyed on
+     disposition prose instead of a row's state, would be two producers of one quantity. What this source uniquely
+     carried — a lane named in a DEBT disposition — has no live rows left to carry. */
   decisions: "docs/development/DECISIONS.md",
   /* LED-6: the pipeline cache may hold no `blocked` row (WORK-PIPELINE §2, invariant P3), so once
      the migration lands EVERY blocked row lives in the backlog — read both, or this list empties.
@@ -137,6 +141,11 @@ export const OWNER_RE = (lane) => new RegExp(
    discharge rewritten, not a routing appended after it — the record is made explicit, never guessed (the
    `owed by this lane` rule below). A residue marker is untouched: a discharged row that still declares
    one stays in the residue population, attributed to nobody. */
+/* RE-POINTED, NOT RETIRED (M0-140, 2026-09-24). `DISCHARGE_RE` was written for a DEBT DISPOSITION cell and the DEBT
+   ledger is retired, but D-435's rule is not about DEBT — it is that a tool which can ATTRIBUTE but never DISCHARGE
+   owes a lane a row for ever (D-134 said *Nothing on this row falls to the BOB lane* and stayed on the list). The
+   surviving attribution source is a BLOCKED PLAN ROW's heading, which names the lane it waits on in exactly the same
+   prose, so the discharge is read there. Deleting it would have dropped a rule that still has a subject. */
 export const DISCHARGE_RE = (lane) => new RegExp(
   String.raw`(?i:\bnothing (?:on this row |here )?falls to (?:the )?)${lane}\b(?i: lane)?`);
 
@@ -199,16 +208,9 @@ export function isClosedDebtRow(disposition) {
   return CLOSURE_HEAD.test(head) && !PARTIAL_HEAD.test(head);
 }
 
-const rowsOf = (text, prefix) => {
-  const out = [];
-  for (const line of text.split("\n")) {
-    if (!line.startsWith(prefix)) continue;
-    const cells = line.split("|");
-    if (cells.length < 6) continue;
-    out.push({ id: cells[1].trim(), body: cells[4] || "", disposition: debtDisposition(line), line });
-  }
-  return out;
-};
+/* The 5-column DEBT table reader WAS HERE (`| D-` lines with 6+ cells, body in the 4th, disposition in the 5th).
+   Retired with the construct (M0-140): `owedFor` was its only caller. `ledger.mjs`' `debtRows` still parses the
+   ARCHIVE's rows for `find`, and it is the one reader of that grammar now. */
 
 export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
   const read = reader || ((p) => readState(repo, p));
@@ -216,23 +218,14 @@ export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
   const discharge = DISCHARGE_RE(lane);
   const items = [], unreadable = [];
 
-  const debt = read(SOURCES.debt);
-  if (debt === null) unreadable.push(SOURCES.debt);
-  else for (const r of rowsOf(debt, "| D-")) {
-    /* A CLOSED row owes nothing, however many owner words it carries. */
-    if (isClosedDebtRow(r.disposition)) continue;
-    /* DISPOSITION ONLY. The body quotes Bob in nearly every row; a mention is not an
-       assignment, and conflating them produced a 58-item list that was mostly noise.
-       D-435: and a lane the disposition DISCHARGES by name is not attributed, whatever owner
-       phrases the same cell carries — per lane, so every other lane it names still is. */
-    const owned = owner.test(r.disposition) && !discharge.test(r.disposition);
-    const residue = RESIDUE_RE.test(r.disposition);
-    if (owned || residue)
-      items.push({ source: "DEBT", id: r.id, attributed: owned,
-                   why: owned ? `names ${lane}` : "open residue on the row — NOT attributed to any lane",
-                   text: (residue ? r.disposition.match(new RegExp(RESIDUE_RE.source + "[^.]{0,180}", "i"))?.[0]
-                                  : r.disposition.trim().slice(0, 180)) || "" });
-  }
+  /* THE DEBT WALK WAS HERE — every open `| D-n |` row whose DISPOSITION named this lane as owner, plus every row
+     declaring open residue, reported with `source: "DEBT"`. RETIRED with the construct (M0-140, 2026-09-24). There
+     are no open DEBT rows: the last three closed and the file was archived whole. `OWNER_RE`, `DISCHARGE_RE` and
+     `RESIDUE_RE` stays — it is `isClosedDebtRow`'s own residue test, and the archive's rows are still judged by it when
+     `find` reads them. `OWNER_RE` and `DISCHARGE_RE` stay and are read by the blocked-row walk below. WHAT IS LOST,
+     stated rather than glossed: the RESIDUE POPULATION. It existed only on DEBT dispositions, so `owedFor` now
+     reports `residue: []` always, and a lane's list is attribution alone. Nothing replaces it, because a plan row
+     declaring an unfinished half is a plan row that is not `done`. */
 
   const dec = read(SOURCES.decisions);
   if (dec === null) unreadable.push(SOURCES.decisions);
@@ -263,8 +256,11 @@ export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
        offset is taken from the lister's own `id` and `state`, never re-parsed. */
     const head = r.body.split("\n")[0];
     const rest = head.slice(head.indexOf(r.state, head.indexOf(r.id) + r.id.length) + r.state.length);
-    if (owner.test(rest)) items.push({ source: r.ledger, id: r.id, attributed: true,
-                                       why: `blocked on ${lane}`, text: rest.trim().slice(0, 160) });
+    /* D-435, re-pointed here by M0-140: a lane the heading DISCHARGES by name is not attributed, whatever owner
+       phrases the same heading carries — per lane, so every other lane it names still is. */
+    if (owner.test(rest) && !discharge.test(rest))
+      items.push({ source: r.ledger, id: r.id, attributed: true,
+                   why: `blocked on ${lane}`, text: rest.trim().slice(0, 160) });
   }
   /* END M0-73 BLOCKED-ROWS */
 

@@ -85,7 +85,27 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    NO_CITATION to ACT_SHAPE_CHECKS, so the catalogue moved 433 -> 435 checks and the stamp moves
    with it, MINOR and additive on this constant's own rule (Publication §3 rule 17). The d470
    census suite caught it on the c20-batch17 train (A3). */
-export const CATALOG_VERSION = "1.23.0";
+/* 1.24.0 (D-507, 2026-09-24): the six STATEMENT_ACK_* refusals that reached a member untranslated
+   became catalogued rows C-82.2..C-82.7 in STATEMENT_ACK_CHECKS, so the catalogue moved 447 -> 453
+   checks and the stamp moves with it, MINOR and additive on this constant's own rule (Publication §3
+   rule 17). Nothing that passed is refused by the move: the six conditions already refused, at the
+   same six sites, under the same six `reason`s — what they gained is a row and a canned translation.
+   The d470 census suite named the figures before this line moved. */
+/* 1.24.0 (D-508, 2026-09-24): the doorbell's two rate refusals take catalogue rows — C-85.1 RATE_IP and
+   C-85.2 RATE_GLOBAL in the new `KNOCK_CHECKS` family — so the catalogue moved 447 -> 449 checks and the
+   stamp moves with it, MINOR and additive on this constant's own rule (Publication §3 rule 17). TWO
+   ARRIVALS, NO DEPARTURES. D-507 adds six rows to `STATEMENT_ACK_CHECKS` in parallel and moves this same
+   constant and the same census row; CONDUCT reconciles the number and RE-READS the census from the d470
+   suite's own print on the merged tree, because neither branch's figure is the union's. */
+/* 1.24.0 AT THE UNION (CONDUCT #20, c20-batch22): D-507 and D-508 each took 1.24.0 on its own branch for a DIFFERENT catalogue, and neither reached main. The union takes 1.24.0 ONCE for the catalogue that actually runs (447 + 6 + 2), census re-read from the d470 suite's own print on the merged tree; both branch rows are dropped. */
+/* 1.24.0 (REC-211, 2026-09-24): IC-273 added C-33.42 NO_DEFINITION_VERSION and C-33.43
+   DEFINITION_MOVED to ACT_SHAPE_CHECKS — op=proposedispose now binds the definition version the
+   member SAW — so the catalogue grew by two and the stamp moves with it. MINOR and additive on this
+   constant's own rule (Publication §3 rule 17): two checks arrive, none moves and none leaves. */
+/* 1.25.0 AT THE SECOND UNION (CONDUCT #20, c20-batch23): REC-211 took 1.24.0 on its own branch for 447 + 2, but main's
+   1.24.0 (c20-batch22) is already the D-507 + D-508 catalogue of 455 checks. REC-211's two rows are a DIFFERENT
+   catalogue, so the union moves the stamp once more, MINOR: 455 + 2 = 457, figures re-read from the d470 suite's print. */
+export const CATALOG_VERSION = "1.25.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

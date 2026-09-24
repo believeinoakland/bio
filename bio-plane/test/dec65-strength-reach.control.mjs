@@ -96,7 +96,7 @@
  * 1,869,260 bytes, sha256 514bb504…. M0-25's arm-liveness census found this
  * driver red; re-measured here whole before a byte was changed.
  *
- * THE SHAPE AS FOUND: 3 PROBLEMS, not the 2 `DEBT.md`'s D-330 row records.
+ * THE SHAPE AS FOUND: 3 PROBLEMS, not the 2 D-330's row records.
  *   (0) BASELINE ......... 27 pass, 0 fail   AS DECLARED — and it MATTERS that
  *       the baseline was green: it is what makes the three below attributable to
  *       their arms instead of to the tree.

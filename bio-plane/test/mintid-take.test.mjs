@@ -67,7 +67,9 @@ git(SANDBOX, "init", "-q", "--bare", ORIGIN);
 const SEED = join(SANDBOX, "seed");
 git(SANDBOX, "init", "-q", "-b", "main", SEED);
 write(SEED, "bio-plane/checks/bio-checks.mjs", "export const CHECKS = [\n  { check: 'C-5.1', what: 'a family on main' },\n];\n");
-write(SEED, "docs/development/DEBT.md", "| D-10 | a debt row on main |\n");
+/* M0-140: the `D-10` seed was a row of `docs/development/DEBT.md`, which left `D`'s corpus with the construct.
+   It moves to the DEBT ARCHIVE, which `docs/archive/` has always walked — the same shape, where the corpus reads. */
+write(SEED, "docs/archive/ledgers/DEBT-closed.md", "| D-10 | an archived debt row on main |\n");
 write(SEED, "docs/development/QUEUE.md", "### M0-3 · done\n");
 git(SEED, "add", "-A"); git(SEED, "commit", "-q", "-m", "main: the corpus");
 git(SEED, "push", "-q", ORIGIN, "main:refs/heads/main");

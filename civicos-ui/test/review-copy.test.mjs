@@ -46,6 +46,39 @@
  *   (H) THE WAIT'S OWN, run by hand: `const WAIT_MS = 8000;` -> `0` (anchor once; restored by cp, sha256 AND cmp,
  *       32,935 B) -> 21/1, the ONE failing line the first budget assertion, its `TIMEOUT (M0-107)` marker printed,
  *       and the suite ENDED there — nothing read off the page the expired wait never saw drawn.
+ *
+ * ============== UI-92 (2026-09-24): SECTION 6b, THE PROJECT'S DRAFTS LISTED ON THE WORKSPACE ==============
+ * §6A.4 and §3 rule 15 (a) (BOB #32), over REC-198's `op=casedrafts` (IC-243). The acceptance in its own words:
+ * every draft the plane lists appears, and each opens. The section drives the WORKSPACE (`openProjectWorkspace`),
+ * not the review copy, because that is where the list belongs — a member goes looking for a project's working
+ * material on the project — and it drives it against the same real plane the rest of this file does.
+ * HOW A LIAR WOULD MAKE IT GREEN, and what answers it: (a) render ONE row and call it the list — so the fixture
+ * authors two more drafts through the plane's own act and the comparison is SET EQUALITY in both directions with
+ * the corpus printed; (b) build the list here — so the page's own wire is read (`op=casedrafts` asked ONCE, naming
+ * the project) and the case-identity sentence rendered is asserted to be the plane's bytes; (c) draw rows that open
+ * nothing, or all open one draft — so every row's handler is RUN and each is asserted to reach the plane as the
+ * `read` the plane PUBLISHED on that row, drawing three DIFFERENT authored scopes.
+ * WHAT IT CANNOT SEE: a browser's own address bar (a member who kept a draft's address could always open it, and
+ * that is what this list exists to make unnecessary); anything about a project with more drafts than the plane's
+ * own ceiling, which is `REVIEW_LIST_MAX` at 500 and is not driven here — the `truncated` sentence is rendered
+ * from the plane's own figures and its arm is the plane's, in `bio-plane/test/reviewcopy.test.mjs` block 9.
+ *
+ * NEGATIVE CONTROL: RUN 2026-09-24 by the UI-92 worker, the whole file re-run per arm — 12/12 AS DECLARED against
+ * app.html cf4960019506b6e35d… (1,574,906 B), IDENTICAL after every arm by sha256 AND cmp. Baseline 58/0 GREEN
+ * (46/0 before this item, measured on `origin/main` @ 68fecb8d in a separate checkout; the twelve are 6b's).
+ *   (I) THE ROW'S OWN — the list stubbed EMPTY -> 49/6, at "EVERY DRAFT THE PLANE LISTS APPEARS"; "NO EXPORT" and
+ *       "MARKING" green.
+ *   (J) every row opens the FIRST draft -> 53/2, at "EACH OPENS" and "AND THEY ARE DIFFERENT DRAFTS"; the
+ *       appearance arm green. **THIS ARM IS WHY THE INSTRUMENT MOVED, and the first run is recorded rather than
+ *       smoothed: with "appears" and "opens" BOTH read off the row's `onclick`, breaking the open also broke the
+ *       appearance arm (4 fails, the spare violated), because one string was standing for two facts.** The page
+ *       now carries the draft's id as VISIBLE TEXT and a `data-project-drafts` count, the appearance arm reads
+ *       those, and the open arm reads the handler — two facts, two places.
+ *   (K) the list dropped from the invited member's SKELETON -> 57/1, at "THE SKELETON CARRIES THE LIST".
+ *   (L) OVER-STRICTNESS — the list's heading re-worded and its local renamed -> 58/0 GREEN. **Its first run was
+ *       RED (57/1) and that is a finding about the ARM THAT WAS WATCHING, not about this one: the reach arm keyed
+ *       on the heading's literal words, so correct work in a spelling nobody anticipated failed. The marker
+ *       attribute is what replaced it.**
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: shared, for its side effect. */
 import fs from "fs";
@@ -187,7 +220,7 @@ function page(hash, token, me) {
     } };
   ctx.globalThis = ctx; vm.createContext(ctx);
   vm.runInContext(APP + `;globalThis.__U = { PLANE, get RVC(){ return RVC; }, get RVS(){ return RVS; },
-    reviewCopyEntryHtml, rvcDraftNew, draftRouteFromHash };`, ctx);
+    reviewCopyEntryHtml, rvcDraftNew, draftRouteFromHash, openProjectWorkspace };`, ctx);
   const U = ctx.__U;
   U.PLANE.base = "http://x";
   if (token) { U.PLANE.token = token; U.PLANE.session = true; U.PLANE.me = me; }
@@ -429,6 +462,101 @@ await drawn("the outsider's draft page settling", () => J.U.RVC && !J.U.RVC.busy
 const jp = J.html("#content");
 ok("NO STANDING: a member outside the project opening the draft's address reads no copy, only the plane's sentence",
    !/data-rvc-copy/.test(jp) && strip(jp).includes(flat(plane5.detail)) && shouty(strip(jp)).length === 0, strip(jp).slice(0, 200));
+
+/* ============================================================
+   6b. UI-92 — THE WORKSPACE LISTS THIS PROJECT'S DRAFTS, AND EACH ONE OPENS.
+
+   §6A.4 and §3 rule 15 (a) (BOB #32, 2026-09-23 23:08Z), over REC-198's `op=casedrafts` (IC-243). Until that
+   op there was no read that could NAME a project's drafts, so a draft whose address was lost was a lost draft
+   — UI-68 measured it and recorded it as this surface's own gap. What is asserted here is the row's
+   acceptance, in its words: EVERY DRAFT THE PLANE LISTS APPEARS, AND EACH OPENS.
+
+   HOW A LIAR WOULD MAKE THIS GREEN, and what answers it:
+     - RENDER ONE ROW AND CALL IT THE LIST. So the fixture authors two more drafts through the plane's own act
+       and the comparison is SET EQUALITY against the plane's answer, both directions, with the corpus printed.
+     - BUILD THE LIST HERE. So the page's own wire is read: `op=casedrafts` asked ONCE, naming the project, and
+       the case-identity sentence rendered is the plane's bytes — a sentence this page could not have composed
+       ("a new case, whose identity is not yet allocated…" is the store's).
+     - DRAW A ROW THAT OPENS NOTHING. So every row's own handler is RUN, as the browser would, and each is
+       asserted to reach the plane as `op=reviewcopy&draft=<that id>` — which is the `read` the plane PUBLISHED
+       on that row — and to draw that draft's own copy at its own address.
+   ============================================================ */
+console.log("\n--- 6b. the workspace lists this project's drafts, and each one opens (UI-92) ---");
+const moreDrafts = [];
+for (const scope of ["The second draft's scope, authored for the list.", "The third draft's scope, authored for the list."]) {
+  const d = await must(`a further draft (${scope.slice(0, 16)}…)`, await POST(`op=casedraft&token=${IRIS}`, { project: PROJ, scope }));
+  moreDrafts.push(d.draftId);
+}
+const planeList = await GET(`op=casedrafts&project=${encodeURIComponent(PROJ)}&token=${IRIS}`);
+ok("THE PLANE: op=casedrafts lists this project's drafts, the one this suite drafted through the form among them",
+   planeList?.ok === true && planeList.kind === "review-drafts" && Array.isArray(planeList.drafts)
+   && planeList.drafts.length >= 3 && planeList.drafts.some((d) => d.draft_id === draftId),
+   JSON.stringify(planeList).slice(0, 300));
+const planeIds = (planeList.drafts || []).map((d) => d.draft_id);
+
+const W = page("", IRIS, irisMe);
+await W.U.openProjectWorkspace(PROJ);
+const ws = W.html("#content");
+PAGES.push(["the project workspace's list of drafts", ws]);
+/* WHAT THE MEMBER IS SHOWN and WHAT THE ROW DOES are read from two DIFFERENT places on purpose — the visible
+   id for the first, the row's own handler for the second — so that "every draft appears" and "each opens" are
+   two facts and not one restated. Arm (J) of the control (every row opening the FIRST draft) is what proved
+   the point: while both were read off the handler, breaking the open ALSO broke the appearance arm. */
+const shownIds = [...ws.matchAll(/<span class="lt mono">([A-Za-z0-9_.-]+)<\/span>/g)].map((m) => m[1]);
+const drewCount = Number((/data-project-drafts="(\d+)"/.exec(ws) || [])[1]);
+ok(`REACH: the workspace drew its drafts section, saying it drew ${drewCount} rows, and ${shownIds.length} draft ids are on the page (the plane lists ${planeIds.length}) — a section that drew nothing would pass every arm below vacuously`,
+   drewCount >= 3 && shownIds.length === drewCount, JSON.stringify({ drewCount, shownIds }));
+ok("EVERY DRAFT THE PLANE LISTS APPEARS, and no row appears that the plane did not list — set equality, both directions",
+   planeIds.every((id) => shownIds.includes(id)) && shownIds.every((id) => planeIds.includes(id))
+   && new Set(shownIds).size === shownIds.length,
+   JSON.stringify({ plane: planeIds, page: shownIds }));
+const askedList = W.WIRE.filter((w) => w.op === "casedrafts");
+ok("THE LIST IS THE PLANE'S: the page asked op=casedrafts ONCE, naming this project, and walked nothing itself",
+   askedList.length === 1 && askedList[0].params.project === PROJ && askedList[0].method === "GET",
+   JSON.stringify(askedList.map((w) => w.params)));
+ok("THE CASE IDENTITY IS THE PLANE'S OWN SENTENCE, rendered and not composed here",
+   (planeList.drafts || []).every((d) => strip(ws).includes(flat(d.case.identity))),
+   JSON.stringify((planeList.drafts || []).map((d) => d.case.identity)));
+ok("NO CODE AND NO MACHINE VOCABULARY reaches the member on the list",
+   shouty(strip(ws)).length === 0 && !/pre-publish/i.test(ws), JSON.stringify(shouty(strip(ws))));
+
+/* EACH OPENS — every row's own handler run, as the browser would. */
+const opened = [];
+for (const d of planeList.drafts) {
+  const h = handler(ws, "onclick", new RegExp(`rvcOpen\\(&quot;${d.draft_id}&quot;\\)`));
+  if (!h) { opened.push({ id: d.draft_id, why: "no single row carries this draft's handler" }); continue; }
+  const P = page("", IRIS, irisMe);
+  await P.run(h);
+  await drawn(`the draft ${d.draft_id.slice(0, 12)}… settling after its row was clicked`, () => P.U.RVC && !P.U.RVC.busy);
+  const asked = P.WIRE.filter((w) => w.op === "reviewcopy");
+  opened.push({ id: d.draft_id, hash: P.hash, read: asked.map((w) => `op=reviewcopy&draft=${w.params.draft}`),
+                drew: !!(P.U.RVC && P.U.RVC.copy && P.U.RVC.copy.kind === "review-copy"),
+                scope: (P.U.RVC && P.U.RVC.copy && P.U.RVC.copy.authored && P.U.RVC.copy.authored.scope) || null });
+}
+ok("EACH OPENS: every listed row opens ITS OWN draft — at that draft's own address, by the read the plane published on the row, and the copy is drawn",
+   opened.length === planeList.drafts.length
+   && opened.every((o, i) => o.hash === `#draft/${o.id}` && o.drew
+                             && o.read.length === 1 && o.read[0] === planeList.drafts[i].read),
+   JSON.stringify(opened).slice(0, 600));
+ok("AND THEY ARE DIFFERENT DRAFTS: the copies drawn carry the three different authored scopes, so one row opening one draft three times could not pass",
+   new Set(opened.map((o) => String(o.scope))).size === opened.length, JSON.stringify(opened.map((o) => o.scope)));
+
+/* THE LIST IS SHOWN ON THE SKELETON TOO, and that is the record's rule rather than this page's: the plane
+   admits every PARTICIPANT, invited or joined, to both draft reads (`viewerPredicate` draws no line between
+   them). jon is invited and does NOT join, and the invite is the plane's own act through the control plane,
+   with the fence it always had — iris owns the project her `op=acquire` promoted. */
+await must("invite jon to the project",
+  await GET(`op=projectinvite&token=${IRIS}&projectId=${encodeURIComponent(PROJ)}&handle=jon`));
+const planeListJon = await GET(`op=casedrafts&project=${encodeURIComponent(PROJ)}&token=${JON}`);
+const WJ = page("", JON, jonMe);
+await WJ.U.openProjectWorkspace(PROJ);
+const wsJ = WJ.html("#content");
+const rowIdsJ = [...wsJ.matchAll(/<span class="lt mono">([A-Za-z0-9_.-]+)<\/span>/g)].map((m) => m[1]);
+ok("THE SKELETON CARRIES THE LIST: an invited-not-joined member, withheld the participants and the arithmetic, is shown exactly the drafts the plane lists for THEIR credential — the page invents no fence the record does not have",
+   planeListJon?.ok === true && !/Who is working on this<\/h2>\s*<table/.test(wsJ)
+   && (planeListJon.drafts || []).every((d) => rowIdsJ.includes(d.draft_id))
+   && rowIdsJ.length === (planeListJon.drafts || []).length,
+   JSON.stringify({ plane: (planeListJon.drafts || []).map((d) => d.draft_id), page: rowIdsJ }));
 
 /* ============================================================
    7. NO EXPORT — nothing on this surface leaves the instance

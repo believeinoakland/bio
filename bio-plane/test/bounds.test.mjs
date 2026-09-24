@@ -1789,6 +1789,71 @@ t("op=projectdirectory: and the cut page still says only what §7.14 lets it —
    typeof D479_BITE?.requests === "string" && D479_BITE.requests.startsWith("NOT_BUILT:")],
   [true, true, true]);
 
+/* ------------------------------------------------------ D-497's ARMS (the row D-479 reported to SCHEDULER).
+   D-479 bounded what this read PUBLISHES and left what it SCANS: sight was a JS predicate with no row source,
+   so the directory asked `#sight` about every project in the group, one bounded statement at a time, and the
+   NUMBER of statements grew with the record. D-479 named the remedy rather than taking it — *a row source the
+   sight predicate itself READS, not a second copy of its rule* — and `project_sight` is it.
+
+   THE ARM BELOW IS A SOURCE ARM, AND IT IS HERE RATHER THAN IN `derivation-bounds.test.mjs` BECAUSE THE TWO
+   MEASURE DIFFERENT THINGS. That suite's census counts methods holding an unbounded row source, and it counted
+   this one OUT at D-479 already — the walk's every statement carried `LIMIT ?`. So restoring the JS filter over
+   an unbounded scan has to fail SOMEWHERE ELSE by name, and this is that place: the shape of the ONE statement.
+   What it grades is that the two halves of EXISTENCE are both ROWS. The discoverable half joins the table
+   `#visibilityOf` reads, so the rule stays stated once; the not-full half is `viewerPredicate`'s own compiled
+   predicate NEGATED, so sight is not hand-copied into this SQL. Neither is a property `bounds.test.mjs` could
+   read off an ANSWER — a JS-filtered walk and one statement answer identically, which is exactly why the live
+   arms above stayed green through this change and why a source arm is owed. */
+const d479Body = SRC_STORE.slice(SRC_STORE.indexOf("  projectDirectory({ viewer = null"),
+                                 SRC_STORE.indexOf("  /* D-479 — THE DIRECTORY'S PAGE SIZE"));
+t("op=projectdirectory: THE CANDIDATE READ IS ONE BOUNDED STATEMENT (D-497) — a single `#rows(` under a SQL "
++ "`LIMIT ?` at the named cap + 1, with no keyset walk and no JS sight filter left to grow with the record",
+  [(d479Body.match(/this\.#rows\(/g) || []).length, /LIMIT \?/.test(d479Body),
+   /cap \+ 1\)/.test(d479Body),
+   /this\.#sight\(/.test(d479Body), /for \(;;\)/.test(d479Body), /LIMIT \d/.test(d479Body)],
+  [1, true, true, false, false, false]);
+t("op=projectdirectory: and BOTH halves of EXISTENCE are ROWS (D-497) — the discoverable half JOINS the sight "
++ "index `#visibilityOf` itself reads, and the not-full half is `viewerPredicate`'s compiled gate NEGATED, "
++ "never a hand copy of it in this statement",
+  [/project_sight/.test(d479Body), /'discoverable'/.test(d479Body),
+   /NOT\s*\(\s*\$\{gate\.sql\}\s*\)/.test(d479Body),
+   /project_participants/.test(d479Body), /project_visibility/.test(d479Body)],
+  [true, true, true, false, false]);
+/* WHAT THE TWO MATCHERS ABOVE CAN AND CANNOT SEE, stated rather than left for the next reader to find out by
+   tripping them. They read the METHOD'S TEXT, so they grade a property through a spelling: "one `#rows(`
+   carrying `LIMIT ?` bound at `cap + 1`", "the sight index is named and the participation tables are not",
+   "the compiled gate is INTERPOLATED and negated next to it". They are tolerant of how the index is joined —
+   a `JOIN`, an `IN (SELECT … FROM project_sight …)`, any form that names the table — which is the
+   over-strictness arm in `d497-sight-index.control.mjs`. They are NOT tolerant of a negation written some
+   other way (`NOT EXISTS (…)` around the gate, `… = 0`): a correct read in that spelling would read as a
+   violation here. That is a known limit of this matcher and not a claim about the plane. What they cannot see
+   at all is whether the rows are the RIGHT rows, which is what the two live arms below are for. */
+t("`#visibilityOf` READS the sight index rather than the act log (D-497) — the property that makes the JOIN "
++ "above one rule and not a second copy of it",
+  [/#visibilityOf\(projectId\) \{\s*const r = this\.#one\(`SELECT setting FROM project_sight WHERE project_id=\?`/
+     .test(SRC_STORE),
+   /#visibilityOf\(projectId\) \{[\s\S]{0,300}?FROM project_visibility/.test(SRC_STORE)],
+  [true, false]);
+/* AND THE LIVE HALF, because a statement of the right SHAPE that reads the wrong rows is the defect this
+   repository meets most. A FOURTH project is created and left HIDDEN — no owner ever acts on it, which is the
+   derivation's default and the state every project in this store starts in — and the OWNER of all four asks
+   its own directory, which must be empty because the directory lists the projects a member is OUTSIDE. */
+const D479_HIDDEN = await makePublishingProject({
+  post: POST, mf, sha, machineToken: "adm-r57", owner: "d479own",
+  name: "bounds-d497-hidden", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+const D497_AFTER = await D479_DIR(null);
+const D497_OWNER_DIR = await GET(`op=projectdirectory&token=${D479_OWNER_TOK}`);
+t("op=projectdirectory: THE INDEX IS READ, NOT MERELY JOINED (D-497) — a fourth project no owner ever set is "
++ "absent from the answer while all three discoverable ones stay in it, so the JOIN carries the derivation's "
++ "HIDDEN default rather than listing whatever `bundles` holds",
+  [D497_AFTER?.ok, D497_AFTER?.count, D497_AFTER?.projects?.some((p) => p.id === D479_HIDDEN),
+   D479_PROJECTS.every((id) => D497_AFTER?.projects?.some((p) => p.id === id))],
+  [true, 3, false, true]);
+t("op=projectdirectory: THE NEGATED GATE IS READ TOO (D-497) — the OWNER of all four, who is outside none of "
++ "them, is answered an EMPTY directory rather than its own projects, which is what `NOT (gate)` buys and what "
++ "a statement missing it could not say",
+  [D497_OWNER_DIR?.ok, D497_OWNER_DIR?.count, D497_OWNER_DIR?.truncated], [true, 0, false]);
+
 /* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
  *
  * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the

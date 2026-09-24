@@ -40631,7 +40631,78 @@ async function loadFont(doc, fontVal) {
     }
   }
   if (width == null) width = isType0 ? 2 : 1;
-  return { subtype, isType0, baseFont, toUni, width };
+  const w2 = fontWidths(doc, map, subtype, isType0);
+  return { subtype, isType0, baseFont, toUni, width, widths: w2.widths, widthsWhy: w2.why };
+}
+function numOf(doc, v2) {
+  v2 = doc.resolve(v2);
+  return typeof v2 === "number" ? v2 : null;
+}
+function glyphScale(doc, map, subtype) {
+  if (subtype !== "Type3") return 1e-3;
+  const fm = doc.resolve(map.FontMatrix);
+  if (!fm || fm.t !== "arr" || fm.items.length < 6) return null;
+  const a2 = numOf(doc, fm.items[0]);
+  return typeof a2 === "number" && a2 !== 0 ? a2 : null;
+}
+function fontWidths(doc, map, subtype, isType0) {
+  if (isType0) return cidWidths(doc, map);
+  const scale = glyphScale(doc, map, subtype);
+  if (scale == null) return { widths: null, why: "type3_no_font_matrix" };
+  const first = numOf(doc, map.FirstChar);
+  const arr = doc.resolve(map.Widths);
+  if (first == null || !arr || arr.t !== "arr" || arr.items.length === 0) {
+    return { widths: null, why: "no_widths_array" };
+  }
+  const vals = arr.items.map((x2) => numOf(doc, x2));
+  const desc = doc.dictOf(map.FontDescriptor);
+  const missing = (desc ? numOf(doc, desc.MissingWidth) : null) ?? 0;
+  const widths = (code) => {
+    const i2 = code - first;
+    const w2 = i2 >= 0 && i2 < vals.length ? vals[i2] : null;
+    return (w2 == null ? missing : w2) * scale;
+  };
+  return { widths, why: null };
+}
+function cidWidths(doc, map) {
+  const enc = nameOf(doc, map.Encoding);
+  if (enc !== "Identity-H" && enc !== "Identity-V") {
+    return { widths: null, why: "cid_encoding_not_identity" };
+  }
+  const descArr = doc.resolve(map.DescendantFonts);
+  const cid = descArr && descArr.t === "arr" && descArr.items.length ? doc.dictOf(descArr.items[0]) : null;
+  if (!cid) return { widths: null, why: "no_descendant_font" };
+  const dw = numOf(doc, cid.DW) ?? 1e3;
+  const table = /* @__PURE__ */ new Map();
+  const wArr = doc.resolve(cid.W);
+  if (wArr && wArr.t === "arr") {
+    const items = wArr.items.map((x2) => doc.resolve(x2));
+    let i2 = 0;
+    while (i2 < items.length) {
+      const c2 = items[i2];
+      if (typeof c2 !== "number") {
+        i2++;
+        continue;
+      }
+      const next = items[i2 + 1];
+      if (next && typeof next === "object" && next.t === "arr") {
+        const list = next.items.map((x2) => numOf(doc, x2));
+        for (let k2 = 0; k2 < list.length; k2++) if (list[k2] != null) table.set(c2 + k2, list[k2]);
+        i2 += 2;
+        continue;
+      }
+      const last = typeof next === "number" ? next : null;
+      const w2 = typeof items[i2 + 2] === "number" ? items[i2 + 2] : null;
+      if (last != null && w2 != null && last >= c2 && last - c2 <= 65535) {
+        for (let code = c2; code <= last; code++) table.set(code, w2);
+        i2 += 3;
+        continue;
+      }
+      i2++;
+    }
+  }
+  const widths = (code) => (table.has(code) ? table.get(code) : dw) * 1e-3;
+  return { widths, why: null };
 }
 var HEX_CAP = 64;
 function bytesToHex(bytes, cap = HEX_CAP) {
@@ -40689,6 +40760,7 @@ function matMul(a2, b2) {
 }
 var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
 var BASELINE_EPS = 1e-6;
+var WORD_GAP_EM = 0.25;
 async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
@@ -40711,6 +40783,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const show = (bytes) => {
     if (!bytes || bytes.length === 0) return;
     if (!curFont) {
+      penKnown = false;
+      inkValid = false;
       undetermined.push({
         page: pageIdx,
         reason: curFontName ? "font_not_in_resources" : "no_current_font",
@@ -40721,6 +40795,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       return;
     }
     if (!curFont.toUni) {
+      advanceOver(bytes);
+      endRun();
       undetermined.push({
         page: pageIdx,
         reason: curFont.isType0 ? "cid_font_no_tounicode" : "no_tounicode",
@@ -40732,6 +40808,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
     const { codes, leftover } = bytesToCodes(bytes, curFont.width);
     for (const code of codes) {
+      advanceOne(code);
       const u2 = curFont.toUni.get(code);
       if (u2 == null) {
         undetermined.push({
@@ -40741,9 +40818,18 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           codes: code.toString(16).padStart((curFont.width || 1) * 2, "0"),
           count: 1
         });
-      } else pieces.push(u2);
+      } else {
+        if (softAt === pieces.length && /^\s/.test(u2)) {
+          pieces.pop();
+          softAt = -1;
+        }
+        pieces.push(u2);
+      }
     }
+    endRun();
     if (leftover) {
+      penKnown = false;
+      inkValid = false;
       undetermined.push({
         page: pageIdx,
         reason: "code_width_misaligned",
@@ -40770,8 +40856,82 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   let leading = 0;
   let lineY = null;
   const breakLine = () => {
+    if (softAt === pieces.length && pieces.length) {
+      pieces.pop();
+      softAt = -1;
+    }
     pieces.push("\n");
     lineY = baselineOf(tlm, ctm);
+  };
+  let tmat = IDENTITY_MATRIX.slice();
+  let penKnown = true;
+  let tfs = 0;
+  let tc2 = 0;
+  let tw = 0;
+  let th = 1;
+  let softAt = -1;
+  let inkX = 0;
+  let inkEm = null;
+  let inkValid = false;
+  const deviceX = (m2) => m2[4] * ctm[0] + m2[5] * ctm[2] + ctm[4];
+  const emDevice = () => {
+    const m2 = matMul(tmat, ctm);
+    return Math.abs(tfs) * th * Math.hypot(m2[0], m2[1]);
+  };
+  const softSpace = () => {
+    if (!pieces.length) return;
+    const last = pieces[pieces.length - 1];
+    if (last.endsWith(" ") || last.endsWith("\n")) return;
+    pieces.push(" ");
+    softAt = pieces.length;
+  };
+  const judgeGap = (toX) => {
+    if (!inkValid) return;
+    const em = inkEm ?? emDevice();
+    if (!(em > 0) || !Number.isFinite(em)) return;
+    const gapEm = (toX - inkX) / em;
+    if (Math.abs(gapEm) > WORD_GAP_EM) softSpace();
+  };
+  const endRun = () => {
+    markInk();
+    if (penKnown) inkEm = emDevice();
+  };
+  const advanceOne = (code) => {
+    if (!penKnown) return;
+    const w0 = curFont && curFont.widths ? curFont.widths(code) : null;
+    if (w0 == null || !Number.isFinite(w0)) {
+      penKnown = false;
+      return;
+    }
+    const spacing = tc2 + (curFont.width === 1 && code === 32 ? tw : 0);
+    tmat = matMul([1, 0, 0, 1, (w0 * tfs + spacing) * th, 0], tmat);
+  };
+  const advanceOver = (bytes) => {
+    if (!penKnown) return;
+    if (!curFont || !curFont.widths) {
+      penKnown = false;
+      return;
+    }
+    const { codes, leftover } = bytesToCodes(bytes, curFont.width);
+    for (const code of codes) advanceOne(code);
+    if (leftover) penKnown = false;
+  };
+  const advanceBy = (adj) => {
+    if (!penKnown) return;
+    tmat = matMul([1, 0, 0, 1, -adj / 1e3 * tfs * th, 0], tmat);
+  };
+  const markInk = () => {
+    if (!penKnown) {
+      inkValid = false;
+      return;
+    }
+    inkX = deviceX(tmat);
+    inkValid = true;
+  };
+  const penToLine = () => {
+    tmat = tlm.slice();
+    penKnown = true;
+    markInk();
   };
   for (const tk of toks) {
     if (tk.t !== "op") {
@@ -40783,6 +40943,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         const nameTok = lastOfType("name");
         curFontName = nameTok ? nameTok.v : null;
         curFont = curFontName ? await getFont(curFontName) : null;
+        const sz = numArgs(1);
+        if (sz) tfs = sz[0];
         break;
       }
       case "Tj": {
@@ -40803,14 +40965,25 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           }
           if (!inArr) continue;
           if (it2.t === "str") show(it2.bytes);
-          else if (it2.t === "num" && it2.v < -100) pieces.push(" ");
+          else if (it2.t === "num") {
+            if (it2.v < -100) pieces.push(" ");
+            advanceBy(it2.v);
+          }
         }
         break;
       }
       case "'":
       case '"': {
+        if (tk.v === '"') {
+          const a2 = numArgs(2);
+          if (a2) {
+            tw = a2[0];
+            tc2 = a2[1];
+          }
+        }
         tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
         breakLine();
+        penToLine();
         const st2 = lastOfType("str");
         if (st2) show(st2.bytes);
         break;
@@ -40828,10 +41001,29 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       }
       case "BT":
         tlm = IDENTITY_MATRIX.slice();
+        tmat = tlm.slice();
+        penKnown = true;
         break;
       case "TL": {
         const a2 = numArgs(1);
         if (a2) leading = a2[0];
+        break;
+      }
+      /* D-502: the three text-state parameters that enter a glyph's horizontal
+         displacement beside the width itself. They change no character. */
+      case "Tc": {
+        const a2 = numArgs(1);
+        if (a2) tc2 = a2[0];
+        break;
+      }
+      case "Tw": {
+        const a2 = numArgs(1);
+        if (a2) tw = a2[0];
+        break;
+      }
+      case "Tz": {
+        const a2 = numArgs(1);
+        if (a2) th = a2[0] / 100;
         break;
       }
       case "Td":
@@ -40843,6 +41035,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         tlm = matMul([1, 0, 0, 1, tx, ty], tlm);
         if (ty !== 0) breakLine();
         else if (lineY === null) lineY = baselineOf(tlm, ctm);
+        else judgeGap(deviceX(tlm));
+        penToLine();
         break;
       }
       case "Tm": {
@@ -40851,11 +41045,14 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         tlm = m2;
         const y2 = baselineOf(tlm, ctm);
         if (lineY === null || Math.abs(y2 - lineY) > BASELINE_EPS) breakLine();
+        else judgeGap(deviceX(tlm));
+        penToLine();
         break;
       }
       case "T*":
         tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
         breakLine();
+        penToLine();
         break;
       default:
         break;

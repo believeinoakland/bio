@@ -6,7 +6,7 @@ its own file under `docs/development/kickoffs/`, the first line of a session's
 prompt names which thread it belongs to, and a session rewrites only its own
 kickoff at the close. `docs/development/kickoffs/README.md` is the register: it
 lists the active threads, the paths each owns, the append-only rules for shared
-files like `DEBT.md` and the state doc, and the rule that a rejected push means
+files like the state doc (`DEBT.md` was one until its retirement, M0-140), and the rule that a rejected push means
 another thread landed work and must be rebased onto, never forced over.
 
 Claude reads everything it needs from this public repository at the start

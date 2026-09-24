@@ -26,7 +26,7 @@
 A worker is a worktree-isolated sub-session CONDUCT spawns to do ONE cached task (`kickoffs/WORKER.md`). It builds, tests,
 pushes its branch, reports, and ends. The persistence is in the files (`WORK-PIPELINE.md`): `QUEUE.md` holds the BOB INBOX and the cache of the
 next tasks, `BACKLOG.md` every other open task in order, and the archive what is done.
-`MILESTONES.md` is the capability ladder every task is placed under. `DEBT.md`, `MEASUREMENTS.md` and the design documents
+`MILESTONES.md` is the capability ladder every task is placed under. `MEASUREMENTS.md` and the design documents
 are knowledge — an INPUT to the plan, never a rival to it. **Nothing is work until it is a row in the plan.**
 
 ## The flow
@@ -65,12 +65,12 @@ untracked one cannot even be found. Two corollaries, each paid for:
 | tell the NEXT session in your area what you learned | **the area's LAW (`<AREA>.md`) for what pays repeatedly; its `-NEXT.md` for what the next session must DO** | see "which of the two" below; the `-NEXT` is rewritten at the close of your turn, by you |
 | need work inside another area's paths | **DELEGATION in `CLAIMS.md`** | append the need; continue with your own work; never edit their paths |
 | change a shape another area builds against | **the IC protocol** (`INTERFACE-CHANGES.md`), one file per IC in `interface-changes/` | PROPOSED → RESPONSES → RESOLUTION → CHANGING → CHANGED → SETTLED |
-| record a defect, a number, or a design | **`DEBT.md` / `measurements/<id>.md` / the design docs** | append-only knowledge; a defect goes to SCHEDULER only with its fix named |
+| record a defect, a number, or a design | **the plan (a `D-` row) / `measurements/<id>.md` / the design docs** | diagnosed until its fix can be named, minted, then SCHEDULER places it in build order; no side list (CLAUDE.md §4) |
 | tell a LIVE session something now | **`SendMessage`** to that lane — **NEVER to an UNATTENDED one; it cannot receive** | an ACCELERATOR, pointing at what to re-read; the state in the repository is the authority |
 | tell a lane something now, **IN THE CLOUD** | **a one-shot trigger into its session**: `create_trigger` with `persistent_session_id` = the lane's session id (from `list_sessions`) and `run_once_at` the next whole minute; open the prompt with `From <LANE> #<n> (<your session id>)` | measured 2026-09-22 (BOB #28; `kickoffs/NEW-MACHINE.md` §0.1): delivered as a new turn in 1-2 min, and a reply comes back the same way. `SendMessage` reaches NO other cloud session (each is its own machine; `ListAgents` lists none). The same ACCELERATOR rule: the repository stays the authority |
 
 **THE BOARD IS THE BRANCH `coord`** (`TREE-SHARING.md` §1, built by M0-110). The state channels above — the BOB INBOX
-and the plan (`QUEUE.md`, `BACKLOG.md`), `CLAIMS.md`, `DEBT.md`, every `-NEXT.md` and the ledgers' archive — live on
+and the plan (`QUEUE.md`, `BACKLOG.md`), `CLAIMS.md`, every `-NEXT.md` and the ledgers' archive — live on
 `coord`, not `main`: **read** with `node tools/coord.mjs read <path>`, **written** with `node tools/coord.mjs write`
 (an INTENT — append a block, add a line under a block's heading, set a row's status word, replace your own handoff,
 archive, refill — re-applied to the fresh tip if another lane wrote first, never a textual merge). A write runs the
@@ -206,7 +206,7 @@ anyway, `git stash push -u -m <your-id>`, capture the stash SHA at once, restore
 ### Before you end a turn
 
 `node tools/plancheck.mjs` — 0 fail. It refuses an unpushed planning surface, an ACTIVE area with no kickoff, an item
-behind an unregistered interface, an unknown milestone, a debt row with no disposition, an unsettled decision with no
+behind an unregistered interface, an unknown milestone, an unsettled decision with no
 provisional, a TRACKED `DECIDED.md` (M0-99: generated on demand, never committed), a governed design with stale front matter, and a kickoff over its reading budget.
 **What it cannot check is yours:** whether an entry describes the change ACCURATELY, whether a correction is COMPLETE,
 and whether a supersession names every affected item. The instrument proves the structure; it cannot prove the prose.
@@ -218,7 +218,7 @@ have the sense that you're spawning sessions much more slowly than you could"*).
 which AT MOST FIVE may touch `bio-plane/src/store.mjs`, `bio-plane/checks/bio-checks.mjs` or `bio-plane/src/index.mjs`**
 — raised 2 → 5 → 8, and the contended-file cap 3 → 5, on measured integration and conflict costs, not nerve. Conflict
 cost scales with workers in ONE file, not with workers, so spend the budget on DISJOINT paths: the UI, the fleet, the
-test estate, the docs, measurement lanes. Append-only prose (`CLAIMS.md`, `DEBT.md`) conflicts on every merge and is
+test estate, the docs, measurement lanes. Append-only prose (`CLAIMS.md`; `DEBT.md` until its retirement, M0-140) conflicts on every merge and is
 resolved by reading both sides; it is never a reason for fewer workers. **Measurement-only and test-estate items hold no
 slot**: they change no plane behaviour, still cost a worker, and still get verified. **Spawn first, then integrate** for
 independent items; for a dependent one, merge → gate → push → spawn.

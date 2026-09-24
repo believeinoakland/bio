@@ -29,7 +29,7 @@
  * file is a `.mjs` under `tools/`, which is INSIDE arm 2's own corpus, so a specimen typed
  * here would be read by the arm it is testing and would fail the gate it is proving.  That
  * is the sweep-arm-that-cites-itself class, which this project has paid for three times in
- * two days (`mintid.mjs`'s own debt row poisoning its own floor; the C-29 catalogue
+ * two days (`mintid.mjs`'s own ledger row poisoning its own floor; the C-29 catalogue
  * comment; `decided.mjs`'s KNOWN_COLLISIONS naming a retired check).  `plancheck.mjs`
  * builds its merge markers the same way and for the same reason.
  */
@@ -389,9 +389,19 @@ rmSync(SCRATCH, { recursive: true, force: true });
         `sha256 ${digest(before)}, ${before.length} byte(s), cmp identical`,
         restored, ok2);
 
-    /* ARM 2 ON DISK, THROUGH THE SAME GATE. A swapped attribution planted in a real file. */
-    const t2 = join(WT, "docs/development/DEBT.md");
-    const p2 = join(WT, "DEBT.m039-arm2-ondisk.pristine");
+    /* ARM 2 ON DISK, THROUGH THE SAME GATE. A swapped attribution planted in a real file.
+       RE-POINTED 2026-09-24 by M0-140, from `docs/development/DEBT.md` — the DEBT construct is retired and the file
+       is archived whole. The row said *re-pointed at the backlog*; it is NOT the backlog, and the reason is a defect
+       this re-point found. `BACKLOG.md` IS STATE: on `main` it is a one-line COORD-POINTER, and the corpus is walked
+       through `walkState`, so a plant APPENDED to a pointer leaves the head bytes intact, the file still reads as a
+       pointer, and `attribution.mjs` reads `coord`'s copy instead — an arm that plants and never arms. That is what
+       had already happened here: `DEBT.md` became a 216-byte pointer at M0-110's cutover, and arm 2 has THROWN on
+       its own size floor (`< 10000`) ever since, reported as `1e/2g THREW` rather than silently, which is the only
+       reason it was visible at all. The subject is now `DECISIONS.md` — in the attribution corpus, read by the same
+       walk, and NOT state (`tools/statepaths.mjs`), so a plant in it is a plant the checker sees. 100,625 B on
+       `origin/main` at 68fecb8d; the floor below is kept and stays well under it. */
+    const t2 = join(WT, "docs/development/DECISIONS.md");
+    const p2 = join(WT, "DECISIONS.m039-arm2-ondisk.pristine");
     cpSync(t2, p2);
     const b2 = readFileSync(p2);
     if (b2.length < 10000) throw new Error(`arm 2's pristine copy is implausibly small (${b2.length} bytes)`);

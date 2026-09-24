@@ -41,7 +41,7 @@ line read *"U1–U8 are DONE"* until 2026-09-14, when UI-58 measured eleven of
 fourteen rungs built; the standing-dependencies section still names plane defects
 that make the link surface tell a member something untrue, and it carries no
 dispositions) — then **the newest `docs/development/CIVICOS_UI_STATE.md` entries,
-which are the area's log and are where your own goes**, `docs/development/DEBT.md`,
+which are the area's log and are where your own goes**, the build plan's `D-` rows (`DEBT.md` retired 2026-09-24, M0-140; `node tools/ledger.mjs find <ID>` resolves any closed one),
 `docs/development/LINK-FIDELITY.md`, and `civicos-ui/test/run.mjs` (the UI test
 path). The parenthetical is why, not a summary; read the document.
 
@@ -151,7 +151,7 @@ audience is non-technical and never made to choose between technical options.
 **Close the turn with the decisions that are BOB'S, and nothing else**, in the
 shape `kickoffs/README.md` defines. Read its three tests before writing an item.
 An empty list is a real answer. At the close, rewrite ONLY this file for the
-session after; append to `DEBT.md`, file figures as `measurements/<id>.md`, prepend to
+session after; send each defect to SCHEDULER as a minted `D-` row (`DEBT.md` retired, M0-140), file figures as `measurements/<id>.md`, prepend to
 `CIVICOS_UI_STATE.md`.
 
 ## Where the area's log lives, and why this file no longer holds it

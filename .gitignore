@@ -469,3 +469,16 @@ bio-plane/.nc-d470/
 # copy as its restore verifies and removes the pen on exit IF EMPTY; this line is for the run that is
 # killed between the two.
 bio-plane/test/.nc-d487-pen/
+
+# D-507's control pen (`bio-plane/test/d507-statement-ack-translation.control.mjs`), on its own line and
+# never under a glob, on the standing rule stated at `.rec84-control-pristine/`: a blanket `.nc-*` rule
+# would silently cover a pen nobody declared. The driver removes it on a clean run; this line is what
+# keeps a FAILED restore's pristine copies of `src/store.mjs` and `checks/bio-checks.mjs` out of a commit.
+bio-plane/.nc-d507/
+# D-508's control pen, on the same reasoning as `bio-plane/test/.nc-d487-pen/` directly above and
+# declared for the same reason: it sits INSIDE `bio-plane/test/`, which `coverage.mjs`'s register and
+# the battery's discovery both read by WALKING, and three of its four arms copy a 3 MB `src/store.mjs`
+# or a 900 KB `checks/bio-checks.mjs` into it. A leftover copy is a SECOND plane source for the next
+# walk to enrol, which has already been measured happening. The driver removes each copy as its
+# restore verifies and removes the pen on exit IF EMPTY; this line is for the run killed between the two.
+bio-plane/test/.nc-d508-pen/

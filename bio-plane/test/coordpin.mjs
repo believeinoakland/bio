@@ -39,7 +39,17 @@ import { join, dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-export const COORD_PIN = "e2d3cb34a9b1b7755fc06aa0b2908785dbeb78b8";
+/* ADVANCED 2026-09-24 by M0-140, from `e2d3cb34` (2026-09-23, M0-136's own claim) to `f3ca0ad8`, and the reason is a
+   COUPLING this landing found rather than a refresh. `mintid`'s `D` corpus no longer names `docs/development/DEBT.md`
+   — the DEBT construct is retired — so a `D-` allocation is read from `docs/archive/ledgers/DEBT-closed.md` alone.
+   At `e2d3cb34` the archive held ONE of the four rows of the registered collisions D-121 and D-124; the other three
+   were still in the LIVE DEBT.md, which had supplied them until now. Both collisions therefore read as STALE — the
+   register's "no registered collision has quietly stopped being one" arm, failing exactly as it should when half a
+   pair moves out of sight (which is the laundering shape `DEBT.md`'s own comment named). At `f3ca0ad8` all FOUR
+   rows are in the archive and NONE in the live file, so the pair is whole where the corpus reads it. VERIFIED at
+   this commit before the pin moved: 4 rows in `DEBT-closed.md`, 0 in `DEBT.md`. The five suites below are measured
+   green over it in the same landing, as this file's rule requires. */
+export const COORD_PIN = "f3ca0ad89004d11c1d2cc9966ffa6fdfc78dd704";
 process.env.BIO_COORD_REF = COORD_PIN;
 
 const GIT_ID = { GIT_AUTHOR_NAME: "M0-136 planted", GIT_AUTHOR_EMAIL: "m0136@example.invalid",

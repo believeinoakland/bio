@@ -3834,6 +3834,33 @@ CREATE TABLE IF NOT EXISTS project_visibility (
   at         TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility(project_id, seq);
+
+-- D-497 (Membership Architecture v2 section 7, item 7.14, "The directory"; SCHEDULER #17's finding carried
+-- forward from D-479): THE SIGHT INDEX. One row per PROJECT, holding the setting that project_visibility's
+-- acts DERIVE -- the latest act, and HIDDEN where the owners have never acted. It is not a second place the
+-- rule is stated: Store#reindexProjectSight is the one statement that computes a row here, and Store#sight
+-- READS this table through #visibilityOf rather than reading the act log. That is what lets the directory's
+-- candidate query bound IN SQL: before this table, sight was a JS predicate the directory had to ask about
+-- every project in the group one at a time, so the number of statements grew with the record even though
+-- each was bounded, and REC-149's first attempt to put the rule in the directory's own SQL instead put
+-- "no act = hidden" in a SECOND place -- caught by its own default-discoverable control arm, which flipped
+-- the default while the directory did not move.
+--
+-- DERIVED, AND IT SAYS SO: every row is recomputed from project_visibility and bundles at every boot
+-- (Store#seedProjectSight, the #seedMintLedger precedent), at every promotion of a bundle, and at every
+-- owner's act. Nothing here is authored, so drift cannot survive a restart, and the act log stays the
+-- record. Keyed on project_id, a bundle id, so both purge arms clear it with the project (the
+-- project_participants precedent).
+-- THE ROW IS THE PROJECT AND ITS SETTING AND NOTHING ELSE. No date: a projection needs none, the act log
+-- above carries every date there is, and a column that moved on each recompute would make an UNCHANGED boot
+-- rewrite every row with different bytes -- which is a RESTART PLUS A PURE READ MOVING A TABLE, and is what
+-- versionnotice.test.mjs's no-write WITNESS refuses. That witness is the guarantee a live verification's
+-- no-write claim rests on, so the derivation is idempotent at the byte instead.
+CREATE TABLE IF NOT EXISTS project_sight (
+  project_id TEXT PRIMARY KEY,
+  setting    TEXT NOT NULL CHECK (setting IN ('discoverable','hidden'))
+);
+CREATE INDEX IF NOT EXISTS project_sight_setting ON project_sight(setting, project_id);
 -- =========================================================================
 
 -- D-86 (NOTIFICATIONS.md, The catalogue: a re-run owed after a lens change, an OBLIGATION, DISCLOSED and never
@@ -3928,9 +3955,19 @@ CREATE INDEX IF NOT EXISTS theme_placements_bundle ON theme_placements(bundle_id
 -- this instance declined because the allowance was spent: a deferral is a
 -- recorded fact, never a silent fall-back to filing the shell as the content.
 -- An operational fact about this instance, not corpus-derived.
+-- D-492: reserved_ms is browser time COMMITTED to renders now in flight and not
+-- yet reported. spent_ms alone could not bound the allowance, because a render
+-- runs in the Worker and reports its cost afterwards, so every render in flight
+-- at once was admitted against one spent_ms. A render reserves its maximum cost
+-- at admission and releases the reservation when it reports, so the figure the
+-- admission test reads is spent_ms + reserved_ms. A render that never reports
+-- stays charged for the day: the allowance is then UNDER-used, which is the
+-- direction that cannot overrun. Added to an existing store by the additive
+-- pass in store.mjs #migrate, so a store written before D-492 reads 0.
 CREATE TABLE IF NOT EXISTS render_allowance (
   day        TEXT PRIMARY KEY,
   spent_ms   INTEGER NOT NULL DEFAULT 0,
+  reserved_ms INTEGER NOT NULL DEFAULT 0,
   renders    INTEGER NOT NULL DEFAULT 0,
   deferred   INTEGER NOT NULL DEFAULT 0,
   last_at    TEXT NOT NULL
@@ -4313,6 +4350,7 @@ __export(bio_checks_exports, {
   INSTALLATION_CHECKS: () => INSTALLATION_CHECKS,
   INSTANCE_GROUP_CHECKS: () => INSTANCE_GROUP_CHECKS,
   ISO_TS_RE: () => ISO_TS_RE,
+  KNOCK_CHECKS: () => KNOCK_CHECKS,
   LAW_LEVELS: () => LAW_LEVELS,
   LAW_PROPOSAL_STATES: () => LAW_PROPOSAL_STATES,
   LAW_PROPOSAL_WHY_MAX: () => LAW_PROPOSAL_WHY_MAX,
@@ -9477,7 +9515,9 @@ var AI_RUN_CHECKS = {
        entry's referent is. The third is `agent-worker`'s `stepLog`, another area's
        path, which composes no referent field while a model may judge `PRESENT`.
        The full reasoning and the driven evidence are at the predicate in
-       `src/airun.mjs`; section I of `test/observation-log.test.mjs` drives it.
+       `src/airun.mjs`; section L of `test/observation-log.test.mjs` drives it
+       (it was section I until D-500, 2026-09-24, which found two sections wearing
+       that letter and moved REC-100's — this citation named the ambiguous one).
   
        **CLOSED 2026-09-18 BY REC-100 (IC-130, D-366).** BOB #14 ruled the rollup
        (`OBSERVATION-LOG-DESIGN.md` §3): a rollup's PRESENT carries `result_kind =
@@ -11527,6 +11567,56 @@ var ACT_SHAPE_CHECKS = {
     check: "C-33.41",
     where: "src/store.mjs actNoCitation > is-act-no-citation",
     translation: "A citation is the address of something somebody who was not here can go and read. Without one, what you have written can only be checked by you, and the record would be claiming more than it can show. Name where the source is published or held \u2014 if it is not public, say who holds it and how it was seen, which is still an address and is still checkable."
+  },
+  /* -------------------------------------------------------------------------
+       REC-211 / IC-273 — A DISPOSITION BINDS THE DEFINITION VERSION THE MEMBER
+       SAW, AND THESE ARE THE TWO REFUSALS THAT MAKE THAT ENFORCEABLE.
+  
+       BOB #32 ruled it on 2026-09-24 (~03:14Z), on REC-184's own worker's finding:
+       *"a disposition binds the definition version the member SAW: the act carries
+       definitionVersion; if the definition has moved since, it is refused
+       DEFINITION_MOVED by name, and the member re-reads and acts again. Authored
+       acts bind what was authored."* Home: `BIO_Content_Framework_v0_10.md` §8.2,
+       "The declared flow, and its revisions".
+  
+       WHY REC-184 DID NOT ALREADY CLOSE IT, and this is the part worth reading
+       before touching either row. REC-184 stamps `proposal_dispositions.definition_version`
+       from the STORE at the moment the write arrives, never from the caller — which
+       is right for authorship and is exactly what makes the remaining hole
+       invisible. A member reads the question at version 3, a revision lands, the
+       member decides: the row is stamped 3+1, the read half compares the stamp
+       against the current version, finds them equal, and publishes `applies: true`.
+       The record then says a member judged a declared flow they never read, and
+       says it with no mark of doubt anywhere. That is the record claiming more than
+       it can support (CLAUDE.md §2), and no read-side rule can recover it, because
+       the two numbers it has to compare are the same number.
+  
+       SO THE ACT CARRIES WHAT THE MEMBER SAW, AND THE STORE COMPARES. Two
+       conditions, and they are two rows rather than one because they are two
+       different facts about the request and DEC-49 gives one code one sentence:
+       C-33.42 is *this act does not say which version it judged*; C-33.43 is *it
+       says one, and it is not the version standing now*.
+  
+       C-33.43's TRANSLATION DOES NOT SAY "REVISED SINCE YOU READ IT" although that
+       is the case it exists for. The plane knows only that the named version is not
+       the current one; a caller naming a version that never stood reaches the same
+       line, and a sentence asserting a revision would be the plane inventing the
+       reason. It says what is true of every route in — the version named is not the
+       one standing — and the refusal carries both numbers beside it.
+  
+       NEITHER ROW REACHES THE JUDGMENT-LAYER ARM. `op=proposedispose`'s second key
+       shape ({project, finding}) ages a finding in one team's feed and no declared
+       flow governs it, so there is no version to name and nothing here to ask.
+       ------------------------------------------------------------------------- */
+  NO_DEFINITION_VERSION: {
+    check: "C-33.42",
+    where: "src/store.mjs proposeDispose > is-dispose-version-named",
+    translation: "Setting aside one of the record's own questions is a decision about the way a body is said to work \u2014 and that description is written down, dated, and rewritten when the group learns better. This request does not say which of those versions you were reading when you decided, so the record cannot say what you actually judged. Open the question again and send the version shown beside it. Nothing was recorded."
+  },
+  DEFINITION_MOVED: {
+    check: "C-33.43",
+    where: "src/store.mjs proposeDispose > is-dispose-version-current",
+    translation: "The version of the declared flow this decision names is not the one standing now. Rather than file your decision against a description you did not read, the record keeps it out and asks you to look again: read the question against the version in force and decide again. The answer may well be the same one, and it will then be yours. Both versions are named beside this message, the earlier one still reads back in full, and nothing was recorded."
   }
 };
 var ROUTE_MARK_CHECKS = {
@@ -11884,12 +11974,18 @@ var RENDER_CAPTURE_CHECKS = {
     where: "src/index.mjs fetch > is-render-admit",
     translation: "This instance has no working page renderer, so it cannot capture the page as a visitor saw it. Nothing was fetched, and the page's empty frame was not filed in its place."
   },
-  /* BOB #32 item 3: the daily render allowance is spent. The render is
-     DEFERRED and the deferral is recorded; the shell is never the content. */
+  /* BOB #32 item 3: the daily render allowance is COMMITTED — spent, or reserved by
+     renders in flight (D-492). The render is DEFERRED and the deferral is recorded;
+     the shell is never the content. CORRECTED 2026-09-24 (D-492), and the old sentence
+     is why: it said the allowance had been USED, which was true only of the time
+     already reported. Since a render now reserves its maximum cost at admission, a
+     deferral can also mean the day's remaining time is held by renders still running,
+     and a member told "used" would have gone away for the day when the answer may be a
+     minute off. The sentence says which, without naming a mechanism. */
   RENDER_DEFERRED: {
     check: "C-83.4",
     where: "src/index.mjs fetch > is-render-admit",
-    translation: "This instance has used today's allowance for rendering pages, so this render is deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. It can be asked again after midnight UTC."
+    translation: "Today's allowance for rendering pages is fully committed \u2014 either already used, or held by renders this instance is running right now \u2014 so this render is deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in flight have finished, or after midnight UTC."
   },
   /* The render loads the page again, which is a second document load to the
      host, so it asks the per-host governor like any other (BOB #32 item 3:
@@ -11936,6 +12032,18 @@ var DISPATCH_CHECKS = {
     check: "C-69.1",
     where: "src/index.mjs fetch > is-unknown-op",
     translation: "This copy has no operation by that name. A copy running an older or newer version can have a different set of operations, and a misspelt name reads the same way. Nothing was changed."
+  }
+};
+var KNOCK_CHECKS = {
+  RATE_IP: {
+    check: "C-85.1",
+    where: "src/store.mjs knock > is-knock-rate",
+    translation: "This group's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly \u2014 the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive."
+  },
+  RATE_GLOBAL: {
+    check: "C-85.2",
+    where: "src/store.mjs knock > is-knock-rate",
+    translation: "This group's inbox is not taking any more material from anyone just now. The whole instance is at its limit rather than you \u2014 the cap exists so that no one sender can fill the inbox \u2014 and it lifts on its own shortly; the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later. If it keeps happening, the group's members can be told the doorbell is saturated."
   }
 };
 var DRIVE_CAPTURE_CHECKS = {
@@ -12075,7 +12183,7 @@ var CASE_DOCUMENT_FAMILY = {
   COMPLETENESS: { check: "C-41.10", what: "the completeness block (REC-14)" },
   EXCLUDED: { check: "C-41.11", what: "the exclusion list field (C-9)" },
   BAR: { check: "C-41.12", what: "required_strength \u2014 the standard of evidence (DEC-17 as DEC-72 rehomes it)" },
-  DISCLOSURES: { check: "C-41.13", what: "bias_manifest and the statement's acknowledgement list, required of a bio-case-document/3 (REC-188)" }
+  DISCLOSURES: { check: "C-41.13", what: "bias_manifest, the statement's acknowledgement list and the statement's WRITER, required of a bio-case-document/3 (REC-188; the writer REC-212)" }
 };
 var C41 = Object.fromEntries(
   Object.entries(CASE_DOCUMENT_FAMILY).map(([k, v]) => [k, v.check])
@@ -12203,13 +12311,20 @@ function checkCaseDocument(fm, ctx = {}) {
     if (!Array.isArray(acks)) {
       findings.push(f(C41.COMPLETENESS, "error", "a case document's completeness_acknowledgements must be a list \u2014 empty when nobody but the statement's author acknowledged it (BIO_Publication \xA73 rule 11)"));
     } else {
-      const author = c && typeof c.author === "string" ? c.author : null;
+      const publisher = c && typeof c.author === "string" ? c.author : null;
+      const statesWriter = !!c && Object.prototype.hasOwnProperty.call(c, "statement_by");
+      const writer = statesWriter && typeof c.statement_by === "string" && c.statement_by.trim() ? c.statement_by.trim() : null;
+      const writerUndetermined = statesWriter && !writer;
       for (const a of acks) {
         if (!a || typeof a !== "object" || !["participant", "recipient"].includes(a.kind) || typeof a.by !== "string" || !a.by.trim() || typeof a.at !== "string")
           findings.push(f(C41.COMPLETENESS, "error", `a case document lists an acknowledgement of its statement that names no acknowledger, kind (participant or recipient) or date (got ${JSON.stringify(a)}): an acknowledgement is an authored, attributed, dated act, and an unattributed one is the record claiming a second reader it cannot name`));
-        else if (a.kind === "participant" && author && a.by === author)
-          findings.push(f(C41.COMPLETENESS, "error", `a case document lists ${a.by}, the completeness statement's own author, as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11), and an author acknowledging their own statement has read it once`));
+        else if (a.kind === "participant" && writer && a.by === writer)
+          findings.push(f(C41.COMPLETENESS, "error", `a case document lists ${a.by}, the member who WROTE its exclusion statement (completeness.statement_by), as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11), and the writer of the sentence has read it once. Who wrote the statement and who published the case are two acts and two names (\xA73 rule 13) \u2014 this is the writer, whether or not they are also completeness.author`));
+        else if (a.kind === "participant" && publisher && a.by === publisher)
+          findings.push(f(C41.COMPLETENESS, "error", `a case document lists ${a.by}, completeness.author \u2014 the member who PREPARED AND PUBLISHED this case and authored this completeness block at that act \u2014 as having acknowledged its statement: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11), and the member who authored the block is its first reader by construction`));
       }
+      if (writerUndetermined && acks.some((a) => a && typeof a === "object" && a.kind === "participant"))
+        findings.push(f(C41.COMPLETENESS, "error", `a case document states that who wrote its exclusion statement is UNDETERMINED (completeness.statement_by is null) and lists ${acks.filter((a) => a && typeof a === "object" && a.kind === "participant").length} participant acknowledgement(s) of it: an acknowledgement is a SECOND person's reading (BIO_Publication \xA73 rule 11), and a document that cannot say who the FIRST reader was cannot support the claim that any of these is a second. Publish the edition again from a draft whose statement carries an author, or let the list stand with its recipients alone \u2014 a recipient of a review copy is never the statement's writer`));
       if (c && c.acknowledged !== void 0 && c.acknowledged !== acks.length)
         findings.push(f(C41.COMPLETENESS, "error", `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
     }
@@ -12260,6 +12375,14 @@ function checkCaseDocument(fm, ctx = {}) {
         "error",
         `a ${CASE_DOCUMENT_FORMAT} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal \u2014 an ABSENT field is silence about who else read what this case leaves out (BIO_Publication \xA73 rule 11)`,
         ["re-publish through op=publish, which lists every acknowledgement of the statement it publishes"]
+      ));
+    }
+    if (!c || !Object.prototype.hasOwnProperty.call(c, "statement_by") || !(c.statement_by === null || typeof c.statement_by === "string" && c.statement_by.trim())) {
+      findings.push(f(
+        C41.DISCLOSURES,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.statement_by, the member who WROTE its exclusion statement \u2014 a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication \xA73 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got ${c ? JSON.stringify(c.statement_by ?? null) : void 0}${c && !Object.prototype.hasOwnProperty.call(c, "statement_by") ? ", with no such key" : ""})`,
+        ["re-publish through op=publish, which carries the draft's server-stamped statement_by onto the document"]
       ));
     }
   }
@@ -13314,6 +13437,57 @@ var STATEMENT_ACK_CHECKS = {
     check: "C-82.1",
     where: "src/store.mjs acknowledgeStatement > is-statement-ack-documents-bound",
     translation: "More unsigned case documents of this project carry this exact exclusion statement than one acknowledgement can update at once. Updating only some would leave the others listing fewer second readers than the record holds, so nothing was recorded. Sign or replace some of those documents, then acknowledge the statement again."
+  },
+  /* D-507 / IC-270 — THE SIX REFUSALS THAT REACHED A MEMBER AS MACHINE WORDS. UI-89's worker measured it
+     at the surface: of the seven conditions `acknowledgeStatement` refuses on, only C-82.1 above held a
+     row, so the other six arrived carrying the plane's authored `detail` and NO canned translation, which
+     is the state DEC-49 exists to make impossible (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10). The
+     obstacle was the same STRUCTURAL one D-484 met at `NO_BASIS`: a row holds ONE `where` naming the
+     SMALLEST SPAN in which its refusal is enforced, and `acknowledgeStatement`'s `refusal` helper stood
+     BELOW all six, so none of them could be built through it and none could honestly hold a row. The six
+     returns now go through the helper, each inside its own DEC-49 region, and each carries the sentence
+     below beside its unchanged `reason` and `detail`.
+     THE WORDS ARE BOB #33's, approved 2026-09-24 and used verbatim. One was checked against the code and
+     is right rather than narrow: C-82.5 says "This draft", and the case-DOCUMENT door cannot reach it —
+     `publishCase` refuses `NO_STATEMENT` (region `is-publish-statement`) before authoring any document, so
+     every case document in the store carries a non-empty `completeness.statement` and the draft door is
+     the only one that reaches an empty one. */
+  STATEMENT_ACK_NO_SUBJECT: {
+    check: "C-82.2",
+    where: "src/store.mjs acknowledgeStatement > is-statement-ack-subject",
+    translation: "Say which statement you are acknowledging: a draft case, or a case document, by its case and edition, that has been written but not yet signed."
+  },
+  STATEMENT_ACK_ALREADY_SIGNED: {
+    check: "C-82.3",
+    where: "src/store.mjs acknowledgeStatement > is-statement-ack-signed",
+    translation: "This edition of the case is already signed, and the signature covers its list of who acknowledged the statement, so a new acknowledgement could not appear in it. A signed edition is corrected only by publishing the next edition."
+  },
+  STATEMENT_ACK_NOT_A_PARTICIPANT: {
+    check: "C-82.4",
+    where: "src/store.mjs acknowledgeStatement > is-statement-ack-participant",
+    translation: "Only someone who has joined the project that makes this case, or someone given a review copy of it, can acknowledge its statement. Being able to see a project is not the same as having joined it: an invited member who has not joined yet, and an administrator, cannot acknowledge it."
+  },
+  STATEMENT_ACK_NO_STATEMENT: {
+    check: "C-82.5",
+    where: "src/store.mjs acknowledgeStatement > is-statement-ack-statement",
+    translation: "This draft does not yet say what its case leaves out, so there is nothing to acknowledge. Once an editor of the draft writes that statement, you can acknowledge it."
+  },
+  STATEMENT_ACK_BY_ITS_AUTHOR: {
+    check: "C-82.6",
+    where: "src/store.mjs acknowledgeStatement > is-statement-ack-by-its-author",
+    /* CONDUCT #20 at c20-batch23: REC-212 sends a SECOND person through this code — the member who PUBLISHED the
+       case, who did not write its statement (§3 rule 13) — and the D-507 sentence told them "You wrote this
+       statement", which is false of them. Generalised at the union to be true of both; the words go to BOB #33,
+       who approved the originals, to confirm or replace. */
+    translation: "You wrote this statement or published this case, so you have already read it. An acknowledgement means a second person has read what the case leaves out, so it has to come from someone else: another participant in the project, or a reader given a review copy. The case can be published without one, and will say so."
+  },
+  STATEMENT_ACK_AUTHOR_UNDETERMINED: {
+    check: "C-82.7",
+    where: "src/store.mjs acknowledgeStatement > is-statement-ack-author-undetermined",
+    /* CONDUCT #20 at c20-batch23: REC-212 reaches this code from a CASE DOCUMENT that states its writer could not
+       be established, where "this draft" and "ask an editor to save it again" are both false. Generalised at the
+       union to name both routes; to BOB #33 with the other. */
+    translation: "The record does not say who wrote this statement, so it cannot tell whether you are its author. For a draft, ask an editor of the project to save the statement again; for a published case, it can be published again from a draft that records who wrote it. You can acknowledge it after that. The case can be published either way."
   }
 };
 var THEME_CHECKS = {
@@ -15324,7 +15498,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.23.0";
+var CATALOG_VERSION = "1.25.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -21527,6 +21701,17 @@ function archiveLocatorFrom(res, requested) {
 
 // src/render.mjs
 var RENDER_DEFAULTS = Object.freeze({
+  /* D-492: THE NAVIGATION BOUND, ASKED OF THE RENDERER AND RESERVED AGAINST THE
+     ALLOWANCE. A render's maximum browser cost is the time it may spend getting to
+     the page plus the time the wait condition may burn once there, so the two
+     together are what `renderReserveMs` reserves at admission. CHOSEN, NOT MEASURED,
+     and stated as chosen for the same reason the daily allowance is: no instrument
+     here has timed a navigation, and no platform enforces this number for us. What
+     it buys is that the reservation is a bound the renderer was ASKED to hold, not
+     one this module invented for the arithmetic — a renderer that overruns its own
+     asked bounds overruns the reservation too, and `renderSpend` then records the
+     time it REPORTED, which is the only figure the plane ever has. */
+  navigation_timeout_ms: 3e4,
   viewport: Object.freeze({ width: 1280, height: 800 }),
   dpr: 1,
   locale: "en-US",
@@ -21534,12 +21719,35 @@ var RENDER_DEFAULTS = Object.freeze({
   wait: Object.freeze({ until: "networkidle", timeout_ms: 15e3 })
 });
 var RENDERED_METHOD = "rendered";
+var TIMEOUT_WORD = /timed?[ _-]?out|timeout/;
+function waitFiredClass(fired, askedWait) {
+  if (!isStr(fired)) return "undetermined";
+  const f2 = fired.trim().toLowerCase();
+  if (TIMEOUT_WORD.test(f2)) return "timeout";
+  const until = askedWait && isStr(askedWait.until) ? askedWait.until.trim().toLowerCase() : null;
+  return until && f2 === until ? "condition" : "undetermined";
+}
+var RENDER_INCOMPLETE_READING = "render may be incomplete (wait timed out)";
+function completenessReading(render) {
+  if (!render || render.completeness !== "undetermined") return null;
+  if (render.wait && render.wait.fired_class === "timeout") return RENDER_INCOMPLETE_READING;
+  return "render completeness is undetermined (which wait ended the render was not established)";
+}
 var RENDER_DAILY_ALLOWANCE_MS_DEFAULT = 20 * 60 * 1e3;
 function renderAllowanceMs(env) {
   const v = env && env.RENDER_DAILY_ALLOWANCE_MS;
   if (v === void 0 || v === null || v === "") return RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
+}
+function renderReserveMs(asked = RENDER_DEFAULTS) {
+  const pos = (v, fallback) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 ? n : fallback;
+  };
+  const wait = pos(asked && asked.wait && asked.wait.timeout_ms, RENDER_DEFAULTS.wait.timeout_ms);
+  const nav = pos(asked && asked.navigation_timeout_ms, RENDER_DEFAULTS.navigation_timeout_ms);
+  return Math.ceil(wait + nav);
 }
 var NON_DATA_TYPES = Object.freeze({
   script: "code",
@@ -21620,6 +21828,13 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at })
     if (v === null || v === void 0) undetermined.push(`${k}: not reported by the renderer`);
     return v ?? null;
   };
+  const waitFired = pick("wait.fired", answer.wait && isStr(answer.wait.fired) ? answer.wait.fired : null);
+  const firedClass = waitFiredClass(waitFired, asked.wait);
+  const completeness = firedClass === "condition" ? "condition_met" : "undetermined";
+  if (firedClass === "timeout")
+    undetermined.push(`completeness: ${RENDER_INCOMPLETE_READING} \u2014 the renderer's wait ended on its timeout${num(asked.wait && asked.wait.timeout_ms) !== null ? ` (${asked.wait.timeout_ms} ms asked)` : ""}${isStr(asked.wait && asked.wait.until) ? ` rather than on the \`${asked.wait.until}\` condition` : ""}, so what the page would have shown had the condition been met is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (BOB #32, 2026-09-24).`);
+  else if (firedClass === "undetermined")
+    undetermined.push(`completeness: ${isStr(waitFired) ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the \`${asked.wait && asked.wait.until || "(none asked)"}\` condition this plane asked for nor a timeout` : "the renderer did not report which wait ended the render"}, so whether the render ran to its condition is undetermined and this rendering may be incomplete.`);
   const render = {
     of: shellSha,
     engine: pick("engine", isStr(answer.engine) ? answer.engine : null),
@@ -21628,7 +21843,13 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at })
     dpr: pick("dpr", num(answer.dpr)),
     locale: pick("locale", isStr(answer.locale) ? answer.locale : null),
     timezone: pick("timezone", isStr(answer.timezone) ? answer.timezone : null),
-    wait: { asked: asked.wait, fired: pick("wait.fired", answer.wait && isStr(answer.wait.fired) ? answer.wait.fired : null) },
+    /* D-499: the renderer's own word, and the plane's three-valued reading of it. */
+    wait: { asked: asked.wait, fired: waitFired, fired_class: firedClass },
+    /* D-499 / BOB #32: `condition_met` says the wait ended on the condition ASKED —
+       not that the page was finished, which no renderer reports. `undetermined`
+       carries its reason in `undetermined[]` above. The GRADE is untouched either
+       way: grade tracks directness, never technique or completeness. */
+    completeness,
     elapsed_ms: pick("elapsed_ms", num(answer.elapsed_ms)),
     navigated_to: isStr(answer.navigated_to) ? answer.navigated_to : null,
     status: num(answer.status),
@@ -22673,7 +22894,78 @@ async function loadFont(doc, fontVal) {
     }
   }
   if (width == null) width = isType0 ? 2 : 1;
-  return { subtype, isType0, baseFont, toUni, width };
+  const w = fontWidths(doc, map, subtype, isType0);
+  return { subtype, isType0, baseFont, toUni, width, widths: w.widths, widthsWhy: w.why };
+}
+function numOf(doc, v) {
+  v = doc.resolve(v);
+  return typeof v === "number" ? v : null;
+}
+function glyphScale(doc, map, subtype) {
+  if (subtype !== "Type3") return 1e-3;
+  const fm = doc.resolve(map.FontMatrix);
+  if (!fm || fm.t !== "arr" || fm.items.length < 6) return null;
+  const a = numOf(doc, fm.items[0]);
+  return typeof a === "number" && a !== 0 ? a : null;
+}
+function fontWidths(doc, map, subtype, isType0) {
+  if (isType0) return cidWidths(doc, map);
+  const scale = glyphScale(doc, map, subtype);
+  if (scale == null) return { widths: null, why: "type3_no_font_matrix" };
+  const first = numOf(doc, map.FirstChar);
+  const arr = doc.resolve(map.Widths);
+  if (first == null || !arr || arr.t !== "arr" || arr.items.length === 0) {
+    return { widths: null, why: "no_widths_array" };
+  }
+  const vals = arr.items.map((x) => numOf(doc, x));
+  const desc = doc.dictOf(map.FontDescriptor);
+  const missing = (desc ? numOf(doc, desc.MissingWidth) : null) ?? 0;
+  const widths = (code) => {
+    const i = code - first;
+    const w = i >= 0 && i < vals.length ? vals[i] : null;
+    return (w == null ? missing : w) * scale;
+  };
+  return { widths, why: null };
+}
+function cidWidths(doc, map) {
+  const enc2 = nameOf(doc, map.Encoding);
+  if (enc2 !== "Identity-H" && enc2 !== "Identity-V") {
+    return { widths: null, why: "cid_encoding_not_identity" };
+  }
+  const descArr = doc.resolve(map.DescendantFonts);
+  const cid = descArr && descArr.t === "arr" && descArr.items.length ? doc.dictOf(descArr.items[0]) : null;
+  if (!cid) return { widths: null, why: "no_descendant_font" };
+  const dw = numOf(doc, cid.DW) ?? 1e3;
+  const table = /* @__PURE__ */ new Map();
+  const wArr = doc.resolve(cid.W);
+  if (wArr && wArr.t === "arr") {
+    const items = wArr.items.map((x) => doc.resolve(x));
+    let i = 0;
+    while (i < items.length) {
+      const c = items[i];
+      if (typeof c !== "number") {
+        i++;
+        continue;
+      }
+      const next = items[i + 1];
+      if (next && typeof next === "object" && next.t === "arr") {
+        const list = next.items.map((x) => numOf(doc, x));
+        for (let k = 0; k < list.length; k++) if (list[k] != null) table.set(c + k, list[k]);
+        i += 2;
+        continue;
+      }
+      const last = typeof next === "number" ? next : null;
+      const w = typeof items[i + 2] === "number" ? items[i + 2] : null;
+      if (last != null && w != null && last >= c && last - c <= 65535) {
+        for (let code = c; code <= last; code++) table.set(code, w);
+        i += 3;
+        continue;
+      }
+      i++;
+    }
+  }
+  const widths = (code) => (table.has(code) ? table.get(code) : dw) * 1e-3;
+  return { widths, why: null };
 }
 var HEX_CAP = 64;
 function bytesToHex(bytes, cap = HEX_CAP) {
@@ -22731,6 +23023,7 @@ function matMul(a, b) {
 }
 var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
 var BASELINE_EPS = 1e-6;
+var WORD_GAP_EM = 0.25;
 async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
@@ -22753,6 +23046,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const show = (bytes) => {
     if (!bytes || bytes.length === 0) return;
     if (!curFont) {
+      penKnown = false;
+      inkValid = false;
       undetermined.push({
         page: pageIdx,
         reason: curFontName ? "font_not_in_resources" : "no_current_font",
@@ -22763,6 +23058,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       return;
     }
     if (!curFont.toUni) {
+      advanceOver(bytes);
+      endRun();
       undetermined.push({
         page: pageIdx,
         reason: curFont.isType0 ? "cid_font_no_tounicode" : "no_tounicode",
@@ -22774,6 +23071,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
     const { codes, leftover } = bytesToCodes(bytes, curFont.width);
     for (const code of codes) {
+      advanceOne(code);
       const u = curFont.toUni.get(code);
       if (u == null) {
         undetermined.push({
@@ -22783,9 +23081,18 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           codes: code.toString(16).padStart((curFont.width || 1) * 2, "0"),
           count: 1
         });
-      } else pieces.push(u);
+      } else {
+        if (softAt === pieces.length && /^\s/.test(u)) {
+          pieces.pop();
+          softAt = -1;
+        }
+        pieces.push(u);
+      }
     }
+    endRun();
     if (leftover) {
+      penKnown = false;
+      inkValid = false;
       undetermined.push({
         page: pageIdx,
         reason: "code_width_misaligned",
@@ -22812,8 +23119,82 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   let leading = 0;
   let lineY = null;
   const breakLine = () => {
+    if (softAt === pieces.length && pieces.length) {
+      pieces.pop();
+      softAt = -1;
+    }
     pieces.push("\n");
     lineY = baselineOf(tlm, ctm);
+  };
+  let tmat = IDENTITY_MATRIX.slice();
+  let penKnown = true;
+  let tfs = 0;
+  let tc = 0;
+  let tw = 0;
+  let th = 1;
+  let softAt = -1;
+  let inkX = 0;
+  let inkEm = null;
+  let inkValid = false;
+  const deviceX = (m) => m[4] * ctm[0] + m[5] * ctm[2] + ctm[4];
+  const emDevice = () => {
+    const m = matMul(tmat, ctm);
+    return Math.abs(tfs) * th * Math.hypot(m[0], m[1]);
+  };
+  const softSpace = () => {
+    if (!pieces.length) return;
+    const last = pieces[pieces.length - 1];
+    if (last.endsWith(" ") || last.endsWith("\n")) return;
+    pieces.push(" ");
+    softAt = pieces.length;
+  };
+  const judgeGap = (toX) => {
+    if (!inkValid) return;
+    const em = inkEm ?? emDevice();
+    if (!(em > 0) || !Number.isFinite(em)) return;
+    const gapEm = (toX - inkX) / em;
+    if (Math.abs(gapEm) > WORD_GAP_EM) softSpace();
+  };
+  const endRun = () => {
+    markInk();
+    if (penKnown) inkEm = emDevice();
+  };
+  const advanceOne = (code) => {
+    if (!penKnown) return;
+    const w0 = curFont && curFont.widths ? curFont.widths(code) : null;
+    if (w0 == null || !Number.isFinite(w0)) {
+      penKnown = false;
+      return;
+    }
+    const spacing = tc + (curFont.width === 1 && code === 32 ? tw : 0);
+    tmat = matMul([1, 0, 0, 1, (w0 * tfs + spacing) * th, 0], tmat);
+  };
+  const advanceOver = (bytes) => {
+    if (!penKnown) return;
+    if (!curFont || !curFont.widths) {
+      penKnown = false;
+      return;
+    }
+    const { codes, leftover } = bytesToCodes(bytes, curFont.width);
+    for (const code of codes) advanceOne(code);
+    if (leftover) penKnown = false;
+  };
+  const advanceBy = (adj) => {
+    if (!penKnown) return;
+    tmat = matMul([1, 0, 0, 1, -adj / 1e3 * tfs * th, 0], tmat);
+  };
+  const markInk = () => {
+    if (!penKnown) {
+      inkValid = false;
+      return;
+    }
+    inkX = deviceX(tmat);
+    inkValid = true;
+  };
+  const penToLine = () => {
+    tmat = tlm.slice();
+    penKnown = true;
+    markInk();
   };
   for (const tk of toks) {
     if (tk.t !== "op") {
@@ -22825,6 +23206,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         const nameTok = lastOfType("name");
         curFontName = nameTok ? nameTok.v : null;
         curFont = curFontName ? await getFont(curFontName) : null;
+        const sz = numArgs(1);
+        if (sz) tfs = sz[0];
         break;
       }
       case "Tj": {
@@ -22845,14 +23228,25 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           }
           if (!inArr) continue;
           if (it.t === "str") show(it.bytes);
-          else if (it.t === "num" && it.v < -100) pieces.push(" ");
+          else if (it.t === "num") {
+            if (it.v < -100) pieces.push(" ");
+            advanceBy(it.v);
+          }
         }
         break;
       }
       case "'":
       case '"': {
+        if (tk.v === '"') {
+          const a = numArgs(2);
+          if (a) {
+            tw = a[0];
+            tc = a[1];
+          }
+        }
         tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
         breakLine();
+        penToLine();
         const st = lastOfType("str");
         if (st) show(st.bytes);
         break;
@@ -22870,10 +23264,29 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       }
       case "BT":
         tlm = IDENTITY_MATRIX.slice();
+        tmat = tlm.slice();
+        penKnown = true;
         break;
       case "TL": {
         const a = numArgs(1);
         if (a) leading = a[0];
+        break;
+      }
+      /* D-502: the three text-state parameters that enter a glyph's horizontal
+         displacement beside the width itself. They change no character. */
+      case "Tc": {
+        const a = numArgs(1);
+        if (a) tc = a[0];
+        break;
+      }
+      case "Tw": {
+        const a = numArgs(1);
+        if (a) tw = a[0];
+        break;
+      }
+      case "Tz": {
+        const a = numArgs(1);
+        if (a) th = a[0] / 100;
         break;
       }
       case "Td":
@@ -22885,6 +23298,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         tlm = matMul([1, 0, 0, 1, tx, ty], tlm);
         if (ty !== 0) breakLine();
         else if (lineY === null) lineY = baselineOf(tlm, ctm);
+        else judgeGap(deviceX(tlm));
+        penToLine();
         break;
       }
       case "Tm": {
@@ -22893,11 +23308,14 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         tlm = m;
         const y = baselineOf(tlm, ctm);
         if (lineY === null || Math.abs(y - lineY) > BASELINE_EPS) breakLine();
+        else judgeGap(deviceX(tlm));
+        penToLine();
         break;
       }
       case "T*":
         tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
         breakLine();
+        penToLine();
         break;
       default:
         break;
@@ -23919,7 +24337,13 @@ function readingPositionInExtent(position, extentKind, extent) {
   return e.shape === p.shape;
 }
 var undeterminedChars = (page) => page && Array.isArray(page.undetermined) ? page.undetermined.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0) : 0;
-var decodedChars = (page) => page && typeof page.text === "string" ? page.text.length : 0;
+var WHITESPACE = /\s/u;
+var decodedChars = (page) => {
+  if (!page || typeof page.text !== "string") return 0;
+  let n = 0;
+  for (const ch of page.text) if (!WHITESPACE.test(ch)) n++;
+  return n;
+};
 function perPageTierWinner(p1, p2) {
   if (!p2) return "tier1";
   if (!p1) return "tier2";
@@ -28537,6 +28961,17 @@ function causesNotRuledOut(missingCause, { evidenceOneSided = void 0 } = {}) {
   if (evidenceOneSided === false) return ["purged", "never_looked"];
   return [...ALL_MISSING_ROW_CAUSES];
 }
+var WATERMARK_SECOND_MS = 1e3;
+var WATERMARK_HAS_FRACTION = /\.\d+Z?$/;
+function watermarkUncertaintyMs(firstAt) {
+  return WATERMARK_HAS_FRACTION.test(String(firstAt ?? "")) ? 0 : WATERMARK_SECOND_MS;
+}
+function enteredAfterFirstRow(enteredAt, firstAt) {
+  const entered = Date.parse(String(enteredAt ?? ""));
+  const first = Date.parse(String(firstAt ?? ""));
+  if (!Number.isFinite(entered) || !Number.isFinite(first)) return false;
+  return entered >= first - watermarkUncertaintyMs(firstAt);
+}
 function readerRunObservation(reading, captureSha, { readerRegistered = null } = {}) {
   if (!reading || typeof reading !== "object")
     return { row: null, why: "no reading was persisted for this capture, so no reader run happened here to record. A look not taken is the ABSENCE of a row (section 5.1)" };
@@ -30181,7 +30616,12 @@ var Store = class _Store extends DurableObject {
          liar this column replaces. NULL reads back as UNDETERMINED, stated, and `op=statementack` refuses by
          name (`STATEMENT_ACK_AUTHOR_UNDETERMINED`) rather than attribute the sentence to whoever last
          touched the draft. */
-      ["case_drafts", "statement_by", "TEXT"]
+      ["case_drafts", "statement_by", "TEXT"],
+      /* D-492: browser time COMMITTED to renders in flight and not yet reported. NOT NULL with a
+         DEFAULT because it is a running total and not an attribution: a store written before this
+         column existed had no renders in flight at the moment it gained the column, so 0 is the
+         MEASURED truth for every old row rather than a value a backfill reached for. */
+      ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"]
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -30367,6 +30807,7 @@ var Store = class _Store extends DurableObject {
     ))
       this.#writeSupersededBy(r.target_id);
     this.#seedMintLedger();
+    this.#reindexProjectSight();
   }
   /* The projection derived from a bundle.md, using the CATALOG'S OWN parser so
      the store's view and the checker's view cannot disagree about what the
@@ -37026,7 +37467,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       lock_violations: Array.isArray(lens.lock_violations) ? lens.lock_violations.length : 0,
       stated: lens.in_force === true ? `the effective bias set in force for ${proj} at publication, frozen here and never recomputed` : lens.in_force === null ? String(lens.stated) : "no manifest was in force"
     };
-    const acks = this.#statementAcknowledgements(proj, theCase, edition, stmt, who);
+    const writer = this.#statementWriter(proj, theCase, edition, stmt, who);
+    const acks = this.#statementAcknowledgements(proj, theCase, edition, stmt, who, writer);
     const docText = _Store.#caseDocumentText({
       caseId: theCase,
       edition,
@@ -37045,6 +37487,9 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       at: when,
       searched,
       conclusions: conclusionRows,
+      /* REC-212 / §3 rule 13: the writer of the statement, beside the author of the block. */
+      statementBy: writer.by,
+      statementByStated: writer.stated,
       /* D-442 / rule 12 (b): per member its own edition and the frozen pair and
          grounds, read at this act — stated here ONCE instead of in the member. */
       frozen,
@@ -37135,7 +37580,15 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         statement_sha: acks.statementSha,
         acknowledgements: acks.rows,
         acknowledgements_truncated: acks.truncated,
-        ...acks.byAuthor ? { acknowledgements_by_author_not_listed: acks.byAuthor } : {}
+        ...acks.byAuthor ? { acknowledgements_by_author_not_listed: acks.byAuthor } : {},
+        /* REC-212 / §3 rule 13: the writer of the sentence, named beside the author of
+           this block, with what the record knows about how it knows. The two counts
+           below are what the list LEFT OUT and why — an acknowledgement withheld and
+           not stated would be the list claiming fewer readers than the record holds. */
+        statement_by: writer.by,
+        statement_by_stated: writer.stated,
+        ...acks.byWriter ? { acknowledgements_by_statement_writer_not_listed: acks.byWriter } : {},
+        ...acks.withheldWriterUndetermined ? { acknowledgements_withheld_writer_undetermined: acks.withheldWriterUndetermined } : {}
       },
       author: who,
       at: when,
@@ -37195,6 +37648,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     excluded,
     author,
     at,
+    /* REC-212 / IC-272 / BIO_Publication_v0_1.md §3 rule 13 (BOB #32 (b),
+       2026-09-24): WHO WROTE THE STATEMENT, as distinct from `author`, who
+       PREPARED AND PUBLISHED the case. Two acts, two names, never conflated.
+       Computed by the caller (`#statementWriter`) for the reason `searched` and
+       `conclusions` are — this method is pure and static and the answer needs the
+       store. `null` is UNDETERMINED and is STATED, never filled in from `author`. */
+    statementBy = null,
+    statementByStated = "",
     /* REC-96 / IC-112: the `searched` section, COMPUTED BY THE CALLER
        and passed in, because this method is pure and static on purpose
        and the section needs the store. It is REQUIRED rather than
@@ -37305,6 +37766,16 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       `  subject_position: ${position}`,
       `  subject_justification: "${_Store.#fmSafe(justification)}"`,
       `  author: ${author}`,
+      /* REC-212 / §3 rule 13 — TWO ACTS, TWO NAMES, IN THE SIGNED BLOCK. `author` above is the member
+         who PREPARED AND PUBLISHED this case and authored this block; this is the member who wrote the
+         sentence `statement` prints. They are the same person in the common case and are NOT one fact:
+         while this key did not exist, C-41.10's exclusion had only `author` to read, so the writer of
+         the statement could be listed as its own second reader whenever somebody else published.
+         `null` is UNDETERMINED — stated, never back-filled from `author` (BOB #32 (b), 2026-09-24).
+         IT SITS ABOVE `statement_sha` ON PURPOSE: `#reauthorAcknowledgements` re-splices the frontmatter
+         run that STARTS at `  statement_sha:`, so a key written below this point would be silently
+         dropped by the next acknowledgement that lands on an unsigned document. */
+      `  statement_by: ${statementBy ?? "null"}`,
       `  at: "${at}"`,
       /* D-150 / §3 rule 11 — THE STATEMENT'S SECOND READERS, IN THE SIGNED BLOCK. The hash
          names the sentence they read (a reader can recompute it from `statement` above); the
@@ -37440,6 +37911,13 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       ...(excluded || []).length ? (excluded || []).map((r) => `- ${r.target ? r.target + " \u2014 " : ""}${r.description || "(named above)"}: ${r.reason}`) : ["Nothing material was excluded from this case."],
       "",
       `Position on putting this case to its subject: ${position}. ${justification}`,
+      "",
+      /* REC-212 / §3 rule 13 — IN THE BODY, BESIDE THE SENTENCE IT IS ABOUT, for this method's own
+         reason: a member reviews and signs the BODY, and a key-value pair they have to decode is not a
+         thing anybody reviewed. It states WHERE the name came from as well as the name, which is what
+         makes UNDETERMINED readable rather than blank. ABOVE the acknowledgement prose, whose head
+         `#reauthorAcknowledgements` splices from, so a later acknowledgement leaves this line alone. */
+      `**Who wrote this statement.** ${statementByStated}`,
       "",
       /* D-150 / §3 rule 11 — IN THE BODY AND IN PROSE, where the statement is: the thing a
          member reviews and signs. The check is DISCLOSED here and enforced nowhere. */
@@ -38561,6 +39039,12 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
   } = {}) {
     let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
     let authorFromDraft = false;
+    const refusal7 = (code, detail, extra) => {
+      const row = STATEMENT_ACK_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra || {} };
+    };
+    let authorStatedUndetermined = false;
+    let blockAuthor = null;
     if (bySecret) {
       const live = this.#liveReviewGrant(secretSha);
       if (!live || draft && String(draft).trim() !== live.draft.draft_id) return _Store.#noReviewCopy();
@@ -38591,60 +39075,58 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       } else {
         const cid = String(caseId ?? "").trim(), ed = Number(edition);
         if (!cid || !Number.isInteger(ed) || ed < 1)
-          return {
-            ok: false,
-            reason: "STATEMENT_ACK_NO_SUBJECT",
-            detail: "name the statement to acknowledge: draft=<a draft case's id>, or case=<case id>&edition=<n> for a case document authored and not yet signed."
-          };
+          return refusal7(
+            "STATEMENT_ACK_NO_SUBJECT",
+            "name the statement to acknowledge: draft=<a draft case's id>, or case=<case id>&edition=<n> for a case document authored and not yet signed."
+          );
         const doc = this.#one(`SELECT case_id, edition, text, ratified_at FROM case_documents
                                WHERE case_id=? AND edition=?`, cid, ed);
         if (!doc || !this.#hasCaseStanding(doc, v)) return _Store.#noReviewCopy();
         if (doc.ratified_at)
-          return {
-            ok: false,
-            reason: "STATEMENT_ACK_ALREADY_SIGNED",
-            caseId: cid,
-            edition: ed,
-            detail: `case ${cid} edition ${ed} is signed, and its completeness block \u2014 which lists who acknowledged its statement \u2014 is what the signature covers. An acknowledgement now could appear in no signed document of this edition; a published edition is corrected forward, by the next one (DEC-12).`
-          };
+          return refusal7(
+            "STATEMENT_ACK_ALREADY_SIGNED",
+            `case ${cid} edition ${ed} is signed, and its completeness block \u2014 which lists who acknowledged its statement \u2014 is what the signature covers. An acknowledgement now could appear in no signed document of this edition; a published edition is corrected forward, by the next one (DEC-12).`,
+            { caseId: cid, edition: ed }
+          );
         const fm = parseFrontmatter(doc.text).data || {};
         project = String(fm.case_project ?? "").trim();
         ident = { caseId: cid, edition: ed };
         const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : {};
         statement = c.statement;
-        statementAuthor = String(c.author ?? "").trim();
+        if (Object.prototype.hasOwnProperty.call(c, "statement_by")) {
+          statementAuthor = typeof c.statement_by === "string" ? c.statement_by.trim() : "";
+          authorStatedUndetermined = !statementAuthor;
+          blockAuthor = String(c.author ?? "").trim() || null;
+        } else {
+          statementAuthor = String(c.author ?? "").trim();
+        }
       }
       if (!project || !this.#isJoinedParticipant(project, who))
-        return {
-          ok: false,
-          reason: "STATEMENT_ACK_NOT_A_PARTICIPANT",
-          detail: "an acknowledgement of a case's exclusion statement is given by a JOINED participant of the project that produces the case, or by the recipient of a review copy through their grant (BIO_Publication \xA73 rule 11). Sight of a project is not a place in it: an invited member who has not joined, and an administrator, are neither."
-        };
+        return refusal7(
+          "STATEMENT_ACK_NOT_A_PARTICIPANT",
+          "an acknowledgement of a case's exclusion statement is given by a JOINED participant of the project that produces the case, or by the recipient of a review copy through their grant (BIO_Publication \xA73 rule 11). Sight of a project is not a place in it: an invited member who has not joined, and an administrator, are neither."
+        );
       kind = "participant";
       by = who;
     }
     const text = _Store.#fmSafe(statement);
     if (!text)
-      return {
-        ok: false,
-        reason: "STATEMENT_ACK_NO_STATEMENT",
-        detail: "this draft states nothing about what its case excludes, so there is no statement to acknowledge yet. The draft's editor authors it (statement=); acknowledge it then."
-      };
-    if (kind === "participant" && authorFromDraft && !statementAuthor)
-      return {
-        ok: false,
-        reason: "STATEMENT_ACK_AUTHOR_UNDETERMINED",
-        draft: draftId,
-        author: null,
-        detail: `this draft records no author for its exclusion statement: it was written before the plane stamped one, and who wrote the sentence that now stands is UNDETERMINED. An acknowledgement is a SECOND person's reading (BIO_Publication \xA73 rule 11), and the plane cannot tell here whether you are the first \u2014 reading the draft's last editor would attribute the statement to whoever last touched any part of it. An editor of this project saves the statement again (op=casedraft with statement=), which records who wrote its current bytes; acknowledge it then. The case publishes either way.`
-      };
-    if (kind === "participant" && statementAuthor && by === statementAuthor)
-      return {
-        ok: false,
-        reason: "STATEMENT_ACK_BY_ITS_AUTHOR",
-        author: statementAuthor,
-        detail: `you wrote this statement, and its acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11). Ask a participant of this project, or hand the draft to a reader through a review grant. The case publishes without one and says so.`
-      };
+      return refusal7(
+        "STATEMENT_ACK_NO_STATEMENT",
+        "this draft states nothing about what its case excludes, so there is no statement to acknowledge yet. The draft's editor authors it (statement=); acknowledge it then."
+      );
+    if (kind === "participant" && (authorFromDraft || authorStatedUndetermined) && !statementAuthor)
+      return refusal7(
+        "STATEMENT_ACK_AUTHOR_UNDETERMINED",
+        (authorFromDraft ? `this draft records no author for its exclusion statement: it was written before the plane stamped one, and who wrote the sentence that now stands is UNDETERMINED. ` : `this case document states that who wrote its exclusion statement could not be established, so the author of the sentence is UNDETERMINED \u2014 and it is not the member named as the case's author, who prepared and published it (BIO_Publication \xA73 rule 13). `) + `An acknowledgement is a SECOND person's reading (BIO_Publication \xA73 rule 11), and the plane cannot tell here whether you are the first \u2014 reading the draft's last editor would attribute the statement to whoever last touched any part of it. ` + (authorFromDraft ? `An editor of this project saves the statement again (op=casedraft with statement=), which records who wrote its current bytes; acknowledge it then. ` : `Publish this edition again from a draft whose statement carries an author (op=publish), and this document will name the member who wrote the sentence. `) + `The case publishes either way.`,
+        { draft: draftId, author: null }
+      );
+    if (kind === "participant" && (statementAuthor && by === statementAuthor || blockAuthor && by === blockAuthor))
+      return refusal7(
+        "STATEMENT_ACK_BY_ITS_AUTHOR",
+        (statementAuthor && by === statementAuthor ? `you wrote this statement, and its acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11). ` : `you prepared and published this case and authored its completeness block at that act, so you are its FIRST reader; an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication \xA73 rule 11). Who WROTE the statement is a separate fact, stated separately in these bytes (\xA73 rule 13). `) + `Ask a participant of this project, or hand the draft to a reader through a review grant. The case publishes without one and says so.`,
+        { author: statementAuthor && by === statementAuthor ? statementAuthor : blockAuthor }
+      );
     const statementSha = _Store.#statementSha(text);
     const ackMax = _Store.STATEMENT_ACK_DOCUMENTS_MAX;
     const needle = `
@@ -38664,10 +39146,6 @@ case_project: ${project}
       projectLine,
       ackMax + 1
     );
-    const refusal7 = (code, detail, extra) => {
-      const row = STATEMENT_ACK_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra || {} };
-    };
     if (found.length > ackMax)
       return refusal7(
         "STATEMENT_ACK_DOCUMENTS_OVER_BOUND",
@@ -38781,12 +39259,14 @@ case_project: ${project}
         why: "this case document was authored before acknowledgements were recorded, so it has no list to add to; it is left exactly as it was signed-for-review"
       };
     const project = String(fm.case_project ?? "").trim();
+    const writer = Object.prototype.hasOwnProperty.call(c, "statement_by") ? { by: typeof c.statement_by === "string" && c.statement_by.trim() ? c.statement_by.trim() : null } : null;
     const acks = this.#statementAcknowledgements(
       project,
       doc.case_id,
       doc.edition,
       c.statement ?? "",
-      String(c.author ?? "").trim() || null
+      String(c.author ?? "").trim() || null,
+      writer
     );
     const text = [
       ...lines.slice(0, f0),
@@ -38815,7 +39295,21 @@ case_project: ${project}
      acknowledgement taken through such a draft matches too: it is the same statement, in the
      same project, at the only edition a new case has. Bounded, and a list that hit the bound
      says so rather than presenting a page as the whole. */
-  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null) {
+  /* REC-212 / §3 rule 13 — `writer` IS THE SECOND EXCLUSION, AND IT IS A DIFFERENT ONE FROM
+     `exceptAuthor`. `exceptAuthor` is the member PUBLISHING: they author the completeness block at that
+     act, so their own acknowledgement of it is not a second reading, and `op=publish` has left it out
+     since D-150. `writer` is the member who wrote the SENTENCE (`#statementWriter`), which rule 11's
+     exclusion is actually about and which nothing here could see until rule 13 gave it a name.
+       - `writer === null` means NOT ASKED, and is the review copy's live list: it shows a reader every
+         acknowledgement recorded, ahead of any act that decides what a document may print.
+       - `{ by: '<member>' }` withholds that member's own.
+       - `{ by: null }` is UNDETERMINED, and withholds EVERY participant row, because any one of them
+         may BE the writer's own and a list that cannot rule that out is the record claiming a second
+         reader it cannot support (`CLAUDE.md` §2). A RECIPIENT row is never withheld by either: a grant's
+         holder is never the writer (REC-193's own sentence).
+     EVERY WITHHOLDING IS COUNTED AND RETURNED, in its own key. A row left out and not stated would make
+     the document list fewer second readers than the record holds, which its owner would then SIGN. */
+  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null, writer = null) {
     const sha = _Store.#statementSha(statement);
     const rows = this.#rows(
       `SELECT acknowledger_kind, acknowledger, recipient, at FROM statement_acknowledgements
@@ -38830,17 +39324,118 @@ case_project: ${project}
     );
     const truncated = rows.length > _Store.STATEMENT_ACK_MAX;
     const all = rows.slice(0, _Store.STATEMENT_ACK_MAX);
-    const listed = all.filter((r) => !(exceptAuthor && r.acknowledger_kind === "participant" && r.acknowledger === exceptAuthor));
+    const byPublisher = (r) => !!(exceptAuthor && r.acknowledger_kind === "participant" && r.acknowledger === exceptAuthor);
+    const byTheWriter = (r) => !!(writer && writer.by && r.acknowledger_kind === "participant" && r.acknowledger === writer.by && !byPublisher(r));
+    const undeterminedWithheld = (r) => !!(writer && writer.by === null && r.acknowledger_kind === "participant" && !byPublisher(r));
+    const listed = all.filter((r) => !byPublisher(r) && !byTheWriter(r) && !undeterminedWithheld(r));
     return {
       statementSha: sha,
       truncated,
-      byAuthor: all.length - listed.length,
+      /* UNCHANGED IN MEANING: the publisher's own, counted apart from every exclusion added since,
+         so a caller reading this number reads the same fact it has read since D-150. */
+      byAuthor: all.filter(byPublisher).length,
+      byWriter: all.filter(byTheWriter).length,
+      withheldWriterUndetermined: all.filter(undeterminedWithheld).length,
       rows: listed.map((r) => ({
         kind: r.acknowledger_kind,
         by: r.acknowledger,
         recipient: r.recipient ?? null,
         at: r.at
       }))
+    };
+  }
+  /* REC-212 / IC-272 / BIO_Publication_v0_1.md §3 rule 13 — WHO WROTE THE STATEMENT THIS CASE IS ABOUT
+       TO PUBLISH, AS DISTINCT FROM WHO PREPARED AND PUBLISHED IT. BOB #32 ruled (b), 2026-09-24: *two acts,
+       two names, never conflated*. `completeness.author` is the publisher — they author the block, date it
+       and hand the document to be signed — and it was ALSO the only name C-41.10's acknowledgement
+       exclusion had, so the member who wrote the sentence could be listed as its own second reader
+       whenever somebody else published. That is the record claiming a reading nobody made.
+  
+       THIS MEASURES NOTHING NEW. `case_drafts.statement_by` already records the writer (REC-193), stamped
+       by the SERVER at the draft write that CHANGED the statement text. This carries that stamp onto the
+       document, and it carries it by the STATEMENT'S OWN IDENTITY: `#fmSafe` of the sentence — the
+       normalisation `#statementSha` hashes, and the one REC-193's stamp itself compares — at the case
+       identity `#statementAcknowledgements` binds an acknowledgement to (this case, or a draft naming no
+       case at edition 1, which is the only edition a new case has). One identity for the writer of the
+       bytes and for their readers, never two.
+  
+       FOUR ANSWERS, EACH A FACT AND NONE A FALLBACK:
+         (1) drafts at this identity hold this sentence and AGREE on its author — that member;
+         (2) NO draft at this identity holds it — the PUBLISHER wrote these bytes AT THIS ACT. `op=publish`
+             takes `statement=` as an authored argument (it refuses NO_STATEMENT without one), so a
+             sentence no draft holds arrived in this call from this caller: a measurement of this act, not
+             a guess about an older one;
+         (3) a matching draft records NO author (written before REC-193's column), or two matching drafts
+             name DIFFERENT members — UNDETERMINED, stated, and NEVER read off `author`;
+         (4) the project holds more drafts than one bounded read lists — UNDETERMINED, with that reason.
+       The bound is `REVIEW_LIST_MAX`, `op=casedrafts`' own bound, so this scan sees exactly what a
+       project's draft list can show: one bound for both, not a second nobody decided.
+  
+       RESIDUE, STATED RATHER THAN SMOOTHED: a publisher who retypes a sentence an editor wrote in a draft
+       that has SINCE BEEN EDITED is credited with it by (2) — no draft holds those bytes any more, and the
+       record keeps no history of a draft's statement text to ask. It is the one answer here that is thin,
+       and it is why the document PRINTS where the name came from beside the name, in a sentence a member
+       reviews, instead of printing the name alone. A caller who wants the editor named publishes the
+       statement the draft holds. */
+  #statementWriter(project, caseId, edition, statement, publisher) {
+    const want = _Store.#fmSafe(statement);
+    const notFromAuthor = `It is NOT read off ${publisher}, who prepared and published this case: preparing a case is not writing its statement (BIO_Publication \xA73 rule 13).`;
+    if (!want) return {
+      by: null,
+      from: "no_statement",
+      stated: "UNDETERMINED: this case document prints no exclusion statement, so there is no sentence for anybody to have written."
+    };
+    const cap = _Store.REVIEW_LIST_MAX;
+    const rows = this.#rows(`SELECT draft_id, case_id, params, statement_by FROM case_drafts
+                             WHERE project_id=? ORDER BY created_at, draft_id LIMIT ?`, project, cap + 1);
+    if (rows.length > cap)
+      return {
+        by: null,
+        from: "drafts_unbounded",
+        stated: `UNDETERMINED: ${project} holds more drafts than one bounded read of them lists (${cap}), so which draft this sentence was written in \u2014 and therefore who wrote it \u2014 cannot be established here. ${notFromAuthor}`
+      };
+    const here = (d) => (d.case_id ?? null) === (caseId ?? null) || (d.case_id ?? null) === null && Number(edition) === 1;
+    const unreadable = [];
+    const matches = rows.filter((d) => {
+      if (!here(d)) return false;
+      let p = null;
+      try {
+        p = JSON.parse(d.params);
+      } catch {
+        unreadable.push(d.draft_id);
+        return false;
+      }
+      return _Store.#fmSafe(p && p.statement) === want;
+    });
+    if (unreadable.length)
+      return {
+        by: null,
+        from: "draft_unreadable",
+        stated: `UNDETERMINED: ${unreadable.length} draft(s) of ${project} at this case identity (${unreadable.join(", ")}) hold arguments this plane cannot read, so whether this sentence was written in one of them, and by whom, cannot be established. ${notFromAuthor}`
+      };
+    if (!matches.length)
+      return {
+        by: publisher,
+        from: "this_act",
+        stated: `${publisher} wrote this exclusion statement in the act that published this case, and prepared and published the case \u2014 two acts, one member: no draft of ${project} at this case identity holds this sentence, so these bytes arrived with this publication.`
+      };
+    if (matches.some((d) => !d.statement_by))
+      return {
+        by: null,
+        from: "draft_unrecorded",
+        stated: `UNDETERMINED: the draft this sentence stands in (${matches.map((d) => d.draft_id).join(", ")}) records no author \u2014 it was written before the plane stamped one \u2014 so who wrote the bytes this case publishes cannot be established. ${notFromAuthor} An editor who saves the statement again records who wrote the bytes that stand.`
+      };
+    const names = [...new Set(matches.map((d) => d.statement_by))];
+    if (names.length > 1)
+      return {
+        by: null,
+        from: "drafts_disagree",
+        stated: `UNDETERMINED: ${names.length} drafts of ${project} at this case identity hold this sentence and name different authors (${names.join(", ")}), so which member wrote the bytes this case publishes cannot be established. ${notFromAuthor}`
+      };
+    return {
+      by: names[0],
+      from: "draft",
+      stated: names[0] === publisher ? `${names[0]} wrote this exclusion statement, in the draft it was prepared in, and also prepared and published the case \u2014 two acts, one member.` : `${names[0]} wrote this exclusion statement, in the draft it was prepared in. ${publisher} prepared and published the case: two acts, two names (BIO_Publication \xA73 rule 13).`
     };
   }
   /* REC-198 / BIO_Publication §6A.4 — THE LIST OF A PROJECT'S DRAFTS. Every other read of `case_drafts` is keyed
@@ -39043,6 +39638,16 @@ case_project: ${project}
         );
       }
       const now = (/* @__PURE__ */ new Date()).toISOString();
+      const stmtWriter = (() => {
+        const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : null;
+        const pub = c && typeof c.author === "string" && c.author.trim() ? c.author.trim() : "(unnamed)";
+        if (!c || !Object.prototype.hasOwnProperty.call(c, "statement_by"))
+          return { by: null, stated: `this case document says nothing about who wrote its exclusion statement: it was authored before the record told the statement's writer apart from the case's publisher (BIO_Publication \xA73 rule 13), and ${pub}, who prepared and published it, is not evidence of either.` };
+        const by = typeof c.statement_by === "string" && c.statement_by.trim() ? c.statement_by.trim() : null;
+        if (!by)
+          return { by: null, stated: `UNDETERMINED: this case document states that who wrote its exclusion statement could not be established, and it is NOT read off ${pub}, who prepared and published the case (BIO_Publication \xA73 rule 13).` };
+        return { by, stated: by === pub ? `${by} wrote this case's exclusion statement, and prepared and published the case \u2014 two acts, one member.` : `${by} wrote this case's exclusion statement; ${pub} prepared and published the case \u2014 two acts, two names (BIO_Publication \xA73 rule 13).` };
+      })();
       const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
       if (owner && owner.project_id !== project)
         return {
@@ -39076,6 +39681,15 @@ case_project: ${project}
           ...completenessFields(fm),
           subject_position: fm.completeness.subject_position ?? null,
           author: fm.completeness.author ?? null,
+          /* REC-212 / §3 rule 13: WHO WROTE THE STATEMENT, committed FROM THE SIGNED BYTES and never
+             from `author` above, who prepared and published the case. THREE STATES, not two, and the
+             sentence beside the name is what tells them apart for a reader of `op=publishedcase`: a
+             name; `null` where this plane established that it could not say (a stated UNDETERMINED);
+             and a document authored before this key existed, which says NOTHING about the writer —
+             and whose publisher's name is not evidence of either. The last two both commit as null,
+             which is why the sentence is committed with them rather than derived by each reader. */
+          statement_by: stmtWriter.by,
+          statement_by_stated: stmtWriter.stated,
           at: fm.completeness.at ?? null,
           /* D-150 / §3 rule 11: THE SIGNED LIST, committed from the signed bytes. NULL — never
              an empty list — for a document authored before acknowledgements were recorded: it
@@ -39145,6 +39759,14 @@ case_project: ${project}
         edition: ed,
         project,
         roster,
+        /* REC-212 / §3 rule 13: BOTH NAMES IN THIS ACT'S ANSWER — who wrote the statement and who
+           prepared and published the case — from the one read above, so the answer and the
+           committed row are one fact. */
+        statement: {
+          author: fm.completeness && typeof fm.completeness === "object" ? fm.completeness.author ?? null : null,
+          by: stmtWriter.by,
+          stated: stmtWriter.stated
+        },
         ...completedCase && completedCase.complete && !completedCase.manifest_sha ? { completedCase } : {},
         members: roster.map((m) => {
           const r = rows.find((x) => x.target === m) || {};
@@ -44861,6 +45483,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         newSha,
         bundleId
       );
+      this.#reindexProjectSight(bundleId);
       const supersededBefore = [...this.sql.exec(
         `SELECT target_id FROM refs WHERE bundle_id=? AND kind='supersedes'`,
         bundleId
@@ -54381,19 +55004,58 @@ ${words}`;
    *  questions that could possibly diverge. A question ONE project draws on can
    *  hold no divergence and is never opened.
    *
-   *  THE `HAVING COUNT(*) > 1` IS ON THE UNGATED TABLE ON PURPOSE. It is a
-   *  CANDIDATE filter, not the answer: the gate and the severed-status
-   *  confirmation both run afterwards in `#projectsDrawingOn`, and either can
-   *  take the real count back below two, in which case no item is minted. Doing
-   *  it the other way — gating first — would make the candidate set a function
-   *  of the viewer and turn one indexed group-by into a per-viewer scan, for a
-   *  narrowing the second step performs anyway. */
-  #queueSharedInquiryCandidates() {
+   *  D-480 — THE GROUP RUNS OVER WHAT THE CALLER CAN SEE, AND THE PARAGRAPH
+   *  THAT USED TO STAND HERE WAS WRONG IN A WAY WORTH KEEPING ON THE RECORD.
+   *  It said the `HAVING COUNT(DISTINCT bundle_id) > 1` was on the UNGATED
+   *  table ON PURPOSE — a CANDIDATE filter, not the answer, since
+   *  `#projectsDrawingOn` gates afterwards and can take the real count back
+   *  below two. **That is true of every candidate the page REACHES and says
+   *  nothing about the page's EDGE**, which is the whole defect (found by
+   *  D-464's worker, `BIO_Membership_Architecture_v2.md` §7 item 7.9). The
+   *  candidate read is BOUNDED at `QUEUE_SHARED_INQUIRIES_MAX` and ordered by
+   *  `target_id`, so a hidden project's citations do two things a later gate
+   *  cannot undo: they make a question that only ONE visible project draws on
+   *  qualify as shared, and that question then TAKES A SLOT — displacing a
+   *  visible one past the cap and flipping the `inquiries_truncated` the feed
+   *  publishes on every item. A count-shaped side channel, D-447's and D-464's
+   *  class: *"Not its existence"* arriving as an aggregate.
+   *
+   *  THE FIX IS D-464'S AND D-486'S SUBTRACTION, NOT A SECOND SIGHT RULE, and
+   *  that is also the answer to the old paragraph's performance objection.
+   *  `#hiddenSets(viewer).hid` is the ONE set of bundles the caller's own
+   *  `viewerPredicate` does not pass, spelled once and read here as a set —
+   *  `NOT IN`, an indexed subtraction SQLite materialises once per statement,
+   *  never the per-row correlated gate the old paragraph rightly refused. Who
+   *  is filtered is the gate's word, inherited rather than restated: a
+   *  credential the gate does not filter (scope `member`) and an enrolled
+   *  administrator get `hid` = nothing and the read they always got, and a
+   *  viewer SENT but unrecognised is DENY, so every bundle is hidden and the
+   *  candidate set is empty — fails closed.
+   *
+   *  BOTH ENDS OF THE EDGE, and the second is not scope creep but the same
+   *  sentence: a question the caller cannot see is dropped by
+   *  `#queueSharedInquiry` a few lines below, so it never mints an item — but
+   *  until this landing it still consumed a slot on the way there. The
+   *  subtraction is over `bundles`, so a `target_id` naming NOTHING (a
+   *  `references[]` entry for a document nobody has captured — the common case)
+   *  is in no hidden set and is kept exactly as before, then dropped by the
+   *  same existence check that always dropped it. Nothing here tightens what is
+   *  ANSWERED; it decides only which rows are allowed to fill the bounded page.
+   *
+   *  THE CANDIDATE FILTER IS STILL A CANDIDATE FILTER. The severed-status
+   *  confirmation and the per-project frontmatter read still run afterwards in
+   *  `#projectsDrawingOn` and can still take the real count back below two, in
+   *  which case no item is minted. */
+  #queueSharedInquiryCandidates(viewer) {
     const cap = _Store.QUEUE_SHARED_INQUIRIES_MAX;
+    const { hid } = this.#hiddenSets(viewer);
+    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : "";
+    const args = hid ? [...hid.args, ...hid.args] : [];
     const rows = this.#rows(
-      `SELECT target_id FROM refs WHERE kind='cites'
-        GROUP BY target_id HAVING COUNT(DISTINCT bundle_id) > 1
-        ORDER BY target_id LIMIT ?`,
+      `SELECT rf.target_id AS target_id FROM refs rf WHERE rf.kind='cites'${where}
+        GROUP BY rf.target_id HAVING COUNT(DISTINCT rf.bundle_id) > 1
+        ORDER BY rf.target_id LIMIT ?`,
+      ...args,
       cap + 1
     );
     const out = rows.slice(0, cap).map((r) => r.target_id);
@@ -54479,7 +55141,7 @@ ${words}`;
    *  disagreement when it may be one project that simply has not caught up. */
   #findingsStanceDiverged(viewer, now, identity = null) {
     const out = [];
-    const shared = this.#queueSharedInquiryCandidates();
+    const shared = this.#queueSharedInquiryCandidates(viewer);
     for (const inq of shared) {
       const q = this.#queueSharedInquiry(inq, viewer);
       if (!q) continue;
@@ -54615,7 +55277,7 @@ ${words}`;
     const out = [];
     let unattributed = 0;
     const unattributedIn = [];
-    const shared = this.#queueSharedInquiryCandidates();
+    const shared = this.#queueSharedInquiryCandidates(viewer);
     for (const inq of shared) {
       const q = this.#queueSharedInquiry(inq, viewer);
       if (!q) continue;
@@ -54757,7 +55419,7 @@ ${words}`;
    *  member's inbox hygiene must not make it vanish for the team. */
   #findingsConcludedElsewhere(viewer, now) {
     const out = [];
-    const shared = this.#queueSharedInquiryCandidates();
+    const shared = this.#queueSharedInquiryCandidates(viewer);
     for (const inq of shared) {
       const q = this.#queueSharedInquiry(inq, viewer);
       if (!q) continue;
@@ -55004,6 +55666,7 @@ ${words}`;
     const pick = (o, k) => o && typeof o === "object" && typeof o[k] === "string" && o[k].trim() ? o[k].trim() : null;
     const pk = pick(item.subject, "progression_key") || pick(item.basis, "progression_key");
     const sk = pick(item.subject, "stage_key") || pick(item.basis, "stage_key");
+    const dv = item.subject && typeof item.subject === "object" && Number.isInteger(item.subject.definition_version) ? item.subject.definition_version : null;
     if (item.class === "OBLIGATION")
       return {
         available: false,
@@ -55035,7 +55698,15 @@ ${words}`;
         key: `${pk}::${sk}`,
         progression_key: pk,
         stage_key: sk,
-        detail: "this finding carries the identity the disposition act is keyed on, so Adopt, Defer and Dismiss are acts a member can actually complete. The act still checks the pair against the definition tables (NO_SUCH_PROGRESSION, BAD_STAGE) \u2014 this says the item has an identity, not that the identity is valid, and those are different claims. THE SCOPE IS `instance` AND THAT IS A CLAIM ABOUT THE SUBJECT, NOT A DEFAULT (D-266, DEC-16): a progression stage is a fact about the SHARED record, so one act clears this finding under every case it appears in, which is dedup rather than one team silencing another."
+        /* REC-211 / IC-273: THE ACT ALSO REQUIRES THE VERSION THIS FINDING WAS DERIVED
+           AGAINST, so it is published beside the key rather than left for a surface to go and
+           find. It is NOT part of `keyed_on`: the identity is still the pair, and a decision
+           is one row per pair whatever version it was taken against. Publishing it here is
+           what keeps the sentence below true — an act a member "can actually complete" is one
+           a surface holding this block has every argument for. */
+        definition_version: dv,
+        requires: ["definitionVersion"],
+        detail: "this finding carries the identity the disposition act is keyed on, so Adopt, Defer and Dismiss are acts a member can actually complete. Send `definitionVersion` with the act \u2014 the version published here, which is the one this finding was derived against: a decision binds the declared flow the member READ, and one naming a version that has since been revised is refused DEFINITION_MOVED so the member can look again (framework \xA78.2, REC-211). The act still checks the pair against the definition tables (NO_SUCH_PROGRESSION, BAD_STAGE) \u2014 this says the item has an identity, not that the identity is valid, and those are different claims. THE SCOPE IS `instance` AND THAT IS A CLAIM ABOUT THE SUBJECT, NOT A DEFAULT (D-266, DEC-16): a progression stage is a fact about the SHARED record, so one act clears this finding under every case it appears in, which is dedup rather than one team silencing another."
       };
     const homes = (item.case && Array.isArray(item.case.ancestors) ? item.case.ancestors : []).filter((a) => a && a.type === "project" && typeof a.id === "string" && a.id.trim()).map((a) => a.id.trim()).sort();
     const fid = typeof item.id === "string" && item.id.trim() ? item.id.trim() : null;
@@ -55856,6 +56527,7 @@ ${words}`;
     to,
     state,
     reason,
+    definitionVersion = null,
     decidedBy = null,
     viewer = null,
     identity = null,
@@ -55864,7 +56536,23 @@ ${words}`;
     if (items !== void 0)
       return this.#perItem(
         "proposedispose",
-        { items, progressionKey, stageKey, key, project, finding, kind, to, state, reason },
+        /* REC-211: `definitionVersion` is SHARED so a set over ONE progression names the version
+           once; `#perItem` spreads each item AFTER the shared fields, so a set spanning several
+           progressions still gives each item its own. It is not stamped like the decider, because
+           the decider is a fact about the actor and this is a fact about what the actor READ. */
+        {
+          items,
+          progressionKey,
+          stageKey,
+          key,
+          project,
+          finding,
+          kind,
+          to,
+          state,
+          reason,
+          definitionVersion
+        },
         { decidedBy, viewer, identity },
         (b) => this.proposeDispose(b)
       );
@@ -56010,8 +56698,42 @@ ${words}`;
       stage_key: sk,
       detail: `'${sk}' is not a stage of progression '${pk}' \u2014 a disposition must name a real stage`
     };
+    const currentDefinition = this.#definitionVersionOf(pk);
+    const currentVersion = currentDefinition ? currentDefinition.version : null;
+    const seenVersion = typeof definitionVersion === "number" || typeof definitionVersion === "string" && definitionVersion.trim() !== "" ? Number(definitionVersion) : NaN;
+    if (!Number.isInteger(seenVersion) || seenVersion < 1) {
+      const row = ACT_SHAPE_CHECKS.NO_DEFINITION_VERSION;
+      return {
+        ok: false,
+        reason: "NO_DEFINITION_VERSION",
+        code: "NO_DEFINITION_VERSION",
+        check: row.check,
+        translation: row.translation,
+        progression_key: pk,
+        stage_key: sk,
+        definition_version: null,
+        current_definition_version: currentVersion,
+        requires: ["definitionVersion"],
+        detail: "a disposition is a judgment of ONE version of the declared flow \u2014 the one the member was reading when they decided (framework \xA78.2). Send `definitionVersion` as the version op=proposals published beside this proposal" + (currentVersion == null ? "" : ` (it is standing at ${currentVersion})`) + ". Nothing was recorded."
+      };
+    }
+    if (seenVersion !== currentVersion) {
+      const row = ACT_SHAPE_CHECKS.DEFINITION_MOVED;
+      return {
+        ok: false,
+        reason: "DEFINITION_MOVED",
+        code: "DEFINITION_MOVED",
+        check: row.check,
+        translation: row.translation,
+        progression_key: pk,
+        stage_key: sk,
+        definition_version: seenVersion,
+        current_definition_version: currentVersion,
+        detail: `this decision names version ${seenVersion} of '${pk}' and version ${currentVersion == null ? "none" : currentVersion} is standing. Read the proposal again (op=proposals) and decide against the version in force; the earlier version still reads back in full (op=progression&version=${seenVersion}). Nothing was recorded \u2014 no disposition was written and no proposal moved.`
+      };
+    }
     const at = (/* @__PURE__ */ new Date()).toISOString();
-    const definitionVersion = this.#definitionVersionOf(pk).version;
+    const definitionVersionWritten = currentVersion;
     this.sql.exec(
       `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at,definition_version)
        VALUES (?,?,?,?,?,?,?)
@@ -56024,7 +56746,7 @@ ${words}`;
       why.slice(0, _Store.EDGE_REASON_MAX),
       by.slice(0, 200),
       at,
-      definitionVersion
+      definitionVersionWritten
     );
     return {
       ok: true,
@@ -56037,7 +56759,7 @@ ${words}`;
       decided_by: by,
       at,
       bundle: null,
-      definition_version: definitionVersion
+      definition_version: definitionVersionWritten
     };
   }
   /* ---- coordination: what LockService and the nextSeq race did ---- */
@@ -57918,6 +58640,7 @@ ${words}`;
         this.sql.exec(`DELETE FROM project_participants WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM project_visibility WHERE project_id=?`, bundleId);
+        this.sql.exec(`DELETE FROM project_sight WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM bias_adoptions WHERE scope_id=?`, bundleId);
         this.sql.exec(`DELETE FROM queue_state WHERE case_id=?`, bundleId);
         this.sql.exec(`DELETE FROM published_edges WHERE from_bundle=? OR to_bundle=?`, bundleId, bundleId);
@@ -57937,6 +58660,7 @@ ${words}`;
         this.sql.exec(`DELETE FROM project_participants`);
         this.sql.exec(`DELETE FROM project_owner_votes`);
         this.sql.exec(`DELETE FROM project_visibility`);
+        this.sql.exec(`DELETE FROM project_sight`);
         this.sql.exec(`DELETE FROM case_documents WHERE ratified_at IS NULL`);
         this.sql.exec(`DELETE FROM case_exclusions WHERE NOT EXISTS (SELECT 1 FROM case_documents d
                          WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)`);
@@ -59235,15 +59959,80 @@ ${words}`;
     if (!b || b.object_type !== "project") return _Store.SIGHT_NONE;
     return this.#visibilityOf(bundleId) === "discoverable" ? _Store.SIGHT_EXISTENCE : _Store.SIGHT_NONE;
   }
-  /* The CURRENT setting: the latest owner's act, and HIDDEN when there is none. No row is the state of every
-     project that existed before REC-149 (each was created under §7.9's promise, and no migration writes one),
-     of a creation that carried no setting, and of anything a machine created — fail closed, disclosing nothing. */
+  /* The CURRENT setting, READ FROM THE SIGHT INDEX (D-497) rather than recomputed from the act log here.
+     `project_sight` holds one row per project carrying exactly what `#reindexProjectSight` derived, so this
+     predicate and the directory's SQL read THE SAME ROWS instead of two copies of one rule — which is the
+     whole of D-497 and the reason the directory can bound its candidates in SQL at all.
+     THE `hidden` BELOW IS NOT THE DEFAULT FOR AN OWNER WHO HAS NOT ACTED. That default is in the derivation's
+     own CASE, one method down, and every project carries a row for it: the index is recomputed at every boot,
+     at every promotion, and at every owner's act. This branch is reached only by an id the index does not hold
+     — a bundle that is not a project, or one purged between the two reads — and it fails closed. */
   #visibilityOf(projectId) {
-    const r = this.#one(
-      `SELECT setting FROM project_visibility WHERE project_id=? ORDER BY seq DESC LIMIT 1`,
+    const r = this.#one(`SELECT setting FROM project_sight WHERE project_id=?`, projectId);
+    return r ? r.setting : "hidden";
+  }
+  /* ===== D-497 — THE DERIVATION, AND IT IS THE ONLY PLACE THE RULE IS STATED (Membership v2 §7, item 7.14).
+   *
+   * WHAT THIS EXISTS FOR. `#sight` was a JS predicate with no row source, so `projectDirectory` established
+   * "this caller sees none of them" by asking it about every project in the group one at a time: each statement
+   * bounded, the NUMBER of statements growing with the record. D-479 bounded what the directory PUBLISHES and
+   * reported this half as a row of its own, in these words — *"bounding that needs a row source the sight
+   * predicate itself READS, not a second copy of its rule"*. This is that row source.
+   *
+   * THE RULE, STATED ONCE: a project's setting is its OWNERS' LATEST ACT, and HIDDEN where they have never
+   * acted — every project that existed before REC-149 (each created under §7.9's promise that the uninvited see
+   * not its existence), every creation that carried no setting, and everything a machine created. It is the
+   * CASE below and nowhere else. `#visibilityOf` reads the answer; the directory joins the same table; nobody
+   * restates the default. REC-149's first build DID restate it — its directory took candidates from the
+   * visibility table — and its own `default-discoverable` control arm caught that by flipping the default and
+   * watching the directory not move. That arm now flips THIS CASE, and both must move together.
+   *
+   * DERIVED, NEVER AUTHORED. `project_visibility` stays the record: append-only, one row per owner's act. This
+   * table is a projection of it that a statement can join, recomputed WHOLE at every boot (the `#seedMintLedger`
+   * precedent) and per project wherever a project or an act changes — so a row that disagreed with the log,
+   * for any reason including a landing that moved the rule, does not survive a restart.
+   *
+   * THE ROW IS project_id AND setting AND NOTHING ELSE, AND THAT IS THE FIX TO A DEFECT THIS LANDING'S OWN
+   * FIRST DRAFT HAD. It carried a third column, `at`, a fresh timestamp written on every recompute — so an
+   * UNCHANGED boot rewrote every row with different bytes, and A RESTART PLUS A PURE READ THEN MOVED A TABLE.
+   * `versionnotice.test.mjs`'s no-write WITNESS caught it by name on the first full battery (`WITNESS QUIET`
+   * and `NOTHING WRITTEN (the whole store)`, both naming `project_sight`), which is what that witness is FOR:
+   * CLAUDE.md §5 rests every live verification's no-write guarantee on the record's tables reading the same
+   * before and after, so a derivation that writes on every boot does not cost a test, it costs the instrument.
+   * Two narrower fixes were tried at the STATEMENT and BOTH ARE REFUSED BY WORKERD with
+   * `Error: incomplete input: SQLITE_ERROR` — a `WHERE` on the conflict action, and the same guard moved into
+   * a LEFT JOIN against the index — while `node:sqlite` prepares each of them without complaint, which is the
+   * receipt for driving the plane's own engine rather than a local one. So the column went instead: a
+   * projection needs no date of its own, the act log carries every date there is, and an unchanged recompute
+   * now writes rows BYTE-IDENTICAL to the ones it found. That is idempotence at the only level the witness
+   * reads, and it costs nothing.
+   *
+   * COST, STATED. Two statements. Given a projectId both address ONE row through a primary key and an indexed
+   * lookup; given none, both run once over the projects in `bundles` — inside SQLite, nothing per row in JS,
+   * at boot only, reached by no op. `derivation-bounds.test.mjs` grades JS loops over an unbounded `#rows(` and
+   * by its own statement cannot see work inside SQL; this is stated rather than left for that reader to miss. */
+  #reindexProjectSight(projectId = null) {
+    this.sql.exec(
+      `DELETE FROM project_sight
+        WHERE (? IS NULL OR project_id = ?)
+          AND NOT EXISTS (SELECT 1 FROM bundles b
+                           WHERE b.bundle_id = project_sight.project_id AND b.object_type = 'project')`,
+      projectId,
       projectId
     );
-    return r && r.setting === "discoverable" ? "discoverable" : "hidden";
+    this.sql.exec(
+      `INSERT INTO project_sight (project_id, setting)
+       SELECT b.bundle_id,
+              CASE WHEN (SELECT pv.setting FROM project_visibility pv
+                          WHERE pv.project_id = b.bundle_id
+                          ORDER BY pv.seq DESC LIMIT 1) = 'discoverable'
+                   THEN 'discoverable' ELSE 'hidden' END
+         FROM bundles b
+        WHERE b.object_type = 'project' AND (? IS NULL OR b.bundle_id = ?)
+       ON CONFLICT(project_id) DO UPDATE SET setting = excluded.setting`,
+      projectId,
+      projectId
+    );
   }
   /* THE ANSWER AN ACT GIVES AT EXISTENCE, asked in ONE place so no act can say a second thing: C-70.1 when the
      caller's sight of this id is EXISTENCE, else null — and then the act's own REC-138 line runs unchanged, so
@@ -59321,6 +60110,7 @@ ${words}`;
       why,
       at
     );
+    this.#reindexProjectSight(projectId);
     return { ok: true, projectId, setting: want, set_by: by, reason: why, at };
   }
   /** REC-149 — THE SETTING AND ITS HISTORY, for a caller with FULL sight (a participant, an administrator, the
@@ -59352,7 +60142,8 @@ ${words}`;
    *  `request` is null on every row and the answer says why rather than letting null read as a fact about the
    *  caller. A viewer that names no member has no directory: it is refused by name, never answered empty. */
   projectDirectory({ viewer = null, limit = null } = {}) {
-    const member = viewerPredicate(viewer).member;
+    const gate = viewerPredicate(viewer);
+    const member = gate.member;
     const refusal7 = (code, detail) => {
       const row = PROJECT_VISIBILITY_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
@@ -59363,26 +60154,15 @@ ${words}`;
         "the project directory lists the discoverable projects a MEMBER is not in, so it is asked by a signed-in member. A credential with no member behind it is outside no project, and an empty list would say something untrue about the record."
       );
     const cap = Math.max(1, Math.min(Number(limit) || _Store.PROJECT_DIRECTORY_LIMIT, _Store.PROJECT_DIRECTORY_LIMIT));
-    const projects = [];
-    let after = "";
-    for (; ; ) {
-      const page2 = this.#rows(
-        `SELECT bundle_id AS id, title FROM bundles
-          WHERE object_type = 'project' AND bundle_id > ?
-          ORDER BY bundle_id
-          LIMIT ?`,
-        after,
-        cap + 1
-      );
-      if (!page2.length) break;
-      after = page2[page2.length - 1].id;
-      for (const r of page2) {
-        if (this.#sight(r.id, viewer) !== _Store.SIGHT_EXISTENCE) continue;
-        projects.push({ id: r.id, name: r.title ?? null, request: null });
-        if (projects.length > cap) break;
-      }
-      if (projects.length > cap) break;
-    }
+    const projects = this.#rows(
+      `SELECT b.bundle_id AS id, b.title
+         FROM bundles b JOIN project_sight s ON s.project_id = b.bundle_id
+        WHERE b.object_type = 'project' AND s.setting = 'discoverable' AND NOT (${gate.sql})
+        ORDER BY b.bundle_id
+        LIMIT ?`,
+      ...gate.args,
+      cap + 1
+    ).map((r) => ({ id: r.id, name: r.title ?? null, request: null }));
     const truncated = projects.length > cap;
     const page = truncated ? projects.slice(0, cap) : projects;
     return {
@@ -62799,8 +63579,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       const cnt = (b) => b ? this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0 : 0;
       const decay = 1 - Math.min(1, Math.max(0, Number(elapsedFrac) || 0));
       const est = (cur, prev) => cnt(prev) * decay + cnt(cur);
-      if (est(ipBucket, ipPrevBucket) >= perIpLimit) return { ok: false, reason: "RATE_IP" };
-      if (est(globalBucket, globalPrevBucket) >= globalLimit) return { ok: false, reason: "RATE_GLOBAL" };
+      const refusal7 = (code, extra) => {
+        const row = KNOCK_CHECKS[code];
+        if (!row || typeof row.translation !== "string" || !row.translation)
+          throw new Error(`knock: ${code} has no KNOCK_CHECKS row with a canned translation (DEC-49).`);
+        return { ok: false, reason: code, code, check: row.check, translation: row.translation, ...extra || {} };
+      };
+      if (est(ipBucket, ipPrevBucket) >= perIpLimit) return refusal7("RATE_IP");
+      if (est(globalBucket, globalPrevBucket) >= globalLimit) return refusal7("RATE_GLOBAL");
       for (const b of [ipBucket, globalBucket])
         this.sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1)
                        ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
@@ -62898,24 +63684,39 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  is the STRING `state` (`admitted` | `deferred`), never a leading boolean, so no
    *  reader grades a datum as a refusal (meaning-bounds D-240 (e)). The DO
    *  serialises, so one row per UTC day is globally correct for the instance.
-   *  Admission is decided on what has been SPENT, because a render's cost is
-   *  only known after it ran.
+   *  Admission is decided on what has been SPENT PLUS WHAT IS RESERVED, because a render's
+   *  cost is only known after it ran and the renders in flight have not reported theirs.
    *
-   *  CORRECTED 2026-09-24 at integration (CONDUCT #20, on BOB #32's reading; VERIFIED HERE AT
-   *  THE CODE, not taken on the message's word). This said the allowance "can therefore be
-   *  overrun by at most one render". THAT IS FALSE, and it is the shape this project meets
-   *  most: a bound believed on the strength of a sentence. Admission is serialised in the DO,
-   *  but the render RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op
-   *  (`renderspend` -> `renderSpend`; the two are distinct rows of the dispatch table), so
-   *  every render IN FLIGHT AT ONCE is admitted against the same `spent_ms`. The bound that
-   *  actually holds is
+   *  THE BOUND THIS NOW HOLDS (D-492, 2026-09-24), stated as the thing a reader may rely on:
    *
-   *      overrun <= (renders in flight concurrently) x (one render's maximum time:
-   *                                                     the wait timeout plus navigation)
+   *      at every moment, spent_ms + reserved_ms <= allowance
    *
-   *  whose first factor nothing here bounds. Reserving at admission is D-492, placed by
-   *  SCHEDULER; until it lands this comment is the only thing that says so. Prose only — no
-   *  behaviour moved.
+   *  because a render is admitted only when `spent + reserved + its own reservation` fits, and
+   *  its reservation is the MAXIMUM the asked environment permits it to cost (`renderReserveMs`:
+   *  the navigation timeout plus the wait timeout). So the allowance is not overrun by renders
+   *  in flight, however many there are, and the first factor of the old bound no longer has to
+   *  be bounded by anything.
+   *
+   *  THE TWO RESIDUES, NAMED RATHER THAN ROUNDED OFF, because neither is closed by this:
+   *  (1) the reservation binds only a renderer that HONOURS what it was asked. A renderer that
+   *      spends longer than its own navigation and wait timeouts reports that longer time and
+   *      `renderSpend` adds it, so `spent_ms` can pass the allowance by exactly the excess the
+   *      renderer took beyond what it was asked for. The plane cannot check this: the elapsed
+   *      time is the RENDERER'S CLAIM, as `render.mjs` says of everything else it reports.
+   *  (2) the allowance is an ACCOUNT, not a throttle. Nothing here caps CONCURRENCY, and
+   *      nothing here is a platform meter (`RENDER_DAILY_ALLOWANCE_MS` is this instance's own
+   *      fence). A day's renders are bounded in total browser time, not in how many run at once.
+   *
+   *  WHAT WAS CORRECTED, kept because the error is the shape this project meets most — a bound
+   *  believed on the strength of a sentence. This said the allowance "can therefore be overrun
+   *  by at most one render". That was FALSE: admission is serialised in the DO, but the render
+   *  RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op (`renderspend` ->
+   *  `renderSpend`; the two are distinct rows of the dispatch table), so every render IN FLIGHT
+   *  AT ONCE was admitted against the same `spent_ms` and the overrun was
+   *  (renders in flight) x (one render's maximum time), whose first factor nothing bounded.
+   *  CONDUCT #20 diagnosed it at integration and corrected the prose alone; the reservation
+   *  below is the fix, and the docstring above is now a claim about behaviour rather than a
+   *  claim about intent.
    *
    *  AND A FINDING ABOUT THE REBUILD RULE, measured making this very edit, because it came
    *  back the opposite way to what `kickoffs/WORKER.md` step 0 predicted. That step said a
@@ -62933,46 +63734,84 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  answer is MEASURED, never assumed. A surprising green is a finding about the arm: the
    *  first reading of this measurement generalised from three greps, which is the same error,
    *  one sample size down, as the line it was correcting. */
-  renderAdmit({ allowanceMs, at = null }) {
+  renderAdmit({ allowanceMs, reserveMs = 0, at = null }) {
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);
     const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
+    const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
     const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
     const spent = cur ? cur.spent_ms : 0;
-    if (spent >= allowance) {
+    const reserved = cur ? cur.reserved_ms || 0 : 0;
+    const defer = (why) => {
       if (cur) this.sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
-      else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 0, 1, ?)`, day, now);
+      else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, 0, 0, 1, ?)`, day, now);
       return {
         state: "deferred",
         day,
         spent_ms: spent,
+        reserved_ms: reserved,
+        reserve_ms: reserve,
         allowance_ms: allowance,
         deferred: (cur ? cur.deferred : 0) + 1,
-        renders: cur ? cur.renders : 0
+        renders: cur ? cur.renders : 0,
+        why
       };
-    }
-    if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, last_at = ? WHERE day = ?`, now, day);
-    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 1, 0, ?)`, day, now);
+    };
+    if (!(reserve > 0))
+      return defer("no reservation was offered, and an unreserved admission is the overrun D-492 closed");
+    if (spent + reserved + reserve > allowance)
+      return defer(null);
+    if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, reserved_ms = reserved_ms + ?, last_at = ? WHERE day = ?`, reserve, now, day);
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
     return {
       state: "admitted",
       day,
       spent_ms: spent,
+      reserved_ms: reserved + reserve,
+      reserve_ms: reserve,
       allowance_ms: allowance,
       renders: (cur ? cur.renders : 0) + 1,
       deferred: cur ? cur.deferred : 0
     };
   }
-  /** Add the browser time one render REPORTED. An unreported time adds nothing
-   *  and says so: the allowance is then under-counted, never guessed. */
-  renderSpend({ ms, at = null }) {
+  /** Add the browser time one render REPORTED, and RELEASE the reservation `renderAdmit` took
+   *  for it. An unreported time adds nothing and says so: the allowance is then under-counted,
+   *  never guessed.
+   *
+   *  AN UNREPORTED RENDER STAYS CHARGED (D-492), and that is the whole safety of the
+   *  reservation rather than an edge case. A render that reported no elapsed time may have
+   *  burned any amount of browser time up to its reservation — a renderer that threw, a Worker
+   *  that died, a fetch that never came back — and the plane has no figure for it. Releasing
+   *  the reservation on that path would hand the allowance back for time that may well have
+   *  been spent, so the reservation is KEPT for the rest of the UTC day. The allowance is then
+   *  under-used, which is the direction that cannot overrun, and `reserved_ms` says how much is
+   *  held that way. The caller RELEASES WITHOUT CHARGE (`ms: 0`) only where it knows no render
+   *  ran at all, which is the `RENDER_NOT_A_PAGE` path in `src/index.mjs`. */
+  renderSpend({ ms, releaseMs = 0, at = null }) {
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);
     const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
-    if (n === null) return { day, spent_ms: null, why: "the renderer reported no elapsed time, so nothing was added" };
+    const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
     const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
-    if (cur) this.sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, last_at = ? WHERE day = ?`, n, now, day);
-    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, ?)`, day, n, now);
-    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n };
+    if (n === null)
+      return {
+        day,
+        spent_ms: cur ? cur.spent_ms : 0,
+        reserved_ms: cur ? cur.reserved_ms || 0 : 0,
+        released_ms: 0,
+        why: "the renderer reported no elapsed time, so nothing was added and its reservation stays charged for the day"
+      };
+    const held = cur ? cur.reserved_ms || 0 : 0;
+    const released = Math.min(held, rel);
+    if (cur) this.sql.exec(
+      `UPDATE render_allowance SET spent_ms = spent_ms + ?, reserved_ms = ?, last_at = ? WHERE day = ?`,
+      n,
+      held - released,
+      now,
+      day
+    );
+    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, 0, ?)`, day, n, now);
+    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n, reserved_ms: held - released, released_ms: released };
   }
   runtimeObservations() {
     const rows = [...this.sql.exec(`SELECT * FROM runtime_observations ORDER BY metric`)];
@@ -67761,8 +68600,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (!firstContentAt) return "purged";
     const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
     if (!reg) return "purged";
-    const sec = (v) => String(v).slice(0, 19);
-    return sec(reg) >= sec(firstContentAt) ? "never_looked" : "purged";
+    return enteredAfterFirstRow(reg, firstContentAt) ? "never_looked" : "purged";
   }
   #missingContentCause(captureSha, registeredAt = null) {
     if (this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha))
@@ -68684,8 +69522,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (!firstAt) return "purged";
     const entered = typeof enteredAt === "string" && enteredAt ? enteredAt : null;
     if (!entered) return "purged";
-    const sec = (v) => String(v).slice(0, 19);
-    return sec(entered) >= sec(firstAt) ? "never_looked" : "purged";
+    return enteredAfterFirstRow(entered, firstAt) ? "never_looked" : "purged";
   }
   /** REC-107 — **THE TWO FIELDS THAT PUT §5.1's UNDETERMINED SET ON THE ROW**, for
    *  every level's frontier, through the one function in `airun.mjs` that decides
@@ -79731,6 +80568,7 @@ var index_default = {
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
       const renderAsked = Object.prototype.hasOwnProperty.call(body2 || {}, "render") && body2.render !== false;
       let renderer = null;
+      let renderReserved = 0;
       if (renderAsked) {
         if (body2.render !== true)
           return json({
@@ -79788,10 +80626,11 @@ var index_default = {
               detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).`
             }, 429);
         }
+        renderReserved = renderReserveMs(RENDER_DEFAULTS);
         const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), at: retrieved })
+          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), reserveMs: renderReserved, at: retrieved })
         }));
         const adm = admOut.answered ? admOut.result : null;
         if (!adm || adm.state !== "admitted")
@@ -79801,7 +80640,7 @@ var index_default = {
             ...renderRow("RENDER_DEFERRED"),
             op,
             render: { state: "deferred", content: "undetermined", allowance: adm || null },
-            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is spent (${adm.spent_ms} ms); this render is recorded as deferred (${adm.deferred} today).` : "the render allowance could not be read, so the render is deferred rather than run unmetered."
+            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is committed (${adm.spent_ms} ms spent, ${adm.reserved_ms} ms reserved by renders in flight), and this render reserves ${adm.reserve_ms} ms; it is recorded as deferred (${adm.deferred} today).` : "the render allowance could not be read, so the render is deferred rather than run unmetered."
           }, 429);
       }
       const via = body2?.via === "archive.org" ? "archive.org" : "direct";
@@ -80019,7 +80858,15 @@ var index_default = {
       if (renderAsked) {
         const pageUrl = res2.url || locator;
         let answer = null, rbytes = null, rb = null;
-        if (multipart || detectFormat(null, ct || null).format !== "html")
+        if (multipart || detectFormat(null, ct || null).format !== "html") {
+          try {
+            await stGov.fetch("http://x/renderspend", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ ms: 0, releaseMs: renderReserved, at: retrieved })
+            });
+          } catch {
+          }
           return json({
             ok: false,
             reason: "RENDER_NOT_A_PAGE",
@@ -80030,6 +80877,7 @@ var index_default = {
             multipart,
             detail: `the served bytes are ${multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``}, not an HTML page; nothing was filed.`
           }, 422);
+        }
         try {
           answer = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS });
         } catch (e) {
@@ -80039,7 +80887,7 @@ var index_default = {
           await stGov.fetch("http://x/renderspend", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ ms: answer && answer.elapsed_ms, at: retrieved })
+            body: JSON.stringify({ ms: answer && answer.elapsed_ms, releaseMs: renderReserved, at: retrieved })
           });
         } catch {
         }
@@ -80730,7 +81578,12 @@ var index_default = {
           provenance_chain: [
             {
               who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
-              asserts: renderRecorded ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)` : `these bytes were served for ${locator} at ${retrieved}`,
+              /* D-499 / BOB #32: a render whose wait fired on its TIMEOUT is NEVER
+                 PRESENTED AS THE WHOLE PAGE. The qualification is DERIVED from the
+                 block by `completenessReading`, never retyped here: a second copy
+                 of the sentence would agree with the record for free and drift from
+                 it for free. The grade and the method above are untouched. */
+              asserts: renderRecorded ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)${completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : ""}` : `these bytes were served for ${locator} at ${retrieved}`,
               evidence: renderRecorded ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment" : "first-party https fetch, hashed at receipt, transport record on this document",
               bound: false,
               via

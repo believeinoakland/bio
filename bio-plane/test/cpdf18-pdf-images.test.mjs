@@ -63,7 +63,20 @@ const AGENDA_RECT = [244.8, 484.9, 363.6, 602.25];
    walk added a tokenizer option; these pins are what says the text walk did
    not feel it. */
 const TEXT_PIN_SYNTH = "11304705928975fe3dfefe4fbbd1d91d8ffb41067a9864407eba87af04a0b821";
-/* RE-PINNED 2026-09-24 by D-481, and the CLAIM is unchanged: this pair still says
+/* RE-PINNED AGAIN 2026-09-24 by D-502, on the same terms and for the same
+   reason the note below gives: this pair still says the image walk does not
+   perturb the text walk, and the text itself moved. D-502 separates two runs
+   that a horizontal jump divides on one baseline \u2014 the agenda's own
+   `(City of Oakland) Tj 391.1 0 Td (Printed on \u2026) Tj` footer, read as
+   `OaklandPrinted` until now \u2014 so 49 separators entered the agenda's text and
+   not one decoded character changed (non-whitespace characters 51,060 before
+   and after; lines 1,495 before and after). Its digest necessarily moved with
+   it. THE OLD VALUE WAS NOT WRONG WHEN IT WAS TAKEN. The SYNTHETIC fixture's
+   pin did NOT move again \u2014 it positions no run after a horizontal jump, so
+   D-502 cannot touch it \u2014 and the new agenda digest reproduced on two
+   consecutive runs. Taken from the figure the suite PRINTED.
+
+   RE-PINNED 2026-09-24 by D-481, and the CLAIM is unchanged: this pair still says
    the image walk does not perturb the text walk. What moved is the text itself.
    D-481 stopped `Td`/`TD`/`Tm` breaking a line when the baseline does NOT move, so
    the agenda now reads 397 lines where it read 421, and its digest necessarily
@@ -74,7 +87,7 @@ const TEXT_PIN_SYNTH = "11304705928975fe3dfefe4fbbd1d91d8ffb41067a9864407eba87af
    baseline, so D-481 cannot touch it), and the new agenda digest reproduced on
    two consecutive runs. Taken from the figure the suite PRINTED, never computed
    by hand. */
-const TEXT_PIN_AGENDA = "aa1703bafc6165324b52dd832d6a15401920f968650ab7ac8b33393e4bb80949";
+const TEXT_PIN_AGENDA = "967ac943c726e38064ee2f153a469a3742d0967d4bacf59234903e39d2865b8a";
 
 /* ---- a tiny PDF assembler (capture-pagecount's) ---- */
 function pdf(objs) {

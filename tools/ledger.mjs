@@ -93,9 +93,13 @@
  * 0 of 1,080 rulings lost, re-attributed or re-dated by a whole-row move), and since M0-99
  * (2026-09-22) its `docs/DECIDED.md` is produced on demand and never committed, so the regeneration
  * this CLI ran after `archive` and `refill`, and the "commit it in the SAME commit" it printed, are
- * retired — a move no longer owes a generated file anything. `DEBT.md` may not fall
- * below 10,000 bytes (`nc-m039.mjs` plants into it). Neither live file is renamed (`mergecarry`
- * keys a declared drop on `docs/development/DEBT.md`).
+ * retired — a move no longer owes a generated file anything.
+ *
+ * M0-140 (2026-09-24) RETIRED THE DEBT LEDGER as a live file: its last three rows closed, the whole file moved to
+ * `docs/archive/ledgers/DEBT-closed.md`, and `DEBT_ARCHIVE` below replaced `LEDGERS.DEBT`. What this archiver does
+ * for DEBT now is READ it — `find` still resolves every closed `D-` row, and `mintid` still reads its archive for
+ * duplicates. It no longer MOVES a DEBT row, because there is no live file to move one out of. The 10,000-byte floor
+ * that `nc-m039.mjs` needed went with it.
  *
  * NEGATIVE CONTROL: `node bio-plane/test/ledger.control.mjs` from the repo root — one arm per
  * property, CONSERVATION FIRST: (C1) the check counts rows instead of comparing id multisets ->
@@ -161,17 +165,25 @@ export const LEDGERS = {
   /* LED-6: the backlog shares the QUEUE grammar AND the QUEUE archive — see the header. */
   BACKLOG: { name: "BACKLOG", grammar: "QUEUE", where: "backlog", live: "docs/development/BACKLOG.md",
              archive: "docs/archive/ledgers/QUEUE-closed.md", family: /^QUEUE-.*\.md$/ },
-  DEBT:    { name: "DEBT",    grammar: "DEBT",  where: "live",    live: "docs/development/DEBT.md",
-             archive: "docs/archive/ledgers/DEBT-closed.md",  family: /^DEBT-.*\.md$/ },
   /* M0-119: the backlog's TAIL — the same order, continued; the same grammar and archive (see the header). OPTIONAL:
      absent until a row is first demoted into it, and an absent tail is an empty one, NAMED `absent`. */
   LATER:   { name: "LATER",   grammar: "QUEUE", where: "tail",    live: "docs/development/BACKLOG-LATER.md",
              archive: "docs/archive/ledgers/QUEUE-closed.md", family: /^QUEUE-.*\.md$/, optional: true },
 };
+/* THE DEBT LEDGER IS RETIRED — ARCHIVE ONLY (M0-140, 2026-09-24; Bob: *"we can remove all reference to the debt
+   construct"*; WORK-PIPELINE §3). It was `LEDGERS.DEBT` with `live: "docs/development/DEBT.md"` until its last three
+   rows (D-313, D-391, D-388) closed and the whole file moved to the archive. It is NOT in `LEDGERS`, so no loop over
+   the live ledgers reads it and none can: `live` is null and every reader here skips a null live BY NAME rather than
+   by a path that happens not to exist. It stays a DESCRIPTOR because the archive did not go anywhere — 220-odd closed
+   `D-` rows are still rows, still parsed by the DEBT grammar, and `node tools/ledger.mjs find D-n` still resolves
+   every one of them. `ARCHIVE_TARGETS` still lists its archive, so `mintid`'s duplicate check still reads it; a `D-`
+   id retired from the record would be a `D-` id mintable twice. */
+export const DEBT_ARCHIVE = { name: "DEBT", grammar: "DEBT", where: "archive", live: null, retired: "M0-140 2026-09-24",
+                              archive: "docs/archive/ledgers/DEBT-closed.md", family: /^DEBT-.*\.md$/ };
 /* The files this archiver writes, EACH ONCE. `mintid.mjs` imports this list for its duplicate
    check, and QUEUE and BACKLOG share an archive — listed twice, every row in it would read as a
    duplicate of itself. Deduplicated here, at the source, for that reason. */
-export const ARCHIVE_TARGETS = [...new Set(Object.values(LEDGERS).map((l) => l.archive))];
+export const ARCHIVE_TARGETS = [...new Set([...Object.values(LEDGERS), DEBT_ARCHIVE].map((l) => l.archive))];
 /* The live files of the QUEUE grammar: the cache, then the backlog, then the backlog's tail (M0-119) — the backlog and
    its tail are ONE order, in that sequence. */
 export const PIPELINE = [LEDGERS.QUEUE, LEDGERS.BACKLOG, LEDGERS.LATER];
@@ -185,7 +197,10 @@ const readPipe = (repo, l) => { const t = readRel(repo, l.live); return t === nu
    so 12 rows sit near 34 KB. More rows means raising that budget, which every session reads whole. Was 8. */
 /* 16 at 48 KiB since 2026-09-23 21:03Z (BOB #31, on Bob's ruling: "12 active plus at least 4 queued", so a worker's done
    report is a spawn in the same turn; workers finish in about ten minutes). Was 12 at 40 KiB. */
-export const CACHE_ROWS = 16;
+/* 20 at 48 KiB since 2026-09-24 ~17:25Z (SCHEDULER #19, on Bob's standing direction of 17:10Z: "keep 16 workers ACTIVELY
+   working ... with spares behind the live 16"): 16 live plus at least 4 queued, the 21:03Z ruling's shape at the new
+   capacity. The byte budget reads only rows not `integrated`, so it does not move. Was 16. */
+export const CACHE_ROWS = 20;
 
 export const CLOSED_QUEUE_STATES = new Set(["done", "superseded"]);
 export const OPEN_QUEUE_STATES = new Set(["queued", "running", "blocked", "integrated"]);
@@ -195,7 +210,10 @@ export const OPEN_QUEUE_STATES = new Set(["queued", "running", "blocked", "integ
    the refill's room and the cache's byte budget read only the rows that are not held. Measured the day it was made:
    at 19:58Z all 12 cache rows were finished, 7 riding one train and 5 the next, and CONDUCT had nothing to spawn. */
 export const HELD_QUEUE_STATES = new Set(["integrated"]);
-export const DEBT_FLOOR_BYTES = 10000;
+/* `DEBT_FLOOR_BYTES` (10,000 B) WAS HERE and is retired with the construct (M0-140, 2026-09-24). It refused any
+   archive that would leave `DEBT.md` below 10,000 bytes because `nc-m039.mjs` planted a fixture row into the live
+   file and needed the room — which is also why the file *could not be emptied row by row* (WORK-PIPELINE §3; an empty
+   DEBT.md was 3,174 B). `nc-m039.mjs` arm 2 now plants into `BACKLOG.md`, and there is no live DEBT file to floor. */
 
 /* THE BUDGET, AS THE ROW NAMES IT (start: QUEUE ≤ 150 KB, a row ≤ 3 KB), in KiB. DEBT's whole-
    file figure is NOT named by the row and is not invented here: it is printed, and LED-4 — which
@@ -212,7 +230,8 @@ export const BUDGET = {
   QUEUE:   { ledger: 48 * 1024,  row: 3 * 1024 },   /* 48 KiB with CACHE_ROWS 16 (BOB #31, 2026-09-23); was 40 */
   BACKLOG: { ledger: 150 * 1024, row: 2 * 1024 },
   LATER:   { ledger: null,       row: 2 * 1024 },
-  DEBT:    { ledger: null,       row: 3 * 1024 },
+  /* `DEBT: { ledger: null, row: 3 * 1024 }` WAS HERE. Retired with the construct (M0-140): a per-row budget over a
+     ledger with no live rows is a check that cannot fail, which is worse than none. */
 };
 /* An arm WARNs until the row that makes it satisfiable is `done`, then FAILs — read from the
    ledger (live or archived) on every run, so nobody has to remember to flip it. (a) is keyed on
@@ -222,7 +241,10 @@ export const BUDGET = {
    so. The pipeline arms P3–P5 (the cache and backlog budget among them) now arm on LED-6, whose
    migration is what makes them satisfiable; DEBT's per-row budget arms on LED-7, the fold that
    empties DEBT (§3). `plancheck` now FAILs on an arming row that is `superseded`. */
-export const ARMING = { closedLive: "LED-3", pipeline: "LED-6", debtBudget: "LED-7" };
+/* `debtBudget: "LED-7"` WAS HERE — the DEBT per-row budget armed on LED-7, the fold that empties DEBT. LED-7 is
+   COMPLETE (M0-140, 2026-09-24: the last three rows closed and the file archived), so the arm it gated is retired
+   rather than armed: there is no live DEBT row left for it to measure. */
+export const ARMING = { closedLive: "LED-3", pipeline: "LED-6" };
 
 const QHEAD = /^###\s+([A-Z][A-Z0-9]*-\d+)\s+·\s+([A-Za-z-]+)/;
 const ANY_HEADING = /^#{1,3}\s/;
@@ -232,7 +254,7 @@ const DROW = /^\|\s*(D-\d+)\s*\|/;
    QUEUE items are headed `### D-n · done` (the item that closed debt row D-n), measured 2026-09-18.
    The first draft routed every `D-` id to DEBT alone, and a full simulated migration left those 17
    closed QUEUE rows live — found by running the migration, not by reading the grammar. */
-export const ledgersFor = (id) => (/^D-\d+$/.test(id) ? [...PIPELINE, LEDGERS.DEBT] : [...PIPELINE]);
+export const ledgersFor = (id) => (/^D-\d+$/.test(id) ? [...PIPELINE, DEBT_ARCHIVE] : [...PIPELINE]);
 const bytes = (s) => Buffer.byteLength(s, "utf8");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
@@ -276,25 +298,15 @@ export function debtRows(text) {
 
 export const rowsOf = (ledger, text) => (ledger.grammar === "DEBT" ? debtRows(text) : queueRows(text));
 
-/** THE DISPOSITION-TOKEN RULE over a DEBT ledger's text: every `| D-n |` row's LAST cell begins with a disposition
-    token or reads as resolved. `plancheck` §2 held this inline and `planning-hygiene` §1 ported it; M0-110 moved the
-    live-row judgement into `coord.mjs`' ledger checks, so the predicate is written ONCE, here, for all of them. */
-export const DEBT_TOKEN = /\|\s*(M\d+|DOCTRINE|ACCEPTED|WATCH|SUPERSEDED|NOT OURS|BOB's)/;
-export const DEBT_RESOLVED = /\|\s*(fixed|resolved|closed|guarded|amended|measured)/i;
-export function debtTokenAudit(text) {
-  const bad = [];
-  let rows = 0;
-  for (const line of text.split("\n")) {
-    if (!/^\|\s*D-\d+\s*\|/.test(line)) continue;
-    rows++;
-    const tail = line.replace(/\s+$/, "");
-    const i = tail.lastIndexOf("|", tail.length - 2);
-    const status = i >= 0 ? tail.slice(i).replace(/^\|\s*|\s*\|$/g, "").trim() : "";
-    if (DEBT_TOKEN.test(`| ${status}`) || DEBT_RESOLVED.test(`| ${status}`)) continue;
-    bad.push({ id: (line.match(/^\|\s*(D-\d+)/) || [])[1], status });
-  }
-  return { rows, bad };
-}
+/* THE DISPOSITION-TOKEN RULE — `DEBT_TOKEN`, `DEBT_RESOLVED` and `debtTokenAudit` WERE HERE, and are RETIRED with
+   the construct (M0-140, 2026-09-24). The rule was: every OPEN `| D-n |` row's last cell begins with a disposition
+   token (a milestone, DOCTRINE, ACCEPTED, WATCH, SUPERSEDED, NOT OURS) or reads as resolved, because *a row with no
+   disposition is invisible work*. `plancheck` §2, `planning-hygiene` §1 and `coord.mjs`' LC-debt-token all called it.
+   It is retired rather than re-pointed at the backlog: a plan row's placement IS its disposition — it sits in build
+   order and `rowdesign`/`rowsubstrate`/P1-P5 judge its fields — so pointing this at `BACKLOG.md` would be a second,
+   weaker producer of one quantity, which is the defect `kickoffs/BOB.md` rule 7 names. What the rule protected is now
+   structural: there is no side list for a defect to be invisible in (CLAUDE.md §4). The archive's rows keep their
+   dispositions and are still parsed by `debtRows` above; nothing audits them, because nothing may change them. */
 
 /* ----------------------------------------------------------------------- conservation */
 
@@ -359,13 +371,16 @@ export function archiveFiles(ledger, { repo = ROOT } = {}) {
   return names.filter((n) => ledger.family.test(n)).sort().map((n) => `${ARCHIVE_DIR}/${n}`);
 }
 
-/** Where an id is: every row carrying it — in the cache, the backlog, the live DEBT ledger or an
+/** Where an id is: every row carrying it — in the cache, the backlog, the DEBT archive (M0-140: archive only) or an
     archive file — with its state. [] if nowhere. An archive file two ledgers share is read ONCE. */
 export function findId(id, { repo = ROOT } = {}) {
   const out = [];
   const seen = new Set();
   for (const ledger of ledgersFor(id))
-    for (const [rel, where] of [[ledger.live, ledger.where], ...archiveFiles(ledger, { repo }).map((f) => [f, "archive"])]) {
+    /* M0-140: a RETIRED ledger has no live file (`live: null`) and contributes its archive alone. The null is
+       skipped BY NAME here — `readRel(repo, null)` would join a null into a path and throw somewhere else. */
+    for (const [rel, where] of [...(ledger.live === null ? [] : [[ledger.live, ledger.where]]),
+                                ...archiveFiles(ledger, { repo }).map((f) => [f, "archive"])]) {
       if (seen.has(rel)) continue;
       seen.add(rel);
       const t = readRel(repo, rel);
@@ -439,14 +454,10 @@ export const ARCHIVE_HEADER = {
     + "as before. Rows arrive in the order they were archived. Find any id, live or archived, with\n"
     + "`node tools/ledger.mjs find <ID>`; rulings in these rows stay indexed by `tools/decided.mjs`.\n"
     + "The August roll (`QUEUE-2026-08.md`) is a separate closed file and is never appended to.\n\n",
-  DEBT: "# DEBT — closed rows, moved by the archiver\n\n"
-    + "**Written only by `node tools/ledger.mjs archive <ID>`**, which moves a closed row with no\n"
-    + "declared residue (the one definition is `isClosedDebtRow` in `tools/owed.mjs`) out of\n"
-    + "`docs/development/DEBT.md` VERBATIM and appends it here, and refuses the move unless every id\n"
-    + "occurs exactly as often in the live ledger plus its archive after the move as before. Rows\n"
-    + "arrive in the order they were archived. Find any id with `node tools/ledger.mjs find <ID>`.\n"
-    + "The August roll (`DEBT-closed-2026-08.md`) is a separate closed file and is never appended to.\n\n"
-    + "| ID | Sev | Found | Item | Status |\n|---|---|---|---|---|\n",
+  /* The DEBT header WAS HERE. Retired with the construct (M0-140): `ARCHIVE_HEADER` is read by `planMove` alone,
+     for the case where a ledger's archive does not yet exist, and no DEBT row can reach `planMove` now — `archiveId`
+     skips a ledger whose `live` is null. A header for a move that cannot happen is a branch nobody can drive, which
+     is the defect this estate meets most. `DEBT-closed.md` keeps the header it already carries. */
 };
 
 export class Refusal extends Error {
@@ -461,11 +472,10 @@ export function planMove(ledger, id, live, archive) {
   const closed = rows.filter((r) => r.closed);
   const kept = rows.filter((r) => !r.closed);
   if (!closed.length)
-    throw refusal("NOT_CLOSED", `${id} is not closed — ${rows.map((r) => ledger.grammar === "DEBT"
-      ? `its disposition begins "${r.disposition.slice(0, 80)}"` : `its state is \`${r.state}\``).join("; ")}. `
-      + (ledger.grammar === "DEBT"
-        ? "A DEBT row is closed when its disposition LEADS with CLOSED/FIXED/RESOLVED/SUPERSEDED and declares no residue (owed.mjs isClosedDebtRow)."
-        : "A QUEUE row is closed when its state is `done` or `superseded`."));
+    /* M0-140: the DEBT half of this message is gone with the construct — `archiveId` skips a ledger whose `live`
+       is null, so the only grammar that reaches `planMove` is QUEUE. */
+    throw refusal("NOT_CLOSED", `${id} is not closed — ${rows.map((r) => `its state is \`${r.state}\``).join("; ")}. `
+      + "A QUEUE row is closed when its state is `done` or `superseded`.");
   const { lines } = linesOf(live);
   const blocks = closed.map((r) => lines.slice(r.start, r.end).join("\n"));
   const out = lines.slice();
@@ -479,9 +489,6 @@ export function planMove(ledger, id, live, archive) {
     appended += b.endsWith("\n") ? b : b + "\n";
   }
   const newArchive = base + appended;
-  if (ledger.name === "DEBT" && bytes(newLive) < DEBT_FLOOR_BYTES)
-    throw refusal("DEBT_BELOW_FLOOR", `moving ${id} would leave ${ledger.live} at ${bytes(newLive)} bytes, `
-      + `below ${DEBT_FLOOR_BYTES} — nc-m039.mjs plants into it and needs the room.`);
   return { newLive, newArchive, base, appended, blocks,
            moved: closed.map((r) => ({ id, line: r.line, bytes: r.bytes, state: r.state })),
            kept: kept.map((r) => ({ id, line: r.line, state: r.state })) };
@@ -494,6 +501,7 @@ export function archiveId(id, { repo = ROOT, dryRun = false } = {}) {
   if (!dryRun) refuseSwitched(repo, "archive");
   const live = {};
   for (const ledger of ledgersFor(id)) {
+    if (ledger.live === null) continue;           /* M0-140: a RETIRED ledger is archive-only — nothing to move out of */
     const t = readRel(repo, ledger.live);
     if (t === null && ledger.optional) continue;  /* M0-119: an absent tail holds no row to move */
     if (t === null) throw refusal("LEDGER_UNREADABLE", `${ledger.live} could not be read — nothing moved.`);
@@ -716,7 +724,7 @@ export function pipelineInvariants(cache, backlog, { repo = ROOT, claims = null,
   const P2 = [...c.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "cache", line: r.line })),
               ...b.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "backlog", line: r.line })),
               ...lt.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "tail", line: r.line }))];
-  /* P3 — ≤ CACHE_ROWS (12) rows in the cache (every row the grammar reads but an `integrated` one), none blocked. */
+  /* P3 — ≤ CACHE_ROWS (20) rows in the cache (every row the grammar reads but an `integrated` one), none blocked. */
   const P3 = [];
   const working = c.filter((r) => !HELD_QUEUE_STATES.has(r.state));   /* an `integrated` row holds no slot */
   if (working.length > CACHE_ROWS) P3.push({ what: "rows", rows: working.length, max: CACHE_ROWS });
@@ -1113,7 +1121,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
        landed `find` read neither file and answered "not found" for every such id `CLAUDE.md` §1 sends it. */
     const { find: findEntry } = await import("./entries.mjs");
     const e = findEntry(ids[0]);
-    if (!f.length && !e.length) { console.log(`${ids[0]}: not found in the cache, the backlog, its tail, the live DEBT ledger, any archive file, or the measurement and interface-change entries`); process.exit(1); }
+    if (!f.length && !e.length) { console.log(`${ids[0]}: not found in the cache, the backlog, its tail, any archive file (the DEBT archive included), or the measurement and interface-change entries`); process.exit(1); }
     for (const x of f) console.log(`${x.id} · ${x.state} · ${x.ledger} ${x.where} · ${x.file}:${x.line}`);
     for (const x of e) console.log(`${x.id} · entry · ${x.parts.map((p) => `${p.file}:${p.line}`).join(" + ")}`);
   } else if (cmd === "refill") {

@@ -1,7 +1,56 @@
-/* NEGATIVE CONTROL: (re-run whole 2026-09-24, D-496) `node test/nc-d487.mjs` — SIX arms, each ALONE, no
-   sleep and no bet on the hour; both baselines 48 pass, 0 fail (open 25499ms, close 24715ms); EVERY ARM
-   CAME BACK AS DECLARED and every restore verified by sha256 AND byte-for-byte against a per-arm pristine
-   copy (store.mjs 3166944 bytes, this suite 22654).
+/* NEGATIVE CONTROL (D-508, 2026-09-24): `node test/nc-d508.mjs` — SIX arms, each ALONE with the others held
+   open, run against TWO instruments per arm (the DEC-49 guard `civicos-ui/check-refusal-codes.mjs --strict`
+   and this suite, driven end to end through `op=knock`). Both baselines GREEN (guard exit 0 / 0 fails; suite
+   57 pass, 0 fail, foot reached) and ALL SIX CAME BACK AS DECLARED on both instruments. Every restore verified
+   by sha256 AND byte-for-byte against a uniquely-named per-arm pristine copy, with the byte count printed and
+   a 6000-byte floor guarded (store.mjs 3,224,664 B; index.mjs 802,836 B; bio-checks.mjs 930,833 B).
+     both-off      THE FALSIFIABILITY ARM and the one to read first -> suite 53/4: exactly the four
+                   `per-source:` arms, with the four `instance-wide:` arms STANDING. It exists because of what
+                   the two arms below measured.
+     bare-reason   (src/store.mjs) mint the per-source refusal as the BARE STORE REASON this item removed ->
+                   suite 57/0, FULLY GREEN. THAT GREEN IS A FINDING, not the arm working: `src/index.mjs`
+                   already carries a GENERIC DEC-49 DECORATOR (`dec49Decorate`) that looks a refusal's `reason`
+                   up across every `*_CHECKS` family by the reserved suffix and fills in `code`, `check` and
+                   `translation`. So the catalogue rows ALONE put the sentence on the wire. The GUARD fails —
+                   on the `outcomeReturns` FLOOR, and NOT as a codeless refusal, because arm C reads a `reason:`
+                   literal as the code and `RATE_IP` has a row. "The guard goes red" and "the guard names it"
+                   are two claims and the driver prints both flags.
+     decorator-off (src/index.mjs) disable that decorator -> suite 57/0, guard green. The mirror image: with the
+                   decorator gone the region still carries the paper. TWO INDEPENDENT MECHANISMS DELIVER THIS
+                   SENTENCE, so no single behavioural arm can see either — the behaviourally-invisible-revert
+                   class (kickoffs/WORKER.md), and only `both-off` and the structural pin below can see it.
+     markers-off   (src/store.mjs) move the region's END marker above the two returns, leaving a well-formed,
+                   non-trivial, correctly nested span with no refusal in it -> SUITE FULLY GREEN and the GUARD
+                   fails FIVE ways, naming the region by name and its four region floors. That is the arm that
+                   says a `where` which has drifted off its refusal is invisible to every behavioural assertion
+                   in this repository.
+     blank-translation (checks/bio-checks.mjs) empty RATE_GLOBAL's sentence -> guard fails BY NAME
+                   ("KNOCK_CHECKS.RATE_GLOBAL has NO CANNED TRANSLATION"); suite 51/6, the two arms that name
+                   the instance-wide refusal plus the four `instance-wide:` arms, the four `per-source:` arms
+                   standing. It stops the catalogue comparison passing for free over two empty strings.
+     overstrict    (src/store.mjs) the same mint in a spelling nobody anticipated — extra whitespace inside the
+                   call, on ONE line -> guard green, suite 57/0. A first draft spread it over three lines and
+                   the guard failed on the `regionLines` floor: THE GUARD WAS RIGHT AND THE ARM WAS WRONG, and
+                   the arm was corrected rather than the floor loosened.
+   AND ONE ARM OF THE FIRST DRAFT DID NOT ARM: `blank-translation` first replaced only the translation's FIRST
+   concatenated line, leaving the remaining `+ '…'` continuations, so the sentence was never blank and the
+   suite was green for the honest reason. An arm that did not arm is a finding; it is recorded here and the
+   anchor now takes the whole value. A second non-arming was the same class one layer down — the subjects are
+   read LATIN1 (byte-exact, CLAUDE.md §7) and the anchor's em dashes had to be encoded to match at all. */
+/* NEGATIVE CONTROL: (RE-RUN WHOLE AGAIN 2026-09-24 by D-508, because this item changed BOTH the suite these
+   arms are measured against AND the `limiter-off` arm's own anchor — and a control whose figures were taken
+   against a different suite is a claim about that day, which is this driver's own sentence.) `node
+   test/nc-d487.mjs` — SIX arms, each ALONE, no sleep and no bet on the hour; both baselines 57 pass, 0 fail
+   (open 34331ms, close 33810ms); EVERY ARM CAME BACK AS DECLARED and every restore verified by sha256 AND
+   byte-for-byte against a per-arm pristine copy (store.mjs 3,224,664 bytes, this suite 31,261).
+     D-508's FIGURES: limiter-off 47/10 (the six it always took down plus the four `per-source:` arms, the
+     instance-wide four STANDING); fixed-bucket 43/14 (its six plus all eight paper arms, both bursts
+     re-admitted); straddle 53/4, unchanged in shape and membership; the three over-strictness arms 57/0.
+     `limiter-off`'s ANCHOR WAS RE-POINTED, not retired: the refusal is now minted through the region's
+     `refusal` helper, so D-496's spelling occurs ZERO times and the arm would have printed "ANCHOR OCCURS 0
+     TIMES — ARM DID NOT ARM". D-508's own subject has its own driver, `test/nc-d508.mjs`, recorded above.
+   PRIOR (2026-09-24, D-496): both baselines 48 pass, 0 fail (open 25499ms, close 24715ms); EVERY ARM CAME
+   BACK AS DECLARED, store.mjs 3166944 bytes, this suite 22654.
      fixed-bucket (D-496's SUBJECT, src/store.mjs) drop the previous bucket's weighted carry —
                   `const est = (cur, prev) => cnt(cur);`, the code as it stood before D-496 — so the count
                   restarts at the edge -> 42 pass, 6 fail: the straddling burst is re-admitted at fourteen
@@ -43,6 +92,9 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+/* D-508: the doorbell's own DEC-49 family, read here so the arms below can ask whether the
+   plane served the CATALOGUE's sentence rather than a second copy of it. */
+import { KNOCK_CHECKS } from "../checks/bio-checks.mjs";
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SRC_TEXT = readFileSync(SRC, "utf8");
 
@@ -81,6 +133,42 @@ const call = (mfi) => ({
   }),
 });
 const A = call(withR2), B = call(noR2);
+
+/* ---- D-508: THE RATE REFUSAL CARRIES ITS DEC-49 CODE AND ITS TRANSLATION ----
+ *
+ * THE ROW'S ACCEPTS-WHEN, and it is asked ON THE WIRE at both rate refusals
+ * rather than at the store, because a store-level test is not evidence a caller
+ * can reach the feature (CLAUDE.md §5; `op=invitelook` shipped with a
+ * ReferenceError while 1,276 assertions passed). The knock is the ONE door open
+ * to the public, so the caller this is asserted for is a stranger with no
+ * account and no other way to find out what happened.
+ *
+ * FOUR ASSERTIONS PER CODE, AND EACH ANSWERS A DIFFERENT WAY OF BEING WRONG:
+ *   `code` and `check` are LITERALS here — a fence taken from its subject is a
+ *   fence the subject can widen (D-487's line, which governs this as it governs
+ *   the published bound below), so a renumbered check must come and edit this
+ *   suite.
+ *   The translation is asserted BOTH against a floor on its length AND against
+ *   `KNOCK_CHECKS`' own row. The second is the one that catches an INLINE COPY:
+ *   the wire value is composed inside a Miniflare isolate from `src/`, this
+ *   comparison reads the catalogue directly, and they agree only if the plane
+ *   served the catalogue's sentence rather than a second copy of it — which is
+ *   the drift every DEC-49 header in `bio-checks.mjs` defends against. The
+ *   length floor is what stops that comparison from passing for free over a row
+ *   somebody blanked: two empty strings agree on nothing (CLAUDE.md §5).
+ *
+ * WHAT THIS CANNOT SEE: whether the sentence is a GOOD one. That is not a thing
+ * a suite can judge, and the DEC-49 guard's totality arms are what establish
+ * that every code has one at all. */
+const ratePaper = (label, r, code, check) => {
+  const row = KNOCK_CHECKS[code];
+  t(`${label}: the refusal carries its DEC-49 code`, r?.code, code);
+  t(`${label}: it names the check the code belongs to`, r?.check, check);
+  t(`${label}: the canned translation is a real sentence, not an empty string`,
+    typeof r?.translation === "string" && r.translation.length >= 120, true);
+  t(`${label}: and it is the CATALOGUE's sentence, not an inline copy in the plane`,
+    r?.translation, row.translation);
+};
 
 /* ---- D-487: THE RATE ARMS RUN ON A PINNED CLOCK ---------------------------
  *
@@ -270,6 +358,11 @@ t("the knock over the line is refused by name", postEdge.find((r) => !r.ok)?.rea
 t("the refusal publishes the bound in words",
   postEdge.find((r) => !r.ok)?.stated,
   "at most 12 knocks from one source in any 10 minutes, estimated by a sliding window");
+/* D-508. The published NUMBER above and the canned SENTENCE here are two
+   different things arriving in one 429, and the arms are kept apart for that
+   reason: `stated` moves when this instance's limits move, the translation does
+   not, and collapsing either into the other would give the bound two authorities. */
+ratePaper("per-source", postEdge.find((r) => !r.ok), "RATE_IP", "C-85.1");
 
 console.log("\n--- D-496: the instance-wide bound straddles the edge too ---");
 /* 300 is the instance's bound, so this arm costs 301 knocks and there is no
@@ -295,6 +388,13 @@ t("the instance is held to 300 across the edge, not 450",
 t("the instance-wide refusal is named", wideAfter.at(-1).reason, "RATE_GLOBAL");
 t("it publishes the instance-wide bound in words", wideAfter.at(-1).stated,
   "at most 300 knocks to this instance in any 10 minutes, estimated by a sliding window");
+/* D-508, and the instance-wide sentence is a DIFFERENT sentence from the
+   per-source one on purpose: what a refused knocker can usefully do about "you
+   are sending too fast" and about "this whole instance is full" is not the same
+   thing, and one sentence serving both would tell half of them something false. */
+ratePaper("instance-wide", wideAfter.at(-1), "RATE_GLOBAL", "C-85.2");
+t("the two rate refusals do not share one sentence",
+  KNOCK_CHECKS.RATE_IP.translation === KNOCK_CHECKS.RATE_GLOBAL.translation, false);
 
 console.log("\n--- D-496 OVER-STRICTNESS: a steady caller well under the rate is never refused ---");
 /* THE ARM THE ROW DEMANDS, and it is the one a sliding window is most likely to

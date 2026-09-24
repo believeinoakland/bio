@@ -139,9 +139,12 @@ failure mode 1.
 
 These are written by more than one thread and are the collision risk:
 
-- `docs/development/DEBT.md` — **append only.** Take the next free D-number at
-  the moment you write, not at the moment you planned to. If two threads take
-  the same number, the second to push renumbers rather than the first.
+- `docs/development/DEBT.md` — **RETIRED 2026-09-24 (M0-140) and archived whole into
+  `docs/archive/ledgers/DEBT-closed.md`; it is no longer a file and no longer a collision risk.** In its place: a defect is DIAGNOSED until its FIX can be named, then minted with `node tools/mintid.mjs D` and sent to
+  SCHEDULER, who places it in the build plan in build order (or to BOB first when the fix needs design). There is
+  no side list (`CLAUDE.md` §4; `DEBT.md` was retired 2026-09-24, M0-140, and archived whole).
+  Take the next free D-number at the moment you write, not at the moment you planned to — `mintid` allocates it
+  under a lock, so two threads cannot take the same one.
 - `docs/development/CIVICOS_UI_STATE.md` — **prepend a new entry.** Never edit an
   existing one. Version numbers may collide; the date and thread name
   disambiguate, so put both in the entry's first line.

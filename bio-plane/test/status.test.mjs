@@ -23,7 +23,9 @@
  *   - a claim with no probe — prose, which is what drifted;
  *   - a rendered cell that breaks §3's table on a pipe;
  *   - a UI call helper the `uinone` probe does not know, which would make every
- *     "the UI does not call X" claim silently blind.
+ *     "the UI does not call X" claim silently blind;
+ *   - a `hit` that matches MANY sites, which reads exactly like one that matches the right site
+ *     and stays green when the right site is deleted (M0-160).
  *
  * NEGATIVE CONTROL: `node bio-plane/test/status.control.mjs` from the repo root — each arm
  * breaks one property of the tool and must turn a NAMED assertion here red.
@@ -52,6 +54,19 @@
  *     AND THE ARM'S OWN FIRST SPELLING DID NOT ARM, reported rather than smoothed: its anchor was written with two
  *     backslashes where the line it matches carries four (a regex source inside a JS string), so the patch matched
  *     ZERO times and the driver's "the arm ARMED" assertion caught it — which is that assertion earning its place.
+ *   RE-RUN 2026-09-24 by M0-160 with A14 added (a `hit` satisfied by its FIRST of many matches again):
+ *     FOURTEEN arms, 77 pass / 0 fail, exit 0; baseline and closing baseline both 89 pass / 0 fail, so no arm
+ *     leaked. A14 FAILED at "A `hit` MATCHING TWICE IN ITS FILE IS NOT ok" and at "TWO FILES MATCHING ONCE
+ *     EACH IS AMBIGUOUS TOO"; not collateral; tools/status.mjs restored by sha256 (e1a51ef4…) AND cmp,
+ *     29628 bytes, byte-identical. DECLARED BEFORE ARMING and held: those two must fail, and the miss
+ *     ("A `hit` MATCHING NOWHERE still says so") and both unique-pin over-strictness arms must PASS armed and
+ *     unarmed — a guard that failed every `hit` would satisfy the ambiguity arms while blinding the corpus.
+ *     AND ITS FIRST RUN FOUND A DEFECT IN A NEIGHBOURING ARM RATHER THAN IN ITS OWN SUBJECT, reported rather
+ *     than smoothed: A12's second assertion (the ESTATE's DEC-49 marker) stopped failing when armed, because a
+ *     region name occurs TWICE in raw source — at its opening marker and at its `END` one — so counting matches
+ *     made the armed probe AMBIGUOUS instead of satisfied and it still read `ok: false`. The arm was passing
+ *     armed and unarmed: a control that cannot fail. CORRECTED at the assertion (anchored at the opening
+ *     marker's `/*`, one raw site and zero blanked), never exempted, and this figure is the run AFTER that.
  * AND A SECOND BY-HAND ARM ON THE PUSH GUARD (2026-09-18): `corpusCheck` made to accept any completion
  *   line regardless of its fail count -> section 8's "A STALE STATUS DATE REFUSES THE PUSH" FAILS (51/1);
  *   `tools/pushguard.mjs` restored by `cp`, verified byte-identical (sha256 7d978c73…).
@@ -87,7 +102,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 11;
+const SECTIONS = 12;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -116,6 +131,16 @@ put("bio-plane/src/schema.mjs", "export const SCHEMA = `\n"
   + "-- CREATE TABLE IF NOT EXISTS phantomtable would rebuild it, so we do not\n"
   + "`;\n");
 put("civicos-ui/app.html", "<script>recR(\"frontier\"); actAsk(\"conclude\", {});</script>");
+/* M0-160's subjects. `pinnedOnce` is written TWICE in this file and only once in CODE — the second
+   copy is in a comment — so it is both the unique-pin arm and the arm proving the count is taken
+   over the SAME blanked text every other probe reads. `twoSites` is written twice in code, and
+   `alsoInB` once here and once in a second file, which is the same defect one file out. */
+put("bio-plane/src/pins.mjs", "export const pinnedOnce = 1;\n"
+  + "export const twoSites = 1;\n"
+  + "export const second = twoSites;\n"
+  + "/* twoSites and pinnedOnce again, in a comment, which is not a site */\n"
+  + "export const alsoInB = 1;\n");
+put("bio-plane/src/pinsb.mjs", "export const alsoInB = 2;\n");
 
 try {
 /* ========================================================================== */
@@ -411,10 +436,106 @@ section("11 — A PROBE READS CODE, NOT COMMENTARY: a claim whose only match is 
   t("OVER-STRICTNESS: a declaration with its column list, and a VIRTUAL one with USING, BOTH still count",
     [P({ table: "content" }).ok, P({ table: "bundles_fts" }).ok], [true, true]);
 
-  const realMarker = evalProbe({ hit: "DEC-49 REGION is-register-home", in: ["bio-plane/src/store.mjs"] });
+  /* CORRECTED BY M0-160, NEVER EXEMPTED, and found by re-running A12 after changing the tool —
+     the "a fix verified only where you changed it is not verified" rule paying for itself. This
+     arm was spelled `DEC-49 REGION is-register-home`, which is correct about the ESTATE (the
+     opening marker is a comment, so the probe fails) but stopped DISCRIMINATING the moment `hit`
+     began counting matches: every region name occurs TWICE in the raw source, once at
+     `/* DEC-49 REGION <name>` and once at `/* END DEC-49 REGION <name>`, so A12 — which hands
+     every probe the RAW text again — made this probe AMBIGUOUS rather than satisfied, and it
+     still read `ok: false`. The assertion passed armed and unarmed, which is a control that
+     cannot fail. Anchored at the OPENING marker's `/*` it is one raw site and zero blanked ones,
+     so A12 turns it green and this arm red again, which is what it was written to prove. */
+  const realMarker = evalProbe({ hit: "/\\* DEC-49 REGION is-register-home", in: ["bio-plane/src/store.mjs"] });
   const realCode = evalProbe({ hit: "refusal\\(\"CAPTURE_HELD_BY_ANOTHER_BUNDLE\"", in: ["bio-plane/src/store.mjs"] });
   t("ON THE REAL TREE a DEC-49 REGION MARKER — a comment — DOES NOT satisfy a probe", realMarker.ok, false);
   t("...while the refusal that region governs DOES, so the tree is read and not blanked to nothing", realCode.ok, true);
+}
+
+/* ========================================================================== */
+section("12 — A `hit` PINS EXACTLY ONE SITE, OR IT PINS NOTHING (M0-160)");
+{
+  /* THE DEFECT, MEASURED. A `hit` was satisfied by its FIRST match and reported that one line as
+     evidence, so a pattern matching twenty-four sites read exactly like a pattern matching the
+     right one. D-498's first probe, `limit: cap, truncated`, matched 24 TIMES in `store.mjs` and
+     stayed green over an op its subject never touched — it was pinned to whichever site came first
+     in the file, which was not the construct's. That is the same class the comment-blanking closes
+     (section 11), arriving one lexical home out: the probe stands on something, but not on the
+     thing. On this estate the day this section landed, 43 of 318 `hit` probes were ambiguous. */
+  const P = (p) => evalProbe(p, { repo, sets: {} });
+  const IN = (f) => ["bio-plane/src/" + f];
+  const two = P({ hit: "twoSites", in: IN("pins.mjs") });
+  t("A `hit` MATCHING TWICE IN ITS FILE IS NOT ok — it pins neither site",
+    [two.ok, two.ambiguous], [false, true]);
+  t("...and the evidence says AMBIGUOUS and NAMES the sites, so it can be re-aimed without a search",
+    [/AMBIGUOUS/.test(two.evidence), /pins\.mjs:2/.test(two.evidence), /pins\.mjs:3/.test(two.evidence)],
+    [true, true, true]);
+  /* `in` IS ONE CORPUS, NOT AN EITHER/OR — stated in the tool's header as what the rule costs. Two
+     files matching once each is the same defect: delete the site the claim is about and the other
+     file keeps the probe green. */
+  const across = P({ hit: "alsoInB", in: ["bio-plane/src/pins.mjs", "bio-plane/src/pinsb.mjs"] });
+  t("TWO FILES MATCHING ONCE EACH IS AMBIGUOUS TOO — `in` is one corpus, not \"either of these\"",
+    [across.ok, across.ambiguous], [false, true]);
+  /* DISCRIMINATION, both ways: a miss is still a miss and must not be dressed as ambiguity, and a
+     genuine unique pin must still pass — a guard that failed every `hit` would pass the arms above. */
+  const none = P({ hit: "notWrittenAnywhere", in: IN("pins.mjs") });
+  t("A `hit` MATCHING NOWHERE still says so, and is NOT called ambiguous",
+    [none.ok, !!none.ambiguous, /matches nowhere/.test(none.evidence), /AMBIGUOUS/.test(none.evidence)],
+    [false, false, true, false]);
+  t("OVER-STRICTNESS: a `hit` matching EXACTLY ONCE is ok, and its evidence names that one line",
+    [P({ hit: "pinnedOnce", in: IN("pins.mjs") }).ok,
+     /pins\.mjs:1$/.test(P({ hit: "pinnedOnce", in: IN("pins.mjs") }).evidence)], [true, true]);
+  /* THE INTERACTION WITH SECTION 11, which is why `pinnedOnce` is written twice in that fixture:
+     the count is taken over the BLANKED text, so a second copy living in a comment is not a second
+     site. Read the other way, a guard that counted RAW matches would have failed this probe and
+     forced a re-aim onto a claim that was already correctly pinned. */
+  t("A SECOND COPY IN A COMMENT IS NOT A SECOND SITE — the count reads the same blanked text every probe does",
+    P({ hit: "pinnedOnce", in: IN("pins.mjs") }).ambiguous, undefined);
+  /* OVER-STRICTNESS on the claim's own flags: `g` is forced on for the count, and a claim that
+     spells `m` must keep meaning `m` — nine probes in the corpus carry it. */
+  t("OVER-STRICTNESS: a claim's own `m` flag survives the count, and still anchors at a line start",
+    [P({ hit: "^export const twoSites", flags: "m", in: IN("pins.mjs") }).ok,
+     P({ hit: "^const twoSites", flags: "m", in: IN("pins.mjs") }).ok], [true, false]);
+  /* JUDGEMENT: an ambiguous probe is a DRIFTED claim, which is what makes the push refuse it. */
+  const j = judge({ repo, data: { sets: {}, constructs: [{ n: 1, name: "X", claims: [
+    { id: "1.pinned", state: "BUILT", text: "a", probes: [{ hit: "pinnedOnce", in: IN("pins.mjs") }] },
+    { id: "1.ambiguous", state: "BUILT", text: "b", probes: [{ hit: "twoSites", in: IN("pins.mjs") }] },
+  ] }] } });
+  t("A CLAIM WHOSE PROBE IS AMBIGUOUS DRIFTS, and the uniquely pinned one beside it does not",
+    j.claims.filter((c) => c.problems.length).map((c) => c.id), ["1.ambiguous"]);
+
+  /* THE ESTATE ITSELF, because a fixture cannot stand in for it, and because the row that accepts
+     this guard is about the real corpus: every `hit` in the source of truth pins ONE site. */
+  const live = judge();
+  const amb = live.claims.flatMap((c) => c.results.filter((r) => r.ambiguous).map((r) => c.id));
+  t("ZERO ambiguous probes on the real source of truth — all 43 measured on 2026-09-24 were re-aimed", amb, []);
+  const hits = live.claims.flatMap((c) => c.results.filter((r) => r.p && r.p.hit));
+  t("...over a real population of `hit` probes, so the arm above is not an empty walk", hits.length > 250, true);
+
+  /* AND THE FIGURE THE ROW IS ACCEPTED ON, read off the CLI rather than from this process: the
+     completion line PRINTS the count, including the 0, so "0 ambiguous" can be read by a session
+     that runs the tool. Driven over scratch repositories, the same seam section 7 uses. */
+  const mk = (hit) => {
+    const r = mkdtempSync(join(tmpdir(), "status-amb-"));
+    const w = (rel, text) => { mkdirSync(join(r, rel, ".."), { recursive: true }); writeFileSync(join(r, rel), text); };
+    mkdirSync(join(r, "tools"), { recursive: true });
+    copyFileSync(join(ROOT, "tools/status.mjs"), join(r, "tools/status.mjs"));
+    mkdirSync(join(r, "bio-plane/scripts"), { recursive: true });
+    for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"])
+      copyFileSync(join(ROOT, "bio-plane/scripts", f), join(r, "bio-plane/scripts", f));
+    w("bio-plane/src/pins.mjs", "export const twoSites = 1;\nexport const second = twoSites;\n");
+    w("docs/architecture/construct-status.json", JSON.stringify({ sets: {}, constructs: [{ n: 1, name: "X",
+      claims: [{ id: "1.a", state: "BUILT", text: "the pin", probes: [{ hit, in: ["bio-plane/src/pins.mjs"] }] }] }] }));
+    w("docs/architecture/BIO_System_Design.md", "| # | c | s |\n| --- | --- | --- |\n| 1 | **X** | x |\n");
+    spawnSync(process.execPath, [join(r, "tools/status.mjs"), "--write"], { cwd: r, encoding: "utf8" });
+    const run = spawnSync(process.execPath, [join(r, "tools/status.mjs"), "--check"], { cwd: r, encoding: "utf8" });
+    rmSync(r, { recursive: true, force: true });
+    return `${run.stdout || ""}${run.stderr || ""}`.match(/^status: .*$/m)?.[0] ?? "NO COMPLETION LINE";
+  };
+  t("THE CLI PRINTS THE COUNT: an ambiguous probe reads `1 ambiguous` on the completion line",
+    /, 1 ambiguous/.test(mk("twoSites")), true);
+  t("...and a uniquely pinned one reads `0 ambiguous`, so the figure is READ and not inferred from silence",
+    /, 0 ambiguous/.test(mk("export const second = twoSites")), true);
 }
 
 } finally {

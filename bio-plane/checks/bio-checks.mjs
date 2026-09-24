@@ -7047,7 +7047,9 @@ export const AI_RUN_CHECKS = {
      entry's referent is. The third is `agent-worker`'s `stepLog`, another area's
      path, which composes no referent field while a model may judge `PRESENT`.
      The full reasoning and the driven evidence are at the predicate in
-     `src/airun.mjs`; section I of `test/observation-log.test.mjs` drives it.
+     `src/airun.mjs`; section L of `test/observation-log.test.mjs` drives it
+     (it was section I until D-500, 2026-09-24, which found two sections wearing
+     that letter and moved REC-100's — this citation named the ambiguous one).
 
      **CLOSED 2026-09-18 BY REC-100 (IC-130, D-366).** BOB #14 ruled the rollup
      (`OBSERVATION-LOG-DESIGN.md` §3): a rollup's PRESENT carries `result_kind =
@@ -10376,6 +10378,65 @@ export const ACT_SHAPE_CHECKS = {
       + 'public, say who holds it and how it was seen, which is still an address and is still '
       + 'checkable.',
   },
+  /* -------------------------------------------------------------------------
+     REC-211 / IC-273 — A DISPOSITION BINDS THE DEFINITION VERSION THE MEMBER
+     SAW, AND THESE ARE THE TWO REFUSALS THAT MAKE THAT ENFORCEABLE.
+
+     BOB #32 ruled it on 2026-09-24 (~03:14Z), on REC-184's own worker's finding:
+     *"a disposition binds the definition version the member SAW: the act carries
+     definitionVersion; if the definition has moved since, it is refused
+     DEFINITION_MOVED by name, and the member re-reads and acts again. Authored
+     acts bind what was authored."* Home: `BIO_Content_Framework_v0_10.md` §8.2,
+     "The declared flow, and its revisions".
+
+     WHY REC-184 DID NOT ALREADY CLOSE IT, and this is the part worth reading
+     before touching either row. REC-184 stamps `proposal_dispositions.definition_version`
+     from the STORE at the moment the write arrives, never from the caller — which
+     is right for authorship and is exactly what makes the remaining hole
+     invisible. A member reads the question at version 3, a revision lands, the
+     member decides: the row is stamped 3+1, the read half compares the stamp
+     against the current version, finds them equal, and publishes `applies: true`.
+     The record then says a member judged a declared flow they never read, and
+     says it with no mark of doubt anywhere. That is the record claiming more than
+     it can support (CLAUDE.md §2), and no read-side rule can recover it, because
+     the two numbers it has to compare are the same number.
+
+     SO THE ACT CARRIES WHAT THE MEMBER SAW, AND THE STORE COMPARES. Two
+     conditions, and they are two rows rather than one because they are two
+     different facts about the request and DEC-49 gives one code one sentence:
+     C-33.42 is *this act does not say which version it judged*; C-33.43 is *it
+     says one, and it is not the version standing now*.
+
+     C-33.43's TRANSLATION DOES NOT SAY "REVISED SINCE YOU READ IT" although that
+     is the case it exists for. The plane knows only that the named version is not
+     the current one; a caller naming a version that never stood reaches the same
+     line, and a sentence asserting a revision would be the plane inventing the
+     reason. It says what is true of every route in — the version named is not the
+     one standing — and the refusal carries both numbers beside it.
+
+     NEITHER ROW REACHES THE JUDGMENT-LAYER ARM. `op=proposedispose`'s second key
+     shape ({project, finding}) ages a finding in one team's feed and no declared
+     flow governs it, so there is no version to name and nothing here to ask.
+     ------------------------------------------------------------------------- */
+  NO_DEFINITION_VERSION: {
+    check: 'C-33.42',
+    where: 'src/store.mjs proposeDispose > is-dispose-version-named',
+    translation: 'Setting aside one of the record\'s own questions is a decision about the way a '
+      + 'body is said to work — and that description is written down, dated, and rewritten when the '
+      + 'group learns better. This request does not say which of those versions you were reading '
+      + 'when you decided, so the record cannot say what you actually judged. Open the question '
+      + 'again and send the version shown beside it. Nothing was recorded.',
+  },
+  DEFINITION_MOVED: {
+    check: 'C-33.43',
+    where: 'src/store.mjs proposeDispose > is-dispose-version-current',
+    translation: 'The version of the declared flow this decision names is not the one standing now. '
+      + 'Rather than file your decision against a description you did not read, the record keeps it '
+      + 'out and asks you to look again: read the question against the version in force and decide '
+      + 'again. The answer may well be the same one, and it will then be yours. Both versions are '
+      + 'named beside this message, the earlier one still reads back in full, and nothing was '
+      + 'recorded.',
+  },
 };
 
 /* =========================================================================
@@ -11005,14 +11066,21 @@ export const RENDER_CAPTURE_CHECKS = {
     translation: 'This instance has no working page renderer, so it cannot capture the page as a visitor '
       + 'saw it. Nothing was fetched, and the page\'s empty frame was not filed in its place.',
   },
-  /* BOB #32 item 3: the daily render allowance is spent. The render is
-     DEFERRED and the deferral is recorded; the shell is never the content. */
+  /* BOB #32 item 3: the daily render allowance is COMMITTED — spent, or reserved by
+     renders in flight (D-492). The render is DEFERRED and the deferral is recorded;
+     the shell is never the content. CORRECTED 2026-09-24 (D-492), and the old sentence
+     is why: it said the allowance had been USED, which was true only of the time
+     already reported. Since a render now reserves its maximum cost at admission, a
+     deferral can also mean the day's remaining time is held by renders still running,
+     and a member told "used" would have gone away for the day when the answer may be a
+     minute off. The sentence says which, without naming a mechanism. */
   RENDER_DEFERRED: {
     check: 'C-83.4',
     where: 'src/index.mjs fetch > is-render-admit',
-    translation: 'This instance has used today\'s allowance for rendering pages, so this render is '
-      + 'deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. It can '
-      + 'be asked again after midnight UTC.',
+    translation: 'Today\'s allowance for rendering pages is fully committed — either already used, or '
+      + 'held by renders this instance is running right now — so this render is deferred, and that is '
+      + 'recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in '
+      + 'flight have finished, or after midnight UTC.',
   },
   /* The render loads the page again, which is a second document load to the
      host, so it asks the per-host governor like any other (BOB #32 item 3:
@@ -11099,6 +11167,84 @@ export const DISPATCH_CHECKS = {
     where: 'src/index.mjs fetch > is-unknown-op',
     translation: 'This copy has no operation by that name. A copy running an older or newer version can have '
       + 'a different set of operations, and a misspelt name reads the same way. Nothing was changed.',
+  },
+};
+
+/* ===========================================================================
+   D-508 / DEC-49 (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10) — THE
+   DOORBELL'S RATE REFUSALS, C-85.
+
+   THE DEFECT, found by D-496's worker: `op=knock` is THE ONE DOOR OPEN TO THE
+   PUBLIC (`test/doorbell.test.mjs`'s own words), and it is the only refusal
+   surface in this plane whose reader is guaranteed NOT to be a member. D-496
+   gave the 429 a published bound in words — `stated` — and left the refusal
+   itself a BARE STORE REASON: `{ ok: false, reason: "RATE_IP" }`. So a stranger
+   who knocked too often got a sentence about the limit beside a token that means
+   nothing to them, and DEC-49's rule — every refusable condition carries a code
+   with a canned translation — held everywhere except at the door where the
+   reader is least equipped to translate for themselves.
+
+   `stated` IS NOT A TRANSLATION AND THE TWO ARE KEPT APART, which is why this
+   family exists rather than the bound being stretched to cover the case. D-496's
+   sentence is a PUBLICATION OF A NUMBER ("at most 12 knocks from one source in
+   any 10 minutes, estimated by a sliding window") composed in `index.mjs` from
+   the limits that instance runs, and it must keep moving when those limits move.
+   The translation below is the MEMBER'S ANSWER — what happened, what it means
+   for the material they were sending, and what to do — and it names no figure at
+   all, because a figure written here would be a second authority for the bound
+   and the two could disagree. Both arrive in the same 429, which is the shape
+   DEC-49 asks for: the code, the canned sentence, and the instance's own
+   published number beside them.
+
+   WHY A FAMILY FOR TWO ROWS, and SK-1's rule (a family is a floor in
+   `civicos-ui/check-refusal-codes.mjs` that buys slack for everybody else's
+   walk) is the argument against it, taken seriously. There is no existing family
+   whose subject is the public door: `CAPTURE_REQUEST_CHECKS` (C-28) is a
+   MEMBER's capture request, `DISPATCH_CHECKS` (C-69) is the router's "no op by
+   that name", `REQUIRED_ARGUMENT_CHECKS` (C-61) is a shape rule at any door, and
+   `ADMISSION_CHECKS` is what a host said to US. Putting an anonymous caller's
+   rate refusal in any of them would file one rule under another rule's subject —
+   the drift every header in this file defends against — and the floor it buys is
+   paid once and measured in the same turn (D-508 moved it from this guard's own
+   print). The family is named for the DOOR rather than for the limiter, so the
+   two knock refusals that are still codeless today — `TOO_LARGE` and `EMPTY`,
+   minted in `index.mjs` before the store is ever called, REPORTED by D-508 and
+   in the plan rather than taken here — have a home to arrive in.
+
+   ONE REGION, `knock > is-knock-rate`, in `Store#knock`; one helper, the local
+   `refusal` closure this file's other families are minted through (IC-246's
+   `acknowledgeStatement`, REC-79's shape before it); the code a STRING LITERAL at
+   its site, which is DEC-49's rule and what lets the guard's arm C compare it
+   against the row (a code held in a variable is one the arm reads past, and one
+   shipped `translation: undefined` to a member that way).
+   Both rows name the SAME region because both refusals are the two adjacent
+   lines that region contains — the smallest span in which either is enforced —
+   on `CONNECTION_CHOICE_CHECKS`' precedent directly below.
+
+   THE CODES ARE READ AS WELL AS MINTED, and that is deliberate: `index.mjs`
+   compares `rec.result.reason` against both literals to choose which published
+   bound to attach. That is a SURFACE keying on a code the plane sent, which is
+   exactly what DEC-49 licenses, and it is not a second mint — the mint is the
+   region below and there is one of it.
+   =========================================================================== */
+export const KNOCK_CHECKS = {
+  RATE_IP: {
+    check: 'C-85.1',
+    where: 'src/store.mjs knock > is-knock-rate',
+    translation: 'This group\'s inbox is not taking any more material from where you are sending it '
+      + 'just now. It is a limit on how fast one sender may knock, not a judgement about you or '
+      + 'about what you sent, and it lifts on its own shortly — the bound is published beside this '
+      + 'message. Nothing was stored and nothing was read, so send the same material again a little '
+      + 'later and it will arrive.',
+  },
+  RATE_GLOBAL: {
+    check: 'C-85.2',
+    where: 'src/store.mjs knock > is-knock-rate',
+    translation: 'This group\'s inbox is not taking any more material from anyone just now. The whole '
+      + 'instance is at its limit rather than you — the cap exists so that no one sender can fill '
+      + 'the inbox — and it lifts on its own shortly; the bound is published beside this message. '
+      + 'Nothing was stored and nothing was read, so send the same material again a little later. '
+      + 'If it keeps happening, the group\'s members can be told the doorbell is saturated.',
   },
 };
 
@@ -11422,7 +11568,7 @@ export const CASE_DOCUMENT_FAMILY = {
   COMPLETENESS: { check: 'C-41.10', what: 'the completeness block (REC-14)' },
   EXCLUDED:     { check: 'C-41.11', what: 'the exclusion list field (C-9)' },
   BAR:          { check: 'C-41.12', what: 'required_strength — the standard of evidence (DEC-17 as DEC-72 rehomes it)' },
-  DISCLOSURES:  { check: 'C-41.13', what: 'bias_manifest and the statement\'s acknowledgement list, required of a bio-case-document/3 (REC-188)' },
+  DISCLOSURES:  { check: 'C-41.13', what: 'bias_manifest, the statement\'s acknowledgement list and the statement\'s WRITER, required of a bio-case-document/3 (REC-188; the writer REC-212)' },
 };
 const C41 = Object.fromEntries(
   Object.entries(CASE_DOCUMENT_FAMILY).map(([k, v]) => [k, v.check]));
@@ -11548,20 +11694,50 @@ export function checkCaseDocument(fm, ctx = {}) {
      list that claims more than it can support: a row naming no acknowledger or no kind, a count
      that disagrees with the list, and the statement's own author listed as its second reader —
      the one thing rule 11 says an acknowledgement is not. Nothing here asks for a row to exist:
-     none is ever required to publish. */
+     none is ever required to publish.
+
+     REC-212 / §3 rule 13 (BOB #32 ruled (b), 2026-09-24: *two acts, two names, never conflated*) —
+     THE EXCLUSION READS THE STATEMENT'S WRITER, WHICH IT COULD NOT DO BEFORE. It read
+     `completeness.author`, and that names the member who PREPARED AND PUBLISHED the case. Where an
+     editor wrote the exclusion statement and somebody else published it, this arm admitted the
+     editor's own acknowledgement of their own sentence — so a signed case document claimed a second
+     reading nobody made, which is the overclaim this catalogue exists to refuse, in the artifact a
+     stranger holds. `completeness.statement_by` (REC-212, carried onto the document from the draft's
+     server stamp) is the writer, and THREE STATES are told apart rather than two:
+       - a NAME — an acknowledgement by that member is refused, and this is the arm the row is about;
+       - `null`, the plane SAYING it could not establish the writer — then EVERY participant row is
+         refused, once, because any one of them may BE the writer's own and a list that cannot rule
+         that out is the record claiming a reader it cannot support. A RECIPIENT row is untouched: a
+         grant's holder is never the writer;
+       - NO KEY — a /1 or /2 document, authored before rule 13, read IN ITS OWN SHAPE: `author` is
+         the only name those bytes hold, and refusing every acknowledgement of them would refuse what
+         already crossed (rule 1).
+     THE PUBLISHER'S OWN STAYS REFUSED, on its own reason and in its own words. They author this block
+     and date it at the act of publishing, so their acknowledgement of it is not a second reading
+     either, and `op=publish` has left it out since D-150. Two exclusions, two messages: one name for
+     each act is the whole content of the ruling, and a single message covering both is how the two
+     came to be one field in the first place. */
   if (fm && fm.completeness_acknowledgements !== undefined) {
     const acks = fm.completeness_acknowledgements;
     if (!Array.isArray(acks)) {
       findings.push(f(C41.COMPLETENESS, 'error', 'a case document\'s completeness_acknowledgements must be a list — empty when nobody but the statement\'s author acknowledged it (BIO_Publication §3 rule 11)'));
     } else {
-      const author = c && typeof c.author === 'string' ? c.author : null;
+      const publisher = c && typeof c.author === 'string' ? c.author : null;
+      const statesWriter = !!c && Object.prototype.hasOwnProperty.call(c, 'statement_by');
+      const writer = statesWriter && typeof c.statement_by === 'string' && c.statement_by.trim()
+        ? c.statement_by.trim() : null;
+      const writerUndetermined = statesWriter && !writer;
       for (const a of acks) {
         if (!a || typeof a !== 'object' || !['participant', 'recipient'].includes(a.kind)
             || typeof a.by !== 'string' || !a.by.trim() || typeof a.at !== 'string')
           findings.push(f(C41.COMPLETENESS, 'error', `a case document lists an acknowledgement of its statement that names no acknowledger, kind (participant or recipient) or date (got ${JSON.stringify(a)}): an acknowledgement is an authored, attributed, dated act, and an unattributed one is the record claiming a second reader it cannot name`));
-        else if (a.kind === 'participant' && author && a.by === author)
-          findings.push(f(C41.COMPLETENESS, 'error', `a case document lists ${a.by}, the completeness statement's own author, as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication §3 rule 11), and an author acknowledging their own statement has read it once`));
+        else if (a.kind === 'participant' && writer && a.by === writer)
+          findings.push(f(C41.COMPLETENESS, 'error', `a case document lists ${a.by}, the member who WROTE its exclusion statement (completeness.statement_by), as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication §3 rule 11), and the writer of the sentence has read it once. Who wrote the statement and who published the case are two acts and two names (§3 rule 13) — this is the writer, whether or not they are also completeness.author`));
+        else if (a.kind === 'participant' && publisher && a.by === publisher)
+          findings.push(f(C41.COMPLETENESS, 'error', `a case document lists ${a.by}, completeness.author — the member who PREPARED AND PUBLISHED this case and authored this completeness block at that act — as having acknowledged its statement: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication §3 rule 11), and the member who authored the block is its first reader by construction`));
       }
+      if (writerUndetermined && acks.some((a) => a && typeof a === 'object' && a.kind === 'participant'))
+        findings.push(f(C41.COMPLETENESS, 'error', `a case document states that who wrote its exclusion statement is UNDETERMINED (completeness.statement_by is null) and lists ${acks.filter((a) => a && typeof a === 'object' && a.kind === 'participant').length} participant acknowledgement(s) of it: an acknowledgement is a SECOND person's reading (BIO_Publication §3 rule 11), and a document that cannot say who the FIRST reader was cannot support the claim that any of these is a second. Publish the edition again from a draft whose statement carries an author, or let the list stand with its recipients alone — a recipient of a review copy is never the statement's writer`));
       if (c && c.acknowledged !== undefined && c.acknowledged !== acks.length)
         findings.push(f(C41.COMPLETENESS, 'error', `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
     }
@@ -11602,6 +11778,21 @@ export function checkCaseDocument(fm, ctx = {}) {
     if (!Array.isArray(fm?.completeness_acknowledgements)) {
       findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal — an ABSENT field is silence about who else read what this case leaves out (BIO_Publication §3 rule 11)`,
         ['re-publish through op=publish, which lists every acknowledgement of the statement it publishes']));
+    }
+    /* REC-212 — (c) `completeness.statement_by`: WHO WROTE THE STATEMENT, told apart from
+       `completeness.author`, who PREPARED AND PUBLISHED the case (§3 rule 13, BOB #32 (b), 2026-09-24).
+       REQUIRED AS A KEY, /3 AND ONLY /3, for REC-188's own reason: a /1 or /2 document was never
+       obliged to carry it and is read in its own shape, and the token is what tells a document that was
+       never obliged from one that left its obligation out. `null` IS LEGAL AND IS A STATEMENT — the
+       plane could not establish who wrote the sentence, said rather than guessed and never back-filled
+       from `author`. What is refused is SILENCE: a /3 document handing a reader only the publisher's
+       name leaves the two acts looking like one, which is the conflation this key exists to end. A
+       document caught here is UNSIGNED — it is authored again by `op=publish`, which stamps the key —
+       so nothing that already crossed is disturbed (rule 1). */
+    if (!c || !Object.prototype.hasOwnProperty.call(c, 'statement_by')
+        || !(c.statement_by === null || (typeof c.statement_by === 'string' && c.statement_by.trim()))) {
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.statement_by, the member who WROTE its exclusion statement — a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication §3 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got ${c ? JSON.stringify(c.statement_by ?? null) : undefined}${c && !Object.prototype.hasOwnProperty.call(c, 'statement_by') ? ', with no such key' : ''})`,
+        ['re-publish through op=publish, which carries the draft\'s server-stamped statement_by onto the document']));
     }
   }
   /* REC-96 / D-196 / IC-112 — THE `searched` SECTION, AND IT IS C-41.10's ARM
@@ -13555,6 +13746,69 @@ export const STATEMENT_ACK_CHECKS = {
       + 'acknowledgement can update at once. Updating only some would leave the others listing fewer second '
       + 'readers than the record holds, so nothing was recorded. Sign or replace some of those documents, then '
       + 'acknowledge the statement again.',
+  },
+  /* D-507 / IC-270 — THE SIX REFUSALS THAT REACHED A MEMBER AS MACHINE WORDS. UI-89's worker measured it
+     at the surface: of the seven conditions `acknowledgeStatement` refuses on, only C-82.1 above held a
+     row, so the other six arrived carrying the plane's authored `detail` and NO canned translation, which
+     is the state DEC-49 exists to make impossible (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10). The
+     obstacle was the same STRUCTURAL one D-484 met at `NO_BASIS`: a row holds ONE `where` naming the
+     SMALLEST SPAN in which its refusal is enforced, and `acknowledgeStatement`'s `refusal` helper stood
+     BELOW all six, so none of them could be built through it and none could honestly hold a row. The six
+     returns now go through the helper, each inside its own DEC-49 region, and each carries the sentence
+     below beside its unchanged `reason` and `detail`.
+     THE WORDS ARE BOB #33's, approved 2026-09-24 and used verbatim. One was checked against the code and
+     is right rather than narrow: C-82.5 says "This draft", and the case-DOCUMENT door cannot reach it —
+     `publishCase` refuses `NO_STATEMENT` (region `is-publish-statement`) before authoring any document, so
+     every case document in the store carries a non-empty `completeness.statement` and the draft door is
+     the only one that reaches an empty one. */
+  STATEMENT_ACK_NO_SUBJECT: {
+    check: 'C-82.2',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-subject',
+    translation: 'Say which statement you are acknowledging: a draft case, or a case document, by its case '
+      + 'and edition, that has been written but not yet signed.',
+  },
+  STATEMENT_ACK_ALREADY_SIGNED: {
+    check: 'C-82.3',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-signed',
+    translation: 'This edition of the case is already signed, and the signature covers its list of who '
+      + 'acknowledged the statement, so a new acknowledgement could not appear in it. A signed edition is '
+      + 'corrected only by publishing the next edition.',
+  },
+  STATEMENT_ACK_NOT_A_PARTICIPANT: {
+    check: 'C-82.4',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-participant',
+    translation: 'Only someone who has joined the project that makes this case, or someone given a review '
+      + 'copy of it, can acknowledge its statement. Being able to see a project is not the same as having '
+      + 'joined it: an invited member who has not joined yet, and an administrator, cannot acknowledge it.',
+  },
+  STATEMENT_ACK_NO_STATEMENT: {
+    check: 'C-82.5',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-statement',
+    translation: 'This draft does not yet say what its case leaves out, so there is nothing to acknowledge. '
+      + 'Once an editor of the draft writes that statement, you can acknowledge it.',
+  },
+  STATEMENT_ACK_BY_ITS_AUTHOR: {
+    check: 'C-82.6',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-by-its-author',
+    /* CONDUCT #20 at c20-batch23: REC-212 sends a SECOND person through this code — the member who PUBLISHED the
+       case, who did not write its statement (§3 rule 13) — and the D-507 sentence told them "You wrote this
+       statement", which is false of them. Generalised at the union to be true of both; the words go to BOB #33,
+       who approved the originals, to confirm or replace. */
+    translation: 'You wrote this statement or published this case, so you have already read it. An acknowledgement '
+      + 'means a second person has read what the case leaves out, so it has to come from someone else: another '
+      + 'participant in the project, or a reader given a review copy. The case can be published without one, '
+      + 'and will say so.',
+  },
+  STATEMENT_ACK_AUTHOR_UNDETERMINED: {
+    check: 'C-82.7',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-author-undetermined',
+    /* CONDUCT #20 at c20-batch23: REC-212 reaches this code from a CASE DOCUMENT that states its writer could not
+       be established, where "this draft" and "ask an editor to save it again" are both false. Generalised at the
+       union to name both routes; to BOB #33 with the other. */
+    translation: 'The record does not say who wrote this statement, so it cannot tell whether you are its author. '
+      + 'For a draft, ask an editor of the project to save the statement again; for a published case, it can be '
+      + 'published again from a draft that records who wrote it. You can acknowledge it after that. The case can '
+      + 'be published either way.',
   },
 };
 

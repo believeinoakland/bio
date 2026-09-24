@@ -17,7 +17,7 @@ narrative. `DEBT.md` 504 KB holding 222 open rows averaging 2.3 KB. No session c
 
 | file | holds | size | read |
 | --- | --- | --- | --- |
-| `docs/development/QUEUE.md` — **the cache** | the BOB INBOX's UNDRAINED entries; then at most **16** rows not `integrated` (`CACHE_ROWS`): those `running`, then the next `queued` rows whose `depends-on` is met, in order | ≤ 48 KiB (rows not `integrated`); a row ≤ 3 KB | **WHOLE, by every session** |
+| `docs/development/QUEUE.md` — **the cache** | the BOB INBOX's UNDRAINED entries; then at most **20** rows not `integrated` (`CACHE_ROWS`): those `running`, then the next `queued` rows whose `depends-on` is met, in order | ≤ 48 KiB (rows not `integrated`); a row ≤ 3 KB | **WHOLE, by every session** |
 | `docs/development/BACKLOG.md` — **everything still to do** | every open item NOT in the cache, in the order it will be processed (top = next), `blocked` rows included with what unblocks them | ≤ 150 KB; a row ≤ 2 KB | **WHOLE, by SCHEDULER at every replenish and when ordering** (corrected 2026-09-19 by BOB #16: it read CONDUCT, before SCHEDULER existed); by id otherwise |
 | `docs/development/BACKLOG-LATER.md` — **the backlog's tail** (M0-119) | the SAME order, continued: its first row comes directly after `BACKLOG.md`'s last (§2) | unbounded; a row ≤ 2 KiB | **LOOKED UP** (`node tools/ledger.mjs find <ID>`) |
 | `docs/archive/ledgers/QUEUE-closed*.md` — **what has been done** | every `done` / `superseded` row, verbatim, as it stood when it closed | unbounded | **LOOKED UP** (`node tools/ledger.mjs find <ID>`) |
@@ -31,6 +31,14 @@ A row is FIELDS, not narrative: id · state · title (one line) · milestone · 
 depends-on (ids) · owner · accepts-when (one paragraph) · why it is here in the order (one line). Reasoning, receipts
 and history belong in the design document the row cites, or in the archive.
 
+**The TITLE is the row's CLAIM, and a status word never touches it** (M0-164, 2026-09-24). A flip's note —
+`coord.mjs write --status <ID> <state> --note …` — used to be written OVER the heading's tail, so every flip erased
+the line saying what the defect IS: all 15 rows CONDUCT #20 flipped on 2026-09-24 lost their headlines, restored by
+hand by SCHEDULER #18 from `f8fd4a77^`/`0cf9783c^`. The note now lives on a field line of its own,
+`status: <state> — <note>`, directly under the heading, replacing any earlier one; a flip carrying NO note REMOVES a
+stale line rather than leaving a note about the state the row has just left standing under its new one. The history
+of a row's notes is `coord`'s log, not the row.
+
 ## 2. The cycle — SCHEDULER's, as the owner of both files (`kickoffs/SCHEDULER.md`; Bob, 2026-09-18)
 
 **CONDUCT writes two words — a cached task's `queued` → `running`, and `running` → `integrated` once its branch is on a pushed batch — and reports each completion to SCHEDULER.** Where
@@ -39,7 +47,7 @@ first written. SCHEDULER **replenishes** the cache; CONDUCT **fills slots**.
 
 1. **An item completes →** its row leaves the cache for the archive in the SAME write as its `done` flip
    (`node tools/ledger.mjs archive <ID>` — LED-5; `coord.mjs write --status <ID> done --archive <ID>`).
-2. **Refill, same write →** the next runnable rows move from the top of `BACKLOG.md` into the cache until it holds 16
+2. **Refill, same write →** the next runnable rows move from the top of `BACKLOG.md` into the cache until it holds 20
    (or the backlog has nothing runnable), and are DELETED from the backlog as they move (`node tools/ledger.mjs refill`).
    A `blocked` row is skipped, never moved; it stays where the order put it.
 3. **New work arrives →** BOB writes it into the BOB INBOX with its place in the order; SCHEDULER gates it (the design is
@@ -52,10 +60,12 @@ first written. SCHEDULER **replenishes** the cache; CONDUCT **fills slots**.
 
 **16 AT 48 KiB — RULED 2026-09-23 21:03Z by BOB #31** (Bob: *"12 active plus at least 4 queued"*, so a worker's done report is a spawn in the same turn): `CACHE_ROWS` 16 and the cache budget 48 KiB, superseding the 12 at 40 KiB below.
 
+**20 AT 48 KiB — 2026-09-24 ~17:25Z, SCHEDULER #19 on Bob's standing direction of 17:10Z** (*"keep 16 workers ACTIVELY working. Keep the cache full enough that CONDUCT never waits for a runnable row, with spares behind the live 16"*): `CACHE_ROWS` 20, 16 live plus at least 4 queued, the shape of the 21:03Z ruling at CONDUCT's new capacity. The byte budget does not move: it reads only rows not `integrated`.
+
 **A FINISHED ROW WAITING ON ITS TRAIN HOLDS NO SLOT — `integrated`, 2026-09-23 (SCHEDULER #16, under the ruling above).** At 19:58Z all 12 cache rows were finished and unlanded (7 on one train, 5 on the next) and CONDUCT had nothing to spawn. So CONDUCT writes a second word: a row whose branch it has integrated on a PUSHED batch goes `running` → `integrated`. The row stays OPEN and in the cache (it is `done` only when SCHEDULER finds its sha on `origin/main`), but P3's count, the refill's room and the cache's byte budget read only the rows not `integrated` (`HELD_QUEUE_STATES` in `tools/ledger.mjs`).
 
 **The invariants, each a `plancheck` arm and a coord write's ledger check (FAIL):** every open id is in EXACTLY ONE of the cache and the backlog; no
-closed id is in either; the cache holds ≤ 16 rows not `integrated` and no `blocked` row; every cache row's `depends-on` is met; both files
+closed id is in either; the cache holds ≤ 20 rows not `integrated` and no `blocked` row; every cache row's `depends-on` is met; both files
 are within budget.
 
 **WHEN `BACKLOG.md` IS OVER ITS BUDGET, THE TAIL MOVES, NOT THE HEAD — RULED 2026-09-22 by BOB #28 on SCHEDULER #14's
@@ -87,7 +97,7 @@ built, `coord.mjs write` rebalances after EVERY write; that is the correction ow
 rebalance is harmless because it conserves every row verbatim. A tree's GATE never fails on the budget either way
 (TREE-SHARING §3 (c)): the budget is enforced at the write.
 
-## 3. DEBT.md FOLDS INTO THE BUILD PLAN, and is retired as a live file
+## 3. DEBT.md FOLDED INTO THE BUILD PLAN, and is RETIRED — completed 2026-09-24 (M0-140)
 
 Bob, 2026-09-18: *"those debts should be appropriately folded into the build plan so that those debts are retired - in
 the right build order. Once in the build plan, they'll eventually be worked on when they are included in a tranche of
@@ -111,18 +121,44 @@ replaces it.
    written where the event that fires it is recorded (a milestone's text, or the row that builds its precondition), then
    archived pointing there — never a blocked backlog row, which costs a placement and watches nothing.
 
-**After the fold, a newly found defect is DIAGNOSED UNTIL ITS FIX CAN BE NAMED, then placed by SCHEDULER as a
-BACKLOG item in build order** (class `defect`, a `D-` id minted as today; Bob: *"understood deeply enough that a fix
+**THE FOLD IS COMPLETE, 2026-09-24 (M0-140), and this is the rule that stands in DEBT.md's place — the SECOND of its
+two statements, the first being `CLAUDE.md` §4, and there is no third.** `docs/development/DEBT.md` no longer exists,
+on `coord` or on `main`. Its last three open rows — D-313 and D-391 (door 3, stated limitations in
+`BIO_Content_Framework_v0_10.md` §16 and `CONTENT-SEARCH-DESIGN.md`) and D-388 (door 1, closed in fact by
+`CORPUS-STANDARD.md` §6) — were closed by SCHEDULER #18, and the whole file moved VERBATIM into
+`docs/archive/ledgers/DEBT-closed.md`. Every `D-` id ever allocated still resolves: `node tools/ledger.mjs find <ID>`
+reads that archive and `DEBT-closed-2026-08.md`, and `tools/mintid.mjs` reads them too, so no retired `D-` can be
+minted twice.
+
+**THE RULE: a defect found anywhere is DIAGNOSED UNTIL ITS FIX CAN BE NAMED, then minted with
+`node tools/mintid.mjs D` and placed by SCHEDULER as a plan row in BUILD ORDER — or routed to BOB first when the fix
+needs design. THERE IS NO SIDE LIST; the plan is the only place work waits.** A `D-` is a plan row while it is open
+and an archived table row once it closed, which is why `mintid`'s `D` floor reads both shapes (see its NAMESPACES
+entry, and the one question M0-140 left open there).
+
+The former wording follows, and it is unchanged in substance: **a newly found defect is DIAGNOSED UNTIL ITS FIX CAN BE
+NAMED, then placed by SCHEDULER as a BACKLOG item in build order** (class `defect`, a `D-` id minted as today; Bob: *"understood deeply enough that a fix
 can be identified and properly added (in the correct order) in the build plan"*; a fix that needs design goes to BOB
-first) — there is no second list for work to wait in. **`DEBT.md` cannot be emptied row by row** (M0-109's sweep, M-96:
-`ledger.mjs`'s `DEBT_FLOOR_BYTES`, 10,000 B, refuses any archive leaving less, and an empty file is 3,174 B), so LED-7's
-CLOSING landing archives the last rows with the file and, in that landing, retargets every reader of the live file:
-`owed.mjs`, `plancheck`'s disposition arm and `ledger.mjs` to the backlog; `DEBT_FLOOR_BYTES` retired with
-`nc-m039.mjs`'s arm 2 re-pointed at the backlog; `ledger.test.mjs` §3 at the archive and `planning-hygiene.test.mjs` §1
-re-pointed or retired — both fail by name at zero rows, on purpose. And AHEAD of the batch that moves D-388,
-`corpuscheck.test.mjs` §5 reads D-388 through `ledger.mjs`'s `findId`, open in the live DEBT, the cache or the backlog
-(BOB #27, 2026-09-22, folding M0-109's DELEGATION to SCHEDULER, which places the fixes); these readers move and `CLAUDE.md` §4's *write it in
-DEBT.md* changes to the backlog in LED-7's own landing, not before. **Performed in batches of ~20 rows by SCHEDULER itself** (Bob,
+first) — there is no second list for work to wait in. **`DEBT.md` could not be emptied row by row** (M0-109's sweep, M-96:
+`ledger.mjs`'s `DEBT_FLOOR_BYTES`, 10,000 B, refused any archive leaving less, and an empty file was 3,174 B), so
+LED-7's CLOSING landing archived the last rows WITH the file. **AS PERFORMED (M0-140, 2026-09-24)**, and it differs
+from the plan above in two places, each stated because the plan said *the backlog* and the landing did not: every
+reader was RETIRED rather than re-pointed at the backlog — `owed.mjs`'s DEBT walk, `plancheck`'s disposition arm and
+its MISSING arm, `ledger.mjs`'s `LEDGERS.DEBT` (now the archive-only `DEBT_ARCHIVE`), `DEBT_FLOOR_BYTES`,
+`debtTokenAudit`, `BUDGET.DEBT`, `ARMING.debtBudget`, and `coord.mjs`'s LC-debt-token and LC-debt-agreement — because
+a plan row's PLACEMENT is its disposition and a second producer of that quantity is the defect `kickoffs/BOB.md`
+rule 7 names. And `nc-m039.mjs`'s arm 2 was re-pointed at **`DECISIONS.md`, not the backlog**: `BACKLOG.md` is STATE,
+so on `main` it is a one-line COORD-POINTER, and a plant appended to a pointer leaves the head bytes intact and is
+read past — an arm that plants and never arms. (That had already happened: the arm's subject became a 216-byte
+pointer at M0-110's cutover and it had been throwing on its own size floor ever since.) `ledger.test.mjs` §3's live
+agreement and `planning-hygiene.test.mjs` §1 are retired with their predicates, each having failed BY NAME at zero
+rows on purpose, which is how this moment reached a landing instead of passing in silence. And AHEAD of the batch that moved D-388,
+`corpuscheck.test.mjs` §5 read D-388 through `ledger.mjs`'s `findId`, open in the live DEBT, the cache or the backlog
+(BOB #27, 2026-09-22, folding M0-109's DELEGATION to SCHEDULER, which places the fixes). That clause is SPENT: BOB #32
+classified all three files in `CORPUS-STANDARD.md` §6 (2026-09-24), `coord.mjs`'s LC-undecided-route was retired of its
+D-388 clause by c19-unionfix the same day, and D-388 is closed and archived by this landing — `findId` answers it from
+`DEBT-closed.md`. `CLAUDE.md` §4's *write it in DEBT.md* changed in LED-7's own landing, as this said it would, and not
+before. **Performed in batches of ~20 rows by SCHEDULER itself** (Bob,
 2026-09-19: *"Scheduler should be actively involved in moving debt rows into the build plan (in the proper order)"* —
 corrected by BOB #16; this read *by workers under CONDUCT*), each row verified at the code, with a worker through CONDUCT
 only for a row whose verification needs a build; **accepts when** every open row has left by one of the three doors with
