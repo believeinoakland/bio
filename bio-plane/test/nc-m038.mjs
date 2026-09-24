@@ -82,10 +82,13 @@ const ARMS = [
   ["16", "SET 2's ROSTER IS A RATCHET IN BOTH DIRECTIONS — BOTH of `biasManifest`'s row sources "
  + "bounded, so the method leaves the census AND leaves both SET 2 rosters. A roster that only "
  + "grows is not a roster; a departure nobody notices is REC-60's shrunken 27",
-    [["        ORDER BY a.bundle_id`, type, id, ...seen.args);",
-      "        ORDER BY a.bundle_id LIMIT 500`, type, id, ...seen.args);"],
-     ["      `SELECT * FROM bias_statements WHERE bundle_id=? ORDER BY ord`, bundleId);",
-      "      `SELECT * FROM bias_statements WHERE bundle_id=? ORDER BY ord LIMIT 500`, bundleId);"]],
+    /* CORRECTED 2026-09-24 (REC-187), not exempted: `biasManifest` now reads each adopted set's
+       statements out of the PINNED revision's bytes (one `#memberTextAtSha` lookup per pin, a keyed
+       read) instead of scanning the `bias_statements` projection, so it holds ONE row source, not two.
+       The second part named a line that no longer exists and would have reported this arm NOT ARMED;
+       bounding the one remaining scan is now the whole of "both". */
+    [["          ORDER BY a.bundle_id`, type, id, ...seen.args);",
+      "          ORDER BY a.bundle_id LIMIT 500`, type, id, ...seen.args);"]],
     "MUST FAIL: the CENSUS FLOOR (104 -> 103), the SET 2 roster pin and the SET 2 PARTITION pin, "
   + "each naming the departure `biasManifest`. MUST NOT: the IN-MEMORY TRUNCATION arm, the "
   + "out-of-reach roster, the UNREAD-FORMS roster (`biasManifest` still publishes its offset form). "

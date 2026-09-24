@@ -2579,7 +2579,7 @@ CREATE TABLE IF NOT EXISTS bias_adoptions (
   scope_type    TEXT NOT NULL,   -- 'instance' | 'project'
   scope_id      TEXT NOT NULL,   -- empty for instance, the project bundle id otherwise
   bundle_id     TEXT NOT NULL,   -- the bias bundle adopted
-  bundle_sha    TEXT NOT NULL,   -- THE PIN: the revision adopted, never re-read
+  bundle_sha    TEXT NOT NULL,   -- THE PIN: the revision adopted, never re-read, and moved to the adopted sha by promote (REC-187)
   author        TEXT NOT NULL,   -- the member who adopted it, server-stamped
   at            TEXT NOT NULL,
   source_url    TEXT,            -- DEC-54 (d), for an inhaled policy
@@ -35984,13 +35984,16 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     const conclusionRows = prepared.map((p) => ({ target: p.id, ...p.conclusion }));
     const lens = this.biasManifest({ scope: "project", scopeId: proj, viewer: "admin", limit: 1 });
     const manifest = {
-      in_force: lens.in_force === true,
+      /* REC-187: `null` is op=biasmanifest's UNDETERMINED (a pin whose bytes cannot be read) and is
+         carried as null with its own sentence — signing "no manifest was in force" over it would be
+         the record claiming an absence it never established. */
+      in_force: lens.in_force === null ? null : lens.in_force === true,
       scope: "project",
       scope_id: proj,
       statements_sha: lens.in_force === true ? lens.statements_sha ?? null : null,
       bundles: (lens.in_force === true && Array.isArray(lens.bundles) ? lens.bundles : []).map((x) => ({ bundle_id: x.bundle_id, revision: x.revision, scope: x.scope })),
       lock_violations: Array.isArray(lens.lock_violations) ? lens.lock_violations.length : 0,
-      stated: lens.in_force === true ? `the effective bias set in force for ${proj} at publication, frozen here and never recomputed` : "no manifest was in force"
+      stated: lens.in_force === true ? `the effective bias set in force for ${proj} at publication, frozen here and never recomputed` : lens.in_force === null ? String(lens.stated) : "no manifest was in force"
     };
     const acks = this.#statementAcknowledgements(proj, theCase, edition, stmt, who);
     const docText = _Store.#caseDocumentText({
@@ -36195,13 +36198,13 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
   }) {
     const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
     const lens = manifest && manifest.in_force === true ? manifest : {
-      in_force: false,
+      in_force: manifest && manifest.in_force === null ? null : false,
       scope: "project",
       scope_id: project,
       statements_sha: null,
       bundles: [],
       lock_violations: 0,
-      stated: "no manifest was in force"
+      stated: manifest && manifest.in_force === null ? manifest.stated : "no manifest was in force"
     };
     const frozenOf = (m) => frozen && frozen.get(m) || null;
     const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
@@ -36461,7 +36464,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         "",
         `Hash of the effective statement set: ${lens.statements_sha}.`,
         ...lens.lock_violations ? ["", `${lens.lock_violations} project override(s) named a LOCKED instance statement and were refused their effect; the instance statement stands in the set hashed above.`] : []
-      ] : [`NO MANIFEST WAS IN FORCE for ${lens.scope_id} when this case was published: no bias set stood adopted for this instance or this project. That is stated, not left blank \u2014 it is a different fact from a lens with nothing in it.`],
+      ] : lens.in_force === null ? [`THE MANIFEST IS UNDETERMINED for ${lens.scope_id}: ${lens.stated}. Nothing is claimed either way.`] : [`NO MANIFEST WAS IN FORCE for ${lens.scope_id} when this case was published: no bias set stood adopted for this instance or this project. That is stated, not left blank \u2014 it is a different fact from a lens with nothing in it.`],
       "",
       "## Bias Acknowledgement",
       "",
@@ -43916,26 +43919,32 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       this.sql.exec(`DELETE FROM bias_statements WHERE bundle_id=?`, bundleId);
       if (normalizeType(meta.object_type) === "bias") {
-        const stmts = docFmW && Array.isArray(docFmW.statements) ? docFmW.statements : [];
-        for (let i = 0; i < stmts.length; i++) {
-          const s = stmts[i];
-          if (!s || typeof s !== "object" || typeof s.id !== "string") continue;
+        for (const r of _Store.#biasStatementRows(bundleId, docFmW))
           this.sql.exec(
             `INSERT INTO bias_statements
                (bundle_id,ord,statement_id,kind,subject,text,justification,citations,locked,nullifies)
              VALUES (?,?,?,?,?,?,?,?,?,?)`,
-            bundleId,
-            i,
-            s.id,
-            /* '' rather than NULL on a replayed malformed shape, mirroring the
-               inquiry_basis target_type fallback: the columns are NOT NULL. */
-            typeof s.kind === "string" ? s.kind : "",
-            s.subject == null ? "" : String(s.subject),
-            typeof s.text === "string" ? s.text : "",
-            typeof s.justification === "string" ? s.justification : "",
-            Array.isArray(s.citations) ? JSON.stringify(s.citations) : null,
-            s.locked === true ? 1 : 0,
-            typeof s.nullifies === "string" && s.nullifies.trim() ? s.nullifies.trim() : null
+            r.bundle_id,
+            r.ord,
+            r.statement_id,
+            r.kind,
+            r.subject,
+            r.text,
+            r.justification,
+            r.citations,
+            r.locked,
+            r.nullifies
+          );
+        if (meta.current_state === "adopted" && newSha) {
+          const pfm = docFmW || {};
+          const str = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+          this.sql.exec(
+            `UPDATE bias_adoptions SET bundle_sha=?, source_url=?, retrieved=?, source_sha256=? WHERE bundle_id=?`,
+            newSha,
+            str(pfm.policy_source),
+            str(pfm.policy_retrieved),
+            str(pfm.policy_sha256) ? str(pfm.policy_sha256).toLowerCase() : null,
+            bundleId
           );
         }
       }
@@ -70776,9 +70785,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  IT. `STATES.bias` has no `draft -> adopted` edge, so a set can only reach
    *  `adopted` through `proposed`, through `promote`, as a member-authored
    *  transition. This refuses a set that is in neither state (C-26.10), and the
-   *  manifest below requires BOTH this row AND the bundle standing at `adopted`
-   *  before it reports a lens in force — which is the fail-closed direction: at
-   *  no point does one act alone put a lens over somebody's work. */
+   *  manifest below requires BOTH this row AND its PINNED revision standing at
+   *  `adopted` before it reports a lens in force — which is the fail-closed
+   *  direction: at no point does one act alone put a lens over somebody's work.
+   *  REC-187: the pin this takes at `proposed` is MOVED by promote() to the sha
+   *  the promotion to `adopted` mints (BOB #31: the lens is the ADOPTED revision). */
   biasAdopt({
     bundleId = null,
     scope = "instance",
@@ -70869,6 +70880,33 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
      machine credential must not be spelled twice, or the day it changes one of
      the two fences quietly stops fencing. */
   static BIAS_MACHINE_PREFIX = MACHINE_AUTHOR_PREFIX;
+  /* REC-187: A BIAS SET'S STATEMENTS AS ROWS, FROM ONE REVISION'S FRONTMATTER — the ONE spelling of
+     that reading. promote()'s `bias_statements` projection writes these rows for the head, and
+     op=biasmanifest reads them out of the PINNED revision's bytes; two normalisations of one list
+     would let the manifest and the projection disagree about what a statement says. '' rather than
+     NULL on a replayed malformed shape, mirroring the inquiry_basis fallback (the columns are NOT
+     NULL); an entry with no string id is skipped, as the projection always skipped it. */
+  static #biasStatementRows(bundleId, fm) {
+    const stmts = fm && Array.isArray(fm.statements) ? fm.statements : [];
+    const out = [];
+    for (let i = 0; i < stmts.length; i++) {
+      const s = stmts[i];
+      if (!s || typeof s !== "object" || typeof s.id !== "string") continue;
+      out.push({
+        bundle_id: bundleId,
+        ord: i,
+        statement_id: s.id,
+        kind: typeof s.kind === "string" ? s.kind : "",
+        subject: s.subject == null ? "" : String(s.subject),
+        text: typeof s.text === "string" ? s.text : "",
+        justification: typeof s.justification === "string" ? s.justification : "",
+        citations: Array.isArray(s.citations) ? JSON.stringify(s.citations) : null,
+        locked: s.locked === true ? 1 : 0,
+        nullifies: typeof s.nullifies === "string" && s.nullifies.trim() ? s.nullifies.trim() : null
+      });
+    }
+    return out;
+  }
   /** op=biasmanifest — THE EFFECTIVE SET IN FORCE, its hash, and its residue.
    *
    *  `BIO_Declared_Bias_v0_1.md`: *"Effective bias for a piece of work = the
@@ -70942,18 +70980,56 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         stated: "no manifest was in force"
       };
     const seen = this.#bundleGate("a.bundle_id", viewer);
-    const adoptionsFor = (type, id) => this.#rows(
-      `SELECT a.*, b.current_state AS state
-         FROM bias_adoptions a JOIN bundles b ON b.bundle_id = a.bundle_id
-        WHERE a.scope_type = ? AND a.scope_id = ? AND b.current_state = 'adopted' AND (${seen.sql})
-        ORDER BY a.bundle_id`,
-      type,
-      id,
-      ...seen.args
-    );
+    const pinned = [];
+    const pinnedText = /* @__PURE__ */ new Map();
+    const unresolved = [];
+    const adoptionsFor = (type, id) => {
+      const out = [];
+      const rows = this.#rows(
+        `SELECT a.*, b.current_state AS state
+           FROM bias_adoptions a JOIN bundles b ON b.bundle_id = a.bundle_id
+          WHERE a.scope_type = ? AND a.scope_id = ? AND b.current_state <> 'retired' AND (${seen.sql})
+          ORDER BY a.bundle_id`,
+        type,
+        id,
+        ...seen.args
+      );
+      for (const a of rows) {
+        const text = this.#memberTextAtSha(a.bundle_id, a.bundle_sha);
+        if (text === null) {
+          unresolved.push({ bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type });
+          continue;
+        }
+        const fm = parseFrontmatter(text).data || {};
+        if (fm.current_state !== "adopted") continue;
+        pinned.push([a.bundle_id, fm]);
+        pinnedText.set(a.bundle_id, text);
+        out.push(a);
+      }
+      return out;
+    };
     const instanceAdoptions = adoptionsFor("instance", "");
     const projectAdoptions = st === "project" ? adoptionsFor("project", sid) : [];
     const adoptions = [...instanceAdoptions, ...projectAdoptions];
+    if (unresolved.length > 0)
+      return {
+        ok: true,
+        scope: st,
+        scope_id: sid,
+        in_force: null,
+        bundles: [],
+        statements: [],
+        residue: [],
+        lock_violations: [],
+        statements_sha: null,
+        unresolved_pins: unresolved,
+        count: 0,
+        total: 0,
+        limit: 0,
+        offset: 0,
+        truncated: false,
+        stated: "undetermined: an adoption pins a revision whose bytes this record cannot produce, so which statements are in force cannot be computed"
+      };
     if (adoptions.length === 0)
       return {
         ok: true,
@@ -70972,10 +71048,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         truncated: false,
         stated: "no manifest was in force"
       };
-    const stmtsOf = (bundleId) => this.#rows(
-      `SELECT * FROM bias_statements WHERE bundle_id=? ORDER BY ord`,
-      bundleId
-    );
+    const pinnedFm = new Map(pinned);
+    const stmtsOf = (bundleId) => _Store.#biasStatementRows(bundleId, pinnedFm.get(bundleId));
     const effective = /* @__PURE__ */ new Map();
     const level = /* @__PURE__ */ new Map();
     for (const a of instanceAdoptions)
@@ -71023,8 +71097,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     ))).hex();
     const residue = [];
     for (const a of adoptions) {
-      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, a.bundle_id);
-      const body = md && typeof md.content === "string" ? md.content : "";
+      const body = pinnedText.get(a.bundle_id) ?? "";
       const m = /\n## What This Does Not Enforce[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + body);
       residue.push({
         bundle_id: a.bundle_id,

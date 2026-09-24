@@ -8513,7 +8513,10 @@ export class Store extends DurableObject {
        which covers the whole set before any bound (op=biasmanifest's own rule). */
     const lens = this.biasManifest({ scope: "project", scopeId: proj, viewer: "admin", limit: 1 });
     const manifest = {
-      in_force: lens.in_force === true,
+      /* REC-187: `null` is op=biasmanifest's UNDETERMINED (a pin whose bytes cannot be read) and is
+         carried as null with its own sentence — signing "no manifest was in force" over it would be
+         the record claiming an absence it never established. */
+      in_force: lens.in_force === null ? null : lens.in_force === true,
       scope: "project", scope_id: proj,
       statements_sha: lens.in_force === true ? (lens.statements_sha ?? null) : null,
       bundles: (lens.in_force === true && Array.isArray(lens.bundles) ? lens.bundles : [])
@@ -8521,7 +8524,7 @@ export class Store extends DurableObject {
       lock_violations: Array.isArray(lens.lock_violations) ? lens.lock_violations.length : 0,
       stated: lens.in_force === true
         ? `the effective bias set in force for ${proj} at publication, frozen here and never recomputed`
-        : "no manifest was in force",
+        : lens.in_force === null ? String(lens.stated) : "no manifest was in force",
     };
     /* D-150 / §3 rule 11 — WHO ACKNOWLEDGED THIS STATEMENT, read at the act that authors the
        document the owner signs, so the list is inside the signature. An acknowledgement by the
@@ -8696,8 +8699,9 @@ export class Store extends DurableObject {
                              acks = { statementSha: null, truncated: false, rows: [] } }) {
     const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
     const lens = manifest && manifest.in_force === true ? manifest
-      : { in_force: false, scope: "project", scope_id: project, statements_sha: null, bundles: [],
-          lock_violations: 0, stated: "no manifest was in force" };
+      : { in_force: manifest && manifest.in_force === null ? null : false,
+          scope: "project", scope_id: project, statements_sha: null, bundles: [], lock_violations: 0,
+          stated: manifest && manifest.in_force === null ? manifest.stated : "no manifest was in force" };
     const frozenOf = (m) => (frozen && frozen.get(m)) || null;
     const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
     const fm = [
@@ -9005,6 +9009,8 @@ export class Store extends DurableObject {
              ? ["", `${lens.lock_violations} project override(s) named a LOCKED instance statement and were `
                    + "refused their effect; the instance statement stands in the set hashed above."]
              : [])]
+        : lens.in_force === null
+        ? [`THE MANIFEST IS UNDETERMINED for ${lens.scope_id}: ${lens.stated}. Nothing is claimed either way.`]
         : [`NO MANIFEST WAS IN FORCE for ${lens.scope_id} when this case was published: no bias set stood `
            + "adopted for this instance or this project. That is stated, not left blank — it is a different "
            + "fact from a lens with nothing in it."]),
@@ -17059,24 +17065,32 @@ export class Store extends DurableObject {
          1 failing quietly. */
       this.sql.exec(`DELETE FROM bias_statements WHERE bundle_id=?`, bundleId);
       if (normalizeType(meta.object_type) === "bias") {
-        const stmts = docFmW && Array.isArray(docFmW.statements) ? docFmW.statements : [];
-        for (let i = 0; i < stmts.length; i++) {
-          const s = stmts[i];
-          if (!s || typeof s !== "object" || typeof s.id !== "string") continue; // replay of a malformed shape
+        for (const r of Store.#biasStatementRows(bundleId, docFmW))
           this.sql.exec(
             `INSERT INTO bias_statements
                (bundle_id,ord,statement_id,kind,subject,text,justification,citations,locked,nullifies)
              VALUES (?,?,?,?,?,?,?,?,?,?)`,
-            bundleId, i, s.id,
-            /* '' rather than NULL on a replayed malformed shape, mirroring the
-               inquiry_basis target_type fallback: the columns are NOT NULL. */
-            typeof s.kind === "string" ? s.kind : "",
-            s.subject == null ? "" : String(s.subject),
-            typeof s.text === "string" ? s.text : "",
-            typeof s.justification === "string" ? s.justification : "",
-            Array.isArray(s.citations) ? JSON.stringify(s.citations) : null,
-            s.locked === true ? 1 : 0,
-            typeof s.nullifies === "string" && s.nullifies.trim() ? s.nullifies.trim() : null);
+            r.bundle_id, r.ord, r.statement_id, r.kind, r.subject, r.text, r.justification,
+            r.citations, r.locked, r.nullifies);
+        /* REC-187 — BOB #31, `BIO_Declared_Bias_v0_1.md` §"The bias acknowledgement, authored at
+           export": *"Promotion to `adopted` re-pins the adoption to the adopted bundle_sha."* The pin
+           op=biasadopt takes is the head AT THE ACT, and the act is taken while the set stands at
+           `proposed` — so the promotion to `adopted` minted a newer sha the pin never named, and the
+           manifest put a PROPOSED revision's sha beside a hash of whatever the projection held last:
+           one quantity under two names. Re-pinned HERE, in the transaction that mints the adopted
+           revision, so no read can see the adopted head with the old pin. Every adoption of this
+           bundle, instance and project alike: the revision adopted is a fact about the bundle, and
+           a scope still pinned to the proposed bytes would state a lens nobody adopted. DEC-54 (d)'s
+           source fields are copied from THE SAME BYTES, for the same reason — the pin is one revision,
+           never a sha from one and a provenance from another. The authored act (`author`, `at`) is
+           op=biasadopt's and is not rewritten: a promotion is attributed in the manifest table. */
+        if (meta.current_state === "adopted" && newSha) {
+          const pfm = docFmW || {};
+          const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+          this.sql.exec(
+            `UPDATE bias_adoptions SET bundle_sha=?, source_url=?, retrieved=?, source_sha256=? WHERE bundle_id=?`,
+            newSha, str(pfm.policy_source), str(pfm.policy_retrieved),
+            str(pfm.policy_sha256) ? str(pfm.policy_sha256).toLowerCase() : null, bundleId);
         }
       }
       /* REC-24 (a)/(b): action_basis and correspondence, projected WHOLE from
@@ -45899,9 +45913,11 @@ export class Store extends DurableObject {
    *  IT. `STATES.bias` has no `draft -> adopted` edge, so a set can only reach
    *  `adopted` through `proposed`, through `promote`, as a member-authored
    *  transition. This refuses a set that is in neither state (C-26.10), and the
-   *  manifest below requires BOTH this row AND the bundle standing at `adopted`
-   *  before it reports a lens in force — which is the fail-closed direction: at
-   *  no point does one act alone put a lens over somebody's work. */
+   *  manifest below requires BOTH this row AND its PINNED revision standing at
+   *  `adopted` before it reports a lens in force — which is the fail-closed
+   *  direction: at no point does one act alone put a lens over somebody's work.
+   *  REC-187: the pin this takes at `proposed` is MOVED by promote() to the sha
+   *  the promotion to `adopted` mints (BOB #31: the lens is the ADOPTED revision). */
   biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null, identity = null,
               viewer = null } = {}) {
     const who = typeof author === "string" ? author.trim() : "";
@@ -45981,6 +45997,32 @@ export class Store extends DurableObject {
      the two fences quietly stops fencing. */
   static BIAS_MACHINE_PREFIX = MACHINE_AUTHOR_PREFIX;
 
+  /* REC-187: A BIAS SET'S STATEMENTS AS ROWS, FROM ONE REVISION'S FRONTMATTER — the ONE spelling of
+     that reading. promote()'s `bias_statements` projection writes these rows for the head, and
+     op=biasmanifest reads them out of the PINNED revision's bytes; two normalisations of one list
+     would let the manifest and the projection disagree about what a statement says. '' rather than
+     NULL on a replayed malformed shape, mirroring the inquiry_basis fallback (the columns are NOT
+     NULL); an entry with no string id is skipped, as the projection always skipped it. */
+  static #biasStatementRows(bundleId, fm) {
+    const stmts = fm && Array.isArray(fm.statements) ? fm.statements : [];
+    const out = [];
+    for (let i = 0; i < stmts.length; i++) {
+      const s = stmts[i];
+      if (!s || typeof s !== "object" || typeof s.id !== "string") continue; // replay of a malformed shape
+      out.push({
+        bundle_id: bundleId, ord: i, statement_id: s.id,
+        kind: typeof s.kind === "string" ? s.kind : "",
+        subject: s.subject == null ? "" : String(s.subject),
+        text: typeof s.text === "string" ? s.text : "",
+        justification: typeof s.justification === "string" ? s.justification : "",
+        citations: Array.isArray(s.citations) ? JSON.stringify(s.citations) : null,
+        locked: s.locked === true ? 1 : 0,
+        nullifies: typeof s.nullifies === "string" && s.nullifies.trim() ? s.nullifies.trim() : null,
+      });
+    }
+    return out;
+  }
+
   /** op=biasmanifest — THE EFFECTIVE SET IN FORCE, its hash, and its residue.
    *
    *  `BIO_Declared_Bias_v0_1.md`: *"Effective bias for a piece of work = the
@@ -46043,18 +46085,51 @@ export class Store extends DurableObject {
                stated: "no manifest was in force" };
 
     const seen = this.#bundleGate("a.bundle_id", viewer);
-    /* IN FORCE = an adoption row AND the bundle standing at `adopted`. The join
-       to `bundles` is what makes the second condition structural rather than a
-       convention biasAdopt is trusted to have kept. */
-    const adoptionsFor = (type, id) => this.#rows(
-      `SELECT a.*, b.current_state AS state
-         FROM bias_adoptions a JOIN bundles b ON b.bundle_id = a.bundle_id
-        WHERE a.scope_type = ? AND a.scope_id = ? AND b.current_state = 'adopted' AND (${seen.sql})
-        ORDER BY a.bundle_id`, type, id, ...seen.args);
+    /* IN FORCE = an adoption row whose PINNED REVISION stands at `adopted`, of a set not since
+       retired. REC-187 (BOB #31: *"the ADOPTED one"*): the revision in force is the one the pin
+       names, so the state that decides it is read from THOSE bytes — never the head's. Before, the
+       join asked the HEAD, which made two defects one: a pin taken at `proposed` was reported in
+       force the moment the head reached `adopted` (a proposed sha named as the lens), and a later
+       revision merely PROPOSED lifted the adopted lens entirely (a published case would sign "no
+       manifest was in force" over a group that had adopted one). `retired` is still asked of the
+       head, because retirement is the one act that takes a set out of force as a whole; the join
+       to `bundles` keeps that structural. */
+    const pinned = [];
+    const pinnedText = new Map();
+    const unresolved = [];
+    const adoptionsFor = (type, id) => {
+      const out = [];
+      const rows = this.#rows(
+        `SELECT a.*, b.current_state AS state
+           FROM bias_adoptions a JOIN bundles b ON b.bundle_id = a.bundle_id
+          WHERE a.scope_type = ? AND a.scope_id = ? AND b.current_state <> 'retired' AND (${seen.sql})
+          ORDER BY a.bundle_id`, type, id, ...seen.args);
+      for (const a of rows) {
+        const text = this.#memberTextAtSha(a.bundle_id, a.bundle_sha);
+        /* The pinned bytes are the live row or a history snapshot (promote() snapshots every
+           outgoing revision), so a pin this store cannot produce is not expected — but if one
+           occurs it is UNDETERMINED and said so, never dropped into "not in force". */
+        if (text === null) { unresolved.push({ bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type }); continue; }
+        const fm = parseFrontmatter(text).data || {};
+        if (fm.current_state !== "adopted") continue;
+        pinned.push([a.bundle_id, fm]);
+        pinnedText.set(a.bundle_id, text);
+        out.push(a);
+      }
+      return out;
+    };
 
     const instanceAdoptions = adoptionsFor("instance", "");
     const projectAdoptions = st === "project" ? adoptionsFor("project", sid) : [];
     const adoptions = [...instanceAdoptions, ...projectAdoptions];
+
+    if (unresolved.length > 0)
+      return { ok: true, scope: st, scope_id: sid, in_force: null,
+               bundles: [], statements: [], residue: [], lock_violations: [],
+               statements_sha: null, unresolved_pins: unresolved,
+               count: 0, total: 0, limit: 0, offset: 0, truncated: false,
+               stated: "undetermined: an adoption pins a revision whose bytes this record cannot produce, "
+                     + "so which statements are in force cannot be computed" };
 
     if (adoptions.length === 0)
       return { ok: true, scope: st, scope_id: sid, in_force: false,
@@ -46063,8 +46138,12 @@ export class Store extends DurableObject {
                count: 0, total: 0, limit: 0, offset: 0, truncated: false,
                stated: "no manifest was in force" };
 
-    const stmtsOf = (bundleId) => this.#rows(
-      `SELECT * FROM bias_statements WHERE bundle_id=? ORDER BY ord`, bundleId);
+    /* REC-187: the statements are read out of EACH PIN'S OWN BYTES, never the `bias_statements`
+       projection, which holds the HEAD — and the head moves the moment a newer revision is
+       proposed. Hashing the projection is exactly how a proposed sha came to stand beside a later
+       revision's hash; `statements_sha` is now over the revision `revision` names, and nothing else. */
+    const pinnedFm = new Map(pinned);
+    const stmtsOf = (bundleId) => Store.#biasStatementRows(bundleId, pinnedFm.get(bundleId));
 
     /* THE INSTANCE LAYER FIRST, keyed by statement id so a project override can
        find what it names. */
@@ -46144,8 +46223,9 @@ export class Store extends DurableObject {
        manifest and the document say one thing. */
     const residue = [];
     for (const a of adoptions) {
-      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, a.bundle_id);
-      const body = md && typeof md.content === "string" ? md.content : "";
+      /* REC-187: the PINNED revision's section, never the head's — a newer proposal's residue is not
+         the adopted lens's residue, and the manifest states one revision. */
+      const body = pinnedText.get(a.bundle_id) ?? "";
       const m = /\n## What This Does Not Enforce[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + body);
       residue.push({ bundle_id: a.bundle_id, scope: a.scope_type,
                      text: m ? m[1].trim() : "",
