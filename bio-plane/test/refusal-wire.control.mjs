@@ -7,7 +7,7 @@
  *
  *     node test/refusal-wire.control.mjs            (from bio-plane/)
  *
- * ELEVEN ARMS (seven D-262's, h and i REC-185's, j and k D-494's), each armed ALONE with every other defence held OPEN, DECLARED
+ * THIRTEEN ARMS (seven D-262's, h and i REC-185's, j and k D-494's, l and m D-495's — relabelled from j/k at the c20-batch17 union), each armed ALONE with every other defence held OPEN, DECLARED
  * BEFORE ARMING (the declarations are in the subject suite's own
  * `NEGATIVE CONTROL:` header so the next session re-runs them in one step), and
  * every restore verified BY sha256 AND BY CONTENT (`cmp`) against a UNIQUELY
@@ -155,6 +155,14 @@ const arm = (id, label, file, patch, declared) => {
     }
   }
 };
+
+/* D-495's subject, spelled ONCE and shared by arms j and k so the two cannot drift
+   apart \u2014 and so a site edited upstream makes BOTH arms fail loudly as NEVER ARMED
+   rather than one of them silently testing nothing. */
+const SITE_J = `      return refusal("GROUP_SLUG_MALFORMED",
+        \`\${s ? \`'\${s.slice(0, 60)}' is not\` : "the request names no slug, and a group is recorded as"} a slug in the \`
+        + \`installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). \`
+        + \`Nothing was recorded.\`);`;
 
 /* ---------------------------------------------------------------- ARM a */
 arm("a", "BASELINE — nothing armed", null, null, "GREEN");
@@ -318,6 +326,41 @@ arm("k", "MACHINE_CANNOT_GROUND minted through a VARIABLE — src/store.mjs (OVE
   },
   "GREEN");
 
+/* ---------------------------------------------------------------- ARM l
+   D-495's ARM, AND IT IS AN ADMIN-CLASS REFUSAL ON PURPOSE. `op=instancegroupseed`
+   is `["admin"]` alone: it is invisible to the member drive, to section 9's pin and
+   to REC-185's hand-driven 6b, so ONLY the class drive can see this. Its refusal is
+   reverted to the pre-DEC-49 shape \u2014 a bare `error` sentence, the whole refusal and
+   not one key deleted, so the arm is the defect and not a caricature of it.
+   MUST FAIL, on 6c's residue pin, NAMING `instancegroupseed (admin)`.
+   MUST NOT FAIL: 6c's admin and probe REACH counts (the op body is still reached \u2014
+   that is what makes this a refusal finding rather than a gate finding); 6c's grade,
+   because a refusal carrying no code is not a bare TRANSLATION and must not be scored
+   as one; section 9's member+`ai` pin, which cannot see this op at all; 6b, whose
+   `op=purge` site is untouched. An arm that took any of those down with it would be
+   moving a second variable. */
+arm("l", "an ADMIN-ONLY refusal stripped of its code \u2014 src/store.mjs (THE SUBJECT, D-495)", STORE,
+  (s) => s.replace(SITE_J,
+                   `      return { ok: false, error: "that is not a slug in the installer's grammar. Nothing was recorded." };`),
+  "RED");
+
+/* ---------------------------------------------------------------- ARM m
+   OVER-STRICTNESS FOR D-495's ARM (l), on the REAL site. The same refusal is rebuilt
+   in a spelling section 6c was not written around: the code in `code` with NO
+   `reason` at all, the row IMPORTED from the catalogue rather than hand-copied,
+   and an extra key the grader has never seen. IT MUST PASS \u2014 6c asks whether the
+   caller was told WHICH condition fired, never which helper wrote the answer, and
+   a class drive that reported correct work as codeless would teach the next author
+   to route around it. */
+arm("m", "the same ADMIN-ONLY refusal in an UNANTICIPATED spelling \u2014 src/store.mjs (OVER-STRICTNESS)", STORE,
+  (s) => s.replace(SITE_J,
+                   `      return { ok: false, code: "GROUP_SLUG_MALFORMED",
+        check: INSTANCE_GROUP_CHECKS.GROUP_SLUG_MALFORMED.check,
+        translation: INSTANCE_GROUP_CHECKS.GROUP_SLUG_MALFORMED.translation,
+        sigil: 7,
+        detail: "Nope \u2014 that slug is not in the installer's grammar. Nothing was recorded." };`),
+  "GREEN");
+
 /* ------------------------------------------------------------------ FOOT */
 console.log("\n================================================== D-262 CONTROL SUMMARY");
 let wrong = 0;
@@ -334,5 +377,5 @@ for (const p of [INDEX, STORE, SUITE]) {
   execFileSync("cmp", ["-s", p, OF_RECORD[p].copy]);
 }
 for (const p of [INDEX, STORE, SUITE]) if (existsSync(`${p}.d262-of-record`)) rmSync(`${p}.d262-of-record`);
-console.log(`\n${wrong === 0 ? "ALL ELEVEN ARMS AS DECLARED" : `${wrong} ARM(S) NOT AS DECLARED — record them, do not smooth them`}`);
+console.log(`\n${wrong === 0 ? "ALL THIRTEEN ARMS AS DECLARED" : `${wrong} ARM(S) NOT AS DECLARED — record them, do not smooth them`}`);
 process.exit(0);
