@@ -21563,6 +21563,20 @@ var RENDER_DEFAULTS = Object.freeze({
   wait: Object.freeze({ until: "networkidle", timeout_ms: 15e3 })
 });
 var RENDERED_METHOD = "rendered";
+var TIMEOUT_WORD = /timed?[ _-]?out|timeout/;
+function waitFiredClass(fired, askedWait) {
+  if (!isStr(fired)) return "undetermined";
+  const f2 = fired.trim().toLowerCase();
+  if (TIMEOUT_WORD.test(f2)) return "timeout";
+  const until = askedWait && isStr(askedWait.until) ? askedWait.until.trim().toLowerCase() : null;
+  return until && f2 === until ? "condition" : "undetermined";
+}
+var RENDER_INCOMPLETE_READING = "render may be incomplete (wait timed out)";
+function completenessReading(render) {
+  if (!render || render.completeness !== "undetermined") return null;
+  if (render.wait && render.wait.fired_class === "timeout") return RENDER_INCOMPLETE_READING;
+  return "render completeness is undetermined (which wait ended the render was not established)";
+}
 var RENDER_DAILY_ALLOWANCE_MS_DEFAULT = 20 * 60 * 1e3;
 function renderAllowanceMs(env) {
   const v = env && env.RENDER_DAILY_ALLOWANCE_MS;
@@ -21649,6 +21663,13 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at })
     if (v === null || v === void 0) undetermined.push(`${k}: not reported by the renderer`);
     return v ?? null;
   };
+  const waitFired = pick("wait.fired", answer.wait && isStr(answer.wait.fired) ? answer.wait.fired : null);
+  const firedClass = waitFiredClass(waitFired, asked.wait);
+  const completeness = firedClass === "condition" ? "condition_met" : "undetermined";
+  if (firedClass === "timeout")
+    undetermined.push(`completeness: ${RENDER_INCOMPLETE_READING} \u2014 the renderer's wait ended on its timeout${num(asked.wait && asked.wait.timeout_ms) !== null ? ` (${asked.wait.timeout_ms} ms asked)` : ""}${isStr(asked.wait && asked.wait.until) ? ` rather than on the \`${asked.wait.until}\` condition` : ""}, so what the page would have shown had the condition been met is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (BOB #32, 2026-09-24).`);
+  else if (firedClass === "undetermined")
+    undetermined.push(`completeness: ${isStr(waitFired) ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the \`${asked.wait && asked.wait.until || "(none asked)"}\` condition this plane asked for nor a timeout` : "the renderer did not report which wait ended the render"}, so whether the render ran to its condition is undetermined and this rendering may be incomplete.`);
   const render = {
     of: shellSha,
     engine: pick("engine", isStr(answer.engine) ? answer.engine : null),
@@ -21657,7 +21678,13 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at })
     dpr: pick("dpr", num(answer.dpr)),
     locale: pick("locale", isStr(answer.locale) ? answer.locale : null),
     timezone: pick("timezone", isStr(answer.timezone) ? answer.timezone : null),
-    wait: { asked: asked.wait, fired: pick("wait.fired", answer.wait && isStr(answer.wait.fired) ? answer.wait.fired : null) },
+    /* D-499: the renderer's own word, and the plane's three-valued reading of it. */
+    wait: { asked: asked.wait, fired: waitFired, fired_class: firedClass },
+    /* D-499 / BOB #32: `condition_met` says the wait ended on the condition ASKED —
+       not that the page was finished, which no renderer reports. `undetermined`
+       carries its reason in `undetermined[]` above. The GRADE is untouched either
+       way: grade tracks directness, never technique or completeness. */
+    completeness,
     elapsed_ms: pick("elapsed_ms", num(answer.elapsed_ms)),
     navigated_to: isStr(answer.navigated_to) ? answer.navigated_to : null,
     status: num(answer.status),
@@ -80828,7 +80855,12 @@ var index_default = {
           provenance_chain: [
             {
               who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
-              asserts: renderRecorded ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)` : `these bytes were served for ${locator} at ${retrieved}`,
+              /* D-499 / BOB #32: a render whose wait fired on its TIMEOUT is NEVER
+                 PRESENTED AS THE WHOLE PAGE. The qualification is DERIVED from the
+                 block by `completenessReading`, never retyped here: a second copy
+                 of the sentence would agree with the record for free and drift from
+                 it for free. The grade and the method above are untouched. */
+              asserts: renderRecorded ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)${completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : ""}` : `these bytes were served for ${locator} at ${retrieved}`,
               evidence: renderRecorded ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment" : "first-party https fetch, hashed at receipt, transport record on this document",
               bound: false,
               via
