@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d149-governing-laws.test.mjs",
+ "inputHash": "481f8e778e0ebc8fe9af61573018345a50440f4700ed55ea105c8967a9332aeb",
+ "verdict": "PASS",
+ "run": "26dc7c2d9a4e2f7d627af4425767881c2754a8bd.1790225083562.1773.json",
+ "tree": "26dc7c2d9a4e2f7d627af4425767881c2754a8bd",
+ "head": "9649acf5dcbdd6da3da26aa1560d241b1251cba7",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 365,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "8d61fd14-43e5-5284-a92a-81c7c15815ad",
+ "at": "2026-09-24T04:44:43.576Z"
+}
