@@ -483,9 +483,19 @@ ARMS["10"] = {
       mustNot: "any DIAGNOSIS assertion — (b) STALE BUNDLE, (d) the manifest mismatch, (g)/(h)/(i) the "
         + "upload-part arms, or any byte-identity arm: the remedy is the only thing that moved",
     });
-    console.log(`     the TOTAL arm fired by name: ${named(r, "FAIL  (j) TOTAL: no finding in scripts/fleet-bundle.mjs names the one-bundle command")}`);
-    console.log(`     the behavioural arm fired by name: ${named(r, "FAIL  (j) NONE of them names the one-bundle command")}`);
-    console.log(`     (b) STALE BUNDLE held: ${!r.out.includes("FAIL  (b) and says it is a STALE BUNDLE")}`);
+    /* PROBED THROUGH `failingLabels`, NOT through a `FAIL  `-prefixed `.includes`, and the
+       difference is A4's rule rather than a style: an anchor is a literal a driver searches
+       for, and `"FAIL  (b) and says it is a STALE BUNDLE"` exists in NO candidate subject —
+       the `FAIL  ` prefix is a runtime marking, not text in the suite. Written that way it
+       carried code punctuation, so `m025-arm-anchor-witness.test.mjs` harvested it and A4
+       fired, correctly, at the D-276 class: a quote that can never match. Each literal below
+       is the suite's own label text and occurs EXACTLY ONCE in `fleetbundles.test.mjs`, so
+       the quote dies loudly if a label is ever changed in place. */
+    const red = failingLabels(r.out);
+    const fired = (prefix) => red.some((l) => l.startsWith(prefix));
+    console.log(`     the TOTAL arm fired by name: ${fired("(j) TOTAL: no finding in scripts/fleet-bundle.mjs names the one-bundle command")}`);
+    console.log(`     the behavioural arm fired by name: ${fired("(j) NONE of them names the one-bundle command")}`);
+    console.log(`     (b) STALE BUNDLE held: ${!fired("(b) and says it is a STALE BUNDLE")}`);
     return r;
   }),
 };
@@ -499,7 +509,7 @@ ARMS["10b"] = {
       mustFail: "nothing",
       mustNot: "any (j) assertion: the command is the same, only the sentence around it differs",
     });
-    console.log(`     no (j) assertion fired: ${!r.out.includes("FAIL  (j)")}`);
+    console.log(`     no (j) assertion fired: ${failingLabels(r.out).filter((l) => l.startsWith("(j) ")).length === 0}`);
     return r;
   }),
 };
@@ -514,7 +524,7 @@ ARMS["10c"] = {
       mustFail: "nothing",
       mustNot: "the (j) TOTAL arm — a comment is prose about how a member is built, not a remedy handed to a reader",
     });
-    console.log(`     no (j) assertion fired: ${!r.out.includes("FAIL  (j)")}`);
+    console.log(`     no (j) assertion fired: ${failingLabels(r.out).filter((l) => l.startsWith("(j) ")).length === 0}`);
     return r;
   }),
 };
