@@ -352,15 +352,15 @@ scope: `newgroup/src/index.mjs`, `release.mjs` and `bio-plane/scripts/deploy.mjs
 accepts-when: `15.instance-ai-secret` BUILT by its probe. NEGATIVE CONTROL: have the installer generate a value when none is supplied, and the no-invention arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
-### D-483 · queued — **THE PLANE'S SETUP PAGE OFFERS NO RISK-TIER CHOOSER, so every action it files is `risk_tier: undetermined` (`setup.mjs`, D-182) and a member there cannot state 1, 2 or 3.** Found by UI-85's worker, optional residue. — owner RECORD (DIST reviews the installer page).
-order: after D-478, low: truthful today (it writes undetermined, never an invented tier); a missing affordance, not an overclaim (SCHEDULER #18, 2026-09-24)
-milestone: M2
-interface: none — consumes `vocabularies.risk_tiers` as published.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`risk_tier`, RULED by BOB #21: only a member's authored act sets 1, 2 or 3).
+### M0-146 · queued — **WORKER.md AND `gates.mjs` §2e CONTRADICT: WORKER.md says keep scratch inside the worktree, and §2e's under-inclusion derivation reads a worker's root dot-directory (REC-185's `.rec185/` moved an assertion count 19513→19512 with no source change), and a gate LOG kept there makes the clean-tree rule refuse to record a green run, a ~14-minute re-run each time (D-487's worker; two workers hit it on 2026-09-24).** Found by REC-185's worker. — owner M0.
+order: AT THE BACKLOG HEAD: two workers lost a full-gate round to it in one night (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z and 04:25Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a gate measures the tree it names).
 depends-on: none.
-scope: a radio group over `vocabularies.risk_tiers` in SETUP_HTML's action arm, unset by default; unset still writes undetermined.
-accepts-when: a chosen tier is written; none chosen writes undetermined. NEGATIVE CONTROL: default the group to 1 and the unset arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+scope: name ONE ignored scratch path for workers' files and gate logs in WORKER.md and `.gitignore`, and have §2e's derivation and the clean-tree check both skip it; stated in both files.
+accepts-when: a worktree with a root scratch dir gates identically to one without. NEGATIVE CONTROL: remove the exclusion and the count moves, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

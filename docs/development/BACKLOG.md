@@ -23,16 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-146 · queued — **WORKER.md AND `gates.mjs` §2e CONTRADICT: WORKER.md says keep scratch inside the worktree, and §2e's under-inclusion derivation reads a worker's root dot-directory (REC-185's `.rec185/` moved an assertion count 19513→19512 with no source change), and a gate LOG kept there makes the clean-tree rule refuse to record a green run, a ~14-minute re-run each time (D-487's worker; two workers hit it on 2026-09-24).** Found by REC-185's worker. — owner M0.
-order: AT THE BACKLOG HEAD: two workers lost a full-gate round to it in one night (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z and 04:25Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a gate measures the tree it names).
-depends-on: none.
-scope: name ONE ignored scratch path for workers' files and gate logs in WORKER.md and `.gitignore`, and have §2e's derivation and the clean-tree check both skip it; stated in both files.
-accepts-when: a worktree with a root scratch dir gates identically to one without. NEGATIVE CONTROL: remove the exclusion and the count moves, failing by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
 ### D-494 · queued — **THE MACHINE-FENCE HARVEST IS BLIND OUTSIDE `store.mjs`: MACHINE_FENCE_CHECKS holds 18 rows, the harvest finds 14; MACHINE_CANNOT_RATIFY(_CASE) are minted in `index.mjs` (2 hits at 16fe1e7f), and three are OPERATOR_TOKEN_*. The two corpora are never asserted to agree, so a catalogued fence nobody enforces would pass.** Found by REC-185's worker; narrowed by SCHEDULER #18 (the ratify fences exist). — owner RECORD.
 order: at the backlog head (D-493 is cached): an authority boundary (no machine attests) whose instrument cannot see half its sites (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z)
 milestone: M7
@@ -203,6 +193,16 @@ depends-on: D-462 (finished; rides the train after c19-batch9).
 scope: the same NAMESPACES set and a NAMESPACE_UNKNOWN refusal in `pdf-worker/src` and `ocr-worker/src`.
 accepts-when: `store=biosmoke` is refused NAMESPACE_UNKNOWN by name by both members. NEGATIVE CONTROL: accept the token again, and the arm reads NOT_FOUND and fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-483 · queued — **THE PLANE'S SETUP PAGE OFFERS NO RISK-TIER CHOOSER, so every action it files is `risk_tier: undetermined` (`setup.mjs`, D-182) and a member there cannot state 1, 2 or 3.** Found by UI-85's worker, optional residue. — owner RECORD (DIST reviews the installer page).
+order: after D-478, low: truthful today (it writes undetermined, never an invented tier); a missing affordance, not an overclaim (SCHEDULER #18, 2026-09-24)
+milestone: M2
+interface: none — consumes `vocabularies.risk_tiers` as published.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`risk_tier`, RULED by BOB #21: only a member's authored act sets 1, 2 or 3).
+depends-on: none.
+scope: a radio group over `vocabularies.risk_tiers` in SETUP_HTML's action arm, unset by default; unset still writes undetermined.
+accepts-when: a chosen tier is written; none chosen writes undetermined. NEGATIVE CONTROL: default the group to 1 and the unset arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### REC-193 · queued — **C-41.10's AUTHOR EXCLUSION READS THE DRAFT'S LAST EDITOR, NOT THE STATEMENT'S AUTHOR: D-150's worker used the last editor PROVISIONALLY, so a participant who edited another section could be refused acknowledging a statement they did not write, and its writer admitted.** Publication §3 rule 13 (BOB #32's ruling, folded): *the statement's author is the member who wrote the statement's CURRENT BYTES.* — owner RECORD.
 order: after REC-188, the same completeness block: a correction to just-landed work (D-150) on who may attest (SCHEDULER #17, 2026-09-23)
