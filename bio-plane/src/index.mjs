@@ -6421,7 +6421,17 @@ export default {
     if (op === "purge") {
       const confirm = url.searchParams.get("confirm");
       if (confirm !== storeName)
-        return json({ ok: false, error: "purge requires confirm=<store>", expected: storeName,
+        /* REC-185 / D-278's class: C-61.1 through the ONE governed helper, so this site adds no row
+           and the row's `where` keeps naming one span. The condition IS the argument complaint —
+           `confirm` is missing or in a shape the op cannot use — and the shape it must take is the
+           store name this request resolved to, which is why `expected` is kept beside it.
+           `error` is passed in BYTE-IDENTICAL (D-270's pattern), so `purge.test.mjs`'s two arms and
+           any script reading `error` move not at all. The helper's `detail` says NOTHING WAS CHANGED,
+           which on the plane's one destructive op is the sentence a caller most needs. */
+        return json({ ok: false,
+                      ...requiredArgument("purge", "confirm", "<store name>",
+                                          "purge requires confirm=<store>"),
+                      expected: storeName,
                       got: confirm, tokenClass: cls, store: storeName }, 400);
     }
 

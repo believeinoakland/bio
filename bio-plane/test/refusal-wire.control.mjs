@@ -7,7 +7,7 @@
  *
  *     node test/refusal-wire.control.mjs            (from bio-plane/)
  *
- * SEVEN ARMS, each armed ALONE with every other defence held OPEN, DECLARED
+ * NINE ARMS (seven D-262's, h and i REC-185's), each armed ALONE with every other defence held OPEN, DECLARED
  * BEFORE ARMING (the declarations are in the subject suite's own
  * `NEGATIVE CONTROL:` header so the next session re-runs them in one step), and
  * every restore verified BY sha256 AND BY CONTENT (`cmp`) against a UNIQUELY
@@ -40,6 +40,27 @@
  * pristine-of-record by sha256 AND by `cmp`.
  * The `NO TALLY` row is kept in this header on purpose: a driver that only ever
  * reported "as declared" would be a driver nobody could tell from a broken one.
+ *
+ * FOURTH RUN, 2026-09-24, BY THE REC-185 WORKER on `land/worker/REC-185` over
+ * origin/main 548eb2c5, against the suite at 33 assertions (23 before this item;
+ * +4 in section 2c, +6 in section 6b, attributed by re-running the pristine
+ * 548eb2c5 suite against this same tree — 23/0 — and NOT by subtraction).
+ * FIRST PASS: **ARM f CAME BACK GREEN 33/0 WHERE IT IS DECLARED RED**, and it is
+ * recorded here rather than smoothed because the surprising green was a finding
+ * about neither the arm nor this item: the arm drops ONE code out of the fence
+ * harvest, and the floor it is supposed to break — `FENCES.length >= 12` — had
+ * been written when the family held twelve codes and the family now holds
+ * FOURTEEN. A floor with two codes of slack is not a ratchet, and this one had
+ * already disarmed arm f silently, for however long the thirteenth fence has
+ * existed. Moved to the measured 14 with the reason at the site (and with what
+ * the number still cannot do stated there), then RE-RUN rather than adjusted on
+ * paper: a GREEN 33/0 · b RED 29/4 · c RED 30/3 · d RED 1/2 · e RED 27/6 ·
+ * **f RED 32/1** · g GREEN 33/0 · **h RED 29/4** · **i GREEN 33/0** — ALL NINE
+ * AS DECLARED, all three files byte-identical to their pristine-of-record by
+ * sha256 AND by `cmp`.
+ * ARM h's four failures are exactly the four lines declared for it and no
+ * others: 6b's `error` line held, which is what says the arm tests the CODE and
+ * not the wording, and section 2c did not move.
  *
  * THE ARMS TOUCH THREE FILES AND SAY WHICH: `src/index.mjs` (the subject — the
  * decoration), `src/store.mjs` (a real refusal site, for the divergence and
@@ -199,6 +220,55 @@ arm("g", "a correct refusal in an UNANTICIPATED spelling — src/store.mjs (OVER
   },
   "GREEN");
 
+/* ---------------------------------------------------------------- ARM h
+   REC-185's OWN CONTROL, AND IT IS THE ROW'S: the bare sentence is RESTORED at
+   `op=purge`'s site — exactly the answer the plane gave before this item, the
+   whole refusal reverted rather than one key deleted, so the arm is the DEFECT
+   and not a caricature of it. Section 6b MUST FAIL BY NAME: no code, no
+   C-number, no canned translation, no argument/shape, and no "Nothing was
+   changed." on the one op that destroys a record.
+   MUST NOT FAIL: the `error` assertion — the sentence is byte-identical either
+   way, which is the whole point of D-270's pattern and is what makes this arm a
+   test of the CODE rather than of the wording. Nor anything in 2c: the forward
+   walk does not read this site (it carries no spread) and the `new Response`
+   walk never did. An arm that took those down with it would be moving a second
+   variable. */
+arm("h", "op=purge's coded refusal reverted to its bare sentence — src/index.mjs (THE SUBJECT)", INDEX,
+  (s) => s.replace(`return json({ ok: false,
+                      ...requiredArgument("purge", "confirm", "<store name>",
+                                          "purge requires confirm=<store>"),
+                      expected: storeName,
+                      got: confirm, tokenClass: cls, store: storeName }, 400);`,
+                   `return json({ ok: false, error: "purge requires confirm=<store>", expected: storeName,
+                      got: confirm, tokenClass: cls, store: storeName }, 400);`),
+  "RED");
+
+/* ---------------------------------------------------------------- ARM i
+   OVER-STRICTNESS FOR REC-185's ARM, on the REAL site and not a fixture. The
+   purge refusal is rebuilt AT ITS SITE in a spelling section 6b was not written
+   around — the code in `code` with NO `reason` at all, the row IMPORTED from the
+   catalogue rather than hand-copied (an equality that costs nothing is not
+   evidence), the `detail` worded unlike anything the helper writes, and an extra
+   key the grader has never seen. IT MUST PASS: what 6b grades is whether a
+   caller is told the FACT, never whether the helper was the author. A control
+   that failed here would be an instrument demanding one implementation, which is
+   how a check comes to be routed around. */
+arm("i", "op=purge's refusal built AT ITS SITE in an unanticipated spelling — src/index.mjs (OVER-STRICTNESS)", INDEX,
+  (s) => s.replace(`return json({ ok: false,
+                      ...requiredArgument("purge", "confirm", "<store name>",
+                                          "purge requires confirm=<store>"),
+                      expected: storeName,
+                      got: confirm, tokenClass: cls, store: storeName }, 400);`,
+                   `return json({ ok: false, code: "REQUIRED_ARGUMENT_MISSING",
+                      check: REQUIRED_ARGUMENT_CHECKS.REQUIRED_ARGUMENT_MISSING.check,
+                      translation: REQUIRED_ARGUMENT_CHECKS.REQUIRED_ARGUMENT_MISSING.translation,
+                      error: "purge requires confirm=<store>", op: "purge", argument: "confirm",
+                      shape: "<store name>", sigil: 7,
+                      detail: "No confirm, no purge. Nothing was changed. Say confirm=<the store>.",
+                      expected: storeName,
+                      got: confirm, tokenClass: cls, store: storeName }, 400);`),
+  "GREEN");
+
 /* ------------------------------------------------------------------ FOOT */
 console.log("\n================================================== D-262 CONTROL SUMMARY");
 let wrong = 0;
@@ -215,5 +285,5 @@ for (const p of [INDEX, STORE, SUITE]) {
   execFileSync("cmp", ["-s", p, OF_RECORD[p].copy]);
 }
 for (const p of [INDEX, STORE, SUITE]) if (existsSync(`${p}.d262-of-record`)) rmSync(`${p}.d262-of-record`);
-console.log(`\n${wrong === 0 ? "ALL SEVEN ARMS AS DECLARED" : `${wrong} ARM(S) NOT AS DECLARED — record them, do not smooth them`}`);
+console.log(`\n${wrong === 0 ? "ALL NINE ARMS AS DECLARED" : `${wrong} ARM(S) NOT AS DECLARED — record them, do not smooth them`}`);
 process.exit(0);
