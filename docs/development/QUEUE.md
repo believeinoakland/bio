@@ -296,8 +296,8 @@ scope: the set act admits project-scoped items, each resolved against its own pr
 accepts-when: a selection mixing a project-scoped finding and a condition is handled in one act. NEGATIVE CONTROL: drop the per-item project, and the mixed-selection arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### D-527 · running — **A REOPENED PROPOSAL'S EARLIER DECISION REACHES NO PAGE: `op=proposals` publishes `prior_disposition` (proposalsFeed, REC-184) but no surface reads that op (UI-14 retired it for `op=queue`), and `op=queue`'s FINDING items carry `subject.definition_version` but not `prior_disposition`, so a member meeting the reopened question is shown one nobody has answered.** Found by UI-99's worker (id minted by it; stated in Framework §8.2's As-built paragraph). — owner RECORD, then UI.
-status: running — SPAWNED 2026-09-24 ~21:52Z by SCHEDULER #19 (dispatch) as a SEPARATE CLOUD SESSION titled WORKER D-527 (SCHEDULER #19), base origin/main 1a7f0bcc0. Falsify rather than believe: a live worker holds the branch land/worker/D-527; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### D-527 · integrated — **A REOPENED PROPOSAL'S EARLIER DECISION REACHES NO PAGE: `op=proposals` publishes `prior_disposition` (proposalsFeed, REC-184) but no surface reads that op (UI-14 retired it for `op=queue`), and `op=queue`'s FINDING items carry `subject.definition_version` but not `prior_disposition`, so a member meeting the reopened question is shown one nobody has answered.** Found by UI-99's worker (id minted by it; stated in Framework §8.2's As-built paragraph). — owner RECORD, then UI.
+status: integrated — integrated — flipped 2026-09-24 ~22:37Z by SCHEDULER #20 on CONDUCT #20's verification (22:34Z): d72e0a2b, full 354/354 · 20388; control (A) 55/3 AS DECLARED by name, (B) over-strictness 58/0; rides c20-batch27; CONDUCT mints and classifies its IC (I3 additive). Its UI follow-on is UI-109.
 order: after UI-106, with the corrections: the record holding a decision the one op a surface reads does not carry (SCHEDULER #19, 2026-09-24; UI-99's worker 21:45Z)
 milestone: M4
 interface: I3 additive — `prior_disposition` on the queue's FINDING item; the integrator mints and classifies the IC.
@@ -427,6 +427,16 @@ depends-on: REC-194.
 scope: `draft=` on `op=publish`; the bind recorded with who and when; the case document states "readings given on draft <id>, which <publisher> named as this case's draft at publication"; the signed list carries those readings; without `draft=` REC-194's undetermined count stands.
 accepts-when: a recipient's reading on a new case's draft appears in the published case's signed list with the link stated, and a publish without `draft=` still reads undetermined (the measured failure it moves: every such reading undetermined). NEGATIVE CONTROL: bind by statement bytes instead of the named draft, and a twin case with the same sentence lists the reader, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs REC`).
+
+### D-552 · queued — **`op=instance` RENDERS A FINDING A MEMBER ALREADY DISMISSED AND SAYS NOTHING ABOUT THE DECISION: `#assembleInstance` (store.mjs ~25693) never consults `proposal_dispositions` (the disposition read lives in `proposalsFeed`), and civicos-ui `progPaintInstance()` renders `inst.findings` verbatim, so a dismissed finding reads as an open question on the progression page.** Against D-79 (a decision AGES a finding and is never silently absent). Found via D-527's integration (CONDUCT #20 22:34Z). — owner RECORD, then UI (UI-108).
+order: after D-540, with the corrections: a live surface stating an answered question as open (CLAUDE.md §2) (SCHEDULER #20, 2026-09-24; via CONDUCT #20 22:34Z)
+milestone: M4
+interface: I3 additive — a per-finding disposition view on two ops; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2 (a decided proposal carries its decision) and §12 "age rather than vanish" (D-79).
+depends-on: REC-184.
+scope: `op=instance` and `op=captureprogressions` publish, per finding, the view `#dispositionVersionView` already computes (state, reason, author, instant, definition_version, applies). It is PUBLISHED, never used to hide a finding.
+accepts-when: a dismissed finding on `op=instance` carries its disposition view with author and reason, and is still listed (the measured failure it moves: the decision absent from the instance read). NEGATIVE CONTROL: drop the view from `#assembleInstance` and the dismissed-finding arm fails by name.
+added: 2026-09-24 · SCHEDULER #20 (id minted by CONDUCT #20).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

@@ -63,6 +63,26 @@ scope: exclude the statement's writer in the `unbound` count's NOT clause, as RE
 accepts-when: a case with a writer's own reading and two second readings reads `unbound` 2 and states the writer-undetermined count apart (the measured failure it moves: 3 read where 2 is true). NEGATIVE CONTROL: drop the writer exclusion and the count reads 3, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by REC-213's worker).
 
+### UI-108 · queued — **THE PROGRESSION PAGE SHOWS A DISMISSED FINDING AS AN OPEN QUESTION: `progPaintInstance()` renders `inst.findings` verbatim and cannot say a member decided it.** The surface half of D-552. — owner UI.
+order: directly after D-552, which it consumes (SCHEDULER #20, 2026-09-24)
+milestone: M4
+interface: I3 consumer (D-552's IC).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §12 "age rather than vanish" (D-79), with D-552's published view.
+depends-on: D-552.
+scope: on the progression page, render each finding's disposition as the plane states it (who, when, the reason, and whether the decision still applies to the current definition_version), in the plane's words; the finding stays listed.
+accepts-when: against a real-plane suite a dismissed finding renders its decision beside it (the measured failure it moves: an answered question shown as open). NEGATIVE CONTROL: render `inst.findings` without the view and the decided-finding arm fails by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs UI`).
+
+### UI-109 · queued — **THE QUEUE'S FINDING ITEM CANNOT SHOW A REOPENED QUESTION'S EARLIER DECISION: D-527 publishes `prior_disposition` on `op=queue`'s FINDING items and no surface reads it.** D-527's own scope: *a UI follow-on renders it and is rowed once this lands* (CONDUCT #20 22:34Z). — owner UI.
+order: after UI-108, in product order: the second surface for the same decision record (SCHEDULER #20, 2026-09-24)
+milestone: M4
+interface: I3 consumer (D-527's IC).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2 "The declared flow, and its revisions" (a reopened proposal carries the earlier decision as `prior_disposition`).
+depends-on: D-527.
+scope: render on the queue's FINDING item who reopened it, the earlier decision, and whether that decision still applies, in the plane's words.
+accepts-when: against a real-plane suite a reopened finding's queue item shows its earlier decision (the measured failure it moves: the reopened question shown as one nobody has answered). NEGATIVE CONTROL: omit `prior_disposition` from the render and the reopened-item arm fails by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs UI`).
+
 ### UI-106 · queued — **THE REVIEW-COPY SURFACE LOSES `newCase` AND WILL SHOW THE CORRECTED IDENTITY SENTENCE UNREAD: `app.html`'s `rvcFormFromCopy` does not read `case.newCase` (DELEGATION RECORD (WORKER REC-199) -> UI on coord CLAIMS.md), and UI-92's draft list draws `#caseIdentitySentence`, which D-538 changes.** — owner UI.
 order: after D-539, the surface half of the review-copy corrections (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:43Z)
 milestone: M10
@@ -1188,33 +1208,3 @@ depends-on: none.
 scope: a live driven arm per shape. In `bio-plane/test/derivation-bounds.test.mjs`.
 accepts-when: each shape is driven past its ceiling and states `truncated`. NEGATIVE CONTROL: drop a paging LIMIT in `queueFeed`, and its live arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
-### D-441 · queued — **`tools/decided.mjs` CANNOT SEE A RULING WHOSE MARKER OPENS A LINE IN TITLE CASE: `MARKER` is uppercase only, so `decided.mjs "severance"` misses Case Making's ruling and two Bob rulings read "No RULING".** — owner M0.
-order: with the M0 instrument rows; M0-97, M0-99 and D-341, which it waited on, are done (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` §"WHAT COMPOSES THE INSTRUMENTS".
-depends-on: none.
-scope: the marker admits a title-case label arm; `**Settled by:**` stays unfiled. Extend `tools/decided.test.mjs`.
-accepts-when: the three missed rulings are found. NEGATIVE CONTROL: remove the label arm, and those rulings go unfiled by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
-### D-304 · queued — **`walkfloor.mjs`'s HEADER STATES HALF ITS LEXICAL-SCOPE BLIND SPOT: it names same-named locals in different blocks, and omits a `let` reassigned in a branch and a site reading GUARDED off a neighbour's `*Repro` key.** — owner M0 (walkfloor's owner).
-order: with the M0 instrument rows (SCHEDULER #17, 2026-09-23, LED-7 S17-4)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (an instrument states its limits), with BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *the missing statements belong in walkfloor.mjs's own HEADER; VERIFICATION.md gets no line (no budget).*
-depends-on: none.
-scope: add the two items to the header's CANNOT SEE list.
-accepts-when: the header names both. NEGATIVE CONTROL: a grep arm over the header fails by name if either is missing.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
-
-### D-342 · queued — **A CLAIMS.md RELEASE HAS FOUR SPELLINGS AND NO TOOL READS ANY OF THEM: a `### RELEASED` heading, a `released:` line at the file end, a dated release, and the one grammar.** BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *the one release grammar is a `released: <date> …` line INSIDE the claim's block; the three historical forms are read as released and brought to it; the planning-hygiene pin is a row.* — owner M0.
-order: with the M0 instrument rows (SCHEDULER #17, 2026-09-23, LED-7 S17-4)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a pin over a ledger), for `docs/development/PARALLELISM.md` §"Claiming an area" (BOB folds the grammar), with BOB #32's ruling of 2026-09-23 23:30Z (cite until folded).
-depends-on: none.
-scope: bring the three historical forms to the grammar; a `planning-hygiene` arm pins it.
-accepts-when: every released block carries the in-block line. NEGATIVE CONTROL: plant a `### RELEASED` heading, and the pin fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
