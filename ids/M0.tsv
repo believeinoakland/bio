@@ -25,3 +25,5 @@ M0-165	2026-09-24T16:34:10.898Z	SCHEDULER #18	measured_by .md labels over-select
 M0-166	2026-09-24T16:34:10.898Z	SCHEDULER #18	measured_by .md labels over-select; VERIFICATION.md lacks unit-selection prose (M0-153 findings)
 M0-167	2026-09-24T16:36:29.016Z	SCHEDULER #18	M0-157 findings: gates.control undeclared failures; control-register declarationAt truncates on citation
 M0-168	2026-09-24T16:36:29.016Z	SCHEDULER #18	M0-157 findings: gates.control undeclared failures; control-register declarationAt truncates on citation
+M0-169	2026-09-24T16:50:41.323Z	SCHEDULER #18	one fixture-closure helper; three hand-kept tool lists (M0-154 findings)
+M0-170	2026-09-24T16:50:41.323Z	SCHEDULER #18	one fixture-closure helper; three hand-kept tool lists (M0-154 findings)
