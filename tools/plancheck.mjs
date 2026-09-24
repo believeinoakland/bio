@@ -813,7 +813,7 @@ if (conduct && inbox && !/INBOX/.test(conduct))
    (`BACKLOG-LATER.md`, M0-119 — the same order continued; absent is an empty tail):
      P1 every open id in EXACTLY ONE of the three — FAILs now (it holds on the real ledgers);
      P2 no closed row in either — armed with (a)'s LED-3, as the QUEUE half of (a) always was;
-     P3 the cache ≤ 16 rows (`CACHE_ROWS`), none `blocked`; P4 every open cache row's depends-on MET; P5 both files
+     P3 the cache ≤ 20 rows (`CACHE_ROWS`), none `blocked`; P4 every open cache row's depends-on MET; P5 both files
      within budget (cache 48 KiB / row 3 KiB, backlog 150 KiB / row 2 KiB) — WARN until LED-6 is
      done, because none can hold before the migration (§5 steps 2–4), then FAIL. */
 
