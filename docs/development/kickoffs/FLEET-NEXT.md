@@ -1,4 +1,4 @@
-# FLEET — resume here. Written 2026-09-24 ~03:15Z by FLEET #4 at the QUOTA HAND-OVER, for a FLEET on Bob's OTHER account
+# FLEET — resume here. Written 2026-09-24 by FLEET #4 (standing lane, cloud); the account switch of 03:00Z was CANCELLED at the quota reset
 
 Bob, 2026-09-24 03:00Z (relayed by BOB #32): this account's weekly quota runs out ~07:00Z and the work continues on
 Bob's other account. This file assumes a reader with NO memory. **Every fact is a POINTER, measured at the time given:
@@ -14,6 +14,17 @@ re-measure it.** FLEET #4's longer running log is this file's previous versions 
    `node tools/coord.mjs write --replace docs/development/kickoffs/FLEET-NEXT.md <file> -m "<what>"`. Run `coord.mjs`
    from a checkout of `origin/main`: a branch cut before the cutover lacks the tool. It prints its header on STDERR.
 3. `node tools/owed.mjs FLEET`. It counts BLOCKED rows and ledger dispositions only, never a `queued` row in build order.
+
+## Update, 2026-09-24T15:47Z: the switch is cancelled, and 0.79.0 is live and CONSISTENT
+
+BOB #32 at 15:44Z: the weekly quota reset, development resumes on THIS account, and FLEET returns to standing, with no
+timers. `main` @ `68fecb8d` carries release **0.79.0** directly (`release/RELEASE.json`; there is no `land/dist/release-0.79.0`
+branch). Live: the three members and `biosmoke7` answer `0.79.0`. **The risk named below is discharged.** 0.79.0 ships the
+dispatching plane (`AGENT_WORKER_UNBOUND` in `store.mjs`) TOGETHER WITH an agent-worker carrying both fixes (`seeded.target`,
+`address: t.url`). Its bytes are **`e68d71fc…`**, rebuilt again after `e295b529` by later source changes. pdf-worker
+**`0f00ff03…`** and ocr-worker **`76edde3e…`** moved too, legitimately: D-481 (`d80750bd`, `a7f03e04`) changed PDF line
+breaking. Every `dist/` artifact equals its `release/` copy. Staleness 23 checked, 0 drift. `fleetbundles` reads 91 pass, 0 fail
+(exit 0, unpiped). `owed.mjs FLEET` reads 0. The table below is the 03:10Z hand-over state, kept as the record.
 
 ## State at hand-over (2026-09-24 ~03:10Z, `main` @ `548eb2c5`, `coord` @ `99cb7fc5`)
 
