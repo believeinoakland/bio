@@ -558,7 +558,7 @@ scope: the progression form offers, when revising an existing progression, a bas
 accepts-when: `civicos-ui/test/` gains a suite arm driving a revision through the form with both fields to a landed version, and one without either reading the canned refusal; the UI harness green. NEGATIVE CONTROL: drop the citation field, and the revision arm reads `NO_CITATION` and fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-128's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs UI`).
 
-### REC-184 · queued — **A PROPOSAL DISPOSITION DOES NOT RECORD THE DEFINITION VERSION IT WAS DECIDED AGAINST, SO ONE MADE UNDER VERSION 1 SILENTLY APPLIES UNDER VERSION 2.** `proposal_dispositions` is keyed `(progression_key, stage_key)` with no version (re-read on `land/conduct/c17-batch3` @ `419272eb`). Also, the stats counters beside `progressionDefs` / `progressionStages` (`store.mjs` ~26650) do not count D-128's version tables. — owner RECORD.
+### REC-184 · running — SPAWNED 2026-09-24 ~02:12Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER REC-184 (CONDUCT #19), base origin/main 15b2a4c0, IC pre-minted; gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-184 and that session; never conclude queued from the absence alone.
 order: directly after UI-83, the same D-128 follow-on: a decision the record applies to a definition nobody judged is the record claiming more than it supports (CLAUDE.md §2) (SCHEDULER #16, 2026-09-23; D-128's worker via CONDUCT #17)
 milestone: M4
 interface: I5 — a `definition_version` column on `proposal_dispositions`; the integrator mints and classifies the IC.
