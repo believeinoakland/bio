@@ -1,0 +1,16 @@
+{
+ "unit": "ui:members-roster.test.mjs",
+ "inputHash": "e9adba26611fb7b39653dac479a1b6b3af1d4b81e3e381dff309b9a108a42861",
+ "verdict": "PASS",
+ "run": "30f058d8c6d6c5d8c450df2cea12f001a2592034.1790215105441.1806.json",
+ "tree": "30f058d8c6d6c5d8c450df2cea12f001a2592034",
+ "head": "660f3731ee9defd0cb9be6e17e51ca8902da14eb",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 4,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "a6d20ccd-50af-5028-85e6-e11060652362",
+ "at": "2026-09-24T01:58:25.457Z"
+}
