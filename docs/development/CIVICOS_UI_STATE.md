@@ -50,6 +50,82 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v112, 2026-09-24 session, thread UI, UI-100 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-100` (base `origin/main` @ `68fecb8d`), in the commit that carries this entry; the version
+number is provisional and CONDUCT renumbers it at integration if a concurrent entry took it. SURFACE:
+**one comment in `civicos-ui/app.html` and nothing else — no rendered byte moves.** What moved is what
+EIGHT suites believe a member reads when the plane does not have an op, and the entry is here because one
+of those eight was depicting a sentence with no source while asserting nothing about the page it was on.
+
+**THE ITEM IS UI-84's RESIDUE, TAKEN WHOLE.** UI-84 rebuilt two mock refusals from the plane's own source
+and catalogue and then swept the class it belonged to: SEVEN more `unknown op` mocks and ONE
+`requiredArgument` mock, every one typed by hand, every one narrower than the wire since D-278 gave both
+refusals a DEC-49 code and a canned translation. Four of the seven composed a sentence THE PLANE HAS NEVER
+SENT — `"unknown op " + op`, `"unknown op queue"`, `"unknown op tasks"`, `"unknown op captureprogressions"`
+— the same invention UI-84 corrected at the preauth fallthrough; the other three carried the bare
+`"unknown op"` the wire sent until 2026-09-23 and no longer does. All eight are now DERIVED.
+
+**THE DERIVATION IS ONE MODULE NOW, AND THAT IS THE STRUCTURAL CHANGE.** `civicos-ui/test/plane-refusal-wire.mjs`
+holds what UI-84 wrote inside `preauth-vocabulary.test.mjs`: the CODE read at the site that mints it, the
+SENTENCE found by DISCOVERING the `*_CHECKS` family rather than naming one, `requiredArgument`'s own
+two-chunk `detail` template, and a call-site reader that BALANCES PARENTHESES because two argument shapes
+exist in `index.mjs` and a regex tuned to either misreads the other. It THROWS at import when any read
+comes back empty, so a derivation that failed stops the suite instead of handing it a fixture that asserts
+nothing. `preauth-vocabulary` imports it rather than keeping its own copy. **The reason it is a module is
+this area's own recorded defect**, `kickoffs/UI.md`: a sweep over the analyst's vocabulary must import
+`analyst-vocabulary.mjs` rather than write a list, *"because a fourth list coming back silently is exactly
+how that defect happened"*. Nine copies of a derivation have a ninth that goes stale.
+
+**ONE OF THE EIGHT SURFACES RENDERS THE REFUSAL; FOUR ONLY GAP-DETECT; TWO ARE UNDRIVEN — and the split is
+DRIVEN rather than asserted.** It is the declaration of an arm in the control, so a surface reported as
+gap-detecting that actually renders would fail. The renderer is the QUEUE: `queueFeedHtml`'s absent branch
+prints `queueReason(e)` in `.q-feed-why`. The others match `error` as a SUBSTRING and then write a sentence
+of their own (`docProgGapHtml`, `proposalAct`'s `NO_SUCH_OP_HERE`) or render none at all
+(`inquiryCasePairs`, whose own header says it shows the refusal to nobody).
+
+**THE QUEUE IS THE ENTRY'S REAL FINDING.** Driven against a plane without `op=tasks`, `.q-feed-why` read
+`"unknown op tasks"` — sixteen characters with no source — and now reads the wire code beside DEC-49's
+canned sentence. **It is a MOCK-SHAPE defect and not a live one**, D-173's class: `queueReason` composes
+nothing, so a real member has read the canned sentence since D-278 landed. What was false was the SUITE's
+account of that surface — and correcting the fixture changed the rendered page while all 140 assertions
+stayed GREEN, because not one of them read the span. That is M0-23's finding a third time: a fixture that
+CAN represent the wire still asserts nothing until somebody writes the assertion. Five assertions are that
+second half. Per-suite, each baseline RE-RUN on a pristine `68fecb8d` worktree and never subtracted: queue
+140 -> 145, preauth-vocabulary 84 -> 85, and document-structure (38), act-proposal (75), auth-surface (95),
+case-frozen-pair (24), publishedcase (244) and refusal-translation-surface (91) all UNMOVED.
+`preauth-vocabulary`'s report is CHARACTER-IDENTICAL across the two trees, 0 differing lines, so DEC-49's
+subject did not move and the module cost one assertion and nothing else.
+
+**`planeSaid`'s COMMENT IS CORRECTED IN PLACE AND THE CONCLUSION IS KEPT** (the row's third clause). It
+justified its layout rule by observing that `"verify requires sha256=<64 lowercase hex>"` and
+`"unknown op"` do not end in a full stop. Both examples died with D-278 — those are the exact two refusals
+that gained canned translations, and `refusalWords` renders a translation FIRST. The rule still holds and
+the comment now says why: all 381 rows in the catalogue's `*_CHECKS` families carry a translation and all
+381 end in terminal punctuation (measured), but `refusalWords` falls through to `detail` and then to `error`
+for every code with no canned sentence — 300 of a 694-code census — and a bare SCREAMING_SNAKE code ends in
+no punctuation at all. **The two illustrations are gone; the constraint is not.**
+
+**NO FLOOR MOVED, AND THAT IS A FINDING RATHER THAN A QUIET RESULT.** `check-refusal-codes` first printed
+`r3Fed` 81 against a floor of 80 and FAILED — and the +1 was two block comments. `partitionSuiteLiterals`
+harvests every quoted SCREAMING_SNAKE token in a suite's whole source, COMMENTS INCLUDED, so naming a code
+in backticks in prose reads as feeding it to a surface. **A floor that rises because somebody wrote a
+sentence is not a ratchet.** The codes are named unquoted, with the reason at both sites, and the guard
+prints `r3Fed` measured 80, slack 0, exit 0 — the pristine base's figure exactly. Both suites DO feed those
+codes now and the walk cannot see either, which is UI-84's finding (2) and M0-148: **the walk is wrong in
+both directions from one cause.** The fix is named in `M-139` §5 and is one change.
+
+**NEGATIVE CONTROL:** `node civicos-ui/test/ui100-mock-wire.control.mjs` — a BASELINE ROW plus five arms
+across EIGHT suites, each armed alone, restores verified by sha256 AND `cmp` against per-arm pristines with
+floored byte counts, scratch outside the worktree (BOB #32). **5 of 5 AS DECLARED**, including the row's
+own: the queue mock retyped BY HAND without a translation -> RED 5 of 145 naming the REACH arms, every other
+suite green. **THREE ARMS CAME BACK WRONG FIRST AND ALL THREE ARE RECORDED AT THEIR SITES, NOT SMOOTHED:**
+(A) armed the `op=queue` fixture when the drive uses `resAbsent`, so it could never have been honoured and
+read as proof the REACH arms were watertight; (D) renamed the catalogue family in one file, which does not
+rename a family — `index.mjs` imports it by name, so the plane would not START and every miniflare suite
+died; (E) declared `publishedcase` safe when `assertDerived()` stops EVERY importer. And the BASELINE ROW
+earned its keep: a FIFTH tally format exists in this estate, `refusal-translation-surface` scored −1, and
+the control refused to arm anything rather than measuring an already-broken tree. The figures are `M-139`.
+
 v111, 2026-09-24 session, thread UI, UI-84 (a WORKER of CONDUCT #20, cloud session). Landed on `land/worker/UI-84`
 (base `origin/main` @ `548eb2c5`), in the commit that carries this entry; the version number is provisional and
 CONDUCT renumbers it at integration if a concurrent entry took it. (It did, and in bulk: the other side of this
