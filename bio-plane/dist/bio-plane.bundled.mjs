@@ -1378,8 +1378,19 @@ CREATE TABLE IF NOT EXISTS proposal_dispositions (
   reason          TEXT NOT NULL,
   decided_by      TEXT,
   at              TEXT,
+  definition_version INTEGER,   -- REC-184: the progression definition version the decision was taken against
   PRIMARY KEY (progression_key, stage_key)
 );
+-- REC-184 (framework 8.2, The declared flow and its revisions): definition_version is the version of
+-- the progression definition CURRENT when the member decided, stamped by the store and never the
+-- caller's word. A decision applies only to the version it was taken against -- once the definition
+-- is revised the proposal is OPEN again, with the earlier decision published beside it, because a
+-- decision the record applies to a definition nobody judged is the record claiming more than it
+-- holds. NULLABLE AND NEVER BACK-FILLED: a row written before this column existed recorded no
+-- version, and the only value a backfill could reach for is the current one, which is the claim
+-- this column exists to test. NULL reads back as not recorded, stated, and such a row governs
+-- only while the definition has not been declared again since the decision was taken (the
+-- definition's own at against the row's at) -- the version stays unknown, the ORDER is recorded.
 CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at);
 -- REC-11 / DATA-MODEL D4: the INQUIRY BASIS -- the legs an inquiry rests on,
 -- and invariant 7's storage: a leg whose role is cuts_against is a ROW, so a
@@ -28230,7 +28241,13 @@ var Store = class _Store extends DurableObject {
          is a match of a ref row's `at` against `last_fetched` -- whole seconds, a row overwritten in place -- which
          costs nothing and proves nothing. NULL reads back as UNDETERMINED as to source, stated by `reusedParts`. */
       ["site_assets", "last_fetched_by", "TEXT"],
-      ["site_asset_refs", "reused_from", "TEXT"]
+      ["site_asset_refs", "reused_from", "TEXT"],
+      /* REC-184 (framework §8.2, D-128's follow-on): the progression definition version a proposal
+         disposition was decided against. NULLABLE AND NEVER BACK-FILLED: a decision taken before this
+         column existed recorded no version, and the one value a backfill could reach for is the
+         CURRENT version — the very claim the column exists to test. NULL reads back `not recorded`,
+         stated by `#dispositionVersionView`. */
+      ["proposal_dispositions", "definition_version", "INTEGER"]
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -48391,6 +48408,65 @@ ${words}`;
         s.required
       );
   }
+  /* REC-184: the CURRENT version's NUMBER and the instant it came to stand, and nothing else -- the
+     light read #assembleInstance, op=proposedispose and op=proposals share, so which version is
+     current has ONE answer on the read and on the act. `at` is progression_defs.at, which every
+     declaration writes: a D-128 revision and, before D-128, every overwriting re-declaration
+     (`ON CONFLICT … DO UPDATE SET … at=excluded.at`), so it is the time the definition an instance
+     is read against was declared. null if the progression was never declared. */
+  #definitionVersionOf(key) {
+    const def = this.#one(`SELECT at FROM progression_defs WHERE progression_key=?`, key);
+    if (!def) return null;
+    const v = this.#one(
+      `SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`,
+      key
+    );
+    return { version: v && v.v != null ? v.v : 1, at: def.at ?? null };
+  }
+  /* REC-184: does a recorded proposal disposition GOVERN the definition an instance is read against
+     today? A decision is a member's judgment of the proposal a definition produced, so it applies to
+     the version it was taken against and to no later one (framework §8.2: a finding names the
+     version it was read against, and the decision about it does too). Four answers, each stated:
+       - recorded and equal to the current version      -> applies;
+       - recorded and earlier (the definition was revised since) -> does NOT apply: the proposal is
+         open again and the decision is published beside it, aged, never deleted (D-79);
+       - NOT RECORDED (a row written before this column) and the definition has not been declared
+         since the decision was taken -> applies: whatever version it was, it is still the current
+         one, because no declaration has happened in between. The version number stays unknown;
+       - NOT RECORDED and the definition was declared after it, or either instant is missing or
+         they are the same instant ->
+         does NOT apply: the decision may have judged a definition that no longer stands, and
+         applying it would be the record claiming a judgment nobody made. Resurfacing is the
+         direction that asks again rather than asserts.
+     Never back-fills the row: this is a read, and `definition_version` stays null on the record. */
+  static #dispositionVersionView(d, cur) {
+    const recorded = d.definition_version != null;
+    const current = cur ? cur.version : null;
+    let applies, because;
+    if (!cur) {
+      applies = false;
+      because = "definition_not_declared";
+    } else if (recorded) {
+      applies = Number(d.definition_version) === current;
+      because = applies ? "decided_against_current_version" : "decided_against_earlier_version";
+    } else if (cur.at == null || d.at == null || String(cur.at) === String(d.at)) {
+      applies = false;
+      because = "version_not_recorded_order_undetermined";
+    } else if (String(cur.at) > String(d.at)) {
+      applies = false;
+      because = "version_not_recorded_definition_declared_since";
+    } else {
+      applies = true;
+      because = "version_not_recorded_definition_not_declared_since";
+    }
+    return {
+      definition_version: recorded ? Number(d.definition_version) : null,
+      definition_version_state: recorded ? "recorded" : "not recorded",
+      current_definition_version: current,
+      applies,
+      applies_because: because
+    };
+  }
   /* D-128: the CURRENT version of a definition -- the one every instance and finding is derived
      against -- with its number. A definition with no version rows was declared before D-128 and
      reads as version 1, its basis not recorded (version_recorded:false). null if never declared. */
@@ -48758,11 +48834,7 @@ ${words}`;
       defined: false,
       detail: "no such progression definition (define it first, op=progressiondefine)"
     };
-    const vrow = this.#one(
-      `SELECT MAX(version) AS v FROM progression_def_versions WHERE progression_key=?`,
-      progressionKey
-    );
-    const definitionVersion = vrow && vrow.v != null ? vrow.v : 1;
+    const definitionVersion = this.#definitionVersionOf(progressionKey).version;
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     const stageDefs = this.#rows(
       `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
@@ -49363,12 +49435,19 @@ ${words}`;
        as a second finding kind are DEFERRED as a follow-on (missing-predecessors only here). */
   proposalsFeed(nowMs) {
     const now = this.#nowMs(nowMs);
-    const disposed = /* @__PURE__ */ new Map();
+    const recorded = /* @__PURE__ */ new Map();
+    const curOf = /* @__PURE__ */ new Map();
     for (const d of this.#rows(
-      `SELECT progression_key, stage_key, state, reason, decided_by, at
+      `SELECT progression_key, stage_key, state, reason, decided_by, at, definition_version
          FROM proposal_dispositions`
-    ))
-      disposed.set(d.progression_key + "::" + d.stage_key, d);
+    )) {
+      if (!curOf.has(d.progression_key)) curOf.set(d.progression_key, this.#definitionVersionOf(d.progression_key));
+      recorded.set(
+        d.progression_key + "::" + d.stage_key,
+        { ...d, ..._Store.#dispositionVersionView(d, curOf.get(d.progression_key)) }
+      );
+    }
+    const disposed = new Map([...recorded].filter(([, d]) => d.applies));
     const pairs = this.#rows(
       `SELECT DISTINCT progression_key, entity_id FROM progression_instances
          ORDER BY progression_key, entity_id`
@@ -49398,6 +49477,7 @@ ${words}`;
         const key = inst.progression_key + "::" + f2.stage_key;
         let g = groups.get(key);
         if (!g) {
+          const prior = recorded.get(key) || null;
           g = {
             key,
             progression_key: inst.progression_key,
@@ -49408,7 +49488,17 @@ ${words}`;
             definition_version: inst.definition_version,
             surfaced_by: "machine",
             overdue_count: 0,
-            instances: []
+            instances: [],
+            prior_disposition: prior ? {
+              state: prior.state,
+              reason: prior.reason,
+              decided_by: prior.decided_by,
+              at: prior.at,
+              definition_version: prior.definition_version,
+              definition_version_state: prior.definition_version_state,
+              applies: false,
+              applies_because: prior.applies_because
+            } : null
           };
           groups.set(key, g);
         }
@@ -49437,14 +49527,21 @@ ${words}`;
       proposals.push(g);
     }
     proposals.sort((a, b) => b.n - a.n || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
-    const dispositions = [...disposed.values()].map((d) => ({
+    const dispositions = [...recorded.values()].map((d) => ({
       key: d.progression_key + "::" + d.stage_key,
       progression_key: d.progression_key,
       stage_key: d.stage_key,
       state: d.state,
       reason: d.reason,
       decided_by: d.decided_by,
-      at: d.at
+      at: d.at,
+      /* REC-184: which definition the decision judged, and whether it governs the
+         one in force — a row written before the column reads `not recorded`. */
+      definition_version: d.definition_version,
+      definition_version_state: d.definition_version_state,
+      current_definition_version: d.current_definition_version,
+      applies: d.applies,
+      applies_because: d.applies_because
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
@@ -51512,7 +51609,13 @@ ${words}`;
         state: d.state,
         reason: d.reason,
         decided_by: d.decided_by,
-        at: d.at
+        at: d.at,
+        /* REC-184: the definition version the decision judged, and whether it still ages the
+           finding — false once the definition is revised, when the finding is an OPEN item again. */
+        definition_version: d.definition_version,
+        definition_version_state: d.definition_version_state,
+        applies: d.applies,
+        applies_because: d.applies_because
       })),
       ...scopedDisposed
     ];
@@ -52162,17 +52265,20 @@ ${words}`;
       detail: `'${sk}' is not a stage of progression '${pk}' \u2014 a disposition must name a real stage`
     };
     const at = (/* @__PURE__ */ new Date()).toISOString();
+    const definitionVersion = this.#definitionVersionOf(pk).version;
     this.sql.exec(
-      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at)
-       VALUES (?,?,?,?,?,?)
+      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at,definition_version)
+       VALUES (?,?,?,?,?,?,?)
        ON CONFLICT(progression_key,stage_key) DO UPDATE SET
-         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at`,
+         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at,
+         definition_version=excluded.definition_version`,
       pk,
       sk,
       st,
       why.slice(0, _Store.EDGE_REASON_MAX),
       by.slice(0, 200),
-      at
+      at,
+      definitionVersion
     );
     return {
       ok: true,
@@ -52184,7 +52290,8 @@ ${words}`;
       reason: why,
       decided_by: by,
       at,
-      bundle: null
+      bundle: null,
+      definition_version: definitionVersion
     };
   }
   /* ---- coordination: what LockService and the nextSeq race did ---- */
@@ -52491,6 +52598,12 @@ ${words}`;
       connections: n("connections"),
       progressionDefs: n("progression_defs"),
       progressionStages: n("progression_stages"),
+      /* REC-184: D-128's version history, counted APART from the current-version tables above —
+         a revision adds a version row and replaces the current one, so the current count alone
+         cannot tell one definition revised five times from one never revised — and so a whole-store
+         purge can PROVE it took the history (D-113). */
+      progressionDefVersions: n("progression_def_versions"),
+      progressionStageVersions: n("progression_stage_versions"),
       /* FW-9: the threaded progression instances, reported so a purge can PROVE it cleared
          them (D-113). */
       progressionInstances: n("progression_instances"),
@@ -54010,6 +54123,9 @@ ${words}`;
         connections: d("connections"),
         progressionDefs: d("progressionDefs"),
         progressionStages: d("progressionStages"),
+        /* REC-184: D-128's version history a whole-store purge took (D-113). */
+        progressionDefVersions: d("progressionDefVersions"),
+        progressionStageVersions: d("progressionStageVersions"),
         /* FW-9: the threaded progression instances a purge took (D-113). */
         progressionInstances: d("progressionInstances"),
         /* FW-10: the exception documents a purge took (D-113). */
