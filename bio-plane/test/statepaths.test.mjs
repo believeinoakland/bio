@@ -86,7 +86,17 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    `mintid.test` already has; the one new reader, 31 -> 32), and two doc-facing suites selected as "doc-facing, and
    docs/development/MEASUREMENTS.md changed": D-125's `plane:d125-findingmute.test.mjs` and D-278's
    `plane:d278-codeless-refusals.test.mjs`. */
-const UNITS_CEILING = 67;
+/* MOVED AGAIN 2026-09-24 by c18-batch7fix at the c17-batch7 union (67 -> 72), from the figure this suite PRINTED on the
+   merged tree (`72 unit(s) of 406 selected · 32 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`); origin/main @
+   3f4b8f8c prints 67 of 390 by the same method (a clone whose origin/main is its own HEAD, the one-line plant), and
+   c17-batch7 @ 0b189430 alone prints 72 — the union added nothing of its own. Five new units, found by diffing the two
+   selected lists by name, each a NEW suite selected as "doc-facing, and docs/development/MEASUREMENTS.md changed", none
+   a reader of the ledger (32 on both) and none reaching through `coord.mjs`: `plane:contradiction-overstrict`,
+   D-149's `plane:d149-governing-laws`, MK-6's `plane:mk6-bundle-names-no-author`, REC-182's
+   `plane:rec-182-created-tie` and UI-68's `ui:review-copy`. A FINDING ABOUT THE REPLICATION, recorded: the first
+   re-measurement of main read 109, because a `node_modules` SYMLINK placed in the clone is untracked under main's
+   directory-only ignore rule and counted as a change; the method above places none. */
+const UNITS_CEILING = 72;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 

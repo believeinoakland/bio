@@ -934,7 +934,15 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    That is the class's shape and it is taken deliberately: `op=publishedmanifest` is the WHOLE published
    record by design (a stranger's reconstruction index), so its per-case pairs cannot be paged away, and a
    sha pinned by ONE edition is skipped without a read. The figure is this arm's own output (`25 methods`). */
-const CLASS_MEASURED_2026_08_08 = 25;
+/* 25 -> 26, 2026-09-24 by c18-batch7fix at the c17-batch7 union — an ARRIVAL, looked at, from this arm's own output
+   (`26 methods`) diffed by name against main's 25: `changedFromAudit` (D-256, IC-233). It reads EVERY live bundle.md
+   carrying `addGo`'s changed-from sentence, unbounded, and asks the version chain once per bundle. Taken
+   deliberately and stated rather than hidden: its three totals (`wrong` / `right` / `undetermined`) are counted over
+   EVERY affected bundle by design — BOB #31 (2026-09-23 22:22Z) ruled the bodies stay as written and the correction
+   is the READ, so a total over a page would under-report the wrong ones — and only the LISTING is bounded
+   (`CHANGED_FROM_AUDIT_LIMIT_MAX`). The population is NOT closed: `civicos-ui/app.html` still writes the sentence,
+   so it grows with every re-captured address. Class-fenced to admin and probe (gate-reads). */
+const CLASS_MEASURED_2026_08_08 = 26;
 console.log(`  RATCHET: ${CLASS_ALL.size} methods derive over an unbounded scan (${CLASS.size} seen by the walk, ${ADMITTED.size} admitted by name), `
           + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work. MOVED 37 -> 24 on 2026-09-18 by M0-63 (D-384 enacted: the for-header credit left perRowScan; 14 seen by the walk + 10 admitted BY NAME with their helper-hidden per-row reads; 13 left, each named with its reason in D384_LEAVES)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
@@ -954,7 +962,9 @@ t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a 
      `queue->queueFeed` STAYS as an ADMITTED member: the walk no longer sees its amplification,
      and `D384_STAYS` names it. This pin reads the union, because what a caller can reach is the
      half that matters whichever instrument saw it. */
-  CLASS_OPS, ["biasmanifest->biasManifest", "export->exportManifest",
+  /* c18-batch7fix, 2026-09-24: `changedfromaudit->changedFromAudit` arrives, D-256's audit — the class ratchet
+     above says why it is taken. */
+  CLASS_OPS, ["biasmanifest->biasManifest", "changedfromaudit->changedFromAudit", "export->exportManifest",
               "proposals->proposalsFeed",
               "publishedcase->publishedCase", "queue->queueFeed", "readingname->documentsNamingEntity",
               "reevaluations->reevaluations", "select->selectionCreate", "selection->selectionResolve",
@@ -1153,7 +1163,8 @@ t("M0-40 -> M0-63: `earnedBasisRegistry` is the WORKED EXAMPLE and is pinned on 
    figure the ceiling grades. */
 const CLASS_ROSTER_2026_09_18 = [
   "#assembleInstance", "#flagCasesOnRevision", "#frozenPairsByCase", "#overdueScan", "#sweepSelections",
-  "biasManifest", "documentsNamingEntity", "exportManifest", "proposalsFeed",
+  "biasManifest", "changedFromAudit" /* D-256, c18-batch7fix 2026-09-24: the class ratchet says why */,
+  "documentsNamingEntity", "exportManifest", "proposalsFeed",
   "publishedCase", "publishedRegistryFor", "reevaluations", "selectionCreate", "selectionRelease",
   "selectionResolve",
 ];
@@ -1344,7 +1355,16 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    progression definition, split out of readProgression so every version reads the same way) and
    `#queueItemMutes` (D-125 — ONE member's item mutes, the twin of `#queueMutes`, already counted).
    Neither is in the amplification CLASS; the class roster pinned by name above is unmoved. */
-const SCANNING_MEASURED_2026_09_15 = 113;
+/* 113 -> 118, 2026-09-24 by c18-batch7fix at the c17-batch7 union, MEASURED from the CENSUS ROSTER this walk
+   printed, diffed BY NAME against origin/main 15b2a4c0's 113. Five arrivals, none a lost LIMIT, each looked at:
+   `#groupIdentityHistory` (REC-164 — ONE field's dated history, append-only, one row per administrator's set act);
+   `actionQuotes` (D-148 — its page IS bounded, `QUOTES_MAX` read one past and published as `max`/`truncated`; the
+   unbounded read is each quote's `revised_by`, the later entries revising that ONE quote); `changedFromAudit`
+   (D-256 — the whole-population audit the CLASS ratchet above admits, with its reason); `projectDirectory` and
+   `projectVisibility` (REC-149 — every project in the instance, each asked `#sight`, whole by design; and ONE
+   project's setting history). Two of them, `actionQuotes` and `changedFromAudit`, also publish a bound, so they
+   join SET 2 below; the count cannot defend their LIMITs, and that is said there. */
+const SCANNING_MEASURED_2026_09_15 = 118;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -1756,14 +1776,21 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
       unbounded half is the census GROUP BY, kept unbounded deliberately so a
       third finding arriving in the marks table cannot go missing from the
       assessed count; the PAGE beside it is bounded and index-served. */
-   "provenanceRoutesMarked", "queueFeed"]);
+   "provenanceRoutesMarked", "queueFeed",
+   /* c18-batch7fix, 2026-09-24 — two arrivals at the c17-batch7 union, each publishing a bound AND scanning
+      unbounded. `actionQuotes` (D-148) joins the DEFENDED half: its page is graded by name (`actionQuotes:rows`,
+      twice, one per axis), so the PARTITIONED arm below does not move for it. `changedFromAudit` (D-256) does NOT:
+      its listing is an in-memory `slice` over the whole population, which REC-99's grader cannot grade, so it
+      joins D-369's set 2 below — named, where before it would have been a member no instrument said anything about. */
+   "actionQuotes", "changedFromAudit"].sort());
 t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blind to the COUNT but "
 + "DEFENDED by REC-99's inversion, which grades its row source by name; the other five are blind "
 + "to BOTH halves and are D-369's set 2 exactly. Reporting six as one number would put a method "
 + "that IS defended into a roster of methods that are not, which is the conflation this row was "
 + "written to undo",
   DOUBLY_BLIND,
-  ["#frontierContent", "#frontierMeaning", "biasManifest", "documentsNamingEntity",
+  ["#frontierContent", "#frontierMeaning", "biasManifest",
+   "changedFromAudit" /* D-256, c18-batch7fix 2026-09-24: see SET 2 above */, "documentsNamingEntity",
    "frontier", "queueFeed"]);
 
 /* ---- AND THE CLAIMS THE GRADER'S OWN SPELLING CANNOT READ AT ALL.
@@ -1854,6 +1881,11 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
    "#contradictionK3: same.truncated || doc.truncated",
    "basisVersions: from + versions.length < total",
    "biasManifest: from + page.length < all.length",
+   /* D-256, declared at the c17-batch7 union by c18-batch7fix (2026-09-24): `changedFromAudit` pages an in-memory list
+      of the WHOLE population by `slice` — `biasManifest`'s OFFSET shape exactly — because its three totals are counted
+      over every affected bundle. Measured correct at the op (`truncated` true only when a page ends before the list
+      does) in versionchain.test.mjs section 15; named here because this grader cannot read the spelling. */
+   "changedFromAudit: from + listed.length < all.length",
    "deriveConnections: rowsCut || distinct.length > endsCap",
    "extractProposals: listed.length >= n",
    "search: ids.length >= IDS_MAX",

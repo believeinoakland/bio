@@ -41,7 +41,8 @@
  *   (F) a recipient's comment labelled a member's -> 38/2, at "LABELLED" and "BOTH DOORS' COMMENTS"; the plane's
  *       own record of the comment green.
  *   (G) OVER-STRICTNESS — two headings and the grant button re-worded -> 40/0 GREEN.
- */
+
+ * ADDED 2026-09-24 by c18-batch7fix (M0-107 wait): (w1) the settle predicate never true (`return !!pred()` -> `return false && !!pred()`), restored by cp and verified by sha256 (e0e24212…) AND cmp (33,117 B). DECLARED: the first wait expires, the M0-107 marker prints, ONE assertion fails and the suite ends. -> 21 pass, 1 fail, "the recipient's copy settles — its 8000 ms budget did not expire (M0-107)", marker printed. AS DECLARED. (w0) a 1 ms budget came back GREEN, 46/0: `until` reads the predicate before the clock and the page had already settled, so that arm never armed — a finding about the arm, recorded. */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: shared, for its side effect. */
 import fs from "fs";
 import vm from "vm";
@@ -49,6 +50,7 @@ import { createRequire } from "module";
 import { pathToFileURL } from "url";
 import { webcrypto, createHash } from "crypto";
 import { appScript } from "./extract.mjs";
+import { until, budgetAssert } from "../../bio-plane/test/budget.mjs";   /* M0-107: a checkable wait */
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -194,12 +196,19 @@ function page(hash, token, me) {
   return { ctx, U, WIRE, html, run, get hash() { return HASH; } };
 }
 /* A navigation the page starts on its own (an address resolved at load, a hash router) is not awaited by
-   anybody, and the plane under miniflare answers over real I/O — so it is waited for BY ITS RESULT, bounded,
-   and a wait that runs out is reported by the assertion that reads the page, never passed. */
-const until = async (pred, ms = 8000) => {
-  const t0 = Date.now();
-  while (Date.now() - t0 < ms) { try { if (pred()) return true; } catch (_) {} await new Promise((r) => setTimeout(r, 20)); }
-  return false;
+   anybody, and the plane under miniflare answers over real I/O — so it is waited for BY ITS RESULT, bounded.
+   CORRECTED 2026-09-24 by c18-batch7fix at the c17-batch7 union, not exempted: this read "a wait that runs out
+   is reported by the assertion that reads the page", which is M0-107's defect exactly — an EXPIRED wait read as
+   a FINDING about the page (BOB #28: an expiry measured nothing). `budget-sweep.test.mjs` found the hand-rolled
+   deadline and its four discarded results as UNCHECKED sites. The wait is now `test/budget.mjs`'s `until`, its
+   result handed to `budgetAssert`; on expiry the suite prints the M0-107 marker, records that ONE assertion, and
+   ENDS, so nothing after the wait is read as a finding about a page it never saw. The predicate's own throw
+   (a page not yet drawn) still reads as "not yet", as the old loop's did. */
+const WAIT_MS = 8000;
+const settle = async (name, pred) => {
+  const w = await until(() => { try { return !!pred(); } catch (_) { return false; } }, WAIT_MS, { stepMs: 20 });
+  if (!budgetAssert((n, got, want) => ok(n, got === want, got), name, w, WAIT_MS,
+                    "every assertion after this wait — the suite ends here")) await finish();
 };
 const unesc = (s) => String(s).replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 /* The handler string on the one control whose markup matches `re` — a control drawn twice, or not at all, fails. */
@@ -339,7 +348,7 @@ ok("ONCE: leaving the copy and coming back shows the secret NOWHERE", !M.html("#
    ============================================================ */
 console.log("\n--- 5. the recipient's door, holding no credential ---");
 const R = page("#reviewcopy/" + SECRET, null, null);
-await until(() => R.U.RVS && !R.U.RVS.busy);
+await settle("the recipient's copy settles", () => R.U.RVS && !R.U.RVS.busy);
 const rv1 = R.html("#pub-body");
 PAGES.push(["the recipient's copy", rv1]);
 const rt1 = strip(rv1);
@@ -391,7 +400,8 @@ ok("REVOKE: op=reviewrevoke was sent naming the grant, and the roster now shows 
    JSON.stringify(revoked && revoked.body));
 const plane5 = await GET(`op=reviewcopy&secret=${encodeURIComponent(SECRET)}`);
 ok("THE PLANE: the withdrawn secret reads nothing", plane5?.ok === false && plane5.reason === "NO_REVIEW_COPY", JSON.stringify(plane5).slice(0, 200));
-const deadPage = async (s) => { const P = page("#reviewcopy/" + s, null, null); await until(() => P.U.RVS && !P.U.RVS.busy); return P.html("#pub-body"); };
+let deadSeen = 0;   /* a label by position, never by any part of the secret */
+const deadPage = async (s) => { const P = page("#reviewcopy/" + s, null, null); await settle(`dead link ${++deadSeen} settles`, () => P.U.RVS && !P.U.RVS.busy); return P.html("#pub-body"); };
 const dRevoked = await deadPage(SECRET);
 const dNever = await deadPage("rv1_" + "A".repeat(43));
 const dMalformed = await deadPage("x");
@@ -404,7 +414,7 @@ ok("NEUTRAL: the dead page says neither 'revoked' nor 'expired', and prints no c
    !/revoked|expired/i.test(dRevoked) && shouty(strip(dRevoked)).length === 0 && strip(dRevoked).includes(flat(plane5.detail)),
    strip(dRevoked));
 const R2 = page("#reviewcopy/" + SECRET, null, null);
-await until(() => R2.U.RVS && !R2.U.RVS.busy);
+await settle("the withdrawn link settles", () => R2.U.RVS && !R2.U.RVS.busy);
 const lateComment = await POST(`op=reviewcomment&secret=${encodeURIComponent(SECRET)}`, { text: "still here?" });
 ok("AND A WITHDRAWN SECRET CANNOT COMMENT", lateComment?.ok === false && !/data-rvc-comment-box/.test(R2.html("#pub-body")),
    JSON.stringify(lateComment).slice(0, 200));
@@ -413,7 +423,7 @@ ok("AND A WITHDRAWN SECRET CANNOT COMMENT", lateComment?.ok === false && !/data-
 const J = page("", JON, jonMe);
 J.ctx.location.hash = "#draft/" + draftId;
 J.U.draftRouteFromHash();
-await until(() => J.U.RVC && !J.U.RVC.busy);
+await settle("the outsider's draft address settles", () => J.U.RVC && !J.U.RVC.busy);
 const jp = J.html("#content");
 ok("NO STANDING: a member outside the project opening the draft's address reads no copy, only the plane's sentence",
    !/data-rvc-copy/.test(jp) && strip(jp).includes(flat(plane5.detail)) && shouty(strip(jp)).length === 0, strip(jp).slice(0, 200));

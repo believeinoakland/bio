@@ -1056,11 +1056,22 @@ console.log(`  RATCHET: ${BARE_ROSTER_MEASURED_2026_08_07} bare-collection read 
    cased in the walker, and not hidden behind a narrowed matcher: the figure
    MOVED, so the next item to add an unbounded collection read still fails here.
    ===================================================================== */
+/* MOVED 40 -> 43 (ceiling) and 39 -> 43 (floor) by c18-batch7fix at the c17-batch7 union (2026-09-24), from the
+   roster THIS WALK PRINTED, diffed BY NAME against main's 40 (origin/main 15b2a4c0). Three arrivals, each looked at:
+   - `op=actionquotes` (D-148): its `quotes` ARE bounded — `QUOTES_MAX`, published as `max` beside `truncated`, and
+     driven with a real bite in bounds.test.mjs — but this reader's BOUND_KEY reads `limit`/`cap`/`bound`/`*_limit`,
+     not `max`, and each quote's `revised_by` is a per-quote list (the later entries revising ONE quote) with no bound.
+     The reader is NOT widened here: `max` in BOUND_KEY would regrade every op at once, a row of its own.
+   - `op=projectdirectory` (REC-149): every project in the instance, each asked `#sight`. WHOLE BY DESIGN — a directory
+     cut at N would hide the (N+1)th project from a member looking for it — and bounded by how many projects a group
+     has made, an act each time, not by the corpus.
+   - `op=projectvisibility` (REC-149): ONE project's setting history, append-only, one row per owner's act.
+   The floor had slack (39 under a ceiling of 40, since D-309); it now sits at the figure, so a departure is loud. */
 t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publishes a collection "
 + "off an unbounded row source pushes this over the figure RE-MEASURED on 2026-08-08 over the "
 + "CORRECTED corpus (REC-70: 27 was measured over 55 of 156 dispatched ops; REC-67 removed one "
-+ "phantom; REC-66 FIXED one member), MOVED 39 -> 40 by D-309 with its reason above, and fails here",
-  BARE_OPS.length <= 40, true);
++ "phantom; REC-66 FIXED one member), MOVED 39 -> 40 by D-309 and 40 -> 43 at the c17-batch7 union, each with its reason above, and fails here",
+  BARE_OPS.length <= 43, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
    which is precisely how this walk spent two days reporting 27. A DROP is not a
@@ -1078,7 +1089,7 @@ t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this
      job on a clean tree — it failed the moment `op=connect` came off the roster,
      which is the only reason this figure is being written by hand rather than
      drifting down unremarked. */
-  BARE_OPS.length >= 39, true);
+  BARE_OPS.length >= 43, true);
 
 /* ==========================================================================
  * REC-70 · REACH — WHAT THIS WALK REACHES, ASSERTED RATHER THAN ASSUMED.

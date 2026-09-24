@@ -17064,6 +17064,11 @@ var MACHINE_REFUSALS = {
   inquiryground: "MACHINE_CANNOT_GROUND",
   actionmove: "MACHINE_CANNOT_MOVE_ACTION",
   actioncorrespond: "MACHINE_CANNOT_CORRESPOND",
+  /* D-149's machine fence (C-32.18), joined at the c17-batch7 union by c18-batch7fix (2026-09-24): the store refuses
+     a machine credential this act by name, and until this line a `class:` credential was OFFERED it — the drive in
+     d311-roster-affordances.test.mjs, added the same day, is what read the code back. `projectvisibilityset` is NOT
+     here: the store answers a machine PROJECT_VISIBILITY_NOT_THE_OWNER, a position, not a class fence. */
+  actionlaws: "MACHINE_CANNOT_SET_LAWS",
   versionaccept: "MACHINE_CANNOT_MOVE_VERSION",
   versionreject: "MACHINE_CANNOT_MOVE_VERSION",
   versionconsider: "MACHINE_CANNOT_MOVE_VERSION",

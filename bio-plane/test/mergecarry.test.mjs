@@ -432,8 +432,10 @@ section("the historical register, graded in BOTH directions over the REAL corpus
   t("the corpus is non-empty and large enough to mean something (>= 150 merges)", h.merges >= 150, true);
   /* EXACT, because the range is fixed: git objects are content-addressed, so the merges reachable from one
      commit are the same set in every clone. Measured 2026-09-23 at e62e08e1: 752. A different figure means
-     the pin moved (move this with it) or this clone cannot see the pin's history (a shallow clone). */
-  t("...and it is EXACTLY the pinned corpus, 752 merges, in every clone and on every day", h.merges, 752);
+     the pin moved (move this with it) or this clone cannot see the pin's history (a shallow clone).
+     MOVED WITH THE PIN, 752 -> 871, 2026-09-24 by c18-batch7fix: the pin is now bb2b21b6 (tools/mergecarry.mjs says
+     why), and 871 is the figure this suite printed from it. */
+  t("...and it is EXACTLY the pinned corpus, 871 merges, in every clone and on every day", h.merges, 871);
   t("no UNREGISTERED drop sits in main's history", h.fresh, []);
   t("no registered drop has quietly stopped being one", h.stale, []);
   /* CORRECTED 2026-09-14 (CONDUCT #9), 3 -> 4, never exempted: the pin exists so this list
@@ -452,8 +454,12 @@ section("the historical register, graded in BOTH directions over the REAL corpus
      (both added lines present, both removed lines absent; measured at the bytes). This file's own
      stale-register arm went red on it, which is the arm doing its job; the row came out. The pin
      stays EXACT. */
-  t("...and the register is the FOUR true drops the sweeps found, not a longer list",
-    KNOWN_HISTORICAL_DROPS.length, 4);
+  /* 4 -> 7, 2026-09-24 by c18-batch7fix: three drops in two merges on land/conduct/c18-batch7fix (d91058c, 01c7c7b),
+     found by plancheck §2c after both were pushed, registered with their reasons in tools/mergecarry.mjs, and reached
+     by this suite only because REGISTER_PIN moved to bb2b21b6 in the same commit (871 merges; 0 fresh, 0 stale,
+     measured before the move). The pin stays EXACT: seven rows, seven drops. */
+  t("...and the register is the SEVEN true drops the sweeps found, not a longer list",
+    KNOWN_HISTORICAL_DROPS.length, 7);
   /* THE FALSE-POSITIVE CLAIM, AS A NUMBER RATHER THAN A PROMISE. Three findings over the
      whole of main's history is what earns this check its place in the gate; a check that
      cried wolf on a tenth of merges would be switched off within a week. */

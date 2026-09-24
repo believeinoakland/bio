@@ -170,6 +170,27 @@ export const KNOWN_HISTORICAL_DROPS = [
        + "until it is done`, while the battery prints `2 member(s) actually RAN` and no `DARK:` "
        + "at all. The work was done and the ledger still asks for it. Leaves this list when "
        + "D-232's disposition is corrected." },
+  /* c18-batch7fix, 2026-09-24: three drops in two merges on land/conduct/c18-batch7fix, each found by plancheck §2c
+     AFTER the merges were pushed; the deny list refuses a force-push, so neither can be amended into a trailer. */
+  { merge: "d91058c", path: "bio-plane/node_modules",
+    why: "c18-batch7fix merging c17-batch7, 2026-09-24. THE DROP IS THE REPAIR. The branch's change was a SYMLINK, "
+       + "`bio-plane/node_modules -> /home/user/b6/bio-plane/node_modules`, committed by c17-batch7's D-256 merge "
+       + "(daf0c729) and pointing at a worktree on another machine; checking it out replaced installed modules with "
+       + "a dangling link. The merge removed it from the index, and b8f18928 widened bio-plane/.gitignore to "
+       + "`node_modules` (no slash) so a link cannot be committed again. CONSEQUENCE: none owed." },
+  { merge: "01c7c7b", path: "bio-plane/test/provenance-marker.test.mjs",
+    why: "c18-batch7fix merging c17-batch7 @ 0b189430, 2026-09-24. The branch's change was c17-unionfix's CEILING "
+       + "28 -> 29 with its note on REC-161's `partitionIndependence` site; this side had already moved the same "
+       + "ceiling to 35 over a superset of sites and named REC-161 among them, so git kept ours whole without a "
+       + "conflict. The NUMBER was superseded; the NOTE — unionfix's record of looking at that site — was not, and "
+       + "it was in the tree nowhere. REPAIRED in the commit that registers this row: the note is carried back "
+       + "verbatim above this side's move, so only the receipt stays here." },
+  { merge: "01c7c7b", path: "docs/architecture/BIO_Membership_Architecture_v2.md",
+    why: "c18-batch7fix merging c17-batch7 @ 0b189430, 2026-09-24. The branch's six lines were its Status `as of` "
+       + "(2026-09-23, BOB #31) and BOB #31's leave/join paragraph in §7. Both were ALREADY in this side, carried by "
+       + "d0756f96's merge of main: the paragraph word for word (separated from REC-149's step-1 note by a blank "
+       + "line, which is the whole byte difference) and the Status carrying the same BOB #31 note under the later "
+       + "`as of 2026-09-24` the push guard required. Nothing of the branch's is missing. CONSEQUENCE: none owed." },
 ];
 
 export function git(args, { repo, allowFail = false } = {}) {
@@ -406,7 +427,12 @@ export function carryAudit({ repo, range = null, commit = null } = {}) {
    no longer re-sweeps landed history on every run, because a sweep of landed history is exactly a
    verdict that moves with what landed. Moving the pin is an act in a commit, with its why here, like
    a register row, and the move surfaces any such drop as `fresh`. */
-export const REGISTER_PIN = "e62e08e147db6faddad635182cbf74675533949e";
+/* MOVED 2026-09-24 by c18-batch7fix, e62e08e1 -> bb2b21b6 (land/conduct/c18-batch7fix, the last pushed commit holding
+   both of its merges with registered drops, d91058c and 01c7c7b). WHY: those drops were pushed before plancheck §2c
+   named them, so they could not be amended into trailers (a force-push is refused), and a registered drop the pin
+   cannot reach reads as STALE. The move was MEASURED before it was made: 871 merges from bb2b21b6, 0 fresh and 0
+   stale with the three new rows — so it surfaced no drop nobody had looked at. */
+export const REGISTER_PIN = "bb2b21b613ad1f37fb3f8bf7f150ab65e9a2626e";
 
 export function historicalRegister({ repo, pin = REGISTER_PIN } = {}) {
   const a = carryAudit({ repo, range: pin });

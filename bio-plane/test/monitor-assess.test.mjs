@@ -188,7 +188,12 @@ t("…and is logged LOOKED_ABSENT, with no assessment and the reason stated",
   [gone.observation?.state, gone.assessment, typeof gone.assessment_basis], ["LOOKED_ABSENT", null, "string"]);
 
 console.log("\n--- a document stating NO frequency takes its type's contract ---");
-serve[LOC] = BASE;
+/* CORRECTED 2026-09-24 by c18-batch7fix at the c17-batch7 union, not exempted: this served BASE again, byte for
+   byte, so the second bundle registered the capture the first already holds — which D-179 (C-53.13, one capture,
+   one home) now refuses by name, and every arm below read the refusal. The subject here is the CONTRACT cadence,
+   not the bytes, so the calendar is served as a fresh fetch of the same page would be: the same four meetings under
+   a new `__VIEWSTATE`, the part an ASP.NET page changes on every render. */
+serve[LOC] = calendar("S4_" + "w".repeat(300), [M.a, M.b, M.c, M.d]);
 const C = await monitored(null);
 t("the contract bundle promoted", C.promoted, true);
 const cc = await P("monitor", { bundleId: C.id });

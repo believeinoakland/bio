@@ -49,7 +49,8 @@
  *   Fixed with realpath, and the guard now requires the tool's completion line, not exit 0.
  * GATE: reads * (M0-126: it drives pushguard's marker, corpus and status checks over THIS tree; traced 2026-09-23 reading
  *   1,022 files that no name in this suite reaches, so its result key covers the whole tree — TREE-SHARING §3a)
- */
+
+   ADDED 2026-09-24 by c18-batch7fix (section 5's derivation corrected): (s1) `queueApplySet` removed from tools/status.mjs UI_HELPERS, restored by cp and verified by sha256 (50f365fa…) AND cmp (19,859 B). DECLARED: only "NO UI helper that calls an op is missing from UI_HELPERS" fails, naming it. -> 63/1, got ["queueApplySet"]. AS DECLARED. (s0) the window cut ALONE, before arrow declarations were parsed: "the network-reaching derivation found the helpers it must" went RED — the guard doing its job, and the reason `const NAME = (…) =>` is now a declaration. */
 
 import "./stdio.mjs";
 import "./sandbox.mjs";
@@ -184,10 +185,24 @@ section("5 — THE UI HELPER LIST IS DERIVED, NOT RECALLED: every helper that ca
      spell an op: `actionCorrArm('capture')` flips a radio button. So: the functions that call
      `fetch(` directly, closed under "calls a helper with its own first parameter", to a fixed
      point — then every one of those that the UI ever calls with a literal op name. */
-  const body = (name) => { const i = ui.search(new RegExp(`(?:async\\s+)?function\\s+${name}\\s*\\(`));
-    return i < 0 ? "" : ui.slice(i, i + 1600); };
-  const defs = [...ui.matchAll(/(?:async\s+)?function\s+([A-Za-z_]\w*)\s*\(\s*([A-Za-z_]\w*)/g)]
-    .map((m) => ({ name: m[1], param: m[2] }));
+  /* CORRECTED 2026-09-24 by c18-batch7fix at the c17-batch7 union, not exempted. A body was the 1,600 characters after
+     a `function` header, and that window was doing work nobody had stated. It made a SHORT function read its
+     NEIGHBOUR's body: D-126's four-line `queueSelFor`, which only filters the member's selection, was derived a
+     network helper off the `recPostR(op` in `queueApplySet` below it. And the positive half RESTED on the same
+     over-reach: `api` — the one seam that calls `fetch(` — is `const api = (op, …) => fetch(`, which the `function`
+     pattern never parsed, so `apiQ` and `apiR` were found only because their windows ran into `rec`'s `fetch(`.
+     Cutting the window alone therefore found NOTHING (the guard arm below went red — the control this correction
+     needed). So a declaration is now either spelling — `function NAME(` / `async function NAME(` or
+     `const|let NAME = (async) (` — and a body ends at the next TOP-LEVEL declaration (a line starting with one), so
+     each function is judged by its own code. */
+  const DECL = String.raw`(?:(?:async\s+)?function\s+NAME\s*\(|(?:const|let)\s+NAME\s*=\s*(?:async\s*)?\()`;
+  const TOP = /\n(?:async\s+function|function|const|let)\s+[A-Za-z_]/;
+  const body = (name) => { const i = ui.search(new RegExp(DECL.replace("NAME", name).replace("NAME", name)));
+    if (i < 0) return "";
+    const next = ui.slice(i + 1).search(TOP);
+    return ui.slice(i, next < 0 ? i + 1600 : Math.min(i + 1600, i + 1 + next)); };
+  const defs = [...ui.matchAll(/(?:(?:async\s+)?function\s+([A-Za-z_]\w*)\s*\(|(?:const|let)\s+([A-Za-z_]\w*)\s*=\s*(?:async\s*)?\()\s*([A-Za-z_]\w*)/g)]
+    .map((m) => ({ name: m[1] || m[2], param: m[3] }));
   const net = new Set(defs.filter((d) => /\bfetch\(/.test(body(d.name))).map((d) => d.name));
   for (let grew = true; grew;) { grew = false;
     for (const d of defs) if (!net.has(d.name) && [...net].some((h) =>
@@ -198,6 +213,7 @@ section("5 — THE UI HELPER LIST IS DERIVED, NOT RECALLED: every helper that ca
   t("the network-reaching derivation found the helpers it must (a derivation finding none would pass)",
     ["recR", "actAsk", "apiQ"].every((h) => helpers.has(h)), true);
   const unknown = [...helpers].filter((h) => !UI_HELPERS.includes(h)).sort();
+  console.log(`  DERIVED UI HELPERS (${helpers.size}): ${[...helpers].sort().join(", ")}`);
   t("the OPS table is non-empty (a walk that found nothing would pass everything)", ops.size > 100, true);
   t("NO UI helper that calls an op is missing from UI_HELPERS — a missing one blinds every `uinone` claim",
     unknown, []);

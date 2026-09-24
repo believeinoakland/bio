@@ -301,6 +301,13 @@ const DRIVE = {
   cite: async () => GET(`op=cite&token=${MEM}&project=${PA}&handle=${await sel([INFO])}&note=basis`),
   sever: async () => GET(`op=sever&token=${MEM}&project=${PA}&handle=${await sel([INFO])}&reason=r`),
   reinstate: async () => GET(`op=reinstate&token=${MEM}&project=${PA}&handle=${await sel([INFO])}&reason=r`),
+  /* Joined at the c17-batch7 union by c18-batch7fix (2026-09-24): two object-directed acts reached ACTS on branches
+     that never ran this sweep. D-149's governing laws, on the fixture action with one well-formed law so the machine
+     fence is the only thing it can meet; REC-149's visibility setting, on the fixture project. What each answers a
+     machine is the store's, read below — nothing about either is typed here. */
+  actionlaws: () => POST(`op=actionlaws&token=${MEM}&target=${E(ACTN)}`,
+    { laws: [{ level: "state", citation: "Cal. Gov. Code § 7920.000" }] }),
+  projectvisibilityset: () => GET(`op=projectvisibilityset&token=${MEM}&projectId=${E(PA)}&setting=discoverable`),
 };
 const objectActs = ACTS.map((a) => a.id).filter((k) => !ROSTER.includes(k));
 t("FIXTURE GUARD: every object-directed act in ACTS has a drive here — an act added to ACTS without "
