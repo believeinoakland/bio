@@ -21519,16 +21519,30 @@ var ACTS = [
     applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && f2.cites_out.confirmed > 0 && f2.project_participant !== false
   },
   /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
-     refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
-     is not. The PROJECT arm is not narrowed: `cites_out.severed` is a count and does not say whether
-     every severed target is retired, so a project whose only severed edges point at retired items is
-     still offered an act the store refuses — a stated residue, not a rule. */
+       refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
+       is not.
+  
+       D-444 NARROWS THE PROJECT ARM, which REC-183 left as a stated residue. The two arms ask the
+       same question from the two ends of the edge. From the TARGET's end `current_state` answers it
+       outright. From the PROJECT's end it cannot be answered by `cites_out.severed` at all: that is a
+       count of the project's own severed edges and says nothing about what their targets have BECOME,
+       so a project whose only severed edges point at retired items was offered an act the store then
+       refused — a pre-flight disagreeing with the refusal it fronts. The store now states
+       `severed_reinstatable`, counted through `#retiredNotCitable`, the predicate `#edgeTransition`
+       itself runs; the arm keys on it and the offer cannot drift from the refusal.
+  
+       IT IS NARROWED AND NOT DROPPED, which is the whole of the accepts-when: a project holding a
+       severed edge onto a LIVE target must still be offered `reinstate`, and the store must still
+       accept it. Withholding the act from every project would satisfy "never offer what is refused"
+       and cost a case the one recorded way to take a citation back up. `?? 0` for the posture every
+       fact added since REC-16 takes: absent reads as ZERO, the safe direction, because `deriveActs`
+       is exported and two suites call it with hand-built facts. */
   {
     id: "reinstate",
     label: "Reinstate a severed citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f2.current_state === "retired") || ty === "project" && f2.cites_out.severed > 0 && f2.project_participant !== false
+    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f2.current_state === "retired") || ty === "project" && (f2.cites_out.severed_reinstatable ?? 0) > 0 && f2.project_participant !== false
   },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
@@ -32349,14 +32363,21 @@ var Store = class _Store extends DurableObject {
         const c = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
         if (c && normalizeType(c.object_type) === "project") citedByCase[key]++;
       }
-    const citesOut = { confirmed: 0, severed: 0 };
+    const citesOut = { confirmed: 0, severed: 0, severed_reinstatable: 0 };
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     const docFm = md && md.content !== null ? parseFrontmatter(md.content).data || {} : {};
     if (normalizeType(b.object_type) === "project") {
       const refs = docFm.references;
       for (const r of Array.isArray(refs) ? refs : [])
-        if (r && typeof r === "object" && r.rel === "cites")
-          citesOut[r.status === "severed" ? "severed" : "confirmed"]++;
+        if (r && typeof r === "object" && r.rel === "cites") {
+          if (r.status !== "severed") {
+            citesOut.confirmed++;
+            continue;
+          }
+          citesOut.severed++;
+          if (typeof r.target === "string" && !this.#retiredNotCitable(r.target))
+            citesOut.severed_reinstatable++;
+        }
     }
     const rested = normalizeType(b.object_type) === "inquiry" ? this.#restsOnLive(target) : { confirmed: [], frozen: [], severed: [] };
     return {
@@ -33722,10 +33743,7 @@ var Store = class _Store extends DurableObject {
       };
     if (to === "confirmed") {
       const retiredMembers = [];
-      for (const id of sel.members) {
-        const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-        if (b && normalizeType(b.object_type) === "information" && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
-      }
+      for (const id of sel.members) if (this.#retiredNotCitable(id)) retiredMembers.push(id);
       if (retiredMembers.length)
         return {
           ok: false,
@@ -34556,6 +34574,30 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
   static RETIRE_CITED_DETAIL = "these are still cited by live edges. Retiring them would leave those Projects pointing at retired material, which C-6.2 treats as an error whose remedy is to sever the edge with a reason. Sever first, then retire.";
   #retirementCitedBy(id) {
     return this.#citesInto(id).confirmed;
+  }
+  /* D-444: REINSTATEMENT'S ONE RETIRED-TARGET PREDICATE, shared by
+   * `#edgeTransition`'s RETIRED_NOT_CITABLE refusal (REC-183) and by
+   * `affordanceFacts`' `cites_out.severed_reinstatable`. §4.1 of State Rules
+   * v1.5 (BOB #30): a retired item is not citable, and moving an edge INTO
+   * `confirmed` is a citation made now.
+   *
+   * IT IS EXTRACTED FOR THE REASON `#citesInto` AND `#retirementCitedBy` WERE:
+   * the pre-flight publishes `reinstate` over a COUNT of severed edges, and a
+   * count cannot say whether every one of those targets has since been retired
+   * — so a project whose only severed edges point at retired items was offered
+   * an act this very predicate then refused, which is the drift DEC-8 forbids.
+   * The fact now asks THIS, so the offer and the refusal cannot answer
+   * differently. A SECOND COPY WOULD HAVE BEEN THE DEFECT ITSELF, one layer on.
+   *
+   * `source_status` is not read, as at cite and at reinstate: a removed or
+   * modified source stays citable, and `retired` is the other axis. Only
+   * Information has the state — an inquiry target answers false, exactly as
+   * `#edgeTransition` leaves it un-refused — and an id with no row answers
+   * false too, because an absent target is refused by another door and this
+   * one claims nothing about it. */
+  #retiredNotCitable(id) {
+    const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+    return !!b && normalizeType(b.object_type) === "information" && String(b.current_state ?? "").trim() === "retired";
   }
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
    *
