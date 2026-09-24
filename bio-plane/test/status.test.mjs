@@ -184,10 +184,21 @@ section("5 — THE UI HELPER LIST IS DERIVED, NOT RECALLED: every helper that ca
      spell an op: `actionCorrArm('capture')` flips a radio button. So: the functions that call
      `fetch(` directly, closed under "calls a helper with its own first parameter", to a fixed
      point — then every one of those that the UI ever calls with a literal op name. */
-  const body = (name) => { const i = ui.search(new RegExp(`(?:async\\s+)?function\\s+${name}\\s*\\(`));
-    return i < 0 ? "" : ui.slice(i, i + 1600); };
-  const defs = [...ui.matchAll(/(?:async\s+)?function\s+([A-Za-z_]\w*)\s*\(\s*([A-Za-z_]\w*)/g)]
-    .map((m) => ({ name: m[1], param: m[2] }));
+  /* CORRECTED 2026-09-24 at integration by c19-unionfix: a body was a FIXED 1600-character window, which ran past a
+     short function into the next one — D-126's `queueSelFor` (which reaches no network) was read as a helper
+     because `queueApplySet`, defined right after it, calls `recPostR(op, …)`. A body now also ends at the next
+     top-level `function` line, so the window can only shrink to the function's own text, never grow. */
+  /* AND A DEFINITION IS ALSO AN ARROW CONST (`const api = (op, body, params) => fetch(…)`): the old fixed window
+     found `apiQ` only because it overflowed into `rec`'s `fetch(` — `api`, the transport `apiQ` really calls, was
+     never parsed at all. Both spellings are read now, so the derivation stands on the call and not on the luck of
+     what text follows a helper. */
+  const DEF = (name) => new RegExp(`(?:(?:async\\s+)?function\\s+${name}\\s*\\(|\\bconst\\s+${name}\\s*=\\s*(?:async\\s*)?\\()`);
+  const body = (name) => { const i = ui.search(DEF(name));
+    if (i < 0) return "";
+    const nx = ui.slice(i + 1).search(/\n(?:async\s+)?function\s|\nconst\s/);
+    return ui.slice(i, nx < 0 ? i + 1600 : Math.min(i + 1600, i + 1 + nx)); };
+  const defs = [...ui.matchAll(/(?:(?:async\s+)?function\s+([A-Za-z_]\w*)\s*\(|\bconst\s+([A-Za-z_]\w*)\s*=\s*(?:async\s*)?\()\s*([A-Za-z_]\w*)/g)]
+    .map((m) => ({ name: m[1] || m[2], param: m[3] }));
   const net = new Set(defs.filter((d) => /\bfetch\(/.test(body(d.name))).map((d) => d.name));
   for (let grew = true; grew;) { grew = false;
     for (const d of defs) if (!net.has(d.name) && [...net].some((h) =>

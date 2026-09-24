@@ -13243,6 +13243,21 @@ const THEME_REF_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+(?:[#/:?].*)?$/;
    grammar reads either; a leg carrying one is claiming membership as a reason. */
 const THEME_LEG_KEYS = ["theme", "themes"];
 
+/* IC-246 / C-82 (minted with `node tools/mintid.mjs C` by c19-unionfix, 2026-09-24) — op=statementack's bound on
+ * the unsigned case documents one acknowledgement re-authors (BIO_Publication_v0_1.md §3 rule 11). Over it the act
+ * is REFUSED and nothing is written, because a cut would leave a document listing fewer second readers than the
+ * record holds, and its owner would sign that absence. */
+export const STATEMENT_ACK_CHECKS = {
+  STATEMENT_ACK_DOCUMENTS_OVER_BOUND: {
+    check: 'C-82.1',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-documents-bound',
+    translation: 'More unsigned case documents of this project carry this exact exclusion statement than one '
+      + 'acknowledgement can update at once. Updating only some would leave the others listing fewer second '
+      + 'readers than the record holds, so nothing was recorded. Sign or replace some of those documents, then '
+      + 'acknowledge the statement again.',
+  },
+};
+
 export const THEME_CHECKS = {
   THEME_NOT_EVIDENCE: {
     check: 'C-81.1',

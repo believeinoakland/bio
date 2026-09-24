@@ -480,6 +480,8 @@ import { PER_ITEM_CHECKS, TASK_ACTOR_CHECKS } from "../checks/bio-checks.mjs";
 import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-checks.mjs";
 /* D-162 / IC-241: THE THEME's refusals (C-81). */
 import { THEME_CHECKS } from "../checks/bio-checks.mjs";
+/* IC-246 / C-82: op=statementack's bound on the unsigned documents it re-authors — a refusal, never a cut. */
+import { STATEMENT_ACK_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
 import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
@@ -10062,6 +10064,36 @@ export class Store extends DurableObject {
                      + `hand the draft to a reader through a review grant. The case publishes without one and `
                      + `says so.` };
     const statementSha = Store.#statementSha(text);
+    /* THE DOCUMENTS ALREADY AUTHORED FOR THIS STATEMENT, UNSIGNED, AT THIS CASE IDENTITY, IN THIS PROJECT — the
+       case door's own document, or (through a draft) the edition `op=publish` authored from it. Found by the hash
+       the document prints beside its statement AND by its project line, both IN THE STATEMENT, and read BEFORE
+       anything is written (IC-246). Two corrections to D-150's first cut, each a defect:
+       - THE PROJECT IS MATCHED IN SQL, spelled as `#caseDocumentText` writes it. It was filtered AFTER a `LIMIT 8`,
+         so another project's documents of the same sentence could fill the page and crowd this project's out —
+         an acknowledgement recorded and never listed where it belongs.
+       - OVER THE BOUND IS A REFUSAL, NOT A CUT. A cut would leave the ninth document listing fewer second readers
+         than the record holds, and its owner would SIGN that absence. So the read is `max + 1`, and more than
+         `max` refuses by name with nothing written. The parse filter stays, applied after the bound is decided. */
+    const ackMax = Store.STATEMENT_ACK_DOCUMENTS_MAX;
+    const needle = `\n  statement_sha: ${statementSha}\n`;
+    const projectLine = `\ncase_project: ${project}\n`;
+    const found = this.#rows(`SELECT case_id, edition, doc_sha, text FROM case_documents
+                              WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
+                                AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
+                             ident.edition, ident.caseId ?? null, ident.caseId ?? null, needle, projectLine, ackMax + 1);
+    const refusal = (code, detail, extra) => {
+      const row = STATEMENT_ACK_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+    };
+    /* DEC-49 REGION is-statement-ack-documents-bound */
+    if (found.length > ackMax)
+      return refusal("STATEMENT_ACK_DOCUMENTS_OVER_BOUND",
+               `more than ${ackMax} unsigned case documents of this project carry this exact statement at `
+                     + `this case identity. Each would have to be re-authored to list the acknowledgement, and `
+                     + `re-authoring only some would leave the rest listing fewer second readers than the record `
+                     + `holds. Nothing was written: sign or supersede some of them, then acknowledge.`,
+               { limit: ackMax, statement_sha: statementSha, edition: ident.edition, case_id: ident.caseId ?? null });
+    /* END DEC-49 REGION is-statement-ack-documents-bound */
     const same = this.#one(`SELECT ack_id, at FROM statement_acknowledgements
                             WHERE project_id=? AND statement_sha=? AND case_id IS ? AND edition=?
                               AND acknowledger_kind=? AND acknowledger=?`,
@@ -10071,14 +10103,8 @@ export class Store extends DurableObject {
       this.sql.exec(`INSERT INTO statement_acknowledgements (project_id,case_id,edition,statement_sha,draft_id,
                      acknowledger_kind,acknowledger,recipient,at) VALUES (?,?,?,?,?,?,?,?,?)`,
                     project, ident.caseId ?? null, ident.edition, statementSha, draftId, kind, by, recipient, when);
-    /* THE DOCUMENTS ALREADY AUTHORED FOR THIS STATEMENT, UNSIGNED, AT THIS CASE IDENTITY — the
-       case door's own document, or (through a draft) the edition `op=publish` authored from it.
-       Found by the hash the document prints beside its statement, bounded, and re-read whole. */
-    const needle = `\n  statement_sha: ${statementSha}\n`;
-    const docs = this.#rows(`SELECT case_id, edition, doc_sha, text FROM case_documents
-                             WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
-                               AND instr(text, ?) > 0 ORDER BY case_id LIMIT 8`,
-                            ident.edition, ident.caseId ?? null, ident.caseId ?? null, needle)
+    /* The documents read above, re-read whole: the parse is the authority on the project, the SQL match its index. */
+    const docs = found
       .filter((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === project);
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
     return { ok: true, existed: !!same,
@@ -10088,12 +10114,17 @@ export class Store extends DurableObject {
              /* Each unsigned case document of this statement, re-authored to list it: its NEW hash is
                 the one the owner signs (op=caseratify refuses the old one as stale). */
              case_documents: reauthored,
+             case_documents_limit: ackMax, case_documents_truncated: false,
              listed: `the completeness block of ${Store.#caseIdentitySentence(ident.caseId ?? null, ident.edition)} `
                    + `lists this acknowledgement when its case document is authored with this exact statement `
                    + `(op=publish), or — if that document is already authored and unsigned — now, re-authored `
                    + `(case_documents). A statement edited afterwards is a different sentence, and this `
                    + `acknowledgement is not listed under it.` };
   }
+
+  /* IC-246: the bound on the unsigned documents one acknowledgement re-authors, declared BELOW its method (REC-116).
+     The figure D-150's literal carried; over it the act is REFUSED (C-82.1), never cut. */
+  static STATEMENT_ACK_DOCUMENTS_MAX = 8;
 
   /* THE TWO RENDERINGS OF THE LIST, ONE SPELLING EACH — written by `#caseDocumentText` when
      `op=publish` authors a document, and spliced by `#reauthorAcknowledgements` when an
@@ -31243,6 +31274,13 @@ export class Store extends DurableObject {
   /** op=groupidentity for a credentialed reader: the public projection, and the claim, its state and both histories. */
   groupIdentity() {
     const pub = this.groupIdentityPublic();
+    /* IC-246: the check log, NEWEST FIRST, cut at a NAMED bound and the cut PUBLISHED. It was a bare `LIMIT 20`: a
+       reader could not tell twenty checks from twenty of many (the bounds sweep's PIN named it). Read at `max + 1`
+       so `truncated` is measured, never inferred from the count equalling the bound. Kept IN this method, not a
+       helper, so the bounds walk (which reads the dispatched method's segment) still sees the cap. */
+    const max = Store.GROUP_DOMAIN_CHECKS_MAX;
+    const checks = this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
+                                 FROM group_domain_checks ORDER BY seq DESC LIMIT ?`, max + 1);
     const dom = this.#groupIdentityCurrent("domain");
     return { ...pub,
              display_name_recorded: this.#groupIdentityCurrent("display_name")?.value ?? null,
@@ -31251,9 +31289,12 @@ export class Store extends DurableObject {
                                    instance_address: dom.instance_address ?? null,
                                    latest: this.#groupDomainLatestCheck(dom.value) } : null,
              domain_history: this.#groupIdentityHistory("domain"),
-             domain_checks: this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
-                                        FROM group_domain_checks ORDER BY seq DESC LIMIT 20`).map((r) => ({ ...r })) };
+             domain_checks: checks.slice(0, max).map((r) => ({ ...r })),
+             domain_checks_limit: max, domain_checks_truncated: checks.length > max };
   }
+  /* IC-246: declared BELOW its method, on REC-116's finding (`bounds.test.mjs`'s segmenter credits a constant to the
+     method above it). The figure the old literal carried. */
+  static GROUP_DOMAIN_CHECKS_MAX = 20;
 
   /* REC-175: THE ONE COMPUTATION of what a promoted file's digest IS, read by `promote` before any write and by
      `digestCensus` over what is already held, so the check at the door and the census of the past cannot disagree

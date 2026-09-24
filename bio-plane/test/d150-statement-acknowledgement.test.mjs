@@ -4,6 +4,17 @@
    (b) THE AUTHOR'S OWN — the STATEMENT_ACK_BY_ITS_AUTHOR refusal disarmed. Declared: MUST FAIL block 1's author arm and block 5's -> 30 pass, 4 fail: those two, block 4's one-member author arm, and block 1's review-copy list (iris's self-acknowledgement landed, so the list reads three). One more than declared, in the declared direction.
    (c) THE LIST NOT WRITTEN — `publishCase` hands the case document an empty list. Declared: MUST FAIL block 3's signed-bytes arms; MUST NOT fail block 4 -> 31 pass, 3 fail: block 3's signed block, its prose and the published case's committed list; block 4 green. AS DECLARED.
 
+   RUN 2026-09-24 by c19-unionfix on block 8 (IC-246), each arm ALONE on `src/store.mjs`, declared before arming,
+   restored by cp from a per-arm pristine copy verified by sha256 AND cmp (3,160,297 B). Baseline 40/0.
+   (sa) A SILENT CUT — the documents read AT the bound (`ackMax`, not `ackMax + 1`), so the refusal can never fire.
+   Declared: the refusal and nothing-written arms fail -> 36/4: those two, and the at-the-bound and DELTA arms
+   (the cut had already re-authored eight documents and recorded the acknowledgement, so the later act is not new).
+   Its first run ended the module at the fixture's signature (the cut had made the recorded sha stale); the
+   INSTRUMENT was corrected to sign the bytes the document holds, never the arm.
+   (proj) THE PROJECT MATCHED ONLY AFTER THE READ — `instr(text, projectLine)` removed from the statement. Declared:
+   the at-the-bound arm fails -> 38/2: it and the DELTA — the other project's same-sentence document is the ninth
+   row, so the act refuses where it should land. The refusal and nothing-written arms stay green.
+
    D-150 / BIO_Publication_v0_1.md §3 rule 11 (BOB #27, 2026-09-22) — THE EXCLUSION STATEMENT IS
    CHECKED BY A SECOND PERSON, AND THE CHECK IS DISCLOSED, NEVER ENFORCED.
 
@@ -430,6 +441,71 @@ console.log("\n--- 7. the gate: bytes listing the author as their own second rea
   delete legacy.completeness_acknowledgements;
   t("a document with NO list (authored before acknowledgements were recorded) is not refused — what already crossed "
   + "stays crossed", errs(legacy), []);
+}
+
+/* =========================================================================== 8 */
+console.log("\n--- 8. IC-246: more unsigned documents than one act re-authors REFUSES, and writes nothing ---");
+/* Added at integration by c19-unionfix (2026-09-24, CONDUCT #19's spec), with the REAL bite: MAX + 1 unsigned case
+   documents of ONE statement in ONE project, reached through a draft (a new case: identity null, edition 1, so every
+   such edition-1 document is the act's to re-author), plus a document of the SAME SENTENCE in ANOTHER project.
+   Two defects of D-150's first cut are driven here: over the bound it CUT silently (`LIMIT 8`), leaving the ninth
+   document listing fewer second readers than the record held for its owner to sign; and it filtered the project
+   AFTER that limit, so another project's documents could crowd this one's out. */
+{
+  const SA_MAX = Number((/static STATEMENT_ACK_DOCUMENTS_MAX = (\d+);/.exec(
+    readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8")) || [])[1]);
+  const MANY = Array.from({ length: SA_MAX + 1 }, (_, i) => `INQ-2026-1500-many${String(i).padStart(2, "0")}`);
+  const OTHER = "INQ-2026-1500-manysolo";
+  for (const [id, tok] of [...MANY.map((m) => [m, IRIS]), [OTHER, SOL]]) {
+    const r = await promote(id, withAdoptableReading(inquiryMd(id, `Was notice ${id} given?`, INFO)), "inquiry", "open");
+    if (r.ok === false) bail(`promote ${id}`, r);
+    const c = rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(id)}`
+      + `&conclusion=${encodeURIComponent(`The answer to ${id} is on the memo.`)}`
+      + `&falsifier=${encodeURIComponent(`An adopted resolution would overturn ${id}.`)}` + adoptedVersionParam()));
+    if (!c.ok) bail(`conclude ${id}`, c);
+  }
+  const pubs = [];
+  for (const id of MANY) {
+    const p = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...args(PROJ, "many"), targets: [id] })));
+    if (p?.ok === false || !p?.caseDocument?.doc_sha) bail(`publish ${id}`, p);
+    pubs.push({ caseId: p.caseDocument.case_id, sha: p.caseDocument.doc_sha });
+  }
+  const po = rP(await POST(`op=publish&token=${SOL}`, withRoles({ ...args(SOLO, "many"), targets: [OTHER] })));
+  if (po?.ok === false || !po?.caseDocument?.doc_sha) bail("publish other project", po);
+  const Dm = rP(await POST(`op=casedraft&token=${IRIS}`, withRoles({ ...args(PROJ, "many"), targets: [MANY[0]] })));
+  if (!Dm?.ok) bail("casedraft many", Dm);
+  const shaNow = async () => [...(await Promise.all(pubs.map(async (x) => (await docOf(x.caseId, 1, IRIS))?.doc_sha))),
+                              (await docOf(po.caseDocument.case_id, 1, SOL))?.doc_sha];
+  const before = await shaNow();
+  t("FIXTURE ARMS THE TRAP: STATEMENT_ACK_DOCUMENTS_MAX is a number and there are MAX + 1 unsigned documents of this "
+  + "one statement in this project, and one more of the same sentence in ANOTHER project",
+    [Number.isInteger(SA_MAX) && SA_MAX > 0, pubs.length, new Set(pubs.map((x) => x.caseId)).size,
+     before.every((x) => typeof x === "string"), fmOf((await docOf(po.caseDocument.case_id, 1, SOL))?.text).case_project],
+    [true, SA_MAX + 1, SA_MAX + 1, true, SOLO]);
+  const over = await ack(`draft=${Dm.draftId}&token=${ELLA}`);
+  t("OVER THE BOUND THE ACT IS REFUSED BY NAME (C-82.1), naming the bound, the statement and the case identity — "
+  + "never a silent cut",
+    [over?.ok, over?.reason, over?.check, typeof over?.translation, over?.limit, over?.edition, over?.case_id,
+     /^[0-9a-f]{64}$/.test(over?.statement_sha || "")],
+    [false, "STATEMENT_ACK_DOCUMENTS_OVER_BOUND", "C-82.1", "string", SA_MAX, 1, null, true]);
+  t("and NOTHING WAS WRITTEN: every document, this project's and the other's, holds the bytes it was authored with",
+    await shaNow(), before);
+  /* The owner signs the bytes the document HOLDS NOW, read back, so an arm that re-authored it (a silent cut) is
+     measured by the arms below rather than ending the module at a stale signature. */
+  const signed = await ratify("iris", IRIS, pubs[0].caseId, 1, (await docOf(pubs[0].caseId, 1, IRIS))?.doc_sha);
+  if (signed?.ok === false) bail("caseratify many00", signed);
+  const at = await ack(`draft=${Dm.draftId}&token=${ELLA}`);
+  const after = await shaNow();
+  t("AT THE BOUND — one document signed, MAX unsigned remain — the act LANDS, is NEW (the refusal wrote no "
+  + "acknowledgement), and re-authors EXACTLY those MAX documents, publishing the bound",
+    [at?.ok, at?.existed, (at?.case_documents || []).map((d) => d.case_id).sort(),
+     (at?.case_documents || []).every((d) => d.reauthored), at?.case_documents_limit, at?.case_documents_truncated],
+    [true, false, pubs.slice(1).map((x) => x.caseId).sort(), true, SA_MAX, false]);
+  t("the OTHER project's document of the same sentence is untouched — the project is matched in the statement, "
+  + "never after a cut it could crowd",
+    after[after.length - 1], before[before.length - 1]);
+  t("DELTA: 'more than one act may re-author' and 'every one of them re-authored' do NOT read alike",
+    [over?.ok, at?.ok], [false, true]);
 }
 
 console.log(`\nd150-statement-acknowledgement: ${pass} pass, ${fail} fail`);
