@@ -242,7 +242,7 @@ scope: parse /Widths + /FirstChar and /W + /DW in `loadFont`, track the pen, set
 accepts-when: the agenda sample's glue tokens return to ≤ 5 without losing D-481's words/page. NEGATIVE CONTROL: ignore widths and the glue arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### M0-164 · running — **`coord.mjs write --status <ID> <state> --note …` REPLACES A ROW'S HEADLINE, so every flip note overwrites the defect it names: all 15 rows CONDUCT #20 flipped on 2026-09-24 lost their headlines (restored by SCHEDULER #18 from f8fd4a77^/0cf9783c^).** Found by M0-158's worker. — owner M0.
+### M0-164 · integrated — **`coord.mjs write --status <ID> <state> --note …` REPLACES A ROW'S HEADLINE, so every flip note overwrites the defect it names: all 15 rows CONDUCT #20 flipped on 2026-09-24 lost their headlines (restored by SCHEDULER #18 from f8fd4a77^/0cf9783c^).** Found by M0-158's worker. — owner M0.
 order: at the head of the M0 rows: every status write corrupts the plan's own record (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z)
 milestone: M0
 interface: none.
