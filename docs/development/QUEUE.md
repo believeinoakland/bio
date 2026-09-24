@@ -213,7 +213,7 @@ scope: `renderAdmit` reserves the render's maximum cost (its `asked` wait timeou
 accepts-when: K concurrent admits against room for exactly J reservations admit J and defer K−J, admits interleaved before any spend. NEGATIVE CONTROL: drop the reservation and the concurrency arm admits all K, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-499 · running — **A RENDER WHOSE WAIT FIRED ON ITS TIMEOUT IS NOT DISTINGUISHED FROM ONE WHOSE CONDITION MET: D-64's render block does not record which fired, so a possibly-incomplete rendering reads as the whole page.** BOB #32's ruling owed at D-64's integration and not paid there (CONDUCT #20 04:56Z). — owner CAPTURE.
+### D-499 · integrated — **A RENDER WHOSE WAIT FIRED ON ITS TIMEOUT IS NOT DISTINGUISHED FROM ONE WHOSE CONDITION MET: D-64's render block does not record which fired, so a possibly-incomplete rendering reads as the whole page.** BOB #32's ruling owed at D-64's integration and not paid there (CONDUCT #20 04:56Z). — owner CAPTURE.
 order: after D-492, with D-64's corrections: a correction to landed work outranks its follow-ons (SCHEDULER #18, 2026-09-24)
 milestone: M2
 interface: I3 additive — `render.wait.fired`; the integrator classifies.
