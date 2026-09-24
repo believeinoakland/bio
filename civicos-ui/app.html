@@ -796,6 +796,8 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
               padding-top:8px;margin-top:26px;word-break:break-all}
 .pub-page details{margin:8px 0}
 .pub-page details>summary{cursor:pointer;font-size:13.5px;color:var(--verdigris-dk)}
+/* UI-68: a review copy's marking leads, and it cannot be mistaken for a heading. */
+.rvc-marking{border:2px solid currentColor;padding:12px 14px;margin:10px 0 14px;font-weight:700;line-height:1.45}
 
 /* ---------- PRINT, AND IT IS FIRST-CLASS ----------
    THERE IS NO `display:none` IN THIS BLOCK AND THERE MUST NEVER BE ONE. A
@@ -1085,9 +1087,13 @@ async function apiR(op, body){
    reach `api` at all. Shape-agnostic exactly as `recR` is — `op=publishedcase`
    and `op=verify` are FLATTENED by their own handlers in index.mjs while
    `op=publishedmanifest` is re-wrapped by its, and no call site should have to
-   know which is which. */
-async function apiQ(op, params){
-  const j = await api(op, null, params||{});
+   know which is which.
+   UI-68 gave it an optional THIRD argument, a POST body, for the one credential-free
+   WRITE there is: a review copy's recipient commenting through `op=reviewcomment`,
+   which takes its `secret` as a parameter and its text as the body. It still never
+   carries a token. */
+async function apiQ(op, params, body){
+  const j = await api(op, body || null, params||{});
   return (j && j.result !== undefined) ? j.result : j;
 }
 async function rec(op, params={}){
@@ -1502,7 +1508,7 @@ async function boot(){
   if(!publishedRouteFromHash() && !routeFromHash() && !projectRouteFromHash()
      && !actionRouteFromHash() && !aiSessionRouteFromHash()
      && !versionReviewRouteFromHash() && !stanceRouteFromHash()
-     && !acceptCeremonyRouteFromHash()) go("queue", true);
+     && !acceptCeremonyRouteFromHash() && !draftRouteFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -2256,6 +2262,20 @@ const SURFACES = {
     levels: ["meaning"],
     acts: [],
     reads: ["publishedcase"],
+  },
+  /* UI-68 · the review copy (BIO_Publication §6A). TWO DOORS, one surface: a
+     member with standing reads `#draft/<id>` with a session, and a recipient
+     reads `#reviewcopy/<secret>` holding nothing. `acts` is EMPTY because none
+     of these five ops is in the plane's act catalogue — `affordances.mjs`
+     NON_ACTS names `casedraft` and `reviewgrant` as acts on a DRAFT keyed
+     `draft_id`, never a move of a bundle — so they are the surface's READS and
+     writes here, each reached from the page. */
+  "review-copy": {
+    routes: ["hash:draft", "hash:reviewcopy"],
+    purpose: "A draft of a case shown, before and without publication, to the people it is addressed to, inside this record: marked as what it is, as complete as it can be, and listing in the publish gates' own words what a publication would still need. Its editors draft it; its project's owner gives and withdraws access; members and recipients comment. Nothing on it leaves the instance.",
+    levels: ["meaning", "documents"],
+    acts: [],
+    reads: ["casedraft", "reviewcopy", "reviewgrant", "reviewrevoke", "reviewcomment"],
   },
   "published-case": {
     routes: ["hash:case"],
@@ -6158,6 +6178,219 @@ const regulation = {
   },
 };
 
+/* ---- docprofile/doctypes/staff-directory.mjs ---- */
+/* A staff directory: a document whose BODY IS a list of one organisation's people (or
+ * offices) with the points at which each can be reached.
+ *
+ * FW-20, the FOURTH and last class in M0-32's measured order (`MEASUREMENTS.md` M-18;
+ * `EXTRACTION-BREADTH-DESIGN.md` §2's table, row 4) — ~395 items (+/-272) scaled to the
+ * text-bearing stratum, the smallest class by a wide margin.
+ *
+ * WHY THIS TYPE WAS NOT WRITTEN BY FW-18, AND WHAT CHANGED. FW-18 measured 0 of 30
+ * name-matched directory PDFs decodable at TIER 1 and withheld the type (D-376), calling
+ * the class "a tier-3 gap wearing a content-type gap's clothes". FW-20 re-took that
+ * census through the plane WITH ITS FLEET BOUND (`bio-plane/scripts/fw20-decode-census.mjs`,
+ * `docs/development/measurements/M-121.md`) and the premise did not survive: the undetermined markers
+ * on those documents are `no_tounicode` — fonts with no Unicode map — which is TIER 2's
+ * case, not a missing text layer, so tier 3 is never asked. With the tier-2 member bound,
+ * 56 of 57 name-matched documents read from text. The class was never unreadable to the
+ * plane; it was unreadable to the tier-1-only instrument that measured it.
+ *
+ * MEASURED ON REAL DOCUMENTS, fetched from `cao-94612.s3.amazonaws.com` on 2026-09-23
+ * and read through the plane's own `op=acquire` with the committed pdf-worker bundle:
+ *
+ *   A · documents/Neighborhood-Services-Section-Directory-Rev-06-14-22.pdf — the City's
+ *       "Neighborhood Services Staff Beat & Program Directory". 30,870 bytes, 1 page,
+ *       2,092 characters at tier 2 (1,303 `no_tounicode` markers at tier 1). Each row is
+ *       a coordinator, the police beats assigned to them, an @oaklandca.gov address and
+ *       an extension.
+ *   B · documents/Neighborhood-Services-Division-Staff-0823.pdf — the same division's
+ *       staff sheet, laid out in TWO COLUMNS, so a name and its address sit on different
+ *       lines. Its file name matches none of FW-18's name patterns: M0-32 measured that
+ *       a name-only census recovers 0% of directories, and this is one it would miss.
+ *
+ * THE DEFECT THIS TYPE WAS BUILT NOT TO MAKE — the liar's pass. A recogniser that
+ * matches "a list of names with phone numbers and addresses" matches a great deal that is
+ * not a staff directory, and four real documents from the same bucket spring it:
+ *
+ *   - the 2018 ELECTION CANDIDATE CONTACT LIST: fifty-odd people, each with a phone and
+ *     an address — but at gmail, yahoo, sonic and their own campaign domains. They are
+ *     candidates, not one organisation's staff;
+ *   - the NCPC ZOOM MEETING DATES: every row names a City coordinator and her
+ *     @oaklandca.gov address — ONE domain, the directory's own signature — but every
+ *     row is a MEETING, dated. A calendar that names its contacts. This is M0-32's one
+ *     defect class, a REFERENCE (to staff) read as MEMBERSHIP (of a directory), and it
+ *     is the negative this type is fenced against by name;
+ *   - the BUSINESS RECYCLING SERVICE PROVIDER DIRECTORY, which names itself a directory
+ *     on its first line and carries the City's own contact address — a directory, of
+ *     businesses, that REFERENCES the City's staff;
+ *   - the WORKFORCE DEVELOPMENT BOARD roster: a list of people with no contact points.
+ *
+ * THE PRINCIPLE, and it is three facts rather than a list of spellings:
+ *   (1) DENSITY — contact points are the body of the document, not a line in it. At
+ *       least DIRECTORY_FLOOR distinct addresses.
+ *   (2) ONE ORGANISATION — a staff directory lists the people of ONE body, so their
+ *       addresses share that body's domain. The candidate list fails here.
+ *   (3) NOT DATED — a directory's entries are people; a schedule's entries are events
+ *       that name people. When the document carries dates in the same order of number
+ *       as its contact points, the contacts are attributes of dated rows and the
+ *       document is a calendar. The NCPC dates fail here.
+ * Self-naming (a title line calling the document a directory, staff list, roster or
+ * contacts) raises LIKELY to CERTAIN and is never sufficient alone — the recycling
+ * directory names itself and is refused by (1).
+ *
+ * WHAT THIS MATCHER CANNOT SEE, stated because the sentence is load-bearing:
+ *   - a directory with NO EMAIL ADDRESSES (phone numbers only, or names and titles only
+ *     — the Council's committee roster and the org charts in the same bucket are of this
+ *     shape). (2) cannot be established from a phone number, so these are NOT
+ *     recognised; they fall to `generic`, which is noisy and honest.
+ *   - a directory of OFFICES at one domain is recognised exactly as a directory of
+ *     people is. M0-32's class definition ("a roster of people OR OFFICES with contact
+ *     points") includes both, so this is the class, not an overreach — but the reader
+ *     does not tell them apart.
+ *   - an organisation whose staff use personal addresses fails (2).
+ *   - it does not pair a name with an address across lines. On a two-column page
+ *     (document B) an address's own line may carry two people's text or none; the
+ *     entry's `line` fact is that line, verbatim, never a pairing this reader guessed. */
+
+
+/* The smallest number of distinct addresses at one domain that makes contact points the
+   BODY of a document rather than a signature block. A staff report names one contact;
+   the recycling directory names the City twice. Five is below every real directory
+   measured (the smallest, document B, carries 11) and above every reference measured
+   except the NCPC schedule, which (3) refuses. */
+const DIRECTORY_FLOOR = 5;
+/* The share of a document's distinct addresses that must sit at its commonest domain.
+   MEASURED, AND THE FIRST DRAFT WAS WRONG IN THE LIAR'S DIRECTION: at 0.6 the 2018
+   candidate contact list PASSED — 19 of its 31 addresses are at gmail.com (61%), so a
+   free-mail provider read as "one organisation". The eleven distinct documents this type
+   recognises sit at 0.88-1.00 (the lowest is a CRO/NCPC revision whose five non-City addresses are
+   community groups'); the candidate list at 0.61. 0.8 is the separation, not a guess.
+   RESIDUE, stated: a list of unrelated people who ALL use one mail provider would still
+   pass (2). Mail providers are not enumerated — a list of spellings goes stale the day
+   a fifth is written — so that case is a named blind spot rather than a hidden one. */
+const ONE_ORGANISATION = 0.8;
+
+const SD_EMAIL = /\b[A-Za-z0-9][A-Za-z0-9._%+-]*@((?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,})\b/g;
+const SD_PHONE = /(?:\(\d{3}\)\s?|\b\d{3}[-.\s])?\b\d{3}[-.]\d{4}\b/g;
+/* A DATE, in the forms a published schedule uses: a month named with a day, or a
+   three-part numeric date. A bare `08/23` (a revision stamp) is not a date here. */
+const SD_DATE = /\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2}\b|\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/gi;
+const SD_SELF_NAMING = /\b(?:directory|staff|roster|contacts)\b/i;
+
+/** The addresses in a document, by domain. Distinct, case-folded. */
+function sdAddresses(raw) {
+  const all = new Map();
+  for (const m of raw.matchAll(SD_EMAIL)) {
+    const a = m[0].toLowerCase().replace(/\.+$/, "");
+    if (!all.has(a)) all.set(a, { address: a, domain: m[1].toLowerCase().replace(/\.+$/, ""), offset: m.index });
+  }
+  const byDomain = new Map();
+  for (const x of all.values()) byDomain.set(x.domain, (byDomain.get(x.domain) || 0) + 1);
+  let domain = null, atDomain = 0;
+  for (const [d, n] of byDomain) if (n > atDomain) { domain = d; atDomain = n; }
+  return { all: [...all.values()], domain, atDomain };
+}
+
+/** The title line, if the document names itself as this kind in its first lines. A
+    title, not a mention: only the first five non-empty lines are read. */
+function sdTitleLine(raw) {
+  const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 5);
+  return lines.find((l) => SD_SELF_NAMING.test(l)) || null;
+}
+
+const staffDirectory = {
+  key: "staff_directory",
+  label: "a staff directory",
+  version: 1,
+  /* A directory is a LIST: what matters is which entries are present and whether each
+     still says what it said. Declared on the content type (CONSTRUCTS Step 0 #4). */
+  contract: CONTRACT.MEMBERSHIP,
+
+  detect(ctx) {
+    const raw = String(ctx.text || "");
+    const { all, domain, atDomain } = sdAddresses(raw);
+    /* (1) DENSITY at (2) ONE ORGANISATION — THE DECIDING LEG. Every match passes
+       through it; nothing else can make a directory. */
+    if (atDomain < DIRECTORY_FLOOR || atDomain / all.length < ONE_ORGANISATION)
+      return { match: false, confidence: CONFIDENCE.NONE };
+    const signals = [`${atDomain} distinct contact address(es) at one organisation's domain (${domain}), `
+                   + `${Math.round((atDomain / all.length) * 100)}% of the ${all.length} in the document`];
+    /* (3) NOT DATED. A schedule names its contacts; its rows are events. */
+    const dates = (flatten(raw).match(SD_DATE) || []).length;
+    if (dates >= Math.max(3, atDomain / 2)) return { match: false, confidence: CONFIDENCE.NONE };
+    const phones = new Set((raw.match(SD_PHONE) || []).map((p) => p.replace(/\D/g, ""))).size;
+    if (phones) signals.push(`${phones} distinct phone number(s)`);
+    const title = sdTitleLine(raw);
+    if (title) {
+      signals.push(`it names itself in its title line ("${title.slice(0, 80)}")`);
+      return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    }
+    return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+  },
+
+  /** What is in it: one entry per distinct address, keyed by the address.
+   *
+   *  THE KEY IS THE ADDRESS, NEVER THE NAME. An address is the identifier the document
+   *  itself assigns to an entry and is stable across revisions of the sheet; a person's
+   *  name is not a source-assigned id (framework §7, and the minutes reader's own rule).
+   *
+   *  FW-17 / IC-86 — each entry carries WHERE it was read, from `ctx.locate` at the
+   *  address's own RAW offset. `rect` is null: tier-1 and tier-2 text carry no geometry. */
+  parse(ctx) {
+    const raw = String(ctx.text || "");
+    const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
+    const { all, domain, atDomain } = sdAddresses(raw);
+    const entities = [];
+    for (const a of all) {
+      const start = raw.lastIndexOf("\n", a.offset) + 1;
+      const endAt = raw.indexOf("\n", a.offset);
+      const line = raw.slice(start, endAt < 0 ? raw.length : endAt).replace(/\s+/g, " ").trim();
+      const phones = [...new Set(line.match(SD_PHONE) || [])];
+      entities.push(entity(`contact:${a.address}`, "contact", line.slice(0, 160) || a.address,
+        { address: a.address, organisation: a.domain === domain, line, phone: phones.join(", ") || null },
+        locate(a.offset)));
+    }
+    const title = sdTitleLine(raw);
+    return {
+      entities,
+      domain,
+      entries: atDomain,
+      title,
+      title_why: title ? null : "no line among the first five names this document as a directory, staff list, roster or contacts",
+      also_satisfies: alsoSatisfies(ctx, "staff_directory"),
+      at: ctx.at || null,
+    };
+  },
+
+  /** Given two parses of the same directory's address, who came, who went, and whose
+   *  entry now says something else. Graded with the catalogue's list events: an entry
+   *  gone is `item_pulled` (the record can no longer say this person is reached here),
+   *  an entry added is `item_added`, an entry whose line moved is `item_changed`. */
+  assess(a, b) {
+    if (!(a.entities || []).length && !(b.entities || []).length)
+      return { meaningful: null, significance: null, events: [], confirmed: null,
+               why: "no entry could be read from this directory this time, so nothing is claimed about it either way" };
+    const d = diffEntities(a.entities || [], b.entities || []);
+    const events = [];
+    for (const e of d.gone)
+      events.push(event("item_pulled", { key: e.key, label: e.label, why: "this address is no longer listed in the directory" }));
+    for (const e of d.appeared)
+      events.push(event("item_added", { key: e.key, label: e.label, why: "the directory now lists an address it did not" }));
+    for (const x of d.altered)
+      events.push(event("item_changed", { key: x.entity.key, label: x.entity.label, moved: x.moved,
+        why: "this entry's line in the directory now says something else" }));
+    bySeverity(events);
+    return {
+      meaningful: isMeaningful(events), significance: worstSignificance(events), events,
+      confirmed: { entries: (b.entities || []).length,
+                   intact: (a.entities || []).filter((e) => (b.entities || []).some((x) => x.key === e.key)).length },
+      why: events.length ? `${events.length} change(s) to the directory's entries`
+                         : "the directory lists the same addresses, each saying what it said",
+    };
+  },
+};
+
 /* ---- docprofile/doctypes/generic.mjs ---- */
 /* The content type for a document whose type is not recognised.
  *
@@ -6205,10 +6438,10 @@ const generic = {
  * instances of the one recogniser engine (recogniser.mjs), which is the whole claim
  * of framework §4: a third axis is a third `makeRegistry()`, not a third loop.
  *
- * SIX types are registered today -- `meeting_calendar`, `meeting_agenda`,
- * `meeting_minutes`, `staff_report`, `regulation` and the `generic` fallback (the
- * register() calls below) -- of which FIVE are measured real types, and the restraint
- * is still deliberate rather than unfinished.
+ * SEVEN types are registered today -- `meeting_calendar`, `meeting_agenda`,
+ * `meeting_minutes`, `staff_report`, `regulation`, `staff_directory` and the `generic`
+ * fallback (the register() calls below) -- of which SIX are measured real types, and the
+ * restraint is still deliberate rather than unfinished.
  *
  * CORRECTED 2026-09-14 (CPDF-17): this header used to open "Only ONE real type is
  * registered today" and went on to list an agenda among the types that "none has been
@@ -6223,17 +6456,20 @@ const generic = {
  * correction obliges every later author to move: three types were added in the order
  * M0-32's census measured (`MEASUREMENTS.md` M-18) -- meeting minutes, then the staff
  * report, then the ordinance or resolution. A staff DIRECTORY, the fourth and smallest
- * class in that order, is STILL NOT WRITTEN and the reason is measured rather than a
- * shortfall of effort: see the register() calls below.
+ * class in that order, was withheld by FW-18 on a measurement and WRITTEN BY FW-20
+ * (2026-09-23) once that measurement was re-taken and did not hold: see the register()
+ * calls below.
  *
  * Every measured type was written from a document that was actually fetched and read:
  * `meeting_calendar` from a page that was fetched, diffed and read, `meeting_agenda`
  * from a real Legistar agenda packet's Tier-1 text, and FW-18's three from the real
  * Oakland documents each names in its own header, read through the plane's own Tier-1
- * extractor. The rule has not moved: a content type invented from what a document
+ * extractor; FW-20's directory from real Oakland directories read through the plane's
+ * tier-2 member. The rule has not moved: a content type invented from what a document
  * probably looks like is a type that reassures people about things it has not
  * understood. The generic type reports change without describing it, which is noisy and
  * honest, and the noise is the prompt to go and measure. */
+
 
 
 
@@ -6267,17 +6503,17 @@ types.register(meetingAgenda);
    Tier-1 output breaks phrases across lines (see `flatten` in ./index.mjs). */
 types.register(staffReport);
 types.register(regulation);
-/* NOT REGISTERED, and the absence is stated rather than left as silence: a STAFF
-   DIRECTORY, class 4 of M0-32's order (~395 items, the smallest class by a wide
-   margin). It is unwritten because no document of the class could be READ, not
-   because none was looked for. FW-18 fetched 30 name-matched directory PDFs from the
-   Oakland bucket and every one was Tier-1 UNDECODABLE (0-100 characters decoded
-   against 1,200-33,000 undetermined markers — single-page scans); a further fixed-seed
-   walk of 300 bucket PDFs decoded 45 and found none of the class. `readText` refuses a
-   document whose undetermined exceeds its decoded characters, so for these documents
-   NO reading is attempted at all and no content type is ever consulted. Writing a
-   directory type from a page nobody could read is precisely the invented type this
-   registry's rule forbids. */
+/* staff_directory (FW-20), class 4 of M0-32's order (~395 items, the smallest class).
+   FW-18 withheld it (D-376) because every directory it fetched was Tier-1 UNDECODABLE,
+   and read that as a tier-3 gap. FW-20 re-took the census through the plane with its
+   fleet bound and the premise did not survive: the markers were `no_tounicode`, TIER 2's
+   case, and with the tier-2 member bound 56 of 57 name-matched documents read from text
+   (`bio-plane/scripts/fw20-decode-census.mjs`; `docs/development/measurements/M-121.md`). So the type
+   is written from directories that were actually fetched AND read — see its own header.
+   Registered AFTER the three substance types: `recognise` breaks on the first CERTAIN,
+   and a report or an instrument that happens to carry a contact block is that document
+   first; `also` then says it is a directory too. */
+types.register(staffDirectory);
 types.register(generic);
 
 function doctypes() { return types.all(); }
@@ -7328,7 +7564,7 @@ function strataGo(a, id){
    why the surface-side disposition array — the option map C5 forbids and the
    last one in this file — was deleted by this item rather than moved.
    ============================================================ */
-const ACT_SOURCE = { loaded:false, catalog:null, vocab:null, captureActs:null };
+const ACT_SOURCE = { loaded:false, catalog:null, vocab:null, captureActs:null, setActs:null };
 async function loadActSource(force){
   if(ACT_SOURCE.loaded && !force) return ACT_SOURCE;
   try{
@@ -7339,7 +7575,10 @@ async function loadActSource(force){
        See `captureAct` below for what it is and why it is separate from
        `catalog`. */
     ACT_SOURCE.captureActs = Array.isArray(r && r.capture_acts) ? r.capture_acts : null;
-  }catch(_){ ACT_SOURCE.catalog = null; ACT_SOURCE.vocab = null; ACT_SOURCE.captureActs = null; }
+    /* D-126's block, off the SAME answer: the acts that take a selection under the `per-item` weight.
+       Read by the queue (`queueSetActsFrom`); absent, the queue draws no selection control. */
+    ACT_SOURCE.setActs = Array.isArray(r && r.set_acts) ? r.set_acts : null;
+  }catch(_){ ACT_SOURCE.catalog = null; ACT_SOURCE.vocab = null; ACT_SOURCE.captureActs = null; ACT_SOURCE.setActs = null; }
   ACT_SOURCE.loaded = true;
   return ACT_SOURCE;
 }
@@ -8272,7 +8511,7 @@ async function openInquiry(id, fromNav){
       ${npcPane}
       ${pubEntry}
       ${actBarHtml(id, fm.title||(proj&&proj.title)||id, actsR, (barOpts.elsewhere || barOpts.routed) ? barOpts : undefined)}
-      <h2 class="sec">What would falsify it</h2>
+      ${reviewCopyEntryHtml() /* UI-68: flush against the next heading, so the publication section's extent is the same for every credential */}<h2 class="sec">What would falsify it</h2>
       ${falsifyText
         ? `<div class="card"><div class="prose">${mdLite(falsifyText)}</div></div>`
         /* CORRECTED 2026-09-17 (REC-117), never exempted. This read "Saying so is a
@@ -13773,6 +14012,130 @@ let QUEUE_ITEMS = new Map();      // id -> the live item, for the forward picker
 let QUEUE_SEEN = new Map();       // id -> what this member was SHOWN, so a disappearance can be explained
 let QUEUE_BUSY = false;
 
+/* ---- D-126: APPLYING A HANDLER TO A SELECTION (NOTIFICATIONS.md §Applying a handler to a selection) ----
+   Bob: *"select some (or all) to apply the action to … If that action didn't work for one or more, they'd
+   stay in the list so that the user can take a different action."* The plane's `per-item` weight is what
+   makes that ONE call rather than N: each item is applied or RETAINED WITH ITS OWN ACT'S REASON, and none
+   stops the others. This surface decides none of it — it sends the selection, reads `items[]`, and keeps
+   every retained item listed with the reason the record gave, in the record's own words (`queueReason`).
+
+   THE BULK PATH EXISTS ONLY WHERE THE PLANE PUBLISHES IT. `op=affordances` (no target) answers `set_acts`;
+   an op missing from it, or published under any weight but `per-item`, draws no selection control at all,
+   so a plane that cannot take a set is never handed one. The single-item controls are untouched: neither
+   mode is forced (DEC-69 as amended).
+
+   A RETAINED ITEM IS KEPT ON THIS SCREEN EVEN WHEN THE FEED NO LONGER CARRIES IT. The commonest drift is an
+   obligation moved to somebody else, and `op=queue` is right not to list another member's task for this
+   one — so the retained item, its summary as it was shown, and the record's reason are held here until the
+   member clears the note or acts on it again. Nothing is invented about it beyond what `items[]` said. */
+let QUEUE_SET_ACTS = new Map();   // op -> the plane's published set act (weight per-item only)
+let QUEUE_SEL = new Set();        // ids of items the member has selected
+let QUEUE_RETAINED = new Map();   // id -> { why, summary } from the last set act's retained outcomes
+let QUEUE_SET_ERR = "";           // a refusal of the SET itself (it had no items to judge)
+/* Read off the act source boot already loaded (`loadActSource`, one `op=affordances` read for the whole
+   surface), never a second call — and never awaited ahead of the feeds, so the queue is not held back by it. */
+function queueSetActsFrom(src){
+  const acts = (src && Array.isArray(src.setActs)) ? src.setActs : [];
+  QUEUE_SET_ACTS = new Map(acts.filter(a => a && a.weight === "per-item" && a.id).map(a => [a.id, a]));
+}
+/* WHICH op a selected item's set act is, from the item's own class and the record's own disposition
+   publication. A finding keyed by (project, finding) is NOT selectable: its act needs the member to name
+   the project it is acting for, one item at a time, and a set would have to choose it for them. */
+function queueSetOpFor(it){
+  if(!it) return null;
+  if(it.class === "OBLIGATION") return canContribute() && QUEUE_SET_ACTS.has("taskresolve") ? "taskresolve" : null;
+  if(it.class === "FINDING"){
+    const d = it.disposition || null;
+    if(d && d.available === true && d.scope === "project") return null;
+    if(!notifDispositionKeyed(it) || !queueFindingKey(it) || !canProposalAct()) return null;
+    return QUEUE_SET_ACTS.has("proposedispose") ? "proposedispose" : null;
+  }
+  return null;
+}
+function queueSelectionToggle(id, on){
+  id = String(id);
+  if(on === undefined) on = !QUEUE_SEL.has(id);
+  if(on) QUEUE_SEL.add(id); else QUEUE_SEL.delete(id);
+  queuePaint();
+}
+function queueSelClear(){ QUEUE_SEL.clear(); QUEUE_SET_ERR = ""; queuePaint(); }
+function queueRetainedClear(id){ QUEUE_RETAINED.delete(String(id)); queuePaint(); }
+/* The selected ids a set op would take, in the order the member sees them. */
+function queueSelFor(op){
+  return [...QUEUE_SEL].filter(id => { const it = QUEUE_ITEMS.get(id); return it && queueSetOpFor(it) === op; });
+}
+/* ONE call for the whole selection. `shared` is what every item shares (a disposition, a reason); each
+   item carries only its own identity. The actor and the decider are the plane's stamps and are never sent. */
+async function queueApplySet(op, shared){
+  if(QUEUE_BUSY) return; QUEUE_BUSY = true;
+  QUEUE_SET_ERR = "";
+  const ids = queueSelFor(op);
+  try{
+    if(!ids.length) return;
+    const items = ids.map(id => op === "proposedispose" ? { key: queueFindingKey(QUEUE_ITEMS.get(id)) } : { id });
+    const res = await recPostR(op, { ...(shared || {}), items });
+    const outs = (res && Array.isArray(res.items)) ? res.items : null;
+    if(!outs){ QUEUE_SET_ERR = queueReason(res); return; }
+    outs.forEach(o => {
+      const id = ids[o.index];
+      if(id === undefined) return;
+      if(o.outcome === "applied"){ QUEUE_SEL.delete(id); QUEUE_RETAINED.delete(id); }
+      else {
+        const it = QUEUE_ITEMS.get(id);
+        /* The canned translation is chosen first (`queueReason`); where the record ALSO sent a detail — the
+           task fence's names who holds the task now — it is shown beside it, verbatim, never re-worded. */
+        const extra = (o.translation && o.detail && o.detail !== o.translation) ? ` · ${o.detail}` : "";
+        QUEUE_RETAINED.set(id, { why: queueReason(o) + extra, summary: (it && it.summary) || "" });
+      }
+    });
+    await queueRun(QUEUE_FEEDS.map(f=>f.id));
+  }catch(e){ QUEUE_SET_ERR = queueReason(e); }
+  finally{ QUEUE_BUSY = false; queuePaint(); }
+}
+/* The per-item tick, drawn only where a published set act can take this item. */
+function queueSelTickHtml(it){
+  if(!queueSetOpFor(it)) return "";
+  const id = String(it.id);
+  /* The tick FEEDS THE SET the act sends (member-respect ARM 1d's item selector): its value is the
+     item's membership of `items[]`, nothing else. */
+  return `<label class="q-sel"><input type="checkbox" data-qsel="${esc(id)}"${QUEUE_SEL.has(id)?" checked":""} onchange="queueSelectionToggle('${esc(id)}', this.checked)"> Select</label>`;
+}
+/* The record's reason an item was kept, on the item itself. */
+function queueRetainedHtml(id){
+  const r = QUEUE_RETAINED.get(String(id));
+  if(!r) return "";
+  return `<div class="q-retained" data-retained="${esc(String(id))}"><b>Not handled by your last action — it stays here.</b> The record's reason: ${esc(r.why || "the record gave none")} <button class="tbtn" data-unretain="${esc(String(id))}">Clear this note</button></div>`;
+}
+/* Retained items the feed no longer carries for this member (moved to somebody else, say): still listed,
+   as they were shown, with the reason. */
+function queueRetainedGoneHtml(){
+  const live = new Set(queueItems().map(i=>String(i.id)));
+  const gone = [...QUEUE_RETAINED.entries()].filter(([id]) => !live.has(id));
+  if(!gone.length) return "";
+  return `<section class="q-case" data-case="__retained__"><h2>Kept from your last action</h2>
+    <p class="q-case-meta">These were in your selection and the record did not handle them. They are no longer in your queue as it reads now, and the reason below is the record's own.</p>
+    ${gone.map(([id, r]) => `<div class="q-item" data-id="${esc(id)}"><div class="q-summary">${esc(r.summary||"")}</div>${queueRetainedHtml(id)}</div>`).join("")}
+  </section>`;
+}
+/* The selection bar: what is selected, and the published set acts over it. */
+function queueSelBarHtml(){
+  const ids = [...QUEUE_SEL].filter(id => QUEUE_ITEMS.has(id));
+  if(!ids.length && !QUEUE_SET_ERR) return "";
+  const tasks = queueSelFor("taskresolve"), finds = queueSelFor("proposedispose");
+  const res = QUEUE_SET_ACTS.get("taskresolve"), disp = QUEUE_SET_ACTS.get("proposedispose");
+  const bits = [];
+  if(tasks.length && res) bits.push(`<button class="btn" data-qset="taskresolve">${esc(res.label)} (${tasks.length})</button>`);
+  if(finds.length && disp) bits.push(`<span class="q-setdisp">${esc(disp.label)} (${finds.length}): `
+    + `<input class="q-setreason" data-qsetreason placeholder="Your reason, in your own words"> `
+    + `<button class="btn ghost" data-qsetdisp="deferred">Defer</button> <button class="btn ghost" data-qsetdisp="dismissed">Dismiss</button></span>`);
+  return `<div class="q-selbar" data-selbar>
+    <b>${ids.length} selected.</b> Each one is handled on its own: whatever the record cannot do to one item stays in your list with its reason, and does not stop the others.
+    ${bits.join(" ")}
+    <button class="tbtn" data-qselclear>Clear the selection</button>
+    ${QUEUE_SET_ERR ? `<div class="q-err">${esc(QUEUE_SET_ERR)}</div>` : ""}
+  </div>`;
+}
+
 async function renderQueue(){
   setActive("queue");
   const c = $("#content");
@@ -13780,6 +14143,10 @@ async function renderQueue(){
     <p class="lede">Everything the record is asking of somebody, in one list: what a named person owes, what the record noticed on its own, and what our own machinery is doing to the work. Each item is filed under the case it belongs to. Nothing is decided by this screen — every option on an item is one the record published for it.</p>
     <div id="q">Loading&hellip;</div>`;
   QUEUE = { feeds:{} };
+  /* D-126: whether the plane takes a selection. From the loaded act source; if boot has not loaded it
+     yet, it loads beside the feeds and the screen repaints when it lands. */
+  queueSetActsFrom(ACT_SOURCE);
+  if(!ACT_SOURCE.loaded) loadActSource().then(src => { queueSetActsFrom(src); queuePaint(); });
   await queueRun(QUEUE_FEEDS.map(f=>f.id));
 }
 
@@ -14069,6 +14436,7 @@ function queueEntryControlsHtml(it){
   if(it.class === "OBLIGATION"){
     if(!canContribute()) return "";
     return `<div class="q-entry-acts" data-acts="${esc(it.id)}">`
+      + queueSelTickHtml(it)
       + `<button class="tbtn tfwd" data-fwd="${esc(it.id)}">Forward to someone&hellip;</button>`
       + `<button class="tbtn tres" data-res="${esc(it.id)}">Mark resolved</button>`
       + `</div><div class="q-err" data-err="${esc(it.id)}"></div>`;
@@ -14088,6 +14456,7 @@ function queueEntryControlsHtml(it){
     const key = queueFindingKey(it);
     if(!key || !canProposalAct()) return "";
     return `<div class="q-entry-acts">`
+      + queueSelTickHtml(it)
       + `<button class="btn" data-prop-adopt="${esc(key)}" onclick="openProposalAdopt('${esc(key)}')">Adopt — make it a question</button>`
       + `<button class="btn ghost" data-prop-defer="${esc(key)}" onclick="openProposalAct('${esc(key)}','deferred')">Defer&hellip;</button>`
       + `<button class="btn ghost" data-prop-dismiss="${esc(key)}" onclick="openProposalAct('${esc(key)}','dismissed')">Dismiss&hellip;</button>`
@@ -14140,6 +14509,7 @@ function queueItemHtml(it){
     ${queueOptionsHtml(it)}
     ${notifOptionsGrainHtml(it)}
     ${queueEntryControlsHtml(it)}
+    ${queueRetainedHtml(it.id)}
   </article>`;
 }
 
@@ -14305,6 +14675,12 @@ function queuePaint(){
   const { groups, ungrouped, unknownHome } = queueGrouped(items);
   QUEUE_GROUPS = groups;
   QUEUE_ITEMS = new Map(items.map(i=>[String(i.id), i]));
+  /* D-126: a selected item the feed no longer carries is no longer selectable; its retained note, if any,
+     is kept (queueRetainedGoneHtml). ONLY OVER AN ANSWERED FEED: a feed that is pending or failed carries no
+     items, and pruning against it would silently empty the member's selection (measured — the retained
+     items stayed listed and their ticks came back cleared). */
+  if(queueFeedState("queue").state === "answered")
+    for(const id of [...QUEUE_SEL]) if(!QUEUE_ITEMS.has(id)) QUEUE_SEL.delete(id);
   /* The three proposal affordances take their context from THIS feed — and, since
      UI-45, only from the findings op=proposedispose can actually be keyed on. A
      finding with no progression identity used to enter this list with two null
@@ -14375,6 +14751,8 @@ function queuePaint(){
     + notifAbsenceHtml()
     + notifDisposedHtml()
     + queueMuteReportHtml()
+    + queueSelBarHtml()
+    + queueRetainedGoneHtml()
     + groupsHtml + ungroupedHtml + unknownHtml + emptyHtml;
   queueWire();
   queueRemember(items);
@@ -14432,6 +14810,14 @@ function queueWire(){
      rather than one overloaded attribute, so a per-kind button cannot be picked up
      by the whole-set selector above and silently mute everything. */
   document.querySelectorAll("#q [data-mute1]").forEach(b=>b.onclick=()=>queueMuteCase(b.dataset.mute1, b.dataset.mutekind));
+  /* D-126: the selection, and the published set acts over it. */
+  document.querySelectorAll("#q [data-qselclear]").forEach(b=>b.onclick=()=>queueSelClear());
+  document.querySelectorAll("#q [data-unretain]").forEach(b=>b.onclick=()=>queueRetainedClear(b.dataset.unretain));
+  document.querySelectorAll("#q [data-qset]").forEach(b=>b.onclick=()=>queueApplySet(b.dataset.qset));
+  document.querySelectorAll("#q [data-qsetdisp]").forEach(b=>b.onclick=()=>{
+    const r = document.querySelector("#q [data-qsetreason]");
+    queueApplySet("proposedispose", { to: b.dataset.qsetdisp, reason: (r && r.value) || "" });
+  });
 }
 /*__QUEUE_END__*/
 
@@ -20037,6 +20423,11 @@ function publishedRouteFromHash(){
   let h = "";
   try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
   if(/^#published\/?$/.test(h)){ enterPublished(); return true; }
+  /* UI-68: a review copy's RECIPIENT holds no session, so their address is asked
+     here, where an address resolves for somebody holding nothing. It opens the
+     copy the secret reads and nothing else — no index, no case list. */
+  const rv = /^#reviewcopy\/([A-Za-z0-9_-]+)$/.exec(h);
+  if(rv){ enterPublished(true); rvsOpen(rv[1]); return true; }
   const m = /^#case\/([A-Za-z0-9._-]+)(?:\/e(\d+))?$/.exec(h);
   if(!m) return false;
   enterPublished(true);
@@ -22810,6 +23201,481 @@ function stanceRouteFromHash(){
 try{ window.addEventListener("hashchange", ()=>{ if(!STANCE_HASH_LOCK) stanceRouteFromHash(); }); }catch(_){}
 /*__NOTIFICATIONS_END__*/
 
+/*__REVIEW_COPY_START__*/
+/* ============================================================
+   UI-68 · THE REVIEW COPY — an addressed act that never leaves the instance.
+
+   DESIGN: `docs/architecture/BIO_Publication_v0_1.md` §6A (Bob, 2026-09-17; §6A.2
+   by BOB #14/#15; §6A.3–6A.4), and the REC-126 → UI DELEGATION in `CLAIMS.md`
+   with its REC-133 addendum, which name the FOUR SURFACES built here. The plane
+   half is REC-126's (IC-145/IC-146) and REC-133's (IC-151); nothing below asks
+   the plane for anything it did not already publish.
+
+     1 DRAFT (an editor of the project) — `op=casedraft`, the same arguments the
+       publish act takes, `draft=` in the body to EDIT in place. Nothing is
+       prefilled and nothing is required but the project (DEC-69): a draft with
+       gaps is the normal case, so this form never refuses locally for a field
+       the plane would accept into a draft. Editing hydrates the form from the
+       draft's OWN answer, which is the draft's content, not a default.
+     2 READ (members with standing, and recipients) — `op=reviewcopy`, by
+       `draft=` with the session, or by `secret=` with NOTHING. The plane's
+       `marking` leads, unmissably; the exclusion statement leads the content
+       (§6A.4, §3 rule 11); `missing` is the publish gates' OWN refusal, and
+       `evaluated` beneath it says it is the FIRST refusal only.
+     3 GRANT AND REVOKE (the owner) — `op=reviewgrant` shows the read secret
+       ONCE, with the plane's own `secretIsShownOnce`; `op=reviewrevoke`
+       withdraws one. §6A.3 point 2 is said AT THE ACT.
+     4 COMMENT (both doors) — `op=reviewcomment`; a recipient's comment is
+       labelled a recipient's, by the name the issuer gave, never a member's.
+
+   WHAT THIS SURFACE MUST NEVER DO, and the harness (`review-copy.test.mjs`)
+   asserts each by name:
+     - OFFER ANY WAY OUT OF THE INSTANCE. No download, no print, no file, no
+       blob or data link, no `beforeprint` hook, no print rule for this copy.
+       §6A.3 point 1 (DEC-31's bound rule, measured by BOB #16): a rendering
+       that leaves carries its hash, date, author and both threshold floors
+       in-band, and `op=reviewcopy` does not yet carry all four — so NO surface
+       offers to export a review copy. Reading it here needs none of that.
+     - TELL A RECIPIENT WHY A COPY IS DEAD. The plane's dead answer is ONE answer
+       for revoked, never issued, malformed and moved-on alike, and the page
+       renders its one sentence and nothing that varies with the cause. The page
+       keys on no refusal code at all: it reads `ok` and `kind`, and renders words.
+     - CALL IT "pre-publish" — Bob: it may never be published.
+     - RENDER A CODE. Refusals render `refusalWords` (the canned translation,
+       else the plane's `detail`), never a sentence built from the code's name.
+
+   ADDRESSES. `#draft/new` and `#draft/<id>` are the member door, asked inside
+   `boot()`'s router chain (POST-authentication). `#reviewcopy/<secret>` is the
+   recipient door and is asked by `publishedRouteFromHash` — the one router
+   that runs at load holding nothing — because a recipient has no session. The
+   secret rides in the FRAGMENT, which a browser never sends to a server; it
+   crosses to the plane only as `op=reviewcopy`'s own `secret=` parameter.
+   ============================================================ */
+let RVC = null;              /* the member door's state */
+let RVC_HASH_LOCK = false;
+let RVS = null;              /* the recipient door's state */
+
+function rvcEmptyForm(){
+  return { project:"", loadBearing:"", supporting:"", undesignated:"", caseMode:"", caseId:"",
+           scope:"", statement:"", excluded:[], nothingLeftOut:false,
+           subjectPosition:"", subjectJustification:"", biasAcknowledgement:"" };
+}
+function rvcIds(s){ return String(s == null ? "" : s).split(/[\s,]+/).map(x => x.trim()).filter(Boolean); }
+function rvcStr(v){ return typeof v === "string" ? v : ""; }
+
+/* The body `op=casedraft` takes. A field left EMPTY is left OUT, so the draft
+   says nothing where the member said nothing and the gates name the gap; an
+   empty exclusion list is SENT only when the member says the case leaves
+   nothing out, because an empty list is a claim (`op=publish`'s own rule). */
+function rvcDraftBody(f, draftId){
+  const body = { project: String(f.project || "").trim() };
+  if(draftId) body.draft = draftId;
+  const lb = rvcIds(f.loadBearing), sp = rvcIds(f.supporting), un = rvcIds(f.undesignated);
+  if(lb.length || sp.length || un.length){
+    body.targets = [...lb, ...sp, ...un];
+    if(lb.length || sp.length){
+      body.roles = {};
+      for(const i of lb) body.roles[i] = "load_bearing";
+      for(const i of sp) body.roles[i] = "supporting";
+    }
+  }
+  if(f.caseMode === "new") body.newCase = true;
+  else if(f.caseMode === "next" && String(f.caseId || "").trim()) body.caseId = String(f.caseId).trim();
+  for(const k of ["scope", "statement", "subjectPosition", "subjectJustification", "biasAcknowledgement"])
+    if(String(f[k] || "").trim()) body[k] = String(f[k]).trim();
+  const rows = (f.excluded || [])
+    .map(r => ({ target: String(r.target || "").trim() || null, description: String(r.description || "").trim(),
+                 reason: String(r.reason || "").trim() }))
+    .filter(r => r.target || r.description || r.reason);
+  if(rows.length) body.excluded = rows;
+  else if(f.nothingLeftOut) body.excluded = [];
+  return body;
+}
+/* Editing starts from what the draft HOLDS, read back from `op=reviewcopy`. The
+   one thing the answer does not say back is whether a draft naming no case was
+   marked as a new one, so that choice starts unmade rather than guessed. */
+function rvcFormFromCopy(c){
+  const f = rvcEmptyForm();
+  f.project = rvcStr(c && c.project);
+  const fs = (c && Array.isArray(c.findings)) ? c.findings : [];
+  f.loadBearing = fs.filter(x => x && x.role === "load_bearing").map(x => x.target).join("\n");
+  f.supporting = fs.filter(x => x && x.role === "supporting").map(x => x.target).join("\n");
+  f.undesignated = fs.filter(x => x && x.role !== "load_bearing" && x.role !== "supporting").map(x => x.target).join("\n");
+  const cid = c && c.case && c.case.case_id;
+  if(cid){ f.caseMode = "next"; f.caseId = String(cid); }
+  const a = (c && c.authored) || {};
+  for(const k of ["scope", "statement", "subjectPosition", "subjectJustification", "biasAcknowledgement"]) f[k] = rvcStr(a[k]);
+  if(Array.isArray(a.excluded)){
+    f.excluded = a.excluded.filter(r => r && typeof r === "object")
+      .map(r => ({ target: rvcStr(r.target), description: rvcStr(r.description), reason: rvcStr(r.reason) }));
+    f.nothingLeftOut = a.excluded.length === 0;
+  }
+  return f;
+}
+
+/* A plane answer is a refusal when it is an object saying why; anything else
+   thrown (a failed fetch) is the record not being reached, said as THAT. */
+function rvcIsAnswer(e){ return !!(e && typeof e === "object" && ("reason" in e || "detail" in e || "error" in e || "translation" in e)); }
+function rvcRefusalHtml(r){
+  return '<div class="intent-ref" data-rvc-refusal><div class="intent-ref-why">'
+    + esc(refusalWords(r) || "The record refused this and said nothing further.") + '</div></div>';
+}
+const RVC_UNREACHED = "This page could not reach the record just now, so nothing is shown. Nothing about the draft is implied by that.";
+function rvcText(v){ return (typeof v === "string" && v.trim()) ? esc(v) : ""; }
+function rvcSaid(v){
+  const t = rvcText(v);
+  return t ? '<div class="card"><div class="prose"><p>' + t.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>") + '</p></div></div>'
+           : '<div class="q-gap">This draft does not say.</div>';
+}
+/* A finding's own write-up, as the draft's editor sees it: its title from its
+   frontmatter and its body as paragraphs. Nothing here collapses or hides. */
+function rvcFindingHtml(f){
+  if(!f || f.present !== true)
+    return '<div class="card" data-rvc-finding="' + esc(f && f.target) + '"><div class="kv"><span class="mono">'
+      + esc(f && f.target) + '</span></div><div class="q-gap">' + esc((f && f.detail) || "") + '</div></div>';
+  const parts = splitFm(typeof f.text === "string" ? f.text : "");
+  const title = parts.fm && parts.fm.title ? parts.fm.title : "";
+  const role = f.role === "load_bearing" ? "The case rests on this finding."
+             : f.role === "supporting" ? "Supporting: part of the work, not presented as carrying it."
+             : "This draft does not yet say whether the case rests on this finding.";
+  const body = String(parts.body || "").trim();
+  return '<div class="card" data-rvc-finding="' + esc(f.target) + '">'
+    + '<div class="kv"><span class="mono">' + esc(f.target) + '</span>' + (title ? ' &middot; ' + esc(title) : '') + '</div>'
+    + '<p class="subj-note">' + role + '</p>'
+    + (body ? '<div class="prose"><p>' + esc(body).replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>") + '</p></div>'
+            : '<div class="q-gap">The record holds no write-up for this finding.</div>')
+    + '</div>';
+}
+function rvcMissingHtml(c){
+  const miss = Array.isArray(c.missing) ? c.missing : [];
+  const items = miss.map(m => {
+    const allowed = (m && Array.isArray(m.allowed) && m.allowed.length)
+      ? '<div class="subj-note">The record accepts: ' + m.allowed.map(a => '<span class="mono">' + esc(a) + '</span>').join(", ") + '</div>' : '';
+    return '<li data-rvc-missing>' + esc(refusalWords(m) || "The record named a gap and said nothing further about it.") + allowed + '</li>';
+  }).join("");
+  return (items ? '<ul class="rvc-missing">' + items + '</ul>' : '')
+    + '<p class="subj-note" data-rvc-evaluated>' + esc(c.evaluated || "") + '</p>';
+}
+function rvcExcludedHtml(a){
+  const ex = a && a.excluded;
+  if(!Array.isArray(ex)) return '<div class="q-gap">This draft does not yet list what the case leaves out.</div>';
+  if(!ex.length) return '<p class="subj-note">This draft says the case leaves nothing material out.</p>';
+  return '<ul>' + ex.map(r => '<li>' + (r && r.target ? '<span class="mono">' + esc(r.target) + '</span> ' : '')
+    + esc((r && r.description) || "") + (r && r.reason ? ' &mdash; ' + esc(r.reason) : '') + '</li>').join("") + '</ul>';
+}
+
+/* THE COPY ITSELF, the same for both doors: what a reader is shown is what the
+   draft holds, in the order §6A puts it. */
+function rvcCopyHtml(c){
+  const a = c.authored || {};
+  return '<div class="rvc-copy" data-rvc-copy>'
+    + '<div class="rvc-marking" data-rvc-marking>' + esc(c.marking || "") + '</div>'
+    + '<p class="subj-note" data-rvc-signature>' + esc((c.signature && c.signature.detail) || "") + '</p>'
+    + '<p class="lede" data-rvc-identity>This draft stands as ' + esc((c.case && c.case.identity) || "") + '.</p>'
+    + '<h2 class="sec">What this case leaves out</h2>'
+    + '<p class="subj-note">Shown first, so it can be tested first.</p>'
+    + rvcSaid(a.statement) + rvcExcludedHtml(a)
+    + '<h2 class="sec">What a publication would still need</h2>'
+    + rvcMissingHtml(c)
+    + '<h2 class="sec">What the case covers</h2>' + rvcSaid(a.scope)
+    + '<h2 class="sec">Putting it to its subject</h2>'
+    + (rvcText(a.subjectPosition) ? '<p><span class="mono">' + esc(a.subjectPosition) + '</span></p>' : '')
+    + rvcSaid(a.subjectJustification)
+    + '<h2 class="sec">The acknowledgement of bias</h2>' + rvcSaid(a.biasAcknowledgement)
+    + '<h2 class="sec">The findings it rests on</h2>'
+    + ((Array.isArray(c.findings) && c.findings.length) ? c.findings.map(rvcFindingHtml).join("")
+       : '<div class="q-gap">This draft names no findings yet.</div>')
+    + '<p class="subj-note" data-rvc-updated>Last changed by <span class="mono">' + esc(c.updated_by || "") + '</span> at <span class="mono">'
+    + esc(c.updated_at || "") + '</span>.</p>'
+    + '</div>';
+}
+function rvcCommentsHtml(c, door){
+  const list = Array.isArray(c.comments) ? c.comments : [];
+  const rows = list.map(k => {
+    const who = k && k.author_kind === "recipient"
+      ? 'From <b>' + esc(k.recipient || "") + '</b>, who this copy was addressed to &mdash; not a member of this group'
+      : 'From <span class="mono">' + esc(k && k.author) + '</span>, a member of this group';
+    return '<div class="card" data-rvc-comment data-author-kind="' + esc(k && k.author_kind) + '"><div class="subj-note">'
+      + who + ' &middot; <span class="mono">' + esc(k && k.at) + '</span></div><div class="prose"><p>'
+      + esc(k && k.text).replace(/\n/g, "<br>") + '</p></div></div>';
+  }).join("");
+  const st = door === "recipient" ? RVS : RVC;
+  return '<h2 class="sec">Comments</h2>'
+    + (rows || '<div class="empty">No comments yet.</div>')
+    + (c.comments_truncated ? '<p class="subj-note">Only the first ' + esc(c.list_limit) + ' comments are shown; the record holds more.</p>' : '')
+    + '<div class="intent-box" data-rvc-comment-box><div class="kv"><span class="k">Add a comment</span></div>'
+    + '<textarea class="txt" id="rv-comment" rows="3" onchange="' + (door === "recipient" ? 'rvsField' : 'rvcField') + '(\'comment\', this.value)">'
+    + esc((st && st.comment) || "") + '</textarea>'
+    + ((st && st.commentRefusal) ? rvcRefusalHtml(st.commentRefusal) : '')
+    + '<button class="btn" onclick="' + (door === "recipient" ? 'rvsComment()' : 'rvcComment()') + '">Add the comment</button></div>';
+}
+
+/* ---------------- THE MEMBER DOOR ---------------- */
+function rvcField(k, v){ if(RVC) RVC[k] = String(v == null ? "" : v); }
+function rvcFormField(k, v){ if(RVC && RVC.form) RVC.form[k] = (k === "nothingLeftOut") ? !!v : String(v == null ? "" : v); }
+function rvcExField(i, k, v){ if(RVC && RVC.form && RVC.form.excluded[i]) RVC.form.excluded[i][k] = String(v == null ? "" : v); }
+function rvcExAdd(){ if(!RVC || !RVC.form) return; RVC.form.excluded.push({ target:"", description:"", reason:"" }); rvcPaint(); }
+
+function rvcSetHash(h){
+  RVC_HASH_LOCK = true;
+  try{ location.hash = h; }catch(_){}
+  RVC_HASH_LOCK = false;
+}
+function rvcDraftNew(){
+  RVC = { mode:"form", draft:null, form:rvcEmptyForm(), formRefusal:null, busy:false };
+  rvcSetHash("#draft/new");
+  rvcPaint();
+}
+function rvcEdit(){
+  if(!RVC || !RVC.copy) return;
+  RVC = { mode:"form", draft:RVC.draft, form:rvcFormFromCopy(RVC.copy), formRefusal:null, busy:false };
+  rvcPaint();
+}
+async function rvcOpen(draftId){
+  const id = String(draftId == null ? "" : draftId).trim();
+  if(!id) return;
+  RVC = { mode:"read", draft:id, copy:null, refusal:null, err:null, busy:true, saved:null, issued:null,
+          recipient:"", grantRefusal:null, revokeRefusal:null, comment:"", commentRefusal:null };
+  rvcSetHash("#draft/" + id);
+  await rvcLoad();
+}
+async function rvcLoad(){
+  if(!RVC || !RVC.draft) return;
+  RVC.busy = true; rvcPaint();
+  try{ RVC.copy = await recR("reviewcopy", { draft: RVC.draft }); RVC.refusal = null; RVC.err = null; }
+  catch(e){ RVC.copy = null; if(rvcIsAnswer(e)) RVC.refusal = e; else RVC.err = RVC_UNREACHED; }
+  RVC.busy = false;
+  rvcPaint();
+}
+async function rvcSave(){
+  if(!RVC || RVC.mode !== "form" || RVC.busy) return;
+  RVC.busy = true; RVC.formRefusal = null; rvcPaint();
+  let r;
+  try{ r = await recPostR("casedraft", rvcDraftBody(RVC.form, RVC.draft)); }
+  catch(e){ r = rvcIsAnswer(e) ? e : { detail: RVC_UNREACHED }; }
+  if(r && r.ok === true && r.draftId){
+    await rvcOpen(r.draftId);
+    RVC.saved = r; rvcPaint();
+    return;
+  }
+  RVC.busy = false; RVC.formRefusal = r || {}; rvcPaint();
+}
+async function rvcGrant(){
+  if(!RVC || !RVC.copy) return;
+  RVC.grantRefusal = null; RVC.issued = null;
+  let r;
+  try{ r = await recPostR("reviewgrant", { draft: RVC.draft, recipient: RVC.recipient || "" }); }
+  catch(e){ r = rvcIsAnswer(e) ? e : { detail: RVC_UNREACHED }; }
+  if(r && r.ok === true && r.secret){ RVC.issued = r; RVC.recipient = ""; }
+  else RVC.grantRefusal = r || {};
+  await rvcLoad();
+}
+async function rvcRevoke(grantId){
+  if(!RVC || !RVC.copy) return;
+  RVC.revokeRefusal = null;
+  let r;
+  try{ r = await recPostR("reviewrevoke", { grant: String(grantId) }); }
+  catch(e){ r = rvcIsAnswer(e) ? e : { detail: RVC_UNREACHED }; }
+  if(!(r && r.ok === true)) RVC.revokeRefusal = r || {};
+  await rvcLoad();
+}
+async function rvcComment(){
+  if(!RVC || !RVC.copy) return;
+  RVC.commentRefusal = null;
+  let r;
+  try{ r = await recPostR("reviewcomment", { text: RVC.comment || "" }, { draft: RVC.draft }); }
+  catch(e){ r = rvcIsAnswer(e) ? e : { detail: RVC_UNREACHED }; }
+  if(r && r.ok === true) RVC.comment = "";
+  else RVC.commentRefusal = r || {};
+  await rvcLoad();
+}
+
+/* The address a recipient opens. The fragment never reaches a server. */
+function rvcRecipientLink(secret){
+  let base = "";
+  try{ base = String((typeof location !== "undefined" && location.href) || "").split("#")[0]; }catch(_){ base = ""; }
+  return base + "#reviewcopy/" + secret;
+}
+/* §6A.3 point 2, AT THE ACT: what the grant controls and what it does not. */
+const RVC_AT_THE_ACT = "This gives one named person a link to read this draft and comment on it, here, inside "
+  + "this group's record. Nothing is sent anywhere and no file of it is made. Withdrawing the grant ends their "
+  + "access at once. What a withdrawal cannot reach is anything copied out of this page by hand: text pasted "
+  + "into an email, a screenshot, a page printed from the browser. That has left, and it cannot be revoked. "
+  + "If what you need is confidentiality, the grant protects what stays here and nothing that leaves.";
+function rvcGrantsHtml(c){
+  const gs = Array.isArray(c.grants) ? c.grants : [];
+  const rows = gs.map(g => {
+    const bound = g.case_id ? "edition " + esc(g.edition) + " of <span class=\"mono\">" + esc(g.case_id) + "</span>" : "a new case";
+    const state = g.live
+      ? 'Can read this draft now. <button class="btn ghost" onclick="rvcRevoke(\'' + esc(g.grant_id) + '\')">Withdraw this grant</button>'
+      : g.revoked_at
+        ? 'Withdrawn by <span class="mono">' + esc(g.revoked_by) + '</span> at <span class="mono">' + esc(g.revoked_at) + '</span>. It reads nothing.'
+        : 'Reads nothing now: it was given for ' + bound + ', and this draft no longer stands there.';
+    return '<div class="card" data-rvc-grant="' + esc(g.grant_id) + '" data-live="' + (g.live ? "1" : "0") + '">'
+      + '<div class="kv"><b>' + esc(g.recipient) + '</b></div>'
+      + '<div class="subj-note">Given by <span class="mono">' + esc(g.issued_by) + '</span> at <span class="mono">' + esc(g.issued_at)
+      + '</span>, for ' + bound + '.</div><div>' + state + '</div></div>';
+  }).join("");
+  const issued = RVC.issued
+    ? '<div class="intent-box" data-rvc-issued><div class="intent-lede">A grant was given to ' + esc(RVC.issued.recipient) + '</div>'
+      + '<p class="subj-note" data-rvc-shown-once>' + esc(RVC.issued.secretIsShownOnce || "") + '</p>'
+      + '<div class="kv"><span class="k">The link to give them</span></div>'
+      + '<div class="mono" data-rvc-link>' + esc(rvcRecipientLink(RVC.issued.secret)) + '</div>'
+      + '<p class="subj-note">' + esc(RVC.issued.boundTo || "") + '</p></div>'
+    : '';
+  return '<h2 class="sec">Who it is addressed to</h2>'
+    + (rows || '<div class="empty">Nobody has been given this draft yet.</div>')
+    + (c.grants_truncated ? '<p class="subj-note">Only the first ' + esc(c.list_limit) + ' grants are shown; the record holds more.</p>' : '')
+    + (RVC.revokeRefusal ? rvcRefusalHtml(RVC.revokeRefusal) : '')
+    + issued
+    + '<div class="intent-box" data-rvc-grant-box><div class="kv"><span class="k">Give one person access to read and comment</span></div>'
+    + '<p class="subj-note" data-rvc-at-the-act>' + RVC_AT_THE_ACT + '</p>'
+    + '<input class="txt" id="rv-recipient" value="' + esc(RVC.recipient || "") + '" onchange="rvcField(\'recipient\', this.value)" placeholder="their name, or the group they speak for">'
+    + (RVC.grantRefusal ? rvcRefusalHtml(RVC.grantRefusal) : '')
+    + '<button class="btn" onclick="rvcGrant()">Give access</button></div>';
+}
+function rvcFormHtml(){
+  const f = RVC.form;
+  const ta = (k, rows) => '<textarea class="txt" id="rv-' + k + '" rows="' + rows + '" onchange="rvcFormField(\'' + k + '\', this.value)">' + esc(f[k]) + '</textarea>';
+  const ex = f.excluded.map((r, i) => '<div class="card" data-rvc-exrow="' + i + '">'
+    + '<div class="kv"><span class="k">What is left out</span></div>'
+    + '<input class="txt" id="rv-ex-d-' + i + '" value="' + esc(r.description) + '" onchange="rvcExField(' + i + ', \'description\', this.value)">'
+    + '<div class="kv"><span class="k">Why</span></div>'
+    + '<input class="txt" id="rv-ex-r-' + i + '" value="' + esc(r.reason) + '" onchange="rvcExField(' + i + ', \'reason\', this.value)">'
+    + '<div class="kv"><span class="k">A document in the record it concerns, by its id (optional)</span></div>'
+    + '<input class="txt" id="rv-ex-t-' + i + '" value="' + esc(r.target) + '" onchange="rvcExField(' + i + ', \'target\', this.value)">'
+    + '</div>').join("");
+  return '<div class="trow"><h1 class="rec">' + (RVC.draft ? 'Editing a review copy' : 'A new review copy') + '</h1></div>'
+    + (RVC.draft ? '<p class="lede mono">' + esc(RVC.draft) + '</p>' : '')
+    + '<p class="subj-note">A review copy is a draft of a case, shown to the people you address it to, inside this group&rsquo;s record. It is not a publication and may never become one. Only the project is needed to save it: a draft with gaps is normal, and the copy lists, in the record&rsquo;s own words, what a publication would still need.</p>'
+    + '<div class="kv"><span class="k">The project whose case this is</span></div>'
+    + (RVC.draft ? '<p class="mono">' + esc(f.project) + '</p>'
+                 : '<input class="txt" id="rv-project" value="' + esc(f.project) + '" onchange="rvcFormField(\'project\', this.value)">')
+    + '<h2 class="sec">The findings it rests on</h2>'
+    + '<p class="subj-note">One finding id per line.</p>'
+    + '<div class="kv"><span class="k">Findings the case rests on</span></div>' + ta("loadBearing", 3)
+    + '<div class="kv"><span class="k">Supporting findings</span></div>' + ta("supporting", 3)
+    + '<div class="kv"><span class="k">Findings not yet designated either way</span></div>' + ta("undesignated", 2)
+    + '<h2 class="sec">Which case</h2>'
+    + '<label><input type="radio" name="rv-case" ' + (f.caseMode === "new" ? 'checked ' : '') + 'onchange="rvcFormField(\'caseMode\', \'new\')"> A new case</label><br>'
+    + '<label><input type="radio" name="rv-case" ' + (f.caseMode === "next" ? 'checked ' : '') + 'onchange="rvcFormField(\'caseMode\', \'next\')"> The next edition of an existing case of this project:</label> '
+    + '<input class="txt" id="rv-caseId" value="' + esc(f.caseId) + '" onchange="rvcFormField(\'caseId\', this.value)">'
+    + '<h2 class="sec">What the case covers</h2>' + ta("scope", 3)
+    + '<h2 class="sec">What it leaves out</h2>'
+    + '<div class="kv"><span class="k">The statement of what this case does not cover</span></div>' + ta("statement", 3)
+    + ex
+    + '<button class="btn ghost" onclick="rvcExAdd()">Add something it leaves out</button><br>'
+    + '<label><input type="checkbox" ' + (f.nothingLeftOut ? 'checked ' : '') + 'onchange="rvcFormField(\'nothingLeftOut\', this.checked)"> This case leaves nothing material out</label>'
+    + '<h2 class="sec">Putting it to its subject</h2>'
+    + '<div class="kv"><span class="k">The position taken</span></div>'
+    + '<input class="txt" id="rv-subjectPosition" value="' + esc(f.subjectPosition) + '" onchange="rvcFormField(\'subjectPosition\', this.value)">'
+    + '<div class="kv"><span class="k">Why</span></div>' + ta("subjectJustification", 3)
+    + '<h2 class="sec">The acknowledgement of bias</h2>' + ta("biasAcknowledgement", 3)
+    + (RVC.formRefusal ? rvcRefusalHtml(RVC.formRefusal) : '')
+    + '<button class="btn" id="rv-save" onclick="rvcSave()">Save the draft</button>'
+    + (RVC.draft ? ' <button class="btn ghost" onclick="rvcOpen(\'' + esc(RVC.draft) + '\')">Back to the copy</button>' : '');
+}
+function rvcHtml(){
+  if(!RVC) return "";
+  if(RVC.mode === "form") return rvcFormHtml();
+  const head = '<div class="trow"><h1 class="rec">Review copy</h1></div><p class="lede mono">' + esc(RVC.draft) + '</p>';
+  if(RVC.busy && !RVC.copy) return head + '<div class="empty">Reading the draft.</div>';
+  if(RVC.err) return head + '<div class="q-gap" data-rvc-unreached>' + esc(RVC.err) + '</div>';
+  if(RVC.refusal) return head + rvcRefusalHtml(RVC.refusal);
+  const c = RVC.copy || {};
+  const saved = RVC.saved
+    ? '<div class="intent-box" data-rvc-saved><div class="intent-lede">' + (RVC.saved.edited ? 'The draft was changed' : 'The draft was saved')
+      + '</div><p class="subj-note">It stands as ' + esc(RVC.saved.caseIdentity || "") + '.</p></div>' : '';
+  return head + saved
+    + '<button class="btn ghost" onclick="rvcEdit()">Edit this draft</button>'
+    + rvcCopyHtml(c)
+    + rvcGrantsHtml(c)
+    + rvcCommentsHtml(c, "member");
+}
+function rvcPaint(){
+  const el = (typeof $ === "function") ? $("#content") : null;
+  if(!el) return;
+  el.innerHTML = rvcHtml();
+}
+/* `#draft/new` and `#draft/<id>` are real addresses, asked inside `boot()`'s
+   router chain and nowhere at the top level — POST-authentication, classified
+   by `preauth-vocabulary.test.mjs` WALK 2. */
+function draftRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  if(/^#draft\/new$/.test(h)){
+    if(!(RVC && RVC.mode === "form" && !RVC.draft)) rvcDraftNew();
+    return true;
+  }
+  const m = /^#draft\/([A-Za-z0-9._-]+)$/.exec(h);
+  if(!m) return false;
+  if(RVC && RVC.draft === m[1]) return true;
+  rvcOpen(m[1]);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!RVC_HASH_LOCK) draftRouteFromHash(); }); }catch(_){}
+
+/* The entry beside the publication statement on a question's page. It renders
+   only for a signed-in member holding `contribute` — the capability half of the
+   draft's authority; the positional half (an owner or a joined participant of
+   the project) is the plane's, and its refusal is rendered in its words. */
+function reviewCopyEntryHtml(){
+  if(!canRelease()) return "";
+  return '<h2 class="sec">A review copy</h2>'
+    + '<p class="subj-note">Before anything is published, a draft of a case can be shown to one named person or group to read and comment on. It stays inside this group&rsquo;s record, the access can be withdrawn, and the copy lists what a publication would still need.</p>'
+    + '<button class="btn ghost" onclick="rvcDraftNew()">Draft a review copy</button>';
+}
+
+/* ---------------- THE RECIPIENT DOOR ---------------- */
+function rvsField(k, v){ if(RVS) RVS[k] = String(v == null ? "" : v); }
+async function rvsOpen(secret){
+  RVS = { secret:String(secret || ""), copy:null, dead:null, err:null, busy:true, comment:"", commentRefusal:null };
+  if(typeof PUB !== "undefined" && PUB){ PUB.id = null; PUB.edition = null; }
+  await rvsLoad();
+}
+async function rvsLoad(){
+  if(!RVS) return;
+  RVS.busy = true; rvsPaint();
+  try{
+    const j = await apiQ("reviewcopy", { secret: RVS.secret });
+    if(j && j.ok === true && j.kind === "review-copy"){ RVS.copy = j; RVS.dead = null; }
+    else { RVS.copy = null; RVS.dead = j || {}; }
+    RVS.err = null;
+  }catch(_){ RVS.copy = null; RVS.err = RVC_UNREACHED; }
+  RVS.busy = false;
+  rvsPaint();
+}
+async function rvsComment(){
+  if(!RVS || !RVS.copy) return;
+  RVS.commentRefusal = null;
+  let r;
+  try{ r = await apiQ("reviewcomment", { secret: RVS.secret }, { text: RVS.comment || "" }); }
+  catch(_){ r = { detail: RVC_UNREACHED }; }
+  if(r && r.ok === true) RVS.comment = "";
+  else RVS.commentRefusal = r || {};
+  await rvsLoad();
+}
+function rvsHtml(){
+  if(!RVS) return "";
+  if(RVS.busy && !RVS.copy) return '<div class="empty">Reading the copy.</div>';
+  if(RVS.err) return '<div class="q-gap" data-rvc-unreached>' + esc(RVS.err) + '</div>';
+  /* ONE ANSWER FOR EVERY DEAD CAUSE: the plane's one sentence, under one neutral
+     heading, and nothing that varies with why. */
+  if(!RVS.copy) return '<h1 class="rec">Nothing to read here</h1>' + rvcRefusalHtml(RVS.dead);
+  const c = RVS.copy, g = c.grant || {};
+  return '<h1 class="rec">Review copy</h1>'
+    + '<p class="subj-note" data-rvc-addressed>Addressed to <b>' + esc(g.recipient || "") + '</b> by <span class="mono">'
+    + esc(g.issued_by || "") + '</span> at <span class="mono">' + esc(g.issued_at || "") + '</span>. You can read it and comment on it here; it is not a publication.</p>'
+    + rvcCopyHtml(c)
+    + rvcCommentsHtml(c, "recipient");
+}
+function rvsPaint(){
+  const el = (typeof $ === "function") ? $("#pub-body") : null;
+  if(!el) return;
+  el.innerHTML = rvsHtml();
+}
+/*__REVIEW_COPY_END__*/
+
 /* prefill the plane address for convenience when opened locally */
 try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}
 /* UI-18: A PUBLISHED ADDRESS RESOLVES FOR SOMEBODY HOLDING NOTHING. `boot()`
@@ -22819,7 +23685,7 @@ try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}
    reaches are the four the plane declares `classes: null`. */
 try{
   const h0 = String((typeof location !== "undefined" && location.hash) || "");
-  if(/^#(published\/?$|case\/)/.test(h0)) publishedRouteFromHash();
+  if(/^#(published\/?$|case\/|reviewcopy\/)/.test(h0)) publishedRouteFromHash();
 }catch{}
 </script>
 </body>

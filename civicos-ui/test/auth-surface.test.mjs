@@ -1174,7 +1174,11 @@ if(!CHILD){
       + src.slice(h, tl).replace("return (j && j.result !== undefined) ? j.result : j;", "return j;")
       + src.slice(tl);
   };
-  const BROKEN = breakSeam(breakSeam(SRC, "async function apiR(op, body){"), "async function apiQ(op, params){");
+  /* CORRECTED 2026-09-23 (UI-68), never exempted: `apiQ` gained a third argument (the recipient's comment body on
+     a review copy), so the old anchor `apiQ(op, params){` matched nothing and `breakSeam` returned the source
+     UNCHANGED for that seam — the arm went on breaking `apiR` alone, and the published-list half of the harm
+     stopped being demonstrated, which the three assertions below named. The anchor is the seam's new signature. */
+  const BROKEN = breakSeam(breakSeam(SRC, "async function apiR(op, body){"), "async function apiQ(op, params, body){");
   ok("NEG-CONTROL (a): the mutation actually changed the source", BROKEN !== SRC);
   /* CORRECTED 2026-08-04 with the widened splice: TWO envelope-opens go (apiR
      and apiQ), and recR/recPostR's byte-identical returns stay — the scoping

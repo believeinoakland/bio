@@ -178,10 +178,15 @@ t("READER op=image: the file holds EXACTLY the canonical header and what ruth wr
   img && tx ? img[tx.file] : null, OBYTES);
 t("…and NO AUTHOR IDENTITY is in the bytes (the attribution level governs that, §4)",
   img && tx && typeof img[tx.file] === "string" ? /ruth/.test(img[tx.file].split("\n\n")[0]) : null, false);
-t("the register entry declares authored, origin member, actor member, the stamped author, observed_at — and NO capture grade",
+/* CORRECTED 2026-09-23 by MK-6 (MEMBER-KNOWLEDGE-DESIGN.md §4.1, BOB #19), never exempted. This asserted
+   `author: "ruth"` in data/provenance.json, which was the design until §4.1: a ratified bundle's files are what
+   the published bucket receives, so a file naming the member would publish them at every attribution level.
+   The provenance document now names the author by the opaque `observer:<testimony id>`, and the stamped member
+   is in the register alone (op=testify's answer above still says ruth). */
+t("the register entry declares authored, origin member, actor member, the author as observer:<id>, observed_at — and NO capture grade",
   d0 ? [d0.authored, d0.origin && d0.origin.kind, d0.capture && d0.capture.actor_class, d0.author,
         d0.observed_at, d0.capture && d0.capture.sha256, "grade" in (d0.capture || {})] : null,
-  [true, "member", "member", "ruth", OBSERVED, OSHA, false]);
+  [true, "member", "member", `observer:${OBS}`, OBSERVED, OSHA, false]);
 t("bundle.md is a well-formed INFO document the catalogue accepts, and the words are not in it",
   img ? [typeof img["bundle.md"], img["bundle.md"].includes("object_type: information"),
          img["bundle.md"].includes(WORDS)] : null, ["string", true, false]);
@@ -213,8 +218,11 @@ t("THE STAMP: a caller's own ?author=mallory is OVERWRITTEN — the observation 
   [qa && qa.ok, qa && qa.author], [true, "ruth"]);
 const qaImg = qa && qa.ok ? await get("image", `id=${encodeURIComponent(qa.bundle_id)}`, RUTH) : null;
 const qaDoc = qaImg ? JSON.parse(qaImg["data/provenance.json"]).documents[0] : null;
-t("…and the record says ruth, not mallory, in the register entry and the revision's author",
-  [qaDoc && qaDoc.author, qaImg ? qaImg["bundle.md"].includes("mallory") : null], ["ruth", false]);
+/* CORRECTED 2026-09-23 by MK-6 (§4.1), never exempted: the provenance document no longer names a member at
+   all, so it cannot say ruth. What this arm is for is unchanged: mallory, the caller's claim, is nowhere. */
+t("…and mallory is nowhere in the record's files: the provenance names observer:<id>, and neither file says mallory",
+  [qaDoc && qaDoc.author === `observer:${qa && qa.bundle_id}`, qaImg ? qaImg["bundle.md"].includes("mallory") : null,
+   qaImg ? qaImg["data/provenance.json"].includes("mallory") : null], [true, false, false]);
 const ba = await post("testify", { words: "I saw it myself, said nobody.", observedAt: OBSERVED,
                                    author: "mallory" }, RUTH);
 t("a caller-supplied author in the BODY is REFUSED BY NAME (C-53.2) — never silently overridden",
@@ -491,7 +499,9 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
     const body = await (await bucket.get(o.key)).text();
     if (body.includes("deputy clerk stamp")) carried.words++;
     if (/"authored":\s*true/.test(body)) carried.authored++;
-    if (/"author":\s*"ruth"/.test(body)) carried.handle++;
+    /* CORRECTED 2026-09-23 by MK-6 (§4.1): the provenance document's author is `observer:<id>` now, so the old
+       pattern (`"author": "ruth"`) could no longer match and the count would be 0 for free. Both spellings. */
+    if (/"author":\s*"(ruth|observer:[^"]*)"/.test(body)) carried.handle++;
   }
   t("…and NOTHING of it is published: the words' bytes do not verify, and no published object carries the words, an authored provenance document or the author's handle",
     [await published(OSHA), carried], [false, { words: 0, authored: 0, handle: 0 }]);

@@ -539,6 +539,101 @@ export function riskTierState(v) {
   return v === 1 || v === 2 || v === 3 ? v : null;
 }
 
+/* D-149 (Bob, 2026-09-22; BIO_Case_Making_v0_1.md §2, *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*):
+ * THE THREE LEVELS a governing law is stated at. Exported for the reason ACTION_KINDS is: C-2.10 judges an
+ * action's `governing_laws[]` against it, `op=actionlaws` refuses against it before anything is written, and
+ * `op=affordances` publishes it — one array, three readers.
+ *
+ * THE LEVEL IS THE MEMBER'S STATEMENT AND NEVER A DERIVATION. The layers follow the AGENCY ASKED (federal FOIA
+ * governs federal agencies only; a California state or local agency is governed by the CPRA; a city with a
+ * sunshine ordinance adds its own), and which agency a request went to is a fact the member holds and the plane
+ * does not. So nothing here maps a counterparty to a level, and nothing maps a level to a rule: the plane
+ * encodes no law's fees, clocks or appeals (the design's own words), because a citation stays true when the law
+ * changes and an encoded rule goes stale silently. */
+export const LAW_LEVELS = ['federal', 'state', 'local'];
+/* The most citations one act may set. Not a legal bound — a request under three levels names a handful — but
+   a statement bound: every entry lands in the document's frontmatter and on every read of the action. */
+export const GOVERNING_LAWS_MAX = 12;
+/* The longest citation, in characters: a citation names a law ("Cal. Gov. Code § 7920.000 et seq."), it does
+   not quote one. */
+export const CITATION_MAX = 200;
+
+/** D-149: WHICH LAWS GOVERN THIS ACTION, AS THE RECORD CAN SUPPORT IT. The one reader: the action's own read
+ *  (`op=projection`'s action block) and the suite read this function, so the sentence a reader is shown and
+ *  the state it describes cannot come apart.
+ *
+ *  TWO STATES, AND THE SECOND IS THE ITEM. `stated` — a member set the list, and it is returned exactly as
+ *  authored with who set it and when. `undetermined` — no member has stated which laws govern this action, and
+ *  the answer SAYS SO IN WORDS rather than returning an empty list a reader would take as "none apply" or,
+ *  worse, as the federal default the design's earlier drafts assumed (wrong for Oakland on every axis D-149
+ *  lists). Nothing is inferred from the counterparty, the kind or the group.
+ *
+ *  `cpra_request` IS THE ONE KIND THAT NAMES A LAW, and it is read as exactly that and nothing more: the kind
+ *  is its member's statement that the CPRA governs (D-149), so the undetermined sentence names it — and the
+ *  LIST stays undetermined, because whether a federal law or a local ordinance also governs is not in the
+ *  kind. The document is not rewritten and no citation is synthesised from the kind. */
+export function governingLawsOf(fm) {
+  const raw = fm && Array.isArray(fm.governing_laws) ? fm.governing_laws : [];
+  const laws = raw.filter((l) => l && typeof l === 'object' && !Array.isArray(l))
+    .map((l) => ({ level: String(l.level ?? ''), citation: String(l.citation ?? '') }));
+  if (laws.length) {
+    return { state: 'stated', laws,
+             by: typeof fm.governing_laws_by === 'string' && fm.governing_laws_by ? fm.governing_laws_by : null,
+             at: typeof fm.governing_laws_at === 'string' && fm.governing_laws_at ? fm.governing_laws_at : null,
+             stated: `${laws.length} governing law${laws.length === 1 ? '' : 's'}, stated by a member` };
+  }
+  const kindNames = fm && fm.action_kind === 'cpra_request';
+  return { state: 'undetermined', laws: [], by: null, at: null,
+           stated: 'UNDETERMINED: no member has stated which laws govern this action. The record assumes none — '
+                 + 'not federal law, not state law, not a local ordinance. Which laws apply follows the agency '
+                 + 'asked, and a member states them, each by citation.'
+                 + (kindNames ? ' This action\'s kind, cpra_request, is its member\'s statement that the '
+                              + 'California Public Records Act governs it; nothing else is inferred from the '
+                              + 'kind.' : '') };
+}
+
+/** D-149: C-2.10's governing-law arm. Judges the SHAPE of `governing_laws[]` and the coherence of its
+ *  attribution; it cannot judge whether a citation is the right law, and says so by not trying — a member
+ *  reads the law. Absent or `[]` is the honest undetermined and passes; a list is attributed or it is refused,
+ *  because a citation nobody stated is the record asserting a legal frame no member chose. */
+function governingLawsFindings(fm, findings) {
+  const has = Object.prototype.hasOwnProperty.call(fm, 'governing_laws');
+  const by = typeof fm.governing_laws_by === 'string' ? fm.governing_laws_by.trim() : '';
+  const at = typeof fm.governing_laws_at === 'string' ? fm.governing_laws_at.trim() : '';
+  if (!has || fm.governing_laws === null || (Array.isArray(fm.governing_laws) && !fm.governing_laws.length)) {
+    if (by || at)
+      findings.push(f('C-2.10', 'error',
+        'governing_laws is empty and governing_laws_by/_at name an act that set it: an attribution with no '
+        + 'list asserts a statement the document does not carry (D-149)',
+        ['set the list with op=actionlaws', 'or remove governing_laws_by and governing_laws_at']));
+    return;
+  }
+  if (!Array.isArray(fm.governing_laws)) {
+    findings.push(f('C-2.10', 'error', 'governing_laws is not a list of {level, citation} entries (D-149)'));
+    return;
+  }
+  if (fm.governing_laws.length > GOVERNING_LAWS_MAX)
+    findings.push(f('C-2.10', 'error', `governing_laws holds ${fm.governing_laws.length} entries; at most ${GOVERNING_LAWS_MAX}`));
+  fm.governing_laws.forEach((l, i) => {
+    if (!l || typeof l !== 'object' || Array.isArray(l)) {
+      findings.push(f('C-2.10', 'error', `governing_laws[${i}] is not a {level, citation} entry`)); return;
+    }
+    if (!LAW_LEVELS.includes(l.level))
+      findings.push(f('C-2.10', 'error', `governing_laws[${i}].level '${l.level}' is not one of: ${LAW_LEVELS.join(', ')}`));
+    const c = typeof l.citation === 'string' ? l.citation.trim() : '';
+    if (!c) findings.push(f('C-2.10', 'error', `governing_laws[${i}].citation is empty: a law is named by its citation`));
+    else if (c.length > CITATION_MAX)
+      findings.push(f('C-2.10', 'error', `governing_laws[${i}].citation is longer than ${CITATION_MAX} characters`));
+  });
+  if (!by || isMachineIdentity(by))
+    findings.push(f('C-2.10', 'error',
+      by ? `governing_laws_by '${by.slice(0, 40)}' is a machine identity: the laws governing a request are a member's authored statement (D-149)`
+         : 'governing_laws carries no governing_laws_by: a list of governing laws is a member\'s authored statement and names who made it (D-149)',
+      ['set the list with op=actionlaws, signed in as a member']));
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(at))
+    findings.push(f('C-2.10', 'error', `governing_laws_at '${at}' is not a timestamp: the act that set the list is dated`));
+}
+
 /* REC-24 (a): the two kinds a leg of an action's basis may carry. Exported for
  * the same reason ACTION_KINDS is — op=affordances publishes it and the store
  * projects against it, so the gate and the publication read ONE array. */
@@ -3321,6 +3416,8 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
     /* MK-4 / C-54.1: a LEAD is refused BY NAME before the generic target grammar
        can answer "not a canonical bundle id" about it — see `leadLegFindings`. */
     if (leadLegFindings(`basis[${i}]`, leg, findings)) continue;
+    /* D-162 / C-81.1: a THEME, or membership in one, is refused BY NAME at the same door (§8.4 fence 4). */
+    if (themeLegFindings(`basis[${i}]`, leg, findings)) continue;
     const t = leg.target;
     /* Hoisted out of the else below by REC-31: the capture-axis arm at the end
        of this loop asks the SAME question (what does this leg rest on), and a
@@ -4335,6 +4432,8 @@ export function actionBasisFindings(fm, findings) {
     }
     /* MK-4 / C-54.1: an action resting on a LEAD rests on nothing found. */
     if (leadLegFindings(`action_basis[${i}]`, l, findings)) return;
+    /* D-162 / C-81.1: an action resting on a THEME rests on a member's lens, not on anything found. */
+    if (themeLegFindings(`action_basis[${i}]`, l, findings)) return;
     const target = typeof l.target === 'string' ? l.target : '';
     if (!BUNDLE_ID_RE.test(target)) {
       findings.push(f('C-2.10', 'error',
@@ -4447,7 +4546,93 @@ export function correspondenceFindings(fm, findings) {
         `correspondence[${i}] carries an account with no author: testimony is somebody's, and an unattributed `
         + 'account is a claim nobody stands behind'));
     }
+    /* D-148: the QUOTE arm, one rule shared with op=actioncorrespond (quoteFindings below). */
+    for (const q of quoteFindings(entries, i)) findings.push(f('C-2.10', 'error', q.message, null, q.code));
   });
+}
+
+/** D-148 — A FEE QUOTE IS EVIDENCE (Bob, 2026-09-22; `BIO_Case_Making_v0_1.md` §2).
+ *
+ *  A `received` correspondence entry may carry a QUOTE, written as FLAT keys on
+ *  the entry because the restricted grammar has no nested map inside an array
+ *  element:
+ *
+ *    quote_amount    the amount AS QUOTED — a number, kept as the text the body
+ *                    wrote (`"1083.00"`, `"1,083.00"`), so a reader sees what was
+ *                    said and not our rounding of it
+ *    quote_currency  the currency AS QUOTED (`USD`, `$`), never inferred
+ *    quote_basis     the stated basis VERBATIM (hours, rate, per page), optional:
+ *                    absent means none was RECORDED, never that none was stated
+ *    quote_answers   the ORD of the earlier `sent` entry it answers — the request's
+ *                    own text is its scope
+ *    quote_revises   optional: the ORD of an earlier quote this one revises. A
+ *                    waiver is a revision to zero, and BOTH entries stand
+ *
+ *  THE RULE IS ONE FUNCTION and it runs at three gates, on the capture-or-testify
+ *  precedent above: the op (so a member is told before anything is written), this
+ *  catalog over the document that lands, and promote. Each finding carries its
+ *  C-72 code so the op refuses by the same name the catalog reports.
+ *
+ *  WHAT IS NOT CHECKED, on purpose: that a quote is reasonable, lawful or larger
+ *  than another. The record asserts only what was quoted, by whom, when, for which
+ *  request (DEC-24); any judgement about a quote is a member's claim in an inquiry.
+ *
+ *  A NUMBER is a decimal with an optional sign and optional thousands separators in
+ *  groups of three. A sign is allowed because the rule is "a number" and a fence
+ *  tighter than its rule is not a safer fence; `quoteValue` parses it for ordering.
+ *
+ *  @returns {{code: string, message: string}[]} */
+export const QUOTE_KEYS = ['quote_amount', 'quote_currency', 'quote_basis', 'quote_answers', 'quote_revises'];
+const QUOTE_NUMBER_RE = /^-?(\d{1,3}(,\d{3})+|\d+)(\.\d+)?$/;
+const ORD_RE = /^\d+$/;
+export function isQuoteEntry(e) {
+  return !!e && typeof e === 'object' && !Array.isArray(e)
+    && Object.keys(e).some((k) => k.startsWith('quote_'));
+}
+export function quoteValue(amount) {
+  const s = amount === null || amount === undefined ? '' : String(amount).trim();
+  return QUOTE_NUMBER_RE.test(s) ? Number(s.replace(/,/g, '')) : null;
+}
+export function quoteFindings(entries, i) {
+  const out = [];
+  const e = entries[i];
+  if (!isQuoteEntry(e)) return out;
+  if (e.direction !== 'received') {
+    out.push({ code: 'QUOTE_NOT_ON_RECEIVED', message:
+      `correspondence[${i}] carries a quote on a '${e.direction}' entry: a quote is what a body SENT BACK, so it `
+      + 'rides a received entry (D-148)' });
+    return out;
+  }
+  if (quoteValue(e.quote_amount) === null) {
+    out.push({ code: 'QUOTE_AMOUNT_NOT_A_NUMBER', message:
+      `correspondence[${i}].quote_amount '${String(e.quote_amount ?? '').slice(0, 40)}' is not a number: the `
+      + 'amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another' });
+  }
+  const cur = e.quote_currency === null || e.quote_currency === undefined ? '' : String(e.quote_currency).trim();
+  if (!cur) {
+    out.push({ code: 'QUOTE_NO_CURRENCY', message:
+      `correspondence[${i}] carries a quote with no quote_currency: the currency is recorded as quoted and is `
+      + 'never inferred' });
+  }
+  const ordOf = (v) => (v === null || v === undefined || !ORD_RE.test(String(v).trim()))
+    ? null : Number(String(v).trim());
+  const a = ordOf(e.quote_answers);
+  const sent = a !== null && a < i ? entries[a] : null;
+  if (!sent || typeof sent !== 'object' || sent.direction !== 'sent') {
+    out.push({ code: 'QUOTE_ANSWERS_NO_SENT', message:
+      `correspondence[${i}].quote_answers '${String(e.quote_answers ?? '').slice(0, 20)}' names no earlier sent `
+      + 'entry: a quote answers a request this ledger holds, and the request\'s own text is its scope' });
+  }
+  if (e.quote_revises !== undefined && e.quote_revises !== null && e.quote_revises !== '') {
+    const r = ordOf(e.quote_revises);
+    const prior = r !== null && r < i ? entries[r] : null;
+    if (!prior || typeof prior !== 'object' || prior.direction !== 'received' || !isQuoteEntry(prior)) {
+      out.push({ code: 'QUOTE_REVISES_NO_QUOTE', message:
+        `correspondence[${i}].quote_revises '${String(e.quote_revises).slice(0, 20)}' names no earlier quote: a `
+        + 'revision names the quote it revises, and both entries stand' });
+    }
+  }
+  return out;
 }
 
 /** DEC-14: what an action's recorded consequence CLAIMS, derived rather than
@@ -4523,6 +4708,7 @@ function checkActionExtension(ctx, findings) {
   /* D-182: 1, 2, 3 or undetermined (absent reads undetermined); the words are RISK_TIERS'. */
   if (riskTierState(fm.risk_tier) === null) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(', ')}`));
   checkCounterparty(fm, findings);
+  governingLawsFindings(fm, findings);
   /* REC-39: the four words are RESOLUTIONS at module level (exported for
      op=affordances) so this finding, op=actionmove's own refusal and the
      published vocabulary read one array — the ACTION_KINDS line above exactly.
@@ -6242,6 +6428,105 @@ async function checkReleaseSignature(ctx, findings) {
 }
 
 // ---------------------------------------------------------------------------
+// C-77 — project name uniqueness over a HANDED CORPUS (D-50)
+// ---------------------------------------------------------------------------
+
+/**
+ * THE comparison key for project name uniqueness (Membership v2 §7.1): the
+ * `title`, trimmed, lower-cased, runs of whitespace collapsed to one space.
+ *
+ * ONE FUNCTION, AND THE STORE HOLDS THIS SAME OBJECT. `Store.projectNameKey`
+ * is assigned from this export (`static projectNameKey = projectNameKey`), so
+ * the write path's NAME_TAKEN refusal and `checkProjectNameUniqueness` below
+ * cannot disagree about what a collision is. It lived as a private static on
+ * `Store` until D-50 and moved HERE, not beside it, because the store imports
+ * the catalog and the catalog cannot import the store (`cloudflare:workers`).
+ * A second normaliser that agrees on a fixture is the way this rule is broken
+ * without any suite noticing; `test/d50-project-names.test.mjs` asserts the
+ * two are the SAME function object, not that they give equal output.
+ *
+ * @param {unknown} title
+ * @returns {string}
+ */
+export function projectNameKey(title) {
+  return String(title ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+/**
+ * Membership v2 §11 item 8: project name uniqueness enforced IN THE CHECK
+ * CATALOG as well as at the write path. The write path refuses a colliding
+ * write (`Store#promote` and `Store#projectFork`, NAME_TAKEN); nothing could
+ * judge a corpus handed in from elsewhere — an export, a migration, another
+ * group's instance, §11 item 9's pre-enforcement recheck — until this.
+ *
+ * A CORPUS-level check, deliberately outside `checkBundle`: uniqueness is a
+ * fact about a SET of bundles and no single bundle can carry it.
+ *
+ * The rule is §7.1's three consequences, in full:
+ *   - compared by `projectNameKey` (case-insensitive, whitespace collapsed);
+ *   - across EVERY lifecycle state: a deactivated (`closed`) project is still
+ *     cited and its name must still resolve to what was cited, so there is NO
+ *     state filter here and there must never be one;
+ *   - about the project OBJECT: only bundles whose `object_type` is `project`.
+ *
+ * C-77.1 (error) names EVERY colliding PAIR, by bundle id and title — three
+ * projects on one key are three pairs, because each pair is a separate thing
+ * somebody has to resolve.
+ *
+ * C-77.2 (warning) names every bundle this check could NOT judge, which is
+ * first-class rather than silence: a bundle with no readable `bundle.md` (it
+ * may or may not be a project) and a project with no title (its key is empty,
+ * so it can collide with nothing; the write path refuses it NO_TITLE). A clean
+ * result over a corpus with C-77.2 findings is a clean result over the part
+ * that could be read, and the finding says which part could not.
+ *
+ * @param {Iterable<{folderName?: string, files: Map<string, string|Uint8Array>}>} corpus
+ *   the catalog's own BundleInput shape, one per bundle
+ * @returns {{pass: boolean, findings: Finding[], projects: number, judged: number}}
+ */
+export function checkProjectNameUniqueness(corpus) {
+  /** @type {Finding[]} */
+  const findings = [];
+  const keyed = [];
+  let projects = 0;
+  for (const input of corpus || []) {
+    const raw = input && input.files && input.files.get ? input.files.get('bundle.md') : undefined;
+    const fm = raw == null ? null : parseFrontmatter(asText(raw)).data;
+    const label = (fm && typeof fm.id === 'string' && fm.id) || (input && input.folderName) || '(unnamed bundle)';
+    if (!fm) {
+      findings.push(f('C-77.2', 'warning',
+        `${label}: bundle.md is ${raw == null ? 'absent' : 'unreadable'}, so whether it is a project, and whether its name collides, is UNDETERMINED`,
+        ['hand the corpus with this bundle\'s bundle.md readable and run the check again']));
+      continue;
+    }
+    if (normalizeType(fm.object_type) !== 'project') continue;
+    projects++;
+    const key = projectNameKey(fm.title);
+    if (!key) {
+      findings.push(f('C-77.2', 'warning',
+        `${label}: a project with no title cannot be compared for name uniqueness (the write path refuses it NO_TITLE)`,
+        ['give the project a title unique across the instance']));
+      continue;
+    }
+    keyed.push({ id: label, title: String(fm.title), state: fm.current_state, key });
+  }
+  for (let i = 0; i < keyed.length; i++) {
+    for (let j = i + 1; j < keyed.length; j++) {
+      const a = keyed[i], b = keyed[j];
+      if (a.key !== b.key) continue;
+      const st = (p) => (p.state === undefined ? '' : ` [${p.state}]`);
+      findings.push(f('C-77.1', 'error',
+        `project names collide: ${a.id} "${a.title}"${st(a)} and ${b.id} "${b.title}"${st(b)} are the same name `
+          + 'compared case-insensitively with whitespace collapsed (Membership v2 §7.1), which holds across '
+          + 'deactivated projects too',
+        ['rename one of the two projects so each name identifies one project',
+         'if one is deactivated, rename the live one: the deactivated project is still cited by its name']));
+    }
+  }
+  return { pass: !findings.some((x) => x.severity === 'error'), findings, projects, judged: keyed.length };
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -7846,6 +8131,8 @@ export function basisVersionFindings(fm, findings) {
     for (const [li, leg] of legs) {
       /* MK-4 / C-54.1: the same named refusal at the version's grain. */
       if (leadLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
+      /* D-162 / C-81.1: the theme refusal at the version's grain. */
+      if (themeLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
       const t = leg.target;
       if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
         push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical bundle id`);
@@ -9437,6 +9724,64 @@ export const MACHINE_FENCE_CHECKS = {
       + 'here is an automated one: it can help prepare the draft, and it cannot address it to anyone. '
       + 'Sign in to do this yourself.',
   },
+  /* D-149 (BIO_Case_Making_v0_1.md §2): stating which laws govern a records request is a member's authored
+     act — the design's words are *set by a member's authored act*, and a machine may PROPOSE a list, labelled
+     as machine work, and never set it. No proposal is built; the fence is the half that is. */
+  MACHINE_CANNOT_SET_LAWS: {
+    check: 'C-32.18',
+    where: 'src/store.mjs actionLaws > is-machine-set-laws',
+    translation: 'Which laws govern a request is a statement a member makes and is named beside: the laws '
+      + 'follow the agency asked, and somebody has to have read them. The credential that asked here is an '
+      + 'automated one, so it can gather what the agency is and cannot state which laws apply. Sign in to set '
+      + 'the list yourself.',
+  },
+};
+
+/* =========================================================================
+ * D-149 — THE GOVERNING-LAW FAMILY (C-73). `BIO_Case_Making_v0_1.md` §2, *A RECORDS REQUEST NAMES EVERY LAW
+ * THAT GOVERNS IT* (Bob, 2026-09-22).
+ *
+ * The list is set by ONE act, `op=actionlaws`, and by nothing else — not at creation, not by a revision through
+ * `op=promote`. That is what makes "an action with none reads undetermined" true of the BYTES and not only of a
+ * read: a writer that filled a citation in at creation would pass every read-side assertion while the record
+ * asserted a legal frame no member chose, so the creation arm is refused BY NAME (GOVERNING_LAWS_REWRITTEN).
+ * The machine fence is C-32.18, in its own family.
+ * ========================================================================= */
+export const GOVERNING_LAW_CHECKS = {
+  GOVERNING_LAWS_REWRITTEN: {
+    check: 'C-73.1',
+    where: 'src/store.mjs promote > is-promote-governing-laws',
+    translation: 'The laws that govern a request are set by a member with the governing-laws act, and a '
+      + 'document created or revised any other way carries them unchanged. This write would have set or '
+      + 'changed them without that act, so nothing was written. Use the governing-laws act to state them.',
+  },
+  NO_LAWS: {
+    check: 'C-73.2',
+    where: 'src/store.mjs actionLaws > is-laws-entry',
+    translation: 'The act names at least one law, each by its citation and its level. With none named there is '
+      + 'nothing to set: a request whose laws nobody has stated reads as undetermined on its own, and '
+      + 'setting an empty list would not make that any truer.',
+  },
+  BAD_LAW_LEVEL: {
+    check: 'C-73.3',
+    where: 'src/store.mjs actionLaws > is-laws-entry',
+    translation: 'Each law is stated at one of three levels: federal, state or local. One entry named a level '
+      + 'outside those three, so nothing was written.',
+  },
+  BAD_CITATION: {
+    check: 'C-73.4',
+    where: 'src/store.mjs actionLaws > is-laws-entry',
+    translation: 'Each law is named by its citation — a short reference such as a code section — and one entry '
+      + 'was empty, too long, repeated, or held a quotation mark, backslash or line break, which this record '
+      + 'cannot store. Nothing was written.',
+  },
+  TOO_MANY_LAWS: {
+    check: 'C-73.5',
+    where: 'src/store.mjs actionLaws > is-laws-entry',
+    translation: 'One act states at most twelve governing laws. A request governed at the federal, state and '
+      + 'local levels names a handful; a longer list is more likely a list of every law that might apply than '
+      + 'of the ones that do. Nothing was written.',
+  },
 };
 
 /* =========================================================================
@@ -10933,6 +11278,32 @@ export function checkCaseDocument(fm, ctx = {}) {
     if (typeof c.subject_justification !== 'string' || c.subject_justification.trim() === '')
       findings.push(f(C41.COMPLETENESS, 'error', 'a case document requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse (DEC-13)'));
   }
+  /* D-150 / BIO_Publication_v0_1.md §3 rule 11 — THE STATEMENT'S ACKNOWLEDGEMENTS, C-41.10's
+     arm because they are the completeness block's. ABSENCE IS NOT REQUIRED AWAY: a document
+     authored before acknowledgements were recorded carries no list, and it is read as saying
+     nothing about them (the ratify committer commits NULL, never an empty list), so this arm
+     cannot demand the key without refusing what already crossed (rule 1). What it refuses is a
+     list that claims more than it can support: a row naming no acknowledger or no kind, a count
+     that disagrees with the list, and the statement's own author listed as its second reader —
+     the one thing rule 11 says an acknowledgement is not. Nothing here asks for a row to exist:
+     none is ever required to publish. */
+  if (fm && fm.completeness_acknowledgements !== undefined) {
+    const acks = fm.completeness_acknowledgements;
+    if (!Array.isArray(acks)) {
+      findings.push(f(C41.COMPLETENESS, 'error', 'a case document\'s completeness_acknowledgements must be a list — empty when nobody but the statement\'s author acknowledged it (BIO_Publication §3 rule 11)'));
+    } else {
+      const author = c && typeof c.author === 'string' ? c.author : null;
+      for (const a of acks) {
+        if (!a || typeof a !== 'object' || !['participant', 'recipient'].includes(a.kind)
+            || typeof a.by !== 'string' || !a.by.trim() || typeof a.at !== 'string')
+          findings.push(f(C41.COMPLETENESS, 'error', `a case document lists an acknowledgement of its statement that names no acknowledger, kind (participant or recipient) or date (got ${JSON.stringify(a)}): an acknowledgement is an authored, attributed, dated act, and an unattributed one is the record claiming a second reader it cannot name`));
+        else if (a.kind === 'participant' && author && a.by === author)
+          findings.push(f(C41.COMPLETENESS, 'error', `a case document lists ${a.by}, the completeness statement's own author, as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication §3 rule 11), and an author acknowledging their own statement has read it once`));
+      }
+      if (c && c.acknowledged !== undefined && c.acknowledged !== acks.length)
+        findings.push(f(C41.COMPLETENESS, 'error', `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
+    }
+  }
   /* REC-96 / D-196 / IC-112 — THE `searched` SECTION, AND IT IS C-41.10's ARM
      BECAUSE IT IS THE SAME QUESTION. The completeness statement says what this
      case does not cover; this says what was looked for. A case carrying the first
@@ -12368,6 +12739,42 @@ export const PROJECT_AUTHORITY_CHECKS = {
   },
 };
 
+/* REC-149 / C-70 — A DISCOVERABLE PROJECT SHOWS ITS EXISTENCE, NOT ITS DOORS (Membership Architecture
+ * v2 §7, item 7.14, BOB #16 from Bob's ruling of 2026-09-18, *"each project chooses"*). A member who
+ * is outside a DISCOVERABLE project sees its id and name in the directory, and nothing else. Every act
+ * such a member aims at it — other than the request to join — is refused POSITIONALLY with this code,
+ * carrying the project's id and name and NOTHING else. A "does not exist" answer there would be false
+ * about a project the directory has just shown the caller; a HIDDEN project still answers exactly as
+ * one that does not exist (§7.9, REC-138), and this code is never said about one. Minted in ONE region,
+ * `Store#existenceOnly`, which every act's sight check relays. */
+export const PROJECT_VISIBILITY_CHECKS = {
+  PROJECT_SEEN_NOT_A_PARTICIPANT: {
+    check: 'C-70.1',
+    where: 'src/store.mjs #existenceOnly > is-project-existence-only',
+    translation: 'This project can be found, but you are not one of its participants, so you cannot do '
+      + 'that in it or see what is inside it. Nothing was changed. You can ask its owners to add you.',
+  },
+  PROJECT_VISIBILITY_NOT_THE_OWNER: {
+    check: 'C-70.2',
+    where: 'src/store.mjs projectVisibilitySet > is-project-visibility-owner',
+    translation: 'Only an owner of this project can choose whether it can be found. You are not one of '
+      + 'its owners, and seeing a project does not let you direct it — administrators included. '
+      + 'Nothing was changed.',
+  },
+  PROJECT_VISIBILITY_UNKNOWN_SETTING: {
+    check: 'C-70.3',
+    where: 'src/store.mjs projectVisibilitySet > is-project-visibility-owner',
+    translation: 'A project is either discoverable or hidden, and nothing else. Nothing was changed. '
+      + 'Choose one of the two.',
+  },
+  PROJECT_DIRECTORY_NEEDS_A_MEMBER: {
+    check: 'C-70.4',
+    where: 'src/store.mjs projectDirectory > is-project-directory-member',
+    translation: 'The list of projects you can ask to join is for a signed-in member. Sign in as yourself to '
+      + 'see it.',
+  },
+};
+
 /* REC-137 / C-57 — A CASE RATIFICATION'S AUTHORITY IS ITS SIGNATURES, AND THEY MUST INCLUDE AN
  * OWNER OF THE PUBLISHING PROJECT (Membership Architecture v2 §7, the bullet *"A CASE
  * RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18; DEC-72 clause 5:
@@ -12588,6 +12995,102 @@ export const CONTRADICTION_PAIR_CHECKS = {
   },
 };
 
+/* D-148 / C-72 — A FEE QUOTE IS EVIDENCE (`BIO_Case_Making_v0_1.md` §2). The refusals of the quote grammar
+ * (`quoteFindings`, which C-2.10 also reports over the document, each finding carrying the same code) and of
+ * its read. The rule lives in ONE pure function; op=actioncorrespond refuses by these names before anything is
+ * written, and op=actionquotes refuses a read that names neither axis. None of them judges a quote. */
+export const QUOTE_CHECKS = {
+  QUOTE_NOT_ON_RECEIVED: {
+    check: 'C-72.1',
+    where: 'src/store.mjs actionCorrespond > is-quote-grammar',
+    translation: 'A quote is what a body sent back, so it belongs on an entry recording something received. '
+      + 'Record the reply as received and put the quote on it.',
+  },
+  QUOTE_AMOUNT_NOT_A_NUMBER: {
+    check: 'C-72.2',
+    where: 'src/store.mjs actionCorrespond > is-quote-grammar',
+    translation: 'The amount is kept exactly as the body wrote it, but it has to read as a number — digits, '
+      + 'with an optional decimal part and thousands separators. Otherwise it cannot be set beside another quote.',
+  },
+  QUOTE_NO_CURRENCY: {
+    check: 'C-72.3',
+    where: 'src/store.mjs actionCorrespond > is-quote-grammar',
+    translation: 'A quote records the currency the body named. The record will not assume one, so say which '
+      + 'currency the amount was quoted in.',
+  },
+  QUOTE_ANSWERS_NO_SENT: {
+    check: 'C-72.4',
+    where: 'src/store.mjs actionCorrespond > is-quote-grammar',
+    translation: 'A quote answers a request, and this one names no earlier sent entry in this ledger. Record '
+      + 'the request first, then name its position as the entry this quote answers.',
+  },
+  QUOTE_REVISES_NO_QUOTE: {
+    check: 'C-72.5',
+    where: 'src/store.mjs actionCorrespond > is-quote-grammar',
+    translation: 'A revision names the earlier quote it changes, and the position given holds no quote. Both '
+      + 'the original and the revision stay on the record, so the revision has to point at a real one.',
+  },
+  QUOTE_TEXT_UNWRITABLE: {
+    check: 'C-72.6',
+    where: 'src/store.mjs actionCorrespond > is-quote-writable',
+    translation: 'The currency or the stated basis is too long, or holds a quotation mark, a backslash or a '
+      + 'line break, which the record cannot store. Shorten it or leave those characters out.',
+  },
+  QUOTE_READ_UNASKED: {
+    check: 'C-72.7',
+    where: 'src/store.mjs actionQuotes > is-quote-read-axis',
+    translation: 'Quotes are listed by the body that quoted them or by the request they answer. Name one of '
+      + 'the two — not neither, and not both at once.',
+  },
+  QUOTE_ANSWERS_NOT_AN_ORD: {
+    check: 'C-72.8',
+    where: 'src/store.mjs actionQuotes > is-quote-read-axis',
+    translation: 'A request is named by its position in the action\'s correspondence, which is a whole number '
+      + 'counted from zero. Give that number to see only the quotes answering that request.',
+  },
+};
+
+/* D-394 / C-80 — THE CROSS-VERSION NOTICE'S REFUSALS
+ * (`BIO_Content_Framework_v0_10.md` §18.1, the cross-version relation).
+ *
+ * THE READ TAKES EXACTLY ONE SUBJECT, and every refusal here is about the subject
+ * rather than about the answer. The answer itself is never refused: a citation whose
+ * document's version chain cannot be read is ANSWERED, with `newer: null` and the
+ * reason, because a refusal there would read as "nothing to report" to a surface
+ * that renders refusals quietly — the record knowing less than it says it does.
+ *
+ * ABSENT AND INVISIBLE ARE ONE ANSWER on both lookups, as on every gated read in
+ * this plane (`op=content`'s NO_SUCH_CONTENT, `op=narrowcandidates`'
+ * NARROW_NO_INQUIRY): a question or a passage in a project the caller was never
+ * invited to refuses byte-identically to one that does not exist. */
+export const VERSION_NOTICE_CHECKS = {
+  /* Neither subject, or both. There is no default: the notice is about a CITATION,
+     and a notice answered for no citation, or for two at once, is a list the caller
+     did not ask for wearing the word "notice". */
+  VERSION_NOTICE_NO_SUBJECT: {
+    check: 'C-80.1',
+    where: 'src/store.mjs versionNotice > is-version-notice-subject',
+    translation: 'That request did not say which citation to check. Ask about one question (target=) '
+      + 'to check every passage its evidence rests on, or about one passage (content=) — one of the '
+      + 'two, not both and not neither.',
+  },
+  /* The question named is not one this caller may read, or is not a question. */
+  VERSION_NOTICE_NO_INQUIRY: {
+    check: 'C-80.2',
+    where: 'src/store.mjs versionNotice > is-version-notice-subject',
+    translation: 'There is no question by that id that you can read here. A question you may not see '
+      + 'answers exactly as one that does not exist, so nothing about it was checked.',
+  },
+  /* The passage named is not a content row this caller may read. */
+  VERSION_NOTICE_NO_CONTENT: {
+    check: 'C-80.3',
+    where: 'src/store.mjs versionNotice > is-version-notice-subject',
+    translation: 'There is no cited passage by that id that you can read here. A passage id exists once '
+      + 'somebody has cited that part of a document; one in a project you were not invited to answers '
+      + 'exactly as one that does not exist.',
+  },
+};
+
 /* D-436 / C-64 — THE INSTANCE'S PRODUCING GROUP (BIO_State_Rules_Consistency_v1_5.md §3.1: `group` is the
  * producing group's slug and travels with every distributed copy — so it is in the SIGNED bytes). The plane
  * used to write one literal slug there, true of one instance and false of every instance `newgroup` installs.
@@ -12625,6 +13128,37 @@ export const INSTANCE_GROUP_CHECKS = {
     translation: 'This copy\'s group is already recorded, and it is recorded once: the name travels inside every '
       + 'document the record has signed, so a second name would make those documents name a producer they were '
       + 'not written under. Nothing was changed.',
+  },
+  /* REC-164 — BIO_Publication_v0_1.md §7 points 2 and 3: the display name and the domain are set by an
+     administrator's own signed-in session, and the record names who set each one. */
+  GROUP_IDENTITY_NEEDS_SESSION: {
+    check: 'C-64.4',
+    where: 'src/index.mjs fetch > is-group-identity-session',
+    translation: 'The name this group shows the public, and the web address it claims, are set by one of its '
+      + 'administrators, and the record names who set each one. The credential that asked here is one of the '
+      + 'operator\'s access tokens for this copy, not a person, so it cannot be that administrator. Sign in as '
+      + 'the administrator and set it from there. Nothing was changed.',
+  },
+  GROUP_IDENTITY_NOT_ADMIN: {
+    check: 'C-64.5',
+    where: 'src/store.mjs #groupIdentityGate > is-group-identity-admin',
+    translation: 'Only one of the group\'s administrators can set the name it shows the public or the web '
+      + 'address it claims. The person signed in here is not one of its active administrators. Nothing was '
+      + 'changed.',
+  },
+  GROUP_DISPLAY_NAME_MALFORMED: {
+    check: 'C-64.6',
+    where: 'src/store.mjs groupNameSet > is-group-display-name',
+    translation: 'A display name is the group\'s own words for itself: some text, at most 120 characters, on '
+      + 'one line. It is always shown beside the group\'s short name and never instead of it. Nothing was '
+      + 'changed.',
+  },
+  GROUP_DOMAIN_MALFORMED: {
+    check: 'C-64.7',
+    where: 'src/store.mjs groupDomainSet > is-group-domain',
+    translation: 'A web address is claimed by its bare domain name, like example.org: no https://, no path and '
+      + 'no port. The claim is then checked by reading a file the domain itself serves, and the public sees '
+      + 'the domain only while that check passes. Nothing was changed.',
   },
 };
 
@@ -12671,6 +13205,165 @@ export function leadLegFindings(label, leg, findings) {
     }
   }
   /* END DEC-49 REGION is-lead-not-evidence */
+  return false;
+}
+
+/* =====================================================================
+ * D-162 / IC-241 — THE THEME (`BIO_Content_Framework_v0_10.md` §8.4, Bob's
+ * ruling of 2026-09-21 and its four fences): a connection through an IDEA.
+ * C-81, minted with `node tools/mintid.mjs C`.
+ *
+ * ITS OWN FAMILY because its subject is its own: the ways a member's declared
+ * LENS could come to claim more than it is. Bob: *"these fuzzy ideas could
+ * become a narrative without basis"*. The four fences, and where each is held:
+ *
+ *   1. declared by a MEMBER, attributed on every reading   is-theme-declare
+ *   2. it carries its TEST, or it is not declared           is-theme-declare
+ *   3. membership is a member's act; a machine's proposal   is-theme-place,
+ *      is a HUNCH (grade C) and never membership            is-theme-propose
+ *   4. NEVER THE BASIS OF A CLAIM: no basis, version or     is-theme-not-evidence
+ *      action-basis leg rests on a theme or on membership
+ *      in one, refused BY NAME as a lead is (C-54.1)
+ *
+ * THE LIAR THIS FAMILY REFUSES is a theme as an ELEVENTH ENTITY KIND — a named,
+ * citable thing — so that two documents "about deferred maintenance" would read
+ * as connected through a subject the record holds rather than through one
+ * member's declared lens. The first fence is STRUCTURAL: a theme lives in
+ * `themes` under a `THEME-` id that no leg grammar accepts, and `ENTITY_KINDS`
+ * does not contain it. The second is C-81.1, which names the theme instead of
+ * answering "not a canonical bundle id" — a member told their theme is a
+ * malformed id would go looking for a way to make it citable.
+ * ===================================================================== */
+export const THEME_ID_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+$/;
+/* A leg can name a theme BARE, or name a MEMBERSHIP in one by the theme's id with
+   an address after it (`THEME-…#INFO-…`, `THEME-…/…`, `THEME-…:…`) — resting on
+   membership is still resting on the theme, so both are the same refusal. */
+const THEME_REF_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+(?:[#/:?].*)?$/;
+/* The leg keys that can only mean "this leg counts BECAUSE of a theme". No leg
+   grammar reads either; a leg carrying one is claiming membership as a reason. */
+const THEME_LEG_KEYS = ["theme", "themes"];
+
+/* IC-246 / C-82 (minted with `node tools/mintid.mjs C` by c19-unionfix, 2026-09-24) — op=statementack's bound on
+ * the unsigned case documents one acknowledgement re-authors (BIO_Publication_v0_1.md §3 rule 11). Over it the act
+ * is REFUSED and nothing is written, because a cut would leave a document listing fewer second readers than the
+ * record holds, and its owner would sign that absence. */
+export const STATEMENT_ACK_CHECKS = {
+  STATEMENT_ACK_DOCUMENTS_OVER_BOUND: {
+    check: 'C-82.1',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-documents-bound',
+    translation: 'More unsigned case documents of this project carry this exact exclusion statement than one '
+      + 'acknowledgement can update at once. Updating only some would leave the others listing fewer second '
+      + 'readers than the record holds, so nothing was recorded. Sign or replace some of those documents, then '
+      + 'acknowledge the statement again.',
+  },
+};
+
+export const THEME_CHECKS = {
+  THEME_NOT_EVIDENCE: {
+    check: 'C-81.1',
+    where: 'checks/bio-checks.mjs themeLegFindings > is-theme-not-evidence',
+    translation: 'That leg rests on a THEME. A theme is one member\'s declared lens — an idea they use to '
+      + 'gather material — and it is never the basis of a claim, so nothing can rest on it or on a '
+      + 'document\'s membership in it. Cite the document or the passage itself: what a finding rests on '
+      + 'is content, whatever theme led you to it.',
+  },
+  THEME_NOT_A_MEMBER: {
+    check: 'C-81.2',
+    where: 'src/store.mjs themeDeclare > is-theme-declare',
+    translation: 'A theme is declared by a person, in their own name, and every reading of it shows whose '
+      + 'lens it is. The credential that asked is an automated one, which has nobody behind it to hold '
+      + 'the idea. Sign in and declare it yourself.',
+  },
+  THEME_NO_TEST: {
+    check: 'C-81.3',
+    where: 'src/store.mjs themeDeclare > is-theme-declare',
+    translation: 'A theme needs its TEST: one sentence a document or a passage either passes or fails, so '
+      + 'any member can check a placement against it. Without one the theme is a label anything could '
+      + 'wear, and it cannot be declared.',
+  },
+  THEME_NO_NAME: {
+    check: 'C-81.4',
+    where: 'src/store.mjs themeDeclare > is-theme-declare',
+    translation: 'A theme needs its idea in a few words — what you are calling it, such as "deferred '
+      + 'maintenance" — as well as its test. Nothing was declared.',
+  },
+  THEME_TOO_LONG: {
+    check: 'C-81.5',
+    where: 'src/store.mjs themeDeclare > is-theme-declare',
+    translation: 'The theme\'s name or its test is longer than the record stores in one passage. It was '
+      + 'refused rather than cut, so nothing you wrote is silently lost. Shorten it and declare it again.',
+  },
+  THEME_NOT_FOUND: {
+    check: 'C-81.6',
+    where: 'src/store.mjs #themeFor > is-theme-source',
+    translation: 'No theme is recorded under that id. Use the id the declaration returned, or list the '
+      + 'themes to find it.',
+  },
+  THEME_PLACEMENT_NOT_A_MEMBER: {
+    check: 'C-81.7',
+    where: 'src/store.mjs themePlace > is-theme-place',
+    translation: 'Placing a document in a theme is a member\'s judgement that it passes the theme\'s test, '
+      + 'recorded in their name. An automated credential may only PROPOSE a placement, which stays a hunch '
+      + 'until a member confirms it. Sign in to place it, or propose it instead.',
+  },
+  THEME_TARGET_NOT_FOUND: {
+    check: 'C-81.8',
+    where: 'src/store.mjs #themeTarget > is-theme-target',
+    translation: 'Nothing you can see in the record answers to that document or passage id, so it cannot be '
+      + 'placed in a theme. Name a document by its id, or a passage by the content id it was minted under.',
+  },
+  THEME_REASON_TOO_LONG: {
+    check: 'C-81.9',
+    where: 'src/store.mjs #themeTarget > is-theme-target',
+    translation: 'The note on this placement is longer than the record stores in one passage. It was '
+      + 'refused rather than cut. Shorten it and try again.',
+  },
+  THEME_NO_PROPOSER: {
+    check: 'C-81.10',
+    where: 'src/store.mjs themePropose > is-theme-propose',
+    translation: 'A proposal must say who proposed it, and this one arrived carrying nobody. The record '
+      + 'stamps the proposer from the credential that asked; nothing was written.',
+  },
+};
+
+/** C-81.1 — ONE LEG, ASKED WHETHER IT RESTS ON A THEME OR ON MEMBERSHIP IN ONE.
+ *  C-54.1's shape exactly, consulted at the same three doors (`checkInquiryBasis`'
+ *  basis[], the version legs, the action basis), so fence 4 has one spelling. It
+ *  asks the two fields a leg names a referent through — the target and the REC-82
+ *  content id — and the leg keys that could only mean "counts because it is in a
+ *  theme". A leg citing a DOCUMENT that happens to be in a theme is NOT refused:
+ *  what a finding rests on stays content (§8.4 fence 4), and the document is
+ *  content. Returns true when it pushed a finding, so the caller skips its own
+ *  target complaint about the same leg rather than answering with the wrong name. */
+export function themeLegFindings(label, leg, findings) {
+  const l = leg && typeof leg === 'object' ? leg : {};
+  /* The family helper, by name: DEC-49's guard judges `refusal("CODE"` at the site. */
+  const refusal = (code, message, repairs) => f(THEME_CHECKS[code].check, 'error', message, repairs, code);
+  const REPAIRS = ['cite the document or the passage itself — the theme is how you found it, not what it shows',
+                   'or leave the theme out of the leg: membership in a theme is never a reason a leg counts'];
+  /* DEC-49 REGION is-theme-not-evidence */
+  for (const field of ['target', 'content_id']) {
+    const v = typeof l[field] === 'string' ? l[field].trim() : '';
+    if (v && THEME_REF_RE.test(v)) {
+      findings.push(refusal("THEME_NOT_EVIDENCE",
+        `${label}.${field} '${v.slice(0, 80)}' names a THEME${THEME_ID_RE.test(v) ? '' : ' membership'}, and a theme `
+        + `is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's `
+        + `declared lens, not evidence, so no leg can rest on it or on membership in it`, REPAIRS));
+      return true;
+    }
+  }
+  for (const key of THEME_LEG_KEYS) {
+    const v = l[key];
+    const named = typeof v === 'string' ? v.trim() !== '' : Array.isArray(v) ? v.length > 0 : v != null && v !== false;
+    if (named) {
+      findings.push(refusal("THEME_NOT_EVIDENCE",
+        `${label}.${key} claims the leg through a THEME, and membership in a theme is never a reason a leg `
+        + `counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing`,
+        REPAIRS));
+      return true;
+    }
+  }
+  /* END DEC-49 REGION is-theme-not-evidence */
   return false;
 }
 
@@ -13184,6 +13877,31 @@ export function imagePartUndetermined(extent, ctx = {}) {
   return null;
 }
 
+/** CPDF-22 (BOB #31, 2026-09-23) — D-420'S PAGE FORM IN THE SAME SHAPE. An image
+ *  `{page}` (with or without a rect) admitted because the record holds no list of
+ *  the images this capture's pages PAINT — a PDF acquired before D-420, a walk that
+ *  did not finish, a capture that is not a PDF — states it as `{level:
+ *  'page_images', why}`. The sentence is the store's (`page_images_why`, naming
+ *  which absence), so the statement cannot describe a different context than the
+ *  one the checker judged. Null when the list was held and checked. */
+export function imagePageUndetermined(extent, ctx = {}) {
+  const e = extent && typeof extent === 'object' ? extent : null;
+  if (!e || e.kind !== 'image' || !Number.isInteger(e.page)) return null;
+  const c = ctx && ctx.container && typeof ctx.container === 'object' ? ctx.container : null;
+  if (!c || typeof c.page_images_why !== 'string' || !c.page_images_why) return null;
+  return { level: 'page_images', why: c.page_images_why };
+}
+
+/** CPDF-22 — ONE SHAPE FOR "ADMITTED, BOUND NOT HELD" on every mint answer
+ *  (BOB #31, 2026-09-23): `undetermined: {level, why}`, the record's UNDETERMINED
+ *  primitive (BIO_System_Design §3, construct 12). D-420's second shape for the
+ *  same statement is WITHDRAWN (one IC, I3); `mintContent` asks this and nothing
+ *  else. A `{part}` and a `{page}` are exclusive address forms, so at most one of
+ *  the two answers. */
+export function mintUndetermined(extent, ctx = {}) {
+  return imagePartUndetermined(extent, ctx) || imagePageUndetermined(extent, ctx);
+}
+
 /* D-420 — THE PAGE FORM'S BOUND: the images a PDF's pages PAINT, as the record
  * holds them (`container.images` of a `container_name: 'pdf'` extent, each
  * `{page, rect}`, written at acquire from the structure op). Returns a sentence
@@ -13219,6 +13937,72 @@ function coversImagePlacement(e, container) {
     + `${onPage.length ? ` (${listed}${onPage.length > 6 ? ' …' : ''})` : ''} and none at `
     + `[${want.join(', ')}], the rectangle the extent names`;
 }
+
+/* D-126 / C-76 — THE TASK-ACTOR FENCE'S REFUSAL, TRANSLATED BECAUSE A MEMBER CAN NOW MEET IT.
+ *
+ * `NOT_YOURS` is REC-4's fence (`store.mjs #refuseNotYours`): a member who is neither a task's assignee nor an
+ * administrator may not resolve or forward it. Until D-126 no surface could receive it — `op=queue` lists a member
+ * only their own and unassigned obligations, so the queue had nothing it could be refused (UI-14 §7). A SELECTION
+ * changes that: an obligation that moves to somebody else between the paint and the act is RETAINED under this
+ * code, and the queue renders the reason. So the code enters reach and carries a canned sentence (DEC-49). The
+ * `detail` still names who holds it; the translation does not, because it is canned. */
+export const TASK_ACTOR_CHECKS = {
+  NOT_YOURS: {
+    check: 'C-76.1',
+    where: 'src/store.mjs #refuseNotYours > is-task-actor-fence',
+    translation: 'This task is not yours to act on: it is with another member now, so nothing was done to it. '
+      + 'The record says below who holds it. Ask them, or an administrator, if it still needs you.',
+  },
+};
+
+/* D-126 / C-75 — THE PER-ITEM WEIGHT (NOTIFICATIONS.md §Applying a handler to a selection).
+ *
+ * Bob's requirement: *"select some (or all) to apply the action to. When the handler is applied to a
+ * notice, it would then indicate whether that notice can be deleted from the list. If that action
+ * didn't work for one or more, they'd stay in the list so that the user can take a different action."*
+ * The design's rule: **each item independently succeeds or is RETAINED WITH A REASON**, and the reason is
+ * the act's OWN refusal for that item, in the plane's own words — never a sentence this family composes
+ * about it. So this family words only what belongs to the SET: a set that is not a set, a set too large
+ * to act on, an item that is not an item, an item whose act threw, and the summary that some items were
+ * kept. Every retained item still carries its own act's `reason` beside this family's summary.
+ *
+ *   C-75.1 — no items: `items` is absent from the set form, not an array, or empty.
+ *   C-75.2 — too many items: over `Store.PER_ITEM_MAX`, refused WHOLE before any item is tried.
+ *   C-75.3 — one item is not an object; THAT item is retained and the others are still tried.
+ *   C-75.4 — one item's act failed without a refusal (it threw); THAT item is retained and says so.
+ *   C-75.5 — the summary: at least one item was retained. Carried beside `items[]`, never instead of it. */
+export const PER_ITEM_CHECKS = {
+  SET_NO_ITEMS: {
+    check: 'C-75.1',
+    where: 'src/store.mjs #perItem > is-per-item-set-shape',
+    translation: 'Nothing was selected, so nothing was done. Choose at least one item and try again.',
+  },
+  SET_TOO_LARGE: {
+    check: 'C-75.2',
+    where: 'src/store.mjs #perItem > is-per-item-set-shape',
+    translation: 'That selection is larger than the record acts on at once, so nothing was done to any of '
+      + 'it. Select fewer items and apply the action again.',
+  },
+  SET_ITEM_MALFORMED: {
+    check: 'C-75.3',
+    where: 'src/store.mjs #perItem > is-per-item-malformed',
+    translation: 'This item could not be read as an item, so it was left as it was. The rest of the '
+      + 'selection was still acted on, one by one.',
+  },
+  SET_ITEM_FAILED: {
+    check: 'C-75.4',
+    where: 'src/store.mjs #perItem > is-per-item-failed',
+    translation: 'The record could not complete the action on this item and did not change it. It stays '
+      + 'in your list. The rest of the selection was still acted on, one by one.',
+  },
+  SET_ITEMS_RETAINED: {
+    check: 'C-75.5',
+    where: 'src/store.mjs #perItem > is-per-item-retained',
+    translation: 'Not every selected item was handled. The ones that were have left your list; the ones that '
+      + 'were not are still there, each with the reason the record gave for it, so you can take a '
+      + 'different action on them.',
+  },
+};
 
 /* =========================================================================
  * FW-17 · THE DETERMINING REFERENCE PAIR, AND WHAT A PORTION MAY EARN FROM IT
@@ -13314,8 +14098,48 @@ export const CONNECTION_PAIR_CHECKS = {
       + 'linked the two documents through the strongest-graded mention without anyone choosing '
       + 'which mention is the one on point. Because another mention bears on the part you cited, '
       + 'whether this connection reaches your citation is undetermined rather than yes or no. A '
-      + 'citation of the document as a whole is answered today; choosing which mention is the '
-      + 'on-point one for this connection is not yet something the record lets anyone do.',
+      + 'citation of the document as a whole is answered today; a member may also choose which '
+      + 'mention is the on-point one for this connection, and the answer then follows that choice.',
+  },
+};
+
+/* REC-122 / D-161 act (3) / IC-232 — THE MEMBER'S CHOICE OF THE ON-POINT PAIR, C-74
+ * (minted with `node tools/mintid.mjs C`; C-68 was minted first and found TAKEN on an
+ * in-flight landing branch, so it was abandoned — gaps cost nothing).
+ *
+ * ITS OWN FAMILY AND NOT A SUB-NUMBER OF C-49, because C-49 is a READ's answer about
+ * what a portion may earn and this is an ACT's refusal: the three ways a member's
+ * choice could record something that was not established — a choice nobody made
+ * (a machine credential, or no name at all), a choice about a connection the record
+ * does not hold (or holds out of the chooser's sight, answered identically), and a
+ * choice of a mention the document does not carry. REC-86's C-50.5 is the leg-side
+ * twin of the first and its wording is mirrored on purpose.
+ *
+ * ONE REGION, `is-connection-choice`, in `Store#chooseConnectionPair`; one helper
+ * named `refusal`; every code a literal at its site. */
+export const CONNECTION_CHOICE_CHECKS = {
+  CONNECTION_CHOICE_NOT_A_MEMBER: {
+    check: 'C-74.1',
+    where: 'src/store.mjs chooseConnectionPair > is-connection-choice',
+    translation: 'Choosing which mention of a subject is the one on point for a connection is a '
+      + 'member\'s own act, done in their name. A machine may point out the mentions a document '
+      + 'holds, but deciding which one a connection rests on is a judgment a person signs for.',
+  },
+  CONNECTION_CHOICE_NO_CONNECTION: {
+    check: 'C-74.2',
+    where: 'src/store.mjs chooseConnectionPair > is-connection-choice',
+    translation: 'That request does not name a connection this record holds and you can see. A '
+      + 'connection is named by the two documents it joins and the subject that joins them, and '
+      + 'it exists once the record has derived it — choose after it appears among the document\'s '
+      + 'connections.',
+  },
+  CONNECTION_CHOICE_NOT_A_MENTION: {
+    check: 'C-74.3',
+    where: 'src/store.mjs chooseConnectionPair > is-connection-choice',
+    translation: 'The mention named is not one this document carries for that subject. The choice '
+      + 'is among the places the record actually read the subject in this document, by the '
+      + 'reference as the reading recorded it; a mention the record never read cannot be the one '
+      + 'a connection rests on.',
   },
 };
 

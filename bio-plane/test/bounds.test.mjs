@@ -14,6 +14,7 @@
 /* NEGATIVE CONTROL: (run 2026-08-07, rec59-agent, IC-24/REC-59) FOUR arms, each RUN, every file restored BYTE-IDENTICALLY (sha256 compared). (1) REVERT op=projection TO THE BARE ARRAY — in src/store.mjs projection(), insert `return bundles;` above the envelope's `return {` -> 25 assertions fail across FOUR suites: bounds 6 (both PIN arms, the PIN GUARD, and three of op=projection's LIVE arms including the DELTA), gate-reads 4 (the enumeration, and all three of the viewer-gated `total` / viewer-independent `limit` arms), projection 3 (the json_extract read and both filter-total arms), projects 12. (1b) AND THE CONTROL FOUND A DEFECT IN THE INSTRUMENT RATHER THAN CONFIRMING IT: on the first run gate-reads, projection and projects all THREW on `.bundles.length` / `.find(...)` of undefined and DIED, hiding every arm behind the throw — D-93's class inside a control. Every migrated read is null-tolerant now, so the control NAMES what it broke; the failure counts above are the post-fix ones. (2) A SECOND BARE-ARRAY CAPPED OP, run in two stages because the stages fail differently and only the second is the pin: (2a) add a capped method returning a bare array plus its dispatch entry -> the walk FINDS it (`op=ncsecond -> ncSecondBareArray` prints on the roster) and 3 fail, headed by "every capped op the walk found is DRIVEN here"; (2b) additionally drive it into `answersByOp` -> **"PIN: ZERO capped ops answer with a bare array" FAILS with `got ["ncsecond"]`**, naming the offender, which is the proof it is a pin and not an exemption. (3) NEUTER THE WALKS, both of them: (3a) `cappedMethods` -> `return new Map()` -> 9 fail including all three REACH-AS-A-DELTA arms, with the corpus PRINTED as `0 carrying a cap, reaching 0 ops`; (3b) empty the consumer walk's corpus (`allFiles.length = 0`) -> 8 fail, corpus PRINTED as `0 files, 0 chars`, every REC-59 REACH arm among them — while "REC-59 REACH (THE FAILURE MODE NAMED)" deliberately STAYS GREEN, because its whole subject is that IC-24's claim still reads true over nothing. (4) OVER-STRICTNESS — inherited from REC-57 and still passing, plus this item's own PIN GUARD arm proving the array reader can still SEE an array when one is present. */
 /* NEGATIVE CONTROL: (run 2026-08-07, rec60-agent, REC-60/D-225) THIS SUITE'S SHARE of REC-60's controls, run against the three ops that JOINED its roster when they gained a bound, each restored byte-identically. (1) RESTORE EACH UNBOUNDED READ in src/store.mjs — drop `LIMIT ?`/`cap + 1` and the `limit:`/`truncated` keys — and this file fails FOUR arms per op, every one naming it: the bound-applied arm, both direction arms, and the DELTA. Run per op: resolutionsForCapture 4, documentsConcerning 4, connectionsFor 4. (2) COUNT WHAT IT SENT (`const truncated = false;` beside a real slice) -> 2 fail per op here, the cut-answer arm and the DELTA. Note that the WALK stays green under (2) — the scan is still capped, so `OPS.size` is still 14 and only the LIVE arms catch a dishonest answer. (3)/(4) are `test/meaning-bounds.test.mjs`'s, which is where REC-60's own walk and its reach deltas live. */
 /* NEGATIVE CONTROL: (run 2026-08-08, rec67-agent, REC-67) FIVE arms, each armed ALONE with every other held open, every file restored from a PRISTINE pre-arm copy and verified by sha256 AND by `cmp`. Baseline 147/0. (1) PLANT A REAL CORPUS-ARM CALL SITE — a new file `civicos-ui/nc-rec67-arm1.mjs` calling `ask("projection", "jsonPath=…")` through an ordinary local helper -> 146/1, the ONE failure being `civicos-ui reaches op=projection ONLY through the &id= arm`, and the helper roster PRINTS the planted file and its callee. **This is the arm proving the narrowing did not blind the walk.** (2) PLANT UI-46's EXACT REGRESSION — `CLASS.methods.get("projection")` in `civicos-ui/nc-rec67-arm2.mjs` -> 147/0, GREEN, the planted file absent from the roster and the site count unmoved at 40. **A green arm proves nothing on its own, so the same planted file was read by the PRE-FIX matcher in the same turn: it classified it `helper corpus-bare civicos-ui/nc-rec67-arm2.mjs:3` and took the count to 41** — which is the 106/106 -> 105/106 failure reproduced and then shown fixed. (3) NEUTER THE RESOLUTION (`if (false && TRANSPORT.test(b))`) -> 142/5, the helper roster PRINTED as `0 site(s) … NONE`, the total dropping 40 -> 38, and the two REC-67 HELPER REACH arms among the failures with both synthetic guards. (4) OVER-STRICTNESS — a real call through `zzq` -> `hop` -> `fetch`, a spelling no list ever carried, two hops deep -> 146/1, FOUND and named `via zzq()`. The old list-based matcher could not have passed this arm. (5) is `meaning-bounds.test.mjs`'s and (6) `plane-envelope.test.mjs`'s — the two sibling walks in the same class, recorded in their own headers. THE HARNESS'S OWN FAULT, RECORDED RATHER THAN SMOOTHED: its first run reported `exit 1 · null pass, null fail` for EVERY arm INCLUDING THE BASELINE, because it joined the suite path onto the repo root while running with `cwd=bio-plane`. Only the baseline row made it visible; without one, six arms failing for a reason unrelated to their subject read exactly like six arms working. */
+/* NEGATIVE CONTROL: (run 2026-09-23, c18-batch7fix, D-148's arms joined at the c17-batch7 union) ONE arm, RUN. (1) COUNT WHAT IT SENT — in src/store.mjs actionQuotes, `const truncated = rows.length > max;` -> `const truncated = false;`, anchor asserted to occur exactly once, restored by cp from a pristine copy and verified by sha256 AND cmp (419e0f54…, 3,023,229 B). DECLARED: the bite arm and the DELTA fail; the whole arm and every other arm hold. RESULT 173/5 against a 175/3 baseline, AS DECLARED: exactly "op=actionquotes: publishes the bound it APPLIED (`max`), and a cut answer SAYS SO …" and "op=actionquotes: DELTA …" were added; the three standing reds (PIN GUARD and both PIN arms, naming groupidentity/statementack and biasmanifest) were red before arming.  ALSO RUN 2026-09-24 by c19-unionfix (IC-246, CONDUCT #19's spec), ONE arm, alone, restored by cp from a per-arm pristine copy verified by sha256 AND cmp (store.mjs 3,160,297 B). (gi) the NAMED bound undone — op=groupidentity's `LIMIT ?` with max + 1 -> the literal `LIMIT 20`. DECLARED: the bite and the DELTA fail. RESULT 191/2 against a 193/0 baseline, AS DECLARED: exactly "op=groupidentity: THE BITE …" and "op=groupidentity: DELTA …". */
 /* REC-57 · EVERY CAPPED OP PUBLISHES THE BOUND IT APPLIED, AND WHETHER IT BIT.
  * ===================================================================== *
  * UI-39 measured this one layer up: a plane that caps and does not say so forces
@@ -116,6 +117,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, extname, relative } from "node:path";
 import { createHash } from "node:crypto";
+import { makePublishingProject } from "./publishingproject.mjs";
 /* M0-18 — ONE mechanism, imported, never a copy of the rule. Why the module
    exists and what it cannot see is in its own header; why THIS suite needed it
    is at the REC-59 corpus walk below. */
@@ -572,7 +574,38 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      not the caller's, and it REFUSES rather than cuts: `BASIS_VERSION_LEGS_MAX` over the question's
      reasons, because a partition checked over a truncated basis could pass as covering reasons it never
      saw. DRIVEN below with the refusal arm, and carried in DRIVEN_ELSEWHERE for versionstrength's reason. */
-  OPS.size, 37);
+  /* MOVED 37 -> 39 AT INTEGRATION by c18-batch7fix for CONDUCT #18 (2026-09-23, land/conduct/c17-batch7), from
+     THIS ARM'S OWN FAILURE OUTPUT on the union tree (`want 37 / got 39`), never by adding. Three rows met here,
+     each gating only its own suites: D-148's `op=actionquotes` (`LIMIT ?` against the named `QUOTES_MAX`),
+     REC-164's `op=groupidentity` (`domain_checks ... LIMIT 20`, a SQL literal) and D-150's `op=statementack`
+     (the unsigned case documents it re-authors, `LIMIT 8`, a SQL literal) — three arrivals. One member LEFT on the
+     same union: `op=biasmanifest` still dispatches to `biasManifest`, which now only delegates to the private
+     `#biasManifestNow` where the cap lives, so the dispatched segment carries no cap and c17-batch5 alone prints
+     36 (that departure, and the "driven but not found" arm it causes, are c17-unionfix's). Neither side's figure is the other's plus three: 39 is what this walk printed. */
+  /* MOVED 36 -> 37 on 2026-09-23 by D-256, from THIS ARM'S OWN FAILURE OUTPUT (`want 36 / got 37`), never by
+     adding: op=changedfromaudit, born with its bound as named constants (CHANGED_FROM_AUDIT_LIMIT_DEFAULT/_MAX,
+     op=versionchain's pair reused) declared BELOW the method on REC-116's finding. It bounds a listing by
+     `slice`, biasManifest's shape, because the three totals must be counted over every affected bundle. */
+  /* MOVED 36 -> 37 on 2026-09-23 by D-394, taken from THIS ARM'S OWN FAILURE OUTPUT (`want 36 / got
+     37`): op=versionnotice, the cross-version notice — a KEYED read (one question) whose answer is one
+     notice per leg, capped by VERSION_NOTICE_LEGS_MAX beside `LIMIT ?`, its constants BELOW nothing
+     that could absorb them. DRIVEN in the map below. */
+  /* MOVED 37 -> 42 by CONDUCT #18 at D-394's merge onto c18-batch8, from THIS ARM'S OWN FAILURE OUTPUT on the merged
+     tree (`want 38 / got 42`), never by adding: each item above moved 36 -> 37 alone, and the batch also carries
+     actionquotes (D-148), groupidentity and statementack, whose PIN arms c18-batch7fix drives. */
+  /* CONDUCT #19 at c18-batch8's merge onto c18-batch7fix + main (2026-09-24): both sides above, the figure below
+     taken from THIS ARM'S OWN OUTPUT on the merged tree, never by adding. */
+  /* MOVED 37 -> 38 on 2026-09-23 by REC-198, from THIS ARM'S OWN FAILURE OUTPUT (`want 37 / got 38`), never by
+     adding one: op=casedrafts, the list of a project's drafts (BOB #32: fenced exactly like reading one). Its bound
+     is REVIEW_LIST_MAX beside `LIMIT ?`, with `total` and `truncated` published; DRIVEN in the loop above against
+     a project holding two drafts. */
+  /* CONDUCT #19 at REC-198's merge onto c19-batch9 (2026-09-24): the figure below is THIS ARM'S OWN OUTPUT on the merged tree. */
+  /* MOVED 37 -> 38 on 2026-09-23 by D-162, from THIS ARM'S OWN FAILURE OUTPUT on the tree merged with REC-161 (`want 37 / got 38`):
+     op=themeread, a theme's members and hunches and the list of themes, capped by
+     THEME_READ_LIMIT_DEFAULT/MAX declared BELOW the method (REC-116's finding). Its bite is driven in
+     `test/theme.test.mjs` section 6 (DRIVEN_ELSEWHERE) and its envelope in the map below. */
+  /* CONDUCT #19 at D-162's merge onto c19-batch9 (2026-09-24): the figure below is THIS ARM'S OWN OUTPUT on the merged tree. */
+  OPS.size, 44);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -964,9 +997,53 @@ const PL1_INQ = "INQ-2026-0807-bounds-pl1";
             current_state: "open", created: NOW, last_updated: NOW } });
   if (r?.ok === false) throw new Error(`PL-1 fixture promote: ${JSON.stringify(r).slice(0, 600)}`);
 }
+/* D-394 — the cross-version notice's fixture: ONE question resting on TWO documents, so a
+   cap of 1 on the legs it answers has something to cut. */
+const D394_INQ = "INQ-2026-0807-bounds-d394";
+{
+  const md = ["---", `id: ${D394_INQ}`, "object_type: inquiry", "schema: inquiry@1",
+    `title: "Does the agenda rest on a newer version?"`, "current_state: open", "prior_state: null",
+    `created: ${NOW}`, `last_updated: ${NOW}`, "produced_by:", "  mode: assisted",
+    "  capability_tier: session", "group: believe-in-oakland",
+    "references:", ...[1, 2].flatMap((i) => [`  - target: INFO-2026-000${i}-r57`, "    rel: cites",
+                                              "    status: confirmed"]),
+    "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false",
+    "  since: null", "  source: null", "visuals: []", "surfaced_by: agent",
+    'disposition_reason: ""', "recheck_triggers:", "  - text: Revisit next cycle",
+    "    description: The next agenda may restate it.",
+    "basis:", ...[1, 2].flatMap((i) => [`  - target: INFO-2026-000${i}-r57`, "    role: supports"]),
+    "---", "", "## Question", "", "Does the agenda rest on a newer version?", "",
+    "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "",
+    "## Session Log", "", "## Review Notes", ""].join("\n");
+  const r = await POST("op=promote&token=mem-r57", {
+    bundleId: D394_INQ, base: null, snapKey: `${D394_INQ}-new`, author: "r57",
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
+    meta: { object_type: "inquiry", group: "believe-in-oakland", title: D394_INQ,
+            current_state: "open", created: NOW, last_updated: NOW } });
+  if (r?.ok === false) throw new Error(`D-394 fixture promote: ${JSON.stringify(r).slice(0, 600)}`);
+}
+t("FIXTURE ARMS THE TRAP: one question rests on TWO documents, so op=versionnotice's cap of 1 has "
++ "something to cut",
+  (await GET(`op=versionnotice&token=mem-r57&target=${D394_INQ}&limit=200`)).count, 2);
 t("FIXTURE ARMS THE TRAP: one inquiry carries THREE alternative accounts of its evidence, so "
 + "op=basisversions' cap of 1 has something to cut",
   (await GET(`op=basisversions&token=mem-r57&id=${PL1_INQ}&limit=5000`)).total, 3);
+
+/* REC-198 / BOB #32: op=casedrafts, the list of a project's drafts. Its BITE needs a project holding TWO drafts,
+   and a draft is authored only by a person with the project's edit permission (C-32.16 refuses a machine by name),
+   while this suite drives machine tokens. So the fixture is the shared publishing project (`publishingproject.mjs`,
+   ownership through the Durable Object's `projectclaimowner`), and the two drafts are written through the store's
+   own `casedraft` route with the owner as author, the control plane's author stamp stood in for by the one value it
+   would stamp. The READ under test is then driven through the real route with the machine credential, which the
+   single read's fence admits unfiltered — so this loop measures the bound, and `test/reviewcopy.test.mjs` block 9
+   measures the fence. */
+const DRAFTS_PROJ = await makePublishingProject({
+  post: POST, mf, sha, machineToken: "adm-r57", owner: "r198owner",
+  name: "bounds-r198-drafts", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+for (const n of [1, 2]) {
+  const r = await DO("casedraft?author=r198owner", { project: DRAFTS_PROJ, scope: `bounds fixture draft ${n}` });
+  if (r?.ok !== true) throw new Error(`bounds fixture casedraft ${n}: ${JSON.stringify(r).slice(0, 400)}`);
+}
 
 const DRIVEN = [
   { op: "readingname", bite: 1, whole: 500,
@@ -1055,6 +1132,14 @@ const DRIVEN = [
      in `op=readingname`'s vocabulary — `limit` beside `truncated` — because it
      is the same kind of read: a KEYED lookup (an address, not a query) whose
      answer is a list. No spelling is minted for it. */
+  /* D-394, 2026-09-23: the cross-version notice, one notice per leg of ONE question. It answers
+     in `op=versionchain`'s vocabulary — `limit` beside `truncated` — because it is that chain asked
+     from a citation's side, and its 200 is the chain's own default reused. */
+  { op: "versionnotice", bite: 1, whole: 200,
+    drive: (n) => GET(`op=versionnotice&token=mem-r57&target=${D394_INQ}&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether every passage the question rests on was checked for a newer version or only the "
+        + "first N — and a notice silently cut reads as 'nothing newer' for the legs it never asked about" },
   { op: "versionchain", bite: 1, whole: 5000,
     drive: (n) => GET(`op=versionchain&token=mem-r57&address=${encodeURIComponent(VC_ADDR)}&limit=${n}`),
     more: (a) => a.truncated, says: "`truncated`",
@@ -1179,6 +1264,16 @@ const DRIVEN = [
     lost: "whether the record worked out the connections among ALL the documents concerning this subject "
         + "or among the first N of them — and a derivation silently cut is a graph a member reads as "
         + "whole, on the one act whose cost grows as k(k-1)/2" },
+  /* REC-198: the list of a project's drafts. It answers in `op=search`'s completeness vocabulary — `total` beside
+     `limit` — with `truncated` said beside them, because a member reading "these are the project's drafts" off a
+     page silently cut would take a draft past the cut for one that does not exist: the lost-draft defect the op
+     exists to remove, reappearing inside it. Its bound is REVIEW_LIST_MAX, the review copy's own list ceiling. */
+  { op: "casedrafts", bite: 1, whole: 500,
+    drive: (n) => GET(`op=casedrafts&token=mem-r57&project=${encodeURIComponent(DRAFTS_PROJ)}&limit=${n}`),
+    more: (a) => a.truncated === true && a.count < a.total,
+    says: "`truncated`, and `total` beside `limit`",
+    lost: "whether these are ALL the project's drafts or the first N — a draft past the cut reads as a draft "
+        + "that does not exist, which is the lost draft this op was built to end" },
 ];
 
 console.log("\n--- LIVE: every roster op, driven twice — the bound biting, and not ---");
@@ -1343,6 +1438,12 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      tokens only. The bite, the clamp and `truncated` both ways are driven
                                      in `test/lead.test.mjs` section 7; the envelope arm is below. */
                                   "leadread",
+                                  /* D-162 / IC-241: op=themeread's BITE arms need a THEME, which only a
+                                     signed-in member can declare (C-81.2), and this suite drives machine
+                                     tokens only. The bite on both pages (the list and a theme's members), the
+                                     clamp and `truncated` both ways are driven in `test/theme.test.mjs`
+                                     section 6; the envelope arm is below. */
+                                  "themeread",
                                   /* REC-126 / IC-145: op=reviewcopy's comments and grants are read under
                                      REVIEW_LIST_MAX with a caller `limit` clamped to it. Its BITE needs a
                                      DRAFT with comments, which only a project OWNER in a session can write,
@@ -1353,7 +1454,27 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                   /* REC-161: op=partitionindependence takes NO `limit` from the caller —
                                      versionstrength's reason: a caller has no business asking for HALF a
                                      partition. Its bound REFUSES (C-71.7) and is driven below. */
-                                  "partitionindependence"]);
+                                  "partitionindependence",
+                                  /* D-148, joined at integration by c18-batch7fix (2026-09-23): op=actionquotes
+                                     takes NO `limit` from the caller — its bound is `QUOTES_MAX`, published as
+                                     `max` beside `truncated`, so the loop's descriptor (ask for a bite of one,
+                                     read the bound back) has nothing to ask for. It is DRIVEN below, in this file,
+                                     with a real bite: one action carrying QUOTES_MAX + 1 quotes. */
+                                  "actionquotes",
+                                  /* D-256: op=changedfromaudit bounds its LISTING under
+                                     CHANGED_FROM_AUDIT_LIMIT_MAX (its three totals are always whole).
+                                     Its BITE needs bodies carrying addGo's changed-from sentence at
+                                     addresses with a version chain, which is `versionchain.test.mjs`'s
+                                     sixty-version fixture — so the bite, the clamp, `truncated` and total
+                                     paging are driven there in section 15; the envelope arm is below. */
+                                  "changedfromaudit",
+                                  /* IC-246 (c19-unionfix, 2026-09-24): neither takes a caller's `limit`.
+                                     op=groupidentity's CUT is driven above with a real bite (an enrolled
+                                     administrator's GROUP_DOMAIN_CHECKS_MAX + 1 claims); op=statementack's
+                                     bound REFUSES and its bite lives in
+                                     `test/d150-statement-acknowledgement.test.mjs`; its named-constant arm is
+                                     above and its envelope below. */
+                                  "groupidentity", "statementack"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1460,6 +1581,112 @@ t("op=partitionindependence: a partition OVER the bound is REFUSED and the refus
 + "shared with op=versionstrength's legs constant rather than a second figure that could drift",
   [PI_OVER.ok, PI_OVER.code, PI_OVER.limit, /BASIS_VERSION_LEGS_MAX = 500\b/.test(SRC_STORE)],
   [false, "PARTITION_INDEPENDENCE_TOO_MANY_LEGS", 500, true]);
+/* ----------------------------------------------- D-148's ARMS (c18-batch7fix, 2026-09-23).
+   op=actionquotes joined this roster at the c17-batch7 union: its read carries `LIMIT ?` against the named
+   `QUOTES_MAX`, so the walk finds it, and D-148's worker — gating its own suites — never met this pin. Its
+   bound is not the caller's (no `limit` is taken), so it is driven here rather than in the loop, with a REAL
+   bite: ONE promote of an action whose ledger holds one sent request and QUOTES_MAX + 1 received quotes
+   answering it. One promote rather than 501 `op=actioncorrespond` acts because promote is the writer that
+   PROJECTS `action_quotes` from the bytes (D-21) — the act is a door onto the same projection, so this is a
+   shape production reaches, built in one write instead of 501 re-promotions of a growing document.
+   WHAT A SILENT CUT WOULD LOSE: the 501st quote a body sent back. Quotes are set side by side so a member can
+   see a fee revised or a request priced twice; a list silently cut at 500 reads as every quote the record
+   holds, and the one left out is exactly the one nobody would know to ask for. */
+const QT_MAX = Number((/static QUOTES_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
+const quoteAction = (id, n) => ["---", `id: ${id}`, "object_type: action", "schema: action@1",
+  `title: "Records request ${id}"`, "current_state: active", "prior_state: null",
+  `created: "${NOW}"`, `last_updated: "${NOW}"`, "produced_by:", "  mode: assisted", "  capability_tier: session",
+  "group: believe-in-oakland", "references: []", "state_history: []", "annotations_open: 0",
+  "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
+  "action_kind: cpra_request", "risk_tier: 1",
+  "counterparty:", "  state: named", "  name: Bounds Clerk r57",
+  "correspondence:",
+  "  - direction: sent", "    at: 2026-07-03", '    account: "The request."', "    author: r57",
+  ...Array.from({ length: n }, (_, i) => ["  - direction: received", "    at: 2026-07-05",
+    `    account: "Quote ${i + 1}."`, "    author: r57",
+    `    quote_amount: "${i + 1}"`, '    quote_currency: "USD"', "    quote_answers: 0"]).flat(),
+  "---", "", "## Plan", "", "Ask for the ledger.", "", "## Status", "", "## Correspondence", "",
+  "## Session Log", "", "## Review Notes", ""].join("\n");
+const QT_BIG = "ACTN-2026-0923-bounds-quotes-many", QT_ONE = "ACTN-2026-0923-bounds-quotes-one";
+for (const [id, n] of [[QT_BIG, QT_MAX + 1], [QT_ONE, 1]]) {
+  const md = quoteAction(id, n);
+  const r = await POST("op=promote&token=mem-r57", {
+    bundleId: id, base: null, snapKey: `${id}-new`, author: "r57",
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
+    meta: { object_type: "action", group: "believe-in-oakland", title: id, current_state: "active",
+            created: NOW, last_updated: NOW } });
+  if (r?.ok !== true) throw new Error(`D-148 fixture promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
+}
+const QT_BITE = await GET(`op=actionquotes&token=mem-r57&request=${QT_BIG}`);
+const QT_WHOLE = await GET(`op=actionquotes&token=mem-r57&request=${QT_ONE}`);
+t("FIXTURE ARMS THE TRAP: the walk's own reading of QUOTES_MAX is a number, so the fixture is ONE past it",
+  Number.isInteger(QT_MAX) && QT_MAX > 0, true);
+t("op=actionquotes: publishes the bound it APPLIED (`max`), and a cut answer SAYS SO — the first QUOTES_MAX of "
++ "QUOTES_MAX + 1 quotes, `truncated` true",
+  [QT_BITE.ok, QT_BITE.max, QT_BITE.count, QT_BITE.quotes?.length, QT_BITE.truncated],
+  [true, QT_MAX, QT_MAX, QT_MAX, true]);
+t("op=actionquotes: a complete answer says the opposite — whether this is every quote the body sent back is "
++ "READABLE, not inferred",
+  [QT_WHOLE.ok, QT_WHOLE.max, QT_WHOLE.count, QT_WHOLE.truncated], [true, QT_MAX, 1, false]);
+t("op=actionquotes: DELTA — 'this is all of them' and 'this is the first QUOTES_MAX' do NOT read alike",
+  QT_BITE.truncated !== QT_WHOLE.truncated, true);
+
+/* ----------------------------------------------- IC-246's ARMS (c19-unionfix, 2026-09-24, CONDUCT #19's spec).
+   REC-164's op=groupidentity and D-150's op=statementack joined this roster at the c17-batch7 union carrying bare
+   SQL literals (`LIMIT 20`, `LIMIT 8`), and neither was DRIVEN, so the PIN named both. Each is now a NAMED bound
+   below its method; neither takes a `limit` from the caller, so both are driven HERE rather than in the loop and
+   carried in DRIVEN_ELSEWHERE.
+
+   op=groupidentity is a READ, so its bound is a CUT and the cut is PUBLISHED (`domain_checks_limit`,
+   `domain_checks_truncated`). The bite is REAL: an administrator — enrolled here, since the SET acts are an
+   administrator's own session act (C-64.4 refuses a bearer by name) — claims GROUP_DOMAIN_CHECKS_MAX + 1 domains,
+   one dated check each. This store records no producing group, so every verdict is `undetermined` ("no slug for
+   the file to name") and no fetch leaves the process. WHAT A SILENT CUT WOULD LOSE: the oldest check, read as
+   "this is the whole history of the claim". */
+const GI_MAX = Number((/static GROUP_DOMAIN_CHECKS_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
+const giAdd = await POST("op=memberadd&token=adm-r57", { memberId: "gia", cover: "cover for gia", role: "admin",
+                                                         capabilities: ["contribute"] });
+const giEn = await POST("op=enroll", { invite: giAdd?.invite, handle: "gia", password: "gia-passphrase-r57" });
+const giTok = (await POST("op=login", { role: "member:gia", password: "gia-passphrase-r57" }))?.token;
+if (!giEn?.ok || !giTok) throw new Error(`IC-246 fixture admin: ${JSON.stringify([giAdd, giEn]).slice(0, 600)}`);
+const giOne = await GET(`op=groupidentity&token=${giTok}`);
+const giSet = [];
+for (let i = 0; i < GI_MAX + 1; i++)
+  giSet.push(await POST(`op=groupdomainset&token=${giTok}`, { domain: `bounds-r57-${i}.invalid` }));
+const GI_BITE = await GET(`op=groupidentity&token=${giTok}`);
+t("FIXTURE ARMS THE TRAP: GROUP_DOMAIN_CHECKS_MAX is a number, and the fixture wrote ONE check past it — every claim "
++ "landed, every verdict `undetermined` (this store names no group, so nothing was fetched)",
+  [Number.isInteger(GI_MAX) && GI_MAX > 0, giSet.length, giSet.every((r) => r?.ok === true),
+   giSet.every((r) => r?.check?.verdict === "undetermined")], [true, GI_MAX + 1, true, true]);
+t("op=groupidentity: THE BITE — the newest GROUP_DOMAIN_CHECKS_MAX of GROUP_DOMAIN_CHECKS_MAX + 1 checks, newest "
++ "first, the bound published and the cut SAID",
+  [GI_BITE?.ok, GI_BITE?.domain_checks?.length, GI_BITE?.domain_checks_limit, GI_BITE?.domain_checks_truncated,
+   GI_BITE?.domain_checks?.[0]?.domain, GI_BITE?.domain_checks?.[GI_MAX - 1]?.domain],
+  [true, GI_MAX, GI_MAX, true, `bounds-r57-${GI_MAX}.invalid`, "bounds-r57-1.invalid"]);
+t("op=groupidentity: WHOLE — before any claim the log is empty and says it is complete",
+  [giOne?.ok, giOne?.domain_checks?.length, giOne?.domain_checks_limit, giOne?.domain_checks_truncated],
+  [true, 0, GI_MAX, false]);
+t("op=groupidentity: DELTA — 'the whole log' and 'the newest GROUP_DOMAIN_CHECKS_MAX' do NOT read alike",
+  giOne?.domain_checks_truncated !== GI_BITE?.domain_checks_truncated, true);
+const giPublic = (await GET("op=groupidentity")) || {};
+t("op=groupidentity: the PUBLIC projection is unchanged — no check log and no bound reach a stranger",
+  ["domain_checks", "domain_checks_limit", "domain_checks_truncated"].map((k) => k in giPublic),
+  [false, false, false]);
+
+/* op=statementack is an ACT, and its bound REFUSES (C-82.1, STATEMENT_ACK_DOCUMENTS_OVER_BOUND): a cut would leave a
+   document listing fewer second readers than the record holds, and its owner would sign that absence. The bite —
+   STATEMENT_ACK_DOCUMENTS_MAX + 1 unsigned documents of one statement in one project, refused with nothing
+   written, and a same-sentence document in another project untouched — needs a project, joined participants and
+   authored case documents, which live in `test/d150-statement-acknowledgement.test.mjs`, where it is driven. Here:
+   the bound is a NAMED constant the statement reads, and the op answers an envelope. */
+const SA_MAX = Number((/static STATEMENT_ACK_DOCUMENTS_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
+const saBody = SRC_STORE.slice(SRC_STORE.indexOf("  acknowledgeStatement({"),
+                               SRC_STORE.indexOf("static STATEMENT_ACK_DOCUMENTS_MAX"));
+t("op=statementack: its bound is the NAMED constant STATEMENT_ACK_DOCUMENTS_MAX, read at `LIMIT ?` with max + 1 and "
++ "no SQL literal left, and a success publishes it",
+  [Number.isInteger(SA_MAX) && SA_MAX > 0, /LIMIT \?`,[\s\S]{0,200}ackMax \+ 1\)/.test(saBody),
+   /FROM case_documents[^`]*LIMIT \d/.test(saBody), /case_documents_limit: ackMax, case_documents_truncated: false/.test(saBody)],
+  [true, true, false, true]);
 /* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
  *
  * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the
@@ -1501,6 +1728,8 @@ const answersByOp = new Map([
   /* REC-161: driven above (its refusing bound) and REUSED here — the envelope is an object on the
      refusal as on the answer. */
   ["partitionindependence", PI_OVER],
+  /* D-148: driven above with its real bite and REUSED here — the envelope is an object either way. */
+  ["actionquotes", QT_WHOLE],
   /* CPDF-10: driven HERE, plainly, for exactly the one thing this map is for —
      the ENVELOPE SHAPE. The bite/`truncated` arms need a corpus of transcribed
      documents and attestations, which lives in `test/textchain.test.mjs`; the
@@ -1548,9 +1777,19 @@ const answersByOp = new Map([
   ["provenanceroutes", await GET("op=provenanceroutes&token=mem-r57&limit=1")],
   /* MK-4: the envelope of a keyed read with no lead to key on — an answer object, never an array. */
   ["leadread", await GET("op=leadread&token=mem-r57&id=LEAD-2026-0918-000000000000&limit=1")],
+  /* D-162: the envelope of the theme list over a store holding none — an answer object, never an array. */
+  ["themeread", await GET("op=themeread&token=mem-r57&limit=1")],
   /* REC-126: the envelope of the review copy's read with no draft to key on — the ONE dead answer, an
      object and never an array. The bite is driven in `test/reviewcopy.test.mjs` (DRIVEN_ELSEWHERE). */
   ["reviewcopy", await GET("op=reviewcopy&token=mem-r57&draft=DRAFT-2026-0000&limit=1")],
+  /* D-256: the envelope of the changed-from audit over a store holding no such sentence — an object with its
+     totals, never an array. Admin-fenced, so the admin token. The bite is driven in `test/versionchain.test.mjs`
+     section 15 (DRIVEN_ELSEWHERE). */
+  ["changedfromaudit", await GET("op=changedfromaudit&token=adm-r57&limit=1")],
+  /* IC-246: groupidentity driven above with its real bite and REUSED here; statementack's envelope for a caller
+     neither door admits — the review copy's one dead answer, an object. */
+  ["groupidentity", GI_BITE],
+  ["statementack", await POST("op=statementack&token=mem-r57&draft=DRAFT-2026-0000")],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

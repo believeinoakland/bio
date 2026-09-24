@@ -1146,6 +1146,34 @@ CREATE INDEX IF NOT EXISTS connections_a ON connections(a_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_b ON connections(b_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_a_bundle ON connections(a_bundle_id);
 CREATE INDEX IF NOT EXISTS connections_b_bundle ON connections(b_bundle_id);
+-- REC-122 / D-161 act (3) / IC-232, 2026-09-23: A MEMBER'S CHOICE OF THE ON-POINT
+-- MENTION on one end of a connection (Bob's 5.4 second pass: specificity is worked
+-- for, not merely permitted). The connection's own pair stays the machine's
+-- strongest-graded selection and is NEVER rewritten by a choice -- a re-derivation
+-- would overwrite it, and the machine's selection and a member's judgment are two
+-- facts. So the choice lives beside the row, keyed by the connection's own primary
+-- key plus the END ('a' or 'b') it is about, and names the mention by its reference
+-- exactly as the reading recorded it (resolutions.ref). APPEND-ONLY: a re-choice
+-- stamps superseded_at on the current row and writes a new one, so the old is
+-- retained (REC-86's rule). superseded_at NULL = the current choice. The two bundle
+-- ids are carried so a per-bundle purge clears a choice with the connection it is
+-- about (D-113). No position is stored: WHERE the mention was read is the reading's
+-- fact (reading_refs), read at answer time, so a choice cannot freeze a position the
+-- record later corrects.
+CREATE TABLE IF NOT EXISTS connection_pair_choices (
+  choice_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  a_capture_sha TEXT NOT NULL,
+  b_capture_sha TEXT NOT NULL,
+  entity_id     TEXT NOT NULL,
+  side          TEXT NOT NULL,  -- which end the choice is about, a or b
+  ref           TEXT NOT NULL,  -- the chosen mention, as resolutions.ref holds it
+  a_bundle_id   TEXT,
+  b_bundle_id   TEXT,
+  chosen_by     TEXT NOT NULL,  -- the member, stamped by the control plane
+  at            TEXT NOT NULL,
+  superseded_at TEXT            -- NULL = current, else when a later choice replaced it
+);
+CREATE INDEX IF NOT EXISTS connection_pair_choices_end ON connection_pair_choices(a_capture_sha, b_capture_sha, entity_id, side);
 -- CONSTRUCTS Step 5, SLICE A (FW-8): the PROGRESSION DEFINITION as data (framework
 -- section 8.2, "generalises the connection table rather than sitting beside it"). A
 -- definition is a named ordered set of STAGES with the rules a progression's junction
@@ -2087,6 +2115,39 @@ CREATE TABLE IF NOT EXISTS correspondence (
 CREATE INDEX IF NOT EXISTS correspondence_artifact ON correspondence(artifact_sha);
 CREATE INDEX IF NOT EXISTS correspondence_bundle ON correspondence(bundle_id);
 
+-- D-148: A FEE QUOTE IS EVIDENCE (BIO_Case_Making_v0_1.md section 2, Bob 2026-09-22).
+-- A received correspondence entry may carry a QUOTE - the amount and currency
+-- as quoted, the stated basis verbatim, and the ord of the sent entry it
+-- answers; a later quote may name the quote it revises, and a waiver is a
+-- revision to zero with BOTH entries standing. This table is a PROJECTION of
+-- those entry keys, written in promote's transaction by the same
+-- delete-then-insert as correspondence above, never a second place to state a
+-- quote (D-21). It exists so a read can set quotes side by side by
+-- counterparty and by request with an index rather than a walk of every
+-- action's bytes.
+--
+-- amount is the text AS QUOTED and value is its parse, so ordering never
+-- rewrites what the body said. counterparty is the action's own
+-- counterparty.name, denormalised at projection and NULL when the action
+-- states its counterparty undetermined - such a quote is still read by its
+-- request. The record asserts only what was quoted, by whom, when, for which
+-- request: no column here judges a quote (DEC-24). Cleared in BOTH purge arms
+-- via the TABLES list (D-113).
+CREATE TABLE IF NOT EXISTS action_quotes (
+  bundle_id    TEXT NOT NULL,   -- the action
+  ord          INTEGER NOT NULL,-- the received entry carrying the quote
+  amount       TEXT NOT NULL,   -- as quoted
+  value        REAL,            -- amount parsed, for setting side by side
+  currency     TEXT NOT NULL,   -- as quoted, never inferred
+  basis        TEXT,            -- verbatim, NULL when none was recorded
+  answers_ord  INTEGER NOT NULL,-- the sent entry it answers
+  revises_ord  INTEGER,         -- the earlier quote it revises, if any
+  counterparty TEXT,            -- the action's counterparty.name, NULL if undetermined
+  at           TEXT NOT NULL,   -- when the quote was received (authored)
+  PRIMARY KEY (bundle_id, ord)
+);
+CREATE INDEX IF NOT EXISTS action_quotes_counterparty ON action_quotes(counterparty);
+
 -- IS-6 / INVESTIGATIVE-SESSION.md §11: THE RUN IS AN OBJECT, and it is built on
 -- the capture_sessions shape above rather than on a new one — "SCRATCH, not
 -- record… a work list with an expiry": ticks, an expiry, opaque state,
@@ -2511,7 +2572,7 @@ CREATE TABLE IF NOT EXISTS bias_adoptions (
   scope_type    TEXT NOT NULL,   -- 'instance' | 'project'
   scope_id      TEXT NOT NULL,   -- empty for instance, the project bundle id otherwise
   bundle_id     TEXT NOT NULL,   -- the bias bundle adopted
-  bundle_sha    TEXT NOT NULL,   -- THE PIN: the revision adopted, never re-read
+  bundle_sha    TEXT NOT NULL,   -- THE PIN: the revision adopted, never re-read, and moved to the adopted sha by promote (REC-187)
   author        TEXT NOT NULL,   -- the member who adopted it, server-stamped
   at            TEXT NOT NULL,
   source_url    TEXT,            -- DEC-54 (d), for an inhaled policy
@@ -3666,6 +3727,171 @@ CREATE TABLE IF NOT EXISTS review_comments (
   at          TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS review_comments_draft ON review_comments(draft_id);
+
+-- D-150 / BIO_Publication_v0_1.md section 3 rule 11: THE EXCLUSION STATEMENT'S ACKNOWLEDGEMENTS.
+-- One row per act: a SECOND person's reading of ONE statement text, by a joined participant of the
+-- producing project (acknowledger = the member id) or a review-copy recipient through a live grant
+-- (acknowledger = the grant id, recipient = the grant's label). statement_sha is the SHA-256 of the
+-- statement as the case document prints it, so an edited statement is a different sentence and its
+-- old acknowledgements match nothing. case_id and edition are the case identity the statement stood
+-- at: a draft's, read from the published record (case_id NULL for a new case), or an unsigned case
+-- document's. op=publish lists the matching rows in the signed completeness block, or states that
+-- nobody but the author acknowledged it; nothing reads this table as a gate. Working data: a
+-- whole-store purge clears it, and a signed document keeps its own list in its signed bytes.
+CREATE TABLE IF NOT EXISTS statement_acknowledgements (
+  ack_id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id        TEXT NOT NULL,
+  case_id           TEXT,
+  edition           INTEGER NOT NULL,
+  statement_sha     TEXT NOT NULL,
+  draft_id          TEXT,               -- the draft read, when acknowledged through one
+  acknowledger_kind TEXT NOT NULL CHECK (acknowledger_kind IN ('participant','recipient')),
+  acknowledger      TEXT NOT NULL,
+  recipient         TEXT,               -- the grant's addressee label, for a recipient
+  at                TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS statement_acknowledgements_statement
+  ON statement_acknowledgements(project_id, statement_sha, edition);
+-- =========================================================================
+
+-- REC-164: THE PUBLISHING GROUP'S DISPLAY NAME AND ITS DOMAIN (BIO_Publication_v0_1.md
+-- section 7 points 2 and 3). Two durable values, each with a dated history: a value is
+-- the LATEST row for its field, and no statement updates or deletes a row, so every
+-- revision stays readable with its date and the administrator who made it.
+--   field             'display_name' or 'domain'
+--   set_by            the member the control plane stamped from the signed-in session,
+--                     never a caller's statement, never a bearer
+--   instance_address  a domain row only: the origin the administrator's session reached,
+--                     stamped by the control plane, which the well-known file must name
+-- EXEMPT FROM op=purge, in both arms: identity, not derived from the corpus, the family
+-- of instance_group. hygiene.test.mjs lists both tables among the purge exemptions.
+CREATE TABLE IF NOT EXISTS group_identity_history (
+  seq               INTEGER PRIMARY KEY AUTOINCREMENT,
+  field             TEXT NOT NULL CHECK (field IN ('display_name','domain')),
+  value             TEXT NOT NULL,
+  set_at            TEXT NOT NULL,
+  set_by            TEXT NOT NULL,
+  instance_address  TEXT
+);
+-- Every verdict on a claimed domain, dated. The public read shows a domain only while
+-- the latest verdict for the CURRENT claim is 'verified'. 'undetermined' is the fourth
+-- word, and it is not one of the design's three: the governor holding the host, a fetch
+-- that did not complete, or an answer that is neither a file nor its absence says
+-- nothing about the domain, so it is recorded as what it is and never as 'absent'.
+--   trigger  'set' (the administrator's act) or 'alarm' (the reconciling re-check)
+CREATE TABLE IF NOT EXISTS group_domain_checks (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  domain      TEXT NOT NULL,
+  verdict     TEXT NOT NULL CHECK (verdict IN ('verified','absent','mismatched','undetermined')),
+  checked_at  TEXT NOT NULL,
+  trigger     TEXT NOT NULL,
+  status      INTEGER,
+  detail      TEXT
+);
+-- REC-149 (Membership Architecture v2 section 7, item 7.14, BOB #16 from Bob's
+-- ruling of 2026-09-18, "each project chooses"): DISCOVERABLE or HIDDEN, as an
+-- OWNER'S RECORDED ACT and never a field of the project document, because a
+-- joined participant may revise that document and would then set an owner's
+-- choice. APPEND-ONLY, one row per act, the current setting is the LATEST row
+-- (highest seq for the project). A project with NO row reads HIDDEN: every
+-- project that existed before this table was created under section 7.9's
+-- promise that the uninvited see not its existence, and no migration writes a
+-- row for any of them. Keyed on project_id, a bundle id, so both purge arms
+-- clear it with the project (the project_participants precedent).
+CREATE TABLE IF NOT EXISTS project_visibility (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id TEXT NOT NULL,
+  setting    TEXT NOT NULL CHECK (setting IN ('discoverable','hidden')),
+  set_by     TEXT NOT NULL,       -- the owner who set it, a member id
+  reason     TEXT,                -- optional, the owner's own words
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility(project_id, seq);
+-- =========================================================================
+
+-- D-86 (NOTIFICATIONS.md, The catalogue: a re-run owed after a lens change, an OBLIGATION, DISCLOSED and never
+-- blocking, DEC-20, with BIO_Content_Framework_v0_10.md section 13): the BIAS DEBT a run carries once the lens it
+-- was formed under has moved. ONE ROW PER RUN, keyed by the run and nothing else, so the sweep is idempotent by
+-- construction: a second alarm tick finds the row and writes nothing new. Written ONLY by the bias-debt consumer
+-- on the one alarm, from the answer aiRunRead publishes (its bias block: moved, moved_basis, the two hashes) and
+-- never from a second comparison. lens_then is the side the comparison was against (the lens at the open for a
+-- recorded open, else the manifest the run was handed), lens_now the lens at the sweep, NULL where none is in
+-- force. cleared_at is set, never a DELETE, when a later sweep reads moved false again: the obligation leaves the
+-- queue and the row keeps what was observed. recipients is a JSON array of member ids, each one checked through
+-- the run's own read gate at the sweep. A run is purged only by the whole-store arm, which takes this with it.
+CREATE TABLE IF NOT EXISTS bias_debts (
+  run           TEXT PRIMARY KEY,
+  context_type  TEXT NOT NULL,
+  context_id    TEXT NOT NULL,
+  moved_basis   TEXT,
+  lens_then     TEXT,
+  lens_now      TEXT,
+  recipients    TEXT NOT NULL,
+  raised        TEXT NOT NULL,
+  observed      TEXT NOT NULL,
+  cleared_at    TEXT
+);
+-- D-86: the sweep's own place in its work. fingerprint is the lens-input fingerprint the LAST COMPLETE sweep read
+-- (every adoption with its bundle's current sha and state), so an alarm with no lens change asks nothing of any
+-- run. target and cursor carry a sweep that spans several ticks, restarted from the top when the lens moves again.
+CREATE TABLE IF NOT EXISTS bias_debt_sweeps (
+  k            TEXT PRIMARY KEY,
+  fingerprint  TEXT,
+  target       TEXT,
+  cursor       TEXT NOT NULL DEFAULT '',
+  at           TEXT NOT NULL
+);
+
+-- D-162 / IC-241 -- THE THEME. BIO_Content_Framework_v0_10.md section 8.4, Bob's
+-- ruling of 2026-09-21: a connection through an IDEA, fenced four ways. Declared
+-- by a MEMBER (the declarer is stamped and shown on every reading), it carries
+-- its TEST, a sentence a document or a passage passes or fails, membership is a
+-- member's act and a machine's proposal is a HUNCH until a member confirms it,
+-- and it is NEVER the basis of a claim (C-81.1 at every leg grammar).
+--
+-- WHY A TABLE OF ITS OWN AND NOT AN ENTITY. The entity registry holds NAMED
+-- things a source's own words can be resolved to, and anything in it is a
+-- subject a connection can run through at grade A to C. A theme is one member's
+-- lens, visibly theirs, so it lives here under a THEME- id that no leg grammar
+-- accepts and that ENTITY_KINDS does not contain -- the eleventh-entity-kind
+-- liar is refused by shape as well as by name.
+--
+-- NO bundle_id: a theme is about no one document, so a per-bundle purge leaves
+-- it and the whole-store purge clears it (D-113). Never rewritten: a changed
+-- idea is a new theme, since a placement was judged against THIS test.
+CREATE TABLE IF NOT EXISTS themes (
+  theme_id     TEXT PRIMARY KEY,   -- THEME-YYYY-MMDD-hex, minted by the plane
+  declared_by  TEXT NOT NULL,      -- a member id, server-stamped, never a machine (C-81.2)
+  name         TEXT NOT NULL,      -- the idea in the declarer words, as written
+  test         TEXT NOT NULL,      -- the inclusion criterion, as written (C-81.3)
+  at           TEXT NOT NULL
+);
+-- A DOCUMENT OR A PASSAGE IN A THEME, graded like any connection (section 8.1).
+-- state member: a MEMBER placed or confirmed it, grade D -- asserted on that
+-- member stated judgement that it passes the test, with an author and a date.
+-- state hunch: PROPOSED (by a machine, or a member proposing rather than
+-- placing), grade C -- correspondence, never established, flagged for a member
+-- to confirm, and NEVER counted as membership. A confirmation turns the row to
+-- member and KEEPS who proposed it, so the record says the machine saw it first.
+-- target is a bundle id (target_kind document) or a content id (content),
+-- bundle_id is the DOCUMENT either way, so every read gates it by the viewer
+-- and a per-bundle purge takes the placement with its document (D-113).
+CREATE TABLE IF NOT EXISTS theme_placements (
+  theme_id     TEXT NOT NULL,
+  target       TEXT NOT NULL,
+  target_kind  TEXT NOT NULL CHECK (target_kind IN ('document','content')),
+  bundle_id    TEXT NOT NULL,
+  state        TEXT NOT NULL CHECK (state IN ('hunch','member')),
+  grade        TEXT NOT NULL CHECK (grade IN ('C','D')),
+  proposed_by  TEXT,               -- who proposed it as a hunch, NULL when a member placed it outright
+  proposed_at  TEXT,
+  proposal_note TEXT,
+  placed_by    TEXT,               -- the member who placed or confirmed it, NULL while a hunch
+  placed_at    TEXT,
+  placement_note TEXT,
+  PRIMARY KEY (theme_id, target)
+);
+CREATE INDEX IF NOT EXISTS theme_placements_bundle ON theme_placements(bundle_id);
 -- =========================================================================
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant

@@ -190,6 +190,13 @@ const FLAT_OPS = new Map(Object.entries({
      way. `op=publishedmanifest` is NOT here and must not be: index.mjs re-wraps
      it explicitly (`json({ok:true, result: …})`), so wrapped is correct. */
   publishedcase:  'index.mjs op==="publishedcase" — json({ok:true, ...c, findings, verification})',
+  /* UI-68. The review copy's two ungated ops share ONE handler in index.mjs
+     (`op === "reviewcopy" || op === "reviewcomment"`), which opens the Durable
+     Object's answer itself and FLATTENS it. `casedraft` and `reviewrevoke` go
+     through the passthrough and are wrapped; `reviewgrant` re-wraps explicitly
+     (`json({ok:true, result:{…, secret}})`), so none of those three is here. */
+  reviewcopy:     'index.mjs op==="reviewcopy" — json({ ok: true, ...r }, 200) over the DO\'s result',
+  reviewcomment:  'index.mjs op==="reviewcomment" — the same handler, json({ ok: true, ...r }, 200)',
 }));
 const wireShapeOf = op => FLAT_OPS.has(op) ? "flat" : "wrapped";
 

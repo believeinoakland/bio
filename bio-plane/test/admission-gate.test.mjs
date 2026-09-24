@@ -154,7 +154,14 @@ console.log("\n--- C-38.7 · A PERSON ASKING FOR SOMETHING ONLY AN ADMINISTRATOR
      reads this session's KIND as member — which is exactly the caller this
      refusal is for, and exactly the distinction a harness that used a roster row
      instead of a session kind could not see (D-270 measured that twice). */
-  const r = await POST(`op=memberadd&${CAI}`, { memberId: "zed", cover: "Zed" });
+  /* RE-POINTED 2026-09-23 (REC-159), NEVER EXEMPTED. This arm drove `op=memberadd`, and REC-159 moved
+     it — with `memberset`, `signeradd` and `signerset` — into BOTH session sets (§4.9: each is EVERY
+     administrator's), so a member's session now passes this gate and the ROSTER refuses it,
+     NOT_AN_ADMIN (`adminvote.test.mjs` §9). Driving it here would assert C-38.7 over an op that no
+     longer produces it. `op=governorconfig` is the one mutating op still in the founder's set alone
+     (§4.9, RULED the operator's by BOB #23), so it is the op this refusal is still for. What its
+     sentence SHOULD say is REC-162's item, not this arm's. */
+  const r = await POST(`op=governorconfig&${CAI}`, { host: "example.org", appetite: 1 });
   admits("a member's session on an op only an administrator's session reaches", r, "SESSION_ROLE_CANNOT_REACH_OP");
   t("and it says there is nothing to go and find, rather than sending them after a credential "
   + "that would not help — the old sentence sent them after one",
@@ -162,7 +169,7 @@ console.log("\n--- C-38.7 · A PERSON ASKING FOR SOMETHING ONLY AN ADMINISTRATOR
   t("and it names the role it judged, so a caller can tell which fact refused them",
     r.role, "member");
   /* THE MIRROR. Without it this arm passes over a gate that refuses everybody. */
-  const m = await POST("op=memberadd&token=t-admin-1", { memberId: "zeta", cover: "Zeta" });
+  const m = await POST("op=governorconfig&token=t-admin-1", { host: "example.org", appetite: 1 });
   t("NEGATIVE CONTROL: the same op is NOT refused admission to a credential that reaches it",
     m.reason === "SESSION_ROLE_CANNOT_REACH_OP", false);
 }

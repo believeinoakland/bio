@@ -128,6 +128,20 @@ const ABSENT = null; /* a path with no blob at a commit. Distinct from "" and fr
    the consequence of a drop is a fact about the CURRENT tree and this register is a fact
    about HISTORY. Conflating them is what the earlier draft did. */
 export const KNOWN_HISTORICAL_DROPS = [
+  { merge: "ff7ed62", path: "bio-plane/test/d149-governing-laws.test.mjs",
+    why: "CONDUCT #19's merge of land/conduct/c18-batch8 (a8944e1d, forked at a8f6094) onto c18-batch7fix + main (8a342e8c), 2026-09-24. c19-unionfix DIFFED THE BRANCH TIP AGAINST THE MERGE for this path, 2026-09-24: the branch-only content is D-149's older section-5 case table, which read each check id from the catalog at run time, and its control header without arm (E). The first parent (c18-batch7fix) holds the NEWER table, with literal row ids asserted against the wire and the catalog, and arm (E). CONSEQUENCE: none owed. CONDUCT #19 failed to declare it with a trailer at the merge, 2026-09-24." },
+  { merge: "ff7ed62", path: "docs/architecture/BIO_Case_Making_v0_1.md",
+    why: "CONDUCT #19's merge of land/conduct/c18-batch8 (a8944e1d, forked at a8f6094) onto c18-batch7fix + main (8a342e8c), 2026-09-24. c19-unionfix DIFFED THE BRANCH TIP AGAINST THE MERGE for this path, 2026-09-24: the branch-only content is an older `**Status**` line. The merge holds a newer Status line and every paragraph the branch added, plus BOB #32's records_request adoption from the main side. CONSEQUENCE: none owed. CONDUCT #19 failed to declare it with a trailer at the merge, 2026-09-24." },
+  { merge: "ff7ed62", path: "docs/architecture/BIO_Publication_v0_1.md",
+    why: "CONDUCT #19's merge of land/conduct/c18-batch8 (a8944e1d, forked at a8f6094) onto c18-batch7fix + main (8a342e8c), 2026-09-24. c19-unionfix DIFFED THE BRANCH TIP AGAINST THE MERGE for this path, 2026-09-24: the branch-only content is an older `**Status**` line. The merge holds a newer Status line and every paragraph the branch added, plus rulings 13 to 15 and the REC-164 well-known-file ruling from the main side. CONSEQUENCE: none owed. CONDUCT #19 failed to declare it with a trailer at the merge, 2026-09-24." },
+  { merge: "ff7ed62", path: "docs/architecture/BIO_State_Rules_Consistency_v1_5.md",
+    why: "CONDUCT #19's merge of land/conduct/c18-batch8 (a8944e1d, forked at a8f6094) onto c18-batch7fix + main (8a342e8c), 2026-09-24. c19-unionfix DIFFED THE BRANCH TIP AGAINST THE MERGE for this path, 2026-09-24: the branch-only content is an older `**Status**` line. The merge holds a newer Status line and every paragraph the branch added, plus BOB #31's D-256 ruling and the D-209 stated limit from the main side. CONSEQUENCE: none owed. CONDUCT #19 failed to declare it with a trailer at the merge, 2026-09-24." },
+  { merge: "ff7ed62", path: "docs/development/CONTRADICTION-IDENTIFY-DESIGN.md",
+    why: "CONDUCT #19's merge of land/conduct/c18-batch8 (a8944e1d, forked at a8f6094) onto c18-batch7fix + main (8a342e8c), 2026-09-24. c19-unionfix DIFFED THE BRANCH TIP AGAINST THE MERGE for this path, 2026-09-24: the branch-only content is an older `**Status**` line and an older §7 threshold bullet. The merge holds the newer Status line, the newer §7 bullet and BOB #31's M0-71 threshold ruling. CONSEQUENCE: none owed. CONDUCT #19 failed to declare it with a trailer at the merge, 2026-09-24." },
+  { merge: "ff7ed62", path: "docs/development/INVESTIGATIVE-SESSION.md",
+    why: "CONDUCT #19's merge of land/conduct/c18-batch8 (a8944e1d, forked at a8f6094) onto c18-batch7fix + main (8a342e8c), 2026-09-24. c19-unionfix DIFFED THE BRANCH TIP AGAINST THE MERGE for this path, 2026-09-24: the branch-only content is an older `**Status**` line and a §12 (c) bullet reading NOT BUILT. The merge holds the newer Status line and REC-161's §12 (c) BUILT IN PART bullet. The §14c bullet is present, reordered. CONSEQUENCE: none owed. CONDUCT #19 failed to declare it with a trailer at the merge, 2026-09-24." },
+  { merge: "8477cdb", path: "docs/development/interface-changes/IC-231.md",
+    why: "CONDUCT #18's merge of land/worker/D-394 into c18-batch8, 2026-09-23. c19-unionfix DIFFED THE BRANCH TIP AGAINST THE MERGE for this path, 2026-09-24: the branch-only content is D-394's op=versionnotice IC, minted as IC-231 while REC-149 held that id. The merge kept REC-149's IC-231 and renumbered D-394's to IC-239 (the merge's own subject line says so), and `docs/development/interface-changes/IC-239.md` holds D-394's text. CONSEQUENCE: none owed. CONDUCT #18 failed to declare it with a trailer at the merge, 2026-09-23; registered by CONDUCT #19's ruling, 2026-09-24." },
   { merge: "cc8187d", path: "bio-plane/scripts/coverage.mjs",
     why: "REC-83, 2026-09-14, CONDUCT #11. A DECLARED drop whose declaration git could not "
        + "read: the branch's REGISTER_FLOOR block (967 -> 973/180/181, from its own print on "
@@ -406,7 +420,12 @@ export function carryAudit({ repo, range = null, commit = null } = {}) {
    no longer re-sweeps landed history on every run, because a sweep of landed history is exactly a
    verdict that moves with what landed. Moving the pin is an act in a commit, with its why here, like
    a register row, and the move surfaces any such drop as `fresh`. */
-export const REGISTER_PIN = "e62e08e147db6faddad635182cbf74675533949e";
+/* MOVED 2026-09-24 by c19-unionfix on CONDUCT #19's ruling, e62e08e1 -> b23f5c94 (land/conduct/c19-batch9, on the remote):
+   the union's tip, which contains CONDUCT #18's 8477cdb and CONDUCT #19's ff7ed62. Those two merges dropped seven paths,
+   each verified superseded and registered above with its why. They sit in pushed history that cannot be re-cut, and
+   the pin must be over them for their rows to be graded rather than read `stale`. The move was checked for any
+   `fresh` drop between the two pins (the move surfaces one, as the paragraph above says): none. */
+export const REGISTER_PIN = "b23f5c946319df0832a5007afebdfd546a7020e7";
 
 export function historicalRegister({ repo, pin = REGISTER_PIN } = {}) {
   const a = carryAudit({ repo, range: pin });

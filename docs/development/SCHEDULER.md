@@ -1,6 +1,6 @@
 # The scheduler: one reconciling Durable Object alarm
 
-**Status** · The DECISION RECORD for the plane's periodic work, decided and built 2026-07-31 by RECORD as REC-1 (milestone M1) and approved in the item rather than by a separate ruling. [BUILT] and live: the reconciling Durable Object alarm, the `#schedConsumers` registry, earliest-wake reconciliation, idle self-termination and the two producers are all in the SCHEDULER block of `bio-plane/src/store.mjs`, with `bio-plane/test/scheduler.test.mjs` as the accepts-when. COMPLETE as the decision it records — the fork it settled (one reconciling alarm, never a Worker cron, never a second alarm) has held through every consumer added since, and each new consumer joined exactly the way this file says. Two sections said the registry holds "the two real consumers" and **M0-27 CORRECTED BOTH IN PLACE on 2026-09-14**: it holds ELEVEN, of which FIVE are unconditionally due, and each corrected sentence carries the COMMAND that counts it in `bio-plane/src/store.mjs` rather than only the number. (The prior front matter said the always-due claim was "true of two entries out of eleven"; measured on 2026-09-14 it is true of FIVE, and that front-matter figure was corrected in the same pass.) The mechanism is the authority; the counts in this prose are not, which is the very argument the file makes about CPDF-13. as of 2026-09-14.
+**Status** · The DECISION RECORD for the plane's periodic work, decided and built 2026-07-31 by RECORD as REC-1 (milestone M1) and approved in the item rather than by a separate ruling. [BUILT] and live: the reconciling Durable Object alarm, the `#schedConsumers` registry, earliest-wake reconciliation, idle self-termination and the two producers are all in the SCHEDULER block of `bio-plane/src/store.mjs`, with `bio-plane/test/scheduler.test.mjs` as the accepts-when. COMPLETE as the decision it records — the fork it settled (one reconciling alarm, never a Worker cron, never a second alarm) has held through every consumer added since, and each new consumer joined exactly the way this file says. Two sections said the registry holds "the two real consumers" and **M0-27 CORRECTED BOTH IN PLACE on 2026-09-14**: it holds ELEVEN, of which FIVE are unconditionally due, and each corrected sentence carries the COMMAND that counts it in `bio-plane/src/store.mjs` rather than only the number. (The prior front matter said the always-due claim was "true of two entries out of eleven"; measured on 2026-09-14 it is true of FIVE, and that front-matter figure was corrected in the same pass.) The mechanism is the authority; the counts in this prose are not, which is the very argument the file makes about CPDF-13. **D-86 appended the TWELFTH on 2026-09-23** (`bias-debt`, §The twelfth consumer); `test/scheduler.test.mjs` pins the list. as of 2026-09-23.
 
 **Place in the system** · A level-2 design serving construct 14 of `BIO_System_Design.md` §3, *scheduler and operations*, and through it construct 2 (intake and capture) and construct 10 (standing intent and monitoring), whose clocks are consumers of this one alarm. **That row names no level-1 document that owns the construct**: it lists this file and `INBOX-GRAMMAR.md`, and points at `BIO_Technical_Architecture_Decisions_v10.md` §10.7, whose interruption model is the RULE the plane implements — recover by re-deriving outstanding conditions from durable state, never by trusting a signal — while §10.7's own mechanisms are retired (that document's front matter says so). This file is the WHY the next periodic consumer inherits, and it is cited by name in `store.mjs` at every site where a consumer was appended.
 
@@ -13,6 +13,7 @@
 - [Why the DO alarm and not a Worker cron](#why-the-do-alarm-and-not-a-worker-cron)
 - [The mechanism, and how the next consumer joins](#the-mechanism-and-how-the-next-consumer-joins)
 - [The eleventh consumer, and what it costs a group (CPDF-13, D-183)](#the-eleventh-consumer-and-what-it-costs-a-group-cpdf-13-d-183)
+- [The twelfth consumer: bias debt (D-86)](#the-twelfth-consumer-bias-debt-d-86)
 - [The test seam](#the-test-seam)
 - [I5 note](#i5-note)
 
@@ -162,6 +163,23 @@ words. A tick that treated "the cadence elapsed and nobody announced anything" a
 grounds to refresh a calibration would be the claim-versus-measurement failure
 committed by the scheduler; `calibrationRecord` refuses a calibration with no
 probe behind it, so it could not do it even if it tried.
+
+## The twelfth consumer: bias debt (D-86)
+
+`bias-debt` is the twelfth entry, appended on 2026-09-23 the way this file says a consumer joins. It is
+overdue-scan's other half (`BIO_Content_Framework_v0_10.md` §13: bias debt and ageing are one mechanism), and it is
+APPENDED rather than inserted beside overdue-scan because an insertion renumbers every consumer a later census names.
+
+**What it does.** For each run it reads `aiRunRead`'s own lens block and raises ONE OBLIGATION (`bias-debt`,
+`NOTIFICATIONS.md` §The catalogue) per run whose `moved` is true, keyed by the run in `bias_debts`; `moved: false`
+clears a live item and `moved: null` does nothing. It compares no hash itself. The items are served on `op=queue`.
+Disclosed, never blocking (DEC-20).
+
+**What it costs.** Nothing on an instance with no run or no lens ever adopted: `#biasDebtPending` answers false and
+the consumer holds no alarm. Otherwise it is due only when the lens INPUTS (each adoption with its bundle's current
+sha and state) differ from the last COMPLETE sweep's; then it reads at most `BIAS_DEBT_BATCH` runs per tick (one
+`aiRunRead` each, plus one per candidate recipient) and stays due until the sweep completes. The two lens-changing
+doors, `op=promote` and `op=biasadopt`, arm it.
 
 ## The test seam
 

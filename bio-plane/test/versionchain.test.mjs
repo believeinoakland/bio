@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (RUN 2026-08-07, pl10-agent, each arm armed ALONE by a scripted mutation whose anchor must match EXACTLY ONCE or the harness refuses to arm blind — it refused once, correctly, because `JOIN register r ON r.capture_sha = cl.capture_sha` appears TWICE in store.mjs, this method and `#conditionBundlesForHost` — then every file restored from a PRISTINE copy with the restore verified by sha256 AND by `cmp`. Whole, clean: 91 pass, 0 fail.) (1) BREAK THE JOIN — in `src/store.mjs`'s CHAIN CTE join on `cl.address_norm` instead of `cl.capture_sha` -> versionchain 58 pass / 33 FAIL and bounds 109/3, the failures NAMING THE ADDRESS whose versions vanished ("the chain answers for https://www.oaklandca.gov/city-council/agenda.pdf, and it answers SIXTY versions") — a broken join reports WHOSE history disappeared rather than a number that moved. (2) ADD THE EDGE THIS ITEM EXISTS NOT TO ADD — a `supersedes TEXT` column on `captured_locators` in `src/schema.mjs` -> versionchain 89/2, "NO EDGE: the schema carries no supersedes/predecessor/version-edge name anywhere" and "NO NEW COLUMN: captured_locators carries EXACTLY the eight columns it carried before this item". **AND THE REST OF THE BATTERY DID NOT NOTICE** — hygiene and purge stayed green — which is precisely why the trap is PINNED rather than left to the next author's care. (3) D-221's OWN — the predecessor query re-ordered ASC so it returns the OLDEST version before the anchor, which is the behaviour `heldMatch` has today -> versionchain 86/5, and the arms NAME THE PREDECESSOR THEY SHOULD HAVE PICKED: `want ["3ee0db34…","INFO-2026-0946-agenda","2026-03-03T09:00:00Z"] got ["f136ccf7…","INFO-2026-0900-agenda","2026-01-01T09:00:00Z"]`, with all FIFTY-NINE links then naming the same first-ever capture — D-221's sentence, reproduced. (4) A CHAIN OF ONE AS A DEGENERATE FAILURE — a null predecessor made a refusal -> versionchain 87/4, "a single-capture address answers as a chain of ONE" and "the OLDEST version has no predecessor and says so": one version is a version history, and an honest absence is an answer. (5) ANSWER A BARE COLLECTION — `return versions;` above the envelope -> bounds 105/7 and **"PIN: ZERO capped ops answer with a bare array" FAILS with `got ["versionchain"]`**, naming the op, with no exception list for it to be added to. (6) OVER-STRICTNESS — section 14: three correct chains in vocabularies this file never emits all PASS, and the same readers still REFUSE an out-of-order chain and one whose versions name no bundle. (7) ARMED-NESS is asserted rather than assumed throughout: section 1 THROWS if the index this item rests on is absent from both real sources; every structural reader in section 2 is run a second time over a source that DOES carry the forbidden thing and must find it; the ground-truth guards prove sixty distinct shas and that date order agrees with neither insertion order nor bundle-id order, which is the only thing that lets this suite tell a date-ordered chain apart from D-221's tiebreak. */
+/* NEGATIVE CONTROL: (RUN 2026-08-07, pl10-agent, each arm armed ALONE by a scripted mutation whose anchor must match EXACTLY ONCE or the harness refuses to arm blind — it refused once, correctly, because `JOIN register r ON r.capture_sha = cl.capture_sha` appears TWICE in store.mjs, this method and `#conditionBundlesForHost` — then every file restored from a PRISTINE copy with the restore verified by sha256 AND by `cmp`. Whole, clean: 91 pass, 0 fail.) (1) BREAK THE JOIN — in `src/store.mjs`'s CHAIN CTE join on `cl.address_norm` instead of `cl.capture_sha` -> versionchain 58 pass / 33 FAIL and bounds 109/3, the failures NAMING THE ADDRESS whose versions vanished ("the chain answers for https://www.oaklandca.gov/city-council/agenda.pdf, and it answers SIXTY versions") — a broken join reports WHOSE history disappeared rather than a number that moved. (2) ADD THE EDGE THIS ITEM EXISTS NOT TO ADD — a `supersedes TEXT` column on `captured_locators` in `src/schema.mjs` -> versionchain 89/2, "NO EDGE: the schema carries no supersedes/predecessor/version-edge name anywhere" and "NO NEW COLUMN: captured_locators carries EXACTLY the eight columns it carried before this item". **AND THE REST OF THE BATTERY DID NOT NOTICE** — hygiene and purge stayed green — which is precisely why the trap is PINNED rather than left to the next author's care. (3) D-221's OWN — the predecessor query re-ordered ASC so it returns the OLDEST version before the anchor, which is the behaviour `heldMatch` has today -> versionchain 86/5, and the arms NAME THE PREDECESSOR THEY SHOULD HAVE PICKED: `want ["3ee0db34…","INFO-2026-0946-agenda","2026-03-03T09:00:00Z"] got ["f136ccf7…","INFO-2026-0900-agenda","2026-01-01T09:00:00Z"]`, with all FIFTY-NINE links then naming the same first-ever capture — D-221's sentence, reproduced. (4) A CHAIN OF ONE AS A DEGENERATE FAILURE — a null predecessor made a refusal -> versionchain 87/4, "a single-capture address answers as a chain of ONE" and "the OLDEST version has no predecessor and says so": one version is a version history, and an honest absence is an answer. (5) ANSWER A BARE COLLECTION — `return versions;` above the envelope -> bounds 105/7 and **"PIN: ZERO capped ops answer with a bare array" FAILS with `got ["versionchain"]`**, naming the op, with no exception list for it to be added to. (6) OVER-STRICTNESS — section 14: three correct chains in vocabularies this file never emits all PASS, and the same readers still REFUSE an out-of-order chain and one whose versions name no bundle. (7) ARMED-NESS is asserted rather than assumed throughout: section 1 THROWS if the index this item rests on is absent from both real sources; every structural reader in section 2 is run a second time over a source that DOES carry the forbidden thing and must find it; the ground-truth guards prove sixty distinct shas and that date order agrees with neither insertion order nor bundle-id order, which is the only thing that lets this suite tell a date-ordered chain apart from D-221's tiebreak. D-256's RUN (2026-09-23, D-256 worker, section 15, each arm armed ALONE by an anchor that must match EXACTLY ONCE in `src/store.mjs` `changedFromAudit`, restored by cp from a per-arm pristine copy and verified by sha256 AND `cmp`; BASELINE 115 pass, 0 fail): (A) RESOLVE THROUGH THE RANKED SEARCH instead of the chain — the predecessor taken as the first hit of `locator:"<address>"` (D-221's route) -> 108/7, and the provably-wrong arm FAILS BY NAME: "PROVABLY WRONG — INFO-2026-0923-agenda, the sixtieth of sixty versions, names the OLDEST (INFO-2026-0900-agenda)"; the forty-first's wrong arm, the totals, the ground-truth arm, the cut-listing totals and the structural arm with it — and the over-strictness arm (a RIGHT sentence among twenty prior versions) too, correctly: the ranked route names the oldest for it as well. (B) FOLD `no_prior_version` INTO `wrong` -> 111/4: the three totals, the undetermined-reasons arm, the ground-truth arm and the cut-listing totals. (C) A WRITE — one byte appended to every audited body -> 113/2: "EVERY BODY IS BYTE-UNCHANGED" and the structural arm. RECORDED, NOT SMOOTHED: the op=stats witness stayed GREEN under (C) — its counters count rows, not bytes — so the digest arm is the one that sees a content rewrite. */
 /* D-220 — THE DOCUMENT-VERSION CHAIN, AND THE POINT IS WHAT IS NOT BUILT.
  *
  * Bob ruled, 2026-08-06: *"Versions of the same document should be linked so
@@ -391,6 +391,20 @@ const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
    tokenise alike can match each other."* It tokenises alike and it is a
    different document, so a chain that ever joins the two has reproduced the
    defect from the other side. */
+/* D-256: THE "CHANGED FROM" SENTENCE, READ OUT OF ITS WRITER rather than typed here — a hand copy agrees
+   with the op for free. `addGo`'s CHANGED_FROM branch (civicos-ui/app.html) composes it from three string
+   literals around the named bundle id; this suite rebuilds it the same way, so the fixture bodies below
+   carry the bytes the pre-2026-08-08 writer put in the record. */
+const APP_SRC = readFileSync(fileURLToPath(new URL("../../civicos-ui/app.html", import.meta.url)), "utf8");
+const CF_PARTS = /CHANGED_FROM\s*\?\s*body \+ NL \+ NL \+ "([^"]+)"\s*\+ CHANGED_FROM\.bundle_id \+ "([^"]+)"\s*\+ "([^"]+)"/.exec(APP_SRC);
+if (!CF_PARTS)
+  throw new Error("REFUSED: addGo's CHANGED_FROM sentence was not found in civicos-ui/app.html. D-256's audit "
+    + "matches the literal that writer emitted; if the writer moved, this suite would be auditing a sentence "
+    + "nobody writes.");
+const changedFrom = (id) => "\n\n" + CF_PARTS[1] + id + CF_PARTS[2] + CF_PARTS[3];
+/* Which fixture bundles carry the sentence, and the id each names. Filled beside the fixture writes. */
+const CF_NAMES = new Map();
+
 const ADDR = normalizeAddress("https://www.oaklandca.gov/city-council/agenda.pdf");
 const DECOY = normalizeAddress("https://www.oaklandca.gov/city-council/agenda.pdf?session=2");
 const SOLO = normalizeAddress("https://www.oaklandca.gov/city-council/charter.pdf");
@@ -463,8 +477,17 @@ t("GROUND TRUTH GUARD: date order is NOT bundle-id order — which is the ONLY t
 /* WRITTEN IN AN ORDER THAT IS NEITHER: reverse-chronological, so insertion order
    cannot be mistaken for the answer either. */
 const writeOrder = [...CHAIN].reverse();
+/* D-256's chain arms: the sixtieth and the forty-first name the OLDEST version (D-221's measured sentence,
+   PROVABLY WRONG); the twenty-first names its true predecessor, the twentieth, with nineteen more before
+   it — RIGHT although the address held more than one prior version, and followed by more prose, so the
+   sentence need not end the body. */
+CF_NAMES.set(CHAIN[59].bundleId, CHAIN[0].bundleId);
+CF_NAMES.set(CHAIN[40].bundleId, CHAIN[0].bundleId);
+CF_NAMES.set(CHAIN[20].bundleId, CHAIN[19].bundleId);
 for (const v of writeOrder) {
-  const r = await promote(v.bundleId, infoMd(v.bundleId, ADDR, `Agenda revision ${v.i}.`), "information",
+  const cf = CF_NAMES.has(v.bundleId) ? changedFrom(CF_NAMES.get(v.bundleId)) : "";
+  const tail = v.i === 20 ? "\n\nA later paragraph the member wrote." : "";
+  const r = await promote(v.bundleId, infoMd(v.bundleId, ADDR, `Agenda revision ${v.i}.${cf}${tail}`), "information",
     [{ sha256: v.captureSha, path: "documents/agenda.pdf", encoding: "binary", bytes: 4096 }]);
   if (r?.ok !== true) throw new Error(`promote ${v.bundleId} refused: ${JSON.stringify(r).slice(0, 600)}`);
   await recordLocator({ address: ADDR, addressNorm: ADDR, captureSha: v.captureSha, retrieved: v.first });
@@ -478,15 +501,23 @@ const DECOY_CHAIN = [0, 1, 2].map((k) => {
   const bytes = `a DIFFERENT document that happens to live one query parameter away, revision ${k}\n`;
   return { bundleId, captureSha: sha(bytes), first: `2026-03-${String(10 + k).padStart(2, "0")}T09:00:00Z` };
 });
+/* D-256: the decoy's second version names its first — the address held EXACTLY ONE prior version, where the
+   ranked route and the chain cannot disagree (RIGHT, `sole_prior`). */
+CF_NAMES.set(DECOY_CHAIN[1].bundleId, DECOY_CHAIN[0].bundleId);
 for (const v of DECOY_CHAIN) {
-  await promote(v.bundleId, infoMd(v.bundleId, DECOY, "A different document at a similar address."), "information",
+  const cf = CF_NAMES.has(v.bundleId) ? changedFrom(CF_NAMES.get(v.bundleId)) : "";
+  await promote(v.bundleId, infoMd(v.bundleId, DECOY, `A different document at a similar address.${cf}`), "information",
     [{ sha256: v.captureSha, path: "documents/agenda.pdf", encoding: "binary", bytes: 2048 }]);
   await recordLocator({ address: DECOY, addressNorm: DECOY, captureSha: v.captureSha, retrieved: v.first });
 }
 
 /* THE SINGLE-CAPTURE ADDRESS: one version is not a degenerate failure. */
 const SOLO_SHA = sha("the charter, captured once and never changed\n");
-await promote("INFO-2026-0990-charter", infoMd("INFO-2026-0990-charter", SOLO, "The charter."), "information",
+/* D-256: the charter's one version names an earlier capture the chain does not hold — it is the OLDEST
+   version at its address, so the record cannot check the sentence (UNDETERMINED, `no_prior_version`). */
+CF_NAMES.set("INFO-2026-0990-charter", "INFO-2026-0001-ghost");
+await promote("INFO-2026-0990-charter", infoMd("INFO-2026-0990-charter", SOLO,
+  `The charter.${changedFrom("INFO-2026-0001-ghost")}`), "information",
   [{ sha256: SOLO_SHA, path: "documents/charter.pdf", encoding: "binary", bytes: 1024 }]);
 await recordLocator({ address: SOLO, addressNorm: SOLO, captureSha: SOLO_SHA, retrieved: "2026-02-14T09:00:00Z" });
 
@@ -821,6 +852,142 @@ console.log("\n--- 14. over-strictness: correct chains phrased unlike anything t
      namesBundle({ versions: [{ first_retrieved: "2026-01-01" }] })], [false, false]);
   t("and the REAL answer passes the same three readers, so they are not a private language",
     [ordered(full), namesBundle(full), settles(full)], [true, true, true]);
+}
+
+/* ===================================================================== 15
+ * D-256: THE "CHANGED FROM" SENTENCES ALREADY WRITTEN, AUDITED THROUGH THE CHAIN.
+ *
+ * D-221 fixed the writer; the sentences it wrote before 2026-08-08 stay in the
+ * record, and BOB #31 ruled (2026-09-23 22:22Z) that the bodies stay as written
+ * and the correction is the READ. `op=changedfromaudit` is that read. Every
+ * verdict below is GROUND TRUTH computed from the fixture definitions, never
+ * read back out of the op, and every body is digested before and after.
+ * ==================================================================== */
+console.log("\n--- 15. D-256: every changed-from sentence, classed through the chain, and no body touched ---");
+{
+  /* Three more affected bundles, and one that must NOT count. */
+  const UNLOCATED = "INFO-2026-0996-unlocated", TWICE = "INFO-2026-0997-twice", NEAR = "INFO-2026-0998-nearmiss";
+  const UNLOC_ADDR = normalizeAddress("https://www.oaklandca.gov/city-council/unlocated.pdf");
+  /* Registered, but NO captured_locators row: the chain holds no version of it (UNDETERMINED). */
+  CF_NAMES.set(UNLOCATED, CHAIN[0].bundleId);
+  await promote(UNLOCATED, infoMd(UNLOCATED, UNLOC_ADDR, `Registered, never located.${changedFrom(CHAIN[0].bundleId)}`),
+    "information", [{ sha256: sha("unlocated bytes\n"), path: "documents/u.pdf", encoding: "binary", bytes: 10 }]);
+  /* Two sentences naming two different ids: which one the writer meant is not in the record (UNDETERMINED). */
+  await promote(TWICE, infoMd(TWICE, ADDR,
+    `Twice.${changedFrom(CHAIN[1].bundleId)}${changedFrom(CHAIN[2].bundleId)}`), "information", []);
+  /* A sentence in words the writer never emitted is not this defect's, and is not counted. */
+  await promote(NEAR, infoMd(NEAR, ADDR,
+    `Near.\n\nThe record already holds an earlier capture of this address (${CHAIN[0].bundleId}).`), "information", []);
+
+  const EVERY = [...CHAIN.map((v) => v.bundleId), ...DECOY_CHAIN.map((v) => v.bundleId),
+    "INFO-2026-0990-charter", "INFO-2026-0995-budget", UNLOCATED, TWICE, NEAR];
+  const digests = async () => {
+    const out = {};
+    for (const id of EVERY) {
+      const md = (await get("image", `id=${encodeURIComponent(id)}`, "adm-pl10"))?.["bundle.md"];
+      out[id] = typeof md === "string" ? sha(md) : null;
+    }
+    return out;
+  };
+  const before = await digests();
+  const statsBefore = await get("stats", "", "mem-pl10");
+  t(`DIGEST GUARD: every one of the ${EVERY.length} bodies was read and digested before the audit — a digest `
+  + "comparison over bodies it never read would agree on nothing",
+    [Object.values(before).filter((d) => typeof d === "string" && d.length === 64).length >= 66,
+     Object.values(before).includes(sha(""))], [true, false]);
+  t("the fixture bodies carry the WRITER'S bytes: the sixtieth version's body holds the sentence exactly as "
+  + "addGo composed it, naming the oldest",
+    ((await get("image", `id=${encodeURIComponent(CHAIN[59].bundleId)}`, "adm-pl10"))?.["bundle.md"] ?? "")
+      .includes(changedFrom(CHAIN[0].bundleId).trim()), true);
+
+  const audit = await get("changedfromaudit", "limit=1000", "adm-pl10");
+  const by = new Map((audit?.bundles ?? []).map((b) => [b.bundle_id, b]));
+  console.log(`  op=changedfromaudit: affected ${audit?.affected}, wrong ${audit?.wrong}, right ${audit?.right}, `
+    + `undetermined ${audit?.undetermined}`);
+
+  /* GROUND TRUTH: the verdict each affected bundle must carry, from the fixture alone. */
+  const WANT = new Map([
+    [CHAIN[59].bundleId, ["wrong", CHAIN[58].bundleId]],
+    [CHAIN[40].bundleId, ["wrong", CHAIN[39].bundleId]],
+    [CHAIN[20].bundleId, ["right", CHAIN[19].bundleId]],
+    [DECOY_CHAIN[1].bundleId, ["right", DECOY_CHAIN[0].bundleId]],
+    ["INFO-2026-0990-charter", ["undetermined", null]],
+    [UNLOCATED, ["undetermined", null]],
+    [TWICE, ["undetermined", null]],
+  ]);
+  t("the audit answers, and says it wrote nothing", [audit?.ok, audit?.wrote], [true, false]);
+  t("EVERY AFFECTED BUNDLE IS FOUND: the set listed is exactly the set carrying the writer's sentence",
+    [...by.keys()].sort(), [...WANT.keys()].sort());
+  t("THE THREE TOTALS ARE KEPT APART and each is right — wrong 2, right 2, undetermined 3 — reporting wrong and "
+  + "undetermined as one number would be D-256's own mistake repeated",
+    [audit?.affected, audit?.wrong, audit?.right, audit?.undetermined], [7, 2, 2, 3]);
+  t("and EXACTLY ONE CLASS EACH: the totals partition the affected set, with no bundle counted twice or left out",
+    [audit?.wrong + audit?.right + audit?.undetermined === audit?.affected,
+     (audit?.bundles ?? []).length === new Set((audit?.bundles ?? []).map((b) => b.bundle_id)).size,
+     (audit?.bundles ?? []).every((b) => ["wrong", "right", "undetermined"].includes(b.verdict))],
+    [true, true, true]);
+  t(`PROVABLY WRONG — ${CHAIN[59].bundleId}, the sixtieth of sixty versions, names the OLDEST `
+  + `(${CHAIN[0].bundleId}); the chain's true predecessor is ${CHAIN[58].bundleId}`,
+    [by.get(CHAIN[59].bundleId)?.verdict, by.get(CHAIN[59].bundleId)?.named,
+     by.get(CHAIN[59].bundleId)?.predecessor?.bundle_id, by.get(CHAIN[59].bundleId)?.at_index],
+    ["wrong", CHAIN[0].bundleId, CHAIN[58].bundleId, 59]);
+  t(`PROVABLY WRONG — ${CHAIN[40].bundleId} names the oldest too; its true predecessor is ${CHAIN[39].bundleId}`,
+    [by.get(CHAIN[40].bundleId)?.verdict, by.get(CHAIN[40].bundleId)?.predecessor?.bundle_id],
+    ["wrong", CHAIN[39].bundleId]);
+  t(`PROVABLY RIGHT with ONE prior version — ${DECOY_CHAIN[1].bundleId} names ${DECOY_CHAIN[0].bundleId}, the `
+  + "only version before it, where the two routes cannot disagree",
+    [by.get(DECOY_CHAIN[1].bundleId)?.verdict, by.get(DECOY_CHAIN[1].bundleId)?.sole_prior,
+     by.get(DECOY_CHAIN[1].bundleId)?.predecessor?.bundle_id], ["right", true, DECOY_CHAIN[0].bundleId]);
+  t(`OVER-STRICTNESS: RIGHT among MANY prior versions — ${CHAIN[20].bundleId} names its true predecessor with `
+  + "nineteen more before it, mid-body; a correct sentence is right however long the chain",
+    [by.get(CHAIN[20].bundleId)?.verdict, by.get(CHAIN[20].bundleId)?.sole_prior,
+     by.get(CHAIN[20].bundleId)?.at_index], ["right", false, 20]);
+  t("UNDETERMINED, each with its reason stated: the oldest version held (no prior version to check against), "
+  + "a bundle the chain holds no version of, and a body naming two ids",
+    [by.get("INFO-2026-0990-charter")?.why, by.get(UNLOCATED)?.why, by.get(TWICE)?.why],
+    ["no_prior_version", "no_version_held", "several_named"]);
+  t("and an undetermined bundle names NO predecessor — the chain could not check it, which is not a verdict",
+    ["INFO-2026-0990-charter", UNLOCATED, TWICE].map((id) => by.get(id)?.predecessor), [null, null, null]);
+  t("EVERY verdict and predecessor matches the ground truth computed from the fixture",
+    [...WANT].map(([id]) => [by.get(id)?.verdict, by.get(id)?.predecessor?.bundle_id ?? null]),
+    [...WANT].map(([, w]) => w));
+  t("PRECISION: a sentence in words the writer never emitted is not counted", by.has(NEAR), false);
+
+  /* THE ENVELOPE: the listing is bounded; the totals never are. */
+  const cut = await get("changedfromaudit", "limit=2", "adm-pl10");
+  t("a CUT listing says so, and the three totals stay WHOLE — a total cut at the page would be a partial count",
+    [cut?.count, cut?.total, cut?.truncated, cut?.wrong, cut?.right, cut?.undetermined],
+    [2, 7, true, 2, 2, 3]);
+  const walk = [];
+  for (let off = 0; off < 7; off += 3)
+    walk.push(...((await get("changedfromaudit", `limit=3&offset=${off}`, "adm-pl10"))?.bundles ?? []));
+  t("PAGING IS TOTAL: walked three at a time, every affected bundle appears exactly once",
+    [walk.length, new Set(walk.map((b) => b.bundle_id)).size], [7, 7]);
+  t("the bound PUBLISHED is the bound APPLIED", (await get("changedfromaudit", "limit=999999", "adm-pl10"))?.limit, 1000);
+
+  /* IT WRITES NOTHING. */
+  const after = await digests();
+  t("EVERY BODY IS BYTE-UNCHANGED: each bundle.md digests the same after the audit as before it",
+    EVERY.filter((id) => after[id] !== before[id]), []);
+  t("and the record's own counters read the same before and after — the witness, not a promise",
+    JSON.stringify(await get("stats", "", "mem-pl10")) === JSON.stringify(statsBefore), true);
+  const seg = SEGMENTS.get("changedFromAudit") || "";
+  t("STRUCTURAL: the audit holds no write statement, resolves through `versionChain` and never through a "
+  + "ranked search or the text index",
+    [/\b(INSERT|UPDATE|DELETE|REPLACE)\b/.test(seg), /this\.versionChain\(/.test(seg),
+     /this\.search\(|bundles_fts|\bMATCH\b|bm25/i.test(seg), seg.length > 1500],
+    [false, true, false, true]);
+  t("the sentence the audit matches IS the writer's literal — if addGo's words move, this goes red",
+    /static CHANGED_FROM_SENTENCE = "([^"]+)";/.exec(STORE_CODE)?.[1], CF_PARTS[1]);
+
+  /* THE FENCE: admin and probe; probe confined to the scratch namespace. */
+  t("op=changedfromaudit is declared admin and probe, non-mutating",
+    /changedfromaudit: \{ classes: \["admin", "probe"\],\s+mutating: false \}/.test(decomment(INDEX_SRC)), true);
+  const asMember = await get("changedfromaudit", "", "mem-pl10");
+  t("a member-class credential is refused", asMember?.ok === true || Array.isArray(asMember?.bundles), false);
+  const asProbe = await get("changedfromaudit", "", "prb-pl10");
+  t("and a probe answers from its own scratch namespace, which holds none of this record's bodies",
+    [asProbe?.ok, asProbe?.affected], [true, 0]);
 }
 
 await mf.dispose();

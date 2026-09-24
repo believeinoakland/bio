@@ -72,6 +72,10 @@ export const BUDGET_LEDGER = {
     why: "CLOSURE — a git read: an expiry is `null`, the stated THIRD state UNVERIFIED, never 'clean' (M0-16)" },
   "bio-plane/scripts/coverage.mjs": { counts: { "timeout:": 1 },
     why: "DEFECT, NOT THIS ROW'S — `lastCommitDate`: an expiry returns null and the row DROPS SILENTLY out of the reported staleness distribution (an under-count, not a false RED); named for SCHEDULER by M0-107" },
+  /* LEDGERED at integration by c19-unionfix, 2026-09-24: D-242's take gained this site and gated only its own
+     suites, so this walk first saw it on the union. */
+  "tools/mintid.mjs": { counts: { "Atomics.wait": 1 },
+    why: "CLOSURE, NOT A BUDGET — `pause`, a jittered BACKOFF (10 to ~490 ms) between compare-and-swap retries after a LOST RACE in `take` (D-242). It has no result and its end is read as nothing: the loop is bounded by `maxAttempts` (24), and exhausting it is REFUSED `RETRIES_EXHAUSTED` with NOTHING TAKEN — never an id handed out, never a finding about the subject" },
   "bio-plane/test/battery-residue.test.mjs": { counts: { "Atomics.wait": 1 },
     why: "CHECKED BY HAND — the synchronous holder wait (`waitFor`) inside the budget the suite asserts as `holder-budget`; it cannot see the holder EXIT, which the site states" },
 };

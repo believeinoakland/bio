@@ -174,16 +174,26 @@ One line each; the full rows are in the archive.
 | another worker's untracked suite ran in a worker's battery (REC-68, M0-15) | `git stash` is REPOSITORY-WIDE: every worktree shares one stack | never stash (below); the battery names any suite not in a commit |
 | SEVEN id collisions in one day, every worker having measured the number free (2026-08-08) | read-the-file-and-add-one is check-then-act with no atomicity | mint every id (below) |
 
-### TAKING AN ID: MINT IT, DO NOT READ THE FILE AND ADD ONE (M0-17)
+### TAKING AN ID: MINT IT, DO NOT READ THE FILE AND ADD ONE (M0-17; the take moved to ONE writer by D-242)
 
-    node tools/mintid.mjs <NAMESPACE> [--count N]      # take
+    node tools/mintid.mjs <NAMESPACE> [--count N]      # take — a compare-and-swap push to origin/coord
     node tools/mintid.mjs --list                       # what exists, and where each floor comes from
 
-It takes an id by exclusive create in the ONE `.git` every worktree of this clone shares. The corpus floor keeps it from
-going below what exists, so losing the ledger degrades to the old convention and no further. **Its only failure is a GAP,
-never a WRONG id.** **Never write an id-shaped example in a file that is a corpus** — an instrument cannot tell a number
-in a sentence from a number in a row, and one such example moved a floor within minutes of landing. `--audit --base
-origin/main` after a merge finds collisions the merge created (`kickoffs/CONDUCT.md`).
+**The take is a push to `origin/coord`, and a push is the only thing that makes it exclusive** (D-242, 2026-09-23). The
+tool writes the ids it takes into `ids/<NS>.tsv` on `coord`, in a commit whose only parent is the tip it read, and pushes
+it WITHOUT force; the remote refuses a non-fast-forward, so of two takes on one tip exactly one lands and the other
+re-reads and takes above it. **Corrected, not extended:** until D-242 this section said the tool "takes an id by exclusive
+create in the ONE `.git` every worktree of this clone shares" — true, and exclusive against nothing once every worker is
+its own cloud clone: on 2026-09-23 clones minted IC-222 and IC-231 three times each, IC-224, IC-228, C-68..C-72 and M-117
+twice, each already held on a `land/*` branch. That local ledger is now this clone's RECORD of its takes, not the
+allocator. **The floor covers every id visible anywhere:** this tree's corpus, the same corpus at `origin`'s `main`,
+`coord` and EVERY `land/*` tip, the ids `coord` already holds, and the local record. **When the push fails for any reason
+but a lost race — the network, a 403, a hook, no `coord` — the tool REFUSES and hands out nothing; it never falls back to a
+local guess.** Retry it; do not number by hand. A test names a scratch remote (`BIO_IDTAKE_REMOTE`); a planted ledger
+aimed at a network remote is refused. **Its only failure is a GAP, never a WRONG id** — except an id written by hand,
+which nothing can see. **Never write an id-shaped example in a file that is a corpus** — an instrument cannot tell a
+number in a sentence from a number in a row, and one such example moved a floor within minutes of landing. `--audit
+--base origin/main` after a merge finds collisions the merge created (`kickoffs/CONDUCT.md`).
 
 ### RE-MEASURING A TRUE BASELINE (M0-15)
 

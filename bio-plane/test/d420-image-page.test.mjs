@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: FOUR arms and a baseline in `test/nc-d420.mjs`, re-runnable in one step with `node test/nc-d420.mjs [arm]` from `bio-plane/`. Each arm edits ONE real source ALONE, declares BEFORE it runs what MUST fail AND what MUST NOT, and is restored from a uniquely-named pristine copy verified by sha256 AND content (never `git checkout --`). (a) `baseline` — nothing armed, MUST be green. (b) `droppage` — THE ROW'S DECLARED CONTROL: drop the page-form branch in `checkContentExtent` (`unpainted = null`); the no-image arm MUST fail BY NAME while the wire, equality and the admitted-and-stated arms hold. (c) `dropwire` — acquire stops persisting a PDF's placements (the record as it was before D-420); the wire arm and the refusals MUST fail, nothing that mints moves. (d) `widetol` — HOW A LIAR PASSES: a 1000 pt tolerance; the far and one-point-off rects MUST mint, the blank-page arms hold. (e) `absentrefuses` — over-strictness: an ABSENT list read as EMPTY; the pre-D-420 and unfinished-walk admissions MUST fail. RUN 2026-09-23 by the D-420 worker, ALL FOUR AS DECLARED, 0 held-open assertions broken in any arm, every restore byte-identical (`checks/bio-checks.mjs` 836,026 B sha256 319a51815747…, `src/index.mjs` 725,893 B sha256 e7b685d884e5…): baseline 28/0 GREEN · droppage 21/7 (5/5 declared; fails BY NAME at "a rect where the page paints NO image is REFUSED BY NAME (C-45.12)") · dropwire 17/11 (4/4) · widetol 23/5 (3/3) · absentrefuses 24/4 (2/2). */
+/* NEGATIVE CONTROL: FOUR arms and a baseline in `test/nc-d420.mjs`, re-runnable in one step with `node test/nc-d420.mjs [arm]` from `bio-plane/`. Each arm edits ONE real source ALONE, declares BEFORE it runs what MUST fail AND what MUST NOT, and is restored from a uniquely-named pristine copy verified by sha256 AND content (never `git checkout --`). (a) `baseline` — nothing armed, MUST be green. (b) `droppage` — THE ROW'S DECLARED CONTROL: drop the page-form branch in `checkContentExtent` (`unpainted = null`); the no-image arm MUST fail BY NAME while the wire, equality and the admitted-and-stated arms hold. (c) `dropwire` — acquire stops persisting a PDF's placements (the record as it was before D-420); the wire arm and the refusals MUST fail, nothing that mints moves. (d) `widetol` — HOW A LIAR PASSES: a 1000 pt tolerance; the far and one-point-off rects MUST mint, the blank-page arms hold. (e) `absentrefuses` — over-strictness: an ABSENT list read as EMPTY; the pre-D-420 and unfinished-walk admissions MUST fail. CPDF-22 added three (`src/store.mjs` joins the files): (f) `restorekey` — THE ROW'S CONTROL (BOB #31): D-420's withdrawn key restored beside `undetermined` on both mint answers; the two one-shape arms MUST fail by name, the statement MUST hold. (g) `silent` — the page form's statement dropped; the stated arms MUST fail, admission holds. (h) `overstate` — over-strictness: `undetermined` stated where the list was held and passed; that arm MUST fail. RUN 2026-09-23 by the CPDF-22 worker, ALL SEVEN AS DECLARED, 0 held-open assertions broken in any arm, every restore byte-identical (`checks/bio-checks.mjs` 847,439 B sha256 d10709574506…, `src/index.mjs` 731,481 B sha256 c7d77e7eee13…, `src/store.mjs` 2,902,230 B sha256 7bcc714afe46…): baseline 29/0 GREEN · droppage 22/7 (5/5) · dropwire 18/11 (4/4) · widetol 24/5 (3/3) · absentrefuses 25/4 (2/2) · restorekey 27/2 (2/2; fails BY NAME at "in ONE shape: the withdrawn image-bound key is absent") · silent 26/3 (3/3) · overstate 28/1 (1/1). EARLIER RUN 2026-09-23 by the D-420 worker, ALL FOUR AS DECLARED, 0 held-open assertions broken in any arm, every restore byte-identical (`checks/bio-checks.mjs` 836,026 B sha256 319a51815747…, `src/index.mjs` 725,893 B sha256 e7b685d884e5…): baseline 28/0 GREEN · droppage 21/7 (5/5 declared; fails BY NAME at "a rect where the page paints NO image is REFUSED BY NAME (C-45.12)") · dropwire 17/11 (4/4) · widetol 23/5 (3/3) · absentrefuses 24/4 (2/2). */
 
 /* D-420 — AN `image {page, rect}` ROW IS BOUNDED BY WHAT THE PAGE PAINTS, NOT
  * ONLY BY THE PAGE SET (EXTRACTION-BREADTH §3.2: `covers` refuses from the
@@ -25,7 +25,7 @@
  *      that paints one it mints (the crop, not the address, needs the rect).
  *   3. ADMITTED, STATED: a PDF acquired BEFORE D-420 (`container_extent: null`,
  *      what the pre-D-420 wire wrote) admits the far rect and SAYS it was not
- *      checked (`image_bound.determined: false` with the sentence); so does a
+ *      checked (`undetermined: {level: "page_images", why}` — CPDF-22's one shape); so does a
  *      PDF whose walk did not finish; and a rect that mints against a held list
  *      carries NO such statement.
  *   4. THE TWO READS AGREE: every rect the checker admits on the fixture, the
@@ -227,8 +227,18 @@ t("the capture is promoted", (await promote(DOC, infoMd(DOC), "information", { r
 const eq = await cite(DOC, { kind: "image", page: 0, rect: [50, 600, 250, 700] });
 t("a rect EQUAL to a persisted placement mints an `image` row",
   [eq.ok, eq.content?.[0]?.extent_kind, eq.content?.[0]?.minted], [true, "image", true]);
+/* CPDF-22 CORRECTED this and the §3 arms below: they read D-420's image-bound key,
+   a SECOND shape for the statement D-440 already made as `undetermined: {level,
+   why}`. BOB #31 (2026-09-23) withdrew it before any client read it; the old
+   assertions pinned the withdrawn key, so they are corrected, not exempted. The
+   arm reading that key as ABSENT survives it, so it would have passed a
+   regression that brought the key back — it now asserts the key is gone too.
+   The key is named by construction, not as a literal, because CPDF-22's
+   acceptance is that `git grep` for it over bio-plane and civicos-ui finds
+   nothing: every hit there is a producer or a reader, and this suite is neither. */
+const WITHDRAWN = ["image", "bound"].join("_");
 t("    and carries NO undetermined statement: the bound was held and it passed",
-  eq.content?.[0]?.image_bound ?? null, null);
+  [eq.content?.[0]?.undetermined ?? null, WITHDRAWN in (eq.content?.[0] || {})], [null, false]);
 const form = await cite(DOC, { kind: "image", page: 0, rect: [310, 110, 370, 190] });
 t("the image painted INSIDE a Form XObject mints at its COMPOSED rectangle", [form.ok, form.content?.[0]?.minted], [true, true]);
 const swapped = await cite(DOC, { kind: "image", page: 0, rect: [370, 190, 310, 110] });
@@ -284,19 +294,23 @@ t("a PDF acquired before D-420 is promoted", (await promote(BEFORE, infoMd(BEFOR
 const old = await cite(BEFORE, { kind: "image", page: 0, rect: FAR_RECT });
 t("the far rect on a PDF acquired BEFORE D-420 is ADMITTED — no bound nobody measured refuses it",
   [old.ok, old.content?.[0]?.extent_kind, old.content?.[0]?.minted], [true, "image", true]);
-t("    and the admission STATES what it was not checked against: determined false, the empty level named",
-  [old.content?.[0]?.image_bound?.determined, old.content?.[0]?.image_bound?.empty_level,
-   /a PDF acquired before D-420 persisted none/.test(old.content?.[0]?.image_bound?.why || ""),
-   /UNDETERMINED and stated, not refused/.test(old.content?.[0]?.image_bound?.why || "")],
-  [false, "the images this capture's pages paint", true, true]);
+t("    and the admission STATES what it was not checked against: undetermined.level and .why",
+  [old.content?.[0]?.undetermined?.level,
+   /a PDF acquired before D-420 persisted none/.test(old.content?.[0]?.undetermined?.why || ""),
+   /UNDETERMINED and stated, not refused/.test(old.content?.[0]?.undetermined?.why || "")],
+  ["page_images", true, true]);
+t("    in ONE shape: the withdrawn image-bound key is absent (CPDF-22, BOB #31)",
+  Object.keys(old.content?.[0] || {}).filter((k) => k === WITHDRAWN), []);
 const oldAct = await post("contentmint", { bundleId: BEFORE, extent: { kind: "image", page: 0, rect: [1, 2, 3, 4] } });
-t("    and op=contentmint states it the same way", [oldAct.ok, oldAct.image_bound?.determined], [true, false]);
+t("    and op=contentmint states it the same way, in the same one shape",
+  [oldAct.ok, oldAct.undetermined?.level, typeof oldAct.undetermined?.why, WITHDRAWN in oldAct],
+  [true, "page_images", "string", false]);
 const ENC = "INFO-2026-9230-encrypted";
 t("the encrypted PDF is promoted", (await promote(ENC, infoMd(ENC), "information", { reading: enc })).ok !== false, true);
 const encRow = await cite(ENC, { kind: "image", page: 0, rect: FAR_RECT });
 t("a PDF whose walk did NOT finish admits the rect and states the walk's reason",
-  [encRow.ok, encRow.content?.[0]?.image_bound?.determined,
-   /walk did not finish \(encrypted\)/.test(encRow.content?.[0]?.image_bound?.why || "")], [true, false, true]);
+  [encRow.ok, encRow.content?.[0]?.undetermined?.level,
+   /walk did not finish \(encrypted\)/.test(encRow.content?.[0]?.undetermined?.why || "")], [true, "page_images", true]);
 
 /* ===================== 4. THE TWO READS AGREE ============================ */
 console.log("\n--- 4. what the mint admits, the crop finds; what it refuses, the crop refuses ---");

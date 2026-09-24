@@ -110,3 +110,36 @@ export async function instanceClaudeToken(env) {
   const st = await instanceClaudeStatus(env);
   return st.configured ? env[INSTANCE_CLAUDE_BINDING] : null;
 }
+
+/* ---------------------------------------------------------------------------
+ * D-260 — THE INSTANCE'S ORGANISATION-PRINCIPAL `ai` CREDENTIAL (BOB #22, 2026-09-21;
+ * `BIO_Assistant_and_AI_Roles_v0_1.md` §6).
+ *
+ * THE SECOND INSTANCE-LEVEL SECRET, AND IT TRAVELS THE OTHER WAY FROM THE ONE ABOVE. `INSTANCE_CLAUDE_TOKEN`
+ * is Anthropic's credential and decides who PAYS; this is BIO's own `aik-…` credential, which `agent-worker`
+ * presents TO the plane when the plane hands it a woken run to resume. The ruling: an instance MAY hold ONE
+ * organisation-principal `ai` credential as a deploy secret, `DAEMON_TOKEN`'s precedent one class over — minted by
+ * a member (DEC-55 (3)) and resolved through its `ai_credentials` row like any other. So this module says only
+ * whether a value is present and not published; WHICH principal it is, and whether it is still standing, is the
+ * RECORD's answer, asked by the one caller (`Store#aiRunResumer`) at the row.
+ *
+ * IT HAS NO WRITE PATH, for DS-3's reason above: the value arrives as a Worker secret an operator places through
+ * install or update (DIST's half of D-260), and nothing an agent can call reaches it. The fence is asserted by
+ * `bio-plane/test/d260-resume.test.mjs` exactly as `claudecascade.test.mjs` asserts the Claude binding's: this
+ * module is the only one in `bio-plane/src` that names the binding. PUBLICATION IS REVOCATION, as for every
+ * token here: a value on `PUBLISHED_TOKEN_HASHES` is NOT SET.
+ */
+export const INSTANCE_AI_BINDING = "INSTANCE_AI_TOKEN";
+
+/** The stated reasons, secret-free. `null` when a live value is present. */
+export const INSTANCE_AI_UNSET = "NO_INSTANCE_AI_CREDENTIAL";
+export const INSTANCE_AI_PUBLISHED = "INSTANCE_AI_CREDENTIAL_REVOKED_BY_PUBLICATION";
+
+/** `{ token, reason }`: the live value and `reason: null`, or `token: null` and the stated reason. The caller spends
+ *  `token` and publishes only `reason` — the two come from ONE test, so they cannot disagree. */
+export async function instanceAiCredential(env) {
+  const v = env?.[INSTANCE_AI_BINDING];
+  if (typeof v !== "string" || v.length === 0) return { token: null, reason: INSTANCE_AI_UNSET };
+  if (!(await liveToken(v))) return { token: null, reason: INSTANCE_AI_PUBLISHED };
+  return { token: v, reason: null };
+}

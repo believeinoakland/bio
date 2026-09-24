@@ -71,7 +71,33 @@
 
    (h) THE DRY RUN AS THE EDITOR — `#reviewGates` runs as `row.updated_by` again, not as
    `#draftPublisher`. Declared: MUST FAIL the editor's-draft-judged-as-publisher arm ->
-   **62 pass, 1 fail**, that arm. AS DECLARED. */
+   **62 pass, 1 fail**, that arm. AS DECLARED.
+
+   REC-198 (BOB #32, 2026-09-23 23:08Z: the list of a project's drafts, fenced exactly like reading one) ADDED
+   BLOCK 9 AND THREE ARMS. DECLARED 2026-09-23 BEFORE ARMING (results appended below when run):
+
+   (i) THE FENCE DROPPED — `caseDraftList` stops asking `#seesProjectDrafts`. MUST FAIL, by name: the uninvited
+   member's byte-identical arm ("THE UNINVITED MEMBER READS THE FENCE'S ANSWER"), the caller-by-caller table (vic
+   admitted), the names-nothing arm, the other-way arm, and both structural arms. MUST NOT FAIL: the owner's and
+   the joined editor's lists, the rows opening, the bound, and every block 1-8 arm.
+
+   (j) THE LIAR'S SECOND FENCE — the list asks an inline copy that admits JOINED participants (and owners) only,
+   the ruling's parenthesis taken literally, instead of calling the fence. It agrees with the fence on iris, ella
+   and vic, so the owner/editor/uninvited arms stay GREEN; MUST FAIL the caller-by-caller table (pat, omar and the
+   machine credential are admitted by the single read and refused by the copy) and both structural arms.
+
+   (k) OVER-STRICTNESS — the list's local `pid` renamed `projectId` throughout, correct work in a spelling this
+   suite did not write. MUST PASS, every arm.
+
+   MEASURED 2026-09-23 by WORKER REC-198 (cloud session, CONDUCT #18) with `node test/reviewcopy.control.mjs`, each arm
+   ALONE, every restore of `src/store.mjs` (2,955,040 B) sha256 MATCH, content IDENTICAL, size ok:
+   (0) BASELINE -> **77 pass, 0 fail**. (i) -> **71 pass, 6 fail**: the caller-by-caller table, THE UNINVITED MEMBER
+   READS THE FENCE'S ANSWER (by name), the names-nothing arm, the other-way arm and both structural arms. AS DECLARED.
+   (j) -> **74 pass, 3 fail**: the caller-by-caller table and both structural arms; the owner, editor and uninvited arms
+   GREEN, which is the liar's copy agreeing today exactly where it was built to. AS DECLARED. (k) -> **77 pass, 0 fail**.
+   AS DECLARED. ARMS (a)-(h) RE-RUN in the same driver run: a 72/5, b 76/1, c 75/2, d 75/2, e 75/2, f 76/1, h 76/1 — each
+   REC-133's failure count unchanged — and g 69/8, FOUR MORE than REC-133 recorded, all four block 9's: with authoring
+   widened, vic, omar and pat write drafts into PROJ and the list reports more than the seven authorised drafts. */
 
 /* REC-126 / DEC-31 — THE REVIEW COPY: AN ADDRESSED ACT BESIDE PUBLISH THAT NEVER
  * LEAVES THE INSTANCE. `BIO_Publication_v0_1.md` §6A is the authority, and every
@@ -197,7 +223,7 @@ rP(await POST("op=signeradd&token=adm-r126", { keyB64: mkKey("iris"), memberId: 
 const PROJ = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r126", owner: "iris",
   name: "PROJ-2026-1260-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
-await makePublishingProject({
+const VIC_PROJ = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r126", owner: "vic",
   name: "PROJ-2026-1261-elsewhere", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 
@@ -384,6 +410,7 @@ t("nor edit an existing draft of the project",
 t("THE CAPABILITY HALF: a JOINED participant without `contribute` is refused at the control plane, "
 + "before the store — the edit permission is position AND capability, and neither alone",
   (await draft(UMA, withRoles({ ...args(1), targets: [LEAD5] })))?.reason, "NOT_CAPABLE");
+let DEO_ID = null;   /* REC-198: every draft of PROJ is tracked by the id its act answered, for block 9's list */
 {
   /* THE GATES ARE RUN AS THE PUBLISHER. `publishCase` runs its owner fence first, so
      a dry run as the non-owner editor would answer NOT_THE_PROJECT_OWNER for every
@@ -392,6 +419,7 @@ t("THE CAPABILITY HALF: a JOINED participant without `contribute` is refused at 
   const DE_read = rP(await GET(`op=reviewcopy&draft=${DEr.draftId}&token=${IRIS}`));
   const DEo = await draft(ELLA, withRoles({ ...args(1), targets: [OPENQ] }));
   const DEo_read = rP(await GET(`op=reviewcopy&draft=${DEo.draftId}&token=${ELLA}`));
+  DEO_ID = DEo?.draftId ?? null;
   t("REC-133: AN EDITOR'S DRAFT IS JUDGED BY THE GATES AS ITS PUBLISHER WOULD MEET THEM — complete passes; "
   + "over an open question names NOT_CONCLUDED, never the editor's want of ownership",
     [DE_read?.gates, DE_read?.missing?.length, DE_read?.updated_by,
@@ -661,6 +689,121 @@ t("NOT ANOTHER EDITION: the edition-2 secret reads the UNSIGNED edition-3 docume
   (await rawOf(`op=casedocument&case=${C1}&edition=3`)).body);
 t("and the owner still reads the draft, now at edition 3 — the copy is MUTABLE and its grants are not",
   (await ownerRead(D1))?.ok, true);
+
+/* =========================================================================== 9
+ * REC-198 — THE LIST OF A PROJECT'S DRAFTS, FENCED EXACTLY LIKE READING ONE.
+ * BOB #32 (2026-09-23 23:08Z; BIO_Publication §3 rule 15 (a)): *"a list read of a project's drafts, fenced exactly like
+ * reading one draft (joined participants)"*. Until this, every read of `case_drafts` was keyed by draft_id,
+ * so a draft whose id was lost was a lost draft.
+ *
+ * HOW A LIAR PASSES THIS: a SECOND fence that agrees with the first today. So the arms below (1) assert the
+ * list and the single read CALL THE SAME FUNCTION, off the source, and (2) drive the callers a copied fence
+ * would most plausibly treat differently — the INVITED-NOT-JOINED participant (pat) and the ADMINISTRATOR who
+ * is no participant (omar), whom a "joined participants" copy would refuse while the single read admits them —
+ * and assert the list admits EXACTLY whom the single read admits, caller by caller.
+ *
+ * WHAT THIS CANNOT SEE: a caller holding NO credential is refused by the op table's class gate before any
+ * fence (the list is gated; `reviewcopy` is not, for its recipient door), so for that caller the two answers
+ * differ in shape by design and only "reads no drafts" is asserted. The uninvited arm is a SIGNED-IN member.
+ * ========================================================================= */
+console.log("\n--- 9. REC-198: the list of a project's drafts, fenced exactly like reading one ---");
+const PROJ_DRAFTS = [D1, D2, D3, D5, DEr.draftId, D6r.draftId, DEO_ID];
+if (PROJ_DRAFTS.some((d) => !d) || new Set(PROJ_DRAFTS).size !== 7) bail("block 9's draft roster", PROJ_DRAFTS);
+const listOf = async (token, extra = "") => rP(await GET(`op=casedrafts&token=${token}&project=${encodeURIComponent(PROJ)}${extra}`));
+const L_OWNER = await listOf(IRIS);
+const L_ELLA = await listOf(ELLA);
+const idsOf = (l) => (l?.drafts || []).map((d) => d.draft_id).sort();
+t("REC-198: THE OWNER LISTS EVERY DRAFT OF THE PROJECT — the seven this suite authored, each by the id its act "
++ "answered, and the count and total say it is all of them",
+  [idsOf(L_OWNER), L_OWNER?.total, L_OWNER?.count, L_OWNER?.truncated, L_OWNER?.project],
+  [[...PROJ_DRAFTS].sort(), 7, 7, false, PROJ]);
+t("REC-198: A JOINED PARTICIPANT WHO IS NOT THE OWNER LISTS THE SAME SEVEN — the accepts-when clause",
+  [idsOf(L_ELLA), L_ELLA?.total], [[...PROJ_DRAFTS].sort(), 7]);
+{
+  /* EACH ROW OPENS: the `read` it names is the single read, and it answers the draft the row names. */
+  const opened = [];
+  for (const row of L_ELLA?.drafts || []) {
+    const q = String(row.read || "");
+    const r = q.startsWith("op=reviewcopy&draft=") ? rP(await GET(`${q}&token=${ELLA}`)) : null;
+    opened.push(r?.kind === "review-copy" && r?.draft === row.draft_id);
+  }
+  t("and every row OPENS: the read it names is `op=reviewcopy`, and it answers the draft the row names",
+    [opened.length, opened.every(Boolean)], [7, true]);
+}
+{
+  const row = (L_OWNER?.drafts || []).find((d) => d.draft_id === D1);
+  const own = await ownerRead(D1);
+  t("a row states the draft's case identity exactly as the single read does — the edition read from the "
+  + "published record, never stored",
+    [row?.case?.case_id, row?.case?.edition, row?.case?.identity], [own?.case?.case_id, own?.case?.edition, own?.case?.identity]);
+}
+
+/* THE FENCE, CALLER BY CALLER. For each caller the single read's admission of D1 and the list's admission of
+   PROJ must agree. pat (invited, not joined) and omar (an administrator, no participant) are the callers a
+   copied "joined participants" fence would refuse while the single read admits them; vic (a member with no
+   position in PROJ) is the caller dropping the fence would admit. */
+{
+  const callers = [["iris", IRIS], ["ella", ELLA], ["pat", PAT], ["uma", UMA], ["omar", OMAR], ["vic", VIC],
+                   ["machine", "mem-r126"]];
+  const single = [], list = [];
+  for (const [who, tok] of callers) {
+    single.push([who, rP(await GET(`op=reviewcopy&draft=${D1}&token=${tok}`))?.kind === "review-copy"]);
+    list.push([who, (await listOf(tok))?.ok === true]);
+  }
+  t("REC-198: THE LIST ADMITS EXACTLY WHOM THE SINGLE READ ADMITS, caller by caller — including the invited-not-"
+  + "joined participant and the non-participant administrator, where a second fence would part from the first",
+    list, single);
+  console.log(`         the single read's admission, printed: ${JSON.stringify(single)}`);
+  t("and the table is not vacuous: the single read admits some of these callers and refuses others",
+    [single.some(([, a]) => a), single.some(([, a]) => !a)], [true, true]);
+}
+{
+  const uninvited = await rawOf(`op=casedrafts&token=${VIC}&project=${encodeURIComponent(PROJ)}`);
+  const singleDead = await rawOf(`op=reviewcopy&draft=${D1}&token=${VIC}`);
+  const noProject = await rawOf(`op=casedrafts&token=${VIC}&project=PROJ-2026-9999-nowhere`);
+  t("REC-198: THE UNINVITED MEMBER READS THE FENCE'S ANSWER — status, content type and every byte of the single "
+  + "read's dead answer, and the same bytes as a project that does not exist",
+    [uninvited, noProject], [singleDead, singleDead]);
+  t("and the dead answer names nothing of the project: no id, no draft",
+    [uninvited.body.includes(PROJ), PROJ_DRAFTS.some((d) => uninvited.body.includes(d))], [false, false]);
+  t("and the fence runs the other way too: PROJ's owner, no participant of vic's project, reads the same dead answer there",
+    [(await rawOf(`op=casedrafts&token=${IRIS}&project=${encodeURIComponent(VIC_PROJ)}`)).body, singleDead.body],
+    [singleDead.body, singleDead.body]);
+  t("a caller with no credential at all reads no drafts (the op is gated; see this block's 'cannot see')",
+    parsed(await rawOf(`op=casedrafts&project=${encodeURIComponent(PROJ)}`))?.drafts === undefined, true);
+}
+{
+  const empty = rP(await GET(`op=casedrafts&token=${VIC}&project=${encodeURIComponent(VIC_PROJ)}`));
+  t("a project with no drafts answers an EMPTY list that says it is the whole — a stated zero, not a refusal",
+    [empty?.ok, empty?.drafts?.length, empty?.total, empty?.truncated], [true, 0, 0, false]);
+}
+{
+  /* THE BOUND, in `bounds.test.mjs`'s loop shape (that suite drives `casedrafts` in its own loop too). */
+  const bite = await listOf(IRIS, "&limit=1");
+  const over = await listOf(IRIS, "&limit=99999");
+  t("REC-198: THE LIST IS BOUNDED AND SAYS SO: a bite of 1 over seven is cut, publishes the bound it applied and "
+  + "the total; the default reads all seven and says it did; an over-ask is answered at the ceiling",
+    [bite?.drafts?.length, bite?.limit, bite?.total, bite?.truncated, L_OWNER?.truncated, over?.limit],
+    [1, 1, 7, true, false, 500]);
+}
+{
+  /* STRUCTURALLY: ONE FENCE, CALLED BY BOTH READS. A behavioural arm cannot see a faithful copy of a rule. */
+  const body = (name) => {
+    const at = STORE_SRC.search(new RegExp(`\\n  ${name.replace(/[#$]/g, (c) => "\\" + c)}\\(`));
+    if (at < 0) return "";
+    const next = STORE_SRC.slice(at + 1).search(/\n  (?:static |async )?[#A-Za-z_$][\w$]*\([^)]*\)\s*\{/);
+    return next < 0 ? "" : STORE_SRC.slice(at, at + 1 + next);
+  };
+  const single = body("#draftForMember"), list = body("caseDraftList");
+  t("REC-198: THE LIST AND THE SINGLE READ CALL THE SAME FENCE — `#seesProjectDrafts` is called from both, and "
+  + "neither compiles a viewer predicate of its own",
+    [single.length > 0, list.length > 0, /this\.#seesProjectDrafts\(/.test(single),
+     /this\.#seesProjectDrafts\(/.test(list),
+     /viewerPredicate\(/.test(single), /viewerPredicate\(/.test(list)],
+    [true, true, true, true, false, false]);
+  t("and the fence has exactly those two callers in the store",
+    (STORE_SRC.match(/this\.#seesProjectDrafts\(/g) || []).length, 2);
+}
 
 console.log(`\nreviewcopy: ${pass} pass, ${fail} fail`);
 await mf.dispose();

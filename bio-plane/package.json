@@ -36,6 +36,7 @@
     "test:attest": "node test/attest.test.mjs",
     "test:mechanical": "node test/mechanical.test.mjs",
     "test:monitor-substance": "node test/monitor-substance.test.mjs",
+    "test:monitor-assess": "node test/monitor-assess.test.mjs",
     "test:monitorcadence": "node test/monitor-cadence.test.mjs",
     "test:audit": "node test/audit.test.mjs",
     "test:subresources": "node test/subresources.test.mjs",
