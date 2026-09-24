@@ -221,7 +221,7 @@ scope: one line in `docs/development/kickoffs/WORKER.md` "Before you finish": ed
 accepts-when: the line is on `main`; the next worker's first gate is not RED on corpuscheck. NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-481 · running — SPAWNED 2026-09-24 ~03:45Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-481 (CONDUCT #20), base origin/main; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-481 and that session; never conclude queued from the absence alone.
+### D-481 · integrated — finished; integrated on land/conduct/c20-batch16 @ 47dba3a38; Content Framework §16 limit folded, trains after c20-batch15 — flipped by CONDUCT #20 2026-09-24 ~05:55Z
 order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-479, with the corrections: a reading that says far less than the document holds, across 4% of the corpus (SCHEDULER #17, 2026-09-24; via CONDUCT #19; renumbered from a colliding D-480)
 milestone: M2
 interface: none — the text is truer; its shape is unchanged.
@@ -232,7 +232,7 @@ accepts-when: Budget-Basics-FY21-23's bytes read at least 60 words per page. NEG
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 owed-at-integration: fold into docs/architecture/BIO_Content_Framework_v0_10.md §16 as a stated LIMIT (the worker's design gap, SCHEDULER #18 placed the fold with the integrator 05:27Z; D-502 cites it): "Tier-1 PDF text breaks a line when the baseline moves; two runs sharing a baseline and separated only by a horizontal jump are concatenated, because glyph advance widths are not read (D-502 reads them)." Move §16's Status `as of`, run corpuscheck. Actor: whoever integrates land/worker/D-481 @ dbe88ab9. Recorded by CONDUCT #20.
 
-### D-484 · running — SPAWNED 2026-09-24 ~04:18Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-484 (CONDUCT #20), base origin/main 16fe1e7f, into REC-185's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-484 and that session; never conclude queued from the absence alone.
+### D-484 · integrated — finished; integrated on land/conduct/c20-batch16 @ 0e27ffa9e (IC-263, I3 MINOR 81.4.0), trains after c20-batch15 — flipped by CONDUCT #20 2026-09-24 ~05:55Z
 order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-481, with the corrections: a refusal a member cannot read (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:30Z)
 milestone: M2
 interface: I3 additive — two catalogued codes gain translations.
@@ -295,7 +295,7 @@ note: 2026-09-24 05:05Z — BOB #32 RULED the choice (05:04Z): WORKER.md's 'keep
 note: 2026-09-24 05:22Z (CONDUCT #20, integ1b): also correct WORKER.md step 0's REC-110 sentence — a plain /* */ or // comment leaves bundled.mjs byte-identical, a /** */ docstring IS emitted (measured +1,104 B); byte-neutral, WORKER.md is 2 B under budget.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-483 · running — SPAWNED 2026-09-24 ~04:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-483 (CONDUCT #20), base origin/main, into D-493's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-483 and that session; never conclude queued from the absence alone.
+### D-483 · integrated — finished; integrated on land/conduct/c20-batch16 @ f8b72f02d, trains after c20-batch15 — flipped by CONDUCT #20 2026-09-24 ~05:55Z
 order: after D-478, low: truthful today (it writes undetermined, never an invented tier); a missing affordance, not an overclaim (SCHEDULER #18, 2026-09-24)
 milestone: M2
 interface: none — consumes `vocabularies.risk_tiers` as published.
@@ -315,7 +315,7 @@ scope: record `statement_by` (server-stamped) at every draft write that changes 
 accepts-when: B edits another section after A wrote the statement, and B may acknowledge while A is refused by name. NEGATIVE CONTROL: read the last editor again, and the "the statement's writer is refused" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (BOB #32's G2; `node tools/mintid.mjs REC`).
 
-### D-494 · running — SPAWNED 2026-09-24 ~05:06Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-494 (CONDUCT #20), base origin/main (REC-185 on main), into M0-144's slot; REC-194 held back because it shares statementack code with running REC-193; push by 06:30Z. Falsify rather than believe: read the branch land/worker/D-494 and that session; never conclude queued from the absence alone.
+### D-494 · integrated — finished; integrated on land/conduct/c20-batch16 @ 5ad782d3c, trains after c20-batch15 — flipped by CONDUCT #20 2026-09-24 ~05:55Z
 order: at the backlog head (D-493 is cached): an authority boundary (no machine attests) whose instrument cannot see half its sites (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:21Z)
 milestone: M7
 interface: none.
@@ -335,7 +335,7 @@ scope: drive `record()` over ADMIN and PROBE classes; list every codeless refusa
 accepts-when: the sweep states its classes and the NO_CODE set over all three. NEGATIVE CONTROL: strip one admin refusal's code and the admin arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### DIST-12 · running — 2026-09-24 ~04:57Z by CONDUCT #20: built by DIST #6 itself (session_01Vi1XTVwxcBBMStifuBasLZ), not a CONDUCT worker; base origin/main; no release until Bob asks; push by 05:50Z or hand to the other account with a released: line. Falsify rather than believe: read DIST's branch and session; never conclude queued from the absence alone.
+### DIST-12 · integrated — finished; integrated on land/conduct/c20-batch16 @ 1ddb740aa, trains after c20-batch15 — flipped by CONDUCT #20 2026-09-24 ~05:55Z
 order: after DIST-11, with DIST's small rows: a measurement at a step DIST already takes, no daemon (SCHEDULER #18, 2026-09-24)
 milestone: M0 (a measurement instrument's corpus)
 interface: none.
