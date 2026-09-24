@@ -92,6 +92,21 @@ const RATE_ARMS = [
   "it publishes the instance-wide bound in words",
   "twelve knocks spread evenly over twenty minutes are all accepted",
   "and none of them was refused for any reason",
+  /* D-508's arms, declared here for the reason D-487's and D-496's are: an arm
+     that silently RENAMES an assertion must be caught rather than scored as
+     "did not fail". These read the refusal OBJECT, so an arm that stops the
+     refusal happening at all takes them down with the arms that name it — which
+     is why they appear in two mustFail lists below and in neither of the three
+     over-strictness ones. */
+  "per-source: the refusal carries its DEC-49 code",
+  "per-source: it names the check the code belongs to",
+  "per-source: the canned translation is a real sentence, not an empty string",
+  "per-source: and it is the CATALOGUE's sentence, not an inline copy in the plane",
+  "instance-wide: the refusal carries its DEC-49 code",
+  "instance-wide: it names the check the code belongs to",
+  "instance-wide: the canned translation is a real sentence, not an empty string",
+  "instance-wide: and it is the CATALOGUE's sentence, not an inline copy in the plane",
+  "the two rate refusals do not share one sentence",
 ];
 
 const GUARD = "const EDGE_GUARD = true;";
@@ -107,14 +122,27 @@ const ARMS = {
        "ANCHOR OCCURS 0 TIMES — ARM DID NOT ARM". It is re-anchored rather than
        retired, because the control it runs is still the right one: disable the
        per-source guard and one source is never throttled. */
-    anchor: 'if (est(ipBucket, ipPrevBucket) >= perIpLimit) return { ok: false, reason: "RATE_IP" };',
-    patch: 'if (false) return { ok: false, reason: "RATE_IP" };',
+    /* D-508 MOVED THIS ANCHOR AGAIN, for D-496's reason one item on: the refusal
+       is now minted through the region's `refusal` helper, so the D-496 spelling
+       occurs ZERO times and this arm would have printed "ANCHOR OCCURS 0 TIMES —
+       ARM DID NOT ARM". Re-anchored rather than retired: the control it runs is
+       still the right one. */
+    anchor: 'if (est(ipBucket, ipPrevBucket) >= perIpLimit) return refusal("RATE_IP");',
+    patch: 'if (false) return refusal("RATE_IP");',
     mustFail: ["one source gets twelve and no more",
                "the thirteenth is refused by name",
                "refusal is a 429, not a 500",
                "the straddling burst is held to twelve, not twenty-four",
                "the knock over the line is refused by name",
-               "the refusal publishes the bound in words"],
+               "the refusal publishes the bound in words",
+               /* D-508: with no per-source refusal there is no refusal OBJECT to
+                  read, so the four arms that read one go down beside the four
+                  that name it. The instance-wide four STAND, which is the pair
+                  this control separates. */
+               "per-source: the refusal carries its DEC-49 code",
+               "per-source: it names the check the code belongs to",
+               "per-source: the canned translation is a real sentence, not an empty string",
+               "per-source: and it is the CATALOGUE's sentence, not an inline copy in the plane"],
   },
   "fixed-bucket": {
     file: STORE,
@@ -126,7 +154,18 @@ const ARMS = {
                "the refusal publishes the bound in words",
                "the instance is held to 300 across the edge, not 450",
                "the instance-wide refusal is named",
-               "it publishes the instance-wide bound in words"],
+               "it publishes the instance-wide bound in words",
+               /* D-508: the fixed bucket re-admits BOTH straddling bursts, so
+                  neither refusal happens and all eight arms that read a refusal
+                  object go down with the six that name one. */
+               "per-source: the refusal carries its DEC-49 code",
+               "per-source: it names the check the code belongs to",
+               "per-source: the canned translation is a real sentence, not an empty string",
+               "per-source: and it is the CATALOGUE's sentence, not an inline copy in the plane",
+               "instance-wide: the refusal carries its DEC-49 code",
+               "instance-wide: it names the check the code belongs to",
+               "instance-wide: the canned translation is a real sentence, not an empty string",
+               "instance-wide: and it is the CATALOGUE's sentence, not an inline copy in the plane"],
   },
   straddle: {
     file: SUITE,

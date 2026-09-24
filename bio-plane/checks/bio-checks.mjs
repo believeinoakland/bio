@@ -11031,6 +11031,84 @@ export const DISPATCH_CHECKS = {
 };
 
 /* ===========================================================================
+   D-508 / DEC-49 (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10) — THE
+   DOORBELL'S RATE REFUSALS, C-85.
+
+   THE DEFECT, found by D-496's worker: `op=knock` is THE ONE DOOR OPEN TO THE
+   PUBLIC (`test/doorbell.test.mjs`'s own words), and it is the only refusal
+   surface in this plane whose reader is guaranteed NOT to be a member. D-496
+   gave the 429 a published bound in words — `stated` — and left the refusal
+   itself a BARE STORE REASON: `{ ok: false, reason: "RATE_IP" }`. So a stranger
+   who knocked too often got a sentence about the limit beside a token that means
+   nothing to them, and DEC-49's rule — every refusable condition carries a code
+   with a canned translation — held everywhere except at the door where the
+   reader is least equipped to translate for themselves.
+
+   `stated` IS NOT A TRANSLATION AND THE TWO ARE KEPT APART, which is why this
+   family exists rather than the bound being stretched to cover the case. D-496's
+   sentence is a PUBLICATION OF A NUMBER ("at most 12 knocks from one source in
+   any 10 minutes, estimated by a sliding window") composed in `index.mjs` from
+   the limits that instance runs, and it must keep moving when those limits move.
+   The translation below is the MEMBER'S ANSWER — what happened, what it means
+   for the material they were sending, and what to do — and it names no figure at
+   all, because a figure written here would be a second authority for the bound
+   and the two could disagree. Both arrive in the same 429, which is the shape
+   DEC-49 asks for: the code, the canned sentence, and the instance's own
+   published number beside them.
+
+   WHY A FAMILY FOR TWO ROWS, and SK-1's rule (a family is a floor in
+   `civicos-ui/check-refusal-codes.mjs` that buys slack for everybody else's
+   walk) is the argument against it, taken seriously. There is no existing family
+   whose subject is the public door: `CAPTURE_REQUEST_CHECKS` (C-28) is a
+   MEMBER's capture request, `DISPATCH_CHECKS` (C-69) is the router's "no op by
+   that name", `REQUIRED_ARGUMENT_CHECKS` (C-61) is a shape rule at any door, and
+   `ADMISSION_CHECKS` is what a host said to US. Putting an anonymous caller's
+   rate refusal in any of them would file one rule under another rule's subject —
+   the drift every header in this file defends against — and the floor it buys is
+   paid once and measured in the same turn (D-508 moved it from this guard's own
+   print). The family is named for the DOOR rather than for the limiter, so the
+   two knock refusals that are still codeless today — `TOO_LARGE` and `EMPTY`,
+   minted in `index.mjs` before the store is ever called, REPORTED by D-508 and
+   in the plan rather than taken here — have a home to arrive in.
+
+   ONE REGION, `knock > is-knock-rate`, in `Store#knock`; one helper, the local
+   `refusal` closure this file's other families are minted through (IC-246's
+   `acknowledgeStatement`, REC-79's shape before it); the code a STRING LITERAL at
+   its site, which is DEC-49's rule and what lets the guard's arm C compare it
+   against the row (a code held in a variable is one the arm reads past, and one
+   shipped `translation: undefined` to a member that way).
+   Both rows name the SAME region because both refusals are the two adjacent
+   lines that region contains — the smallest span in which either is enforced —
+   on `CONNECTION_CHOICE_CHECKS`' precedent directly below.
+
+   THE CODES ARE READ AS WELL AS MINTED, and that is deliberate: `index.mjs`
+   compares `rec.result.reason` against both literals to choose which published
+   bound to attach. That is a SURFACE keying on a code the plane sent, which is
+   exactly what DEC-49 licenses, and it is not a second mint — the mint is the
+   region below and there is one of it.
+   =========================================================================== */
+export const KNOCK_CHECKS = {
+  RATE_IP: {
+    check: 'C-85.1',
+    where: 'src/store.mjs knock > is-knock-rate',
+    translation: 'This group\'s inbox is not taking any more material from where you are sending it '
+      + 'just now. It is a limit on how fast one sender may knock, not a judgement about you or '
+      + 'about what you sent, and it lifts on its own shortly — the bound is published beside this '
+      + 'message. Nothing was stored and nothing was read, so send the same material again a little '
+      + 'later and it will arrive.',
+  },
+  RATE_GLOBAL: {
+    check: 'C-85.2',
+    where: 'src/store.mjs knock > is-knock-rate',
+    translation: 'This group\'s inbox is not taking any more material from anyone just now. The whole '
+      + 'instance is at its limit rather than you — the cap exists so that no one sender can fill '
+      + 'the inbox — and it lifts on its own shortly; the bound is published beside this message. '
+      + 'Nothing was stored and nothing was read, so send the same material again a little later. '
+      + 'If it keeps happening, the group\'s members can be told the doorbell is saturated.',
+  },
+};
+
+/* ===========================================================================
    CAP-8 — THE GOOGLE DRIVE HOST STACK (C-48), enacting Bob's ruling of
    2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is
    the OpenDocument export the content is extracted from.
