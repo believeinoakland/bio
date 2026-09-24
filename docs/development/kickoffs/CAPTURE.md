@@ -13,8 +13,8 @@ The plane is at 0.55.0, op=audit 31/31 clean, and the installer carries 0.55.0. 
 the append-only rules, and `kickoffs/BATON.md` for the release baton, which
 CAPTURE currently holds.
 
-WHAT IS NOT DONE, so this document is not read as a victory lap: 68 items are
-open in DEBT.md. The archive fallback can decide and capture but NOTHING CALLS
+WHAT IS NOT DONE, so this document is not read as a victory lap: 68 items were
+open in DEBT.md when this was written; that ledger is retired (M0-140) and its open work is in the build plan. The archive fallback can decide and capture but NOTHING CALLS
 IT: no monitoring tick consults `sourcereach` and nothing fires the fallback, so
 the machinery is correct and idle. The task inbox creates tasks but NOTHING
 DRAINS THE QUEUE on a schedule (D-109), so the ruling's word "automatically" is
@@ -89,8 +89,12 @@ is why, not a summary; read the document.
    writing a single item.
 2. `docs/development/kickoffs/BATON.md` — who may cut a plane release. CAPTURE
    holds it.
-3. `docs/development/DEBT.md` — 68 items open. Take the next free D-number at
-   the moment you write, not at the moment you plan.
+3. THE BUILD PLAN — `node tools/coord.mjs read docs/development/QUEUE.md`, and `node tools/ledger.mjs find <ID>`
+   for a closed row. `docs/development/DEBT.md` was RETIRED 2026-09-24 (M0-140) and archived whole; its 68 open
+   items at the time this was written went into the plan or into a design document by LED-7's three doors. Now:
+   a defect is DIAGNOSED until its FIX can be named, then minted with `node tools/mintid.mjs D` and sent to
+   SCHEDULER, who places it in the build plan in build order (or to BOB first when the fix needs design). There is
+   no side list (`CLAUDE.md` §4; `DEBT.md` was retired 2026-09-24, M0-140, and archived whole).
 4. `docs/development/MEASUREMENTS.md` — READ THE 2026-07-31 SECTIONS FIRST. They
    overturn three claims the archive design rested on and they record one near
    miss that would have wasted a session.
@@ -149,7 +153,7 @@ are unaffected. Import `digests`/`compare` into monitoring, `op=audit`'s
 duplicate sweep, and `resolveLinks`' bracket arm. Do not grow a second copy.
 Read docprofile; do not change it.
 
-**(5) Close out.** Push, APPENDING to DEBT.md and filing each figure as its own
+**(5) Close out.** Push, sending each defect to SCHEDULER as a minted `D-` row (DEBT.md is retired, M0-140) and filing each figure as its own
 `measurements/<id>.md` (M0-100) rather than rewriting either, prepend a state doc entry naming this thread, and rewrite ONLY
 `docs/development/kickoffs/CAPTURE.md` for the session after.
 

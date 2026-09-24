@@ -137,7 +137,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { dirname, join, resolve, isAbsolute, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ARCHIVE_TARGETS, LEDGERS } from "./ledger.mjs";
-/* M0-110: the queue, backlog, debt, claims and archive corpora live on `coord` after the cutover. Every read and walk
+/* M0-110: the queue, backlog, claims and archive corpora live on `coord` after the cutover. Every read and walk
    of a corpus goes through the coord layer — the pointer is the switch — or each floor would read the one-line
    pointer and fall to zero, which is the DANGEROUS direction for an allocator (it re-issues ids). */
 import { readState, walkState, isSwitched, freshen } from "./coord.mjs";
@@ -304,10 +304,34 @@ export const NAMESPACES = {
        allocPattern: () => /^\s*"[a-z0-9_-]+":\s*"N-(\d+)"/gm, allocIsUnique: true },
 
   /* (ii) prose-referenced */
-  D: { kind: "prose", what: "debt rows",
-       corpus: ["docs/archive/", "docs/development/DEBT.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md", "docs/development/CLAIMS.md"], ceiling: 9999,
+  /* M0-140, 2026-09-24: `docs/development/DEBT.md` LEFT this corpus with the construct — it is archived whole into
+     `docs/archive/ledgers/DEBT-closed.md`, which `docs/archive/` (first in the list, and unchanged) already walks.
+     A `D-` is now a PLAN row's id, minted for a defect diagnosed until its fix can be named (CLAUDE.md §4); the
+     archive is what keeps every retired `D-` unmintable. MEASURED both sides of the change, because a floor that
+     FALLS re-issues ids: floor 508 from `BACKLOG.md`, 8282 refs, before and after. */
+  D: { kind: "prose", what: "defect rows in the build plan, and the retired DEBT ledger's archived rows",
+       corpus: ["docs/archive/", "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md", "docs/development/CLAIMS.md"], ceiling: 9999,
        /* an allocation is a table ROW opening the id; a number in a sentence is not */
-       allocPattern: () => /^\|\s*D-(\d+)\s*\|/gm, allocIsUnique: true },
+       allocPattern: () => /^\|\s*D-(\d+)\s*\|/gm, allocIsUnique: true,
+       /* THE FLOOR READS A WIDER SITE THAN THE DUPLICATE CHECK, AND ONLY `D` NEEDS THIS (M0-140, 2026-09-24).
+          MEASURED, and it is the retirement's own consequence: with DEBT retired a `D-` is minted for a defect and
+          placed as a PLAN ROW (`### D-497 · running`; CLAUDE.md §4), which `allocPattern` above — a DEBT table row
+          and nothing else — does not see. On coord `f3ca0ad8` that left D-496..D-508 counted only as MENTIONS while
+          the highest recognised ALLOCATION read D-443, so `corpusFloor` called a CORRECT floor of 508 *prose-driven*
+          and reported 65 ids about to be skipped that are in fact real, allocated plan rows. The generous floor was
+          never wrong; the classification was, and a wrong *proseDriven* is a report that the estate's own prose is
+          leaking ids when it is not.
+          WHY NOT JUST WIDEN `allocPattern`: measured, and it is the reason this is two fields and not one. A CLOSED
+          `D-n` is written in BOTH grammars on purpose — `### D-n · done` in the QUEUE archive is the ITEM that
+          closed the debt row, `| D-n |` in the DEBT archive is the row it closed (`ledgersFor` names the same pair;
+          M-57 measured 17 of them). Widening `allocPattern` made `allocIsUnique` read every one of those as a
+          duplicate: 120 false collisions on this tree, against a register of six. The floor may count both shapes
+          because it takes a MAXIMUM; the duplicate check may not, because it counts OCCURRENCES.
+          NOT CLOSED BY THIS: whether `D` should have one allocation site again, and which, is a question about the
+          namespace's model rather than about the DEBT construct, so M0-140 diagnoses it and leaves it. Reported to
+          SCHEDULER with this landing. Until it is ruled, the floor is right, the duplicate check is unchanged from
+          what it has always graded, and NEITHER is guessed. */
+       floorPattern: itemAlloc },
   /* M0-73: DEC, IC and M read `BACKLOG.md` beside `QUEUE.md`, as D and the queue families already did
      (LED-6). The floor counts a MENTION, and after LED-6's split a row citing an id may live only in the
      backlog — an id mentioned nowhere else would set no floor and could be handed out a second time.
@@ -487,7 +511,10 @@ export function corpusFloor(ns, { repo = REPO_ROOT } = {}) {
      ALLOCATION rather than a mention. `null` where the namespace has not
      declared what one looks like — stated rather than guessed, because a
      strict floor guessed wrong would be wrong in the DANGEROUS direction. */
-  let allocFloor = spec.allocPattern ? 0 : null;
+  /* M0-140: `floorPattern` overrides `allocPattern` FOR THE FLOOR ONLY, where a namespace's allocation is written
+     in more shapes than its duplicate check may count as separate sites. See `D` in NAMESPACES for the measurement. */
+  const allocRe = spec.floorPattern || spec.allocPattern;
+  let allocFloor = allocRe ? 0 : null;
   const discarded = [];
   const missing = [];
   for (const rel of expandCorpus(spec.corpus, repo)) {
@@ -501,8 +528,8 @@ export function corpusFloor(ns, { repo = REPO_ROOT } = {}) {
       if (n > spec.ceiling) { discarded.push(`${m[0]} in ${rel}`); continue; }
       if (n > floor) { floor = n; from = rel; }
     }
-    if (spec.allocPattern) {
-      const ar = spec.allocPattern(ns);
+    if (allocRe) {
+      const ar = allocRe(ns);
       let a; ar.lastIndex = 0;
       /* whichever alternative group matched — see `allocations` below */
       while ((a = ar.exec(src))) {

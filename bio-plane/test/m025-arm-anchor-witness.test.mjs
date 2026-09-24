@@ -548,7 +548,7 @@ console.log("\n--- D-329 · the labels a driver quotes, evaluated the way the SU
 
 /* THE LIVE CORPUS FOR A LABEL EXCLUDES `docs/`, AND IT IS THE CONTROL THAT SAYS
    SO. An assertion's NAME lives in a suite; the RECORD quotes the defects it
-   records, and `DEBT.md`'s own D-329 row carries the stale fragment verbatim.
+   records, and D-329's own row carries the stale fragment verbatim.
    With `docs/` in, this check reads that row, scores the defect "present", and
    goes green over a fully armed subject — measured, because that is exactly how
    the first draft of arm (7) failed. The ANCHOR half above keeps `docs/` IN and

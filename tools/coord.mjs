@@ -10,7 +10,7 @@
  * after the cutover.
  *
  * WHAT MOVES (§1, widened by BOB #28's four rulings the same day): `docs/development/CLAIMS.md`, `QUEUE.md`,
- * `BACKLOG.md`, `DEBT.md`, every `kickoffs/<LANE>-NEXT.md`, the WHOLE `docs/archive/ledgers/` family (ruling 1:
+ * `BACKLOG.md`, every `kickoffs/<LANE>-NEXT.md`, the WHOLE `docs/archive/ledgers/` family (ruling 1:
  * the archiver writes it in the act that edits the live file, so it is state), and `PLACEMENT.md`, the placement
  * table that leaves `MILESTONES.md` (ruling 3). Everything else stays on `main`. `docs/DECIDED.md` does not move:
  * M0-99 made it untracked and generated on every branch.
@@ -53,7 +53,7 @@
  * arm fails; (C) the write command's checks skipped -> the planted-closed-row write is NOT refused and the arm fails.
  */
 
-import { readFileSync, writeFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, rmSync, statSync, openSync, readSync, closeSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, rmSync, statSync, openSync, readSync, closeSync, unlinkSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -69,8 +69,8 @@ export const DEFAULT_REF = `${REMOTE}/${BRANCH}`;
 /* M0-121: WHICH FILES ARE STATE is defined in `tools/statepaths.mjs`, a module that walks nothing, and re-exported
    here. An importer that needs only the predicate imports that file, so it does not inherit this module's walks of
    `docs/` (M-106: a MEASUREMENTS-only landing selected every op-claims importer through them). */
-import { MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath } from "./statepaths.mjs";
-export { MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath };
+import { MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath, RETIRED_FILES, isRetiredPath } from "./statepaths.mjs";
+export { MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath, RETIRED_FILES, isRetiredPath };
 /* The one file whose pointer says the TREE is switched (for files created on `coord` after the cutover, which
    carry no pointer of their own). The cache is the file every lane reads first. */
 export const SWITCH_FILE = "docs/development/QUEUE.md";
@@ -379,6 +379,21 @@ async function applyIntent(dir, it) {
     }
     /* M0-119: an exact text, found ONCE in the file it is applied to, replaced — for a preamble line no row intent
        reaches. Anchored to its text, never a line number, so a concurrent write elsewhere in the file is kept. */
+    /* M0-140: DELETE a state file from `coord`. The ONE act a retired construct needs and the write vocabulary
+       lacked — `replace` with empty text leaves an empty file, which is a live file that reads as nothing, and
+       WORK-PIPELINE §3 requires the last rows to be archived WITH THE FILE. It takes a RETIRED path (one named in
+       `statepaths.mjs`' `RETIRED_FILES`, which by then is no longer a state path, so `need()` would refuse it) or a
+       state path still listed. It REFUSES an absent file rather than passing: a delete that deleted nothing is a
+       write that reports success for free. Deleting a file the plan still reads is caught where every write is —
+       the ledger checks run after the intents, on the materialised tree. */
+    case "delete": {
+      const rel = it.file;
+      if (!rel || !(isMovedPath(rel) || isRetiredPath(rel)))
+        throw refusal("NOT_A_STATE_FILE", `${rel} is not a state file and is not a retired one — it stays on main (TREE-SHARING §1).`);
+      if (rd(rel) === null) throw refusal("FILE_ABSENT", `${rel} does not exist on coord — nothing to delete.`);
+      unlinkSync(join(dir, rel));
+      return;
+    }
     case "swap": {
       const t = rd(need(it.file));
       if (t === null) throw refusal("FILE_ABSENT", `${it.file} does not exist.`);
@@ -415,16 +430,12 @@ export async function ledgerChecks({ repo = ROOT, today = undefined, git: gitArm
     return { fails, note: `${files} state file(s) scanned` };
   });
 
-  await arm("LC-debt-token", "planning-hygiene §1 (live), plancheck §2", "every open DEBT row carries a disposition token", async () => {
-    const { debtTokenAudit } = await import("./ledger.mjs");
-    const t = rs("docs/development/DEBT.md");
-    if (t === null) return { fails: ["docs/development/DEBT.md could not be read — an unreadable ledger is not an empty one"] };
-    const a = debtTokenAudit(t);
-    /* NON-VACUITY, not size (M0-109's correction): zero rows is the empty-corpus pass, and it FAILS here by name.
-       When LED-7 archives DEBT.md whole, that landing re-points this arm; it is never left to pass over nothing. */
-    return { fails: [...(a.rows ? [] : ["DEBT.md has NO debt rows — a token check over nothing passes for free"]),
-                     ...a.bad.map((b) => `${b.id} found: "${b.status.slice(0, 60)}"`)], note: `${a.rows} DEBT row(s) read` };
-  });
+  /* `LC-debt-token` WAS HERE — every open DEBT row carries a disposition token, failing by name at ZERO rows so it
+     could never pass over an empty corpus. RETIRED, not re-pointed, by M0-140 (2026-09-24), which is the landing the
+     old comment here said would re-point it. It failed by name at zero rows ON PURPOSE, and that is exactly what it
+     now would do for ever: DEBT.md is archived whole and there are no open DEBT rows to read. Re-pointing it at
+     `BACKLOG.md` was considered and refused — see `ledger.mjs`' retirement note on `debtTokenAudit`: a plan row's
+     PLACEMENT is its disposition, and P1-P5 already produce that quantity. */
 
   await arm("LC-queued-refs", "planning-hygiene §2 (live)", "every `QUEUED <ID>` in the design and process docs names a live or archived queue row", async () => {
     const { pipelineRows, archivedQueueIds } = await import("./ledger.mjs");
@@ -498,18 +509,12 @@ export async function ledgerChecks({ repo = ROOT, today = undefined, git: gitArm
     return { fails, warns, note: a.pipeline ? `cache ${a.pipeline.cacheRows} row(s), backlog ${a.pipeline.backlogRows} row(s), tail ${a.pipeline.tailRows} row(s)` : "pipeline UNREAD" };
   });
 
-  await arm("LC-debt-agreement", "ledger §3 (live)", "no live DEBT row owed lists for any lane reads closed, and no residue reads closed", async () => {
-    const L = await import("./ledger.mjs");
-    const { owedFor, RESIDUE_RE } = await import("./owed.mjs");
-    const t = rs("docs/development/DEBT.md");
-    if (t === null) return { fails: ["docs/development/DEBT.md could not be read"] };
-    const rows = L.debtRows(t);
-    if (!rows.length) return { fails: ["DEBT.md has NO rows — the agreement is vacuous (M0-109's non-vacuity floor, moved here)"] };
-    const owed = new Set(["BOB", "CONDUCT", "DIST", "ZZZNOTALANE"].flatMap((lane) => owedFor(lane, { repo }).items.map((i) => i.id)));
-    return { fails: [...rows.filter((r) => RESIDUE_RE.test(r.disposition) && r.closed).map((r) => `${r.id} declares a residue and reads closed`),
-                     ...rows.filter((r) => r.closed && owed.has(r.id)).map((r) => `${r.id} is owed by a lane and reads closed`)],
-             note: `${rows.length} DEBT row(s)` };
-  });
+  /* `LC-debt-agreement` WAS HERE — the archiver's closed test and `owed.mjs`' must never disagree about which live
+     DEBT row owes nothing, because a row both call closed while a lane still owes it is live work vanishing
+     silently. RETIRED by M0-140 (2026-09-24) with the construct. It carried M0-109's NON-VACUITY floor and failed
+     by name at zero rows, which is what it would now do for ever. The agreement it enforced survives where it is
+     still reachable: `owed.mjs` no longer reads a DEBT row at all (there are none), and `isClosedDebtRow` remains
+     the ONE definition of a closed DEBT row, used by `ledger.mjs`' `debtRows` when `find` reads the ARCHIVE. */
 
   /* RETIRED 2026-09-24 by c19-unionfix (CONDUCT #19, on SCHEDULER #17's finding): the D-388 CLAUSE. This arm held that
      the standard's UNDECIDED set was ROUTED to a live DEBT row, D-388. BOB #32 classified every undecided file in
@@ -636,7 +641,12 @@ function commitFrom(repo, tip, dir, message, { env = null } = {}) {
   const lines = [];
   const changed = [];
   for (const [p, s] of after) if (before.get(p) !== s) { lines.push(`100644 ${s}\t${p}`); changed.push(p); }
-  for (const p of before.keys()) if (isMovedPath(p) && !after.has(p)) { lines.push(`0 ${"0".repeat(40)}\t${p}`); changed.push(p); }
+  /* A REMOVAL. `isRetiredPath` joins `isMovedPath` here (M0-140, 2026-09-24) and the reason is a defect this row
+     found by reading a dry run instead of believing it: the `delete` intent unlinked `DEBT.md` on the materialised
+     tree, this line then declined to record the removal because the path is no longer state, and the dry run
+     reported a clean write that would have LEFT THE FILE ON COORD. A guard keyed on the path still being state
+     cannot express the one act a retired path needs, which is its own removal. */
+  for (const p of before.keys()) if ((isMovedPath(p) || isRetiredPath(p)) && !after.has(p)) { lines.push(`0 ${"0".repeat(40)}\t${p}`); changed.push(p); }
   if (!lines.length) return { commit: null, changed };
   const idx = join(dir, ".coord-index");
   const ienv = { GIT_INDEX_FILE: idx, ...(env || {}) };
@@ -825,6 +835,7 @@ function usage(code = 2) {
     "           --rebalance                             node tools/ledger.mjs rebalance, inside the write (creates an absent tail);",
     "                                                   every write ends with one anyway (M0-119), which never creates the tail",
     "           --swap <path> <oldfile|-> <newfile|->   an exact text, found once, replaced (a preamble line)",
+    "           --delete <path>                         a state file (or a RETIRED one) removed from coord; refuses an absent file",
     "           --intents <json-file>                   an array of {op, file, text, under, id, state, note}",
     "       node tools/coord.mjs checks [--git]",
     "       node tools/coord.mjs churn [--since <iso>] [--until <iso>] [--ref <ref>]",
@@ -862,6 +873,7 @@ async function cli(argv) {
       else if (a === "--refill") intents.push({ op: "refill" });
       else if (a === "--rebalance") intents.push({ op: "rebalance" });
       else if (a === "--swap") { intents.push({ op: "swap", file: rest[i + 1], old: textOf(rest[i + 2]), text: textOf(rest[i + 3]) }); i += 3; }
+      else if (a === "--delete") { intents.push({ op: "delete", file: rest[i + 1] }); i += 1; }
       else if (a === "--intents") { intents.push(...JSON.parse(readFileSync(rest[i + 1], "utf8"))); i += 1; }
       else if (a === "-m") { i += 1; }
       else if (a === "--dry-run") { /* below */ }

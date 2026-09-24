@@ -27,7 +27,7 @@ verified it. When a lookup returns nothing, say so: *not found* is not *absent*;
 **Keep them true in the commit that changes the truth.** Build or remove something → update
 `construct-status.json` (the push is refused until you do). Rule on something → it goes in its home
 document, and `node tools/decided.mjs` finds it. Close a row → `node tools/ledger.mjs archive <ID>`
-in the same write. **State (claims, plan, debt, handoffs) is on `coord`**: `node tools/coord.mjs read`,
+in the same write. **State (claims, plan, handoffs) is on `coord`**: `node tools/coord.mjs read`,
 `coord.mjs write`, never a `main` commit (TREE-SHARING §1).
 
 **THE READING BUDGET (Bob, 2026-09-18: every session must be able to read the record it needs IN FULL,
@@ -108,9 +108,9 @@ design, doctrine, anything for Bob → BOB) and continue.
   7 days, so arm a ONE-SHOT 5 days out that renews it (cloud: `send_later`).
 - **Undetermined is first-class and must be STATED.** Never invent an attribution, a referent or a figure
   to get past a gate; a gate that pressures someone into inventing one is a bug in the gate.
-- **A defect you find is diagnosed until its FIX can be named**, then sent to SCHEDULER to be placed in the build plan
-  in order — or to BOB first if the fix needs design (Bob, 2026-09-18). Never park it on a list. A new defect goes
-  STRAIGHT INTO THE PLAN; `DEBT.md` only shrinks, and leaves the process at 0 open rows (Bob, 2026-09-23).
+- **A defect you find is diagnosed until its FIX can be named**, then minted (`mintid.mjs D`) and sent to SCHEDULER,
+  who places it in the plan IN BUILD ORDER — or to BOB first if the fix needs design (Bob, 2026-09-18). **THERE IS NO
+  SIDE LIST: the plan is the only place work waits.** `DEBT.md` is retired (M0-140); `ledger.mjs find` answers it.
 
 ## 5. How to know a thing is true
 

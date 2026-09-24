@@ -80,13 +80,15 @@ writes the plan (Bob, 20:57Z). Never `fire_trigger` a routine. When nothing is o
 - **LED-6 — the pipeline migration** (`WORK-PIPELINE.md` §5), transferred from CONDUCT to this lane: the files are
   now this lane's. The tool half (`ledger.mjs` replenish, the backlog ledger, the invariant arms) is a build task for a
   worker CONDUCT spawns; the file migration is this lane's own act, performed with the tool.
-- **LED-7 — the debt fold** (`WORK-PIPELINE.md` §3) — **THIS LANE DRIVES IT, actively** (Bob, 2026-09-19: *"Scheduler
-  should be actively involved in moving debt rows into the build plan (in the proper order)."*). Take DEBT.md's open rows
-  in batches of about 20, security and disclosure rows first, then corrections to landed work, then the rest oldest
-  first. Verify each at the code yourself (a row is a claim about the day it was written), and send it out by one of the
-  three doors in the same commit: CLOSED IN FACT with its evidence, a BACKLOG task placed in order, or a stated
-  LIMITATION in its home document. A row whose verification needs a build or a long code trace may go to a worker
-  through CONDUCT; this lane does not wait on workers to keep the fold moving. Report each batch's counts to BOB.
+- **LED-7 — the debt fold** (`WORK-PIPELINE.md` §3) — **COMPLETE, 2026-09-24 (M0-140).** This lane drove it, in
+  batches of about 20, each row verified at the code and sent out by one of three doors: CLOSED IN FACT with its
+  evidence, a BACKLOG task placed in order keeping its `D-` id, or a stated LIMITATION in its home document. The last
+  three rows (D-313, D-391, D-388) closed with the file, and `docs/development/DEBT.md` was archived WHOLE into
+  `docs/archive/ledgers/DEBT-closed.md`. **Nothing is owed here any more. What stands in its place is the rule you
+  now enforce as the plan's owner:** a defect reaches you DIAGNOSED UNTIL ITS FIX CAN BE NAMED, minted with
+  `node tools/mintid.mjs D`, and you place it as a plan row in BUILD ORDER — or it goes to BOB first when the fix
+  needs design. **There is no side list to put one in** (`CLAUDE.md` §4). A `D-` is a plan row while it is open and an
+  archived table row once it closed; `node tools/ledger.mjs find <ID>` answers either.
 
 ## Mechanics learned by SCHEDULER #1 (2026-09-18/19) — durable, read before your first commit
 
@@ -105,11 +107,12 @@ writes the plan (Bob, 20:57Z). Never `fire_trigger` a routine. When nothing is o
   and ask BOB to fold the ruling first (D-431, M0-69 were placed this way and folded within the hour).
 - **A peer's message is a pointer.** Verify ids and shas (BOB once named M0-67 for the open M0-65); a defect is placed
   only with its fix named, and one whose fix needs a decision goes to BOB and stays where it is.
-- **The DEBT fold (LED-7):** close a row by leading its disposition with `CLOSED <date> IN FACT by LED-7 batch N` and the
-  evidence, then `ledger.mjs archive`. `isClosedDebtRow`'s residue pattern (`STILL OPEN`, `OUTSTANDING`, …) scans the
-  WHOLE disposition, so a prior disposition carrying one moves verbatim into the description cell. A PLACED row is
-  archived from DEBT as *CLOSED … AS A DEBT ROW — PLACED*, and its backlog row keeps the `D-` id (the MET rule reads a
-  closed DEBT row with an open row of the same id as not met).
+- **The DEBT fold (LED-7) — COMPLETE 2026-09-24 (M0-140), kept as the record of how it was done.** A row was closed by
+  leading its disposition with `CLOSED <date> IN FACT by LED-7 batch N` and the evidence, then `ledger.mjs archive`.
+  `isClosedDebtRow`'s residue pattern (`STILL OPEN`, `OUTSTANDING`, …) scans the WHOLE disposition, so a prior
+  disposition carrying one moved verbatim into the description cell. A PLACED row was archived from DEBT as
+  *CLOSED … AS A DEBT ROW — PLACED*, and its backlog row keeps the `D-` id (the MET rule reads a closed DEBT row with
+  an open row of the same id as not met — that rule is LIVE, and it is why the archive still has to be readable).
 - **`ledger.mjs` cannot see ids with a letter suffix or compound headings** (`CASE-5b`, `D-329+D-331+D-333`); move them
   by hand and say so. Never write `### <ID> ·` at the start of a line in an archive block (it is an allocation site);
   prefix quoted rows with `> `.
@@ -185,7 +188,8 @@ writes the plan (Bob, 20:57Z). Never `fire_trigger` a routine. When nothing is o
   next group rather than going early and half-formed.
 
 - **A ROW MAY NOT REST ON A SURFACE `main` DOES NOT HAVE — GREP IT BY ITS FUNCTION NAMES BEFORE PLACING A DEPENDENT** (SCHEDULER #5, 2026-09-21). BOB #19's inbox asked for a UI row "at the accept ceremony"; no surface calls `op=versionaccept`, because the ceremony (IS-BUILD-PLAN's UI-43) sat unmerged on a branch D-397 had named while the IS plan read 43/43. The row was committed before the next DEBT row in the batch exposed it. An inbox entry, a plan marked closed and a quoted sentence are all claims; the surface's own names on `origin/main` are the evidence. The fix was a re-derivation row (UI-74) that carries the dependent, not a dependent placed on nothing.
-- **A `DEBT.md` DISPOSITION IS A MARKDOWN TABLE CELL: it may not contain `|`.** Quoting code like `a || b` splits the cell, `debtDisposition` then reads the wrong text, and `isClosedDebtRow` judges a row you did not write. Write the condition in words; assert the read-back equals what you wrote before saving (SCHEDULER #5's batch 10 aborted on exactly that assertion, before any byte was written).
+- **A `DEBT.md` DISPOSITION WAS A MARKDOWN TABLE CELL AND MAY NOT CONTAIN `|`** — kept because the ARCHIVE is still
+  parsed by that grammar, and because the lesson generalises to any table cell you write. Quoting code like `a || b` splits the cell, `debtDisposition` then reads the wrong text, and `isClosedDebtRow` judges a row you did not write. Write the condition in words; assert the read-back equals what you wrote before saving (SCHEDULER #5's batch 10 aborted on exactly that assertion, before any byte was written).
 - **`git grep -E` HAS NO `\b` ON THIS MACHINE, AND AN EMPTY GREP READS EXACTLY LIKE ABSENCE** (SCHEDULER #8, 2026-09-21). `git grep -E "\bD-32\b"` printed nothing while `git grep -w -e D-32` found twenty hits, one of them the dataplane state's note that a remedy D-32 named was already BUILT; the first disposition called it unbuilt and was caught before the push. Search an id with `-w -e` (or `-P`), and re-run a surprising miss in a second form before a disposition rests on it.
 - **NAME THE PUBLIC OP IN A ROW, NEVER A DURABLE OBJECT PATH.** `op-claims.test.mjs` failed the gate on a row that wrote the DO route `resolvelinks` as an op: it is the path behind `op=links&capture=`, and no op reaches it (and it failed AGAIN on this line's first draft, which quoted the wrong spelling). Find the op in `index.mjs` (`op === "<name>"`) before writing `op=` anywhere in the plan (SCHEDULER #8, 2026-09-21).
 - **`BACKLOG.md`'S BUDGET STAYS 150 KiB — RULED by BOB #23, 2026-09-21.** When a placement needs room, cut the rows FURTHEST DOWN the order to their fields (their `scope:` verbatim in the dated cut archive, `docs/archive/ledgers/QUEUE-cut-<date>.md`, each line prefixed `> `, a `cut:` line left on the row), never from the top: the file you read whole stays readable whole. Raise the budget only with a measurement that cut rows are re-read from the archive often enough to cost more than the budget saves.

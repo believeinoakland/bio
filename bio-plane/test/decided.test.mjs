@@ -135,6 +135,8 @@ section("1 — M0-97: EVERY ANSWERED OR ENACTED REGISTER ENTRY IS FILED UNDER IT
   /* M0-110: `main`'s files by `git grep` (the state files excluded — they are pointers after the cutover), and the
      pinned state files by `git grep` AT THE PIN, whose lines print as `<pin>:<path>:<n>:` and are read back without the
      pin. Still git's own search, never the tool's parser. */
+  /* M0-140: `DEBT.md` is RETIRED and no longer on `main`, so its exclude is inert. It stays NAMED rather than
+     deleted, because the pinned half of this grep still reads the file AT THE PIN, where it existed. */
   const EXCL = [":(exclude)docs/development/CLAIMS.md", ":(exclude)docs/development/QUEUE.md", ":(exclude)docs/development/BACKLOG.md",
                 ":(exclude)docs/development/DEBT.md", ":(exclude)docs/development/PLACEMENT.md", ":(exclude)docs/archive/ledgers",
                 ":(exclude)docs/development/kickoffs/*-NEXT.md"];

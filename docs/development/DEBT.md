@@ -1,1 +1,0 @@
-COORD-POINTER: this file lives on the branch `coord` — read it with `node tools/coord.mjs read docs/development/DEBT.md`, change it with `node tools/coord.mjs write` (docs/development/TREE-SHARING.md §1; M0-110).
