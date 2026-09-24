@@ -80,3 +80,4 @@ commit on main for 120+ min. INBOX → SCHEDULER: undrained BOB INBOX entries.
   the archive list in CONDUCT-NEXT is DONE. DIST owes: D-461, D-464, D-462 (I8 2.0.0), DIST-11, plus the newgroup/dist rebuild from
   current main. One-shots asking CONDUCT #20 and DIST #6 to update their files were sent 12:10Z; their sessions were disconnected and had
   not written by 12:22Z. The cache budget is CACHE_ROWS = 16 on main (BOB #32's "12" came from a stale local tree; no ruling needed).
+- 12:35Z (Bob asked why three rows were blocked): REC-147 UNBLOCKED (queued; recall must be reported, baseline 2/9 is the bar). REC-203 still blocked but ONLY on BOB #33 folding M-132 into Framework §8.3 (concurrent project-number forms, C.M.S. referent + coverage floor, APN apn_sort + retired parcels) — DO THIS FIRST, then unblock it. M0-106 correctly waits on DIST's next release cut (no release until Bob asks).
