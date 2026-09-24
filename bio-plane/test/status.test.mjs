@@ -36,6 +36,13 @@
  *     "renderCell renders the first sentence"), tools/status.mjs restored by sha256 (f498cce1…) AND cmp, byte-identical.
  *   RE-RUN 2026-09-24 by BOB #32 with A11 added (the cell cap lifted): eleven arms, 59 pass / 0 fail, exit 0; A11
  *     FAILED at "a first sentence past CELL_CAP is cut, marked, …"; tools/status.mjs restored (sha256 21ebc265…).
+ *   RE-RUN 2026-09-24 by M0-155 with A12 added (comments read as code again): TWELVE arms, 65 pass / 0 fail, exit 0;
+ *     baseline 74 pass / 0 fail and closing baseline 74 pass / 0 fail, so no arm leaked. A12 FAILED at "A `hit` WHOSE
+ *     ONLY MATCH IS A COMMENT IS NOT BUILT" and, with it, at the ESTATE arm "ON THE REAL TREE a DEC-49 REGION MARKER";
+ *     the collateral canary stayed green; tools/status.mjs restored by sha256 (bd085066…) AND cmp, 25123 bytes,
+ *     byte-identical. DECLARED BEFORE ARMING and held: those two must fail, the other 72 assertions must not, and
+ *     section 11's over-strictness arms (a token in CODE, and a token inside a STRING LITERAL) must PASS both armed
+ *     and unarmed — a strip that blanked strings would blind almost every probe in the corpus while reporting clean.
  * AND A SECOND BY-HAND ARM ON THE PUSH GUARD (2026-09-18): `corpusCheck` made to accept any completion
  *   line regardless of its fail count -> section 8's "A STALE STATUS DATE REFUSES THE PUSH" FAILS (51/1);
  *   `tools/pushguard.mjs` restored by `cp`, verified byte-identical (sha256 7d978c73…).
@@ -59,7 +66,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "nod
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { evalProbe, judge, renderCell, renderMap, lookup, bumpAsOf, firstSentence, CELL_CAP, UI_HELPERS, ROOT, STATES }
+import { evalProbe, judge, renderCell, renderMap, lookup, bumpAsOf, firstSentence, CELL_CAP, CODE_EXT, UI_HELPERS, ROOT, STATES }
   from "../../tools/status.mjs";
 import { BUDGET, MAP as BUDGET_MAP } from "../../tools/readbudget.mjs";
 import { statusCheck, corpusCheck, markerCheck } from "../../tools/pushguard.mjs";
@@ -71,7 +78,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 10;
+const SECTIONS = 11;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -81,7 +88,17 @@ const repo = mkdtempSync(join(tmpdir(), "status-suite-"));
 const put = (rel, text) => { mkdirSync(join(repo, rel, ".."), { recursive: true }); writeFileSync(join(repo, rel), text); };
 put("bio-plane/src/index.mjs", "const OPS = {\n  cite:       { classes: [\"member\"], mutating: true },\n  frontier:   { classes: [\"member\"], mutating: false },\n};\n");
 put("bio-plane/src/schema.mjs", "CREATE TABLE IF NOT EXISTS content (\n  id TEXT\n);\n");
-put("bio-plane/src/store.mjs", "CREATE VIRTUAL TABLE IF NOT EXISTS bundles_fts USING fts5(x);\n/* compilation point */\n");
+/* M0-155 CORRECTED THIS FIXTURE RATHER THAN ITS ASSERTIONS. Probes now read code with comments
+   blanked, and `compilation` was written here ONLY inside a comment — so section 1's "`none` FAILS
+   when any pattern matches" would have started passing over a blanked token, which is a fixture too
+   weak for the assertion and not an assertion that had become wrong. `compilation` is now CODE; the
+   comment stays for section 3's `1.absent-by-comment`; and `onlyInAComment` / `onlyInAString` are
+   section 11's own subjects, one per lexical home. */
+put("bio-plane/src/store.mjs", "CREATE VIRTUAL TABLE IF NOT EXISTS bundles_fts USING fts5(x);\n"
+  + "const compilation = \"point\";\n"
+  + "/* compilation point, and onlyInAComment says a thing no code does */\n"
+  + "const kept = \"onlyInAString\";\n");
+put("docs/notes.md", "prose with // notCode in it\n");
 put("civicos-ui/app.html", "<script>recR(\"frontier\"); actAsk(\"conclude\", {});</script>");
 
 try {
@@ -240,6 +257,15 @@ section("7 — THE PUSH IS WHERE IT CANNOT BE SKIPPED: the guard REFUSES a drift
     const w = (rel, text) => { mkdirSync(join(r, rel, ".."), { recursive: true }); writeFileSync(join(r, rel), text); };
     mkdirSync(join(r, "tools"), { recursive: true });
     copyFileSync(join(ROOT, "tools/status.mjs"), join(r, "tools/status.mjs"));
+    /* THE LEXER TRAVELS WITH THE TOOL (M0-155). `status.mjs` imports `stripComments` STATICALLY —
+       a dynamic import with a raw-text fallback would make the tool quietly weaker wherever the
+       lexer is missing, and this scratch repository is exactly such a place. So this seam copies
+       walkfloor and the two modules it imports, which makes the arm STRONGER than it was: the guard
+       is now driven over the real lexer rather than over a tool that had none. Found by this arm
+       going red on the static import, which is the arm doing its job. */
+    mkdirSync(join(r, "bio-plane/scripts"), { recursive: true });
+    for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"])
+      copyFileSync(join(ROOT, "bio-plane/scripts", f), join(r, "bio-plane/scripts", f));
     w("bio-plane/src/index.mjs", "const OPS = {\n  cite:       { classes: [\"member\"], mutating: true },\n};\n");
     const data = { sets: {}, constructs: [{ n: 1, name: "X", claims: [
       { id: "1.a", state: "BUILT", text: "the op", probes: [{ op: claimOp }] }] }] };
@@ -319,6 +345,49 @@ section("10 — §3 RENDERS EACH CLAIM'S FIRST SENTENCE, AND THE MAP FITS ITS BU
   t("every whole text stays in the source and is served by the lookup",
     lookup("3.history-append").hits.map((h) => h.text), [claims.find((cl) => cl.id === "3.history-append").text]);
 }
+
+/* ========================================================================== */
+section("11 — A PROBE READS CODE, NOT COMMENTARY: a claim whose only match is a comment is NOT BUILT (M0-155)");
+{
+  /* THE DEFECT, ARRIVING IN THE DIRECTION `judge` DID NOT CLOSE. `judge` already refuses an ABSENT
+     claim that rests only on a `hit`, because CPDF-19's correction comment QUOTED the sentence an
+     ABSENT probe was searching for and the probe passed on a fixed defect. The same lexical mistake
+     runs the other way and nothing caught it: a BUILT claim's `hit` satisfied by a sentence in a
+     comment, and an ABSENT claim's `none` FALSIFIED by one. Measured on this estate the day this
+     section landed: SIXTEEN claims' probes were matching comments, and one of them — `7.hunch`,
+     "an uncleared hunch refuses publication" — was reading BUILT over a refusal code that exists
+     NOWHERE in the plane as code. A comment is prose, and prose is what drifted. */
+  const S = { "@s": ["bio-plane/src/store.mjs"] };
+  const P = (p) => evalProbe(p, { repo, sets: S });
+  const inStore = (hit) => P({ hit, in: ["bio-plane/src/store.mjs"] });
+  t("A `hit` WHOSE ONLY MATCH IS A COMMENT IS NOT BUILT, and the evidence says so by name",
+    [inStore("onlyInAComment").ok, /matches nowhere/.test(inStore("onlyInAComment").evidence)], [false, true]);
+  t("...and a `none` over that same token HOLDS, because a comment is not the thing it describes",
+    P({ none: ["onlyInAComment"], in: "@s" }).ok, true);
+  /* OVER-STRICTNESS, in the two directions that would make the blanking a new defect of its own —
+     and the second is the one walkfloor's own header was written about: an op name, a file path and
+     a refusal code all live INSIDE STRING LITERALS, so a strip that blanked strings would blind
+     almost every probe in the corpus while reporting a clean result. */
+  t("OVER-STRICTNESS: a token in CODE still matches", inStore("const compilation").ok, true);
+  t("OVER-STRICTNESS: A TOKEN INSIDE A STRING LITERAL STILL MATCHES — every op name, path and refusal code is one",
+    inStore("onlyInAString").ok, true);
+  t("the line a match reports is the line in the REAL file, not in a shortened copy (the blanking is length-preserving)",
+    /store\.mjs:4$/.test(inStore("onlyInAString").evidence), true);
+  /* WHAT THE BLANKING CANNOT SEE, asserted so the limit cannot change in silence. */
+  t("a file outside CODE_EXT is read RAW, and its `//` is not a comment to this tool",
+    [CODE_EXT.has(".mjs"), CODE_EXT.has(".md"), P({ hit: "// notCode", in: ["docs/notes.md"] }).ok],
+    [true, false, true]);
+
+  /* THE ESTATE ITSELF, because a fixture cannot stand in for it: a DEC-49 region marker is a
+     comment by construction — the guard requires the markers and `regionLines` measures them — so on
+     the real tree it must NOT satisfy a probe, while the refusal the region governs must. These two
+     ran the other way before this item: eleven claims named a marker and read BUILT on it. */
+  const realMarker = evalProbe({ hit: "DEC-49 REGION is-register-home", in: ["bio-plane/src/store.mjs"] });
+  const realCode = evalProbe({ hit: "refusal\\(\"CAPTURE_HELD_BY_ANOTHER_BUNDLE\"", in: ["bio-plane/src/store.mjs"] });
+  t("ON THE REAL TREE a DEC-49 REGION MARKER — a comment — DOES NOT satisfy a probe", realMarker.ok, false);
+  t("...while the refusal that region governs DOES, so the tree is read and not blanked to nothing", realCode.ok, true);
+}
+
 } finally {
   rmSync(repo, { recursive: true, force: true });
 }

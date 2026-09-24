@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* The NEGATIVE CONTROL DRIVER for `tools/status.mjs` and `bio-plane/test/status.test.mjs` —
- * eleven arms plus an opening and closing baseline.
+ * twelve arms plus an opening and closing baseline.
  *
  *   node bio-plane/test/status.control.mjs        (from the repo root)
  *
@@ -118,6 +118,17 @@ const ARMS = [
     from: "export const CELL_CAP = 240;",
     to:   "export const CELL_CAP = 1e9;",
     mustBreak: "a first sentence past CELL_CAP is cut, marked, and no longer than the cap plus its mark" },
+  /* M0-155, 2026-09-24. THE ARM THAT MATTERS MOST HERE, because the property it breaks is the one
+     that had never been asserted at all: this tool spent its whole life matching comments, and
+     sixteen claims' probes were resting on one when the arm was written. Armed, `readCode` hands
+     every probe the RAW source again, so a comment satisfies a `hit` and falsifies a `none` exactly
+     as before. Note what it must ALSO break, on the real tree rather than in a fixture — a DEC-49
+     region marker is a comment, and eleven claims used to read BUILT on one. */
+  { id: "A12", title: "comments read as code again — a claim stands on a sentence nothing enforces (M0-155)",
+    from: "? t : stripComments(t));",
+    to:   "? t : t);",
+    mustBreak: "A `hit` WHOSE ONLY MATCH IS A COMMENT IS NOT BUILT",
+    alsoBreak: "ON THE REAL TREE a DEC-49 REGION MARKER" },
 ];
 
 for (const a of ARMS) {
