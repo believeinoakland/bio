@@ -1770,6 +1770,11 @@ export const MACHINE_REFUSALS = {
   inquiryground:      "MACHINE_CANNOT_GROUND",
   actionmove:         "MACHINE_CANNOT_MOVE_ACTION",
   actioncorrespond:   "MACHINE_CANNOT_CORRESPOND",
+  /* D-149's act, added at integration by c19-unionfix (2026-09-24): the store refuses a machine BY NAME at it
+     (C-32.18, `is-machine-set-laws`), and D-149 landed it in ACTS without this entry — so a machine credential
+     was OFFERED "State governing laws" and refused at the act, the DEC-8 disagreement this map exists to
+     prevent. Found when `d311-roster-affordances.test.mjs` gained the drive its fixture guard demanded. */
+  actionlaws:         "MACHINE_CANNOT_SET_LAWS",
   versionaccept:      "MACHINE_CANNOT_MOVE_VERSION",
   versionreject:      "MACHINE_CANNOT_MOVE_VERSION",
   versionconsider:    "MACHINE_CANNOT_MOVE_VERSION",

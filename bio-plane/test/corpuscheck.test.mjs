@@ -420,8 +420,14 @@ section("design status has ONE authority — the construct map, and the arm that
        of the old map and is wrong of this one; the whole set stays pinned.
        CORRECTED AGAIN 2026-09-22 by REC-165, never exempted: the new `11.run-production` row cites
        `INVESTIGATIVE-SESSION.md` §11 item 5 (rules 2 and 3 NOT built), a FOURTH real pair, evaluated with
-       the same passing verdict — §11 is a design and its front matter says what it lacks. */
-    [`8·docs/development/INVESTIGATIVE-SESSION.md·7.1·4·list-claims-no-undesignedness`,
+       the same passing verdict — §11 is a design and its front matter says what it lacks.
+       CORRECTED AGAIN 2026-09-24 at integration by c19-unionfix, never exempted: D-50's `1.project-names` row
+       (landed in c19-batch9 through BOB #32's folds) cites `BIO_Membership_Architecture_v2.md` §11 item 8 (built)
+       and item 9 (the live recheck, NOT built), a FIFTH and SIXTH real pair, each evaluated with the same passing
+       verdict. They sort FIRST because construct 1 precedes construct 8. */
+    [`1·docs/architecture/BIO_Membership_Architecture_v2.md·11·8·list-claims-no-undesignedness`,
+     `1·docs/architecture/BIO_Membership_Architecture_v2.md·11·9·list-claims-no-undesignedness`,
+     `8·docs/development/INVESTIGATIVE-SESSION.md·7.1·4·list-claims-no-undesignedness`,
      `8·docs/development/INVESTIGATIVE-SESSION.md·7.1·9·list-claims-no-undesignedness`,
      `8·${FRAMEWORK}·18·6·points-at-its-design`,
      `11·docs/development/INVESTIGATIVE-SESSION.md·11·5·list-claims-no-undesignedness`]);
@@ -459,9 +465,12 @@ section("design status has ONE authority — the construct map, and the arm that
        evaluated here too and stays a pass; the receipt's pair is still the one RESTATED.
        CORRECTED AGAIN 2026-09-21 by BOB #21 (M0-86): the third real pair (§7.1 item 9, see arm 1)
        is evaluated here as well and also passes; the receipt's pair is still the only one RESTATED.
-       CORRECTED AGAIN 2026-09-22 by REC-165: the fourth real pair (§11 item 5, see arm 1) passes here too. */
+       CORRECTED AGAIN 2026-09-22 by REC-165: the fourth real pair (§11 item 5, see arm 1) passes here too.
+       CORRECTED AGAIN 2026-09-24 by c19-unionfix: D-50's two pairs (Membership v2 §11 items 8 and 9, arm 1) pass
+       here too, and come first; the receipt's pair is still the only one RESTATED. */
     armed.pairs.map((p) => [p.verdict, p.covering]),
-    [["list-claims-no-undesignedness", null], ["list-claims-no-undesignedness", null], ["RESTATED", CASEMAKING],
+    [["list-claims-no-undesignedness", null], ["list-claims-no-undesignedness", null],
+     ["list-claims-no-undesignedness", null], ["list-claims-no-undesignedness", null], ["RESTATED", CASEMAKING],
      ["list-claims-no-undesignedness", null]]);
 
   // --------------------- 3. THE LIAR'S ARM, EXCLUDED — a SECOND triple fires with NO TOOL EDIT

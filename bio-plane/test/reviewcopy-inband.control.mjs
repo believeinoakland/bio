@@ -46,10 +46,14 @@ const ARMS = {
   a: { files: [INDEX],
        label: "(a) THE ROW'S CONTROL: the review copy's hash re-taken by a SECOND hasher over a differently-"
             + "canonicalised body (no indent), at the review copy's own site",
+       /* RE-ANCHORED 2026-09-24 at integration by c19-unionfix: CONDUCT #19 moved the review copy's answer into
+          ONE function at c19-batch9 (REC-198 made it the answer shape for every read of a draft), so the quoted
+          line lost six spaces of indent and this needle matched ZERO times — m025's A4 named it (the D-276
+          class). The quote moves with its line; the arm and its declaration are unchanged. */
        apply: () => edit(INDEX,
-         "            date: r.updated_at ?? null, author: r.updated_by ?? null, bar: bar ?? null });\n",
-         "            date: r.updated_at ?? null, author: r.updated_by ?? null, bar: bar ?? null });\n"
-         + "          quartet.hash.sha256 = await sha256Hex(JSON.stringify(served));\n") },
+         "      date: r.updated_at ?? null, author: r.updated_by ?? null, bar: bar ?? null });\n",
+         "      date: r.updated_at ?? null, author: r.updated_by ?? null, bar: bar ?? null });\n"
+         + "    quartet.hash.sha256 = await sha256Hex(JSON.stringify(served));\n") },
 
   b: { files: [INBAND],
        label: "(b) OVER-STRICTNESS: the floors count as declared only on a boolean `true`, never the word",
