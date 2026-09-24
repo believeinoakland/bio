@@ -395,8 +395,8 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.24.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.26.0)", "1.25.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.26.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.26.0)", "1.26.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
