@@ -169,7 +169,13 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    set before this item too, verified in a clone of the unchanged tree. A CEILING IS NOT A RATCHET: left at the
    printed figure, with no slack bought for a future landing. */
 /* CONDUCT #20 at c20-batch25: 42 -> 43, READ from this suite's print on the merged tree (`43 unit(s) of 431 selected`): M0-165's 42 plus M0-169's plane:moduleclosure.test.mjs, the edge M0-169 attributed (its closure names tools/gates.mjs). */
-const UNITS_CEILING = 43;
+/* MOVED 43 -> 44 by M0-191 (2026-09-24), READ from this suite's print on the M0-191 tree over origin/main 9f8b69e6
+   (`44 unit(s) of 437 selected · 29 MEASUREMENTS reader(s) · 5 through tools/coord.mjs`), never by adding to the number
+   in the file. The one is M0-191's own suite, `plane:slots.test.mjs`, selected "through coord": its subject
+   `tools/slots.mjs` REALLY imports `tools/coord.mjs` (`readRemote`, the CLI's default read of coord's QUEUE.md) and
+   `tools/ledger.mjs` (`queueRows`, `CACHE_ROWS`), which imports coord.mjs too, so the edge is a module edge and not a
+   label. THROUGH_COORD_CEILING (5) is met at 5 and not moved. A CEILING IS NOT A RATCHET: left at the printed figure. */
+const UNITS_CEILING = 44;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 
