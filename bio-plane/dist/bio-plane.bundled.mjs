@@ -12012,8 +12012,15 @@ var RENDER_CAPTURE_CHECKS = {
     where: "src/index.mjs fetch > is-render-admit",
     translation: "A rendered capture runs the live page in a browser, and this request combined that with a way of capturing that does not load a live page (an archived copy, a Drive export, or the continuation of an earlier capture). Ask for one or the other. Nothing was fetched."
   },
-  /* No renderer bound — or the Browser Rendering binding is bound and the
-     in-plane driver over it is not built. Named rather than falling back. */
+  /* No renderer bound: no RENDERER service binding and no BROWSER binding — or a
+     BROWSER bound to something that is not a Fetcher, so there is no endpoint to
+     open a devtools session on. Named rather than falling back.
+     CORRECTED BY D-490: this comment read "the Browser Rendering binding is bound
+     and the in-plane driver over it is not built", which was the state D-64 shipped
+     and is the state D-490 ended (`src/browserrender.mjs`). The TRANSLATION below
+     did not move and did not need to — "no working page renderer" is true of every
+     case this code still names — but a comment describing a condition that no longer
+     exists is how the next reader is told the wrong thing by the record. */
   RENDER_NO_RENDERER: {
     check: "C-83.3",
     where: "src/index.mjs fetch > is-render-admit",
@@ -21778,6 +21785,334 @@ function archiveLocatorFrom(res, requested) {
   return null;
 }
 
+// src/browserrender.mjs
+var FAKE_HOST = "https://fake.host";
+var CLIENT_HEADER = "bio-plane";
+var IDLE_QUIET_MS = 500;
+async function openSession(binding) {
+  const acq = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser`, { method: "POST" });
+  if (acq.status !== 200) {
+    const text = await acq.text().catch(() => "");
+    throw new Error(`the Browser Rendering binding refused a session: HTTP ${acq.status} ${text.slice(0, 200)}`);
+  }
+  let sessionId = null;
+  try {
+    sessionId = (await acq.json()).sessionId;
+  } catch {
+    sessionId = null;
+  }
+  if (typeof sessionId !== "string" || !sessionId)
+    throw new Error("the Browser Rendering binding acquired a session with no sessionId");
+  const up = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser/${sessionId}`, {
+    headers: { Upgrade: "websocket", "cf-brapi-client": CLIENT_HEADER }
+  });
+  if (!up.webSocket)
+    throw new Error(`the Browser Rendering binding did not upgrade session ${sessionId} to a websocket (HTTP ${up.status})`);
+  up.webSocket.accept();
+  return { sessionId, ws: up.webSocket };
+}
+function cdpConnection(ws) {
+  let nextId = 1, closed = null;
+  const pending = /* @__PURE__ */ new Map();
+  const listeners = [];
+  ws.addEventListener("message", (ev) => {
+    let m = null;
+    try {
+      m = JSON.parse(typeof ev.data === "string" ? ev.data : new TextDecoder().decode(ev.data));
+    } catch {
+      return;
+    }
+    if (m && typeof m.id === "number" && pending.has(m.id)) {
+      const { resolve, reject } = pending.get(m.id);
+      pending.delete(m.id);
+      m.error ? reject(new Error(`CDP ${m.error.message || "error"}`)) : resolve(m.result || {});
+      return;
+    }
+    if (m && typeof m.method === "string") for (const fn of listeners) {
+      try {
+        fn(m);
+      } catch {
+      }
+    }
+  });
+  ws.addEventListener("close", () => {
+    closed = new Error("the CDP socket closed");
+    for (const { reject } of pending.values()) reject(closed);
+    pending.clear();
+  });
+  return {
+    /** Send a command. `sessionId` is the FLAT session (a page); omitted for browser-level. */
+    send(method, params = {}, sessionId = void 0, timeoutMs = 3e4) {
+      if (closed) return Promise.reject(closed);
+      const id = nextId++;
+      const msg = { id, method, params, ...sessionId ? { sessionId } : {} };
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          if (pending.delete(id)) reject(new Error(`CDP ${method} did not answer within ${timeoutMs} ms`));
+        }, timeoutMs);
+        pending.set(id, {
+          resolve: (r) => {
+            clearTimeout(timer);
+            resolve(r);
+          },
+          reject: (e) => {
+            clearTimeout(timer);
+            reject(e);
+          }
+        });
+        try {
+          ws.send(JSON.stringify(msg));
+        } catch (e) {
+          pending.delete(id);
+          clearTimeout(timer);
+          reject(e);
+        }
+      });
+    },
+    on(fn) {
+      listeners.push(fn);
+    },
+    close() {
+      try {
+        ws.close();
+      } catch {
+      }
+    }
+  };
+}
+var resourceType = (t) => typeof t === "string" && t ? t.toLowerCase() : "other";
+async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) {
+  const asked = req || {};
+  const timeoutMs = Math.max(1e3, Number(asked.wait?.timeout_ms) || 15e3);
+  const until = typeof asked.wait?.until === "string" ? asked.wait.until : "networkidle";
+  let sess = null, conn = null, targetId = null;
+  const started = now();
+  try {
+    sess = await openSession(binding);
+    conn = cdpConnection(sess.ws);
+    let engine = null, engineVersion = null;
+    try {
+      const v = await conn.send("Browser.getVersion");
+      const product = typeof v.product === "string" ? v.product : null;
+      if (product) {
+        const slash = product.lastIndexOf("/");
+        if (slash > 0) {
+          engine = product.slice(0, slash);
+          engineVersion = product.slice(slash + 1);
+        } else engine = product;
+      }
+    } catch {
+    }
+    let pageTarget = null;
+    try {
+      const { targetInfos } = await conn.send("Target.getTargets");
+      pageTarget = (Array.isArray(targetInfos) ? targetInfos : []).find((t) => t && t.type === "page") || null;
+    } catch {
+      pageTarget = null;
+    }
+    if (!pageTarget) {
+      const made = await conn.send("Target.createTarget", { url: "about:blank" });
+      targetId = made.targetId;
+    } else targetId = pageTarget.targetId;
+    if (!targetId) throw new Error("the browser gave this render no page target");
+    const { sessionId } = await conn.send("Target.attachToTarget", { targetId, flatten: true });
+    if (!sessionId) throw new Error(`the browser did not attach a session to target ${targetId}`);
+    const vp = asked.viewport || {};
+    const envOk = { viewport: false, dpr: false, locale: false, timezone: false };
+    try {
+      await conn.send("Emulation.setDeviceMetricsOverride", {
+        width: Math.round(Number(vp.width) || 1280),
+        height: Math.round(Number(vp.height) || 800),
+        deviceScaleFactor: Number(asked.dpr) || 1,
+        mobile: false
+      }, sessionId);
+      envOk.viewport = true;
+      envOk.dpr = true;
+    } catch {
+    }
+    if (typeof asked.locale === "string" && asked.locale)
+      try {
+        await conn.send("Emulation.setLocaleOverride", { locale: asked.locale }, sessionId);
+        envOk.locale = true;
+      } catch {
+      }
+    if (typeof asked.timezone === "string" && asked.timezone)
+      try {
+        await conn.send("Emulation.setTimezoneOverride", { timezoneId: asked.timezone }, sessionId);
+        envOk.timezone = true;
+      } catch {
+      }
+    let requests = /* @__PURE__ */ new Map(), scripts = [];
+    let sawNetwork = false, sawDebugger = false;
+    try {
+      await conn.send("Network.enable", {}, sessionId);
+      sawNetwork = true;
+    } catch {
+    }
+    try {
+      await conn.send("Page.enable", {}, sessionId);
+    } catch {
+    }
+    try {
+      await conn.send("Debugger.enable", {}, sessionId);
+      sawDebugger = true;
+    } catch {
+    }
+    let inflight = 0, lastQuietAt = null, loadFired = false, mainFrameId = null, mainStatus = null;
+    conn.on((m) => {
+      const p = m.params || {};
+      switch (m.method) {
+        case "Network.requestWillBeSent":
+          if (!p.requestId) break;
+          if (p.redirectResponse && requests.has(p.requestId)) {
+            const prev = requests.get(p.requestId);
+            requests.set(`${p.requestId}#${requests.size}`, {
+              ...prev,
+              outcome: "completed",
+              status: Number(p.redirectResponse.status) || prev.status
+            });
+          } else inflight++;
+          requests.set(p.requestId, {
+            url: String(p.request?.url || ""),
+            type: resourceType(p.type),
+            outcome: "pending",
+            status: null,
+            blocked_by: null
+          });
+          break;
+        case "Network.responseReceived": {
+          const r = requests.get(p.requestId);
+          if (r) {
+            r.status = Number(p.response?.status) || r.status;
+            if (p.type) r.type = resourceType(p.type);
+          }
+          if (resourceType(p.type) === "document" && p.frameId && p.frameId === mainFrameId)
+            mainStatus = Number(p.response?.status) || mainStatus;
+          break;
+        }
+        case "Network.loadingFinished": {
+          const r = requests.get(p.requestId);
+          if (r && r.outcome === "pending") {
+            r.outcome = "completed";
+            inflight--;
+            lastQuietAt = inflight === 0 ? now() : null;
+          }
+          break;
+        }
+        case "Network.loadingFailed": {
+          const r = requests.get(p.requestId);
+          if (r && r.outcome === "pending") {
+            r.outcome = p.blockedReason ? "blocked" : "failed";
+            if (p.blockedReason) r.blocked_by = String(p.blockedReason);
+            inflight--;
+            lastQuietAt = inflight === 0 ? now() : null;
+          }
+          break;
+        }
+        case "Page.loadEventFired":
+          loadFired = true;
+          break;
+        case "Debugger.scriptParsed":
+          if (typeof p.url === "string" && p.url) scripts.push({ url: p.url });
+          break;
+      }
+    });
+    const nav = await conn.send("Page.navigate", { url: String(asked.url || "") }, sessionId, timeoutMs);
+    if (nav.errorText) throw new Error(`the browser could not navigate to ${asked.url}: ${nav.errorText}`);
+    mainFrameId = nav.frameId || null;
+    const deadline = started + timeoutMs;
+    let fired = null;
+    while (now() < deadline) {
+      if (until === "load" && loadFired) {
+        fired = "load";
+        break;
+      }
+      if (loadFired && inflight <= 0 && lastQuietAt !== null && now() - lastQuietAt >= IDLE_QUIET_MS) {
+        fired = "networkidle";
+        break;
+      }
+      if (loadFired && inflight <= 0 && lastQuietAt === null) lastQuietAt = now();
+      await new Promise((r) => setTimeout(r, 25));
+    }
+    if (!fired) fired = "timeout";
+    const evaluated = await conn.send("Runtime.evaluate", {
+      expression: `JSON.stringify({html: (document.doctype ? "<!DOCTYPE " + document.doctype.name + ">\\n" : "") + document.documentElement.outerHTML,url: location.href })`,
+      returnByValue: true,
+      awaitPromise: false
+    }, sessionId, timeoutMs);
+    let html = null, navigatedTo = null;
+    try {
+      const parsed = JSON.parse(evaluated.result?.value);
+      html = typeof parsed.html === "string" ? parsed.html : null;
+      navigatedTo = typeof parsed.url === "string" ? parsed.url : null;
+    } catch {
+      html = null;
+    }
+    if (typeof html !== "string" || !html)
+      throw new Error("the browser returned no serialised document after the render");
+    const elapsed = now() - started;
+    return {
+      ok: true,
+      html,
+      engine,
+      engine_version: engineVersion,
+      /* WHAT WAS ASKED, reported as USED only where the override was accepted.
+         A refused override reports `null`, which `renderBlock` records as
+         "not reported by the renderer" — the honest reading, since the browser
+         then rendered at whatever IT had and we do not know what that was. */
+      viewport: envOk.viewport ? { width: Math.round(Number(vp.width) || 1280), height: Math.round(Number(vp.height) || 800) } : null,
+      dpr: envOk.dpr ? Number(asked.dpr) || 1 : null,
+      locale: envOk.locale ? asked.locale : null,
+      timezone: envOk.timezone ? asked.timezone : null,
+      wait: { condition: asked.wait || null, fired },
+      elapsed_ms: elapsed,
+      navigated_to: navigatedTo,
+      status: mainStatus,
+      /* `sha256` IS NEVER SET, AND THAT IS A STATEMENT: hashing a subresource body
+         means `Network.getResponseBody` per request, which the browser refuses for
+         many resources and which would put the renderer's copy of the bytes in the
+         record beside the plane's. `renderBlock` already records a missing hash as
+         `null` with `reported_by: "renderer"`, so the record says the renderer
+         reported the request and did not report its bytes. */
+      requests: sawNetwork ? [...requests.values()].map((r) => ({
+        url: r.url,
+        type: r.type,
+        outcome: r.outcome,
+        ...r.status !== null ? { status: r.status } : {},
+        ...r.blocked_by ? { blocked_by: r.blocked_by } : {}
+      })) : null,
+      /* WHAT `scripts` CAN AND CANNOT SEE, because the count feeds an authority
+         verdict: `Debugger.scriptParsed` fires for every script the ENGINE parsed,
+         which is every script resource that reached execution. It OVER-reports in
+         one direction — a script parsed and never invoked is listed — and that
+         direction makes a capture MORE undetermined, which is the bias
+         `render.mjs` states for `NON_DATA_TYPES` and the one to prefer. It does
+         NOT see a script whose parse the engine skipped, and it does not see
+         inline script (no url), which is the shell's own bytes. */
+      scripts: sawDebugger ? scripts : null
+    };
+  } catch (e) {
+    return { ok: false, error: String(e && e.message || e) };
+  } finally {
+    if (conn) {
+      if (targetId) {
+        try {
+          await conn.send("Target.closeTarget", { targetId }, void 0, 5e3);
+        } catch {
+        }
+      }
+      try {
+        await conn.send("Browser.close", {}, void 0, 5e3);
+      } catch {
+      }
+      conn.close();
+    }
+  }
+}
+function browserBindingRenderer(binding) {
+  return { kind: "browser-binding", render: (req) => renderWithBinding(binding, req) };
+}
+
 // src/render.mjs
 var RENDER_DEFAULTS = Object.freeze({
   /* D-492: THE NAVIGATION BOUND, ASKED OF THE RENDERER AND RESERVED AGAINST THE
@@ -21983,6 +22318,8 @@ function rendererFor(env) {
       });
       return r.json().catch(() => ({ ok: false, error: `the renderer answered HTTP ${r.status} with no JSON` }));
     } };
+  if (env && env.BROWSER && typeof env.BROWSER.fetch === "function")
+    return browserBindingRenderer(env.BROWSER);
   if (env && env.BROWSER)
     return { kind: "browser-binding-without-driver", render: null };
   return { kind: "none", render: null };
@@ -80802,7 +81139,14 @@ var index_default = {
             ...renderRow("RENDER_NO_RENDERER"),
             op,
             renderer: renderer.kind,
-            detail: renderer.kind === "browser-binding-without-driver" ? "a Browser Rendering binding (BROWSER) is bound, but the in-plane driver over it is not built (D-64 shipped the seam and the record, not a CDP client). Nothing was fetched." : "no renderer is bound to this instance (no RENDERER service binding). Nothing was fetched."
+            /* D-490 CORRECTED THIS SENTENCE, and the correction is the point: D-64's
+               words said the in-plane driver was not built, which was true of every
+               instance and is no longer true of any. What this branch can still mean
+               is NARROWER — BROWSER bound to something with no `fetch`, so there is
+               no endpoint to open a devtools session on. Saying the old sentence now
+               would be the record claiming less than it can support, which is the
+               same defect as claiming more. */
+            detail: renderer.kind === "browser-binding-without-driver" ? "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no endpoint to open a devtools session on. Nothing was fetched." : "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched."
           }, 501);
         let rHost = null;
         try {

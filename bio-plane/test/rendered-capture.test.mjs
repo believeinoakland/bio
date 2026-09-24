@@ -306,8 +306,18 @@ console.log("\n--- G. every way a render cannot happen is refused by name; the s
   await none.dispose();
   const bb = plane({ BROWSER: "bound-but-no-driver" }, {});
   const b = await acq(bb)({ locator: `https://${HOST}/same`, render: true });
-  t("G6 the BROWSER binding alone is reported, never mistaken for a renderer",
-    [refusal(b), b.renderer, /in-plane driver over it is not built/.test(b.detail || "")],
+  /* CORRECTED BY D-490, NOT EXEMPTED. As written this arm asserted the refusal's
+     sentence read "the in-plane driver over it is not built", which was true when
+     D-64 shipped the seam without a driver. D-490 built the driver
+     (`src/browserrender.mjs`), so that sentence became FALSE while this assertion
+     went on passing — a test pinning a claim the code no longer supports. The kind
+     and the code are unchanged and still correct: this fixture binds BROWSER to a
+     STRING, which has no `fetch`, and a binding the plane cannot speak to is still
+     never mistaken for a renderer. Only the sentence moved. D-490's own suite
+     (`browser-render.test.mjs`, block A) is where a WORKING browser binding is
+     driven. */
+  t("G6 a BROWSER binding the plane cannot speak to is reported, never mistaken for a renderer",
+    [refusal(b), b.renderer, /not a Fetcher/.test(b.detail || "")],
     [row("RENDER_NO_RENDERER"), "browser-binding-without-driver", true]);
   await bb.dispose();
 }
