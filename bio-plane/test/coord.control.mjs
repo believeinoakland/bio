@@ -14,6 +14,11 @@
  *        MUST FAIL: "§5 the line is in ITS OWN block" and "...and NOT inside the block that landed meanwhile".
  *   C  THE WRITE'S LEDGER CHECKS SKIPPED — BOB #28's ruling 2 control: the planted closed row is then pushed.
  *        MUST FAIL: "§6 the planted closed row is REFUSED".
+ *   S  THE STATUS NOTE REPLACES THE HEADING'S TAIL AGAIN — M0-164's defect restored exactly: `setStatus` writes
+ *      `<state> — <note>` over everything after the state word and writes no `status:` line, which is how all 15 rows
+ *      CONDUCT #20 flipped on 2026-09-24 lost the headlines naming their defects.
+ *        MUST FAIL: "M0-164 the flip leaves the row's HEADLINE byte-identical — only the state word moves" and
+ *        "M0-164 ...and the note is on a `status:` line of the row's own, directly under the heading".
  * What MUST NOT fail: the baseline and the closing run, and every restore. Arms W and C may redden OTHER assertions
  * too (the in-block arm has two halves; with the checks off, every refusal-by-check in §6–§7 goes) — each arm
  * declares the names that MUST be among its failures, and prints every failure it saw, so collateral is visible.
@@ -40,7 +45,7 @@ const LEDGER = path.join(REPO, "tools", "ledger.mjs");
 const PEN = path.join(REPO, ".m0110-harness");
 const PEN_IGNORE = path.join(PEN, ".gitignore");
 const ONLY = process.argv.slice(2);
-const DECLARED_ARMS = 3;
+const DECLARED_ARMS = 4;
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const EMPTY_SHA = sha(Buffer.alloc(0));
@@ -100,6 +105,10 @@ function runSuite() {
 const anchorReader = "const readRel = (repo, rel) => readState(repo, rel);";
 const anchorAddLine = "  const at = findAnchor(lines, anchor);";
 const anchorChecks = "      if (checks) {\n        checked = await ledgerChecks({ repo: dir, today });";
+/* M0-164's arm: the ONE line that carries the headline through. Restoring the old right-hand side restores the
+   defect — the note written over the heading's tail, and no `status:` line at all. */
+const anchorHead = "  return [...lines.slice(0, start), `${head[1]}${state}${head[3]}`, ...body, ...lines.slice(end)].join(\"\\n\");";
+const armHead = "  return [...lines.slice(0, start), `${head[1]}${state}${note === null ? head[3] : ` \u2014 ${note}`}`, ...lines.slice(start + 1, end), ...lines.slice(end)].join(\"\\n\");";
 const ARMS = [
   { id: "R", title: "ONE READER pointed back at main's old path (`ledger.mjs` readRel reads the working tree again)",
     must: ["§2 findId answers the same row from coord"],
@@ -110,6 +119,10 @@ const ARMS = [
   { id: "C", title: "the write's LEDGER CHECKS skipped (BOB #28's ruling 2 control)",
     must: ["§6 the planted closed row is REFUSED"],
     patches: [[COORD, anchorChecks, anchorChecks.replace("if (checks) {", "if (false) {")]] },
+  { id: "S", title: "M0-164's defect restored: the status note is written OVER the heading's tail, and no `status:` line",
+    must: ["M0-164 the flip leaves the row's HEADLINE byte-identical — only the state word moves",
+           "M0-164 ...and the note is on a `status:` line of the row's own, directly under the heading"],
+    patches: [[COORD, anchorHead, armHead]] },
 ];
 if (ARMS.length !== DECLARED_ARMS) { console.log(`** ${ARMS.length} arms against ${DECLARED_ARMS} declared — the head is wrong`); process.exit(1); }
 const selected = ARMS.filter((a) => !ONLY.length || ONLY.includes(a.id));

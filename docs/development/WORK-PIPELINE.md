@@ -31,6 +31,14 @@ A row is FIELDS, not narrative: id · state · title (one line) · milestone · 
 depends-on (ids) · owner · accepts-when (one paragraph) · why it is here in the order (one line). Reasoning, receipts
 and history belong in the design document the row cites, or in the archive.
 
+**The TITLE is the row's CLAIM, and a status word never touches it** (M0-164, 2026-09-24). A flip's note —
+`coord.mjs write --status <ID> <state> --note …` — used to be written OVER the heading's tail, so every flip erased
+the line saying what the defect IS: all 15 rows CONDUCT #20 flipped on 2026-09-24 lost their headlines, restored by
+hand by SCHEDULER #18 from `f8fd4a77^`/`0cf9783c^`. The note now lives on a field line of its own,
+`status: <state> — <note>`, directly under the heading, replacing any earlier one; a flip carrying NO note REMOVES a
+stale line rather than leaving a note about the state the row has just left standing under its new one. The history
+of a row's notes is `coord`'s log, not the row.
+
 ## 2. The cycle — SCHEDULER's, as the owner of both files (`kickoffs/SCHEDULER.md`; Bob, 2026-09-18)
 
 **CONDUCT writes two words — a cached task's `queued` → `running`, and `running` → `integrated` once its branch is on a pushed batch — and reports each completion to SCHEDULER.** Where

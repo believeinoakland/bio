@@ -11,7 +11,8 @@
  *   §2 every reader answers as it did from main — the same answers read pre-cutover from the seed's files and
  *      post-cutover through the pointers from coord;
  *   §3 a claim, a queue flip and a handoff each land on coord WITHOUT moving main, and a handoff created on coord is
- *      seen by the readers of the kickoffs directory;
+ *      seen by the readers of the kickoffs directory; and (M0-164) a flip changes the STATE WORD ALONE — the row's
+ *      headline is carried through byte-identically and the note goes on a `status:` line of the row's own;
  *   §4 a main gate record survives a coord write (the record is keyed by main's tree, D-293);
  *   §5 a new block and a line into an existing block, written CONCURRENTLY, both land with the line in its own block
  *      (the loser re-applies its intent to the fresh tip — BOB #27);
@@ -26,12 +27,21 @@
  * AND `cmp`. DECLARED: (R) `ledger.mjs`' `readRel` pointed back at the working tree's old path -> FAILS at "§2 findId
  * answers the same row from coord"; (W) `addLine` made a TAIL APPEND — what a textual merge of two tail appends
  * yields — instead of the anchored insertion -> FAILS at "§5 the line is in ITS OWN block"; (C) the write's ledger
- * checks skipped -> FAILS at "§6 the planted closed row is REFUSED". RESULT: recorded on the line below at the run.
- * NEGATIVE CONTROL RESULT: RUN 2026-09-22 by the M0-110 worker on `tools/coord.mjs` sha256 b533bac0… and `ledger.mjs`
- * 1e4f5f4a…, driver exit 0, 25 pass / 0 fail, 3 of 3 arms as declared, every restore sha256- and cmp-identical: baseline
- * 80/0; R 72/8 (§2's four answers through `readRel`, the flip read-back and the archive write among them); W 78/2 (exactly
- * the two in-block assertions); C 74/6 (§6's three, the dry run, the P2 refusal, the hook-vs-check refusal); closing 80/0.
- * AND M0-109's floors, moved here (§8): `node bio-plane/test/debt-floor.control.mjs`, RUN the same day on the same sha,
+ * checks skipped -> FAILS at "§6 the planted closed row is REFUSED"; (S, M0-164) the status note written OVER the
+ * heading's tail again, with no `status:` line -> FAILS at "M0-164 the flip leaves the row's HEADLINE byte-identical…"
+ * and "M0-164 …and the note is on a `status:` line of the row's own…". RESULT: recorded on the line below at the run.
+ * NEGATIVE CONTROL RESULT: RUN 2026-09-24 by the M0-164 worker on `tools/coord.mjs` sha256 85ede13d… (62601 B) and
+ * `ledger.mjs` fec76ca1… (79081 B), driver exit 0, 33 pass / 0 fail, 4 of 4 arms as declared, every restore sha256-
+ * and cmp-identical: baseline 104/0; R 95/9 (§2's four answers through `readRel`, the flip read-back and the archive
+ * write among them); W 102/2 (exactly the two in-block assertions); C 98/6 (§6's three, the dry run, the P2 refusal,
+ * the hook-vs-check refusal); S 98/6 (the two declared, and as collateral the four other M0-164 assertions the
+ * defect also reaches — the over-strictness headline, the no-stacking arm, the re-flip through the write, and the
+ * archived row's headline; the no-note and NOTE_MULTILINE arms PASS under the arm, which is the correct reading:
+ * the defect was in what a NOTE did); closing 104/0. The earlier run of record, superseded by this one, is
+ * 2026-09-22 by the M0-110 worker on coord.mjs b533bac0… / ledger.mjs 1e4f5f4a…: 25/0, 3 of 3, baseline 80/0,
+ * R 72/8, W 78/2, C 74/6, closing 80/0.
+ * AND M0-109's floors, moved here (§8): `node bio-plane/test/debt-floor.control.mjs`, RUN 2026-09-22 on the SUPERSEDED
+ * shas above (coord.mjs b533bac0… / ledger.mjs 1e4f5f4a…), not on this run's — M0-164 re-ran coord.control only,
  * exit 0, 33 pass / 0 fail, 4 of 4 arms as declared: TL 79/1 and AL 79/1 (each liar fails ONLY its own empty-ledger
  * assertion); TC 59/20 and AC 58/21 (the size floors fail the one-row assertion — and AC the hundred-row one — and every
  * small fixture write with them, the collateral the driver's head declares: a size floor fails small honest ledgers).
@@ -197,6 +207,29 @@ t("the queue flip lands", [flip.status, flip.changed], ["pushed", ["docs/develop
 t("...main did not move", mainAt(), main0);
 C.resetCoordCache(); git(A, "fetch", "-q", "origin");
 t("the row reads `running`, with its note, through the reader", [(L.findId("ZZ-1", { repo: A })[0] || { state: "ABSENT" }).state, /flipped by the fixture/.test(C.readState(A, "docs/development/QUEUE.md"))], ["running", true]);
+/* M0-164: A STATUS WORD CHANGES STATE, NEVER THE ROW'S CLAIM (`WORK-PIPELINE.md` §1). The note used to replace the
+   heading's TAIL, so every flip overwrote the headline — the one line saying what the defect IS. All 15 rows CONDUCT
+   #20 flipped on 2026-09-24 lost theirs, and SCHEDULER #18 restored them by hand from `f8fd4a77^`/`0cf9783c^`. */
+{
+  const ls = C.readState(A, "docs/development/QUEUE.md").split("\n");
+  const i = ls.findIndex((l) => l.startsWith("### ZZ-1 · "));
+  t("M0-164 the flip leaves the row's HEADLINE byte-identical — only the state word moves", ls[i], "### ZZ-1 · running — a fixture row");
+  t("M0-164 ...and the note is on a `status:` line of the row's own, directly under the heading", ls[i + 1], "status: running — flipped by the fixture");
+}
+/* The shapes the fixture repo does not carry, driven on the exported function itself. The real write above is the
+   evidence a CALLER reaches this; these are the evidence about the TEXT, and the first is the over-strictness arm —
+   a headline in a spelling nobody anticipated (bold, with a `·` and an em dash of its own inside it) must PASS. */
+const GNARLY = "# Q\n\n### ZZ-1 · queued — **A HEADLINE · with an em dash — and bold.** Found by X. — owner M0.\nmilestone: M0\n\n### ZZ-2 · queued — plain\nmilestone: M0\n";
+const g1 = C.setStatus(GNARLY, "ZZ-1", "running", "note one");
+t("M0-164 a headline carrying `·`, `—` and bold survives the flip byte-for-byte (OVER-STRICTNESS)",
+  g1.split("\n")[2], "### ZZ-1 · running — **A HEADLINE · with an em dash — and bold.** Found by X. — owner M0.");
+const g2 = C.setStatus(g1, "ZZ-1", "integrated", "note two");
+t("M0-164 a second flip REPLACES the `status:` line — notes never stack", g2.split("\n").filter((l) => /^status:/.test(l)), ["status: integrated — note two"]);
+t("M0-164 a flip with NO note REMOVES the stale one — it described the state the row has just left",
+  C.setStatus(g2, "ZZ-1", "done").split("\n").filter((l) => /^status:/.test(l)), []);
+t("M0-164 ...and the row after it is untouched", C.setStatus(g2, "ZZ-1", "done").split("\n")[5], "### ZZ-2 · queued — plain");
+t("M0-164 a note carrying a newline is REFUSED, never written across the row's fields",
+  (() => { try { C.setStatus(GNARLY, "ZZ-1", "running", "one\ntwo"); return "NOT REFUSED"; } catch (e) { return e.code; } })(), "NOTE_MULTILINE");
 const hand = await tryWrite({ repo: A, message: "LANE #3's handoff", intents: [
   { op: "replace", file: "docs/development/kickoffs/LANE-NEXT.md", text: "LANE #3 — the next handoff, line 1\n" },
   { op: "replace", file: "docs/development/kickoffs/NEWLANE-NEXT.md", text: "NEWLANE #1 — a lane's first handoff\n" }] });
@@ -209,6 +242,14 @@ t("a handoff CREATED on coord (no pointer on main) is seen by the kickoffs' read
   RB.readSet(B).filter((r) => r.key === "next").map((r) => r.file).sort(),
   ["docs/development/kickoffs/LANE-NEXT.md", "docs/development/kickoffs/NEWLANE-NEXT.md"]);
 t("an unchanged intent is not a commit", (await tryWrite({ repo: A, message: "again", intents: [{ op: "status", id: "ZZ-1", state: "running", note: "flipped by the fixture" }] })).status, "unchanged");
+/* M0-164, through the real write: a re-flip carrying a different note replaces the `status:` line and still leaves
+   the headline alone — the accumulation this row's fix must not trade the overwrite for. */
+const reflip = await tryWrite({ repo: A, message: "ZZ-1 re-flipped", intents: [{ op: "status", id: "ZZ-1", state: "running", note: "flipped again by the fixture" }] });
+C.resetCoordCache(); git(A, "fetch", "-q", "origin");
+t("M0-164 a re-flip through the write replaces the row's `status:` line and keeps the headline",
+  (() => { const ls = C.readState(A, "docs/development/QUEUE.md").split("\n"); const i = ls.findIndex((l) => l.startsWith("### ZZ-1 · "));
+    return [reflip.status, ls[i], ls[i + 1], ls[i + 2]]; })(),
+  ["pushed", "### ZZ-1 · running — a fixture row", "status: running — flipped again by the fixture", "milestone: M0"]);
 
 /* ============================================================================================ */
 section("§4 A MAIN GATE RECORD SURVIVES A coord WRITE (D-293: the record is keyed by main's tree)");
@@ -267,6 +308,9 @@ git(A, "fetch", "-q", "origin"); C.resetCoordCache();
 t("a done flip and its archive land as ONE coord commit (P2 would refuse the flip alone)",
   [arch.status, arch.changed.sort(), L.findId("ZZ-1", { repo: A }).map((f) => `${f.where} ${f.state}`)],
   ["pushed", ["docs/archive/ledgers/QUEUE-closed.md", "docs/development/QUEUE.md"], ["archive done"]]);
+t("M0-164 ...and the archived row carries its HEADLINE into the archive, with the stale `status:` note dropped",
+  (() => { const ls = C.readState(A, "docs/archive/ledgers/QUEUE-closed.md").split("\n"); const i = ls.findIndex((l) => l.startsWith("### ZZ-1 · "));
+    return [ls[i], ls.filter((l) => /^status:/.test(l))]; })(), ["### ZZ-1 · done — a fixture row", []]);
 const backlogIds = () => { git(A, "fetch", "-q", "origin"); C.resetCoordCache(); return L.pipelineRows({ repo: A }).rows.filter((r) => r.where === "backlog").map((r) => r.id); };
 const ins = await tryWrite({ repo: A, message: "place ZZ-4 ahead of ZZ-3", intents: [{ op: "insert", file: "docs/development/BACKLOG.md", where: "before", id: "ZZ-3", text: ROW("ZZ-4", "queued") }] });
 t("a new row is PLACED by the row it precedes — the plan's order is file position (SCHEDULER's act)", [ins.status, backlogIds()], ["pushed", ["ZZ-4", "ZZ-3"]]);

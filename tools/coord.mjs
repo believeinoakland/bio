@@ -321,16 +321,36 @@ export function insertRow(text, where, id, block) {
     : [...lines.slice(0, end), "", ...body, ...lines.slice(end)]).join("\n");
 }
 
-/** Set a plan row's status word — `### <ID> · <word>` — and, with a note, the rest of its heading. */
+/** Set a plan row's status word — `### <ID> · <word>` — and nothing else in the heading.
+ *
+ * M0-164, measured: the note used to REPLACE the heading's tail, so every flip overwrote the row's HEADLINE — the
+ * one line that says what the defect IS. All 15 rows CONDUCT #20 flipped on 2026-09-24 lost theirs, and SCHEDULER #18
+ * restored them by hand from `f8fd4a77^`/`0cf9783c^`. A status word changes STATE; it never changes the row's CLAIM
+ * (`WORK-PIPELINE.md` §1, `VERIFICATION.md`). So the headline — everything after the state word — is carried through
+ * BYTE-IDENTICAL, and the note goes on a `status:` line of its own, directly under the heading, in the shape
+ * SCHEDULER #18's restoration already put in the live file: `status: <state> — <note>`.
+ *
+ * A flip that carries NO note REMOVES any earlier `status:` line rather than leaving it: that note was written for
+ * the state the row has just left, so keeping it under a new state word would make the record claim more than it can
+ * support. The history is on `coord`, which is where a superseded note belongs.
+ *
+ * WHAT THIS MATCHER CAN AND CANNOT SEE: it takes a `status:` line to be a FIELD line of the row — column 0, inside
+ * the row's span. A `status:` written at column 0 inside a wrapped `scope:` or `accepts-when:` paragraph would be
+ * read as the field and replaced; indented or mid-sentence, it is invisible to this and left alone. */
 export function setStatus(text, id, state, note = null) {
   if (!ROW_STATES.includes(state)) throw refusal("UNKNOWN_STATE", `\`${state}\` is not a row state (${ROW_STATES.join(", ")}).`);
   if (text === null) throw refusal("FILE_ABSENT", `no row ${id}: the file does not exist.`);
+  if (note !== null && /[\r\n]/.test(note))
+    throw refusal("NOTE_MULTILINE", `a status note is ONE line; this one carries a newline. Put the reasoning in the row's design document.`);
   const esc = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const re = new RegExp(`^(###\\s+${esc}\\s+·\\s+)([A-Za-z-]+)(.*)$`, "gm");
-  const hits = [...text.matchAll(re)];
-  if (!hits.length) throw refusal("ROW_NOT_FOUND", `no row headed \`### ${id} · <state>\`.`);
-  if (hits.length > 1) throw refusal("ROW_AMBIGUOUS", `${hits.length} rows are headed ${id}.`);
-  return text.replace(re, (_, pre, _old, rest) => `${pre}${state}${note === null ? rest : ` — ${note}`}`);
+  const lines = text.split("\n");
+  const { start, end } = rowSpan(lines, id);          /* refuses ROW_NOT_FOUND / ROW_AMBIGUOUS, as this did before */
+  /* rowSpan matched `^###\s+<id>\s+·\s+[A-Za-z-]+` on this very line, and the tail here is `(.*)`, so this match
+     cannot be null — `head[3]` IS the headline, and it is never rewritten. */
+  const head = lines[start].match(new RegExp(`^(###\\s+${esc}\\s+·\\s+)([A-Za-z-]+)(.*)$`));
+  const body = lines.slice(start + 1, end).filter((l) => !/^status:/.test(l));
+  if (note !== null) body.unshift(`status: ${state} — ${note}`);
+  return [...lines.slice(0, start), `${head[1]}${state}${head[3]}`, ...body, ...lines.slice(end)].join("\n");
 }
 
 /** Apply ONE intent inside a materialised tree `dir`. Returns the paths it changed. */
@@ -816,7 +836,7 @@ function usage(code = 2) {
     "         intents, applied in order to the fresh coord tip on EVERY attempt:",
     "           --append <path> <textfile|->            a block at the end of the file (a new file is created)",
     "           --line <path> <heading> <textfile|->    lines at the end of the block under that heading",
-    "           --status <ID> <state> [--note <text>]   a plan row's status word (and the rest of its heading)",
+    "           --status <ID> <state> [--note <text>]   a plan row's status word; the note goes on the row's own `status:` line, NEVER over its headline (M0-164)",
     "           --replace <path> <textfile|->           the whole file (a lane's own handoff)",
     "           --row <path> <ID> <textfile|->          a plan row's whole block (an empty file deletes the row)",
     "           --insert <path> before|after <ID> <textfile|->   a new row placed by the row it follows or precedes",
