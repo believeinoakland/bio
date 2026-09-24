@@ -9277,6 +9277,17 @@ export const MACHINE_FENCE_CHECKS = {
       + 'credential that asked here is an automated one, so it can prepare the action and cannot '
       + 'move it. Sign in to move it yourself.',
   },
+  /* REC-189 — D-182's ruling on the write side (BOB #21: *"Only a member's authored act sets 1, 2 or 3"*).
+     Refuses a CHANGE of tier by a machine, never a presence: carrying a member's tier forward unchanged,
+     or stating none (undetermined), is not refused. Inside `promote`'s action block, not an act. */
+  MACHINE_CANNOT_SET_RISK_TIER: {
+    check: 'C-32.18',
+    where: 'src/store.mjs promote > is-machine-set-risk-tier',
+    translation: 'A risk tier tells whoever reads this action whether it is safe to file, needs caution, or '
+      + 'must not be filed without a lawyer, and somebody has to be answerable for that judgement. The '
+      + 'credential that asked here is an automated one: it can carry forward the tier a member set, or '
+      + 'leave the tier unstated, and it cannot set or change one. Sign in to state the tier yourself.',
+  },
   MACHINE_CANNOT_CORRESPOND: {
     check: 'C-32.4',
     where: 'src/store.mjs actionCorrespond > is-machine-correspond',

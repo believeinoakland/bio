@@ -896,6 +896,22 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
     MACHINE_CANNOT_RESOLVE:      ["taskresolve", { id: "TASK-2026-0001-x" }],
     /* REC-126 / C-32.16 — the harvest named it until it was driven here. */
     MACHINE_CANNOT_REVIEW:       ["casedraft", { project: "PROJ-2026-9000-x" }],
+    /* REC-189 / C-32.18 — not an act: the fence stands inside `promote`'s action block, so the thinnest
+       payload that reaches it is a whole action stating a tier (a creation replaces no version, so any
+       stated tier is a change). */
+    MACHINE_CANNOT_SET_RISK_TIER: ["promote", (() => {
+      const id = "ACTN-2026-9000-risk-tier";
+      const text = ["---", `id: ${id}`, "object_type: action", "schema: action@1", `title: "Action ${id}"`,
+        "current_state: planned", "prior_state: null", 'created: "2026-07-01T00:00:00Z"',
+        'last_updated: "2026-07-01T00:00:00Z"', "produced_by:", "  mode: assisted", "  capability_tier: session",
+        "group: believe-in-oakland", "references: []", "state_history: []", "action_kind: cpra_request",
+        "risk_tier: 2", "counterparty:", "  state: named", "  name: City Clerk", "---", "", "## Plan", "", "P.",
+        "", "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+      return { bundleId: id, base: null, snapKey: `${id}-000001`, register: [],
+        files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+        meta: { object_type: "action", group: "believe-in-oakland", title: `Action ${id}`,
+                current_state: "planned", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } };
+    })()],
   };
   /* HARVESTED, NEVER TYPED: a thirteenth fence must not arrive unmeasured, and
      the harvest is asserted non-empty BEFORE anything is compared over it — a
@@ -953,16 +969,18 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
   + "reach whoever meets the fence",
     /* MOVED 12 -> 13 on 2026-09-18 by REC-126: C-32.16 MACHINE_CANNOT_REVIEW
        arrived through the same decoration with NO edit to it, which is the
-       mechanism arm below doing exactly what it promised. */
-    [mute, explained.length], [[], 13]);
+       mechanism arm below doing exactly what it promised.
+       MOVED 13 -> 14 on 2026-09-24 by REC-189: C-32.18 MACHINE_CANNOT_SET_RISK_TIER,
+       the same way — no edit to the decoration. */
+    [mute, explained.length], [[], 14]);
   t("(and the set is asserted EMPTY by name rather than by count, so a thirteenth fence written the "
   + "mute way lands here as a FAILURE naming itself rather than as a silent fall)",
     mute.includes("MACHINE_CANNOT_PUBLISH"), false);
   t("and it is one MECHANISM rather than twelve conformances — the decoration attaches the catalog "
   + "row on the way out, so a fence added tomorrow is explained without its author knowing this "
   + "rule exists. That is what VF-5's finding bought.",
-    explained.length === 13 && explained.includes("MACHINE_CANNOT_MOVE_VERSION")
-      && explained.includes("MACHINE_CANNOT_REVIEW"), true);
+    explained.length === 14 && explained.includes("MACHINE_CANNOT_MOVE_VERSION")
+      && explained.includes("MACHINE_CANNOT_REVIEW") && explained.includes("MACHINE_CANNOT_SET_RISK_TIER"), true);
 }
 
 } finally {

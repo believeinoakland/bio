@@ -14,6 +14,19 @@
    `EDITION_NOT_INCREMENTED` in `publish` as an identity refusal, so seven of REC-78's eight pins stay load-bearing
    here. Stage 1 now asserts the set is non-empty and owned by the moved pinners, and 6b proves it complete.
    After: 59 of 59 control checks as declared, exit 0. */
+/* NEGATIVE CONTROL (REC-189, block xiv, RUN 2026-09-24 over origin/main 3f4b8f8c, each arm ALONE on src/store.mjs's
+   `is-machine-set-risk-tier` region, restored from a uniquely-named per-arm pristine copy and verified by sha256 AND cmp,
+   2,953,960 bytes, floored; baseline 56 pass / 0 fail before and after, harness outside the shared scratchpad):
+   (A) THE ROW'S CONTROL — the machine-identity clause neutered to `false` -> 52 pass, 4 FAIL, as declared: the pin
+   "MACHINE_CANNOT_SET_RISK_TIER — the machine is refused BY NAME", "the record did not move under the machine's call",
+   "…from undetermined the machine still cannot state 1", and block 3's "every one of them answered with its OWN name";
+   the member arm and both carry-forward arms stayed GREEN. (B) THE LIAR the row names — refuse EVERY machine promote of
+   an action (the tier clauses dropped) -> 54 pass, 2 FAIL, as declared: "a machine credential's revision that CARRIES
+   THE MEMBER'S TIER FORWARD UNCHANGED lands" and "…stating the tier UNDETERMINED lands"; the pin and the member arm
+   stayed green. (C) THE ROW'S WORDS READ LITERALLY — the identity clause DELETED, so the fence asks only whether the
+   tier changed -> the suite DIES before its foot (tally -1): block (v)'s fixture, a signed-in MEMBER creating an action
+   at tier 1, is refused and `mustPromote` throws. Declared as "the member path fails"; it failed at a fixture rather
+   than at a named assertion, recorded as found. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/machine-fences.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (PL-3's, PL-4's and PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, and every restore is verified BY sha256 AND BY CONTENT.
    ALL FIVE ARMS RUN 2026-08-08 IN WORKTREE agent-a75c0395e77e7eaed, every one behaving as declared, baseline 45/0 before each. Figures below are MEASURED.
    (1) NEUTER THE PREDICATE — `isMachineStamp` returns false in checks/bio-checks.mjs — and ALL TWELVE complete-payload arms FAIL NAMING THE MACHINE REFUSAL, not a payload complaint -> 15 pass, 30 FAIL. **AND HERE IS WHAT THE COMPLETE PAYLOAD BOUGHT, WHICH IS MORE THAN THE ITEM PREDICTED: TEN OF THE TWELVE ACTS THEN WENT ALL THE WAY THROUGH.** The machine RELEASED a collected document to `verified`, CONCLUDED a question, REOPENED one, PUBLISHED a case at edition 1, MOVED an action, wrote a CORRESPONDENCE entry at ord 0, DIVIDED a question into two children, GROUPED a basis, SET THE GROUP'S REQUIRED EVIDENTIARY STRENGTH (`author: token:ai` in the row, read back), and ACCEPTED a reading. Under PL-11's payloads the same edit produced ONE success and eleven payload complaints; under these it produces ten. **THE TWO THAT DID NOT: `taskforward` and `taskresolve`, both answering `NOT_YOURS` — REC-4's assignee fence catching what the machine fence let past.** Those two verbs are the only pair in the family with a SECOND independent fence behind the first, and nobody knew that until the arm was run with a payload good enough to reach it.
@@ -252,6 +265,8 @@ const MACHINE_OPS = ["release", "conclude", "reopen", "publish", "actionmove", "
                      "taskforward", "taskresolve",
                      /* REC-126 / C-32.16: the review copy's draft act. */
                      "casedraft",
+                     /* REC-189 / C-32.18: the substrate write, so the risk-tier fence is reached. */
+                     "promote",
                      /* `select` is not one of the twelve. It is here because a
                         selection is readable ONLY by the credential that made
                         it (`owner` is server-stamped, `class:ai` for this one),
@@ -683,15 +698,75 @@ const fence = (code, payload, machineAnswer) => {
     [r.ok, typeof r.draftId, r.project], [true, "string", REV_PRJ]);
 }
 
+/* ------------------------------------------------ (xiv) SET_RISK_TIER */
+{
+  /* REC-189 / C-32.18 — D-182's ruling on the write side (BOB #21: *"Only a member's authored act sets 1, 2
+     or 3"*). NOT an act: the fence stands inside `promote`'s action block and refuses a CHANGE of tier by a
+     machine, never a presence. So this block carries more arms than its siblings, because the liar the row
+     names — refusing EVERY machine promote of an action — passes a pin and fails only an arm that asks
+     whether a machine's carry-forward still lands. Each arm is a REVISION of one action a member created at
+     tier 1 (`actionMd`), promoted on the version it replaces, so nothing but the tier and the credential moves. */
+  const ACT = "ACTN-2026-7300-risk-tier";
+  await mustPromote(ACT, actionMd(ACT), "action", RUTH, { current_state: "planned" });
+  const view = async () => {
+    const p = rP(await (await mf.dispatchFetch(`http://x/api/?op=projection&token=${RUTH}&id=${ACT}`)).json());
+    return { sha: p?.bundle_sha ?? null, tier: p?.action?.risk_tier ?? null };
+  };
+  const revise = async (tok, tierLine, plan) => {
+    const { sha: base } = await view();
+    let text = actionMd(ACT).replace("risk_tier: 1", tierLine);
+    if (plan) text = text.replace("Ask for the transfer ledger.", plan);
+    return POST(`op=promote&token=${tok}`, {
+      bundleId: ACT, base, snapKey: `${ACT}-${String(++snapKeySeq).padStart(6, "0")}`,
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+      meta: { object_type: "action", group: GROUP, title: `Bundle ${ACT}`, current_state: "planned",
+              created: NOW, last_updated: LATER } });
+  };
+  const v0 = await view();
+  t("  a member created the action at tier 1, so there is a stated tier to carry and one to change",
+    v0.tier, 1);
+
+  const m = await revise(AI, "risk_tier: 2");
+  fence("MACHINE_CANNOT_SET_RISK_TIER",
+    "a revision of a member's action, on the version it replaces, well-formed in every field, changing "
+    + "risk_tier 1 -> 2 — the payload a signed-in member lands with below",
+    codeOf(m));
+  const v1 = await view();
+  t("  the record did not move under the machine's call: still tier 1, on the same version (the refusal "
+  + "says NOTHING WAS WRITTEN, and this is what makes that sentence true rather than hoped)",
+    [v1.tier, !!v0.sha && v1.sha === v0.sha], [1, true]);
+
+  /* THE LIAR'S ARM (the row's own): a fence refusing every machine promote of an action passes the pin
+     above and fails HERE. The machine revises the plan and carries the member's tier forward unchanged. */
+  const carry = await revise(AI, "risk_tier: 1", "Ask for the transfer ledger and the FY2023 memo.");
+  t("a machine credential's revision that CARRIES THE MEMBER'S TIER FORWARD UNCHANGED lands — the fence "
+  + "refuses a change of tier, never a machine promote of an action",
+    [carry.ok, (await view()).tier], [true, 1]);
+  /* OVER-STRICTNESS, a spelling the fence did not write: stating the tier undetermined claims nothing. */
+  const unstated = await revise(AI, "risk_tier: undetermined", "Ask for the transfer ledger and the FY2023 memo.");
+  t("a machine credential's revision stating the tier UNDETERMINED lands, and reads undetermined",
+    [unstated.ok, (await view()).tier], [true, "undetermined"]);
+  const reset = await revise(AI, "risk_tier: 1");
+  t("…and from undetermined the machine still cannot state 1 — the change is asked of the version it "
+  + "replaces, so a tier dropped by a machine cannot be restored by one",
+    codeOf(reset), "MACHINE_CANNOT_SET_RISK_TIER");
+
+  const r = await revise(RUTH, "risk_tier: 2");
+  t("  and the SAME payload (risk_tier 2, on the version it replaces) lands for a signed-in member, read "
+  + "back through op=projection",
+    [r.ok, (await view()).tier], [true, 2]);
+}
+
 /* ====================================================================== 3
  * THE SWEEP AND THE COMPLETENESS ARM.
  * ==================================================================== */
 console.log("\n--- 3. the driven set IS the harvested set: a thirteenth fence cannot arrive unmeasured ---");
 {
   const drivenCodes = DRIVEN.map((d) => d.code).sort();
-  /* MOVED 12 -> 13 on 2026-09-18 by REC-126 (C-32.16 MACHINE_CANNOT_REVIEW, block xiii). */
-  t("(thirteen acts were actually driven — the guard before the equality, because two empty sets are "
-  + "equal and prove nothing)", drivenCodes.length, 13);
+  /* MOVED 12 -> 13 on 2026-09-18 by REC-126 (C-32.16 MACHINE_CANNOT_REVIEW, block xiii).
+     MOVED 13 -> 14 on 2026-09-24 by REC-189 (C-32.18 MACHINE_CANNOT_SET_RISK_TIER, block xiv). */
+  t("(fourteen fences were actually driven — the guard before the equality, because two empty sets are "
+  + "equal and prove nothing)", drivenCodes.length, 14);
   t("EVERY MACHINE_CANNOT_* the plane can mint was driven under a COMPLETE payload",
     HARVEST.filter((c) => !drivenCodes.includes(c)), []);
   t("and nothing was driven that the plane does not mint", drivenCodes.filter((c) => !HARVEST.includes(c)), []);

@@ -23,8 +23,10 @@
  *
  * WHAT IT CANNOT SEE. A row written BEFORE this landed at the old default reads 1, because its bytes say 1, and
  * nothing in the record distinguishes a stated 1 from a defaulted one; the row forbids back-filling an
- * assessment nobody made, so none is. No fence refuses a MACHINE credential's promote that writes a determined
- * tier: "only a member's authored act sets 1, 2 or 3" is honoured by the writers, not enforced at promote.
+ * assessment nobody made, so none is. CORRECTED 2026-09-24 by REC-189: this said no fence refused a MACHINE
+ * credential's promote writing a determined tier. One does now — C-32.18 MACHINE_CANNOT_SET_RISK_TIER, in
+ * `promote`'s action block — and `machine-fences.test.mjs` block (xiv) drives it; this suite's member arm is a
+ * signed-in session for that reason.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -124,17 +126,38 @@ console.log("\n--- 2-4. through the ops: the no-tier action, a member's 2, and t
   const get = async (qs) => (await mf.dispatchFetch("http://x/api/?token=mem-d182&" + qs)).json();
   const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 
+  /* CORRECTED 2026-09-24 by REC-189, never exempted: section 3's "a member's authored act sets 2" was driven
+     through `token=mem-d182` — the MEMBER_TOKEN DEPLOY credential, which the control plane stamps `token:member`,
+     a MACHINE identity by REC-46's one predicate. The arm was asserting the ruling's OWN overclaim as its positive:
+     a machine setting 2 read as a member doing so. REC-189's fence (C-32.18) refuses exactly that, so the member's
+     act is now a SIGNED-IN SESSION's, and the writers' no-tier creations stay on the machine credential (they state
+     no tier, which the fence does not refuse). AND THE THROW BELOW WAS VACUOUS: the answer arrives wrapped in
+     `result`, so `r.ok === false` read `undefined` and a refused promote went on as if it had landed — which is
+     how the refusal surfaced as five read-back FAILs rather than one named throw. It now reads through `rP`. */
+  const RUTH = await (async () => {
+    const add = rP(await (await mf.dispatchFetch("http://x/api/?op=memberadd&token=adm-d182",
+      { method: "POST", body: JSON.stringify({ memberId: "ruth", cover: "cover for ruth", role: "admin",
+                                               capabilities: ["contribute"] }) })).json());
+    const en = rP(await (await mf.dispatchFetch("http://x/api/?op=enroll",
+      { method: "POST", body: JSON.stringify({ invite: add.invite, handle: "ruth", password: "ruth-passphrase-1" }) })).json());
+    if (!en?.ok) throw new Error(`enroll ruth: ${JSON.stringify(en)}`);
+    const lg = rP(await (await mf.dispatchFetch("http://x/api/?op=login",
+      { method: "POST", body: JSON.stringify({ role: "member:ruth", password: "ruth-passphrase-1" }) })).json());
+    if (!lg?.token) throw new Error(`login ruth: ${JSON.stringify(lg)}`);
+    return lg.token;
+  })();
+
   let seq = 0;
-  const promoteAction = async (id, tierLines, base = null) => {
+  const promoteAction = async (id, tierLines, base = null, token = "mem-d182") => {
     const text = actionMd(id, tierLines);
-    const r = await post("promote", {
+    const r = rP(await (await mf.dispatchFetch("http://x/api/?op=promote&token=" + token, { method: "POST", body: JSON.stringify({
       bundleId: id, base, snapKey: `20260724T010000Z_d182${String(++seq).padStart(4, "0")}`, author: "member-ruth",
       meta: { object_type: "action", group: "believe-in-oakland", title: "Records request",
               current_state: "planned", created: NOW, last_updated: NOW },
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
       register: [],
-    });
-    if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
+    }) })).json());
+    if (r?.ok !== true) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
     return r;
   };
   const projection = async (id) => rP(await get(`op=projection&id=${encodeURIComponent(id)}`));
@@ -158,7 +181,7 @@ console.log("\n--- 2-4. through the ops: the no-tier action, a member's 2, and t
 
   /* 3. A member's authored act sets 2: a new version of the same action, promoted by the member. */
   const before = await projection(STATED);
-  await promoteAction(STATED, TIER.two, before.bundle_sha);
+  await promoteAction(STATED, TIER.two, before.bundle_sha, RUTH);
   const after = await projection(STATED);
   t("a member's act sets 2, and op=projection reads 2", after.action.risk_tier, 2);
   t("…in the plane's words: file with caution", after.action.risk_tier_words, "file with caution");

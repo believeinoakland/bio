@@ -10435,6 +10435,14 @@ var MACHINE_FENCE_CHECKS = {
     where: "src/store.mjs actionMove > is-machine-move-action",
     translation: "Advancing an action is a decision to reach outside this system, or to declare that reaching out is finished, and either way somebody is answerable for it. The credential that asked here is an automated one, so it can prepare the action and cannot move it. Sign in to move it yourself."
   },
+  /* REC-189 — D-182's ruling on the write side (BOB #21: *"Only a member's authored act sets 1, 2 or 3"*).
+     Refuses a CHANGE of tier by a machine, never a presence: carrying a member's tier forward unchanged,
+     or stating none (undetermined), is not refused. Inside `promote`'s action block, not an act. */
+  MACHINE_CANNOT_SET_RISK_TIER: {
+    check: "C-32.18",
+    where: "src/store.mjs promote > is-machine-set-risk-tier",
+    translation: "A risk tier tells whoever reads this action whether it is safe to file, needs caution, or must not be filed without a lawyer, and somebody has to be answerable for that judgement. The credential that asked here is an automated one: it can carry forward the tier a member set, or leave the tier unstated, and it cannot set or change one. Sign in to state the tier yourself."
+  },
   MACHINE_CANNOT_CORRESPOND: {
     check: "C-32.4",
     where: "src/store.mjs actionCorrespond > is-machine-correspond",
@@ -41284,6 +41292,19 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       const isAction = normalizeType(meta.object_type) === "action";
       if (isAction && docFmW && !pkg.replay) {
+        const nextTier = riskTierState(docFmW.risk_tier);
+        const heldTierMd = cur ? this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId) : null;
+        const heldTierFm = heldTierMd && typeof heldTierMd.content === "string" ? parseFrontmatter(heldTierMd.content).data : null;
+        const heldTier = riskTierState(heldTierFm && typeof heldTierFm === "object" ? heldTierFm.risk_tier : void 0);
+        const tierWho = String(author ?? "").trim();
+        if ((!tierWho || isMachineIdentity(tierWho)) && (nextTier === 1 || nextTier === 2 || nextTier === 3) && nextTier !== heldTier)
+          return {
+            ok: false,
+            reason: "MACHINE_CANNOT_SET_RISK_TIER",
+            risk_tier: nextTier,
+            held: cur ? heldTier : null,
+            detail: (cur ? `this revision states risk_tier ${nextTier} where the version it replaces states ${heldTier}.` : `this creation states risk_tier ${nextTier}.`) + ` A risk tier is a member's assessment of the legal exposure of filing this action, and only a member's authored act sets 1, 2 or 3. A machine credential may carry a member's tier forward unchanged, or leave it unstated (undetermined). Nothing was written.`
+          };
         const af = [];
         actionBasisFindings(docFmW, af);
         const aerrs = af.filter((x) => x.severity === "error");
