@@ -84,6 +84,7 @@ from the old text's rules to these tags is `measurements/M-147.md`, checked by `
 - **W52** · `regionLines` is a property of the MERGED source: touch a governed region and say so in your report (DEC-49).
 - **W53** · `REGISTER_FLOOR` in `bio-plane/scripts/coverage.mjs` has ONE key set: on a conflict, collapse to one and re-read the printed figures (DEC-49).
 - **W54** · `_CHECKS` is a reserved suffix: the DEC-49 guard harvests every `/_CHECKS$/` export as a refusal family (DEC-49).
+- **W81** · A governed refusal is built as a LITERAL, never spread: the DEC-49 guard cannot resolve a verdict inherited through a spread, so a spread refusal reads as a region with no refusal (D-468; BOB #34 2026-09-24 23:51Z).
 
 ## Ids
 

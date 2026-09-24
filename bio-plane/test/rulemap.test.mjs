@@ -37,10 +37,10 @@ const added = (r) => r.missing.filter((m) => !base.has(JSON.stringify(m)));
 console.log("1 — the live map, kickoff and archive");
 {
   /* The corpus is floored: a map that parsed to nothing would pass every arm below for free. */
-  t("the map parses to 80 rule rows and 33 rulings", [rules.length, rulings.length], [80, 33]);
+  t("the map parses to 81 rule rows and 33 rulings", [rules.length, rulings.length], [81, 33]);
   const r = check(live);
   t("the live map is complete", r.missing, []);
-  t("...79 old rules onto 80 lines", [r.oldRules, r.lines], [79, 80]);
+  t("...79 old rules onto 81 lines", [r.oldRules, r.lines], [79, 81]);
 }
 console.log("2 — dropping one mapped line is NAMED");
 {

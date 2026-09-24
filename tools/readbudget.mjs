@@ -44,7 +44,11 @@ export const BUDGET = {
 
 /* A WORD budget for one file, on top of its class's byte budget (M0-194, BOB #34 2026-09-24 22:50Z): WORKER.md, read by
    every worker, was cut to one line per rule at HALF its 3,959 words, 1,979. The ruling set it in words, so it is
-   measured in words (whitespace-separated, as `wc -w` counts), and the byte budget still applies beside it. */
+   measured in words AS `wc -w` COUNTS THEM, the instrument behind the 3,959: a whitespace-separated token is a word only
+   if it holds a printable ASCII character, so a lone `·` or `→` is not one. A plain whitespace split counted 2,004 where
+   `wc -w` counts 1,899 on the same file (M0-194, measured; `wordCount` matches `wc -w` on five files, M-147). The byte
+   budget still applies beside it. */
+export const wordCount = (text) => text.split(/\s+/).filter((w) => /[\x21-\x7e]/.test(w)).length;
 export const WORD_BUDGET = { "docs/development/kickoffs/WORKER.md": 1979 };
 
 /* Files whose cut has landed, by repo-relative path: over budget again is a FAIL, not a WARN. */
@@ -85,7 +89,7 @@ export function check(root = ROOT, { budget = BUDGET, cut = CUT, words = WORD_BU
                                verdict: cut.has(r.file) ? "FAIL" : "WARN" });
     const w = words[r.file];
     if (w !== undefined) {
-      const n = text.split(/\s+/).filter(Boolean).length;
+      const n = wordCount(text);
       if (n > w) over.push({ file: r.file, words: n, budget: w, unit: "words",
                              verdict: cut.has(r.file) ? "FAIL" : "WARN" });
     }

@@ -18,13 +18,17 @@
  * RUN 2026-09-24 by the M0-194 worker on the word budget: `check`'s word test disarmed (`if (n > w)` -> `if (false)`) ->
  * exactly "three words over a budget of 2 are NAMED, in words" and "...and FAIL, the file being CUT" FAIL (20 pass,
  * 2 fail); restored by cp, sha256 30784e3530062b12 and `cmp` identical, 22 pass.
+ * RUN 2026-09-24 by the M0-194 worker on the word COUNTER: `wordCount` put back to a plain whitespace split -> exactly
+ * "a word is counted as `wc -w` counts it…" and "the live WORKER.md is inside its word budget" FAIL (21 pass, 2 fail;
+ * the split read the live file at 2,004 words where `wc -w` reads 1,899); restored by cp, sha256 1acd186890c551a8 and
+ * `cmp` identical, 23 pass.
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { check, readSet, BUDGET, CUT, ROOT, WORD_BUDGET } from "../../tools/readbudget.mjs";
+import { check, readSet, BUDGET, CUT, ROOT, WORD_BUDGET, wordCount } from "../../tools/readbudget.mjs";
 import { plantedCoord, assertPlanted, REPO as PIN_REPO } from "./coordpin.mjs";   /* M0-136: coord read at a PINNED commit */
 
 let pass = 0, fail = 0;
@@ -97,6 +101,7 @@ console.log("6 — M0-194: a WORD budget for one file (BOB #34 2026-09-24 22:50Z
   const o = check(root, { budget: big, cut: new Set([wk]), words: { [wk]: 2 } });
   t("three words over a budget of 2 are NAMED, in words", o.map((x) => [x.file, x.unit, x.words, x.budget]), [[wk, "words", 3, 2]]);
   t("...and FAIL, the file being CUT", o[0]?.verdict, "FAIL");
+  t("a word is counted as `wc -w` counts it: a lone `·` or `→` is not one, `a·b` and `—x` are", wordCount("a · b → c a·b —x"), 5);
   t("the declared word budget is half of 3,959, on WORKER.md", WORD_BUDGET, { "docs/development/kickoffs/WORKER.md": 1979 });
   t("WORKER.md is marked CUT", CUT.has("docs/development/kickoffs/WORKER.md"), true);
   t("the live WORKER.md is inside its word budget", check(ROOT).some((x) => x.file === "docs/development/kickoffs/WORKER.md"), false);
