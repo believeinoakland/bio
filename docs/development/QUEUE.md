@@ -508,7 +508,7 @@ scope: take the `head()` inside `flush()` before the part is written (it already
 accepts-when: a first acquire answers `existed: false` and a second `existed: true`. NEGATIVE CONTROL: move `head()` back after `flush()`, and the first-acquire arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (CONDUCT #19 minted it through the coord minter).
 
-### D-462 · queued — **`agent-worker`'s `STORE_SHAPE` ACCEPTS ANY TOKEN, SO A FLEET RUN CAN NAME A NAMESPACE THE PLANE NOW REFUSES (D-456) AND ONLY LEARN AT THE PLANE.** — owner FLEET.
+### D-462 · running — SPAWNED 2026-09-24 ~01:10Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER D-462 (CONDUCT #19), base origin/main 15b2a4c0 (D-456 on main); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-462 and that session; never conclude queued from the absence alone.
 order: after D-464 (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
 milestone: M0 (the fleet's side of the same guard)
 interface: none — a fleet-side refusal.
