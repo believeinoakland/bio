@@ -232,9 +232,15 @@ const tier2Answer = (sha) => {
 };
 
 const OCR_LINES = ["EXHIBIT A", "Certified true copy", "Office of the City Clerk"];
+/* THE `.md` IS OFF THESE PROVENANCE LABELS ON PURPOSE (M0-165, 2026-09-24). `measured_by` is a FREE STRING
+   (index.mjs' chain contract) naming WHERE a fidelity grade was measured; it is not a path and nothing opens
+   it. But `tools/gates.mjs` reads a unit's code with the estate's one lexer, which KEEPS strings on purpose
+   (D-301: a path is a string), so its basename probe read `"MEASUREMENTS.md …"` here as a read of the ledger
+   and made this suite a MEASUREMENTS reader — selected, and run, for every measurement anyone appends.
+   Do not put it back: `bio-plane/test/statepaths.test.mjs` pins the property and names the file that breaks it. */
 const ocrAnswer = (pages) => ({
   ok: true, engine: "tesseract", version: "5.3.4-fast", cap: "C",
-  measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)", confidence_floor: 0.6,
+  measured_by: "MEASUREMENTS 2026-08-03 (CPDF-9)", confidence_floor: 0.6,
   pages: (Array.isArray(pages) ? pages : []).map((page) => ({
     page,
     regions: OCR_LINES.map((text, i) => ({

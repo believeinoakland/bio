@@ -356,10 +356,28 @@ console.log("\n--- CLAUSE (b): A TRANSCRIPTION NAMES THE MEASUREMENT ITS GRADE R
    is driven at the shape level — the chain carries the reference, the reader
    finds it, and the projection joins on it — and the acquire-path wiring is
    asserted STRUCTURALLY below rather than claimed. */
+/* THE `.md` IS OFF THESE PROVENANCE LABELS ON PURPOSE (M0-165, 2026-09-24). `measured_by` is a FREE STRING
+   (index.mjs' chain contract) naming WHERE a fidelity grade was measured; it is not a path and nothing opens
+   it. But `tools/gates.mjs` reads a unit's code with the estate's one lexer, which KEEPS strings on purpose
+   (D-301: a path is a string), so its basename probe read `"MEASUREMENTS.md …"` here as a read of the ledger
+   and made this suite a MEASUREMENTS reader — selected, and run, for every measurement anyone appends.
+   Do not put it back: `bio-plane/test/statepaths.test.mjs` pins the property and names the file that breaks it.
+   AND HERE IT TOOK MORE THAN DROPPING `.md`, which is a finding about the probe rather than about this suite:
+   these four labels were the BARE basename, and `probesFor` runs TWO probes — the basename as a plain substring
+   (`MEASUREMENTS.md`) and the STEM as a quoted token (`tokenRe`: `["'`/]MEASUREMENTS/?["'`]`). Dropping `.md`
+   defeats the first and walks straight into the second: `"MEASUREMENTS"` alone IS a quoted token. MEASURED —
+   with `.md` merely dropped, the estate went 45 -> 42 units and this suite stayed selected, reason `names
+   "MEASUREMENTS"`. So the undated labels name the ledger in prose instead. The DATED ones below need no such
+   help: a space follows the stem, so the token probe cannot close.
+   This suite is STILL selected for a MEASUREMENTS-only change, and that is a DELIBERATE CLOSURE, not a residue:
+   it really does open `docs/development/SCHEDULER.md` below and assert on its text, so it sits in DOCS' own
+   doc-facing set, and gates.mjs §2's "net" bound hands every doc-facing unit any `docs/` change — prose is
+   never checked more narrowly than DOCS checks it. It was in that set before this item too, verified in a clone
+   of the unchanged tree. What LEFT here is the false claim that this suite READS the measurements ledger. */
 const boundChain = [
-  { step: "pixels", cap: "C", measured_by: "MEASUREMENTS.md", calibration: first.calibration_id },
+  { step: "pixels", cap: "C", measured_by: "the MEASUREMENTS ledger", calibration: first.calibration_id },
   { step: "ocr", engine: "pdfjs", version: "4.2.67", cap: "C",
-    measured_by: "MEASUREMENTS.md", calibration: first.calibration_id },
+    measured_by: "the MEASUREMENTS ledger", calibration: first.calibration_id },
 ];
 t("the chain NAMES its calibration, once, deduped across the steps that share it",
   calibrationsOf(boundChain), [first.calibration_id]);
@@ -382,13 +400,13 @@ console.log("\n--- CLAUSE (d): A WORSE CALIBRATION RAISES AN OBLIGATION AND RE-G
      OTHER   — bound to a calibration of a different engine entirely. */
 const BOUND_SHA = "b".repeat(64), UNBOUND_SHA = "c".repeat(64), OTHER_SHA = "d".repeat(64);
 await promoteReading("INFO-2026-0001-cal", BOUND_SHA, [
-  { step: "pixels", cap: "C", measured_by: "MEASUREMENTS.md", calibration: first.calibration_id },
+  { step: "pixels", cap: "C", measured_by: "the MEASUREMENTS ledger", calibration: first.calibration_id },
   { step: "ocr", engine: "pdfjs", version: "4.2.67", cap: "C",
-    measured_by: "MEASUREMENTS.md", calibration: first.calibration_id }]);
+    measured_by: "the MEASUREMENTS ledger", calibration: first.calibration_id }]);
 await promoteReading("INFO-2026-0002-cal", UNBOUND_SHA, [
-  { step: "pixels", cap: "C", measured_by: "MEASUREMENTS.md 2026-08-03" },
+  { step: "pixels", cap: "C", measured_by: "MEASUREMENTS 2026-08-03" },
   { step: "ocr", engine: "pdfjs", version: "4.2.67", cap: "C",
-    measured_by: "MEASUREMENTS.md 2026-08-03" }]);
+    measured_by: "MEASUREMENTS 2026-08-03" }]);
 await promoteReading("INFO-2026-0003-cal", OTHER_SHA, [
   { step: "ocr", engine: "tesseract", version: "5.3.4", cap: "C", calibration: "CAL-999" }]);
 const planted = await api("op=textprovenance&token=mem-cal");
