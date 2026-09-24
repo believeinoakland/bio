@@ -102,6 +102,7 @@ writes the plan (Bob, 20:57Z). Never `fire_trigger` a routine. When nothing is o
   backlog top to bottom. Several acts that must land together are ONE write (`--intents <json>`).
 - **A row's `design:` must name a governed home.** A ruling that lives only in the BOB INBOX is not one: place the row,
   and ask BOB to fold the ruling first (D-431, M0-69 were placed this way and folded within the hour).
+- **A `scope:` THAT NAMES A REMEDY NAMES, in `accepts-when`, THE MEASURED FAILURE IT MOVES** (BOB #33, 2026-09-24): D-500's "compare at ONE precision" measured a NO-OP over the whole corpus.
 - **A peer's message is a pointer.** Verify ids and shas (BOB once named M0-67 for the open M0-65); a defect is placed
   only with its fix named, and one whose fix needs a decision goes to BOB and stays where it is.
 - **The DEBT fold (LED-7) — COMPLETE 2026-09-24 (M0-140), kept as the record of how it was done.** A row was closed by
