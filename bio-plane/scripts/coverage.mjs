@@ -1468,6 +1468,7 @@ const REGISTER_FLOOR = {
   /* [CONDUCT #16 at batch3's REC-174 merge] 2026-09-23: RE-READ from `--strict` on the COMMITTED merge, exit 0 unpiped: `arms 1828/1820 · classified 287/286 · corpus (suites read) 288/287 · GREW by 8 arm(s)`, `floor 251/250 reproducible · GREW by 1` — REC-174's new suite rec174-supplyfetch.test.mjs. MOVED to the print. */
   /* [CONDUCT #16 at batch5's REC-175 merge] 2026-09-23: RE-READ from `--strict` on the COMMITTED merge, exit 0 unpiped: `arms 1830/1828 · classified 288/287 · corpus (suites read) 289/288 · GREW by 2 arm(s)`, `floor 252/251 reproducible · GREW by 1` — REC-175's suite rec175-digest.test.mjs. MOVED to the print. */
   /* [D-440 worker] 2026-09-23: RE-READ from `--strict` on its COMMITTED merge with origin/main 0e5f7054 (64711f5a), exit 0 unpiped: `arms 1832/1830 · classified 289/288 · corpus (suites read) 290/289 · GREW by 2 arm(s)`, `floor 253/252 reproducible · GREW by 1` — d440-image-part.test.mjs, its two arms (a) nocontainer and (b) liar, both RUN. */
+  /* M0-187 side, kept as history: arms 2129 on its own branch; the c20-batch27 union's figure is re-read from --strict's print. */
   /* D-475 side, kept as history: arms 2100 on its own branch; the c20-batch25 union's figure is re-read from the print. */
   /* M0-178 side, kept as history: arms 2106 on its own branch; the c20-batch25 union's figure is re-read from the print. */
   /* D-491 side, kept as history: arms 2099 on its own branch; the c20-batch25 union's figure is re-read from the print. */
@@ -1574,6 +1575,8 @@ const REGISTER_FLOOR = {
   // [branch record | REC-96 read arms 1134 on its own tree] checkout can see (D-238), so a floor moved then would have been a figure
   // [branch record | REC-96 read arms 1134 on its own tree] nobody else reproduces. CONDUCT re-reads this on the MERGED tree. 
   // [D-430] 2026-09-18: MOVED 1443 -> 1447, classified 245 -> 246, corpus 246 -> 247, run 208 -> 209, from this item's own `--strict` print on its COMMITTED MERGE with origin/main (REC-143 in) `86cc1111` (`arms 1447/1443 · classified 246/245 · corpus (suites read) 247/246 · GREW by 4`, `floor 209/208 reproducible`); its earlier reads (1434 at `1b096956`, 1441 at `0b5d1ff2`) are replaced, never added. One new suite, `pipeline-readers.test.mjs`, declaring four arms (NC1–NC4). Nothing FELL.
+  /* M0-187 side, kept as history: classified 345 on its own branch; the c20-batch27 union's figure is re-read from --strict's print. */
+  /* M0-187 side, kept as history: corpus 346 on its own branch; the c20-batch27 union's figure is re-read from --strict's print. */
   /* D-475 side, kept as history: classified 343 on its own branch; the c20-batch25 union's figure is re-read from the print. */
   /* M0-178 side, kept as history: classified 343 on its own branch; the c20-batch25 union's figure is re-read from the print. */
   /* M0-169 side, kept as history: classified 343 on its own branch; the c20-batch25 union's figure is re-read from the print. */
@@ -1607,6 +1610,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
+  /* M0-187 side, kept as history: run 308 on its own branch; the c20-batch27 union's figure is re-read from --strict's print. */
   /* D-475 side, kept as history: run 305 on its own branch; the c20-batch25 union's figure is re-read from the print. */
   /* M0-178 side, kept as history: run 305 on its own branch; the c20-batch25 union's figure is re-read from the print. */
   /* M0-169 side, kept as history: run 305 on its own branch; the c20-batch25 union's figure is re-read from the print. */
