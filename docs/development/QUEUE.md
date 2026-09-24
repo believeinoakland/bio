@@ -252,7 +252,7 @@ accepts-when: a stale-version disposition is refused DEFINITION_MOVED and a curr
 note: 2026-09-24 05:22Z (CONDUCT #20, integ1b report 2): the READ half is built (a disposition records the version it judged; applies/applies_because say whether it still governs); this row is the WRITE half only.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs REC`).
 
-### D-500 · queued — **THE OBSERVATION-LOG WATERMARK CLASSIFIES A RECORD DIFFERENTLY FROM RUN TO RUN: `#hiddenSets`' watermark read and `#contentAxisTally` compare MIN(at) with `register.registered` at different precisions (one-second against milliseconds), so a same-second pair flips class intermittently.** D-486's narrowed trace. BOB #32 RULED (2026-09-24 05:04Z): the watermark STAYS VIEWER-INDEPENDENT (never taken through the caller's sight, never narrowed per viewer); a hidden run's reclassification is the accepted cost ONLY IF DETERMINISTIC. — owner RECORD.
+### D-500 · running — **THE OBSERVATION-LOG WATERMARK CLASSIFIES A RECORD DIFFERENTLY FROM RUN TO RUN: `#hiddenSets`' watermark read and `#contentAxisTally` compare MIN(at) with `register.registered` at different precisions (one-second against milliseconds), so a same-second pair flips class intermittently.** D-486's narrowed trace. BOB #32 RULED (2026-09-24 05:04Z): the watermark STAYS VIEWER-INDEPENDENT (never taken through the caller's sight, never narrowed per viewer); a hidden run's reclassification is the accepted cost ONLY IF DETERMINISTIC. — owner RECORD.
 order: after REC-211, a correction to D-486, run once c20-batch14 lands (SCHEDULER #18, 2026-09-24)
 milestone: M8
 interface: none.
@@ -262,7 +262,7 @@ scope: compare at ONE precision (milliseconds) in both readers; fold the rule in
 accepts-when: a same-second pair classifies identically on every run, pinned by an arm; §6 states the rule. NEGATIVE CONTROL: restore the mixed precision and the same-second arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-501 · queued — **A PAGE'S TIER-2 AWARD COMPARES RAW `text.length`, so a newline policy moves its margin (129 → 77 in D-481's measurement) with no glyph changing hands.** Found by D-481's worker (M-133). — owner CONTENT-PDF.
+### D-501 · running — **A PAGE'S TIER-2 AWARD COMPARES RAW `text.length`, so a newline policy moves its margin (129 → 77 in D-481's measurement) with no glyph changing hands.** Found by D-481's worker (M-133). — owner CONTENT-PDF.
 order: after D-500, with the extraction corrections (D-481 rides the next train) (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:21Z)
 milestone: M2
 interface: none.
@@ -272,7 +272,7 @@ scope: compare non-whitespace characters (or decoded code points) in the tier-2 
 accepts-when: the same page's award is unchanged under two newline policies. NEGATIVE CONTROL: restore raw length and the newline arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-502 · queued — **TWO RUNS ON ONE BASELINE SEPARATED BY A HORIZONTAL JUMP NOW CONCATENATE (D-481's stated cost: agenda glue tokens 5 → 13, 0.32%), because glyph advance widths are not read.** Found by D-481's worker (M-133). — owner CONTENT-PDF.
+### D-502 · running — **TWO RUNS ON ONE BASELINE SEPARATED BY A HORIZONTAL JUMP NOW CONCATENATE (D-481's stated cost: agenda glue tokens 5 → 13, 0.32%), because glyph advance widths are not read.** Found by D-481's worker (M-133). — owner CONTENT-PDF.
 order: after D-501, the same reader (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:21Z)
 milestone: M2
 interface: none.
@@ -282,7 +282,7 @@ scope: parse /Widths + /FirstChar and /W + /DW in `loadFont`, track the pen, set
 accepts-when: the agenda sample's glue tokens return to ≤ 5 without losing D-481's words/page. NEGATIVE CONTROL: ignore widths and the glue arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### M0-164 · queued — **`coord.mjs write --status <ID> <state> --note …` REPLACES A ROW'S HEADLINE, so every flip note overwrites the defect it names: all 15 rows CONDUCT #20 flipped on 2026-09-24 lost their headlines (restored by SCHEDULER #18 from f8fd4a77^/0cf9783c^).** Found by M0-158's worker. — owner M0.
+### M0-164 · running — **`coord.mjs write --status <ID> <state> --note …` REPLACES A ROW'S HEADLINE, so every flip note overwrites the defect it names: all 15 rows CONDUCT #20 flipped on 2026-09-24 lost their headlines (restored by SCHEDULER #18 from f8fd4a77^/0cf9783c^).** Found by M0-158's worker. — owner M0.
 order: at the head of the M0 rows: every status write corrupts the plan's own record (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z)
 milestone: M0
 interface: none.
