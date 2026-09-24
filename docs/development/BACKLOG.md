@@ -23,16 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-192 · queued — **`d470-catalog-census.control.mjs` QUOTES `CATALOG_VERSION` AS A LITERAL NEEDLE, so every catalogue bump silently disarms its arm (d), MOVE THE VERSION: line 67 holds `'export const CATALOG_VERSION = "1.28.0";'`, hand-moved at c20-batch25 after it sat at 1.24.0 through four bumps (it would have thrown NOT ARMED).** Found by CONDUCT #20 (22:09Z). — owner M0.
-order: after D-544, AHEAD of product: a control disarmed by an unrelated bump is a false gate result, and it recurs on every catalogue move (Bob's 17:41Z rule). Not merged with D-544: a different file and a different fix (SCHEDULER #20, 2026-09-24)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` "The negative-control register" (a control breaks only the thing, and must arm on the tree it runs on).
-depends-on: none.
-scope: read the needle from `bio-plane/src/gate.mjs`'s own `CATALOG_VERSION` line at run time, never a literal; sweep the other `*.control.mjs` for a quoted version constant and state each.
-accepts-when: with the constant bumped to a new value, arm (d) still arms and fails as designed (the measured failure it moves: NOT ARMED after a bump). NEGATIVE CONTROL: restore the literal needle, bump the constant, and the control reports NOT ARMED by name.
-added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
-
 ### D-528 · queued — **THE QUEUE TELLS EACH NAMED RECIPIENT OF A BIAS-DEBT OBLIGATION "This is not addressed to anybody": `app.html` `queueAssigneeHtml` reads `assignee == null` and never `recipients`, so the surface states something it can see is false.** Found by UI-93's worker (id minted by it). The DELEGATION RECORD (D-86) → UI on coord `CLAIMS.md` is dischargeable by this row. — owner UI.
 order: after D-512, with the corrections: a surface stating a falsehood about the record is worse than a missing feature (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:06Z)
 milestone: M8
@@ -273,6 +263,16 @@ depends-on: none.
 scope: capture `(\d+(?:\.\d+)*[A-Za-z]?)`, compute depth from the dotted part, and escape the letter in `sectionText`.
 accepts-when: rowsubstrate reads REC-213's `§6A` as §6A and the three false notes are gone (the measured failure it moves: three rows noted "substrate not evident"). NEGATIVE CONTROL: restore the digits-only capture and the §6A arm reads §6, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by REC-213's worker).
+
+### M0-193 · queued — **`bio-plane/test/surfacing-run.mjs` HAS TWO LATENT FIXTURE DEFECTS: (F2) `openRun` derives `snapKey` from the whole SECOND (`${now.replace(/[-:]/g, "")}_5171f1a0`), so two fixture projects opened in one second share a snapKey; (F3) the wrapper clears its run cache on ANY whole-store `op=purge` attempt, including one REFUSED for a missing `confirm`.** Found by M0-187's worker (via CONDUCT #20 22:15Z). Harmless today. — owner RECORD (the shared test helper).
+order: after D-541, with the process rows behind the product rows: latent, and neither has produced a false gate result (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none (test code).
+design: `docs/development/VERIFICATION.md` (a fixture's state follows what the plane answered, never what was asked).
+depends-on: M0-187 (its per-run `nth`).
+scope: append M0-187's per-run `nth` to `snapKey`; clear the run cache only when the purge's answer says the purge happened.
+accepts-when: two fixture projects opened in one second get distinct snapKeys, and a refused purge leaves the cache (the measured failure it moves: a shared key and a cache cleared by a refusal, each driven by a planted arm). NEGATIVE CONTROL: drop `nth` from the key and clear on any attempt, and both arms fail by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

@@ -75,7 +75,8 @@ scope: show a revision's basis beside its version, and on a disposition the vers
 accepts-when: both render against a real-plane suite. NEGATIVE CONTROL: hide `not recorded` and its arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs UI`).
 
-### M0-187 · running — **`surfacing-run.mjs` CANNOT SUPPLY A SURFACING RUN FOR A SECOND DEPLOY TOKEN IN ONE STORE: `openRun` creates its fixture project BY TITLE, so the second token is refused NAME_TAKEN, the wrapper's `.catch(() => null)` swallows it, and the suite reads SURFACE_NO_RUN with the real cause unnamed.** Found by D-511's worker (F1). — owner RECORD (the shared test helper).
+### M0-187 · integrated — **`surfacing-run.mjs` CANNOT SUPPLY A SURFACING RUN FOR A SECOND DEPLOY TOKEN IN ONE STORE: `openRun` creates its fixture project BY TITLE, so the second token is refused NAME_TAKEN, the wrapper's `.catch(() => null)` swallows it, and the suite reads SURFACE_NO_RUN with the real cause unnamed.** Found by D-511's worker (F1). — owner RECORD (the shared test helper).
+status: integrated — integrated — flipped 2026-09-24 ~22:20Z by SCHEDULER #20 on CONDUCT #20's verification (22:15Z): land/worker/M0-187 @ 3ef3c6b9, whole battery 355/355 · 20403, control 7 arms AS DECLARED re-run after its rebase; rides c20-batch27.
 order: after M0-181, AHEAD of the product rows: a fixture that hides the cause of a red costs a diagnosis round in every suite that imports it (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:47Z)
 milestone: M0
 interface: none.
@@ -375,6 +376,16 @@ depends-on: D-511.
 scope: generalise `migrationReplayOf` to every replayed promotion; keep D-511's class test as a second condition.
 accepts-when: a replay whose capture does not list the bundle and SHA-256 is refused by name; a verified one is admitted. NEGATIVE CONTROL: skip the verification and the unverified arm is admitted, failing by name. AND INVERT §8 arm (δ), which D-511 pinned as the gap (admin-class replay still caller-asserted; via CONDUCT #20 19:47Z).
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
+
+### M0-192 · queued — **`d470-catalog-census.control.mjs` QUOTES `CATALOG_VERSION` AS A LITERAL NEEDLE, so every catalogue bump silently disarms its arm (d), MOVE THE VERSION: line 67 holds `'export const CATALOG_VERSION = "1.28.0";'`, hand-moved at c20-batch25 after it sat at 1.24.0 through four bumps (it would have thrown NOT ARMED).** Found by CONDUCT #20 (22:09Z). — owner M0.
+order: after D-544, AHEAD of product: a control disarmed by an unrelated bump is a false gate result, and it recurs on every catalogue move (Bob's 17:41Z rule). Not merged with D-544: a different file and a different fix (SCHEDULER #20, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` "The negative-control register" (a control breaks only the thing, and must arm on the tree it runs on).
+depends-on: none.
+scope: read the needle from `bio-plane/src/gate.mjs`'s own `CATALOG_VERSION` line at run time, never a literal; sweep the other `*.control.mjs` for a quoted version constant and state each.
+accepts-when: with the constant bumped to a new value, arm (d) still arms and fails as designed (the measured failure it moves: NOT ARMED after a bump). NEGATIVE CONTROL: restore the literal needle, bump the constant, and the control reports NOT ARMED by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
