@@ -25,6 +25,10 @@
    (c) 19 pass, 4 FAIL — exactly block 4's four post-publication rows (participant, recipient, re-authored bytes,
        the stale-then-fresh ratify); blocks 1-3, 5 and 6 GREEN, as declared.
    ALL THREE AS DECLARED, with (a)'s two extra rows stated above.
+   THE SUBJECT CHANGED AFTER THE CONTROL: the gate's `bounds.test.mjs` refused a SQL literal (`LIMIT 1`) inside
+   `acknowledgeStatement` — this item's own read of the draft's link — so that read moved to `#draftLinkOf`. Arm (b)
+   was RE-RUN ALONE on the changed `src/store.mjs` (restored `sha256sum -c` OK e52d8160…0786c9, `cmp` identical,
+   3,337,185 bytes): 8 pass, 15 FAIL, the same fifteen rows, block 2 GREEN — the control still bites.
 
    REC-217 / BIO_Publication_v0_1.md §3 rules 11 and 13 — BOB #33 RULED 2026-09-24 19:14Z: `op=publish` NAMES THE
    DRAFT IT PUBLISHES (`draft=`, optional, additive), and AT THAT ACT the readings taken through that draft BIND to

@@ -39078,6 +39078,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     const top = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, named);
     return { caseId: named, edition: (top && top.m != null ? Number(top.m) : 0) + 1 };
   }
+  /* REC-217 / BIO_Publication_v0_1.md §3 rule 13 (BOB #33): THE CASE EDITION A PUBLISHER NAMED THIS DRAFT FOR, read
+     off the act's own record (`case_documents.draft_id`, with the act's `authored_by` and `authored_at` as who and
+     when), signed or not — or null where no publisher has named it. One row at most by construction: `op=publish`
+     refuses a second binding of one draft (PUBLISH_DRAFT_ALREADY_BOUND), so `LIMIT 1` states the key, not a cut. */
+  #draftLinkOf(draftId) {
+    return this.#one(`SELECT case_id, edition, authored_by, authored_at, sig_armored FROM case_documents
+                      WHERE draft_id=? LIMIT 1`, String(draftId ?? ""));
+  }
   static #caseIdentitySentence(caseId, edition) {
     return caseId ? `the next edition (${edition}) of ${caseId}` : "a new case, whose identity is not yet allocated \u2014 a case id is minted only by publication";
   }
@@ -39720,8 +39728,7 @@ case_project: ${project}
       );
     const docs = found.filter((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === project);
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
-    const linkedTo = ident.caseId == null && draftId ? this.#one(`SELECT case_id, edition, authored_by, authored_at, sig_armored FROM case_documents
-                   WHERE draft_id=? LIMIT 1`, draftId) : null;
+    const linkedTo = ident.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
     return {
       ok: true,
       existed: !!same,

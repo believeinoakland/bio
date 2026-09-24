@@ -10034,6 +10034,15 @@ export class Store extends DurableObject {
     return { caseId: named, edition: (top && top.m != null ? Number(top.m) : 0) + 1 };
   }
 
+  /* REC-217 / BIO_Publication_v0_1.md §3 rule 13 (BOB #33): THE CASE EDITION A PUBLISHER NAMED THIS DRAFT FOR, read
+     off the act's own record (`case_documents.draft_id`, with the act's `authored_by` and `authored_at` as who and
+     when), signed or not — or null where no publisher has named it. One row at most by construction: `op=publish`
+     refuses a second binding of one draft (PUBLISH_DRAFT_ALREADY_BOUND), so `LIMIT 1` states the key, not a cut. */
+  #draftLinkOf(draftId) {
+    return this.#one(`SELECT case_id, edition, authored_by, authored_at, sig_armored FROM case_documents
+                      WHERE draft_id=? LIMIT 1`, String(draftId ?? ""));
+  }
+
   static #caseIdentitySentence(caseId, edition) {
     return caseId
       ? `the next edition (${edition}) of ${caseId}`
@@ -10694,10 +10703,7 @@ export class Store extends DurableObject {
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
     /* REC-217: WHICH CASE, IF ANY, A PUBLISHER HAS NAMED THIS DRAFT FOR — read off the act's own record,
        signed or not, so the answer below states the link instead of REC-194's "bound to no case". */
-    const linkedTo = ident.caseId == null && draftId
-      ? this.#one(`SELECT case_id, edition, authored_by, authored_at, sig_armored FROM case_documents
-                   WHERE draft_id=? LIMIT 1`, draftId)
-      : null;
+    const linkedTo = ident.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
     return { ok: true, existed: !!same,
              acknowledgement: { kind, by, recipient, grant_id: grantId, at: when, project,
                                 case_id: ident.caseId ?? null, edition: ident.edition, draft_id: draftId,
