@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec177-allowance.test.mjs",
+ "inputHash": "06b7145d8bc7721800ed5b2d33cd10584f33eb5c569898f1d9a9f4e13ad8d674",
+ "verdict": "PASS",
+ "run": "d9bb586facdcc2ed71f5f00d4d52e7831ccad717.1790287845047.1676.json",
+ "tree": "d9bb586facdcc2ed71f5f00d4d52e7831ccad717",
+ "head": "05857da890e8cd3d535af8ad61c8d86c2e91bc3f",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 137,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "fc9d741e-87ea-5045-8551-f5105c32033c",
+ "at": "2026-09-24T22:10:45.061Z"
+}
