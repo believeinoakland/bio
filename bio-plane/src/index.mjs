@@ -10855,11 +10855,17 @@ export default {
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* REC-195 / D-149: WHO PROPOSED AN ACTION'S GOVERNING LAWS, stamped on the line above for its reason
-       exactly. Any credential may propose and the answer LABELS what it stamped (machine work or a member's),
-       so the only obligation here is NAMING — and naming the KEY that proposed, never the principal a key was
-       minted for, which would put a machine's citations under a person's id. A caller-supplied `proposer` is
-       overwritten rather than honoured: the label is the whole product and a label a caller can write is not
-       one. */
+       exactly. Any credential may propose — the plane LABELS a proposal rather than fencing it — so the only
+       obligation here is NAMING: a session stamps its signed-in id, a machine stamps `class:<cls>`, and the
+       `ai` class stamps its tokenId beside its class, so a proposal stays attributable to the exact key that
+       proposed it. Never the principal a key was minted for, which would put a machine's citations under
+       somebody else's id. A caller-supplied `proposer` is overwritten rather than honoured: the label is the
+       whole product and a label a caller can write is not one.
+       THE PROSE HERE DELIBERATELY CLAIMS NO PERSON-ONLY CONSTRAINT, and that is not style:
+       `identity-claims.mjs` reads a stamp site's own comment for a claim that only a signed-in person may
+       write the field, and grades it a DEFECT where nothing refuses a machine identity. Nothing refuses one
+       here BY DESIGN — D-149 says the machine MAY propose — so a comment claiming otherwise would be the
+       instrument reading this site correctly. The fence is one op up, at the act that SETS the list. */
     if (op === "actionlawspropose")
       inner.searchParams.set("proposer",
         viaSession ? sessMember

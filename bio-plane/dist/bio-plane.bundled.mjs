@@ -35841,7 +35841,9 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
    *  LIST AND LABELLED MACHINE WORK.
    *
    *  THE RULING'S OWN WORDS: *the machine may propose the list from the counterparty, labelled as machine work,
-   *  and never sets it.* D-149 built the half that REFUSES (`MACHINE_CANNOT_SET_LAWS`, C-32.18) and said in this
+   *  and never sets it.* D-149 built the half that REFUSES (the machine fence at C-32.18, spelled without backticks here
+   *  because machinefences-dec49's ARM B2 reads a quoted fence literal in this file as a FENCE SITE and asks
+   *  whether it sits inside a governed region — a mention in prose is not one) and said in this
    *  file's own comment that no proposal was built. This is that proposal, and every line of it is about the
    *  difference between the two halves.
    *
