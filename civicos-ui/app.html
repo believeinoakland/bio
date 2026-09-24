@@ -19863,10 +19863,28 @@ function pubAuthors(f){
 /* PER CASE: a LIST and never a merge. The completeness assertion has one author
    — it is the case's claim — and every member finding has its own attestor. A
    case with two attestors has two, and saying "the author" would be composing
-   two people into one the same way a case-level letter composes two strengths. */
+   two people into one the same way a case-level letter composes two strengths.
+
+   UI-103 / BIO_Publication_v0_1.md §3 rule 13 — AND THE LIST NOW HAS A THIRD KIND
+   OF ENTRY, BECAUSE THE CASE HAS A THIRD ACT. `completeness.author` PREPARED AND
+   PUBLISHED the case; `completeness.statement_by` WROTE its exclusion statement
+   (REC-212, IC-272; BOB #32 ruled (b): *two acts, two names, never conflated*).
+   The label read "(completeness, for the case)", which was true of the block and
+   said nothing about which act it named — so on a case one member wrote and
+   another published, a reader of this line met one name where the record holds
+   two. Each entry now names ITS act in words, and the writer is added as its own
+   entry, which is this function's own rule (a list, never a merge) applied to the
+   split rather than a new rule. The writer is listed only when the record NAMES
+   one and it is not already the publisher: a stated UNDETERMINED belongs beside
+   the statement, in the plane's own sentence (`pubStatementWriterHtml`), and never
+   as a name-shaped absence in a list of names. */
 function pubCaseAuthors(c){
   const names = [];
-  if(c && c.completeness && c.completeness.author) names.push(String(c.completeness.author) + " (completeness, for the case)");
+  const cm = (c && c.completeness) || null;
+  const pub = (cm && typeof cm.author === "string" && cm.author.trim()) ? cm.author.trim() : null;
+  const by = (cm && typeof cm.statement_by === "string" && cm.statement_by.trim()) ? cm.statement_by.trim() : null;
+  if(pub) names.push(pub + " (prepared and published the case)");
+  if(by && by !== pub) names.push(by + " (wrote the statement of what this case leaves out)");
   for(const f of (c && c.findings) || []) if(f.attestor && f.attestor.member) names.push(String(f.attestor.member) + " (attested " + String(f.bundle_id) + ")");
   return names.length ? names.join(", ") : "not named in the published bytes";
 }
@@ -19999,6 +20017,72 @@ function pubAckRowHtml(a){
     : (a && a.by) ? '<span class="mono">' + esc(a.by) + '</span>' : 'unnamed in the record';
   return '<li data-pub-ack data-ack-kind="' + esc((a && a.kind) || "") + '">' + who
     + ' &mdash; ' + kind + ', on <span class="mono">' + esc((a && a.at) || "an unrecorded date") + '</span>.</li>';
+}
+/* UI-103 / BIO_Publication_v0_1.md §3 rule 13 — WHO WROTE THE SENTENCE, AND WHO PUBLISHED THE CASE.
+   TWO ACTS, TWO NAMES (REC-212, IC-272; BOB #32 ruled (b), 2026-09-24, and BOB #33 ruled REC-212's
+   three determinations the same day).
+
+   THE DEFECT THIS REPLACES, stated so the correction is not mistaken for a rewording. Page 2 read
+   `Written by ${c.completeness.author}` under a note promising "the member who wrote it" — and
+   `completeness.author` is the member who PREPARED AND PUBLISHED the case, which rule 13 rules is not
+   the same act as writing what the case leaves out. On a case an editor wrote and an owner published,
+   a credential-free published page told a stranger that the publisher wrote a sentence they did not
+   write. That is the record claiming more than it can support, in the one place a stranger reads.
+
+   THE DATE WENT WITH IT, and it is the second half of the same defect rather than a tidy-up:
+   `completeness.at` is stamped at the PUBLISHING act (`op=publish` writes `author: who, at: when`
+   together), so "Written by X on <at>" dated the writing by the publishing. The date is kept and is
+   now printed against the act it measures.
+
+   THREE STATES AND NOT TWO, which is UI-89's rule for the acknowledgement list arriving at the name
+   beside it: `op=publishedcase` serves `completeness.statement_by` — a NAME, or `null` — together with
+   `completeness.statement_by_stated`, ONE SENTENCE the plane committed from the signed bytes at
+   ratification. That sentence is what tells the two nulls apart: a document that SAYS it could not
+   establish the writer, and a document authored before rule 13 that says NOTHING about one. Both are
+   `null` and they are different facts, so the sentence is rendered AS THE PLANE WROTE IT (DEC-8: the
+   plane's words are not paraphrased, translated or blanked here) rather than reduced to a word this
+   surface chose.
+
+   AND A FOURTH STATE THIS SURFACE CAN MEET AND THE PLANE CANNOT: a case whose published record was
+   committed before `statement_by_stated` existed carries NO such key, so there is no plane sentence to
+   render. That is not the plane's stated undetermined and is not rendered as it — it is this record
+   having been written before the distinction, said in those terms. In none of the three is a name read
+   off the publisher: an absent writer is stated, never back-filled (§3 rule 13; CLAUDE.md §4). */
+function pubStatementWriterHtml(c){
+  /* Bytes that are not a member of any published case carry no case completeness assertion at all —
+     the page says so above, and no authorship sentence is invented for them either. */
+  if(!pubCaseId(c) || !(c && c.completeness)) return "";
+  const cm = c.completeness;
+  const pub = (typeof cm.author === "string" && cm.author.trim()) ? cm.author.trim() : null;
+  const by = (typeof cm.statement_by === "string" && cm.statement_by.trim()) ? cm.statement_by.trim() : null;
+  /* `hasOwnProperty` and not truthiness, for the plane's own reason at the committer: a record that
+     SAYS undetermined and one that never held the key are two facts, and testing for truth would make
+     the second read as the first. */
+  const said = Object.prototype.hasOwnProperty.call(cm, "statement_by_stated")
+    && typeof cm.statement_by_stated === "string" && cm.statement_by_stated.trim()
+      ? cm.statement_by_stated.trim() : null;
+  const state = !said ? "unstated" : (by ? "named" : "undetermined");
+  const published = pub
+    ? esc(pub) + " prepared and published this case"
+      + (cm.at ? ", on <span class=\"mono\">" + esc(String(cm.at)) + "</span>" : ", and the bytes carry no date for the act")
+      + "."
+    : "The published bytes do not name who prepared and published this case, and no name is invented for it here.";
+  const written = state === "named"
+    ? "<b>" + esc(by) + "</b> wrote it. " + esc(said)
+    : state === "undetermined"
+      ? esc(said)
+      : "These published bytes say nothing about who wrote it. This case's published record was written "
+        + "before the record told the statement's writer apart from the case's publisher, so the question "
+        + "was never put to it — which is the absence of a record, and not a record of "
+        + (pub ? esc(pub) : "whoever published the case") + " having written the sentence. No name is read "
+        + "off the publisher here.";
+  return '<h2>Who wrote this, and who published it</h2>'
+    + '<p class="subj-note">Writing the sentence above and preparing and publishing this case are two '
+    + 'different acts. One member may have done both, and on this case that is a fact about this case '
+    + 'rather than the way it works &mdash; so each act is named for itself, and neither name is read off '
+    + 'the other.</p>'
+    + '<div class="pub-excl" data-pub-published-by="' + (pub ? "named" : "unnamed") + '">' + published + '</div>'
+    + '<div class="pub-excl" data-pub-writer="' + state + '">' + written + '</div>';
 }
 function pubStatementAcksHtml(c){
   /* Bytes that are not a member of any published case carry no case completeness
@@ -21025,9 +21109,9 @@ function pubCaseHtml(c, floors){
      (d)), which is the altitude C-21.1 checks it at. */
   const p2 = pubPage(c, floors, null,
     `<h2>What this case excludes</h2>
-     <p class="subj-note">Printed verbatim from the signed bytes, with the member who wrote it and the date it was written. It is the CASE's assertion, made once for this edition, and not a claim any one finding makes on its own.
-       Written by ${esc((c.completeness && c.completeness.author) || "an unnamed member")} on ${esc((c.completeness && c.completeness.at) || "an unrecorded date")}.</p>
+     <p class="subj-note">Printed verbatim from the signed bytes. It is the CASE's assertion, made once for this edition, and not a claim any one finding makes on its own. Who wrote it, and who prepared and published the case, are said below &mdash; two acts, named apart (UI-103, §3 rule 13).</p>
      <div class="pub-excl">${esc((c.completeness && c.completeness.statement) || (pubCaseId(c) ? "The published bytes carry no completeness statement for this case." : "These bytes are not a member of any published case and carry no case completeness assertion."))}</div>
+     ${pubStatementWriterHtml(c)}
      <p class="subj-note">Position on putting this case to its subject: ${esc((c.completeness && c.completeness.subject_position) || "not stated")}. ${esc((c.completeness && c.completeness.subject_justification) || "")}</p>
      ${pubStatementAcksHtml(c)}`);
 
