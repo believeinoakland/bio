@@ -373,9 +373,15 @@ section("coverage — the hand-fed half, and the walk that audits it (M0-43)");
      STANDARD stays here; the half about the live row is `coord.mjs`' ledger check LC-undecided-route, which every
      coord write runs before its push (so a write that archives D-388 while the standard still routes to it is
      REFUSED) and plancheck runs against the coord view. */
-  t("the undecided set is ROUTED to an entry somebody drains, not a sentence in a report — the standard names it, and "
-  + "the live row is held by the coord ledger check LC-undecided-route",
-    /D-388/.test(std) && /await arm\("LC-undecided-route"/.test(readFileSync(join(ROOT, "tools/coord.mjs"), "utf8")), true);
+  /* CORRECTED 2026-09-24 by c19-unionfix (CONDUCT #19, on SCHEDULER #17's finding), never deleted: this pinned that the
+     standard ROUTED its undecided set to D-388. BOB #32 classified every undecided file (CORPUS-STANDARD §6,
+     folds-0924b) and the table is EMPTY, so there is no set left to route: the old assertion held of a hole that has
+     been drained. What it guarded still holds and is asserted instead: UNDECIDED is empty, and the coord ledger check
+     LC-undecided-route fails a row that arrives there. */
+  t("the undecided set is DRAINED — no row is left UNDECIDED, and the coord ledger check LC-undecided-route fails one "
+  + "that arrives, so a file is classified rather than parked",
+    [cov.undecidedRows.length, /await arm\("LC-undecided-route"/.test(readFileSync(join(ROOT, "tools/coord.mjs"), "utf8"))],
+    [0, true]);
 
   // 6. the mechanism is in the loop the readers actually run
   const pc = readFileSync(join(ROOT, "tools/plancheck.mjs"), "utf8");
