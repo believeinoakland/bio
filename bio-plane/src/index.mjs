@@ -108,8 +108,8 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 /* D-64: the render arm's pure half and its renderer seam. */
-import { RENDER_DEFAULTS, RENDERED_METHOD, renderAllowanceMs, renderBlock, renderedAuthority,
-         rendererFor } from "./render.mjs";
+import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, renderAllowanceMs, renderBlock,
+         renderedAuthority, rendererFor } from "./render.mjs";
 /* COFF-1 (I7): the FORMAT registry is the ONLY format dispatch in this file.
    pdfstructure.mjs is no longer imported here — it is the registry's pdf
    entry, reached through getFormat("pdf").structure with byte-identical
@@ -8962,8 +8962,13 @@ export default {
              * the content. */
           provenance_chain: [{
             who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
+            /* D-499 / BOB #32: a render whose wait fired on its TIMEOUT is NEVER
+               PRESENTED AS THE WHOLE PAGE. The qualification is DERIVED from the
+               block by `completenessReading`, never retyped here: a second copy
+               of the sentence would agree with the record for free and drift from
+               it for free. The grade and the method above are untouched. */
             asserts: renderRecorded
-              ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)`
+              ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)${completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : ""}`
               : `these bytes were served for ${locator} at ${retrieved}`,
             evidence: renderRecorded
               ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment"

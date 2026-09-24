@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: re-run with `node test/nc-d64.mjs` (one arm: `node test/nc-d64.mjs <arm>`). Run 2026-09-24 on base origin/main 15b2a4c0 plus this item, SIX rows — four arms each armed ALONE, a baseline first and last — each file copied to a UNIQUELY-NAMED per-arm pristine copy inside this worktree, every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (4 of 4 MATCH/IDENTICAL). BASELINE 61 pass 0 fail; BASELINE-LAST 61/0 (re-run after the `render: false` correction, I4 and the C-number pin; the first run, at 59, read every arm identically). (1) `determined` — THE ROW'S CONTROL — force `determined` on a page drawing data from a second origin (renderedAuthority stops naming foreign data origins): DECLARED red on B1 by name, B2-B4 and E1, nothing else; ACTUAL 56/5 failing exactly B1 B2 B3 B4 E1, AS DECLARED. (2) `emptyscripts` — a script set nobody recorded read as `[]` (none ran): DECLARED D1 D2 D4; ACTUAL 58/3 D1 D2 D4, AS DECLARED (D3, the stated gap, is written by another line and stays green). (3) `shellprimary` — the shell kept as the PRIMARY (the swap to the rendered sha removed): DECLARED A2 A3 A4; ACTUAL 58/3 A2 A3 A4, AS DECLARED — A7/A8 stay green because both artifacts are still stored; only the primary moved, which is exactly what those three read. (4) `overstrict` — OVER-STRICTNESS — the host's own data read as foreign: DECLARED A16 alone (a correct page refused determination); ACTUAL 60/1 A16, AS DECLARED. */
+/* NEGATIVE CONTROL: re-run with `node test/nc-d64.mjs` (one arm: `node test/nc-d64.mjs <arm>`). RE-RUN IN FULL 2026-09-24 for D-499 on base origin/main 58293bf3 plus this item, EIGHT rows — six arms each armed ALONE, a baseline first and last — each file copied to a UNIQUELY-NAMED per-arm pristine copy OUTSIDE this worktree (corrected by D-499, BOB #32's scratch ruling), every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (6 of 6 MATCH/IDENTICAL, 19715 and 802628 bytes). BASELINE 76 pass 0 fail; BASELINE-LAST 76/0. (1) `determined` — D-64's control — force `determined` on a page drawing data from a second origin: DECLARED B1 by name, B2-B4, E1; ACTUAL 71/5 B1 B2 B3 B4 E1, AS DECLARED. (2) `emptyscripts` — a script set nobody recorded read as `[]`: DECLARED D1 D2 D4; ACTUAL 73/3, AS DECLARED. (3) `shellprimary` — the shell kept as the PRIMARY: DECLARED A2 A3 A4; ACTUAL 73/3, AS DECLARED. (4) `overstrict` — OVER-STRICTNESS — the host's own data read as foreign: DECLARED A16 and, since D-499, J7; ACTUAL 74/2 A16 J7, AS DECLARED — the arm's set WIDENED by one because D-499 asserts the same property a second time (J7, on the timeout page), not because the arm breaks anything new; it read A16 alone before this item and that is a change in the SUITE, recorded rather than smoothed. (5) `waitcondition` — D-499'S CONTROL, the row's own words: record every wait as `condition`: DECLARED J2 J3 J4 J4b J6 (the timeout page), J10 J11 (an unrecognised word), J12 (no wait reported), and NOT J0 J1 J5 J7 J8 J9 J13 or A-I; ACTUAL 68/8 failing exactly J2 J3 J4 J4b J6 J10 J11 J12, AS DECLARED — the capture is still filed, still graded and still determined under the arm, which is the point: the arm removes the RECORD of which wait fired and nothing else. (6) `waitcase` — D-499'S OVER-STRICTNESS ARM — drop the normalisation so `  NetworkIdle  ` no longer reads as the asked condition: DECLARED J13 ALONE; ACTUAL 75/1 J13, AS DECLARED. */
 /* D-64 — THE RENDER ARM OF op=acquire, driven THROUGH THE OP.
  *
  * Design: `CLIENT-RENDERED.md` (a development design, cited here and never read by this suite) §"What must be recorded on a
@@ -44,7 +44,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { RENDER_CAPTURE_CHECKS } from "../checks/bio-checks.mjs";
-import { RENDERED_METHOD, NON_DATA_TYPES } from "../src/render.mjs";
+import { RENDERED_METHOD, NON_DATA_TYPES, RENDER_INCOMPLETE_READING } from "../src/render.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -77,6 +77,13 @@ const PAGES = {
       { url: "https://ads.example/pixel.gif", type: "image", outcome: "blocked", blocked_by: "renderer policy" }],
     scripts: [{ url: `https://${HOST}/app.js` }, { url: "https://cdn.analytics.example/a.js" }] },
   "/scripts-unknown": { requests: same("/scripts-unknown"), scripts: null },
+  /* D-499 — THE WAIT'S OWN CASES, one page each. `fired` is the word the RENDERER
+     reports; `null` means it reported no wait at all. A page that names no `fired`
+     gets "networkidle", which is the condition this plane asks for. */
+  "/timeout": { requests: same("/timeout"), scripts: [{ url: `https://${HOST}/app.js` }], fired: "timeout" },
+  "/odd-wait": { requests: same("/odd-wait"), scripts: [{ url: `https://${HOST}/app.js` }], fired: "domcontentloaded" },
+  "/no-wait": { requests: same("/no-wait"), scripts: [{ url: `https://${HOST}/app.js` }], fired: null },
+  "/odd-case": { requests: same("/odd-case"), scripts: [{ url: `https://${HOST}/app.js` }], fired: "  NetworkIdle  " },
   "/same-site": {
     requests: [...same("/same-site"),
       { url: "https://tiles.example.gov/0/0/0.png", type: "image", outcome: "completed", status: 200 }],
@@ -95,7 +102,11 @@ const renderer = async (request) => {
   return Response.json({
     ok: true, html: rendered(p), engine: "chromium", engine_version: "fixture-1",
     viewport: q.viewport, dpr: q.dpr, locale: q.locale, timezone: q.timezone,
-    wait: { condition: q.wait, fired: "networkidle" }, elapsed_ms: 1000,
+    /* D-499: the fixture's own `fired`, or the asked condition when it names none;
+       `null` is a renderer that reported no wait object at all. */
+    wait: page.fired === null ? { condition: q.wait }
+        : { condition: q.wait, fired: "fired" in page ? page.fired : "networkidle" },
+    elapsed_ms: 1000,
     navigated_to: q.url, status: 200, requests: page.requests, scripts: page.scripts,
   });
 };
@@ -150,7 +161,12 @@ t("each code carries the C-number this item minted for it",
 t("the method string is the one BOB #32 ruled", RENDERED_METHOD, "rendered");
 t("code and layout are the only non-data axes (inverted list)", Object.values(NON_DATA_TYPES).sort(),
   ["code", "layout", "layout"]);
-t("the fixture has six pages, five that render", [Object.keys(PAGES).length, Object.values(PAGES).filter(Boolean).length], [6, 5]);
+/* CORRECTED by D-499: this read [6, 5]. The old figure was not wrong when it was
+   written, it is SUPERSEDED — D-499 added four pages (/timeout, /odd-wait, /no-wait,
+   /odd-case) that drive the wait's own cases, and a count pinned to the old number
+   would have failed for the one reason that is not a defect. `/fail` is still the
+   only page that does not render. */
+t("the fixture has ten pages, nine that render", [Object.keys(PAGES).length, Object.values(PAGES).filter(Boolean).length], [10, 9]);
 
 /* ====================================================================== A */
 console.log("\n--- A. a rendered capture of a shell holds BOTH artifacts, the rendered one primary ---");
@@ -317,6 +333,66 @@ console.log("\n--- I. over-strictness: an ordinary capture is untouched ---");
   const f = await acquire({ locator: `https://${HOST}/ordinary`, render: false });
   t("I4 render: false is the plain capture, not a malformed flag", [f.ok, f.document && f.document.capture.method, f.document && "render" in f.document],
     [true, "bio-plane acquire, https fetch, hashed at receipt", false]);
+}
+
+/* ====================================================================== J */
+console.log("\n--- J. D-499: WHICH WAIT FIRED, and the completeness that follows (BOB #32) ---");
+{
+  /* THE SENTENCE AS A LITERAL, for the same reason the C-numbers are literals above:
+     BOB #32 ruled the wording, and a suite that read it out of the module it is
+     testing would agree with any reword for free. */
+  t("J0 the reading is the sentence BOB #32 ruled", RENDER_INCOMPLETE_READING,
+    "render may be incomplete (wait timed out)");
+
+  const r = await acquire({ locator: `https://${HOST}/timeout`, render: true, authority: "City of Example" });
+  const d = r.document || {};
+  t("J1 A TIMED-OUT RENDER IS NEVER REFUSED: it files the pair, with the rendered method",
+    [r.ok, d.capture && d.capture.method, !!d.pair], [true, "rendered", true]);
+  t("J2 wait.fired keeps the RENDERER's word and fired_class is the plane's reading of it",
+    d.render && [d.render.wait.fired, d.render.wait.fired_class], ["timeout", "timeout"]);
+  t("J3 the rendered document's COMPLETENESS is undetermined", d.render && d.render.completeness, "undetermined");
+  t("J4 THE ROW'S SENTENCE IS IN THE RECORD, by name",
+    d.render && d.render.undetermined.some((u) => u.startsWith(`completeness: ${RENDER_INCOMPLETE_READING} `)), true);
+  t("J4b and it says the timeout fired rather than the condition asked, with the figure asked",
+    d.render && d.render.undetermined.some((u) => /wait ended on its timeout \(15000 ms asked\) rather than on the `networkidle` condition/.test(u)),
+    true);
+  t("J5 THE GRADE IS INTACT — the same grade a plain direct capture earns",
+    d.capture && d.capture.grade, (await acquire({ locator: `https://${HOST}/plain` })).document.capture.grade);
+  t("J6 and the provenance assertion does not present the bytes as the whole page",
+    /render may be incomplete \(wait timed out\), so they are not asserted to be the whole page/
+      .test((d.provenance_chain && d.provenance_chain[0].asserts) || ""), true);
+  t("J7 COMPLETENESS IS NOT AUTHORITY: an all-same-host asserted page is still determined",
+    [d.authority_state, d.authority], ["determined", "City of Example"]);
+
+  const c = ((await acquire({ locator: `https://${HOST}/same`, render: true, authority: "City of Example" })).document) || {};
+  t("J8 a render whose ASKED condition fired reads condition_met",
+    c.render && [c.render.wait.fired, c.render.wait.fired_class, c.render.completeness],
+    ["networkidle", "condition", "condition_met"]);
+  t("J9 and NOTHING says it may be incomplete, in the record or in the provenance",
+    [c.render.undetermined.some((u) => /completeness:/.test(u)),
+     /incomplete/.test((c.provenance_chain && c.provenance_chain[0].asserts) || "")], [false, false]);
+
+  const o = ((await acquire({ locator: `https://${HOST}/odd-wait`, render: true, authority: "City of Example" })).document) || {};
+  t("J10 A WORD THE PLANE DOES NOT RECOGNISE IS NAMED, never scored as either",
+    o.render && [o.render.wait.fired, o.render.wait.fired_class, o.render.completeness],
+    ["domcontentloaded", "undetermined", "undetermined"]);
+  t("J11 its reading names the word and is NOT the timeout sentence",
+    o.render && [o.render.undetermined.some((u) => /wait fired on `domcontentloaded`, which is neither the `networkidle` condition/.test(u)),
+                 o.render.undetermined.some((u) => u.includes(RENDER_INCOMPLETE_READING))], [true, false]);
+
+  const n = ((await acquire({ locator: `https://${HOST}/no-wait`, render: true, authority: "City of Example" })).document) || {};
+  t("J12 a renderer that reported no wait at all: the field is null, the class undetermined, BOTH gaps stated",
+    n.render && [n.render.wait.fired, n.render.wait.fired_class, n.render.completeness,
+                 n.render.undetermined.some((u) => u === "wait.fired: not reported by the renderer"),
+                 n.render.undetermined.some((u) => /^completeness: the renderer did not report which wait ended the render/.test(u))],
+    [null, "undetermined", "undetermined", true, true]);
+
+  /* OVER-STRICTNESS: a renderer that spells the condition it was asked for in a case
+     and with padding this suite did not anticipate is CORRECT WORK and must pass. */
+  const k = ((await acquire({ locator: `https://${HOST}/odd-case`, render: true, authority: "City of Example" })).document) || {};
+  t("J13 OVER-STRICTNESS: `  NetworkIdle  ` is the asked condition, and reads condition_met",
+    k.render && [k.render.wait.fired, k.render.wait.fired_class, k.render.completeness],
+    ["  NetworkIdle  ", "condition", "condition_met"]);
 }
 
 await mf.dispose();

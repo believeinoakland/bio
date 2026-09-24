@@ -2,17 +2,28 @@
  *
  * Each arm breaks ONE thing in ONE file, runs the suite, records its tally and the
  * FAIL labels, and restores the file by copy from a uniquely-named pristine copy
- * INSIDE this worktree, verified by sha256 AND by content with the byte count
- * printed and floored. A baseline row runs first and last. An arm whose patch
+ * OUTSIDE this worktree (CORRECTED by D-499; see PRISTINE below), verified by
+ * sha256 AND by content with the byte count printed and floored. A baseline row runs first and last. An arm whose patch
  * matched anything but exactly once is reported as NOT ARMED, never as a result. */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync } from "node:fs";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SUITE = `${ROOT}test/rendered-capture.test.mjs`;
-const PRISTINE = `${ROOT}.nc-d64-pristine`;
+/* CORRECTED by D-499: the pristine copies used to sit at `${ROOT}.nc-d64-pristine`,
+   INSIDE the worktree, on the rule as it read when this harness was written. BOB #32
+   RULED otherwise on 2026-09-24 (WORKER.md, "KEEP EVERY SCRATCH FILE OUT OF YOUR
+   WORKTREE"): a file in the worktree is walked by repository-walking suites, trips
+   `gates.mjs` §2e's under-inclusion check and makes the tree DIRTY, so D-293 refuses a
+   GREEN verdict — and this harness holds its copies across a SIX-MINUTE suite run, which
+   is exactly the window a gate measures in. Out of the worktree, and named for this RUN
+   rather than generically, because a shared temp root spans every session on this
+   machine and a generic name is an identity nobody owns. */
+const PRISTINE = join(tmpdir(), `nc-d64-pristine-${process.pid}-${randomUUID()}`);
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 const ARMS = {
@@ -29,11 +40,28 @@ const ARMS = {
   shellprimary: { file: "src/index.mjs",
     from: `        sha = rsha; total = rbytes.length; ct = "text/html"; existed = renderedExisted;`,
     to:   `        total = total; ct = ct; existed = existed;` },
-  /* OVER-STRICTNESS: the host's own data read as foreign. MUST FAIL: A16 (a correct
-     page refused determination). Nothing about B–E may newly fail. */
+  /* OVER-STRICTNESS: the host's own data read as foreign. MUST FAIL: A16 and, SINCE
+     D-499, J7 — both are the same correct page refused determination, J7 on the
+     timeout page, and D-499 widened this arm's declared set by asserting the
+     property twice rather than by changing anything it breaks. Nothing about B–E
+     may newly fail. */
   overstrict: { file: "src/render.mjs",
     from: `    for (const d of render.data) if (d.origin !== "same_host") {`,
     to:   `    for (const d of render.data) if (true) {` },
+  /* D-499'S CONTROL, the row's own words: record EVERY wait as `condition`, so a
+     render that timed out is indistinguishable from one whose condition met. MUST
+     FAIL: J2, J3, J4, J4b, J6 (the timeout page), J10, J11 (the unrecognised word),
+     J12 (no wait reported). MUST NOT FAIL: J0, J1, J5, J7 (the capture is still
+     filed, still graded, still determined), J8, J9, J13, and A–I. */
+  waitcondition: { file: "src/render.mjs",
+    from: `  const firedClass = waitFiredClass(waitFired, asked.wait);`,
+    to:   `  const firedClass = "condition";` },
+  /* D-499'S OVER-STRICTNESS ARM: drop the normalisation, so a renderer that spells
+     the asked condition with padding and a capital reads as unrecognised. MUST FAIL:
+     J13 ALONE — correct work in a spelling the suite did not anticipate. */
+  waitcase: { file: "src/render.mjs",
+    from: `  const f = fired.trim().toLowerCase();`,
+    to:   `  const f = fired;` },
 };
 
 const run = () => {

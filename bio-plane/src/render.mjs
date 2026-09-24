@@ -38,6 +38,63 @@ export const RENDER_DEFAULTS = Object.freeze({
 /* The render method string BOB #32 ruled. The shell keeps its own method. */
 export const RENDERED_METHOD = "rendered";
 
+/* D-499 — WHICH WAIT FIRED, AND WHAT THAT SAYS ABOUT COMPLETENESS.
+ *
+ * BOB #32, 2026-09-24 (QUEUE.md D-64's `owed-at-integration:` line, coord
+ * a04264b8; cited here until BOB folds it into CLIENT-RENDERED.md
+ * §"What must be recorded on a rendered capture", whose Incomplete sections
+ * record this as a DESIGN GAP today): a render whose wait fired on its TIMEOUT
+ * keeps the capture's GRADE — grade is the chain, and the method is recorded —
+ * while the rendered document's COMPLETENESS is UNDETERMINED. It is never
+ * presented as the whole page, and it is never refused.
+ *
+ * COMPLETENESS IS NOT AUTHORITY AND DOES NOT TOUCH IT. `renderedAuthority`
+ * below answers WHOSE the bytes are; this answers WHETHER they are the whole
+ * page. A timed-out render of a page whose data and code are all the host's is
+ * still `determined` as the host, and an authority-undetermined render whose
+ * condition met is still complete. Two axes, deliberately not averaged.
+ *
+ * THE CLASSIFICATION IS THE PLANE'S; THE WORD IS THE RENDERER'S. `wait.fired`
+ * keeps the renderer's own word — "networkidle", a selector, "timeout" — because
+ * the design asks for WHICH condition ended the render and a two-valued field
+ * would throw that away. `wait.fired_class` is what the plane DERIVES from it,
+ * and it is THREE-valued on purpose:
+ *
+ *   "condition"     the word IS the condition this plane asked for;
+ *   "timeout"       the word names the timeout;
+ *   "undetermined"  anything else, INCLUDING a word this module has never seen.
+ *
+ * INVERTED rather than listed (WORKER.md, "invert, do not lengthen a list"): the
+ * plane asks for exactly ONE condition, so the only two things it can honestly
+ * recognise are "the condition I asked for fired" and "the timeout fired". A
+ * third word is NAMED as unclassified rather than scored as either — reading it
+ * as `condition` would claim a completeness nothing measured, and reading it as
+ * `timeout` would take a completeness away from a render that had one. WHAT THIS
+ * CANNOT SEE: whether the renderer's word is TRUE. It is the renderer's claim,
+ * like its request and script lists; the plane hashes only the document. */
+const TIMEOUT_WORD = /timed?[ _-]?out|timeout/;
+
+export function waitFiredClass(fired, askedWait) {
+  if (!isStr(fired)) return "undetermined";
+  const f = fired.trim().toLowerCase();
+  if (TIMEOUT_WORD.test(f)) return "timeout";
+  const until = askedWait && isStr(askedWait.until) ? askedWait.until.trim().toLowerCase() : null;
+  return until && f === until ? "condition" : "undetermined";
+}
+
+/* The sentence a timed-out render reads, as one string in ONE place: the record
+   states it in `render.undetermined[]` and the provenance assertion carries it,
+   and a hand copy in either would agree for free and drift for free. */
+export const RENDER_INCOMPLETE_READING = "render may be incomplete (wait timed out)";
+
+/** The reading, derived from a built render block. `null` when the wait met the
+ *  condition that was asked, which is the only case that says nothing. */
+export function completenessReading(render) {
+  if (!render || render.completeness !== "undetermined") return null;
+  if (render.wait && render.wait.fired_class === "timeout") return RENDER_INCOMPLETE_READING;
+  return "render completeness is undetermined (which wait ended the render was not established)";
+}
+
 /* The daily render allowance, in browser milliseconds, when the instance sets none.
    DERIVED FROM A VENDOR CLAIM, LABELLED AS THEIRS: Cloudflare's pricing page
    (read 2026-07-29, CLIENT-RENDERED.md §"What Workers Paid actually buys") says
@@ -157,6 +214,26 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
   }
 
   const pick = (k, v) => { if (v === null || v === undefined) undetermined.push(`${k}: not reported by the renderer`); return v ?? null; };
+
+  /* D-499 — WHICH WAIT FIRED, and the completeness that follows from it. Computed
+     here rather than in the literal below so the reading lands in `undetermined[]`
+     beside the gap that caused it, and so the classifier is read once. */
+  const waitFired = pick("wait.fired", answer.wait && isStr(answer.wait.fired) ? answer.wait.fired : null);
+  const firedClass = waitFiredClass(waitFired, asked.wait);
+  const completeness = firedClass === "condition" ? "condition_met" : "undetermined";
+  if (firedClass === "timeout")
+    undetermined.push(`completeness: ${RENDER_INCOMPLETE_READING} — the renderer's wait ended on its timeout`
+      + `${num(asked.wait && asked.wait.timeout_ms) !== null ? ` (${asked.wait.timeout_ms} ms asked)` : ""}`
+      + `${isStr(asked.wait && asked.wait.until) ? ` rather than on the \`${asked.wait.until}\` condition` : ""}`
+      + `, so what the page would have shown had the condition been met is undetermined. The capture keeps its `
+      + `grade and its method; these bytes are not presented as the whole page (BOB #32, 2026-09-24).`);
+  else if (firedClass === "undetermined")
+    undetermined.push(`completeness: ${isStr(waitFired)
+      ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the `
+        + `\`${(asked.wait && asked.wait.until) || "(none asked)"}\` condition this plane asked for nor a timeout`
+      : "the renderer did not report which wait ended the render"}, so whether the render ran to its `
+      + `condition is undetermined and this rendering may be incomplete.`);
+
   const render = {
     of: shellSha,
     engine: pick("engine", isStr(answer.engine) ? answer.engine : null),
@@ -166,7 +243,13 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
     dpr: pick("dpr", num(answer.dpr)),
     locale: pick("locale", isStr(answer.locale) ? answer.locale : null),
     timezone: pick("timezone", isStr(answer.timezone) ? answer.timezone : null),
-    wait: { asked: asked.wait, fired: pick("wait.fired", answer.wait && isStr(answer.wait.fired) ? answer.wait.fired : null) },
+    /* D-499: the renderer's own word, and the plane's three-valued reading of it. */
+    wait: { asked: asked.wait, fired: waitFired, fired_class: firedClass },
+    /* D-499 / BOB #32: `condition_met` says the wait ended on the condition ASKED —
+       not that the page was finished, which no renderer reports. `undetermined`
+       carries its reason in `undetermined[]` above. The GRADE is untouched either
+       way: grade tracks directness, never technique or completeness. */
+    completeness,
     elapsed_ms: pick("elapsed_ms", num(answer.elapsed_ms)),
     navigated_to: isStr(answer.navigated_to) ? answer.navigated_to : null,
     status: num(answer.status),
