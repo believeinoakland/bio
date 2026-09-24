@@ -431,7 +431,7 @@ scope: one line in WORKER.md's construct-status step: probes read code with comm
 accepts-when: the line is on main and names M0-155 (the measured failure it moves: two probes on comment text drifting at batch22's union). NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### M0-183 · queued — **A WORKER'S /tmp SCRATCHPAD CAN LOSE FILES MID-SESSION (cause not established; REC-194's worker), and `kickoffs/WORKER.md` does not say where durable scratch goes; the practice that held was the harness's `tasks/<id>.output`.** Found by REC-194's worker (F6). — owner M0 (BOB reviews the WORKER.md line).
+### M0-183 · running — **A WORKER'S /tmp SCRATCHPAD CAN LOSE FILES MID-SESSION (cause not established; REC-194's worker), and `kickoffs/WORKER.md` does not say where durable scratch goes; the practice that held was the harness's `tasks/<id>.output`.** Found by REC-194's worker (F6). — owner M0 (BOB reviews the WORKER.md line).
 order: after M0-181, AHEAD of the product rows: a worker losing its own evidence mid-session costs a re-run (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
 milestone: M0
 interface: none.
@@ -441,7 +441,7 @@ scope: one line in WORKER.md beside the name-collision receipt: capture evidence
 accepts-when: the line is on main (the measured failure it moves: REC-194's scratch files vanishing mid-session). NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### D-478 · queued — **`pdf-worker` AND `ocr-worker` ACCEPT ANY `store` TOKEN AND ANSWER AN UNKNOWN NAMESPACE WITH NOT_FOUND: nothing is written (IC-237 measured it), but "not found" reads as the capture's ABSENCE when the truth is that the namespace does not exist.** Found by D-462's worker. — owner CONTENT-PDF.
+### D-478 · running — **`pdf-worker` AND `ocr-worker` ACCEPT ANY `store` TOKEN AND ANSWER AN UNKNOWN NAMESPACE WITH NOT_FOUND: nothing is written (IC-237 measured it), but "not found" reads as the capture's ABSENCE when the truth is that the namespace does not exist.** Found by D-462's worker. — owner CONTENT-PDF.
 order: last of the namespace guards, low: read-only, no write; placed because *not found* is not *absent* (CLAUDE.md §1) (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
 milestone: M0 (the members' side of the guard)
 interface: I6 — a named refusal on the members' routes; the integrator mints and classifies the IC.
