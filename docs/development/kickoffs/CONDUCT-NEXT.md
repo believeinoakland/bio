@@ -41,14 +41,15 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
 - OWED AT INTEGRATION (BOB #32 rulings ~03:14Z, on the D-64/REC-184 rows at coord a04264b8, sent to c20-integ1 03:17Z): D-64 timeout →
   grade unchanged, completeness UNDETERMINED (`render.wait` records the timeout; reading says "render may be incomplete");
   REC-184 → act carries definitionVersion, refuse DEFINITION_MOVED. If integ1 reports either UNPAID, tell SCHEDULER to row it.
-  D-64/REC-184 findings SENT to SCHEDULER 03:17Z, incl. the DIST `browser` binding-class row (for the other account).
+  D-64/REC-184 findings PLACED by SCHEDULER (coord cead06f3: DIST-11, D-490, D-491, UI-99); the allowance
+  overrun diagnosed (concurrent admits, not 'one render') and its fix (reserve at admission) sent 03:25Z; incl. the DIST `browser` binding-class row (for the other account).
 - Owed on D-64's landing to DIST: teach deploy derivation the `browser` binding class, then add BROWSER binding to
   bio-plane/wrangler.jsonc and newgroup. D-64 findings (a)–(d) and REC-184 findings (1)–(3) are in #19's handoff on coord history
   (coord ae79e9d6) — send to SCHEDULER when integ1 reports if not yet sent.
 - DIST owed from batch10 on landing: D-461 SAFETY (store=scratch honoured by bio-pinned ops), D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0).
 - BOB's branches for the next train: land/bob/d461-claude @ f1787108 READY (BOB 03:12Z; = land/worker/D-461, already in batch10,
-  + one CLAUDE.md §5 commit) — ride it with the batch11 train. land/bob/status-cellcap and folds-0924e: built on main 548eb2c5,
-  gates running; BOB sends tips when green. NEVER land/bob/folds-0924c or folds-0924d (superseded). On landing tell SCHEDULER the homes: MEMBER-KNOWLEDGE §5,
+  + one CLAUDE.md §5 commit) — ride it with the batch11 train. land/bob/folds-0924e @ e5ed7752 READY (BOB 03:22Z,
+  prose, on main, doc gate 62/62 · 4488). land/bob/status-cellcap: gate running; BOB sends its tip when green. NEVER land/bob/folds-0924c or folds-0924d (superseded). On landing tell SCHEDULER the homes: MEMBER-KNOWLEDGE §5,
   EXTRACTION-BREADTH §2 row 5, OFFICE-FORMATS CSV, Intake §8.
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
 - D-453 (Oakland identifier-space measurement) RUNNING beside the eight: session_017L57JtEbWmyk63Ep8SRZoj (fresh, network FULL), branch
