@@ -461,7 +461,7 @@ console.log("\n--- 3. OVER-STRICTNESS: correct statements phrased unlike anythin
 console.log("\n--- 4. the refusals, each a C-number with a code and a canned translation from ONE place ---");
 {
   const rows = Object.entries(BIAS_CHECKS);
-  t("ELEVEN refusals are allocated, and every one carries check + where + translation",
+  t("TWELVE refusals are allocated, and every one carries check + where + translation",
     /* C-26, not C-25 — the family moved at the rebase because PL-1 landed first
        and took C-25 (see the note at BIAS_CHECKS). THIS LINE IS WHY THE ARM IS
        WORTH HAVING: the wholesale renumber was a regex on `C-25.<digits>`, and
@@ -472,8 +472,13 @@ console.log("\n--- 4. the refusals, each a C-number with a code and a canned tra
     [rows.length, rows.every(([, r]) => /^C-26\.\d+$/.test(r.check) && r.where && r.translation.length > 60)],
     /* ELEVEN, not ten: C-26.11 (BIAS_REFUSED) was added 2026-08-08 when VF-2's
        DEC-49 guard measured that the write path's ENVELOPE code carried no
-       translation. Corrected here rather than exempted. */
-    [11, true]);
+       translation. Corrected here rather than exempted.
+       TWELVE, not eleven, since 2026-09-24: C-26.12 (BIAS_ILLEGAL_TRANSITION,
+       D-468) — `op=promote` now holds a bias set to the declared STATES edges
+       read from its head, which `STATES.bias`'s own comment had described and
+       nothing enforced. CORRECTED here rather than exempted, and the figure is
+       the one the gate PRINTED, not this number plus one. */
+    [12, true]);
   t("the C-numbers are unique — an allocation reused is an allocation nobody can act on",
     new Set(rows.map(([, r]) => r.check)).size, rows.length);
   t("DEC-54's four scopes each have a NUMBER, which is what makes each a mechanism rather than a paragraph",

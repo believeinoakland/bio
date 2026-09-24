@@ -17289,7 +17289,7 @@ export class Store extends DurableObject {
          found it (F4), and `d84-case-manifest.test.mjs` §4 DROVE it and read the new head back, which is
          the measurement this row opens on rather than a reading of the comment.
          THE TABLE IS THE CATALOGUE'S AND THIS PATH HOLDS NO COPY, through `vocabFor` over the DECLARED
-         spelling (the MAP RULE), exactly as op=move and op=conclude take it. Only a MOVE is asked: `from ===
+         spelling (the MAP RULE), exactly as op=actionmove and op=conclude take it. Only a MOVE is asked: `from ===
          to` is a revision and not a transition, which is the doctrine's own way to amend an adopted set —
          *"Amending an adopted set is a NEW REVISION of the same bundle under append-only history — which
          re-pins"* — and `bias.test.mjs` §11 and `d84-case-manifest.test.mjs` §3 both drive that amendment.
@@ -17316,14 +17316,23 @@ export class Store extends DurableObject {
       if (cur && biasSpelling) {
         const from = cur.current_state, to = meta.current_state;
         const legalFrom = vocabFor(STATES, biasSpelling)?.edges?.[from] || [];
+        /* BUILT AS A LITERAL rather than through `#biasRefuse`, and the DEC-49 guard is why: a verdict
+           INHERITED THROUGH A SPREAD is one the guard's outcome walk cannot resolve until run time, so
+           it reads this span as a governed region containing no refusal at all. Its ceiling on such
+           returns may only ever move DOWN. The code is a STRING LITERAL at its site and the check and
+           the translation are read from the catalogue's own row — one place, as `BIAS_REFUSED` does it
+           four hundred lines below. */
         if (to !== from && !legalFrom.includes(to))
-          return { ...this.#biasRefuse("BIAS_ILLEGAL_TRANSITION",
-                     `${bundleId} stands at '${from}' and this promotion names '${to === undefined || to === null ? "no state" : to}'. `
+          return { ok: false, reason: "BIAS_ILLEGAL_TRANSITION",
+                   check: BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION.check,
+                   translation: BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION.translation,
+                   from, to: to ?? null, object_type: biasSpelling, legal_from: legalFrom,
+                   detail: `${bundleId} stands at '${from}' and this promotion names `
+                     + `'${to === undefined || to === null ? "no state" : to}'. `
                      + `A bias set at '${from}' moves to ${legalFrom.length ? legalFrom.join(" or ") : "no other state"}`
                      + `${legalFrom.length ? "" : " — it is terminal"}, and a revision that leaves it where it stands is `
                      + `how an adopted set is amended. The table is the catalogue's and this path holds no copy of it. `
-                     + `Nothing was written.`),
-                   from, to: to ?? null, object_type: biasSpelling, legal_from: legalFrom };
+                     + `Nothing was written.` };
       }
       /* END DEC-49 REGION bias-state-edge */
 
