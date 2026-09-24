@@ -1,5 +1,11 @@
-/* FL-9's AND FL-10's NEGATIVE CONTROL DRIVER — twelve arms plus a baseline,
- * re-runnable in one step:
+/* FL-9's, FL-10's, FLEET #4's AND M0-188's NEGATIVE CONTROL DRIVER — fifteen arms
+ * plus a baseline, re-runnable in one step:
+ *
+ * TALLY MOVED 2026-09-24 (M0-188) from *"twelve arms plus a baseline"*, which was
+ * already stale by one when it was corrected: FLEET #4 appended arm 9 on 2026-09-23
+ * without moving the head. M0-188 appends 10, 10b and 10c, so twelve -> fifteen, and
+ * the drift is named rather than quietly absorbed — the same treatment M0-29 gave it
+ * below, and the second time this number has decayed by APPEND.
  *
  * TALLY CORRECTED 2026-09-14 (M0-29, D-343). This line read *"six arms plus a
  * baseline"* and the driver announces THIRTEEN. THIS ONE DECAYED IN TWO STEPS
@@ -153,7 +159,7 @@ const ARMS = {
        (`six` against a table of twelve); corrected 2026-09-14 by M0-29 with the head, because
        correcting one and leaving the other is the half-fix that makes the next reader believe
        the wrong half. */
-    label: "nothing armed — what distinguishes twelve-arms-working from twelve-arms-broken",
+    label: "nothing armed — what distinguishes fifteen-arms-working from fifteen-arms-broken",
     run: () => {
       const r = runSuite();
       console.log(`  -> BASELINE ${r.pass} pass, ${r.fail} fail, exit ${r.status}`);
@@ -431,6 +437,86 @@ ARMS["9"] = {
     console.log(`     agent-worker byte arm held: ${!r.out.includes("FAIL  agent-worker: a fresh build")}`);
     return r;
   })),
+};
+
+/* ---- ARMS 10, 10b, 10c, APPENDED 2026-09-24 (M0-188). No existing arm is edited. ----
+   The subject is the REMEDY a staleness finding hands its reader. Until M0-188 all twelve
+   said `npm run build` in ONE member's directory; one `bio-plane/src/` edit stales THREE
+   artifacts (M0-178, measured), so a worker who obeyed rebuilt one and met the next at the
+   next gate. The arms are (10) the row's own declared control, plus TWO over-strictness arms,
+   because a matcher that only ever goes red is a matcher nobody has seen be right. */
+
+/* Exactly-once replacement. An arm that matched zero times or twice is a finding, not a pass
+   (WORKER.md: "arms that NEVER ARMED"), so the count is checked BEFORE the tree is touched. */
+function withReplacedOnce(file, from, to, body) {
+  const before = readFileSync(file);
+  if (before.length < FLOOR) throw new Error(`refusing to arm ${file}: ${before.length} B is below the floor`);
+  const text = before.toString("utf8");
+  const hits = text.split(from).length - 1;
+  if (hits !== 1) throw new Error(`refusing to arm ${file}: the anchor occurs ${hits} time(s), not once`);
+  try {
+    writeFileSync(file, text.replace(from, to));
+    return body();
+  } finally {
+    writeFileSync(file, before);
+    const after = readFileSync(file);
+    console.log(`    restore ${file.replace(REPO + "/", "")}: content=${after.equals(before)} sha256=${sha(after) === sha(before)} bytes=${after.length}`);
+    if (!after.equals(before) || sha(after) !== sha(before) || after.length < FLOOR)
+      throw new Error("RESTORE FAILED — stop and fix the tree by hand");
+  }
+}
+
+/* The ONE site, anchored on the line ABOVE it too: the remedy sentence itself occurs twice in
+   the file (here and in `verifyFresh`), and an anchor that matches both would arm two sites. */
+const REMEDY_HEAD = "        + `(source is now sha256 ${liveSha}, the bundle was built from ${inp.sha256}). `\n        + ";
+const REMEDY_NOW = "`Run \\`node tools/bundles.mjs\\`, which rebuilds every bundle this change staled, and commit the artifacts with the change.`);";
+const REMEDY_OLD = "`Run \\`npm run build\\` in ${member.dir}/ and commit the artifact with the change.`);";
+
+ARMS["10"] = {
+  label: "(10) M0-188's OWN ARM — restore ONE site's pre-M0-188 sentence, the one-bundle remedy, "
+    + "in the (b) input-hash finding. Nothing else changes: the finding's DIAGNOSIS half is untouched.",
+  run: () => withReplacedOnce(FLEET_BUNDLE, REMEDY_HEAD + REMEDY_NOW, REMEDY_HEAD + REMEDY_OLD, () => {
+    const r = report("10", runSuite(), {
+      mustFail: "exit non-zero on FOUR (j) assertions: the behavioural none-names-`npm run build` arm, "
+        + "the behavioural at-least-four-name-`node tools/bundles.mjs` arm (3, not >= 4), the TOTAL over "
+        + "the guard's source (1, not 0), and the TOTAL's corpus floor (11, not >= 12)",
+      mustNot: "any DIAGNOSIS assertion — (b) STALE BUNDLE, (d) the manifest mismatch, (g)/(h)/(i) the "
+        + "upload-part arms, or any byte-identity arm: the remedy is the only thing that moved",
+    });
+    console.log(`     the TOTAL arm fired by name: ${named(r, "FAIL  (j) TOTAL: no finding in scripts/fleet-bundle.mjs names the one-bundle command")}`);
+    console.log(`     the behavioural arm fired by name: ${named(r, "FAIL  (j) NONE of them names the one-bundle command")}`);
+    console.log(`     (b) STALE BUNDLE held: ${!r.out.includes("FAIL  (b) and says it is a STALE BUNDLE")}`);
+    return r;
+  }),
+};
+
+ARMS["10b"] = {
+  label: "(10b) OVER-STRICTNESS, A SPELLING THE ARM WAS NOT WRITTEN FOR — the same site reworded "
+    + "around the SAME command. Correct work in an unanticipated spelling must PASS.",
+  run: () => withReplacedOnce(FLEET_BUNDLE, REMEDY_HEAD + REMEDY_NOW,
+    REMEDY_HEAD + "`Rebuild with \\`node tools/bundles.mjs\\` \\u2014 it rebuilds every bundle this change staled \\u2014 and commit the artifacts.`);", () => {
+    const r = report("10b", runSuite(), {
+      mustFail: "nothing",
+      mustNot: "any (j) assertion: the command is the same, only the sentence around it differs",
+    });
+    console.log(`     no (j) assertion fired: ${!r.out.includes("FAIL  (j)")}`);
+    return r;
+  }),
+};
+
+ARMS["10c"] = {
+  label: "(10c) OVER-STRICTNESS, AND IT ASSERTS THE MATCHER'S DECLARED BLIND SPOT RATHER THAN "
+    + "PROMISING IT — a plain COMMENT in the guard naming `npm run build` unescaped must NOT be read "
+    + "as a remedy. The suite's stated reach is the backtick-escaped spelling inside a template "
+    + "literal; a comment writes the command unescaped and is not a finding's remedy.",
+  run: () => withAppended(FLEET_BUNDLE, "\n/* M0-188 over-strictness probe: a member is built by npm run build in its own directory. */\n", () => {
+    const r = report("10c", runSuite(), {
+      mustFail: "nothing",
+      mustNot: "the (j) TOTAL arm — a comment is prose about how a member is built, not a remedy handed to a reader",
+    });
+    console.log(`     no (j) assertion fired: ${!r.out.includes("FAIL  (j)")}`);
+    return r;
+  }),
 };
 
 const only = process.argv[2];

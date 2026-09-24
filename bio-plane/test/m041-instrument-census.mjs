@@ -330,6 +330,9 @@ export const INSTRUMENTS = [
   "tools/decided.mjs",
   "tools/waitquiet.mjs",
   "tools/bundle-docprofile.mjs",
+  "tools/bundles.mjs",           /* M0-188/A6: the every-stale-bundle rebuild, which
+                                    `kickoffs/WORKER.md` step 0 and every staleness finding in
+                                    `scripts/fleet-bundle.mjs` now name as the remedy. */
   "tools/gates.mjs",
   "bio-plane/scripts/coverage.mjs",
   "bio-plane/scripts/battery.mjs",
