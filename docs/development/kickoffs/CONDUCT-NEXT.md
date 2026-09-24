@@ -30,10 +30,11 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   by c20-batch11fix: DROP IT from every train. Archive its session session_01WHZuugzaksTkh8G6anyMyh once batch11fix lands. Its base cff0ede6
   held 10 rows integrated there (D-469 D-351 D-461 D-462 D-464 REC-189 REC-188 UI-86
   D-291 D-66), NOT TRAINED.
-- c19-batch11 PUSHED @ 8b7e4bca (03:37Z): REC-192 8646219d, REC-190 c650a697, UI-85 e49f66f8, UI-83 3e3684ee — reported integrated to
-  SCHEDULER. I3 84.1.0. ONE inherited red (meaning-bounds floor 43/42: op=resolve hidden in #resolveOne) + IC-246 unresolved (MAJOR)
-  → WORKER c20-batch11fix session_01TcTNdcXz9g85LF9TfQ29Jp fixes both, merges current main, pushes land/conduct/c20-batch11fix by
-  05:15Z. TRAIN THAT BRANCH (not batch10/batch11 directly). Map bytes vs 49,152 B budget: never raise it; report to BOB.
+- c20-batch11fix GREEN @ 54415fcb (04:44Z; full 347/347): batch10+11's 14 rows + d461-claude on main 16fe1e7f; I3 85.0.0
+  (IC-246 MAJOR); meaning-bounds BARE 44. It CONFLICTS with c20-batch12 in 6 files → WORKER c20-batch13 session_01KXuCWoxFB4aA2GaADwB9E8
+  (spawned 04:47Z) merges batch12 onto it (IC-259/260/257 → 85.1/85.2/85.3.0, ratchets re-read), full gate, pushes by 05:40Z.
+  TRAIN land/conduct/c20-batch13 (drop batch10, batch11, batch11fix, batch12 refs). ON LANDING: DIST owed D-461 SAFETY
+  (store=scratch honoured by bio-pinned ops), D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0), D-64 BROWSER class (DIST-11).
 - LIVE WORKERS spawned by #20 at ~03:07Z, all briefed to PUSH BY 05:45Z and report by one-shot trigger to CONDUCT #20:
   | row | session | base | branch |
   | D-486 | session_01Ae2P1iE8tf4RQTeMT5TaGd | batch10 cff0ede6 | land/worker/D-486 |
