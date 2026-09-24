@@ -7724,6 +7724,9 @@ export default {
       /* One part and small enough to be a plain capture: store the whole under
          its own hash so the ordinary single-file shape still applies. */
       let existed = false, multipart = parts.length > 1;
+      /* D-476: the sentence that goes out BESIDE a `null` `existed`, and the only
+         thing that ever sets it. It is present exactly when `existed` is null. */
+      let existedUndetermined = null;
       if (!multipart) {
         const only = parts[0];
         if (only.sha256 !== sha) {
@@ -7736,12 +7739,57 @@ export default {
         /* D-469: the answer flush() took BEFORE it wrote the one part, which for
            one part is the whole. Re-asking here would find this call's own write. */
         existed = partHeldBefore[0];
+      } else {
+        /* D-476, THE MULTI-PART CASE, AND THE CORRECTION OF D-469's OWN NOTE.
+           D-469 left this `false` and said so at this site: the whole is never
+           stored under its own hash, part boundaries follow the stream's
+           chunking, so "every part was already held" is not the claim "this
+           document was already held", and a `false` here only UNDER-claims a
+           re-fetch. THAT LAST SENTENCE WAS WRONG, and it is the defect this item
+           closes: `existed: false` is not the absence of a claim, it is the
+           positive claim THESE BYTES ARE NEW, made on a question nobody asked.
+           Every re-fetch of a held multi-part document said it - and the whole
+           product is the trustworthiness of the record, which ranks a false
+           claim below a missing answer.
+           *
+           * SO THE QUESTION THAT CAN BE ASKED IS ASKED, and it is the record's
+           * own rather than R2's: `register` is keyed by `capture_sha`, the
+           * identity of the bytes across the whole system, and one capture has
+           * one home (D-179; Intake Doctrine section 8). ONE bounded read, and it
+           * cannot find this call's own write the way D-469's head() did, because
+           * `op=acquire` writes no register row at all - `op=promote` does. That
+           * is why the lookup is preferred here over a second guess at the bytes.
+           *
+           * AND A MISS IS STATED, NEVER SCORED FALSE. The register answers for
+           * documents the record REGISTERED; an earlier acquire that was never
+           * promoted leaves its parts in the store and no register row, so a miss
+           * does not establish that these bytes are new. `null` with the sentence
+           * below is the honest answer, and the sentence carries the part tally as
+           * an OBSERVATION - what this fetch's own chunking found already held -
+           * never as the answer, for the chunking reason above. */
+        const heldOut = await doAnswer(stGov.fetch(
+          `http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
+        const reg = heldOut.answered ? heldOut.result : null;
+        const heldParts = partHeldBefore.filter(Boolean).length;
+        if (reg && reg.registered === true) existed = true;
+        else {
+          existed = null;
+          existedUndetermined = reg
+            ? `this document was captured in ${parts.length} parts, so the store holds no object under its `
+              + `whole hash for the question a single-part capture asks, and the record's register - which `
+              + `does answer by the whole hash - holds no row for these bytes under a bundle that still `
+              + `exists. That is NOT a finding that the bytes are new: a capture acquired earlier and never `
+              + `promoted leaves its parts in the store and no register row, and part boundaries follow the `
+              + `stream's chunking, so this fetch's parts need not be the parts an earlier one made. `
+              + `Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were `
+              + `already held before it wrote them.`
+            : `this document was captured in ${parts.length} parts, so the store holds no object under its `
+              + `whole hash for the question a single-part capture asks, and the record's register could not `
+              + `be consulted. Nothing here is a statement about the record, and in particular it is not a `
+              + `claim that these bytes are new. Observed, and not the answer: ${heldParts} of this fetch's `
+              + `${parts.length} parts were already held before it wrote them.`;
+        }
       }
-      /* D-469, THE MULTI-PART CASE: `existed` stays false and is NOT asked. The
-         whole is never stored under its own hash, and part boundaries follow the
-         stream's chunking, so "every part was already held" is not the same claim
-         as "this document was already held". False here under-claims a re-fetch;
-         it never over-claims a first one. */
 
       let ct = (res.headers.get("content-type") || "").split(";")[0].trim();
 
@@ -7846,6 +7894,10 @@ export default {
             body: JSON.stringify({ host: new URL(pageUrl).host, status: renderRecorded.status, retry_after_ms: null }) }); }
           catch { /* an unrecorded outcome is not a failed render */ }
         }
+        /* D-476: `existedUndetermined` is not cleared here and does not need to be.
+           It is set only on the multi-part branch, and this region's first refusal
+           (RENDER_NOT_A_PAGE) has already returned for a multi-part body, so a
+           render always arrives with it null. */
         sha = rsha; total = rbytes.length; ct = "text/html"; existed = renderedExisted;
       }
 
@@ -8979,6 +9031,10 @@ export default {
          know it and cannot get it subtly wrong. */
       return json({
         ok: true, existed,
+        /* D-476: the stated reason, present exactly when `existed` is null and
+           absent otherwise - so the single-part answer is byte-identical to what
+           every caller reads today, and a null is never bare. */
+        ...(existedUndetermined ? { existed_undetermined: existedUndetermined } : {}),
         document: {
           file: `snapshots/${name}`,
           locator, retrieved,

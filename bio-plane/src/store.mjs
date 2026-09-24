@@ -33496,6 +33496,43 @@ export class Store extends DurableObject {
                  + "current holder, never a finding about which bundle held the capture first — that is undetermined. "
                  + "The same content in different bytes is not reached." };
   }
+
+  /** D-476 - IS THIS WHOLE DOCUMENT ALREADY IN THE REGISTER? ONE BOUNDED READ ON
+   *  THE REGISTER'S OWN KEY, and the only question `op=acquire` can ask about a
+   *  MULTI-PART capture.
+   *
+   *  D-469 answered acquire's `existed` for a single-part capture by asking R2 for
+   *  the whole's own key BEFORE the put. A multi-part capture has no such key: the
+   *  whole is never stored under its own hash, only its parts are. So that
+   *  question cannot be asked at all, and acquire answered a flat `false` - which
+   *  CLAIMS THE BYTES ARE NEW every time a document the record already holds is
+   *  re-fetched. This is the question that CAN be asked, and it is the record's
+   *  own: `register` is keyed by `capture_sha`, the identity of the bytes across
+   *  the whole system (`INTERFACES.md` I1 section 1), and one capture has one
+   *  home (D-179; `BIO_Intake_Doctrine_v1_1.md` section 8).
+   *
+   *  THE HOLDER MUST STILL EXIST - the `bundles` join D-179's fence makes, for
+   *  the reason that ruling gives: bytes whose home was purged register afresh,
+   *  so a register row whose bundle is gone is not a holding.
+   *
+   *  IT NAMES NO BUNDLE, and so it needs no viewer. A caller learns only that the
+   *  record holds these bytes, which is the whole of what `existed` has ever said;
+   *  WHICH bundle holds them is D-15's question, answered under a visibility stamp
+   *  by `op=promote`'s refusal and never here.
+   *
+   *  A MISS IS NOT AN ABSENCE, and THE CALLER STATES THAT, not this read: the
+   *  register answers for documents the record REGISTERED, and a prior acquire
+   *  never promoted leaves parts in R2 and no register row. `registered: false` is
+   *  that one fact and nothing more; `registered: null` is no question asked.
+   */
+  registerHolds({ sha = null } = {}) {
+    const s = typeof sha === "string" && sha.trim()
+      ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
+    if (!s) return { ok: true, sha: null, asked: false, registered: null };
+    return { ok: true, sha: s, asked: true, registered: !!this.#one(
+      `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE r.capture_sha = ? LIMIT 1`, s) };
+  }
   static #promoteAbsent() {
     return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
   }
@@ -48705,6 +48742,10 @@ export class Store extends DurableObject {
           limit: url.searchParams.get("limit"), offset: url.searchParams.get("offset") }),
         /* REC-190: the census of displaced homes, read-only (see `homeCensus`). */
         homecensus: () => this.homeCensus({ limit: url.searchParams.get("limit") }),
+        /* D-476: does the register hold these whole-document bytes, read-only and naming no
+           bundle (see `registerHolds`). op=acquire asks it of a MULTI-PART capture, whose whole
+           is never stored under its own hash for R2 to be asked about. */
+        registerholds: () => this.registerHolds({ sha: url.searchParams.get("sha256") }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,
