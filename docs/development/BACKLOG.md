@@ -123,6 +123,16 @@ scope: one line in `docs/development/kickoffs/WORKER.md` "Before you finish": ed
 accepts-when: the line is on `main`; the next worker's first gate is not RED on corpuscheck. NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
+### D-487 · queued — **`doorbell.test.mjs` FAILS WHEN ITS RUN CROSSES A 10-MINUTE BOUNDARY: `op=knock`'s window is a FIXED bucket read off the wall clock (`Math.floor(Date.now() / KNOCK.windowMs)`, `index.mjs`), so a rollover between the 13th and 14th knock fails "one source gets twelve and no more" and "refusal is a 429, not a 500".** A clock-edge bug, not a flake: REC-190's gate went RED once and passed alone on the same tree. — owner the plane estate.
+order: after M0-141, with the rows that cut gate time: a suite that fails correct work by the clock costs a full-gate round (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:42Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a printed failure is a failure; a suite's verdict must not depend on the wall clock).
+depends-on: none.
+scope: the suite waits past a bucket edge before its run, or the window reads an injectable clock under test; the limiter itself is unchanged. Whether it should be a sliding window is a separate design question, not this row.
+accepts-when: the suite passes with its run started seconds before a bucket edge. NEGATIVE CONTROL: remove the edge guard, start the run just before a rollover, and the twelve-knock arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
 ### FW-22 · queued — **AUDITED FINANCIAL STATEMENTS ARE NOT BUDGETS: BOB #32 ruled (2026-09-24 02:30Z) that an ACFR/CAFR or an agency's audited statements are a separate type, FINANCIAL REPORT, counted apart. D-66's budget sample is recounted with them excluded, and the new class is counted.** — owner FRAMEWORK.
 order: directly after D-66: §2's rule that a count comes before any reader; the financial-report reader follows the budget reader and is its own row once these counts justify it (SCHEDULER #18, 2026-09-24)
 milestone: M2
@@ -1256,13 +1266,3 @@ depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds
 accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-105» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-84 · queued — **NOTHING NOTICES WHEN A RETIRED INSTANCE OF A LANE LANDS AFTER ITS SUCCESSOR.** BOB #17 landed `aa5cc98d` (00:48) after BOB #18 … (whole text: the cut archive)
-order: behind the product rows, first of the session-hygiene instruments (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: a detector neither cuts gate time nor unblocks product; SCHEDULER #12); after M0-81, which PREVENTS what this DETECTS (BOB #19, 2026-09-21): pure git, about a second (SCHEDULER #4, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), enacting `kickoffs/BOB.md` rules 4 and 12.
-depends-on: none.
-accepts-when: a fixture log with an older instance landing after a newer one WARNs naming both; the same log whose late commit touches only the `-NEXT` file does not. How a liar passes it … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-84» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
