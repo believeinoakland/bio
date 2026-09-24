@@ -15880,6 +15880,3676 @@ async function inbandQuartet({ subject, over, date = null, author = null, bar = 
   };
 }
 
+// src/cpu.mjs
+function makeMeter() {
+  const seg = /* @__PURE__ */ Object.create(null);
+  const bump = (label, bytes) => {
+    const e = seg[label] || (seg[label] = { calls: 0, bytes: 0 });
+    e.calls++;
+    if (typeof bytes === "number" && Number.isFinite(bytes)) e.bytes += bytes;
+  };
+  return {
+    /** Run a synchronous block, counting it. `bytes` is the size of what it
+     *  worked on, when that is known and meaningful. */
+    sync(label, fn, bytes) {
+      bump(label, bytes);
+      return fn();
+    },
+    /** Same, for an await that is compute rather than I/O: a crypto digest is
+     *  async in the Workers API and is not a network wait. */
+    async cpuAwait(label, fn, bytes) {
+      bump(label, bytes);
+      return await fn();
+    },
+    report() {
+      const calls = Object.values(seg).reduce((a, e) => a + e.calls, 0);
+      const bytes = Object.values(seg).reduce((a, e) => a + e.bytes, 0);
+      return {
+        work_calls: calls,
+        work_bytes: bytes,
+        segments: { ...seg },
+        measured_ms: null,
+        note: "COUNTS, not times. Cloudflare freezes Date.now() during synchronous execution as a timing-attack defence, so a Worker cannot measure its own compute and any millisecond figure reported from inside one is meaningless. These are the quantities that DRIVE the cost and that would explain a kill afterwards. The ceiling is measured separately, in reference iterations, by op=cpuprobe."
+      };
+    }
+  };
+}
+function burn(iterations) {
+  let x = 1;
+  for (let i = 0; i < iterations; i++) x = (x * 1103515245 + 12345) % 2147483647;
+  return x;
+}
+async function cpuProbe({
+  checkpoint,
+  startStep = 0,
+  maxStep = 40,
+  iterationsPerStep = 2e6,
+  budgetMs = 2e4,
+  now = () => Date.now()
+}) {
+  const t0 = now();
+  let step = startStep;
+  for (; step < maxStep; step++) {
+    burn(iterationsPerStep);
+    const elapsed = now() - t0;
+    await checkpoint(step + 1, elapsed);
+    if (elapsed >= budgetMs) return { completed: step + 1, elapsed_ms: elapsed, reason: "BUDGET_REACHED" };
+  }
+  return { completed: step, elapsed_ms: now() - t0, reason: "MAX_STEP_REACHED" };
+}
+
+// src/subresources.mjs
+var SUBRESOURCE_CAP = 400;
+var SUBRESOURCE_MAX = 8 * 1024 * 1024;
+var SUBRESOURCE_BUDGET = 64 * 1024 * 1024;
+var CSS_MAX_DEPTH = 2;
+var STRIPPED_ELEMENTS = ["script", "iframe", "object", "embed", "applet", "frame", "frameset", "noembed"];
+var REFUSED_SCHEMES = ["javascript:", "data:", "blob:", "about:", "mailto:", "tel:", "file:", "ftp:", "ws:", "wss:", "chrome:", "chrome-extension:", "view-source:"];
+var TAG_RE = /<(\/?[a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
+var ATTR_RE = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+var CSS_URL_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)/gi;
+var CSS_IMPORT_RE = /@import\s+(?:url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)|"([^"]*)"|'([^']*)')/gi;
+var STYLE_EL_RE = /<style\b([^>]*)>([\s\S]*?)<\/style\s*>/gi;
+var COMMENT_RE = /<!--[\s\S]*?-->/g;
+var placeholderFor = (sha) => `about:capture#${sha}`;
+var PLACEHOLDER_MISSING = "about:capture#unavailable";
+function attrsOf(blob) {
+  const out = [];
+  ATTR_RE.lastIndex = 0;
+  let m;
+  while (m = ATTR_RE.exec(blob)) {
+    if (!m[0].trim()) {
+      if (ATTR_RE.lastIndex <= m.index) ATTR_RE.lastIndex = m.index + 1;
+      continue;
+    }
+    out.push({
+      name: m[1].toLowerCase(),
+      raw: m[0],
+      value: m[3] !== void 0 ? m[3] : m[4] !== void 0 ? m[4] : m[5] !== void 0 ? m[5] : null,
+      quote: m[3] !== void 0 ? '"' : m[4] !== void 0 ? "'" : "",
+      present: m[2] !== void 0
+    });
+  }
+  return out;
+}
+var attr = (as, n) => {
+  const a = as.find((x) => x.name === n);
+  return a ? a.value : null;
+};
+function srcsetUrls(v) {
+  const out = [];
+  const s = String(v);
+  let i = 0;
+  const isWs = (c) => c === " " || c === "	" || c === "\n" || c === "\r" || c === "\f";
+  while (i < s.length) {
+    while (i < s.length && (isWs(s[i]) || s[i] === ",")) i++;
+    if (i >= s.length) break;
+    const start = i;
+    while (i < s.length && !isWs(s[i])) i++;
+    let url = s.slice(start, i);
+    if (url.endsWith(",")) {
+      out.push(url.replace(/,+$/, ""));
+      continue;
+    }
+    out.push(url);
+    let depth = 0;
+    while (i < s.length) {
+      if (s[i] === "(") depth++;
+      else if (s[i] === ")" && depth) depth--;
+      else if (s[i] === "," && !depth) {
+        i++;
+        break;
+      }
+      i++;
+    }
+  }
+  return out.filter(Boolean);
+}
+function cssRefs(css) {
+  const out = [];
+  CSS_URL_RE.lastIndex = 0;
+  let m;
+  while (m = CSS_URL_RE.exec(css)) {
+    const u = m[1] ?? m[2] ?? m[3] ?? "";
+    if (u.trim()) out.push(u.trim());
+  }
+  CSS_IMPORT_RE.lastIndex = 0;
+  while (m = CSS_IMPORT_RE.exec(css)) {
+    const u = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? "";
+    if (u.trim()) out.push(u.trim());
+  }
+  return out;
+}
+var FURNITURE_TAGS = /* @__PURE__ */ new Set(["nav", "footer", "header", "aside"]);
+var FURNITURE_ROLES = /* @__PURE__ */ new Set(["navigation", "banner", "contentinfo", "complementary", "search"]);
+var BODY_TAGS = /* @__PURE__ */ new Set(["article", "main"]);
+function pickSrcsetCandidate(cands) {
+  const score = (raw) => {
+    const d = /\s(\d+(?:\.\d+)?)([wx])\s*$/.exec(raw || "");
+    if (!d) return 1;
+    return d[2] === "w" ? Number(d[1]) : Number(d[1]) * 1e3;
+  };
+  const sorted = [...cands].sort((a, b) => score(b.raw) - score(a.raw));
+  return { pick: sorted[0], rest: sorted.slice(1) };
+}
+function parseHtmlRefs(html) {
+  const src = String(html).replace(COMMENT_RE, "");
+  const refs = [];
+  const region = [];
+  const here = () => {
+    const body = region.find((r) => r.region === "body");
+    if (body) return body;
+    const furn = region[region.length - 1];
+    return furn || { region: "body", basis: "default" };
+  };
+  const add = (ref, kind, where, extra) => {
+    if (!ref || !ref.trim()) return;
+    const r = here();
+    refs.push({ ref: ref.trim(), kind, where, region: r.region, region_basis: r.basis, ...extra || {} });
+  };
+  TAG_RE.lastIndex = 0;
+  let m;
+  while (m = TAG_RE.exec(src)) {
+    const raw = m[1];
+    const closing = raw.startsWith("/");
+    const tag = (closing ? raw.slice(1) : raw).toLowerCase();
+    if (closing) {
+      if (FURNITURE_TAGS.has(tag) || BODY_TAGS.has(tag)) {
+        for (let i = region.length - 1; i >= 0; i--)
+          if (region[i].tag === tag) {
+            region.splice(i, 1);
+            break;
+          }
+      }
+      continue;
+    }
+    const as = attrsOf(m[2] || "");
+    {
+      const role = (attr(as, "role") || "").toLowerCase().trim();
+      if (FURNITURE_ROLES.has(role)) region.push({ tag, region: "furniture", basis: `role=${role}` });
+      else if (role === "main" || role === "article") region.push({ tag, region: "body", basis: `role=${role}` });
+      else if (FURNITURE_TAGS.has(tag)) region.push({ tag, region: "furniture", basis: `<${tag}>` });
+      else if (BODY_TAGS.has(tag)) region.push({ tag, region: "body", basis: `<${tag}>` });
+    }
+    const inlineStyle = attr(as, "style");
+    if (inlineStyle) for (const u of cssRefs(inlineStyle)) add(u, "css-asset", `${tag}[style]`);
+    if (tag === "link") {
+      const rel = (attr(as, "rel") || "").toLowerCase().split(/\s+/).filter(Boolean);
+      const href = attr(as, "href");
+      if (!href) continue;
+      if (rel.includes("stylesheet")) add(href, "stylesheet", "link[rel=stylesheet]");
+      else if (rel.some((r) => r === "icon" || r === "shortcut" || r === "apple-touch-icon" || r === "mask-icon" || r === "apple-touch-icon-precomposed"))
+        add(href, "icon", `link[rel=${rel.join(" ")}]`);
+      else if (rel.includes("preload")) {
+        const as_ = (attr(as, "as") || "").toLowerCase();
+        if (as_ === "style") add(href, "stylesheet", "link[rel=preload][as=style]");
+        else if (as_ === "image") add(href, "image", "link[rel=preload][as=image]");
+        else if (as_ === "font") add(href, "font", "link[rel=preload][as=font]");
+      }
+      continue;
+    }
+    if (tag === "img" || tag === "input" || tag === "source" || tag === "video" || tag === "audio" || tag === "track" || tag === "image" || tag === "use") {
+      if (tag === "input" && (attr(as, "type") || "").toLowerCase() !== "image") continue;
+      const kind = tag === "video" || tag === "audio" || tag === "track" ? "media" : "image";
+      const ss = attr(as, "srcset") || attr(as, "imagesrcset");
+      if (ss) {
+        const rawCands = ss.split(",").map((x) => x.trim()).filter(Boolean);
+        const cands = srcsetUrls(ss).map((u, i) => ({ url: u, raw: rawCands[i] || u }));
+        const fb = attr(as, "src");
+        if (fb && !cands.some((c) => c.url === fb)) cands.push({ url: fb, raw: fb });
+        const { pick, rest } = pickSrcsetCandidate(cands);
+        const meta = { family: "srcset", family_size: cands.length, evidentiary_prior: "weak_against" };
+        if (pick) add(pick.url, kind, `${tag}[srcset]`, meta);
+        for (const r of rest) add(r.url, kind, `${tag}[srcset]`, { ...meta, collapsed: true });
+        const po = attr(as, "poster");
+        if (po) add(po, "image", `${tag}[poster]`);
+        continue;
+      }
+      for (const n of ["src", "poster", "href", "xlink:href"]) {
+        const v = attr(as, n);
+        if (v) add(v, n === "poster" ? "image" : kind, `${tag}[${n}]`);
+      }
+      continue;
+    }
+    if (tag === "script") {
+      const s = attr(as, "src");
+      if (s) add(s, "script", "script[src]");
+      continue;
+    }
+  }
+  STYLE_EL_RE.lastIndex = 0;
+  while (m = STYLE_EL_RE.exec(src))
+    for (const u of cssRefs(m[2] || "")) add(u, "css-asset", "style");
+  return refs;
+}
+function classifyRef(ref, base, isPublic) {
+  const lower = ref.toLowerCase();
+  for (const s of REFUSED_SCHEMES) {
+    if (lower.startsWith(s)) return { ok: false, reason: "REFUSED_SCHEME", scheme: s, url: ref };
+  }
+  let abs;
+  try {
+    abs = new URL(ref, base).toString();
+  } catch {
+    return { ok: false, reason: "UNRESOLVABLE", url: ref };
+  }
+  const clean = abs.split("#")[0];
+  if (!isPublic(clean)) return { ok: false, reason: "REFUSED_LOCATOR", url: clean };
+  return { ok: true, url: clean };
+}
+var CSP = "default-src 'none'; img-src blob: about:; style-src blob: about: 'unsafe-inline'; font-src blob: about:; media-src blob: about:; script-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'";
+var BANNER = (primarySha, when) => `<!-- DERIVED ARTIFACT, not evidence. Generated by bio-plane from the capture
+     ${primarySha}
+     at ${when}. The raw bytes as served are the evidence and are stored
+     separately, unmodified. This file has had scripts and frames removed and
+     every subresource reference replaced with an about:capture#<sha256>
+     placeholder resolved from data/snapshot-manifest.json. Opened without a
+     resolving viewer it renders blank, on purpose. -->
+`;
+function stripElements(html) {
+  let out = html;
+  for (const el of STRIPPED_ELEMENTS) {
+    out = out.replace(new RegExp(`<${el}\\b[^>]*>[\\s\\S]*?<\\/${el}\\s*>`, "gi"), "");
+    out = out.replace(new RegExp(`<${el}\\b[^>]*\\/?>`, "gi"), "");
+    out = out.replace(new RegExp(`<\\/${el}\\s*>`, "gi"), "");
+  }
+  out = out.replace(/<base\b[^>]*>/gi, "");
+  out = out.replace(/<meta\b[^>]*http-equiv\s*=\s*["']?\s*refresh[^>]*>/gi, "");
+  return out;
+}
+function rewriteCssText(css, resolve) {
+  const one = (whole, u) => {
+    const t = resolve(u);
+    return t === null ? whole : whole.replace(/url\(\s*(?:"[^"]*"|'[^']*'|[^)'"\s]*)\s*\)/i, `url("${t}")`);
+  };
+  let out = css.replace(CSS_URL_RE, (whole, a, b, c) => one(whole, (a ?? b ?? c ?? "").trim()));
+  out = out.replace(CSS_IMPORT_RE, (whole, a, b, c, d, e) => {
+    const u = (a ?? b ?? c ?? d ?? e ?? "").trim();
+    const t = resolve(u);
+    return t === null ? whole : `@import url("${t}")`;
+  });
+  return out;
+}
+function renderCompanion(html, { resolve, classifyLink, primarySha, when }) {
+  let src = stripElements(String(html));
+  src = src.replace(STYLE_EL_RE, (whole, attrsBlob, body) => `<style${attrsBlob}>${rewriteCssText(body, (u) => resolve(u, "css-asset"))}</style>`);
+  src = src.replace(TAG_RE, (whole, name, blob, selfClose) => {
+    const tag = name.toLowerCase();
+    const as = attrsOf(blob || "");
+    if (!as.length) return whole;
+    const kept = [];
+    for (const a of as) {
+      if (/^on[a-z]+$/.test(a.name)) continue;
+      if (a.name === "integrity" || a.name === "nonce") continue;
+      if (!a.present || a.value === null) {
+        kept.push(a.raw);
+        continue;
+      }
+      const q = a.quote || '"';
+      const put = (v) => kept.push(`${a.name}=${q}${v}${q}`);
+      if (a.name === "style") {
+        put(rewriteCssText(a.value, (u) => resolve(u, "css-asset")));
+        continue;
+      }
+      if (a.name === "srcset" || a.name === "imagesrcset") {
+        const live = [];
+        let anyDead = false;
+        for (const cand of a.value.split(",")) {
+          const trimmed = cand.trim();
+          if (!trimmed) continue;
+          const bits = trimmed.split(/\s+/);
+          const t = resolve(bits[0], "image");
+          if (t === PLACEHOLDER_MISSING) {
+            anyDead = true;
+            continue;
+          }
+          bits[0] = t === null ? bits[0] : t;
+          live.push(bits.join(" "));
+        }
+        if (!live.length) {
+          put(PLACEHOLDER_MISSING);
+          continue;
+        }
+        put(live.length === 1 && anyDead ? live[0].split(/\s+/)[0] : live.join(", "));
+        continue;
+      }
+      if (a.name === "href" || a.name === "src" || a.name === "poster" || a.name === "xlink:href" || a.name === "data") {
+        if (tag === "a" || tag === "area") {
+          const L = classifyLink(a.value);
+          kept.push(`data-bio-link="${L.type}"`);
+          if (L.address) kept.push(`data-bio-href="${L.address.replace(/"/g, "&quot;")}"`);
+          put(L.wrapper);
+          continue;
+        }
+        const t = resolve(a.value, tag === "script" ? "script" : "asset");
+        put(t === null ? a.value : t);
+        continue;
+      }
+      kept.push(a.raw);
+    }
+    return `<${name}${kept.length ? " " + kept.join(" ") : ""}${selfClose}>`;
+  });
+  const head = BANNER(primarySha, when) + `<meta http-equiv="Content-Security-Policy" content="${CSP}">
+`;
+  const at = src.search(/<head\b[^>]*>/i);
+  if (at !== -1) {
+    const end = src.indexOf(">", at) + 1;
+    return src.slice(0, end) + "\n" + head + src.slice(end);
+  }
+  return head + src;
+}
+function originOf(url, baseHost) {
+  let h;
+  try {
+    h = new URL(url).hostname.toLowerCase();
+  } catch {
+    return { origin: "unknown", host: null };
+  }
+  const b = String(baseHost || "").toLowerCase();
+  if (h === b) return { origin: "same_host", host: h };
+  const tail = (x) => x.split(".").slice(-2).join(".");
+  if (b && tail(h) === tail(b)) return { origin: "same_site", host: h, approximate: true };
+  return { origin: "third_party", host: h };
+}
+var FETCH_PRIORITY = { stylesheet: 0, "css-asset": 1, font: 1, icon: 2, image: 3, media: 4, script: 5 };
+var priorityOf = (ref) => (FETCH_PRIORITY[ref.kind] ?? 3) + (ref.region === "furniture" ? 10 : 0);
+function normalizeAddress(url) {
+  let u;
+  try {
+    u = new URL(url);
+  } catch {
+    return String(url || "").trim();
+  }
+  u.hash = "";
+  u.protocol = u.protocol.toLowerCase();
+  u.hostname = u.hostname.toLowerCase();
+  if (u.protocol === "https:" && u.port === "443" || u.protocol === "http:" && u.port === "80") u.port = "";
+  const ps = [...u.searchParams.entries()].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] < b[1] ? -1 : 1);
+  u.search = ps.length ? "?" + ps.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&") : "";
+  return u.toString();
+}
+function normalizeCitation(url) {
+  const raw = String(url || "").trim();
+  const hash = raw.indexOf("#");
+  if (hash === -1) return normalizeAddress(raw);
+  const frag = raw.slice(hash + 1);
+  return normalizeAddress(raw.slice(0, hash)) + (frag ? "#" + frag : "");
+}
+function fragmentOf(url) {
+  const raw = String(url || "").trim();
+  const hash = raw.indexOf("#");
+  if (hash === -1) return null;
+  const frag = raw.slice(hash + 1).trim();
+  return frag || null;
+}
+var REUSABLE_KINDS = /* @__PURE__ */ new Set(["stylesheet", "css-asset", "font", "icon"]);
+function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 1e3, minDocuments = 2 } = {}) {
+  if (!known || !known.sha256) return { reuse: false, why: "not_seen_before" };
+  if (!REUSABLE_KINDS.has(ref.kind)) return { reuse: false, why: "evidence_is_always_fetched" };
+  const pages = known.documents || 0;
+  if (pages < minDocuments)
+    return { reuse: false, why: pages + (known.documents_undetermined || 0) >= minDocuments ? "shared_across_documents_undetermined" : "not_yet_shared_across_documents" };
+  const seen = Date.parse(known.last_fetched || "");
+  if (!Number.isFinite(seen)) return { reuse: false, why: "no_fetch_record" };
+  const age = now - seen;
+  if (age > freshWindowMs) return { reuse: false, why: "last_seen_served_too_long_ago", age_ms: age };
+  const stable = Date.parse(known.stable_since || "");
+  return {
+    reuse: true,
+    fetched_age_ms: age,
+    stable_for_ms: Number.isFinite(stable) ? now - stable : null,
+    changes: known.changes || 0
+  };
+}
+function fetchPolicy(ref, origin) {
+  if (ref.collapsed)
+    return {
+      fetch: false,
+      reason: "COLLAPSED_SRCSET_FAMILY",
+      detail: `one of ${ref.family_size} responsive candidates for one picture; the largest is captured`
+    };
+  if (ref.kind === "stylesheet" || ref.kind === "css-asset" || ref.kind === "font" || ref.kind === "icon")
+    return { fetch: true, why: "layout" };
+  if (origin === "third_party" && (ref.kind === "script" || ref.kind === "image" || ref.kind === "media"))
+    return {
+      fetch: false,
+      reason: "THIRD_PARTY",
+      detail: "cross-origin script, image, or media: advertising, analytics, and social widgets are not part of the document"
+    };
+  if (ref.kind === "script") return { fetch: true, why: "served_with_the_page" };
+  if (ref.region === "furniture")
+    return {
+      fetch: false,
+      reason: "OUTSIDE_THE_DOCUMENT",
+      detail: `found in ${ref.region_basis}, which belongs to the site rather than to this document`
+    };
+  return { fetch: true, why: "in_the_document" };
+}
+var LINK_TYPES = ["anchor", "intra", "deferred", "refused"];
+var linkWrapper = {
+  anchor: (frag) => frag,
+  intra: (sha) => `about:capture#${sha}`,
+  deferred: (url) => `about:link#${encodeURIComponent(url)}`,
+  refused: () => "about:link#refused"
+};
+async function captureSubresources({
+  html,
+  base,
+  primarySha,
+  primaryFile,
+  fetchOne,
+  put,
+  sha256: sha2562,
+  isPublic,
+  cap = SUBRESOURCE_CAP,
+  perMax = SUBRESOURCE_MAX,
+  budget = SUBRESOURCE_BUDGET,
+  now = () => /* @__PURE__ */ new Date(),
+  /* What this runtime was last OBSERVED to allow, passed in by the caller from
+     whatever it recorded last time, or null the first time anything runs here.
+     Never a constant in this file: the number belongs to the platform, changes
+     without notice, and differs per account, so the only honest source for it
+     is having hit it. */
+  platformCeiling = null,
+  platformMargin = 5,
+  subrequestsAlreadySpent = 1,
+  /* What this host has served before. `siteLookup(addressNorm)` returns the
+     stored record or null; absent, nothing is ever reused and behaviour is
+     exactly what it was before reuse existed. */
+  siteLookup = null,
+  reuseFreshWindowMs = 24 * 3600 * 1e3,
+  reuseMinDocuments = 2,
+  /* Reads a stored capture back as text, so a REUSED stylesheet can have its own
+     url() targets followed just as a freshly fetched one does. Without it a
+     reused stylesheet would render without its sprites. */
+  readBack = null,
+  /* Resuming a capture that ran out of budget. `resume` carries what an earlier
+     tick accumulated and what it had left to do. Nothing is re-fetched and
+     nothing is re-parsed: the queue is restored rather than rediscovered,
+     because rediscovering it means reading every stylesheet back out of R2 to
+     re-derive its url() targets, and on a Legistar page that is thirty storage
+     reads spent to learn what one row already knew. */
+  resume = null,
+  /* Measured, not assumed. Every synchronous compute segment in here is timed so
+     the record can say what a capture actually costs against whatever ceiling
+     the runtime has. Network waits are never inside a segment. */
+  meter = makeMeter()
+}) {
+  const noReuse = [];
+  const rec_noreuse = (stem, dec) => noReuse.push({ url: stem.url, kind: stem.kind, why: dec.why });
+  const stamp = () => now().toISOString().split(".")[0] + "Z";
+  const records = [];
+  const bySha = /* @__PURE__ */ new Map();
+  const byUrl = /* @__PURE__ */ new Map();
+  const refToUrl = /* @__PURE__ */ new Map();
+  let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false, platformHit = false;
+  let observedCeiling = null, deferred = 0, reused = 0;
+  const siteObservations = [];
+  const links = [];
+  const outstanding = [];
+  const ceilingBudget = platformCeiling == null ? Infinity : Math.max(0, platformCeiling - platformMargin - subrequestsAlreadySpent);
+  let baseHost = null;
+  try {
+    baseHost = new URL(base).hostname;
+  } catch {
+    baseHost = null;
+  }
+  let queue;
+  if (resume) {
+    for (const r of resume.records || []) {
+      records.push(r);
+      if (r.url) byUrl.set(r.url, r);
+      if (r.ok && r.sha256 && !bySha.has(r.sha256)) bySha.set(r.sha256, r);
+    }
+    for (const l of resume.links || []) links.push(l);
+    for (const [k, v] of Object.entries(resume.refToUrl || {})) refToUrl.set(k, v);
+    for (const o of resume.siteObservations || []) siteObservations.push(o);
+    discovered = resume.discovered || records.length;
+    spent = resume.spent || 0;
+    queue = (resume.queue || []).map((q) => ({
+      ...q,
+      cssOwner: q.cssOwnerIdx == null ? void 0 : records[q.cssOwnerIdx]
+    }));
+    const retry = new Set(queue.map((q) => q.retryUrl).filter(Boolean));
+    for (let i = records.length - 1; i >= 0; i--)
+      if (records[i].reason === "DEFERRED" && retry.has(records[i].url)) {
+        byUrl.delete(records[i].url);
+        records.splice(i, 1);
+        discovered--;
+      }
+  } else {
+    queue = meter.sync("parse_html", () => parseHtmlRefs(html), html.length).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
+  }
+  const settle = (item, rec) => {
+    if (rec) records.push(rec);
+    if (item.cssOwner)
+      item.cssOwner.rewrite.push({ ref: item.ref, sha256: rec && rec.ok ? rec.sha256 : null });
+  };
+  while (queue.length) {
+    let at_ = 0, best = priorityOf(queue[0]);
+    for (let i = 1; i < queue.length; i++) {
+      const p = priorityOf(queue[i]);
+      if (p < best) {
+        best = p;
+        at_ = i;
+      }
+    }
+    const item = queue.splice(at_, 1)[0];
+    discovered++;
+    const cls = classifyRef(item.ref, item.against, isPublic);
+    if (item.depth === 1 && !refToUrl.has(item.ref)) refToUrl.set(item.ref, cls.ok ? cls.url : null);
+    const at = stamp();
+    const org = cls.ok ? originOf(cls.url, baseHost) : { origin: "unknown", host: null };
+    const stem = {
+      url: cls.ok ? cls.url : item.ref,
+      kind: item.kind,
+      via: item.where,
+      from: item.from,
+      depth: item.depth,
+      region: item.region || "body",
+      region_basis: item.region_basis || "default",
+      ...org,
+      ...item.family ? { family: item.family, family_size: item.family_size } : {},
+      ...item.evidentiary_prior ? { evidentiary_prior: item.evidentiary_prior } : {},
+      fetched_at: at
+    };
+    if (!cls.ok) {
+      settle(item, {
+        ...stem,
+        ok: false,
+        status: null,
+        reason: cls.reason,
+        ...cls.scheme ? { scheme: cls.scheme } : {},
+        detail: cls.reason === "REFUSED_SCHEME" ? `a ${cls.scheme} reference is not something this surface fetches` : "the address is not public https, and the fence that guards the primary locator guards this one"
+      });
+      continue;
+    }
+    const pol = fetchPolicy(item, org.origin);
+    if (!pol.fetch) {
+      settle(item, {
+        ...stem,
+        ok: false,
+        status: null,
+        fetched: false,
+        reason: pol.reason,
+        detail: pol.detail
+      });
+      continue;
+    }
+    const already = byUrl.get(cls.url);
+    if (already) {
+      if (item.cssOwner)
+        item.cssOwner.rewrite.push({ ref: item.ref, sha256: already.ok ? already.sha256 : null });
+      continue;
+    }
+    if (platformHit || attempted >= ceilingBudget) {
+      deferred++;
+      outstanding.push({
+        ...{ ...item, cssOwner: void 0 },
+        cssOwnerIdx: item.cssOwner ? records.indexOf(item.cssOwner) : null,
+        retryUrl: cls.url
+      });
+      settle(item, {
+        ...stem,
+        ok: false,
+        status: null,
+        reason: "DEFERRED",
+        detail: platformHit ? "this invocation reached the runtime's outbound request limit; the reference is outstanding, not failed, and a continuation can fetch it" : "held back from a previously observed runtime limit so the invocation ends on our terms rather than mid-fetch"
+      });
+      continue;
+    }
+    if (attempted >= cap) {
+      truncated = true;
+      settle(item, {
+        ...stem,
+        ok: false,
+        status: null,
+        reason: "CAP_REACHED",
+        cap,
+        detail: "the fanout cap was reached before this reference; it is recorded rather than dropped so the truncation is visible"
+      });
+      continue;
+    }
+    if (spent >= budget) {
+      budgetHit = true;
+      settle(item, { ...stem, ok: false, status: null, reason: "BUDGET_EXHAUSTED", budgetBytes: budget });
+      continue;
+    }
+    if (siteLookup) {
+      const known = await siteLookup(normalizeAddress(cls.url));
+      const dec = reuseDecision(item, known, { now: Date.now(), freshWindowMs: reuseFreshWindowMs, minDocuments: reuseMinDocuments });
+      if (dec.reuse) {
+        reused++;
+        const rec2 = {
+          ...stem,
+          ok: true,
+          status: null,
+          sha256: known.sha256,
+          bytes: known.bytes,
+          ...known.content_type ? { content_type: known.content_type } : {},
+          existed: true,
+          /* The honesty fields. A reader must never be led to believe a byte was
+             verified against the source during THIS capture when it was not. */
+          fetched_this_capture: false,
+          /* CAP-14 (CAPTURE-SCALING.md §Job one, RULED 2026-09-21 by BOB #21): the
+             capture whose FETCH served these bytes, so a reader can follow them to
+             the fetch that saw them served. null when the record names none (a
+             fetch recorded before the build): UNDETERMINED as to source, never
+             inferred from timestamps. */
+          reused_from: known.last_fetched_by || null,
+          reused_from_fetched_at: known.last_fetched,
+          reused_stable_since: known.stable_since,
+          reused_seen_in_documents: known.documents,
+          detail: `not fetched during this capture: the source was seen serving these exact bytes at ${known.last_fetched}` + (known.last_fetched_by ? ` by capture ${known.last_fetched_by}` : ` by a capture the record does not name (undetermined)`) + `, across ${known.documents} documents on this host` + (known.documents_undetermined ? ` (and ${known.documents_undetermined} earlier capture${known.documents_undetermined === 1 ? "" : "s"} whose page the record does not name, counted as undetermined)` : "") + `, and they are reused from the record rather than requested again`
+        };
+        byUrl.set(cls.url, rec2);
+        if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec2);
+        siteObservations.push({
+          address: cls.url,
+          address_norm: normalizeAddress(cls.url),
+          sha256: known.sha256,
+          kind: item.kind,
+          reused: true,
+          reused_from: known.last_fetched_by || null
+        });
+        if ((item.kind === "stylesheet" || known.content_type === "text/css") && item.depth < CSS_MAX_DEPTH && readBack) {
+          const text = await readBack(known.sha256);
+          if (text != null) {
+            rec2.css = true;
+            rec2.rewrite = [];
+            for (const u of cssRefs(text))
+              queue.push({
+                ref: u,
+                kind: "css-asset",
+                where: `url() in ${cls.url}`,
+                depth: item.depth + 1,
+                from: cls.url,
+                against: cls.url,
+                cssOwner: rec2,
+                region: rec2.region,
+                region_basis: rec2.region_basis
+              });
+          }
+        }
+        settle(item, rec2);
+        continue;
+      }
+      if (known) rec_noreuse(stem, dec);
+    }
+    attempted++;
+    let r;
+    try {
+      r = await fetchOne(cls.url);
+    } catch (e) {
+      const msg = String(e && e.message || e);
+      const platform = /too many subrequests|subrequest limit|exceeded.*limit/i.test(msg);
+      r = {
+        ok: false,
+        status: 0,
+        reason: platform ? "PLATFORM_LIMIT" : "FETCH_FAILED",
+        detail: platform ? "the runtime refused another outbound request in this invocation; the source was never asked, and this says nothing about whether it would have answered" : msg
+      };
+      if (platform && !platformHit) {
+        platformHit = true;
+        observedCeiling = attempted + subrequestsAlreadySpent;
+      }
+    }
+    if (!r || !r.ok) {
+      const rec2 = {
+        ...stem,
+        ok: false,
+        status: r ? r.status ?? null : null,
+        reason: r?.reason || "SOURCE_REFUSED",
+        ...r?.detail ? { detail: r.detail } : {}
+      };
+      byUrl.set(cls.url, rec2);
+      settle(item, rec2);
+      continue;
+    }
+    const bytes = r.bytes || new Uint8Array(0);
+    if (bytes.length > perMax) {
+      const rec2 = {
+        ...stem,
+        ok: false,
+        status: r.status ?? 200,
+        reason: "TOO_LARGE",
+        bytes: bytes.length,
+        maxBytes: perMax
+      };
+      byUrl.set(cls.url, rec2);
+      settle(item, rec2);
+      continue;
+    }
+    spent += bytes.length;
+    const sha = await meter.cpuAwait("hash_subresource", () => sha2562(bytes), bytes.length);
+    const { existed } = await put(sha, bytes);
+    const ct = (r.contentType || "").split(";")[0].trim();
+    const rec = {
+      ...stem,
+      ok: true,
+      status: r.status ?? 200,
+      sha256: sha,
+      bytes: bytes.length,
+      ...ct ? { content_type: ct } : {},
+      existed: !!existed
+    };
+    rec.fetched_this_capture = true;
+    byUrl.set(cls.url, rec);
+    if (!bySha.has(sha)) bySha.set(sha, rec);
+    siteObservations.push({
+      address: cls.url,
+      address_norm: normalizeAddress(cls.url),
+      sha256: sha,
+      kind: item.kind,
+      bytes: bytes.length,
+      content_type: ct || null,
+      reused: false
+    });
+    const isCss = item.kind === "stylesheet" || ct === "text/css";
+    if (isCss && item.depth < CSS_MAX_DEPTH) {
+      let text = "";
+      try {
+        text = meter.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes), bytes.length);
+      } catch {
+        text = "";
+      }
+      rec.css = true;
+      rec.rewrite = [];
+      for (const u of meter.sync("parse_css", () => cssRefs(text)))
+        queue.push({
+          ref: u,
+          kind: "css-asset",
+          where: `url() in ${cls.url}`,
+          depth: item.depth + 1,
+          from: cls.url,
+          against: cls.url,
+          cssOwner: rec,
+          /* A stylesheet's own assets carry the stylesheet's region,
+             not the region of whatever tag happened to be open. */
+          region: rec.region,
+          region_basis: rec.region_basis
+        });
+    }
+    settle(item, rec);
+  }
+  const resolve = (ref, kind) => {
+    const trimmed = String(ref || "").trim();
+    if (!trimmed) return null;
+    if (kind === "script") return PLACEHOLDER_MISSING;
+    const abs = refToUrl.has(trimmed) ? refToUrl.get(trimmed) : (() => {
+      const c = classifyRef(trimmed, base, isPublic);
+      return c.ok ? c.url : null;
+    })();
+    if (abs === null) return PLACEHOLDER_MISSING;
+    const rec = byUrl.get(abs);
+    if (!rec) return PLACEHOLDER_MISSING;
+    if (rec.kind === "script") return PLACEHOLDER_MISSING;
+    return rec.ok ? placeholderFor(rec.sha256) : PLACEHOLDER_MISSING;
+  };
+  const when0 = resume && resume.when0 ? resume.when0 : stamp();
+  const seenLink = new Map(links.map((l) => [`${l.type}\0${l.citation || l.address || l.ref}`, true]));
+  const classifyLink = (ref) => {
+    const raw = String(ref || "").trim();
+    const note = (type, address, extra = {}) => {
+      const key = `${type}\0${extra.citation || address || raw}`;
+      if (!seenLink.has(key)) {
+        seenLink.set(key, true);
+        links.push({
+          ref: raw,
+          type,
+          address: address || null,
+          as_of: when0,
+          ...address ? originOf(address, baseHost) : {},
+          ...extra
+        });
+      }
+      return { type, address, ...extra };
+    };
+    if (!raw) return { type: "refused", wrapper: linkWrapper.refused(), address: null };
+    if (raw.startsWith("#")) {
+      note("anchor", base, { fragment: fragmentOf(raw), citation: normalizeCitation(base + raw) });
+      return { type: "anchor", wrapper: linkWrapper.anchor(raw), address: null };
+    }
+    const cls = classifyRef(raw, base, isPublic);
+    if (!cls.ok) {
+      note("refused", cls.url, { reason: cls.reason, ...cls.scheme ? { scheme: cls.scheme } : {} });
+      return { type: "refused", wrapper: linkWrapper.refused(), address: null };
+    }
+    const held = byUrl.get(cls.url);
+    if (held && held.ok) {
+      note("intra", cls.url, {
+        sha256: held.sha256,
+        fragment: fragmentOf(raw),
+        citation: normalizeCitation(new URL(raw, base).toString())
+      });
+      return { type: "intra", wrapper: linkWrapper.intra(held.sha256), address: cls.url };
+    }
+    note("deferred", cls.url, {
+      held_at_capture: false,
+      fragment: fragmentOf(raw),
+      citation: normalizeCitation(new URL(raw, base).toString())
+    });
+    return { type: "deferred", wrapper: linkWrapper.deferred(cls.url), address: cls.url };
+  };
+  const when = when0;
+  const companionText = meter.sync("render_companion", () => renderCompanion(html, { resolve, classifyLink, primarySha, when }), html.length);
+  const companionBytes = meter.sync("encode_companion", () => new TextEncoder().encode(companionText), companionText.length);
+  const companionSha = await meter.cpuAwait("hash_companion", () => sha2562(companionBytes));
+  await put(companionSha, companionBytes);
+  const fetched = records.filter((r) => r.ok);
+  const manifest = {
+    version: 1,
+    derived: true,
+    of: primaryFile,
+    of_sha256: primarySha,
+    base,
+    generated: when,
+    render: `${primaryFile}.render.html`,
+    render_sha256: companionSha,
+    placeholder_scheme: "about:capture#<sha256>",
+    unavailable: PLACEHOLDER_MISSING,
+    limits: { cap, per_max_bytes: perMax, budget_bytes: budget, css_max_depth: CSS_MAX_DEPTH },
+    discovered,
+    attempted,
+    truncated,
+    budget_exhausted: budgetHit,
+    complete: !platformHit && !truncated && !budgetHit && deferred === 0,
+    compute: meter.report(),
+    reuse: {
+      reused,
+      fetched: fetched.length - reused,
+      not_reused: noReuse,
+      fresh_window_ms: reuseFreshWindowMs,
+      min_documents: reuseMinDocuments,
+      note: "entries with fetched_this_capture:false were NOT fetched during this capture; their bytes come from an earlier fetch of the same address on this host, made by the capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. A capture ratified as evidence must re-fetch them."
+    },
+    outstanding: deferred,
+    platform: {
+      limited: platformHit,
+      /* Discovered, never declared. null means this run never found the edge,
+         which tells the caller only that the ceiling is AT LEAST what was spent,
+         not what it is. */
+      observed_ceiling: observedCeiling,
+      ceiling_used: platformCeiling,
+      spent_this_invocation: attempted + subrequestsAlreadySpent,
+      note: observedCeiling ? "the runtime refused an outbound request at this count; record it and pass it back as platformCeiling" : "no limit was reached, so the ceiling is at least spent_this_invocation and its true value is unknown"
+    },
+    counts: {
+      fetched: fetched.length,
+      failed: records.filter((r) => !r.ok && (r.reason === "SOURCE_REFUSED" || r.reason === "FETCH_FAILED" || r.reason === "TOO_LARGE")).length,
+      platform_limited: records.filter((r) => r.reason === "PLATFORM_LIMIT").length,
+      deferred: records.filter((r) => r.reason === "DEFERRED").length,
+      refused: records.filter((r) => !r.ok && (r.reason === "REFUSED_SCHEME" || r.reason === "REFUSED_LOCATOR" || r.reason === "UNRESOLVABLE")).length,
+      /* Deliberately not fetched: policy skips, plus the two bounds. Every
+         record lands in exactly one of fetched/failed/refused/skipped, and the
+         subresources test asserts that identity, so a new reason that forgets
+         to name a bucket fails rather than quietly vanishing from the totals. */
+      skipped: records.filter((r) => !r.ok && (r.reason === "OUTSIDE_THE_DOCUMENT" || r.reason === "THIRD_PARTY" || r.reason === "COLLAPSED_SRCSET_FAMILY" || r.reason === "CAP_REACHED" || r.reason === "BUDGET_EXHAUSTED" || r.reason === "PLATFORM_LIMIT" || r.reason === "DEFERRED")).length,
+      scripts_held_unreferenced: fetched.filter((r) => r.kind === "script").length,
+      bytes: spent,
+      not_fetched: {
+        outside_the_document: records.filter((r) => r.reason === "OUTSIDE_THE_DOCUMENT").length,
+        third_party: records.filter((r) => r.reason === "THIRD_PARTY").length,
+        collapsed_srcset: records.filter((r) => r.reason === "COLLAPSED_SRCSET_FAMILY").length
+      },
+      by_origin: {
+        same_host: records.filter((r) => r.origin === "same_host").length,
+        same_site: records.filter((r) => r.origin === "same_site").length,
+        third_party: records.filter((r) => r.origin === "third_party").length
+      },
+      links: {
+        anchor: links.filter((l) => l.type === "anchor").length,
+        intra: links.filter((l) => l.type === "intra").length,
+        deferred: links.filter((l) => l.type === "deferred").length,
+        refused: links.filter((l) => l.type === "refused").length
+      }
+    },
+    subresources: records,
+    links,
+    link_note: "Every <a> the page carried, characterised. `intra` resolves inside this bundle and is final. `deferred` is an address whose partition depends on what the store holds and is therefore NOT final: held_at_capture records only what was true when this page was captured, and a viewer must re-resolve it against the store at read time. A deferred link that later resolves to a capture in another bundle is a link to THAT VERSION of the target only if the target's capture can be shown to be the version the source was pointing at on this page's retrieval date. Until that is established the link is unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.",
+    note: "Every entry the viewer renders must be fetched by sha256 through op=capture and verified against that sha before use. Entries with ok:false are recorded because a stylesheet the source failed to serve is part of what the source served that day. Script entries hold bytes and are never referenced by the render companion."
+  };
+  const manifestBytes = meter.sync("serialise_manifest", () => new TextEncoder().encode(JSON.stringify(manifest, null, 1)), records.length);
+  const manifestSha = await meter.cpuAwait("hash_manifest", () => sha2562(manifestBytes));
+  await put(manifestSha, manifestBytes);
+  return {
+    subresources: records,
+    links,
+    siteObservations,
+    reused,
+    meter,
+    /* Everything the next tick needs, and nothing it does not. The primary HTML
+       is NOT in here: it is already in the store under primarySha, and carrying
+       a copy in session state would be a second, unverified copy of evidence. */
+    resumeState: outstanding.length ? {
+      when0,
+      discovered,
+      spent,
+      queue: outstanding,
+      records,
+      links,
+      siteObservations,
+      refToUrl: Object.fromEntries(refToUrl)
+    } : null,
+    manifest,
+    manifestSha,
+    manifestBytes,
+    companionText,
+    companionSha,
+    companionBytes,
+    truncated,
+    discovered,
+    attempted,
+    /* `renditions`, not `derived`. C-18.1 already spends `derived` on a
+       different claim: that THIS document is itself a derivation of something
+       else, with a transform and a reason. What is being named here is the
+       opposite direction, artifacts derived FROM this document, so it needs its
+       own key. It borrows the transform/reason vocabulary because the honesty
+       requirement is identical: a rendering that does not say what was done to
+       it and why is indistinguishable from evidence. */
+    renditions: [
+      {
+        file: `${primaryFile}.render.html`,
+        kind: "render_companion",
+        from_file: primaryFile,
+        sha256: companionSha,
+        bytes: companionBytes.length,
+        content_type: "text/html",
+        transform: "scripts and frames removed; subresource references replaced with about:capture#<sha256> placeholders; a content security policy added",
+        reason: "the raw capture is the evidence and is never rewritten, so showing the page as it was needs a separate artifact that says it is one"
+      },
+      {
+        file: "data/snapshot-manifest.json",
+        kind: "snapshot_manifest",
+        from_file: primaryFile,
+        sha256: manifestSha,
+        bytes: manifestBytes.length,
+        content_type: "application/json",
+        transform: "index of the render companion's placeholders to the content-addressed captures they resolve to",
+        reason: "a viewer must be able to verify every byte it substitutes against the record before showing it"
+      }
+    ]
+  };
+}
+
+// src/docx.mjs
+var UTF82 = new TextDecoder("utf-8", { fatal: false });
+var DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+var CONTENT_TYPES_PART2 = "[Content_Types].xml";
+var MAIN_PART = "word/document.xml";
+var COMMENTS_PART = "word/comments.xml";
+var EMBEDDINGS_DIR = "word/embeddings/";
+function docParaRef(para, run = null) {
+  const ref = { kind: "doc-para", ref: `\xB6${para + 1}`, para };
+  if (run != null) ref.run = run;
+  return ref;
+}
+function docTableRef(table, cell = null) {
+  const out = { kind: "doc-table", ref: `table ${table + 1}${cell != null ? `, ${cell}` : ""}`, table };
+  if (cell != null) out.cell = cell;
+  return out;
+}
+function decodeEntities(s) {
+  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
+    if (e[0] === "#") {
+      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+    }
+    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
+  });
+}
+function attrsOf2(raw) {
+  const attrs = {};
+  for (const a of (raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
+    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
+    attrs[local] = decodeEntities(a[3] ?? a[4] ?? "");
+  }
+  return attrs;
+}
+var TOKEN_RE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
+var localOf = (name) => name.includes(":") ? name.split(":").pop() : name;
+function walkDocumentBody(xml) {
+  const paragraphs = [];
+  const hyperlinks = [];
+  const bookmarks = /* @__PURE__ */ new Map();
+  const changes = [];
+  const commentRefs = /* @__PURE__ */ new Map();
+  const ridUsage = /* @__PURE__ */ new Map();
+  let para = -1;
+  let run = -1;
+  let inPara = false;
+  let textTarget = null;
+  const hyperStack = [];
+  const insStack = [];
+  const delStack = [];
+  const noteRid = (attrs) => {
+    if (!inPara) return;
+    for (const key of ["id", "embed", "link"]) {
+      const v = attrs[key];
+      if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
+        ridUsage.set(v, { para, run: run >= 0 ? run : null });
+    }
+  };
+  const appendVisible = (s) => {
+    if (!inPara || !s) return;
+    paragraphs[para].text += s;
+    for (const c of insStack) c.text += s;
+  };
+  TOKEN_RE.lastIndex = 0;
+  let m, prev = 0;
+  while ((m = TOKEN_RE.exec(xml)) !== null) {
+    if (textTarget && m.index > prev) {
+      const data = decodeEntities(xml.slice(prev, m.index));
+      if (textTarget === "t") appendVisible(data);
+      else if (textTarget === "delText" && delStack.length) delStack[delStack.length - 1].text += data;
+    }
+    prev = TOKEN_RE.lastIndex;
+    if (m[1] === void 0) continue;
+    const name = localOf(m[1]);
+    const selfClosed = m[3] === "/";
+    const closing = m[0][1] === "/";
+    if (closing) {
+      if (name === "t" || name === "delText") textTarget = null;
+      else if (name === "p") {
+        inPara = false;
+      } else if (name === "hyperlink") {
+        const h = hyperStack.pop();
+        if (h) hyperlinks.push(h);
+      } else if (name === "ins") {
+        const c = insStack.pop();
+        if (c) changes.push(c);
+      } else if (name === "del") {
+        const c = delStack.pop();
+        if (c) changes.push(c);
+      }
+      continue;
+    }
+    const attrs = m[2] && m[2].includes("=") ? attrsOf2(m[2]) : {};
+    switch (name) {
+      case "p":
+        if (!selfClosed) {
+          para++;
+          run = -1;
+          inPara = true;
+          paragraphs.push({ para, text: "" });
+        } else {
+          para++;
+          run = -1;
+          paragraphs.push({ para, text: "" });
+        }
+        break;
+      case "r":
+        if (inPara && !selfClosed) {
+          run++;
+          for (const c of hyperStack) if (c.run == null) c.run = run;
+          for (const c of insStack) if (c.run == null) c.run = run;
+          for (const c of delStack) if (c.run == null) c.run = run;
+        }
+        break;
+      case "t":
+        if (!selfClosed) textTarget = "t";
+        break;
+      case "delText":
+        if (!selfClosed) textTarget = "delText";
+        break;
+      case "tab":
+        appendVisible("	");
+        break;
+      case "br":
+      case "cr":
+        appendVisible("\n");
+        break;
+      case "hyperlink":
+        noteRid(attrs);
+        if (!selfClosed && inPara)
+          hyperStack.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
+        else if (selfClosed && inPara)
+          hyperlinks.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
+        break;
+      case "ins":
+        if (!selfClosed && inPara)
+          insStack.push({ change: "insertion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
+        break;
+      case "del":
+        if (!selfClosed && inPara)
+          delStack.push({ change: "deletion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
+        break;
+      case "bookmarkStart":
+        if (attrs.name != null && !bookmarks.has(attrs.name))
+          bookmarks.set(attrs.name, para >= 0 ? para : 0);
+        break;
+      case "commentReference":
+        if (attrs.id != null && !commentRefs.has(attrs.id))
+          commentRefs.set(attrs.id, { para, run: run >= 0 ? run : null });
+        break;
+      default:
+        noteRid(attrs);
+    }
+  }
+  return { paragraphs, hyperlinks, bookmarks, changes, commentRefs, ridUsage };
+}
+function parseComments(xml) {
+  if (typeof xml !== "string" || !/<(?:[\w.-]+:)?comments\b/.test(xml)) {
+    return { ok: false, why: "comments_unparseable" };
+  }
+  const comments = [];
+  const re = /<(?:[\w.-]+:)?comment\b((?:[^>"']|"[^"]*"|'[^']*')*?)>([\s\S]*?)<\/(?:[\w.-]+:)?comment>/g;
+  for (const m of xml.matchAll(re)) {
+    const a = attrsOf2(m[1]);
+    const paras = [];
+    for (const pm of m[2].split(/<\/(?:[\w.-]+:)?p>/)) {
+      let text = "";
+      for (const t of pm.matchAll(/<(?:[\w.-]+:)?t\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?t>/g))
+        text += decodeEntities(t[1]);
+      if (text) paras.push(text);
+    }
+    comments.push({
+      id: a.id ?? null,
+      author: a.author ?? null,
+      date: a.date ?? null,
+      initials: a.initials ?? null,
+      text: paras.join("\n")
+    });
+  }
+  return { ok: true, comments };
+}
+function classifyUri(uri) {
+  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
+  const scheme = m ? m[1].toLowerCase() : null;
+  if (scheme === "http" || scheme === "https") return "deferred";
+  if (!scheme && uri) return "deferred";
+  return "refused";
+}
+function deferredOrRefusedRecord(uri, source) {
+  const partition = classifyUri(uri);
+  return {
+    partition,
+    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(uri),
+    target: { url: uri },
+    source
+  };
+}
+function undeterminedRecord(source, why, extra = {}) {
+  return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
+}
+var HEX = "0123456789abcdef";
+async function sha256Hex(u8) {
+  const d = await crypto.subtle.digest("SHA-256", u8);
+  const b = new Uint8Array(d);
+  let out = "";
+  for (let i = 0; i < b.length; i++) out += HEX[b[i] >> 4] + HEX[b[i] & 15];
+  return out;
+}
+function resolveRelTarget(relsPart, target) {
+  const t = String(target || "");
+  if (t.startsWith("/")) return normalizePartName(t);
+  const baseDir = relsPart.replace(/_rels\/[^/]*\.rels$/, "");
+  const segs = (baseDir + t).split("/");
+  const out = [];
+  for (const s of segs) {
+    if (s === "" || s === ".") continue;
+    if (s === "..") out.pop();
+    else out.push(s);
+  }
+  return out.join("/");
+}
+async function docxParts(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const d = await discriminate(b);
+  if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
+  if (d.format !== "docx") {
+    return {
+      ok: false,
+      why: d.format === "undetermined" ? d.why : `not_docx:${d.format}`,
+      signals: d.signals
+    };
+  }
+  const container = readContainer(b);
+  if (!container.ok) return { ok: false, why: container.why, signals: d.signals };
+  const undetermined = [];
+  const mainPart = normalizePartName(d.mainPart || MAIN_PART);
+  let declaredTextBytes2 = 0;
+  for (const partName of [mainPart, COMMENTS_PART]) {
+    const e = container.byName.get(partName);
+    if (e) declaredTextBytes2 += e.uncompressedSize;
+  }
+  const guardR = sizeGuard(declaredTextBytes2);
+  const guard = guardR.ok ? null : guardR;
+  let documentXml = null;
+  let commentsXml = null;
+  if (!guard) {
+    const main = await readPart(b, container, mainPart);
+    if (main.ok) documentXml = UTF82.decode(main.bytes);
+    else undetermined.push({ part: mainPart, why: main.why });
+    if (container.byName.has(COMMENTS_PART)) {
+      const com = await readPart(b, container, COMMENTS_PART);
+      if (com.ok) commentsXml = UTF82.decode(com.bytes);
+      else undetermined.push({ part: COMMENTS_PART, why: com.why });
+    }
+  }
+  const rels = await walkRels(b, container);
+  let core = null;
+  if (container.byName.has(CORE_PROPERTIES_PART)) {
+    const c = await readCoreProperties(b, container);
+    if (c.ok) core = c;
+    else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
+  }
+  return { ok: true, format: "docx", bytes: b, container, mainPart, documentXml, commentsXml, rels, core, guard, undetermined };
+}
+function walkDocumentTables(xml) {
+  const done = [];
+  const stack = [];
+  let next = 0;
+  TOKEN_RE.lastIndex = 0;
+  let m;
+  while ((m = TOKEN_RE.exec(xml)) !== null) {
+    if (m[1] === void 0) continue;
+    const name = localOf(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    const top = stack.length ? stack[stack.length - 1] : null;
+    if (closing) {
+      if (name === "tbl" && stack.length) {
+        const t = stack.pop();
+        done[t.table] = {
+          table: t.table,
+          rows: t.rows,
+          cols: t.gridCols > 0 ? t.gridCols : t.maxTc > 0 ? t.maxTc : null
+        };
+      } else if (name === "tr" && top) {
+        if (top.tc > top.maxTc) top.maxTc = top.tc;
+      }
+      continue;
+    }
+    if (name === "tbl" && !selfClosed) stack.push({ table: next++, rows: 0, gridCols: 0, tc: 0, maxTc: 0 });
+    else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null };
+    else if (!top) continue;
+    else if (name === "gridCol") top.gridCols++;
+    else if (name === "tr") {
+      top.rows++;
+      top.tc = 0;
+    } else if (name === "tc") top.tc++;
+  }
+  while (stack.length) {
+    const t = stack.pop();
+    done[t.table] = {
+      table: t.table,
+      rows: t.rows || null,
+      cols: t.gridCols > 0 ? t.gridCols : t.maxTc > 0 ? t.maxTc : null
+    };
+  }
+  return done;
+}
+async function docxStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  const notes = [];
+  const links = [];
+  const walk = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
+  if (!walk) {
+    notes.push(parts.guard ? "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "word/document.xml unreadable: element references unavailable (stated)");
+  }
+  const docRelsPart = relsPartFor(parts.mainPart);
+  for (const rel of parts.rels.outbound) {
+    if (rel.part === docRelsPart && walk) {
+      const usages = walk.hyperlinks.filter((h) => h.rid === rel.id);
+      if (usages.length) {
+        for (const u of usages)
+          links.push(deferredOrRefusedRecord(rel.target, docParaRef(u.para, u.run)));
+        continue;
+      }
+    }
+    links.push(deferredOrRefusedRecord(rel.target, null));
+  }
+  for (const u of parts.rels.undetermined) {
+    links.push(undeterminedRecord(null, "rels_unreadable", { part: u.part, detail: u.why }));
+  }
+  if (walk) {
+    for (const h of walk.hyperlinks) {
+      if (h.rid != null || h.anchor == null) continue;
+      const source = docParaRef(h.para, h.run);
+      if (walk.bookmarks.has(h.anchor)) {
+        const targetPara = walk.bookmarks.get(h.anchor);
+        const fragment = `#para=${targetPara + 1}`;
+        links.push({
+          partition: "anchor",
+          wrapper: linkWrapper.anchor(fragment),
+          target: { para: targetPara, fragment, bookmark: h.anchor },
+          source
+        });
+      } else {
+        links.push(undeterminedRecord(source, "bookmark_unresolved", { bookmark: h.anchor }));
+      }
+    }
+  }
+  const embeddingRids = /* @__PURE__ */ new Map();
+  for (const bp of parts.rels.byPart) {
+    if (bp.part !== docRelsPart) continue;
+    for (const r of bp.relationships) {
+      if (r.external || !r.target) continue;
+      const resolved = resolveRelTarget(bp.part, r.target);
+      if (resolved.startsWith(EMBEDDINGS_DIR)) embeddingRids.set(resolved, r.id);
+    }
+  }
+  for (const entry of parts.container.entries) {
+    const name = normalizePartName(entry.name);
+    if (!name.startsWith(EMBEDDINGS_DIR) || name === EMBEDDINGS_DIR) continue;
+    const rid = embeddingRids.get(name) ?? null;
+    const at = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
+    const source = at ? docParaRef(at.para, at.run) : null;
+    const read = await readPart(parts.bytes, parts.container, name);
+    if (!read.ok) {
+      links.push(undeterminedRecord(source, "embedded_part_unreadable", { part: name, detail: read.why }));
+      continue;
+    }
+    const sha = await sha256Hex(read.bytes);
+    links.push({
+      partition: "intra",
+      wrapper: linkWrapper.intra(sha),
+      target: { sha256: sha, name: name.slice(name.lastIndexOf("/") + 1), bytes: read.bytes.length },
+      source
+    });
+  }
+  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
+  for (const l of links) counts[l.partition]++;
+  const items = [];
+  if (walk) {
+    for (const c of walk.changes) {
+      const item = {
+        kind: "tracked-change",
+        change: c.change,
+        author: c.author,
+        date: c.date,
+        source: docParaRef(c.para, c.run)
+      };
+      if (c.change === "deletion") item.superseded = c.text;
+      else item.text = c.text;
+      items.push(item);
+    }
+  }
+  const evUndetermined = [...parts.undetermined];
+  if (parts.guard) evUndetermined.push({ part: parts.mainPart, why: "over_size_bound", guard: parts.guard });
+  if (parts.commentsXml != null) {
+    const parsed = parseComments(parts.commentsXml);
+    if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
+    else {
+      for (const c of parsed.comments) {
+        const at = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
+        items.push({
+          kind: "comment",
+          id: c.id,
+          author: c.author,
+          date: c.date,
+          initials: c.initials,
+          text: c.text,
+          source: at ? docParaRef(at.para, at.run) : null
+        });
+      }
+    }
+  }
+  if (parts.core) {
+    items.push({
+      kind: "core-properties",
+      creator: parts.core.creator,
+      lastModifiedBy: parts.core.lastModifiedBy,
+      revision: parts.core.revision,
+      revisionNumber: parts.core.revisionNumber,
+      created: parts.core.created,
+      modified: parts.core.modified,
+      title: parts.core.title,
+      source: null
+    });
+  }
+  const evCounts = {};
+  for (const it of items) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
+  const evidentiary = {
+    container: "docx",
+    kinds: [...new Set(items.map((it) => it.kind))],
+    items,
+    undetermined: evUndetermined,
+    counts: evCounts
+  };
+  return {
+    ok: true,
+    container: "docx",
+    paragraphs: walk ? walk.paragraphs.length : null,
+    // null = honestly unknown
+    links,
+    counts,
+    evidentiary,
+    notes
+  };
+}
+async function docxText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "docx",
+      document: null,
+      paragraphs: [],
+      tables: null,
+      undetermined: [parts.guard],
+      counts: { chars: 0, undetermined: 1 }
+    };
+  }
+  if (parts.documentXml == null) {
+    const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
+    return {
+      ok: true,
+      container: "docx",
+      document: null,
+      paragraphs: [],
+      tables: null,
+      undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart, why: stated?.why ?? "unreadable" }],
+      counts: { chars: 0, undetermined: 1 }
+    };
+  }
+  const walk = walkDocumentBody(parts.documentXml);
+  const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `\xB6${p.para + 1}`, text: p.text }));
+  const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
+  const tables = walkDocumentTables(parts.documentXml).filter(Boolean).map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
+  return {
+    ok: true,
+    container: "docx",
+    document,
+    paragraphs,
+    tables,
+    undetermined: [],
+    counts: { chars: document.length, undetermined: 0 }
+  };
+}
+var docxEntry = {
+  format: "docx",
+  detect(bytes, contentType) {
+    if (bytes) {
+      if (!hasZipMagic(bytes)) return null;
+      const container = readContainer(bytes);
+      if (!container.ok) return null;
+      if (container.byName.has(CONTENT_TYPES_PART2) && container.byName.has(MAIN_PART)) {
+        return {
+          format: "docx",
+          confidence: "likely",
+          signals: [
+            "magic: PK\\x03\\x04 with a readable central directory",
+            `part: ${CONTENT_TYPES_PART2} present`,
+            `part: ${MAIN_PART} present`,
+            "likely, not certain: the OPC content-type declaration is deflated \u2014 parts() discriminates"
+          ]
+        };
+      }
+      return null;
+    }
+    if (contentType === DOCX_CONTENT_TYPE) {
+      return { format: "docx", confidence: "likely", signals: [`content type "${contentType}"`] };
+    }
+    return null;
+  },
+  parts: (bytes) => docxParts(bytes),
+  structure: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await docxParts(partsOrBytes) : partsOrBytes;
+    return docxStructure(parts);
+  },
+  text: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await docxParts(partsOrBytes) : partsOrBytes;
+    return withContainerImages(docxText(parts), parts, "word/media/");
+  }
+};
+
+// src/formats-xlsx.mjs
+var UTF83 = new TextDecoder("utf-8", { fatal: false });
+var XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+var WORKBOOK_PART = "xl/workbook.xml";
+var SHARED_STRINGS_PART = "xl/sharedStrings.xml";
+function decodeXmlEntities2(s) {
+  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
+    if (e[0] === "#") {
+      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+    }
+    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
+  });
+}
+function parseAttrs(raw) {
+  const attrs = {};
+  for (const a of String(raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
+    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
+    attrs[local] = decodeXmlEntities2(a[3] ?? a[4] ?? "");
+  }
+  return attrs;
+}
+function elements(xml, localName) {
+  const out = [];
+  const open = new RegExp(`<((?:[\\w.-]+:)?${localName})\\b([^>]*?)(/)?>`, "g");
+  let m;
+  while (m = open.exec(xml)) {
+    const attrs = parseAttrs(m[2]);
+    if (m[3]) {
+      out.push({ attrs, inner: "" });
+      continue;
+    }
+    const close = xml.indexOf(`</${m[1]}>`, open.lastIndex);
+    if (close < 0) {
+      out.push({ attrs, inner: "" });
+      continue;
+    }
+    out.push({ attrs, inner: xml.slice(open.lastIndex, close) });
+    open.lastIndex = close + m[1].length + 3;
+  }
+  return out;
+}
+function textRuns(inner) {
+  return elements(inner, "t").map((t) => decodeXmlEntities2(t.inner)).join("");
+}
+var HEX2 = "0123456789abcdef";
+async function sha256Hex2(u8) {
+  const d = await crypto.subtle.digest("SHA-256", u8);
+  const b = new Uint8Array(d);
+  let out = "";
+  for (let i = 0; i < b.length; i++) out += HEX2[b[i] >> 4] + HEX2[b[i] & 15];
+  return out;
+}
+function sheetCellRef(sheet, cell) {
+  return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
+}
+function sheetRangeRef(sheet, range) {
+  return { kind: "sheet-range", ref: `${sheet}!${range}`, sheet, range };
+}
+function columnLetters(n) {
+  let out = "";
+  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + (c - 1) % 26) + out;
+  return out;
+}
+function usedSheetRange(name, usedRows, usedCols) {
+  if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
+  return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
+}
+var XLSX_GRID_ROWS = 1048576;
+var XLSX_GRID_COLS = 16384;
+function a1Col(ref) {
+  const m = /^\$?([A-Za-z]{1,3})\$?\d+$/.exec(String(ref ?? "").trim());
+  if (!m) return null;
+  let n = 0;
+  for (const ch of m[1].toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
+  return n;
+}
+function classifyUrl(url) {
+  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(url || "");
+  const scheme = m ? m[1].toLowerCase() : null;
+  if (scheme === "http" || scheme === "https") return "deferred";
+  if (!scheme && url) return "deferred";
+  return "refused";
+}
+function resolveTarget(fromPart, target) {
+  if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(target) || target.startsWith("/")) {
+    return normalizePartName(target);
+  }
+  const base = fromPart.split("/").slice(0, -1);
+  for (const seg of target.split("/")) {
+    if (seg === "" || seg === ".") continue;
+    if (seg === "..") base.pop();
+    else base.push(seg);
+  }
+  return base.join("/");
+}
+async function xlsxParts(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const undetermined = [];
+  const disc = await discriminate(b);
+  if (!disc.ok) return { ok: false, why: disc.why, signals: disc.signals };
+  if (disc.format !== "xlsx") {
+    return { ok: false, why: `not_xlsx:${disc.format}`, signals: disc.signals };
+  }
+  const container = readContainer(b);
+  const wbRead = await readPart(b, container, WORKBOOK_PART);
+  if (!wbRead.ok) return { ok: false, why: `workbook_unreadable:${wbRead.why}` };
+  const wbXml = UTF83.decode(wbRead.bytes);
+  const relsById = /* @__PURE__ */ new Map();
+  const wbRelsRead = await readPart(b, container, relsPartFor(WORKBOOK_PART));
+  if (wbRelsRead.ok) {
+    const parsed = parseRels(UTF83.decode(wbRelsRead.bytes));
+    if (parsed.ok) {
+      for (const r of parsed.relationships) if (r.id) relsById.set(r.id, r);
+    } else undetermined.push({ part: relsPartFor(WORKBOOK_PART), why: parsed.why });
+  } else undetermined.push({ part: relsPartFor(WORKBOOK_PART), why: wbRelsRead.why });
+  const sheets = elements(wbXml, "sheet").map((s, index) => {
+    const state = s.attrs.state === "hidden" || s.attrs.state === "veryHidden" ? s.attrs.state : "visible";
+    const rel = s.attrs.id ? relsById.get(s.attrs.id) : null;
+    return {
+      index,
+      name: s.attrs.name ?? `sheet${index + 1}`,
+      sheetId: s.attrs.sheetId ?? null,
+      state,
+      hidden: state === "visible" ? false : state,
+      part: rel && !rel.external ? resolveTarget(WORKBOOK_PART, rel.target) : null,
+      xml: null,
+      why: rel ? null : "sheet_rel_unresolved"
+    };
+  });
+  const definedNames = elements(wbXml, "definedName").filter((d) => d.attrs.name != null).map((d) => ({ name: d.attrs.name, ref: decodeXmlEntities2(d.inner).trim() }));
+  const sheetParts = new Set(sheets.map((s) => s.part).filter(Boolean));
+  const isTextPart = (n) => sheetParts.has(n) || n === SHARED_STRINGS_PART;
+  const declared = declaredTextBytes(container, isTextPart);
+  const guardR = sizeGuard(declared.total);
+  const guard = guardR.ok ? null : guardR;
+  let sharedStrings = null;
+  if (!guard) {
+    if (container.byName.has(SHARED_STRINGS_PART)) {
+      const ss = await readPart(b, container, SHARED_STRINGS_PART);
+      if (ss.ok) sharedStrings = elements(UTF83.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
+      else undetermined.push({ part: SHARED_STRINGS_PART, why: ss.why });
+    }
+    for (const sheet of sheets) {
+      if (!sheet.part) {
+        undetermined.push({ part: `(sheet ${sheet.name})`, why: sheet.why });
+        continue;
+      }
+      const read = await readPart(b, container, sheet.part);
+      if (read.ok) sheet.xml = UTF83.decode(read.bytes);
+      else {
+        sheet.why = read.why;
+        undetermined.push({ part: sheet.part, why: read.why });
+      }
+    }
+  }
+  let core = null;
+  if (container.byName.has(CORE_PROPERTIES_PART)) {
+    const c = await readCoreProperties(b, container);
+    if (c.ok) core = c;
+    else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
+  }
+  return {
+    ok: true,
+    format: "xlsx",
+    bytes: b,
+    container,
+    sheets,
+    definedNames,
+    sharedStrings,
+    core,
+    declared,
+    guard,
+    undetermined
+  };
+}
+function walkSheetXml(xml) {
+  const rows = elements(xml, "row").map((row) => ({
+    r: row.attrs.r != null ? parseInt(row.attrs.r, 10) : null,
+    hidden: row.attrs.hidden === "1" || row.attrs.hidden === "true",
+    cells: elements(row.inner, "c").map((c) => {
+      const f2 = elements(c.inner, "f");
+      const v = elements(c.inner, "v");
+      const is = elements(c.inner, "is");
+      return {
+        cell: c.attrs.r ?? null,
+        t: c.attrs.t ?? null,
+        f: f2.length ? decodeXmlEntities2(f2[0].inner) : null,
+        v: v.length ? decodeXmlEntities2(v[0].inner) : null,
+        is: is.length ? textRuns(is[0].inner) : null
+      };
+    })
+  }));
+  const hiddenRows = rows.filter((r) => r.hidden && r.r != null).map((r) => r.r);
+  const hiddenCols = elements(xml, "col").filter((c) => c.attrs.hidden === "1" || c.attrs.hidden === "true").map((c) => ({ min: parseInt(c.attrs.min, 10), max: parseInt(c.attrs.max, 10) }));
+  const hyperlinks = elements(xml, "hyperlink").map((h) => ({
+    cell: h.attrs.ref ?? null,
+    relId: h.attrs.id ?? null,
+    location: h.attrs.location ?? null,
+    display: h.attrs.display ?? null
+  }));
+  let usedRows = 0, usedCols = 0;
+  for (const row of rows) {
+    if (!row.cells.length) continue;
+    if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
+    for (const c of row.cells) {
+      const col = a1Col(c.cell);
+      if (col != null && col > usedCols) usedCols = col;
+    }
+  }
+  return { rows, hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols };
+}
+function cellValue(c, sharedStrings) {
+  if (c.t === "s") {
+    const i = c.v != null ? parseInt(c.v, 10) : NaN;
+    if (sharedStrings && Number.isInteger(i) && i >= 0 && i < sharedStrings.length)
+      return { value: sharedStrings[i] };
+    return { undetermined: sharedStrings ? "shared_string_index_out_of_range" : "shared_strings_unreadable" };
+  }
+  if (c.t === "inlineStr") return { value: c.is ?? "" };
+  if (c.t === "b") return { value: c.v === "1" ? "TRUE" : c.v === "0" ? "FALSE" : c.v };
+  return { value: c.v };
+}
+async function xlsxStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "xlsx", reason: parts ? parts.why : "PARTS_ABSENT" };
+  }
+  const { bytes, container, sheets, definedNames, guard } = parts;
+  const links = [];
+  const notes = [];
+  const evItems = [];
+  const evUndetermined = [...parts.undetermined];
+  for (const sheet of sheets) {
+    const relTargets = /* @__PURE__ */ new Map();
+    if (sheet.part) {
+      const relsPart = relsPartFor(sheet.part);
+      if (container.byName.has(relsPart)) {
+        const read = await readPart(bytes, container, relsPart);
+        const parsed = read.ok ? parseRels(UTF83.decode(read.bytes)) : null;
+        if (parsed && parsed.ok) {
+          for (const r of parsed.relationships) if (r.id) relTargets.set(r.id, r);
+        } else {
+          evUndetermined.push({ part: relsPart, why: read.ok ? parsed.why : read.why });
+        }
+      }
+    }
+    if (sheet.xml == null) {
+      const why = guard == null ? sheet.why ?? "sheet_unreadable" : "over_size_bound";
+      for (const [, r] of relTargets) {
+        if (!r.external) continue;
+        const partition = classifyUrl(r.target);
+        links.push({
+          partition,
+          wrapper: partition === "deferred" ? linkWrapper.deferred(r.target) : linkWrapper.refused(),
+          target: { url: r.target },
+          source: null,
+          note: `cell_join_unavailable:${why}`
+        });
+      }
+      continue;
+    }
+    const walked = walkSheetXml(sheet.xml);
+    for (const h of walked.hyperlinks) {
+      const source = h.cell ? sheetCellRef(sheet.name, h.cell) : null;
+      if (h.relId) {
+        const rel = relTargets.get(h.relId);
+        if (!rel) {
+          links.push({
+            partition: "undetermined",
+            wrapper: null,
+            target: { why: "hyperlink_rel_unresolved", relId: h.relId },
+            source
+          });
+          continue;
+        }
+        if (!rel.external) {
+          links.push({
+            partition: "undetermined",
+            wrapper: null,
+            target: { why: "hyperlink_rel_not_external", relId: h.relId, part: rel.target },
+            source
+          });
+          continue;
+        }
+        const partition = classifyUrl(rel.target);
+        links.push({
+          partition,
+          wrapper: partition === "deferred" ? linkWrapper.deferred(rel.target) : linkWrapper.refused(),
+          target: { url: rel.target },
+          source
+        });
+        continue;
+      }
+      if (h.location) {
+        const fragment = `#${h.location}`;
+        links.push({
+          partition: "anchor",
+          wrapper: linkWrapper.anchor(fragment),
+          target: { location: h.location, fragment },
+          source
+        });
+        continue;
+      }
+      links.push({
+        partition: "undetermined",
+        wrapper: null,
+        target: { why: "hyperlink_without_target" },
+        source
+      });
+    }
+    for (const row of walked.rows) {
+      for (const c of row.cells) {
+        if (c.f == null) continue;
+        evItems.push({
+          kind: "formula",
+          source: c.cell ? sheetCellRef(sheet.name, c.cell) : null,
+          formula: c.f,
+          value: c.v
+          // the cached result, null when the file carries none — stated, not invented
+        });
+      }
+    }
+    if (walked.hiddenRows.length) {
+      evItems.push({
+        kind: "hidden-rows",
+        sheet: sheet.name,
+        rows: walked.hiddenRows,
+        count: walked.hiddenRows.length,
+        source: null
+      });
+    }
+    if (walked.hiddenCols.length) {
+      evItems.push({
+        kind: "hidden-cols",
+        sheet: sheet.name,
+        cols: walked.hiddenCols,
+        count: walked.hiddenCols.length,
+        source: null
+      });
+    }
+  }
+  for (const sheet of sheets) {
+    if (sheet.hidden) {
+      evItems.push({ kind: "hidden-sheet", sheet: sheet.name, state: sheet.state, source: null });
+    }
+  }
+  if (guard) {
+    notes.push("text_parts_over_bound");
+    evUndetermined.push({ part: "(text parts: worksheets + sharedStrings)", why: "over_size_bound", guard });
+  }
+  for (const dn of definedNames) {
+    const fragment = `#${dn.ref}`;
+    links.push({
+      partition: "anchor",
+      wrapper: linkWrapper.anchor(fragment),
+      target: { definedName: dn.name, ref: dn.ref, fragment },
+      source: null
+    });
+  }
+  for (const entry of container.entries) {
+    const name = normalizePartName(entry.name);
+    if (!/^xl\/embeddings\//.test(name)) continue;
+    const read = await readPart(bytes, container, name);
+    if (!read.ok) {
+      links.push({
+        partition: "undetermined",
+        wrapper: null,
+        target: { why: `embedding_unreadable:${read.why}`, name },
+        source: null
+      });
+      continue;
+    }
+    const sha = await sha256Hex2(read.bytes);
+    links.push({
+      partition: "intra",
+      wrapper: linkWrapper.intra(sha),
+      target: { sha256: sha, name, bytes: read.bytes.length },
+      source: null
+    });
+  }
+  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
+  for (const l of links) counts[l.partition]++;
+  if (parts.core) {
+    evItems.push({
+      kind: "core-properties",
+      creator: parts.core.creator,
+      lastModifiedBy: parts.core.lastModifiedBy,
+      revision: parts.core.revision,
+      revisionNumber: parts.core.revisionNumber,
+      created: parts.core.created,
+      modified: parts.core.modified,
+      title: parts.core.title,
+      source: null
+    });
+  }
+  const evCounts = {};
+  for (const it of evItems) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
+  return {
+    ok: true,
+    container: "xlsx",
+    sheets: sheets.map((s) => ({
+      sheet: s.index,
+      name: s.name,
+      sheetId: s.sheetId,
+      state: s.state,
+      hidden: s.hidden
+    })),
+    links,
+    counts,
+    /* The IC-2 envelope AS ACCEPTED (COFF-4 filed it first, from docx.mjs as
+     * built; this entry CONFIRMS — same key, same fields, no variant). */
+    evidentiary: {
+      container: "xlsx",
+      kinds: [...new Set(evItems.map((it) => it.kind))],
+      items: evItems,
+      undetermined: evUndetermined,
+      counts: evCounts
+    },
+    notes
+  };
+}
+function xlsxText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "xlsx", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  const { sheets, sharedStrings, guard } = parts;
+  if (guard) {
+    return {
+      ok: true,
+      container: "xlsx",
+      document: null,
+      sheets: [],
+      undetermined: [guard],
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
+    };
+  }
+  const outSheets = [];
+  const allUndetermined = [];
+  let cellCount = 0, formulaCount = 0;
+  for (const sheet of sheets) {
+    if (sheet.xml == null) {
+      const marker = { sheet: sheet.index, cell: null, reason: sheet.why ?? "sheet_unreadable" };
+      outSheets.push({
+        sheet: sheet.index,
+        name: sheet.name,
+        hidden: sheet.hidden,
+        rows: XLSX_GRID_ROWS,
+        cols: XLSX_GRID_COLS,
+        usedRows: null,
+        usedCols: null,
+        range: null,
+        text: "",
+        undetermined: [marker]
+      });
+      allUndetermined.push(marker);
+      continue;
+    }
+    const walked = walkSheetXml(sheet.xml);
+    const undetermined = [];
+    const lines = [];
+    for (const row of walked.rows) {
+      const vals = [];
+      for (const c of row.cells) {
+        if (c.f != null) formulaCount++;
+        const r = cellValue(c, sharedStrings);
+        if (r.undetermined) {
+          undetermined.push({ sheet: sheet.index, cell: c.cell, reason: r.undetermined });
+          continue;
+        }
+        if (r.value == null || r.value === "") continue;
+        cellCount++;
+        vals.push(r.value);
+      }
+      if (vals.length) lines.push(vals.join("	"));
+    }
+    const text = lines.join("\n");
+    outSheets.push({
+      sheet: sheet.index,
+      name: sheet.name,
+      hidden: sheet.hidden,
+      rows: XLSX_GRID_ROWS,
+      cols: XLSX_GRID_COLS,
+      usedRows: walked.usedRows,
+      usedCols: walked.usedCols,
+      /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
+      range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
+      text,
+      undetermined
+    });
+    for (const u of undetermined) allUndetermined.push(u);
+  }
+  const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
+  return {
+    ok: true,
+    container: "xlsx",
+    document,
+    sheets: outSheets,
+    undetermined: allUndetermined,
+    counts: {
+      chars: document.length,
+      cells: cellCount,
+      formulas: formulaCount,
+      undetermined: allUndetermined.length
+    }
+  };
+}
+var xlsxEntry = {
+  format: "xlsx",
+  detect(bytes, contentType) {
+    if (bytes) {
+      if (!hasZipMagic(bytes)) return null;
+      const c = readContainer(bytes);
+      if (!c.ok) return null;
+      if (c.byName.has(CONTENT_TYPES_PART) && c.byName.has(WORKBOOK_PART)) {
+        return { format: "xlsx", confidence: "likely", signals: [
+          "magic: PK\\x03\\x04 with a readable central directory",
+          `parts: ${CONTENT_TYPES_PART} and ${WORKBOOK_PART} present`,
+          "likely, not certain: the declared main content type lives in a deflated part; parts() completes the discrimination"
+        ] };
+      }
+      return null;
+    }
+    if (contentType === XLSX_CONTENT_TYPE) {
+      return {
+        format: "xlsx",
+        confidence: "likely",
+        signals: [`content type "${contentType}"`]
+      };
+    }
+    return null;
+  },
+  parts: (bytes) => xlsxParts(bytes),
+  /* Accept either parts() output or raw bytes, exactly as docx.mjs does, so
+     detect→structure works uniformly at the registry seam while a caller that
+     already paid for parts() does not pay twice. */
+  structure: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await xlsxParts(partsOrBytes) : partsOrBytes;
+    return xlsxStructure(parts);
+  },
+  text: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await xlsxParts(partsOrBytes) : partsOrBytes;
+    return withContainerImages(xlsxText(parts), parts, "xl/media/");
+  }
+};
+
+// src/pptx.mjs
+var UTF84 = new TextDecoder("utf-8", { fatal: false });
+var PPTX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+var CONTENT_TYPES_PART3 = "[Content_Types].xml";
+var MAIN_PART2 = "ppt/presentation.xml";
+var EMBEDDINGS_DIR2 = "ppt/embeddings/";
+var SLIDE_PART_RE = /^ppt\/slides\/[^/]+\.xml$/;
+var NOTES_PART_RE = /^ppt\/notesSlides\/[^/]+\.xml$/;
+function slideShapeRef(slide, shape = null) {
+  const ref = { kind: "slide-shape", ref: `slide ${slide}`, slide };
+  if (shape != null) ref.shape = shape;
+  return ref;
+}
+function decodeEntities2(s) {
+  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
+    if (e[0] === "#") {
+      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+    }
+    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
+  });
+}
+function attrsOf3(raw) {
+  const attrs = {};
+  for (const a of (raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
+    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
+    attrs[local] = decodeEntities2(a[3] ?? a[4] ?? "");
+  }
+  return attrs;
+}
+var TOKEN_RE2 = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
+var localOf2 = (name) => name.includes(":") ? name.split(":").pop() : name;
+var SHAPE_TAGS = /* @__PURE__ */ new Set(["sp", "pic", "graphicFrame", "cxnSp", "grpSp"]);
+var declaresNotShown = (v) => v === "0" || v === "false";
+var SLD_ROOT_RE = /<(?:[\w.-]+:)?sld(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/;
+var SHOW_ATTR_RE = /(?:^|\s)(?:[\w.-]+:)?show\s*=\s*(?:"([^"]*)"|'([^']*)')/;
+var showAttrOf = (rawAttrs) => {
+  const m = (rawAttrs || "").match(SHOW_ATTR_RE);
+  return m ? m[1] ?? m[2] : null;
+};
+function walkSlide(xml) {
+  const paragraphs = [];
+  const hlinks = [];
+  const ridUsage = /* @__PURE__ */ new Map();
+  let shape = -1;
+  let cur = null;
+  let inText = false;
+  const noteRid = (attrs) => {
+    for (const key of ["id", "embed", "link"]) {
+      const v = attrs[key];
+      if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
+        ridUsage.set(v, shape >= 0 ? shape : null);
+    }
+  };
+  TOKEN_RE2.lastIndex = 0;
+  let m, prev = 0;
+  while ((m = TOKEN_RE2.exec(xml)) !== null) {
+    if (inText && cur != null && m.index > prev) cur += decodeEntities2(xml.slice(prev, m.index));
+    prev = TOKEN_RE2.lastIndex;
+    if (m[1] === void 0) continue;
+    const name = localOf2(m[1]);
+    const selfClosed = m[3] === "/";
+    const closing = m[0][1] === "/";
+    if (closing) {
+      if (name === "t") inText = false;
+      else if (name === "p") {
+        if (cur != null) {
+          paragraphs.push(cur);
+          cur = null;
+        }
+      }
+      continue;
+    }
+    if (SHAPE_TAGS.has(name)) shape++;
+    const attrs = m[2] && m[2].includes("=") ? attrsOf3(m[2]) : {};
+    switch (name) {
+      case "p":
+        if (!selfClosed) cur = "";
+        break;
+      case "t":
+        if (!selfClosed) inText = true;
+        break;
+      case "br":
+        if (cur != null) cur += "\n";
+        break;
+      case "hlinkClick":
+        noteRid(attrs);
+        if (attrs.id && /^rId/.test(attrs.id))
+          hlinks.push({ rid: attrs.id, shape: shape >= 0 ? shape : null });
+        break;
+      default:
+        noteRid(attrs);
+    }
+  }
+  const text = paragraphs.filter((t) => t.length).join("\n");
+  return { paragraphs, text, shapes: shape + 1, hlinks, ridUsage };
+}
+function classifyUri2(uri) {
+  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
+  const scheme = m ? m[1].toLowerCase() : null;
+  if (scheme === "http" || scheme === "https") return "deferred";
+  if (!scheme && uri) return "deferred";
+  return "refused";
+}
+function deferredOrRefusedRecord2(uri, source) {
+  const partition = classifyUri2(uri);
+  return {
+    partition,
+    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(uri),
+    target: { url: uri },
+    source
+  };
+}
+function undeterminedRecord2(source, why, extra = {}) {
+  return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
+}
+var HEX3 = "0123456789abcdef";
+async function sha256Hex3(u8) {
+  const d = await crypto.subtle.digest("SHA-256", u8);
+  const b = new Uint8Array(d);
+  let out = "";
+  for (let i = 0; i < b.length; i++) out += HEX3[b[i] >> 4] + HEX3[b[i] & 15];
+  return out;
+}
+function resolveRelTarget2(relsPart, target) {
+  const t = String(target || "");
+  if (t.startsWith("/")) return normalizePartName(t);
+  const baseDir = relsPart.replace(/_rels\/[^/]*\.rels$/, "");
+  const segs = (baseDir + t).split("/");
+  const out = [];
+  for (const s of segs) {
+    if (s === "" || s === ".") continue;
+    if (s === "..") out.pop();
+    else out.push(s);
+  }
+  return out.join("/");
+}
+async function pptxParts(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const d = await discriminate(b);
+  if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
+  if (d.format !== "pptx") {
+    return {
+      ok: false,
+      why: d.format === "undetermined" ? d.why : `not_pptx:${d.format}`,
+      signals: d.signals
+    };
+  }
+  const container = readContainer(b);
+  if (!container.ok) return { ok: false, why: container.why, signals: d.signals };
+  const undetermined = [];
+  const mainPart = normalizePartName(d.mainPart || MAIN_PART2);
+  const slideParts = [];
+  const notesParts = [];
+  for (const e of container.entries) {
+    const n = normalizePartName(e.name);
+    if (SLIDE_PART_RE.test(n)) slideParts.push(n);
+    else if (NOTES_PART_RE.test(n)) notesParts.push(n);
+  }
+  let declaredTextBytes2 = 0;
+  for (const n of [...slideParts, ...notesParts]) {
+    const e = container.byName.get(n);
+    if (e) declaredTextBytes2 += e.uncompressedSize;
+  }
+  const guardR = sizeGuard(declaredTextBytes2);
+  const guard = guardR.ok ? null : guardR;
+  const rels = await walkRels(b, container);
+  let presentationXml = null;
+  const main = await readPart(b, container, mainPart);
+  if (main.ok) presentationXml = UTF84.decode(main.bytes);
+  else undetermined.push({ part: mainPart, why: main.why });
+  let order = null;
+  const hiddenParts = /* @__PURE__ */ new Set();
+  if (presentationXml != null) {
+    const presRelsPart = relsPartFor(mainPart);
+    const presRels = rels.byPart.find((p) => p.part === presRelsPart);
+    if (!presRels) {
+      const stated = rels.undetermined.find((u) => u.part === presRelsPart);
+      undetermined.push({ part: presRelsPart, why: stated?.why ?? "part_absent" });
+    } else {
+      const byId = new Map(presRels.relationships.map((r) => [r.id, r]));
+      order = [];
+      const sldIdRe = /<(?:[\w.-]+:)?sldId\b((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/g;
+      for (const m of presentationXml.matchAll(sldIdRe)) {
+        const rid = m[1].match(/[\w.-]+:id\s*=\s*(?:"([^"]*)"|'([^']*)')/);
+        const id = rid ? rid[1] ?? rid[2] : null;
+        const rel = id != null ? byId.get(id) : null;
+        if (!rel || rel.external || !rel.target) {
+          order.push(null);
+          undetermined.push({ part: mainPart, why: `sldid_rel_unresolved:${id ?? "no_rid"}` });
+          continue;
+        }
+        const resolved = resolveRelTarget2(presRelsPart, rel.target);
+        order.push(resolved);
+        if (declaresNotShown(showAttrOf(m[1]))) hiddenParts.add(resolved);
+      }
+    }
+  }
+  const slideXml = /* @__PURE__ */ new Map();
+  const notesXml = /* @__PURE__ */ new Map();
+  if (!guard) {
+    for (const n of slideParts) {
+      const r = await readPart(b, container, n);
+      if (r.ok) {
+        const xml = UTF84.decode(r.bytes);
+        slideXml.set(n, xml);
+        const root = xml.match(SLD_ROOT_RE);
+        if (root && declaresNotShown(showAttrOf(root[1]))) hiddenParts.add(n);
+      } else undetermined.push({ part: n, why: r.why });
+    }
+    for (const n of notesParts) {
+      const r = await readPart(b, container, n);
+      if (r.ok) notesXml.set(n, UTF84.decode(r.bytes));
+      else undetermined.push({ part: n, why: r.why });
+    }
+  }
+  const notesOf = /* @__PURE__ */ new Map();
+  for (const bp of rels.byPart) {
+    const m = bp.part.match(/^(ppt\/slides\/)_rels\/([^/]+\.xml)\.rels$/);
+    if (!m) continue;
+    const slidePart = m[1] + m[2];
+    for (const r of bp.relationships) {
+      if (!r.external && r.type && r.type.endsWith("/notesSlide") && r.target) {
+        notesOf.set(slidePart, resolveRelTarget2(bp.part, r.target));
+        break;
+      }
+    }
+  }
+  let core = null;
+  if (container.byName.has(CORE_PROPERTIES_PART)) {
+    const c = await readCoreProperties(b, container);
+    if (c.ok) core = c;
+    else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
+  }
+  return {
+    ok: true,
+    format: "pptx",
+    bytes: b,
+    container,
+    mainPart,
+    presentationXml,
+    order,
+    slideParts,
+    notesParts,
+    slideXml,
+    notesXml,
+    notesOf,
+    hiddenParts,
+    rels,
+    core,
+    guard,
+    undetermined
+  };
+}
+function deckOf(parts) {
+  const seq = [];
+  const seen = /* @__PURE__ */ new Set();
+  if (parts.order) {
+    parts.order.forEach((part, i) => {
+      if (part == null) return;
+      seq.push({ part, slide: i + 1 });
+      seen.add(part);
+    });
+  }
+  for (const p of parts.slideParts) if (!seen.has(p)) seq.push({ part: p, slide: null });
+  return seq;
+}
+var GUARDED_PARTS = "ppt/slides/* + ppt/notesSlides/*";
+async function pptxStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "pptx", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  const notes = [];
+  const links = [];
+  const deck = deckOf(parts);
+  const slideNoOf = /* @__PURE__ */ new Map();
+  for (const d of deck) if (d.slide != null) slideNoOf.set(d.part, d.slide);
+  if (!parts.order) {
+    notes.push("deck order undeclared-or-unreadable (ppt/presentation.xml sldIdLst): slides are UNNUMBERED \u2014 slide:null, sources null \u2014 stated, never numbered off filenames");
+  }
+  if (parts.guard) {
+    notes.push("slide/notes parts not read: over the size bound (stated in evidentiary.undetermined and by text())");
+  }
+  const walks = /* @__PURE__ */ new Map();
+  for (const { part } of deck) {
+    const xml = parts.slideXml.get(part);
+    if (xml != null) walks.set(part, walkSlide(xml));
+  }
+  const relsPartToSlide = /* @__PURE__ */ new Map();
+  for (const { part } of deck) relsPartToSlide.set(relsPartFor(part), part);
+  const slideLevelSource = (slidePart) => {
+    const n = slideNoOf.get(slidePart);
+    return n != null ? slideShapeRef(n) : null;
+  };
+  for (const rel of parts.rels.outbound) {
+    const slidePart = relsPartToSlide.get(rel.part);
+    if (slidePart) {
+      const slideNo = slideNoOf.get(slidePart) ?? null;
+      const w = walks.get(slidePart);
+      const usages = w ? w.hlinks.filter((h) => h.rid === rel.id) : [];
+      if (usages.length) {
+        for (const u of usages) {
+          links.push(deferredOrRefusedRecord2(
+            rel.target,
+            slideNo != null ? slideShapeRef(slideNo, u.shape) : null
+          ));
+        }
+        continue;
+      }
+      links.push(deferredOrRefusedRecord2(rel.target, slideLevelSource(slidePart)));
+      continue;
+    }
+    links.push(deferredOrRefusedRecord2(rel.target, null));
+  }
+  for (const u of parts.rels.undetermined) {
+    links.push(undeterminedRecord2(null, "rels_unreadable", { part: u.part, detail: u.why }));
+  }
+  for (const bp of parts.rels.byPart) {
+    const slidePart = relsPartToSlide.get(bp.part);
+    if (!slidePart) continue;
+    const w = walks.get(slidePart);
+    if (!w) continue;
+    const slideNo = slideNoOf.get(slidePart) ?? null;
+    for (const r of bp.relationships) {
+      if (r.external || !r.type || !r.type.endsWith("/slide") || !r.target) continue;
+      const usages = w.hlinks.filter((h) => h.rid === r.id);
+      if (!usages.length) continue;
+      const resolved = resolveRelTarget2(bp.part, r.target);
+      const targetNo = slideNoOf.get(resolved) ?? null;
+      for (const u of usages) {
+        const source = slideNo != null ? slideShapeRef(slideNo, u.shape) : null;
+        if (targetNo != null) {
+          const fragment = `#slide=${targetNo}`;
+          links.push({
+            partition: "anchor",
+            wrapper: linkWrapper.anchor(fragment),
+            target: { slide: targetNo, fragment, part: resolved },
+            source
+          });
+        } else {
+          links.push(undeterminedRecord2(source, "slide_unresolved", { part: resolved }));
+        }
+      }
+    }
+  }
+  const embeddingRefs = /* @__PURE__ */ new Map();
+  for (const bp of parts.rels.byPart) {
+    const slidePart = relsPartToSlide.get(bp.part) ?? null;
+    for (const r of bp.relationships) {
+      if (r.external || !r.target) continue;
+      const resolved = resolveRelTarget2(bp.part, r.target);
+      if (resolved.startsWith(EMBEDDINGS_DIR2) && !embeddingRefs.has(resolved))
+        embeddingRefs.set(resolved, { slidePart, rid: r.id });
+    }
+  }
+  for (const entry of parts.container.entries) {
+    const name = normalizePartName(entry.name);
+    if (!name.startsWith(EMBEDDINGS_DIR2) || name === EMBEDDINGS_DIR2) continue;
+    const refd = embeddingRefs.get(name) ?? null;
+    let source = null;
+    if (refd && refd.slidePart) {
+      const slideNo = slideNoOf.get(refd.slidePart) ?? null;
+      if (slideNo != null) {
+        const w = walks.get(refd.slidePart);
+        const shape = w && w.ridUsage.has(refd.rid) ? w.ridUsage.get(refd.rid) : null;
+        source = slideShapeRef(slideNo, shape);
+      }
+    }
+    const read = await readPart(parts.bytes, parts.container, name);
+    if (!read.ok) {
+      links.push(undeterminedRecord2(source, "embedded_part_unreadable", { part: name, detail: read.why }));
+      continue;
+    }
+    const sha = await sha256Hex3(read.bytes);
+    links.push({
+      partition: "intra",
+      wrapper: linkWrapper.intra(sha),
+      target: { sha256: sha, name: name.slice(name.lastIndexOf("/") + 1), bytes: read.bytes.length },
+      source
+    });
+  }
+  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
+  for (const l of links) counts[l.partition]++;
+  const items = [];
+  const evUndetermined = [...parts.undetermined];
+  if (parts.guard) evUndetermined.push({ part: GUARDED_PARTS, why: "over_size_bound", guard: parts.guard });
+  for (const { part, slide } of deck) {
+    if (!parts.hiddenParts.has(part)) continue;
+    items.push({
+      kind: "hidden-slide",
+      slide,
+      part,
+      source: slide != null ? slideShapeRef(slide) : null
+    });
+  }
+  const mappedNotes = /* @__PURE__ */ new Set();
+  for (const { part, slide } of deck) {
+    const notesPart = parts.notesOf.get(part) ?? null;
+    if (!notesPart) continue;
+    mappedNotes.add(notesPart);
+    const xml = parts.notesXml.get(notesPart);
+    if (xml == null) {
+      if (!parts.guard && !parts.container.byName.has(notesPart))
+        evUndetermined.push({ part: notesPart, why: "part_absent" });
+      continue;
+    }
+    items.push({
+      kind: "speaker-notes",
+      slide,
+      part: notesPart,
+      text: walkSlide(xml).text,
+      source: slide != null ? slideShapeRef(slide) : null
+    });
+  }
+  for (const np of parts.notesParts) {
+    if (mappedNotes.has(np) || !parts.notesXml.has(np)) continue;
+    items.push({ kind: "speaker-notes", slide: null, part: np, text: walkSlide(parts.notesXml.get(np)).text, source: null });
+  }
+  if (parts.core) {
+    items.push({
+      kind: "core-properties",
+      creator: parts.core.creator,
+      lastModifiedBy: parts.core.lastModifiedBy,
+      revision: parts.core.revision,
+      revisionNumber: parts.core.revisionNumber,
+      created: parts.core.created,
+      modified: parts.core.modified,
+      title: parts.core.title,
+      source: null
+    });
+  }
+  const evCounts = {};
+  for (const it of items) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
+  const evidentiary = {
+    container: "pptx",
+    kinds: [...new Set(items.map((it) => it.kind))],
+    items,
+    undetermined: evUndetermined,
+    counts: evCounts
+  };
+  return {
+    ok: true,
+    container: "pptx",
+    slides: deck.length,
+    links,
+    counts,
+    evidentiary,
+    notes
+  };
+}
+function deckLengthOf(parts) {
+  return Array.isArray(parts.order) ? parts.order.length : null;
+}
+async function pptxText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "pptx", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "pptx",
+      document: null,
+      slides: [],
+      speakerNotes: [],
+      deckLength: deckLengthOf(parts),
+      undetermined: [parts.guard],
+      counts: { chars: 0, notesChars: 0, undetermined: 1 }
+    };
+  }
+  const deck = deckOf(parts);
+  const slides = [];
+  const speakerNotes = [];
+  const undetermined = [];
+  for (const { part, slide } of deck) {
+    const hidden = parts.hiddenParts.has(part);
+    const xml = parts.slideXml.get(part);
+    if (xml == null) {
+      const stated = parts.undetermined.find((u) => u.part === part);
+      undetermined.push({ reason: "slide_unreadable", part, why: stated?.why ?? "unreadable" });
+    } else {
+      const walked = walkSlide(xml);
+      slides.push({
+        slide,
+        ref: slide != null ? `slide ${slide}` : null,
+        part,
+        hidden,
+        shapes: walked.shapes,
+        text: walked.text
+      });
+    }
+    const notesPart = parts.notesOf.get(part) ?? null;
+    if (!notesPart) continue;
+    const nxml = parts.notesXml.get(notesPart);
+    if (nxml == null) {
+      const stated = parts.undetermined.find((u) => u.part === notesPart);
+      undetermined.push({ reason: "notes_unreadable", part: notesPart, why: stated?.why ?? "unreadable" });
+    } else {
+      speakerNotes.push({ slide, ref: slide != null ? `slide ${slide} (notes)` : null, part: notesPart, hidden, text: walkSlide(nxml).text });
+    }
+  }
+  const mapped = /* @__PURE__ */ new Set([...parts.notesOf.values()]);
+  for (const np of parts.notesParts) {
+    if (mapped.has(np) || !parts.notesXml.has(np)) continue;
+    speakerNotes.push({ slide: null, ref: null, part: np, hidden: null, text: walkSlide(parts.notesXml.get(np)).text });
+  }
+  const document = slides.map((s) => s.text).filter((t) => t.length).join("\n");
+  const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
+  return {
+    ok: true,
+    container: "pptx",
+    document,
+    slides,
+    speakerNotes,
+    deckLength: deckLengthOf(parts),
+    undetermined,
+    counts: { chars: document.length, notesChars, undetermined: undetermined.length }
+  };
+}
+var pptxEntry = {
+  format: "pptx",
+  detect(bytes, contentType) {
+    if (bytes) {
+      if (!hasZipMagic(bytes)) return null;
+      const container = readContainer(bytes);
+      if (!container.ok) return null;
+      if (container.byName.has(CONTENT_TYPES_PART3) && container.byName.has(MAIN_PART2)) {
+        return {
+          format: "pptx",
+          confidence: "likely",
+          signals: [
+            "magic: PK\\x03\\x04 with a readable central directory",
+            `part: ${CONTENT_TYPES_PART3} present`,
+            `part: ${MAIN_PART2} present`,
+            "likely, not certain: the OPC content-type declaration is deflated \u2014 parts() discriminates"
+          ]
+        };
+      }
+      return null;
+    }
+    if (contentType === PPTX_CONTENT_TYPE) {
+      return { format: "pptx", confidence: "likely", signals: [`content type "${contentType}"`] };
+    }
+    return null;
+  },
+  parts: (bytes) => pptxParts(bytes),
+  structure: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await pptxParts(partsOrBytes) : partsOrBytes;
+    return pptxStructure(parts);
+  },
+  text: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await pptxParts(partsOrBytes) : partsOrBytes;
+    return withContainerImages(pptxText(parts), parts, "ppt/media/");
+  }
+};
+
+// src/odf.mjs
+var UTF85 = new TextDecoder("utf-8", { fatal: false });
+var ODF_ROWS = CONTAINER_FLAVOURS.filter((f2) => f2.partMap === "odf");
+function odfRow(flavour) {
+  const row = ODF_ROWS.find((f2) => f2.flavour === flavour);
+  if (!row) throw new Error(`odf.mjs: no partMap:"odf" row for "${flavour}" in ooxml.mjs`);
+  return row;
+}
+var ODT_ROW = odfRow("odt");
+var ODS_ROW = odfRow("ods");
+var ODP_ROW = odfRow("odp");
+var ODT_CONTENT_TYPE = ODT_ROW.mimetype;
+var ODS_CONTENT_TYPE = ODS_ROW.mimetype;
+var ODP_CONTENT_TYPE = ODP_ROW.mimetype;
+var CONTENT_PART = normalizePartName(ODT_ROW.conventionalMainPart);
+var META_PART = "meta.xml";
+function decodeEntities3(s) {
+  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
+    if (e[0] === "#") {
+      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+    }
+    return { amp: "&", lt: "<", gt: ">", quot: "'" === e ? "'" : '"', apos: "'" }[e] ?? m;
+  });
+}
+function attrsOf4(raw) {
+  const attrs = {};
+  for (const a of String(raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
+    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
+    attrs[local] = decodeEntities3(a[3] ?? a[4] ?? "");
+  }
+  return attrs;
+}
+var localOf3 = (n) => n.includes(":") ? n.split(":").pop() : n;
+var tokens = () => /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/)?>/g;
+function elementsNested(xml, localName) {
+  const out = [];
+  const RE = tokens();
+  let m, depth = 0, start = -1, openAttrs = null;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m[1] === void 0) continue;
+    if (localOf3(m[1]) !== localName) continue;
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (closing) {
+      depth--;
+      if (depth === 0 && start >= 0) {
+        out.push({ attrs: openAttrs, inner: xml.slice(start, m.index) });
+        start = -1;
+        openAttrs = null;
+      }
+      continue;
+    }
+    if (selfClosed) {
+      if (depth === 0) out.push({ attrs: attrsOf4(m[2]), inner: "" });
+      continue;
+    }
+    if (depth === 0) {
+      start = RE.lastIndex;
+      openAttrs = attrsOf4(m[2]);
+    }
+    depth++;
+  }
+  return out;
+}
+function stripElement(xml, localName) {
+  let out = "";
+  let cut = 0;
+  const RE = tokens();
+  let m, depth = 0, start = -1;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m[1] === void 0) continue;
+    if (localOf3(m[1]) !== localName) continue;
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (selfClosed) {
+      if (depth === 0) {
+        out += xml.slice(cut, m.index);
+        cut = RE.lastIndex;
+      }
+      continue;
+    }
+    if (closing) {
+      depth--;
+      if (depth === 0 && start >= 0) {
+        cut = RE.lastIndex;
+        start = -1;
+      }
+      continue;
+    }
+    if (depth === 0) {
+      out += xml.slice(cut, m.index);
+      start = m.index;
+    }
+    depth++;
+  }
+  return out + xml.slice(cut);
+}
+function visibleText(xml) {
+  let out = "";
+  let prev = 0;
+  const RE = tokens();
+  let m;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m.index > prev) out += decodeEntities3(xml.slice(prev, m.index));
+    prev = RE.lastIndex;
+    if (m[1] === void 0) continue;
+    if (m[0][1] === "/") continue;
+    const name = localOf3(m[1]);
+    if (name === "s") {
+      const c = parseInt(attrsOf4(m[2]).c ?? "1", 10);
+      out += " ".repeat(Number.isFinite(c) && c > 0 ? c : 1);
+    } else if (name === "tab") out += "	";
+    else if (name === "line-break") out += "\n";
+  }
+  if (xml.length > prev) out += decodeEntities3(xml.slice(prev));
+  return out;
+}
+function automaticStyles(xml) {
+  const tableDisplay = /* @__PURE__ */ new Map();
+  const pageVisible = /* @__PURE__ */ new Map();
+  for (const block of elementsNested(xml, "automatic-styles")) {
+    for (const st of elementsNested(block.inner, "style")) {
+      const name = st.attrs["name"];
+      if (!name) continue;
+      if (st.attrs.family === "table") {
+        for (const p of elementsNested(st.inner, "table-properties")) {
+          if (p.attrs.display != null) tableDisplay.set(name, p.attrs.display !== "false");
+        }
+      } else if (st.attrs.family === "drawing-page") {
+        for (const p of elementsNested(st.inner, "drawing-page-properties")) {
+          if (p.attrs.visibility != null) pageVisible.set(name, p.attrs.visibility !== "hidden");
+        }
+      }
+    }
+  }
+  return { tableDisplay, pageVisible };
+}
+function classifyUri3(uri) {
+  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
+  const scheme = m ? m[1].toLowerCase() : null;
+  if (scheme === "http" || scheme === "https") return "deferred";
+  if (!scheme && uri) return "deferred";
+  return "refused";
+}
+function linkRecord(uri, source) {
+  if (typeof uri === "string" && uri.startsWith("#")) {
+    return {
+      partition: "anchor",
+      wrapper: linkWrapper.anchor(uri),
+      target: { fragment: uri, name: uri.slice(1) },
+      source
+    };
+  }
+  const partition = classifyUri3(uri);
+  return {
+    partition,
+    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(),
+    target: { url: uri },
+    source
+  };
+}
+function hrefsIn(xml) {
+  const out = [];
+  const RE = tokens();
+  let m;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m[1] === void 0 || m[0][1] === "/") continue;
+    if (localOf3(m[1]) !== "a") continue;
+    const href = attrsOf4(m[2]).href;
+    if (href != null) out.push(href);
+  }
+  return out;
+}
+function readStoredMemberSync(bytes, container, name, maxBytes) {
+  const want = normalizePartName(name);
+  const entry = container.byName.get(want) ?? container.entries.find((e) => normalizePartName(e.name) === want);
+  if (!entry) return null;
+  if (entry.method !== 0) return null;
+  if (entry.uncompressedSize > maxBytes) return null;
+  const lh = entry.localHeaderOffset;
+  if (lh + 30 > bytes.length) return null;
+  const nameLen = bytes[lh + 26] | bytes[lh + 27] << 8;
+  const extraLen = bytes[lh + 28] | bytes[lh + 29] << 8;
+  const start = lh + 30 + nameLen + extraLen;
+  const end = start + entry.compressedSize;
+  if (end > bytes.length) return null;
+  const out = bytes.subarray(start, end);
+  if (out.length !== entry.uncompressedSize) return null;
+  if (crc32(out) !== entry.crc32) return null;
+  return UTF85.decode(out);
+}
+function detectOdf(row, bytes, contentType) {
+  if (bytes) {
+    if (!hasZipMagic(bytes)) return null;
+    const container = readContainer(bytes);
+    if (!container.ok) return null;
+    const first = container.entries[0];
+    if (!first || normalizePartName(first.name) !== ODF_MIMETYPE_PART) return null;
+    const declared = readStoredMemberSync(bytes, container, ODF_MIMETYPE_PART, ODF_MIMETYPE_MAX_BYTES);
+    if (declared !== row.mimetype) return null;
+    const main = normalizePartName(row.conventionalMainPart);
+    const present = container.byName.has(main) || container.entries.some((e) => normalizePartName(e.name) === main);
+    if (!present) return null;
+    return {
+      format: row.flavour,
+      confidence: "certain",
+      signals: [
+        "magic: PK\\x03\\x04 with a readable central directory",
+        `part: ${ODF_MIMETYPE_PART} is the FIRST member, STORED, CRC-verified`,
+        `odf:${ODF_MIMETYPE_PART}=${row.mimetype} (exact match, not trimmed)`,
+        `part: ${main} present`
+      ]
+    };
+  }
+  if (contentType === row.mimetype) {
+    return { format: row.flavour, confidence: "likely", signals: [`content type "${contentType}"`] };
+  }
+  return null;
+}
+async function odfParts(row, bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const d = await discriminate(b);
+  if (!d.ok) return { ok: false, container: row.flavour, why: d.why, signals: d.signals };
+  if (d.format !== row.flavour) {
+    const absent = d.why === "declared_main_part_absent";
+    return {
+      ok: false,
+      container: row.flavour,
+      why: d.format === "undetermined" ? d.why : `not_${row.flavour}:${d.format}`,
+      part: absent ? CONTENT_PART : null,
+      flavourDeclared: d.flavourDeclared ?? null,
+      signals: d.signals
+    };
+  }
+  const container = readContainer(b);
+  if (!container.ok) return { ok: false, container: row.flavour, why: container.why, signals: d.signals };
+  const undetermined = [];
+  const declared = declaredTextBytes(container, (n) => n === CONTENT_PART);
+  const guardR = sizeGuard(declared.total);
+  const guard = guardR.ok ? null : guardR;
+  let contentXml = null;
+  if (!guard) {
+    const read = await readPart(b, container, CONTENT_PART);
+    if (read.ok) contentXml = UTF85.decode(read.bytes);
+    else undetermined.push({ part: CONTENT_PART, why: read.why });
+  }
+  undetermined.push({
+    part: META_PART,
+    why: "outside_content_xml_not_read",
+    detail: "OpenDocument carries the core properties (creator, title, created/modified, revision) in meta.xml; this entry reads content.xml only, so NO core-properties item is emitted and its absence is not evidence the document carries none"
+  });
+  undetermined.push({
+    part: ODF_MANIFEST_PART,
+    why: "outside_content_xml_not_read",
+    detail: "OpenDocument lists embedded objects and images as separate package members in META-INF/manifest.xml; this entry reads content.xml only, so NO intra link is content-addressed and a zero intra count means NOT LOOKED, never NONE PRESENT"
+  });
+  return { ok: true, format: row.flavour, row, bytes: b, container, contentXml, declared, guard, undetermined };
+}
+function officeBody(contentXml, kind) {
+  if (contentXml == null) return null;
+  const body = elementsNested(contentXml, "body")[0];
+  if (!body) return null;
+  const inner = elementsNested(body.inner, kind)[0];
+  return inner ? inner.inner : null;
+}
+function envelopeUndetermined(parts) {
+  const out = [...parts.undetermined];
+  if (parts.guard) out.push({ part: CONTENT_PART, why: "over_size_bound", guard: parts.guard });
+  return out;
+}
+function envelopeOf(container, items, undetermined) {
+  const counts = {};
+  for (const it of items) counts[it.kind] = (counts[it.kind] ?? 0) + 1;
+  return {
+    container,
+    kinds: [...new Set(items.map((it) => it.kind))],
+    items,
+    undetermined,
+    counts
+  };
+}
+function countPartitions(links) {
+  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
+  for (const l of links) counts[l.partition]++;
+  return counts;
+}
+var NO_INTRA_NOTE = "no intra link is emitted: embedded members live outside content.xml (stated in evidentiary.undetermined)";
+function walkTextBody(bodyXml) {
+  const paragraphs = [];
+  const hyperlinks = [];
+  const annotations = [];
+  const marks = [];
+  const openChanges = /* @__PURE__ */ new Map();
+  const served = stripElement(bodyXml, "tracked-changes");
+  const RE = tokens();
+  let m, prev = 0;
+  let para = -1;
+  let inPara = false;
+  let depthInPara = 0;
+  let skipDepth = 0;
+  let paraStart = -1;
+  const openStack = [];
+  while ((m = RE.exec(served)) !== null) {
+    if (m[1] === void 0) {
+      prev = RE.lastIndex;
+      continue;
+    }
+    const name = localOf3(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (skipDepth > 0) {
+      if (!closing && !selfClosed) skipDepth++;
+      else if (closing) skipDepth--;
+      prev = RE.lastIndex;
+      continue;
+    }
+    if (!closing && !selfClosed && name === "annotation") {
+      const rest = served.slice(m.index);
+      const ann = elementsNested(rest, "annotation")[0];
+      annotations.push({ attrs: attrsOf4(m[2]), inner: ann ? ann.inner : "", para: para >= 0 ? para : null });
+      skipDepth = 1;
+      prev = RE.lastIndex;
+      continue;
+    }
+    if (!closing && (name === "p" || name === "h")) {
+      if (!selfClosed) {
+        if (!inPara) {
+          para++;
+          inPara = true;
+          depthInPara = 1;
+          paraStart = RE.lastIndex;
+          openStack.length = 0;
+        } else depthInPara++;
+      } else {
+        if (!inPara) {
+          para++;
+          paragraphs.push({ para, text: "" });
+        }
+      }
+      prev = RE.lastIndex;
+      continue;
+    }
+    if (closing && (name === "p" || name === "h") && inPara) {
+      depthInPara--;
+      if (depthInPara === 0) {
+        const raw = served.slice(paraStart, m.index);
+        paragraphs.push({ para, text: visibleText(stripElement(raw, "annotation")) });
+        inPara = false;
+        paraStart = -1;
+      }
+      prev = RE.lastIndex;
+      continue;
+    }
+    const attrs = m[2] && m[2].includes("=") ? attrsOf4(m[2]) : {};
+    if (!closing && name === "a" && attrs.href != null) {
+      hyperlinks.push({ href: attrs.href, para: para >= 0 ? para : null });
+    } else if (name === "change-start" && attrs["change-id"] != null) {
+      openChanges.set(attrs["change-id"], { para: para >= 0 ? para : null });
+      marks.push({ id: attrs["change-id"], para: para >= 0 ? para : null });
+    } else if (name === "change" && attrs["change-id"] != null) {
+      marks.push({ id: attrs["change-id"], para: para >= 0 ? para : null });
+    }
+    prev = RE.lastIndex;
+  }
+  return { paragraphs, hyperlinks, annotations, marks, openChanges };
+}
+function insertedTextFor(bodyXml, id) {
+  const served = stripElement(bodyXml, "tracked-changes");
+  const startRe = new RegExp(`<(?:[\\w.-]+:)?change-start\\b[^>]*change-id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`);
+  const endRe = new RegExp(`<(?:[\\w.-]+:)?change-end\\b[^>]*change-id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`);
+  const s = served.match(startRe);
+  const e = served.match(endRe);
+  if (!s || !e || e.index < s.index) return null;
+  return visibleText(served.slice(s.index + s[0].length, e.index));
+}
+function parseTrackedChanges(bodyXml) {
+  const block = elementsNested(bodyXml, "tracked-changes")[0];
+  if (!block) return [];
+  const out = [];
+  for (const region of elementsNested(block.inner, "changed-region")) {
+    const id = region.attrs.id ?? null;
+    for (const [kind, change] of [["insertion", "insertion"], ["deletion", "deletion"]]) {
+      for (const el of elementsNested(region.inner, kind)) {
+        const info = elementsNested(el.inner, "change-info")[0];
+        const creator = info ? elementsNested(info.inner, "creator")[0] : null;
+        const date = info ? elementsNested(info.inner, "date")[0] : null;
+        out.push({
+          id,
+          change,
+          author: creator ? visibleText(creator.inner) : null,
+          // null, never invented
+          date: date ? visibleText(date.inner) : null,
+          /* A deletion's own paragraphs ARE the superseded wording. An
+             insertion's content is in the body, not here. */
+          superseded: change === "deletion" ? elementsNested(stripElement(el.inner, "change-info"), "p").map((p) => visibleText(p.inner)).join("\n") : null
+        });
+      }
+    }
+  }
+  return out;
+}
+function odtStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  const notes = [NO_INTRA_NOTE];
+  const links = [];
+  const items = [];
+  const body = officeBody(parts.contentXml, "text");
+  if (!body) {
+    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:text>: element references unavailable (stated)");
+  }
+  let paragraphs = null;
+  if (body) {
+    const walk = walkTextBody(body);
+    paragraphs = walk.paragraphs.length;
+    for (const h of walk.hyperlinks) {
+      links.push(linkRecord(h.href, h.para == null ? null : docParaRef(h.para)));
+    }
+    const markFor = /* @__PURE__ */ new Map();
+    for (const mk of walk.marks) if (!markFor.has(mk.id)) markFor.set(mk.id, mk.para);
+    for (const c of parseTrackedChanges(parts.contentXml)) {
+      const at = c.id != null ? markFor.get(c.id) : void 0;
+      const item = {
+        kind: "tracked-change",
+        change: c.change,
+        author: c.author,
+        date: c.date,
+        source: at == null ? null : docParaRef(at)
+      };
+      if (c.change === "deletion") item.superseded = c.superseded;
+      else item.text = c.id != null ? insertedTextFor(body, c.id) : null;
+      if (at === void 0) item.why = "change_region_unmarked_in_body";
+      items.push(item);
+    }
+    for (const a of walk.annotations) {
+      const creator = elementsNested(a.inner, "creator")[0];
+      const date = elementsNested(a.inner, "date")[0];
+      const initials = elementsNested(a.inner, "creator-initials")[0];
+      items.push({
+        kind: "comment",
+        id: a.attrs.name ?? null,
+        author: creator ? visibleText(creator.inner) : null,
+        date: date ? visibleText(date.inner) : null,
+        initials: initials ? visibleText(initials.inner) : null,
+        text: elementsNested(stripElement(a.inner, "change-info"), "p").map((p) => visibleText(p.inner)).join("\n"),
+        source: a.para == null ? null : docParaRef(a.para)
+      });
+    }
+  }
+  return {
+    ok: true,
+    container: "odt",
+    paragraphs,
+    // null = honestly unknown, the docx.mjs convention
+    links,
+    counts: countPartitions(links),
+    evidentiary: envelopeOf("odt", items, envelopeUndetermined(parts)),
+    notes
+  };
+}
+function walkOdfTables(bodyXml) {
+  const done = [];
+  const stack = [];
+  let next = 0;
+  const RE = tokens();
+  const rep = (v) => {
+    const n = parseInt(v ?? "1", 10);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  };
+  let m;
+  while ((m = RE.exec(bodyXml)) !== null) {
+    if (m[1] === void 0) continue;
+    const name = localOf3(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    const top = stack.length ? stack[stack.length - 1] : null;
+    if (closing) {
+      if (name === "table" && stack.length) {
+        const t = stack.pop();
+        done[t.table] = { table: t.table, rows: t.rows, cols: t.cols > 0 ? t.cols : null };
+      }
+      continue;
+    }
+    if (name === "table") {
+      if (selfClosed) done[next] = { table: next++, rows: 0, cols: null };
+      else stack.push({ table: next++, rows: 0, cols: 0 });
+      continue;
+    }
+    if (!top) continue;
+    const attrs = m[2] && m[2].includes("=") ? attrsOf4(m[2]) : {};
+    if (name === "table-column") top.cols += rep(attrs["number-columns-repeated"]);
+    else if (name === "table-row") top.rows += rep(attrs["number-rows-repeated"]);
+  }
+  while (stack.length) {
+    const t = stack.pop();
+    done[t.table] = { table: t.table, rows: t.rows || null, cols: t.cols > 0 ? t.cols : null };
+  }
+  return done.filter(Boolean);
+}
+function odtText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "odt",
+      document: null,
+      paragraphs: [],
+      tables: null,
+      undetermined: [parts.guard],
+      // the marker VERBATIM, never a truncation
+      counts: { chars: 0, undetermined: 1 }
+    };
+  }
+  const body = officeBody(parts.contentXml, "text");
+  if (!body) {
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    return {
+      ok: true,
+      container: "odt",
+      document: null,
+      paragraphs: [],
+      tables: null,
+      undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_text_body" }],
+      counts: { chars: 0, undetermined: 1 }
+    };
+  }
+  const walk = walkTextBody(body);
+  const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `\xB6${p.para + 1}`, text: p.text }));
+  const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
+  const tables = walkOdfTables(stripElement(body, "tracked-changes")).map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
+  return {
+    ok: true,
+    container: "odt",
+    document,
+    paragraphs,
+    tables,
+    undetermined: [],
+    counts: { chars: document.length, undetermined: 0 }
+  };
+}
+function columnName(i) {
+  let n = i, out = "";
+  do {
+    out = String.fromCharCode(65 + n % 26) + out;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return out;
+}
+function walkSheet(tableXml) {
+  const rows = [];
+  const hiddenRows = [];
+  const hiddenCols = [];
+  let colIndex = 0;
+  for (const col of elementsNested(tableXml, "table-column")) {
+    const rep = parseInt(col.attrs["number-columns-repeated"] ?? "1", 10);
+    const n = Number.isFinite(rep) && rep > 0 ? rep : 1;
+    const vis = col.attrs.visibility;
+    if (vis === "collapse" || vis === "filter") {
+      hiddenCols.push({ min: colIndex + 1, max: colIndex + n, visibility: vis });
+    }
+    colIndex += n;
+  }
+  let rowIndex = 0;
+  for (const row of elementsNested(tableXml, "table-row")) {
+    const rep = parseInt(row.attrs["number-rows-repeated"] ?? "1", 10);
+    const nRows = Number.isFinite(rep) && rep > 0 ? rep : 1;
+    const vis = row.attrs.visibility;
+    const cells = [];
+    let c = 0;
+    for (const cell of elementsNested(row.inner, "table-cell")) {
+      const crep = parseInt(cell.attrs["number-columns-repeated"] ?? "1", 10);
+      const nCols = Number.isFinite(crep) && crep > 0 ? crep : 1;
+      const carries = cell.attrs["value-type"] != null || cell.attrs.formula != null || cell.inner.trim() !== "";
+      const emit = carries ? nCols : 0;
+      for (let k = 0; k < emit; k++) {
+        cells.push({
+          col: c + k,
+          cell: `${columnName(c + k)}${rowIndex + 1}`,
+          valueType: cell.attrs["value-type"] ?? null,
+          value: cell.attrs.value ?? cell.attrs["string-value"] ?? cell.attrs["date-value"] ?? cell.attrs["time-value"] ?? cell.attrs["boolean-value"] ?? null,
+          formula: cell.attrs.formula ?? null,
+          /* The DISPLAYED form: ODF writes what the sheet shows as the cell's
+             `<text:p>` children, which is the analogue of xlsx's cached <v>. */
+          display: elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n"),
+          hrefs: hrefsIn(cell.inner)
+        });
+      }
+      c += nCols;
+    }
+    const materialise = cells.length ? nRows : 0;
+    for (let k = 0; k < materialise; k++) {
+      const r = rowIndex + k;
+      if (vis === "collapse" || vis === "filter") hiddenRows.push(r + 1);
+      rows.push({
+        r: r + 1,
+        hidden: vis === "collapse" || vis === "filter" ? vis : false,
+        cells: cells.map((cell) => ({ ...cell, cell: `${columnName(cell.col)}${r + 1}` }))
+      });
+    }
+    if (!materialise && (vis === "collapse" || vis === "filter")) {
+      for (let k = 0; k < nRows; k++) hiddenRows.push(rowIndex + k + 1);
+    }
+    rowIndex += nRows;
+  }
+  return { rows, hiddenRows, hiddenCols };
+}
+function sheetsOf(bodyXml, styles) {
+  return elementsNested(bodyXml, "table").map((tbl, index) => {
+    const styleName = tbl.attrs["style-name"] ?? null;
+    const fromElement = tbl.attrs.display != null ? tbl.attrs.display !== "false" : null;
+    const fromStyle = styleName != null && styles.tableDisplay.has(styleName) ? styles.tableDisplay.get(styleName) : null;
+    const displayed = fromElement ?? fromStyle ?? true;
+    return {
+      index,
+      name: tbl.attrs.name ?? `table${index + 1}`,
+      /* ODF identifies a table by NAME only — there is no numeric sheet id.
+         null is the FORMAT speaking, not a gap in this reader. */
+      sheetId: null,
+      /* ODF's visibility is a boolean, so there is no xlsx "veryHidden". */
+      state: displayed ? "visible" : "hidden",
+      hidden: displayed ? false : "hidden",
+      xml: tbl.inner
+    };
+  });
+}
+function odsStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  const notes = [NO_INTRA_NOTE];
+  const links = [];
+  const items = [];
+  const body = officeBody(parts.contentXml, "spreadsheet");
+  if (!body) {
+    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:spreadsheet>: element references unavailable (stated)");
+  }
+  if (parts.guard) notes.push("text_parts_over_bound");
+  const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
+  const sheets = body ? sheetsOf(body, styles) : [];
+  for (const sheet of sheets) {
+    const walked = walkSheet(sheet.xml);
+    for (const row of walked.rows) {
+      for (const cell of row.cells) {
+        const ref = sheetCellRef(sheet.name, cell.cell);
+        for (const href of cell.hrefs) links.push(linkRecord(href, ref));
+        if (cell.formula != null) {
+          items.push({
+            kind: "formula",
+            source: ref,
+            formula: cell.formula,
+            value: cell.display !== "" ? cell.display : cell.value
+            // the cached result; null when the file carries none
+          });
+        }
+      }
+    }
+    if (walked.hiddenRows.length) {
+      items.push({
+        kind: "hidden-rows",
+        sheet: sheet.name,
+        rows: walked.hiddenRows,
+        count: walked.hiddenRows.length,
+        source: null
+      });
+    }
+    if (walked.hiddenCols.length) {
+      items.push({
+        kind: "hidden-cols",
+        sheet: sheet.name,
+        cols: walked.hiddenCols,
+        count: walked.hiddenCols.length,
+        source: null
+      });
+    }
+  }
+  for (const sheet of sheets) {
+    if (sheet.hidden) items.push({ kind: "hidden-sheet", sheet: sheet.name, state: sheet.state, source: null });
+  }
+  return {
+    ok: true,
+    container: "ods",
+    sheets: sheets.map((s) => ({ sheet: s.index, name: s.name, sheetId: s.sheetId, state: s.state, hidden: s.hidden })),
+    links,
+    counts: countPartitions(links),
+    evidentiary: envelopeOf("ods", items, envelopeUndetermined(parts)),
+    notes
+  };
+}
+function odsText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "ods",
+      document: null,
+      sheets: [],
+      undetermined: [parts.guard],
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
+    };
+  }
+  const body = officeBody(parts.contentXml, "spreadsheet");
+  if (!body) {
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    const marker = { sheet: null, cell: null, reason: stated?.why ?? "no_office_spreadsheet_body" };
+    return {
+      ok: true,
+      container: "ods",
+      document: null,
+      sheets: [],
+      undetermined: [marker],
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
+    };
+  }
+  const styles = automaticStyles(parts.contentXml);
+  const outSheets = [];
+  let cellCount = 0, formulaCount = 0;
+  for (const sheet of sheetsOf(body, styles)) {
+    const walked = walkSheet(sheet.xml);
+    const lines = [];
+    for (const row of walked.rows) {
+      const vals = [];
+      for (const c of row.cells) {
+        if (c.formula != null) formulaCount++;
+        const v = c.display !== "" ? c.display : c.value;
+        if (v == null || v === "") continue;
+        cellCount++;
+        vals.push(v);
+      }
+      if (vals.length) lines.push(vals.join("	"));
+    }
+    const text = lines.join("\n");
+    let usedRows = 0, usedCols = 0;
+    for (const row of walked.rows) {
+      if (!row.cells.length) continue;
+      if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
+      for (const c of row.cells) {
+        if (Number.isInteger(c.col) && c.col + 1 > usedCols) usedCols = c.col + 1;
+      }
+    }
+    outSheets.push({
+      sheet: sheet.index,
+      name: sheet.name,
+      hidden: sheet.hidden,
+      rows: null,
+      cols: null,
+      usedRows,
+      usedCols,
+      /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
+      range: usedSheetRange(sheet.name, usedRows, usedCols),
+      text,
+      undetermined: []
+    });
+  }
+  const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
+  return {
+    ok: true,
+    container: "ods",
+    document,
+    sheets: outSheets,
+    undetermined: [],
+    counts: { chars: document.length, cells: cellCount, formulas: formulaCount, undetermined: 0 }
+  };
+}
+var ODP_SHAPE_TAGS = /* @__PURE__ */ new Set([
+  "frame",
+  "custom-shape",
+  "rect",
+  "ellipse",
+  "circle",
+  "line",
+  "polyline",
+  "polygon",
+  "path",
+  "connector",
+  "measure",
+  "caption",
+  "g",
+  "page-thumbnail",
+  "control",
+  "object",
+  "image"
+]);
+function walkPage(pageXml) {
+  const slideOnly = stripElement(pageXml, "notes");
+  const shapes = [];
+  const RE = tokens();
+  let m;
+  let index = -1;
+  const open = [];
+  while ((m = RE.exec(slideOnly)) !== null) {
+    if (m[1] === void 0) continue;
+    const name = localOf3(m[1]);
+    if (!ODP_SHAPE_TAGS.has(name)) continue;
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (closing) {
+      const o = open.pop();
+      if (o) shapes.push({ shape: o.index, inner: slideOnly.slice(o.start, m.index) });
+      continue;
+    }
+    index++;
+    if (selfClosed) {
+      shapes.push({ shape: index, inner: "" });
+      continue;
+    }
+    open.push({ index, start: RE.lastIndex });
+  }
+  shapes.sort((a, b) => a.shape - b.shape);
+  return {
+    count: index + 1,
+    shapes: shapes.map((s) => ({
+      shape: s.shape,
+      /* A group's text is the text of the shapes inside it, which are their
+         own entries; taking the group's inner markup would double-count it in
+         the slide's text, so a shape's OWN text is its `<draw:text-box>`
+         paragraphs only. */
+      text: elementsNested(s.inner, "text-box").map((tb) => elementsNested(tb.inner, "p").map((p) => visibleText(p.inner)).join("\n")).join("\n"),
+      hrefs: hrefsIn(s.inner)
+    }))
+  };
+}
+function notesTextOf(pageXml) {
+  const notes = elementsNested(pageXml, "notes")[0];
+  if (!notes) return null;
+  return elementsNested(notes.inner, "text-box").map((tb) => elementsNested(tb.inner, "p").map((p) => visibleText(p.inner)).join("\n")).filter((t) => t.length).join("\n");
+}
+function deckOf2(bodyXml, styles) {
+  return elementsNested(bodyXml, "page").map((page, i) => {
+    const styleName = page.attrs["style-name"] ?? null;
+    const fromElement = page.attrs.visibility != null ? page.attrs.visibility !== "hidden" : null;
+    const fromStyle = styleName != null && styles.pageVisible.has(styleName) ? styles.pageVisible.get(styleName) : null;
+    const visible = fromElement ?? fromStyle ?? true;
+    return { slide: i + 1, name: page.attrs.name ?? null, hidden: !visible, xml: page.inner };
+  });
+}
+function odpStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  const notes = [NO_INTRA_NOTE];
+  const links = [];
+  const items = [];
+  const body = officeBody(parts.contentXml, "presentation");
+  if (!body) {
+    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:presentation>: element references unavailable (stated)");
+  }
+  const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
+  const deck = body ? deckOf2(body, styles) : null;
+  if (deck) {
+    for (const page of deck) {
+      const walked = walkPage(page.xml);
+      for (const s of walked.shapes) {
+        for (const href of s.hrefs) links.push(linkRecord(href, slideShapeRef(page.slide, s.shape)));
+      }
+      const nt = notesTextOf(page.xml);
+      if (nt != null && nt.length) {
+        items.push({
+          kind: "speaker-notes",
+          slide: page.slide,
+          part: CONTENT_PART,
+          text: nt,
+          source: slideShapeRef(page.slide)
+        });
+      }
+      if (page.hidden) {
+        items.push({
+          kind: "hidden-slide",
+          slide: page.slide,
+          part: CONTENT_PART,
+          source: slideShapeRef(page.slide)
+        });
+      }
+    }
+  }
+  return {
+    ok: true,
+    container: "odp",
+    slides: deck ? deck.length : null,
+    // null = honestly unknown
+    links,
+    counts: countPartitions(links),
+    evidentiary: envelopeOf("odp", items, envelopeUndetermined(parts)),
+    notes
+  };
+}
+function odpText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "odp",
+      document: null,
+      slides: [],
+      speakerNotes: [],
+      deckLength: null,
+      undetermined: [parts.guard],
+      counts: { chars: 0, notesChars: 0, undetermined: 1 }
+    };
+  }
+  const body = officeBody(parts.contentXml, "presentation");
+  if (!body) {
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    return {
+      ok: true,
+      container: "odp",
+      document: null,
+      slides: [],
+      speakerNotes: [],
+      deckLength: null,
+      undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_presentation_body" }],
+      counts: { chars: 0, notesChars: 0, undetermined: 1 }
+    };
+  }
+  const styles = automaticStyles(parts.contentXml);
+  const slides = [];
+  const speakerNotes = [];
+  const deck = deckOf2(body, styles);
+  for (const page of deck) {
+    const walked = walkPage(page.xml);
+    const text = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
+    slides.push({
+      slide: page.slide,
+      ref: `slide ${page.slide}`,
+      part: CONTENT_PART,
+      hidden: page.hidden,
+      shapes: walked.count,
+      text
+    });
+    const nt = notesTextOf(page.xml);
+    if (nt != null && nt.length) {
+      speakerNotes.push({
+        slide: page.slide,
+        ref: `slide ${page.slide} (notes)`,
+        part: CONTENT_PART,
+        hidden: page.hidden,
+        text: nt
+      });
+    }
+  }
+  const document = slides.map((s) => s.text).filter((t) => t.length).join("\n");
+  const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
+  return {
+    ok: true,
+    container: "odp",
+    document,
+    slides,
+    speakerNotes,
+    /* COFF-13 — THE DECK'S OWN LENGTH, on pptx.mjs's key. Every `<draw:page>`
+       lives in the one content.xml, so once the body is read no slide can be
+       unreadable on its own and the length EQUALS the slide list — emitted
+       anyway, so the wire reads one key from every deck entry rather than
+       inferring it from which entry answered. */
+    deckLength: deck.length,
+    undetermined: [],
+    counts: { chars: document.length, notesChars, undetermined: 0 }
+  };
+}
+function entryFor(row, structureOf, textOf2) {
+  return {
+    format: row.flavour,
+    detect: (bytes, contentType) => detectOdf(row, bytes, contentType),
+    parts: (bytes) => odfParts(row, bytes),
+    /* Accept either parts() output or raw bytes, exactly as the three OOXML
+       entries do, so detect→structure works uniformly at the registry seam
+       while a caller that already paid for parts() does not pay twice. */
+    structure: async (partsOrBytes) => structureOf(
+      partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes
+    ),
+    /* FW-19 / IC-124: `images` under the package's `Pictures/` directory,
+       exhaustive or NULL, through the one enumerator the OOXML entries use.
+       Read off the central directory, so it does NOT depend on
+       META-INF/manifest.xml — the `outside_content_xml_not_read` marker about
+       the manifest stays TRUE and stays emitted: it speaks about `intra`
+       embedded objects, which this does not content-address. */
+    text: async (partsOrBytes) => {
+      const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes;
+      return withContainerImages(textOf2(parts), parts, "Pictures/");
+    }
+  };
+}
+var odtEntry = entryFor(ODT_ROW, odtStructure, odtText);
+var odsEntry = entryFor(ODS_ROW, odsStructure, odsText);
+var odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
+var ODF_EVIDENTIARY_VERSION = 1;
+var ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
+var ODF_EVIDENTIARY_MEASURED = Object.freeze({
+  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 \xA74) and 18/18 over 3 census targets (M-123)"
+});
+var ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
+  odt: "the .odt content.xml differs on every Google export (MEASUREMENTS.md 2026-09-14 \xA74; M-123 found random xml:id values on text:list, on 2 documents); the normalisation that would discount them is not measured by this build, so no evidentiary digest is claimed for .odt",
+  odp: "no .odp export has been measured for content.xml stability (M-123: the census holds no Slides target), so no evidentiary digest is claimed for .odp"
+});
+function referencedMembers(contentXml, container) {
+  const names = container.entries.map((e) => normalizePartName(e.name));
+  const hit = /* @__PURE__ */ new Set();
+  const RE = tokens();
+  let m;
+  while ((m = RE.exec(contentXml)) !== null) {
+    if (m[1] === void 0 || m[0][1] === "/") continue;
+    const href = attrsOf4(m[2]).href;
+    if (typeof href !== "string" || !href || href.startsWith("#")) continue;
+    if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(href)) continue;
+    const want = normalizePartName(href.replace(/^(?:\.\/)+/, "").replace(/\/+$/, ""));
+    if (!want) continue;
+    for (const n of names)
+      if (n === want || n.startsWith(want + "/")) hit.add(n);
+  }
+  return [...hit];
+}
+async function odfEvidentiaryDigest(bytes, sha256Hex6) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
+  const no2 = (flavour2, basis) => ({ determined: false, flavour: flavour2, evidentiary: null, basis });
+  let row = null;
+  for (const r of [ODT_ROW, ODS_ROW, ODP_ROW]) {
+    const d = detectOdf(r, b, null);
+    if (d && d.confidence === "certain") {
+      row = r;
+      break;
+    }
+  }
+  if (!row) return no2(null, "the bytes are not an OpenDocument package detected with certainty, so no container digest was taken");
+  const flavour = row.flavour;
+  if (!ODF_EVIDENTIARY_MEASURED[flavour])
+    return no2(flavour, ODF_EVIDENTIARY_UNMEASURED[flavour] || `no .${flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed`);
+  const container = readContainer(b);
+  if (!container.ok) return no2(flavour, `the package's central directory could not be read (${container.why})`);
+  const declared = declaredTextBytes(container, (n) => n === CONTENT_PART);
+  const guard = sizeGuard(declared.total);
+  if (!guard.ok) return no2(flavour, `content.xml is over the declared-uncompressed text bound (${guard.why || "size_guard"}), so it was not inflated and no digest was taken`);
+  const read = await readPart(b, container, CONTENT_PART);
+  if (!read.ok) return no2(flavour, `content.xml could not be read whole (${read.why})`);
+  const refs = referencedMembers(UTF85.decode(read.bytes), container);
+  if (refs.length)
+    return no2(flavour, `content.xml references ${refs.length} package member(s) whose bytes it does not hold (${refs.slice(0, 3).join(", ")}${refs.length > 3 ? ", \u2026" : ""}); a digest of content.xml cannot speak for them, so none is claimed`);
+  return {
+    determined: true,
+    flavour,
+    over: CONTENT_PART,
+    evidentiary: await sha256Hex6(read.bytes),
+    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified), odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml and thumbnails are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`
+  };
+}
+
 // src/drive.mjs
 var DRIVE_HOSTS = [
   "docs.google.com",
@@ -17475,998 +21145,6 @@ function archiveLocatorFrom(res, requested) {
   return null;
 }
 
-// src/cpu.mjs
-function makeMeter() {
-  const seg = /* @__PURE__ */ Object.create(null);
-  const bump = (label, bytes) => {
-    const e = seg[label] || (seg[label] = { calls: 0, bytes: 0 });
-    e.calls++;
-    if (typeof bytes === "number" && Number.isFinite(bytes)) e.bytes += bytes;
-  };
-  return {
-    /** Run a synchronous block, counting it. `bytes` is the size of what it
-     *  worked on, when that is known and meaningful. */
-    sync(label, fn, bytes) {
-      bump(label, bytes);
-      return fn();
-    },
-    /** Same, for an await that is compute rather than I/O: a crypto digest is
-     *  async in the Workers API and is not a network wait. */
-    async cpuAwait(label, fn, bytes) {
-      bump(label, bytes);
-      return await fn();
-    },
-    report() {
-      const calls = Object.values(seg).reduce((a, e) => a + e.calls, 0);
-      const bytes = Object.values(seg).reduce((a, e) => a + e.bytes, 0);
-      return {
-        work_calls: calls,
-        work_bytes: bytes,
-        segments: { ...seg },
-        measured_ms: null,
-        note: "COUNTS, not times. Cloudflare freezes Date.now() during synchronous execution as a timing-attack defence, so a Worker cannot measure its own compute and any millisecond figure reported from inside one is meaningless. These are the quantities that DRIVE the cost and that would explain a kill afterwards. The ceiling is measured separately, in reference iterations, by op=cpuprobe."
-      };
-    }
-  };
-}
-function burn(iterations) {
-  let x = 1;
-  for (let i = 0; i < iterations; i++) x = (x * 1103515245 + 12345) % 2147483647;
-  return x;
-}
-async function cpuProbe({
-  checkpoint,
-  startStep = 0,
-  maxStep = 40,
-  iterationsPerStep = 2e6,
-  budgetMs = 2e4,
-  now = () => Date.now()
-}) {
-  const t0 = now();
-  let step = startStep;
-  for (; step < maxStep; step++) {
-    burn(iterationsPerStep);
-    const elapsed = now() - t0;
-    await checkpoint(step + 1, elapsed);
-    if (elapsed >= budgetMs) return { completed: step + 1, elapsed_ms: elapsed, reason: "BUDGET_REACHED" };
-  }
-  return { completed: step, elapsed_ms: now() - t0, reason: "MAX_STEP_REACHED" };
-}
-
-// src/subresources.mjs
-var SUBRESOURCE_CAP = 400;
-var SUBRESOURCE_MAX = 8 * 1024 * 1024;
-var SUBRESOURCE_BUDGET = 64 * 1024 * 1024;
-var CSS_MAX_DEPTH = 2;
-var STRIPPED_ELEMENTS = ["script", "iframe", "object", "embed", "applet", "frame", "frameset", "noembed"];
-var REFUSED_SCHEMES = ["javascript:", "data:", "blob:", "about:", "mailto:", "tel:", "file:", "ftp:", "ws:", "wss:", "chrome:", "chrome-extension:", "view-source:"];
-var TAG_RE = /<(\/?[a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
-var ATTR_RE = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
-var CSS_URL_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)/gi;
-var CSS_IMPORT_RE = /@import\s+(?:url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)|"([^"]*)"|'([^']*)')/gi;
-var STYLE_EL_RE = /<style\b([^>]*)>([\s\S]*?)<\/style\s*>/gi;
-var COMMENT_RE = /<!--[\s\S]*?-->/g;
-var placeholderFor = (sha) => `about:capture#${sha}`;
-var PLACEHOLDER_MISSING = "about:capture#unavailable";
-function attrsOf(blob) {
-  const out = [];
-  ATTR_RE.lastIndex = 0;
-  let m;
-  while (m = ATTR_RE.exec(blob)) {
-    if (!m[0].trim()) {
-      if (ATTR_RE.lastIndex <= m.index) ATTR_RE.lastIndex = m.index + 1;
-      continue;
-    }
-    out.push({
-      name: m[1].toLowerCase(),
-      raw: m[0],
-      value: m[3] !== void 0 ? m[3] : m[4] !== void 0 ? m[4] : m[5] !== void 0 ? m[5] : null,
-      quote: m[3] !== void 0 ? '"' : m[4] !== void 0 ? "'" : "",
-      present: m[2] !== void 0
-    });
-  }
-  return out;
-}
-var attr = (as, n) => {
-  const a = as.find((x) => x.name === n);
-  return a ? a.value : null;
-};
-function srcsetUrls(v) {
-  const out = [];
-  const s = String(v);
-  let i = 0;
-  const isWs = (c) => c === " " || c === "	" || c === "\n" || c === "\r" || c === "\f";
-  while (i < s.length) {
-    while (i < s.length && (isWs(s[i]) || s[i] === ",")) i++;
-    if (i >= s.length) break;
-    const start = i;
-    while (i < s.length && !isWs(s[i])) i++;
-    let url = s.slice(start, i);
-    if (url.endsWith(",")) {
-      out.push(url.replace(/,+$/, ""));
-      continue;
-    }
-    out.push(url);
-    let depth = 0;
-    while (i < s.length) {
-      if (s[i] === "(") depth++;
-      else if (s[i] === ")" && depth) depth--;
-      else if (s[i] === "," && !depth) {
-        i++;
-        break;
-      }
-      i++;
-    }
-  }
-  return out.filter(Boolean);
-}
-function cssRefs(css) {
-  const out = [];
-  CSS_URL_RE.lastIndex = 0;
-  let m;
-  while (m = CSS_URL_RE.exec(css)) {
-    const u = m[1] ?? m[2] ?? m[3] ?? "";
-    if (u.trim()) out.push(u.trim());
-  }
-  CSS_IMPORT_RE.lastIndex = 0;
-  while (m = CSS_IMPORT_RE.exec(css)) {
-    const u = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? "";
-    if (u.trim()) out.push(u.trim());
-  }
-  return out;
-}
-var FURNITURE_TAGS = /* @__PURE__ */ new Set(["nav", "footer", "header", "aside"]);
-var FURNITURE_ROLES = /* @__PURE__ */ new Set(["navigation", "banner", "contentinfo", "complementary", "search"]);
-var BODY_TAGS = /* @__PURE__ */ new Set(["article", "main"]);
-function pickSrcsetCandidate(cands) {
-  const score = (raw) => {
-    const d = /\s(\d+(?:\.\d+)?)([wx])\s*$/.exec(raw || "");
-    if (!d) return 1;
-    return d[2] === "w" ? Number(d[1]) : Number(d[1]) * 1e3;
-  };
-  const sorted = [...cands].sort((a, b) => score(b.raw) - score(a.raw));
-  return { pick: sorted[0], rest: sorted.slice(1) };
-}
-function parseHtmlRefs(html) {
-  const src = String(html).replace(COMMENT_RE, "");
-  const refs = [];
-  const region = [];
-  const here = () => {
-    const body = region.find((r) => r.region === "body");
-    if (body) return body;
-    const furn = region[region.length - 1];
-    return furn || { region: "body", basis: "default" };
-  };
-  const add = (ref, kind, where, extra) => {
-    if (!ref || !ref.trim()) return;
-    const r = here();
-    refs.push({ ref: ref.trim(), kind, where, region: r.region, region_basis: r.basis, ...extra || {} });
-  };
-  TAG_RE.lastIndex = 0;
-  let m;
-  while (m = TAG_RE.exec(src)) {
-    const raw = m[1];
-    const closing = raw.startsWith("/");
-    const tag = (closing ? raw.slice(1) : raw).toLowerCase();
-    if (closing) {
-      if (FURNITURE_TAGS.has(tag) || BODY_TAGS.has(tag)) {
-        for (let i = region.length - 1; i >= 0; i--)
-          if (region[i].tag === tag) {
-            region.splice(i, 1);
-            break;
-          }
-      }
-      continue;
-    }
-    const as = attrsOf(m[2] || "");
-    {
-      const role = (attr(as, "role") || "").toLowerCase().trim();
-      if (FURNITURE_ROLES.has(role)) region.push({ tag, region: "furniture", basis: `role=${role}` });
-      else if (role === "main" || role === "article") region.push({ tag, region: "body", basis: `role=${role}` });
-      else if (FURNITURE_TAGS.has(tag)) region.push({ tag, region: "furniture", basis: `<${tag}>` });
-      else if (BODY_TAGS.has(tag)) region.push({ tag, region: "body", basis: `<${tag}>` });
-    }
-    const inlineStyle = attr(as, "style");
-    if (inlineStyle) for (const u of cssRefs(inlineStyle)) add(u, "css-asset", `${tag}[style]`);
-    if (tag === "link") {
-      const rel = (attr(as, "rel") || "").toLowerCase().split(/\s+/).filter(Boolean);
-      const href = attr(as, "href");
-      if (!href) continue;
-      if (rel.includes("stylesheet")) add(href, "stylesheet", "link[rel=stylesheet]");
-      else if (rel.some((r) => r === "icon" || r === "shortcut" || r === "apple-touch-icon" || r === "mask-icon" || r === "apple-touch-icon-precomposed"))
-        add(href, "icon", `link[rel=${rel.join(" ")}]`);
-      else if (rel.includes("preload")) {
-        const as_ = (attr(as, "as") || "").toLowerCase();
-        if (as_ === "style") add(href, "stylesheet", "link[rel=preload][as=style]");
-        else if (as_ === "image") add(href, "image", "link[rel=preload][as=image]");
-        else if (as_ === "font") add(href, "font", "link[rel=preload][as=font]");
-      }
-      continue;
-    }
-    if (tag === "img" || tag === "input" || tag === "source" || tag === "video" || tag === "audio" || tag === "track" || tag === "image" || tag === "use") {
-      if (tag === "input" && (attr(as, "type") || "").toLowerCase() !== "image") continue;
-      const kind = tag === "video" || tag === "audio" || tag === "track" ? "media" : "image";
-      const ss = attr(as, "srcset") || attr(as, "imagesrcset");
-      if (ss) {
-        const rawCands = ss.split(",").map((x) => x.trim()).filter(Boolean);
-        const cands = srcsetUrls(ss).map((u, i) => ({ url: u, raw: rawCands[i] || u }));
-        const fb = attr(as, "src");
-        if (fb && !cands.some((c) => c.url === fb)) cands.push({ url: fb, raw: fb });
-        const { pick, rest } = pickSrcsetCandidate(cands);
-        const meta = { family: "srcset", family_size: cands.length, evidentiary_prior: "weak_against" };
-        if (pick) add(pick.url, kind, `${tag}[srcset]`, meta);
-        for (const r of rest) add(r.url, kind, `${tag}[srcset]`, { ...meta, collapsed: true });
-        const po = attr(as, "poster");
-        if (po) add(po, "image", `${tag}[poster]`);
-        continue;
-      }
-      for (const n of ["src", "poster", "href", "xlink:href"]) {
-        const v = attr(as, n);
-        if (v) add(v, n === "poster" ? "image" : kind, `${tag}[${n}]`);
-      }
-      continue;
-    }
-    if (tag === "script") {
-      const s = attr(as, "src");
-      if (s) add(s, "script", "script[src]");
-      continue;
-    }
-  }
-  STYLE_EL_RE.lastIndex = 0;
-  while (m = STYLE_EL_RE.exec(src))
-    for (const u of cssRefs(m[2] || "")) add(u, "css-asset", "style");
-  return refs;
-}
-function classifyRef(ref, base, isPublic) {
-  const lower = ref.toLowerCase();
-  for (const s of REFUSED_SCHEMES) {
-    if (lower.startsWith(s)) return { ok: false, reason: "REFUSED_SCHEME", scheme: s, url: ref };
-  }
-  let abs;
-  try {
-    abs = new URL(ref, base).toString();
-  } catch {
-    return { ok: false, reason: "UNRESOLVABLE", url: ref };
-  }
-  const clean = abs.split("#")[0];
-  if (!isPublic(clean)) return { ok: false, reason: "REFUSED_LOCATOR", url: clean };
-  return { ok: true, url: clean };
-}
-var CSP = "default-src 'none'; img-src blob: about:; style-src blob: about: 'unsafe-inline'; font-src blob: about:; media-src blob: about:; script-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'";
-var BANNER = (primarySha, when) => `<!-- DERIVED ARTIFACT, not evidence. Generated by bio-plane from the capture
-     ${primarySha}
-     at ${when}. The raw bytes as served are the evidence and are stored
-     separately, unmodified. This file has had scripts and frames removed and
-     every subresource reference replaced with an about:capture#<sha256>
-     placeholder resolved from data/snapshot-manifest.json. Opened without a
-     resolving viewer it renders blank, on purpose. -->
-`;
-function stripElements(html) {
-  let out = html;
-  for (const el of STRIPPED_ELEMENTS) {
-    out = out.replace(new RegExp(`<${el}\\b[^>]*>[\\s\\S]*?<\\/${el}\\s*>`, "gi"), "");
-    out = out.replace(new RegExp(`<${el}\\b[^>]*\\/?>`, "gi"), "");
-    out = out.replace(new RegExp(`<\\/${el}\\s*>`, "gi"), "");
-  }
-  out = out.replace(/<base\b[^>]*>/gi, "");
-  out = out.replace(/<meta\b[^>]*http-equiv\s*=\s*["']?\s*refresh[^>]*>/gi, "");
-  return out;
-}
-function rewriteCssText(css, resolve) {
-  const one = (whole, u) => {
-    const t = resolve(u);
-    return t === null ? whole : whole.replace(/url\(\s*(?:"[^"]*"|'[^']*'|[^)'"\s]*)\s*\)/i, `url("${t}")`);
-  };
-  let out = css.replace(CSS_URL_RE, (whole, a, b, c) => one(whole, (a ?? b ?? c ?? "").trim()));
-  out = out.replace(CSS_IMPORT_RE, (whole, a, b, c, d, e) => {
-    const u = (a ?? b ?? c ?? d ?? e ?? "").trim();
-    const t = resolve(u);
-    return t === null ? whole : `@import url("${t}")`;
-  });
-  return out;
-}
-function renderCompanion(html, { resolve, classifyLink, primarySha, when }) {
-  let src = stripElements(String(html));
-  src = src.replace(STYLE_EL_RE, (whole, attrsBlob, body) => `<style${attrsBlob}>${rewriteCssText(body, (u) => resolve(u, "css-asset"))}</style>`);
-  src = src.replace(TAG_RE, (whole, name, blob, selfClose) => {
-    const tag = name.toLowerCase();
-    const as = attrsOf(blob || "");
-    if (!as.length) return whole;
-    const kept = [];
-    for (const a of as) {
-      if (/^on[a-z]+$/.test(a.name)) continue;
-      if (a.name === "integrity" || a.name === "nonce") continue;
-      if (!a.present || a.value === null) {
-        kept.push(a.raw);
-        continue;
-      }
-      const q = a.quote || '"';
-      const put = (v) => kept.push(`${a.name}=${q}${v}${q}`);
-      if (a.name === "style") {
-        put(rewriteCssText(a.value, (u) => resolve(u, "css-asset")));
-        continue;
-      }
-      if (a.name === "srcset" || a.name === "imagesrcset") {
-        const live = [];
-        let anyDead = false;
-        for (const cand of a.value.split(",")) {
-          const trimmed = cand.trim();
-          if (!trimmed) continue;
-          const bits = trimmed.split(/\s+/);
-          const t = resolve(bits[0], "image");
-          if (t === PLACEHOLDER_MISSING) {
-            anyDead = true;
-            continue;
-          }
-          bits[0] = t === null ? bits[0] : t;
-          live.push(bits.join(" "));
-        }
-        if (!live.length) {
-          put(PLACEHOLDER_MISSING);
-          continue;
-        }
-        put(live.length === 1 && anyDead ? live[0].split(/\s+/)[0] : live.join(", "));
-        continue;
-      }
-      if (a.name === "href" || a.name === "src" || a.name === "poster" || a.name === "xlink:href" || a.name === "data") {
-        if (tag === "a" || tag === "area") {
-          const L = classifyLink(a.value);
-          kept.push(`data-bio-link="${L.type}"`);
-          if (L.address) kept.push(`data-bio-href="${L.address.replace(/"/g, "&quot;")}"`);
-          put(L.wrapper);
-          continue;
-        }
-        const t = resolve(a.value, tag === "script" ? "script" : "asset");
-        put(t === null ? a.value : t);
-        continue;
-      }
-      kept.push(a.raw);
-    }
-    return `<${name}${kept.length ? " " + kept.join(" ") : ""}${selfClose}>`;
-  });
-  const head = BANNER(primarySha, when) + `<meta http-equiv="Content-Security-Policy" content="${CSP}">
-`;
-  const at = src.search(/<head\b[^>]*>/i);
-  if (at !== -1) {
-    const end = src.indexOf(">", at) + 1;
-    return src.slice(0, end) + "\n" + head + src.slice(end);
-  }
-  return head + src;
-}
-function originOf(url, baseHost) {
-  let h;
-  try {
-    h = new URL(url).hostname.toLowerCase();
-  } catch {
-    return { origin: "unknown", host: null };
-  }
-  const b = String(baseHost || "").toLowerCase();
-  if (h === b) return { origin: "same_host", host: h };
-  const tail = (x) => x.split(".").slice(-2).join(".");
-  if (b && tail(h) === tail(b)) return { origin: "same_site", host: h, approximate: true };
-  return { origin: "third_party", host: h };
-}
-var FETCH_PRIORITY = { stylesheet: 0, "css-asset": 1, font: 1, icon: 2, image: 3, media: 4, script: 5 };
-var priorityOf = (ref) => (FETCH_PRIORITY[ref.kind] ?? 3) + (ref.region === "furniture" ? 10 : 0);
-function normalizeAddress(url) {
-  let u;
-  try {
-    u = new URL(url);
-  } catch {
-    return String(url || "").trim();
-  }
-  u.hash = "";
-  u.protocol = u.protocol.toLowerCase();
-  u.hostname = u.hostname.toLowerCase();
-  if (u.protocol === "https:" && u.port === "443" || u.protocol === "http:" && u.port === "80") u.port = "";
-  const ps = [...u.searchParams.entries()].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] < b[1] ? -1 : 1);
-  u.search = ps.length ? "?" + ps.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&") : "";
-  return u.toString();
-}
-function normalizeCitation(url) {
-  const raw = String(url || "").trim();
-  const hash = raw.indexOf("#");
-  if (hash === -1) return normalizeAddress(raw);
-  const frag = raw.slice(hash + 1);
-  return normalizeAddress(raw.slice(0, hash)) + (frag ? "#" + frag : "");
-}
-function fragmentOf(url) {
-  const raw = String(url || "").trim();
-  const hash = raw.indexOf("#");
-  if (hash === -1) return null;
-  const frag = raw.slice(hash + 1).trim();
-  return frag || null;
-}
-var REUSABLE_KINDS = /* @__PURE__ */ new Set(["stylesheet", "css-asset", "font", "icon"]);
-function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 1e3, minDocuments = 2 } = {}) {
-  if (!known || !known.sha256) return { reuse: false, why: "not_seen_before" };
-  if (!REUSABLE_KINDS.has(ref.kind)) return { reuse: false, why: "evidence_is_always_fetched" };
-  const pages = known.documents || 0;
-  if (pages < minDocuments)
-    return { reuse: false, why: pages + (known.documents_undetermined || 0) >= minDocuments ? "shared_across_documents_undetermined" : "not_yet_shared_across_documents" };
-  const seen = Date.parse(known.last_fetched || "");
-  if (!Number.isFinite(seen)) return { reuse: false, why: "no_fetch_record" };
-  const age = now - seen;
-  if (age > freshWindowMs) return { reuse: false, why: "last_seen_served_too_long_ago", age_ms: age };
-  const stable = Date.parse(known.stable_since || "");
-  return {
-    reuse: true,
-    fetched_age_ms: age,
-    stable_for_ms: Number.isFinite(stable) ? now - stable : null,
-    changes: known.changes || 0
-  };
-}
-function fetchPolicy(ref, origin) {
-  if (ref.collapsed)
-    return {
-      fetch: false,
-      reason: "COLLAPSED_SRCSET_FAMILY",
-      detail: `one of ${ref.family_size} responsive candidates for one picture; the largest is captured`
-    };
-  if (ref.kind === "stylesheet" || ref.kind === "css-asset" || ref.kind === "font" || ref.kind === "icon")
-    return { fetch: true, why: "layout" };
-  if (origin === "third_party" && (ref.kind === "script" || ref.kind === "image" || ref.kind === "media"))
-    return {
-      fetch: false,
-      reason: "THIRD_PARTY",
-      detail: "cross-origin script, image, or media: advertising, analytics, and social widgets are not part of the document"
-    };
-  if (ref.kind === "script") return { fetch: true, why: "served_with_the_page" };
-  if (ref.region === "furniture")
-    return {
-      fetch: false,
-      reason: "OUTSIDE_THE_DOCUMENT",
-      detail: `found in ${ref.region_basis}, which belongs to the site rather than to this document`
-    };
-  return { fetch: true, why: "in_the_document" };
-}
-var LINK_TYPES = ["anchor", "intra", "deferred", "refused"];
-var linkWrapper = {
-  anchor: (frag) => frag,
-  intra: (sha) => `about:capture#${sha}`,
-  deferred: (url) => `about:link#${encodeURIComponent(url)}`,
-  refused: () => "about:link#refused"
-};
-async function captureSubresources({
-  html,
-  base,
-  primarySha,
-  primaryFile,
-  fetchOne,
-  put,
-  sha256: sha2562,
-  isPublic,
-  cap = SUBRESOURCE_CAP,
-  perMax = SUBRESOURCE_MAX,
-  budget = SUBRESOURCE_BUDGET,
-  now = () => /* @__PURE__ */ new Date(),
-  /* What this runtime was last OBSERVED to allow, passed in by the caller from
-     whatever it recorded last time, or null the first time anything runs here.
-     Never a constant in this file: the number belongs to the platform, changes
-     without notice, and differs per account, so the only honest source for it
-     is having hit it. */
-  platformCeiling = null,
-  platformMargin = 5,
-  subrequestsAlreadySpent = 1,
-  /* What this host has served before. `siteLookup(addressNorm)` returns the
-     stored record or null; absent, nothing is ever reused and behaviour is
-     exactly what it was before reuse existed. */
-  siteLookup = null,
-  reuseFreshWindowMs = 24 * 3600 * 1e3,
-  reuseMinDocuments = 2,
-  /* Reads a stored capture back as text, so a REUSED stylesheet can have its own
-     url() targets followed just as a freshly fetched one does. Without it a
-     reused stylesheet would render without its sprites. */
-  readBack = null,
-  /* Resuming a capture that ran out of budget. `resume` carries what an earlier
-     tick accumulated and what it had left to do. Nothing is re-fetched and
-     nothing is re-parsed: the queue is restored rather than rediscovered,
-     because rediscovering it means reading every stylesheet back out of R2 to
-     re-derive its url() targets, and on a Legistar page that is thirty storage
-     reads spent to learn what one row already knew. */
-  resume = null,
-  /* Measured, not assumed. Every synchronous compute segment in here is timed so
-     the record can say what a capture actually costs against whatever ceiling
-     the runtime has. Network waits are never inside a segment. */
-  meter = makeMeter()
-}) {
-  const noReuse = [];
-  const rec_noreuse = (stem, dec) => noReuse.push({ url: stem.url, kind: stem.kind, why: dec.why });
-  const stamp = () => now().toISOString().split(".")[0] + "Z";
-  const records = [];
-  const bySha = /* @__PURE__ */ new Map();
-  const byUrl = /* @__PURE__ */ new Map();
-  const refToUrl = /* @__PURE__ */ new Map();
-  let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false, platformHit = false;
-  let observedCeiling = null, deferred = 0, reused = 0;
-  const siteObservations = [];
-  const links = [];
-  const outstanding = [];
-  const ceilingBudget = platformCeiling == null ? Infinity : Math.max(0, platformCeiling - platformMargin - subrequestsAlreadySpent);
-  let baseHost = null;
-  try {
-    baseHost = new URL(base).hostname;
-  } catch {
-    baseHost = null;
-  }
-  let queue;
-  if (resume) {
-    for (const r of resume.records || []) {
-      records.push(r);
-      if (r.url) byUrl.set(r.url, r);
-      if (r.ok && r.sha256 && !bySha.has(r.sha256)) bySha.set(r.sha256, r);
-    }
-    for (const l of resume.links || []) links.push(l);
-    for (const [k, v] of Object.entries(resume.refToUrl || {})) refToUrl.set(k, v);
-    for (const o of resume.siteObservations || []) siteObservations.push(o);
-    discovered = resume.discovered || records.length;
-    spent = resume.spent || 0;
-    queue = (resume.queue || []).map((q) => ({
-      ...q,
-      cssOwner: q.cssOwnerIdx == null ? void 0 : records[q.cssOwnerIdx]
-    }));
-    const retry = new Set(queue.map((q) => q.retryUrl).filter(Boolean));
-    for (let i = records.length - 1; i >= 0; i--)
-      if (records[i].reason === "DEFERRED" && retry.has(records[i].url)) {
-        byUrl.delete(records[i].url);
-        records.splice(i, 1);
-        discovered--;
-      }
-  } else {
-    queue = meter.sync("parse_html", () => parseHtmlRefs(html), html.length).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
-  }
-  const settle = (item, rec) => {
-    if (rec) records.push(rec);
-    if (item.cssOwner)
-      item.cssOwner.rewrite.push({ ref: item.ref, sha256: rec && rec.ok ? rec.sha256 : null });
-  };
-  while (queue.length) {
-    let at_ = 0, best = priorityOf(queue[0]);
-    for (let i = 1; i < queue.length; i++) {
-      const p = priorityOf(queue[i]);
-      if (p < best) {
-        best = p;
-        at_ = i;
-      }
-    }
-    const item = queue.splice(at_, 1)[0];
-    discovered++;
-    const cls = classifyRef(item.ref, item.against, isPublic);
-    if (item.depth === 1 && !refToUrl.has(item.ref)) refToUrl.set(item.ref, cls.ok ? cls.url : null);
-    const at = stamp();
-    const org = cls.ok ? originOf(cls.url, baseHost) : { origin: "unknown", host: null };
-    const stem = {
-      url: cls.ok ? cls.url : item.ref,
-      kind: item.kind,
-      via: item.where,
-      from: item.from,
-      depth: item.depth,
-      region: item.region || "body",
-      region_basis: item.region_basis || "default",
-      ...org,
-      ...item.family ? { family: item.family, family_size: item.family_size } : {},
-      ...item.evidentiary_prior ? { evidentiary_prior: item.evidentiary_prior } : {},
-      fetched_at: at
-    };
-    if (!cls.ok) {
-      settle(item, {
-        ...stem,
-        ok: false,
-        status: null,
-        reason: cls.reason,
-        ...cls.scheme ? { scheme: cls.scheme } : {},
-        detail: cls.reason === "REFUSED_SCHEME" ? `a ${cls.scheme} reference is not something this surface fetches` : "the address is not public https, and the fence that guards the primary locator guards this one"
-      });
-      continue;
-    }
-    const pol = fetchPolicy(item, org.origin);
-    if (!pol.fetch) {
-      settle(item, {
-        ...stem,
-        ok: false,
-        status: null,
-        fetched: false,
-        reason: pol.reason,
-        detail: pol.detail
-      });
-      continue;
-    }
-    const already = byUrl.get(cls.url);
-    if (already) {
-      if (item.cssOwner)
-        item.cssOwner.rewrite.push({ ref: item.ref, sha256: already.ok ? already.sha256 : null });
-      continue;
-    }
-    if (platformHit || attempted >= ceilingBudget) {
-      deferred++;
-      outstanding.push({
-        ...{ ...item, cssOwner: void 0 },
-        cssOwnerIdx: item.cssOwner ? records.indexOf(item.cssOwner) : null,
-        retryUrl: cls.url
-      });
-      settle(item, {
-        ...stem,
-        ok: false,
-        status: null,
-        reason: "DEFERRED",
-        detail: platformHit ? "this invocation reached the runtime's outbound request limit; the reference is outstanding, not failed, and a continuation can fetch it" : "held back from a previously observed runtime limit so the invocation ends on our terms rather than mid-fetch"
-      });
-      continue;
-    }
-    if (attempted >= cap) {
-      truncated = true;
-      settle(item, {
-        ...stem,
-        ok: false,
-        status: null,
-        reason: "CAP_REACHED",
-        cap,
-        detail: "the fanout cap was reached before this reference; it is recorded rather than dropped so the truncation is visible"
-      });
-      continue;
-    }
-    if (spent >= budget) {
-      budgetHit = true;
-      settle(item, { ...stem, ok: false, status: null, reason: "BUDGET_EXHAUSTED", budgetBytes: budget });
-      continue;
-    }
-    if (siteLookup) {
-      const known = await siteLookup(normalizeAddress(cls.url));
-      const dec = reuseDecision(item, known, { now: Date.now(), freshWindowMs: reuseFreshWindowMs, minDocuments: reuseMinDocuments });
-      if (dec.reuse) {
-        reused++;
-        const rec2 = {
-          ...stem,
-          ok: true,
-          status: null,
-          sha256: known.sha256,
-          bytes: known.bytes,
-          ...known.content_type ? { content_type: known.content_type } : {},
-          existed: true,
-          /* The honesty fields. A reader must never be led to believe a byte was
-             verified against the source during THIS capture when it was not. */
-          fetched_this_capture: false,
-          /* CAP-14 (CAPTURE-SCALING.md §Job one, RULED 2026-09-21 by BOB #21): the
-             capture whose FETCH served these bytes, so a reader can follow them to
-             the fetch that saw them served. null when the record names none (a
-             fetch recorded before the build): UNDETERMINED as to source, never
-             inferred from timestamps. */
-          reused_from: known.last_fetched_by || null,
-          reused_from_fetched_at: known.last_fetched,
-          reused_stable_since: known.stable_since,
-          reused_seen_in_documents: known.documents,
-          detail: `not fetched during this capture: the source was seen serving these exact bytes at ${known.last_fetched}` + (known.last_fetched_by ? ` by capture ${known.last_fetched_by}` : ` by a capture the record does not name (undetermined)`) + `, across ${known.documents} documents on this host` + (known.documents_undetermined ? ` (and ${known.documents_undetermined} earlier capture${known.documents_undetermined === 1 ? "" : "s"} whose page the record does not name, counted as undetermined)` : "") + `, and they are reused from the record rather than requested again`
-        };
-        byUrl.set(cls.url, rec2);
-        if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec2);
-        siteObservations.push({
-          address: cls.url,
-          address_norm: normalizeAddress(cls.url),
-          sha256: known.sha256,
-          kind: item.kind,
-          reused: true,
-          reused_from: known.last_fetched_by || null
-        });
-        if ((item.kind === "stylesheet" || known.content_type === "text/css") && item.depth < CSS_MAX_DEPTH && readBack) {
-          const text = await readBack(known.sha256);
-          if (text != null) {
-            rec2.css = true;
-            rec2.rewrite = [];
-            for (const u of cssRefs(text))
-              queue.push({
-                ref: u,
-                kind: "css-asset",
-                where: `url() in ${cls.url}`,
-                depth: item.depth + 1,
-                from: cls.url,
-                against: cls.url,
-                cssOwner: rec2,
-                region: rec2.region,
-                region_basis: rec2.region_basis
-              });
-          }
-        }
-        settle(item, rec2);
-        continue;
-      }
-      if (known) rec_noreuse(stem, dec);
-    }
-    attempted++;
-    let r;
-    try {
-      r = await fetchOne(cls.url);
-    } catch (e) {
-      const msg = String(e && e.message || e);
-      const platform = /too many subrequests|subrequest limit|exceeded.*limit/i.test(msg);
-      r = {
-        ok: false,
-        status: 0,
-        reason: platform ? "PLATFORM_LIMIT" : "FETCH_FAILED",
-        detail: platform ? "the runtime refused another outbound request in this invocation; the source was never asked, and this says nothing about whether it would have answered" : msg
-      };
-      if (platform && !platformHit) {
-        platformHit = true;
-        observedCeiling = attempted + subrequestsAlreadySpent;
-      }
-    }
-    if (!r || !r.ok) {
-      const rec2 = {
-        ...stem,
-        ok: false,
-        status: r ? r.status ?? null : null,
-        reason: r?.reason || "SOURCE_REFUSED",
-        ...r?.detail ? { detail: r.detail } : {}
-      };
-      byUrl.set(cls.url, rec2);
-      settle(item, rec2);
-      continue;
-    }
-    const bytes = r.bytes || new Uint8Array(0);
-    if (bytes.length > perMax) {
-      const rec2 = {
-        ...stem,
-        ok: false,
-        status: r.status ?? 200,
-        reason: "TOO_LARGE",
-        bytes: bytes.length,
-        maxBytes: perMax
-      };
-      byUrl.set(cls.url, rec2);
-      settle(item, rec2);
-      continue;
-    }
-    spent += bytes.length;
-    const sha = await meter.cpuAwait("hash_subresource", () => sha2562(bytes), bytes.length);
-    const { existed } = await put(sha, bytes);
-    const ct = (r.contentType || "").split(";")[0].trim();
-    const rec = {
-      ...stem,
-      ok: true,
-      status: r.status ?? 200,
-      sha256: sha,
-      bytes: bytes.length,
-      ...ct ? { content_type: ct } : {},
-      existed: !!existed
-    };
-    rec.fetched_this_capture = true;
-    byUrl.set(cls.url, rec);
-    if (!bySha.has(sha)) bySha.set(sha, rec);
-    siteObservations.push({
-      address: cls.url,
-      address_norm: normalizeAddress(cls.url),
-      sha256: sha,
-      kind: item.kind,
-      bytes: bytes.length,
-      content_type: ct || null,
-      reused: false
-    });
-    const isCss = item.kind === "stylesheet" || ct === "text/css";
-    if (isCss && item.depth < CSS_MAX_DEPTH) {
-      let text = "";
-      try {
-        text = meter.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes), bytes.length);
-      } catch {
-        text = "";
-      }
-      rec.css = true;
-      rec.rewrite = [];
-      for (const u of meter.sync("parse_css", () => cssRefs(text)))
-        queue.push({
-          ref: u,
-          kind: "css-asset",
-          where: `url() in ${cls.url}`,
-          depth: item.depth + 1,
-          from: cls.url,
-          against: cls.url,
-          cssOwner: rec,
-          /* A stylesheet's own assets carry the stylesheet's region,
-             not the region of whatever tag happened to be open. */
-          region: rec.region,
-          region_basis: rec.region_basis
-        });
-    }
-    settle(item, rec);
-  }
-  const resolve = (ref, kind) => {
-    const trimmed = String(ref || "").trim();
-    if (!trimmed) return null;
-    if (kind === "script") return PLACEHOLDER_MISSING;
-    const abs = refToUrl.has(trimmed) ? refToUrl.get(trimmed) : (() => {
-      const c = classifyRef(trimmed, base, isPublic);
-      return c.ok ? c.url : null;
-    })();
-    if (abs === null) return PLACEHOLDER_MISSING;
-    const rec = byUrl.get(abs);
-    if (!rec) return PLACEHOLDER_MISSING;
-    if (rec.kind === "script") return PLACEHOLDER_MISSING;
-    return rec.ok ? placeholderFor(rec.sha256) : PLACEHOLDER_MISSING;
-  };
-  const when0 = resume && resume.when0 ? resume.when0 : stamp();
-  const seenLink = new Map(links.map((l) => [`${l.type}\0${l.citation || l.address || l.ref}`, true]));
-  const classifyLink = (ref) => {
-    const raw = String(ref || "").trim();
-    const note = (type, address, extra = {}) => {
-      const key = `${type}\0${extra.citation || address || raw}`;
-      if (!seenLink.has(key)) {
-        seenLink.set(key, true);
-        links.push({
-          ref: raw,
-          type,
-          address: address || null,
-          as_of: when0,
-          ...address ? originOf(address, baseHost) : {},
-          ...extra
-        });
-      }
-      return { type, address, ...extra };
-    };
-    if (!raw) return { type: "refused", wrapper: linkWrapper.refused(), address: null };
-    if (raw.startsWith("#")) {
-      note("anchor", base, { fragment: fragmentOf(raw), citation: normalizeCitation(base + raw) });
-      return { type: "anchor", wrapper: linkWrapper.anchor(raw), address: null };
-    }
-    const cls = classifyRef(raw, base, isPublic);
-    if (!cls.ok) {
-      note("refused", cls.url, { reason: cls.reason, ...cls.scheme ? { scheme: cls.scheme } : {} });
-      return { type: "refused", wrapper: linkWrapper.refused(), address: null };
-    }
-    const held = byUrl.get(cls.url);
-    if (held && held.ok) {
-      note("intra", cls.url, {
-        sha256: held.sha256,
-        fragment: fragmentOf(raw),
-        citation: normalizeCitation(new URL(raw, base).toString())
-      });
-      return { type: "intra", wrapper: linkWrapper.intra(held.sha256), address: cls.url };
-    }
-    note("deferred", cls.url, {
-      held_at_capture: false,
-      fragment: fragmentOf(raw),
-      citation: normalizeCitation(new URL(raw, base).toString())
-    });
-    return { type: "deferred", wrapper: linkWrapper.deferred(cls.url), address: cls.url };
-  };
-  const when = when0;
-  const companionText = meter.sync("render_companion", () => renderCompanion(html, { resolve, classifyLink, primarySha, when }), html.length);
-  const companionBytes = meter.sync("encode_companion", () => new TextEncoder().encode(companionText), companionText.length);
-  const companionSha = await meter.cpuAwait("hash_companion", () => sha2562(companionBytes));
-  await put(companionSha, companionBytes);
-  const fetched = records.filter((r) => r.ok);
-  const manifest = {
-    version: 1,
-    derived: true,
-    of: primaryFile,
-    of_sha256: primarySha,
-    base,
-    generated: when,
-    render: `${primaryFile}.render.html`,
-    render_sha256: companionSha,
-    placeholder_scheme: "about:capture#<sha256>",
-    unavailable: PLACEHOLDER_MISSING,
-    limits: { cap, per_max_bytes: perMax, budget_bytes: budget, css_max_depth: CSS_MAX_DEPTH },
-    discovered,
-    attempted,
-    truncated,
-    budget_exhausted: budgetHit,
-    complete: !platformHit && !truncated && !budgetHit && deferred === 0,
-    compute: meter.report(),
-    reuse: {
-      reused,
-      fetched: fetched.length - reused,
-      not_reused: noReuse,
-      fresh_window_ms: reuseFreshWindowMs,
-      min_documents: reuseMinDocuments,
-      note: "entries with fetched_this_capture:false were NOT fetched during this capture; their bytes come from an earlier fetch of the same address on this host, made by the capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. A capture ratified as evidence must re-fetch them."
-    },
-    outstanding: deferred,
-    platform: {
-      limited: platformHit,
-      /* Discovered, never declared. null means this run never found the edge,
-         which tells the caller only that the ceiling is AT LEAST what was spent,
-         not what it is. */
-      observed_ceiling: observedCeiling,
-      ceiling_used: platformCeiling,
-      spent_this_invocation: attempted + subrequestsAlreadySpent,
-      note: observedCeiling ? "the runtime refused an outbound request at this count; record it and pass it back as platformCeiling" : "no limit was reached, so the ceiling is at least spent_this_invocation and its true value is unknown"
-    },
-    counts: {
-      fetched: fetched.length,
-      failed: records.filter((r) => !r.ok && (r.reason === "SOURCE_REFUSED" || r.reason === "FETCH_FAILED" || r.reason === "TOO_LARGE")).length,
-      platform_limited: records.filter((r) => r.reason === "PLATFORM_LIMIT").length,
-      deferred: records.filter((r) => r.reason === "DEFERRED").length,
-      refused: records.filter((r) => !r.ok && (r.reason === "REFUSED_SCHEME" || r.reason === "REFUSED_LOCATOR" || r.reason === "UNRESOLVABLE")).length,
-      /* Deliberately not fetched: policy skips, plus the two bounds. Every
-         record lands in exactly one of fetched/failed/refused/skipped, and the
-         subresources test asserts that identity, so a new reason that forgets
-         to name a bucket fails rather than quietly vanishing from the totals. */
-      skipped: records.filter((r) => !r.ok && (r.reason === "OUTSIDE_THE_DOCUMENT" || r.reason === "THIRD_PARTY" || r.reason === "COLLAPSED_SRCSET_FAMILY" || r.reason === "CAP_REACHED" || r.reason === "BUDGET_EXHAUSTED" || r.reason === "PLATFORM_LIMIT" || r.reason === "DEFERRED")).length,
-      scripts_held_unreferenced: fetched.filter((r) => r.kind === "script").length,
-      bytes: spent,
-      not_fetched: {
-        outside_the_document: records.filter((r) => r.reason === "OUTSIDE_THE_DOCUMENT").length,
-        third_party: records.filter((r) => r.reason === "THIRD_PARTY").length,
-        collapsed_srcset: records.filter((r) => r.reason === "COLLAPSED_SRCSET_FAMILY").length
-      },
-      by_origin: {
-        same_host: records.filter((r) => r.origin === "same_host").length,
-        same_site: records.filter((r) => r.origin === "same_site").length,
-        third_party: records.filter((r) => r.origin === "third_party").length
-      },
-      links: {
-        anchor: links.filter((l) => l.type === "anchor").length,
-        intra: links.filter((l) => l.type === "intra").length,
-        deferred: links.filter((l) => l.type === "deferred").length,
-        refused: links.filter((l) => l.type === "refused").length
-      }
-    },
-    subresources: records,
-    links,
-    link_note: "Every <a> the page carried, characterised. `intra` resolves inside this bundle and is final. `deferred` is an address whose partition depends on what the store holds and is therefore NOT final: held_at_capture records only what was true when this page was captured, and a viewer must re-resolve it against the store at read time. A deferred link that later resolves to a capture in another bundle is a link to THAT VERSION of the target only if the target's capture can be shown to be the version the source was pointing at on this page's retrieval date. Until that is established the link is unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.",
-    note: "Every entry the viewer renders must be fetched by sha256 through op=capture and verified against that sha before use. Entries with ok:false are recorded because a stylesheet the source failed to serve is part of what the source served that day. Script entries hold bytes and are never referenced by the render companion."
-  };
-  const manifestBytes = meter.sync("serialise_manifest", () => new TextEncoder().encode(JSON.stringify(manifest, null, 1)), records.length);
-  const manifestSha = await meter.cpuAwait("hash_manifest", () => sha2562(manifestBytes));
-  await put(manifestSha, manifestBytes);
-  return {
-    subresources: records,
-    links,
-    siteObservations,
-    reused,
-    meter,
-    /* Everything the next tick needs, and nothing it does not. The primary HTML
-       is NOT in here: it is already in the store under primarySha, and carrying
-       a copy in session state would be a second, unverified copy of evidence. */
-    resumeState: outstanding.length ? {
-      when0,
-      discovered,
-      spent,
-      queue: outstanding,
-      records,
-      links,
-      siteObservations,
-      refToUrl: Object.fromEntries(refToUrl)
-    } : null,
-    manifest,
-    manifestSha,
-    manifestBytes,
-    companionText,
-    companionSha,
-    companionBytes,
-    truncated,
-    discovered,
-    attempted,
-    /* `renditions`, not `derived`. C-18.1 already spends `derived` on a
-       different claim: that THIS document is itself a derivation of something
-       else, with a transform and a reason. What is being named here is the
-       opposite direction, artifacts derived FROM this document, so it needs its
-       own key. It borrows the transform/reason vocabulary because the honesty
-       requirement is identical: a rendering that does not say what was done to
-       it and why is indistinguishable from evidence. */
-    renditions: [
-      {
-        file: `${primaryFile}.render.html`,
-        kind: "render_companion",
-        from_file: primaryFile,
-        sha256: companionSha,
-        bytes: companionBytes.length,
-        content_type: "text/html",
-        transform: "scripts and frames removed; subresource references replaced with about:capture#<sha256> placeholders; a content security policy added",
-        reason: "the raw capture is the evidence and is never rewritten, so showing the page as it was needs a separate artifact that says it is one"
-      },
-      {
-        file: "data/snapshot-manifest.json",
-        kind: "snapshot_manifest",
-        from_file: primaryFile,
-        sha256: manifestSha,
-        bytes: manifestBytes.length,
-        content_type: "application/json",
-        transform: "index of the render companion's placeholders to the content-addressed captures they resolve to",
-        reason: "a viewer must be able to verify every byte it substitutes against the record before showing it"
-      }
-    ]
-  };
-}
-
 // src/pdfstructure.mjs
 var PDF_LINK_TYPES = [...LINK_TYPES, "undetermined"];
 var LATIN12 = new TextDecoder("latin1");
@@ -19041,7 +21719,7 @@ function readProducer(doc) {
     return classifyProducer({ unreadable: "info_unreadable" });
   }
 }
-function classifyUri(uri) {
+function classifyUri4(uri) {
   const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
   const scheme = m ? m[1].toLowerCase() : null;
   if (scheme === "http" || scheme === "https") return "deferred";
@@ -19118,29 +21796,29 @@ function searchNameTree(doc, node, name, depth = 0) {
   }
   return null;
 }
-var HEX = "0123456789abcdef";
+var HEX4 = "0123456789abcdef";
 function toHex(u8) {
   let out = "";
-  for (let i = 0; i < u8.length; i++) out += HEX[u8[i] >> 4] + HEX[u8[i] & 15];
+  for (let i = 0; i < u8.length; i++) out += HEX4[u8[i] >> 4] + HEX4[u8[i] & 15];
   return out;
 }
-async function sha256Hex(u8) {
+async function sha256Hex4(u8) {
   const d = await crypto.subtle.digest("SHA-256", u8);
   return toHex(new Uint8Array(d));
 }
 async function embeddedFileRecord(doc, filespec, sourcePage, rect, name) {
   const fs = doc.dictOf(filespec);
-  if (!fs) return undeterminedRecord({ page: sourcePage, rect }, "embedded_filespec_unresolved", { name });
+  if (!fs) return undeterminedRecord3({ page: sourcePage, rect }, "embedded_filespec_unresolved", { name });
   const ef = doc.dictOf(fs.EF);
   const streamRef = ef && (ef.F || ef.UF || ef.DOS || ef.Mac || ef.Unix);
   const stream = doc.resolve(streamRef);
   const label = name || strOf(doc, fs.UF) || strOf(doc, fs.F) || null;
   if (!stream || stream.t !== "stream")
-    return undeterminedRecord({ page: sourcePage, rect }, "embedded_stream_absent", { name: label });
+    return undeterminedRecord3({ page: sourcePage, rect }, "embedded_stream_absent", { name: label });
   const bytes = await doc.streamDecoded(stream);
   if (!bytes)
-    return undeterminedRecord({ page: sourcePage, rect }, "embedded_stream_undecodable", { name: label });
-  const sha = await sha256Hex(bytes);
+    return undeterminedRecord3({ page: sourcePage, rect }, "embedded_stream_undecodable", { name: label });
+  const sha = await sha256Hex4(bytes);
   return {
     partition: "intra",
     wrapper: linkWrapper.intra(sha),
@@ -19152,8 +21830,8 @@ function strOf(doc, v) {
   v = doc.resolve(v);
   return v && v.t === "str" ? v.v : null;
 }
-function deferredOrRefusedRecord(uri, source) {
-  const partition = classifyUri(uri);
+function deferredOrRefusedRecord3(uri, source) {
+  const partition = classifyUri4(uri);
   return {
     partition,
     wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(uri),
@@ -19170,7 +21848,7 @@ function anchorRecord(doc, targetPage, source, destName) {
     source
   };
 }
-function undeterminedRecord(source, why, extra = {}) {
+function undeterminedRecord3(source, why, extra = {}) {
   return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
 }
 function tokenizeContent(s, opts = {}) {
@@ -19458,7 +22136,7 @@ var HEX_CAP = 64;
 function bytesToHex(bytes, cap = HEX_CAP) {
   const n = Math.min(bytes.length, cap);
   let out = "";
-  for (let i = 0; i < n; i++) out += HEX[bytes[i] >> 4] + HEX[bytes[i] & 15];
+  for (let i = 0; i < n; i++) out += HEX4[bytes[i] >> 4] + HEX4[bytes[i] & 15];
   if (bytes.length > cap) out += "\u2026";
   return out;
 }
@@ -19881,10 +22559,10 @@ async function extractPdfStructure(bytes) {
       if (sName === "URI") {
         const uri = strOf(doc, action.URI);
         if (uri != null) {
-          links.push(deferredOrRefusedRecord(uri, source));
+          links.push(deferredOrRefusedRecord3(uri, source));
           continue;
         }
-        links.push(undeterminedRecord(source, "uri_action_without_uri"));
+        links.push(undeterminedRecord3(source, "uri_action_without_uri"));
         continue;
       }
       if (sName === "GoTo" || map.Dest) {
@@ -19893,15 +22571,15 @@ async function extractPdfStructure(bytes) {
         if (res.ok) {
           links.push(anchorRecord(doc, res.page, source, destNameOf(doc, dest)));
         } else {
-          links.push(undeterminedRecord(source, res.why, { dest: res.dest }));
+          links.push(undeterminedRecord3(source, res.why, { dest: res.dest }));
         }
         continue;
       }
       if (sName === "GoToR" || sName === "Launch") {
-        links.push(undeterminedRecord(source, `unsupported_action_${sName}`));
+        links.push(undeterminedRecord3(source, `unsupported_action_${sName}`));
         continue;
       }
-      links.push(undeterminedRecord(source, sName ? `unsupported_action_${sName}` : "link_without_action_or_dest"));
+      links.push(undeterminedRecord3(source, sName ? `unsupported_action_${sName}` : "link_without_action_or_dest"));
     }
   }
   for (const rec of await documentEmbeddedFiles(doc)) links.push(rec);
@@ -19954,2625 +22632,6 @@ function collectNameTreePairs(doc, node, depth = 0, acc = []) {
   if (kids && kids.t === "arr") for (const kid of kids.items) collectNameTreePairs(doc, kid, depth + 1, acc);
   return acc;
 }
-
-// src/docx.mjs
-var UTF82 = new TextDecoder("utf-8", { fatal: false });
-var DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-var CONTENT_TYPES_PART2 = "[Content_Types].xml";
-var MAIN_PART = "word/document.xml";
-var COMMENTS_PART = "word/comments.xml";
-var EMBEDDINGS_DIR = "word/embeddings/";
-function docParaRef(para, run = null) {
-  const ref = { kind: "doc-para", ref: `\xB6${para + 1}`, para };
-  if (run != null) ref.run = run;
-  return ref;
-}
-function docTableRef(table, cell = null) {
-  const out = { kind: "doc-table", ref: `table ${table + 1}${cell != null ? `, ${cell}` : ""}`, table };
-  if (cell != null) out.cell = cell;
-  return out;
-}
-function decodeEntities(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
-    if (e[0] === "#") {
-      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
-    }
-    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
-  });
-}
-function attrsOf2(raw) {
-  const attrs = {};
-  for (const a of (raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
-    attrs[local] = decodeEntities(a[3] ?? a[4] ?? "");
-  }
-  return attrs;
-}
-var TOKEN_RE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
-var localOf = (name) => name.includes(":") ? name.split(":").pop() : name;
-function walkDocumentBody(xml) {
-  const paragraphs = [];
-  const hyperlinks = [];
-  const bookmarks = /* @__PURE__ */ new Map();
-  const changes = [];
-  const commentRefs = /* @__PURE__ */ new Map();
-  const ridUsage = /* @__PURE__ */ new Map();
-  let para = -1;
-  let run = -1;
-  let inPara = false;
-  let textTarget = null;
-  const hyperStack = [];
-  const insStack = [];
-  const delStack = [];
-  const noteRid = (attrs) => {
-    if (!inPara) return;
-    for (const key of ["id", "embed", "link"]) {
-      const v = attrs[key];
-      if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
-        ridUsage.set(v, { para, run: run >= 0 ? run : null });
-    }
-  };
-  const appendVisible = (s) => {
-    if (!inPara || !s) return;
-    paragraphs[para].text += s;
-    for (const c of insStack) c.text += s;
-  };
-  TOKEN_RE.lastIndex = 0;
-  let m, prev = 0;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    if (textTarget && m.index > prev) {
-      const data = decodeEntities(xml.slice(prev, m.index));
-      if (textTarget === "t") appendVisible(data);
-      else if (textTarget === "delText" && delStack.length) delStack[delStack.length - 1].text += data;
-    }
-    prev = TOKEN_RE.lastIndex;
-    if (m[1] === void 0) continue;
-    const name = localOf(m[1]);
-    const selfClosed = m[3] === "/";
-    const closing = m[0][1] === "/";
-    if (closing) {
-      if (name === "t" || name === "delText") textTarget = null;
-      else if (name === "p") {
-        inPara = false;
-      } else if (name === "hyperlink") {
-        const h = hyperStack.pop();
-        if (h) hyperlinks.push(h);
-      } else if (name === "ins") {
-        const c = insStack.pop();
-        if (c) changes.push(c);
-      } else if (name === "del") {
-        const c = delStack.pop();
-        if (c) changes.push(c);
-      }
-      continue;
-    }
-    const attrs = m[2] && m[2].includes("=") ? attrsOf2(m[2]) : {};
-    switch (name) {
-      case "p":
-        if (!selfClosed) {
-          para++;
-          run = -1;
-          inPara = true;
-          paragraphs.push({ para, text: "" });
-        } else {
-          para++;
-          run = -1;
-          paragraphs.push({ para, text: "" });
-        }
-        break;
-      case "r":
-        if (inPara && !selfClosed) {
-          run++;
-          for (const c of hyperStack) if (c.run == null) c.run = run;
-          for (const c of insStack) if (c.run == null) c.run = run;
-          for (const c of delStack) if (c.run == null) c.run = run;
-        }
-        break;
-      case "t":
-        if (!selfClosed) textTarget = "t";
-        break;
-      case "delText":
-        if (!selfClosed) textTarget = "delText";
-        break;
-      case "tab":
-        appendVisible("	");
-        break;
-      case "br":
-      case "cr":
-        appendVisible("\n");
-        break;
-      case "hyperlink":
-        noteRid(attrs);
-        if (!selfClosed && inPara)
-          hyperStack.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
-        else if (selfClosed && inPara)
-          hyperlinks.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
-        break;
-      case "ins":
-        if (!selfClosed && inPara)
-          insStack.push({ change: "insertion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
-        break;
-      case "del":
-        if (!selfClosed && inPara)
-          delStack.push({ change: "deletion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
-        break;
-      case "bookmarkStart":
-        if (attrs.name != null && !bookmarks.has(attrs.name))
-          bookmarks.set(attrs.name, para >= 0 ? para : 0);
-        break;
-      case "commentReference":
-        if (attrs.id != null && !commentRefs.has(attrs.id))
-          commentRefs.set(attrs.id, { para, run: run >= 0 ? run : null });
-        break;
-      default:
-        noteRid(attrs);
-    }
-  }
-  return { paragraphs, hyperlinks, bookmarks, changes, commentRefs, ridUsage };
-}
-function parseComments(xml) {
-  if (typeof xml !== "string" || !/<(?:[\w.-]+:)?comments\b/.test(xml)) {
-    return { ok: false, why: "comments_unparseable" };
-  }
-  const comments = [];
-  const re = /<(?:[\w.-]+:)?comment\b((?:[^>"']|"[^"]*"|'[^']*')*?)>([\s\S]*?)<\/(?:[\w.-]+:)?comment>/g;
-  for (const m of xml.matchAll(re)) {
-    const a = attrsOf2(m[1]);
-    const paras = [];
-    for (const pm of m[2].split(/<\/(?:[\w.-]+:)?p>/)) {
-      let text = "";
-      for (const t of pm.matchAll(/<(?:[\w.-]+:)?t\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?t>/g))
-        text += decodeEntities(t[1]);
-      if (text) paras.push(text);
-    }
-    comments.push({
-      id: a.id ?? null,
-      author: a.author ?? null,
-      date: a.date ?? null,
-      initials: a.initials ?? null,
-      text: paras.join("\n")
-    });
-  }
-  return { ok: true, comments };
-}
-function classifyUri2(uri) {
-  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
-  const scheme = m ? m[1].toLowerCase() : null;
-  if (scheme === "http" || scheme === "https") return "deferred";
-  if (!scheme && uri) return "deferred";
-  return "refused";
-}
-function deferredOrRefusedRecord2(uri, source) {
-  const partition = classifyUri2(uri);
-  return {
-    partition,
-    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(uri),
-    target: { url: uri },
-    source
-  };
-}
-function undeterminedRecord2(source, why, extra = {}) {
-  return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
-}
-var HEX2 = "0123456789abcdef";
-async function sha256Hex2(u8) {
-  const d = await crypto.subtle.digest("SHA-256", u8);
-  const b = new Uint8Array(d);
-  let out = "";
-  for (let i = 0; i < b.length; i++) out += HEX2[b[i] >> 4] + HEX2[b[i] & 15];
-  return out;
-}
-function resolveRelTarget(relsPart, target) {
-  const t = String(target || "");
-  if (t.startsWith("/")) return normalizePartName(t);
-  const baseDir = relsPart.replace(/_rels\/[^/]*\.rels$/, "");
-  const segs = (baseDir + t).split("/");
-  const out = [];
-  for (const s of segs) {
-    if (s === "" || s === ".") continue;
-    if (s === "..") out.pop();
-    else out.push(s);
-  }
-  return out.join("/");
-}
-async function docxParts(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  const d = await discriminate(b);
-  if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
-  if (d.format !== "docx") {
-    return {
-      ok: false,
-      why: d.format === "undetermined" ? d.why : `not_docx:${d.format}`,
-      signals: d.signals
-    };
-  }
-  const container = readContainer(b);
-  if (!container.ok) return { ok: false, why: container.why, signals: d.signals };
-  const undetermined = [];
-  const mainPart = normalizePartName(d.mainPart || MAIN_PART);
-  let declaredTextBytes2 = 0;
-  for (const partName of [mainPart, COMMENTS_PART]) {
-    const e = container.byName.get(partName);
-    if (e) declaredTextBytes2 += e.uncompressedSize;
-  }
-  const guardR = sizeGuard(declaredTextBytes2);
-  const guard = guardR.ok ? null : guardR;
-  let documentXml = null;
-  let commentsXml = null;
-  if (!guard) {
-    const main = await readPart(b, container, mainPart);
-    if (main.ok) documentXml = UTF82.decode(main.bytes);
-    else undetermined.push({ part: mainPart, why: main.why });
-    if (container.byName.has(COMMENTS_PART)) {
-      const com = await readPart(b, container, COMMENTS_PART);
-      if (com.ok) commentsXml = UTF82.decode(com.bytes);
-      else undetermined.push({ part: COMMENTS_PART, why: com.why });
-    }
-  }
-  const rels = await walkRels(b, container);
-  let core = null;
-  if (container.byName.has(CORE_PROPERTIES_PART)) {
-    const c = await readCoreProperties(b, container);
-    if (c.ok) core = c;
-    else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
-  }
-  return { ok: true, format: "docx", bytes: b, container, mainPart, documentXml, commentsXml, rels, core, guard, undetermined };
-}
-function walkDocumentTables(xml) {
-  const done = [];
-  const stack = [];
-  let next = 0;
-  TOKEN_RE.lastIndex = 0;
-  let m;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    if (m[1] === void 0) continue;
-    const name = localOf(m[1]);
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    const top = stack.length ? stack[stack.length - 1] : null;
-    if (closing) {
-      if (name === "tbl" && stack.length) {
-        const t = stack.pop();
-        done[t.table] = {
-          table: t.table,
-          rows: t.rows,
-          cols: t.gridCols > 0 ? t.gridCols : t.maxTc > 0 ? t.maxTc : null
-        };
-      } else if (name === "tr" && top) {
-        if (top.tc > top.maxTc) top.maxTc = top.tc;
-      }
-      continue;
-    }
-    if (name === "tbl" && !selfClosed) stack.push({ table: next++, rows: 0, gridCols: 0, tc: 0, maxTc: 0 });
-    else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null };
-    else if (!top) continue;
-    else if (name === "gridCol") top.gridCols++;
-    else if (name === "tr") {
-      top.rows++;
-      top.tc = 0;
-    } else if (name === "tc") top.tc++;
-  }
-  while (stack.length) {
-    const t = stack.pop();
-    done[t.table] = {
-      table: t.table,
-      rows: t.rows || null,
-      cols: t.gridCols > 0 ? t.gridCols : t.maxTc > 0 ? t.maxTc : null
-    };
-  }
-  return done;
-}
-async function docxStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  const notes = [];
-  const links = [];
-  const walk = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
-  if (!walk) {
-    notes.push(parts.guard ? "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "word/document.xml unreadable: element references unavailable (stated)");
-  }
-  const docRelsPart = relsPartFor(parts.mainPart);
-  for (const rel of parts.rels.outbound) {
-    if (rel.part === docRelsPart && walk) {
-      const usages = walk.hyperlinks.filter((h) => h.rid === rel.id);
-      if (usages.length) {
-        for (const u of usages)
-          links.push(deferredOrRefusedRecord2(rel.target, docParaRef(u.para, u.run)));
-        continue;
-      }
-    }
-    links.push(deferredOrRefusedRecord2(rel.target, null));
-  }
-  for (const u of parts.rels.undetermined) {
-    links.push(undeterminedRecord2(null, "rels_unreadable", { part: u.part, detail: u.why }));
-  }
-  if (walk) {
-    for (const h of walk.hyperlinks) {
-      if (h.rid != null || h.anchor == null) continue;
-      const source = docParaRef(h.para, h.run);
-      if (walk.bookmarks.has(h.anchor)) {
-        const targetPara = walk.bookmarks.get(h.anchor);
-        const fragment = `#para=${targetPara + 1}`;
-        links.push({
-          partition: "anchor",
-          wrapper: linkWrapper.anchor(fragment),
-          target: { para: targetPara, fragment, bookmark: h.anchor },
-          source
-        });
-      } else {
-        links.push(undeterminedRecord2(source, "bookmark_unresolved", { bookmark: h.anchor }));
-      }
-    }
-  }
-  const embeddingRids = /* @__PURE__ */ new Map();
-  for (const bp of parts.rels.byPart) {
-    if (bp.part !== docRelsPart) continue;
-    for (const r of bp.relationships) {
-      if (r.external || !r.target) continue;
-      const resolved = resolveRelTarget(bp.part, r.target);
-      if (resolved.startsWith(EMBEDDINGS_DIR)) embeddingRids.set(resolved, r.id);
-    }
-  }
-  for (const entry of parts.container.entries) {
-    const name = normalizePartName(entry.name);
-    if (!name.startsWith(EMBEDDINGS_DIR) || name === EMBEDDINGS_DIR) continue;
-    const rid = embeddingRids.get(name) ?? null;
-    const at = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
-    const source = at ? docParaRef(at.para, at.run) : null;
-    const read = await readPart(parts.bytes, parts.container, name);
-    if (!read.ok) {
-      links.push(undeterminedRecord2(source, "embedded_part_unreadable", { part: name, detail: read.why }));
-      continue;
-    }
-    const sha = await sha256Hex2(read.bytes);
-    links.push({
-      partition: "intra",
-      wrapper: linkWrapper.intra(sha),
-      target: { sha256: sha, name: name.slice(name.lastIndexOf("/") + 1), bytes: read.bytes.length },
-      source
-    });
-  }
-  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
-  for (const l of links) counts[l.partition]++;
-  const items = [];
-  if (walk) {
-    for (const c of walk.changes) {
-      const item = {
-        kind: "tracked-change",
-        change: c.change,
-        author: c.author,
-        date: c.date,
-        source: docParaRef(c.para, c.run)
-      };
-      if (c.change === "deletion") item.superseded = c.text;
-      else item.text = c.text;
-      items.push(item);
-    }
-  }
-  const evUndetermined = [...parts.undetermined];
-  if (parts.guard) evUndetermined.push({ part: parts.mainPart, why: "over_size_bound", guard: parts.guard });
-  if (parts.commentsXml != null) {
-    const parsed = parseComments(parts.commentsXml);
-    if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
-    else {
-      for (const c of parsed.comments) {
-        const at = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
-        items.push({
-          kind: "comment",
-          id: c.id,
-          author: c.author,
-          date: c.date,
-          initials: c.initials,
-          text: c.text,
-          source: at ? docParaRef(at.para, at.run) : null
-        });
-      }
-    }
-  }
-  if (parts.core) {
-    items.push({
-      kind: "core-properties",
-      creator: parts.core.creator,
-      lastModifiedBy: parts.core.lastModifiedBy,
-      revision: parts.core.revision,
-      revisionNumber: parts.core.revisionNumber,
-      created: parts.core.created,
-      modified: parts.core.modified,
-      title: parts.core.title,
-      source: null
-    });
-  }
-  const evCounts = {};
-  for (const it of items) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
-  const evidentiary = {
-    container: "docx",
-    kinds: [...new Set(items.map((it) => it.kind))],
-    items,
-    undetermined: evUndetermined,
-    counts: evCounts
-  };
-  return {
-    ok: true,
-    container: "docx",
-    paragraphs: walk ? walk.paragraphs.length : null,
-    // null = honestly unknown
-    links,
-    counts,
-    evidentiary,
-    notes
-  };
-}
-async function docxText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  if (parts.guard) {
-    return {
-      ok: true,
-      container: "docx",
-      document: null,
-      paragraphs: [],
-      tables: null,
-      undetermined: [parts.guard],
-      counts: { chars: 0, undetermined: 1 }
-    };
-  }
-  if (parts.documentXml == null) {
-    const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
-    return {
-      ok: true,
-      container: "docx",
-      document: null,
-      paragraphs: [],
-      tables: null,
-      undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart, why: stated?.why ?? "unreadable" }],
-      counts: { chars: 0, undetermined: 1 }
-    };
-  }
-  const walk = walkDocumentBody(parts.documentXml);
-  const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `\xB6${p.para + 1}`, text: p.text }));
-  const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
-  const tables = walkDocumentTables(parts.documentXml).filter(Boolean).map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
-  return {
-    ok: true,
-    container: "docx",
-    document,
-    paragraphs,
-    tables,
-    undetermined: [],
-    counts: { chars: document.length, undetermined: 0 }
-  };
-}
-var docxEntry = {
-  format: "docx",
-  detect(bytes, contentType) {
-    if (bytes) {
-      if (!hasZipMagic(bytes)) return null;
-      const container = readContainer(bytes);
-      if (!container.ok) return null;
-      if (container.byName.has(CONTENT_TYPES_PART2) && container.byName.has(MAIN_PART)) {
-        return {
-          format: "docx",
-          confidence: "likely",
-          signals: [
-            "magic: PK\\x03\\x04 with a readable central directory",
-            `part: ${CONTENT_TYPES_PART2} present`,
-            `part: ${MAIN_PART} present`,
-            "likely, not certain: the OPC content-type declaration is deflated \u2014 parts() discriminates"
-          ]
-        };
-      }
-      return null;
-    }
-    if (contentType === DOCX_CONTENT_TYPE) {
-      return { format: "docx", confidence: "likely", signals: [`content type "${contentType}"`] };
-    }
-    return null;
-  },
-  parts: (bytes) => docxParts(bytes),
-  structure: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await docxParts(partsOrBytes) : partsOrBytes;
-    return docxStructure(parts);
-  },
-  text: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await docxParts(partsOrBytes) : partsOrBytes;
-    return withContainerImages(docxText(parts), parts, "word/media/");
-  }
-};
-
-// src/formats-xlsx.mjs
-var UTF83 = new TextDecoder("utf-8", { fatal: false });
-var XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-var WORKBOOK_PART = "xl/workbook.xml";
-var SHARED_STRINGS_PART = "xl/sharedStrings.xml";
-function decodeXmlEntities2(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
-    if (e[0] === "#") {
-      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
-    }
-    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
-  });
-}
-function parseAttrs(raw) {
-  const attrs = {};
-  for (const a of String(raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
-    attrs[local] = decodeXmlEntities2(a[3] ?? a[4] ?? "");
-  }
-  return attrs;
-}
-function elements(xml, localName) {
-  const out = [];
-  const open = new RegExp(`<((?:[\\w.-]+:)?${localName})\\b([^>]*?)(/)?>`, "g");
-  let m;
-  while (m = open.exec(xml)) {
-    const attrs = parseAttrs(m[2]);
-    if (m[3]) {
-      out.push({ attrs, inner: "" });
-      continue;
-    }
-    const close = xml.indexOf(`</${m[1]}>`, open.lastIndex);
-    if (close < 0) {
-      out.push({ attrs, inner: "" });
-      continue;
-    }
-    out.push({ attrs, inner: xml.slice(open.lastIndex, close) });
-    open.lastIndex = close + m[1].length + 3;
-  }
-  return out;
-}
-function textRuns(inner) {
-  return elements(inner, "t").map((t) => decodeXmlEntities2(t.inner)).join("");
-}
-var HEX3 = "0123456789abcdef";
-async function sha256Hex3(u8) {
-  const d = await crypto.subtle.digest("SHA-256", u8);
-  const b = new Uint8Array(d);
-  let out = "";
-  for (let i = 0; i < b.length; i++) out += HEX3[b[i] >> 4] + HEX3[b[i] & 15];
-  return out;
-}
-function sheetCellRef(sheet, cell) {
-  return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
-}
-function sheetRangeRef(sheet, range) {
-  return { kind: "sheet-range", ref: `${sheet}!${range}`, sheet, range };
-}
-function columnLetters(n) {
-  let out = "";
-  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + (c - 1) % 26) + out;
-  return out;
-}
-function usedSheetRange(name, usedRows, usedCols) {
-  if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
-  return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
-}
-var XLSX_GRID_ROWS = 1048576;
-var XLSX_GRID_COLS = 16384;
-function a1Col(ref) {
-  const m = /^\$?([A-Za-z]{1,3})\$?\d+$/.exec(String(ref ?? "").trim());
-  if (!m) return null;
-  let n = 0;
-  for (const ch of m[1].toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
-  return n;
-}
-function classifyUrl(url) {
-  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(url || "");
-  const scheme = m ? m[1].toLowerCase() : null;
-  if (scheme === "http" || scheme === "https") return "deferred";
-  if (!scheme && url) return "deferred";
-  return "refused";
-}
-function resolveTarget(fromPart, target) {
-  if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(target) || target.startsWith("/")) {
-    return normalizePartName(target);
-  }
-  const base = fromPart.split("/").slice(0, -1);
-  for (const seg of target.split("/")) {
-    if (seg === "" || seg === ".") continue;
-    if (seg === "..") base.pop();
-    else base.push(seg);
-  }
-  return base.join("/");
-}
-async function xlsxParts(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  const undetermined = [];
-  const disc = await discriminate(b);
-  if (!disc.ok) return { ok: false, why: disc.why, signals: disc.signals };
-  if (disc.format !== "xlsx") {
-    return { ok: false, why: `not_xlsx:${disc.format}`, signals: disc.signals };
-  }
-  const container = readContainer(b);
-  const wbRead = await readPart(b, container, WORKBOOK_PART);
-  if (!wbRead.ok) return { ok: false, why: `workbook_unreadable:${wbRead.why}` };
-  const wbXml = UTF83.decode(wbRead.bytes);
-  const relsById = /* @__PURE__ */ new Map();
-  const wbRelsRead = await readPart(b, container, relsPartFor(WORKBOOK_PART));
-  if (wbRelsRead.ok) {
-    const parsed = parseRels(UTF83.decode(wbRelsRead.bytes));
-    if (parsed.ok) {
-      for (const r of parsed.relationships) if (r.id) relsById.set(r.id, r);
-    } else undetermined.push({ part: relsPartFor(WORKBOOK_PART), why: parsed.why });
-  } else undetermined.push({ part: relsPartFor(WORKBOOK_PART), why: wbRelsRead.why });
-  const sheets = elements(wbXml, "sheet").map((s, index) => {
-    const state = s.attrs.state === "hidden" || s.attrs.state === "veryHidden" ? s.attrs.state : "visible";
-    const rel = s.attrs.id ? relsById.get(s.attrs.id) : null;
-    return {
-      index,
-      name: s.attrs.name ?? `sheet${index + 1}`,
-      sheetId: s.attrs.sheetId ?? null,
-      state,
-      hidden: state === "visible" ? false : state,
-      part: rel && !rel.external ? resolveTarget(WORKBOOK_PART, rel.target) : null,
-      xml: null,
-      why: rel ? null : "sheet_rel_unresolved"
-    };
-  });
-  const definedNames = elements(wbXml, "definedName").filter((d) => d.attrs.name != null).map((d) => ({ name: d.attrs.name, ref: decodeXmlEntities2(d.inner).trim() }));
-  const sheetParts = new Set(sheets.map((s) => s.part).filter(Boolean));
-  const isTextPart = (n) => sheetParts.has(n) || n === SHARED_STRINGS_PART;
-  const declared = declaredTextBytes(container, isTextPart);
-  const guardR = sizeGuard(declared.total);
-  const guard = guardR.ok ? null : guardR;
-  let sharedStrings = null;
-  if (!guard) {
-    if (container.byName.has(SHARED_STRINGS_PART)) {
-      const ss = await readPart(b, container, SHARED_STRINGS_PART);
-      if (ss.ok) sharedStrings = elements(UTF83.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
-      else undetermined.push({ part: SHARED_STRINGS_PART, why: ss.why });
-    }
-    for (const sheet of sheets) {
-      if (!sheet.part) {
-        undetermined.push({ part: `(sheet ${sheet.name})`, why: sheet.why });
-        continue;
-      }
-      const read = await readPart(b, container, sheet.part);
-      if (read.ok) sheet.xml = UTF83.decode(read.bytes);
-      else {
-        sheet.why = read.why;
-        undetermined.push({ part: sheet.part, why: read.why });
-      }
-    }
-  }
-  let core = null;
-  if (container.byName.has(CORE_PROPERTIES_PART)) {
-    const c = await readCoreProperties(b, container);
-    if (c.ok) core = c;
-    else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
-  }
-  return {
-    ok: true,
-    format: "xlsx",
-    bytes: b,
-    container,
-    sheets,
-    definedNames,
-    sharedStrings,
-    core,
-    declared,
-    guard,
-    undetermined
-  };
-}
-function walkSheetXml(xml) {
-  const rows = elements(xml, "row").map((row) => ({
-    r: row.attrs.r != null ? parseInt(row.attrs.r, 10) : null,
-    hidden: row.attrs.hidden === "1" || row.attrs.hidden === "true",
-    cells: elements(row.inner, "c").map((c) => {
-      const f2 = elements(c.inner, "f");
-      const v = elements(c.inner, "v");
-      const is = elements(c.inner, "is");
-      return {
-        cell: c.attrs.r ?? null,
-        t: c.attrs.t ?? null,
-        f: f2.length ? decodeXmlEntities2(f2[0].inner) : null,
-        v: v.length ? decodeXmlEntities2(v[0].inner) : null,
-        is: is.length ? textRuns(is[0].inner) : null
-      };
-    })
-  }));
-  const hiddenRows = rows.filter((r) => r.hidden && r.r != null).map((r) => r.r);
-  const hiddenCols = elements(xml, "col").filter((c) => c.attrs.hidden === "1" || c.attrs.hidden === "true").map((c) => ({ min: parseInt(c.attrs.min, 10), max: parseInt(c.attrs.max, 10) }));
-  const hyperlinks = elements(xml, "hyperlink").map((h) => ({
-    cell: h.attrs.ref ?? null,
-    relId: h.attrs.id ?? null,
-    location: h.attrs.location ?? null,
-    display: h.attrs.display ?? null
-  }));
-  let usedRows = 0, usedCols = 0;
-  for (const row of rows) {
-    if (!row.cells.length) continue;
-    if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
-    for (const c of row.cells) {
-      const col = a1Col(c.cell);
-      if (col != null && col > usedCols) usedCols = col;
-    }
-  }
-  return { rows, hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols };
-}
-function cellValue(c, sharedStrings) {
-  if (c.t === "s") {
-    const i = c.v != null ? parseInt(c.v, 10) : NaN;
-    if (sharedStrings && Number.isInteger(i) && i >= 0 && i < sharedStrings.length)
-      return { value: sharedStrings[i] };
-    return { undetermined: sharedStrings ? "shared_string_index_out_of_range" : "shared_strings_unreadable" };
-  }
-  if (c.t === "inlineStr") return { value: c.is ?? "" };
-  if (c.t === "b") return { value: c.v === "1" ? "TRUE" : c.v === "0" ? "FALSE" : c.v };
-  return { value: c.v };
-}
-async function xlsxStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "xlsx", reason: parts ? parts.why : "PARTS_ABSENT" };
-  }
-  const { bytes, container, sheets, definedNames, guard } = parts;
-  const links = [];
-  const notes = [];
-  const evItems = [];
-  const evUndetermined = [...parts.undetermined];
-  for (const sheet of sheets) {
-    const relTargets = /* @__PURE__ */ new Map();
-    if (sheet.part) {
-      const relsPart = relsPartFor(sheet.part);
-      if (container.byName.has(relsPart)) {
-        const read = await readPart(bytes, container, relsPart);
-        const parsed = read.ok ? parseRels(UTF83.decode(read.bytes)) : null;
-        if (parsed && parsed.ok) {
-          for (const r of parsed.relationships) if (r.id) relTargets.set(r.id, r);
-        } else {
-          evUndetermined.push({ part: relsPart, why: read.ok ? parsed.why : read.why });
-        }
-      }
-    }
-    if (sheet.xml == null) {
-      const why = guard == null ? sheet.why ?? "sheet_unreadable" : "over_size_bound";
-      for (const [, r] of relTargets) {
-        if (!r.external) continue;
-        const partition = classifyUrl(r.target);
-        links.push({
-          partition,
-          wrapper: partition === "deferred" ? linkWrapper.deferred(r.target) : linkWrapper.refused(),
-          target: { url: r.target },
-          source: null,
-          note: `cell_join_unavailable:${why}`
-        });
-      }
-      continue;
-    }
-    const walked = walkSheetXml(sheet.xml);
-    for (const h of walked.hyperlinks) {
-      const source = h.cell ? sheetCellRef(sheet.name, h.cell) : null;
-      if (h.relId) {
-        const rel = relTargets.get(h.relId);
-        if (!rel) {
-          links.push({
-            partition: "undetermined",
-            wrapper: null,
-            target: { why: "hyperlink_rel_unresolved", relId: h.relId },
-            source
-          });
-          continue;
-        }
-        if (!rel.external) {
-          links.push({
-            partition: "undetermined",
-            wrapper: null,
-            target: { why: "hyperlink_rel_not_external", relId: h.relId, part: rel.target },
-            source
-          });
-          continue;
-        }
-        const partition = classifyUrl(rel.target);
-        links.push({
-          partition,
-          wrapper: partition === "deferred" ? linkWrapper.deferred(rel.target) : linkWrapper.refused(),
-          target: { url: rel.target },
-          source
-        });
-        continue;
-      }
-      if (h.location) {
-        const fragment = `#${h.location}`;
-        links.push({
-          partition: "anchor",
-          wrapper: linkWrapper.anchor(fragment),
-          target: { location: h.location, fragment },
-          source
-        });
-        continue;
-      }
-      links.push({
-        partition: "undetermined",
-        wrapper: null,
-        target: { why: "hyperlink_without_target" },
-        source
-      });
-    }
-    for (const row of walked.rows) {
-      for (const c of row.cells) {
-        if (c.f == null) continue;
-        evItems.push({
-          kind: "formula",
-          source: c.cell ? sheetCellRef(sheet.name, c.cell) : null,
-          formula: c.f,
-          value: c.v
-          // the cached result, null when the file carries none — stated, not invented
-        });
-      }
-    }
-    if (walked.hiddenRows.length) {
-      evItems.push({
-        kind: "hidden-rows",
-        sheet: sheet.name,
-        rows: walked.hiddenRows,
-        count: walked.hiddenRows.length,
-        source: null
-      });
-    }
-    if (walked.hiddenCols.length) {
-      evItems.push({
-        kind: "hidden-cols",
-        sheet: sheet.name,
-        cols: walked.hiddenCols,
-        count: walked.hiddenCols.length,
-        source: null
-      });
-    }
-  }
-  for (const sheet of sheets) {
-    if (sheet.hidden) {
-      evItems.push({ kind: "hidden-sheet", sheet: sheet.name, state: sheet.state, source: null });
-    }
-  }
-  if (guard) {
-    notes.push("text_parts_over_bound");
-    evUndetermined.push({ part: "(text parts: worksheets + sharedStrings)", why: "over_size_bound", guard });
-  }
-  for (const dn of definedNames) {
-    const fragment = `#${dn.ref}`;
-    links.push({
-      partition: "anchor",
-      wrapper: linkWrapper.anchor(fragment),
-      target: { definedName: dn.name, ref: dn.ref, fragment },
-      source: null
-    });
-  }
-  for (const entry of container.entries) {
-    const name = normalizePartName(entry.name);
-    if (!/^xl\/embeddings\//.test(name)) continue;
-    const read = await readPart(bytes, container, name);
-    if (!read.ok) {
-      links.push({
-        partition: "undetermined",
-        wrapper: null,
-        target: { why: `embedding_unreadable:${read.why}`, name },
-        source: null
-      });
-      continue;
-    }
-    const sha = await sha256Hex3(read.bytes);
-    links.push({
-      partition: "intra",
-      wrapper: linkWrapper.intra(sha),
-      target: { sha256: sha, name, bytes: read.bytes.length },
-      source: null
-    });
-  }
-  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
-  for (const l of links) counts[l.partition]++;
-  if (parts.core) {
-    evItems.push({
-      kind: "core-properties",
-      creator: parts.core.creator,
-      lastModifiedBy: parts.core.lastModifiedBy,
-      revision: parts.core.revision,
-      revisionNumber: parts.core.revisionNumber,
-      created: parts.core.created,
-      modified: parts.core.modified,
-      title: parts.core.title,
-      source: null
-    });
-  }
-  const evCounts = {};
-  for (const it of evItems) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
-  return {
-    ok: true,
-    container: "xlsx",
-    sheets: sheets.map((s) => ({
-      sheet: s.index,
-      name: s.name,
-      sheetId: s.sheetId,
-      state: s.state,
-      hidden: s.hidden
-    })),
-    links,
-    counts,
-    /* The IC-2 envelope AS ACCEPTED (COFF-4 filed it first, from docx.mjs as
-     * built; this entry CONFIRMS — same key, same fields, no variant). */
-    evidentiary: {
-      container: "xlsx",
-      kinds: [...new Set(evItems.map((it) => it.kind))],
-      items: evItems,
-      undetermined: evUndetermined,
-      counts: evCounts
-    },
-    notes
-  };
-}
-function xlsxText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "xlsx", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  const { sheets, sharedStrings, guard } = parts;
-  if (guard) {
-    return {
-      ok: true,
-      container: "xlsx",
-      document: null,
-      sheets: [],
-      undetermined: [guard],
-      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
-    };
-  }
-  const outSheets = [];
-  const allUndetermined = [];
-  let cellCount = 0, formulaCount = 0;
-  for (const sheet of sheets) {
-    if (sheet.xml == null) {
-      const marker = { sheet: sheet.index, cell: null, reason: sheet.why ?? "sheet_unreadable" };
-      outSheets.push({
-        sheet: sheet.index,
-        name: sheet.name,
-        hidden: sheet.hidden,
-        rows: XLSX_GRID_ROWS,
-        cols: XLSX_GRID_COLS,
-        usedRows: null,
-        usedCols: null,
-        range: null,
-        text: "",
-        undetermined: [marker]
-      });
-      allUndetermined.push(marker);
-      continue;
-    }
-    const walked = walkSheetXml(sheet.xml);
-    const undetermined = [];
-    const lines = [];
-    for (const row of walked.rows) {
-      const vals = [];
-      for (const c of row.cells) {
-        if (c.f != null) formulaCount++;
-        const r = cellValue(c, sharedStrings);
-        if (r.undetermined) {
-          undetermined.push({ sheet: sheet.index, cell: c.cell, reason: r.undetermined });
-          continue;
-        }
-        if (r.value == null || r.value === "") continue;
-        cellCount++;
-        vals.push(r.value);
-      }
-      if (vals.length) lines.push(vals.join("	"));
-    }
-    const text = lines.join("\n");
-    outSheets.push({
-      sheet: sheet.index,
-      name: sheet.name,
-      hidden: sheet.hidden,
-      rows: XLSX_GRID_ROWS,
-      cols: XLSX_GRID_COLS,
-      usedRows: walked.usedRows,
-      usedCols: walked.usedCols,
-      /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
-      range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
-      text,
-      undetermined
-    });
-    for (const u of undetermined) allUndetermined.push(u);
-  }
-  const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
-  return {
-    ok: true,
-    container: "xlsx",
-    document,
-    sheets: outSheets,
-    undetermined: allUndetermined,
-    counts: {
-      chars: document.length,
-      cells: cellCount,
-      formulas: formulaCount,
-      undetermined: allUndetermined.length
-    }
-  };
-}
-var xlsxEntry = {
-  format: "xlsx",
-  detect(bytes, contentType) {
-    if (bytes) {
-      if (!hasZipMagic(bytes)) return null;
-      const c = readContainer(bytes);
-      if (!c.ok) return null;
-      if (c.byName.has(CONTENT_TYPES_PART) && c.byName.has(WORKBOOK_PART)) {
-        return { format: "xlsx", confidence: "likely", signals: [
-          "magic: PK\\x03\\x04 with a readable central directory",
-          `parts: ${CONTENT_TYPES_PART} and ${WORKBOOK_PART} present`,
-          "likely, not certain: the declared main content type lives in a deflated part; parts() completes the discrimination"
-        ] };
-      }
-      return null;
-    }
-    if (contentType === XLSX_CONTENT_TYPE) {
-      return {
-        format: "xlsx",
-        confidence: "likely",
-        signals: [`content type "${contentType}"`]
-      };
-    }
-    return null;
-  },
-  parts: (bytes) => xlsxParts(bytes),
-  /* Accept either parts() output or raw bytes, exactly as docx.mjs does, so
-     detect→structure works uniformly at the registry seam while a caller that
-     already paid for parts() does not pay twice. */
-  structure: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await xlsxParts(partsOrBytes) : partsOrBytes;
-    return xlsxStructure(parts);
-  },
-  text: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await xlsxParts(partsOrBytes) : partsOrBytes;
-    return withContainerImages(xlsxText(parts), parts, "xl/media/");
-  }
-};
-
-// src/pptx.mjs
-var UTF84 = new TextDecoder("utf-8", { fatal: false });
-var PPTX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-var CONTENT_TYPES_PART3 = "[Content_Types].xml";
-var MAIN_PART2 = "ppt/presentation.xml";
-var EMBEDDINGS_DIR2 = "ppt/embeddings/";
-var SLIDE_PART_RE = /^ppt\/slides\/[^/]+\.xml$/;
-var NOTES_PART_RE = /^ppt\/notesSlides\/[^/]+\.xml$/;
-function slideShapeRef(slide, shape = null) {
-  const ref = { kind: "slide-shape", ref: `slide ${slide}`, slide };
-  if (shape != null) ref.shape = shape;
-  return ref;
-}
-function decodeEntities2(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
-    if (e[0] === "#") {
-      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
-    }
-    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
-  });
-}
-function attrsOf3(raw) {
-  const attrs = {};
-  for (const a of (raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
-    attrs[local] = decodeEntities2(a[3] ?? a[4] ?? "");
-  }
-  return attrs;
-}
-var TOKEN_RE2 = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
-var localOf2 = (name) => name.includes(":") ? name.split(":").pop() : name;
-var SHAPE_TAGS = /* @__PURE__ */ new Set(["sp", "pic", "graphicFrame", "cxnSp", "grpSp"]);
-var declaresNotShown = (v) => v === "0" || v === "false";
-var SLD_ROOT_RE = /<(?:[\w.-]+:)?sld(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/;
-var SHOW_ATTR_RE = /(?:^|\s)(?:[\w.-]+:)?show\s*=\s*(?:"([^"]*)"|'([^']*)')/;
-var showAttrOf = (rawAttrs) => {
-  const m = (rawAttrs || "").match(SHOW_ATTR_RE);
-  return m ? m[1] ?? m[2] : null;
-};
-function walkSlide(xml) {
-  const paragraphs = [];
-  const hlinks = [];
-  const ridUsage = /* @__PURE__ */ new Map();
-  let shape = -1;
-  let cur = null;
-  let inText = false;
-  const noteRid = (attrs) => {
-    for (const key of ["id", "embed", "link"]) {
-      const v = attrs[key];
-      if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
-        ridUsage.set(v, shape >= 0 ? shape : null);
-    }
-  };
-  TOKEN_RE2.lastIndex = 0;
-  let m, prev = 0;
-  while ((m = TOKEN_RE2.exec(xml)) !== null) {
-    if (inText && cur != null && m.index > prev) cur += decodeEntities2(xml.slice(prev, m.index));
-    prev = TOKEN_RE2.lastIndex;
-    if (m[1] === void 0) continue;
-    const name = localOf2(m[1]);
-    const selfClosed = m[3] === "/";
-    const closing = m[0][1] === "/";
-    if (closing) {
-      if (name === "t") inText = false;
-      else if (name === "p") {
-        if (cur != null) {
-          paragraphs.push(cur);
-          cur = null;
-        }
-      }
-      continue;
-    }
-    if (SHAPE_TAGS.has(name)) shape++;
-    const attrs = m[2] && m[2].includes("=") ? attrsOf3(m[2]) : {};
-    switch (name) {
-      case "p":
-        if (!selfClosed) cur = "";
-        break;
-      case "t":
-        if (!selfClosed) inText = true;
-        break;
-      case "br":
-        if (cur != null) cur += "\n";
-        break;
-      case "hlinkClick":
-        noteRid(attrs);
-        if (attrs.id && /^rId/.test(attrs.id))
-          hlinks.push({ rid: attrs.id, shape: shape >= 0 ? shape : null });
-        break;
-      default:
-        noteRid(attrs);
-    }
-  }
-  const text = paragraphs.filter((t) => t.length).join("\n");
-  return { paragraphs, text, shapes: shape + 1, hlinks, ridUsage };
-}
-function classifyUri3(uri) {
-  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
-  const scheme = m ? m[1].toLowerCase() : null;
-  if (scheme === "http" || scheme === "https") return "deferred";
-  if (!scheme && uri) return "deferred";
-  return "refused";
-}
-function deferredOrRefusedRecord3(uri, source) {
-  const partition = classifyUri3(uri);
-  return {
-    partition,
-    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(uri),
-    target: { url: uri },
-    source
-  };
-}
-function undeterminedRecord3(source, why, extra = {}) {
-  return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
-}
-var HEX4 = "0123456789abcdef";
-async function sha256Hex4(u8) {
-  const d = await crypto.subtle.digest("SHA-256", u8);
-  const b = new Uint8Array(d);
-  let out = "";
-  for (let i = 0; i < b.length; i++) out += HEX4[b[i] >> 4] + HEX4[b[i] & 15];
-  return out;
-}
-function resolveRelTarget2(relsPart, target) {
-  const t = String(target || "");
-  if (t.startsWith("/")) return normalizePartName(t);
-  const baseDir = relsPart.replace(/_rels\/[^/]*\.rels$/, "");
-  const segs = (baseDir + t).split("/");
-  const out = [];
-  for (const s of segs) {
-    if (s === "" || s === ".") continue;
-    if (s === "..") out.pop();
-    else out.push(s);
-  }
-  return out.join("/");
-}
-async function pptxParts(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  const d = await discriminate(b);
-  if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
-  if (d.format !== "pptx") {
-    return {
-      ok: false,
-      why: d.format === "undetermined" ? d.why : `not_pptx:${d.format}`,
-      signals: d.signals
-    };
-  }
-  const container = readContainer(b);
-  if (!container.ok) return { ok: false, why: container.why, signals: d.signals };
-  const undetermined = [];
-  const mainPart = normalizePartName(d.mainPart || MAIN_PART2);
-  const slideParts = [];
-  const notesParts = [];
-  for (const e of container.entries) {
-    const n = normalizePartName(e.name);
-    if (SLIDE_PART_RE.test(n)) slideParts.push(n);
-    else if (NOTES_PART_RE.test(n)) notesParts.push(n);
-  }
-  let declaredTextBytes2 = 0;
-  for (const n of [...slideParts, ...notesParts]) {
-    const e = container.byName.get(n);
-    if (e) declaredTextBytes2 += e.uncompressedSize;
-  }
-  const guardR = sizeGuard(declaredTextBytes2);
-  const guard = guardR.ok ? null : guardR;
-  const rels = await walkRels(b, container);
-  let presentationXml = null;
-  const main = await readPart(b, container, mainPart);
-  if (main.ok) presentationXml = UTF84.decode(main.bytes);
-  else undetermined.push({ part: mainPart, why: main.why });
-  let order = null;
-  const hiddenParts = /* @__PURE__ */ new Set();
-  if (presentationXml != null) {
-    const presRelsPart = relsPartFor(mainPart);
-    const presRels = rels.byPart.find((p) => p.part === presRelsPart);
-    if (!presRels) {
-      const stated = rels.undetermined.find((u) => u.part === presRelsPart);
-      undetermined.push({ part: presRelsPart, why: stated?.why ?? "part_absent" });
-    } else {
-      const byId = new Map(presRels.relationships.map((r) => [r.id, r]));
-      order = [];
-      const sldIdRe = /<(?:[\w.-]+:)?sldId\b((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/g;
-      for (const m of presentationXml.matchAll(sldIdRe)) {
-        const rid = m[1].match(/[\w.-]+:id\s*=\s*(?:"([^"]*)"|'([^']*)')/);
-        const id = rid ? rid[1] ?? rid[2] : null;
-        const rel = id != null ? byId.get(id) : null;
-        if (!rel || rel.external || !rel.target) {
-          order.push(null);
-          undetermined.push({ part: mainPart, why: `sldid_rel_unresolved:${id ?? "no_rid"}` });
-          continue;
-        }
-        const resolved = resolveRelTarget2(presRelsPart, rel.target);
-        order.push(resolved);
-        if (declaresNotShown(showAttrOf(m[1]))) hiddenParts.add(resolved);
-      }
-    }
-  }
-  const slideXml = /* @__PURE__ */ new Map();
-  const notesXml = /* @__PURE__ */ new Map();
-  if (!guard) {
-    for (const n of slideParts) {
-      const r = await readPart(b, container, n);
-      if (r.ok) {
-        const xml = UTF84.decode(r.bytes);
-        slideXml.set(n, xml);
-        const root = xml.match(SLD_ROOT_RE);
-        if (root && declaresNotShown(showAttrOf(root[1]))) hiddenParts.add(n);
-      } else undetermined.push({ part: n, why: r.why });
-    }
-    for (const n of notesParts) {
-      const r = await readPart(b, container, n);
-      if (r.ok) notesXml.set(n, UTF84.decode(r.bytes));
-      else undetermined.push({ part: n, why: r.why });
-    }
-  }
-  const notesOf = /* @__PURE__ */ new Map();
-  for (const bp of rels.byPart) {
-    const m = bp.part.match(/^(ppt\/slides\/)_rels\/([^/]+\.xml)\.rels$/);
-    if (!m) continue;
-    const slidePart = m[1] + m[2];
-    for (const r of bp.relationships) {
-      if (!r.external && r.type && r.type.endsWith("/notesSlide") && r.target) {
-        notesOf.set(slidePart, resolveRelTarget2(bp.part, r.target));
-        break;
-      }
-    }
-  }
-  let core = null;
-  if (container.byName.has(CORE_PROPERTIES_PART)) {
-    const c = await readCoreProperties(b, container);
-    if (c.ok) core = c;
-    else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
-  }
-  return {
-    ok: true,
-    format: "pptx",
-    bytes: b,
-    container,
-    mainPart,
-    presentationXml,
-    order,
-    slideParts,
-    notesParts,
-    slideXml,
-    notesXml,
-    notesOf,
-    hiddenParts,
-    rels,
-    core,
-    guard,
-    undetermined
-  };
-}
-function deckOf(parts) {
-  const seq = [];
-  const seen = /* @__PURE__ */ new Set();
-  if (parts.order) {
-    parts.order.forEach((part, i) => {
-      if (part == null) return;
-      seq.push({ part, slide: i + 1 });
-      seen.add(part);
-    });
-  }
-  for (const p of parts.slideParts) if (!seen.has(p)) seq.push({ part: p, slide: null });
-  return seq;
-}
-var GUARDED_PARTS = "ppt/slides/* + ppt/notesSlides/*";
-async function pptxStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "pptx", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  const notes = [];
-  const links = [];
-  const deck = deckOf(parts);
-  const slideNoOf = /* @__PURE__ */ new Map();
-  for (const d of deck) if (d.slide != null) slideNoOf.set(d.part, d.slide);
-  if (!parts.order) {
-    notes.push("deck order undeclared-or-unreadable (ppt/presentation.xml sldIdLst): slides are UNNUMBERED \u2014 slide:null, sources null \u2014 stated, never numbered off filenames");
-  }
-  if (parts.guard) {
-    notes.push("slide/notes parts not read: over the size bound (stated in evidentiary.undetermined and by text())");
-  }
-  const walks = /* @__PURE__ */ new Map();
-  for (const { part } of deck) {
-    const xml = parts.slideXml.get(part);
-    if (xml != null) walks.set(part, walkSlide(xml));
-  }
-  const relsPartToSlide = /* @__PURE__ */ new Map();
-  for (const { part } of deck) relsPartToSlide.set(relsPartFor(part), part);
-  const slideLevelSource = (slidePart) => {
-    const n = slideNoOf.get(slidePart);
-    return n != null ? slideShapeRef(n) : null;
-  };
-  for (const rel of parts.rels.outbound) {
-    const slidePart = relsPartToSlide.get(rel.part);
-    if (slidePart) {
-      const slideNo = slideNoOf.get(slidePart) ?? null;
-      const w = walks.get(slidePart);
-      const usages = w ? w.hlinks.filter((h) => h.rid === rel.id) : [];
-      if (usages.length) {
-        for (const u of usages) {
-          links.push(deferredOrRefusedRecord3(
-            rel.target,
-            slideNo != null ? slideShapeRef(slideNo, u.shape) : null
-          ));
-        }
-        continue;
-      }
-      links.push(deferredOrRefusedRecord3(rel.target, slideLevelSource(slidePart)));
-      continue;
-    }
-    links.push(deferredOrRefusedRecord3(rel.target, null));
-  }
-  for (const u of parts.rels.undetermined) {
-    links.push(undeterminedRecord3(null, "rels_unreadable", { part: u.part, detail: u.why }));
-  }
-  for (const bp of parts.rels.byPart) {
-    const slidePart = relsPartToSlide.get(bp.part);
-    if (!slidePart) continue;
-    const w = walks.get(slidePart);
-    if (!w) continue;
-    const slideNo = slideNoOf.get(slidePart) ?? null;
-    for (const r of bp.relationships) {
-      if (r.external || !r.type || !r.type.endsWith("/slide") || !r.target) continue;
-      const usages = w.hlinks.filter((h) => h.rid === r.id);
-      if (!usages.length) continue;
-      const resolved = resolveRelTarget2(bp.part, r.target);
-      const targetNo = slideNoOf.get(resolved) ?? null;
-      for (const u of usages) {
-        const source = slideNo != null ? slideShapeRef(slideNo, u.shape) : null;
-        if (targetNo != null) {
-          const fragment = `#slide=${targetNo}`;
-          links.push({
-            partition: "anchor",
-            wrapper: linkWrapper.anchor(fragment),
-            target: { slide: targetNo, fragment, part: resolved },
-            source
-          });
-        } else {
-          links.push(undeterminedRecord3(source, "slide_unresolved", { part: resolved }));
-        }
-      }
-    }
-  }
-  const embeddingRefs = /* @__PURE__ */ new Map();
-  for (const bp of parts.rels.byPart) {
-    const slidePart = relsPartToSlide.get(bp.part) ?? null;
-    for (const r of bp.relationships) {
-      if (r.external || !r.target) continue;
-      const resolved = resolveRelTarget2(bp.part, r.target);
-      if (resolved.startsWith(EMBEDDINGS_DIR2) && !embeddingRefs.has(resolved))
-        embeddingRefs.set(resolved, { slidePart, rid: r.id });
-    }
-  }
-  for (const entry of parts.container.entries) {
-    const name = normalizePartName(entry.name);
-    if (!name.startsWith(EMBEDDINGS_DIR2) || name === EMBEDDINGS_DIR2) continue;
-    const refd = embeddingRefs.get(name) ?? null;
-    let source = null;
-    if (refd && refd.slidePart) {
-      const slideNo = slideNoOf.get(refd.slidePart) ?? null;
-      if (slideNo != null) {
-        const w = walks.get(refd.slidePart);
-        const shape = w && w.ridUsage.has(refd.rid) ? w.ridUsage.get(refd.rid) : null;
-        source = slideShapeRef(slideNo, shape);
-      }
-    }
-    const read = await readPart(parts.bytes, parts.container, name);
-    if (!read.ok) {
-      links.push(undeterminedRecord3(source, "embedded_part_unreadable", { part: name, detail: read.why }));
-      continue;
-    }
-    const sha = await sha256Hex4(read.bytes);
-    links.push({
-      partition: "intra",
-      wrapper: linkWrapper.intra(sha),
-      target: { sha256: sha, name: name.slice(name.lastIndexOf("/") + 1), bytes: read.bytes.length },
-      source
-    });
-  }
-  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
-  for (const l of links) counts[l.partition]++;
-  const items = [];
-  const evUndetermined = [...parts.undetermined];
-  if (parts.guard) evUndetermined.push({ part: GUARDED_PARTS, why: "over_size_bound", guard: parts.guard });
-  for (const { part, slide } of deck) {
-    if (!parts.hiddenParts.has(part)) continue;
-    items.push({
-      kind: "hidden-slide",
-      slide,
-      part,
-      source: slide != null ? slideShapeRef(slide) : null
-    });
-  }
-  const mappedNotes = /* @__PURE__ */ new Set();
-  for (const { part, slide } of deck) {
-    const notesPart = parts.notesOf.get(part) ?? null;
-    if (!notesPart) continue;
-    mappedNotes.add(notesPart);
-    const xml = parts.notesXml.get(notesPart);
-    if (xml == null) {
-      if (!parts.guard && !parts.container.byName.has(notesPart))
-        evUndetermined.push({ part: notesPart, why: "part_absent" });
-      continue;
-    }
-    items.push({
-      kind: "speaker-notes",
-      slide,
-      part: notesPart,
-      text: walkSlide(xml).text,
-      source: slide != null ? slideShapeRef(slide) : null
-    });
-  }
-  for (const np of parts.notesParts) {
-    if (mappedNotes.has(np) || !parts.notesXml.has(np)) continue;
-    items.push({ kind: "speaker-notes", slide: null, part: np, text: walkSlide(parts.notesXml.get(np)).text, source: null });
-  }
-  if (parts.core) {
-    items.push({
-      kind: "core-properties",
-      creator: parts.core.creator,
-      lastModifiedBy: parts.core.lastModifiedBy,
-      revision: parts.core.revision,
-      revisionNumber: parts.core.revisionNumber,
-      created: parts.core.created,
-      modified: parts.core.modified,
-      title: parts.core.title,
-      source: null
-    });
-  }
-  const evCounts = {};
-  for (const it of items) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
-  const evidentiary = {
-    container: "pptx",
-    kinds: [...new Set(items.map((it) => it.kind))],
-    items,
-    undetermined: evUndetermined,
-    counts: evCounts
-  };
-  return {
-    ok: true,
-    container: "pptx",
-    slides: deck.length,
-    links,
-    counts,
-    evidentiary,
-    notes
-  };
-}
-function deckLengthOf(parts) {
-  return Array.isArray(parts.order) ? parts.order.length : null;
-}
-async function pptxText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "pptx", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  if (parts.guard) {
-    return {
-      ok: true,
-      container: "pptx",
-      document: null,
-      slides: [],
-      speakerNotes: [],
-      deckLength: deckLengthOf(parts),
-      undetermined: [parts.guard],
-      counts: { chars: 0, notesChars: 0, undetermined: 1 }
-    };
-  }
-  const deck = deckOf(parts);
-  const slides = [];
-  const speakerNotes = [];
-  const undetermined = [];
-  for (const { part, slide } of deck) {
-    const hidden = parts.hiddenParts.has(part);
-    const xml = parts.slideXml.get(part);
-    if (xml == null) {
-      const stated = parts.undetermined.find((u) => u.part === part);
-      undetermined.push({ reason: "slide_unreadable", part, why: stated?.why ?? "unreadable" });
-    } else {
-      const walked = walkSlide(xml);
-      slides.push({
-        slide,
-        ref: slide != null ? `slide ${slide}` : null,
-        part,
-        hidden,
-        shapes: walked.shapes,
-        text: walked.text
-      });
-    }
-    const notesPart = parts.notesOf.get(part) ?? null;
-    if (!notesPart) continue;
-    const nxml = parts.notesXml.get(notesPart);
-    if (nxml == null) {
-      const stated = parts.undetermined.find((u) => u.part === notesPart);
-      undetermined.push({ reason: "notes_unreadable", part: notesPart, why: stated?.why ?? "unreadable" });
-    } else {
-      speakerNotes.push({ slide, ref: slide != null ? `slide ${slide} (notes)` : null, part: notesPart, hidden, text: walkSlide(nxml).text });
-    }
-  }
-  const mapped = /* @__PURE__ */ new Set([...parts.notesOf.values()]);
-  for (const np of parts.notesParts) {
-    if (mapped.has(np) || !parts.notesXml.has(np)) continue;
-    speakerNotes.push({ slide: null, ref: null, part: np, hidden: null, text: walkSlide(parts.notesXml.get(np)).text });
-  }
-  const document = slides.map((s) => s.text).filter((t) => t.length).join("\n");
-  const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
-  return {
-    ok: true,
-    container: "pptx",
-    document,
-    slides,
-    speakerNotes,
-    deckLength: deckLengthOf(parts),
-    undetermined,
-    counts: { chars: document.length, notesChars, undetermined: undetermined.length }
-  };
-}
-var pptxEntry = {
-  format: "pptx",
-  detect(bytes, contentType) {
-    if (bytes) {
-      if (!hasZipMagic(bytes)) return null;
-      const container = readContainer(bytes);
-      if (!container.ok) return null;
-      if (container.byName.has(CONTENT_TYPES_PART3) && container.byName.has(MAIN_PART2)) {
-        return {
-          format: "pptx",
-          confidence: "likely",
-          signals: [
-            "magic: PK\\x03\\x04 with a readable central directory",
-            `part: ${CONTENT_TYPES_PART3} present`,
-            `part: ${MAIN_PART2} present`,
-            "likely, not certain: the OPC content-type declaration is deflated \u2014 parts() discriminates"
-          ]
-        };
-      }
-      return null;
-    }
-    if (contentType === PPTX_CONTENT_TYPE) {
-      return { format: "pptx", confidence: "likely", signals: [`content type "${contentType}"`] };
-    }
-    return null;
-  },
-  parts: (bytes) => pptxParts(bytes),
-  structure: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await pptxParts(partsOrBytes) : partsOrBytes;
-    return pptxStructure(parts);
-  },
-  text: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await pptxParts(partsOrBytes) : partsOrBytes;
-    return withContainerImages(pptxText(parts), parts, "ppt/media/");
-  }
-};
-
-// src/odf.mjs
-var UTF85 = new TextDecoder("utf-8", { fatal: false });
-var ODF_ROWS = CONTAINER_FLAVOURS.filter((f2) => f2.partMap === "odf");
-function odfRow(flavour) {
-  const row = ODF_ROWS.find((f2) => f2.flavour === flavour);
-  if (!row) throw new Error(`odf.mjs: no partMap:"odf" row for "${flavour}" in ooxml.mjs`);
-  return row;
-}
-var ODT_ROW = odfRow("odt");
-var ODS_ROW = odfRow("ods");
-var ODP_ROW = odfRow("odp");
-var ODT_CONTENT_TYPE = ODT_ROW.mimetype;
-var ODS_CONTENT_TYPE = ODS_ROW.mimetype;
-var ODP_CONTENT_TYPE = ODP_ROW.mimetype;
-var CONTENT_PART = normalizePartName(ODT_ROW.conventionalMainPart);
-var META_PART = "meta.xml";
-function decodeEntities3(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
-    if (e[0] === "#") {
-      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
-    }
-    return { amp: "&", lt: "<", gt: ">", quot: "'" === e ? "'" : '"', apos: "'" }[e] ?? m;
-  });
-}
-function attrsOf4(raw) {
-  const attrs = {};
-  for (const a of String(raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
-    attrs[local] = decodeEntities3(a[3] ?? a[4] ?? "");
-  }
-  return attrs;
-}
-var localOf3 = (n) => n.includes(":") ? n.split(":").pop() : n;
-var tokens = () => /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/)?>/g;
-function elementsNested(xml, localName) {
-  const out = [];
-  const RE = tokens();
-  let m, depth = 0, start = -1, openAttrs = null;
-  while ((m = RE.exec(xml)) !== null) {
-    if (m[1] === void 0) continue;
-    if (localOf3(m[1]) !== localName) continue;
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    if (closing) {
-      depth--;
-      if (depth === 0 && start >= 0) {
-        out.push({ attrs: openAttrs, inner: xml.slice(start, m.index) });
-        start = -1;
-        openAttrs = null;
-      }
-      continue;
-    }
-    if (selfClosed) {
-      if (depth === 0) out.push({ attrs: attrsOf4(m[2]), inner: "" });
-      continue;
-    }
-    if (depth === 0) {
-      start = RE.lastIndex;
-      openAttrs = attrsOf4(m[2]);
-    }
-    depth++;
-  }
-  return out;
-}
-function stripElement(xml, localName) {
-  let out = "";
-  let cut = 0;
-  const RE = tokens();
-  let m, depth = 0, start = -1;
-  while ((m = RE.exec(xml)) !== null) {
-    if (m[1] === void 0) continue;
-    if (localOf3(m[1]) !== localName) continue;
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    if (selfClosed) {
-      if (depth === 0) {
-        out += xml.slice(cut, m.index);
-        cut = RE.lastIndex;
-      }
-      continue;
-    }
-    if (closing) {
-      depth--;
-      if (depth === 0 && start >= 0) {
-        cut = RE.lastIndex;
-        start = -1;
-      }
-      continue;
-    }
-    if (depth === 0) {
-      out += xml.slice(cut, m.index);
-      start = m.index;
-    }
-    depth++;
-  }
-  return out + xml.slice(cut);
-}
-function visibleText(xml) {
-  let out = "";
-  let prev = 0;
-  const RE = tokens();
-  let m;
-  while ((m = RE.exec(xml)) !== null) {
-    if (m.index > prev) out += decodeEntities3(xml.slice(prev, m.index));
-    prev = RE.lastIndex;
-    if (m[1] === void 0) continue;
-    if (m[0][1] === "/") continue;
-    const name = localOf3(m[1]);
-    if (name === "s") {
-      const c = parseInt(attrsOf4(m[2]).c ?? "1", 10);
-      out += " ".repeat(Number.isFinite(c) && c > 0 ? c : 1);
-    } else if (name === "tab") out += "	";
-    else if (name === "line-break") out += "\n";
-  }
-  if (xml.length > prev) out += decodeEntities3(xml.slice(prev));
-  return out;
-}
-function automaticStyles(xml) {
-  const tableDisplay = /* @__PURE__ */ new Map();
-  const pageVisible = /* @__PURE__ */ new Map();
-  for (const block of elementsNested(xml, "automatic-styles")) {
-    for (const st of elementsNested(block.inner, "style")) {
-      const name = st.attrs["name"];
-      if (!name) continue;
-      if (st.attrs.family === "table") {
-        for (const p of elementsNested(st.inner, "table-properties")) {
-          if (p.attrs.display != null) tableDisplay.set(name, p.attrs.display !== "false");
-        }
-      } else if (st.attrs.family === "drawing-page") {
-        for (const p of elementsNested(st.inner, "drawing-page-properties")) {
-          if (p.attrs.visibility != null) pageVisible.set(name, p.attrs.visibility !== "hidden");
-        }
-      }
-    }
-  }
-  return { tableDisplay, pageVisible };
-}
-function classifyUri4(uri) {
-  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
-  const scheme = m ? m[1].toLowerCase() : null;
-  if (scheme === "http" || scheme === "https") return "deferred";
-  if (!scheme && uri) return "deferred";
-  return "refused";
-}
-function linkRecord(uri, source) {
-  if (typeof uri === "string" && uri.startsWith("#")) {
-    return {
-      partition: "anchor",
-      wrapper: linkWrapper.anchor(uri),
-      target: { fragment: uri, name: uri.slice(1) },
-      source
-    };
-  }
-  const partition = classifyUri4(uri);
-  return {
-    partition,
-    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(),
-    target: { url: uri },
-    source
-  };
-}
-function hrefsIn(xml) {
-  const out = [];
-  const RE = tokens();
-  let m;
-  while ((m = RE.exec(xml)) !== null) {
-    if (m[1] === void 0 || m[0][1] === "/") continue;
-    if (localOf3(m[1]) !== "a") continue;
-    const href = attrsOf4(m[2]).href;
-    if (href != null) out.push(href);
-  }
-  return out;
-}
-function readStoredMemberSync(bytes, container, name, maxBytes) {
-  const want = normalizePartName(name);
-  const entry = container.byName.get(want) ?? container.entries.find((e) => normalizePartName(e.name) === want);
-  if (!entry) return null;
-  if (entry.method !== 0) return null;
-  if (entry.uncompressedSize > maxBytes) return null;
-  const lh = entry.localHeaderOffset;
-  if (lh + 30 > bytes.length) return null;
-  const nameLen = bytes[lh + 26] | bytes[lh + 27] << 8;
-  const extraLen = bytes[lh + 28] | bytes[lh + 29] << 8;
-  const start = lh + 30 + nameLen + extraLen;
-  const end = start + entry.compressedSize;
-  if (end > bytes.length) return null;
-  const out = bytes.subarray(start, end);
-  if (out.length !== entry.uncompressedSize) return null;
-  if (crc32(out) !== entry.crc32) return null;
-  return UTF85.decode(out);
-}
-function detectOdf(row, bytes, contentType) {
-  if (bytes) {
-    if (!hasZipMagic(bytes)) return null;
-    const container = readContainer(bytes);
-    if (!container.ok) return null;
-    const first = container.entries[0];
-    if (!first || normalizePartName(first.name) !== ODF_MIMETYPE_PART) return null;
-    const declared = readStoredMemberSync(bytes, container, ODF_MIMETYPE_PART, ODF_MIMETYPE_MAX_BYTES);
-    if (declared !== row.mimetype) return null;
-    const main = normalizePartName(row.conventionalMainPart);
-    const present = container.byName.has(main) || container.entries.some((e) => normalizePartName(e.name) === main);
-    if (!present) return null;
-    return {
-      format: row.flavour,
-      confidence: "certain",
-      signals: [
-        "magic: PK\\x03\\x04 with a readable central directory",
-        `part: ${ODF_MIMETYPE_PART} is the FIRST member, STORED, CRC-verified`,
-        `odf:${ODF_MIMETYPE_PART}=${row.mimetype} (exact match, not trimmed)`,
-        `part: ${main} present`
-      ]
-    };
-  }
-  if (contentType === row.mimetype) {
-    return { format: row.flavour, confidence: "likely", signals: [`content type "${contentType}"`] };
-  }
-  return null;
-}
-async function odfParts(row, bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  const d = await discriminate(b);
-  if (!d.ok) return { ok: false, container: row.flavour, why: d.why, signals: d.signals };
-  if (d.format !== row.flavour) {
-    const absent = d.why === "declared_main_part_absent";
-    return {
-      ok: false,
-      container: row.flavour,
-      why: d.format === "undetermined" ? d.why : `not_${row.flavour}:${d.format}`,
-      part: absent ? CONTENT_PART : null,
-      flavourDeclared: d.flavourDeclared ?? null,
-      signals: d.signals
-    };
-  }
-  const container = readContainer(b);
-  if (!container.ok) return { ok: false, container: row.flavour, why: container.why, signals: d.signals };
-  const undetermined = [];
-  const declared = declaredTextBytes(container, (n) => n === CONTENT_PART);
-  const guardR = sizeGuard(declared.total);
-  const guard = guardR.ok ? null : guardR;
-  let contentXml = null;
-  if (!guard) {
-    const read = await readPart(b, container, CONTENT_PART);
-    if (read.ok) contentXml = UTF85.decode(read.bytes);
-    else undetermined.push({ part: CONTENT_PART, why: read.why });
-  }
-  undetermined.push({
-    part: META_PART,
-    why: "outside_content_xml_not_read",
-    detail: "OpenDocument carries the core properties (creator, title, created/modified, revision) in meta.xml; this entry reads content.xml only, so NO core-properties item is emitted and its absence is not evidence the document carries none"
-  });
-  undetermined.push({
-    part: ODF_MANIFEST_PART,
-    why: "outside_content_xml_not_read",
-    detail: "OpenDocument lists embedded objects and images as separate package members in META-INF/manifest.xml; this entry reads content.xml only, so NO intra link is content-addressed and a zero intra count means NOT LOOKED, never NONE PRESENT"
-  });
-  return { ok: true, format: row.flavour, row, bytes: b, container, contentXml, declared, guard, undetermined };
-}
-function officeBody(contentXml, kind) {
-  if (contentXml == null) return null;
-  const body = elementsNested(contentXml, "body")[0];
-  if (!body) return null;
-  const inner = elementsNested(body.inner, kind)[0];
-  return inner ? inner.inner : null;
-}
-function envelopeUndetermined(parts) {
-  const out = [...parts.undetermined];
-  if (parts.guard) out.push({ part: CONTENT_PART, why: "over_size_bound", guard: parts.guard });
-  return out;
-}
-function envelopeOf(container, items, undetermined) {
-  const counts = {};
-  for (const it of items) counts[it.kind] = (counts[it.kind] ?? 0) + 1;
-  return {
-    container,
-    kinds: [...new Set(items.map((it) => it.kind))],
-    items,
-    undetermined,
-    counts
-  };
-}
-function countPartitions(links) {
-  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
-  for (const l of links) counts[l.partition]++;
-  return counts;
-}
-var NO_INTRA_NOTE = "no intra link is emitted: embedded members live outside content.xml (stated in evidentiary.undetermined)";
-function walkTextBody(bodyXml) {
-  const paragraphs = [];
-  const hyperlinks = [];
-  const annotations = [];
-  const marks = [];
-  const openChanges = /* @__PURE__ */ new Map();
-  const served = stripElement(bodyXml, "tracked-changes");
-  const RE = tokens();
-  let m, prev = 0;
-  let para = -1;
-  let inPara = false;
-  let depthInPara = 0;
-  let skipDepth = 0;
-  let paraStart = -1;
-  const openStack = [];
-  while ((m = RE.exec(served)) !== null) {
-    if (m[1] === void 0) {
-      prev = RE.lastIndex;
-      continue;
-    }
-    const name = localOf3(m[1]);
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    if (skipDepth > 0) {
-      if (!closing && !selfClosed) skipDepth++;
-      else if (closing) skipDepth--;
-      prev = RE.lastIndex;
-      continue;
-    }
-    if (!closing && !selfClosed && name === "annotation") {
-      const rest = served.slice(m.index);
-      const ann = elementsNested(rest, "annotation")[0];
-      annotations.push({ attrs: attrsOf4(m[2]), inner: ann ? ann.inner : "", para: para >= 0 ? para : null });
-      skipDepth = 1;
-      prev = RE.lastIndex;
-      continue;
-    }
-    if (!closing && (name === "p" || name === "h")) {
-      if (!selfClosed) {
-        if (!inPara) {
-          para++;
-          inPara = true;
-          depthInPara = 1;
-          paraStart = RE.lastIndex;
-          openStack.length = 0;
-        } else depthInPara++;
-      } else {
-        if (!inPara) {
-          para++;
-          paragraphs.push({ para, text: "" });
-        }
-      }
-      prev = RE.lastIndex;
-      continue;
-    }
-    if (closing && (name === "p" || name === "h") && inPara) {
-      depthInPara--;
-      if (depthInPara === 0) {
-        const raw = served.slice(paraStart, m.index);
-        paragraphs.push({ para, text: visibleText(stripElement(raw, "annotation")) });
-        inPara = false;
-        paraStart = -1;
-      }
-      prev = RE.lastIndex;
-      continue;
-    }
-    const attrs = m[2] && m[2].includes("=") ? attrsOf4(m[2]) : {};
-    if (!closing && name === "a" && attrs.href != null) {
-      hyperlinks.push({ href: attrs.href, para: para >= 0 ? para : null });
-    } else if (name === "change-start" && attrs["change-id"] != null) {
-      openChanges.set(attrs["change-id"], { para: para >= 0 ? para : null });
-      marks.push({ id: attrs["change-id"], para: para >= 0 ? para : null });
-    } else if (name === "change" && attrs["change-id"] != null) {
-      marks.push({ id: attrs["change-id"], para: para >= 0 ? para : null });
-    }
-    prev = RE.lastIndex;
-  }
-  return { paragraphs, hyperlinks, annotations, marks, openChanges };
-}
-function insertedTextFor(bodyXml, id) {
-  const served = stripElement(bodyXml, "tracked-changes");
-  const startRe = new RegExp(`<(?:[\\w.-]+:)?change-start\\b[^>]*change-id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`);
-  const endRe = new RegExp(`<(?:[\\w.-]+:)?change-end\\b[^>]*change-id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`);
-  const s = served.match(startRe);
-  const e = served.match(endRe);
-  if (!s || !e || e.index < s.index) return null;
-  return visibleText(served.slice(s.index + s[0].length, e.index));
-}
-function parseTrackedChanges(bodyXml) {
-  const block = elementsNested(bodyXml, "tracked-changes")[0];
-  if (!block) return [];
-  const out = [];
-  for (const region of elementsNested(block.inner, "changed-region")) {
-    const id = region.attrs.id ?? null;
-    for (const [kind, change] of [["insertion", "insertion"], ["deletion", "deletion"]]) {
-      for (const el of elementsNested(region.inner, kind)) {
-        const info = elementsNested(el.inner, "change-info")[0];
-        const creator = info ? elementsNested(info.inner, "creator")[0] : null;
-        const date = info ? elementsNested(info.inner, "date")[0] : null;
-        out.push({
-          id,
-          change,
-          author: creator ? visibleText(creator.inner) : null,
-          // null, never invented
-          date: date ? visibleText(date.inner) : null,
-          /* A deletion's own paragraphs ARE the superseded wording. An
-             insertion's content is in the body, not here. */
-          superseded: change === "deletion" ? elementsNested(stripElement(el.inner, "change-info"), "p").map((p) => visibleText(p.inner)).join("\n") : null
-        });
-      }
-    }
-  }
-  return out;
-}
-function odtStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
-  }
-  const notes = [NO_INTRA_NOTE];
-  const links = [];
-  const items = [];
-  const body = officeBody(parts.contentXml, "text");
-  if (!body) {
-    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:text>: element references unavailable (stated)");
-  }
-  let paragraphs = null;
-  if (body) {
-    const walk = walkTextBody(body);
-    paragraphs = walk.paragraphs.length;
-    for (const h of walk.hyperlinks) {
-      links.push(linkRecord(h.href, h.para == null ? null : docParaRef(h.para)));
-    }
-    const markFor = /* @__PURE__ */ new Map();
-    for (const mk of walk.marks) if (!markFor.has(mk.id)) markFor.set(mk.id, mk.para);
-    for (const c of parseTrackedChanges(parts.contentXml)) {
-      const at = c.id != null ? markFor.get(c.id) : void 0;
-      const item = {
-        kind: "tracked-change",
-        change: c.change,
-        author: c.author,
-        date: c.date,
-        source: at == null ? null : docParaRef(at)
-      };
-      if (c.change === "deletion") item.superseded = c.superseded;
-      else item.text = c.id != null ? insertedTextFor(body, c.id) : null;
-      if (at === void 0) item.why = "change_region_unmarked_in_body";
-      items.push(item);
-    }
-    for (const a of walk.annotations) {
-      const creator = elementsNested(a.inner, "creator")[0];
-      const date = elementsNested(a.inner, "date")[0];
-      const initials = elementsNested(a.inner, "creator-initials")[0];
-      items.push({
-        kind: "comment",
-        id: a.attrs.name ?? null,
-        author: creator ? visibleText(creator.inner) : null,
-        date: date ? visibleText(date.inner) : null,
-        initials: initials ? visibleText(initials.inner) : null,
-        text: elementsNested(stripElement(a.inner, "change-info"), "p").map((p) => visibleText(p.inner)).join("\n"),
-        source: a.para == null ? null : docParaRef(a.para)
-      });
-    }
-  }
-  return {
-    ok: true,
-    container: "odt",
-    paragraphs,
-    // null = honestly unknown, the docx.mjs convention
-    links,
-    counts: countPartitions(links),
-    evidentiary: envelopeOf("odt", items, envelopeUndetermined(parts)),
-    notes
-  };
-}
-function walkOdfTables(bodyXml) {
-  const done = [];
-  const stack = [];
-  let next = 0;
-  const RE = tokens();
-  const rep = (v) => {
-    const n = parseInt(v ?? "1", 10);
-    return Number.isFinite(n) && n > 0 ? n : 1;
-  };
-  let m;
-  while ((m = RE.exec(bodyXml)) !== null) {
-    if (m[1] === void 0) continue;
-    const name = localOf3(m[1]);
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    const top = stack.length ? stack[stack.length - 1] : null;
-    if (closing) {
-      if (name === "table" && stack.length) {
-        const t = stack.pop();
-        done[t.table] = { table: t.table, rows: t.rows, cols: t.cols > 0 ? t.cols : null };
-      }
-      continue;
-    }
-    if (name === "table") {
-      if (selfClosed) done[next] = { table: next++, rows: 0, cols: null };
-      else stack.push({ table: next++, rows: 0, cols: 0 });
-      continue;
-    }
-    if (!top) continue;
-    const attrs = m[2] && m[2].includes("=") ? attrsOf4(m[2]) : {};
-    if (name === "table-column") top.cols += rep(attrs["number-columns-repeated"]);
-    else if (name === "table-row") top.rows += rep(attrs["number-rows-repeated"]);
-  }
-  while (stack.length) {
-    const t = stack.pop();
-    done[t.table] = { table: t.table, rows: t.rows || null, cols: t.cols > 0 ? t.cols : null };
-  }
-  return done.filter(Boolean);
-}
-function odtText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
-  }
-  if (parts.guard) {
-    return {
-      ok: true,
-      container: "odt",
-      document: null,
-      paragraphs: [],
-      tables: null,
-      undetermined: [parts.guard],
-      // the marker VERBATIM, never a truncation
-      counts: { chars: 0, undetermined: 1 }
-    };
-  }
-  const body = officeBody(parts.contentXml, "text");
-  if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
-    return {
-      ok: true,
-      container: "odt",
-      document: null,
-      paragraphs: [],
-      tables: null,
-      undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_text_body" }],
-      counts: { chars: 0, undetermined: 1 }
-    };
-  }
-  const walk = walkTextBody(body);
-  const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `\xB6${p.para + 1}`, text: p.text }));
-  const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
-  const tables = walkOdfTables(stripElement(body, "tracked-changes")).map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
-  return {
-    ok: true,
-    container: "odt",
-    document,
-    paragraphs,
-    tables,
-    undetermined: [],
-    counts: { chars: document.length, undetermined: 0 }
-  };
-}
-function columnName(i) {
-  let n = i, out = "";
-  do {
-    out = String.fromCharCode(65 + n % 26) + out;
-    n = Math.floor(n / 26) - 1;
-  } while (n >= 0);
-  return out;
-}
-function walkSheet(tableXml) {
-  const rows = [];
-  const hiddenRows = [];
-  const hiddenCols = [];
-  let colIndex = 0;
-  for (const col of elementsNested(tableXml, "table-column")) {
-    const rep = parseInt(col.attrs["number-columns-repeated"] ?? "1", 10);
-    const n = Number.isFinite(rep) && rep > 0 ? rep : 1;
-    const vis = col.attrs.visibility;
-    if (vis === "collapse" || vis === "filter") {
-      hiddenCols.push({ min: colIndex + 1, max: colIndex + n, visibility: vis });
-    }
-    colIndex += n;
-  }
-  let rowIndex = 0;
-  for (const row of elementsNested(tableXml, "table-row")) {
-    const rep = parseInt(row.attrs["number-rows-repeated"] ?? "1", 10);
-    const nRows = Number.isFinite(rep) && rep > 0 ? rep : 1;
-    const vis = row.attrs.visibility;
-    const cells = [];
-    let c = 0;
-    for (const cell of elementsNested(row.inner, "table-cell")) {
-      const crep = parseInt(cell.attrs["number-columns-repeated"] ?? "1", 10);
-      const nCols = Number.isFinite(crep) && crep > 0 ? crep : 1;
-      const carries = cell.attrs["value-type"] != null || cell.attrs.formula != null || cell.inner.trim() !== "";
-      const emit = carries ? nCols : 0;
-      for (let k = 0; k < emit; k++) {
-        cells.push({
-          col: c + k,
-          cell: `${columnName(c + k)}${rowIndex + 1}`,
-          valueType: cell.attrs["value-type"] ?? null,
-          value: cell.attrs.value ?? cell.attrs["string-value"] ?? cell.attrs["date-value"] ?? cell.attrs["time-value"] ?? cell.attrs["boolean-value"] ?? null,
-          formula: cell.attrs.formula ?? null,
-          /* The DISPLAYED form: ODF writes what the sheet shows as the cell's
-             `<text:p>` children, which is the analogue of xlsx's cached <v>. */
-          display: elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n"),
-          hrefs: hrefsIn(cell.inner)
-        });
-      }
-      c += nCols;
-    }
-    const materialise = cells.length ? nRows : 0;
-    for (let k = 0; k < materialise; k++) {
-      const r = rowIndex + k;
-      if (vis === "collapse" || vis === "filter") hiddenRows.push(r + 1);
-      rows.push({
-        r: r + 1,
-        hidden: vis === "collapse" || vis === "filter" ? vis : false,
-        cells: cells.map((cell) => ({ ...cell, cell: `${columnName(cell.col)}${r + 1}` }))
-      });
-    }
-    if (!materialise && (vis === "collapse" || vis === "filter")) {
-      for (let k = 0; k < nRows; k++) hiddenRows.push(rowIndex + k + 1);
-    }
-    rowIndex += nRows;
-  }
-  return { rows, hiddenRows, hiddenCols };
-}
-function sheetsOf(bodyXml, styles) {
-  return elementsNested(bodyXml, "table").map((tbl, index) => {
-    const styleName = tbl.attrs["style-name"] ?? null;
-    const fromElement = tbl.attrs.display != null ? tbl.attrs.display !== "false" : null;
-    const fromStyle = styleName != null && styles.tableDisplay.has(styleName) ? styles.tableDisplay.get(styleName) : null;
-    const displayed = fromElement ?? fromStyle ?? true;
-    return {
-      index,
-      name: tbl.attrs.name ?? `table${index + 1}`,
-      /* ODF identifies a table by NAME only — there is no numeric sheet id.
-         null is the FORMAT speaking, not a gap in this reader. */
-      sheetId: null,
-      /* ODF's visibility is a boolean, so there is no xlsx "veryHidden". */
-      state: displayed ? "visible" : "hidden",
-      hidden: displayed ? false : "hidden",
-      xml: tbl.inner
-    };
-  });
-}
-function odsStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
-  }
-  const notes = [NO_INTRA_NOTE];
-  const links = [];
-  const items = [];
-  const body = officeBody(parts.contentXml, "spreadsheet");
-  if (!body) {
-    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:spreadsheet>: element references unavailable (stated)");
-  }
-  if (parts.guard) notes.push("text_parts_over_bound");
-  const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
-  const sheets = body ? sheetsOf(body, styles) : [];
-  for (const sheet of sheets) {
-    const walked = walkSheet(sheet.xml);
-    for (const row of walked.rows) {
-      for (const cell of row.cells) {
-        const ref = sheetCellRef(sheet.name, cell.cell);
-        for (const href of cell.hrefs) links.push(linkRecord(href, ref));
-        if (cell.formula != null) {
-          items.push({
-            kind: "formula",
-            source: ref,
-            formula: cell.formula,
-            value: cell.display !== "" ? cell.display : cell.value
-            // the cached result; null when the file carries none
-          });
-        }
-      }
-    }
-    if (walked.hiddenRows.length) {
-      items.push({
-        kind: "hidden-rows",
-        sheet: sheet.name,
-        rows: walked.hiddenRows,
-        count: walked.hiddenRows.length,
-        source: null
-      });
-    }
-    if (walked.hiddenCols.length) {
-      items.push({
-        kind: "hidden-cols",
-        sheet: sheet.name,
-        cols: walked.hiddenCols,
-        count: walked.hiddenCols.length,
-        source: null
-      });
-    }
-  }
-  for (const sheet of sheets) {
-    if (sheet.hidden) items.push({ kind: "hidden-sheet", sheet: sheet.name, state: sheet.state, source: null });
-  }
-  return {
-    ok: true,
-    container: "ods",
-    sheets: sheets.map((s) => ({ sheet: s.index, name: s.name, sheetId: s.sheetId, state: s.state, hidden: s.hidden })),
-    links,
-    counts: countPartitions(links),
-    evidentiary: envelopeOf("ods", items, envelopeUndetermined(parts)),
-    notes
-  };
-}
-function odsText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
-  }
-  if (parts.guard) {
-    return {
-      ok: true,
-      container: "ods",
-      document: null,
-      sheets: [],
-      undetermined: [parts.guard],
-      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
-    };
-  }
-  const body = officeBody(parts.contentXml, "spreadsheet");
-  if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
-    const marker = { sheet: null, cell: null, reason: stated?.why ?? "no_office_spreadsheet_body" };
-    return {
-      ok: true,
-      container: "ods",
-      document: null,
-      sheets: [],
-      undetermined: [marker],
-      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
-    };
-  }
-  const styles = automaticStyles(parts.contentXml);
-  const outSheets = [];
-  let cellCount = 0, formulaCount = 0;
-  for (const sheet of sheetsOf(body, styles)) {
-    const walked = walkSheet(sheet.xml);
-    const lines = [];
-    for (const row of walked.rows) {
-      const vals = [];
-      for (const c of row.cells) {
-        if (c.formula != null) formulaCount++;
-        const v = c.display !== "" ? c.display : c.value;
-        if (v == null || v === "") continue;
-        cellCount++;
-        vals.push(v);
-      }
-      if (vals.length) lines.push(vals.join("	"));
-    }
-    const text = lines.join("\n");
-    let usedRows = 0, usedCols = 0;
-    for (const row of walked.rows) {
-      if (!row.cells.length) continue;
-      if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
-      for (const c of row.cells) {
-        if (Number.isInteger(c.col) && c.col + 1 > usedCols) usedCols = c.col + 1;
-      }
-    }
-    outSheets.push({
-      sheet: sheet.index,
-      name: sheet.name,
-      hidden: sheet.hidden,
-      rows: null,
-      cols: null,
-      usedRows,
-      usedCols,
-      /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
-      range: usedSheetRange(sheet.name, usedRows, usedCols),
-      text,
-      undetermined: []
-    });
-  }
-  const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
-  return {
-    ok: true,
-    container: "ods",
-    document,
-    sheets: outSheets,
-    undetermined: [],
-    counts: { chars: document.length, cells: cellCount, formulas: formulaCount, undetermined: 0 }
-  };
-}
-var ODP_SHAPE_TAGS = /* @__PURE__ */ new Set([
-  "frame",
-  "custom-shape",
-  "rect",
-  "ellipse",
-  "circle",
-  "line",
-  "polyline",
-  "polygon",
-  "path",
-  "connector",
-  "measure",
-  "caption",
-  "g",
-  "page-thumbnail",
-  "control",
-  "object",
-  "image"
-]);
-function walkPage(pageXml) {
-  const slideOnly = stripElement(pageXml, "notes");
-  const shapes = [];
-  const RE = tokens();
-  let m;
-  let index = -1;
-  const open = [];
-  while ((m = RE.exec(slideOnly)) !== null) {
-    if (m[1] === void 0) continue;
-    const name = localOf3(m[1]);
-    if (!ODP_SHAPE_TAGS.has(name)) continue;
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    if (closing) {
-      const o = open.pop();
-      if (o) shapes.push({ shape: o.index, inner: slideOnly.slice(o.start, m.index) });
-      continue;
-    }
-    index++;
-    if (selfClosed) {
-      shapes.push({ shape: index, inner: "" });
-      continue;
-    }
-    open.push({ index, start: RE.lastIndex });
-  }
-  shapes.sort((a, b) => a.shape - b.shape);
-  return {
-    count: index + 1,
-    shapes: shapes.map((s) => ({
-      shape: s.shape,
-      /* A group's text is the text of the shapes inside it, which are their
-         own entries; taking the group's inner markup would double-count it in
-         the slide's text, so a shape's OWN text is its `<draw:text-box>`
-         paragraphs only. */
-      text: elementsNested(s.inner, "text-box").map((tb) => elementsNested(tb.inner, "p").map((p) => visibleText(p.inner)).join("\n")).join("\n"),
-      hrefs: hrefsIn(s.inner)
-    }))
-  };
-}
-function notesTextOf(pageXml) {
-  const notes = elementsNested(pageXml, "notes")[0];
-  if (!notes) return null;
-  return elementsNested(notes.inner, "text-box").map((tb) => elementsNested(tb.inner, "p").map((p) => visibleText(p.inner)).join("\n")).filter((t) => t.length).join("\n");
-}
-function deckOf2(bodyXml, styles) {
-  return elementsNested(bodyXml, "page").map((page, i) => {
-    const styleName = page.attrs["style-name"] ?? null;
-    const fromElement = page.attrs.visibility != null ? page.attrs.visibility !== "hidden" : null;
-    const fromStyle = styleName != null && styles.pageVisible.has(styleName) ? styles.pageVisible.get(styleName) : null;
-    const visible = fromElement ?? fromStyle ?? true;
-    return { slide: i + 1, name: page.attrs.name ?? null, hidden: !visible, xml: page.inner };
-  });
-}
-function odpStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
-  }
-  const notes = [NO_INTRA_NOTE];
-  const links = [];
-  const items = [];
-  const body = officeBody(parts.contentXml, "presentation");
-  if (!body) {
-    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:presentation>: element references unavailable (stated)");
-  }
-  const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
-  const deck = body ? deckOf2(body, styles) : null;
-  if (deck) {
-    for (const page of deck) {
-      const walked = walkPage(page.xml);
-      for (const s of walked.shapes) {
-        for (const href of s.hrefs) links.push(linkRecord(href, slideShapeRef(page.slide, s.shape)));
-      }
-      const nt = notesTextOf(page.xml);
-      if (nt != null && nt.length) {
-        items.push({
-          kind: "speaker-notes",
-          slide: page.slide,
-          part: CONTENT_PART,
-          text: nt,
-          source: slideShapeRef(page.slide)
-        });
-      }
-      if (page.hidden) {
-        items.push({
-          kind: "hidden-slide",
-          slide: page.slide,
-          part: CONTENT_PART,
-          source: slideShapeRef(page.slide)
-        });
-      }
-    }
-  }
-  return {
-    ok: true,
-    container: "odp",
-    slides: deck ? deck.length : null,
-    // null = honestly unknown
-    links,
-    counts: countPartitions(links),
-    evidentiary: envelopeOf("odp", items, envelopeUndetermined(parts)),
-    notes
-  };
-}
-function odpText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
-  }
-  if (parts.guard) {
-    return {
-      ok: true,
-      container: "odp",
-      document: null,
-      slides: [],
-      speakerNotes: [],
-      deckLength: null,
-      undetermined: [parts.guard],
-      counts: { chars: 0, notesChars: 0, undetermined: 1 }
-    };
-  }
-  const body = officeBody(parts.contentXml, "presentation");
-  if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
-    return {
-      ok: true,
-      container: "odp",
-      document: null,
-      slides: [],
-      speakerNotes: [],
-      deckLength: null,
-      undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_presentation_body" }],
-      counts: { chars: 0, notesChars: 0, undetermined: 1 }
-    };
-  }
-  const styles = automaticStyles(parts.contentXml);
-  const slides = [];
-  const speakerNotes = [];
-  const deck = deckOf2(body, styles);
-  for (const page of deck) {
-    const walked = walkPage(page.xml);
-    const text = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
-    slides.push({
-      slide: page.slide,
-      ref: `slide ${page.slide}`,
-      part: CONTENT_PART,
-      hidden: page.hidden,
-      shapes: walked.count,
-      text
-    });
-    const nt = notesTextOf(page.xml);
-    if (nt != null && nt.length) {
-      speakerNotes.push({
-        slide: page.slide,
-        ref: `slide ${page.slide} (notes)`,
-        part: CONTENT_PART,
-        hidden: page.hidden,
-        text: nt
-      });
-    }
-  }
-  const document = slides.map((s) => s.text).filter((t) => t.length).join("\n");
-  const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
-  return {
-    ok: true,
-    container: "odp",
-    document,
-    slides,
-    speakerNotes,
-    /* COFF-13 — THE DECK'S OWN LENGTH, on pptx.mjs's key. Every `<draw:page>`
-       lives in the one content.xml, so once the body is read no slide can be
-       unreadable on its own and the length EQUALS the slide list — emitted
-       anyway, so the wire reads one key from every deck entry rather than
-       inferring it from which entry answered. */
-    deckLength: deck.length,
-    undetermined: [],
-    counts: { chars: document.length, notesChars, undetermined: 0 }
-  };
-}
-function entryFor(row, structureOf, textOf2) {
-  return {
-    format: row.flavour,
-    detect: (bytes, contentType) => detectOdf(row, bytes, contentType),
-    parts: (bytes) => odfParts(row, bytes),
-    /* Accept either parts() output or raw bytes, exactly as the three OOXML
-       entries do, so detect→structure works uniformly at the registry seam
-       while a caller that already paid for parts() does not pay twice. */
-    structure: async (partsOrBytes) => structureOf(
-      partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes
-    ),
-    /* FW-19 / IC-124: `images` under the package's `Pictures/` directory,
-       exhaustive or NULL, through the one enumerator the OOXML entries use.
-       Read off the central directory, so it does NOT depend on
-       META-INF/manifest.xml — the `outside_content_xml_not_read` marker about
-       the manifest stays TRUE and stays emitted: it speaks about `intra`
-       embedded objects, which this does not content-address. */
-    text: async (partsOrBytes) => {
-      const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes;
-      return withContainerImages(textOf2(parts), parts, "Pictures/");
-    }
-  };
-}
-var odtEntry = entryFor(ODT_ROW, odtStructure, odtText);
-var odsEntry = entryFor(ODS_ROW, odsStructure, odsText);
-var odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
 
 // src/formats.mjs
 var REGISTRY = /* @__PURE__ */ new Map();
@@ -75668,11 +75727,44 @@ async function sha256Hex5(v) {
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+var ODF_DIGEST_MAX = 8 * 1024 * 1024;
 function profilesAsText(ct, total, multipart) {
   return !multipart && total <= PROFILE_TEXT_MAX && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "");
 }
-async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart) {
+async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes = null) {
   const digestCertain = !!profileBytes && stackId.handler.textual === true && stackId.confidence === CONFIDENCE.CERTAIN;
+  if (!digestCertain && !profileBytes && containerBytes && !multipart) {
+    let od;
+    try {
+      od = await odfEvidentiaryDigest(containerBytes, sha256Hex5);
+    } catch (e) {
+      od = {
+        determined: false,
+        flavour: "unread",
+        basis: `the container digest could not be taken (${String(e && e.message || e).slice(0, 90)}), so none is claimed`
+      };
+    }
+    if (od.determined) {
+      if (await sha256Hex5(containerBytes) !== sha)
+        return {
+          determined: false,
+          rendition: null,
+          evidentiary: null,
+          basis: "the container bytes read back from the store did not hash to the capture identity, so no container digest could be trusted"
+        };
+      return {
+        determined: true,
+        rendition: null,
+        evidentiary: od.evidentiary,
+        over: od.over,
+        container: od.flavour,
+        boundary_missed: false,
+        basis: od.basis
+      };
+    }
+    if (od.flavour)
+      return { determined: false, rendition: null, evidentiary: null, container: od.flavour, basis: od.basis };
+  }
   if (!digestCertain)
     return {
       determined: false,
@@ -78718,7 +78810,16 @@ var index_default = {
           { retrieved, resolved: res2.url || null, detected: profile.format }
         );
       }
-      profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart);
+      let containerBytes = null;
+      const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
+      if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
+        try {
+          const cobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
+          if (cobj) containerBytes = new Uint8Array(await cobj.arrayBuffer());
+        } catch {
+        }
+      }
+      profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
       let reading;
       let textUnits = null, textUnitsOverBound = 0;
       const canRead = !!profileText && typeof docType.type.parse === "function";
@@ -79372,14 +79473,24 @@ var index_default = {
                 text: asText2 ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : ""
               };
               const stackId = identify(profCtx);
-              const fresh = await substanceDigests(asText2 ? bytes : null, stackId, profCtx, seen, false);
-              if (stackId.handler.key !== baselineProfile.handler || stackId.handler.version !== baselineProfile.handler_version)
+              const fresh = await substanceDigests(
+                asText2 ? bytes : null,
+                stackId,
+                profCtx,
+                seen,
+                false,
+                asText2 || bytes.length > ODF_DIGEST_MAX ? null : bytes
+              );
+              const bdOver = bd.over || null, freshOver = fresh.over || null;
+              if (bdOver !== freshOver)
+                comparedBasis = `the baseline's evidentiary digest was taken over ${bdOver || "the normalised text"} but the fetched bytes' over ${freshOver || "the normalised text"}, so the raw bytes were compared`;
+              else if (stackId.handler.key !== baselineProfile.handler || stackId.handler.version !== baselineProfile.handler_version)
                 comparedBasis = `the fetched bytes identify as ${stackId.handler.key} v${stackId.handler.version} but the baseline was normalised under ${baselineProfile.handler} v${baselineProfile.handler_version}, so the raw bytes were compared`;
               else if (!fresh.determined)
                 comparedBasis = `the fetched bytes' substance digest is undetermined (${fresh.basis}), so the raw bytes were compared`;
               else {
                 compared = "evidentiary";
-                comparedBasis = `the evidentiary digests were compared, both normalised under ${stackId.handler.key} v${stackId.handler.version} (certain)`;
+                comparedBasis = freshOver ? `the evidentiary digests were compared, both taken over the package's ${freshOver} (${fresh.basis})` : `the evidentiary digests were compared, both normalised under ${stackId.handler.key} v${stackId.handler.version} (certain)`;
                 if (fresh.evidentiary !== bd.evidentiary) {
                   status = "modified";
                   note = "the substance of the source differs from the capture";
@@ -79388,7 +79499,7 @@ var index_default = {
                   note = "the source still serves the captured bytes";
                 } else {
                   status = "unchanged";
-                  note = fresh.rendition === bd.rendition ? "the substance is unchanged; only machinery the source rebuilds on every visit differs from the capture" : "the substance is unchanged; machinery or furniture around it differs from the capture";
+                  note = fresh.rendition != null && fresh.rendition === bd.rendition ? "the substance is unchanged; only machinery the source rebuilds on every visit differs from the capture" : "the substance is unchanged; machinery or furniture around it differs from the capture";
                 }
               }
             }
