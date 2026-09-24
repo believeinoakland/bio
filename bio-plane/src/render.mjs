@@ -23,6 +23,7 @@
  * labelled `reported_by: "renderer"`; a missing one is `null`, never invented.
  */
 import { originOf } from "./subresources.mjs";
+import { browserBindingRenderer } from "./browserrender.mjs";
 
 /* The environment this instance asks for. Recorded on every capture whether or not
    the renderer honoured it: `render.*` carries what the renderer SAID it used, and
@@ -224,15 +225,31 @@ export function renderedAuthority({ asserted, render, at }) {
  *
  *  `env.RENDERER` — a service binding answering `POST /render` with `RENDER_ANSWER`.
  *  Tests inject it through miniflare's `serviceBindings`; a render fleet member
- *  would be bound here the same way PDF_WORKER and OCR_WORKER are.
+ *  would be bound here the same way PDF_WORKER and OCR_WORKER are. IT GOES FIRST
+ *  ON PURPOSE: an instance that has been given a dedicated renderer meant it, and
+ *  a browser binding beside it is the fallback, not the override.
  *
- *  `env.BROWSER` — a Browser Rendering binding. NOT in `wrangler.jsonc`: D-64 added it
- *  and took it back out, because DIST's deploy derivation (`deploybindings.test.mjs`)
- *  refuses the `browser` binding class by name (UNKNOWN_BINDING_CLASS), so the line
- *  would have refused every plane deploy. The IN-PLANE DRIVER over it is NOT BUILT
- *  either: it needs a CDP client (Cloudflare's `@cloudflare/puppeteer`), which this
- *  landing does not vendor into the plane. So an instance that binds it by hand is
- *  REPORTED as holding a binding without a driver, never mistaken for a renderer. */
+ *  `env.BROWSER` — a Browser Rendering binding, DRIVEN IN-PLANE SINCE D-490
+ *  (`browserrender.mjs`, a CDP client over the binding's two endpoints). D-64
+ *  shipped this branch as `browser-binding-without-driver`, answering 501
+ *  RENDER_NO_RENDERER (C-83.3) on every instance; that is what D-490 closes. Read
+ *  `browserrender.mjs`'s header for why the driver is written here rather than
+ *  taken from `@cloudflare/puppeteer`, which the plane's test harness MEASURABLY
+ *  cannot carry, and for what the alternative (a fourth fleet member) would be.
+ *
+ *  THE `browser-binding-without-driver` KIND SURVIVES, NARROWED to what it now
+ *  actually means: a `BROWSER` bound to something that is not a Fetcher, so there
+ *  is nothing to speak CDP to. That is a real state — an instance can bind the
+ *  name to the wrong thing — and it keeps C-83.3's second sentence true instead of
+ *  leaving a refusal whose condition nothing can reach.
+ *
+ *  NOT YET VERIFIED LIVE, AND SAYING SO IS THE POINT: no deployed instance has a
+ *  `browser` binding, because `wrangler.jsonc` carries no `browser` line and DIST's
+ *  deploy derivation refuses the class (UNKNOWN_BINDING_CLASS). That is DIST-11's
+ *  row, which this landing is ordered behind. Everything below is driven under
+ *  miniflare against a fake that speaks the binding's own protocol
+ *  (`test/browser-render.test.mjs`), which proves the DRIVER and proves nothing
+ *  about Cloudflare's service. */
 export function rendererFor(env) {
   if (env && env.RENDERER && typeof env.RENDERER.fetch === "function")
     return { kind: "service", render: async (req) => {
@@ -240,6 +257,8 @@ export function rendererFor(env) {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(req) });
       return r.json().catch(() => ({ ok: false, error: `the renderer answered HTTP ${r.status} with no JSON` }));
     } };
+  if (env && env.BROWSER && typeof env.BROWSER.fetch === "function")
+    return browserBindingRenderer(env.BROWSER);
   if (env && env.BROWSER)
     return { kind: "browser-binding-without-driver", render: null };
   return { kind: "none", render: null };

@@ -7330,10 +7330,18 @@ export default {
         if (typeof renderer.render !== "function")
           return json({ ok: false, reason: "RENDER_NO_RENDERER", ...renderRow("RENDER_NO_RENDERER"),
             op, renderer: renderer.kind,
+            /* D-490 CORRECTED THIS SENTENCE, and the correction is the point: D-64's
+               words said the in-plane driver was not built, which was true of every
+               instance and is no longer true of any. What this branch can still mean
+               is NARROWER — BROWSER bound to something with no `fetch`, so there is
+               no endpoint to open a devtools session on. Saying the old sentence now
+               would be the record claiming less than it can support, which is the
+               same defect as claiming more. */
             detail: renderer.kind === "browser-binding-without-driver"
-              ? "a Browser Rendering binding (BROWSER) is bound, but the in-plane driver over it is not built "
-                + "(D-64 shipped the seam and the record, not a CDP client). Nothing was fetched."
-              : "no renderer is bound to this instance (no RENDERER service binding). Nothing was fetched." }, 501);
+              ? "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no "
+                + "endpoint to open a devtools session on. Nothing was fetched."
+              : "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). "
+                + "Nothing was fetched." }, 501);
         /* THROUGH THE HOST GOVERNOR: the render is a second load of the page. */
         let rHost = null;
         try { rHost = new URL(locator).host; } catch { rHost = null; }

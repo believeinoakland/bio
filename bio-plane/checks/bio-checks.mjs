@@ -10925,8 +10925,15 @@ export const RENDER_CAPTURE_CHECKS = {
       + 'a way of capturing that does not load a live page (an archived copy, a Drive export, or the '
       + 'continuation of an earlier capture). Ask for one or the other. Nothing was fetched.',
   },
-  /* No renderer bound — or the Browser Rendering binding is bound and the
-     in-plane driver over it is not built. Named rather than falling back. */
+  /* No renderer bound: no RENDERER service binding and no BROWSER binding — or a
+     BROWSER bound to something that is not a Fetcher, so there is no endpoint to
+     open a devtools session on. Named rather than falling back.
+     CORRECTED BY D-490: this comment read "the Browser Rendering binding is bound
+     and the in-plane driver over it is not built", which was the state D-64 shipped
+     and is the state D-490 ended (`src/browserrender.mjs`). The TRANSLATION below
+     did not move and did not need to — "no working page renderer" is true of every
+     case this code still names — but a comment describing a condition that no longer
+     exists is how the next reader is told the wrong thing by the record. */
   RENDER_NO_RENDERER: {
     check: 'C-83.3',
     where: 'src/index.mjs fetch > is-render-admit',
