@@ -64,7 +64,7 @@ const edit = (file, needle, replacement) => {
 
 const FAMILY_HEAD = "export const GOVERNING_LAW_CHECKS = {\n";
 const EMIT_C151 = "    findings.push(f('C-15.1', 'error', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));";
-const VERSION = 'export const CATALOG_VERSION = "1.21.0";';
+const VERSION = 'export const CATALOG_VERSION = "1.22.0";';
 
 const A1 = "(A1) THE CENSUS IS NON-EMPTY AND FLOORED";
 const A2 = "(A2) EVERY EMISSION SITE RESOLVES";
