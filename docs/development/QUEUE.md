@@ -321,7 +321,7 @@ scope: strip `//` and `/* */` comments from `src` and `ctrlSrc` before matching;
 accepts-when: `gates.mjs --explain` on a prose diff lists fewer suites. NEGATIVE CONTROL: a suite whose only `tools/x.mjs` mention is in a comment is doc-facing before the fix and not after, named by the arm.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-493 · queued — **THE TIER 1 PROBE LABELS A PERMISSION-ENCRYPTED PDF "NO-TEXT-LAYER", the scanned-page label whose comment says only OCR helps: measured false for acfr-2025 and legistar-staffrep-15579526 (unpdf decoded the latter to 13,012 chars, CPDF-5, 2026-07-31). It understates Tier 2 and overstates the OCR need in the 07-31 sizing.** Found by D-166's worker (M-127). — owner CONTENT-PDF.
+### D-493 · running — SPAWNED 2026-09-24 ~04:23Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-493 (CONDUCT #20), base land/worker/D-166 @ 05ec142e (the probe's changes), into D-487's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-493 and that session; never conclude queued from the absence alone.
 order: at the backlog head: a published figure's bucket is wrong in the direction of overclaiming a need, and the fix is small enough for tonight's window (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:41Z)
 milestone: M0 (a measurement instrument)
 interface: none.
