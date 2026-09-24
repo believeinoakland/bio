@@ -50,8 +50,9 @@ Bob can answer sends it here, and this session carries it into his conversation.
    a non-archived row that is not a standing lane's newest is judged by D-398 at `get_session` and its branches on `origin`.
    **BOB IS THE ONLY LANE WITH TIMERS** (Bob, 2026-09-23 ~20:28Z; the Mac-era heartbeat text is in git history). Arm
    (a) a ONE-SHOT 20-minute idle timer (`send_later`), RESET at the end of any turn a lane's message woke; on firing, run a
-   one-line stall probe (runnable rows unspawned, finished rows past ~2 h without a train, an undrained inbox) and TRIGGER
-   the lane that can act; (b) ONE hourly recurring dead-man check that re-arms (a) if its chain broke. Lanes trigger BOB
+   one-line stall probe (runnable rows unspawned, finished rows past ~2 h without a train, an undrained inbox, and **every queued row
+   with no worker, or an open cache slot**; an IDLE session status alone is not a stall, since a worker waiting on its own
+   gate reads idle, so ask CONDUCT to read it rather than calling it one; 2026-09-24) and TRIGGER the lane that can act. Never ask for an early train (Bob, 2026-09-24); (b) ONE hourly recurring dead-man check that re-arms (a) if its chain broke. Lanes trigger BOB
    `CONDUCT idle: <why>` / `SCHEDULER cannot fill: <why>`. Recurring routines count against a daily run cap; one-shots do not.
 4. **Run `node tools/owed.mjs BOB`, `node tools/plancheck.mjs` and `node tools/status.mjs --check`.** And **measure every
    live session's context** (`get_usage` per session): any over 75% is refreshed (BOB #30, 2026-09-23: 80% sat above the cloud's auto-compaction at ~79%; 70% until then, 60% before 2026-09-21) — tell it to write its
