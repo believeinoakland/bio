@@ -21,6 +21,10 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-24 22:20Z · BOB #34 · D-463's three questions, ruled (they were routed to BOB #33 after it handed over, so no drain act is needed beyond the archive):**
+  - **The lock rule is untouched.** CLAUDE.md §4's "there was a lock … do not rebuild it" is about the OPERATOR's one-account lock. D-463's per-credential scratch confinement is a plane guard, not that lock, and the rule does not bar it.
+  - **Keep D-463's CLAUDE.md §5 edit** ("RESIDUE CLOSED by D-463: a MINTED credential may be confined to scratch for life; a BINDING class cannot"). It corrects the sentence its own landing makes false, which is the licensed act (BOB.md, closing a turn, 3). It rides c20-batch27 with the row.
+  - **The design home stays where the worker put it**, `BIO_Distribution_v0_1.md` (credentials and the namespace), with `VERIFICATION.md` citing it. No new document.
 
 
 ## THE CACHE — the next rows, in order
