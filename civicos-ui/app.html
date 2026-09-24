@@ -314,6 +314,9 @@ td.upd{color:var(--muted);font-size:12.5px;font-family:var(--font-fact)}
 .act-law{margin:8px 0 0;padding:9px 13px;border:var(--hair);background:var(--card);border-radius:var(--r-2)}
 .act-law-cite{font-family:var(--font-fact);font-size:13px;color:var(--ink)}
 .act-law-row{margin:8px 0 0;padding:10px 13px;border:var(--hair);background:var(--paper-2);border-radius:var(--r-2)}
+/* REC-195 / UI-102: a PROPOSAL, set beside the list and marked as not being it. Dimmer than
+   `.act-law` on purpose — the member's list is the answer on this surface and a proposal is not. */
+.act-law-prop{background:var(--paper-2)}
 /* UI-9: a progression finding under an instance the document sits in */
 .docprog-finding{margin:8px 0 0;padding:8px 11px;border-left:2px solid var(--rule);background:var(--paper-2);border-radius:var(--r-2)}
 .docprog-finding.overdue{border-left-color:#d6a48c;background:var(--tint-note)}
@@ -9261,6 +9264,8 @@ async function openAction(id, fromNav){
       <h2 class="sec">The laws this ask is made under</h2>
       <p class="subj-note">ALL records laws apply, and WHICH ones follows the agency asked. Each is named by its own citation, at the level the record publishes for it, by a member. Nothing here is inferred from who was asked, from the kind of ask, or from the group making it.</p>
       ${actionLawsHtml(der)}
+      <p class="subj-note">And what has been PROPOSED, stood beside that list and never part of it. A proposal is somebody&rsquo;s suggestion of the citations; the list is a member&rsquo;s own act, and nothing here offers a proposal as a way of making one. Each is shown under the record&rsquo;s own words about who proposed it.</p>
+      ${actionLawsProposalsHtml(der)}
       <h2 class="sec">The clock</h2>
       <p class="subj-note">Every deadline carries the statute, the order, or the commitment it comes from. A date with no basis would be the record asserting a deadline it invented.</p>
       ${actionClockHtml(fmj, der)}
@@ -9366,6 +9371,49 @@ function actionLawsHtml(der){
     </div>`).join("")}
     <div class="ln">${esc(String(gl.stated||""))}${gl.by?` &middot; stated by ${esc(gl.by)}`:""}${
       gl.at?` &middot; <span class="mono">${esc(String(gl.at).slice(0,10))}</span>`:""}</div>`;
+}
+
+/* REC-195 / UI-102 (D-149, BIO_Case_Making_v0_1.md §2, *A RECORDS REQUEST NAMES EVERY LAW THAT
+   GOVERNS IT*): WHAT WAS PROPOSED — BESIDE THE LIST, NEVER PART OF IT, AND NEVER A WAY TO SET IT.
+
+   TWO KEYS, NEVER COMPOSED. `governing_laws` above is the member's statement or its honest
+   undetermined; `governing_laws_proposals` is somebody's suggestion of the citations, and the
+   plane labels each one (`lawProposalLabel`: who proposed it, whether that is machine work, and
+   the published sentence saying what a proposal is not). This function renders BOTH the per
+   proposal sentence and the block's own, and holds NO sentence of its own about either — the
+   same rule `actionLawsHtml` above is held to, for the same reason: what a proposal means for
+   which laws apply is a legal claim, and the only words the record has for it are the plane's.
+
+   THERE IS NO CONTROL HERE, AND THAT IS THE ITEM. `op=actionlaws` — the act that states the list —
+   is offered from the act bar and nowhere else, and it opens on an EMPTY row (`openActionLaws`).
+   A "use this proposal" button would carry a machine's citations into a member's authored act and
+   make the record hold, in the member's name, a list the member did not write; and even one that
+   only prefilled the form would be the surface answering the legal question the act exists to have
+   a member answer. So this function emits no button, no link and no handler at all, and
+   `ui102-laws-proposals.test.mjs` §3 drives that structurally rather than trusting this comment.
+
+   AND AN ABSENT BLOCK IS ITS OWN ANSWER, said as an absence — a plane predating REC-195, or a
+   projection not yet backfilled, answers with no `governing_laws_proposals` at all. "Nothing has
+   been proposed" and "the record did not answer" are different facts, exactly as they are for the
+   list above and for the ledger below. The empty case is the PLANE's `says`, never a sentence
+   here: `proposals: []` printed bare would read as *nothing applies*, which is REC-146's finding
+   one construct over and the reason the plane carries `says` on the empty set at all. */
+function actionLawsProposalsHtml(der){
+  const p = der && der.governing_laws_proposals;
+  if(!p || typeof p !== "object")
+    return `<div class="empty">The record did not answer with any proposal of this action's governing laws.</div>`;
+  const rows = Array.isArray(p.proposals) ? p.proposals : [];
+  if(!rows.length) return `<div class="empty">${esc(String(p.says || ""))}</div>`;
+  return `${rows.map(pr=>`<div class="card act-law-prop">
+      <div class="act-cp-who">${esc(String(pr.by||""))}${
+        pr.at?` &middot; <span class="mono">${esc(String(pr.at).slice(0,10))}</span>`:""}</div>
+      ${(Array.isArray(pr.laws)?pr.laws:[]).map(l=>`<div class="act-law">
+        <div class="act-law-cite"><span class="mono">${esc(l.level||"")}</span> &middot; ${esc(l.citation||"")}</div>
+      </div>`).join("")}
+      <div class="act-clock-why">${esc(String(pr.says||""))}</div>
+    </div>`).join("")}
+    <div class="ln">${esc(String(p.says||""))}</div>${
+    p.truncated?`<div class="ln">The record answered with the most recent ${esc(String(p.limit??rows.length))} of them.</div>`:""}`;
 }
 
 function actionLedgerHtml(der){
@@ -9646,11 +9694,21 @@ async function doActionCorrespond(){
    answers, the surface offers no level and says so, because an invented option is worse than
    none (DEC-8, and `actVocab`'s own rule).
 
-   WHAT THIS FLOW DOES NOT DO, deliberately: it proposes nothing. The design licenses a
-   machine to PROPOSE a list from the counterparty, labelled as machine work — no proposal is
-   built in the plane and none is invented here, and a surface that filled in a statute from
-   an action's KIND would be exactly the inference `governingLawsOf` refuses to make one
-   layer down — it reads `cpra_request` as its member's statement and stops there.
+   WHAT THIS FLOW DOES NOT DO, deliberately: it proposes nothing, and it READS nothing that was
+   proposed. The design licenses a machine to PROPOSE a list from the counterparty, labelled as
+   machine work, and a surface that filled in a statute from an action's KIND would be exactly the
+   inference `governingLawsOf` refuses to make one layer down — it reads `cpra_request` as its
+   member's statement and stops there.
+
+   CORRECTED 2026-09-24 (UI-102), and the old sentence was true when it was written: it said *no
+   proposal is built in the plane and none is invented here*. REC-195 built the plane half, so the
+   first clause is now false — `op=actionlawspropose` stores proposals and the action's read carries
+   them as `governing_laws_proposals`. The clause that matters is the second and it is UNCHANGED and
+   now load-bearing: this form still opens on an EMPTY row whatever the record holds, and nothing
+   reaches it from a proposal. The proposals are RENDERED, beside the list and with no control on
+   them (`actionLawsProposalsHtml`), because adopting one is not an act the record has — the list
+   moves only through this act, authored by a member, and a prefilled form would be the surface
+   making the claim the act exists to have the member make.
    --------------------------------------------------------------- */
 async function openActionLaws(id, title, act){
   ACTION.laws = { id, title, act, rows:[{ level:"", citation:"" }], levels:[], source:"",
