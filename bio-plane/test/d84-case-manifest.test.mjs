@@ -86,6 +86,13 @@
    which is where the number actually lives. (A first attempt at that same arm also broke the module's
    syntax and was thrown away rather than read: a control that moves a second variable refutes nothing.)
 
+   RE-RUN IN FULL after D-468 merged `origin/main` (9f8b69e67) into its branch and FOLDED its type derivation
+   onto D-510's `promotedType`: the subject changed, so its control was re-armed rather than believed. Every
+   figure is the same — BASELINE 44/0 foot reached, (i) 22/3 with the same two rows by name and the same abort,
+   (ii) 12/1 at the same amendment, (iii) 42/2 foot reached — and every restore verified by sha256 AND `cmp` on
+   the merged files (3,327,022 bytes for store.mjs, 961,420 for bio-checks.mjs). The rule that made this
+   necessary: a suite coupled to BEHAVIOUR survives a refactor that disarms a control coupled to SHAPE.
+
    ---
 
    D-84 — THE BIAS MANIFEST IS STAMPED INTO THE SIGNED CASE DOCUMENT, FROZEN.

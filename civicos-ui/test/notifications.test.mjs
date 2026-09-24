@@ -70,9 +70,9 @@
  *     driven directly at the current address — the honest substitute, and it is
  *     labelled as one here the way UI-42's is in its own file.
  *
- * NEGATIVE CONTROL: `node civicos-ui/test/notifications.control.mjs` — sixteen
+ * NEGATIVE CONTROL: `node civicos-ui/test/notifications.control.mjs` — NINETEEN
  * arms, each armed ALONE on the real `civicos-ui/app.html` with every other
- * defence held open, including three OVER-STRICTNESS arms and a BASELINE row.
+ * defence held open, including four OVER-STRICTNESS arms and a BASELINE row.
  * Declared expectations and measured results are in that file's header. UI-86,
  * RUN 2026-09-24: 16 of 16 as declared, exit 0, every restore verified by sha256
  * and cmp. ARM 12 (the row's control: restore the CONDITION-only filter in
@@ -80,6 +80,17 @@
  * liar: control offered, CASE form sent) fails "…AS THE ITEM FORM"; ARM 13b (the
  * report stops reading `mute.items`) fails "…SUPPRESSION READS UNDER mute.items";
  * ARM 14 (the class rule in another spelling) stays GREEN.
+ * UI-93, RUN 2026-09-24: 19 of 19 as declared, exit 0, every restore verified by
+ * sha256 and cmp; baseline 85 pass, 0 fail. ARM 15 (the row's control: return ""
+ * for a `run` subject again) fails "§7 THE RUN IS NAMED" by name and takes the
+ * context arm, the phase-B arm and the reach arm with it; ARM 15b (the reach
+ * sentence dropped) fails "…NOBODY COULD BE NAMED"; ARM 16 (the same subject line
+ * assembled from an array) stays GREEN. **ARM 15 WAS NOT AS DECLARED ON ITS FIRST
+ * RUN AND IT WAS THE ARM THAT WAS WRONG, not the subject** — §7's run arms were
+ * written as `html.includes(RUN_ID)` and came back GREEN over a blank subject,
+ * because the item's published id is `OBLIGATION::bias-debt::<run>` and
+ * `queueItemHtml` prints it into `data-id`. The arms now pin the rendered PHRASE;
+ * §7's second instrument arm carries the measurement.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
@@ -205,6 +216,54 @@ const CONDITION = {
   options: [],
 };
 
+/* THE BIAS-DEBT OBLIGATION (UI-93 · D-86). The shape is `store.mjs`
+   `#obligationsBiasDebt`'s, field for field, and its sentences are THAT PRODUCER'S
+   OWN, carried here rather than invented: a suite that renders a fixture no
+   producer publishes is judging a world instead of this record. It is also the
+   FIRST OBLIGATION this suite fixtures, which matters — every earlier section
+   drives a FINDING or a CONDITION, and the class that cannot be muted and whose
+   subject is not a document had no phase here at all.
+
+   `recipients` IS A PARAMETER BECAUSE THE PRODUCER PUBLISHES TWO ANSWERS. It lists
+   the run's readers where it can name them, and where it could name nobody inside
+   the run's read gate it publishes `recipients_stated` INSTEAD — one sentence
+   saying what the item's reach then is. §7 drives both. */
+const RUN_ID  = "AIS-2026-0042";
+const RUN_CTX = "PROJ-2026-0042";     // `ai_runs.context_id`; its `context_type` is the word below
+const RUN_CTX_TYPE = "project";
+const BIAS_SUMMARY = "The lens this assistant's run was formed under has changed since it opened; a re-run under "
+                   + "the lens now in force is owed. This is disclosed and blocks nothing.";
+const BIAS_BASIS_DETAIL = "bias debt is DISCLOSED and travels with the work; only an uncleared hunch refuses "
+                        + "publication (DEC-20). Whether the lens moved is op=airun's own comparison, read by the "
+                        + "sweep and never recomputed.";
+const BIAS_NOBODY = "no member could be named inside this run's read gate, so "
+                  + "it is offered to every member who can read the run";
+function BIAS(named){
+  const it = {
+    id: "OBLIGATION::bias-debt::" + RUN_ID,
+    class: "OBLIGATION",
+    kind: "bias-debt",
+    case: CASE_A,
+    subject: { kind:"run", id:RUN_ID, context:{ type:RUN_CTX_TYPE, id:RUN_CTX } },
+    summary: BIAS_SUMMARY,
+    detail: null,
+    basis: { source:"bias_debts", computed_by:"aiRunRead", run:RUN_ID, moved:true,
+             moved_basis:"at_open", lens_then:"none in force", lens_now:"7f21c0",
+             observed:"2026-09-23T09:00:00Z",
+             stated:"the run's lens was none in force (the lens in force when it opened) and is 7f21c0 now",
+             detail: BIAS_BASIS_DETAIL },
+    age: { state:"determined", since:"2026-09-23T09:00:00Z", ms: 90000000 },
+    assignee: null, assignee_role: null,
+    recipients: named ? ["m_alice"] : [],
+    options: [],
+  };
+  /* THE FIELD IS ABSENT, NOT NULL, WHERE THE PRODUCER OMITS IT — `#obligationsBiasDebt`
+     spreads it in only when it named nobody, and a fixture writing `null` there would
+     let a surface reading truthiness pass a test the real answer would fail. */
+  if(!named) it.recipients_stated = BIAS_NOBODY;
+  return it;
+}
+
 /* THE VERSIONS. `LEAKY_LABEL` is UI-42's technique and its reason is the same:
    the record's own filing name for a set of reasons is member-authored, and this
    one is written to carry three of the words DEC-32 clause 1 forbids. If any
@@ -239,7 +298,11 @@ const V_SUGGESTED = {
   ok("every kind this suite fixtures is one the plane's own catalogue names — a fixture inventing a kind would be testing a producer that does not exist",
      classOfKind(LEAD(null).kind) === "FINDING"
      && classOfKind(PROPOSAL.kind) === "FINDING"
-     && classOfKind(CONDITION.kind) === "CONDITION");
+     && classOfKind(CONDITION.kind) === "CONDITION"
+     /* WIDENED 2026-09-24 (UI-93), never exempted: the bias-debt fixture §7 drives is
+        an OBLIGATION, and an arm that walked only the three kinds this file happened to
+        carry in August would have scored a fourth one silently. */
+     && classOfKind(BIAS(true).kind) === "OBLIGATION");
   /* CORRECTED 2026-08-09 (PL-13), NEVER EXEMPTED — and the alarm did exactly
      what UI-45 built it to do.
 
@@ -823,6 +886,92 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
   await new Promise(r => setTimeout(r, 0));
   ok("§5 and a hash that is not this shape is not claimed by this router",
      (() => { c4.location.hash = "#versions/" + INQ_A; return c4.__stanceRoute() === false; })());
+}
+
+/* ===== 7. AN OBLIGATION ABOUT A RUN NAMES THE RUN (UI-93 · D-86) ===== */
+{
+  /* WHAT THIS SECTION IS FOR. D-86's sweep raises an OBLIGATION whose subject is of
+     kind `run`, and `queueSubjectHtml` had no branch for that kind — it returned ""
+     — so the item told a member that a re-run was owed and never said WHICH RUN
+     owes it. The summary is the producer's and was already reaching the page; the
+     missing half was the only part of the item that identifies the thing.
+
+     THE INSTRUMENT ARM BELOW IS LOAD-BEARING. Every arm here looks for the run's id
+     in the rendered page, and that would pass for free if the id also appeared in a
+     sentence some other renderer prints. It does not — the producer's summary and
+     basis detail name no run — and the first arm MEASURES that rather than assuming
+     it, so a green here can only have come from the subject. */
+  ok("§7 INSTRUMENT: neither the run's id nor its context's appears in any SENTENCE this item "
+     + "publishes — not the summary, not the basis, not the reach note — so no other renderer on "
+     + "the page can answer for the subject",
+     !BIAS_SUMMARY.includes(RUN_ID) && !BIAS_SUMMARY.includes(RUN_CTX)
+     && !BIAS_BASIS_DETAIL.includes(RUN_ID) && !BIAS_BASIS_DETAIL.includes(RUN_CTX)
+     && !BIAS_NOBODY.includes(RUN_ID) && !BIAS_NOBODY.includes(RUN_CTX));
+
+  /* AND THE SECOND HALF OF THE INSTRUMENT, WHICH THIS ITEM'S OWN NEGATIVE CONTROL
+     FOUND RATHER THAN ANTICIPATED (arm 15, run 2026-09-24). The arms below were
+     first written as `html.includes(RUN_ID)`, and with the run branch reverted to
+     `return ""` that arm CAME BACK GREEN: the producer's published id IS
+     `OBLIGATION::bias-debt::<run>`, and `queueItemHtml` prints it into the item's
+     `data-id`, so the run's id is on the page whether or not anything renders the
+     subject. **A bare substring test for the run was answering from the attribute
+     the mute is keyed on.** It is recorded here rather than quietly repaired
+     because it is the shape WORKER.md names — an arm that costs nothing to satisfy
+     — met on the one field that could not be dropped. Every arm below therefore
+     pins the rendered PHRASE, which only `queueSubjectHtml` can produce. */
+  ok("§7 INSTRUMENT: the item's own published id EMBEDS the run (it is what the id is keyed on), "
+     + "so a bare search for the run's id answers from `data-id` and would pass over a blank "
+     + "subject — measured by this item's arm 15, and the reason every arm below pins the PHRASE",
+     BIAS(true).id.includes(RUN_ID));
+
+  /* PHASE A — the producer NAMED the run's readers. */
+  const planeA = makePlane({ items:[BIAS(true)] });
+  const ctxA = boot(planeA);
+  await ctxA.__renderQueue();
+  const htmlA = keep("the queue with a bias-debt obligation whose recipients the plane named", q(ctxA));
+
+  ok("§7 the obligation reaches the queue at all — an OBLIGATION is the class no earlier phase here drives",
+     htmlA.includes(BIAS_SUMMARY));
+  const SAID = (id, type, ctx) => 'on the run <span class="mono">' + id + '</span>'
+    + (type || ctx ? ' &middot; in the <span class="mono">' + type + '</span> <span class="mono">' + ctx + '</span>' : "");
+  ok("§7 THE RUN IS NAMED — a bias-debt obligation says WHICH run the re-run is owed on, in the "
+     + "subject line and not merely inside the attribute its mute is keyed on, and before this "
+     + "branch existed it said nothing at all",
+     htmlA.includes('on the run <span class="mono">' + RUN_ID + '</span>'));
+  ok("§7 AND THE RUN'S CONTEXT IS NAMED WITH IT, kind and id both, in the record's own spelling "
+     + "and rendered as ONE subject line rather than two facts a member has to join",
+     htmlA.includes(SAID(RUN_ID, RUN_CTX_TYPE, RUN_CTX)));
+  ok("§7 AND IT POINTS AT NOTHING — no address in this application opens a run by its id, so the "
+     + "subject is STATED and not drawn as a control that could only fail (the rule queueOptionsHtml "
+     + "already states for a subject that is not a document)",
+     !htmlA.includes('data-open="' + RUN_ID + '"'));
+  ok("§7 and where the plane NAMED recipients, this surface writes no sentence about who the item "
+     + "reaches — it has none of the record's to render there, and authoring one would be DEC-8's drift",
+     !htmlA.includes("q-recip") && !htmlA.includes(BIAS_NOBODY));
+
+  /* PHASE B — the producer could name NOBODY inside the run's read gate. */
+  const planeB = makePlane({ items:[BIAS(false)] });
+  const ctxB = boot(planeB);
+  await ctxB.__renderQueue();
+  const htmlB = keep("the queue with a bias-debt obligation the plane could name nobody for", q(ctxB));
+
+  ok("§7 the run is named in this phase too — the reach note is ADDED beside the subject, never "
+     + "INSTEAD of it",
+     htmlB.includes(SAID(RUN_ID, RUN_CTX_TYPE, RUN_CTX)));
+  ok("§7 WHERE THE PLANE STATES NOBODY COULD BE NAMED, ITS OWN SENTENCE REACHES THE PAGE VERBATIM — "
+     + "the item is offered to every member who can read the run, and that is the record's wording, "
+     + "not a reading of an empty list made in this browser",
+     htmlB.includes(BIAS_NOBODY));
+
+  /* THE SLUG ARM, the same rule §0 states for PL-13's two kinds and for the same
+     reason: this branch is keyed on the SUBJECT'S KIND, which is the shape of the
+     thing, and never on `bias-debt`, which is one producer's name for one alarm. A
+     surface keyed on the slug would need a new branch for the next producer that
+     files an obligation about a run. */
+  const APP_SRC7 = fs.readFileSync(new URL("../app.html", import.meta.url).pathname, "utf8");
+  ok("§7 and the surface names the SLUG nowhere — it renders a run because the subject says `run`, "
+     + "so the next producer that raises an obligation about a run arrives already rendered",
+     !APP_SRC7.includes('"bias-debt"') && !APP_SRC7.includes("'bias-debt'"));
 }
 
 /* ============ 6. DEC-32 CLAUSE 1 / D-226 — THE VOCABULARY BAN, SWEPT ============ */

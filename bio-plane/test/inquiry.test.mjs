@@ -326,12 +326,21 @@ console.log("\n--- 6. the boot normaliser converts pre-REC-10 rows (site 2, exer
      out of the current build — then reboot the SAME storage under the live
      build and watch the boot normaliser convert it. */
   const dir = mkdtempSync(join(tmpdir(), "bio-inquiry-boot-"));
+  /* ANCHOR CORRECTED 2026-09-24 BY D-510, NEVER EXEMPTED: `promote`'s normalisation site 3 of 4 now reads
+     `const projectedType = promotedType;` — the type is decided once, above, from the PROMOTED DOCUMENT
+     rather than the caller's envelope (`BIO_Case_Making_v0_1.md` §2). What this block neuters and what it
+     proves are unchanged.
+     AND THE ASSERTION BELOW IS CORRECTED WITH IT, which is a finding about this instrument rather than about
+     D-510: it tested for the ABSENCE of the old spelling, so when the marker VANISHED the patch armed NOTHING
+     and this arm went GREEN — the anchor-that-did-not-arm WORKER.md names, caught only because
+     `reopen.test.mjs` pins the same site with a PRESENCE test and went red. It is a presence test now. */
   const neutered = STORE_SRC
     .replace("Object.entries(LEGACY_TYPE_ALIASES))", "[])")
-    .replace("const projectedType = normalizeType(meta.object_type);",
+    .replace("const projectedType = promotedType;",
              "const projectedType = meta.object_type;");
   t("the neutering patch found both sites (markers moved if this fails)",
-    neutered !== STORE_SRC && !neutered.includes("const projectedType = normalizeType("), true);
+    neutered !== STORE_SRC && neutered.includes("const projectedType = meta.object_type;")
+      && !neutered.includes("Object.entries(LEGACY_TYPE_ALIASES))"), true);
   const mkMf = (src) => new Miniflare({
     modules: true, script: src, modulesRoot: "/", scriptPath: SRC("store.mjs"),
     compatibilityDate: "2026-07-01", durableObjectsPersist: dir,

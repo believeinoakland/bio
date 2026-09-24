@@ -8,7 +8,8 @@ built"). Until each change lands, the
 rules in `CLAUDE.md` stand as written, and the landing that builds a change corrects every rule and kickoff it supersedes.
 **Revised 2026-09-22 by BOB #27** for Bob's move to cloud Claude Code under his second account (§4), with three builders'
 questions answered in §1 (M0-99, M0-100, M0-101), and M0-110's builder's four answered there by BOB #28 the same day;
-§5 points at the rest of the same day's program. Status as of 2026-09-23.
+§5 points at the rest of the same day's program. **§3a's append-only law is read on the way IN as well as at the push
+by M0-179** (§3a "As built" 9 and 11). Status as of 2026-09-24.
 
 ## Why: measured on 2026-09-22
 
@@ -394,6 +395,27 @@ file from a unit's input set, and condition 2 fails that unit by name.
      | `coverage` | HEAD's own history (`log -1 %cs`, printed and never gated), HEAD's tree and index | HEAD-ONLY |
 
      None of the eleven had a live read that was its PURPOSE; all stay never-cache (each reads history by commit id).
+
+     **AND THE HALF PER-SUITE PINS COULD NOT REACH: THE GATE ITSELF PINS `coord` FOR THE WHOLE RUN (M0-173,
+     2026-09-24).** M0-136 pinned the five suites that read the state IN PROCESS, and left every unit that reads it
+     THROUGH `plancheck` — 11 units on `58293bf3`, measured by `gates.mjs --inputs all` — reading the LIVE
+     `origin/coord`, which this very checkout moves whenever a unit's CLI fetches it. **MEASURED by CONDUCT #20 on
+     2026-09-24:** a train's gate read `planning-hygiene.test.mjs` 75 pass / 1 fail at ~17:1xZ and the IDENTICAL tree,
+     re-run by hand, read 76 / 0 — the arm that flips is "plancheck's own count of open rows equals this suite's",
+     which holds the suite's own read of the plan against the figure a separately-spawned `plancheck` printed, so a
+     write to `coord` between the two reads is a red round costing the whole battery. **`tools/gates.mjs` §0b now
+     resolves `origin/coord` ONCE, at the start of the run, and sets `BIO_COORD_REF` to that COMMIT**; every step
+     inherits it, so every unit and every CLI a unit spawns reads the same bytes, and a tool whose override is set does
+     not fetch (`freshen`) — which is what moved the ref mid-run. The gate PRINTS the pinned commit and its RECORD
+     names it (`coord`, `coordPinned`), both read back from the variable the children are actually given rather than
+     from the pinning block having run. A suite with a pin of its own keeps it (it sets the variable after the gate),
+     and an override already in the environment is a plant and is never overridden. **The override names a commit in
+     THIS repository:** `coordRef(repo)` answers `origin/coord` for any other repository, because a fixture clone a
+     suite builds does not hold that sha — unscoped, a set `BIO_COORD_REF` made `coord.test.mjs` THROW (measured
+     2026-09-24, 95 / 0 with it unset). **What it does not claim:** a battery run by hand outside the gate is
+     unpinned, and the live state is still judged where a live read is the PURPOSE (`plancheck` bare, and the coord
+     write's own ledger checks). NEGATIVE CONTROL: `gates.control.mjs` arm G22 (the pin not set) and
+     `coord.control.mjs` arm S (the override unscoped).
      NEGATIVE CONTROL: `bio-plane/test/coordpin.control.mjs` points each pinned suite back at `origin/coord`, and its
      planted-ref arm fails by name. And a REUSED record
      never answers for a never-cached unit: with the per-unit record on, §2d's tree-keyed GREEN shortcut is not taken,
@@ -431,12 +453,45 @@ file from a unit's input set, and condition 2 fails that unit by name.
   9. **Append-only is enforced at the push**: the guard's `gate-results` arm (a push of that ref alone) passes only a
      commit that descends from the remote tip and ADDS `results/…` or `revoked/…` files; a modify, a stray path, a
      rewritten history or a deletion is refused by name. `main`'s checks do not judge it, as for `coord`.
+     **CORRECTED BY M0-179 (2026-09-24), and the correction is about the RECORD, not the fence.** The descent test read
+     `if (git merge-base --is-ancestor <remote tip> <local> exits non-zero)` and called every non-zero outcome
+     "(history rewritten)". It exits 1 for NOT an ancestor and 128 for a commit the clone does not HAVE, and the honest
+     cause is usually neither: eight gates append records at once, so a commit built on the tip a fetch saw a moment
+     earlier is refused, which is the ordinary race this branch is designed to absorb. **THE COST, MEASURED:** REC-211
+     reported `origin/gate-results` REWRITTEN on the strength of this message; M0-179 established from the branch that
+     nothing had been (the tip named, `78f2412e`, is an ancestor of the branch's tip; its 215 commits are linear and
+     every one only ADDS), and the false claim had already reached `QUEUE.md` as a row at the backlog head. The arm now
+     says which cause it could ESTABLISH — a stale base (named with the code `GATE_RESULTS_STALE_BASE`, which the
+     writer re-applies on), an ancestry it cannot read (UNDETERMINED, refused, explicitly not a rewrite), or a tip that
+     dropped this commit's base, the only one that reads as a possible rewrite. **And the writer's retry, which never
+     engaged:** a pre-push hook's refusal carries NONE of git's own words (measured 2026-09-24: the output is the hook's
+     text plus `error: failed to push some refs`), so `appendRecords`' re-fetch-and-re-apply loop — written for exactly
+     this race — matched nothing and reported a failed write on the first attempt. That is the whole of REC-211's "the
+     gate could not write its results".
+  11. **The law is read on the way IN too (M0-179, 2026-09-24), not only at the push.** Until this landing a tip whose
+      history had been rewritten was fetched, READ and REUSED exactly like an honest one, and the run failed only when
+      it came to write: a reused PASS is a green verdict, so a rewritten cache could carry a green gate resting on
+      records nobody can trace — worse than the missing feature, by §2's rule. `fetchResults` now judges every fetched
+      tip against a LOCAL RECORD of the branch and reports one of four outcomes (`descentOf`): `first` (no record yet),
+      `ok`, `non-descending`, `undetermined`. §3b reuses and §4b writes only on the first two, and a refusal names the
+      tip, the record and the law on its own line. **Why the record is a ref of its own** (`refs/bio-gate-results/
+      record/<remote>`, written only by `tools/gateresults.mjs` and advanced only forward, by a fetch whose descent
+      holds and by a push that lands): the FETCH DESTINATION cannot serve, because a plain `git fetch <remote>` carries
+      the forced default refspec `+refs/heads/*:refs/remotes/<remote>/*` and rewrites
+      `refs/remotes/<remote>/gate-results` without a word. On a non-descending tip the record is LEFT WHERE IT IS, so
+      the refusal repeats until someone resolves it instead of healing itself the moment it fires. **`undetermined` is
+      refused the same way and said differently:** it is never reported as a claim that the branch was rewritten, which
+      is the mistake this whole item exists to undo.
   10. **The tree-keyed reuse stays as a local fast path** (§2d, M0-122's `recordedGreen`): it answers only for the
       CACHEABLE units — the train's reuse runs every never-cached unit on the union (M0-131, §2) — and is cheaper than keying; the per-unit record supersedes it as the shared
       mechanism. (Corrected at integration by CONDUCT #16 on BOB #30's order, 2026-09-23: "still correct" was not — a
       tree-identical reuse skips a unit that reads history, the 4355bfda class.)
-  **Not built:** a concurrent-writer race driven in the suite (the writer re-fetches and re-applies on a rejected push,
-  as `coord.mjs write` does, and the suite does not force the race); an automatic trigger that revokes a key when the
+  **Not built:** a TRUE two-process concurrent-writer race driven in the suite — **narrowed, not closed, by M0-179
+  (2026-09-24):** the writer's re-fetch-and-re-apply is now driven, through a fixture hook that refuses the first push
+  with the REAL guard's REAL stale-base text and delegates afterwards, so the loop's predicate is exercised against the
+  message it must recognise; what is still not driven is two processes racing for the tip in real time, and the
+  measured gap that arm closes (the loop matching nothing, so one ordinary append read as a failed write) was found by
+  reading the guard, not by racing it; an automatic trigger that revokes a key when the
   backstop reads RED (a person runs `revoke`, naming the unit the backstop named); DIST's release step (`DIST.md`)
   still names `--since` as an alternative to the whole battery, which §3a's condition 3 now forbids — DIST's to change.
 

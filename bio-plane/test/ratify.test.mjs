@@ -237,14 +237,28 @@ t("attested by the key's member", rat.attestor, "sparky");
 /* CORRECTED at c20-batch23 (CONDUCT #20): 1.24.0 -> 1.25.0. REC-211's two rows (C-33.42, C-33.43) land on a
    main whose 1.24.0 already names the D-507 + D-508 catalogue, so the union's catalogue is 1.25.0; the literal
    names the catalogue that actually runs. */
-/* CORRECTED 2026-09-24 (D-468): 1.25.0 -> 1.26.0. The assertion's SUBJECT is unchanged, which is why it is
+/* CORRECTED 2026-09-24 (D-468): 1.28.0 -> 1.29.0. The assertion's SUBJECT is unchanged, which is why it is
    corrected and never loosened to a read of CATALOG_VERSION — a pin derived from the thing it pins agrees for
-   free (CLAUDE.md §5), so this literal is edited by hand in the same commit that moves the constant and going
-   red here is the arm working. It went red on D-468's FIRST gate for exactly that reason. D-468 adds ONE row,
-   C-26.12 BIAS_ILLEGAL_TRANSITION, so the census goes 457 -> 458 and CATALOG_VERSION 1.25.0 -> 1.26.0 (MINOR:
-   one arrival, no departures). THE SECOND PIN OF THE SAME CONSTANT, and both move together or the gate says
-   so: this one and d470-catalog-census.test.mjs's (A5). */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.26.0)");
+   free (CLAUDE.md §5), so this literal is edited by hand in the same commit that moves the constant, and going
+   red here is the arm working. It went red on D-468's second gate for exactly that reason, which is how that
+   item learned the constant has THREE live pins: the census row in d470, that suite's (A5) literal, and this
+   one. The list is written beside the constant in src/gate.mjs now. */
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.29.0)");
+/* CORRECTED 2026-09-24 (D-491): 1.23.0 -> 1.24.0, and CORRECTED rather than exempted for the
+   reason every note above says — the old literal named a catalogue that no longer exists once
+   C-28.16 joined CAPTURE_REQUEST_CHECKS (IC-276). FOUND BY ASKING WHO ELSE READS THE CONSTANT
+   rather than by a red suite: the census arm (d470 A3/A5) is what forces the bump, and this pin
+   is a SECOND reader of it, two directories away from the change. */
+/* CORRECTED at c20-batch25 (CONDUCT #20): 1.25.0 -> 1.26.0, D-491's C-28.16 over the batch23 catalogue; the literal names the catalogue that runs. */
+/* CORRECTED 2026-09-24 by D-472, never exempted: `op=monitor` gained C-48.8 and C-48.9, the census arm
+   forced the MINOR bump 1.23.0 -> 1.24.0, and the old literal named a catalogue that no longer exists.
+   The stamp is the CATALOGUE's version, so it moves whenever the catalogue does — which is the whole
+   point of the pin, and why this assertion is corrected rather than loosened. */
+/* CORRECTED at c20-batch25 (CONDUCT #20): 1.26.0 -> 1.27.0, D-472's rows over the union's catalogue. */
+/* MOVED 1.23.0 -> 1.24.0 by D-510 (2026-09-24): the catalogue gained C-86.1 (ENVELOPE_TYPE_DISAGREES), so
+   CATALOG_VERSION took a MINOR step and the stamp this arm reads moved with it. Found by asking who ELSE
+   reads the constant rather than by a red suite (CLAUDE.md §5). */
+/* CORRECTED at c20-batch25 (CONDUCT #20): 1.27.0 -> 1.28.0, D-510's rows over the union's catalogue. */
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong

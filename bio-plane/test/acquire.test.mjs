@@ -5,7 +5,8 @@
    (a) THE ITEM'S OWN — PUBLISH THE NOTE AS A HAND-TYPED LITERAL COPY. Replace `note: ACQUIRE_GRADE_NOTE,` in src/index.mjs with the same sentence typed out ("Grade B: bytes as fetched … Co-attestation raises B toward evidentiary weight.") -> THIS SUITE STAYS 79 PASS, 0 FAIL. Every behavioural pin — the wire equality, the composer equality, both interpolation pins, the not-the-attest-fence pin — is satisfied by a copy that agrees today at zero cost. Only hygiene.test.mjs moves: 367/2, both detectors naming `index.mjs:1822 "Grade B"` and `"Grade A"`. REC-35's finding restated a fifth time and REC-43's measurement reproduced on a second sentence: THE STRUCTURAL PIN IS THE WHOLE OF THIS CONTROL, and a suite that owns the sentence cannot be the suite that catches the copy.
    (b) THE SAME LITERAL, AND THEN MOVE THE RULE — keep the literal and set `EARNED_CAPTURE_CEILING = 'C'` in checks/bio-checks.mjs -> 74 pass, 5 FAIL, and they name the note that still says B in both directions: the letter claimed is no longer the letter the gate enforces, the ceiling is not interpolated, the derived unreachable grade is not named, the wire is not the composition, and it is not the published constant. THIS IS WHAT THE COPY COSTS — a caller is told the capture it just made is Grade B while the gate refuses any leg above C, the record overclaiming on a doctrine sentence, which CLAUDE.md ranks worse than a missing feature. hygiene 367/2 and earnedbasis 50/4 alongside.
    (c) THE COMPOSED NOTE UNDER THE SAME MOVED RULE -> 78 pass, 1 FAIL, and the difference between (b) and (c) is the whole item: the note now says Grade C and no caller is told a grade the gate will not accept. The ONE remaining failure is a REAL FINDING and not this item's doing — "the letter it claims is the one the gate ENFORCES" fires on `src/index.mjs`'s `grade: via === "archive.org" ? "C" : "B"`, the STAMPED grade, which is a value copy of the ceiling that REC-48 deliberately did not close because its other arm (the archive-sourced letter) has no exported constant to compose from and minting one is a doctrine act. Routed to CONDUCT; the assertion is left in so the gap is MEASURED rather than remembered.
-   D-469's TWO ARMS (run 2026-09-24, worker D-469), each broken ALONE in src/index.mjs and restored by cp from a per-arm pristine copy, sha256 2be01329... before and after and cmp identical; whole = 87 pass. (a) THE ITEM'S OWN — move the head() back after flush(): replace `existed = partHeldBefore[0];` with the old `existed = !!(await env.CAPTURES.head(`${storeName}/captures/${sha}`));` -> 86 pass, 1 FAIL, "a first acquire says the store did not already hold the bytes" (want false, got true): the head finds the object the same call just wrote, the overclaim M-123 measured live. The idempotent pin and the multi-part pin stay green, as declared. (b) OVER-CORRECTION — hard-code `existed = false;` -> 86 pass, 1 FAIL, "acquiring the same document again is idempotent" (want true, got false): the first-acquire pin alone would pass a field that never says true, so the two pins are one control and neither may be dropped. */
+   D-469's TWO ARMS (run 2026-09-24, worker D-469), each broken ALONE in src/index.mjs and restored by cp from a per-arm pristine copy, sha256 2be01329... before and after and cmp identical; whole = 87 pass. (a) THE ITEM'S OWN — move the head() back after flush(): replace `existed = partHeldBefore[0];` with the old `existed = !!(await env.CAPTURES.head(`${storeName}/captures/${sha}`));` -> 86 pass, 1 FAIL, "a first acquire says the store did not already hold the bytes" (want false, got true): the head finds the object the same call just wrote, the overclaim M-123 measured live. The idempotent pin and the multi-part pin stay green, as declared. (b) OVER-CORRECTION — hard-code `existed = false;` -> 86 pass, 1 FAIL, "acquiring the same document again is idempotent" (want true, got false): the first-acquire pin alone would pass a field that never says true, so the two pins are one control and neither may be dropped.
+   D-476's FIVE ARMS PLUS D-469's TWO RE-RUN (run 2026-09-24, worker D-476, drivers `nc-d476.py` and `nc-d469-rerun.py` in the session scratchpad), each arm ALONE against the REAL src/index.mjs and src/store.mjs with every other defence held open, each anchor asserted to match EXACTLY ONCE (an arm that did not arm is a finding), and every restore by cp from a uniquely-named per-arm pristine copy verified by sha256 AND cmp with the byte count printed and a floor guarded -- index.mjs 810,235 B sha256 23422365a59c..., store.mjs 3,239,252 B sha256 f2446058a8ec..., identical before and after EVERY arm. BASELINE 95/0, and the TRUE pre-item baseline measured on this machine at origin/main e9b21be6 by copying all three pristine files in: 87/0, exactly the figure the brief carried. (a) THE ROW'S OWN -- restore the per-part answer, the whole D-476 else-block removed so `existed` stays D-469's flat false -> 91 pass, 4 FAIL, AS DECLARED and all four by name: "a first multi-part acquire states undetermined, never that the bytes are new" (want null, got false), "and says why it cannot say...", "carrying the parts already held as an observation...", and "and the register answers for the whole: the bytes are HELD, never new" (want true, got false). THAT LAST ONE IS THE ROW'S RE-FETCH ARM and it is what the false costs: a document the register holds, re-fetched, answered as new bytes. (b) OVER-CORRECTION -- the register's answer ignored so `existed` is null even for a document it holds -> 93/2 AS DECLARED, "...the bytes are HELD, never new" (want true, got null) and "so nothing is stated as undetermined" (the sentence now travels where nothing is undetermined): the null ALONE is not the fix, the lookup is load-bearing, and the two halves are ONE control. (c) the holder-exists join dropped from `registerHolds` -> 95/0, DECLARED GREEN: purge deletes a bundle's register rows with it, so no op here leaves an orphan for the join to skip -- MEASURED UNREACHABLE in this suite and kept as the defence D-179's ruling requires, exactly as d179onehome's own nojoin arm is. (d) THE STORE IS SILENT -- the `registerholds` route renamed so `doAnswer` reports unanswered -> 93/2, the same two as (b) AS DECLARED, and this arm is the only thing that drives the silent branch at all: the three first-multipart pins STAY GREEN over its differently-worded sentence, which is what shows they pin the STRUCTURE (the register named, the tally in this fetch's own figures) rather than a copy of one sentence. (e) OVER-STRICTNESS -- the same rule in two spellings nothing anticipated, the join rewritten as an EXISTS subquery and the sentence's tail reworded -> 95/0 AS DECLARED. AND D-469's TWO ARMS RE-RUN ON THIS TREE, because a suite coupled to behaviour can survive a change that disarms the control coupled to shape: (a) head() moved back after flush() -> 94 pass, 1 FAIL, "a first acquire says the store did not already hold the bytes"; (b) the single-part answer hard-coded false -> 94/1, "acquiring the same document again is idempotent". BOTH AS ORIGINALLY DECLARED, so D-476 does not disarm D-469's control. EVERY ARM AS DECLARED ON ITS FIRST RUN, and nothing came back surprising. The figures name index.mjs and store.mjs as they stand on disk; only this paragraph, a comment in the SUITE, was written after the runs. */
 /* Acquisition: the fetch layer, and the honesty of what it claims.
  *
  * Negative-control detail: overclaim the capture grade in the acquire path (index.mjs: a direct fetch stamps "A" instead of "B") -> 1 assertion fails (the load-bearing "acquire says B, a Worker cannot produce a grade-A capture"); restored, 72 pass.
@@ -322,9 +323,25 @@ const HUGE_SHA = createHash("sha256").update(HUGE).digest("hex");
 const huge = await acquire({ ...GOOD, locator: "https://www.oaklandca.gov/huge" });
 t("the capture succeeds where it used to be refused", huge.ok, true);
 t("it came in parts", huge.parts > 1, true);
-/* D-469: a multi-part capture never asks, so `existed` is false; it may
-   under-claim a re-fetch, and this pins that it never over-claims a first. */
-t("a first multi-part acquire does not claim the bytes were held", huge.existed, false);
+/* CORRECTED 2026-09-24 BY D-476, never exempted, and the old assertion was WRONG
+   rather than merely superseded. It read `t("a first multi-part acquire does not
+   claim the bytes were held", huge.existed, false)`, and D-469's comment beside it
+   called that an under-claim that "never over-claims". IT IS NOT AN UNDER-CLAIM.
+   `false` is the positive claim THESE BYTES ARE NEW, answered on a question
+   nobody asked — the whole is never stored under its own hash, so R2 was not
+   consulted at all — and acquire made it on every multi-part capture, a re-fetch
+   of a document the record holds included. The honest answer when it cannot be
+   established is `null` WITH THE SENTENCE that says why, which is what these
+   three pin: the value, that the reason names the register (the one thing that
+   CAN answer by the whole hash), and that the part tally travels as an
+   observation computed from THIS fetch rather than as the answer. The sentence is
+   pinned as a FUNCTION of the fetch's own figures, not as a copy of its words —
+   REC-48's lesson, since a hand copy agrees for free. */
+t("a first multi-part acquire states undetermined, never that the bytes are new", huge.existed, null);
+t("and says why it cannot say, naming the register that answers by the whole hash",
+  /register/.test(huge.existed_undetermined || ""), true);
+t("carrying the parts already held as an observation, in this fetch's own figures",
+  new RegExp(`\\b\\d+ of this fetch's ${huge.parts} parts\\b`).test(huge.existed_undetermined || ""), true);
 t("and the whole hashes correctly across them", huge.document.capture.sha256, HUGE_SHA);
 t("the recorded size is the whole document", huge.document.capture.bytes, HUGE.length);
 t("each part names a file inside the bundle",
@@ -471,6 +488,53 @@ console.log("\n--- op=archivelookup is reachable through the control plane ---")
   t("archivelookup is reached and answers structurally, not with a crash", al.ok, false);
   t("and refuses by the eligibility fence rather than an exception", al.reason, "NOT_ELIGIBLE");
   t("carrying the reachability verdict the fence rested on", typeof al.reachability, "object");
+}
+
+console.log("\n--- D-476: a re-fetched multi-part capture never claims the bytes are new ---");
+/* THE ANSWER'S OTHER HALF. The pins up at the parts section fix what acquire says
+   when it CANNOT establish whether the record holds the bytes; this fixes what it
+   says when it CAN. `register` is keyed by `capture_sha` — the identity of the
+   bytes across the whole system — and one capture has one home (D-179; Intake
+   Doctrine section 8), so the register is the one read that answers by the WHOLE
+   hash for a document the store holds only in parts. Registered: `true`. Not
+   registered: `null` with the sentence, above. Never `false`.
+   *
+   * IT RUNS LAST ON PURPOSE. It is the first thing in this suite to write live
+   * bundle state, and "the store is still empty: intake never writes live state"
+   * further up has to measure a store that intake alone has touched. Moving this
+   * block above that pin would flip it, which is the finding, not the fixture.
+   *
+   * DRIVEN THROUGH THE OPS, both of them: op=promote puts the register row there
+   * (a store-level insert would not prove a caller can reach this) and op=acquire
+   * re-fetches the same 21 MB locator and answers over it. */
+{
+  const NOW = "2026-09-24T00:00:00Z";
+  const POST = async (q, body) => (await (await mf.dispatchFetch(`http://x/api/?${q}`,
+    { method: "POST", body: JSON.stringify(body ?? {}) })).json());
+  t("the instance claims, so a bundle can register the capture",
+    (await POST("op=claim", { bootstrapToken: "adm-acq", password: "founder-passphrase-476" })).ok, true);
+  const ID = "INFO-2026-0900-huge-registered";
+  const md = ["---", `id: ${ID}`, "object_type: information", "schema: information@1",
+    `title: "Info ${ID}"`, "current_state: collected", "prior_state: null", `created: "${NOW}"`,
+    `last_updated: "${NOW}"`, "produced_by:", "  mode: agent", "  capability_tier: high",
+    "group: believe-in-oakland", "references: []", "state_history: []", "annotations_open: 0",
+    "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
+    "---", "", "## Summary", "", "The parted document, registered.", "",
+    "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const promoted = await POST("op=promote&token=adm-acq", {
+    bundleId: ID, base: null, snapKey: "20260924T000001Z_d476",
+    files: [{ path: "bundle.md", text: md, bytes: Buffer.byteLength(md),
+              sha256: createHash("sha256").update(md, "utf8").digest("hex") }],
+    register: [{ path: "snapshots/huge.bin", sha256: HUGE_SHA, encoding: "binary", bytes: HUGE.length }],
+    meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${ID}`,
+            current_state: "collected", created: NOW, last_updated: NOW } });
+  t("the whole document's bytes are registered under a bundle that exists", promoted.ok, true);
+
+  const refetch = await acquire({ ...GOOD, locator: "https://www.oaklandca.gov/huge" });
+  t("the re-fetch still comes in more than one part", refetch.parts > 1, true);
+  t("and the register answers for the whole: the bytes are HELD, never new", refetch.existed, true);
+  t("so nothing is stated as undetermined", "existed_undetermined" in refetch, false);
+  t("and the whole still hashes to the same document", refetch.document.capture.sha256, HUGE_SHA);
 }
 
 await mf.dispose();

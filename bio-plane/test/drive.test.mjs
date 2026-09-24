@@ -259,7 +259,13 @@ console.log("\n--- 0. the drift pins: one definition of an ODF media type, one o
      vacuous — the zero-cost-equality failure arriving in the INSTRUMENT. */
   const codes = Object.keys(DRIVE_CAPTURE_CHECKS).sort();
   console.log(`    CORPUS: ${codes.length} DRIVE_CAPTURE_CHECKS rows · ${codes.join(", ")}`);
-  t("the family carries seven rows and the walk can see them", codes.length, 7);
+  /* CORRECTED 2026-09-24 BY D-472, never exempted: this read SEVEN, which was true
+     of a family whose only consumer was `op=acquire`. D-472 gave `op=monitor`'s own
+     two shell arms their own rows (C-48.8, C-48.9) because a tick that meets the
+     shell has lost the CHECK rather than a capture, and DEC-49's canned translation
+     is the sentence a member reads — one sentence cannot be true of both. The floor
+     moves to the measured NINE rather than the assertion being loosened. */
+  t("the family carries nine rows and the walk can see them", codes.length, 9);
   t("every row carries a C-48 number and a non-empty canned translation",
     Object.values(DRIVE_CAPTURE_CHECKS)
       .filter((r) => !/^C-48\.\d+$/.test(r.check || "") || !(r.translation || "").trim()).length, 0);

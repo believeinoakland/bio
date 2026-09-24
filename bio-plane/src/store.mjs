@@ -153,6 +153,14 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             can only agree by coincidence. */
          CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible,
          civicosUserAgent,
+         /* D-491 / IC-276: C-83's rows, imported READ-ONLY and for ONE purpose —
+            the drain asks whether the code op=acquire sent belongs to the render
+            family, so a render refused can be held under its own name instead of
+            reported as a fetch that failed. The family is DECLARED in index.mjs's
+            span (`is-render-admit`) and every code is minted there; nothing here
+            refuses with one, which is why this import cannot conscript this file
+            into that family's governed span. */
+         RENDER_CAPTURE_CHECKS,
          /* PL-11 / IS-5 / D-199: the ai credential's DEC-49 rows. The MINT's
             three and the REVOKE's two live here; the gate's four live in
             index.mjs, because what a scope may REACH is a question only the OPS
@@ -509,6 +517,9 @@ import { SURFACE_CHECKS } from "../checks/bio-checks.mjs";
 import { RATIFY_SCOPE_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-141 / C-59: the plane mints project ids; a caller-supplied one is refused with one answer. */
 import { PROJECT_ID_CHECKS } from "../checks/bio-checks.mjs";
+/* D-510: the one refusal of `promote`'s envelope-versus-document check, held in the catalogue with every
+   other DEC-49 row so the code, its check number and its canned translation live in one place. */
+import { PROMOTED_TYPE_CHECKS } from "../checks/bio-checks.mjs";
 /* D-436 / C-64: the instance's producing group, recorded once and never a literal — and the ONE definition of how it
    is written into a document's bytes, which the suites judging a composer's bytes call too. */
 import { INSTANCE_GROUP_CHECKS, withProducingGroup } from "../checks/bio-checks.mjs";
@@ -1052,6 +1063,18 @@ export class Store extends DurableObject {
          nobody delivered, which on THIS column would mean a wake that never
          happened reading as one that did. */
       ["capture_requests", "run_woken_at", "TEXT"],
+      /* D-491 / IC-276: does this request ask for the page as a visitor saw it
+         (CLIENT-RENDERED.md, BOB #32 item 3). THE ONE COLUMN IN THIS LIST THAT
+         IS NOT NULLABLE, and the distinction is the point rather than an
+         exception: every column above is nullable because a legacy row carried
+         an unstated value that a default would INVENT. This one has no unstated
+         value to invent. A request written before the column existed could not
+         ask for a render — no door read the flag, and no drain could have
+         honoured one — so 0 states what was true of that row, and a NULL here
+         would mean "we do not know whether this asked for a render" about a row
+         that demonstrably could not have. Backfilled by the ALTER so a migrated
+         store and a fresh install present the same table. */
+      ["capture_requests", "render", "INTEGER NOT NULL DEFAULT 0"],
       /* CASE-1 / DEC-72: the member finding's PINNED VERSION and the publisher's
          AUTHORED ROLE for it. Additive and nullable for the reason every column
          above is, and here NULL carries two facts this item exists to keep
@@ -8890,7 +8913,11 @@ export class Store extends DurableObject {
                              ...(acks.byWriter ? { acknowledgements_by_statement_writer_not_listed: acks.byWriter } : {}),
                              ...(acks.withheldWriterUndetermined
                                ? { acknowledgements_withheld_writer_undetermined: acks.withheldWriterUndetermined }
-                               : {}) },
+                               : {}),
+                             /* REC-194 / §3 rule 13: the readings of this exact sentence this record cannot
+                                bind to any case (a draft naming none). The document's prose states them;
+                                the act says so too, so a publisher reads it before signing. */
+                             ...(acks.unbound ? { acknowledgements_unbindable_to_this_case: acks.unbound } : {}) },
              author: who, at: when, weight: "single",
              /* THERE IS NO CASE-LEVEL `strength` KEY AND THERE MUST NEVER BE
                 ONE. Two findings whose strengths differ have two answers; one
@@ -10241,7 +10268,18 @@ export class Store extends DurableObject {
          `op=publish` lists in the case document, so a reviewer sees the list the document would print
          (less the publisher's own, which the act leaves out). An edited statement starts empty. */
       statement_acknowledgements: (() => {
-        const a = this.#statementAcknowledgements(d.project_id, ident.caseId, ident.edition, params.statement ?? "");
+        /* REC-194 / §3 rule 13: THE DRAFT IS PASSED, because for a draft naming no case the draft IS the
+           identity the reading was given for. Without it this read matched every same-sentence reading in
+           the project at edition 1 — another draft's included.
+           AND THE SIXTH ARGUMENT IS `writer`, NOT the draft — the union of REC-194 and REC-212 put a
+           parameter between them, and passing six positionals here would have bound `d.draft_id` to
+           `writer`, which is a member handle: every participant row would have been withheld as the
+           writer's own and the review copy would have shown an EMPTY list to a reader whose whole
+           purpose is seeing who has read the statement. `writer` is NULL here on purpose (REC-212: not
+           asked) — the review copy is the LIVE list, shown before any act decides what a document may
+           print. */
+        const a = this.#statementAcknowledgements(d.project_id, ident.caseId, ident.edition,
+                                                  params.statement ?? "", null, null, d.draft_id);
         return { statement_sha: a.statementSha, acknowledgements: a.rows, truncated: a.truncated,
                  act: "op=statementack&draft=" + d.draft_id };
       })(),
@@ -10514,10 +10552,28 @@ export class Store extends DurableObject {
     const ackMax = Store.STATEMENT_ACK_DOCUMENTS_MAX;
     const needle = `\n  statement_sha: ${statementSha}\n`;
     const projectLine = `\ncase_project: ${project}\n`;
-    const found = this.#rows(`SELECT case_id, edition, doc_sha, text FROM case_documents
-                              WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
+    /* REC-194 / §3 rule 13 — THE DOOR REACHES ONLY ITS OWN DOCUMENT, AND A DRAFT OF A NEW CASE HAS NONE.
+       `(case_id=? OR ? IS NULL)` was an OR over the whole project at that edition, so a draft naming NO
+       case — identity null, edition 1 — re-authored every unsigned edition-1 document of EVERY OTHER case
+       of the project that carried the same sentence. That is the defect BOB #32 ruled out: reading A's
+       statement is not reading B's, so acknowledging A's draft may not put a second reader's name into
+       B's document, where B's owner would sign it. A draft naming an existing case reaches that case's
+       next edition and nothing else; a draft naming none reaches NOTHING, because a case id is minted
+       only by publication (DEC-12) and the document authored from such a draft cannot be named from here.
+       WHAT THIS COSTS, AND IT IS NOT HIDDEN: the acknowledgement is still recorded (below) and the review
+       copy still lists it, and `#statementAcknowledgements` states it as an UNBINDABLE reading rather
+       than letting a case document say nobody read the sentence. The fix that would bind it — `op=publish`
+       naming the draft it publishes — is a design question, reported and not invented here.
+       THE BOUND AND ITS REFUSAL ARE KEPT AND ARE NOW UNREACHABLE BY CONSTRUCTION, WHICH IS SAID RATHER
+       THAN LEFT TO BE NOTICED: `(case_id, edition)` is `case_documents`' PRIMARY KEY, so a read naming
+       both returns at most one row and `found.length` cannot exceed 1. IC-246's refusal is retained as a
+       guard over this read — deleting it would move the DEC-49 refusal floor and drop C-82.1 from the
+       catalogue, which is a landing of its own — and the removal is reported as a nameable fix. */
+    const found = ident.caseId == null ? [] : this.#rows(
+                            `SELECT case_id, edition, doc_sha, text FROM case_documents
+                              WHERE sig_armored IS NULL AND edition=? AND case_id=?
                                 AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
-                             ident.edition, ident.caseId ?? null, ident.caseId ?? null, needle, projectLine, ackMax + 1);
+                             ident.edition, ident.caseId, needle, projectLine, ackMax + 1);
     /* DEC-49 REGION is-statement-ack-documents-bound */
     if (found.length > ackMax)
       return refusal("STATEMENT_ACK_DOCUMENTS_OVER_BOUND",
@@ -10548,11 +10604,29 @@ export class Store extends DurableObject {
                 the one the owner signs (op=caseratify refuses the old one as stale). */
              case_documents: reauthored,
              case_documents_limit: ackMax, case_documents_truncated: false,
-             listed: `the completeness block of ${Store.#caseIdentitySentence(ident.caseId ?? null, ident.edition)} `
+             /* REC-194 / §3 rule 13: THE ANSWER SAYS WHICH OF THE TWO THINGS HAPPENED, because they are
+                different facts and one sentence used to claim the stronger of them for both. An
+                acknowledgement given at a CASE IDENTITY is listed by that case's document and by no
+                other. One given for a draft that names NO case is a reading of the DRAFT: the review copy
+                lists it, and no case document can — a case id is minted only by publication, so nothing
+                here can say which case the draft became, and naming one would be inventing a referent. */
+             bound_to_a_case: ident.caseId != null,
+             listed: ident.caseId != null
+               ? `the completeness block of ${Store.#caseIdentitySentence(ident.caseId, ident.edition)} `
                    + `lists this acknowledgement when its case document is authored with this exact statement `
                    + `(op=publish), or — if that document is already authored and unsigned — now, re-authored `
                    + `(case_documents). A statement edited afterwards is a different sentence, and this `
-                   + `acknowledgement is not listed under it.` };
+                   + `acknowledgement is not listed under it. It is listed under NO OTHER CASE, even one whose `
+                   + `statement is byte-identical: reading this case's statement is not reading that one's.`
+               : `this is a reading of draft ${draftId}, which names no case — a case id is minted only by `
+                   + `publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy `
+                   + `lists it for this draft. NO case document lists it, and that is deliberate: a case `
+                   + `document that named you would be claiming you read ITS statement, which this record `
+                   + `cannot establish of any case (§3 rule 13). A reading reaches a case's signed bytes only `
+                   + `when it is given FOR that case, at its prepared and unsigned document — a door open to a `
+                   + `member of this project holding a session, and NOT to the holder of a review grant, which is `
+                   + `a gap in the design and is recorded as one rather than worked around here. A statement `
+                   + `edited afterwards is a different sentence, and this acknowledgement is not listed under it.` };
   }
 
   /* IC-246: the bound on the unsigned documents one acknowledgement re-authors, declared BELOW its method (REC-116).
@@ -10578,7 +10652,25 @@ export class Store extends DurableObject {
         `    at: "${a.at}"`])];
   }
   static ACK_PROSE_HEAD = "**Who else read this statement.**";
+  /* REC-194 / §3 rule 13 — THE UNBINDABLE READINGS TRAVEL WITH THE LIST, WHATEVER THE LIST SAYS. They
+     are a fact about this statement and not a substitute for an empty list, so the tail is appended to
+     the named run as well as to the nobody run: a document naming one second reader while the record
+     holds another reading it cannot attribute to this case would otherwise read as complete. Counted,
+     never named — naming is the claim that cannot be made. */
+  static #ackUnboundLines(acks, project) {
+    if (!acks.unbound) return [];
+    return ["",
+      `This record also holds ${acks.unbound} acknowledgement${acks.unbound === 1 ? "" : "s"} of this exact `
+      + `statement in ${project} given for a case whose identity was not yet allocated — a draft — and whether `
+      + "any of them is a reading of THIS case is UNDETERMINED: a case id is minted only by publication, and "
+      + "no draft is bound to the case it became, so a reading of a draft is not a reading of this case. They "
+      + "are counted here and deliberately not named, because naming them would claim they read THIS case's "
+      + "statement, which this record does not establish (BIO_Publication §3 rule 13)."];
+  }
   static #ackBodyLines(acks, project) {
+    return [...Store.#ackBodyHeadLines(acks, project), ...Store.#ackUnboundLines(acks, project)];
+  }
+  static #ackBodyHeadLines(acks, project) {
     return acks.rows.length
       ? [`${Store.ACK_PROSE_HEAD} Acknowledged, as a second reader of what this case leaves out, by:`, "",
          ...acks.rows.map((a) => a.kind === "recipient"
@@ -10587,9 +10679,20 @@ export class Store extends DurableObject {
            : `- ${a.by}, a participant of ${project}, on ${a.at}`),
          ...(acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this "
                                 + "document lists)"] : [])]
-      : [`${Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never `
-         + "required to publish — a group may be one person — and its absence is stated rather than left "
-         + "for a reader to infer."];
+      : acks.unbound
+        /* REC-194 / §3 rule 13: NOBODY AND UNDETERMINED ARE DIFFERENT FACTS, and the narrowing is what
+           made the difference reachable. This record holds readings of this exact sentence given for a
+           case whose identity was not yet allocated — a draft — and it cannot establish that any of them
+           is a reading of THIS case: a case id is minted only by publication and no draft is bound to the
+           case it became. So the block's `acknowledged: 0` is true of this case and is not the whole
+           truth, and this sentence carries the rest. Counted, never named: naming a reader here is the
+           one claim the record cannot support. */
+        ? [`${Store.ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never `
+           + "required to publish — a group may be one person — and its absence is stated rather than left "
+           + "for a reader to infer."]
+        : [`${Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never `
+           + "required to publish — a group may be one person — and its absence is stated rather than left "
+           + "for a reader to infer."];
   }
 
   /* AN ACKNOWLEDGEMENT THAT LANDS WHILE ITS CASE DOCUMENT IS AUTHORED AND UNSIGNED RE-AUTHORS THAT
@@ -10635,11 +10738,8 @@ export class Store extends DurableObject {
   }
 
   /* THE ACKNOWLEDGEMENTS OF ONE STATEMENT AT ONE CASE IDENTITY, for `op=publish` and the review
-     copy alike, so the list a reviewer sees and the list a case document prints are one read. A
-     NEW case's draft carries no case id (one is minted only by publication), so at edition 1 an
-     acknowledgement taken through such a draft matches too: it is the same statement, in the
-     same project, at the only edition a new case has. Bounded, and a list that hit the bound
-     says so rather than presenting a page as the whole. */
+     copy alike, so the list a reviewer sees and the list a case document prints are one read.
+     Bounded, and a list that hit the bound says so rather than presenting a page as the whole. */
   /* REC-212 / §3 rule 13 — `writer` IS THE SECOND EXCLUSION, AND IT IS A DIFFERENT ONE FROM
      `exceptAuthor`. `exceptAuthor` is the member PUBLISHING: they author the completeness block at that
      act, so their own acknowledgement of it is not a second reading, and `op=publish` has left it out
@@ -10654,13 +10754,52 @@ export class Store extends DurableObject {
          holder is never the writer (REC-193's own sentence).
      EVERY WITHHOLDING IS COUNTED AND RETURNED, in its own key. A row left out and not stated would make
      the document list fewer second readers than the record holds, which its owner would then SIGN. */
-  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null, writer = null) {
+  /* REC-194 / §3 rule 13 (BOB #32, 2026-09-23): AN ACKNOWLEDGEMENT IS MATCHED BY THE IDENTITY IT
+     WAS RECORDED AT, AND BY NOTHING ELSE. D-150's first cut read `(case_id IS ? OR (case_id IS NULL
+     AND edition=1))`, and the second half of that OR is the defect: an acknowledgement taken through
+     a draft naming NO case matched EVERY edition-1 document of the project carrying the same
+     sentence, so a second case with a byte-identical statement listed the first's second readers —
+     in its SIGNED completeness block, under its owner's signature. Reading A's statement is not
+     reading B's, and a statement's bytes are not a case's identity.
+       - A CASE DOCUMENT (`caseId` given) lists the rows recorded at ITS (case_id, edition). Never a
+         row at another case's, and never one at no case at all.
+       - A DRAFT NAMING NO CASE (`caseId` null — the review copy's own read) lists the rows recorded
+         THROUGH THAT DRAFT, matched on `draft_id`. Never another draft's of the same sentence: two
+         drafts of one project may hold the same statement and be two different productions.
+     `unbound` IS THE HONEST REMAINDER, AND IT EXISTS BECAUSE THE NARROWING WOULD OTHERWISE MAKE A
+     DOCUMENT LIE. Before it, a new case's document listed a draft-given reading (possibly another
+     draft's); after it, the document lists none — and writing `Nobody but its author acknowledged
+     it` over a record that holds a reading of that exact sentence would be the record claiming more
+     than it can support, which is worse than a missing feature (`CLAUDE.md` §2). So the readings
+     this record cannot bind to any case are COUNTED and STATED in the prose beside the block, as
+     undetermined and never as nobody. The author's own is not among them: at publication the
+     publisher becomes the statement's author, and their own reading is the first, not a second. */
+  /* THE SIGNATURE IS THE UNION OF THREE LANDINGS (CONDUCT #20, 2026-09-24): `exceptAuthor` is D-150's
+     publisher exclusion, `writer` is REC-212's writer exclusion, and `draftId` is REC-194's identity
+     match. They are THREE DIFFERENT QUESTIONS about one list and none subsumes another: the first two
+     decide WHOM the list may name, the third decides WHICH readings are this case's at all. */
+  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null, writer = null,
+                            draftId = null) {
     const sha = Store.#statementSha(statement);
-    const rows = this.#rows(`SELECT acknowledger_kind, acknowledger, recipient, at FROM statement_acknowledgements
-                             WHERE project_id=? AND statement_sha=? AND edition=? AND (case_id IS ? OR
-                               (case_id IS NULL AND edition=1))
+    const unallocated = caseId == null;
+    /* THE DRAFT FILTER IS IN THE SQL RATHER THAN IN A TERNARY AROUND THE CALL, and that is a MEASURED
+       requirement rather than a style: `derivation-bounds.test.mjs`' truncation grader pairs a `truncated`
+       claim with the `rows = this.#rows(` assignment that produced it, so wrapping the call in a ternary
+       moved this read out of its GRADED roster and into its UNGRADEABLE one — the read is still bounded
+       and the grader could no longer see that it is. Its own rule at the site is *fix what is wrong, then
+       declare what is out of reach — in that order*, so it is fixed. `draftMatch` is the draft whose
+       readings are wanted, or the sentinel `*` meaning every row at this case identity: a draft id is
+       `DRAFT-YYYY-NNNN` (`#caseDraft`), so no draft can be spelled `*`, and an unallocated identity with no
+       draft named asks for `draft_id = ''`, which no row carries — zero rows by the predicate rather than
+       by a branch around it. */
+    const draftMatch = unallocated ? String(draftId ?? "") : "*";
+    const rows = this.#rows(
+                           `SELECT acknowledger_kind, acknowledger, recipient, at FROM statement_acknowledgements
+                             WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS ?
+                               AND (? = '*' OR draft_id = ?)
                              ORDER BY at, ack_id LIMIT ?`,
-                            project, sha, edition, caseId ?? null, Store.STATEMENT_ACK_MAX + 1);
+                            project, sha, edition, caseId ?? null, draftMatch, draftMatch,
+                            Store.STATEMENT_ACK_MAX + 1);
     const truncated = rows.length > Store.STATEMENT_ACK_MAX;
     const all = rows.slice(0, Store.STATEMENT_ACK_MAX);
     const byPublisher = (r) => !!(exceptAuthor && r.acknowledger_kind === "participant"
@@ -10670,12 +10809,22 @@ export class Store extends DurableObject {
     const undeterminedWithheld = (r) => !!(writer && writer.by === null
                                            && r.acknowledger_kind === "participant" && !byPublisher(r));
     const listed = all.filter((r) => !byPublisher(r) && !byTheWriter(r) && !undeterminedWithheld(r));
+    /* The readings of this exact sentence, in this project, at this edition, recorded at NO case
+       identity — a draft naming no case. Asked only for a case document: a draft's own read has no
+       case to be unbound from. Counted, never listed: naming somebody as a reader of THIS case is
+       exactly the claim that cannot be made of them. */
+    const unboundRow = unallocated ? null
+      : this.#one(`SELECT COUNT(*) AS n FROM statement_acknowledgements
+                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
+                     AND NOT (acknowledger_kind='participant' AND acknowledger IS ?)`,
+                  project, sha, edition, exceptAuthor ?? null);
     return { statementSha: sha, truncated,
              /* UNCHANGED IN MEANING: the publisher's own, counted apart from every exclusion added since,
                 so a caller reading this number reads the same fact it has read since D-150. */
              byAuthor: all.filter(byPublisher).length,
              byWriter: all.filter(byTheWriter).length,
              withheldWriterUndetermined: all.filter(undeterminedWithheld).length,
+             unbound: unboundRow ? Number(unboundRow.n) : 0,
              rows: listed.map((r) => ({ kind: r.acknowledger_kind, by: r.acknowledger,
                                         recipient: r.recipient ?? null, at: r.at })) };
   }
@@ -16790,7 +16939,6 @@ export class Store extends DurableObject {
        * history was acyclic when it was written, so an honest replay never
        * meets them.
        */
-      const isInquiry = normalizeType(meta.object_type) === "inquiry";
       const basisMd = files.find((f) => f.path === "bundle.md");
       /* Parsed ONCE for both arms below. REC-16's supersession check is NOT
          inquiry-scoped — `supersedes` is in the vocabulary for every type and
@@ -16799,6 +16947,66 @@ export class Store extends DurableObject {
          re-parsed. */
       const docFmW = basisMd && typeof basisMd.text === "string"
         ? parseFrontmatter(basisMd.text).data : null;
+      /* ===== D-510 (`BIO_Case_Making_v0_1.md` §2, `action` IS the impact substrate; C-2.5 pins a document's
+       * type to its id prefix) — THE PROMOTED DOCUMENT DECLARES ITS OWN TYPE, AND AN ENVELOPE THAT DISAGREES
+       * IS REFUSED. D-505's worker found this beside the risk-tier fence (its finding 3).
+       *
+       * THE DEFECT, measured at the code: `bundles.object_type` was written from `normalizeType(meta.object_type)`
+       * — the CALLER'S envelope — and the action, bias and inquiry projections below were gated on the same
+       * envelope, while `#projectRow`'s action COLUMNS (`action_kind`, `action_risk_tier`,
+       * `action_counterparty_state`, `action_resolution`, the clock) are read off the promoted DOCUMENT'S own
+       * front matter. So an ACTION promoted under `meta: { object_type: "information" }` landed TYPED
+       * INFORMATION with `action_risk_tier` set from its bytes and its `action_basis` and `correspondence`
+       * NEVER PROJECTED — the record holding an action it does not index as one, which is worse than not
+       * holding it (CLAUDE.md §2). D-505 measured the same disagreement from the other side and pinned it.
+       *
+       * TWO HALVES, AND THEY ARE DIFFERENT CLAIMS.
+       *   (1) DERIVATION. `promotedType` below is the DOCUMENT's own type through the catalogue's
+       *       `normalizeType`, and every site that decides WHAT THE RECORD SAYS ABOUT THESE BYTES reads it:
+       *       `bundles.object_type` itself, `isInquiry` (the inquiry_basis and basis-version projections),
+       *       the bias projection, and the action_basis / correspondence / action_quotes projections. A
+       *       projection is a view of the document (D-21); it may not be keyed on something the document
+       *       does not say.
+       *   (2) REFUSAL. An envelope that STATES a type contradicting the document's is refused by name, here,
+       *       before the first write — never silently obeyed and never silently overridden, because a caller
+       *       who asked for one thing and got another was told nothing either way.
+       *
+       * REPLAY IS EXEMPT FROM (2) AND NOT FROM (1), and the split is the point: the record's own history may
+       * contain a package whose envelope and document disagree and must stay holdable verbatim — but what the
+       * record SAYS about those bytes is the bytes' own word. So a replayed action lands TYPED ACTION with its
+       * basis and correspondence projected, rather than as mislabelled information. That exemption is
+       * CALLER-ASSERTED, which is D-505's declared residue and D-511's subject, and nothing here closes it.
+       *
+       * WHAT IS ABOVE THIS LINE AND STILL READS THE ENVELOPE, stated rather than left to be found: the project
+       * name scan, the `CITED` retirement arm and D-149's `LAWS_ACT` carry-forward run before `bundle.md` is
+       * parsed, so a divergent envelope reaches them on the envelope's word. Nothing they let through can LAND
+       * — this refusal is still ahead of the first write, and REC-180's rollback is the net under it — so the
+       * only thing undecided is WHICH refusal a caller meets when both apply. Moving them would mean parsing
+       * the document at the top of `act`, which is a bigger change than this row, and `isAction` (D-505) stays
+       * a UNION for the same reason it was built as one: a union can only add refusals, and it is still
+       * reachable where the envelope states no type at all. ===== */
+      const typeStated = (v) => (typeof v === "string" && v.trim() !== "" ? normalizeType(v) : null);
+      const documentType = docFmW && typeof docFmW === "object" ? typeStated(docFmW.object_type) : null;
+      const envelopeType = typeStated(meta.object_type);
+      /* DEC-49 REGION is-promoted-type-disagrees */
+      if (documentType !== null && envelopeType !== null && documentType !== envelopeType && !pkg.replay) {
+        const dtRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TYPE_DISAGREES;
+        return { ok: false, reason: "ENVELOPE_TYPE_DISAGREES", code: "ENVELOPE_TYPE_DISAGREES",
+                 check: dtRow.check, translation: dtRow.translation,
+                 document_type: documentType, envelope_type: envelopeType,
+                 detail: `the document being promoted says object_type `
+                       + `'${String(docFmW.object_type).slice(0, 40)}' and this request's meta says `
+                       + `'${String(meta.object_type).slice(0, 40)}'. The record goes by the document, and it `
+                       + `will not file one kind of thing as another: what a document IS decides which `
+                       + `columns, projections and reads it gets. Send it again with the meta naming the type `
+                       + `the document names, or change the document first. Nothing was written.` };
+      }
+      /* END DEC-49 REGION is-promoted-type-disagrees */
+      /* The one value every projection below reads. The envelope is the FALLBACK and not the authority: a
+         bundle.md held as a blob, or one stating no type, leaves the record nothing else to go on, and that
+         case is byte-identical to what this line did before D-510. */
+      const promotedType = documentType ?? normalizeType(meta.object_type);
+      const isInquiry = promotedType === "inquiry";
       const basisFm = isInquiry ? docFmW : null;
       const basisLegs = basisFm && Array.isArray(basisFm.basis)
         ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
@@ -17295,11 +17503,18 @@ export class Store extends DurableObject {
          re-pins"* — and `bias.test.mjs` §11 and `d84-case-manifest.test.mjs` §3 both drive that amendment.
          A CREATION IS NOT A TRANSITION EITHER (`cur` is null and there is no head to move from), so this
          does not decide which state a set may be BORN in; that question is the gate's and is NOT asked here.
-         ASKED WHENEVER THE HEAD IS A BIAS SET **OR** THE REVISION DECLARES ONE, so a promotion that also
+         THE TYPE IS D-510's `promotedType` AND THIS HOLDS NO SECOND DERIVATION OF IT. D-510 (2026-09-24,
+         reached by merging main into this branch) made the DOCUMENT's own type the one value every projection
+         reads and refuses an envelope contradicting it (`is-promoted-type-disagrees`) ahead of this line, so
+         the document-versus-envelope question is already answered here and re-deriving it would be the
+         two-readings drift this repository has measured five times. This item's first spelling DID re-derive
+         it, and folding it onto `promotedType` is what the merge was for.
+         ASKED WHENEVER THE PROMOTED TYPE IS BIAS **OR** THE HEAD IS A BIAS SET, so a promotion that also
          retypes the bundle cannot step around the machine by renaming it: from a bias head the legal moves
          are the bias table's whatever the incoming document calls itself. (That a revision can retype a
-         bundle AT ALL is a separate, wider defect — `projectedType` below takes `meta.object_type` with no
-         comparison to the head — and is reported rather than fixed here.)
+         bundle AT ALL is a separate, wider defect D-510 did NOT close — `promotedType` is written into
+         `bundles.object_type` with no comparison anywhere to `cur.object_type` — and is reported rather than
+         fixed here.)
          `replay` IS NOT AN EXEMPTION, on REC-179's reasoning and not by oversight: `index.mjs` verifies a
          replay only for a CREATION (REC-173), so on a revision the flag is a caller's assertion, and a fence
          a caller can turn off by asserting is not a fence. The gathering check's exemption exists because a
@@ -17309,9 +17524,7 @@ export class Store extends DurableObject {
          refusal's reason: a refusal returned inside `transactionSync` rolls nothing back, so a state the
          record will not honour must be refused before it can land in append-only history. */
       /* DEC-49 REGION bias-state-edge */
-      const biasDeclared = docFmW && typeof docFmW.object_type === "string" ? docFmW.object_type
-                         : (typeof meta.object_type === "string" ? meta.object_type : null);
-      const biasSpelling = normalizeType(biasDeclared) === "bias" ? biasDeclared
+      const biasSpelling = promotedType === "bias" ? promotedType
                          : (cur && normalizeType(cur.object_type) === "bias" ? cur.object_type : null);
       if (cur && biasSpelling) {
         const from = cur.current_state, to = meta.current_state;
@@ -17497,8 +17710,11 @@ export class Store extends DurableObject {
       /* Normalisation site 3 of 4 (REC-10): the projected type goes through
          the CATALOG'S OWN normalizeType rather than an inline restatement of
          it, so the store's view and the checker's view cannot disagree — the
-         same reason this file imports the catalog's parser. */
-      const projectedType = normalizeType(meta.object_type);
+         same reason this file imports the catalog's parser.
+         D-510: and what it normalises is the PROMOTED DOCUMENT's own type, decided once above. This column
+         is what every reader asks "is this an action" of — `#projectRow` was already reading the action
+         columns beside it off these same bytes, and the two could disagree. */
+      const projectedType = promotedType;
       /* C-16: an inquiry's title is DERIVED from its `## Question` section
          and never separately authored — deriveInquiryTitle (the catalog
          holds the one rule) over the document being promoted, with the
@@ -17870,7 +18086,8 @@ export class Store extends DurableObject {
          re-ordered and an override that silently re-pointed would be safeguard
          1 failing quietly. */
       this.sql.exec(`DELETE FROM bias_statements WHERE bundle_id=?`, bundleId);
-      if (normalizeType(meta.object_type) === "bias") {
+      /* D-510: the PROMOTED DOCUMENT's type, not the envelope's — a projection is a view of the bytes. */
+      if (promotedType === "bias") {
         for (const r of Store.#biasStatementRows(bundleId, docFmW))
           this.sql.exec(
             `INSERT INTO bias_statements
@@ -17918,7 +18135,10 @@ export class Store extends DurableObject {
          entries' own quote_* keys — a projection of the bytes, never a second
          place to state a quote (D-21). */
       this.sql.exec(`DELETE FROM action_quotes WHERE bundle_id=?`, bundleId);
-      if (normalizeType(meta.object_type) === "action" && docFmW) {
+      /* D-510 — THE ROW'S OWN SITE. These three projections were gated on the CALLER'S envelope while
+         `#projectRow`'s action columns came from the document, so an action under an `information` envelope
+         landed with its tier in a column and its basis and correspondence in no table at all. */
+      if (promotedType === "action" && docFmW) {
         const alegs = Array.isArray(docFmW.action_basis) ? docFmW.action_basis : [];
         for (let i = 0; i < alegs.length; i++) {
           const leg = alegs[i];
@@ -33466,6 +33686,43 @@ export class Store extends DurableObject {
                  + "current holder, never a finding about which bundle held the capture first — that is undetermined. "
                  + "The same content in different bytes is not reached." };
   }
+
+  /** D-476 - IS THIS WHOLE DOCUMENT ALREADY IN THE REGISTER? ONE BOUNDED READ ON
+   *  THE REGISTER'S OWN KEY, and the only question `op=acquire` can ask about a
+   *  MULTI-PART capture.
+   *
+   *  D-469 answered acquire's `existed` for a single-part capture by asking R2 for
+   *  the whole's own key BEFORE the put. A multi-part capture has no such key: the
+   *  whole is never stored under its own hash, only its parts are. So that
+   *  question cannot be asked at all, and acquire answered a flat `false` - which
+   *  CLAIMS THE BYTES ARE NEW every time a document the record already holds is
+   *  re-fetched. This is the question that CAN be asked, and it is the record's
+   *  own: `register` is keyed by `capture_sha`, the identity of the bytes across
+   *  the whole system (`INTERFACES.md` I1 section 1), and one capture has one
+   *  home (D-179; `BIO_Intake_Doctrine_v1_1.md` section 8).
+   *
+   *  THE HOLDER MUST STILL EXIST - the `bundles` join D-179's fence makes, for
+   *  the reason that ruling gives: bytes whose home was purged register afresh,
+   *  so a register row whose bundle is gone is not a holding.
+   *
+   *  IT NAMES NO BUNDLE, and so it needs no viewer. A caller learns only that the
+   *  record holds these bytes, which is the whole of what `existed` has ever said;
+   *  WHICH bundle holds them is D-15's question, answered under a visibility stamp
+   *  by `op=promote`'s refusal and never here.
+   *
+   *  A MISS IS NOT AN ABSENCE, and THE CALLER STATES THAT, not this read: the
+   *  register answers for documents the record REGISTERED, and a prior acquire
+   *  never promoted leaves parts in R2 and no register row. `registered: false` is
+   *  that one fact and nothing more; `registered: null` is no question asked.
+   */
+  registerHolds({ sha = null } = {}) {
+    const s = typeof sha === "string" && sha.trim()
+      ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
+    if (!s) return { ok: true, sha: null, asked: false, registered: null };
+    return { ok: true, sha: s, asked: true, registered: !!this.#one(
+      `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE r.capture_sha = ? LIMIT 1`, s) };
+  }
   static #promoteAbsent() {
     return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
   }
@@ -41125,6 +41382,29 @@ export class Store extends DurableObject {
         + `not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's `
         + `structural gate, DEC-60).`, { fields: brought });
 
+    /* D-491 / IC-276 — THE RENDER FLAG, AND IT IS READ STRICTLY BECAUSE READING
+       IT LOOSELY IS THE DEFECT. `render: true` asks the drain for the page as a
+       visitor saw it (CLIENT-RENDERED.md, BOB #32 item 3: an unattended sweep MAY
+       render). Absent, null and `false` are the document as the site serves it —
+       a caller saying "no render" is ANSWERED and not refused, because a fence
+       tighter than its rule is an undeclared interface change wearing the costume
+       of caution.
+
+       ANY OTHER VALUE IS REFUSED BY NAME. That is C-83.1's argument at this door:
+       a `render: "yes"` normalised to 0 queues a plain capture, and the served
+       shell is then filed as the content — the one outcome the C-83 family exists
+       to prevent. It is worse here than at op=acquire by exactly the row's
+       lifetime: the call that dropped the flag is gone, the drain fetches under a
+       flag nobody can see was dropped, and the request reads afterwards as one
+       that never asked for a render. */
+    const renderRaw = args.render ?? null;
+    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)
+      return refusal("CAPTURE_REQUEST_RENDER_MALFORMED",
+        `render=${JSON.stringify(renderRaw).slice(0, 40)} is not a value this door reads. Send `
+        + `render: true for the page as a visitor saw it, or nothing for the document as the site `
+        + `serves it.`, { render: null });
+    const render = renderRaw === true ? 1 : 0;
+
     /* END DEC-49 REGION is-capture-request */
 
     /* BOTH PRINCIPALS ARE COPIED FROM THE RUN AND NEVER FROM THE CALLER — a
@@ -41160,13 +41440,23 @@ export class Store extends DurableObject {
     const request = String(args.request ?? "").trim()
       || `CR-${now.replace(/[-:TZ]/g, "")}-${Store.#rand(6)}`;
 
-    /* IDEMPOTENT ON (run, address). A run that asks twice for the same document
-       has asked once: the second ask returns the standing row rather than
-       queueing a second fetch at somebody else's server. That is DEC-47's rate
-       rule arriving at the door as arithmetic rather than as politeness. */
+    /* IDEMPOTENT ON (run, address, render). A run that asks twice for the same
+       document has asked once: the second ask returns the standing row rather
+       than queueing a second fetch at somebody else's server. That is DEC-47's
+       rate rule arriving at the door as arithmetic rather than as politeness.
+
+       `render` JOINED THE KEY WITH D-491, AND NOT AS A CONVENIENCE. The rendered
+       page and the served document are NOT the same document — that is D-64's
+       founding claim, and the plane files them under two digests and calls the
+       rendered one the primary. A key of (run, address) alone would answer a
+       render ask with a standing plain row, `already: true`, and a render nobody
+       ever performed: the run's ask silently unmet, and the answer agreeing with
+       a row that says something else. Two rows is the honest shape, and DEC-47's
+       politeness is not spent by it — the drain admits ONE request per host per
+       tick, so the second lands in a later tick either way. */
     const standing = this.#one(
-      `SELECT * FROM capture_requests WHERE run=? AND address=? AND state IN ('requested','draining','captured')`,
-      run, address);
+      `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
+      run, address, render);
     if (standing)
       return { ok: true, request: standing.request, run, target: standing.target, address,
                host: standing.host, purpose: standing.purpose, ua_mode: standing.ua_mode,
@@ -41175,18 +41465,28 @@ export class Store extends DurableObject {
                   echoing the caller's field back would report a lead nothing
                   stored — the answer disagreeing with the row it stands for. */
                lead_inquiry: standing.lead_inquiry ?? null,
+               /* D-491: the STANDING row's flag, on the identical reasoning the
+                  lead above carries — and here it cannot disagree with the call,
+                  because the flag is part of the key this row was found by. */
+               render: standing.render === 1,
                state: standing.state, requested: false, already: true,
                principals: { plane: standing.principal_plane, claude: standing.principal_claude } };
 
     this.sql.exec(
       `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
-         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry)
-       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?)`,
+         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render)
+       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?)`,
       request, run, target, address, host, purpose, uaMode,
       callerPlane, runRow.principal_claude,
-      now, now, Store.#aiIso(nowMs + Store.CAPTURE_REQUEST_TTL_MS), lead || null);
+      now, now, Store.#aiIso(nowMs + Store.CAPTURE_REQUEST_TTL_MS), lead || null, render);
     return { ok: true, request, run, target, address, host, purpose, ua_mode: uaMode,
              lead_inquiry: lead || null,
+             /* D-491: the flag AS THE ROW WAS WRITTEN — the same `render` the
+                INSERT bound, not the field the caller sent, so an answer saying
+                `render: true` cannot disagree with the value the drain will
+                read. It is not a re-read of the row, and this comment says so
+                rather than letting the next reader assume one. */
+             render: render === 1,
              state: "requested", requested: true, already: false,
              principals: { plane: callerPlane, claude: runRow.principal_claude },
              detail: "requested. This instance does not fetch on a caller's timing: the daemon drains "
@@ -41322,6 +41622,76 @@ export class Store extends DurableObject {
           }, at, 0);
           captured.push({ request: q.request, address: q.address, sha: r.sha || null,
                           grade: r.grade ?? null, attribution: verdict.attribution });
+        } else if (r.renderCode) {
+          /* D-491 / IC-276 — A RENDER THIS INSTANCE COULD NOT DO IS DEFERRED, AND
+             THE SERVED SHELL IS NEVER FILED IN ITS PLACE (CLIENT-RENDERED.md, BOB
+             #32 item 3: *"the tick records the render as DEFERRED (undetermined).
+             It never records the shell as though it were the content."*).
+             op=acquire decides every way a render cannot happen before it fetches
+             anything, so there is nothing to fall back TO — and that is the
+             property, not a convenience: a fallback here would file the frame of
+             a page as the page, which is the whole of C-83 undone by its own
+             consumer.
+
+             THE ROW IS HELD, NOT REFUSED, and `requested` is what holds it. Every
+             C-83 admission refusal names a condition that can change without the
+             request changing — a renderer gets bound, the allowance rolls over at
+             midnight UTC, a cooling-off host comes back — so the next tick asks
+             again. A terminal `refused` would make an instance's CURRENT inability
+             a permanent fact about the ask. The row's own `expires` bounds the
+             hold, so this is not an unbounded retry.
+
+             THE CODE IS THE ONE THE PLANE SENT, never collapsed into a single
+             deferral word. C-83.3's sentence and C-83.4's are different sentences
+             — one says this instance cannot render at all, the other says it can
+             and has spent today's allowance, and only the second may tell a member
+             to ask again after midnight. Recording either under the other's
+             translation would be the record saying more than it can support. */
+          const renderRow = RENDER_CAPTURE_CHECKS[r.renderCode];
+          const why = String(r.detail || r.reason || "").slice(0, 400);
+          /* THE HOST'S SLOT IS GIVEN BACK, AND THIS IS A DEFECT D-491 WOULD HAVE
+             INTRODUCED RATHER THAN A TIDY-UP. The per-host count is taken before
+             the fire, which is right for every other outcome because every other
+             outcome SENT something — CONDUCT 3's own sentence is *"this tick has
+             already fetched from <host> once"*. A deferred render fetched nothing.
+             Left counted, the oldest row wins the host's one slot every tick and
+             defers again, so a plain request behind a render this instance cannot
+             do would be answered CAPTURE_CONDUCT_TICK_SPENT until the render row
+             expired 24 hours later: starvation caused by a request that never
+             touched the host. Driven in `capturerequests.test.mjs` block 7c, where
+             a plain request for the SAME host is captured in the same tick as the
+             deferral. It is a rollback and not a re-ordering: nothing else about
+             the rate rule moves, and a render that DOES load the page spends the
+             slot exactly as any other fetch. */
+          hostsThisTick.set(q.host, Math.max(0, (hostsThisTick.get(q.host) || 1) - 1));
+          this.sql.exec(
+            `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
+            r.renderCode, why, at, q.request);
+          /* GOVERNED, AND ON D-104's OWN REASONING RATHER THAN BY ANALOGY: every
+             one of these is a fact about US — our allowance, our per-host pacing,
+             our missing renderer — and none of them is the source failing or even
+             being asked. Writing this as an ungoverned indeterminate would put
+             "we looked and could not tell" against an address nothing was sent
+             to, and the archive fallback reads exactly that counter (D-104). No
+             `condition` is named: the queue's vocabulary has no kind for a
+             deferred render, and `client-rendered-shell` would claim a shell was
+             captured when nothing was fetched at all. Inventing a kind is an
+             interface change to another surface's roster and is NOT taken here. */
+          this.#observe({
+            ...this.#lookAuthority(q),
+            level: "document", subjectKind: "address", subject: q.address,
+            state: "LOOKED_INDETERMINATE", governed: true,
+            detail: `${renderRow.check} ${r.renderCode}: the render was deferred and nothing was `
+                  + `filed — ${why || "no detail was carried"}`,
+          }, at, 0);
+          held.push({ request: q.request, address: q.address, host: q.host,
+                      code: r.renderCode, check: renderRow.check, translation: renderRow.translation,
+                      /* THE TICK'S OWN WORD FOR IT, in op=acquire's vocabulary so
+                         a reader needs no second one: the content is UNDETERMINED
+                         and says so, which is what keeps a deferral out of the
+                         coverage a captured row would imply. */
+                      render: { state: "deferred", content: "undetermined" },
+                      detail: why });
         } else {
           this.sql.exec(
             `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
@@ -41470,11 +41840,18 @@ export class Store extends DurableObject {
    *  already live, and this consumer only DECIDES and INVOKES.
    *
    *  IT SENDS TWO FIELDS AND NOTHING ELSE — `via` and `request`. The address,
-   *  the purpose and the agent are read by op=acquire FROM THE ROW, through
-   *  `captureRequestDraining`, so what leaves this instance is exactly what the
-   *  conduct check judged. Passing them in the body would have made the check an
-   *  assertion about a value the sender could still differ from, which is the
-   *  "checked one thing, sent another" gap in its smallest form. */
+   *  the purpose, the agent and (D-491) WHETHER TO RENDER are read by op=acquire
+   *  FROM THE ROW, through `captureRequestDraining`, so what leaves this instance
+   *  is exactly what the conduct check judged. Passing them in the body would
+   *  have made the check an assertion about a value the sender could still differ
+   *  from, which is the "checked one thing, sent another" gap in its smallest
+   *  form. D-491 did NOT add a third field for the render, and that is why.
+   *
+   *  WHAT COMES BACK OUT, D-491: a refused render is named. op=acquire decides
+   *  every way a render cannot happen BEFORE it fetches anything and answers a
+   *  C-83 code; this returns that code as `renderCode` so the drain can hold the
+   *  row under it instead of reporting a fetch that was never attempted. `reason`
+   *  is unchanged for every other failure. */
   async #fireCaptureRequest(q) {
     const token = await this.#monitorToken();
     /* D-334: refuse BY NAME rather than spend a credential the gate refuses. */
@@ -41489,7 +41866,18 @@ export class Store extends DurableObject {
       const doc = out && out.ok && out.document;
       if (doc) return { ok: true, sha: doc.capture && doc.capture.sha256,
                         grade: doc.capture && doc.capture.grade };
-      return { ok: false, reason: (out && (out.reason || out.error)) || `http ${res.status}` };
+      const reason = (out && (out.reason || out.error)) || `http ${res.status}`;
+      /* D-491: A RENDER REFUSED IS NOT A FETCH THAT FAILED, and the discriminator
+         is read off the CATALOGUE rather than off a spelling this method invents
+         — the code the plane sent is looked up in the family that owns it, so a
+         row added to C-83 later is recognised here without a second list to keep
+         in step. `q.render` is asked as well, so a code arriving on a row that
+         asked for no render is treated as the ordinary failure it must be. */
+      const renderCode = q.render === 1 && typeof reason === "string"
+        && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
+      return { ok: false, reason,
+               renderCode,
+               detail: renderCode ? String((out && out.detail) || "").slice(0, 400) : null };
     } catch (e) {
       /* D-205: the message is the plane's own, never the exception's, because a
          thrown error can carry a query string and a query string can carry a
@@ -41513,12 +41901,23 @@ export class Store extends DurableObject {
       : null;
     if (!r)
       return { request: request || null, found: false, state: null, draining: false,
-               address: null, purpose: null, ua_mode: null, agent: null };
+               address: null, purpose: null, ua_mode: null, agent: null,
+               /* D-491: FALSE on a row that does not exist, and that is the
+                  fail-closed direction — an absent row asks for no render, so a
+                  silence here can never turn into a render nobody requested. */
+               render: false };
     const agent = r.ua_mode === "member-browser"
       ? this.#captureRequestMemberAgent(r.target)
       : civicosUserAgent(this.env && this.env.VERSION, this.env && this.env.INSTANCE_NAME, r.purpose);
     return { request: r.request, found: true, state: r.state, draining: r.state === "draining",
              address: r.address, purpose: r.purpose, ua_mode: r.ua_mode, agent: agent || null,
+             /* D-491 / IC-276: WHETHER THIS ROW ASKED FOR THE RENDERED PAGE, on
+                the identical reasoning the three fields above it carry. op=acquire
+                takes it FROM HERE and never from the request body, so what this
+                instance renders is what the drain's conduct check judged — a value
+                a caller can supply is a value a caller can differ from what was
+                checked, and a render is a second load of the page. */
+             render: r.render === 1,
              run: r.run, target: r.target };
   }
 
@@ -41575,6 +41974,14 @@ export class Store extends DurableObject {
          those are the two states this one field distinguishes. Additive, on
          PL-15's precedent: no existing reader's shape moves. */
       run_woken_at: r.run_woken_at ?? null,
+      /* D-491 / IC-276: WHAT THIS REQUEST ASKED FOR, and it is published for the
+         reason the two fields above it are — this projection is explicit, so a
+         column omitted here is a column NO caller can see. It is the field that
+         makes a held row legible: a row sitting at `requested` under C-83.3 with
+         no `render` beside it reads as a fetch that keeps failing, when what it
+         is is a render this instance cannot yet do. A run cannot otherwise read
+         back what it asked, and an operator cannot tell the two apart. */
+      render: r.render === 1,
       /* THE ATTRIBUTION IS ON THE READ, composed by the same one function the
          drain used. A row whose principals cannot both be named answers with the
          refusal rather than with a half attribution — the read cannot state less
@@ -47469,11 +47876,40 @@ export class Store extends DurableObject {
         ? { address: address_norm, grade: r.grade, hops: r.hops }
         : { address: address_norm, reason: r.reason });
     }
-    /* A tick with nothing failed is FINISHED, so the epoch closes and the next
+    /* A tick is FINISHED when it accounted for every eligible subject ITSELF:
+       nothing failed AND nothing was skipped. Then the epoch closes and the next
        tick is a fresh check rather than a retry. A tick that failed on any
        address keeps its epoch OPEN: the next fire is that tick's retry, it
-       re-attempts only what failed, and the successes are already keyed. */
-    if (!failed.length) this.#closeTickEpoch("archive-monitor", epoch);
+       re-attempts only what failed, and the successes are already keyed.
+
+       D-518, 2026-09-24 — THE `skipped` HALF IS A CORRECTION, not a tightening,
+       and the old condition was wrong rather than merely loose. This read
+       `if (!failed.length)` alone, which CLOSED the epoch on a tick that fired
+       nothing and only SKIPPED subjects an earlier, still-unfinished tick had
+       claimed. Such a tick did no work and learned nothing: it inherited another
+       run's claim set. Closing on it erases the record that the earlier tick
+       failed, so the next wake mints a fresh epoch, finds the claims gone, and
+       re-fires an address that ALREADY SUCCEEDED — and a successful archive fire
+       calls recordCapturedLocator, which does `observations = observations + 1`.
+       That is MACHINE-PROCESSES.md risk 2 alive in the code that exists to close
+       it: a retry MANUFACTURING CORROBORATION, which is the class CLAUDE.md names
+       worst here because the record then claims more than it can support.
+       MEASURED on this tree before the fix: `observations` went 1 -> 2 across two
+       ticks 62ms apart in real time, with no second genuine check.
+
+       `skipped` non-empty can only mean this tick REUSED an open epoch — a fresh
+       one deletes every other epoch's monitor_fired rows before the loop, so
+       nothing can be pre-claimed under it — so the added clause says exactly
+       "this was a retry, and a retry finishes nothing." The epoch is released
+       instead by #openTickEpoch's spent-epoch rule, one whole cadence on, which
+       is the "idempotence, not amnesia" property; it is now that rule ALONE,
+       rather than a race with whatever else arms this alarm. That race was the
+       measured defect: `archive-monitor` is registered `due: (now) => now`, so it
+       runs on EVERY wake, and the wake armed at REAL now by a nested op=acquire's
+       inbox enqueue landed between two ticks a suite was driving at an injected
+       virtual `now` — which is how a suite's verdict came to depend on machine
+       load. */
+    if (!failed.length && !skipped.length) this.#closeTickEpoch("archive-monitor", epoch);
     return { monitor: { configured: true, at: nowIso, checked: rows.length,
                         epoch, eligible, fired, failed, skipped } };
     } finally { this.#tickRunning.delete("archive-monitor"); }
@@ -47678,7 +48114,14 @@ export class Store extends DurableObject {
         ? { bundle: d.bundle, frequency: d.frequency, status: r.status, reeval_raised: r.reeval }
         : { bundle: d.bundle, frequency: d.frequency, reason: r.reason });
     }
-    if (!failed.length) this.#closeTickEpoch("monitor-cadence", epoch);
+    /* D-518: the same correction as #monitorTick's, made for the same reason and
+       in the same class — a cadence tick that fired nothing and only skipped
+       bundles an unfinished tick had claimed has finished nothing, and closing on
+       it lets the next wake re-fire op=monitor, which writes a SECOND
+       monitor-tick promotion record and a second monitoring.last_checked for one
+       check. The epoch is released by the spent-epoch rule at the shortest
+       cadence instead. #monitorTick's note carries the measurement. */
+    if (!failed.length && !skipped.length) this.#closeTickEpoch("monitor-cadence", epoch);
     return { monitorcadence: { configured: true, at, epoch, monitored: plan.monitored,
                                candidates: plan.due.length, next: plan.next,
                                ticked, skipped, failed, unscheduled: plan.unscheduled } };
@@ -48489,6 +48932,10 @@ export class Store extends DurableObject {
           limit: url.searchParams.get("limit"), offset: url.searchParams.get("offset") }),
         /* REC-190: the census of displaced homes, read-only (see `homeCensus`). */
         homecensus: () => this.homeCensus({ limit: url.searchParams.get("limit") }),
+        /* D-476: does the register hold these whole-document bytes, read-only and naming no
+           bundle (see `registerHolds`). op=acquire asks it of a MULTI-PART capture, whose whole
+           is never stored under its own hash for R2 to be asked about. */
+        registerholds: () => this.registerHolds({ sha: url.searchParams.get("sha256") }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,

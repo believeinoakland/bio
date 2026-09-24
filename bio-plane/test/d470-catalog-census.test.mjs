@@ -285,11 +285,44 @@ const CATALOG_CENSUS = {
      number, MINOR (two arrivals, no departures), and its count and digest are THIS SUITE'S OWN PRINT on the merged
      tree. REC-211's branch row is DROPPED (its comment kept as history). */
   "1.25.0": { count: 457, digest: "b333cf2716ad870d295d9373e081076a15e1a7543e1beda28ab312fad77ca3c5" },
-  /* 1.26.0 (D-468, 2026-09-24): ONE arrival — C-26.12 BIAS_ILLEGAL_TRANSITION, `op=promote` holding a bias
-     set to the declared STATES edges read from its head. ONE ARRIVAL, NO DEPARTURES, so MINOR on the rule
-     above; the count and the digest are THIS SUITE'S OWN PRINT on this tree and never 457 + 1, because the
-     arithmetic would agree with the catalogue for free. */
-  "1.26.0": { count: 458, digest: "e39db266312f046e5fc4d6cbf309fa0c1ca96910aff1be007f49da818dc058fd" },
+  /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): ONE arrival, no departures —
+     C-28.16 CAPTURE_REQUEST_RENDER_MALFORMED in CAPTURE_REQUEST_CHECKS, the door's refusal
+     of a `render` flag that is neither true nor absent (IC-276). 448 and the digest below
+     are THIS SUITE'S OWN PRINT on the item's committed tree, never 447 + 1: the count and
+     the digest are two facts and only one of them is arithmetic. ADDITIVE, so the bump stays
+     MINOR. 1.23.0's row STAYS — it is what the catalogue held at that version, and A4 needs
+     both rows to mean anything. IF A CONCURRENT ITEM ALSO TOOK 1.24.0 (D-490, D-492 and
+     D-499 were in render and capture code the same night), the integrator re-reads this
+     suite's print on the union and this row takes the next number: ONE VERSION NAMES ONE
+     CATALOGUE is this table's whole rule. */
+
+  /* 1.26.0 AT THE THIRD UNION (CONDUCT #20, c20-batch25): D-491's C-28.16 over 1.25.0's 457; its branch row (1.24.0 = 448) DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
+  "1.26.0": { count: 458, digest: "c7acb768bfd46e72469e9f414b2bc94151a911c6b479ffaa6ed07a9a2df82f65" },
+  /* 1.24.0 (D-472, 2026-09-24, WORKER D-472 under CONDUCT #20, branch land/worker/D-472): TWO ARRIVALS,
+     NO DEPARTURES — C-48.8 and C-48.9, `op=monitor`'s own two Drive-shell refusals, which are NOT
+     `op=acquire`'s C-48.5/C-48.7 firing from a second site (a capture that meets the shell has captured
+     nothing; a TICK that meets it has lost the CHECK, and one canned sentence cannot be true of both).
+     447 -> 449, count AND digest from THIS SUITE'S OWN PRINT on this tree, never arithmetic on 447.
+     1.23.0's row STAYS: it is what the catalogue held at that version, and A4 needs both to mean anything.
+     **IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE UNION'S: CONDUCT takes the
+     next number and re-reads the census from this suite's print on the merged tree.** */
+
+  /* 1.27.0 AT THE UNION (CONDUCT #20, c20-batch25): D-472's rows over 1.26.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
+  "1.27.0": { count: 460, digest: "f77e4fba4cfc5ad7e58511b035cae4584a8643bb8c9d9c2718ffbb208d24cc75" },
+  /* D-510 (2026-09-24): 1.23.0 -> 1.24.0, MINOR — one check ADDED and none changed or removed: C-86.1,
+     `ENVELOPE_TYPE_DISAGREES`, the one row of the new PROMOTED_TYPE_CHECKS family. The count and the digest
+     are THIS SUITE'S OWN PRINT on the item's tree over origin/main e9b21be6, never computed by hand.
+     CONDUCT reconciles the VERSION at integration if another branch takes 1.24.0 first; the census is the
+     catalogue's and moves with it. */
+
+  /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510's rows over 1.27.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
+  "1.28.0": { count: 461, digest: "3c28396e5c9e7c561a01625f9fe1f2965799f661b0d9a595d3ae752e21c61d89" },
+  /* 1.29.0 (D-468, 2026-09-24): ONE arrival -- C-26.12 BIAS_ILLEGAL_TRANSITION, `op=promote` holding a bias
+     set to the declared STATES edges read from its head. MINOR: one arrival, no departures. This item took
+     1.26.0 over origin/main 1a7f0bcc0 and then MERGED a main already at 1.28.0 (whose own 1.26.0 row is a
+     DIFFERENT catalogue), so the stamp moves once more and the count and digest are THIS SUITE'S OWN PRINT on
+     the merged tree -- never either base's figure plus one. */
+  "1.29.0": { count: 462, digest: "9e9b4509de7d05d142ff9edb765c287231ad14a7504e1f120eb5c8829dab1303" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -387,8 +420,8 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.26.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.26.0)", "1.26.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
