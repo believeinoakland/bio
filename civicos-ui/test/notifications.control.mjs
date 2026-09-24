@@ -40,6 +40,27 @@
  * general rule is now written at the arm: `says` quotes the ASSERTION, never
  * the source.
  *
+ * UI-93, RUN 2026-09-24: nineteen arms, 19 as declared, 0 not, exit 0; every
+ * restore verified by sha256 AND cmp; the baseline row reads 85 pass, 0 fail.
+ * ARM 15 (the item's row names it: return "" for a `run` subject, which is the
+ * surface exactly as it shipped before UI-93) RED at "§7 THE RUN IS NAMED", and it
+ * takes three more §7 arms with it; ARM 15b (drop the plane's reach sentence) RED
+ * at "…NOBODY COULD BE NAMED"; ARM 16 (over-strictness, the subject line built
+ * from an array) GREEN.
+ *
+ * AND ARM 15 IS THE ONE WORTH READING, for the second time in this file's life and
+ * for the same reason ARM 8 was: **it came back RED-but-NOT-AS-DECLARED on its
+ * first run, and the ARM was wrong rather than the subject.** §7's run arms were
+ * first written as `html.includes(RUN_ID)`. With the `run` branch reverted to
+ * `return ""` that arm stayed GREEN — the producer's published id IS
+ * `OBLIGATION::bias-debt::<run>` and `queueItemHtml` prints it into the item's
+ * `data-id`, so the run's id is on the page whether or not any renderer names it.
+ * An arm that costs nothing to satisfy is the class WORKER.md warns about, met
+ * here on the one field of the item that could not be dropped. The arms now pin
+ * the rendered PHRASE, which only `queueSubjectHtml` can produce, and §7 carries
+ * the measurement as an instrument assertion so the next reader is told rather
+ * than left to rediscover it.
+ *
  * UI-86, RUN 2026-09-24: sixteen arms, 16 as declared, 0 not, exit 0; every
  * restore verified by sha256 AND cmp. ARM 12 (restore the CONDITION-only filter)
  * RED at "§2 a FINDING is offered a mute" and the case-form arm beside it; ARM 13
@@ -239,6 +260,37 @@ const ARMS = [
       const a = '  return !!it && (it.class === "CONDITION" || it.class === "FINDING");';
       if (t.split(a).length - 1 !== 1) return null;
       return t.replace(a, '  return !!it && ["FINDING", "CONDITION"].includes(it.class);');
+    } },
+
+  /* UI-93's arms. 15 IS THE ROW'S OWN NEGATIVE CONTROL — return "" for a `run`
+     subject again, which is byte-for-byte the state the surface shipped in before
+     this item and is the reason the item exists. 15b breaks the other half the row
+     names (the plane's reach sentence where it could name nobody). 16 is the
+     over-strictness half: the SAME rendering built a way this suite's author did
+     not choose, which must stay GREEN. */
+  { id: "15-run-subject-renders-nothing", file: APP, mustFail: true, says: "THE RUN IS NAMED",
+    what: "RETURN \"\" FOR A RUN SUBJECT AGAIN — the pre-UI-93 surface exactly: the bias-debt obligation still says a re-run is owed and no longer says on WHICH run (the row's named control)",
+    patch: (t) => {
+      const a = '    return `<span class="q-on">on the run <span class="mono">${esc(s.id||"")}</span>${where}</span>` + note;';
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, '    return "";');
+    } },
+
+  { id: "15b-reach-sentence-dropped", file: APP, mustFail: true, says: "NOBODY COULD BE NAMED",
+    what: "DROP THE PLANE'S REACH SENTENCE — where the producer could name nobody inside the run's read gate it publishes ONE sentence saying so, and this arm stops rendering it, which leaves an obligation addressed to nobody visible and no statement of who it reaches",
+    patch: (t) => {
+      const a = '      ? `<div class="q-recip">${esc(it.recipients_stated)}</div>` : "";';
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, '      ? "" : "";');
+    } },
+
+  { id: "16-over-strictness-run-subject", file: APP, mustFail: false,
+    what: "OVER-STRICTNESS — the same subject line assembled from an array instead of one template, a spelling this suite's author did not choose, which renders the identical HTML and must PASS",
+    patch: (t) => {
+      const a = '    return `<span class="q-on">on the run <span class="mono">${esc(s.id||"")}</span>${where}</span>` + note;';
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, '    const parts = ["on the run ", `<span class="mono">${esc(s.id||"")}</span>`, where];\n'
+        + '    return `<span class="q-on">` + parts.join("") + `</span>` + note;');
     } },
 
   { id: "11-baseline", file: APP, mustFail: false,
