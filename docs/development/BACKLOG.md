@@ -23,26 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-519 · queued — **THREE SUITES CARRY D-509's LATENT FALSE GREEN: `publish.test.mjs` (~734/736/737), `caseproduction.test.mjs` (~842/849) and `d280-strengthbar.test.mjs` (~467/471) drive `op=strengthbar` with NO group in the payload and read back the literal "believe-in-oakland", green only because each suite's INSTANCE_NAME happens to be that name.** Found by D-509's worker (via CONDUCT #20 18:57Z). — owner RECORD.
-order: at the backlog head, beside D-518: an assertion that passes for the wrong reason (Bob's 17:41Z rule: a false gate result goes ahead) (SCHEDULER #19, 2026-09-24)
-milestone: M0 (three suites over M7 code)
-interface: none.
-design: `docs/development/VERIFICATION.md` (an equality that costs nothing to produce is not evidence), with D-509's fix as the precedent.
-depends-on: D-509.
-scope: name the group in the three payloads (or assert the INSTANCE_NAME binding beside each read); re-run `d280-strengthbar.control.mjs` and `caseproduction.control.mjs`.
-accepts-when: each suite's strengthbar read names the group it wrote (the measured failure it moves: a read that stays green under a renamed INSTANCE_NAME). NEGATIVE CONTROL: rename one suite's INSTANCE_NAME and its read fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
-### M0-181 · queued — **`status.mjs`'s `table` PROBE HAS THE AMBIGUITY HOLE M0-160 CLOSED FOR `hit`, AND IT IS LIVE: `content` matches the declaration (schema.mjs ~3273) AND a string argument in store.mjs ~1237 (`.find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("))`), so deleting the declaration would still read BUILT.** Found by M0-160's worker (F2). — owner M0.
-order: after M0-180, AHEAD of the product rows: a construct probe that reads BUILT on a string is a false green in the record of what is built (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:03Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a check that cannot fail is worse than none), with M0-160's ambiguity arm.
-depends-on: M0-160.
-scope: anchor a table declaration at line start OR immediately after a template backtick (measured: 114 matches over 114 distinct names; a bare `^` loses 9 real declarations); fail any `table` probe matching more than once.
-accepts-when: `content` matches once, and 114 declarations still read (the measured failure it moves: a second, string match that would keep a deleted table BUILT). NEGATIVE CONTROL: delete `content`'s declaration in a fixture and the probe reads NOT BUILT by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
 ### M0-188 · queued — **THE GATE'S OWN REMEDY NAMES THE ONE-BUNDLE COMMAND: `verifyStatic` in `bio-plane/scripts/fleet-bundle.mjs` ends its staleness findings with "Run `npm run build` in <dir>/." at nine sites, so a worker following it rebuilds one bundle and meets the next stale one in the next gate.** Found by M0-178's worker (F1; with F2 and A6). — owner FLEET (the path), M0.
 order: at the backlog head before D-512, AHEAD of the product rows: a wrong remedy in a gate message costs a red round per stale member (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:02Z)
 milestone: M0
@@ -121,6 +101,26 @@ design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 1
 depends-on: REC-194.
 scope: collapse the read to `#one`; remove the bound, C-82.1, its DEC-49 region `is-statement-ack-documents-bound` and block 8's bound arms; move each refusal-code floor to its printed figure.
 accepts-when: C-82.1 and its region are gone and the census floors read their printed figures (the measured failure it moves: a code no input can reach). NEGATIVE CONTROL: restore the region without its reachable site and check-refusal-codes names the orphan.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### D-524 · queued — **A MONITORED BUNDLE WITH AN ARCHIVE-SOURCED BASELINE READS "no captured baseline" FOREVER: `op=acquire` sets `body.locator = sel.replay`, so the register row names the Wayback replay URL while the capture files under the CDX original, and op=monitor's register lookup never finds it.** D-472's defect surviving on the ARCHIVE arm; found by D-472's worker (F1). — owner CAPTURE.
+order: after D-521, with the corrections to just-landed work: a monitor that reads no baseline where one is held (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:14Z)
+milestone: M3
+interface: I5 additive — `archiveHop` gains `document_address`; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §6 (the monitoring contract), with D-472's Drive arm as the precedent.
+depends-on: D-472.
+scope: give `src/cdx.mjs` `archiveHop` a `document_address` key as `driveHop` has; op=monitor's register lookup prefers the row whose hop names the bundle's locator.
+accepts-when: an archive-sourced baseline is found by op=monitor and two unchanged ticks read `unchanged` (the measured failure it moves: "no captured baseline" on every tick). NEGATIVE CONTROL: drop the hop key and the archive-baseline arm reads no baseline, failing by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### D-525 · queued — **A PRE-CAP-8 DRIVE BASELINE IS A CAPTURE OF GOOGLE'S SHELL, so its monitor reads `modified` on every tick permanently, and nothing lists which bundles carry one.** Found by D-472's worker (F3). — owner CAPTURE.
+order: after D-524, the same monitor path; low: the fix is a re-acquire (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:14Z)
+milestone: M3
+interface: none unless a read is added (the integrator classifies).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §6, with CAP-8's Drive export arm.
+depends-on: D-472.
+scope: a sweep listing Drive-address bundles whose baseline capture's handler is an HTML stack (a shell); re-acquire each through the export address, recorded as a new capture, never overwriting the old.
+accepts-when: the sweep names every shell baseline and a re-acquired one reads `unchanged` across two ticks (the measured failure it moves: a permanent `modified`). NEGATIVE CONTROL: skip the re-acquire and the two-tick arm reads `modified` by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
 ### M0-170 · queued — **THREE MORE FIXTURES KEEP HAND-KEPT TOOL COPY LISTS: `pushguard.test.mjs` scratchRepo, `pushguard-check.test.mjs` and `retirable.test.mjs` (measured correct today).** Found by M0-154's worker. — owner M0.
@@ -745,6 +745,7 @@ depends-on: D-351 (finished; rides the train after c19-batch9).
 scope: re-measure the `.odt` and `.odp` normalisation over a population the lane may read (never by routing around a refusal); widen only on the figure.
 accepts-when: the stability figure is recorded with date, instrument and population, and the formats are widened or stated undetermined on it. NEGATIVE CONTROL: skip the `xml:id` strip, and the re-fetch pair reads unstable by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+note: 2026-09-24 by SCHEDULER #19 (D-472's worker F2, via CONDUCT #20 20:14Z): the monitor's cry-wolf survives for Google Docs and Slides (.odt, .odp) because only .ods has a measured container digest; land the .odt normalisation with an ODF_EVIDENTIARY_MEASURED row once measured, and name a census target for .odp.
 
 ### D-515 · queued — **NO COMMITTED FIXTURE IS A PDF WHERE TIER 2 GENUINELY DECODES FEWER GLYPHS THAN TIER 1, so D-501's degradation arm is proved on synthetic input only.** Found by D-501's worker (F1). — owner CONTENT-PDF.
 order: after D-473, with the measurements: the case is covered synthetically; a real page raises the evidence, not the behaviour (SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:51Z)

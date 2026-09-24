@@ -4683,3 +4683,186 @@ depends-on: UI-84 (its train).
 scope: build every such mock from `DISPATCH_CHECKS.UNKNOWN_OP` / the requiredArgument catalogue as UI-84 does, correcting the composed forms to the wire's shape; drive each surface and state whether it RENDERS the refusal or only gap-detects it; also correct `planeSaid`'s stale comment in `app.html` (it cites two sentences D-278 replaced).
 accepts-when: no mock in the two families types a refusal by hand. NEGATIVE CONTROL: retype one mock's `error` without `translation` and the derivation arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs UI`).
+
+### D-480 · done — **A HIDDEN PROJECT CAN CROWD A VISIBLE ONE OUT OF THE SHARED-QUESTION CANDIDATES: `#queueSharedInquiryCandidates` groups over UNGATED refs capped at 64, so past 64 shared questions a hidden project's citations take a candidate slot and flip the served `inquiries_truncated` — a count-shaped side channel, D-447's and D-464's class.** Found by D-464's worker. — owner RECORD.
+order: at the head with the disclosure rows (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
+milestone: M8
+interface: none — the candidate selection; the answer's shape is unchanged.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.9: a project the caller cannot see answers exactly as one that does not exist).
+depends-on: D-464 (finished; rides the train after c19-batch9).
+scope: count DISTINCT VISIBLE citers in the HAVING clause (a gate join), or apply the cap after the gate.
+accepts-when: with more than 64 shared questions, adding hidden-project citations changes neither the candidates nor `inquiries_truncated`. NEGATIVE CONTROL: group over ungated refs again, and the hidden-crowding arm fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-492 · done — **D-64's RENDER ALLOWANCE CLAIMS A BOUND THE CODE DOES NOT HOLD: `renderAdmit` admits while `spent_ms < allowance`, but `renderSpend` adds the time only AFTER the Worker's render finishes, so N concurrent renders are all admitted against one `spent_ms`. The overrun is in-flight × (wait timeout 15,000 ms + navigation), not "at most one render" as its docstring says.** Diagnosed by CONDUCT #20 at `land/worker/D-64` @ b1ffb5a0. — owner CAPTURE.
+order: after DIST-9, AHEAD of D-64's other follow-ons: a correction to D-64's own claim outranks new work, and a record that claims more than it holds is the worse defect (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:25Z)
+milestone: M2
+interface: I5 — a `reserved_ms` column on `render_allowance`; the integrator classifies.
+design: `docs/development/CLIENT-RENDERED.md` "There is no collision: rendering is available on the free tier" (the free tier's daily allowance is the budget this admits against).
+depends-on: D-64.
+scope: `renderAdmit` reserves the render's maximum cost (its `asked` wait timeout plus the navigation bound) into `reserved_ms`, admitting only if spent + reserved + this ≤ allowance; `renderSpend` releases it and adds the reported time; an unreported render stays charged. Correct the docstring to the bound then held.
+accepts-when: K concurrent admits against room for exactly J reservations admit J and defer K−J, admits interleaved before any spend. NEGATIVE CONTROL: drop the reservation and the concurrency arm admits all K, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-497 · done — **THE PROJECT DIRECTORY'S CANDIDATE SCAN IS STILL LINEAR IN THE GROUP'S PROJECTS: `#sight` is a JS predicate, so D-479's page bounds the ANSWER but not the rows read.** Found by D-479's worker. — owner RECORD.
+order: after D-495: a bound on work, not on disclosure; the answer is already capped (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
+milestone: M8
+interface: none (I5 additive if an index table is added; the integrator classifies).
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (items 7.9, 7.14): one sight rule, never a second copy.
+depends-on: D-479 (its train).
+scope: give sight a row source it reads (an owner-set-derived index) so the candidate query bounds in SQL, with the sight rule stated once.
+accepts-when: `bounds.test.mjs` shows the candidate read bounded. NEGATIVE CONTROL: restore the JS filter over the unbounded scan and the bounds arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-499 · done — **A RENDER WHOSE WAIT FIRED ON ITS TIMEOUT IS NOT DISTINGUISHED FROM ONE WHOSE CONDITION MET: D-64's render block does not record which fired, so a possibly-incomplete rendering reads as the whole page.** BOB #32's ruling owed at D-64's integration and not paid there (CONDUCT #20 04:56Z). — owner CAPTURE.
+order: after D-492, with D-64's corrections: a correction to landed work outranks its follow-ons (SCHEDULER #18, 2026-09-24)
+milestone: M2
+interface: I3 additive — `render.wait.fired`; the integrator classifies.
+design: `docs/development/CLIENT-RENDERED.md` "What must be recorded on a rendered capture", with BOB #32's timeout ruling on the D-64 row (coord a04264b8; cite until folded): the capture keeps its GRADE, its COMPLETENESS is UNDETERMINED, never presented as the whole page, never refused.
+depends-on: D-64.
+scope: the render block records `wait.fired: "timeout"|"condition"`; the reading derives "render may be incomplete (wait timed out)". Drive with a stub renderer through `op=acquire`.
+accepts-when: a timed-out render reads the sentence with its grade intact; a condition-met render does not. NEGATIVE CONTROL: record every wait as `condition` and the timeout arm fails by name.
+note: 2026-09-24 05:22Z (CONDUCT #20): first confirm D-64's `rendererFor` seam admits a stub; if it does not, making it do so is this row's first act.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-500 · done — **THE OBSERVATION-LOG WATERMARK CLASSIFIES A RECORD DIFFERENTLY FROM RUN TO RUN: `#hiddenSets`' watermark read and `#contentAxisTally` compare MIN(at) with `register.registered` at different precisions (one-second against milliseconds), so a same-second pair flips class intermittently.** D-486's narrowed trace. BOB #32 RULED (2026-09-24 05:04Z): the watermark STAYS VIEWER-INDEPENDENT (never taken through the caller's sight, never narrowed per viewer); a hidden run's reclassification is the accepted cost ONLY IF DETERMINISTIC. — owner RECORD.
+order: after REC-211, a correction to D-486, run once c20-batch14 lands (SCHEDULER #18, 2026-09-24)
+milestone: M8
+interface: none.
+design: `docs/development/OBSERVATION-LOG-DESIGN.md` §6 "The readers", with BOB #32's ruling of 05:04Z, which this row FOLDS into §6 in the same landing.
+depends-on: D-486.
+scope: compare at ONE precision (milliseconds) in both readers; fold the rule into §6; also relabel `observation-log.test.mjs`'s second section `I` (absorbs M0-151, withdrawn).
+accepts-when: a same-second pair classifies identically on every run, pinned by an arm; §6 states the rule. NEGATIVE CONTROL: restore the mixed precision and the same-second arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-501 · done — **A PAGE'S TIER-2 AWARD COMPARES RAW `text.length`, so a newline policy moves its margin (129 → 77 in D-481's measurement) with no glyph changing hands.** Found by D-481's worker (M-133). — owner CONTENT-PDF.
+order: after D-500, with the extraction corrections (D-481 rides the next train) (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:21Z)
+milestone: M2
+interface: none.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (how content is extracted today).
+depends-on: D-481.
+scope: compare non-whitespace characters (or decoded code points) in the tier-2 award.
+accepts-when: the same page's award is unchanged under two newline policies. NEGATIVE CONTROL: restore raw length and the newline arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-502 · done — **TWO RUNS ON ONE BASELINE SEPARATED BY A HORIZONTAL JUMP NOW CONCATENATE (D-481's stated cost: agenda glue tokens 5 → 13, 0.32%), because glyph advance widths are not read.** Found by D-481's worker (M-133). — owner CONTENT-PDF.
+order: after D-501, the same reader (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:21Z)
+milestone: M2
+interface: none.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with the tier-1 line limit CONDUCT folds at D-481's integration.
+depends-on: D-481.
+scope: parse /Widths + /FirstChar and /W + /DW in `loadFont`, track the pen, set the word-gap threshold from a measured distribution; restate §16's limit when met.
+accepts-when: the agenda sample's glue tokens return to ≤ 5 without losing D-481's words/page. NEGATIVE CONTROL: ignore widths and the glue arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-507 · done — **SIX STATEMENT_ACK_* REFUSALS REACH A MEMBER UNTRANSLATED: NO_SUBJECT, ALREADY_SIGNED, NOT_A_PARTICIPANT, NO_STATEMENT, BY_ITS_AUTHOR and REC-193's AUTHOR_UNDETERMINED have no row in any `*_CHECKS` family (only DOCUMENTS_OVER_BOUND, C-82.1, does), so the member reads the plane's authored `detail` with no DEC-49 translation.** Found by UI-89's worker. — owner RECORD (BOB sees the six sentences' wording).
+order: at the backlog head: refusals a member cannot read, on a landed surface (SCHEDULER #18, 2026-09-24; via CONDUCT #20 07:19Z)
+milestone: M10
+interface: I3 additive — six catalogued codes; the catalogue version moves; FULL gate.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, following REC-79's single-helper shape.
+depends-on: REC-193.
+scope: rows C-82.2..C-82.7 in STATEMENT_ACK_CHECKS inside a DEC-49 REGION; route acknowledgeStatement's returns through its `refusal` helper; rebuild the bundle; move check-refusal-codes' floors from the print.
+accepts-when: each of the six arrives with its translation. NEGATIVE CONTROL: return one code outside the helper and the DEC-49 guard names it.
+note: 2026-09-24 16:25Z — BOB #33 APPROVED the six `translation:` values (C-82.2..C-82.7): use them verbatim, as drained to `docs/archive/ledgers/BOB-INBOX-drained.md` ("Drained 2026-09-24 by SCHEDULER #18"); the worker may fix a factual error at the code and says so in its commit.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-508 · done — **THE KNOCK LIMITER'S REFUSALS ARE BARE STORE REASONS: RATE_IP and RATE_GLOBAL carry no DEC-49 code or translation, so a refused knocker reads a raw reason.** Found by D-496's worker. — owner RECORD.
+order: after D-507, the same shape (SCHEDULER #18, 2026-09-24; via CONDUCT #20 07:19Z)
+milestone: M2
+interface: I3 additive — two catalogued codes; the catalogue version moves.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, at the door `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §2a "The doorbell: material from anyone" designs (folded on main e9b21be6).
+depends-on: D-496.
+scope: catalogue RATE_IP and RATE_GLOBAL with translations in a DEC-49 REGION on the knock path, through one helper; move the floors from the print.
+accepts-when: a rate refusal arrives with its code and translation. NEGATIVE CONTROL: return the bare reason and the guard names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-509 · done — **A FALSE GREEN ON THE MACHINE-FENCE SENTINEL: `machine-fences.control.mjs` arm (2) stays green when it must fail. Driven, not read: with the identity predicate neutered, a machine's `op=strengthbar` DOES set the group's required evidentiary strength, but block (ix) reads back group=believe-in-oakland while the act writes to the store's PRODUCING group (D-436 moved the write, not the read).** Found by D-503's worker (id minted by it). — owner RECORD.
+order: at the backlog head: a control that cannot fail on the authority boundary no machine may cross (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:52Z)
+milestone: M7
+interface: none.
+design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 4, with `docs/development/VERIFICATION.md` "The negative-control register".
+depends-on: D-503.
+scope: add `group: GROUP` to block (ix)'s strengthbar body; re-measure the publication arms that run after it (MOVE_VERSION, REVIEW, SET_LAWS, RISK_TIER), since a group-wide bar can gate them.
+accepts-when: `node test/machine-fences.control.mjs` exits 0 with every arm as declared. NEGATIVE CONTROL: arm (2) itself — neuter the predicate and it now fails by name.
+added: 2026-09-24 · SCHEDULER #18 (placed; `D-509` minted by land/worker/D-503).
+
+### M0-140 · done — **MOVED TO THE HEAD OF THE CACHE 2026-09-24 by BOB #32 on Bob's instruction, and WIDENED to retire the debt construct entirely.** **DEBT.md LEAVES THE PROCESS: its last three rows (D-313, D-391, D-388) are CLOSED IN FACT on `main` 548eb2c5 and are closed BY this row, Bob's 22:09Z ruling removes it — CLAUDE.md §1/§4, `tools/owed.mjs`, plancheck's DEBT arms, `tools/ledger.mjs`'s DEBT handling, `coord.mjs`'s `LC-debt-*` and `LC-undecided-route` arms, `corpuscheck.test.mjs` §5's D-388 pin, and the kickoffs.** — owner M0 (tools), with BOB for CLAUDE.md and the kickoffs.
+order: FIRST in the cache (Bob, 2026-09-24 ~15:15Z: "Do it ... once that is done, we can remove all reference to the debt construct"); ahead of the product rows by Bob's word.
+milestone: M0
+interface: none — process tooling.
+design: `docs/development/WORK-PIPELINE.md` §3 (LED-7's end state: DEBT.md at 0, then archived), with `docs/development/VERIFICATION.md`.
+depends-on: none (its one prerequisite, land/bob/folds-0924b, is on main at 548eb2c5).
+scope: (1) close D-313, D-391, D-388 (dispositions drafted on `scheduler18/row-drafts`: Framework §16 "THREE STATED LIMITS", CONTENT-SEARCH D-391 part 2, CORPUS-STANDARD §6) and retire `DEBT_FLOOR_BYTES` with `nc-m039.mjs`'s planting; (2) archive DEBT.md whole into `docs/archive/ledgers/`; (3) REMOVE EVERY REFERENCE TO THE DEBT CONSTRUCT (Bob, 2026-09-24): every live tool and suite that reads or names DEBT (`owed.mjs`, `plancheck.mjs`, `ledger.mjs`, `coord.mjs` LC-debt-* and LC-undecided-route, `corpuscheck.test.mjs` §5, and the ~57 tool/test files `git grep -il debt` lists — re-point or delete each, stating which), and every live instruction: CLAUDE.md §1 and §4, `kickoffs/*.md`, WORK-PIPELINE, ORCHESTRATION; archives keep their history untouched. (4) THE PROCESS RULE THAT REPLACES IT, stated once in CLAUDE.md §4 and WORK-PIPELINE: a defect found anywhere is diagnosed until its fix can be named, minted `D-` with `node tools/mintid.mjs D`, and sent to SCHEDULER, who places it as a plan row in build order (or to BOB first when the fix needs design); there is no side list. BOB #33 reviews the CLAUDE.md wording before the landing.
+accepts-when: `node tools/plancheck.mjs`, the coord ledger checks and the full gate pass with no DEBT.md; `git grep -il "debt"` over live tools, suites, CLAUDE.md, kickoffs and development docs returns only archive pointers, each named in the landing; D-313/D-391/D-388 read done in the ledger archive. NEGATIVE CONTROL: restore one reader, and its arm fails naming the missing file.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs M0`).
+
+### M0-159 · done — **`tools/train.mjs run --drop a,b,c` DROPS NOTHING: the comma list is read as ONE branch name, matches no waiting row, and is silently ignored, so every waiting branch merges (forbidden ones included); the only sign is `dropped: a,b,c` beside the waiting count.** It happened on 2026-09-24 07:08Z; CONDUCT #20 killed the run by PID before any gate or push, and main was untouched. — owner M0.
+order: at the head of the M0 rows: a process defect that risks main itself (SCHEDULER #18, 2026-09-24; via CONDUCT #20 07:15Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument that silently does nothing is worse than none).
+depends-on: none.
+scope: in `runTrain` (near `const drop = new Set(opts.drop || [])`), refuse to start with a named error when any `--drop` entry matches no row of `train.mjs list`; also split on commas.
+accepts-when: `--drop x,y` naming no waiting branch is refused by name, and a valid comma list drops each named branch. NEGATIVE CONTROL: restore the silent ignore and the refusal arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-160 · done — **`status.mjs` DOES NOT FLAG AN AMBIGUOUS PROBE: a `hit` matching more than once in its file pins nothing — D-498's first probe (`limit: cap, truncated`) matched 24 times in `store.mjs` and stayed green on an unrelated op.** Found by D-498's worker. — owner M0.
+order: after M0-159, beside M0-155 (probes going false-green on comments), the same class (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:13Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a check that cannot fail is worse than none).
+depends-on: none.
+scope: a `--check` arm failing any probe `hit` that matches more than once in its file; re-pin every claim it names.
+accepts-when: `node tools/status.mjs --check` reads 0 ambiguous probes. NEGATIVE CONTROL: widen one claim's `hit` to match twice and the arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-164 · done — **`coord.mjs write --status <ID> <state> --note …` REPLACES A ROW'S HEADLINE, so every flip note overwrites the defect it names: all 15 rows CONDUCT #20 flipped on 2026-09-24 lost their headlines (restored by SCHEDULER #18 from f8fd4a77^/0cf9783c^).** Found by M0-158's worker. — owner M0.
+order: at the head of the M0 rows: every status write corrupts the plan's own record (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z)
+milestone: M0
+interface: none.
+design: `docs/development/WORK-PIPELINE.md` and `docs/development/VERIFICATION.md` (a status word changes state, never the row's claim).
+depends-on: none.
+scope: `--status` keeps the headline and writes the note on a separate `status:` line (replacing any earlier one).
+accepts-when: a flip with a note leaves the headline byte-identical. NEGATIVE CONTROL: restore the replacing behaviour and the headline arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-165 · done — **FOUR SUITES ARE SELECTED FOR ANY MEASUREMENTS-ONLY CHANGE BY A DATA STRING: `measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)"` in calibration, reextract, textchain and tier3-layer-parts reads to the gate as a MEASUREMENTS reader.** Found by M0-153's worker. — owner M0.
+order: after M0-160, with the gate-time rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:33Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
+depends-on: M0-153.
+scope: drop `.md` from those provenance labels; textchain's own /MEASUREMENTS/ assertion survives; expect ~45 → ~41 units, measured.
+accepts-when: a MEASUREMENTS-only diff no longer selects the four. NEGATIVE CONTROL: restore one `.md` label and that suite is selected again, by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### REC-211 · done — **A DISPOSITION BINDS WHATEVER DEFINITION IS CURRENT AT THE ACT, NOT THE ONE THE MEMBER SAW: REC-184 stamps the version at the act, so a definition revised in between is disposed of unseen.** BOB #32's DEFINITION_MOVED ruling owed at REC-184's integration and not paid there (CONDUCT #20 04:56Z). — owner RECORD.
+order: after D-496 at the backlog head: a correction to just-landed work, where an authored act binds what was not authored (SCHEDULER #18, 2026-09-24)
+milestone: M4
+interface: I3 MAJOR — a refusal where an answer stood; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2 "The declared flow, and its revisions", with BOB #32's DEFINITION_MOVED ruling (~03:14Z; cite until folded): authored acts bind what was authored.
+depends-on: REC-184.
+scope: the disposition act carries `definitionVersion`; if the definition moved since, refuse DEFINITION_MOVED by name, catalogued with its DEC-49 translation.
+accepts-when: a stale-version disposition is refused DEFINITION_MOVED and a current one is admitted. NEGATIVE CONTROL: drop the version check and the stale-version arm is admitted, failing by name.
+note: 2026-09-24 05:22Z (CONDUCT #20, integ1b report 2): the READ half is built (a disposition records the version it judged; applies/applies_because say whether it still governs); this row is the WRITE half only.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs REC`).
+
+### REC-212 · done — **THE CASE DOCUMENT CONFLATES TWO ACTS: `completeness.author` names who PREPARED AND PUBLISHED it, and C-41.10's author exclusion reads that name, so the writer of the statement can ratify it when someone else published.** REC-193's finding (1). BOB #32 RULED (b), 2026-09-24 06:11Z (cite until folded): two acts, two names, never conflated. — owner RECORD.
+order: after REC-194, the same statementack family; after REC-193 lands (SCHEDULER #18, 2026-09-24)
+milestone: M10
+interface: I3 — `completeness.statement_by` added; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13, with BOB #32's ruling of 06:11Z (cite until folded); Case Making prose states the two roles.
+depends-on: REC-193.
+scope: carry the draft's server-stamped `statement_by` onto the document at publish; `author` keeps its meaning; C-41.10 excludes `statement_by`; a pre-existing case with none reads UNDETERMINED and its ratify is refused by name, never back-filled from `author`; `op=caseratify` and `op=publishedcase` show both names.
+accepts-when: a statement's writer cannot ratify a case another member published. NEGATIVE CONTROL: point C-41.10 back at `author` and that arm is admitted, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs REC`).
+
+### UI-92 · done — **THE WORKSPACE CANNOT SHOW A PROJECT'S DRAFTS.** REC-198's list, rendered. — owner UI.
+order: directly after REC-198 (SCHEDULER #17, 2026-09-23)
+milestone: M10
+interface: I3 consumer (REC-198's IC).
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, with BOB #32's ruling of 2026-09-23 23:08Z (cite until folded).
+depends-on: REC-198.
+scope: the workspace lists the project's drafts from the plane's read; each opens.
+accepts-when: every draft the plane lists appears and opens. NEGATIVE CONTROL: stub the list empty, and the listed-draft arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
