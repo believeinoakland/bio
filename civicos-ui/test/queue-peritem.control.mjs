@@ -11,11 +11,35 @@
  *                 and none is cleared from the selection. MUST FAIL "CLEARED: the two applied obligations have left
  *                 the list"? NO — the plane still applied them, so the feed drops them; what must fail is "KEPT:
  *                 exactly the drifted one" (three kept, not one). MUST NOT FAIL: section 3.
+ *                 AMENDED 2026-09-24 by UI-94, from the arm's own printed result rather than from a prediction: it
+ *                 splices `queueApplySet`, so its blast radius now includes the bulk forward, and it ALSO fails
+ *                 section 4c's "G6 was forwarded and has left the list". It fails "CLEARED" and "given a reason"
+ *                 too — the 2026-09-23 run recorded both below and the declaration above never caught up.
  *   silentdrop  — `queueRetainedGoneHtml` renders nothing: a retained item the feed no longer carries vanishes.
  *                 MUST FAIL "KEPT: …" and "with the RECORD's reason …". MUST NOT FAIL: section 2 (those retained
  *                 items are still in the feed) and section 3.
+ *                 AMENDED 2026-09-24 by UI-94: section 4c retains a FORWARDED item the feed no longer carries — the
+ *                 same shape — so this arm must ALSO fail "G7 is KEPT, and with the RECORD's own reason".
  *   ncalls      — the bulk control loops ONE single-key call per item (the forty-dialogs shape in a bulk control's
  *                 clothes). MUST FAIL "ONE call for the whole selection". MUST NOT FAIL: section 3.
+ *                 AMENDED 2026-09-24 by UI-94: this arm splices `queueApplySet`, which the bulk FORWARD also goes
+ *                 through, so it must now ALSO fail section 4's and 4c's one-call arms. Declared before arming.
+ *
+ *   ---- UI-94's own three. The row's control is *"loop per item, and the one-act arm fails by name"* (`fwdloop`);
+ *        the other two are the candidate rule's break arm and the over-strictness arm WORKER.md requires.
+ *
+ *   fwdloop     — the bulk FORWARD loops `forwardTask(id, to)`, one call per item, exactly as the per-item picker
+ *                 does. MUST FAIL "ONE op=taskforward call for the whole selection, carrying THREE items" and
+ *                 "still ONE call for the two"; and, because a loop of single acts makes no `items[]` to retain
+ *                 from, ALSO "G7 is KEPT …" and "it is NOT still selected …" and "the chosen member is the act's
+ *                 SHARED key". MUST NOT FAIL: sections 1, 2 and 3, which never touch the forward.
+ *   fwdofferall — `queueForwardCandidates` withholds nobody, so the picker names a member the whole selection
+ *                 already belongs to — a control the record cannot honour. MUST FAIL "it does NOT offer mona …"
+ *                 and 4b's "UNIT, the same state read directly …". MUST NOT FAIL: 4b's spanning UNIT arm (mona
+ *                 belongs there), nor any one-call arm, nor sections 1, 2, 3, 4c, 5.
+ *   fwdspelling — OVER-STRICTNESS. The shared key is built in a spelling this suite did not anticipate (an object
+ *                 assembled before the call rather than a literal at it). Correct work, differently spelled.
+ *                 MUST BE GREEN — every arm, every section.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282: a file that exits flushes its own tally */
 import fs from "fs";
@@ -33,6 +57,18 @@ const ARMS = {
     return one(s, a, `      if(o.outcome === "applied" && outs.every(x => x.outcome === "applied")){ QUEUE_SEL.delete(id); QUEUE_RETAINED.delete(id); }`);
   },
   silentdrop: (s) => one(s, `function queueRetainedGoneHtml(){`, `function queueRetainedGoneHtml(){ return "";`),
+  /* UI-94's three. */
+  fwdloop: (s) => one(s,
+    `  await queueApplySet("taskforward", { to });`,
+    `  for(const id of queueSelFor("taskforward")) await forwardTask(id, to);
+  await queueRun(QUEUE_FEEDS.map(f=>f.id));`),
+  fwdofferall: (s) => one(s,
+    `    return !(held.length && held.every(a => a === mid));`,
+    `    return true;`),
+  fwdspelling: (s) => one(s,
+    `  await queueApplySet("taskforward", { to });`,
+    `  const shared = {}; shared["to"] = to;
+  await queueApplySet("taskforward", shared);`),
   ncalls: (s) => one(s,
     `    const res = await recPostR(op, { ...(shared || {}), items });`,
     `    const parts = []; for(const it of items) parts.push(await recPostR(op, { ...(shared || {}), ...it }));
@@ -66,6 +102,9 @@ try {
   fs.rmSync(dir, { recursive: true, force: true });
 }
 const base = results.find((r) => r.name === "baseline");
-const bad = results.filter((r) => (r.name === "baseline") !== (r.code === 0));
+/* UI-94: `fwdspelling` is an OVER-STRICTNESS arm — correct work in an unanticipated spelling — so it is
+   declared GREEN alongside the baseline, and a RED there is the finding, not a pass. */
+const GREEN = new Set(["baseline", "fwdspelling"]);
+const bad = results.filter((r) => GREEN.has(r.name) !== (r.code === 0));
 console.log(`\ncontrol: ${results.length} arm(s) run; ${bad.length ? "NOT AS DECLARED: " + bad.map((r) => r.name).join(", ") : "every arm as declared"}${base ? "" : " (no baseline in this run)"}`);
 process.exit(bad.length ? 1 : 0);
