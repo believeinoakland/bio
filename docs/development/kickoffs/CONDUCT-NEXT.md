@@ -22,7 +22,7 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS (Bob's ruling ~03:08Z via
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (04:18Z)
+## 4. STATE (04:41Z)
 - MAIN = 16fe1e7f (train-20260924T033115Z-658: land/bob/status-cellcap 6977d9d2 + folds-0924e 16fe1e7f; 112/112 green). Map budget
   now 49,152 B with CELL_CAP 240 — never raise it. Interfaces on main: I3 81.0.0, I5 3.5.0, I8 1.0.0.
 - land/bob/d461-claude RETURNED (conflicts vs main) → merged by c20-batch11fix instead (its CLAUDE.md §5 commit is the novel part).
@@ -58,6 +58,10 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
 - IN FLIGHT 04:17Z: train-20260924T041650Z-598 = D-482 + D-166 + REC-185 onto main 16fe1e7f (merged clean, gating). If #20 is gone,
   read origin/main's log for it. OWED at the next integration: IC-257 (REC-185) resolved I3 MINOR on INTERFACES.
+- land/conduct/c20-batch12 @ e1a945f0 PUSHED (base main 16fe1e7f; worktree /home/user/w12): D-470 + D-487 + UI-84, flipped
+  integrated. D-470's owed acts PAID (Publication §3 rule 17 verbatim; IC-259 I3 MINOR 81.1.0). TRAIN IT after train-598. If
+  batch11fix lands first, re-read I3's base and renumber IC-259. IC-257 (REC-185) still owed a resolution: pay it in batch12 after
+  train-598 lands (merge main into batch12, I3 MINOR).
 - UI-84 DONE @ 8f8b7be7 (124/124, M-130, no IC) — NEXT TRAIN. M0-144 spawned session_01ERbJKhXFUofstFpHerqrEx into its slot.
 - D-487 DONE @ 14e9140d (101/101, M-128, no IC) — NEXT TRAIN. BOB asked: knock limiter bound or budget (sliding-window fix named).
   D-493 spawned session_01XknYRN5Zzyw2fU3nRqF8F9 from land/worker/D-166 into its slot.
