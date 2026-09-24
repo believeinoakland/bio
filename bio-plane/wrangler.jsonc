@@ -112,20 +112,6 @@
     { "binding": "SELF",         "service": "bio-plane" }
   ],
 
-  // BROWSER (D-64, 2026-09-24). Cloudflare Browser Rendering, the renderer the
-  // design names for the render arm of op=acquire (CLIENT-RENDERED.md: the
-  // isolation of running a page's adversary-chosen code is somebody else's
-  // specialty). ADDED TO CONFIG BY D-64; DEPLOYING IT IS DIST'S.
-  //
-  // INERT AS SHIPPED, AND THE PLANE SAYS SO BY NAME. The in-plane driver over
-  // this binding (a CDP client, Cloudflare's own `@cloudflare/puppeteer`) is NOT
-  // BUILT: `src/render.mjs` `rendererFor` reports the binding's presence and
-  // op=acquire{render:true} refuses RENDER_NO_RENDERER (C-82.3) naming it,
-  // rather than filing the shell as the content. The render arm itself is
-  // driven through the RENDERER seam (a service binding speaking the documented
-  // answer shape), which is how the suite injects a renderer.
-  "browser": { "binding": "BROWSER" },
-
   "observability": { "enabled": true },
 
   // D-54 (2026-09-23): the plane's SUBREQUEST CEILING per invocation, set here

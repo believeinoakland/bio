@@ -226,10 +226,13 @@ export function renderedAuthority({ asserted, render, at }) {
  *  Tests inject it through miniflare's `serviceBindings`; a render fleet member
  *  would be bound here the same way PDF_WORKER and OCR_WORKER are.
  *
- *  `env.BROWSER` — the Browser Rendering binding (added to wrangler.jsonc by D-64).
- *  The IN-PLANE DRIVER over it is NOT BUILT: it needs a CDP client
- *  (Cloudflare's `@cloudflare/puppeteer`), which this landing does not vendor into
- *  the plane. So the binding's presence is REPORTED, never mistaken for a renderer. */
+ *  `env.BROWSER` — a Browser Rendering binding. NOT in `wrangler.jsonc`: D-64 added it
+ *  and took it back out, because DIST's deploy derivation (`deploybindings.test.mjs`)
+ *  refuses the `browser` binding class by name (UNKNOWN_BINDING_CLASS), so the line
+ *  would have refused every plane deploy. The IN-PLANE DRIVER over it is NOT BUILT
+ *  either: it needs a CDP client (Cloudflare's `@cloudflare/puppeteer`), which this
+ *  landing does not vendor into the plane. So an instance that binds it by hand is
+ *  REPORTED as holding a binding without a driver, never mistaken for a renderer. */
 export function rendererFor(env) {
   if (env && env.RENDERER && typeof env.RENDERER.fetch === "function")
     return { kind: "service", render: async (req) => {

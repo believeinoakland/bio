@@ -6885,9 +6885,9 @@ export default {
           return json({ ok: false, reason: "RENDER_NO_RENDERER", ...renderRow("RENDER_NO_RENDERER"),
             op, renderer: renderer.kind,
             detail: renderer.kind === "browser-binding-without-driver"
-              ? "the Browser Rendering binding (BROWSER) is bound, but the in-plane driver over it is not built "
+              ? "a Browser Rendering binding (BROWSER) is bound, but the in-plane driver over it is not built "
                 + "(D-64 shipped the seam and the record, not a CDP client). Nothing was fetched."
-              : "no renderer is bound to this instance (neither RENDERER nor BROWSER). Nothing was fetched." }, 501);
+              : "no renderer is bound to this instance (no RENDERER service binding). Nothing was fetched." }, 501);
         /* THROUGH THE HOST GOVERNOR: the render is a second load of the page. */
         let rHost = null;
         try { rHost = new URL(locator).host; } catch { rHost = null; }
@@ -6902,12 +6902,13 @@ export default {
               detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).` }, 429);
         }
         /* THE DAILY ALLOWANCE (BOB #32 item 3): spent means DEFERRED, recorded. */
-        let adm = null;
-        try { adm = (await (await stGov.fetch("http://x/renderadmit", {
+        /* A store that did not answer DEFERS the render rather than running it
+           unmetered: the answered-guard, never a bare `.result` read. */
+        const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), at: retrieved }) })).json()).result; }
-        catch { adm = null; }
-        if (!adm || adm.admitted !== true)
+          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), at: retrieved }) }));
+        const adm = admOut.answered ? admOut.result : null;
+        if (!adm || adm.state !== "admitted")
           return json({ ok: false, reason: "RENDER_DEFERRED", ...renderRow("RENDER_DEFERRED"),
             op, render: { state: "deferred", content: "undetermined", allowance: adm || null },
             detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is spent `

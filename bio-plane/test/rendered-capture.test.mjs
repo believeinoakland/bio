@@ -1,7 +1,7 @@
-/* NEGATIVE CONTROL: re-run with `node test/nc-d64.mjs` (one arm: `node test/nc-d64.mjs <arm>`). Run 2026-09-24 on base origin/main 15b2a4c0 plus this item, SIX rows — four arms each armed ALONE, a baseline first and last — each file copied to a UNIQUELY-NAMED per-arm pristine copy inside this worktree, every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (4 of 4 MATCH/IDENTICAL). BASELINE 60 pass 0 fail; BASELINE-LAST 60/0 (re-run after the `render: false` correction and I4's assertion; the first run, at 59, read every arm identically). (determined) THE ROW'S CONTROL — force `determined` on a page drawing data from a second origin (renderedAuthority stops naming foreign data origins): DECLARED red on B1 by name, B2-B4 and E1, nothing else; ACTUAL 55/5 failing exactly B1 B2 B3 B4 E1, AS DECLARED. (emptyscripts) a script set nobody recorded read as `[]` (none ran): DECLARED D1 D2 D4; ACTUAL 57/3 D1 D2 D4, AS DECLARED (D3, the stated gap, is written by another line and stays green). (shellprimary) the shell kept as the PRIMARY (the swap to the rendered sha removed): DECLARED A2 A3 A4; ACTUAL 57/3 A2 A3 A4, AS DECLARED — A7/A8 stay green because both artifacts are still stored; only the primary moved, which is exactly what those three read. (overstrict) OVER-STRICTNESS — the host's own data read as foreign: DECLARED A16 alone (a correct page refused determination); ACTUAL 59/1 A16, AS DECLARED. */
+/* NEGATIVE CONTROL: re-run with `node test/nc-d64.mjs` (one arm: `node test/nc-d64.mjs <arm>`). Run 2026-09-24 on base origin/main 15b2a4c0 plus this item, SIX rows — four arms each armed ALONE, a baseline first and last — each file copied to a UNIQUELY-NAMED per-arm pristine copy inside this worktree, every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (4 of 4 MATCH/IDENTICAL). BASELINE 61 pass 0 fail; BASELINE-LAST 61/0 (re-run after the `render: false` correction, I4 and the C-number pin; the first run, at 59, read every arm identically). (1) `determined` — THE ROW'S CONTROL — force `determined` on a page drawing data from a second origin (renderedAuthority stops naming foreign data origins): DECLARED red on B1 by name, B2-B4 and E1, nothing else; ACTUAL 56/5 failing exactly B1 B2 B3 B4 E1, AS DECLARED. (2) `emptyscripts` — a script set nobody recorded read as `[]` (none ran): DECLARED D1 D2 D4; ACTUAL 58/3 D1 D2 D4, AS DECLARED (D3, the stated gap, is written by another line and stays green). (3) `shellprimary` — the shell kept as the PRIMARY (the swap to the rendered sha removed): DECLARED A2 A3 A4; ACTUAL 58/3 A2 A3 A4, AS DECLARED — A7/A8 stay green because both artifacts are still stored; only the primary moved, which is exactly what those three read. (4) `overstrict` — OVER-STRICTNESS — the host's own data read as foreign: DECLARED A16 alone (a correct page refused determination); ACTUAL 60/1 A16, AS DECLARED. */
 /* D-64 — THE RENDER ARM OF op=acquire, driven THROUGH THE OP.
  *
- * Design: `docs/development/CLIENT-RENDERED.md` §"What must be recorded on a
+ * Design: `CLIENT-RENDERED.md` (a development design, cited here and never read by this suite) §"What must be recorded on a
  * rendered capture" (and its DESIGNED 2026-09-21 item 3, the authority rule),
  * BOB #31 (third-party scripts run and every one is recorded, or the set is
  * `undetermined`) and BOB #32 (method `rendered`; ONE capture holds BOTH artifacts,
@@ -24,8 +24,10 @@
  *     suite proves what the PLANE RECORDS from a renderer's answer — the pair, the
  *     render.* fields, the origins by axis, the authority rule, the refusals, the
  *     allowance — and NOTHING about whether Cloudflare Browser Rendering reports
- *     those facts, or reports them truthfully. The in-plane driver over the BROWSER
- *     binding is NOT BUILT (block G proves the plane says so by name).
+ *     those facts, or reports them truthfully. The in-plane driver over a BROWSER
+ *     binding is NOT BUILT, and the binding is NOT in wrangler.jsonc (DIST's deploy
+ *     derivation refuses its class); block G proves the plane says so by name when an
+ *     instance binds it anyway.
  *   - LIVE BEHAVIOUR. Undetermined until DIST deploys the plane with the binding.
  *   - The D-98 task the rendered arm enqueues when its authority is undetermined:
  *     the enqueue condition changed, and no read in this suite drives the task
@@ -138,6 +140,13 @@ console.log("\n--- 0. the family and the fixture are what they claim ---");
 t("C-82 has seven rows, each with a C-number and a sentence",
   Object.values(RENDER_CAPTURE_CHECKS).map((r) => /^C-82\.\d+$/.test(r.check) && r.translation.length > 40),
   [true, true, true, true, true, true, true]);
+/* THE C-NUMBERS AS LITERALS, so a renumber or a swapped row fails here by name rather
+   than agreeing with itself through row() below. */
+t("each code carries the C-number this item minted for it",
+  Object.fromEntries(Object.entries(RENDER_CAPTURE_CHECKS).map(([k, r]) => [k, r.check])),
+  { RENDER_FLAG_MALFORMED: "C-82.1", RENDER_ARM_CONFLICT: "C-82.2", RENDER_NO_RENDERER: "C-82.3",
+    RENDER_DEFERRED: "C-82.4", RENDER_HOST_COOLING_OFF: "C-82.5", RENDER_NOT_A_PAGE: "C-82.6",
+    RENDER_FAILED: "C-82.7" });
 t("the method string is the one BOB #32 ruled", RENDERED_METHOD, "rendered");
 t("code and layout are the only non-data axes (inverted list)", Object.values(NON_DATA_TYPES).sort(),
   ["code", "layout", "layout"]);

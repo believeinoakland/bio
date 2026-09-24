@@ -58517,7 +58517,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
   /* ------------------------------------------------------------------
    * D-64: the daily render allowance (CLIENT-RENDERED.md, BOB #32 item 3)
    * ------------------------------------------------------------------ */
-  /** Admit one render against today's allowance, or record it DEFERRED. The DO
+  /** Admit one render against today's allowance, or record it DEFERRED. The verdict
+   *  is the STRING `state` (`admitted` | `deferred`), never a leading boolean, so no
+   *  reader grades a datum as a refusal (meaning-bounds D-240 (e)). The DO
    *  serialises, so one row per UTC day is globally correct for the instance.
    *  Admission is decided on what has been SPENT, because a render's cost is
    *  only known after it ran; the allowance can therefore be overrun by at most
@@ -58532,7 +58534,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       if (cur) this.sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
       else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 0, 1, ?)`, day, now);
       return {
-        admitted: false,
+        state: "deferred",
         day,
         spent_ms: spent,
         allowance_ms: allowance,
@@ -58543,7 +58545,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, last_at = ? WHERE day = ?`, now, day);
     else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, 0, 1, 0, ?)`, day, now);
     return {
-      admitted: true,
+      state: "admitted",
       day,
       spent_ms: spent,
       allowance_ms: allowance,
@@ -58557,11 +58559,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);
     const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
-    if (n === null) return { recorded: false, day, why: "the renderer reported no elapsed time, so nothing was added" };
+    if (n === null) return { day, spent_ms: null, why: "the renderer reported no elapsed time, so nothing was added" };
     const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
     if (cur) this.sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, last_at = ? WHERE day = ?`, n, now, day);
     else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, ?)`, day, n, now);
-    return { recorded: true, day, spent_ms: (cur ? cur.spent_ms : 0) + n };
+    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n };
   }
   runtimeObservations() {
     const rows = [...this.sql.exec(`SELECT * FROM runtime_observations ORDER BY metric`)];
@@ -73607,7 +73609,7 @@ var index_default = {
             ...renderRow("RENDER_NO_RENDERER"),
             op,
             renderer: renderer.kind,
-            detail: renderer.kind === "browser-binding-without-driver" ? "the Browser Rendering binding (BROWSER) is bound, but the in-plane driver over it is not built (D-64 shipped the seam and the record, not a CDP client). Nothing was fetched." : "no renderer is bound to this instance (neither RENDERER nor BROWSER). Nothing was fetched."
+            detail: renderer.kind === "browser-binding-without-driver" ? "a Browser Rendering binding (BROWSER) is bound, but the in-plane driver over it is not built (D-64 shipped the seam and the record, not a CDP client). Nothing was fetched." : "no renderer is bound to this instance (no RENDERER service binding). Nothing was fetched."
           }, 501);
         let rHost = null;
         try {
@@ -73637,17 +73639,13 @@ var index_default = {
               detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).`
             }, 429);
         }
-        let adm = null;
-        try {
-          adm = (await (await stGov.fetch("http://x/renderadmit", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), at: retrieved })
-          })).json()).result;
-        } catch {
-          adm = null;
-        }
-        if (!adm || adm.admitted !== true)
+        const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), at: retrieved })
+        }));
+        const adm = admOut.answered ? admOut.result : null;
+        if (!adm || adm.state !== "admitted")
           return json({
             ok: false,
             reason: "RENDER_DEFERRED",
