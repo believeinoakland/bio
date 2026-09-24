@@ -1,0 +1,16 @@
+{
+ "unit": "ui:change-layers.test.mjs",
+ "inputHash": "59bb5cf0bb6973b503cb52f7361a63a2ace66422f72e5ad85cfc1be2d564822f",
+ "verdict": "PASS",
+ "run": "b887c97500b676d330dd540b4be96906879381fb.1790210855673.4505.json",
+ "tree": "b887c97500b676d330dd540b4be96906879381fb",
+ "head": "d74448264614f0053f73a4a6a4bfdc6bf9eaac93",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 25,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "28dc5b1d-3820-55c2-9b29-2a3bf85134d3",
+ "at": "2026-09-24T00:47:35.688Z"
+}
