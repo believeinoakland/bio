@@ -248,7 +248,7 @@ scope: compare non-whitespace characters (or decoded code points) in the tier-2 
 accepts-when: the same page's award is unchanged under two newline policies. NEGATIVE CONTROL: restore raw length and the newline arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-502 · running — **TWO RUNS ON ONE BASELINE SEPARATED BY A HORIZONTAL JUMP NOW CONCATENATE (D-481's stated cost: agenda glue tokens 5 → 13, 0.32%), because glyph advance widths are not read.** Found by D-481's worker (M-133). — owner CONTENT-PDF.
+### D-502 · integrated — **TWO RUNS ON ONE BASELINE SEPARATED BY A HORIZONTAL JUMP NOW CONCATENATE (D-481's stated cost: agenda glue tokens 5 → 13, 0.32%), because glyph advance widths are not read.** Found by D-481's worker (M-133). — owner CONTENT-PDF.
 order: after D-501, the same reader (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:21Z)
 milestone: M2
 interface: none.
