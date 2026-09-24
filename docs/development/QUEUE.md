@@ -538,7 +538,7 @@ scope: list every `files`/`history` row whose sha the register assigns to a DIFF
 accepts-when: a store seeded with one moved row lists that sha under both bundles; a clean store lists none; the record's counters read before and after the call are unchanged. How a liar passes it: listing every multi-bundle sha including legitimate shares, so the clean-store arm must read none. NEGATIVE CONTROL: remove the different-bundle predicate, and the "displaced row found" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
 
-### D-64 · queued — **A CLIENT-RENDERED PAGE IS RECOGNISED AS A SHELL AND STILL CANNOT BE CAPTURED AS EVIDENCE: only detection is built (`docprofile/handlers/client-rendered.mjs`; `airun.mjs` holds a shell at LOOKED_INDETERMINATE, never PRESENT); there is no Browser Rendering binding and no rendered capture.** — owner RECORD (the binding through DIST).
+### D-64 · running — SPAWNED 2026-09-24 ~01:45Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER D-64 (CONDUCT #19), base origin/main 15b2a4c0, IC pre-minted; gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-64 and that session; never conclude queued from the absence alone.
 order: with the M2 capture rows, behind its substrate (BOB #31, 22:22Z: *place the capture row behind its substrate*) (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
 milestone: M2
 interface: I3 — a render arm on capture producing the pair, and the `render` provenance block; the integrator mints and classifies the IC.
