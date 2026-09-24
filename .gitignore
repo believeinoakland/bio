@@ -459,3 +459,13 @@ bio-plane/.nc-d442/
 # the run that MATTERS is the one where a restore FAILED and the pristine copies
 # are deliberately left behind. `git add -A` would stage them.
 bio-plane/.nc-d470/
+
+# D-487's control pen (`bio-plane/test/nc-d487.mjs`), on its own line and never under a glob, on the
+# standing rule stated at `.rec84-control-pristine/` above: a wildcard would silently cover a pen nobody
+# declared. It sits INSIDE `bio-plane/test/` — the directory `coverage.mjs`'s register and the battery's
+# discovery both read by WALKING rather than from a list — and the `limiter-off` arm copies a 3.1 MB
+# `src/store.mjs` into it, so a leading dot alone is not enough (the note at
+# `bio-plane/test/.nc-rec102-pristine/` makes that point for the same directory). The driver removes each
+# copy as its restore verifies and removes the pen on exit IF EMPTY; this line is for the run that is
+# killed between the two.
+bio-plane/test/.nc-d487-pen/
