@@ -382,7 +382,7 @@ scope: drive `record()` over ADMIN and PROBE classes; list every codeless refusa
 accepts-when: the sweep states its classes and the NO_CODE set over all three. NEGATIVE CONTROL: strip one admin refusal's code and the admin arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### DIST-12 · queued — **NOTHING NOTICES WHEN THE TIER 1 CORPUS URLS ROT: the probe's `--urls` preflight (D-166) runs only when someone runs it, and a network check cannot sit in the battery.** BOB #32 RULED (2026-09-24 03:45Z, cite until folded): the liveness check runs at EACH RELEASE'S LIVE VERIFICATION, by DIST. — owner DIST.
+### DIST-12 · running — 2026-09-24 ~04:57Z by CONDUCT #20: built by DIST #6 itself (session_01Vi1XTVwxcBBMStifuBasLZ), not a CONDUCT worker; base origin/main; no release until Bob asks; push by 05:50Z or hand to the other account with a released: line. Falsify rather than believe: read DIST's branch and session; never conclude queued from the absence alone.
 order: after DIST-11, with DIST's small rows: a measurement at a step DIST already takes, no daemon (SCHEDULER #18, 2026-09-24)
 milestone: M0 (a measurement instrument's corpus)
 interface: none.
