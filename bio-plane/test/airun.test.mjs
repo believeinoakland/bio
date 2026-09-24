@@ -355,9 +355,14 @@ console.log("\n--- ARM S · SCHEDULER.md's one mechanism ---");
      here rather than a `>= N` floor, and that reasoning is unchanged: the number
      is what makes this a DELTA, and a floor would go on passing over a registry
      that had LOST a consumer. */
-  t("ARM S1 (REACH, as a delta): the registry parse reaches 11 consumers, was 10 before CPDF-13 "
-    + "appended the calibration re-probe",
-    [names.length, names.length - 1], [11, 10]);
+  /* CORRECTED 2026-09-23 by D-86, never loosened: the corpus is 12 — `bias-debt` was appended as the TWELFTH,
+     the same shape again, for the reason the two paragraphs above give. */
+  /* CORRECTED 2026-09-23 by CONDUCT #18 at D-86's merge onto c17-batch7, never loosened: the corpus is 13 —
+     REC-164 appended `group-domain-recheck` and D-86 `bias-debt`, each as the twelfth on its own base, so the union
+     carries both. Still a delta, for the reason above: 13 now, 12 before the last append. */
+  t("ARM S1 (REACH, as a delta): the registry parse reaches 13 consumers, was 12 before D-86 "
+    + "appended the bias-debt sweep after REC-164's group-domain re-check",
+    [names.length, names.length - 1], [13, 12]);
   t("ARM S2: the investigative run joined as ONE appended entry",
     names.filter((n) => n === "ai-run-reap").length, 1);
   t("ARM S2b (PL-4): and the capture-request drain joined as ONE appended entry too — no second "

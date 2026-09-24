@@ -316,9 +316,6 @@ const run = async () => {
   for (const k of Object.keys(RUN_ENDINGS)) terms.add(k);
   for (const f of fences) terms.add(f.code);
   const CORPUS = [...terms];
-  const tierWords = Object.values(published?.vocabularies?.risk_tiers || {});
-  t("ARM B1d: and the published risk_tiers WORDS are in the corpus (numeral keys out, words in)",
-    [tierWords.length >= 4, tierWords.every((w) => terms.has(w))], [true, true]);
   /* CORRECTED 2026-09-23 (D-149), never exempted: D-149 published `law_levels` (federal, state, local), and the
      word `state` then became a sourced term — so this arm read the pack's ABSENCE_ANSWER_SHAPE, which names the
      FIELD `state` that §11's log requires, as a copied vocabulary. It is a homonym, not a copy, and this scanner
@@ -329,10 +326,12 @@ const run = async () => {
   const SHAPE_DECL = /export const ABSENCE_ANSWER_SHAPE = \[[^\]\n]*\];/g;
   t("ARM B2-shape: the one field-name declaration blanked before the scan is found exactly once",
     (PACK_SRC.match(SHAPE_DECL) || []).length, 1);
-  /* SUPERSEDED AT INTEGRATION (CONDUCT #19, 2026-09-24, merging main into c18-batch7fix): c18-batch7fix blanked
-     DOCTRINE_EDITION = "1" because D-182's risk_tiers KEY "1" had become a sourced term. main fixed the same collision
-     at its cause — ARM B1c: a digit-only vocabulary KEY is not a term, the word it maps to is — so "1" is no longer
-     in the corpus and that second blanking would hide nothing true. It is removed rather than kept as a dead fence. */
+  const tierWords = Object.values(published?.vocabularies?.risk_tiers || {});
+  t("ARM B1d: and the published risk_tiers WORDS are in the corpus (numeral keys out, words in)",
+    [tierWords.length >= 4, tierWords.every((w) => terms.has(w))], [true, true]);
+  /* CONDUCT #18 at main's merge into c17-batch7 (2026-09-23): D-182's "1" homonym is handled by c17-unionfix's
+     digit-key rule (numeral KEYS out of the corpus, their WORDS in, arms B1c/B1d), which supersedes the
+     DOCTRINE_EDITION blanking this branch carried; D-149's field-name blanking stays, since `state` is a word. */
   const found = quotedIn(PACK_SRC.replace(SHAPE_DECL, ""), CORPUS);
   console.log(`  corpus: ${CORPUS.length} sourced terms, scanned against ${found.literals} string `
             + `literals in src/skillpack.mjs (comments removed)`);

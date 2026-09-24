@@ -96,7 +96,7 @@ import { readDriveAddress, driveHop, callerSuppliedHopFacts,
    `ATTEST_FENCE` — a different act, a different reader — but it states the same
    doctrine, so its two grade letters come from the same place the refusal reads
    them. The reasoning is on `acquireGradeNote` itself, beside the fence. */
-import { ACTS, RUNGS, RUNG_ABSENT, VOCABULARIES, CAPTURE_ACTS, deriveActs,
+import { ACTS, RUNGS, RUNG_ABSENT, VOCABULARIES, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs,
          ACQUIRE_GRADE_NOTE } from "./affordances.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
@@ -439,6 +439,13 @@ const OPS = {
      enforces both halves; `by` is stamped server-side below. */
   projectownerrescue:  { classes: ["admin", "member", "probe"], mutating: true  },
   projectparticipants: { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-149 (Membership v2 §7.14): DISCOVERABLE or HIDDEN. The setting is an OWNER's recorded act (the store
+     refuses every other caller, machines included, by C-70.2); its read serves the setting and its history to a
+     caller who can see the project; the directory lists, for a member session, the discoverable projects it is
+     not in (a credential with no member is refused, C-70.4). */
+  projectvisibilityset: { classes: ["admin", "member", "probe"], mutating: true  },
+  projectvisibility:    { classes: ["admin", "member", "probe"], mutating: false },
+  projectdirectory:     { classes: ["admin", "member", "probe"], mutating: false },
   /* The 7.10 arithmetic, computed rather than transcribed, so an interface can
      tell a group what a change would take BEFORE they start one. op=adminarith
      is the same thing for section 4.7, and the two differ at n=2 on purpose. */
@@ -818,6 +825,12 @@ const OPS = {
      machine's proposals are listed to whoever may see the question. */
   narrow:           { classes: ["admin", "member", "probe"],     mutating: true  },
   narrowcandidates: { classes: ["admin", "member", "probe"],     mutating: false },
+  /* REC-122 / IC-232 — A MEMBER CHOOSES THE ON-POINT MENTION of one end of a connection
+     (D-161 act 3). `narrow`'s class cut and `narrow`'s reasoning: what the act refuses to a
+     machine is decided by the store on the author the control plane stamps below
+     (`CONNECTION_CHOICE_NOT_A_MEMBER`, C-74.1), so a machine arriving honestly named
+     `token:<class>` is refused BY SHAPE and the probe with it. */
+  connectionchoose: { classes: ["admin", "member", "probe"],     mutating: true  },
   /* REC-146 / IC-167 — CONTRADICTION'S IDENTIFY, THE PAIRING READ. A pure read on
      `narrowcandidates`' class cut exactly: whoever may READ the record may ask which of
      its assertions are worth comparing. It writes nothing, judges nothing and mints
@@ -838,6 +851,11 @@ const OPS = {
      NEVER rewritten. The method a deployed instance runs to learn whether its own history lost a row. Admin and
      probe, `registeraudit`'s fence: it is an audit of the working corpus, and it lists bundle ids. */
   snapkeycensus: { classes: ["admin", "probe"],                    mutating: false },
+  /* D-256: every "changed from" sentence the pre-2026-08-08 `addGo` wrote, each resolved through the version chain
+     (`op=versionchain`, PL-10) and classed wrong / right / undetermined with the three totals apart. WRITES NOTHING:
+     BOB #31 ruled (2026-09-23 22:22Z) that the bodies stay as written and the correction is the read. Admin and
+     probe, `registeraudit`'s fence: it is an audit of the working corpus, and it lists bundle ids. */
+  changedfromaudit: { classes: ["admin", "probe"],                 mutating: false },
   /* REC-130's sweep said here that `allocid` with `prefix=CASE` disclosing how
      many case identities this year had minted was acceptable — instance-level
      knowledge a member already holds. SUPERSEDED 2026-09-19 by BOB #16 (Membership
@@ -866,6 +884,12 @@ const OPS = {
      a bundle per version, so a member must not be able to learn from a version
      chain what op=list would not tell them. */
   versionchain: { classes: ["admin", "member", "probe"],         mutating: false },
+  /* D-394 — THE CROSS-VERSION NOTICE (framework §18.1): does a newer capture exist at
+     the address of a document a citation rests on, and is a passage at the same extent
+     in it. A pure READ on `versionchain`'s class cut, because it IS that chain asked
+     from a citation's side; it writes nothing, so there is no act to fence. `viewer`
+     is stamped below, fail-closed, like the chain it reads. */
+  versionnotice: { classes: ["admin", "member", "probe"],        mutating: false },
   /* PL-1 / IS-1: THE BASIS VERSIONS OF ONE INQUIRY — every alternative account
      of the evidence for a question, with its ground partition, the AND/OR
      relationship it states, the derivation edge it came along, and the run that
@@ -1674,7 +1698,9 @@ const VERSION_ACTIONS = ["versionaccept", "versionreject", "versionconsider",
                          "versionrevert", "versioncurrent", "versionhide"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
                          "projectowneradd", "projectownerremove", "projectfork",
-                         "projectownerrescue"];
+                         "projectownerrescue",
+                         /* REC-149: the owner's §7.14 setting — `by` and `viewer` stamped like every roster act. */
+                         "projectvisibilityset"];
 /* D-136 — THE SECTION 4.7 VOTE AND THE SECTION 4.9 CAPABILITY EDIT, AND THEY ARE
    ONE ARRAY BECAUSE THEY ARE ONE LANDING.
    `BIO_Membership_Architecture_v2.md` §4.7 (BOB #17, 2026-09-19, read at the
@@ -1915,6 +1941,9 @@ const SESSION_OPS = {
                    /* REC-86: NARROW and its candidate read — a member's act on a
                       reading of a question, reached by a signed-in member. */
                    "narrow", "narrowcandidates",
+                   /* REC-122: choosing a connection's on-point mention — a member's
+                      act, reached by a signed-in member. */
+                   "connectionchoose",
                    /* D-136: THE §4.7 VOTE BECOMES CASTABLE BY THE PEOPLE §4.7 ASSIGNS IT
                       TO — AND THAT IS WHY THE THREE ARE IN **BOTH** SETS, WHICH IS THE ONE
                       DESIGN CALL THIS ITEM HAD TO MAKE. It is `EXPERTISE_ACTIONS`' posture,
@@ -1960,6 +1989,9 @@ const SESSION_OPS = {
                    "contradictionpairs",
                    /* D-148: the fee-quote read, across actions, gated by the viewer. */
                    "actionquotes",
+                   /* D-394: THE CROSS-VERSION NOTICE — shown where a member meets a
+                      citation, so the session route is the one it must reach. */
+                   "versionnotice",
                    /* REC-87: TRANSCRIBE and the attestation of a typing — a person's
                       word in their own name, `attesttext`'s route and reason. */
                    "transcribe", "transcriptionattest",
@@ -1998,8 +2030,10 @@ const SESSION_OPS = {
                       is named beside `contentmint`, whose act it reads back. */
                    "extractproposals",
                    "narrow", "narrowcandidates",
+                   "connectionchoose",
                    "contradictionpairs",
                    "actionquotes",
+                   "versionnotice",
                    "transcribe", "transcriptionattest",
                    "testify",
                    "lead", "leadlook", "leadshare",
@@ -2078,6 +2112,10 @@ const NEEDS = {
      group putting its name on anything — the new reading is born `suggested`. */
   narrow:           "contribute",
   narrowcandidates: "contribute",
+  /* REC-122: choosing a connection's on-point mention rides `contribute`, on `narrow`'s
+     reasoning — it is a member's judgment written into the working record, and nothing it
+     writes is the group putting its name on anything. */
+  connectionchoose: "contribute",
   /* REC-146: NO CAPABILITY. The pairing read takes none, on `op=content`'s and
      `op=transcription`'s reasoning: asking which of the record's own assertions are
      worth comparing is READING the record. It writes nothing into the working corpus
@@ -2088,6 +2126,9 @@ const NEEDS = {
   /* D-148: NO CAPABILITY, on `contradictionpairs`' reasoning: reading what a body
      quoted is READING the record, and it writes nothing. */
   actionquotes: null,
+  /* D-394: NO CAPABILITY, on `op=content`'s reasoning — asking whether the document a
+     citation rests on has a newer version is READING the record, and it writes nothing. */
+  versionnotice: null,
   /* REC-87: NO FIFTH CAPABILITY TOKEN. Typing a portion's text writes a content
      row and its text into the working corpus, and attesting a typing is
      `attesttext`'s act on different text — both ride `contribute`, as
@@ -2330,6 +2371,8 @@ const NEEDS = {
   projectowneradd:  null,
   projectownerremove: null,
   projectownerrescue: null,
+  /* REC-149: §7.14's setting is an owner's act over participation-level policy, governed by §7 and not §5. */
+  projectvisibilityset: null,
   /* The one participation op that DOES carry a capability, because a fork
      creates a project. Without this any participant creates projects they were
      not trusted to create, which is create_projects defeated by a button. */
@@ -5999,13 +6042,19 @@ export default {
           catalog: ACTS.map((a) => ({ ...decorate(a), appliesTo: a.types })),
           vocabularies: VOCABULARIES,
           capture_acts: CAPTURE_ACTS.map(decorate),
+          /* D-126: the acts that take a SET under the `per-item` weight (affordances.mjs PER_ITEM_ACTS),
+             decorated from the same tables as every act, with the bound the store enforces. */
+          set_acts: PER_ITEM_ACTS.map((a) => ({ ...decorate(a), set_key: a.set_key, item_keys: a.item_keys,
+                                               shared_keys: a.shared_keys, max_items: PER_ITEM_MAX })),
           detail: "pass target=<bundle id> for the acts available on that object right now; "
                 + "rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE "
                 + "at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is "
                 + "null only where the act carries a STATED absence — read rung_absence for the "
                 + "ground, and vocabularies.rung_absence_grounds for what that ground means; "
                 + "capture_acts are keyed by a capture sha rather than by a bundle, so they are "
-                + "published with their metadata and never derived against an object's state",
+                + "published with their metadata and never derived against an object's state; "
+                + "set_acts take a selection as `items` under the per-item weight: each item is "
+                + "applied or RETAINED with its own act's reason, and none stops the others",
         }, store: storeName, tokenClass: cls }, 200);
       }
       const st = env.STORE.get(env.STORE.idFromName(storeName));
@@ -9883,7 +9932,10 @@ export default {
                                    projects that declared the bar, which is §7.9's reverse-edge
                                    walk arriving by a new door. The VALUE stays whole for every
                                    reader (DEC-17) — only the names are withheld. */
-                                "strengthbarof"];
+                                "strengthbarof",
+                                /* REC-149: the setting's read and the directory decide by the caller's SIGHT
+                                   (Membership v2 §7.14), so both take the stamp; each fails closed without it. */
+                                "projectvisibility", "projectdirectory"];
     /* PL-9: op=meaningrows is the SAME compiler read at meaning grain, so it
        takes op=search's stamp beside op=search rather than joining a list of
        reads that merely name a bundle. Its answer is a CANDIDATE LIST in §14c's
@@ -9974,6 +10026,11 @@ export default {
            same predicate, so hidden and absent are one answer; and it fails
            closed on an absent stamp, like every op in this list. */
         || op === "versionchain"
+        /* D-394: the notice names the question or passage asked about AND the
+           newer version it found, so both are gated: the subject through
+           `#viewerSees` and the chain through `versionChain`'s own gate. Fails
+           closed on an absent stamp, like the chain it reads. */
+        || op === "versionnotice"
         /* PL-1 / IS-1: a version set names its INQUIRY and every bundle its legs
            rest on, so an inquiry the caller was never invited to must answer
            exactly as one with no versions and as one that does not exist. The
@@ -10000,6 +10057,11 @@ export default {
            gates through the same `#bundleGate` every read here compiles and
            fails closed on an absent stamp, like every op in this list. */
         || op === "biasmanifest"
+        /* REC-149 (Membership v2 §7.14): the two acts that name a project and took no viewer — a bias set adopted
+           into a project's scope, and a review copy's draft under a project. Each asks the stamp ONLY for
+           EXISTENCE (a discoverable project, a member outside it: C-70.1); every other caller's answer is
+           unchanged, because each act's own fence already answers without it. */
+        || op === "biasadopt" || op === "casedraft"
         /* PL-2 / IS-2: the six acts name an inquiry, and make-current also names
            a project. A question the caller was never invited to must refuse
            exactly as an absent one does, so the store gates both through the same
@@ -10048,6 +10110,10 @@ export default {
            answer exactly as one that does not exist — the version acts' reason
            one screen up. Fails closed on an absent stamp. */
         || op === "narrow" || op === "narrowcandidates"
+        /* REC-122: choosing a connection's on-point mention NAMES A DOCUMENT (the end
+           chosen on), so a document the caller was never invited to must answer exactly
+           as a connection that does not exist (C-74.2). Fails closed on an absent stamp. */
+        || op === "connectionchoose"
         /* REC-146: THE PAIRING READ names no single object and is gated for a wider
            reason than the two above — it ENUMERATES, across every question and every
            cited document, and section 6 of its design requires it to pair only what
@@ -10385,6 +10451,12 @@ export default {
        `owner` stamp and a set-application shape they do not have. */
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op)
         || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op)
+        /* REC-122: the name that goes against "this mention is the one on point for this
+           connection". Overwritten rather than honoured, so the store refuses a machine BY
+           SHAPE (C-74.1). Placed ABOVE `VERSION_ACTIONS` and not beside `narrow` below: the
+           versionstate suite pins FENCE LAYER 1 by the span from `VERSION_ACTIONS` to this
+           stamp, and a new op is not a reason to lengthen that span. */
+        || op === "connectionchoose"
         || VERSION_ACTIONS.includes(op)
         /* PL-3 / IS-4: and the suggest endpoint, for the reason one paragraph
            up. `author` here is the name that goes against a STRUCTURAL claim —

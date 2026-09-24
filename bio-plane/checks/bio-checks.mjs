@@ -6424,6 +6424,105 @@ async function checkReleaseSignature(ctx, findings) {
 }
 
 // ---------------------------------------------------------------------------
+// C-77 — project name uniqueness over a HANDED CORPUS (D-50)
+// ---------------------------------------------------------------------------
+
+/**
+ * THE comparison key for project name uniqueness (Membership v2 §7.1): the
+ * `title`, trimmed, lower-cased, runs of whitespace collapsed to one space.
+ *
+ * ONE FUNCTION, AND THE STORE HOLDS THIS SAME OBJECT. `Store.projectNameKey`
+ * is assigned from this export (`static projectNameKey = projectNameKey`), so
+ * the write path's NAME_TAKEN refusal and `checkProjectNameUniqueness` below
+ * cannot disagree about what a collision is. It lived as a private static on
+ * `Store` until D-50 and moved HERE, not beside it, because the store imports
+ * the catalog and the catalog cannot import the store (`cloudflare:workers`).
+ * A second normaliser that agrees on a fixture is the way this rule is broken
+ * without any suite noticing; `test/d50-project-names.test.mjs` asserts the
+ * two are the SAME function object, not that they give equal output.
+ *
+ * @param {unknown} title
+ * @returns {string}
+ */
+export function projectNameKey(title) {
+  return String(title ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+/**
+ * Membership v2 §11 item 8: project name uniqueness enforced IN THE CHECK
+ * CATALOG as well as at the write path. The write path refuses a colliding
+ * write (`Store#promote` and `Store#projectFork`, NAME_TAKEN); nothing could
+ * judge a corpus handed in from elsewhere — an export, a migration, another
+ * group's instance, §11 item 9's pre-enforcement recheck — until this.
+ *
+ * A CORPUS-level check, deliberately outside `checkBundle`: uniqueness is a
+ * fact about a SET of bundles and no single bundle can carry it.
+ *
+ * The rule is §7.1's three consequences, in full:
+ *   - compared by `projectNameKey` (case-insensitive, whitespace collapsed);
+ *   - across EVERY lifecycle state: a deactivated (`closed`) project is still
+ *     cited and its name must still resolve to what was cited, so there is NO
+ *     state filter here and there must never be one;
+ *   - about the project OBJECT: only bundles whose `object_type` is `project`.
+ *
+ * C-77.1 (error) names EVERY colliding PAIR, by bundle id and title — three
+ * projects on one key are three pairs, because each pair is a separate thing
+ * somebody has to resolve.
+ *
+ * C-77.2 (warning) names every bundle this check could NOT judge, which is
+ * first-class rather than silence: a bundle with no readable `bundle.md` (it
+ * may or may not be a project) and a project with no title (its key is empty,
+ * so it can collide with nothing; the write path refuses it NO_TITLE). A clean
+ * result over a corpus with C-77.2 findings is a clean result over the part
+ * that could be read, and the finding says which part could not.
+ *
+ * @param {Iterable<{folderName?: string, files: Map<string, string|Uint8Array>}>} corpus
+ *   the catalog's own BundleInput shape, one per bundle
+ * @returns {{pass: boolean, findings: Finding[], projects: number, judged: number}}
+ */
+export function checkProjectNameUniqueness(corpus) {
+  /** @type {Finding[]} */
+  const findings = [];
+  const keyed = [];
+  let projects = 0;
+  for (const input of corpus || []) {
+    const raw = input && input.files && input.files.get ? input.files.get('bundle.md') : undefined;
+    const fm = raw == null ? null : parseFrontmatter(asText(raw)).data;
+    const label = (fm && typeof fm.id === 'string' && fm.id) || (input && input.folderName) || '(unnamed bundle)';
+    if (!fm) {
+      findings.push(f('C-77.2', 'warning',
+        `${label}: bundle.md is ${raw == null ? 'absent' : 'unreadable'}, so whether it is a project, and whether its name collides, is UNDETERMINED`,
+        ['hand the corpus with this bundle\'s bundle.md readable and run the check again']));
+      continue;
+    }
+    if (normalizeType(fm.object_type) !== 'project') continue;
+    projects++;
+    const key = projectNameKey(fm.title);
+    if (!key) {
+      findings.push(f('C-77.2', 'warning',
+        `${label}: a project with no title cannot be compared for name uniqueness (the write path refuses it NO_TITLE)`,
+        ['give the project a title unique across the instance']));
+      continue;
+    }
+    keyed.push({ id: label, title: String(fm.title), state: fm.current_state, key });
+  }
+  for (let i = 0; i < keyed.length; i++) {
+    for (let j = i + 1; j < keyed.length; j++) {
+      const a = keyed[i], b = keyed[j];
+      if (a.key !== b.key) continue;
+      const st = (p) => (p.state === undefined ? '' : ` [${p.state}]`);
+      findings.push(f('C-77.1', 'error',
+        `project names collide: ${a.id} "${a.title}"${st(a)} and ${b.id} "${b.title}"${st(b)} are the same name `
+          + 'compared case-insensitively with whitespace collapsed (Membership v2 §7.1), which holds across '
+          + 'deactivated projects too',
+        ['rename one of the two projects so each name identifies one project',
+         'if one is deactivated, rename the live one: the deactivated project is still cited by its name']));
+    }
+  }
+  return { pass: !findings.some((x) => x.severity === 'error'), findings, projects, judged: keyed.length };
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -12607,6 +12706,42 @@ export const PROJECT_AUTHORITY_CHECKS = {
   },
 };
 
+/* REC-149 / C-70 — A DISCOVERABLE PROJECT SHOWS ITS EXISTENCE, NOT ITS DOORS (Membership Architecture
+ * v2 §7, item 7.14, BOB #16 from Bob's ruling of 2026-09-18, *"each project chooses"*). A member who
+ * is outside a DISCOVERABLE project sees its id and name in the directory, and nothing else. Every act
+ * such a member aims at it — other than the request to join — is refused POSITIONALLY with this code,
+ * carrying the project's id and name and NOTHING else. A "does not exist" answer there would be false
+ * about a project the directory has just shown the caller; a HIDDEN project still answers exactly as
+ * one that does not exist (§7.9, REC-138), and this code is never said about one. Minted in ONE region,
+ * `Store#existenceOnly`, which every act's sight check relays. */
+export const PROJECT_VISIBILITY_CHECKS = {
+  PROJECT_SEEN_NOT_A_PARTICIPANT: {
+    check: 'C-70.1',
+    where: 'src/store.mjs #existenceOnly > is-project-existence-only',
+    translation: 'This project can be found, but you are not one of its participants, so you cannot do '
+      + 'that in it or see what is inside it. Nothing was changed. You can ask its owners to add you.',
+  },
+  PROJECT_VISIBILITY_NOT_THE_OWNER: {
+    check: 'C-70.2',
+    where: 'src/store.mjs projectVisibilitySet > is-project-visibility-owner',
+    translation: 'Only an owner of this project can choose whether it can be found. You are not one of '
+      + 'its owners, and seeing a project does not let you direct it — administrators included. '
+      + 'Nothing was changed.',
+  },
+  PROJECT_VISIBILITY_UNKNOWN_SETTING: {
+    check: 'C-70.3',
+    where: 'src/store.mjs projectVisibilitySet > is-project-visibility-owner',
+    translation: 'A project is either discoverable or hidden, and nothing else. Nothing was changed. '
+      + 'Choose one of the two.',
+  },
+  PROJECT_DIRECTORY_NEEDS_A_MEMBER: {
+    check: 'C-70.4',
+    where: 'src/store.mjs projectDirectory > is-project-directory-member',
+    translation: 'The list of projects you can ask to join is for a signed-in member. Sign in as yourself to '
+      + 'see it.',
+  },
+};
+
 /* REC-137 / C-57 — A CASE RATIFICATION'S AUTHORITY IS ITS SIGNATURES, AND THEY MUST INCLUDE AN
  * OWNER OF THE PUBLISHING PROJECT (Membership Architecture v2 §7, the bullet *"A CASE
  * RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18; DEC-72 clause 5:
@@ -12879,6 +13014,47 @@ export const QUOTE_CHECKS = {
     where: 'src/store.mjs actionQuotes > is-quote-read-axis',
     translation: 'A request is named by its position in the action\'s correspondence, which is a whole number '
       + 'counted from zero. Give that number to see only the quotes answering that request.',
+  },
+};
+
+/* D-394 / C-80 — THE CROSS-VERSION NOTICE'S REFUSALS
+ * (`BIO_Content_Framework_v0_10.md` §18.1, the cross-version relation).
+ *
+ * THE READ TAKES EXACTLY ONE SUBJECT, and every refusal here is about the subject
+ * rather than about the answer. The answer itself is never refused: a citation whose
+ * document's version chain cannot be read is ANSWERED, with `newer: null` and the
+ * reason, because a refusal there would read as "nothing to report" to a surface
+ * that renders refusals quietly — the record knowing less than it says it does.
+ *
+ * ABSENT AND INVISIBLE ARE ONE ANSWER on both lookups, as on every gated read in
+ * this plane (`op=content`'s NO_SUCH_CONTENT, `op=narrowcandidates`'
+ * NARROW_NO_INQUIRY): a question or a passage in a project the caller was never
+ * invited to refuses byte-identically to one that does not exist. */
+export const VERSION_NOTICE_CHECKS = {
+  /* Neither subject, or both. There is no default: the notice is about a CITATION,
+     and a notice answered for no citation, or for two at once, is a list the caller
+     did not ask for wearing the word "notice". */
+  VERSION_NOTICE_NO_SUBJECT: {
+    check: 'C-80.1',
+    where: 'src/store.mjs versionNotice > is-version-notice-subject',
+    translation: 'That request did not say which citation to check. Ask about one question (target=) '
+      + 'to check every passage its evidence rests on, or about one passage (content=) — one of the '
+      + 'two, not both and not neither.',
+  },
+  /* The question named is not one this caller may read, or is not a question. */
+  VERSION_NOTICE_NO_INQUIRY: {
+    check: 'C-80.2',
+    where: 'src/store.mjs versionNotice > is-version-notice-subject',
+    translation: 'There is no question by that id that you can read here. A question you may not see '
+      + 'answers exactly as one that does not exist, so nothing about it was checked.',
+  },
+  /* The passage named is not a content row this caller may read. */
+  VERSION_NOTICE_NO_CONTENT: {
+    check: 'C-80.3',
+    where: 'src/store.mjs versionNotice > is-version-notice-subject',
+    translation: 'There is no cited passage by that id that you can read here. A passage id exists once '
+      + 'somebody has cited that part of a document; one in a project you were not invited to answers '
+      + 'exactly as one that does not exist.',
   },
 };
 
@@ -13570,6 +13746,72 @@ function coversImagePlacement(e, container) {
     + `[${want.join(', ')}], the rectangle the extent names`;
 }
 
+/* D-126 / C-76 — THE TASK-ACTOR FENCE'S REFUSAL, TRANSLATED BECAUSE A MEMBER CAN NOW MEET IT.
+ *
+ * `NOT_YOURS` is REC-4's fence (`store.mjs #refuseNotYours`): a member who is neither a task's assignee nor an
+ * administrator may not resolve or forward it. Until D-126 no surface could receive it — `op=queue` lists a member
+ * only their own and unassigned obligations, so the queue had nothing it could be refused (UI-14 §7). A SELECTION
+ * changes that: an obligation that moves to somebody else between the paint and the act is RETAINED under this
+ * code, and the queue renders the reason. So the code enters reach and carries a canned sentence (DEC-49). The
+ * `detail` still names who holds it; the translation does not, because it is canned. */
+export const TASK_ACTOR_CHECKS = {
+  NOT_YOURS: {
+    check: 'C-76.1',
+    where: 'src/store.mjs #refuseNotYours > is-task-actor-fence',
+    translation: 'This task is not yours to act on: it is with another member now, so nothing was done to it. '
+      + 'The record says below who holds it. Ask them, or an administrator, if it still needs you.',
+  },
+};
+
+/* D-126 / C-75 — THE PER-ITEM WEIGHT (NOTIFICATIONS.md §Applying a handler to a selection).
+ *
+ * Bob's requirement: *"select some (or all) to apply the action to. When the handler is applied to a
+ * notice, it would then indicate whether that notice can be deleted from the list. If that action
+ * didn't work for one or more, they'd stay in the list so that the user can take a different action."*
+ * The design's rule: **each item independently succeeds or is RETAINED WITH A REASON**, and the reason is
+ * the act's OWN refusal for that item, in the plane's own words — never a sentence this family composes
+ * about it. So this family words only what belongs to the SET: a set that is not a set, a set too large
+ * to act on, an item that is not an item, an item whose act threw, and the summary that some items were
+ * kept. Every retained item still carries its own act's `reason` beside this family's summary.
+ *
+ *   C-75.1 — no items: `items` is absent from the set form, not an array, or empty.
+ *   C-75.2 — too many items: over `Store.PER_ITEM_MAX`, refused WHOLE before any item is tried.
+ *   C-75.3 — one item is not an object; THAT item is retained and the others are still tried.
+ *   C-75.4 — one item's act failed without a refusal (it threw); THAT item is retained and says so.
+ *   C-75.5 — the summary: at least one item was retained. Carried beside `items[]`, never instead of it. */
+export const PER_ITEM_CHECKS = {
+  SET_NO_ITEMS: {
+    check: 'C-75.1',
+    where: 'src/store.mjs #perItem > is-per-item-set-shape',
+    translation: 'Nothing was selected, so nothing was done. Choose at least one item and try again.',
+  },
+  SET_TOO_LARGE: {
+    check: 'C-75.2',
+    where: 'src/store.mjs #perItem > is-per-item-set-shape',
+    translation: 'That selection is larger than the record acts on at once, so nothing was done to any of '
+      + 'it. Select fewer items and apply the action again.',
+  },
+  SET_ITEM_MALFORMED: {
+    check: 'C-75.3',
+    where: 'src/store.mjs #perItem > is-per-item-malformed',
+    translation: 'This item could not be read as an item, so it was left as it was. The rest of the '
+      + 'selection was still acted on, one by one.',
+  },
+  SET_ITEM_FAILED: {
+    check: 'C-75.4',
+    where: 'src/store.mjs #perItem > is-per-item-failed',
+    translation: 'The record could not complete the action on this item and did not change it. It stays '
+      + 'in your list. The rest of the selection was still acted on, one by one.',
+  },
+  SET_ITEMS_RETAINED: {
+    check: 'C-75.5',
+    where: 'src/store.mjs #perItem > is-per-item-retained',
+    translation: 'Not every selected item was handled. The ones that were have left your list; the ones that '
+      + 'were not are still there, each with the reason the record gave for it, so you can take a '
+      + 'different action on them.',
+  },
+};
+
 /* =========================================================================
  * FW-17 · THE DETERMINING REFERENCE PAIR, AND WHAT A PORTION MAY EARN FROM IT
  * (D-161; Bob's rulings of 2026-09-14, CONTENT-EXTENT-DESIGN-SPACE.md 5.1
@@ -13664,8 +13906,48 @@ export const CONNECTION_PAIR_CHECKS = {
       + 'linked the two documents through the strongest-graded mention without anyone choosing '
       + 'which mention is the one on point. Because another mention bears on the part you cited, '
       + 'whether this connection reaches your citation is undetermined rather than yes or no. A '
-      + 'citation of the document as a whole is answered today; choosing which mention is the '
-      + 'on-point one for this connection is not yet something the record lets anyone do.',
+      + 'citation of the document as a whole is answered today; a member may also choose which '
+      + 'mention is the on-point one for this connection, and the answer then follows that choice.',
+  },
+};
+
+/* REC-122 / D-161 act (3) / IC-232 — THE MEMBER'S CHOICE OF THE ON-POINT PAIR, C-74
+ * (minted with `node tools/mintid.mjs C`; C-68 was minted first and found TAKEN on an
+ * in-flight landing branch, so it was abandoned — gaps cost nothing).
+ *
+ * ITS OWN FAMILY AND NOT A SUB-NUMBER OF C-49, because C-49 is a READ's answer about
+ * what a portion may earn and this is an ACT's refusal: the three ways a member's
+ * choice could record something that was not established — a choice nobody made
+ * (a machine credential, or no name at all), a choice about a connection the record
+ * does not hold (or holds out of the chooser's sight, answered identically), and a
+ * choice of a mention the document does not carry. REC-86's C-50.5 is the leg-side
+ * twin of the first and its wording is mirrored on purpose.
+ *
+ * ONE REGION, `is-connection-choice`, in `Store#chooseConnectionPair`; one helper
+ * named `refusal`; every code a literal at its site. */
+export const CONNECTION_CHOICE_CHECKS = {
+  CONNECTION_CHOICE_NOT_A_MEMBER: {
+    check: 'C-74.1',
+    where: 'src/store.mjs chooseConnectionPair > is-connection-choice',
+    translation: 'Choosing which mention of a subject is the one on point for a connection is a '
+      + 'member\'s own act, done in their name. A machine may point out the mentions a document '
+      + 'holds, but deciding which one a connection rests on is a judgment a person signs for.',
+  },
+  CONNECTION_CHOICE_NO_CONNECTION: {
+    check: 'C-74.2',
+    where: 'src/store.mjs chooseConnectionPair > is-connection-choice',
+    translation: 'That request does not name a connection this record holds and you can see. A '
+      + 'connection is named by the two documents it joins and the subject that joins them, and '
+      + 'it exists once the record has derived it — choose after it appears among the document\'s '
+      + 'connections.',
+  },
+  CONNECTION_CHOICE_NOT_A_MENTION: {
+    check: 'C-74.3',
+    where: 'src/store.mjs chooseConnectionPair > is-connection-choice',
+    translation: 'The mention named is not one this document carries for that subject. The choice '
+      + 'is among the places the record actually read the subject in this document, by the '
+      + 'reference as the reading recorded it; a mention the record never read cannot be the one '
+      + 'a connection rests on.',
   },
 };
 

@@ -1146,6 +1146,34 @@ CREATE INDEX IF NOT EXISTS connections_a ON connections(a_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_b ON connections(b_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_a_bundle ON connections(a_bundle_id);
 CREATE INDEX IF NOT EXISTS connections_b_bundle ON connections(b_bundle_id);
+-- REC-122 / D-161 act (3) / IC-232, 2026-09-23: A MEMBER'S CHOICE OF THE ON-POINT
+-- MENTION on one end of a connection (Bob's 5.4 second pass: specificity is worked
+-- for, not merely permitted). The connection's own pair stays the machine's
+-- strongest-graded selection and is NEVER rewritten by a choice -- a re-derivation
+-- would overwrite it, and the machine's selection and a member's judgment are two
+-- facts. So the choice lives beside the row, keyed by the connection's own primary
+-- key plus the END ('a' or 'b') it is about, and names the mention by its reference
+-- exactly as the reading recorded it (resolutions.ref). APPEND-ONLY: a re-choice
+-- stamps superseded_at on the current row and writes a new one, so the old is
+-- retained (REC-86's rule). superseded_at NULL = the current choice. The two bundle
+-- ids are carried so a per-bundle purge clears a choice with the connection it is
+-- about (D-113). No position is stored: WHERE the mention was read is the reading's
+-- fact (reading_refs), read at answer time, so a choice cannot freeze a position the
+-- record later corrects.
+CREATE TABLE IF NOT EXISTS connection_pair_choices (
+  choice_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  a_capture_sha TEXT NOT NULL,
+  b_capture_sha TEXT NOT NULL,
+  entity_id     TEXT NOT NULL,
+  side          TEXT NOT NULL,  -- which end the choice is about, a or b
+  ref           TEXT NOT NULL,  -- the chosen mention, as resolutions.ref holds it
+  a_bundle_id   TEXT,
+  b_bundle_id   TEXT,
+  chosen_by     TEXT NOT NULL,  -- the member, stamped by the control plane
+  at            TEXT NOT NULL,
+  superseded_at TEXT            -- NULL = current, else when a later choice replaced it
+);
+CREATE INDEX IF NOT EXISTS connection_pair_choices_end ON connection_pair_choices(a_capture_sha, b_capture_sha, entity_id, side);
 -- CONSTRUCTS Step 5, SLICE A (FW-8): the PROGRESSION DEFINITION as data (framework
 -- section 8.2, "generalises the connection table rather than sitting beside it"). A
 -- definition is a named ordered set of STAGES with the rules a progression's junction
@@ -3759,6 +3787,59 @@ CREATE TABLE IF NOT EXISTS group_domain_checks (
   trigger     TEXT NOT NULL,
   status      INTEGER,
   detail      TEXT
+);
+-- REC-149 (Membership Architecture v2 section 7, item 7.14, BOB #16 from Bob's
+-- ruling of 2026-09-18, "each project chooses"): DISCOVERABLE or HIDDEN, as an
+-- OWNER'S RECORDED ACT and never a field of the project document, because a
+-- joined participant may revise that document and would then set an owner's
+-- choice. APPEND-ONLY, one row per act, the current setting is the LATEST row
+-- (highest seq for the project). A project with NO row reads HIDDEN: every
+-- project that existed before this table was created under section 7.9's
+-- promise that the uninvited see not its existence, and no migration writes a
+-- row for any of them. Keyed on project_id, a bundle id, so both purge arms
+-- clear it with the project (the project_participants precedent).
+CREATE TABLE IF NOT EXISTS project_visibility (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id TEXT NOT NULL,
+  setting    TEXT NOT NULL CHECK (setting IN ('discoverable','hidden')),
+  set_by     TEXT NOT NULL,       -- the owner who set it, a member id
+  reason     TEXT,                -- optional, the owner's own words
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility(project_id, seq);
+-- =========================================================================
+
+-- D-86 (NOTIFICATIONS.md, The catalogue: a re-run owed after a lens change, an OBLIGATION, DISCLOSED and never
+-- blocking, DEC-20, with BIO_Content_Framework_v0_10.md section 13): the BIAS DEBT a run carries once the lens it
+-- was formed under has moved. ONE ROW PER RUN, keyed by the run and nothing else, so the sweep is idempotent by
+-- construction: a second alarm tick finds the row and writes nothing new. Written ONLY by the bias-debt consumer
+-- on the one alarm, from the answer aiRunRead publishes (its bias block: moved, moved_basis, the two hashes) and
+-- never from a second comparison. lens_then is the side the comparison was against (the lens at the open for a
+-- recorded open, else the manifest the run was handed), lens_now the lens at the sweep, NULL where none is in
+-- force. cleared_at is set, never a DELETE, when a later sweep reads moved false again: the obligation leaves the
+-- queue and the row keeps what was observed. recipients is a JSON array of member ids, each one checked through
+-- the run's own read gate at the sweep. A run is purged only by the whole-store arm, which takes this with it.
+CREATE TABLE IF NOT EXISTS bias_debts (
+  run           TEXT PRIMARY KEY,
+  context_type  TEXT NOT NULL,
+  context_id    TEXT NOT NULL,
+  moved_basis   TEXT,
+  lens_then     TEXT,
+  lens_now      TEXT,
+  recipients    TEXT NOT NULL,
+  raised        TEXT NOT NULL,
+  observed      TEXT NOT NULL,
+  cleared_at    TEXT
+);
+-- D-86: the sweep's own place in its work. fingerprint is the lens-input fingerprint the LAST COMPLETE sweep read
+-- (every adoption with its bundle's current sha and state), so an alarm with no lens change asks nothing of any
+-- run. target and cursor carry a sweep that spans several ticks, restarted from the top when the lens moves again.
+CREATE TABLE IF NOT EXISTS bias_debt_sweeps (
+  k            TEXT PRIMARY KEY,
+  fingerprint  TEXT,
+  target       TEXT,
+  cursor       TEXT NOT NULL DEFAULT '',
+  at           TEXT NOT NULL
 );
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant

@@ -2257,6 +2257,13 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        `mf.dispose()`, to find the Durable Object's SQLite file and PLANT the lost manifest rows the census must count.
        The count it plants is asserted EXACTLY (`2`), so a phantom file can only turn that arm RED, never quietly green. */
     "bio-plane/test/rec176-snapkey.test.mjs",     // its own mkdtemp persist root, to plant the census fixture; asserted exact
+    /* ADDED 2026-09-23 by D-394; the ratchet caught it on the item's first battery. NAMED AND NOT GUARDED: its one
+       walk is of ITS OWN `mkdtemp` persist root (`d394-persist-*`, inside the sandbox `sandbox.mjs` owns), after
+       `mf.dispose()`, to hash every table of the Durable Object's SQLite — the WITNESS that the notice read wrote
+       nothing. It floors its reach (>= 40 tables, the content table present, none unreadable) and compares the store
+       with itself across the reads, so a phantom file adds tables to BOTH sides of the comparison and cannot make the
+       nothing-written arm pass; it can only fail the quiet arm, by name. */
+    "bio-plane/test/versionnotice.test.mjs",      // its own mkdtemp persist root, hashed as the nothing-written witness
     /* ADDED 2026-09-22 by CONDUCT #12 at M0-81's integration, AND THE RATCHET CAUGHT IT ON THE FIRST BATTERY THE ITEM
        MET: the integration gate of batch 2 (tree cd85c88a, commit b2797101), because M0-81 was folded into the batch with
        its own FULL gate unrun. NAMED AND NOT GUARDED: the driver's one discovery primitive in code is
@@ -2356,13 +2363,17 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   /* MOVED 2026-09-23 BY REC-176: 38 -> 39, from the figure this suite PRINTED on the item's tree over origin/main
      0e7cc03e, never by adding to the number in the file. The one is REC-176's own suite (`test/rec176-snapkey.test.mjs`,
      named above), the only walker the item adds. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 42)`,
+  /* MOVED 41 -> 42 by D-394, 2026-09-23, from the figure this suite PRINTED on the item's tree (`class census: 42
+     file(s)`): the one is D-394's own suite (`test/versionnotice.test.mjs`, named above), the only walker it adds. */
+  /* MOVED 42 -> 43 by CONDUCT #18 at D-394's merge onto c18-batch8, which carries D-179's walker (d179onehome): the
+     merged tree PRINTED 43, d179onehome and versionnotice both walkers. */
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 43)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
     /* MOVED 41 -> 42 by D-179 (d179onehome named above), from the figure this suite PRINTED on the item's tree over
        origin/main 91bcea6b, the only walker the item adds (its control driver copies trees and walks none). */
-    census.length >= 42, true);
+    census.length >= 43, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

@@ -4,6 +4,9 @@ import { DurableObject } from "cloudflare:workers";
    checker's view cannot disagree about what the document says. */
 import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_FIELD_SETS,
          checkBundle, createSha256, isPublicHttpsLocator,
+         /* D-50: 7.1's name key is the CATALOG's one function, held below as `Store.projectNameKey`, so the
+            write path's NAME_TAKEN and the catalog's C-77 cannot disagree about what a collision is. */
+         projectNameKey,
          /* REC-10: the type mapping and the inquiry state machine come from
             the catalog, so the store's view and the checker's view cannot
             disagree (the same reason this file already imports the catalog's
@@ -116,6 +119,9 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             translation for the version chain's three refusals, as ONE row read
             from the catalog rather than restated here. */
          VERSION_CHAIN_CHECKS,
+         /* D-394 / DEC-49: the cross-version notice's three refusals, one row
+            each, read from the catalog rather than restated here. */
+         VERSION_NOTICE_CHECKS,
          /* PL-1 / IS-1: the BASIS-VERSION grammar, imported rather than
             reimplemented, so the version rules run at BOTH gates through ONE
             function — a version that cannot land cannot audit clean either,
@@ -222,7 +228,7 @@ import { liveToken } from "./tokens.mjs";
    admits and the catalogue does not publish (or the reverse) is not reachable
    by editing one place, which is the whole of the guarantee. */
 import { DISPOSITIONS, REOPENABLE_FROM, deriveActs,
-         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS } from "./affordances.mjs";
+         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, PER_ITEM_MAX } from "./affordances.mjs";
 /* REC-21: the queue's PERSONAL half. The CONDITION-kind vocabulary the mute
    fence refuses against, and the ONE admission decision the feed applies — pure,
    so the suite holds the rule directly rather than only through a Durable
@@ -306,7 +312,7 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
          CONTENT_EVIDENCE_IS_ONE_SIDED, causesNotRuledOut,
          /* REC-129 / IC-143: the internet level's sidedness and its empty-answer ladder. */
          INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES,
-         readerRunObservation, resolutionObservation, derivationObservation,
+         readerRunObservation, resolutionObservation, derivationObservation, derivationStatement,
          /* REC-96 / D-196 / IC-112: THE COMPLETENESS STATEMENT'S `searched`
             SECTION, decided in `airun.mjs` for the reason every vocabulary above
             is — this file gathers the subjects the CASE names and asks what
@@ -459,10 +465,15 @@ import { checkLegExtentGrammar } from "../checks/bio-checks.mjs";
    whether an address is legal, this asks whether a link REACHES an address. */
 import { CONNECTION_PAIR_CHECKS, checkConnectionPairCovers,
          checkConnectionMentionUnchosen } from "../checks/bio-checks.mjs";
+/* REC-122 / IC-232: the member's CHOICE of the on-point mention, and its refusals (C-74). */
+import { CONNECTION_CHOICE_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-86 / IC-123: NARROW's refusals, its one predicate over two extents, and
    the version-name grammar its new reading must meet (C-25.2's own regex, so a
    name this act accepts is one op=promote accepts). */
 import { NARROW_CHECKS, extentRelation, VERSION_NAME_RE } from "../checks/bio-checks.mjs";
+/* D-126 / C-75: the PER-ITEM weight's own refusals — the SET's words, never an item's (NOTIFICATIONS.md
+   §Applying a handler to a selection). An item's reason is its own act's refusal, carried verbatim. */
+import { PER_ITEM_CHECKS, TASK_ACTOR_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-87 / IC-128: TRANSCRIBE's refusals, and the digest the `typed` step
    carries — the catalogue's own sync sha256, so the text digest and the content
    address are computed by one implementation. */
@@ -471,6 +482,8 @@ import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-che
 import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
 import { PROJECT_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
+/* REC-149 / C-70: a DISCOVERABLE project's existence is seen; its doors are not (Membership v2 §7.14). */
+import { PROJECT_VISIBILITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-137 / C-57: a case ratification is signed by an OWNER of the publishing project (DEC-72 cl. 5). */
 import { CASE_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-167 / C-65: a case document is signed only while its project still stands on the conclusion it records. */
@@ -2857,6 +2870,15 @@ export class Store extends DurableObject {
                 offered and then refused. THREE-VALUED, `project_owner`'s shape exactly: null on
                 any target that is not a project and for a caller with no roster position (a
                 `class:*` credential), whose act set is therefore byte-unchanged. */
+             /* REC-149 / Membership v2 §7.14: WHETHER THE CALLER OWNS THIS PROJECT — the PAIR fact D-311 names,
+                asked of `identity` through `#isProjectOwner`, the predicate `projectVisibilitySet` refuses on, so
+                the published act and its refusal cannot disagree (DEC-8). THREE-VALUED, `project_participant`'s
+                shape: null on a target that is not a project and for a caller with no roster position. Its one
+                consumer is `projectvisibilityset`, which is offered on `=== true` only. */
+             project_target_owner: (() => {
+               if (normalizeType(b.object_type) !== "project") return null;
+               const who = this.#positionalMember(viewer, identity);
+               return who === null ? null : this.#isProjectOwner(b.bundle_id, who); })(),
              project_participant: (() => {
                if (normalizeType(b.object_type) !== "project") return null;
                const who = this.#positionalMember(viewer, identity);
@@ -3216,10 +3238,15 @@ export class Store extends DurableObject {
          interval, or nothing threaded holds no alarm. It does NOT mint a task/focus per overdue
          instance (D-79 don't-drown; escalation is DEC-10, Bob's). Uses the firing instant `now`,
          the virtual clock a suite drives onAlarm(now) with, exactly as the other consumers do.
-         DEFERRED and flagged (D-86, the other half): bias-debt — a decayed bias measure is the
-         SAME shape (an obligation with a clock, blocking a state transition, settleable in batches),
-         and rides THIS consumer shape later with a different producer. REC-8 builds only the temporal
-         half; a bias-debt sweep would register beside overdue-scan and inherit the reconcile. */
+         D-86, the other half: bias-debt is the SAME shape (an obligation with a clock, attached to an
+         object, settleable in batches) and rides THIS alarm with a different producer — the `bias-debt`
+         consumer at the foot of this registry, which inherits the reconcile. REC-8 built only the
+         temporal half.
+         CORRECTED 2026-09-23 (D-86, per DEC-20 / D-188): this read that bias debt is "blocking a state
+         transition". It is not and never was under DEC-20 — ordinary bias debt is DISCLOSED and travels
+         with the work; only an uncleared HUNCH refuses publication. The temporal half blocks; the bias
+         half surfaces. The sentence stood here after `queuestate.mjs`, `NOTIFICATIONS.md` and framework
+         §13 had all been corrected on 2026-08-05, which is the copy-that-agreed-once hazard exactly. */
       { name: "overdue-scan",
         due:  (now) => now,
         wake: (now) => this.#overdueScan(now).next_deadline,
@@ -3466,6 +3493,25 @@ export class Store extends DurableObject {
         due:  ()    => this.#groupDomainWake(),
         wake: ()    => this.#groupDomainWake(),
         tick: ()    => this.#groupDomainTick() },
+      /* D-86 (NOTIFICATIONS.md §The catalogue: *"a re-run owed after a lens change `[OBLIGATION]` — DISCLOSED,
+         never blocking"*; framework §13, bias debt and ageing are one mechanism): THE BIAS-DEBT SWEEP, the
+         TWELFTH consumer on the one alarm and ONE APPENDED ENTRY exactly as SCHEDULER.md instructs. It is
+         overdue-scan's other half and registers on the same alarm; it is APPENDED rather than inserted beside
+         it because an insertion renumbers every consumer a later census names (`airun.test.mjs` ARM S3b).
+
+         IT RAISES ONE OBLIGATION PER RUN WHOSE RECORDED LENS MOVED, AND IT NEVER COMPARES A HASH ITSELF. The
+         comparison is `aiRunRead`'s — `#biasForRun`, the one reader `op=airun` publishes — read whole per run;
+         a second comparison here would agree today and drift tomorrow, and D-86's control changes that ONE
+         function and watches the item follow it. `moved: null` raises nothing and clears nothing: undetermined
+         is stated, never rounded to either side. Nothing is refused anywhere (DEC-20).
+
+         INTERVAL-consumer shape, and it self-terminates: due and wake only while the lens inputs have moved
+         since the last complete sweep (`#biasDebtPending`, one small read), so an instance whose lens has not
+         changed holds no alarm for it. The lens-changing doors (`promote`, `biasadopt`) arm it. */
+      { name: "bias-debt",
+        due:  (now) => this.#biasDebtPending() ? now : null,
+        wake: (now) => this.#biasDebtPending() ? now + this.#biasDebtDelayMs() : null,
+        tick: (now) => this.#biasDebtSweep(now).then((b) => ({ biasdebt: b })) },
     ];
     for (const name of Object.keys(probe || {})) {
       const st = probe[name];
@@ -3494,7 +3540,7 @@ export class Store extends DurableObject {
     const grace = Store.SCHED_GRACE_MS;
     let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null,
         queuerenotify = null, monitorcadence = null, airunreap = null, capturerequests = null,
-        airunwake = null, calibration = null, groupdomain = null;
+        airunwake = null, calibration = null, groupdomain = null, biasdebt = null;
     const probes = [];
     for (const c of reg) {
       const d = c.due(now);
@@ -3544,6 +3590,9 @@ export class Store extends DurableObject {
       /* REC-164, named for the seventh time and for the same reason: a domain re-check that disappears into
          `probes` is the one mechanism keeping a public claim true, unobservable in the alarm's own account. */
       else if (c.name === "group-domain-recheck") groupdomain = r && r.groupdomain;
+      /* D-86, named for the seventh time and for the same reason: an unnamed consumer is reported as a TEST
+         PROBE, and a debt that disappears into `probes` is a lens change nobody can see was noticed. */
+      else if (c.name === "bias-debt") biasdebt = r && r.biasdebt;
       else probes.push(c.name);
     }
     /* Reconcile over the FULL registry, not just the consumers that ticked, and
@@ -3568,7 +3617,8 @@ export class Store extends DurableObject {
              ...(capturerequests ? { capturerequests } : {}),
              ...(airunwake ? { airunwake } : {}),
              ...(calibration ? { calibration } : {}),
-             ...(groupdomain ? { groupdomain } : {}) };
+             ...(groupdomain ? { groupdomain } : {}),
+             ...(biasdebt ? { biasdebt } : {}) };
   }
 
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -4019,6 +4069,7 @@ export class Store extends DurableObject {
     if (!sel.ok) return sel;
 
     const p = this.#one(`SELECT bundle_id, object_type, bundle_sha FROM bundles WHERE bundle_id=?`, project);
+    { const existence = p ? this.#existenceAct(p.bundle_id, viewer) : null; if (existence) return existence; }   /* REC-149 */
     /* REC-138 / D-426: sight BEFORE position — a project this viewer cannot see answers as absent. */
     if (!p || !this.#inSight(p.bundle_id, viewer)) return Store.#noSuchProject(project);
     if (p.object_type !== "project")
@@ -5512,6 +5563,8 @@ export class Store extends DurableObject {
       projRow = this.#one(
         `SELECT b.bundle_id, b.object_type, b.bundle_sha FROM bundles b
          WHERE b.bundle_id=? AND (${pgate.sql})`, pid, ...pgate.args);
+      /* REC-149: at EXISTENCE the positional C-70.1; NONE falls to the unchanged answer below. */
+      if (!projRow) { const existence = this.#existenceAct(pid, viewer); if (existence) return existence; }
       if (!projRow || normalizeType(projRow.object_type) !== "project")
         return { ok: false, reason: "NOT_A_PROJECT", target, project: pid,
                  detail: `${pid.slice(0, 60)} is not a project readable here, so there is no relationship `
@@ -7460,6 +7513,8 @@ export class Store extends DurableObject {
     const pb = this.#one(
       `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
       proj, ...gate.args);
+    /* REC-149: at EXISTENCE the positional C-70.1; NONE falls to the unchanged answer below. */
+    if (!pb) { const existence = this.#existenceAct(proj, viewer); if (existence) return existence; }
     if (!pb)
       return { ok: false, reason: "NO_SUCH_PROJECT", project: proj,
                detail: `no project answers to ${proj}. A project you cannot see is answered exactly as one that `
@@ -9557,9 +9612,12 @@ export class Store extends DurableObject {
 
   /* THE DRAFT ACT — create, or edit in place (a review copy is MUTABLE; Bob,
      2026-09-17: *"An editor must be able to edit"*). */
-  #caseDraft(who, { draft = null, project = null, ...rest } = {}) {
+  #caseDraft(who, { draft = null, project = null, viewer = null, ...rest } = {}) {
     const a = { who };
     const proj = String(project ?? "").trim();
+    /* REC-149: a NEW draft under a DISCOVERABLE project its caller is outside is refused positionally (C-70.1);
+       every other caller keeps the one answer below, which says nothing about whether the project exists. */
+    if (!draft && proj) { const existence = this.#existenceAct(proj, viewer); if (existence) return existence; }
     const existing = draft ? this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft).trim()) : null;
     if (draft && !existing) return Store.#notReviewOwner("draft");
     const owning = existing ? existing.project_id : proj;
@@ -11804,6 +11862,7 @@ export class Store extends DurableObject {
     /* REC-138 / D-426: sight BEFORE position. A project this viewer cannot see answers exactly as
        an absent id, through the one shared answer; an inquiry is shared material and always in
        sight, so the question arm is untouched. */
+    { const existence = p ? this.#existenceAct(p.bundle_id, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!p || !this.#inSight(p.bundle_id, viewer)) return Store.#noSuchProject(project);
     /* Through normalizeType, so a legacy focus/problem spelling lands on the
        inquiry arm rather than falling through to the refusal — the MAP RULE. */
@@ -15722,6 +15781,13 @@ export class Store extends DurableObject {
          C-56 — so none of them can speak to a caller who cannot see the project. A CREATION at a
          hidden id (base null) still answers EXISTS: a shared id space cannot hide that an id is
          taken, which is D-428's, stated there rather than here. */
+      /* REC-149: asked just before, at EXISTENCE only (a discoverable project, a member outside it): C-70.1,
+         positional, because the directory has shown this caller it exists. A stamped identity with no viewer is
+         asked as an EMPTY viewer, which is NONE, so the line below still fails it closed. */
+      if (cur && base !== null && pkg.actorIdentity != null) {
+        const existence = this.#existenceAct(bundleId, pkg.actorViewer ?? "");
+        if (existence) return existence;
+      }
       if (cur && base !== null && pkg.actorIdentity != null && !this.#inSight(bundleId, pkg.actorViewer ?? null))
         return Store.#promoteAbsent();
       /* ===== REC-176 — A RE-SEND OF A PROMOTION THE RECORD ALREADY HOLDS IS A NO-OP (the history law,
@@ -23220,11 +23286,39 @@ export class Store extends DurableObject {
        connection with one visible end and one invisible one still says what it
        says, and names only the end it may. */
     const keep = this.#bundleRedactor(viewer);
+    /* REC-122: a member's choice of the on-point mention on either end is published beside the
+       machine's pair, and ONLY where one exists — a connection nobody chose on answers byte for
+       byte as before. `on_point` is the member's; `determining_pair` stays the machine's. */
+    const withChoice = (r) => {
+      const ch = this.#currentPairChoices(r.a_capture_sha, r.b_capture_sha, r.entity_id);
+      return (ch.a || ch.b) ? { on_point: ch } : {};
+    };
+    /* D-241 — THE DERIVATION'S EXTENT, beside the read's. `truncated` above is whether THIS
+       PAGE was cut at `limit`; it says nothing about whether the derivation that WROTE the
+       rows was cut at its pair bound, and a cut derivation read at the ceiling came back
+       `truncated: false` over part of the set. REC-95's row per derivation already records
+       that (`partial`), so the entity arm reads the LATEST one — one hit on the
+       `observation_log_frontier` index — and `derivationStatement` in `airun.mjs` says what
+       it means. No row is never published bare: §5.1's cause decides between never derived,
+       pre-log and undetermined. Ungated for the reason the meaning frontier's entity fetch
+       gives: an entity is not gated. The capture arm spans many entities and publishes
+       nothing here; its derivation is read per entity. */
+    const derivation = entityId
+      ? (() => {
+          const obs = this.#one(
+            `SELECT at, state, detail FROM observation_log
+              WHERE level = 'meaning' AND subject_kind = 'entity' AND subject = ?
+              ORDER BY seq DESC LIMIT 1`, entityId);
+          if (obs) return derivationStatement(obs);
+          const ent = this.#one(`SELECT at FROM entities WHERE entity_id = ?`, entityId);
+          return derivationStatement(null, this.#missingMeaningCause("entity", entityId, ent ? ent.at : null));
+        })()
+      : undefined;
     return { ok: true, entity_id: entityId, capture_sha: captureSha, count: rows.length,
              connections: rows.map((r) => ({
                ...this.#connectionView(r),
-               a_bundle_id: keep(r.a_bundle_id), b_bundle_id: keep(r.b_bundle_id) })),
-             limit: cap, truncated };
+               a_bundle_id: keep(r.a_bundle_id), b_bundle_id: keep(r.b_bundle_id), ...withChoice(r) })),
+             limit: cap, truncated, ...(derivation ? { derivation } : {}) };
   }
 
   /* ============ FW-17 · A PORTION'S CONNECTION GRADE ============
@@ -23346,6 +23440,57 @@ export class Store extends DurableObject {
                       determining_pair: view.determining_pair };
       if (whole) { reaching.push({ ...entry, why: "this citation is of the whole document, so every "
                                                 + "connection the document has is inside it" }); continue; }
+      /* REC-122 / D-161 act (3) — A MEMBER'S CHOICE SETTLES WHAT THE MACHINE'S SELECTION COULD
+         NOT. Where a member has chosen the on-point mention on THIS end, the answer is taken from
+         that mention and from nothing else: inside the part is a definite reach, outside it a
+         definite outside (the member established which mention the connection rests on, so another
+         mention elsewhere no longer unsettles it), and a chosen mention the reading could not place
+         is UNDETERMINED under C-49.2 exactly as an unplaced pair is. The containment question is
+         asked through the ONE predicate (`checkConnectionPairCovers`) with the chosen mention in the
+         pair's place, so a choice cannot be judged by a second rule.
+         THE GRADE IS THE CHOSEN MENTION'S, composed with the other end by the same weaker-of-two
+         rule the connection's own grade uses — a member choosing a weaker mention gets that mention's
+         grade, never the strongest one's. The other end's grade is ITS chosen mention's where one
+         is chosen, else the row's.
+         A CHOICE WHOSE MENTION THE DOCUMENT NO LONGER CARRIES (a re-read reading dropped it) is
+         LAPSED: said on the entry, and the answer falls back to REC-120's, never to the machine's
+         pair as if it were chosen. With no choice this block is skipped and every answer is
+         REC-120's byte for byte. */
+      const choices = this.#currentPairChoices(c.a_capture_sha, c.b_capture_sha, c.entity_id);
+      const mine = choices[side];
+      let lapsed = null;
+      if (mine) {
+        const m = this.#one(
+          `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref
+             FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
+            WHERE r.capture_sha=? AND r.entity_id=? AND r.ref=?`, row.capture_sha, c.entity_id, mine.ref);
+        if (!m) {
+          lapsed = { ref: mine.ref, chosen_by: mine.chosen_by, at: mine.at, lapsed: true,
+                     why: "a member chose this mention as on point, and this document no longer carries it "
+                        + "for this subject, so the choice cannot answer and the machine's selection is "
+                        + "read as unchosen" };
+        } else {
+          const position = readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref);
+          const theirs = choices[side === "a" ? "b" : "a"];
+          const otherSha = side === "a" ? c.b_capture_sha : c.a_capture_sha;
+          const theirGrade = (theirs && this.#one(
+            `SELECT grade FROM resolutions WHERE capture_sha=? AND entity_id=? AND ref=?`,
+            otherSha, c.entity_id, theirs.ref)?.grade) || (side === "a" ? c.b_grade : c.a_grade);
+          const grade = Store.#weakerGrade(m.grade, theirGrade);
+          const onPoint = { ref: m.ref, position, grade: m.grade, chosen_by: mine.chosen_by, at: mine.at };
+          const chosenEntry = { ...entry, grade, on_point: onPoint };
+          const said = `a member (${mine.chosen_by}) chose ${m.ref} as the on-point mention on this end`;
+          const verdict = checkConnectionPairCovers(
+            side === "a" ? { a_ref: m.ref, a_position: position } : { b_ref: m.ref, b_position: position },
+            side, row.extent_kind, extent, readingPositionInExtent);
+          if (!verdict) reaching.push({ ...chosenEntry, why: `${said}; it was read at ${position.ref}, inside ${row.ref}` });
+          else (verdict.code === "CONNECTION_PAIR_OUTSIDE_EXTENT" ? outside : undetermined)
+            .push({ ...chosenEntry, code: verdict.code, check: verdict.check, translation: verdict.translation,
+                    why: `${said}; ${verdict.detail.replace(/^the determining reference/, "that mention")}` });
+          continue;
+        }
+      }
+      if (lapsed) entry.on_point = lapsed;
       if (!view.determining_pair) {
         undetermined.push({ ...entry, code: "CONNECTION_PAIR_NO_PAIR",
           why: "this connection was derived before the record kept which reference established it, so "
@@ -23423,6 +23568,122 @@ export class Store extends DurableObject {
             : `all ${outside.length} of this document's connections were established by references read `
               + `outside ${row.ref}, so none of them reaches this citation`,
     };
+  }
+
+  /* ============ REC-122 · D-161 ACT (3) · A MEMBER CHOOSES THE ON-POINT MENTION ============
+   *
+   * Bob, 2026-09-14 (5.4, second pass): the connection pair is the ON-POINT pair, CHOSEN, and
+   * specificity is worked for. FW-17 built the strongest-graded mention instead; REC-120 made
+   * every answer that rested on that machine selection among several mentions honestly
+   * UNDETERMINED (C-49.4). This is the act that lets a member settle it: WHICH mention of the
+   * subject, on ONE end of ONE connection, is the one on point.
+   *
+   * WHAT IT IS NOT. It does not rewrite the connection's pair — that stays the machine's
+   * selection, stated as such (`determining_pair.selection`), and a re-derivation rewrites it
+   * anyway. It does not change the connection's document-grain grade or any whole-document
+   * answer: a whole document holds every mention, so nothing there rested on a choice. It
+   * does not guess: nothing machine-chosen counts, a machine credential is refused BY SHAPE on
+   * the name the control plane stamped (C-74.1, REC-86's C-50.5 twin), and a mention the
+   * document does not carry for that subject is refused BY NAME (C-74.3).
+   *
+   * THE OLD IS RETAINED (REC-86's rule): a re-choice supersedes the current row and appends a
+   * new one; the same choice twice writes nothing and says so.
+   *
+   * HOW A LIAR PASSES THIS, stated before what it checks: a choice the READ then ignores (the
+   * act records, and `connectionGradeForContent` answers REC-120's UNDETERMINED as before), or
+   * a default that picks the strongest-graded mention for everyone (REC-120's overclaim back,
+   * wearing a member's name). The suite drives the act and then the READ, and the negative
+   * control removes the read's use of the choice. */
+  /* BOUNDED BY CONSTRUCTION: the act supersedes the current row in the same transaction that
+     inserts the next, so at most ONE row per end is current and two rows cover both ends. Newest
+     first, and the first seen per end wins, so if that invariant were ever broken the LATEST
+     choice answers — never an older one by scan order. */
+  #currentPairChoices(aSha, bSha, entityId) {
+    const rows = this.#rows(
+      `SELECT side, ref, chosen_by, at FROM connection_pair_choices
+        WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=? AND side IN ('a','b')
+          AND superseded_at IS NULL ORDER BY choice_id DESC LIMIT 2`, aSha, bSha, entityId);
+    const out = { a: null, b: null };
+    for (const r of rows) if (!out[r.side]) out[r.side] = { ref: r.ref, chosen_by: r.chosen_by, at: r.at };
+    return out;
+  }
+
+  /** op=connectionchoose — THE ACT. `capture` is the end the choice is about, `other` the
+   *  connection's other end, `entity` the subject joining them, `ref` the mention chosen. */
+  chooseConnectionPair(a = {}) {
+    const args = a || {};
+    const refusal = (code, detail, extra) => {
+      const row = CONNECTION_CHOICE_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+               detail, ...(extra || {}) };
+    };
+    const who = String(args.author ?? "").trim();
+    const capture = String(args.capture ?? "").trim().toLowerCase();
+    const other = String(args.other ?? "").trim().toLowerCase();
+    const entityId = String(args.entity ?? "").trim();
+    const ref = String(args.ref ?? "").trim();
+    const aSha = capture < other ? capture : other, bSha = capture < other ? other : capture;
+    const conn = (capture && other && entityId && capture !== other)
+      ? this.#one(`SELECT a_capture_sha, b_capture_sha, entity_id, a_bundle_id, b_bundle_id, a_ref, b_ref
+                     FROM connections WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=?`,
+                  aSha, bSha, entityId)
+      : null;
+    const side = capture === aSha ? "a" : "b";
+    const keep = this.#bundleRedactor(args.viewer ?? null);
+    const mention = conn && ref
+      ? this.#one(`SELECT ref, grade FROM resolutions WHERE capture_sha=? AND entity_id=? AND ref=?`,
+                  capture, entityId, ref)
+      : null;
+    /* DEC-49 REGION is-connection-choice */
+    if (!who || isMachineIdentity(who))
+      return refusal("CONNECTION_CHOICE_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential. It may list a document's mentions `
+              + `(op=connections&content= names them where they bear on a citation); choosing which one `
+              + `a connection rests on is a member's act.`
+            : `this act names no member, and a choice nobody made is not a choice.`);
+    /* A connection whose chosen end the chooser cannot see answers EXACTLY as one that
+       does not exist (REC-25/REC-30's leak arriving at a write): the act names a document. */
+    if (!conn || !keep(side === "a" ? conn.a_bundle_id : conn.b_bundle_id))
+      return refusal("CONNECTION_CHOICE_NO_CONNECTION",
+        `this record holds no connection between capture=${capture.slice(0, 12) || "(none)"}… and `
+        + `other=${other.slice(0, 12) || "(none)"}… through entity=${entityId || "(none)"} that you can `
+        + `see. Name the end the choice is about (capture), the other end (other) and the subject (entity).`,
+        { capture: capture || null, other: other || null, entity_id: entityId || null });
+    if (!mention)
+      return refusal("CONNECTION_CHOICE_NOT_A_MENTION",
+        ref ? `this document does not carry '${ref.slice(0, 80)}' as a mention of ${entityId}. Its mentions `
+              + `are the references the record resolved to that subject in it.`
+            : `pass ref=: the mention, as the reading recorded it, that is on point for this connection.`,
+        { capture, entity_id: entityId, ref: ref || null });
+    /* END DEC-49 REGION is-connection-choice */
+    const cur = this.#currentPairChoices(aSha, bSha, entityId)[side];
+    const pos = this.#one(`SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=?`,
+                          capture, mention.ref);
+    const position = pos ? readingSourceFromColumns(pos.pos_kind, pos.pos, pos.pos_ref) : null;
+    const answer = (wrote, prior) => ({
+      ok: true, wrote, a_capture_sha: aSha, b_capture_sha: bSha, entity_id: entityId, side,
+      chosen: { ref: mention.ref, grade: mention.grade, position,
+                chosen_by: wrote ? who : cur.chosen_by, at: wrote ? at : cur.at },
+      superseded: prior,
+      machine_pair_ref: side === "a" ? conn.a_ref : conn.b_ref,
+      says: (wrote ? `recorded: ` : `already the choice, so nothing was written: `)
+        + `on end ${side.toUpperCase()} of this connection the on-point mention of ${entityId} is `
+        + `${mention.ref}` + (position ? ` (read at ${position.ref})` : ` (the reading did not record where)`)
+        + `, as chosen by ${wrote ? who : cur.chosen_by}. A citation of a part of this document now `
+        + `answers from this mention; the machine's strongest-graded pair is kept beside it, unchanged` });
+    const at = new Date().toISOString();
+    if (cur && cur.ref === mention.ref) return answer(false, null);
+    this.ctx.storage.transactionSync(() => {
+      if (cur)
+        this.sql.exec(`UPDATE connection_pair_choices SET superseded_at=?
+                        WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=? AND side=?
+                          AND superseded_at IS NULL`, at, aSha, bSha, entityId, side);
+      this.sql.exec(`INSERT INTO connection_pair_choices
+                       (a_capture_sha,b_capture_sha,entity_id,side,ref,a_bundle_id,b_bundle_id,chosen_by,at)
+                     VALUES (?,?,?,?,?,?,?,?,?)`,
+                    aSha, bSha, entityId, side, mention.ref, conn.a_bundle_id, conn.b_bundle_id, who, at);
+    });
+    return answer(true, cur ? { ref: cur.ref, chosen_by: cur.chosen_by, at: cur.at } : null);
   }
 
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
@@ -26670,6 +26931,11 @@ export class Store extends DurableObject {
       });
     }
 
+    /* --------------------------------------- OBLIGATION · D-86 · bias debt
+       The OBLIGATION half's SECOND producer: one item per run whose lens moved, raised by the `bias-debt` alarm
+       consumer. Pushed above the mint, like every producer, so the mint validates what it mints. */
+    items.push(...this.#obligationsBiasDebt(viewer, me, now, identity));
+
     /* --------------------------------------- FINDING · the proposals feed
        proposalsFeed is the ONE derivation (REC-6/7/8) and is read whole rather
        than re-implemented, so the queue and op=proposals cannot disagree about
@@ -27526,7 +27792,14 @@ export class Store extends DurableObject {
      IS checked is that the project is a real project bundle THIS VIEWER CAN SEE, so a caller
      cannot write a decision under a team it was never invited to. */
   proposeDispose({ progressionKey, stageKey, key, project, finding, kind,
-                   to, state, reason, decidedBy = null, viewer = null, identity = null } = {}) {
+                   to, state, reason, decidedBy = null, viewer = null, identity = null, items } = {}) {
+    /* D-126: WITH `items`, the act takes a SET under the PER-ITEM weight (`#perItem`), each item decided by
+       THIS method's single-key path. The decider (the control plane's stamp) and the viewer and identity
+       (the URL's, spread after the body at the dispatch) are forced onto every item. */
+    if (items !== undefined)
+      return this.#perItem("proposedispose",
+        { items, progressionKey, stageKey, key, project, finding, kind, to, state, reason },
+        { decidedBy, viewer, identity }, (b) => this.proposeDispose(b));
     const proj = typeof project === "string" ? project.trim() : "";
     const find = typeof finding === "string" ? finding.trim() : "";
     /* WHICH ACT THIS IS, decided by what the caller SENT and never by inspecting the id's shape.
@@ -27617,6 +27890,8 @@ export class Store extends DurableObject {
       const row = this.#one(
         `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
         proj, ...gate.args);
+      /* REC-149: at EXISTENCE the positional C-70.1; NONE falls to the unchanged answer below. */
+      if (!row) { const existence = this.#existenceAct(proj, viewer); if (existence) return existence; }
       if (!row || normalizeType(row.object_type) !== "project")
         return { ok: false, reason: "NO_SUCH_PROJECT", project: proj, finding: find,
                  detail: "the project a judgment-layer disposition is scoped to must be a PROJECT "
@@ -27970,6 +28245,8 @@ export class Store extends DurableObject {
       /* FW-8: the derived connections and the member-declared progression definitions,
          reported so a whole-store purge can PROVE it cleared them (D-113). */
       connections: n("connections"), progressionDefs: n("progression_defs"),
+      /* REC-122: the member on-point choices, so a purge can PROVE it took them (D-113). */
+      connectionPairChoices: n("connection_pair_choices"),
       progressionStages: n("progression_stages"),
       /* FW-9: the threaded progression instances, reported so a purge can PROVE it cleared
          them (D-113). */
@@ -29695,6 +29972,8 @@ export class Store extends DurableObject {
            when EITHER end's bundle is purged, so the reverse-index connection cannot
            outlive a document it joined (D-113). */
         this.sql.exec(`DELETE FROM connections WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
+        /* REC-122: a member's on-point choice is ABOUT a connection and goes with it. */
+        this.sql.exec(`DELETE FROM connection_pair_choices WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
         /* REC-27 / D-137. Participation and owner-governance votes are keyed on
            project_id, and a project_id IS a bundle id, so they are cleared in the
            per-bundle arm too: purging a project bundle and leaving its participant
@@ -29705,6 +29984,8 @@ export class Store extends DurableObject {
            change nothing. hygiene.test.mjs holds this list against BOTH files now. */
         this.sql.exec(`DELETE FROM project_participants WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=?`, bundleId);
+        /* REC-149: the visibility record is keyed on project_id too — the same arm, the same reason. */
+        this.sql.exec(`DELETE FROM project_visibility WHERE project_id=?`, bundleId);
         /* PL-12 / D-84 / D-113. An adoption is keyed (scope_type, scope_id,
            bundle_id) and a project scope_id IS a bundle id, so purging a project
            while leaving its adoptions behind would leave a LENS in force over a
@@ -29825,6 +30106,8 @@ export class Store extends DurableObject {
            is identity and not derived from captured documents. */
         this.sql.exec(`DELETE FROM project_participants`);
         this.sql.exec(`DELETE FROM project_owner_votes`);
+        /* REC-149: the visibility record goes with the participation graph it sits beside. */
+        this.sql.exec(`DELETE FROM project_visibility`);
         /* CASE-5b / D-113, AND IT IS CASE-1'S OWN REVERSAL CONDITION ARRIVING
            RATHER THAN A NEW JUDGEMENT. CASE-1 exempted `cases` from purge and
            wrote the condition that would reverse it at the site, in these words:
@@ -29935,6 +30218,8 @@ export class Store extends DurableObject {
            Stages before defs, so nothing outlives the definition it belongs to.
            hygiene.test.mjs asserts this list against schema.mjs. */
         this.sql.exec(`DELETE FROM connections`);
+        /* REC-122: the member's on-point choices, about connections that are gone. */
+        this.sql.exec(`DELETE FROM connection_pair_choices`);
         this.sql.exec(`DELETE FROM progression_stages`);
         this.sql.exec(`DELETE FROM progression_defs`);
         /* D-128: every version of every definition, the append-only history beside the current
@@ -30013,6 +30298,10 @@ export class Store extends DurableObject {
            its looks can only ever be cleared together. */
         this.sql.exec(`DELETE FROM leads`);
         this.sql.exec(`DELETE FROM ai_run_bounds`);
+        /* D-86 / D-113: a run's bias debt goes with the run it is about, and the sweep's place with the lens it
+           was reading — a debt outliving its run would name a run nobody can open. */
+        this.sql.exec(`DELETE FROM bias_debts`);
+        this.sql.exec(`DELETE FROM bias_debt_sweeps`);
         this.sql.exec(`DELETE FROM ai_runs`);
         /* PL-3 / IS-4 / D-113. F10's stored refusals go with the corpus they are
            about: every key names an inquiry this purge just removed, so a
@@ -30046,6 +30335,8 @@ export class Store extends DurableObject {
                  /* FW-8: the derived connections and member-declared progression
                     definitions a whole-store purge took (D-113). */
                  connections: d("connections"), progressionDefs: d("progressionDefs"),
+                 /* REC-122: the on-point choices a purge took (D-113). */
+                 connectionPairChoices: d("connectionPairChoices"),
                  progressionStages: d("progressionStages"),
                  /* FW-9: the threaded progression instances a purge took (D-113). */
                  progressionInstances: d("progressionInstances"),
@@ -31171,6 +31462,152 @@ export class Store extends DurableObject {
     const g = viewerPredicate(viewer);
     return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, bundleId, ...g.args);
   }
+  /* ===== REC-149 — SIGHT HAS THREE LEVELS, AND IT IS STILL ONE PREDICATE (Membership v2 §7, item 7.14) =====
+   *
+   * Bob, 2026-09-18: *"The project's contents might be private, though the existence of the project may not
+   * be"*, and *"each project chooses"*. So a project is DISCOVERABLE or HIDDEN, and `#sight` answers:
+   *   SIGHT_NONE      — nothing: an absent id, or a project the caller cannot see at all. §7.9 exactly.
+   *   SIGHT_EXISTENCE — the project's id and name and the request to join, and nothing else: a DISCOVERABLE
+   *                     project, asked by a member SESSION (a viewer naming a member) outside its participants.
+   *   SIGHT_FULL      — what `viewerPredicate` admits today (invited, joined, an administrator, the founder,
+   *                     every machine credential). Unchanged: its SQL is asked first and alone decides FULL.
+   * EXISTENCE is asked only where FULL was refused, only of a PROJECT, and only of a viewer the gate reads as
+   * a member — so a machine credential (already FULL) and an administrator (already FULL) are unchanged, an
+   * absent or unrecognised viewer stays NONE (fail closed), and a HIDDEN project stays NONE for everybody who
+   * could not already see it. `viewerPredicate` IS NOT CHANGED: every record read, search, citation list,
+   * reverse edge and run report still compiles only FULL sight, because those reads return CONTENTS.
+   * `#inSight` IS the FULL level, asked first and unchanged, so every existing caller keeps its meaning; the
+   * acts ask `#existenceAct` just BEFORE their REC-138 line, so NONE still reaches that line and its answer. */
+  static SIGHT_NONE = "none";
+  static SIGHT_EXISTENCE = "existence";
+  static SIGHT_FULL = "full";
+  #sight(bundleId, viewer) {
+    if (this.#inSight(bundleId, viewer)) return Store.SIGHT_FULL;
+    if (!viewerPredicate(viewer).member) return Store.SIGHT_NONE;
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
+    if (!b || b.object_type !== "project") return Store.SIGHT_NONE;
+    return this.#visibilityOf(bundleId) === "discoverable" ? Store.SIGHT_EXISTENCE : Store.SIGHT_NONE;
+  }
+  /* The CURRENT setting: the latest owner's act, and HIDDEN when there is none. No row is the state of every
+     project that existed before REC-149 (each was created under §7.9's promise, and no migration writes one),
+     of a creation that carried no setting, and of anything a machine created — fail closed, disclosing nothing. */
+  #visibilityOf(projectId) {
+    const r = this.#one(`SELECT setting FROM project_visibility WHERE project_id=? ORDER BY seq DESC LIMIT 1`,
+      projectId);
+    return r && r.setting === "discoverable" ? "discoverable" : "hidden";
+  }
+  /* THE ANSWER AN ACT GIVES AT EXISTENCE, asked in ONE place so no act can say a second thing: C-70.1 when the
+     caller's sight of this id is EXISTENCE, else null — and then the act's own REC-138 line runs unchanged, so
+     NONE is still answered exactly as an id naming nothing (byte for byte) and FULL proceeds. Every act that
+     names a project asks this immediately before its sight line. A viewer never SENT is not asked
+     (`#rosterInSight`'s precedent): it is an internal caller, and NONE's line decides for it as before. */
+  #existenceAct(projectId, viewer) {
+    if (viewer === null || viewer === undefined) return null;
+    return this.#sight(projectId, viewer) === Store.SIGHT_EXISTENCE ? this.#existenceOnly(projectId) : null;
+  }
+  /* C-70.1, minted here and only here; every act RELAYS it through `#existenceAct`. The id and the name, which the
+     directory already showed this caller, and nothing else — no act, no state, no owner, no participant. */
+  #existenceOnly(projectId) {
+    const b = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, projectId);
+    const refusal = (code, detail) => {
+      const row = PROJECT_VISIBILITY_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+               project: projectId, name: b ? b.title ?? null : null };
+    };
+    /* DEC-49 REGION is-project-existence-only */
+    return refusal("PROJECT_SEEN_NOT_A_PARTICIPANT",
+      "this project is discoverable and you are not one of its participants. Its existence and name are all "
+      + "it shows you; asking to join is the one act open to you (Membership Architecture v2 §7.14).");
+    /* END DEC-49 REGION is-project-existence-only */
+  }
+
+  /** REC-149 — THE SETTING, an OWNER'S recorded act (§7.14 "The setting"). Append-only: every act is a row with
+   *  the owner, the date and an optional reason, and the current setting is the latest. Sight before position:
+   *  a caller who cannot see the project is answered as for one that does not exist, a caller at EXISTENCE gets
+   *  C-70.1, and only then is ownership asked — through `#isProjectOwner`, §7's one owner predicate, so an
+   *  administrator, the founder and every machine credential are refused (administrators direct nothing, §4.9,
+   *  and §7.13's rescue does not set it). A viewer never SENT is not asked, `#rosterInSight`'s precedent. */
+  projectVisibilitySet({ projectId, setting, reason = null, by, viewer = null } = {}) {
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    const existence = b ? this.#existenceAct(projectId, viewer) : null;
+    if (existence) return existence;
+    if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
+    const want = String(setting ?? "");
+    const refusal = (code, detail) => {
+      const row = PROJECT_VISIBILITY_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+               project: projectId };
+    };
+    /* DEC-49 REGION is-project-visibility-owner */
+    if (!this.#isProjectOwner(projectId, by))
+      return refusal("PROJECT_VISIBILITY_NOT_THE_OWNER",
+        `whether ${String(projectId).slice(0, 80)} can be found is its OWNERS' choice (Membership Architecture `
+        + `v2 §7.14), and ${String(by ?? "an unnamed caller").slice(0, 80)} is not one of them. Seeing a project `
+        + `is not directing it. Nothing was written.`);
+    if (want !== "discoverable" && want !== "hidden")
+      return refusal("PROJECT_VISIBILITY_UNKNOWN_SETTING",
+        `${JSON.stringify(want.slice(0, 40))} is not a setting: a project is "discoverable" or "hidden", and `
+        + `nothing else. Nothing was written.`);
+    /* END DEC-49 REGION is-project-visibility-owner */
+    const why = reason === null || reason === undefined || String(reason).trim() === ""
+      ? null : String(reason).slice(0, 280);
+    const at = new Date().toISOString();
+    this.sql.exec(`INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
+      projectId, want, by, why, at);
+    return { ok: true, projectId, setting: want, set_by: by, reason: why, at };
+  }
+
+  /** REC-149 — THE SETTING AND ITS HISTORY, for a caller with FULL sight (a participant, an administrator, the
+   *  founder: §7.14, "administrators and the founder see the setting and its history"). A READ, so it does not
+   *  widen: a caller without full sight is answered as for a project that does not exist. */
+  projectVisibility({ projectId, viewer = null } = {}) {
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
+    const history = this.#rows(
+      `SELECT setting, set_by, reason, at FROM project_visibility WHERE project_id=? ORDER BY seq`, projectId);
+    return { ok: true, projectId, setting: this.#visibilityOf(projectId), recorded: history.length > 0, history,
+             note: history.length ? undefined
+               : "no owner has set this project's visibility, so it is HIDDEN: a project with no record reads "
+                 + "hidden (Membership Architecture v2 §7.14)." };
+  }
+
+  /** REC-149 — THE DIRECTORY (§7.14 "The directory"): for a member session, the DISCOVERABLE projects it does
+   *  not participate in, each with its id and name and the state of the caller's OWN request to it. Nothing
+   *  else. A hidden project is never in it, so its absence here is one answer for "hidden" and "does not
+   *  exist". Every row is asked through `#sight` — the one predicate — and listed only at EXISTENCE, so a
+   *  project this caller can see fully (it is in it, or it is an administrator) is not listed as one to join.
+   *  THE REQUEST LIFECYCLE IS NOT BUILT (item 7.14's decomposition, step 2): no request can exist yet, so
+   *  `request` is null on every row and the answer says why rather than letting null read as a fact about the
+   *  caller. A viewer that names no member has no directory: it is refused by name, never answered empty. */
+  projectDirectory({ viewer = null } = {}) {
+    const member = viewerPredicate(viewer).member;
+    const refusal = (code, detail) => {
+      const row = PROJECT_VISIBILITY_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+    };
+    /* DEC-49 REGION is-project-directory-member */
+    if (!member)
+      return refusal("PROJECT_DIRECTORY_NEEDS_A_MEMBER",
+        "the project directory lists the discoverable projects a MEMBER is not in, so it is asked by a signed-in "
+        + "member. A credential with no member behind it is outside no project, and an empty list would say "
+        + "something untrue about the record.");
+    /* END DEC-49 REGION is-project-directory-member */
+    /* EVERY project is a candidate and `#sight` alone decides. The first build took its candidates from the
+       visibility table, which restated "no record = hidden" in a second place — the control's
+       `default-discoverable` arm flipped the default and the directory did not move (REC-149's own finding). */
+    const candidates = this.#rows(`SELECT bundle_id AS id FROM bundles WHERE object_type = 'project' ORDER BY bundle_id`);
+    const projects = [];
+    for (const { id } of candidates) {
+      if (this.#sight(id, viewer) !== Store.SIGHT_EXISTENCE) continue;
+      const t = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, id);
+      projects.push({ id, name: t ? t.title ?? null : null, request: null });
+    }
+    return { ok: true, projects,
+             requests: "NOT_BUILT: the request to join is not built yet (Membership Architecture v2 §7.14, "
+                     + "step 2), so no request exists and `request` is null on every row." };
+  }
   /* THE ROSTER ACTS' form of the same question, and the one difference is stated rather than hidden.
      Their positional half is `by`, and they have always been driven straight at the store by callers
      that are not requests (setup, fixtures, the store's own suites) — the same population
@@ -31360,6 +31797,7 @@ export class Store extends DurableObject {
   projectInvite({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
+    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
@@ -31379,7 +31817,10 @@ export class Store extends DurableObject {
   }
 
   /** 7.4: joining is selecting the checkbox. There is no acceptance ceremony. */
-  projectJoin({ projectId, by } = {}) {
+  projectJoin({ projectId, by, viewer = null } = {}) {
+    /* REC-149: at EXISTENCE (a discoverable project, a member outside it) the positional C-70.1; otherwise the
+       answer below is unchanged, and it already says the same thing for an absent id and a hidden one. */
+    { const existence = this.#existenceAct(projectId, viewer); if (existence) return existence; }
     const p = this.#participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_INVITED",
       detail: "a member joins a project they were invited to. Being uninvited is not a refusal you can see." };
@@ -31391,7 +31832,10 @@ export class Store extends DurableObject {
   /** 7.6: unchecking the box is a REQUEST to leave. It greys the checkmark and
    *  removes nobody; removal is 7.7's, which v2 gives to an OWNER of the project
    *  (CORRECTED 2026-09-23 by D-311 — this read "to administrators alone", v1.4's rule). */
-  projectLeave({ projectId, by, comment = null } = {}) {
+  projectLeave({ projectId, by, comment = null, viewer = null } = {}) {
+    /* REC-149: at EXISTENCE (a discoverable project, a member outside it) the positional C-70.1; otherwise the
+       answer below is unchanged, and it already says the same thing for an absent id and a hidden one. */
+    { const existence = this.#existenceAct(projectId, viewer); if (existence) return existence; }
     const p = this.#participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT" };
     if (p.state !== "joined") return { ok: false, reason: "NOT_JOINED", state: p.state };
@@ -31408,7 +31852,10 @@ export class Store extends DurableObject {
    *  ("only an administrator removes … Project owners invite; they do not remove")
    *  over code that has enforced v2's since the reversal; §11 item 5 requires it
    *  corrected rather than left to disagree in silence. */
-  projectRemove({ projectId, handle, by, comment = null } = {}) {
+  projectRemove({ projectId, handle, by, comment = null, viewer = null } = {}) {
+    /* REC-149: at EXISTENCE (a discoverable project, a member outside it) the positional C-70.1; otherwise the
+       answer below is unchanged, and it already says the same thing for an absent id and a hidden one. */
+    { const existence = this.#existenceAct(projectId, viewer); if (existence) return existence; }
     if (!this.#isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
                detail: "only an owner of this project removes a participant from it. This REVERSES the "
@@ -31433,6 +31880,7 @@ export class Store extends DurableObject {
   projectOwnerAdd({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
+    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
@@ -31524,6 +31972,7 @@ export class Store extends DurableObject {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position — so ADMIN_ONLY is said only to a member who can
        already see the project (an invited one); an administrator sees every project (§7.3). */
+    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     const blocked = this.#rescueRefusal(projectId, by);
@@ -31558,6 +32007,7 @@ export class Store extends DurableObject {
   projectOwnerRemove({ projectId, handle, by, reason, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
+    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
@@ -31650,6 +32100,7 @@ export class Store extends DurableObject {
     /* REC-138 / D-426: sight BEFORE position. NOT_A_PARTICIPANT below said *"An uninvited member
        cannot see that it exists"* while telling them exactly that; it is now said only to a caller
        who CAN see the project (an administrator not in it). */
+    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     const p = this.#participation(projectId, by);
@@ -31743,11 +32194,10 @@ export class Store extends DurableObject {
              owner: by, participantsCopied: 0, bundleSha: promoted.bundleSha };
   }
 
-  /** The comparison key for 7.1 project name uniqueness, in one place so the
-   *  fork check and any later write-path check cannot disagree about it. */
-  static projectNameKey(title) {
-    return String(title ?? "").trim().toLowerCase().replace(/\s+/g, " ");
-  }
+  /** The comparison key for 7.1 project name uniqueness. D-50: this IS the catalog's `projectNameKey` (the same
+   *  function object, imported, never a copy), so `promote`'s and the fork's NAME_TAKEN and the catalog's C-77
+   *  corpus check cannot disagree about what a collision is. `test/d50-project-names.test.mjs` asserts identity. */
+  static projectNameKey = projectNameKey;
 
   /* ---- section 8: secure verified export ----
    *
@@ -32765,6 +33215,8 @@ export class Store extends DurableObject {
   gateFacts(bundleId, viewer = null) {
     const row = this.#one(
       `SELECT bundle_id, object_type, current_state, bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
+    /* REC-149: EXISTENCE answers C-70.1 (ratify is an act on the bundle); NONE is the line below, unchanged. */
+    { const existence = row ? this.#existenceAct(bundleId, viewer) : null; if (existence) return existence; }
     if (!row || (viewer !== null && viewer !== undefined && !this.#inSight(bundleId, viewer)))
       return { ok: false, reason: "ABSENT", bundleId };
     return {
@@ -35283,6 +35735,404 @@ export class Store extends DurableObject {
     };
   }
 
+  /** D-256 — THE "CHANGED FROM" SENTENCES ALREADY WRITTEN, EACH CHECKED AGAINST
+   *  THE VERSION CHAIN, AND NOT ONE BYTE OF ANY BODY REWRITTEN.
+   *
+   *  D-221 fixed the writer: before 2026-08-08 `addGo` chose the named id by a
+   *  bm25 tiebreak among captures with identical url text, which PL-10 measured
+   *  naming the OLDEST version at the address. The sentences it wrote stay in
+   *  the record, and BOB #31 ruled (2026-09-23 22:22Z) that the bodies stay as
+   *  written and the correction is the READ (DEC-19: correction moves forward;
+   *  D-219: a stored string is a fact about when it was written). This is that
+   *  read. It WRITES NOTHING — `versionchain.test.mjs` asserts every body
+   *  byte-unchanged by digest, and that this method holds no write statement.
+   *
+   *  THE BUNDLE'S OWN VERSION IS FOUND FROM THE RECORD, never from its prose:
+   *  its `register` rows joined to `captured_locators` give the (address,
+   *  capture) pairs the bundle holds; then `versionChain` — the one chain
+   *  reader, consumed and never restated — answers the true predecessor. The
+   *  frontmatter's `content_hash` only breaks a tie when the bundle holds
+   *  versions at more than one address pair.
+   *
+   *  THREE VERDICTS, COUNTED APART, because folding any two is D-256's own
+   *  mistake repeated:
+   *    wrong         the chain names a different predecessor than the sentence
+   *    right         the chain's predecessor IS the bundle the sentence names
+   *                  (`sole_prior` says whether the address held exactly one
+   *                  prior version, where the two routes could not disagree)
+   *    undetermined  the chain cannot check it, with the reason: the bundle
+   *                  holds no version in the chain (`no_version_held`), holds
+   *                  several and none is the frontmatter's (`several_versions_held`),
+   *                  its version is the oldest held (`no_prior_version` —
+   *                  the earlier capture may simply never have been
+   *                  registered; sparse is normal), or the sentence names
+   *                  more than one id (`several_named`) or none this reader
+   *                  can take as one (`no_named_id`).
+   *
+   *  WHAT IT CANNOT SEE, said here rather than implied: it reads the LIVE
+   *  `bundle.md` of every bundle, so a sentence present only in a superseded
+   *  history snapshot is not counted; and it matches the literal the writer
+   *  emitted, so a sentence a member retyped in other words is not counted. */
+  changedFromAudit({ limit = null, offset = 0 } = {}) {
+    const cap = Math.max(1, Math.min(Store.CHANGED_FROM_AUDIT_LIMIT_MAX,
+      Math.floor(Number(limit) || Store.CHANGED_FROM_AUDIT_LIMIT_DEFAULT)));
+    const from = Math.max(0, Math.floor(Number(offset) || 0));
+    const lit = Store.CHANGED_FROM_SENTENCE;
+    const viewer = `${MACHINE_CLASS_PREFIX}admin`;
+    const named = new RegExp(lit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^()\\s]+)\\)", "g");
+    const rows = this.#rows(
+      `SELECT bundle_id, content FROM files WHERE path = 'bundle.md' AND instr(content, ?) > 0
+        ORDER BY bundle_id`, lit);
+    const out = { wrong: 0, right: 0, undetermined: 0 };
+    const all = rows.map((r) => {
+      const ids = [...new Set([...String(r.content).matchAll(named)].map((m) => m[1]))];
+      const base = { bundle_id: r.bundle_id, named: ids.length === 1 ? ids[0] : null };
+      const undetermined = (why, extra = {}) =>
+        ({ ...base, verdict: "undetermined", why, predecessor: null, ...extra });
+      if (ids.length !== 1) return undetermined(ids.length ? "several_named" : "no_named_id", { named_all: ids });
+      const pairs = this.#rows(
+        `SELECT DISTINCT cl.address_norm AS address_norm, cl.capture_sha AS capture_sha
+           FROM register r JOIN captured_locators cl ON cl.capture_sha = r.capture_sha
+          WHERE r.bundle_id = ? ORDER BY cl.address_norm, cl.capture_sha`, r.bundle_id);
+      let pair = pairs.length === 1 ? pairs[0] : null;
+      if (pairs.length > 1) {
+        const h = /^\s*content_hash:\s*"?([0-9a-fA-F]{64})"?\s*$/m.exec(String(r.content));
+        const hits = h ? pairs.filter((p) => p.capture_sha === h[1].toLowerCase()) : [];
+        pair = hits.length === 1 ? hits[0] : null;
+        if (!pair) return undetermined("several_versions_held", { versions_held: pairs.length });
+      }
+      if (!pair) return undetermined("no_version_held");
+      const c = this.versionChain({ addressNorm: pair.address_norm, at: pair.capture_sha, limit: 1, viewer });
+      if (!c.ok) return undetermined("no_version_held");
+      const at = { address_norm: pair.address_norm, capture_sha: pair.capture_sha, at_index: c.at_index };
+      if (!c.predecessor) return undetermined("no_prior_version", at);
+      const predecessor = { bundle_id: c.predecessor.bundle_id, capture_sha: c.predecessor.capture_sha,
+                            first_retrieved: c.predecessor.first_retrieved };
+      return { ...base, verdict: c.predecessor.bundle_id === ids[0] ? "right" : "wrong",
+               ...at, sole_prior: c.at_index === 1, predecessor };
+    });
+    for (const a of all) out[a.verdict]++;
+    const listed = all.slice(from, from + cap);
+    return {
+      ok: true,
+      affected: all.length,
+      wrong: out.wrong, right: out.right, undetermined: out.undetermined,
+      bundles: listed, count: listed.length, total: all.length,
+      limit: cap, offset: from, truncated: from + listed.length < all.length,
+      wrote: false,
+      note: "read-only: every body stays as written (BOB #31, 2026-09-23 22:22Z); this answer is the correction. "
+        + "'undetermined' is the chain unable to check a sentence, never evidence it was right.",
+    };
+  }
+  /* D-256's bound, `op=versionchain`'s 200/1000 pair reused rather than a new
+     spelling invented. Declared BELOW its method, on REC-116's finding: `bounds.test.mjs`'s
+     segmenter splits on method signatures, so a constant above a method is credited to the one before it. It bounds the LISTING only: the three totals are always
+     counted over every affected bundle, because a verdict total cut at N would
+     be the partial count this op exists to replace. */
+  static CHANGED_FROM_AUDIT_LIMIT_DEFAULT = 200;
+  static CHANGED_FROM_AUDIT_LIMIT_MAX = 1000;
+  /* The one literal the pre-2026-08-08 `addGo` wrote (civicos-ui/app.html,
+     the CHANGED_FROM branch), up to the parenthesis that opens the named id. */
+  static CHANGED_FROM_SENTENCE = "The record already holds an earlier capture of this same address (";
+
+  /* ====================================================================== *
+   * D-394 — THE CROSS-VERSION NOTICE (BIO_Content_Framework_v0_10.md §18.1).
+   * ====================================================================== *
+   *
+   * THE GAP THIS CLOSES IS NOT AN OVERCLAIM, WHICH IS WHY NO GATE CAUGHT IT. A
+   * member's citation stays honestly pointed at the capture it was made against,
+   * and a case may rest on a passage the publisher has since revised, with the
+   * record holding BOTH captures and saying nothing. This read is the record
+   * TELLING. It answers three questions about one cited passage, and keeps them
+   * apart because collapsing them is what kept the whole thing unbuilt (§18.1's
+   * decomposition):
+   *
+   *   1. IS THERE A NEWER CAPTURE AT THIS DOCUMENT'S ADDRESS?  Answered WITH
+   *      CERTAINTY, by asking `versionChain` — the one chain lookup, PL-10's, and
+   *      no second copy of it — anchored on the row's own capture. `newer` is
+   *      three-valued: true, false, or NULL when the chain could not be read (no
+   *      address recorded for the capture, or the capture is not a version the
+   *      chain holds). **`false` is said ONLY when every chain was read**: "no
+   *      newer version" answered for a chain nobody read is the lie this read is
+   *      most exposed to, and it reads exactly like the earned silence of §18.1's
+   *      first row.
+   *   2. IS A PASSAGE AT THE SAME EXTENT IN IT?  REC-82's extent test, asked
+   *      against the newer capture as the record holds it. It is admitted as a
+   *      SUFFICIENT signal for a CANDIDATE and never as evidence of identity:
+   *      the candidate is labelled so, and nothing here says "the same passage".
+   *      Where the test cannot hold — the extent is outside the newer capture, or
+   *      the record holds no bound for it to be tested against — the answer is
+   *      UNDETERMINED with its reason, which §18.1 calls the honest and most
+   *      common answer. A bound the record does not hold is NOT a match: the
+   *      checker skips an unheld bound (a fence must not refuse what nobody
+   *      measured), and reading that skip as "it fits" would be the checker's
+   *      permissiveness turned into a claim.
+   *   3. WHAT MAY BE DONE ABOUT IT?  Nothing, by the record. Only a member's act
+   *      moves a citation (§14.4, Bob 2026-09-14), and the answer says so.
+   *
+   * IT WRITES NOTHING, AND THAT IS THE MECHANISM RATHER THAN AN OMISSION.
+   * §18.1: *the strongest guarantee that a proposal is never mistaken for a
+   * re-pointing is to make it impossible to persist one.* So no content row is
+   * minted for the candidate (an existing one is NAMED if somebody already cited
+   * that extent of the newer capture — a find, never a mint), no leg, edge or
+   * row is touched, and the answer is computed at READ against the current state
+   * of both captures, so it cannot go stale. `test/versionnotice.test.mjs`
+   * asserts every table of the store byte-identical across the read.
+   *
+   * GATED TWICE, both times through predicates that already exist: the subject
+   * (the question, or the passage) through `#viewerSees`, and the chain through
+   * `versionChain`'s own `#bundleGate` — so a newer capture filed inside a
+   * project the caller was never invited to is not in the chain this caller
+   * reads, and the answer says the chain is the one VISIBLE TO THE CALLER.
+   * ====================================================================== */
+
+  /** The legs one notice read answers for a question. 200 is the version chain's
+   *  own default, reused rather than a new spelling: a question resting on more
+   *  than two hundred passages is a run's walk, and `truncated` says so. */
+  static VERSION_NOTICE_LEGS_MAX = 200;
+  /** The addresses one capture is asked about. A capture seen at several
+   *  addresses has several chains (D-96: the same bytes through two routes); past
+   *  twenty the remainder is NOT asked, and the answer says so rather than
+   *  reading as all of them. */
+  static VERSION_NOTICE_ADDRESSES_MAX = 20;
+
+  /** The four states, with the sentence a member reads. The vocabulary travels
+   *  with the answer (PL-17), so a surface renders what the plane holds. */
+  static VERSION_NOTICE_STATES = {
+    no_newer_capture: "nothing: the version chain was read and holds nothing after this capture",
+    newer_capture_matched: "a newer version of this document exists, and a passage at the same extent "
+      + "is in it. That is a candidate, never the same passage: whether your citation should move is "
+      + "yours to decide, and only your act can move it",
+    newer_capture_undetermined: "a newer version of this document exists; whether your passage survives "
+      + "into it is UNDETERMINED. Nothing has moved — look at the newer version and decide",
+    chain_unread: "whether a newer version of this document exists is UNDETERMINED: the record could not "
+      + "read its version chain, so this is not a statement that there is none",
+  };
+
+  /** Does the record HOLD the bound this extent is tested against, for this
+   *  capture? Null when it does, or the sentence naming what is not held. Per
+   *  arm, on the checker's own fields — `checkContentExtent` asks only where the
+   *  record holds a figure, so a pass there is evidence only where this says the
+   *  figure was held. */
+  static #extentBoundUnheld(extent, ctx) {
+    const c = ctx && ctx.container && typeof ctx.container === "object" ? ctx.container : {};
+    const has = (v) => Array.isArray(v) && v.length > 0;
+    switch (extent.kind) {
+      case "pdf-page":
+        return Number.isInteger(ctx.pageCount) ? null : "the record holds no page set for the newer capture";
+      case "doc-para":
+        return Number.isInteger(c.paragraphs) ? null : "the record holds no paragraph count for the newer capture";
+      case "sheet-cell": case "sheet-range":
+        return has(c.sheets) ? null : "the record holds no sheet list for the newer capture";
+      case "slide-shape":
+        return has(c.slides) ? null : "the record holds no slide list for the newer capture";
+      case "doc-table":
+        return Array.isArray(c.tables) ? null : "the record holds no table list for the newer capture";
+      case "image":
+        return Number.isInteger(extent.page)
+          ? (Number.isInteger(ctx.pageCount) ? null : "the record holds no page set for the newer capture")
+          : (Array.isArray(c.images) ? null : "the record holds no image list for the newer capture");
+      default:
+        return `this read cannot bound an extent of kind '${String(extent.kind).slice(0, 40)}'`;
+    }
+  }
+
+  /** REC-82's extent test, asked of the NEWER capture. Returns
+   *  `{ holds, reason, why, existing_content_id }`; `holds` is true only on a
+   *  positive test. Mints nothing: an existing row at that extent of that capture
+   *  is FOUND and named, and absence of one is reported as `null`. */
+  #extentTestAcross(extent, newerSha) {
+    const existing = (e) => this.#one(
+      `SELECT content_id FROM content WHERE capture_sha=? AND extent=? ORDER BY content_id LIMIT 1`,
+      newerSha, canonicalExtent(e))?.content_id ?? null;
+    if (!extent || typeof extent !== "object" || typeof extent.kind !== "string")
+      return { holds: false, reason: "extent_unreadable", existing_content_id: null,
+               why: "the cited passage's extent could not be read back from its row, so nothing was tested" };
+    if (extent.kind === "document")
+      return { holds: true, reason: "whole_document", existing_content_id: existing(extent),
+               why: "the citation is to the whole document, and a whole document is at the same extent in "
+                  + "every version of it" };
+    const ctx = this.contentContextFor(newerSha);
+    /* THE CHECKER'S REFUSAL IS READ BY ITS CODE, because two of its refusals are
+       two different facts about the newer capture and only one of them is about
+       where the passage went. OUT_OF_RANGE: the capture holds the bound and the
+       extent is past it — the passage may have moved. NO_CHAIN: nobody has read
+       the newer capture, so it holds no text at any extent yet — a fact about
+       US, never about the document, and saying "it may have moved" there would
+       be the record inventing a revision. Any other code is named as it is. */
+    const bad = checkContentExtent(extent, ctx);
+    const said = bad ? String(bad.detail || bad.code).slice(0, 240) : "";
+    if (bad && bad.code === "CONTENT_EXTENT_OUT_OF_RANGE")
+      return { holds: false, reason: "outside_newer_capture", existing_content_id: null,
+               why: `the newer capture does not hold this extent (${said}); the passage may have moved, been `
+                  + "renumbered or been removed" };
+    if (bad && bad.code === "CONTENT_EXTENT_NO_CHAIN")
+      return { holds: false, reason: "newer_capture_unread", existing_content_id: null,
+               why: "nobody has read the newer capture yet, so the record holds no text of it at any extent "
+                  + "to test against — that is a fact about this record, not about the document" };
+    if (bad)
+      return { holds: false, reason: "not_testable", existing_content_id: null,
+               why: `the extent test could not be asked of the newer capture (${bad.code}: ${said})` };
+    const unheld = Store.#extentBoundUnheld(extent, ctx);
+    if (unheld)
+      return { holds: false, reason: "bound_not_held", existing_content_id: null,
+               why: `${unheld}, so whether this extent exists in it cannot be tested` };
+    return { holds: true, reason: "extent_in_newer_capture", existing_content_id: existing(extent),
+             why: `${describeExtent(extent)} exists in the newer capture as the record holds it` };
+  }
+
+  /** THE ADDRESSES ONE CAPTURE WAS RETRIEVED FROM — one walk of `captured_locators`
+   *  by capture, shared by its two askers: IS-6's origin walk (`#independenceOf`) and
+   *  D-394's notice. `independence.test.mjs` pins exactly ONE such walk in this file,
+   *  and D-394 met that pin: a second spelling of the same question is where two
+   *  answers to "where did these bytes come from" would drift. DISTINCT, because the
+   *  key carries `via` (D-96) and one address seen by two routes is one address;
+   *  ordered, so a bounded answer is a stable one. */
+  #capturedAddresses(captureSha, limit) {
+    return this.#rows(
+      `SELECT DISTINCT address_norm FROM captured_locators WHERE capture_sha=? ORDER BY address_norm LIMIT ?`,
+      captureSha, limit);
+  }
+
+  /** The notice for ONE content row. `row` is the stored row (extent as JSON text). */
+  #versionNoticeFor(row, viewer) {
+    const extent = safeJson(row.extent);
+    const cap = Store.VERSION_NOTICE_ADDRESSES_MAX;
+    const addrRows = this.#capturedAddresses(row.capture_sha, cap + 1);
+    const addresses = addrRows.slice(0, cap).map((r) => r.address_norm);
+    const chains = [];
+    const newerBySha = new Map();
+    for (const addr of addresses) {
+      const at = this.versionChain({ addressNorm: addr, at: row.capture_sha, limit: 1, viewer });
+      if (!at.ok) {
+        chains.push({ address_norm: addr, read: false, reason: at.reason,
+                      why: "this capture is not a version the chain at this address holds for you" });
+        continue;
+      }
+      const after = at.total - 1 - at.at_index;
+      let newest = null;
+      if (after > 0) {
+        const last = this.versionChain({ addressNorm: addr, limit: 1, offset: at.total - 1, viewer });
+        newest = last.ok && last.versions[0] ? last.versions[0] : null;
+      }
+      chains.push({ address_norm: addr, read: true, versions: at.total, position: at.at_index,
+                    newer_count: after,
+                    newest: newest && { capture_sha: newest.capture_sha, bundle_id: newest.bundle_id,
+                                        first_retrieved: newest.first_retrieved } });
+      if (newest && !newerBySha.has(newest.capture_sha)) newerBySha.set(newest.capture_sha, newest);
+    }
+    const read = chains.filter((c) => c.read);
+    /* THE CERTAINTY, and its three values. A newer capture on ANY read chain is a
+       certain `true`. `false` needs EVERY address read and none unasked. */
+    const allRead = addresses.length > 0 && read.length === addresses.length && addrRows.length <= cap;
+    const newer = newerBySha.size > 0 ? true : allRead ? false : null;
+    const candidates = [...newerBySha.values()].map((v) => {
+      const test = this.#extentTestAcross(extent, v.capture_sha);
+      return { capture_sha: v.capture_sha, bundle_id: v.bundle_id, first_retrieved: v.first_retrieved,
+               extent: test.holds ? extent : null, matched: test.holds, reason: test.reason, why: test.why,
+               existing_content_id: test.existing_content_id,
+               candidate_only: true, identity: "not_established",
+               says: test.holds
+                 ? "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to "
+                   + "be the same passage; extent-match is a sufficient signal for a candidate and never "
+                   + "evidence of identity"
+                 : "UNDETERMINED: " + test.why };
+    });
+    const state = newer === true
+      ? (candidates.length && candidates.every((c) => c.matched) ? "newer_capture_matched" : "newer_capture_undetermined")
+      : newer === false ? "no_newer_capture" : "chain_unread";
+    const unread = !addresses.length
+      ? "the record holds no address this capture was retrieved from, so its version chain cannot be read"
+      : addrRows.length > cap
+        ? `this capture was seen at more than ${cap} addresses and only ${cap} were asked`
+        : "at least one address's version chain does not hold this capture for you";
+    return {
+      content_id: row.content_id, capture_sha: row.capture_sha, bundle_id: row.bundle_id,
+      extent_kind: row.extent_kind, ref: row.ref,
+      state, newer, chain_read: newer === false ? true : read.length > 0,
+      chains, addresses_asked: addresses.length, addresses_truncated: addrRows.length > cap,
+      candidates,
+      /* §18.1's first row: silence is earned only where the chain was read. */
+      says: state === "no_newer_capture" ? null : Store.VERSION_NOTICE_STATES[state],
+      why: state === "no_newer_capture"
+        ? "every version chain this capture sits on was read and holds nothing after it"
+        : state === "chain_unread" ? unread : null,
+    };
+  }
+
+  /** op=versionnotice — D-394. One question (`target=`: every live-basis leg that
+   *  rests on a passage) or one passage (`content=`). A READ that writes nothing.
+   *  `limit` bounds the legs answered for a question; it is CLAMPED to
+   *  [1, VERSION_NOTICE_LEGS_MAX] and the applied figure is what is published
+   *  (REC-57's discipline), with `truncated` saying whether legs were left out. */
+  versionNotice({ target = null, content = null, limit = null, viewer = null } = {}) {
+    const refusal = (code, detail, extra) => {
+      const row = VERSION_NOTICE_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+               detail, ...(extra || {}) };
+    };
+    const tgt = String(target ?? "").trim();
+    const cid = String(content ?? "").trim();
+    const ROW_COLS = `content_id, capture_sha, bundle_id, extent_kind, extent, ref`;
+    let legs = [], rows = [], truncated = false, inquiry = null;
+    /* DEC-49 REGION is-version-notice-subject */
+    if ((tgt && cid) || (!tgt && !cid))
+      return refusal("VERSION_NOTICE_NO_SUBJECT",
+        tgt ? "pass target=<INQ-…> OR content=<content id>, not both: a notice is about one subject."
+            : "pass target=<INQ-…> (every passage a question rests on) or content=<content id> (one passage).");
+    if (tgt) {
+      const b = this.#one(`SELECT bundle_id, object_type FROM bundles WHERE bundle_id=?`, tgt);
+      if (!b || normalizeType(b.object_type) !== "inquiry" || !this.#viewerSees(b.bundle_id, viewer))
+        return refusal("VERSION_NOTICE_NO_INQUIRY",
+          `no question by the id '${tgt.slice(0, 60)}' is readable here. A question you may not see `
+          + `answers exactly as one that does not exist.`, { target: tgt });
+      inquiry = b.bundle_id;
+    } else {
+      const r = this.#one(`SELECT ${ROW_COLS} FROM content WHERE content_id=?`, cid);
+      if (!r || !this.#viewerSees(r.bundle_id, viewer))
+        return refusal("VERSION_NOTICE_NO_CONTENT",
+          `no cited passage by the id '${cid.slice(0, 80)}' is readable here.`, { content: cid });
+      rows = [r];
+    }
+    /* END DEC-49 REGION is-version-notice-subject */
+    const max = Math.max(1, Math.min(Store.VERSION_NOTICE_LEGS_MAX,
+      Math.floor(Number(limit) || Store.VERSION_NOTICE_LEGS_MAX)));
+    if (inquiry) {
+      const page = this.#rows(
+        `SELECT b.ord AS ord, b.target_id AS target, b.content_id AS content_id
+           FROM inquiry_basis b WHERE b.bundle_id=? ORDER BY b.ord LIMIT ?`, inquiry, max + 1);
+      truncated = page.length > max;
+      legs = page.slice(0, max);
+      const ids = [...new Set(legs.map((l) => l.content_id).filter(Boolean))];
+      /* `LIMIT ?` at the id count: the set is already bounded by the leg cap above, and
+         saying so in the SQL is what lets the derivation-bounds census see it. */
+      rows = ids.length
+        ? this.#rows(`SELECT ${ROW_COLS} FROM content WHERE content_id IN (${ids.map(() => "?").join(",")}) LIMIT ?`,
+            ...ids, ids.length)
+        : [];
+    }
+    const byId = new Map(rows.map((r) => [r.content_id, this.#versionNoticeFor(r, viewer)]));
+    const notices = inquiry
+      ? legs.map((l) => l.content_id && byId.has(l.content_id)
+          ? { ord: l.ord, target: l.target, ...byId.get(l.content_id) }
+          : { ord: l.ord, target: l.target, content_id: null, state: "not_asked", newer: null,
+              says: null,
+              why: "this leg rests on no cited passage (it cites another question, or a document this record "
+                 + "holds no bytes of), so there is no capture whose newer versions could be asked about" })
+      : [...byId.values()];
+    return {
+      ok: true, target: inquiry, content: inquiry ? null : cid,
+      notices, count: notices.length, limit: inquiry ? max : 1, truncated,
+      states: Store.VERSION_NOTICE_STATES,
+      wrote: false, proposal_only: true,
+      visible_to: "the version chains here are the ones visible to you; a version filed in a project you "
+        + "were not invited to is not in them",
+      says: "a notice, computed now and stored nowhere. A newer version is stated with certainty where the "
+        + "version chain was read; a passage at the same extent in it is a CANDIDATE, never the same passage; "
+        + "nothing was moved, minted or written, and only a member's act can re-point a citation.",
+    };
+  }
+
   /* PL-1's own bound. 200/1000 is `op=versionchain`'s pair reused rather than a
      thirteenth spelling invented, and the KIND is the same: a KEYED lookup (one
      inquiry, not a query) whose answer is a list. 200 is generous against the
@@ -35535,9 +36385,7 @@ export class Store extends DurableObject {
         if (caps.length > OMAX) complete = false;
         for (const r of caps.slice(0, OMAX)) {
           out.add(`capture:${r.capture_sha}`);
-          const addrs = this.#rows(
-            `SELECT address_norm FROM captured_locators WHERE capture_sha=? LIMIT ?`,
-            r.capture_sha, OMAX + 1);
+          const addrs = this.#capturedAddresses(r.capture_sha, OMAX + 1);
           if (addrs.length > OMAX) complete = false;
           for (const l of addrs.slice(0, OMAX)) out.add(`address:${l.address_norm}`);
         }
@@ -36813,6 +37661,8 @@ export class Store extends DurableObject {
       projectRow = this.#one(
         `SELECT b.bundle_id, b.object_type, b.bundle_sha FROM bundles b
          WHERE b.bundle_id=? AND (${pgate.sql})`, projectId, ...pgate.args);
+      /* REC-149: at EXISTENCE the positional C-70.1; NONE falls to the unchanged answer below. */
+      if (!projectRow) { const existence = this.#existenceAct(projectId, a.viewer ?? null); if (existence) return existence; }
       if (!projectRow || normalizeType(projectRow.object_type) !== "project")
         return refuse("VERSION_CURRENT_UNRELATED",
           `${projectId.slice(0, 60)} is not a project readable here, so it holds no stance to move.`,
@@ -41705,6 +42555,17 @@ export class Store extends DurableObject {
        id opened for a member who had not joined it. A RELAY, like the gate's below and C-22.7's: the refusal
        is minted in `airun.mjs checkRunContextKind`, whose catalogue row names that site. Only the CONTEXT's
        open is checked; tick and close read the stored kind, which is now checked at the door it came in by. */
+    /* REC-149 (Membership v2 §7.14): a run over a DISCOVERABLE project the caller is outside is an act at
+       EXISTENCE, answered with the positional C-70.1 — never "no such context" about a project the directory
+       showed them. Asked only of a word in the closed vocabulary, so rule 1's refusal is untouched; a hidden or
+       absent id still reaches the line below and its one answer. */
+    if (Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, String(contextType ?? ""))) {
+      const existence = this.#existenceAct(String(contextId ?? ""), viewer ?? "");
+      if (existence)
+        return { run, started: false, code: existence.code, check: existence.check,
+                 translation: existence.translation, detail: existence.detail,
+                 project: existence.project, name: existence.name };
+    }
     const kind = checkRunContextKind({ contextType, contextId, found: this.#runContextKind(contextId, viewer) });
     if (kind)
       return { run, started: false,
@@ -42734,6 +43595,206 @@ export class Store extends DurableObject {
              at_open: atOpenBlock, hand: handOf(recordedSha) };
   }
 
+  /** D-86 — THE BIAS-DEBT SWEEP. NOTIFICATIONS.md §The catalogue: *"a re-run owed after a lens change
+   *  `[OBLIGATION]` (D-86 — DISCLOSED, never blocking)"*; framework §13: *"Bias debt says: the lens changed, so
+   *  this analysis owes a re-run"*, one mechanism with the temporal half, and what differs is what each consumer
+   *  DOES when the clock runs out — the temporal half blocks, the bias half SURFACES.
+   *
+   *  ONE COMPARISON, AND IT IS NOT HERE. Whether a run's lens moved is `aiRunRead`'s answer — `#biasForRun`, the
+   *  block `op=airun` publishes — read whole for each run under the operator-internal viewer. This method reads
+   *  `moved` and the two hashes that block names; it holds no hash and compares none. A comparison of its own
+   *  would agree with the reader today and be the thing that drifts (D-86's row: *"how a liar passes this: a
+   *  second comparison in the sweep that happens to agree today"*), so the control alters the ONE function and
+   *  the item must follow it.
+   *
+   *  THREE ANSWERS, NEVER COLLAPSED. `moved: true` raises (or restates) the run's ONE item. `moved: false` raises
+   *  nothing, and CLEARS a live item — stamped, never deleted — because an obligation claiming a lens moved while
+   *  the reader says it did not would be the record claiming more than it can support. `moved: null` does
+   *  NEITHER: undetermined is not evidence in either direction, so an item stands as it was and none is minted.
+   *
+   *  IDEMPOTENT BY ITS KEY, NOT BY CARE. `bias_debts` is keyed by the run alone, so a second tick finds the row
+   *  and, when nothing moved, writes nothing. A lens that moves AGAIN restates the same row with the new hash —
+   *  still one item per run — and one that moves back clears it.
+   *
+   *  RECIPIENTS, NAMED BY THIS PRODUCER AND EACH ONE INSIDE THE RUN'S READ GATE. The run's own principal when it is
+   *  a member, and for a run over a project that project's active owners (DEC-72 clause 5: manager is the owner
+   *  role) — each kept only if `aiRunRead` answers `found` for them, the same read that gates `op=airun`, so the
+   *  item never reaches a member who could not open the run it is about. None nameable is STATED, and the item is
+   *  then offered to every member who can read the run, the `unassigned` task's precedent (D-98, DEC-7).
+   *
+   *  BOUNDED. At most BIAS_DEBT_BATCH runs per tick, with a cursor; a sweep that spans ticks keeps the consumer
+   *  due, and a lens that moves mid-sweep restarts it from the top. The fingerprint is recorded only when a sweep
+   *  COMPLETES, so an alarm with no lens change asks nothing of any run. */
+  static BIAS_DEBT_DELAY_MS = 1000;
+  static BIAS_DEBT_BATCH = 50;
+  /* Overridable, on the connection-derive consumer's precedent: a suite pins the delay far out so the alarm it
+     drives by hand is the only one that fires, and pins the batch to 1 to PROVE a sweep spans ticks. */
+  #biasDebtDelayMs() {
+    const v = Number(this.env && this.env.BIAS_DEBT_DELAY_MS);
+    return Number.isFinite(v) && v >= 0 ? v : Store.BIAS_DEBT_DELAY_MS;
+  }
+  #biasDebtBatch() {
+    const v = Math.floor(Number(this.env && this.env.BIAS_DEBT_BATCH));
+    return Number.isFinite(v) && v >= 1 ? Math.min(v, 500) : Store.BIAS_DEBT_BATCH;
+  }
+  static BIAS_DEBT_VIEWER = "admin";
+
+  /** Every input the lens NOW is computed from, and nothing it is not: each adoption row with its bundle's current
+   *  sha and state (`biasManifest` reads statements through exactly these). Synchronous and small, so a consumer's
+   *  `due`/`wake` can ask it. It is a TRIGGER, never a comparison of lenses — whether a run moved is still
+   *  `aiRunRead`'s answer. */
+  #biasDebtFingerprint() {
+    /* BOUNDED (`derivation-bounds.test.mjs`' census): at most BIAS_DEBT_FINGERPRINT_MAX adoptions are read, plus the
+       whole table's count. STATED LIMIT: past that many adoptions, a revision of a bundle adopted beyond the cap
+       moves no input this reads, so the sweep waits for the next change it CAN see (or the next adoption, which
+       moves the count). An instance holding a thousand adopted lenses is not one this plane has met. */
+    const cap = Store.BIAS_DEBT_FINGERPRINT_MAX;
+    const n = this.#one(`SELECT count(*) AS n FROM bias_adoptions`).n;
+    return JSON.stringify([n, ...this.#rows(
+      `SELECT a.scope_type AS t, a.scope_id AS s, a.bundle_id AS b, bd.bundle_sha AS sha, bd.current_state AS st
+         FROM bias_adoptions a LEFT JOIN bundles bd ON bd.bundle_id = a.bundle_id
+        ORDER BY a.scope_type, a.scope_id, a.bundle_id LIMIT ?`, cap)
+      .map((r) => [r.t, r.s, r.b, r.sha ?? null, r.st ?? null])]);
+  }
+  static BIAS_DEBT_FINGERPRINT_MAX = 1000;
+  static BIAS_DEBT_OWNERS_MAX = 50;
+
+  /** Due while the lens inputs differ from the last COMPLETE sweep's. An instance with no run owes no debt; one
+   *  that has never adopted a lens cannot have one move (a recorded open compares two absent hashes, and a
+   *  pre-D-85 hand against no lens reads `moved: null`), so it holds no alarm for this consumer either. */
+  #biasDebtPending() {
+    if (!this.#one(`SELECT 1 AS x FROM ai_runs LIMIT 1`)) return false;
+    const st = this.#one(`SELECT fingerprint FROM bias_debt_sweeps WHERE k = 'lens'`);
+    if (!st) return !!this.#one(`SELECT 1 AS x FROM bias_adoptions LIMIT 1`);
+    return st.fingerprint !== this.#biasDebtFingerprint();
+  }
+
+  async #biasDebtRecipients(run, session) {
+    const cands = new Set();
+    /* `principal_plane` is `member:<id>` for a session and `member:<id>/<token>` for a member's credential; any
+       other spelling (`token:<class>`) has no person behind it and names nobody. */
+    const pm = /^member:([A-Za-z0-9._:-]{1,128}?)(?:\/.*)?$/.exec(String(session?.principal?.plane || ""));
+    if (pm) cands.add(pm[1]);
+    if (session?.context?.type === "project")
+      /* BOUNDED, and the bound is stated rather than hidden: the first BIAS_DEBT_OWNERS_MAX owners by id. */
+      for (const r of this.#rows(
+        `SELECT pp.member_id FROM project_participants pp WHERE pp.project_id = ? AND pp.owner = 1
+          ORDER BY pp.member_id LIMIT ?`, session.context.id, Store.BIAS_DEBT_OWNERS_MAX)) cands.add(r.member_id);
+    const out = [];
+    for (const id of [...cands].sort()) {
+      if (!this.#one(`SELECT 1 AS x FROM members WHERE member_id = ? AND status = 'active'`, id)) continue;
+      const sight = await this.aiRunRead({ run, viewer: `member:${id}` });
+      if (sight && sight.found === true) out.push(id);
+    }
+    return out;
+  }
+
+  async #biasDebtSweep(nowMs) {
+    const at = Store.#aiIso(nowMs);
+    const cap = this.#biasDebtBatch();
+    const fp = this.#biasDebtFingerprint();
+    const st = this.#one(`SELECT fingerprint, target, cursor FROM bias_debt_sweeps WHERE k = 'lens'`);
+    const from = st && st.target === fp ? String(st.cursor || "") : "";
+    const rows = this.#rows(`SELECT run FROM ai_runs WHERE run > ? ORDER BY run LIMIT ?`, from, cap + 1);
+    const batch = rows.slice(0, cap);
+    const out = { read: 0, raised: [], restated: [], cleared: [], undetermined: [], unchanged: 0,
+                  complete: rows.length <= cap, batch: cap };
+    for (const { run } of batch) {
+      const read = await this.aiRunRead({ run, viewer: Store.BIAS_DEBT_VIEWER });
+      out.read++;
+      const session = read && read.found === true ? read.session : null;
+      const bias = session ? session.bias : null;
+      const moved = bias ? bias.moved : null;
+      const prior = this.#one(`SELECT * FROM bias_debts WHERE run = ?`, run);
+      if (moved === true) {
+        /* THE TWO HASHES, AS THE READER PUBLISHED THEM — the side `moved_basis` says the comparison was against,
+           and the lens now. Read, not recomputed; a lens not in force is NULL and the item says so. */
+        const then = bias.moved_basis === "at_open"
+          ? (bias.at_open && typeof bias.at_open.statements_sha === "string" ? bias.at_open.statements_sha : null)
+          : (bias.manifest && typeof bias.manifest.statements_sha === "string" ? bias.manifest.statements_sha : null);
+        const now = bias.now && typeof bias.now.statements_sha === "string" ? bias.now.statements_sha : null;
+        const recipients = JSON.stringify(await this.#biasDebtRecipients(run, session));
+        if (!prior) {
+          this.sql.exec(
+            `INSERT INTO bias_debts (run, context_type, context_id, moved_basis, lens_then, lens_now, recipients,
+                                     raised, observed, cleared_at)
+             VALUES (?,?,?,?,?,?,?,?,?,NULL)`,
+            run, session.context.type, session.context.id, bias.moved_basis ?? null, then, now, recipients, at, at);
+          out.raised.push(run);
+        } else if (prior.cleared_at != null || prior.lens_now !== now || prior.lens_then !== then
+                   || prior.recipients !== recipients) {
+          /* A CLEARED debt that moves again is NEW debt and ages from now; a live one restated keeps its age. */
+          this.sql.exec(
+            `UPDATE bias_debts SET moved_basis = ?, lens_then = ?, lens_now = ?, recipients = ?, observed = ?,
+                    raised = CASE WHEN cleared_at IS NULL THEN raised ELSE ? END, cleared_at = NULL
+              WHERE run = ?`,
+            bias.moved_basis ?? null, then, now, recipients, at, at, run);
+          out.restated.push(run);
+        } else out.unchanged++;
+      } else if (moved === false) {
+        if (prior && prior.cleared_at == null) {
+          this.sql.exec(`UPDATE bias_debts SET cleared_at = ?, observed = ? WHERE run = ?`, at, at, run);
+          out.cleared.push(run);
+        } else out.unchanged++;
+      } else out.undetermined.push(run);
+    }
+    const last = batch.length ? batch[batch.length - 1].run : "";
+    this.sql.exec(
+      `INSERT INTO bias_debt_sweeps (k, fingerprint, target, cursor, at) VALUES ('lens', ?, ?, ?, ?)
+       ON CONFLICT(k) DO UPDATE SET fingerprint = excluded.fingerprint, target = excluded.target,
+                                    cursor = excluded.cursor, at = excluded.at`,
+      out.complete ? fp : (st ? st.fingerprint : null), fp, out.complete ? "" : last, at);
+    return out;
+  }
+
+  /** D-86: the OBLIGATION items the sweep raised, for `queueFeed`. Synchronous, like every producer there. The
+   *  row is gated by `#bundleGate` over the run's `context_id` — the predicate `aiRunRead` compiles for the run
+   *  itself, so an item about a run is shown exactly to the readers of that run. A member who is not a recipient
+   *  is skipped unless the producer could name nobody, which is stated on the item. */
+  #obligationsBiasDebt(viewer, me, now, identity) {
+    const seen = this.#bundleGate("bd.context_id", viewer);
+    const items = [];
+    for (const row of this.#rows(
+      `SELECT bd.* FROM bias_debts bd WHERE bd.cleared_at IS NULL AND (${seen.sql})
+        ORDER BY bd.raised DESC, bd.run LIMIT ?`, ...seen.args, Store.BIAS_DEBT_QUEUE_MAX)) {
+      const recipients = safeJson(row.recipients);
+      const named = Array.isArray(recipients) ? recipients.filter((x) => typeof x === "string") : [];
+      if (me && named.length && !named.includes(me)) continue;
+      const raisedMs = Date.parse(row.raised);
+      items.push({
+        id: `OBLIGATION::bias-debt::${row.run}`,
+        class: "OBLIGATION",
+        kind: "bias-debt",
+        case: this.#queueAncestors([row.context_id], viewer),
+        subject: { kind: "run", id: row.run, context: { type: row.context_type, id: row.context_id } },
+        summary: "The lens this assistant's run was formed under has changed since it opened; a re-run under "
+               + "the lens now in force is owed. This is disclosed and blocks nothing.",
+        detail: null,
+        basis: { source: "bias_debts", computed_by: "aiRunRead", run: row.run, moved: true,
+                 moved_basis: row.moved_basis, lens_then: row.lens_then, lens_now: row.lens_now,
+                 observed: row.observed,
+                 stated: `the run's lens was ${row.lens_then ?? "none in force"} `
+                       + `(${row.moved_basis === "at_open" ? "the lens in force when it opened" : "the lens it was handed"}) `
+                       + `and is ${row.lens_now ?? "none in force"} now`,
+                 detail: "bias debt is DISCLOSED and travels with the work; only an uncleared hunch refuses "
+                       + "publication (DEC-20). Whether the lens moved is op=airun's own comparison, read by the "
+                       + "sweep and never recomputed." },
+        age: Number.isFinite(raisedMs)
+          ? { state: "determined", since: row.raised, ms: Math.max(0, now - raisedMs) }
+          : { state: "undetermined", reason: "unparseable_raised",
+              detail: "the debt row carries a raised stamp this producer cannot read as an instant" },
+        assignee: null,
+        assignee_role: null,
+        recipients: named,
+        ...(named.length ? {} : { recipients_stated: "no member could be named inside this run's read gate, so "
+                                  + "it is offered to every member who can read the run" }),
+        options: this.#queueOptions([row.context_id], viewer, identity),
+      });
+    }
+    return items;
+  }
+  static BIAS_DEBT_QUEUE_MAX = 200;
+
   /** op=airunspawn — THE FENCE, AS CODE.
    *
    *  `INVESTIGATIVE-SESSION.md` §14, and the sweep's own correction of v2:
@@ -43721,13 +44782,19 @@ export class Store extends DurableObject {
     if (row.assignee === "unassigned") return null;
     if (actor === row.assignee) return null;
     if (this.#isAdminMember(actor)) return null;
+    /* DEC-49 REGION is-task-actor-fence — D-126/C-76.1: `code`, `check` and `translation` added (a queue
+       selection now surfaces this refusal to a member); `reason`, `detail` and the assignee are unchanged. */
     return {
       ok: false,
       reason: "NOT_YOURS",
+      code: "NOT_YOURS",
+      check: TASK_ACTOR_CHECKS.NOT_YOURS.check,
+      translation: TASK_ACTOR_CHECKS.NOT_YOURS.translation,
       detail: `this task is not yours to ${verb}; it is with ${row.assignee}`,
       assignee: row.assignee,
       assignee_role: row.assignee_role,
     };
+    /* END DEC-49 REGION is-task-actor-fence */
   }
 
   /** Forward a task to a member better placed to attest it.
@@ -43759,7 +44826,11 @@ export class Store extends DurableObject {
    *  are derived from the SAME `MACHINE_STAMP_PREFIXES` in the catalog, so the
    *  spelling still moves in one place and moves here too; what is deliberately
    *  not shared is the bare-class arm, for the reason in the paragraph above. */
-  taskForward({ id = null, to = null, actor = null, now = null } = {}) {
+  taskForward({ id = null, to = null, actor = null, now = null, items } = {}) {
+    /* D-126: WITH `items`, a SET under the PER-ITEM weight; the actor (the control plane's stamp) is forced
+       onto every item. */
+    if (items !== undefined)
+      return this.#perItem("taskforward", { items, to, now }, { actor }, (b) => this.taskForward(b));
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a forward is recorded under the member who made it" };
     /* DEC-49 REGION is-machine-forward — REC-64/C-32.10. The fence alone. REC-73
        measured that this pair is the ONLY one of the twelve with a second
@@ -43807,7 +44878,10 @@ export class Store extends DurableObject {
    *  `taskDrain` is deliberately untouched and is the daemon's path: draining
    *  turns queued events into tasks and ROUTES them, which is surfacing work
    *  rather than discharging it. Nothing a drain does closes an obligation. */
-  taskResolve({ id = null, actor = null, now = null } = {}) {
+  taskResolve({ id = null, actor = null, now = null, items } = {}) {
+    /* D-126: WITH `items`, a SET under the PER-ITEM weight; the actor is forced onto every item. */
+    if (items !== undefined)
+      return this.#perItem("taskresolve", { items, now }, { actor }, (b) => this.taskResolve(b));
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a resolution is recorded under the member who made it" };
     /* DEC-49 REGION is-machine-resolve — REC-64/C-32.11. The fence alone. */
     if (isMachineStamp(actor))                          /* REC-46: the NARROW predicate, deliberately — see the note above */
@@ -43832,6 +44906,105 @@ export class Store extends DurableObject {
     this.sql.exec(`UPDATE tasks SET status=?, resolved_at=?, history=? WHERE id=?`,
       task.status, at, JSON.stringify(task.history), id);
     return { ok: true, id, status: "resolved", resolved_at: at };
+  }
+
+  /* ==================================================================== D-126
+   * THE PER-ITEM WEIGHT — "each item independently succeeds or is RETAINED WITH A REASON"
+   * (NOTIFICATIONS.md §Applying a handler to a selection; Bob: *"If that action didn't work for one or
+   * more, they'd stay in the list so that the user can take a different action."*).
+   *
+   * ONE HELPER, THREE ACTS. `op=proposedispose`, `op=taskresolve` and `op=taskforward` each take a SET
+   * when the body carries `items` — the branch is the first statement of each act's own method, so the
+   * dispatch map is unchanged — and without `items` each is the single-key act it was. The
+   * set form is NOT a second implementation of any act: every item goes through the SAME method the
+   * single form calls, so an item is accepted and refused by exactly the rules one key would be, and its
+   * reason is that act's own refusal, verbatim. This helper words only what belongs to the SET (C-75).
+   *
+   * WHAT IT REFUSES TO BE, and each is how a liar would pass the row:
+   *   - ALL-OR-NOTHING RELABELLED. A refusal on item k does not stop item k+1; nothing here breaks out of
+   *     the loop, and the `refuse` weight's stop-on-drift is exactly the behaviour this weight is not.
+   *   - SILENT SKIPPING. Every item the caller sent has exactly one outcome in `items[]`, at its own
+   *     `index`, `applied` or `retained`, and `applied + retained === count` by construction. A retained
+   *     item carries its act's `reason` (and `code`/`translation` where that act has them).
+   *   - `ok: true` OVER A MIXED SET. `ok` is true only when EVERY item applied; otherwise the answer is
+   *     C-75.5's summary refusal WITH `items[]` beside it, so a caller reading `ok` alone is told the
+   *     truth about the set and a caller reading `items[]` is told the truth about each item.
+   *
+   * THE SERVER'S STAMPS WIN OVER EVERY ITEM. `stamped` is what the control plane stamped (the actor, the
+   * decider) or the URL carries (viewer, identity); it is spread LAST, so an item that names its own
+   * actor is overwritten exactly as a single-key body is. The rest of the body is SHARED — a common
+   * `reason`, `to` or disposition — and an item may override it for itself.
+   *
+   * ITEMS ARE NOT IN ONE TRANSACTION, deliberately: independence is the weight. Each single act writes
+   * at most once, after all of its own refusals, so an item that is refused has written nothing. */
+  static PER_ITEM_MAX = PER_ITEM_MAX;   /* affordances.mjs: ONE number, published as set_acts[].max_items */
+  #perItem(act, body, stamped, one) {
+    const refusal = (code, detail, extra) => {
+      const row = PER_ITEM_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+               detail, ...(extra || {}) };
+    };
+    const { items, ...shared } = body || {};
+    const count = Array.isArray(items) ? items.length : 0;
+    /* DEC-49 REGION is-per-item-set-shape */
+    if (!Array.isArray(items) || items.length === 0)
+      return refusal("SET_NO_ITEMS",
+        `op=${act} was sent as a set and the set holds no items. Send \`items\` as a non-empty array, or `
+        + `send one item's fields without \`items\` for the single act. Nothing was done.`,
+        { op: act, weight: "per-item", count: 0 });
+    if (items.length > Store.PER_ITEM_MAX)
+      return refusal("SET_TOO_LARGE",
+        `op=${act} acts on at most ${Store.PER_ITEM_MAX} items at once and this set holds ${items.length}. `
+        + `Refused WHOLE, before any item was tried, so no item moved.`,
+        { op: act, weight: "per-item", count: items.length, max: Store.PER_ITEM_MAX });
+    /* END DEC-49 REGION is-per-item-set-shape */
+    const echo = (it) => {
+      const o = {};
+      for (const [k, v] of Object.entries(it)) {
+        if (typeof v === "string") o[k] = v.slice(0, 400);
+        else if (typeof v === "number" || typeof v === "boolean" || v === null) o[k] = v;
+      }
+      return o;
+    };
+    const outcomes = [];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      /* DEC-49 REGION is-per-item-malformed */
+      if (!it || typeof it !== "object" || Array.isArray(it)) {
+        outcomes.push({ index: i, outcome: "retained", asked: null,
+          ...refusal("SET_ITEM_MALFORMED", `item ${i} is not an object naming one ${act} subject; it was `
+            + `left as it was and the other items were still tried.`) });
+        continue;
+      }
+      /* END DEC-49 REGION is-per-item-malformed */
+      let r;
+      /* `items: undefined` LAST: an item cannot smuggle a nested set back into the act. */
+      try { r = one({ ...shared, ...it, ...stamped, items: undefined }); }
+      catch (e) {
+        /* DEC-49 REGION is-per-item-failed */
+        r = refusal("SET_ITEM_FAILED", `op=${act} threw on item ${i} rather than refusing it: `
+          + String((e && e.message) || e).slice(0, 200) + `. Nothing about the item is claimed.`);
+        /* END DEC-49 REGION is-per-item-failed */
+      }
+      const res = (r && typeof r === "object") ? r : { ok: false };
+      outcomes.push({ index: i, outcome: res.ok === true ? "applied" : "retained", asked: echo(it), ...res });
+    }
+    const applied = outcomes.filter((o) => o.outcome === "applied").length;
+    const retained = outcomes.length - applied;
+    const head = { op: act, weight: "per-item", count, applied, retained, items: outcomes };
+    if (retained === 0)
+      return { ok: true, ...head,
+               detail: `every one of the ${count} item(s) was applied, each by op=${act}'s own rules.` };
+    /* DEC-49 REGION is-per-item-retained */
+    /* Written out rather than spread from `refusal()`, so the verdict and the code are LITERALS at the
+       site the DEC-49 guard reads (a spread verdict is one its outcome walk cannot grade). */
+    return { ok: false, reason: "SET_ITEMS_RETAINED", code: "SET_ITEMS_RETAINED",
+             check: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.check,
+             translation: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.translation,
+             detail: `${applied} of ${count} item(s) applied and ${retained} RETAINED; each retained item in `
+               + `items[] carries its own act's reason. The applied items stand — this is not a rollback.`,
+             ...head };
+    /* END DEC-49 REGION is-per-item-retained */
   }
 
   /* ---- D-104: source reachability ----
@@ -44521,7 +45694,8 @@ export class Store extends DurableObject {
    *  manifest below requires BOTH this row AND the bundle standing at `adopted`
    *  before it reports a lens in force — which is the fail-closed direction: at
    *  no point does one act alone put a lens over somebody's work. */
-  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null, identity = null } = {}) {
+  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null, identity = null,
+              viewer = null } = {}) {
     const who = typeof author === "string" ? author.trim() : "";
     if (!who || who.startsWith(Store.BIAS_MACHINE_PREFIX))
       return this.#biasRefuse("BIAS_ADOPTION_NOT_AUTHORED",
@@ -44548,6 +45722,10 @@ export class Store extends DurableObject {
        gated it before: any member, and every administrator, could adopt a set into any project's
        scope. The instance scope is untouched (*"Admins define instance bias"*). */
     if (st === "project") {
+      /* REC-149: at EXISTENCE (a discoverable project, a member outside it) the positional C-70.1, asked of the
+         stamped VIEWER — sight is the viewer's question, position the identity's. */
+      const existence = this.#existenceAct(sid, viewer);
+      if (existence) return existence;
       const denied = this.#projectAuthority(sid, identity, "owner", "biasadopt");
       if (denied) return denied;
     }
@@ -45000,12 +46178,20 @@ export class Store extends DurableObject {
             const row = this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, r.bundleId);
             if (row && row.monitor_enabled === 1) await this.#armScheduler();
           }
+          /* D-86: a promote can move a lens (a bias bundle revised, or stepping into or out of `adopted`), and
+             an idle instance holds no alarm to notice it — so the producer pays for the wake, gated on the sweep
+             actually having something to read. */
+          if (r && r.ok && this.#biasDebtPending()) await this.#armScheduler();
           return r;
         },
         allocid: () => this.allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => this.acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
         /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
         snapkeycensus: () => this.snapKeyCensus({ limit: url.searchParams.get("limit") }),
+        /* D-256: every "changed from" sentence already written, checked against the version chain; read-only
+           (see `changedFromAudit`). */
+        changedfromaudit: () => this.changedFromAudit({
+          limit: url.searchParams.get("limit"), offset: url.searchParams.get("offset") }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,
@@ -45287,6 +46473,17 @@ export class Store extends DurableObject {
                                                  contentId: url.searchParams.get("content"),
                                                  limit: url.searchParams.get("limit"),
                                                  viewer: url.searchParams.get("viewer") }),
+        /* REC-122 / IC-232: a member's choice of the on-point mention. `author` and `viewer`
+           are the control plane's stamps and never the caller's, so a machine is refused BY
+           SHAPE (C-74.1) and a connection out of sight answers as absent (C-74.2). */
+        connectionchoose: () => this.chooseConnectionPair({
+          capture: (body && body.capture) || url.searchParams.get("capture"),
+          other: (body && body.other) || url.searchParams.get("other"),
+          entity: (body && body.entity) || url.searchParams.get("entity"),
+          ref: (body && body.ref) || url.searchParams.get("ref"),
+          author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer"),
+        }),
         progressiondefine: () => this.defineProgression(body || {}),
         progression: () => this.readProgression({ progressionKey: url.searchParams.get("key"),
                                                   version: url.searchParams.get("version") }),
@@ -45381,6 +46578,14 @@ export class Store extends DurableObject {
            the seam op=links already uses for the same reason. `viewer` is
            stamped by the control plane and an absent one compiles to the deny
            predicate, so this fails closed like every other gated read. */
+        /* D-394: THE CROSS-VERSION NOTICE. A READ: `viewer` is the control
+           plane's stamp, and both subjects are gated through it. */
+        versionnotice: () => this.versionNotice({
+          target: url.searchParams.get("target"),
+          content: url.searchParams.get("content"),
+          limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer"),
+        }),
         versionchain: () => this.versionChain({
           addressNorm: url.searchParams.get("address"),
           at: url.searchParams.get("at"),
@@ -45449,13 +46654,19 @@ export class Store extends DurableObject {
           viewer: url.searchParams.get("viewer"),
         }),
 
-        biasadopt: () => this.biasAdopt({
-          bundleId: url.searchParams.get("bundleId"),
-          scope: url.searchParams.get("scope"),
-          scopeId: url.searchParams.get("scopeId"),
-          author: url.searchParams.get("author"),
-          identity: url.searchParams.get("identity"),   /* REC-134 */
-        }),
+        biasadopt: async () => {
+          const r = this.biasAdopt({
+            bundleId: url.searchParams.get("bundleId"),
+            scope: url.searchParams.get("scope"),
+            scopeId: url.searchParams.get("scopeId"),
+            author: url.searchParams.get("author"),
+            identity: url.searchParams.get("identity"),   /* REC-134 */
+            viewer: url.searchParams.get("viewer"),       /* REC-149 */
+          });
+          /* D-86: an adoption is the other door a lens moves through; the promote arm's reason. */
+          if (r && r.ok && this.#biasDebtPending()) await this.#armScheduler();
+          return r;
+        },
         /* The policy arrives in the BODY. A policy document in a query string
            would be truncated by the first proxy with an opinion about URL
            length, and a truncated policy silently produces a smaller residue —
@@ -46206,13 +47417,23 @@ export class Store extends DurableObject {
         projectinvite: () => this.projectInvite({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
           viewer: url.searchParams.get("viewer") }),   /* REC-138 */
+        /* REC-149: the three take the stamped viewer too, and ask it ONLY for EXISTENCE (C-70.1). */
         projectjoin: () => this.projectJoin({ projectId: url.searchParams.get("projectId"),
-          by: url.searchParams.get("by") }),
+          by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),
         projectleave: () => this.projectLeave({ projectId: url.searchParams.get("projectId"),
-          by: url.searchParams.get("by"), comment: url.searchParams.get("comment") }),
+          by: url.searchParams.get("by"), comment: url.searchParams.get("comment"),
+          viewer: url.searchParams.get("viewer") }),
         projectremove: () => this.projectRemove({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
-          comment: url.searchParams.get("comment") }),
+          comment: url.searchParams.get("comment"), viewer: url.searchParams.get("viewer") }),
+        /* REC-149 (Membership v2 §7.14): the owner's setting, its read, and the directory. `by` and `viewer` are
+           the control plane's stamps (PROJECT_ACTIONS for the setting, the viewer stamp for all three). */
+        projectvisibilityset: () => this.projectVisibilitySet({ projectId: url.searchParams.get("projectId"),
+          setting: url.searchParams.get("setting"), reason: url.searchParams.get("reason"),
+          by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),
+        projectvisibility: () => this.projectVisibility({ projectId: url.searchParams.get("projectId"),
+          viewer: url.searchParams.get("viewer") }),
+        projectdirectory: () => this.projectDirectory({ viewer: url.searchParams.get("viewer") }),
         projectparticipants: () => this.projectParticipants({ projectId: url.searchParams.get("projectId"),
           by: url.searchParams.get("by") }),
         registeraudit: () => this.registerAudit(),
@@ -46239,7 +47460,8 @@ export class Store extends DurableObject {
         /* REC-126: the review copy's five routes. Every identity — `author`,
            `viewer`, `secretSha`, `bySecret` — is STAMPED by the control plane and
            spread SECOND, so a body naming one is overwritten, never honoured. */
-        casedraft: () => this.reviewAct({ ...(body || {}), act: "draft", author: url.searchParams.get("author") }),
+        casedraft: () => this.reviewAct({ ...(body || {}), act: "draft", author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer") }),   /* REC-149: stamped, asked only for EXISTENCE */
         reviewgrant: () => this.reviewAct({ act: "grant", draft: (body || {}).draft ?? url.searchParams.get("draft"),
           recipient: (body || {}).recipient ?? url.searchParams.get("recipient"),
           author: url.searchParams.get("author"), secretSha: url.searchParams.get("secretSha") }),
