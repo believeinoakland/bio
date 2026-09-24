@@ -330,7 +330,7 @@ scope: one helper with a `dynamic: true|false` mode; refusal-codes reads it.
 accepts-when: both callers use the one helper and stay green. NEGATIVE CONTROL: add an import the static mode cannot see and the dynamic-mode arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-518 · queued — **`monitor-cadence.test.mjs` FAILS UNDER LOAD: 57/2 in a gate on tree 64bc5e3e while a second full gate ran in the same container, 59/0 alone on the identical tree. Both failures are the third tick ("the key is idempotence, not amnesia": `later.fired` expected [A]; observations 2). `Store#monitorTick` takes the injected now (T1 + 3600000 + 1); the fire goes through `op=acquire` over SELF, and something below it reads the real clock or a wall-clock budget (the host governor's window, or a fetch timeout to the fake Archive), so under load the fire does not land.** Found by DIST #6 (18:52Z). — owner RECORD (the suite with M0).
+### D-518 · running — **`monitor-cadence.test.mjs` FAILS UNDER LOAD: 57/2 in a gate on tree 64bc5e3e while a second full gate ran in the same container, 59/0 alone on the identical tree. Both failures are the third tick ("the key is idempotence, not amnesia": `later.fired` expected [A]; observations 2). `Store#monitorTick` takes the injected now (T1 + 3600000 + 1); the fire goes through `op=acquire` over SELF, and something below it reads the real clock or a wall-clock budget (the host governor's window, or a fetch timeout to the fake Archive), so under load the fire does not land.** Found by DIST #6 (18:52Z). — owner RECORD (the suite with M0).
 order: at the backlog head, beside M0-173: a gate whose verdict depends on machine load costs every FULL gate a red round (Bob's 17:41Z rule: a false or flaky gate result goes ahead) (SCHEDULER #19, 2026-09-24)
 milestone: M0 (a diagnosis, then its fix)
 interface: none unless the fix threads `now` through `op=acquire` (the integrator classifies).
@@ -340,7 +340,7 @@ scope: pin the load-sensitive step by driving the third tick with a stalled fake
 accepts-when: the suite reads 59/0 with a concurrent full gate running, on three runs (the measured failure it moves: 57/2 under load on 64bc5e3e). NEGATIVE CONTROL: restore the real-clock read the pin names, add an artificial delay, and the third-tick arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (DIST #6's finding; `node tools/mintid.mjs D`).
 
-### M0-178 · queued — **A `bio-plane/src` CHANGE CAN MAKE THREE BUNDLES STALE (plane, pdf-worker, ocr-worker, per `fleetbundles.test.mjs`), and `kickoffs/WORKER.md` names only the plane's `dist/bio-plane.bundled.mjs`, so a worker following it ships stale member bundles into a red gate.** Found by D-502's worker. — owner M0 (BOB reviews the WORKER.md line).
+### M0-178 · running — **A `bio-plane/src` CHANGE CAN MAKE THREE BUNDLES STALE (plane, pdf-worker, ocr-worker, per `fleetbundles.test.mjs`), and `kickoffs/WORKER.md` names only the plane's `dist/bio-plane.bundled.mjs`, so a worker following it ships stale member bundles into a red gate.** Found by D-502's worker. — owner M0 (BOB reviews the WORKER.md line).
 order: after M0-176, AHEAD of the product rows by Bob's 17:41Z rule: a stale bundle costs a red gate round (SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:04Z)
 milestone: M0
 interface: none.
@@ -350,7 +350,7 @@ scope: one `tools/` command that rebuilds every bundle whose manifest names a to
 accepts-when: a `bio-plane/src` edit read by pdf-worker, then the command, leaves `fleetbundles.test.mjs` green (the measured failure it moves: three stale bundles after one src edit). NEGATIVE CONTROL: rebuild only the plane's bundle and fleetbundles names the stale member.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### D-476 · queued — **A MULTI-PART CAPTURE ALWAYS ANSWERS `existed: false`, EVEN ON A RE-FETCH OF BYTES THE RECORD HOLDS: the per-part write guard cannot see the whole document.** It under-claims (never over-claims), so it follows D-469. — owner CAPTURE.
+### D-476 · running — **A MULTI-PART CAPTURE ALWAYS ANSWERS `existed: false`, EVEN ON A RE-FETCH OF BYTES THE RECORD HOLDS: the per-part write guard cannot see the whole document.** It under-claims (never over-claims), so it follows D-469. — owner CAPTURE.
 order: after D-472, with the acquire corrections (SCHEDULER #17, 2026-09-24; D-469's worker via CONDUCT #19)
 milestone: M2
 interface: I3 — `existed` becomes `null` (stated undetermined) or a whole-document lookup; the integrator mints and classifies the IC.
@@ -360,7 +360,7 @@ scope: report `existed: null` with its sentence for a multi-part capture, or com
 accepts-when: a re-fetched multi-part capture reads true or null-with-reason, never a false that claims the bytes are new. NEGATIVE CONTROL: restore the per-part answer, and the re-fetch arm reads false and fails by name. Extend `bio-plane/test/acquire.test.mjs`.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### FW-22 · queued — **AUDITED FINANCIAL STATEMENTS ARE NOT BUDGETS: BOB #32 ruled (2026-09-24 02:30Z) that an ACFR/CAFR or an agency's audited statements are a separate type, FINANCIAL REPORT, counted apart. D-66's budget sample is recounted with them excluded, and the new class is counted.** — owner FRAMEWORK.
+### FW-22 · running — **AUDITED FINANCIAL STATEMENTS ARE NOT BUDGETS: BOB #32 ruled (2026-09-24 02:30Z) that an ACFR/CAFR or an agency's audited statements are a separate type, FINANCIAL REPORT, counted apart. D-66's budget sample is recounted with them excluded, and the new class is counted.** — owner FRAMEWORK.
 order: directly after D-66: §2's rule that a count comes before any reader; the financial-report reader follows the budget reader and is its own row once these counts justify it (SCHEDULER #18, 2026-09-24)
 milestone: M2
 interface: none — a census class and a recount.
@@ -370,7 +370,7 @@ scope: the census instrument gains FINANCIAL REPORT, judged from bodies; D-66's 
 accepts-when: `MEASUREMENTS.md` carries both counts with intervals, dated with the instrument. NEGATIVE CONTROL: fold the class back into budget and the recount arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs FW`).
 
-### FW-23 · queued — **CSV HAS NO FORMAT-REGISTRY ENTRY, so the corpus's CSV files are held and never read.** BOB #32 DESIGNED it (2026-09-24 02:30Z): delimiter and encoding found by signature and RECORDED on the reading, undetermined when they cannot be told; one sheet; row 1 is row 1, a header being a reading, never assumed; cells addressed sheet-cell/sheet-range, 1-based; the capture's grade. Legacy `.xls` (50 keys) stays waiting under OFFICE-FORMATS's legacy ruling. — owner FRAMEWORK.
+### FW-23 · running — **CSV HAS NO FORMAT-REGISTRY ENTRY, so the corpus's CSV files are held and never read.** BOB #32 DESIGNED it (2026-09-24 02:30Z): delimiter and encoding found by signature and RECORDED on the reading, undetermined when they cannot be told; one sheet; row 1 is row 1, a header being a reading, never assumed; cells addressed sheet-cell/sheet-range, 1-based; the capture's grade. Legacy `.xls` (50 keys) stays waiting under OFFICE-FORMATS's legacy ruling. — owner FRAMEWORK.
 order: behind D-66, per BOB #32's ruling (SCHEDULER #18, 2026-09-24)
 milestone: M2
 interface: I2 additive — a `csv` format entry.
@@ -380,7 +380,7 @@ scope: the `csv` entry and its reader on the format axis; extend the office-form
 accepts-when: a CSV reads as addressed cells with delimiter and encoding recorded. NEGATIVE CONTROL: guess a delimiter where none is determined and the undetermined arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs FW`).
 
-### D-463 · queued — **NO CREDENTIAL IS CONFINED TO SCRATCH FOR LIFE: the namespace binds per CALL, so an instrument that omits `store=scratch` addresses the real record (CLAUDE.md §5's stated residue: *a sticky confinement is RECORD's and is NOT built*).** — owner RECORD.
+### D-463 · running — **NO CREDENTIAL IS CONFINED TO SCRATCH FOR LIFE: the namespace binds per CALL, so an instrument that omits `store=scratch` addresses the real record (CLAUDE.md §5's stated residue: *a sticky confinement is RECORD's and is NOT built*).** — owner RECORD.
 order: after D-462, the last of the namespace guards (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
 milestone: M0 (a guard)
 interface: I3/I5 — a per-credential confinement; the integrator mints and classifies the IC.
@@ -390,7 +390,7 @@ scope: a credential may be minted confined to `scratch`; every call it makes res
 accepts-when: a confined credential writing without `store=` lands in scratch, and `bio`'s counters are unchanged. NEGATIVE CONTROL: drop the confinement, and that arm moves `bio` and fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-475 · queued — **THE `/` SETUP PAGE READS `bio`'s GROUP SLUG WHATEVER `store=` SAYS: it is an HTML route, not an op, so D-461's refusal on the bio-pinned ops does not reach it.** Read-only and public, so low priority. Found by D-461's worker. — owner RECORD.
+### D-475 · running — **THE `/` SETUP PAGE READS `bio`'s GROUP SLUG WHATEVER `store=` SAYS: it is an HTML route, not an op, so D-461's refusal on the bio-pinned ops does not reach it.** Read-only and public, so low priority. Found by D-461's worker. — owner RECORD.
 order: behind the namespace guards (D-462, D-463), low: read-only, public, and names no member (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
 milestone: M0 (the namespace guard's last door)
 interface: none — the page's read.
