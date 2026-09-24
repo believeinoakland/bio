@@ -4554,3 +4554,13 @@ depends-on: D-487 (its pinned-clock Miniflare instance; branch from `land/worker
 scope: a two-bucket weighted sliding window in `Store.knock` (est = prev × (1 − elapsed/W) + cur; refuse at est ≥ limit), `index.mjs` passing the previous bucket and elapsed fraction; the same for the instance-wide 300; the prune keeps win and win−1; no schema change. If the estimate is approximate, the published text says so.
 accepts-when: a burst straddling the edge is refused at the stated limit, per source and instance-wide, in `doorbell.test.mjs`. NEGATIVE CONTROL: restore the fixed bucket and the straddling burst is re-admitted, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### M0-106 · done — CLOSED 2026-09-24 by BOB #32 (Bob asked why it still waited): its scope — DIST.md step 1 checks for an isBackstop() record for the exact tree and otherwise runs gates.mjs --full --no-reuse — is BUILT and was EXERCISED at the 0.79.0 cut (dist/cut-0.79.0 commit: 'GATE STEP 1: no isBackstop() record for this tree; gates.mjs --full --no-reuse runs'). The skip half cannot occur from the cloud today: a fresh DIST session holds no gate record, so waiting for it would wait forever. Not rowed further: making records cross clones would only cut gate time on a rare act (process is overhead, Bob 2026-09-22).
+order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3a condition 3 (BOB #30, 2026-09-23), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: M0-126 (the backstop mark); then DIST's first cut from a tree carrying a backstop record.
+scope: DIST.md step 1 reads: `gates.mjs --full --no-reuse` on the exact tree, or a record for which pushguard's `isBackstop()` (M0-126) is true, NAMED in the cut commit, else the whole battery; `--since` removed (M0-126's worker found step 1 still naming it, via CONDUCT #15); the bumped tree's own gate stays.
+accepts-when: a cut from a tree with a backstop record runs no battery and names it; a record whose run printed any REUSED unit, or a `--since`, never satisfies a cut and the battery runs.
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1; `node tools/mintid.mjs M0`); re-narrowed 2026-09-23 by SCHEDULER #15 (BOB #30's ruling).
