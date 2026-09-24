@@ -11338,6 +11338,39 @@ export default {
            caller, set only here. A verified replay is a replay: `replay` is set with it, so no creation-time stamp
            (D-436's group) rewrites the bytes the provenance lists. Anything failing (1) or (2) falls through to the
            ordinary creation unchanged. */
+        /* D-511 (§11 item 5, "`replay` IS THE SERVER'S WORD, NEVER THE CALLER'S", RULED 2026-09-24 by BOB #33 on
+           D-505's finding), STEP (1), THE FENCE. `replay` exempts a promotion from every SHAPE fence `promote` has —
+           the gathering grammar, the inquiry and action basis arms, the correspondence arms, the bias arm, the
+           creation-time group stamp, and C-32.19's rule that no machine writes a member's `risk_tier`. The exemption
+           is right for what it is FOR: a replay re-states the record's own past verbatim, and that past predates the
+           fences. But the flag ARRIVED IN THE REQUEST BODY and nothing removed it, so any caller could hand itself
+           the exemption. MEASURED by D-505 through op=promote (`risk-tier.test.mjs` §7 arm (ix), now INVERTED): a
+           MEMBER-class deploy token sending `replay: true` landed `risk_tier: 1` — "file freely" — on an action
+           nobody assessed, and `op=projection` published it. A provenance hop a caller can hand us is one a caller
+           can invent (`CLAUDE.md` §5), which is the reasoning `migrationReplay` below already answers one field over.
+           THE CONDITION IS THE ADMIN CLASS WITH NO SESSION, AND BOTH HALVES ARE LOAD-BEARING. Admin is the only class
+           `migrate.mjs` uses (it narrowed to admin at REC-173, and refuses to run under any other), so the migration
+           is untouched. `!viaSession` is there because the session block above sets `cls = kind` from
+           `sess.role === "admin"`, and the FOUNDER'S OWN SESSION — the one whose stored role is the literal `admin`
+           (`Store.ROOT_ADMIN`, `rootOfTrust: true`), minted by `op=claim` and `op=login` — therefore arrives as
+           `cls === "admin"` exactly as the deploy token does. A person signed in at a browser is not the root of
+           trust, which is the distinction `op=export` draws in this file in the same words. MEASURED, because the
+           first draft of this comment said an ADMIN-ROLE MEMBER's session arrives that way too and that is FALSE:
+           a member login stores `member:<id>`, so her class is `member` and `m.role === "admin"` decides only her
+           capabilities (`Store#sessionRights`). `risk-tier.test.mjs` §8's REACH arm asks `op=whoami` for all four
+           callers rather than asserting any of it, and this section's control caught the error. Everything else
+           — a member session, a member, probe or `ai` token, and any class added later — has the flag removed BEFORE
+           the store sees it, so every fence applies to it. It is a DELETE and not a refusal: the caller asked for an
+           exemption it may not have, and the honest answer is the promotion judged as what it IS, which then refuses
+           by the fence's own name (C-32.19 for the measured case) rather than by a name about the flag.
+           DELETED BEFORE the `migrationReplay` block below, which sets `b.replay` as the SERVER's word on a verified
+           migration replay — the only writer of it that remains.
+           RESIDUE, STATED RATHER THAN LEFT TO BE FOUND: until step (2) is built (every replayed promotion, of any
+           type and any revision, names a drive-provenance capture the plane verifies, as `migrationReplayOf` already
+           does for a creation) an ADMIN-class caller can still ASSERT a replay it cannot show. The record does not
+           model the root of trust's honesty (Membership §DEC-2, deferred). Step (1) closes the measured hole; it does
+           not close that one, and BOB #33 keeps step (1)'s class test as a second condition when step (2) lands. */
+        if (viaSession || cls !== "admin") delete b.replay;
         delete b.migrationReplay;
         const replayed = (!viaSession && cls === "admin" && b.base === null && b.meta
                           && normalizeType(b.meta.object_type) === "inquiry")

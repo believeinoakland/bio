@@ -1631,7 +1631,14 @@ console.log("\n--- 8. D-235: the answer names the source of every field it publi
       `  - version: "held from before the rule"`,
       `    target: "${MINUTES}"`,
       `    role: "supports"`].join("\n"));
-    const replayed = await POST(`op=promote&token=${RUTH}`, {
+    /* CORRECTED 2026-09-24 by D-511, never exempted: this replayed the historical partition under RUTH'S SESSION,
+       and it landed because the exemption was the CALLER'S to claim. BOB #33 ruled `replay` the SERVER'S word
+       (INVESTIGATIVE-SESSION.md §11 item 5), and the plane now deletes a caller's flag unless the call arrives
+       under the ADMIN class with NO SESSION — ruth is an admin-ROLE member, so her session reads `cls === "admin"`
+       too and it is the session test alone that tells her browser from the root of trust. The arm's subject — what
+       the read publishes for a leg the record already holds — does not move; the credential that may put such a
+       leg there does. It is a REVISION, so no surfacing run is asked of it. */
+    const replayed = await POST(`op=promote&token=adm-pl3`, {
       bundleId: RINQ, base: await shaOf(RINQ), replay: true,
       snapKey: `${RINQ}-replay`,
       files: [{ path: "bundle.md", text: withUnlabelledLeg,
