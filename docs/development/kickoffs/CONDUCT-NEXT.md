@@ -35,7 +35,7 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   (spawned 04:47Z) merges batch12 onto it (IC-259/260/257 → 85.1/85.2/85.3.0, ratchets re-read), full gate, pushes by 05:40Z.
   TRAIN land/conduct/c20-batch13 (drop batch10, batch11, batch11fix, batch12 refs). ON LANDING: DIST owed D-461 SAFETY
   (store=scratch honoured by bio-pinned ops), D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0), D-64 BROWSER class (DIST-11).
-- c20-integ1 REPORTED GREEN on land/conduct/c20-integ1b @ e2e502eb (full 347/347): D-64 + REC-184 + M0-141 + .gitignore; D-64's family
+- c20-integ1 REPORTED GREEN on land/conduct/c20-integ1b @ 4ed8616c (full 347/347 RECORDED; renderAdmit docstring PAID there): D-64 + REC-184 + M0-141 + .gitignore; D-64's family
   is C-83. NEVER train land/conduct/c20-integ1 (cb2a35aa, broken trailers; undeletable) — drop it. integ1b re-did batch10+main
   in parallel with batch11fix and numbers ICs on batch10 (84.x): WORKER c20-batch14 session_01Ya8PUPivB6xpvV51uhcZa9 (04:53Z)
   moves its content onto batch11fix (IC-252 → I3 86.0.0 MAJOR, IC-255 → 86.1.0), merges batch13 when pushed, adds the
