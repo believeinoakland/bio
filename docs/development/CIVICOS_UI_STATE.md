@@ -1144,6 +1144,35 @@ reaches the act; the receipt, the stated rule and **the honest all-clear** are t
 pieces — an all-clear that cannot distinguish *nothing happened* from *we did not look* is the
 defect UI-45 later closed per-class.
 
+> **D-176 · THE LIMIT OF v46's ALL-CLEAR, STATED BESIDE IT — 2026-09-24, thread UI, a WORKER of CONDUCT #19
+> (BOB #32, 2026-09-23: *CIVICOS_UI_STATE.md is UI's file — state the limit beside v46's UI-14 entry*). This is an
+> ADDENDUM, not an edit: the v46 entry above is untouched, and this block sits beside it so a reader of v46 meets
+> its limit where the claim is made.** Verified against `civicos-ui/app.html` on the landing tree, not taken from
+> the 2026-08-04 debt row.
+>
+> 1. **The all-clear rests on an INTERPRETED feed-emptiness, not a literal one.** `queueAllClearHtml` shows
+>    *"Nothing needs anybody right now"* only when every feed answered and every feed's `queueFeedYield` is zero.
+>    For the queue feed that is its item count; for the resolutions feed it is **NOT the feed's rows** but
+>    `queueNotices().length` — the receipts this screen would paint, i.e. resolved obligations that THIS PAGE
+>    showed the member and that have since left. The interpretation is deliberate (a literal reading would let one
+>    historical resolved task forbid the all-clear for ever), and it is the one doing the work: *"every one of
+>    them was empty"* means empty **of what this screen would show**, not empty of rows.
+> 2. **So the all-clear is relative to this page's memory, which the record does not hold.** `QUEUE_SEEN` is
+>    page state, empty at every load of `app.html`. An obligation resolved before this load's queue screen ever
+>    painted it was never in `QUEUE_SEEN`, yields no receipt, and does not withhold the all-clear; one this load
+>    DID paint keeps its receipt once resolved — and so keeps the all-clear withheld — until the page is reloaded
+>    or the resolutions feed stops returning it. Two members, or one member in two tabs, looking at the same
+>    record can see different answers.
+> 3. **`QUEUE_SEEN` is unbounded for the life of the page.** `queueRemember` only ever `set`s it; nothing deletes
+>    from it or clears it, and `renderQueue` does not reset it. It grows with every item ever painted until reload.
+>
+> **What would remove the limit, and why it is not built.** A narrow plane read — *what left this member's
+> queue since they last looked* — would make the rule literal (the record, not the page, would say what the
+> member has not yet been told) and bound the map. It is RECORD's to build, and waits on the map's growth
+> mattering or the interpretation biting (D-176's prior disposition: M8 · WATCH). **Pinned** by
+> `civicos-ui/test/queue-allclear-limit.test.mjs`, which fails by name if this statement goes missing or if the
+> code stops carrying the limit it describes — in which case this block is what must be corrected.
+
 v45, 2026-08-04 session, thread UI, UI-13. Landed `9b0b357` (merged `7dfe631`). SURFACE:
 `app.html`. A WRITE SURFACE FOR THE INTENT LAYER — **NINE OPS, ZERO CALLERS**, and now nine
 call sites. The envelope bug D-173 was fixed at ONE SEAM in the same integration; the class
