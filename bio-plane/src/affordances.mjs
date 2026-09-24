@@ -1904,6 +1904,9 @@ export const NON_ACTS = {
   casedraft: "review copy: its subject is a DRAFT CASE keyed draft_id, beside publish and never a bundle in a state — the answer names op=reviewcopy",
   reviewgrant: "review copy: its subject is a DRAFT CASE keyed draft_id and its product is a grant keyed grant_id, not a move of any bundle",
   reviewrevoke: "review copy: its subject is a GRANT keyed grant_id, not a bundle in a state",
+  /* REC-198: a READ, and its subject is a PROJECT's set of drafts — it moves nothing and offers nothing beside a
+     bundle; each row it answers names the read that opens that draft. */
+  casedrafts: "read: the drafts of one project (BIO_Publication §6A.4), fenced exactly like reading one draft (BOB #32); each row names op=reviewcopy for its draft, and nothing is written",
   /* REC-14 / DEC-17. Its subject is the GROUP's own declaration about the
      standard its work is held to — authored before the work, about their own
      intentions — so there is no object in any state for it to appear beside. A

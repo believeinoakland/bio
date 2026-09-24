@@ -9770,11 +9770,23 @@ export class Store extends DurableObject {
   #draftForMember(draftId, viewer) {
     const d = this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draftId ?? "").trim());
     if (!d) return null;
+    return this.#seesProjectDrafts(d.project_id, viewer) ? d : null;
+  }
+
+  /* REC-198 — THE DRAFT FENCE, AND THERE IS EXACTLY ONE OF IT. BOB #32 (2026-09-23 23:08Z; BIO_Publication §3 rule 15 (a)):
+     the list of a project's drafts is *"fenced exactly like reading one draft"*. So the member door of the
+     single read (`#draftForMember`, above) and the list (`caseDraftList`, below) both CALL this predicate; a
+     second copy that agreed today is how the two would come apart unnoticed, and `reviewcopy.test.mjs` pins the
+     call count. It is D-15's predicate over the producing PROJECT bundle, as REC-126 built it: a machine class
+     compiles unfiltered, an identified member must be a PARTICIPANT of the project (invited or joined — the
+     predicate draws no line between them, see `viewerPredicate`) or an active administrator, and anything the
+     gate does not recognise is DENY. What it admits is REC-126's, moved here verbatim and not re-decided. */
+  #seesProjectDrafts(projectId, viewer) {
     const gate = viewerPredicate(viewer);
-    if (gate.scope === "DENY") return null;
-    if (gate.scope === "member") return d;
-    return this.#one(`SELECT 1 AS seen FROM bundles b WHERE b.bundle_id=? AND b.object_type='project' AND ${gate.sql}`,
-                     d.project_id, ...gate.args) ? d : null;
+    if (gate.scope === "DENY") return false;
+    if (gate.scope === "member") return true;
+    return !!this.#one(`SELECT 1 AS seen FROM bundles b WHERE b.bundle_id=? AND b.object_type='project' AND ${gate.sql}`,
+                       projectId, ...gate.args);
   }
 
   #reviewGrant(who, { draft = null, recipient = "", secretSha = null } = {}) {
@@ -10169,6 +10181,40 @@ export class Store extends DurableObject {
     return { statementSha: sha, truncated, byAuthor: all.length - listed.length,
              rows: listed.map((r) => ({ kind: r.acknowledger_kind, by: r.acknowledger,
                                         recipient: r.recipient ?? null, at: r.at })) };
+  }
+  /* REC-198 / BIO_Publication §6A.4 — THE LIST OF A PROJECT'S DRAFTS. Every other read of `case_drafts` is keyed
+     by `draft_id`, so a draft whose id was lost was a lost draft: nothing could name it again. This is the one
+     read that answers "which drafts does this project hold", and BOB #32 (2026-09-23 23:08Z) ruled its fence:
+     exactly the single read's. So it asks `#seesProjectDrafts` — CALLED, never copied — and every caller that
+     predicate refuses, and every project that does not exist, receives `#noReviewCopy()`: the one dead answer
+     the single read gives such a caller, built from no argument, so the list is no oracle for which projects
+     exist or hold drafts.
+     BOUNDED like every capped read: `limit` clamped to [1, REVIEW_LIST_MAX] and PUBLISHED as applied, `total`
+     counted over the project's drafts, and `truncated` said rather than left to be inferred. Each row names the
+     draft's case identity through `#draftIdentity` (the edition read from the published record, never stored)
+     and the read that opens it. Nothing here writes. */
+  caseDraftList({ project = null, viewer = null, limit = null } = {}) {
+    const pid = String(project ?? "").trim();
+    if (!pid || !this.#one(`SELECT 1 AS p FROM bundles WHERE bundle_id=? AND object_type='project'`, pid)
+        || !this.#seesProjectDrafts(pid, viewer)) return Store.#noReviewCopy();
+    const askedCap = Number.parseInt(String(limit ?? ""), 10);
+    const cap = Number.isInteger(askedCap) && askedCap >= 1 ? Math.min(askedCap, Store.REVIEW_LIST_MAX)
+              : Store.REVIEW_LIST_MAX;
+    const counted = this.#one(`SELECT COUNT(*) AS n FROM case_drafts WHERE project_id=?`, pid);
+    const total = counted ? Number(counted.n) : 0;
+    const rows = this.#rows(`SELECT draft_id, case_id, created_by, created_at, updated_by, updated_at
+                             FROM case_drafts WHERE project_id=? ORDER BY created_at, draft_id LIMIT ?`, pid, cap);
+    const drafts = rows.map((d) => {
+      const ident = this.#draftIdentity(d);
+      return { draft_id: d.draft_id,
+               case: { case_id: ident.caseId, edition: ident.edition,
+                       identity: Store.#caseIdentitySentence(ident.caseId, ident.edition) },
+               created_by: d.created_by, created_at: d.created_at,
+               updated_by: d.updated_by, updated_at: d.updated_at,
+               read: `op=reviewcopy&draft=${d.draft_id}` };
+    });
+    return { ok: true, kind: "review-drafts", project: pid, drafts, count: drafts.length,
+             total, limit: cap, truncated: total > drafts.length };
   }
   /* ===== END REC-126 ====================================================== */
 
@@ -47767,6 +47813,10 @@ export class Store extends DurableObject {
           caseId: url.searchParams.get("case"), edition: url.searchParams.get("edition"),
           secretSha: url.searchParams.get("secretSha"), viewer: url.searchParams.get("viewer"),
           bySecret: url.searchParams.get("bySecret") === "1" }),
+        /* REC-198: the list of a project's drafts. `viewer` is STAMPED by the control plane, as every fenced
+           read's is; the store fails closed on an absent one. */
+        casedrafts: () => this.caseDraftList({ project: url.searchParams.get("project"),
+          viewer: url.searchParams.get("viewer"), limit: url.searchParams.get("limit") }),
         caseratify: () => this.ratifyCaseDocument(body || {}),
         audit: () => this.auditPass({ after: url.searchParams.get("after") || "",
                                       limit: url.searchParams.get("limit"),
