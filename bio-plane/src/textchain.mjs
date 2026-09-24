@@ -1361,21 +1361,59 @@ const undeterminedChars = (page) =>
  * WHAT THIS DOES NOT TOUCH. `undeterminedChars` reads counts the decoder
  * reported and is not a length at all. `counts.chars` — the figure I2 REPORTS —
  * is deliberately left as the raw character count: it is a reported quantity
- * rather than an award, and moving it is an interface change. That leaves
+ * rather than an award, and moving it is an interface change.
+ *
+ * D-514 CLOSED THE FOUR READER SITES D-501 LEFT, 2026-09-24, and the paragraph
+ * that stood here is CORRECTED rather than deleted because what it recorded was
+ * a real closure whose reason did not survive the sweep. It read: *that leaves
  * `needsTier2` in `index.mjs`, which compares undetermined REGIONS against
  * `counts.chars`, reading the same class of number; it is the ROUTING half,
  * closed on purpose (index.mjs's own note), and is named in D-501's report
- * rather than changed here. */
+ * rather than changed here.* D-501's worker then found three MORE sites reading
+ * the same class of number, and two of them make the record CLAIM MORE THAN IT
+ * HOLDS rather than merely route a document to the wrong member — which is what
+ * moved the closure. SCHEDULER #19 rowed all of them as D-514. They are, and
+ * each now counts glyphs through `glyphCount` below:
+ *   - `needsTier2` (`index.mjs`) — the ROUTING half, the one named above.
+ *   - the wholesale-base refusal in `mergeTier2Text` HERE, and its twin in
+ *     `mergeTier3Text` (`index.mjs`), each of which refused a whitespace-only
+ *     base SAYING it "already holds N decoded character(s)". A false sentence
+ *     in a note is the class CLAUDE.md §2 puts above a missing feature.
+ *   - the tier-3 LAYER ATTRIBUTION (`index.mjs`), which put a whitespace-only
+ *     page into the `layer` part of the chain, so the record named a tier-1
+ *     derivation for a page from which nothing was derived.
+ * `counts.chars` is UNCHANGED at every one of them — no interface moves — because
+ * a judgment about whether a document holds decoded text is read off THE TEXT IN
+ * HAND, never off a producer's counter. The counter is a claim; the string is the
+ * fact, and the two disagree by exactly the whitespace. */
 const WHITESPACE = /\s/u;
-const decodedChars = (page) => {
-  if (!page || typeof page.text !== "string") return 0;
+/**
+ * The glyphs a string holds: non-whitespace CODE POINTS, D-501's unit and the
+ * one counter every reader that judges "is there decoded text here" must read
+ * (D-514). Exported for those readers; the SUITE deliberately spells the rule
+ * again for itself rather than importing it, which is the note in
+ * `tier-pagewise.test.mjs` and still true — a suite that shares its subject's
+ * helper has stopped being able to disagree with it.
+ *
+ * @param {string} s
+ * @returns {number}
+ */
+export function glyphCount(s) {
+  if (typeof s !== "string") return 0;
   /* `for…of` over a string iterates CODE POINTS, so a surrogate pair counts
      once. A lone surrogate counts once too, which is the honest answer for a
      thing that is not a glyph either way. */
   let n = 0;
-  for (const ch of page.text) if (!WHITESPACE.test(ch)) n++;
+  for (const ch of s) if (!WHITESPACE.test(ch)) n++;
   return n;
-};
+}
+/* The AWARD's counter — one page's glyphs. The loop moved into `glyphCount`
+   above at D-514 so the four reader sites that judge the same question read the
+   same counter; this wrapper keeps the page shape the award is written against,
+   and keeps `decodedChars` unexported, which is what lets the suite spell the
+   rule independently. */
+const decodedChars = (page) =>
+  (page && typeof page.text === "string") ? glyphCount(page.text) : 0;
 
 /**
  * Which tier wins ONE page. The whole rule, isolated so it can be driven
@@ -1412,13 +1450,32 @@ export function mergeTier2Text(base, t2) {
   const t2Pages = (t2 && Array.isArray(t2.pages)) ? t2.pages : [];
 
   if (!usable.length) {
-    const baseChars = (base && base.counts && Number.isFinite(base.counts.chars))
-      ? base.counts.chars
-      : (typeof (base && base.document) === "string" ? base.document.length : 0);
-    if (baseChars > 0)
+    /* D-514 — WHAT THE BASE HOLDS IS COUNTED IN GLYPHS, AND READ OFF THE TEXT IN
+       HAND. This read `counts.chars`, the raw character count, and fell back to
+       `document.length`: both count whitespace as decoded text, so a page whose
+       tier-1 reading is 39 space characters and NO glyph (`legistar-73550` p1,
+       M-140) refused a tier-2 decode while SAYING it "already holds 39 decoded
+       character(s)". The sentence was false and the refusal it justified cost a
+       document its reading — the record claiming more than it holds, which
+       CLAUDE.md §2 ranks above a missing feature.
+       THE ORDER IS INVERTED ON PURPOSE. The document string is the FACT and
+       `counts.chars` is the producer's CLAIM about it, so the string is asked
+       first. The counter is consulted only when there is no string to count, and
+       then a counter claiming characters over a payload this merge cannot read is
+       still REFUSED, in its own words: a producer disagreeing with its own output
+       is not a licence to replace what it may be describing. No producer in this
+       plane reaches that branch (`tier2-wire.test.mjs` §8 measured it), so it is
+       a guard, named rather than dressed up as behaviour. */
+    const baseText = (typeof (base && base.document) === "string") ? base.document : null;
+    const baseGlyphs = baseText === null ? null : glyphCount(baseText);
+    const reported = (base && base.counts && Number.isFinite(base.counts.chars)) ? base.counts.chars : 0;
+    if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
       return { ok: false, replaced: [], kept: [], perPageTier: null,
                why: `this document's tier-1 reading has no per-page grain and already holds `
-                  + `${baseChars} decoded character(s), so a tier-2 decode was refused rather `
+                  + `${baseGlyphs === null
+                        ? `${reported} character(s) its producer counted and no text this merge can read`
+                        : `${baseGlyphs} decoded glyph(s)`}`
+                  + `, so a tier-2 decode was refused rather `
                   + `than allowed to replace text page by page it cannot be compared against` };
     /* Nothing to lose — the wholly-unread document. Tier 2 takes it whole, and
        the per-page statement says so honestly rather than inventing pages. */

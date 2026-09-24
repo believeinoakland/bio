@@ -24762,12 +24762,13 @@ function readingPositionInExtent(position, extentKind, extent) {
 }
 var undeterminedChars = (page) => page && Array.isArray(page.undetermined) ? page.undetermined.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0) : 0;
 var WHITESPACE = /\s/u;
-var decodedChars = (page) => {
-  if (!page || typeof page.text !== "string") return 0;
+function glyphCount(s) {
+  if (typeof s !== "string") return 0;
   let n = 0;
-  for (const ch of page.text) if (!WHITESPACE.test(ch)) n++;
+  for (const ch of s) if (!WHITESPACE.test(ch)) n++;
   return n;
-};
+}
+var decodedChars = (page) => page && typeof page.text === "string" ? glyphCount(page.text) : 0;
 function perPageTierWinner(p1, p2) {
   if (!p2) return "tier1";
   if (!p1) return "tier2";
@@ -24780,14 +24781,16 @@ function mergeTier2Text(base, t2) {
   const usable = basePages.filter((p) => p && Number.isInteger(p.page));
   const t2Pages = t2 && Array.isArray(t2.pages) ? t2.pages : [];
   if (!usable.length) {
-    const baseChars = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : typeof (base && base.document) === "string" ? base.document.length : 0;
-    if (baseChars > 0)
+    const baseText = typeof (base && base.document) === "string" ? base.document : null;
+    const baseGlyphs = baseText === null ? null : glyphCount(baseText);
+    const reported = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : 0;
+    if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
       return {
         ok: false,
         replaced: [],
         kept: [],
         perPageTier: null,
-        why: `this document's tier-1 reading has no per-page grain and already holds ${baseChars} decoded character(s), so a tier-2 decode was refused rather than allowed to replace text page by page it cannot be compared against`
+        why: `this document's tier-1 reading has no per-page grain and already holds ${baseGlyphs === null ? `${reported} character(s) its producer counted and no text this merge can read` : `${baseGlyphs} decoded glyph(s)`}, so a tier-2 decode was refused rather than allowed to replace text page by page it cannot be compared against`
       };
     return {
       ok: true,
@@ -79256,7 +79259,8 @@ async function migrationReplayOf(env, storeName, b) {
 function needsTier2(text) {
   const c = text && text.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
-  if (!(c.undetermined > c.chars)) return false;
+  const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
+  if (!(c.undetermined > glyphs)) return false;
   const marks = Array.isArray(text.undetermined) ? text.undetermined : [];
   if (marks.length && marks.every((m) => m && m.reason === "no_text_layer")) return false;
   return true;
@@ -79309,14 +79313,16 @@ function mergeTier3Text(base, ocr, eligible) {
   const ocrPages = ocr && Array.isArray(ocr.pages) ? ocr.pages : [];
   const wanted = new Set(eligible);
   if (!usable.length) {
-    const baseChars = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : typeof (base && base.document) === "string" ? base.document.length : 0;
-    if (baseChars > 0)
+    const baseText = typeof (base && base.document) === "string" ? base.document : null;
+    const baseGlyphs = baseText === null ? null : glyphCount(baseText);
+    const reported = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : 0;
+    if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
       return {
         ok: false,
         filled: [],
         refused: [],
         unanswered: [],
-        why: `this document's text could not be merged page by page (the tier that read it reported no per-page text), and it already holds ${baseChars} decoded character(s), so an OCR pass was refused rather than allowed to replace text that may be better than it`
+        why: `this document's text could not be merged page by page (the tier that read it reported no per-page text), and it already holds ${baseGlyphs === null ? `${reported} character(s) its producer counted and no text this merge can read` : `${baseGlyphs} decoded glyph(s)`}, so an OCR pass was refused rather than allowed to replace text that may be better than it`
       };
     return {
       ok: true,
@@ -79332,7 +79338,7 @@ function mergeTier3Text(base, ocr, eligible) {
   for (const p of ocrPages) {
     if (!p || !Number.isInteger(p.page)) continue;
     const target = usable.find((b) => b.page === p.page);
-    const empty = target && !(typeof target.text === "string" && target.text.length);
+    const empty = target && !(typeof target.text === "string" && glyphCount(target.text) > 0);
     if (!target || !wanted.has(p.page) || !empty) {
       refused.push(p.page);
       continue;
@@ -79417,7 +79423,7 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
             if (!m.ok) ocrNote = m.why;
             else {
               i2text = m.text;
-              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page) && typeof p.text === "string" && p.text.length).map((p) => p.page);
+              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page) && typeof p.text === "string" && glyphCount(p.text) > 0).map((p) => p.page);
               const parts = [];
               const layerSet = new Set(layerPages);
               const spokenFor = tier2PerPage ? [
