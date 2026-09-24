@@ -9,6 +9,16 @@ ever cut to fit. No whole-file budget; a row is held to 2 KiB, as in the backlog
 
 ## Rows
 
+### D-107 · queued — **THE INSTALLER HAS NO SCRIPTED DEPLOY.** `newgroup/DEPLOY.md` documents a dashboard paste of the bundled module, which records … (whole text: the cut archive)
+order: with the preventive instruments, after LED-9: DIST's law reads the installer back BY HAND at every cut (`kickoffs/DIST.md` step 9: the embedded version, and `bindings: []` still empty), so nothing ships unverified today; the script moves it from discipline to instrument (SCHEDULER #6, 2026-09-21, LED-7 batch 15)
+milestone: M7
+interface: I4 — the release artifact's deploy path; the integrator classifies it.
+design: `docs/architecture/BIO_Distribution_v0_1.md` §6, the deploy-to-serve ladder — *every rung read back … (whole text: the cut archive)
+depends-on: none.
+accepts-when: a deploy whose read-back differs from the signed bytes, carries another version or shows any binding reports FAILURE by name; a clean one reports the hash it read. How a liar … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 15; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-107» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
 ### D-211 · queued — **DIST's GATE STEP 8 SAYS `op=audit` CLEAN, AND ON A RECORD PAST 200 DOCUMENTS A CLEAN FIRST PAGE SATISFIES THAT WORDING.** `op=audit` answers one page (`checked` is the page size, `cursor` non-null means more; REC-57); `kickoffs/DIST.md` step 8 (re-read on `b5ce975a`) reads only *"`op=audit` clean."* Latent until an instance passes 200 documents. — owner DIST (its own kickoff).
 order: behind the product rows with DIST's instruments, directly after D-107: preventive wording, latent today (biosmoke7 holds fewer than 200 documents), so it neither cuts gate time nor unblocks product (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #15, 2026-09-23, LED-7)
 milestone: M0
