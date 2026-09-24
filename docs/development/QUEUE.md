@@ -136,7 +136,7 @@ scope: NARROWED 2026-09-24 06:01Z (SCHEDULER #18): the REBUILD is done (land/dis
 accepts-when: the guard passes on the rebuilt bundle. NEGATIVE CONTROL: restore the 0.71.0 bundle and the guard fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
-### UI-92 · queued — **THE WORKSPACE CANNOT SHOW A PROJECT'S DRAFTS.** REC-198's list, rendered. — owner UI.
+### UI-92 · running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER UI-92 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/UI-92; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
 order: directly after REC-198 (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I3 consumer (REC-198's IC).
@@ -146,7 +146,7 @@ scope: the workspace lists the project's drafts from the plane's read; each open
 accepts-when: every draft the plane lists appears and opens. NEGATIVE CONTROL: stub the list empty, and the listed-draft arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
-### D-505 · queued — **NOTHING STOPS A MACHINE CREDENTIAL FROM CHANGING A RISK TIER A MEMBER SET: BOB #32's rule of 2026-09-24 (once a member sets a tier, no machine may change it, not even back to undetermined) is NOT BUILT, and no fence refuses a machine promote that writes a determined tier.** Found by D-483's worker. — owner RECORD.
+### D-505 · running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-505 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/D-505; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
 order: at the backlog head: an authority boundary on the one field carrying legal exposure (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z)
 milestone: M7
 interface: I3 MAJOR — a refusal where an answer stood; the integrator classifies.
@@ -156,7 +156,7 @@ scope: a machine-fence refusal (catalogued, DEC-49 translation) on any machine w
 accepts-when: a machine promote writing a tier is refused by name; a member's own set is admitted. NEGATIVE CONTROL: drop the fence and the machine arm is admitted, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-503 · queued — **FIVE MACHINE/OPERATOR FENCES IN `index.mjs` ARE CATALOGUED AND MINTED BUT NEVER DRIVEN: MACHINE_CANNOT_RATIFY, MACHINE_CANNOT_RATIFY_CASE, OPERATOR_TOKEN_CANNOT_RATIFY, _RATIFY_CASE and _GOVERN are outside `machine-fences.test.mjs`'s corpus (the `store.mjs` family only).** Found by D-494's worker (18 = 18 catalogued and minted). — owner RECORD.
+### D-503 · running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-503 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/D-503; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
 order: at the backlog head: the authority boundary that no machine attests, with five of its fences asserted by nothing (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:33Z)
 milestone: M7
 interface: none.
@@ -166,7 +166,7 @@ scope: extend `machine-fences.test.mjs` to drive each `index.mjs` fence with a m
 accepts-when: all five refuse by name through the op. NEGATIVE CONTROL: remove one fence's check and its arm is admitted, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-506 · queued — **A FAILING CANARY READS AS A BARE BOOLEAN: `op=livefire` answers `ok:false` with no reason, code or error (status 500) when its 19-assertion self-test fails (`livefire.mjs` ~192-201, `index.mjs` ~6438), so a caller learns nothing exactly when it matters.** Found by D-495's worker. BOB #32 RULED (b), 2026-09-24 06:10Z (cite until folded): `ok` keeps meaning the op answered; the result moves to `verdict: "pass"|"fail"` with `failing: [names]` (empty on pass) under `ok:true`, HTTP 200. — owner RECORD (DIST updates its release check).
+### D-506 · running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-506 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/D-506; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
 order: after D-503: the record staying silent where it must speak, on the release's own canary (SCHEDULER #18, 2026-09-24)
 milestone: M8
 interface: I3 MAJOR — `ok`'s meaning narrows for this op; an IC entry; the integrator classifies.
@@ -176,7 +176,7 @@ scope: return `verdict` and `failing`; `ok:false` only for a catalogued refusal;
 accepts-when: a broken assertion yields `ok:true, verdict:"fail"` naming it. NEGATIVE CONTROL: break one assertion and drop its name from `failing`, and the arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### REC-194 · queued — **AN ACKNOWLEDGEMENT MAY MATCH ANOTHER CASE WHOSE STATEMENT IS BYTE-IDENTICAL: D-150 binds it to the statement's bytes, not to ONE case identity.** Publication §3 rule 13 (folded): *an acknowledgement binds to ONE case identity; it never matches another case whose statement is byte-identical.* — owner RECORD.
+### REC-194 · running — SPAWNED 2026-09-24 ~15:55Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER REC-194 (CONDUCT #20), base origin/main 68fecb8d (cap 16, Bob via BOB #32 15:45Z). Falsify rather than believe: a live worker holds the branch land/worker/REC-194; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
 order: (held behind REC-193: both edit the statementack code; CONDUCT #20 05:08Z) directly after REC-193, the same block (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I3 — the `statementack` op's binding narrows to one case; the integrator mints and classifies the IC.
