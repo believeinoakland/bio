@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-493 · queued — **THE TIER 1 PROBE LABELS A PERMISSION-ENCRYPTED PDF "NO-TEXT-LAYER", the scanned-page label whose comment says only OCR helps: measured false for acfr-2025 and legistar-staffrep-15579526 (unpdf decoded the latter to 13,012 chars, CPDF-5, 2026-07-31). It understates Tier 2 and overstates the OCR need in the 07-31 sizing.** Found by D-166's worker (M-127). — owner CONTENT-PDF.
+order: at the backlog head: a published figure's bucket is wrong in the direction of overclaiming a need, and the fix is small enough for tonight's window (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:41Z)
+milestone: M0 (a measurement instrument)
+interface: none.
+design: `docs/development/VERIFICATION.md` (measure; do not recall), for the Tier 1 coverage entry in `docs/development/MEASUREMENTS.md`.
+depends-on: none (D-166's probe changes ride its train; branch from `land/worker/D-166` if they are needed).
+scope: in `classify()`, before the NO-TEXT-LAYER branches, return `ENCRYPTED` when `r.byReason` has `encrypted`; an ENCRYPTED rollup line; re-state the 07-31 sizing entry's buckets with date and instrument.
+accepts-when: the two named documents classify ENCRYPTED and the rollup counts them. NEGATIVE CONTROL: drop the branch and both read NO-TEXT-LAYER, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
 ### M0-144 · queued — **THE DEC-49 GUARD CANNOT SEE A QUOTED KEY IN A SURFACE TABLE: `civicos-ui/check-refusal-codes.mjs` harvests keys with `/(?:^|[{,\s])([A-Z][A-Z0-9_]{2,})\s*:/g`, so a code table written with quoted keys escapes the TABLE_PRODUCERS pairing.** Latent: `app.html`'s four quoted SCREAMING keys (ACFR, GPF, CAFR, SSHSIG) are glossary terms, not codes. Found by D-482's worker. — owner M0 (UI reviews).
 order: after M0-143, with the instrument rows: a guard with a blind spot, not yet bitten (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:38Z)
 milestone: M0
@@ -1265,13 +1275,3 @@ depends-on: none.
 accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### CPDF-21 · queued — **`kickoffs/CONTENT-PDF.md` IS 25,863 B AGAINST THE 24,576 B READING BUDGET**, so the lane cannot read its own instructions … (whole text: the cut archive)
-order: directly after REC-154, its class and its precedent: it breaks CLAUDE.md §1's reading budget for a build lane, every CONTENT-PDF worker pays it on every spawn, and it is cheap and mechanical (SCHEDULER #6, 2026-09-21; SCHEDULER #5's handoff)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a … (whole text: the cut archive)
-depends-on: none. **Same line as REC-154** (`CUT` in `tools/readbudget.mjs`): whichever lands second re-reads the first.
-accepts-when: `node tools/readbudget.mjs` no longer warns on CONTENT-PDF.md and lists it in `CUT`; the archived text is byte-identical to what left the live file. How a liar passes it … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CPDF`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CPDF-21» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
