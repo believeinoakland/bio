@@ -477,7 +477,7 @@ scope: the plane's selection path for both acts under §S; the surfaces use it; 
 accepts-when: bulk and single both reach the op in one motion, and ARM 4d's carry is struck. NEGATIVE CONTROL: a client-side loop, and the one-motion arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
 
-### D-461 · queued — **A VALID `store=scratch` IS SILENTLY IGNORED BY THE PUBLIC OPS PINNED TO `bio` (`claim`, `login`, `knock`, `bootstrap`, `verify`, `publishedmanifest` …), SO `op=knock&store=scratch` WRITES THE REAL RECORD WHILE THE CALLER BELIEVES IT IS IN SCRATCH.** D-456 refused unknown names; this is the second half of the same trap. — owner RECORD.
+### D-461 · running — SPAWNED 2026-09-24 ~00:57Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER D-461 (CONDUCT #19), base origin/main 15b2a4c0 (D-456 on main); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-461 and that session; never conclude queued from the absence alone.
 order: FIRST in the backlog, as D-456 was: a live verification that names scratch and writes the real record is a safety defect on the record itself (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
 milestone: M0 (a guard at the plane's front door)
 interface: I3 — a second refusal on the pinned ops; the integrator mints and classifies the IC.
