@@ -35,6 +35,8 @@ biosmoke7's stores record group `believe-in-oakland` (never seed again). D-461 i
 REFUSES `store=scratch` (NAMESPACE_PINNED) — probes of public ops must name `store=bio` or nothing.
 
 ## What waits for the release Bob asks for (origin/main @ `548eb2c5`; re-read `git log 38b49c50..origin/main` at the cut — never this list)
+**Live check owed at the next deploy (D-475, c20-batch25, SCHEDULER #19 20:46Z) — both read-only and public:** `GET /?store=scratch`
+shows scratch's slug or the "no group recorded" words; `GET /?store=nonsense` returns 400 NAMESPACE_UNKNOWN.
 **UPDATE 12:25Z (BOB #32, verified at the code by DIST #6): main = `13073707`** (c20-batch14 landed 11:39Z; gate GREEN
 351/351 · 19,983 per BOB). Now ALSO owed at the next release: **D-461** (SAFETY: `store=scratch` on a public op pinned to
 `bio` is refused by name, C-78.2; CLAUDE.md §5 updated — a probe of a public op on scratch is REFUSED), **D-464**
