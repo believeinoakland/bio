@@ -24955,7 +24955,14 @@ function archiveHop(chosen, replay, { mementoDatetime = null, warcSource = null 
     /* Not cryptographic, and said plainly. This is delegated attestation. */
     bound: false,
     unsigned_reason: "no cryptographic attestation exists over a Wayback capture; this is a dated third-party claim we are trusting, not verifying",
-    via: "archive.org"
+    via: "archive.org",
+    /* D-524: the document these bytes are a capture OF, as a named key, as
+       `driveHop` carries it. The capture is FILED under the CDX original while
+       `op=acquire` answers `locator` as the replay address it fetched, so a
+       register row built from that answer names the replay; this key is what
+       lets op=monitor find the row for the bundle's own address. Taken from the
+       CDX record this instance fetched, never from the request (D-112). */
+    document_address: chosen.original
   };
 }
 
@@ -82596,7 +82603,8 @@ var index_default = {
       try {
         const reg = JSON.parse(img["data/provenance.json"] || "{}");
         const rows = (reg.documents || []).filter((d) => d && typeof d.locator === "string");
-        const match = (driveTick && driveTick.harvestable ? rows.find((d) => d.locator === driveTick.exportAddress) : null) || rows.find((d) => d.locator === locator);
+        const namesThis = (d) => Array.isArray(d.provenance_chain) && d.provenance_chain.some((h) => h && h.via === "archive.org" && typeof h.document_address === "string" && normalizeAddress(h.document_address) === normalizeAddress(locator));
+        const match = (driveTick && driveTick.harvestable ? rows.find((d) => d.locator === driveTick.exportAddress) : null) || rows.find((d) => d.locator === locator) || rows.find(namesThis);
         baseline = match?.capture?.sha256 || null;
         baselineAt = typeof match?.retrieved === "string" ? match.retrieved : null;
         baselineProfile = match && match.profile && typeof match.profile === "object" ? match.profile : null;

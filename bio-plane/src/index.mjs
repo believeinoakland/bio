@@ -9475,9 +9475,23 @@ export default {
            row because it is the one whose bytes are comparable with what this tick
            now fetches: a pre-CAP-8 capture at the document address holds the
            application shell. */
+        /* D-524, THE SAME DEFECT ON THE ARCHIVE ARM: an archive-sourced row names
+           the WAYBACK REPLAY URL as its locator, so the last fallback is the row
+           whose `archive.org` hop names this document — `archiveHop`'s
+           `document_address`, the CDX original the plane read. It comes AFTER the
+           exact-locator row, never before: a direct capture of the address is the
+           same fetch this tick makes, one hop and grade B, and the archive's is
+           the one to compare against only when no direct capture is held. The
+           comparison is in `normalizeAddress`'s form, the form the capture was
+           filed under. Scoped to the archive hop: a Drive row is D-472's clause
+           above, and D-525's pre-CAP-8 shells are rows at `locator` itself. */
+        const namesThis = (d) => Array.isArray(d.provenance_chain) && d.provenance_chain.some((h) =>
+          h && h.via === "archive.org" && typeof h.document_address === "string"
+            && normalizeAddress(h.document_address) === normalizeAddress(locator));
         const match = (driveTick && driveTick.harvestable
             ? rows.find((d) => d.locator === driveTick.exportAddress) : null)
-          || rows.find((d) => d.locator === locator);
+          || rows.find((d) => d.locator === locator)
+          || rows.find(namesThis);
         baseline = match?.capture?.sha256 || null;
         baselineAt = typeof match?.retrieved === "string" ? match.retrieved : null;
         baselineProfile = (match && match.profile && typeof match.profile === "object") ? match.profile : null;
