@@ -3894,6 +3894,21 @@ CREATE TABLE IF NOT EXISTS theme_placements (
 CREATE INDEX IF NOT EXISTS theme_placements_bundle ON theme_placements(bundle_id);
 -- =========================================================================
 
+-- D-64: the instance's DAILY RENDER ALLOWANCE, spent by the render arm of
+-- op=acquire (CLIENT-RENDERED.md, RULED 2026-09-23 by BOB #32 item 3). One row
+-- per UTC day. spent_ms is browser time the renderer REPORTED, so it is the
+-- renderer's claim summed, not a platform meter. deferred counts the renders
+-- this instance declined because the allowance was spent: a deferral is a
+-- recorded fact, never a silent fall-back to filing the shell as the content.
+-- An operational fact about this instance, not corpus-derived.
+CREATE TABLE IF NOT EXISTS render_allowance (
+  day        TEXT PRIMARY KEY,
+  spent_ms   INTEGER NOT NULL DEFAULT 0,
+  renders    INTEGER NOT NULL DEFAULT 0,
+  deferred   INTEGER NOT NULL DEFAULT 0,
+  last_at    TEXT NOT NULL
+);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
