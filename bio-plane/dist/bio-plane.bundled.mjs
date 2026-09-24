@@ -62347,17 +62347,21 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  behaviour moved.
    *
    *  AND A FINDING ABOUT THE REBUILD RULE, measured making this very edit, because it came
-   *  back the opposite way to what `kickoffs/WORKER.md` step 0 predicts. That step says a
+   *  back the opposite way to what `kickoffs/WORKER.md` step 0 predicted. That step said a
    *  COMMENT-ONLY `src/` change leaves `bundled.mjs` BYTE-IDENTICAL (REC-110) — "if you are
    *  hunting a diff after a comment-only change, there isn't one". This edit moved it by
-   *  1,104 bytes. THE RULE IS TRUE OF A PLAIN BLOCK COMMENT AND FALSE OF A JSDOC ONE (a block
-   *  opened with two stars). Grepped in the emitted bundle: an ordinary block comment in this
-   *  file, and one added to `index.mjs` in this same batch, are both ABSENT (0 hits), while
-   *  this JSDoc block is PRESENT verbatim (1 hit). The bundler strips block comments and
-   *  PRESERVES JSDoc. So a worker who edits a docstring and trusts the kickoff reads a real
-   *  diff as a build problem — the exact wasted hunt that line exists to prevent, one comment
-   *  form over. Reported to CONDUCT #20 with the measurement; the fix is to narrow WORKER.md
-   *  step 0 to the comment FORM rather than to "comments". */
+   *  1,104 bytes: the JSDoc block you are reading is PRESENT in the emitted bundle, verbatim.
+   *
+   *  THE DISCRIMINATOR FIRST PROPOSED HERE — "the bundler strips block comments and PRESERVES
+   *  JSDoc" — IS ITSELF REFUTED, and by a wider sample taken at c20-batch14 rather than by
+   *  argument. Counted over the emitted bundle: of 25 plain block comments sampled from
+   *  `index.mjs`, TWELVE are PRESENT (every one inspected sits inside the OPS table), and
+   *  `render.mjs`'s own JSDoc block is ABSENT. So the FORM does not decide it; position and
+   *  file do, by a rule nothing here has established. What is safe to say, and all that
+   *  `WORKER.md` step 0 now says, is that a comment-only change MAY move the bundle and the
+   *  answer is MEASURED, never assumed. A surprising green is a finding about the arm: the
+   *  first reading of this measurement generalised from three greps, which is the same error,
+   *  one sample size down, as the line it was correcting. */
   renderAdmit({ allowanceMs, at = null }) {
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);

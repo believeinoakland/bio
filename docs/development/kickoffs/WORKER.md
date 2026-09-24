@@ -248,14 +248,14 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
 
 0. **IF YOU TOUCHED ANYTHING UNDER `bio-plane/src/`, REBUILD THE BUNDLE FIRST: `cd bio-plane && npm run build`.** The
    committed `dist/bio-plane.bundled.mjs` is a TRACKED ARTIFACT and `FL-10`'s freshness guard fires when it does not
-   match `src/`. **This step is owed by every `src/`-touching worker, it was in NO kickoff until 2026-09-18, and THREE
-   CONSECUTIVE `RECORD` ITEMS EACH DISCOVERED IT FROM A RED SUITE** — REC-119 counted them and said the remedy is a
-   process change rather than a better warning, which is what this line is. Rebuild BEFORE the battery, because the
-   guard is what turns red and the failure names the artifact rather than your change.
-   **A COMMENT-ONLY `src/` CHANGE IS THE EXCEPTION AND IT IS MEASURED, NOT ASSUMED: the bundler STRIPS COMMENTS, so the
-   emitted bundle is BYTE-IDENTICAL while the manifest's INPUT RECORD still moves** (REC-110 measured both, twice). Rebuild
-   anyway — but there is no diff to hunt in `bundled.mjs` after a comment-only change, and a session expecting
-   one chases a build problem that does not exist.
+   match `src/`. **It is owed by every `src/`-touching worker, was in NO kickoff until 2026-09-18, and THREE CONSECUTIVE
+   `RECORD` ITEMS EACH DISCOVERED IT FROM A RED SUITE** — REC-119 counted them and said the remedy is a process change
+   rather than a better warning, which is this line. Rebuild BEFORE the battery: the guard is what turns red, and the
+   failure names the artifact rather than your change.
+   **A COMMENT-ONLY `src/` CHANGE MAY OR MAY NOT MOVE `bundled.mjs`: MEASURE, NEVER ASSUME** (c20-batch14, narrowing
+   REC-110, which generalised from two cases). The bundler keeps some comments and drops others, and the FORM is not the
+   discriminator — MEASURED: `store.mjs`'s JSDoc and `index.mjs`'s OPS-table comments PRESENT, store's other block
+   comments and all of render.mjs's ABSENT. The INPUT RECORD moves either way.
 
 0b. **EDITED A GOVERNED DESIGN DOC** (`docs/architecture/*`, or `docs/development/*` with front matter)?
    Move its Status `as of` to today and run `node tools/corpuscheck.mjs` to **0 fail** BEFORE the gate
