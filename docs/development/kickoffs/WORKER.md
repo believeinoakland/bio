@@ -86,14 +86,12 @@ incident's own shape inverted:
   files. That is how one worker's untracked suite was materialised into another's tree and
   **counted into its baseline**. Need a clean tree? `git worktree add` a scratch checkout.
 - **KEEP EVERY SCRATCH FILE OUT OF YOUR WORKTREE — in the SESSION SCRATCHPAD your harness names:**
-  logs, baseline captures, control-pen copies, and above all a scratch COPY OR CLONE OF THE REPO.
+  logs, baseline captures, copies YOU make of files, and above all a scratch COPY OR CLONE OF THE REPO.
+  A driver's or tool's own pen, GITIGNORED and ITEM-NAMED, stays in the worktree (BOB #33, 2026-09-24).
   **RULED by BOB #32, 2026-09-24**, superseding "inside your own worktree": a file in the worktree
   is not inert. Repository-walking suites WALK IT, it trips
   `gates.mjs` §2e's under-inclusion check, and it makes the tree DIRTY, so D-293 refuses to RECORD a
-  GREEN verdict. **THREE ITEMS PAID IN ONE NIGHT (2026-09-24):** REC-185's
-  `.rec185/` moved the battery's assertion total 19513 -> 19512 with no source change; D-487's
-  `bio-plane/.d487-gate.log` cost a 14-minute re-run of a green gate; D-486's scratch
-  clone was walked by `statepaths`, 36 files. **The scratchpad is NOT isolated between
+  GREEN verdict (three items paid for it on 2026-09-24: REC-185, D-487, D-486). **The scratchpad is NOT isolated between
   sessions** — two workers reported that — so name every file there for YOUR item, never
   generically (and see the `provenance:` rule below).
 - **PUSH YOUR OWN BRANCH. Do not merge, and never push to `main`.** CONDUCT integrates; you make
