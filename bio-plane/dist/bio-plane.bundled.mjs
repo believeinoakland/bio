@@ -38024,7 +38024,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         statement_by: writer.by,
         statement_by_stated: writer.stated,
         ...acks.byWriter ? { acknowledgements_by_statement_writer_not_listed: acks.byWriter } : {},
-        ...acks.withheldWriterUndetermined ? { acknowledgements_withheld_writer_undetermined: acks.withheldWriterUndetermined } : {}
+        ...acks.withheldWriterUndetermined ? { acknowledgements_withheld_writer_undetermined: acks.withheldWriterUndetermined } : {},
+        /* REC-194 / §3 rule 13: the readings of this exact sentence this record cannot
+           bind to any case (a draft naming none). The document's prose states them;
+           the act says so too, so a publisher reads it before signing. */
+        ...acks.unbound ? { acknowledgements_unbindable_to_this_case: acks.unbound } : {}
       },
       author: who,
       at: when,
@@ -39364,7 +39368,15 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
          `op=publish` lists in the case document, so a reviewer sees the list the document would print
          (less the publisher's own, which the act leaves out). An edited statement starts empty. */
       statement_acknowledgements: (() => {
-        const a = this.#statementAcknowledgements(d.project_id, ident.caseId, ident.edition, params.statement ?? "");
+        const a = this.#statementAcknowledgements(
+          d.project_id,
+          ident.caseId,
+          ident.edition,
+          params.statement ?? "",
+          null,
+          null,
+          d.draft_id
+        );
         return {
           statement_sha: a.statementSha,
           acknowledgements: a.rows,
@@ -39571,13 +39583,12 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     const projectLine = `
 case_project: ${project}
 `;
-    const found = this.#rows(
+    const found = ident.caseId == null ? [] : this.#rows(
       `SELECT case_id, edition, doc_sha, text FROM case_documents
-                              WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
+                              WHERE sig_armored IS NULL AND edition=? AND case_id=?
                                 AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
       ident.edition,
-      ident.caseId ?? null,
-      ident.caseId ?? null,
+      ident.caseId,
       needle,
       projectLine,
       ackMax + 1
@@ -39636,7 +39647,14 @@ case_project: ${project}
       case_documents: reauthored,
       case_documents_limit: ackMax,
       case_documents_truncated: false,
-      listed: `the completeness block of ${_Store.#caseIdentitySentence(ident.caseId ?? null, ident.edition)} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or \u2014 if that document is already authored and unsigned \u2014 now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.`
+      /* REC-194 / §3 rule 13: THE ANSWER SAYS WHICH OF THE TWO THINGS HAPPENED, because they are
+         different facts and one sentence used to claim the stronger of them for both. An
+         acknowledgement given at a CASE IDENTITY is listed by that case's document and by no
+         other. One given for a draft that names NO case is a reading of the DRAFT: the review copy
+         lists it, and no case document can — a case id is minted only by publication, so nothing
+         here can say which case the draft became, and naming one would be inventing a referent. */
+      bound_to_a_case: ident.caseId != null,
+      listed: ident.caseId != null ? `the completeness block of ${_Store.#caseIdentitySentence(ident.caseId, ident.edition)} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or \u2014 if that document is already authored and unsigned \u2014 now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it. It is listed under NO OTHER CASE, even one whose statement is byte-identical: reading this case's statement is not reading that one's.` : `this is a reading of draft ${draftId}, which names no case \u2014 a case id is minted only by publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy lists it for this draft. NO case document lists it, and that is deliberate: a case document that named you would be claiming you read ITS statement, which this record cannot establish of any case (\xA73 rule 13). A reading reaches a case's signed bytes only when it is given FOR that case, at its prepared and unsigned document \u2014 a door open to a member of this project holding a session, and NOT to the holder of a review grant, which is a gap in the design and is recorded as one rather than worked around here. A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.`
     };
   }
   /* IC-246: the bound on the unsigned documents one acknowledgement re-authors, declared BELOW its method (REC-116).
@@ -39663,13 +39681,28 @@ case_project: ${project}
     ];
   }
   static ACK_PROSE_HEAD = "**Who else read this statement.**";
+  /* REC-194 / §3 rule 13 — THE UNBINDABLE READINGS TRAVEL WITH THE LIST, WHATEVER THE LIST SAYS. They
+     are a fact about this statement and not a substitute for an empty list, so the tail is appended to
+     the named run as well as to the nobody run: a document naming one second reader while the record
+     holds another reading it cannot attribute to this case would otherwise read as complete. Counted,
+     never named — naming is the claim that cannot be made. */
+  static #ackUnboundLines(acks, project) {
+    if (!acks.unbound) return [];
+    return [
+      "",
+      `This record also holds ${acks.unbound} acknowledgement${acks.unbound === 1 ? "" : "s"} of this exact statement in ${project} given for a case whose identity was not yet allocated \u2014 a draft \u2014 and whether any of them is a reading of THIS case is UNDETERMINED: a case id is minted only by publication, and no draft is bound to the case it became, so a reading of a draft is not a reading of this case. They are counted here and deliberately not named, because naming them would claim they read THIS case's statement, which this record does not establish (BIO_Publication \xA73 rule 13).`
+    ];
+  }
   static #ackBodyLines(acks, project) {
+    return [..._Store.#ackBodyHeadLines(acks, project), ..._Store.#ackUnboundLines(acks, project)];
+  }
+  static #ackBodyHeadLines(acks, project) {
     return acks.rows.length ? [
       `${_Store.ACK_PROSE_HEAD} Acknowledged, as a second reader of what this case leaves out, by:`,
       "",
       ...acks.rows.map((a) => a.kind === "recipient" ? `- the recipient of review grant ${a.by}, addressed by its issuer as '${_Store.#fmSafe(a.recipient)}', on ${a.at}` : `- ${a.by}, a participant of ${project}, on ${a.at}`),
       ...acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this document lists)"] : []
-    ] : [`${_Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`];
+    ] : acks.unbound ? [`${_Store.ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`] : [`${_Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`];
   }
   /* AN ACKNOWLEDGEMENT THAT LANDS WHILE ITS CASE DOCUMENT IS AUTHORED AND UNSIGNED RE-AUTHORS THAT
      DOCUMENT, because the list must be inside the signature and `op=publish` cannot run twice over
@@ -39726,11 +39759,8 @@ case_project: ${project}
     };
   }
   /* THE ACKNOWLEDGEMENTS OF ONE STATEMENT AT ONE CASE IDENTITY, for `op=publish` and the review
-     copy alike, so the list a reviewer sees and the list a case document prints are one read. A
-     NEW case's draft carries no case id (one is minted only by publication), so at edition 1 an
-     acknowledgement taken through such a draft matches too: it is the same statement, in the
-     same project, at the only edition a new case has. Bounded, and a list that hit the bound
-     says so rather than presenting a page as the whole. */
+     copy alike, so the list a reviewer sees and the list a case document prints are one read.
+     Bounded, and a list that hit the bound says so rather than presenting a page as the whole. */
   /* REC-212 / §3 rule 13 — `writer` IS THE SECOND EXCLUSION, AND IT IS A DIFFERENT ONE FROM
      `exceptAuthor`. `exceptAuthor` is the member PUBLISHING: they author the completeness block at that
      act, so their own acknowledgement of it is not a second reading, and `op=publish` has left it out
@@ -39745,17 +39775,45 @@ case_project: ${project}
          holder is never the writer (REC-193's own sentence).
      EVERY WITHHOLDING IS COUNTED AND RETURNED, in its own key. A row left out and not stated would make
      the document list fewer second readers than the record holds, which its owner would then SIGN. */
-  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null, writer = null) {
+  /* REC-194 / §3 rule 13 (BOB #32, 2026-09-23): AN ACKNOWLEDGEMENT IS MATCHED BY THE IDENTITY IT
+     WAS RECORDED AT, AND BY NOTHING ELSE. D-150's first cut read `(case_id IS ? OR (case_id IS NULL
+     AND edition=1))`, and the second half of that OR is the defect: an acknowledgement taken through
+     a draft naming NO case matched EVERY edition-1 document of the project carrying the same
+     sentence, so a second case with a byte-identical statement listed the first's second readers —
+     in its SIGNED completeness block, under its owner's signature. Reading A's statement is not
+     reading B's, and a statement's bytes are not a case's identity.
+       - A CASE DOCUMENT (`caseId` given) lists the rows recorded at ITS (case_id, edition). Never a
+         row at another case's, and never one at no case at all.
+       - A DRAFT NAMING NO CASE (`caseId` null — the review copy's own read) lists the rows recorded
+         THROUGH THAT DRAFT, matched on `draft_id`. Never another draft's of the same sentence: two
+         drafts of one project may hold the same statement and be two different productions.
+     `unbound` IS THE HONEST REMAINDER, AND IT EXISTS BECAUSE THE NARROWING WOULD OTHERWISE MAKE A
+     DOCUMENT LIE. Before it, a new case's document listed a draft-given reading (possibly another
+     draft's); after it, the document lists none — and writing `Nobody but its author acknowledged
+     it` over a record that holds a reading of that exact sentence would be the record claiming more
+     than it can support, which is worse than a missing feature (`CLAUDE.md` §2). So the readings
+     this record cannot bind to any case are COUNTED and STATED in the prose beside the block, as
+     undetermined and never as nobody. The author's own is not among them: at publication the
+     publisher becomes the statement's author, and their own reading is the first, not a second. */
+  /* THE SIGNATURE IS THE UNION OF THREE LANDINGS (CONDUCT #20, 2026-09-24): `exceptAuthor` is D-150's
+     publisher exclusion, `writer` is REC-212's writer exclusion, and `draftId` is REC-194's identity
+     match. They are THREE DIFFERENT QUESTIONS about one list and none subsumes another: the first two
+     decide WHOM the list may name, the third decides WHICH readings are this case's at all. */
+  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null, writer = null, draftId = null) {
     const sha = _Store.#statementSha(statement);
+    const unallocated = caseId == null;
+    const draftMatch = unallocated ? String(draftId ?? "") : "*";
     const rows = this.#rows(
       `SELECT acknowledger_kind, acknowledger, recipient, at FROM statement_acknowledgements
-                             WHERE project_id=? AND statement_sha=? AND edition=? AND (case_id IS ? OR
-                               (case_id IS NULL AND edition=1))
+                             WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS ?
+                               AND (? = '*' OR draft_id = ?)
                              ORDER BY at, ack_id LIMIT ?`,
       project,
       sha,
       edition,
       caseId ?? null,
+      draftMatch,
+      draftMatch,
       _Store.STATEMENT_ACK_MAX + 1
     );
     const truncated = rows.length > _Store.STATEMENT_ACK_MAX;
@@ -39764,6 +39822,15 @@ case_project: ${project}
     const byTheWriter = (r) => !!(writer && writer.by && r.acknowledger_kind === "participant" && r.acknowledger === writer.by && !byPublisher(r));
     const undeterminedWithheld = (r) => !!(writer && writer.by === null && r.acknowledger_kind === "participant" && !byPublisher(r));
     const listed = all.filter((r) => !byPublisher(r) && !byTheWriter(r) && !undeterminedWithheld(r));
+    const unboundRow = unallocated ? null : this.#one(
+      `SELECT COUNT(*) AS n FROM statement_acknowledgements
+                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
+                     AND NOT (acknowledger_kind='participant' AND acknowledger IS ?)`,
+      project,
+      sha,
+      edition,
+      exceptAuthor ?? null
+    );
     return {
       statementSha: sha,
       truncated,
@@ -39772,6 +39839,7 @@ case_project: ${project}
       byAuthor: all.filter(byPublisher).length,
       byWriter: all.filter(byTheWriter).length,
       withheldWriterUndetermined: all.filter(undeterminedWithheld).length,
+      unbound: unboundRow ? Number(unboundRow.n) : 0,
       rows: listed.map((r) => ({
         kind: r.acknowledger_kind,
         by: r.acknowledger,
