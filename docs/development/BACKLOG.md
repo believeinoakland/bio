@@ -64,7 +64,7 @@ accepts-when: an action promoted under an information envelope is refused (or la
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### M0-169 · queued — **TWO DERIVATIONS OF "A FIXTURE'S MODULE CLOSURE": `bio-plane/test/gatedeps.mjs` (M0-154; follows dynamic literals, lexer-blanked) and `civicos-ui/test/refusal-codes.test.mjs` `copyImports` (D-254; static-only, column-anchored).** Found by M0-154's worker. — owner M0 (UI reviews).
-order: after M0-168, with the gate instruments (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:50Z)
+order: after M0-168, with the gate instruments (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:50Z) AHEAD of the product rows by Bob's 17:41Z rule: a new import in gates.mjs breaks a hand-copied fixture with a false red (a false gate result costs a round) (SCHEDULER #19, 2026-09-24).
 milestone: M0
 interface: none.
 design: `docs/development/VERIFICATION.md` (a fixture derives what it carries; one derivation, not two).
@@ -74,7 +74,7 @@ accepts-when: both callers use the one helper and stay green. NEGATIVE CONTROL: 
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### M0-170 · queued — **THREE MORE FIXTURES KEEP HAND-KEPT TOOL COPY LISTS: `pushguard.test.mjs` scratchRepo, `pushguard-check.test.mjs` and `retirable.test.mjs` (measured correct today).** Found by M0-154's worker. — owner M0.
-order: after M0-169, whose static mode it wires (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:50Z)
+order: after M0-169, whose static mode it wires (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:50Z) AHEAD of the product rows by Bob's 17:41Z rule: a new import in gates.mjs breaks a hand-copied fixture with a false red (a false gate result costs a round) (SCHEDULER #19, 2026-09-24).
 milestone: M0
 interface: none.
 design: `docs/development/VERIFICATION.md` (a fixture derives what it carries).
@@ -92,26 +92,6 @@ depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds.te
 scope: add `max|[a-z_]*_max` to BOUND_KEY.
 accepts-when: actionquotes' `max` counts as a bound. NEGATIVE CONTROL: remove actionquotes' published max, and the arm names it bare.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### D-490 · queued — **NO RENDERER EXISTS: D-64's render arm answers every `render: true` with 501 RENDER_NO_RENDERER, so a client-rendered source is still captured as its empty shell.** Found by D-64's worker. — owner CAPTURE.
-order: after DIST-11, whose binding it runs behind (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:17Z)
-milestone: M2
-interface: I3 — render answers a capture instead of 501; the integrator classifies.
-design: `docs/development/CLIENT-RENDERED.md` "There is no collision: rendering is available on the free tier" and "What must be recorded on a rendered capture".
-depends-on: D-64; DIST-11 for live verification.
-scope: `@cloudflare/puppeteer` behind `rendererFor(env.BROWSER)`; absent binding keeps the 501, stated.
-accepts-when: with a (mocked) binding a render produces D-64's pair. NEGATIVE CONTROL: unbind and the arm answers RENDER_NO_RENDERER by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
-### D-491 · queued — **THE SWEEP CANNOT ASK FOR A RENDER: `capture_requests` has no `render` column, so D-64's sweep deferral is NARROWED, not closed.** Found by D-64's worker. — owner CAPTURE.
-order: after D-490 (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:17Z)
-milestone: M2
-interface: I5 — a `render` column on `capture_requests`; the integrator classifies.
-design: `docs/development/CLIENT-RENDERED.md` "RULED 2026-09-23 by BOB #32: the method, the primary, and the unattended sweep".
-depends-on: D-64.
-scope: carry `render` through captureRequestDrain → `#fireCaptureRequest`, held as RENDER_DEFERRED until a renderer answers.
-accepts-when: a render request survives the drain as RENDER_DEFERRED. NEGATIVE CONTROL: drop the column's carry and the arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### D-480 · queued — **A HIDDEN PROJECT CAN CROWD A VISIBLE ONE OUT OF THE SHARED-QUESTION CANDIDATES: `#queueSharedInquiryCandidates` groups over UNGATED refs capped at 64, so past 64 shared questions a hidden project's citations take a candidate slot and flip the served `inquiries_truncated` — a count-shaped side channel, D-447's and D-464's class.** Found by D-464's worker. — owner RECORD.
 order: at the head with the disclosure rows (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
@@ -1096,6 +1076,16 @@ depends-on: D-498.
 scope: walk the OPS table's dispatch (not method names) to every capped read, then list each construct claim describing it without its cap; each hit is placed as a row.
 accepts-when: the sweep classifies all 27 capped methods and names every uncapped claim. NEGATIVE CONTROL: strip "at most" from D-498's claim and the sweep names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-175 · queued — **`tools/train.mjs` READS A FLAG AS A VALUE: `--trailer --full` takes `--full` as the trailer's text, and `--branch` does the same.** Found by M0-159's worker (optional, cosmetic). — owner M0.
+order: after M0-161, behind the product rows: cosmetic, no effect on gate time, gate verdicts or product (Bob's 17:41Z rule, via BOB #33: tracked and built, placed after product; SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:46Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument refuses what it cannot read, never silently takes it).
+depends-on: M0-159.
+scope: `--branch` and `--trailer` refuse a value starting with `--` by name, with an escape for a literal one.
+accepts-when: `--trailer --full` is refused by name, and the escaped form is taken literally. NEGATIVE CONTROL: drop the check and the refusal arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
 ### D-446 · queued — **`nc-m040.mjs` ARM 1 DECLARES FIVE FAILURES AND MEASURES ONE (derivation-bounds 71/1 on `main`), AND FIVE SUITES NAME INFORMATION FIXTURES `INF-…` WHERE `OBJECT_TYPES` HAS `INFO`.** The fixtures: `frontier-chunk` (D-390's), `d389-fullfetch`, `observation-content`, `observation-log`, `cap14-reused-from`. — owner M0.
 order: after M0-139, among the control-hygiene rows; after c17-batch7 lands (SCHEDULER #17, 2026-09-23; via CONDUCT #18 22:27Z (4), measured by SCHEDULER #17's verifier)

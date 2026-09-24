@@ -323,6 +323,26 @@ scope: teach the deploy derivation the `browser` class FIRST; then add `"browser
 accepts-when: a deploy derived with the binding succeeds and a config without it still installs. NEGATIVE CONTROL: drop the class and the derivation refuses UNKNOWN_BINDING_CLASS by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
+### D-490 · queued — **NO RENDERER EXISTS: D-64's render arm answers every `render: true` with 501 RENDER_NO_RENDERER, so a client-rendered source is still captured as its empty shell.** Found by D-64's worker. — owner CAPTURE.
+order: after DIST-11, whose binding it runs behind (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:17Z)
+milestone: M2
+interface: I3 — render answers a capture instead of 501; the integrator classifies.
+design: `docs/development/CLIENT-RENDERED.md` "There is no collision: rendering is available on the free tier" and "What must be recorded on a rendered capture".
+depends-on: D-64; DIST-11 for live verification.
+scope: `@cloudflare/puppeteer` behind `rendererFor(env.BROWSER)`; absent binding keeps the 501, stated.
+accepts-when: with a (mocked) binding a render produces D-64's pair. NEGATIVE CONTROL: unbind and the arm answers RENDER_NO_RENDERER by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-491 · queued — **THE SWEEP CANNOT ASK FOR A RENDER: `capture_requests` has no `render` column, so D-64's sweep deferral is NARROWED, not closed.** Found by D-64's worker. — owner CAPTURE.
+order: after D-490 (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:17Z)
+milestone: M2
+interface: I5 — a `render` column on `capture_requests`; the integrator classifies.
+design: `docs/development/CLIENT-RENDERED.md` "RULED 2026-09-23 by BOB #32: the method, the primary, and the unattended sweep".
+depends-on: D-64.
+scope: carry `render` through captureRequestDrain → `#fireCaptureRequest`, held as RENDER_DEFERRED until a renderer answers.
+accepts-when: a render request survives the drain as RENDER_DEFERRED. NEGATIVE CONTROL: drop the column's carry and the arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
