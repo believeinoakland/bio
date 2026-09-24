@@ -558,7 +558,14 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
      parses is the CALLER's own `partition` argument, and `undefined` falls straight into the coded refusal
      PARTITION_INDEPENDENCE_UNREADABLE, which tells the caller what shape to send. Nothing the plane could not
      establish is smoothed into a normal-looking answer; a malformed request is refused, by code. */
-  const CEILING = 29;
+  /* MOVED 29 -> 30 by D-291 (2026-09-24), FROM THE FIGURE THIS WALK PRINTED on land/worker/D-291 (origin/main 3f4b8f8c
+     prints 29; main + land/worker/D-126, the merge 2d2b3799, prints 30; D-291's own change adds no catch), and the new
+     site was LOOKED AT: D-126's `#perItem`, `try { r = one(...) } catch (e) { r = refusal("SET_ITEM_FAILED", ...) }`.
+     It is not a read of the record smoothed into a normal answer: a throw from ONE item's act becomes that item's
+     RETAINED outcome under the coded refusal C-75.4, whose words say "Nothing about the item is claimed", and the set's
+     answer is then `ok: false` / SET_ITEMS_RETAINED. The failure is named to the caller, per item. D-126's worker
+     gated its own suites only, so this walk first saw the site at a union — here. */
+  const CEILING = 30;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 

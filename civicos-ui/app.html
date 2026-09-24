@@ -15643,7 +15643,9 @@ async function loadResolveCandidates(){
   RES_SEL.clear(); RES_RETAINED.clear(); RES_SET_RECEIPT = ""; RES_SET_ERR = "";
   INTENT_SUBJ.candNote = note;
   INTENT_SUBJ.candHow = how;
-  if(!ACT_SOURCE.loaded) await loadActSource();
+  /* The act source is read as boot left it (boot AWAITS `loadActSource` before any screen paints) and never
+     re-read here: the candidate lookup stays the two reads it is (`intent-write.test.mjs` counts them). Not
+     loaded means no `set_acts`, so no tick — the absent-publication case, never a guessed one. */
   resolveCandPaint();
 }
 /* D-291 — THE RESOLVE LIST TAKES A SELECTION, AS ONE CALL (BIO_Interaction_Constructs §S, BOB #32's ruling of
