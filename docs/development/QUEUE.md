@@ -212,7 +212,7 @@ accepts-when: a stale-version disposition is refused DEFINITION_MOVED and a curr
 note: 2026-09-24 05:22Z (CONDUCT #20, integ1b report 2): the READ half is built (a disposition records the version it judged; applies/applies_because say whether it still governs); this row is the WRITE half only.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs REC`).
 
-### D-500 · running — **THE OBSERVATION-LOG WATERMARK CLASSIFIES A RECORD DIFFERENTLY FROM RUN TO RUN: `#hiddenSets`' watermark read and `#contentAxisTally` compare MIN(at) with `register.registered` at different precisions (one-second against milliseconds), so a same-second pair flips class intermittently.** D-486's narrowed trace. BOB #32 RULED (2026-09-24 05:04Z): the watermark STAYS VIEWER-INDEPENDENT (never taken through the caller's sight, never narrowed per viewer); a hidden run's reclassification is the accepted cost ONLY IF DETERMINISTIC. — owner RECORD.
+### D-500 · integrated — **THE OBSERVATION-LOG WATERMARK CLASSIFIES A RECORD DIFFERENTLY FROM RUN TO RUN: `#hiddenSets`' watermark read and `#contentAxisTally` compare MIN(at) with `register.registered` at different precisions (one-second against milliseconds), so a same-second pair flips class intermittently.** D-486's narrowed trace. BOB #32 RULED (2026-09-24 05:04Z): the watermark STAYS VIEWER-INDEPENDENT (never taken through the caller's sight, never narrowed per viewer); a hidden run's reclassification is the accepted cost ONLY IF DETERMINISTIC. — owner RECORD.
 order: after REC-211, a correction to D-486, run once c20-batch14 lands (SCHEDULER #18, 2026-09-24)
 milestone: M8
 interface: none.
@@ -343,7 +343,7 @@ scope: carry `render` through captureRequestDrain → `#fireCaptureRequest`, hel
 accepts-when: a render request survives the drain as RENDER_DEFERRED. NEGATIVE CONTROL: drop the column's carry and the arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-480 · queued — **A HIDDEN PROJECT CAN CROWD A VISIBLE ONE OUT OF THE SHARED-QUESTION CANDIDATES: `#queueSharedInquiryCandidates` groups over UNGATED refs capped at 64, so past 64 shared questions a hidden project's citations take a candidate slot and flip the served `inquiries_truncated` — a count-shaped side channel, D-447's and D-464's class.** Found by D-464's worker. — owner RECORD.
+### D-480 · running — **A HIDDEN PROJECT CAN CROWD A VISIBLE ONE OUT OF THE SHARED-QUESTION CANDIDATES: `#queueSharedInquiryCandidates` groups over UNGATED refs capped at 64, so past 64 shared questions a hidden project's citations take a candidate slot and flip the served `inquiries_truncated` — a count-shaped side channel, D-447's and D-464's class.** Found by D-464's worker. — owner RECORD.
 order: at the head with the disclosure rows (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
 milestone: M8
 interface: none — the candidate selection; the answer's shape is unchanged.
