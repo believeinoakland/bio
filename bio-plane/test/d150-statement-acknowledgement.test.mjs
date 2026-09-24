@@ -341,7 +341,8 @@ t("a member of ANOTHER project (sol) cannot even see the draft, and is answered 
 
 const A1 = await ack(`draft=${D1}&token=${ELLA}`);
 t("A JOINED PARTICIPANT ACKNOWLEDGES — attributed to her, dated, of THIS statement's hash (computed here), at "
-+ "the draft's case identity (a new case, edition 1)",
++ "the draft's case identity (no case id, edition 1 — a draft naming no case, whose case publication derives; "
++ "the label read \"a new case\", which D-538 corrected: the draft sets no `newCase`)",
   [A1?.ok, A1?.existed, A1?.acknowledgement?.kind, A1?.acknowledgement?.by,
    A1?.acknowledgement?.statement_sha === sha(STMT), A1?.acknowledgement?.case_id, A1?.acknowledgement?.edition,
    /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(A1?.acknowledgement?.at || "")],

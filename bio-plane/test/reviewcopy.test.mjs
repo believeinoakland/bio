@@ -132,7 +132,29 @@
    the draft that asked for nothing and the fixed point catch it. AS DECLARED. (n) -> **82 pass, 0 fail**. AS
    DECLARED. ARMS (a)-(k) RE-RUN in the same driver run: a 77/5, b 81/1, c 80/2, d 80/2, e 80/2, f 81/1, g 74/8,
    h 81/1, i 76/6, j 79/3, k 82/0 — EVERY failure count unchanged from REC-198's measurement, the five new arms
-   landing whole in each tally's pass column. */
+   landing whole in each tally's pass column.
+
+   D-538 (the identity sentence reads the draft's `newCase`; §6A.4 with BOB #32's 2026-09-23 23:08Z ruling) ADDED
+   BLOCK 11, CORRECTED block 2's new-case arm (it pinned the defect as the rule, see there) and RE-ANCHORED arm (l)
+   on the identity line that now passes `newCase`. TWO ARMS, DECLARED 2026-09-24 BEFORE ARMING:
+
+   (o) `newCase` IGNORED AGAIN — `#caseIdentitySentence` takes `newCase = !caseId`, the plane before D-538. MUST FAIL,
+   by name: block 2's corrected arm (D2 told "a new case"), "D-538 ACCEPTS-WHEN" (DD told "a new case" in all four
+   answers) and "A DRAFT THAT NAMES C1 AND ASKS FOR A NEW CASE" (told "the next edition"). MUST NOT FAIL: the fixture
+   arm, the new-case-kept arm (DN IS a new case, so the liar agrees there for free), the naming-a-case arm, nor any
+   arm of blocks 1-10.
+
+   (p) OVER-STRICTNESS — the derived sentence REWORDED ("an undetermined case: publication will derive it …"), the same
+   two facts in words this suite did not write. MUST PASS, every arm.
+
+   MEASURED 2026-09-24 by WORKER D-538 (cloud) with `node test/reviewcopy.control.mjs`, all SIXTEEN arms in one driver
+   run, every arm ALONE, the pen in the session scratchpad via `BIO_NC_PEN`, every restore of `src/store.mjs`
+   (3,330,923 B, sha256 14b7f5d1…) sha256 MATCH, content IDENTICAL, size ok (16 of 16): (0) BASELINE -> **87 pass,
+   0 fail**. (o) -> **84 pass, 3 fail**: block 2's corrected arm, "D-538 ACCEPTS-WHEN" and "A DRAFT THAT NAMES C1 AND
+   ASKS FOR A NEW CASE", by name; the fixture, new-case-kept and naming-a-case arms GREEN. AS DECLARED, exactly.
+   (p) -> **87 pass, 0 fail**. AS DECLARED. ARMS (a)-(n) RE-RUN: a 82/5, b 86/1, c 85/2, d 85/2, e 85/2, f 86/1,
+   g 79/8, h 86/1, i 81/6, j 84/3, k 87/0, l 84/3 (re-anchored), m 85/2, n 87/0 — EVERY failure count unchanged
+   from REC-199's measurement, the five new arms of block 11 landing whole in each tally's pass column. */
 
 /* REC-126 / DEC-31 — THE REVIEW COPY: AN ADDRESSED ACT BESIDE PUBLISH THAT NEVER
  * LEAVES THE INSTANCE. `BIO_Publication_v0_1.md` §6A is the authority, and every
@@ -413,9 +435,17 @@ const [D1, D2, D3, D5] = [D1r.draftId, D2r.draftId, D3r.draftId, D5r.draftId];
 t("a draft naming an existing case stands at THAT CASE'S NEXT EDITION — the edition is read from the "
 + "published record, never taken from the caller",
   [D1r.caseId, D1r.edition], [C1, 2]);
-t("a draft naming no case is a NEW case at edition 1, and its identity is STATED as not yet allocated "
-+ "rather than invented — a case id is minted only by publication",
-  [D2r.caseId, D2r.edition, typeof D2r.caseIdentity === "string" && /not yet allocated/i.test(D2r.caseIdentity)],
+/* CORRECTED by D-538: this arm read "a draft naming no case is a NEW case at edition 1" and pinned the
+   sentence *not yet allocated* on D2, which names no case and does NOT set `newCase`. That was the defect
+   pinned as the rule: `publishCase` DERIVES such a draft's case (a further edition of the one case its
+   findings serve, a new case only if they serve none), so "a new case" claimed an answer only publication
+   can give. D2's identity is stated as DERIVED and UNDETERMINED, never invented; block 11 drives all three
+   routes through every answer that prints the sentence. */
+t("a draft naming no case and not asking for a new one stands at edition 1 with no case id, and its identity "
++ "is STATED as derived at publication and UNDETERMINED here — never as a new case, which only publication "
++ "could establish",
+  [D2r.caseId, D2r.edition, typeof D2r.caseIdentity === "string" && /deriv/i.test(D2r.caseIdentity)
+     && /undetermined/i.test(D2r.caseIdentity) && !/not yet allocated/i.test(D2r.caseIdentity)],
   [null, 1, true]);
 /* CORRECTED by REC-133: the first label said the authority was publish's (DEC-72).
    It is the project's EDIT permission now (§6A.2); VIC is still refused, because she
@@ -949,6 +979,63 @@ console.log("\n--- 10. REC-199: the copy says `newCase` back, so an edit does no
   + "verdict come back unchanged. A twelfth field the answer forgets fails this without a list to extend",
     [[okN, okD, ok1, ok2], JSON.stringify([bN, bD, b1, b2]) === JSON.stringify([aN, aD, a1, a2])],
     [[true, true, true, true], true]);
+}
+
+/* =========================================================================== 11
+ * D-538 (`BIO_Publication_v0_1.md` §6A.4, with BOB #32's newCase ruling of 2026-09-23 23:08Z): THE
+ * IDENTITY SENTENCE READS THE DRAFT'S `newCase`, IN EVERY ANSWER THAT PRINTS IT.
+ *
+ * THE MEASURED FAILURE IT MOVES is block 10's draft DD: it names no case and does not set `newCase`,
+ * its findings already serve C1, and its own gates DERIVE C1 and refuse ALREADY_A_CASE_MEMBER — while
+ * `#caseIdentitySentence(null, 1)` told the casedraft, casedrafts and reviewcopy answers (and the grant's
+ * `boundTo`) that it was *a new case, whose identity is not yet allocated*. That is the record asserting
+ * a new case where it will derive an existing one. Three drafts are read through FOUR answers each:
+ *   DN — `newCase` set          -> the new-case sentence (the only draft it is true of);
+ *   DD — nothing named or asked  -> DERIVED at publication, UNDETERMINED here, never "a new case";
+ *   D1 — names C1                -> the next edition (2) of C1, unchanged.
+ * And DB, which names C1 AND asks for a new case — a pair publication refuses together — is told so,
+ * rather than "the next edition" of a case it cannot become as it stands.
+ * ========================================================================= */
+console.log("\n--- 11. D-538: the identity sentence reads `newCase`, in every answer that prints it ---");
+{
+  /* Matched by what the sentence must SAY, not by its spelling: arm (p) rewords it and must pass. */
+  const NEW = /not yet allocated/i, DERIVED = (x) => typeof x === "string" && /deriv/i.test(x)
+    && /undetermined/i.test(x) && !NEW.test(x);
+  const DNr = await draft(IRIS, withRoles({ ...args(9), targets: [LEAD], newCase: true }));
+  const DDr = await draft(IRIS, withRoles({ ...args(9), targets: [LEAD] }));
+  const DBr = await draft(IRIS, withRoles({ ...args(9), targets: [LEAD], caseId: C1, newCase: true }));
+  for (const [n, r] of [["DN", DNr], ["DD", DDr], ["DB", DBr]]) if (!r?.ok) bail(`casedraft ${n} (block 11)`, r);
+  const copy = async (id) => rP(await GET(`op=reviewcopy&draft=${id}&token=${IRIS}`));
+  const [cN, cD, c1, cB] = [await copy(DNr.draftId), await copy(DDr.draftId), await copy(D1), await copy(DBr.draftId)];
+  const list = rP(await GET(`op=casedrafts&token=${IRIS}&project=${encodeURIComponent(PROJ)}`));
+  const row = (id) => (list?.drafts || []).find((d) => d.draft_id === id)?.case?.identity;
+  const gN = await grant(IRIS, { draft: DNr.draftId, recipient: "D-538 reader, new case" });
+  const gD = await grant(IRIS, { draft: DDr.draftId, recipient: "D-538 reader, derived case" });
+  for (const [n, r] of [["DN", gN], ["DD", gD]]) if (!r?.ok) bail(`reviewgrant ${n} (block 11)`, r);
+
+  t("D-538: THE FIXTURE IS THE MEASURED FAILURE — DD's own gates derive C1 and refuse ALREADY_A_CASE_MEMBER, "
+  + "DN's mint and pass, and the list holds every draft this block reads (so a missing row cannot pass)",
+    [cD?.gates, cD?.missing?.[0]?.reason, cN?.gates, list?.truncated,
+     [DNr, DDr, DBr].every((r) => typeof row(r.draftId) === "string") && typeof row(D1) === "string"],
+    ["refused", "ALREADY_A_CASE_MEMBER", "passed", false, true]);
+  t("D-538 ACCEPTS-WHEN: DRAFT DD READS THE DERIVATION — DERIVED at publication and UNDETERMINED here, never "
+  + "\"a new case\" — in all three reads (casedraft, casedrafts, reviewcopy) and in its grant's boundTo",
+    [DERIVED(DDr.caseIdentity), DERIVED(row(DDr.draftId)), DERIVED(cD?.case?.identity), DERIVED(gD.boundTo)],
+    [true, true, true, true]);
+  t("D-538: AND THE NEW-CASE SENTENCE IS KEPT FOR THE ONE DRAFT IT IS TRUE OF — DN, which asked for a new case, "
+  + "in the same four answers (an arm that deleted the sentence everywhere fails here)",
+    [NEW.test(DNr.caseIdentity), NEW.test(row(DNr.draftId)), NEW.test(cN?.case?.identity), NEW.test(gN.boundTo)],
+    [true, true, true, true]);
+  /* The edition is read from the published record at each read (C1 has moved past 1 by this block), so the
+     sentence is pinned against the edition the SAME answer states, and that edition against "next". */
+  t("D-538: A DRAFT NAMING A CASE IS UNCHANGED — the next edition of C1, in its copy and its list row",
+    [c1?.case?.case_id, c1?.case?.edition >= 2, c1?.case?.identity, row(D1)],
+    [C1, true, `the next edition (${c1?.case?.edition}) of ${C1}`, `the next edition (${c1?.case?.edition}) of ${C1}`]);
+  t("D-538: A DRAFT THAT NAMES C1 AND ASKS FOR A NEW CASE is told publication refuses the pair "
+  + "(CASE_IDENTITY_AMBIGUOUS) and that its case is UNDETERMINED — its own gates' verdict, not \"the next edition\"",
+    [cB?.gates, cB?.missing?.[0]?.reason, /CASE_IDENTITY_AMBIGUOUS/.test(cB?.case?.identity ?? ""),
+     /undetermined/i.test(DBr.caseIdentity ?? ""), /undetermined/i.test(row(DBr.draftId) ?? "")],
+    ["refused", "CASE_IDENTITY_AMBIGUOUS", true, true, true]);
 }
 
 console.log(`\nreviewcopy: ${pass} pass, ${fail} fail`);

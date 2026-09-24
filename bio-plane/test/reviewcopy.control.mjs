@@ -1,6 +1,6 @@
-/* REC-126's NEGATIVE CONTROL DRIVER — fourteen arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
+/* REC-126's NEGATIVE CONTROL DRIVER — sixteen arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
  * REC-133's, §6A.2's authority, (i)-(k) REC-198's, the list of a project's drafts, (l)-(n) REC-199's,
- * the copy saying `newCase` back), re-runnable in one step:
+ * the copy saying `newCase` back, (o)-(p) D-538's, the identity sentence reading it), re-runnable in one step:
  *
  *     node test/reviewcopy.control.mjs            # every arm, in order
  *     node test/reviewcopy.control.mjs a          # one arm
@@ -153,9 +153,11 @@ const ARMS = {
        label: "(l) THE FIELD DROPPED: the copy stops saying `newCase` back, which is the state of the plane "
             + "before REC-199 — an edit written from the answer loses the draft's new-case intent",
        apply: () => edit(STORE,
-         "              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition),\n"
+         /* RE-ANCHORED by D-538: the identity line now passes the draft's `newCase` to the sentence. The arm
+            still drops the FIELD alone; the sentence beside it is (o)'s subject, not this one's. */
+         "              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),\n"
        + "              newCase: !!params.newCase },",
-         "              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition) },") },
+         "              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase) },") },
 
   m: { files: [STORE],
        label: "(m) THE LIAR'S FIELD: `newCase` answered from the CASE IDENTITY (`!ident.caseId`) instead of "
@@ -171,6 +173,22 @@ const ARMS = {
        apply: () => edit(STORE,
          "              newCase: !!params.newCase },",
          "              newCase: params.newCase ? true : false },") },
+
+  /* D-538 — the identity sentence reads the draft's `newCase`. Declarations in the suite's header. */
+  o: { files: [STORE],
+       label: "(o) `newCase` IGNORED AGAIN: the sentence treats every draft naming no case as a new case, and "
+            + "every draft naming one as its next edition — the plane exactly as it stood before D-538",
+       apply: () => edit(STORE,
+         "  static #caseIdentitySentence(caseId, edition, newCase) {",
+         "  static #caseIdentitySentence(caseId, edition, _ignored, newCase = !caseId) {") },
+
+  p: { files: [STORE],
+       label: "(p) OVER-STRICTNESS: the derived sentence REWORDED, saying the same two facts (derived at "
+            + "publication; undetermined here) in words this suite did not write — must PASS",
+       apply: () => edit(STORE,
+         "    return \"a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED \"",
+         "    return \"an undetermined case: publication will derive it from the record, since this draft names none \"\n"
+       + "         + \"and asks for no new one; until then \"") },
 };
 
 const want = process.argv[2];
@@ -290,4 +308,14 @@ console.log(`\npen removed: ${PEN}`);
               arms are what caught it — recorded because it is the arm's finding, not a shortfall
      n 82/0   the unanticipated spelling passes
    Every (a)-(k) failure count is REC-198's, unchanged; the three new arms of block 10 are the only movement.
+
+   RE-MEASURED 2026-09-24 by WORKER D-538 (cloud), all SIXTEEN arms, pen in the session scratchpad via
+   `BIO_NC_PEN`, every restore of a 3,330,923-byte `store.mjs` sha256 MATCH / content IDENTICAL / size ok:
+     baseline  87/0
+     a 82/5   b 86/1   c 85/2   d 85/2   e 85/2   f 86/1   g 79/8   h 86/1
+     i 81/6   j 84/3   k 87/0   l 84/3 (re-anchored on the identity line)   m 85/2   n 87/0
+     o 84/3   `newCase` ignored again — block 2's corrected arm, ACCEPTS-WHEN and the names-C1-and-asks-new arm;
+              the new-case-kept arm GREEN, the liar agreeing for free on the one draft it is right about
+     p 87/0   the reworded derived sentence passes
+   Every (a)-(n) failure count is REC-199's, unchanged; block 11's five arms are the only movement.
 */
