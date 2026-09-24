@@ -1,0 +1,16 @@
+{
+ "unit": "fleet:agent-worker/cascade.test.mjs",
+ "inputHash": "ed39f667b16699fc8495bb4b324b163dc81cb2df229bca932c549c6f2e086a5f",
+ "verdict": "PASS",
+ "run": "b4c55b5463808b5ee8f3bfa043f7e6fb406f548b.1790271498385.7149.json",
+ "tree": "b4c55b5463808b5ee8f3bfa043f7e6fb406f548b",
+ "head": "dbacd55fbe9f4139d2ed1c29fd4ef25d33229ee4",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 136,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "f53ac446-9cc2-519e-a667-0793c29ce590",
+ "at": "2026-09-24T17:38:18.404Z"
+}
