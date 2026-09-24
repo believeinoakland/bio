@@ -94,7 +94,10 @@ DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the
 Next RELEASES row: `["0.79.0", "dd324152…"]` (full sha from `git rev-parse dd324152`). **Not run at 0.79.0, so owed at the next cut:**
 the migrate-released control arms (predict from 0.78.0's 522/0 · alterafter 444/78 plus two rows) and lesson 7's member byte
 compare. Gate trend: 296·17690 (0.78.0) → **351·20004 (0.79.0, `--full --no-reuse` BACKSTOP)**. Signature controls 7/7 at both.
-op=audit baseline: the ten C-18.9 ids listed in M-137 (unchanged at 0.79.0). A live probe pairs refusals with a wire code
+op=audit baseline (lesson 15; unchanged at 0.79.0), 10 C-18.9 ids: INFO-2026-0099-auditor-report-feb-2022,
+-0100-acfr-fy2023-24-fund-statements, -0100-adopted-budget-fy2026-27, -0103-acfr-fy2023-24-pdf, -0104-adopted-budget-book-pdf,
+-0105-adopted-budget-fy13-15-csv, -0106-acfr-fy2021-22-pdf, -0107-revenue-expenditure-reports-page, -0108-zolly-opinion,
+INFO-2026-5460-member-release-key-registry. A live probe pairs refusals with a wire code
 absent from the prior signed bundle (lesson 18); since D-116 read `storeVersion` and `members=1`.
 
 ## Carried, not re-verified
