@@ -22,14 +22,14 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS until 05:45Z, 6 from 05:4
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (05:58Z) — read the tree; these are pointers
-- MAIN = d536f834 (c20-batch12 landed: D-470 D-487 UI-84 D-479; I3 81.3.0). Earlier tonight: 0fdef669 (D-482 D-166 REC-185),
-  16fe1e7f (BOB status-cellcap + folds-0924e). Landed workers archived by ancestry (Bob's rule, via BOB 04:58Z).
-- TRAIN RUNNING (re-train 05:42Z): land/conduct/c20-batch15 @ e729ee8e = D-493 M0-144 M0-143 D-453 DIST-9 + IC-261 (I4 MINOR 2.2.0);
-  first try was RED at statepaths (preauth-vocabulary printed a ledger path — reworded). Log: #20 scratchpad train5.log.
-- NEXT TRAIN, ALONE, after batch15 lands: land/conduct/c20-batch17 @ 20a2a990 (= c20-batch16b + M0-146 + land/dist/newgroup-dist-078).
-  16b = D-481 D-494 DIST-12 D-483 D-484, IC-263 (I3 81.4.0), D-481's §16 limit folded. NEVER train c20-batch16 (no trailers).
-  newgroup bundle 0.71→0.78 lags DIST-9's installer code until DIST rebuilds (DIST's).
+## 4. STATE (06:00Z) — read the tree; these are pointers
+- MAIN = 135abf3b (c20-batch15 landed: D-493 M0-144 M0-143 D-453 DIST-9; IC-261 I4 2.2.0). Before: d536f834 (batch12: D-470 D-487
+  UI-84 D-479; I3 81.3.0), 0fdef669, 16fe1e7f. Landed workers archived by ancestry (Bob's rule).
+- TRAIN RUNNING (05:58Z): land/conduct/c20-batch17 @ aa8c0721 = main 135abf3b + D-481 D-494 DIST-12 D-483 D-484 M0-146 D-495 +
+  land/dist/newgroup-dist-078; IC-263 (D-484) I3 81.4.0; D-481 §16 limit folded. Log: #20 scratchpad train6.log. On landing archive
+  D-481 D-494 D-483 D-484 M0-146 D-495 workers by ancestry. NEVER train c20-batch16 (no trailers); 16b is inside 17.
+- c20-batch13 GREEN @ 41db70e1 (batch11fix + batch12; I3 85.3.0; CATALOG_VERSION 1.22.0, census 438): NOT trained alone — batch14
+  carries it.
 - INTEGRATION WORKERS: c20-batch13 session_01KXuCWoxFB4aA2GaADwB9E8 (batch11fix + batch12, I3 85.x; due 05:40Z, NOT yet reported)
   and c20-batch14 session_01Ya8PUPivB6xpvV51uhcZa9 (integ1b @ 4ed8616c's D-64 + REC-184 onto batch11fix, IC-252 86.0.0 MAJOR,
   IC-255 86.1.0, then batch13, then D-486 IC-258 86.2.0; due 06:15Z). They carry batch10/11's 14 rows + d461-claude + D-64 REC-184
