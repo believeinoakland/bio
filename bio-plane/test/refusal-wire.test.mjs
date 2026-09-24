@@ -412,7 +412,10 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
 + "must be looked at, and one that disappears must be struck with its reason. It does NOT see a "
 + "second site forwarding a name already on this list, which is why the count is printed beside it",
   [...new Set(FWD.map((f) => f.names))].sort(),
-  ["arm.refusal", "built", "c", "declared.error", "facts", "r", "rec.result", "scoped.error", "zip"]);
+  /* CORRECTED by D-549, LOOKED AT as this assertion asks: `storeAbsent` is op=publishedbytes forwarding
+     publishedStoreAbsent's answer, the ONE governed site of the published-store complaint (C-68.5), whose code,
+     check and canned translation are minted inside its DEC-49 region and graded in publishedcase.test.mjs. */
+  ["arm.refusal", "built", "c", "declared.error", "facts", "r", "rec.result", "scoped.error", "storeAbsent", "zip"]);
 
 /* ====================================================================== 3
  * THE TWELVE — HARVESTED FROM `store.mjs`, SO A THIRTEENTH CANNOT ARRIVE
