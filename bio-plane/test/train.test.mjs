@@ -30,6 +30,8 @@
  * AND THE GUARD'S OWN LIMIT IS DRIVEN, NOT IMPLIED CLOSED: forging the trailer, the train record and a GREEN gate
  * record by hand PASSES the `main` arm (section 8) — the mark proves a procedure, never an actor.
  *
+ *   - M0-159: a train that refuses EVERY `--drop` passes the refusal arm, so the valid comma list is asserted to LAND
+ *     the branch it did not name and to leave the two it did WAITING on the remote, read from the remote.
  * NEGATIVE CONTROL: `node bio-plane/test/train.control.mjs` from the repo root, each arm ALONE against pristine copies
  * restored by sha256 AND `cmp` —
  *   (1) the guard's `main` arm dropped (its call site in `run`) -> "A LANE'S DIRECT PUSH TO main IS REFUSED BY NAME"
@@ -51,6 +53,25 @@
  *       NOT EMPTY"; the train and the reuse arm hold.
  *   (9) M0-131 — THE VERDICT IGNORED (the never-cached run happens; the reused tree reads GREEN) -> the refusal FAILS
  *       (no "RED at plane:carry.test.mjs", nothing returned by name) while "THE DERIVED SET IS NOT EMPTY" holds.
+ *  (10) M0-159 — THE REFUSAL DROPPED (the silent ignore restored: an unmatched --drop entry is accepted and drops
+ *       nothing) -> "A --drop ENTRY NAMING NO BRANCH REFUSES THE TRAIN BY NAME" FAILS; the comma split, the
+ *       over-strictness arm and the bare-flag refusal hold.
+ *  (11) M0-159 — THE COMMA SPLIT DROPPED (a --drop value is one branch name again) -> "A VALID COMMA LIST DROPS EACH
+ *       BRANCH IT NAMES" FAILS, and the OVER-STRICTNESS arm with it (both lists are now unmatched entries, which the
+ *       refusal — still armed — catches); the refusal arm itself holds, which is what tells the two halves apart.
+ *  (12) M0-159 — THE BARE-FLAG CHECK DROPPED (`--drop` last on the line is read as if never typed) -> "A FLAG WITH NO
+ *       VALUE AFTER IT IS REFUSED BY NAME" FAILS; the refusal, the comma split and the over-strictness arm hold.
+ *   RUN 2026-09-24 by the M0-159 worker, ALL TWELVE AS DECLARED: baseline 61 pass / 0 fail, closing 61 / 0, driver
+ *   106 pass / 0 fail, 12 of 12 arms run, every restore byte-identical by sha256 and `cmp`, pen removed; failing counts
+ *   per arm 9, 1, 1, 25, 7, 5, 5, 4, 1, 2, 3, 1. Arm 4's count moved 22 -> 25 because this section's three landing
+ *   assertions cascade with every other train when the trailer is dropped — the arm working, on fixtures of their own.
+ *   TWO OF ARM 10's DECLARATIONS CAME BACK WRONG ON ITS FIRST RUN AND ARE RECORDED RATHER THAN SMOOTHED, BOTH DEFECTS
+ *   IN THE SUITE THIS CONTROL FOUND: (a) "...it names what it COULD have dropped" did NOT fail, because the train logs
+ *   `WAITING <branch>` for every waiting branch, so a train that MERGED instead of refusing contained all three names
+ *   for free — an equality that costs nothing to produce; the assertion now reads the REFUSAL's own
+ *   `What it could drop:` list and nothing else. (b) "A FLAG WITH NO VALUE AFTER IT IS REFUSED BY NAME" went red as a
+ *   CASCADE, not collateral: with the refusal disarmed, the unmatched-entry train LANDED and moved `main` under an
+ *   assertion that shared its fixture; that arm now drives a fixture of its own, which is why this section has three.
  *   RUN 2026-09-23 by the M0-131 worker, all nine AS DECLARED: baseline 53 pass / 0 fail; failing counts per arm 9, 1, 1,
  *   22, 7, 5, 5, 4, 1; every restore byte-identical by sha256 and `cmp`, closing 53 / 0, driver 78 pass / 0 fail. Arm 7
  *   is the row's control: the bad merge landed. FOUND BY ARM 9, re-run alone: main still did NOT move — the never-cached
@@ -86,7 +107,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 12;
+const SECTIONS = 13;
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -518,6 +539,88 @@ section("M0-131 · A REUSED GREEN TREE STILL RUNS THE NEVER-CACHED UNITS — a m
     [g1.status, ok.status, isAncestor(K.remote, good), /NO FULL GATE/.test(ok.text), /^train: the reused tree's never-cached run — GREEN, \d+ unit\(s\) run: [^\n]*plane:carry\.test\.mjs/m.test(ok.text)],
     [0, 0, true, true, true]);
   git(["worktree", "remove", "--force", wt], K.C);
+}
+
+/* ========================================================================== */
+section("M0-159 — A `--drop` THAT NAMES NOTHING REFUSES THE TRAIN; a comma list drops each branch it names");
+{
+  /* THE INCIDENT, DRIVEN (2026-09-24 07:08Z): `run --drop a,b,c` read the comma list as ONE branch name, which matched
+     no WAITING row, so the train dropped NOTHING and began merging every waiting branch — the forbidden ones included.
+     It was killed by PID before any gate or push. The only sign was `dropped: a,b,c` beside the waiting count, which
+     reads exactly like it worked, so this section asserts on what MERGED and on the REMOTE, never on that line alone.
+     HOW A LIAR PASSES THIS SECTION, stated before what it checks: a train that refused EVERY `--drop` would pass the
+     refusal arm, so the valid comma list is asserted to LAND the branch it did not name and to leave the two it did
+     WAITING on the remote; and a refusal read from the exit status alone would pass over a train refused for any
+     other reason, so each refusal is read from the train's OWN text, naming the unknown entry. Its own fixture, so
+     nothing here cascades from the sections above or into them. */
+  /* THREE FIXTURES, AND THE REASON IS THE CONTROL, MEASURED: each REFUSAL arm here, when the control disarms it, lets
+     its train MERGE AND PUSH — which moves every later assertion in the SAME fixture and makes a cascade
+     indistinguishable from a collateral red. Control arm 10's first run proved it: with the refusal dropped, the
+     unmatched-entry train landed, and the bare-flag assertion sharing its fixture went red on `main` having moved,
+     against a declaration that said it must not. So each refusing arm has a fixture of its own (R and T), the
+     dropping arms have S, and no arm's train can reach another's remote. */
+  const R = fixture("dropbad");
+  const d1 = lane(R.A, "land/alpha/d1", "docs/notes/d1.md", "# d1\n");
+  const d2 = lane(R.B, "land/beta/d2", "docs/notes/d2.md", "# d2\n");
+  const d3 = lane(R.A, "land/alpha/d3", "docs/notes/d3.md", "# d3\n");
+  const before = onRemote(R.remote, "main");
+  t("(fixture R: three lanes waiting, all three pushed, main not yet moved)",
+    [d1.status, d2.status, d3.status, isAncestor(R.remote, d1.sha)], [0, 0, 0, false]);
+
+  const bad = train(R.C, ["run", "--drop", "land/alpha/d1,land/typo/nope"]);
+  t("A --drop ENTRY NAMING NO BRANCH REFUSES THE TRAIN BY NAME — nothing merged, no gate run, main unmoved, the unknown entry named",
+    [bad.status !== 0, /^train: REFUSED — --drop names 1 branch\(es\) this train cannot drop/m.test(bad.summary),
+     bad.text.includes("land/typo/nope"), bad.gates, onRemote(R.remote, "main"), isAncestor(R.remote, d1.sha), isAncestor(R.remote, d3.sha)],
+    [true, true, true, 0, before, false, false]);
+  /* READ FROM THE REFUSAL'S OWN LINE, never from `bad.text`: MEASURED by control arm 10's first run, a train that
+     merged instead of refusing ALSO contained all three names, because it logs `WAITING <branch>` for each — an
+     equality that costs nothing to produce, and the assertion passed over the disarmed subject. */
+  const couldDrop = ((bad.summary || "").match(/What it could drop: ([^·]+)/) || [])[1] || "";
+  t("...and the REFUSAL ITSELF names what it could have dropped, so the operator can see the spelling it missed",
+    ["land/alpha/d1", "land/beta/d2", "land/alpha/d3"].every((b) => couldDrop.includes(b)), true);
+
+  /* THE SAME CLASS ONE LEVEL OUT: `--drop` as the LAST token yields no value at all, so no entry reaches the check
+     above and the train would merge everything — the incident's own shape in the one spelling the check cannot see.
+     Its own fixture, because disarming the check above lets that train land (see the three-fixtures note). */
+  const T_ = fixture("dropbare");
+  const f1 = lane(T_.A, "land/alpha/f1", "docs/notes/f1.md", "# f1\n");
+  const beforeT = onRemote(T_.remote, "main");
+  const bareDrop = train(T_.C, ["run", "--drop"]);
+  t("A FLAG WITH NO VALUE AFTER IT IS REFUSED BY NAME — a bare trailing --drop merges nothing and main does not move",
+    [bareDrop.status !== 0, /^train: REFUSED — --drop given with no value after it/m.test(bareDrop.text),
+     bareDrop.gates, f1.status, isAncestor(T_.remote, f1.sha), onRemote(T_.remote, "main")],
+    [true, true, 0, 0, false, beforeT]);
+
+  const S = fixture("dropok");
+  const e1 = lane(S.A, "land/alpha/e1", "docs/notes/e1.md", "# e1\n");
+  const e2 = lane(S.B, "land/beta/e2", "docs/notes/e2.md", "# e2\n");
+  const e3 = lane(S.A, "land/alpha/e3", "docs/notes/e3.md", "# e3\n");
+  const ok = train(S.C, ["run", "--drop", "land/alpha/e1,land/beta/e2"]);
+  t("A VALID COMMA LIST DROPS EACH BRANCH IT NAMES — the one not named lands; the two named do not, and their refs are kept for their lanes",
+    [ok.status, isAncestor(S.remote, e3.sha), isAncestor(S.remote, e1.sha), isAncestor(S.remote, e2.sha),
+     onRemote(S.remote, "land/alpha/e1"), onRemote(S.remote, "land/beta/e2")],
+    [0, true, false, false, e1.sha, e2.sha]);
+  t("...and the train's own line names both dropped branches separately, never the comma list as one name",
+    /· dropped: land\/alpha\/e1, land\/beta\/e2/.test(ok.text), true);
+
+  /* OVER-STRICTNESS — a correct drop in a spelling this change did not anticipate must PASS: an `origin/` prefix (the
+     spelling `train.mjs list` does NOT print, but `--branch` has always accepted) and a space after the comma. */
+  const e4 = lane(S.B, "land/beta/e4", "docs/notes/e4.md", "# e4\n");
+  const loose = train(S.C, ["run", "--drop", "origin/land/alpha/e1, land/beta/e2"]);
+  t("OVER-STRICTNESS — an origin/ prefix and a space after the comma are ACCEPTED and DROP: e4 lands, the two named still do not",
+    [loose.status, /REFUSED — --drop/.test(loose.text), isAncestor(S.remote, e4.sha), isAncestor(S.remote, e1.sha), isAncestor(S.remote, e2.sha)],
+    [0, false, true, false, false]);
+
+  /* THE LIMIT, DRIVEN rather than implied closed: the check accepts any row `list` names, not only a WAITING one. A
+     drop naming a row that could never merge anyway (MALFORMED here; a LANDED one the same) is a NO-OP, not a typo —
+     a branch that lands between the operator's `list` and the run must not become a refusal. */
+  const mal = lane(S.B, "land/malformed", "docs/notes/mal.md", "# no lane in this name\n");
+  const e5 = lane(S.A, "land/alpha/e5", "docs/notes/e5.md", "# e5\n");
+  const limit = train(S.C, ["run", "--drop", "land/malformed"]);
+  t("THE LIMIT — a drop naming a listed row that could never merge (MALFORMED) is ACCEPTED as a no-op, not refused, and the train lands",
+    [limit.status, /REFUSED — --drop/.test(limit.text), isAncestor(S.remote, e5.sha), mal.status,
+     limit.returned.some((l) => l.includes("land/malformed") && l.includes("MALFORMED"))],
+    [0, false, true, 0, true]);
 }
 
 /* ========================================================================== */
