@@ -437,7 +437,7 @@ scope-amended: + memberset/signeradd/signerset record the server-stamped actor i
 added: 2026-09-21 · SCHEDULER #7 (REC-156's DELEGATION; `node tools/mintid.mjs REC`).
 unblocked: 2026-09-23 by SCHEDULER #17 — Bob ruled (~23:20Z) that starting plan entries is BOB's act; BOB #32 started WORKER REC-159 (session_01Kmhpfj3yoHZCRgNHbBXaTf, 23:20Z), reporting to CONDUCT #18, which writes `running`.
 
-### UI-85 · queued — **NO SURFACE LETS A MEMBER CHOOSE A RISK TIER: the action intake writes `risk_tier: undetermined` with no control, though the plane publishes the words (`op=affordances`, `vocabularies.risk_tiers`).** `civicos-ui/app.html` names `risk_tiers` only in a comment that says *"a chooser … is this page's to add"*; the design's front matter reads *"built except its member-facing chooser"*. — owner UI.
+### UI-85 · running — SPAWNED 2026-09-24 ~01:32Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER UI-85 (CONDUCT #19), base origin/main 15b2a4c0 (D-182 on main; REC-189 finished at land/worker/REC-189 @ 9d9919dd, not yet trained); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/UI-85 and that session; never conclude queued from the absence alone.
 order: directly after REC-189, so the plane's fence and the member's only path to a tier land together; D-182's surface half (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:48Z finding (2), verified at c17-batch5 @ 74fc2e25)
 milestone: M10
 interface: I3 consumer (`op=affordances`'s `vocabularies.risk_tiers`); none new.
