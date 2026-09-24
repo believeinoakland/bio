@@ -1,0 +1,16 @@
+{
+ "unit": "plane:refusal-wire.test.mjs",
+ "inputHash": "1f15059e4d1c037c5d29b5e2ba572b2f1c8b0e15bf62d8abc8aeb5256ece7052",
+ "verdict": "PASS",
+ "run": "0dfef3220d1e430b54918047bebbdf0fabf85150.1790209789046.1211.json",
+ "tree": "0dfef3220d1e430b54918047bebbdf0fabf85150",
+ "head": "3100472c992d06986022a5f1d2fda92c4feb8afc",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 136,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "09fcf4ba-a686-5937-92d0-89d0c278d6e2",
+ "at": "2026-09-24T00:29:49.058Z"
+}
