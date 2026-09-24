@@ -1,0 +1,16 @@
+{
+ "unit": "ui:project-id-surface.test.mjs",
+ "inputHash": "e6df9836de8c8b27151f92985778d0bed1a8483bf15390f2f4e7e271da9ba280",
+ "verdict": "PASS",
+ "run": "fdde0ded0be8d135daf12b1abd0318d5b21c132c.1790288975823.2110.json",
+ "tree": "fdde0ded0be8d135daf12b1abd0318d5b21c132c",
+ "head": "a68b61184feef2c788cc2b0091e53c76100b2168",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 79,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "c17fe8de-daa8-58e3-967d-5923f58bf4e6",
+ "at": "2026-09-24T22:29:35.836Z"
+}
