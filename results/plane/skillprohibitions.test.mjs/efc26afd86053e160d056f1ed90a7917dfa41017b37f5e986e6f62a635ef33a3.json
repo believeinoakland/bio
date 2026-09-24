@@ -1,0 +1,16 @@
+{
+ "unit": "plane:skillprohibitions.test.mjs",
+ "inputHash": "efc26afd86053e160d056f1ed90a7917dfa41017b37f5e986e6f62a635ef33a3",
+ "verdict": "PASS",
+ "run": "0fc878855b188866d8a555edffe4595e97e45e11.1790290103486.3489.json",
+ "tree": "0fc878855b188866d8a555edffe4595e97e45e11",
+ "head": "7a2d73cba8d39098ff26ea2448d80ab1489813bd",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 995,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "548512a6-10ae-515e-bab0-45f055eef398",
+ "at": "2026-09-24T22:48:23.499Z"
+}
