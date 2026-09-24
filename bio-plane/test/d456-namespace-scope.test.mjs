@@ -240,7 +240,11 @@ console.log("\n--- 4 · every site in src/index.mjs that reads the `store` param
      `bio` by a literal; it now takes op=instancegroup's rule and runs `namespaceGate` itself, and
      `test/d475-page-namespace.test.mjs` drives it through the route (18 assertions) with `test/nc-d475.mjs` as its
      negative control. The old set was right for its day, not wrong. */
-  const KNOWN = new Set(["scopeFor", "namespaceGate", "pinnedNamespaceGate", "unauthenticated-block", "op=instancegroup", "op=groupidentity", "setup-page"]);
+  /* CORRECTED 2026-09-24 by D-463 on the same precedent: `confinedNamespaceGate` is a reader too — it holds a
+     credential MINTED CONFINED to `scratch` to it, refusing a named `bio` by name (C-78.3) and setting the absent
+     case to `scratch`. `test/d463-confined-credential.test.mjs` drives what it DOES; the arm below drives what this
+     suite owns about it, which is that a caller holding no such credential meets it and is unchanged. */
+  const KNOWN = new Set(["scopeFor", "namespaceGate", "pinnedNamespaceGate", "unauthenticated-block", "op=instancegroup", "op=groupidentity", "setup-page", "confinedNamespaceGate"]);
   t("the sweep found readers (a sweep over nothing is not a sweep)", found.length >= 4, true);
   /* THE LABEL CORRECTED 2026-09-24 by D-475, not exempted. It read "one this suite drives", which stopped being
      true at D-461 — `pinnedNamespaceGate` is driven by `d461-pinned-namespace.test.mjs` and was admitted here with
@@ -253,6 +257,20 @@ console.log("\n--- 4 · every site in src/index.mjs that reads the `store` param
   t("the front-door gate runs before any credential is classified",
     src.indexOf("const unknownNamespace = namespaceGate(url);") > 0
       && src.indexOf("const unknownNamespace = namespaceGate(url);") < src.indexOf("let cls = await classify("), true);
+  /* D-463's reader, driven in the direction THIS suite owns: an unconfined caller passes through it untouched, in
+     every shape of `store=` this suite is about. A gate that changed any of these would have changed D-456's own
+     answers, so this is the arm that says the new reader did not. */
+  const untouched = [
+    ["admin · store absent", await call("op=whoami&token=adm-d456"), 200, "bio"],
+    ["admin · store=bio", await call("op=whoami&token=adm-d456&store=bio"), 200, "bio"],
+    ["admin · store=scratch", await call("op=whoami&token=adm-d456&store=scratch"), 200, "scratch"],
+    ["probe · store absent (its CLASS confinement, not a credential's)", await call("op=whoami&token=prb-d456"), 200, "scratch"],
+  ];
+  for (const [label, r, status, store] of untouched)
+    t(`the confinement gate leaves an unconfined caller unchanged — ${label}`, [r.status, r.body?.store], [status, store]);
+  const stillUnknown = await call("op=whoami&token=adm-d456&store=biosmoke-pdf");
+  t("and D-456's own refusal still runs FIRST, ahead of it", [stillUnknown.status, stillUnknown.body?.reason],
+    [400, "NAMESPACE_UNKNOWN"]);
 }
 
 } finally {
