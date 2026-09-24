@@ -55,6 +55,24 @@
  *   - Regex literals go with the comments (walkfloor blanks both), so a `hit` naming text that lives
  *     only inside a `/…/` in the source no longer matches. Measured on this tree: no probe did.
  *
+ * AND A `hit` PINS EXACTLY ONE SITE, OR IT PINS NOTHING (M0-160, 2026-09-24). A `hit` used to be
+ * satisfied by its FIRST match and report that one line as evidence, so a pattern matching many
+ * sites read exactly like a pattern matching the right one. D-498's first probe, `limit: cap,
+ * truncated`, matched 24 TIMES in `store.mjs` and stayed green while the op it was written about
+ * was untouched by the change that should have moved it — the probe was pinned to whichever site
+ * came first in the file, which was not the construct's. So a `hit` now COUNTS its matches over
+ * every file in `in` and is ok only at exactly one: two sites means deleting the real one leaves
+ * the probe green, which is the same defect the blanking closes, one lexical home out. Measured on
+ * this tree the day it landed: 43 of 318 `hit` probes were ambiguous, and every one was re-aimed.
+ *
+ * WHAT THAT COSTS, stated rather than discovered: `in` is now ONE corpus that must hold exactly one
+ * site, so a multi-file `in` can no longer mean "in EITHER of these files" — it means "once across
+ * all of them". Nothing in the corpus used it the other way (measured: 1 of 318 `hit` probes had a
+ * multi-file `in`, `8.risk-tier`'s, and that one was ambiguous by any reading — one catalogue entry
+ * and three test assertions). A claim that really needs an either/or reads it as two claims or as a
+ * `count`. The counting is over the SAME blanked text every other probe reads, so a second match
+ * that lives only in a comment does not make a probe ambiguous.
+ *
  * NEGATIVE CONTROL: `node bio-plane/test/status.control.mjs` from the repo root.
  */
 
@@ -167,15 +185,24 @@ export function evalProbe(p, { repo = ROOT, sets = {} } = {}) {
                                            : { ok: false, evidence: `${p.file} does NOT exist` };
   }
   if (p.hit) {
-    const re = new RegExp(p.hit, p.flags || "");
-    const fl = files(p.in); const missing = [];
+    /* EVERY match, not the first: a `hit` that matches twice pins neither site, so the count is the
+       verdict (M0-160 — the header's "A `hit` PINS EXACTLY ONE SITE"). `g` is forced on because the
+       claim may spell its own flags and `matchAll` requires it; a zero-width pattern still advances. */
+    const re = new RegExp(p.hit, (p.flags || "").includes("g") ? p.flags : `${p.flags || ""}g`);
+    const fl = files(p.in); const missing = []; const sites = [];
     for (const f of fl) {
       const t = readCode(repo, f); if (t === null) { missing.push(f); continue; }
-      const m = re.exec(t);
-      if (m) return { ok: true, evidence: `/${p.hit}/ at ${f}:${lineOf(t, m.index)}` };
+      for (const m of t.matchAll(re)) sites.push(`${f}:${lineOf(t, m.index)}`);
     }
-    return { ok: false, evidence: `/${p.hit}/ matches nowhere in ${fl.join(", ")}`
+    if (sites.length === 1) return { ok: true, evidence: `/${p.hit}/ at ${sites[0]}` };
+    if (sites.length === 0) return { ok: false, evidence: `/${p.hit}/ matches nowhere in ${fl.join(", ")}`
       + (missing.length ? ` (UNREADABLE: ${missing.join(", ")})` : "") };
+    const shown = sites.slice(0, AMBIGUOUS_SITES_SHOWN);
+    return { ok: false, ambiguous: true,
+      evidence: `/${p.hit}/ is AMBIGUOUS — ${sites.length} matches (${shown.join(", ")}`
+        + `${sites.length > shown.length ? `, +${sites.length - shown.length} more` : ""}), so it pins no site: `
+        + "delete the one this claim is about and the probe stays green. Re-aim it at a pattern that "
+        + "matches ONCE at the code that makes the claim true, verified at the code — never widen the claim to fit the probe" };
   }
   if (p.none) {
     const fl = files(p.in); const missing = [];
@@ -285,6 +312,9 @@ const CITE = /§\s*\d+(?:\.\d+)*\s+item\s+\d+/gi;
    CELL_CAP characters, at the last word boundary OUTSIDE backticks, and marked ` …` like any cut. The claim text is
    untouched: this is the rendering's limit, and no author rewords a claim to fit it. */
 export const CELL_CAP = 240;
+/* How many of an ambiguous `hit`'s sites the evidence names before it says "+N more". Enough to
+   re-aim from without printing 24 lines for one probe (M0-160). */
+export const AMBIGUOUS_SITES_SHOWN = 4;
 function capAtWord(head) {
   if (head.length <= CELL_CAP) return { text: head, cut: false };
   let tick = false, lastSpace = -1;
@@ -399,8 +429,11 @@ if (IS_CLI) {
     if (stale) console.log(`STALE  ${MAP} §3's state column differs from its rendering — run \`node tools/status.mjs --write\` and commit.`);
     if (r.missing.length) console.log(`MISSING  construct(s) ${r.missing.join(", ")} have no row in ${MAP} §3`);
     const probes = j.claims.reduce((a, c) => a + c.results.length, 0);
+    /* PRINTED UNCONDITIONALLY, including the 0 (M0-160): the row that accepts this guard reads
+       "0 ambiguous probes", and a figure that appears only when it is non-zero cannot be read. */
+    const ambiguous = j.claims.reduce((a, c) => a + c.results.filter((x) => x.ambiguous).length, 0);
     console.log(`status: ${j.claims.length} claims, ${probes} probes over ${j.data.constructs.length} constructs — `
-      + `${drift.length} drift${stale ? ", §3 STALE" : ""}${r.missing.length ? ", rows MISSING" : ""}`);
+      + `${drift.length} drift, ${ambiguous} ambiguous${stale ? ", §3 STALE" : ""}${r.missing.length ? ", rows MISSING" : ""}`);
     if (drift.length) console.log(`  Update ${DATA} to what the code says (and say why in the commit), or fix the code. Never delete a probe to pass.`);
     process.exit(drift.length || stale || r.missing.length ? 1 : 0);
   } else {
