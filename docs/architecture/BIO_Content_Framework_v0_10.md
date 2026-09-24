@@ -956,8 +956,9 @@ Bob, 2026-09-21: *"Reporters are connecting disparate ideas all the time. That's
 done as a hunch that doesn't pan out."* Connecting ideas is therefore a feature, and because *"these fuzzy ideas could
 become a narrative without basis"*, a THEME is fenced four ways (his ruling, with BOB #23's guardrails he accepted):
 
-1. **Declared by a member, under that member's COVER** (Membership v2 §3), which every reading of the theme shows. No
-   theme is anonymous, and no machine declares one.
+1. **Declared by a member, and every reading of the theme shows the declarer's HANDLE** (corrected 2026-09-24 by BOB #32,
+   D-162's finding: Membership v2 §3 lets only administrators see cover, so the member id and cover reach administrators
+   alone, through the administer projection). No theme is anonymous, and no machine declares one.
 2. **It carries its TEST**: an inclusion criterion its declarer writes, a sentence a document or a portion passes or
    fails, so any member can check a membership against it. A theme without its test cannot be declared.
 3. **Membership is graded like any connection (§8.1).** Placing a document or a portion in a theme is an attributed
