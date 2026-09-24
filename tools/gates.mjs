@@ -293,6 +293,32 @@ if (NEVER_ONLY && !FORCE_FULL && SINCE === null) {
   why = "--never-cached: this tree's record answers for every cacheable unit; the never-cached units read what no tree record holds (BOB #30)";
 }
 
+const textMemo = new Map();
+const textOf = (abs) => {
+  if (!textMemo.has(abs)) { let s = null; try { s = readFileSync(abs, "utf8"); } catch { /* gone */ } textMemo.set(abs, s); }
+  return textMemo.get(abs);
+};
+/* A FILE A UNIT MERELY IMPORTS IS READ AS CODE, ITS COMMENTS BLANKED — by the estate's ONE lexer
+   (`stripComments` in `bio-plane/scripts/walkfloor.mjs`, D-301: strings KEPT, since a path is a string),
+   never a second one. The helpers every suite imports cite files in their prose (`stdio.mjs` names
+   `MEASUREMENTS.md`, `provenance.mjs` names `coverage.mjs`), and read by prose, one appended measurement
+   selected 219 units and one `REGISTER_FLOOR` move ~100 (measured 2026-09-21, before this).
+   A UNIT'S OWN FILES ARE READ AS CODE TOO (M0-116, BOB #27, 2026-09-22). They were read whole, comments
+   included, on the reasoning that over-selection is the safe direction; measured, it was not safe but merely
+   expensive — about 30 suites were selected for a MEASUREMENTS-only change because their OWN prose cites a
+   measurement (`see MEASUREMENTS.md M-60`), and a comment reads nothing. A suite that READS the file does it
+   through a string (`join(REPO, "docs/development/MEASUREMENTS.md")`), which the lexer keeps. What a unit names
+   as a tool or script it RUNS (`edges`) is still read off the whole text. If the lexer cannot be loaded, every
+   file is read whole and the plan SAYS so. */
+let stripComments = null;
+try { ({ stripComments } = await import("../bio-plane/scripts/walkfloor.mjs")); } catch { /* read whole, and say so */ }
+const codeMemo = new Map();
+const codeOf = (abs) => {
+  if (!stripComments) return textOf(abs);
+  if (!codeMemo.has(abs)) { const s = textOf(abs); let c = s; try { c = s === null ? null : stripComments(s); } catch { /* read whole */ } codeMemo.set(abs, c); }
+  return codeMemo.get(abs);
+};
+
 /* ---- 2 · the doc-facing suite set, derived ------------------------------ */
 /* A SUITE READS docs/ THROUGH A TOOL AS SURELY AS DIRECTLY. Corrected 2026-09-18 (LED-2) from
    M-57's finding that `owed.test.mjs` — which reads DEBT.md, DECISIONS.md and QUEUE.md live
@@ -300,15 +326,29 @@ if (NEVER_ONLY && !FORCE_FULL && SINCE === null) {
    because the path lives in the tool's `SOURCES`. The fix is the CLASS, not a hand entry for one
    suite (a list is the D-93 defect this header refuses): a suite is doc-facing iff it, its control,
    or any `tools/<name>.mjs` it names — followed through that tool's own `./x.mjs` imports — mentions
-   `docs/`. REACH, stated: a tool reached only through `bio-plane/scripts/` is not followed. */
+   `docs/`. REACH, stated: a tool reached only through `bio-plane/scripts/` is not followed.
+
+   EVERY FILE THIS SECTION READS IS READ AS CODE, ITS COMMENTS BLANKED (M0-143, 2026-09-24) — by the
+   same one lexer §2b uses (`stripComments`, strings KEPT, since a path is a string), through the same
+   `codeOf`, never a second reader. This is M0-116's correction arriving at the other selector: a
+   comment naming `docs/` or naming `tools/owed.mjs` READS NOTHING and RUNS NOTHING, so it cannot make
+   a suite doc-facing. MEASURED on this tree at 16fe1e7f, by this tool's own printed line in a clone whose
+   `origin/main` carried each side: 72 doc-facing suites before (plane 60 · ui 12), 41 after (plane 37 · ui 4) —
+   31 of 72, 43%, qualified by a comment mention ALONE, and NONE was added. `measurements/M-134.md` names all 31.
+   REACH, stated, and it differs from §2b's: there a tool or script the unit NAMES is read off the
+   unit's whole text, because naming one is weak evidence it runs it; here the name is the whole of the
+   evidence, so a named tool inside a comment selects nothing. A `docs/` path written inside a REGEX
+   literal is blanked with the comments (the lexer's rule), and one assembled at run time from pieces
+   none of which spells `docs/` was invisible before this change and still is. If the lexer cannot be
+   loaded, every file is read whole — over-selection — and the plan SAYS so. */
 const toolReachesDocs = (() => {
   const memo = new Map();
   const reaches = (name, seen = new Set()) => {
     if (memo.has(name)) return memo.get(name);
     if (seen.has(name)) return false;
     seen.add(name);
-    let src = "";
-    try { src = readFileSync(join(REPO, "tools", name), "utf-8"); } catch { memo.set(name, false); return false; }
+    const src = codeOf(join(REPO, "tools", name));
+    if (src === null) { memo.set(name, false); return false; }
     const hit = src.includes("docs/")
       || [...src.matchAll(/["']\.\/([\w.-]+\.mjs)["']/g)].some((m) => reaches(m[1], seen));
     memo.set(name, hit);
@@ -321,9 +361,9 @@ function docFacing(dir) {
   let files = [];
   try { files = readdirSync(join(REPO, dir)).filter((f) => f.endsWith(".test.mjs")); } catch { return out; }
   for (const f of files.sort()) {
-    const src = readFileSync(join(REPO, dir, f), "utf-8");
+    const src = codeOf(join(REPO, dir, f)) ?? "";
     const ctrl = join(REPO, dir, f.replace(/\.test\.mjs$/, ".control.mjs"));
-    const ctrlSrc = existsSync(ctrl) ? readFileSync(ctrl, "utf-8") : "";
+    const ctrlSrc = (existsSync(ctrl) ? codeOf(ctrl) : "") ?? "";
     const viaTool = [...(src + ctrlSrc).matchAll(/tools\/([\w.-]+\.mjs)/g)].some((m) => toolReachesDocs(m[1]));
     if (src.includes("docs/") || ctrlSrc.includes("docs/") || viaTool) out.push(f);
   }
@@ -362,31 +402,6 @@ const UNITS = (() => {
   return u;
 })();
 
-const textMemo = new Map();
-const textOf = (abs) => {
-  if (!textMemo.has(abs)) { let s = null; try { s = readFileSync(abs, "utf8"); } catch { /* gone */ } textMemo.set(abs, s); }
-  return textMemo.get(abs);
-};
-/* A FILE A UNIT MERELY IMPORTS IS READ AS CODE, ITS COMMENTS BLANKED — by the estate's ONE lexer
-   (`stripComments` in `bio-plane/scripts/walkfloor.mjs`, D-301: strings KEPT, since a path is a string),
-   never a second one. The helpers every suite imports cite files in their prose (`stdio.mjs` names
-   `MEASUREMENTS.md`, `provenance.mjs` names `coverage.mjs`), and read by prose, one appended measurement
-   selected 219 units and one `REGISTER_FLOOR` move ~100 (measured 2026-09-21, before this).
-   A UNIT'S OWN FILES ARE READ AS CODE TOO (M0-116, BOB #27, 2026-09-22). They were read whole, comments
-   included, on the reasoning that over-selection is the safe direction; measured, it was not safe but merely
-   expensive — about 30 suites were selected for a MEASUREMENTS-only change because their OWN prose cites a
-   measurement (`see MEASUREMENTS.md M-60`), and a comment reads nothing. A suite that READS the file does it
-   through a string (`join(REPO, "docs/development/MEASUREMENTS.md")`), which the lexer keeps. What a unit names
-   as a tool or script it RUNS (`edges`) is still read off the whole text. If the lexer cannot be loaded, every
-   file is read whole and the plan SAYS so. */
-let stripComments = null;
-try { ({ stripComments } = await import("../bio-plane/scripts/walkfloor.mjs")); } catch { /* read whole, and say so */ }
-const codeMemo = new Map();
-const codeOf = (abs) => {
-  if (!stripComments) return textOf(abs);
-  if (!codeMemo.has(abs)) { const s = textOf(abs); let c = s; try { c = s === null ? null : stripComments(s); } catch { /* read whole */ } codeMemo.set(abs, c); }
-  return codeMemo.get(abs);
-};
 const TOOL_RE = /\btools\/([\w.-]+\.mjs)\b/g;
 const SCRIPT_RE = /\bscripts\/([\w.-]+\.mjs)\b/g;
 /* [file, how it is reached]: "import" for a relative import or a `new URL(…, import.meta.url)`
@@ -1082,7 +1097,7 @@ if (NEVER_CACHED) {
   for (const u of NEVER_SET) console.log(`gates:   NEVER-CACHED ${u.id}  <- ${neverCacheOf(u)}${NEVER_ADDED.includes(u.id) ? "" : " (already planned)"}`);
 }
 if (cls === "DOCS")
-  console.log(`gates: doc-facing suites derived fresh — plane [${planeDoc.join(", ")}] · ui [${uiDoc.join(", ")}]`);
+  console.log(`gates: doc-facing suites derived fresh, read as code${stripComments ? ", comments blanked (strings kept)" : " — THE LEXER DID NOT LOAD, so comments count too (over-selection)"} — plane [${planeDoc.join(", ")}] · ui [${uiDoc.join(", ")}]`);
 if (cls === "TARGETED" || cls === "SINCE" || cls === "RERUN") {
   console.log(`gates: FULL is derived too — plane imports from outside bio-plane/: [${planeForeign.roots.join(", ")}]`
     + `${planeForeign.files.length ? ` + [${planeForeign.files.join(", ")}]` : ""} · fleet: [${FLEET.map((m) => m.dir).join(", ")}]`);
