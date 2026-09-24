@@ -58237,7 +58237,7 @@ ${words}`;
    *  THE REQUEST LIFECYCLE IS NOT BUILT (item 7.14's decomposition, step 2): no request can exist yet, so
    *  `request` is null on every row and the answer says why rather than letting null read as a fact about the
    *  caller. A viewer that names no member has no directory: it is refused by name, never answered empty. */
-  projectDirectory({ viewer = null } = {}) {
+  projectDirectory({ viewer = null, limit = null } = {}) {
     const member = viewerPredicate(viewer).member;
     const refusal7 = (code, detail) => {
       const row = PROJECT_VISIBILITY_CHECKS[code];
@@ -58248,19 +58248,51 @@ ${words}`;
         "PROJECT_DIRECTORY_NEEDS_A_MEMBER",
         "the project directory lists the discoverable projects a MEMBER is not in, so it is asked by a signed-in member. A credential with no member behind it is outside no project, and an empty list would say something untrue about the record."
       );
-    const candidates = this.#rows(`SELECT bundle_id AS id FROM bundles WHERE object_type = 'project' ORDER BY bundle_id`);
+    const cap = Math.max(1, Math.min(Number(limit) || _Store.PROJECT_DIRECTORY_LIMIT, _Store.PROJECT_DIRECTORY_LIMIT));
     const projects = [];
-    for (const { id } of candidates) {
-      if (this.#sight(id, viewer) !== _Store.SIGHT_EXISTENCE) continue;
-      const t = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, id);
-      projects.push({ id, name: t ? t.title ?? null : null, request: null });
+    let after = "";
+    for (; ; ) {
+      const page2 = this.#rows(
+        `SELECT bundle_id AS id, title FROM bundles
+          WHERE object_type = 'project' AND bundle_id > ?
+          ORDER BY bundle_id
+          LIMIT ?`,
+        after,
+        cap + 1
+      );
+      if (!page2.length) break;
+      after = page2[page2.length - 1].id;
+      for (const r of page2) {
+        if (this.#sight(r.id, viewer) !== _Store.SIGHT_EXISTENCE) continue;
+        projects.push({ id: r.id, name: r.title ?? null, request: null });
+        if (projects.length > cap) break;
+      }
+      if (projects.length > cap) break;
     }
+    const truncated = projects.length > cap;
+    const page = truncated ? projects.slice(0, cap) : projects;
     return {
       ok: true,
-      projects,
+      projects: page,
+      count: page.length,
+      /* THE BOUND, BESIDE THE ANSWER: `count` is what was returned, `limit` what could be, `truncated`
+         whether more exists. A truncated answer is the FIRST `limit` discoverable projects this caller
+         is outside, in `bundle_id` order, and a caller who needs the rest lowers `limit` and asks
+         again from what it already holds — the order is stable, so a page means the same thing twice. */
+      limit: cap,
+      truncated,
       requests: "NOT_BUILT: the request to join is not built yet (Membership Architecture v2 \xA77.14, step 2), so no request exists and `request` is null on every row."
     };
   }
+  /* D-479 — THE DIRECTORY'S PAGE SIZE (§7.14 "The directory"; SCHEDULER #17's finding on REC-149, 2026-09-24).
+     A CHOSEN CONSTANT and never a finding: the directory's answer grows with the group's own record — every
+     project an owner sets DISCOVERABLE that this caller is outside — and has no natural ceiling, so the read
+     publishes `limit` and `truncated` beside its answer rather than listing whatever is there. 200 is
+     deliberately generous, `CASE_FLAGS_LIMIT`'s reasoning at this read's scale: the directory is a surface a
+     member browses to find one project to ask to join, and a bound a legitimate caller trips is a bound that
+     teaches people to ignore it. It is a CEILING, not a target — a caller may ask for less and an over-ask is
+     answered here, with the ceiling published, so nobody is told they got more than they did. */
+  static PROJECT_DIRECTORY_LIMIT = 200;
   /* THE ROSTER ACTS' form of the same question, and the one difference is stated rather than hidden.
      Their positional half is `by`, and they have always been driven straight at the store by callers
      that are not requests (setup, fixtures, the store's own suites) — the same population
@@ -73442,7 +73474,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           projectId: url.searchParams.get("projectId"),
           viewer: url.searchParams.get("viewer")
         }),
-        projectdirectory: () => this.projectDirectory({ viewer: url.searchParams.get("viewer") }),
+        /* D-479: `limit` reaches the directory's page (the cap is the caller's to LOWER, not to raise). */
+        projectdirectory: () => this.projectDirectory({
+          viewer: url.searchParams.get("viewer"),
+          limit: url.searchParams.get("limit")
+        }),
         projectparticipants: () => this.projectParticipants({
           projectId: url.searchParams.get("projectId"),
           by: url.searchParams.get("by")
