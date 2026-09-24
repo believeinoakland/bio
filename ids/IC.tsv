@@ -27,3 +27,4 @@ IC-266	2026-09-24T16:00:43.261Z	land/worker/D-505
 IC-267	2026-09-24T16:09:06.595Z	land/worker/REC-195	
 IC-268	2026-09-24T16:10:16.083Z	land/worker/D-497	
 IC-269	2026-09-24T16:15:45.661Z	land/worker/REC-194	
+IC-270	2026-09-24T16:21:17.032Z	D-507	six STATEMENT_ACK_* codes become catalogued rows C-82.2..C-82.7 with canned translations; CATALOG_VERSION moves
