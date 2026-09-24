@@ -1,29 +1,31 @@
-# SCHEDULER-NEXT — the resume for SCHEDULER #19 (written by SCHEDULER #18, session_01MgL7YDGuxH1F7e3zxx6GSp, at REFRESH: 74% context, 2026-09-24 ~17:15Z)
+# SCHEDULER-NEXT — the resume for SCHEDULER #20 (written by SCHEDULER #19, session_01KJoJnoXN6d5CyZsiw8KTKa, 2026-09-24 ~21:15Z; kept current at each state change)
 
 Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` and `BACKLOG.md` from `coord`. A POINTER: re-measure before resting on any of it.
 
-## How the lane runs (Bob's rulings, 2026-09-23/24)
-- **No timers; wake on messages.** Lane-to-lane = one-shot `create_trigger` with `persistent_session_id`, `run_once_at` = `date -u -d '+2 min'`. Never `fire_trigger`. Peers: BOB #33 `session_01BkXH3dLHH2wx8eUA4k5p73` (from 15:53Z; BOB #32 archived), CONDUCT #20 `session_011PzZW1FSobMne4cYeAYWfU`, DIST #6 `session_01Vi1XTVwxcBBMStifuBasLZ`; on the other account find your peers with `list_sessions` and confirm yourself to each. A trigger to an ARCHIVED session is refused: that is how #18 found CONDUCT #19 had been succeeded.
-- **Only SCHEDULER writes the plan;** CONDUCT writes `queued→running` and `running→integrated` (tonight: flipped at the integration merge, by Bob's rule). On a TRAIN landing: verify each row's merge in `git log <old>..origin/main`, then ONE write `--status <ID> done --note … --archive <ID>` per row plus `--refill`.
-- **Live-worker cap** (Bob 03:08Z, recorded in QUEUE's cache preamble): 10, dropping to 6 then 0 new at the wind-down. `CACHE_ROWS` stays 16 and counts `running` rows even when their worker has FINISHED; when the cache is 16 running + 0 queued, say so to BOB ("SCHEDULER cannot fill") and ask CONDUCT to push/flip integrations.
+## DISPATCH IS THIS LANE'S, END TO END (BOB #33, 2026-09-24 21:10Z, under Bob's direction)
+Root cause measured all day: CONDUCT did both long work (trains, 30–60 min) and short work (flips, spawns), so slots emptied while it trained. FROM NOW ON, at EVERY wake and after EVERY write:
+1. `list_sessions` (limit 50, mine) and read each worker's `status_bucket` against the cache's `running` rows.
+   - COMPLETED or REVIEW_READY **and its branch `land/worker/<ID>` pushed** → flip the row `integrated` (`coord.mjs write --status <ID> integrated`).
+     REVIEW_READY often means "gate running in the session"; with no pushed branch it is NOT finished.
+   - BLOCKED → forward the question to CONDUCT, or to BOB if it is design.
+   - A `running` row with no live session, or an idle "completed" session with no pushed branch → tell CONDUCT.
+2. Refill to `CACHE_ROWS` (20).
+3. SPAWN every queued row yourself. First flip it `running` with the spawn sentence (the falsification clause); CONDUCT's form is in `kickoffs/CONDUCT.md` "For each free slot". Then call `create_session`:
+   - title `WORKER <ID> (SCHEDULER #N)`, model `claude-opus-5`, source `https://github.com/believeinoakland/bio`;
+   - a self-contained brief: read CLAUDE.md, WORKER.md, the area kickoff, the row on coord (STOP unless `running`), the design SECTION; `npm ci` ×3; mintid; no stash; claim; don't edit QUEUE; push `land/worker/<ID>`; report to CONDUCT #20 by one-shot trigger.
+   Check first that the row is not already landed, by its CONTENT.
+4. Target: 16+ worker sessions WORKING at all times.
+CONDUCT keeps verifying, integrating, trains and archiving of worker sessions. BOB's prototype check: builder/slots.py.txt in https://claude.ai/artifact/M5hUaNBgeM292h4D6odXbX.
 
-## Mechanics learned tonight (#18) — durable
-- **Mint with MAIN's tools.** On `main` since 548eb2c5 (D-242), `node tools/mintid.mjs <NS>` takes the id by CAS on `coord` (`ids/<NS>.tsv`); an OLD checkout mints locally only (#18 lost D-488/489, DIST-10, UI-98 that way; they are skipped numbers, never used). `git checkout --detach origin/main` in your clone first.
-- **`depends-on:` must be plain ids** (`D-150, REC-193.`): prose like "REC-193 (it edits …)" is NOT parsed, the refill reads the row as met and re-admits it (REC-194, 05:08Z). Check with `ledger.mjs`'s `rowDepsMet` before writing. A dependency is MET only when `done` on `main`; `integrated` is not met, so rows resting on an un-landed batch wait in the backlog by design.
-- **Extract a row with an awk that stops at `### ` OR `## `**: stopping only at `### ` swallowed the TRACKED ELSEWHERE section after the last backlog row and duplicated it (94390a98; repaired f79903fc).
-- `--insert` anchors must be in the file you name; a row already refilled into QUEUE is not in BACKLOG (refused ROW_NOT_FOUND).
-- **DEBT.md reads 3 open rows but is 0 IN FACT** (D-313, D-391, D-388 closed by BOB's folds on main 548eb2c5). `ledger.mjs` DEBT_FLOOR_BYTES (10,000 B, nc-m039) refuses to archive them and LC-ledger refuses them closed-in-place, so **M0-140 carries their closing** and retiring that floor; the closed rows are drafted on `origin/scheduler18/row-drafts`.
+## How the lane runs
+- Wake by message only; no timers. Lane-to-lane = one-shot `create_trigger` with `persistent_session_id`, `run_once_at` ≈ +2 min. Peers: BOB #33 `session_01BkXH3dLHH2wx8eUA4k5p73`, CONDUCT #20 `session_011PzZW1FSobMne4cYeAYWfU`, DIST #6 `session_01Vi1XTVwxcBBMStifuBasLZ`.
+- `CACHE_ROWS` is 20 on main since 1a7f0bcc (land/scheduler19/cache-20-on-m0140). DEBT.md is RETIRED on coord (M0-140's write, 0065b961). Write coord with MAIN's tools only; never from a stale or M0-140-less checkout (two deletions of DEBT.md today came from wrong checkouts).
+- ORDER (Bob, 17:41Z): every process improvement is a tracked row. A process row goes ahead of product ONLY for an appreciable effect on productivity (gate time, a false or flaky gate result, a blocker) or on product quality; every other one goes after the product rows. Record why on its `order:` line.
+- ROW-WRITING (BOB #33): a `scope:` naming a remedy names, in `accepts-when`, the measured failure it moves. `design:` must be a governed home (LC-row-design refuses TREE-SHARING for M0; cite VERIFICATION.md and name the other beside it).
+- Build intents with a QUOTED heredoc or a script file: an unquoted heredoc executes backticks in row text.
 
-- **`--status … --note` REPLACES a row's headline** (M0-164 fixes it, running): until it lands, keep notes to one clause; #18 restored 13 running rows' headlines from coord history (29519a4e) and kept each note as a `status:` line.
-- **A worker-minted id is placed as-is** (D-509 was minted by land/worker/D-503): check `ids/D.tsv`, then `--insert` with an `added:` saying so.
-- **Drain the BOB INBOX in ONE write:** `--swap` the entries' exact text out of QUEUE, `--append` them `> `-prefixed under a `### Drained <date> by SCHEDULER #N — …` heading to `docs/archive/ledgers/BOB-INBOX-drained.md`, and place/note the rows in the same write. A note too big for a cache row (≤ 3072 B) points to the drained entry instead.
-- **Before writing `op=<name>` in a row, the op must be on main** (NO-SUCH-OP refuses it); name a not-yet-landed op without `op=`.
-
-## State at ~17:15Z (coord 8a6c4dbe; main 58293bf3; ledger invariants 0 FAIL; plancheck 0 fail, 6 warn)
-- **Peers:** BOB #33 `session_01BkXH3dLHH2wx8eUA4k5p73`; CONDUCT #20 `session_011PzZW1FSobMne4cYeAYWfU`; DIST #6 `session_01Vi1XTVwxcBBMStifuBasLZ`. Development resumed on this account at 15:40Z (quota reset). CACHE_ROWS 16; CONDUCT's live cap 16.
-- **Cache, running (14):** M0-140 (FIRST: retires the debt construct entirely, widened by Bob), D-497, UI-92, REC-194, D-507 (use BOB #33's approved wording, drained 16:25Z), D-508, REC-212, REC-211, D-500, D-501, D-502, M0-164, M0-159, M0-160. **Queued (2):** DIST-13 (DIST's), M0-165.
-- **Integrated, awaiting a train (8):** UI-100, REC-195, M0-154, M0-155, M0-157, D-505, D-503, D-506 (IC-265/266 both I3 MAJOR, CONDUCT sequences them). On each landing: verify in `git log <old>..origin/main`, then `--status done --archive` per row plus `--refill`.
-- **Backlog head, in order:** D-511 (replay fence; after D-505 lands), D-512 (server-verified replay), D-509 (machine-fence sentinel false green; after D-503), D-510 (promote trusts the envelope's type; after D-505), M0-171, M0-172, M0-166, M0-168, M0-169, M0-170, M0-167, M0-162, M0-163, M0-142, M0-149, M0-150 … then UI-99..UI-102, D-492, D-499, DIST-11, D-490, D-491, D-480 … REC-203 is queued in the backlog (M-132 folded).
-- **Design homes pending on branches (re-point when on main):** doorbell → `BIO_Intake_Doctrine_v1_1.md` §2a (land/bob/doorbell-home) for D-508; replay → INVESTIGATIVE-SESSION.md §11 item 5 (land/bob/replay-ruling @ 8474837c) for D-511/D-512. Rows still citing BOB messages until folded: D-499, REC-211, D-505's replay pair, REC-212, D-506 (done? check), M0-172.
-- **Owed to DIST at the next deploy:** D-461, D-464, D-462 (I8 2.0.0 MAJOR), DIST-11; newgroup's RELEASE_SOURCE carries the old livefire shape until DIST regenerates it (DIST-13 guards freshness).
-- **Stated, no row:** D-484's assertion total +27 vs 28 passes unreconciled; how many drafts predate REC-193's column is UNDETERMINED; CACHE_ROWS 16 vs a 12-row budget BOB #32 once named, never reconciled.
+## State at ~21:15Z (main 1a7f0bcc; coord 0ca3688c)
+- Train c20-batch25 (≈18 rows) leaves ~21:20Z. On landing: verify each row's tip on main (worker branches get deleted; use the shas in CONDUCT's reports or batch ancestry), then ONE write: `--status done --archive` per row plus `--refill`, then dispatch.
+- Waiting on BOB: registeraudit soundness for a parted capture (D-476 finding A); confirmation of D-518's mixed-tick epoch behaviour.
+- Owed to DIST at its next deploy: D-475's two GETs; ONE live render with the BROWSER binding (D-490; header validation undetermined).
+- D-528 (UI-93's id) and D-530 are placed; both wait on the 21:20Z train.
