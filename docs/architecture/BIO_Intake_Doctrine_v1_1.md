@@ -660,6 +660,14 @@ the answer says so (`first_holder: "UNDETERMINED"`) rather than guessing; nor ca
 a bundle carried without ever registering them. The digest-level duplicate stays out of reach. Driven through the
 op by `bio-plane/test/homecensus.test.mjs`, with the pre-fence move seeded at the store (IC-251).
 
+**AND THE CENSUS'S OWN GAP WAS RULED 2026-09-24 by BOB #32, ONE DAY AFTER BOB #31 ORDERED THE CENSUS AND ON
+THE SAME TREE THAT BUILT IT — the paragraph above says what `op=homecensus` REPORTS, this one says what may ever
+be DONE about a row it names: A HOME IS FIXED BY THE FIRST REGISTRATION.** Registering is the
+record's act. A bundle that carried bytes without registering them never made a home, so a later bundle that registered
+the same bytes IS their home. Only a register row MOVED by the pre-fence UPSERT (D-179's residue) is a defect. The census
+cannot tell the two apart, so a repair touches ONLY rows the record itself proves were moved (register history, or a
+surviving prior row). Every other row stays STATED as undetermined between the two, and is never repaired by guess.
+
 # 9. Creation authority boundaries (added v1.1)
 
 Made concrete by the admission of creation-by-packaging (the endpoint at
