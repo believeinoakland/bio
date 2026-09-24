@@ -1489,6 +1489,10 @@ export const odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
  * Widening this is one entry in `ODF_EVIDENTIARY_MEASURED` plus the
  * measurement it cites — and, for `.odt`, the normalisation it measured. */
 export const ODF_EVIDENTIARY_VERSION = 1;
+/** The flavours this module's rows define, READ OFF the rows so the control
+ *  plane can ask "is this an OpenDocument format?" without learning the names
+ *  (formats-odf.test.mjs pins that index.mjs spells none of them — D-70). */
+export const ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
 export const ODF_EVIDENTIARY_MEASURED = Object.freeze({
   ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 §4) and 18/18 over 3 census targets (M-121)",
 });

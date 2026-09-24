@@ -83,7 +83,7 @@ import { serialiseContainer, containerEntries } from "./container.mjs";
    three facts — export address, export format, producer — is readable off a
    request body, and `callerSuppliedHopFacts` makes an attempt to supply one a
    NAMED refusal rather than a silent drop (D-112). */
-import { odfEvidentiaryDigest } from "./odf.mjs";
+import { odfEvidentiaryDigest, ODF_FORMATS } from "./odf.mjs";
 import { readDriveAddress, driveHop, callerSuppliedHopFacts,
          DRIVE_PRODUCER, driveConvertStep } from "./drive.mjs";
 /* REC-19 / DEC-8: the act catalogue and derivation behind op=affordances. The
@@ -7590,7 +7590,7 @@ export default {
          that second read is the price of keeping the digest beside its siblings
          here rather than splitting the one gate across two blocks. */
       let containerBytes = null;
-      const odfFmt = profile.format && ["odt", "ods", "odp"].includes(profile.format.format);
+      const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
       if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
         try {
           const cobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);

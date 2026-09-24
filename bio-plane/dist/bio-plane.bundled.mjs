@@ -18687,6 +18687,7 @@ var odtEntry = entryFor(ODT_ROW, odtStructure, odtText);
 var odsEntry = entryFor(ODS_ROW, odsStructure, odsText);
 var odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
 var ODF_EVIDENTIARY_VERSION = 1;
+var ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
 var ODF_EVIDENTIARY_MEASURED = Object.freeze({
   ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 \xA74) and 18/18 over 3 census targets (M-121)"
 });
@@ -73833,7 +73834,7 @@ var index_default = {
         );
       }
       let containerBytes = null;
-      const odfFmt = profile.format && ["odt", "ods", "odp"].includes(profile.format.format);
+      const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
       if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
         try {
           const cobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
