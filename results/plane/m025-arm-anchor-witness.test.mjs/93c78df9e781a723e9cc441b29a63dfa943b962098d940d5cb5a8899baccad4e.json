@@ -1,0 +1,16 @@
+{
+ "unit": "plane:m025-arm-anchor-witness.test.mjs",
+ "inputHash": "93c78df9e781a723e9cc441b29a63dfa943b962098d940d5cb5a8899baccad4e",
+ "verdict": "PASS",
+ "run": "94ca0ac6e093a8c177da210212301ca1b44df9ff.1790293646983.458.json",
+ "tree": "94ca0ac6e093a8c177da210212301ca1b44df9ff",
+ "head": "a8c6bb0bb0dc49973fe093b36bd12391b6356817",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "DOCS",
+ "inputs": 1331,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "9ebe702d-c1c3-561a-94fe-6cf9f11e9708",
+ "at": "2026-09-24T23:47:26.993Z"
+}
