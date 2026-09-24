@@ -61,7 +61,7 @@ button.copy:hover{border-color:var(--verdigris)}
 `;
 
 function page({ title, description, eyebrow, lede, blocks, slugLabel, slugHint,
-  placeholder, buttonText, mode, footer }) {
+  placeholder, buttonText, mode, footer, extra = "" }) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -82,6 +82,7 @@ ${blocks}
 <label for="slug" id="slug-label">${slugLabel}</label>
 <input id="slug" type="text" autocomplete="off" spellcheck="false" placeholder="${placeholder}">
 <p class="hint" id="slug-hint">${slugHint}</p>
+${extra}
 
 <button id="go">${buttonText}</button>
 <p class="err" id="err"></p>
@@ -102,7 +103,7 @@ $("#go").addEventListener("click",async()=>{
   $("#go").disabled=true;
   try{
     const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({slug,mode:"${mode}"})});
+      body:JSON.stringify({slug,mode:"${mode}",...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
     const j=await r.json();
     if(!j.ok){err.textContent=j.error||"That name was not accepted.";return;}
     location.href=j.authorize;
@@ -162,7 +163,8 @@ export const UPDATE_HTML = page({
   lede: `This brings a copy your group already runs up to the current software
 release. It changes the software and nothing else: your passwords, your
 credentials, and your record are untouched, and that is enforced by how the
-update is applied, not by promise.`,
+update is applied, not by promise. The one exception is yours to choose: an
+organisation AI credential you paste in the optional box below.`,
   blocks: `<h2>What happens when you press the button</h2>
 <p>Cloudflare shows you the same permission screen as at install. You approve
 it on Cloudflare's own page, the new release is placed into your account, and
@@ -171,6 +173,13 @@ the permission is gone the moment it finishes. Nothing is stored here.</p>
 <h2>Which copy</h2>`,
   slugLabel: "The name of the copy to update",
   slugHint: "The first part of your copy's address, before the first dot.",
+  /* DIST-9 (D-260): the optional organisation `ai` credential. A member mints it ON the copy, so it can only be given
+     to an update of that copy; the installer never creates one. type=password: it is a secret, never shown back. */
+  extra: `<label for="ai">Organisation AI credential (optional)</label>
+<input id="ai" type="password" autocomplete="off" spellcheck="false" placeholder="leave empty to keep what your copy has">
+<p class="hint">Only if a member of your group minted an organisation AI credential on this copy and you want the copy
+to resume paused assistant runs on its own. It is stored in your copy as a secret and never shown. Left empty, the
+update sends none and keeps any your copy already holds. This installer never creates one.</p>`,
   placeholder: "oakland-sewer-watch",
   buttonText: "Continue to Cloudflare",
   footer: `<p class="small" style="margin-top:34px;border-top:1px solid var(--rule);padding-top:16px">
