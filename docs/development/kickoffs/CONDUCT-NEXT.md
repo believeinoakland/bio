@@ -26,8 +26,10 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
 - MAIN = 548eb2c5 (train-20260924T024342Z-905). Interfaces on main: I3 81.0.0, I5 3.5.0, I8 1.0.0.
 - land/conduct/c19-batch10 @ cff0ede6 — pushed, 10 rows integrated there (D-469 D-351 D-461 D-462 D-464 REC-189 REC-188 UI-86
   D-291 D-66), NOT TRAINED.
-- c19-batch11 worker `session_01FoZ785Cn2MWUSRUCxU42Cz` (spawned by #19) — merges REC-192 REC-190 UI-85 UI-83 onto batch10+main.
-  ON ITS REPORT: tell SCHEDULER those 4 integrated with shas; TRAIN batch11 onto main (drop every other WAITING).
+- c19-batch11 PUSHED @ 8b7e4bca (03:37Z): REC-192 8646219d, REC-190 c650a697, UI-85 e49f66f8, UI-83 3e3684ee — reported integrated to
+  SCHEDULER. I3 84.1.0. ONE inherited red (meaning-bounds floor 43/42: op=resolve hidden in #resolveOne) + IC-246 unresolved (MAJOR)
+  → WORKER c20-batch11fix session_01TcTNdcXz9g85LF9TfQ29Jp fixes both, merges current main, pushes land/conduct/c20-batch11fix by
+  05:15Z. TRAIN THAT BRANCH (not batch10/batch11 directly). Map bytes vs 49,152 B budget: never raise it; report to BOB.
 - LIVE WORKERS spawned by #20 at ~03:07Z, all briefed to PUSH BY 05:45Z and report by one-shot trigger to CONDUCT #20:
   | row | session | base | branch |
   | D-486 | session_01Ae2P1iE8tf4RQTeMT5TaGd | batch10 cff0ede6 | land/worker/D-486 |
