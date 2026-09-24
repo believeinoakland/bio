@@ -9,6 +9,9 @@
    (g) OVER-STRICTNESS, and it is the arm this file exists to survive: a REAL site is rewritten to carry its row itself, in a SHAPE THIS SUITE WAS NOT WRITTEN AROUND — the code spelled in `code` with NO `reason` at all, the row IMPORTED rather than hand-copied (an equality that costs nothing is not evidence), an extra key the grader has never seen. It MUST PASS. A grader that reports correct work as bare is worse than no grader, because it teaches the next author to route around it.
    (h) REC-185 — `op=purge`'s CODED REFUSAL REVERTED TO ITS BARE SENTENCE at its site in `src/index.mjs`, the whole refusal restored to the pre-REC-185 answer rather than one key deleted, so the arm is the defect and not a caricature of it. Section 6b MUST FAIL BY NAME on four of its six lines — no code, no C-number and no canned translation, no argument/shape, and no "Nothing was changed." on the one op that destroys a record. MUST NOT FAIL: 6b's `error` line, because the sentence is byte-identical either way and that is precisely what makes this an arm about the CODE and not about the wording; nor anything in section 2c, whose two walks do not read this site (it carries no spread, and it never left by a raw `new Response`) — an arm that took those down with it would be moving a second variable.
    (i) REC-185's OVER-STRICTNESS ARM, on the REAL site: `op=purge`'s refusal rebuilt AT ITS SITE in a spelling 6b was not written around — the code in `code` with NO `reason`, the row IMPORTED from `REQUIRED_ARGUMENT_CHECKS` rather than hand-copied, the `detail` worded unlike anything the helper writes, an extra key the grader has never seen. It MUST PASS: 6b grades whether a caller is told the FACT, never whether the helper was the author.
+   (j) D-494 — A FENCE'S MINT DROPPED AT ITS SITE IN `src/store.mjs`: `MACHINE_CANNOT_REVIEW`'s literal replaced with a code the harvest does not match, so the catalogue row survives a fence that no longer exists. Section 3b MUST FAIL naming `MACHINE_CANNOT_REVIEW` under `cataloguedMintedNowhere` — BY NAME, never on a count. MUST NOT FAIL: 3b's template census, and nothing in 2c or 6b. Section 3's older `store.mjs`-only floor MAY also fail on the same loss; that is the two instruments agreeing over one variable, not a second variable.
+   (k) D-494's OVER-STRICTNESS ARM: `MACHINE_CANNOT_GROUND` hoisted into a `const` above its DEC-49 region and minted THROUGH THE VARIABLE — the shape a `machineFenceRow` refactor produces and the one section 3b was not written around. It MUST PASS: the widened harvest walks literals wherever they stand. A RED here would be an instrument demanding one syntax, which is how a check comes to be routed around.
+   RUN 2026-09-24 BY THE D-494 WORKER on branch `land/worker/D-494`, TWICE — once over origin/main 0fdef669 and again after rebasing onto origin/main d536f834 (which moved `src/store.mjs`, so the figures were RE-MEASURED rather than carried across the rebase; they agree), and the figures are the ones the driver PRINTED: **a GREEN 35/0 · b RED 31/4 · c RED 32/3 · d RED 1/2 · e RED 29/6 · f RED 34/1 · g GREEN 35/0 · h RED 31/4 · i GREEN 35/0 · j RED 33/2 · k GREEN 35/0 — ALL ELEVEN AS DECLARED**, all three files byte-identical to their pristine-of-record by sha256 AND by `cmp` (on d536f834: `src/store.mjs` 3164607 bytes sha `213ad1fa0b4dd608…`, `src/index.mjs` 779787 bytes sha `ee3c550c242f7895…`, `test/refusal-wire.test.mjs` 66452 bytes sha `32e24d56b970eda4…`). Arm (j)'s two failures are the declared one plus section 3's older `store.mjs`-only floor, which reads the same loss — the two instruments agreeing over one variable. **AND THE DRIVER ITSELF WAS CORRECTED BY THIS ARM RATHER THAN THE ARM BY THE DRIVER:** the first run printed arm (j) RED on a label TRUNCATED AT 200 CHARACTERS, so the driver's own output said a line had failed and NOT which fence it failed over — the count-not-names reading this item exists to refuse, in the instrument that grades the item. The driver now prints each FAIL's `want`/`got` continuation and was RE-RUN rather than adjusted on paper; the figures above are the second run's, and arm (j)'s `got` reads `cataloguedMintedNowhere: ["MACHINE_CANNOT_REVIEW"]`.
    RUN 2026-09-24 BY THE REC-185 WORKER on branch `land/worker/REC-185` over origin/main 548eb2c5, TWICE, and the figures are the ones the driver PRINTED: FIRST PASS **ARM (f) CAME BACK GREEN 33/0 WHERE IT IS DECLARED RED** — not this item's arm and not a broken arm, but the fence floor of 12 gone slack against a family of 14, which had disarmed (f) silently. The floor was moved to the measured 14 with its reason at the site and the driver RE-RUN rather than adjusted on paper: **a GREEN 33/0 · b RED 29/4 · c RED 30/3 · d RED 1/2 · e RED 27/6 · f RED 32/1 · g GREEN 33/0 · h RED 29/4 · i GREEN 33/0 — ALL NINE AS DECLARED**, all three files byte-identical to their pristine-of-record by sha256 AND by `cmp`. Arm (h)'s four failures are exactly the four declared and no others.
    RUN 2026-08-09 IN WORKTREE agent-a0afb13cbfcc0d6b9, THREE TIMES, and the figures are the ones the driver PRINTED. FIRST RUN (suite at 22 assertions): six of seven as declared — a GREEN 22/0, b RED 18/4, c RED 19/3, e RED 15/7, f RED 21/1, g GREEN 22/0. **ARM (d) CAME BACK `NO TALLY` RATHER THAN RED, AND IT IS RECORDED HERE RATHER THAN SMOOTHED: the arm was right and the INSTRUMENT was wrong.** A blind catalogue made every later block read `ROWS.get(code).translation` on `undefined`, so a `TypeError` ended the module while the tally read clean — WORKER.md's named failure, arriving inside the file built to find that class. Corrected in two ways at once (every `ROWS.get` read is null-tolerant, and a corpus below its floor HALTS at the floor with its tally printed) and RE-RUN: all seven as declared. THIRD RUN against the FINAL suite (23 assertions, after the static-class block landed) — re-run rather than adjusted on paper, because a figure carried forward across an edit is a figure nobody measured: **ALL SEVEN AS DECLARED — (a) GREEN 23/0 · (b) RED 19/4 · (c) RED 20/3 · (d) RED 1/2 · (e) RED 16/7 · (f) RED 22/1 · (g) GREEN 23/0**, all three files byte-identical to their pristine-of-record by sha256 and by `cmp`.
  * =========================================================================
@@ -403,6 +406,116 @@ t("the fence harvest found a REAL family and not an empty set — and the floor 
 t("every harvested fence has a catalogue row with a canned translation — REC-64's work, and the "
 + "precondition for asking whether it reaches anybody",
   FENCES.filter((c) => !ROWS.has(c)), []);
+
+/* ====================================================================== 3b
+ * D-494 · THE HARVEST WIDENED TO BOTH SOURCES, AND THE CATALOGUE GRADED
+ * AGAINST IT BY NAME.
+ *
+ * WHY THIS EXISTS, AND IT IS REC-185's OWN FINDING RATHER THAN A TIDY-UP.
+ * Section 3's harvest reads `store.mjs` only, and only the `MACHINE_CANNOT_`
+ * spelling, so it finds 14 where `MACHINE_FENCE_CHECKS` holds 18. REC-185
+ * measured that gap, said plainly it had not derived the floor, and reported
+ * the four unseen codes to SCHEDULER by name. **Four catalogued fences were
+ * therefore governed by a catalogue nothing checked against the code**: the two
+ * `MACHINE_CANNOT_RATIFY*` rows (REC-123/IC-132) and the three
+ * `OPERATOR_TOKEN_CANNOT_*` rows (REC-125/IC-137, BOB #14's D-421) are all
+ * minted in `index.mjs`, which section 3 does not read. A row whose fence had
+ * been deleted would have read exactly the same as one whose fence is standing,
+ * which is `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 believed on the
+ * strength of its EXISTENCE rather than its behaviour — the defect this file
+ * was built to find, one level up, in this file.
+ *
+ * THE ANSWER IS A DERIVATION AND NOT A SECOND FLOOR. A number goes stale the
+ * day a nineteenth fence lands; this grades the two corpora against each other
+ * BY NAME, so a fence added, moved between sources, or deleted moves a NAME and
+ * not a count. **A catalogued fence with NO site anywhere is a DEFECT and this
+ * gate says so** — the row is either deleted or the fence is built; it is never
+ * allow-listed, because an allow-list of missing fences is the catalogue lying
+ * about the plane in the direction that costs nothing.
+ *
+ * WHAT THIS MATCHER CAN AND CANNOT SEE, and the sentence is load-bearing:
+ *   - IT CAN SEE a fence code written as a STRING LITERAL anywhere in either
+ *     source with comments blanked — at its refusal site, inside a
+ *     `machineFenceRow("…")` call, or ASSIGNED TO A VARIABLE that the refusal
+ *     then mints through. The last is why this walks literals rather than
+ *     `reason:` sites: a variable mint is still a literal somewhere, and a
+ *     harvest keyed to one syntax is the staleness this file exists to refuse.
+ *   - IT CANNOT SEE a code ASSEMBLED from a template (`` `MACHINE_CANNOT_${x}` ``)
+ *     — no static walk can name such a code. That is not left as prose: the
+ *     template census below is PRINTED and GATED AT EMPTY, so the day one
+ *     arrives it is a named failure here rather than a silent hole.
+ *   - IT IS A SOURCE WALK, not a drive. That a fence is MINTED says nothing
+ *     about whether the act reaches it; `test/machine-fences.test.mjs` grades
+ *     the fence against the act, and section 4 below grades the wire.
+ * ==================================================================== */
+console.log("\n--- 3b. D-494 · the catalogue vs the WIDENED harvest (both sources, both spellings) ---");
+
+const FENCE_LITERAL = /"((?:MACHINE|OPERATOR_TOKEN)_CANNOT_[A-Z_]+)"/g;
+const SITES = new Map();                       /* code -> [{ file, line }] */
+for (const [file, bare] of [["src/store.mjs", STORE_BARE], ["src/index.mjs", INDEX_BARE]]) {
+  for (const m of bare.matchAll(FENCE_LITERAL)) {
+    if (!SITES.has(m[1])) SITES.set(m[1], []);
+    const at = SITES.get(m[1]), line = lineOf(bare, m.index);
+    if (!at.some((s) => s.file === file && s.line === line)) at.push({ file, line });
+  }
+}
+
+/* A code this walk cannot name. Gated at empty rather than described. */
+const TEMPLATED = [];
+for (const [file, bare] of [["src/store.mjs", STORE_BARE], ["src/index.mjs", INDEX_BARE]])
+  for (const m of bare.matchAll(/`[^`\n]*(?:MACHINE|OPERATOR_TOKEN)_CANNOT_[A-Z_]*\$\{[^`\n]*`/g))
+    TEMPLATED.push(`${file} L${lineOf(bare, m.index)}  ${m[0].slice(0, 80)}`);
+
+const CAT = CHECK_CATALOGUE.MACHINE_FENCE_CHECKS;
+const CAT_CODES = Object.keys(CAT).sort();
+const whereFile = (w) => (/(src\/[A-Za-z.]+\.mjs)/.exec(String(w)) || [])[1] || null;
+const familyOf = (c) => (ROWS.get(c) || {}).family || null;
+
+console.log(`    MACHINE_FENCE_CHECKS holds ${CAT_CODES.length} row(s); the widened harvest finds `
+          + `${SITES.size} code(s) minted across src/store.mjs + src/index.mjs`);
+for (const code of [...SITES.keys()].sort()) {
+  const at = SITES.get(code).map((s) => `${s.file}:${s.line}`).join(", ");
+  console.log(`      ${(familyOf(code) === "MACHINE_FENCE_CHECKS" ? "   " : "  *")} ${code.padEnd(34)} `
+            + `${(familyOf(code) || "NO ROW IN ANY _CHECKS FAMILY").padEnd(22)} ${at}`);
+}
+for (const code of CAT_CODES) if (!SITES.has(code))
+  console.log(`      !!! ${code} — CATALOGUED AND MINTED NOWHERE (${CAT[code].check}, where says ${CAT[code].where})`);
+console.log(`    templated/assembled codes this walk cannot name: ${TEMPLATED.length}`);
+for (const l of TEMPLATED) console.log(`        ${l}`);
+
+/* THE AGREEMENT, IN NAMES. Each of the three lists is a different way for the
+   catalogue and the plane to disagree, and each is reported as NAMES so the
+   failure says WHICH fence rather than how many.
+     1. a catalogued fence minted nowhere — the DEFECT the row names;
+     2. a catalogued fence whose `where` names a source it is NOT minted in —
+        the row drifted from the code it governs (REC-123 moved two fences from
+        `store.mjs` to `index.mjs`, which is exactly this shape);
+     3. a minted fence outside `MACHINE_FENCE_CHECKS` — pinned as a SET with the
+        family that DOES hold it, so a sixteenth `MACHINE_CANNOT_*` catalogued
+        somewhere else is a name to look at and not a silent pass.
+   A code in list 3 with NO family at all is a bare code on the wire, and it
+   fails here reading `NO ROW IN ANY _CHECKS FAMILY`. */
+const cataloguedMintedNowhere = CAT_CODES.filter((c) => !SITES.has(c));
+const whereNamesTheWrongSource = CAT_CODES.filter((c) => SITES.has(c))
+  .filter((c) => whereFile(CAT[c].where) && !SITES.get(c).some((s) => s.file === whereFile(CAT[c].where)))
+  .map((c) => `${c} — where says ${whereFile(CAT[c].where)}, minted in `
+             + `${[...new Set(SITES.get(c).map((s) => s.file))].sort().join(" + ")}`);
+const mintedOutsideTheFenceFamily = [...SITES.keys()].filter((c) => !CAT_CODES.includes(c)).sort()
+  .map((c) => `${c} -> ${familyOf(c) || "NO ROW IN ANY _CHECKS FAMILY"}`);
+
+t("D-494 · the CATALOGUE and the WIDENED HARVEST agree, BY NAME and not by count: every one of "
++ "MACHINE_FENCE_CHECKS' rows is minted in the source its `where` names, and the only fence-shaped "
++ "code minted outside that family is MACHINE_CANNOT_MOVE_VERSION, which VERSION_ACT_CHECKS holds "
++ "on purpose (C-25.24, REC-46's one predicate at the six version acts' one transition). A row "
++ "minted nowhere is a DEFECT — delete the row or build the fence; it is never allow-listed here",
+  { cataloguedMintedNowhere, whereNamesTheWrongSource, mintedOutsideTheFenceFamily },
+  { cataloguedMintedNowhere: [], whereNamesTheWrongSource: [],
+    mintedOutsideTheFenceFamily: ["MACHINE_CANNOT_MOVE_VERSION -> VERSION_ACT_CHECKS"] });
+
+t("D-494 · no fence code is ASSEMBLED from a template — the one spelling no static harvest can "
++ "name, gated at empty rather than described, because a hole stated in prose is a hole nobody "
++ "is watching",
+  TEMPLATED, []);
 
 /* ====================================================================== 4
  * THE DRIVE.

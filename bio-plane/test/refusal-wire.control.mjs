@@ -7,7 +7,7 @@
  *
  *     node test/refusal-wire.control.mjs            (from bio-plane/)
  *
- * NINE ARMS (seven D-262's, h and i REC-185's), each armed ALONE with every other defence held OPEN, DECLARED
+ * ELEVEN ARMS (seven D-262's, h and i REC-185's, j and k D-494's), each armed ALONE with every other defence held OPEN, DECLARED
  * BEFORE ARMING (the declarations are in the subject suite's own
  * `NEGATIVE CONTROL:` header so the next session re-runs them in one step), and
  * every restore verified BY sha256 AND BY CONTENT (`cmp`) against a UNIQUELY
@@ -127,7 +127,18 @@ const arm = (id, label, file, patch, declared) => {
     results.push({ id, label, declared, actual: verdict, pass: r.pass, fail: r.fail, exit: r.exit, out: r.out });
     console.log(`\nARM ${id} — ${label}\n  declared ${declared} · actual ${verdict} · ${r.pass} pass, ${r.fail} fail · exit ${r.exit}`);
     if (verdict === "RED") {
-      for (const line of r.out.split("\n").filter((l) => l.includes("FAIL  "))) console.log(`    ${line.trim().slice(0, 200)}`);
+      /* D-494: the FAILING line AND its `want`/`got` continuation. An arm
+         declared to fail BY NAME is only observed to have done so if the names
+         are in the driver's own output — a truncated label says a line failed
+         and not which fence it failed over, which is the count-not-names
+         reading this item exists to refuse. */
+      const lines = r.out.split("\n");
+      for (let i = 0; i < lines.length; i++) {
+        if (!lines[i].includes("FAIL  ")) continue;
+        console.log(`    ${lines[i].trim().slice(0, 200)}`);
+        for (let j = i + 1; j < lines.length && /^\s+(?:want|got) /.test(lines[j]); j++)
+          console.log(`      ${lines[j].trim().slice(0, 400)}`);
+      }
     }
   } finally {
     if (file) {
@@ -269,6 +280,44 @@ arm("i", "op=purge's refusal built AT ITS SITE in an unanticipated spelling — 
                       got: confirm, tokenClass: cls, store: storeName }, 400);`),
   "GREEN");
 
+
+/* ---------------------------------------------------------------- ARM j
+   D-494 · A FENCE'S MINT DROPPED, IN THE SOURCE AND NOT IN THE INSTRUMENT.
+   `MACHINE_CANNOT_REVIEW`'s literal is taken out of `store.mjs` at its own
+   refusal site and replaced with a code shape the harvest does not match — so
+   the catalogue still holds the row, the act still refuses, and NOTHING in the
+   plane says the fence the row governs is gone. That is the state a deleted
+   fence would leave behind, and section 3b MUST FAIL NAMING
+   `MACHINE_CANNOT_REVIEW` in `cataloguedMintedNowhere`. A run that failed here
+   on a COUNT rather than on the name would not be this arm passing.
+   Section 3's own harvest sees the same loss (it reads `store.mjs` too), so its
+   floor line may fail as well; that is the older instrument agreeing, not a
+   second variable. */
+arm("j", "MACHINE_CANNOT_REVIEW's mint removed from its site — src/store.mjs (THE SUBJECT)", STORE,
+  (s) => s.replace('return { ok: false, reason: "MACHINE_CANNOT_REVIEW",',
+                   'return { ok: false, reason: "THE_MACHINE_MAY_NOT_REVIEW",'),
+  "RED");
+
+/* ---------------------------------------------------------------- ARM k
+   D-494 · OVER-STRICTNESS, AND IT IS THE HALF THE WIDENING WAS FOR: a fence
+   MINTED THROUGH A VARIABLE. `MACHINE_CANNOT_GROUND` is hoisted into a `const`
+   above its DEC-49 region and the refusal mints the variable, which is a shape
+   section 3b was not written around and the exact shape a `machineFenceRow`
+   style refactor would produce. IT MUST PASS: the harvest walks LITERALS
+   wherever they stand, so a code that moved into a variable is still named, and
+   an instrument that demanded one syntax would be a check the next author
+   routes around. */
+arm("k", "MACHINE_CANNOT_GROUND minted through a VARIABLE — src/store.mjs (OVER-STRICTNESS)", STORE,
+  (s) => {
+    const hoisted = s.replace('    /* DEC-49 REGION is-machine-ground \u2014 REC-64/C-32.8. The fence alone. */',
+      '    const groundFenceCode = "MACHINE_CANNOT_GROUND";   /* D-494 arm k: the code in a variable */\n'
+    + '    /* DEC-49 REGION is-machine-ground \u2014 REC-64/C-32.8. The fence alone. */');
+    if (hoisted === s) throw new Error("ARM k NEVER ARMED \u2014 the region anchor matched zero times");
+    return hoisted.replace('return { ok: false, reason: "MACHINE_CANNOT_GROUND",',
+                           'return { ok: false, reason: groundFenceCode,');
+  },
+  "GREEN");
+
 /* ------------------------------------------------------------------ FOOT */
 console.log("\n================================================== D-262 CONTROL SUMMARY");
 let wrong = 0;
@@ -285,5 +334,5 @@ for (const p of [INDEX, STORE, SUITE]) {
   execFileSync("cmp", ["-s", p, OF_RECORD[p].copy]);
 }
 for (const p of [INDEX, STORE, SUITE]) if (existsSync(`${p}.d262-of-record`)) rmSync(`${p}.d262-of-record`);
-console.log(`\n${wrong === 0 ? "ALL NINE ARMS AS DECLARED" : `${wrong} ARM(S) NOT AS DECLARED — record them, do not smooth them`}`);
+console.log(`\n${wrong === 0 ? "ALL ELEVEN ARMS AS DECLARED" : `${wrong} ARM(S) NOT AS DECLARED — record them, do not smooth them`}`);
 process.exit(0);
