@@ -2216,8 +2216,8 @@ correspondence would be worth less and could mislead a published case.
 **RULED 2026-09-24 by Bob (option D of five BOB #32 put to him): a PUBLISHED case's OWNERS are told ONCE.**
 When a document a published case cites has a newer version at its address, the case's owners, the members who can
 publish a new edition, receive ONE notice. Other members and the public are not told. The published case is never
-marked or altered (DEC-19), and a new edition stays the owners' choice (DEC-69). Anyone may still ASK through
-`op=versionnotice`. NOT BUILT: the owners' notice and its surface (4.cross-version-ui). Nothing above changes §14.4, the row's identity,
+marked or altered (DEC-19), and a new edition stays the owners' choice (DEC-69). Anyone may still ASK, through
+the cross-version read D-394 built (on its way to `main`). NOT BUILT: the owners' notice and its surface (4.cross-version-ui). Nothing above changes §14.4, the row's identity,
 or the rule that an authored edge moves only by a member's act.
 
 ---
