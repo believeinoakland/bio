@@ -20123,3 +20123,22 @@ paths, BY SITE:
 
 **open as of 2026-09-24** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.
 amended 2026-09-24 (two things, one line each). (1) REBASED: the branch's base is now `origin/main` @ `1a7f0bcc` (the c20-batch24c train) and no longer `e9b21be6` — the train the brief named as gating reached `main` mid-item, so the item was rebased onto it and re-verified there. (2) ALSO `notifDisposedHtml` in `civicos-ui/app.html` — SIX LINES at its head and nothing else. The claim above said NOT touched, and that was right until the item's second half existed: rendering `op=queue`'s own `disposed` block beside a page-local map of the same decisions would show one decision TWICE, a second place a fact is stated (D-21/DEC-8) and the very defect the plane's `disposed` block was built to end (its own comment in `store.mjs` names this map as the honest stopgap it replaces). So the map now renders only the decisions the record's block does not yet carry, keyed on the decision's own key, which both producers spell the same way. `notifRememberDisposition` is untouched, and so is REC-211's `queueDispositionVersion` — that reads an OPEN item's `disposition` block for the SEND path and is the opposite direction from this item's read-back.
+
+## DELEGATION 2026-09-24 RECORD (WORKER REC-199) -> UI — **THE REVIEW COPY NOW SAYS `newCase` BACK, AND `rvcFormFromCopy` STILL DOES NOT READ IT**
+
+**open as of 2026-09-24** — the plane half landed on `land/worker/REC-199`; no surface reads the field, so the loss
+this row exists to close is still reachable through the member UI.
+
+REC-199 (IC-285, BOB #32's ruling of 2026-09-23 23:08Z) makes `op=reviewcopy`'s `case` block carry a boolean
+`newCase` beside `case_id`, `edition` and `identity`. `civicos-ui/app.html`'s `rvcFormFromCopy` — the read-back that
+rebuilds the draft form when a member re-opens `#draft/<id>` — sets `caseMode` from `c.case.case_id` only, so a
+draft that asked for a NEW case still comes back with the choice unmade, and `rvcDraftBody` then writes it back
+WITHOUT `newCase`: the draft silently becomes one whose case is DERIVED from what its findings already serve, which
+is the D-309 override the field exists to refuse. Its own comment above the function still states the old fact
+(*"the one thing the answer does not say back is whether a draft naming no case was marked as a new one, so that
+choice starts unmade rather than guessed"*), and that sentence is now false.
+
+**THE ACT, and its actor: UI sets `f.caseMode = "new"` from `c.case.newCase` in `rvcFormFromCopy` (beside the
+existing `case_id` branch, which keeps precedence — the plane refuses both together as `CASE_IDENTITY_AMBIGUOUS`),
+and corrects that comment.** RECORD does not edit `civicos-ui/**`. The plane-side arm that proves the round trip is
+`bio-plane/test/reviewcopy.test.mjs` block 10; the surface's own round trip is not driven anywhere yet.
