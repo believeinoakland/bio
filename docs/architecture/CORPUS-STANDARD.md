@@ -217,7 +217,6 @@ joins the table in the same commit that gives it front matter.
 | `docs/development/CAPTURE-FIDELITY.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
 | `docs/development/CLIENT-RENDERED.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
 | `docs/development/INBOX-GRAMMAR.md` | 2 | construct 14 has no level-1 document (`BIO_System_Design.md` §3) | 2026-09-14 |
-| `docs/development/DOORBELL.md` | 2 | construct 14 has no level-1 document (`BIO_System_Design.md` §3) | 2026-09-24 |
 | `docs/development/PRACTICE-SURVEY.md` | 2 | `BIO_Interaction_Constructs_v0_1.md` | 2026-09-14 |
 | `docs/development/FINDINGS-WORKPLAN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part I §12 | 2026-09-14 |
 | `docs/development/RETRIEVAL-PROBE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3 | 2026-09-14 |
