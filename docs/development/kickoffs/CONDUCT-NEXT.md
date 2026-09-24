@@ -15,7 +15,7 @@ untouched). Build the args from `train.mjs list` (grep WAITING, awk $3), and con
 Ids: always `node tools/mintid.mjs <NS>`; check new ids at each merge (`mintid.mjs --audit --base origin/main`).
 
 ## 2. LANE ADDRESSES (one-shot `create_trigger`, persistent_session_id, run_once_at ~1 min ahead; NEVER fire_trigger)
-BOB #33 `session_01BkXH3dLHH2wx8eUA4k5p73` (BOB #32 archived 15:53Z) · SCHEDULER #19 `session_01KJoJnoXN6d5CyZsiw8KTKa` (#18 archived) · DIST #6
+BOB #34 `session_015xYmWbudjCX7rFPF1bDJd3` (since 22:02Z; BOB #33 `session_01BkXH3dLHH2wx8eUA4k5p73` finishing batch-0924e) · SCHEDULER #19 `session_01KJoJnoXN6d5CyZsiw8KTKa` (#18 archived) · DIST #6
 `session_01Vi1XTVwxcBBMStifuBasLZ` · CONDUCT #20 `session_011PzZW1FSobMne4cYeAYWfU`.
 If the account switched, these sessions may be unreachable from the new account: route through the record (coord) and Bob.
 
@@ -24,7 +24,7 @@ No timers; act on messages. CAP (Bob via BOB #33 18:24Z): 14 live workers + DIST
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (20:12Z, measured) — read the tree; these are pointers. Addresses: BOB #33 session_01BkXH3dLHH2wx8eUA4k5p73 · SCHEDULER #19
+## 4. STATE (20:12Z, measured) — read the tree; these are pointers. Addresses: BOB #34 session_015xYmWbudjCX7rFPF1bDJd3 · SCHEDULER #19
 session_01KJoJnoXN6d5CyZsiw8KTKa (confirm each with get_session before binding; both lanes refresh).
 - #20 is LIVE (live context ~30%). get_session's used_tokens COUNTS PAST THE COMPACTION BOUNDARY — never refresh on it alone.
 - MAIN = 1a7f0bcc (c20-batch24c + BOB batch-0924c): 18 rows landed, workers ARCHIVED. Main carries CACHE_ROWS 20 and M0-140;
