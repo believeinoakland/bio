@@ -36,6 +36,13 @@
  *   (6) DEC-32 CLAUSE 1 / D-226 — NOT ONE ANALYST WORD ON ANY SURFACE THIS ITEM
  *       RENDERS. A SWEEP over every phase, with the fixture deliberately
  *       carrying the banned words in a place a careless renderer would print.
+ *   (7) UI-86 — A FINDING IS OFFERED A MUTE (BOB #26, D-125; NOTIFICATIONS.md
+ *       "MARKED AS HANDLED"). §2: a feed holding only a lead draws a per-item
+ *       mute that reaches `op=queuemute` as `{ item }` — the REQUEST BODY is
+ *       read, because a liar offers the control and sends the case form — and
+ *       the suppression is reported from `mute.items`, including an item muted
+ *       earlier that is not live now. §2's old "NO MUTE IS OFFERED ON A FINDING"
+ *       pin and §4's whole-page kind read are CORRECTED IN PLACE, each with why.
  *
  * ---- THE TWO SLUGS THIS ITEM'S ROW NAMES AND THIS SURFACE DOES NOT RENDER
  *
@@ -63,10 +70,16 @@
  *     driven directly at the current address — the honest substitute, and it is
  *     labelled as one here the way UI-42's is in its own file.
  *
- * NEGATIVE CONTROL: `node civicos-ui/test/notifications.control.mjs` — eight
+ * NEGATIVE CONTROL: `node civicos-ui/test/notifications.control.mjs` — sixteen
  * arms, each armed ALONE on the real `civicos-ui/app.html` with every other
- * defence held open, including two OVER-STRICTNESS arms and a BASELINE row.
- * Declared expectations and measured results are in that file's header.
+ * defence held open, including three OVER-STRICTNESS arms and a BASELINE row.
+ * Declared expectations and measured results are in that file's header. UI-86,
+ * RUN 2026-09-24: 16 of 16 as declared, exit 0, every restore verified by sha256
+ * and cmp. ARM 12 (the row's control: restore the CONDITION-only filter in
+ * `queueMutableItem`) fails "§2 a FINDING is offered a mute" by name; ARM 13 (the
+ * liar: control offered, CASE form sent) fails "…AS THE ITEM FORM"; ARM 13b (the
+ * report stops reading `mute.items`) fails "…SUPPRESSION READS UNDER mute.items";
+ * ARM 14 (the class rule in another spelling) stays GREEN.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
@@ -276,6 +289,15 @@ function makePlane(cfg){
   const CALLS = [];
   const R = o => ({ ok:true, json:async()=>({ ok:true, result:o }) });
   const DISPOSED = new Set();
+  /* UI-86 · the mute, mirroring D-125's `op=queuemute` (store.mjs `queueMute`):
+     the ITEM form keyed on the item's id and on no case, refused when named
+     beside a case or kinds, refused for an OBLIGATION by class; the CASE form
+     over CONDITION and FINDING kinds. `op=queue` then REPORTS both — `mute.cases`,
+     `mute.items` (every item muted, live or not) and `suppressed[]` with `scope`.
+     `cfg.mutedItems` seeds an item mute whose item is NOT live, which is the
+     phase that shows the report reads `mute.items` and not only `suppressed`. */
+  const MUTED_ITEMS = new Set(cfg.mutedItems || []);
+  const MUTED_CASE = new Map();          // case -> Set(kinds)
   /* THE BODY IS READ, NOT ONLY THE QUERY. `op=proposedispose` is a POST and its
      key, disposition and reason travel in the JSON body — a mock reading only
      `searchParams` would receive three undefineds and answer happily, which is
@@ -291,17 +313,28 @@ function makePlane(cfg){
       try{ body = JSON.parse(opts.body) || {}; }catch(_){ body = {}; }
     }
     const p = { ...Object.fromEntries(url.searchParams.entries()), ...body };
-    CALLS.push({ op, params:p });
+    /* UI-86: the BODY is kept apart as well as merged. The item mute's acceptance
+       is about WHICH FORM travelled — `{item}` and nothing else — and a merged
+       view cannot tell a body field from a query one. */
+    CALLS.push({ op, params:p, body });
     if(op === "queue"){
       if(cfg.queueFails) return { ok:false, json:async()=>({ ok:false, error:"boom" }) };
-      const items = (cfg.items || []).filter(i => !DISPOSED.has(String(i.id).replace(/^FINDING::/, "")));
+      const open = (cfg.items || []).filter(i => !DISPOSED.has(String(i.id).replace(/^FINDING::/, "")));
+      const suppressed = [];
+      const items = open.filter(i => {
+        if(MUTED_ITEMS.has(String(i.id))){ suppressed.push({ id:i.id, class:i.class, kind:i.kind, case:null, scope:"item" }); return false; }
+        const home = ((i.case && i.case.ancestors) || []).map(a => a.id).find(cid => MUTED_CASE.has(cid) && MUTED_CASE.get(cid).has(i.kind));
+        if(home){ suppressed.push({ id:i.id, class:i.class, kind:i.kind, case:home, scope:"case" }); return false; }
+        return true;
+      });
       const answer = {
         ok:true, member:"m_alice", items,
         limit:500, item_count:items.length, truncated:false,
         classes: cfg.classes || ["OBLIGATION","FINDING","CONDITION"],
         classes_deferred: cfg.classesDeferred || [],
         ancestor_depth_bound: 6,
-        mute:{ personal:true, cases:[], suppressed:[], suppressed_count:0,
+        mute:{ personal:true, cases:[...MUTED_CASE.keys()].sort(), items:[...MUTED_ITEMS].sort(),
+               suppressed, suppressed_count:suppressed.length,
                detail:"muting is PERSONAL and dismissing is a RECORD ACT." },
       };
       if(!cfg.noCounts)
@@ -314,6 +347,26 @@ function makePlane(cfg){
       return R(answer);
     }
     if(op === "tasks") return R({ ok:true, tasks:[], counts:{ resolved:0 }, limit:500, truncated:false });
+    if(op === "queuemute"){
+      const item = typeof body.item === "string" ? body.item.trim() : "";
+      const kinds = Array.isArray(body.kinds) ? body.kinds : [];
+      if(item){
+        if(kinds.length || body.case) return R({ ok:false, reason:"BAD_KIND", item,
+          detail:"name EITHER one item OR kinds on a case, not both" });
+        const cls = /^(FINDING|CONDITION)::/.exec(item);
+        if(!cls) return R({ ok:false, reason:"KIND_NOT_PERSONAL", item, kind_class:"OBLIGATION",
+          detail:"an obligation leaves every list only when it is resolved" });
+        MUTED_ITEMS.add(item);
+        return R({ ok:true, member:"m_alice", form:"item", item, item_class:cls[1],
+                   muted_items:[...MUTED_ITEMS].sort() });
+      }
+      const bad = kinds.find(k => !["CONDITION","FINDING"].includes(classOfKind(k)));
+      if(!body.case || !kinds.length || bad) return R({ ok:false, reason:"KIND_NOT_PERSONAL", kind:bad || null,
+        kind_class: bad ? classOfKind(bad) : null, detail:"an obligation leaves every list only when it is resolved" });
+      if(!MUTED_CASE.has(body.case)) MUTED_CASE.set(body.case, new Set());
+      for(const k of kinds) MUTED_CASE.get(body.case).add(k);
+      return R({ ok:true, member:"m_alice", case:body.case, muted_kinds:[...MUTED_CASE.get(body.case)].sort() });
+    }
     if(op === "proposedispose"){
       DISPOSED.add(String(p.key || ""));
       return R({ ok:true, key:p.key, progression_key:"procurement", stage_key:"solicitation",
@@ -380,7 +433,7 @@ const EXPORTS = ";globalThis.__PLANE=PLANE;globalThis.__renderQueue=renderQueue;
   + "globalThis.__author=proposalActAuthor;globalThis.__dispose=doProposalDispose;"
   + "globalThis.__keyed=notifDispositionKeyed;globalThis.__grain=notifOptionsGrainHtml;"
   + "globalThis.__entry=notifBasisEntryHtml;globalThis.__absence=notifAbsenceHtml;"
-  + "globalThis.__mutable=queueMutableKinds;"
+  + "globalThis.__mutable=queueMutableKinds;globalThis.__muteItem=queueMuteItem;"
   + "globalThis.__stanceOpen=stanceOpen;globalThis.__stanceSend=stanceSend;"
   + "globalThis.__stanceRoute=stanceRouteFromHash;globalThis.__STANCE=()=>STANCE;"
   + "globalThis.__STANCE_ASK=STANCE_ASK;globalThis.__STATE_WORD=VREV_STATE_WORD;"
@@ -492,16 +545,65 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
      /no words for/.test(h4) && /partially_looked/.test(h4)
      && !/The record LOOKED, and this document is part of no case/.test(h4));
 
-  /* THE DELIBERATE CLOSURE, PINNED. PL-15: *"DO NOT OFFER A MUTE ON IT."*
-     op=queuemute refuses the kind by name, so a mute control here would be one
-     the record cannot honour. The queue already honours this; the pin is what
-     keeps it true. */
-  ok("§2 NO MUTE IS OFFERED ON A FINDING — the mute control reaches CONDITION kinds only, which is the "
-     + "class op=queuemute will accept, and a lead-only feed therefore draws no mute at all",
-     !/data-mute=/.test(html) && ctx.__mutable([LEAD("absent")]).length === 0);
-  ok("§2 INSTRUMENT: and the same helper DOES find a condition kind, so the arm above is not passing "
-     + "because the helper answers empty for everything",
-     ctx.__mutable([CONDITION]).length === 1);
+  /* CORRECTED IN PLACE BY UI-86 (2026-09-24), NEVER EXEMPTED. THIS ARM READ:
+     *"§2 NO MUTE IS OFFERED ON A FINDING — the mute control reaches CONDITION
+     kinds only, which is the class op=queuemute will accept, and a lead-only feed
+     therefore draws no mute at all"*, pinning PL-15's *"DO NOT OFFER A MUTE ON
+     IT."* It was RIGHT on its day: `op=queuemute` refused a FINDING kind by name,
+     so a mute on the lead was a control the record could not honour.
+     WHY IT IS WRONG NOW: BOB #26 ruled on 2026-09-22 that a member's PERSONAL
+     mute admits FINDING kinds (NOTIFICATIONS.md "MARKED AS HANDLED"; DEC-10's
+     (b) per item and (c) per case), and D-125 built both forms on the plane on
+     2026-09-23. From then on the pin was keeping a choice the record honours
+     away from the member. What the old arm protected still holds and is asserted
+     below: the mute writes NO disposition and moves nobody else's list — the
+     plane's `wrote` and `op=proposals` carry that, and this surface sends only
+     the member's own preference. */
+  ok("§2 a FINDING is offered a mute — a feed holding only a lead draws the per-item control on the "
+     + "lead, keyed on the lead's own published id (DEC-10's (b), D-125)",
+     html.includes('data-muteitem="FINDING::out-of-inquiry-lead::CR-2026-0031"')
+     && ctx.__mutable([LEAD("absent")]).join(",") === "out-of-inquiry-lead");
+  ok("§2 and the CASE form names the lead's FINDING kind too, on the case it is filed under (DEC-10's (c))",
+     /data-mute="INQ-2026-0002"/.test(html) && /<span class="mono">out-of-inquiry-lead<\/span>/.test(html));
+  ok("§2 INSTRUMENT: and the same helper finds a condition kind as well, so the arm above is not passing "
+     + "because the helper answers everything",
+     ctx.__mutable([CONDITION]).length === 1 && ctx.__mutable([]).length === 0);
+  const APPTXT = fs.readFileSync(new URL("../app.html", import.meta.url).pathname, "utf8");
+  ok("§2 the per-item control is WIRED to the item act — a control drawn and never bound is worse than none",
+     /querySelectorAll\("#q \[data-muteitem\]"\)\.forEach\(b=>b\.onclick=\(\)=>queueMuteItem\(b\.dataset\.muteitem\)\)/.test(APPTXT));
+
+  /* THE ACCEPTANCE, AND IT READS THE REQUEST BODY. A liar offers the control
+     and sends the CASE form (or a kind) behind it — which would silence every
+     lead on the case, not this one. So what is asserted is the body that
+     travelled: `{ item }`, exactly one key. */
+  await ctx.__muteItem("FINDING::out-of-inquiry-lead::CR-2026-0031");
+  const mc = plane.CALLS.filter(c => c.op === "queuemute");
+  ok("§2 the lead's mute REACHES op=queuemute AS THE ITEM FORM — the body is exactly { item }, no case, "
+     + "no kinds, no member (a mute is keyed to the session server-side)",
+     mc.length === 1 && JSON.stringify(Object.keys(mc[0].body)) === '["item"]'
+     && mc[0].body.item === "FINDING::out-of-inquiry-lead::CR-2026-0031");
+  const afterMute = keep("the lead after its item mute", q(ctx));
+  ok("§2 the muted lead leaves THIS member's feed",
+     !afterMute.includes('data-id="FINDING::out-of-inquiry-lead::CR-2026-0031"'));
+  ok("§2 and the SUPPRESSION READS UNDER mute.items — the report names the item by its id and says it is "
+     + "live and kept from this member, so the feed is never quietly shorter",
+     /You asked not to be notified about 1 item one at a time/.test(afterMute)
+     && afterMute.includes('<span class="mono">FINDING::out-of-inquiry-lead::CR-2026-0031</span>')
+     && /It is live, and not shown to you below/.test(afterMute));
+  ok("§2 and no disposition act was sent — a mute is not a way to clear the team's question",
+     !plane.CALLS.some(c => c.op === "proposedispose"));
+
+  /* mute.items IS READ FOR ITSELF, not reconstructed from `suppressed`. An item
+     muted earlier that is not live today is in `mute.items` and in no
+     `suppressed` row; a report built from `suppressed` alone says nothing. */
+  const p5 = makePlane({ items:[CONDITION], mutedItems:["FINDING::out-of-inquiry-lead::CR-2026-0031"] });
+  const c5 = boot(p5);
+  await c5.__renderQueue();
+  const h5 = keep("an item mute whose item is not live", q(c5));
+  ok("§2 an item muted earlier and NOT live now is still REPORTED from mute.items — it stays muted for "
+     + "this member if it comes back, and the page says so",
+     /You asked not to be notified about 1 item one at a time/.test(h5)
+     && /It is not on your list right now; if it comes back it stays muted for you/.test(h5));
 }
 
 /* ====== 3. DERIVED, AGGREGATED, AND AGED RATHER THAN VANISHED (§6.4) ====== */
@@ -608,9 +710,15 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
      /<b>OBLIGATION<\/b> — the record looked and raised none/.test(h1));
   ok("§4 and a class that raised some reports the record's own count",
      /<b>FINDING<\/b> — 1 raised/.test(h1));
+  /* CORRECTED IN PLACE BY UI-86: this arm read the WHOLE page, and "here" is the
+     level block. Since UI-86 the case mute names the kinds PRESENT on the case —
+     the record's own token for an item on the screen, which the mute already did
+     for condition kinds — and that is not a roster claiming a producer exists.
+     The arm now reads the block it was written about, and floors that it found it. */
+  const levels = (/<div class="q-levels">[\s\S]*?<\/ul><\/div>/.exec(h1) || [""])[0];
   ok("§4 THE SURFACE NAMES NO KIND HERE — a per-kind roster on the surface would let this page claim a "
      + "producer exists before one does",
-     !Object.keys(QUEUE_FINDING_KINDS).some(k => h1.includes(k)));
+     levels.length > 200 && !Object.keys(QUEUE_FINDING_KINDS).some(k => levels.includes(k)));
 
   /* (b) NO COUNTS AT ALL — a third fact, and it is said rather than shown as
      zero. `counts` absent is not `counts` of zero. */

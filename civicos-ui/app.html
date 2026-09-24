@@ -14140,18 +14140,38 @@ function queueItemHtml(it){
     ${queueOptionsHtml(it)}
     ${notifOptionsGrainHtml(it)}
     ${queueEntryControlsHtml(it)}
+    ${queueItemMuteHtml(it)}
   </article>`;
 }
 
 /* ---- REC-21 / C-3: the mute, on the QUEUE ENTRY ----
-   It reads exactly "Mute conditions on this case" and it reaches CONDITION items
-   ONLY. The kinds it names are the CONDITION kinds PRESENT on this case when the
-   control was drawn — the plane's own scoping rule, and what lets a NEW kind on
-   the same case still reach the member. An OBLIGATION or a FINDING kind is never
-   named here; the plane refuses one if it ever were, and this surface renders
-   THE PLANE'S refusal rather than a sentence of its own. */
+   The kinds it names are the kinds PRESENT on this case when the control was
+   drawn — the plane's own scoping rule, and what lets a NEW kind on the same case
+   still reach the member. An OBLIGATION kind is never named here; the plane
+   refuses one if it ever were, and this surface renders THE PLANE'S refusal
+   rather than a sentence of its own.
+
+   CORRECTED IN PLACE BY UI-86 (2026-09-24), and the old rule was right on its
+   day. This read *"it reaches CONDITION items ONLY"* and filtered on
+   `it.class === "CONDITION"`, because until D-125 `op=queuemute` refused a
+   FINDING kind by name (`MUTE_REFUSAL_DETAIL`) and a control the record cannot
+   honour is worse than none. BOB #26 ruled on 2026-09-22 (NOTIFICATIONS.md
+   "MARKED AS HANDLED") that a member's PERSONAL mute admits FINDING kinds —
+   DEC-10's (c), per case over the kinds named — and D-125 built it on the plane
+   (2026-09-23). A FINDING muted here leaves only THIS member's feed: it stays
+   open for the team, and in op=proposals, until somebody adopts, defers or
+   dismisses it. So the filter that kept findings out of this control was, from
+   D-125 on, a surface withholding a choice the record honours — the defect this
+   correction closes. An OBLIGATION stays out, here and at the plane.
+
+   ONE predicate, `queueMutableItem`, decides the class for BOTH forms — the case
+   form's kinds and the per-item control below — so the two cannot disagree about
+   what a member may mute. */
+function queueMutableItem(it){
+  return !!it && (it.class === "CONDITION" || it.class === "FINDING");
+}
 function queueMutableKinds(items){
-  return [...new Set((items||[]).filter(it => it.class === "CONDITION")
+  return [...new Set((items||[]).filter(queueMutableItem)
                                 .map(it => it.kind).filter(Boolean))].sort();
 }
 /* UI-55 / DEC-69 AS AMENDED — BOTH MODES, AND NEITHER FORCED.
@@ -14195,8 +14215,8 @@ function queueMuteHtml(group){
       }</div>`
     : "";
   return `<div class="q-mute">
-    <button class="tbtn q-mutebtn" data-mute="${esc(group.id)}">Mute conditions on this case</button>
-    <span class="q-mute-what">It reaches condition kinds only, and only for you: ${kinds.map(k=>`<span class="mono">${esc(k)}</span>`).join(", ")}. Muting changes nothing about the record and nothing for anybody else, and an obligation on this case still reaches you — an obligation leaves every list only when it is resolved.</span>
+    <button class="tbtn q-mutebtn" data-mute="${esc(group.id)}">Mute these kinds on this case</button>
+    <span class="q-mute-what">It reaches condition and finding kinds only, and only for you: ${kinds.map(k=>`<span class="mono">${esc(k)}</span>`).join(", ")}. Muting changes nothing about the record and nothing for anybody else. A finding you mute stays open for everyone else until somebody adopts, defers or dismisses it, and an obligation on this case still reaches you — an obligation leaves every list only when it is resolved.</span>
     ${each}
     <div class="q-mute-err" data-muteerr="${esc(group.id)}"></div>
   </div>`;
@@ -14214,19 +14234,84 @@ async function queueMuteCase(caseId, kind){
   finally{ QUEUE_BUSY = false; }
 }
 
+/* UI-86 · DEC-10's (b): STOP NOTIFYING ME ABOUT THIS ONE. The ITEM form of
+   `op=queuemute`, `{ item }`, keyed on the item's own published id and on no case
+   (D-125; NOTIFICATIONS.md "MARKED AS HANDLED"). It is the SINGLE-item mode beside
+   the case group's kind mute, which is the set mode — so neither is forced
+   (DEC-69 as amended). Because it names no case it is also the only mute an
+   UNGROUPED condition can take (D-170, BOB #29): the case form needs a case and
+   there is none.
+
+   IT SENDS THE ITEM FORM AND NOTHING ELSE. One `item`, no `case`, no `kinds`: the
+   plane refuses the two named together as ambiguous, and a control that drew
+   "this one" and sent a kind would silence every item of that kind on the case —
+   the member's choice widened behind their back. Drawn only where
+   `queueMutableItem` says the class is personally mutable; an OBLIGATION gets
+   none, and if one were ever sent the plane refuses it in its own words. */
+function queueItemMuteHtml(it){
+  if(!(PLANE.me && PLANE.me.session)) return "";
+  if(!queueMutableItem(it) || !it.id) return "";
+  return `<div class="q-mute q-mute-item">
+    <button class="tbtn q-muteitembtn" data-muteitem="${esc(it.id)}">Stop notifying me about this one</button>
+    <span class="q-mute-what">Only this item, and only for you. It stays in the record and on everyone else's list${it.class === "FINDING" ? ", and it stays open for the team until somebody adopts, defers or dismisses it" : ""}. If it comes back later it stays muted for you, and this page says so.</span>
+    <div class="q-mute-err" data-muteitemerr="${esc(it.id)}"></div>
+  </div>`;
+}
+async function queueMuteItem(itemId){
+  if(QUEUE_BUSY) return; QUEUE_BUSY = true;
+  const host = document.querySelector(`[data-muteitemerr="${itemId}"]`);
+  try{
+    const res = await recPostR("queuemute", { item: itemId });
+    if(res && res.ok === false){ if(host) host.textContent = queueReason(res); return; }
+    await queueRun(["queue"]);
+  }catch(e){ if(host) host.textContent = queueReason(e); }
+  finally{ QUEUE_BUSY = false; }
+}
+
 /* WHAT THE MEMBER CHOSE NOT TO BE TOLD, REPORTED. A feed that is quietly shorter
    is indistinguishable from nobody caring, so the plane reports its own
-   suppressions and this renders them. There is never a gap here. */
+   suppressions and this renders them. There is never a gap here.
+
+   UI-86: BOTH FORMS ARE REPORTED, each from its own field. `mute.cases` is the
+   case form; `mute.items` (D-125) is every item this member muted by its id,
+   LIVE OR NOT — a muted host that is not held today is still muted — and until
+   UI-86 this block returned nothing unless `cases` was non-empty, so a member
+   whose only mute was an item one saw a quietly shorter feed. `suppressed[].scope`
+   says which form hid each row; a row with no `scope` is from a plane older than
+   D-125 and can only be the case form. The class word is taken from the rows, not
+   assumed: "condition kinds" only when every row is a condition. */
+function queueMuteClassWord(rows){
+  const cls = [...new Set(rows.map(s => s && s.class).filter(Boolean))];
+  return cls.length === 1 ? String(cls[0]).toLowerCase() + " " : "";
+}
 function queueMuteReportHtml(){
   const d = queueData();
   const m = d && d.mute;
-  if(!m || !Array.isArray(m.cases) || !m.cases.length) return "";
-  const n = Number.isFinite(m.suppressed_count) ? m.suppressed_count : (m.suppressed||[]).length;
-  const kinds = [...new Set((m.suppressed||[]).map(s=>s && s.kind).filter(Boolean))];
-  const head = n === 0
-    ? `You muted condition kinds on ${m.cases.length} ${m.cases.length===1?"case":"cases"}, and nothing is being kept from you right now — none of the conditions you muted is currently true.`
-    : `You muted ${kinds.length} condition ${kinds.length===1?"kind":"kinds"} (${kinds.map(k=>esc(k)).join(", ")}) on ${m.cases.length} ${m.cases.length===1?"case":"cases"}, so ${n} ${n===1?"item is":"items are"} not shown to you below.`;
-  return `<div class="q-muted"><b>${head}</b> ${esc(m.detail||"")}</div>`;
+  if(!m) return "";
+  const cases = Array.isArray(m.cases) ? m.cases : [];
+  const muted = Array.isArray(m.items) ? m.items : [];
+  if(!cases.length && !muted.length) return "";
+  const sup = Array.isArray(m.suppressed) ? m.suppressed.filter(Boolean) : [];
+  const byItem = sup.filter(s => s.scope === "item");
+  const byCase = sup.filter(s => s.scope !== "item");
+  const parts = [];
+  if(cases.length){
+    const n = byCase.length;
+    const kinds = [...new Set(byCase.map(s=>s.kind).filter(Boolean))];
+    parts.push(n === 0
+      ? `You muted kinds on ${cases.length} ${cases.length===1?"case":"cases"}, and nothing is being kept from you right now by those — none of the kinds you muted is on your list at the moment.`
+      : `You muted ${kinds.length} ${queueMuteClassWord(byCase)}${kinds.length===1?"kind":"kinds"} (${kinds.map(k=>esc(k)).join(", ")}) on ${cases.length} ${cases.length===1?"case":"cases"}, so ${n} ${n===1?"item is":"items are"} not shown to you below.`);
+  }
+  if(muted.length){
+    const n = byItem.length;
+    parts.push(`You asked not to be notified about ${muted.length} ${muted.length===1?"item":"items"} one at a time: ${muted.map(id=>`<span class="mono">${esc(id)}</span>`).join(", ")}. `
+      + (muted.length === 1
+        ? (n === 0 ? `It is not on your list right now; if it comes back it stays muted for you.`
+                   : `It is live, and not shown to you below.`)
+        : (n === 0 ? `None of them is on your list right now; if one comes back it stays muted for you.`
+                   : `${n} of them ${n===1?"is":"are"} live, and not shown to you below.`)));
+  }
+  return `<div class="q-muted"><b>${parts.join(" ")}</b> ${esc(m.detail||"")}</div>`;
 }
 
 /* ---- DEC-16's receipts: what became of an item that is no longer here ---- */
@@ -14432,6 +14517,9 @@ function queueWire(){
      rather than one overloaded attribute, so a per-kind button cannot be picked up
      by the whole-set selector above and silently mute everything. */
   document.querySelectorAll("#q [data-mute1]").forEach(b=>b.onclick=()=>queueMuteCase(b.dataset.mute1, b.dataset.mutekind));
+  /* UI-86: the ITEM form, on its own attribute for the same reason — a per-item
+     button must never be read as a case or a kind. */
+  document.querySelectorAll("#q [data-muteitem]").forEach(b=>b.onclick=()=>queueMuteItem(b.dataset.muteitem));
 }
 /*__QUEUE_END__*/
 
