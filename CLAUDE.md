@@ -10,42 +10,25 @@ from a group installing its instance to a member answering a question, making a 
 and taking action on a living civic system. The product of this lane is **a UX design proposal Bob can
 rule on**, not code. The current UI is evidence to study, not a constraint to preserve.
 
-## 2. Relationship to BIO development
+## 2. Scope: what this lane may do
 
-This lane runs **beside** BIO development, not inside it (Bob, 2026-09-24).
+**This lane owns BIO's UX design, broadly** (Bob, 2026-09-24). It studies options, and it creates
+and evolves the UX that is actually built and integrated into the BIO code base. **It may touch
+whatever in the `bio` repo it needs to for that.** There is no path fence.
 
-**Where it may write** (Bob, 2026-09-24: "this lane only writes to the portion of the bio repo
-where the ux work is held"):
+**Where the work lives:**
 
-- **The `ux-study` branch.** This is its study record. It shares no history with `main` and never
-  merges into it. Here, only this charter governs.
-- **The UX portion of `main`:**
-  - `civicos-ui/**`
-  - the UI's documents: `docs/development/CIVICOS_UI_STATE.md`, `docs/development/UI-PLAN.md` and
-    `docs/development/UI-KICKOFF.md`
-  - the bookkeeping `main`'s rules require for a change there (see below).
-
-  Nothing else on `main` or any other branch: no plane, installer, fleet, ledgers outside that
-  bookkeeping, or other lanes' kickoffs.
-
-**On `main`, `main`'s rules govern in full.** A write to the UX portion is BIO development and follows
-`main`'s `CLAUDE.md` exactly:
-
-- Claim the paths in `CLAIMS.md` for an edit that spans landings.
-- Run the gates and keep `construct-status.json` true.
-- Land through CONDUCT's train, never a direct push to `main`.
-- A defect found is minted and sent to SCHEDULER.
-- **Only DIST deploys.**
-
-This lane's exemptions (§3) apply to the study, never to a change to the product.
-
-**Two kinds of work, kept apart:**
-
-- **Studying and proposing** happens on `ux-study`.
-- **Changing the UI** happens on `main`, one scoped change at a time. Each change carries its
-  reason: a finding or ruling recorded here.
-
-A redesign is not landed piecemeal on `main` ahead of Bob's ruling on the proposal.
+- **`ux-study` (this branch):** the study record. Inventory, journeys, rounds with claude.ai,
+  patterns, prototypes, the proposal. It shares no history with `main` and never merges into it.
+  Here, only this charter governs.
+- **`main`:** the UX as built, meaning the UI (`civicos-ui/`), its documents, and anything else the UX
+  needs changed. A change on `main` follows the rules every lane follows there, because they protect
+  the record, not because this lane is fenced:
+  - claims, gates and `construct-status.json`
+  - landing through CONDUCT's train
+  - minting a defect found and placing it in the plan
+  - `civicos`, the UI worker, is deployed by whoever lands the UI change (kickoffs/UI.md). The plane
+    and the installer are deployed only by DIST.
 
 Where `main`'s `CLAUDE.md` and this charter conflict: on `ux-study` this charter governs, and on
 `main` `main`'s governs.
@@ -75,7 +58,7 @@ Where `main`'s `CLAUDE.md` and this charter conflict: on `ux-study` this charter
 
 **Does not bind the study: the development process.** No gates, `plancheck`, `CLAIMS.md`, ledgers, `QUEUE.md`,
 `construct-status.json` upkeep, lane messaging or DIST rules. Those govern changes to the product,
-and the study changes none of it. A change to the UI on `main` is under them in full (§2).
+and the study changes none of it. A change on `main` is under them in full (§2).
 
 ## 4. Every claim carries its state
 
