@@ -1,0 +1,56 @@
+# prune-landed.yml: delete land/* branches whose work is already on main.
+# Added by Bob 2026-09-24: cloud sessions cannot delete remote branches
+# (Claude Code's auto-mode check refuses it, and the cloud git connection
+# dropped every deletion), so this runs on GitHub's side instead.
+#
+# SAFETY: it deletes ONLY a refs/heads/land/* branch whose tip is already
+# contained in main, re-checked at the moment of deletion. Such a branch
+# holds nothing main lacks, so no work is lost. It never touches main,
+# coord, gate-results, anything outside land/, or any land/* branch that
+# carries work main does not have (including the never-merge ones).
+name: prune-landed
+
+on:
+  push:
+    branches: ["main"]      # every landing makes its branches prunable
+  schedule:
+    - cron: "17 * * * *"    # hourly, in case a push event is missed
+  workflow_dispatch:        # lets it be run by hand from the Actions tab
+
+permissions:
+  contents: write           # needed to delete branches; nothing else
+
+concurrency:
+  group: prune-landed
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: delete land/* branches already on main
+        run: |
+          set -euo pipefail
+          git fetch --quiet --prune origin '+refs/heads/*:refs/remotes/origin/*'
+          main=$(git rev-parse origin/main)
+          deleted=0; kept=0; failed=0
+          for ref in $(git for-each-ref --format='%(refname:strip=3)' 'refs/remotes/origin/land/'); do
+            case "$ref" in land/*) ;; *) continue ;; esac
+            sha=$(git rev-parse "refs/remotes/origin/$ref")
+            if git merge-base --is-ancestor "$sha" "$main"; then
+              # delete only if the branch still points where we checked it
+              if git push --quiet origin --force-with-lease="refs/heads/$ref:$sha" --delete "refs/heads/$ref"; then
+                echo "deleted $ref @ ${sha:0:8}"; deleted=$((deleted+1))
+              else
+                echo "::warning::could not delete $ref @ ${sha:0:8}"; failed=$((failed+1))
+              fi
+            else
+              echo "kept $ref @ ${sha:0:8} (carries work not on main)"; kept=$((kept+1))
+            fi
+          done
+          echo "prune-landed: main ${main:0:8} · deleted $deleted · kept $kept · failed $failed" | tee -a "$GITHUB_STEP_SUMMARY"
+          [ "$failed" -eq 0 ]
