@@ -484,16 +484,15 @@ scope: sweep today's residue from scratch with `store=scratch` named on every ca
 accepts-when: scratch reads empty after the sweep and `bio`'s counters are unchanged. NEGATIVE CONTROL: a sweep call without `store=scratch` is refused (D-456) or moves `bio`'s counters, and the witness arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs DIST`).
 
-### M0-140 · queued — **DEBT.md LEAVES THE PROCESS: with its last rows closed (D-313, D-391, D-388 on folds-0924b's landing), Bob's 22:09Z ruling removes it — CLAUDE.md §1/§4, `tools/owed.mjs`, plancheck's DEBT arms, `tools/ledger.mjs`'s DEBT handling, `coord.mjs`'s `LC-debt-*` and `LC-undecided-route` arms, `corpuscheck.test.mjs` §5's D-388 pin, and the kickoffs.** — owner M0 (tools), with BOB for CLAUDE.md and the kickoffs.
-order: at the head of the M0 group: it removes checks that would otherwise fail on an empty ledger, and a gate that reads a retired file is a gate that lies (SCHEDULER #17, 2026-09-24; BOB #32 02:05Z)
+### M0-140 · queued — **DEBT.md LEAVES THE PROCESS: its last three rows (D-313, D-391, D-388) are CLOSED IN FACT on `main` 548eb2c5 and are closed BY this row, Bob's 22:09Z ruling removes it — CLAUDE.md §1/§4, `tools/owed.mjs`, plancheck's DEBT arms, `tools/ledger.mjs`'s DEBT handling, `coord.mjs`'s `LC-debt-*` and `LC-undecided-route` arms, `corpuscheck.test.mjs` §5's D-388 pin, and the kickoffs.** — owner M0 (tools), with BOB for CLAUDE.md and the kickoffs.
+order: at the head of the M0 group: it removes checks that would otherwise fail on an empty ledger, and a gate that reads a retired file is a gate that lies (SCHEDULER #17, 2026-09-24; BOB #32 02:05Z); its depends-on narrowed by SCHEDULER #18 (2026-09-24 03:05Z) to break a cycle: `ledger.mjs` DEBT_FLOOR_BYTES refuses to archive the rows and LC-ledger refuses them closed-in-place, so only this row can close them
 milestone: M0
 interface: none — process tooling.
 design: `docs/development/WORK-PIPELINE.md` §3 (LED-7's end state: DEBT.md at 0, then archived), with `docs/development/VERIFICATION.md`.
-depends-on: land/bob/folds-0924b on `main`; D-313, D-391, D-388 closed.
-scope: archive DEBT.md whole into `docs/archive/ledgers/`; remove or re-point every reader named above; a defect is minted `D-` and placed as a plan row (the rule already in force).
+depends-on: land/bob/folds-0924b on `main` (MET at 548eb2c5).
+scope: FIRST close D-313, D-391, D-388 (dispositions drafted on `scheduler18/row-drafts`: Framework §16 "THREE STATED LIMITS", CONTENT-SEARCH's D-391 part 2, CORPUS-STANDARD §6) and retire `DEBT_FLOOR_BYTES` with `nc-m039.mjs`'s planting; then archive DEBT.md whole into `docs/archive/ledgers/`; remove or re-point every reader named above; a defect is minted `D-` and placed as a plan row (the rule already in force).
 accepts-when: `node tools/plancheck.mjs` and the coord ledger checks pass with no DEBT.md, and no live tool reads it. NEGATIVE CONTROL: restore one reader, and its arm fails naming the missing file.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs M0`).
-note: 2026-09-24 — CONDUCT #19 (02:14Z): the folds carrier landing now is fb24040e WITHOUT §6's classification; the §6 change rides WITH this row, so this row's first act is to retire `LC-undecided-route`'s D-388 clause and correct `corpuscheck.test.mjs` §5's pin together with BOB's §6 fold (prove `node tools/coord.mjs checks` passes on that tree). D-388 closes then.
 
 ### D-485 · queued — **THE DEC-49 GUARD CANNOT SEE REACH THROUGH THE REAL PLANE: under D-433 its R3 counts only codes a MOCK feeds a surface, so "every code a surface can receive carries a canned translation" was false of `NO_CITATION` for months.** Found by UI-83's worker. D-484 closes the instance; this closes the class. — owner the plane estate.
 order: after M0-140, with the M0 instruments: it catches a class of defects that reach members (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:30Z)
