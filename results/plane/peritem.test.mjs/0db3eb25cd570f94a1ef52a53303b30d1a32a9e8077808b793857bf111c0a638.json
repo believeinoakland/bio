@@ -1,0 +1,16 @@
+{
+ "unit": "plane:peritem.test.mjs",
+ "inputHash": "0db3eb25cd570f94a1ef52a53303b30d1a32a9e8077808b793857bf111c0a638",
+ "verdict": "PASS",
+ "run": "4e1bd38eb11293e50f7b3358dccedde10e55f3ef.1790224822766.974.json",
+ "tree": "4e1bd38eb11293e50f7b3358dccedde10e55f3ef",
+ "head": "0fdef669394a886c94c761ec79f263e6ae270980",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 150,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d1cb1ba3-0ea1-5897-8ed8-b3bcbcc5fa4f",
+ "at": "2026-09-24T04:40:22.777Z"
+}
