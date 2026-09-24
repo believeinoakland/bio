@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d484-refusal-translation.test.mjs",
+ "inputHash": "cf6bf0afd65d49a68c4fa7b709e8a14e25a2602e844ed653f77b8b6fee985acd",
+ "verdict": "PASS",
+ "run": "1aa5e341be18f181e0258cff42019bfe09d8fd05.1790292081506.29369.json",
+ "tree": "1aa5e341be18f181e0258cff42019bfe09d8fd05",
+ "head": "727a1d85692ec08f44dc3533a8adeca197a0b16e",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 154,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "6552c870-ad5d-5246-85a0-c9d04e179dba",
+ "at": "2026-09-24T23:21:21.519Z"
+}
