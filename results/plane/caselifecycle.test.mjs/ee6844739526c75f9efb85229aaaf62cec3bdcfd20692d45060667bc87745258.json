@@ -1,0 +1,16 @@
+{
+ "unit": "plane:caselifecycle.test.mjs",
+ "inputHash": "ee6844739526c75f9efb85229aaaf62cec3bdcfd20692d45060667bc87745258",
+ "verdict": "PASS",
+ "run": "d892070aed96cde00a10c50408bf4555070e7dc4.1790260117385.666.json",
+ "tree": "d892070aed96cde00a10c50408bf4555070e7dc4",
+ "head": "d9a640f43c6ec864d7e26a507ce539aba6222b22",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "DOCS",
+ "inputs": 415,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "5684be10-4191-5653-aa3c-40b54f969bb3",
+ "at": "2026-09-24T14:28:37.395Z"
+}
